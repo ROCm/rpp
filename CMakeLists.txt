@@ -19,6 +19,12 @@
 # THE SOFTWARE.
 
 cmake_minimum_required(VERSION 3.5)
+# Set Default Compiler for OCL/CPU
+if(NOT "${BACKEND}" STREQUAL "HIP")
+    set(CMAKE_C_COMPILER clang)
+    set(CMAKE_CXX_COMPILER clang++)
+endif()
+set(CMAKE_CXX_STANDARD 14)
 
 project(amd_rpp CXX)
 set(VERSION "0.99")
@@ -84,15 +90,6 @@ else()
     endif()
 endif()
 message("-- ${BoldBlue}AMD RPP Backend set to -- ${BACKEND}${ColourReset}")
-
-# Set Default Compiler for OCL/CPU
-if(NOT "${BACKEND}" STREQUAL "HIP")
-    if(NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-        set(CMAKE_C_COMPILER clang)
-        set(CMAKE_CXX_COMPILER clang++)
-        set(CMAKE_CXX_STANDARD 14)
-    endif()
-endif()
 
 # RPP Build Type
 if(NOT CMAKE_BUILD_TYPE)
