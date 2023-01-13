@@ -28,7 +28,7 @@ int main(int argc, char **argv)
     const int MIN_ARG_COUNT = 11;
 
     char *src = argv[1];
-    char *src_second = argv[2];
+    char *srcSecond = argv[2];
     string dst = argv[3];
 
     int inputBitDepth = atoi(argv[4]);
@@ -164,15 +164,15 @@ int main(int argc, char **argv)
     unsigned long long ioBufferSize = 0;
     unsigned long long oBufferSize = 0;
     static int noOfImages = 0;
-    Mat image, image_second;
+    Mat image, imageSecond;
 
     // String ops on function name
     string src1 = "";
     src1 = src;
     src1 += "/";
-    string src1_second = "";
-    src1_second = src_second;
-    src1_second += "/";
+    string src1Second = "";
+    src1Second = srcSecond;
+    src1Second += "/";
 
     string func="";
     func = funcName;
@@ -325,7 +325,7 @@ int main(int argc, char **argv)
 
     // Set 8u host buffers for src/dst
     DIR *dr2 = opendir(src);
-    DIR *dr2_second = opendir(src_second);
+    DIR *dr2_second = opendir(srcSecond);
     count = 0;
     i = 0;
 
@@ -335,9 +335,9 @@ int main(int argc, char **argv)
 
     while ((de = readdir(dr2)) != NULL)
     {
-        Rpp8u *input_temp, *input_second_temp;
-        input_temp = offsetted_input + (i * srcDescPtr->strides.nStride);
-        input_second_temp = offsetted_input_second + (i * srcDescPtr->strides.nStride);
+        Rpp8u *inputTemp, *inputSecondTemp;
+        inputTemp = offsetted_input + (i * srcDescPtr->strides.nStride);
+        inputSecondTemp = offsetted_input_second + (i * srcDescPtr->strides.nStride);
         if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0)
             continue;
 
@@ -345,34 +345,34 @@ int main(int argc, char **argv)
         temp = src1;
         temp += de->d_name;
 
-        string temp_second = "";
-        temp_second = src1_second;
-        temp_second += de->d_name;
+        string tempSecond = "";
+        tempSecond = src1Second;
+        tempSecond += de->d_name;
 
         Rpp32u elementsInRow;
         if (layoutType == 0 || layoutType == 1)
         {
             image = imread(temp, 1);
-            image_second = imread(temp_second, 1);
+            imageSecond = imread(tempSecond, 1);
             elementsInRow = roiTensorPtrSrc[i].xywhROI.roiWidth * srcDescPtr->c;
         }
         else if (layoutType == 2)
         {
             image = imread(temp, 0);
-            image_second = imread(temp_second, 0);
+            imageSecond = imread(tempSecond, 0);
             elementsInRow = roiTensorPtrSrc[i].xywhROI.roiWidth;
         }
 
-        Rpp8u *ip_image = image.data;
-        Rpp8u *ip_image_second = image_second.data;
+        Rpp8u *inputImage = image.data;
+        Rpp8u *inputImageSecond = imageSecond.data;
         for (j = 0; j < roiTensorPtrSrc[i].xywhROI.roiHeight; j++)
         {
-            memcpy(input_temp, ip_image, elementsInRow * sizeof(Rpp8u));
-            memcpy(input_second_temp, ip_image_second, elementsInRow * sizeof(Rpp8u));
-            ip_image += elementsInRow;
-            ip_image_second += elementsInRow;
-            input_temp += srcDescPtr->w * srcDescPtr->c;
-            input_second_temp += srcDescPtr->w * srcDescPtr->c;
+            memcpy(inputTemp, inputImage, elementsInRow * sizeof(Rpp8u));
+            memcpy(inputSecondTemp, inputImageSecond, elementsInRow * sizeof(Rpp8u));
+            inputImage += elementsInRow;
+            inputImageSecond += elementsInRow;
+            inputTemp += srcDescPtr->w * srcDescPtr->c;
+            inputSecondTemp += srcDescPtr->w * srcDescPtr->c;
         }
         i++;
         count++;
