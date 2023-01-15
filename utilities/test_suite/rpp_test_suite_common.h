@@ -11,15 +11,11 @@
 #include <unistd.h>
 #include <time.h>
 #include <omp.h>
-#include <half/half.hpp>
 #include <fstream>
-#include <hip/hip_fp16.h>
 #include <experimental/filesystem>
 
 using namespace cv;
 using namespace std;
-
-typedef half Rpp16f;
 
 std::map<int, string> augmentationMap =
 {
@@ -37,8 +33,8 @@ std::map<int, string> augmentationMap =
     {31, "color_cast"},
     {36, "color_twist"},
     {37, "crop"},
-    {38, "resize_crop_mirror"},
-    {39, "gamma_correction"},
+    {38, "crop_mirror_normalize"},
+    {39, "resize_crop_mirror"},
     {40, "erode"},
     {41, "dilate"},
     {49, "box_filter"},
@@ -298,18 +294,4 @@ void compare_output(T* output, string func, string funcName, RpptDescPtr srcDesc
         cout<<func<<" unit_test "<<"PASS \n";
     else
         cout<<func<<" unit_test "<<"FAIL \n";
-}
-
-size_t get_size_of_data_type(RpptDataType dataType)
-{
-    if(dataType == RpptDataType::U8)
-        return sizeof(Rpp8u);
-    else if(dataType == RpptDataType::I8)
-        return sizeof(Rpp8s);
-    else if(dataType == RpptDataType::F16)
-        return sizeof(Rpp16f);
-    else if(dataType == RpptDataType::F32)
-        return sizeof(Rpp32f);
-    else
-        return 0;
 }

@@ -12,8 +12,10 @@
 #include <unistd.h>
 #include <time.h>
 #include <omp.h>
-// #include <hip/hip_fp16.h>
+#include <hip/hip_fp16.h>
 #include <fstream>
+
+typedef half Rpp16f;
 
 using namespace cv;
 using namespace std;
@@ -21,6 +23,20 @@ using namespace std;
 #define RPPPIXELCHECK(pixel) (pixel < (Rpp32f)0) ? ((Rpp32f)0) : ((pixel < (Rpp32f)255) ? pixel : ((Rpp32f)255))
 #define RPPMAX2(a, b) ((a > b) ? a : b)
 #define RPPMIN2(a, b) ((a < b) ? a : b)
+
+size_t get_size_of_data_type(RpptDataType dataType)
+{
+    if(dataType == RpptDataType::U8)
+        return sizeof(Rpp8u);
+    else if(dataType == RpptDataType::I8)
+        return sizeof(Rpp8s);
+    else if(dataType == RpptDataType::F16)
+        return sizeof(Rpp16f);
+    else if(dataType == RpptDataType::F32)
+        return sizeof(Rpp32f);
+    else
+        return 0;
+}
 
 int main(int argc, char **argv)
 {
@@ -313,25 +329,25 @@ int main(int argc, char **argv)
 
     // Initialize 8u host buffers for src/dst
     Rpp8u *inputu8 = (Rpp8u *)calloc(ioBufferSizeInBytes_u8, 1);
-    Rpp8u *inputu8_second = (Rpp8u *)calloc(ioBufferSizeInBytes_u8, 1);
+    Rpp8u *inputu8Second = (Rpp8u *)calloc(ioBufferSizeInBytes_u8, 1);
     Rpp8u *outputu8 = (Rpp8u *)calloc(oBufferSizeInBytes_u8, 1);
     if (testCase == 40) memset(inputu8, 0xFF, ioBufferSizeInBytes_u8);
 
     // Set 8u host buffers for src/dst
     DIR *dr2 = opendir(src);
-    DIR *dr2_second = opendir(srcSecond);
+    DIR *dr2Second = opendir(srcSecond);
     count = 0;
     i = 0;
 
-    Rpp8u *offsetted_input, *offsetted_input_second;
-    offsetted_input = inputu8 + srcDescPtr->offsetInBytes;
-    offsetted_input_second = inputu8_second + srcDescPtr->offsetInBytes;
+    Rpp8u *offsettedInput, *offsettedInputSecond;
+    offsettedInput = inputu8 + srcDescPtr->offsetInBytes;
+    offsettedInputSecond = inputu8Second + srcDescPtr->offsetInBytes;
 
     while ((de = readdir(dr2)) != NULL)
     {
         Rpp8u *inputTemp, *inputSecondTemp;
-        inputTemp = offsetted_input + (i * srcDescPtr->strides.nStride);
-        inputSecondTemp = offsetted_input_second + (i * srcDescPtr->strides.nStride);
+        inputTemp = offsettedInput + (i * srcDescPtr->strides.nStride);
+        inputSecondTemp = offsettedInputSecond + (i * srcDescPtr->strides.nStride);
         if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0)
             continue;
 
@@ -381,7 +397,7 @@ int main(int argc, char **argv)
     {
         // Convert default OpenCV PKD3 to PLN3 for first and second input batch
         convert_pkd3_to_pln3(inputu8, srcDescPtr);
-        convert_pkd3_to_pln3(inputu8_second, srcDescPtr);
+        convert_pkd3_to_pln3(inputu8Second, srcDescPtr);
     }
 
     // Factors to convert U8 data to F32, F16 data to 0-1 range and reconvert them back to 0 -255 range
@@ -398,14 +414,14 @@ int main(int argc, char **argv)
     if (inputBitDepth == 0)
     {
         memcpy(input, inputu8, inputBufferSize);
-        memcpy(input_second, inputu8_second, inputBufferSize);
+        memcpy(input_second, inputu8Second, inputBufferSize);
     }
     else if (inputBitDepth == 1)
     {
         Rpp8u *inputTemp, *inputSecondTemp;
         half *inputf16Temp, *inputf16SecondTemp;
         inputTemp = inputu8 + srcDescPtr->offsetInBytes;
-        inputSecondTemp = inputu8_second + srcDescPtr->offsetInBytes;
+        inputSecondTemp = inputu8Second + srcDescPtr->offsetInBytes;
         inputf16Temp = (half *)((Rpp8u *)input + srcDescPtr->offsetInBytes);
         inputf16SecondTemp = (half *)((Rpp8u *)input + srcDescPtr->offsetInBytes);
 
@@ -424,7 +440,7 @@ int main(int argc, char **argv)
         Rpp8u *inputTemp, *inputSecondTemp;
         Rpp32f *inputf32Temp, *inputf32SecondTemp;
         inputTemp = inputu8 + srcDescPtr->offsetInBytes;
-        inputSecondTemp = inputu8_second + srcDescPtr->offsetInBytes;
+        inputSecondTemp = inputu8Second + srcDescPtr->offsetInBytes;
         inputf32Temp = (Rpp32f *)((Rpp8u *)input + srcDescPtr->offsetInBytes);
         inputf32SecondTemp = (Rpp32f *)((Rpp8u *)input + srcDescPtr->offsetInBytes);
 
@@ -444,7 +460,7 @@ int main(int argc, char **argv)
         Rpp8s *inputi8Temp, *inputi8SecondTemp;
 
         inputTemp = inputu8 + srcDescPtr->offsetInBytes;
-        inputSecondTemp = inputu8_second + srcDescPtr->offsetInBytes;
+        inputSecondTemp = inputu8Second + srcDescPtr->offsetInBytes;
         inputi8Temp = (Rpp8s *)input + srcDescPtr->offsetInBytes;
         inputi8SecondTemp = (Rpp8s *)input_second + srcDescPtr->offsetInBytes;
 
@@ -473,9 +489,9 @@ int main(int argc, char **argv)
     rppCreateWithStreamAndBatchSize(&handle, stream, noOfImages);
 
     clock_t start, end;
-    double max_time_used = 0, min_time_used = 500, avg_time_used = 0;
+    double maxTimeUsed = 0, minTimeUsed = 500, avgTimeUsed = 0;
     double gpuTime, wallTime;
-    string test_case_name;
+    string testCaseName;
 
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numIterations, noOfImages);
@@ -487,7 +503,7 @@ int main(int argc, char **argv)
         {
         case 0:
         {
-            test_case_name = "brightness";
+            testCaseName = "brightness";
 
             Rpp32f alpha[images];
             Rpp32f beta[images];
@@ -531,7 +547,7 @@ int main(int argc, char **argv)
         }
         case 1:
         {
-            test_case_name = "gamma_correction";
+            testCaseName = "gamma_correction";
 
             Rpp32f gammaVal[images];
             for (i = 0; i < images; i++)
@@ -573,7 +589,7 @@ int main(int argc, char **argv)
         }
         case 2:
         {
-            test_case_name = "blend";
+            testCaseName = "blend";
 
             Rpp32f alpha[images];
             for (i = 0; i < images; i++)
@@ -615,7 +631,7 @@ int main(int argc, char **argv)
         }
         case 4:
         {
-            test_case_name = "contrast";
+            testCaseName = "contrast";
 
             Rpp32f contrastFactor[images];
             Rpp32f contrastCenter[images];
@@ -659,7 +675,7 @@ int main(int argc, char **argv)
         }
         case 8:
         {
-            test_case_name = "noise";
+            testCaseName = "noise";
 
             switch(additionalParam)
             {
@@ -805,7 +821,7 @@ int main(int argc, char **argv)
         }
         case 13:
         {
-            test_case_name = "exposure";
+            testCaseName = "exposure";
 
             Rpp32f exposureFactor[images];
             for (i = 0; i < images; i++)
@@ -847,7 +863,7 @@ int main(int argc, char **argv)
         }
         case 20:
         {
-            test_case_name = "flip";
+            testCaseName = "flip";
 
             Rpp32u horizontalFlag[images];
             Rpp32u verticalFlag[images];
@@ -891,7 +907,7 @@ int main(int argc, char **argv)
         }
         case 21:
         {
-            test_case_name = "resize";
+            testCaseName = "resize";
 
             for (i = 0; i < images; i++)
             {
@@ -933,7 +949,7 @@ int main(int argc, char **argv)
         }
         case 23:
         {
-            test_case_name = "rotate";
+            testCaseName = "rotate";
 
             if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR))
             {
@@ -980,7 +996,7 @@ int main(int argc, char **argv)
         }
         case 24:
         {
-            test_case_name = "warp_affine";
+            testCaseName = "warp_affine";
 
             if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR))
             {
@@ -1034,7 +1050,7 @@ int main(int argc, char **argv)
         }
         case 30:
         {
-            test_case_name = "non_linear_blend";
+            testCaseName = "non_linear_blend";
 
             Rpp32f stdDev[images];
             for (i = 0; i < images; i++)
@@ -1076,7 +1092,7 @@ int main(int argc, char **argv)
         }
         case 31:
         {
-            test_case_name = "color_cast";
+            testCaseName = "color_cast";
 
             RpptRGB rgbTensor[images];
             Rpp32f alphaTensor[images];
@@ -1123,7 +1139,7 @@ int main(int argc, char **argv)
         }
         case 36:
         {
-            test_case_name = "color_twist";
+            testCaseName = "color_twist";
 
             Rpp32f brightness[images];
             Rpp32f contrast[images];
@@ -1171,7 +1187,7 @@ int main(int argc, char **argv)
         }
         case 37:
         {
-            test_case_name = "crop";
+            testCaseName = "crop";
 
             // Uncomment to run test case with an xywhROI override
             for (i = 0; i < images; i++)
@@ -1207,27 +1223,41 @@ int main(int argc, char **argv)
         }
         case 38:
         {
-            test_case_name = "crop_mirror_normalize";
-            Rpp32f multiplier[images * 3];
-            Rpp32f offset[images * 3];
+            testCaseName = "crop_mirror_normalize";
+            Rpp32f multiplier[images * srcDescPtr->c];
+            Rpp32f offset[images * srcDescPtr->c];
             Rpp32u mirror[images];
-            Rpp32f meanParam[3] = { 60.0f, 80.0f, 100.0f };
-            Rpp32f stdDevParam[3] = { 0.9f, 0.9f, 0.9f };
-            Rpp32f offsetParam[3] = { - meanParam[0] / stdDevParam[0], - meanParam[1] / stdDevParam[1], - meanParam[2] / stdDevParam[2] };
-            Rpp32f multiplierParam[3] = {  1.0f / stdDevParam[0], 1.0f / stdDevParam[1], 1.0f / stdDevParam[2] };
-
-            for (i = 0, j = 0; i < images; i++, j += 3)
+            if (srcDescPtr->c == 3)
             {
-                multiplier[j] = multiplierParam[0];
-                offset[j] = offsetParam[0];
+                Rpp32f meanParam[3] = { 60.0f, 80.0f, 100.0f };
+                Rpp32f stdDevParam[3] = { 0.9f, 0.9f, 0.9f };
+                Rpp32f offsetParam[3] = { - meanParam[0] / stdDevParam[0], - meanParam[1] / stdDevParam[1], - meanParam[2] / stdDevParam[2] };
+                Rpp32f multiplierParam[3] = {  1.0f / stdDevParam[0], 1.0f / stdDevParam[1], 1.0f / stdDevParam[2] };
 
-                multiplier[j + 1] = multiplierParam[1];
-                offset[j + 1] = offsetParam[1];
+                for (i = 0, j = 0; i < images; i++, j += 3)
+                {
+                    multiplier[j] = multiplierParam[0];
+                    offset[j] = offsetParam[0];
+                    multiplier[j + 1] = multiplierParam[1];
+                    offset[j + 1] = offsetParam[1];
+                    multiplier[j + 2] = multiplierParam[2];
+                    offset[j + 2] = offsetParam[2];
+                    mirror[i] = 1;
+                }
+            }
+            else if(srcDescPtr->c == 1)
+            {
+                Rpp32f meanParam = 100.0f;
+                Rpp32f stdDevParam = 0.9f;
+                Rpp32f offsetParam = - meanParam / stdDevParam;
+                Rpp32f multiplierParam = 1.0f / stdDevParam;
 
-                multiplier[j + 2] = multiplierParam[2];
-                offset[j + 2] = offsetParam[2];
-
-                mirror[i] = 1;
+                for (i = 0; i < images; i++)
+                {
+                    multiplier[i] = multiplierParam;
+                    offset[i] = offsetParam;
+                    mirror[i] = 1;
+                }
             }
 
             // Uncomment to run test case with an xywhROI override
@@ -1264,7 +1294,7 @@ int main(int argc, char **argv)
         }
         case 39:
         {
-            test_case_name = "resize_crop_mirror";
+            testCaseName = "resize_crop_mirror";
 
             if (interpolationType != RpptInterpolationType::BILINEAR)
             {
@@ -1313,7 +1343,7 @@ int main(int argc, char **argv)
         }
         case 40:
         {
-            test_case_name = "erode";
+            testCaseName = "erode";
 
             Rpp32u kernelSize = additionalParam;
 
@@ -1351,7 +1381,7 @@ int main(int argc, char **argv)
         }
         case 41:
         {
-            test_case_name = "dilate";
+            testCaseName = "dilate";
 
             Rpp32u kernelSize = additionalParam;
 
@@ -1389,7 +1419,7 @@ int main(int argc, char **argv)
         }
         case 49:
         {
-            test_case_name = "box_filter";
+            testCaseName = "box_filter";
 
             Rpp32u kernelSize = additionalParam;
 
@@ -1427,7 +1457,7 @@ int main(int argc, char **argv)
         }
         case 70:
         {
-            test_case_name = "copy";
+            testCaseName = "copy";
 
             start_omp = omp_get_wtime();
             start = clock();
@@ -1441,7 +1471,7 @@ int main(int argc, char **argv)
         }
         case 80:
         {
-            test_case_name = "resize_mirror_normalize";
+            testCaseName = "resize_mirror_normalize";
 
             if (interpolationType != RpptInterpolationType::BILINEAR)
             {
@@ -1455,20 +1485,30 @@ int main(int argc, char **argv)
                 dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiHeight / 3;
             }
 
-            Rpp32f mean[images * 3];
-            Rpp32f stdDev[images * 3];
+            Rpp32f mean[images * srcDescPtr->c];
+            Rpp32f stdDev[images * srcDescPtr->c];
             Rpp32u mirror[images];
-            for (i = 0, j = 0; i < images; i++, j += 3)
+            if(srcDescPtr->c == 3)
             {
-                mean[j] = 60.0;
-                stdDev[j] = 1.0;
-
-                mean[j + 1] = 80.0;
-                stdDev[j + 1] = 1.0;
-
-                mean[j + 2] = 100.0;
-                stdDev[j + 2] = 1.0;
-                mirror[i] = 1;
+                for (i = 0, j = 0; i < images; i++, j += 3)
+                {
+                    mean[j] = 60.0;
+                    stdDev[j] = 1.0;
+                    mean[j + 1] = 80.0;
+                    stdDev[j + 1] = 1.0;
+                    mean[j + 2] = 100.0;
+                    stdDev[j + 2] = 1.0;
+                    mirror[i] = 1;
+                }
+            }
+            else
+            {
+                for (i = 0; i < images; i++)
+                {
+                    mean[i] = 100.0;
+                    stdDev[i] = 1.0;
+                    mirror[i] = 1;
+                }
             }
 
             // Uncomment to run test case with an xywhROI override
@@ -1504,7 +1544,7 @@ int main(int argc, char **argv)
         }
         case 83:
         {
-            test_case_name = "gridmask";
+            testCaseName = "gridmask";
 
             Rpp32u tileWidth = 40;
             Rpp32f gridRatio = 0.6;
@@ -1547,7 +1587,7 @@ int main(int argc, char **argv)
         }
         case 84:
         {
-            test_case_name = "spatter";
+            testCaseName = "spatter";
 
             RpptRGB spatterColor;
 
@@ -1600,7 +1640,7 @@ int main(int argc, char **argv)
         }
         case 85:
         {
-            test_case_name = "swap_channels";
+            testCaseName = "swap_channels";
 
             start_omp = omp_get_wtime();
             start = clock();
@@ -1614,7 +1654,7 @@ int main(int argc, char **argv)
         }
         case 86:
         {
-            test_case_name = "color_to_greyscale";
+            testCaseName = "color_to_greyscale";
 
             RpptSubpixelLayout srcSubpixelLayout = RpptSubpixelLayout::RGBtype;
 
@@ -1646,11 +1686,11 @@ int main(int argc, char **argv)
         gpuTime = ((double)(end - start)) / CLOCKS_PER_SEC;
         wallTime = end_omp - start_omp;
 
-        if (gpuTime > max_time_used)
-            max_time_used = gpuTime;
-        if (gpuTime < min_time_used)
-            min_time_used = gpuTime;
-        avg_time_used += gpuTime;
+        if (gpuTime > maxTimeUsed)
+            maxTimeUsed = gpuTime;
+        if (gpuTime < minTimeUsed)
+            minTimeUsed = gpuTime;
+        avgTimeUsed += gpuTime;
     }
 
     if (testType == 0)
@@ -1661,13 +1701,13 @@ int main(int argc, char **argv)
     }
     else
     {
-        avg_time_used /= numIterations;
-        max_time_used = max_time_used;
-        min_time_used = min_time_used;
-        avg_time_used = avg_time_used;
+        avgTimeUsed /= numIterations;
+        maxTimeUsed = maxTimeUsed;
+        minTimeUsed = minTimeUsed;
+        avgTimeUsed = avgTimeUsed;
 
         // Display measured times
-        cout << fixed << "\nmax,min,avg in ms = " << max_time_used << "," << min_time_used << "," << avg_time_used << endl;
+        cout << fixed << "\nmax,min,avg in ms = " << maxTimeUsed << "," << minTimeUsed << "," << avgTimeUsed << endl;
     }
 
     if (testType == 0)
@@ -1736,7 +1776,8 @@ int main(int argc, char **argv)
             }
         }
 
-        // compare_output<Rpp8u>(outputu8, func, test_case_name, dstDescPtr, "HIP");
+        if(inputBitDepth == 0)
+            compare_output<Rpp8u>(outputu8, func, testCaseName, dstDescPtr, "HIP");
 
         RpptROI roiDefault;
         RpptROIPtr roiPtrDefault;
@@ -1813,7 +1854,7 @@ int main(int argc, char **argv)
     free(input_second);
     free(output);
     free(inputu8);
-    free(inputu8_second);
+    free(inputu8Second);
     free(outputu8);
     hipFree(d_input);
     hipFree(d_input_second);
