@@ -17,6 +17,8 @@
 using namespace cv;
 using namespace std;
 
+#define CUTOFF 0
+
 std::map<int, string> augmentationMap =
 {
     {0, "brightness"},
@@ -161,15 +163,15 @@ void set_strides(RpptDescPtr descPtr)
 
 void convert_pln3_to_pkd3(Rpp8u *output, RpptDescPtr descPtr)
 {
-    unsigned long long bufferSize = (unsigned long long)descPtr->h * (unsigned long long)descPtr->w * (unsigned long long)descPtr->c * (unsigned long long)descPtr->n + (unsigned long long)descPtr->offsetInBytes;
+    unsigned long long bufferSize = ((unsigned long long)descPtr->h * (unsigned long long)descPtr->w * (unsigned long long)descPtr->c * (unsigned long long)descPtr->n) + descPtr->offsetInBytes;
     Rpp8u *outputCopy = (Rpp8u *)calloc(bufferSize, sizeof(Rpp8u));
     memcpy(outputCopy, output, bufferSize * sizeof(Rpp8u));
 
     Rpp8u *outputCopyTemp;
     outputCopyTemp = outputCopy + descPtr->offsetInBytes;
 
-    // omp_set_dynamic(0);
-    // #pragma omp parallel for num_threads(descPtr->n)
+    omp_set_dynamic(0);
+    #pragma omp parallel for num_threads(descPtr->n)
     for (int count = 0; count < descPtr->n; count++)
     {
         Rpp8u *outputCopyTempR, *outputCopyTempG, *outputCopyTempB;
@@ -198,28 +200,28 @@ void convert_pln3_to_pkd3(Rpp8u *output, RpptDescPtr descPtr)
     free(outputCopy);
 }
 
-void convert_pkd3_to_pln3(Rpp8u *input, RpptDescPtr srcDescPtr)
+void convert_pkd3_to_pln3(Rpp8u *input, RpptDescPtr descPtr)
 {
-    unsigned long long bufferSize = ((unsigned long long)srcDescPtr->h * (unsigned long long)srcDescPtr->w * (unsigned long long)srcDescPtr->c * (unsigned long long)srcDescPtr->n) + (unsigned long long)srcDescPtr->offsetInBytes;
+    unsigned long long bufferSize = ((unsigned long long)descPtr->h * (unsigned long long)descPtr->w * (unsigned long long)descPtr->c * (unsigned long long)descPtr->n) + descPtr->offsetInBytes;
     Rpp8u *inputCopy = (Rpp8u *)calloc(bufferSize, sizeof(Rpp8u));
     memcpy(inputCopy, input, bufferSize * sizeof(Rpp8u));
 
     Rpp8u *inputTemp, *inputCopyTemp;
-    inputTemp = input + srcDescPtr->offsetInBytes;
+    inputTemp = input + descPtr->offsetInBytes;
 
     omp_set_dynamic(0);
-    #pragma omp parallel for num_threads(srcDescPtr->n)
-    for (int count = 0; count < srcDescPtr->n; count++)
+    #pragma omp parallel for num_threads(descPtr->n)
+    for (int count = 0; count < descPtr->n; count++)
     {
         Rpp8u *inputTempR, *inputTempG, *inputTempB;
-        inputTempR = inputTemp + count * srcDescPtr->strides.nStride;
-        inputTempG = inputTempR + srcDescPtr->strides.cStride;
-        inputTempB = inputTempG + srcDescPtr->strides.cStride;
-        Rpp8u *inputCopyTemp = inputCopy + srcDescPtr->offsetInBytes + count * srcDescPtr->strides.nStride;
+        inputTempR = inputTemp + count * descPtr->strides.nStride;
+        inputTempG = inputTempR + descPtr->strides.cStride;
+        inputTempB = inputTempG + descPtr->strides.cStride;
+        Rpp8u *inputCopyTemp = inputCopy + descPtr->offsetInBytes + count * descPtr->strides.nStride;
 
-        for (int i = 0; i < srcDescPtr->h; i++)
+        for (int i = 0; i < descPtr->h; i++)
         {
-            for (int j = 0; j < srcDescPtr->w; j++)
+            for (int j = 0; j < descPtr->w; j++)
             {
                 *inputTempR = *inputCopyTemp;
                 inputCopyTemp++;
@@ -248,7 +250,7 @@ void remove_substring(string &str, string &pattern)
 }
 
 template <typename T>
-void compare_output(T* output, string func, string funcName, RpptDescPtr srcDescPtr, std::string backend)
+void compare_output(T* output, string func, string funcName, RpptDescPtr descPtr, std::string backend)
 {
     bool isEqual = true;
     string ref_path = get_current_dir_name();
@@ -260,6 +262,8 @@ void compare_output(T* output, string func, string funcName, RpptDescPtr srcDesc
     vector<vector<string>> refOutput;
     vector<string> row;
     string line, word;
+
+    // Load the refennce output values from files and store in vector
     if(file.is_open())
     {
         while(getline(file, line))
@@ -277,21 +281,22 @@ void compare_output(T* output, string func, string funcName, RpptDescPtr srcDesc
         return;
     }
 
-    for(int i = 0; i < refOutput.size(); i++)
+    T* outputTemp = output + descPtr->offsetInBytes;
+    for(int i = 0; i < descPtr->h; i++)
     {
-        for(int j = 0; j < refOutput[i].size(); j++)
+        for(int j = 0; j < descPtr->w; j++)
         {
-            if( stoi(refOutput[i][j]) != *output)
+            int diff = abs(stoi(refOutput[i][j]) - *outputTemp);
+            if(diff > CUTOFF)
             {
                 isEqual = false;
                 break;
             }
-            output++;
+            outputTemp++;
         }
-        cout<<"\n";
     }
     if(isEqual == true)
-        cout<<func<<" unit_test "<<"PASS \n";
+        cout<<func<<": "<<"PASSED \n";
     else
-        cout<<func<<" unit_test "<<"FAIL \n";
+        cout<<func<<": "<<"FAILED \n";
 }

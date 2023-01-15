@@ -484,7 +484,7 @@ int main(int argc, char **argv)
     for (int perfRunCount = 0; perfRunCount < numIterations; perfRunCount++)
     {
         clock_t start, end;
-        double start_omp, end_omp;
+        double startOmp, endOmp;
         switch (testCase)
         {
             case 0:
@@ -521,7 +521,7 @@ int main(int argc, char **argv)
                 roiTypeSrc = RpptRoiType::LTRB;
                 roiTypeDst = RpptRoiType::LTRB;*/
 
-                start_omp = omp_get_wtime();
+                startOmp = omp_get_wtime();
                 start = clock();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                     rppt_brightness_host(input, srcDescPtr, output, dstDescPtr, alpha, beta, roiTensorPtrSrc, roiTypeSrc, handle);
@@ -562,7 +562,7 @@ int main(int argc, char **argv)
                 roiTypeSrc = RpptRoiType::LTRB;
                 roiTypeDst = RpptRoiType::LTRB;*/
 
-                start_omp = omp_get_wtime();
+                startOmp = omp_get_wtime();
                 start = clock();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                     rppt_gamma_correction_host(input, srcDescPtr, output, dstDescPtr, gammaVal, roiTensorPtrSrc, roiTypeSrc, handle);
@@ -603,7 +603,7 @@ int main(int argc, char **argv)
                 roiTypeSrc = RpptRoiType::LTRB;
                 roiTypeDst = RpptRoiType::LTRB;*/
 
-                start_omp = omp_get_wtime();
+                startOmp = omp_get_wtime();
                 start = clock();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                     rppt_blend_host(input, input_second, srcDescPtr, output, dstDescPtr, alpha, roiTensorPtrSrc, roiTypeSrc, handle);
@@ -643,7 +643,7 @@ int main(int argc, char **argv)
                 roiTypeSrc = RpptRoiType::LTRB;
                 roiTypeDst = RpptRoiType::LTRB;*/
 
-                start_omp = omp_get_wtime();
+                startOmp = omp_get_wtime();
                 start = clock();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                     rppt_contrast_host(input, srcDescPtr, output, dstDescPtr, contrastFactor, contrastCenter, roiTensorPtrSrc, roiTypeSrc, handle);
@@ -692,7 +692,7 @@ int main(int argc, char **argv)
                         roiTypeSrc = RpptRoiType::LTRB;
                         roiTypeDst = RpptRoiType::LTRB;*/
 
-                        start_omp = omp_get_wtime();
+                        startOmp = omp_get_wtime();
                         start = clock();
                         if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                             rppt_salt_and_pepper_noise_host(input, srcDescPtr, output, dstDescPtr, noiseProbabilityTensor, saltProbabilityTensor, saltValueTensor, pepperValueTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
@@ -731,7 +731,7 @@ int main(int argc, char **argv)
                         roiTypeSrc = RpptRoiType::LTRB;
                         roiTypeDst = RpptRoiType::LTRB;*/
 
-                        start_omp = omp_get_wtime();
+                        startOmp = omp_get_wtime();
                         start = clock();
                         if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                             rppt_gaussian_noise_host(input, srcDescPtr, output, dstDescPtr, meanTensor, stdDevTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
@@ -768,7 +768,7 @@ int main(int argc, char **argv)
                         roiTypeSrc = RpptRoiType::LTRB;
                         roiTypeDst = RpptRoiType::LTRB;*/
 
-                        start_omp = omp_get_wtime();
+                        startOmp = omp_get_wtime();
                         start = clock();
                         if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                             rppt_shot_noise_host(input, srcDescPtr, output, dstDescPtr, shotNoiseFactorTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
@@ -818,7 +818,7 @@ int main(int argc, char **argv)
                 roiTypeSrc = RpptRoiType::LTRB;
                 roiTypeDst = RpptRoiType::LTRB;*/
 
-                start_omp = omp_get_wtime();
+                startOmp = omp_get_wtime();
                 start = clock();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                     rppt_exposure_host(input, srcDescPtr, output, dstDescPtr, exposureFactor, roiTensorPtrSrc, roiTypeSrc, handle);
@@ -839,7 +839,7 @@ int main(int argc, char **argv)
                     verticalFlag[i] = 0;
                 }
 
-                start_omp = omp_get_wtime();
+                startOmp = omp_get_wtime();
                 start = clock();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                     rppt_flip_host(input, srcDescPtr, output, dstDescPtr, horizontalFlag, verticalFlag, roiTensorPtrSrc, roiTypeSrc, handle);
@@ -878,7 +878,7 @@ int main(int argc, char **argv)
                 roiTypeSrc = RpptRoiType::LTRB;
                 roiTypeDst = RpptRoiType::LTRB;*/
 
-                start_omp = omp_get_wtime();
+                startOmp = omp_get_wtime();
                 start = clock();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                     rppt_resize_host(input, srcDescPtr, output, dstDescPtr, dstImgSizes, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
@@ -923,7 +923,7 @@ int main(int argc, char **argv)
                 roiTypeSrc = RpptRoiType::LTRB;
                 roiTypeDst = RpptRoiType::LTRB;*/
 
-                start_omp = omp_get_wtime();
+                startOmp = omp_get_wtime();
                 start = clock();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                     rppt_rotate_host(input, srcDescPtr, output, dstDescPtr, angle, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
@@ -973,7 +973,7 @@ int main(int argc, char **argv)
                 roiTypeSrc = RpptRoiType::LTRB;
                 roiTypeDst = RpptRoiType::LTRB;*/
 
-                start_omp = omp_get_wtime();
+                startOmp = omp_get_wtime();
                 start = clock();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                     rppt_warp_affine_host(input, srcDescPtr, output, dstDescPtr, affineTensor, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
@@ -1012,7 +1012,7 @@ int main(int argc, char **argv)
                 roiTypeSrc = RpptRoiType::LTRB;
                 roiTypeDst = RpptRoiType::LTRB;*/
 
-                start_omp = omp_get_wtime();
+                startOmp = omp_get_wtime();
                 start = clock();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                     rppt_non_linear_blend_host(input, input_second, srcDescPtr, output, dstDescPtr, stdDev, roiTensorPtrSrc, roiTypeSrc, handle);
@@ -1057,7 +1057,7 @@ int main(int argc, char **argv)
                 roiTypeSrc = RpptRoiType::LTRB;
                 roiTypeDst = RpptRoiType::LTRB;*/
 
-                start_omp = omp_get_wtime();
+                startOmp = omp_get_wtime();
                 start = clock();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                     rppt_color_cast_host(input, srcDescPtr, output, dstDescPtr, rgbTensor, alphaTensor, roiTensorPtrSrc, roiTypeSrc, handle);
@@ -1104,7 +1104,7 @@ int main(int argc, char **argv)
                 roiTypeSrc = RpptRoiType::LTRB;
                 roiTypeDst = RpptRoiType::LTRB;*/
 
-                start_omp = omp_get_wtime();
+                startOmp = omp_get_wtime();
                 start = clock();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                     rppt_color_twist_host(input, srcDescPtr, output, dstDescPtr, brightness, contrast, hue, saturation, roiTensorPtrSrc, roiTypeSrc, handle);
@@ -1139,7 +1139,7 @@ int main(int argc, char **argv)
                 roiTypeSrc = RpptRoiType::LTRB;
                 roiTypeDst = RpptRoiType::LTRB;*/
 
-                start_omp = omp_get_wtime();
+                startOmp = omp_get_wtime();
                 start = clock();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                     rppt_crop_host(input, srcDescPtr, output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
@@ -1209,7 +1209,7 @@ int main(int argc, char **argv)
                 roiTypeSrc = RpptRoiType::LTRB;
                 roiTypeDst = RpptRoiType::LTRB;*/
 
-                start_omp = omp_get_wtime();
+                startOmp = omp_get_wtime();
                 start = clock();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 3 || inputBitDepth == 4 || inputBitDepth == 5)
                     rppt_crop_mirror_normalize_host(input, srcDescPtr, output, dstDescPtr, offset, multiplier, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
@@ -1257,7 +1257,7 @@ int main(int argc, char **argv)
                 roiTypeSrc = RpptRoiType::LTRB;
                 roiTypeDst = RpptRoiType::LTRB;*/
 
-                start_omp = omp_get_wtime();
+                startOmp = omp_get_wtime();
                 start = clock();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                     rppt_resize_crop_mirror_host(input, srcDescPtr, output, dstDescPtr, dstImgSizes, interpolationType, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
@@ -1270,7 +1270,7 @@ int main(int argc, char **argv)
             {
                 testCaseName = "copy";
 
-                start_omp = omp_get_wtime();
+                startOmp = omp_get_wtime();
                 start = clock();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                     rppt_copy_host(input, srcDescPtr, output, dstDescPtr, handle);
@@ -1343,7 +1343,7 @@ int main(int argc, char **argv)
                 roiTypeSrc = RpptRoiType::LTRB;
                 roiTypeDst = RpptRoiType::LTRB;*/
 
-                start_omp = omp_get_wtime();
+                startOmp = omp_get_wtime();
                 start = clock();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 3 || inputBitDepth == 4 || inputBitDepth == 5)
                     rppt_resize_mirror_normalize_host(input, srcDescPtr, output, dstDescPtr, dstImgSizes, interpolationType, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
@@ -1390,7 +1390,7 @@ int main(int argc, char **argv)
                 roiTypeSrc = RpptRoiType::LTRB;
                 roiTypeDst = RpptRoiType::LTRB;*/
 
-                start_omp = omp_get_wtime();
+                startOmp = omp_get_wtime();
                 start = clock();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                     rppt_color_jitter_host(input, srcDescPtr, output, dstDescPtr, brightness, contrast, hue, saturation, roiTensorPtrSrc, roiTypeSrc, handle);
@@ -1432,7 +1432,7 @@ int main(int argc, char **argv)
                 roiTypeSrc = RpptRoiType::LTRB;
                 roiTypeDst = RpptRoiType::LTRB;*/
 
-                start_omp = omp_get_wtime();
+                startOmp = omp_get_wtime();
                 start = clock();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                     rppt_gridmask_host(input, srcDescPtr, output, dstDescPtr, tileWidth, gridRatio, gridAngle, translateVector, roiTensorPtrSrc, roiTypeSrc, handle);
@@ -1484,7 +1484,7 @@ int main(int argc, char **argv)
                 roiTypeSrc = RpptRoiType::LTRB;
                 roiTypeDst = RpptRoiType::LTRB;*/
 
-                start_omp = omp_get_wtime();
+                startOmp = omp_get_wtime();
                 start = clock();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                     rppt_spatter_host(input, srcDescPtr, output, dstDescPtr, spatterColor, roiTensorPtrSrc, roiTypeSrc, handle);
@@ -1497,7 +1497,7 @@ int main(int argc, char **argv)
             {
                 testCaseName = "swap_channels";
 
-                start_omp = omp_get_wtime();
+                startOmp = omp_get_wtime();
                 start = clock();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                     rppt_swap_channels_host(input, srcDescPtr, output, dstDescPtr, handle);
@@ -1512,7 +1512,7 @@ int main(int argc, char **argv)
 
                 RpptSubpixelLayout srcSubpixelLayout = RpptSubpixelLayout::RGBtype;
 
-                start_omp = omp_get_wtime();
+                startOmp = omp_get_wtime();
                 start = clock();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                     rppt_color_to_greyscale_host(input, srcDescPtr, output, dstDescPtr, srcSubpixelLayout, handle);
@@ -1526,7 +1526,7 @@ int main(int argc, char **argv)
                 break;
         }
         end = clock();
-        end_omp = omp_get_wtime();
+        endOmp = omp_get_wtime();
 
         if (missingFuncFlag == 1)
         {
@@ -1535,7 +1535,7 @@ int main(int argc, char **argv)
         }
 
         cpuTime = ((double)(end - start)) / CLOCKS_PER_SEC;
-        wallTime = end_omp - start_omp;
+        wallTime = endOmp - startOmp;
 
         maxTimeUsed = max(maxTimeUsed, wallTime);
         minTimeUsed = min(minTimeUsed, wallTime);
@@ -1602,7 +1602,7 @@ int main(int argc, char **argv)
             }
         }
 
-        if(inputBitDepth == 0)
+        if(inputBitDepth == 0 && (srcDescPtr->layout == dstDescPtr->layout))
             compare_output<Rpp8u>(outputu8, func, testCaseName, dstDescPtr, "HOST");
 
         // Calculate exact dstROI in XYWH format for OpenCV dump
@@ -1652,24 +1652,24 @@ int main(int argc, char **argv)
 
         count = 0;
         Rpp32u elementsInRowMax = dstDescPtr->w * dstDescPtr->c;
-        Rpp8u *offsetted_output = outputu8 + dstDescPtr->offsetInBytes;
+        Rpp8u *offsettedOutput = outputu8 + dstDescPtr->offsetInBytes;
         for (j = 0; j < dstDescPtr->n; j++)
         {
             int height = dstImgSizes[j].height;
             int width = dstImgSizes[j].width;
-            int op_size = height * width * dstDescPtr->c;
+            int outputSize = height * width * dstDescPtr->c;
 
-            Rpp8u *temp_output = (Rpp8u *)calloc(op_size, sizeof(Rpp8u));
-            Rpp8u *temp_output_row;
-            temp_output_row = temp_output;
+            Rpp8u *tempOutput = (Rpp8u *)calloc(outputSize, sizeof(Rpp8u));
+            Rpp8u *tempOutputRow;
+            tempOutputRow = tempOutput;
             Rpp32u elementsInRow = width * dstDescPtr->c;
-            Rpp8u *output_row = offsetted_output + count;
+            Rpp8u *outputRow = offsettedOutput + count;
 
             for (int k = 0; k < height; k++)
             {
-                memcpy(temp_output_row, output_row, elementsInRow * sizeof(Rpp8u));
-                temp_output_row += elementsInRow;
-                output_row += elementsInRowMax;
+                memcpy(tempOutputRow, outputRow, elementsInRow * sizeof(Rpp8u));
+                tempOutputRow += elementsInRow;
+                outputRow += elementsInRowMax;
             }
             count += dstDescPtr->strides.nStride;
 
@@ -1677,14 +1677,14 @@ int main(int argc, char **argv)
             temp = dst;
             temp += imageNames[j];
 
-            Mat mat_op_image;
+            Mat matOutputImage;
             if (layoutType == 0 || layoutType == 1)
-                mat_op_image = (pln1OutTypeCase) ? Mat(height, width, CV_8UC1, temp_output) : Mat(height, width, CV_8UC3, temp_output);
+                matOutputImage = (pln1OutTypeCase) ? Mat(height, width, CV_8UC1, tempOutput) : Mat(height, width, CV_8UC3, tempOutput);
             else if (layoutType == 2)
-                mat_op_image = Mat(height, width, CV_8UC1, temp_output);
+                matOutputImage = Mat(height, width, CV_8UC1, tempOutput);
 
-            imwrite(temp, mat_op_image);
-            free(temp_output);
+            imwrite(temp, matOutputImage);
+            free(tempOutput);
         }
     }
 
