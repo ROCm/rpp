@@ -1,5 +1,22 @@
 #!/bin/bash
 
+# Fill with default values if arguments are not passed
+CASE_MIN=0
+CASE_MAX=13
+if (( "$#" < 3 )); then
+    TEST_TYPE="0"
+    NUM_ITERATIONS="1"
+    CASE_LIST=()
+    for ((case=$CASE_MIN;case<=$CASE_MAX;case++))
+    do
+        CASE_LIST+=("$case")
+    done
+else
+    TEST_TYPE="$1"
+    NUM_ITERATIONS="$2"
+    CASE_LIST="${@:3}"
+fi
+
 # <<<<<<<<<<<<<< DEFAULT SOURCE AND DESTINATION FOLDERS (NEED NOT CHANGE) >>>>>>>>>>>>>>
 
 cwd=$(pwd)
@@ -27,8 +44,6 @@ DEFAULT_SRC_FOLDER_2="$cwd/../TEST_IMAGES/three_images_mixed_src2"
 # Output Images
 mkdir "$cwd/../OUTPUT_IMAGES_HIP_NEW"
 DEFAULT_DST_FOLDER="$cwd/../OUTPUT_IMAGES_HIP_NEW"
-
-TEST_TYPE=$3
 
 # logging folders for performance tests
 if [ $TEST_TYPE -eq 1 ]; then
@@ -100,44 +115,6 @@ directory_name_generator() {
     DST_FOLDER_TEMP="$DST_FOLDER""/rpp_""$AFFINITY""_""$TYPE""_""$FUNCTIONALITY_GROUP"
 }
 
-if [[ "$1" -lt 0 ]] | [[ "$1" -gt 86 ]]; then
-    echo "The starting case# must be in the 0:86 range!"
-    echo
-    echo "The testAllScript.sh bash script runs the RPP performance testsuite for AMDRPP functionalities in HOST/OCL/HIP backends."
-    echo
-    echo "Syntax: ./testAllScript.sh <S> <E> <T> <N>"
-    echo "S     CASE_START (Starting case# (0:86))"
-    echo "E     CASE_END (Ending case# (0:86))"
-    echo "T     TEST_TYPE - (0 = Unittests / 1 = Performancetests)"
-    echo "N     NUM_ITERATIONS - (0 = Unittests / 1 = Performancetests)"
-    exit 1
-fi
-
-if [[ "$2" -lt 0 ]] | [[ "$2" -gt 86 ]]; then
-    echo "The ending case# must be in the 0:86 range!"
-    echo
-    echo "The testAllScript.sh bash script runs the RPP performance testsuite for AMDRPP functionalities in HOST/OCL/HIP backends."
-    echo
-    echo "Syntax: ./testAllScript.sh <S> <E> <T> <N>"
-    echo "S     CASE_START (Starting case# (0:86))"
-    echo "E     CASE_END (Ending case# (0:86))"
-    echo "T     TEST_TYPE - (0 = Unittests / 1 = Performancetests)"
-    echo "N     NUM_ITERATIONS - (0 = Unittests / 1 = Performancetests)"
-    exit 1
-fi
-
-if (( "$#" < 2 )); then
-    CASE_START="0"
-    CASE_END="86"
-    TEST_TYPE="0"
-    NUM_ITERATIONS="1"
-else
-    CASE_START="$1"
-    CASE_END="$2"
-    TEST_TYPE="$3"
-    NUM_ITERATIONS="$4"
-fi
-
 rm -rvf "$DST_FOLDER"/*
 shopt -s extglob
 mkdir build
@@ -151,9 +128,13 @@ echo "##########################################################################
 echo "Running all layout Inputs..."
 echo "##########################################################################################"
 
-for ((layout=0;layout<=2;layout++))
+for case in ${CASE_LIST[@]};
 do
-    for ((case=$CASE_START;case<=$CASE_END;case++))
+    if [ "$case" -lt "0" ] || [ "$case" -gt " 86" ]; then
+        echo "Invalid case number $case. casenumber must be in the 0:86 range!"
+        continue
+    fi
+    for ((layout=0;layout<=2;layout++))
     do
         if [ $layout -eq 0 ]; then
             directory_name_generator "hip" "pkd3" "$case"
@@ -222,20 +203,18 @@ do
                 echo "------------------------------------------------------------------------------------------"
             done
         done
+        if [[ "$layout" -eq 0 ]]
+        then
+            mkdir "$DST_FOLDER/PKD3"
+            mv "$DST_FOLDER/"!(PKD3) "$DST_FOLDER/PKD3"
+        elif [[ "$layout" -eq 1 ]]
+        then
+            mkdir "$DST_FOLDER/PLN3"
+            mv "$DST_FOLDER/"!(PKD3|PLN3) "$DST_FOLDER/PLN3"
+        else
+            mkdir "$DST_FOLDER/PLN1"
+            mv "$DST_FOLDER/"!(PKD3|PLN1|PLN3) "$DST_FOLDER/PLN1"
+        fi
     done
-
-    if [[ "$layout" -eq 0 ]]
-    then
-        mkdir "$DST_FOLDER/PKD3"
-        mv "$DST_FOLDER/"!(PKD3) "$DST_FOLDER/PKD3"
-    elif [[ "$layout" -eq 1 ]]
-    then
-        mkdir "$DST_FOLDER/PLN3"
-        mv "$DST_FOLDER/"!(PKD3|PLN3) "$DST_FOLDER/PLN3"
-    else
-        mkdir "$DST_FOLDER/PLN1"
-        mv "$DST_FOLDER/"!(PKD3|PLN1|PLN3) "$DST_FOLDER/PLN1"
-    fi
-
 done
 # <<<<<<<<<<<<<< EXECUTION OF ALL FUNCTIONALITIES (NEED NOT CHANGE) >>>>>>>>>>>>>>

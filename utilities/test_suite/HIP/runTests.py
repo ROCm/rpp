@@ -6,11 +6,13 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--case_start", type=str, default="0", help="Testing range starting case # - (0:86)")
 parser.add_argument("--case_end", type=str, default="86", help="Testing range ending case # - (0:86)")
 parser.add_argument('--test_type', type=str, default='0', help="Type of Test - (0 = Unittests / 1 = Performancetests)")
+parser.add_argument('--case_list', nargs="+", help="List of case numbers to list", required=False)
 args = parser.parse_args()
 
 caseStart = args.case_start
 caseEnd = args.case_end
 testType = args.test_type
+caseList = args.case_list
 if (int(testType) == 0):
     numIterations = "1"
 else:
@@ -32,8 +34,16 @@ if testType < "0" or testType > "1":
     print("Test Type# must be in the 0:1 range. Aborting!")
     exit(0)
 
-
-subprocess.call(["./testAllScript.sh", caseStart, caseEnd, testType, numIterations])
+if caseList is None:
+    caseList = range(int(caseStart), int(caseEnd) + 1)
+    caseList = [str(x) for x in caseList]
+    subprocess.call(["./testAllScript.sh", testType, numIterations, " ".join(caseList)])
+else:
+    for case in caseList:
+        if int(case) < 0 or int(case) > 86:
+            print("The case# must be in the 0:86 range!")
+            exit(0)
+    subprocess.call(["./testAllScript.sh", testType, numIterations, " ".join(caseList)])
 
 log_file_list = [
     "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW/Tensor_hip_pkd3_raw_performance_log.txt",

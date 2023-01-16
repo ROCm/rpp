@@ -232,6 +232,12 @@ int main(int argc, char **argv)
     }
     closedir(dr);
 
+    if(!noOfImages)
+    {
+        std::cerr<<"Not able to find any images in the folder specified. Please check the input path";
+        exit(0);
+    }
+
     // Initialize ROI tensors for src/dst
     RpptROI *roiTensorPtrSrc = (RpptROI *)calloc(noOfImages, sizeof(RpptROI));
     RpptROI *roiTensorPtrDst = (RpptROI *)calloc(noOfImages, sizeof(RpptROI));
