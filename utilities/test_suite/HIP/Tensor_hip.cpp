@@ -167,6 +167,7 @@ int main(int argc, char **argv)
 
     // Get function name
     string funcName = augmentationMap[testCase];
+    funcName = (funcName.empty()) ? "testCase" : funcName;
 
     // Set src/dst data types in tensor descriptors
     set_data_type(inputBitDepth, funcName, srcDescPtr, dstDescPtr);
@@ -294,6 +295,13 @@ int main(int argc, char **argv)
         count++;
     }
     closedir(dr1);
+
+    // Check if any of maxWidth and maxHeight is less than or equal to 0
+    if(maxHeight <= 0 || maxWidth <= 0)
+    {
+        std::cerr<<"Unable to read images properly.Please check the input path of the files specified";
+        exit(0);
+    }
 
     // Set numDims, offset, n/c/h/w values for src/dst
     srcDescPtr->numDims = 4;
