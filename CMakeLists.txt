@@ -64,6 +64,8 @@ if(NOT "${BACKEND}" STREQUAL "HIP")
 endif()
 set(CMAKE_CXX_STANDARD 14)
 
+project(amd_rpp CXX)
+
 set(CMAKE_INSTALL_LIBDIR "lib" CACHE STRING "Library install directory")
 include(GNUInstallDirs)
 
@@ -89,7 +91,6 @@ set(DEFAULT_BUILD_TYPE "Release")
 # RPP Version
 set(VERSION "0.99")
 
-project(amd_rpp CXX)
 message("-- ${BoldBlue}AMD Radeon Performance Primitives (RPP) Version -- ${VERSION}${ColourReset}")
 message("-- ${BoldBlue}AMD RPP install path set to -- ${CMAKE_INSTALL_PREFIX}${ColourReset}")
 message("-- ${BoldBlue}AMD RPP Backend set to -- ${BACKEND}${ColourReset}")
