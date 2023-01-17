@@ -257,7 +257,7 @@ void compare_output(T* output, string func, string funcName, RpptDescPtr descPtr
     string pattern = backend + "/build";
     remove_substring(ref_path, pattern);
     string ref_file = ref_path + "REFERENCE_OUTPUT/" + funcName + "/"+ func + ".csv";
-    ref_file.replace(ref_file.find("HIP"), 3, "HOST");
+    //ref_file.replace(ref_file.find("HIP"), 3, "HOST");
     ifstream file(ref_file);
 
     vector<vector<string>> refOutput;
@@ -283,9 +283,9 @@ void compare_output(T* output, string func, string funcName, RpptDescPtr descPtr
     }
 
     T* outputTemp = output + descPtr->offsetInBytes;
-    for(int i = 0; i < descPtr->h; i++)
+    for(int i = 0; i < refOutput.size(); i++)
     {
-        for(int j = 0; j < descPtr->w; j++)
+        for(int j = 0; j < refOutput[i].size(); j++)
         {
             int diff = abs(stoi(refOutput[i][j]) - *outputTemp);
             if(diff > CUTOFF)
