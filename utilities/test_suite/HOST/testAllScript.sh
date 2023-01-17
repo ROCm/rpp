@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Fill with default values if arguments are not passed
+# Fill with default values if all arguments are not given by user
 CASE_MIN=0
-CASE_MAX=13
+CASE_MAX=86
 if (( "$#" < 3 )); then
     TEST_TYPE="0"
     NUM_ITERATIONS="1"
@@ -45,22 +45,16 @@ cwd=$(pwd)
 DEFAULT_SRC_FOLDER_1="$cwd/../TEST_IMAGES/three_images_mixed_src1"
 DEFAULT_SRC_FOLDER_2="$cwd/../TEST_IMAGES/three_images_mixed_src2"
 
-# Output Images
-mkdir "$cwd/../OUTPUT_IMAGES_HOST_NEW"
-DEFAULT_DST_FOLDER="$cwd/../OUTPUT_IMAGES_HOST_NEW"
-
-# logging folders for performance tests
-if [ $TEST_TYPE -eq 1 ]; then
-    rm -rvf "$cwd/../OUTPUT_PERFORMANCE_LOGS_HOST_NEW"
-    mkdir "$cwd/../OUTPUT_PERFORMANCE_LOGS_HOST_NEW"
-    LOGGING_FOLDER="$cwd/../OUTPUT_PERFORMANCE_LOGS_HOST_NEW"
-fi
-
-# <<<<<<<<<<<<<< PRINTING THE TEST TYPE THAT USER SPECIFIED >>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# <<<<<<<<<<<<<< CREATE OUTPUT FOLDERS BASED ON TEST TYPE>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 if [ $TEST_TYPE -eq 0 ]; then
     printf "\nRunning Unittests...\n"
+    mkdir "$cwd/../OUTPUT_IMAGES_HOST_NEW"
+    DEFAULT_DST_FOLDER="$cwd/../OUTPUT_IMAGES_HOST_NEW"
 elif [ $TEST_TYPE -eq 1 ]; then
     printf "\nRunning Performance tests...\n"
+    mkdir "$cwd/../OUTPUT_PERFORMANCE_LOGS_HOST_NEW"
+    DEFAULT_DST_FOLDER="$cwd/../OUTPUT_PERFORMANCE_LOGS_HOST_NEW"
+    LOGGING_FOLDER="$cwd/../OUTPUT_PERFORMANCE_LOGS_HOST_NEW"
 fi
 
 # <<<<<<<<<<<<<< DEFAULT SOURCE AND DESTINATION FOLDERS (NEED NOT CHANGE) >>>>>>>>>>>>>>
@@ -138,7 +132,7 @@ do
         echo "Invalid case number $case. casenumber must be in the 0:86 range!"
         continue
     fi
-    for ((layout=0;layout<=2;layout++))
+    for ((layout=0;layout<3;layout++))
     do
         if [ $layout -eq 0 ]; then
             directory_name_generator "host" "pkd3" "$case"
@@ -153,12 +147,15 @@ do
             log_file_layout="pln1"
         fi
 
-        mkdir $DST_FOLDER_TEMP
+        if [ $TEST_TYPE -eq 0 ]; then
+            mkdir $DST_FOLDER_TEMP
+        fi
+
         printf "\n\n\n\n"
         echo "--------------------------------"
         printf "Running a New Functionality...\n"
         echo "--------------------------------"
-        for ((bitDepth=0;bitDepth<1;bitDepth++))
+        for ((bitDepth=0;bitDepth<7;bitDepth++))
         do
             printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n"
             for ((outputFormatToggle=0;outputFormatToggle<2;outputFormatToggle++))
@@ -210,31 +207,33 @@ do
     done
 done
 
-for ((layout=0;layout<=2;layout++))
-do
-    if [[ "$layout" -eq 0 ]]
-    then
-        mkdir "$DST_FOLDER/PKD3"
-        PKD3_FOLDERS=$(find $DST_FOLDER -maxdepth 1 -name "*pkd3*")
-        for TEMP_FOLDER in $PKD3_FOLDERS
-        do
-            mv "$TEMP_FOLDER" "$DST_FOLDER/PKD3"
-        done
-    elif [[ "$layout" -eq 1 ]]
-    then
-        mkdir "$DST_FOLDER/PLN3"
-        PLN3_FOLDERS=$(find $DST_FOLDER -maxdepth 1 -name "*pln3*")
-        for TEMP_FOLDER in $PLN3_FOLDERS
-        do
-            mv "$TEMP_FOLDER" "$DST_FOLDER/PLN3"
-        done
-    else
-        mkdir "$DST_FOLDER/PLN1"
-        PLN1_FOLDERS=$(find $DST_FOLDER -maxdepth 1 -name "*pln1*")
-        for TEMP_FOLDER in $PLN1_FOLDERS
-        do
-            mv "$TEMP_FOLDER" "$DST_FOLDER/PLN1"
-        done
-    fi
-done
+if [ $TEST_TYPE -eq 0 ]; then
+    for ((layout=0;layout<3;layout++))
+    do
+        if [[ "$layout" -eq 0 ]]
+        then
+            mkdir "$DST_FOLDER/PKD3"
+            PKD3_FOLDERS=$(find $DST_FOLDER -maxdepth 1 -name "*pkd3*")
+            for TEMP_FOLDER in $PKD3_FOLDERS
+            do
+                mv "$TEMP_FOLDER" "$DST_FOLDER/PKD3"
+            done
+        elif [[ "$layout" -eq 1 ]]
+        then
+            mkdir "$DST_FOLDER/PLN3"
+            PLN3_FOLDERS=$(find $DST_FOLDER -maxdepth 1 -name "*pln3*")
+            for TEMP_FOLDER in $PLN3_FOLDERS
+            do
+                mv "$TEMP_FOLDER" "$DST_FOLDER/PLN3"
+            done
+        else
+            mkdir "$DST_FOLDER/PLN1"
+            PLN1_FOLDERS=$(find $DST_FOLDER -maxdepth 1 -name "*pln1*")
+            for TEMP_FOLDER in $PLN1_FOLDERS
+            do
+                mv "$TEMP_FOLDER" "$DST_FOLDER/PLN1"
+            done
+        fi
+    done
+fi
 # <<<<<<<<<<<<<< EXECUTION OF ALL FUNCTIONALITIES (NEED NOT CHANGE) >>>>>>>>>>>>>>

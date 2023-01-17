@@ -14,9 +14,9 @@ caseEnd = args.case_end
 testType = args.test_type
 caseList = args.case_list
 if (int(testType) == 0):
-    num_iterations = "1"
+    numIterations = "1"
 else:
-    num_iterations = "100"
+    numIterations = "100"
 
 if caseEnd < caseStart:
     print("Ending case# must be greater than starting case#. Aborting!")
@@ -32,6 +32,10 @@ if caseEnd < "0" or caseEnd > "86":
 
 if testType < "0" or testType > "1":
     print("Test Type# must be in the 0:1 range. Aborting!")
+    exit(0)
+
+if caseList is not None and caseStart > 0 and caseEnd <86:
+    print("Invalid input! Please provide only 1 option between case_list, case_start and case_end")
     exit(0)
 
 if caseList is None:
@@ -101,7 +105,7 @@ if(int(testType) == 1):
                 prevLine = prevLine.partition(split_word_start)[2].partition(split_word_end)[0]
                 if prevLine not in functions:
                     functions.append(prevLine)
-                    frames.append("100")
+                    frames.append(numIterations)
                     split_word_start = "max,min,avg in ms = "
                     split_word_end = "\n"
                     stats = line.partition(split_word_start)[2].partition(split_word_end)[0].split(",")
@@ -117,7 +121,7 @@ if(int(testType) == 1):
         print("Functionalities - ", funcCount)
 
         # Print summary of log
-        print("\n\nFunctionality\t\t\t\t\t\tFrames Count\tmax(s)\t\tmin(s)\t\tavg(s)\n")
+        print("\n\nFunctionality\t\t\t\t\t\tFrames Count\tmax(ms)\t\tmin(ms)\t\tavg(ms)\n")
         if len(functions) != 0:
             maxCharLength = len(max(functions, key=len))
             functions = [x + (' ' * (maxCharLength - len(x))) for x in functions]
