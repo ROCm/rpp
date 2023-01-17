@@ -257,7 +257,8 @@ void compare_output(T* output, string func, string funcName, RpptDescPtr descPtr
     string pattern = backend + "/build";
     remove_substring(ref_path, pattern);
     string ref_file = ref_path + "REFERENCE_OUTPUT/" + funcName + "/"+ func + ".csv";
-    //ref_file.replace(ref_file.find("HIP"), 3, "HOST");
+    if(backend == "HIP")
+        ref_file.replace(ref_file.find("HIP"), 3, "HOST");
     ifstream file(ref_file);
 
     vector<vector<string>> refOutput;
