@@ -165,6 +165,25 @@ RppStatus rppt_non_linear_blend_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDesc
 
 /******************** glitch ********************/
 
+// Performs a glitch augmentation for a batch of images
+
+// *param[in] srcPtr source tensor memory
+// *param[in] srcDescPtr source tensor descriptor
+// *param[out] dstPtr destination tensor memory
+// *param[in] dstDescPtr destination tensor descriptor
+// *param[in] xOffsetR Array containing an Rpp32u x offset value for the r-channel pixels in each image in the batch (x_offset_r[n] >= 0)
+// *param[in] yOffsetR Array containing an Rpp32u y offset value for the r-channel pixels in each image in the batch (y_offset_r[n] >= 0)
+// *param[in] xOffsetG Array containing an Rpp32u x offset value for the g-channel pixels in each image in the batch (x_offset_g[n] >= 0)
+// *param[in] yOffsetG Array containing an Rpp32u y offset value for the g-channel pixels in each image in the batch (y_offset_g[n] >= 0)
+// *param[in] xOffsetB Array containing an Rpp32u x offset value for the b-channel pixels in each image in the batch (x_offset_b[n] >= 0)
+// *param[in] yOffsetB Array containing an Rpp32u y offset value for the b-channel pixels in each image in the batch (y_offset_b[n] >= 0)
+// *param[in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+// *param[in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+// *param[in] rppHandle OpenCL-handle/HIP-handle for "_gpu" variants and Host-handle for "_host" variants
+// *returns a  RppStatus enumeration.
+// *retval RPP_SUCCESS : No error, Succesful completion
+// *retval RPP_ERROR : Error
+
 RppStatus rppt_glitch_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u *xOffsetR, Rpp32u *yOffsetR, Rpp32u *xOffsetG, Rpp32u *yOffsetG, Rpp32u *xOffsetB, Rpp32u *yOffsetB, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #ifdef GPU_SUPPORT
 RppStatus rppt_glitch_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u *xOffsetR, Rpp32u *yOffsetR, Rpp32u *xOffsetG, Rpp32u *yOffsetG, Rpp32u *xOffsetB, Rpp32u *yOffsetB, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);

@@ -218,19 +218,19 @@ RppStatus glitch_u8_u8_host_tensor(Rpp8u *srcPtr,
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
-        Rpp32u x_offset_r = xOffsetR[batchCount];
-        Rpp32u y_offset_r = yOffsetR[batchCount];
-        Rpp32u x_offset_g = xOffsetG[batchCount];
-        Rpp32u y_offset_g = yOffsetG[batchCount];
-        Rpp32u x_offset_b = xOffsetB[batchCount];
-        Rpp32u y_offset_b = yOffsetB[batchCount];
+        Rpp32u xOffsetRchn = xOffsetR[batchCount];
+        Rpp32u yOffsetRchn = yOffsetR[batchCount];
+        Rpp32u xOffsetGchn = xOffsetG[batchCount];
+        Rpp32u yOffsetGchn = yOffsetG[batchCount];
+        Rpp32u xOffsetBchn = xOffsetB[batchCount];
+        Rpp32u yOffsetBchn = yOffsetB[batchCount];
 
         Rpp32u elementsInRowMax = srcDescPtr->w;
 
-        Rpp32u xOffsets[3] = {x_offset_r, x_offset_g, x_offset_b};
-        Rpp32u yOffsets[3] = {y_offset_r, y_offset_g, y_offset_b};
-        Rpp32u xOffsetsLoc[3] = {x_offset_r, x_offset_g, x_offset_b};
-        Rpp32u yOffsetsLoc[3] = {y_offset_r * elementsInRowMax, y_offset_g * elementsInRowMax, y_offset_b * elementsInRowMax};
+        Rpp32u xOffsets[3] = {xOffsetRchn, xOffsetGchn, xOffsetBchn};
+        Rpp32u yOffsets[3] = {yOffsetRchn, yOffsetGchn, yOffsetBchn};
+        Rpp32u xOffsetsLoc[3] = {xOffsetRchn, xOffsetGchn, xOffsetBchn};
+        Rpp32u yOffsetsLoc[3] = {yOffsetRchn * elementsInRowMax, yOffsetGchn * elementsInRowMax, yOffsetBchn * elementsInRowMax};
 
         Rpp8u *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
@@ -447,19 +447,19 @@ RppStatus glitch_i8_i8_host_tensor(Rpp8s *srcPtr,
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
-        Rpp32u x_offset_r = xOffsetR[batchCount];
-        Rpp32u y_offset_r = yOffsetR[batchCount];
-        Rpp32u x_offset_g = xOffsetG[batchCount];
-        Rpp32u y_offset_g = yOffsetG[batchCount];
-        Rpp32u x_offset_b = xOffsetB[batchCount];
-        Rpp32u y_offset_b = yOffsetB[batchCount];
+        Rpp32u xOffsetRchn = xOffsetR[batchCount];
+        Rpp32u yOffsetRchn = yOffsetR[batchCount];
+        Rpp32u xOffsetGchn = xOffsetG[batchCount];
+        Rpp32u yOffsetGchn = yOffsetG[batchCount];
+        Rpp32u xOffsetBchn = xOffsetB[batchCount];
+        Rpp32u yOffsetBchn = yOffsetB[batchCount];
 
         Rpp32u elementsInRowMax = srcDescPtr->w;
 
-        Rpp32u xOffsets[3] = {x_offset_r, x_offset_g, x_offset_b};
-        Rpp32u yOffsets[3] = {y_offset_r, y_offset_g, y_offset_b};
-        Rpp32u xOffsetsLoc[3] = {x_offset_r, x_offset_g, x_offset_b};
-        Rpp32u yOffsetsLoc[3] = {y_offset_r * elementsInRowMax, y_offset_g * elementsInRowMax, y_offset_b * elementsInRowMax};
+        Rpp32u xOffsets[3] = {xOffsetRchn, xOffsetGchn, xOffsetBchn};
+        Rpp32u yOffsets[3] = {yOffsetRchn, yOffsetGchn, yOffsetBchn};
+        Rpp32u xOffsetsLoc[3] = {xOffsetRchn, xOffsetGchn, xOffsetBchn};
+        Rpp32u yOffsetsLoc[3] = {yOffsetRchn * elementsInRowMax, yOffsetGchn * elementsInRowMax, yOffsetBchn * elementsInRowMax};
 
         Rpp8s *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
@@ -674,19 +674,19 @@ RppStatus glitch_f32_f32_host_tensor(Rpp32f *srcPtr,
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
-        Rpp32u x_offset_r = xOffsetR[batchCount];
-        Rpp32u y_offset_r = yOffsetR[batchCount];
-        Rpp32u x_offset_g = xOffsetG[batchCount];
-        Rpp32u y_offset_g = yOffsetG[batchCount];
-        Rpp32u x_offset_b = xOffsetB[batchCount];
-        Rpp32u y_offset_b = yOffsetB[batchCount];
+        Rpp32u xOffsetRchn = xOffsetR[batchCount];
+        Rpp32u yOffsetRchn = yOffsetR[batchCount];
+        Rpp32u xOffsetGchn = xOffsetG[batchCount];
+        Rpp32u yOffsetGchn = yOffsetG[batchCount];
+        Rpp32u xOffsetBchn = xOffsetB[batchCount];
+        Rpp32u yOffsetBchn = yOffsetB[batchCount];
 
         Rpp32u elementsInRowMax = srcDescPtr->w;
 
-        Rpp32u xOffsets[3] = {x_offset_r, x_offset_g, x_offset_b};
-        Rpp32u yOffsets[3] = {y_offset_r, y_offset_g, y_offset_b};
-        Rpp32u xOffsetsLoc[3] = {x_offset_r, x_offset_g, x_offset_b};
-        Rpp32u yOffsetsLoc[3] = {y_offset_r * elementsInRowMax, y_offset_g * elementsInRowMax, y_offset_b * elementsInRowMax};
+        Rpp32u xOffsets[3] = {xOffsetRchn, xOffsetGchn, xOffsetBchn};
+        Rpp32u yOffsets[3] = {yOffsetRchn, yOffsetGchn, yOffsetBchn};
+        Rpp32u xOffsetsLoc[3] = {xOffsetRchn, xOffsetGchn, xOffsetBchn};
+        Rpp32u yOffsetsLoc[3] = {yOffsetRchn * elementsInRowMax, yOffsetGchn * elementsInRowMax, yOffsetBchn * elementsInRowMax};
 
         Rpp32f *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
@@ -898,19 +898,19 @@ RppStatus glitch_f16_f16_host_tensor(Rpp16f *srcPtr,
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
-        Rpp32u x_offset_r = xOffsetR[batchCount];
-        Rpp32u y_offset_r = yOffsetR[batchCount];
-        Rpp32u x_offset_g = xOffsetG[batchCount];
-        Rpp32u y_offset_g = yOffsetG[batchCount];
-        Rpp32u x_offset_b = xOffsetB[batchCount];
-        Rpp32u y_offset_b = yOffsetB[batchCount];
+        Rpp32u xOffsetRchn = xOffsetR[batchCount];
+        Rpp32u yOffsetRchn = yOffsetR[batchCount];
+        Rpp32u xOffsetGchn = xOffsetG[batchCount];
+        Rpp32u yOffsetGchn = yOffsetG[batchCount];
+        Rpp32u xOffsetBchn = xOffsetB[batchCount];
+        Rpp32u yOffsetBchn = yOffsetB[batchCount];
 
         Rpp32u elementsInRowMax = srcDescPtr->w;
 
-        Rpp32u xOffsets[3] = {x_offset_r, x_offset_g, x_offset_b};
-        Rpp32u yOffsets[3] = {y_offset_r, y_offset_g, y_offset_b};
-        Rpp32u xOffsetsLoc[3] = {x_offset_r, x_offset_g, x_offset_b};
-        Rpp32u yOffsetsLoc[3] = {y_offset_r * elementsInRowMax, y_offset_g * elementsInRowMax, y_offset_b * elementsInRowMax};
+        Rpp32u xOffsets[3] = {xOffsetRchn, xOffsetGchn, xOffsetBchn};
+        Rpp32u yOffsets[3] = {yOffsetRchn, yOffsetGchn, yOffsetBchn};
+        Rpp32u xOffsetsLoc[3] = {xOffsetRchn, xOffsetGchn, xOffsetBchn};
+        Rpp32u yOffsetsLoc[3] = {yOffsetRchn * elementsInRowMax, yOffsetGchn * elementsInRowMax, yOffsetBchn * elementsInRowMax};
 
         Rpp16f *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
