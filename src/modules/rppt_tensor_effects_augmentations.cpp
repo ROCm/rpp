@@ -498,7 +498,6 @@ RppStatus rppt_glitch_host(RppPtr_t srcPtr,
                            rppHandle_t rppHandle)
 {
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
-
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
         glitch_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
@@ -1007,7 +1006,6 @@ RppStatus rppt_gaussian_noise_gpu(RppPtr_t srcPtr,
 
 /******************** non_linear_blend ********************/
 
-<<<<<<< HEAD
 RppStatus rppt_non_linear_blend_host(RppPtr_t srcPtr1,
                                      RppPtr_t srcPtr2,
                                      RpptDescPtr srcDescPtr,
