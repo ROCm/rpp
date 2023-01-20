@@ -48,7 +48,14 @@ std::map<int, string> augmentationMap =
     {86, "color_to_greyscale"}
 };
 
-std::string get_interpolation_type(unsigned int val, RpptInterpolationType &interpolationType)
+template <typename T>
+inline T validate_pixel_range(T pixel)
+{
+    pixel = (pixel < (Rpp32f)0) ? ((Rpp32f)0) : ((pixel < (Rpp32f)255) ? pixel : ((Rpp32f)255));
+    return pixel;
+}
+
+inline std::string get_interpolation_type(unsigned int val, RpptInterpolationType &interpolationType)
 {
     switch(val)
     {
@@ -85,7 +92,7 @@ std::string get_interpolation_type(unsigned int val, RpptInterpolationType &inte
     }
 }
 
-std::string get_noise_type(unsigned int val)
+inline std::string get_noise_type(unsigned int val)
 {
     switch(val)
     {
@@ -96,7 +103,7 @@ std::string get_noise_type(unsigned int val)
     }
 }
 
-void set_data_type(int ip_bitDepth, string &funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr)
+inline void set_data_type(int ip_bitDepth, string &funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr)
 {
     if (ip_bitDepth == 0)
     {
@@ -142,7 +149,7 @@ void set_data_type(int ip_bitDepth, string &funcName, RpptDescPtr srcDescPtr, Rp
     }
 }
 
-void set_strides(RpptDescPtr descPtr)
+inline void set_strides(RpptDescPtr descPtr)
 {
     // set strides
     if (descPtr->layout == RpptLayout::NHWC)
@@ -161,7 +168,7 @@ void set_strides(RpptDescPtr descPtr)
     }
 }
 
-void convert_pln3_to_pkd3(Rpp8u *output, RpptDescPtr descPtr)
+inline void convert_pln3_to_pkd3(Rpp8u *output, RpptDescPtr descPtr)
 {
     unsigned long long bufferSize = ((unsigned long long)descPtr->h * (unsigned long long)descPtr->w * (unsigned long long)descPtr->c * (unsigned long long)descPtr->n) + descPtr->offsetInBytes;
     Rpp8u *outputCopy = (Rpp8u *)calloc(bufferSize, sizeof(Rpp8u));
@@ -200,7 +207,7 @@ void convert_pln3_to_pkd3(Rpp8u *output, RpptDescPtr descPtr)
     free(outputCopy);
 }
 
-void convert_pkd3_to_pln3(Rpp8u *input, RpptDescPtr descPtr)
+inline void convert_pkd3_to_pln3(Rpp8u *input, RpptDescPtr descPtr)
 {
     unsigned long long bufferSize = ((unsigned long long)descPtr->h * (unsigned long long)descPtr->w * (unsigned long long)descPtr->c * (unsigned long long)descPtr->n) + descPtr->offsetInBytes;
     Rpp8u *inputCopy = (Rpp8u *)calloc(bufferSize, sizeof(Rpp8u));
@@ -239,7 +246,7 @@ void convert_pkd3_to_pln3(Rpp8u *input, RpptDescPtr descPtr)
     free(inputCopy);
 }
 
-void remove_substring(string &str, string &pattern)
+inline void remove_substring(string &str, string &pattern)
 {
     std::string::size_type i = str.find(pattern);
     while (i != std::string::npos)
@@ -250,31 +257,33 @@ void remove_substring(string &str, string &pattern)
 }
 
 template <typename T>
-void compare_output(T* output, string func, string funcName, RpptDescPtr descPtr, std::string backend)
+inline void compare_output(T* output, string func, string funcName, RpptDescPtr descPtr, string backend, RpptROI *roiPtr, int noOfImages)
 {
     bool isEqual = true;
-    string ref_path = get_current_dir_name();
+    string refPath = get_current_dir_name();
     string pattern = backend + "/build";
-    remove_substring(ref_path, pattern);
-    string ref_file = ref_path + "REFERENCE_OUTPUT/" + funcName + "/"+ func + ".csv";
+    remove_substring(refPath, pattern);
+    string refFile = refPath + "REFERENCE_OUTPUT/" + funcName + "/"+ func + ".csv";
     if(backend == "HIP")
-        ref_file.replace(ref_file.find("HIP"), 3, "HOST");
-    ifstream file(ref_file);
-
-    vector<vector<string>> refOutput;
-    vector<string> row;
-    string line, word;
+        refFile.replace(refFile.find("HIP"), 3, "HOST");
+    ifstream file(refFile);
+    cout << " ref "<<refFile;
+    Rpp8u *refOutput;
+    refOutput = (Rpp8u *)malloc(noOfImages * descPtr->strides.nStride * sizeof(Rpp8u));
+    string line,word;
+    int index = 0;
 
     // Load the refennce output values from files and store in vector
     if(file.is_open())
     {
         while(getline(file, line))
         {
-            row.clear();
             stringstream str(line);
             while(getline(str, word, ','))
-            row.push_back(word);
-            refOutput.push_back(row);
+            {
+                refOutput[index] = stoi(word);
+                index++;
+            }
         }
     }
     else
@@ -283,22 +292,72 @@ void compare_output(T* output, string func, string funcName, RpptDescPtr descPtr
         return;
     }
 
-    T* outputTemp = output + descPtr->offsetInBytes;
-    for(int i = 0; i < refOutput.size(); i++)
+    for(int c = 0; c < noOfImages; c++)
     {
-        for(int j = 0; j < refOutput[i].size(); j++)
+        Rpp8u *outputTemp = output + c * descPtr->strides.nStride;
+        Rpp8u *outputTempRef = refOutput + c * descPtr->strides.nStride;
+        for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
         {
-            int diff = abs(stoi(refOutput[i][j]) - *outputTemp);
-            if(diff > CUTOFF)
+            Rpp8u *rowTemp = outputTemp + i * descPtr->strides.hStride;
+            Rpp8u *rowTempRef = outputTempRef + i * descPtr->strides.hStride;
+            for(int j = 0; j < roiPtr->xywhROI.roiWidth; j++)
             {
-                isEqual = false;
-                break;
+                Rpp8u *outVal = rowTemp + j;
+                Rpp8u *outRefVal = rowTempRef + j;
+                int diff = abs(*outVal - *outRefVal);
+                if(diff > CUTOFF)
+                {
+                    isEqual = false;
+                    break;
+                }
             }
-            outputTemp++;
         }
     }
     if(isEqual == true)
-        cout<<func<<": "<<"PASSED \n";
+        cout<< func << ": " << "PASSED \n";
     else
-        cout<<func<<": "<<"FAILED \n";
+        cout<< func << ": " << "FAILED \n";
 }
+
+// inline void openCV_dump(string dst, Rpp8u *output, RpptDescPtr dstDescPtr, int layoutType, string imageNames[], RpptImagePatch *dstImgSizes, bool pln1OutTypeCase)
+// {
+//     mkdir(dst.c_str(), 0700);
+//     dst += "/";
+
+//     Rpp64u count = 0;
+//     Rpp32u elementsInRowMax = dstDescPtr->w * dstDescPtr->c;
+//     Rpp8u *offsettedOutput = output + dstDescPtr->offsetInBytes;
+//     for (int j = 0; j < dstDescPtr->n; j++)
+//     {
+//         int height = dstImgSizes[j].height;
+//         int width = dstImgSizes[j].width;
+//         int outputSize = height * width * dstDescPtr->c;
+
+//         Rpp8u *tempOutput = (Rpp8u *)calloc(outputSize, sizeof(Rpp8u));
+//         Rpp8u *tempOutputRow;
+//         tempOutputRow = tempOutput;
+//         Rpp32u elementsInRow = width * dstDescPtr->c;
+//         Rpp8u *outputRow = offsettedOutput + count;
+
+//         for (int k = 0; k < height; k++)
+//         {
+//             memcpy(tempOutputRow, outputRow, elementsInRow * sizeof(Rpp8u));
+//             tempOutputRow += elementsInRow;
+//             outputRow += elementsInRowMax;
+//         }
+//         count += dstDescPtr->strides.nStride;
+
+//         string temp;
+//         temp = dst;
+//         temp += imageNames[j];
+
+//         Mat matOutputImage;
+//         if (layoutType == 0 || layoutType == 1)
+//             matOutputImage = (pln1OutTypeCase) ? Mat(height, width, CV_8UC1, tempOutput) : Mat(height, width, CV_8UC3, tempOutput);
+//         else if (layoutType == 2)
+//             matOutputImage = Mat(height, width, CV_8UC1, tempOutput);
+
+//         imwrite(temp, matOutputImage);
+//         free(tempOutput);
+//     }
+// }

@@ -20,10 +20,6 @@ typedef half Rpp16f;
 using namespace cv;
 using namespace std;
 
-#define RPPPIXELCHECK(pixel) (pixel < (Rpp32f)0) ? ((Rpp32f)0) : ((pixel < (Rpp32f)255) ? pixel : ((Rpp32f)255))
-#define RPPMAX2(a, b) ((a > b) ? a : b)
-#define RPPMIN2(a, b) ((a < b) ? a : b)
-
 size_t get_size_of_data_type(RpptDataType dataType)
 {
     if(dataType == RpptDataType::U8)
@@ -177,9 +173,9 @@ int main(int argc, char **argv)
     int i = 0, j = 0;
     int maxHeight = 0, maxWidth = 0;
     int maxDstHeight = 0, maxDstWidth = 0;
-    unsigned long long count = 0;
-    unsigned long long ioBufferSize = 0;
-    unsigned long long oBufferSize = 0;
+    Rpp64u count = 0;
+    Rpp64u ioBufferSize = 0;
+    Rpp64u oBufferSize = 0;
     static int noOfImages = 0;
     Mat image, imageSecond;
 
@@ -287,10 +283,10 @@ int main(int argc, char **argv)
         dstImgSizes[count].width = roiTensorPtrDst[count].xywhROI.roiWidth;
         dstImgSizes[count].height = roiTensorPtrDst[count].xywhROI.roiHeight;
 
-        maxHeight = RPPMAX2(maxHeight, roiTensorPtrSrc[count].xywhROI.roiHeight);
-        maxWidth = RPPMAX2(maxWidth, roiTensorPtrSrc[count].xywhROI.roiWidth);
-        maxDstHeight = RPPMAX2(maxDstHeight, roiTensorPtrDst[count].xywhROI.roiHeight);
-        maxDstWidth = RPPMAX2(maxDstWidth, roiTensorPtrDst[count].xywhROI.roiWidth);
+        maxHeight = std::max(maxHeight, roiTensorPtrSrc[count].xywhROI.roiHeight);
+        maxWidth = std::max(maxWidth, roiTensorPtrSrc[count].xywhROI.roiWidth);
+        maxDstHeight = std::max(maxDstHeight, roiTensorPtrDst[count].xywhROI.roiHeight);
+        maxDstWidth = std::max(maxDstWidth, roiTensorPtrDst[count].xywhROI.roiWidth);
 
         count++;
     }
@@ -332,14 +328,14 @@ int main(int argc, char **argv)
     set_strides(dstDescPtr);
 
     // Set buffer sizes in pixels for src/dst
-    ioBufferSize = (unsigned long long)srcDescPtr->h * (unsigned long long)srcDescPtr->w * (unsigned long long)srcDescPtr->c * (unsigned long long)noOfImages;
-    oBufferSize = (unsigned long long)dstDescPtr->h * (unsigned long long)dstDescPtr->w * (unsigned long long)dstDescPtr->c * (unsigned long long)noOfImages;
+    ioBufferSize = (Rpp64u)srcDescPtr->h * (Rpp64u)srcDescPtr->w * (Rpp64u)srcDescPtr->c * (Rpp64u)noOfImages;
+    oBufferSize = (Rpp64u)dstDescPtr->h * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)noOfImages;
 
     // Set buffer sizes in bytes for src/dst (including offsets)
-    unsigned long long ioBufferSizeInBytes_u8 = ioBufferSize + srcDescPtr->offsetInBytes;
-    unsigned long long oBufferSizeInBytes_u8 = oBufferSize + dstDescPtr->offsetInBytes;
-    unsigned long long inputBufferSize = ioBufferSize * get_size_of_data_type(srcDescPtr->dataType) + srcDescPtr->offsetInBytes;
-    unsigned long long outputBufferSize = oBufferSize * get_size_of_data_type(srcDescPtr->dataType) + dstDescPtr->offsetInBytes;
+    Rpp64u ioBufferSizeInBytes_u8 = ioBufferSize + srcDescPtr->offsetInBytes;
+    Rpp64u oBufferSizeInBytes_u8 = oBufferSize + dstDescPtr->offsetInBytes;
+    Rpp64u inputBufferSize = ioBufferSize * get_size_of_data_type(srcDescPtr->dataType) + srcDescPtr->offsetInBytes;
+    Rpp64u outputBufferSize = oBufferSize * get_size_of_data_type(srcDescPtr->dataType) + dstDescPtr->offsetInBytes;
 
     // Initialize 8u host buffers for src/dst
     Rpp8u *inputu8 = (Rpp8u *)calloc(ioBufferSizeInBytes_u8, 1);
@@ -1741,7 +1737,7 @@ int main(int argc, char **argv)
             outputf16Temp = (half *)((Rpp8u *)output + dstDescPtr->offsetInBytes);
             for (int i = 0; i < oBufferSize; i++)
             {
-                *outputTemp = (Rpp8u)RPPPIXELCHECK((float)*outputf16Temp * invConversionFactor);
+                *outputTemp = (Rpp8u)validate_pixel_range((float)*outputf16Temp * invConversionFactor);
                 outputf16Temp++;
                 outputTemp++;
             }
@@ -1755,7 +1751,7 @@ int main(int argc, char **argv)
             outputf32Temp = (Rpp32f *)((Rpp8u *)output + dstDescPtr->offsetInBytes);
             for (int i = 0; i < oBufferSize; i++)
             {
-                *outputTemp = (Rpp8u)RPPPIXELCHECK(*outputf32Temp * invConversionFactor);
+                *outputTemp = (Rpp8u)validate_pixel_range(*outputf32Temp * invConversionFactor);
                 outputf32Temp++;
                 outputTemp++;
             }
@@ -1767,7 +1763,7 @@ int main(int argc, char **argv)
             Rpp8s *outputi8Temp = (Rpp8s *)output + dstDescPtr->offsetInBytes;
             for (int i = 0; i < oBufferSize; i++)
             {
-                *outputTemp = (Rpp8u) RPPPIXELCHECK(((Rpp32s) *outputi8Temp) + 128);
+                *outputTemp = (Rpp8u) validate_pixel_range(((Rpp32s) *outputi8Temp) + 128);
                 outputi8Temp++;
                 outputTemp++;
             }
@@ -1791,7 +1787,7 @@ int main(int argc, char **argv)
         }
 
         if(inputBitDepth == 0 && (srcDescPtr->layout == dstDescPtr->layout))
-            compare_output<Rpp8u>(outputu8, func, testCaseName, dstDescPtr, "HIP");
+            compare_output<Rpp8u>(outputu8, func, testCaseName, dstDescPtr, "HIP", roiTensorPtrDst, noOfImages);
 
         RpptROI roiDefault;
         RpptROIPtr roiPtrDefault;
@@ -1803,10 +1799,10 @@ int main(int argc, char **argv)
 
         for (int i = 0; i < dstDescPtr->n; i++)
         {
-            roiTensorPtrSrc[i].xywhROI.roiWidth = RPPMIN2(roiPtrDefault->xywhROI.roiWidth - roiTensorPtrSrc[i].xywhROI.xy.x, roiTensorPtrSrc[i].xywhROI.roiWidth);
-            roiTensorPtrSrc[i].xywhROI.roiHeight = RPPMIN2(roiPtrDefault->xywhROI.roiHeight - roiTensorPtrSrc[i].xywhROI.xy.y, roiTensorPtrSrc[i].xywhROI.roiHeight);
-            roiTensorPtrSrc[i].xywhROI.xy.x = RPPMAX2(roiPtrDefault->xywhROI.xy.x, roiTensorPtrSrc[i].xywhROI.xy.x);
-            roiTensorPtrSrc[i].xywhROI.xy.y = RPPMAX2(roiPtrDefault->xywhROI.xy.y, roiTensorPtrSrc[i].xywhROI.xy.y);
+            roiTensorPtrSrc[i].xywhROI.roiWidth = std::min(roiPtrDefault->xywhROI.roiWidth - roiTensorPtrSrc[i].xywhROI.xy.x, roiTensorPtrSrc[i].xywhROI.roiWidth);
+            roiTensorPtrSrc[i].xywhROI.roiHeight = std::min(roiPtrDefault->xywhROI.roiHeight - roiTensorPtrSrc[i].xywhROI.xy.y, roiTensorPtrSrc[i].xywhROI.roiHeight);
+            roiTensorPtrSrc[i].xywhROI.xy.x = std::max(roiPtrDefault->xywhROI.xy.x, roiTensorPtrSrc[i].xywhROI.xy.x);
+            roiTensorPtrSrc[i].xywhROI.xy.y = std::max(roiPtrDefault->xywhROI.xy.y, roiTensorPtrSrc[i].xywhROI.xy.y);
         }
 
         // Convert any PLN3 outputs to the corresponding PKD3 version for OpenCV dump
@@ -1817,7 +1813,7 @@ int main(int argc, char **argv)
         }
         rppDestroyGPU(handle);
 
-        // OpenCV dump (if testType is unit test)
+         // OpenCV dump (if testType is unit test)
         mkdir(dst.c_str(), 0700);
         dst += "/";
 

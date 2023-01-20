@@ -56,17 +56,12 @@ log_file_list = [
     ]
 
 functionality_group_list = [
-    "image_augmentations",
-    "statistical_functions",
-    "geometry_transforms",
-    "advanced_augmentations",
-    "fused_functions",
-    "morphological_transforms",
-    "color_model_conversions",
-    "filter_operations",
-    "arithmetic_operations",
-    "logical_operations",
-    "computer_vision"
+    "color_augmentations",
+    "data_exchange_operations",
+    "effects_augmentations",
+    "filter_augmentations",
+    "geometric_augmentations",
+    "morphological_operations"
 ]
 
 if(int(testType) == 1):
