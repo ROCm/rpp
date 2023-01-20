@@ -1813,46 +1813,8 @@ int main(int argc, char **argv)
         }
         rppDestroyGPU(handle);
 
-         // OpenCV dump (if testType is unit test)
-        mkdir(dst.c_str(), 0700);
-        dst += "/";
-
-        count = 0;
-        Rpp32u elementsInRowMax = dstDescPtr->w * dstDescPtr->c;
-        Rpp8u *offsettedOutput = outputu8 + dstDescPtr->offsetInBytes;
-        for (j = 0; j < dstDescPtr->n; j++)
-        {
-            int height = dstImgSizes[j].height;
-            int width = dstImgSizes[j].width;
-            int outputSize = height * width * dstDescPtr->c;
-
-            Rpp8u *tempOutput = (Rpp8u *)calloc(outputSize, sizeof(Rpp8u));
-            Rpp8u *tempOutputRow;
-            tempOutputRow = tempOutput;
-            Rpp32u elementsInRow = width * dstDescPtr->c;
-            Rpp8u *outputRow = offsettedOutput + count;
-
-            for (int k = 0; k < height; k++)
-            {
-                memcpy(tempOutputRow, outputRow, elementsInRow * sizeof(Rpp8u));
-                tempOutputRow += elementsInRow;
-                outputRow += elementsInRowMax;
-            }
-            count += dstDescPtr->strides.nStride;
-
-            string temp;
-            temp = dst;
-            temp += imageNames[j];
-
-            Mat matOutputImage;
-            if (layoutType == 0 || layoutType == 1)
-                matOutputImage = (pln1OutTypeCase) ? Mat(height, width, CV_8UC1, tempOutput) : Mat(height, width, CV_8UC3, tempOutput);
-            else if (layoutType == 2)
-                matOutputImage = Mat(height, width, CV_8UC1, tempOutput);
-
-            imwrite(temp, matOutputImage);
-            free(tempOutput);
-        }
+        // OpenCV dump (if testType is unit test)
+        openCV_dump(dst, outputu8, dstDescPtr, layoutType, imageNames, dstImgSizes, pln1OutTypeCase);
     }
 
     // Free memory

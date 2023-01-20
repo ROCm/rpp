@@ -267,7 +267,6 @@ inline void compare_output(T* output, string func, string funcName, RpptDescPtr 
     if(backend == "HIP")
         refFile.replace(refFile.find("HIP"), 3, "HOST");
     ifstream file(refFile);
-    cout << " ref "<<refFile;
     Rpp8u *refOutput;
     refOutput = (Rpp8u *)malloc(noOfImages * descPtr->strides.nStride * sizeof(Rpp8u));
     string line,word;
@@ -319,45 +318,45 @@ inline void compare_output(T* output, string func, string funcName, RpptDescPtr 
         cout<< func << ": " << "FAILED \n";
 }
 
-// inline void openCV_dump(string dst, Rpp8u *output, RpptDescPtr dstDescPtr, int layoutType, string imageNames[], RpptImagePatch *dstImgSizes, bool pln1OutTypeCase)
-// {
-//     mkdir(dst.c_str(), 0700);
-//     dst += "/";
+inline void openCV_dump(string dst, Rpp8u *output, RpptDescPtr dstDescPtr, int layoutType, string imageNames[], RpptImagePatch *dstImgSizes, bool pln1OutTypeCase)
+{
+    mkdir(dst.c_str(), 0700);
+    dst += "/";
 
-//     Rpp64u count = 0;
-//     Rpp32u elementsInRowMax = dstDescPtr->w * dstDescPtr->c;
-//     Rpp8u *offsettedOutput = output + dstDescPtr->offsetInBytes;
-//     for (int j = 0; j < dstDescPtr->n; j++)
-//     {
-//         int height = dstImgSizes[j].height;
-//         int width = dstImgSizes[j].width;
-//         int outputSize = height * width * dstDescPtr->c;
+    Rpp64u count = 0;
+    Rpp32u elementsInRowMax = dstDescPtr->w * dstDescPtr->c;
+    Rpp8u *offsettedOutput = output + dstDescPtr->offsetInBytes;
+    for (int j = 0; j < dstDescPtr->n; j++)
+    {
+        int height = dstImgSizes[j].height;
+        int width = dstImgSizes[j].width;
+        int outputSize = height * width * dstDescPtr->c;
 
-//         Rpp8u *tempOutput = (Rpp8u *)calloc(outputSize, sizeof(Rpp8u));
-//         Rpp8u *tempOutputRow;
-//         tempOutputRow = tempOutput;
-//         Rpp32u elementsInRow = width * dstDescPtr->c;
-//         Rpp8u *outputRow = offsettedOutput + count;
+        Rpp8u *tempOutput = (Rpp8u *)calloc(outputSize, sizeof(Rpp8u));
+        Rpp8u *tempOutputRow;
+        tempOutputRow = tempOutput;
+        Rpp32u elementsInRow = width * dstDescPtr->c;
+        Rpp8u *outputRow = offsettedOutput + count;
 
-//         for (int k = 0; k < height; k++)
-//         {
-//             memcpy(tempOutputRow, outputRow, elementsInRow * sizeof(Rpp8u));
-//             tempOutputRow += elementsInRow;
-//             outputRow += elementsInRowMax;
-//         }
-//         count += dstDescPtr->strides.nStride;
+        for (int k = 0; k < height; k++)
+        {
+            memcpy(tempOutputRow, outputRow, elementsInRow * sizeof(Rpp8u));
+            tempOutputRow += elementsInRow;
+            outputRow += elementsInRowMax;
+        }
+        count += dstDescPtr->strides.nStride;
 
-//         string temp;
-//         temp = dst;
-//         temp += imageNames[j];
+        string temp;
+        temp = dst;
+        temp += imageNames[j];
 
-//         Mat matOutputImage;
-//         if (layoutType == 0 || layoutType == 1)
-//             matOutputImage = (pln1OutTypeCase) ? Mat(height, width, CV_8UC1, tempOutput) : Mat(height, width, CV_8UC3, tempOutput);
-//         else if (layoutType == 2)
-//             matOutputImage = Mat(height, width, CV_8UC1, tempOutput);
+        Mat matOutputImage;
+        if (layoutType == 0 || layoutType == 1)
+            matOutputImage = (pln1OutTypeCase) ? Mat(height, width, CV_8UC1, tempOutput) : Mat(height, width, CV_8UC3, tempOutput);
+        else if (layoutType == 2)
+            matOutputImage = Mat(height, width, CV_8UC1, tempOutput);
 
-//         imwrite(temp, matOutputImage);
-//         free(tempOutput);
-//     }
-// }
+        imwrite(temp, matOutputImage);
+        free(tempOutput);
+    }
+}
