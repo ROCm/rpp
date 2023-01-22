@@ -149,6 +149,35 @@ inline void set_data_type(int ip_bitDepth, string &funcName, RpptDescPtr srcDesc
     }
 }
 
+inline void set_nchw_values(RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, int noOfImages, int maxHeight, int maxWidth, int maxDstHeight, int maxDstWidth, int inputChannel, int layoutType, bool pln1OutTypeCase, string backend)
+{
+    srcDescPtr->numDims = 4;
+    dstDescPtr->numDims = 4;
+
+    if (backend == "HIP")
+        srcDescPtr->offsetInBytes = 64;
+    else
+        srcDescPtr->offsetInBytes = 0;
+    dstDescPtr->offsetInBytes = 0;
+
+    srcDescPtr->n = noOfImages;
+    srcDescPtr->h = maxHeight;
+    srcDescPtr->w = maxWidth;
+    srcDescPtr->c = inputChannel;
+
+    dstDescPtr->n = noOfImages;
+    dstDescPtr->h = maxDstHeight;
+    dstDescPtr->w = maxDstWidth;
+    if (layoutType == 0 || layoutType == 1)
+        dstDescPtr->c = (pln1OutTypeCase) ? 1 : inputChannel;
+    else
+        dstDescPtr->c = inputChannel;
+
+    // Optionally set w stride as a multiple of 8 for src/dst
+    srcDescPtr->w = ((srcDescPtr->w / 8) * 8) + 8;
+    dstDescPtr->w = ((dstDescPtr->w / 8) * 8) + 8;
+}
+
 inline void set_strides(RpptDescPtr descPtr)
 {
     // set strides
@@ -264,8 +293,12 @@ inline void compare_output(T* output, string func, string funcName, RpptDescPtr 
     string pattern = backend + "/build";
     remove_substring(refPath, pattern);
     string refFile = refPath + "REFERENCE_OUTPUT/" + funcName + "/"+ func + ".csv";
+
     if(backend == "HIP")
-        refFile.replace(refFile.find("HIP"), 3, "HOST");
+        refFile.replace(refFile.find("HIP_"), 4, "");
+    else
+        refFile.replace(refFile.find("HOST_"), 5, "");
+
     ifstream file(refFile);
     Rpp8u *refOutput;
     refOutput = (Rpp8u *)malloc(noOfImages * descPtr->strides.nStride * sizeof(Rpp8u));
@@ -318,7 +351,7 @@ inline void compare_output(T* output, string func, string funcName, RpptDescPtr 
         cout<< func << ": " << "FAILED \n";
 }
 
-inline void openCV_dump(string dst, Rpp8u *output, RpptDescPtr dstDescPtr, int layoutType, string imageNames[], RpptImagePatch *dstImgSizes, bool pln1OutTypeCase)
+inline void write_image(string dst, Rpp8u *output, RpptDescPtr dstDescPtr, int layoutType, string imageNames[], RpptImagePatch *dstImgSizes, bool pln1OutTypeCase)
 {
     mkdir(dst.c_str(), 0700);
     dst += "/";

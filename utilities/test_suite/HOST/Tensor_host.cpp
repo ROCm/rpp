@@ -299,28 +299,7 @@ int main(int argc, char **argv)
     }
 
     // Set numDims, offset, n/c/h/w values for src/dst
-    srcDescPtr->numDims = 4;
-    dstDescPtr->numDims = 4;
-
-    srcDescPtr->offsetInBytes = 0;
-    dstDescPtr->offsetInBytes = 0;
-
-    srcDescPtr->n = noOfImages;
-    srcDescPtr->h = maxHeight;
-    srcDescPtr->w = maxWidth;
-    srcDescPtr->c = inputChannel;
-
-    dstDescPtr->n = noOfImages;
-    dstDescPtr->h = maxDstHeight;
-    dstDescPtr->w = maxDstWidth;
-    if (layoutType == 0 || layoutType == 1)
-        dstDescPtr->c = (pln1OutTypeCase) ? 1 : inputChannel;
-    else
-        dstDescPtr->c = inputChannel;
-
-    // Optionally set w stride as a multiple of 8 for src/dst
-    srcDescPtr->w = ((srcDescPtr->w / 8) * 8) + 8;
-    dstDescPtr->w = ((dstDescPtr->w / 8) * 8) + 8;
+    set_nchw_values(srcDescPtr, dstDescPtr, noOfImages, maxHeight, maxWidth, maxDstHeight, maxDstWidth, inputChannel, layoutType, pln1OutTypeCase, "HOST");
 
     // Set n/c/h/w strides for src/dst
     set_strides(srcDescPtr);
@@ -935,10 +914,6 @@ int main(int argc, char **argv)
 
                 startOmp = omp_get_wtime();
                 start = clock();
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_rotate_host(input, srcDescPtr, output, dstDescPtr, angle, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
-                else
-                    missingFuncFlag = 1;
 
                 break;
             }
@@ -1554,10 +1529,10 @@ int main(int argc, char **argv)
 
     if (testType == 0)
     {
-        cpuTime = cpuTime;
+        cpuTime = cpuTime * 1000;
         wallTime = wallTime;
-        cout << "\nCPU Time - Tensor : " << cpuTime <<" ms";
-        cout << "\nOMP Time - Tensor : " << wallTime <<" ms";
+        cout << "\nCPU Clock Time - Tensor : " << cpuTime <<" ms";
+        cout << "\nCPU Wall Time - Tensor  : " << wallTime <<" ms";
         printf("\n");
     }
     else
@@ -1657,7 +1632,7 @@ int main(int argc, char **argv)
         rppDestroyHost(handle);
 
         // OpenCV dump (if testType is unit test)
-        openCV_dump(dst, outputu8, dstDescPtr, layoutType, imageNames, dstImgSizes, pln1OutTypeCase);
+        write_image(dst, outputu8, dstDescPtr, layoutType, imageNames, dstImgSizes, pln1OutTypeCase);
     }
 
     // Free memory

@@ -72,39 +72,24 @@ directory_name_generator() {
     TYPE=$2
     CASE=$3
 
-    if [[ "$case" -lt 15 ]]
+if [[ "$case" -lt 5 ]] || [ "$case" -eq 13 ] || [ "$case" -eq 36 ]
     then
-        FUNCTIONALITY_GROUP="image_augmentations"
-    elif [[ "$case" -lt 20 ]]
+        FUNCTIONALITY_GROUP="color_augmentations"
+    elif [[ "$case" -eq 8 ]] || [ "$case" -eq 30 ] || [ "$case" -eq 83 ] || [ "$case" -eq 84 ]
     then
-        FUNCTIONALITY_GROUP="statistical_functions"
-    elif [[ "$case" -lt 29 ]]
-    then
-        FUNCTIONALITY_GROUP="geometry_transforms"
-    elif [[ "$case" -lt 36 ]]
-    then
-        FUNCTIONALITY_GROUP="advanced_augmentations"
+        FUNCTIONALITY_GROUP="effects_augmentations"
     elif [[ "$case" -lt 40 ]]
     then
-        FUNCTIONALITY_GROUP="fused_functions"
+        FUNCTIONALITY_GROUP="geometric_augmentations"
     elif [[ "$case" -lt 42 ]]
     then
-        FUNCTIONALITY_GROUP="morphological_transforms"
-    elif [[ "$case" -lt 49 ]]
+        FUNCTIONALITY_GROUP="morphological_operations"
+    elif [[ "$case" -eq 49 ]]
     then
-        FUNCTIONALITY_GROUP="color_model_conversions"
-    elif [[ "$case" -lt 56 ]]
+        FUNCTIONALITY_GROUP="filter_augmentations"
+    elif [[ "$case" -lt 86 ]]
     then
-        FUNCTIONALITY_GROUP="filter_operations"
-    elif [[ "$case" -lt 65 ]]
-    then
-        FUNCTIONALITY_GROUP="arithmetic_operations"
-    elif [[ "$case" -lt 69 ]]
-    then
-        FUNCTIONALITY_GROUP="logical_operations"
-    elif [[ "$case" -lt 79 ]]
-    then
-        FUNCTIONALITY_GROUP="computer_vision"
+        FUNCTIONALITY_GROUP="data_exchange_operations"
     else
         FUNCTIONALITY_GROUP="miscellaneous"
     fi
@@ -167,26 +152,8 @@ do
             for ((outputFormatToggle=0;outputFormatToggle<2;outputFormatToggle++))
             do
 
-                if [[ "$case" -eq 74 ]]
-                then
-                    SRC_FOLDER_1_TEMP="$DEFAULT_HARRIS_CORNER_DETECTOR_IMAGES"
-                    SRC_FOLDER_2_TEMP="$DEFAULT_HARRIS_CORNER_DETECTOR_IMAGES"
-                elif [[ "$case" -eq 75 ]]
-                then
-                    SRC_FOLDER_1_TEMP="$DEFAULT_FAST_CORNER_DETECTOR_IMAGES"
-                    SRC_FOLDER_2_TEMP="$DEFAULT_FAST_CORNER_DETECTOR_IMAGES"
-                elif [[ "$case" -eq 77 ]]
-                then
-                    SRC_FOLDER_1_TEMP="$DEFAULT_HOUGH_LINES_IMAGES"
-                    SRC_FOLDER_2_TEMP="$DEFAULT_HOUGH_LINES_IMAGES"
-                elif [[ "$case" -eq 78 ]]
-                then
-                    SRC_FOLDER_1_TEMP="$DEFAULT_HOG_IMAGES"
-                    SRC_FOLDER_2_TEMP="$DEFAULT_HOG_IMAGES"
-                else
-                    SRC_FOLDER_1_TEMP="$SRC_FOLDER_1"
-                    SRC_FOLDER_2_TEMP="$SRC_FOLDER_2"
-                fi
+                SRC_FOLDER_1_TEMP="$SRC_FOLDER_1"
+                SRC_FOLDER_2_TEMP="$SRC_FOLDER_2"
 
                 if [[ "$PROFILING_OPTION" -eq 0 ]]
                 then
