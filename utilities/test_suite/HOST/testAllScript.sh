@@ -174,33 +174,33 @@ do
     done
 done
 
-if [ $TEST_TYPE -eq 0 ]; then
-    for ((layout=0;layout<3;layout++))
-    do
-        if [[ "$layout" -eq 0 ]]
-        then
-            mkdir "$DST_FOLDER/PKD3"
-            PKD3_FOLDERS=$(find $DST_FOLDER -maxdepth 1 -name "*pkd3*")
-            for TEMP_FOLDER in $PKD3_FOLDERS
-            do
-                mv "$TEMP_FOLDER" "$DST_FOLDER/PKD3"
-            done
-        elif [[ "$layout" -eq 1 ]]
-        then
-            mkdir "$DST_FOLDER/PLN3"
-            PLN3_FOLDERS=$(find $DST_FOLDER -maxdepth 1 -name "*pln3*")
-            for TEMP_FOLDER in $PLN3_FOLDERS
-            do
-                mv "$TEMP_FOLDER" "$DST_FOLDER/PLN3"
-            done
-        else
-            mkdir "$DST_FOLDER/PLN1"
-            PLN1_FOLDERS=$(find $DST_FOLDER -maxdepth 1 -name "*pln1*")
-            for TEMP_FOLDER in $PLN1_FOLDERS
-            do
-                mv "$TEMP_FOLDER" "$DST_FOLDER/PLN1"
-            done
-        fi
-    done
-fi
+# if [ $TEST_TYPE -eq 0 ]; then
+#     for ((layout=0;layout<3;layout++))
+#     do
+#         if [[ "$layout" -eq 0 ]]
+#         then
+#             mkdir "$DST_FOLDER/PKD3"
+#             PKD3_FOLDERS=$(find $DST_FOLDER -maxdepth 1 -name "*pkd3*")
+#             for TEMP_FOLDER in $PKD3_FOLDERS
+#             do
+#                 mv "$TEMP_FOLDER" "$DST_FOLDER/PKD3"
+#             done
+#         elif [[ "$layout" -eq 1 ]]
+#         then
+#             mkdir "$DST_FOLDER/PLN3"
+#             PLN3_FOLDERS=$(find $DST_FOLDER -maxdepth 1 -name "*pln3*")
+#             for TEMP_FOLDER in $PLN3_FOLDERS
+#             do
+#                 mv "$TEMP_FOLDER" "$DST_FOLDER/PLN3"
+#             done
+#         else
+#             mkdir "$DST_FOLDER/PLN1"
+#             PLN1_FOLDERS=$(find $DST_FOLDER -maxdepth 1 -name "*pln1*")
+#             for TEMP_FOLDER in $PLN1_FOLDERS
+#             do
+#                 mv "$TEMP_FOLDER" "$DST_FOLDER/PLN1"
+#             done
+#         fi
+#     done
+# fi
 # <<<<<<<<<<<<<< EXECUTION OF ALL FUNCTIONALITIES (NEED NOT CHANGE) >>>>>>>>>>>>>>

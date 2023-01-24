@@ -2,19 +2,44 @@ import os
 import subprocess
 import argparse
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--case_start", type=str, default="0", help="Testing range starting case # - (0:86)")
-parser.add_argument("--case_end", type=str, default="86", help="Testing range ending case # - (0:86)")
-parser.add_argument('--test_type', type=str, default='0', help="Type of Test - (0 = Unittests / 1 = Performancetests)")
-parser.add_argument('--case_list', nargs="+", help="List of case numbers to list", required=False)
-parser.add_argument('--profiling', type=str, default='NO', help='Run with profiler? - (YES/NO)', required=False)
-args = parser.parse_args()
+cwd = os.getcwd()
+inFilePath = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src1')
+outFilePath = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src2')
 
+def rpp_test_suite_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input_path", type = str, default = inFilePath, help = "Path to the input data")
+    parser.add_argument("--output_path", type = str, default = outFilePath, help = "Path to the output data")
+    parser.add_argument("--case_start", type=str, default="0", help="Testing range starting case # - (0:86)")
+    parser.add_argument("--case_end", type=str, default="86", help="Testing range ending case # - (0:86)")
+    parser.add_argument('--test_type', type=str, default='0', help="Type of Test - (0 = Unittests / 1 = Performancetests)")
+    parser.add_argument('--case_list', nargs="+", help="List of case numbers to list", required=False)
+    parser.add_argument('--profiling', type=str, default='NO', help='Run with profiler? - (YES/NO)', required=False)
+
+args = rpp_test_suite_parser()
+
+srcPath = args.input_path
+dstPath = args.output_path
 caseStart = args.case_start
 caseEnd = args.case_end
 testType = args.test_type
 caseList = args.case_list
 profilingOption = args.profiling
+
+def case_file_check(CASE_FILE_PATH)
+    try:
+        case_file = open(CASE_FILE_PATH,'r')
+        for line in case_file:
+            print(line)
+            if not(line.startswith('"Name"')):
+                if TYPE in TENSOR_TYPE_LIST:
+                    new_file.write(line)
+                    d_counter[TYPE] = d_counter[TYPE] + 1
+        case_file.close()
+        return True
+    except IOError:
+        print("Unable to open case results")
+        return False
 
 if (int(testType) == 0):
     numIterations = "1"
@@ -204,17 +229,8 @@ elif (int(testType) == 1 and profilingOption == "YES"):
                             # Write into csv file
                             CASE_FILE_PATH = CASE_RESULTS_DIR + "/output_case" + str(CASE_NUM) + "_bitDepth" + str(BIT_DEPTH) + "_oft" + str(OFT) + "_kSize" + str(KSIZE) + ".stats.csv"
                             print("CASE_FILE_PATH = " + CASE_FILE_PATH)
-                            try:
-                                case_file = open(CASE_FILE_PATH,'r')
-                                for line in case_file:
-                                    print(line)
-                                    if not(line.startswith('"Name"')):
-                                        if TYPE in TENSOR_TYPE_LIST:
-                                            new_file.write(line)
-                                            d_counter[TYPE] = d_counter[TYPE] + 1
-                                case_file.close()
-                            except IOError:
-                                print("Unable to open case results")
+                            fileCheck = case_file_check(CASE_FILE_PATH)
+                            if fileCheck == False
                                 continue
                     elif (CASE_NUM == 24 or CASE_NUM == 21) and TYPE.startswith("Tensor"):
                         INTERPOLATIONTYPE_LIST = [0, 1, 2, 3, 4, 5]
@@ -223,17 +239,8 @@ elif (int(testType) == 1 and profilingOption == "YES"):
                             # Write into csv file
                             CASE_FILE_PATH = CASE_RESULTS_DIR + "/output_case" + str(CASE_NUM) + "_bitDepth" + str(BIT_DEPTH) + "_oft" + str(OFT) + "_interpolationType" + str(INTERPOLATIONTYPE) + ".stats.csv"
                             print("CASE_FILE_PATH = " + CASE_FILE_PATH)
-                            try:
-                                case_file = open(CASE_FILE_PATH,'r')
-                                for line in case_file:
-                                    print(line)
-                                    if not(line.startswith('"Name"')):
-                                        if TYPE in TENSOR_TYPE_LIST:
-                                            new_file.write(line)
-                                            d_counter[TYPE] = d_counter[TYPE] + 1
-                                case_file.close()
-                            except IOError:
-                                print("Unable to open case results")
+                            fileCheck = case_file_check(CASE_FILE_PATH)
+                            if fileCheck == False
                                 continue
                     elif (CASE_NUM == 8) and TYPE.startswith("Tensor"):
                         NOISETYPE_LIST = [0, 1, 2]
@@ -242,33 +249,15 @@ elif (int(testType) == 1 and profilingOption == "YES"):
                             # Write into csv file
                             CASE_FILE_PATH = CASE_RESULTS_DIR + "/output_case" + str(CASE_NUM) + "_bitDepth" + str(BIT_DEPTH) + "_oft" + str(OFT) + "_noiseType" + str(NOISETYPE) + ".stats.csv"
                             print("CASE_FILE_PATH = " + CASE_FILE_PATH)
-                            try:
-                                case_file = open(CASE_FILE_PATH,'r')
-                                for line in case_file:
-                                    print(line)
-                                    if not(line.startswith('"Name"')):
-                                        if TYPE in TENSOR_TYPE_LIST:
-                                            new_file.write(line)
-                                            d_counter[TYPE] = d_counter[TYPE] + 1
-                                case_file.close()
-                            except IOError:
-                                print("Unable to open case results")
+                            fileCheck = case_file_check(CASE_FILE_PATH)
+                            if fileCheck == False
                                 continue
                     else:
                         # Write into csv file
                         CASE_FILE_PATH = CASE_RESULTS_DIR + "/output_case" + str(CASE_NUM) + "_bitDepth" + str(BIT_DEPTH) + "_oft" + str(OFT) + ".stats.csv"
                         print("CASE_FILE_PATH = " + CASE_FILE_PATH)
-                        try:
-                            case_file = open(CASE_FILE_PATH,'r')
-                            for line in case_file:
-                                print(line)
-                                if not(line.startswith('"Name"')):
-                                    if TYPE in TENSOR_TYPE_LIST:
-                                        new_file.write(line)
-                                        d_counter[TYPE] = d_counter[TYPE] + 1
-                            case_file.close()
-                        except IOError:
-                            print("Unable to open case results")
+                        fileCheck = case_file_check(CASE_FILE_PATH)
+                        if fileCheck == False
                             continue
 
         new_file.close()
@@ -298,3 +287,22 @@ elif (int(testType) == 1 and profilingOption == "YES"):
 
     except IOError:
         print("Unable to open results in " + RESULTS_DIR + "/consolidated_results_" + TYPE + ".stats.csv")
+
+DST_FOLDER = dstPath
+if testType == 0:
+    for layout in range(3):
+        if layout == 0:
+            os.mkdir(f'{DST_FOLDER}/PKD3')
+            PKD3_FOLDERS = [f for f in os.listdir(DST_FOLDER) if f.startswith('pkd3')]
+            for TEMP_FOLDER in PKD3_FOLDERS:
+                os.rename(f'{DST_FOLDER}/{TEMP_FOLDER}', f'{DST_FOLDER}/PKD3/{TEMP_FOLDER}')
+        elif layout == 1:
+            os.mkdir(f'{DST_FOLDER}/PLN3')
+            PLN3_FOLDERS = [f for f in os.listdir(DST_FOLDER) if f.startswith('pln3')]
+            for TEMP_FOLDER in PLN3_FOLDERS:
+                os.rename(f'{DST_FOLDER}/{TEMP_FOLDER}', f'{DST_FOLDER}/PLN3/{TEMP_FOLDER}')
+        else:
+            os.mkdir(f'{DST_FOLDER}/PLN1')
+            PLN1_FOLDERS = [f for f in os.listdir(DST_FOLDER) if f.startswith('pln1')]
+            for TEMP_FOLDER in PLN1_FOLDERS:
+                os.rename(f'{DST_FOLDER}/{TEMP_FOLDER}', f'{DST_FOLDER}/PLN1/{TEMP_FOLDER}')

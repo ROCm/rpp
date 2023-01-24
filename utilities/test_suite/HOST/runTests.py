@@ -2,13 +2,24 @@ import os
 import subprocess
 import argparse
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--case_start", type=str, default="0", help="Testing range starting case # - (0:86)")
-parser.add_argument("--case_end", type=str, default="86", help="Testing range ending case # - (0:86)")
-parser.add_argument('--test_type', type=str, default='0', help="Type of Test - (0 = Unittests / 1 = Performancetests)")
-parser.add_argument('--case_list', nargs="+", help="List of case numbers to list", required=False)
-args = parser.parse_args()
+cwd = os.getcwd()
+inFilePath = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src1')
+outFilePath = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src2')
 
+def rpp_test_suite_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input_path", type = str, default = inFilePath, help = "Path to the input data")
+    parser.add_argument("--output_path", type = str, default = outFilePath, help = "Path to the output data")
+    parser.add_argument("--case_start", type=str, default="0", help="Testing range starting case # - (0:86)")
+    parser.add_argument("--case_end", type=str, default="86", help="Testing range ending case # - (0:86)")
+    parser.add_argument('--test_type', type=str, default='0', help="Type of Test - (0 = Unittests / 1 = Performancetests)")
+    parser.add_argument('--case_list', nargs="+", help="List of case numbers to list", required=False)
+    parser.add_argument('--profiling', type=str, default='NO', help='Run with profiler? - (YES/NO)', required=False)
+
+args = rpp_test_suite_parser()
+
+srcPath = args.input_path
+dstPath = args.output_path
 caseStart = args.case_start
 caseEnd = args.case_end
 testType = args.test_type
@@ -41,13 +52,13 @@ if caseList is not None and caseStart > 0 and caseEnd <86:
 if caseList is None:
     caseList = range(int(caseStart), int(caseEnd) + 1)
     caseList = [str(x) for x in caseList]
-    subprocess.call(["./testAllScript.sh", testType, numIterations, " ".join(caseList)])
+    subprocess.call(["./testAllScript.sh", srcPath, dstPath, testType, numIterations, " ".join(caseList)])
 else:
     for case in caseList:
         if int(case) < 0 or int(case) > 86:
             print("The case# must be in the 0:86 range!")
             exit(0)
-    subprocess.call(["./testAllScript.sh", testType, numIterations, " ".join(caseList)])
+    subprocess.call(["./testAllScript.sh", srcPath, dstPath, testType, numIterations, " ".join(caseList)])
 
 log_file_list = [
     "../OUTPUT_PERFORMANCE_LOGS_HOST_NEW/Tensor_host_pkd3_raw_performance_log.txt",
@@ -127,3 +138,22 @@ if(int(testType) == 1):
 
         # Closing log file
         f.close()
+
+DST_FOLDER = dstPath
+if testType == 0:
+    for layout in range(3):
+        if layout == 0:
+            os.mkdir(f'{DST_FOLDER}/PKD3')
+            PKD3_FOLDERS = [f for f in os.listdir(DST_FOLDER) if f.startswith('pkd3')]
+            for TEMP_FOLDER in PKD3_FOLDERS:
+                os.rename(f'{DST_FOLDER}/{TEMP_FOLDER}', f'{DST_FOLDER}/PKD3/{TEMP_FOLDER}')
+        elif layout == 1:
+            os.mkdir(f'{DST_FOLDER}/PLN3')
+            PLN3_FOLDERS = [f for f in os.listdir(DST_FOLDER) if f.startswith('pln3')]
+            for TEMP_FOLDER in PLN3_FOLDERS:
+                os.rename(f'{DST_FOLDER}/{TEMP_FOLDER}', f'{DST_FOLDER}/PLN3/{TEMP_FOLDER}')
+        else:
+            os.mkdir(f'{DST_FOLDER}/PLN1')
+            PLN1_FOLDERS = [f for f in os.listdir(DST_FOLDER) if f.startswith('pln1')]
+            for TEMP_FOLDER in PLN1_FOLDERS:
+                os.rename(f'{DST_FOLDER}/{TEMP_FOLDER}', f'{DST_FOLDER}/PLN1/{TEMP_FOLDER}')

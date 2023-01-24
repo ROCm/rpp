@@ -197,6 +197,32 @@ inline void set_strides(RpptDescPtr descPtr)
     }
 }
 
+inline void set_roi_values(int images , RpptROI *roiTensorPtrSrc, RpptImagePatch *dstImgSizes, RpptRoiType roiTypeSrc, RpptRoiType roiTypeDst)
+{
+    if(roiTypeSrc == RpptRoiType::XYWH && roiTypeDst == RpptRoiType::XYWH)
+    { 
+        for (int i = 0; i < images; i++)
+        {
+            roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+            roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+            dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+            dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+        }
+    }
+    else
+    {
+        for (int i = 0; i < images; i++)
+        {
+            roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+            roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+            roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+            roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+            dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+            dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
+        }
+    }
+}
+
 inline void convert_pln3_to_pkd3(Rpp8u *output, RpptDescPtr descPtr)
 {
     unsigned long long bufferSize = ((unsigned long long)descPtr->h * (unsigned long long)descPtr->w * (unsigned long long)descPtr->c * (unsigned long long)descPtr->n) + descPtr->offsetInBytes;
@@ -286,22 +312,41 @@ inline void remove_substring(string &str, string &pattern)
 }
 
 template <typename T>
-inline void compare_output(T* output, string func, string funcName, RpptDescPtr descPtr, string backend, RpptROI *roiPtr, int noOfImages)
+inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, RpptROI *roiPtr, int noOfImages)
 {
     bool isEqual = true;
+    string func = "";
+    func += funcName;
     string refPath = get_current_dir_name();
-    string pattern = backend + "/build";
+    string pattern = "/build";
     remove_substring(refPath, pattern);
-    string refFile = refPath + "REFERENCE_OUTPUT/" + funcName + "/"+ func + ".csv";
 
-    if(backend == "HIP")
-        refFile.replace(refFile.find("HIP_"), 4, "");
+    string dataType[4] = {"_u8_", "_f16_", "_f32_", "_i8_"};
+
+    if(srcDescPtr->dataType == dstDescPtr->dataType)
+        func += dataType[srcDescPtr->dataType];
     else
-        refFile.replace(refFile.find("HOST_"), 5, "");
+    {
+        func = func + dataType[srcDescPtr->dataType];
+        func.resize(func.size() - 1);
+        func += dataType[dstDescPtr->dataType];
+    }
+
+    if(dstDescPtr->layout == RpptLayout::NHWC)
+        func += "Tensor_PKD3";
+    else
+    {
+        if (dstDescPtr->c == 3)
+            func += "Tensor_PLN3";
+        else 
+            func += "Tensor_PLN1";
+    }
+
+    string refFile = refPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ func + ".csv";
 
     ifstream file(refFile);
     Rpp8u *refOutput;
-    refOutput = (Rpp8u *)malloc(noOfImages * descPtr->strides.nStride * sizeof(Rpp8u));
+    refOutput = (Rpp8u *)malloc(noOfImages * dstDescPtr->strides.nStride * sizeof(Rpp8u));
     string line,word;
     int index = 0;
 
@@ -326,12 +371,12 @@ inline void compare_output(T* output, string func, string funcName, RpptDescPtr 
 
     for(int c = 0; c < noOfImages; c++)
     {
-        Rpp8u *outputTemp = output + c * descPtr->strides.nStride;
-        Rpp8u *outputTempRef = refOutput + c * descPtr->strides.nStride;
+        Rpp8u *outputTemp = output + c * dstDescPtr->strides.nStride;
+        Rpp8u *outputTempRef = refOutput + c * dstDescPtr->strides.nStride;
         for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
         {
-            Rpp8u *rowTemp = outputTemp + i * descPtr->strides.hStride;
-            Rpp8u *rowTempRef = outputTempRef + i * descPtr->strides.hStride;
+            Rpp8u *rowTemp = outputTemp + i * dstDescPtr->strides.hStride;
+            Rpp8u *rowTempRef = outputTempRef + i * dstDescPtr->strides.hStride;
             for(int j = 0; j < roiPtr->xywhROI.roiWidth; j++)
             {
                 Rpp8u *outVal = rowTemp + j;
