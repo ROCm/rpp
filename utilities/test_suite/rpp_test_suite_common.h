@@ -200,7 +200,7 @@ inline void set_strides(RpptDescPtr descPtr)
 inline void set_roi_values(int images , RpptROI *roiTensorPtrSrc, RpptImagePatch *dstImgSizes, RpptRoiType roiTypeSrc, RpptRoiType roiTypeDst)
 {
     if(roiTypeSrc == RpptRoiType::XYWH && roiTypeDst == RpptRoiType::XYWH)
-    { 
+    {
         for (int i = 0; i < images; i++)
         {
             roiTensorPtrSrc[i].xywhROI.xy.x = 0;
@@ -338,7 +338,7 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     {
         if (dstDescPtr->c == 3)
             func += "Tensor_PLN3";
-        else 
+        else
             func += "Tensor_PLN1";
     }
 
@@ -396,45 +396,41 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
         cout<< func << ": " << "FAILED \n";
 }
 
-inline void write_image(string dst, Rpp8u *output, RpptDescPtr dstDescPtr, int layoutType, string imageNames[], RpptImagePatch *dstImgSizes, bool pln1OutTypeCase)
+inline void write_image(string outputFolder, Rpp8u *output, RpptDescPtr dstDescPtr, string imageNames[], RpptImagePatch *dstImgSizes)
 {
-    mkdir(dst.c_str(), 0700);
-    dst += "/";
+    // create output folder
+    mkdir(outputFolder.c_str(), 0700);
+    outputFolder += "/";
 
-    Rpp64u count = 0;
     Rpp32u elementsInRowMax = dstDescPtr->w * dstDescPtr->c;
     Rpp8u *offsettedOutput = output + dstDescPtr->offsetInBytes;
     for (int j = 0; j < dstDescPtr->n; j++)
     {
-        int height = dstImgSizes[j].height;
-        int width = dstImgSizes[j].width;
-        int outputSize = height * width * dstDescPtr->c;
+        Rpp32u height = dstImgSizes[j].height;
+        Rpp32u width = dstImgSizes[j].width;
+        Rpp32u elementsInRow = width * dstDescPtr->c;
+        Rpp32u outputSize = height * width * dstDescPtr->c;
 
         Rpp8u *tempOutput = (Rpp8u *)calloc(outputSize, sizeof(Rpp8u));
-        Rpp8u *tempOutputRow;
-        tempOutputRow = tempOutput;
-        Rpp32u elementsInRow = width * dstDescPtr->c;
-        Rpp8u *outputRow = offsettedOutput + count;
-
+        Rpp8u *tempOutputRow = tempOutput;
+        Rpp8u *outputRow = offsettedOutput + j * dstDescPtr->strides.nStride;
         for (int k = 0; k < height; k++)
         {
             memcpy(tempOutputRow, outputRow, elementsInRow * sizeof(Rpp8u));
             tempOutputRow += elementsInRow;
             outputRow += elementsInRowMax;
         }
-        count += dstDescPtr->strides.nStride;
 
-        string temp;
-        temp = dst;
-        temp += imageNames[j];
-
+        string outputImagePath = outputFolder + imageNames[j];
         Mat matOutputImage;
-        if (layoutType == 0 || layoutType == 1)
-            matOutputImage = (pln1OutTypeCase) ? Mat(height, width, CV_8UC1, tempOutput) : Mat(height, width, CV_8UC3, tempOutput);
-        else if (layoutType == 2)
+        if (dstDescPtr->c == 1)
             matOutputImage = Mat(height, width, CV_8UC1, tempOutput);
+        else if (dstDescPtr->c == 2)
+            matOutputImage = Mat(height, width, CV_8UC2, tempOutput);
+        else if (dstDescPtr->c == 3)
+            matOutputImage = Mat(height, width, CV_8UC3, tempOutput);
 
-        imwrite(temp, matOutputImage);
+        imwrite(outputImagePath, matOutputImage);
         free(tempOutput);
     }
 }
