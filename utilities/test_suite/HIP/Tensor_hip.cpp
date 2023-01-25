@@ -477,8 +477,7 @@ int main(int argc, char **argv)
     hipStreamCreate(&stream);
     rppCreateWithStreamAndBatchSize(&handle, stream, noOfImages);
 
-    clock_t start, end;
-    double maxTimeUsed = 0, minTimeUsed = 500, avgTimeUsed = 0;
+    double maxWallTime = 0, minWallTime = 500, avgWallTime = 0;
     double wallTime;
     string testCaseName;
 
@@ -486,8 +485,7 @@ int main(int argc, char **argv)
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numIterations, noOfImages);
     for (int perfRunCount = 0; perfRunCount < numIterations; perfRunCount++)
     {
-        clock_t start, end;
-        double startOmp, endOmp;
+        double startWallTime, endWallTime;
         switch (testCase)
         {
         case 0:
@@ -510,8 +508,7 @@ int main(int argc, char **argv)
                 roiTypeDst = RpptRoiType::LTRB;
                 set_roi_values(images, roiTensorPtrSrc, dstImgSizes, roiTypeSrc, roiTypeDst);*/
 
-            startOmp = omp_get_wtime();
-
+            startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_brightness_gpu(d_input, srcDescPtr, d_output, dstDescPtr, alpha, beta, roiTensorPtrSrc, roiTypeSrc, handle);
             else
@@ -537,8 +534,7 @@ int main(int argc, char **argv)
                 roiTypeDst = RpptRoiType::LTRB;
                 set_roi_values(images, roiTensorPtrSrc, dstImgSizes, roiTypeSrc, roiTypeDst);*/
 
-            startOmp = omp_get_wtime();
-
+            startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_gamma_correction_gpu(d_input, srcDescPtr, d_output, dstDescPtr, gammaVal, roiTensorPtrSrc, roiTypeSrc, handle);
             else
@@ -564,8 +560,7 @@ int main(int argc, char **argv)
                 roiTypeDst = RpptRoiType::LTRB;
                 set_roi_values(images, roiTensorPtrSrc, dstImgSizes, roiTypeSrc, roiTypeDst);*/
 
-            startOmp = omp_get_wtime();
-
+            startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_blend_gpu(d_input, d_input_second, srcDescPtr, d_output, dstDescPtr, alpha, roiTensorPtrSrc, roiTypeSrc, handle);
             else
@@ -593,8 +588,7 @@ int main(int argc, char **argv)
                 roiTypeDst = RpptRoiType::LTRB;
                 set_roi_values(images, roiTensorPtrSrc, dstImgSizes, roiTypeSrc, roiTypeDst);*/
 
-            startOmp = omp_get_wtime();
-
+            startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_contrast_gpu(d_input, srcDescPtr, d_output, dstDescPtr, contrastFactor, contrastCenter, roiTensorPtrSrc, roiTypeSrc, handle);
             else
@@ -631,8 +625,7 @@ int main(int argc, char **argv)
                     roiTypeDst = RpptRoiType::LTRB;
                     set_roi_values(images, roiTensorPtrSrc, dstImgSizes, roiTypeSrc, roiTypeDst);*/
 
-                    startOmp = omp_get_wtime();
-
+                    startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_salt_and_pepper_noise_gpu(d_input, srcDescPtr, d_output, dstDescPtr, noiseProbabilityTensor, saltProbabilityTensor, saltValueTensor, pepperValueTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
@@ -673,8 +666,7 @@ int main(int argc, char **argv)
                     roiTypeSrc = RpptRoiType::LTRB;
                     roiTypeDst = RpptRoiType::LTRB;*/
 
-                    startOmp = omp_get_wtime();
-
+                    startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_gaussian_noise_gpu(d_input, srcDescPtr, d_output, dstDescPtr, meanTensor, stdDevTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
@@ -699,8 +691,7 @@ int main(int argc, char **argv)
                     roiTypeDst = RpptRoiType::LTRB;
                     set_roi_values(images, roiTensorPtrSrc, dstImgSizes, roiTypeSrc, roiTypeDst);*/
 
-                    startOmp = omp_get_wtime();
-
+                    startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_shot_noise_gpu(d_input, srcDescPtr, d_output, dstDescPtr, shotNoiseFactorTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
@@ -735,8 +726,7 @@ int main(int argc, char **argv)
                 roiTypeDst = RpptRoiType::LTRB;
                 set_roi_values(images, roiTensorPtrSrc, dstImgSizes, roiTypeSrc, roiTypeDst);*/
 
-            startOmp = omp_get_wtime();
-
+            startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_exposure_gpu(d_input, srcDescPtr, d_output, dstDescPtr, exposureFactor, roiTensorPtrSrc, roiTypeSrc, handle);
             else
@@ -764,8 +754,7 @@ int main(int argc, char **argv)
                 roiTypeDst = RpptRoiType::LTRB;
                 set_roi_values(images, roiTensorPtrSrc, dstImgSizes, roiTypeSrc, roiTypeDst);*/
 
-            startOmp = omp_get_wtime();
-
+            startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_flip_gpu(d_input, srcDescPtr, d_output, dstDescPtr, horizontalFlag, verticalFlag, roiTensorPtrSrc, roiTypeSrc, handle);
             else
@@ -791,8 +780,7 @@ int main(int argc, char **argv)
                 roiTypeDst = RpptRoiType::LTRB;
                 set_roi_values(images, roiTensorPtrSrc, dstImgSizes, roiTypeSrc, roiTypeDst);*/
 
-            startOmp = omp_get_wtime();
-
+            startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_resize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, dstImgSizes, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
             else
@@ -824,8 +812,7 @@ int main(int argc, char **argv)
                 roiTypeDst = RpptRoiType::LTRB;
                 set_roi_values(images, roiTensorPtrSrc, dstImgSizes, roiTypeSrc, roiTypeDst);*/
 
-            startOmp = omp_get_wtime();
-
+            startWallTime = omp_get_wtime();
 
             break;
         }
@@ -859,8 +846,7 @@ int main(int argc, char **argv)
                 roiTypeDst = RpptRoiType::LTRB;
                 set_roi_values(images, roiTensorPtrSrc, dstImgSizes, roiTypeSrc, roiTypeDst);*/
 
-            startOmp = omp_get_wtime();
-
+            startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_warp_affine_gpu(d_input, srcDescPtr, d_output, dstDescPtr, affineTensor, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
             else
@@ -886,8 +872,7 @@ int main(int argc, char **argv)
                 roiTypeDst = RpptRoiType::LTRB;
                 set_roi_values(images, roiTensorPtrSrc, dstImgSizes, roiTypeSrc, roiTypeDst);*/
 
-            startOmp = omp_get_wtime();
-
+            startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_non_linear_blend_gpu(d_input, d_input_second, srcDescPtr, d_output, dstDescPtr, stdDev, roiTensorPtrSrc, roiTypeSrc, handle);
             else
@@ -918,8 +903,7 @@ int main(int argc, char **argv)
                 roiTypeDst = RpptRoiType::LTRB;
                 set_roi_values(images, roiTensorPtrSrc, dstImgSizes, roiTypeSrc, roiTypeDst);*/
 
-            startOmp = omp_get_wtime();
-
+            startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_color_cast_gpu(d_input, srcDescPtr, d_output, dstDescPtr, rgbTensor, alphaTensor, roiTensorPtrSrc, roiTypeSrc, handle);
             else
@@ -951,8 +935,7 @@ int main(int argc, char **argv)
                 roiTypeDst = RpptRoiType::LTRB;
                 set_roi_values(images, roiTensorPtrSrc, dstImgSizes, roiTypeSrc, roiTypeDst);*/
 
-            startOmp = omp_get_wtime();
-
+            startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_color_twist_gpu(d_input, srcDescPtr, d_output, dstDescPtr, brightness, contrast, hue, saturation, roiTensorPtrSrc, roiTypeSrc, handle);
             else
@@ -981,8 +964,7 @@ int main(int argc, char **argv)
                 roiTypeDst = RpptRoiType::LTRB;
                 set_roi_values(images, roiTensorPtrSrc, dstImgSizes, roiTypeSrc, roiTypeDst);*/
 
-            startOmp = omp_get_wtime();
-
+            startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_crop_gpu(d_input, srcDescPtr, d_output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
             else
@@ -1046,8 +1028,7 @@ int main(int argc, char **argv)
                 roiTypeDst = RpptRoiType::LTRB;
                 set_roi_values(images, roiTensorPtrSrc, dstImgSizes, roiTypeSrc, roiTypeDst);*/
 
-            startOmp = omp_get_wtime();
-
+            startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 3 || inputBitDepth == 4 || inputBitDepth == 5)
                 rppt_crop_mirror_normalize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, offset, multiplier, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
             else
@@ -1089,8 +1070,7 @@ int main(int argc, char **argv)
                 roiTypeDst = RpptRoiType::LTRB;
                 set_roi_values(images, roiTensorPtrSrc, dstImgSizes, roiTypeSrc, roiTypeDst);*/
 
-            startOmp = omp_get_wtime();
-
+            startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_resize_crop_mirror_gpu(d_input, srcDescPtr, d_output, dstDescPtr, dstImgSizes, interpolationType, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
             else
@@ -1112,8 +1092,7 @@ int main(int argc, char **argv)
                 roiTypeDst = RpptRoiType::LTRB;
                 set_roi_values(images, roiTensorPtrSrc, dstImgSizes, roiTypeSrc, roiTypeDst);*/
 
-            startOmp = omp_get_wtime();
-
+            startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_erode_gpu(d_input, srcDescPtr, d_output, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
             else
@@ -1135,8 +1114,7 @@ int main(int argc, char **argv)
                 roiTypeDst = RpptRoiType::LTRB;
                 set_roi_values(images, roiTensorPtrSrc, dstImgSizes, roiTypeSrc, roiTypeDst);*/
 
-            startOmp = omp_get_wtime();
-
+            startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_dilate_gpu(d_input, srcDescPtr, d_output, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
             else
@@ -1158,8 +1136,7 @@ int main(int argc, char **argv)
                 roiTypeDst = RpptRoiType::LTRB;
                 set_roi_values(images, roiTensorPtrSrc, dstImgSizes, roiTypeSrc, roiTypeDst);*/
 
-            startOmp = omp_get_wtime();
-
+            startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_box_filter_gpu(d_input, srcDescPtr, d_output, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
             else
@@ -1171,8 +1148,7 @@ int main(int argc, char **argv)
         {
             testCaseName = "copy";
 
-            startOmp = omp_get_wtime();
-
+            startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_copy_gpu(d_input, srcDescPtr, d_output, dstDescPtr, handle);
             else
@@ -1230,8 +1206,7 @@ int main(int argc, char **argv)
                 roiTypeDst = RpptRoiType::LTRB;
                 set_roi_values(images, roiTensorPtrSrc, dstImgSizes, roiTypeSrc, roiTypeDst);*/
 
-            startOmp = omp_get_wtime();
-
+            startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 3 || inputBitDepth == 4 || inputBitDepth == 5)
                 rppt_resize_mirror_normalize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, dstImgSizes, interpolationType, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
             else
@@ -1258,8 +1233,7 @@ int main(int argc, char **argv)
                 roiTypeDst = RpptRoiType::LTRB;
                 set_roi_values(images, roiTensorPtrSrc, dstImgSizes, roiTypeSrc, roiTypeDst);*/
 
-            startOmp = omp_get_wtime();
-
+            startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_gridmask_gpu(d_input, srcDescPtr, d_output, dstDescPtr, tileWidth, gridRatio, gridAngle, translateVector, roiTensorPtrSrc, roiTypeSrc, handle);
             else
@@ -1296,8 +1270,7 @@ int main(int argc, char **argv)
             roiTypeDst = RpptRoiType::LTRB;
             set_roi_values(images, roiTensorPtrSrc, dstImgSizes, roiTypeSrc, roiTypeDst);*/
 
-            startOmp = omp_get_wtime();
-
+            startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_spatter_gpu(d_input, srcDescPtr, d_output, dstDescPtr, spatterColor, roiTensorPtrSrc, roiTypeSrc, handle);
             else
@@ -1309,8 +1282,7 @@ int main(int argc, char **argv)
         {
             testCaseName = "swap_channels";
 
-            startOmp = omp_get_wtime();
-
+            startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_swap_channels_gpu(d_input, srcDescPtr, d_output, dstDescPtr, handle);
             else
@@ -1324,8 +1296,7 @@ int main(int argc, char **argv)
 
             RpptSubpixelLayout srcSubpixelLayout = RpptSubpixelLayout::RGBtype;
 
-            startOmp = omp_get_wtime();
-
+            startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_color_to_greyscale_gpu(d_input, srcDescPtr, d_output, dstDescPtr, srcSubpixelLayout, handle);
             else
@@ -1339,36 +1310,30 @@ int main(int argc, char **argv)
         }
 
         hipDeviceSynchronize();
-        endOmp = omp_get_wtime();
-
-
+        endWallTime = omp_get_wtime();
+        wallTime = endWallTime - startWallTime;
         if (missingFuncFlag == 1)
         {
             printf("\nThe functionality %s doesn't yet exist in RPP\n", func.c_str());
             return -1;
         }
 
-        wallTime = endOmp - startOmp;
-
-        maxTimeUsed = max(maxTimeUsed, wallTime);
-        minTimeUsed = min(minTimeUsed, wallTime);
-        avgTimeUsed += wallTime ;
+        maxWallTime = max(maxWallTime, wallTime);
+        minWallTime = min(minWallTime, wallTime);
+        avgWallTime += wallTime ;
     }
 
+    wallTime *= 1000;
+    maxWallTime *= 1000;
+    minWallTime *= 1000;
+    avgWallTime *= 1000;
     if (testType == 0)
-    {
-        cout << "\nGPU Wall Time - Tensor : " << wallTime <<" ms";
-        printf("\n");
-    }
+        cout << "\nGPU Backend Wall Time:" << wallTime <<" ms"<< endl;
     else
     {
-        avgTimeUsed /= numIterations;
-        maxTimeUsed = maxTimeUsed;
-        minTimeUsed = minTimeUsed;
-        avgTimeUsed = avgTimeUsed;
-
         // Display measured times
-        cout << fixed << "\nmax,min,avg in ms = " << maxTimeUsed << "," << minTimeUsed << "," << avgTimeUsed << endl;
+        avgWallTime /= numIterations;
+        cout << fixed <<"\nmax,min,avg in ms = " << maxWallTime << "," << minWallTime << "," << avgWallTime << endl;
     }
 
     if (testType == 0)
