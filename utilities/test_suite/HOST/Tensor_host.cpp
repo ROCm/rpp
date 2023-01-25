@@ -21,7 +21,7 @@ using namespace std;
 using half_float::half;
 typedef half Rpp16f;
 
-size_t get_size_of_data_type(RpptDataType dataType)
+inline size_t get_size_of_data_type(RpptDataType dataType)
 {
     if(dataType == RpptDataType::U8)
         return sizeof(Rpp8u);

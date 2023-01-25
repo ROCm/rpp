@@ -89,9 +89,9 @@ int main(int argc, char **argv)
     unsigned int outputFormatToggle = atoi(argv[5]);
     int test_case = atoi(argv[6]);
 
-    bool additionalParamCase = (test_case == 8 || test_case == 21 || test_case == 23 || test_case == 24 || test_case == 40 || test_case == 41 || test_case == 49);
+    bool additionalParamCase = (test_case == 8 || test_case == 21 || test_case == 24 || test_case == 40 || test_case == 41 || test_case == 49);
     bool kernelSizeCase = (test_case == 40 || test_case == 41 || test_case == 49);
-    bool interpolationTypeCase = (test_case == 21 || test_case == 23 || test_case == 24);
+    bool interpolationTypeCase = (test_case == 21 || test_case == 24);
     bool noiseTypeCase = (test_case == 8);
     bool pln1OutTypeCase = (test_case == 86);
 
@@ -141,9 +141,6 @@ int main(int argc, char **argv)
         break;
     case 21:
         strcpy(funcName, "resize");
-        break;
-    case 23:
-        strcpy(funcName, "rotate");
         break;
     case 24:
         strcpy(funcName, "warp_affine");
@@ -345,15 +342,21 @@ int main(int argc, char **argv)
 
     // Initialize ROI tensors for src/dst
 
-    RpptROI *roiTensorPtrSrc, *roiTensorPtrDst;
-    hipHostMalloc(&roiTensorPtrSrc, noOfImages * sizeof(RpptROI));
-    hipHostMalloc(&roiTensorPtrDst, noOfImages * sizeof(RpptROI));
+    RpptROI *roiTensorPtrSrc = (RpptROI *) calloc(noOfImages, sizeof(RpptROI));
+    RpptROI *roiTensorPtrDst = (RpptROI *) calloc(noOfImages, sizeof(RpptROI));
+
+    RpptROI *d_roiTensorPtrSrc, *d_roiTensorPtrDst;
+    hipMalloc(&d_roiTensorPtrSrc, noOfImages * sizeof(RpptROI));
+    hipMalloc(&d_roiTensorPtrDst, noOfImages * sizeof(RpptROI));
 
     // Initialize the ImagePatch for source and destination
 
-    RpptImagePatch *srcImgSizes, *dstImgSizes;
-    hipHostMalloc(&srcImgSizes, noOfImages * sizeof(RpptImagePatch));
-    hipHostMalloc(&dstImgSizes, noOfImages * sizeof(RpptImagePatch));
+    RpptImagePatch *srcImgSizes = (RpptImagePatch *) calloc(noOfImages, sizeof(RpptImagePatch));
+    RpptImagePatch *dstImgSizes = (RpptImagePatch *) calloc(noOfImages, sizeof(RpptImagePatch));
+
+    RpptImagePatch *d_srcImgSizes, *d_dstImgSizes;
+    hipMalloc(&d_srcImgSizes, noOfImages * sizeof(RpptImagePatch));
+    hipMalloc(&d_dstImgSizes, noOfImages * sizeof(RpptImagePatch));
 
     // Set ROI tensors types for src/dst
 
@@ -719,20 +722,22 @@ int main(int argc, char **argv)
         roiTypeSrc = RpptRoiType::LTRB;
         roiTypeDst = RpptRoiType::LTRB;*/
 
+        hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
+
         start = clock();
 
         if (ip_bitDepth == 0)
-            rppt_brightness_gpu(d_input, srcDescPtr, d_output, dstDescPtr, alpha, beta, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_brightness_gpu(d_input, srcDescPtr, d_output, dstDescPtr, alpha, beta, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 1)
-            rppt_brightness_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, alpha, beta, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_brightness_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, alpha, beta, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 2)
-            rppt_brightness_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, alpha, beta, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_brightness_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, alpha, beta, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 3)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            rppt_brightness_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, alpha, beta, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_brightness_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, alpha, beta, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
@@ -772,20 +777,22 @@ int main(int argc, char **argv)
         roiTypeSrc = RpptRoiType::LTRB;
         roiTypeDst = RpptRoiType::LTRB;*/
 
+        hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
+
         start = clock();
 
         if (ip_bitDepth == 0)
-            rppt_gamma_correction_gpu(d_input, srcDescPtr, d_output, dstDescPtr, gammaVal, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_gamma_correction_gpu(d_input, srcDescPtr, d_output, dstDescPtr, gammaVal, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 1)
-            rppt_gamma_correction_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, gammaVal, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_gamma_correction_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, gammaVal, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 2)
-            rppt_gamma_correction_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, gammaVal, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_gamma_correction_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, gammaVal, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 3)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            rppt_gamma_correction_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, gammaVal, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_gamma_correction_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, gammaVal, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
@@ -825,20 +832,22 @@ int main(int argc, char **argv)
         roiTypeSrc = RpptRoiType::LTRB;
         roiTypeDst = RpptRoiType::LTRB;*/
 
+        hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
+
         start = clock();
 
         if (ip_bitDepth == 0)
-            rppt_blend_gpu(d_input, d_input_second, srcDescPtr, d_output, dstDescPtr, alpha, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_blend_gpu(d_input, d_input_second, srcDescPtr, d_output, dstDescPtr, alpha, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 1)
-            rppt_blend_gpu(d_inputf16, d_inputf16_second, srcDescPtr, d_outputf16, dstDescPtr, alpha, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_blend_gpu(d_inputf16, d_inputf16_second, srcDescPtr, d_outputf16, dstDescPtr, alpha, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 2)
-            rppt_blend_gpu(d_inputf32, d_inputf32_second, srcDescPtr, d_outputf32, dstDescPtr, alpha, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_blend_gpu(d_inputf32, d_inputf32_second, srcDescPtr, d_outputf32, dstDescPtr, alpha, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 3)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            rppt_blend_gpu(d_inputi8, d_inputi8_second, srcDescPtr, d_outputi8, dstDescPtr, alpha, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_blend_gpu(d_inputi8, d_inputi8_second, srcDescPtr, d_outputi8, dstDescPtr, alpha, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
@@ -881,20 +890,22 @@ int main(int argc, char **argv)
         roiTypeDst = RpptRoiType::LTRB;*/
 
 
+        hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
+
         start = clock();
 
         if (ip_bitDepth == 0)
-            rppt_contrast_gpu(d_input, srcDescPtr, d_output, dstDescPtr, contrastFactor, contrastCenter, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_contrast_gpu(d_input, srcDescPtr, d_output, dstDescPtr, contrastFactor, contrastCenter, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 1)
-            rppt_contrast_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, contrastFactor, contrastCenter, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_contrast_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, contrastFactor, contrastCenter, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 2)
-            rppt_contrast_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, contrastFactor, contrastCenter, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_contrast_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, contrastFactor, contrastCenter, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 3)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            rppt_contrast_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, contrastFactor, contrastCenter, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_contrast_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, contrastFactor, contrastCenter, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
@@ -945,20 +956,22 @@ int main(int argc, char **argv)
                 roiTypeSrc = RpptRoiType::LTRB;
                 roiTypeDst = RpptRoiType::LTRB;*/
 
+                hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
+
                 start = clock();
 
                 if (ip_bitDepth == 0)
-                    rppt_salt_and_pepper_noise_gpu(d_input, srcDescPtr, d_output, dstDescPtr, noiseProbabilityTensor, saltProbabilityTensor, saltValueTensor, pepperValueTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
+                    rppt_salt_and_pepper_noise_gpu(d_input, srcDescPtr, d_output, dstDescPtr, noiseProbabilityTensor, saltProbabilityTensor, saltValueTensor, pepperValueTensor, seed, d_roiTensorPtrSrc, roiTypeSrc, handle);
                 else if (ip_bitDepth == 1)
-                    rppt_salt_and_pepper_noise_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, noiseProbabilityTensor, saltProbabilityTensor, saltValueTensor, pepperValueTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
+                    rppt_salt_and_pepper_noise_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, noiseProbabilityTensor, saltProbabilityTensor, saltValueTensor, pepperValueTensor, seed, d_roiTensorPtrSrc, roiTypeSrc, handle);
                 else if (ip_bitDepth == 2)
-                    rppt_salt_and_pepper_noise_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, noiseProbabilityTensor, saltProbabilityTensor, saltValueTensor, pepperValueTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
+                    rppt_salt_and_pepper_noise_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, noiseProbabilityTensor, saltProbabilityTensor, saltValueTensor, pepperValueTensor, seed, d_roiTensorPtrSrc, roiTypeSrc, handle);
                 else if (ip_bitDepth == 3)
                     missingFuncFlag = 1;
                 else if (ip_bitDepth == 4)
                     missingFuncFlag = 1;
                 else if (ip_bitDepth == 5)
-                    rppt_salt_and_pepper_noise_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, noiseProbabilityTensor, saltProbabilityTensor, saltValueTensor, pepperValueTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
+                    rppt_salt_and_pepper_noise_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, noiseProbabilityTensor, saltProbabilityTensor, saltValueTensor, pepperValueTensor, seed, d_roiTensorPtrSrc, roiTypeSrc, handle);
                 else if (ip_bitDepth == 6)
                     missingFuncFlag = 1;
                 else
@@ -999,20 +1012,22 @@ int main(int argc, char **argv)
                 roiTypeSrc = RpptRoiType::LTRB;
                 roiTypeDst = RpptRoiType::LTRB;*/
 
+                hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
+
                 start = clock();
 
                 if (ip_bitDepth == 0)
-                    rppt_gaussian_noise_gpu(d_input, srcDescPtr, d_output, dstDescPtr, meanTensor, stdDevTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
+                    rppt_gaussian_noise_gpu(d_input, srcDescPtr, d_output, dstDescPtr, meanTensor, stdDevTensor, seed, d_roiTensorPtrSrc, roiTypeSrc, handle);
                 else if (ip_bitDepth == 1)
-                    rppt_gaussian_noise_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, meanTensor, stdDevTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
+                    rppt_gaussian_noise_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, meanTensor, stdDevTensor, seed, d_roiTensorPtrSrc, roiTypeSrc, handle);
                 else if (ip_bitDepth == 2)
-                    rppt_gaussian_noise_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, meanTensor, stdDevTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
+                    rppt_gaussian_noise_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, meanTensor, stdDevTensor, seed, d_roiTensorPtrSrc, roiTypeSrc, handle);
                 else if (ip_bitDepth == 3)
                     missingFuncFlag = 1;
                 else if (ip_bitDepth == 4)
                     missingFuncFlag = 1;
                 else if (ip_bitDepth == 5)
-                    rppt_gaussian_noise_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, meanTensor, stdDevTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
+                    rppt_gaussian_noise_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, meanTensor, stdDevTensor, seed, d_roiTensorPtrSrc, roiTypeSrc, handle);
                 else if (ip_bitDepth == 6)
                     missingFuncFlag = 1;
                 else
@@ -1051,20 +1066,22 @@ int main(int argc, char **argv)
                 roiTypeSrc = RpptRoiType::LTRB;
                 roiTypeDst = RpptRoiType::LTRB;*/
 
+                hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
+
                 start = clock();
 
                 if (ip_bitDepth == 0)
-                    rppt_shot_noise_gpu(d_input, srcDescPtr, d_output, dstDescPtr, shotNoiseFactorTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
+                    rppt_shot_noise_gpu(d_input, srcDescPtr, d_output, dstDescPtr, shotNoiseFactorTensor, seed, d_roiTensorPtrSrc, roiTypeSrc, handle);
                 else if (ip_bitDepth == 1)
-                    rppt_shot_noise_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, shotNoiseFactorTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
+                    rppt_shot_noise_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, shotNoiseFactorTensor, seed, d_roiTensorPtrSrc, roiTypeSrc, handle);
                 else if (ip_bitDepth == 2)
-                    rppt_shot_noise_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, shotNoiseFactorTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
+                    rppt_shot_noise_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, shotNoiseFactorTensor, seed, d_roiTensorPtrSrc, roiTypeSrc, handle);
                 else if (ip_bitDepth == 3)
                     missingFuncFlag = 1;
                 else if (ip_bitDepth == 4)
                     missingFuncFlag = 1;
                 else if (ip_bitDepth == 5)
-                    rppt_shot_noise_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, shotNoiseFactorTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
+                    rppt_shot_noise_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, shotNoiseFactorTensor, seed, d_roiTensorPtrSrc, roiTypeSrc, handle);
                 else if (ip_bitDepth == 6)
                     missingFuncFlag = 1;
                 else
@@ -1113,20 +1130,22 @@ int main(int argc, char **argv)
         roiTypeSrc = RpptRoiType::LTRB;
         roiTypeDst = RpptRoiType::LTRB;*/
 
+        hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
+
         start = clock();
 
         if (ip_bitDepth == 0)
-            rppt_exposure_gpu(d_input, srcDescPtr, d_output, dstDescPtr, exposureFactor, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_exposure_gpu(d_input, srcDescPtr, d_output, dstDescPtr, exposureFactor, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 1)
-            rppt_exposure_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, exposureFactor, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_exposure_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, exposureFactor, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 2)
-            rppt_exposure_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, exposureFactor, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_exposure_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, exposureFactor, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 3)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            rppt_exposure_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, exposureFactor, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_exposure_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, exposureFactor, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
@@ -1168,20 +1187,22 @@ int main(int argc, char **argv)
         roiTypeSrc = RpptRoiType::LTRB;
         roiTypeDst = RpptRoiType::LTRB;*/
 
+        hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
+
         start = clock();
 
         if (ip_bitDepth == 0)
-            rppt_flip_gpu(d_input, srcDescPtr, d_output, dstDescPtr, horizontalFlag, verticalFlag, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_flip_gpu(d_input, srcDescPtr, d_output, dstDescPtr, horizontalFlag, verticalFlag, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 1)
-            rppt_flip_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, horizontalFlag, verticalFlag, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_flip_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, horizontalFlag, verticalFlag, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 2)
-            rppt_flip_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, horizontalFlag, verticalFlag, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_flip_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, horizontalFlag, verticalFlag, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 3)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            rppt_flip_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, horizontalFlag, verticalFlag, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_flip_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, horizontalFlag, verticalFlag, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
@@ -1221,78 +1242,23 @@ int main(int argc, char **argv)
         roiTypeSrc = RpptRoiType::LTRB;
         roiTypeDst = RpptRoiType::LTRB;*/
 
+        hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
+        hipMemcpy(d_dstImgSizes, dstImgSizes, images * sizeof(RpptImagePatch), hipMemcpyHostToDevice);
+
         start = clock();
 
         if (ip_bitDepth == 0)
-            rppt_resize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, dstImgSizes, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_resize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, d_dstImgSizes, interpolationType, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 1)
-            rppt_resize_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, dstImgSizes, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_resize_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, d_dstImgSizes, interpolationType, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 2)
-            rppt_resize_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, dstImgSizes, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_resize_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, d_dstImgSizes, interpolationType, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 3)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            rppt_resize_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, dstImgSizes, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
-        else if (ip_bitDepth == 6)
-            missingFuncFlag = 1;
-        else
-            missingFuncFlag = 1;
-
-        break;
-    }
-    case 23:
-    {
-        test_case_name = "rotate";
-
-        if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR))
-        {
-            missingFuncFlag = 1;
-            break;
-        }
-
-        Rpp32f angle[images];
-        for (i = 0; i < images; i++)
-        {
-            angle[i] = 50;
-        }
-
-        // Uncomment to run test case with an xywhROI override
-        /*for (i = 0; i < images; i++)
-        {
-            roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-            roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-            roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-            roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
-        }*/
-
-        // Uncomment to run test case with an ltrbROI override
-        /*for (i = 0; i < images; i++)
-            roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
-            roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
-            roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
-            roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
-            dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
-            dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
-        }
-        roiTypeSrc = RpptRoiType::LTRB;
-        roiTypeDst = RpptRoiType::LTRB;*/
-
-        start = clock();
-
-        if (ip_bitDepth == 0)
-            rppt_rotate_gpu(d_input, srcDescPtr, d_output, dstDescPtr, angle, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
-        else if (ip_bitDepth == 1)
-            rppt_rotate_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, angle, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
-        else if (ip_bitDepth == 2)
-            rppt_rotate_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, angle, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
-        else if (ip_bitDepth == 3)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 4)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 5)
-            rppt_rotate_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, angle, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_resize_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, d_dstImgSizes, interpolationType, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
@@ -1344,20 +1310,22 @@ int main(int argc, char **argv)
         roiTypeSrc = RpptRoiType::LTRB;
         roiTypeDst = RpptRoiType::LTRB;*/
 
+        hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
+
         start = clock();
 
         if (ip_bitDepth == 0)
-            rppt_warp_affine_gpu(d_input, srcDescPtr, d_output, dstDescPtr, affineTensor, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_warp_affine_gpu(d_input, srcDescPtr, d_output, dstDescPtr, affineTensor, interpolationType, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 1)
-            rppt_warp_affine_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, affineTensor, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_warp_affine_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, affineTensor, interpolationType, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 2)
-            rppt_warp_affine_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, affineTensor, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_warp_affine_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, affineTensor, interpolationType, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 3)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            rppt_warp_affine_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, affineTensor, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_warp_affine_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, affineTensor, interpolationType, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
@@ -1397,20 +1365,22 @@ int main(int argc, char **argv)
         roiTypeSrc = RpptRoiType::LTRB;
         roiTypeDst = RpptRoiType::LTRB;*/
 
+        hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
+
         start = clock();
 
         if (ip_bitDepth == 0)
-            rppt_non_linear_blend_gpu(d_input, d_input_second, srcDescPtr, d_output, dstDescPtr, stdDev, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_non_linear_blend_gpu(d_input, d_input_second, srcDescPtr, d_output, dstDescPtr, stdDev, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 1)
-            rppt_non_linear_blend_gpu(d_inputf16, d_inputf16_second, srcDescPtr, d_outputf16, dstDescPtr, stdDev, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_non_linear_blend_gpu(d_inputf16, d_inputf16_second, srcDescPtr, d_outputf16, dstDescPtr, stdDev, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 2)
-            rppt_non_linear_blend_gpu(d_inputf32, d_inputf32_second, srcDescPtr, d_outputf32, dstDescPtr, stdDev, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_non_linear_blend_gpu(d_inputf32, d_inputf32_second, srcDescPtr, d_outputf32, dstDescPtr, stdDev, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 3)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            rppt_non_linear_blend_gpu(d_inputi8, d_inputi8_second, srcDescPtr, d_outputi8, dstDescPtr, stdDev, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_non_linear_blend_gpu(d_inputi8, d_inputi8_second, srcDescPtr, d_outputi8, dstDescPtr, stdDev, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
@@ -1455,20 +1425,22 @@ int main(int argc, char **argv)
         roiTypeSrc = RpptRoiType::LTRB;
         roiTypeDst = RpptRoiType::LTRB;*/
 
+        hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
+
         start = clock();
 
         if (ip_bitDepth == 0)
-            rppt_color_cast_gpu(d_input, srcDescPtr, d_output, dstDescPtr, rgbTensor, alphaTensor, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_color_cast_gpu(d_input, srcDescPtr, d_output, dstDescPtr, rgbTensor, alphaTensor, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 1)
-            rppt_color_cast_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, rgbTensor, alphaTensor, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_color_cast_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, rgbTensor, alphaTensor, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 2)
-            rppt_color_cast_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, rgbTensor, alphaTensor, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_color_cast_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, rgbTensor, alphaTensor, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 3)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            rppt_color_cast_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, rgbTensor, alphaTensor, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_color_cast_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, rgbTensor, alphaTensor, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
@@ -1514,20 +1486,22 @@ int main(int argc, char **argv)
         roiTypeSrc = RpptRoiType::LTRB;
         roiTypeDst = RpptRoiType::LTRB;*/
 
+        hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
+
         start = clock();
 
         if (ip_bitDepth == 0)
-            rppt_color_twist_gpu(d_input, srcDescPtr, d_output, dstDescPtr, brightness, contrast, hue, saturation, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_color_twist_gpu(d_input, srcDescPtr, d_output, dstDescPtr, brightness, contrast, hue, saturation, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 1)
-            rppt_color_twist_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, brightness, contrast, hue, saturation, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_color_twist_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, brightness, contrast, hue, saturation, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 2)
-            rppt_color_twist_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, brightness, contrast, hue, saturation, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_color_twist_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, brightness, contrast, hue, saturation, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 3)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            rppt_color_twist_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, brightness, contrast, hue, saturation, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_color_twist_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, brightness, contrast, hue, saturation, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
@@ -1561,20 +1535,22 @@ int main(int argc, char **argv)
         roiTypeSrc = RpptRoiType::LTRB;
         roiTypeDst = RpptRoiType::LTRB;*/
 
+        hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
+
         start = clock();
 
         if (ip_bitDepth == 0)
-            rppt_crop_gpu(d_input, srcDescPtr, d_output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_crop_gpu(d_input, srcDescPtr, d_output, dstDescPtr, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 1)
-            rppt_crop_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_crop_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 2)
-            rppt_crop_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_crop_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 3)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            rppt_crop_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_crop_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
@@ -1629,20 +1605,22 @@ int main(int argc, char **argv)
         roiTypeSrc = RpptRoiType::LTRB;
         roiTypeDst = RpptRoiType::LTRB;*/
 
+        hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
+
         start = clock();
 
         if (ip_bitDepth == 0)
-            rppt_crop_mirror_normalize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, offset, multiplier, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_crop_mirror_normalize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, offset, multiplier, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 1)
-            rppt_crop_mirror_normalize_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, offset, multiplier, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_crop_mirror_normalize_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, offset, multiplier, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 2)
-            rppt_crop_mirror_normalize_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, offset, multiplier, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_crop_mirror_normalize_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, offset, multiplier, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 3)
-            rppt_crop_mirror_normalize_gpu(d_input, srcDescPtr, d_outputf16, dstDescPtr, offset, multiplier, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_crop_mirror_normalize_gpu(d_input, srcDescPtr, d_outputf16, dstDescPtr, offset, multiplier, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 4)
-            rppt_crop_mirror_normalize_gpu(d_input, srcDescPtr, d_outputf32, dstDescPtr, offset, multiplier, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_crop_mirror_normalize_gpu(d_input, srcDescPtr, d_outputf32, dstDescPtr, offset, multiplier, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 5)
-            rppt_crop_mirror_normalize_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, offset, multiplier, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_crop_mirror_normalize_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, offset, multiplier, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
@@ -1689,19 +1667,22 @@ int main(int argc, char **argv)
         roiTypeSrc = RpptRoiType::LTRB;
         roiTypeDst = RpptRoiType::LTRB;*/
 
+        hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
+        hipMemcpy(d_dstImgSizes, dstImgSizes, images * sizeof(RpptImagePatch), hipMemcpyHostToDevice);
+
         start = clock();
         if (ip_bitDepth == 0)
-            rppt_resize_crop_mirror_gpu(d_input, srcDescPtr, d_output, dstDescPtr, dstImgSizes, interpolationType, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_resize_crop_mirror_gpu(d_input, srcDescPtr, d_output, dstDescPtr, d_dstImgSizes, interpolationType, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 1)
-            rppt_resize_crop_mirror_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, dstImgSizes, interpolationType, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_resize_crop_mirror_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, d_dstImgSizes, interpolationType, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 2)
-            rppt_resize_crop_mirror_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, dstImgSizes, interpolationType, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_resize_crop_mirror_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, d_dstImgSizes, interpolationType, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 3)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            rppt_resize_crop_mirror_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, dstImgSizes, interpolationType, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_resize_crop_mirror_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, d_dstImgSizes, interpolationType, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
@@ -1737,20 +1718,22 @@ int main(int argc, char **argv)
         roiTypeSrc = RpptRoiType::LTRB;
         roiTypeDst = RpptRoiType::LTRB;*/
 
+        hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
+
         start = clock();
 
         if (ip_bitDepth == 0)
-            rppt_erode_gpu(d_input, srcDescPtr, d_output, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_erode_gpu(d_input, srcDescPtr, d_output, dstDescPtr, kernelSize, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 1)
-            rppt_erode_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_erode_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, kernelSize, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 2)
-            rppt_erode_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_erode_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, kernelSize, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 3)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            rppt_erode_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_erode_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, kernelSize, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
@@ -1786,20 +1769,22 @@ int main(int argc, char **argv)
         roiTypeSrc = RpptRoiType::LTRB;
         roiTypeDst = RpptRoiType::LTRB;*/
 
+        hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
+
         start = clock();
 
         if (ip_bitDepth == 0)
-            rppt_dilate_gpu(d_input, srcDescPtr, d_output, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_dilate_gpu(d_input, srcDescPtr, d_output, dstDescPtr, kernelSize, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 1)
-            rppt_dilate_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_dilate_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, kernelSize, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 2)
-            rppt_dilate_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_dilate_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, kernelSize, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 3)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            rppt_dilate_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_dilate_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, kernelSize, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
@@ -1835,20 +1820,22 @@ int main(int argc, char **argv)
         roiTypeSrc = RpptRoiType::LTRB;
         roiTypeDst = RpptRoiType::LTRB;*/
 
+        hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
+
         start = clock();
 
         if (ip_bitDepth == 0)
-            rppt_box_filter_gpu(d_input, srcDescPtr, d_output, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_box_filter_gpu(d_input, srcDescPtr, d_output, dstDescPtr, kernelSize, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 1)
-            rppt_box_filter_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_box_filter_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, kernelSize, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 2)
-            rppt_box_filter_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_box_filter_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, kernelSize, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 3)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            rppt_box_filter_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_box_filter_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, kernelSize, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
@@ -1934,19 +1921,22 @@ int main(int argc, char **argv)
         roiTypeSrc = RpptRoiType::LTRB;
         roiTypeDst = RpptRoiType::LTRB;*/
 
+        hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
+        hipMemcpy(d_dstImgSizes, dstImgSizes, images * sizeof(RpptImagePatch), hipMemcpyHostToDevice);
+
         start = clock();
         if (ip_bitDepth == 0)
-            rppt_resize_mirror_normalize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, dstImgSizes, interpolationType, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_resize_mirror_normalize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, d_dstImgSizes, interpolationType, mean, stdDev, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 1)
-            rppt_resize_mirror_normalize_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, dstImgSizes, interpolationType, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_resize_mirror_normalize_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, d_dstImgSizes, interpolationType, mean, stdDev, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 2)
-            rppt_resize_mirror_normalize_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, dstImgSizes, interpolationType, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_resize_mirror_normalize_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, d_dstImgSizes, interpolationType, mean, stdDev, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 3)
-            rppt_resize_mirror_normalize_gpu(d_input, srcDescPtr, d_outputf16, dstDescPtr, dstImgSizes, interpolationType, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_resize_mirror_normalize_gpu(d_input, srcDescPtr, d_outputf16, dstDescPtr, d_dstImgSizes, interpolationType, mean, stdDev, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 4)
-            rppt_resize_mirror_normalize_gpu(d_input, srcDescPtr, d_outputf32, dstDescPtr, dstImgSizes, interpolationType, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_resize_mirror_normalize_gpu(d_input, srcDescPtr, d_outputf32, dstDescPtr, d_dstImgSizes, interpolationType, mean, stdDev, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 5)
-            rppt_resize_mirror_normalize_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, dstImgSizes, interpolationType, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_resize_mirror_normalize_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, d_dstImgSizes, interpolationType, mean, stdDev, mirror, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
@@ -1988,20 +1978,22 @@ int main(int argc, char **argv)
         roiTypeDst = RpptRoiType::LTRB;*/
 
 
+        hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
+
         start = clock();
 
         if (ip_bitDepth == 0)
-            rppt_gridmask_gpu(d_input, srcDescPtr, d_output, dstDescPtr, tileWidth, gridRatio, gridAngle, translateVector, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_gridmask_gpu(d_input, srcDescPtr, d_output, dstDescPtr, tileWidth, gridRatio, gridAngle, translateVector, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 1)
-            rppt_gridmask_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, tileWidth, gridRatio, gridAngle, translateVector, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_gridmask_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, tileWidth, gridRatio, gridAngle, translateVector, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 2)
-            rppt_gridmask_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, tileWidth, gridRatio, gridAngle, translateVector, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_gridmask_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, tileWidth, gridRatio, gridAngle, translateVector, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 3)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            rppt_gridmask_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, tileWidth, gridRatio, gridAngle, translateVector, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_gridmask_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, tileWidth, gridRatio, gridAngle, translateVector, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
@@ -2053,20 +2045,22 @@ int main(int argc, char **argv)
         roiTypeDst = RpptRoiType::LTRB;*/
 
 
+        hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
+
         start = clock();
 
         if (ip_bitDepth == 0)
-            rppt_spatter_gpu(d_input, srcDescPtr, d_output, dstDescPtr, spatterColor, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_spatter_gpu(d_input, srcDescPtr, d_output, dstDescPtr, spatterColor, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 1)
-            rppt_spatter_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, spatterColor, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_spatter_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, spatterColor, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 2)
-            rppt_spatter_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, spatterColor, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_spatter_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, spatterColor, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 3)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 4)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
-            rppt_spatter_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, spatterColor, roiTensorPtrSrc, roiTypeSrc, handle);
+            rppt_spatter_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, spatterColor, d_roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
@@ -2354,10 +2348,14 @@ int main(int argc, char **argv)
 
     // Free memory
 
-    hipHostFree(roiTensorPtrSrc);
-    hipHostFree(roiTensorPtrDst);
-    hipHostFree(srcImgSizes);
-    hipHostFree(dstImgSizes);
+    free(roiTensorPtrSrc);
+    free(roiTensorPtrDst);
+    hipFree(d_roiTensorPtrSrc);
+    hipFree(d_roiTensorPtrDst);
+    free(srcImgSizes);
+    free(dstImgSizes);
+    hipFree(d_srcImgSizes);
+    hipFree(d_dstImgSizes);
     free(input);
     free(input_second);
     free(output);

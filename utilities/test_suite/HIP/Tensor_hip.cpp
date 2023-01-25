@@ -20,7 +20,7 @@ typedef half Rpp16f;
 using namespace cv;
 using namespace std;
 
-size_t get_size_of_data_type(RpptDataType dataType)
+inline size_t get_size_of_data_type(RpptDataType dataType)
 {
     if(dataType == RpptDataType::U8)
         return sizeof(Rpp8u);
