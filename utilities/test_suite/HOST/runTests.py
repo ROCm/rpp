@@ -29,36 +29,46 @@ if (int(testType) == 0):
 else:
     numIterations = "100"
 
-if caseEnd < caseStart:
-    print("Ending case# must be greater than starting case#. Aborting!")
-    exit(0)
+def validate_path(input_path):
+    if not os.path.exists(input_path):
+        raise ValueError(f" path {input_path} does not exist.")
+    if not os.path.isdir(input_path):
+        raise ValueError(f" path {input_path} is not a directory.")
 
-if caseStart < "0" or caseStart > "86":
-    print("Starting case# must be in the 0:86 range. Aborting!")
-    exit(0)
+def validator(caseStart, caseEnd, testType, caseList, srcPath,dstPath):
+    validate_path(srcPath)
+    validate_path(dstPath)
+    if caseEnd < caseStart:
+        print("Ending case# must be greater than starting case#. Aborting!")
+        exit(0)
 
-if caseEnd < "0" or caseEnd > "86":
-    print("Ending case# must be in the 0:86 range. Aborting!")
-    exit(0)
+    if caseStart < "0" or caseStart > "86":
+        print("Starting case# must be in the 0:86 range. Aborting!")
+        exit(0)
 
-if testType < "0" or testType > "1":
-    print("Test Type# must be in the 0:1 range. Aborting!")
-    exit(0)
+    if caseEnd < "0" or caseEnd > "86":
+        print("Ending case# must be in the 0:86 range. Aborting!")
+        exit(0)
 
-if caseList is not None and caseStart > 0 and caseEnd <86:
-    print("Invalid input! Please provide only 1 option between case_list, case_start and case_end")
-    exit(0)
+    if testType < "0" or testType > "1":
+        print("Test Type# must be in the 0:1 range. Aborting!")
+        exit(0)
 
-if caseList is None:
-    caseList = range(int(caseStart), int(caseEnd) + 1)
-    caseList = [str(x) for x in caseList]
-    subprocess.call(["./testAllScript.sh", srcPath, dstPath, testType, numIterations, " ".join(caseList)])
-else:
-    for case in caseList:
-        if int(case) < 0 or int(case) > 86:
-            print("The case# must be in the 0:86 range!")
-            exit(0)
-    subprocess.call(["./testAllScript.sh", srcPath, dstPath, testType, numIterations, " ".join(caseList)])
+    if caseList is not None and caseStart > 0 and caseEnd <86:
+        print("Invalid input! Please provide only 1 option between case_list, case_start and case_end")
+        exit(0)
+
+    if caseList is None:
+        caseList = range(int(caseStart), int(caseEnd) + 1)
+        caseList = [str(x) for x in caseList]
+        subprocess.call(["./testAllScript.sh", srcPath, dstPath, testType, numIterations, " ".join(caseList)])
+    else:
+        for case in caseList:
+            if int(case) < 0 or int(case) > 86:
+                print("The case# must be in the 0:86 range!")
+                exit(0)
+        subprocess.call(["./testAllScript.sh", srcPath, dstPath, testType, numIterations, " ".join(caseList)])
+
 
 log_file_list = [
     "../OUTPUT_PERFORMANCE_LOGS_HOST_NEW/Tensor_host_pkd3_raw_performance_log.txt",
