@@ -90,7 +90,7 @@ int main(int argc, char **argv)
         }
     }
 
-    int inputChannel;
+    int inputChannels;
     string funcType;
 
     // Initialize tensor descriptors
@@ -101,7 +101,7 @@ int main(int argc, char **argv)
 
     if(layoutType == 0)
     {
-        inputChannel = 3;
+        inputChannels = 3;
         funcType = "Tensor_HOST_PKD3";
         srcDescPtr->layout = RpptLayout::NHWC;
 
@@ -127,7 +127,7 @@ int main(int argc, char **argv)
     }
     else if(layoutType == 1)
     {
-        inputChannel = 3;
+        inputChannels = 3;
         funcType = "Tensor_HOST_PLN3";
         srcDescPtr->layout = RpptLayout::NCHW;
 
@@ -153,7 +153,7 @@ int main(int argc, char **argv)
     }
     else
     {
-        inputChannel = 1;
+        inputChannels = 1;
         funcType = "Tensor_HOST_PLN1";
         funcType += "_toPLN1";
 
@@ -298,12 +298,14 @@ int main(int argc, char **argv)
         exit(0);
     }
 
-    // Set numDims, offset, n/c/h/w values for src/dst
-    set_nchw_values(srcDescPtr, dstDescPtr, noOfImages, maxHeight, maxWidth, maxDstHeight, maxDstWidth, inputChannel, layoutType, pln1OutTypeCase, "HOST");
+    Rpp32u outputChannels = inputChannels;
+    if(pln1OutTypeCase)
+        outputChannels = 1;
+    Rpp32u offsetInBytes = 0;
 
-    // Set n/c/h/w strides for src/dst
-    set_strides(srcDescPtr);
-    set_strides(dstDescPtr);
+    // Set numDims, offset, n/c/h/w values, strides for src/dst
+    set_description_ptr_dims_and_strides(srcDescPtr, noOfImages, maxHeight, maxWidth, inputChannels, offsetInBytes);
+    set_description_ptr_dims_and_strides(dstDescPtr, noOfImages, maxDstHeight, maxDstWidth, outputChannels, offsetInBytes);
 
     // Set buffer sizes for src/dst
     ioBufferSize = (Rpp64u)srcDescPtr->h * (Rpp64u)srcDescPtr->w * (Rpp64u)srcDescPtr->c * (Rpp64u)noOfImages;
@@ -1288,6 +1290,7 @@ int main(int argc, char **argv)
     avgWallTime *= 1000;
     if (testType == 0)
     {
+        cout <<"\n\n";
         cout <<"CPU Backend Clock Time: "<< cpuTime <<" ms"<< endl;
         cout <<"CPU Backend Wall Time: "<< wallTime <<" ms"<< endl;
     }
@@ -1295,7 +1298,7 @@ int main(int argc, char **argv)
     {
         // Display measured times
         avgWallTime /= numIterations;
-        cout << fixed << "\nmax,min,avg in ms = " << maxWallTime << "," << minWallTime << "," << avgWallTime << endl;
+        cout << fixed << "\n\nmax,min,avg in ms = " << maxWallTime << "," << minWallTime << "," << avgWallTime << endl;
     }
 
     if (testType == 0)

@@ -149,37 +149,18 @@ inline void set_data_type(int ip_bitDepth, string &funcName, RpptDescPtr srcDesc
     }
 }
 
-inline void set_nchw_values(RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, int noOfImages, int maxHeight, int maxWidth, int maxDstHeight, int maxDstWidth, int inputChannel, int layoutType, bool pln1OutTypeCase, string backend)
+inline void set_description_ptr_dims_and_strides(RpptDescPtr descPtr, int noOfImages, int maxHeight, int maxWidth, int numChannels, int offsetInBytes)
 {
-    srcDescPtr->numDims = 4;
-    dstDescPtr->numDims = 4;
-
-    if (backend == "HIP")
-        srcDescPtr->offsetInBytes = 64;
-    else
-        srcDescPtr->offsetInBytes = 0;
-    dstDescPtr->offsetInBytes = 0;
-
-    srcDescPtr->n = noOfImages;
-    srcDescPtr->h = maxHeight;
-    srcDescPtr->w = maxWidth;
-    srcDescPtr->c = inputChannel;
-
-    dstDescPtr->n = noOfImages;
-    dstDescPtr->h = maxDstHeight;
-    dstDescPtr->w = maxDstWidth;
-    if (layoutType == 0 || layoutType == 1)
-        dstDescPtr->c = (pln1OutTypeCase) ? 1 : inputChannel;
-    else
-        dstDescPtr->c = inputChannel;
+    descPtr->numDims = 4;
+    descPtr->offsetInBytes = offsetInBytes;
+    descPtr->n = noOfImages;
+    descPtr->h = maxHeight;
+    descPtr->w = maxWidth;
+    descPtr->c = numChannels;
 
     // Optionally set w stride as a multiple of 8 for src/dst
-    srcDescPtr->w = ((srcDescPtr->w / 8) * 8) + 8;
-    dstDescPtr->w = ((dstDescPtr->w / 8) * 8) + 8;
-}
+    descPtr->w = ((descPtr->w / 8) * 8) + 8;
 
-inline void set_strides(RpptDescPtr descPtr)
-{
     // set strides
     if (descPtr->layout == RpptLayout::NHWC)
     {
@@ -315,12 +296,10 @@ template <typename T>
 inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, RpptROI *roiPtr, int noOfImages)
 {
     bool isEqual = true;
-    string func = "";
-    func += funcName;
+    string func = funcName;
     string refPath = get_current_dir_name();
     string pattern = "/build";
     remove_substring(refPath, pattern);
-
     string dataType[4] = {"_u8_", "_f16_", "_f32_", "_i8_"};
 
     if(srcDescPtr->dataType == dstDescPtr->dataType)
@@ -343,7 +322,6 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     }
 
     string refFile = refPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ func + ".csv";
-
     ifstream file(refFile);
     Rpp8u *refOutput;
     refOutput = (Rpp8u *)malloc(noOfImages * dstDescPtr->strides.nStride * sizeof(Rpp8u));
