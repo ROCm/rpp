@@ -1386,7 +1386,7 @@ int main(int argc, char **argv)
         rppDestroyHost(handle);
 
         // OpenCV dump (if testType is unit test)
-        write_image(dst, outputu8, dstDescPtr, layoutType, imageNames, dstImgSizes, pln1OutTypeCase);
+        write_image(dst, outputu8, dstDescPtr, imageNames, dstImgSizes);
     }
 
     // Free memory
