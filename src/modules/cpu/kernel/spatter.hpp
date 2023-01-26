@@ -295,6 +295,40 @@ RppStatus spatter_u8_u8_host_tensor(Rpp8u *srcPtr,
                 spatterMaskInvPtrTemp = spatterMaskInvPtrRow;
 
                 int vectorLoopCount = 0;
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+#if __AVX2__
+                    __m256 pSpatterMask[2], pSpatterMaskInv[2];
+                    rpp_simd_load(rpp_load16_f32_to_f32_avx, spatterMaskPtrTemp, pSpatterMask);    // simd loads
+                    rpp_simd_load(rpp_load16_f32_to_f32_avx, spatterMaskInvPtrTemp, pSpatterMaskInv);    // simd loads
+#else
+                    __m128 pSpatterMask[4], pSpatterMaskInv[4];
+                    rpp_simd_load(rpp_load16_f32_to_f32, spatterMaskPtrTemp, pSpatterMask);    // simd loads
+                    rpp_simd_load(rpp_load16_f32_to_f32, spatterMaskInvPtrTemp, pSpatterMaskInv);    // simd loads
+#endif
+                    srcPtrChannel = srcPtrTemp;
+                    dstPtrChannel = dstPtrTemp;
+                    for(int c = 0; c < srcDescPtr->c; c++)
+                    {
+#if __AVX2__
+                        __m256 p[2];
+                        rpp_simd_load(rpp_load16_u8_to_f32_avx, srcPtrChannel, p);    // simd loads
+                        compute_spatter_16_host(p, pSpatterMaskInv, pSpatterMask, pSpatterValue[c]);    // spatter adjustment
+                        rpp_simd_store(rpp_store16_f32_to_u8_avx, dstPtrChannel, p);    // simd stores
+#else
+                        __m128 p[4];
+                        rpp_simd_load(rpp_load16_u8_to_f32, srcPtrChannel, p);    // simd loads
+                        compute_spatter_16_host(p, pSpatterMaskInv, pSpatterMask, pSpatterValue[c]);    // spatter adjustment
+                        rpp_simd_store(rpp_store16_f32_to_u8, dstPtrChannel, p);    // simd stores
+#endif
+                        srcPtrChannel += srcDescPtr->strides.cStride;
+                        dstPtrChannel += dstDescPtr->strides.cStride;
+                    }
+                    srcPtrTemp += vectorIncrementPerChannel;
+                    dstPtrTemp += vectorIncrementPerChannel;
+                    spatterMaskPtrTemp += vectorIncrementPerChannel;
+                    spatterMaskInvPtrTemp += vectorIncrementPerChannel;
+                }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     srcPtrChannel = srcPtrTemp;
