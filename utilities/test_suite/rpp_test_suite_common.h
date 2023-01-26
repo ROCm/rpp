@@ -178,28 +178,46 @@ inline void set_description_ptr_dims_and_strides(RpptDescPtr descPtr, int noOfIm
     }
 }
 
-inline void set_roi_values(int images , RpptROI *roiTensorPtrSrc, RpptImagePatch *dstImgSizes, RpptRoiType roiTypeSrc, RpptRoiType roiTypeDst)
+inline void set_roi_values(RpptROI *roi, RpptROI *roiTensorPtrSrc, RpptRoiType roiType, int batchSize)
 {
-    if(roiTypeSrc == RpptRoiType::XYWH && roiTypeDst == RpptRoiType::XYWH)
+    if(roiType == RpptRoiType::XYWH)
     {
-        for (int i = 0; i < images; i++)
+        for (int i = 0; i < batchSize; i++)
         {
-            roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-            roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-            dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-            dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+            roiTensorPtrSrc[i].xywhROI.xy.x = roi->xywhROI.xy.x;
+            roiTensorPtrSrc[i].xywhROI.xy.y = roi->xywhROI.xy.y;
+            roiTensorPtrSrc[i].xywhROI.roiWidth = roi->xywhROI.roiWidth;
+            roiTensorPtrSrc[i].xywhROI.roiHeight = roi->xywhROI.roiHeight;
         }
     }
-    else
+    else if(roiType == RpptRoiType::LTRB)
     {
-        for (int i = 0; i < images; i++)
+        for (int i = 0; i < batchSize; i++)
         {
-            roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
-            roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
-            roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
-            roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
-            dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
-            dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
+            roiTensorPtrSrc[i].ltrbROI.lt.x = roi->ltrbROI.lt.x;
+            roiTensorPtrSrc[i].ltrbROI.lt.y = roi->ltrbROI.lt.y;
+            roiTensorPtrSrc[i].ltrbROI.rb.x = roi->ltrbROI.rb.x;
+            roiTensorPtrSrc[i].ltrbROI.rb.y = roi->ltrbROI.rb.x;
+        }
+    }
+}
+
+inline void update_dst_sizes_with_roi(RpptROI *roiTensorPtrSrc, RpptImagePatchPtr dstImageSize, RpptRoiType roiType, int batchSize)
+{
+    if(roiType == RpptRoiType::XYWH)
+    {
+        for (int i = 0; i < batchSize; i++)
+        {
+            dstImageSize[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth;
+            dstImageSize[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight;
+        }
+    }
+    else if(roiType == RpptRoiType::LTRB)
+    {
+        for (int i = 0; i < batchSize; i++)
+        {
+            dstImageSize[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+            dstImageSize[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
         }
     }
 }
@@ -374,7 +392,32 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
         cout<< func << ": " << "FAILED \n";
 }
 
-inline void write_image(string outputFolder, Rpp8u *output, RpptDescPtr dstDescPtr, string imageNames[], RpptImagePatch *dstImgSizes)
+inline void read_image_batch_opencv(Rpp8u *input, RpptDescPtr descPtr, string imageNames[])
+{
+    for(int i = 0; i < descPtr->n; i++)
+    {
+        Rpp8u *inputTemp = input + (i * descPtr->strides.nStride);
+        string inputImagePath = imageNames[i];
+        cv::Mat image;
+        if (descPtr->c == 3)
+            image = imread(inputImagePath, 1);
+        else if (descPtr->c == 1)
+            image = imread(inputImagePath, 0);
+
+        int width = image.cols;
+        int height = image.rows;
+        Rpp32u elementsInRow = width * descPtr->c;
+        Rpp8u *inputImage = image.data;
+        for (int j = 0; j < height; j++)
+        {
+            memcpy(inputTemp, inputImage, elementsInRow * sizeof(Rpp8u));
+            inputImage += elementsInRow;
+            inputTemp += descPtr->w * descPtr->c;
+        }
+    }
+}
+
+inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDescPtr dstDescPtr, string imageNames[], RpptImagePatch *dstImgSizes)
 {
     // create output folder
     mkdir(outputFolder.c_str(), 0700);
