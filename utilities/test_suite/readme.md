@@ -1,6 +1,14 @@
-RPP Test Suite
+AMD Radeon Performance Primitives (RPP) Test Suite
 
-The RPP Test Suite is a set of tests that are used to validate the functionality and performance of the RPP application. The suite includes both unit tests and performance tests, and allows the user to test specific cases or a range of cases. This test suite includes  all three layouts .The test suite also provides an option to run the tests with a profiler for performance analysis. This test suite also contains validation part to validate the functionalities, currently the validation part is only restricted to input depth 0 and outputToggle value 0
+The RPP Test Suite is a set of tests that are used to validate the functionality and performance of the AMD Radeon Performance Primitives vision library.
+
+Features:
+The suite includes:
+--Unit tests that execute the desired functionality and variant once, report RPP execution wall timee and save output images.
+--Performance tests that execute the desired functionality and variant 100 times by default, and report max/min/avg RPP execution wall time, or optionally, AMD rocprof kernel profiler max/min/avg time for HIP backend variants.
+--Unit and Performance tests are included for three layouts - PLN1 (1 channel planar NCHW), PLN3 (3 channel planar NCHW) and PKD3 (3 channel packed/interrleaved NHWC).
+--Unit and Performance tests are included for various input/output bitdepths including U8/F32/F16/I8.
+--Support for pixelwise output referencing against golden outputs, and functionality validation checking, by tolerance-based pass/fail criterions for each variant. (Current support for U8 PKD3 variants)
 
 Command Line Arguments
 
@@ -16,4 +24,4 @@ The test suite accepts the following command line arguments:
 Running the Tests
 
 The test suite can be run with the following command:
-python main.py --input_path <input_path> --output_path <output_path> --case_start <case_start> --case_end <case_end> --test_type <test_type> --case_list <case_list> --profiling <profiling>
+python runTests.py --input_path <input_path> --output_path <output_path> --case_start <case_start> --case_end <case_end> --test_type <test_type> --case_list <case_list> --profiling <profiling>

@@ -340,7 +340,7 @@ int main(int argc, char **argv)
         imageNamesPathSecond[i] = src1Second + "/" + imageNames[i];
     }
 
-    // Read image
+    // Read images
     read_image_batch_opencv(inputu8, srcDescPtr, imageNamesPath);
     read_image_batch_opencv(inputu8Second, srcDescPtr, imageNamesPathSecond);
 
