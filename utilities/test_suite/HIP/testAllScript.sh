@@ -1,9 +1,15 @@
 #!/bin/bash
 
+#Input Images - Three images (mixed size)
+DEFAULT_SRC_FOLDER_1="$cwd/../TEST_IMAGES/three_images_mixed_src1"
+DEFAULT_SRC_FOLDER_2="$cwd/../TEST_IMAGES/three_images_mixed_src2"
+
 # Fill with default values if all arguments are not given by user
 CASE_MIN=0
 CASE_MAX=86
 if (( "$#" < 4 )); then
+    SRC_FOLDER_1="$DEFAULT_SRC_FOLDER_1"
+    SRC_FOLDER_2="$DEFAULT_SRC_FOLDER_2"
     PROFILING_OPTION="0"
     TEST_TYPE="0"
     NUM_ITERATIONS="1"
@@ -13,16 +19,24 @@ if (( "$#" < 4 )); then
         CASE_LIST+=("$case")
     done
 else
-    PROFILING_OPTION="$1"
-    TEST_TYPE="$2"
-    NUM_ITERATIONS="$3"
-    CASE_LIST="${@:4}"
+    SRC_FOLDER_1="$1"
+    SRC_FOLDER_2="$2"
+    PROFILING_OPTION="$3"
+    TEST_TYPE="$4"
+    NUM_ITERATIONS="$5"
+    CASE_LIST="${@:6}"
 fi
 
 if [[ "$TEST_TYPE" -ne 0 ]] && [[ "$TEST_TYPE" -ne 1 ]]; then
     echo "Inavlid TEST_TYPE specified. TEST_TYPE should be 0/1 (0 = Unittests / 1 = Performancetests)"
     exit
 fi
+
+for case in $CASE_LIST; do
+    if [[ $case -lt 0 || $case -gt 86 ]]; then
+        echo "The case# must be in the 0:86 range!"
+    fi
+done
 
 # <<<<<<<<<<<<<< DEFAULT SOURCE AND DESTINATION FOLDERS (NEED NOT CHANGE) >>>>>>>>>>>>>>
 
@@ -40,9 +54,9 @@ cwd=$(pwd)
 # DEFAULT_SRC_FOLDER_1="$cwd/../../rpp-unittests/TEST_IMAGES/three_images_224x224_src1"
 # DEFAULT_SRC_FOLDER_2="$cwd/../../rpp-unittests/TEST_IMAGES/three_images_224x224_src2"
 
-#Input Images - Three images (mixed size)
-DEFAULT_SRC_FOLDER_1="$cwd/../TEST_IMAGES/three_images_mixed_src1"
-DEFAULT_SRC_FOLDER_2="$cwd/../TEST_IMAGES/three_images_mixed_src2"
+# #Input Images - Three images (mixed size)
+# DEFAULT_SRC_FOLDER_1="$cwd/../TEST_IMAGES/three_images_mixed_src1"
+# DEFAULT_SRC_FOLDER_2="$cwd/../TEST_IMAGES/three_images_mixed_src2"
 
 # Input Images - Two images (mixed size)
 # DEFAULT_SRC_FOLDER_1="$cwd/../../rpp-unittests/TEST_IMAGES/two_images_mixed_src1"
@@ -77,7 +91,7 @@ directory_name_generator() {
     TYPE=$2
     CASE=$3
 
-if [[ "$case" -lt 5 ]] || [ "$case" -eq 13 ] || [ "$case" -eq 36 ]
+    if [[ "$case" -lt 5 ]] || [ "$case" -eq 13 ] || [ "$case" -eq 36 ]
     then
         FUNCTIONALITY_GROUP="color_augmentations"
     elif [[ "$case" -eq 8 ]] || [ "$case" -eq 30 ] || [ "$case" -eq 83 ] || [ "$case" -eq 84 ]
@@ -279,34 +293,4 @@ do
         done
     done
 done
-
-if [ $TEST_TYPE -eq 0 ]; then
-    for ((layout=0;layout<3;layout++))
-    do
-        if [[ "$layout" -eq 0 ]]
-        then
-            mkdir "$DST_FOLDER/PKD3"
-            PKD3_FOLDERS=$(find $DST_FOLDER -maxdepth 1 -name "*pkd3*")
-            for TEMP_FOLDER in $PKD3_FOLDERS
-            do
-                mv "$TEMP_FOLDER" "$DST_FOLDER/PKD3"
-            done
-        elif [[ "$layout" -eq 1 ]]
-        then
-            mkdir "$DST_FOLDER/PLN3"
-            PLN3_FOLDERS=$(find $DST_FOLDER -maxdepth 1 -name "*pln3*")
-            for TEMP_FOLDER in $PLN3_FOLDERS
-            do
-                mv "$TEMP_FOLDER" "$DST_FOLDER/PLN3"
-            done
-        else
-            mkdir "$DST_FOLDER/PLN1"
-            PLN1_FOLDERS=$(find $DST_FOLDER -maxdepth 1 -name "*pln1*")
-            for TEMP_FOLDER in $PLN1_FOLDERS
-            do
-                mv "$TEMP_FOLDER" "$DST_FOLDER/PLN1"
-            done
-        fi
-    done
-fi
 # <<<<<<<<<<<<<< EXECUTION OF ALL FUNCTIONALITIES (NEED NOT CHANGE) >>>>>>>>>>>>>>

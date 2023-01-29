@@ -20,10 +20,9 @@ def rpp_test_suite_parser_and_validator():
     parser.add_argument("--case_end", type=str, default="86", help="Testing range ending case # - (0:86)")
     parser.add_argument('--test_type', type=str, default='0', help="Type of Test - (0 = Unittests / 1 = Performancetests)")
     parser.add_argument('--case_list', nargs="+", help="List of case numbers to list", required=False)
-    parser.add_argument('--profiling', type=str, default='NO', help='Run with profiler? - (YES/NO)', required=False)
-    
+
     args = parser.parse_args()
-    
+
     if(args.test_type == '0'):
         #os.mkdir(f'{cwd}/OUTPUT_IMAGES_HOST_NEW')
         outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_IMAGES_HOST_NEW')
@@ -69,10 +68,10 @@ def rpp_test_suite_parser_and_validator():
                 exit(0)
         subprocess.call(["./testAllScript.sh", args.input_path1, args.input_path2, args.test_type, numIterations, " ".join(args.case_list)])
 
-    return parser.parse_args(), outFilePath
-    
+    return parser.parse_args(), outFilePath, numIterations
 
-args,outFilePath = rpp_test_suite_parser_and_validator()
+
+args, outFilePath, numIterations = rpp_test_suite_parser_and_validator()
 
 srcPath = args.input_path1
 dstPath = outFilePath
