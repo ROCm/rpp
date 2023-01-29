@@ -1398,15 +1398,16 @@ int main(int argc, char **argv)
         if(inputBitDepth == 0 && (srcDescPtr->layout == dstDescPtr->layout))
             compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, roiTensorPtrDst, noOfImages);
 
-        RpptROI roiDefault;
+        // RpptROI roiDefault;
+        // RpptROIPtr roiPtrDefault;
+        // roiPtrDefault = &roiDefault;
+        // roiPtrDefault->xywhROI.xy.x = 0;
+        // roiPtrDefault->xywhROI.xy.y = 0;
+        // roiPtrDefault->xywhROI.roiWidth = dstDescPtr->w;
+        // roiPtrDefault->xywhROI.roiHeight = dstDescPtr->h;
+        RpptRoiXywh roiDefault = {0, 0, (int)dstDescPtr->w, (int)dstDescPtr->h};
         RpptROIPtr roiPtrDefault;
-        roiPtrDefault = &roiDefault;
-        roiPtrDefault->xywhROI.xy.x = 0;
-        roiPtrDefault->xywhROI.xy.y = 0;
-        roiPtrDefault->xywhROI.roiWidth = dstDescPtr->w;
-        roiPtrDefault->xywhROI.roiHeight = dstDescPtr->h;
-        // RpptROI roiDefault = {0, 0, dstDescPtr->w, dstDescPtr->h};
-        // RpptROIPtr roiPtrDefault = &roiDefault;
+        roiPtrDefault->xywhROI = roiDefault;
 
         for (int i = 0; i < dstDescPtr->n; i++)
         {

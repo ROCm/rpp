@@ -1,9 +1,15 @@
 #!/bin/bash
 
+#Input Images - Three images (mixed size)
+DEFAULT_SRC_FOLDER_1="$cwd/../TEST_IMAGES/three_images_mixed_src1"
+DEFAULT_SRC_FOLDER_2="$cwd/../TEST_IMAGES/three_images_mixed_src2"
+
 # Fill with default values if all arguments are not given by user
 CASE_MIN=0
 CASE_MAX=86
 if (( "$#" < 3 )); then
+    SRC_FOLDER_1="$DEFAULT_SRC_FOLDER_1"
+    SRC_FOLDER_2="$DEFAULT_SRC_FOLDER_2"
     TEST_TYPE="0"
     NUM_ITERATIONS="1"
     CASE_LIST=()
@@ -12,9 +18,11 @@ if (( "$#" < 3 )); then
         CASE_LIST+=("$case")
     done
 else
-    TEST_TYPE="$1"
-    NUM_ITERATIONS="$2"
-    CASE_LIST="${@:3}"
+    SRC_FOLDER_1="$1"
+    SRC_FOLDER_2="$2"
+    TEST_TYPE="$3"
+    NUM_ITERATIONS="$4"
+    CASE_LIST="${@:5}"
 fi
 
 if [[ "$TEST_TYPE" -ne 0 ]] && [[ "$TEST_TYPE" -ne 1 ]]; then
@@ -46,10 +54,6 @@ cwd=$(pwd)
 # DEFAULT_SRC_FOLDER_1="$cwd/TEST_IMAGES/"
 # DEFAULT_SRC_FOLDER_2="$cwd/TEST_IMAGES/"
 
-#Input Images - Three images (mixed size)
-DEFAULT_SRC_FOLDER_1="$cwd/../TEST_IMAGES/three_images_mixed_src1"
-DEFAULT_SRC_FOLDER_2="$cwd/../TEST_IMAGES/three_images_mixed_src2"
-
 # <<<<<<<<<<<<<< CREATE OUTPUT FOLDERS BASED ON TEST TYPE>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 if [ $TEST_TYPE -eq 0 ]; then
     printf "\nRunning Unittests...\n"
@@ -65,8 +69,6 @@ fi
 # <<<<<<<<<<<<<< DEFAULT SOURCE AND DESTINATION FOLDERS (NEED NOT CHANGE) >>>>>>>>>>>>>>
 
 # <<<<<<<<<<<<<< FOR MANUAL OVERRIDE, JUST REPLACE AND POINT TO THE SOURCE AND DESTINATION FOLDERS HERE >>>>>>>>>>>>>>
-SRC_FOLDER_1="$DEFAULT_SRC_FOLDER_1"
-SRC_FOLDER_2="$DEFAULT_SRC_FOLDER_2"
 DST_FOLDER="$DEFAULT_DST_FOLDER"
 # <<<<<<<<<<<<<< FOR MANUAL OVERRIDE, JUST REPLACE AND POINT TO THE SOURCE AND DESTINATION FOLDERS HERE >>>>>>>>>>>>>>
 

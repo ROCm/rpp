@@ -24,4 +24,4 @@ The test suite accepts the following command line arguments:
 Running the Tests
 
 The test suite can be run with the following command:
-python runTests.py --input_path <input_path> --output_path <output_path> --case_start <case_start> --case_end <case_end> --test_type <test_type> --case_list <case_list> --profiling <profiling>
+python runTests.py --input_path1 <input_path1> --input_path2 <input_path2> --case_start <case_start> --case_end <case_end> --test_type <test_type> --case_list <case_list> --profiling <profiling>
