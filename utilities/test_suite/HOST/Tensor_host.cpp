@@ -253,7 +253,7 @@ int main(int argc, char **argv)
 
     // Set maxHeight, maxWidth and ROIs for src/dst
     const int images = noOfImages;
-    string imageNames[images];
+    vector<string> imageNames(images);
 
     DIR *dr1 = opendir(src);
     while ((de = readdir(dr1)) != NULL)
@@ -292,6 +292,7 @@ int main(int argc, char **argv)
         count++;
     }
     closedir(dr1);
+    sort(imageNames.begin(), imageNames.end());
 
     // Check if any of maxWidth and maxHeight is less than or equal to 0
     if(maxHeight <= 0 || maxWidth <= 0)

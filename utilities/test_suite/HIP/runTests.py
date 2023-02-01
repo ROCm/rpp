@@ -69,7 +69,7 @@ def rpp_test_suite_parser_and_validator():
         print("Test Type# must be in the 0:1 range. Aborting!")
         exit(0)
 
-    if args.case_list is not None and args.case_start > 0 and args.case_end <86:
+    if args.case_list is not None and int(args.case_start) > 0 and int(args.case_end) <86:
         print("Invalid input! Please provide only 1 option between case_list, case_start and case_end")
         exit(0)
 

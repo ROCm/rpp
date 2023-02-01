@@ -417,7 +417,7 @@ inline void read_image_batch_opencv(Rpp8u *input, RpptDescPtr descPtr, string im
     }
 }
 
-inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDescPtr dstDescPtr, string imageNames[], RpptImagePatch *dstImgSizes)
+inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDescPtr dstDescPtr, vector<string> imageNames, RpptImagePatch *dstImgSizes)
 {
     // create output folder
     mkdir(outputFolder.c_str(), 0700);
