@@ -1405,9 +1405,9 @@ int main(int argc, char **argv)
         // roiPtrDefault->xywhROI.xy.y = 0;
         // roiPtrDefault->xywhROI.roiWidth = dstDescPtr->w;
         // roiPtrDefault->xywhROI.roiHeight = dstDescPtr->h;
-        RpptRoiXywh roiDefault = {0, 0, (int)dstDescPtr->w, (int)dstDescPtr->h};
+        RpptRoiXywh roiDefault = {{0,0}, static_cast<int>(dstDescPtr->w), static_cast<int>(dstDescPtr->h)};
         RpptROIPtr roiPtrDefault;
-        roiPtrDefault->xywhROI = roiDefault;
+        (*roiPtrDefault).xywhROI = roiDefault;
 
         for (int i = 0; i < dstDescPtr->n; i++)
         {

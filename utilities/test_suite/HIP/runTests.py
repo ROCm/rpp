@@ -6,7 +6,7 @@ cwd = os.getcwd()
 inFilePath1 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src1')
 inFilePath2 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src2')
 
-def case_file_check(CASE_FILE_PATH)
+def case_file_check(CASE_FILE_PATH):
     try:
         case_file = open(CASE_FILE_PATH,'r')
         for line in case_file:
@@ -41,10 +41,10 @@ def rpp_test_suite_parser_and_validator():
 
     if(args.test_type == '0'):
         #os.mkdir(f'{cwd}/OUTPUT_IMAGES_HOST_NEW')
-        outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_IMAGES_HOST_NEW')
+        outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_IMAGES_HIP_NEW')
     else:
         #os.mkdir(f'{cwd}/OUTPUT_PERFORMANCE_LOGS_HOST_NEW')
-        outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_PERFORMANCE_LOGS_HOST_NEW')
+        outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_PERFORMANCE_LOGS_HIP_NEW')
         
     if (int(args.test_type) == 0):
         numIterations = "1"
@@ -73,10 +73,7 @@ def rpp_test_suite_parser_and_validator():
         print("Invalid input! Please provide only 1 option between case_list, case_start and case_end")
         exit(0)
 
-    if args.case_list is None:
-        args.case_list = range(int(args.case_start), int(args.case_end) + 1)
-        args.case_list = [str(x) for x in args.case_list]
-    else:
+    if args.case_list:
         for case in args.case_list:
             if int(case) < 0 or int(case) > 86:
                 print("The case# must be in the 0:86 range!")
@@ -84,8 +81,11 @@ def rpp_test_suite_parser_and_validator():
 
     return parser.parse_args(), outFilePath, numIterations
 
-
 args, outFilePath, numIterations = rpp_test_suite_parser_and_validator()
+
+if args.case_list is None:
+    args.case_list = range(int(args.case_start), int(args.case_end) + 1)
+    args.case_list = [str(x) for x in args.case_list]
 
 srcPath1 = args.input_path1
 srcPath2 = args.input_path2
@@ -95,25 +95,6 @@ caseEnd = args.case_end
 testType = args.test_type
 caseList = args.case_list
 profilingOption = args.profiling
-
-DST_FOLDER = dstPath
-if testType == '0':
-    for layout in range(3):
-        if layout == 0:
-            os.mkdir(f'{DST_FOLDER}/PKD3')
-            PKD3_FOLDERS = [f for f in os.listdir(DST_FOLDER) if 'pkd3' in f]
-            for TEMP_FOLDER in PKD3_FOLDERS:
-                os.rename(f'{DST_FOLDER}/{TEMP_FOLDER}', f'{DST_FOLDER}/PKD3/{TEMP_FOLDER}')
-        elif layout == 1:
-            os.mkdir(f'{DST_FOLDER}/PLN3')
-            PLN3_FOLDERS = [f for f in os.listdir(DST_FOLDER) if 'pln3' in f]
-            for TEMP_FOLDER in PLN3_FOLDERS:
-                os.rename(f'{DST_FOLDER}/{TEMP_FOLDER}', f'{DST_FOLDER}/PLN3/{TEMP_FOLDER}')
-        else:
-            os.mkdir(f'{DST_FOLDER}/PLN1')
-            PLN1_FOLDERS = [f for f in os.listdir(DST_FOLDER) if 'pln1' in f]
-            for TEMP_FOLDER in PLN1_FOLDERS:
-                os.rename(f'{DST_FOLDER}/{TEMP_FOLDER}', f'{DST_FOLDER}/PLN1/{TEMP_FOLDER}')
 
 log_file_list = [
     "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW/Tensor_hip_pkd3_raw_performance_log.txt",
@@ -262,7 +243,7 @@ elif (int(testType) == 1 and profilingOption == "YES"):
                             CASE_FILE_PATH = CASE_RESULTS_DIR + "/output_case" + str(CASE_NUM) + "_bitDepth" + str(BIT_DEPTH) + "_oft" + str(OFT) + "_kSize" + str(KSIZE) + ".stats.csv"
                             print("CASE_FILE_PATH = " + CASE_FILE_PATH)
                             fileCheck = case_file_check(CASE_FILE_PATH)
-                            if fileCheck == False
+                            if fileCheck == False:
                                 continue
                     elif (CASE_NUM == 24 or CASE_NUM == 21) and TYPE.startswith("Tensor"):
                         INTERPOLATIONTYPE_LIST = [0, 1, 2, 3, 4, 5]
@@ -272,7 +253,7 @@ elif (int(testType) == 1 and profilingOption == "YES"):
                             CASE_FILE_PATH = CASE_RESULTS_DIR + "/output_case" + str(CASE_NUM) + "_bitDepth" + str(BIT_DEPTH) + "_oft" + str(OFT) + "_interpolationType" + str(INTERPOLATIONTYPE) + ".stats.csv"
                             print("CASE_FILE_PATH = " + CASE_FILE_PATH)
                             fileCheck = case_file_check(CASE_FILE_PATH)
-                            if fileCheck == False
+                            if fileCheck == False:
                                 continue
                     elif (CASE_NUM == 8) and TYPE.startswith("Tensor"):
                         NOISETYPE_LIST = [0, 1, 2]
@@ -282,14 +263,14 @@ elif (int(testType) == 1 and profilingOption == "YES"):
                             CASE_FILE_PATH = CASE_RESULTS_DIR + "/output_case" + str(CASE_NUM) + "_bitDepth" + str(BIT_DEPTH) + "_oft" + str(OFT) + "_noiseType" + str(NOISETYPE) + ".stats.csv"
                             print("CASE_FILE_PATH = " + CASE_FILE_PATH)
                             fileCheck = case_file_check(CASE_FILE_PATH)
-                            if fileCheck == False
+                            if fileCheck == False:
                                 continue
                     else:
                         # Write into csv file
                         CASE_FILE_PATH = CASE_RESULTS_DIR + "/output_case" + str(CASE_NUM) + "_bitDepth" + str(BIT_DEPTH) + "_oft" + str(OFT) + ".stats.csv"
                         print("CASE_FILE_PATH = " + CASE_FILE_PATH)
                         fileCheck = case_file_check(CASE_FILE_PATH)
-                        if fileCheck == False
+                        if fileCheck == False:
                             continue
 
         new_file.close()
@@ -319,3 +300,22 @@ elif (int(testType) == 1 and profilingOption == "YES"):
 
     except IOError:
         print("Unable to open results in " + RESULTS_DIR + "/consolidated_results_" + TYPE + ".stats.csv")
+
+DST_FOLDER = dstPath
+if testType == '0':
+    for layout in range(3):
+        if layout == 0:
+            os.makedirs(f'{DST_FOLDER}/PKD3',  exist_ok=True)
+            PKD3_FOLDERS = [f for f in os.listdir(DST_FOLDER) if 'pkd3' in f]
+            for TEMP_FOLDER in PKD3_FOLDERS:
+                os.rename(f'{DST_FOLDER}/{TEMP_FOLDER}', f'{DST_FOLDER}/PKD3/{TEMP_FOLDER}')
+        elif layout == 1:
+            os.makedirs(f'{DST_FOLDER}/PLN3',  exist_ok=True)
+            PLN3_FOLDERS = [f for f in os.listdir(DST_FOLDER) if 'pln3' in f]
+            for TEMP_FOLDER in PLN3_FOLDERS:
+                os.rename(f'{DST_FOLDER}/{TEMP_FOLDER}', f'{DST_FOLDER}/PLN3/{TEMP_FOLDER}')
+        else:
+            os.makedirs(f'{DST_FOLDER}/PLN1',  exist_ok=True)
+            PLN1_FOLDERS = [f for f in os.listdir(DST_FOLDER) if 'pln1' in f]
+            for TEMP_FOLDER in PLN1_FOLDERS:
+                os.rename(f'{DST_FOLDER}/{TEMP_FOLDER}', f'{DST_FOLDER}/PLN1/{TEMP_FOLDER}')

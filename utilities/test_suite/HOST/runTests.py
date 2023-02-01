@@ -84,17 +84,17 @@ DST_FOLDER = dstPath
 if testType == '0':
     for layout in range(3):
         if layout == 0:
-            os.mkdir(f'{DST_FOLDER}/PKD3')
+            os.makedirs(f'{DST_FOLDER}/PKD3',  exist_ok=True)
             PKD3_FOLDERS = [f for f in os.listdir(DST_FOLDER) if 'pkd3' in f]
             for TEMP_FOLDER in PKD3_FOLDERS:
                 os.rename(f'{DST_FOLDER}/{TEMP_FOLDER}', f'{DST_FOLDER}/PKD3/{TEMP_FOLDER}')
         elif layout == 1:
-            os.mkdir(f'{DST_FOLDER}/PLN3')
+            os.makedirs(f'{DST_FOLDER}/PLN3',  exist_ok=True)
             PLN3_FOLDERS = [f for f in os.listdir(DST_FOLDER) if 'pln3' in f]
             for TEMP_FOLDER in PLN3_FOLDERS:
                 os.rename(f'{DST_FOLDER}/{TEMP_FOLDER}', f'{DST_FOLDER}/PLN3/{TEMP_FOLDER}')
         else:
-            os.mkdir(f'{DST_FOLDER}/PLN1')
+            os.makedirs(f'{DST_FOLDER}/PLN1',  exist_ok=True)
             PLN1_FOLDERS = [f for f in os.listdir(DST_FOLDER) if 'pln1' in f]
             for TEMP_FOLDER in PLN1_FOLDERS:
                 os.rename(f'{DST_FOLDER}/{TEMP_FOLDER}', f'{DST_FOLDER}/PLN1/{TEMP_FOLDER}')
