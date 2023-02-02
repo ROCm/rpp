@@ -218,16 +218,19 @@ int main(int argc, char **argv)
     dst += "/";
     dst += func;
 
-    // Get number of images
+    // Get number of images and image Names
     struct dirent *de;
     DIR *dr = opendir(src);
+    vector<string> imageNames;
     while ((de = readdir(dr)) != NULL)
     {
         if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0)
             continue;
         noOfImages += 1;
+        imageNames.push_back(de->d_name);
     }
     closedir(dr);
+    sort(imageNames.begin(), imageNames.end());
 
     if(!noOfImages)
     {
@@ -253,46 +256,39 @@ int main(int argc, char **argv)
 
     // Set maxHeight, maxWidth and ROIs for src/dst
     const int images = noOfImages;
-    vector<string> imageNames(images);
 
-    DIR *dr1 = opendir(src);
-    while ((de = readdir(dr1)) != NULL)
+    for(int i = 0; i < imageNames.size(); i++)
     {
-        if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0)
-            continue;
-        imageNames[count] = de->d_name;
         string temp = src1;
-        temp += imageNames[count];
+        temp += imageNames[i];
         if (layoutType == 0 || layoutType == 1)
             image = imread(temp, 1);
 
         else
             image = imread(temp, 0);
 
-        roiTensorPtrSrc[count].xywhROI.xy.x = 0;
-        roiTensorPtrSrc[count].xywhROI.xy.y = 0;
-        roiTensorPtrSrc[count].xywhROI.roiWidth = image.cols;
-        roiTensorPtrSrc[count].xywhROI.roiHeight = image.rows;
+        roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+        roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+        roiTensorPtrSrc[i].xywhROI.roiWidth = image.cols;
+        roiTensorPtrSrc[i].xywhROI.roiHeight = image.rows;
 
-        roiTensorPtrDst[count].xywhROI.xy.x = 0;
-        roiTensorPtrDst[count].xywhROI.xy.y = 0;
-        roiTensorPtrDst[count].xywhROI.roiWidth = image.cols;
-        roiTensorPtrDst[count].xywhROI.roiHeight = image.rows;
+        roiTensorPtrDst[i].xywhROI.xy.x = 0;
+        roiTensorPtrDst[i].xywhROI.xy.y = 0;
+        roiTensorPtrDst[i].xywhROI.roiWidth = image.cols;
+        roiTensorPtrDst[i].xywhROI.roiHeight = image.rows;
 
-        srcImgSizes[count].width = roiTensorPtrSrc[count].xywhROI.roiWidth;
-        srcImgSizes[count].height = roiTensorPtrSrc[count].xywhROI.roiHeight;
-        dstImgSizes[count].width = roiTensorPtrDst[count].xywhROI.roiWidth;
-        dstImgSizes[count].height = roiTensorPtrDst[count].xywhROI.roiHeight;
+        srcImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth;
+        srcImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight;
+        dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth;
+        dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight;
 
-        maxHeight = std::max(maxHeight, roiTensorPtrSrc[count].xywhROI.roiHeight);
-        maxWidth = std::max(maxWidth, roiTensorPtrSrc[count].xywhROI.roiWidth);
-        maxDstHeight = std::max(maxDstHeight, roiTensorPtrDst[count].xywhROI.roiHeight);
-        maxDstWidth = std::max(maxDstWidth, roiTensorPtrDst[count].xywhROI.roiWidth);
+        maxHeight = std::max(maxHeight, roiTensorPtrSrc[i].xywhROI.roiHeight);
+        maxWidth = std::max(maxWidth, roiTensorPtrSrc[i].xywhROI.roiWidth);
+        maxDstHeight = std::max(maxDstHeight, roiTensorPtrDst[i].xywhROI.roiHeight);
+        maxDstWidth = std::max(maxDstWidth, roiTensorPtrDst[i].xywhROI.roiWidth);
 
         count++;
     }
-    closedir(dr1);
-    sort(imageNames.begin(), imageNames.end());
 
     // Check if any of maxWidth and maxHeight is less than or equal to 0
     if(maxHeight <= 0 || maxWidth <= 0)
