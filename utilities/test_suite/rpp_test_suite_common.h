@@ -313,7 +313,6 @@ inline void remove_substring(string &str, string &pattern)
 template <typename T>
 inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, RpptROI *roiPtr, int noOfImages)
 {
-    bool isEqual = true;
     string func = funcName;
     string refPath = get_current_dir_name();
     string pattern = "/build";
@@ -365,6 +364,7 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
         return;
     }
 
+    bool isEqual = true;
     for(int c = 0; c < noOfImages; c++)
     {
         Rpp8u *outputTemp = output + c * dstDescPtr->strides.nStride;

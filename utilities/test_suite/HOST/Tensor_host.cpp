@@ -76,17 +76,20 @@ int main(int argc, char **argv)
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
-        if (testType == 0)
+        printf("\nUsage: <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:86> <number of iterations > 0> <verbosity = 0/1>>\n");
+    }
+
+    if (layoutType == 2)
+    {
+        if(testCase == 36 || testCase == 31 || testCase == 86)
         {
-            printf("\nUsage: <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:86> <number of iterations > 0> <verbosity = 0/1>>\n");
-            if (layoutType == 2)
-            {
-                if (atoi(argv[5]) != 0)
-                {
-                    printf("\nPLN1 cases don't have outputFormatToggle! Please input outputFormatToggle = 0\n");
-                    return -1;
-                }
-            }
+            printf("\ncase %d does not exist for PLN1 layout\n", testCase);
+            return -1;
+        }
+        else if (outputFormatToggle != 0)
+        {
+            printf("\nPLN1 cases don't have outputFormatToggle! Please input outputFormatToggle = 0\n");
+            return -1;
         }
     }
 

@@ -149,9 +149,13 @@ do
             printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n"
             for ((outputFormatToggle=0;outputFormatToggle<2;outputFormatToggle++))
             do
-
                 SRC_FOLDER_1_TEMP="$SRC_FOLDER_1"
                 SRC_FOLDER_2_TEMP="$SRC_FOLDER_2"
+
+                # There is no layout toggle for PLN1 case, so skip this case
+                if [[ $layout -eq 2 ]] && [[ $outputFormatToggle -eq 1 ]]; then
+                    continue
+                fi
 
                 if [ "$case" -eq 8 ]
                 then
