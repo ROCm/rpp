@@ -45,7 +45,7 @@ else
     CASE_LIST="${@:5}"
 fi
 
-if [[ "$TEST_TYPE" -ne 0 ]] && [[ "$TEST_TYPE" -ne 1 ]]; then
+if [[ $TEST_TYPE -ne 0 ]] && [[ $TEST_TYPE -ne 1 ]]; then
     echo "Invalid TEST_TYPE specified. TEST_TYPE should be 0/1 (0 = Unittests / 1 = Performancetests)"
     exit
 fi
@@ -67,12 +67,7 @@ elif [ $TEST_TYPE -eq 1 ]; then
     DEFAULT_DST_FOLDER="$cwd/../OUTPUT_PERFORMANCE_LOGS_HOST_NEW"
     LOGGING_FOLDER="$cwd/../OUTPUT_PERFORMANCE_LOGS_HOST_NEW"
 fi
-
-# <<<<<<<<<<<<<< DEFAULT SOURCE AND DESTINATION FOLDERS (NEED NOT CHANGE) >>>>>>>>>>>>>>
-
-# <<<<<<<<<<<<<< FOR MANUAL OVERRIDE, JUST REPLACE AND POINT TO THE SOURCE AND DESTINATION FOLDERS HERE >>>>>>>>>>>>>>
 DST_FOLDER="$DEFAULT_DST_FOLDER"
-# <<<<<<<<<<<<<< FOR MANUAL OVERRIDE, JUST REPLACE AND POINT TO THE SOURCE AND DESTINATION FOLDERS HERE >>>>>>>>>>>>>>
 
 # <<<<<<<<<<<<<< EXECUTION OF ALL FUNCTIONALITIES (NEED NOT CHANGE) >>>>>>>>>>>>>>
 

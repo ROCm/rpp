@@ -47,7 +47,7 @@ else
     CASE_LIST="${@:6}"
 fi
 
-if [[ "$TEST_TYPE" -ne 0 ]] && [[ "$TEST_TYPE" -ne 1 ]]; then
+if [[ $TEST_TYPE -ne 0 ]] && [[ $TEST_TYPE -ne 1 ]]; then
     echo "Invalid TEST_TYPE specified. TEST_TYPE should be 0/1 (0 = Unittests / 1 = Performancetests)"
     exit
 fi
@@ -70,13 +70,7 @@ elif [ $TEST_TYPE -eq 1 ]; then
     DEFAULT_DST_FOLDER="$cwd/../OUTPUT_PERFORMANCE_LOGS_HIP_NEW"
     LOGGING_FOLDER="$cwd/../OUTPUT_PERFORMANCE_LOGS_HIP_NEW"
 fi
-
-# <<<<<<<<<<<<<< DEFAULT SOURCE AND DESTINATION FOLDERS (NEED NOT CHANGE) >>>>>>>>>>>>>>
-
-# <<<<<<<<<<<<<< FOR MANUAL OVERRIDE, JUST REPLACE AND POINT TO THE SOURCE AND DESTINATION FOLDERS HERE >>>>>>>>>>>>>>
-
 DST_FOLDER="$DEFAULT_DST_FOLDER"
-# <<<<<<<<<<<<<< FOR MANUAL OVERRIDE, JUST REPLACE AND POINT TO THE SOURCE AND DESTINATION FOLDERS HERE >>>>>>>>>>>>>>
 
 # <<<<<<<<<<<<<< EXECUTION OF ALL FUNCTIONALITIES (NEED NOT CHANGE) >>>>>>>>>>>>>>
 
@@ -119,8 +113,7 @@ rm -rvf ./*
 cmake ..
 make -j16
 
-if [ "$TEST_TYPE" -eq 1 ] && [ "$PROFILING_OPTION" -eq 1 ]
-then
+if [[ $TEST_TYPE -eq 1 ]] && [[ $PROFILING_OPTION -eq 1 ]]; then
     mkdir "$DST_FOLDER/Tensor_PKD3"
     mkdir "$DST_FOLDER/Tensor_PLN1"
     mkdir "$DST_FOLDER/Tensor_PLN3"
@@ -160,7 +153,7 @@ do
         echo "--------------------------------"
         printf "Running a New Functionality...\n"
         echo "--------------------------------"
-        for ((bitDepth=0;bitDepth<1;bitDepth++))
+        for ((bitDepth=0;bitDepth<7;bitDepth++))
         do
             printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n"
             for ((outputFormatToggle=0;outputFormatToggle<2;outputFormatToggle++))

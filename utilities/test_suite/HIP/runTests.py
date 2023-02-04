@@ -173,7 +173,7 @@ else:
             # Closing log file
             f.close()
     elif (testType == 1 and profilingOption == "YES"):
-        subprocess.call(["./testAllScript.sh", str(testType), str(numIterations), "1", " ".join(caseList)])
+        subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "1", " ".join(caseList)])
         NEW_FUNC_GROUP_LIST = [0, 15, 20, 29, 36, 40, 42, 49, 56, 65, 69]
 
         # Functionality group finder

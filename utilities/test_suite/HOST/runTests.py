@@ -127,7 +127,7 @@ elif (testType == 1):
 
             if "max,min,avg in ms" in line:
                 split_word_start = "Running "
-                split_word_end = " 100"
+                split_word_end = " " +str(numIterations)
                 prevLine = prevLine.partition(split_word_start)[2].partition(split_word_end)[0]
                 if prevLine not in functions:
                     functions.append(prevLine)
