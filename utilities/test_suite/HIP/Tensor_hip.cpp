@@ -1318,7 +1318,7 @@ int main(int argc, char **argv)
     minWallTime *= 1000;
     avgWallTime *= 1000;
     if (testType == 0)
-        cout << "\n\nGPU Backend Wall Time:" << wallTime <<" ms"<< endl;
+        cout << "\n\nGPU Backend Wall Time: " << wallTime <<" ms"<< endl;
     else
     {
         // Display measured times
