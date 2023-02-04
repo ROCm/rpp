@@ -261,7 +261,6 @@ int main(int argc, char **argv)
         temp += imageNames[i];
         if (layoutType == 0 || layoutType == 1)
             image = imread(temp, 1);
-
         else
             image = imread(temp, 0);
 
@@ -375,7 +374,7 @@ int main(int argc, char **argv)
         inputTemp = inputu8 + srcDescPtr->offsetInBytes;
         inputSecondTemp = inputu8Second + srcDescPtr->offsetInBytes;
         inputf16Temp = (half *)((Rpp8u *)input + srcDescPtr->offsetInBytes);
-        inputf16SecondTemp = (half *)((Rpp8u *)input + srcDescPtr->offsetInBytes);
+        inputf16SecondTemp = (half *)((Rpp8u *)input_second+ srcDescPtr->offsetInBytes);
 
         for (int i = 0; i < ioBufferSize; i++)
         {
@@ -394,7 +393,7 @@ int main(int argc, char **argv)
         inputTemp = inputu8 + srcDescPtr->offsetInBytes;
         inputSecondTemp = inputu8Second + srcDescPtr->offsetInBytes;
         inputf32Temp = (Rpp32f *)((Rpp8u *)input + srcDescPtr->offsetInBytes);
-        inputf32SecondTemp = (Rpp32f *)((Rpp8u *)input + srcDescPtr->offsetInBytes);
+        inputf32SecondTemp = (Rpp32f *)((Rpp8u *)input_second + srcDescPtr->offsetInBytes);
 
         for (int i = 0; i < ioBufferSize; i++)
         {

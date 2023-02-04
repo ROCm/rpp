@@ -1,8 +1,28 @@
 #!/bin/bash
 
+# <<<<<<<<<<<<<< DEFAULT SOURCE AND DESTINATION FOLDERS (NEED NOT CHANGE) >>>>>>>>>>>>>>
+
+cwd=$(pwd)
+
 #Input Images - Three images (mixed size)
 DEFAULT_SRC_FOLDER_1="$cwd/../TEST_IMAGES/three_images_mixed_src1"
 DEFAULT_SRC_FOLDER_2="$cwd/../TEST_IMAGES/three_images_mixed_src2"
+
+# Input Images - Three images (224 x 224)
+# DEFAULT_SRC_FOLDER_1="$cwd/../../rpp-unittests/TEST_IMAGES/three_images_224x224_src1"
+# DEFAULT_SRC_FOLDER_2="$cwd/../../rpp-unittests/TEST_IMAGES/three_images_224x224_src2"
+
+# Input Images - Two images (224 x 224)
+# DEFAULT_SRC_FOLDER_1="$cwd/../../rpp-unittests/TEST_IMAGES/two_images_224x224_src1"
+# DEFAULT_SRC_FOLDER_2="$cwd/../../rpp-unittests/TEST_IMAGES/two_images_224x224_src2"
+
+# Input Images - Two images (mixed size)
+# DEFAULT_SRC_FOLDER_1="$cwd/../../rpp-unittests/TEST_IMAGES/two_images_mixed_src1"
+# DEFAULT_SRC_FOLDER_2="$cwd/../../rpp-unittests/TEST_IMAGES/two_images_mixed_src2"
+
+# Input Images - Single image (224 x 224)
+# DEFAULT_SRC_FOLDER_1="$cwd/../../rpp-unittests/TEST_IMAGES/single_image_224x224_src1"
+# DEFAULT_SRC_FOLDER_2="$cwd/../../rpp-unittests/TEST_IMAGES/single_image_224x224_src2"
 
 # Fill with default values if all arguments are not given by user
 CASE_MIN=0
@@ -21,14 +41,14 @@ if (( "$#" < 4 )); then
 else
     SRC_FOLDER_1="$1"
     SRC_FOLDER_2="$2"
-    PROFILING_OPTION="$3"
-    TEST_TYPE="$4"
-    NUM_ITERATIONS="$5"
+    TEST_TYPE="$3"
+    NUM_ITERATIONS="$4"
+    PROFILING_OPTION="$5"
     CASE_LIST="${@:6}"
 fi
 
 if [[ "$TEST_TYPE" -ne 0 ]] && [[ "$TEST_TYPE" -ne 1 ]]; then
-    echo "Inavlid TEST_TYPE specified. TEST_TYPE should be 0/1 (0 = Unittests / 1 = Performancetests)"
+    echo "Invalid TEST_TYPE specified. TEST_TYPE should be 0/1 (0 = Unittests / 1 = Performancetests)"
     exit
 fi
 
@@ -38,31 +58,7 @@ for case in $CASE_LIST; do
     fi
 done
 
-# <<<<<<<<<<<<<< DEFAULT SOURCE AND DESTINATION FOLDERS (NEED NOT CHANGE) >>>>>>>>>>>>>>
-
-cwd=$(pwd)
-
-# Input Images - Single image (224 x 224)
-# DEFAULT_SRC_FOLDER_1="$cwd/../../rpp-unittests/TEST_IMAGES/single_image_224x224_src1"
-# DEFAULT_SRC_FOLDER_2="$cwd/../../rpp-unittests/TEST_IMAGES/single_image_224x224_src2"
-
-# Input Images - Two images (224 x 224)
-# DEFAULT_SRC_FOLDER_1="$cwd/../../rpp-unittests/TEST_IMAGES/two_images_224x224_src1"
-# DEFAULT_SRC_FOLDER_2="$cwd/../../rpp-unittests/TEST_IMAGES/two_images_224x224_src2"
-
-# Input Images - Three images (224 x 224)
-# DEFAULT_SRC_FOLDER_1="$cwd/../../rpp-unittests/TEST_IMAGES/three_images_224x224_src1"
-# DEFAULT_SRC_FOLDER_2="$cwd/../../rpp-unittests/TEST_IMAGES/three_images_224x224_src2"
-
-# #Input Images - Three images (mixed size)
-# DEFAULT_SRC_FOLDER_1="$cwd/../TEST_IMAGES/three_images_mixed_src1"
-# DEFAULT_SRC_FOLDER_2="$cwd/../TEST_IMAGES/three_images_mixed_src2"
-
-# Input Images - Two images (mixed size)
-# DEFAULT_SRC_FOLDER_1="$cwd/../../rpp-unittests/TEST_IMAGES/two_images_mixed_src1"
-# DEFAULT_SRC_FOLDER_2="$cwd/../../rpp-unittests/TEST_IMAGES/two_images_mixed_src2"
-
-# <<<<<<<<<<<<<< PRINTING THE TEST TYPE THAT USER SPECIFIED >>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# <<<<<<<<<<<<<< CREATE OUTPUT FOLDERS BASED ON TEST TYPE>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 if [ $TEST_TYPE -eq 0 ]; then
     printf "\nRunning Unittests...\n"
     mkdir "$cwd/../OUTPUT_IMAGES_HIP_NEW"
@@ -123,7 +119,7 @@ rm -rvf ./*
 cmake ..
 make -j16
 
-if [ $TEST_TYPE -eq 1 ] && [ "$PROFILING_OPTION" -eq 1 ]
+if [ "$TEST_TYPE" -eq 1 ] && [ "$PROFILING_OPTION" -eq 1 ]
 then
     mkdir "$DST_FOLDER/Tensor_PKD3"
     mkdir "$DST_FOLDER/Tensor_PLN1"

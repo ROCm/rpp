@@ -64,7 +64,7 @@ def rpp_test_suite_parser_and_validator():
                  print("The case# must be in the 0:86 range!")
                  exit(0)
 
-    return parser.parse_args()
+    return args
 
 args = rpp_test_suite_parser_and_validator()
 srcPath1 = args.input_path1
@@ -84,7 +84,7 @@ else:
 dstPath = outFilePath
 
 if(testType == 0):
-    subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, "0", str(testType), str(numIterations), " ".join(caseList)])
+    subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "0", " ".join(caseList)])
     layoutDict ={0:"PKD3", 1:"PLN3", 2:"PLN1"}
 
     for layout in range(3):
@@ -110,9 +110,9 @@ else:
     ]
 
     if (testType == 1 and profilingOption == "NO"):
-        subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, "0", str(testType), str(numIterations), " ".join(caseList)])
+        subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "0", " ".join(caseList)])
         for log_file in log_file_list:
-        # Opening log file
+            # Opening log file
             try:
                 f = open(log_file,"r")
                 print("\n\n\nOpened log file -> ", log_file)
@@ -120,60 +120,60 @@ else:
                 print("Skipping file -> ", log_file)
                 continue
 
-        stats = []
-        maxVals = []
-        minVals = []
-        avgVals = []
-        functions = []
-        frames = []
-        prevLine = ""
-        funcCount = 0
+            stats = []
+            maxVals = []
+            minVals = []
+            avgVals = []
+            functions = []
+            frames = []
+            prevLine = ""
+            funcCount = 0
 
-        # Loop over each line
-        for line in f:
-            for functionality_group in functionality_group_list:
-                if functionality_group in line:
-                    functions.extend([" ", functionality_group, " "])
-                    frames.extend([" ", " ", " "])
-                    maxVals.extend([" ", " ", " "])
-                    minVals.extend([" ", " ", " "])
-                    avgVals.extend([" ", " ", " "])
+            # Loop over each line
+            for line in f:
+                for functionality_group in functionality_group_list:
+                    if functionality_group in line:
+                        functions.extend([" ", functionality_group, " "])
+                        frames.extend([" ", " ", " "])
+                        maxVals.extend([" ", " ", " "])
+                        minVals.extend([" ", " ", " "])
+                        avgVals.extend([" ", " ", " "])
 
-            if "max,min,avg in ms" in line:
-                split_word_start = "Running "
-                split_word_end = " 100"
-                prevLine = prevLine.partition(split_word_start)[2].partition(split_word_end)[0]
-                if prevLine not in functions:
-                    functions.append(prevLine)
-                    frames.append("100")
-                    split_word_start = "max,min,avg in ms = "
-                    split_word_end = "\n"
-                    stats = line.partition(split_word_start)[2].partition(split_word_end)[0].split(",")
-                    maxVals.append(stats[0])
-                    minVals.append(stats[1])
-                    avgVals.append(stats[2])
-                    funcCount += 1
+                if "max,min,avg in ms" in line:
+                    split_word_start = "Running "
+                    split_word_end = " "+ str(numIterations)
+                    prevLine = prevLine.partition(split_word_start)[2].partition(split_word_end)[0]
+                    if prevLine not in functions:
+                        functions.append(prevLine)
+                        frames.append(str(numIterations))
+                        split_word_start = "max,min,avg in ms = "
+                        split_word_end = "\n"
+                        stats = line.partition(split_word_start)[2].partition(split_word_end)[0].split(",")
+                        maxVals.append(stats[0])
+                        minVals.append(stats[1])
+                        avgVals.append(stats[2])
+                        funcCount += 1
 
-            if line != "\n":
-                prevLine = line
+                if line != "\n":
+                    prevLine = line
 
-        # Print log lengths
-        print("Functionalities - ", funcCount)
+            # Print log lengths
+            print("Functionalities - ", funcCount)
 
-        # Print summary of log
-        print("\n\nFunctionality\t\t\t\t\t\tFrames Count\tmax(ms)\t\tmin(ms)\t\tavg(ms)\n")
-        if len(functions) != 0:
-            maxCharLength = len(max(functions, key=len))
-            functions = [x + (' ' * (maxCharLength - len(x))) for x in functions]
-            for i, func in enumerate(functions):
-                print(func, "\t", frames[i], "\t\t", maxVals[i], "\t", minVals[i], "\t", avgVals[i])
-        else:
-            print("No variants under this category")
+            # Print summary of log
+            print("\n\nFunctionality\t\t\t\t\t\tFrames Count\tmax(ms)\t\tmin(ms)\t\tavg(ms)\n")
+            if len(functions) != 0:
+                maxCharLength = len(max(functions, key=len))
+                functions = [x + (' ' * (maxCharLength - len(x))) for x in functions]
+                for i, func in enumerate(functions):
+                    print(func, "\t", frames[i], "\t\t", maxVals[i], "\t", minVals[i], "\t", avgVals[i])
+            else:
+                print("No variants under this category")
 
-        # Closing log file
-        f.close()
+            # Closing log file
+            f.close()
     elif (testType == 1 and profilingOption == "YES"):
-        subprocess.call(["./testAllScript.sh", "1", str(testType), str(numIterations), " ".join(caseList)])
+        subprocess.call(["./testAllScript.sh", str(testType), str(numIterations), "1", " ".join(caseList)])
         NEW_FUNC_GROUP_LIST = [0, 15, 20, 29, 36, 40, 42, 49, 56, 65, 69]
 
         # Functionality group finder

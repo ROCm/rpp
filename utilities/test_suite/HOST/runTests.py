@@ -49,7 +49,7 @@ def rpp_test_suite_parser_and_validator():
                  print("The case# must be in the 0:86 range!")
                  exit(0)
 
-    return parser.parse_args()
+    return args
 
 args = rpp_test_suite_parser_and_validator()
 srcPath1 = args.input_path1
