@@ -58,10 +58,10 @@ else()
 endif()
 
 # Set Default Compiler for OCL/CPU
-if(NOT "${BACKEND}" STREQUAL "HIP")
+#if(NOT "${BACKEND}" STREQUAL "HIP")
     set(CMAKE_C_COMPILER clang)
     set(CMAKE_CXX_COMPILER clang++)
-endif()
+#endif()
 set(CMAKE_CXX_STANDARD 14)
 
 project(amd_rpp CXX)

@@ -90,7 +90,8 @@ if( "${BACKEND}" STREQUAL "HIP")
     message("-- ${Green}HIP kernels added${ColourReset}")
 
     # Set HIP compiler and flags
-    set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
+    #set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
+    set(CMAKE_CXX_COMPILER ${ROCM_PATH}/bin/hipcc)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_HIPCC_FLAGS}")
 
     # Add HIP specific preprocessor flags
