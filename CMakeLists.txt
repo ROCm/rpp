@@ -19,6 +19,35 @@
 # THE SOFTWARE.
 
 cmake_minimum_required(VERSION 3.5)
+set(CMAKE_CXX_COMPILER clang++)
+set(CMAKE_CXX_STANDARD 14)
+
+project(amd_rpp CXX)
+
+# RPP Version
+set(VERSION "0.99")
+
+set(CMAKE_INSTALL_LIBDIR "lib" CACHE STRING "Library install directory")
+include(GNUInstallDirs)
+
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
+
+find_program(MAKE_NSIS_EXE makensis)
+find_program(RPMBUILD_EXE rpmbuild)
+find_program(DPKG_EXE dpkg)
+
+# ROCm Path
+set(ROCM_PATH /opt/rocm CACHE PATH "RPP default ROCm installation path")
+# Avoid setting the default path to /usr/local
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  set(CMAKE_INSTALL_PREFIX ${ROCM_PATH} CACHE PATH "RPP default ROCm installation path" FORCE)
+endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
+# RPP Default Options
+set(DEFAULT_BUILD_TYPE "Release")
 
 # Set message options
 if(NOT WIN32)
@@ -56,40 +85,6 @@ else()
         set(BACKEND "HIP")
     endif()
 endif()
-
-# Set Default Compiler for OCL/CPU
-if(NOT "${BACKEND}" STREQUAL "HIP")
-    set(CMAKE_C_COMPILER clang)
-    set(CMAKE_CXX_COMPILER clang++)
-endif()
-set(CMAKE_CXX_STANDARD 14)
-
-project(amd_rpp CXX)
-
-set(CMAKE_INSTALL_LIBDIR "lib" CACHE STRING "Library install directory")
-include(GNUInstallDirs)
-
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
-
-find_program(MAKE_NSIS_EXE makensis)
-find_program(RPMBUILD_EXE rpmbuild)
-find_program(DPKG_EXE dpkg)
-
-# ROCm Path
-set(ROCM_PATH /opt/rocm CACHE PATH "RPP default ROCm installation path")
-# Avoid setting the default path to /usr/local
-if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  set(CMAKE_INSTALL_PREFIX ${ROCM_PATH} CACHE PATH "RPP default ROCm installation path" FORCE)
-endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-
-# RPP Default Options
-set(DEFAULT_BUILD_TYPE "Release")
-
-# RPP Version
-set(VERSION "0.99")
 
 message("-- ${BoldBlue}AMD Radeon Performance Primitives (RPP) Version -- ${VERSION}${ColourReset}")
 message("-- ${BoldBlue}AMD RPP install path set to -- ${CMAKE_INSTALL_PREFIX}${ColourReset}")
