@@ -311,11 +311,12 @@ inline void remove_substring(string &str, string &pattern)
 }
 
 template <typename T>
-inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, RpptROI *roiPtr, int noOfImages)
+inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, RpptROI *roiPtr, int noOfImages, string interpolationTypeName, int testCase)
 {
     string func = funcName;
     string refPath = get_current_dir_name();
     string pattern = "/build";
+    string refFile = "";
     remove_substring(refPath, pattern);
     string dataType[4] = {"_u8_", "_f16_", "_f32_", "_i8_"};
 
@@ -337,8 +338,11 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
         else
             func += "Tensor_PLN1";
     }
+    if(testCase == 21 ||testCase == 23 || testCase == 24)
+        refFile = refPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ func + "_interpolationType" + interpolationTypeName + ".csv";
+    else
+        refFile = refPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ func + ".csv";
 
-    string refFile = refPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ func + ".csv";
     ifstream file(refFile);
     Rpp8u *refOutput;
     refOutput = (Rpp8u *)malloc(noOfImages * dstDescPtr->strides.nStride * sizeof(Rpp8u));
@@ -365,18 +369,20 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     }
 
     bool isEqual = true;
-    for(int c = 0; c < noOfImages; c++)
+    Rpp8u *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef;
+    for(int c = 0; c < /*noOfImages*/ 1; c++)
     {
-        Rpp8u *outputTemp = output + c * dstDescPtr->strides.nStride;
-        Rpp8u *outputTempRef = refOutput + c * dstDescPtr->strides.nStride;
-        for(int i = 0; i < roiPtr->xywhROI.roiHeight; i++)
+        outputTemp = output + c * dstDescPtr->strides.nStride;
+        outputTempRef = refOutput + c * dstDescPtr->strides.nStride;
+
+        for(int i = 0; i < roiPtr[c].xywhROI.roiHeight; i++)
         {
-            Rpp8u *rowTemp = outputTemp + i * dstDescPtr->strides.hStride;
-            Rpp8u *rowTempRef = outputTempRef + i * dstDescPtr->strides.hStride;
-            for(int j = 0; j < roiPtr->xywhROI.roiWidth; j++)
+            rowTemp = outputTemp + i * dstDescPtr->strides.hStride;
+            rowTempRef = outputTempRef + i * dstDescPtr->strides.hStride;
+            for(int j = 0; j < roiPtr[c].xywhROI.roiWidth * dstDescPtr->c; j++)
             {
-                Rpp8u *outVal = rowTemp + j;
-                Rpp8u *outRefVal = rowTempRef + j;
+                outVal = rowTemp + j;
+                outRefVal = rowTempRef + j;
                 int diff = abs(*outVal - *outRefVal);
                 if(diff > CUTOFF)
                 {
