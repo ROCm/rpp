@@ -85,7 +85,7 @@ struct RPPTensorFunctionMetaData
 #define LOCAL_THREADS_X                 16
 #define LOCAL_THREADS_Y                 16
 #define LOCAL_THREADS_Z                 1
-#define ONE_OVER_255                    0.00392157f
+#define ONE_OVER_255                    0.00392156862745f
 #define ONE_OVER_256                    0.00390625f
 #define SIX_OVER_360                    0.01666667f
 #define PI                              3.14159265

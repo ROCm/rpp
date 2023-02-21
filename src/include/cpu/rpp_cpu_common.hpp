@@ -14,7 +14,7 @@ typedef halfhpp Rpp16f;
 
 #define PI                              3.14159265
 #define PI_OVER_180                     0.0174532925
-#define ONE_OVER_255                    0.00392157f
+#define ONE_OVER_255                    0.00392156862745f
 #define ONE_OVER_256                    0.00390625f
 #define RPP_128_OVER_255                0.50196078431f
 #define RAD(deg)                        (deg * PI / 180)
@@ -65,7 +65,7 @@ const __m256i avx_newtonMethodInitialGuess = _mm256_set1_epi32(NEWTON_METHOD_INI
 #if __AVX2__
 #define SIMD_FLOAT_VECTOR_LENGTH        8
 #else
-#define SIMD_FLOAT_VECTOR_LENGTH        4
+#define SIMD_FLOAT_VECTOR_LENGTH        4compute_resize_src_loc
 #endif
 
 /*Constants used for Gaussian interpolation*/
