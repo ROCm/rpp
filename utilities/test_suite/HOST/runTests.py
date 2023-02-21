@@ -3,14 +3,14 @@ import subprocess
 import argparse
 
 cwd = os.getcwd()
-inFilePath1 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src1')
-inFilePath2 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src2')
+inFilePath1 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', '3840x2160_0032_images_src1')
+inFilePath2 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', '3840x2160_0032_images_src1')
 
 def validate_path(input_path):
     if not os.path.exists(input_path):
-        raise ValueError(f" path {input_path} does not exist.")
+        raise ValueError("path " + input_path + " does not exist.")
     if not os.path.isdir(input_path):
-        raise ValueError(f" path {input_path} is not a directory.")
+        raise ValueError(" path " + input_path + " is not a directory.")
 
 def rpp_test_suite_parser_and_validator():
     parser = argparse.ArgumentParser()
@@ -20,6 +20,7 @@ def rpp_test_suite_parser_and_validator():
     parser.add_argument("--case_end", type = int, default = 86, help = "Testing range ending case # - (0:86)")
     parser.add_argument('--test_type', type = int, default = 0, help = "Type of Test - (0 = Unittests / 1 = Performancetests)")
     parser.add_argument('--case_list', nargs = "+", help = "List of case numbers to list", required = False)
+    parser.add_argument('--debug', type = int, default = 0, help = " Falg value to dump output buffer into csv files for debugging purposes")
     args = parser.parse_args()
 
     # check if the folder exists
@@ -35,6 +36,9 @@ def rpp_test_suite_parser_and_validator():
         exit(0)
     elif args.test_type < 0 or args.test_type > 1:
         print("Test Type# must be in the 0 / 1. Aborting!")
+        exit(0)
+    elif args.debug < 0 or args.debug > 1:
+        print("Debug Flag# must be in the 0 / 1. Aborting!")
         exit(0)
     elif args.case_list is not None and args.case_start > 0 and args.case_end < 86:
         print("Invalid input! Please provide only 1 option between case_list, case_start and case_end")
@@ -58,6 +62,7 @@ caseStart = args.case_start
 caseEnd = args.case_end
 testType = args.test_type
 caseList = args.case_list
+debugFlag = args.debug
 
 # set the output folders and number of runs based on type of test (unit test / performance test)
 if(testType == 0):
@@ -69,17 +74,17 @@ else:
 dstPath = outFilePath
 
 # run the shell script
-subprocess.call(["./testAllScript.sh", srcPath1, args.input_path2, str(testType), str(numIterations), " ".join(caseList)])
+subprocess.call(["./testAllScript.sh", srcPath1, args.input_path2, str(testType), str(numIterations), str(debugFlag), " ".join(caseList)])
 
 layoutDict ={0:"PKD3", 1:"PLN3", 2:"PLN1"}
 # unit tests
 if testType == 0:
     for layout in range(3):
         currentLayout = layoutDict[layout]
-        os.makedirs(f'{dstPath}/{currentLayout}', exist_ok=True)
+        os.makedirs(dstPath + '/' + currentLayout, exist_ok=True)
         folderList = [f for f in os.listdir(dstPath) if currentLayout.lower() in f]
         for folder in folderList:
-            os.rename(f'{dstPath}/{folder}', f'{dstPath}/{currentLayout}/{folder}')
+            os.rename(dstPath + '/' + folder, dstPath + '/' + currentLayout +  '/' + folder)
 # Performance tests
 elif (testType == 1):
     log_file_list = [

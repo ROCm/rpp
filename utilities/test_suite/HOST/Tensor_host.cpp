@@ -50,6 +50,7 @@ int main(int argc, char **argv)
     int numIterations = atoi(argv[8]);
     int testType = atoi(argv[9]);     // 0 for unit and 1 for performance test
     int layoutType = atoi(argv[10]); // 0 for pkd3 / 1 for pln3 / 2 for pln1
+    int debugFlag = atoi(argv[12]);
 
     bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23 || testCase == 24);
     bool kernelSizeCase = false;
@@ -196,6 +197,7 @@ int main(int argc, char **argv)
     func += funcType;
 
     RpptInterpolationType interpolationType = RpptInterpolationType::BILINEAR;
+    std::string interpolationTypeName = "";
     if (kernelSizeCase)
     {
         char additionalParam_char[2];
@@ -205,7 +207,6 @@ int main(int argc, char **argv)
     }
     else if (interpolationTypeCase)
     {
-        std::string interpolationTypeName;
         interpolationTypeName = get_interpolation_type(additionalParam, interpolationType);
         func += "_interpolationType";
         func += interpolationTypeName.c_str();
@@ -731,6 +732,12 @@ int main(int argc, char **argv)
             }
             case 21:
             {
+                // for(int i = 0; i < inputBufferSize; i+=3)
+                // {
+                //     static_cast<char *>(input)[i] = 222;
+                //     static_cast<char *>(input)[i + 1] = 208;
+                //     static_cast<char *>(input)[i + 2] = 244;
+                // }
                 testCaseName = "resize";
 
                 for (i = 0; i < images; i++)
@@ -761,6 +768,12 @@ int main(int argc, char **argv)
             }
             case 24:
             {
+                // for(int i = 0; i < inputBufferSize; i+=3)
+                // {
+                //     static_cast<char *>(input)[i] = 24;
+                //     static_cast<char *>(input)[i + 1] = 78;
+                //     static_cast<char *>(input)[i + 2] = 35;
+                // }
                 testCaseName = "warp_affine";
 
                 if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR))
@@ -833,6 +846,10 @@ int main(int argc, char **argv)
             }
             case 31:
             {
+                // for(int i = 0; i < inputBufferSize; i++)
+                // {
+                //     static_cast<char *>(input)[i] = 75;
+                // }
                 testCaseName = "color_cast";
 
                 RpptRGB rgbTensor[images];
@@ -1075,6 +1092,8 @@ int main(int argc, char **argv)
                 {
                     dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / 1.1;
                     dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiHeight / 3;
+                    // cout<< " input Height : "<<dstImgSizes[i].height<<"\n";
+                    // cout<< " input Width : "<<dstImgSizes[i].width<<"\n";
                 }
 
                 Rpp32f mean[images * srcDescPtr->c];
@@ -1339,8 +1358,20 @@ int main(int argc, char **argv)
             }
         }
 
-        if(inputBitDepth == 0 && (srcDescPtr->layout == dstDescPtr->layout))
-            compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, roiTensorPtrDst, noOfImages);
+        if(debugFlag)
+        {
+            std::ofstream refFile;
+            refFile.open(func+".csv");
+            for (int i = 0; i < oBufferSize; i++)
+            {
+                refFile<<(int)*(outputu8+i)<<",";
+            }
+            refFile.close();
+        }
+
+        //std::cout<<"\n testCase: "<<testCase;
+        if(inputBitDepth == 0 && (srcDescPtr->layout == dstDescPtr->layout) && testType == 0)
+            compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, roiTensorPtrDst, noOfImages, interpolationTypeName, testCase);
 
         // Calculate exact dstROI in XYWH format for OpenCV dump
         if (roiTypeSrc == RpptRoiType::LTRB)

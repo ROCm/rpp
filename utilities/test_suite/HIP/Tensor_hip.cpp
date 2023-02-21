@@ -49,6 +49,7 @@ int main(int argc, char **argv)
     int numIterations = atoi(argv[8]);
     int testType = atoi(argv[9]);     // 0 for unit and 1 for performance test
     int layoutType = atoi(argv[10]); // 0 for pkd3 / 1 for pln3 / 2 for pln1
+    int debugFlag = atoi(argv[12]);
 
     bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23|| testCase == 24 || testCase == 40 || testCase == 41 || testCase == 49);
     bool kernelSizeCase = (testCase == 40 || testCase == 41 || testCase == 49);
@@ -196,6 +197,7 @@ int main(int argc, char **argv)
     func += funcType;
 
     RpptInterpolationType interpolationType = RpptInterpolationType::BILINEAR;
+    std::string interpolationTypeName = "";
     if (kernelSizeCase)
     {
         char additionalParam_char[2];
@@ -205,7 +207,6 @@ int main(int argc, char **argv)
     }
     else if (interpolationTypeCase)
     {
-        std::string interpolationTypeName;
         interpolationTypeName = get_interpolation_type(additionalParam, interpolationType);
         func += "_interpolationType";
         func += interpolationTypeName.c_str();
@@ -1378,6 +1379,19 @@ int main(int argc, char **argv)
             }
         }
 
+        if(debugFlag)
+        {
+            std::ofstream refFile;
+            refFile.open(func+".csv");
+            for (int i = 0; i < oBufferSize; i++)
+            {
+                refFile<<(int)*(outputu8+i)<<",";
+            }
+            refFile.close();
+        }
+
+        if(inputBitDepth == 0 && (srcDescPtr->layout == dstDescPtr->layout))
+            compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, roiTensorPtrDst, noOfImages, interpolationTypeName, testCase);
         // Calculate exact dstROI in XYWH format for OpenCV dump
         if (roiTypeSrc == RpptRoiType::LTRB)
         {
@@ -1394,9 +1408,6 @@ int main(int argc, char **argv)
                 roiTensorPtrSrc[i].xywhROI.roiHeight = rbY - ltY + 1;
             }
         }
-
-        if(inputBitDepth == 0 && (srcDescPtr->layout == dstDescPtr->layout))
-            compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, roiTensorPtrDst, noOfImages);
 
         RpptROI roiDefault;
         RpptROIPtr roiPtrDefault;
