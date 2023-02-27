@@ -869,6 +869,14 @@ __device__ __forceinline__ void rpp_hip_load24_pln3_and_unpack_to_float24_pkd3(h
 __device__ __forceinline__ void rpp_hip_pack_float8_and_store8(uchar *dstPtr, d_float8 *dstPtr_f8)
 {
     uint2 dst_ui2;
+    dstPtr_f8->f4[0].w = std::nearbyintf(dstPtr_f8->f4[0].w);
+    dstPtr_f8->f4[0].x = std::nearbyintf(dstPtr_f8->f4[0].x);
+    dstPtr_f8->f4[0].y = std::nearbyintf(dstPtr_f8->f4[0].y);
+    dstPtr_f8->f4[0].z = std::nearbyintf(dstPtr_f8->f4[0].z);
+    dstPtr_f8->f4[1].w = std::nearbyintf(dstPtr_f8->f4[1].w);
+    dstPtr_f8->f4[1].x = std::nearbyintf(dstPtr_f8->f4[1].x);
+    dstPtr_f8->f4[1].y = std::nearbyintf(dstPtr_f8->f4[1].y);
+    dstPtr_f8->f4[1].z = std::nearbyintf(dstPtr_f8->f4[1].z);
     dst_ui2.x = rpp_hip_pack(dstPtr_f8->f4[0]);
     dst_ui2.y = rpp_hip_pack(dstPtr_f8->f4[1]);
     *(uint2 *)dstPtr = dst_ui2;
@@ -910,6 +918,14 @@ __device__ __forceinline__ void rpp_hip_pack_float8_and_store8(half *dstPtr, d_f
 __device__ __forceinline__ void rpp_hip_pack_float24_pkd3_and_store24_pkd3(uchar *dstPtr, d_float24 *dstPtr_f24)
 {
     d_uint6 dst_ui6;
+
+    for(int i = 0; i < 6; i++)
+    {
+        dstPtr_f24->f4[i].w = std::nearbyintf(dstPtr_f24->f4[i].w);
+        dstPtr_f24->f4[i].x = std::nearbyintf(dstPtr_f24->f4[i].x);
+        dstPtr_f24->f4[i].y = std::nearbyintf(dstPtr_f24->f4[i].y);
+        dstPtr_f24->f4[i].z = std::nearbyintf(dstPtr_f24->f4[i].z);
+    }
 
     dst_ui6.ui1[0] = rpp_hip_pack(dstPtr_f24->f4[0]);    // write R00G00B00R01
     dst_ui6.ui1[1] = rpp_hip_pack(dstPtr_f24->f4[1]);    // write G01B01R02G02
@@ -971,6 +987,14 @@ __device__ __forceinline__ void rpp_hip_pack_float24_pkd3_and_store24_pkd3(half 
 __device__ __forceinline__ void rpp_hip_pack_float24_pln3_and_store24_pln3(uchar *dstPtr, uint increment, d_float24 *dstPtr_f24)
 {
     d_uint6 dst_ui6;
+
+    for(int i = 0; i < 6; i++)
+    {
+        dstPtr_f24->f4[i].w = std::nearbyintf(dstPtr_f24->f4[i].w);
+        dstPtr_f24->f4[i].x = std::nearbyintf(dstPtr_f24->f4[i].x);
+        dstPtr_f24->f4[i].y = std::nearbyintf(dstPtr_f24->f4[i].y);
+        dstPtr_f24->f4[i].z = std::nearbyintf(dstPtr_f24->f4[i].z);
+    }
 
     dst_ui6.ui1[0] = rpp_hip_pack(dstPtr_f24->f4[0]);    // write R00-R03
     dst_ui6.ui1[1] = rpp_hip_pack(dstPtr_f24->f4[1]);    // write R04-R07
@@ -1049,7 +1073,15 @@ __device__ __forceinline__ void rpp_hip_pack_float24_pln3_and_store24_pln3(half 
 
 __device__ __forceinline__ void rpp_hip_pack_float24_pln3_and_store24_pkd3(uchar *dstPtr, d_float24 *dstPtr_f24)
 {
+
     d_uint6 dst_ui6;
+    for(int i = 0; i < 6; i++)
+    {
+        dstPtr_f24->f4[i].w = nearbyintf(dstPtr_f24->f4[i].w);
+        dstPtr_f24->f4[i].x = nearbyintf(dstPtr_f24->f4[i].x);
+        dstPtr_f24->f4[i].y = nearbyintf(dstPtr_f24->f4[i].y);
+        dstPtr_f24->f4[i].z = nearbyintf(dstPtr_f24->f4[i].z);
+    }
 
     dst_ui6.ui1[0] = rpp_hip_pack(make_float4(dstPtr_f24->f1[ 0], dstPtr_f24->f1[ 8], dstPtr_f24->f1[16], dstPtr_f24->f1[ 1]));    // write R00G00B00R01
     dst_ui6.ui1[1] = rpp_hip_pack(make_float4(dstPtr_f24->f1[ 9], dstPtr_f24->f1[17], dstPtr_f24->f1[ 2], dstPtr_f24->f1[10]));    // write G01B01R02G02
@@ -1120,6 +1152,13 @@ __device__ __forceinline__ void rpp_hip_pack_float24_pln3_and_store24_pkd3(half 
 __device__ __forceinline__ void rpp_hip_pack_float24_pkd3_and_store24_pln3(uchar *dstPtr, uint increment, d_float24 *dstPtr_f24)
 {
     d_uint6 dst_ui6;
+    for(int i = 0; i < 6; i++)
+    {
+        dstPtr_f24->f4[i].w = std::nearbyintf(dstPtr_f24->f4[i].w);
+        dstPtr_f24->f4[i].x = std::nearbyintf(dstPtr_f24->f4[i].x);
+        dstPtr_f24->f4[i].y = std::nearbyintf(dstPtr_f24->f4[i].y);
+        dstPtr_f24->f4[i].z = std::nearbyintf(dstPtr_f24->f4[i].z);
+    }
 
     dst_ui6.ui1[0] = rpp_hip_pack(make_float4(dstPtr_f24->f1[ 0], dstPtr_f24->f1[ 3], dstPtr_f24->f1[ 6], dstPtr_f24->f1[ 9]));    // write R00-R03
     dst_ui6.ui1[1] = rpp_hip_pack(make_float4(dstPtr_f24->f1[12], dstPtr_f24->f1[15], dstPtr_f24->f1[18], dstPtr_f24->f1[21]));    // write R04-R07
