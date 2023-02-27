@@ -103,7 +103,66 @@ inline std::string get_noise_type(unsigned int val)
     }
 }
 
-inline void set_data_type(int ip_bitDepth, string &funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr)
+inline int set_input_channels(int layoutType)
+{
+    if(layoutType == 0 || layoutType == 1)
+        return 3;
+    else
+        return 1;
+}
+
+inline string set_function_type(int layoutType, int pln1OutTypeCase, int outputFormatToggle)
+{
+    string funcType;
+    if(layoutType == 0)
+    {
+        funcType = "Tensor_HIP_PKD3";
+
+        if (pln1OutTypeCase)
+        {
+            funcType += "_toPLN1";
+        }
+        else
+        {
+            if (outputFormatToggle == 0)
+            {
+                funcType += "_toPKD3";
+            }
+            else if (outputFormatToggle == 1)
+            {
+                funcType += "_toPLN3";
+            }
+        }
+    }
+    else if(layoutType == 1)
+    {
+        funcType = "Tensor_HIP_PLN3";;
+
+        if (pln1OutTypeCase)
+        {
+            funcType += "_toPLN1";
+        }
+        else
+        {
+            if (outputFormatToggle == 0)
+            {
+                funcType += "_toPLN3";
+            }
+            else if (outputFormatToggle == 1)
+            {
+                funcType += "_toPKD3";
+            }
+        }
+    }
+    else
+    {
+        funcType = "Tensor_HIP_PLN1";
+        funcType += "_toPLN1";
+    }
+    return funcType;
+}
+
+inline void set_descriptor_data_type(int ip_bitDepth, string &funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr)
 {
     if (ip_bitDepth == 0)
     {
@@ -149,7 +208,45 @@ inline void set_data_type(int ip_bitDepth, string &funcName, RpptDescPtr srcDesc
     }
 }
 
-inline void set_description_ptr_dims_and_strides(RpptDescPtr descPtr, int noOfImages, int maxHeight, int maxWidth, int numChannels, int offsetInBytes)
+inline void set_descriptor_layout( RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, int layoutType, bool pln1OutTypeCase, int outputFormatToggle)
+{
+    if(layoutType == 0)
+    {
+        srcDescPtr->layout = RpptLayout::NHWC;
+        // Set src/dst layouts in tensor descriptors
+        if (pln1OutTypeCase)
+            dstDescPtr->layout = RpptLayout::NCHW;
+        else
+        {
+            if (outputFormatToggle == 0)
+                dstDescPtr->layout = RpptLayout::NHWC;
+            else if (outputFormatToggle == 1)
+                dstDescPtr->layout = RpptLayout::NCHW;
+        }
+    }
+    else if(layoutType == 1)
+    {
+        srcDescPtr->layout = RpptLayout::NCHW;
+        // Set src/dst layouts in tensor descriptors
+        if (pln1OutTypeCase)
+            dstDescPtr->layout = RpptLayout::NCHW;
+        else
+        {
+            if (outputFormatToggle == 0)
+                dstDescPtr->layout = RpptLayout::NCHW;
+            else if (outputFormatToggle == 1)
+                dstDescPtr->layout = RpptLayout::NHWC;
+        }
+    }
+    else
+    {
+        // Set src/dst layouts in tensor descriptors
+        srcDescPtr->layout = RpptLayout::NCHW;
+        dstDescPtr->layout = RpptLayout::NCHW;
+    }
+}
+
+inline void set_descriptor_dims_and_strides(RpptDescPtr descPtr, int noOfImages, int maxHeight, int maxWidth, int numChannels, int offsetInBytes)
 {
     descPtr->numDims = 4;
     descPtr->offsetInBytes = offsetInBytes;
@@ -181,25 +278,11 @@ inline void set_description_ptr_dims_and_strides(RpptDescPtr descPtr, int noOfIm
 inline void set_roi_values(RpptROI *roi, RpptROI *roiTensorPtrSrc, RpptRoiType roiType, int batchSize)
 {
     if(roiType == RpptRoiType::XYWH)
-    {
         for (int i = 0; i < batchSize; i++)
-        {
-            roiTensorPtrSrc[i].xywhROI.xy.x = roi->xywhROI.xy.x;
-            roiTensorPtrSrc[i].xywhROI.xy.y = roi->xywhROI.xy.y;
-            roiTensorPtrSrc[i].xywhROI.roiWidth = roi->xywhROI.roiWidth;
-            roiTensorPtrSrc[i].xywhROI.roiHeight = roi->xywhROI.roiHeight;
-        }
-    }
+            roiTensorPtrSrc[i].xywhROI = roi->xywhROI;
     else if(roiType == RpptRoiType::LTRB)
-    {
         for (int i = 0; i < batchSize; i++)
-        {
-            roiTensorPtrSrc[i].ltrbROI.lt.x = roi->ltrbROI.lt.x;
-            roiTensorPtrSrc[i].ltrbROI.lt.y = roi->ltrbROI.lt.y;
-            roiTensorPtrSrc[i].ltrbROI.rb.x = roi->ltrbROI.rb.x;
-            roiTensorPtrSrc[i].ltrbROI.rb.y = roi->ltrbROI.rb.x;
-        }
-    }
+            roiTensorPtrSrc[i].ltrbROI = roi->ltrbROI;
 }
 
 inline void update_dst_sizes_with_roi(RpptROI *roiTensorPtrSrc, RpptImagePatchPtr dstImageSize, RpptRoiType roiType, int batchSize)
@@ -270,8 +353,8 @@ inline void convert_pkd3_to_pln3(Rpp8u *input, RpptDescPtr descPtr)
     Rpp8u *inputTemp, *inputCopyTemp;
     inputTemp = input + descPtr->offsetInBytes;
 
-    omp_set_dynamic(0);
-    #pragma omp parallel for num_threads(descPtr->n)
+omp_set_dynamic(0);
+#pragma omp parallel for num_threads(descPtr->n)
     for (int count = 0; count < descPtr->n; count++)
     {
         Rpp8u *inputTempR, *inputTempG, *inputTempB;
@@ -370,16 +453,26 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
 
     bool isEqual = true;
     Rpp8u *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef;
-    for(int c = 0; c < /*noOfImages*/ 1; c++)
+    for(int c = 0; c < noOfImages; c++)
     {
         outputTemp = output + c * dstDescPtr->strides.nStride;
         outputTempRef = refOutput + c * dstDescPtr->strides.nStride;
+        int height = roiPtr[c].xywhROI.roiHeight;
+        int width = roiPtr[c].xywhROI.roiWidth;
 
-        for(int i = 0; i < roiPtr[c].xywhROI.roiHeight; i++)
+        if(dstDescPtr->layout == RpptLayout::NHWC)
+            width =  roiPtr[c].xywhROI.roiWidth * dstDescPtr->c;
+        else
+        {
+            if (dstDescPtr->c == 3)
+                height = roiPtr[c].xywhROI.roiHeight * dstDescPtr->c;
+        }
+
+        for(int i = 0; i < height; i++)
         {
             rowTemp = outputTemp + i * dstDescPtr->strides.hStride;
             rowTempRef = outputTempRef + i * dstDescPtr->strides.hStride;
-            for(int j = 0; j < roiPtr[c].xywhROI.roiWidth * dstDescPtr->c; j++)
+            for(int j = 0; j < width; j++)
             {
                 outVal = rowTemp + j;
                 outRefVal = rowTempRef + j;

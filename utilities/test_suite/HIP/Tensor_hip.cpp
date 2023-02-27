@@ -15,6 +15,8 @@
 #include <hip/hip_fp16.h>
 #include <fstream>
 
+#define DEBUG_MODE "ON"
+
 typedef half Rpp16f;
 
 using namespace cv;
@@ -49,7 +51,7 @@ int main(int argc, char **argv)
     int numIterations = atoi(argv[8]);
     int testType = atoi(argv[9]);     // 0 for unit and 1 for performance test
     int layoutType = atoi(argv[10]); // 0 for pkd3 / 1 for pln3 / 2 for pln1
-    int debugFlag = atoi(argv[12]);
+    int qaFlag = atoi(argv[12]);
 
     bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23|| testCase == 24 || testCase == 40 || testCase == 41 || testCase == 49);
     bool kernelSizeCase = (testCase == 40 || testCase == 41 || testCase == 49);
@@ -94,8 +96,10 @@ int main(int argc, char **argv)
         }
     }
 
-    int inputChannels;
-    string funcType;
+    // Determine the number of input channels based on the specified layout type
+    int inputChannels = set_input_channels(layoutType);
+    // Determine the type of function to be used based on the specified layout type
+    string funcType = set_function_type(layoutType, pln1OutTypeCase, outputFormatToggle);
 
     // Initialize tensor descriptors
     RpptDesc srcDesc, dstDesc;
@@ -103,75 +107,15 @@ int main(int argc, char **argv)
     srcDescPtr = &srcDesc;
     dstDescPtr = &dstDesc;
 
-    if(layoutType == 0)
-    {
-        inputChannels = 3;
-        funcType = "Tensor_HIP_PKD3";
-        srcDescPtr->layout = RpptLayout::NHWC;
-
-        // Set src/dst layouts in tensor descriptors
-        if (pln1OutTypeCase)
-        {
-            funcType += "_toPLN1";
-            dstDescPtr->layout = RpptLayout::NCHW;
-        }
-        else
-        {
-            if (outputFormatToggle == 0)
-            {
-                funcType += "_toPKD3";
-                dstDescPtr->layout = RpptLayout::NHWC;
-            }
-            else if (outputFormatToggle == 1)
-            {
-                funcType += "_toPLN3";
-                dstDescPtr->layout = RpptLayout::NCHW;
-            }
-        }
-    }
-    else if(layoutType == 1)
-    {
-        inputChannels = 3;
-        funcType = "Tensor_HIP_PLN3";
-        srcDescPtr->layout = RpptLayout::NCHW;
-
-        // Set src/dst layouts in tensor descriptors
-        if (pln1OutTypeCase)
-        {
-            funcType += "_toPLN1";
-            dstDescPtr->layout = RpptLayout::NCHW;
-        }
-        else
-        {
-            if (outputFormatToggle == 0)
-            {
-                funcType += "_toPLN3";
-                dstDescPtr->layout = RpptLayout::NCHW;
-            }
-            else if (outputFormatToggle == 1)
-            {
-                funcType += "_toPKD3";
-                dstDescPtr->layout = RpptLayout::NHWC;
-            }
-        }
-    }
-    else
-    {
-        inputChannels = 1;
-        funcType = "Tensor_HIP_PLN1";
-        funcType += "_toPLN1";
-
-        // Set src/dst layouts in tensor descriptors
-        srcDescPtr->layout = RpptLayout::NCHW;
-        dstDescPtr->layout = RpptLayout::NCHW;
-    }
+    //Set src/dst layout types in tensor descriptors
+    set_descriptor_layout( srcDescPtr, dstDescPtr, layoutType, pln1OutTypeCase, outputFormatToggle);
 
     // Get function name
     string funcName = augmentationMap[testCase];
     funcName = (funcName.empty()) ? "testCase" : funcName;
 
     // Set src/dst data types in tensor descriptors
-    set_data_type(inputBitDepth, funcName, srcDescPtr, dstDescPtr);
+    set_descriptor_data_type(inputBitDepth, funcName, srcDescPtr, dstDescPtr);
 
     // Other initializations
     int missingFuncFlag = 0;
@@ -305,8 +249,8 @@ int main(int argc, char **argv)
     Rpp32u offsetInBytes = 0;
 
     // Set numDims, offset, n/c/h/w values, strides for src/dst
-    set_description_ptr_dims_and_strides(srcDescPtr, noOfImages, maxHeight, maxWidth, inputChannels, offsetInBytes);
-    set_description_ptr_dims_and_strides(dstDescPtr, noOfImages, maxDstHeight, maxDstWidth, outputChannels, offsetInBytes);
+    set_descriptor_dims_and_strides(srcDescPtr, noOfImages, maxHeight, maxWidth, inputChannels, offsetInBytes);
+    set_descriptor_dims_and_strides(dstDescPtr, noOfImages, maxDstHeight, maxDstWidth, outputChannels, offsetInBytes);
 
     // Set buffer sizes in pixels for src/dst
     ioBufferSize = (Rpp64u)srcDescPtr->h * (Rpp64u)srcDescPtr->w * (Rpp64u)srcDescPtr->c * (Rpp64u)noOfImages;
@@ -448,6 +392,17 @@ int main(int argc, char **argv)
     double wallTime;
     string testCaseName;
 
+    // Uncomment to run test case with an xywhROI override
+    // roi.xywhROI = {0, 0, 100, 180};
+    // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
+    // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
+
+    // Uncomment to run test case with an ltrbROI override
+    // roiTypeSrc = RpptRoiType::LTRB;
+    // roi.ltrbROI = {50, 30, 210, 210};
+    // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
+    // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
+
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numIterations, noOfImages);
     for (int perfRunCount = 0; perfRunCount < numIterations; perfRunCount++)
@@ -467,17 +422,6 @@ int main(int argc, char **argv)
                 beta[i] = 50;
             }
 
-            // Uncomment to run test case with an xywhROI override
-            // roi.xywhROI = {0, 0, 100, 180};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
-
-            // Uncomment to run test case with an ltrbROI override
-            // roiTypeSrc = RpptRoiType::LTRB;
-            // roi.ltrbROI = {50, 30, 210, 210};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
-
             startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_brightness_gpu(d_input, srcDescPtr, d_output, dstDescPtr, alpha, beta, roiTensorPtrSrc, roiTypeSrc, handle);
@@ -496,17 +440,6 @@ int main(int argc, char **argv)
                 gammaVal[i] = 1.9;
             }
 
-            // Uncomment to run test case with an xywhROI override
-            // roi.xywhROI = {0, 0, 100, 180};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
-
-            // Uncomment to run test case with an ltrbROI override
-            // roiTypeSrc = RpptRoiType::LTRB;
-            // roi.ltrbROI = {50, 30, 210, 210};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
-
             startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_gamma_correction_gpu(d_input, srcDescPtr, d_output, dstDescPtr, gammaVal, roiTensorPtrSrc, roiTypeSrc, handle);
@@ -524,17 +457,6 @@ int main(int argc, char **argv)
             {
                 alpha[i] = 0.4;
             }
-
-            // Uncomment to run test case with an xywhROI override
-            // roi.xywhROI = {0, 0, 100, 180};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
-
-            // Uncomment to run test case with an ltrbROI override
-            // roiTypeSrc = RpptRoiType::LTRB;
-            // roi.ltrbROI = {50, 30, 210, 210};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
 
             startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
@@ -555,17 +477,6 @@ int main(int argc, char **argv)
                 contrastFactor[i] = 2.96;
                 contrastCenter[i] = 128;
             }
-
-            // Uncomment to run test case with an xywhROI override
-            // roi.xywhROI = {0, 0, 100, 180};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
-
-            // Uncomment to run test case with an ltrbROI override
-            // roiTypeSrc = RpptRoiType::LTRB;
-            // roi.ltrbROI = {50, 30, 210, 210};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
 
             startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
@@ -596,17 +507,6 @@ int main(int argc, char **argv)
                         pepperValueTensor[i] = 0.0f;
                     }
 
-                    // Uncomment to run test case with an xywhROI override
-                    // roi.xywhROI = {0, 0, 100, 180};
-                    // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-                    // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
-
-                    // Uncomment to run test case with an ltrbROI override
-                    // roiTypeSrc = RpptRoiType::LTRB;
-                    // roi.ltrbROI = {50, 30, 210, 210};
-                    // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-                    // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
-
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_salt_and_pepper_noise_gpu(d_input, srcDescPtr, d_output, dstDescPtr, noiseProbabilityTensor, saltProbabilityTensor, saltValueTensor, pepperValueTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
@@ -626,17 +526,6 @@ int main(int argc, char **argv)
                         stdDevTensor[i] = 0.2f;
                     }
 
-                    // Uncomment to run test case with an xywhROI override
-                    // roi.xywhROI = {0, 0, 100, 180};
-                    // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-                    // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
-
-                    // Uncomment to run test case with an ltrbROI override
-                    // roiTypeSrc = RpptRoiType::LTRB;
-                    // roi.ltrbROI = {50, 30, 210, 210};
-                    // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-                    // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
-
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_gaussian_noise_gpu(d_input, srcDescPtr, d_output, dstDescPtr, meanTensor, stdDevTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
@@ -653,17 +542,6 @@ int main(int argc, char **argv)
                     {
                         shotNoiseFactorTensor[i] = 80.0f;
                     }
-
-                    // Uncomment to run test case with an xywhROI override
-                    // roi.xywhROI = {0, 0, 100, 180};
-                    // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-                    // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
-
-                    // Uncomment to run test case with an ltrbROI override
-                    // roiTypeSrc = RpptRoiType::LTRB;
-                    // roi.ltrbROI = {50, 30, 210, 210};
-                    // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-                    // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
 
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
@@ -692,17 +570,6 @@ int main(int argc, char **argv)
                 exposureFactor[i] = 1.4;
             }
 
-            // Uncomment to run test case with an xywhROI override
-            // roi.xywhROI = {0, 0, 100, 180};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
-
-            // Uncomment to run test case with an ltrbROI override
-            // roiTypeSrc = RpptRoiType::LTRB;
-            // roi.ltrbROI = {50, 30, 210, 210};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
-
             startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_exposure_gpu(d_input, srcDescPtr, d_output, dstDescPtr, exposureFactor, roiTensorPtrSrc, roiTypeSrc, handle);
@@ -723,17 +590,6 @@ int main(int argc, char **argv)
                 verticalFlag[i] = 0;
             }
 
-            // Uncomment to run test case with an xywhROI override
-            // roi.xywhROI = {0, 0, 100, 180};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
-
-            // Uncomment to run test case with an ltrbROI override
-            // roiTypeSrc = RpptRoiType::LTRB;
-            // roi.ltrbROI = {50, 30, 210, 210};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
-
             startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_flip_gpu(d_input, srcDescPtr, d_output, dstDescPtr, horizontalFlag, verticalFlag, roiTensorPtrSrc, roiTypeSrc, handle);
@@ -751,17 +607,6 @@ int main(int argc, char **argv)
                 dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / 1.1;
                 dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiHeight / 3;
             }
-
-            // Uncomment to run test case with an xywhROI override
-            // roi.xywhROI = {0, 0, 100, 180};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
-
-            // Uncomment to run test case with an ltrbROI override
-            // roiTypeSrc = RpptRoiType::LTRB;
-            // roi.ltrbROI = {50, 30, 210, 210};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
 
             startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
@@ -793,17 +638,6 @@ int main(int argc, char **argv)
                 affineTensor_f6[i].data[5] = 0;
             }
 
-            // Uncomment to run test case with an xywhROI override
-            // roi.xywhROI = {0, 0, 100, 180};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
-
-            // Uncomment to run test case with an ltrbROI override
-            // roiTypeSrc = RpptRoiType::LTRB;
-            // roi.ltrbROI = {50, 30, 210, 210};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
-
             startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_warp_affine_gpu(d_input, srcDescPtr, d_output, dstDescPtr, affineTensor, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
@@ -821,17 +655,6 @@ int main(int argc, char **argv)
             {
                 stdDev[i] = 50.0;
             }
-
-            // Uncomment to run test case with an xywhROI override
-            // roi.xywhROI = {0, 0, 100, 180};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
-
-            // Uncomment to run test case with an ltrbROI override
-            // roiTypeSrc = RpptRoiType::LTRB;
-            // roi.ltrbROI = {50, 30, 210, 210};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
 
             startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
@@ -855,17 +678,6 @@ int main(int argc, char **argv)
                 rgbTensor[i].B = 100;
                 alphaTensor[i] = 0.5;
             }
-
-            // Uncomment to run test case with an xywhROI override
-            // roi.xywhROI = {0, 0, 100, 180};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
-
-            // Uncomment to run test case with an ltrbROI override
-            // roiTypeSrc = RpptRoiType::LTRB;
-            // roi.ltrbROI = {50, 30, 210, 210};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
 
             startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
@@ -891,17 +703,6 @@ int main(int argc, char **argv)
                 saturation[i] = 1.9;
             }
 
-            // Uncomment to run test case with an xywhROI override
-            // roi.xywhROI = {0, 0, 100, 180};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
-
-            // Uncomment to run test case with an ltrbROI override
-            // roiTypeSrc = RpptRoiType::LTRB;
-            // roi.ltrbROI = {50, 30, 210, 210};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
-
             startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_color_twist_gpu(d_input, srcDescPtr, d_output, dstDescPtr, brightness, contrast, hue, saturation, roiTensorPtrSrc, roiTypeSrc, handle);
@@ -914,7 +715,6 @@ int main(int argc, char **argv)
         {
             testCaseName = "crop";
 
-            // Uncomment to run test case with an xywhROI override
             for (i = 0; i < images; i++)
             {
                 roiTensorPtrSrc[i].xywhROI.xy.x = 0;
@@ -922,17 +722,6 @@ int main(int argc, char **argv)
                 dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
                 dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 100;
             }
-
-            // Uncomment to run test case with an xywhROI override
-            // roi.xywhROI = {0, 0, 100, 180};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
-
-            // Uncomment to run test case with an ltrbROI override
-            // roiTypeSrc = RpptRoiType::LTRB;
-            // roi.ltrbROI = {50, 30, 210, 210};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
 
             startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
@@ -981,7 +770,6 @@ int main(int argc, char **argv)
                 }
             }
 
-            // Uncomment to run test case with an xywhROI override
             for (i = 0; i < images; i++)
             {
                 roiTensorPtrSrc[i].xywhROI.xy.x = 10;
@@ -989,17 +777,6 @@ int main(int argc, char **argv)
                 dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
                 dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiHeight / 2;
             }
-
-            // Uncomment to run test case with an xywhROI override
-            // roi.xywhROI = {0, 0, 100, 180};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
-
-            // Uncomment to run test case with an ltrbROI override
-            // roiTypeSrc = RpptRoiType::LTRB;
-            // roi.ltrbROI = {50, 30, 210, 210};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
 
             startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 3 || inputBitDepth == 4 || inputBitDepth == 5)
@@ -1035,17 +812,6 @@ int main(int argc, char **argv)
                 roiTensorPtrSrc[i].xywhROI.roiHeight = 50;
             }
 
-            // Uncomment to run test case with an xywhROI override
-            // roi.xywhROI = {0, 0, 100, 180};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
-
-            // Uncomment to run test case with an ltrbROI override
-            // roiTypeSrc = RpptRoiType::LTRB;
-            // roi.ltrbROI = {50, 30, 210, 210};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
-
             startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_resize_crop_mirror_gpu(d_input, srcDescPtr, d_output, dstDescPtr, dstImgSizes, interpolationType, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
@@ -1059,17 +825,6 @@ int main(int argc, char **argv)
             testCaseName = "erode";
 
             Rpp32u kernelSize = additionalParam;
-
-            // Uncomment to run test case with an xywhROI override
-            // roi.xywhROI = {0, 0, 100, 180};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
-
-            // Uncomment to run test case with an ltrbROI override
-            // roiTypeSrc = RpptRoiType::LTRB;
-            // roi.ltrbROI = {50, 30, 210, 210};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
 
             startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
@@ -1085,17 +840,6 @@ int main(int argc, char **argv)
 
             Rpp32u kernelSize = additionalParam;
 
-            // Uncomment to run test case with an xywhROI override
-            // roi.xywhROI = {0, 0, 100, 180};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
-
-            // Uncomment to run test case with an ltrbROI override
-            // roiTypeSrc = RpptRoiType::LTRB;
-            // roi.ltrbROI = {50, 30, 210, 210};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
-
             startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_dilate_gpu(d_input, srcDescPtr, d_output, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
@@ -1109,17 +853,6 @@ int main(int argc, char **argv)
             testCaseName = "box_filter";
 
             Rpp32u kernelSize = additionalParam;
-
-            // Uncomment to run test case with an xywhROI override
-            // roi.xywhROI = {0, 0, 100, 180};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
-
-            // Uncomment to run test case with an ltrbROI override
-            // roiTypeSrc = RpptRoiType::LTRB;
-            // roi.ltrbROI = {50, 30, 210, 210};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
 
             startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
@@ -1183,17 +916,6 @@ int main(int argc, char **argv)
                 }
             }
 
-            // Uncomment to run test case with an xywhROI override
-            // roi.xywhROI = {0, 0, 100, 180};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
-
-            // Uncomment to run test case with an ltrbROI override
-            // roiTypeSrc = RpptRoiType::LTRB;
-            // roi.ltrbROI = {50, 30, 210, 210};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
-
             startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 3 || inputBitDepth == 4 || inputBitDepth == 5)
                 rppt_resize_mirror_normalize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, dstImgSizes, interpolationType, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
@@ -1212,17 +934,6 @@ int main(int argc, char **argv)
             RpptUintVector2D translateVector;
             translateVector.x = 0.0;
             translateVector.y = 0.0;
-
-            // Uncomment to run test case with an xywhROI override
-            // roi.xywhROI = {0, 0, 100, 180};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
-
-            // Uncomment to run test case with an ltrbROI override
-            // roiTypeSrc = RpptRoiType::LTRB;
-            // roi.ltrbROI = {50, 30, 210, 210};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
 
             startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
@@ -1252,17 +963,6 @@ int main(int argc, char **argv)
             // spatterColor.R = 5;
             // spatterColor.G = 20;
             // spatterColor.B = 64;
-
-            // Uncomment to run test case with an xywhROI override
-            // roi.xywhROI = {0, 0, 100, 180};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
-
-            // Uncomment to run test case with an ltrbROI override
-            // roiTypeSrc = RpptRoiType::LTRB;
-            // roi.ltrbROI = {50, 30, 210, 210};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
 
             startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
@@ -1322,16 +1022,9 @@ int main(int argc, char **argv)
     minWallTime *= 1000;
     avgWallTime *= 1000;
     if (testType == 0)
+    {
         cout << "\n\nGPU Backend Wall Time: " << wallTime <<" ms"<< endl;
-    else
-    {
-        // Display measured times
-        avgWallTime /= numIterations;
-        cout << fixed <<"\n\nmax,min,avg in ms = " << maxWallTime << "," << minWallTime << "," << avgWallTime << endl;
-    }
 
-    if (testType == 0)
-    {
         // Reconvert other bit depths to 8u for output display purposes
         if (inputBitDepth == 0)
         {
@@ -1379,7 +1072,7 @@ int main(int argc, char **argv)
             }
         }
 
-        if(debugFlag)
+        if(DEBUG_MODE == "ON")
         {
             std::ofstream refFile;
             refFile.open(func+".csv");
@@ -1390,7 +1083,7 @@ int main(int argc, char **argv)
             refFile.close();
         }
 
-        if(inputBitDepth == 0 && (srcDescPtr->layout == dstDescPtr->layout))
+        if(inputBitDepth == 0 && (srcDescPtr->layout == dstDescPtr->layout) && qaFlag)
             compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, roiTensorPtrDst, noOfImages, interpolationTypeName, testCase);
         // Calculate exact dstROI in XYWH format for OpenCV dump
         if (roiTypeSrc == RpptRoiType::LTRB)
@@ -1416,9 +1109,6 @@ int main(int argc, char **argv)
         roiPtrDefault->xywhROI.xy.y = 0;
         roiPtrDefault->xywhROI.roiWidth = dstDescPtr->w;
         roiPtrDefault->xywhROI.roiHeight = dstDescPtr->h;
-        // RpptRoiXywh roiDefault = {{0,0}, static_cast<int>(dstDescPtr->w), static_cast<int>(dstDescPtr->h)};
-        // RpptROIPtr roiPtrDefault;
-        // (*roiPtrDefault).xywhROI = roiDefault;
 
         for (int i = 0; i < dstDescPtr->n; i++)
         {
@@ -1438,6 +1128,12 @@ int main(int argc, char **argv)
 
         // OpenCV dump (if testType is unit test)
         write_image_batch_opencv(dst, outputu8, dstDescPtr, imageNames, dstImgSizes);
+    }
+    else
+    {
+        // Display measured times
+        avgWallTime /= numIterations;
+        cout << fixed <<"\n\nmax,min,avg in ms = " << maxWallTime << "," << minWallTime << "," << avgWallTime << endl;
     }
 
     // Free memory
