@@ -65,7 +65,7 @@ const __m256i avx_newtonMethodInitialGuess = _mm256_set1_epi32(NEWTON_METHOD_INI
 #if __AVX2__
 #define SIMD_FLOAT_VECTOR_LENGTH        8
 #else
-#define SIMD_FLOAT_VECTOR_LENGTH        4compute_resize_src_loc
+#define SIMD_FLOAT_VECTOR_LENGTH        4
 #endif
 
 /*Constants used for Gaussian interpolation*/
@@ -5302,9 +5302,9 @@ inline void compute_bilinear_interpolation_1c(T **srcRowPtrsForInterp, Rpp32s lo
     Rpp32s loc1 = std::min(std::max(loc, 0), limit);
     Rpp32s loc2 = std::min(std::max(loc + 1, 0), limit);
     *dstPtr = (U)std::nearbyintf((((*(srcRowPtrsForInterp[0] + loc1)) * bilinearCoeffs[0]) +     // TopRow 1st Pixel * coeff0
-                  ((*(srcRowPtrsForInterp[0] + loc2)) * bilinearCoeffs[1]) +     // TopRow 2nd Pixel * coeff1
-                  ((*(srcRowPtrsForInterp[1] + loc1)) * bilinearCoeffs[2]) +     // BottomRow 1st Pixel * coeff2
-                  ((*(srcRowPtrsForInterp[1] + loc2)) * bilinearCoeffs[3])));     // BottomRow 2nd Pixel * coeff3
+                                  ((*(srcRowPtrsForInterp[0] + loc2)) * bilinearCoeffs[1]) +     // TopRow 2nd Pixel * coeff1
+                                  ((*(srcRowPtrsForInterp[1] + loc1)) * bilinearCoeffs[2]) +     // BottomRow 1st Pixel * coeff2
+                                  ((*(srcRowPtrsForInterp[1] + loc2)) * bilinearCoeffs[3])));    // BottomRow 2nd Pixel * coeff3
 }
 
 template <typename T, typename U>
@@ -5313,17 +5313,17 @@ inline void compute_bilinear_interpolation_3c_pkd(T **srcRowPtrsForInterp, Rpp32
     Rpp32s loc1 = std::min(std::max(loc, 0), limit);
     Rpp32s loc2 = std::min(std::max(loc + 3, 0), limit);
     *dstPtrR = (U)std::nearbyintf((((*(srcRowPtrsForInterp[0] + loc1)) * bilinearCoeffs[0]) +        // TopRow R01 Pixel * coeff0
-                   ((*(srcRowPtrsForInterp[0] + loc2)) * bilinearCoeffs[1]) +        // TopRow R02 Pixel * coeff1
-                   ((*(srcRowPtrsForInterp[1] + loc1)) * bilinearCoeffs[2]) +        // BottomRow R01 Pixel * coeff2
-                   ((*(srcRowPtrsForInterp[1] + loc2)) * bilinearCoeffs[3])));        // BottomRow R02 Pixel * coeff3
+                                   ((*(srcRowPtrsForInterp[0] + loc2)) * bilinearCoeffs[1]) +        // TopRow R02 Pixel * coeff1
+                                   ((*(srcRowPtrsForInterp[1] + loc1)) * bilinearCoeffs[2]) +        // BottomRow R01 Pixel * coeff2
+                                   ((*(srcRowPtrsForInterp[1] + loc2)) * bilinearCoeffs[3])));       // BottomRow R02 Pixel * coeff3
     *dstPtrG = (U)std::nearbyintf((((*(srcRowPtrsForInterp[0] + loc1 + 1)) * bilinearCoeffs[0]) +    // TopRow G01 Pixel * coeff0
-                   ((*(srcRowPtrsForInterp[0] + loc2 + 1)) * bilinearCoeffs[1]) +    // TopRow G02 Pixel * coeff1
-                   ((*(srcRowPtrsForInterp[1] + loc1 + 1)) * bilinearCoeffs[2]) +    // BottomRow G01 Pixel * coeff2
-                   ((*(srcRowPtrsForInterp[1] + loc2 + 1)) * bilinearCoeffs[3])));    // BottomRow G02 Pixel * coeff3
+                                   ((*(srcRowPtrsForInterp[0] + loc2 + 1)) * bilinearCoeffs[1]) +    // TopRow G02 Pixel * coeff1
+                                   ((*(srcRowPtrsForInterp[1] + loc1 + 1)) * bilinearCoeffs[2]) +    // BottomRow G01 Pixel * coeff2
+                                   ((*(srcRowPtrsForInterp[1] + loc2 + 1)) * bilinearCoeffs[3])));   // BottomRow G02 Pixel * coeff3
     *dstPtrB = (U)std::nearbyintf((((*(srcRowPtrsForInterp[0] + loc1 + 2)) * bilinearCoeffs[0]) +    // TopRow B01 Pixel * coeff0
-                   ((*(srcRowPtrsForInterp[0] + loc2 + 2)) * bilinearCoeffs[1]) +    // TopRow B02 Pixel * coeff1
-                   ((*(srcRowPtrsForInterp[1] + loc1 + 2)) * bilinearCoeffs[2]) +    // BottomRow B01 Pixel * coeff2
-                   ((*(srcRowPtrsForInterp[1] + loc2 + 2)) * bilinearCoeffs[3])));    // BottomRow B02 Pixel * coeff3
+                                   ((*(srcRowPtrsForInterp[0] + loc2 + 2)) * bilinearCoeffs[1]) +    // TopRow B02 Pixel * coeff1
+                                   ((*(srcRowPtrsForInterp[1] + loc1 + 2)) * bilinearCoeffs[2]) +    // BottomRow B01 Pixel * coeff2
+                                   ((*(srcRowPtrsForInterp[1] + loc2 + 2)) * bilinearCoeffs[3])));   // BottomRow B02 Pixel * coeff3
 }
 
 template <typename T, typename U>

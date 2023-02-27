@@ -3,8 +3,8 @@ import subprocess
 import argparse
 
 cwd = os.getcwd()
-inFilePath1 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', '3840x2160_0032_images_src1')
-inFilePath2 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', '3840x2160_0032_images_src1')
+inFilePath1 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src1')
+inFilePath2 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src2')
 
 def case_file_check(CASE_FILE_PATH):
     try:
@@ -36,7 +36,7 @@ def rpp_test_suite_parser_and_validator():
     parser.add_argument('--test_type', type = int, default = 0, help="Type of Test - (0 = Unittests / 1 = Performancetests)")
     parser.add_argument('--case_list', nargs = "+", help="List of case numbers to list", required=False)
     parser.add_argument('--profiling', type = str , default='NO', help='Run with profiler? - (YES/NO)', required=False)
-    parser.add_argument('--debug', type = int, default = 0, help = " Falg value to dump output buffer into csv files for debugging purposes")
+    parser.add_argument('--QA_mode', type = int, default = 0, help = " Falg value to dump output buffer into csv files for debugging purposes")
     args = parser.parse_args()
 
     # check if the folder exists
@@ -53,7 +53,7 @@ def rpp_test_suite_parser_and_validator():
     elif args.test_type < 0 or args.test_type > 1:
         print("Test Type# must be in the 0 / 1. Aborting!")
         exit(0)
-    elif args.debug < 0 or args.debug > 1:
+    elif args.QA_mode < 0 or args.QA_mode > 1:
         print("Debug Flag# must be in the 0 / 1. Aborting!")
         exit(0)
     elif args.case_list is not None and args.case_start > 0 and args.case_end < 86:
@@ -79,7 +79,7 @@ caseEnd = args.case_end
 testType = args.test_type
 caseList = args.case_list
 profilingOption = args.profiling
-debugFlag = args.debug
+qaFlag = args.QA_mode
 if(testType == 0):
     outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_IMAGES_HIP_NEW')
     numIterations = 1
@@ -89,7 +89,7 @@ else:
 dstPath = outFilePath
 
 if(testType == 0):
-    subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "0", str(debugFlag), " ".join(caseList)])
+    subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "0", str(qaFlag), " ".join(caseList)])
     layoutDict ={0:"PKD3", 1:"PLN3", 2:"PLN1"}
 
     for layout in range(3):
@@ -115,7 +115,7 @@ else:
     ]
 
     if (testType == 1 and profilingOption == "NO"):
-        subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "0", str(debugFlag), " ".join(caseList)])
+        subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "0", str(qaFlag), " ".join(caseList)])
         for log_file in log_file_list:
             # Opening log file
             try:
@@ -178,7 +178,7 @@ else:
             # Closing log file
             f.close()
     elif (testType == 1 and profilingOption == "YES"):
-        subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "1", str(debugFlag), " ".join(caseList)])
+        subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "1", str(qaFlag), " ".join(caseList)])
         NEW_FUNC_GROUP_LIST = [0, 15, 20, 29, 36, 40, 42, 49, 56, 65, 69]
 
         # Functionality group finder
