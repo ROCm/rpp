@@ -1,16 +1,17 @@
-AMD Radeon Performance Primitives (RPP) Test Suite
+#AMD Radeon Performance Primitives (RPP) Test Suite
+The Radeon Performance Primitives library provides a test suite, that are used to validate the functionality and performance of the AMD Radeon Performance Primitives vision library. It can be executed under 2 backend scenarios - (HOST/HIP):
+- HOST backend - (On a CPU with HOST backend)
+- HIP backend - (On a GPU with HIP backend)
 
-The RPP Test Suite is a set of tests that are used to validate the functionality and performance of the AMD Radeon Performance Primitives vision library.
-
-Features:
+##Features:
 The suite includes:
-* Unit tests that execute the desired functionality and variant once, report RPP execution wall timee and save output images.
+* Unit tests that execute the desired functionality and variant once, report RPP execution wall time and save output images
 * Performance tests that execute the desired functionality and variant 100 times by default, and report max/min/avg RPP execution wall time, or optionally, AMD rocprof kernel profiler max/min/avg time for HIP backend variants.
 * Unit and Performance tests are included for three layouts - PLN1 (1 channel planar NCHW), PLN3 (3 channel planar NCHW) and PKD3 (3 channel packed/interrleaved NHWC).
 * Unit and Performance tests are included for various input/output bitdepths including U8/F32/F16/I8.
 * Support for pixelwise output referencing against golden outputs, and functionality validation checking, by tolerance-based pass/fail criterions for each variant. (Current support for U8 PKD3 variants)
 
-Command Line Arguments
+##Command Line Arguments
 
 The test suite accepts the following command line arguments:
 * input_path: The path to the input data. Default is $cwd/../TEST_IMAGES/three_images_mixed_src1
@@ -21,7 +22,7 @@ The test suite accepts the following command line arguments:
 * case_list: A list of specific case numbers to run. Must be used in conjunction with --test_type.
 * profiling: Run the tests with a profiler (YES/NO). Default is NO
 
-Running the Tests
+##Running the Tests
 
 The test suite can be run with the following command:
 python runTests.py --input_path1 <input_path1> --input_path2 <input_path2> --case_start <case_start> --case_end <case_end> --test_type <test_type> --case_list <case_list> --profiling <profiling>

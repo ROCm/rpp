@@ -15,7 +15,7 @@
 #include <hip/hip_fp16.h>
 #include <fstream>
 
-#define DEBUG_MODE "ON"
+#define DEBUG_MODE 0
 
 typedef half Rpp16f;
 
@@ -662,19 +662,18 @@ int main(int argc, char **argv)
             }
         }
 
-        if(DEBUG_MODE == "ON")
+        if(DEBUG_MODE)
         {
             std::ofstream refFile;
             refFile.open(func+".csv");
             for (int i = 0; i < oBufferSize; i++)
-            {
-                refFile<<(int)*(outputu8+i)<<",";
-            }
+                refFile<<(int)*(outputu8 + i)<<",";
             refFile.close();
         }
 
         if(inputBitDepth == 0 && (srcDescPtr->layout == dstDescPtr->layout) && qaFlag)
             compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, roiTensorPtrDst, noOfImages, interpolationTypeName, testCase);
+
         // Calculate exact dstROI in XYWH format for OpenCV dump
         if (roiTypeSrc == RpptRoiType::LTRB)
         {

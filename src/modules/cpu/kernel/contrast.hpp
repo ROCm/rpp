@@ -169,7 +169,7 @@ RppStatus contrast_u8_u8_host_tensor(Rpp8u *srcPtr,
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        *dstPtrTemp = (Rpp8u) RPPPIXELCHECK(std::nearbyint(((Rpp32f)(*srcPtrTemp) - contrastCenter) * contrastFactor + contrastCenter));
+                        *dstPtrTemp = (Rpp8u) RPPPIXELCHECK(std::nearbyintf(((Rpp32f)(*srcPtrTemp) - contrastCenter) * contrastFactor + contrastCenter));
                         srcPtrTemp++;
                         dstPtrTemp++;
                     }

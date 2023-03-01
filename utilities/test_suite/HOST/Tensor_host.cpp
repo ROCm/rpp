@@ -15,7 +15,7 @@
 #include <half/half.hpp>
 #include <fstream>
 
-#define DEBUG_MODE "ON"
+#define DEBUG_MODE 0
 
 using namespace cv;
 using namespace std;
@@ -660,14 +660,12 @@ int main(int argc, char **argv)
             }
         }
 
-        if(DEBUG_MODE == "ON")
+        if(DEBUG_MODE)
         {
             std::ofstream refFile;
             refFile.open(func+".csv");
             for (int i = 0; i < oBufferSize; i++)
-            {
-                refFile<<(int)*(outputu8+i)<<",";
-            }
+                refFile<<(int)*(outputu8 + i)<<",";
             refFile.close();
         }
 
