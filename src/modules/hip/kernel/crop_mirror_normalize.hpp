@@ -65,7 +65,7 @@ __global__ void crop_mirror_normalize_pkd_tensor(T *srcPtr,
         if((id_z == 0) && (id_y == 0) && (id_x + 8) > roiTensorPtrSrc[id_z].xywhROI.roiWidth)
         {
             srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + roiTensorPtrSrc[id_z].xywhROI.xy.x * 3;
-            dstIdx -= (roiTensorPtrSrc[id_z].xywhROI.roiWidth - id_x) * 3;
+            dstIdx -= (id_x + 8 - roiTensorPtrSrc[id_z].xywhROI.roiWidth) * 3;
         }
         else
         {
@@ -130,7 +130,7 @@ __global__ void crop_mirror_normalize_pln_tensor(T *srcPtr,
         if((id_z == 0) && (id_y == 0) && (id_x + 8) > roiTensorPtrSrc[id_z].xywhROI.roiWidth)
         {
             srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + roiTensorPtrSrc[id_z].xywhROI.xy.x;
-            dstIdx -= (roiTensorPtrSrc[id_z].xywhROI.roiWidth - id_x);
+            dstIdx -= (id_x + 8 - roiTensorPtrSrc[id_z].xywhROI.roiWidth);
         }
         else
         {
@@ -225,7 +225,7 @@ __global__ void crop_mirror_normalize_pkd3_pln3_tensor(T *srcPtr,
         if((id_z == 0) && (id_y == 0) && (id_x + 8) > roiTensorPtrSrc[id_z].xywhROI.roiWidth)
         {
             srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + roiTensorPtrSrc[id_z].xywhROI.xy.x * 3;
-            dstIdx -= (roiTensorPtrSrc[id_z].xywhROI.roiWidth - id_x);
+            dstIdx -= (id_x + 8 - roiTensorPtrSrc[id_z].xywhROI.roiWidth);
         }
         else
         {
@@ -284,7 +284,7 @@ __global__ void crop_mirror_normalize_pln3_pkd3_tensor(T *srcPtr,
         if((id_z == 0) && (id_y == 0) && (id_x + 8) > roiTensorPtrSrc[id_z].xywhROI.roiWidth)
         {
             srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + roiTensorPtrSrc[id_z].xywhROI.xy.x;
-            dstIdx -= (roiTensorPtrSrc[id_z].xywhROI.roiWidth - id_x) * 3;
+            dstIdx -= (id_x + 8 - roiTensorPtrSrc[id_z].xywhROI.roiWidth) * 3;
         }
         else
         {
