@@ -23,30 +23,12 @@ using namespace std;
 std::map<int, string> augmentationMap =
 {
     {0, "brightness"},
-    {1, "gamma_correction"},
     {2, "blend"},
     {4, "contrast"},
-    {8, "noise"},
     {13, "exposure"},
-    {20, "flip"},
-    {21, "resize"},
-    {23, "rotate"},
-    {24, "warp_affine"},
-    {30, "non_linear_blend"},
     {31, "color_cast"},
     {36, "color_twist"},
-    {37, "crop"},
     {38, "crop_mirror_normalize"},
-    {39, "resize_crop_mirror"},
-    {40, "erode"},
-    {41, "dilate"},
-    {49, "box_filter"},
-    {70, "copy"},
-    {80, "resize_mirror_normalize"},
-    {83, "grid_mask"},
-    {84, "spatter"},
-    {85, "swap_channels"},
-    {86, "color_to_greyscale"}
 };
 
 template <typename T>

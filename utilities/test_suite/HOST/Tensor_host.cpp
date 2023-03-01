@@ -97,6 +97,15 @@ int main(int argc, char **argv)
         }
     }
 
+    // Get function name
+    string funcName = augmentationMap[testCase];
+    funcName = (funcName.empty()) ? "testCase" : funcName;
+    if (funcName == "testCase")
+    {
+        printf("\ncase %d is not supported\n", testCase);
+        return -1;
+    }
+
     // Determine the number of input channels based on the specified layout type
     int inputChannels = set_input_channels(layoutType);
     // Determine the type of function to be used based on the specified layout type
@@ -109,11 +118,7 @@ int main(int argc, char **argv)
     dstDescPtr = &dstDesc;
 
     //Set src/dst layout types in tensor descriptors
-    set_descriptor_layout( srcDescPtr, dstDescPtr, layoutType, pln1OutTypeCase, outputFormatToggle);
-
-    // Get function name
-    string funcName = augmentationMap[testCase];
-    funcName = (funcName.empty()) ? "testCase" : funcName;
+    set_descriptor_layout(srcDescPtr, dstDescPtr, layoutType, pln1OutTypeCase, outputFormatToggle);
 
     // Set src/dst data types in tensor descriptors
     set_descriptor_data_type(inputBitDepth, funcName, srcDescPtr, dstDescPtr);
