@@ -14,13 +14,13 @@ def validate_path(input_path):
 
 def rpp_test_suite_parser_and_validator():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input_path1", type = str, default = inFilePath1, help = "Path to the input data")
-    parser.add_argument("--input_path2", type = str, default = inFilePath2, help = "Path to the input data")
+    parser.add_argument("--input_path1", type = str, default = inFilePath1, help = "Path to the input folder 1")
+    parser.add_argument("--input_path2", type = str, default = inFilePath2, help = "Path to the input folder 2")
     parser.add_argument("--case_start", type = int, default = 0, help = "Testing range starting case # - (0:86)")
     parser.add_argument("--case_end", type = int, default = 86, help = "Testing range ending case # - (0:86)")
     parser.add_argument('--test_type', type = int, default = 0, help = "Type of Test - (0 = Unittests / 1 = Performancetests)")
     parser.add_argument('--case_list', nargs = "+", help = "List of case numbers to list", required = False)
-    parser.add_argument('--QA_mode', type = int, default = 0, help = " Falg value to dump output buffer into csv files for debugging purposes")
+    parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Outputs images from tests will be compared with golden outputs - (0 / 1)", required = False)
     args = parser.parse_args()
 
     # check if the folder exists
@@ -37,7 +37,7 @@ def rpp_test_suite_parser_and_validator():
     elif args.test_type < 0 or args.test_type > 1:
         print("Test Type# must be in the 0 / 1. Aborting!")
         exit(0)
-    elif args.QA_mode < 0 or args.QA_mode > 1:
+    elif args.qa_mode < 0 or args.qa_mode > 1:
         print("Debug Flag# must be in the 0 / 1. Aborting!")
         exit(0)
     elif args.case_list is not None and args.case_start > 0 and args.case_end < 86:
@@ -62,7 +62,7 @@ caseStart = args.case_start
 caseEnd = args.case_end
 testType = args.test_type
 caseList = args.case_list
-qaFlag = args.QA_mode
+qaOption = args.qa_mode
 
 # set the output folders and number of runs based on type of test (unit test / performance test)
 if(testType == 0):
@@ -74,7 +74,7 @@ else:
 dstPath = outFilePath
 
 # run the shell script
-subprocess.call(["./testAllScript.sh", srcPath1, args.input_path2, str(testType), str(numIterations), str(qaFlag), " ".join(caseList)])
+subprocess.call(["./testAllScript.sh", srcPath1, args.input_path2, str(testType), str(numIterations), str(qaOption), " ".join(caseList)])
 
 layoutDict ={0:"PKD3", 1:"PLN3", 2:"PLN1"}
 # unit tests

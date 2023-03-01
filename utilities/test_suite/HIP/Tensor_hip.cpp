@@ -393,13 +393,13 @@ int main(int argc, char **argv)
     string testCaseName;
 
     // Uncomment to run test case with an xywhROI override
-    // roi.xywhROI = {0, 0, 100, 180};
+    // roi.xywhROI = {0, 0, 25, 25};
     // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
     // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
 
     // Uncomment to run test case with an ltrbROI override
     // roiTypeSrc = RpptRoiType::LTRB;
-    // roi.ltrbROI = {50, 30, 210, 210};
+    // roi.ltrbROI = {10, 10, 40, 40};
     // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
     // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
 
