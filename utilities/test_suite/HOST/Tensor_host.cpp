@@ -289,13 +289,13 @@ int main(int argc, char **argv)
     // Read images
     if(decoderType == 0)
     {
-        read_image_batch_opencv(inputu8, srcDescPtr, imageNamesPath);
-        read_image_batch_opencv(inputu8Second, srcDescPtr, imageNamesPathSecond);
+        read_image_batch_turbojpeg(inputu8, srcDescPtr, imageNamesPath);
+        read_image_batch_turbojpeg(inputu8Second, srcDescPtr, imageNamesPathSecond);
     }
     else
     {
-        read_image_batch_turbojpeg(inputu8, srcDescPtr, imageNamesPath);
-        read_image_batch_turbojpeg(inputu8Second, srcDescPtr, imageNamesPathSecond);
+        read_image_batch_opencv(inputu8, srcDescPtr, imageNamesPath);
+        read_image_batch_opencv(inputu8Second, srcDescPtr, imageNamesPathSecond);
     }
 
     // Convert inputs to test various other bit depths and copy to hip buffers

@@ -18,7 +18,7 @@
 using namespace cv;
 using namespace std;
 
-#define CUTOFF 0
+#define CUTOFF 1
 
 std::map<int, string> augmentationMap =
 {
@@ -117,54 +117,36 @@ inline string set_function_type(int layoutType, int pln1OutTypeCase, int outputF
     string funcType;
     if(layoutType == 0)
     {
-        if(backend == "HIP")
-            funcType = "Tensor_HIP_PKD3";
-        else
-            funcType = "Tensor_HOST_PKD3";
-
+        funcType = "Tensor_" + backend + "_PKD3";
         if (pln1OutTypeCase)
-        {
             funcType += "_toPLN1";
-        }
         else
         {
-            if (outputFormatToggle == 0)
-            {
-                funcType += "_toPKD3";
-            }
-            else if (outputFormatToggle == 1)
-            {
+            if (outputFormatToggle)
                 funcType += "_toPLN3";
-            }
+            else
+                funcType += "_toPKD3";
         }
     }
-    else if(layoutType == 1)
+    else if (layoutType == 1)
     {
-        if(backend == "HIP")
-            funcType = "Tensor_HIP_PLN3";
-        else
-            funcType = "Tensor_HOST_PLN3";
-
+        funcType = "Tensor_" + backend + "_PLN3";
         if (pln1OutTypeCase)
-        {
             funcType += "_toPLN1";
-        }
         else
         {
-            if (outputFormatToggle == 0)
-                funcType += "_toPLN3";
-            else if (outputFormatToggle == 1)
+            if (outputFormatToggle)
                 funcType += "_toPKD3";
+            else
+                funcType += "_toPLN3";
         }
     }
     else
     {
-        if(backend == "HIP")
-            funcType = "Tensor_HIP_PLN1";
-        else
-            funcType = "Tensor_HOST_PLN1";
-        funcType += "_toPLN1";
+       funcType = "Tensor_" + backend + "_PLN1";
+       funcType += "_toPLN1";
     }
+
     return funcType;
 }
 
@@ -321,7 +303,7 @@ inline void convert_pln3_to_pkd3(Rpp8u *output, RpptDescPtr descPtr)
     outputCopyTemp = outputCopy + descPtr->offsetInBytes;
 
     omp_set_dynamic(0);
-    #pragma omp parallel for num_threads(descPtr->n)
+#pragma omp parallel for num_threads(descPtr->n)
     for (int count = 0; count < descPtr->n; count++)
     {
         Rpp8u *outputCopyTempR, *outputCopyTempG, *outputCopyTempB;
@@ -359,7 +341,7 @@ inline void convert_pkd3_to_pln3(Rpp8u *input, RpptDescPtr descPtr)
     Rpp8u *inputTemp, *inputCopyTemp;
     inputTemp = input + descPtr->offsetInBytes;
 
-omp_set_dynamic(0);
+    omp_set_dynamic(0);
 #pragma omp parallel for num_threads(descPtr->n)
     for (int count = 0; count < descPtr->n; count++)
     {
@@ -468,7 +450,7 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
         int matched_idx = 0;
 
         if(dstDescPtr->layout == RpptLayout::NHWC)
-            width =  dstImgSizes[c].width * dstDescPtr->c;
+            width = dstImgSizes[c].width * dstDescPtr->c;
         else
         {
             if (dstDescPtr->c == 3)
@@ -565,7 +547,6 @@ inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDes
 
 inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, string imageNames[])
 {
-
     tjhandle tjInstance = tjInitDecompress();
 
     // Loop through the input images

@@ -37,7 +37,7 @@ def rpp_test_suite_parser_and_validator():
     parser.add_argument('--case_list', nargs = "+", help="List of case numbers to list", required=False)
     parser.add_argument('--profiling', type = str , default='NO', help='Run with profiler? - (YES/NO)', required=False)
     parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Outputs images from tests will be compared with golden outputs - (0 / 1)", required = False)
-    parser.add_argument('--decoder_type', type = int, default = 0, help = "Type of Decoder to decode the input data - (0 = OpenCV / 1 = TurboJPEG)")
+    parser.add_argument('--decoder_type', type = int, default = 0, help = "Type of Decoder to decode the input data - (0 = TurboJPEG / 1 = OpenCV)")
     args = parser.parse_args()
 
     # check if the folder exists
