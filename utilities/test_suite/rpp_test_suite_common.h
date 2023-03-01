@@ -12,6 +12,7 @@
 #include <time.h>
 #include <omp.h>
 #include <fstream>
+#include <turbojpeg.h>
 #include <experimental/filesystem>
 
 using namespace cv;
@@ -111,12 +112,15 @@ inline int set_input_channels(int layoutType)
         return 1;
 }
 
-inline string set_function_type(int layoutType, int pln1OutTypeCase, int outputFormatToggle)
+inline string set_function_type(int layoutType, int pln1OutTypeCase, int outputFormatToggle, string backend)
 {
     string funcType;
     if(layoutType == 0)
     {
-        funcType = "Tensor_HIP_PKD3";
+        if(backend == "HIP")
+            funcType = "Tensor_HIP_PKD3";
+        else
+            funcType = "Tensor_HOST_PKD3";
 
         if (pln1OutTypeCase)
         {
@@ -136,7 +140,10 @@ inline string set_function_type(int layoutType, int pln1OutTypeCase, int outputF
     }
     else if(layoutType == 1)
     {
-        funcType = "Tensor_HIP_PLN3";;
+        if(backend == "HIP")
+            funcType = "Tensor_HIP_PLN3";
+        else
+            funcType = "Tensor_HOST_PLN3";
 
         if (pln1OutTypeCase)
         {
@@ -145,18 +152,17 @@ inline string set_function_type(int layoutType, int pln1OutTypeCase, int outputF
         else
         {
             if (outputFormatToggle == 0)
-            {
                 funcType += "_toPLN3";
-            }
             else if (outputFormatToggle == 1)
-            {
                 funcType += "_toPKD3";
-            }
         }
     }
     else
     {
-        funcType = "Tensor_HIP_PLN1";
+        if(backend == "HIP")
+            funcType = "Tensor_HIP_PLN1";
+        else
+            funcType = "Tensor_HOST_PLN1";
         funcType += "_toPLN1";
     }
     return funcType;
@@ -394,7 +400,7 @@ inline void remove_substring(string &str, string &pattern)
 }
 
 template <typename T>
-inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, RpptROI *roiPtr, int noOfImages, string interpolationTypeName, int testCase)
+inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int noOfImages, string interpolationTypeName, int testCase)
 {
     string func = funcName;
     string refPath = get_current_dir_name();
@@ -451,21 +457,22 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
         return;
     }
 
-    bool isEqual = true;
+    int file_match = 0;
     Rpp8u *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef;
     for(int c = 0; c < noOfImages; c++)
     {
         outputTemp = output + c * dstDescPtr->strides.nStride;
         outputTempRef = refOutput + c * dstDescPtr->strides.nStride;
-        int height = roiPtr[c].xywhROI.roiHeight;
-        int width = roiPtr[c].xywhROI.roiWidth;
+        int height = dstImgSizes[c].height;
+        int width = dstImgSizes[c].width;
+        int matched_idx = 0;
 
         if(dstDescPtr->layout == RpptLayout::NHWC)
-            width =  roiPtr[c].xywhROI.roiWidth * dstDescPtr->c;
+            width =  dstImgSizes[c].width * dstDescPtr->c;
         else
         {
             if (dstDescPtr->c == 3)
-                height = roiPtr[c].xywhROI.roiHeight * dstDescPtr->c;
+                height = dstImgSizes[c].height * dstDescPtr->c;
         }
 
         for(int i = 0; i < height; i++)
@@ -477,18 +484,19 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
                 outVal = rowTemp + j;
                 outRefVal = rowTempRef + j;
                 int diff = abs(*outVal - *outRefVal);
-                if(diff > CUTOFF)
-                {
-                    isEqual = false;
-                    break;
-                }
+                if(diff <= CUTOFF)
+                    matched_idx++;
             }
         }
+        if(matched_idx == (height * width) && matched_idx !=0)
+            file_match++;
     }
-    if(isEqual == true)
-        cout<< func << ": " << "PASSED \n";
+    std::cerr<<std::endl<<"Results for "<<func<<" :"<<std::endl;
+    if(file_match == dstDescPtr->n)
+        std::cerr<<"PASSED!"<<std::endl;
     else
-        cout<< func << ": " << "FAILED \n";
+        std::cerr<<"FAILED! "<<file_match<<"/"<<dstDescPtr->n<<" outputs are matching with reference outputs"<<std::endl;
+    file.close();
 }
 
 inline void read_image_batch_opencv(Rpp8u *input, RpptDescPtr descPtr, string imageNames[])
@@ -553,4 +561,56 @@ inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDes
         imwrite(outputImagePath, matOutputImage);
         free(tempOutput);
     }
+}
+
+inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, string imageNames[])
+{
+
+    tjhandle tjInstance = tjInitDecompress();
+
+    // Loop through the input images
+    for (int i = 0; i < descPtr->n; i++)
+    {
+        // Read the JPEG compressed data from a file
+        std::string inputImagePath = imageNames[i];
+        FILE* fp = fopen(inputImagePath.c_str(), "rb");
+        fseek(fp, 0, SEEK_END);
+        long jpegSize = ftell(fp);
+        rewind(fp);
+        unsigned char* jpegBuf = (unsigned char*)malloc(jpegSize);
+        fread(jpegBuf, 1, jpegSize, fp);
+        fclose(fp);
+
+        // Decompress the JPEG data into an RGB image buffer
+        int width, height, subsamp, color_space;
+        tjDecompressHeader3(tjInstance, jpegBuf, jpegSize, &width, &height, &subsamp, &color_space);
+        Rpp8u* rgbBuf;
+        int elementsInRow;
+        if(descPtr->c == 3)
+        {
+            elementsInRow = width * descPtr->c;
+            rgbBuf= (Rpp8u*)malloc(width * height * 3);
+            tjDecompress2(tjInstance, jpegBuf, jpegSize, rgbBuf, width, 0, height, TJPF_BGR, 0);
+        }
+        else
+        {
+            elementsInRow = width;
+            rgbBuf= (Rpp8u*)malloc(width * height);
+            tjDecompress2(tjInstance, jpegBuf, jpegSize, rgbBuf, width, 0, height, TJPF_GRAY, 0);
+        }
+        // Copy the decompressed image buffer to the RPP input buffer
+        Rpp8u *inputTemp = input + (i * descPtr->strides.nStride);
+        for (int j = 0; j < height; j++)
+        {
+            memcpy(inputTemp, rgbBuf + j * elementsInRow, elementsInRow * sizeof(Rpp8u));
+            inputTemp += descPtr->w * descPtr->c;
+        }
+        // Clean up
+        free(jpegBuf);
+        free(rgbBuf);
+    }
+
+    // Clean up
+    tjDestroy(tjInstance);
+
 }

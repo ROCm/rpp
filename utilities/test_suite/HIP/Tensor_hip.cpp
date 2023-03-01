@@ -52,6 +52,7 @@ int main(int argc, char **argv)
     int testType = atoi(argv[9]);     // 0 for unit and 1 for performance test
     int layoutType = atoi(argv[10]); // 0 for pkd3 / 1 for pln3 / 2 for pln1
     int qaFlag = atoi(argv[12]);
+    int decoderType = atoi(argv[13]);
 
     bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23|| testCase == 24 || testCase == 40 || testCase == 41 || testCase == 49);
     bool kernelSizeCase = (testCase == 40 || testCase == 41 || testCase == 49);
@@ -99,7 +100,7 @@ int main(int argc, char **argv)
     // Determine the number of input channels based on the specified layout type
     int inputChannels = set_input_channels(layoutType);
     // Determine the type of function to be used based on the specified layout type
-    string funcType = set_function_type(layoutType, pln1OutTypeCase, outputFormatToggle);
+    string funcType = set_function_type(layoutType, pln1OutTypeCase, outputFormatToggle, "HIP");
 
     // Initialize tensor descriptors
     RpptDesc srcDesc, dstDesc;
@@ -286,8 +287,16 @@ int main(int argc, char **argv)
     }
 
     // Read images
-    read_image_batch_opencv(inputu8, srcDescPtr, imageNamesPath);
-    read_image_batch_opencv(inputu8Second, srcDescPtr, imageNamesPathSecond);
+    if(decoderType == 0)
+    {
+        read_image_batch_opencv(inputu8, srcDescPtr, imageNamesPath);
+        read_image_batch_opencv(inputu8Second, srcDescPtr, imageNamesPathSecond);
+    }
+    else
+    {
+        read_image_batch_turbojpeg(inputu8, srcDescPtr, imageNamesPath);
+        read_image_batch_turbojpeg(inputu8Second, srcDescPtr, imageNamesPathSecond);
+    }
 
     // Convert inputs to test various other bit depths and copy to hip buffers
     void *input, *input_second, *output;
@@ -672,7 +681,7 @@ int main(int argc, char **argv)
         }
 
         if(inputBitDepth == 0 && (srcDescPtr->layout == dstDescPtr->layout) && qaFlag)
-            compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, roiTensorPtrDst, noOfImages, interpolationTypeName, testCase);
+            compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, noOfImages, interpolationTypeName, testCase);
 
         // Calculate exact dstROI in XYWH format for OpenCV dump
         if (roiTypeSrc == RpptRoiType::LTRB)

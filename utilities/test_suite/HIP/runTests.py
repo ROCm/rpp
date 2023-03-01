@@ -37,6 +37,7 @@ def rpp_test_suite_parser_and_validator():
     parser.add_argument('--case_list', nargs = "+", help="List of case numbers to list", required=False)
     parser.add_argument('--profiling', type = str , default='NO', help='Run with profiler? - (YES/NO)', required=False)
     parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Outputs images from tests will be compared with golden outputs - (0 / 1)", required = False)
+    parser.add_argument('--decoder_type', type = int, default = 0, help = "Type of Decoder to decode the input data - (0 = OpenCV / 1 = TurboJPEG)")
     args = parser.parse_args()
 
     # check if the folder exists
@@ -54,7 +55,10 @@ def rpp_test_suite_parser_and_validator():
         print("Test Type# must be in the 0 / 1. Aborting!")
         exit(0)
     elif args.qa_mode < 0 or args.qa_mode > 1:
-        print("qa mode must be in the 0 / 1. Aborting!")
+        print("QA mode must be in the 0 / 1. Aborting!")
+        exit(0)
+    elif args.decoder_type < 0 or args.decoder_type > 1:
+        print("Decoder Type must be in the 0/1 (0 = OpenCV / 1 = TurboJPEG). Aborting")
         exit(0)
     elif args.case_list is not None and args.case_start > 0 and args.case_end < 86:
         print("Invalid input! Please provide only 1 option between case_list, case_start and case_end")
@@ -80,6 +84,8 @@ testType = args.test_type
 caseList = args.case_list
 profilingOption = args.profiling
 qaOption = args.qa_mode
+decoderType = args.decoder_type
+
 if(testType == 0):
     outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_IMAGES_HIP_NEW')
     numIterations = 1
@@ -89,12 +95,15 @@ else:
 dstPath = outFilePath
 
 if(testType == 0):
-    subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "0", str(qaOption), " ".join(caseList)])
+    subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "0", str(qaOption), str(decoderType), " ".join(caseList)])
     layoutDict ={0:"PKD3", 1:"PLN3", 2:"PLN1"}
 
     for layout in range(3):
         currentLayout = layoutDict[layout]
-        os.makedirs(dstPath + '/' + currentLayout, exist_ok=True)
+        try:
+            os.makedirs(dstPath + '/' + currentLayout)
+        except FileExistsError:
+            pass
         folderList = [f for f in os.listdir(dstPath) if currentLayout.lower() in f]
         for folder in folderList:
             os.rename(dstPath + '/' + folder, dstPath + '/' + currentLayout +  '/' + folder)
@@ -115,7 +124,7 @@ else:
     ]
 
     if (testType == 1 and profilingOption == "NO"):
-        subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "0", str(qaOption), " ".join(caseList)])
+        subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "0", str(qaOption), str(decoderType), " ".join(caseList)])
         for log_file in log_file_list:
             # Opening log file
             try:
@@ -178,7 +187,7 @@ else:
             # Closing log file
             f.close()
     elif (testType == 1 and profilingOption == "YES"):
-        subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "1", str(qaOption), " ".join(caseList)])
+        subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "1", str(qaOption), str(decoderType), " ".join(caseList)])
         NEW_FUNC_GROUP_LIST = [0, 15, 20, 29, 36, 40, 42, 49, 56, 65, 69]
 
         # Functionality group finder

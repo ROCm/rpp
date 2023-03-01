@@ -21,6 +21,7 @@ def rpp_test_suite_parser_and_validator():
     parser.add_argument('--test_type', type = int, default = 0, help = "Type of Test - (0 = Unittests / 1 = Performancetests)")
     parser.add_argument('--case_list', nargs = "+", help = "List of case numbers to list", required = False)
     parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Outputs images from tests will be compared with golden outputs - (0 / 1)", required = False)
+    parser.add_argument('--decoder_type', type = int, default = 0, help = "Type of Decoder to decode the input data - (0 = OpenCV / 1 = TurboJPEG)")
     args = parser.parse_args()
 
     # check if the folder exists
@@ -38,7 +39,10 @@ def rpp_test_suite_parser_and_validator():
         print("Test Type# must be in the 0 / 1. Aborting!")
         exit(0)
     elif args.qa_mode < 0 or args.qa_mode > 1:
-        print("Debug Flag# must be in the 0 / 1. Aborting!")
+        print("QA mode must be in the 0 / 1. Aborting!")
+        exit(0)
+    elif args.decoder_type < 0 or args.decoder_type > 1:
+        print("Decoder Type must be in the 0/1 (0 = OpenCV / 1 = TurboJPEG). Aborting")
         exit(0)
     elif args.case_list is not None and args.case_start > 0 and args.case_end < 86:
         print("Invalid input! Please provide only 1 option between case_list, case_start and case_end")
@@ -63,6 +67,7 @@ caseEnd = args.case_end
 testType = args.test_type
 caseList = args.case_list
 qaOption = args.qa_mode
+decoderType = args.decoder_type
 
 # set the output folders and number of runs based on type of test (unit test / performance test)
 if(testType == 0):
@@ -74,14 +79,17 @@ else:
 dstPath = outFilePath
 
 # run the shell script
-subprocess.call(["./testAllScript.sh", srcPath1, args.input_path2, str(testType), str(numIterations), str(qaOption), " ".join(caseList)])
+subprocess.call(["./testAllScript.sh", srcPath1, args.input_path2, str(testType), str(numIterations), str(qaOption), str(decoderType), " ".join(caseList)])
 
 layoutDict ={0:"PKD3", 1:"PLN3", 2:"PLN1"}
 # unit tests
 if testType == 0:
     for layout in range(3):
         currentLayout = layoutDict[layout]
-        os.makedirs(dstPath + '/' + currentLayout, exist_ok=True)
+        try:
+            os.makedirs(dstPath + '/' + currentLayout)
+        except FileExistsError:
+            pass
         folderList = [f for f in os.listdir(dstPath) if currentLayout.lower() in f]
         for folder in folderList:
             os.rename(dstPath + '/' + folder, dstPath + '/' + currentLayout +  '/' + folder)
