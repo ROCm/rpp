@@ -108,6 +108,7 @@ int main(int argc, char **argv)
 
     // Determine the number of input channels based on the specified layout type
     int inputChannels = set_input_channels(layoutType);
+
     // Determine the type of function to be used based on the specified layout type
     string funcType = set_function_type(layoutType, pln1OutTypeCase, outputFormatToggle, "HIP");
 
@@ -117,7 +118,7 @@ int main(int argc, char **argv)
     srcDescPtr = &srcDesc;
     dstDescPtr = &dstDesc;
 
-    //Set src/dst layout types in tensor descriptors
+    // Set src/dst layout types in tensor descriptors
     set_descriptor_layout( srcDescPtr, dstDescPtr, layoutType, pln1OutTypeCase, outputFormatToggle);
 
     // Set src/dst data types in tensor descriptors
@@ -685,7 +686,11 @@ int main(int argc, char **argv)
             refFile.close();
         }
 
-        if(inputBitDepth == 0 && (srcDescPtr->layout == dstDescPtr->layout) && qaFlag)
+        /*Comparing the output of the function with golden outputs only if
+          1.QA Flag is set
+          2.input bit depth 0 (Input U8 && Output U8)
+          3.source and destination layout are the same*/
+        if(qaFlag && inputBitDepth == 0 && (srcDescPtr->layout == dstDescPtr->layout))
             compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, noOfImages, interpolationTypeName, testCase);
 
         // Calculate exact dstROI in XYWH format for OpenCV dump
