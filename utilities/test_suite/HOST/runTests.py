@@ -66,7 +66,7 @@ caseStart = args.case_start
 caseEnd = args.case_end
 testType = args.test_type
 caseList = args.case_list
-qaOption = args.qa_mode
+qaMode = args.qa_mode
 decoderType = args.decoder_type
 
 # set the output folders and number of runs based on type of test (unit test / performance test)
@@ -79,7 +79,15 @@ else:
 dstPath = outFilePath
 
 # run the shell script
-subprocess.call(["./testAllScript.sh", srcPath1, args.input_path2, str(testType), str(numIterations), str(qaOption), str(decoderType), " ".join(caseList)])
+subprocess.call(["./testAllScript.sh", srcPath1, args.input_path2, str(testType), str(numIterations), str(qaMode), str(decoderType), " ".join(caseList)])
+
+# print the results of qa tests
+if qaMode:
+    qaFilePath = os.path.join(outFilePath, "QA_results.txt")
+    f = open(qaFilePath, 'r')
+    print("---------------------------------- Results of QA Test ----------------------------------\n")
+    for line in f:
+        print(line, end="")
 
 layoutDict ={0:"PKD3", 1:"PLN3", 2:"PLN1"}
 # unit tests

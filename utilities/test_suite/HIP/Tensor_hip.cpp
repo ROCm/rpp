@@ -114,9 +114,8 @@ int main(int argc, char **argv)
 
     // Initialize tensor descriptors
     RpptDesc srcDesc, dstDesc;
-    RpptDescPtr srcDescPtr, dstDescPtr;
-    srcDescPtr = &srcDesc;
-    dstDescPtr = &dstDesc;
+    RpptDescPtr srcDescPtr = &srcDesc;
+    RpptDescPtr dstDescPtr = &dstDesc;
 
     // Set src/dst layout types in tensor descriptors
     set_descriptor_layout( srcDescPtr, dstDescPtr, layoutType, pln1OutTypeCase, outputFormatToggle);
@@ -220,15 +219,8 @@ int main(int argc, char **argv)
         else
             image = imread(temp, 0);
 
-        roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-        roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-        roiTensorPtrSrc[i].xywhROI.roiWidth = image.cols;
-        roiTensorPtrSrc[i].xywhROI.roiHeight = image.rows;
-
-        roiTensorPtrDst[i].xywhROI.xy.x = 0;
-        roiTensorPtrDst[i].xywhROI.xy.y = 0;
-        roiTensorPtrDst[i].xywhROI.roiWidth = image.cols;
-        roiTensorPtrDst[i].xywhROI.roiHeight = image.rows;
+        roiTensorPtrSrc[i].xywhROI = {0, 0, image.cols, image.rows};
+        roiTensorPtrDst[i].xywhROI = {0, 0, image.cols, image.rows};
 
         srcImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth;
         srcImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight;
@@ -338,16 +330,12 @@ int main(int argc, char **argv)
         inputTemp = inputu8 + srcDescPtr->offsetInBytes;
         inputSecondTemp = inputu8Second + srcDescPtr->offsetInBytes;
         inputf16Temp = (half *)((Rpp8u *)input + srcDescPtr->offsetInBytes);
-        inputf16SecondTemp = (half *)((Rpp8u *)input_second+ srcDescPtr->offsetInBytes);
+        inputf16SecondTemp = (half *)((Rpp8u *)input_second + srcDescPtr->offsetInBytes);
 
         for (int i = 0; i < ioBufferSize; i++)
         {
-            *inputf16Temp = (half)(((float)*inputTemp) * conversionFactor);
-            *inputf16SecondTemp = (half)(((float)*inputSecondTemp) * conversionFactor);
-            inputTemp++;
-            inputf16Temp++;
-            inputSecondTemp++;
-            inputf16SecondTemp++;
+            *inputf16Temp++ = (half)(((float)*inputTemp++) * conversionFactor);
+            *inputf16SecondTemp++ = (half)(((float)*inputSecondTemp++) * conversionFactor);
         }
     }
     else if (inputBitDepth == 2)
@@ -361,12 +349,8 @@ int main(int argc, char **argv)
 
         for (int i = 0; i < ioBufferSize; i++)
         {
-            *inputf32Temp = ((Rpp32f)*inputTemp) * conversionFactor;
-            *inputf32SecondTemp = ((Rpp32f)*inputSecondTemp) * conversionFactor;
-            inputTemp++;
-            inputf32Temp++;
-            inputSecondTemp++;
-            inputf32SecondTemp++;
+            *inputf32Temp++ = ((Rpp32f)*inputTemp++) * conversionFactor;
+            *inputf32SecondTemp++ = ((Rpp32f)*inputSecondTemp++) * conversionFactor;
         }
     }
     else if (inputBitDepth == 5)
@@ -381,12 +365,8 @@ int main(int argc, char **argv)
 
         for (int i = 0; i < ioBufferSize; i++)
         {
-            *inputi8Temp = (Rpp8s) (((Rpp32s) *inputTemp) - 128);
-            *inputi8SecondTemp = (Rpp8s) (((Rpp32s) *inputSecondTemp) - 128);
-            inputTemp++;
-            inputi8Temp++;
-            inputSecondTemp++;
-            inputi8SecondTemp++;
+            *inputi8Temp++ = (Rpp8s) (((Rpp32s) *inputTemp++) - 128);
+            *inputi8SecondTemp++ = (Rpp8s) (((Rpp32s) *inputSecondTemp++) - 128);
         }
     }
 
@@ -677,47 +657,31 @@ int main(int argc, char **argv)
             }
         }
 
+        // If DEBUG_MODE is set to 1 dump the outputs to csv files for debugging
         if(DEBUG_MODE)
         {
             std::ofstream refFile;
-            refFile.open(func+".csv");
+            refFile.open(func + ".csv");
             for (int i = 0; i < oBufferSize; i++)
                 refFile<<(int)*(outputu8 + i)<<",";
             refFile.close();
         }
 
-        /*Comparing the output of the function with golden outputs only if
+        /*Compare the output of the function with golden outputs only if
           1.QA Flag is set
           2.input bit depth 0 (Input U8 && Output U8)
           3.source and destination layout are the same*/
         if(qaFlag && inputBitDepth == 0 && (srcDescPtr->layout == dstDescPtr->layout))
-            compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, noOfImages, interpolationTypeName, testCase);
+            compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, noOfImages, interpolationTypeName, testCase, "HIP");
 
         // Calculate exact dstROI in XYWH format for OpenCV dump
         if (roiTypeSrc == RpptRoiType::LTRB)
-        {
-            for (int i = 0; i < dstDescPtr->n; i++)
-            {
-                int ltX = roiTensorPtrSrc[i].ltrbROI.lt.x;
-                int ltY = roiTensorPtrSrc[i].ltrbROI.lt.y;
-                int rbX = roiTensorPtrSrc[i].ltrbROI.rb.x;
-                int rbY = roiTensorPtrSrc[i].ltrbROI.rb.y;
+            convert_roi(roiTensorPtrSrc, RpptRoiType::XYWH, dstDescPtr->n);
 
-                roiTensorPtrSrc[i].xywhROI.xy.x = ltX;
-                roiTensorPtrSrc[i].xywhROI.xy.y = ltY;
-                roiTensorPtrSrc[i].xywhROI.roiWidth = rbX - ltX + 1;
-                roiTensorPtrSrc[i].xywhROI.roiHeight = rbY - ltY + 1;
-            }
-        }
-
+        // Check if the ROI values for each input is within the bounds of the max buffer allocated
         RpptROI roiDefault;
-        RpptROIPtr roiPtrDefault;
-        roiPtrDefault = &roiDefault;
-        roiPtrDefault->xywhROI.xy.x = 0;
-        roiPtrDefault->xywhROI.xy.y = 0;
-        roiPtrDefault->xywhROI.roiWidth = dstDescPtr->w;
-        roiPtrDefault->xywhROI.roiHeight = dstDescPtr->h;
-
+        RpptROIPtr roiPtrDefault = &roiDefault;
+        roiPtrDefault->xywhROI =  {0, 0, (int)dstDescPtr->w, (int)dstDescPtr->h};
         for (int i = 0; i < dstDescPtr->n; i++)
         {
             roiTensorPtrSrc[i].xywhROI.roiWidth = std::min(roiPtrDefault->xywhROI.roiWidth - roiTensorPtrSrc[i].xywhROI.xy.x, roiTensorPtrSrc[i].xywhROI.roiWidth);

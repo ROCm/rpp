@@ -255,6 +255,26 @@ inline void set_roi_values(RpptROI *roi, RpptROI *roiTensorPtrSrc, RpptRoiType r
             roiTensorPtrSrc[i].ltrbROI = roi->ltrbROI;
 }
 
+inline void convert_roi(RpptROI *roiTensorPtrSrc, RpptRoiType roiType, int batchSize)
+{
+    if(roiType == RpptRoiType::LTRB)
+    {
+        for (int i = 0; i < batchSize; i++)
+        {
+            RpptRoiXywh roi = roiTensorPtrSrc[i].xywhROI;
+            roiTensorPtrSrc[i].ltrbROI = {roi.xy.x, roi.xy.y, roi.roiWidth - roi.xy.x, roi.roiHeight - roi.xy.y};
+        }
+    }
+    else
+    {
+        for (int i = 0; i < batchSize; i++)
+        {
+            RpptRoiLtrb roi = roiTensorPtrSrc[i].ltrbROI;
+            roiTensorPtrSrc[i].xywhROI = {roi.lt.x, roi.lt.y, roi.rb.x - roi.lt.x + 1, roi.rb.y - roi.lt.y + 1};
+        }
+    }
+}
+
 inline void update_dst_sizes_with_roi(RpptROI *roiTensorPtrSrc, RpptImagePatchPtr dstImageSize, RpptRoiType roiType, int batchSize)
 {
     if(roiType == RpptRoiType::XYWH)
@@ -353,6 +373,120 @@ inline void convert_pkd3_to_pln3(Rpp8u *input, RpptDescPtr descPtr)
     free(inputCopy);
 }
 
+inline void read_image_batch_opencv(Rpp8u *input, RpptDescPtr descPtr, string imageNames[])
+{
+    for(int i = 0; i < descPtr->n; i++)
+    {
+        Rpp8u *inputTemp = input + (i * descPtr->strides.nStride);
+        string inputImagePath = imageNames[i];
+        cv::Mat image;
+        if (descPtr->c == 3)
+            image = imread(inputImagePath, 1);
+        else if (descPtr->c == 1)
+            image = imread(inputImagePath, 0);
+
+        int width = image.cols;
+        int height = image.rows;
+        Rpp32u elementsInRow = width * descPtr->c;
+        Rpp8u *inputImage = image.data;
+        for (int j = 0; j < height; j++)
+        {
+            memcpy(inputTemp, inputImage, elementsInRow * sizeof(Rpp8u));
+            inputImage += elementsInRow;
+            inputTemp += descPtr->w * descPtr->c;
+        }
+    }
+}
+
+inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, string imageNames[])
+{
+    tjhandle tjInstance = tjInitDecompress();
+
+    // Loop through the input images
+    for (int i = 0; i < descPtr->n; i++)
+    {
+        // Read the JPEG compressed data from a file
+        std::string inputImagePath = imageNames[i];
+        FILE* fp = fopen(inputImagePath.c_str(), "rb");
+        fseek(fp, 0, SEEK_END);
+        long jpegSize = ftell(fp);
+        rewind(fp);
+        unsigned char* jpegBuf = (unsigned char*)malloc(jpegSize);
+        fread(jpegBuf, 1, jpegSize, fp);
+        fclose(fp);
+
+        // Decompress the JPEG data into an RGB image buffer
+        int width, height, subsamp, color_space;
+        tjDecompressHeader3(tjInstance, jpegBuf, jpegSize, &width, &height, &subsamp, &color_space);
+        Rpp8u* rgbBuf;
+        int elementsInRow;
+        if(descPtr->c == 3)
+        {
+            elementsInRow = width * descPtr->c;
+            rgbBuf= (Rpp8u*)malloc(width * height * 3);
+            tjDecompress2(tjInstance, jpegBuf, jpegSize, rgbBuf, width, 0, height, TJPF_BGR, 0);
+        }
+        else
+        {
+            elementsInRow = width;
+            rgbBuf= (Rpp8u*)malloc(width * height);
+            tjDecompress2(tjInstance, jpegBuf, jpegSize, rgbBuf, width, 0, height, TJPF_GRAY, 0);
+        }
+        // Copy the decompressed image buffer to the RPP input buffer
+        Rpp8u *inputTemp = input + (i * descPtr->strides.nStride);
+        for (int j = 0; j < height; j++)
+        {
+            memcpy(inputTemp, rgbBuf + j * elementsInRow, elementsInRow * sizeof(Rpp8u));
+            inputTemp += descPtr->w * descPtr->c;
+        }
+        // Clean up
+        free(jpegBuf);
+        free(rgbBuf);
+    }
+
+    // Clean up
+    tjDestroy(tjInstance);
+}
+
+inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDescPtr dstDescPtr, vector<string> imageNames, RpptImagePatch *dstImgSizes)
+{
+    // create output folder
+    mkdir(outputFolder.c_str(), 0700);
+    outputFolder += "/";
+
+    Rpp32u elementsInRowMax = dstDescPtr->w * dstDescPtr->c;
+    Rpp8u *offsettedOutput = output + dstDescPtr->offsetInBytes;
+    for (int j = 0; j < dstDescPtr->n; j++)
+    {
+        Rpp32u height = dstImgSizes[j].height;
+        Rpp32u width = dstImgSizes[j].width;
+        Rpp32u elementsInRow = width * dstDescPtr->c;
+        Rpp32u outputSize = height * width * dstDescPtr->c;
+
+        Rpp8u *tempOutput = (Rpp8u *)calloc(outputSize, sizeof(Rpp8u));
+        Rpp8u *tempOutputRow = tempOutput;
+        Rpp8u *outputRow = offsettedOutput + j * dstDescPtr->strides.nStride;
+        for (int k = 0; k < height; k++)
+        {
+            memcpy(tempOutputRow, outputRow, elementsInRow * sizeof(Rpp8u));
+            tempOutputRow += elementsInRow;
+            outputRow += elementsInRowMax;
+        }
+
+        string outputImagePath = outputFolder + imageNames[j];
+        Mat matOutputImage;
+        if (dstDescPtr->c == 1)
+            matOutputImage = Mat(height, width, CV_8UC1, tempOutput);
+        else if (dstDescPtr->c == 2)
+            matOutputImage = Mat(height, width, CV_8UC2, tempOutput);
+        else if (dstDescPtr->c == 3)
+            matOutputImage = Mat(height, width, CV_8UC3, tempOutput);
+
+        imwrite(outputImagePath, matOutputImage);
+        free(tempOutput);
+    }
+}
+
 inline void remove_substring(string &str, string &pattern)
 {
     std::string::size_type i = str.find(pattern);
@@ -364,7 +498,7 @@ inline void remove_substring(string &str, string &pattern)
 }
 
 template <typename T>
-inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int noOfImages, string interpolationTypeName, int testCase)
+inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int noOfImages, string interpolationTypeName, int testCase, string backend)
 {
     string func = funcName;
     string refPath = get_current_dir_name();
@@ -421,7 +555,7 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
         return;
     }
 
-    int file_match = 0;
+    int fileMatch = 0;
     Rpp8u *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef;
     for(int c = 0; c < noOfImages; c++)
     {
@@ -453,127 +587,32 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
             }
         }
         if(matched_idx == (height * width) && matched_idx !=0)
-            file_match++;
+            fileMatch++;
     }
     std::cerr<<std::endl<<"Results for "<<func<<" :"<<std::endl;
-    if(file_match == dstDescPtr->n)
+    std::string status = func + ": ";
+    if(fileMatch == dstDescPtr->n)
+    {
         std::cerr<<"PASSED!"<<std::endl;
+        status += "PASSED";
+    }
     else
-        std::cerr<<"FAILED! "<<file_match<<"/"<<dstDescPtr->n<<" outputs are matching with reference outputs"<<std::endl;
-    file.close();
-}
-
-inline void read_image_batch_opencv(Rpp8u *input, RpptDescPtr descPtr, string imageNames[])
-{
-    for(int i = 0; i < descPtr->n; i++)
     {
-        Rpp8u *inputTemp = input + (i * descPtr->strides.nStride);
-        string inputImagePath = imageNames[i];
-        cv::Mat image;
-        if (descPtr->c == 3)
-            image = imread(inputImagePath, 1);
-        else if (descPtr->c == 1)
-            image = imread(inputImagePath, 0);
-
-        int width = image.cols;
-        int height = image.rows;
-        Rpp32u elementsInRow = width * descPtr->c;
-        Rpp8u *inputImage = image.data;
-        for (int j = 0; j < height; j++)
-        {
-            memcpy(inputTemp, inputImage, elementsInRow * sizeof(Rpp8u));
-            inputImage += elementsInRow;
-            inputTemp += descPtr->w * descPtr->c;
-        }
-    }
-}
-
-inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDescPtr dstDescPtr, vector<string> imageNames, RpptImagePatch *dstImgSizes)
-{
-    // create output folder
-    mkdir(outputFolder.c_str(), 0700);
-    outputFolder += "/";
-
-    Rpp32u elementsInRowMax = dstDescPtr->w * dstDescPtr->c;
-    Rpp8u *offsettedOutput = output + dstDescPtr->offsetInBytes;
-    for (int j = 0; j < dstDescPtr->n; j++)
-    {
-        Rpp32u height = dstImgSizes[j].height;
-        Rpp32u width = dstImgSizes[j].width;
-        Rpp32u elementsInRow = width * dstDescPtr->c;
-        Rpp32u outputSize = height * width * dstDescPtr->c;
-
-        Rpp8u *tempOutput = (Rpp8u *)calloc(outputSize, sizeof(Rpp8u));
-        Rpp8u *tempOutputRow = tempOutput;
-        Rpp8u *outputRow = offsettedOutput + j * dstDescPtr->strides.nStride;
-        for (int k = 0; k < height; k++)
-        {
-            memcpy(tempOutputRow, outputRow, elementsInRow * sizeof(Rpp8u));
-            tempOutputRow += elementsInRow;
-            outputRow += elementsInRowMax;
-        }
-
-        string outputImagePath = outputFolder + imageNames[j];
-        Mat matOutputImage;
-        if (dstDescPtr->c == 1)
-            matOutputImage = Mat(height, width, CV_8UC1, tempOutput);
-        else if (dstDescPtr->c == 2)
-            matOutputImage = Mat(height, width, CV_8UC2, tempOutput);
-        else if (dstDescPtr->c == 3)
-            matOutputImage = Mat(height, width, CV_8UC3, tempOutput);
-
-        imwrite(outputImagePath, matOutputImage);
-        free(tempOutput);
-    }
-}
-
-inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, string imageNames[])
-{
-    tjhandle tjInstance = tjInitDecompress();
-
-    // Loop through the input images
-    for (int i = 0; i < descPtr->n; i++)
-    {
-        // Read the JPEG compressed data from a file
-        std::string inputImagePath = imageNames[i];
-        FILE* fp = fopen(inputImagePath.c_str(), "rb");
-        fseek(fp, 0, SEEK_END);
-        long jpegSize = ftell(fp);
-        rewind(fp);
-        unsigned char* jpegBuf = (unsigned char*)malloc(jpegSize);
-        fread(jpegBuf, 1, jpegSize, fp);
-        fclose(fp);
-
-        // Decompress the JPEG data into an RGB image buffer
-        int width, height, subsamp, color_space;
-        tjDecompressHeader3(tjInstance, jpegBuf, jpegSize, &width, &height, &subsamp, &color_space);
-        Rpp8u* rgbBuf;
-        int elementsInRow;
-        if(descPtr->c == 3)
-        {
-            elementsInRow = width * descPtr->c;
-            rgbBuf= (Rpp8u*)malloc(width * height * 3);
-            tjDecompress2(tjInstance, jpegBuf, jpegSize, rgbBuf, width, 0, height, TJPF_BGR, 0);
-        }
-        else
-        {
-            elementsInRow = width;
-            rgbBuf= (Rpp8u*)malloc(width * height);
-            tjDecompress2(tjInstance, jpegBuf, jpegSize, rgbBuf, width, 0, height, TJPF_GRAY, 0);
-        }
-        // Copy the decompressed image buffer to the RPP input buffer
-        Rpp8u *inputTemp = input + (i * descPtr->strides.nStride);
-        for (int j = 0; j < height; j++)
-        {
-            memcpy(inputTemp, rgbBuf + j * elementsInRow, elementsInRow * sizeof(Rpp8u));
-            inputTemp += descPtr->w * descPtr->c;
-        }
-        // Clean up
-        free(jpegBuf);
-        free(rgbBuf);
+        std::cerr<<"FAILED! "<<fileMatch<<"/"<<dstDescPtr->n<<" outputs are matching with reference outputs"<<std::endl;
+        status += "FAILED";
     }
 
-    // Clean up
-    tjDestroy(tjInstance);
-
+    // Append the QA results to file
+    std::string qaResultsPath = refPath;
+    if (backend == "HOST")
+        qaResultsPath += "/../OUTPUT_IMAGES_HOST_NEW/QA_results.txt";
+    else
+        qaResultsPath += "/../OUTPUT_IMAGES_HIP_NEW/QA_results.txt";
+    std::cerr<<"qaResultsPath: "<<qaResultsPath<<std::endl;
+    std:: ofstream qaResults(qaResultsPath, ios_base::app);
+    if (qaResults.is_open())
+    {
+        qaResults << status << std::endl;
+        qaResults.close();
+    }
 }
