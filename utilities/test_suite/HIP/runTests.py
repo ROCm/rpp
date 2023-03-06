@@ -83,7 +83,7 @@ caseEnd = args.case_end
 testType = args.test_type
 caseList = args.case_list
 profilingOption = args.profiling
-qaOption = args.qa_mode
+qaMode = args.qa_mode
 decoderType = args.decoder_type
 
 if(testType == 0):
@@ -95,7 +95,16 @@ else:
 dstPath = outFilePath
 
 if(testType == 0):
-    subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "0", str(qaOption), str(decoderType), " ".join(caseList)])
+    subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "0", str(qaMode), str(decoderType), " ".join(caseList)])
+
+    # print the results of qa tests
+    if qaMode:
+        qaFilePath = os.path.join(outFilePath, "QA_results.txt")
+        f = open(qaFilePath, 'r')
+        print("---------------------------------- Results of QA Test ----------------------------------\n")
+        for line in f:
+            print(line)
+
     layoutDict ={0:"PKD3", 1:"PLN3", 2:"PLN1"}
 
     for layout in range(3):
@@ -124,7 +133,7 @@ else:
     ]
 
     if (testType == 1 and profilingOption == "NO"):
-        subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "0", str(qaOption), str(decoderType), " ".join(caseList)])
+        subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "0", str(qaMode), str(decoderType), " ".join(caseList)])
         for log_file in log_file_list:
             # Opening log file
             try:
@@ -187,7 +196,7 @@ else:
             # Closing log file
             f.close()
     elif (testType == 1 and profilingOption == "YES"):
-        subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "1", str(qaOption), str(decoderType), " ".join(caseList)])
+        subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "1", str(qaMode), str(decoderType), " ".join(caseList)])
         NEW_FUNC_GROUP_LIST = [0, 15, 20, 29, 36, 40, 42, 49, 56, 65, 69]
 
         # Functionality group finder

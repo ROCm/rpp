@@ -14,8 +14,8 @@ The suite includes:
 
 ## Command Line Arguments
 The test suite accepts the following command line arguments:
-* input_path: The path to the input data. Default is $cwd/../TEST_IMAGES/three_images_mixed_src1
-* output_path: The path to the output data. Default is $cwd/../TEST_IMAGES/three_images_mixed_src2
+* input_path1: The path to the input data. Default is $cwd/../TEST_IMAGES/three_images_mixed_src1
+* input_path2: The path to the input data. Default is $cwd/../TEST_IMAGES/three_images_mixed_src2
 * case_start: The starting case number for the test range (0-38). Default is 0
 * case_end: The ending case number for the test range (0-38). Default is 38
 * test_type: The type of test to run (0 = Unit tests, 1 = Performance tests). Default is 0

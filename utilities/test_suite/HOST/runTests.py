@@ -87,7 +87,7 @@ if qaMode:
     f = open(qaFilePath, 'r')
     print("---------------------------------- Results of QA Test ----------------------------------\n")
     for line in f:
-        print(line, end="")
+        print(line)
 
 layoutDict ={0:"PKD3", 1:"PLN3", 2:"PLN1"}
 # unit tests
