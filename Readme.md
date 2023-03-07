@@ -32,7 +32,7 @@ RPP is developed for **Linux** operating system.
     ```
     sudo apt-get install clang
     ```
-  
+
   + CentOS `7`
     ```
     sudo yum install llvm-toolset-7-clang llvm-toolset-7-clang-analyzer llvm-toolset-7-clang-tools-extra
@@ -99,6 +99,11 @@ RPP is developed for **Linux** operating system.
   sudo -S make -j128 <Or other number of threads to use>
   sudo -S make install
   sudo -S ldconfig
+  ```
+
+* TurboJpeg installation
+  ```
+  sudo apt-get install -y libturbojpeg
   ```
 
 ## Supported Functionalities and Variants
