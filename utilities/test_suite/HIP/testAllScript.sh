@@ -8,25 +8,10 @@ cwd=$(pwd)
 DEFAULT_SRC_FOLDER_1="$cwd/../TEST_IMAGES/three_images_mixed_src1"
 DEFAULT_SRC_FOLDER_2="$cwd/../TEST_IMAGES/three_images_mixed_src2"
 
-# Input Images - Three images (224 x 224)
-# DEFAULT_SRC_FOLDER_1="$cwd/../../rpp-unittests/TEST_IMAGES/three_images_224x224_src1"
-# DEFAULT_SRC_FOLDER_2="$cwd/../../rpp-unittests/TEST_IMAGES/three_images_224x224_src2"
+# <<<<<<<<<<<<<< PROCESSING OF INPUT ARGUMENTS (NEED NOT CHANGE) >>>>>>>>>>>>>>
 
-# Input Images - Two images (224 x 224)
-# DEFAULT_SRC_FOLDER_1="$cwd/../../rpp-unittests/TEST_IMAGES/two_images_224x224_src1"
-# DEFAULT_SRC_FOLDER_2="$cwd/../../rpp-unittests/TEST_IMAGES/two_images_224x224_src2"
-
-# Input Images - Two images (mixed size)
-# DEFAULT_SRC_FOLDER_1="$cwd/../../rpp-unittests/TEST_IMAGES/two_images_mixed_src1"
-# DEFAULT_SRC_FOLDER_2="$cwd/../../rpp-unittests/TEST_IMAGES/two_images_mixed_src2"
-
-# Input Images - Single image (224 x 224)
-# DEFAULT_SRC_FOLDER_1="$cwd/../../rpp-unittests/TEST_IMAGES/single_image_224x224_src1"
-# DEFAULT_SRC_FOLDER_2="$cwd/../../rpp-unittests/TEST_IMAGES/single_image_224x224_src2"
-
-# Fill with default values if all arguments are not given by user
 CASE_MIN=0
-CASE_MAX=86
+CASE_MAX=38
 if (( "$#" < 4 )); then
     SRC_FOLDER_1="$DEFAULT_SRC_FOLDER_1"
     SRC_FOLDER_2="$DEFAULT_SRC_FOLDER_2"
@@ -51,18 +36,21 @@ else
     CASE_LIST="${@:8}"
 fi
 
+# <<<<<<<<<<<<<< VALIDATION CHECK FOR TEST_TYPE AND CASE NUMBERS >>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
 if [[ $TEST_TYPE -ne 0 ]] && [[ $TEST_TYPE -ne 1 ]]; then
     echo "Invalid TEST_TYPE specified. TEST_TYPE should be 0/1 (0 = Unittests / 1 = Performancetests)"
     exit
 fi
 
 for case in $CASE_LIST; do
-    if [[ $case -lt 0 || $case -gt 86 ]]; then
-        echo "The case# must be in the 0:86 range!"
+    if [[ $case -lt 0 || $case -gt 38 ]]; then
+        echo "The case# must be in the 0:38 range!"
     fi
 done
 
 # <<<<<<<<<<<<<< CREATE OUTPUT FOLDERS BASED ON TEST TYPE>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
 if [ $TEST_TYPE -eq 0 ]; then
     printf "\nRunning Unittests...\n"
     mkdir "$cwd/../OUTPUT_IMAGES_HIP_NEW"
@@ -123,7 +111,6 @@ if [[ $TEST_TYPE -eq 1 ]] && [[ $PROFILING_OPTION -eq 1 ]]; then
     mkdir "$DST_FOLDER/Tensor_PLN3"
 fi
 
-# <<<<<<<<<<<<<< EXECUTION OF ALL FUNCTIONALITIES (NEED NOT CHANGE) >>>>>>>>>>>>>>
 printf "\n\n\n\n\n"
 echo "##########################################################################################"
 echo "Running all layout Inputs..."
@@ -131,8 +118,8 @@ echo "##########################################################################
 
 for case in ${CASE_LIST[@]};
 do
-    if [ "$case" -lt "0" ] || [ "$case" -gt " 86" ]; then
-        echo "Invalid case number $case. casenumber must be in the 0:86 range!"
+    if [ "$case" -lt "0" ] || [ "$case" -gt " 38" ]; then
+        echo "Invalid case number $case. case number must be in the 0:38 range!"
         continue
     fi
     for ((layout=0;layout<3;layout++))
@@ -289,4 +276,3 @@ do
         done
     done
 done
-# <<<<<<<<<<<<<< EXECUTION OF ALL FUNCTIONALITIES (NEED NOT CHANGE) >>>>>>>>>>>>>>
