@@ -20,7 +20,7 @@ if (( "$#" < 3 )); then
     DECODER_TYPE="0"
     NUM_ITERATIONS="1"
     CASE_LIST=()
-    for ((case=$CASE_MIN;case<=$CASE_MAX;case++))
+    for ((case="$CASE_MIN";case<="$CASE_MAX";case++))
     do
         CASE_LIST+=("$case")
     done
