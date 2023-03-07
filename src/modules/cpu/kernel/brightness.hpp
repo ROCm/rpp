@@ -88,9 +88,9 @@ RppStatus brightness_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTempR = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (srcPtrTemp[0])) * alpha) + beta);
-                    *dstPtrTempG = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (srcPtrTemp[1])) * alpha) + beta);
-                    *dstPtrTempB = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (srcPtrTemp[2])) * alpha) + beta);
+                    *dstPtrTempR = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (srcPtrTemp[0])) * alpha) + beta));
+                    *dstPtrTempG = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (srcPtrTemp[1])) * alpha) + beta));
+                    *dstPtrTempB = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (srcPtrTemp[2])) * alpha) + beta));
 
                     srcPtrTemp += 3;
                     dstPtrTempR++;
@@ -143,9 +143,9 @@ RppStatus brightness_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (*srcPtrTempR)) * alpha) + beta);
-                    dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (*srcPtrTempG)) * alpha) + beta);
-                    dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (*srcPtrTempB)) * alpha) + beta);
+                    dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (*srcPtrTempR)) * alpha) + beta));
+                    dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (*srcPtrTempG)) * alpha) + beta));
+                    dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (*srcPtrTempB)) * alpha) + beta));
 
                     srcPtrTempR++;
                     srcPtrTempG++;
@@ -197,7 +197,7 @@ RppStatus brightness_u8_u8_host_tensor(Rpp8u *srcPtr,
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        *dstPtrTemp = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (*srcPtrTemp)) * alpha) + beta);
+                        *dstPtrTemp = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (*srcPtrTemp)) * alpha) + beta));
 
                         srcPtrTemp++;
                         dstPtrTemp++;

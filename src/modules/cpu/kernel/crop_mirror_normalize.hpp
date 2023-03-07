@@ -81,9 +81,9 @@ RppStatus crop_mirror_normalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                     {
-                        *dstPtrTempR = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (srcPtrTemp[0] * multiplierTensor[cmnParamLocs[0]]) + offsetTensor[cmnParamLocs[0]])));
-                        *dstPtrTempG = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (srcPtrTemp[1] * multiplierTensor[cmnParamLocs[1]]) + offsetTensor[cmnParamLocs[1]])));
-                        *dstPtrTempB = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (srcPtrTemp[2] * multiplierTensor[cmnParamLocs[2]]) + offsetTensor[cmnParamLocs[2]])));
+                        *dstPtrTempR = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (srcPtrTemp[0] * multiplierTensor[cmnParamLocs[0]]) + offsetTensor[cmnParamLocs[0]]))));
+                        *dstPtrTempG = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (srcPtrTemp[1] * multiplierTensor[cmnParamLocs[1]]) + offsetTensor[cmnParamLocs[1]]))));
+                        *dstPtrTempB = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (srcPtrTemp[2] * multiplierTensor[cmnParamLocs[2]]) + offsetTensor[cmnParamLocs[2]]))));
 
                         srcPtrTemp += 3;
                         dstPtrTempR++;
@@ -131,9 +131,9 @@ RppStatus crop_mirror_normalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                     for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                     {
                         srcPtrTemp -= 3;
-                        *dstPtrTempR = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (srcPtrTemp[0] * multiplierTensor[cmnParamLocs[0]]) + offsetTensor[cmnParamLocs[0]])));
-                        *dstPtrTempG = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (srcPtrTemp[1] * multiplierTensor[cmnParamLocs[1]]) + offsetTensor[cmnParamLocs[1]])));
-                        *dstPtrTempB = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (srcPtrTemp[2] * multiplierTensor[cmnParamLocs[2]]) + offsetTensor[cmnParamLocs[2]])));
+                        *dstPtrTempR = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (srcPtrTemp[0] * multiplierTensor[cmnParamLocs[0]]) + offsetTensor[cmnParamLocs[0]]))));
+                        *dstPtrTempG = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (srcPtrTemp[1] * multiplierTensor[cmnParamLocs[1]]) + offsetTensor[cmnParamLocs[1]]))));
+                        *dstPtrTempB = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (srcPtrTemp[2] * multiplierTensor[cmnParamLocs[2]]) + offsetTensor[cmnParamLocs[2]]))));
 
                         dstPtrTempR++;
                         dstPtrTempG++;
@@ -183,9 +183,9 @@ RppStatus crop_mirror_normalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (*srcPtrTempR)) * multiplierTensor[cmnParamLocs[0]]) + offsetTensor[cmnParamLocs[0]]);
-                        dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (*srcPtrTempG)) * multiplierTensor[cmnParamLocs[1]]) + offsetTensor[cmnParamLocs[1]]);
-                        dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (*srcPtrTempB)) * multiplierTensor[cmnParamLocs[2]]) + offsetTensor[cmnParamLocs[2]]);
+                        dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (*srcPtrTempR)) * multiplierTensor[cmnParamLocs[0]]) + offsetTensor[cmnParamLocs[0]]));
+                        dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (*srcPtrTempG)) * multiplierTensor[cmnParamLocs[1]]) + offsetTensor[cmnParamLocs[1]]));
+                        dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (*srcPtrTempB)) * multiplierTensor[cmnParamLocs[2]]) + offsetTensor[cmnParamLocs[2]]));
 
                         srcPtrTempR++;
                         srcPtrTempG++;
@@ -236,9 +236,9 @@ RppStatus crop_mirror_normalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                         srcPtrTempG--;
                         srcPtrTempB--;
 
-                        dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (*srcPtrTempR)) * multiplierTensor[cmnParamLocs[0]]) + offsetTensor[cmnParamLocs[0]]);
-                        dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (*srcPtrTempG)) * multiplierTensor[cmnParamLocs[1]]) + offsetTensor[cmnParamLocs[1]]);
-                        dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (*srcPtrTempB)) * multiplierTensor[cmnParamLocs[2]]) + offsetTensor[cmnParamLocs[2]]);
+                        dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (*srcPtrTempR)) * multiplierTensor[cmnParamLocs[0]]) + offsetTensor[cmnParamLocs[0]]));
+                        dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (*srcPtrTempG)) * multiplierTensor[cmnParamLocs[1]]) + offsetTensor[cmnParamLocs[1]]));
+                        dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (*srcPtrTempB)) * multiplierTensor[cmnParamLocs[2]]) + offsetTensor[cmnParamLocs[2]]));
 
                         dstPtrTemp += 3;
                     }
@@ -280,9 +280,9 @@ RppStatus crop_mirror_normalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                     {
-                        dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (srcPtrTemp[0] * multiplierTensor[cmnParamLocs[0]]) + offsetTensor[cmnParamLocs[0]])));
-                        dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (srcPtrTemp[1] * multiplierTensor[cmnParamLocs[1]]) + offsetTensor[cmnParamLocs[1]])));
-                        dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (srcPtrTemp[2] * multiplierTensor[cmnParamLocs[2]]) + offsetTensor[cmnParamLocs[2]])));
+                        dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (srcPtrTemp[0] * multiplierTensor[cmnParamLocs[0]]) + offsetTensor[cmnParamLocs[0]]))));
+                        dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (srcPtrTemp[1] * multiplierTensor[cmnParamLocs[1]]) + offsetTensor[cmnParamLocs[1]]))));
+                        dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (srcPtrTemp[2] * multiplierTensor[cmnParamLocs[2]]) + offsetTensor[cmnParamLocs[2]]))));
                         srcPtrTemp += 3;
                         dstPtrTemp += 3;
                     }
@@ -318,9 +318,9 @@ RppStatus crop_mirror_normalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                     for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                     {
                         srcPtrTemp -= 3;
-                        dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (srcPtrTemp[0] * multiplierTensor[cmnParamLocs[0]]) + offsetTensor[cmnParamLocs[0]])));
-                        dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (srcPtrTemp[1] * multiplierTensor[cmnParamLocs[1]]) + offsetTensor[cmnParamLocs[1]])));
-                        dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (srcPtrTemp[2] * multiplierTensor[cmnParamLocs[2]]) + offsetTensor[cmnParamLocs[2]])));
+                        dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (srcPtrTemp[0] * multiplierTensor[cmnParamLocs[0]]) + offsetTensor[cmnParamLocs[0]]))));
+                        dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (srcPtrTemp[1] * multiplierTensor[cmnParamLocs[1]]) + offsetTensor[cmnParamLocs[1]]))));
+                        dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (srcPtrTemp[2] * multiplierTensor[cmnParamLocs[2]]) + offsetTensor[cmnParamLocs[2]]))));
                         dstPtrTemp += 3;
                     }
                     srcPtrRow += srcDescPtr->strides.hStride;
@@ -361,7 +361,7 @@ RppStatus crop_mirror_normalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                         }
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            *dstPtrTemp = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (*srcPtrTemp)) * multiplierTensor[cmnParamLocs[c]]) + offsetTensor[cmnParamLocs[c]]);
+                            *dstPtrTemp = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (*srcPtrTemp)) * multiplierTensor[cmnParamLocs[c]]) + offsetTensor[cmnParamLocs[c]]));
 
                             srcPtrTemp++;
                             dstPtrTemp++;
@@ -405,7 +405,7 @@ RppStatus crop_mirror_normalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                         {
                             srcPtrTemp--;
 
-                            *dstPtrTemp = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (*srcPtrTemp)) * multiplierTensor[cmnParamLocs[c]]) + offsetTensor[cmnParamLocs[c]]);
+                            *dstPtrTemp = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (*srcPtrTemp)) * multiplierTensor[cmnParamLocs[c]]) + offsetTensor[cmnParamLocs[c]]));
                             dstPtrTemp++;
                         }
                         srcPtrRow += srcDescPtr->strides.hStride;

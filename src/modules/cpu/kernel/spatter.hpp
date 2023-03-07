@@ -120,9 +120,9 @@ RppStatus spatter_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTempR = (Rpp8u) RPPPIXELCHECK(((Rpp32f) srcPtrTemp[0]) * *spatterMaskInvPtrTemp + spatterValue[0] * *spatterMaskPtrTemp);
-                    *dstPtrTempG = (Rpp8u) RPPPIXELCHECK(((Rpp32f) srcPtrTemp[1]) * *spatterMaskInvPtrTemp + spatterValue[1] * *spatterMaskPtrTemp);
-                    *dstPtrTempB = (Rpp8u) RPPPIXELCHECK(((Rpp32f) srcPtrTemp[2]) * *spatterMaskInvPtrTemp + spatterValue[2] * *spatterMaskPtrTemp);
+                    *dstPtrTempR = (Rpp8u) RPPPIXELCHECK(std::nearbyintf(((Rpp32f) srcPtrTemp[0]) * *spatterMaskInvPtrTemp + spatterValue[0] * *spatterMaskPtrTemp));
+                    *dstPtrTempG = (Rpp8u) RPPPIXELCHECK(std::nearbyintf(((Rpp32f) srcPtrTemp[1]) * *spatterMaskInvPtrTemp + spatterValue[1] * *spatterMaskPtrTemp));
+                    *dstPtrTempB = (Rpp8u) RPPPIXELCHECK(std::nearbyintf(((Rpp32f) srcPtrTemp[2]) * *spatterMaskInvPtrTemp + spatterValue[2] * *spatterMaskPtrTemp));
 
                     srcPtrTemp += 3;
                     dstPtrTempR++;
@@ -191,9 +191,9 @@ RppStatus spatter_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK(((Rpp32f) *srcPtrTempR) * *spatterMaskInvPtrTemp + spatterValue[0] * *spatterMaskPtrTemp);
-                    dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK(((Rpp32f) *srcPtrTempG) * *spatterMaskInvPtrTemp + spatterValue[1] * *spatterMaskPtrTemp);
-                    dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK(((Rpp32f) *srcPtrTempB) * *spatterMaskInvPtrTemp + spatterValue[2] * *spatterMaskPtrTemp);
+                    dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf(((Rpp32f) *srcPtrTempR) * *spatterMaskInvPtrTemp + spatterValue[0] * *spatterMaskPtrTemp));
+                    dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf(((Rpp32f) *srcPtrTempG) * *spatterMaskInvPtrTemp + spatterValue[1] * *spatterMaskPtrTemp));
+                    dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf(((Rpp32f) *srcPtrTempB) * *spatterMaskInvPtrTemp + spatterValue[2] * *spatterMaskPtrTemp));
 
                     srcPtrTempR++;
                     srcPtrTempG++;
@@ -258,7 +258,7 @@ RppStatus spatter_u8_u8_host_tensor(Rpp8u *srcPtr,
                 {
                     for(int c = 0; c < srcDescPtr->c; c++)
                     {
-                        *dstPtrTemp = (Rpp8u) RPPPIXELCHECK(((Rpp32f) *srcPtrTemp) * *spatterMaskInvPtrTemp + spatterValue[c] * *spatterMaskPtrTemp);
+                        *dstPtrTemp = (Rpp8u) RPPPIXELCHECK(std::nearbyintf(((Rpp32f) *srcPtrTemp) * *spatterMaskInvPtrTemp + spatterValue[c] * *spatterMaskPtrTemp));
                         srcPtrTemp++;
                         dstPtrTemp++;
                     }
@@ -335,7 +335,7 @@ RppStatus spatter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     dstPtrChannel = dstPtrTemp;
                     for(int c = 0; c < srcDescPtr->c; c++)
                     {
-                        *dstPtrChannel = (Rpp8u) RPPPIXELCHECK(((Rpp32f) *srcPtrChannel) * *spatterMaskInvPtrTemp + spatterValue[c] * *spatterMaskPtrTemp);
+                        *dstPtrChannel = (Rpp8u) RPPPIXELCHECK(std::nearbyintf(((Rpp32f) *srcPtrChannel) * *spatterMaskInvPtrTemp + spatterValue[c] * *spatterMaskPtrTemp));
                         srcPtrChannel += srcDescPtr->strides.cStride;
                         dstPtrChannel += dstDescPtr->strides.cStride;
                     }
