@@ -49,11 +49,11 @@ done
 
 # <<<<<<<<<<<<<< CREATE OUTPUT FOLDERS BASED ON TEST TYPE>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-if [ $TEST_TYPE -eq 0 ]; then
+if [ "$TEST_TYPE" -eq 0 ]; then
     printf "\nRunning Unittests...\n"
     mkdir "$cwd/../OUTPUT_IMAGES_HOST_NEW"
     DEFAULT_DST_FOLDER="$cwd/../OUTPUT_IMAGES_HOST_NEW"
-elif [ $TEST_TYPE -eq 1 ]; then
+elif [ "$TEST_TYPE" -eq 1 ]; then
     printf "\nRunning Performance tests...\n"
     mkdir "$cwd/../OUTPUT_PERFORMANCE_LOGS_HOST_NEW"
     DEFAULT_DST_FOLDER="$cwd/../OUTPUT_PERFORMANCE_LOGS_HOST_NEW"
