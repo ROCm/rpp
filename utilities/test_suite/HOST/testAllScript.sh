@@ -129,7 +129,7 @@ do
         fi
 
         if [ $TEST_TYPE -eq 0 ]; then
-            mkdir $DST_FOLDER_TEMP
+            mkdir "$DST_FOLDER_TEMP"
         fi
 
         printf "\n\n\n\n"
