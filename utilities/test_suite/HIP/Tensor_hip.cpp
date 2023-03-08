@@ -262,9 +262,9 @@ int main(int argc, char **argv)
     Rpp64u outputBufferSize = oBufferSize * get_size_of_data_type(dstDescPtr->dataType) + dstDescPtr->offsetInBytes;
 
     // Initialize 8u host buffers for src/dst
-    Rpp8u *inputu8 = (Rpp8u *)calloc(ioBufferSizeInBytes_u8, 1);
-    Rpp8u *inputu8Second = (Rpp8u *)calloc(ioBufferSizeInBytes_u8, 1);
-    Rpp8u *outputu8 = (Rpp8u *)calloc(oBufferSizeInBytes_u8, 1);
+    Rpp8u *inputu8 = static_cast<Rpp8u *>(calloc(ioBufferSizeInBytes_u8, 1));
+    Rpp8u *inputu8Second = static_cast<Rpp8u *>(calloc(ioBufferSizeInBytes_u8, 1));
+    Rpp8u *outputu8 = static_cast<Rpp8u *>(calloc(oBufferSizeInBytes_u8, 1));
     if (testCase == 40) memset(inputu8, 0xFF, ioBufferSizeInBytes_u8);
 
     // Set 8u host buffers for src/dst
@@ -314,9 +314,9 @@ int main(int argc, char **argv)
     Rpp32f invConversionFactor = 1.0f / conversionFactor;
 
     // Convert inputs to test various other bit depths
-    input = (Rpp8u *)calloc(inputBufferSize, 1);
-    input_second = (Rpp8u *)calloc(inputBufferSize, 1);
-    output = (Rpp8u *)calloc(outputBufferSize, 1);
+    input = static_cast<Rpp8u *>(calloc(inputBufferSize, 1));
+    input_second = static_cast<Rpp8u *>(calloc(inputBufferSize, 1));
+    output = static_cast<Rpp8u *>(calloc(outputBufferSize, 1));
 
     if (inputBitDepth == 0)
     {
@@ -329,8 +329,8 @@ int main(int argc, char **argv)
         half *inputf16Temp, *inputf16SecondTemp;
         inputTemp = inputu8 + srcDescPtr->offsetInBytes;
         inputSecondTemp = inputu8Second + srcDescPtr->offsetInBytes;
-        inputf16Temp = (half *)((Rpp8u *)input + srcDescPtr->offsetInBytes);
-        inputf16SecondTemp = (half *)((Rpp8u *)input_second + srcDescPtr->offsetInBytes);
+        inputf16Temp = reinterpret_cast<half *>(reinterpret_cast<Rpp8u *>(input) + srcDescPtr->offsetInBytes);
+        inputf16SecondTemp = reinterpret_cast<half *>(reinterpret_cast<Rpp8u *>(input_second) + srcDescPtr->offsetInBytes);
 
         for (int i = 0; i < ioBufferSize; i++)
         {
@@ -344,8 +344,8 @@ int main(int argc, char **argv)
         Rpp32f *inputf32Temp, *inputf32SecondTemp;
         inputTemp = inputu8 + srcDescPtr->offsetInBytes;
         inputSecondTemp = inputu8Second + srcDescPtr->offsetInBytes;
-        inputf32Temp = (Rpp32f *)((Rpp8u *)input + srcDescPtr->offsetInBytes);
-        inputf32SecondTemp = (Rpp32f *)((Rpp8u *)input_second + srcDescPtr->offsetInBytes);
+        inputf32Temp = reinterpret_cast<Rpp32f *>(reinterpret_cast<Rpp8u *>(input) + srcDescPtr->offsetInBytes);
+        inputf32SecondTemp = reinterpret_cast<Rpp32f *>(reinterpret_cast<Rpp8u *>(input_second) + srcDescPtr->offsetInBytes);
 
         for (int i = 0; i < ioBufferSize; i++)
         {
@@ -360,8 +360,8 @@ int main(int argc, char **argv)
 
         inputTemp = inputu8 + srcDescPtr->offsetInBytes;
         inputSecondTemp = inputu8Second + srcDescPtr->offsetInBytes;
-        inputi8Temp = (Rpp8s *)input + srcDescPtr->offsetInBytes;
-        inputi8SecondTemp = (Rpp8s *)input_second + srcDescPtr->offsetInBytes;
+        inputi8Temp = static_cast<Rpp8s *>(input) + srcDescPtr->offsetInBytes;
+        inputi8SecondTemp = static_cast<Rpp8s *>(input_second) + srcDescPtr->offsetInBytes;
 
         for (int i = 0; i < ioBufferSize; i++)
         {

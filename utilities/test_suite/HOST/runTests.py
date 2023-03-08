@@ -1,5 +1,5 @@
 import os
-import subprocess
+import subprocess  # nosec
 import argparse
 
 cwd = os.getcwd()
@@ -79,7 +79,7 @@ else:
 dstPath = outFilePath
 
 # run the shell script
-subprocess.call(["./testAllScript.sh", srcPath1, args.input_path2, str(testType), str(numIterations), str(qaMode), str(decoderType), " ".join(caseList)])
+subprocess.call(["./testAllScript.sh", srcPath1, args.input_path2, str(testType), str(numIterations), str(qaMode), str(decoderType), " ".join(caseList)])  # nosec
 
 # print the results of qa tests
 if qaMode:

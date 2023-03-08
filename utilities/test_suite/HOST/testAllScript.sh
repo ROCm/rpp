@@ -67,7 +67,6 @@ directory_name_generator() {
 
     AFFINITY=$1
     TYPE=$2
-    CASE=$3
 
     if [[ "$case" -lt 5 ]] || [ "$case" -eq 13 ] || [ "$case" -eq 36 ]
     then
