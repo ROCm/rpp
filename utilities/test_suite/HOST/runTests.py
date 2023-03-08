@@ -57,6 +57,11 @@ def rpp_test_suite_parser_and_validator():
                  print("The case# must be in the 0:38 range!")
                  exit(0)
 
+    # if QA mode is enabled overwrite the input folders with the folders used for generating golden outputs
+    if args.qa_mode:
+        args.input_path1 = inFilePath1
+        args.input_path2 = inFilePath2
+
     return args
 
 args = rpp_test_suite_parser_and_validator()
