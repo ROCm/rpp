@@ -329,8 +329,8 @@ int main(int argc, char **argv)
         half *inputf16Temp, *inputf16SecondTemp;
         inputTemp = inputu8 + srcDescPtr->offsetInBytes;
         inputSecondTemp = inputu8Second + srcDescPtr->offsetInBytes;
-        inputf16Temp = reinterpret_cast<half *>(reinterpret_cast<Rpp8u *>(input) + srcDescPtr->offsetInBytes);
-        inputf16SecondTemp = reinterpret_cast<half *>(reinterpret_cast<Rpp8u *>(input_second) + srcDescPtr->offsetInBytes);
+        inputf16Temp = reinterpret_cast<half *>(static_cast<Rpp8u *>(input) + srcDescPtr->offsetInBytes);
+        inputf16SecondTemp = reinterpret_cast<half *>(static_cast<Rpp8u *>(input_second) + srcDescPtr->offsetInBytes);
 
         for (int i = 0; i < ioBufferSize; i++)
         {
@@ -344,8 +344,8 @@ int main(int argc, char **argv)
         Rpp32f *inputf32Temp, *inputf32SecondTemp;
         inputTemp = inputu8 + srcDescPtr->offsetInBytes;
         inputSecondTemp = inputu8Second + srcDescPtr->offsetInBytes;
-        inputf32Temp = reinterpret_cast<Rpp32f *>(reinterpret_cast<Rpp8u *>(input) + srcDescPtr->offsetInBytes);
-        inputf32SecondTemp = reinterpret_cast<Rpp32f *>(reinterpret_cast<Rpp8u *>(input_second) + srcDescPtr->offsetInBytes);
+        inputf32Temp = reinterpret_cast<Rpp32f *>(static_cast<Rpp8u *>(input) + srcDescPtr->offsetInBytes);
+        inputf32SecondTemp = reinterpret_cast<Rpp32f *>(static_cast<Rpp8u *>(input_second) + srcDescPtr->offsetInBytes);
 
         for (int i = 0; i < ioBufferSize; i++)
         {
