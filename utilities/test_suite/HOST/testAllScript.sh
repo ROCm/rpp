@@ -20,7 +20,7 @@ if (( "$#" < 3 )); then
     DECODER_TYPE="0"
     NUM_ITERATIONS="1"
     CASE_LIST=()
-    for ((case=$CASE_MIN;case<=$CASE_MAX;case++))
+    for ((case="$CASE_MIN";case<="$CASE_MAX";case++))
     do
         CASE_LIST+=("$case")
     done
@@ -49,11 +49,11 @@ done
 
 # <<<<<<<<<<<<<< CREATE OUTPUT FOLDERS BASED ON TEST TYPE>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-if [ $TEST_TYPE -eq 0 ]; then
+if [ "$TEST_TYPE" -eq 0 ]; then
     printf "\nRunning Unittests...\n"
     mkdir "$cwd/../OUTPUT_IMAGES_HOST_NEW"
     DEFAULT_DST_FOLDER="$cwd/../OUTPUT_IMAGES_HOST_NEW"
-elif [ $TEST_TYPE -eq 1 ]; then
+elif [ "$TEST_TYPE" -eq 1 ]; then
     printf "\nRunning Performance tests...\n"
     mkdir "$cwd/../OUTPUT_PERFORMANCE_LOGS_HOST_NEW"
     DEFAULT_DST_FOLDER="$cwd/../OUTPUT_PERFORMANCE_LOGS_HOST_NEW"
@@ -128,7 +128,7 @@ do
         fi
 
         if [ $TEST_TYPE -eq 0 ]; then
-            mkdir $DST_FOLDER_TEMP
+            mkdir "$DST_FOLDER_TEMP"
         fi
 
         printf "\n\n\n\n"

@@ -3,7 +3,7 @@
 
 # Radeon Performance Primitives Library
 
-Radeon Performance Primitives (RPP) library is a comprehensive high-performance computer vision library for AMD (CPU and GPU) with HIP and OpenCL back-ends.
+AMD Radeon Performance Primitives (**RPP**) library is a comprehensive high-performance computer vision library for AMD processors with `HIP`/`OpenCL`/`CPU` back-ends.
 
 #### Latest Release
 
@@ -19,7 +19,8 @@ RPP is developed for **Linux** operating system.
 
 * OS
   + Ubuntu `20.04`/`22.04`
-  + CentOS/RHEL `7`/`8`
+  + CentOS `7`/`8`
+  + RHEL `8`/`9`
   + SLES - `15-SP2`
 
 * [ROCm supported hardware](https://rocm.github.io/hardware.html)
@@ -39,7 +40,7 @@ RPP is developed for **Linux** operating system.
     scl enable llvm-toolset-7 bash
     ```
 
-  + CentOS `8`
+  + CentOS `8` and RHEL `8`/`9`
     ```
     sudo yum install clang
     ```
@@ -51,7 +52,7 @@ RPP is developed for **Linux** operating system.
 
 * CMake Version `3.5` and above
 
-* Boost Version `1.72`
+* Boost Version `1.72` and above
   ```
   wget https://boostorg.jfrog.io/artifactory/main/release/1.72.0/source/boost_1_72_0.tar.gz
   tar -xzvf boost_1_72_0.tar.gz
@@ -71,14 +72,15 @@ RPP is developed for **Linux** operating system.
   ```
 
 ## Prerequisites for Test Suite
-* OpenCV 3.4.0 or OpenCV 4.5.5 pre-requisites
+
+* OpenCV `3.4.0`/`4.5.5` - **pre-requisites**
   ```
   sudo apt-get update
   sudo -S apt-get -y --allow-unauthenticated install build-essential libgtk2.0-dev libavcodec-dev libavformat-dev libswscale-dev python-dev python-numpy
   sudo -S apt-get -y --allow-unauthenticated install libtbb2 libtbb-dev libjpeg-dev libpng-dev libtiff-dev libdc1394-22-dev unzip wget
   ```
 
-* OpenCV 3.4.0 or OpenCV 4.5.5 download
+* OpenCV `3.4.0` /`4.5.5` - **download**
   ```
   wget https://github.com/opencv/opencv/archive/3.4.0.zip
   unzip 3.4.0.zip
@@ -91,11 +93,11 @@ RPP is developed for **Linux** operating system.
   cd opencv-4.5.5/
   ```
 
-* OpenCV 3.4.0 or OpenCV 4.5.5 installation
+* OpenCV `3.4.0`/`4.5.5` - **installation**
   ```
   mkdir build
   cd build
-  cmake -D WITH_OPENCL=OFF -D WITH_OPENCLAMDFFT=OFF -D WITH_OPENCLAMDBLAS=OFF -D WITH_VA_INTEL=OFF -D WITH_OPENCL_SVM=OFF -D CMAKE_INSTALL_PREFIX=/usr/local ..
+  cmake -D WITH_GTK=ON -D WITH_JPEG=ON -D BUILD_JPEG=ON -D WITH_OPENCL=OFF -D WITH_OPENCLAMDFFT=OFF -D WITH_OPENCLAMDBLAS=OFF -D WITH_VA_INTEL=OFF -D WITH_OPENCL_SVM=OFF -D CMAKE_INSTALL_PREFIX=/usr/local ..
   sudo -S make -j128 <Or other number of threads to use>
   sudo -S make install
   sudo -S ldconfig

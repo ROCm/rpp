@@ -19,13 +19,13 @@
 # THE SOFTWARE.
 
 cmake_minimum_required(VERSION 3.5)
-# Set Default Compiler & Standard
-set(CMAKE_C_COMPILER clang)
 set(CMAKE_CXX_COMPILER clang++)
 set(CMAKE_CXX_STANDARD 14)
 
 project(amd_rpp CXX)
-set(VERSION "0.98")
+
+# RPP Version
+set(VERSION "0.99")
 
 set(CMAKE_INSTALL_LIBDIR "lib" CACHE STRING "Library install directory")
 include(GNUInstallDirs)
@@ -63,9 +63,7 @@ if(NOT WIN32)
     set(White       "${Esc}[37m")
 endif()
 
-message("-- ${BoldBlue}AMD Radeon Performance Primitives (RPP) Version -- ${VERSION}${ColourReset}")
-message("-- ${BoldBlue}AMD RPP install path set to -- ${CMAKE_INSTALL_PREFIX}${ColourReset}")
-
+# Set backend options
 if(APPLE)
   set(CMAKE_MACOSX_RPATH 1)
   set(BACKEND "CPU")
@@ -87,6 +85,9 @@ else()
         set(BACKEND "HIP")
     endif()
 endif()
+
+message("-- ${BoldBlue}AMD Radeon Performance Primitives (RPP) Version -- ${VERSION}${ColourReset}")
+message("-- ${BoldBlue}AMD RPP install path set to -- ${CMAKE_INSTALL_PREFIX}${ColourReset}")
 message("-- ${BoldBlue}AMD RPP Backend set to -- ${BACKEND}${ColourReset}")
 
 # RPP Build Type
@@ -211,7 +212,6 @@ elseif("${BACKEND}" STREQUAL "OCL")
         # Set external flag to notify GPU_SUPPORT and OPENCL backend availability - Compatible with rocAL and MIVisionX
         add_definitions(-DGPU_SUPPORT)
         set(RPP_BACKEND_OPENCL 1) # For cmakedefine01 in rpp_backend.h.in
-        set(COMPILER_FOR_OPENCL clang++)
         add_definitions(-DRPP_BACKEND_OPENCL=${RPP_BACKEND_OPENCL}) # To use RPP_BACKEND_HIP
         include_directories(${OpenCL_INCLUDE_DIRS} ${OpenCL_INCLUDE_DIRS}/Headers)
 
