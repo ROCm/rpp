@@ -46,7 +46,7 @@ python runTests.py --case_list 0 2 4 --test_type 0
 python runTests.py --case_list 0 2 4 --test_type 1
 ```
 
-## Features:
+## Features
 The suite includes:
 -   Unit tests that execute the desired functionality and variant once, report RPP execution wall time and save output images
 -   Performance tests that execute the desired functionality and variant 100 times by default, and report max/min/avg RPP execution wall time, or optionally, AMD rocprof kernel profiler max/min/avg time for HIP backend variants.

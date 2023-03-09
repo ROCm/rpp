@@ -137,7 +137,7 @@ do
             log_file_layout="pln1"
         fi
 
-        if [ $TEST_TYPE -eq 0 ]; then
+        if [ "$TEST_TYPE" -eq 0 ]; then
             mkdir "$DST_FOLDER_TEMP"
         fi
         printf "\n\n\n\n"

@@ -1,5 +1,5 @@
 import os
-import subprocess
+import subprocess  # nosec
 import argparse
 
 cwd = os.getcwd()
@@ -73,6 +73,11 @@ def rpp_test_suite_parser_and_validator():
                  print("The case# must be in the 0:38 range!")
                  exit(0)
 
+    # if QA mode is enabled overwrite the input folders with the folders used for generating golden outputs
+    if args.qa_mode:
+        args.input_path1 = inFilePath1
+        args.input_path2 = inFilePath2
+
     return args
 
 args = rpp_test_suite_parser_and_validator()
@@ -95,15 +100,7 @@ else:
 dstPath = outFilePath
 
 if(testType == 0):
-    subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "0", str(qaMode), str(decoderType), " ".join(caseList)])
-
-    # print the results of qa tests
-    if qaMode:
-        qaFilePath = os.path.join(outFilePath, "QA_results.txt")
-        f = open(qaFilePath, 'r')
-        print("---------------------------------- Results of QA Test ----------------------------------\n")
-        for line in f:
-            print(line)
+    subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "0", str(qaMode), str(decoderType), " ".join(caseList)])  # nosec
 
     layoutDict ={0:"PKD3", 1:"PLN3", 2:"PLN1"}
 
@@ -133,7 +130,7 @@ else:
     ]
 
     if (testType == 1 and profilingOption == "NO"):
-        subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "0", str(qaMode), str(decoderType), " ".join(caseList)])
+        subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "0", str(qaMode), str(decoderType), " ".join(caseList)])  # nosec
         for log_file in log_file_list:
             # Opening log file
             try:
@@ -196,7 +193,7 @@ else:
             # Closing log file
             f.close()
     elif (testType == 1 and profilingOption == "YES"):
-        subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "1", str(qaMode), str(decoderType), " ".join(caseList)])
+        subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "1", str(qaMode), str(decoderType), " ".join(caseList)])  # nosec
         NEW_FUNC_GROUP_LIST = [0, 15, 20, 29, 36, 40, 42, 49, 56, 65, 69]
 
         # Functionality group finder
@@ -319,3 +316,11 @@ else:
 
         except IOError:
             print("Unable to open results in " + RESULTS_DIR + "/consolidated_results_" + TYPE + ".stats.csv")
+
+# print the results of qa tests
+if qaMode:
+    qaFilePath = os.path.join(outFilePath, "QA_results.txt")
+    f = open(qaFilePath, 'r')
+    print("---------------------------------- Results of QA Test ----------------------------------\n")
+    for line in f:
+        print(line)
