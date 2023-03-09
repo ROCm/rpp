@@ -622,7 +622,7 @@ int main(int argc, char **argv)
             Rpp8u *outputTemp;
             outputTemp = outputu8 + dstDescPtr->offsetInBytes;
             half *outputf16Temp;
-            outputf16Temp = (half *)((Rpp8u *)output + dstDescPtr->offsetInBytes);
+            outputf16Temp = reinterpret_cast<half *>(static_cast<Rpp8u *>(output) + dstDescPtr->offsetInBytes);
             for (int i = 0; i < oBufferSize; i++)
             {
                 *outputTemp = (Rpp8u)validate_pixel_range((float)*outputf16Temp * invConversionFactor);
@@ -636,7 +636,7 @@ int main(int argc, char **argv)
             Rpp8u *outputTemp;
             outputTemp = outputu8 + dstDescPtr->offsetInBytes;
             Rpp32f *outputf32Temp;
-            outputf32Temp = (Rpp32f *)((Rpp8u *)output + dstDescPtr->offsetInBytes);
+            outputf32Temp = reinterpret_cast<Rpp32f *>(static_cast<Rpp8u *>(output) + dstDescPtr->offsetInBytes);
             for (int i = 0; i < oBufferSize; i++)
             {
                 *outputTemp = (Rpp8u)validate_pixel_range(*outputf32Temp * invConversionFactor);
@@ -648,7 +648,7 @@ int main(int argc, char **argv)
         {
             hipMemcpy(output, d_output, outputBufferSize, hipMemcpyDeviceToHost);
             Rpp8u *outputTemp = outputu8 + dstDescPtr->offsetInBytes;
-            Rpp8s *outputi8Temp = (Rpp8s *)output + dstDescPtr->offsetInBytes;
+            Rpp8s *outputi8Temp = static_cast<Rpp8s *>(output) + dstDescPtr->offsetInBytes;
             for (int i = 0; i < oBufferSize; i++)
             {
                 *outputTemp = (Rpp8u) validate_pixel_range(((Rpp32s) *outputi8Temp) + 128);
