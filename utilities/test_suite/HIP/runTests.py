@@ -27,6 +27,24 @@ def validate_path(input_path):
     if not os.path.isdir(input_path):
         raise ValueError("path " + input_path + " is not a directory.")
 
+def create_layout_directories(dst_path, layout_dict):
+    for layout in range(3):
+        current_layout = layout_dict[layout]
+        try:
+            os.makedirs(dst_path + '/' + current_layout)
+        except FileExistsError:
+            pass
+        folder_list = [f for f in os.listdir(dst_path) if current_layout.lower() in f]
+        for folder in folder_list:
+            os.rename(dst_path + '/' + folder, dst_path + '/' + current_layout +  '/' + folder)
+
+def get_log_file_list():
+    return [
+        "../OUTPUT_PERFORMANCE_LOGS_HOST_NEW/Tensor_host_pkd3_raw_performance_log.txt",
+        "../OUTPUT_PERFORMANCE_LOGS_HOST_NEW/Tensor_host_pln3_raw_performance_log.txt",
+        "../OUTPUT_PERFORMANCE_LOGS_HOST_NEW/Tensor_host_pln1_raw_performance_log.txt"
+    ]
+
 def rpp_test_suite_parser_and_validator():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_path1", type = str, default = inFilePath1, help = "Path to the input folder 1")
@@ -103,22 +121,9 @@ if(testType == 0):
     subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "0", str(qaMode), str(decoderType), " ".join(caseList)])  # nosec
 
     layoutDict ={0:"PKD3", 1:"PLN3", 2:"PLN1"}
-
-    for layout in range(3):
-        currentLayout = layoutDict[layout]
-        try:
-            os.makedirs(dstPath + '/' + currentLayout)
-        except FileExistsError:
-            pass
-        folderList = [f for f in os.listdir(dstPath) if currentLayout.lower() in f]
-        for folder in folderList:
-            os.rename(dstPath + '/' + folder, dstPath + '/' + currentLayout +  '/' + folder)
+    create_layout_directories(dstPath, layoutDict)
 else:
-    log_file_list = [
-    "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW/Tensor_hip_pkd3_raw_performance_log.txt",
-    "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW/Tensor_hip_pln3_raw_performance_log.txt",
-    "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW/Tensor_hip_pln1_raw_performance_log.txt"
-    ]
+    log_file_list = get_log_file_list()
 
     functionality_group_list = [
     "color_augmentations",
@@ -290,8 +295,7 @@ else:
                                 continue
 
             new_file.close()
-            os.system('chown $USER:$USER ' + RESULTS_DIR + "/consolidated_results_" + TYPE + ".stats.csv")
-
+            subprocess.run(['chown', '{}:{}'.format(os.getuid(), os.getgid()), RESULTS_DIR + "/consolidated_results_" + TYPE + ".stats.csv"])
         try:
             import pandas as pd
             pd.options.display.max_rows = None
