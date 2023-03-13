@@ -1,4 +1,4 @@
-# Radeon Performance Primitives Library
+# ROCm Performance Primitives Library
 
 ## Changelog
 

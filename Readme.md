@@ -1,9 +1,9 @@
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Build Status](https://travis-ci.com/GPUOpen-ProfessionalCompute-Libraries/rpp.svg?branch=master)](https://travis-ci.com/GPUOpen-ProfessionalCompute-Libraries/rpp)
 
-# Radeon Performance Primitives Library
+# ROCm Performance Primitives Library
 
-AMD Radeon Performance Primitives (**RPP**) library is a comprehensive high-performance computer vision library for AMD processors with `HIP`/`OpenCL`/`CPU` back-ends.
+AMD ROCm Performance Primitives (**RPP**) library is a comprehensive high-performance computer vision library for AMD processors with `HIP`/`OpenCL`/`CPU` back-ends.
 
 #### Latest Release
 
@@ -25,7 +25,7 @@ RPP is developed for **Linux** operating system.
 
 * [ROCm supported hardware](https://rocm.github.io/hardware.html)
 
-* [ROCm](https://github.com/RadeonOpenCompute/ROCm#installing-from-amd-rocm-repositories) `5.3` and above
+* [ROCm](https://docs.amd.com/bundle/ROCm-Installation-Guide-v5.4.3/page/How_to_Install_ROCm.html) `5.4.3` and above
 
 * Clang Version `5.0.1` and above
 
@@ -125,7 +125,7 @@ RPP is developed for **Linux** operating system.
 
 ## [Instructions to build the library](#rpp-installation)
 
-The Radeon Performance Primitives (RPP) library has support for three backends: HIP, OpenCL, and CPU:
+The ROCm Performance Primitives (RPP) library has support for three backends: HIP, OpenCL, and CPU:
 
 * Instructions for building RPP with the **HIP** backend **(default)**:
 ```
