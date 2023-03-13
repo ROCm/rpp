@@ -23,7 +23,7 @@ RPP is developed for **Linux** operating system.
   + RHEL `8`/`9`
   + SLES - `15-SP2`
 
-* [ROCm supported hardware](https://rocm.github.io/hardware.html)
+* [ROCm supported hardware](https://docs.amd.com/bundle/Hardware_and_Software_Reference_Guide/page/Hardware_and_Software_Support.html)
 
 * [ROCm](https://docs.amd.com/bundle/ROCm-Installation-Guide-v5.4.3/page/How_to_Install_ROCm.html) `5.4.3` and above
 
