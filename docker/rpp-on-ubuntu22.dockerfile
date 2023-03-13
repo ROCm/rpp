@@ -19,18 +19,13 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -y install initramfs-tools libnuma-de
 # install rpp dependencies - half.hpp & boost
 RUN wget https://sourceforge.net/projects/half/files/half/1.12.0/half-1.12.0.zip && \
         unzip half-1.12.0.zip -d half-files && mkdir -p /usr/local/include/half && cp half-files/include/half.hpp /usr/local/include/half && \
-        wget https://boostorg.jfrog.io/artifactory/main/release/1.72.0/source/boost_1_72_0.tar.bz2 && tar xjvf boost_1_72_0.tar.bz2 && \
-        cd boost_1_72_0 && ./bootstrap.sh --prefix=/usr/local --with-python=python3 && \
-        ./b2 stage -j16 threading=multi link=shared cxxflags="-std=c++11" && \
-        ./b2 install threading=multi link=shared --with-system --with-filesystem && \
-        ./b2 stage -j16 threading=multi link=static cxxflags="-std=c++11 -fpic" cflags="-fpic" && \
-        ./b2 install threading=multi link=static --with-system --with-filesystem
-# install ROCm for rpp OpenCL/HIP dependency
-RUN DEBIAN_FRONTEND=noninteractive apt-get -y install wget sudo initramfs-tools libnuma-dev keyboard-configuration &&  \
-        wget https://repo.radeon.com/amdgpu-install/5.3/ubuntu/jammy/amdgpu-install_5.3.50300-1_all.deb && \
-        sudo apt-get install -y ./amdgpu-install_5.3.50300-1_all.deb && \
-        sudo apt-get update -y && \
-        sudo amdgpu-install -y --usecase=graphics,rocm
+RUN apt-get -y install sqlite3 libsqlite3-dev libtool build-essential && \
+    wget https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/boost_1_80_0.tar.bz2 && tar xjvf boost_1_80_0.tar.bz2 && \
+    cd boost_1_80_0 && ./bootstrap.sh --prefix=/usr/local --with-python=python3 && \
+    ./b2 stage -j16 threading=multi link=shared cxxflags="-std=c++11" && \
+    sudo ./b2 install threading=multi link=shared --with-system --with-filesystem && \
+    ./b2 stage -j16 threading=multi link=static cxxflags="-std=c++11 -fpic" cflags="-fpic" && \
+    sudo ./b2 install threading=multi link=static --with-system --with-filesystem
 
 ENV RPP_WORKSPACE=/workspace
 WORKDIR $RPP_WORKSPACE
