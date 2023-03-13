@@ -1,5 +1,5 @@
 # RPP UNIT TESTS
-The Radeon Performance Primitives library provides a test suite, to run unit tests on its functionalities, executed under 3 backend scenarios - (HOST/OCL/HIP):
+The ROCm Performance Primitives library provides a test suite, to run unit tests on its functionalities, executed under 3 backend scenarios - (HOST/OCL/HIP):
 - HOST backend - (On a CPU with HOST backend)
 - OCL backend - (On a GPU with OpenCL backend)
 - HIP backend - (On a GPU with HIP backend)
