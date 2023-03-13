@@ -18,7 +18,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -y install initramfs-tools libnuma-de
         sudo amdgpu-install -y --usecase=graphics,rocm
 # install rpp dependencies - half.hpp & boost
 RUN wget https://sourceforge.net/projects/half/files/half/1.12.0/half-1.12.0.zip && \
-        unzip half-1.12.0.zip -d half-files && mkdir -p /usr/local/include/half && cp half-files/include/half.hpp /usr/local/include/half && \
+        unzip half-1.12.0.zip -d half-files && mkdir -p /usr/local/include/half && cp half-files/include/half.hpp /usr/local/include/half
 RUN apt-get -y install sqlite3 libsqlite3-dev libtool build-essential && \
     wget https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/boost_1_80_0.tar.bz2 && tar xjvf boost_1_80_0.tar.bz2 && \
     cd boost_1_80_0 && ./bootstrap.sh --prefix=/usr/local --with-python=python3 && \
