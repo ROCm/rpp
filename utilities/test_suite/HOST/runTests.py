@@ -1,6 +1,7 @@
 import os
 import subprocess  # nosec
 import argparse
+import sys
 
 cwd = os.getcwd()
 inFilePath1 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src1')
@@ -40,7 +41,7 @@ def rpp_test_suite_parser_and_validator():
     parser.add_argument('--case_list', nargs = "+", help = "List of case numbers to list", required = False)
     parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Outputs images from tests will be compared with golden outputs - (0 / 1)", required = False)
     parser.add_argument('--decoder_type', type = int, default = 0, help = "Type of Decoder to decode the input data - (0 = TurboJPEG / 1 = OpenCV)")
-    parser.add_argument('--num_iterations', type = int, default= 0, help = " specifies the number of iterations")
+    parser.add_argument('--num_iterations', type = int, default= 0, help = "Specifies the number of iterations for running the performance tests")
     args = parser.parse_args()
 
     # check if the folder exists
@@ -101,21 +102,31 @@ numIterations = args.num_iterations
 if(testType == 0):
     outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_IMAGES_HOST_NEW')
     numIterations = 1
-elif(testType == 1 and numIterations == 0):
+elif(testType == 1):
+    if numIterations == 0:
+        numIterations = 100  #default numIterations for running performance tests
     outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_PERFORMANCE_LOGS_HOST_NEW')
-    numIterations = 100
 dstPath = outFilePath
 
 # run the shell script
 subprocess.call(["./testAllScript.sh", srcPath1, args.input_path2, str(testType), str(numIterations), str(qaMode), str(decoderType), " ".join(caseList)])  # nosec
 
 # print the results of qa tests
+supportedCaseList = ['0', '2', '4', '13', '31', '36', '38']
+supportedCases = 0
+for num in caseList:
+    if num in supportedCaseList:
+        supportedCases += 1
+caseInfo = "Tests are run for " + str(supportedCases) + " supported cases out of the " + str(len(caseList)) + " cases requested"
 if qaMode:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
-    f = open(qaFilePath, 'r')
+    f = open(qaFilePath, 'r+')
     print("---------------------------------- Results of QA Test ----------------------------------\n")
     for line in f:
-        print(line)
+        sys.stdout.write(line)
+        sys.stdout.flush()
+    f.write(caseInfo)
+    print("\n-------------- " + caseInfo + " --------------")
 
 layoutDict ={0:"PKD3", 1:"PLN3", 2:"PLN1"}
 # unit tests

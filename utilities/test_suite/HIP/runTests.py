@@ -1,6 +1,7 @@
 import os
 import subprocess  # nosec
 import argparse
+import sys
 
 cwd = os.getcwd()
 inFilePath1 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src1')
@@ -56,7 +57,7 @@ def rpp_test_suite_parser_and_validator():
     parser.add_argument('--profiling', type = str , default='NO', help='Run with profiler? - (YES/NO)', required=False)
     parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Outputs images from tests will be compared with golden outputs - (0 / 1)", required = False)
     parser.add_argument('--decoder_type', type = int, default = 0, help = "Type of Decoder to decode the input data - (0 = TurboJPEG / 1 = OpenCV)")
-    parser.add_argument('--num_iterations', type = int, default= 0, help = " specifies the number of iterations")
+    parser.add_argument('--num_iterations', type = int, default= 0, help = "Specifies the number of iterations for running the performance tests")
     args = parser.parse_args()
 
     # check if the folder exists
@@ -117,9 +118,10 @@ numIterations = args.num_iterations
 if(testType == 0):
     outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_IMAGES_HIP_NEW')
     numIterations = 1
-elif(testType == 1 and numIterations == 0):
+elif(testType == 1):
+    if numIterations == 0:
+        numIterations = 100 #default numIterations for running performance tests
     outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_PERFORMANCE_LOGS_HIP_NEW')
-    numIterations = 100
 dstPath = outFilePath
 
 if(testType == 0):
@@ -327,9 +329,18 @@ else:
             print("Unable to open results in " + RESULTS_DIR + "/consolidated_results_" + TYPE + ".stats.csv")
 
 # print the results of qa tests
+supportedCaseList = ['0', '2', '4', '13', '31', '36', '38']
+supportedCases = 0
+for num in caseList:
+    if num in supportedCaseList:
+        supportedCases += 1
+caseInfo = "Tests are run for " + str(supportedCases) + " supported cases out of the " + str(len(caseList)) + " cases requested"
 if qaMode:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
-    f = open(qaFilePath, 'r')
+    f = open(qaFilePath, 'r+')
     print("---------------------------------- Results of QA Test ----------------------------------\n")
     for line in f:
-        print(line)
+        sys.stdout.write(line)
+        sys.stdout.flush()
+    f.write(caseInfo)
+    print("\n-------------- " + caseInfo + " --------------")
