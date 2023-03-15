@@ -608,7 +608,7 @@ int main(int argc, char **argv)
     avgWallTime *= 1000;
     if (testType == 0)
     {
-        cout << "\n\nGPU Backend Wall Time: " << wallTime <<" ms"<< endl;
+        cout << "\n\nGPU Backend Wall Time: " << wallTime <<" ms/batch"<< endl;
 
         // Reconvert other bit depths to 8u for output display purposes
         if (inputBitDepth == 0)
@@ -705,7 +705,7 @@ int main(int argc, char **argv)
     {
         // Display measured times
         avgWallTime /= numIterations;
-        cout << fixed <<"\n\nmax,min,avg in ms = " << maxWallTime << "," << minWallTime << "," << avgWallTime << endl;
+        cout << fixed <<"\n\nmax,min,avg in ms/batch = " << maxWallTime << "," << minWallTime << "," << avgWallTime << endl;
     }
 
     // Free memory

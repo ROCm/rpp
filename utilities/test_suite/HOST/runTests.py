@@ -40,6 +40,7 @@ def rpp_test_suite_parser_and_validator():
     parser.add_argument('--case_list', nargs = "+", help = "List of case numbers to list", required = False)
     parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Outputs images from tests will be compared with golden outputs - (0 / 1)", required = False)
     parser.add_argument('--decoder_type', type = int, default = 0, help = "Type of Decoder to decode the input data - (0 = TurboJPEG / 1 = OpenCV)")
+    parser.add_argument('--num_iterations', type = int, default= 0, help = " specifies the number of iterations")
     args = parser.parse_args()
 
     # check if the folder exists
@@ -64,6 +65,9 @@ def rpp_test_suite_parser_and_validator():
         exit(0)
     elif args.case_list is not None and args.case_start > 0 and args.case_end < 38:
         print("Invalid input! Please provide only 1 option between case_list, case_start and case_end")
+        exit(0)
+    elif args.num_iterations < 0:
+        print("Number of Iterations must be greater than 0. Aborting!")
         exit(0)
 
     if args.case_list is None:
@@ -91,12 +95,13 @@ testType = args.test_type
 caseList = args.case_list
 qaMode = args.qa_mode
 decoderType = args.decoder_type
+numIterations = args.num_iterations
 
 # set the output folders and number of runs based on type of test (unit test / performance test)
 if(testType == 0):
     outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_IMAGES_HOST_NEW')
     numIterations = 1
-else:
+elif(testType == 1 and numIterations == 0):
     outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_PERFORMANCE_LOGS_HOST_NEW')
     numIterations = 100
 dstPath = outFilePath
@@ -157,14 +162,14 @@ elif (testType == 1):
                     minVals.extend([" ", " ", " "])
                     avgVals.extend([" ", " ", " "])
 
-            if "max,min,avg in ms" in line:
+            if "max,min,avg in ms/batch" in line:
                 split_word_start = "Running "
                 split_word_end = " " +str(numIterations)
                 prevLine = prevLine.partition(split_word_start)[2].partition(split_word_end)[0]
                 if prevLine not in functions:
                     functions.append(prevLine)
                     frames.append(numIterations)
-                    split_word_start = "max,min,avg in ms = "
+                    split_word_start = "max,min,avg in ms/batch = "
                     split_word_end = "\n"
                     stats = line.partition(split_word_start)[2].partition(split_word_end)[0].split(",")
                     maxVals.append(stats[0])
@@ -179,7 +184,7 @@ elif (testType == 1):
         print("Functionalities - ", funcCount)
 
         # Print summary of log
-        print("\n\nFunctionality\t\t\t\t\t\tFrames Count\tmax(ms)\t\tmin(ms)\t\tavg(ms)\n")
+        print("\n\nFunctionality\t\t\t\t\t\tFrames Count\tmax(ms/batch)\t\tmin(ms/batch)\t\tavg(ms/batch)\n")
         if len(functions) != 0:
             maxCharLength = len(max(functions, key=len))
             functions = [x + (' ' * (maxCharLength - len(x))) for x in functions]

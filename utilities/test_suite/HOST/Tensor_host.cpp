@@ -601,8 +601,8 @@ int main(int argc, char **argv)
     if (testType == 0)
     {
         cout <<"\n\n";
-        cout <<"CPU Backend Clock Time: "<< cpuTime <<" ms"<< endl;
-        cout <<"CPU Backend Wall Time: "<< wallTime <<" ms"<< endl;
+        cout <<"CPU Backend Clock Time: "<< cpuTime <<" ms/batch"<< endl;
+        cout <<"CPU Backend Wall Time: "<< wallTime <<" ms/batch"<< endl;
 
        // Reconvert other bit depths to 8u for output display purposes
         if (inputBitDepth == 0)
@@ -691,7 +691,7 @@ int main(int argc, char **argv)
     {
         // Display measured times
         avgWallTime /= numIterations;
-        cout << fixed << "\n\nmax,min,avg in ms = " << maxWallTime << "," << minWallTime << "," << avgWallTime << endl;
+        cout << fixed << "\n\nmax,min,avg in ms/batch = " << maxWallTime << "," << minWallTime << "," << avgWallTime << endl;
     }
 
 
