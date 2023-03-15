@@ -334,8 +334,8 @@ int main(int argc, char **argv)
 
         for (int i = 0; i < ioBufferSize; i++)
         {
-            *inputf16Temp++ = (half)(((float)*inputTemp++) * conversionFactor);
-            *inputf16SecondTemp++ = (half)(((float)*inputSecondTemp++) * conversionFactor);
+            *inputf16Temp++ = static_cast<half>((static_cast<float>(*inputTemp++)) * conversionFactor);
+            *inputf16SecondTemp++ = static_cast<half>((static_cast<float>(*inputSecondTemp++)) * conversionFactor);
         }
     }
     else if (inputBitDepth == 2)
@@ -349,8 +349,8 @@ int main(int argc, char **argv)
 
         for (int i = 0; i < ioBufferSize; i++)
         {
-            *inputf32Temp++ = ((Rpp32f)*inputTemp++) * conversionFactor;
-            *inputf32SecondTemp++ = ((Rpp32f)*inputSecondTemp++) * conversionFactor;
+            *inputf32Temp++ = (static_cast<Rpp32f>(*inputTemp++)) * conversionFactor;
+            *inputf32SecondTemp++ = (static_cast<Rpp32f>(*inputSecondTemp++)) * conversionFactor;
         }
     }
     else if (inputBitDepth == 5)
@@ -365,8 +365,8 @@ int main(int argc, char **argv)
 
         for (int i = 0; i < ioBufferSize; i++)
         {
-            *inputi8Temp++ = (Rpp8s) (((Rpp32s) *inputTemp++) - 128);
-            *inputi8SecondTemp++ = (Rpp8s) (((Rpp32s) *inputSecondTemp++) - 128);
+            *inputi8Temp++ = static_cast<Rpp8s>((static_cast<Rpp32s>(*inputTemp++)) - 128);
+            *inputi8SecondTemp++ = static_cast<Rpp8s>((static_cast<Rpp32s>(*inputSecondTemp++)) - 128);
         }
     }
 
@@ -622,10 +622,10 @@ int main(int argc, char **argv)
             Rpp8u *outputTemp;
             outputTemp = outputu8 + dstDescPtr->offsetInBytes;
             half *outputf16Temp;
-            outputf16Temp = (half *)((Rpp8u *)output + dstDescPtr->offsetInBytes);
+            outputf16Temp = reinterpret_cast<half *>(static_cast<Rpp8u *>(output) + dstDescPtr->offsetInBytes);
             for (int i = 0; i < oBufferSize; i++)
             {
-                *outputTemp = (Rpp8u)validate_pixel_range((float)*outputf16Temp * invConversionFactor);
+                *outputTemp = static_cast<Rpp8u>(validate_pixel_range(static_cast<float>(*outputf16Temp) * invConversionFactor));
                 outputf16Temp++;
                 outputTemp++;
             }
@@ -636,10 +636,10 @@ int main(int argc, char **argv)
             Rpp8u *outputTemp;
             outputTemp = outputu8 + dstDescPtr->offsetInBytes;
             Rpp32f *outputf32Temp;
-            outputf32Temp = (Rpp32f *)((Rpp8u *)output + dstDescPtr->offsetInBytes);
+            outputf32Temp = reinterpret_cast<Rpp32f *>(static_cast<Rpp8u *>(output) + dstDescPtr->offsetInBytes);
             for (int i = 0; i < oBufferSize; i++)
             {
-                *outputTemp = (Rpp8u)validate_pixel_range(*outputf32Temp * invConversionFactor);
+                *outputTemp = static_cast<Rpp8u>(validate_pixel_range(*outputf32Temp * invConversionFactor));
                 outputf32Temp++;
                 outputTemp++;
             }
@@ -648,10 +648,10 @@ int main(int argc, char **argv)
         {
             hipMemcpy(output, d_output, outputBufferSize, hipMemcpyDeviceToHost);
             Rpp8u *outputTemp = outputu8 + dstDescPtr->offsetInBytes;
-            Rpp8s *outputi8Temp = (Rpp8s *)output + dstDescPtr->offsetInBytes;
+            Rpp8s *outputi8Temp = static_cast<Rpp8s *>(output) + dstDescPtr->offsetInBytes;
             for (int i = 0; i < oBufferSize; i++)
             {
-                *outputTemp = (Rpp8u) validate_pixel_range(((Rpp32s) *outputi8Temp) + 128);
+                *outputTemp = static_cast<Rpp8u>(validate_pixel_range((static_cast<Rpp32s>(*outputi8Temp)) + 128));
                 outputi8Temp++;
                 outputTemp++;
             }
@@ -663,7 +663,7 @@ int main(int argc, char **argv)
             std::ofstream refFile;
             refFile.open(func + ".csv");
             for (int i = 0; i < oBufferSize; i++)
-                refFile<<(int)*(outputu8 + i)<<",";
+                refFile<<static_cast<int>(*(outputu8 + i))<<",";
             refFile.close();
         }
 
@@ -681,7 +681,7 @@ int main(int argc, char **argv)
         // Check if the ROI values for each input is within the bounds of the max buffer allocated
         RpptROI roiDefault;
         RpptROIPtr roiPtrDefault = &roiDefault;
-        roiPtrDefault->xywhROI =  {0, 0, (int)dstDescPtr->w, (int)dstDescPtr->h};
+        roiPtrDefault->xywhROI =  {0, 0, static_cast<int>(dstDescPtr->w), static_cast<int>(dstDescPtr->h)};
         for (int i = 0; i < dstDescPtr->n; i++)
         {
             roiTensorPtrSrc[i].xywhROI.roiWidth = std::min(roiPtrDefault->xywhROI.roiWidth - roiTensorPtrSrc[i].xywhROI.xy.x, roiTensorPtrSrc[i].xywhROI.roiWidth);

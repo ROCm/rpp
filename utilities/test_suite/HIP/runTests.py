@@ -295,7 +295,7 @@ else:
                                 continue
 
             new_file.close()
-            subprocess.run(['chown', '{}:{}'.format(os.getuid(), os.getgid()), RESULTS_DIR + "/consolidated_results_" + TYPE + ".stats.csv"])
+            subprocess.run(['chown', '{}:{}'.format(os.getuid(), os.getgid()), RESULTS_DIR + "/consolidated_results_" + TYPE + ".stats.csv"])  # nosec
         try:
             import pandas as pd
             pd.options.display.max_rows = None
