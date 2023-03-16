@@ -40,7 +40,7 @@ inline size_t get_size_of_data_type(RpptDataType dataType)
 int main(int argc, char **argv)
 {
     // Handle inputs
-    const int MIN_ARG_COUNT = 11;
+    const int MIN_ARG_COUNT = 13;
 
     char *src = argv[1];
     char *srcSecond = argv[2];
@@ -64,7 +64,7 @@ int main(int argc, char **argv)
 
     if (verbosity == 1)
     {
-        printf("\nInputs for this test case are:");
+       printf("\nInputs for this test case are:");
         printf("\nsrc1 = %s", argv[1]);
         printf("\nsrc2 = %s", argv[2]);
         if (testType == 0)
@@ -72,14 +72,17 @@ int main(int argc, char **argv)
         printf("\nu8 / f16 / f32 / u8->f16 / u8->f32 / i8 / u8->i8 (0/1/2/3/4/5/6) = %s", argv[4]);
         printf("\noutputFormatToggle (pkd->pkd = 0 / pkd->pln = 1) = %s", argv[5]);
         printf("\ncase number (0:86) = %s", argv[6]);
-        printf("\nNumber of times to run = %s", argv[8]);
-        printf("\nUnit test/Performance test - 0/1 = %s", argv[9]);
+        printf("\nnumber of times to run = %s", argv[8]);
+        printf("\ntest type - (0 = unit tests / 1 = performance tests) = %s", argv[9]);
+        printf("\nlayout type - (0 = PKD3/ 1 = PLN3/ 2 = PLN1) = %s", argv[10]);
+        printf("\nqa mode - 0/1 = %s", argv[12]);
+        printf("\ndecoder type - (0 = TurboJPEG / 1 = OpenCV) = %s", argv[13]);
     }
 
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
-        printf("\nUsage: <inputPath folder> <src2 folder (place same as inputPath folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:86> <number of iterations > 0> <verbosity = 0/1>>\n");
+        printf("\nUsage: <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:86> <number of iterations > 0> <verbosity = 0/1>>\n");
     }
 
     if (layoutType == 2)
