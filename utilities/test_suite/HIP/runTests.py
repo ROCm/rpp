@@ -41,9 +41,9 @@ def create_layout_directories(dst_path, layout_dict):
 
 def get_log_file_list():
     return [
-        "../OUTPUT_PERFORMANCE_LOGS_HOST_NEW/Tensor_host_pkd3_raw_performance_log.txt",
-        "../OUTPUT_PERFORMANCE_LOGS_HOST_NEW/Tensor_host_pln3_raw_performance_log.txt",
-        "../OUTPUT_PERFORMANCE_LOGS_HOST_NEW/Tensor_host_pln1_raw_performance_log.txt"
+        "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW/Tensor_hip_pkd3_raw_performance_log.txt",
+        "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW/Tensor_hip_pln3_raw_performance_log.txt",
+        "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW/Tensor_hip_pln1_raw_performance_log.txt"
     ]
 
 def rpp_test_suite_parser_and_validator():
@@ -52,7 +52,7 @@ def rpp_test_suite_parser_and_validator():
     parser.add_argument("--input_path2", type = str, default = inFilePath2, help = "Path to the input folder 2")
     parser.add_argument("--case_start", type = int, default = 0, help="Testing range starting case # - (0:38)")
     parser.add_argument("--case_end", type = int, default = 38, help="Testing range ending case # - (0:38)")
-    parser.add_argument('--test_type', type = int, default = 0, help="Type of Test - (0 = Unittests / 1 = Performancetests)")
+    parser.add_argument('--test_type', type = int, default = 0, help="Type of Test - (0 = Unit tests / 1 = Performance tests)")
     parser.add_argument('--case_list', nargs = "+", help="List of case numbers to list", required=False)
     parser.add_argument('--profiling', type = str , default='NO', help='Run with profiler? - (YES/NO)', required=False)
     parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Outputs images from tests will be compared with golden outputs - (0 / 1)", required = False)
@@ -147,9 +147,9 @@ else:
             # Opening log file
             try:
                 f = open(log_file,"r")
-                print("\n\n\nOpened log file -> ", log_file)
+                print("\n\n\nOpened log file -> " + log_file)
             except IOError:
-                print("Skipping file -> ", log_file)
+                print("Skipping file -> " + log_file)
                 continue
 
             stats = []
@@ -171,14 +171,14 @@ else:
                         minVals.extend([" ", " ", " "])
                         avgVals.extend([" ", " ", " "])
 
-                if "max,min,avg in ms/batch" in line:
+                if "max,min,avg wall times in ms/batch" in line:
                     split_word_start = "Running "
                     split_word_end = " "+ str(numIterations)
                     prevLine = prevLine.partition(split_word_start)[2].partition(split_word_end)[0]
                     if prevLine not in functions:
                         functions.append(prevLine)
                         frames.append(str(numIterations))
-                        split_word_start = "max,min,avg in ms/batch = "
+                        split_word_start = "max,min,avg wall times in ms/batch = "
                         split_word_end = "\n"
                         stats = line.partition(split_word_start)[2].partition(split_word_end)[0].split(",")
                         maxVals.append(stats[0])
@@ -190,7 +190,7 @@ else:
                     prevLine = line
 
             # Print log lengths
-            print("Functionalities - ", funcCount)
+            print("Functionalities - " + funcCount)
 
             # Print summary of log
             print("\n\nFunctionality\t\t\t\t\t\tFrames Count\tmax(ms/batch)\t\tmin(ms/batch)\t\tavg(ms/batch)\n")
@@ -198,7 +198,7 @@ else:
                 maxCharLength = len(max(functions, key=len))
                 functions = [x + (' ' * (maxCharLength - len(x))) for x in functions]
                 for i, func in enumerate(functions):
-                    print(func, "\t", frames[i], "\t\t", maxVals[i], "\t", minVals[i], "\t", avgVals[i])
+                    print(func + "\t" + str(frames[i]) + "\t\t" + str(maxVals[i]) + "\t" + str(minVals[i]) + "\t" + str(avgVals[i]))
             else:
                 print("No variants under this category")
 
@@ -302,7 +302,7 @@ else:
                                 continue
 
             new_file.close()
-            subprocess.run(['chown', '{}:{}'.format(os.getuid(), os.getgid()), RESULTS_DIR + "/consolidated_results_" + TYPE + ".stats.csv"])  # nosec
+            subprocess.call(['chown', '{}:{}'.format(os.getuid(), os.getgid()), RESULTS_DIR + "/consolidated_results_" + TYPE + ".stats.csv"])  # nosec
         try:
             import pandas as pd
             pd.options.display.max_rows = None
@@ -335,7 +335,7 @@ for num in caseList:
     if num in supportedCaseList:
         supportedCases += 1
 caseInfo = "Tests are run for " + str(supportedCases) + " supported cases out of the " + str(len(caseList)) + " cases requested"
-if qaMode:
+if qaMode and testType == 0:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
     f = open(qaFilePath, 'r+')
     print("---------------------------------- Results of QA Test ----------------------------------\n")
