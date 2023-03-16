@@ -1,6 +1,7 @@
 import os
 import subprocess  # nosec
 import argparse
+import sys
 
 cwd = os.getcwd()
 inFilePath1 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src1')
@@ -27,17 +28,36 @@ def validate_path(input_path):
     if not os.path.isdir(input_path):
         raise ValueError("path " + input_path + " is not a directory.")
 
+def create_layout_directories(dst_path, layout_dict):
+    for layout in range(3):
+        current_layout = layout_dict[layout]
+        try:
+            os.makedirs(dst_path + '/' + current_layout)
+        except FileExistsError:
+            pass
+        folder_list = [f for f in os.listdir(dst_path) if current_layout.lower() in f]
+        for folder in folder_list:
+            os.rename(dst_path + '/' + folder, dst_path + '/' + current_layout +  '/' + folder)
+
+def get_log_file_list():
+    return [
+        "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW/Tensor_hip_pkd3_raw_performance_log.txt",
+        "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW/Tensor_hip_pln3_raw_performance_log.txt",
+        "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW/Tensor_hip_pln1_raw_performance_log.txt"
+    ]
+
 def rpp_test_suite_parser_and_validator():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_path1", type = str, default = inFilePath1, help = "Path to the input folder 1")
     parser.add_argument("--input_path2", type = str, default = inFilePath2, help = "Path to the input folder 2")
     parser.add_argument("--case_start", type = int, default = 0, help="Testing range starting case # - (0:38)")
     parser.add_argument("--case_end", type = int, default = 38, help="Testing range ending case # - (0:38)")
-    parser.add_argument('--test_type', type = int, default = 0, help="Type of Test - (0 = Unittests / 1 = Performancetests)")
+    parser.add_argument('--test_type', type = int, default = 0, help="Type of Test - (0 = Unit tests / 1 = Performance tests)")
     parser.add_argument('--case_list', nargs = "+", help="List of case numbers to list", required=False)
     parser.add_argument('--profiling', type = str , default='NO', help='Run with profiler? - (YES/NO)', required=False)
     parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Outputs images from tests will be compared with golden outputs - (0 / 1)", required = False)
     parser.add_argument('--decoder_type', type = int, default = 0, help = "Type of Decoder to decode the input data - (0 = TurboJPEG / 1 = OpenCV)")
+    parser.add_argument('--num_iterations', type = int, default= 0, help = "Specifies the number of iterations for running the performance tests")
     args = parser.parse_args()
 
     # check if the folder exists
@@ -62,6 +82,9 @@ def rpp_test_suite_parser_and_validator():
         exit(0)
     elif args.case_list is not None and args.case_start > 0 and args.case_end < 38:
         print("Invalid input! Please provide only 1 option between case_list, case_start and case_end")
+        exit(0)
+    elif args.num_iterations < 0:
+        print("Number of Iterations must be greater than 0. Aborting!")
         exit(0)
 
     if args.case_list is None:
@@ -90,35 +113,24 @@ caseList = args.case_list
 profilingOption = args.profiling
 qaMode = args.qa_mode
 decoderType = args.decoder_type
+numIterations = args.num_iterations
 
 if(testType == 0):
     outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_IMAGES_HIP_NEW')
     numIterations = 1
-else:
+elif(testType == 1):
+    if numIterations == 0:
+        numIterations = 100 #default numIterations for running performance tests
     outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_PERFORMANCE_LOGS_HIP_NEW')
-    numIterations = 100
 dstPath = outFilePath
 
 if(testType == 0):
     subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "0", str(qaMode), str(decoderType), " ".join(caseList)])  # nosec
 
     layoutDict ={0:"PKD3", 1:"PLN3", 2:"PLN1"}
-
-    for layout in range(3):
-        currentLayout = layoutDict[layout]
-        try:
-            os.makedirs(dstPath + '/' + currentLayout)
-        except FileExistsError:
-            pass
-        folderList = [f for f in os.listdir(dstPath) if currentLayout.lower() in f]
-        for folder in folderList:
-            os.rename(dstPath + '/' + folder, dstPath + '/' + currentLayout +  '/' + folder)
+    create_layout_directories(dstPath, layoutDict)
 else:
-    log_file_list = [
-    "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW/Tensor_hip_pkd3_raw_performance_log.txt",
-    "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW/Tensor_hip_pln3_raw_performance_log.txt",
-    "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW/Tensor_hip_pln1_raw_performance_log.txt"
-    ]
+    log_file_list = get_log_file_list()
 
     functionality_group_list = [
     "color_augmentations",
@@ -135,9 +147,9 @@ else:
             # Opening log file
             try:
                 f = open(log_file,"r")
-                print("\n\n\nOpened log file -> ", log_file)
+                print("\n\n\nOpened log file -> " + log_file)
             except IOError:
-                print("Skipping file -> ", log_file)
+                print("Skipping file -> " + log_file)
                 continue
 
             stats = []
@@ -159,14 +171,14 @@ else:
                         minVals.extend([" ", " ", " "])
                         avgVals.extend([" ", " ", " "])
 
-                if "max,min,avg in ms" in line:
+                if "max,min,avg wall times in ms/batch" in line:
                     split_word_start = "Running "
                     split_word_end = " "+ str(numIterations)
                     prevLine = prevLine.partition(split_word_start)[2].partition(split_word_end)[0]
                     if prevLine not in functions:
                         functions.append(prevLine)
                         frames.append(str(numIterations))
-                        split_word_start = "max,min,avg in ms = "
+                        split_word_start = "max,min,avg wall times in ms/batch = "
                         split_word_end = "\n"
                         stats = line.partition(split_word_start)[2].partition(split_word_end)[0].split(",")
                         maxVals.append(stats[0])
@@ -178,15 +190,15 @@ else:
                     prevLine = line
 
             # Print log lengths
-            print("Functionalities - ", funcCount)
+            print("Functionalities - " + funcCount)
 
             # Print summary of log
-            print("\n\nFunctionality\t\t\t\t\t\tFrames Count\tmax(ms)\t\tmin(ms)\t\tavg(ms)\n")
+            print("\n\nFunctionality\t\t\t\t\t\tFrames Count\tmax(ms/batch)\t\tmin(ms/batch)\t\tavg(ms/batch)\n")
             if len(functions) != 0:
                 maxCharLength = len(max(functions, key=len))
                 functions = [x + (' ' * (maxCharLength - len(x))) for x in functions]
                 for i, func in enumerate(functions):
-                    print(func, "\t", frames[i], "\t\t", maxVals[i], "\t", minVals[i], "\t", avgVals[i])
+                    print(func + "\t" + str(frames[i]) + "\t\t" + str(maxVals[i]) + "\t" + str(minVals[i]) + "\t" + str(avgVals[i]))
             else:
                 print("No variants under this category")
 
@@ -290,8 +302,7 @@ else:
                                 continue
 
             new_file.close()
-            os.system('chown $USER:$USER ' + RESULTS_DIR + "/consolidated_results_" + TYPE + ".stats.csv")
-
+            subprocess.call(['chown', '{}:{}'.format(os.getuid(), os.getgid()), RESULTS_DIR + "/consolidated_results_" + TYPE + ".stats.csv"])  # nosec
         try:
             import pandas as pd
             pd.options.display.max_rows = None
@@ -318,9 +329,18 @@ else:
             print("Unable to open results in " + RESULTS_DIR + "/consolidated_results_" + TYPE + ".stats.csv")
 
 # print the results of qa tests
-if qaMode:
+supportedCaseList = ['0', '2', '4', '13', '31', '36', '38']
+supportedCases = 0
+for num in caseList:
+    if num in supportedCaseList:
+        supportedCases += 1
+caseInfo = "Tests are run for " + str(supportedCases) + " supported cases out of the " + str(len(caseList)) + " cases requested"
+if qaMode and testType == 0:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
-    f = open(qaFilePath, 'r')
+    f = open(qaFilePath, 'r+')
     print("---------------------------------- Results of QA Test ----------------------------------\n")
     for line in f:
-        print(line)
+        sys.stdout.write(line)
+        sys.stdout.flush()
+    f.write(caseInfo)
+    print("\n-------------- " + caseInfo + " --------------")

@@ -34,7 +34,7 @@ std::map<int, string> augmentationMap =
 template <typename T>
 inline T validate_pixel_range(T pixel)
 {
-    pixel = (pixel < (Rpp32f)0) ? ((Rpp32f)0) : ((pixel < (Rpp32f)255) ? pixel : ((Rpp32f)255));
+    pixel = (pixel < static_cast<Rpp32f>(0)) ? (static_cast<Rpp32f>(0)) : ((pixel < static_cast<Rpp32f>(255)) ? pixel : (static_cast<Rpp32f>(255)));
     return pixel;
 }
 
