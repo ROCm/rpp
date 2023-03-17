@@ -46,6 +46,38 @@ def get_log_file_list():
         "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW/Tensor_hip_pln1_raw_performance_log.txt"
     ]
 
+# Functionality group finder
+def func_group_finder(case_number):
+    if case_number < 5 or case_number == 13 or case_number == 36:
+        return "color_augmentations"
+    elif case_number == 8 or case_number == 30 or case_number == 83 or case_number == 84:
+        return "effects_augmentations"
+    elif case_number < 40:
+        return "geometric_augmentations"
+    elif case_number < 42:
+        return "morphological_operations"
+    elif case_number == 49:
+        return "filter_augmentations"
+    elif case_number < 86:
+        return "data_exchange_operations"
+    else:
+        return "miscellaneous"
+
+def generate_performance_reports(d_counter, TYPE_LIST):
+    import pandas as pd
+    pd.options.display.max_rows = None
+    # Generate performance report
+    for TYPE in TYPE_LIST:
+        print("\n\n\nKernels tested - ", d_counter[TYPE], "\n\n")
+        df = pd.read_csv(RESULTS_DIR + "/consolidated_results_" + TYPE + ".stats.csv")
+        df["AverageMs"] = df["AverageNs"] / 1000000
+        dfPrint = df.drop(['Percentage'], axis=1)
+        dfPrint["HIP Kernel Name"] = dfPrint.iloc[:,0].str.lstrip("Hip_")
+        dfPrint_noIndices = dfPrint.astype(str)
+        dfPrint_noIndices.replace(['0', '0.0'], '', inplace=True)
+        dfPrint_noIndices = dfPrint_noIndices.to_string(index=False)
+        print(dfPrint_noIndices)
+
 def rpp_test_suite_parser_and_validator():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_path1", type = str, default = inFilePath1, help = "Path to the input folder 1")
@@ -208,23 +240,6 @@ else:
         subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "1", str(qaMode), str(decoderType), " ".join(caseList)])  # nosec
         NEW_FUNC_GROUP_LIST = [0, 15, 20, 29, 36, 40, 42, 49, 56, 65, 69]
 
-        # Functionality group finder
-        def func_group_finder(case_number):
-            if case_number < 5 or case_number == 13 or case_number == 36:
-                return "color_augmentations"
-            elif case_number == 8 or case_number == 30 or case_number == 83 or case_number == 84:
-                return "effects_augmentations"
-            elif case_number < 40:
-                return "geometric_augmentations"
-            elif case_number < 42:
-                return "morphological_operations"
-            elif case_number == 49:
-                return "filter_augmentations"
-            elif case_number < 86:
-                return "data_exchange_operations"
-            else:
-                return "miscellaneous"
-
         RESULTS_DIR = "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW"
         print("RESULTS_DIR = " + RESULTS_DIR)
         CONSOLIDATED_FILE_TENSOR_PKD3 = RESULTS_DIR + "/consolidated_results_Tensor_PKD3.stats.csv"
@@ -304,20 +319,7 @@ else:
             new_file.close()
             subprocess.call(['chown', '{}:{}'.format(os.getuid(), os.getgid()), RESULTS_DIR + "/consolidated_results_" + TYPE + ".stats.csv"])  # nosec
         try:
-            import pandas as pd
-            pd.options.display.max_rows = None
-
-            # Generate performance report
-            for TYPE in TYPE_LIST:
-                print("\n\n\nKernels tested - ", d_counter[TYPE], "\n\n")
-                df = pd.read_csv(RESULTS_DIR + "/consolidated_results_" + TYPE + ".stats.csv")
-                df["AverageMs"] = df["AverageNs"] / 1000000
-                dfPrint = df.drop(['Percentage'], axis=1)
-                dfPrint["HIP Kernel Name"] = dfPrint.iloc[:,0].str.lstrip("Hip_")
-                dfPrint_noIndices = dfPrint.astype(str)
-                dfPrint_noIndices.replace(['0', '0.0'], '', inplace=True)
-                dfPrint_noIndices = dfPrint_noIndices.to_string(index=False)
-                print(dfPrint_noIndices)
+            generate_performance_reports(d_counter, TYPE_LIST)
 
         except ImportError:
             print("\nPandas not available! Results of GPU profiling experiment are available in the following files:\n" + \
