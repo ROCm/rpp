@@ -60,7 +60,8 @@ rppi_box_filter_u8_pln1_batchPD_host(RppPtr_t srcPtr,
                                  rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                                  rpp::deref(rppHandle).GetBatchSize(),
                                  RPPI_CHN_PLANAR,
-                                 1);
+                                 1,
+                                 rpp::deref(rppHandle).GetNumThreads());
 
     return RPP_SUCCESS;
 }
@@ -90,7 +91,8 @@ rppi_box_filter_u8_pln3_batchPD_host(RppPtr_t srcPtr,
                                  rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                                  rpp::deref(rppHandle).GetBatchSize(),
                                  RPPI_CHN_PLANAR,
-                                 3);
+                                 3,
+                                 rpp::deref(rppHandle).GetNumThreads());
 
     return RPP_SUCCESS;
 }
@@ -120,7 +122,8 @@ rppi_box_filter_u8_pkd3_batchPD_host(RppPtr_t srcPtr,
                                  rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                                  rpp::deref(rppHandle).GetBatchSize(),
                                  RPPI_CHN_PACKED,
-                                 3);
+                                 3,
+                                 rpp::deref(rppHandle).GetNumThreads());
 
     return RPP_SUCCESS;
 }
@@ -152,7 +155,8 @@ rppi_sobel_filter_u8_pln1_batchPD_host(RppPtr_t srcPtr,
                                    rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                                    rpp::deref(rppHandle).GetBatchSize(),
                                    RPPI_CHN_PLANAR,
-                                   1);
+                                   1,
+                                   rpp::deref(rppHandle).GetNumThreads());
 
     return RPP_SUCCESS;
 }
@@ -182,7 +186,8 @@ rppi_sobel_filter_u8_pln3_batchPD_host(RppPtr_t srcPtr,
                                    rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                                    rpp::deref(rppHandle).GetBatchSize(),
                                    RPPI_CHN_PLANAR,
-                                   3);
+                                   3,
+                                   rpp::deref(rppHandle).GetNumThreads());
 
     return RPP_SUCCESS;
 }
@@ -212,7 +217,8 @@ rppi_sobel_filter_u8_pkd3_batchPD_host(RppPtr_t srcPtr,
                                    rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                                    rpp::deref(rppHandle).GetBatchSize(),
                                    RPPI_CHN_PACKED,
-                                   3);
+                                   3,
+                                   rpp::deref(rppHandle).GetNumThreads());
 
     return RPP_SUCCESS;
 }
@@ -244,7 +250,8 @@ rppi_median_filter_u8_pln1_batchPD_host(RppPtr_t srcPtr,
                                     rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                                     rpp::deref(rppHandle).GetBatchSize(),
                                     RPPI_CHN_PLANAR,
-                                    1);
+                                    1,
+                                    rpp::deref(rppHandle).GetNumThreads());
 
     return RPP_SUCCESS;
 }
@@ -274,7 +281,8 @@ rppi_median_filter_u8_pln3_batchPD_host(RppPtr_t srcPtr,
                                     rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                                     rpp::deref(rppHandle).GetBatchSize(),
                                     RPPI_CHN_PLANAR,
-                                    3);
+                                    3,
+                                    rpp::deref(rppHandle).GetNumThreads());
 
     return RPP_SUCCESS;
 }
@@ -304,7 +312,8 @@ rppi_median_filter_u8_pkd3_batchPD_host(RppPtr_t srcPtr,
                                     rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                                     rpp::deref(rppHandle).GetBatchSize(),
                                     RPPI_CHN_PACKED,
-                                    3);
+                                    3,
+                                    rpp::deref(rppHandle).GetNumThreads());
 
     return RPP_SUCCESS;
 }
@@ -336,7 +345,8 @@ rppi_non_max_suppression_u8_pln1_batchPD_host(RppPtr_t srcPtr,
                                           rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                                           rpp::deref(rppHandle).GetBatchSize(),
                                           RPPI_CHN_PLANAR,
-                                          1);
+                                          1,
+                                          rpp::deref(rppHandle).GetNumThreads());
 
     return RPP_SUCCESS;
 }
@@ -366,7 +376,8 @@ rppi_non_max_suppression_u8_pln3_batchPD_host(RppPtr_t srcPtr,
                                           rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                                           rpp::deref(rppHandle).GetBatchSize(),
                                           RPPI_CHN_PLANAR,
-                                          3);
+                                          3,
+                                          rpp::deref(rppHandle).GetNumThreads());
 
     return RPP_SUCCESS;
 }
@@ -396,7 +407,8 @@ rppi_non_max_suppression_u8_pkd3_batchPD_host(RppPtr_t srcPtr,
                                           rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                                           rpp::deref(rppHandle).GetBatchSize(),
                                           RPPI_CHN_PACKED,
-                                          3);
+                                          3,
+                                          rpp::deref(rppHandle).GetNumThreads());
 
     return RPP_SUCCESS;
 }
@@ -430,7 +442,8 @@ rppi_gaussian_filter_u8_pln1_batchPD_host(RppPtr_t srcPtr,
                                       rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                                       rpp::deref(rppHandle).GetBatchSize(),
                                       RPPI_CHN_PLANAR,
-                                      1);
+                                      1,
+                                      rpp::deref(rppHandle).GetNumThreads());
 
     return RPP_SUCCESS;
 }
@@ -462,7 +475,8 @@ rppi_gaussian_filter_u8_pln3_batchPD_host(RppPtr_t srcPtr,
                                       rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                                       rpp::deref(rppHandle).GetBatchSize(),
                                       RPPI_CHN_PLANAR,
-                                      3);
+                                      3,
+                                      rpp::deref(rppHandle).GetNumThreads());
 
     return RPP_SUCCESS;
 }
@@ -494,7 +508,8 @@ rppi_gaussian_filter_u8_pkd3_batchPD_host(RppPtr_t srcPtr,
                                       rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                                       rpp::deref(rppHandle).GetBatchSize(),
                                       RPPI_CHN_PACKED,
-                                      3);
+                                      3,
+                                      rpp::deref(rppHandle).GetNumThreads());
 
     return RPP_SUCCESS;
 }
@@ -526,7 +541,8 @@ rppi_nonlinear_filter_u8_pln1_batchPD_host(RppPtr_t srcPtr,
                                     rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                                     rpp::deref(rppHandle).GetBatchSize(),
                                     RPPI_CHN_PLANAR,
-                                    1);
+                                    1,
+                                    rpp::deref(rppHandle).GetNumThreads());
 
     return RPP_SUCCESS;
 }
@@ -556,7 +572,8 @@ rppi_nonlinear_filter_u8_pln3_batchPD_host(RppPtr_t srcPtr,
                                     rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                                     rpp::deref(rppHandle).GetBatchSize(),
                                     RPPI_CHN_PLANAR,
-                                    3);
+                                    3,
+                                    rpp::deref(rppHandle).GetNumThreads());
 
     return RPP_SUCCESS;
 }
@@ -586,7 +603,8 @@ rppi_nonlinear_filter_u8_pkd3_batchPD_host(RppPtr_t srcPtr,
                                     rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                                     rpp::deref(rppHandle).GetBatchSize(),
                                     RPPI_CHN_PACKED,
-                                    3);
+                                    3,
+                                    rpp::deref(rppHandle).GetNumThreads());
 
     return RPP_SUCCESS;
 }
@@ -620,7 +638,8 @@ rppi_custom_convolution_u8_pln1_batchPD_host(RppPtr_t srcPtr,
                                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                                          rpp::deref(rppHandle).GetBatchSize(),
                                          RPPI_CHN_PLANAR,
-                                         1);
+                                         1,
+                                         rpp::deref(rppHandle).GetNumThreads());
 
     return RPP_SUCCESS;
 }
@@ -652,7 +671,8 @@ rppi_custom_convolution_u8_pln3_batchPD_host(RppPtr_t srcPtr,
                                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                                          rpp::deref(rppHandle).GetBatchSize(),
                                          RPPI_CHN_PLANAR,
-                                         3);
+                                         3,
+                                         rpp::deref(rppHandle).GetNumThreads());
 
     return RPP_SUCCESS;
 }
@@ -684,7 +704,8 @@ rppi_custom_convolution_u8_pkd3_batchPD_host(RppPtr_t srcPtr,
                                          rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                                          rpp::deref(rppHandle).GetBatchSize(),
                                          RPPI_CHN_PACKED,
-                                         3);
+                                         3,
+                                         rpp::deref(rppHandle).GetNumThreads());
 
     return RPP_SUCCESS;
 }
