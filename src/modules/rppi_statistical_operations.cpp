@@ -63,7 +63,7 @@ rppi_thresholding_u8_pln1_batchPD_host(RppPtr_t srcPtr,
                                    rpp::deref(rppHandle).GetBatchSize(),
                                    RPPI_CHN_PLANAR,
                                    1,
-                                   rpp::deref(rppHandle).GetNumThreads());
+                                   rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -96,7 +96,7 @@ rppi_thresholding_u8_pln3_batchPD_host(RppPtr_t srcPtr,
                                    rpp::deref(rppHandle).GetBatchSize(),
                                    RPPI_CHN_PLANAR,
                                    3,
-                                   rpp::deref(rppHandle).GetNumThreads());
+                                   rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -129,7 +129,7 @@ rppi_thresholding_u8_pkd3_batchPD_host(RppPtr_t srcPtr,
                                    rpp::deref(rppHandle).GetBatchSize(),
                                    RPPI_CHN_PACKED,
                                    3,
-                                   rpp::deref(rppHandle).GetNumThreads());
+                                   rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -162,7 +162,7 @@ rppi_min_u8_pln1_batchPD_host(RppPtr_t srcPtr1,
                           rpp::deref(rppHandle).GetBatchSize(),
                           RPPI_CHN_PLANAR,
                           1,
-                          rpp::deref(rppHandle).GetNumThreads());
+                          rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -193,7 +193,7 @@ rppi_min_u8_pln3_batchPD_host(RppPtr_t srcPtr1,
                           rpp::deref(rppHandle).GetBatchSize(),
                           RPPI_CHN_PLANAR,
                           3,
-                          rpp::deref(rppHandle).GetNumThreads());
+                          rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -224,7 +224,7 @@ rppi_min_u8_pkd3_batchPD_host(RppPtr_t srcPtr1,
                           rpp::deref(rppHandle).GetBatchSize(),
                           RPPI_CHN_PACKED,
                           3,
-                          rpp::deref(rppHandle).GetNumThreads());
+                          rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -257,7 +257,7 @@ rppi_max_u8_pln1_batchPD_host(RppPtr_t srcPtr1,
                           rpp::deref(rppHandle).GetBatchSize(),
                           RPPI_CHN_PLANAR,
                           1,
-                          rpp::deref(rppHandle).GetNumThreads());
+                          rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -288,7 +288,7 @@ rppi_max_u8_pln3_batchPD_host(RppPtr_t srcPtr1,
                           rpp::deref(rppHandle).GetBatchSize(),
                           RPPI_CHN_PLANAR,
                           3,
-                          rpp::deref(rppHandle).GetNumThreads());
+                          rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -319,7 +319,7 @@ rppi_max_u8_pkd3_batchPD_host(RppPtr_t srcPtr1,
                           rpp::deref(rppHandle).GetBatchSize(),
                           RPPI_CHN_PACKED,
                           3,
-                          rpp::deref(rppHandle).GetNumThreads());
+                          rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -343,7 +343,7 @@ rppi_min_max_loc_u8_pln1_host(RppPtr_t srcPtr,
                             maxLoc,
                             RPPI_CHN_PLANAR,
                             1,
-                            rpp::deref(rppHandle).GetNumThreads());
+                            rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -365,7 +365,7 @@ rppi_min_max_loc_u8_pln3_host(RppPtr_t srcPtr,
                             maxLoc,
                             RPPI_CHN_PLANAR,
                             3,
-                            rpp::deref(rppHandle).GetNumThreads());
+                            rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -387,7 +387,7 @@ rppi_min_max_loc_u8_pkd3_host(RppPtr_t srcPtr,
                             maxLoc,
                             RPPI_CHN_PACKED,
                             3,
-                            rpp::deref(rppHandle).GetNumThreads());
+                            rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -411,7 +411,7 @@ rppi_integral_u8_pln1_batchPD_host(RppPtr_t srcPtr,
                                rpp::deref(rppHandle).GetBatchSize(),
                                RPPI_CHN_PLANAR,
                                1,
-                               rpp::deref(rppHandle).GetNumThreads());
+                               rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -433,7 +433,7 @@ rppi_integral_u8_pln3_batchPD_host(RppPtr_t srcPtr,
                                rpp::deref(rppHandle).GetBatchSize(),
                                RPPI_CHN_PLANAR,
                                3,
-                               rpp::deref(rppHandle).GetNumThreads());
+                               rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -455,7 +455,7 @@ rppi_integral_u8_pkd3_batchPD_host(RppPtr_t srcPtr,
                                rpp::deref(rppHandle).GetBatchSize(),
                                RPPI_CHN_PACKED,
                                3,
-                               rpp::deref(rppHandle).GetNumThreads());
+                               rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -479,7 +479,7 @@ rppi_histogram_equalization_u8_pln1_batchPD_host(RppPtr_t srcPtr,
                                              rpp::deref(rppHandle).GetBatchSize(),
                                              RPPI_CHN_PLANAR,
                                              1,
-                                             rpp::deref(rppHandle).GetNumThreads());
+                                             rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -501,7 +501,7 @@ rppi_histogram_equalization_u8_pln3_batchPD_host(RppPtr_t srcPtr,
                                              rpp::deref(rppHandle).GetBatchSize(),
                                              RPPI_CHN_PLANAR,
                                              3,
-                                             rpp::deref(rppHandle).GetNumThreads());
+                                             rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -523,7 +523,7 @@ rppi_histogram_equalization_u8_pkd3_batchPD_host(RppPtr_t srcPtr,
                                              rpp::deref(rppHandle).GetBatchSize(),
                                              RPPI_CHN_PACKED,
                                              3,
-                                             rpp::deref(rppHandle).GetNumThreads());
+                                             rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }

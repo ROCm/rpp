@@ -55,7 +55,7 @@ RppStatus rppt_brightness_host(RppPtr_t srcPtr,
                                      roiTensorPtrSrc,
                                      roiType,
                                      layoutParams,
-                                     rpp::deref(rppHandle).GetNumThreads());
+                                     rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
@@ -68,7 +68,7 @@ RppStatus rppt_brightness_host(RppPtr_t srcPtr,
                                        roiTensorPtrSrc,
                                        roiType,
                                        layoutParams,
-                                       rpp::deref(rppHandle).GetNumThreads());
+                                       rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
@@ -81,7 +81,7 @@ RppStatus rppt_brightness_host(RppPtr_t srcPtr,
                                        roiTensorPtrSrc,
                                        roiType,
                                        layoutParams,
-                                       rpp::deref(rppHandle).GetNumThreads());
+                                       rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
@@ -94,7 +94,7 @@ RppStatus rppt_brightness_host(RppPtr_t srcPtr,
                                      roiTensorPtrSrc,
                                      roiType,
                                      layoutParams,
-                                     rpp::deref(rppHandle).GetNumThreads());
+                                     rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;
@@ -123,7 +123,7 @@ RppStatus rppt_gamma_correction_host(RppPtr_t srcPtr,
                                            roiTensorPtrSrc,
                                            roiType,
                                            layoutParams,
-                                           rpp::deref(rppHandle).GetNumThreads());
+                                           rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
@@ -135,7 +135,7 @@ RppStatus rppt_gamma_correction_host(RppPtr_t srcPtr,
                                              roiTensorPtrSrc,
                                              roiType,
                                              layoutParams,
-                                             rpp::deref(rppHandle).GetNumThreads());
+                                             rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
@@ -147,7 +147,7 @@ RppStatus rppt_gamma_correction_host(RppPtr_t srcPtr,
                                              roiTensorPtrSrc,
                                              roiType,
                                              layoutParams,
-                                             rpp::deref(rppHandle).GetNumThreads());
+                                             rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
@@ -159,7 +159,7 @@ RppStatus rppt_gamma_correction_host(RppPtr_t srcPtr,
                                            roiTensorPtrSrc,
                                            roiType,
                                            layoutParams,
-                                           rpp::deref(rppHandle).GetNumThreads());
+                                           rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;
@@ -190,7 +190,7 @@ RppStatus rppt_blend_host(RppPtr_t srcPtr1,
                                 roiTensorPtrSrc,
                                 roiType,
                                 layoutParams,
-                                rpp::deref(rppHandle).GetNumThreads());
+                                rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
@@ -203,7 +203,7 @@ RppStatus rppt_blend_host(RppPtr_t srcPtr1,
                                   roiTensorPtrSrc,
                                   roiType,
                                   layoutParams,
-                                  rpp::deref(rppHandle).GetNumThreads());
+                                  rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
@@ -216,7 +216,7 @@ RppStatus rppt_blend_host(RppPtr_t srcPtr1,
                                   roiTensorPtrSrc,
                                   roiType,
                                   layoutParams,
-                                  rpp::deref(rppHandle).GetNumThreads());
+                                  rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
@@ -229,7 +229,7 @@ RppStatus rppt_blend_host(RppPtr_t srcPtr1,
                                 roiTensorPtrSrc,
                                 roiType,
                                 layoutParams,
-                                rpp::deref(rppHandle).GetNumThreads());
+                                rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;
@@ -264,7 +264,7 @@ RppStatus rppt_color_twist_host(RppPtr_t srcPtr,
                                       roiTensorPtrSrc,
                                       roiType,
                                       layoutParams,
-                                      rpp::deref(rppHandle).GetNumThreads());
+                                      rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
@@ -279,7 +279,7 @@ RppStatus rppt_color_twist_host(RppPtr_t srcPtr,
                                         roiTensorPtrSrc,
                                         roiType,
                                         layoutParams,
-                                        rpp::deref(rppHandle).GetNumThreads());
+                                        rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
@@ -294,7 +294,7 @@ RppStatus rppt_color_twist_host(RppPtr_t srcPtr,
                                         roiTensorPtrSrc,
                                         roiType,
                                         layoutParams,
-                                        rpp::deref(rppHandle).GetNumThreads());
+                                        rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
@@ -309,7 +309,7 @@ RppStatus rppt_color_twist_host(RppPtr_t srcPtr,
                                       roiTensorPtrSrc,
                                       roiType,
                                       layoutParams,
-                                      rpp::deref(rppHandle).GetNumThreads());
+                                      rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;
@@ -344,7 +344,7 @@ RppStatus rppt_color_jitter_host(RppPtr_t srcPtr,
                                        roiTensorPtrSrc,
                                        roiType,
                                        layoutParams,
-                                       rpp::deref(rppHandle).GetNumThreads());
+                                       rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
@@ -359,7 +359,7 @@ RppStatus rppt_color_jitter_host(RppPtr_t srcPtr,
                                          roiTensorPtrSrc,
                                          roiType,
                                          layoutParams,
-                                         rpp::deref(rppHandle).GetNumThreads());
+                                         rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
@@ -374,7 +374,7 @@ RppStatus rppt_color_jitter_host(RppPtr_t srcPtr,
                                          roiTensorPtrSrc,
                                          roiType,
                                          layoutParams,
-                                         rpp::deref(rppHandle).GetNumThreads());
+                                         rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
@@ -389,7 +389,7 @@ RppStatus rppt_color_jitter_host(RppPtr_t srcPtr,
                                        roiTensorPtrSrc,
                                        roiType,
                                        layoutParams,
-                                       rpp::deref(rppHandle).GetNumThreads());
+                                       rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;
@@ -425,7 +425,7 @@ RppStatus rppt_color_cast_host(RppPtr_t srcPtr,
                                      roiTensorPtrSrc,
                                      roiType,
                                      layoutParams,
-                                     rpp::deref(rppHandle).GetNumThreads());
+                                     rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
@@ -438,7 +438,7 @@ RppStatus rppt_color_cast_host(RppPtr_t srcPtr,
                                        roiTensorPtrSrc,
                                        roiType,
                                        layoutParams,
-                                       rpp::deref(rppHandle).GetNumThreads());
+                                       rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
@@ -451,7 +451,7 @@ RppStatus rppt_color_cast_host(RppPtr_t srcPtr,
                                        roiTensorPtrSrc,
                                        roiType,
                                        layoutParams,
-                                       rpp::deref(rppHandle).GetNumThreads());
+                                       rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
@@ -464,7 +464,7 @@ RppStatus rppt_color_cast_host(RppPtr_t srcPtr,
                                      roiTensorPtrSrc,
                                      roiType,
                                      layoutParams,
-                                     rpp::deref(rppHandle).GetNumThreads());
+                                     rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;
@@ -493,7 +493,7 @@ RppStatus rppt_exposure_host(RppPtr_t srcPtr,
                                    roiTensorPtrSrc,
                                    roiType,
                                    layoutParams,
-                                   rpp::deref(rppHandle).GetNumThreads());
+                                   rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
@@ -505,7 +505,7 @@ RppStatus rppt_exposure_host(RppPtr_t srcPtr,
                                      roiTensorPtrSrc,
                                      roiType,
                                      layoutParams,
-                                     rpp::deref(rppHandle).GetNumThreads());
+                                     rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
@@ -517,7 +517,7 @@ RppStatus rppt_exposure_host(RppPtr_t srcPtr,
                                      roiTensorPtrSrc,
                                      roiType,
                                      layoutParams,
-                                     rpp::deref(rppHandle).GetNumThreads());
+                                     rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
@@ -529,7 +529,7 @@ RppStatus rppt_exposure_host(RppPtr_t srcPtr,
                                    roiTensorPtrSrc,
                                    roiType,
                                    layoutParams,
-                                   rpp::deref(rppHandle).GetNumThreads());
+                                   rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;
@@ -560,7 +560,7 @@ RppStatus rppt_contrast_host(RppPtr_t srcPtr,
                                    roiTensorPtrSrc,
                                    roiType,
                                    layoutParams,
-                                   rpp::deref(rppHandle).GetNumThreads());
+                                   rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
@@ -573,7 +573,7 @@ RppStatus rppt_contrast_host(RppPtr_t srcPtr,
                                      roiTensorPtrSrc,
                                      roiType,
                                      layoutParams,
-                                     rpp::deref(rppHandle).GetNumThreads());
+                                     rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
@@ -586,7 +586,7 @@ RppStatus rppt_contrast_host(RppPtr_t srcPtr,
                                      roiTensorPtrSrc,
                                      roiType,
                                      layoutParams,
-                                     rpp::deref(rppHandle).GetNumThreads());
+                                     rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
@@ -599,7 +599,7 @@ RppStatus rppt_contrast_host(RppPtr_t srcPtr,
                                    roiTensorPtrSrc,
                                    roiType,
                                    layoutParams,
-                                   rpp::deref(rppHandle).GetNumThreads());
+                                   rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;

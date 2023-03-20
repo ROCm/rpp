@@ -61,7 +61,7 @@ rppi_flip_u8_pln1_batchPD_host(RppPtr_t srcPtr,
                            rpp::deref(rppHandle).GetBatchSize(),
                            RPPI_CHN_PLANAR,
                            1,
-                           rpp::deref(rppHandle).GetNumThreads());
+                           rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -92,7 +92,7 @@ rppi_flip_u8_pln3_batchPD_host(RppPtr_t srcPtr,
                            rpp::deref(rppHandle).GetBatchSize(),
                            RPPI_CHN_PLANAR,
                            3,
-                           rpp::deref(rppHandle).GetNumThreads());
+                           rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -123,7 +123,7 @@ rppi_flip_u8_pkd3_batchPD_host(RppPtr_t srcPtr,
                            rpp::deref(rppHandle).GetBatchSize(),
                            RPPI_CHN_PACKED,
                            3,
-                           rpp::deref(rppHandle).GetNumThreads());
+                           rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -168,7 +168,7 @@ RppStatus resize_host_helper(RppiChnFormat chn_format,
                                             rpp::deref(rppHandle).GetBatchSize(),
                                             chn_format,
                                             num_of_channels,
-                                            rpp::deref(rppHandle).GetNumThreads());
+                                            rpp::deref(rppHandle));
         }
         else if (tensorOutType == RPPTensorDataType::FP16)
         {
@@ -183,7 +183,7 @@ RppStatus resize_host_helper(RppiChnFormat chn_format,
                                              rpp::deref(rppHandle).GetBatchSize(),
                                              chn_format,
                                              num_of_channels,
-                                             rpp::deref(rppHandle).GetNumThreads());
+                                             rpp::deref(rppHandle));
         }
         else if (tensorOutType == RPPTensorDataType::FP32)
         {
@@ -198,7 +198,7 @@ RppStatus resize_host_helper(RppiChnFormat chn_format,
                                              rpp::deref(rppHandle).GetBatchSize(),
                                              chn_format,
                                              num_of_channels,
-                                             rpp::deref(rppHandle).GetNumThreads());
+                                             rpp::deref(rppHandle));
         }
         else if (tensorOutType == RPPTensorDataType::I8)
         {
@@ -213,7 +213,7 @@ RppStatus resize_host_helper(RppiChnFormat chn_format,
                                                   rpp::deref(rppHandle).GetBatchSize(),
                                                   chn_format,
                                                   num_of_channels,
-                                                  rpp::deref(rppHandle).GetNumThreads());
+                                                  rpp::deref(rppHandle));
         }
     }
     else if (tensorInType == RPPTensorDataType::FP16)
@@ -229,7 +229,7 @@ RppStatus resize_host_helper(RppiChnFormat chn_format,
                                           rpp::deref(rppHandle).GetBatchSize(),
                                           chn_format,
                                           num_of_channels,
-                                          rpp::deref(rppHandle).GetNumThreads());
+                                          rpp::deref(rppHandle));
     }
     else if (tensorInType == RPPTensorDataType::FP32)
     {
@@ -244,7 +244,7 @@ RppStatus resize_host_helper(RppiChnFormat chn_format,
                                           rpp::deref(rppHandle).GetBatchSize(),
                                           chn_format,
                                           num_of_channels,
-                                          rpp::deref(rppHandle).GetNumThreads());
+                                          rpp::deref(rppHandle));
     }
     else if (tensorInType == RPPTensorDataType::I8)
     {
@@ -259,7 +259,7 @@ RppStatus resize_host_helper(RppiChnFormat chn_format,
                                         rpp::deref(rppHandle).GetBatchSize(),
                                         chn_format,
                                         num_of_channels,
-                                        rpp::deref(rppHandle).GetNumThreads());
+                                        rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;
@@ -409,7 +409,7 @@ RppStatus resize_crop_host_helper(RppiChnFormat chn_format,
                                       rpp::deref(rppHandle).GetBatchSize(),
                                       chn_format,
                                       num_of_channels,
-                                      rpp::deref(rppHandle).GetNumThreads());
+                                      rpp::deref(rppHandle));
     }
     else if (tensor_type == RPPTensorDataType::FP16)
     {
@@ -427,7 +427,7 @@ RppStatus resize_crop_host_helper(RppiChnFormat chn_format,
                                        rpp::deref(rppHandle).GetBatchSize(),
                                        chn_format,
                                        num_of_channels,
-                                       rpp::deref(rppHandle).GetNumThreads());
+                                       rpp::deref(rppHandle));
     }
     else if (tensor_type == RPPTensorDataType::FP32)
     {
@@ -445,7 +445,7 @@ RppStatus resize_crop_host_helper(RppiChnFormat chn_format,
                                        rpp::deref(rppHandle).GetBatchSize(),
                                        chn_format,
                                        num_of_channels,
-                                       rpp::deref(rppHandle).GetNumThreads());
+                                       rpp::deref(rppHandle));
     }
     else if (tensor_type == RPPTensorDataType::I8)
     {
@@ -463,7 +463,7 @@ RppStatus resize_crop_host_helper(RppiChnFormat chn_format,
                                       rpp::deref(rppHandle).GetBatchSize(),
                                       chn_format,
                                       num_of_channels,
-                                      rpp::deref(rppHandle).GetNumThreads());
+                                      rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;
@@ -569,7 +569,7 @@ RppStatus rotate_host_helper(RppiChnFormat chn_format,
                                  rpp::deref(rppHandle).GetBatchSize(),
                                  chn_format,
                                  num_of_channels,
-                                 rpp::deref(rppHandle).GetNumThreads());
+                                 rpp::deref(rppHandle));
     }
     else if (tensor_type == RPPTensorDataType::FP16)
     {
@@ -585,7 +585,7 @@ RppStatus rotate_host_helper(RppiChnFormat chn_format,
                                   rpp::deref(rppHandle).GetBatchSize(),
                                   chn_format,
                                   num_of_channels,
-                                  rpp::deref(rppHandle).GetNumThreads());
+                                  rpp::deref(rppHandle));
     }
     else if (tensor_type == RPPTensorDataType::FP32)
     {
@@ -601,7 +601,7 @@ RppStatus rotate_host_helper(RppiChnFormat chn_format,
                                   rpp::deref(rppHandle).GetBatchSize(),
                                   chn_format,
                                   num_of_channels,
-                                  rpp::deref(rppHandle).GetNumThreads());
+                                  rpp::deref(rppHandle));
     }
     else if (tensor_type == RPPTensorDataType::I8)
     {
@@ -617,7 +617,7 @@ RppStatus rotate_host_helper(RppiChnFormat chn_format,
                                  rpp::deref(rppHandle).GetBatchSize(),
                                  chn_format,
                                  num_of_channels,
-                                 rpp::deref(rppHandle).GetNumThreads());
+                                 rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;
@@ -726,7 +726,7 @@ RppStatus warp_affine_host_helper(RppiChnFormat chn_format,
                                           rpp::deref(rppHandle).GetBatchSize(),
                                           chn_format,
                                           num_of_channels,
-                                          rpp::deref(rppHandle).GetNumThreads());
+                                          rpp::deref(rppHandle));
         }
     }
     else if (in_tensor_type == RPPTensorDataType::FP16)
@@ -745,7 +745,7 @@ RppStatus warp_affine_host_helper(RppiChnFormat chn_format,
                                            rpp::deref(rppHandle).GetBatchSize(),
                                            chn_format,
                                            num_of_channels,
-                                           rpp::deref(rppHandle).GetNumThreads());
+                                           rpp::deref(rppHandle));
         }
     }
     else if (in_tensor_type == RPPTensorDataType::FP32)
@@ -764,7 +764,7 @@ RppStatus warp_affine_host_helper(RppiChnFormat chn_format,
                                            rpp::deref(rppHandle).GetBatchSize(),
                                            chn_format,
                                            num_of_channels,
-                                           rpp::deref(rppHandle).GetNumThreads());
+                                           rpp::deref(rppHandle));
         }
     }
     else if (in_tensor_type == RPPTensorDataType::I8)
@@ -783,7 +783,7 @@ RppStatus warp_affine_host_helper(RppiChnFormat chn_format,
                                           rpp::deref(rppHandle).GetBatchSize(),
                                           chn_format,
                                           num_of_channels,
-                                          rpp::deref(rppHandle).GetNumThreads());
+                                          rpp::deref(rppHandle));
         }
     }
 
@@ -877,7 +877,7 @@ rppi_fisheye_u8_pln1_batchPD_host(RppPtr_t srcPtr,
                               rpp::deref(rppHandle).GetBatchSize(),
                               RPPI_CHN_PLANAR,
                               1,
-                              rpp::deref(rppHandle).GetNumThreads());
+                              rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -906,7 +906,7 @@ rppi_fisheye_u8_pln3_batchPD_host(RppPtr_t srcPtr,
                               rpp::deref(rppHandle).GetBatchSize(),
                               RPPI_CHN_PLANAR,
                               3,
-                              rpp::deref(rppHandle).GetNumThreads());
+                              rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -935,7 +935,7 @@ rppi_fisheye_u8_pkd3_batchPD_host(RppPtr_t srcPtr,
                               rpp::deref(rppHandle).GetBatchSize(),
                               RPPI_CHN_PACKED,
                               3,
-                              rpp::deref(rppHandle).GetNumThreads());
+                              rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -970,7 +970,7 @@ rppi_lens_correction_u8_pln1_batchPD_host(RppPtr_t srcPtr,
                                       rpp::deref(rppHandle).GetBatchSize(),
                                       RPPI_CHN_PLANAR,
                                       1,
-                                      rpp::deref(rppHandle).GetNumThreads());
+                                      rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -1003,7 +1003,7 @@ rppi_lens_correction_u8_pln3_batchPD_host(RppPtr_t srcPtr,
                                       rpp::deref(rppHandle).GetBatchSize(),
                                       RPPI_CHN_PLANAR,
                                       3,
-                                      rpp::deref(rppHandle).GetNumThreads());
+                                      rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -1036,7 +1036,7 @@ rppi_lens_correction_u8_pkd3_batchPD_host(RppPtr_t srcPtr,
                                       rpp::deref(rppHandle).GetBatchSize(),
                                       RPPI_CHN_PACKED,
                                       3,
-                                      rpp::deref(rppHandle).GetNumThreads());
+                                      rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -1074,7 +1074,7 @@ rppi_scale_u8_pln1_batchPD_host(RppPtr_t srcPtr,
                             rpp::deref(rppHandle).GetBatchSize(),
                             RPPI_CHN_PLANAR,
                             1,
-                            rpp::deref(rppHandle).GetNumThreads());
+                            rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -1110,7 +1110,7 @@ rppi_scale_u8_pln3_batchPD_host(RppPtr_t srcPtr,
                             rpp::deref(rppHandle).GetBatchSize(),
                             RPPI_CHN_PLANAR,
                             3,
-                            rpp::deref(rppHandle).GetNumThreads());
+                            rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -1146,7 +1146,7 @@ rppi_scale_u8_pkd3_batchPD_host(RppPtr_t srcPtr,
                             rpp::deref(rppHandle).GetBatchSize(),
                             RPPI_CHN_PACKED,
                             3,
-                            rpp::deref(rppHandle).GetNumThreads());
+                            rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -1184,7 +1184,7 @@ rppi_warp_perspective_u8_pln1_batchPD_host(RppPtr_t srcPtr,
                                        rpp::deref(rppHandle).GetBatchSize(),
                                        RPPI_CHN_PLANAR,
                                        1,
-                                       rpp::deref(rppHandle).GetNumThreads());
+                                       rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -1220,7 +1220,7 @@ rppi_warp_perspective_u8_pln3_batchPD_host(RppPtr_t srcPtr,
                                        rpp::deref(rppHandle).GetBatchSize(),
                                        RPPI_CHN_PLANAR,
                                        3,
-                                       rpp::deref(rppHandle).GetNumThreads());
+                                       rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -1256,7 +1256,7 @@ rppi_warp_perspective_u8_pkd3_batchPD_host(RppPtr_t srcPtr,
                                        rpp::deref(rppHandle).GetBatchSize(),
                                        RPPI_CHN_PACKED,
                                        3,
-                                       rpp::deref(rppHandle).GetNumThreads());
+                                       rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }

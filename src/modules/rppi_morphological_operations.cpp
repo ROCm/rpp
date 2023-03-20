@@ -61,7 +61,7 @@ rppi_erode_u8_pln1_batchPD_host(RppPtr_t srcPtr,
                             rpp::deref(rppHandle).GetBatchSize(),
                             RPPI_CHN_PLANAR,
                             1,
-                            rpp::deref(rppHandle).GetNumThreads());
+                            rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -92,7 +92,7 @@ rppi_erode_u8_pln3_batchPD_host(RppPtr_t srcPtr,
                             rpp::deref(rppHandle).GetBatchSize(),
                             RPPI_CHN_PLANAR,
                             3,
-                            rpp::deref(rppHandle).GetNumThreads());
+                            rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -123,7 +123,7 @@ rppi_erode_u8_pkd3_batchPD_host(RppPtr_t srcPtr,
                             rpp::deref(rppHandle).GetBatchSize(),
                             RPPI_CHN_PACKED,
                             3,
-                            rpp::deref(rppHandle).GetNumThreads());
+                            rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -156,7 +156,7 @@ rppi_dilate_u8_pln1_batchPD_host(RppPtr_t srcPtr,
                              rpp::deref(rppHandle).GetBatchSize(),
                              RPPI_CHN_PLANAR,
                              1,
-                             rpp::deref(rppHandle).GetNumThreads());
+                             rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -187,7 +187,7 @@ rppi_dilate_u8_pln3_batchPD_host(RppPtr_t srcPtr,
                              rpp::deref(rppHandle).GetBatchSize(),
                              RPPI_CHN_PLANAR,
                              3,
-                             rpp::deref(rppHandle).GetNumThreads());
+                             rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -218,7 +218,7 @@ rppi_dilate_u8_pkd3_batchPD_host(RppPtr_t srcPtr,
                              rpp::deref(rppHandle).GetBatchSize(),
                              RPPI_CHN_PACKED,
                              3,
-                             rpp::deref(rppHandle).GetNumThreads());
+                             rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }

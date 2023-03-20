@@ -31,8 +31,9 @@ template <typename T>
 RppStatus flip_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
                           Rpp32u *batch_flipAxis, RppiROI *roiPoints,
                           Rpp32u nbatchSize,
-                          RppiChnFormat chnFormat, Rpp32u channel, Rpp32u numThreads)
+                          RppiChnFormat chnFormat, Rpp32u channel, rpp::Handle& handle)
 {
+    Rpp32u numThreads = handle.GetNumThreads();
     if(chnFormat == RPPI_CHN_PLANAR)
     {
         omp_set_dynamic(0);
@@ -710,8 +711,9 @@ RppStatus fisheye_base_host(T* srcPtrTemp, RppiSize srcSize, T* dstPtrTemp,
 template <typename T>
 RppStatus fisheye_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, RppiROI *roiPoints,
                              Rpp32u nbatchSize,
-                             RppiChnFormat chnFormat, Rpp32u channel, Rpp32u numThreads)
+                             RppiChnFormat chnFormat, Rpp32u channel, rpp::Handle& handle)
 {
+    Rpp32u numThreads = handle.GetNumThreads();
     if(chnFormat == RPPI_CHN_PLANAR)
     {
         omp_set_dynamic(0);
@@ -1539,8 +1541,9 @@ template <typename T>
 RppStatus lens_correction_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
                                      Rpp32f *batch_strength, Rpp32f *batch_zoom, RppiROI *roiPoints,
                                      Rpp32u nbatchSize,
-                                     RppiChnFormat chnFormat, Rpp32u channel, Rpp32u numThreads)
+                                     RppiChnFormat chnFormat, Rpp32u channel, rpp::Handle& handle)
 {
+    Rpp32u numThreads = handle.GetNumThreads();
     if(chnFormat == RPPI_CHN_PLANAR)
     {
         omp_set_dynamic(0);
@@ -2251,8 +2254,9 @@ template <typename T>
 RppStatus scale_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, RppiSize *batch_dstSize, RppiSize *batch_dstSizeMax,
                              Rpp32f *batch_percentage, RppiROI *roiPoints,
                              Rpp32u nbatchSize,
-                             RppiChnFormat chnFormat, Rpp32u channel, Rpp32u numThreads)
+                             RppiChnFormat chnFormat, Rpp32u channel, rpp::Handle& handle)
 {
+    Rpp32u numThreads = handle.GetNumThreads();
     if(chnFormat == RPPI_CHN_PLANAR)
     {
         omp_set_dynamic(0);
@@ -2587,8 +2591,9 @@ template <typename T>
 RppStatus rotate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, RppiSize *batch_dstSize, RppiSize *batch_dstSizeMax,
                              Rpp32f *batch_angleDeg, RppiROI *roiPoints,
                              Rpp32u outputFormatToggle, Rpp32u nbatchSize,
-                             RppiChnFormat chnFormat, Rpp32u channel, Rpp32u numThreads)
+                             RppiChnFormat chnFormat, Rpp32u channel, rpp::Handle& handle)
 {
+    Rpp32u numThreads = handle.GetNumThreads();
     if(chnFormat == RPPI_CHN_PLANAR)
     {
         omp_set_dynamic(0);
@@ -3014,8 +3019,9 @@ RppStatus rotate_host(T* srcPtr, RppiSize srcSize, T* dstPtr, RppiSize dstSize,
 template <typename T, typename U>
 RppStatus resize_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, U* dstPtr, RppiSize *batch_dstSize, RppiSize *batch_dstSizeMax,
                             RppiROI *roiPoints, Rpp32u outputFormatToggle, Rpp32u nbatchSize,
-                            RppiChnFormat chnFormat, Rpp32u channel, Rpp32u numThreads)
+                            RppiChnFormat chnFormat, Rpp32u channel, rpp::Handle& handle)
 {
+    Rpp32u numThreads = handle.GetNumThreads();
     if(chnFormat == RPPI_CHN_PLANAR)
     {
         omp_set_dynamic(0);
@@ -3186,8 +3192,9 @@ RppStatus resize_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
 template <typename T, typename U>
 RppStatus resize_u8_i8_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, U* dstPtr, RppiSize *batch_dstSize, RppiSize *batch_dstSizeMax,
                             RppiROI *roiPoints, Rpp32u outputFormatToggle, Rpp32u nbatchSize,
-                            RppiChnFormat chnFormat, Rpp32u channel, Rpp32u numThreads)
+                            RppiChnFormat chnFormat, Rpp32u channel, rpp::Handle& handle)
 {
+    Rpp32u numThreads = handle.GetNumThreads();
     if(chnFormat == RPPI_CHN_PLANAR)
     {
         omp_set_dynamic(0);
@@ -3384,8 +3391,9 @@ template <typename T>
 RppStatus resize_crop_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, RppiSize *batch_dstSize, RppiSize *batch_dstSizeMax,
                                  Rpp32u *batch_x1, Rpp32u *batch_x2, Rpp32u *batch_y1, Rpp32u *batch_y2,
                                  Rpp32u outputFormatToggle, Rpp32u nbatchSize,
-                                 RppiChnFormat chnFormat, Rpp32u channel, Rpp32u numThreads)
+                                 RppiChnFormat chnFormat, Rpp32u channel, rpp::Handle& handle)
 {
+    Rpp32u numThreads = handle.GetNumThreads();
     if(chnFormat == RPPI_CHN_PLANAR)
     {
         omp_set_dynamic(0);
@@ -3532,8 +3540,9 @@ template <typename T>
 RppStatus warp_affine_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, RppiSize *batch_dstSize, RppiSize *batch_dstSizeMax, RppiROI *roiPoints,
                                  Rpp32f *batch_affine,
                                  Rpp32u outputFormatToggle, Rpp32u nbatchSize,
-                                 RppiChnFormat chnFormat, Rpp32u channel, Rpp32u numThreads)
+                                 RppiChnFormat chnFormat, Rpp32u channel, rpp::Handle& handle)
 {
+    Rpp32u numThreads = handle.GetNumThreads();
     if(chnFormat == RPPI_CHN_PLANAR)
     {
         omp_set_dynamic(0);
@@ -3926,9 +3935,10 @@ template <typename T>
 RppStatus warp_perspective_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr, RppiSize *batch_dstSize, RppiSize *batch_dstSizeMax,
                                       RppiROI *roiPoints, Rpp32f *batch_perspective,
                                       Rpp32u nbatchSize,
-                                      RppiChnFormat chnFormat, Rpp32u channel, Rpp32u numThreads)
+                                      RppiChnFormat chnFormat, Rpp32u channel, rpp::Handle& handle)
 {
     //Rpp32f perspective[9] = {0.707, 0.707, 0, -0.707, 0.707, 0, 0.001, 0.001, 1};
+    Rpp32u numThreads = handle.GetNumThreads();
     if(chnFormat == RPPI_CHN_PLANAR)
     {
         omp_set_dynamic(0);

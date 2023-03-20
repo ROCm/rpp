@@ -33,11 +33,12 @@ RppStatus resize_crop_mirror_u8_u8_host_tensor(Rpp8u *srcPtr,
                                                RpptROIPtr roiTensorPtrSrc,
                                                RpptRoiType roiType,
                                                RppLayoutParams layoutParams,
-                                               Rpp32u numThreads)
+                                               rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
-omp_set_dynamic(0);
+Rpp32u numThreads = handle.GetNumThreads();
+    omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
@@ -283,11 +284,12 @@ RppStatus resize_crop_mirror_f32_f32_host_tensor(Rpp32f *srcPtr,
                                                  RpptROIPtr roiTensorPtrSrc,
                                                  RpptRoiType roiType,
                                                  RppLayoutParams layoutParams,
-                                                 Rpp32u numThreads)
+                                                 rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
-omp_set_dynamic(0);
+Rpp32u numThreads = handle.GetNumThreads();
+    omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
@@ -538,11 +540,12 @@ RppStatus resize_crop_mirror_f16_f16_host_tensor(Rpp16f *srcPtr,
                                                  RpptROIPtr roiTensorPtrSrc,
                                                  RpptRoiType roiType,
                                                  RppLayoutParams layoutParams,
-                                                 Rpp32u numThreads)
+                                                 rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
-omp_set_dynamic(0);
+Rpp32u numThreads = handle.GetNumThreads();
+    omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
@@ -793,11 +796,12 @@ RppStatus resize_crop_mirror_i8_i8_host_tensor(Rpp8s *srcPtr,
                                                RpptROIPtr roiTensorPtrSrc,
                                                RpptRoiType roiType,
                                                RppLayoutParams layoutParams,
-                                               Rpp32u numThreads)
+                                               rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
-omp_set_dynamic(0);
+Rpp32u numThreads = handle.GetNumThreads();
+    omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
