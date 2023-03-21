@@ -618,7 +618,7 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
         qaResultsPath += "/../OUTPUT_IMAGES_HOST_NEW/QA_results.txt";
     else
         qaResultsPath += "/../OUTPUT_IMAGES_HIP_NEW/QA_results.txt";
-    std::cerr<<"qaResultsPath: "<<qaResultsPath<<std::endl;
+    
     std:: ofstream qaResults(qaResultsPath, ios_base::app);
     if (qaResults.is_open())
     {

@@ -366,6 +366,7 @@ int main(int argc, char **argv)
     hipMalloc(&d_output, outputBufferSize);
     hipMemcpy(d_input, input, inputBufferSize, hipMemcpyHostToDevice);
     hipMemcpy(d_input_second, input_second, inputBufferSize, hipMemcpyHostToDevice);
+    hipMemcpy(d_output, output, outputBufferSize, hipMemcpyHostToDevice);
 
     // Run case-wise RPP API and measure time
     rppHandle_t handle;
