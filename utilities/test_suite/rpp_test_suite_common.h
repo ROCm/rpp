@@ -379,9 +379,12 @@ inline void read_image_batch_opencv(Rpp8u *input, RpptDescPtr descPtr, string im
     {
         Rpp8u *inputTemp = input + (i * descPtr->strides.nStride);
         string inputImagePath = imageNames[i];
-        cv::Mat image;
+        cv::Mat image, imageBgr;
         if (descPtr->c == 3)
-            image = imread(inputImagePath, 1);
+        {
+            imageBgr = imread(inputImagePath, 1);
+            cvtColor(imageBgr, image, COLOR_BGR2RGB);
+        }
         else if (descPtr->c == 1)
             image = imread(inputImagePath, 0);
 
@@ -400,7 +403,7 @@ inline void read_image_batch_opencv(Rpp8u *input, RpptDescPtr descPtr, string im
 
 inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, string imageNames[])
 {
-    tjhandle tjInstance = tjInitDecompress();
+    tjhandle m_jpegDecompressor = tjInitDecompress();
 
     // Loop through the input images
     for (int i = 0; i < descPtr->n; i++)
@@ -408,6 +411,8 @@ inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, string
         // Read the JPEG compressed data from a file
         std::string inputImagePath = imageNames[i];
         FILE* fp = fopen(inputImagePath.c_str(), "rb");
+        if(!fp)
+            std::cerr<<"\n unable to open file : "<<inputImagePath;
         fseek(fp, 0, SEEK_END);
         long jpegSize = ftell(fp);
         rewind(fp);
@@ -417,20 +422,22 @@ inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, string
 
         // Decompress the JPEG data into an RGB image buffer
         int width, height, subsamp, color_space;
-        tjDecompressHeader3(tjInstance, jpegBuf, jpegSize, &width, &height, &subsamp, &color_space);
+        if(tjDecompressHeader2(m_jpegDecompressor, jpegBuf, jpegSize, &width, &height, &color_space) != 0)
+            std::cerr<<"\n Jpeg image decode failed in tjDecompressHeader2";
         Rpp8u* rgbBuf;
         int elementsInRow;
         if(descPtr->c == 3)
         {
             elementsInRow = width * descPtr->c;
             rgbBuf= (Rpp8u*)malloc(width * height * 3);
-            tjDecompress2(tjInstance, jpegBuf, jpegSize, rgbBuf, width, 0, height, TJPF_BGR, 0);
+            if(tjDecompress2(m_jpegDecompressor, jpegBuf, jpegSize, rgbBuf, width, width * 3, height, TJPF_RGB, TJFLAG_FASTDCT) != 0)
+                std::cerr<<"\n Jpeg image decode failed ";
         }
         else
         {
             elementsInRow = width;
             rgbBuf= (Rpp8u*)malloc(width * height);
-            tjDecompress2(tjInstance, jpegBuf, jpegSize, rgbBuf, width, 0, height, TJPF_GRAY, 0);
+            tjDecompress2(m_jpegDecompressor, jpegBuf, jpegSize, rgbBuf, width, 0, height, TJPF_GRAY, 0);
         }
         // Copy the decompressed image buffer to the RPP input buffer
         Rpp8u *inputTemp = input + (i * descPtr->strides.nStride);
@@ -445,7 +452,7 @@ inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, string
     }
 
     // Clean up
-    tjDestroy(tjInstance);
+    tjDestroy(m_jpegDecompressor);
 }
 
 inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDescPtr dstDescPtr, vector<string> imageNames, RpptImagePatch *dstImgSizes)
@@ -474,15 +481,18 @@ inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDes
         }
 
         string outputImagePath = outputFolder + imageNames[j];
-        Mat matOutputImage;
+        Mat matOutputImage, matOutputImageRgb;
         if (dstDescPtr->c == 1)
             matOutputImage = Mat(height, width, CV_8UC1, tempOutput);
         else if (dstDescPtr->c == 2)
             matOutputImage = Mat(height, width, CV_8UC2, tempOutput);
         else if (dstDescPtr->c == 3)
+        {
             matOutputImage = Mat(height, width, CV_8UC3, tempOutput);
+            cvtColor(matOutputImage, matOutputImageRgb, COLOR_RGB2BGR);
+        }
 
-        imwrite(outputImagePath, matOutputImage);
+        imwrite(outputImagePath, matOutputImageRgb);
         free(tempOutput);
     }
 }
@@ -608,7 +618,7 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
         qaResultsPath += "/../OUTPUT_IMAGES_HOST_NEW/QA_results.txt";
     else
         qaResultsPath += "/../OUTPUT_IMAGES_HIP_NEW/QA_results.txt";
-    std::cerr<<"qaResultsPath: "<<qaResultsPath<<std::endl;
+    
     std:: ofstream qaResults(qaResultsPath, ios_base::app);
     if (qaResults.is_open())
     {
