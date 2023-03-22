@@ -222,7 +222,7 @@ else:
                     prevLine = line
 
             # Print log lengths
-            print("Functionalities - " + funcCount)
+            print("Functionalities - " + str(funcCount))
 
             # Print summary of log
             print("\n\nFunctionality\t\t\t\t\t\tFrames Count\tmax(ms/batch)\t\tmin(ms/batch)\t\tavg(ms/batch)\n")
