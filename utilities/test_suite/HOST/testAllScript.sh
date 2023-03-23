@@ -19,6 +19,7 @@ if (( "$#" < 3 )); then
     QA_MODE="0"
     DECODER_TYPE="0"
     NUM_ITERATIONS="1"
+    PRESERVE_OUTPUT="1"
     CASE_LIST=()
     for ((case="$CASE_MIN";case<="$CASE_MAX";case++))
     do
@@ -31,7 +32,8 @@ else
     NUM_ITERATIONS="$4"
     QA_MODE="$5"
     DECODER_TYPE="$6"
-    CASE_LIST="${@:7}"
+    PRESERVE_OUTPUT="$7"
+    CASE_LIST="${@:8}"
 fi
 
 # <<<<<<<<<<<<<< VALIDATION CHECK FOR TEST_TYPE AND CASE NUMBERS >>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -50,14 +52,31 @@ done
 # <<<<<<<<<<<<<< CREATE OUTPUT FOLDERS BASED ON TEST TYPE>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 if [ "$TEST_TYPE" -eq 0 ]; then
-    printf "\nRunning Unittests...\n"
-    mkdir "$cwd/../OUTPUT_IMAGES_HOST_NEW"
-    DEFAULT_DST_FOLDER="$cwd/../OUTPUT_IMAGES_HOST_NEW"
+    if [ "$PRESERVE_OUTPUT" -ne 1 ]; then
+        printf "\nRunning Unittests...\n"
+        rm -rvf "$cwd/.."/OUTPUT_IMAGES_HOST_*
+        mkdir "$cwd/../OUTPUT_IMAGES_HOST_NEW"
+        DEFAULT_DST_FOLDER="$cwd/../OUTPUT_IMAGES_HOST_NEW"
+    else
+        printf "\nRunning Unittests...\n"
+        mkdir "$cwd/../OUTPUT_IMAGES_HOST_$TIMESTAMP"
+        DEFAULT_DST_FOLDER="$cwd/../OUTPUT_IMAGES_HOST_$TIMESTAMP"
+    fi
+
 elif [ "$TEST_TYPE" -eq 1 ]; then
-    printf "\nRunning Performance tests...\n"
-    mkdir "$cwd/../OUTPUT_PERFORMANCE_LOGS_HOST_NEW"
-    DEFAULT_DST_FOLDER="$cwd/../OUTPUT_PERFORMANCE_LOGS_HOST_NEW"
-    LOGGING_FOLDER="$cwd/../OUTPUT_PERFORMANCE_LOGS_HOST_NEW"
+    if [ "$PRESERVE_OUTPUT" -ne 1 ]; then
+        rm -rvf "$cwd/.."/OUTPUT_PERFORMANCE_LOGS_HOST_*
+        printf "\nRunning Performance tests...\n"
+        mkdir "$cwd/../OUTPUT_PERFORMANCE_LOGS_HOST_NEW"
+        DEFAULT_DST_FOLDER="$cwd/../OUTPUT_PERFORMANCE_LOGS_HOST_NEW"
+        LOGGING_FOLDER="$cwd/../OUTPUT_PERFORMANCE_LOGS_HOST_NEW"
+    else
+        printf "\nRunning Performance tests...\n"
+        mkdir "$cwd/../OUTPUT_PERFORMANCE_LOGS_HOST_$TIMESTAMP"
+        DEFAULT_DST_FOLDER="$cwd/../OUTPUT_PERFORMANCE_LOGS_HOST_$TIMESTAMP"
+        LOGGING_FOLDER="$cwd/../OUTPUT_PERFORMANCE_LOGS_HOST_$TIMESTAMP"
+    fi
+
 fi
 DST_FOLDER="$DEFAULT_DST_FOLDER"
 
@@ -153,18 +172,18 @@ do
                     for ((noiseType=0;noiseType<3;noiseType++))
                     do
                         printf "\n./Tensor_host $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER_TEMP $bitDepth $outputFormatToggle $case $noiseType 0"
-                        ./Tensor_host "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$noiseType" "$NUM_ITERATIONS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE"| tee -a "$LOGGING_FOLDER/Tensor_host_${log_file_layout}_raw_performance_log.txt"
+                        ./Tensor_host "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$noiseType" "$NUM_ITERATIONS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE"| tee -a "$LOGGING_FOLDER/Tensor_host_${log_file_layout}_raw_performance_log.txt" 2>&1 >/dev/null
                     done
                 elif [ "$case" -eq 21 ] || [ "$case" -eq 23 ] || [ "$case" -eq 24 ]
                 then
                     for ((interpolationType=0;interpolationType<6;interpolationType++))
                     do
                         printf "\n./Tensor_host $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER_TEMP $bitDepth $outputFormatToggle $case $interpolationType 0"
-                        ./Tensor_host "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$interpolationType" "$NUM_ITERATIONS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE"| tee -a "$LOGGING_FOLDER/Tensor_host_${log_file_layout}_raw_performance_log.txt"
+                        ./Tensor_host "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$interpolationType" "$NUM_ITERATIONS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE"| tee -a "$LOGGING_FOLDER/Tensor_host_${log_file_layout}_raw_performance_log.txt" 2>&1 >/dev/null
                     done
                 else
                     printf "\n./Tensor_host $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER_TEMP $bitDepth $outputFormatToggle $case ${NUM_ITERATIONS} ${TEST_TYPE} ${layout} 0 ${QA_MODE}" "$DECODER_TYPE"
-                    ./Tensor_host "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" "$NUM_ITERATIONS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE"| tee -a "$LOGGING_FOLDER/Tensor_host_${log_file_layout}_raw_performance_log.txt"
+                    ./Tensor_host "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" "$NUM_ITERATIONS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE"| tee -a "$LOGGING_FOLDER/Tensor_host_${log_file_layout}_raw_performance_log.txt" 2>&1 >/dev/null
                 fi
 
                 echo "------------------------------------------------------------------------------------------"

@@ -168,7 +168,6 @@ int main(int argc, char **argv)
         func += "_noiseType";
         func += noiseTypeName.c_str();
     }
-    printf("\nRunning %s...", func.c_str());
     dst += "/";
     dst += func;
 

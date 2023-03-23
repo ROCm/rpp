@@ -437,7 +437,8 @@ inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, string
         {
             elementsInRow = width;
             rgbBuf= (Rpp8u*)malloc(width * height);
-            tjDecompress2(m_jpegDecompressor, jpegBuf, jpegSize, rgbBuf, width, 0, height, TJPF_GRAY, 0);
+            if(tjDecompress2(m_jpegDecompressor, jpegBuf, jpegSize, rgbBuf, width, width, height, TJPF_GRAY, 0) != 0)
+                std::cerr<<"\n Jpeg image decode failed ";
         }
         // Copy the decompressed image buffer to the RPP input buffer
         Rpp8u *inputTemp = input + (i * descPtr->strides.nStride);

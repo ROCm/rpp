@@ -2,6 +2,13 @@ import os
 import subprocess  # nosec
 import argparse
 import sys
+import datetime
+
+# Set the timestamp
+timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+# Set the value of an environment variable
+os.environ["TIMESTAMP"] = timestamp
 
 cwd = os.getcwd()
 inFilePath1 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src1')
@@ -24,12 +31,19 @@ def create_layout_directories(dst_path, layout_dict):
         for folder in folder_list:
             os.rename(dst_path + '/' + folder, dst_path + '/' + current_layout +  '/' + folder)
 
-def get_log_file_list():
-    return [
-        "../OUTPUT_PERFORMANCE_LOGS_HOST_NEW/Tensor_host_pkd3_raw_performance_log.txt",
-        "../OUTPUT_PERFORMANCE_LOGS_HOST_NEW/Tensor_host_pln3_raw_performance_log.txt",
-        "../OUTPUT_PERFORMANCE_LOGS_HOST_NEW/Tensor_host_pln1_raw_performance_log.txt"
-    ]
+def get_log_file_list(preserveOutput):
+    if preserveOutput:
+        return [
+            "../OUTPUT_PERFORMANCE_LOGS_HOST_" + timestamp + "/Tensor_host_pkd3_raw_performance_log.txt",
+            "../OUTPUT_PERFORMANCE_LOGS_HOST_" + timestamp + "/Tensor_host_pln3_raw_performance_log.txt",
+            "../OUTPUT_PERFORMANCE_LOGS_HOST_" + timestamp + "/Tensor_host_pln1_raw_performance_log.txt"
+        ]
+    else:
+        return [
+            "../OUTPUT_PERFORMANCE_LOGS_HOST_NEW/Tensor_host_pkd3_raw_performance_log.txt",
+            "../OUTPUT_PERFORMANCE_LOGS_HOST_NEW/Tensor_host_pln3_raw_performance_log.txt",
+            "../OUTPUT_PERFORMANCE_LOGS_HOST_NEW/Tensor_host_pln1_raw_performance_log.txt"
+        ]
 
 def rpp_test_suite_parser_and_validator():
     parser = argparse.ArgumentParser()
@@ -41,7 +55,8 @@ def rpp_test_suite_parser_and_validator():
     parser.add_argument('--case_list', nargs = "+", help = "List of case numbers to list", required = False)
     parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Outputs images from tests will be compared with golden outputs - (0 / 1)", required = False)
     parser.add_argument('--decoder_type', type = int, default = 0, help = "Type of Decoder to decode the input data - (0 = TurboJPEG / 1 = OpenCV)")
-    parser.add_argument('--num_iterations', type = int, default= 0, help = "Specifies the number of iterations for running the performance tests")
+    parser.add_argument('--num_iterations', type = int, default = 0, help = "Specifies the number of iterations for running the performance tests")
+    parser.add_argument('--preserve_output', type = int, default = 1, help = "preserves the output of the program - (0 = override output / 1 = preserve output )" )
     args = parser.parse_args()
 
     # check if the folder exists
@@ -97,19 +112,26 @@ caseList = args.case_list
 qaMode = args.qa_mode
 decoderType = args.decoder_type
 numIterations = args.num_iterations
+preserveOutput = args.preserve_output
 
 # set the output folders and number of runs based on type of test (unit test / performance test)
 if(testType == 0):
-    outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_IMAGES_HOST_NEW')
+    if preserveOutput:
+        outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_IMAGES_HOST_' + timestamp)
+    else:
+        outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_IMAGES_HOST_NEW')
     numIterations = 1
 elif(testType == 1):
     if numIterations == 0:
         numIterations = 100  #default numIterations for running performance tests
-    outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_PERFORMANCE_LOGS_HOST_NEW')
+    if preserveOutput:
+        outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_PERFORMANCE_LOGS_HOST_' + timestamp)
+    else:
+        outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_PERFORMANCE_LOGS_HOST_NEW')
 dstPath = outFilePath
 
 # run the shell script
-subprocess.call(["./testAllScript.sh", srcPath1, args.input_path2, str(testType), str(numIterations), str(qaMode), str(decoderType), " ".join(caseList)])  # nosec
+subprocess.call(["./testAllScript.sh", srcPath1, args.input_path2, str(testType), str(numIterations), str(qaMode), str(decoderType), str(preserveOutput), " ".join(caseList)])  # nosec
 
 # print the results of qa tests
 supportedCaseList = ['0', '2', '4', '13', '31', '36', '38']
@@ -134,7 +156,7 @@ if testType == 0:
     create_layout_directories(dstPath, layoutDict)
 # Performance tests
 elif (testType == 1):
-    log_file_list = get_log_file_list()
+    log_file_list = get_log_file_list(preserveOutput)
 
     functionality_group_list = [
         "color_augmentations",
