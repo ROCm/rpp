@@ -103,7 +103,9 @@ int main(int argc, char **argv)
     string funcName = augmentationMap[testCase];
     if (funcName.empty())
     {
-        printf("\ncase %d is not supported\n", testCase);
+        if (testType == 0)
+            printf("\ncase %d is not supported\n", testCase);
+
         return -1;
     }
 
