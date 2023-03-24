@@ -437,7 +437,8 @@ inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, string
         {
             elementsInRow = width;
             rgbBuf= (Rpp8u*)malloc(width * height);
-            tjDecompress2(m_jpegDecompressor, jpegBuf, jpegSize, rgbBuf, width, 0, height, TJPF_GRAY, 0);
+            if(tjDecompress2(m_jpegDecompressor, jpegBuf, jpegSize, rgbBuf, width, width, height, TJPF_GRAY, 0) != 0)
+                std::cerr<<"\n Jpeg image decode failed ";
         }
         // Copy the decompressed image buffer to the RPP input buffer
         Rpp8u *inputTemp = input + (i * descPtr->strides.nStride);
@@ -488,11 +489,11 @@ inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDes
             matOutputImage = Mat(height, width, CV_8UC2, tempOutput);
         else if (dstDescPtr->c == 3)
         {
-            matOutputImage = Mat(height, width, CV_8UC3, tempOutput);
-            cvtColor(matOutputImage, matOutputImageRgb, COLOR_RGB2BGR);
+            matOutputImageRgb = Mat(height, width, CV_8UC3, tempOutput);
+            cvtColor(matOutputImageRgb, matOutputImage, COLOR_RGB2BGR);
         }
 
-        imwrite(outputImagePath, matOutputImageRgb);
+        imwrite(outputImagePath, matOutputImage);
         free(tempOutput);
     }
 }
@@ -508,7 +509,7 @@ inline void remove_substring(string &str, string &pattern)
 }
 
 template <typename T>
-inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int noOfImages, string interpolationTypeName, int testCase, string backend)
+inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int noOfImages, string interpolationTypeName, int testCase, string dst)
 {
     string func = funcName;
     string refPath = get_current_dir_name();
@@ -613,12 +614,7 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     }
 
     // Append the QA results to file
-    std::string qaResultsPath = refPath;
-    if (backend == "HOST")
-        qaResultsPath += "/../OUTPUT_IMAGES_HOST_NEW/QA_results.txt";
-    else
-        qaResultsPath += "/../OUTPUT_IMAGES_HIP_NEW/QA_results.txt";
-    
+    std::string qaResultsPath = dst + "/QA_results.txt";
     std:: ofstream qaResults(qaResultsPath, ios_base::app);
     if (qaResults.is_open())
     {
