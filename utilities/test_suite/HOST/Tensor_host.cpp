@@ -161,8 +161,12 @@ int main(int argc, char **argv)
         func += "_noiseType";
         func += noiseTypeName.c_str();
     }
-    dst += "/";
-    dst += func;
+
+    if(!qaFlag)
+    {
+        dst += "/";
+        dst += func;
+    }
 
     // Get number of images and image Names
     struct dirent *de;
@@ -648,7 +652,7 @@ int main(int argc, char **argv)
           2.input bit depth 0 (U8)
           3.source and destination layout are the same*/
         if(qaFlag && inputBitDepth == 0 && (srcDescPtr->layout == dstDescPtr->layout))
-            compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, noOfImages, interpolationTypeName, testCase, "HOST");
+            compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, noOfImages, interpolationTypeName, testCase, dst);
 
         // Calculate exact dstROI in XYWH format for OpenCV dump
         if (roiTypeSrc == RpptRoiType::LTRB)
@@ -682,9 +686,10 @@ int main(int argc, char **argv)
     {
         // Display measured times
         avgWallTime /= numIterations;
-        cout << fixed << "\n\nmax,min,avg wall times in ms/batch = " << maxWallTime << "," << minWallTime << "," << avgWallTime << endl;
+        cout << fixed << "\nmax,min,avg wall times in ms/batch = " << maxWallTime << "," << minWallTime << "," << avgWallTime;
     }
 
+    cout<<endl;
 
     // Free memory
     free(roiTensorPtrSrc);

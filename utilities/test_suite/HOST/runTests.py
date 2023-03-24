@@ -32,18 +32,11 @@ def create_layout_directories(dst_path, layout_dict):
             os.rename(dst_path + '/' + folder, dst_path + '/' + current_layout +  '/' + folder)
 
 def get_log_file_list(preserveOutput):
-    if preserveOutput:
-        return [
-            "../OUTPUT_PERFORMANCE_LOGS_HOST_" + timestamp + "/Tensor_host_pkd3_raw_performance_log.txt",
-            "../OUTPUT_PERFORMANCE_LOGS_HOST_" + timestamp + "/Tensor_host_pln3_raw_performance_log.txt",
-            "../OUTPUT_PERFORMANCE_LOGS_HOST_" + timestamp + "/Tensor_host_pln1_raw_performance_log.txt"
-        ]
-    else:
-        return [
-            "../OUTPUT_PERFORMANCE_LOGS_HOST_NEW/Tensor_host_pkd3_raw_performance_log.txt",
-            "../OUTPUT_PERFORMANCE_LOGS_HOST_NEW/Tensor_host_pln3_raw_performance_log.txt",
-            "../OUTPUT_PERFORMANCE_LOGS_HOST_NEW/Tensor_host_pln1_raw_performance_log.txt"
-        ]
+    return [
+        "../OUTPUT_PERFORMANCE_LOGS_HOST_" + timestamp + "/Tensor_host_pkd3_raw_performance_log.txt",
+        "../OUTPUT_PERFORMANCE_LOGS_HOST_" + timestamp + "/Tensor_host_pln3_raw_performance_log.txt",
+        "../OUTPUT_PERFORMANCE_LOGS_HOST_" + timestamp + "/Tensor_host_pln1_raw_performance_log.txt"
+    ]
 
 def rpp_test_suite_parser_and_validator():
     parser = argparse.ArgumentParser()
@@ -53,7 +46,7 @@ def rpp_test_suite_parser_and_validator():
     parser.add_argument("--case_end", type = int, default = 38, help = "Testing range ending case # - (0:38)")
     parser.add_argument('--test_type', type = int, default = 0, help = "Type of Test - (0 = Unit tests / 1 = Performance tests)")
     parser.add_argument('--case_list', nargs = "+", help = "List of case numbers to list", required = False)
-    parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Outputs images from tests will be compared with golden outputs - (0 / 1)", required = False)
+    parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Output images from tests will be compared with golden outputs - (0 / 1)", required = False)
     parser.add_argument('--decoder_type', type = int, default = 0, help = "Type of Decoder to decode the input data - (0 = TurboJPEG / 1 = OpenCV)")
     parser.add_argument('--num_iterations', type = int, default = 0, help = "Specifies the number of iterations for running the performance tests")
     parser.add_argument('--preserve_output', type = int, default = 1, help = "preserves the output of the program - (0 = override output / 1 = preserve output )" )
@@ -116,18 +109,15 @@ preserveOutput = args.preserve_output
 
 # set the output folders and number of runs based on type of test (unit test / performance test)
 if(testType == 0):
-    if preserveOutput:
-        outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_IMAGES_HOST_' + timestamp)
+    if qaMode:
+        outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_QA_RESULTS_HOST_' + timestamp)
     else:
-        outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_IMAGES_HOST_NEW')
+        outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_IMAGES_HOST_' + timestamp)
     numIterations = 1
 elif(testType == 1):
     if numIterations == 0:
         numIterations = 100  #default numIterations for running performance tests
-    if preserveOutput:
-        outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_PERFORMANCE_LOGS_HOST_' + timestamp)
-    else:
-        outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_PERFORMANCE_LOGS_HOST_NEW')
+    outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_PERFORMANCE_LOGS_HOST_' + timestamp)
 dstPath = outFilePath
 
 # run the shell script
@@ -148,11 +138,11 @@ if qaMode and testType == 0:
         sys.stdout.write(line)
         sys.stdout.flush()
     f.write(caseInfo)
-    print("\n-------------- " + caseInfo + " --------------")
+print("\n-------------- " + caseInfo + " --------------")
 
 layoutDict ={0:"PKD3", 1:"PLN3", 2:"PLN1"}
-# unit tests
-if testType == 0:
+# unit tests and QA mode disabled
+if testType == 0 and qaMode == 0:
     create_layout_directories(dstPath, layoutDict)
 # Performance tests
 elif (testType == 1):

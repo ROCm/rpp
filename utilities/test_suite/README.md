@@ -12,10 +12,10 @@ The test suite accepts the following command line arguments:
 -   test_type: The type of test to run (0 = Unit tests, 1 = Performance tests). Default is 0
 -   case_list: A list of specific case numbers to run. Must be used in conjunction with --test_type
 -   profiling: Run the tests with a profiler (YES/NO). Default is NO. This option is only available with HIP backend
--   qa_mode: Outputs images from tests will be compared with golden outputs - (0 / 1). Default is 0
+-   qa_mode: Output images from tests will be compared with golden outputs - (0 / 1). Default is 0
 -   decoder_type: Type of Decoder to decode the input data - (0 = TurboJPEG / 1 = OpenCV). Default is 0
 -   num_iterations: Specifies the number of iterations for running the performance tests
--   preserve_output: preserves the output of the program - (0 = override output / 1 = preserve output ). Default is 1
+-   preserve_output: preserves the output images or performance logs generated from the previous test suite run - (0 = remove output images or performance logs / 1 = preserve output images or performance logs). Default is 1
 
 ## Running the Tests for HOST Backend
 The test suite can be run with the following command:

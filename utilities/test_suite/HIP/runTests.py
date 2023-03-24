@@ -47,18 +47,11 @@ def create_layout_directories(dst_path, layout_dict):
             os.rename(dst_path + '/' + folder, dst_path + '/' + current_layout +  '/' + folder)
 
 def get_log_file_list(preserveOutput):
-    if preserveOutput:
-        return [
-            "../OUTPUT_PERFORMANCE_LOGS_HIP_" + timestamp + "/Tensor_hip_pkd3_raw_performance_log.txt",
-            "../OUTPUT_PERFORMANCE_LOGS_HIP_" + timestamp + "/Tensor_hip_pln3_raw_performance_log.txt",
-            "../OUTPUT_PERFORMANCE_LOGS_HIP_" + timestamp + "/Tensor_hip_pln1_raw_performance_log.txt"
-        ]
-    else:
-        return [
-            "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW/Tensor_hip_pkd3_raw_performance_log.txt",
-            "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW/Tensor_hip_pln3_raw_performance_log.txt",
-            "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW/Tensor_hip_pln1_raw_performance_log.txt"
-        ]
+    return [
+        "../OUTPUT_PERFORMANCE_LOGS_HIP_" + timestamp + "/Tensor_hip_pkd3_raw_performance_log.txt",
+        "../OUTPUT_PERFORMANCE_LOGS_HIP_" + timestamp + "/Tensor_hip_pln3_raw_performance_log.txt",
+        "../OUTPUT_PERFORMANCE_LOGS_HIP_" + timestamp + "/Tensor_hip_pln1_raw_performance_log.txt"
+    ]
 
 # Functionality group finder
 def func_group_finder(case_number):
@@ -101,7 +94,7 @@ def rpp_test_suite_parser_and_validator():
     parser.add_argument('--test_type', type = int, default = 0, help="Type of Test - (0 = Unit tests / 1 = Performance tests)")
     parser.add_argument('--case_list', nargs = "+", help="List of case numbers to list", required=False)
     parser.add_argument('--profiling', type = str , default='NO', help='Run with profiler? - (YES/NO)', required=False)
-    parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Outputs images from tests will be compared with golden outputs - (0 / 1)", required = False)
+    parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Output images from tests will be compared with golden outputs - (0 / 1)", required = False)
     parser.add_argument('--decoder_type', type = int, default = 0, help = "Type of Decoder to decode the input data - (0 = TurboJPEG / 1 = OpenCV)")
     parser.add_argument('--num_iterations', type = int, default = 0, help = "Specifies the number of iterations for running the performance tests")
     parser.add_argument('--preserve_output', type = int, default = 1, help = "preserves the output of the program - (0 = override output / 1 = preserve output )" )
@@ -167,25 +160,23 @@ numIterations = args.num_iterations
 preserveOutput = args.preserve_output
 
 if(testType == 0):
-    if preserveOutput:
-        outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_IMAGES_HIP_' + timestamp)
+    if qaMode:
+        outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_QA_RESULTS_HIP_' + timestamp)
     else:
-        outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_IMAGES_HIP_NEW')
+        outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_IMAGES_HIP_' + timestamp)
     numIterations = 1
 elif(testType == 1):
     if numIterations == 0:
         numIterations = 100 #default numIterations for running performance tests
-    if preserveOutput:
-        outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_PERFORMANCE_LOGS_HIP_' + timestamp)
-    else:
-        outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_PERFORMANCE_LOGS_HIP_NEW')
+    outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_PERFORMANCE_LOGS_HIP_' + timestamp)
 dstPath = outFilePath
 
-if(testType == 0):
+if testType == 0:
     subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "0", str(qaMode), str(decoderType), str(preserveOutput), " ".join(caseList)])  # nosec
 
     layoutDict ={0:"PKD3", 1:"PLN3", 2:"PLN1"}
-    create_layout_directories(dstPath, layoutDict)
+    if qaMode == 0:
+        create_layout_directories(dstPath, layoutDict)
 else:
     log_file_list = get_log_file_list(preserveOutput)
 
@@ -266,10 +257,7 @@ else:
         NEW_FUNC_GROUP_LIST = [0, 15, 20, 29, 36, 40, 42, 49, 56, 65, 69]
 
         RESULTS_DIR = ""
-        if preserveOutput:
-            RESULTS_DIR = "../OUTPUT_PERFORMANCE_LOGS_HIP_" + timestamp
-        else:
-            RESULTS_DIR = "../OUTPUT_PERFORMANCE_LOGS_HIP_NEW"
+        RESULTS_DIR = "../OUTPUT_PERFORMANCE_LOGS_HIP_" + timestamp
         print("RESULTS_DIR = " + RESULTS_DIR)
         CONSOLIDATED_FILE_TENSOR_PKD3 = RESULTS_DIR + "/consolidated_results_Tensor_PKD3.stats.csv"
         CONSOLIDATED_FILE_TENSOR_PLN1 = RESULTS_DIR + "/consolidated_results_Tensor_PLN1.stats.csv"
@@ -374,4 +362,4 @@ if qaMode and testType == 0:
         sys.stdout.write(line)
         sys.stdout.flush()
     f.write(caseInfo)
-    print("\n-------------- " + caseInfo + " --------------")
+print("\n-------------- " + caseInfo + " --------------")
