@@ -161,7 +161,7 @@ preserveOutput = args.preserve_output
 
 if(testType == 0):
     if qaMode:
-        outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_QA_RESULTS_HIP_' + timestamp)
+        outFilePath = os.path.join(os.path.dirname(cwd), 'QA_RESULTS_HIP_' + timestamp)
     else:
         outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_IMAGES_HIP_' + timestamp)
     numIterations = 1
@@ -171,7 +171,7 @@ elif(testType == 1):
     outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_PERFORMANCE_LOGS_HIP_' + timestamp)
 dstPath = outFilePath
 
-if testType == 0:
+if(testType == 0):
     subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "0", str(qaMode), str(decoderType), str(preserveOutput), " ".join(caseList)])  # nosec
 
     layoutDict ={0:"PKD3", 1:"PLN3", 2:"PLN1"}

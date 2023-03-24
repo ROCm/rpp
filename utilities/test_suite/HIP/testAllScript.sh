@@ -51,35 +51,27 @@ for case in $CASE_LIST; do
     fi
 done
 
+# <<<<<<<<<<<<<< REMOVE FOLDERS FROM PREVIOUS RUN BASED ON PRESERVE_OUTPUT >>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+if [ "$PRESERVE_OUTPUT" -ne 1 ]; then
+    rm -rvf "$cwd/.."/OUTPUT_IMAGES_HIP*
+    rm -rvf "$cwd/.."/QA_RESULTS_HIP*
+    rm -rvf "$cwd/.."/OUTPUT_PERFORMANCE_LOGS_HIP*
+fi
+
 # <<<<<<<<<<<<<< CREATE OUTPUT FOLDERS BASED ON TEST TYPE>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 if [ "$TEST_TYPE" -eq 0 ]; then
     if [ "$QA_MODE" -eq 0 ]; then
-        if [ "$PRESERVE_OUTPUT" -ne 1 ]; then
-            rm -rvf "$cwd/.."/OUTPUT_IMAGES_HIP*
-            rm -rvf "$cwd/.."/OUTPUT_QA_RESULTS_HIP*
-            rm -rvf "$cwd/.."/OUTPUT_PERFORMANCE_LOGS_HIP*
-        fi
         printf "\nRunning Unittests...\n"
         mkdir "$cwd/../OUTPUT_IMAGES_HIP_$TIMESTAMP"
         DEFAULT_DST_FOLDER="$cwd/../OUTPUT_IMAGES_HIP_$TIMESTAMP"
     else
         printf "\nRunning Unittests with QA mode...\n"
-        if [ "$PRESERVE_OUTPUT" -ne 1 ]; then
-            rm -rvf "$cwd/.."/OUTPUT_IMAGES_HIP*
-            rm -rvf "$cwd/.."/OUTPUT_QA_RESULTS_HIP*
-            rm -rvf "$cwd/.."/OUTPUT_PERFORMANCE_LOGS_HIP*
-        fi
-        mkdir "$cwd/../OUTPUT_QA_RESULTS_HIP_$TIMESTAMP"
-        DEFAULT_DST_FOLDER="$cwd/../OUTPUT_QA_RESULTS_HIP_$TIMESTAMP"
+        mkdir "$cwd/../QA_RESULTS_HIP_$TIMESTAMP"
+        DEFAULT_DST_FOLDER="$cwd/../QA_RESULTS_HIP_$TIMESTAMP"
     fi
-
 elif [ "$TEST_TYPE" -eq 1 ]; then
-    if [ "$PRESERVE_OUTPUT" -ne 1 ]; then
-        rm -rvf "$cwd/../"OUTPUT_PERFORMANCE_LOGS_HIP*
-        rm -rvf "$cwd/../"OUTPUT_QA_RESULTS_HIP*
-        rm -rvf "$cwd/../"OUTPUT_IMAGES_HIP*
-    fi
     printf "\nRunning Performance tests...\n"
     mkdir "$cwd/../OUTPUT_PERFORMANCE_LOGS_HIP_$TIMESTAMP"
     DEFAULT_DST_FOLDER="$cwd/../OUTPUT_PERFORMANCE_LOGS_HIP_$TIMESTAMP"

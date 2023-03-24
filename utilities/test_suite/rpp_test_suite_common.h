@@ -614,8 +614,7 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     }
 
     // Append the QA results to file
-    std::string qaResultsPath = dst;
-    qaResultsPath += "/QA_results.txt";
+    std::string qaResultsPath = dst + "/QA_results.txt";
     std:: ofstream qaResults(qaResultsPath, ios_base::app);
     if (qaResults.is_open())
     {

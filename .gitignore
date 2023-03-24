@@ -11,3 +11,4 @@ stb-test/
 hip_build/
 OUTPUT_IMAGES*
 OUTPUT_PERFORMANCE*
+QA_RESULTS*

@@ -49,35 +49,27 @@ for case in $CASE_LIST; do
     fi
 done
 
+# <<<<<<<<<<<<<< REMOVE FOLDERS FROM PREVIOUS RUN BASED ON PRESERVE_OUTPUT >>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+if [ "$PRESERVE_OUTPUT" -ne 1 ]; then
+    rm -rvf "$cwd/.."/OUTPUT_IMAGES_HOST*
+    rm -rvf "$cwd/.."/QA_RESULTS_HOST*
+    rm -rvf "$cwd/.."/OUTPUT_PERFORMANCE_LOGS_HOST*
+fi
+
 # <<<<<<<<<<<<<< CREATE OUTPUT FOLDERS BASED ON TEST TYPE>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 if [ "$TEST_TYPE" -eq 0 ]; then
     if [ "$QA_MODE" -eq 0 ]; then
-        if [ "$PRESERVE_OUTPUT" -ne 1 ]; then
-            rm -rvf "$cwd/.."/OUTPUT_IMAGES_HOST*
-            rm -rvf "$cwd/.."/OUTPUT_QA_RESULTS_HOST*
-            rm -rvf "$cwd/.."/OUTPUT_PERFORMANCE_LOGS_HOST*
-        fi
         printf "\nRunning Unittests...\n"
         mkdir "$cwd/../OUTPUT_IMAGES_HOST_$TIMESTAMP"
         DEFAULT_DST_FOLDER="$cwd/../OUTPUT_IMAGES_HOST_$TIMESTAMP"
     else
         printf "\nRunning Unittests with QA mode...\n"
-        if [ "$PRESERVE_OUTPUT" -ne 1 ]; then
-            rm -rvf "$cwd/.."/OUTPUT_QA_RESULTS_HOST*
-            rm -rvf "$cwd/.."/OUTPUT_IMAGES_HOST*
-            rm -rvf "$cwd/.."/OUTPUT_PERFORMANCE_LOGS_HOST*
-        fi
-            mkdir "$cwd/../OUTPUT_QA_RESULTS_HOST_$TIMESTAMP"
-            DEFAULT_DST_FOLDER="$cwd/../OUTPUT_QA_RESULTS_HOST_$TIMESTAMP"
+        mkdir "$cwd/../QA_RESULTS_HOST_$TIMESTAMP"
+        DEFAULT_DST_FOLDER="$cwd/../QA_RESULTS_HOST_$TIMESTAMP"
     fi
-
 elif [ "$TEST_TYPE" -eq 1 ]; then
-    if [ "$PRESERVE_OUTPUT" -ne 1 ]; then
-        rm -rvf "$cwd/.."/OUTPUT_PERFORMANCE_LOGS_HOST*
-        rm -rvf "$cwd/.."/OUTPUT_QA_RESULTS_HOST*
-        rm -rvf "$cwd/.."/OUTPUT_IMAGES_HOST*
-    fi
     printf "\nRunning Performance tests...\n"
     mkdir "$cwd/../OUTPUT_PERFORMANCE_LOGS_HOST_$TIMESTAMP"
     DEFAULT_DST_FOLDER="$cwd/../OUTPUT_PERFORMANCE_LOGS_HOST_$TIMESTAMP"
@@ -88,6 +80,7 @@ DST_FOLDER="$DEFAULT_DST_FOLDER"
 # <<<<<<<<<<<<<< EXECUTION OF ALL FUNCTIONALITIES (NEED NOT CHANGE) >>>>>>>>>>>>>>
 
 directory_name_generator() {
+
     if [ "$QA_MODE" -eq 0 ]; then
         AFFINITY=$1
         TYPE=$2

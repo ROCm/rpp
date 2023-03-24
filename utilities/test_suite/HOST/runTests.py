@@ -110,7 +110,7 @@ preserveOutput = args.preserve_output
 # set the output folders and number of runs based on type of test (unit test / performance test)
 if(testType == 0):
     if qaMode:
-        outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_QA_RESULTS_HOST_' + timestamp)
+        outFilePath = os.path.join(os.path.dirname(cwd), 'QA_RESULTS_HOST_' + timestamp)
     else:
         outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_IMAGES_HOST_' + timestamp)
     numIterations = 1
