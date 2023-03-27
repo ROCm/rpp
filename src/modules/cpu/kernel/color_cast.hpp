@@ -78,9 +78,9 @@ RppStatus color_cast_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTempR = (Rpp8u) RPPPIXELCHECK((alphaParam * (srcPtrTemp[0] - rParam)) + rParam);
-                    *dstPtrTempG = (Rpp8u) RPPPIXELCHECK((alphaParam * (srcPtrTemp[1] - gParam)) + gParam);
-                    *dstPtrTempB = (Rpp8u) RPPPIXELCHECK((alphaParam * (srcPtrTemp[2] - bParam)) + bParam);
+                    *dstPtrTempR = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((alphaParam * (srcPtrTemp[0] - bParam)) + bParam));
+                    *dstPtrTempG = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((alphaParam * (srcPtrTemp[1] - gParam)) + gParam));
+                    *dstPtrTempB = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((alphaParam * (srcPtrTemp[2] - rParam)) + rParam));
 
                     srcPtrTemp+=3;
                     dstPtrTempR++;
@@ -130,9 +130,9 @@ RppStatus color_cast_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK((alphaParam * (*srcPtrTempR - bParam)) + bParam);
-                    dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK((alphaParam * (*srcPtrTempG - gParam)) + gParam);
-                    dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK((alphaParam * (*srcPtrTempB - rParam)) + rParam);
+                    dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((alphaParam * (*srcPtrTempR - bParam)) + bParam));
+                    dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((alphaParam * (*srcPtrTempG - gParam)) + gParam));
+                    dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((alphaParam * (*srcPtrTempB - rParam)) + rParam));
 
                     srcPtrTempR++;
                     srcPtrTempG++;
@@ -176,9 +176,9 @@ RppStatus color_cast_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK((alphaParam * (srcPtrTemp[0] - rParam)) + rParam);
-                    dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK((alphaParam * (srcPtrTemp[1] - gParam)) + gParam);
-                    dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK((alphaParam * (srcPtrTemp[2] - bParam)) + bParam);
+                    dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((alphaParam * (srcPtrTemp[0] - bParam)) + bParam));
+                    dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((alphaParam * (srcPtrTemp[1] - gParam)) + gParam));
+                    dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((alphaParam * (srcPtrTemp[2] - rParam)) + rParam));
 
                     srcPtrTemp += 3;
                     dstPtrTemp += 3;
@@ -230,9 +230,9 @@ RppStatus color_cast_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    *dstPtrTempR = (Rpp8u) RPPPIXELCHECK((alphaParam * (*srcPtrTempR - bParam)) + bParam);
-                    *dstPtrTempG = (Rpp8u) RPPPIXELCHECK((alphaParam * (*srcPtrTempG - gParam)) + gParam);
-                    *dstPtrTempB = (Rpp8u) RPPPIXELCHECK((alphaParam * (*srcPtrTempB - rParam)) + rParam);
+                    *dstPtrTempR = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((alphaParam * (*srcPtrTempR - bParam)) + bParam));
+                    *dstPtrTempG = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((alphaParam * (*srcPtrTempG - gParam)) + gParam));
+                    *dstPtrTempB = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((alphaParam * (*srcPtrTempB - rParam)) + rParam));
 
                     srcPtrTempR++;
                     srcPtrTempG++;
@@ -331,9 +331,9 @@ RppStatus color_cast_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTempR = RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[0] - rParam)) + rParam);
+                    *dstPtrTempR = RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[0] - bParam)) + bParam);
                     *dstPtrTempG = RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[1] - gParam)) + gParam);
-                    *dstPtrTempB = RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[2] - bParam)) + bParam);
+                    *dstPtrTempB = RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[2] - rParam)) + rParam);
 
                     srcPtrTemp += 3;
                     dstPtrTempR++;
@@ -429,9 +429,9 @@ RppStatus color_cast_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    dstPtrTemp[0] = RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[0] - rParam)) + rParam);
+                    dstPtrTemp[0] = RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[0] - bParam)) + bParam);
                     dstPtrTemp[1] = RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[1] - gParam)) + gParam);
-                    dstPtrTemp[2] = RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[2] - bParam)) + bParam);
+                    dstPtrTemp[2] = RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[2] - rParam)) + rParam);
 
                     srcPtrTemp += 3;
                     dstPtrTemp += 3;
@@ -598,9 +598,9 @@ RppStatus color_cast_f16_f16_host_tensor(Rpp16f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTempR = (Rpp16f) RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[0] - rParam)) + rParam);
+                    *dstPtrTempR = (Rpp16f) RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[0] - bParam)) + bParam);
                     *dstPtrTempG = (Rpp16f) RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[1] - gParam)) + gParam);
-                    *dstPtrTempB = (Rpp16f) RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[2] - bParam)) + bParam);
+                    *dstPtrTempB = (Rpp16f) RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[2] - rParam)) + rParam);
 
                     srcPtrTemp += 3;
                     dstPtrTempR++;
@@ -722,9 +722,9 @@ RppStatus color_cast_f16_f16_host_tensor(Rpp16f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    dstPtrTemp[0] = (Rpp16f) RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[0] - rParam)) + rParam);
+                    dstPtrTemp[0] = (Rpp16f) RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[0] - bParam)) + bParam);
                     dstPtrTemp[1] = (Rpp16f) RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[1] - gParam)) + gParam);
-                    dstPtrTemp[2] = (Rpp16f) RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[2] - bParam)) + bParam);
+                    dstPtrTemp[2] = (Rpp16f) RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[2] - rParam)) + rParam);
 
                     srcPtrTemp += 3;
                     dstPtrTemp += 3;
@@ -898,9 +898,9 @@ RppStatus color_cast_i8_i8_host_tensor(Rpp8s *srcPtr,
                     srcPtrTempI8[1] = (Rpp32f)srcPtrTemp[1] + 128;
                     srcPtrTempI8[2] = (Rpp32f)srcPtrTemp[2] + 128;
 
-                    *dstPtrTempR = (Rpp8s) RPPPIXELCHECKI8((alphaParam * (srcPtrTempI8[0] - rParam)) + rParam - 128);
+                    *dstPtrTempR = (Rpp8s) RPPPIXELCHECKI8((alphaParam * (srcPtrTempI8[0] - bParam)) + bParam - 128);
                     *dstPtrTempG = (Rpp8s) RPPPIXELCHECKI8((alphaParam * (srcPtrTempI8[1] - gParam)) + gParam - 128);
-                    *dstPtrTempB = (Rpp8s) RPPPIXELCHECKI8((alphaParam * (srcPtrTempI8[2] - bParam)) + bParam - 128);
+                    *dstPtrTempB = (Rpp8s) RPPPIXELCHECKI8((alphaParam * (srcPtrTempI8[2] - rParam)) + rParam - 128);
 
                     srcPtrTemp+=3;
                     dstPtrTempR++;
@@ -1006,9 +1006,9 @@ RppStatus color_cast_i8_i8_host_tensor(Rpp8s *srcPtr,
                     srcPtrTempI8[1] = (Rpp32f)srcPtrTemp[1] + 128;
                     srcPtrTempI8[2] = (Rpp32f)srcPtrTemp[2] + 128;
 
-                    dstPtrTemp[0] = (Rpp8s) RPPPIXELCHECKI8((alphaParam * (srcPtrTempI8[0] - rParam)) + rParam - 128);
+                    dstPtrTemp[0] = (Rpp8s) RPPPIXELCHECKI8((alphaParam * (srcPtrTempI8[0] - bParam)) + bParam - 128);
                     dstPtrTemp[1] = (Rpp8s) RPPPIXELCHECKI8((alphaParam * (srcPtrTempI8[1] - gParam)) + gParam - 128);
-                    dstPtrTemp[2] = (Rpp8s) RPPPIXELCHECKI8((alphaParam * (srcPtrTempI8[2] - bParam)) + bParam - 128);
+                    dstPtrTemp[2] = (Rpp8s) RPPPIXELCHECKI8((alphaParam * (srcPtrTempI8[2] - rParam)) + rParam - 128);
 
                     srcPtrTemp += 3;
                     dstPtrTemp += 3;

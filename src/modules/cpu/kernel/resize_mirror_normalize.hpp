@@ -117,9 +117,9 @@ omp_set_dynamic(0);
                     compute_resize_bilinear_src_loc_and_weights(dstLoc, wRatio, srcLocationColumn, &weightParams[2], wOffset, srcDescPtr->strides.wStride); // Compute the src col location correspoding to the dst col location
                     compute_bilinear_coefficients(weightParams, bilinearCoeffs);    // Compute Bilinear coefficients
                     compute_bilinear_interpolation_3c_pkd(srcRowPtrsForInterp, srcLocationColumn, maxWidthLimit, bilinearCoeffs, dstPtrTempR, dstPtrTempG, dstPtrTempB);   // Compute Bilinear interpolation
-                    *dstPtrTempR = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (*dstPtrTempR - mean[0]) * invStdDev[0])));
-                    *dstPtrTempG = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (*dstPtrTempG - mean[1]) * invStdDev[1])));
-                    *dstPtrTempB = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (*dstPtrTempB - mean[2]) * invStdDev[2])));
+                    *dstPtrTempR = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (*dstPtrTempR - mean[0]) * invStdDev[0]))));
+                    *dstPtrTempG = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (*dstPtrTempG - mean[1]) * invStdDev[1]))));
+                    *dstPtrTempB = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (*dstPtrTempB - mean[2]) * invStdDev[2]))));
                     dstPtrTempR++;
                     dstPtrTempG++;
                     dstPtrTempB++;
@@ -169,9 +169,9 @@ omp_set_dynamic(0);
                     compute_resize_bilinear_src_loc_and_weights(dstLoc, wRatio, srcLocationColumn, &weightParams[2], wOffset);  // Compute the src col location correspoding to the dst col location
                     compute_bilinear_coefficients(weightParams, bilinearCoeffs);    // Compute Bilinear coefficients
                     compute_bilinear_interpolation_3c_pln(srcRowPtrsForInterp, srcLocationColumn, maxWidthLimit, bilinearCoeffs, &dstPtrTemp[0], &dstPtrTemp[1], &dstPtrTemp[2]);  // Compute Bilinear interpolation
-                    dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (dstPtrTemp[0] - mean[0]) * invStdDev[0])));
-                    dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (dstPtrTemp[1] - mean[1]) * invStdDev[1])));
-                    dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (dstPtrTemp[2] - mean[2]) * invStdDev[2])));
+                    dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (dstPtrTemp[0] - mean[0]) * invStdDev[0]))));
+                    dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (dstPtrTemp[1] - mean[1]) * invStdDev[1]))));
+                    dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (dstPtrTemp[2] - mean[2]) * invStdDev[2]))));
                     dstPtrTemp += dstDescPtr->c;
                 }
                 dstPtrRow += dstDescPtr->strides.hStride;
@@ -214,9 +214,9 @@ omp_set_dynamic(0);
                     compute_resize_bilinear_src_loc_and_weights(dstLoc, wRatio, srcLocationColumn, &weightParams[2], wOffset, srcDescPtr->strides.wStride); // Compute the src col location correspoding to the dst col location
                     compute_bilinear_coefficients(weightParams, bilinearCoeffs);    // Compute Bilinear coefficients
                     compute_bilinear_interpolation_3c_pkd(srcRowPtrsForInterp, srcLocationColumn, maxWidthLimit, bilinearCoeffs, &dstPtrTemp[0], &dstPtrTemp[1], &dstPtrTemp[2]);  // Compute Bilinear interpolation
-                    dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (dstPtrTemp[0] - mean[0]) * invStdDev[1])));
-                    dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (dstPtrTemp[1] - mean[1]) * invStdDev[0])));
-                    dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (dstPtrTemp[2] - mean[2]) * invStdDev[2])));
+                    dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (dstPtrTemp[0] - mean[0]) * invStdDev[1]))));
+                    dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (dstPtrTemp[1] - mean[1]) * invStdDev[0]))));
+                    dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (dstPtrTemp[2] - mean[2]) * invStdDev[2]))));
                     dstPtrTemp += dstDescPtr->c;
                 }
                 dstPtrRow += dstDescPtr->strides.hStride;
@@ -268,7 +268,7 @@ omp_set_dynamic(0);
                     for (int c = 0; c < dstDescPtr->c; c++)
                     {
                         compute_bilinear_interpolation_1c(&srcRowPtrsForInterp[c * INTERP_BILINEAR_KERNEL_SIZE], srcLocationColumn, maxWidthLimit, bilinearCoeffs, dstPtrTempChn);  // Compute Bilinear interpolation
-                        *dstPtrTempChn = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (*dstPtrTempChn - mean[c]) * invStdDev[c])));
+                        *dstPtrTempChn = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (*dstPtrTempChn - mean[c]) * invStdDev[c]))));
                         dstPtrTempChn += dstDescPtr->strides.cStride;
                     }
 

@@ -73,9 +73,9 @@ RppStatus exposure_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTempR = (Rpp8u) RPPPIXELCHECK(((Rpp32f) (srcPtrTemp[0])) * multiplyingFactor);
-                    *dstPtrTempG = (Rpp8u) RPPPIXELCHECK(((Rpp32f) (srcPtrTemp[1])) * multiplyingFactor);
-                    *dstPtrTempB = (Rpp8u) RPPPIXELCHECK(((Rpp32f) (srcPtrTemp[2])) * multiplyingFactor);
+                    *dstPtrTempR = (Rpp8u) RPPPIXELCHECK(std::nearbyintf(((Rpp32f) (srcPtrTemp[0])) * multiplyingFactor));
+                    *dstPtrTempG = (Rpp8u) RPPPIXELCHECK(std::nearbyintf(((Rpp32f) (srcPtrTemp[1])) * multiplyingFactor));
+                    *dstPtrTempB = (Rpp8u) RPPPIXELCHECK(std::nearbyintf(((Rpp32f) (srcPtrTemp[2])) * multiplyingFactor));
 
                     srcPtrTemp += 3;
                     dstPtrTempR++;
@@ -122,9 +122,9 @@ RppStatus exposure_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK(((Rpp32f) (*srcPtrTempR)) * multiplyingFactor);
-                    dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK(((Rpp32f) (*srcPtrTempG)) * multiplyingFactor);
-                    dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK(((Rpp32f) (*srcPtrTempB)) * multiplyingFactor);
+                    dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf(((Rpp32f) (*srcPtrTempR)) * multiplyingFactor));
+                    dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf(((Rpp32f) (*srcPtrTempG)) * multiplyingFactor));
+                    dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf(((Rpp32f) (*srcPtrTempB)) * multiplyingFactor));
 
                     srcPtrTempR++;
                     srcPtrTempG++;
@@ -169,7 +169,7 @@ RppStatus exposure_u8_u8_host_tensor(Rpp8u *srcPtr,
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        *dstPtrTemp = (Rpp8u) RPPPIXELCHECK(((Rpp32f) (*srcPtrTemp)) * multiplyingFactor);
+                        *dstPtrTemp = (Rpp8u) RPPPIXELCHECK(std::nearbyintf(((Rpp32f) (*srcPtrTemp)) * multiplyingFactor));
 
                         srcPtrTemp++;
                         dstPtrTemp++;

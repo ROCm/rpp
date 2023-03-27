@@ -33,7 +33,7 @@ RPP is developed for **Linux** operating system.
     ```
     sudo apt-get install clang
     ```
-  
+
   + CentOS `7`
     ```
     sudo yum install llvm-toolset-7-clang llvm-toolset-7-clang-analyzer llvm-toolset-7-clang-tools-extra
@@ -101,6 +101,24 @@ RPP is developed for **Linux** operating system.
   sudo -S make -j128 <Or other number of threads to use>
   sudo -S make install
   sudo -S ldconfig
+  ```
+
+* TurboJpeg installation
+  ```
+  sudo apt-get install nasm
+  sudo apt-get install wget
+  git clone -b 2.0.6.1 https://github.com/rrawther/libjpeg-turbo.git
+  cd libjpeg-turbo
+  mkdir build
+  cd build
+  cmake -DCMAKE_INSTALL_PREFIX=/usr \
+        -DCMAKE_BUILD_TYPE=RELEASE  \
+        -DENABLE_STATIC=FALSE       \
+        -DCMAKE_INSTALL_DOCDIR=/usr/share/doc/libjpeg-turbo-2.0.3 \
+        -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib  \
+        ..
+  make -j$nproc
+  sudo make install
   ```
 
 ## Supported Functionalities and Variants

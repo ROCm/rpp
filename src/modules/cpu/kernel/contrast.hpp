@@ -75,9 +75,9 @@ RppStatus contrast_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTempR = (Rpp8u) RPPPIXELCHECK(((Rpp32f)(srcPtrTemp[0]) - contrastCenter) * contrastFactor + contrastCenter);
-                    *dstPtrTempG = (Rpp8u) RPPPIXELCHECK(((Rpp32f)(srcPtrTemp[1]) - contrastCenter) * contrastFactor + contrastCenter);
-                    *dstPtrTempB = (Rpp8u) RPPPIXELCHECK(((Rpp32f)(srcPtrTemp[2]) - contrastCenter) * contrastFactor + contrastCenter);
+                    *dstPtrTempR = (Rpp8u) RPPPIXELCHECK(std::nearbyintf(((Rpp32f)(srcPtrTemp[0]) - contrastCenter) * contrastFactor + contrastCenter));
+                    *dstPtrTempG = (Rpp8u) RPPPIXELCHECK(std::nearbyintf(((Rpp32f)(srcPtrTemp[1]) - contrastCenter) * contrastFactor + contrastCenter));
+                    *dstPtrTempB = (Rpp8u) RPPPIXELCHECK(std::nearbyintf(((Rpp32f)(srcPtrTemp[2]) - contrastCenter) * contrastFactor + contrastCenter));
 
                     srcPtrTemp += 3;
                     dstPtrTempR++;
@@ -124,9 +124,9 @@ RppStatus contrast_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK(((Rpp32f)(*srcPtrTempR) - contrastCenter) * contrastFactor + contrastCenter);
-                    dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK(((Rpp32f)(*srcPtrTempG) - contrastCenter) * contrastFactor + contrastCenter);
-                    dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK(((Rpp32f)(*srcPtrTempB) - contrastCenter) * contrastFactor + contrastCenter);
+                    dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf(((Rpp32f)(*srcPtrTempR) - contrastCenter) * contrastFactor + contrastCenter));
+                    dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf(((Rpp32f)(*srcPtrTempG) - contrastCenter) * contrastFactor + contrastCenter));
+                    dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf(((Rpp32f)(*srcPtrTempB) - contrastCenter) * contrastFactor + contrastCenter));
 
                     srcPtrTempR++;
                     srcPtrTempG++;
@@ -169,7 +169,7 @@ RppStatus contrast_u8_u8_host_tensor(Rpp8u *srcPtr,
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        *dstPtrTemp = (Rpp8u) RPPPIXELCHECK(((Rpp32f)(*srcPtrTemp) - contrastCenter) * contrastFactor + contrastCenter);
+                        *dstPtrTemp = (Rpp8u) RPPPIXELCHECK(std::nearbyintf(((Rpp32f)(*srcPtrTemp) - contrastCenter) * contrastFactor + contrastCenter));
                         srcPtrTemp++;
                         dstPtrTemp++;
                     }
