@@ -141,7 +141,7 @@ RPP is developed for **Linux** operating system.
 -   ROI variants
 -   Padded variants
 
-## [Instructions to build the library](#rpp-installation)
+## Instructions to build the library
 
 The ROCm Performance Primitives (RPP) library has support for three backends: HIP, OpenCL, and CPU:
 
