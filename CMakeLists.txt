@@ -1,4 +1,4 @@
-# Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -22,10 +22,10 @@ cmake_minimum_required(VERSION 3.5)
 set(CMAKE_CXX_COMPILER clang++)
 set(CMAKE_CXX_STANDARD 14)
 
-project(amd_rpp CXX)
+project(rpp CXX)
 
 # RPP Version
-set(VERSION "0.99")
+set(VERSION "1.0.0")
 
 set(CMAKE_INSTALL_LIBDIR "lib" CACHE STRING "Library install directory")
 include(GNUInstallDirs)

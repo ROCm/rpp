@@ -189,7 +189,7 @@ $ sudo make install
 
 ## MIVisionX(OpenVX) Support
 
-Extended RPP support as a functionality through OpenVX [MIVisionX](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX) (Find build instructions and build the amd_rpp library)
+Extended RPP support as a functionality through OpenVX [MIVisionX](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX) (Find build instructions and build the `rpp` library)
 
 ## Miscellaneous examples
 
