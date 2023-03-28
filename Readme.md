@@ -21,7 +21,7 @@ RPP is developed for **Linux** operating system.
   + Ubuntu `20.04`/`22.04`
   + CentOS `7`/`8`
   + RHEL `8`/`9`
-  + SLES - `15-SP2`
+  + SLES - `15-SP3`
 
 * [ROCm supported hardware](https://docs.amd.com/bundle/Hardware_and_Software_Reference_Guide/page/Hardware_and_Software_Support.html)
 
@@ -45,7 +45,7 @@ RPP is developed for **Linux** operating system.
     sudo yum install clang
     ```
 
-  + SLES `15-SP2`
+  + SLES `15-SP3`
     ```
     sudo zypper install llvm-clang
     ```
@@ -322,3 +322,30 @@ Extended RPP support as a functionality through OpenVX [MIVisionX](https://githu
 
     // Copy output data back to host
     hipMemcpy(output, d_output, ioBufferSize * sizeof(Rpp8u), hipMemcpyDeviceToHost);
+
+## Technical Support
+
+Please email `mivisionx.support@amd.com` for questions, and feedback on AMD RPP.
+
+Please submit your feature requests, and bug reports on the [GitHub issues](https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp/issues) page.
+
+## Release Notes
+
+### Latest Release
+
+[![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/GPUOpen-ProfessionalCompute-Libraries/rpp?style=for-the-badge)](https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp/releases)
+
+### Changelog
+
+Review all notable [changes](CHANGELOG.md#changelog) with the latest release
+
+### Tested configurations
+
+* Linux distribution
+  + Ubuntu - `20.04` / `22.04`
+  + CentOS - `7` / `8`
+  + RedHat - `8` / `9`
+  + SLES - `15-SP3`
+* ROCm: rocm-core - `5.4.0.50400-72`
+* Protobuf - [V3.12.4](https://github.com/protocolbuffers/protobuf/releases/tag/v3.12.4)
+* OpenCV - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
