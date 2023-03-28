@@ -15,6 +15,16 @@ AMD ROCm Performance Primitives (**RPP**) library is a comprehensive high-perfor
 
 RPP is developed for **Linux** operating system.
 
+## Supported Functionalities and Variants
+
+### Supported Functionalities List
+
+<p align="center"><img width="90%" src="docs/images/supported_functionalities.png" /></p>
+
+### Supported Functionalities Samples
+
+<p align="center"><img width="90%" src="docs/images/supported_functionalities_samples.jpg" /></p>
+
 ## Prerequisites
 
 * OS
@@ -121,16 +131,6 @@ RPP is developed for **Linux** operating system.
   sudo make install
   ```
 
-## Supported Functionalities and Variants
-
-### Supported Functionalities List
-
-<p align="center"><img width="90%" src="docs/images/supported_functionalities.png" /></p>
-
-### Supported Functionalities Samples
-
-<p align="center"><img width="90%" src="docs/images/supported_functionalities_samples.jpg" /></p>
-
 ### Supported Variants
 
 -   Packed 3 Channel (RGB) - PKD3 images
@@ -141,11 +141,11 @@ RPP is developed for **Linux** operating system.
 -   ROI variants
 -   Padded variants
 
-## Instructions to build the library
+## Build & Install RPP 
 
 The ROCm Performance Primitives (RPP) library has support for three backends: HIP, OpenCL, and CPU:
 
-* Instructions for building RPP with the **HIP** backend **(default)**:
+* Building RPP with the **HIP** backend **(default)**:
 ```
 $ git clone https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git
 $ mkdir build && cd build
@@ -154,7 +154,7 @@ $ make -j8
 $ sudo make install
 ```
 
-* Instructions for building RPP with the **OPENCL** backend:
+* Building RPP with the **OPENCL** backend:
 ```
 $ git clone https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git
 $ mkdir build && cd build
@@ -163,7 +163,7 @@ $ make -j8
 $ sudo make install
 ```
 
-* Instructions for building RPP with the **CPU** backend:
+* Building RPP with the **CPU** backend:
 ```
 $ git clone https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git
 $ mkdir build && cd build
@@ -172,24 +172,26 @@ $ make -j8
 $ sudo make install
 ```
 
-## Instructions to test functionalities after HOST installation
+## Test Functionalities
+
+### CPU installation
 
     $ cd rpp/utilities/rpp-unittests/HOST_NEW
     $ ./testAllScript.sh
 
-## Instructions to test functionalities after OCL installation
+### OCL installation
 
     $ cd rpp/utilities/rpp-unittests/OCL_NEW
     $ ./testAllScript.sh
 
-## Instructions to test functionalities after HIP installation
+### HIP installation
 
     $ cd rpp/utilities/rpp-unittests/HIP_NEW
     $ ./testAllScript.sh
 
-## MIVisionX(OpenVX) Support
+## MIVisionX Support - OpenVX Extension
 
-Extended RPP support as a functionality through OpenVX [MIVisionX](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX) (Find build instructions and build the `rpp` library)
+Extended RPP support as a functionality through OpenVX [MIVisionX](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX)
 
 ## Miscellaneous examples
 
