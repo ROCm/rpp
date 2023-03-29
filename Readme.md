@@ -13,8 +13,6 @@ AMD ROCm Performance Primitives (**RPP**) library is a comprehensive high-perfor
 
 <p align="center"><img width="50%" src="docs/images/rpp_structure_4.png" /></p>
 
-RPP is developed for **Linux** operating system.
-
 ## Supported Functionalities and Variants
 
 ### Supported Functionalities List
@@ -25,9 +23,19 @@ RPP is developed for **Linux** operating system.
 
 <p align="center"><img width="90%" src="docs/images/supported_functionalities_samples.jpg" /></p>
 
+### Supported Variants
+
+-   Packed 3 Channel (RGB) - PKD3 images
+-   Planar 3 Channel (RGB) - PLN3 images
+-   Planar 1 Channel (Greyscale) - PLN1 images
+-   Affinity - Host and GPU
+-   Batch Processing - 26 variants
+-   ROI variants
+-   Padded variants
+
 ## Prerequisites
 
-* OS
+* **OS**
   + Ubuntu `20.04`/`22.04`
   + CentOS `7`/`8`
   + RHEL `8`/`9`
@@ -131,16 +139,6 @@ RPP is developed for **Linux** operating system.
   sudo make install
   ```
 
-### Supported Variants
-
--   Packed 3 Channel (RGB) - PKD3 images
--   Planar 3 Channel (RGB) - PLN3 images
--   Planar 1 Channel (Greyscale) - PLN1 images
--   Affinity - Host and GPU
--   Batch Processing - 26 variants
--   ROI variants
--   Padded variants
-
 ## Build & Install RPP 
 
 The ROCm Performance Primitives (RPP) library has support for three backends: HIP, OpenCL, and CPU:
@@ -191,7 +189,7 @@ $ sudo make install
 
 ## MIVisionX Support - OpenVX Extension
 
-Extended RPP support as a functionality through OpenVX [MIVisionX](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX)
+[MIVisionX](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX) RPP Extension [vx_rpp](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/master/amd_openvx_extensions/amd_rpp#amd-rpp-extension) supports RPP functionality through OpenVX Framework.
 
 ## Miscellaneous examples
 
