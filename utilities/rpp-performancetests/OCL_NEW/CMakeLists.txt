@@ -1,3 +1,23 @@
+# Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
 cmake_minimum_required(VERSION 3.5)
 project(Rpp_test)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../../../cmake)
@@ -42,11 +62,11 @@ if (OpenCL_FOUND AND OpenCV_FOUND)
     # add_executable(Single_ocl Single_ocl.cpp)
     add_executable(uniqueFunctionalities_ocl uniqueFunctionalities_ocl.cpp)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGPU_SUPPORT=1 -DRPP_BACKEND_OPENCL=1 -std=gnu++14")
-    target_link_libraries(BatchPD_ocl_pkd3 ${OpenCV_LIBS} -lamd_rpp ${OpenCL_LIBRARIES} pthread ${LINK_LIBRARY_LIST})
-    target_link_libraries(BatchPD_ocl_pln1 ${OpenCV_LIBS} -lamd_rpp ${OpenCL_LIBRARIES} pthread ${LINK_LIBRARY_LIST})
-    target_link_libraries(BatchPD_ocl_pln3 ${OpenCV_LIBS} -lamd_rpp ${OpenCL_LIBRARIES} pthread ${LINK_LIBRARY_LIST})
-    # target_link_libraries(Single_ocl ${OpenCV_LIBS} -lamd_rpp ${OpenCL_LIBRARIES} pthread boost_filesystem boost_system)
-    target_link_libraries(uniqueFunctionalities_ocl ${OpenCV_LIBS} -lamd_rpp ${OpenCL_LIBRARIES} pthread ${LINK_LIBRARY_LIST})
+    target_link_libraries(BatchPD_ocl_pkd3 ${OpenCV_LIBS} -lrpp ${OpenCL_LIBRARIES} pthread ${LINK_LIBRARY_LIST})
+    target_link_libraries(BatchPD_ocl_pln1 ${OpenCV_LIBS} -lrpp ${OpenCL_LIBRARIES} pthread ${LINK_LIBRARY_LIST})
+    target_link_libraries(BatchPD_ocl_pln3 ${OpenCV_LIBS} -lrpp ${OpenCL_LIBRARIES} pthread ${LINK_LIBRARY_LIST})
+    # target_link_libraries(Single_ocl ${OpenCV_LIBS} -lrpp ${OpenCL_LIBRARIES} pthread boost_filesystem boost_system)
+    target_link_libraries(uniqueFunctionalities_ocl ${OpenCV_LIBS} -lrpp ${OpenCL_LIBRARIES} pthread ${LINK_LIBRARY_LIST})
 else()
     message("-- ${Yellow}Error: OpenCV and OpenCL must be installed to install ${PROJECT_NAME} successfully!${ColourReset}")
 endif()

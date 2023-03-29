@@ -5,6 +5,61 @@
 ### Online Documentation
 [RPP Documentation](https://gpuopen-professionalcompute-libraries.github.io/rpp/)
 
+### RPP 1.0.0 (Unreleased)
+
+#### Added
+* 
+
+#### Optimizations
+* Readme Updates
+
+#### Changed
+* Lib Name - `amd_rpp` to `rpp`
+
+#### Fixed
+* Minor bugs
+
+### Tested Configurations
+* Linux distribution
+  + Ubuntu - `20.04` / `22.04`
+  + CentOS - `7`/`8`
+  + RHEL - `8`/`9`
+* ROCm: rocm-core - `5.4.0.50400-72`
+* Clang - Version `5.0.1` and above
+* CMake - Version `3.22.3` 
+* Boost - Version `1.72`
+* IEEE 754-based half-precision floating-point library - Version `1.12.0`
+
+### Known issues
+* 
+
+### RPP 0.99
+
+#### Added
+* Linux Dockers
+
+#### Optimizations
+* Readme Updates
+
+#### Changed
+* CMakeList
+
+#### Fixed
+* Minor bugs and warnings
+
+### Tested Configurations
+* Linux distribution
+  + Ubuntu - `20.04` / `22.04`
+  + CentOS - `7`/`8`
+* ROCm: rocm-core - `5.4.0.50400-72`
+* Clang - Version `5.0.1` and above
+* CMake - Version `3.22.3` 
+* Boost - Version `1.72`
+* IEEE 754-based half-precision floating-point library - Version `1.12.0`
+
+### Known issues
+* 
+
 ### RPP 0.98
 
 #### Added

@@ -15,13 +15,23 @@ AMD ROCm Performance Primitives (**RPP**) library is a comprehensive high-perfor
 
 RPP is developed for **Linux** operating system.
 
+## Supported Functionalities and Variants
+
+### Supported Functionalities List
+
+<p align="center"><img width="90%" src="docs/images/supported_functionalities.png" /></p>
+
+### Supported Functionalities Samples
+
+<p align="center"><img width="90%" src="docs/images/supported_functionalities_samples.jpg" /></p>
+
 ## Prerequisites
 
 * OS
   + Ubuntu `20.04`/`22.04`
   + CentOS `7`/`8`
   + RHEL `8`/`9`
-  + SLES - `15-SP2`
+  + SLES - `15-SP3`
 
 * [ROCm supported hardware](https://docs.amd.com/bundle/Hardware_and_Software_Reference_Guide/page/Hardware_and_Software_Support.html)
 
@@ -45,7 +55,7 @@ RPP is developed for **Linux** operating system.
     sudo yum install clang
     ```
 
-  + SLES `15-SP2`
+  + SLES `15-SP3`
     ```
     sudo zypper install llvm-clang
     ```
@@ -121,16 +131,6 @@ RPP is developed for **Linux** operating system.
   sudo make install
   ```
 
-## Supported Functionalities and Variants
-
-### Supported Functionalities List
-
-<p align="center"><img width="90%" src="docs/images/supported_functionalities.png" /></p>
-
-### Supported Functionalities Samples
-
-<p align="center"><img width="90%" src="docs/images/supported_functionalities_samples.jpg" /></p>
-
 ### Supported Variants
 
 -   Packed 3 Channel (RGB) - PKD3 images
@@ -141,11 +141,11 @@ RPP is developed for **Linux** operating system.
 -   ROI variants
 -   Padded variants
 
-## [Instructions to build the library](#rpp-installation)
+## Build & Install RPP 
 
 The ROCm Performance Primitives (RPP) library has support for three backends: HIP, OpenCL, and CPU:
 
-* Instructions for building RPP with the **HIP** backend **(default)**:
+* Building RPP with the **HIP** backend **(default)**:
 ```
 $ git clone https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git
 $ mkdir build && cd build
@@ -154,7 +154,7 @@ $ make -j8
 $ sudo make install
 ```
 
-* Instructions for building RPP with the **OPENCL** backend:
+* Building RPP with the **OPENCL** backend:
 ```
 $ git clone https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git
 $ mkdir build && cd build
@@ -163,7 +163,7 @@ $ make -j8
 $ sudo make install
 ```
 
-* Instructions for building RPP with the **CPU** backend:
+* Building RPP with the **CPU** backend:
 ```
 $ git clone https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git
 $ mkdir build && cd build
@@ -172,24 +172,26 @@ $ make -j8
 $ sudo make install
 ```
 
-## Instructions to test functionalities after HOST installation
+## Test Functionalities
+
+### CPU installation
 
     $ cd rpp/utilities/rpp-unittests/HOST_NEW
     $ ./testAllScript.sh
 
-## Instructions to test functionalities after OCL installation
+### OCL installation
 
     $ cd rpp/utilities/rpp-unittests/OCL_NEW
     $ ./testAllScript.sh
 
-## Instructions to test functionalities after HIP installation
+### HIP installation
 
     $ cd rpp/utilities/rpp-unittests/HIP_NEW
     $ ./testAllScript.sh
 
-## MIVisionX(OpenVX) Support
+## MIVisionX Support - OpenVX Extension
 
-Extended RPP support as a functionality through OpenVX [MIVisionX](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX) (Find build instructions and build the amd_rpp library)
+Extended RPP support as a functionality through OpenVX [MIVisionX](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX)
 
 ## Miscellaneous examples
 
@@ -322,3 +324,30 @@ Extended RPP support as a functionality through OpenVX [MIVisionX](https://githu
 
     // Copy output data back to host
     hipMemcpy(output, d_output, ioBufferSize * sizeof(Rpp8u), hipMemcpyDeviceToHost);
+
+## Technical Support
+
+Please email `mivisionx.support@amd.com` for questions, and feedback on AMD RPP.
+
+Please submit your feature requests, and bug reports on the [GitHub issues](https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp/issues) page.
+
+## Release Notes
+
+### Latest Release
+
+[![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/GPUOpen-ProfessionalCompute-Libraries/rpp?style=for-the-badge)](https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp/releases)
+
+### Changelog
+
+Review all notable [changes](CHANGELOG.md#changelog) with the latest release
+
+### Tested configurations
+
+* Linux distribution
+  + Ubuntu - `20.04` / `22.04`
+  + CentOS - `7` / `8`
+  + RedHat - `8` / `9`
+  + SLES - `15-SP3`
+* ROCm: rocm-core - `5.4.0.50400-72`
+* Protobuf - [V3.12.4](https://github.com/protocolbuffers/protobuf/releases/tag/v3.12.4)
+* OpenCV - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
