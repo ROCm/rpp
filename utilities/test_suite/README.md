@@ -1,5 +1,5 @@
-# AMD Radeon Performance Primitives (RPP) Test Suite
-The Radeon Performance Primitives library provides a test suite, that are used to validate the functionality and performance of the AMD Radeon Performance Primitives vision library. It can be executed under 2 backend scenarios - (HOST/HIP):
+# AMD ROCm Performance Primitives (RPP) Test Suite
+The AMD ROCm Performance Primitives (RPP) test suite can be used to validate the functionality and performance of the AMD ROCm Performance Primitives (RPP) vision library. It can be executed under 2 backend scenarios - (HOST/HIP):
 -   HOST backend - (On a CPU with HOST backend)
 -   HIP backend - (On a GPU with HIP backend)
 
