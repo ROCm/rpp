@@ -58,9 +58,9 @@ extern "C" rppStatus_t rppCreate(rppHandle_t* handle)
     return rpp::try_([&] { rpp::deref(handle) = new rpp::Handle(); });
 }
 
-extern "C" rppStatus_t rppCreateWithBatchSize(rppHandle_t* handle, size_t nBatchSize)
+extern "C" rppStatus_t rppCreateWithBatchSize(rppHandle_t* handle, size_t nBatchSize, Rpp32u numThreads)
 {
-    return rpp::try_([&] { rpp::deref(handle) = new rpp::Handle(nBatchSize); });
+    return rpp::try_([&] { rpp::deref(handle) = new rpp::Handle(nBatchSize, numThreads); });
 }
 
 extern "C" rppStatus_t rppDestroy(rppHandle_t handle)

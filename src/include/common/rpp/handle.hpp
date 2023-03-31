@@ -66,7 +66,7 @@ using rocblas_handle_ptr = RPP_MANAGE_PTR(rocblas_handle, rocblas_destroy_handle
 struct Handle : rppHandle
 {
     Handle();
-    Handle(size_t nBatchSize);
+    Handle(size_t nBatchSize, Rpp32u numThreads);
     Handle(Handle&&) noexcept;
     ~Handle();
 
@@ -84,7 +84,7 @@ struct Handle : rppHandle
 {
     // Host handle related
     Handle();
-    Handle(size_t nBatchSize);
+    Handle(size_t nBatchSize, Rpp32u numThreads);
     Handle(Handle&&) noexcept;
     ~Handle();
     InitHandle*  GetInitHandle() const;

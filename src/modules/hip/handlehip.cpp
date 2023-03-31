@@ -172,7 +172,7 @@ struct HandleImpl
     void PreInitializeBufferCPU()
     {
         this->initHandle = new InitHandle();
-        if(this->numThreads == 0)
+         if(this->numThreads == 0)
             this->numThreads = this->nBatchSize;
 
         this->initHandle->nbatchSize = this->nBatchSize;
@@ -280,9 +280,12 @@ Handle::Handle(rppAcceleratorQueue_t stream) : impl(new HandleImpl())
     RPP_LOG_I(*this);
 }
 
-Handle::Handle(size_t batchSize) : impl(new HandleImpl())
+Handle::Handle(size_t batchSize, Rpp32u numThreads) : impl(new HandleImpl())
 {
     impl->nBatchSize = batchSize;
+    if(numThreads == 0)
+        numThreads = batchSize;
+    impl->numThreads = numThreads;
     this->SetAllocator(nullptr, nullptr, nullptr);
     impl->PreInitializeBufferCPU();
 }

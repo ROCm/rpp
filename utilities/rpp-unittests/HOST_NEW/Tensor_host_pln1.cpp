@@ -599,7 +599,8 @@ int main(int argc, char **argv)
     // Run case-wise RPP API and measure time
 
     rppHandle_t handle;
-    rppCreateWithBatchSize(&handle, noOfImages);
+    Rpp32u numThreads = 0;
+    rppCreateWithBatchSize(&handle, noOfImages, numThreads);
     clock_t start, end;
     double start_omp, end_omp;
     double cpu_time_used, omp_time_used;

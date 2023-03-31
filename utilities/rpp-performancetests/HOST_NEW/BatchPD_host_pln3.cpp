@@ -748,7 +748,8 @@ int main(int argc, char **argv)
     }
 
     rppHandle_t handle;
-    rppCreateWithBatchSize(&handle, noOfImages);
+    Rpp32u numThreads = 0;
+    rppCreateWithBatchSize(&handle, noOfImages, numThreads);
     clock_t start, end;
     double start_omp, end_omp;
     double max_time_used = 0, min_time_used = 500, avg_time_used = 0;

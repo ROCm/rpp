@@ -57,9 +57,12 @@ struct HandleImpl
     }
 };
 
-Handle::Handle(size_t batchSize) : impl(new HandleImpl())
+Handle::Handle(size_t batchSize, Rpp32u numThreads) : impl(new HandleImpl())
 {
     impl->nBatchSize = batchSize;
+    if(numThreads == 0)
+        numThreads = batchSize;
+    impl->numThreads = numThreads;
     impl->PreInitializeBufferCPU();
 }
 
