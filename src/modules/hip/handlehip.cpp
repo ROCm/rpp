@@ -172,7 +172,7 @@ struct HandleImpl
     void PreInitializeBufferCPU()
     {
         this->initHandle = new InitHandle();
-         if(this->numThreads == 0)
+        if(this->numThreads == 0)
             this->numThreads = this->nBatchSize;
 
         this->initHandle->nbatchSize = this->nBatchSize;

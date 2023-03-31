@@ -3386,8 +3386,7 @@ RppStatus pixelate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batc
     }
     else if(chnFormat == RPPI_CHN_PACKED)
     {
-        Rpp32u numThreads = handle.GetNumThreads();
-    omp_set_dynamic(0);
+        omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
@@ -4194,14 +4193,14 @@ RppStatus noise_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
                            RppiROI *roiPoints, Rpp32u nbatchSize,
                            RppiChnFormat chnFormat, Rpp32u channel, rpp::Handle& handle)
 {
+    Rpp32u numThreads = handle.GetNumThreads();
     if(chnFormat == RPPI_CHN_PLANAR)
     {
         T *srcPtrBufferROI, *dstPtrBufferROI;
         srcPtrBufferROI = (T*) calloc(channel * batch_srcSizeMax[0].height * batch_srcSizeMax[0].width * nbatchSize, sizeof(T));
         dstPtrBufferROI = (T*) calloc(channel * batch_srcSizeMax[0].height * batch_srcSizeMax[0].width * nbatchSize, sizeof(T));
 
-        Rpp32u numThreads = handle.GetNumThreads();
-    omp_set_dynamic(0);
+        omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
@@ -4310,8 +4309,7 @@ RppStatus noise_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
         srcPtrBufferROI = (T*) calloc(channel * batch_srcSizeMax[0].height * batch_srcSizeMax[0].width * nbatchSize, sizeof(T));
         dstPtrBufferROI = (T*) calloc(channel * batch_srcSizeMax[0].height * batch_srcSizeMax[0].width * nbatchSize, sizeof(T));
 
-        Rpp32u numThreads = handle.GetNumThreads();
-    omp_set_dynamic(0);
+        omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {

@@ -1332,9 +1332,7 @@ RppStatus mean_stddev_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
                 T *srcPtrChannel;
                 srcPtrChannel = srcPtrImage + (c * imageDimMax);
 
-
-                Rpp32u numThreads = handle.GetNumThreads();
-    omp_set_dynamic(0);
+                omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
                 for(int i = 0; i < batch_srcSize[batchCount].height; i++)
                 {
@@ -1372,9 +1370,7 @@ RppStatus mean_stddev_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
                 T *srcPtrChannel;
                 srcPtrChannel = srcPtrImage + (c * imageDimMax);
 
-
-                Rpp32u numThreads = handle.GetNumThreads();
-    omp_set_dynamic(0);
+                omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
                 for(int i = 0; i < batch_srcSize[batchCount].height; i++)
                 {
@@ -1445,9 +1441,7 @@ RppStatus mean_stddev_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
             Rpp32u elementsInRow = channel * batch_srcSize[batchCount].width;
             Rpp32u elementsInRowMax = channel * batch_srcSizeMax[batchCount].width;
 
-
-                Rpp32u numThreads = handle.GetNumThreads();
-    omp_set_dynamic(0);
+            omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
             for(int i = 0; i < batch_srcSize[batchCount].height; i++)
             {
@@ -1482,9 +1476,7 @@ RppStatus mean_stddev_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
 
             *mean = *mean / (channel * imageDim);
 
-
-                Rpp32u numThreads = handle.GetNumThreads();
-    omp_set_dynamic(0);
+            omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
             for(int i = 0; i < batch_srcSize[batchCount].height; i++)
             {

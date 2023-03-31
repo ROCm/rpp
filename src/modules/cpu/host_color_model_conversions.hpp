@@ -471,7 +471,6 @@ RppStatus look_up_table_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize 
                         RppiChnFormat chnFormat, Rpp32u channel, rpp::Handle& handle)
 {
     Rpp32u lutSize = 256;
-
     Rpp32u numThreads = handle.GetNumThreads();
     if(chnFormat == RPPI_CHN_PLANAR)
     {
@@ -516,8 +515,7 @@ RppStatus look_up_table_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize 
     }
     else if(chnFormat == RPPI_CHN_PACKED)
     {
-        Rpp32u numThreads = handle.GetNumThreads();
-    omp_set_dynamic(0);
+        omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {

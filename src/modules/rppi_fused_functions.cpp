@@ -73,7 +73,7 @@ RppStatus color_twist_host_helper(RppiChnFormat chn_format,
                                       rpp::deref(rppHandle).GetBatchSize(),
                                       chn_format,
                                       num_of_channels,
-                                          rpp::deref(rppHandle));
+                                      rpp::deref(rppHandle));
     }
     else if (tensor_type == RPPTensorDataType::FP16)
     {
@@ -90,7 +90,7 @@ RppStatus color_twist_host_helper(RppiChnFormat chn_format,
                                            rpp::deref(rppHandle).GetBatchSize(),
                                            chn_format,
                                            num_of_channels,
-                                          rpp::deref(rppHandle));
+                                           rpp::deref(rppHandle));
     }
     else if (tensor_type == RPPTensorDataType::FP32)
     {
@@ -107,7 +107,7 @@ RppStatus color_twist_host_helper(RppiChnFormat chn_format,
                                            rpp::deref(rppHandle).GetBatchSize(),
                                            chn_format,
                                            num_of_channels,
-                                          rpp::deref(rppHandle));
+                                           rpp::deref(rppHandle));
     }
     else if (tensor_type == RPPTensorDataType::I8)
     {
@@ -124,7 +124,7 @@ RppStatus color_twist_host_helper(RppiChnFormat chn_format,
                                          rpp::deref(rppHandle).GetBatchSize(),
                                          chn_format,
                                          num_of_channels,
-                                          rpp::deref(rppHandle));
+                                         rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;
