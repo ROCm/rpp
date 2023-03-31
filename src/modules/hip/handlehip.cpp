@@ -129,6 +129,7 @@ struct HandleImpl
     bool enable_profiling = false;
     float profiling_result = 0.0;
     size_t nBatchSize = 1;
+    Rpp32u numThreads = 1;
     InitHandle* initHandle = nullptr;
 
     HandleImpl() : ctx(get_ctx()) {}
@@ -383,6 +384,11 @@ void Handle::rpp_destroy_object_host()
 size_t Handle::GetBatchSize() const
 {
     return this->impl->nBatchSize;
+}
+
+Rpp32u Handle::GetNumThreads() const
+{
+    return this->impl->numThreads;
 }
 
 void Handle::SetBatchSize(size_t bSize) const
