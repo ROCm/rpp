@@ -54,7 +54,8 @@ RppStatus rppt_crop_host(RppPtr_t srcPtr,
                                dstDescPtr,
                                roiTensorPtrSrc,
                                roiType,
-                               layoutParams);
+                               layoutParams,
+                               rpp::deref(rppHandle).GetNumThreads());
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
@@ -64,7 +65,8 @@ RppStatus rppt_crop_host(RppPtr_t srcPtr,
                                  dstDescPtr,
                                  roiTensorPtrSrc,
                                  roiType,
-                                 layoutParams);
+                                 layoutParams,
+                                 rpp::deref(rppHandle).GetNumThreads());
     }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
@@ -74,7 +76,8 @@ RppStatus rppt_crop_host(RppPtr_t srcPtr,
                                  dstDescPtr,
                                  roiTensorPtrSrc,
                                  roiType,
-                                 layoutParams);
+                                 layoutParams,
+                                 rpp::deref(rppHandle).GetNumThreads());
     }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
@@ -84,7 +87,8 @@ RppStatus rppt_crop_host(RppPtr_t srcPtr,
                                dstDescPtr,
                                roiTensorPtrSrc,
                                roiType,
-                               layoutParams);
+                               layoutParams,
+                               rpp::deref(rppHandle).GetNumThreads());
     }
 
     return RPP_SUCCESS;
@@ -116,7 +120,8 @@ RppStatus rppt_crop_mirror_normalize_host(RppPtr_t srcPtr,
                                                 mirrorTensor,
                                                 roiTensorPtrSrc,
                                                 roiType,
-                                                layoutParams);
+                                                layoutParams,
+                                                rpp::deref(rppHandle).GetNumThreads());
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
@@ -129,7 +134,8 @@ RppStatus rppt_crop_mirror_normalize_host(RppPtr_t srcPtr,
                                                   mirrorTensor,
                                                   roiTensorPtrSrc,
                                                   roiType,
-                                                  layoutParams);
+                                                  layoutParams,
+                                                  rpp::deref(rppHandle).GetNumThreads());
     }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
@@ -142,7 +148,8 @@ RppStatus rppt_crop_mirror_normalize_host(RppPtr_t srcPtr,
                                                   mirrorTensor,
                                                   roiTensorPtrSrc,
                                                   roiType,
-                                                  layoutParams);
+                                                  layoutParams,
+                                                  rpp::deref(rppHandle).GetNumThreads());
     }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
@@ -155,7 +162,8 @@ RppStatus rppt_crop_mirror_normalize_host(RppPtr_t srcPtr,
                                                 mirrorTensor,
                                                 roiTensorPtrSrc,
                                                 roiType,
-                                                layoutParams);
+                                                layoutParams,
+                                                rpp::deref(rppHandle).GetNumThreads());
     }
     else if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::F32))
     {
@@ -168,7 +176,8 @@ RppStatus rppt_crop_mirror_normalize_host(RppPtr_t srcPtr,
                                                  mirrorTensor,
                                                  roiTensorPtrSrc,
                                                  roiType,
-                                                 layoutParams);
+                                                 layoutParams,
+                                                 rpp::deref(rppHandle).GetNumThreads());
     }
     else if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::F16))
     {
@@ -181,7 +190,8 @@ RppStatus rppt_crop_mirror_normalize_host(RppPtr_t srcPtr,
                                                  mirrorTensor,
                                                  roiTensorPtrSrc,
                                                  roiType,
-                                                 layoutParams);
+                                                 layoutParams,
+                                                 rpp::deref(rppHandle).GetNumThreads());
     }
 
     return RPP_SUCCESS;
@@ -326,7 +336,8 @@ RppStatus rppt_flip_host(RppPtr_t srcPtr,
                                verticalTensor,
                                roiTensorPtrSrc,
                                roiType,
-                               layoutParams);
+                               layoutParams,
+                               rpp::deref(rppHandle).GetNumThreads());
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
@@ -338,7 +349,8 @@ RppStatus rppt_flip_host(RppPtr_t srcPtr,
                                  verticalTensor,
                                  roiTensorPtrSrc,
                                  roiType,
-                                 layoutParams);
+                                 layoutParams,
+                                 rpp::deref(rppHandle).GetNumThreads());
     }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
@@ -350,7 +362,8 @@ RppStatus rppt_flip_host(RppPtr_t srcPtr,
                                  verticalTensor,
                                  roiTensorPtrSrc,
                                  roiType,
-                                 layoutParams);
+                                 layoutParams,
+                                 rpp::deref(rppHandle).GetNumThreads());
     }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
@@ -362,7 +375,8 @@ RppStatus rppt_flip_host(RppPtr_t srcPtr,
                                verticalTensor,
                                roiTensorPtrSrc,
                                roiType,
-                               layoutParams);
+                               layoutParams,
+                               rpp::deref(rppHandle).GetNumThreads());
     }
 
     return RPP_SUCCESS;
@@ -393,7 +407,8 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
                                         dstImgSizes,
                                         roiTensorPtrSrc,
                                         roiType,
-                                        srcLayoutParams);
+                                        srcLayoutParams,
+                                        rpp::deref(rppHandle).GetNumThreads());
         }
         else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
         {
@@ -404,7 +419,8 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
                                           dstImgSizes,
                                           roiTensorPtrSrc,
                                           roiType,
-                                          srcLayoutParams);
+                                          srcLayoutParams,
+                                          rpp::deref(rppHandle).GetNumThreads());
         }
         else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
         {
@@ -415,7 +431,8 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
                                           dstImgSizes,
                                           roiTensorPtrSrc,
                                           roiType,
-                                          srcLayoutParams);
+                                          srcLayoutParams,
+                                          rpp::deref(rppHandle).GetNumThreads());
         }
         else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
         {
@@ -426,7 +443,8 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
                                         dstImgSizes,
                                         roiTensorPtrSrc,
                                         roiType,
-                                        srcLayoutParams);
+                                        srcLayoutParams,
+                                        rpp::deref(rppHandle).GetNumThreads());
         }
     }
     else if(interpolationType == RpptInterpolationType::BILINEAR)
@@ -440,7 +458,8 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
                                               dstImgSizes,
                                               roiTensorPtrSrc,
                                               roiType,
-                                              srcLayoutParams);
+                                              srcLayoutParams,
+                                              rpp::deref(rppHandle).GetNumThreads());
         }
         else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
         {
@@ -451,7 +470,8 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
                                                 dstImgSizes,
                                                 roiTensorPtrSrc,
                                                 roiType,
-                                                srcLayoutParams);
+                                                srcLayoutParams,
+                                                rpp::deref(rppHandle).GetNumThreads());
         }
         else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
         {
@@ -462,7 +482,8 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
                                                 dstImgSizes,
                                                 roiTensorPtrSrc,
                                                 roiType,
-                                                srcLayoutParams);
+                                                srcLayoutParams,
+                                                rpp::deref(rppHandle).GetNumThreads());
         }
         else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
         {
@@ -473,7 +494,8 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
                                                dstImgSizes,
                                                roiTensorPtrSrc,
                                                roiType,
-                                               srcLayoutParams);
+                                               srcLayoutParams,
+                                               rpp::deref(rppHandle).GetNumThreads());
         }
     }
     else
@@ -500,7 +522,8 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
                                          roiTensorPtrSrc,
                                          roiType,
                                          srcLayoutParams,
-                                         interpolationType);
+                                         interpolationType,
+                                         rpp::deref(rppHandle).GetNumThreads());
         }
         else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
         {
@@ -514,7 +537,8 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
                                          roiTensorPtrSrc,
                                          roiType,
                                          srcLayoutParams,
-                                         interpolationType);
+                                         interpolationType,
+                                         rpp::deref(rppHandle).GetNumThreads());
         }
         else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
         {
@@ -528,7 +552,8 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
                                          roiTensorPtrSrc,
                                          roiType,
                                          srcLayoutParams,
-                                         interpolationType);
+                                         interpolationType,
+                                         rpp::deref(rppHandle).GetNumThreads());
         }
         else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
         {
@@ -542,7 +567,8 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
                                          roiTensorPtrSrc,
                                          roiType,
                                          srcLayoutParams,
-                                         interpolationType);
+                                         interpolationType,
+                                         rpp::deref(rppHandle).GetNumThreads());
         }
     }
 
@@ -581,7 +607,8 @@ RppStatus rppt_resize_mirror_normalize_host(RppPtr_t srcPtr,
                                                   mirrorTensor,
                                                   roiTensorPtrSrc,
                                                   roiType,
-                                                  srcLayoutParams);
+                                                  srcLayoutParams,
+                                                  rpp::deref(rppHandle).GetNumThreads());
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
@@ -595,7 +622,8 @@ RppStatus rppt_resize_mirror_normalize_host(RppPtr_t srcPtr,
                                                     mirrorTensor,
                                                     roiTensorPtrSrc,
                                                     roiType,
-                                                    srcLayoutParams);
+                                                    srcLayoutParams,
+                                                    rpp::deref(rppHandle).GetNumThreads());
     }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
@@ -609,7 +637,8 @@ RppStatus rppt_resize_mirror_normalize_host(RppPtr_t srcPtr,
                                                     mirrorTensor,
                                                     roiTensorPtrSrc,
                                                     roiType,
-                                                    srcLayoutParams);
+                                                    srcLayoutParams,
+                                                    rpp::deref(rppHandle).GetNumThreads());
     }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
@@ -623,7 +652,8 @@ RppStatus rppt_resize_mirror_normalize_host(RppPtr_t srcPtr,
                                                   mirrorTensor,
                                                   roiTensorPtrSrc,
                                                   roiType,
-                                                  srcLayoutParams);
+                                                  srcLayoutParams,
+                                                  rpp::deref(rppHandle).GetNumThreads());
     }
     else if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::F32))
     {
@@ -637,7 +667,8 @@ RppStatus rppt_resize_mirror_normalize_host(RppPtr_t srcPtr,
                                                    mirrorTensor,
                                                    roiTensorPtrSrc,
                                                    roiType,
-                                                   srcLayoutParams);
+                                                   srcLayoutParams,
+                                                   rpp::deref(rppHandle).GetNumThreads());
     }
     else if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::F16))
     {
@@ -651,7 +682,8 @@ RppStatus rppt_resize_mirror_normalize_host(RppPtr_t srcPtr,
                                                    mirrorTensor,
                                                    roiTensorPtrSrc,
                                                    roiType,
-                                                   srcLayoutParams);
+                                                   srcLayoutParams,
+                                                   rpp::deref(rppHandle).GetNumThreads());
     }
 
     return RPP_SUCCESS;
@@ -683,7 +715,8 @@ RppStatus rppt_resize_crop_mirror_host(RppPtr_t srcPtr,
                                              mirrorTensor,
                                              roiTensorPtrSrc,
                                              roiType,
-                                             srcLayoutParams);
+                                             srcLayoutParams,
+                                             rpp::deref(rppHandle).GetNumThreads());
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
@@ -695,7 +728,8 @@ RppStatus rppt_resize_crop_mirror_host(RppPtr_t srcPtr,
                                                mirrorTensor,
                                                roiTensorPtrSrc,
                                                roiType,
-                                               srcLayoutParams);
+                                               srcLayoutParams,
+                                               rpp::deref(rppHandle).GetNumThreads());
     }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
@@ -707,7 +741,8 @@ RppStatus rppt_resize_crop_mirror_host(RppPtr_t srcPtr,
                                                mirrorTensor,
                                                roiTensorPtrSrc,
                                                roiType,
-                                               srcLayoutParams);
+                                               srcLayoutParams,
+                                               rpp::deref(rppHandle).GetNumThreads());
     }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
@@ -719,7 +754,8 @@ RppStatus rppt_resize_crop_mirror_host(RppPtr_t srcPtr,
                                              mirrorTensor,
                                              roiTensorPtrSrc,
                                              roiType,
-                                             srcLayoutParams);
+                                             srcLayoutParams,
+                                             rpp::deref(rppHandle).GetNumThreads());
     }
 
     return RPP_SUCCESS;
@@ -741,7 +777,7 @@ RppStatus rppt_rotate_host(RppPtr_t srcPtr,
         return RPP_ERROR_NOT_IMPLEMENTED;
 
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
-    
+
     // Compute affine transformation matrix from rotate angle
     Rpp32f *affineTensor = rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.tempFloatmem;
     for(int idx = 0; idx < srcDescPtr->n; idx++)
@@ -1413,7 +1449,7 @@ RppStatus rppt_rotate_gpu(RppPtr_t srcPtr,
 #ifdef HIP_COMPILE
     if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR))
         return RPP_ERROR_NOT_IMPLEMENTED;
-    
+
     // Compute affine transformation matrix from rotate angle
     Rpp32f *affineTensor = rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.tempFloatmem;
     for(int idx = 0; idx < srcDescPtr->n; idx++)

@@ -129,7 +129,7 @@ struct HandleImpl
     bool enable_profiling = false;
     float profiling_result = 0.0;
     size_t nBatchSize = 1;
-    Rpp32u numThreads = 1;
+    Rpp32u numThreads = 0;
     InitHandle* initHandle = nullptr;
 
     HandleImpl() : ctx(get_ctx()) {}
@@ -172,6 +172,8 @@ struct HandleImpl
     void PreInitializeBufferCPU()
     {
         this->initHandle = new InitHandle();
+        if(this->numThreads == 0)
+            this->numThreads = this->nBatchSize;
 
         this->initHandle->nbatchSize = this->nBatchSize;
         this->initHandle->mem.mcpu.srcSize = (RppiSize *)malloc(sizeof(RppiSize) * this->nBatchSize);

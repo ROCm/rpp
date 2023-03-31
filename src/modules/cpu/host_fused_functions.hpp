@@ -2919,12 +2919,12 @@ RppStatus crop_mirror_normalize_host_batch(T* srcPtr, RppiSize *batch_srcSize, R
                                      Rpp32f *batch_mean, Rpp32f *batch_stdDev,
                                      Rpp32u *batch_mirrorFlag, Rpp32u outputFormatToggle,
                                      Rpp32u nbatchSize,
-                                     RppiChnFormat chnFormat, Rpp32u channel)
+                                     RppiChnFormat chnFormat, Rpp32u channel, Rpp32u numThreads)
 {
     if(chnFormat == RPPI_CHN_PLANAR)
     {
         omp_set_dynamic(0);
-#pragma omp parallel for num_threads(nbatchSize)
+#pragma omp parallel for num_threads(numThreads)
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u srcImageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
@@ -3553,12 +3553,12 @@ RppStatus crop_mirror_normalize_f32_host_batch(Rpp32f* srcPtr, RppiSize *batch_s
                                      Rpp32f *batch_mean, Rpp32f *batch_stdDev,
                                      Rpp32u *batch_mirrorFlag, Rpp32u outputFormatToggle,
                                      Rpp32u nbatchSize,
-                                     RppiChnFormat chnFormat, Rpp32u channel)
+                                     RppiChnFormat chnFormat, Rpp32u channel, Rpp32u numThreads)
 {
     if(chnFormat == RPPI_CHN_PLANAR)
     {
         omp_set_dynamic(0);
-#pragma omp parallel for num_threads(nbatchSize)
+#pragma omp parallel for num_threads(numThreads)
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u srcImageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
@@ -3833,12 +3833,12 @@ RppStatus crop_mirror_normalize_f16_host_batch(Rpp16f* srcPtr, RppiSize *batch_s
                                      Rpp32f *batch_mean, Rpp32f *batch_stdDev,
                                      Rpp32u *batch_mirrorFlag, Rpp32u outputFormatToggle,
                                      Rpp32u nbatchSize,
-                                     RppiChnFormat chnFormat, Rpp32u channel)
+                                     RppiChnFormat chnFormat, Rpp32u channel, Rpp32u numThreads)
 {
     if(chnFormat == RPPI_CHN_PLANAR)
     {
         omp_set_dynamic(0);
-#pragma omp parallel for num_threads(nbatchSize)
+#pragma omp parallel for num_threads(numThreads)
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u srcImageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
@@ -4159,12 +4159,12 @@ RppStatus crop_mirror_normalize_u8_f_host_batch(T* srcPtr, RppiSize *batch_srcSi
                                      Rpp32f *batch_mean, Rpp32f *batch_stdDev,
                                      Rpp32u *batch_mirrorFlag, Rpp32u outputFormatToggle,
                                      Rpp32u nbatchSize,
-                                     RppiChnFormat chnFormat, Rpp32u channel)
+                                     RppiChnFormat chnFormat, Rpp32u channel, Rpp32u numThreads)
 {
     if(chnFormat == RPPI_CHN_PLANAR)
     {
         omp_set_dynamic(0);
-#pragma omp parallel for num_threads(nbatchSize)
+#pragma omp parallel for num_threads(numThreads)
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u srcImageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
@@ -4564,7 +4564,7 @@ RppStatus crop_mirror_normalize_u8_i8_host_batch(Rpp8u* srcPtr, RppiSize *batch_
                                      Rpp32f *batch_mean, Rpp32f *batch_stdDev,
                                      Rpp32u *batch_mirrorFlag, Rpp32u outputFormatToggle,
                                      Rpp32u nbatchSize,
-                                     RppiChnFormat chnFormat, Rpp32u channel)
+                                     RppiChnFormat chnFormat, Rpp32u channel, Rpp32u numThreads)
 {
     Rpp32u srcBufferSize = nbatchSize * batch_srcSizeMax[0].height * batch_srcSizeMax[0].width * channel;
     Rpp32u dstBufferSize = nbatchSize * batch_dstSizeMax[0].height * batch_dstSizeMax[0].width * channel;
@@ -4586,7 +4586,7 @@ RppStatus crop_mirror_normalize_u8_i8_host_batch(Rpp8u* srcPtr, RppiSize *batch_
 
     crop_mirror_normalize_f32_host_batch(srcPtrf32, batch_srcSize, batch_srcSizeMax, dstPtrf32, batch_dstSize, batch_dstSizeMax,
                                     batch_crop_pos_x, batch_crop_pos_y, batch_mean, batch_stdDev, batch_mirrorFlag, outputFormatToggle,
-                                    nbatchSize, chnFormat, channel);
+                                    nbatchSize, chnFormat, channel, numThreads);
 
     Rpp8s *dstPtrTemp;
     Rpp32f *dstPtrf32Temp;
@@ -4612,12 +4612,12 @@ template <typename T, typename U>
 RppStatus crop_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, U* dstPtr, RppiSize *batch_dstSize, RppiSize *batch_dstSizeMax,
                                      Rpp32u *batch_crop_pos_x, Rpp32u *batch_crop_pos_y,
                                      Rpp32u outputFormatToggle, Rpp32u nbatchSize,
-                                     RppiChnFormat chnFormat, Rpp32u channel)
+                                     RppiChnFormat chnFormat, Rpp32u channel, Rpp32u numThreads)
 {
     if(chnFormat == RPPI_CHN_PLANAR)
     {
         omp_set_dynamic(0);
-#pragma omp parallel for num_threads(nbatchSize)
+#pragma omp parallel for num_threads(numThreads)
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u srcImageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
@@ -4770,12 +4770,12 @@ template <typename T, typename U>
 RppStatus crop_host_u_f_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, U* dstPtr, RppiSize *batch_dstSize, RppiSize *batch_dstSizeMax,
                                      Rpp32u *batch_crop_pos_x, Rpp32u *batch_crop_pos_y,
                                      Rpp32u outputFormatToggle, Rpp32u nbatchSize,
-                                     RppiChnFormat chnFormat, Rpp32u channel)
+                                     RppiChnFormat chnFormat, Rpp32u channel, Rpp32u numThreads)
 {
     if(chnFormat == RPPI_CHN_PLANAR)
     {
         omp_set_dynamic(0);
-#pragma omp parallel for num_threads(nbatchSize)
+#pragma omp parallel for num_threads(numThreads)
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u srcImageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
@@ -4954,12 +4954,12 @@ template <typename T, typename U>
 RppStatus crop_host_u_i_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, U* dstPtr, RppiSize *batch_dstSize, RppiSize *batch_dstSizeMax,
                                      Rpp32u *batch_crop_pos_x, Rpp32u *batch_crop_pos_y,
                                      Rpp32u outputFormatToggle, Rpp32u nbatchSize,
-                                     RppiChnFormat chnFormat, Rpp32u channel)
+                                     RppiChnFormat chnFormat, Rpp32u channel, Rpp32u numThreads)
 {
     if(chnFormat == RPPI_CHN_PLANAR)
     {
         omp_set_dynamic(0);
-#pragma omp parallel for num_threads(nbatchSize)
+#pragma omp parallel for num_threads(numThreads)
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u srcImageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;

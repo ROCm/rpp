@@ -33,12 +33,13 @@ RppStatus spatter_u8_u8_host_tensor(Rpp8u *srcPtr,
                                     RpptRGB spatterColor,
                                     RpptROIPtr roiTensorPtrSrc,
                                     RpptRoiType roiType,
-                                    RppLayoutParams layoutParams)
+                                    RppLayoutParams layoutParams,
+                                    Rpp32u numThreads)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(dstDescPtr->n)
+#pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
@@ -385,12 +386,13 @@ RppStatus spatter_f32_f32_host_tensor(Rpp32f *srcPtr,
                                       RpptRGB spatterColor,
                                       RpptROIPtr roiTensorPtrSrc,
                                       RpptRoiType roiType,
-                                      RppLayoutParams layoutParams)
+                                      RppLayoutParams layoutParams,
+                                      Rpp32u numThreads)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(dstDescPtr->n)
+#pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
@@ -745,12 +747,13 @@ RppStatus spatter_f16_f16_host_tensor(Rpp16f *srcPtr,
                                       RpptRGB spatterColor,
                                       RpptROIPtr roiTensorPtrSrc,
                                       RpptRoiType roiType,
-                                      RppLayoutParams layoutParams)
+                                      RppLayoutParams layoutParams,
+                                      Rpp32u numThreads)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(dstDescPtr->n)
+#pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
@@ -1136,12 +1139,13 @@ RppStatus spatter_i8_i8_host_tensor(Rpp8s *srcPtr,
                                     RpptRGB spatterColor,
                                     RpptROIPtr roiTensorPtrSrc,
                                     RpptRoiType roiType,
-                                    RppLayoutParams layoutParams)
+                                    RppLayoutParams layoutParams,
+                                    Rpp32u numThreads)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(dstDescPtr->n)
+#pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;

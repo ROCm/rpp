@@ -40,12 +40,14 @@ namespace rpp {
 struct HandleImpl
 {
     size_t nBatchSize = 1;
-    Rpp32u numThreads = 1;
+    Rpp32u numThreads = 0;
     InitHandle* initHandle = nullptr;
 
     void PreInitializeBufferCPU()
     {
         this->initHandle = new InitHandle();
+        if(this->numThreads == 0)
+            this->numThreads = this->nBatchSize;
 
         this->initHandle->nbatchSize = this->nBatchSize;
         this->initHandle->mem.mcpu.maxSrcSize = (RppiSize *)malloc(sizeof(RppiSize) * this->nBatchSize);
