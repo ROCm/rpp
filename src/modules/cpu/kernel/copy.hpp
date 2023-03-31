@@ -31,11 +31,12 @@ RppStatus copy_u8_u8_host_tensor(Rpp8u *srcPtr,
                                  RppLayoutParams layoutParams,
                                  rpp::Handle& handle)
 {
+    Rpp32u numThreads = handle.GetNumThreads();
+
     // Copy without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
     if ((srcDescPtr->c == 1) || (srcDescPtr->layout == dstDescPtr->layout))
     {
-        Rpp32u numThreads = handle.GetNumThreads();
-    omp_set_dynamic(0);
+        omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
         for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
         {
@@ -49,8 +50,7 @@ RppStatus copy_u8_u8_host_tensor(Rpp8u *srcPtr,
     // Copy with fused output-layout toggle (NHWC -> NCHW)
     else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
-        Rpp32u numThreads = handle.GetNumThreads();
-    omp_set_dynamic(0);
+        omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
         for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
         {
@@ -105,8 +105,7 @@ RppStatus copy_u8_u8_host_tensor(Rpp8u *srcPtr,
     // Copy with fused output-layout toggle (NCHW -> NHWC)
     else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
     {
-        Rpp32u numThreads = handle.GetNumThreads();
-    omp_set_dynamic(0);
+        omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
         for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
         {
@@ -168,11 +167,12 @@ RppStatus copy_f32_f32_host_tensor(Rpp32f *srcPtr,
                                    RppLayoutParams layoutParams,
                                    rpp::Handle& handle)
 {
+    Rpp32u numThreads = handle.GetNumThreads();
+
     // Copy without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
     if ((srcDescPtr->c == 1) || (srcDescPtr->layout == dstDescPtr->layout))
     {
-        Rpp32u numThreads = handle.GetNumThreads();
-    omp_set_dynamic(0);
+        omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
         for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
         {
@@ -186,8 +186,7 @@ RppStatus copy_f32_f32_host_tensor(Rpp32f *srcPtr,
     // Copy with fused output-layout toggle (NHWC -> NCHW)
     else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
-        Rpp32u numThreads = handle.GetNumThreads();
-    omp_set_dynamic(0);
+        omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
         for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
         {
@@ -243,8 +242,7 @@ RppStatus copy_f32_f32_host_tensor(Rpp32f *srcPtr,
     // Copy with fused output-layout toggle (NCHW -> NHWC)
     else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
     {
-        Rpp32u numThreads = handle.GetNumThreads();
-    omp_set_dynamic(0);
+        omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
         for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
         {
@@ -307,11 +305,12 @@ RppStatus copy_f16_f16_host_tensor(Rpp16f *srcPtr,
                                    RppLayoutParams layoutParams,
                                    rpp::Handle& handle)
 {
+    Rpp32u numThreads = handle.GetNumThreads();
+
     // Copy without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
     if ((srcDescPtr->c == 1) || (srcDescPtr->layout == dstDescPtr->layout))
     {
-        Rpp32u numThreads = handle.GetNumThreads();
-    omp_set_dynamic(0);
+        omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
         for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
         {
@@ -325,8 +324,7 @@ RppStatus copy_f16_f16_host_tensor(Rpp16f *srcPtr,
     // Copy with fused output-layout toggle (NHWC -> NCHW)
     else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
-        Rpp32u numThreads = handle.GetNumThreads();
-    omp_set_dynamic(0);
+        omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
         for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
         {
@@ -398,8 +396,7 @@ RppStatus copy_f16_f16_host_tensor(Rpp16f *srcPtr,
     // Copy with fused output-layout toggle (NCHW -> NHWC)
     else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
     {
-        Rpp32u numThreads = handle.GetNumThreads();
-    omp_set_dynamic(0);
+        omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
         for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
         {
@@ -478,10 +475,11 @@ RppStatus copy_i8_i8_host_tensor(Rpp8s *srcPtr,
                                  RppLayoutParams layoutParams,
                                  rpp::Handle& handle)
 {
+    Rpp32u numThreads = handle.GetNumThreads();
+
     // Copy without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
     if ((srcDescPtr->c == 1) || (srcDescPtr->layout == dstDescPtr->layout))
     {
-        Rpp32u numThreads = handle.GetNumThreads();
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
         for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
@@ -496,8 +494,7 @@ RppStatus copy_i8_i8_host_tensor(Rpp8s *srcPtr,
     // Copy with fused output-layout toggle (NHWC -> NCHW)
     else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
-        Rpp32u numThreads = handle.GetNumThreads();
-    omp_set_dynamic(0);
+        omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
         for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
         {
@@ -552,8 +549,7 @@ RppStatus copy_i8_i8_host_tensor(Rpp8s *srcPtr,
     // Copy with fused output-layout toggle (NCHW -> NHWC)
     else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
     {
-        Rpp32u numThreads = handle.GetNumThreads();
-    omp_set_dynamic(0);
+        omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
         for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
         {

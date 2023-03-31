@@ -342,8 +342,7 @@ rppi_min_max_loc_u8_pln1_host(RppPtr_t srcPtr,
                             minLoc,
                             maxLoc,
                             RPPI_CHN_PLANAR,
-                            1,
-                            rpp::deref(rppHandle));
+                            1);
 
     return RPP_SUCCESS;
 }
@@ -364,8 +363,7 @@ rppi_min_max_loc_u8_pln3_host(RppPtr_t srcPtr,
                             minLoc,
                             maxLoc,
                             RPPI_CHN_PLANAR,
-                            3,
-                            rpp::deref(rppHandle));
+                            3);
 
     return RPP_SUCCESS;
 }
@@ -386,8 +384,7 @@ rppi_min_max_loc_u8_pkd3_host(RppPtr_t srcPtr,
                             minLoc,
                             maxLoc,
                             RPPI_CHN_PACKED,
-                            3,
-                            rpp::deref(rppHandle));
+                            3);
 
     return RPP_SUCCESS;
 }

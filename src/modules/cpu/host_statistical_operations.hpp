@@ -1118,7 +1118,7 @@ RppStatus min_max_loc_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *b
 template <typename T>
 RppStatus min_max_loc_host(T* srcPtr, RppiSize srcSize,
                          Rpp8u* min, Rpp8u* max, Rpp32u* minLoc, Rpp32u* maxLoc,
-                         RppiChnFormat chnFormat, Rpp32u channel, rpp::Handle& handle)
+                         RppiChnFormat chnFormat, Rpp32u channel)
 {
     *min = 255;
     *max = 0;
