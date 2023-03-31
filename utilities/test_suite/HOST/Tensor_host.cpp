@@ -380,7 +380,8 @@ int main(int argc, char **argv)
 
     // Run case-wise RPP API and measure time
     rppHandle_t handle;
-    rppCreateWithBatchSize(&handle, noOfImages);
+    Rpp32u numThreads = 0;
+    rppCreateWithBatchSize(&handle, noOfImages, numThreads);
 
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0;
     double cpuTime, wallTime;
