@@ -129,6 +129,7 @@ struct HandleImpl
     bool enable_profiling = false;
     float profiling_result = 0.0;
     size_t nBatchSize = 1;
+    Rpp32u numThreads = 0;
     InitHandle* initHandle = nullptr;
 
     HandleImpl() : ctx(get_ctx()) {}
@@ -171,6 +172,8 @@ struct HandleImpl
     void PreInitializeBufferCPU()
     {
         this->initHandle = new InitHandle();
+        if(this->numThreads == 0)
+            this->numThreads = this->nBatchSize;
 
         this->initHandle->nbatchSize = this->nBatchSize;
         this->initHandle->mem.mcpu.srcSize = (RppiSize *)malloc(sizeof(RppiSize) * this->nBatchSize);
@@ -277,9 +280,12 @@ Handle::Handle(rppAcceleratorQueue_t stream) : impl(new HandleImpl())
     RPP_LOG_I(*this);
 }
 
-Handle::Handle(size_t batchSize) : impl(new HandleImpl())
+Handle::Handle(size_t batchSize, Rpp32u numThreads) : impl(new HandleImpl())
 {
     impl->nBatchSize = batchSize;
+    if(numThreads == 0)
+        numThreads = batchSize;
+    impl->numThreads = numThreads;
     this->SetAllocator(nullptr, nullptr, nullptr);
     impl->PreInitializeBufferCPU();
 }
@@ -383,6 +389,11 @@ void Handle::rpp_destroy_object_host()
 size_t Handle::GetBatchSize() const
 {
     return this->impl->nBatchSize;
+}
+
+Rpp32u Handle::GetNumThreads() const
+{
+    return this->impl->numThreads;
 }
 
 void Handle::SetBatchSize(size_t bSize) const

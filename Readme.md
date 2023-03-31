@@ -221,7 +221,8 @@ $ sudo make install
 
     // Create handle
     rppHandle_t handle;
-    rppCreateWithBatchSize(&handle, noOfImages);
+    Rpp32u numThreads = 0;
+    rppCreateWithBatchSize(&handle, noOfImages, numThreads);
 
     // Call the RPP API for the specific variant required (pkd3/pln3/pln1)
     rppi_brightness_u8_pkd3_batchPD_host(input, srcSize, maxSize, output, alpha, beta, noOfImages, handle);

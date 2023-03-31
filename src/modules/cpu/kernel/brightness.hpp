@@ -32,12 +32,14 @@ RppStatus brightness_u8_u8_host_tensor(Rpp8u *srcPtr,
                                        Rpp32f *betaTensor,
                                        RpptROIPtr roiTensorPtrSrc,
                                        RpptRoiType roiType,
-                                       RppLayoutParams layoutParams)
+                                       RppLayoutParams layoutParams,
+                                       rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(dstDescPtr->n)
+#pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
@@ -244,12 +246,14 @@ RppStatus brightness_f32_f32_host_tensor(Rpp32f *srcPtr,
                                          Rpp32f *betaTensor,
                                          RpptROIPtr roiTensorPtrSrc,
                                          RpptRoiType roiType,
-                                         RppLayoutParams layoutParams)
+                                         RppLayoutParams layoutParams,
+                                         rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(dstDescPtr->n)
+#pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
@@ -462,12 +466,14 @@ RppStatus brightness_f16_f16_host_tensor(Rpp16f *srcPtr,
                                          Rpp32f *betaTensor,
                                          RpptROIPtr roiTensorPtrSrc,
                                          RpptRoiType roiType,
-                                         RppLayoutParams layoutParams)
+                                         RppLayoutParams layoutParams,
+                                         rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(dstDescPtr->n)
+#pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
@@ -716,12 +722,14 @@ RppStatus brightness_i8_i8_host_tensor(Rpp8s *srcPtr,
                                        Rpp32f *betaTensor,
                                        RpptROIPtr roiTensorPtrSrc,
                                        RpptRoiType roiType,
-                                       RppLayoutParams layoutParams)
+                                       RppLayoutParams layoutParams,
+                                       rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(dstDescPtr->n)
+#pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
