@@ -139,7 +139,7 @@ AMD ROCm Performance Primitives (**RPP**) library is a comprehensive high-perfor
   sudo make install
   ```
 
-## Build & Install RPP 
+## Build & Install RPP
 
 The ROCm Performance Primitives (RPP) library has support for three backends: HIP, OpenCL, and CPU:
 
@@ -221,6 +221,8 @@ $ sudo make install
 
     // Create handle
     rppHandle_t handle;
+
+    // Number of threads to be used for OpenMP pragma. if numThreads value passed is 0, it will be reset to batch size
     Rpp32u numThreads = 0;
     rppCreateWithBatchSize(&handle, noOfImages, numThreads);
 

@@ -176,6 +176,8 @@ int main(int argc, char **argv)
 
     closedir(dr2);
     rppHandle_t handle;
+
+    // Number of threads to be used for OpenMP pragma. if numThreads value passed is 0, it will be reset to batch size
     Rpp32u numThreads = 0;
     rppCreateWithBatchSize(&handle, noOfImages, numThreads);
 
