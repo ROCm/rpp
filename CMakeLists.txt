@@ -1,4 +1,4 @@
-# Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -22,10 +22,10 @@ cmake_minimum_required(VERSION 3.5)
 set(CMAKE_CXX_COMPILER clang++)
 set(CMAKE_CXX_STANDARD 14)
 
-project(amd_rpp CXX)
+project(rpp CXX)
 
 # RPP Version
-set(VERSION "0.99")
+set(VERSION "1.0.0")
 
 set(CMAKE_INSTALL_LIBDIR "lib" CACHE STRING "Library install directory")
 include(GNUInstallDirs)
@@ -86,7 +86,7 @@ else()
     endif()
 endif()
 
-message("-- ${BoldBlue}AMD Radeon Performance Primitives (RPP) Version -- ${VERSION}${ColourReset}")
+message("-- ${BoldBlue}AMD ROCm Performance Primitives (RPP) Version -- ${VERSION}${ColourReset}")
 message("-- ${BoldBlue}AMD RPP install path set to -- ${CMAKE_INSTALL_PREFIX}${ColourReset}")
 message("-- ${BoldBlue}AMD RPP Backend set to -- ${BACKEND}${ColourReset}")
 
@@ -302,14 +302,14 @@ set(CPACK_PACKAGE_VERSION       ${VERSION})
 set(CPACK_PACKAGE_NAME          "rpp")
 set(CPACK_PACKAGE_LICENSE       "MIT")
 set(CPACK_PACKAGE_CONTACT       "mivisionx support <mivisionx.support@amd.com>")
-set(CPACK_PACKAGE_VENDOR        "AMD Radeon")
+set(CPACK_PACKAGE_VENDOR        "AMD ROCm")
 set(CPACK_PACKAGE_GROUP         "Development/Tools")
 set(CPACK_PACKAGE_HOMEPAGE      "https://gpuopen-professionalcompute-libraries.github.io/rpp/")
 
-set(CPACK_DEBIAN_PACKAGE_DESCRIPTION   "Radeon Performance Primitives library is a comprehensive high performance computer vision library
-    Radeon Performance Primitives (RPP) library is a comprehensive high performance \
+set(CPACK_DEBIAN_PACKAGE_DESCRIPTION   "ROCm Performance Primitives library is a comprehensive high performance computer vision library
+    ROCm Performance Primitives (RPP) library is a comprehensive high performance \
     computer vision library for AMD (CPU and GPU) with HIP and OpenCL back-ends")
-set(CPACK_RPM_PACKAGE_SUMMARY          "Radeon Performance Primitives (RPP) library is a comprehensive high performance computer vision library for AMD (CPU and GPU) with HIP and OpenCL back-ends")
+set(CPACK_RPM_PACKAGE_SUMMARY          "ROCm Performance Primitives (RPP) library is a comprehensive high performance computer vision library for AMD (CPU and GPU) with HIP and OpenCL back-ends")
 
 if(DEFINED ENV{ROCM_LIBPATCH_VERSION})
     set(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}.$ENV{ROCM_LIBPATCH_VERSION}")

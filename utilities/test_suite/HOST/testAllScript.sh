@@ -148,7 +148,7 @@ if [ "$TEST_TYPE" -eq 0 ]; then
                 log_file_layout="pln1"
             fi
             if [ "$QA_MODE" -eq 0 ]; then
-                if [ ! -d $DST_FOLDER_TEMP ]; then
+                if [ ! -d "$DST_FOLDER_TEMP" ]; then
                     mkdir "$DST_FOLDER_TEMP"
                 fi
             fi
