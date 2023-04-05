@@ -29,6 +29,7 @@
 #include <unistd.h>
 #endif
 
+#include<thread>
 #include "config.h"
 #include "rpp/device_name.hpp"
 #include "rpp/errors.hpp"
@@ -172,8 +173,6 @@ struct HandleImpl
     void PreInitializeBufferCPU()
     {
         this->initHandle = new InitHandle();
-        if(this->numThreads == 0)
-            this->numThreads = this->nBatchSize;
 
         this->initHandle->nbatchSize = this->nBatchSize;
         this->initHandle->mem.mcpu.srcSize = (RppiSize *)malloc(sizeof(RppiSize) * this->nBatchSize);
@@ -283,6 +282,7 @@ Handle::Handle(rppAcceleratorQueue_t stream) : impl(new HandleImpl())
 Handle::Handle(size_t batchSize, Rpp32u numThreads) : impl(new HandleImpl())
 {
     impl->nBatchSize = batchSize;
+    numThreads = std::min(numThreads, std::thread::hardware_concurrency());
     if(numThreads == 0)
         numThreads = batchSize;
     impl->numThreads = numThreads;
@@ -303,6 +303,9 @@ Handle::Handle() : impl(new HandleImpl())
 #endif
     this->SetAllocator(nullptr, nullptr, nullptr);
     impl->PreInitializeBuffer();
+    impl->numThreads = std::min(impl->numThreads, std::thread::hardware_concurrency());
+    if(impl->numThreads == 0)
+        impl->numThreads = impl->nBatchSize;
     RPP_LOG_I(*this);
 }
 

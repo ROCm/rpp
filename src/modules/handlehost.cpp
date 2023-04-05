@@ -29,6 +29,7 @@
 #include <unistd.h>
 #endif
 
+#include<thread>
 #include "config.h"
 #include "rpp/logger.hpp"
 #include "rpp/handle.hpp"
@@ -46,9 +47,6 @@ struct HandleImpl
     void PreInitializeBufferCPU()
     {
         this->initHandle = new InitHandle();
-        if(this->numThreads == 0)
-            this->numThreads = this->nBatchSize;
-
         this->initHandle->nbatchSize = this->nBatchSize;
         this->initHandle->mem.mcpu.maxSrcSize = (RppiSize *)malloc(sizeof(RppiSize) * this->nBatchSize);
         this->initHandle->mem.mcpu.maxDstSize = (RppiSize *)malloc(sizeof(RppiSize) * this->nBatchSize);
@@ -60,6 +58,7 @@ struct HandleImpl
 Handle::Handle(size_t batchSize, Rpp32u numThreads) : impl(new HandleImpl())
 {
     impl->nBatchSize = batchSize;
+    numThreads = std::min(numThreads, std::thread::hardware_concurrency());
     if(numThreads == 0)
         numThreads = batchSize;
     impl->numThreads = numThreads;
@@ -69,6 +68,9 @@ Handle::Handle(size_t batchSize, Rpp32u numThreads) : impl(new HandleImpl())
 Handle::Handle() : impl(new HandleImpl())
 {
     impl->PreInitializeBufferCPU();
+    impl->numThreads = std::min(impl->numThreads, std::thread::hardware_concurrency());
+    if(impl->numThreads == 0)
+        impl->numThreads = impl->nBatchSize;
     RPP_LOG_I(*this);
 }
 

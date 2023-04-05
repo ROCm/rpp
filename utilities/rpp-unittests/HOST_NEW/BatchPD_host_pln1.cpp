@@ -648,6 +648,9 @@ int main(int argc, char **argv)
     }
 
     rppHandle_t handle;
+
+    // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
+    // If numThreads value passed is 0, number of OpenMP threads used by RPP will be set to batch size
     Rpp32u numThreads = 0;
     rppCreateWithBatchSize(&handle, noOfImages, numThreads);
     clock_t start, end;

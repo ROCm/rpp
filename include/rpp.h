@@ -103,7 +103,7 @@ extern "C" SHARED_PUBLIC rppStatus_t rppCreate(rppHandle_t* handle);
 // *param[in] nBatchSize Batch size
 // *param[in] numThreads number of threads to be used for OpenMP pragma
 // *returns a rppStatus_t enumeration.
-extern "C" SHARED_PUBLIC rppStatus_t rppCreateWithBatchSize(rppHandle_t* handle, size_t nBatchSize, Rpp32u numThreads);
+extern "C" SHARED_PUBLIC rppStatus_t rppCreateWithBatchSize(rppHandle_t* handle, size_t nBatchSize, Rpp32u numThreads = 0);
 
 /******************** rppDestroy ********************/
 
