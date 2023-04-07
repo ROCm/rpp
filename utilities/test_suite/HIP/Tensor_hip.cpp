@@ -76,8 +76,8 @@ int main(int argc, char **argv)
     int qaFlag = atoi(argv[12]);
     int decoderType = atoi(argv[13]);
 
-    bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23|| testCase == 24 || testCase == 40 || testCase == 41 || testCase == 49);
-    bool kernelSizeCase = (testCase == 40 || testCase == 41 || testCase == 49);
+    bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23|| testCase == 24 || testCase == 40 || testCase == 41 || testCase == 49 || testCase == 54);
+    bool kernelSizeCase = (testCase == 40 || testCase == 41 || testCase == 49 || testCase == 54);
     bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24);
     bool noiseTypeCase = (testCase == 8);
     bool pln1OutTypeCase = (testCase == 86);
@@ -269,11 +269,12 @@ int main(int argc, char **argv)
     Rpp32u outputChannels = inputChannels;
     if(pln1OutTypeCase)
         outputChannels = 1;
-    Rpp32u offsetInBytes = 0;
+    Rpp32u srcOffsetInBytes = (kernelSizeCase) ? (12 * (additionalParam / 2)) : 0;
+    Rpp32u dstOffsetInBytes = 0;
 
     // Set numDims, offset, n/c/h/w values, strides for src/dst
-    set_descriptor_dims_and_strides(srcDescPtr, noOfImages, maxHeight, maxWidth, inputChannels, offsetInBytes);
-    set_descriptor_dims_and_strides(dstDescPtr, noOfImages, maxDstHeight, maxDstWidth, outputChannels, offsetInBytes);
+    set_descriptor_dims_and_strides(srcDescPtr, noOfImages, maxHeight, maxWidth, inputChannels, srcOffsetInBytes);
+    set_descriptor_dims_and_strides(dstDescPtr, noOfImages, maxDstHeight, maxDstWidth, outputChannels, dstOffsetInBytes);
 
     // Set buffer sizes in pixels for src/dst
     ioBufferSize = (Rpp64u)srcDescPtr->h * (Rpp64u)srcDescPtr->w * (Rpp64u)srcDescPtr->c * (Rpp64u)noOfImages;
@@ -595,6 +596,25 @@ int main(int argc, char **argv)
             startWallTime = omp_get_wtime();
             if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 3 || inputBitDepth == 4 || inputBitDepth == 5)
                 rppt_crop_mirror_normalize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, offset, multiplier, mirror, roiTensorPtrDst, roiTypeSrc, handle);
+            else
+                missingFuncFlag = 1;
+
+            break;
+        }
+        case 54:
+        {
+            testCaseName = "gaussian_filter";
+            Rpp32u kernelSize = additionalParam;
+
+            Rpp32f stdDevTensor[images];
+            for (i = 0; i < images; i++)
+            {
+                stdDevTensor[i] = 5.0f;
+            }
+
+            startWallTime = omp_get_wtime();
+            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                rppt_gaussian_filter_gpu(d_input, srcDescPtr, d_output, dstDescPtr, stdDevTensor, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
             else
                 missingFuncFlag = 1;
 

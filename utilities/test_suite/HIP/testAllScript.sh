@@ -11,7 +11,7 @@ DEFAULT_SRC_FOLDER_2="$cwd/../TEST_IMAGES/three_images_mixed_src2"
 # <<<<<<<<<<<<<< PROCESSING OF INPUT ARGUMENTS (NEED NOT CHANGE) >>>>>>>>>>>>>>
 
 CASE_MIN=0
-CASE_MAX=38
+CASE_MAX=54
 if (( "$#" < 4 )); then
     SRC_FOLDER_1="$DEFAULT_SRC_FOLDER_1"
     SRC_FOLDER_2="$DEFAULT_SRC_FOLDER_2"
@@ -46,8 +46,8 @@ if [[ $TEST_TYPE -ne 0 ]] && [[ $TEST_TYPE -ne 1 ]]; then
 fi
 
 for case in $CASE_LIST; do
-    if [[ $case -lt 0 || $case -gt 38 ]]; then
-        echo "The case# must be in the 0:38 range!"
+    if [[ $case -lt 0 || $case -gt 54 ]]; then
+        echo "The case# must be in the 0:54 range!"
     fi
 done
 
@@ -137,8 +137,8 @@ echo "##########################################################################
 if [ "$TEST_TYPE" -eq 0 ]; then
     for case in ${CASE_LIST[@]};
     do
-        if [ "$case" -lt "0" ] || [ "$case" -gt " 38" ]; then
-            echo "Invalid case number $case. case number must be in the 0:38 range!"
+        if [ "$case" -lt "0" ] || [ "$case" -gt " 54" ]; then
+            echo "Invalid case number $case. case number must be in the 0:54 range!"
             continue
         fi
         for ((layout=0;layout<3;layout++))
@@ -178,7 +178,7 @@ if [ "$TEST_TYPE" -eq 0 ]; then
                         continue
                     fi
 
-                    if [ "$case" -eq 40 ] || [ "$case" -eq 41 ] || [ "$case" -eq 49 ]
+                    if [ "$case" -eq 40 ] || [ "$case" -eq 41 ] || [ "$case" -eq 49 ] || [ "$case" -eq 54 ]
                     then
                         for ((kernelSize=3;kernelSize<=9;kernelSize+=2))
                         do
@@ -212,8 +212,8 @@ if [ "$TEST_TYPE" -eq 0 ]; then
 else
     for case in ${CASE_LIST[@]};
     do
-        if [ "$case" -lt "0" ] || [ "$case" -gt " 38" ]; then
-            echo "Invalid case number $case. case number must be in the 0:38 range!"
+        if [ "$case" -lt "0" ] || [ "$case" -gt " 54" ]; then
+            echo "Invalid case number $case. case number must be in the 0:54 range!"
             continue
         fi
         for ((layout=0;layout<3;layout++))
@@ -250,7 +250,7 @@ else
 
                     if [[ "$PROFILING_OPTION" -eq 0 ]]
                     then
-                        if [ "$case" -eq 40 ] || [ "$case" -eq 41 ] || [ "$case" -eq 49 ]
+                        if [ "$case" -eq 40 ] || [ "$case" -eq 41 ] || [ "$case" -eq 49 ] || [ "$case" -eq 54 ]
                         then
                             for ((kernelSize=3;kernelSize<=9;kernelSize+=2))
                             do
@@ -279,7 +279,7 @@ else
                         echo "------------------------------------------------------------------------------------------"
                     elif [[ "$PROFILING_OPTION" -eq 1 ]]
                     then
-                        if [ "$case" -eq 40 ] || [ "$case" -eq 41 ] || [ "$case" -eq 49 ]
+                        if [ "$case" -eq 40 ] || [ "$case" -eq 41 ] || [ "$case" -eq 49 ] || [ "$case" -eq 54 ]
                         then
                             for ((kernelSize=3;kernelSize<=9;kernelSize+=2))
                             do
