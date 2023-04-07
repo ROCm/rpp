@@ -1,7 +1,7 @@
 #include <hip/hip_runtime.h>
 #include "rpp_hip_common.hpp"
 
-// -------------------- Set 0 - generic_filter device helpers --------------------
+// -------------------- Set 0 - gaussian_filter device helpers --------------------
 
 __device__ void gaussian_filter_3x3_row_hip_compute(uchar *srcPtr, d_float8 *dst_f8, d_float9 *filter_f9, int rowIndex)
 {
@@ -278,13 +278,13 @@ __device__ void gaussian_filter_9x9_row_hip_compute(uchar *srcPtr, d_float8 *dst
 // kernelSize = 3
 template <typename T>
 __global__ void gaussian_filter_3x3_pkd_tensor(T *srcPtr,
-                                          uint2 srcStridesNH,
-                                          T *dstPtr,
-                                          uint2 dstStridesNH,
-                                          uint padLength,
-                                          uint2 tileSize,
-                                          RpptROIPtr roiTensorPtrSrc,
-                                          d_float9 *filterTensor)
+                                               uint2 srcStridesNH,
+                                               T *dstPtr,
+                                               uint2 dstStridesNH,
+                                               uint padLength,
+                                               uint2 tileSize,
+                                               RpptROIPtr roiTensorPtrSrc,
+                                               d_float9 *filterTensor)
 {
     int hipThreadIdx_x8 = hipThreadIdx_x << 3;
     int id_x_o = (hipBlockIdx_x * tileSize.x * 8) + hipThreadIdx_x8;
@@ -296,10 +296,9 @@ __global__ void gaussian_filter_3x3_pkd_tensor(T *srcPtr,
     d_float24 sum_f24;
     __shared__ uchar src_lds[48][128];
 
-    d_float9 filter_f9 = filterTensor[id_z];
-
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
+    d_float9 filter_f9 = filterTensor[id_z];
     sum_f24.f4[0] = (float4) 0;
     sum_f24.f4[1] = (float4) 0;
     sum_f24.f4[2] = (float4) 0;
@@ -351,13 +350,13 @@ __global__ void gaussian_filter_3x3_pkd_tensor(T *srcPtr,
 // kernelSize = 5
 template <typename T>
 __global__ void gaussian_filter_5x5_pkd_tensor(T *srcPtr,
-                                          uint2 srcStridesNH,
-                                          T *dstPtr,
-                                          uint2 dstStridesNH,
-                                          uint padLength,
-                                          uint2 tileSize,
-                                          RpptROIPtr roiTensorPtrSrc,
-                                          d_float25 *filterTensor)
+                                               uint2 srcStridesNH,
+                                               T *dstPtr,
+                                               uint2 dstStridesNH,
+                                               uint padLength,
+                                               uint2 tileSize,
+                                               RpptROIPtr roiTensorPtrSrc,
+                                               d_float25 *filterTensor)
 {
     int hipThreadIdx_x8 = hipThreadIdx_x << 3;
     int id_x_o = (hipBlockIdx_x * tileSize.x * 8) + hipThreadIdx_x8;
@@ -369,10 +368,9 @@ __global__ void gaussian_filter_5x5_pkd_tensor(T *srcPtr,
     d_float24 sum_f24;
     __shared__ uchar src_lds[48][128];
 
-    d_float25 filter_f25 = filterTensor[id_z];
-
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
+    d_float25 filter_f25 = filterTensor[id_z];
     sum_f24.f4[0] = (float4) 0;
     sum_f24.f4[1] = (float4) 0;
     sum_f24.f4[2] = (float4) 0;
@@ -430,13 +428,13 @@ __global__ void gaussian_filter_5x5_pkd_tensor(T *srcPtr,
 // kernelSize = 7
 template <typename T>
 __global__ void gaussian_filter_7x7_pkd_tensor(T *srcPtr,
-                                          uint2 srcStridesNH,
-                                          T *dstPtr,
-                                          uint2 dstStridesNH,
-                                          uint padLength,
-                                          uint2 tileSize,
-                                          RpptROIPtr roiTensorPtrSrc,
-                                          d_float49 *filterTensor)
+                                               uint2 srcStridesNH,
+                                               T *dstPtr,
+                                               uint2 dstStridesNH,
+                                               uint padLength,
+                                               uint2 tileSize,
+                                               RpptROIPtr roiTensorPtrSrc,
+                                               d_float49 *filterTensor)
 {
     int hipThreadIdx_x8 = hipThreadIdx_x << 3;
     int id_x_o = (hipBlockIdx_x * tileSize.x * 8) + hipThreadIdx_x8;
@@ -448,10 +446,9 @@ __global__ void gaussian_filter_7x7_pkd_tensor(T *srcPtr,
     d_float24 sum_f24;
     __shared__ uchar src_lds[48][128];
 
-    d_float49 filter_f49 = filterTensor[id_z];
-
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
+    d_float49 filter_f49 = filterTensor[id_z];
     sum_f24.f4[0] = (float4) 0;
     sum_f24.f4[1] = (float4) 0;
     sum_f24.f4[2] = (float4) 0;
@@ -515,13 +512,13 @@ __global__ void gaussian_filter_7x7_pkd_tensor(T *srcPtr,
 // kernelSize = 9
 template <typename T>
 __global__ void gaussian_filter_9x9_pkd_tensor(T *srcPtr,
-                                          uint2 srcStridesNH,
-                                          T *dstPtr,
-                                          uint2 dstStridesNH,
-                                          uint padLength,
-                                          uint2 tileSize,
-                                          RpptROIPtr roiTensorPtrSrc,
-                                          d_float81 *filterTensor)
+                                               uint2 srcStridesNH,
+                                               T *dstPtr,
+                                               uint2 dstStridesNH,
+                                               uint padLength,
+                                               uint2 tileSize,
+                                               RpptROIPtr roiTensorPtrSrc,
+                                               d_float81 *filterTensor)
 {
     int hipThreadIdx_x8 = hipThreadIdx_x << 3;
     int id_x_o = (hipBlockIdx_x * tileSize.x * 8) + hipThreadIdx_x8;
@@ -533,10 +530,9 @@ __global__ void gaussian_filter_9x9_pkd_tensor(T *srcPtr,
     d_float24 sum_f24;
     __shared__ uchar src_lds[48][128];
 
-    d_float81 filter_f81 = filterTensor[id_z];
-
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
+    d_float81 filter_f81 = filterTensor[id_z];
     sum_f24.f4[0] = (float4) 0;
     sum_f24.f4[1] = (float4) 0;
     sum_f24.f4[2] = (float4) 0;
@@ -608,14 +604,14 @@ __global__ void gaussian_filter_9x9_pkd_tensor(T *srcPtr,
 // kernelSize = 3
 template <typename T>
 __global__ void gaussian_filter_3x3_pln_tensor(T *srcPtr,
-                                          uint3 srcStridesNCH,
-                                          T *dstPtr,
-                                          uint3 dstStridesNCH,
-                                          int channelsDst,
-                                          uint padLength,
-                                          uint2 tileSize,
-                                          RpptROIPtr roiTensorPtrSrc,
-                                          d_float9 *filterTensor)
+                                               uint3 srcStridesNCH,
+                                               T *dstPtr,
+                                               uint3 dstStridesNCH,
+                                               int channelsDst,
+                                               uint padLength,
+                                               uint2 tileSize,
+                                               RpptROIPtr roiTensorPtrSrc,
+                                               d_float9 *filterTensor)
 {
     int hipThreadIdx_x8 = hipThreadIdx_x << 3;
     int id_x_o = (hipBlockIdx_x * tileSize.x * 8) + hipThreadIdx_x8;
@@ -625,13 +621,12 @@ __global__ void gaussian_filter_3x3_pln_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
 
-    d_float9 filter_f9 = filterTensor[id_z];
-
     d_float8 sum_f8;
     __shared__ uchar src_lds[16][128];
 
     int srcIdx = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
+    d_float9 filter_f9 = filterTensor[id_z];
     sum_f8.f4[0] = (float4) 0;
     sum_f8.f4[1] = (float4) 0;
     if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -705,14 +700,14 @@ __global__ void gaussian_filter_3x3_pln_tensor(T *srcPtr,
 // kernelSize = 5
 template <typename T>
 __global__ void gaussian_filter_5x5_pln_tensor(T *srcPtr,
-                                          uint3 srcStridesNCH,
-                                          T *dstPtr,
-                                          uint3 dstStridesNCH,
-                                          int channelsDst,
-                                          uint padLength,
-                                          uint2 tileSize,
-                                          RpptROIPtr roiTensorPtrSrc,
-                                          d_float25 *filterTensor)
+                                               uint3 srcStridesNCH,
+                                               T *dstPtr,
+                                               uint3 dstStridesNCH,
+                                               int channelsDst,
+                                               uint padLength,
+                                               uint2 tileSize,
+                                               RpptROIPtr roiTensorPtrSrc,
+                                               d_float25 *filterTensor)
 {
     int hipThreadIdx_x8 = hipThreadIdx_x << 3;
     int id_x_o = (hipBlockIdx_x * tileSize.x * 8) + hipThreadIdx_x8;
@@ -724,10 +719,9 @@ __global__ void gaussian_filter_5x5_pln_tensor(T *srcPtr,
     d_float8 sum_f8;
     __shared__ uchar src_lds[16][128];
 
-    d_float25 filter_f25 = filterTensor[id_z];
-
     int srcIdx = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
+    d_float25 filter_f25 = filterTensor[id_z];
     sum_f8.f4[0] = (float4) 0;
     sum_f8.f4[1] = (float4) 0;
     if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -807,14 +801,14 @@ __global__ void gaussian_filter_5x5_pln_tensor(T *srcPtr,
 // kernelSize = 7
 template <typename T>
 __global__ void gaussian_filter_7x7_pln_tensor(T *srcPtr,
-                                          uint3 srcStridesNCH,
-                                          T *dstPtr,
-                                          uint3 dstStridesNCH,
-                                          int channelsDst,
-                                          uint padLength,
-                                          uint2 tileSize,
-                                          RpptROIPtr roiTensorPtrSrc,
-                                          d_float49 *filterTensor)
+                                               uint3 srcStridesNCH,
+                                               T *dstPtr,
+                                               uint3 dstStridesNCH,
+                                               int channelsDst,
+                                               uint padLength,
+                                               uint2 tileSize,
+                                               RpptROIPtr roiTensorPtrSrc,
+                                               d_float49 *filterTensor)
 {
     int hipThreadIdx_x8 = hipThreadIdx_x << 3;
     int id_x_o = (hipBlockIdx_x * tileSize.x * 8) + hipThreadIdx_x8;
@@ -826,10 +820,9 @@ __global__ void gaussian_filter_7x7_pln_tensor(T *srcPtr,
     d_float8 sum_f8;
     __shared__ uchar src_lds[16][128];
 
-    d_float49 filter_f49 = filterTensor[id_z];
-
     int srcIdx = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
+    d_float49 filter_f49 = filterTensor[id_z];
     sum_f8.f4[0] = (float4) 0;
     sum_f8.f4[1] = (float4) 0;
     if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -915,14 +908,14 @@ __global__ void gaussian_filter_7x7_pln_tensor(T *srcPtr,
 // kernelSize = 9
 template <typename T>
 __global__ void gaussian_filter_9x9_pln_tensor(T *srcPtr,
-                                          uint3 srcStridesNCH,
-                                          T *dstPtr,
-                                          uint3 dstStridesNCH,
-                                          int channelsDst,
-                                          uint padLength,
-                                          uint2 tileSize,
-                                          RpptROIPtr roiTensorPtrSrc,
-                                          d_float81 *filterTensor)
+                                               uint3 srcStridesNCH,
+                                               T *dstPtr,
+                                               uint3 dstStridesNCH,
+                                               int channelsDst,
+                                               uint padLength,
+                                               uint2 tileSize,
+                                               RpptROIPtr roiTensorPtrSrc,
+                                               d_float81 *filterTensor)
 {
     int hipThreadIdx_x8 = hipThreadIdx_x << 3;
     int id_x_o = (hipBlockIdx_x * tileSize.x * 8) + hipThreadIdx_x8;
@@ -934,10 +927,9 @@ __global__ void gaussian_filter_9x9_pln_tensor(T *srcPtr,
     d_float8 sum_f8;
     __shared__ uchar src_lds[16][128];
 
-    d_float81 filter_f81 = filterTensor[id_z];
-
     int srcIdx = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
+    d_float81 filter_f81 = filterTensor[id_z];
     sum_f8.f4[0] = (float4) 0;
     sum_f8.f4[1] = (float4) 0;
     if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -1031,13 +1023,13 @@ __global__ void gaussian_filter_9x9_pln_tensor(T *srcPtr,
 // kernelSize = 3
 template <typename T>
 __global__ void gaussian_filter_3x3_pkd3_pln3_tensor(T *srcPtr,
-                                                uint2 srcStridesNH,
-                                                T *dstPtr,
-                                                uint3 dstStridesNCH,
-                                                uint padLength,
-                                                uint2 tileSize,
-                                                RpptROIPtr roiTensorPtrSrc,
-                                                d_float9 *filterTensor)
+                                                     uint2 srcStridesNH,
+                                                     T *dstPtr,
+                                                     uint3 dstStridesNCH,
+                                                     uint padLength,
+                                                     uint2 tileSize,
+                                                     RpptROIPtr roiTensorPtrSrc,
+                                                     d_float9 *filterTensor)
 {
     int hipThreadIdx_x8 = hipThreadIdx_x << 3;
     int id_x_o = (hipBlockIdx_x * tileSize.x * 8) + hipThreadIdx_x8;
@@ -1048,10 +1040,10 @@ __global__ void gaussian_filter_3x3_pkd3_pln3_tensor(T *srcPtr,
     int id_y_i = id_y_o - padLength;
     d_float24 sum_f24;
     __shared__ uchar src_lds[48][128];
-    d_float9 filter_f9 = filterTensor[id_z];
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
+    d_float9 filter_f9 = filterTensor[id_z];
     sum_f24.f4[0] = (float4) 0;
     sum_f24.f4[1] = (float4) 0;
     sum_f24.f4[2] = (float4) 0;
@@ -1103,13 +1095,13 @@ __global__ void gaussian_filter_3x3_pkd3_pln3_tensor(T *srcPtr,
 // kernelSize = 5
 template <typename T>
 __global__ void gaussian_filter_5x5_pkd3_pln3_tensor(T *srcPtr,
-                                                uint2 srcStridesNH,
-                                                T *dstPtr,
-                                                uint3 dstStridesNCH,
-                                                uint padLength,
-                                                uint2 tileSize,
-                                                RpptROIPtr roiTensorPtrSrc,
-                                                d_float25 *filterTensor)
+                                                     uint2 srcStridesNH,
+                                                     T *dstPtr,
+                                                     uint3 dstStridesNCH,
+                                                     uint padLength,
+                                                     uint2 tileSize,
+                                                     RpptROIPtr roiTensorPtrSrc,
+                                                     d_float25 *filterTensor)
 {
     int hipThreadIdx_x8 = hipThreadIdx_x << 3;
     int id_x_o = (hipBlockIdx_x * tileSize.x * 8) + hipThreadIdx_x8;
@@ -1120,10 +1112,10 @@ __global__ void gaussian_filter_5x5_pkd3_pln3_tensor(T *srcPtr,
     int id_y_i = id_y_o - padLength;
     d_float24 sum_f24;
     __shared__ uchar src_lds[48][128];
-    d_float25 filter_f25 = filterTensor[id_z];
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
+    d_float25 filter_f25 = filterTensor[id_z];
     sum_f24.f4[0] = (float4) 0;
     sum_f24.f4[1] = (float4) 0;
     sum_f24.f4[2] = (float4) 0;
@@ -1181,13 +1173,13 @@ __global__ void gaussian_filter_5x5_pkd3_pln3_tensor(T *srcPtr,
 // kernelSize = 7
 template <typename T>
 __global__ void gaussian_filter_7x7_pkd3_pln3_tensor(T *srcPtr,
-                                                uint2 srcStridesNH,
-                                                T *dstPtr,
-                                                uint3 dstStridesNCH,
-                                                uint padLength,
-                                                uint2 tileSize,
-                                                RpptROIPtr roiTensorPtrSrc,
-                                                d_float49 *filterTensor)
+                                                     uint2 srcStridesNH,
+                                                     T *dstPtr,
+                                                     uint3 dstStridesNCH,
+                                                     uint padLength,
+                                                     uint2 tileSize,
+                                                     RpptROIPtr roiTensorPtrSrc,
+                                                     d_float49 *filterTensor)
 {
     int hipThreadIdx_x8 = hipThreadIdx_x << 3;
     int id_x_o = (hipBlockIdx_x * tileSize.x * 8) + hipThreadIdx_x8;
@@ -1198,10 +1190,10 @@ __global__ void gaussian_filter_7x7_pkd3_pln3_tensor(T *srcPtr,
     int id_y_i = id_y_o - padLength;
     d_float24 sum_f24;
     __shared__ uchar src_lds[48][128];
-    d_float49 filter_f49 = filterTensor[id_z];
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
+    d_float49 filter_f49 = filterTensor[id_z];
     sum_f24.f4[0] = (float4) 0;
     sum_f24.f4[1] = (float4) 0;
     sum_f24.f4[2] = (float4) 0;
@@ -1265,13 +1257,13 @@ __global__ void gaussian_filter_7x7_pkd3_pln3_tensor(T *srcPtr,
 // kernelSize = 9
 template <typename T>
 __global__ void gaussian_filter_9x9_pkd3_pln3_tensor(T *srcPtr,
-                                                uint2 srcStridesNH,
-                                                T *dstPtr,
-                                                uint3 dstStridesNCH,
-                                                uint padLength,
-                                                uint2 tileSize,
-                                                RpptROIPtr roiTensorPtrSrc,
-                                                d_float81 *filterTensor)
+                                                     uint2 srcStridesNH,
+                                                     T *dstPtr,
+                                                     uint3 dstStridesNCH,
+                                                     uint padLength,
+                                                     uint2 tileSize,
+                                                     RpptROIPtr roiTensorPtrSrc,
+                                                     d_float81 *filterTensor)
 {
     int hipThreadIdx_x8 = hipThreadIdx_x << 3;
     int id_x_o = (hipBlockIdx_x * tileSize.x * 8) + hipThreadIdx_x8;
@@ -1282,10 +1274,10 @@ __global__ void gaussian_filter_9x9_pkd3_pln3_tensor(T *srcPtr,
     int id_y_i = id_y_o - padLength;
     d_float24 sum_f24;
     __shared__ uchar src_lds[48][128];
-    d_float81 filter_f81 = filterTensor[id_z];
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
+    d_float81 filter_f81 = filterTensor[id_z];
     sum_f24.f4[0] = (float4) 0;
     sum_f24.f4[1] = (float4) 0;
     sum_f24.f4[2] = (float4) 0;
@@ -1357,13 +1349,13 @@ __global__ void gaussian_filter_9x9_pkd3_pln3_tensor(T *srcPtr,
 // kernelSize = 3
 template <typename T>
 __global__ void gaussian_filter_3x3_pln3_pkd3_tensor(T *srcPtr,
-                                                uint3 srcStridesNCH,
-                                                T *dstPtr,
-                                                uint2 dstStridesNH,
-                                                uint padLength,
-                                                uint2 tileSize,
-                                                RpptROIPtr roiTensorPtrSrc,
-                                                d_float9 *filterTensor)
+                                                     uint3 srcStridesNCH,
+                                                     T *dstPtr,
+                                                     uint2 dstStridesNH,
+                                                     uint padLength,
+                                                     uint2 tileSize,
+                                                     RpptROIPtr roiTensorPtrSrc,
+                                                     d_float9 *filterTensor)
 {
     int hipThreadIdx_x8 = hipThreadIdx_x << 3;
     int id_x_o = (hipBlockIdx_x * tileSize.x * 8) + hipThreadIdx_x8;
@@ -1374,13 +1366,13 @@ __global__ void gaussian_filter_3x3_pln3_pkd3_tensor(T *srcPtr,
     int id_y_i = id_y_o - padLength;
     d_float24 sum_f24;
     __shared__ uchar src_lds[48][128];
-    d_float9 filter_f9 = filterTensor[id_z];
 
     int3 srcIdx;
     srcIdx.x = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     srcIdx.y = srcIdx.x + srcStridesNCH.y;
     srcIdx.z = srcIdx.y + srcStridesNCH.y;
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
+    d_float9 filter_f9 = filterTensor[id_z];
     sum_f24.f4[0] = (float4) 0;
     sum_f24.f4[1] = (float4) 0;
     sum_f24.f4[2] = (float4) 0;
@@ -1429,13 +1421,13 @@ __global__ void gaussian_filter_3x3_pln3_pkd3_tensor(T *srcPtr,
 // kernelSize = 5
 template <typename T>
 __global__ void gaussian_filter_5x5_pln3_pkd3_tensor(T *srcPtr,
-                                                uint3 srcStridesNCH,
-                                                T *dstPtr,
-                                                uint2 dstStridesNH,
-                                                uint padLength,
-                                                uint2 tileSize,
-                                                RpptROIPtr roiTensorPtrSrc,
-                                                d_float25 *filterTensor)
+                                                     uint3 srcStridesNCH,
+                                                     T *dstPtr,
+                                                     uint2 dstStridesNH,
+                                                     uint padLength,
+                                                     uint2 tileSize,
+                                                     RpptROIPtr roiTensorPtrSrc,
+                                                     d_float25 *filterTensor)
 {
     int hipThreadIdx_x8 = hipThreadIdx_x << 3;
     int id_x_o = (hipBlockIdx_x * tileSize.x * 8) + hipThreadIdx_x8;
@@ -1446,13 +1438,13 @@ __global__ void gaussian_filter_5x5_pln3_pkd3_tensor(T *srcPtr,
     int id_y_i = id_y_o - padLength;
     d_float24 sum_f24;
     __shared__ uchar src_lds[48][128];
-    d_float25 filter_f25 = filterTensor[id_z];
 
     int3 srcIdx;
     srcIdx.x = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     srcIdx.y = srcIdx.x + srcStridesNCH.y;
     srcIdx.z = srcIdx.y + srcStridesNCH.y;
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
+    d_float25 filter_f25 = filterTensor[id_z];
     sum_f24.f4[0] = (float4) 0;
     sum_f24.f4[1] = (float4) 0;
     sum_f24.f4[2] = (float4) 0;
@@ -1507,13 +1499,13 @@ __global__ void gaussian_filter_5x5_pln3_pkd3_tensor(T *srcPtr,
 // kernelSize = 7
 template <typename T>
 __global__ void gaussian_filter_7x7_pln3_pkd3_tensor(T *srcPtr,
-                                                uint3 srcStridesNCH,
-                                                T *dstPtr,
-                                                uint2 dstStridesNH,
-                                                uint padLength,
-                                                uint2 tileSize,
-                                                RpptROIPtr roiTensorPtrSrc,
-                                                d_float49 *filterTensor)
+                                                     uint3 srcStridesNCH,
+                                                     T *dstPtr,
+                                                     uint2 dstStridesNH,
+                                                     uint padLength,
+                                                     uint2 tileSize,
+                                                     RpptROIPtr roiTensorPtrSrc,
+                                                     d_float49 *filterTensor)
 {
     int hipThreadIdx_x8 = hipThreadIdx_x << 3;
     int id_x_o = (hipBlockIdx_x * tileSize.x * 8) + hipThreadIdx_x8;
@@ -1524,13 +1516,13 @@ __global__ void gaussian_filter_7x7_pln3_pkd3_tensor(T *srcPtr,
     int id_y_i = id_y_o - padLength;
     d_float24 sum_f24;
     __shared__ uchar src_lds[48][128];
-    d_float49 filter_f49 = filterTensor[id_z];
 
     int3 srcIdx;
     srcIdx.x = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     srcIdx.y = srcIdx.x + srcStridesNCH.y;
     srcIdx.z = srcIdx.y + srcStridesNCH.y;
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
+    d_float49 filter_f49 = filterTensor[id_z];
     sum_f24.f4[0] = (float4) 0;
     sum_f24.f4[1] = (float4) 0;
     sum_f24.f4[2] = (float4) 0;
@@ -1591,13 +1583,13 @@ __global__ void gaussian_filter_7x7_pln3_pkd3_tensor(T *srcPtr,
 // kernelSize = 9
 template <typename T>
 __global__ void gaussian_filter_9x9_pln3_pkd3_tensor(T *srcPtr,
-                                                uint3 srcStridesNCH,
-                                                T *dstPtr,
-                                                uint2 dstStridesNH,
-                                                uint padLength,
-                                                uint2 tileSize,
-                                                RpptROIPtr roiTensorPtrSrc,
-                                                d_float81 *filterTensor)
+                                                     uint3 srcStridesNCH,
+                                                     T *dstPtr,
+                                                     uint2 dstStridesNH,
+                                                     uint padLength,
+                                                     uint2 tileSize,
+                                                     RpptROIPtr roiTensorPtrSrc,
+                                                     d_float81 *filterTensor)
 {
     int hipThreadIdx_x8 = hipThreadIdx_x << 3;
     int id_x_o = (hipBlockIdx_x * tileSize.x * 8) + hipThreadIdx_x8;
@@ -1608,13 +1600,13 @@ __global__ void gaussian_filter_9x9_pln3_pkd3_tensor(T *srcPtr,
     int id_y_i = id_y_o - padLength;
     d_float24 sum_f24;
     __shared__ uchar src_lds[48][128];
-    d_float81 filter_f81 = filterTensor[id_z];
 
     int3 srcIdx;
     srcIdx.x = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     srcIdx.y = srcIdx.x + srcStridesNCH.y;
     srcIdx.z = srcIdx.y + srcStridesNCH.y;
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
+    d_float81 filter_f81 = filterTensor[id_z];
     sum_f24.f4[0] = (float4) 0;
     sum_f24.f4[1] = (float4) 0;
     sum_f24.f4[2] = (float4) 0;
