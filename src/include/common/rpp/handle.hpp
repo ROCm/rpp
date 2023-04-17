@@ -84,7 +84,7 @@ struct Handle : rppHandle
 {
     // Host handle related
     Handle();
-    Handle(size_t nBatchSize, Rpp32u numThreads);
+    Handle(size_t nBatchSize, Rpp32u numThreads = 0);
     Handle(Handle&&) noexcept;
     ~Handle();
     InitHandle*  GetInitHandle() const;
