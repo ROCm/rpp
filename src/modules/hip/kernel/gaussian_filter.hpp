@@ -1678,33 +1678,39 @@ __device__ float gaussian(int x, int y, float mulFactor)
     return res;
 }
 
-__global__ void set_filter_values(float *filterTensor, float *stdDevTensor, int kernelSize, int N, int batchSize)
+__global__ void create_gaussian_kernel(float *filterTensor,
+                                       float *stdDevTensor,
+                                       int kernelSize,
+                                       int filterStride,
+                                       int batchSize)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
     if(id_x >= batchSize)
         return;
 
-    float *filter = &filterTensor[id_x * N];
+    float *filter = &filterTensor[id_x * filterStride];
     float stdDev = stdDevTensor[id_x];
     int cnt = 0;
     float mulFactor = 1 / (2 * stdDev * stdDev);
     float kernelSum = 0.0f;
-    for(int i = 0; i < kernelSize; i++)
+    int startIdx = -(kernelSize / 2);
+    int endIdx = -startIdx;
+    for(int i = startIdx; i <= endIdx; i++)
     {
-        for(int j = 0; j < kernelSize; j++)
+        for(int j = startIdx; j <= endIdx; j++)
         {
             filter[cnt] = gaussian(i, j, mulFactor);
             kernelSum += filter[cnt];
             cnt++;
         }
     }
-    kernelSum = (kernelSum == 0.0f) ? 1.0f : (1.0f / kernelSum);
+    kernelSum = (1.0f / kernelSum);
 
     // Multiply kernel values by (1 / kernelSum)
     cnt = 0;
-    for(int i = 0; i < kernelSize; i++)
+    for(int i = startIdx; i <= endIdx; i++)
     {
-        for(int j = 0; j < kernelSize; j++)
+        for(int j = startIdx; j <= endIdx; j++)
         {
             filter[cnt] *= kernelSum;
             cnt++;
@@ -1712,7 +1718,10 @@ __global__ void set_filter_values(float *filterTensor, float *stdDevTensor, int 
     }
 }
 
-static RppStatus hip_exec_fill_kernel_values(float *filterTensor, int kernelSize, Rpp32f *stdDevTensor, rpp::Handle &handle)
+static RppStatus hip_exec_create_gaussian_kernel(Rpp32f *filterTensor,
+                                                 Rpp32s kernelSize,
+                                                 Rpp32f *stdDevTensor,
+                                                 rpp::Handle &handle)
 {
     int localThreads_x = 256;
     int localThreads_y = 1;
@@ -1722,7 +1731,7 @@ static RppStatus hip_exec_fill_kernel_values(float *filterTensor, int kernelSize
     int globalThreads_z = 1;
     int numValues = kernelSize * kernelSize;
 
-    hipLaunchKernelGGL(set_filter_values,
+    hipLaunchKernelGGL(create_gaussian_kernel,
                        dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                        dim3(localThreads_x, localThreads_y, localThreads_z),
                        0,
@@ -1733,7 +1742,6 @@ static RppStatus hip_exec_fill_kernel_values(float *filterTensor, int kernelSize
                        numValues,
                        handle.GetBatchSize());
 
-    hipDeviceSynchronize();
     return RPP_SUCCESS;
 }
 
@@ -1766,13 +1774,11 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
     tileSize.y = 16 - padLengthTwice;
 
     // Create a filter of size (kernel size x kernel size)
-    void *filterTensor;
-    int numValues = kernelSize * kernelSize;
-    hipMalloc(&filterTensor,  numValues * dstDescPtr->n * sizeof(float));
-    hip_exec_fill_kernel_values((float *)filterTensor,
-                                kernelSize,
-                                handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
-                                handle);
+    float *filterTensor = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
+    hip_exec_create_gaussian_kernel((float *)filterTensor,
+                                    kernelSize,
+                                    handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                                    handle);
 
     if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
     {
@@ -2058,8 +2064,6 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
             }
         }
     }
-
-    hipFree(filterTensor);
 
     return RPP_SUCCESS;
 }
