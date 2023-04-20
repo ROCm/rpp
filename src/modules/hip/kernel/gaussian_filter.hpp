@@ -1670,12 +1670,11 @@ __global__ void gaussian_filter_9x9_pln3_pkd3_tensor(T *srcPtr,
     }
 }
 
-__device__ float gaussian(int x, int y, float mulFactor)
+__device__ float gaussian(int iSquare, int j, float mulFactor)
 {
-    float expFactor = - ((x * x) + (y * y)) * mulFactor;
+    float expFactor = - (iSquare + (j * j)) * mulFactor;
     expFactor = expf(expFactor);
-    float res  = (expFactor * mulFactor) / PI;
-    return res;
+    return expFactor;
 }
 
 __global__ void create_gaussian_kernel(float *filterTensor,
@@ -1697,9 +1696,10 @@ __global__ void create_gaussian_kernel(float *filterTensor,
     int endIdx = -startIdx;
     for(int i = startIdx; i <= endIdx; i++)
     {
+        int iSquare = i * i;
         for(int j = startIdx; j <= endIdx; j++)
         {
-            filter[cnt] = gaussian(i, j, mulFactor);
+            filter[cnt] = gaussian(iSquare, j, mulFactor);
             kernelSum += filter[cnt];
             cnt++;
         }
