@@ -3,45 +3,45 @@
 
 // -------------------- Set 0 - gaussian_filter device helpers --------------------
 
-__device__ void gaussian_filter_3x3_row_hip_compute(uchar *srcPtr, d_float8 *dst_f8, d_float9 *filter_f9, int rowIndex)
+__device__ void gaussian_filter_3x3_row_hip_compute(uchar *srcPtr, d_float8 *dst_f8, float *filter)
 {
     float src_f1;
     uint3 src_ui3;
     src_ui3 = *(uint3 *)srcPtr;
     src_f1 = rpp_hip_unpack0(src_ui3.x);
-    dst_f8->f1[0] = fmaf(src_f1, filter_f9->f1[rowIndex], dst_f8->f1[0]);
+    dst_f8->f1[0] = fmaf(src_f1, filter[0], dst_f8->f1[0]);
     src_f1 = rpp_hip_unpack1(src_ui3.x);
-    dst_f8->f1[0] = fmaf(src_f1, filter_f9->f1[rowIndex + 1], dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f1, filter_f9->f1[rowIndex], dst_f8->f1[1]);
+    dst_f8->f1[0] = fmaf(src_f1, filter[1], dst_f8->f1[0]);
+    dst_f8->f1[1] = fmaf(src_f1, filter[0], dst_f8->f1[1]);
     src_f1 = rpp_hip_unpack2(src_ui3.x);
-    dst_f8->f1[0] = fmaf(src_f1, filter_f9->f1[rowIndex + 2], dst_f8->f1[0]);
-    dst_f8->f1[1] = fmaf(src_f1, filter_f9->f1[rowIndex + 1], dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f1, filter_f9->f1[rowIndex], dst_f8->f1[2]);
+    dst_f8->f1[0] = fmaf(src_f1, filter[2], dst_f8->f1[0]);
+    dst_f8->f1[1] = fmaf(src_f1, filter[1], dst_f8->f1[1]);
+    dst_f8->f1[2] = fmaf(src_f1, filter[0], dst_f8->f1[2]);
     src_f1 = rpp_hip_unpack3(src_ui3.x);
-    dst_f8->f1[1] = fmaf(src_f1, filter_f9->f1[rowIndex + 2], dst_f8->f1[1]);
-    dst_f8->f1[2] = fmaf(src_f1, filter_f9->f1[rowIndex + 1], dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f1, filter_f9->f1[rowIndex], dst_f8->f1[3]);
+    dst_f8->f1[1] = fmaf(src_f1, filter[2], dst_f8->f1[1]);
+    dst_f8->f1[2] = fmaf(src_f1, filter[1], dst_f8->f1[2]);
+    dst_f8->f1[3] = fmaf(src_f1, filter[0], dst_f8->f1[3]);
     src_f1 = rpp_hip_unpack0(src_ui3.y);
-    dst_f8->f1[2] = fmaf(src_f1, filter_f9->f1[rowIndex + 2], dst_f8->f1[2]);
-    dst_f8->f1[3] = fmaf(src_f1, filter_f9->f1[rowIndex + 1], dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f1, filter_f9->f1[rowIndex], dst_f8->f1[4]);
+    dst_f8->f1[2] = fmaf(src_f1, filter[2], dst_f8->f1[2]);
+    dst_f8->f1[3] = fmaf(src_f1, filter[1], dst_f8->f1[3]);
+    dst_f8->f1[4] = fmaf(src_f1, filter[0], dst_f8->f1[4]);
     src_f1 = rpp_hip_unpack1(src_ui3.y);
-    dst_f8->f1[3] = fmaf(src_f1, filter_f9->f1[rowIndex + 2], dst_f8->f1[3]);
-    dst_f8->f1[4] = fmaf(src_f1, filter_f9->f1[rowIndex + 1], dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f1, filter_f9->f1[rowIndex], dst_f8->f1[5]);
+    dst_f8->f1[3] = fmaf(src_f1, filter[2], dst_f8->f1[3]);
+    dst_f8->f1[4] = fmaf(src_f1, filter[1], dst_f8->f1[4]);
+    dst_f8->f1[5] = fmaf(src_f1, filter[0], dst_f8->f1[5]);
     src_f1 = rpp_hip_unpack2(src_ui3.y);
-    dst_f8->f1[4] = fmaf(src_f1, filter_f9->f1[rowIndex + 2], dst_f8->f1[4]);
-    dst_f8->f1[5] = fmaf(src_f1, filter_f9->f1[rowIndex + 1], dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f1, filter_f9->f1[rowIndex], dst_f8->f1[6]);
+    dst_f8->f1[4] = fmaf(src_f1, filter[2], dst_f8->f1[4]);
+    dst_f8->f1[5] = fmaf(src_f1, filter[1], dst_f8->f1[5]);
+    dst_f8->f1[6] = fmaf(src_f1, filter[0], dst_f8->f1[6]);
     src_f1 = rpp_hip_unpack3(src_ui3.y);
-    dst_f8->f1[5] = fmaf(src_f1, filter_f9->f1[rowIndex + 2], dst_f8->f1[5]);
-    dst_f8->f1[6] = fmaf(src_f1, filter_f9->f1[rowIndex + 1], dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f1, filter_f9->f1[rowIndex], dst_f8->f1[7]);
+    dst_f8->f1[5] = fmaf(src_f1, filter[2], dst_f8->f1[5]);
+    dst_f8->f1[6] = fmaf(src_f1, filter[1], dst_f8->f1[6]);
+    dst_f8->f1[7] = fmaf(src_f1, filter[0], dst_f8->f1[7]);
     src_f1 = rpp_hip_unpack0(src_ui3.z);
-    dst_f8->f1[6] = fmaf(src_f1, filter_f9->f1[rowIndex + 2], dst_f8->f1[6]);
-    dst_f8->f1[7] = fmaf(src_f1, filter_f9->f1[rowIndex + 1], dst_f8->f1[7]);
+    dst_f8->f1[6] = fmaf(src_f1, filter[2], dst_f8->f1[6]);
+    dst_f8->f1[7] = fmaf(src_f1, filter[1], dst_f8->f1[7]);
     src_f1 = rpp_hip_unpack1(src_ui3.z);
-    dst_f8->f1[7] = fmaf(src_f1, filter_f9->f1[rowIndex + 2], dst_f8->f1[7]);
+    dst_f8->f1[7] = fmaf(src_f1, filter[2], dst_f8->f1[7]);
 }
 
 __device__ void gaussian_filter_5x5_row_hip_compute(uchar *srcPtr, d_float8 *dst_f8, d_float25 *filter_f25, int rowIndex)
@@ -299,6 +299,9 @@ __global__ void gaussian_filter_3x3_pkd_tensor(T *srcPtr,
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
     d_float9 filter_f9 = filterTensor[id_z];
+    float *filter_row1 = &filter_f9.f1[0];
+    float *filter_row2 = &filter_f9.f1[3];
+    float *filter_row3 = &filter_f9.f1[6];
     sum_f24.f4[0] = (float4) 0;
     sum_f24.f4[1] = (float4) 0;
     sum_f24.f4[2] = (float4) 0;
@@ -333,15 +336,15 @@ __global__ void gaussian_filter_3x3_pkd_tensor(T *srcPtr,
         (hipThreadIdx_x < tileSize.x) &&
         (hipThreadIdx_y < tileSize.y))
     {
-        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0], &filter_f9, 0);
-        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1], &filter_f9, 0);
-        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2], &filter_f9, 0);
-        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0], &filter_f9, 3);
-        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1], &filter_f9, 3);
-        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2], &filter_f9, 3);
-        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0], &filter_f9, 6);
-        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1], &filter_f9, 6);
-        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2], &filter_f9, 6);
+        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0], filter_row1);
+        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1], filter_row1);
+        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2], filter_row1);
+        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0], filter_row2);
+        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1], filter_row2);
+        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2], filter_row2);
+        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0], filter_row3);
+        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1], filter_row3);
+        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2], filter_row3);
         rpp_hip_adjust_range(dstPtr, &sum_f24);
         rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &sum_f24);
     }
@@ -627,6 +630,9 @@ __global__ void gaussian_filter_3x3_pln_tensor(T *srcPtr,
     int srcIdx = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
     d_float9 filter_f9 = filterTensor[id_z];
+    float *filter_row1 = &filter_f9.f1[0];
+    float *filter_row2 = &filter_f9.f1[3];
+    float *filter_row3 = &filter_f9.f1[6];
     sum_f8.f4[0] = (float4) 0;
     sum_f8.f4[1] = (float4) 0;
     if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -640,9 +646,9 @@ __global__ void gaussian_filter_3x3_pln_tensor(T *srcPtr,
         (hipThreadIdx_x < tileSize.x) &&
         (hipThreadIdx_y < tileSize.y))
     {
-        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8, &filter_f9, 0);
-        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8, &filter_f9, 3);
-        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8, &filter_f9, 6);
+        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8, filter_row1);
+        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8, filter_row2);
+        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8, filter_row3);
         rpp_hip_adjust_range(dstPtr, &sum_f8);
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
     }
@@ -665,9 +671,9 @@ __global__ void gaussian_filter_3x3_pln_tensor(T *srcPtr,
             (hipThreadIdx_x < tileSize.x) &&
             (hipThreadIdx_y < tileSize.y))
         {
-            gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8, &filter_f9, 0);
-            gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8, &filter_f9, 3);
-            gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8, &filter_f9, 6);
+            gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8, filter_row1);
+            gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8, filter_row2);
+            gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8, filter_row3);
             rpp_hip_adjust_range(dstPtr, &sum_f8);
             rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
         }
@@ -688,9 +694,9 @@ __global__ void gaussian_filter_3x3_pln_tensor(T *srcPtr,
             (hipThreadIdx_x < tileSize.x) &&
             (hipThreadIdx_y < tileSize.y))
         {
-            gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8, &filter_f9, 0);
-            gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8, &filter_f9, 3);
-            gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8, &filter_f9, 6);
+            gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y    ][hipThreadIdx_x8], &sum_f8, filter_row1);
+            gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y + 1][hipThreadIdx_x8], &sum_f8, filter_row2);
+            gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y + 2][hipThreadIdx_x8], &sum_f8, filter_row3);
             rpp_hip_adjust_range(dstPtr, &sum_f8);
             rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &sum_f8);
         }
@@ -1044,6 +1050,9 @@ __global__ void gaussian_filter_3x3_pkd3_pln3_tensor(T *srcPtr,
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
     d_float9 filter_f9 = filterTensor[id_z];
+    float *filter_row1 = &filter_f9.f1[0];
+    float *filter_row2 = &filter_f9.f1[3];
+    float *filter_row3 = &filter_f9.f1[6];
     sum_f24.f4[0] = (float4) 0;
     sum_f24.f4[1] = (float4) 0;
     sum_f24.f4[2] = (float4) 0;
@@ -1078,15 +1087,15 @@ __global__ void gaussian_filter_3x3_pkd3_pln3_tensor(T *srcPtr,
         (hipThreadIdx_x < tileSize.x) &&
         (hipThreadIdx_y < tileSize.y))
     {
-        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0], &filter_f9, 0);
-        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1], &filter_f9, 0);
-        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2], &filter_f9, 0);
-        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0], &filter_f9, 3);
-        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1], &filter_f9, 3);
-        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2], &filter_f9, 3);
-        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0], &filter_f9, 6);
-        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1], &filter_f9, 6);
-        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2], &filter_f9, 6);
+        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0], filter_row1);
+        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1], filter_row1);
+        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2], filter_row1);
+        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0], filter_row2);
+        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1], filter_row2);
+        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2], filter_row2);
+        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0], filter_row3);
+        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1], filter_row3);
+        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2], filter_row3);
         rpp_hip_adjust_range(dstPtr, &sum_f24);
         rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &sum_f24);
     }
@@ -1373,6 +1382,9 @@ __global__ void gaussian_filter_3x3_pln3_pkd3_tensor(T *srcPtr,
     srcIdx.z = srcIdx.y + srcStridesNCH.y;
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
     d_float9 filter_f9 = filterTensor[id_z];
+    float *filter_row1 = &filter_f9.f1[0];
+    float *filter_row2 = &filter_f9.f1[3];
+    float *filter_row3 = &filter_f9.f1[6];
     sum_f24.f4[0] = (float4) 0;
     sum_f24.f4[1] = (float4) 0;
     sum_f24.f4[2] = (float4) 0;
@@ -1404,15 +1416,15 @@ __global__ void gaussian_filter_3x3_pln3_pkd3_tensor(T *srcPtr,
         (hipThreadIdx_x < tileSize.x) &&
         (hipThreadIdx_y < tileSize.y))
     {
-        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0], &filter_f9, 0);
-        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1], &filter_f9, 0);
-        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2], &filter_f9, 0);
-        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0], &filter_f9, 3);
-        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1], &filter_f9, 3);
-        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2], &filter_f9, 3);
-        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0], &filter_f9, 6);
-        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1], &filter_f9, 6);
-        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2], &filter_f9, 6);
+        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x    ][hipThreadIdx_x8], &sum_f24.f8[0], filter_row1);
+        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y    ][hipThreadIdx_x8], &sum_f24.f8[1], filter_row1);
+        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z    ][hipThreadIdx_x8], &sum_f24.f8[2], filter_row1);
+        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 1][hipThreadIdx_x8], &sum_f24.f8[0], filter_row2);
+        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 1][hipThreadIdx_x8], &sum_f24.f8[1], filter_row2);
+        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 1][hipThreadIdx_x8], &sum_f24.f8[2], filter_row2);
+        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.x + 2][hipThreadIdx_x8], &sum_f24.f8[0], filter_row3);
+        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.y + 2][hipThreadIdx_x8], &sum_f24.f8[1], filter_row3);
+        gaussian_filter_3x3_row_hip_compute(&src_lds[hipThreadIdx_y_channel.z + 2][hipThreadIdx_x8], &sum_f24.f8[2], filter_row3);
         rpp_hip_adjust_range(dstPtr, &sum_f24);
         rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &sum_f24);
     }
