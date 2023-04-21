@@ -1,6 +1,6 @@
 # Sample example to run brightness augmentation 
 
-* To run this example
+*  To run this example
 ```
 mkdir build
 cd build
@@ -10,7 +10,7 @@ make -j
     <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <layout type (pkd3 - 0/pln3 - 1/pln1 - 2)> <decoder type (TurboJPEG - 0/ OpenCV - 1)>
 ```
 
-* Example:
+*  Example:
 ```
- ./brightness_hip ../../../test_suite/TEST_IMAGES/three_images_mixed_src1/ ../../../test_suite/TEST_IMAGES/three_images_mixed_src2/ output_images/ 0 0 0 0
+./brightness_hip ../../../test_suite/TEST_IMAGES/three_images_mixed_src1/ ../../../test_suite/TEST_IMAGES/three_images_mixed_src2/ output_images/ 0 0 0 0
 ```
