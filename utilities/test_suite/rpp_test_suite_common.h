@@ -35,10 +35,12 @@ THE SOFTWARE.
 #include <omp.h>
 #include <fstream>
 #include <turbojpeg.h>
-#include <experimental/filesystem>
+#include <boost/filesystem.hpp>
 
 using namespace cv;
 using namespace std;
+namespace fs = boost::filesystem;
+
 
 #define CUTOFF 1
 
@@ -58,6 +60,20 @@ inline T validate_pixel_range(T pixel)
 {
     pixel = (pixel < static_cast<Rpp32f>(0)) ? (static_cast<Rpp32f>(0)) : ((pixel < static_cast<Rpp32f>(255)) ? pixel : (static_cast<Rpp32f>(255)));
     return pixel;
+}
+
+void replicate_last_image_to_fill_batch(const string& lastFilePath, vector<string>& imageNamesPath, vector<string>& imageNames, const string& lastFileName, int noOfImages, int batch_count)
+{
+    std::string filePath = lastFilePath;
+    std::string fileName = lastFileName;
+    if (noOfImages > 0 && noOfImages < batch_count)
+    {
+        for (int i = noOfImages; i < batch_count; i++)
+        {
+            imageNamesPath.push_back(filePath);
+            imageNames.push_back(fileName);
+        }
+    }
 }
 
 inline std::string get_interpolation_type(unsigned int val, RpptInterpolationType &interpolationType)
@@ -238,6 +254,49 @@ inline void set_descriptor_layout( RpptDescPtr srcDescPtr, RpptDescPtr dstDescPt
     }
 }
 
+inline void set_roi_and_max_dimensions(vector<string> imagePaths, int& maxWidth, int& maxHeight, int& maxDstWidth, int& maxDstHeight, RpptROI *roiTensorPtrSrc, RpptROI *roiTensorPtrDst, RpptImagePatchPtr dstImgSizes)
+{
+   tjhandle tjInstance = tjInitDecompress();
+    maxWidth = 0;
+    maxHeight = 0;
+    int i = 0;
+    for (const auto& imagePath : imagePaths)
+    {
+        FILE* jpegFile = fopen(imagePath.c_str(), "rb");
+        if (!jpegFile) {
+            std::cerr << "Error opening file: " << imagePath << std::endl;
+            continue;
+        }
+
+        fseek(jpegFile, 0, SEEK_END);
+        long fileSize = ftell(jpegFile);
+        fseek(jpegFile, 0, SEEK_SET);
+
+        std::vector<unsigned char> jpegBuffer(fileSize);
+        fread(jpegBuffer.data(), 1, fileSize, jpegFile);
+        fclose(jpegFile);
+
+        int jpegSubsamp;
+        int width, height;
+        if (tjDecompressHeader2(tjInstance, jpegBuffer.data(), jpegBuffer.size(), &width, &height, &jpegSubsamp) == -1) {
+            std::cerr << "Error decompressing file: " << imagePath << std::endl;
+            continue;
+        }
+
+        roiTensorPtrSrc[i].xywhROI = {0, 0, width, height};
+        roiTensorPtrDst[i].xywhROI = {0, 0, width, height};
+        dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth;
+        dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight;
+        maxWidth = std::max(maxWidth, width);
+        maxHeight = std::max(maxHeight, height);
+        maxDstWidth = std::max(maxDstWidth, width);
+        maxDstHeight = std::max(maxDstHeight, height);
+        i++;
+    }
+
+    tjDestroy(tjInstance);
+}
+
 inline void set_descriptor_dims_and_strides(RpptDescPtr descPtr, int noOfImages, int maxHeight, int maxWidth, int numChannels, int offsetInBytes)
 {
     descPtr->numDims = 4;
@@ -249,7 +308,6 @@ inline void set_descriptor_dims_and_strides(RpptDescPtr descPtr, int noOfImages,
 
     // Optionally set w stride as a multiple of 8 for src/dst
     descPtr->w = ((descPtr->w / 8) * 8) + 8;
-
     // set strides
     if (descPtr->layout == RpptLayout::NHWC)
     {
@@ -395,7 +453,96 @@ inline void convert_pkd3_to_pln3(Rpp8u *input, RpptDescPtr descPtr)
     free(inputCopy);
 }
 
-inline void read_image_batch_opencv(Rpp8u *input, RpptDescPtr descPtr, string imageNames[])
+void open_folder(const string& folderPath, vector<string>& imageNames, vector<string>& imageNamesPath)
+{
+    auto src_dir = opendir (folderPath.c_str());
+    struct dirent* entity;
+    std::string fileName = " ";
+
+    if (src_dir == nullptr)
+        std::cerr<<"\n ERROR: Failed opening the directory at " <<folderPath;
+
+    while((entity = readdir (src_dir)) != nullptr)
+    {
+        string entry_name(entity->d_name);
+        if (entry_name == "." || entry_name == "..")
+            continue;
+        fileName = entity->d_name;
+        std::string filePath = folderPath;
+        filePath.append("/");
+        filePath.append(entity->d_name);
+        fs::path pathObj(filePath);
+        if(fs::exists(pathObj) && fs::is_directory(pathObj))
+        {
+            open_folder(filePath, imageNames, imageNamesPath);
+        }
+        if (fileName.size() > 4 && fileName.substr(fileName.size() - 4) == ".jpg")
+        {
+            imageNamesPath.push_back(filePath);
+            imageNames.push_back(entity->d_name);
+        }
+    }
+    if(imageNames.empty())
+        std::cerr<<"\n Did not load any file from " << folderPath;
+
+    closedir(src_dir);
+}
+
+void search_jpg_files(const string& folder_path, vector<string>& imageNames, vector<string>& imageNamesPath)
+{
+    vector<string> entry_list;
+    string full_path = folder_path;
+    auto sub_dir = opendir(folder_path.c_str());
+    if (!sub_dir)
+    {
+        std::cerr << "ERROR: Failed opening the directory at "<< folder_path << std::endl;
+        exit(0);
+    }
+
+    struct dirent* entity;
+    while ((entity = readdir(sub_dir)) != nullptr)
+    {
+        string entry_name(entity->d_name);
+        if (entry_name == "." || entry_name == "..")
+            continue;
+        entry_list.push_back(entry_name);
+    }
+    closedir(sub_dir);
+    std::sort(entry_list.begin(), entry_list.end());
+
+    for (unsigned dir_count = 0; dir_count < entry_list.size(); ++dir_count)
+    {
+        string subfolder_path = full_path + "/" + entry_list[dir_count];
+        fs::path pathObj(subfolder_path);
+        if (fs::exists(pathObj) && fs::is_regular_file(pathObj))
+        {
+            // ignore files with extensions .tar, .zip, .7z
+            auto file_extension_idx = subfolder_path.find_last_of(".");
+            if (file_extension_idx != std::string::npos)
+            {
+                std::string file_extension = subfolder_path.substr(file_extension_idx+1);
+                if ((file_extension == "tar") || (file_extension == "zip") || (file_extension == "7z") || (file_extension == "rar"))
+                    continue;
+            }
+            if (entry_list[dir_count].size() > 4 && entry_list[dir_count].substr(entry_list[dir_count].size() - 4) == ".jpg")
+            {
+                imageNames.push_back(entry_list[dir_count]);
+                imageNamesPath.push_back(subfolder_path);
+            }
+            // open_folder(subfolder_path, imageNames, imageNamesPath);
+            // break;
+        }
+        else if (fs::exists(pathObj) && fs::is_directory(pathObj))
+        {
+            // full_path = subfolder_path;
+            // search_jpg_files(full_path, imageNames, imageNamesPath);
+            open_folder(subfolder_path, imageNames, imageNamesPath);
+        }
+
+    }
+}
+
+inline void read_image_batch_opencv(Rpp8u *input, RpptDescPtr descPtr, vector<string> imageNames)
 {
     for(int i = 0; i < descPtr->n; i++)
     {
@@ -423,7 +570,7 @@ inline void read_image_batch_opencv(Rpp8u *input, RpptDescPtr descPtr, string im
     }
 }
 
-inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, string imageNames[])
+inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, vector<string> imageNames)
 {
     tjhandle m_jpegDecompressor = tjInitDecompress();
 
@@ -483,6 +630,7 @@ inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDes
     // create output folder
     mkdir(outputFolder.c_str(), 0700);
     outputFolder += "/";
+    static int cnt = 1;
 
     Rpp32u elementsInRowMax = dstDescPtr->w * dstDescPtr->c;
     Rpp8u *offsettedOutput = output + dstDescPtr->offsetInBytes;
@@ -515,7 +663,15 @@ inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDes
             cvtColor(matOutputImageRgb, matOutputImage, COLOR_RGB2BGR);
         }
 
-        imwrite(outputImagePath, matOutputImage);
+        fs::path pathObj(outputImagePath);
+        if (fs::exists(pathObj))
+        {
+            std::string outPath = outputImagePath.substr(0, outputImagePath.find_last_of('.')) + "_" + to_string(cnt) + outputImagePath.substr(outputImagePath.find_last_of('.'));
+            imwrite(outPath, matOutputImage);
+            cnt++;
+        }
+        else
+            imwrite(outputImagePath, matOutputImage);
         free(tempOutput);
     }
 }
@@ -565,7 +721,7 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
 
     ifstream file(refFile);
     Rpp8u *refOutput;
-    refOutput = (Rpp8u *)malloc(noOfImages * dstDescPtr->strides.nStride * sizeof(Rpp8u));
+    refOutput = (Rpp8u *)malloc(dstDescPtr->n * dstDescPtr->strides.nStride * sizeof(Rpp8u));
     string line,word;
     int index = 0;
 
@@ -590,7 +746,7 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
 
     int fileMatch = 0;
     Rpp8u *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef;
-    for(int c = 0; c < noOfImages; c++)
+    for(int c = 0; c < dstDescPtr->n; c++)
     {
         outputTemp = output + c * dstDescPtr->strides.nStride;
         outputTempRef = refOutput + c * dstDescPtr->strides.nStride;

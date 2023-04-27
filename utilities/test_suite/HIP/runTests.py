@@ -118,6 +118,7 @@ def rpp_test_suite_parser_and_validator():
     parser.add_argument('--decoder_type', type = int, default = 0, help = "Type of Decoder to decode the input data - (0 = TurboJPEG / 1 = OpenCV)")
     parser.add_argument('--num_iterations', type = int, default = 0, help = "Specifies the number of iterations for running the performance tests")
     parser.add_argument('--preserve_output', type = int, default = 1, help = "preserves the output of the program - (0 = override output / 1 = preserve output )" )
+    parser.add_argument('--batch_size', type = int, default = 0, help = "Specifies the batch size to use for running tests. Default is 1.")
     args = parser.parse_args()
 
     # check if the folder exists
@@ -149,6 +150,9 @@ def rpp_test_suite_parser_and_validator():
     elif args.preserve_output < 0 or args.preserve_output > 1:
         print("Preserve Output must be in the 0/1 (0 = override / 1 = preserve). Aborting")
         exit(0)
+    elif args.batch_size < 0:
+        print("Batch size must be greater than 0. Aborting!")
+        exit(0)
 
     if args.case_list is None:
         args.case_list = range(args.case_start, args.case_end + 1)
@@ -178,6 +182,10 @@ qaMode = args.qa_mode
 decoderType = args.decoder_type
 numIterations = args.num_iterations
 preserveOutput = args.preserve_output
+batchSize = args.batch_size
+
+if(batchSize != 3):
+    qaMode = 0
 
 if(testType == 0):
     if qaMode:
@@ -192,7 +200,7 @@ elif(testType == 1):
 dstPath = outFilePath
 
 if(testType == 0):
-    subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "0", str(qaMode), str(decoderType), str(preserveOutput), " ".join(caseList)])  # nosec
+    subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "0", str(qaMode), str(decoderType), str(preserveOutput), str(batchSize), " ".join(caseList)])  # nosec
 
     layoutDict ={0:"PKD3", 1:"PLN3", 2:"PLN1"}
     if qaMode == 0:
@@ -210,7 +218,7 @@ else:
     ]
 
     if (testType == 1 and profilingOption == "NO"):
-        subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "0", str(qaMode), str(decoderType), str(preserveOutput), " ".join(caseList)])  # nosec
+        subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "0", str(qaMode), str(decoderType), str(preserveOutput), str(batchSize), " ".join(caseList)])  # nosec
         for log_file in log_file_list:
             # Opening log file
             try:
@@ -273,7 +281,7 @@ else:
             # Closing log file
             f.close()
     elif (testType == 1 and profilingOption == "YES"):
-        subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "1", str(qaMode), str(decoderType), str(preserveOutput), " ".join(caseList)])  # nosec
+        subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "1", str(qaMode), str(decoderType), str(preserveOutput), str(batchSize), " ".join(caseList)])  # nosec
         NEW_FUNC_GROUP_LIST = [0, 15, 20, 29, 36, 40, 42, 49, 56, 65, 69]
 
         RESULTS_DIR = ""
