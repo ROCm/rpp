@@ -2,11 +2,11 @@
 
 ## Supported Functionalities List
 
-![supported list](docs/data/supported_functionalities.png")
+![supported list](data/supported_functionalities.png")
 
 ## Supported Functionalities Samples
 
-![supported samples](docs/data/supported_functionalities_samples.jpg)
+![supported samples](data/supported_functionalities_samples.jpg)
 
 ## Supported Variants
 
