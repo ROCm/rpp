@@ -78,6 +78,7 @@ int main(int argc, char **argv)
     int batchSize = atoi(argv[14]);
 
     bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23|| testCase == 24 || testCase == 40 || testCase == 41 || testCase == 49);
+    bool dualInputCase = (testCase == 2);
     bool kernelSizeCase = (testCase == 40 || testCase == 41 || testCase == 49);
     bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24);
     bool noiseTypeCase = (testCase == 8);
@@ -202,7 +203,8 @@ int main(int argc, char **argv)
     // Get number of images and image Names
     vector<string> imageNames, imageNamesSecond, imageNamesPath, imageNamesPathSecond;
     search_jpg_files(src, imageNames, imageNamesPath);
-    search_jpg_files(srcSecond, imageNamesSecond, imageNamesPathSecond);
+    if(dualInputCase)
+        search_jpg_files(srcSecond, imageNamesSecond, imageNamesPathSecond);
     noOfImages = imageNames.size();
 
     if(batchSize == 0)
@@ -211,7 +213,8 @@ int main(int argc, char **argv)
     if(noOfImages < batchSize)
     {
         replicate_last_image_to_fill_batch(imageNamesPath[noOfImages-1], imageNamesPath, imageNames, imageNames[noOfImages-1], noOfImages, batchSize);
-        replicate_last_image_to_fill_batch(imageNamesPathSecond[noOfImages-1], imageNamesPathSecond, imageNamesSecond, imageNamesSecond[noOfImages-1], noOfImages, batchSize);
+        if(dualInputCase)
+            replicate_last_image_to_fill_batch(imageNamesPathSecond[noOfImages-1], imageNamesPathSecond, imageNamesSecond, imageNamesSecond[noOfImages-1], noOfImages, batchSize);
     }
 
     if(!noOfImages)
@@ -223,7 +226,8 @@ int main(int argc, char **argv)
     if(qaFlag)
     {
         sort(imageNames.begin(), imageNames.end());
-        sort(imageNamesSecond.begin(), imageNamesSecond.end());
+        if(dualInputCase)
+            sort(imageNamesSecond.begin(), imageNamesSecond.end());
     }
 
     // Initialize ROI tensors for src/dst
@@ -287,8 +291,9 @@ int main(int argc, char **argv)
             for(int j = 0; j < batchSize; j++)
             {
                 batchImagesPath.push_back(imageNamesPath[t*batchSize + j]);
-                batchImagesPathSecond.push_back(imageNamesPathSecond[t*batchSize + j]);
                 batchImageNames.push_back(imageNames[t*batchSize+j]);
+                if(dualInputCase)
+                    batchImagesPathSecond.push_back(imageNamesPathSecond[t*batchSize + j]);
             }
 
             // Set maxHeight, maxWidth and ROIs for src/dst
@@ -326,20 +331,21 @@ int main(int argc, char **argv)
 
             //Read images
             if(decoderType == 0)
-            {
                 read_image_batch_turbojpeg(inputu8, srcDescPtr, batchImagesPath);
-                read_image_batch_turbojpeg(inputu8Second, srcDescPtr, batchImagesPathSecond);
-            }
             else
-            {
                 read_image_batch_opencv(inputu8, srcDescPtr, batchImagesPath);
-                read_image_batch_opencv(inputu8Second, srcDescPtr, batchImagesPathSecond);
-            }
             // if the input layout requested is PLN3, convert PKD3 inputs to PLN3 for first and second input batch
             if (layoutType == 1)
-            {
                 convert_pkd3_to_pln3(inputu8, srcDescPtr);
-                convert_pkd3_to_pln3(inputu8Second, srcDescPtr);
+
+            if(dualInputCase)
+            {
+                if(decoderType == 0)
+                    read_image_batch_turbojpeg(inputu8Second, srcDescPtr, batchImagesPathSecond);
+                else
+                    read_image_batch_opencv(inputu8Second, srcDescPtr, batchImagesPathSecond);
+                if (layoutType == 1)
+                    convert_pkd3_to_pln3(inputu8Second, srcDescPtr);
             }
 
             input = static_cast<Rpp8u *>(calloc(inputBufferSize, 1));
@@ -350,21 +356,24 @@ int main(int argc, char **argv)
             if (inputBitDepth == 0)
             {
                 memcpy(input, inputu8, inputBufferSize);
-                memcpy(input_second, inputu8Second, inputBufferSize);
+                if(dualInputCase)
+                    memcpy(input_second, inputu8Second, inputBufferSize);
             }
             else if (inputBitDepth == 1)
             {
                 Rpp8u *inputTemp, *inputSecondTemp;
                 Rpp16f *inputf16Temp, *inputf16SecondTemp;
                 inputTemp = inputu8 + srcDescPtr->offsetInBytes;
-                inputSecondTemp = inputu8Second + srcDescPtr->offsetInBytes;
                 inputf16Temp = reinterpret_cast<Rpp16f *>(static_cast<Rpp8u *>(input) + srcDescPtr->offsetInBytes);
-                inputf16SecondTemp = reinterpret_cast<Rpp16f *>(static_cast<Rpp8u *>(input_second) + srcDescPtr->offsetInBytes);
-
                 for (int i = 0; i < ioBufferSize; i++)
-                {
                     *inputf16Temp++ = static_cast<Rpp16f>((static_cast<float>(*inputTemp++)) * conversionFactor);
-                    *inputf16SecondTemp++ = static_cast<Rpp16f>((static_cast<float>(*inputSecondTemp++)) * conversionFactor);
+
+                if(dualInputCase)
+                {
+                    inputSecondTemp = inputu8Second + srcDescPtr->offsetInBytes;
+                    inputf16SecondTemp = reinterpret_cast<Rpp16f *>(static_cast<Rpp8u *>(input_second) + srcDescPtr->offsetInBytes);
+                    for (int i = 0; i < ioBufferSize; i++)
+                        *inputf16SecondTemp++ = static_cast<Rpp16f>((static_cast<float>(*inputSecondTemp++)) * conversionFactor);
                 }
             }
             else if (inputBitDepth == 2)
@@ -372,14 +381,16 @@ int main(int argc, char **argv)
                 Rpp8u *inputTemp, *inputSecondTemp;
                 Rpp32f *inputf32Temp, *inputf32SecondTemp;
                 inputTemp = inputu8 + srcDescPtr->offsetInBytes;
-                inputSecondTemp = inputu8Second + srcDescPtr->offsetInBytes;
                 inputf32Temp = reinterpret_cast<Rpp32f *>(static_cast<Rpp8u *>(input) + srcDescPtr->offsetInBytes);
-                inputf32SecondTemp = reinterpret_cast<Rpp32f *>(static_cast<Rpp8u *>(input_second) + srcDescPtr->offsetInBytes);
-
                 for (int i = 0; i < ioBufferSize; i++)
-                {
                     *inputf32Temp++ = (static_cast<Rpp32f>(*inputTemp++)) * conversionFactor;
-                    *inputf32SecondTemp++ = (static_cast<Rpp32f>(*inputSecondTemp++)) * conversionFactor;
+
+                if(dualInputCase)
+                {
+                    inputSecondTemp = inputu8Second + srcDescPtr->offsetInBytes;
+                    inputf32SecondTemp = reinterpret_cast<Rpp32f *>(static_cast<Rpp8u *>(input_second) + srcDescPtr->offsetInBytes);
+                    for (int i = 0; i < ioBufferSize; i++)
+                        *inputf32SecondTemp++ = (static_cast<Rpp32f>(*inputSecondTemp++)) * conversionFactor;
                 }
             }
             else if (inputBitDepth == 5)
@@ -388,14 +399,16 @@ int main(int argc, char **argv)
                 Rpp8s *inputi8Temp, *inputi8SecondTemp;
 
                 inputTemp = inputu8 + srcDescPtr->offsetInBytes;
-                inputSecondTemp = inputu8Second + srcDescPtr->offsetInBytes;
                 inputi8Temp = static_cast<Rpp8s *>(input) + srcDescPtr->offsetInBytes;
-                inputi8SecondTemp = static_cast<Rpp8s *>(input_second) + srcDescPtr->offsetInBytes;
-
                 for (int i = 0; i < ioBufferSize; i++)
-                {
                     *inputi8Temp++ = static_cast<Rpp8s>((static_cast<Rpp32s>(*inputTemp++)) - 128);
-                    *inputi8SecondTemp++ = static_cast<Rpp8s>((static_cast<Rpp32s>(*inputSecondTemp++)) - 128);
+
+                if(dualInputCase)
+                {
+                    inputSecondTemp = inputu8Second + srcDescPtr->offsetInBytes;
+                    inputi8SecondTemp = static_cast<Rpp8s *>(input_second) + srcDescPtr->offsetInBytes;
+                    for (int i = 0; i < ioBufferSize; i++)
+                        *inputi8SecondTemp++ = static_cast<Rpp8s>((static_cast<Rpp32s>(*inputSecondTemp++)) - 128);
                 }
             }
 
