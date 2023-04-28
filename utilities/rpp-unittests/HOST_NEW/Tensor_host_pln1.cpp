@@ -184,6 +184,9 @@ int main(int argc, char **argv)
     case 31:
         strcpy(funcName, "color_cast");
         break;
+    case 34:
+        strcpy(funcName, "lut");
+        break;
     case 36:
         strcpy(funcName, "color_twist");
         break;
@@ -1293,6 +1296,66 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
             rppt_non_linear_blend_host(inputi8, inputi8_second, srcDescPtr, outputi8, dstDescPtr, stdDev, roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 6)
+            missingFuncFlag = 1;
+        else
+            missingFuncFlag = 1;
+
+        break;
+    }
+    case 34:
+    {
+        test_case_name = "lut";
+
+        Rpp8u lut8u[images * 256];
+        Rpp8s lut8s[images * 256];
+
+        for (i = 0; i < images; i++)
+        {
+            for (j = 0; j < 256; j++)
+            {
+                lut8u[(i * 256) + j] = (Rpp8u)(255 - j);
+                lut8s[(i * 256) + j] = (Rpp8s)(255 - j - 128);
+            }
+
+        }
+
+        // Uncomment to run test case with an xywhROI override
+        /*for (i = 0; i < images; i++)
+        {
+            roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+            roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+            dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+            dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+        }*/
+
+        // Uncomment to run test case with an ltrbROI override
+        /*for (i = 0; i < images; i++)
+        {
+            roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+            roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+            roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+            roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+            dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+            dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
+        }
+        roiTypeSrc = RpptRoiType::LTRB;
+        roiTypeDst = RpptRoiType::LTRB;*/
+
+        start_omp = omp_get_wtime();
+        start = clock();
+        if (ip_bitDepth == 0)
+            rppt_lut_host(input, srcDescPtr, output, dstDescPtr, lut8u, roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 1)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 2)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 3)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 4)
+            missingFuncFlag = 1;
+        /*else if (ip_bitDepth == 5)
+            rppt_lut_host(inputi8, srcDescPtr, outputi8, dstDescPtr, lut8s, roiTensorPtrSrc, roiTypeSrc, handle);*/
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
