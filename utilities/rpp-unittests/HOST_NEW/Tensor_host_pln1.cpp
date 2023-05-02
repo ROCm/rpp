@@ -1309,6 +1309,8 @@ int main(int argc, char **argv)
 
         Rpp8u lut8u[images * 256];
         Rpp8s lut8s[images * 256];
+        Rpp16f lut16f[images * 256];
+        Rpp32f lut32f[images * 256];
 
         for (i = 0; i < images; i++)
         {
@@ -1316,6 +1318,8 @@ int main(int argc, char **argv)
             {
                 lut8u[(i * 256) + j] = (Rpp8u)(255 - j);
                 lut8s[(i * 256) + j] = (Rpp8s)(255 - j - 128);
+                lut16f[(i * 256) + j] = ((Rpp16f)(255 - j)) / 255;
+                lut32f[(i * 256) + j] = ((Rpp32f)(255 - j)) / 255;
             }
 
         }
@@ -1351,9 +1355,9 @@ int main(int argc, char **argv)
         else if (ip_bitDepth == 2)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 3)
-            missingFuncFlag = 1;
+            rppt_lut_host(input, srcDescPtr, outputf16, dstDescPtr, lut16f, roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 4)
-            missingFuncFlag = 1;
+            rppt_lut_host(input, srcDescPtr, outputf32, dstDescPtr, lut32f, roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 5)
             rppt_lut_host(inputi8, srcDescPtr, outputi8, dstDescPtr, lut8s, roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 6)

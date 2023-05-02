@@ -28,7 +28,6 @@ THE SOFTWARE.
 extern "C" {
 #endif
 
-#include "rppt_tensor_advanced_augmentations.h"
 #include "rppt_tensor_color_augmentations.h"
 #include "rppt_tensor_data_exchange_operations.h"
 #include "rppt_tensor_effects_augmentations.h"
