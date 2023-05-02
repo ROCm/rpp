@@ -25,7 +25,7 @@ set(CMAKE_CXX_STANDARD 14)
 project(rpp CXX)
 
 # RPP Version
-set(VERSION "1.0.0")
+set(VERSION "1.1.0")
 
 set(CMAKE_INSTALL_LIBDIR "lib" CACHE STRING "Library install directory")
 include(GNUInstallDirs)
