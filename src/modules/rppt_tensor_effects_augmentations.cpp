@@ -59,7 +59,8 @@ RppStatus rppt_gridmask_host(RppPtr_t srcPtr,
                                    translateVector,
                                    roiTensorPtrSrc,
                                    roiType,
-                                   layoutParams);
+                                   layoutParams,
+                                   rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
@@ -73,7 +74,8 @@ RppStatus rppt_gridmask_host(RppPtr_t srcPtr,
                                      translateVector,
                                      roiTensorPtrSrc,
                                      roiType,
-                                     layoutParams);
+                                     layoutParams,
+                                     rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
@@ -87,7 +89,8 @@ RppStatus rppt_gridmask_host(RppPtr_t srcPtr,
                                      translateVector,
                                      roiTensorPtrSrc,
                                      roiType,
-                                     layoutParams);
+                                     layoutParams,
+                                     rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
@@ -101,7 +104,8 @@ RppStatus rppt_gridmask_host(RppPtr_t srcPtr,
                                    translateVector,
                                    roiTensorPtrSrc,
                                    roiType,
-                                   layoutParams);
+                                   layoutParams,
+                                   rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;
@@ -141,7 +145,8 @@ RppStatus rppt_spatter_host(RppPtr_t srcPtr,
                                   spatterColor,
                                   roiTensorPtrSrc,
                                   roiType,
-                                  layoutParams);
+                                  layoutParams,
+                                  rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
@@ -152,7 +157,8 @@ RppStatus rppt_spatter_host(RppPtr_t srcPtr,
                                     spatterColor,
                                     roiTensorPtrSrc,
                                     roiType,
-                                    layoutParams);
+                                    layoutParams,
+                                    rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
@@ -163,7 +169,8 @@ RppStatus rppt_spatter_host(RppPtr_t srcPtr,
                                     spatterColor,
                                     roiTensorPtrSrc,
                                     roiType,
-                                    layoutParams);
+                                    layoutParams,
+                                    rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
@@ -174,7 +181,8 @@ RppStatus rppt_spatter_host(RppPtr_t srcPtr,
                                   spatterColor,
                                   roiTensorPtrSrc,
                                   roiType,
-                                  layoutParams);
+                                  layoutParams,
+                                  rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;
@@ -216,7 +224,8 @@ RppStatus rppt_salt_and_pepper_noise_host(RppPtr_t srcPtr,
                                                 xorwowInitialState,
                                                 roiTensorPtrSrc,
                                                 roiType,
-                                                layoutParams);
+                                                layoutParams,
+                                                rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
@@ -231,7 +240,8 @@ RppStatus rppt_salt_and_pepper_noise_host(RppPtr_t srcPtr,
                                                   xorwowInitialState,
                                                   roiTensorPtrSrc,
                                                   roiType,
-                                                  layoutParams);
+                                                  layoutParams,
+                                                  rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
@@ -246,7 +256,8 @@ RppStatus rppt_salt_and_pepper_noise_host(RppPtr_t srcPtr,
                                                   xorwowInitialState,
                                                   roiTensorPtrSrc,
                                                   roiType,
-                                                  layoutParams);
+                                                  layoutParams,
+                                                  rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
@@ -261,7 +272,8 @@ RppStatus rppt_salt_and_pepper_noise_host(RppPtr_t srcPtr,
                                                 xorwowInitialState,
                                                 roiTensorPtrSrc,
                                                 roiType,
-                                                layoutParams);
+                                                layoutParams,
+                                                rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;
@@ -297,7 +309,8 @@ RppStatus rppt_shot_noise_host(RppPtr_t srcPtr,
                                      xorwowInitialState,
                                      roiTensorPtrSrc,
                                      roiType,
-                                     layoutParams);
+                                     layoutParams,
+                                     rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
@@ -309,7 +322,8 @@ RppStatus rppt_shot_noise_host(RppPtr_t srcPtr,
                                        xorwowInitialState,
                                        roiTensorPtrSrc,
                                        roiType,
-                                       layoutParams);
+                                       layoutParams,
+                                       rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
@@ -321,7 +335,8 @@ RppStatus rppt_shot_noise_host(RppPtr_t srcPtr,
                                        xorwowInitialState,
                                        roiTensorPtrSrc,
                                        roiType,
-                                       layoutParams);
+                                       layoutParams,
+                                       rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
@@ -333,7 +348,8 @@ RppStatus rppt_shot_noise_host(RppPtr_t srcPtr,
                                      xorwowInitialState,
                                      roiTensorPtrSrc,
                                      roiType,
-                                     layoutParams);
+                                     layoutParams,
+                                     rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;
@@ -367,7 +383,8 @@ RppStatus rppt_gaussian_noise_host(RppPtr_t srcPtr,
                                          xorwowInitialState,
                                          roiTensorPtrSrc,
                                          roiType,
-                                         layoutParams);
+                                         layoutParams,
+                                         rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
@@ -380,7 +397,8 @@ RppStatus rppt_gaussian_noise_host(RppPtr_t srcPtr,
                                            xorwowInitialState,
                                            roiTensorPtrSrc,
                                            roiType,
-                                           layoutParams);
+                                           layoutParams,
+                                           rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
@@ -393,7 +411,8 @@ RppStatus rppt_gaussian_noise_host(RppPtr_t srcPtr,
                                            xorwowInitialState,
                                            roiTensorPtrSrc,
                                            roiType,
-                                           layoutParams);
+                                           layoutParams,
+                                           rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
@@ -406,7 +425,8 @@ RppStatus rppt_gaussian_noise_host(RppPtr_t srcPtr,
                                          xorwowInitialState,
                                          roiTensorPtrSrc,
                                          roiType,
-                                         layoutParams);
+                                         layoutParams,
+                                         rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;
@@ -439,7 +459,8 @@ RppStatus rppt_non_linear_blend_host(RppPtr_t srcPtr1,
                                            stdDevTensor,
                                            roiTensorPtrSrc,
                                            roiType,
-                                           layoutParams);
+                                           layoutParams,
+                                           rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
@@ -451,7 +472,8 @@ RppStatus rppt_non_linear_blend_host(RppPtr_t srcPtr1,
                                              stdDevTensor,
                                              roiTensorPtrSrc,
                                              roiType,
-                                             layoutParams);
+                                             layoutParams,
+                                             rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
@@ -463,7 +485,8 @@ RppStatus rppt_non_linear_blend_host(RppPtr_t srcPtr1,
                                              stdDevTensor,
                                              roiTensorPtrSrc,
                                              roiType,
-                                             layoutParams);
+                                             layoutParams,
+                                             rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
@@ -475,7 +498,8 @@ RppStatus rppt_non_linear_blend_host(RppPtr_t srcPtr1,
                                            stdDevTensor,
                                            roiTensorPtrSrc,
                                            roiType,
-                                           layoutParams);
+                                           layoutParams,
+                                           rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;

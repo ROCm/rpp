@@ -60,7 +60,8 @@ rppi_hueRGB_u8_pln3_batchPD_host(RppPtr_t srcPtr,
                              rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                              rpp::deref(rppHandle).GetBatchSize(),
                              RPPI_CHN_PLANAR,
-                             3);
+                             3,
+                             rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -90,7 +91,8 @@ rppi_hueRGB_u8_pkd3_batchPD_host(RppPtr_t srcPtr,
                              rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                              rpp::deref(rppHandle).GetBatchSize(),
                              RPPI_CHN_PACKED,
-                             3);
+                             3,
+                             rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -122,7 +124,8 @@ rppi_saturationRGB_u8_pln3_batchPD_host(RppPtr_t srcPtr,
                                     rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                                     rpp::deref(rppHandle).GetBatchSize(),
                                     RPPI_CHN_PLANAR,
-                                    3);
+                                    3,
+                                    rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -152,7 +155,8 @@ rppi_saturationRGB_u8_pkd3_batchPD_host(RppPtr_t srcPtr,
                                     rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                                     rpp::deref(rppHandle).GetBatchSize(),
                                     RPPI_CHN_PACKED,
-                                    3);
+                                    3,
+                                    rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -179,7 +183,8 @@ rppi_color_convert_u8_pln3_batchPS_host(RppPtr_t srcPtr,
                                                            convert_mode,
                                                            rpp::deref(rppHandle).GetBatchSize(),
                                                            RPPI_CHN_PLANAR,
-                                                           3);
+                                                           3,
+                                                           rpp::deref(rppHandle));
     }
     else if(convert_mode == RppiColorConvertMode::HSV_RGB)
     {
@@ -190,7 +195,8 @@ rppi_color_convert_u8_pln3_batchPS_host(RppPtr_t srcPtr,
                                                            convert_mode,
                                                            rpp::deref(rppHandle).GetBatchSize(),
                                                            RPPI_CHN_PLANAR,
-                                                           3);
+                                                           3,
+                                                           rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;
@@ -216,7 +222,8 @@ rppi_color_convert_u8_pkd3_batchPS_host(RppPtr_t srcPtr,
                                                            convert_mode,
                                                            rpp::deref(rppHandle).GetBatchSize(),
                                                            RPPI_CHN_PACKED,
-                                                           3);
+                                                           3,
+                                                           rpp::deref(rppHandle));
     }
     else if(convert_mode == RppiColorConvertMode::HSV_RGB)
     {
@@ -227,7 +234,8 @@ rppi_color_convert_u8_pkd3_batchPS_host(RppPtr_t srcPtr,
                                                            convert_mode,
                                                            rpp::deref(rppHandle).GetBatchSize(),
                                                            RPPI_CHN_PACKED,
-                                                           3);
+                                                           3,
+                                                           rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;
@@ -260,7 +268,8 @@ rppi_color_temperature_u8_pln1_batchPD_host(RppPtr_t srcPtr,
                                         rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                                         rpp::deref(rppHandle).GetBatchSize(),
                                         RPPI_CHN_PLANAR,
-                                        1);
+                                        1,
+                                        rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -290,7 +299,8 @@ rppi_color_temperature_u8_pln3_batchPD_host(RppPtr_t srcPtr,
                                         rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                                         rpp::deref(rppHandle).GetBatchSize(),
                                         RPPI_CHN_PLANAR,
-                                        3);
+                                        3,
+                                        rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -320,7 +330,8 @@ rppi_color_temperature_u8_pkd3_batchPD_host(RppPtr_t srcPtr,
                                         rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                                         rpp::deref(rppHandle).GetBatchSize(),
                                         RPPI_CHN_PACKED,
-                                        3);
+                                        3,
+                                        rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -352,7 +363,8 @@ rppi_vignette_u8_pln1_batchPD_host(RppPtr_t srcPtr,
                                rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                                rpp::deref(rppHandle).GetBatchSize(),
                                RPPI_CHN_PLANAR,
-                               1);
+                               1,
+                               rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -382,7 +394,8 @@ rppi_vignette_u8_pln3_batchPD_host(RppPtr_t srcPtr,
                                rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                                rpp::deref(rppHandle).GetBatchSize(),
                                RPPI_CHN_PLANAR,
-                               3);
+                               3,
+                               rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -412,7 +425,8 @@ rppi_vignette_u8_pkd3_batchPD_host(RppPtr_t srcPtr,
                                rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                                rpp::deref(rppHandle).GetBatchSize(),
                                RPPI_CHN_PACKED,
-                               3);
+                               3,
+                               rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -437,7 +451,8 @@ rppi_channel_extract_u8_pln1_batchPD_host(RppPtr_t srcPtr,
                                       extractChannelNumber,
                                       rpp::deref(rppHandle).GetBatchSize(),
                                       RPPI_CHN_PLANAR,
-                                      1);
+                                      1,
+                                      rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -460,7 +475,8 @@ rppi_channel_extract_u8_pln3_batchPD_host(RppPtr_t srcPtr,
                                       extractChannelNumber,
                                       rpp::deref(rppHandle).GetBatchSize(),
                                       RPPI_CHN_PLANAR,
-                                      3);
+                                      3,
+                                      rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -483,7 +499,8 @@ rppi_channel_extract_u8_pkd3_batchPD_host(RppPtr_t srcPtr,
                                       extractChannelNumber,
                                       rpp::deref(rppHandle).GetBatchSize(),
                                       RPPI_CHN_PACKED,
-                                      3);
+                                      3,
+                                      rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -510,7 +527,8 @@ rppi_channel_combine_u8_pln1_batchPD_host(RppPtr_t srcPtr1,
                                       static_cast<Rpp8u*>(dstPtr),
                                       rpp::deref(rppHandle).GetBatchSize(),
                                       RPPI_CHN_PLANAR,
-                                      1);
+                                      1,
+                                      rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -535,7 +553,8 @@ rppi_channel_combine_u8_pln3_batchPD_host(RppPtr_t srcPtr1,
                                       static_cast<Rpp8u*>(dstPtr),
                                       rpp::deref(rppHandle).GetBatchSize(),
                                       RPPI_CHN_PLANAR,
-                                      3);
+                                      3,
+                                      rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -560,7 +579,8 @@ rppi_channel_combine_u8_pkd3_batchPD_host(RppPtr_t srcPtr1,
                                       static_cast<Rpp8u*>(dstPtr),
                                       rpp::deref(rppHandle).GetBatchSize(),
                                       RPPI_CHN_PACKED,
-                                      3);
+                                      3,
+                                      rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -592,7 +612,8 @@ rppi_look_up_table_u8_pln1_batchPD_host(RppPtr_t srcPtr,
                                     rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                                     rpp::deref(rppHandle).GetBatchSize(),
                                     RPPI_CHN_PLANAR,
-                                    1);
+                                    1,
+                                    rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -622,7 +643,8 @@ rppi_look_up_table_u8_pln3_batchPD_host(RppPtr_t srcPtr,
                                     rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                                     rpp::deref(rppHandle).GetBatchSize(),
                                     RPPI_CHN_PLANAR,
-                                    3);
+                                    3,
+                                    rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -652,7 +674,8 @@ rppi_look_up_table_u8_pkd3_batchPD_host(RppPtr_t srcPtr,
                                     rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                                     rpp::deref(rppHandle).GetBatchSize(),
                                     RPPI_CHN_PACKED,
-                                    3);
+                                    3,
+                                    rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
