@@ -36,7 +36,7 @@
 ### RPP 1.1.0
 
 #### Added
-* OpenMP Thread Support
+* OpenMP - parameter support for OpenMP numthreads
 
 #### Optimizations
 * Readme Updates
