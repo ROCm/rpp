@@ -15,6 +15,6 @@ Review all notable [changes](CHANGELOG.md#changelog) with the latest release
   + CentOS - `7` / `8`
   + RedHat - `8` / `9`
   + SLES - `15-SP3`
-* ROCm: rocm-core - `5.4.0.50400-72`
+* ROCm: rocm-core - `5.5.0.50500-63`
 * Protobuf - [V3.12.4](https://github.com/protocolbuffers/protobuf/releases/tag/v3.12.4)
 * OpenCV - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
