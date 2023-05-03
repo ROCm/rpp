@@ -1,6 +1,18 @@
 #!/bin/bash
 
-# <<<<<<<<<<<<<< DEFAULT SOURCE AND DESTINATION FOLDERS (NEED NOT CHANGE) >>>>>>>>>>>>>>
+# <<<<<<<<<<<<<< VALIDATION CHECK FOR DST_FOLDER PATH >>>>>>>>>>>>>>>>>>>>>>>>>>>>
+function VALIDATE_PATH {
+    if [ -z "$1" ]; then
+        echo "DST Folder path is empty."
+        exit
+    fi
+    if [ -e "$1" ]; then
+        rm -rvf "$1"/*
+    else
+        echo "The DST_FOLDER path is invalid or does not exist."
+        exit
+    fi
+}
 
 cwd=$(pwd)
 
@@ -115,7 +127,8 @@ directory_name_generator() {
     fi
 }
 
-rm -rvf "$DST_FOLDER"/*
+VALIDATE_PATH $DST_FOLDER
+
 shopt -s extglob
 mkdir build
 cd build
