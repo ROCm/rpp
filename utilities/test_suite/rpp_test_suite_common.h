@@ -35,10 +35,7 @@ THE SOFTWARE.
 #include <omp.h>
 #include <fstream>
 #include <turbojpeg.h>
-<<<<<<< HEAD
 #include <boost/filesystem.hpp>
-=======
->>>>>>> upstream/master
 
 using namespace cv;
 using namespace std;
