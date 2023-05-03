@@ -38,6 +38,7 @@ THE SOFTWARE.
 #include <fstream>
 
 #define DEBUG_MODE 0
+#define MAX_IMAGE_DUMP 20
 
 typedef half Rpp16f;
 
@@ -207,9 +208,6 @@ int main(int argc, char **argv)
         search_jpg_files(srcSecond, imageNamesSecond, imageNamesPathSecond);
     noOfImages = imageNames.size();
 
-    if(batchSize == 0)
-        batchSize = noOfImages;
-
     if(noOfImages < batchSize)
     {
         replicate_last_image_to_fill_batch(imageNamesPath[noOfImages-1], imageNamesPath, imageNames, imageNames[noOfImages-1], noOfImages, batchSize);
@@ -285,15 +283,15 @@ int main(int argc, char **argv)
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numIterations, batchSize);
     for (int perfRunCount = 0; perfRunCount < numIterations; perfRunCount++)
     {
-        for(int t = 0; t < (int)imageNames.size() / batchSize; t++)
+        for(int batchCount = 0; batchCount < (int)imageNames.size() / batchSize; batchCount++)
         {
             vector<string> batchImagesPath, batchImagesPathSecond, batchImageNames;
             for(int j = 0; j < batchSize; j++)
             {
-                batchImagesPath.push_back(imageNamesPath[t*batchSize + j]);
-                batchImageNames.push_back(imageNames[t*batchSize+j]);
+                batchImagesPath.push_back(imageNamesPath[batchCount * batchSize + j]);
+                batchImageNames.push_back(imageNames[batchCount * batchSize + j]);
                 if(dualInputCase)
-                    batchImagesPathSecond.push_back(imageNamesPathSecond[t*batchSize + j]);
+                    batchImagesPathSecond.push_back(imageNamesPathSecond[batchCount * batchSize + j]);
             }
 
             // Set maxHeight, maxWidth and ROIs for src/dst
@@ -670,7 +668,7 @@ int main(int argc, char **argv)
                 }
 
                 // If DEBUG_MODE is set to 1 dump the outputs to csv files for debugging
-                if(DEBUG_MODE)
+                if(DEBUG_MODE && batchCount == 0)
                 {
                     std::ofstream refFile;
                     refFile.open(func + ".csv");
@@ -710,7 +708,7 @@ int main(int argc, char **argv)
                 }
                 // OpenCV dump (if testType is unit test and QA mode is not set)
                 if(!qaFlag)
-                    write_image_batch_opencv(dst, outputu8, dstDescPtr, batchImageNames, dstImgSizes);
+                    write_image_batch_opencv(dst, outputu8, dstDescPtr, batchImageNames, dstImgSizes, MAX_IMAGE_DUMP);
             }
             free(inputu8);
             free(inputu8Second);

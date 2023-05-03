@@ -529,16 +529,9 @@ void search_jpg_files(const string& folder_path, vector<string>& imageNames, vec
                 imageNames.push_back(entry_list[dir_count]);
                 imageNamesPath.push_back(subfolder_path);
             }
-            // open_folder(subfolder_path, imageNames, imageNamesPath);
-            // break;
         }
         else if (fs::exists(pathObj) && fs::is_directory(pathObj))
-        {
-            // full_path = subfolder_path;
-            // search_jpg_files(full_path, imageNames, imageNamesPath);
             open_folder(subfolder_path, imageNames, imageNamesPath);
-        }
-
     }
 }
 
@@ -625,7 +618,7 @@ inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, vector
     tjDestroy(m_jpegDecompressor);
 }
 
-inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDescPtr dstDescPtr, vector<string> imageNames, RpptImagePatch *dstImgSizes)
+inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDescPtr dstDescPtr, vector<string> imageNames, RpptImagePatch *dstImgSizes, int maxImageDump)
 {
     // create output folder
     mkdir(outputFolder.c_str(), 0700);
@@ -634,7 +627,7 @@ inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDes
 
     Rpp32u elementsInRowMax = dstDescPtr->w * dstDescPtr->c;
     Rpp8u *offsettedOutput = output + dstDescPtr->offsetInBytes;
-    for (int j = 0; j < dstDescPtr->n; j++)
+    for (int j = 0, imageCnt = 0; (j < dstDescPtr->n) && (imageCnt < maxImageDump) ; j++)
     {
         Rpp32u height = dstImgSizes[j].height;
         Rpp32u width = dstImgSizes[j].width;
@@ -672,6 +665,7 @@ inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDes
         }
         else
             imwrite(outputImagePath, matOutputImage);
+        imageCnt++;
         free(tempOutput);
     }
 }

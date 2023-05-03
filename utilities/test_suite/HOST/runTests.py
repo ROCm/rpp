@@ -33,6 +33,7 @@ os.environ["TIMESTAMP"] = timestamp
 cwd = os.getcwd()
 inFilePath1 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src1')
 inFilePath2 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src2')
+qaInputFile = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src1')
 
 def validate_path(input_path):
     if not os.path.exists(input_path):
@@ -70,7 +71,7 @@ def rpp_test_suite_parser_and_validator():
     parser.add_argument('--decoder_type', type = int, default = 0, help = "Type of Decoder to decode the input data - (0 = TurboJPEG / 1 = OpenCV)")
     parser.add_argument('--num_iterations', type = int, default = 0, help = "Specifies the number of iterations for running the performance tests")
     parser.add_argument('--preserve_output', type = int, default = 1, help = "preserves the output of the program - (0 = override output / 1 = preserve output )" )
-    parser.add_argument('--batch_size', type = int, default = 0, help = "Specifies the batch size to use for running tests. Default is 1.")
+    parser.add_argument('--batch_size', type = int, default = 1, help = "Specifies the batch size to use for running tests. Default is 1.")
     args = parser.parse_args()
 
     # check if the folder exists
@@ -132,8 +133,11 @@ numIterations = args.num_iterations
 preserveOutput = args.preserve_output
 batchSize = args.batch_size
 
-if(batchSize != 3):
+if os.path.abspath(qaInputFile) != os.path.abspath(srcPath1):
     qaMode = 0
+
+if qaMode:
+    batchSize = 3
 
 # set the output folders and number of runs based on type of test (unit test / performance test)
 if(testType == 0):
