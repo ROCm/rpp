@@ -498,6 +498,35 @@ int main(int argc, char **argv)
 
             break;
         }
+        case 29:
+        {
+            testCaseName = "water";
+
+            Rpp32f amplX[images];
+            Rpp32f amplY[images];
+            Rpp32f freqX[images];
+            Rpp32f freqY[images];
+            Rpp32f phaseX[images];
+            Rpp32f phaseY[images];
+
+            for (i = 0; i < images; i++)
+            {
+                amplX[i] = 2.0f;
+                amplY[i] = 5.0f;
+                freqX[i] = 5.8f;
+                freqY[i] = 1.2f;
+                phaseX[i] = 10.0f;
+                phaseY[i] = 15.0f;
+            }
+
+            startWallTime = omp_get_wtime();
+            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                rppt_water_gpu(d_input, srcDescPtr, d_output, dstDescPtr, amplX, amplY, freqX, freqY, phaseX, phaseY, roiTensorPtrSrc, roiTypeSrc, handle);
+            else
+                missingFuncFlag = 1;
+
+            break;
+        }
         case 31:
         {
             testCaseName = "color_cast";
