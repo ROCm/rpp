@@ -1,20 +1,44 @@
 #!/bin/bash
 
-# <<<<<<<<<<<<<< VALIDATION CHECK FOR DST_FOLDER PATH >>>>>>>>>>>>>>>>>>>>>>>>>>>>
+cwd=$(pwd)
+
+# <<<<<<<<<<<<<< VALIDATION CHECK FOR FOLDER PATHS >>>>>>>>>>>>>>>>>>>>>>>>>>>>
 function VALIDATE_PATH {
-    if [ -z "$1" ]; then
-        echo "DST Folder path is empty."
+    if [ -z "$1" ]; then  #check if a string is empty 
+        echo "$1 Folder path is empty."
         exit
     fi
-    if [ -e "$1" ]; then
-        rm -rvf "$1"/*
+    if [ "$1" = "/*" ]; then  # check if the root directory is passed to the function
+        echo "$1 is root folder, cannot delete root folder."
+        exit
+    fi
+    if [ -e "$1" ]; then  # check if a Folder exists
+        rm -rvf "$1"/*  # Delete the directory if it exists
     else
-        echo "The DST_FOLDER path is invalid or does not exist."
+        echo "$1 path is invalid or does not exist."
         exit
     fi
 }
 
-cwd=$(pwd)
+function VALIDATE_FOLDERS {
+    if [ "$1" = "/*" ]; then    # check if the root directory is passed to the function
+        echo "$1 is root folder, cannot delete root folder."
+        exit
+    fi
+    if [ -n "$1" ] && [ -d "$1/.." ]; then  #checks if directory string is not empty and it exists
+        output_folders=("$1/../$2"*)  # Get a list of all directories starting with given input string in the parent directory
+
+        # Loop through each directory and delete it only if it exists
+        for folder in "${output_folders[@]}"; do
+            if [ -d "$folder" ]; then
+                rm -rf "$folder"  # Delete the directory if it exists
+                echo "Deleted directory: $folder"
+            else
+                echo "Directory not found: $folder"
+            fi
+        done
+    fi
+}
 
 #Input Images - Three images (mixed size)
 DEFAULT_SRC_FOLDER_1="$cwd/../TEST_IMAGES/three_images_mixed_src1"
@@ -52,11 +76,26 @@ else
     CASE_LIST="${@:10}"
 fi
 
-# <<<<<<<<<<<<<< VALIDATION CHECK FOR TEST_TYPE AND CASE NUMBERS >>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# <<<<<<<<<<<<<< VALIDATION CHECKS FOR ALL OPTIONS >>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-if [[ $TEST_TYPE -ne 0 ]] && [[ $TEST_TYPE -ne 1 ]]; then
+if [[ "$TEST_TYPE" -ne 0 ]] && [[ "$TEST_TYPE" -ne 1 ]]; then
     echo "Invalid TEST_TYPE specified. TEST_TYPE should be 0/1 (0 = Unittests / 1 = Performancetests)"
     exit
+elif [[ "$QA_MODE" -ne 0 ]] && [[ "$QA_MODE" -ne 1 ]]; then
+    echo "QA mode must be in the 0 / 1. Aborting!"
+    exit 0
+elif [[ "$DECODER_TYPE" -ne 0 ]] && [[ "$DECODER_TYPE" -ne 1 ]]; then
+    echo "Decoder Type must be in the 0/1 (0 = OpenCV / 1 = TurboJPEG). Aborting!"
+    exit 0
+elif [[ "$NUM_ITERATIONS" < 0 ]]; then
+    echo "Number of Iterations must be greater than 0. Aborting!"
+    exit 0
+elif [[ "$BATCH_SIZE" < 1 ]]; then
+    echo "Batch size must be greater than or equal to 1. Aborting!"
+    exit 0
+elif [[ "$PRESERVE_OUTPUT" -ne 0 ]] && [[ "$PRESERVE_OUTPUT" -ne 1 ]]; then
+    echo "Preserve Output must be in the 0/1 (0 = override / 1 = preserve). Aborting"
+    exit 0
 fi
 
 for case in $CASE_LIST; do
@@ -65,12 +104,21 @@ for case in $CASE_LIST; do
     fi
 done
 
+if [[ "$TEST_TYPE" -eq 0 ]]; then
+    NUM_ITERATIONS="1"
+fi
+
 # <<<<<<<<<<<<<< REMOVE FOLDERS FROM PREVIOUS RUN BASED ON PRESERVE_OUTPUT >>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 if [ "$PRESERVE_OUTPUT" -ne 1 ]; then
-    rm -rvf "$cwd/.."/OUTPUT_IMAGES_HIP*
-    rm -rvf "$cwd/.."/QA_RESULTS_HIP*
-    rm -rvf "$cwd/.."/OUTPUT_PERFORMANCE_LOGS_HIP*
+    VALIDATE_FOLDERS "$cwd" "OUTPUT_IMAGES_HIP"
+    VALIDATE_FOLDERS "$cwd" "QA_RESULTS_HIP"
+    VALIDATE_FOLDERS "$cwd" "OUTPUT_PERFORMANCE_LOGS_HIP"
+fi
+
+# Check if the TIMESTAMP environment variable is empty
+if [ -z "$TIMESTAMP" ]; then
+  TIMESTAMP=$(date +%Y-%m-%d_%H-%M-%S)
 fi
 
 # <<<<<<<<<<<<<< CREATE OUTPUT FOLDERS BASED ON TEST TYPE>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -90,6 +138,9 @@ elif [ "$TEST_TYPE" -eq 1 ]; then
     mkdir "$cwd/../OUTPUT_PERFORMANCE_LOGS_HIP_$TIMESTAMP"
     DEFAULT_DST_FOLDER="$cwd/../OUTPUT_PERFORMANCE_LOGS_HIP_$TIMESTAMP"
     LOGGING_FOLDER="$cwd/../OUTPUT_PERFORMANCE_LOGS_HIP_$TIMESTAMP"
+else
+    echo "Invalid TEST_TYPE specified. TEST_TYPE should be 0/1 (0 = Unittests / 1 = Performancetests)"
+    exit
 fi
 DST_FOLDER="$DEFAULT_DST_FOLDER"
 
@@ -133,8 +184,8 @@ VALIDATE_PATH $DST_FOLDER
 
 shopt -s extglob
 mkdir build
+rm -rvf build/*
 cd build
-rm -rvf ./*
 cmake ..
 make -j16
 

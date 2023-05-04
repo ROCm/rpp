@@ -103,6 +103,9 @@ def rpp_test_suite_parser_and_validator():
     elif args.batch_size < 0:
         print("Batch size must be greater than 0. Aborting!")
         exit(0)
+    elif args.preserve_output < 0 or args.preserve_output > 1:
+        print("Preserve Output must be in the 0/1 (0 = override / 1 = preserve). Aborting")
+        exit(0)
 
     if args.case_list is None:
         args.case_list = range(args.case_start, args.case_end + 1)
