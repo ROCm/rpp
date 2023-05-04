@@ -52,9 +52,11 @@ typedef union { float f1[24];   float2 f2[12];  float3 f3[8];   float4 f4[6];   
 
 // uint
 typedef union { uint ui1[6];    uint2 ui2[3];                                                   }   d_uint6;
+typedef union { uint ui1[8];    uint2 ui2[4];    uint4 ui4[2];                                  }   d_uint8;
 
 // int
 typedef union { int i1[6];      int2 i2[3];                                                     }   d_int6;
+typedef union { int i1[8];      int2 i2[4];      int4 i4[2];                                    }   d_int8;
 
 // half
 typedef struct { half h1[3];                                                                    }   d_half3_s;
@@ -2347,6 +2349,18 @@ __device__ __forceinline__ void rpp_hip_interpolate24_nearest_neighbor_pkd3(T *s
     rpp_hip_interpolate3_nearest_neighbor_pkd3(srcPtr, srcStrideH, locPtrSrc_f16->f1[5], locPtrSrc_f16->f1[13], roiPtrSrc_i4, &(dst_f24->f3[5]));
     rpp_hip_interpolate3_nearest_neighbor_pkd3(srcPtr, srcStrideH, locPtrSrc_f16->f1[6], locPtrSrc_f16->f1[14], roiPtrSrc_i4, &(dst_f24->f3[6]));
     rpp_hip_interpolate3_nearest_neighbor_pkd3(srcPtr, srcStrideH, locPtrSrc_f16->f1[7], locPtrSrc_f16->f1[15], roiPtrSrc_i4, &(dst_f24->f3[7]));
+}
+
+__device__ __forceinline__ void rpp_hip_compute_loc(d_float16 *locPtrSrc_f16, d_uint8 *srcIdx, uint srcStrideH, uint srcStrideW)
+{
+    srcIdx->ui1[0] = (uint)((locPtrSrc_f16->f1[8] * (float)srcStrideH) + locPtrSrc_f16->f1[0] * (float)3);
+    srcIdx->ui1[1] = (uint)((locPtrSrc_f16->f1[9] * (float)srcStrideH) + locPtrSrc_f16->f1[1] * (float)3);
+    srcIdx->ui1[2] = (uint)((locPtrSrc_f16->f1[10] * (float)srcStrideH) + locPtrSrc_f16->f1[2] * (float)3);
+    srcIdx->ui1[3] = (uint)((locPtrSrc_f16->f1[11] * (float)srcStrideH) + locPtrSrc_f16->f1[3] * (float)3);
+    srcIdx->ui1[4] = (uint)((locPtrSrc_f16->f1[12] * (float)srcStrideH) + locPtrSrc_f16->f1[4] * (float)3);
+    srcIdx->ui1[5] = (uint)((locPtrSrc_f16->f1[13] * (float)srcStrideH) + locPtrSrc_f16->f1[5] * (float)3);
+    srcIdx->ui1[6] = (uint)((locPtrSrc_f16->f1[14] * (float)srcStrideH) + locPtrSrc_f16->f1[6] * (float)3);
+    srcIdx->ui1[7] = (uint)((locPtrSrc_f16->f1[15] * (float)srcStrideH) + locPtrSrc_f16->f1[7] * (float)3);
 }
 
 #endif // RPP_HIP_COMMON_H
