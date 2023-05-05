@@ -521,6 +521,45 @@ int main(int argc, char **argv)
 
             break;
         }
+        case 34:
+        {
+            testCaseName = "lut";
+
+            Rpp8u lut8u[images * 65536];
+            Rpp8s lut8s[images * 65536];
+            half lut16f[images * 65536];
+            Rpp32f lut32f[images * 65536];
+
+            std::fill_n(lut8u, images * 65536, 0);
+            std::fill_n(lut8s, images * 65536, 0);
+            std::fill_n(lut16f, images * 65536, 0.0);
+            std::fill_n(lut32f, images * 65536, 0.0);
+
+            for (i = 0; i < images; i++)
+            {
+                for (j = 0; j < 256; j++)
+                {
+                    lut8u[(i * 65536) + j] = (Rpp8u)(255 - j);
+                    lut8s[(i * 65536) + j] = (Rpp8s)(255 - j - 128);
+                    lut16f[(i * 65536) + j] = (half)((Rpp32f)(255 - j) / 255);
+                    lut32f[(i * 65536) + j] = ((Rpp32f)(255 - j)) / 255;
+                }
+            }
+
+            startWallTime = omp_get_wtime();
+            if (inputBitDepth == 0)
+                rppt_lut_gpu(d_input, srcDescPtr, d_output, dstDescPtr, lut8u, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (inputBitDepth == 3)
+                rppt_lut_gpu(d_input, srcDescPtr, d_output, dstDescPtr, lut16f, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (inputBitDepth == 4)
+                rppt_lut_gpu(d_input, srcDescPtr, d_output, dstDescPtr, lut32f, roiTensorPtrSrc, roiTypeSrc, handle);
+            else if (inputBitDepth == 5)
+                rppt_lut_gpu(d_input, srcDescPtr, d_output, dstDescPtr, lut8s, roiTensorPtrSrc, roiTypeSrc, handle);
+            else
+                missingFuncFlag = 1;
+
+            break;
+        }
         case 36:
         {
             testCaseName = "color_twist";

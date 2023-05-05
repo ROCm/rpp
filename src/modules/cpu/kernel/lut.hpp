@@ -6,13 +6,13 @@ RppStatus lut_u8_u8_host_tensor(Rpp8u *srcPtr,
                                 RpptDescPtr srcDescPtr,
                                 Rpp8u *dstPtr,
                                 RpptDescPtr dstDescPtr,
-                                Rpp8u *lutTensor,
+                                Rpp8u *lutPtr,
                                 RpptROIPtr roiTensorPtrSrc,
                                 RpptRoiType roiType,
                                 RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    Rpp32u lutSize = 256;
+    Rpp32u lutSize = 65536;
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(dstDescPtr->n)
@@ -25,7 +25,7 @@ RppStatus lut_u8_u8_host_tensor(Rpp8u *srcPtr,
         Rpp8u *srcPtrImage, *dstPtrImage, *lut;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
-        lut = lutTensor + batchCount * lutSize;
+        lut = lutPtr + batchCount * lutSize;
 
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
 
@@ -148,13 +148,13 @@ RppStatus lut_u8_f16_host_tensor(Rpp8u *srcPtr,
                                  RpptDescPtr srcDescPtr,
                                  Rpp16f *dstPtr,
                                  RpptDescPtr dstDescPtr,
-                                 Rpp16f *lutTensor,
+                                 Rpp16f *lutPtr,
                                  RpptROIPtr roiTensorPtrSrc,
                                  RpptRoiType roiType,
                                  RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    Rpp32u lutSize = 256;
+    Rpp32u lutSize = 65536;
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(dstDescPtr->n)
@@ -168,7 +168,7 @@ RppStatus lut_u8_f16_host_tensor(Rpp8u *srcPtr,
         Rpp16f *dstPtrImage, *lut;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
-        lut = lutTensor + batchCount * lutSize;
+        lut = lutPtr + batchCount * lutSize;
 
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
 
@@ -298,13 +298,13 @@ RppStatus lut_u8_f32_host_tensor(Rpp8u *srcPtr,
                                  RpptDescPtr srcDescPtr,
                                  Rpp32f *dstPtr,
                                  RpptDescPtr dstDescPtr,
-                                 Rpp32f *lutTensor,
+                                 Rpp32f *lutPtr,
                                  RpptROIPtr roiTensorPtrSrc,
                                  RpptRoiType roiType,
                                  RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    Rpp32u lutSize = 256;
+    Rpp32u lutSize = 65536;
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(dstDescPtr->n)
@@ -318,7 +318,7 @@ RppStatus lut_u8_f32_host_tensor(Rpp8u *srcPtr,
         Rpp32f *dstPtrImage, *lut;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
-        lut = lutTensor + batchCount * lutSize;
+        lut = lutPtr + batchCount * lutSize;
 
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
 
@@ -448,13 +448,13 @@ RppStatus lut_i8_i8_host_tensor(Rpp8s *srcPtr,
                                 RpptDescPtr srcDescPtr,
                                 Rpp8s *dstPtr,
                                 RpptDescPtr dstDescPtr,
-                                Rpp8s *lutTensor,
+                                Rpp8s *lutPtr,
                                 RpptROIPtr roiTensorPtrSrc,
                                 RpptRoiType roiType,
                                 RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    Rpp32u lutSize = 256;
+    Rpp32u lutSize = 65536;
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(dstDescPtr->n)
@@ -467,7 +467,7 @@ RppStatus lut_i8_i8_host_tensor(Rpp8s *srcPtr,
         Rpp8s *srcPtrImage, *dstPtrImage, *lut;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
-        lut = lutTensor + batchCount * lutSize;
+        lut = lutPtr + batchCount * lutSize;
 
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
 
