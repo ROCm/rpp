@@ -146,9 +146,7 @@ if( "${BACKEND}" STREQUAL "HIP")
     PRIVATE
         ${CMAKE_SOURCE_DIR}/src/include/hip
     )
-    foreach (target ${AMDGPU_TARGETS})
-        target_link_libraries(${PROJECT_NAME} hip::device)
-    endforeach()
+    target_link_libraries(${PROJECT_NAME} hip::device)
 elseif( "${BACKEND}" STREQUAL "OCL")
     target_include_directories(${PROJECT_NAME}
     PRIVATE
