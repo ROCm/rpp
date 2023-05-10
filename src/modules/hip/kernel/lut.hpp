@@ -54,12 +54,11 @@ __global__ void lut_pkd_tensor(T1 *srcPtr,
 
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x * 3);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x;
-    uint lutIdx = (256 * id_z);
 
     d_float8 src_f8, dst_f8;
 
     rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);
-    lut_hip_compute(srcPtr, &src_f8, &dst_f8, &lutPtr[lutIdx]);
+    lut_hip_compute(srcPtr, &src_f8, &dst_f8, lutPtr);
     rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
 }
 
@@ -83,12 +82,11 @@ __global__ void lut_pln_tensor(T1 *srcPtr,
 
     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
-    uint lutIdx = (256 * id_z);
 
     d_float8 src_f8, dst_f8;
 
     rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);
-    lut_hip_compute(srcPtr, &src_f8, &dst_f8, &lutPtr[lutIdx]);
+    lut_hip_compute(srcPtr, &src_f8, &dst_f8, lutPtr);
     rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
 
     if (channelsDst == 3)
@@ -97,14 +95,14 @@ __global__ void lut_pln_tensor(T1 *srcPtr,
         dstIdx += dstStridesNCH.y;
 
         rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);
-        lut_hip_compute(srcPtr, &src_f8, &dst_f8, &lutPtr[lutIdx]);
+        lut_hip_compute(srcPtr, &src_f8, &dst_f8, lutPtr);
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
 
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
 
         rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);
-        lut_hip_compute(srcPtr, &src_f8, &dst_f8, &lutPtr[lutIdx]);
+        lut_hip_compute(srcPtr, &src_f8, &dst_f8, lutPtr);
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
     }
 }
@@ -128,14 +126,13 @@ __global__ void lut_pkd3_pln3_tensor(T1 *srcPtr,
 
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
-    uint lutIdx = (256 * id_z);
 
     d_float24 src_f24, dst_f24;
 
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &src_f24);
-    lut_hip_compute(srcPtr, &src_f24.f8[0], &dst_f24.f8[0], &lutPtr[lutIdx]);
-    lut_hip_compute(srcPtr, &src_f24.f8[1], &dst_f24.f8[1], &lutPtr[lutIdx]);
-    lut_hip_compute(srcPtr, &src_f24.f8[2], &dst_f24.f8[2], &lutPtr[lutIdx]);
+    lut_hip_compute(srcPtr, &src_f24.f8[0], &dst_f24.f8[0], lutPtr);
+    lut_hip_compute(srcPtr, &src_f24.f8[1], &dst_f24.f8[1], lutPtr);
+    lut_hip_compute(srcPtr, &src_f24.f8[2], &dst_f24.f8[2], lutPtr);
     rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &dst_f24);
 }
 
@@ -158,14 +155,13 @@ __global__ void lut_pln3_pkd3_tensor(T1 *srcPtr,
 
     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
-    uint lutIdx = (256 * id_z);
 
     d_float24 src_f24, dst_f24;
 
     rpp_hip_load24_pln3_and_unpack_to_float24_pkd3(srcPtr + srcIdx, srcStridesNCH.y, &src_f24);
-    lut_hip_compute(srcPtr, &src_f24.f8[0], &dst_f24.f8[0], &lutPtr[lutIdx]);
-    lut_hip_compute(srcPtr, &src_f24.f8[1], &dst_f24.f8[1], &lutPtr[lutIdx]);
-    lut_hip_compute(srcPtr, &src_f24.f8[2], &dst_f24.f8[2], &lutPtr[lutIdx]);
+    lut_hip_compute(srcPtr, &src_f24.f8[0], &dst_f24.f8[0], lutPtr);
+    lut_hip_compute(srcPtr, &src_f24.f8[1], &dst_f24.f8[1], lutPtr);
+    lut_hip_compute(srcPtr, &src_f24.f8[2], &dst_f24.f8[2], lutPtr);
     rpp_hip_pack_float24_pkd3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
 }
 
