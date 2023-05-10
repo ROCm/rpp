@@ -1504,37 +1504,32 @@ int main(int argc, char **argv)
     case 34:
     {
         test_case_name = "lut";
+        Rpp8u lut8u[65536];
+        Rpp8s lut8s[65536];
+        half lut16f[65536];
+        Rpp32f lut32f[65536];
+        std::fill_n(lut8u, 65536, 0);
+        std::fill_n(lut8s, 65536, 0);
+        std::fill_n(lut16f, 65536, 0.0);
+        std::fill_n(lut32f, 65536, 0.0);
 
-        Rpp8u lut8u[images * 65536];
-        Rpp8s lut8s[images * 65536];
-        half lut16f[images * 65536];
-        Rpp32f lut32f[images * 65536];
-
-        std::fill_n(lut8u, images * 65536, 0);
-        std::fill_n(lut8s, images * 65536, 0);
-        std::fill_n(lut16f, images * 65536, 0.0);
-        std::fill_n(lut32f, images * 65536, 0.0);
-
-        for (i = 0; i < images; i++)
+        for (j = 0; j < 256; j++)
         {
-            for (j = 0; j < 256; j++)
-            {
-                lut8u[(i * 65536) + j] = (Rpp8u)(255 - j);
-                lut8s[(i * 65536) + j] = (Rpp8s)(255 - j - 128);
-                lut16f[(i * 65536) + j] = (half)((Rpp32f)(255 - j) / 255);
-                lut32f[(i * 65536) + j] = ((Rpp32f)(255 - j)) / 255;
-            }
+            lut8u[j] = (Rpp8u)(255 - j);
+            lut8s[j] = (Rpp8s)(255 - j - 128);
+            lut16f[j] = (half)((Rpp32f)(255 - j) / 255);
+            lut32f[j] = ((Rpp32f)(255 - j)) / 255;
         }
 
         int *d_lut8u, *d_lut8s, *d_lut16f, *d_lut32f;
-        hipMalloc(&d_lut8u, images * 65536 * sizeof(Rpp8u));
-        hipMalloc(&d_lut8s, images * 65536 * sizeof(Rpp8s));
-        hipMalloc(&d_lut16f, images * 65536 * sizeof(half));
-        hipMalloc(&d_lut32f, images * 65536 * sizeof(Rpp32f));
-        hipMemcpy(d_lut8u, lut8u, images * 65536 * sizeof(Rpp8u), hipMemcpyHostToDevice);
-        hipMemcpy(d_lut8s, lut8s, images * 65536 * sizeof(Rpp8s), hipMemcpyHostToDevice);
-        hipMemcpy(d_lut16f, lut16f, images * 65536 * sizeof(half), hipMemcpyHostToDevice);
-        hipMemcpy(d_lut32f, lut32f, images * 65536 * sizeof(Rpp32f), hipMemcpyHostToDevice);
+        hipMalloc(&d_lut8u, 65536 * sizeof(Rpp8u));
+        hipMalloc(&d_lut8s, 65536 * sizeof(Rpp8s));
+        hipMalloc(&d_lut16f, 65536 * sizeof(half));
+        hipMalloc(&d_lut32f, 65536 * sizeof(Rpp32f));
+        hipMemcpy(d_lut8u, lut8u, 65536 * sizeof(Rpp8u), hipMemcpyHostToDevice);
+        hipMemcpy(d_lut8s, lut8s, 65536 * sizeof(Rpp8s), hipMemcpyHostToDevice);
+        hipMemcpy(d_lut16f, lut16f, 65536 * sizeof(half), hipMemcpyHostToDevice);
+        hipMemcpy(d_lut32f, lut32f, 65536 * sizeof(Rpp32f), hipMemcpyHostToDevice);
 
         // Uncomment to run test case with an xywhROI override
         /*for (i = 0; i < images; i++)
@@ -1557,7 +1552,6 @@ int main(int argc, char **argv)
         }
         roiTypeSrc = RpptRoiType::LTRB;
         roiTypeDst = RpptRoiType::LTRB;*/
-
         start = clock();
         if (ip_bitDepth == 0)
             rppt_lut_gpu(d_input, srcDescPtr, d_output, dstDescPtr, d_lut8u, roiTensorPtrSrc, roiTypeSrc, handle);
@@ -1577,6 +1571,11 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
 
         break;
+
+        hipFree(d_lut8u);
+        hipFree(d_lut8s);
+        hipFree(d_lut16f);
+        hipFree(d_lut32f);
     }
     case 36:
     {
@@ -2444,7 +2443,7 @@ int main(int argc, char **argv)
         count += dstDescPtr->strides.nStride;
 
         char temp[1000];
-        strcpy(temp, dst);
+        strcpy(temp, "dst");
         strcat(temp, imageNames[j]);
 
         Mat mat_op_image;

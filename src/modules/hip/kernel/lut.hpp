@@ -3,26 +3,26 @@
 
 __device__ void lut_hip_compute(uchar *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, uchar *lut)
 {
-    dst_f8->f4[0] = make_float4(lut[(int) src_f8->f1[0]], lut[(int) src_f8->f1[1]], lut[(int) src_f8->f1[2]], lut[(int) src_f8->f1[3]]) * (float4) 255.0;
-    dst_f8->f4[1] = make_float4(lut[(int) src_f8->f1[4]], lut[(int) src_f8->f1[5]], lut[(int) src_f8->f1[6]], lut[(int) src_f8->f1[7]]) * (float4) 255.0;
+    dst_f8->f4[0] = make_float4((float)lut[(int) src_f8->f1[0]], (float)lut[(int) src_f8->f1[1]], (float)lut[(int) src_f8->f1[2]], (float)lut[(int) src_f8->f1[3]]);
+    dst_f8->f4[1] = make_float4((float)lut[(int) src_f8->f1[4]], (float)lut[(int) src_f8->f1[5]], (float)lut[(int) src_f8->f1[6]], (float)lut[(int) src_f8->f1[7]]);
 }
 
 __device__ void lut_hip_compute(uchar *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, signed char *lut)
 {
-    dst_f8->f4[0] = make_float4(lut[(int) src_f8->f1[0]], lut[(int) src_f8->f1[1]], lut[(int) src_f8->f1[2]], lut[(int) src_f8->f1[3]]) * (float4) 255.0;
-    dst_f8->f4[1] = make_float4(lut[(int) src_f8->f1[4]], lut[(int) src_f8->f1[5]], lut[(int) src_f8->f1[6]], lut[(int) src_f8->f1[7]]) * (float4) 255.0;
+    dst_f8->f4[0] = make_float4((float)lut[(int) src_f8->f1[0]], (float)lut[(int) src_f8->f1[1]], (float)lut[(int) src_f8->f1[2]], (float)lut[(int) src_f8->f1[3]]);
+    dst_f8->f4[1] = make_float4((float)lut[(int) src_f8->f1[4]], (float)lut[(int) src_f8->f1[5]], (float)lut[(int) src_f8->f1[6]], (float)lut[(int) src_f8->f1[7]]);
 }
 
 __device__ void lut_hip_compute(uchar *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, float *lut)
 {
-    dst_f8->f4[0] = make_float4(lut[(int) src_f8->f1[0]], lut[(int) src_f8->f1[1]], lut[(int) src_f8->f1[2]], lut[(int) src_f8->f1[3]]) * (float4) 255.0;
-    dst_f8->f4[1] = make_float4(lut[(int) src_f8->f1[4]], lut[(int) src_f8->f1[5]], lut[(int) src_f8->f1[6]], lut[(int) src_f8->f1[7]]) * (float4) 255.0;
+    dst_f8->f4[0] = make_float4(lut[(int) src_f8->f1[0]], lut[(int) src_f8->f1[1]], lut[(int) src_f8->f1[2]], lut[(int) src_f8->f1[3]]);
+    dst_f8->f4[1] = make_float4(lut[(int) src_f8->f1[4]], lut[(int) src_f8->f1[5]], lut[(int) src_f8->f1[6]], lut[(int) src_f8->f1[7]]);
 }
 
 __device__ void lut_hip_compute(uchar *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, half *lut)
 {
-    dst_f8->f4[0] = make_float4(lut[(int) src_f8->f1[0]], lut[(int) src_f8->f1[1]], lut[(int) src_f8->f1[2]], lut[(int) src_f8->f1[3]]) * (float4) 255.0;
-    dst_f8->f4[1] = make_float4(lut[(int) src_f8->f1[4]], lut[(int) src_f8->f1[5]], lut[(int) src_f8->f1[6]], lut[(int) src_f8->f1[7]]) * (float4) 255.0;
+    dst_f8->f4[0] = make_float4(lut[(int) src_f8->f1[0]], lut[(int) src_f8->f1[1]], lut[(int) src_f8->f1[2]], lut[(int) src_f8->f1[3]]);
+    dst_f8->f4[1] = make_float4(lut[(int) src_f8->f1[4]], lut[(int) src_f8->f1[5]], lut[(int) src_f8->f1[6]], lut[(int) src_f8->f1[7]]);
 }
 
 __device__ void lut_hip_compute(signed char *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, signed char *lut)
@@ -31,8 +31,8 @@ __device__ void lut_hip_compute(signed char *srcPtr, d_float8 *src_f8, d_float8 
     srcNorm_f8.f4[0] = src_f8->f4[0] + (float4)128;
     srcNorm_f8.f4[1] = src_f8->f4[1] + (float4)128;
 
-    dst_f8->f4[0] = (make_float4(lut[(int) srcNorm_f8.f1[0]], lut[(int) srcNorm_f8.f1[1]], lut[(int) srcNorm_f8.f1[2]], lut[(int) srcNorm_f8.f1[3]]) * (float4) 255) - (float4) 128;
-    dst_f8->f4[1] = (make_float4(lut[(int) srcNorm_f8.f1[4]], lut[(int) srcNorm_f8.f1[5]], lut[(int) srcNorm_f8.f1[6]], lut[(int) srcNorm_f8.f1[7]]) * (float4) 255) - (float4) 128;
+    dst_f8->f4[0] = make_float4((float)lut[(int) srcNorm_f8.f1[0]], (float)lut[(int) srcNorm_f8.f1[1]], (float)lut[(int) srcNorm_f8.f1[2]], (float)lut[(int) srcNorm_f8.f1[3]]);
+    dst_f8->f4[1] = make_float4((float)lut[(int) srcNorm_f8.f1[4]], (float)lut[(int) srcNorm_f8.f1[5]], (float)lut[(int) srcNorm_f8.f1[6]], (float)lut[(int) srcNorm_f8.f1[7]]);
 }
 
 template <typename T1, typename T2>

@@ -1375,25 +1375,22 @@ int main(int argc, char **argv)
     {
         test_case_name = "lut";
 
-        Rpp8u lut8u[images * 65536];
-        Rpp8s lut8s[images * 65536];
-        Rpp16f lut16f[images * 65536];
-        Rpp32f lut32f[images * 65536];
+        Rpp8u lut8u[65536];
+        Rpp8s lut8s[65536];
+        Rpp16f lut16f[65536];
+        Rpp32f lut32f[65536];
 
-        std::fill_n(lut8u, images * 65536, 0);
-        std::fill_n(lut8s, images * 65536, 0);
-        std::fill_n(lut16f, images * 65536, 0.0);
-        std::fill_n(lut32f, images * 65536, 0.0);
+        std::fill_n(lut8u, 65536, 0);
+        std::fill_n(lut8s, 65536, 0);
+        std::fill_n(lut16f, 65536, 0.0);
+        std::fill_n(lut32f, 65536, 0.0);
 
-        for (i = 0; i < images; i++)
+        for (j = 0; j < 256; j++)
         {
-            for (j = 0; j < 256; j++)
-            {
-                lut8u[(i * 65536) + j] = (Rpp8u)(255 - j);
-                lut8s[(i * 65536) + j] = (Rpp8s)(255 - j - 128);
-                lut16f[(i * 65536) + j] = ((Rpp16f)(255 - j)) / 255;
-                lut32f[(i * 65536) + j] = ((Rpp32f)(255 - j)) / 255;
-            }
+            lut8u[j] = (Rpp8u)(255 - j);
+            lut8s[j] = (Rpp8s)(255 - j - 128);
+            lut16f[j] = ((Rpp16f)(255 - j)) / 255;
+            lut32f[j] = ((Rpp32f)(255 - j)) / 255;
         }
 
         // Uncomment to run test case with an xywhROI override
@@ -1548,8 +1545,8 @@ int main(int argc, char **argv)
     case 38:
     {
         test_case_name = "crop_mirror_normalize";
-        Rpp32f multiplier[images * 3];
-        Rpp32f offset[images * 3];
+        Rpp32f multiplier[3];
+        Rpp32f offset[3];
         Rpp32u mirror[images];
         Rpp32f meanParam[3] = { 60.0f, 80.0f, 100.0f };
         Rpp32f stdDevParam[3] = { 0.9f, 0.9f, 0.9f };
@@ -1714,8 +1711,8 @@ int main(int argc, char **argv)
             dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiHeight / 3;
         }
 
-        Rpp32f mean[images * 3];
-        Rpp32f stdDev[images * 3];
+        Rpp32f mean[3];
+        Rpp32f stdDev[3];
         Rpp32u mirror[images];
         for (i = 0, j = 0; i < images; i++, j += 3)
         {

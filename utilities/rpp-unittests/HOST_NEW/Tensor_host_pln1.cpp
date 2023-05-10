@@ -1307,22 +1307,24 @@ int main(int argc, char **argv)
     {
         test_case_name = "lut";
 
-        Rpp8u lut8u[images * 256];
-        Rpp8s lut8s[images * 256];
-        Rpp16f lut16f[images * 256];
-        Rpp32f lut32f[images * 256];
+        Rpp8u lut8u[65536];
+        Rpp8s lut8s[65536];
+        Rpp16f lut16f[65536];
+        Rpp32f lut32f[65536];
 
-        for (i = 0; i < images; i++)
+        std::fill_n(lut8u, 65536, 0);
+        std::fill_n(lut8s, 65536, 0);
+        std::fill_n(lut16f, 65536, 0.0);
+        std::fill_n(lut32f, 65536, 0.0);
+
+        for (j = 0; j < 256; j++)
         {
-            for (j = 0; j < 256; j++)
-            {
-                lut8u[(i * 256) + j] = (Rpp8u)(255 - j);
-                lut8s[(i * 256) + j] = (Rpp8s)(255 - j - 128);
-                lut16f[(i * 256) + j] = ((Rpp16f)(255 - j)) / 255;
-                lut32f[(i * 256) + j] = ((Rpp32f)(255 - j)) / 255;
-            }
-
+            lut8u[j] = (Rpp8u)(255 - j);
+            lut8s[j] = (Rpp8s)(255 - j - 128);
+            lut16f[j] = ((Rpp16f)(255 - j)) / 255;
+            lut32f[j] = ((Rpp32f)(255 - j)) / 255;
         }
+
 
         // Uncomment to run test case with an xywhROI override
         /*for (i = 0; i < images; i++)
