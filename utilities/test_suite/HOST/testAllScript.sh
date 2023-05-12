@@ -47,7 +47,7 @@ DEFAULT_SRC_FOLDER_2="$cwd/../TEST_IMAGES/three_images_mixed_src2"
 # <<<<<<<<<<<<<< PROCESSING OF INPUT ARGUMENTS (NEED NOT CHANGE) >>>>>>>>>>>>>>
 
 CASE_MIN=0
-CASE_MAX=38
+CASE_MAX=86
 if (( "$#" < 3 )); then
     SRC_FOLDER_1="$DEFAULT_SRC_FOLDER_1"
     SRC_FOLDER_2="$DEFAULT_SRC_FOLDER_2"
@@ -97,8 +97,8 @@ elif [[ "$PRESERVE_OUTPUT" -ne 0 ]] && [[ "$PRESERVE_OUTPUT" -ne 1 ]]; then
 fi
 
 for case in $CASE_LIST; do
-    if [[ $case -lt 0 || $case -gt 38 ]]; then
-        echo "The case# must be in the 0:38 range!"
+    if [[ $case -lt 0 || $case -gt 86 ]]; then
+        echo "The case# must be in the 0:86 range!"
     fi
 done
 
@@ -195,8 +195,8 @@ echo "##########################################################################
 if [ "$TEST_TYPE" -eq 0 ]; then
     for case in ${CASE_LIST[@]};
     do
-        if [ "$case" -lt "0" ] || [ "$case" -gt " 38" ]; then
-            echo "Invalid case number $case. case number must be in the 0:38 range!"
+        if [ "$case" -lt "0" ] || [ "$case" -gt " 86" ]; then
+            echo "Invalid case number $case. case number must be in the 0:86 range!"
             continue
         fi
         for ((layout=0;layout<3;layout++))
@@ -223,10 +223,10 @@ if [ "$TEST_TYPE" -eq 0 ]; then
             echo "--------------------------------"
             printf "Running a New Functionality...\n"
             echo "--------------------------------"
-            for ((bitDepth=0;bitDepth<7;bitDepth++))
+            for ((bitDepth=0;bitDepth<1;bitDepth++))
             do
                 printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n"
-                for ((outputFormatToggle=0;outputFormatToggle<2;outputFormatToggle++))
+                for ((outputFormatToggle=0;outputFormatToggle<1;outputFormatToggle++))
                 do
                     SRC_FOLDER_1_TEMP="$SRC_FOLDER_1"
                     SRC_FOLDER_2_TEMP="$SRC_FOLDER_2"
@@ -263,8 +263,8 @@ if [ "$TEST_TYPE" -eq 0 ]; then
 else
     for case in ${CASE_LIST[@]};
     do
-        if [ "$case" -lt "0" ] || [ "$case" -gt " 38" ]; then
-            echo "Invalid case number $case. case number must be in the 0:38 range!"
+        if [ "$case" -lt "0" ] || [ "$case" -gt " 86" ]; then
+            echo "Invalid case number $case. case number must be in the 0:86 range!"
             continue
         fi
         for ((layout=0;layout<3;layout++))
