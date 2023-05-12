@@ -265,9 +265,9 @@ RppStatus shot_noise_u8_u8_host_tensor(Rpp8u *srcPtr,
                         poissonDistribLambda[0] = (Rpp32f) srcPtrTemp[0] * shotNoiseFactorInv;
                         poissonDistribLambda[1] = (Rpp32f) srcPtrTemp[1] * shotNoiseFactorInv;
                         poissonDistribLambda[2] = (Rpp32f) srcPtrTemp[2] * shotNoiseFactorInv;
-                        dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[0]) * shotNoiseFactor);
-                        dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[1]) * shotNoiseFactor);
-                        dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[2]) * shotNoiseFactor);
+                        dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[0]) * shotNoiseFactor));
+                        dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[1]) * shotNoiseFactor));
+                        dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[2]) * shotNoiseFactor));
                     }
                     else
                         memcpy(dstPtrTemp, srcPtrTemp, 3);
@@ -333,9 +333,9 @@ RppStatus shot_noise_u8_u8_host_tensor(Rpp8u *srcPtr,
                         poissonDistribLambda[0] = (Rpp32f) *srcPtrTempR * shotNoiseFactorInv;
                         poissonDistribLambda[1] = (Rpp32f) *srcPtrTempG * shotNoiseFactorInv;
                         poissonDistribLambda[2] = (Rpp32f) *srcPtrTempB * shotNoiseFactorInv;
-                        *dstPtrTempR = (Rpp8u) RPPPIXELCHECK(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[0]) * shotNoiseFactor);
-                        *dstPtrTempG = (Rpp8u) RPPPIXELCHECK(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[1]) * shotNoiseFactor);
-                        *dstPtrTempB = (Rpp8u) RPPPIXELCHECK(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[2]) * shotNoiseFactor);
+                        *dstPtrTempR = (Rpp8u) RPPPIXELCHECK(std::nearbyintf(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[0]) * shotNoiseFactor));
+                        *dstPtrTempG = (Rpp8u) RPPPIXELCHECK(std::nearbyintf(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[1]) * shotNoiseFactor));
+                        *dstPtrTempB = (Rpp8u) RPPPIXELCHECK(std::nearbyintf(compute_shot_noise_1_host(&xorwowState, poissonDistribLambda[2]) * shotNoiseFactor));
                     }
                     else
                     {
@@ -398,7 +398,7 @@ RppStatus shot_noise_u8_u8_host_tensor(Rpp8u *srcPtr,
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     if (shotNoiseFactor)
-                        *dstPtrTemp = (Rpp8u) RPPPIXELCHECK(compute_shot_noise_1_host(&xorwowState, ((Rpp32f) *srcPtrTemp * shotNoiseFactorInv)) * shotNoiseFactor);
+                        *dstPtrTemp = (Rpp8u) RPPPIXELCHECK(std::nearbyintf(compute_shot_noise_1_host(&xorwowState, ((Rpp32f) *srcPtrTemp * shotNoiseFactorInv)) * shotNoiseFactor));
                     else
                         *dstPtrTemp = *srcPtrTemp;
 

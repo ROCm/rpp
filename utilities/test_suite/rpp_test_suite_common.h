@@ -35,7 +35,12 @@ THE SOFTWARE.
 #include <omp.h>
 #include <fstream>
 #include <turbojpeg.h>
+#include <hip/hip_fp16.h>
+// #include <half/half.hpp>
 #include <boost/filesystem.hpp>
+
+// using half_float::half;
+typedef half Rpp16f;
 
 using namespace cv;
 using namespace std;
@@ -47,12 +52,28 @@ namespace fs = boost::filesystem;
 std::map<int, string> augmentationMap =
 {
     {0, "brightness"},
+    {1, "gamma_correction"},
     {2, "blend"},
     {4, "contrast"},
+    {8, "noise"},
     {13, "exposure"},
+    {20, "flip"},
+    {21, "resize"},
+    {23, "rotate"},
+    {24, "warp_affine"},
+    {30, "non_linear_blend"},
     {31, "color_cast"},
     {36, "color_twist"},
+    {37, "crop"},
     {38, "crop_mirror_normalize"},
+    {39, "resize_crop_mirror"},
+    {70, "copy"},
+    {80, "resize_mirror_normalize"},
+    {81, "color_jitter"},
+    {83, "gridmask"},
+    {84, "spatter"},
+    {85, "swap_channels"},
+    {86, "color_to_greyscale"},
 };
 
 template <typename T>
@@ -62,13 +83,13 @@ inline T validate_pixel_range(T pixel)
     return pixel;
 }
 
-void replicate_last_image_to_fill_batch(const string& lastFilePath, vector<string>& imageNamesPath, vector<string>& imageNames, const string& lastFileName, int noOfImages, int batch_count)
+void replicate_last_image_to_fill_batch(const string& lastFilePath, vector<string>& imageNamesPath, vector<string>& imageNames, const string& lastFileName, int noOfImages, int batchCount)
 {
     std::string filePath = lastFilePath;
     std::string fileName = lastFileName;
-    if (noOfImages > 0 && noOfImages < batch_count)
+    if (noOfImages > 0 && noOfImages < batchCount)
     {
-        for (int i = noOfImages; i < batch_count; i++)
+        for (int i = noOfImages; i < batchCount; i++)
         {
             imageNamesPath.push_back(filePath);
             imageNames.push_back(fileName);
@@ -254,14 +275,15 @@ inline void set_descriptor_layout( RpptDescPtr srcDescPtr, RpptDescPtr dstDescPt
     }
 }
 
-inline void set_roi_and_max_dimensions(vector<string> imagePaths, int& maxWidth, int& maxHeight, int& maxDstWidth, int& maxDstHeight, RpptROI *roiTensorPtrSrc, RpptROI *roiTensorPtrDst, RpptImagePatchPtr dstImgSizes)
+inline void set_roi(vector<string>::const_iterator imagePathsStart, vector<string>::const_iterator imagePathsEnd, RpptROI *roiTensorPtrSrc, RpptROI *roiTensorPtrDst, RpptImagePatchPtr dstImgSizes)
 {
    tjhandle tjInstance = tjInitDecompress();
-    maxWidth = 0;
-    maxHeight = 0;
+    // maxWidth = 0;
+    // maxHeight = 0;
     int i = 0;
-    for (const auto& imagePath : imagePaths)
+    for (auto imagePathIter = imagePathsStart; imagePathIter != imagePathsEnd; ++imagePathIter)
     {
+        const string& imagePath = *imagePathIter;
         FILE* jpegFile = fopen(imagePath.c_str(), "rb");
         if (!jpegFile) {
             std::cerr << "Error opening file: " << imagePath << std::endl;
@@ -287,10 +309,10 @@ inline void set_roi_and_max_dimensions(vector<string> imagePaths, int& maxWidth,
         roiTensorPtrDst[i].xywhROI = {0, 0, width, height};
         dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth;
         dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight;
-        maxWidth = std::max(maxWidth, width);
-        maxHeight = std::max(maxHeight, height);
-        maxDstWidth = std::max(maxDstWidth, width);
-        maxDstHeight = std::max(maxDstHeight, height);
+        // maxWidth = std::max(maxWidth, width);
+        // maxHeight = std::max(maxHeight, height);
+        // maxDstWidth = std::max(maxDstWidth, width);
+        // maxDstHeight = std::max(maxDstHeight, height);
         i++;
     }
 
@@ -351,6 +373,110 @@ inline void convert_roi(RpptROI *roiTensorPtrSrc, RpptRoiType roiType, int batch
         {
             RpptRoiLtrb roi = roiTensorPtrSrc[i].ltrbROI;
             roiTensorPtrSrc[i].xywhROI = {roi.lt.x, roi.lt.y, roi.rb.x - roi.lt.x + 1, roi.rb.y - roi.lt.y + 1};
+        }
+    }
+}
+
+// Convert inputs to correponding bit depth specified by user
+inline void convert_input_bitdepth(void *input, void *input_second, Rpp8u *inputu8, Rpp8u *inputu8Second, int inputBitDepth, Rpp64u ioBufferSize, Rpp64u inputBufferSize, RpptDescPtr srcDescPtr, bool dualInputCase, Rpp32f conversionFactor)
+{
+    if (inputBitDepth == 0)
+    {
+        memcpy(input, inputu8, inputBufferSize);
+        if(dualInputCase)
+            memcpy(input_second, inputu8Second, inputBufferSize);
+    }
+    else if (inputBitDepth == 1)
+    {
+        Rpp8u *inputTemp, *inputSecondTemp;
+        Rpp16f *inputf16Temp, *inputf16SecondTemp;
+        inputTemp = inputu8 + srcDescPtr->offsetInBytes;
+        inputf16Temp = reinterpret_cast<Rpp16f *>(static_cast<Rpp8u *>(input) + srcDescPtr->offsetInBytes);
+        for (int i = 0; i < ioBufferSize; i++)
+            *inputf16Temp++ = static_cast<Rpp16f>((static_cast<float>(*inputTemp++)) * conversionFactor);
+
+        if(dualInputCase)
+        {
+            inputSecondTemp = inputu8Second + srcDescPtr->offsetInBytes;
+            inputf16SecondTemp = reinterpret_cast<Rpp16f *>(static_cast<Rpp8u *>(input_second) + srcDescPtr->offsetInBytes);
+            for (int i = 0; i < ioBufferSize; i++)
+                *inputf16SecondTemp++ = static_cast<Rpp16f>((static_cast<float>(*inputSecondTemp++)) * conversionFactor);
+        }
+    }
+    else if (inputBitDepth == 2)
+    {
+        Rpp8u *inputTemp, *inputSecondTemp;
+        Rpp32f *inputf32Temp, *inputf32SecondTemp;
+        inputTemp = inputu8 + srcDescPtr->offsetInBytes;
+        inputf32Temp = reinterpret_cast<Rpp32f *>(static_cast<Rpp8u *>(input) + srcDescPtr->offsetInBytes);
+        for (int i = 0; i < ioBufferSize; i++)
+            *inputf32Temp++ = (static_cast<Rpp32f>(*inputTemp++)) * conversionFactor;
+
+        if(dualInputCase)
+        {
+            inputSecondTemp = inputu8Second + srcDescPtr->offsetInBytes;
+            inputf32SecondTemp = reinterpret_cast<Rpp32f *>(static_cast<Rpp8u *>(input_second) + srcDescPtr->offsetInBytes);
+            for (int i = 0; i < ioBufferSize; i++)
+                *inputf32SecondTemp++ = (static_cast<Rpp32f>(*inputSecondTemp++)) * conversionFactor;
+        }
+    }
+    else if (inputBitDepth == 5)
+    {
+        Rpp8u *inputTemp, *inputSecondTemp;
+        Rpp8s *inputi8Temp, *inputi8SecondTemp;
+
+        inputTemp = inputu8 + srcDescPtr->offsetInBytes;
+        inputi8Temp = static_cast<Rpp8s *>(input) + srcDescPtr->offsetInBytes;
+        for (int i = 0; i < ioBufferSize; i++)
+            *inputi8Temp++ = static_cast<Rpp8s>((static_cast<Rpp32s>(*inputTemp++)) - 128);
+
+        if(dualInputCase)
+        {
+            inputSecondTemp = inputu8Second + srcDescPtr->offsetInBytes;
+            inputi8SecondTemp = static_cast<Rpp8s *>(input_second) + srcDescPtr->offsetInBytes;
+            for (int i = 0; i < ioBufferSize; i++)
+                *inputi8SecondTemp++ = static_cast<Rpp8s>((static_cast<Rpp32s>(*inputSecondTemp++)) - 128);
+        }
+    }
+}
+
+inline void convert_output_bitdepth_to_u8(void *output, Rpp8u *outputu8, int inputBitDepth, Rpp64u oBufferSize, Rpp64u outputBufferSize, RpptDescPtr dstDescPtr, Rpp32f invConversionFactor)
+{
+    if (inputBitDepth == 0)
+    {
+        memcpy(outputu8, output, outputBufferSize);
+    }
+    else if ((inputBitDepth == 1) || (inputBitDepth == 3))
+    {
+        Rpp8u *outputTemp = outputu8 + dstDescPtr->offsetInBytes;
+        Rpp16f *outputf16Temp = reinterpret_cast<Rpp16f *>(static_cast<Rpp8u *>(output) + dstDescPtr->offsetInBytes);
+        for (int i = 0; i < oBufferSize; i++)
+        {
+            *outputTemp = static_cast<Rpp8u>(validate_pixel_range(static_cast<float>(*outputf16Temp) * invConversionFactor));
+            outputf16Temp++;
+            outputTemp++;
+        }
+    }
+    else if ((inputBitDepth == 2) || (inputBitDepth == 4))
+    {
+        Rpp8u *outputTemp = outputu8 + dstDescPtr->offsetInBytes;
+        Rpp32f *outputf32Temp = reinterpret_cast<Rpp32f *>(static_cast<Rpp8u *>(output) + dstDescPtr->offsetInBytes);
+        for (int i = 0; i < oBufferSize; i++)
+        {
+            *outputTemp = static_cast<Rpp8u>(validate_pixel_range(*outputf32Temp * invConversionFactor));
+            outputf32Temp++;
+            outputTemp++;
+        }
+    }
+    else if ((inputBitDepth == 5) || (inputBitDepth == 6))
+    {
+        Rpp8u *outputTemp = outputu8 + dstDescPtr->offsetInBytes;
+        Rpp8s *outputi8Temp = static_cast<Rpp8s *>(output) + dstDescPtr->offsetInBytes;
+        for (int i = 0; i < oBufferSize; i++)
+        {
+            *outputTemp = static_cast<Rpp8u>(validate_pixel_range((static_cast<Rpp32s>(*outputi8Temp) + 128)));
+            outputi8Temp++;
+            outputTemp++;
         }
     }
 }
@@ -535,20 +661,20 @@ void search_jpg_files(const string& folder_path, vector<string>& imageNames, vec
     }
 }
 
-inline void read_image_batch_opencv(Rpp8u *input, RpptDescPtr descPtr, vector<string> imageNames)
+inline void read_image_batch_opencv(Rpp8u *input, RpptDescPtr descPtr, vector<string>::const_iterator imagesNamesStart)
 {
     for(int i = 0; i < descPtr->n; i++)
     {
         Rpp8u *inputTemp = input + (i * descPtr->strides.nStride);
-        string inputImagePath = imageNames[i];
+        string inputImagePath = *(imagesNamesStart + i);
         cv::Mat image, imageBgr;
         if (descPtr->c == 3)
         {
-            imageBgr = imread(inputImagePath, 1);
-            cvtColor(imageBgr, image, COLOR_BGR2RGB);
+            imageBgr = cv::imread(inputImagePath, 1);
+            cv::cvtColor(imageBgr, image, cv::COLOR_BGR2RGB);
         }
         else if (descPtr->c == 1)
-            image = imread(inputImagePath, 0);
+            image = cv::imread(inputImagePath, 0);
 
         int width = image.cols;
         int height = image.rows;
@@ -558,12 +684,13 @@ inline void read_image_batch_opencv(Rpp8u *input, RpptDescPtr descPtr, vector<st
         {
             memcpy(inputTemp, inputImage, elementsInRow * sizeof(Rpp8u));
             inputImage += elementsInRow;
-            inputTemp += descPtr->w * descPtr->c;
+            inputTemp += descPtr->strides.wStride;
         }
     }
 }
 
-inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, vector<string> imageNames)
+
+inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, vector<string>::const_iterator imagesNamesStart)
 {
     tjhandle m_jpegDecompressor = tjInitDecompress();
 
@@ -571,7 +698,7 @@ inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, vector
     for (int i = 0; i < descPtr->n; i++)
     {
         // Read the JPEG compressed data from a file
-        std::string inputImagePath = imageNames[i];
+        std::string inputImagePath = *(imagesNamesStart + i);
         FILE* fp = fopen(inputImagePath.c_str(), "rb");
         if(!fp)
             std::cerr<<"\n unable to open file : "<<inputImagePath;
@@ -592,7 +719,7 @@ inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, vector
         {
             elementsInRow = width * descPtr->c;
             rgbBuf= (Rpp8u*)malloc(width * height * 3);
-            if(tjDecompress2(m_jpegDecompressor, jpegBuf, jpegSize, rgbBuf, width, width * 3, height, TJPF_RGB, TJFLAG_FASTDCT) != 0)
+            if(tjDecompress2(m_jpegDecompressor, jpegBuf, jpegSize, rgbBuf, width, width * 3, height, TJPF_RGB, TJFLAG_ACCURATEDCT) != 0)
                 std::cerr<<"\n Jpeg image decode failed ";
         }
         else
@@ -618,7 +745,7 @@ inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, vector
     tjDestroy(m_jpegDecompressor);
 }
 
-inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDescPtr dstDescPtr, vector<string> imageNames, RpptImagePatch *dstImgSizes, int maxImageDump)
+inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDescPtr dstDescPtr, vector<string>::const_iterator imagesNamesStart, RpptImagePatch *dstImgSizes, int maxImageDump)
 {
     // create output folder
     mkdir(outputFolder.c_str(), 0700);
@@ -633,7 +760,6 @@ inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDes
         Rpp32u width = dstImgSizes[j].width;
         Rpp32u elementsInRow = width * dstDescPtr->c;
         Rpp32u outputSize = height * width * dstDescPtr->c;
-
         Rpp8u *tempOutput = (Rpp8u *)calloc(outputSize, sizeof(Rpp8u));
         Rpp8u *tempOutputRow = tempOutput;
         Rpp8u *outputRow = offsettedOutput + j * dstDescPtr->strides.nStride;
@@ -643,8 +769,7 @@ inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDes
             tempOutputRow += elementsInRow;
             outputRow += elementsInRowMax;
         }
-
-        string outputImagePath = outputFolder + imageNames[j];
+        string outputImagePath = outputFolder + *(imagesNamesStart + j);
         Mat matOutputImage, matOutputImageRgb;
         if (dstDescPtr->c == 1)
             matOutputImage = Mat(height, width, CV_8UC1, tempOutput);
@@ -681,12 +806,15 @@ inline void remove_substring(string &str, string &pattern)
 }
 
 template <typename T>
-inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int noOfImages, string interpolationTypeName, int testCase, string dst)
+inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int noOfImages, string interpolationTypeName, string noiseTypeName, int testCase, string dst)
 {
     string func = funcName;
     string refPath = get_current_dir_name();
     string pattern = "/build";
     string refFile = "";
+    int refOutputWidth = 152;
+    int refOutputHeight = 150;
+    int refOutputSize = refOutputHeight * refOutputWidth * dstDescPtr->c;
     remove_substring(refPath, pattern);
     string dataType[4] = {"_u8_", "_f16_", "_f32_", "_i8_"};
 
@@ -710,12 +838,14 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     }
     if(testCase == 21 ||testCase == 23 || testCase == 24)
         refFile = refPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ func + "_interpolationType" + interpolationTypeName + ".csv";
+    else if(testCase == 8)
+        refFile = refPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ func + "_noiseType" + noiseTypeName + ".csv";
     else
         refFile = refPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ func + ".csv";
 
     ifstream file(refFile);
     Rpp8u *refOutput;
-    refOutput = (Rpp8u *)malloc(dstDescPtr->n * dstDescPtr->strides.nStride * sizeof(Rpp8u));
+    refOutput = (Rpp8u *)malloc(dstDescPtr->n * refOutputSize * sizeof(Rpp8u));
     string line,word;
     int index = 0;
 
@@ -743,13 +873,17 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     for(int c = 0; c < dstDescPtr->n; c++)
     {
         outputTemp = output + c * dstDescPtr->strides.nStride;
-        outputTempRef = refOutput + c * dstDescPtr->strides.nStride;
+        outputTempRef = refOutput + c * refOutputSize;
         int height = dstImgSizes[c].height;
         int width = dstImgSizes[c].width;
         int matched_idx = 0;
+        int refOutputHstride = refOutputWidth;
 
         if(dstDescPtr->layout == RpptLayout::NHWC)
+        {
             width = dstImgSizes[c].width * dstDescPtr->c;
+            refOutputHstride = refOutputWidth * dstDescPtr->c;
+        }
         else
         {
             if (dstDescPtr->c == 3)
@@ -759,7 +893,7 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
         for(int i = 0; i < height; i++)
         {
             rowTemp = outputTemp + i * dstDescPtr->strides.hStride;
-            rowTempRef = outputTempRef + i * dstDescPtr->strides.hStride;
+            rowTempRef = outputTempRef + i * refOutputHstride;
             for(int j = 0; j < width; j++)
             {
                 outVal = rowTemp + j;

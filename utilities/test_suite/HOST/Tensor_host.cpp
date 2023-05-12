@@ -39,8 +39,8 @@ THE SOFTWARE.
 
 #define DEBUG_MODE 1
 #define MAX_IMAGE_DUMP 20
-#define MAX_HEIGHT 150
-#define MAX_WIDTH 150
+#define MAX_HEIGHT 2160
+#define MAX_WIDTH 3840
 
 using namespace cv;
 using namespace std;
