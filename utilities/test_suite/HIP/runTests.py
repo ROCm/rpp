@@ -110,8 +110,8 @@ def rpp_test_suite_parser_and_validator():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_path1", type = str, default = inFilePath1, help = "Path to the input folder 1")
     parser.add_argument("--input_path2", type = str, default = inFilePath2, help = "Path to the input folder 2")
-    parser.add_argument("--case_start", type = int, default = 0, help="Testing range starting case # - (0:86)")
-    parser.add_argument("--case_end", type = int, default = 86, help="Testing range ending case # - (0:86)")
+    parser.add_argument("--case_start", type = int, default = 0, help="Testing range starting case # - (0:84)")
+    parser.add_argument("--case_end", type = int, default = 84, help="Testing range ending case # - (0:84)")
     parser.add_argument('--test_type', type = int, default = 0, help="Type of Test - (0 = Unit tests / 1 = Performance tests)")
     parser.add_argument('--case_list', nargs = "+", help="List of case numbers to list", required=False)
     parser.add_argument('--profiling', type = str , default='NO', help='Run with profiler? - (YES/NO)', required=False)
@@ -127,8 +127,8 @@ def rpp_test_suite_parser_and_validator():
     validate_path(args.input_path2)
 
     # validate the parameters passed by user
-    if ((args.case_start < 0 or args.case_start > 86) or (args.case_end < 0 or args.case_end > 86)):
-        print("Starting case# and Ending case# must be in the 0:86 range. Aborting!")
+    if ((args.case_start < 0 or args.case_start > 84) or (args.case_end < 0 or args.case_end > 84)):
+        print("Starting case# and Ending case# must be in the 0:84 range. Aborting!")
         exit(0)
     elif args.case_end < args.case_start:
         print("Ending case# must be greater than starting case#. Aborting!")
@@ -142,7 +142,7 @@ def rpp_test_suite_parser_and_validator():
     elif args.decoder_type < 0 or args.decoder_type > 1:
         print("Decoder Type must be in the 0/1 (0 = OpenCV / 1 = TurboJPEG). Aborting")
         exit(0)
-    elif args.case_list is not None and args.case_start > 0 and args.case_end < 86:
+    elif args.case_list is not None and args.case_start > 0 and args.case_end < 84:
         print("Invalid input! Please provide only 1 option between case_list, case_start and case_end")
         exit(0)
     elif args.num_iterations < 0:
@@ -160,8 +160,8 @@ def rpp_test_suite_parser_and_validator():
         args.case_list = [str(x) for x in args.case_list]
     else:
         for case in args.case_list:
-            if int(case) < 0 or int(case) > 86:
-                 print("The case# must be in the 0:86 range!")
+            if int(case) < 0 or int(case) > 84:
+                 print("The case# must be in the 0:84 range!")
                  exit(0)
 
     # if QA mode is enabled overwrite the input folders with the folders used for generating golden outputs
@@ -186,10 +186,12 @@ preserveOutput = args.preserve_output
 batchSize = args.batch_size
 
 if os.path.abspath(qaInputFile) != os.path.abspath(srcPath1):
-    qaMode = 0
+    print("QA mode should only run with the given Input path: ", qaInputFile)
+    exit(0)
 
-if qaMode:
-    batchSize = 3
+if qaMode and batchSize != 3:
+    print("QA mode can only run with a batch size of 3.")
+    exit(0)
 
 if(testType == 0):
     if qaMode:
@@ -380,7 +382,7 @@ else:
             print("Unable to open results in " + RESULTS_DIR + "/consolidated_results_" + TYPE + ".stats.csv")
 
 # print the results of qa tests
-supportedCaseList = ['0', '1', '2', '4', '8', '13', '20', '21', '23', '24', '30', '31', '36', '37', '38', '39', '70', '80', '81', '83', '84', '85', '86']
+supportedCaseList = ['0', '2', '4', '13', '20', '31', '36', '38', '80', '84']
 supportedCases = 0
 for num in caseList:
     if num in supportedCaseList:

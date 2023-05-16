@@ -56,28 +56,15 @@ namespace fs = boost::filesystem;
 std::map<int, string> augmentationMap =
 {
     {0, "brightness"},
-    {1, "gamma_correction"},
     {2, "blend"},
     {4, "contrast"},
-    {8, "noise"},
     {13, "exposure"},
     {20, "flip"},
-    {21, "resize"},
-    {23, "rotate"},
-    {24, "warp_affine"},
-    {30, "non_linear_blend"},
     {31, "color_cast"},
     {36, "color_twist"},
-    {37, "crop"},
     {38, "crop_mirror_normalize"},
-    {39, "resize_crop_mirror"},
-    {70, "copy"},
     {80, "resize_mirror_normalize"},
-    {81, "color_jitter"},
-    {83, "gridmask"},
     {84, "spatter"},
-    {85, "swap_channels"},
-    {86, "color_to_greyscale"},
 };
 
 template <typename T>
@@ -281,9 +268,7 @@ inline void set_descriptor_layout( RpptDescPtr srcDescPtr, RpptDescPtr dstDescPt
 
 inline void set_roi(vector<string>::const_iterator imagePathsStart, vector<string>::const_iterator imagePathsEnd, RpptROI *roiTensorPtrSrc, RpptROI *roiTensorPtrDst, RpptImagePatchPtr dstImgSizes)
 {
-   tjhandle tjInstance = tjInitDecompress();
-    // maxWidth = 0;
-    // maxHeight = 0;
+    tjhandle tjInstance = tjInitDecompress();
     int i = 0;
     for (auto imagePathIter = imagePathsStart; imagePathIter != imagePathsEnd; ++imagePathIter)
     {
@@ -313,10 +298,6 @@ inline void set_roi(vector<string>::const_iterator imagePathsStart, vector<strin
         roiTensorPtrDst[i].xywhROI = {0, 0, width, height};
         dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth;
         dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight;
-        // maxWidth = std::max(maxWidth, width);
-        // maxHeight = std::max(maxHeight, height);
-        // maxDstWidth = std::max(maxDstWidth, width);
-        // maxDstHeight = std::max(maxDstHeight, height);
         i++;
     }
 
