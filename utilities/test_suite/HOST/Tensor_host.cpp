@@ -37,7 +37,7 @@ THE SOFTWARE.
 #include <half/half.hpp>
 #include <fstream>
 
-#define DEBUG_MODE 1
+#define DEBUG_MODE 0
 #define MAX_IMAGE_DUMP 20
 #define MAX_HEIGHT 2160
 #define MAX_WIDTH 3840

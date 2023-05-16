@@ -35,11 +35,15 @@ THE SOFTWARE.
 #include <omp.h>
 #include <fstream>
 #include <turbojpeg.h>
-#include <hip/hip_fp16.h>
-// #include <half/half.hpp>
 #include <boost/filesystem.hpp>
 
-// using half_float::half;
+#ifdef __HIP_PLATFORM_HCC__
+#include <hip/hip_fp16.h>
+#else
+#include <half/half.hpp>
+using half_float::half;
+#endif
+
 typedef half Rpp16f;
 
 using namespace cv;
@@ -805,6 +809,72 @@ inline void remove_substring(string &str, string &pattern)
    }
 }
 
+void compare_pkd(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
+{
+    Rpp8u *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef;
+    for(int imageCnt = 0; imageCnt < dstDescPtr->n; imageCnt++)
+    {
+        outputTemp = output + imageCnt * dstDescPtr->strides.nStride;
+        outputTempRef = refOutput + imageCnt * refOutputSize;
+        int height = dstImgSizes[imageCnt].height;
+        int width = dstImgSizes[imageCnt].width * dstDescPtr->c;;
+        int matched_idx = 0;
+        int refOutputHstride = refOutputWidth * dstDescPtr->c;
+
+        for(int i = 0; i < height; i++)
+        {
+            rowTemp = outputTemp + i * dstDescPtr->strides.hStride;
+            rowTempRef = outputTempRef + i * refOutputHstride;
+            for(int j = 0; j < width; j++)
+            {
+                outVal = rowTemp + j;
+                outRefVal = rowTempRef + j ;
+                int diff = abs(*outVal - *outRefVal);
+                if(diff <= CUTOFF)
+                    matched_idx++;
+            }
+        }
+        if(matched_idx == (height * width) && matched_idx !=0)
+            fileMatch++;
+    }
+}
+
+void compare_pln(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
+{
+    Rpp8u *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef, *outputTempChn, *outputTempRefChn;
+    for(int imageCnt = 0; imageCnt < dstDescPtr->n; imageCnt++)
+    {
+        outputTemp = output + imageCnt * dstDescPtr->strides.nStride;
+        outputTempRef = refOutput + imageCnt * refOutputSize;
+        int height = dstImgSizes[imageCnt].height;
+        int width = dstImgSizes[imageCnt].width;
+        int matched_idx = 0;
+        int refOutputHstride = refOutputWidth;
+        int refOutputCstride = refOutputHeight * refOutputWidth;
+
+        for(int c = 0; c < dstDescPtr->c; c++)
+        {
+            outputTempChn = outputTemp + c * dstDescPtr->strides.cStride;
+            outputTempRefChn = outputTempRef + c * refOutputCstride;
+            for(int i = 0; i < height; i++)
+            {
+                rowTemp = outputTempChn + i * dstDescPtr->strides.hStride;
+                rowTempRef = outputTempRefChn + i * refOutputHstride;
+                for(int j = 0; j < width; j++)
+                {
+                    outVal = rowTemp + j;
+                    outRefVal = rowTempRef + j ;
+                    int diff = abs(*outVal - *outRefVal);
+                    if(diff <= CUTOFF)
+                        matched_idx++;
+                }
+            }
+        }
+        if(matched_idx == (height * width * dstDescPtr->c) && matched_idx !=0)
+            fileMatch++;
+    }
+}
+
 template <typename T>
 inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int noOfImages, string interpolationTypeName, string noiseTypeName, int testCase, string dst)
 {
@@ -815,6 +885,7 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     int refOutputWidth = 152;
     int refOutputHeight = 150;
     int refOutputSize = refOutputHeight * refOutputWidth * dstDescPtr->c;
+
     remove_substring(refPath, pattern);
     string dataType[4] = {"_u8_", "_f16_", "_f32_", "_i8_"};
 
@@ -869,43 +940,11 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     }
 
     int fileMatch = 0;
-    Rpp8u *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef;
-    for(int c = 0; c < dstDescPtr->n; c++)
-    {
-        outputTemp = output + c * dstDescPtr->strides.nStride;
-        outputTempRef = refOutput + c * refOutputSize;
-        int height = dstImgSizes[c].height;
-        int width = dstImgSizes[c].width;
-        int matched_idx = 0;
-        int refOutputHstride = refOutputWidth;
+    if(dstDescPtr->layout == RpptLayout::NHWC)
+        compare_pkd(output, refOutput, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+    else
+        compare_pln(output, refOutput, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
 
-        if(dstDescPtr->layout == RpptLayout::NHWC)
-        {
-            width = dstImgSizes[c].width * dstDescPtr->c;
-            refOutputHstride = refOutputWidth * dstDescPtr->c;
-        }
-        else
-        {
-            if (dstDescPtr->c == 3)
-                height = dstImgSizes[c].height * dstDescPtr->c;
-        }
-
-        for(int i = 0; i < height; i++)
-        {
-            rowTemp = outputTemp + i * dstDescPtr->strides.hStride;
-            rowTempRef = outputTempRef + i * refOutputHstride;
-            for(int j = 0; j < width; j++)
-            {
-                outVal = rowTemp + j;
-                outRefVal = rowTempRef + j;
-                int diff = abs(*outVal - *outRefVal);
-                if(diff <= CUTOFF)
-                    matched_idx++;
-            }
-        }
-        if(matched_idx == (height * width) && matched_idx !=0)
-            fileMatch++;
-    }
     std::cerr<<std::endl<<"Results for "<<func<<" :"<<std::endl;
     std::string status = func + ": ";
     if(fileMatch == dstDescPtr->n)

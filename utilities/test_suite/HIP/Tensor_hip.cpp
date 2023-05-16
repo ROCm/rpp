@@ -400,7 +400,6 @@ int main(int argc, char **argv)
                 }
 
                 startWallTime = omp_get_wtime();
-                startCpuTime = clock();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                     rppt_gamma_correction_gpu(d_input, srcDescPtr, d_output, dstDescPtr, gammaVal, roiTensorPtrSrc, roiTypeSrc, handle);
                 else
@@ -468,7 +467,6 @@ int main(int argc, char **argv)
                         }
 
                         startWallTime = omp_get_wtime();
-                        startCpuTime = clock();
                         if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                             rppt_salt_and_pepper_noise_gpu(d_input, srcDescPtr, d_output, dstDescPtr, noiseProbabilityTensor, saltProbabilityTensor, saltValueTensor, pepperValueTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
                         else
@@ -488,7 +486,6 @@ int main(int argc, char **argv)
                         }
 
                         startWallTime = omp_get_wtime();
-                        startCpuTime = clock();
                         if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                             rppt_gaussian_noise_gpu(d_input, srcDescPtr, d_output, dstDescPtr, meanTensor, stdDevTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
                         else
@@ -506,7 +503,6 @@ int main(int argc, char **argv)
                         }
 
                         startWallTime = omp_get_wtime();
-                        startCpuTime = clock();
                         if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                             rppt_shot_noise_gpu(d_input, srcDescPtr, d_output, dstDescPtr, shotNoiseFactorTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
                         else
@@ -554,7 +550,6 @@ int main(int argc, char **argv)
                 }
 
                 startWallTime = omp_get_wtime();
-                startCpuTime = clock();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                     rppt_flip_gpu(d_input, srcDescPtr, d_output, dstDescPtr, horizontalFlag, verticalFlag, roiTensorPtrSrc, roiTypeSrc, handle);
                 else
@@ -573,7 +568,6 @@ int main(int argc, char **argv)
                 }
 
                 startWallTime = omp_get_wtime();
-                startCpuTime = clock();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                     rppt_resize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, dstImgSizes, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
                 else
@@ -598,7 +592,6 @@ int main(int argc, char **argv)
                 }
 
                 startWallTime = omp_get_wtime();
-                startCpuTime = clock();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                     rppt_rotate_gpu(d_input, srcDescPtr, d_output, dstDescPtr, angle, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
                 else
@@ -629,7 +622,6 @@ int main(int argc, char **argv)
                 }
 
                 startWallTime = omp_get_wtime();
-                startCpuTime = clock();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                     rppt_warp_affine_gpu(d_input, srcDescPtr, d_output, dstDescPtr, affineTensor, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
                 else
@@ -648,7 +640,6 @@ int main(int argc, char **argv)
                 }
 
                 startWallTime = omp_get_wtime();
-                startCpuTime = clock();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                     rppt_non_linear_blend_gpu(d_input, d_input_second, srcDescPtr, d_output, dstDescPtr, stdDev, roiTensorPtrSrc, roiTypeSrc, handle);
                 else
@@ -716,7 +707,6 @@ int main(int argc, char **argv)
                 }
 
                 startWallTime = omp_get_wtime();
-                startCpuTime = clock();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                     rppt_crop_gpu(d_input, srcDescPtr, d_output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
                 else
@@ -806,7 +796,6 @@ int main(int argc, char **argv)
                 }
 
                 startWallTime = omp_get_wtime();
-                startCpuTime = clock();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 3 || inputBitDepth == 4 || inputBitDepth == 5)
                     rppt_resize_crop_mirror_gpu(d_input, srcDescPtr, d_output, dstDescPtr, dstImgSizes, interpolationType, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
                 else
@@ -819,7 +808,6 @@ int main(int argc, char **argv)
                 testCaseName = "copy";
 
                 startWallTime = omp_get_wtime();
-                startCpuTime = clock();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                     rppt_copy_gpu(d_input, srcDescPtr, d_output, dstDescPtr, handle);
                 else
@@ -860,7 +848,6 @@ int main(int argc, char **argv)
                 }
 
                 startWallTime = omp_get_wtime();
-                startCpuTime = clock();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                     rppt_resize_mirror_normalize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, dstImgSizes, interpolationType, mean, stdDev, mirror, roiTensorPtrSrc, roiTypeSrc, handle);
                 else
@@ -880,7 +867,6 @@ int main(int argc, char **argv)
                 translateVector.y = 0.0;
 
                 startWallTime = omp_get_wtime();
-                startCpuTime = clock();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                     rppt_gridmask_gpu(d_input, srcDescPtr, d_output, dstDescPtr, tileWidth, gridRatio, gridAngle, translateVector, roiTensorPtrSrc, roiTypeSrc, handle);
                 else
@@ -910,7 +896,6 @@ int main(int argc, char **argv)
                 // spatterColor.B = 64;
 
                 startWallTime = omp_get_wtime();
-                startCpuTime = clock();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                     rppt_spatter_gpu(d_input, srcDescPtr, d_output, dstDescPtr, spatterColor, roiTensorPtrSrc, roiTypeSrc, handle);
                 else
@@ -923,7 +908,6 @@ int main(int argc, char **argv)
                 testCaseName = "swap_channels";
 
                 startWallTime = omp_get_wtime();
-                startCpuTime = clock();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                     rppt_swap_channels_gpu(d_input, srcDescPtr, d_output, dstDescPtr, handle);
                 else
@@ -938,7 +922,6 @@ int main(int argc, char **argv)
                 RpptSubpixelLayout srcSubpixelLayout = RpptSubpixelLayout::RGBtype;
 
                 startWallTime = omp_get_wtime();
-                startCpuTime = clock();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                     rppt_color_to_greyscale_gpu(d_input, srcDescPtr, d_output, dstDescPtr, srcSubpixelLayout, handle);
                 else
@@ -967,53 +950,10 @@ int main(int argc, char **argv)
             if (testType == 0)
             {
                 cout << "\n\nGPU Backend Wall Time: " << wallTime <<" ms/batch"<< endl;
+                hipMemcpy(output, d_output, outputBufferSize, hipMemcpyDeviceToHost);
 
                 // Reconvert other bit depths to 8u for output display purposes
-                if (inputBitDepth == 0)
-                {
-                    hipMemcpy(output, d_output, outputBufferSize, hipMemcpyDeviceToHost);
-                    memcpy(outputu8, output, outputBufferSize);
-                }
-                else if ((inputBitDepth == 1) || (inputBitDepth == 3))
-                {
-                    hipMemcpy(output, d_output, outputBufferSize, hipMemcpyDeviceToHost);
-                    Rpp8u *outputTemp;
-                    outputTemp = outputu8 + dstDescPtr->offsetInBytes;
-                    Rpp16f *outputf16Temp;
-                    outputf16Temp = reinterpret_cast<Rpp16f *>(static_cast<Rpp8u *>(output) + dstDescPtr->offsetInBytes);
-                    for (int i = 0; i < oBufferSize; i++)
-                    {
-                        *outputTemp = static_cast<Rpp8u>(validate_pixel_range(static_cast<float>(*outputf16Temp) * invConversionFactor));
-                        outputf16Temp++;
-                        outputTemp++;
-                    }
-                }
-                else if ((inputBitDepth == 2) || (inputBitDepth == 4))
-                {
-                    hipMemcpy(output, d_output, outputBufferSize, hipMemcpyDeviceToHost);
-                    Rpp8u *outputTemp;
-                    outputTemp = outputu8 + dstDescPtr->offsetInBytes;
-                    Rpp32f *outputf32Temp;
-                    outputf32Temp = reinterpret_cast<Rpp32f *>(static_cast<Rpp8u *>(output) + dstDescPtr->offsetInBytes);
-                    for (int i = 0; i < oBufferSize; i++)
-                    {
-                        *outputTemp = static_cast<Rpp8u>(validate_pixel_range(*outputf32Temp * invConversionFactor));
-                        outputf32Temp++;
-                        outputTemp++;
-                    }
-                }
-                else if ((inputBitDepth == 5) || (inputBitDepth == 6))
-                {
-                    hipMemcpy(output, d_output, outputBufferSize, hipMemcpyDeviceToHost);
-                    Rpp8u *outputTemp = outputu8 + dstDescPtr->offsetInBytes;
-                    Rpp8s *outputi8Temp = static_cast<Rpp8s *>(output) + dstDescPtr->offsetInBytes;
-                    for (int i = 0; i < oBufferSize; i++)
-                    {
-                        *outputTemp = static_cast<Rpp8u>(validate_pixel_range((static_cast<Rpp32s>(*outputi8Temp)) + 128));
-                        outputi8Temp++;
-                        outputTemp++;
-                    }
-                }
+                convert_output_bitdepth_to_u8(output, outputu8, inputBitDepth, oBufferSize, outputBufferSize, dstDescPtr, invConversionFactor);
 
                 // if DEBUG_MODE is set to 1, the output of the first iteration will be dumped to csv files for debugging purposes.
                 if(DEBUG_MODE && iterCount == 0)
