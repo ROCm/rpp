@@ -86,7 +86,7 @@ RppStatus flip_u8_u8_host_tensor(Rpp8u *srcPtr,
 
         //Compute constant increment, Decrement factors used in source pointer updation
         Rpp32s srcPtrIncrement = (horizontalFlag)? -vectorIncrement : vectorIncrement;
-        Rpp32u hFlipFactor = (vectorIncrement - 3) * horizontalFlag;
+        Rpp32u hFlipFactor = (vectorIncrement - 1) * horizontalFlag;
         Rpp32s srcPtrIncrementPerChannel = (horizontalFlag)? -vectorIncrementPerChannel : vectorIncrementPerChannel;
         Rpp32u hFlipFactorPerChannel = (vectorIncrementPerChannel - 1) * horizontalFlag;
         Rpp32s srcPtrIncrementPerRGB = (horizontalFlag) ? -3 : 3;
@@ -279,7 +279,6 @@ RppStatus flip_u8_u8_host_tensor(Rpp8u *srcPtr,
                         srcPtrTemp += srcPtrIncrementPerChannel;
                         dstPtrTemp += vectorIncrementPerChannel;
                     }
-                    srcPtrTemp += hFlipFactorPerChannel;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         *dstPtrTemp = (Rpp8u) RPPPIXELCHECK((Rpp32f) (*srcPtrTemp));

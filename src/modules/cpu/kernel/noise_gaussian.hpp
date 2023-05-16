@@ -242,9 +242,9 @@ RppStatus gaussian_noise_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    dstPtrTemp[0] = (Rpp8u)std::nearbyintf((compute_gaussian_noise_1_host((Rpp32f)srcPtrTemp[0] * ONE_OVER_255, &xorwowState, mean, stdDev) * 255.0f));
-                    dstPtrTemp[1] = (Rpp8u)std::nearbyintf((compute_gaussian_noise_1_host((Rpp32f)srcPtrTemp[1] * ONE_OVER_255, &xorwowState, mean, stdDev) * 255.0f));
-                    dstPtrTemp[2] = (Rpp8u)std::nearbyintf((compute_gaussian_noise_1_host((Rpp32f)srcPtrTemp[2] * ONE_OVER_255, &xorwowState, mean, stdDev) * 255.0f));
+                    dstPtrTemp[0] = (Rpp8u)(compute_gaussian_noise_1_host((Rpp32f)srcPtrTemp[0] * ONE_OVER_255, &xorwowState, mean, stdDev) * 255.0f);
+                    dstPtrTemp[1] = (Rpp8u)(compute_gaussian_noise_1_host((Rpp32f)srcPtrTemp[1] * ONE_OVER_255, &xorwowState, mean, stdDev) * 255.0f);
+                    dstPtrTemp[2] = (Rpp8u)(compute_gaussian_noise_1_host((Rpp32f)srcPtrTemp[2] * ONE_OVER_255, &xorwowState, mean, stdDev) * 255.0f);
 
                     srcPtrTemp += 3;
                     dstPtrTemp += 3;
@@ -303,9 +303,9 @@ RppStatus gaussian_noise_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    *dstPtrTempR++ = (Rpp8u)std::nearbyintf((compute_gaussian_noise_1_host((Rpp32f)*srcPtrTempR++ * ONE_OVER_255, &xorwowState, mean, stdDev) * 255.0f));
-                    *dstPtrTempG++ = (Rpp8u)std::nearbyintf((compute_gaussian_noise_1_host((Rpp32f)*srcPtrTempG++ * ONE_OVER_255, &xorwowState, mean, stdDev) * 255.0f));
-                    *dstPtrTempB++ = (Rpp8u)std::nearbyintf((compute_gaussian_noise_1_host((Rpp32f)*srcPtrTempB++ * ONE_OVER_255, &xorwowState, mean, stdDev) * 255.0f));
+                    *dstPtrTempR++ = (Rpp8u)(compute_gaussian_noise_1_host((Rpp32f)*srcPtrTempR++ * ONE_OVER_255, &xorwowState, mean, stdDev) * 255.0f);
+                    *dstPtrTempG++ = (Rpp8u)(compute_gaussian_noise_1_host((Rpp32f)*srcPtrTempG++ * ONE_OVER_255, &xorwowState, mean, stdDev) * 255.0f);
+                    *dstPtrTempB++ = (Rpp8u)(compute_gaussian_noise_1_host((Rpp32f)*srcPtrTempB++ * ONE_OVER_255, &xorwowState, mean, stdDev) * 255.0f);
                 }
 
                 srcPtrRowR += srcDescPtr->strides.hStride;
@@ -355,7 +355,7 @@ RppStatus gaussian_noise_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    *dstPtrTemp++ = (Rpp8u)std::nearbyintf((compute_gaussian_noise_1_host((Rpp32f)*srcPtrTemp++ * ONE_OVER_255, &xorwowState, mean, stdDev) * 255.0f));
+                    *dstPtrTemp++ = (Rpp8u)(compute_gaussian_noise_1_host((Rpp32f)*srcPtrTemp++ * ONE_OVER_255, &xorwowState, mean, stdDev) * 255.0f);
                 }
 
                 srcPtrRow += srcDescPtr->strides.hStride;

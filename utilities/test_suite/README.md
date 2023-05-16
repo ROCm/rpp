@@ -16,6 +16,7 @@ The test suite accepts the following command line arguments:
 -   decoder_type: Type of Decoder to decode the input data - (0 = TurboJPEG / 1 = OpenCV). Default is 0
 -   num_iterations: Specifies the number of iterations for running the performance tests
 -   preserve_output: preserves the output images or performance logs generated from the previous test suite run - (0 = remove output images or performance logs / 1 = preserve output images or performance logs). Default is 1
+-   batch_size: Specifies the batch size to use for running tests. Default is 1
 
 ## Running the Tests for HOST Backend
 The test suite can be run with the following command:
