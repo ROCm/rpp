@@ -139,7 +139,7 @@ AMD ROCm Performance Primitives (**RPP**) library is a comprehensive high-perfor
   sudo make install
   ```
 
-## Build & Install RPP
+## Build & Install RPP 
 
 The ROCm Performance Primitives (RPP) library has support for three backends: HIP, OpenCL, and CPU:
 

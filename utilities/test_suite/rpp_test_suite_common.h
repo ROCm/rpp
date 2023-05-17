@@ -74,6 +74,7 @@ inline T validate_pixel_range(T pixel)
     return pixel;
 }
 
+// replicates the last image in a batch to fill the remaining images in a batch
 void replicate_last_image_to_fill_batch(const string& lastFilePath, vector<string>& imageNamesPath, vector<string>& imageNames, const string& lastFileName, int noOfImages, int batchCount)
 {
     std::string filePath = lastFilePath;
@@ -88,6 +89,7 @@ void replicate_last_image_to_fill_batch(const string& lastFilePath, vector<strin
     }
 }
 
+// Retrieve the interpolation type used for image resizing or scaling operations.
 inline std::string get_interpolation_type(unsigned int val, RpptInterpolationType &interpolationType)
 {
     switch(val)
@@ -125,6 +127,7 @@ inline std::string get_interpolation_type(unsigned int val, RpptInterpolationTyp
     }
 }
 
+// Retrieve the noise type applied to an image
 inline std::string get_noise_type(unsigned int val)
 {
     switch(val)
@@ -136,6 +139,7 @@ inline std::string get_noise_type(unsigned int val)
     }
 }
 
+// returns number of input channels according to layout type
 inline int set_input_channels(int layoutType)
 {
     if(layoutType == 0 || layoutType == 1)
@@ -144,6 +148,7 @@ inline int set_input_channels(int layoutType)
         return 1;
 }
 
+//returns function type
 inline string set_function_type(int layoutType, int pln1OutTypeCase, int outputFormatToggle, string backend)
 {
     string funcType;
@@ -182,6 +187,7 @@ inline string set_function_type(int layoutType, int pln1OutTypeCase, int outputF
     return funcType;
 }
 
+// sets descriptor data types of src/dst
 inline void set_descriptor_data_type(int ip_bitDepth, string &funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr)
 {
     if (ip_bitDepth == 0)
@@ -228,6 +234,7 @@ inline void set_descriptor_data_type(int ip_bitDepth, string &funcName, RpptDesc
     }
 }
 
+// sets descriptor layout of src/dst
 inline void set_descriptor_layout( RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, int layoutType, bool pln1OutTypeCase, int outputFormatToggle)
 {
     if(layoutType == 0)
@@ -266,6 +273,7 @@ inline void set_descriptor_layout( RpptDescPtr srcDescPtr, RpptDescPtr dstDescPt
     }
 }
 
+// sets roi xywh values and dstImg sizes
 inline void set_roi(vector<string>::const_iterator imagePathsStart, vector<string>::const_iterator imagePathsEnd, RpptROI *roiTensorPtrSrc, RpptROI *roiTensorPtrDst, RpptImagePatchPtr dstImgSizes)
 {
     tjhandle tjInstance = tjInitDecompress();
@@ -304,6 +312,7 @@ inline void set_roi(vector<string>::const_iterator imagePathsStart, vector<strin
     tjDestroy(tjInstance);
 }
 
+// sets descriptor dimensions and strides of src/dst
 inline void set_descriptor_dims_and_strides(RpptDescPtr descPtr, int noOfImages, int maxHeight, int maxWidth, int numChannels, int offsetInBytes)
 {
     descPtr->numDims = 4;
@@ -425,6 +434,7 @@ inline void convert_input_bitdepth(void *input, void *input_second, Rpp8u *input
     }
 }
 
+// Reconvert other bit depths to 8u for output display purposes
 inline void convert_output_bitdepth_to_u8(void *output, Rpp8u *outputu8, int inputBitDepth, Rpp64u oBufferSize, Rpp64u outputBufferSize, RpptDescPtr dstDescPtr, Rpp32f invConversionFactor)
 {
     if (inputBitDepth == 0)
@@ -466,6 +476,7 @@ inline void convert_output_bitdepth_to_u8(void *output, Rpp8u *outputu8, int inp
     }
 }
 
+// updates dstImg sizes
 inline void update_dst_sizes_with_roi(RpptROI *roiTensorPtrSrc, RpptImagePatchPtr dstImageSize, RpptRoiType roiType, int batchSize)
 {
     if(roiType == RpptRoiType::XYWH)
@@ -486,6 +497,7 @@ inline void update_dst_sizes_with_roi(RpptROI *roiTensorPtrSrc, RpptImagePatchPt
     }
 }
 
+// converts image data from PLN3 to PKD3
 inline void convert_pln3_to_pkd3(Rpp8u *output, RpptDescPtr descPtr)
 {
     unsigned long long bufferSize = ((unsigned long long)descPtr->h * (unsigned long long)descPtr->w * (unsigned long long)descPtr->c * (unsigned long long)descPtr->n) + descPtr->offsetInBytes;
@@ -525,6 +537,7 @@ inline void convert_pln3_to_pkd3(Rpp8u *output, RpptDescPtr descPtr)
     free(outputCopy);
 }
 
+// converts image data from PKD3 to PLN3
 inline void convert_pkd3_to_pln3(Rpp8u *input, RpptDescPtr descPtr)
 {
     unsigned long long bufferSize = ((unsigned long long)descPtr->h * (unsigned long long)descPtr->w * (unsigned long long)descPtr->c * (unsigned long long)descPtr->n) + descPtr->offsetInBytes;
@@ -564,6 +577,7 @@ inline void convert_pkd3_to_pln3(Rpp8u *input, RpptDescPtr descPtr)
     free(inputCopy);
 }
 
+// Opens a folder and recursively search for .jpg files
 void open_folder(const string& folderPath, vector<string>& imageNames, vector<string>& imageNamesPath)
 {
     auto src_dir = opendir (folderPath.c_str());
@@ -571,7 +585,7 @@ void open_folder(const string& folderPath, vector<string>& imageNames, vector<st
     std::string fileName = " ";
 
     if (src_dir == nullptr)
-        std::cerr<<"\n ERROR: Failed opening the directory at " <<folderPath;
+        std::cerr << "\n ERROR: Failed opening the directory at " <<folderPath;
 
     while((entity = readdir (src_dir)) != nullptr)
     {
@@ -594,11 +608,12 @@ void open_folder(const string& folderPath, vector<string>& imageNames, vector<st
         }
     }
     if(imageNames.empty())
-        std::cerr<<"\n Did not load any file from " << folderPath;
+        std::cerr << "\n Did not load any file from " << folderPath;
 
     closedir(src_dir);
 }
 
+// Searches for .jpg files in input folders
 void search_jpg_files(const string& folder_path, vector<string>& imageNames, vector<string>& imageNamesPath)
 {
     vector<string> entry_list;
@@ -646,6 +661,7 @@ void search_jpg_files(const string& folder_path, vector<string>& imageNames, vec
     }
 }
 
+// Read a batch of images using the OpenCV library
 inline void read_image_batch_opencv(Rpp8u *input, RpptDescPtr descPtr, vector<string>::const_iterator imagesNamesStart)
 {
     for(int i = 0; i < descPtr->n; i++)
@@ -674,7 +690,7 @@ inline void read_image_batch_opencv(Rpp8u *input, RpptDescPtr descPtr, vector<st
     }
 }
 
-
+// Read a batch of images using the turboJpeg decoder
 inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, vector<string>::const_iterator imagesNamesStart)
 {
     tjhandle m_jpegDecompressor = tjInitDecompress();
@@ -686,7 +702,7 @@ inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, vector
         std::string inputImagePath = *(imagesNamesStart + i);
         FILE* fp = fopen(inputImagePath.c_str(), "rb");
         if(!fp)
-            std::cerr<<"\n unable to open file : "<<inputImagePath;
+            std::cerr << "\n unable to open file : "<<inputImagePath;
         fseek(fp, 0, SEEK_END);
         long jpegSize = ftell(fp);
         rewind(fp);
@@ -697,7 +713,7 @@ inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, vector
         // Decompress the JPEG data into an RGB image buffer
         int width, height, subsamp, color_space;
         if(tjDecompressHeader2(m_jpegDecompressor, jpegBuf, jpegSize, &width, &height, &color_space) != 0)
-            std::cerr<<"\n Jpeg image decode failed in tjDecompressHeader2";
+            std::cerr << "\n Jpeg image decode failed in tjDecompressHeader2";
         Rpp8u* rgbBuf;
         int elementsInRow;
         if(descPtr->c == 3)
@@ -705,14 +721,14 @@ inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, vector
             elementsInRow = width * descPtr->c;
             rgbBuf= (Rpp8u*)malloc(width * height * 3);
             if(tjDecompress2(m_jpegDecompressor, jpegBuf, jpegSize, rgbBuf, width, width * 3, height, TJPF_RGB, TJFLAG_ACCURATEDCT) != 0)
-                std::cerr<<"\n Jpeg image decode failed ";
+                std::cerr << "\n Jpeg image decode failed ";
         }
         else
         {
             elementsInRow = width;
             rgbBuf= (Rpp8u*)malloc(width * height);
             if(tjDecompress2(m_jpegDecompressor, jpegBuf, jpegSize, rgbBuf, width, width, height, TJPF_GRAY, 0) != 0)
-                std::cerr<<"\n Jpeg image decode failed ";
+                std::cerr << "\n Jpeg image decode failed ";
         }
         // Copy the decompressed image buffer to the RPP input buffer
         Rpp8u *inputTemp = input + (i * descPtr->strides.nStride);
@@ -730,6 +746,7 @@ inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, vector
     tjDestroy(m_jpegDecompressor);
 }
 
+// Write a batch of images using the OpenCV library
 inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDescPtr dstDescPtr, vector<string>::const_iterator imagesNamesStart, RpptImagePatch *dstImgSizes, int maxImageDump)
 {
     // create output folder
@@ -790,6 +807,7 @@ inline void remove_substring(string &str, string &pattern)
    }
 }
 
+// compares the output of PKD3-PKD3 variants
 void compare_pkd(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
 {
     Rpp8u *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef;
@@ -820,6 +838,7 @@ void compare_pkd(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr, RpptIm
     }
 }
 
+// compares the output of PLN3-PLN3 and PLN1-PLN1 variants
 void compare_pln(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
 {
     Rpp8u *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef, *outputTempChn, *outputTempRefChn;
@@ -926,16 +945,16 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     else
         compare_pln(output, refOutput, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
 
-    std::cerr<<std::endl<<"Results for "<<func<<" :"<<std::endl;
+    std::cerr << std::endl << "Results for " << func << " :" << std::endl;
     std::string status = func + ": ";
     if(fileMatch == dstDescPtr->n)
     {
-        std::cerr<<"PASSED!"<<std::endl;
+        std::cerr << "PASSED!" << std::endl;
         status += "PASSED";
     }
     else
     {
-        std::cerr<<"FAILED! "<<fileMatch<<"/"<<dstDescPtr->n<<" outputs are matching with reference outputs"<<std::endl;
+        std::cerr << "FAILED! " << fileMatch << "/" << dstDescPtr->n << " outputs are matching with reference outputs" << std::endl;
         status += "FAILED";
     }
 

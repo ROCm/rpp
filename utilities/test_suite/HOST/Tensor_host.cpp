@@ -130,7 +130,7 @@ int main(int argc, char **argv)
 
     if(batchSize > MAX_BATCH_SIZE)
     {
-        std::cerr<<"\n Batchsize should be less than or equal to "<<MAX_IMAGE_DUMP << " Aborting!";
+        std::cerr << "\n Batchsize should be less than or equal to "<<MAX_IMAGE_DUMP << " Aborting!";
         exit(0);
     }
 
@@ -212,7 +212,7 @@ int main(int argc, char **argv)
         search_jpg_files(srcSecond, imageNamesSecond, imageNamesPathSecond);
         if(imageNames.size() != imageNamesSecond.size())
         {
-            std::cerr <<" \n The number of images in the input folders must be the same.";
+            std::cerr << " \n The number of images in the input folders must be the same.";
             exit(0);
         }
     }
@@ -227,7 +227,7 @@ int main(int argc, char **argv)
 
     if(!noOfImages)
     {
-        std::cerr<<"Not able to find any images in the folder specified. Please check the input path";
+        std::cerr << "Not able to find any images in the folder specified. Please check the input path";
         exit(0);
     }
 
@@ -236,13 +236,6 @@ int main(int argc, char **argv)
         sort(imageNames.begin(), imageNames.end());
         if(dualInputCase)
             sort(imageNamesSecond.begin(), imageNamesSecond.end());
-    }
-
-    // Check if any of maxWidth and maxHeight is less than or equal to 0
-    if(MAX_HEIGHT <= 0 || MAX_WIDTH <= 0)
-    {
-        std::cerr<<"Unable to read images properly.Please check the input path of the files specified";
-        exit(0);
     }
 
     // Initialize ROI tensors for src/dst
@@ -301,7 +294,7 @@ int main(int argc, char **argv)
     input_second = static_cast<Rpp8u *>(calloc(inputBufferSize, 1));
     output = static_cast<Rpp8u *>(calloc(outputBufferSize, 1));
 
-    // Run case-wise RPP API and measure time
+    // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
     rppHandle_t handle;
     rppCreateWithBatchSize(&handle, batchSize);
 
