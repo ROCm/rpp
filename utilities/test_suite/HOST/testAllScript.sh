@@ -74,7 +74,7 @@ else
     CASE_LIST="${@:9}"
 fi
 
-# <<<<<<<<<<<<<< VALIDATION CHECKS FOR ALL OPTIONS >>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# <<<<<<<<<<<<<< VALIDATION CHECKS FOR ALL INPUT PARAMETERS >>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 if [[ "$TEST_TYPE" -ne 0 ]] && [[ "$TEST_TYPE" -ne 1 ]]; then
     echo "Invalid TEST_TYPE specified. TEST_TYPE should be 0/1 (0 = Unittests / 1 = Performancetests)"
@@ -85,8 +85,8 @@ elif [[ "$QA_MODE" -ne 0 ]] && [[ "$QA_MODE" -ne 1 ]]; then
 elif [[ "$DECODER_TYPE" -ne 0 ]] && [[ "$DECODER_TYPE" -ne 1 ]]; then
     echo "Decoder Type must be in the 0/1 (0 = OpenCV / 1 = TurboJPEG). Aborting!"
     exit 0
-elif [[ "$NUM_ITERATIONS" < 0 ]]; then
-    echo "Number of Iterations must be greater than 0. Aborting!"
+elif [[ "$NUM_ITERATIONS" < 1 ]]; then
+    echo "Number of Iterations must be greater than or equal to 1. Aborting!"
     exit 0
 elif [[ "$BATCH_SIZE" < 1 ]]; then
     echo "Batch size must be greater than or equal to 1. Aborting!"
@@ -102,13 +102,18 @@ for case in $CASE_LIST; do
     fi
 done
 
+if [[ $test_type -eq 0 && $numIterations -gt 1 ]]; then
+    echo "Number of iterations should be 1 in case of unittests"
+    exit 0
+fi
+
 if [[ "$TEST_TYPE" -eq 0 ]]; then
     NUM_ITERATIONS="1"
 fi
 
 # <<<<<<<<<<<<<< REMOVE FOLDERS FROM PREVIOUS RUN BASED ON PRESERVE_OUTPUT >>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-if [ "$PRESERVE_OUTPUT" -ne 1 ]; then
+if [ "$PRESERVE_OUTPUT" -eq 0 ]; then
     VALIDATE_FOLDERS "$cwd" "OUTPUT_IMAGES_HOST"
     VALIDATE_FOLDERS "$cwd" "QA_RESULTS_HOST"
     VALIDATE_FOLDERS "$cwd" "OUTPUT_PERFORMANCE_LOGS_HOST"

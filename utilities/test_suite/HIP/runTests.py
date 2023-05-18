@@ -99,25 +99,25 @@ def generate_performance_reports(d_counter, TYPE_LIST):
         print("\n\n\nKernels tested - ", d_counter[TYPE], "\n\n")
         df = pd.read_csv(RESULTS_DIR + "/consolidated_results_" + TYPE + ".stats.csv")
         df["AverageMs"] = df["AverageNs"] / 1000000
-        dfPrint = df.drop(['Percentage'], axis=1)
+        dfPrint = df.drop(['Percentage'], axis = 1)
         dfPrint["HIP Kernel Name"] = dfPrint.iloc[:,0].str.lstrip("Hip_")
         dfPrint_noIndices = dfPrint.astype(str)
-        dfPrint_noIndices.replace(['0', '0.0'], '', inplace=True)
-        dfPrint_noIndices = dfPrint_noIndices.to_string(index=False)
+        dfPrint_noIndices.replace(['0', '0.0'], '', inplace = True)
+        dfPrint_noIndices = dfPrint_noIndices.to_string(index = False)
         print(dfPrint_noIndices)
 
 def rpp_test_suite_parser_and_validator():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_path1", type = str, default = inFilePath1, help = "Path to the input folder 1")
     parser.add_argument("--input_path2", type = str, default = inFilePath2, help = "Path to the input folder 2")
-    parser.add_argument("--case_start", type = int, default = 0, help="Testing range starting case # - (0:84)")
-    parser.add_argument("--case_end", type = int, default = 84, help="Testing range ending case # - (0:84)")
-    parser.add_argument('--test_type', type = int, default = 0, help="Type of Test - (0 = Unit tests / 1 = Performance tests)")
-    parser.add_argument('--case_list', nargs = "+", help="List of case numbers to list", required=False)
-    parser.add_argument('--profiling', type = str , default='NO', help='Run with profiler? - (YES/NO)', required=False)
+    parser.add_argument("--case_start", type = int, default = 0, help = "Testing range starting case # - (0:84)")
+    parser.add_argument("--case_end", type = int, default = 84, help = "Testing range ending case # - (0:84)")
+    parser.add_argument('--test_type', type = int, default = 0, help = "Type of Test - (0 = Unit tests / 1 = Performance tests)")
+    parser.add_argument('--case_list', nargs = "+", help = "List of case numbers to list", required = False)
+    parser.add_argument('--profiling', type = str , default = 'NO', help = 'Run with profiler? - (YES/NO)', required = False)
     parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Output images from tests will be compared with golden outputs - (0 / 1)", required = False)
     parser.add_argument('--decoder_type', type = int, default = 0, help = "Type of Decoder to decode the input data - (0 = TurboJPEG / 1 = OpenCV)")
-    parser.add_argument('--num_iterations', type = int, default = 0, help = "Specifies the number of iterations for running the performance tests")
+    parser.add_argument('--num_iterations', type = int, default = 1, help = "Specifies the number of iterations for running the performance tests")
     parser.add_argument('--preserve_output', type = int, default = 1, help = "preserves the output of the program - (0 = override output / 1 = preserve output )" )
     parser.add_argument('--batch_size', type = int, default = 1, help = "Specifies the batch size to use for running tests. Default is 1.")
     args = parser.parse_args()
@@ -145,15 +145,19 @@ def rpp_test_suite_parser_and_validator():
     elif args.case_list is not None and args.case_start > 0 and args.case_end < 84:
         print("Invalid input! Please provide only 1 option between case_list, case_start and case_end")
         exit(0)
-    elif args.num_iterations < 0:
+    elif args.num_iterations <= 0:
         print("Number of Iterations must be greater than 0. Aborting!")
         exit(0)
     elif args.preserve_output < 0 or args.preserve_output > 1:
         print("Preserve Output must be in the 0/1 (0 = override / 1 = preserve). Aborting")
         exit(0)
-    elif args.batch_size < 0:
+    elif args.batch_size <= 0:
         print("Batch size must be greater than 0. Aborting!")
         exit(0)
+    elif args.profiling != 'YES' and args.profiling != 'NO':
+        print("Profiling option value must be either 'YES' or 'NO'.")
+        exit(0)
+
 
     if args.case_list is None:
         args.case_list = range(args.case_start, args.case_end + 1)
@@ -208,7 +212,7 @@ dstPath = outFilePath
 if(testType == 0):
     subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "0", str(qaMode), str(decoderType), str(preserveOutput), str(batchSize), " ".join(caseList)])  # nosec
 
-    layoutDict ={0:"PKD3", 1:"PLN3", 2:"PLN1"}
+    layoutDict = {0:"PKD3", 1:"PLN3", 2:"PLN1"}
     if qaMode == 0:
         create_layout_directories(dstPath, layoutDict)
 else:
@@ -277,7 +281,7 @@ else:
             # Print summary of log
             print("\n\nFunctionality\t\t\t\t\t\tFrames Count\tmax(ms/batch)\t\tmin(ms/batch)\t\tavg(ms/batch)\n")
             if len(functions) != 0:
-                maxCharLength = len(max(functions, key=len))
+                maxCharLength = len(max(functions, key = len))
                 functions = [x + (' ' * (maxCharLength - len(x))) for x in functions]
                 for i, func in enumerate(functions):
                     print(func + "\t" + str(frames[i]) + "\t\t" + str(maxVals[i]) + "\t" + str(minVals[i]) + "\t" + str(avgVals[i]))
@@ -309,7 +313,7 @@ else:
             new_file = open(RESULTS_DIR + "/consolidated_results_" + TYPE + ".stats.csv",'w')
             new_file.write('"HIP Kernel Name","Calls","TotalDurationNs","AverageNs","Percentage"\n')
 
-            prev=""
+            prev = ""
 
             # Loop through cases
             for CASE_NUM in CASE_NUM_LIST:

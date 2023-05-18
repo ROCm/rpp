@@ -97,10 +97,10 @@ def rpp_test_suite_parser_and_validator():
     elif args.case_list is not None and args.case_start > 0 and args.case_end < 84:
         print("Invalid input! Please provide only 1 option between case_list, case_start and case_end")
         exit(0)
-    elif args.num_iterations < 0:
+    elif args.num_iterations <= 0:
         print("Number of Iterations must be greater than 0. Aborting!")
         exit(0)
-    elif args.batch_size < 0:
+    elif args.batch_size <= 0:
         print("Batch size must be greater than 0. Aborting!")
         exit(0)
     elif args.preserve_output < 0 or args.preserve_output > 1:
@@ -177,7 +177,7 @@ if qaMode and testType == 0:
     f.write(caseInfo)
 print("\n-------------- " + caseInfo + " --------------")
 
-layoutDict ={0:"PKD3", 1:"PLN3", 2:"PLN1"}
+layoutDict = {0:"PKD3", 1:"PLN3", 2:"PLN1"}
 # unit tests and QA mode disabled
 if testType == 0 and qaMode == 0:
     create_layout_directories(dstPath, layoutDict)
@@ -246,7 +246,7 @@ elif (testType == 1):
         # Print summary of log
         print("\n\nFunctionality\t\t\t\t\t\tFrames Count\tmax(ms/batch)\t\tmin(ms/batch)\t\tavg(ms/batch)\n")
         if len(functions) != 0:
-            maxCharLength = len(max(functions, key=len))
+            maxCharLength = len(max(functions, key = len))
             functions = [x + (' ' * (maxCharLength - len(x))) for x in functions]
             for i, func in enumerate(functions):
                 print(func + "\t" + str(frames[i]) + "\t\t" + str(maxVals[i]) + "\t" + str(minVals[i]) + "\t" + str(avgVals[i]))

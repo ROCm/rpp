@@ -37,11 +37,11 @@ THE SOFTWARE.
 #include <turbojpeg.h>
 #include <boost/filesystem.hpp>
 
-#ifdef __HIP_PLATFORM_HCC__
-#include <hip/hip_fp16.h>
+#ifdef GPU_SUPPORT
+    #include <hip/hip_fp16.h>
 #else
-#include <half/half.hpp>
-using half_float::half;
+    #include <half/half.hpp>
+    using half_float::half;
 #endif
 
 typedef half Rpp16f;
@@ -89,7 +89,7 @@ void replicate_last_image_to_fill_batch(const string& lastFilePath, vector<strin
     }
 }
 
-// Retrieve the interpolation type used for image resizing or scaling operations.
+// returns the interpolation type used for image resizing or scaling operations.
 inline std::string get_interpolation_type(unsigned int val, RpptInterpolationType &interpolationType)
 {
     switch(val)
@@ -127,7 +127,7 @@ inline std::string get_interpolation_type(unsigned int val, RpptInterpolationTyp
     }
 }
 
-// Retrieve the noise type applied to an image
+// returns the noise type applied to an image
 inline std::string get_noise_type(unsigned int val)
 {
     switch(val)
@@ -278,7 +278,7 @@ inline void set_roi(vector<string>::const_iterator imagePathsStart, vector<strin
 {
     tjhandle tjInstance = tjInitDecompress();
     int i = 0;
-    for (auto imagePathIter = imagePathsStart; imagePathIter != imagePathsEnd; ++imagePathIter)
+    for (auto imagePathIter = imagePathsStart; imagePathIter != imagePathsEnd; ++imagePathIter, i++)
     {
         const string& imagePath = *imagePathIter;
         FILE* jpegFile = fopen(imagePath.c_str(), "rb");
@@ -306,9 +306,7 @@ inline void set_roi(vector<string>::const_iterator imagePathsStart, vector<strin
         roiTensorPtrDst[i].xywhROI = {0, 0, width, height};
         dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth;
         dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight;
-        i++;
     }
-
     tjDestroy(tjInstance);
 }
 
