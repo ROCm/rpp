@@ -131,7 +131,7 @@ int main(int argc, char **argv)
 
     if(batchSize > MAX_BATCH_SIZE)
     {
-        std:: << "\n Batchsize should be less than or equal to "<<MAX_IMAGE_DUMP << " Aborting!";
+        std::cerr << "\n Batchsize should be less than or equal to "<<MAX_IMAGE_DUMP << " Aborting!";
         exit(0);
     }
 
