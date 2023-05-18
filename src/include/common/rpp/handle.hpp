@@ -66,12 +66,13 @@ using rocblas_handle_ptr = RPP_MANAGE_PTR(rocblas_handle, rocblas_destroy_handle
 struct Handle : rppHandle
 {
     Handle();
-    Handle(size_t nBatchSize);
+    Handle(size_t nBatchSize, Rpp32u numThreads = 0);
     Handle(Handle&&) noexcept;
     ~Handle();
 
     InitHandle* GetInitHandle() const;
     size_t GetBatchSize() const;
+    Rpp32u GetNumThreads() const;
     void SetBatchSize(size_t bSize) const;
     void rpp_destroy_object_host();
     std::unique_ptr<HandleImpl> impl;
@@ -83,11 +84,12 @@ struct Handle : rppHandle
 {
     // Host handle related
     Handle();
-    Handle(size_t nBatchSize);
+    Handle(size_t nBatchSize, Rpp32u numThreads = 0);
     Handle(Handle&&) noexcept;
     ~Handle();
     InitHandle*  GetInitHandle() const;
     size_t GetBatchSize() const;
+    Rpp32u GetNumThreads() const;
     void SetBatchSize(size_t bSize) const;
     void rpp_destroy_object_host();
 

@@ -295,8 +295,10 @@ int main(int argc, char **argv)
     output = static_cast<Rpp8u *>(calloc(outputBufferSize, 1));
 
     // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
+    // If numThreads value passed is 0, number of OpenMP threads used by RPP will be set to batch size
+    Rpp32u numThreads = 0;
     rppHandle_t handle;
-    rppCreateWithBatchSize(&handle, batchSize);
+    rppCreateWithBatchSize(&handle, noOfImages, numThreads);
 
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0;
     double cpuTime, wallTime;
