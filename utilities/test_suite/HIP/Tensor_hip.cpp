@@ -37,12 +37,6 @@ THE SOFTWARE.
 #include <hip/hip_fp16.h>
 #include <fstream>
 
-#define DEBUG_MODE 0
-#define MAX_IMAGE_DUMP 20
-#define MAX_HEIGHT 2160
-#define MAX_WIDTH 3840
-#define MAX_BATCH_SIZE 512
-
 typedef half Rpp16f;
 
 using namespace cv;
@@ -106,12 +100,13 @@ int main(int argc, char **argv)
         printf("\nlayout type - (0 = PKD3/ 1 = PLN3/ 2 = PLN1) = %s", argv[10]);
         printf("\nqa mode - 0/1 = %s", argv[12]);
         printf("\ndecoder type - (0 = TurboJPEG / 1 = OpenCV) = %s", argv[13]);
+        printf("\nbatch size = %s", argv[14]);
     }
 
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
-        printf("\nUsage: <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:84> <number of iterations > 0> <verbosity = 0/1>>\n");
+        printf("\nUsage: <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:84> <number of iterations > 0> <batch size > 1> <verbosity = 0/1>>\n");
         return -1;
     }
 
@@ -131,7 +126,7 @@ int main(int argc, char **argv)
 
     if(batchSize > MAX_BATCH_SIZE)
     {
-        std::cerr << "\n Batchsize should be less than or equal to "<<MAX_IMAGE_DUMP << " Aborting!";
+        std::cerr << "\n Batchsize should be less than or equal to "<< MAX_BATCH_SIZE << " Aborting!";
         exit(0);
     }
 
@@ -158,6 +153,7 @@ int main(int argc, char **argv)
 
     // Set src/dst layout types in tensor descriptors
     set_descriptor_layout( srcDescPtr, dstDescPtr, layoutType, pln1OutTypeCase, outputFormatToggle);
+
     // Set src/dst data types in tensor descriptors
     set_descriptor_data_type(inputBitDepth, funcName, srcDescPtr, dstDescPtr);
 
@@ -313,8 +309,9 @@ int main(int argc, char **argv)
 
     //Allocate hip memory for src/dst
     hipMalloc(&d_input, inputBufferSize);
-    hipMalloc(&d_input_second, inputBufferSize);
     hipMalloc(&d_output, outputBufferSize);
+    if(dualInputCase)
+        hipMalloc(&d_input_second, inputBufferSize);
 
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numIterations, batchSize);
@@ -337,6 +334,7 @@ int main(int argc, char **argv)
                 read_image_batch_turbojpeg(inputu8, srcDescPtr, imagesPathStart);
             else
                 read_image_batch_opencv(inputu8, srcDescPtr, imagesPathStart);
+
             // if the input layout requested is PLN3, convert PKD3 inputs to PLN3 for first and second input batch
             if (layoutType == 1)
                 convert_pkd3_to_pln3(inputu8, srcDescPtr);
@@ -356,8 +354,9 @@ int main(int argc, char **argv)
 
             //copy decoded inputs to hip buffers
             hipMemcpy(d_input, input, inputBufferSize, hipMemcpyHostToDevice);
-            hipMemcpy(d_input_second, input_second, inputBufferSize, hipMemcpyHostToDevice);
             hipMemcpy(d_output, output, outputBufferSize, hipMemcpyHostToDevice);
+            if(dualInputCase)
+                hipMemcpy(d_input_second, input_second, inputBufferSize, hipMemcpyHostToDevice);
 
             // Uncomment to run test case with an xywhROI override
             // roi.xywhROI = {0, 0, 25, 25};
@@ -399,9 +398,7 @@ int main(int argc, char **argv)
 
                 Rpp32f gammaVal[batchSize];
                 for (i = 0; i < batchSize; i++)
-                {
                     gammaVal[i] = 1.9;
-                }
 
                 startWallTime = omp_get_wtime();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
@@ -417,9 +414,7 @@ int main(int argc, char **argv)
 
                 Rpp32f alpha[batchSize];
                 for (i = 0; i < batchSize; i++)
-                {
                     alpha[i] = 0.4;
-                }
 
                 startWallTime = omp_get_wtime();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
@@ -455,9 +450,7 @@ int main(int argc, char **argv)
 
                 Rpp32f exposureFactor[batchSize];
                 for (i = 0; i < batchSize; i++)
-                {
                     exposureFactor[i] = 1.4;
-                }
 
                 startWallTime = omp_get_wtime();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)

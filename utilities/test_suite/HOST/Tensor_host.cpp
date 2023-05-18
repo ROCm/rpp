@@ -37,12 +37,6 @@ THE SOFTWARE.
 #include <half/half.hpp>
 #include <fstream>
 
-#define DEBUG_MODE 0
-#define MAX_IMAGE_DUMP 20
-#define MAX_HEIGHT 2160
-#define MAX_WIDTH 3840
-#define MAX_BATCH_SIZE 512
-
 using namespace cv;
 using namespace std;
 
@@ -106,12 +100,13 @@ int main(int argc, char **argv)
         printf("\nlayout type - (0 = PKD3/ 1 = PLN3/ 2 = PLN1) = %s", argv[10]);
         printf("\nqa mode - 0/1 = %s", argv[12]);
         printf("\ndecoder type - (0 = TurboJPEG / 1 = OpenCV) = %s", argv[13]);
+        printf("\nbatch size = %s", argv[14]);
     }
 
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
-        printf("\nUsage: <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:84> <number of iterations > 0> <verbosity = 0/1>>\n");
+        printf("\nUsage: <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:84> <number of iterations > 0>  <batch size > 1> <verbosity = 0/1>>\n");
     }
 
     if (layoutType == 2)
@@ -130,7 +125,7 @@ int main(int argc, char **argv)
 
     if(batchSize > MAX_BATCH_SIZE)
     {
-        std::cerr << "\n Batchsize should be less than or equal to "<<MAX_IMAGE_DUMP << " Aborting!";
+        std::cerr << "\n Batchsize should be less than or equal to "<< MAX_BATCH_SIZE << " Aborting!";
         exit(0);
     }
 
@@ -325,6 +320,7 @@ int main(int argc, char **argv)
                 read_image_batch_turbojpeg(inputu8, srcDescPtr, imagesPathStart);
             else
                 read_image_batch_opencv(inputu8, srcDescPtr, imagesPathStart);
+
             // if the input layout requested is PLN3, convert PKD3 inputs to PLN3 for first and second input batch
             if (layoutType == 1)
                 convert_pkd3_to_pln3(inputu8, srcDescPtr);
@@ -382,9 +378,7 @@ int main(int argc, char **argv)
 
                     Rpp32f gammaVal[batchSize];
                     for (i = 0; i < batchSize; i++)
-                    {
                         gammaVal[i] = 1.9;
-                    }
 
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();
@@ -401,9 +395,7 @@ int main(int argc, char **argv)
 
                     Rpp32f alpha[batchSize];
                     for (i = 0; i < batchSize; i++)
-                    {
                         alpha[i] = 0.4;
-                    }
 
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();
@@ -441,9 +433,7 @@ int main(int argc, char **argv)
 
                     Rpp32f exposureFactor[batchSize];
                     for (i = 0; i < batchSize; i++)
-                    {
                         exposureFactor[i] = 1.4;
-                    }
 
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();

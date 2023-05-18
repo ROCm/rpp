@@ -52,6 +52,13 @@ namespace fs = boost::filesystem;
 
 
 #define CUTOFF 1
+#define DEBUG_MODE 0
+#define MAX_IMAGE_DUMP 20
+#define MAX_HEIGHT 2160
+#define MAX_WIDTH 3840
+#define MAX_BATCH_SIZE 512
+#define MAX_REFERENCE_HEIGHT 150
+#define MAX_REFERENCE_WIDTH 150
 
 std::map<int, string> augmentationMap =
 {
@@ -578,14 +585,14 @@ inline void convert_pkd3_to_pln3(Rpp8u *input, RpptDescPtr descPtr)
 // Opens a folder and recursively search for .jpg files
 void open_folder(const string& folderPath, vector<string>& imageNames, vector<string>& imageNamesPath)
 {
-    auto src_dir = opendir (folderPath.c_str());
+    auto src_dir = opendir(folderPath.c_str());
     struct dirent* entity;
     std::string fileName = " ";
 
     if (src_dir == nullptr)
         std::cerr << "\n ERROR: Failed opening the directory at " <<folderPath;
 
-    while((entity = readdir (src_dir)) != nullptr)
+    while((entity = readdir(src_dir)) != nullptr)
     {
         string entry_name(entity->d_name);
         if (entry_name == "." || entry_name == "..")
@@ -596,9 +603,8 @@ void open_folder(const string& folderPath, vector<string>& imageNames, vector<st
         filePath.append(entity->d_name);
         fs::path pathObj(filePath);
         if(fs::exists(pathObj) && fs::is_directory(pathObj))
-        {
             open_folder(filePath, imageNames, imageNamesPath);
-        }
+
         if (fileName.size() > 4 && fileName.substr(fileName.size() - 4) == ".jpg")
         {
             imageNamesPath.push_back(filePath);
@@ -632,7 +638,6 @@ void search_jpg_files(const string& folder_path, vector<string>& imageNames, vec
         entry_list.push_back(entry_name);
     }
     closedir(sub_dir);
-    std::sort(entry_list.begin(), entry_list.end());
 
     for (unsigned dir_count = 0; dir_count < entry_list.size(); ++dir_count)
     {
@@ -666,14 +671,14 @@ inline void read_image_batch_opencv(Rpp8u *input, RpptDescPtr descPtr, vector<st
     {
         Rpp8u *inputTemp = input + (i * descPtr->strides.nStride);
         string inputImagePath = *(imagesNamesStart + i);
-        cv::Mat image, imageBgr;
+        Mat image, imageBgr;
         if (descPtr->c == 3)
         {
-            imageBgr = cv::imread(inputImagePath, 1);
-            cv::cvtColor(imageBgr, image, cv::COLOR_BGR2RGB);
+            imageBgr = imread(inputImagePath, 1);
+            cvtColor(imageBgr, image, COLOR_BGR2RGB);
         }
         else if (descPtr->c == 1)
-            image = cv::imread(inputImagePath, 0);
+            image = imread(inputImagePath, 0);
 
         int width = image.cols;
         int height = image.rows;
@@ -683,7 +688,7 @@ inline void read_image_batch_opencv(Rpp8u *input, RpptDescPtr descPtr, vector<st
         {
             memcpy(inputTemp, inputImage, elementsInRow * sizeof(Rpp8u));
             inputImage += elementsInRow;
-            inputTemp += descPtr->strides.wStride;
+            inputTemp += descPtr->w * descPtr->c;;
         }
     }
 }
@@ -751,10 +756,11 @@ inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDes
     mkdir(outputFolder.c_str(), 0700);
     outputFolder += "/";
     static int cnt = 1;
+    static int imageCnt = 0;
 
     Rpp32u elementsInRowMax = dstDescPtr->w * dstDescPtr->c;
     Rpp8u *offsettedOutput = output + dstDescPtr->offsetInBytes;
-    for (int j = 0, imageCnt = 0; (j < dstDescPtr->n) && (imageCnt < maxImageDump) ; j++)
+    for (int j = 0; (j < dstDescPtr->n) && (imageCnt < maxImageDump) ; j++, imageCnt++)
     {
         Rpp32u height = dstImgSizes[j].height;
         Rpp32u width = dstImgSizes[j].width;
@@ -790,7 +796,6 @@ inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDes
         }
         else
             imwrite(outputImagePath, matOutputImage);
-        imageCnt++;
         free(tempOutput);
     }
 }
@@ -806,7 +811,7 @@ inline void remove_substring(string &str, string &pattern)
 }
 
 // compares the output of PKD3-PKD3 variants
-void compare_pkd(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
+void compare_outputs_pkd(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
 {
     Rpp8u *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef;
     for(int imageCnt = 0; imageCnt < dstDescPtr->n; imageCnt++)
@@ -825,7 +830,7 @@ void compare_pkd(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr, RpptIm
             for(int j = 0; j < width; j++)
             {
                 outVal = rowTemp + j;
-                outRefVal = rowTempRef + j ;
+                outRefVal = rowTempRef + j;
                 int diff = abs(*outVal - *outRefVal);
                 if(diff <= CUTOFF)
                     matched_idx++;
@@ -837,7 +842,7 @@ void compare_pkd(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr, RpptIm
 }
 
 // compares the output of PLN3-PLN3 and PLN1-PLN1 variants
-void compare_pln(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
+void compare_outputs_pln(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
 {
     Rpp8u *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef, *outputTempChn, *outputTempRefChn;
     for(int imageCnt = 0; imageCnt < dstDescPtr->n; imageCnt++)
@@ -880,8 +885,8 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     string refPath = get_current_dir_name();
     string pattern = "/build";
     string refFile = "";
-    int refOutputWidth = 152;
-    int refOutputHeight = 150;
+    int refOutputWidth = ((MAX_REFERENCE_WIDTH / 8) * 8) + 8;
+    int refOutputHeight = MAX_REFERENCE_HEIGHT;
     int refOutputSize = refOutputHeight * refOutputWidth * dstDescPtr->c;
 
     remove_substring(refPath, pattern);
@@ -939,9 +944,9 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
 
     int fileMatch = 0;
     if(dstDescPtr->layout == RpptLayout::NHWC)
-        compare_pkd(output, refOutput, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+        compare_outputs_pkd(output, refOutput, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
     else
-        compare_pln(output, refOutput, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+        compare_outputs_pln(output, refOutput, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
 
     std::cerr << std::endl << "Results for " << func << " :" << std::endl;
     std::string status = func + ": ";

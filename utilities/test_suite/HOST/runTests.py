@@ -69,7 +69,7 @@ def rpp_test_suite_parser_and_validator():
     parser.add_argument('--case_list', nargs = "+", help = "List of case numbers to list", required = False)
     parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Output images from tests will be compared with golden outputs - (0 / 1)", required = False)
     parser.add_argument('--decoder_type', type = int, default = 0, help = "Type of Decoder to decode the input data - (0 = TurboJPEG / 1 = OpenCV)")
-    parser.add_argument('--num_iterations', type = int, default = 0, help = "Specifies the number of iterations for running the performance tests")
+    parser.add_argument('--num_iterations', type = int, default = 1, help = "Specifies the number of iterations for running the performance tests")
     parser.add_argument('--preserve_output', type = int, default = 1, help = "preserves the output of the program - (0 = override output / 1 = preserve output )" )
     parser.add_argument('--batch_size', type = int, default = 1, help = "Specifies the batch size to use for running tests. Default is 1.")
     args = parser.parse_args()
@@ -77,6 +77,7 @@ def rpp_test_suite_parser_and_validator():
     # check if the folder exists
     validate_path(args.input_path1)
     validate_path(args.input_path2)
+    validate_path(qaInputFile)
 
     # validate the parameters passed by user
     if ((args.case_start < 0 or args.case_start > 84) or (args.case_end < 0 or args.case_end > 84)):
@@ -136,7 +137,7 @@ numIterations = args.num_iterations
 preserveOutput = args.preserve_output
 batchSize = args.batch_size
 
-if os.path.abspath(qaInputFile) != os.path.abspath(srcPath1):
+if qaMode and os.path.abspath(qaInputFile) != os.path.abspath(srcPath1):
     print("QA mode should only run with the given Input path: ", qaInputFile)
     exit(0)
 
