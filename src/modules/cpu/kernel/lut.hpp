@@ -1,5 +1,4 @@
 #include "rppdefs.h"
-#include "rpp_cpu_simd.hpp"
 #include "rpp_cpu_common.hpp"
 
 RppStatus lut_u8_u8_host_tensor(Rpp8u *srcPtr,
@@ -12,7 +11,6 @@ RppStatus lut_u8_u8_host_tensor(Rpp8u *srcPtr,
                                 RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    Rpp32u lutSize = 65536;
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(dstDescPtr->n)
@@ -25,7 +23,6 @@ RppStatus lut_u8_u8_host_tensor(Rpp8u *srcPtr,
         Rpp8u *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
-        
 
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
 
@@ -56,7 +53,6 @@ RppStatus lut_u8_u8_host_tensor(Rpp8u *srcPtr,
                     *dstPtrTempR = lutPtr[srcPtrTemp[0]];
                     *dstPtrTempG = lutPtr[srcPtrTemp[1]];
                     *dstPtrTempB = lutPtr[srcPtrTemp[2]];
-
                     srcPtrTemp += 3;
                     dstPtrTempR++;
                     dstPtrTempG++;
@@ -93,7 +89,6 @@ RppStatus lut_u8_u8_host_tensor(Rpp8u *srcPtr,
                     dstPtrTemp[0] = lutPtr[*srcPtrTempR];
                     dstPtrTemp[1] = lutPtr[*srcPtrTempG];
                     dstPtrTemp[2] = lutPtr[*srcPtrTempB];
-
                     srcPtrTempR++;
                     srcPtrTempG++;
                     srcPtrTempB++;
@@ -126,7 +121,6 @@ RppStatus lut_u8_u8_host_tensor(Rpp8u *srcPtr,
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         *dstPtrTemp = lutPtr[*srcPtrTemp];
-
                         srcPtrTemp++;
                         dstPtrTemp++;
                     }
@@ -154,7 +148,6 @@ RppStatus lut_u8_f16_host_tensor(Rpp8u *srcPtr,
                                  RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    Rpp32u lutSize = 65536;
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(dstDescPtr->n)
@@ -168,7 +161,7 @@ RppStatus lut_u8_f16_host_tensor(Rpp8u *srcPtr,
         Rpp16f *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
-        
+
 
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
 
@@ -202,7 +195,6 @@ RppStatus lut_u8_f16_host_tensor(Rpp8u *srcPtr,
                     *dstPtrTempR = lutPtr[srcPtrTemp[0]];
                     *dstPtrTempG = lutPtr[srcPtrTemp[1]];
                     *dstPtrTempB = lutPtr[srcPtrTemp[2]];
-
                     srcPtrTemp += 3;
                     dstPtrTempR++;
                     dstPtrTempG++;
@@ -241,7 +233,6 @@ RppStatus lut_u8_f16_host_tensor(Rpp8u *srcPtr,
                     dstPtrTemp[0] = lutPtr[*srcPtrTempR];
                     dstPtrTemp[1] = lutPtr[*srcPtrTempG];
                     dstPtrTemp[2] = lutPtr[*srcPtrTempB];
-
                     srcPtrTempR++;
                     srcPtrTempG++;
                     srcPtrTempB++;
@@ -276,7 +267,6 @@ RppStatus lut_u8_f16_host_tensor(Rpp8u *srcPtr,
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         *dstPtrTemp = lutPtr[*srcPtrTemp];
-
                         srcPtrTemp++;
                         dstPtrTemp++;
                     }
@@ -304,7 +294,6 @@ RppStatus lut_u8_f32_host_tensor(Rpp8u *srcPtr,
                                  RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    Rpp32u lutSize = 65536;
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(dstDescPtr->n)
@@ -318,7 +307,6 @@ RppStatus lut_u8_f32_host_tensor(Rpp8u *srcPtr,
         Rpp32f *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
-        
 
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
 
@@ -352,7 +340,6 @@ RppStatus lut_u8_f32_host_tensor(Rpp8u *srcPtr,
                     *dstPtrTempR = lutPtr[srcPtrTemp[0]];
                     *dstPtrTempG = lutPtr[srcPtrTemp[1]];
                     *dstPtrTempB = lutPtr[srcPtrTemp[2]];
-
                     srcPtrTemp += 3;
                     dstPtrTempR++;
                     dstPtrTempG++;
@@ -391,7 +378,6 @@ RppStatus lut_u8_f32_host_tensor(Rpp8u *srcPtr,
                     dstPtrTemp[0] = lutPtr[*srcPtrTempR];
                     dstPtrTemp[1] = lutPtr[*srcPtrTempG];
                     dstPtrTemp[2] = lutPtr[*srcPtrTempB];
-
                     srcPtrTempR++;
                     srcPtrTempG++;
                     srcPtrTempB++;
@@ -426,7 +412,6 @@ RppStatus lut_u8_f32_host_tensor(Rpp8u *srcPtr,
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         *dstPtrTemp = lutPtr[*srcPtrTemp];
-
                         srcPtrTemp++;
                         dstPtrTemp++;
                     }
@@ -454,7 +439,6 @@ RppStatus lut_i8_i8_host_tensor(Rpp8s *srcPtr,
                                 RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    Rpp32u lutSize = 65536;
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(dstDescPtr->n)
@@ -467,7 +451,7 @@ RppStatus lut_i8_i8_host_tensor(Rpp8s *srcPtr,
         Rpp8s *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
-        
+
 
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
 
@@ -498,7 +482,6 @@ RppStatus lut_i8_i8_host_tensor(Rpp8s *srcPtr,
                     *dstPtrTempR = lutPtr[(Rpp32s)(srcPtrTemp[0]) + 128];
                     *dstPtrTempG = lutPtr[(Rpp32s)(srcPtrTemp[1]) + 128];
                     *dstPtrTempB = lutPtr[(Rpp32s)(srcPtrTemp[2]) + 128];
-
                     srcPtrTemp += 3;
                     dstPtrTempR++;
                     dstPtrTempG++;
@@ -535,7 +518,6 @@ RppStatus lut_i8_i8_host_tensor(Rpp8s *srcPtr,
                     dstPtrTemp[0] = lutPtr[(Rpp32s)(*srcPtrTempR) + 128];
                     dstPtrTemp[1] = lutPtr[(Rpp32s)(*srcPtrTempG) + 128];
                     dstPtrTemp[2] = lutPtr[(Rpp32s)(*srcPtrTempB) + 128];
-
                     srcPtrTempR++;
                     srcPtrTempG++;
                     srcPtrTempB++;
@@ -567,10 +549,10 @@ RppStatus lut_i8_i8_host_tensor(Rpp8s *srcPtr,
                     int vectorLoopCount = 0;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        *dstPtrTemp = lutPtr[(Rpp32s)*srcPtrTemp + 128];
-
-                        srcPtrTemp++;
-                        dstPtrTemp++;
+                        //*dstPtrTemp = lutPtr[(Rpp32s)*srcPtrTemp + 128];
+                        *dstPtrTemp++ = lutPtr[(Rpp32s)*srcPtrTemp++ + 128];
+                        //srcPtrTemp++;
+                        //dstPtrTemp++;
                     }
 
                     srcPtrRow += srcDescPtr->strides.hStride;
