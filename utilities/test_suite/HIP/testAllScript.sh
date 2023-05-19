@@ -55,7 +55,7 @@ if (( "$#" < 4 )); then
     TEST_TYPE="0"
     QA_MODE="0"
     DECODER_TYPE="0"
-    NUM_ITERATIONS="1"
+    NUM_RUNS="1"
     PRESERVE_OUTPUT="1"
     BATCH_SIZE="1"
     CASE_LIST=()
@@ -67,7 +67,7 @@ else
     SRC_FOLDER_1="$1"
     SRC_FOLDER_2="$2"
     TEST_TYPE="$3"
-    NUM_ITERATIONS="$4"
+    NUM_RUNS="$4"
     PROFILING_OPTION="$5"
     QA_MODE="$6"
     DECODER_TYPE="$7"
@@ -87,7 +87,7 @@ elif [[ "$QA_MODE" -ne 0 ]] && [[ "$QA_MODE" -ne 1 ]]; then
 elif [[ "$DECODER_TYPE" -ne 0 ]] && [[ "$DECODER_TYPE" -ne 1 ]]; then
     echo "Decoder Type must be in the 0/1 (0 = OpenCV / 1 = TurboJPEG). Aborting!"
     exit 0
-elif [[ "$NUM_ITERATIONS" < 1 ]]; then
+elif [[ "$NUM_RUNS" < 1 ]]; then
     echo "Number of Iterations must be greater than or equal to 1. Aborting!"
     exit 0
 elif [[ "$BATCH_SIZE" < 1 ]]; then
@@ -110,7 +110,7 @@ if [[ $test_type -eq 0 && $numIterations -gt 1 ]]; then
 fi
 
 if [[ "$TEST_TYPE" -eq 0 ]]; then
-    NUM_ITERATIONS="1"
+    NUM_RUNS="1"
 fi
 
 # <<<<<<<<<<<<<< REMOVE FOLDERS FROM PREVIOUS RUN BASED ON PRESERVE_OUTPUT >>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -254,25 +254,25 @@ if [ "$TEST_TYPE" -eq 0 ]; then
                         for ((kernelSize=3;kernelSize<=9;kernelSize+=2))
                         do
                             printf "\n./Tensor_hip $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER_TEMP $bitDepth $outputFormatToggle $case $kernelSize"
-                            ./Tensor_hip "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$kernelSize" "$NUM_ITERATIONS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE" "$BATCH_SIZE"
+                            ./Tensor_hip "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$kernelSize" "$NUM_RUNS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE" "$BATCH_SIZE"
                         done
                     elif [ "$case" -eq 8 ]
                     then
                         for ((noiseType=0;noiseType<3;noiseType++))
                         do
                             printf "\n./Tensor_hip $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER_TEMP $bitDepth $outputFormatToggle $case $kernelSize"
-                            ./Tensor_hip "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$kernelSize" "$NUM_ITERATIONS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE" "$BATCH_SIZE"
+                            ./Tensor_hip "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$kernelSize" "$NUM_RUNS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE" "$BATCH_SIZE"
                         done
                     elif [ "$case" -eq 21 ] || [ "$case" -eq 23 ] || [ "$case" -eq 24 ]
                     then
                         for ((interpolationType=0;interpolationType<6;interpolationType++))
                         do
                             printf "\n./Tensor_hip $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER_TEMP $bitDepth $outputFormatToggle $case $interpolationType"
-                            ./Tensor_hip "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$interpolationType" "$NUM_ITERATIONS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE" "$BATCH_SIZE"
+                            ./Tensor_hip "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$interpolationType" "$NUM_RUNS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE" "$BATCH_SIZE"
                         done
                     else
-                        printf "\n./Tensor_hip $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER_TEMP $bitDepth $outputFormatToggle $case ${NUM_ITERATIONS} ${TEST_TYPE} ${layout}"
-                        ./Tensor_hip "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" "$NUM_ITERATIONS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE" "$BATCH_SIZE"
+                        printf "\n./Tensor_hip $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER_TEMP $bitDepth $outputFormatToggle $case ${NUM_RUNS} ${TEST_TYPE} ${layout}"
+                        ./Tensor_hip "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" "$NUM_RUNS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE" "$BATCH_SIZE"
                     fi
 
                     echo "------------------------------------------------------------------------------------------"
@@ -326,25 +326,25 @@ else
                             for ((kernelSize=3;kernelSize<=9;kernelSize+=2))
                             do
                                 printf "\n./Tensor_hip $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER_TEMP $bitDepth $outputFormatToggle $case $kernelSize"
-                                ./Tensor_hip "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$kernelSize" "$NUM_ITERATIONS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE" "$BATCH_SIZE"| tee -a "$LOGGING_FOLDER/Tensor_hip_${log_file_layout}_raw_performance_log.txt"
+                                ./Tensor_hip "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$kernelSize" "$NUM_RUNS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE" "$BATCH_SIZE"| tee -a "$LOGGING_FOLDER/Tensor_hip_${log_file_layout}_raw_performance_log.txt"
                             done
                         elif [ "$case" -eq 8 ]
                         then
                             for ((noiseType=0;noiseType<3;noiseType++))
                             do
                                 printf "\n./Tensor_hip $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER_TEMP $bitDepth $outputFormatToggle $case $kernelSize"
-                                ./Tensor_hip "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$kernelSize" "$NUM_ITERATIONS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE" "$BATCH_SIZE"| tee -a "$LOGGING_FOLDER/Tensor_hip_${log_file_layout}_raw_performance_log.txt"
+                                ./Tensor_hip "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$kernelSize" "$NUM_RUNS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE" "$BATCH_SIZE"| tee -a "$LOGGING_FOLDER/Tensor_hip_${log_file_layout}_raw_performance_log.txt"
                             done
                         elif [ "$case" -eq 21 ] || [ "$case" -eq 23 ] || [ "$case" -eq 24 ]
                         then
                             for ((interpolationType=0;interpolationType<6;interpolationType++))
                             do
                                 printf "\n./Tensor_hip $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER_TEMP $bitDepth $outputFormatToggle $case $interpolationType"
-                                ./Tensor_hip "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$interpolationType" "$NUM_ITERATIONS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE" "$BATCH_SIZE"| tee -a "$LOGGING_FOLDER/Tensor_hip_${log_file_layout}_raw_performance_log.txt"
+                                ./Tensor_hip "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$interpolationType" "$NUM_RUNS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE" "$BATCH_SIZE"| tee -a "$LOGGING_FOLDER/Tensor_hip_${log_file_layout}_raw_performance_log.txt"
                             done
                         else
-                            printf "\n./Tensor_hip $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER_TEMP $bitDepth $outputFormatToggle $case ${NUM_ITERATIONS} ${TEST_TYPE} ${layout}"
-                            ./Tensor_hip "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" "$NUM_ITERATIONS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE" "$BATCH_SIZE"| tee -a "$LOGGING_FOLDER/Tensor_hip_${log_file_layout}_raw_performance_log.txt"
+                            printf "\n./Tensor_hip $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER_TEMP $bitDepth $outputFormatToggle $case ${NUM_RUNS} ${TEST_TYPE} ${layout}"
+                            ./Tensor_hip "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" "$NUM_RUNS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE" "$BATCH_SIZE"| tee -a "$LOGGING_FOLDER/Tensor_hip_${log_file_layout}_raw_performance_log.txt"
                         fi
 
                         echo "------------------------------------------------------------------------------------------"
@@ -360,21 +360,21 @@ else
                                         mkdir "$DST_FOLDER/Tensor_PKD3/case_$case"
                                     fi
                                     printf "\nrocprof --basenames on --timestamp on --stats -o $DST_FOLDER/Tensor_PKD3/case_$case/output_case$case" "_bitDepth$bitDepth" "_oft$outputFormatToggle" "_kernelSize$kernelSize.csv" "./Tensor_hip $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case $kernelSize 0"
-                                    rocprof --basenames on --timestamp on --stats -o "$DST_FOLDER/Tensor_PKD3/case_$case""/output_case""$case""_bitDepth""$bitDepth""_oft""$outputFormatToggle""_kernelSize""$kernelSize"".csv" ./Tensor_hip "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$kernelSize" "$NUM_ITERATIONS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE" "$BATCH_SIZE"| tee -a "$DST_FOLDER/Tensor_hip_pkd3_hip_raw_performance_log.txt"
+                                    rocprof --basenames on --timestamp on --stats -o "$DST_FOLDER/Tensor_PKD3/case_$case""/output_case""$case""_bitDepth""$bitDepth""_oft""$outputFormatToggle""_kernelSize""$kernelSize"".csv" ./Tensor_hip "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$kernelSize" "$NUM_RUNS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE" "$BATCH_SIZE"| tee -a "$DST_FOLDER/Tensor_hip_pkd3_hip_raw_performance_log.txt"
                                 elif [ $layout -eq 1 ]
                                 then
                                     if [ ! -d "$DST_FOLDER/Tensor_PLN3/case_$case" ]; then
                                         mkdir "$DST_FOLDER/Tensor_PLN3/case_$case"
                                     fi
                                     printf "\nrocprof --basenames on --timestamp on --stats -o $DST_FOLDER/Tensor_PLN3/case_$case/output_case$case" "_bitDepth$bitDepth" "_oft$outputFormatToggle" "_kernelSize$kernelSize.csv" "./Tensor_hip $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case $kernelSize 0"
-                                    rocprof --basenames on --timestamp on --stats -o "$DST_FOLDER/Tensor_PLN3/case_$case""/output_case""$case""_bitDepth""$bitDepth""_oft""$outputFormatToggle""_kernelSize""$kernelSize"".csv" ./Tensor_hip "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$kernelSize" "$NUM_ITERATIONS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE" "$BATCH_SIZE"| tee -a "$DST_FOLDER/Tensor_hip_pln3_hip_raw_performance_log.txt"
+                                    rocprof --basenames on --timestamp on --stats -o "$DST_FOLDER/Tensor_PLN3/case_$case""/output_case""$case""_bitDepth""$bitDepth""_oft""$outputFormatToggle""_kernelSize""$kernelSize"".csv" ./Tensor_hip "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$kernelSize" "$NUM_RUNS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE" "$BATCH_SIZE"| tee -a "$DST_FOLDER/Tensor_hip_pln3_hip_raw_performance_log.txt"
                                 elif [ $layout -eq 2 ]
                                 then
                                     if [ ! -d "$DST_FOLDER/Tensor_PLN1/case_$case" ]; then
                                         mkdir "$DST_FOLDER/Tensor_PLN1/case_$case"
                                     fi
                                     printf "\nrocprof --basenames on --timestamp on --stats -o $DST_FOLDER/Tensor_PLN1/case_$case/output_case$case" "_bitDepth$bitDepth" "_oft$outputFormatToggle" "_kernelSize$kernelSize.csv" "./Tensor_hip $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case $kernelSize 0"
-                                    rocprof --basenames on --timestamp on --stats -o "$DST_FOLDER/Tensor_PLN1/case_$case""/output_case""$case""_bitDepth""$bitDepth""_oft""$outputFormatToggle""_kernelSize""$kernelSize"".csv" ./Tensor_hip "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$kernelSize" "$NUM_ITERATIONS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE" "$BATCH_SIZE"| tee -a "$DST_FOLDER/Tensor_hip_pln1_hip_raw_performance_log.txt"
+                                    rocprof --basenames on --timestamp on --stats -o "$DST_FOLDER/Tensor_PLN1/case_$case""/output_case""$case""_bitDepth""$bitDepth""_oft""$outputFormatToggle""_kernelSize""$kernelSize"".csv" ./Tensor_hip "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$kernelSize" "$NUM_RUNS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE" "$BATCH_SIZE"| tee -a "$DST_FOLDER/Tensor_hip_pln1_hip_raw_performance_log.txt"
                                 fi
                             done
                         elif [ "$case" -eq 8 ]
@@ -387,21 +387,21 @@ else
                                         mkdir "$DST_FOLDER/Tensor_PKD3/case_$case"
                                     fi
                                     printf "\nrocprof --basenames on --timestamp on --stats -o $DST_FOLDER/Tensor_PKD3/case_$case/output_case$case" "_bitDepth$bitDepth" "_oft$outputFormatToggle" "_noiseType$noiseType.csv" "./Tensor_hip $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case $noiseType 0"
-                                    rocprof --basenames on --timestamp on --stats -o "$DST_FOLDER/Tensor_PKD3/case_$case""/output_case""$case""_bitDepth""$bitDepth""_oft""$outputFormatToggle""_noiseType""$noiseType"".csv" ./Tensor_hip "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$noiseType" "$NUM_ITERATIONS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE" "$BATCH_SIZE"| tee -a "$DST_FOLDER/Tensor_hip_pkd3_hip_raw_performance_log.txt"
+                                    rocprof --basenames on --timestamp on --stats -o "$DST_FOLDER/Tensor_PKD3/case_$case""/output_case""$case""_bitDepth""$bitDepth""_oft""$outputFormatToggle""_noiseType""$noiseType"".csv" ./Tensor_hip "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$noiseType" "$NUM_RUNS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE" "$BATCH_SIZE"| tee -a "$DST_FOLDER/Tensor_hip_pkd3_hip_raw_performance_log.txt"
                                 elif [ $layout -eq 1 ]
                                 then
                                     if [ ! -d "$DST_FOLDER/Tensor_PLN3/case_$case" ]; then
                                         mkdir "$DST_FOLDER/Tensor_PLN3/case_$case"
                                     fi
                                     printf "\nrocprof --basenames on --timestamp on --stats -o $DST_FOLDER/Tensor_PLN3/case_$case/output_case$case" "_bitDepth$bitDepth" "_oft$outputFormatToggle" "_noiseType$noiseType.csv" "./Tensor_hip $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case $noiseType 0"
-                                    rocprof --basenames on --timestamp on --stats -o "$DST_FOLDER/Tensor_PLN3/case_$case""/output_case""$case""_bitDepth""$bitDepth""_oft""$outputFormatToggle""_noiseType""$noiseType"".csv" ./Tensor_hip "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$noiseType" "$NUM_ITERATIONS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE" "$BATCH_SIZE"| tee -a "$DST_FOLDER/Tensor_hip_pln3_hip_raw_performance_log.txt"
+                                    rocprof --basenames on --timestamp on --stats -o "$DST_FOLDER/Tensor_PLN3/case_$case""/output_case""$case""_bitDepth""$bitDepth""_oft""$outputFormatToggle""_noiseType""$noiseType"".csv" ./Tensor_hip "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$noiseType" "$NUM_RUNS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE" "$BATCH_SIZE"| tee -a "$DST_FOLDER/Tensor_hip_pln3_hip_raw_performance_log.txt"
                                 elif [ $layout -eq 2 ]
                                 then
                                     if [ ! -d "$DST_FOLDER/Tensor_PLN1/case_$case" ]; then
                                         mkdir "$DST_FOLDER/Tensor_PLN1/case_$case"
                                     fi
                                     printf "\nrocprof --basenames on --timestamp on --stats -o $DST_FOLDER/Tensor_PLN1/case_$case/output_case$case" "_bitDepth$bitDepth" "_oft$outputFormatToggle" "_noiseType$noiseType.csv" "./Tensor_hip $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case $noiseType 0"
-                                    rocprof --basenames on --timestamp on --stats -o "$DST_FOLDER/Tensor_PLN1/case_$case""/output_case""$case""_bitDepth""$bitDepth""_oft""$outputFormatToggle""_noiseType""$noiseType"".csv" ./Tensor_hip "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$noiseType" "$NUM_ITERATIONS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE" "$BATCH_SIZE"| tee -a "$DST_FOLDER/Tensor_hip_pln1_hip_raw_performance_log.txt"
+                                    rocprof --basenames on --timestamp on --stats -o "$DST_FOLDER/Tensor_PLN1/case_$case""/output_case""$case""_bitDepth""$bitDepth""_oft""$outputFormatToggle""_noiseType""$noiseType"".csv" ./Tensor_hip "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$noiseType" "$NUM_RUNS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE" "$BATCH_SIZE"| tee -a "$DST_FOLDER/Tensor_hip_pln1_hip_raw_performance_log.txt"
                                 fi
                             done
                         elif [ "$case" -eq 21 ] || [ "$case" -eq 23 ] || [ "$case" -eq 24 ]
@@ -414,21 +414,21 @@ else
                                         mkdir "$DST_FOLDER/Tensor_PKD3/case_$case"
                                     fi
                                     printf "\nrocprof --basenames on --timestamp on --stats -o $DST_FOLDER/Tensor_PKD3/case_$case/output_case$case" "_bitDepth$bitDepth" "_oft$outputFormatToggle" "_interpolationType$interpolationType.csv" "./Tensor_hip $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case $interpolationType 0"
-                                    rocprof --basenames on --timestamp on --stats -o "$DST_FOLDER/Tensor_PKD3/case_$case""/output_case""$case""_bitDepth""$bitDepth""_oft""$outputFormatToggle""_interpolationType""$interpolationType"".csv" ./Tensor_hip "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$interpolationType" "$NUM_ITERATIONS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE" "$BATCH_SIZE"| tee -a "$DST_FOLDER/Tensor_hip_pkd3_hip_raw_performance_log.txt"
+                                    rocprof --basenames on --timestamp on --stats -o "$DST_FOLDER/Tensor_PKD3/case_$case""/output_case""$case""_bitDepth""$bitDepth""_oft""$outputFormatToggle""_interpolationType""$interpolationType"".csv" ./Tensor_hip "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$interpolationType" "$NUM_RUNS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE" "$BATCH_SIZE"| tee -a "$DST_FOLDER/Tensor_hip_pkd3_hip_raw_performance_log.txt"
                                 elif [ $layout -eq 1 ]
                                 then
                                     if [ ! -d "$DST_FOLDER/Tensor_PLN3/case_$case" ]; then
                                         mkdir "$DST_FOLDER/Tensor_PLN3/case_$case"
                                     fi
                                     printf "\nrocprof --basenames on --timestamp on --stats -o $DST_FOLDER/Tensor_PLN3/case_$case/output_case$case" "_bitDepth$bitDepth" "_oft$outputFormatToggle" "_interpolationType$interpolationType.csv" "./Tensor_hip $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case $interpolationType 0"
-                                    rocprof --basenames on --timestamp on --stats -o "$DST_FOLDER/Tensor_PLN3/case_$case""/output_case""$case""_bitDepth""$bitDepth""_oft""$outputFormatToggle""_interpolationType""$interpolationType"".csv" ./Tensor_hip "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$interpolationType" "$NUM_ITERATIONS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE" "$BATCH_SIZE"| tee -a "$DST_FOLDER/Tensor_hip_pln3_hip_raw_performance_log.txt"
+                                    rocprof --basenames on --timestamp on --stats -o "$DST_FOLDER/Tensor_PLN3/case_$case""/output_case""$case""_bitDepth""$bitDepth""_oft""$outputFormatToggle""_interpolationType""$interpolationType"".csv" ./Tensor_hip "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$interpolationType" "$NUM_RUNS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE" "$BATCH_SIZE"| tee -a "$DST_FOLDER/Tensor_hip_pln3_hip_raw_performance_log.txt"
                                 elif [ $layout -eq 2 ]
                                 then
                                     if [ ! -d "$DST_FOLDER/Tensor_PLN1/case_$case" ]; then
                                         mkdir "$DST_FOLDER/Tensor_PLN1/case_$case"
                                     fi
                                     printf "\nrocprof --basenames on --timestamp on --stats -o $DST_FOLDER/Tensor_PLN1/case_$case/output_case$case" "_bitDepth$bitDepth" "_oft$outputFormatToggle" "_interpolationType$interpolationType.csv" "./Tensor_hip $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case $interpolationType 0"
-                                    rocprof --basenames on --timestamp on --stats -o "$DST_FOLDER/Tensor_PLN1/case_$case""/output_case""$case""_bitDepth""$bitDepth""_oft""$outputFormatToggle""_interpolationType""$interpolationType"".csv" ./Tensor_hip "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$interpolationType" "$NUM_ITERATIONS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE" "$BATCH_SIZE"| tee -a "$DST_FOLDER/Tensor_hip_pln1_hip_raw_performance_log.txt"
+                                    rocprof --basenames on --timestamp on --stats -o "$DST_FOLDER/Tensor_PLN1/case_$case""/output_case""$case""_bitDepth""$bitDepth""_oft""$outputFormatToggle""_interpolationType""$interpolationType"".csv" ./Tensor_hip "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$interpolationType" "$NUM_RUNS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE" "$BATCH_SIZE"| tee -a "$DST_FOLDER/Tensor_hip_pln1_hip_raw_performance_log.txt"
                                 fi
                             done
                         else
@@ -438,21 +438,21 @@ else
                                     mkdir "$DST_FOLDER/Tensor_PKD3/case_$case"
                                 fi
                                 printf "\nrocprof --basenames on --timestamp on --stats -o $DST_FOLDER/Tensor_PKD3/case_$case/output_case$case" "_bitDepth$bitDepth" "_oft$outputFormatToggle"".csv" "./Tensor_hip $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case 0 0"
-                                rocprof --basenames on --timestamp on --stats -o "$DST_FOLDER/Tensor_PKD3/case_$case""/output_case""$case""_bitDepth""$bitDepth""_oft""$outputFormatToggle"".csv" ./Tensor_hip "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" "$NUM_ITERATIONS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE" "$BATCH_SIZE"| tee -a "$DST_FOLDER/Tensor_hip_pkd3_hip_raw_performance_log.txt"
+                                rocprof --basenames on --timestamp on --stats -o "$DST_FOLDER/Tensor_PKD3/case_$case""/output_case""$case""_bitDepth""$bitDepth""_oft""$outputFormatToggle"".csv" ./Tensor_hip "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" "$NUM_RUNS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE" "$BATCH_SIZE"| tee -a "$DST_FOLDER/Tensor_hip_pkd3_hip_raw_performance_log.txt"
                             elif [ $layout -eq 1 ]
                             then
                                 if [ ! -d "$DST_FOLDER/Tensor_PLN3/case_$case" ]; then
                                     mkdir "$DST_FOLDER/Tensor_PLN3/case_$case"
                                 fi
                                 printf "\nrocprof --basenames on --timestamp on --stats -o $DST_FOLDER/Tensor_PLN3/case_$case/output_case$case" "_bitDepth$bitDepth" "_oft$outputFormatToggle"".csv" "./Tensor_hip $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case 0 0"
-                                rocprof --basenames on --timestamp on --stats -o "$DST_FOLDER/Tensor_PLN3/case_$case""/output_case""$case""_bitDepth""$bitDepth""_oft""$outputFormatToggle"".csv" ./Tensor_hip "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" "$NUM_ITERATIONS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE" "$BATCH_SIZE"| tee -a "$DST_FOLDER/Tensor_hip_pln3_hip_raw_performance_log.txt"
+                                rocprof --basenames on --timestamp on --stats -o "$DST_FOLDER/Tensor_PLN3/case_$case""/output_case""$case""_bitDepth""$bitDepth""_oft""$outputFormatToggle"".csv" ./Tensor_hip "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" "$NUM_RUNS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE" "$BATCH_SIZE"| tee -a "$DST_FOLDER/Tensor_hip_pln3_hip_raw_performance_log.txt"
                             elif [ $layout -eq 2 ]
                             then
                                 if [ ! -d "$DST_FOLDER/Tensor_PLN1/case_$case" ]; then
                                     mkdir "$DST_FOLDER/Tensor_PLN1/case_$case"
                                 fi
                                 printf "\nrocprof --basenames on --timestamp on --stats -o $DST_FOLDER/Tensor_PLN1/case_$case/output_case$case" "_bitDepth$bitDepth" "_oft$outputFormatToggle"".csv" "./Tensor_hip $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $bitDepth $outputFormatToggle $case 0 0"
-                                rocprof --basenames on --timestamp on --stats -o "$DST_FOLDER/Tensor_PLN1/case_$case""/output_case""$case""_bitDepth""$bitDepth""_oft""$outputFormatToggle"".csv" ./Tensor_hip "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" "$NUM_ITERATIONS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE" "$BATCH_SIZE"| tee -a "$DST_FOLDER/Tensor_hip_pln1_hip_raw_performance_log.txt"
+                                rocprof --basenames on --timestamp on --stats -o "$DST_FOLDER/Tensor_PLN1/case_$case""/output_case""$case""_bitDepth""$bitDepth""_oft""$outputFormatToggle"".csv" ./Tensor_hip "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "0" "$NUM_RUNS" "$TEST_TYPE" "$layout" "0" "$QA_MODE" "$DECODER_TYPE" "$BATCH_SIZE"| tee -a "$DST_FOLDER/Tensor_hip_pln1_hip_raw_performance_log.txt"
                             fi
                         fi
 

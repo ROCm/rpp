@@ -14,7 +14,7 @@ The test suite accepts the following command line arguments:
 -   profiling: Run the tests with a profiler (YES/NO). Default is NO. This option is only available with HIP backend
 -   qa_mode: Output images from tests will be compared with golden outputs - (0 / 1). Default is 0
 -   decoder_type: Type of Decoder to decode the input data - (0 = TurboJPEG / 1 = OpenCV). Default is 0
--   num_iterations: Specifies the number of iterations for running the performance tests
+-   num_runs: Specifies the number of runs for running the performance tests
 -   preserve_output: preserves the output images or performance logs generated from the previous test suite run - (0 = remove output images or performance logs / 1 = preserve output images or performance logs). Default is 1
 -   batch_size: Specifies the batch size to use for running tests. Default is 1
 

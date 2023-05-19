@@ -117,7 +117,7 @@ def rpp_test_suite_parser_and_validator():
     parser.add_argument('--profiling', type = str , default = 'NO', help = 'Run with profiler? - (YES/NO)', required = False)
     parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Output images from tests will be compared with golden outputs - (0 / 1)", required = False)
     parser.add_argument('--decoder_type', type = int, default = 0, help = "Type of Decoder to decode the input data - (0 = TurboJPEG / 1 = OpenCV)")
-    parser.add_argument('--num_iterations', type = int, default = 1, help = "Specifies the number of iterations for running the performance tests")
+    parser.add_argument('--num_runs', type = int, default = 1, help = "Specifies the number of runs for running the performance tests")
     parser.add_argument('--preserve_output', type = int, default = 1, help = "preserves the output of the program - (0 = override output / 1 = preserve output )" )
     parser.add_argument('--batch_size', type = int, default = 1, help = "Specifies the batch size to use for running tests. Default is 1.")
     args = parser.parse_args()
@@ -146,8 +146,8 @@ def rpp_test_suite_parser_and_validator():
     elif args.case_list is not None and args.case_start > 0 and args.case_end < 84:
         print("Invalid input! Please provide only 1 option between case_list, case_start and case_end")
         exit(0)
-    elif args.num_iterations <= 0:
-        print("Number of Iterations must be greater than 0. Aborting!")
+    elif args.num_runs <= 0:
+        print("Number of Runs must be greater than 0. Aborting!")
         exit(0)
     elif args.preserve_output < 0 or args.preserve_output > 1:
         print("Preserve Output must be in the 0/1 (0 = override / 1 = preserve). Aborting")
@@ -185,7 +185,7 @@ caseList = args.case_list
 profilingOption = args.profiling
 qaMode = args.qa_mode
 decoderType = args.decoder_type
-numIterations = args.num_iterations
+numRuns = args.num_runs
 preserveOutput = args.preserve_output
 batchSize = args.batch_size
 
@@ -202,15 +202,15 @@ if(testType == 0):
         outFilePath = os.path.join(os.path.dirname(cwd), 'QA_RESULTS_HIP_' + timestamp)
     else:
         outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_IMAGES_HIP_' + timestamp)
-    numIterations = 1
+    numRuns = 1
 elif(testType == 1):
-    if numIterations == 0:
-        numIterations = 100 #default numIterations for running performance tests
+    if numRuns == 0:
+        numRuns = 100 #default numRuns for running performance tests
     outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_PERFORMANCE_LOGS_HIP_' + timestamp)
 dstPath = outFilePath
 
 if(testType == 0):
-    subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "0", str(qaMode), str(decoderType), str(preserveOutput), str(batchSize), " ".join(caseList)])  # nosec
+    subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numRuns), "0", str(qaMode), str(decoderType), str(preserveOutput), str(batchSize), " ".join(caseList)])  # nosec
 
     layoutDict = {0:"PKD3", 1:"PLN3", 2:"PLN1"}
     if qaMode == 0:
@@ -228,7 +228,7 @@ else:
     ]
 
     if (testType == 1 and profilingOption == "NO"):
-        subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "0", str(qaMode), str(decoderType), str(preserveOutput), str(batchSize), " ".join(caseList)])  # nosec
+        subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numRuns), "0", str(qaMode), str(decoderType), str(preserveOutput), str(batchSize), " ".join(caseList)])  # nosec
         for log_file in log_file_list:
             # Opening log file
             try:
@@ -259,11 +259,11 @@ else:
 
                 if "max,min,avg wall times in ms/batch" in line:
                     split_word_start = "Running "
-                    split_word_end = " "+ str(numIterations)
+                    split_word_end = " "+ str(numRuns)
                     prevLine = prevLine.partition(split_word_start)[2].partition(split_word_end)[0]
                     if prevLine not in functions:
                         functions.append(prevLine)
-                        frames.append(str(numIterations))
+                        frames.append(str(numRuns))
                         split_word_start = "max,min,avg wall times in ms/batch = "
                         split_word_end = "\n"
                         stats = line.partition(split_word_start)[2].partition(split_word_end)[0].split(",")
@@ -291,7 +291,7 @@ else:
             # Closing log file
             f.close()
     elif (testType == 1 and profilingOption == "YES"):
-        subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numIterations), "1", str(qaMode), str(decoderType), str(preserveOutput), str(batchSize), " ".join(caseList)])  # nosec
+        subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numRuns), "1", str(qaMode), str(decoderType), str(preserveOutput), str(batchSize), " ".join(caseList)])  # nosec
         NEW_FUNC_GROUP_LIST = [0, 15, 20, 29, 36, 40, 42, 49, 56, 65, 69]
 
         RESULTS_DIR = ""

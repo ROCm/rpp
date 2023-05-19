@@ -69,7 +69,7 @@ int main(int argc, char **argv)
     int inputBitDepth = atoi(argv[4]);
     unsigned int outputFormatToggle = atoi(argv[5]);
     int testCase = atoi(argv[6]);
-    int numIterations = atoi(argv[8]);
+    int numRuns = atoi(argv[8]);
     int testType = atoi(argv[9]);     // 0 for unit and 1 for performance test
     int layoutType = atoi(argv[10]); // 0 for pkd3 / 1 for pln3 / 2 for pln1
     int qaFlag = atoi(argv[12]);
@@ -213,11 +213,12 @@ int main(int argc, char **argv)
     }
     noOfImages = imageNames.size();
 
-    if(noOfImages < batchSize)
+    if(noOfImages < batchSize || ((noOfImages % batchSize) != 0))
     {
         replicate_last_image_to_fill_batch(imageNamesPath[noOfImages - 1], imageNamesPath, imageNames, imageNames[noOfImages - 1], noOfImages, batchSize);
         if(dualInputCase)
             replicate_last_image_to_fill_batch(imageNamesPathSecond[noOfImages - 1], imageNamesPathSecond, imageNamesSecond, imageNamesSecond[noOfImages - 1], noOfImages, batchSize);
+        noOfImages = imageNames.size();
     }
 
     if(!noOfImages)
@@ -300,8 +301,8 @@ int main(int argc, char **argv)
     string testCaseName;
 
     // case-wise RPP API and measure time script for Unit and Performance test
-    printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numIterations, batchSize);
-    for (int perfRunCount = 0; perfRunCount < numIterations; perfRunCount++)
+    printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
+    for (int perfRunCount = 0; perfRunCount < numRuns; perfRunCount++)
     {
         for(int iterCount = 0; iterCount < (int)imageNames.size() / batchSize; iterCount++)
         {
@@ -488,7 +489,8 @@ int main(int argc, char **argv)
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_color_twist_host(input, srcDescPtr, output, dstDescPtr, brightness, contrast, hue, saturation, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
-                        missingFuncFlag = 1;
+                        missingFuncFlag =
+                         1;
 
                     break;
                 }
@@ -684,7 +686,7 @@ int main(int argc, char **argv)
         maxWallTime *= 1000;
         minWallTime *= 1000;
         avgWallTime *= 1000;
-        avgWallTime /= numIterations;
+        avgWallTime /= numRuns;
         cout << fixed << "\nmax,min,avg wall times in ms/batch = " << maxWallTime << "," << minWallTime << "," << avgWallTime;
     }
 

@@ -57,8 +57,8 @@ namespace fs = boost::filesystem;
 #define MAX_HEIGHT 2160
 #define MAX_WIDTH 3840
 #define MAX_BATCH_SIZE 512
-#define MAX_REFERENCE_HEIGHT 150
-#define MAX_REFERENCE_WIDTH 150
+#define GOLDEN_OUTPUT_MAX_HEIGHT 150    // Golden outputs are generated with MAX_HEIGHT set to 150. Changing this constant will result in QA test failures
+#define GOLDEN_OUTPUT_MAX_WIDTH 150     // Golden outputs are generated with MAX_WIDTH set to 150. Changing this constant will result in QA test failures
 
 std::map<int, string> augmentationMap =
 {
@@ -84,11 +84,12 @@ inline T validate_pixel_range(T pixel)
 // replicates the last image in a batch to fill the remaining images in a batch
 void replicate_last_image_to_fill_batch(const string& lastFilePath, vector<string>& imageNamesPath, vector<string>& imageNames, const string& lastFileName, int noOfImages, int batchCount)
 {
+    int remainingImages = batchCount - (noOfImages % batchCount);
     std::string filePath = lastFilePath;
     std::string fileName = lastFileName;
-    if (noOfImages > 0 && noOfImages < batchCount)
+    if (noOfImages > 0 && ( noOfImages < batchCount || noOfImages % batchCount != 0 ))
     {
-        for (int i = noOfImages; i < batchCount; i++)
+        for (int i = 0; i < remainingImages; i++)
         {
             imageNamesPath.push_back(filePath);
             imageNames.push_back(fileName);
@@ -885,8 +886,8 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     string refPath = get_current_dir_name();
     string pattern = "/build";
     string refFile = "";
-    int refOutputWidth = ((MAX_REFERENCE_WIDTH / 8) * 8) + 8;
-    int refOutputHeight = MAX_REFERENCE_HEIGHT;
+    int refOutputWidth = ((GOLDEN_OUTPUT_MAX_WIDTH / 8) * 8) + 8;    // obtain next multiple of 8 after GOLDEN_OUTPUT_MAX_WIDTH
+    int refOutputHeight = GOLDEN_OUTPUT_MAX_HEIGHT;
     int refOutputSize = refOutputHeight * refOutputWidth * dstDescPtr->c;
 
     remove_substring(refPath, pattern);
