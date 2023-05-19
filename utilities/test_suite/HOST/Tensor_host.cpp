@@ -498,16 +498,16 @@ int main(int argc, char **argv)
 
                     for (i = 0; i < batchSize; i++)
                     {
-                        roiTensorPtrSrc[i].xywhROI.xy.x = 10;
-                        roiTensorPtrSrc[i].xywhROI.xy.y = 10;
-                        dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
-                        dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiHeight / 2;
+                        roiTensorPtrDst[i].xywhROI.xy.x = 10;
+                        roiTensorPtrDst[i].xywhROI.xy.y = 10;
+                        dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
+                        dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiHeight / 2;
                     }
 
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_crop_host(input, srcDescPtr, output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
+                        rppt_crop_host(input, srcDescPtr, output, dstDescPtr, roiTensorPtrDst, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
