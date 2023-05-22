@@ -2178,6 +2178,29 @@ inline void rpp_generic_nn_load_u8pln1(Rpp8u *srcPtrChannel, Rpp32s *srcLoc, Rpp
     p = _mm_unpacklo_epi8(px[0], px[1]);    // unpack to obtain [R01|R11|R21|R31|00|00|00|00|00|00|00|00|00|00|00|00]
 }
 
+inline void rpp_generic_nn_load_u8pln1_avx(Rpp8u *srcPtrChannel, Rpp32s *srcLoc, Rpp32s *invalidLoad, __m256i &p)
+{
+    __m256i px[8];
+    px[0] = invalidLoad[0] ? avx_px0 : _mm256_loadu_si256((__m256i *)(srcPtrChannel + srcLoc[0]));  // LOC0 load [R01|R02|R03|R04|R05|R06...] - Need R01
+    px[1] = invalidLoad[1] ? avx_px0 : _mm256_loadu_si256((__m256i *)(srcPtrChannel + srcLoc[1]));  // LOC1 load [R11|R12|R13|R14|R15|R16...] - Need R11
+    px[2] = invalidLoad[2] ? avx_px0 : _mm256_loadu_si256((__m256i *)(srcPtrChannel + srcLoc[2]));  // LOC2 load [R21|R22|R23|R24|R25|R26...] - Need R21
+    px[3] = invalidLoad[3] ? avx_px0 : _mm256_loadu_si256((__m256i *)(srcPtrChannel + srcLoc[3]));  // LOC3 load [R31|R32|R33|R34|R35|R36...] - Need R31
+    px[4] = invalidLoad[4] ? avx_px0 : _mm256_loadu_si256((__m256i *)(srcPtrChannel + srcLoc[4]));  // LOC0 load [R41|R42|R43|R44|R45|R46...] - Need R41
+    px[5] = invalidLoad[5] ? avx_px0 : _mm256_loadu_si256((__m256i *)(srcPtrChannel + srcLoc[5]));  // LOC1 load [R51|R52|R53|R54|R55|R56...] - Need R51
+    px[6] = invalidLoad[6] ? avx_px0 : _mm256_loadu_si256((__m256i *)(srcPtrChannel + srcLoc[6]));  // LOC2 load [R61|R62|R63|R64|R65|R66...] - Need R61
+    px[7] = invalidLoad[7] ? avx_px0 : _mm256_loadu_si256((__m256i *)(srcPtrChannel + srcLoc[7]));  // LOC3 load [R71|R72|R73|R74|R75|R76...] - Need R71
+
+    px[0] = _mm256_unpacklo_epi8(px[0], px[2]);    // unpack 8 lo-pixels of px[0] and px[2] - [R01|R21|R02|R22.... R08|R28]
+    px[1] = _mm256_unpacklo_epi8(px[1], px[3]);    // unpack 8 lo-pixels of px[1] and px[3] - [R11|R31|R12|R32.... R18|R38]
+    px[2] = _mm256_unpacklo_epi8(px[4], px[6]);    // unpack 8 lo-pixels of px[4] and px[6] - [R41|R61|R42|R62.... R48|R68]
+    px[3] = _mm256_unpacklo_epi8(px[5], px[7]);    // unpack 8 lo-pixels of px[5] and px[7] - [R51|R71|R12|R32.... R18|R38]
+
+    px[0] = _mm256_unpacklo_epi8(px[0], px[1]);   // unpack to obtain [R01|R11|R21|R31|00|00|00|00|00|00|00|00|00|00|00|00]
+    px[1] = _mm256_unpacklo_epi8(px[2], px[3]);   // unpack to obtain [R41|R51|R61|R71|00|00|00|00|00|00|00|00|00|00|00|00]
+
+    p = _mm256_unpacklo_epi64(px[0], px[1]);    // unpack to obtain [R01|R11|R21|R31|R41|R51|R61|R71|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00]
+}
+
 inline void rpp_generic_nn_load_f32pkd3_to_f32pln3(Rpp32f *srcPtrChannel, Rpp32s *srcLoc, Rpp32s *invalidLoad, __m128 *p)
 {
     p[0] = invalidLoad[0] ? xmm_p0 : _mm_loadu_ps(srcPtrChannel + srcLoc[0]);  // LOC0 load [R01|G01|B01|R02] - Need RGB 01
@@ -3114,6 +3137,12 @@ inline void rpp_store4_u8_to_u8(Rpp8u* dstPtr, __m128i &p)
 inline void rpp_store4_u8pln1_to_u8pln1(Rpp8u* dstPtr, __m128i &p)
 {
     _mm_storeu_si32((__m128i *)(dstPtr), p);
+}
+
+inline void rpp_store8_u8pln1_to_u8pln1_avx(Rpp8u* dstPtr, __m256i &p)
+{
+    __m128i pTemp = _mm256_extracti128_si256(p, 0);
+    _mm_storeu_si64((__m128i *)(dstPtr), pTemp);
 }
 
 inline void rpp_store12_u8pln3_to_u8pkd3(Rpp8u* dstPtr, __m128i *p)
