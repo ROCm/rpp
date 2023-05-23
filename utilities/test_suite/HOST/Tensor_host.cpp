@@ -511,23 +511,23 @@ int main(int argc, char **argv)
             {
                 testCaseName = "lut";
 
-                Rpp8u lut8u[65536];
-                Rpp8s lut8s[65536];
-                Rpp16f lut16f[65536];
-                Rpp32f lut32f[65536];
-
-                std::fill_n(lut8u, 65536, 0);
-                std::fill_n(lut8s, 65536, 0);
-                std::fill_n(lut16f, 65536, 0.0);
-                std::fill_n(lut32f, 65536, 0.0);
-
-                for (j = 0; j < 256; j++)
-                {
-                    lut8u[j] = (Rpp8u)(255 - j);
-                    lut8s[j] = (Rpp8s)(255 - j - 128);
-                    lut16f[j] = ((Rpp16f)(255 - j)) / 255;
-                    lut32f[j] = ((Rpp32f)(255 - j)) / 255;
-                }
+                Rpp32f lutBuffer[65536] = {0};
+                Rpp8u *lut8u = reinterpret_cast<Rpp8u *>(lutBuffer);
+                Rpp16f *lut16f = reinterpret_cast<Rpp16f *>(lutBuffer);
+                Rpp32f *lut32f = reinterpret_cast<Rpp32f *>(lutBuffer);
+                Rpp8s *lut8s = reinterpret_cast<Rpp8s *>(lutBuffer);
+                if (inputBitDepth == 0)
+                    for (j = 0; j < 256; j++)
+                        lut8u[j] = (Rpp8u)(255 - j);
+                else if (inputBitDepth == 3)
+                    for (j = 0; j < 256; j++)
+                        lut16f[j] = (Rpp16f)((255 - j) * ONE_OVER_255);
+                else if (inputBitDepth == 4)
+                    for (j = 0; j < 256; j++)
+                        lut32f[j] = (Rpp32f)((255 - j) * ONE_OVER_255);
+                else if (inputBitDepth == 5)
+                    for (j = 0; j < 256; j++)
+                        lut8s[j] = (Rpp8s)(255 - j - 128);
 
 
                 startWallTime = omp_get_wtime();

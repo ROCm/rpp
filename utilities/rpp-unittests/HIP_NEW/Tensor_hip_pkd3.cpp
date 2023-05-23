@@ -176,9 +176,6 @@ int main(int argc, char **argv)
     case 31:
         strcpy(funcName, "color_cast");
         break;
-    case 34:
-        strcpy(funcName, "lut");
-        break;
     case 36:
         strcpy(funcName, "color_twist");
         break;
@@ -1500,82 +1497,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
 
         break;
-    }
-    case 34:
-    {
-        test_case_name = "lut";
-        Rpp8u lut8u[65536];
-        Rpp8s lut8s[65536];
-        half lut16f[65536];
-        Rpp32f lut32f[65536];
-        std::fill_n(lut8u, 65536, 0);
-        std::fill_n(lut8s, 65536, 0);
-        std::fill_n(lut16f, 65536, 0.0);
-        std::fill_n(lut32f, 65536, 0.0);
-
-        for (j = 0; j < 256; j++)
-        {
-            lut8u[j] = (Rpp8u)(255 - j);
-            lut8s[j] = (Rpp8s)(255 - j - 128);
-            lut16f[j] = (half)((Rpp32f)(255 - j) / 255);
-            lut32f[j] = ((Rpp32f)(255 - j)) / 255;
-        }
-
-        int *d_lut8u, *d_lut8s, *d_lut16f, *d_lut32f;
-        hipMalloc(&d_lut8u, 65536 * sizeof(Rpp8u));
-        hipMalloc(&d_lut8s, 65536 * sizeof(Rpp8s));
-        hipMalloc(&d_lut16f, 65536 * sizeof(half));
-        hipMalloc(&d_lut32f, 65536 * sizeof(Rpp32f));
-        hipMemcpy(d_lut8u, lut8u, 65536 * sizeof(Rpp8u), hipMemcpyHostToDevice);
-        hipMemcpy(d_lut8s, lut8s, 65536 * sizeof(Rpp8s), hipMemcpyHostToDevice);
-        hipMemcpy(d_lut16f, lut16f, 65536 * sizeof(half), hipMemcpyHostToDevice);
-        hipMemcpy(d_lut32f, lut32f, 65536 * sizeof(Rpp32f), hipMemcpyHostToDevice);
-
-        // Uncomment to run test case with an xywhROI override
-        /*for (i = 0; i < images; i++)
-        {
-            roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-            roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-            dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-            dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
-        }*/
-
-        // Uncomment to run test case with an ltrbROI override
-        /*for (i = 0; i < images; i++)
-        {
-            roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
-            roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
-            roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
-            roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
-            dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
-            dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
-        }
-        roiTypeSrc = RpptRoiType::LTRB;
-        roiTypeDst = RpptRoiType::LTRB;*/
-        start = clock();
-        if (ip_bitDepth == 0)
-            rppt_lut_gpu(d_input, srcDescPtr, d_output, dstDescPtr, d_lut8u, roiTensorPtrSrc, roiTypeSrc, handle);
-        else if (ip_bitDepth == 1)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 2)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 3)
-            rppt_lut_gpu(d_input, srcDescPtr, d_outputf16, dstDescPtr, d_lut16f, roiTensorPtrSrc, roiTypeSrc, handle);
-        else if (ip_bitDepth == 4)
-            rppt_lut_gpu(d_input, srcDescPtr, d_outputf32, dstDescPtr, d_lut32f, roiTensorPtrSrc, roiTypeSrc, handle);
-        else if (ip_bitDepth == 5)
-            rppt_lut_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, d_lut8s, roiTensorPtrSrc, roiTypeSrc, handle);
-        else if (ip_bitDepth == 6)
-            missingFuncFlag = 1;
-        else
-            missingFuncFlag = 1;
-
-        break;
-
-        hipFree(d_lut8u);
-        hipFree(d_lut8s);
-        hipFree(d_lut16f);
-        hipFree(d_lut32f);
     }
     case 36:
     {

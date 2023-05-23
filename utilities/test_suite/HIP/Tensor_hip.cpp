@@ -525,52 +525,41 @@ int main(int argc, char **argv)
         {
             testCaseName = "lut";
 
-            Rpp8u lut8u[65536];
-            Rpp8s lut8s[65536];
-            half lut16f[65536];
-            Rpp32f lut32f[65536];
-
-            std::fill_n(lut8u, 65536, 0);
-            std::fill_n(lut8s, 65536, 0);
-            std::fill_n(lut16f, 65536, 0.0);
-            std::fill_n(lut32f, 65536, 0.0);
-
-            for (j = 0; j < 256; j++)
-            {
-                lut8u[j] = (Rpp8u)(255 - j);
-                lut8s[j] = (Rpp8s)(255 - j - 128);
-                lut16f[j] = (half)((Rpp32f)(255 - j) / 255);
-                lut32f[j] = ((Rpp32f)(255 - j)) / 255;
-            }
-
-            int *d_lut8u, *d_lut8s, *d_lut16f, *d_lut32f;
-            hipMalloc(&d_lut8u, 65536 * sizeof(Rpp8u));
-            hipMalloc(&d_lut8s, 65536 * sizeof(Rpp8s));
-            hipMalloc(&d_lut16f, 65536 * sizeof(half));
-            hipMalloc(&d_lut32f, 65536 * sizeof(Rpp32f));
-            hipMemcpy(d_lut8u, lut8u, 65536 * sizeof(Rpp8u), hipMemcpyHostToDevice);
-            hipMemcpy(d_lut8s, lut8s, 65536 * sizeof(Rpp8s), hipMemcpyHostToDevice);
-            hipMemcpy(d_lut16f, lut16f, 65536 * sizeof(half), hipMemcpyHostToDevice);
-            hipMemcpy(d_lut32f, lut32f, 65536 * sizeof(Rpp32f), hipMemcpyHostToDevice);
+            Rpp32f *lutBuffer;
+            hipHostMalloc(&lutBuffer, 65536 * sizeof(Rpp32f));
+            hipMemset(lutBuffer, 0, 65536 * sizeof(Rpp32f));
+            Rpp8u *lut8u = reinterpret_cast<Rpp8u *>(lutBuffer);
+            Rpp16f *lut16f = reinterpret_cast<Rpp16f *>(lutBuffer);
+            Rpp32f *lut32f = reinterpret_cast<Rpp32f *>(lutBuffer);
+            Rpp8s *lut8s = reinterpret_cast<Rpp8s *>(lutBuffer);
+            if (inputBitDepth == 0)
+                for (j = 0; j < 256; j++)
+                    lut8u[j] = (Rpp8u)(255 - j);
+            else if (inputBitDepth == 3)
+                for (j = 0; j < 256; j++)
+                    lut16f[j] = (Rpp16f)((255 - j) * ONE_OVER_255);
+            else if (inputBitDepth == 4)
+                for (j = 0; j < 256; j++)
+                    lut32f[j] = (Rpp32f)((255 - j) * ONE_OVER_255);
+            else if (inputBitDepth == 5)
+                for (j = 0; j < 256; j++)
+                    lut8s[j] = (Rpp8s)(255 - j - 128);
 
             startWallTime = omp_get_wtime();
             if (inputBitDepth == 0)
-                rppt_lut_gpu(d_input, srcDescPtr, d_output, dstDescPtr, d_lut8u, roiTensorPtrSrc, roiTypeSrc, handle);
+                rppt_lut_gpu(d_input, srcDescPtr, d_output, dstDescPtr, lut8u, roiTensorPtrSrc, roiTypeSrc, handle);
             else if (inputBitDepth == 3)
-                rppt_lut_gpu(d_input, srcDescPtr, d_output, dstDescPtr, d_lut16f, roiTensorPtrSrc, roiTypeSrc, handle);
+                rppt_lut_gpu(d_input, srcDescPtr, d_output, dstDescPtr, lut16f, roiTensorPtrSrc, roiTypeSrc, handle);
             else if (inputBitDepth == 4)
-                rppt_lut_gpu(d_input, srcDescPtr, d_output, dstDescPtr, d_lut32f, roiTensorPtrSrc, roiTypeSrc, handle);
+                rppt_lut_gpu(d_input, srcDescPtr, d_output, dstDescPtr, lut32f, roiTensorPtrSrc, roiTypeSrc, handle);
             else if (inputBitDepth == 5)
-                rppt_lut_gpu(d_input, srcDescPtr, d_output, dstDescPtr, d_lut8s, roiTensorPtrSrc, roiTypeSrc, handle);
+                rppt_lut_gpu(d_input, srcDescPtr, d_output, dstDescPtr, lut8s, roiTensorPtrSrc, roiTypeSrc, handle);
             else
                 missingFuncFlag = 1;
 
             break;
 
-            hipFree(d_lut8u);
-            hipFree(d_lut8s);
-            hipFree(d_lut16f);
-            hipFree(d_lut32f);
+            hipHostFree(lutBuffer);
         }
         case 36:
         {

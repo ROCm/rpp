@@ -39,6 +39,7 @@ THE SOFTWARE.
 
 const float ONE_OVER_6 = 1.0f / 6;
 const float ONE_OVER_3 = 1.0f / 3;
+const float ONE_OVER_255 = 1.0f / 255;
 
 /******************** RPP typedefs ********************/
 
