@@ -199,6 +199,26 @@ RppStatus rppt_contrast_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t d
 RppStatus rppt_contrast_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *contrastFactorTensor, Rpp32f *contrastCenterTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
+/******************** lut ********************/
+
+// Performs a table look-up for each pixel in a batch of images
+
+// *param[in] srcPtr source tensor memory
+// *param[in] srcDescPtr source tensor descriptor
+// *param[out] dstPtr destination tensor memory
+// *param[in] dstDescPtr destination tensor descriptor
+// *param[in] lutPtr lut Array containing a single integer look up table of length 65536, to be used for all images in the batch
+// *param[in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+// *param[in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+// *returns a  RppStatus enumeration.
+// *retval RPP_SUCCESS : succesful completion
+// *retval RPP_ERROR : Error
+
+RppStatus rppt_lut_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RppPtr_t lutPtr, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+#ifdef GPU_SUPPORT
+RppStatus rppt_lut_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RppPtr_t lutPtr, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
+
 #ifdef __cplusplus
 }
 #endif
