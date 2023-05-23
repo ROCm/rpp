@@ -2198,7 +2198,7 @@ inline void rpp_generic_nn_load_u8pln1_avx(Rpp8u *srcPtrChannel, Rpp32s *srcLoc,
     px[0] = _mm256_unpacklo_epi8(px[0], px[1]);   // unpack to obtain [R01|R11|R21|R31|00|00|00|00|00|00|00|00|00|00|00|00]
     px[1] = _mm256_unpacklo_epi8(px[2], px[3]);   // unpack to obtain [R41|R51|R61|R71|00|00|00|00|00|00|00|00|00|00|00|00]
 
-    p = _mm256_unpacklo_epi64(px[0], px[1]);    // unpack to obtain [R01|R11|R21|R31|R41|R51|R61|R71|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00]
+    p = _mm256_unpacklo_epi32(px[0], px[1]);    // unpack to obtain [R01|R11|R21|R31|R41|R51|R61|R71|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00]
 }
 
 inline void rpp_generic_nn_load_f32pkd3_to_f32pln3(Rpp32f *srcPtrChannel, Rpp32s *srcLoc, Rpp32s *invalidLoad, __m128 *p)
