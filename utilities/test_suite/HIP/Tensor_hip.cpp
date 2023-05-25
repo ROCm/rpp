@@ -42,20 +42,6 @@ typedef half Rpp16f;
 using namespace cv;
 using namespace std;
 
-inline size_t get_size_of_data_type(RpptDataType dataType)
-{
-    if(dataType == RpptDataType::U8)
-        return sizeof(Rpp8u);
-    else if(dataType == RpptDataType::I8)
-        return sizeof(Rpp8s);
-    else if(dataType == RpptDataType::F16)
-        return sizeof(Rpp16f);
-    else if(dataType == RpptDataType::F32)
-        return sizeof(Rpp32f);
-    else
-        return 0;
-}
-
 int main(int argc, char **argv)
 {
     // Handle inputs
@@ -260,9 +246,11 @@ int main(int argc, char **argv)
         outputChannels = 1;
     Rpp32u offsetInBytes = 0;
 
+    set_max_dimensions(imageNamesPath, maxHeight, maxWidth);
+
     // Set numDims, offset, n/c/h/w values, strides for src/dst
-    set_descriptor_dims_and_strides(srcDescPtr, batchSize, MAX_HEIGHT, MAX_WIDTH, inputChannels, offsetInBytes);
-    set_descriptor_dims_and_strides(dstDescPtr, batchSize, MAX_HEIGHT, MAX_WIDTH, outputChannels, offsetInBytes);
+    set_descriptor_dims_and_strides(srcDescPtr, batchSize, maxHeight, maxWidth, inputChannels, offsetInBytes);
+    set_descriptor_dims_and_strides(dstDescPtr, batchSize, maxHeight, maxWidth, outputChannels, offsetInBytes);
 
     // Factors to convert U8 data to F32, F16 data to 0-1 range and reconvert them back to 0 -255 range
     Rpp32f conversionFactor = 1.0f / 255.0;
@@ -327,7 +315,7 @@ int main(int argc, char **argv)
             vector<string>::const_iterator imagesPathSecondEnd = imagesPathSecondStart + batchSize;
 
             // Set ROIs for src/dst
-            set_roi(imagesPathStart, imagesPathEnd, roiTensorPtrSrc, roiTensorPtrDst, dstImgSizes);
+            set_src_and_dst_roi(imagesPathStart, imagesPathEnd, roiTensorPtrSrc, roiTensorPtrDst, dstImgSizes);
 
             //Read images
             if(decoderType == 0)

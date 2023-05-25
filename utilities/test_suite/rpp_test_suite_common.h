@@ -97,6 +97,20 @@ void replicate_last_image_to_fill_batch(const string& lastFilePath, vector<strin
     }
 }
 
+inline size_t get_size_of_data_type(RpptDataType dataType)
+{
+    if(dataType == RpptDataType::U8)
+        return sizeof(Rpp8u);
+    else if(dataType == RpptDataType::I8)
+        return sizeof(Rpp8s);
+    else if(dataType == RpptDataType::F16)
+        return sizeof(Rpp16f);
+    else if(dataType == RpptDataType::F32)
+        return sizeof(Rpp32f);
+    else
+        return 0;
+}
+
 // returns the interpolation type used for image resizing or scaling operations.
 inline std::string get_interpolation_type(unsigned int val, RpptInterpolationType &interpolationType)
 {
@@ -281,8 +295,41 @@ inline void set_descriptor_layout( RpptDescPtr srcDescPtr, RpptDescPtr dstDescPt
     }
 }
 
+// sets values of maxHeight and maxWidth
+inline void set_max_dimensions(vector<string>imagePaths, int& maxHeight, int& maxWidth)
+{
+    tjhandle tjInstance = tjInitDecompress();
+    for (const std::string& imagePath : imagePaths)
+    {
+        FILE* jpegFile = fopen(imagePath.c_str(), "rb");
+        if (!jpegFile) {
+            std::cerr << "Error opening file: " << imagePath << std::endl;
+            continue;
+        }
+
+        fseek(jpegFile, 0, SEEK_END);
+        long fileSize = ftell(jpegFile);
+        fseek(jpegFile, 0, SEEK_SET);
+
+        std::vector<unsigned char> jpegBuffer(fileSize);
+        fread(jpegBuffer.data(), 1, fileSize, jpegFile);
+        fclose(jpegFile);
+
+        int jpegSubsamp;
+        int width, height;
+        if (tjDecompressHeader2(tjInstance, jpegBuffer.data(), jpegBuffer.size(), &width, &height, &jpegSubsamp) == -1) {
+            std::cerr << "Error decompressing file: " << imagePath << std::endl;
+            continue;
+        }
+
+        maxWidth = max(maxWidth, width);
+        maxHeight = max(maxHeight, height);
+    }
+    tjDestroy(tjInstance);
+}
+
 // sets roi xywh values and dstImg sizes
-inline void set_roi(vector<string>::const_iterator imagePathsStart, vector<string>::const_iterator imagePathsEnd, RpptROI *roiTensorPtrSrc, RpptROI *roiTensorPtrDst, RpptImagePatchPtr dstImgSizes)
+inline void  set_src_and_dst_roi(vector<string>::const_iterator imagePathsStart, vector<string>::const_iterator imagePathsEnd, RpptROI *roiTensorPtrSrc, RpptROI *roiTensorPtrDst, RpptImagePatchPtr dstImgSizes)
 {
     tjhandle tjInstance = tjInitDecompress();
     int i = 0;
