@@ -3155,6 +3155,11 @@ inline void rpp_store12_u8pkd3_to_u8pln3(Rpp8u* dstPtrR, Rpp8u* dstPtrG, Rpp8u* 
     _mm_storeu_si32((__m128i *)(dstPtrB), _mm_shuffle_epi8(p, xmm_char_maskB)); /* Shuffle and extract the B pixels*/
 }
 
+inline void rpp_store24_u8pkd3_to_u8pln3_avx(Rpp8u* dstPtrR, Rpp8u* dstPtrG, Rpp8u* dstPtrB, __m256i &p)
+{
+
+}
+
 inline void rpp_store4_u8_to_u8(Rpp8u* dstPtr, __m128i &p)
 {
     _mm_storeu_si128((__m128i *)(dstPtr), p);
@@ -3182,6 +3187,11 @@ inline void rpp_store12_u8pln3_to_u8pkd3(Rpp8u* dstPtr, __m128i *p)
     px[0] = _mm_unpacklo_epi8(p[0], p[1]);
     px[1] = _mm_unpacklo_epi64(px[0], p[2]);
     _mm_storeu_si128((__m128i *)(dstPtr), _mm_shuffle_epi8(px[1], xmm_store4_pkd_pixels));
+}
+
+inline void rpp_store24_u8pln3_to_u8pkd3_avx(Rpp8u* dstPtr, __m256i *p)
+{
+
 }
 
 inline void rpp_store12_i8pkd3_to_i8pln3(Rpp8s* dstPtrR, Rpp8s* dstPtrG, Rpp8s* dstPtrB, __m128i &p)

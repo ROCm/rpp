@@ -113,103 +113,103 @@ RppStatus water_u8_u8_host_tensor(Rpp8u *srcPtr,
         pWaterParams[5] = _mm256_set1_ps(phaseY);
 
         // // Water with fused output-layout toggle (NHWC -> NCHW)
-        // if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
-        // {
-        //     Rpp8u *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
-        //     srcPtrRow = srcPtrChannel;
-        //     dstPtrRowR = dstPtrChannel;
-        //     dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
-        //     dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
+        if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            Rpp8u *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
+            srcPtrRow = srcPtrChannel;
+            dstPtrRowR = dstPtrChannel;
+            dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
+            dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
 
-        //     for(int i = 0; i < roi.xywhROI.roiHeight; i++)
-        //     {
-        //         Rpp8u *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
-        //         dstPtrTempR = dstPtrRowR;
-        //         dstPtrTempG = dstPtrRowG;
-        //         dstPtrTempB = dstPtrRowB;
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            {
+                Rpp8u *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
+                dstPtrTempR = dstPtrRowR;
+                dstPtrTempG = dstPtrRowG;
+                dstPtrTempB = dstPtrRowB;
 
-        //         Rpp32f dstX, dstY, sinFactor;
-        //         __m128 pDstX, pDstY, pSinFactor;
-        //         dstY = (Rpp32f)i;
-        //         sinFactor= std::sin((freqX * dstY) + phaseX);
-        //         pDstX = xmm_pDstLocInit;
-        //         pDstY = _mm_set1_ps(dstY);
-        //         pSinFactor = _mm_set1_ps(sinFactor);
-        //         int vectorLoopCount = 0;
-        //         for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
-        //         {
-        //             __m128 pCosFactor, pDummy, pSrcX, pSrcY;
-        //             __m128i pRow;
-        //             sincos_ps(_mm_fmadd_ps(pWaterParams[3], pDstX, pWaterParams[5]), &pDummy, &pCosFactor);
-        //             compute_water_src_loc_sse(pDstY, pDstX, pSrcY, pSrcX, pWaterParams, pSinFactor, pCosFactor, pRoiLTRB[3], pRoiLTRB[2], pSrcStrideH, srcLocArray, true);
-        //             compute_generic_nn_srclocs_and_validate_sse(pSrcY, pSrcX, pRoiLTRB, pSrcStrideH, srcLocArray, invalidLoad, true);
-        //             rpp_simd_load(rpp_generic_nn_load_u8pkd3, srcPtrChannel, srcLocArray, invalidLoad, pRow);
-        //             rpp_simd_store(rpp_store12_u8pkd3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, pRow);
-        //             dstPtrTempR += vectorIncrementPerChannel;
-        //             dstPtrTempG += vectorIncrementPerChannel;
-        //             dstPtrTempB += vectorIncrementPerChannel;
-        //         }
-        //         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
-        //         {
-        //             Rpp32f srcX, srcY, cosFactor;
-        //             dstX = vectorLoopCount;
-        //             cosFactor = std::cos((freqY * dstX) + phaseY);
-        //             compute_water_src_loc(dstY, dstX, srcY, srcX, amplY, amplX, sinFactor, cosFactor, &roiLTRB);
-        //             compute_generic_nn_interpolation_pkd3_to_pln3(srcY, srcX, &roiLTRB, dstPtrTempR++, dstPtrTempG++, dstPtrTempB++, srcPtrChannel, srcDescPtr);
-        //         }
-        //         dstPtrRowR += dstDescPtr->strides.hStride;
-        //         dstPtrRowG += dstDescPtr->strides.hStride;
-        //         dstPtrRowB += dstDescPtr->strides.hStride;
-        //     }
-        // }
+                Rpp32f dstX, dstY, sinFactor;
+                __m256 pDstX, pDstY, pSinFactor;
+                dstY = (Rpp32f)i;
+                sinFactor= std::sin((freqX * dstY) + phaseX);
+                pDstX = avx_pDstLocInit;
+                pDstY = _mm256_set1_ps(dstY);
+                pSinFactor = _mm256_set1_ps(sinFactor);
+                int vectorLoopCount = 0;
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    __m256 pCosFactor, pDummy, pSrcX, pSrcY;
+                    __m256i pRow;
+                    sincos_ps(_mm256_fmadd_ps(pWaterParams[3], pDstX, pWaterParams[5]), &pDummy, &pCosFactor);
+                    compute_water_src_loc_avx(pDstY, pDstX, pSrcY, pSrcX, pWaterParams, pSinFactor, pCosFactor, pRoiLTRB[3], pRoiLTRB[2], pSrcStrideH, srcLocArray, true);
+                    compute_generic_nn_srclocs_and_validate_avx(pSrcY, pSrcX, pRoiLTRB, pSrcStrideH, srcLocArray, invalidLoad, true);
+                    rpp_simd_load(rpp_generic_nn_load_u8pkd3_avx, srcPtrChannel, srcLocArray, invalidLoad, pRow);
+                    rpp_simd_store(rpp_store24_u8pkd3_to_u8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, pRow);
+                    dstPtrTempR += vectorIncrementPerChannel;
+                    dstPtrTempG += vectorIncrementPerChannel;
+                    dstPtrTempB += vectorIncrementPerChannel;
+                }
+                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                {
+                    Rpp32f srcX, srcY, cosFactor;
+                    dstX = vectorLoopCount;
+                    cosFactor = std::cos((freqY * dstX) + phaseY);
+                    compute_water_src_loc(dstY, dstX, srcY, srcX, amplY, amplX, sinFactor, cosFactor, &roiLTRB);
+                    compute_generic_nn_interpolation_pkd3_to_pln3(srcY, srcX, &roiLTRB, dstPtrTempR++, dstPtrTempG++, dstPtrTempB++, srcPtrChannel, srcDescPtr);
+                }
+                dstPtrRowR += dstDescPtr->strides.hStride;
+                dstPtrRowG += dstDescPtr->strides.hStride;
+                dstPtrRowB += dstDescPtr->strides.hStride;
+            }
+        }
 
-        // // Water with fused output-layout toggle (NCHW -> NHWC)
-        // else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
-        // {
-        //     Rpp8u *dstPtrRow;
-        //     dstPtrRow = dstPtrChannel;
-        //     Rpp8u *srcPtrChannelR, *srcPtrChannelG, *srcPtrChannelB;
-        //     srcPtrChannelR = srcPtrChannel;
-        //     srcPtrChannelG = srcPtrChannelR + srcDescPtr->strides.cStride;
-        //     srcPtrChannelB = srcPtrChannelG + srcDescPtr->strides.cStride;
+        // Water with fused output-layout toggle (NCHW -> NHWC)
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            Rpp8u *dstPtrRow;
+            dstPtrRow = dstPtrChannel;
+            Rpp8u *srcPtrChannelR, *srcPtrChannelG, *srcPtrChannelB;
+            srcPtrChannelR = srcPtrChannel;
+            srcPtrChannelG = srcPtrChannelR + srcDescPtr->strides.cStride;
+            srcPtrChannelB = srcPtrChannelG + srcDescPtr->strides.cStride;
 
-        //     for(int i = 0; i < roi.xywhROI.roiHeight; i++)
-        //     {
-        //         Rpp8u *dstPtrTemp;
-        //         dstPtrTemp = dstPtrRow;
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            {
+                Rpp8u *dstPtrTemp;
+                dstPtrTemp = dstPtrRow;
 
-        //         Rpp32f dstX, dstY, sinFactor;
-        //         __m128 pDstX, pDstY, pSinFactor;
-        //         dstY = (Rpp32f)i;
-        //         sinFactor= std::sin((freqX * dstY) + phaseX);
-        //         pDstX = xmm_pDstLocInit;
-        //         pDstY = _mm_set1_ps(dstY);
-        //         pSinFactor = _mm_set1_ps(sinFactor);
-        //         int vectorLoopCount = 0;
-        //         for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
-        //         {
-        //             __m128 pCosFactor, pDummy, pSrcX, pSrcY;
-        //             __m128i pRow[3];
-        //             sincos_ps(_mm_fmadd_ps(pWaterParams[3], pDstX, pWaterParams[5]), &pDummy, &pCosFactor);
-        //             compute_water_src_loc_sse(pDstY, pDstX, pSrcY, pSrcX, pWaterParams, pSinFactor, pCosFactor, pRoiLTRB[3], pRoiLTRB[2], pSrcStrideH, srcLocArray);
-        //             compute_generic_nn_srclocs_and_validate_sse(pSrcY, pSrcX, pRoiLTRB, pSrcStrideH, srcLocArray, invalidLoad);
-        //             rpp_simd_load(rpp_generic_nn_load_u8pln1, srcPtrChannelR, srcLocArray, invalidLoad, pRow[0]);
-        //             rpp_simd_load(rpp_generic_nn_load_u8pln1, srcPtrChannelG, srcLocArray, invalidLoad, pRow[1]);
-        //             rpp_simd_load(rpp_generic_nn_load_u8pln1, srcPtrChannelB, srcLocArray, invalidLoad, pRow[2]);
-        //             rpp_simd_store(rpp_store12_u8pln3_to_u8pkd3, dstPtrTemp, pRow);
-        //             dstPtrTemp += vectorIncrementPkd;
-        //         }
-        //         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
-        //         {
-        //             Rpp32f srcX, srcY, cosFactor;
-        //             dstX = vectorLoopCount;
-        //             cosFactor = std::cos((freqY * dstX) + phaseY);
-        //             compute_generic_nn_interpolation_pln3_to_pkd3(srcY, srcX, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
-        //             dstPtrTemp += 3;
-        //         }
-        //         dstPtrRow += dstDescPtr->strides.hStride;
-        //     }
-        // }
+                Rpp32f dstX, dstY, sinFactor;
+                __m256 pDstX, pDstY, pSinFactor;
+                dstY = (Rpp32f)i;
+                sinFactor= std::sin((freqX * dstY) + phaseX);
+                pDstX = avx_pDstLocInit;
+                pDstY = _mm256_set1_ps(dstY);
+                pSinFactor = _mm256_set1_ps(sinFactor);
+                int vectorLoopCount = 0;
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    __m256 pCosFactor, pDummy, pSrcX, pSrcY;
+                    __m256i pRow[3];
+                    sincos_ps(_mm256_fmadd_ps(pWaterParams[3], pDstX, pWaterParams[5]), &pDummy, &pCosFactor);
+                    compute_water_src_loc_avx(pDstY, pDstX, pSrcY, pSrcX, pWaterParams, pSinFactor, pCosFactor, pRoiLTRB[3], pRoiLTRB[2], pSrcStrideH, srcLocArray);
+                    compute_generic_nn_srclocs_and_validate_avx(pSrcY, pSrcX, pRoiLTRB, pSrcStrideH, srcLocArray, invalidLoad);
+                    rpp_simd_load(rpp_generic_nn_load_u8pln1_avx, srcPtrChannelR, srcLocArray, invalidLoad, pRow[0]);
+                    rpp_simd_load(rpp_generic_nn_load_u8pln1_avx, srcPtrChannelG, srcLocArray, invalidLoad, pRow[1]);
+                    rpp_simd_load(rpp_generic_nn_load_u8pln1_avx, srcPtrChannelB, srcLocArray, invalidLoad, pRow[2]);
+                    rpp_simd_store(rpp_store24_u8pln3_to_u8pkd3_avx, dstPtrTemp, pRow);
+                    dstPtrTemp += vectorIncrementPkd;
+                }
+                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                {
+                    Rpp32f srcX, srcY, cosFactor;
+                    dstX = vectorLoopCount;
+                    cosFactor = std::cos((freqY * dstX) + phaseY);
+                    compute_generic_nn_interpolation_pln3_to_pkd3(srcY, srcX, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
+                    dstPtrTemp += 3;
+                }
+                dstPtrRow += dstDescPtr->strides.hStride;
+            }
+        }
 
         // Water without fused output-layout toggle (NHWC -> NHWC)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
