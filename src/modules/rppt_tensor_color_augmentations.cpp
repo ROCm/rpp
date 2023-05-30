@@ -616,6 +616,9 @@ RppStatus rppt_lut_host(RppPtr_t srcPtr,
                         RpptRoiType roiType,
                         rppHandle_t rppHandle)
 {
+    if (srcDescPtr->dataType != RpptDataType::U8 && srcDescPtr->dataType != RpptDataType::I8)
+        return RPP_ERROR_INVALID_SRC_DATATYPE;
+    
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
