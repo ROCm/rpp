@@ -1481,8 +1481,8 @@ int main(int argc, char **argv)
     case 38:
     {
         test_case_name = "crop_mirror_normalize";
-        Rpp32f multiplier[3];
-        Rpp32f offset[3];
+        Rpp32f multiplier[images * 3];
+        Rpp32f offset[images * 3];
         Rpp32u mirror[images];
         Rpp32f meanParam[3] = { 60.0f, 80.0f, 100.0f };
         Rpp32f stdDevParam[3] = { 0.9f, 0.9f, 0.9f };
@@ -1647,8 +1647,8 @@ int main(int argc, char **argv)
             dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiHeight / 3;
         }
 
-        Rpp32f mean[3];
-        Rpp32f stdDev[3];
+        Rpp32f mean[images * 3];
+        Rpp32f stdDev[images * 3];
         Rpp32u mirror[images];
         for (i = 0, j = 0; i < images; i++, j += 3)
         {
