@@ -31,7 +31,8 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
                 echo Build RPP - ${buildTypeDir}
                 cd ${project.paths.project_build_prefix}
                 mkdir -p build/${buildTypeDir} && cd build/${buildTypeDir}
-                (${enableSCL}; cmake -DBACKEND=${backend} ${buildTypeArg} ../..)
+                ${enableSCL}
+                cmake -DBACKEND=${backend} ${buildTypeArg} ../..
                 make -j\$(nproc)
                 sudo make install
                 sudo make package
