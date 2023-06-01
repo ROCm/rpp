@@ -59,7 +59,9 @@ def runPackageCommand(platform, project) {
     String packageType = ""
     String packageInfo = ""
 
-    if (platform.jenkinsLabel.contains('centos'))
+    if (platform.jenkinsLabel.contains('centos') || 
+        platform.jenkinsLabel.contains('rhel') || 
+        platform.jenkinsLabel.contains('sles'))
     {
         packageType = 'rpm'
         packageInfo = 'rpm -qlp'
