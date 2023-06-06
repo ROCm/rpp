@@ -1773,7 +1773,8 @@ __device__ float gaussian(int iSquare, int j, float mulFactor)
     return expFactor;
 }
 
-__global__ void create_gaussian_kernel(float *filterTensor,
+template <typename T>
+__global__ void create_gaussian_kernel(T *filterTensor,
                                        float *stdDevTensor,
                                        int kernelSize,
                                        int filterStride,
@@ -1783,7 +1784,8 @@ __global__ void create_gaussian_kernel(float *filterTensor,
     if(id_x >= batchSize)
         return;
 
-    float *filter = &filterTensor[id_x * filterStride];
+    T filter_temp;
+    T *filter = &filterTensor[id_x];
     float stdDev = stdDevTensor[id_x];
     int cnt = 0;
     float mulFactor = 1 / (2 * stdDev * stdDev);
@@ -1795,8 +1797,8 @@ __global__ void create_gaussian_kernel(float *filterTensor,
         int iSquare = i * i;
         for(int j = startIdx; j <= endIdx; j++)
         {
-            filter[cnt] = gaussian(iSquare, j, mulFactor);
-            kernelSum += filter[cnt];
+            filter_temp.f1[cnt] = gaussian(iSquare, j, mulFactor);
+            kernelSum += filter_temp.f1[cnt];
             cnt++;
         }
     }
@@ -1808,10 +1810,12 @@ __global__ void create_gaussian_kernel(float *filterTensor,
     {
         for(int j = startIdx; j <= endIdx; j++)
         {
-            filter[cnt] *= kernelSum;
+            filter_temp.f1[cnt] *= kernelSum;
             cnt++;
         }
     }
+
+    *(T *)filter = filter_temp;
 }
 
 static RppStatus hip_exec_create_gaussian_kernel(Rpp32f *filterTensor,
@@ -1827,16 +1831,50 @@ static RppStatus hip_exec_create_gaussian_kernel(Rpp32f *filterTensor,
     int globalThreads_z = 1;
     int numValues = kernelSize * kernelSize;
 
-    hipLaunchKernelGGL(create_gaussian_kernel,
-                       dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                       dim3(localThreads_x, localThreads_y, localThreads_z),
-                       0,
-                       handle.GetStream(),
-                       filterTensor,
-                       stdDevTensor,
-                       kernelSize,
-                       numValues,
-                       handle.GetBatchSize());
+    if (kernelSize == 3)
+        hipLaunchKernelGGL(create_gaussian_kernel,
+                           dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                           dim3(localThreads_x, localThreads_y, localThreads_z),
+                           0,
+                           handle.GetStream(),
+                           (d_float9 *)filterTensor,
+                           stdDevTensor,
+                           kernelSize,
+                           numValues,
+                           handle.GetBatchSize());
+    else if (kernelSize == 5)
+        hipLaunchKernelGGL(create_gaussian_kernel,
+                           dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                           dim3(localThreads_x, localThreads_y, localThreads_z),
+                           0,
+                           handle.GetStream(),
+                           (d_float25 *)filterTensor,
+                           stdDevTensor,
+                           kernelSize,
+                           numValues,
+                           handle.GetBatchSize());
+    else if (kernelSize == 7)
+        hipLaunchKernelGGL(create_gaussian_kernel,
+                           dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                           dim3(localThreads_x, localThreads_y, localThreads_z),
+                           0,
+                           handle.GetStream(),
+                           (d_float49 *)filterTensor,
+                           stdDevTensor,
+                           kernelSize,
+                           numValues,
+                           handle.GetBatchSize());
+    else if (kernelSize == 9)
+        hipLaunchKernelGGL(create_gaussian_kernel,
+                           dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                           dim3(localThreads_x, localThreads_y, localThreads_z),
+                           0,
+                           handle.GetStream(),
+                           (d_float81 *)filterTensor,
+                           stdDevTensor,
+                           kernelSize,
+                           numValues,
+                           handle.GetBatchSize());
 
     return RPP_SUCCESS;
 }
