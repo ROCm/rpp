@@ -29,6 +29,7 @@
 #include <unistd.h>
 #endif
 
+#include<thread>
 #include "config.h"
 #include "rpp/logger.hpp"
 #include "rpp/handle.hpp"
@@ -40,12 +41,12 @@ namespace rpp {
 struct HandleImpl
 {
     size_t nBatchSize = 1;
+    Rpp32u numThreads = 0;
     InitHandle* initHandle = nullptr;
 
     void PreInitializeBufferCPU()
     {
         this->initHandle = new InitHandle();
-
         this->initHandle->nbatchSize = this->nBatchSize;
         this->initHandle->mem.mcpu.maxSrcSize = (RppiSize *)malloc(sizeof(RppiSize) * this->nBatchSize);
         this->initHandle->mem.mcpu.maxDstSize = (RppiSize *)malloc(sizeof(RppiSize) * this->nBatchSize);
@@ -54,15 +55,22 @@ struct HandleImpl
     }
 };
 
-Handle::Handle(size_t batchSize) : impl(new HandleImpl())
+Handle::Handle(size_t batchSize, Rpp32u numThreads) : impl(new HandleImpl())
 {
     impl->nBatchSize = batchSize;
+    numThreads = std::min(numThreads, std::thread::hardware_concurrency());
+    if(numThreads == 0)
+        numThreads = batchSize;
+    impl->numThreads = numThreads;
     impl->PreInitializeBufferCPU();
 }
 
 Handle::Handle() : impl(new HandleImpl())
 {
     impl->PreInitializeBufferCPU();
+    impl->numThreads = std::min(impl->numThreads, std::thread::hardware_concurrency());
+    if(impl->numThreads == 0)
+        impl->numThreads = impl->nBatchSize;
     RPP_LOG_I(*this);
 }
 
@@ -79,6 +87,11 @@ void Handle::rpp_destroy_object_host()
 size_t Handle::GetBatchSize() const
 {
     return this->impl->nBatchSize;
+}
+
+Rpp32u Handle::GetNumThreads() const
+{
+    return this->impl->numThreads;
 }
 
 void Handle::SetBatchSize(size_t bSize) const

@@ -29,10 +29,12 @@ RppStatus color_to_greyscale_u8_u8_host_tensor(Rpp8u *srcPtr,
                                                Rpp8u *dstPtr,
                                                RpptDescPtr dstDescPtr,
                                                Rpp32f *channelWeights,
-                                               RppLayoutParams layoutParams)
+                                               RppLayoutParams layoutParams,
+                                               rpp::Handle& handle)
 {
+    Rpp32u numThreads = handle.GetNumThreads();
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(dstDescPtr->n)
+#pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         Rpp8u *srcPtrImage, *dstPtrImage;
@@ -160,10 +162,12 @@ RppStatus color_to_greyscale_f32_f32_host_tensor(Rpp32f *srcPtr,
                                                  Rpp32f *dstPtr,
                                                  RpptDescPtr dstDescPtr,
                                                  Rpp32f *channelWeights,
-                                                 RppLayoutParams layoutParams)
+                                                 RppLayoutParams layoutParams,
+                                                 rpp::Handle& handle)
 {
+    Rpp32u numThreads = handle.GetNumThreads();
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(dstDescPtr->n)
+#pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         Rpp32f *srcPtrImage, *dstPtrImage;
@@ -295,10 +299,12 @@ RppStatus color_to_greyscale_f16_f16_host_tensor(Rpp16f *srcPtr,
                                                  Rpp16f *dstPtr,
                                                  RpptDescPtr dstDescPtr,
                                                  Rpp32f *channelWeights,
-                                                 RppLayoutParams layoutParams)
+                                                 RppLayoutParams layoutParams,
+                                                 rpp::Handle& handle)
 {
+    Rpp32u numThreads = handle.GetNumThreads();
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(dstDescPtr->n)
+#pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         Rpp16f *srcPtrImage, *dstPtrImage;
@@ -445,10 +451,12 @@ RppStatus color_to_greyscale_i8_i8_host_tensor(Rpp8s *srcPtr,
                                                Rpp8s *dstPtr,
                                                RpptDescPtr dstDescPtr,
                                                Rpp32f *channelWeights,
-                                               RppLayoutParams layoutParams)
+                                               RppLayoutParams layoutParams,
+                                               rpp::Handle& handle)
 {
+    Rpp32u numThreads = handle.GetNumThreads();
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(dstDescPtr->n)
+#pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         Rpp8s *srcPtrImage, *dstPtrImage;

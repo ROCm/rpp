@@ -5,6 +5,62 @@
 ### Online Documentation
 [RPP Documentation](https://gpuopen-professionalcompute-libraries.github.io/rpp/)
 
+### RPP 1.2.0 (Unreleased)
+
+#### Added
+* 
+
+#### Optimizations
+* 
+
+#### Changed
+* 
+
+#### Fixed
+* 
+
+### Tested Configurations
+* Linux distribution
+  + Ubuntu - `20.04` / `22.04`
+  + CentOS - `7`
+  + RHEL - `8`/`9`
+* ROCm: rocm-core - `5.5.0.50500-63`
+* Clang - Version `5.0.1` and above
+* CMake - Version `3.22.3`
+* Boost - Version `1.72`
+* IEEE 754-based half-precision floating-point library - Version `1.12.0`
+
+### Known issues
+* 
+
+### RPP 1.1.0
+
+#### Added
+* OpenMP - parameter support for OpenMP numthreads
+
+#### Optimizations
+* Readme Updates
+
+#### Changed
+* RPP - API Updated
+
+#### Fixed
+* Minor bugs
+
+### Tested Configurations
+* Linux distribution
+  + Ubuntu - `20.04` / `22.04`
+  + CentOS - `7`
+  + RHEL - `8`/`9`
+* ROCm: rocm-core - `5.5.0.50500-63`
+* Clang - Version `5.0.1` and above
+* CMake - Version `3.22.3`
+* Boost - Version `1.72`
+* IEEE 754-based half-precision floating-point library - Version `1.12.0`
+
+### Known issues
+* SLES - Clang package missing with latest updates. Need manual Clang install.
+
 ### RPP 1.0.0
 
 #### Added

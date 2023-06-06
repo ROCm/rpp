@@ -70,7 +70,7 @@ int main(int argc, char **argv)
 
     int i = 0, j = 0;
     int minHeight = 30000, minWidth = 30000, maxHeight = 0, maxWidth = 0;
-    
+
     unsigned long long ioBufferSize = 0;
 
     static int noOfImages = 128;
@@ -176,7 +176,11 @@ int main(int argc, char **argv)
 
     closedir(dr2);
     rppHandle_t handle;
-    rppCreateWithBatchSize(&handle, noOfImages);
+
+    // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
+    // If numThreads value passed is 0, number of OpenMP threads used by RPP will be set to batch size
+    Rpp32u numThreads = 0;
+    rppCreateWithBatchSize(&handle, noOfImages, numThreads);
 
     clock_t start, end;
     double cpu_time_used;

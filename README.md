@@ -5,33 +5,35 @@
 
 AMD ROCm Performance Primitives (**RPP**) library is a comprehensive high-performance computer vision library for AMD processors with `HIP`/`OpenCL`/`CPU` back-ends.
 
-#### Latest Release
+## Latest Release
 
 [![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/GPUOpen-ProfessionalCompute-Libraries/rpp?style=for-the-badge)](https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp/releases)
 
 ## Top level design
 
-<p align="center"><img width="50%" src="docs/images/rpp_structure_4.png" /></p>
+<p align="center"><img width="50%" src="docs/data/rpp_structure_4.png" /></p>
 
 ## Supported Functionalities and Variants
 
 ### Supported Functionalities List
 
-<p align="center"><img width="90%" src="docs/images/supported_functionalities.png" /></p>
+<p align="center"><img width="90%" src="docs/data/supported_functionalities.png" /></p>
 
 ### Supported Functionalities Samples
 
-<p align="center"><img width="90%" src="docs/images/supported_functionalities_samples.jpg" /></p>
+<p align="center"><img width="90%" src="docs/data/supported_functionalities_samples.jpg" /></p>
 
-### Supported Variants
+## Documentation
 
--   Packed 3 Channel (RGB) - PKD3 images
--   Planar 3 Channel (RGB) - PLN3 images
--   Planar 1 Channel (Greyscale) - PLN1 images
--   Affinity - Host and GPU
--   Batch Processing - 26 variants
--   ROI variants
--   Padded variants
+Run the steps below to build documentation locally.
+
+```bash
+cd docs
+
+pip3 install -r .sphinx/requirements.txt
+
+python3 -m sphinx -T -E -b html -d _build/doctrees -D language=en . _build/html
+```
 
 ## Prerequisites
 
@@ -169,7 +171,6 @@ $ cmake -DBACKEND=CPU ../rpp
 $ make -j8
 $ sudo make install
 ```
-
 ## Test Functionalities
 
 ### CPU installation
@@ -190,138 +191,6 @@ $ sudo make install
 ## MIVisionX Support - OpenVX Extension
 
 [MIVisionX](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX) RPP Extension [vx_rpp](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/master/amd_openvx_extensions/amd_rpp#amd-rpp-extension) supports RPP functionality through OpenVX Framework.
-
-## Miscellaneous examples
-
-### RPP stand-alone batch processing code snippet (HOST)
-
-    // Initializations
-    int noOfImages = 32;
-    int channels = 3;
-    RppiSize maxSize;
-    maxSize.width = 224;
-    maxSize.height = 224;
-
-    // Allocate host memory and/or obtain input data
-    unsigned long long ioBufferSize = noOfImages * maxSize.width * maxSize.height * channels;
-    Rpp8u *input = (Rpp8u *)calloc(ioBufferSize, sizeof(Rpp8u));
-    Rpp8u *output = (Rpp8u *)calloc(ioBufferSize, sizeof(Rpp8u));
-    // Get the data for a batch of 224x224 images into 'input' here
-
-    // Initialize values for any necessary parameters to the RPP function being called
-    Rpp32f alpha[noOfImages];
-    Rpp32f beta[noOfImages];
-    for (int i = 0; i < noOfImages; i++)
-    {
-        alpha[i] = 1.75;
-        beta[i] = 50;
-        srcSize[i].width = 224;
-        srcSize[i].height = 224;
-    }
-
-    // Create handle
-    rppHandle_t handle;
-    rppCreateWithBatchSize(&handle, noOfImages);
-
-    // Call the RPP API for the specific variant required (pkd3/pln3/pln1)
-    rppi_brightness_u8_pkd3_batchPD_host(input, srcSize, maxSize, output, alpha, beta, noOfImages, handle);
-
-### RPP stand-alone batch processing code snippet (OCL)
-
-    // Initializations
-    int noOfImages = 32;
-    int channels = 3;
-    RppiSize maxSize;
-    maxSize.width = 224;
-    maxSize.height = 224;
-
-    // Allocate host memory and/or obtain input data
-    unsigned long long ioBufferSize = noOfImages * maxSize.width * maxSize.height * channels;
-    Rpp8u *input = (Rpp8u *)calloc(ioBufferSize, sizeof(Rpp8u));
-    Rpp8u *output = (Rpp8u *)calloc(ioBufferSize, sizeof(Rpp8u));
-    // Get the data for a batch of 224x224 images into 'input' here
-
-    // OCL initializations, allocate device memory and copy input data to device
-    cl_mem d_input, d_output;
-    cl_platform_id platform_id;
-    cl_device_id device_id;
-    cl_context theContext;
-    cl_command_queue theQueue;
-    cl_int err;
-    err = clGetPlatformIDs(1, &platform_id, NULL);
-    err |= clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_GPU, 1, &device_id, NULL);
-    theContext = clCreateContext(0, 1, &device_id, NULL, NULL, &err);
-    theQueue = clCreateCommandQueueWithProperties(theContext, device_id, 0, &err);
-    d_input = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8u), NULL, NULL);
-    d_output = clCreateBuffer(theContext, CL_MEM_READ_ONLY, ioBufferSize * sizeof(Rpp8u), NULL, NULL);
-    err |= clEnqueueWriteBuffer(theQueue, d_input, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), input, 0, NULL, NULL);
-    err |= clEnqueueWriteBuffer(theQueue, d_output, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), output, 0, NULL, NULL);
-
-    // Initialize values for any necessary parameters to the RPP function being called
-    Rpp32f alpha[noOfImages];
-    Rpp32f beta[noOfImages];
-    for (int i = 0; i < noOfImages; i++)
-    {
-        alpha[i] = 1.75;
-        beta[i] = 50;
-        srcSize[i].width = 224;
-        srcSize[i].height = 224;
-    }
-
-    // Create handle
-    rppHandle_t handle;
-    rppCreateWithStreamAndBatchSize(&handle, theQueue, noOfImages);
-
-    // Call the RPP API for the specific variant required (pkd3/pln3/pln1)
-    rppi_brightness_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, alpha, beta, noOfImages, handle);
-
-    // Copy output data back to host
-    clEnqueueReadBuffer(theQueue, d_output, CL_TRUE, 0, ioBufferSize * sizeof(Rpp8u), output, 0, NULL, NULL);
-
-### RPP stand-alone batch processing code snippet (HIP)
-
-    // Initializations
-    int noOfImages = 32;
-    int channels = 3;
-    RppiSize maxSize;
-    maxSize.width = 224;
-    maxSize.height = 224;
-
-    // Allocate host memory and/or obtain input data
-    unsigned long long ioBufferSize = noOfImages * maxSize.width * maxSize.height * channels;
-    Rpp8u *input = (Rpp8u *)calloc(ioBufferSize, sizeof(Rpp8u));
-    Rpp8u *output = (Rpp8u *)calloc(ioBufferSize, sizeof(Rpp8u));
-    // Get the data for a batch of 224x224 images into 'input' here
-
-    // HIP initializations, allocate device memory and copy input data to device
-    int *d_input, d_output;
-    hipMalloc(&d_input, ioBufferSize * sizeof(Rpp8u));
-    hipMalloc(&d_output, ioBufferSize * sizeof(Rpp8u));
-    hipMemcpy(d_input, input, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
-    hipMemcpy(d_output, output, ioBufferSize * sizeof(Rpp8u), hipMemcpyHostToDevice);
-
-    // Initialize values for any necessary parameters to the RPP function being called
-    Rpp32f alpha[noOfImages];
-    Rpp32f beta[noOfImages];
-    for (int i = 0; i < noOfImages; i++)
-    {
-        alpha[i] = 1.75;
-        beta[i] = 50;
-        srcSize[i].width = 224;
-        srcSize[i].height = 224;
-    }
-
-    // Create handle
-    rppHandle_t handle;
-    hipStream_t stream;
-    hipStreamCreate(&stream);
-    rppCreateWithStreamAndBatchSize(&handle, stream, noOfImages);
-
-    // Call the RPP API for the specific variant required (pkd3/pln3/pln1)
-    rppi_brightness_u8_pkd3_batchPD_gpu(d_input, srcSize, maxSize, d_output, alpha, beta, noOfImages, handle);
-
-    // Copy output data back to host
-    hipMemcpy(output, d_output, ioBufferSize * sizeof(Rpp8u), hipMemcpyDeviceToHost);
 
 ## Technical Support
 
