@@ -334,7 +334,7 @@ int main(int argc, char **argv)
     output = static_cast<Rpp8u *>(calloc(outputBufferSize, 1));
 
     // Convert inputs to correponding bit depth specified by user
-    if (inputBitDepth == 0)
+    if (inputBitDepth == 0 || inputBitDepth == 3 || inputBitDepth == 4)
     {
         memcpy(input, inputu8, inputBufferSize);
         memcpy(input_second, inputu8Second, inputBufferSize);

@@ -626,7 +626,7 @@ int main(int argc, char **argv)
         cout <<"CPU Backend Wall Time: "<< wallTime <<" ms/batch"<< endl;
 
        // Reconvert other bit depths to 8u for output display purposes
-        if (inputBitDepth == 0)
+        if (inputBitDepth == 0 || inputBitDepth == 3 || inputBitDepth == 4)
         {
             memcpy(outputu8, output, outputBufferSize);
         }
