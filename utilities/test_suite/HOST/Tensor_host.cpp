@@ -674,7 +674,7 @@ int main(int argc, char **argv)
         maxWallTime *= 1000;
         minWallTime *= 1000;
         avgWallTime *= 1000;
-        avgWallTime /= numRuns;
+        avgWallTime /= (numRuns * batchSize);
         cout << fixed << "\nmax,min,avg wall times in ms/batch = " << maxWallTime << "," << minWallTime << "," << avgWallTime;
     }
 
