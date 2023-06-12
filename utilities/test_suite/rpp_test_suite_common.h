@@ -48,6 +48,7 @@ std::map<int, string> augmentationMap =
     {4, "contrast"},
     {13, "exposure"},
     {31, "color_cast"},
+    {34, "lut"},
     {36, "color_twist"},
     {38, "crop_mirror_normalize"},
 };

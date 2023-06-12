@@ -511,6 +511,44 @@ int main(int argc, char **argv)
 
                 break;
             }
+            case 34:
+            {
+                testCaseName = "lut";
+
+                Rpp32f lutBuffer[65536] = {0};
+                Rpp8u *lut8u = reinterpret_cast<Rpp8u *>(lutBuffer);
+                Rpp16f *lut16f = reinterpret_cast<Rpp16f *>(lutBuffer);
+                Rpp32f *lut32f = reinterpret_cast<Rpp32f *>(lutBuffer);
+                Rpp8s *lut8s = reinterpret_cast<Rpp8s *>(lutBuffer);
+                if (inputBitDepth == 0)
+                    for (j = 0; j < 256; j++)
+                        lut8u[j] = (Rpp8u)(255 - j);
+                else if (inputBitDepth == 3)
+                    for (j = 0; j < 256; j++)
+                        lut16f[j] = (Rpp16f)((255 - j) * ONE_OVER_255);
+                else if (inputBitDepth == 4)
+                    for (j = 0; j < 256; j++)
+                        lut32f[j] = (Rpp32f)((255 - j) * ONE_OVER_255);
+                else if (inputBitDepth == 5)
+                    for (j = 0; j < 256; j++)
+                        lut8s[j] = (Rpp8s)(255 - j - 128);
+
+
+                startWallTime = omp_get_wtime();
+                startCpuTime = clock();
+                if (inputBitDepth == 0)
+                    rppt_lut_host(input, srcDescPtr, output, dstDescPtr, lut8u, roiTensorPtrSrc, roiTypeSrc, handle);
+                else if (inputBitDepth == 3)
+                    rppt_lut_host(input, srcDescPtr, output, dstDescPtr, lut16f, roiTensorPtrSrc, roiTypeSrc, handle);
+                else if (inputBitDepth == 4)
+                    rppt_lut_host(input, srcDescPtr, output, dstDescPtr, lut32f, roiTensorPtrSrc, roiTypeSrc, handle);
+                else if (inputBitDepth == 5)
+                    rppt_lut_host(input, srcDescPtr, output, dstDescPtr, lut8s, roiTensorPtrSrc, roiTypeSrc, handle);
+                else
+                    missingFuncFlag = 1;
+
+                break;
+            }
             case 36:
             {
                 testCaseName = "color_twist";
@@ -626,7 +664,7 @@ int main(int argc, char **argv)
         cout <<"CPU Backend Wall Time: "<< wallTime <<" ms/batch"<< endl;
 
        // Reconvert other bit depths to 8u for output display purposes
-        if (inputBitDepth == 0)
+        if (inputBitDepth == 0 || inputBitDepth == 3 || inputBitDepth == 4)
         {
             memcpy(outputu8, output, outputBufferSize);
         }
