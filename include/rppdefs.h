@@ -39,6 +39,7 @@ THE SOFTWARE.
 
 const float ONE_OVER_6 = 1.0f / 6;
 const float ONE_OVER_3 = 1.0f / 3;
+const float ONE_OVER_255 = 1.0f / 255;
 
 /******************** RPP typedefs ********************/
 
@@ -67,7 +68,8 @@ typedef enum
     RPP_ERROR_INVALID_SRC_CHANNELS      = -7,
     RPP_ERROR_INVALID_DST_CHANNELS      = -8,
     RPP_ERROR_INVALID_SRC_LAYOUT        = -9,
-    RPP_ERROR_INVALID_DST_LAYOUT        = -10
+    RPP_ERROR_INVALID_DST_LAYOUT        = -10,
+    RPP_ERROR_INVALID_SRC_DATATYPE      = -11
 } RppStatus;
 
 typedef enum

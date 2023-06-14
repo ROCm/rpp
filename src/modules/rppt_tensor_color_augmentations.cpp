@@ -605,6 +605,70 @@ RppStatus rppt_contrast_host(RppPtr_t srcPtr,
     return RPP_SUCCESS;
 }
 
+/******************** lut ********************/
+
+RppStatus rppt_lut_host(RppPtr_t srcPtr,
+                        RpptDescPtr srcDescPtr,
+                        RppPtr_t dstPtr,
+                        RpptDescPtr dstDescPtr,
+                        RppPtr_t lutPtr,
+                        RpptROIPtr roiTensorPtrSrc,
+                        RpptRoiType roiType,
+                        rppHandle_t rppHandle)
+{
+    if (srcDescPtr->dataType != RpptDataType::U8 && srcDescPtr->dataType != RpptDataType::I8)
+        return RPP_ERROR_INVALID_SRC_DATATYPE;
+    
+    RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+
+    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+    {
+        lut_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                              srcDescPtr,
+                              static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                              dstDescPtr,
+                              static_cast<Rpp8u*>(lutPtr),
+                              roiTensorPtrSrc,
+                              roiType,
+                              layoutParams);
+    }
+    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::F16))
+    {
+        lut_u8_f16_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                               srcDescPtr,
+                               static_cast<Rpp16f*>(dstPtr) + dstDescPtr->offsetInBytes,
+                               dstDescPtr,
+                               static_cast<Rpp16f*>(lutPtr),
+                               roiTensorPtrSrc,
+                               roiType,
+                               layoutParams);
+    }
+    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        lut_u8_f32_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                               srcDescPtr,
+                               static_cast<Rpp32f*>(dstPtr) + dstDescPtr->offsetInBytes,
+                               dstDescPtr,
+                               static_cast<Rpp32f*>(lutPtr),
+                               roiTensorPtrSrc,
+                               roiType,
+                               layoutParams);
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+    {
+        lut_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                              srcDescPtr,
+                              static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                              dstDescPtr,
+                              static_cast<Rpp8s*>(lutPtr),
+                              roiTensorPtrSrc,
+                              roiType,
+                              layoutParams);
+    }
+
+    return RPP_SUCCESS;
+}
+
 /********************************************************************************************************************/
 /*********************************************** RPP_GPU_SUPPORT = ON ***********************************************/
 /********************************************************************************************************************/
@@ -1064,6 +1128,72 @@ RppStatus rppt_contrast_gpu(RppPtr_t srcPtr,
                                  roiTensorPtrSrc,
                                  roiType,
                                  rpp::deref(rppHandle));
+    }
+
+    return RPP_SUCCESS;
+#elif defined(OCL_COMPILE)
+    return RPP_ERROR_NOT_IMPLEMENTED;
+#endif // backend
+}
+
+/******************** lut ********************/
+
+RppStatus rppt_lut_gpu(RppPtr_t srcPtr,
+                       RpptDescPtr srcDescPtr,
+                       RppPtr_t dstPtr,
+                       RpptDescPtr dstDescPtr,
+                       RppPtr_t lutPtr,
+                       RpptROIPtr roiTensorPtrSrc,
+                       RpptRoiType roiType,
+                       rppHandle_t rppHandle)
+{
+#ifdef HIP_COMPILE
+    if (srcDescPtr->dataType != RpptDataType::U8 && srcDescPtr->dataType != RpptDataType::I8)
+        return RPP_ERROR_INVALID_SRC_DATATYPE;
+
+    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+    {
+        hip_exec_lut_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                            srcDescPtr,
+                            static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                            dstDescPtr,
+                            static_cast<Rpp8u*>(lutPtr),
+                            roiTensorPtrSrc,
+                            roiType,
+                            rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::F16))
+    {
+        hip_exec_lut_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                            srcDescPtr,
+                            (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                            dstDescPtr,
+                            static_cast<half*>(lutPtr),
+                            roiTensorPtrSrc,
+                            roiType,
+                            rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        hip_exec_lut_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                            srcDescPtr,
+                            (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                            dstDescPtr,
+                            static_cast<Rpp32f*>(lutPtr),
+                            roiTensorPtrSrc,
+                            roiType,
+                            rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+    {
+        hip_exec_lut_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                            srcDescPtr,
+                            static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                            dstDescPtr,
+                            static_cast<Rpp8s*>(lutPtr),
+                            roiTensorPtrSrc,
+                            roiType,
+                            rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;
