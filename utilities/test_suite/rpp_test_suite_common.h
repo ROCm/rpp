@@ -428,7 +428,7 @@ inline void convert_roi(RpptROI *roiTensorPtrSrc, RpptRoiType roiType, int batch
 // Convert inputs to correponding bit depth specified by user
 inline void convert_input_bitdepth(void *input, void *input_second, Rpp8u *inputu8, Rpp8u *inputu8Second, int inputBitDepth, Rpp64u ioBufferSize, Rpp64u inputBufferSize, RpptDescPtr srcDescPtr, bool dualInputCase, Rpp32f conversionFactor)
 {
-    if (inputBitDepth == 0)
+    if (inputBitDepth == 0 || inputBitDepth == 3 || inputBitDepth == 4)
     {
         memcpy(input, inputu8, inputBufferSize);
         if(dualInputCase)
