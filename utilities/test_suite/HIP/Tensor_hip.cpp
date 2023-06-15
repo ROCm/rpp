@@ -290,6 +290,7 @@ int main(int argc, char **argv)
     hipStreamCreate(&stream);
     rppCreateWithStreamAndBatchSize(&handle, stream, batchSize);
 
+    int noOfIterations = (int)imageNames.size() / batchSize;
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0;
     double wallTime;
     string testCaseName;
@@ -304,7 +305,7 @@ int main(int argc, char **argv)
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
     for (int perfRunCount = 0; perfRunCount < numRuns; perfRunCount++)
     {
-        for(int iterCount = 0; iterCount < (int)imageNames.size() / batchSize; iterCount++)
+        for(int iterCount = 0; iterCount < noOfIterations; iterCount++)
         {
             vector<string>::const_iterator imagesPathStart = imageNamesPath.begin() + (iterCount * batchSize);
             vector<string>::const_iterator imagesPathEnd = imagesPathStart + batchSize;
@@ -716,7 +717,7 @@ int main(int argc, char **argv)
         maxWallTime *= 1000;
         minWallTime *= 1000;
         avgWallTime *= 1000;
-        avgWallTime /= (numRuns * batchSize);
+        avgWallTime /= (numRuns * noOfIterations);
         cout << fixed <<"\nmax,min,avg wall times in ms/batch = " << maxWallTime << "," << minWallTime << "," << avgWallTime << endl;
     }
 

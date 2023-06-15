@@ -28,6 +28,7 @@ python runTests.py --input_path1 <input_path1> --input_path2 <input_path2> --cas
 
 ## Modes of operation
 -   QA mode - Tolerance based PASS/FAIL tests for RPP HIP/HOST functionalities checking pixelwise match between C/SSE/AVX/HIP versions after comparison to preset golden outputs. Please note that QA mode is only supported with a batch size of 3.
+Note: QA mode is not supported for case 84 due to run-to-run variation of outputs.
 ``` python
 python runTests.py --case_start 0 --case_end 38 --test_type 0 --qa_mode 1 --batch_size 3
 ```
