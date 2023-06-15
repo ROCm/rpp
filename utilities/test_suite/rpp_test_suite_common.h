@@ -687,6 +687,7 @@ void search_jpg_files(const string& folder_path, vector<string>& imageNames, vec
         entry_list.push_back(entry_name);
     }
     closedir(sub_dir);
+    sort(entry_list.begin(), entry_list.end());
 
     for (unsigned dir_count = 0; dir_count < entry_list.size(); ++dir_count)
     {
