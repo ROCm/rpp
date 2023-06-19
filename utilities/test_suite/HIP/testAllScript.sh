@@ -185,7 +185,7 @@ directory_name_generator() {
     fi
 }
 
-VALIDATE_PATH $DST_FOLDER
+VALIDATE_PATH "$DST_FOLDER"
 
 shopt -s extglob
 mkdir build
@@ -194,7 +194,7 @@ cd build
 cmake ..
 make -j16
 
-if [[ $TEST_TYPE -eq 1 ]] && [[ $PROFILING_OPTION -eq 1 ]]; then
+if [[ "$TEST_TYPE" -eq 1 ]] && [[ "$PROFILING_OPTION" -eq 1 ]]; then
     mkdir "$DST_FOLDER/Tensor_PKD3"
     mkdir "$DST_FOLDER/Tensor_PLN1"
     mkdir "$DST_FOLDER/Tensor_PLN3"
