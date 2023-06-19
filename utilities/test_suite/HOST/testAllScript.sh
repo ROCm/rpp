@@ -183,7 +183,7 @@ directory_name_generator() {
     fi
 }
 
-VALIDATE_PATH $DST_FOLDER
+VALIDATE_PATH "$DST_FOLDER"
 
 shopt -s extglob
 mkdir build
