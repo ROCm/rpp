@@ -3297,13 +3297,13 @@ inline void rpp_store24_u8pkd3_to_u8pln3_avx(Rpp8u* dstPtrR, Rpp8u* dstPtrG, Rpp
     const __m128i maskB2 = _mm_setr_epi8(1, 4, 7, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80);
     p128[0] = _mm256_extractf128_si256(p, 0);
     p128[1] = _mm256_extractf128_si256(p, 1);
-    _mm_storeu_si32((__m128i *)(dstPtrR), _mm_shuffle_epi8(p128[0], maskR1));
-    _mm_storeu_si32((__m128i *)(dstPtrG), _mm_shuffle_epi8(p128[0], maskG1));
-    _mm_storeu_si32((__m128i *)(dstPtrB), _mm_shuffle_epi8(p128[0], maskB1));
+    _mm_storeu_si128((__m128i *)(dstPtrR), _mm_shuffle_epi8(p128[0], maskR1));
+    _mm_storeu_si128((__m128i *)(dstPtrG), _mm_shuffle_epi8(p128[0], maskG1));
+    _mm_storeu_si128((__m128i *)(dstPtrB), _mm_shuffle_epi8(p128[0], maskB1));
 
-    _mm_storeu_si32((__m128i *)(dstPtrR + 6), _mm_shuffle_epi8(p128[1], maskR2));
-    _mm_storeu_si32((__m128i *)(dstPtrG + 5), _mm_shuffle_epi8(p128[1], maskG2));
-    _mm_storeu_si32((__m128i *)(dstPtrB + 5), _mm_shuffle_epi8(p128[1], maskB2));
+    _mm_storeu_si128((__m128i *)(dstPtrR + 6), _mm_shuffle_epi8(p128[1], maskR2));
+    _mm_storeu_si128((__m128i *)(dstPtrG + 5), _mm_shuffle_epi8(p128[1], maskG2));
+    _mm_storeu_si128((__m128i *)(dstPtrB + 5), _mm_shuffle_epi8(p128[1], maskB2));
 }
 
 inline void rpp_store24_i8pkd3_to_i8pln3_avx(Rpp8s* dstPtrR, Rpp8s* dstPtrG, Rpp8s* dstPtrB, __m256i &p)
@@ -3317,13 +3317,13 @@ inline void rpp_store24_i8pkd3_to_i8pln3_avx(Rpp8s* dstPtrR, Rpp8s* dstPtrG, Rpp
     const __m128i maskB2 = _mm_setr_epi8(1, 4, 7, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80);
     p128[0] = _mm256_extractf128_si256(p, 0);
     p128[1] = _mm256_extractf128_si256(p, 1);
-    _mm_storeu_si32((__m128i *)(dstPtrR), _mm_shuffle_epi8(p128[0], maskR1));
-    _mm_storeu_si32((__m128i *)(dstPtrG), _mm_shuffle_epi8(p128[0], maskG1));
-    _mm_storeu_si32((__m128i *)(dstPtrB), _mm_shuffle_epi8(p128[0], maskB1));
+    _mm_storeu_si128((__m128i *)(dstPtrR), _mm_shuffle_epi8(p128[0], maskR1));
+    _mm_storeu_si128((__m128i *)(dstPtrG), _mm_shuffle_epi8(p128[0], maskG1));
+    _mm_storeu_si128((__m128i *)(dstPtrB), _mm_shuffle_epi8(p128[0], maskB1));
 
-    _mm_storeu_si32((__m128i *)(dstPtrR + 6), _mm_shuffle_epi8(p128[1], maskR2));
-    _mm_storeu_si32((__m128i *)(dstPtrG + 5), _mm_shuffle_epi8(p128[1], maskG2));
-    _mm_storeu_si32((__m128i *)(dstPtrB + 5), _mm_shuffle_epi8(p128[1], maskB2));
+    _mm_storeu_si128((__m128i *)(dstPtrR + 6), _mm_shuffle_epi8(p128[1], maskR2));
+    _mm_storeu_si128((__m128i *)(dstPtrG + 5), _mm_shuffle_epi8(p128[1], maskG2));
+    _mm_storeu_si128((__m128i *)(dstPtrB + 5), _mm_shuffle_epi8(p128[1], maskB2));
 }
 
 inline void rpp_store4_u8_to_u8(Rpp8u* dstPtr, __m128i &p)
