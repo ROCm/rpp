@@ -23,23 +23,48 @@ import subprocess  # nosec
 import argparse
 import sys
 import datetime
+import shutil
 
 # Set the timestamp
 timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-# Set the value of an environment variable
-os.environ["TIMESTAMP"] = timestamp
+# # Set the value of an environment variable
+# os.environ["TIMESTAMP"] = timestamp
 
 cwd = os.getcwd()
 inFilePath1 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src1')
 inFilePath2 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src2')
 qaInputFile = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src1')
 
-def validate_path(input_path):
-    if not os.path.exists(input_path):
-        raise ValueError("path " + input_path + " does not exist.")
-    if not os.path.isdir(input_path):
-        raise ValueError(" path " + input_path + " is not a directory.")
+def validate_and_remove_contents(path):
+    if not path:  # check if a string is empty
+        print("Folder path is empty.")
+        exit()
+    if path == "/*":  # check if the root directory is passed to the function
+        print("Root folder cannot be deleted.")
+        exit()
+    if os.path.exists(path):  # check if the folder exists
+        os.system("rm -rvf {}/*".format(path))  # Delete the directory if it exists
+    else:
+        print("Path is invalid or does not exist.")
+        exit()
+
+def validate_and_remove_folders(path, folder):
+    if path == "/*":  # check if the root directory is passed to the function
+        print("Root folder cannot be deleted.")
+        exit()
+    if path and os.path.isdir(path + "/.."):  # checks if directory string is not empty and it exists
+        output_folders = [folder_name for folder_name in os.listdir(path + "/..") if folder_name.startswith(folder)]
+
+        # Loop through each directory and delete it only if it exists
+        for folder_name in output_folders:
+            folder_path = os.path.join(path, "..", folder_name)
+            if os.path.isdir(folder_path):
+                os.system("rm -rf {}".format(folder_path))  # Delete the directory if it exists
+                print("Deleted directory:", folder_path)
+            else:
+                print("Directory not found:", folder_path)
+
 
 def create_layout_directories(dst_path, layout_dict):
     for layout in range(3):
@@ -52,12 +77,46 @@ def create_layout_directories(dst_path, layout_dict):
         for folder in folder_list:
             os.rename(dst_path + '/' + folder, dst_path + '/' + current_layout +  '/' + folder)
 
+def validate_path(input_path):
+    if not os.path.exists(input_path):
+        raise ValueError("path " + input_path +" does not exist.")
+    if not os.path.isdir(input_path):
+        raise ValueError("path " + input_path + " is not a directory.")
+
 def get_log_file_list(preserveOutput):
     return [
         "../OUTPUT_PERFORMANCE_LOGS_HOST_" + timestamp + "/Tensor_host_pkd3_raw_performance_log.txt",
         "../OUTPUT_PERFORMANCE_LOGS_HOST_" + timestamp + "/Tensor_host_pln3_raw_performance_log.txt",
         "../OUTPUT_PERFORMANCE_LOGS_HOST_" + timestamp + "/Tensor_host_pln1_raw_performance_log.txt"
     ]
+
+# Functionality group finder
+def func_group_finder(case_number):
+    if case_number < 5 or case_number == 13 or case_number == 36 or case_number == 31:
+        return "color_augmentations"
+    elif case_number == 8 or case_number == 30 or case_number == 83 or case_number == 84:
+        return "effects_augmentations"
+    elif case_number < 40:
+        return "geometric_augmentations"
+    elif case_number < 42:
+        return "morphological_operations"
+    elif case_number == 49:
+        return "filter_augmentations"
+    elif case_number < 86:
+        return "data_exchange_operations"
+    else:
+        return "miscellaneous"
+
+def directory_name_generator(qaMode, affinity, type, case, path):
+    if qaMode == 0:
+        functionality_group = func_group_finder(int(case))
+
+        dst_folder_temp = f"{path}/rpp_{affinity}_{type}_{functionality_group}"
+    else:
+        dst_folder_temp = path
+
+    return dst_folder_temp
+
 
 def rpp_test_suite_parser_and_validator():
     parser = argparse.ArgumentParser()
@@ -137,6 +196,11 @@ numRuns = args.num_runs
 preserveOutput = args.preserve_output
 batchSize = args.batch_size
 
+if preserveOutput == 0:
+    validate_and_remove_folders(cwd, "OUTPUT_IMAGES_HOST")
+    validate_and_remove_folders(cwd, "QA_RESULTS_HOST")
+    validate_and_remove_folders(cwd, "OUTPUT_PERFORMANCE_LOGS_HOST")
+
 if qaMode and os.path.abspath(qaInputFile) != os.path.abspath(srcPath1):
     print("QA mode should only run with the given Input path: ", qaInputFile)
     exit(0)
@@ -145,7 +209,6 @@ if qaMode and batchSize != 3:
     print("QA mode can only run with a batch size of 3.")
     exit(0)
 
-# set the output folders and number of runs based on type of test (unit test / performance test)
 if(testType == 0):
     if qaMode:
         outFilePath = os.path.join(os.path.dirname(cwd), 'QA_RESULTS_HOST_' + timestamp)
@@ -154,12 +217,144 @@ if(testType == 0):
     numRuns = 1
 elif(testType == 1):
     if numRuns == 0:
-        numRuns = 100  #default numRuns for running performance tests
+        numRuns = 100 #default numRuns for running performance tests
     outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_PERFORMANCE_LOGS_HOST_' + timestamp)
+else:
+    print("Invalid TEST_TYPE specified. TEST_TYPE should be 0/1 (0 = Unittests / 1 = Performancetests)")
+    exit()
+
+print(outFilePath)
+os.mkdir(outFilePath)
+loggingFolder = outFilePath
 dstPath = outFilePath
 
-# run the shell script
-subprocess.call(["./testAllScript.sh", srcPath1, args.input_path2, str(testType), str(numRuns), str(qaMode), str(decoderType), str(preserveOutput), str(batchSize), " ".join(caseList)])  # nosec
+# Validate DST_FOLDER
+validate_and_remove_contents(dstPath)
+
+# Enable extglob
+if os.path.exists("build"):
+    shutil.rmtree("build")
+os.makedirs("build")
+os.chdir("build")
+
+# Run cmake and make commands
+subprocess.run(["cmake", ".."])
+subprocess.run(["make", "-j16"])
+
+print("\n\n\n\n\n")
+print("##########################################################################################")
+print("Running all layout Inputs...")
+print("##########################################################################################")
+
+if testType == 0:
+    for case in caseList:
+        if int(case) < 0 or int(case) > 84:
+            print(f"Invalid case number {case}. Case number must be in the range of 0 to 84!")
+            continue
+        for layout in range(3):
+            if layout == 0:
+                dstPathTemp = directory_name_generator(qaMode, "host", "pkd3", case, dstPath)
+            elif layout == 1:
+                dstPathTemp = directory_name_generator(qaMode, "host", "pln3", case, dstPath)
+            elif layout == 2:
+                dstPathTemp = directory_name_generator(qaMode, "host", "pln1", case, dstPath)
+
+            if qaMode == 0:
+                if not os.path.isdir(dstPathTemp):
+                    os.mkdir(dstPathTemp)
+
+            print("\n\n\n\n")
+            print("--------------------------------")
+            print("Running a New Functionality...")
+            print("--------------------------------")
+            
+            for bitDepth in range(7):
+                print("\n\n\nRunning New Bit Depth...\n-------------------------\n\n")
+                
+                for outputFormatToggle in range(2):
+                    # There is no layout toggle for PLN1 case, so skip this case
+                    if layout == 2 and outputFormatToggle == 1:
+                        continue
+
+                    if case == 8:
+                        for noiseType in range(3):
+                            print(f"./Tensor_host {srcPath1} {srcPath2} {dstPathTemp} {bitDepth} {outputFormatToggle} {case} {noiseType} 0 ")
+                            subprocess.run(["./Tensor_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(noiseType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)])
+                    elif case == 21 or case == 23 or case == 24:
+                        for interpolationType in range(6):
+                            print(f"./Tensor_host {srcPath1} {srcPath2} {dstPathTemp} {bitDepth} {outputFormatToggle} {case} {interpolationType} 0")
+                            subprocess.run(["./Tensor_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(interpolationType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)])
+                    else:
+                        print(f"./Tensor_host {srcPath1} {srcPath2} {dstPathTemp} {bitDepth} {outputFormatToggle} {case} 0 {numRuns} {testType} {layout} 0")
+                        subprocess.run(["./Tensor_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), "0", str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)])
+
+                    print("------------------------------------------------------------------------------------------")
+    layoutDict = {0:"PKD3", 1:"PLN3", 2:"PLN1"}
+    if qaMode == 0:
+        create_layout_directories(dstPath, layoutDict)
+else:
+    for case in caseList:
+        if int(case) < 0 or int(case) > 84:
+            print(f"Invalid case number {case}. Case number must be in the range of 0 to 84!")
+            continue
+        for layout in range(3):
+            if layout == 0:
+                directory_name_generator(qaMode, "host", "pkd3", case, dstPath)
+                log_file_layout = "pkd3"
+            elif layout == 1:
+                directory_name_generator(qaMode, "host", "pln3", case, dstPath)
+                log_file_layout = "pln3"
+            elif layout == 2:
+                directory_name_generator(qaMode, "host", "pln1", case, dstPath)
+                log_file_layout = "pln1"
+
+            print("\n\n\n\n")
+            print("--------------------------------")
+            print("Running a New Functionality...")
+            print("--------------------------------")
+            
+            for bitDepth in range(7):
+                print("\n\n\nRunning New Bit Depth...\n-------------------------\n\n")
+                
+                for outputFormatToggle in range(2):
+                    # There is no layout toggle for PLN1 case, so skip this case
+                    if layout == 2 and outputFormatToggle == 1:
+                        continue
+
+                    if case == 8:
+                        for noiseType in range(3):
+                            with open(f"{loggingFolder}/Tensor_host_{log_file_layout}_raw_performance_log.txt", "a") as log_file:
+                                print(f"./Tensor_host {srcPath1} {srcPath2} {dstPath} {bitDepth} {outputFormatToggle} {case} {noiseType} 0 ")
+                                process = subprocess.run(["./Tensor_host", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(noiseType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+                                while True:
+                                    output = process.stdout.readline()
+                                    if not output and process.poll() is not None:
+                                        break
+                                    print(output.strip())
+                                    log_file.write(output)
+                    elif case == 21 or case == 23 or case == 24:
+                        for interpolationType in range(6):
+                            with open(f"{loggingFolder}/Tensor_host_{log_file_layout}_raw_performance_log.txt", "a") as log_file:
+                                print(f"./Tensor_host {srcPath1} {srcPath2} {dstPath} {bitDepth} {outputFormatToggle} {case} {interpolationType} 0")
+                                process = subprocess.run(["./Tensor_host", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(interpolationType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+                                while True:
+                                    output = process.stdout.readline()
+                                    if not output and process.poll() is not None:
+                                        break
+                                    print(output.strip())
+                                    log_file.write(output)
+                    else:
+                        with open(f"{loggingFolder}/Tensor_host_{log_file_layout}_raw_performance_log.txt", "a") as log_file:
+                            print(f"./Tensor_host {srcPath1} {srcPath2} {dstPath} {bitDepth} {outputFormatToggle} {case} 0 {numRuns} {testType} {layout} 0")
+                            process = subprocess.Popen(["./Tensor_host", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), "0", str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+                            while True:
+                                output = process.stdout.readline()
+                                if not output and process.poll() is not None:
+                                    break
+                                print(output.strip())
+                                log_file.write(output)
+
+                    print("------------------------------------------------------------------------------------------")
 
 # print the results of qa tests
 supportedCaseList = ['0', '1', '2', '4', '13', '31', '34', '36', '37', '38', '84']
