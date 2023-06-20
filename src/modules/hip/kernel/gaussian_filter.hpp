@@ -1773,8 +1773,9 @@ __device__ float gaussian(int iSquare, int j, float mulFactor)
     return expFactor;
 }
 
-template <typename T>
+template <typename T, typename U>
 __global__ void create_gaussian_kernel(T *filterTensor,
+                                       U *rowType,
                                        float *stdDevTensor,
                                        int kernelSize,
                                        int filterStride,
@@ -1787,17 +1788,36 @@ __global__ void create_gaussian_kernel(T *filterTensor,
     T filter_temp;
     T *filter = &filterTensor[id_x];
     float stdDev = stdDevTensor[id_x];
-    int cnt = 0;
     float mulFactor = 1 / (2 * stdDev * stdDev);
-    float kernelSum = 0.0f;
-    int startIdx = -(kernelSize / 2);
-    int endIdx = -startIdx;
-    for(int i = startIdx; i <= endIdx; i++)
+    int kernelSizeByTwo = kernelSize / 2;
+    int startIdx = - (kernelSizeByTwo);
+    int lastRowIdx = (kernelSize - 1) * kernelSize;
+    int rowIdx = 0;
+
+    // compute values for only top left quarter and replicate the values
+    for(int i = startIdx; i <= 0; i++, rowIdx += kernelSize)
     {
         int iSquare = i * i;
-        for(int j = startIdx; j <= endIdx; j++)
+        int colIdx = 0;
+        for(int j = startIdx; j <= 0; j++, colIdx++)
         {
-            filter_temp.f1[cnt] = gaussian(iSquare, j, mulFactor);
+            filter_temp.f1[rowIdx + colIdx] = gaussian(iSquare, j, mulFactor);
+            filter_temp.f1[rowIdx + kernelSize - 1 - colIdx] = filter_temp.f1[rowIdx + colIdx];
+        }
+
+        // Copy symmetric rows
+        if((lastRowIdx - rowIdx) != rowIdx)
+            *(U *)(&filter_temp.f1[lastRowIdx - rowIdx]) = *(U *)(&filter_temp.f1[rowIdx]); // To check, if branching inside if for loop cause degration in performance
+    }
+
+
+    // Find the sum of kernel values
+    int cnt = 0;
+    float kernelSum = 0.0f;
+    for(int i = startIdx; i <= kernelSizeByTwo; i++)
+    {
+        for(int j = startIdx; j <= kernelSizeByTwo; j++)
+        {
             kernelSum += filter_temp.f1[cnt];
             cnt++;
         }
@@ -1806,9 +1826,9 @@ __global__ void create_gaussian_kernel(T *filterTensor,
 
     // Multiply kernel values by (1 / kernelSum)
     cnt = 0;
-    for(int i = startIdx; i <= endIdx; i++)
+    for(int i = startIdx; i <= kernelSizeByTwo; i++)
     {
-        for(int j = startIdx; j <= endIdx; j++)
+        for(int j = startIdx; j <= kernelSizeByTwo; j++)
         {
             filter_temp.f1[cnt] *= kernelSum;
             cnt++;
@@ -1832,49 +1852,65 @@ static RppStatus hip_exec_create_gaussian_kernel(Rpp32f *filterTensor,
     int numValues = kernelSize * kernelSize;
 
     if (kernelSize == 3)
+    {
+        float3 *rowType = NULL;
         hipLaunchKernelGGL(create_gaussian_kernel,
                            dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                            dim3(localThreads_x, localThreads_y, localThreads_z),
                            0,
                            handle.GetStream(),
                            (d_float9 *)filterTensor,
+                           rowType,
                            stdDevTensor,
                            kernelSize,
                            numValues,
                            handle.GetBatchSize());
+    }
     else if (kernelSize == 5)
+    {
+        d_float5 *rowType = NULL;
         hipLaunchKernelGGL(create_gaussian_kernel,
                            dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                            dim3(localThreads_x, localThreads_y, localThreads_z),
                            0,
                            handle.GetStream(),
                            (d_float25 *)filterTensor,
+                           rowType,
                            stdDevTensor,
                            kernelSize,
                            numValues,
                            handle.GetBatchSize());
+    }
     else if (kernelSize == 7)
+    {
+        d_float7 *rowType = NULL;
         hipLaunchKernelGGL(create_gaussian_kernel,
                            dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                            dim3(localThreads_x, localThreads_y, localThreads_z),
                            0,
                            handle.GetStream(),
                            (d_float49 *)filterTensor,
+                           rowType,
                            stdDevTensor,
                            kernelSize,
                            numValues,
                            handle.GetBatchSize());
+    }
     else if (kernelSize == 9)
+    {
+        d_float9 *rowType = NULL;
         hipLaunchKernelGGL(create_gaussian_kernel,
                            dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                            dim3(localThreads_x, localThreads_y, localThreads_z),
                            0,
                            handle.GetStream(),
                            (d_float81 *)filterTensor,
+                           rowType,
                            stdDevTensor,
                            kernelSize,
                            numValues,
                            handle.GetBatchSize());
+    }
 
     return RPP_SUCCESS;
 }
@@ -1913,6 +1949,18 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                     kernelSize,
                                     handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
                                     handle);
+
+    // float *tempFilter = (float *)malloc(handle.GetBatchSize() * kernelSize * kernelSize * sizeof(float));
+    // hipMemcpy(tempFilter, filterTensor, handle.GetBatchSize() * kernelSize * kernelSize * sizeof(float), hipMemcpyDeviceToHost);
+    // printf("\nPrinting filter values\n");
+    // for (int i = 0; i < kernelSize; i++)
+    // {
+    //     for (int j = 0; j < kernelSize; j++)
+    //     {
+    //         std::cerr<<tempFilter[i * kernelSize + j]<<" ";
+    //     }
+    //     std::cerr<<std::endl;
+    // }
 
     if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
     {
