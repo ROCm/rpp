@@ -65,7 +65,6 @@ def validate_and_remove_folders(path, folder):
             else:
                 print("Directory not found:", folder_path)
 
-
 def create_layout_directories(dst_path, layout_dict):
     for layout in range(3):
         current_layout = layout_dict[layout]
@@ -223,7 +222,6 @@ else:
     print("Invalid TEST_TYPE specified. TEST_TYPE should be 0/1 (0 = Unittests / 1 = Performancetests)")
     exit()
 
-print(outFilePath)
 os.mkdir(outFilePath)
 loggingFolder = outFilePath
 dstPath = outFilePath
@@ -325,7 +323,7 @@ else:
                         for noiseType in range(3):
                             with open(f"{loggingFolder}/Tensor_host_{log_file_layout}_raw_performance_log.txt", "a") as log_file:
                                 print(f"./Tensor_host {srcPath1} {srcPath2} {dstPath} {bitDepth} {outputFormatToggle} {case} {noiseType} 0 ")
-                                process = subprocess.run(["./Tensor_host", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(noiseType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+                                process = subprocess.Popen(["./Tensor_host", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(noiseType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
                                 while True:
                                     output = process.stdout.readline()
                                     if not output and process.poll() is not None:
@@ -336,7 +334,7 @@ else:
                         for interpolationType in range(6):
                             with open(f"{loggingFolder}/Tensor_host_{log_file_layout}_raw_performance_log.txt", "a") as log_file:
                                 print(f"./Tensor_host {srcPath1} {srcPath2} {dstPath} {bitDepth} {outputFormatToggle} {case} {interpolationType} 0")
-                                process = subprocess.run(["./Tensor_host", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(interpolationType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+                                process = subprocess.Popen(["./Tensor_host", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(interpolationType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
                                 while True:
                                     output = process.stdout.readline()
                                     if not output and process.poll() is not None:

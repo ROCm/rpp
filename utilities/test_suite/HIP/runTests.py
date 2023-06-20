@@ -23,6 +23,7 @@ import subprocess  # nosec
 import argparse
 import sys
 import datetime
+import shutil
 
 # Set the timestamp
 timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -34,6 +35,53 @@ cwd = os.getcwd()
 inFilePath1 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src1')
 inFilePath2 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src2')
 qaInputFile = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src1')
+
+import os
+import subprocess  # nosec
+import argparse
+import sys
+import datetime
+import shutil
+
+# Set the timestamp
+timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+# # Set the value of an environment variable
+# os.environ["TIMESTAMP"] = timestamp
+
+cwd = os.getcwd()
+inFilePath1 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src1')
+inFilePath2 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src2')
+qaInputFile = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src1')
+
+def validate_and_remove_contents(path):
+    if not path:  # check if a string is empty
+        print("Folder path is empty.")
+        exit()
+    if path == "/*":  # check if the root directory is passed to the function
+        print("Root folder cannot be deleted.")
+        exit()
+    if os.path.exists(path):  # check if the folder exists
+        os.system("rm -rvf {}/*".format(path))  # Delete the directory if it exists
+    else:
+        print("Path is invalid or does not exist.")
+        exit()
+
+def validate_and_remove_folders(path, folder):
+    if path == "/*":  # check if the root directory is passed to the function
+        print("Root folder cannot be deleted.")
+        exit()
+    if path and os.path.isdir(path + "/.."):  # checks if directory string is not empty and it exists
+        output_folders = [folder_name for folder_name in os.listdir(path + "/..") if folder_name.startswith(folder)]
+
+        # Loop through each directory and delete it only if it exists
+        for folder_name in output_folders:
+            folder_path = os.path.join(path, "..", folder_name)
+            if os.path.isdir(folder_path):
+                os.system("rm -rf {}".format(folder_path))  # Delete the directory if it exists
+                print("Deleted directory:", folder_path)
+            else:
+                print("Directory not found:", folder_path)
 
 def case_file_check(CASE_FILE_PATH):
     try:
@@ -49,6 +97,16 @@ def case_file_check(CASE_FILE_PATH):
     except IOError:
         print("Unable to open case results")
         return False
+
+def directory_name_generator(qaMode, affinity, type, case, path):
+    if qaMode == 0:
+        functionality_group = func_group_finder(int(case))
+
+        dst_folder_temp = f"{path}/rpp_{affinity}_{type}_{functionality_group}"
+    else:
+        dst_folder_temp = path
+
+    return dst_folder_temp
 
 def validate_path(input_path):
     if not os.path.exists(input_path):
@@ -189,6 +247,11 @@ numRuns = args.num_runs
 preserveOutput = args.preserve_output
 batchSize = args.batch_size
 
+if preserveOutput == 0:
+    validate_and_remove_folders(cwd, "OUTPUT_IMAGES_HIP")
+    validate_and_remove_folders(cwd, "QA_RESULTS_HIP")
+    validate_and_remove_folders(cwd, "OUTPUT_PERFORMANCE_LOGS_HIP")
+
 if qaMode and os.path.abspath(qaInputFile) != os.path.abspath(srcPath1):
     print("QA mode should only run with the given Input path: ", qaInputFile)
     exit(0)
@@ -207,11 +270,84 @@ elif(testType == 1):
     if numRuns == 0:
         numRuns = 100 #default numRuns for running performance tests
     outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_PERFORMANCE_LOGS_HIP_' + timestamp)
+else:
+    print("Invalid TEST_TYPE specified. TEST_TYPE should be 0/1 (0 = Unittests / 1 = Performancetests)")
+    exit()
+os.mkdir(outFilePath)
+loggingFolder = outFilePath
 dstPath = outFilePath
 
-if(testType == 0):
-    subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numRuns), "0", str(qaMode), str(decoderType), str(preserveOutput), str(batchSize), " ".join(caseList)])  # nosec
+# Validate DST_FOLDER
+validate_and_remove_contents(dstPath)
 
+# Enable extglob
+if os.path.exists("build"):
+    shutil.rmtree("build")
+os.makedirs("build")
+os.chdir("build")
+
+# Run cmake and make commands
+subprocess.run(["cmake", ".."])
+subprocess.run(["make", "-j16"])
+
+# Create folders based on testType and profilingOption
+if testType == 1 and profilingOption == 1:
+    os.makedirs(f"{dstPath}/Tensor_PKD3")
+    os.makedirs(f"{dstPath}/Tensor_PLN1")
+    os.makedirs(f"{dstPath}/Tensor_PLN3")
+
+print("\n\n\n\n\n")
+print("##########################################################################################")
+print("Running all layout Inputs...")
+print("##########################################################################################")
+
+if(testType == 0):
+    for case in caseList:
+        if int(case) < 0 or int(case) > 84:
+            print(f"Invalid case number {case}. Case number must be in the range of 0 to 84!")
+            continue
+        for layout in range(3):
+            if layout == 0:
+                dstPathTemp = directory_name_generator(qaMode, "hip", "pkd3", case, dstPath)
+            elif layout == 1:
+                dstPathTemp = directory_name_generator(qaMode, "hip", "pln3", case, dstPath)
+            elif layout == 2:
+                dstPathTemp = directory_name_generator(qaMode, "hip", "pln1", case, dstPath)
+
+            if qaMode == 0:
+                if not os.path.isdir(dstPathTemp):
+                    os.mkdir(dstPathTemp)
+
+            print("\n\n\n\n")
+            print("--------------------------------")
+            print("Running a New Functionality...")
+            print("--------------------------------")
+            
+            for bitDepth in range(7):
+                print("\n\n\nRunning New Bit Depth...\n-------------------------\n\n")
+                
+                for outputFormatToggle in range(2):
+                    # There is no layout toggle for PLN1 case, so skip this case
+                    if layout == 2 and outputFormatToggle == 1: 
+                        continue
+
+                    if case == 40 or case == 41 or case == 49:
+                        for kernelSize in range(3, 10, 2):
+                            print(f"./Tensor_hip {srcPath1} {srcPath2} {dstPath} {bitDepth} {outputFormatToggle} {case} {kernelSize}")
+                            subprocess.run(["./Tensor_hip", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(kernelSize), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)])
+                    elif case == 8:
+                        for noiseType in range(3):
+                            print(f"./Tensor_hip {srcPath1} {srcPath2} {dstPathTemp} {bitDepth} {outputFormatToggle} {case} {noiseType} ")
+                            subprocess.run(["./Tensor_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(noiseType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)])
+                    elif case == 21 or case == 23 or case == 24:
+                        for interpolationType in range(6):
+                            print(f"./Tensor_hip {srcPath1} {srcPath2} {dstPathTemp} {bitDepth} {outputFormatToggle} {case} {interpolationType}")
+                            subprocess.run(["./Tensor_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(interpolationType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)])
+                    else:
+                        print(f"./Tensor_hip {srcPath1} {srcPath2} {dstPathTemp} {bitDepth} {outputFormatToggle} {case} 0 {numRuns} {testType} {layout}")
+                        subprocess.run(["./Tensor_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), "0", str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)])
+
+                    print("------------------------------------------------------------------------------------------")
     layoutDict = {0:"PKD3", 1:"PLN3", 2:"PLN1"}
     if qaMode == 0:
         create_layout_directories(dstPath, layoutDict)
@@ -228,7 +364,79 @@ else:
     ]
 
     if (testType == 1 and profilingOption == "NO"):
-        subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numRuns), "0", str(qaMode), str(decoderType), str(preserveOutput), str(batchSize), " ".join(caseList)])  # nosec
+        for case in caseList:
+            if int(case) < 0 or int(case) > 84:
+                print(f"Invalid case number {case}. Case number must be in the range of 0 to 84!")
+                continue
+            for layout in range(3):
+                if layout == 0:
+                    directory_name_generator(qaMode, "hip", "pkd3", case, dstPath)
+                    log_file_layout = "pkd3"
+                elif layout == 1:
+                    directory_name_generator(qaMode, "hip", "pln3", case, dstPath)
+                    log_file_layout = "pln3"
+                elif layout == 2:
+                    directory_name_generator(qaMode, "hip", "pln1", case, dstPath)
+                    log_file_layout = "pln1"
+
+                print("\n\n\n\n")
+                print("--------------------------------")
+                print("Running a New Functionality...")
+                print("--------------------------------")
+                
+                for bitDepth in range(7):
+                    print("\n\n\nRunning New Bit Depth...\n-------------------------\n\n")
+                    
+                    for outputFormatToggle in range(2):
+                        # There is no layout toggle for PLN1 case, so skip this case
+                        if layout == 2 and outputFormatToggle == 1:
+                            continue
+
+                            if case == 40 or case == 41 or case == 49:
+                                for kernelSize in range(3, 10, 2):
+                                    with open(f"{loggingFolder}/Tensor_hip_{log_file_layout}_raw_performance_log.txt", "a") as log_file:
+                                        print(f"./Tensor_hip {srcPath1} {srcPath2} {dstPath} {bitDepth} {outputFormatToggle} {case} {kernelSize}")
+                                        process = subprocess.Popen(["./Tensor_hip", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(kernelSize), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+                                        while True:
+                                            output = process.stdout.readline()
+                                            if not output and process.poll() is not None:
+                                                break
+                                            print(output.strip())
+                                            log_file.write(output)
+                            elif case == 8:
+                                for noiseType in range(3):
+                                    with open(f"{loggingFolder}/Tensor_hip_{log_file_layout}_raw_performance_log.txt", "a") as log_file:
+                                        print(f"./Tensor_hip {srcPath1} {srcPath2} {dstPathTemp} {bitDepth} {outputFormatToggle} {case} {noiseType} ")
+                                        process = subprocess.Popen(["./Tensor_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(noiseType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+                                        while True:
+                                            output = process.stdout.readline()
+                                            if not output and process.poll() is not None:
+                                                break
+                                            print(output.strip())
+                                            log_file.write(output)
+                            elif case == 21 or case == 23 or case == 24:
+                                for interpolationType in range(6):
+                                    with open(f"{loggingFolder}/Tensor_hip_{log_file_layout}_raw_performance_log.txt", "a") as log_file:
+                                        print(f"./Tensor_hip {srcPath1} {srcPath2} {dstPathTemp} {bitDepth} {outputFormatToggle} {case} {interpolationType}")
+                                        process = subprocess.Popen(["./Tensor_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(interpolationType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+                                        while True:
+                                            output = process.stdout.readline()
+                                            if not output and process.poll() is not None:
+                                                break
+                                            print(output.strip())
+                                            log_file.write(output)
+                            else:
+                                with open(f"{loggingFolder}/Tensor_hip_{log_file_layout}_raw_performance_log.txt", "a") as log_file:
+                                    print(f"./Tensor_hip {srcPath1} {srcPath2} {dstPathTemp} {bitDepth} {outputFormatToggle} {case} 0 {numRuns} {testType} {layout}")
+                                    process = subprocess.Popen(["./Tensor_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), "0", str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+                                    while True:
+                                        output = process.stdout.readline()
+                                        if not output and process.poll() is not None:
+                                            break
+                                        print(output.strip())
+                                        log_file.write(output)
+                            print("------------------------------------------------------------------------------------------")
+
         for log_file in log_file_list:
             # Opening log file
             try:
@@ -291,8 +499,183 @@ else:
             # Closing log file
             f.close()
     elif (testType == 1 and profilingOption == "YES"):
-        subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numRuns), "1", str(qaMode), str(decoderType), str(preserveOutput), str(batchSize), " ".join(caseList)])  # nosec
         NEW_FUNC_GROUP_LIST = [0, 15, 20, 29, 36, 40, 42, 49, 56, 65, 69]
+
+        for case in caseList:
+            if int(case) < 0 or int(case) > 84:
+                print(f"Invalid case number {case}. Case number must be in the range of 0 to 84!")
+                continue
+            for layout in range(3):
+                if layout == 0:
+                    directory_name_generator(qaMode, "hip", "pkd3", case, dstPath)
+                    log_file_layout = "pkd3"
+                elif layout == 1:
+                    directory_name_generator(qaMode, "hip", "pln3", case, dstPath)
+                    log_file_layout = "pln3"
+                elif layout == 2:
+                    directory_name_generator(qaMode, "hip", "pln1", case, dstPath)
+                    log_file_layout = "pln1"
+
+                print("\n\n\n\n")
+                print("--------------------------------")
+                print("Running a New Functionality...")
+                print("--------------------------------")
+                
+                for bitDepth in range(7):
+                    print("\n\n\nRunning New Bit Depth...\n-------------------------\n\n")
+                    
+                    for outputFormatToggle in range(2):
+                        # There is no layout toggle for PLN1 case, so skip this case
+                        if layout == 2 and outputFormatToggle == 1:
+                            continue
+
+                            if case == 40 or case == 41 or case == 49:
+                                for kernelSize in range(3, 10, 2):
+                                    if layout == 0:
+                                        if not os.path.isdir(f"{dstPath}/Tensor_PKD3/case_{case}"):
+                                            os.mkdir(f"{dstPath}/Tensor_PKD3/case_{case}")
+                                        with open(f"{loggingFolder}/Tensor_hip_{log_file_layout}_raw_performance_log.txt", "a") as log_file:
+                                            print(f'rocprof --basenames on --timestamp on --stats -o {dstPath}/Tensor_PKD3/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}_kernelSize{kernelSize}.csv ./Tensor_hip {srcPath1} {srcPath2} {bitDepth} {outputFormatToggle} {case} {kernelSize} 0')
+                                            process = subprocess.Popen(['rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f'{dstPath}/Tensor_PKD3/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}_kernelSize{kernelSize}.csv', './Tensor_hip', srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(kernelSize), str(numRuns), str(testType), str(layout), '0', str(qaMode), str(decoderType), str(batchSize)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                                            while True:
+                                                output = process.stdout.readline()
+                                                if not output and process.poll() is not None:
+                                                    break
+                                                print(output.strip())
+                                                log_file.write(output)
+                                    elif layout == 1:
+                                        if not os.path.isdir(f"{dstPath}/Tensor_PLN3/case_{case}"):
+                                            os.mkdir(f"{dstPath}/Tensor_PLN3/case_{case}")
+                                        with open(f"{loggingFolder}/Tensor_hip_{log_file_layout}_raw_performance_log.txt", "a") as log_file:
+                                            print(f'rocprof --basenames on --timestamp on --stats -o {dstPath}/Tensor_PLN3/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}_kernelSize{kernelSize}.csv ./Tensor_hip {srcPath1} {srcPath2} {bitDepth} {outputFormatToggle} {case} {kernelSize} 0')
+                                            process = subprocess.Popen(['rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f'{dstPath}/Tensor_PLN3/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}_kernelSize{kernelSize}.csv', './Tensor_hip', srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(kernelSize), str(numRuns), str(testType), str(layout), '0', str(qaMode), str(decoderType), str(batchSize)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                                            while True:
+                                                output = process.stdout.readline()
+                                                if not output and process.poll() is not None:
+                                                    break
+                                                print(output.strip())
+                                                log_file.write(output)
+                                    elif layout == 2:
+                                        if not os.path.isdir(f"{dstPath}/Tensor_PLN1/case_{case}"):
+                                            os.mkdir(f"{dstPath}/Tensor_PLN1/case_{case}")
+                                        with open(f"{loggingFolder}/Tensor_hip_{log_file_layout}_raw_performance_log.txt", "a") as log_file:
+                                            print(f'rocprof --basenames on --timestamp on --stats -o "{dstPath}/Tensor_PLN1/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}_kernelSize{kernelSize}.csv" "./Tensor_hip {srcPath1} {srcPath2} {bitDepth} {outputFormatToggle} {case} {kernelSize} 0"')
+                                            process = subprocess.Popen(['rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f'{dstPath}/Tensor_PLN1/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}_kernelSize{kernelSize}.csv', './Tensor_hip', srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(kernelSize), str(numRuns), str(testType), str(layout), '0', str(qaMode), str(decoderType), str(batchSize)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                                            while True:
+                                                output = process.stdout.readline()
+                                                if not output and process.poll() is not None:
+                                                    break
+                                                print(output.strip())
+                                                log_file.write(output)
+                            elif case == 8:
+                                for noiseType in range(3):
+                                    if layout == 0:
+                                        if not os.path.isdir(f"{dstPath}/Tensor_PKD3/case_{case}"):
+                                            os.mkdir(f"{dstPath}/Tensor_PKD3/case_{case}")
+                                        with open(f"{loggingFolder}/Tensor_hip_{log_file_layout}_raw_performance_log.txt", "a") as log_file:
+                                            print(f'rocprof --basenames on --timestamp on --stats -o "{dstPath}/Tensor_PKD3/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}_noiseType{noiseType}.csv" "./Tensor_hip {srcPath1} {srcPath2} {bitDepth} {outputFormatToggle} {case} {kernelSize} {noiseType}"')
+                                            process = subprocess.Popen(['rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f'{dstPath}/Tensor_PKD3/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}_noiseType{noiseType}.csv', './Tensor_hip', srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(noiseType), str(numRuns), str(testType), str(layout), '0', str(qaMode), str(decoderType), str(batchSize)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                                            while True:
+                                                output = process.stdout.readline()
+                                                if not output and process.poll() is not None:
+                                                    break
+                                                print(output.strip())
+                                                log_file.write(output)
+                                    elif layout == 1:
+                                        if not os.path.isdir(f"{dstPath}/Tensor_PLN3/case_{case}"):
+                                            os.mkdir(f"{dstPath}/Tensor_PLN3/case_{case}")
+                                        with open(f"{loggingFolder}/Tensor_hip_{log_file_layout}_raw_performance_log.txt", "a") as log_file:
+                                            print(f'rocprof --basenames on --timestamp on --stats -o "{dstPath}/Tensor_PLN3/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}_noiseType{noiseType}.csv" "./Tensor_hip {srcPath1} {srcPath2} {bitDepth} {outputFormatToggle} {case} {kernelSize} {noiseType}"')
+                                            process = subprocess.Popen(['rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f'{dstPath}/Tensor_PLN3/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}_noiseType{noiseType}.csv', './Tensor_hip', srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(noiseType), str(numRuns), str(testType), str(layout), '0', str(qaMode), str(decoderType), str(batchSize)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                                            while True:
+                                                output = process.stdout.readline()
+                                                if not output and process.poll() is not None:
+                                                    break
+                                                print(output.strip())
+                                                log_file.write(output)
+                                    elif layout == 2:
+                                        if not os.path.isdir(f"{dstPath}/Tensor_PLN1/case_{case}"):
+                                            os.mkdir(f"{dstPath}/Tensor_PLN1/case_{case}")
+                                        with open(f"{loggingFolder}/Tensor_hip_{log_file_layout}_raw_performance_log.txt", "a") as log_file:
+                                            print(f'rocprof --basenames on --timestamp on --stats -o "{dstPath}/Tensor_PLN1/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}_noiseType{noiseType}.csv" "./Tensor_hip {srcPath1} {srcPath2} {bitDepth} {outputFormatToggle} {case} {kernelSize} {noiseType}"')
+                                            process = subprocess.Popen(['rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f'{dstPath}/Tensor_PLN1/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}_noiseType{noiseType}.csv', './Tensor_hip', srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(noiseType), str(numRuns), str(testType), str(layout), '0', str(qaMode), str(decoderType), str(batchSize)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                                            while True:
+                                                output = process.stdout.readline()
+                                                if not output and process.poll() is not None:
+                                                    break
+                                                print(output.strip())
+                                                log_file.write(output)
+                            elif case == 21 or case == 23 or case == 24:
+                                for interpolationType in range(6):
+                                    if layout == 0:
+                                        if not os.path.exists(f"{dstPath}/Tensor_PKD3/case_{case}"):
+                                            os.mkdir(f"{dstPath}/Tensor_PKD3/case_{case}")
+                                        print(f"\nrocprof --basenames on --timestamp on --stats -o {dstPath}/Tensor_PKD3/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}_interpolationType{interpolationType}.csv ./Tensor_hip {srcPath1} {srcPath2} {dstPath} {bitDepth} {outputFormatToggle} {case} {interpolationType} 0")
+                                        subprocess.Popen(['rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f"{dstPath}/Tensor_PKD3/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}_interpolationType{interpolationType}.csv", './Tensor_hip', srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(interpolationType), '0', str(numRuns), str(testType), str(layout), '0', str(qaMode), str(decoderType), str(batchSize) ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
+                                        while True:
+                                            output = process.stdout.readline()
+                                            if not output and process.poll() is not None:
+                                                break
+                                            print(output.strip())
+                                            log_file.write(output)
+                                    elif layout == 1:
+                                        if not os.path.exists(f"{dstPath}/Tensor_PLN3/case_{case}"):
+                                            os.mkdir(f"{dstPath}/Tensor_PLN3/case_{case}")
+                                        print(f"\nrocprof --basenames on --timestamp on --stats -o {dstPath}/Tensor_PLN3/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}_interpolationType{interpolationType}.csv ./Tensor_hip {srcPath1} {srcPath2} {dstPath} {bitDepth} {outputFormatToggle} {case} {interpolationType} 0")
+                                        subprocess.Popen(['rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f"{dstPath}/Tensor_PLN3/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}_interpolationType{interpolationType}.csv", './Tensor_hip', srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(interpolationType), '0', str(numRuns), str(testType), str(layout), '0', str(qaMode), str(decoderType), str(batchSize) ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
+                                        while True:
+                                            output = process.stdout.readline()
+                                            if not output and process.poll() is not None:
+                                                break
+                                            print(output.strip())
+                                            log_file.write(output)
+                                    elif layout == 2:
+                                        if not os.path.exists(f"{dstPath}/Tensor_PLN1/case_{case}"):
+                                            os.mkdir(f"{dstPath}/Tensor_PLN1/case_{case}")
+                                        print(f"\nrocprof --basenames on --timestamp on --stats -o {dstPath}/Tensor_PLN1/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}_interpolationType{interpolationType}.csv ./Tensor_hip {srcPath1} {srcPath2} {dstPath} {bitDepth} {outputFormatToggle} {case} {interpolationType} 0")
+                                        subprocess.Popen(['rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f"{dstPath}/Tensor_PLN1/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}_interpolationType{interpolationType}.csv", './Tensor_hip', srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(interpolationType), '0', str(numRuns), str(testType), str(layout), '0', str(qaMode), str(decoderType), str(batchSize) ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT )
+                                        while True:
+                                            output = process.stdout.readline()
+                                            if not output and process.poll() is not None:
+                                                break
+                                            print(output.strip())
+                                            log_file.write(output)
+                            else:
+                                if layout == 0:
+                                    if not os.path.exists(f"{dstPath}/Tensor_PKD3/case_{case}"):
+                                        os.mkdir(f"{dstPath}/Tensor_PKD3/case_{case}")
+                                    print(f"\nrocprof --basenames on --timestamp on --stats -o {dstPath}/Tensor_PKD3/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}.csv ./Tensor_hip {srcPath1} {srcPath2} {dstPath} {bitDepth} {outputFormatToggle} {case} 0 0")
+                                    subprocess.Popen([ 'rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f"{dstPath}/Tensor_PKD3/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}.csv", './Tensor_hip', srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), '0', str(numRuns), str(testType), str(layout), '0', str(qaMode), str(decoderType), str(batchSize) ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                                    while True:
+                                        output = process.stdout.readline()
+                                        if not output and process.poll() is not None:
+                                            break
+                                        print(output.strip())
+                                        log_file.write(output)
+                                elif layout == 1:
+                                    if not os.path.exists(f"{dstPath}/Tensor_PLN3/case_{case}"):
+                                        os.mkdir(f"{dstPath}/Tensor_PLN3/case_{case}")
+                                    print(f"\nrocprof --basenames on --timestamp on --stats -o {dstPath}/Tensor_PLN1/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}.csv ./Tensor_hip {srcPath1} {srcPath2} {dstPath} {bitDepth} {outputFormatToggle} {case} 0 0")
+                                    subprocess.Popen([ 'rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f"{dstPath}/Tensor_PLN1/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}.csv", './Tensor_hip', srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), '0', str(numRuns), str(testType), str(layout), '0', str(qaMode), str(decoderType), str(batchSize) ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                                    while True:
+                                        output = process.stdout.readline()
+                                        if not output and process.poll() is not None:
+                                            break
+                                        print(output.strip())
+                                        log_file.write(output)
+                                elif layout == 2:
+                                    if not os.path.exists(f"{dstPath}/Tensor_PLN1/case_{case}"):
+                                        os.mkdir(f"{dstPath}/Tensor_PLN1/case_{case}")
+                                    print(f"\nrocprof --basenames on --timestamp on --stats -o {dstPath}/Tensor_PLN3/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}.csv ./Tensor_hip {srcPath1} {srcPath2} {dstPath} {bitDepth} {outputFormatToggle} {case} 0 0")
+                                    subprocess.Popen([ 'rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f"{dstPath}/Tensor_PLN3/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}.csv", './Tensor_hip', srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), '0', str(numRuns), str(testType), str(layout), '0', str(qaMode), str(decoderType), str(batchSize) ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                                    while True:
+                                        output = process.stdout.readline()
+                                        if not output and process.poll() is not None:
+                                            break
+                                        print(output.strip())
+                                        log_file.write(output)
+
+                                print("------------------------------------------------------------------------------------------")
 
         RESULTS_DIR = ""
         RESULTS_DIR = "../OUTPUT_PERFORMANCE_LOGS_HIP_" + timestamp
