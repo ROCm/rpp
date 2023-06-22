@@ -1431,6 +1431,22 @@ __device__ __forceinline__ void rpp_hip_layouttoggle24_pln3_to_pkd3(T *pixpln3Pt
 
 // /******************** DEVICE MATH HELPER FUNCTIONS ********************/
 
+// float2 min_max (read and write vector float2)
+
+__device__ __forceinline__ void rpp_hip_math_minmax2(float2 &src1Ptr_f2, float2 &src2Ptr_f2, float2 &dstPtr_f2)
+{
+    dstPtr_f2.x = fminf(src1Ptr_f2.x, src2Ptr_f2.x);
+    dstPtr_f2.y = fmaxf(src1Ptr_f2.y, src2Ptr_f2.y);
+}
+
+// d_float8 min_max (reduce d_float8 to float2)
+
+__device__ __forceinline__ void rpp_hip_math_minmax8(d_float8 &srcPtr_f8, float2 &dstPtr_f2)
+{
+    dstPtr_f2.x = fminf(fminf(fminf(fminf(fminf(fminf(fminf(srcPtr_f8.f1[0], srcPtr_f8.f1[1]), srcPtr_f8.f1[2]), srcPtr_f8.f1[3]), srcPtr_f8.f1[4]), srcPtr_f8.f1[5]), srcPtr_f8.f1[6]), srcPtr_f8.f1[7]);
+    dstPtr_f2.y = fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(srcPtr_f8.f1[0], srcPtr_f8.f1[1]), srcPtr_f8.f1[2]), srcPtr_f8.f1[3]), srcPtr_f8.f1[4]), srcPtr_f8.f1[5]), srcPtr_f8.f1[6]), srcPtr_f8.f1[7]);
+}
+
 // d_float16 floor
 
 __device__ __forceinline__ void rpp_hip_math_floor16(d_float16 *srcPtr_f16, d_float16 *dstPtr_f16)

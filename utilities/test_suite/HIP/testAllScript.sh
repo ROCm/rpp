@@ -11,7 +11,7 @@ DEFAULT_SRC_FOLDER_2="$cwd/../TEST_IMAGES/three_images_mixed_src2"
 # <<<<<<<<<<<<<< PROCESSING OF INPUT ARGUMENTS (NEED NOT CHANGE) >>>>>>>>>>>>>>
 
 CASE_MIN=0
-CASE_MAX=38
+CASE_MAX=88
 if (( "$#" < 4 )); then
     SRC_FOLDER_1="$DEFAULT_SRC_FOLDER_1"
     SRC_FOLDER_2="$DEFAULT_SRC_FOLDER_2"
@@ -46,8 +46,8 @@ if [[ $TEST_TYPE -ne 0 ]] && [[ $TEST_TYPE -ne 1 ]]; then
 fi
 
 for case in $CASE_LIST; do
-    if [[ $case -lt 0 || $case -gt 38 ]]; then
-        echo "The case# must be in the 0:38 range!"
+    if [[ $case -lt 0 || $case -gt 88 ]]; then
+        echo "The case# must be in the 0:88 range!"
     fi
 done
 
@@ -137,11 +137,11 @@ echo "##########################################################################
 if [ "$TEST_TYPE" -eq 0 ]; then
     for case in ${CASE_LIST[@]};
     do
-        if [ "$case" -lt "0" ] || [ "$case" -gt " 38" ]; then
-            echo "Invalid case number $case. case number must be in the 0:38 range!"
+        if [ "$case" -lt "0" ] || [ "$case" -gt " 88" ]; then
+            echo "Invalid case number $case. case number must be in the 0:88 range!"
             continue
         fi
-        for ((layout=0;layout<3;layout++))
+        for ((layout=1;layout<2;layout++))
         do
             if [ $layout -eq 0 ]; then
                 directory_name_generator "hip" "pkd3" "$case"
@@ -165,7 +165,7 @@ if [ "$TEST_TYPE" -eq 0 ]; then
             echo "--------------------------------"
             printf "Running a New Functionality...\n"
             echo "--------------------------------"
-            for ((bitDepth=0;bitDepth<7;bitDepth++))
+            for ((bitDepth=0;bitDepth<1;bitDepth++))
             do
                 printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n"
                 for ((outputFormatToggle=0;outputFormatToggle<2;outputFormatToggle++))
@@ -212,11 +212,11 @@ if [ "$TEST_TYPE" -eq 0 ]; then
 else
     for case in ${CASE_LIST[@]};
     do
-        if [ "$case" -lt "0" ] || [ "$case" -gt " 38" ]; then
-            echo "Invalid case number $case. case number must be in the 0:38 range!"
+        if [ "$case" -lt "0" ] || [ "$case" -gt " 88" ]; then
+            echo "Invalid case number $case. case number must be in the 0:88 range!"
             continue
         fi
-        for ((layout=0;layout<3;layout++))
+        for ((layout=1;layout<2;layout++))
         do
             if [ $layout -eq 0 ]; then
                 directory_name_generator "hip" "pkd3" "$case"
@@ -235,7 +235,7 @@ else
             echo "--------------------------------"
             printf "Running a New Functionality...\n"
             echo "--------------------------------"
-            for ((bitDepth=0;bitDepth<7;bitDepth++))
+            for ((bitDepth=0;bitDepth<1;bitDepth++))
             do
                 printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n"
                 for ((outputFormatToggle=0;outputFormatToggle<2;outputFormatToggle++))

@@ -81,6 +81,8 @@ int main(int argc, char **argv)
     bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24);
     bool noiseTypeCase = (testCase == 8);
     bool pln1OutTypeCase = (testCase == 86);
+    bool reductionTypeCase = (testCase == 88);
+
     unsigned int verbosity = atoi(argv[11]);
     unsigned int additionalParam = additionalParamCase ? atoi(argv[7]) : 1;
 
@@ -386,6 +388,13 @@ int main(int argc, char **argv)
         }
     }
 
+    // Initialize buffers for any reductionType functions
+    Rpp32f *reductionFuncResult;
+    Rpp32u reductionFuncResultArrLength = srcDescPtr->n * 6;
+    reductionFuncResult = (Rpp32f *)calloc(reductionFuncResultArrLength, sizeof(Rpp32f));
+    float *d_reductionFuncResult;
+    hipMalloc(&d_reductionFuncResult, reductionFuncResultArrLength * sizeof(Rpp32f));
+
     // Allocate hip memory for src/dst and copy decoded inputs to hip buffers
     hipMalloc(&d_input, inputBufferSize);
     hipMalloc(&d_input_second, inputBufferSize);
@@ -640,6 +649,24 @@ int main(int argc, char **argv)
 
             break;
         }
+        case 88:
+        {
+            testCaseName = "image_min_max";
+
+            if(outputFormatToggle == 1)
+                missingFuncFlag = 1;
+
+            if(srcDescPtr->c == 1)
+                reductionFuncResultArrLength = srcDescPtr->n * 2;
+
+            startWallTime = omp_get_wtime();
+            if (inputBitDepth == 0)
+                rppt_image_min_max_gpu(d_input, srcDescPtr, d_reductionFuncResult, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
+            else
+                missingFuncFlag = 1;
+
+            break;
+        }
         default:
             missingFuncFlag = 1;
             break;
@@ -667,50 +694,63 @@ int main(int argc, char **argv)
     {
         cout << "\n\nGPU Backend Wall Time: " << wallTime <<" ms/batch"<< endl;
 
+        // Display results for reduction functions
+        if (reductionTypeCase)
+        {
+            printf("\nReduction result (Batch of n channel images produces n+1 results per image in batch): ");
+            hipMemcpy(reductionFuncResult, d_reductionFuncResult, reductionFuncResultArrLength * sizeof(Rpp32f), hipMemcpyDeviceToHost);
+            std::cerr<<"Reduction function length is:"<<reductionFuncResultArrLength<<std::endl;
+            for (int i = 0; i < reductionFuncResultArrLength; i++)
+                printf(" %0.3f\n", reductionFuncResult[i]);
+        }
+
         // Reconvert other bit depths to 8u for output display purposes
-        if (inputBitDepth == 0)
+        if (!reductionTypeCase)
         {
-            hipMemcpy(output, d_output, outputBufferSize, hipMemcpyDeviceToHost);
-            memcpy(outputu8, output, outputBufferSize);
-        }
-        else if ((inputBitDepth == 1) || (inputBitDepth == 3))
-        {
-            hipMemcpy(output, d_output, outputBufferSize, hipMemcpyDeviceToHost);
-            Rpp8u *outputTemp;
-            outputTemp = outputu8 + dstDescPtr->offsetInBytes;
-            Rpp16f *outputf16Temp;
-            outputf16Temp = reinterpret_cast<Rpp16f *>(static_cast<Rpp8u *>(output) + dstDescPtr->offsetInBytes);
-            for (int i = 0; i < oBufferSize; i++)
+            if (inputBitDepth == 0)
             {
-                *outputTemp = static_cast<Rpp8u>(validate_pixel_range(static_cast<float>(*outputf16Temp) * invConversionFactor));
-                outputf16Temp++;
-                outputTemp++;
+                hipMemcpy(output, d_output, outputBufferSize, hipMemcpyDeviceToHost);
+                memcpy(outputu8, output, outputBufferSize);
             }
-        }
-        else if ((inputBitDepth == 2) || (inputBitDepth == 4))
-        {
-            hipMemcpy(output, d_output, outputBufferSize, hipMemcpyDeviceToHost);
-            Rpp8u *outputTemp;
-            outputTemp = outputu8 + dstDescPtr->offsetInBytes;
-            Rpp32f *outputf32Temp;
-            outputf32Temp = reinterpret_cast<Rpp32f *>(static_cast<Rpp8u *>(output) + dstDescPtr->offsetInBytes);
-            for (int i = 0; i < oBufferSize; i++)
+            else if ((inputBitDepth == 1) || (inputBitDepth == 3))
             {
-                *outputTemp = static_cast<Rpp8u>(validate_pixel_range(*outputf32Temp * invConversionFactor));
-                outputf32Temp++;
-                outputTemp++;
+                hipMemcpy(output, d_output, outputBufferSize, hipMemcpyDeviceToHost);
+                Rpp8u *outputTemp;
+                outputTemp = outputu8 + dstDescPtr->offsetInBytes;
+                Rpp16f *outputf16Temp;
+                outputf16Temp = reinterpret_cast<Rpp16f *>(static_cast<Rpp8u *>(output) + dstDescPtr->offsetInBytes);
+                for (int i = 0; i < oBufferSize; i++)
+                {
+                    *outputTemp = static_cast<Rpp8u>(validate_pixel_range(static_cast<float>(*outputf16Temp) * invConversionFactor));
+                    outputf16Temp++;
+                    outputTemp++;
+                }
             }
-        }
-        else if ((inputBitDepth == 5) || (inputBitDepth == 6))
-        {
-            hipMemcpy(output, d_output, outputBufferSize, hipMemcpyDeviceToHost);
-            Rpp8u *outputTemp = outputu8 + dstDescPtr->offsetInBytes;
-            Rpp8s *outputi8Temp = static_cast<Rpp8s *>(output) + dstDescPtr->offsetInBytes;
-            for (int i = 0; i < oBufferSize; i++)
+            else if ((inputBitDepth == 2) || (inputBitDepth == 4))
             {
-                *outputTemp = static_cast<Rpp8u>(validate_pixel_range((static_cast<Rpp32s>(*outputi8Temp)) + 128));
-                outputi8Temp++;
-                outputTemp++;
+                hipMemcpy(output, d_output, outputBufferSize, hipMemcpyDeviceToHost);
+                Rpp8u *outputTemp;
+                outputTemp = outputu8 + dstDescPtr->offsetInBytes;
+                Rpp32f *outputf32Temp;
+                outputf32Temp = reinterpret_cast<Rpp32f *>(static_cast<Rpp8u *>(output) + dstDescPtr->offsetInBytes);
+                for (int i = 0; i < oBufferSize; i++)
+                {
+                    *outputTemp = static_cast<Rpp8u>(validate_pixel_range(*outputf32Temp * invConversionFactor));
+                    outputf32Temp++;
+                    outputTemp++;
+                }
+            }
+            else if ((inputBitDepth == 5) || (inputBitDepth == 6))
+            {
+                hipMemcpy(output, d_output, outputBufferSize, hipMemcpyDeviceToHost);
+                Rpp8u *outputTemp = outputu8 + dstDescPtr->offsetInBytes;
+                Rpp8s *outputi8Temp = static_cast<Rpp8s *>(output) + dstDescPtr->offsetInBytes;
+                for (int i = 0; i < oBufferSize; i++)
+                {
+                    *outputTemp = static_cast<Rpp8u>(validate_pixel_range((static_cast<Rpp32s>(*outputi8Temp)) + 128));
+                    outputi8Temp++;
+                    outputTemp++;
+                }
             }
         }
 
@@ -756,7 +796,7 @@ int main(int argc, char **argv)
         rppDestroyGPU(handle);
 
         // OpenCV dump (if testType is unit test and QA mode is not set)
-        if(!qaFlag)
+        if(!qaFlag && (reductionTypeCase == 0))
             write_image_batch_opencv(dst, outputu8, dstDescPtr, imageNames, dstImgSizes);
     }
     else
@@ -776,8 +816,10 @@ int main(int argc, char **argv)
     free(inputu8);
     free(inputu8Second);
     free(outputu8);
+    free(reductionFuncResult);
     hipFree(d_input);
     hipFree(d_input_second);
     hipFree(d_output);
+    hipFree(d_reductionFuncResult);
     return 0;
 }

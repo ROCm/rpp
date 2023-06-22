@@ -36,6 +36,25 @@ THE SOFTWARE.
 #include <hip/hip_runtime_api.h>
 #endif
 
+inline void rpp_tensor_generic_to_image_desc(RpptGenericDescPtr genericDescPtr, RpptDescPtr descPtr)
+{
+    if (genericDescPtr->layout == RpptLayout::NHWC)
+        *descPtr = *(RpptDescPtr)genericDescPtr;
+    else if (genericDescPtr->layout == RpptLayout::NCHW)
+    {
+        *descPtr = *(RpptDescPtr)genericDescPtr;
+        Rpp32u temp;
+        temp = descPtr->c;
+        descPtr->c = descPtr->h;
+        descPtr->h = descPtr->w;
+        descPtr->w = temp;
+        temp = descPtr->strides.cStride;
+        descPtr->strides.cStride = descPtr->strides.hStride;
+        descPtr->strides.hStride = descPtr->strides.wStride;
+        descPtr->strides.wStride = temp;
+    }
+}
+
 inline RppLayoutParams get_layout_params(RpptLayout layout, Rpp32u channels)
 {
     RppLayoutParams layoutParams;

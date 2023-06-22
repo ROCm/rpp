@@ -36,7 +36,7 @@ THE SOFTWARE.
 #define RPP_MAX_8U      ( 255 )
 #define RPP_MIN_16U     ( 0 )
 #define RPP_MAX_16U     ( 65535 )
-
+#define RPPT_MAX_DIMS   ( 4 )
 const float ONE_OVER_6 = 1.0f / 6;
 const float ONE_OVER_3 = 1.0f / 3;
 const float ONE_OVER_255 = 1.0f / 255;
@@ -292,6 +292,16 @@ typedef struct
     Rpp32u n, c, h, w;
     RpptStrides strides;
 } RpptDesc, *RpptDescPtr;
+
+typedef struct
+{
+    RppSize_t numDims;
+    Rpp32u offsetInBytes;
+    RpptDataType dataType;
+    Rpp32u dims[RPPT_MAX_DIMS];
+    Rpp32u strides[RPPT_MAX_DIMS];
+    RpptLayout layout;
+} RpptGenericDesc, *RpptGenericDescPtr;
 
 typedef struct
 {
