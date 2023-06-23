@@ -143,4 +143,41 @@ RppStatus rppt_image_min_gpu(RppPtr_t srcPtr,
 #endif // backend
 }
 
+RppStatus rppt_image_max_gpu(RppPtr_t srcPtr,
+                             RpptDescPtr srcDescPtr,
+                             Rpp32f *imageMaxArr,
+                             Rpp32u imageMaxArrLength,
+                             RpptROIPtr roiTensorPtrSrc,
+                             RpptRoiType roiType,
+                             rppHandle_t rppHandle)
+{
+#ifdef HIP_COMPILE
+    if (srcDescPtr->c == 1)
+    {
+        if (imageMaxArrLength < srcDescPtr->n)   // max of single channel
+            return RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH;
+    }
+    else if (srcDescPtr->c == 3)
+    {
+        if (imageMaxArrLength < srcDescPtr->n * 3)   // max of each channel, and overall max of all 3 channels
+            return RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH;
+    }
+
+    if (srcDescPtr->dataType == RpptDataType::U8)
+    {
+        hip_exec_image_max_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                  srcDescPtr,
+                                  imageMaxArr,
+                                  roiTensorPtrSrc,
+                                  roiType,
+                                  rpp::deref(rppHandle));
+    }
+
+
+    return RPP_SUCCESS;
+#elif defined(OCL_COMPILE)
+    return RPP_ERROR_NOT_IMPLEMENTED;
+#endif // backend
+}
+
 #endif // GPU_SUPPORT

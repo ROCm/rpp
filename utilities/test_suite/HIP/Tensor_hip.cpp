@@ -81,7 +81,7 @@ int main(int argc, char **argv)
     bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24);
     bool noiseTypeCase = (testCase == 8);
     bool pln1OutTypeCase = (testCase == 86);
-    bool reductionTypeCase = (testCase == 88);
+    bool reductionTypeCase = (testCase == 88 || testCase == 89 || testCase == 90);
 
     unsigned int verbosity = atoi(argv[11]);
     unsigned int additionalParam = additionalParamCase ? atoi(argv[7]) : 1;
@@ -649,9 +649,9 @@ int main(int argc, char **argv)
 
             break;
         }
-        case 88:
+        case 89:
         {
-            testCaseName = "image_min_max";
+            testCaseName = "image_min";
 
             if(outputFormatToggle == 1)
                 missingFuncFlag = 1;
@@ -660,9 +660,26 @@ int main(int argc, char **argv)
                 reductionFuncResultArrLength = srcDescPtr->n;
 
             startWallTime = omp_get_wtime();
-            std::cerr<<"input is "<<(int)((Rpp8u *)input)[0]<<std::endl;
             if (inputBitDepth == 0)
                 rppt_image_min_gpu(d_input, srcDescPtr, d_reductionFuncResult, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
+            else
+                missingFuncFlag = 1;
+
+            break;
+        }
+        case 90:
+        {
+            testCaseName = "image_max";
+
+            if(outputFormatToggle == 1)
+                missingFuncFlag = 1;
+
+            if(srcDescPtr->c == 1)
+                reductionFuncResultArrLength = srcDescPtr->n;
+
+            startWallTime = omp_get_wtime();
+            if (inputBitDepth == 0)
+                rppt_image_max_gpu(d_input, srcDescPtr, d_reductionFuncResult, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
             else
                 missingFuncFlag = 1;
 
