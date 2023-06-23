@@ -23,6 +23,6 @@ THE SOFTWARE.
 #ifndef HIP_TENSOR_STATISTICAL_OPERATIONS_HPP
 #define HIP_TENSOR_STATISTICAL_OPERATIONS_HPP
 
-#include "kernel/image_min_max.hpp"
+#include "kernel/image_min.hpp"
 
 #endif // HIP_TENSOR_STATISTICAL_OPERATIONS_HPP

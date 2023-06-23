@@ -44,7 +44,7 @@ extern "C" {
 
 RppStatus rppt_image_min_max_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t imageMinMaxArr, Rpp32u imageMinMaxArrLength, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #ifdef GPU_SUPPORT
-RppStatus rppt_image_min_max_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rpp32f *imageMinMaxArr, Rpp32u imageMinMaxArrLength, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+RppStatus rppt_image_min_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rpp32f *imageMinArr, Rpp32u imageMinArrLength, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
 #ifdef __cplusplus

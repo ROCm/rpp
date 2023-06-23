@@ -103,69 +103,39 @@ RppStatus rppt_image_min_max_host(RppPtr_t srcPtr,
 
 #ifdef GPU_SUPPORT
 
-/******************** image_min_max ********************/
+/******************** image_min ********************/
 
-RppStatus rppt_image_min_max_gpu(RppPtr_t srcPtr,
-                                RpptDescPtr srcDescPtr,
-                                Rpp32f *imageMinMaxArr,
-                                Rpp32u imageMinMaxArrLength,
-                                RpptROIPtr roiTensorPtrSrc,
-                                RpptRoiType roiType,
-                                rppHandle_t rppHandle)
+RppStatus rppt_image_min_gpu(RppPtr_t srcPtr,
+                             RpptDescPtr srcDescPtr,
+                             Rpp32f *imageMinArr,
+                             Rpp32u imageMinArrLength,
+                             RpptROIPtr roiTensorPtrSrc,
+                             RpptRoiType roiType,
+                             rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
-    // RpptDesc srcDesc;
-    // RpptDescPtr srcDescPtr;
-    // srcDescPtr = &srcDesc;
-    // rpp_tensor_generic_to_image_desc(srcGenericDescPtr, srcDescPtr);
 
     if (srcDescPtr->c == 1)
     {
-        if (imageMinMaxArrLength < srcDescPtr->n * 2)   // min and max of single channel
+        if (imageMinArrLength < srcDescPtr->n)   // min and max of single channel
             return RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH;
     }
     else if (srcDescPtr->c == 3)
     {
-        if (imageMinMaxArrLength < srcDescPtr->n * 6)   // min and max of each channel, and overall min and max of all 3 channels
+        if (imageMinArrLength < srcDescPtr->n * 3)   // min and max of each channel, and overall min and max of all 3 channels
             return RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH;
     }
 
     if (srcDescPtr->dataType == RpptDataType::U8)
     {
-        hip_exec_image_min_max_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                      srcDescPtr,
-                                      imageMinMaxArr,
-                                      roiTensorPtrSrc,
-                                      roiType,
-                                      rpp::deref(rppHandle));
+        hip_exec_image_min_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                  srcDescPtr,
+                                  imageMinArr,
+                                  roiTensorPtrSrc,
+                                  roiType,
+                                  rpp::deref(rppHandle));
     }
-    // else if (srcDescPtr->dataType == RpptDataType::F16)
-    // {
-    //     hip_exec_image_min_max_tensor((half*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-    //                                 srcDescPtr,
-    //                                 static_cast<Rpp32f*>(imageMinMaxArr),
-    //                                 roiTensorPtrSrc,
-    //                                 roiType,
-    //                                 rpp::deref(rppHandle));
-    // }
-    // else if (srcDescPtr->dataType == RpptDataType::F32)
-    // {
-    //     hip_exec_image_min_max_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-    //                                 srcDescPtr,
-    //                                 static_cast<Rpp32f*>(imageMinMaxArr),
-    //                                 roiTensorPtrSrc,
-    //                                 roiType,
-    //                                 rpp::deref(rppHandle));
-    // }
-    // else if (srcDescPtr->dataType == RpptDataType::I8)
-    // {
-    //     hip_exec_image_min_max_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
-    //                                 srcDescPtr,
-    //                                 static_cast<Rpp32f*>(imageMinMaxArr),
-    //                                 roiTensorPtrSrc,
-    //                                 roiType,
-    //                                 rpp::deref(rppHandle));
-    // }
+
 
     return RPP_SUCCESS;
 #elif defined(OCL_COMPILE)

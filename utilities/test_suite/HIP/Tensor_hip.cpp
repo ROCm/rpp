@@ -390,7 +390,7 @@ int main(int argc, char **argv)
 
     // Initialize buffers for any reductionType functions
     Rpp32f *reductionFuncResult;
-    Rpp32u reductionFuncResultArrLength = srcDescPtr->n * 6;
+    Rpp32u reductionFuncResultArrLength = srcDescPtr->n * 3;
     reductionFuncResult = (Rpp32f *)calloc(reductionFuncResultArrLength, sizeof(Rpp32f));
     float *d_reductionFuncResult;
     hipMalloc(&d_reductionFuncResult, reductionFuncResultArrLength * sizeof(Rpp32f));
@@ -657,11 +657,12 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
 
             if(srcDescPtr->c == 1)
-                reductionFuncResultArrLength = srcDescPtr->n * 2;
+                reductionFuncResultArrLength = srcDescPtr->n;
 
             startWallTime = omp_get_wtime();
+            std::cerr<<"input is "<<(int)((Rpp8u *)input)[0]<<std::endl;
             if (inputBitDepth == 0)
-                rppt_image_min_max_gpu(d_input, srcDescPtr, d_reductionFuncResult, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
+                rppt_image_min_gpu(d_input, srcDescPtr, d_reductionFuncResult, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
             else
                 missingFuncFlag = 1;
 
