@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -29,73 +29,6 @@ THE SOFTWARE.
     #include <hip/hip_fp16.h>
     #include "hip/hip_tensor_statistical_operations.hpp"
 #endif // HIP_COMPILE
-
-/******************** image_sum ********************/
-
-RppStatus rppt_image_min_max_host(RppPtr_t srcPtr,
-                                  RpptDescPtr srcDescPtr,
-                                  RppPtr_t imageMinMaxArr,
-                                  Rpp32u imageMinMaxArrLength,
-                                  RpptROIPtr roiTensorPtrSrc,
-                                  RpptRoiType roiType,
-                                  rppHandle_t rppHandle)
-{
-    if (srcDescPtr->c == 1)
-    {
-        if (imageMinMaxArrLength < srcDescPtr->n * 2)      // min, max pair for each image
-            return RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH;
-    }
-    else if (srcDescPtr->c == 3)
-    {
-        if (imageMinMaxArrLength < srcDescPtr->n * 8)  // min, max pair of each channel, and min, max of all 3 channels
-            return RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH;
-    }
-
-    RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
-
-    if (srcDescPtr->dataType == RpptDataType::U8)
-    {
-        image_min_max_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                        srcDescPtr,
-                                        static_cast<Rpp8u*>(imageMinMaxArr),
-                                        imageMinMaxArrLength,
-                                        roiTensorPtrSrc,
-                                        roiType,
-                                        layoutParams);
-    }
-    /*else if (srcDescPtr->dataType == RpptDataType::F16)
-    {
-        image_min_max_f16_f16_host_tensor((Rpp16f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                           srcDescPtr,
-                                           static_cast<Rpp32f*>(imageMinMaxArr),
-                                           imageMinMaxArrLength,
-                                           roiTensorPtrSrc,
-                                           roiType,
-                                           layoutParams);
-    }
-    else if (srcDescPtr->dataType == RpptDataType::F32)
-    {
-        image_min_max_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                           srcDescPtr,
-                                           static_cast<Rpp32f*>(imageMinMaxArr),
-                                           imageMinMaxArrLength,
-                                           roiTensorPtrSrc,
-                                           roiType,
-                                           layoutParams);
-    }
-    else if (srcDescPtr->dataType == RpptDataType::I8)
-    {
-        image_min_max_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                         srcDescPtr,
-                                         static_cast<Rpp32f*>(imageMinMaxArr),
-                                         imageMinMaxArrLength,
-                                         roiTensorPtrSrc,
-                                         roiType,
-                                         layoutParams);
-    }*/
-
-    return RPP_SUCCESS;
-}
 
 /********************************************************************************************************************/
 /*********************************************** RPP_GPU_SUPPORT = ON ***********************************************/
@@ -130,18 +63,46 @@ RppStatus rppt_image_min_gpu(RppPtr_t srcPtr,
     {
         hip_exec_image_min_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
                                   srcDescPtr,
-                                  static_cast<Rpp32f *>(imageMinArr),
+                                  static_cast<Rpp8u*>(imageMinArr),
                                   roiTensorPtrSrc,
                                   roiType,
                                   rpp::deref(rppHandle));
     }
-
+    else if (srcDescPtr->dataType == RpptDataType::F16)
+    {
+        hip_exec_image_min_tensor((half*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                  srcDescPtr,
+                                  static_cast<half*>(imageMinArr),
+                                  roiTensorPtrSrc,
+                                  roiType,
+                                  rpp::deref(rppHandle));
+    }
+    else if (srcDescPtr->dataType == RpptDataType::F32)
+    {
+        hip_exec_image_min_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                  srcDescPtr,
+                                  static_cast<Rpp32f*>(imageMinArr),
+                                  roiTensorPtrSrc,
+                                  roiType,
+                                  rpp::deref(rppHandle));
+    }
+    else if (srcDescPtr->dataType == RpptDataType::I8)
+    {
+        hip_exec_image_min_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                  srcDescPtr,
+                                  static_cast<Rpp8s*>(imageMinArr),
+                                  roiTensorPtrSrc,
+                                  roiType,
+                                  rpp::deref(rppHandle));
+    }
 
     return RPP_SUCCESS;
 #elif defined(OCL_COMPILE)
     return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
+
+/******************** image_max ********************/
 
 RppStatus rppt_image_max_gpu(RppPtr_t srcPtr,
                              RpptDescPtr srcDescPtr,
@@ -167,7 +128,34 @@ RppStatus rppt_image_max_gpu(RppPtr_t srcPtr,
     {
         hip_exec_image_max_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
                                   srcDescPtr,
-                                  static_cast<Rpp32f *>(imageMaxArr),
+                                  static_cast<Rpp8u*>(imageMaxArr),
+                                  roiTensorPtrSrc,
+                                  roiType,
+                                  rpp::deref(rppHandle));
+    }
+    else if (srcDescPtr->dataType == RpptDataType::F16)
+    {
+        hip_exec_image_max_tensor((half*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                  srcDescPtr,
+                                  static_cast<half*>(imageMaxArr),
+                                  roiTensorPtrSrc,
+                                  roiType,
+                                  rpp::deref(rppHandle));
+    }
+    else if (srcDescPtr->dataType == RpptDataType::F32)
+    {
+        hip_exec_image_max_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                  srcDescPtr,
+                                  static_cast<Rpp32f*>(imageMaxArr),
+                                  roiTensorPtrSrc,
+                                  roiType,
+                                  rpp::deref(rppHandle));
+    }
+    else if (srcDescPtr->dataType == RpptDataType::I8)
+    {
+        hip_exec_image_max_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                  srcDescPtr,
+                                  static_cast<Rpp8s*>(imageMaxArr),
                                   roiTensorPtrSrc,
                                   roiType,
                                   rpp::deref(rppHandle));

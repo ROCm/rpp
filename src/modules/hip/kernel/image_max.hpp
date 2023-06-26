@@ -1,51 +1,51 @@
 #include <hip/hip_runtime.h>
 #include "rpp_hip_common.hpp"
 
-// -------------------- Set 0 - image_max reduction stage 2 --------------------
+// -------------------- Set 0 - Reduction Stage 2 --------------------
 
-// template <typename T>
+template <typename T>
 __global__ void image_max_grid_3channel_result_tensor(float *srcPtr,
                                                       uint xBufferLength,
-                                                      float *dstPtr)
+                                                      T *dstPtr)
 {
     int id_x = hipThreadIdx_x * 8;
     int id_z = hipBlockIdx_z;
 
-    __shared__ float partialRMaxLDS[256];                            // 1024 floats of src reduced to 256 in a 256 x 1 thread block
-    __shared__ float partialGMaxLDS[256];                            // 1024 floats of src reduced to 256 in a 256 x 1 thread block
-    __shared__ float partialBMaxLDS[256];                            // 1024 floats of src reduced to 256 in a 256 x 1 thread block
+    __shared__ float partialRMaxLDS[256];                           // 1024 floats of src reduced to 256 in a 256 x 1 thread block
+    __shared__ float partialGMaxLDS[256];                           // 1024 floats of src reduced to 256 in a 256 x 1 thread block
+    __shared__ float partialBMaxLDS[256];                           // 1024 floats of src reduced to 256 in a 256 x 1 thread block
 
     uint srcIdx = (id_z * xBufferLength) * 3;
-    float srcRefR = srcPtr[srcIdx];
-    float srcRefG = srcPtr[srcIdx + 1];
-    float srcRefB = srcPtr[srcIdx + 2];
+    float srcRefR = srcPtr[srcIdx];                                 // get starting value of R channel
+    float srcRefG = srcPtr[srcIdx + 1];                             // get starting value of G channel
+    float srcRefB = srcPtr[srcIdx + 2];                             // get starting value of B channel
 
-    partialRMaxLDS[hipThreadIdx_x] = srcRefR;                         // initialization of LDS to 0 using all 256 x 1 threads
-    partialGMaxLDS[hipThreadIdx_x] = srcRefG;                         // initialization of LDS to 0 using all 256 x 1 threads
-    partialBMaxLDS[hipThreadIdx_x] = srcRefB;                         // initialization of LDS to 0 using all 256 x 1 threads
+    partialRMaxLDS[hipThreadIdx_x] = srcRefR;                       // initialization of LDS for R channel to srcRefR using all 256 x 1 threads
+    partialGMaxLDS[hipThreadIdx_x] = srcRefG;                       // initialization of LDS for G channel to srcRefG using all 256 x 1 threads
+    partialBMaxLDS[hipThreadIdx_x] = srcRefB;                       // initialization of LDS for B channel to srcRefB using all 256 x 1 threads
 
     if (id_x >= xBufferLength)
         return;
 
-    int xAlignedLength = xBufferLength & ~7;                          // alignedLength for vectorized global loads
-    int xDiff = xBufferLength - xAlignedLength;                       // difference between bufferLength and alignedLength
+    int xAlignedLength = xBufferLength & ~7;                        // alignedLength for vectorized global loads
+    int xDiff = xBufferLength - xAlignedLength;                     // difference between bufferLength and alignedLength
     srcIdx += id_x * 3;
 
     d_float24 src_f24;
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &src_f24);           // load 24 pixels to local mmemory
-    if (id_x + 8 > xBufferLength)                                                        // local memory reset of invalid values (from the vectorized global load) to 0.0f
+    if (id_x + 8 > xBufferLength)
     {
         for(int i = xDiff; i < 8; i++)
         {
-            src_f24.f8[0].f1[i] = srcRefR;
-            src_f24.f8[1].f1[i] = srcRefG;
-            src_f24.f8[2].f1[i] = srcRefB;
+            src_f24.f8[0].f1[i] = srcRefR;                                              // local memory reset of invalid values (from the vectorized global load) to srcRefR
+            src_f24.f8[1].f1[i] = srcRefG;  	                                        // local memory reset of invalid values (from the vectorized global load) to srcRefG
+            src_f24.f8[2].f1[i] = srcRefB;                                              // local memory reset of invalid values (from the vectorized global load) to srcRefB
         }
     }
 
-    partialRMaxLDS[hipThreadIdx_x] = fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(src_f24.f8[0].f1[0], src_f24.f8[0].f1[1]), src_f24.f8[0].f1[2]), src_f24.f8[0].f1[3]), src_f24.f8[0].f1[4]), src_f24.f8[0].f1[5]), src_f24.f8[0].f1[6]), src_f24.f8[0].f1[7]);
-    partialGMaxLDS[hipThreadIdx_x] = fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(src_f24.f8[1].f1[0], src_f24.f8[1].f1[1]), src_f24.f8[1].f1[2]), src_f24.f8[1].f1[3]), src_f24.f8[1].f1[4]), src_f24.f8[1].f1[5]), src_f24.f8[1].f1[6]), src_f24.f8[1].f1[7]);
-    partialBMaxLDS[hipThreadIdx_x] = fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(src_f24.f8[2].f1[0], src_f24.f8[2].f1[1]), src_f24.f8[2].f1[2]), src_f24.f8[2].f1[3]), src_f24.f8[2].f1[4]), src_f24.f8[2].f1[5]), src_f24.f8[2].f1[6]), src_f24.f8[2].f1[7]);
+    rpp_hip_math_max8(&src_f24.f8[0], &partialRMaxLDS[hipThreadIdx_x]);
+    rpp_hip_math_max8(&src_f24.f8[1], &partialGMaxLDS[hipThreadIdx_x]);
+    rpp_hip_math_max8(&src_f24.f8[2], &partialBMaxLDS[hipThreadIdx_x]);
     __syncthreads();                                                                    // syncthreads after LDS load
 
     // Reduction of 256 floats on 256 threads per block in x dimension
@@ -64,17 +64,17 @@ __global__ void image_max_grid_3channel_result_tensor(float *srcPtr,
     if (hipThreadIdx_x == 0)
     {
         int dstIdx = hipBlockIdx_z * 4;
-        dstPtr[dstIdx] = partialRMaxLDS[0];
-        dstPtr[dstIdx + 1] = partialGMaxLDS[0];
-        dstPtr[dstIdx + 2] = partialBMaxLDS[0];
-        dstPtr[dstIdx + 3] = (fmaxf(fmaxf(partialRMaxLDS[0], partialGMaxLDS[0]), partialBMaxLDS[0]));
+        dstPtr[dstIdx] = (T) partialRMaxLDS[0];
+        dstPtr[dstIdx + 1] = (T) partialGMaxLDS[0];
+        dstPtr[dstIdx + 2] = (T) partialBMaxLDS[0];
+        dstPtr[dstIdx + 3] = (T) (fmaxf(fmaxf(partialRMaxLDS[0], partialGMaxLDS[0]), partialBMaxLDS[0]));
     }
 }
 
-// template <typename T>
+template <typename T>
 __global__ void image_max_grid_result_tensor(float *srcPtr,
                                              uint xBufferLength,
-                                             float *dstPtr)
+                                             T *dstPtr)
 {
     int id_x = hipThreadIdx_x * 8;
     int id_z = hipBlockIdx_z;
@@ -83,7 +83,7 @@ __global__ void image_max_grid_result_tensor(float *srcPtr,
 
     uint srcIdx = (id_z * xBufferLength);
     float srcRef = srcPtr[srcIdx];
-    partialMaxLDS[hipThreadIdx_x] = srcRef;                         // initialization of LDS to 0 using all 256 x 1 threads
+    partialMaxLDS[hipThreadIdx_x] = srcRef;                         // initialization of LDS to srcRef using all 256 x 1 threads
 
     if (id_x >= xBufferLength)
         return;
@@ -96,9 +96,9 @@ __global__ void image_max_grid_result_tensor(float *srcPtr,
     rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);   // load 8 pixels to local mmemory
     if (id_x + 8 > xBufferLength)
         for(int i = xDiff; i < 8; i++)
-            src_f8.f1[i] = srcRef;                                  // local memory reset of invalid values (from the vectorized global load) to 0.0f
+            src_f8.f1[i] = srcRef;                                  // local memory reset of invalid values (from the vectorized global load) to srcRef
 
-    partialMaxLDS[hipThreadIdx_x] = fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(src_f8.f1[0], src_f8.f1[1]), src_f8.f1[2]), src_f8.f1[3]), src_f8.f1[4]), src_f8.f1[5]), src_f8.f1[6]), src_f8.f1[7]);
+    rpp_hip_math_max8(&src_f8, &partialMaxLDS[hipThreadIdx_x]);
     __syncthreads();                                                // syncthreads after LDS load
 
     // Reduction of 256 floats on 256 threads per block in x dimension
@@ -111,11 +111,11 @@ __global__ void image_max_grid_result_tensor(float *srcPtr,
 
     // Final store to dst
     if (hipThreadIdx_x == 0)
-        dstPtr[hipBlockIdx_z] = partialMaxLDS[0];
+        dstPtr[hipBlockIdx_z] = (T) (partialMaxLDS[0]);
 }
 
 
-// -------------------- Set 0 - image_max reduction stage 1 --------------------
+// -------------------- Set 1 - Reduction Stage 1 --------------------
 
 template <typename T>
 __global__ void image_max_pkd3_tensor(T *srcPtr,
@@ -127,22 +127,22 @@ __global__ void image_max_pkd3_tensor(T *srcPtr,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    __shared__ float partialRMaxLDS[16][16];                                 // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
-    __shared__ float partialGMaxLDS[16][16];
-    __shared__ float partialBMaxLDS[16][16];
+    __shared__ float partialRMaxLDS[16][16];                                 // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block for R channel
+    __shared__ float partialGMaxLDS[16][16];                                 // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block for G channel
+    __shared__ float partialBMaxLDS[16][16];                                 // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block for B channel
 
     uint srcIdx = (id_z * srcStridesNH.x);
-    float srcRefR = srcPtr[srcIdx];
-    float srcRefG = srcPtr[srcIdx + 1];
-    float srcRefB = srcPtr[srcIdx + 2];
+    float srcRefR = srcPtr[srcIdx];                                          // get starting value of R channel
+    float srcRefG = srcPtr[srcIdx + 1];                                      // get starting value of G channel
+    float srcRefB = srcPtr[srcIdx + 2];                                      // get starting value of B channel
 
-    float *partialRMaxLDSRowPtr = &partialRMaxLDS[hipThreadIdx_y][0];         // float pointer to beginning of each row in LDS
-    float *partialGMaxLDSRowPtr = &partialGMaxLDS[hipThreadIdx_y][0];
-    float *partialBMaxLDSRowPtr = &partialBMaxLDS[hipThreadIdx_y][0];
+    float *partialRMaxLDSRowPtr = &partialRMaxLDS[hipThreadIdx_y][0];        // float pointer to beginning of each row in LDS for R Channel
+    float *partialGMaxLDSRowPtr = &partialGMaxLDS[hipThreadIdx_y][0];        // float pointer to beginning of each row in LDS for G Channel
+    float *partialBMaxLDSRowPtr = &partialBMaxLDS[hipThreadIdx_y][0];        // float pointer to beginning of each row in LDS for B Channel
 
-    partialRMaxLDSRowPtr[hipThreadIdx_x] = srcRefR;                           // initialization of LDS to 0 using all 16 x 16 threads
-    partialGMaxLDSRowPtr[hipThreadIdx_x] = srcRefG;
-    partialBMaxLDSRowPtr[hipThreadIdx_x] = srcRefB;
+    partialRMaxLDSRowPtr[hipThreadIdx_x] = srcRefR;                          // initialization of LDS for R channel to srcRefR using all 16 x 16 threads
+    partialGMaxLDSRowPtr[hipThreadIdx_x] = srcRefG;                          // initialization of LDS for G channel to srcRefG using all 16 x 16 threads
+    partialBMaxLDSRowPtr[hipThreadIdx_x] = srcRefB;                          // initialization of LDS for B channel to srcRefB using all 16 x 16 threads
 
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
     {
@@ -159,7 +159,7 @@ __global__ void image_max_pkd3_tensor(T *srcPtr,
 
     d_float24 src_f24;
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &src_f24);           // load 24 pixels to local mmemory
-    if (id_x + 8 > roiTensorPtrSrc[id_z].xywhROI.roiWidth)                               // local memory reset of invalid values (from the vectorized global load) to 0.0f
+    if (id_x + 8 > roiTensorPtrSrc[id_z].xywhROI.roiWidth)
     {
         for(int i = xDiff; i < 8; i++)
         {
@@ -169,9 +169,9 @@ __global__ void image_max_pkd3_tensor(T *srcPtr,
         }
     }
 
-    partialRMaxLDSRowPtr[hipThreadIdx_x] = fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(src_f24.f8[0].f1[0], src_f24.f8[0].f1[1]), src_f24.f8[0].f1[2]), src_f24.f8[0].f1[3]), src_f24.f8[0].f1[4]), src_f24.f8[0].f1[5]), src_f24.f8[0].f1[6]), src_f24.f8[0].f1[7]);
-    partialGMaxLDSRowPtr[hipThreadIdx_x] = fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(src_f24.f8[1].f1[0], src_f24.f8[1].f1[1]), src_f24.f8[1].f1[2]), src_f24.f8[1].f1[3]), src_f24.f8[1].f1[4]), src_f24.f8[1].f1[5]), src_f24.f8[1].f1[6]), src_f24.f8[1].f1[7]);
-    partialBMaxLDSRowPtr[hipThreadIdx_x] = fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(src_f24.f8[2].f1[0], src_f24.f8[2].f1[1]), src_f24.f8[2].f1[2]), src_f24.f8[2].f1[3]), src_f24.f8[2].f1[4]), src_f24.f8[2].f1[5]), src_f24.f8[2].f1[6]), src_f24.f8[2].f1[7]);
+    rpp_hip_math_max8(&src_f24.f8[0], &partialRMaxLDSRowPtr[hipThreadIdx_x]);
+    rpp_hip_math_max8(&src_f24.f8[1], &partialGMaxLDSRowPtr[hipThreadIdx_x]);
+    rpp_hip_math_max8(&src_f24.f8[2], &partialBMaxLDSRowPtr[hipThreadIdx_x]);
     __syncthreads();
 
     // Reduction of 16 floats on 16 threads per block in x dimension (for every y dimension)
@@ -247,26 +247,26 @@ __global__ void image_max_pln3_tensor(T *srcPtr,
         return;
     }
 
-    int xAlignedLength = roiTensorPtrSrc[id_z].xywhROI.roiWidth & ~7;       // alignedLength for vectorized global loads
-    int xDiff = roiTensorPtrSrc[id_z].xywhROI.roiWidth - xAlignedLength;    // difference between roiWidth and alignedLength
+    int xAlignedLength = roiTensorPtrSrc[id_z].xywhROI.roiWidth & ~7;        // alignedLength for vectorized global loads
+    int xDiff = roiTensorPtrSrc[id_z].xywhROI.roiWidth - xAlignedLength;     // difference between roiWidth and alignedLength
     srcIdx += ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
 
     d_float24 src_f24;
     rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &src_f24);
-    if (id_x + 8 > roiTensorPtrSrc[id_z].xywhROI.roiWidth)                  // local memory reset of invalid values (from the vectorized global load) to srcRef
+    if (id_x + 8 > roiTensorPtrSrc[id_z].xywhROI.roiWidth)
     {
         for(int i = xDiff; i < 8; i++)
         {
-            src_f24.f8[0].f1[i] = srcRefR;
-            src_f24.f8[1].f1[i] = srcRefG;
-            src_f24.f8[2].f1[i] = srcRefB;
+            src_f24.f8[0].f1[i] = srcRefR;                                   // local memory reset of invalid values (from the vectorized global load) to srcRefR
+            src_f24.f8[1].f1[i] = srcRefG;                                   // local memory reset of invalid values (from the vectorized global load) to srcRefG
+            src_f24.f8[2].f1[i] = srcRefB;                                   // local memory reset of invalid values (from the vectorized global load) to srcRefB
         }
     }
 
-    partialRMaxLDSRowPtr[hipThreadIdx_x] = fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(src_f24.f8[0].f1[0], src_f24.f8[0].f1[1]), src_f24.f8[0].f1[2]), src_f24.f8[0].f1[3]), src_f24.f8[0].f1[4]), src_f24.f8[0].f1[5]), src_f24.f8[0].f1[6]), src_f24.f8[0].f1[7]);
-    partialGMaxLDSRowPtr[hipThreadIdx_x] = fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(src_f24.f8[1].f1[0], src_f24.f8[1].f1[1]), src_f24.f8[1].f1[2]), src_f24.f8[1].f1[3]), src_f24.f8[1].f1[4]), src_f24.f8[1].f1[5]), src_f24.f8[1].f1[6]), src_f24.f8[1].f1[7]);
-    partialBMaxLDSRowPtr[hipThreadIdx_x] = fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(src_f24.f8[2].f1[0], src_f24.f8[2].f1[1]), src_f24.f8[2].f1[2]), src_f24.f8[2].f1[3]), src_f24.f8[2].f1[4]), src_f24.f8[2].f1[5]), src_f24.f8[2].f1[6]), src_f24.f8[2].f1[7]);
-    __syncthreads();                                                        // syncthreads after LDS load
+    rpp_hip_math_max8(&src_f24.f8[0], &partialRMaxLDSRowPtr[hipThreadIdx_x]);
+    rpp_hip_math_max8(&src_f24.f8[1], &partialGMaxLDSRowPtr[hipThreadIdx_x]);
+    rpp_hip_math_max8(&src_f24.f8[2], &partialBMaxLDSRowPtr[hipThreadIdx_x]);
+    __syncthreads();                                                         // syncthreads after LDS load
 
     // Reduction of 16 floats on 16 threads per block in x dimension (for every y dimension)
     for (int threadMax = 8; threadMax >= 1; threadMax /= 2)
@@ -320,7 +320,7 @@ __global__ void image_max_pln1_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNH.x);
     float srcRef = srcPtr[srcIdx];
     float *partialMaxLDSRowPtr = &partialMaxLDS[hipThreadIdx_y][0];         // float pointer to beginning of each row in LDS
-    partialMaxLDSRowPtr[hipThreadIdx_x] = srcRef;                             // initialization of LDS to 0 using all 16 x 16 threads
+    partialMaxLDSRowPtr[hipThreadIdx_x] = srcRef;                           // initialization of LDS to srcRefR using all 16 x 16 threads
 
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
     {
@@ -334,13 +334,11 @@ __global__ void image_max_pln1_tensor(T *srcPtr,
 
     d_float8 src_f8;
     rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);           // load 8 pixels to local mmemory
-    if (id_x + 8 > roiTensorPtrSrc[id_z].xywhROI.roiWidth)                  // local memory reset of invalid values (from the vectorized global load) to 0.0f
-    {
+    if (id_x + 8 > roiTensorPtrSrc[id_z].xywhROI.roiWidth)
         for(int i = xDiff; i < 8; i++)
-            src_f8.f1[i] = srcRef;
-    }
+            src_f8.f1[i] = srcRef;                                          // local memory reset of invalid values (from the vectorized global load) to srcRef
 
-    partialMaxLDSRowPtr[hipThreadIdx_x] = fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(src_f8.f1[0], src_f8.f1[1]), src_f8.f1[2]), src_f8.f1[3]), src_f8.f1[4]), src_f8.f1[5]), src_f8.f1[6]), src_f8.f1[7]);
+    rpp_hip_math_max8(&src_f8, &partialMaxLDSRowPtr[hipThreadIdx_x]);
     __syncthreads();                                                        // syncthreads after LDS load
 
     // Reduction of 16 floats on 16 threads per block in x dimension (for every y dimension)

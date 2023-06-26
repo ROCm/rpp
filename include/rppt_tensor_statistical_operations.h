@@ -28,25 +28,37 @@ THE SOFTWARE.
 extern "C" {
 #endif
 
-/******************** image_min_max ********************/
+/******************** image_min ********************/
 
-// Image min max finder operation for a NCHW/NHWC layout tensor
+// Image min finder operation for a NCHW/NHWC layout tensor
 
 // *param[in] srcPtr source tensor memory
 // *param[in] srcDescPtr source tensor descriptor
-// *param[out] imageMinMaxArr destination array of minimum length (srcPtr->n * 8)
-// *param[in] imageMinMaxArrLength length of provided destination array (minimum length = srcPtr->n * 8)
+// *param[out] imageMinArr destination array of minimum length (srcPtr->n)
+// *param[in] imageMinArrLength length of provided destination array (minimum length = srcPtr->n)
 // *param[in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
 // *param[in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
 // *returns a  RppStatus enumeration.
 // *retval RPP_SUCCESS : succesful completion
 // *retval RPP_ERROR : Error
 
-RppStatus rppt_image_min_max_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t imageMinMaxArr, Rpp32u imageMinMaxArrLength, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
-
 #ifdef GPU_SUPPORT
 RppStatus rppt_image_min_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t imageMinArr, Rpp32u imageMinArrLength, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
+
+/******************** image_max ********************/
+
+// Image max finder operation for a NCHW/NHWC layout tensor
+
+// *param[in] srcPtr source tensor memory
+// *param[in] srcDescPtr source tensor descriptor
+// *param[out] imageMaxArr destination array of minimum length (srcPtr->n)
+// *param[in] imageMaxArrLength length of provided destination array (minimum length = srcPtr->n)
+// *param[in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+// *param[in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+// *returns a  RppStatus enumeration.
+// *retval RPP_SUCCESS : succesful completion
+// *retval RPP_ERROR : Error
 
 #ifdef GPU_SUPPORT
 RppStatus rppt_image_max_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t imageMaxArr, Rpp32u imageMaxArrLength, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);

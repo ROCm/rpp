@@ -389,12 +389,19 @@ int main(int argc, char **argv)
     }
 
     // Initialize buffers for any reductionType functions
-    Rpp32f *reductionFuncResult;
-    Rpp32u reductionFuncResultArrLength = srcDescPtr->n * 4;
-    reductionFuncResult = (Rpp32f *)calloc(reductionFuncResultArrLength, sizeof(Rpp32f));
-    void *d_reductionFuncResult;
-    hipMalloc(&d_reductionFuncResult, reductionFuncResultArrLength * sizeof(Rpp32f));
-    hipMemcpy(d_reductionFuncResult, reductionFuncResult, reductionFuncResultArrLength * sizeof(Rpp32f), hipMemcpyHostToDevice);
+    void *reductionFuncResult, *d_reductionFuncResult;
+    Rpp32u reductionFuncResultArrLength;
+    if (srcDescPtr->c == 1)
+        reductionFuncResultArrLength = srcDescPtr->n ;
+    else
+        reductionFuncResultArrLength = srcDescPtr->n * 4;
+
+    if(reductionTypeCase)
+    {
+        reductionFuncResult = (Rpp8u *)calloc(reductionFuncResultArrLength, get_size_of_data_type(dstDescPtr->dataType));
+        hipMalloc(&d_reductionFuncResult, reductionFuncResultArrLength * get_size_of_data_type(dstDescPtr->dataType));
+        hipMemcpy(d_reductionFuncResult, reductionFuncResult,reductionFuncResultArrLength * get_size_of_data_type(dstDescPtr->dataType), hipMemcpyHostToDevice);
+    }
 
     // Allocate hip memory for src/dst and copy decoded inputs to hip buffers
     hipMalloc(&d_input, inputBufferSize);
@@ -654,14 +661,8 @@ int main(int argc, char **argv)
         {
             testCaseName = "image_min";
 
-            if(outputFormatToggle == 1)
-                missingFuncFlag = 1;
-
-            if(srcDescPtr->c == 1)
-                reductionFuncResultArrLength = srcDescPtr->n;
-
             startWallTime = omp_get_wtime();
-            if (inputBitDepth == 0)
+            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_image_min_gpu(d_input, srcDescPtr, d_reductionFuncResult, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
             else
                 missingFuncFlag = 1;
@@ -672,14 +673,8 @@ int main(int argc, char **argv)
         {
             testCaseName = "image_max";
 
-            if(outputFormatToggle == 1)
-                missingFuncFlag = 1;
-
-            if(srcDescPtr->c == 1)
-                reductionFuncResultArrLength = srcDescPtr->n;
-
             startWallTime = omp_get_wtime();
-            if (inputBitDepth == 0)
+            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                 rppt_image_max_gpu(d_input, srcDescPtr, d_reductionFuncResult, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
             else
                 missingFuncFlag = 1;
@@ -716,11 +711,33 @@ int main(int argc, char **argv)
         // Display results for reduction functions
         if (reductionTypeCase)
         {
-            printf("\nReduction result (Batch of n channel images produces n+1 results per image in batch): ");
-            hipMemcpy(reductionFuncResult, d_reductionFuncResult, reductionFuncResultArrLength * sizeof(Rpp32f), hipMemcpyDeviceToHost);
-            std::cerr<<"Reduction function length is:"<<reductionFuncResultArrLength<<std::endl;
-            for (int i = 0; i < reductionFuncResultArrLength; i++)
-                printf(" %0.3f\n", reductionFuncResult[i]);
+            cout<<"Printing reduction function results"<<endl;
+            hipMemcpy(reductionFuncResult, d_reductionFuncResult, reductionFuncResultArrLength * get_size_of_data_type(dstDescPtr->dataType), hipMemcpyDeviceToHost);
+            cout<<"Reduction output array length is:"<<reductionFuncResultArrLength<<endl;
+            if(dstDescPtr->dataType == RpptDataType::U8)
+            {
+                Rpp8u *reductionOutPtr = static_cast<Rpp8u*>(reductionFuncResult);
+                for (int i = 0; i < reductionFuncResultArrLength; i++)
+                    printf("%d\n", (int)reductionOutPtr[i]);
+            }
+            else if(dstDescPtr->dataType == RpptDataType::F16)
+            {
+                Rpp16f *reductionOutPtr = static_cast<Rpp16f *>(reductionFuncResult);
+                for (int i = 0; i < reductionFuncResultArrLength; i++)
+                    printf("%d\n", (int)reductionOutPtr[i]);
+            }
+            else if(dstDescPtr->dataType == RpptDataType::F32)
+            {
+                Rpp32f *reductionOutPtr = static_cast<Rpp32f *>(reductionFuncResult);
+                for (int i = 0; i < reductionFuncResultArrLength; i++)
+                    printf("%d\n", (int)reductionOutPtr[i]);
+            }
+            else if(dstDescPtr->dataType == RpptDataType::I8)
+            {
+                Rpp8s *reductionOutPtr = static_cast<Rpp8s *>(reductionFuncResult);
+                for (int i = 0; i < reductionFuncResultArrLength; i++)
+                    printf("%d\n", (int)reductionOutPtr[i]);
+            }
         }
 
         // Reconvert other bit depths to 8u for output display purposes
@@ -835,10 +852,13 @@ int main(int argc, char **argv)
     free(inputu8);
     free(inputu8Second);
     free(outputu8);
-    free(reductionFuncResult);
+    if (reductionTypeCase)
+    {
+        free(reductionFuncResult);
+        hipFree(d_reductionFuncResult);
+    }
     hipFree(d_input);
     hipFree(d_input_second);
     hipFree(d_output);
-    hipFree(d_reductionFuncResult);
     return 0;
 }
