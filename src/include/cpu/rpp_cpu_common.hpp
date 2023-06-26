@@ -5860,4 +5860,61 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
     }
 }
 
+inline void compute_min_32_host(__m256i *p1, __m256i *pMin)
+{
+    pMin[0] = _mm256_min_epu8(p1[0], pMin[0]); //compare and store min of 32 values into global min
+}
+
+inline void reduce_min_32_host(__m256i *pMin, __m128i *result)
+{
+    __m128i px[3];
+    __m128i zero = _mm_setzero_si128();
+    __m128i mask = _mm_set_epi8(0,1,2,3,4,5,6,8,9,10,11,12,13,14,15,7);
+    px[0] = _mm256_castsi256_si128(pMin[0]);
+    px[1] = _mm256_extracti128_si256(pMin[0], 1);
+    px[0] = _mm_min_epu8(px[0], px[1]);
+    px[1] = _mm_unpacklo_epi8(zero, px[0]);
+    px[0] = _mm_unpackhi_epi8(zero, px[0]);
+    px[0] = _mm_min_epu8(px[0], px[1]);
+    px[1] = _mm_unpacklo_epi16(zero, px[0]);
+    px[0] = _mm_unpackhi_epi16(zero, px[0]);
+    px[0] = _mm_min_epu16(px[0], px[1]);
+    px[1] = _mm_unpacklo_epi32(zero, px[0]);
+    px[0] = _mm_unpackhi_epi32(zero, px[0]);
+    px[0] = _mm_min_epu32(px[0], px[1]);
+    result[0] = _mm_shuffle_epi8(px[0], mask);
+}
+
+inline void compute_min_96_host(__m256i *p1, __m256i *pMinR, __m256i *pMinG, __m256i *pMinB)
+{
+    pMinR[0] = _mm256_min_epu8(p1[0], pMinR[0]); //compare and store min of 32 R values into global min
+    pMinG[0] = _mm256_min_epu8(p1[1], pMinG[0]); //compare and store min of 32 G values into global min
+    pMinB[0] = _mm256_min_epu8(p1[2], pMinB[0]); //compare and store min of 32 B values into global min
+}
+
+inline void reduce_min_96_host(__m256i *pMinR, __m256i *pMinG, __m256i *pMinB, __m128i *result)
+{
+    __m128i px[4];
+    __m128i zero = _mm_setzero_si128();
+    __m128i mask = _mm_set_epi8(0,1,2,3,4,5,6,8,9,10,11,12,13,14,15,7);
+    px[0] = _mm_min_epu8(_mm256_castsi256_si128(pMinR[0]), _mm256_extracti128_si256(pMinR[0], 1));
+    px[1] = _mm_min_epu8(_mm_unpacklo_epi8(zero, px[0]), _mm_unpackhi_epi8(zero, px[0]));
+    px[0] = _mm_min_epu16(_mm_unpacklo_epi16(zero, px[1]), _mm_unpackhi_epi16(zero, px[1]));
+    px[1] = _mm_min_epu32(_mm_unpacklo_epi32(zero, px[0]), _mm_unpackhi_epi32(zero, px[0]));
+    px[2] = _mm_shuffle_epi8(px[1], mask);
+
+    px[0] = _mm_min_epu8(_mm256_castsi256_si128(pMinG[0]), _mm256_extracti128_si256(pMinG[0], 1));
+    px[1] = _mm_min_epu8(_mm_unpacklo_epi8(zero, px[0]), _mm_unpackhi_epi8(zero, px[0]));
+    px[0] = _mm_min_epu16(_mm_unpacklo_epi16(zero, px[1]), _mm_unpackhi_epi16(zero, px[1]));
+    px[1] = _mm_min_epu32(_mm_unpacklo_epi32(zero, px[0]), _mm_unpackhi_epi32(zero, px[0]));
+    px[0] = _mm_shuffle_epi8(px[1], mask);
+    px[3] = _mm_unpacklo_epi16(px[2], px[0]);
+
+    px[0] = _mm_min_epu8(_mm256_castsi256_si128(pMinB[0]), _mm256_extracti128_si256(pMinB[0], 1));
+    px[1] = _mm_min_epu8(_mm_unpacklo_epi8(zero, px[0]), _mm_unpackhi_epi8(zero, px[0]));
+    px[0] = _mm_min_epu16(_mm_unpacklo_epi16(zero, px[1]), _mm_unpackhi_epi16(zero, px[1]));
+    px[1] = _mm_min_epu32(_mm_unpacklo_epi32(zero, px[0]), _mm_unpackhi_epi32(zero, px[0]));
+    px[2] = _mm_shuffle_epi8(px[1], mask);
+    px[3] = _mm_unpacklo_epi32(px[3], px[2]);
+}
 #endif //RPP_CPU_COMMON_H
