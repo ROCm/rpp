@@ -11,21 +11,21 @@ __global__ void image_min_grid_3channel_result_tensor(float *srcPtr,
     int id_x = hipThreadIdx_x * 8;
     int id_z = hipBlockIdx_z;
 
-    if (id_x >= xBufferLength)
-        return;
-
-    uint srcIdx = (id_z * xBufferLength) * 3;
-    float srcRefR = 255.0f;//srcPtr[srcIdx];
-    float srcRefG = 255.0f;//srcPtr[srcIdx + 1];
-    float srcRefB = 255.0f;//srcPtr[srcIdx + 2];
-
     __shared__ float partialRMinLDS[256];                            // 1024 floats of src reduced to 256 in a 256 x 1 thread block
     __shared__ float partialGMinLDS[256];                            // 1024 floats of src reduced to 256 in a 256 x 1 thread block
     __shared__ float partialBMinLDS[256];                            // 1024 floats of src reduced to 256 in a 256 x 1 thread block
 
+    uint srcIdx = (id_z * xBufferLength) * 3;
+    float srcRefR = srcPtr[srcIdx];
+    float srcRefG = srcPtr[srcIdx + 1];
+    float srcRefB = srcPtr[srcIdx + 2];
+
     partialRMinLDS[hipThreadIdx_x] = srcRefR;                         // initialization of LDS to 0 using all 256 x 1 threads
     partialGMinLDS[hipThreadIdx_x] = srcRefG;                         // initialization of LDS to 0 using all 256 x 1 threads
     partialBMinLDS[hipThreadIdx_x] = srcRefB;                         // initialization of LDS to 0 using all 256 x 1 threads
+
+    if (id_x >= xBufferLength)
+        return;
 
     int xAlignedLength = xBufferLength & ~7;                          // alignedLength for vectorized global loads
     int xDiff = xBufferLength - xAlignedLength;                       // difference between bufferLength and alignedLength
@@ -79,18 +79,18 @@ __global__ void image_min_grid_result_tensor(float *srcPtr,
     int id_x = hipThreadIdx_x * 8;
     int id_z = hipBlockIdx_z;
 
+    __shared__ float partialMinLDS[256];                            // 1024 floats of src reduced to 256 in a 256 x 1 thread block
+
+    uint srcIdx = (id_z * xBufferLength);
+    float srcRef = srcPtr[srcIdx];
+    partialMinLDS[hipThreadIdx_x] = srcRef;                         // initialization of LDS to 0 using all 256 x 1 threads
+
     if (id_x >= xBufferLength)
         return;
 
-    uint srcIdx = (id_z * xBufferLength);
-    float srcRef = 255.0f;//srcPtr[srcIdx];
-    srcIdx += id_x;
-
-    __shared__ float partialMinLDS[256];                            // 1024 floats of src reduced to 256 in a 256 x 1 thread block
-    partialMinLDS[hipThreadIdx_x] = srcRef;                         // initialization of LDS to 0 using all 256 x 1 threads
-
     int xAlignedLength = xBufferLength & ~7;                        // alignedLength for vectorized global loads
     int xDiff = xBufferLength - xAlignedLength;                     // difference between bufferLength and alignedLength
+    srcIdx += id_x;
 
     d_float8 src_f8;
     rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);   // load 8 pixels to local mmemory
@@ -114,6 +114,7 @@ __global__ void image_min_grid_result_tensor(float *srcPtr,
         dstPtr[hipBlockIdx_z] = partialMinLDS[0];
 }
 
+
 // -------------------- Set 0 - image_min reduction stage 1 --------------------
 
 template <typename T>
@@ -126,20 +127,20 @@ __global__ void image_min_pkd3_tensor(T *srcPtr,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    uint srcIdx = (id_z * srcStridesNH.x);
-    float srcRefR = 255.0f;//(float)srcPtr[srcIdx];
-    float srcRefG = 255.0f;//(float)srcPtr[srcIdx + 1];
-    float srcRefB = 255.0f;//(float)srcPtr[srcIdx + 2];
-
     __shared__ float partialRMinLDS[16][16];                                 // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
     __shared__ float partialGMinLDS[16][16];
     __shared__ float partialBMinLDS[16][16];
+
+    uint srcIdx = (id_z * srcStridesNH.x);
+    float srcRefR = srcPtr[srcIdx];
+    float srcRefG = srcPtr[srcIdx + 1];
+    float srcRefB = srcPtr[srcIdx + 2];
 
     float *partialRMinLDSRowPtr = &partialRMinLDS[hipThreadIdx_y][0];         // float pointer to beginning of each row in LDS
     float *partialGMinLDSRowPtr = &partialGMinLDS[hipThreadIdx_y][0];
     float *partialBMinLDSRowPtr = &partialBMinLDS[hipThreadIdx_y][0];
 
-    partialRMinLDSRowPtr[hipThreadIdx_x] = srcRefR;                              // initialization of LDS to 0 using all 16 x 16 threads
+    partialRMinLDSRowPtr[hipThreadIdx_x] = srcRefR;                           // initialization of LDS to 0 using all 16 x 16 threads
     partialGMinLDSRowPtr[hipThreadIdx_x] = srcRefG;
     partialBMinLDSRowPtr[hipThreadIdx_x] = srcRefB;
 
@@ -220,14 +221,14 @@ __global__ void image_min_pln3_tensor(T *srcPtr,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    uint srcIdx = (id_z * srcStridesNCH.x);
-    float srcRefR = 255.0f;//(float)srcPtr[srcIdx];
-    float srcRefG = 255.0f;//(float)srcPtr[srcIdx + srcStridesNCH.y];
-    float srcRefB = 255.0f;//(float)srcPtr[srcIdx + 2 * srcStridesNCH.y];
-
     __shared__ float partialRMinLDS[16][16];                                 // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
     __shared__ float partialGMinLDS[16][16];                                 // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
     __shared__ float partialBMinLDS[16][16];                                 // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
+
+    uint srcIdx = (id_z * srcStridesNCH.x);
+    float srcRefR = srcPtr[srcIdx];
+    float srcRefG = srcPtr[srcIdx + srcStridesNCH.y];
+    float srcRefB = srcPtr[srcIdx + 2 * srcStridesNCH.y];
 
     float *partialRMinLDSRowPtr = &partialRMinLDS[hipThreadIdx_y][0];        // float pointer to beginning of each row in LDS
     float *partialGMinLDSRowPtr = &partialGMinLDS[hipThreadIdx_y][0];        // float pointer to beginning of each row in LDS
@@ -246,9 +247,9 @@ __global__ void image_min_pln3_tensor(T *srcPtr,
         return;
     }
 
-    srcIdx += ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     int xAlignedLength = roiTensorPtrSrc[id_z].xywhROI.roiWidth & ~7;       // alignedLength for vectorized global loads
     int xDiff = roiTensorPtrSrc[id_z].xywhROI.roiWidth - xAlignedLength;    // difference between roiWidth and alignedLength
+    srcIdx += ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
 
     d_float24 src_f24;
     rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &src_f24);
@@ -314,10 +315,10 @@ __global__ void image_min_pln1_tensor(T *srcPtr,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    uint srcIdx = (id_z * srcStridesNH.x);
-    float srcRef = 255.0f;//(float)srcPtr[srcIdx];
-
     __shared__ float partialMinLDS[16][16];                                 // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
+
+    uint srcIdx = (id_z * srcStridesNH.x);
+    float srcRef = srcPtr[srcIdx];
     float *partialMinLDSRowPtr = &partialMinLDS[hipThreadIdx_y][0];         // float pointer to beginning of each row in LDS
     partialMinLDSRowPtr[hipThreadIdx_x] = srcRef;                             // initialization of LDS to 0 using all 16 x 16 threads
 
@@ -327,9 +328,9 @@ __global__ void image_min_pln1_tensor(T *srcPtr,
         return;
     }
 
-    srcIdx += ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     int xAlignedLength = roiTensorPtrSrc[id_z].xywhROI.roiWidth & ~7;       // alignedLength for vectorized global loads
     int xDiff = roiTensorPtrSrc[id_z].xywhROI.roiWidth - xAlignedLength;    // difference between roiWidth and alignedLength
+    srcIdx += ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
 
     d_float8 src_f8;
     rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);           // load 8 pixels to local mmemory
@@ -365,6 +366,7 @@ __global__ void image_min_pln1_tensor(T *srcPtr,
             imageMinArr[(hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x] = partialMinLDSRowPtr[0];
     }
 }
+
 
 // -------------------- Set 2 - Kernel Executors --------------------
 
@@ -406,6 +408,7 @@ RppStatus hip_exec_image_min_tensor(T *srcPtr,
                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                            imagePartialMinArr,
                            roiTensorPtrSrc);
+        hipDeviceSynchronize();
         hipLaunchKernelGGL(image_min_grid_result_tensor,
                            dim3(1, 1, gridDim_z),
                            dim3(256, 1, 1),
