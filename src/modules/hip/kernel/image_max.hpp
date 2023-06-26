@@ -3,6 +3,7 @@
 
 // -------------------- Set 0 - image_max reduction stage 2 --------------------
 
+// template <typename T>
 __global__ void image_max_grid_3channel_result_tensor(float *srcPtr,
                                                       uint xBufferLength,
                                                       float *dstPtr)
@@ -14,9 +15,9 @@ __global__ void image_max_grid_3channel_result_tensor(float *srcPtr,
         return;
 
     uint srcIdx = (id_z * xBufferLength) * 3;
-    float srcRefR = srcPtr[srcIdx];
-    float srcRefG = srcPtr[srcIdx + 1];
-    float srcRefB = srcPtr[srcIdx + 2];
+    float srcRefR = 0.0f;//srcPtr[srcIdx];
+    float srcRefG = 0.0f;//srcPtr[srcIdx + 1];
+    float srcRefB = 0.0f;//srcPtr[srcIdx + 2];
 
     __shared__ float partialRMaxLDS[256];                            // 1024 floats of src reduced to 256 in a 256 x 1 thread block
     __shared__ float partialGMaxLDS[256];                            // 1024 floats of src reduced to 256 in a 256 x 1 thread block
@@ -62,13 +63,15 @@ __global__ void image_max_grid_3channel_result_tensor(float *srcPtr,
     // Final store to dst
     if (hipThreadIdx_x == 0)
     {
-        int idx = hipBlockIdx_z * 3;
-        dstPtr[idx] = partialRMaxLDS[0];
-        dstPtr[idx + 1] = partialGMaxLDS[0];
-        dstPtr[idx + 2] = partialBMaxLDS[0];
+        int dstIdx = hipBlockIdx_z * 4;
+        dstPtr[dstIdx] = partialRMaxLDS[0];
+        dstPtr[dstIdx + 1] = partialGMaxLDS[0];
+        dstPtr[dstIdx + 2] = partialBMaxLDS[0];
+        dstPtr[dstIdx + 3] = (fmaxf(fmaxf(partialRMaxLDS[0], partialGMaxLDS[0]), partialBMaxLDS[0]));
     }
 }
 
+// template <typename T>
 __global__ void image_max_grid_result_tensor(float *srcPtr,
                                              uint xBufferLength,
                                              float *dstPtr)
@@ -80,7 +83,7 @@ __global__ void image_max_grid_result_tensor(float *srcPtr,
         return;
 
     uint srcIdx = (id_z * xBufferLength);
-    float srcRef = srcPtr[srcIdx];
+    float srcRef = 0.0f;//srcPtr[srcIdx];
     srcIdx += id_x;
 
     __shared__ float partialMaxLDS[256];                            // 1024 floats of src reduced to 256 in a 256 x 1 thread block
@@ -125,9 +128,9 @@ __global__ void image_max_pkd3_tensor(T *srcPtr,
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
     uint srcIdx = (id_z * srcStridesNH.x);
-    float srcRefR = (float)srcPtr[srcIdx];
-    float srcRefG = (float)srcPtr[srcIdx + 1];
-    float srcRefB = (float)srcPtr[srcIdx + 2];
+    float srcRefR = 0.0f;//(float)srcPtr[srcIdx];
+    float srcRefG = 0.0f;//(float)srcPtr[srcIdx + 1];
+    float srcRefB = 0.0f;//(float)srcPtr[srcIdx + 2];
 
     __shared__ float partialRMaxLDS[16][16];                                 // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
     __shared__ float partialGMaxLDS[16][16];
@@ -219,9 +222,9 @@ __global__ void image_max_pln3_tensor(T *srcPtr,
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
     uint srcIdx = (id_z * srcStridesNCH.x);
-    float srcRefR = (float)srcPtr[srcIdx];
-    float srcRefG = (float)srcPtr[srcIdx + srcStridesNCH.y];
-    float srcRefB = (float)srcPtr[srcIdx + 2 * srcStridesNCH.y];
+    float srcRefR = 0.0f;//(float)srcPtr[srcIdx];
+    float srcRefG = 0.0f;//(float)srcPtr[srcIdx + srcStridesNCH.y];
+    float srcRefB = 0.0f;//(float)srcPtr[srcIdx + 2 * srcStridesNCH.y];
 
     __shared__ float partialRMaxLDS[16][16];                                 // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
     __shared__ float partialGMaxLDS[16][16];                                 // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
@@ -313,7 +316,7 @@ __global__ void image_max_pln1_tensor(T *srcPtr,
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
     uint srcIdx = (id_z * srcStridesNH.x);
-    float srcRef = (float)srcPtr[srcIdx];
+    float srcRef = 0.0f;//(float)srcPtr[srcIdx];
 
     __shared__ float partialMaxLDS[16][16];                                 // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
     float *partialMaxLDSRowPtr = &partialMaxLDS[hipThreadIdx_y][0];         // float pointer to beginning of each row in LDS
@@ -394,6 +397,7 @@ RppStatus hip_exec_image_max_tensor(T *srcPtr,
         float *imagePartialMaxArr;
         imagePartialMaxArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
         hipMemset(imagePartialMaxArr, 0, imagePartialMaxArrLength * sizeof(float));
+        hipDeviceSynchronize();
 
         hipLaunchKernelGGL(image_max_pln1_tensor,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
@@ -404,6 +408,7 @@ RppStatus hip_exec_image_max_tensor(T *srcPtr,
                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                            imagePartialMaxArr,
                            roiTensorPtrSrc);
+        hipDeviceSynchronize();
         hipLaunchKernelGGL(image_max_grid_result_tensor,
                            dim3(1, 1, gridDim_z),
                            dim3(256, 1, 1),
@@ -456,6 +461,7 @@ RppStatus hip_exec_image_max_tensor(T *srcPtr,
                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                            imagePartialMaxArr,
                            roiTensorPtrSrc);
+        hipDeviceSynchronize();
         hipLaunchKernelGGL(image_max_grid_3channel_result_tensor,
                            dim3(1, 1, gridDim_z),
                            dim3(256, 1, 1),

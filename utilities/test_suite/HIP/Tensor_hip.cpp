@@ -390,10 +390,11 @@ int main(int argc, char **argv)
 
     // Initialize buffers for any reductionType functions
     Rpp32f *reductionFuncResult;
-    Rpp32u reductionFuncResultArrLength = srcDescPtr->n * 3;
+    Rpp32u reductionFuncResultArrLength = srcDescPtr->n * 4;
     reductionFuncResult = (Rpp32f *)calloc(reductionFuncResultArrLength, sizeof(Rpp32f));
-    float *d_reductionFuncResult;
+    void *d_reductionFuncResult;
     hipMalloc(&d_reductionFuncResult, reductionFuncResultArrLength * sizeof(Rpp32f));
+    hipMemcpy(d_reductionFuncResult, reductionFuncResult, reductionFuncResultArrLength * sizeof(Rpp32f), hipMemcpyHostToDevice);
 
     // Allocate hip memory for src/dst and copy decoded inputs to hip buffers
     hipMalloc(&d_input, inputBufferSize);

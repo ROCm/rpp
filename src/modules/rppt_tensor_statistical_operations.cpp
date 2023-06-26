@@ -107,7 +107,7 @@ RppStatus rppt_image_min_max_host(RppPtr_t srcPtr,
 
 RppStatus rppt_image_min_gpu(RppPtr_t srcPtr,
                              RpptDescPtr srcDescPtr,
-                             Rpp32f *imageMinArr,
+                             RppPtr_t imageMinArr,
                              Rpp32u imageMinArrLength,
                              RpptROIPtr roiTensorPtrSrc,
                              RpptRoiType roiType,
@@ -122,7 +122,7 @@ RppStatus rppt_image_min_gpu(RppPtr_t srcPtr,
     }
     else if (srcDescPtr->c == 3)
     {
-        if (imageMinArrLength < srcDescPtr->n * 3)   // min and max of each channel, and overall min and max of all 3 channels
+        if (imageMinArrLength < srcDescPtr->n * 4)   // min and max of each channel, and overall min and max of all 3 channels
             return RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH;
     }
 
@@ -130,7 +130,7 @@ RppStatus rppt_image_min_gpu(RppPtr_t srcPtr,
     {
         hip_exec_image_min_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
                                   srcDescPtr,
-                                  imageMinArr,
+                                  static_cast<Rpp32f *>(imageMinArr),
                                   roiTensorPtrSrc,
                                   roiType,
                                   rpp::deref(rppHandle));
@@ -145,7 +145,7 @@ RppStatus rppt_image_min_gpu(RppPtr_t srcPtr,
 
 RppStatus rppt_image_max_gpu(RppPtr_t srcPtr,
                              RpptDescPtr srcDescPtr,
-                             Rpp32f *imageMaxArr,
+                             RppPtr_t imageMaxArr,
                              Rpp32u imageMaxArrLength,
                              RpptROIPtr roiTensorPtrSrc,
                              RpptRoiType roiType,
@@ -159,7 +159,7 @@ RppStatus rppt_image_max_gpu(RppPtr_t srcPtr,
     }
     else if (srcDescPtr->c == 3)
     {
-        if (imageMaxArrLength < srcDescPtr->n * 3)   // max of each channel, and overall max of all 3 channels
+        if (imageMaxArrLength < srcDescPtr->n * 4)   // max of each channel, and overall max of all 3 channels
             return RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH;
     }
 
@@ -167,7 +167,7 @@ RppStatus rppt_image_max_gpu(RppPtr_t srcPtr,
     {
         hip_exec_image_max_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
                                   srcDescPtr,
-                                  imageMaxArr,
+                                  static_cast<Rpp32f *>(imageMaxArr),
                                   roiTensorPtrSrc,
                                   roiType,
                                   rpp::deref(rppHandle));
