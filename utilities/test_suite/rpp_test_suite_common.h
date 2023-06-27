@@ -389,6 +389,7 @@ inline void convert_pkd3_to_pln3(Rpp8u *input, RpptDescPtr descPtr)
                 inputTempG++;
                 *inputTempB = *inputCopyTemp;
                 inputCopyTemp++;
+                inputTempB++;
             }
         }
     }

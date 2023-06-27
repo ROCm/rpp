@@ -206,7 +206,8 @@ else:
     "effects_augmentations",
     "filter_augmentations",
     "geometric_augmentations",
-    "morphological_operations"
+    "morphological_operations",
+    "statistical_operations"
     ]
 
     if (testType == 1 and profilingOption == "NO"):
@@ -368,7 +369,7 @@ else:
             print("Unable to open results in " + RESULTS_DIR + "/consolidated_results_" + TYPE + ".stats.csv")
 
 # print the results of qa tests
-supportedCaseList = ['0', '2', '4', '13', '31', '34', '36', '90']
+supportedCaseList = ['0', '2', '4', '13', '31', '34', '36', '89', '90']
 supportedCases = 0
 for num in caseList:
     if num in supportedCaseList:
