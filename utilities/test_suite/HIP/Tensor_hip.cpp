@@ -81,7 +81,7 @@ int main(int argc, char **argv)
     bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24);
     bool noiseTypeCase = (testCase == 8);
     bool pln1OutTypeCase = (testCase == 86);
-    bool reductionTypeCase = (testCase == 88 || testCase == 89 || testCase == 90);
+    bool reductionTypeCase = (testCase == 89 || testCase == 90);
 
     unsigned int verbosity = atoi(argv[11]);
     unsigned int additionalParam = additionalParamCase ? atoi(argv[7]) : 1;
