@@ -201,5 +201,7 @@ int main(int argc, char * argv[])
 
     free(niftiData);
 
+    system("convert -delay 10 -loop 0 $(ls -v | grep jpg) niftiOutput.gif");
+
     return(0);
 }
