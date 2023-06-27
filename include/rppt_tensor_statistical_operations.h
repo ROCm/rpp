@@ -31,8 +31,8 @@ extern "C" {
 
 // *param[in] srcPtr source tensor memory
 // *param[in] srcDescPtr source tensor descriptor
-// *param[out] imageMinArr destination array of minimum length (srcPtr->n * 4)
-// *param[in] imageMinArrLength length of provided destination array (minimum length = srcPtr->n * 4)
+// *param[out] imageMinArr destination array of minimum length (srcPtr->n)
+// *param[in] imageMinArrLength length of provided destination array (minimum length = srcPtr->n)
 // *param[in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
 // *param[in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
 // *returns a  RppStatus enumeration.
@@ -50,8 +50,8 @@ RppStatus rppt_image_min_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t 
 
 // *param[in] srcPtr source tensor memory
 // *param[in] srcDescPtr source tensor descriptor
-// *param[out] imageMaxArr destination array of minimum length (srcPtr->n * 4)
-// *param[in] imageMaxArrLength length of provided destination array (minimum length = srcPtr->n * 4)
+// *param[out] imageMaxArr destination array of minimum length (srcPtr->n)
+// *param[in] imageMaxArrLength length of provided destination array (minimum length = srcPtr->n)
 // *param[in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
 // *param[in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
 // *returns a  RppStatus enumeration.

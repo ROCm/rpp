@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -69,7 +69,7 @@ RppStatus rppt_image_min_host(RppPtr_t srcPtr,
                                        roiTensorPtrSrc,
                                        roiType,
                                        layoutParams);
-    }
+    }*/
     else if (srcDescPtr->dataType == RpptDataType::F32)
     {
         image_min_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
@@ -80,7 +80,7 @@ RppStatus rppt_image_min_host(RppPtr_t srcPtr,
                                        roiType,
                                        layoutParams);
     }
-    else if (srcDescPtr->dataType == RpptDataType::I8)
+    /*else if (srcDescPtr->dataType == RpptDataType::I8)
     {
         image_min_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
                                     srcDescPtr,
@@ -136,7 +136,7 @@ RppStatus rppt_image_max_host(RppPtr_t srcPtr,
                                        roiTensorPtrSrc,
                                        roiType,
                                        layoutParams);
-    }
+    }*/
     else if (srcDescPtr->dataType == RpptDataType::F32)
     {
         image_max_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
@@ -147,7 +147,7 @@ RppStatus rppt_image_max_host(RppPtr_t srcPtr,
                                        roiType,
                                        layoutParams);
     }
-    else if (srcDescPtr->dataType == RpptDataType::I8)
+    /*else if (srcDescPtr->dataType == RpptDataType::I8)
     {
         image_max_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
                                     srcDescPtr,

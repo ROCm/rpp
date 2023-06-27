@@ -386,11 +386,11 @@ int main(int argc, char **argv)
     }
 
     // Initialize buffers for any reductionType functions
-    Rpp32f *reductionFuncResultArr;
+    void *reductionFuncResultArr;
     Rpp32u reductionFuncResultArrLength = srcDescPtr->n * 4;
     if(reductionTypeCase)
     {
-        reductionFuncResultArr = (Rpp32f *)malloc(reductionFuncResultArrLength * sizeof(Rpp32f));
+        reductionFuncResultArr = (Rpp8u *)calloc(reductionFuncResultArrLength, get_size_of_data_type(dstDescPtr->dataType));
     }
 
     // Run case-wise RPP API and measure time
@@ -716,11 +716,30 @@ int main(int argc, char **argv)
         if (reductionTypeCase)
         {
             printf("\nReduction result (Batch of n channel images produces n+1 results per image in batch): ");
-            for (int i = 0; i < reductionFuncResultArrLength; i++)
+            if(dstDescPtr->dataType == RpptDataType::U8)
             {
-                printf(" %0.3f ", reductionFuncResultArr[i]);
+                Rpp8u *reductionOutPtr = static_cast<Rpp8u*>(reductionFuncResultArr);
+                for (int i = 0; i < reductionFuncResultArrLength; i++)
+                    printf("%d\n", (int)reductionOutPtr[i]);
             }
-            printf("\n");
+            else if(dstDescPtr->dataType == RpptDataType::F16)
+            {
+                Rpp16f *reductionOutPtr = static_cast<Rpp16f *>(reductionFuncResultArr);
+                for (int i = 0; i < reductionFuncResultArrLength; i++)
+                    printf("%0.5f\n", (float)reductionOutPtr[i]);
+            }
+            else if(dstDescPtr->dataType == RpptDataType::F32)
+            {
+                Rpp32f *reductionOutPtr = static_cast<Rpp32f *>(reductionFuncResultArr);
+                for (int i = 0; i < reductionFuncResultArrLength; i++)
+                    printf("%0.5f\n", (float)reductionOutPtr[i]);
+            }
+            else if(dstDescPtr->dataType == RpptDataType::I8)
+            {
+                Rpp8s *reductionOutPtr = static_cast<Rpp8s *>(reductionFuncResultArr);
+                for (int i = 0; i < reductionFuncResultArrLength; i++)
+                    printf("%d\n", (int)reductionOutPtr[i]);
+            }
         }
         else
         {
