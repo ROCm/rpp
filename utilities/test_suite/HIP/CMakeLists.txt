@@ -41,6 +41,7 @@ endif()
 find_package(hip QUIET)
 find_package(OpenCV QUIET)
 find_package(TurboJpeg QUIET)
+find_package(NIFTI 2.1.0 CONFIG REQUIRED)
 
 # BOOST
 set(BOOST_COMPONENTS filesystem system)
@@ -73,6 +74,9 @@ if (hip_FOUND AND OpenCV_FOUND)
     add_executable(Tensor_hip Tensor_hip.cpp)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGPU_SUPPORT=1 -DRPP_BACKEND_HIP=1 -std=gnu++14")
     target_link_libraries(Tensor_hip ${OpenCV_LIBS} -lturbojpeg -lrpp ${hip_LIBRARIES} pthread ${LINK_LIBRARY_LIST} hip::device)
+
+    add_executable(Tensor_voxel_hip Tensor_voxel_hip.cpp)
+    target_link_libraries(Tensor_voxel_hip PUBLIC ${NIFTI_PACKAGE_PREFIX}NIFTI::${NIFTI_PACKAGE_PREFIX}niftiio)
 else()
     message("-- ${Yellow}Error: OpenCV and hip must be installed to install ${PROJECT_NAME} successfully!${ColourReset}")
 endif()
