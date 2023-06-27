@@ -141,7 +141,22 @@ python3 -m sphinx -T -E -b html -d _build/doctrees -D language=en . _build/html
   sudo make install
   ```
 
-## Build & Install RPP 
+* Imagemagick
+  ```
+  sudo apt-get install imagemagick
+  ```
+
+* Nifti-Imaging nifti_clib
+  ```
+  git clone git@github.com:NIFTI-Imaging/nifti_clib.git
+  cd nifti_clib
+  mkdir build
+  cd build
+  cmake ..
+  sudo make -j$nproc install
+  ```
+
+## Build & Install RPP
 
 The ROCm Performance Primitives (RPP) library has support for three backends: HIP, OpenCL, and CPU:
 
