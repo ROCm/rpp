@@ -133,7 +133,7 @@ if [ "$TEST_TYPE" -eq 0 ]; then
             echo "Invalid case number $case. case number must be in the 0:38 range!"
             continue
         fi
-        for ((layout=1;layout<2;layout++))
+        for ((layout=0;layout<3;layout++))
         do
             if [ $layout -eq 0 ]; then
                 directory_name_generator "host" "pkd3" "$case"
@@ -157,7 +157,7 @@ if [ "$TEST_TYPE" -eq 0 ]; then
             echo "--------------------------------"
             printf "Running a New Functionality...\n"
             echo "--------------------------------"
-            for ((bitDepth=0;bitDepth<1;bitDepth++))
+            for ((bitDepth=0;bitDepth<7;bitDepth++))
             do
                 printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n"
                 for ((outputFormatToggle=0;outputFormatToggle<2;outputFormatToggle++))
@@ -201,7 +201,7 @@ else
             echo "Invalid case number $case. case number must be in the 0:38 range!"
             continue
         fi
-        for ((layout=1;layout<2;layout++))
+        for ((layout=0;layout<3;layout++))
         do
             if [ $layout -eq 0 ]; then
                 directory_name_generator "host" "pkd3" "$case"
@@ -220,7 +220,7 @@ else
             echo "--------------------------------"
             printf "Running a New Functionality...\n"
             echo "--------------------------------"
-            for ((bitDepth=0;bitDepth<1;bitDepth++))
+            for ((bitDepth=0;bitDepth<7;bitDepth++))
             do
                 printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n"
                 for ((outputFormatToggle=0;outputFormatToggle<2;outputFormatToggle++))

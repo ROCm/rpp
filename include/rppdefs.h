@@ -36,7 +36,6 @@ THE SOFTWARE.
 #define RPP_MAX_8U      ( 255 )
 #define RPP_MIN_16U     ( 0 )
 #define RPP_MAX_16U     ( 65535 )
-#define RPPT_MAX_DIMS   ( 4 )
 const float ONE_OVER_6 = 1.0f / 6;
 const float ONE_OVER_3 = 1.0f / 3;
 const float ONE_OVER_255 = 1.0f / 255;
@@ -58,18 +57,19 @@ typedef size_t              RppSize_t;
 
 typedef enum
 {
-    RPP_SUCCESS                         = 0,
-    RPP_ERROR                           = -1,
-    RPP_ERROR_INVALID_ARGUMENTS         = -2,
-    RPP_ERROR_LOW_OFFSET                = -3,
-    RPP_ERROR_ZERO_DIVISION             = -4,
-    RPP_ERROR_HIGH_SRC_DIMENSION        = -5,
-    RPP_ERROR_NOT_IMPLEMENTED           = -6,
-    RPP_ERROR_INVALID_SRC_CHANNELS      = -7,
-    RPP_ERROR_INVALID_DST_CHANNELS      = -8,
-    RPP_ERROR_INVALID_SRC_LAYOUT        = -9,
-    RPP_ERROR_INVALID_DST_LAYOUT        = -10,
-    RPP_ERROR_INVALID_SRC_DATATYPE      = -11
+    RPP_SUCCESS                                  = 0,
+    RPP_ERROR                                    = -1,
+    RPP_ERROR_INVALID_ARGUMENTS                  = -2,
+    RPP_ERROR_LOW_OFFSET                         = -3,
+    RPP_ERROR_ZERO_DIVISION                      = -4,
+    RPP_ERROR_HIGH_SRC_DIMENSION                 = -5,
+    RPP_ERROR_NOT_IMPLEMENTED                    = -6,
+    RPP_ERROR_INVALID_SRC_CHANNELS               = -7,
+    RPP_ERROR_INVALID_DST_CHANNELS               = -8,
+    RPP_ERROR_INVALID_SRC_LAYOUT                 = -9,
+    RPP_ERROR_INVALID_DST_LAYOUT                 = -10,
+    RPP_ERROR_INVALID_SRC_DATATYPE               = -11,
+    RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH     = -12
 } RppStatus;
 
 typedef enum
@@ -292,16 +292,6 @@ typedef struct
     Rpp32u n, c, h, w;
     RpptStrides strides;
 } RpptDesc, *RpptDescPtr;
-
-typedef struct
-{
-    RppSize_t numDims;
-    Rpp32u offsetInBytes;
-    RpptDataType dataType;
-    Rpp32u dims[RPPT_MAX_DIMS];
-    Rpp32u strides[RPPT_MAX_DIMS];
-    RpptLayout layout;
-} RpptGenericDesc, *RpptGenericDescPtr;
 
 typedef struct
 {

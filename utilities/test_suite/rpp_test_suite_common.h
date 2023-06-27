@@ -51,7 +51,6 @@ std::map<int, string> augmentationMap =
     {34, "lut"},
     {36, "color_twist"},
     {38, "crop_mirror_normalize"},
-    {88, "image_min_max"},
     {89, "image_min"},
     {90, "image_max"},
 };
@@ -384,15 +383,12 @@ inline void convert_pkd3_to_pln3(Rpp8u *input, RpptDescPtr descPtr)
             {
                 *inputTempR = *inputCopyTemp;
                 inputCopyTemp++;
+                inputTempR++;
                 *inputTempG = *inputCopyTemp;
                 inputCopyTemp++;
+                inputTempG++;
                 *inputTempB = *inputCopyTemp;
                 inputCopyTemp++;
-
-                // std::cerr<<"i, j, R, G, B: "<<i<<", "<<j<<", "<<(int)*inputTempR<<", "<<(int)*inputTempG<<", "<<(int)*inputTempB<<std::endl;
-                inputTempR++;
-                inputTempB++;
-                inputTempG++;
             }
         }
     }
