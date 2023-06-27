@@ -76,7 +76,7 @@ if (hip_FOUND AND OpenCV_FOUND)
     target_link_libraries(Tensor_hip ${OpenCV_LIBS} -lturbojpeg -lrpp ${hip_LIBRARIES} pthread ${LINK_LIBRARY_LIST} hip::device)
 
     add_executable(Tensor_voxel_hip Tensor_voxel_hip.cpp)
-    target_link_libraries(Tensor_voxel_hip PUBLIC ${NIFTI_PACKAGE_PREFIX}NIFTI::${NIFTI_PACKAGE_PREFIX}niftiio)
+    target_link_libraries(Tensor_voxel_hip PUBLIC ${OpenCV_LIBS} -lrpp ${hip_LIBRARIES} pthread ${LINK_LIBRARY_LIST} hip::device ${NIFTI_PACKAGE_PREFIX}NIFTI::${NIFTI_PACKAGE_PREFIX}niftiio)
 else()
     message("-- ${Yellow}Error: OpenCV and hip must be installed to install ${PROJECT_NAME} successfully!${ColourReset}")
 endif()
