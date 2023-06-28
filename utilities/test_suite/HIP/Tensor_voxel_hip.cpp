@@ -243,20 +243,26 @@ inline void convert_output_float_to_niftitype_generic(float *outputF32, RpptGene
 
 int main(int argc, char * argv[])
 {
-    int layoutType;
+    int layoutType, testCase;
     char *header_file, *data_file;
 
-    if (argc != 4)
+    if (argc != 5)
     {
-        fprintf(stderr, "\nUsage: %s <header file> <data file> <layoutType = 0 for NCDHW / 1 for NDHWC>\n", argv[0]);
+        fprintf(stderr, "\nUsage: %s <header file> <data file> <layoutType = 0 for NCDHW / 1 for NDHWC> <testCase = 0 to 1>\n", argv[0]);
         exit(1);
     }
 
     header_file = argv[1];
     data_file = argv[2];
     layoutType = atoi(argv[3]); // 0 for NCDHW / 1 for NDHWC
+    testCase = atoi(argv[4]); // 0 to 1
 
     if ((layoutType != 0) && (layoutType != 1))
+    {
+        fprintf(stderr, "\nUsage: %s <header file> <data file> <layoutType = 0 for NCDHW / 1 for NDHWC>\n", argv[0]);
+        exit(1);
+    }
+    if ((testCase < 0) || (testCase > 1))
     {
         fprintf(stderr, "\nUsage: %s <header file> <data file> <layoutType = 0 for NCDHW / 1 for NDHWC>\n", argv[0]);
         exit(1);
@@ -299,9 +305,9 @@ int main(int argc, char * argv[])
     set_generic_descriptor(descriptorPtr3D, batchSize, maxX, maxY, maxZ, numChannels, offsetInBytes, layoutType);
 
     // set src/dst xyzwhd ROI tensors
-    void *pinnedMem;
-    hipHostMalloc(&pinnedMem, batchSize * sizeof(RpptRoiXyzwhd));
-    RpptRoiXyzwhd *roiGenericSrcPtr = reinterpret_cast<RpptRoiXyzwhd *>(pinnedMem);
+    void *pinnedMemROI;
+    hipHostMalloc(&pinnedMemROI, batchSize * sizeof(RpptRoiXyzwhd));
+    RpptRoiXyzwhd *roiGenericSrcPtr = reinterpret_cast<RpptRoiXyzwhd *>(pinnedMemROI);
     roiGenericSrcPtr[0].xyz.x = 0;                      // start X dim
     roiGenericSrcPtr[0].xyz.y = 0;                      // start Y dim
     roiGenericSrcPtr[0].xyz.z = 0;                      // start Z dim
@@ -318,38 +324,79 @@ int main(int argc, char * argv[])
     Rpp64u oBufferSizeInBytes = iBufferSizeInBytes;
 
     // Allocate host memory in float for RPP strided buffer
-    void *input, *output;
     float *inputF32 = static_cast<float *>(calloc(iBufferSizeInBytes, 1));
     float *outputF32 = static_cast<float *>(calloc(oBufferSizeInBytes, 1));
 
     // Convert default NIFTI_DATATYPE unstrided buffer to RpptDataType::F32 strided buffer
     convert_input_niftitype_to_float_generic(niftiData, &niftiHeader, inputF32, descriptorPtr3D);
 
-    memcpy(outputF32, inputF32, oBufferSizeInBytes);
+    // Allocate hip memory in float for RPP strided buffer
+    void *d_inputF32, *d_outputF32;
+    hipMalloc(&d_inputF32, iBufferSizeInBytes);
+    hipMalloc(&d_outputF32, oBufferSizeInBytes);
+
+    // Copy input buffer to hip
+    hipMemcpy(d_inputF32, inputF32, iBufferSizeInBytes, hipMemcpyHostToDevice);
+
+    // set argument tensors
+    void *pinnedMemArgs;
+    hipHostMalloc(&pinnedMemArgs, 2 * batchSize * sizeof(Rpp32f));
+
+    // Run case-wise RPP API and measure time
+    rppHandle_t handle;
+    hipStream_t stream;
+    hipStreamCreate(&stream);
+    rppCreateWithStreamAndBatchSize(&handle, stream, batchSize);
+
+    // case-wise RPP API
+
+    int missingFuncFlag = 0;
+    double startWallTime, endWallTime, wallTime;
+    switch (testCase)
+    {
+    case 0:
+    {
+        Rpp32f *mulTensor = reinterpret_cast<Rpp32f *>(pinnedMemArgs);
+        Rpp32f *addTensor = mulTensor + batchSize;
+
+        for (int i = 0; i < batchSize; i++)
+        {
+            mulTensor[i] = 80;
+            addTensor[i] = 5;
+        }
+
+        startWallTime = omp_get_wtime();
+        rppt_fmadd_scalar_gpu(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, mulTensor, addTensor, roiGenericSrcPtr, handle);
+        break;
+    }
+    case 1:
+    {
+        startWallTime = omp_get_wtime();
+        break;
+    }
+    default:
+    {
+        missingFuncFlag = 1;
+        break;
+    }
+    }
+
+    hipDeviceSynchronize();
+    endWallTime = omp_get_wtime();
+    wallTime = endWallTime - startWallTime;
+    wallTime *= 1000;
+    if (missingFuncFlag == 1)
+    {
+        printf("\nThe functionality doesn't yet exist in RPP\n");
+        return -1;
+    }
+    cout << "\n\nGPU Backend Wall Time: " << wallTime <<" ms per nifti file"<< endl;
+
+    // Copy output buffer to host
+    hipMemcpy(outputF32, d_outputF32, oBufferSizeInBytes, hipMemcpyDeviceToHost);
 
     // Convert RpptDataType::F32 strided buffer to default NIFTI_DATATYPE unstrided buffer
     convert_output_float_to_niftitype_generic(outputF32, descriptorPtr3D, niftiData, &niftiHeader);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     // optionally normalize and write specific zPlanes to jpg images or mp4 video
     uchar *niftiDataU8 = (uchar *) malloc(dataSizeInBytes);
@@ -371,7 +418,16 @@ int main(int argc, char * argv[])
     // write nifti file
     write_nifti_file(&niftiHeader, niftiData);
 
+    rppDestroyGPU(handle);
+
+    // Free memory
     free(niftiData);
+    free(inputF32);
+    free(outputF32);
+    hipHostFree(pinnedMemROI);
+    hipHostFree(pinnedMemArgs);
+    hipFree(d_inputF32);
+    hipFree(d_outputF32);
 
     system("convert -delay 10 -loop 0 $(ls -v | grep jpg) niftiOutput.gif");
 
