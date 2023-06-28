@@ -23,6 +23,12 @@ AMD ROCm Performance Primitives (**RPP**) library is a comprehensive high-perfor
 
 <p align="center"><img width="90%" src="docs/data/supported_functionalities_samples.jpg" /></p>
 
+### Supported 3D Functionalities Samples
+
+Input                      |  fmadd_scalar             |  slice                    | fmadd_scalar with slice
+:-------------------------:|:-------------------------:|:-------------------------:|:-------------------------:
+![](docs/data/niftiInput.gif)  |  ![](docs/data/niftiOutputBrightened.gif)  | ![](docs/data/niftiOutputSlicedXZ.gif) | ![](docs/data/niftiOutputBrightenedSlicedXYZ.gif)
+
 ## Documentation
 
 Run the steps below to build documentation locally.
