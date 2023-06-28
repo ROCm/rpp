@@ -1,10 +1,34 @@
-#include <iostream>
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/opencv.hpp>
+/*
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/opencv.hpp>
+#include <iostream>
+#include "rpp.h"
+#include "../rpp_test_suite_common.h"
 #include "nifti1.h"
 
 using namespace std;
@@ -13,31 +37,31 @@ typedef int16_t NIFTI_DATATYPE;
 #define MIN_HEADER_SIZE 348
 
 // reads nifti-1 header file
-static int read_nifti_header_file(char* const hdr_file, nifti_1_header *niftiHeader)
+static int read_nifti_header_file(char* const header_file, nifti_1_header *niftiHeader)
 {
     nifti_1_header hdr;
 
     // open and read header
-    FILE *fp = fopen(hdr_file,"r");
+    FILE *fp = fopen(header_file,"r");
     if (fp == NULL)
     {
-        fprintf(stderr, "\nError opening header file %s\n", hdr_file);
+        fprintf(stderr, "\nError opening header file %s\n", header_file);
         exit(1);
     }
     int ret = fread(&hdr, MIN_HEADER_SIZE, 1, fp);
     if (ret != 1)
     {
-        fprintf(stderr, "\nError reading header file %s\n", hdr_file);
+        fprintf(stderr, "\nError reading header file %s\n", header_file);
         exit(1);
     }
     fclose(fp);
 
     // print header information
-    fprintf(stderr, "\n%s header information:", hdr_file);
-    fprintf(stderr, "\nXYZT dimensions: %d %d %d %d", hdr.dim[1], hdr.dim[2], hdr.dim[3], hdr.dim[4]);
-    fprintf(stderr, "\nDatatype code and bits/pixel: %d %d", hdr.datatype, hdr.bitpix);
-    fprintf(stderr, "\nScaling slope and intercept: %.6f %.6f", hdr.scl_slope, hdr.scl_inter);
-    fprintf(stderr, "\nByte offset to data in datafile: %ld", (long)(hdr.vox_offset));
+    fprintf(stderr, "\n%s header information:", header_file);
+    fprintf(stderr, "\nNIFTI1 XYZT dimensions: %d %d %d %d", hdr.dim[1], hdr.dim[2], hdr.dim[3], hdr.dim[4]);
+    fprintf(stderr, "\nNIFTI1 Datatype code and bits/pixel: %d %d", hdr.datatype, hdr.bitpix);
+    fprintf(stderr, "\nNIFTI1 Scaling slope and intercept: %.6f %.6f", hdr.scl_slope, hdr.scl_inter);
+    fprintf(stderr, "\nNIFTI1 Byte offset to data in datafile: %ld", (long)(hdr.vox_offset));
     fprintf(stderr, "\n");
 
     *niftiHeader = hdr;
@@ -147,24 +171,102 @@ inline void write_image_from_nifti_opencv(uchar *niftiDataU8, nifti_1_header *ni
 //     videoOutput.release();
 // }
 
+// Convert default NIFTI_DATATYPE unstrided buffer to RpptDataType::F32 strided buffer
+template<typename T>
+inline void convert_input_niftitype_to_float_generic(T *input, nifti_1_header *niftiHeader, float *inputF32, RpptGenericDescPtr descriptorPtr3D)
+{
+    nifti_1_header hdr = *niftiHeader;
+    T *inputTemp = input;
+    float *inputF32Temp = inputF32;
+
+    if (descriptorPtr3D->layout == RpptLayout::NCDHW)
+    {
+        int increment = descriptorPtr3D->strides[3] - hdr.dim[1];
+        for (int n = 0; n < descriptorPtr3D->dims[0]; n++)
+        {
+            for (int c = 0; c < hdr.dim[4]; c++)
+            {
+                for (int d = 0; d < hdr.dim[3]; d++)
+                {
+                    for (int h = 0; h < hdr.dim[2]; h++)
+                    {
+                        for (int w = 0; w < hdr.dim[1]; w++)
+                        {
+                            *inputF32Temp++ = (float)*inputTemp++;
+                        }
+                        inputF32Temp += increment;
+                    }
+                }
+            }
+        }
+    }
+    else if (descriptorPtr3D->layout == RpptLayout::NDHWC)
+    {
+        // TODO: to be implemented
+    }
+}
+
+// Convert RpptDataType::F32 strided buffer to default NIFTI_DATATYPE unstrided buffer
+template<typename T>
+inline void convert_output_float_to_niftitype_generic(float *outputF32, RpptGenericDescPtr descriptorPtr3D, T *output, nifti_1_header *niftiHeader)
+{
+    nifti_1_header hdr = *niftiHeader;
+    T *outputTemp = output;
+    float *outputF32Temp = outputF32;
+
+    if (descriptorPtr3D->layout == RpptLayout::NCDHW)
+    {
+        int increment = descriptorPtr3D->strides[3] - hdr.dim[1];
+        for (int n = 0; n < descriptorPtr3D->dims[0]; n++)
+        {
+            for (int c = 0; c < hdr.dim[4]; c++)
+            {
+                for (int d = 0; d < hdr.dim[3]; d++)
+                {
+                    for (int h = 0; h < hdr.dim[2]; h++)
+                    {
+                        for (int w = 0; w < hdr.dim[1]; w++)
+                        {
+                            *outputTemp++ = (T)*outputF32Temp++;
+                        }
+                        outputF32Temp += increment;
+                    }
+                }
+            }
+        }
+    }
+    else if (descriptorPtr3D->layout == RpptLayout::NDHWC)
+    {
+        // TODO: to be implemented
+    }
+}
+
 int main(int argc, char * argv[])
 {
-    char *hdr_file, *data_file;
+    int layoutType;
+    char *header_file, *data_file;
 
-    if (argc != 3)
+    if (argc != 4)
     {
-        fprintf(stderr, "\nUsage: %s <-r|-w> <header file> <data file>\n",argv[0]);
+        fprintf(stderr, "\nUsage: %s <header file> <data file> <layoutType = 0 for NCDHW / 1 for NDHWC>\n", argv[0]);
         exit(1);
     }
 
-    hdr_file = argv[1];
+    header_file = argv[1];
     data_file = argv[2];
+    layoutType = atoi(argv[3]); // 0 for NCDHW / 1 for NDHWC
+
+    if ((layoutType != 0) && (layoutType != 1))
+    {
+        fprintf(stderr, "\nUsage: %s <header file> <data file> <layoutType = 0 for NCDHW / 1 for NDHWC>\n", argv[0]);
+        exit(1);
+    }
 
     NIFTI_DATATYPE *niftiData = NULL;
     nifti_1_header niftiHeader;
 
     // read nifti header file
-    read_nifti_header_file(hdr_file, &niftiHeader);
+    read_nifti_header_file(header_file, &niftiHeader);
 
     // allocate buffer and read first 3D volume from data file
     uint dataSize = niftiHeader.dim[1] * niftiHeader.dim[2] * niftiHeader.dim[3];
@@ -178,6 +280,76 @@ int main(int argc, char * argv[])
 
     // read nifti data file
     read_nifti_data_file(data_file, &niftiHeader, niftiData);
+
+    // set parameters to load into descriptor3D
+    int batchSize, maxX, maxY, maxZ, numChannels, offsetInBytes;
+    batchSize = 1;                      // Can be modified for batch processing
+    maxX = niftiHeader.dim[1];          // Can be modified to obtain maxX of multiple 3D images for batch processing
+    maxY = niftiHeader.dim[2];          // Can be modified to obtain maxY of multiple 3D images for batch processing
+    maxZ = niftiHeader.dim[3];          // Can be modified to obtain maxZ of multiple 3D images for batch processing
+    numChannels = niftiHeader.dim[4];
+    offsetInBytes = 0;
+
+    // optionally set maxX as a multiple of 8 for RPP optimal CPU/GPU processing
+    maxX = ((maxX / 8) * 8) + 8;
+
+    // set src/dst generic tensor descriptors
+    RpptGenericDesc descriptor3D;
+    RpptGenericDescPtr descriptorPtr3D = &descriptor3D;
+    set_generic_descriptor(descriptorPtr3D, batchSize, maxX, maxY, maxZ, numChannels, offsetInBytes, layoutType);
+
+    // set src/dst xyzwhd ROI tensors
+    void *pinnedMem;
+    hipHostMalloc(&pinnedMem, batchSize * sizeof(RpptRoiXyzwhd));
+    RpptRoiXyzwhd *roiGenericSrcPtr = reinterpret_cast<RpptRoiXyzwhd *>(pinnedMem);
+    roiGenericSrcPtr[0].xyz.x = 0;                      // start X dim
+    roiGenericSrcPtr[0].xyz.y = 0;                      // start Y dim
+    roiGenericSrcPtr[0].xyz.z = 0;                      // start Z dim
+    roiGenericSrcPtr[0].roiWidth = niftiHeader.dim[1];  // length in X dim
+    roiGenericSrcPtr[0].roiHeight = niftiHeader.dim[2]; // length in Y dim
+    roiGenericSrcPtr[0].roiDepth = niftiHeader.dim[3];  // length in Z dim
+
+    // Set buffer sizes in pixels for src/dst
+    Rpp64u iBufferSize = (Rpp64u)descriptorPtr3D->strides[0] * (Rpp64u)descriptorPtr3D->dims[0];
+    Rpp64u oBufferSize = iBufferSize;   // User can provide a different oBufferSize
+
+    // Set buffer sizes in bytes for src/dst (including offsets)
+    Rpp64u iBufferSizeInBytes = iBufferSize * sizeof(float) + descriptorPtr3D->offsetInBytes;
+    Rpp64u oBufferSizeInBytes = iBufferSizeInBytes;
+
+    // Allocate host memory in float for RPP strided buffer
+    void *input, *output;
+    float *inputF32 = static_cast<float *>(calloc(iBufferSizeInBytes, 1));
+    float *outputF32 = static_cast<float *>(calloc(oBufferSizeInBytes, 1));
+
+    // Convert default NIFTI_DATATYPE unstrided buffer to RpptDataType::F32 strided buffer
+    convert_input_niftitype_to_float_generic(niftiData, &niftiHeader, inputF32, descriptorPtr3D);
+
+    memcpy(outputF32, inputF32, oBufferSizeInBytes);
+
+    // Convert RpptDataType::F32 strided buffer to default NIFTI_DATATYPE unstrided buffer
+    convert_output_float_to_niftitype_generic(outputF32, descriptorPtr3D, niftiData, &niftiHeader);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // optionally normalize and write specific zPlanes to jpg images or mp4 video
     uchar *niftiDataU8 = (uchar *) malloc(dataSizeInBytes);
