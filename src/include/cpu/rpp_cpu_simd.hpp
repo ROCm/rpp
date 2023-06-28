@@ -1176,6 +1176,18 @@ inline void rpp_load96_u8_avx(Rpp8u *srcPtrR, Rpp8u *srcPtrG, Rpp8u *srcPtrB, __
     p[2] = _mm256_loadu_si256((__m256i *)srcPtrB);
 }
 
+inline void rpp_load32_i8_avx(Rpp8s *srcPtr, __m256i *p)
+{
+    p[0] = _mm256_load_si256((__m256i *)srcPtr);
+}
+
+inline void rpp_load96_i8_avx(Rpp8s *srcPtrR, Rpp8s *srcPtrG, Rpp8s *srcPtrB, __m256i *p)
+{
+    p[0] = _mm256_load_si256((__m256i *)srcPtrR);
+    p[1] = _mm256_load_si256((__m256i *)srcPtrG);
+    p[2] = _mm256_load_si256((__m256i *)srcPtrB);
+}
+
 inline void rpp_load24_f32pkd3_to_f32pln3_avx(Rpp32f *srcPtr, __m256 *p)
 {
     __m128 p128[8];
@@ -1307,6 +1319,11 @@ inline void rpp_store8_f32_to_f32_avx(Rpp32f *dstPtr, __m256 *p)
 inline void rpp_store16_u8_to_u8(Rpp8u *dstPtr, __m128i *p)
 {
     _mm_storeu_si128((__m128i *)dstPtr, p[0]);
+}
+
+inline void rpp_store16_i8(Rpp8s *dstPtr, __m128i *p)
+{
+    _mm_store_si128((__m128i *)dstPtr, p[0]);
 }
 
 inline void rpp_store8_f32_to_f16_avx(Rpp16f *dstPtr, __m256 *p)

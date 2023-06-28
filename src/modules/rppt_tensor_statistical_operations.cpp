@@ -60,7 +60,7 @@ RppStatus rppt_image_min_host(RppPtr_t srcPtr,
                                     roiType,
                                     layoutParams);
     }
-    /*else if (srcDescPtr->dataType == RpptDataType::F16)
+    else if (srcDescPtr->dataType == RpptDataType::F16)
     {
         image_min_f16_f16_host_tensor((Rpp16f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                        srcDescPtr,
@@ -69,7 +69,7 @@ RppStatus rppt_image_min_host(RppPtr_t srcPtr,
                                        roiTensorPtrSrc,
                                        roiType,
                                        layoutParams);
-    }*/
+    }
     else if (srcDescPtr->dataType == RpptDataType::F32)
     {
         image_min_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
@@ -80,7 +80,7 @@ RppStatus rppt_image_min_host(RppPtr_t srcPtr,
                                        roiType,
                                        layoutParams);
     }
-    /*else if (srcDescPtr->dataType == RpptDataType::I8)
+    else if (srcDescPtr->dataType == RpptDataType::I8)
     {
         image_min_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
                                     srcDescPtr,
@@ -89,7 +89,7 @@ RppStatus rppt_image_min_host(RppPtr_t srcPtr,
                                     roiTensorPtrSrc,
                                     roiType,
                                     layoutParams);
-    }*/
+    }
 
     return RPP_SUCCESS;
 }
@@ -127,7 +127,7 @@ RppStatus rppt_image_max_host(RppPtr_t srcPtr,
                                     roiType,
                                     layoutParams);
     }
-    /*else if (srcDescPtr->dataType == RpptDataType::F16)
+    else if (srcDescPtr->dataType == RpptDataType::F16)
     {
         image_max_f16_f16_host_tensor((Rpp16f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                        srcDescPtr,
@@ -136,7 +136,7 @@ RppStatus rppt_image_max_host(RppPtr_t srcPtr,
                                        roiTensorPtrSrc,
                                        roiType,
                                        layoutParams);
-    }*/
+    }
     else if (srcDescPtr->dataType == RpptDataType::F32)
     {
         image_max_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
@@ -147,7 +147,7 @@ RppStatus rppt_image_max_host(RppPtr_t srcPtr,
                                        roiType,
                                        layoutParams);
     }
-    /*else if (srcDescPtr->dataType == RpptDataType::I8)
+    else if (srcDescPtr->dataType == RpptDataType::I8)
     {
         image_max_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
                                     srcDescPtr,
@@ -156,7 +156,7 @@ RppStatus rppt_image_max_host(RppPtr_t srcPtr,
                                     roiTensorPtrSrc,
                                     roiType,
                                     layoutParams);
-    }*/
+    }
 
     return RPP_SUCCESS;
 }
