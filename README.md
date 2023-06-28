@@ -25,7 +25,7 @@ AMD ROCm Performance Primitives (**RPP**) library is a comprehensive high-perfor
 
 ### Supported 3D Functionalities Samples
 
-Input (nifti1 .nii medical image) | fmadd_scalar (brightened 3D image) | slice (tensor cube sliced in X and Z dims) | fmadd_scalar with slice (tensor cube sliced in X and Z dims and brightened)
+Input<br>(nifti1 .nii medical image) | fmadd_scalar<br>(brightened 3D image) | slice<br>(tensor cube sliced in X and Z dims) | fmadd_scalar with slice<br>(tensor cube sliced in X and Z dims and brightened)
 :-------------------------:|:-------------------------:|:-------------------------:|:-------------------------:
 ![](docs/data/niftiInput.gif)  |  ![](docs/data/niftiOutputBrightened.gif)  | ![](docs/data/niftiOutputSlicedXZ.gif) | ![](docs/data/niftiOutputBrightenedSlicedXYZ.gif)
 
