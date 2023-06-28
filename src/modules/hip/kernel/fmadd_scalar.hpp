@@ -21,68 +21,6 @@ __device__ void fmaf_scalar_hip_compute(d_float24 *val_f24, float2 *fmaddParams_
     fmaf_scalar_hip_compute(&(val_f24->f8[2]), fmaddParams_f2);
 }
 
-// FIRST VERSION
-// __global__ void fmadd_scalar_tensor(float *srcPtr,
-//                                     uint3 srcStrides012,
-//                                     float *dstPtr,
-//                                     uint3 dstStrides012,
-//                                     int dim1Max,
-//                                     float *mul,
-//                                     float *add,
-//                                     RpptGenericROIPtr roiGenericPtrSrc)
-// {
-//     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;        // inner most dim vectorized
-//     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;              // second to inner
-//     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;              // outer most dim
-
-//     RpptGenericROI roiGenericSrc = roiGenericPtrSrc[id_z];
-
-//     if ((id_y >= roiGenericSrc.roiLength[2]) || (id_x >= roiGenericSrc.roiLength[3]))
-//     {
-//         return;
-//     }
-
-//     uint srcIdx = (id_z * srcStrides012.x) + ((id_y + roiGenericSrc.roiBegin[2]) * srcStrides012.z) + (id_x + roiGenericSrc.roiBegin[3]);
-//     uint dstIdx = (id_z * dstStrides012.x) + (id_y * dstStrides012.z) + id_x;
-
-//     float2 fmaddParams_f2 = make_float2(mul[id_z], add[id_z]);
-
-//     d_float8 val_f8;
-//     for(int dim1 = 0; dim1 < dim1Max; dim1++)
-//     {
-//         rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &val_f8);
-//         fmaf_scalar_hip_compute(&val_f8, &fmaddParams_f2);
-//         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &val_f8);
-//         srcIdx += srcStrides012.y;
-//         dstIdx += dstStrides012.y;
-//     }
-
-
-//     // int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;        // inner most dim vectorized
-//     // int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;              // second to inner
-//     // int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;              // outer most dim
-
-//     // RpptGenericROI roiGenericSrc = roiGenericPtrSrc[id_z];
-
-//     // if ((id_y >= roiGenericSrc.roiLength[2]) || (id_x >= roiGenericSrc.roiLength[3]))
-//     // {
-//     //     return;
-//     // }
-
-//     // uint srcIdx = (id_z * srcStrides012.x) + ((id_y + roiGenericSrc.roiBegin[2]) * srcStrides012.z) + (id_x + roiGenericSrc.roiBegin[3]);
-//     // uint dstIdx = (id_z * dstStrides012.x) + (id_y * dstStrides012.z) + id_x;
-
-//     // float2 fmaddParams_f2 = make_float2(mul[id_z], add[id_z]);
-
-//     // for(int dim1 = 0; dim1 < dim1Max; dim1++)
-//     // {
-//     //     dstPtr[dstIdx] = srcPtr[srcIdx] * fmaddParams_f2.x + fmaddParams_f2.y;
-//     //     srcIdx += srcStrides012.y;
-//     //     dstIdx += dstStrides012.y;
-//     // }
-// }
-
-// SECOND VERSION
 __global__ void fmadd_scalar_ncdhw_tensor(float *srcPtr,
                                           uint3 srcStridesCDH,
                                           float *dstPtr,
