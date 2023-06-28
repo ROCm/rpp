@@ -36,6 +36,7 @@ THE SOFTWARE.
 #define RPP_MAX_8U      ( 255 )
 #define RPP_MIN_16U     ( 0 )
 #define RPP_MAX_16U     ( 65535 )
+#define RPPT_MAX_DIMS   ( 5 )
 
 const float ONE_OVER_6 = 1.0f / 6;
 const float ONE_OVER_3 = 1.0f / 3;
@@ -69,7 +70,9 @@ typedef enum
     RPP_ERROR_INVALID_DST_CHANNELS      = -8,
     RPP_ERROR_INVALID_SRC_LAYOUT        = -9,
     RPP_ERROR_INVALID_DST_LAYOUT        = -10,
-    RPP_ERROR_INVALID_SRC_DATATYPE      = -11
+    RPP_ERROR_INVALID_SRC_DATA_TYPE     = -11,
+    RPP_ERROR_INVALID_DST_DATA_TYPE     = -12,
+    RPP_ERROR_INVALID_ROI_TYPE          = -13
 } RppStatus;
 
 typedef enum
@@ -183,6 +186,13 @@ typedef struct
 {
     int x;
     int y;
+    int z;
+} RppiPoint3D;
+
+typedef struct
+{
+    int x;
+    int y;
     int width;
     int height;
 } RppiRect;
@@ -230,7 +240,9 @@ typedef enum
 typedef enum
 {
     NCHW,
-    NHWC
+    NHWC,
+    NCDHW,
+    NDHWC
 } RpptLayout;
 
 typedef enum
@@ -268,6 +280,13 @@ typedef struct
 
 } RpptRoiXywh;
 
+typedef struct
+{
+    RppiPoint3D xyz;
+    int roiWidth, roiHeight, roiDepth;
+
+} RpptRoiXyzwhd;
+
 typedef union
 {
     RpptRoiLtrb ltrbROI;
@@ -288,10 +307,20 @@ typedef struct
     RppSize_t numDims;
     Rpp32u offsetInBytes;
     RpptDataType dataType;
-    RpptLayout layout;
     Rpp32u n, c, h, w;
     RpptStrides strides;
+    RpptLayout layout;
 } RpptDesc, *RpptDescPtr;
+
+typedef struct
+{
+    RppSize_t numDims;
+    Rpp32u offsetInBytes;
+    RpptDataType dataType;
+    Rpp32u dims[RPPT_MAX_DIMS];
+    Rpp32u strides[RPPT_MAX_DIMS];
+    RpptLayout layout;
+} RpptGenericDesc, *RpptGenericDescPtr;
 
 typedef struct
 {
