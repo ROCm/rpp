@@ -209,6 +209,24 @@ RppStatus rppt_rotate_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dst
 RppStatus rppt_rotate_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *angle, RpptInterpolationType interpolationType, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
+/******************** slice ********************/
+
+// slice for a generic 4D tensor
+
+// *param[in] srcPtr source tensor memory
+// *param[in] srcGenericDescPtr source tensor descriptor
+// *param[out] dstPtr destination tensor memory
+// *param[in] dstGenericDescPtr destination tensor descriptor
+// *param[in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
+// *param[in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+// *returns a  RppStatus enumeration.
+// *retval RPP_SUCCESS : succesful completion
+// *retval RPP_ERROR : Error
+
+#ifdef GPU_SUPPORT
+RppStatus rppt_slice_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, RpptRoiXyzwhd *roiGenericPtrSrc, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
+
 #ifdef __cplusplus
 }
 #endif
