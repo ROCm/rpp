@@ -139,14 +139,26 @@ inline void write_nifti_file(nifti_1_header *niftiHeader, NIFTI_DATATYPE *niftiD
     fclose(fp);
 }
 
-inline void write_image_from_nifti_opencv(uchar *niftiDataU8, nifti_1_header *niftiHeader, int zPlane)
+inline void write_image_from_nifti_opencv(uchar *niftiDataXYFrameU8, int niftiHeaderImageWidth, RpptRoiXyzwhd *roiGenericSrcPtr, uchar *outputBufferOpenCV, int zPlane)
 {
-    nifti_1_header hdr = *niftiHeader;
-    int xyFrameSize = hdr.dim[1] * hdr.dim[2];
-    uchar *niftiDataU8Temp = &niftiDataU8[xyFrameSize * zPlane];
-    cv::Mat matOutputImage = cv::Mat(hdr.dim[2], hdr.dim[1], CV_8UC1, niftiDataU8Temp);
+    uchar *outputBufferOpenCVRow = outputBufferOpenCV;
+    uchar *niftiDataXYFrameU8Row = niftiDataXYFrameU8;
+    for(int i = 0; i < roiGenericSrcPtr[0].roiHeight; i++)
+    {
+        memcpy(outputBufferOpenCVRow, niftiDataXYFrameU8Row, roiGenericSrcPtr[0].roiWidth);
+        outputBufferOpenCVRow += roiGenericSrcPtr[0].roiWidth;
+        niftiDataXYFrameU8Row += niftiHeaderImageWidth;
+    }
+    cv::Mat matOutputImage = cv::Mat(roiGenericSrcPtr[0].roiHeight, roiGenericSrcPtr[0].roiWidth, CV_8UC1, outputBufferOpenCV);
     string fileName = "nifti_single_zPlane_" + std::to_string(zPlane) + ".jpg";
     cv::imwrite(fileName, matOutputImage);
+
+    // nifti_1_header hdr = *niftiHeader;
+    // int xyFrameSize = hdr.dim[1] * hdr.dim[2];
+    // uchar *niftiDataU8Temp = &niftiDataU8[xyFrameSize * zPlane];
+    // cv::Mat matOutputImage = cv::Mat(hdr.dim[2], hdr.dim[1], CV_8UC1, niftiDataU8Temp);
+    // string fileName = "nifti_single_zPlane_" + std::to_string(zPlane) + ".jpg";
+    // cv::imwrite(fileName, matOutputImage);
 }
 
 // TODO: Fix issue in writing video
@@ -160,7 +172,7 @@ inline void write_image_from_nifti_opencv(uchar *niftiDataU8, nifti_1_header *ni
 //     cv::Size frameSize(hdr.dim[1], hdr.dim[2]);
 //     cv::VideoWriter videoOutput("niftiVideoOutput.mp4", cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), 15, frameSize);
 
-//     for (int zFrame = zPlaneMin; zFrame < zPlaneMax; zFrame++)
+//     for (int zPlane = zPlaneMin; zPlane < zPlaneMax; zPlane++)
 //     {
 //         cv::Mat matOutputImageU8 = cv::Mat(hdr.dim[2], hdr.dim[1], CV_8UC1, niftiDataU8Temp);
 //         videoOutput.write(matOutputImageU8);
@@ -308,12 +320,36 @@ int main(int argc, char * argv[])
     void *pinnedMemROI;
     hipHostMalloc(&pinnedMemROI, batchSize * sizeof(RpptRoiXyzwhd));
     RpptRoiXyzwhd *roiGenericSrcPtr = reinterpret_cast<RpptRoiXyzwhd *>(pinnedMemROI);
-    roiGenericSrcPtr[0].xyz.x = 0;                      // start X dim
-    roiGenericSrcPtr[0].xyz.y = 0;                      // start Y dim
-    roiGenericSrcPtr[0].xyz.z = 0;                      // start Z dim
-    roiGenericSrcPtr[0].roiWidth = niftiHeader.dim[1];  // length in X dim
-    roiGenericSrcPtr[0].roiHeight = niftiHeader.dim[2]; // length in Y dim
-    roiGenericSrcPtr[0].roiDepth = niftiHeader.dim[3];  // length in Z dim
+
+    // optionally pick full image as ROI or a smaller slice of the 3D tensor in X/Y/Z dimensions
+    // option 1 - test using roi as the whole 3D image - not sliced (example for 240 x 240 x 155 x 1)
+    roiGenericSrcPtr[0].xyz.x = 0;                              // start X dim = 0
+    roiGenericSrcPtr[0].xyz.y = 0;                              // start Y dim = 0
+    roiGenericSrcPtr[0].xyz.z = 0;                              // start Z dim = 0
+    roiGenericSrcPtr[0].roiWidth = niftiHeader.dim[1];          // length in X dim = 240
+    roiGenericSrcPtr[0].roiHeight = niftiHeader.dim[2];         // length in Y dim = 240
+    roiGenericSrcPtr[0].roiDepth = niftiHeader.dim[3];          // length in Z dim = 155
+    // option 2 - test using roi as a smaller 3D tensor slice - sliced in X, Y and Z dims (example for 240 x 240 x 155 x 1)
+    // roiGenericSrcPtr[0].xyz.x = niftiHeader.dim[1] / 4;         // start X dim = 60
+    // roiGenericSrcPtr[0].xyz.y = niftiHeader.dim[2] / 4;         // start Y dim = 60
+    // roiGenericSrcPtr[0].xyz.z = niftiHeader.dim[3] / 3;         // start Z dim = 51
+    // roiGenericSrcPtr[0].roiWidth = niftiHeader.dim[1] / 2;      // length in X dim = 120
+    // roiGenericSrcPtr[0].roiHeight = niftiHeader.dim[2] / 2;     // length in Y dim = 120
+    // roiGenericSrcPtr[0].roiDepth = niftiHeader.dim[3] / 3;      // length in Z dim = 51
+    // option 3 - test using roi as a smaller 3D tensor slice - sliced in only Z dim (example for 240 x 240 x 155 x 1)
+    // roiGenericSrcPtr[0].xyz.x = 0;                              // start X dim = 0
+    // roiGenericSrcPtr[0].xyz.y = 0;                              // start Y dim = 0
+    // roiGenericSrcPtr[0].xyz.z = niftiHeader.dim[3] / 3;         // start Z dim = 51
+    // roiGenericSrcPtr[0].roiWidth = niftiHeader.dim[1];          // length in X dim = 240
+    // roiGenericSrcPtr[0].roiHeight = niftiHeader.dim[2];         // length in Y dim = 240
+    // roiGenericSrcPtr[0].roiDepth = niftiHeader.dim[3] / 3;      // length in Z dim = 51
+    // option 4 - test using roi as a smaller 3D tensor slice - sliced in only X and Z dim (example for 240 x 240 x 155 x 1)
+    // roiGenericSrcPtr[0].xyz.x = niftiHeader.dim[1] / 5;         // start X dim = 48
+    // roiGenericSrcPtr[0].xyz.y = 0;                              // start Y dim = 0
+    // roiGenericSrcPtr[0].xyz.z = niftiHeader.dim[3] / 3;         // start Z dim = 51
+    // roiGenericSrcPtr[0].roiWidth = niftiHeader.dim[1] * 3 / 5;  // length in X dim = 144
+    // roiGenericSrcPtr[0].roiHeight = niftiHeader.dim[2];         // length in Y dim = 240
+    // roiGenericSrcPtr[0].roiDepth = niftiHeader.dim[3] / 3;      // length in Z dim = 51
 
     // Set buffer sizes in pixels for src/dst
     Rpp64u iBufferSize = (Rpp64u)descriptorPtr3D->strides[0] * (Rpp64u)descriptorPtr3D->dims[0];
@@ -410,8 +446,14 @@ int main(int argc, char * argv[])
     float multiplier = 255.0f / (max - min);
     for (int i = 0; i < dataSize; i++)
         niftiDataU8[i] = (uchar)((niftiData[i] - min) * multiplier);
-    for (int zFrame = 0; zFrame < niftiHeader.dim[3]; zFrame++)
-        write_image_from_nifti_opencv(niftiDataU8, &niftiHeader, zFrame);
+    int xyFrameSize = niftiHeader.dim[1] * niftiHeader.dim[2];
+    int xyFrameSizeROI = roiGenericSrcPtr[0].roiWidth * roiGenericSrcPtr[0].roiHeight;
+    uchar *outputBufferOpenCV = (uchar *)calloc(xyFrameSizeROI, sizeof(uchar));
+    for (int zPlane = roiGenericSrcPtr[0].xyz.z; zPlane < roiGenericSrcPtr[0].xyz.z + roiGenericSrcPtr[0].roiDepth; zPlane++)
+    {
+        write_image_from_nifti_opencv(niftiDataU8, niftiHeader.dim[1], roiGenericSrcPtr, outputBufferOpenCV, zPlane);
+        niftiDataU8 += xyFrameSize;
+    }
     // int zPlaneMin = 0, zPlaneMax = niftiHeader.dim[3] - 1;
     // write_video_from_nifti_opencv(niftiDataU8, &niftiHeader, zPlaneMin, zPlaneMax);
 
@@ -424,6 +466,7 @@ int main(int argc, char * argv[])
     free(niftiData);
     free(inputF32);
     free(outputF32);
+    free(outputBufferOpenCV);
     hipHostFree(pinnedMemROI);
     hipHostFree(pinnedMemArgs);
     hipFree(d_inputF32);
