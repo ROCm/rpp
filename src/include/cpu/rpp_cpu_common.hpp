@@ -2566,6 +2566,11 @@ inline void compute_brightness_4_host(__m128 *p, __m128 *pBrightnessParams)
     p[0] = _mm_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
 }
 
+inline void compute_fmadd_8_host(__m256 *p, __m256 *pFmaddParams)
+{
+    p[0] = _mm256_fmadd_ps(p[0], pFmaddParams[0], pFmaddParams[1]);    // fmadd adjustment
+}
+
 inline void compute_exposure_48_host(__m256 *p, __m256 &pExposureParam)
 {
     p[0] = _mm256_mul_ps(p[0], pExposureParam);    // exposure adjustment
@@ -3025,10 +3030,10 @@ inline void compute_color_cast_12_host(__m128 *p, __m128 pMul, __m128 *pAdd)
 
 inline void compute_xywh_from_ltrb_host(RpptROIPtr roiPtrInput, RpptROIPtr roiPtrImage)
 {
-    roiPtrImage->xywhROI.xy.x = roiPtrInput->ltrbROI.lt.x;
-    roiPtrImage->xywhROI.xy.y = roiPtrInput->ltrbROI.lt.y;
-    roiPtrImage->xywhROI.roiWidth = roiPtrInput->ltrbROI.rb.x - roiPtrInput->ltrbROI.lt.x + 1;
-    roiPtrImage->xywhROI.roiHeight = roiPtrInput->ltrbROI.rb.y - roiPtrInput->ltrbROI.lt.y + 1;
+    roiPtrImage->xyzwhdROI.xyz.x = roiPtrInput->ltrbROI.lt.x;
+    roiPtrImage->xyzwhdROI.xyz.y = roiPtrInput->ltrbROI.lt.y;
+    roiPtrImage->xyzwhdROI.roiWidth = roiPtrInput->ltrbROI.rb.x - roiPtrInput->ltrbROI.lt.x + 1;
+    roiPtrImage->xyzwhdROI.roiHeight = roiPtrInput->ltrbROI.rb.y - roiPtrInput->ltrbROI.lt.y + 1;
 }
 
 inline void compute_ltrb_from_xywh_host(RpptROIPtr roiPtrInput, RpptROIPtr roiPtrImage)
