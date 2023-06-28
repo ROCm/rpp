@@ -617,8 +617,8 @@ RppStatus rppt_lut_host(RppPtr_t srcPtr,
                         rppHandle_t rppHandle)
 {
     if (srcDescPtr->dataType != RpptDataType::U8 && srcDescPtr->dataType != RpptDataType::I8)
-        return RPP_ERROR_INVALID_SRC_DATATYPE;
-    
+        return RPP_ERROR_INVALID_SRC_DATA_TYPE;
+
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
@@ -1149,7 +1149,7 @@ RppStatus rppt_lut_gpu(RppPtr_t srcPtr,
 {
 #ifdef HIP_COMPILE
     if (srcDescPtr->dataType != RpptDataType::U8 && srcDescPtr->dataType != RpptDataType::I8)
-        return RPP_ERROR_INVALID_SRC_DATATYPE;
+        return RPP_ERROR_INVALID_SRC_DATA_TYPE;
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
