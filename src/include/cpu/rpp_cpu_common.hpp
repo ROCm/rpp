@@ -3030,10 +3030,20 @@ inline void compute_color_cast_12_host(__m128 *p, __m128 pMul, __m128 *pAdd)
 
 inline void compute_xywh_from_ltrb_host(RpptROIPtr roiPtrInput, RpptROIPtr roiPtrImage)
 {
-    roiPtrImage->xyzwhdROI.xyz.x = roiPtrInput->ltrbROI.lt.x;
-    roiPtrImage->xyzwhdROI.xyz.y = roiPtrInput->ltrbROI.lt.y;
-    roiPtrImage->xyzwhdROI.roiWidth = roiPtrInput->ltrbROI.rb.x - roiPtrInput->ltrbROI.lt.x + 1;
-    roiPtrImage->xyzwhdROI.roiHeight = roiPtrInput->ltrbROI.rb.y - roiPtrInput->ltrbROI.lt.y + 1;
+    roiPtrImage->xywhROI.xy.x = roiPtrInput->ltrbROI.lt.x;
+    roiPtrImage->xywhROI.xy.y = roiPtrInput->ltrbROI.lt.y;
+    roiPtrImage->xywhROI.roiWidth = roiPtrInput->ltrbROI.rb.x - roiPtrInput->ltrbROI.lt.x + 1;
+    roiPtrImage->xywhROI.roiHeight = roiPtrInput->ltrbROI.rb.y - roiPtrInput->ltrbROI.lt.y + 1;
+}
+
+inline void compute_xyzwhd_from_ltfrbb_host(RpptROI3DPtr roiPtrInput, RpptROI3DPtr roiPtrImage)
+{
+    roiPtrImage->xyzwhdROI.xyz.x = roiPtrInput->ltfrbbROI.ltf.x;
+    roiPtrImage->xyzwhdROI.xyz.y = roiPtrInput->ltfrbbROI.ltf.y;
+    roiPtrImage->xyzwhdROI.xyz.z = roiPtrInput->ltfrbbROI.ltf.z;
+    roiPtrImage->xyzwhdROI.roiWidth = roiPtrInput->ltfrbbROI.rbb.x - roiPtrInput->ltfrbbROI.ltf.x + 1;
+    roiPtrImage->xyzwhdROI.roiHeight = roiPtrInput->ltfrbbROI.rbb.y - roiPtrInput->ltfrbbROI.ltf.y + 1;
+    roiPtrImage->xyzwhdROI.roiDepth = roiPtrInput->ltfrbbROI.rbb.z - roiPtrInput->ltfrbbROI.ltf.z + 1;
 }
 
 inline void compute_ltrb_from_xywh_host(RpptROIPtr roiPtrInput, RpptROIPtr roiPtrImage)
@@ -3052,6 +3062,16 @@ inline void compute_roi_boundary_check_host(RpptROIPtr roiPtrImage, RpptROIPtr r
     roiPtr->xywhROI.roiHeight = std::min(roiPtrDefault->xywhROI.roiHeight - roiPtrImage->xywhROI.xy.y, roiPtrImage->xywhROI.roiHeight);
 }
 
+inline void compute_roi3D_boundary_check_host(RpptROI3DPtr roiPtrImage, RpptROI3DPtr roiPtr, RpptROI3DPtr roiPtrDefault)
+{
+    roiPtr->xyzwhdROI.xyz.x = std::max(roiPtrDefault->xyzwhdROI.xyz.x, roiPtrImage->xyzwhdROI.xyz.x);
+    roiPtr->xyzwhdROI.xyz.y = std::max(roiPtrDefault->xyzwhdROI.xyz.y, roiPtrImage->xyzwhdROI.xyz.y);
+    roiPtr->xyzwhdROI.xyz.z = std::max(roiPtrDefault->xyzwhdROI.xyz.z, roiPtrImage->xyzwhdROI.xyz.z);
+    roiPtr->xyzwhdROI.roiWidth = std::min(roiPtrDefault->xyzwhdROI.roiWidth - roiPtrImage->xyzwhdROI.xyz.x, roiPtrImage->xyzwhdROI.roiWidth);
+    roiPtr->xyzwhdROI.roiHeight = std::min(roiPtrDefault->xyzwhdROI.roiHeight - roiPtrImage->xyzwhdROI.xyz.y, roiPtrImage->xyzwhdROI.roiHeight);
+    roiPtr->xyzwhdROI.roiDepth = std::min(roiPtrDefault->xyzwhdROI.roiDepth - roiPtrImage->xyzwhdROI.xyz.z, roiPtrImage->xyzwhdROI.roiDepth);
+}
+
 inline void compute_roi_validation_host(RpptROIPtr roiPtrInput, RpptROIPtr roiPtr, RpptROIPtr roiPtrDefault, RpptRoiType roiType)
 {
     if (roiPtrInput == NULL)
@@ -3067,6 +3087,24 @@ inline void compute_roi_validation_host(RpptROIPtr roiPtrInput, RpptROIPtr roiPt
         else if (roiType == RpptRoiType::XYWH)
             roiPtrImage = roiPtrInput;
         compute_roi_boundary_check_host(roiPtrImage, roiPtr, roiPtrDefault);
+    }
+}
+
+inline void compute_roi3D_validation_host(RpptROI3DPtr roiPtrInput, RpptROI3DPtr roiPtr, RpptROI3DPtr roiPtrDefault, RpptRoi3DType roiType)
+{
+    if (roiPtrInput == NULL)
+    {
+        roiPtr = roiPtrDefault;
+    }
+    else
+    {
+        RpptROI3D roiImage;
+        RpptROI3DPtr roiPtrImage = &roiImage;
+        if (roiType == RpptRoi3DType::LTFRBB)
+            compute_xyzwhd_from_ltfrbb_host(roiPtrInput, roiPtrImage);
+        else if (roiType == RpptRoi3DType::XYZWHD)
+            roiPtrImage = roiPtrInput;
+        compute_roi3D_boundary_check_host(roiPtrImage, roiPtr, roiPtrDefault);
     }
 }
 
