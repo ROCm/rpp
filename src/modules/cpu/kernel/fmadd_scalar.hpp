@@ -25,38 +25,38 @@ THE SOFTWARE.
 #include "rpp_cpu_common.hpp"
 
 RppStatus fmadd_scalar_f32_f32_host_tensor(Rpp32f *srcPtr,
-                                           RpptGenericDescPtr srcDescPtr,
+                                           RpptGenericDescPtr srcGenericDescPtr,
                                            Rpp32f *dstPtr,
-                                           RpptGenericDescPtr dstDescPtr,
+                                           RpptGenericDescPtr dstGenericDescPtr,
                                            Rpp32f *mulTensor,
                                            Rpp32f *addTensor,
-                                           RpptRoiXyzwhd roiTensorPtrSrc,
-                                           RpptRoiType roiType,
+                                           RpptROI3DPtr roiGenericPtrSrc,
+                                           RpptRoi3DType roiType,
                                            RppLayoutParams layoutParams,
                                            rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, 0, (Rpp32s)srcDescPtr->dims[3], (Rpp32s)srcDescPtr->dims[4], (Rpp32s)srcDescPtr->dims[2]};
+    RpptROI3D roiDefault = {0, 0, 0, (Rpp32s)srcGenericDescPtr->dims[3], (Rpp32s)srcGenericDescPtr->dims[4], (Rpp32s)srcGenericDescPtr->dims[2]};
     Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
-    for(int batchCount = 0; batchCount < dstDescPtr->dims[0]; batchCount++)
+    for(int batchCount = 0; batchCount < dstGenericDescPtr->dims[0]; batchCount++)
     {
-        RpptROI roi;
-        RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
-        compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType); // To change
+        RpptROI3D roi;
+        RpptROI3DPtr roiPtrInput = &roiGenericPtrSrc[batchCount];
+        compute_roi3D_validation_host(roiPtrInput, &roi, &roiDefault, roiType); // To change
 
         Rpp32f mulParam = mulTensor[batchCount];
         Rpp32f addParam = addTensor[batchCount];
 
         Rpp32f *srcPtrImage, *dstPtrImage;
-        srcPtrImage = srcPtr + batchCount * srcDescPtr->strides[0];
-        dstPtrImage = dstPtr + batchCount * dstDescPtr->strides[0];
+        srcPtrImage = srcPtr + batchCount * srcGenericDescPtr->strides[0];
+        dstPtrImage = dstPtr + batchCount * dstGenericDescPtr->strides[0];
 
-        Rpp32u bufferLength = roi.RpptRoiXyzwhd.roiWidth * layoutParams.bufferMultiplier;
+        Rpp32u bufferLength = roi.xyzwhdROI.roiWidth * layoutParams.bufferMultiplier;
 
         Rpp32f *srcPtrChannel, *dstPtrChannel;
-        srcPtrChannel = srcPtrImage + (roi.xyzwhdROI.xyz.z * srcDescPtr->strides.dStride) + (roi.xyzwhdROI.xyz.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
+        srcPtrChannel = srcPtrImage + (roi.xyzwhdROI.xyz.z * srcGenericDescPtr->strides[2]) + (roi.xyzwhdROI.xyz.y * srcGenericDescPtr->strides[3]) + (roi.xyzwhdROI.xyz.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
 #if __AVX2__
@@ -69,7 +69,7 @@ RppStatus fmadd_scalar_f32_f32_host_tensor(Rpp32f *srcPtr,
         pFmaddParams[1] = _mm256_set1_ps(addParam);
 #endif
         // Fmadd without fused output-layout toggle single channel(NCDHW -> NCDHW)
-        if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCDHW) && (dstDescPtr->layout == RpptLayout::NCDHW))
+        if ((srcGenericDescPtr->dims[1] == 1) && (srcGenericDescPtr->layout == RpptLayout::NCDHW) && (dstGenericDescPtr->layout == RpptLayout::NCDHW))
         {
 #if __AVX2__
             alignedLength = bufferLength & ~7;
@@ -111,12 +111,12 @@ RppStatus fmadd_scalar_f32_f32_host_tensor(Rpp32f *srcPtr,
                         dstPtrTemp++;
                     }
 
-                    srcPtrRow += srcDescPtr->strides[3];
-                    dstPtrRow += dstDescPtr->strides[3];
+                    srcPtrRow += srcGenericDescPtr->strides[3];
+                    dstPtrRow += dstGenericDescPtr->strides[3];
                 }
 
-                srcPtrDepth += srcDescPtr->strides[2];
-                dstPtrDepth += dstDescPtr->strides[2];
+                srcPtrDepth += srcGenericDescPtr->strides[2];
+                dstPtrDepth += dstGenericDescPtr->strides[2];
             }
         }
     }

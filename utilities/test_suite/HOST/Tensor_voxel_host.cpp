@@ -286,6 +286,10 @@ int main(int argc, char * argv[])
     // read nifti header file
     read_nifti_header_file(header_file, &niftiHeader);
 
+    // Set ROI tensors types for src
+    RpptRoi3DType roiTypeSrc;
+    roiTypeSrc = RpptRoi3DType::XYZWHD;
+
     // allocate buffer and read first 3D volume from data file
     uint dataSize = niftiHeader.dim[1] * niftiHeader.dim[2] * niftiHeader.dim[3];
     uint dataSizeInBytes = dataSize * sizeof(NIFTI_DATATYPE);
@@ -393,7 +397,7 @@ int main(int argc, char * argv[])
         }
 
         startWallTime = omp_get_wtime();
-        memcpy(outputF32, inputF32, iBufferSizeInBytes);
+        rppt_fmadd_scalar_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, mulTensor, addTensor, roiGenericSrcPtr, roiTypeSrc, handle);
         break;
     }
     case 1:
