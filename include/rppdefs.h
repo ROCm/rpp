@@ -70,7 +70,9 @@ typedef enum
     RPP_ERROR_INVALID_DST_CHANNELS      = -8,
     RPP_ERROR_INVALID_SRC_LAYOUT        = -9,
     RPP_ERROR_INVALID_DST_LAYOUT        = -10,
-    RPP_ERROR_INVALID_SRC_DATATYPE      = -11
+    RPP_ERROR_INVALID_SRC_DATATYPE     = -11,
+    RPP_ERROR_INVALID_DST_DATATYPE     = -12,
+    RPP_ERROR_INVALID_ROI_TYPE          = -13
 } RppStatus;
 
 typedef enum
@@ -251,6 +253,12 @@ typedef enum
 
 typedef enum
 {
+    LTFRBB,
+    XYZWHD
+} RpptRoi3DType;
+
+typedef enum
+{
     RGBtype,
     BGRtype
 } RpptSubpixelLayout;
@@ -273,6 +281,12 @@ typedef struct
 
 typedef struct
 {
+    RppiPoint3D ltf, rbb;
+
+} RpptRoiLtfrbb;
+
+typedef struct
+{
     RppiPoint xy;
     int roiWidth, roiHeight;
 
@@ -289,9 +303,14 @@ typedef union
 {
     RpptRoiLtrb ltrbROI;
     RpptRoiXywh xywhROI;
-    RpptRoiXyzwhd xyzwhdROI;
 
 } RpptROI, *RpptROIPtr;
+
+typedef union
+{
+    RpptRoiLtfrbb ltfrbbROI;
+    RpptRoiXyzwhd xyzwhdROI;
+} RpptROI3D, *RpptROI3DPtr;
 
 typedef struct
 {
