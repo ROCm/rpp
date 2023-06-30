@@ -29,7 +29,7 @@
 #include <unistd.h>
 #endif
 
-#include<thread>
+#include <thread>
 #include "config.h"
 #include "rpp/device_name.hpp"
 #include "rpp/errors.hpp"

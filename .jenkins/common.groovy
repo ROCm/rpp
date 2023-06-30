@@ -15,7 +15,7 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
             enableSCL = 'source scl_source enable llvm-toolset-7'
         }
     }
-    else if (platform.jenkinsLabel.contains('ubuntu18')) {
+    else if (platform.jenkinsLabel.contains('ubuntu20')) {
         backend = 'OCL'
     }
     else {
