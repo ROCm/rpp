@@ -44,7 +44,7 @@ RppStatus fmadd_scalar_f32_f32_host_tensor(Rpp32f *srcPtr,
     {
         RpptROI3D roi;
         RpptROI3DPtr roiPtrInput = &roiGenericPtrSrc[batchCount];
-        compute_roi3D_validation_host(roiPtrInput, &roi, &roiDefault, roiType); // To change
+        compute_roi3D_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
         Rpp32f mulParam = mulTensor[batchCount];
         Rpp32f addParam = addTensor[batchCount];
@@ -59,21 +59,20 @@ RppStatus fmadd_scalar_f32_f32_host_tensor(Rpp32f *srcPtr,
         srcPtrChannel = srcPtrImage + (roi.xyzwhdROI.xyz.z * srcGenericDescPtr->strides[2]) + (roi.xyzwhdROI.xyz.y * srcGenericDescPtr->strides[3]) + (roi.xyzwhdROI.xyz.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
+
 #if __AVX2__
-        Rpp32u alignedLength; // = (bufferLength / 24) * 24;
-        //Rpp32u vectorIncrement = 24;
         Rpp32u vectorIncrementPerChannel = 8;
 
         __m256 pFmaddParams[2];
         pFmaddParams[0] = _mm256_set1_ps(mulParam);
         pFmaddParams[1] = _mm256_set1_ps(addParam);
 #endif
-        // Fmadd without fused output-layout toggle single channel(NCDHW -> NCDHW)
-        if ((srcGenericDescPtr->dims[1] == 1) && (srcGenericDescPtr->layout == RpptLayout::NCDHW) && (dstGenericDescPtr->layout == RpptLayout::NCDHW))
-        {
+        // Fmadd without fused output-layout toggle (NDHWC -> NDHWC or NCDHW -> NCDHW)
 #if __AVX2__
-            alignedLength = bufferLength & ~7;
+        Rpp32u alignedLength = bufferLength & ~(vectorIncrementPerChannel-1);
 #endif
+        for(int c = 0; c < layoutParams.channelParam; c++)
+        {
             Rpp32f *srcPtrDepth, *dstPtrDepth;
             srcPtrDepth = srcPtrChannel;
             dstPtrDepth = dstPtrChannel;
@@ -98,14 +97,14 @@ RppStatus fmadd_scalar_f32_f32_host_tensor(Rpp32f *srcPtr,
 
                         rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrTemp, p);    // simd loads
                         compute_fmadd_8_host(p, pFmaddParams);                     // fmadd adjustment
-                        rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp, p);  // simd stores                                    // simd stores                                         // simd stores
+                        rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp, p);  // simd stores
 #endif
                         srcPtrTemp += vectorIncrementPerChannel;
                         dstPtrTemp += vectorIncrementPerChannel;
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        *dstPtrTemp = RPPPIXELCHECKF32((*srcPtrTemp * mulParam) + addParam);
+                        *dstPtrTemp = (*srcPtrTemp * mulParam) + addParam;
 
                         srcPtrTemp++;
                         dstPtrTemp++;
@@ -114,10 +113,12 @@ RppStatus fmadd_scalar_f32_f32_host_tensor(Rpp32f *srcPtr,
                     srcPtrRow += srcGenericDescPtr->strides[3];
                     dstPtrRow += dstGenericDescPtr->strides[3];
                 }
-
                 srcPtrDepth += srcGenericDescPtr->strides[2];
                 dstPtrDepth += dstGenericDescPtr->strides[2];
             }
+
+            srcPtrChannel += srcGenericDescPtr->strides[1];
+            dstPtrChannel += srcGenericDescPtr->strides[1];
         }
     }
 

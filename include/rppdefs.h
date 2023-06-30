@@ -310,6 +310,7 @@ typedef union
 {
     RpptRoiLtfrbb ltfrbbROI;
     RpptRoiXyzwhd xyzwhdROI;
+    
 } RpptROI3D, *RpptROI3DPtr;
 
 typedef struct
