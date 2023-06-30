@@ -35,6 +35,7 @@ using namespace std;
 typedef int16_t NIFTI_DATATYPE;
 
 #define MIN_HEADER_SIZE 348
+#define RPPRANGECHECK(value)     (value < -32768) ? -32768 : ((value < 32767) ? value : 32767)
 
 // reads nifti-1 header file
 static int read_nifti_header_file(char* const header_file, nifti_1_header *niftiHeader)
@@ -139,7 +140,7 @@ inline void write_nifti_file(nifti_1_header *niftiHeader, NIFTI_DATATYPE *niftiD
     fclose(fp);
 }
 
-inline void write_image_from_nifti_opencv(uchar *niftiDataXYFrameU8, int niftiHeaderImageWidth, RpptRoiXyzwhd *roiGenericSrcPtr, uchar *outputBufferOpenCV, int zPlane)
+inline void write_image_from_nifti_opencv(uchar *niftiDataXYFrameU8, int niftiHeaderImageWidth, RpptRoiXyzwhd *roiGenericSrcPtr, uchar *outputBufferOpenCV, int zPlane, int Channel)
 {
     uchar *outputBufferOpenCVRow = outputBufferOpenCV;
     uchar *niftiDataXYFrameU8Row = niftiDataXYFrameU8;
@@ -150,7 +151,7 @@ inline void write_image_from_nifti_opencv(uchar *niftiDataXYFrameU8, int niftiHe
         niftiDataXYFrameU8Row += niftiHeaderImageWidth;
     }
     cv::Mat matOutputImage = cv::Mat(roiGenericSrcPtr[0].roiHeight, roiGenericSrcPtr[0].roiWidth, CV_8UC1, outputBufferOpenCV);
-    string fileName = "nifti_single_zPlane_" + std::to_string(zPlane) + ".jpg";
+    string fileName = "nifti_single_zPlane_chn_"+ std::to_string(Channel)+ "_" + std::to_string(zPlane) + ".jpg";
     cv::imwrite(fileName, matOutputImage);
 
     // nifti_1_header hdr = *niftiHeader;
@@ -239,6 +240,7 @@ inline void convert_output_float_to_niftitype_generic(float *outputF32, RpptGene
                     {
                         for (int w = 0; w < hdr.dim[1]; w++)
                         {
+                            *outputF32Temp = RPPRANGECHECK(*outputF32Temp);
                             *outputTemp++ = (T)*outputF32Temp++;
                         }
                         outputF32Temp += increment;
@@ -255,12 +257,12 @@ inline void convert_output_float_to_niftitype_generic(float *outputF32, RpptGene
 
 int main(int argc, char * argv[])
 {
-    int layoutType, testCase;
+    int layoutType, testCase, testType;
     char *header_file, *data_file;
 
-    if (argc != 5)
+    if (argc != 6)
     {
-        fprintf(stderr, "\nUsage: %s <header file> <data file> <layoutType = 0 for NCDHW / 1 for NDHWC> <testCase = 0 to 1>\n", argv[0]);
+        fprintf(stderr, "\nUsage: %s <header file> <data file> <layoutType = 0 for NCDHW / 1 for NDHWC> <testCase = 0 to 1> <testType = 0 - unit test/ 1 - performance test>\n", argv[0]);
         exit(1);
     }
 
@@ -268,6 +270,7 @@ int main(int argc, char * argv[])
     data_file = argv[2];
     layoutType = atoi(argv[3]); // 0 for NCDHW / 1 for NDHWC
     testCase = atoi(argv[4]); // 0 to 1
+    testType = atoi(argv[5]); // 0 - unit test / 1 - performance test
 
     if ((layoutType != 0) && (layoutType != 1))
     {
@@ -286,14 +289,14 @@ int main(int argc, char * argv[])
     // read nifti header file
     read_nifti_header_file(header_file, &niftiHeader);
 
-    // Set ROI tensors types for src
+	// Set ROI tensors types for src
     RpptRoi3DType roiTypeSrc;
     roiTypeSrc = RpptRoi3DType::XYZWHD;
 
     // allocate buffer and read first 3D volume from data file
     uint dataSize = niftiHeader.dim[1] * niftiHeader.dim[2] * niftiHeader.dim[3];
     uint dataSizeInBytes = dataSize * sizeof(NIFTI_DATATYPE);
-    niftiData = (NIFTI_DATATYPE *) malloc(dataSizeInBytes);
+    niftiData = (NIFTI_DATATYPE *) calloc(dataSizeInBytes, 1);
     if (niftiData == NULL)
     {
         fprintf(stderr, "\nError allocating data buffer for %s\n",data_file);
@@ -309,7 +312,7 @@ int main(int argc, char * argv[])
     maxX = niftiHeader.dim[1];          // Can be modified to obtain maxX of multiple 3D images for batch processing
     maxY = niftiHeader.dim[2];          // Can be modified to obtain maxY of multiple 3D images for batch processing
     maxZ = niftiHeader.dim[3];          // Can be modified to obtain maxZ of multiple 3D images for batch processing
-    numChannels = niftiHeader.dim[4];
+    numChannels = 3;                    //Temporary value set to 3 for running pln3, the actual value should be obtained from niftiHeader.dim[4].
     offsetInBytes = 0;
 
     // optionally set maxX as a multiple of 8 for RPP optimal CPU/GPU processing
@@ -321,40 +324,41 @@ int main(int argc, char * argv[])
     set_generic_descriptor(descriptorPtr3D, batchSize, maxX, maxY, maxZ, numChannels, offsetInBytes, layoutType);
 
     // set src/dst xyzwhd ROI tensors
-    RpptRoiXyzwhd *roiGenericSrcPtr = reinterpret_cast<RpptRoiXyzwhd *>(calloc(batchSize, sizeof(RpptRoiXyzwhd)));
+    //RpptRoiXyzwhd *roiGenericSrcPtr = reinterpret_cast<RpptRoiXyzwhd *>(calloc(batchSize, sizeof(RpptRoiXyzwhd)));
+    RpptROI3D *roiGenericSrcPtr = (RpptROI3D *) calloc(batchSize, sizeof(RpptROI3D));
 
     // optionally pick full image as ROI or a smaller slice of the 3D tensor in X/Y/Z dimensions
     // option 1 - test using roi as the whole 3D image - not sliced (example for 240 x 240 x 155 x 1)
-    roiGenericSrcPtr[0].xyz.x = 0;                              // start X dim = 0
-    roiGenericSrcPtr[0].xyz.y = 0;                              // start Y dim = 0
-    roiGenericSrcPtr[0].xyz.z = 0;                              // start Z dim = 0
-    roiGenericSrcPtr[0].roiWidth = niftiHeader.dim[1];          // length in X dim = 240
-    roiGenericSrcPtr[0].roiHeight = niftiHeader.dim[2];         // length in Y dim = 240
-    roiGenericSrcPtr[0].roiDepth = niftiHeader.dim[3];          // length in Z dim = 155
+    roiGenericSrcPtr[0].xyzwhdROI.xyz.x = 0;                              // start X dim = 0
+    roiGenericSrcPtr[0].xyzwhdROI.xyz.y = 0;                              // start Y dim = 0
+    roiGenericSrcPtr[0].xyzwhdROI.xyz.z = 0;                              // start Z dim = 0
+    roiGenericSrcPtr[0].xyzwhdROI.roiWidth = niftiHeader.dim[1];          // length in X dim = 240
+    roiGenericSrcPtr[0].xyzwhdROI.roiHeight = niftiHeader.dim[2];         // length in Y dim = 240
+    roiGenericSrcPtr[0].xyzwhdROI.roiDepth = niftiHeader.dim[3];          // length in Z dim = 155
     // option 2 - test using roi as a smaller 3D tensor slice - sliced in X, Y and Z dims (example for 240 x 240 x 155 x 1)
-    // roiGenericSrcPtr[0].xyz.x = niftiHeader.dim[1] / 4;         // start X dim = 60
-    // roiGenericSrcPtr[0].xyz.y = niftiHeader.dim[2] / 4;         // start Y dim = 60
-    // roiGenericSrcPtr[0].xyz.z = niftiHeader.dim[3] / 3;         // start Z dim = 51
-    // roiGenericSrcPtr[0].roiWidth = niftiHeader.dim[1] / 2;      // length in X dim = 120
-    // roiGenericSrcPtr[0].roiHeight = niftiHeader.dim[2] / 2;     // length in Y dim = 120
-    // roiGenericSrcPtr[0].roiDepth = niftiHeader.dim[3] / 3;      // length in Z dim = 51
+    // roiGenericSrcPtr[0].xyzwhdROI.xyz.x = niftiHeader.dim[1] / 4;         // start X dim = 60
+    // roiGenericSrcPtr[0].xyzwhdROI.xyz.y = niftiHeader.dim[2] / 4;         // start Y dim = 60
+    // roiGenericSrcPtr[0].xyzwhdROI.xyz.z = niftiHeader.dim[3] / 3;         // start Z dim = 51
+    // roiGenericSrcPtr[0].xyzwhdROI.roiWidth = niftiHeader.dim[1] / 2;      // length in X dim = 120
+    // roiGenericSrcPtr[0].xyzwhdROI.roiHeight = niftiHeader.dim[2] / 2;     // length in Y dim = 120
+    // roiGenericSrcPtr[0].xyzwhdROI.roiDepth = niftiHeader.dim[3] / 3;      // length in Z dim = 51
     // option 3 - test using roi as a smaller 3D tensor slice - sliced in only Z dim (example for 240 x 240 x 155 x 1)
-    // roiGenericSrcPtr[0].xyz.x = 0;                              // start X dim = 0
-    // roiGenericSrcPtr[0].xyz.y = 0;                              // start Y dim = 0
-    // roiGenericSrcPtr[0].xyz.z = niftiHeader.dim[3] / 3;         // start Z dim = 51
-    // roiGenericSrcPtr[0].roiWidth = niftiHeader.dim[1];          // length in X dim = 240
-    // roiGenericSrcPtr[0].roiHeight = niftiHeader.dim[2];         // length in Y dim = 240
-    // roiGenericSrcPtr[0].roiDepth = niftiHeader.dim[3] / 3;      // length in Z dim = 51
+    // roiGenericSrcPtr[0].xyzwhdROI.xyz.x = 0;                              // start X dim = 0
+    // roiGenericSrcPtr[0].xyzwhdROI.xyz.y = 0;                              // start Y dim = 0
+    // roiGenericSrcPtr[0].xyzwhdROI.xyz.z = niftiHeader.dim[3] / 3;         // start Z dim = 51
+    // roiGenericSrcPtr[0].xyzwhdROI.roiWidth = niftiHeader.dim[1];          // length in X dim = 240
+    // roiGenericSrcPtr[0].xyzwhdROI.roiHeight = niftiHeader.dim[2];         // length in Y dim = 240
+    // roiGenericSrcPtr[0].xyzwhdROI.roiDepth = niftiHeader.dim[3] / 3;      // length in Z dim = 51
     // option 4 - test using roi as a smaller 3D tensor slice - sliced in only X and Z dim (example for 240 x 240 x 155 x 1)
-    // roiGenericSrcPtr[0].xyz.x = niftiHeader.dim[1] / 5;         // start X dim = 48
-    // roiGenericSrcPtr[0].xyz.y = 0;                              // start Y dim = 0
-    // roiGenericSrcPtr[0].xyz.z = niftiHeader.dim[3] / 3;         // start Z dim = 51
-    // roiGenericSrcPtr[0].roiWidth = niftiHeader.dim[1] * 3 / 5;  // length in X dim = 144
-    // roiGenericSrcPtr[0].roiHeight = niftiHeader.dim[2];         // length in Y dim = 240
-    // roiGenericSrcPtr[0].roiDepth = niftiHeader.dim[3] / 3;      // length in Z dim = 51
+    // roiGenericSrcPtr[0].xyzwhdROI.xyz.x = niftiHeader.dim[1] / 5;         // start X dim = 48
+    // roiGenericSrcPtr[0].xyzwhdROI.xyz.y = 0;                              // start Y dim = 0
+    // roiGenericSrcPtr[0].xyzwhdROI.xyz.z = niftiHeader.dim[3] / 3;         // start Z dim = 51
+    // roiGenericSrcPtr[0].xyzwhdROI.roiWidth = niftiHeader.dim[1] * 3 / 5;  // length in X dim = 144
+    // roiGenericSrcPtr[0].xyzwhdROI.roiHeight = niftiHeader.dim[2];         // length in Y dim = 240
+    // roiGenericSrcPtr[0].xyzwhdROI.roiDepth = niftiHeader.dim[3] / 3;      // length in Z dim = 51
 
     // Set buffer sizes in pixels for src/dst
-    Rpp64u iBufferSize = (Rpp64u)descriptorPtr3D->strides[0] * (Rpp64u)descriptorPtr3D->dims[0];
+    Rpp64u iBufferSize = (Rpp64u)descriptorPtr3D->strides[0] * (Rpp64u)descriptorPtr3D->dims[0] * numChannels;
     Rpp64u oBufferSize = iBufferSize;   // User can provide a different oBufferSize
 
     // Set buffer sizes in bytes for src/dst (including offsets)
@@ -366,7 +370,11 @@ int main(int argc, char * argv[])
     float *outputF32 = static_cast<float *>(calloc(oBufferSizeInBytes, 1));
 
     // Convert default NIFTI_DATATYPE unstrided buffer to RpptDataType::F32 strided buffer
-    convert_input_niftitype_to_float_generic(niftiData, &niftiHeader, inputF32, descriptorPtr3D);
+    Rpp64u increment = ((Rpp64u)descriptorPtr3D->strides[0] * (Rpp64u)descriptorPtr3D->dims[0]);
+    for(int i = 0; i < numChannels; i++) //temporary change to process pln3
+    {
+        convert_input_niftitype_to_float_generic(niftiData, &niftiHeader, inputF32 + i * increment, descriptorPtr3D);
+    }
 
     // set argument tensors
     void *pinnedMemArgs;
@@ -381,77 +389,108 @@ int main(int argc, char * argv[])
 
     // case-wise RPP API
 
+    int numRuns = 1;
+    if(testType == 1)
+        numRuns = 100;
+
     int missingFuncFlag = 0;
     double startWallTime, endWallTime, wallTime;
-    switch (testCase)
+    double maxWallTime = 0, minWallTime = 5000, avgWallTime = 0;
+    for (int perfRunCount = 0; perfRunCount < numRuns; perfRunCount++)
     {
-    case 0:
-    {
-        Rpp32f *mulTensor = reinterpret_cast<Rpp32f *>(pinnedMemArgs);
-        Rpp32f *addTensor = mulTensor + batchSize;
-
-        for (int i = 0; i < batchSize; i++)
+        switch (testCase)
         {
-            mulTensor[i] = 80;
-            addTensor[i] = 5;
+        case 0:
+        {
+            Rpp32f *mulTensor = reinterpret_cast<Rpp32f *>(pinnedMemArgs);
+            Rpp32f *addTensor = mulTensor + batchSize;
+
+            for (int i = 0; i < batchSize; i++)
+            {
+                mulTensor[i] = 80;
+                addTensor[i] = 5;
+            }
+
+            startWallTime = omp_get_wtime();
+            rppt_fmadd_scalar_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, mulTensor, addTensor, roiGenericSrcPtr, roiTypeSrc, handle);
+            break;
+        }
+        case 1:
+        {
+            startWallTime = omp_get_wtime();
+            memcpy(outputF32, inputF32, iBufferSizeInBytes);
+            break;
+        }
+        default:
+        {
+            missingFuncFlag = 1;
+            break;
+        }
         }
 
-        startWallTime = omp_get_wtime();
-        rppt_fmadd_scalar_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, mulTensor, addTensor, roiGenericSrcPtr, roiTypeSrc, handle);
-        break;
-    }
-    case 1:
-    {
-        startWallTime = omp_get_wtime();
-        memcpy(outputF32, inputF32, iBufferSizeInBytes);
-        break;
-    }
-    default:
-    {
-        missingFuncFlag = 1;
-        break;
-    }
+        endWallTime = omp_get_wtime();
+        wallTime = endWallTime - startWallTime;
+        maxWallTime = std::max(maxWallTime, wallTime);
+        minWallTime = std::min(minWallTime, wallTime);
+        avgWallTime += wallTime;
+        wallTime *= 1000;
+        if (missingFuncFlag == 1)
+        {
+            printf("\nThe functionality doesn't yet exist in RPP\n");
+            return -1;
+        }
+        if(testType == 0)
+            cout << "\n\nCPU Backend Wall Time: " << wallTime <<" ms per nifti file"<< endl;
     }
 
-    endWallTime = omp_get_wtime();
-    wallTime = endWallTime - startWallTime;
-    wallTime *= 1000;
-    if (missingFuncFlag == 1)
+    if(testType == 1)
     {
-        printf("\nThe functionality doesn't yet exist in RPP\n");
-        return -1;
+        // Display measured times
+        maxWallTime *= 1000;
+        minWallTime *= 1000;
+        avgWallTime *= 1000;
+        avgWallTime /= numRuns;
+        cout << fixed << "\nmax,min,avg wall times in ms/batch = " << maxWallTime << "," << minWallTime << "," << avgWallTime;
     }
-    cout << "\n\nCPU Backend Wall Time: " << wallTime <<" ms per nifti file"<< endl;
 
-
-    // Convert RpptDataType::F32 strided buffer to default NIFTI_DATATYPE unstrided buffer
-    convert_output_float_to_niftitype_generic(outputF32, descriptorPtr3D, niftiData, &niftiHeader);
-
-    // optionally normalize and write specific zPlanes to jpg images or mp4 video
-    uchar *niftiDataU8 = (uchar *) malloc(dataSizeInBytes);
-    NIFTI_DATATYPE min = niftiData[0];
-    NIFTI_DATATYPE max = niftiData[0];
-    for (int i = 0; i < dataSize; i++)
+    if(testType == 0)
     {
-        min = std::min(min, niftiData[i]);
-        max = std::max(max, niftiData[i]);
-    }
-    float multiplier = 255.0f / (max - min);
-    for (int i = 0; i < dataSize; i++)
-        niftiDataU8[i] = (uchar)((niftiData[i] - min) * multiplier);
-    int xyFrameSize = niftiHeader.dim[1] * niftiHeader.dim[2];
-    int xyFrameSizeROI = roiGenericSrcPtr[0].roiWidth * roiGenericSrcPtr[0].roiHeight;
-    uchar *outputBufferOpenCV = (uchar *)calloc(xyFrameSizeROI, sizeof(uchar));
-    for (int zPlane = roiGenericSrcPtr[0].xyz.z; zPlane < roiGenericSrcPtr[0].xyz.z + roiGenericSrcPtr[0].roiDepth; zPlane++)
-    {
-        write_image_from_nifti_opencv(niftiDataU8, niftiHeader.dim[1], roiGenericSrcPtr, outputBufferOpenCV, zPlane);
-        niftiDataU8 += xyFrameSize;
-    }
-    // int zPlaneMin = 0, zPlaneMax = niftiHeader.dim[3] - 1;
-    // write_video_from_nifti_opencv(niftiDataU8, &niftiHeader, zPlaneMin, zPlaneMax);
+        for(int i = 0; i < numChannels; i++) // temporary changes to process pln3
+        {
+            // Convert RpptDataType::F32 strided buffer to default NIFTI_DATATYPE unstrided buffer
+            Rpp64u increment = ((Rpp64u)descriptorPtr3D->strides[0] * (Rpp64u)descriptorPtr3D->dims[0]);
+            convert_output_float_to_niftitype_generic(outputF32 + i * increment, descriptorPtr3D, niftiData, &niftiHeader);
 
-    // write nifti file
-    write_nifti_file(&niftiHeader, niftiData);
+            // optionally normalize and write specific zPlanes to jpg images or mp4 video
+            uchar *niftiDataU8 = (uchar *) malloc(dataSizeInBytes);
+            NIFTI_DATATYPE min = niftiData[0];
+            NIFTI_DATATYPE max = niftiData[0];
+            for (int i = 0; i < dataSize; i++)
+            {
+                min = std::min(min, niftiData[i]);
+                max = std::max(max, niftiData[i]);
+            }
+            float multiplier = 255.0f / (max - min);
+            for (int i = 0; i < dataSize; i++)
+                niftiDataU8[i] = (uchar)((niftiData[i] - min) * multiplier);
+            int xyFrameSize = niftiHeader.dim[1] * niftiHeader.dim[2];
+            int xyFrameSizeROI = roiGenericSrcPtr[0].xyzwhdROI.roiWidth * roiGenericSrcPtr[0].xyzwhdROI.roiHeight;
+            uchar *outputBufferOpenCV = (uchar *)calloc(xyFrameSizeROI, sizeof(uchar));
+            for (int zPlane = roiGenericSrcPtr[0].xyzwhdROI.xyz.z; zPlane < roiGenericSrcPtr[0].xyzwhdROI.xyz.z + roiGenericSrcPtr[0].xyzwhdROI.roiDepth; zPlane++)
+            {
+                write_image_from_nifti_opencv(niftiDataU8, niftiHeader.dim[1], (RpptRoiXyzwhd *)roiGenericSrcPtr, outputBufferOpenCV, zPlane, i);
+                niftiDataU8 += xyFrameSize;
+            }
+            // int zPlaneMin = 0, zPlaneMax = niftiHeader.dim[3] - 1;
+            // write_video_from_nifti_opencv(niftiDataU8, &niftiHeader, zPlaneMin, zPlaneMax);
+
+            // write nifti file
+            write_nifti_file(&niftiHeader, niftiData);
+            std::string command = "convert -delay 10 -loop 0 $(ls -v | grep jpg) niftiOutput_chn" + std::to_string(i) + ".gif";
+            system(command.c_str());
+            free(outputBufferOpenCV);
+        }
+    }
 
     rppDestroyHost(handle);
 
@@ -459,11 +498,8 @@ int main(int argc, char * argv[])
     free(niftiData);
     free(inputF32);
     free(outputF32);
-    free(outputBufferOpenCV);
     free(roiGenericSrcPtr);
     free(pinnedMemArgs);
-
-    system("convert -delay 10 -loop 0 $(ls -v | grep jpg) niftiOutput.gif");
 
     return(0);
 }
