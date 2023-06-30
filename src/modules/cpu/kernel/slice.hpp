@@ -49,7 +49,6 @@ RppStatus slice_f32_f32_host_tensor(Rpp32f *srcPtr,
         dstPtrImage = dstPtr + batchCount * dstGenericDescPtr->strides[0];
 
         Rpp32u bufferLength = roi.xyzwhdROI.roiWidth * layoutParams.bufferMultiplier;
-        printf("\nbufferLength:%d\n",bufferLength);
 
         Rpp32f *srcPtrChannel, *dstPtrChannel;
         srcPtrChannel = srcPtrImage + (roi.xyzwhdROI.xyz.z * srcGenericDescPtr->strides[2]) + (roi.xyzwhdROI.xyz.y * srcGenericDescPtr->strides[3]) + (roi.xyzwhdROI.xyz.x * layoutParams.bufferMultiplier);
