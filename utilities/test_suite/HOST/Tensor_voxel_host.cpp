@@ -329,12 +329,12 @@ int main(int argc, char * argv[])
 
     // optionally pick full image as ROI or a smaller slice of the 3D tensor in X/Y/Z dimensions
     // option 1 - test using roi as the whole 3D image - not sliced (example for 240 x 240 x 155 x 1)
-    roiGenericSrcPtr[0].xyzwhdROI.xyz.x = 0;                              // start X dim = 0
-    roiGenericSrcPtr[0].xyzwhdROI.xyz.y = 0;                              // start Y dim = 0
-    roiGenericSrcPtr[0].xyzwhdROI.xyz.z = 0;                              // start Z dim = 0
-    roiGenericSrcPtr[0].xyzwhdROI.roiWidth = niftiHeader.dim[1];          // length in X dim = 240
-    roiGenericSrcPtr[0].xyzwhdROI.roiHeight = niftiHeader.dim[2];         // length in Y dim = 240
-    roiGenericSrcPtr[0].xyzwhdROI.roiDepth = niftiHeader.dim[3];          // length in Z dim = 155
+    // roiGenericSrcPtr[0].xyzwhdROI.xyz.x = 0;                              // start X dim = 0
+    // roiGenericSrcPtr[0].xyzwhdROI.xyz.y = 0;                              // start Y dim = 0
+    // roiGenericSrcPtr[0].xyzwhdROI.xyz.z = 0;                              // start Z dim = 0
+    // roiGenericSrcPtr[0].xyzwhdROI.roiWidth = niftiHeader.dim[1];          // length in X dim = 240
+    // roiGenericSrcPtr[0].xyzwhdROI.roiHeight = niftiHeader.dim[2];         // length in Y dim = 240
+    // roiGenericSrcPtr[0].xyzwhdROI.roiDepth = niftiHeader.dim[3];          // length in Z dim = 155
     // option 2 - test using roi as a smaller 3D tensor slice - sliced in X, Y and Z dims (example for 240 x 240 x 155 x 1)
     // roiGenericSrcPtr[0].xyzwhdROI.xyz.x = niftiHeader.dim[1] / 4;         // start X dim = 60
     // roiGenericSrcPtr[0].xyzwhdROI.xyz.y = niftiHeader.dim[2] / 4;         // start Y dim = 60
@@ -350,12 +350,12 @@ int main(int argc, char * argv[])
     // roiGenericSrcPtr[0].xyzwhdROI.roiHeight = niftiHeader.dim[2];         // length in Y dim = 240
     // roiGenericSrcPtr[0].xyzwhdROI.roiDepth = niftiHeader.dim[3] / 3;      // length in Z dim = 51
     // option 4 - test using roi as a smaller 3D tensor slice - sliced in only X and Z dim (example for 240 x 240 x 155 x 1)
-    // roiGenericSrcPtr[0].xyzwhdROI.xyz.x = niftiHeader.dim[1] / 5;         // start X dim = 48
-    // roiGenericSrcPtr[0].xyzwhdROI.xyz.y = 0;                              // start Y dim = 0
-    // roiGenericSrcPtr[0].xyzwhdROI.xyz.z = niftiHeader.dim[3] / 3;         // start Z dim = 51
-    // roiGenericSrcPtr[0].xyzwhdROI.roiWidth = niftiHeader.dim[1] * 3 / 5;  // length in X dim = 144
-    // roiGenericSrcPtr[0].xyzwhdROI.roiHeight = niftiHeader.dim[2];         // length in Y dim = 240
-    // roiGenericSrcPtr[0].xyzwhdROI.roiDepth = niftiHeader.dim[3] / 3;      // length in Z dim = 51
+    roiGenericSrcPtr[0].xyzwhdROI.xyz.x = niftiHeader.dim[1] / 5;         // start X dim = 48
+    roiGenericSrcPtr[0].xyzwhdROI.xyz.y = 0;                              // start Y dim = 0
+    roiGenericSrcPtr[0].xyzwhdROI.xyz.z = niftiHeader.dim[3] / 3;         // start Z dim = 51
+    roiGenericSrcPtr[0].xyzwhdROI.roiWidth = niftiHeader.dim[1] * 3 / 5;  // length in X dim = 144
+    roiGenericSrcPtr[0].xyzwhdROI.roiHeight = niftiHeader.dim[2];         // length in Y dim = 240
+    roiGenericSrcPtr[0].xyzwhdROI.roiDepth = niftiHeader.dim[3] / 3;      // length in Z dim = 51
 
     // Set buffer sizes in pixels for src/dst
     Rpp64u iBufferSize = (Rpp64u)descriptorPtr3D->strides[0] * (Rpp64u)descriptorPtr3D->dims[0] * numChannels;
@@ -418,7 +418,7 @@ int main(int argc, char * argv[])
         case 1:
         {
             startWallTime = omp_get_wtime();
-            memcpy(outputF32, inputF32, iBufferSizeInBytes);
+            rppt_slice_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, roiGenericSrcPtr, roiTypeSrc, handle);
             break;
         }
         default:
