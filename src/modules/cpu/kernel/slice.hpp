@@ -33,7 +33,11 @@ RppStatus slice_f32_f32_host_tensor(Rpp32f *srcPtr,
                                     RppLayoutParams layoutParams,
                                     rpp::Handle& handle)
 {
-    RpptROI3D roiDefault = {0, 0, 0, (Rpp32s)srcGenericDescPtr->dims[3], (Rpp32s)srcGenericDescPtr->dims[4], (Rpp32s)srcGenericDescPtr->dims[2]};
+    RpptROI3D roiDefault;
+    if(srcGenericDescPtr->layout==RpptLayout::NCDHW)
+        roiDefault = {0, 0, 0, (Rpp32s)srcGenericDescPtr->dims[4], (Rpp32s)srcGenericDescPtr->dims[3], (Rpp32s)srcGenericDescPtr->dims[2]};
+    else if(srcGenericDescPtr->layout==RpptLayout::NDHWC)
+        roiDefault = {0, 0, 0, (Rpp32s)srcGenericDescPtr->dims[3], (Rpp32s)srcGenericDescPtr->dims[2], (Rpp32s)srcGenericDescPtr->dims[1]};
     Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
@@ -54,18 +58,51 @@ RppStatus slice_f32_f32_host_tensor(Rpp32f *srcPtr,
         srcPtrChannel = srcPtrImage + (roi.xyzwhdROI.xyz.z * srcGenericDescPtr->strides[2]) + (roi.xyzwhdROI.xyz.y * srcGenericDescPtr->strides[3]) + (roi.xyzwhdROI.xyz.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
-        // Slice without fused output-layout toggle (NDHWC -> NDHWC or NCDHW -> NCDHW)
-        for(int c = 0; c < layoutParams.channelParam; c++)
+        // Slice without fused output-layout toggle (NCDHW -> NCDHW)
+        if((srcGenericDescPtr->layout == RpptLayout::NCDHW) && (dstGenericDescPtr->layout == RpptLayout::NCDHW))
         {
-            Rpp32f *srcPtrDepth, *dstPtrDepth;
-            srcPtrDepth = srcPtrChannel;
-            dstPtrDepth = dstPtrChannel;
+            for(int c = 0; c < layoutParams.channelParam; c++)
+            {
+                Rpp32f *srcPtrDepth, *dstPtrDepth;
+                srcPtrDepth = srcPtrChannel;
+                dstPtrDepth = dstPtrChannel;
 
+                for(int i = 0; i < roi.xyzwhdROI.roiDepth; i++)
+                {
+                    Rpp32f *srcPtrRow, *dstPtrRow;
+                    srcPtrRow = srcPtrDepth;
+                    dstPtrRow = dstPtrDepth;
+
+                    for(int j = 0; j < roi.xyzwhdROI.roiHeight; j++)
+                    {
+                        Rpp32f *srcPtrTemp, *dstPtrTemp;
+                        srcPtrTemp = srcPtrRow;
+                        dstPtrTemp = dstPtrRow;
+
+                        int vectorLoopCount = 0;
+                        for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                        {
+                            *dstPtrTemp++ = *srcPtrTemp++;
+                        }
+                        srcPtrRow += srcGenericDescPtr->strides[3];
+                        dstPtrRow += dstGenericDescPtr->strides[3];
+                    }
+                    srcPtrDepth += srcGenericDescPtr->strides[2];
+                    dstPtrDepth += dstGenericDescPtr->strides[2];
+                }
+
+                srcPtrChannel += srcGenericDescPtr->strides[1];
+                dstPtrChannel += srcGenericDescPtr->strides[1];
+            }
+        }
+        // Slice without fused output-layout toggle (NDHWC -> NDHWC)
+        else if((srcGenericDescPtr->layout == RpptLayout::NDHWC) && (dstGenericDescPtr->layout == RpptLayout::NDHWC))
+        {
             for(int i = 0; i < roi.xyzwhdROI.roiDepth; i++)
             {
                 Rpp32f *srcPtrRow, *dstPtrRow;
-                srcPtrRow = srcPtrDepth;
-                dstPtrRow = dstPtrDepth;
+                srcPtrRow = srcPtrChannel;
+                dstPtrRow = srcPtrChannel;
 
                 for(int j = 0; j < roi.xyzwhdROI.roiHeight; j++)
                 {
@@ -78,15 +115,12 @@ RppStatus slice_f32_f32_host_tensor(Rpp32f *srcPtr,
                     {
                         *dstPtrTemp++ = *srcPtrTemp++;
                     }
-                    srcPtrRow += srcGenericDescPtr->strides[3];
-                    dstPtrRow += dstGenericDescPtr->strides[3];
+                    srcPtrRow += srcGenericDescPtr->strides[2];
+                    dstPtrRow += dstGenericDescPtr->strides[2];
                 }
-                srcPtrDepth += srcGenericDescPtr->strides[2];
-                dstPtrDepth += dstGenericDescPtr->strides[2];
+                srcPtrChannel += srcGenericDescPtr->strides[1];
+                srcPtrChannel += dstGenericDescPtr->strides[1];
             }
-
-            srcPtrChannel += srcGenericDescPtr->strides[1];
-            dstPtrChannel += srcGenericDescPtr->strides[1];
         }
     }
 
