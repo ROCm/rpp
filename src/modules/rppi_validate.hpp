@@ -39,7 +39,7 @@ THE SOFTWARE.
 inline RppLayoutParams get_layout_params(RpptLayout layout, Rpp32u channels)
 {
     RppLayoutParams layoutParams;
-    if(layout == RpptLayout::NCHW)
+    if(layout == RpptLayout::NCHW || layout == RpptLayout::NCDHW)
     {
         if (channels == 1) // PLN1
         {
@@ -52,7 +52,7 @@ inline RppLayoutParams get_layout_params(RpptLayout layout, Rpp32u channels)
             layoutParams.bufferMultiplier = 1;
         }
     }
-    else if(layout == RpptLayout::NHWC)
+    else if(layout == RpptLayout::NHWC || layout == RpptLayout::NDHWC)
     {
         if (channels == 3) // PKD3
         {
@@ -60,28 +60,6 @@ inline RppLayoutParams get_layout_params(RpptLayout layout, Rpp32u channels)
             layoutParams.bufferMultiplier = 3;
         }
     }
-    else if(layout == RpptLayout::NCDHW)
-    {
-        if (channels == 1) // PLN1
-        {
-            layoutParams.channelParam = 1;
-            layoutParams.bufferMultiplier = 1;
-        }
-        else if (channels == 3) // PLN3
-        {
-            layoutParams.channelParam = 3;
-            layoutParams.bufferMultiplier = 1;
-        }
-    }
-    else if(layout == RpptLayout::NDHWC)
-    {
-        if (channels == 3) // PKD3
-        {
-            layoutParams.channelParam = 1;
-            layoutParams.bufferMultiplier = 3;
-        }
-    }
-
     return layoutParams;
 }
 
