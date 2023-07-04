@@ -217,10 +217,7 @@ def rpp_test_suite_parser_and_validator():
     elif args.profiling != 'YES' and args.profiling != 'NO':
         print("Profiling option value must be either 'YES' or 'NO'.")
         exit(0)
-    elif int(args.roi[0]) < 0 or int(args.roi[1]) < 0:
-        print(" Invalid ROI. Aborting")
-        exit(0)
-    elif int(args.roi[2]) <= 0 or int(args.roi[3]) <= 0:
+    elif args.roi is not None and any(int(val) < 0 for val in args.roi):
         print(" Invalid ROI. Aborting")
         exit(0)
 
@@ -253,7 +250,7 @@ decoderType = args.decoder_type
 numRuns = args.num_runs
 preserveOutput = args.preserve_output
 batchSize = args.batch_size
-roiList = args.roi
+roiList = ['0', '0', '0', '0'] if args.roi is None else args.roi
 
 if preserveOutput == 0:
     validate_and_remove_folders(cwd, "OUTPUT_IMAGES_HIP")

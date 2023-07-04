@@ -37,9 +37,6 @@ typedef halfhpp Rpp16f;
 #include <immintrin.h>
 #endif
 
-#define __AVX2__ 1
-#define __SSE4_1__ 1
-
 #define M256I(m256i_register) (*((_m256i_union*)&m256i_register))
 typedef union
 {
