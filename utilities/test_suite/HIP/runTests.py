@@ -28,32 +28,12 @@ import shutil
 # Set the timestamp
 timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-# Set the value of an environment variable
-os.environ["TIMESTAMP"] = timestamp
-
 cwd = os.getcwd()
 inFilePath1 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src1')
 inFilePath2 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src2')
 qaInputFile = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src1')
 
-import os
-import subprocess  # nosec
-import argparse
-import sys
-import datetime
-import shutil
-
-# Set the timestamp
-timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-
-# # Set the value of an environment variable
-# os.environ["TIMESTAMP"] = timestamp
-
-cwd = os.getcwd()
-inFilePath1 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src1')
-inFilePath2 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src2')
-qaInputFile = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src1')
-
+# Check if folder path is empty, if it is the root folder, or if it exists, and remove its contents
 def validate_and_remove_contents(path):
     if not path:  # check if a string is empty
         print("Folder path is empty.")
@@ -67,6 +47,7 @@ def validate_and_remove_contents(path):
         print("Path is invalid or does not exist.")
         exit()
 
+# Check if the folder is the root folder or exists, and remove the specified subfolders
 def validate_and_remove_folders(path, folder):
     if path == "/*":  # check if the root directory is passed to the function
         print("Root folder cannot be deleted.")
@@ -83,6 +64,7 @@ def validate_and_remove_folders(path, folder):
             else:
                 print("Directory not found:", folder_path)
 
+# Check if a case file exists and filter its contents based on certain conditions
 def case_file_check(CASE_FILE_PATH):
     try:
         case_file = open(CASE_FILE_PATH,'r')
@@ -98,6 +80,7 @@ def case_file_check(CASE_FILE_PATH):
         print("Unable to open case results")
         return False
 
+ # Generate a directory name based on certain parameters
 def directory_name_generator(qaMode, affinity, type, case, path):
     if qaMode == 0:
         functionality_group = func_group_finder(int(case))
@@ -108,12 +91,28 @@ def directory_name_generator(qaMode, affinity, type, case, path):
 
     return dst_folder_temp
 
+# Process the layout based on the given parameters and generate the directory name and log file layout.
+def process_layout(layout, qaMode, case, dstPath):
+    if layout == 0:
+        dstPathTemp = directory_name_generator(qaMode, "hip", "pkd3", case, dstPath)
+        log_file_layout = "pkd3"
+    elif layout == 1:
+        dstPathTemp = directory_name_generator(qaMode, "hip", "pln3", case, dstPath)
+        log_file_layout = "pln3"
+    elif layout == 2:
+        dstPathTemp = directory_name_generator(qaMode, "hip", "pln1", case, dstPath)
+        log_file_layout = "pln1"
+    
+    return dstPathTemp, log_file_layout
+
+# Validate if a path exists and is a directory
 def validate_path(input_path):
     if not os.path.exists(input_path):
         raise ValueError("path " + input_path +" does not exist.")
     if not os.path.isdir(input_path):
         raise ValueError("path " + input_path + " is not a directory.")
 
+# Create layout directories within a destination path based on a layout dictionary
 def create_layout_directories(dst_path, layout_dict):
     for layout in range(3):
         current_layout = layout_dict[layout]
@@ -125,6 +124,7 @@ def create_layout_directories(dst_path, layout_dict):
         for folder in folder_list:
             os.rename(dst_path + '/' + folder, dst_path + '/' + current_layout +  '/' + folder)
 
+# Get a list of log files based on a flag for preserving output
 def get_log_file_list(preserveOutput):
     return [
         "../OUTPUT_PERFORMANCE_LOGS_HIP_" + timestamp + "/Tensor_hip_pkd3_raw_performance_log.txt",
@@ -149,6 +149,7 @@ def func_group_finder(case_number):
     else:
         return "miscellaneous"
 
+# Generate performance reports based on counters and a list of types
 def generate_performance_reports(d_counter, TYPE_LIST):
     import pandas as pd
     pd.options.display.max_rows = None
@@ -164,6 +165,7 @@ def generate_performance_reports(d_counter, TYPE_LIST):
         dfPrint_noIndices = dfPrint_noIndices.to_string(index = False)
         print(dfPrint_noIndices)
 
+# Parse and validate command-line arguments for the RPP test suite
 def rpp_test_suite_parser_and_validator():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_path1", type = str, default = inFilePath1, help = "Path to the input folder 1")
@@ -312,12 +314,7 @@ if(testType == 0):
             print(f"Invalid case number {case}. Case number must be in the range of 0 to 84!")
             continue
         for layout in range(3):
-            if layout == 0:
-                dstPathTemp = directory_name_generator(qaMode, "hip", "pkd3", case, dstPath)
-            elif layout == 1:
-                dstPathTemp = directory_name_generator(qaMode, "hip", "pln3", case, dstPath)
-            elif layout == 2:
-                dstPathTemp = directory_name_generator(qaMode, "hip", "pln1", case, dstPath)
+            dstPathTemp, log_file_layout = process_layout(layout, qaMode, case, dstPath)
 
             if qaMode == 0:
                 if not os.path.isdir(dstPathTemp):
@@ -374,15 +371,7 @@ else:
                 print(f"Invalid case number {case}. Case number must be in the range of 0 to 84!")
                 continue
             for layout in range(3):
-                if layout == 0:
-                    directory_name_generator(qaMode, "hip", "pkd3", case, dstPath)
-                    log_file_layout = "pkd3"
-                elif layout == 1:
-                    directory_name_generator(qaMode, "hip", "pln3", case, dstPath)
-                    log_file_layout = "pln3"
-                elif layout == 2:
-                    directory_name_generator(qaMode, "hip", "pln1", case, dstPath)
-                    log_file_layout = "pln1"
+                dstPathTemp, log_file_layout = process_layout(layout, qaMode, case, dstPath)
 
                 print("\n\n\n\n")
                 print("--------------------------------")
@@ -511,15 +500,7 @@ else:
                 print(f"Invalid case number {case}. Case number must be in the range of 0 to 84!")
                 continue
             for layout in range(3):
-                if layout == 0:
-                    directory_name_generator(qaMode, "hip", "pkd3", case, dstPath)
-                    log_file_layout = "pkd3"
-                elif layout == 1:
-                    directory_name_generator(qaMode, "hip", "pln3", case, dstPath)
-                    log_file_layout = "pln3"
-                elif layout == 2:
-                    directory_name_generator(qaMode, "hip", "pln1", case, dstPath)
-                    log_file_layout = "pln1"
+                dstPathTemp, log_file_layout = process_layout(layout, qaMode, case, dstPath)
 
                 print("\n\n\n\n")
                 print("--------------------------------")
