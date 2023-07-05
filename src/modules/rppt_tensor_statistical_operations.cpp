@@ -62,7 +62,7 @@ RppStatus rppt_image_sum_host(RppPtr_t srcPtr,
                                     roiType,
                                     layoutParams);
     }
-    /*else if (srcDescPtr->dataType == RpptDataType::F16)
+    else if (srcDescPtr->dataType == RpptDataType::F16)
     {
         image_sum_f16_f16_host_tensor((Rpp16f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                        srcDescPtr,
@@ -88,7 +88,7 @@ RppStatus rppt_image_sum_host(RppPtr_t srcPtr,
                                      roiTensorPtrSrc,
                                      roiType,
                                      layoutParams);
-    }*/
+    }
 
     return RPP_SUCCESS;
 }
