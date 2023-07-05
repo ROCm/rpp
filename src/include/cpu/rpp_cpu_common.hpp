@@ -5860,4 +5860,9 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
     }
 }
 
+inline void compute_sum_8_host(__m256d *p1, __m256d *pSum)
+{
+    pSum[0] = _mm256_add_pd(_mm256_add_pd(p1[0], p1[1]), pSum[0]); //add 8 values and bring it down to 4
+}
+
 #endif //RPP_CPU_COMMON_H
