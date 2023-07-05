@@ -5865,4 +5865,11 @@ inline void compute_sum_8_host(__m256d *p1, __m256d *pSum)
     pSum[0] = _mm256_add_pd(_mm256_add_pd(p1[0], p1[1]), pSum[0]); //add 8 values and bring it down to 4
 }
 
+inline void compute_sum_24_host(__m256d *p, __m256d *pSumR, __m256d *pSumG, __m256d *pSumB)
+{
+    pSumR[0] = _mm256_add_pd(_mm256_add_pd(p[0], p[1]), pSumR[0]); //add 8R values and bring it down to 4
+    pSumG[0] = _mm256_add_pd(_mm256_add_pd(p[2], p[3]), pSumG[0]); //add 8G values and bring it down to 4
+    pSumB[0] = _mm256_add_pd(_mm256_add_pd(p[4], p[5]), pSumB[0]); //add 8B values and bring it down to 4
+}
+
 #endif //RPP_CPU_COMMON_H
