@@ -710,7 +710,7 @@ RppStatus image_sum_i8_i8_host_tensor(Rpp8s *srcPtr,
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        sum += (Rpp64f)(*srcPtrTemp + 128);
+                        sum += (Rpp64f)(*srcPtrTemp);
                         srcPtrTemp++;
                     }
                     srcPtrRow += srcDescPtr->strides.hStride;
@@ -765,9 +765,9 @@ RppStatus image_sum_i8_i8_host_tensor(Rpp8s *srcPtr,
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                     {
-                        sumR += (Rpp64f)(*srcPtrTempR + 128);
-                        sumG += (Rpp64f)(*srcPtrTempG + 128);
-                        sumB += (Rpp64f)(*srcPtrTempB + 128);
+                        sumR += (Rpp64f)(*srcPtrTempR);
+                        sumG += (Rpp64f)(*srcPtrTempG);
+                        sumB += (Rpp64f)(*srcPtrTempB);
                         srcPtrTempR++;
                         srcPtrTempG++;
                         srcPtrTempB++;
@@ -829,9 +829,9 @@ RppStatus image_sum_i8_i8_host_tensor(Rpp8s *srcPtr,
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                     {
-                        sumR += (Rpp64f)(srcPtrTemp[0] + 128);
-                        sumG += (Rpp64f)(srcPtrTemp[1] + 128);
-                        sumB += (Rpp64f)(srcPtrTemp[2] + 128);
+                        sumR += (Rpp64f)(srcPtrTemp[0]);
+                        sumG += (Rpp64f)(srcPtrTemp[1]);
+                        sumB += (Rpp64f)(srcPtrTemp[2]);
                         srcPtrTemp += 3;
                     }
                     srcPtrRow += srcDescPtr->strides.hStride;
