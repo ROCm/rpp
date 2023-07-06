@@ -687,7 +687,10 @@ int main(int argc, char **argv)
 
                 if (reductionTypeCase)
                 {
-                    printf("\nReduction result (Batch of n channel images produces n+1 results per image in batch): ");
+                    if(srcDescPtr->c == 3)
+                        printf("\nReduction result (Batch of 3 channel images produces 4 results per image in batch): ");
+                    else if(srcDescPtr->c == 1)
+                        printf("\nReduction result (Batch of 1 channel images produces 1 result per image in batch): ");
 
                     for (int i = 0; i < reductionFuncResultArrLength; i++)
                         printf(" %0.3f ", reductionFuncResultArr[i]);
