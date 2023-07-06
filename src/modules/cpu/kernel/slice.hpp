@@ -55,12 +55,13 @@ RppStatus slice_f32_f32_host_tensor(Rpp32f *srcPtr,
         Rpp32u bufferLength = roi.xyzwhdROI.roiWidth * layoutParams.bufferMultiplier;
 
         Rpp32f *srcPtrChannel, *dstPtrChannel;
-        srcPtrChannel = srcPtrImage + (roi.xyzwhdROI.xyz.z * srcGenericDescPtr->strides[2]) + (roi.xyzwhdROI.xyz.y * srcGenericDescPtr->strides[3]) + (roi.xyzwhdROI.xyz.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
         // Slice without fused output-layout toggle (NCDHW -> NCDHW)
         if((srcGenericDescPtr->layout == RpptLayout::NCDHW) && (dstGenericDescPtr->layout == RpptLayout::NCDHW))
         {
+            srcPtrChannel = srcPtrImage + (roi.xyzwhdROI.xyz.z * srcGenericDescPtr->strides[2]) + (roi.xyzwhdROI.xyz.y * srcGenericDescPtr->strides[3]) + (roi.xyzwhdROI.xyz.x * layoutParams.bufferMultiplier);
+
             for(int c = 0; c < layoutParams.channelParam; c++)
             {
                 Rpp32f *srcPtrDepth, *dstPtrDepth;
@@ -98,6 +99,8 @@ RppStatus slice_f32_f32_host_tensor(Rpp32f *srcPtr,
         // Slice without fused output-layout toggle (NDHWC -> NDHWC)
         else if((srcGenericDescPtr->layout == RpptLayout::NDHWC) && (dstGenericDescPtr->layout == RpptLayout::NDHWC))
         {
+            srcPtrChannel = srcPtrImage + (roi.xyzwhdROI.xyz.z * srcGenericDescPtr->strides[1]) + (roi.xyzwhdROI.xyz.y * srcGenericDescPtr->strides[2]) + (roi.xyzwhdROI.xyz.x * layoutParams.bufferMultiplier);
+
             for(int i = 0; i < roi.xyzwhdROI.roiDepth; i++)
             {
                 Rpp32f *srcPtrRow, *dstPtrRow;
