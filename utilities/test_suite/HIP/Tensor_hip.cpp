@@ -694,7 +694,7 @@ int main(int argc, char **argv)
                 // Display results for reduction functions
                 if (reductionTypeCase)
                 {
-                    printf("\nReduction result (Batch of 1 channel images produces 1 result per image in batch): ");
+                    printf("\nReduction result (Batch of n channel images produces n+1 result per image in batch): ");
                     for (int i = 0; i < reductionFuncResultArrLength; i++)
                     {
                         printf(" %0.3f ", reductionFuncResultArr[i]);
