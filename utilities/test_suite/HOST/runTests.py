@@ -33,6 +33,7 @@ os.environ["TIMESTAMP"] = timestamp
 cwd = os.getcwd()
 inFilePath1 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src1')
 inFilePath2 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src2')
+qaInputFile = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src1')
 
 def validate_path(input_path):
     if not os.path.exists(input_path):
@@ -62,23 +63,25 @@ def rpp_test_suite_parser_and_validator():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_path1", type = str, default = inFilePath1, help = "Path to the input folder 1")
     parser.add_argument("--input_path2", type = str, default = inFilePath2, help = "Path to the input folder 2")
-    parser.add_argument("--case_start", type = int, default = 0, help = "Testing range starting case # - (0:38)")
-    parser.add_argument("--case_end", type = int, default = 38, help = "Testing range ending case # - (0:38)")
+    parser.add_argument("--case_start", type = int, default = 0, help = "Testing range starting case # - (0:84)")
+    parser.add_argument("--case_end", type = int, default = 84, help = "Testing range ending case # - (0:84)")
     parser.add_argument('--test_type', type = int, default = 0, help = "Type of Test - (0 = Unit tests / 1 = Performance tests)")
     parser.add_argument('--case_list', nargs = "+", help = "List of case numbers to list", required = False)
     parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Output images from tests will be compared with golden outputs - (0 / 1)", required = False)
     parser.add_argument('--decoder_type', type = int, default = 0, help = "Type of Decoder to decode the input data - (0 = TurboJPEG / 1 = OpenCV)")
-    parser.add_argument('--num_iterations', type = int, default = 0, help = "Specifies the number of iterations for running the performance tests")
+    parser.add_argument('--num_runs', type = int, default = 1, help = "Specifies the number of runs for running the performance tests")
     parser.add_argument('--preserve_output', type = int, default = 1, help = "preserves the output of the program - (0 = override output / 1 = preserve output )" )
+    parser.add_argument('--batch_size', type = int, default = 1, help = "Specifies the batch size to use for running tests. Default is 1.")
     args = parser.parse_args()
 
     # check if the folder exists
     validate_path(args.input_path1)
     validate_path(args.input_path2)
+    validate_path(qaInputFile)
 
     # validate the parameters passed by user
-    if ((args.case_start < 0 or args.case_start > 38) or (args.case_end < 0 or args.case_end > 38)):
-        print("Starting case# and Ending case# must be in the 0:38 range. Aborting!")
+    if ((args.case_start < 0 or args.case_start > 84) or (args.case_end < 0 or args.case_end > 84)):
+        print("Starting case# and Ending case# must be in the 0:84 range. Aborting!")
         exit(0)
     elif args.case_end < args.case_start:
         print("Ending case# must be greater than starting case#. Aborting!")
@@ -92,11 +95,17 @@ def rpp_test_suite_parser_and_validator():
     elif args.decoder_type < 0 or args.decoder_type > 1:
         print("Decoder Type must be in the 0/1 (0 = OpenCV / 1 = TurboJPEG). Aborting")
         exit(0)
-    elif args.case_list is not None and args.case_start > 0 and args.case_end < 38:
+    elif args.case_list is not None and args.case_start > 0 and args.case_end < 84:
         print("Invalid input! Please provide only 1 option between case_list, case_start and case_end")
         exit(0)
-    elif args.num_iterations < 0:
-        print("Number of Iterations must be greater than 0. Aborting!")
+    elif args.num_runs <= 0:
+        print("Number of Runs must be greater than 0. Aborting!")
+        exit(0)
+    elif args.batch_size <= 0:
+        print("Batch size must be greater than 0. Aborting!")
+        exit(0)
+    elif args.preserve_output < 0 or args.preserve_output > 1:
+        print("Preserve Output must be in the 0/1 (0 = override / 1 = preserve). Aborting")
         exit(0)
 
     if args.case_list is None:
@@ -104,8 +113,8 @@ def rpp_test_suite_parser_and_validator():
         args.case_list = [str(x) for x in args.case_list]
     else:
         for case in args.case_list:
-            if int(case) < 0 or int(case) > 38:
-                 print("The case# must be in the 0:38 range!")
+            if int(case) < 0 or int(case) > 84:
+                 print("The case# must be in the 0:84 range!")
                  exit(0)
 
     # if QA mode is enabled overwrite the input folders with the folders used for generating golden outputs
@@ -124,8 +133,17 @@ testType = args.test_type
 caseList = args.case_list
 qaMode = args.qa_mode
 decoderType = args.decoder_type
-numIterations = args.num_iterations
+numRuns = args.num_runs
 preserveOutput = args.preserve_output
+batchSize = args.batch_size
+
+if qaMode and os.path.abspath(qaInputFile) != os.path.abspath(srcPath1):
+    print("QA mode should only run with the given Input path: ", qaInputFile)
+    exit(0)
+
+if qaMode and batchSize != 3:
+    print("QA mode can only run with a batch size of 3.")
+    exit(0)
 
 # set the output folders and number of runs based on type of test (unit test / performance test)
 if(testType == 0):
@@ -133,18 +151,18 @@ if(testType == 0):
         outFilePath = os.path.join(os.path.dirname(cwd), 'QA_RESULTS_HOST_' + timestamp)
     else:
         outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_IMAGES_HOST_' + timestamp)
-    numIterations = 1
+    numRuns = 1
 elif(testType == 1):
-    if numIterations == 0:
-        numIterations = 100  #default numIterations for running performance tests
+    if numRuns == 0:
+        numRuns = 100  #default numRuns for running performance tests
     outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_PERFORMANCE_LOGS_HOST_' + timestamp)
 dstPath = outFilePath
 
 # run the shell script
-subprocess.call(["./testAllScript.sh", srcPath1, args.input_path2, str(testType), str(numIterations), str(qaMode), str(decoderType), str(preserveOutput), " ".join(caseList)])  # nosec
+subprocess.call(["./testAllScript.sh", srcPath1, args.input_path2, str(testType), str(numRuns), str(qaMode), str(decoderType), str(preserveOutput), str(batchSize), " ".join(caseList)])  # nosec
 
 # print the results of qa tests
-supportedCaseList = ['0', '2', '4', '13', '31', '36', '38']
+supportedCaseList = ['0', '1', '2', '4', '13', '31', '34', '36', '37', '38', '84']
 supportedCases = 0
 for num in caseList:
     if num in supportedCaseList:
@@ -160,7 +178,7 @@ if qaMode and testType == 0:
     f.write(caseInfo)
 print("\n-------------- " + caseInfo + " --------------")
 
-layoutDict ={0:"PKD3", 1:"PLN3", 2:"PLN1"}
+layoutDict = {0:"PKD3", 1:"PLN3", 2:"PLN1"}
 # unit tests and QA mode disabled
 if testType == 0 and qaMode == 0:
     create_layout_directories(dstPath, layoutDict)
@@ -207,11 +225,11 @@ elif (testType == 1):
 
             if "max,min,avg wall times in ms/batch" in line:
                 split_word_start = "Running "
-                split_word_end = " " +str(numIterations)
+                split_word_end = " " +str(numRuns)
                 prevLine = prevLine.partition(split_word_start)[2].partition(split_word_end)[0]
                 if prevLine not in functions:
                     functions.append(prevLine)
-                    frames.append(numIterations)
+                    frames.append(numRuns)
                     split_word_start = "max,min,avg wall times in ms/batch = "
                     split_word_end = "\n"
                     stats = line.partition(split_word_start)[2].partition(split_word_end)[0].split(",")
@@ -229,7 +247,7 @@ elif (testType == 1):
         # Print summary of log
         print("\n\nFunctionality\t\t\t\t\t\tFrames Count\tmax(ms/batch)\t\tmin(ms/batch)\t\tavg(ms/batch)\n")
         if len(functions) != 0:
-            maxCharLength = len(max(functions, key=len))
+            maxCharLength = len(max(functions, key = len))
             functions = [x + (' ' * (maxCharLength - len(x))) for x in functions]
             for i, func in enumerate(functions):
                 print(func + "\t" + str(frames[i]) + "\t\t" + str(maxVals[i]) + "\t" + str(minVals[i]) + "\t" + str(avgVals[i]))

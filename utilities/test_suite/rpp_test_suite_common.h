@@ -35,22 +35,42 @@ THE SOFTWARE.
 #include <omp.h>
 #include <fstream>
 #include <turbojpeg.h>
+#include <boost/filesystem.hpp>
+
+#ifdef GPU_SUPPORT
+    #include <hip/hip_fp16.h>
+#else
+    #include <half/half.hpp>
+    using half_float::half;
+#endif
+
+typedef half Rpp16f;
 
 using namespace cv;
 using namespace std;
+namespace fs = boost::filesystem;
 
 #define CUTOFF 1
+#define DEBUG_MODE 0
+#define MAX_IMAGE_DUMP 20
+#define MAX_BATCH_SIZE 512
+#define GOLDEN_OUTPUT_MAX_HEIGHT 150    // Golden outputs are generated with MAX_HEIGHT set to 150. Changing this constant will result in QA test failures
+#define GOLDEN_OUTPUT_MAX_WIDTH 150     // Golden outputs are generated with MAX_WIDTH set to 150. Changing this constant will result in QA test failures
 
 std::map<int, string> augmentationMap =
 {
     {0, "brightness"},
+    {1, "gamma_correction"},
     {2, "blend"},
     {4, "contrast"},
     {13, "exposure"},
     {31, "color_cast"},
+    {34, "lut"},
     {36, "color_twist"},
+    {37, "crop"},
     {38, "crop_mirror_normalize"},
-    {54, "gaussian_filter"}
+    {54, "gaussian_filter"},
+    {84, "spatter"}
 };
 
 template <typename T>
@@ -60,6 +80,37 @@ inline T validate_pixel_range(T pixel)
     return pixel;
 }
 
+// replicates the last image in a batch to fill the remaining images in a batch
+void replicate_last_image_to_fill_batch(const string& lastFilePath, vector<string>& imageNamesPath, vector<string>& imageNames, const string& lastFileName, int noOfImages, int batchCount)
+{
+    int remainingImages = batchCount - (noOfImages % batchCount);
+    std::string filePath = lastFilePath;
+    std::string fileName = lastFileName;
+    if (noOfImages > 0 && ( noOfImages < batchCount || noOfImages % batchCount != 0 ))
+    {
+        for (int i = 0; i < remainingImages; i++)
+        {
+            imageNamesPath.push_back(filePath);
+            imageNames.push_back(fileName);
+        }
+    }
+}
+
+inline size_t get_size_of_data_type(RpptDataType dataType)
+{
+    if(dataType == RpptDataType::U8)
+        return sizeof(Rpp8u);
+    else if(dataType == RpptDataType::I8)
+        return sizeof(Rpp8s);
+    else if(dataType == RpptDataType::F16)
+        return sizeof(Rpp16f);
+    else if(dataType == RpptDataType::F32)
+        return sizeof(Rpp32f);
+    else
+        return 0;
+}
+
+// returns the interpolation type used for image resizing or scaling operations.
 inline std::string get_interpolation_type(unsigned int val, RpptInterpolationType &interpolationType)
 {
     switch(val)
@@ -97,6 +148,7 @@ inline std::string get_interpolation_type(unsigned int val, RpptInterpolationTyp
     }
 }
 
+// returns the noise type applied to an image
 inline std::string get_noise_type(unsigned int val)
 {
     switch(val)
@@ -108,6 +160,7 @@ inline std::string get_noise_type(unsigned int val)
     }
 }
 
+// returns number of input channels according to layout type
 inline int set_input_channels(int layoutType)
 {
     if(layoutType == 0 || layoutType == 1)
@@ -116,6 +169,7 @@ inline int set_input_channels(int layoutType)
         return 1;
 }
 
+//returns function type
 inline string set_function_type(int layoutType, int pln1OutTypeCase, int outputFormatToggle, string backend)
 {
     string funcType;
@@ -154,6 +208,7 @@ inline string set_function_type(int layoutType, int pln1OutTypeCase, int outputF
     return funcType;
 }
 
+// sets descriptor data types of src/dst
 inline void set_descriptor_data_type(int ip_bitDepth, string &funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr)
 {
     if (ip_bitDepth == 0)
@@ -200,6 +255,7 @@ inline void set_descriptor_data_type(int ip_bitDepth, string &funcName, RpptDesc
     }
 }
 
+// sets descriptor layout of src/dst
 inline void set_descriptor_layout( RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, int layoutType, bool pln1OutTypeCase, int outputFormatToggle)
 {
     if(layoutType == 0)
@@ -238,6 +294,77 @@ inline void set_descriptor_layout( RpptDescPtr srcDescPtr, RpptDescPtr dstDescPt
     }
 }
 
+// sets values of maxHeight and maxWidth
+inline void set_max_dimensions(vector<string>imagePaths, int& maxHeight, int& maxWidth)
+{
+    tjhandle tjInstance = tjInitDecompress();
+    for (const std::string& imagePath : imagePaths)
+    {
+        FILE* jpegFile = fopen(imagePath.c_str(), "rb");
+        if (!jpegFile) {
+            std::cerr << "Error opening file: " << imagePath << std::endl;
+            continue;
+        }
+
+        fseek(jpegFile, 0, SEEK_END);
+        long fileSize = ftell(jpegFile);
+        fseek(jpegFile, 0, SEEK_SET);
+
+        std::vector<unsigned char> jpegBuffer(fileSize);
+        fread(jpegBuffer.data(), 1, fileSize, jpegFile);
+        fclose(jpegFile);
+
+        int jpegSubsamp;
+        int width, height;
+        if (tjDecompressHeader2(tjInstance, jpegBuffer.data(), jpegBuffer.size(), &width, &height, &jpegSubsamp) == -1) {
+            std::cerr << "Error decompressing file: " << imagePath << std::endl;
+            continue;
+        }
+
+        maxWidth = max(maxWidth, width);
+        maxHeight = max(maxHeight, height);
+    }
+    tjDestroy(tjInstance);
+}
+
+// sets roi xywh values and dstImg sizes
+inline void  set_src_and_dst_roi(vector<string>::const_iterator imagePathsStart, vector<string>::const_iterator imagePathsEnd, RpptROI *roiTensorPtrSrc, RpptROI *roiTensorPtrDst, RpptImagePatchPtr dstImgSizes)
+{
+    tjhandle tjInstance = tjInitDecompress();
+    int i = 0;
+    for (auto imagePathIter = imagePathsStart; imagePathIter != imagePathsEnd; ++imagePathIter, i++)
+    {
+        const string& imagePath = *imagePathIter;
+        FILE* jpegFile = fopen(imagePath.c_str(), "rb");
+        if (!jpegFile) {
+            std::cerr << "Error opening file: " << imagePath << std::endl;
+            continue;
+        }
+
+        fseek(jpegFile, 0, SEEK_END);
+        long fileSize = ftell(jpegFile);
+        fseek(jpegFile, 0, SEEK_SET);
+
+        std::vector<unsigned char> jpegBuffer(fileSize);
+        fread(jpegBuffer.data(), 1, fileSize, jpegFile);
+        fclose(jpegFile);
+
+        int jpegSubsamp;
+        int width, height;
+        if (tjDecompressHeader2(tjInstance, jpegBuffer.data(), jpegBuffer.size(), &width, &height, &jpegSubsamp) == -1) {
+            std::cerr << "Error decompressing file: " << imagePath << std::endl;
+            continue;
+        }
+
+        roiTensorPtrSrc[i].xywhROI = {0, 0, width, height};
+        roiTensorPtrDst[i].xywhROI = {0, 0, width, height};
+        dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth;
+        dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight;
+    }
+    tjDestroy(tjInstance);
+}
+
+// sets descriptor dimensions and strides of src/dst
 inline void set_descriptor_dims_and_strides(RpptDescPtr descPtr, int noOfImages, int maxHeight, int maxWidth, int numChannels, int offsetInBytes)
 {
     descPtr->numDims = 4;
@@ -249,7 +376,6 @@ inline void set_descriptor_dims_and_strides(RpptDescPtr descPtr, int noOfImages,
 
     // Optionally set w stride as a multiple of 8 for src/dst
     descPtr->w = ((descPtr->w / 8) * 8) + 8;
-
     // set strides
     if (descPtr->layout == RpptLayout::NHWC)
     {
@@ -297,6 +423,112 @@ inline void convert_roi(RpptROI *roiTensorPtrSrc, RpptRoiType roiType, int batch
     }
 }
 
+// Convert inputs to correponding bit depth specified by user
+inline void convert_input_bitdepth(void *input, void *input_second, Rpp8u *inputu8, Rpp8u *inputu8Second, int inputBitDepth, Rpp64u ioBufferSize, Rpp64u inputBufferSize, RpptDescPtr srcDescPtr, bool dualInputCase, Rpp32f conversionFactor)
+{
+    if (inputBitDepth == 0 || inputBitDepth == 3 || inputBitDepth == 4)
+    {
+        memcpy(input, inputu8, inputBufferSize);
+        if(dualInputCase)
+            memcpy(input_second, inputu8Second, inputBufferSize);
+    }
+    else if (inputBitDepth == 1)
+    {
+        Rpp8u *inputTemp, *inputSecondTemp;
+        Rpp16f *inputf16Temp, *inputf16SecondTemp;
+        inputTemp = inputu8 + srcDescPtr->offsetInBytes;
+        inputf16Temp = reinterpret_cast<Rpp16f *>(static_cast<Rpp8u *>(input) + srcDescPtr->offsetInBytes);
+        for (int i = 0; i < ioBufferSize; i++)
+            *inputf16Temp++ = static_cast<Rpp16f>((static_cast<float>(*inputTemp++)) * conversionFactor);
+
+        if(dualInputCase)
+        {
+            inputSecondTemp = inputu8Second + srcDescPtr->offsetInBytes;
+            inputf16SecondTemp = reinterpret_cast<Rpp16f *>(static_cast<Rpp8u *>(input_second) + srcDescPtr->offsetInBytes);
+            for (int i = 0; i < ioBufferSize; i++)
+                *inputf16SecondTemp++ = static_cast<Rpp16f>((static_cast<float>(*inputSecondTemp++)) * conversionFactor);
+        }
+    }
+    else if (inputBitDepth == 2)
+    {
+        Rpp8u *inputTemp, *inputSecondTemp;
+        Rpp32f *inputf32Temp, *inputf32SecondTemp;
+        inputTemp = inputu8 + srcDescPtr->offsetInBytes;
+        inputf32Temp = reinterpret_cast<Rpp32f *>(static_cast<Rpp8u *>(input) + srcDescPtr->offsetInBytes);
+        for (int i = 0; i < ioBufferSize; i++)
+            *inputf32Temp++ = (static_cast<Rpp32f>(*inputTemp++)) * conversionFactor;
+
+        if(dualInputCase)
+        {
+            inputSecondTemp = inputu8Second + srcDescPtr->offsetInBytes;
+            inputf32SecondTemp = reinterpret_cast<Rpp32f *>(static_cast<Rpp8u *>(input_second) + srcDescPtr->offsetInBytes);
+            for (int i = 0; i < ioBufferSize; i++)
+                *inputf32SecondTemp++ = (static_cast<Rpp32f>(*inputSecondTemp++)) * conversionFactor;
+        }
+    }
+    else if (inputBitDepth == 5)
+    {
+        Rpp8u *inputTemp, *inputSecondTemp;
+        Rpp8s *inputi8Temp, *inputi8SecondTemp;
+
+        inputTemp = inputu8 + srcDescPtr->offsetInBytes;
+        inputi8Temp = static_cast<Rpp8s *>(input) + srcDescPtr->offsetInBytes;
+        for (int i = 0; i < ioBufferSize; i++)
+            *inputi8Temp++ = static_cast<Rpp8s>((static_cast<Rpp32s>(*inputTemp++)) - 128);
+
+        if(dualInputCase)
+        {
+            inputSecondTemp = inputu8Second + srcDescPtr->offsetInBytes;
+            inputi8SecondTemp = static_cast<Rpp8s *>(input_second) + srcDescPtr->offsetInBytes;
+            for (int i = 0; i < ioBufferSize; i++)
+                *inputi8SecondTemp++ = static_cast<Rpp8s>((static_cast<Rpp32s>(*inputSecondTemp++)) - 128);
+        }
+    }
+}
+
+// Reconvert other bit depths to 8u for output display purposes
+inline void convert_output_bitdepth_to_u8(void *output, Rpp8u *outputu8, int inputBitDepth, Rpp64u oBufferSize, Rpp64u outputBufferSize, RpptDescPtr dstDescPtr, Rpp32f invConversionFactor)
+{
+    if (inputBitDepth == 0)
+    {
+        memcpy(outputu8, output, outputBufferSize);
+    }
+    else if ((inputBitDepth == 1) || (inputBitDepth == 3))
+    {
+        Rpp8u *outputTemp = outputu8 + dstDescPtr->offsetInBytes;
+        Rpp16f *outputf16Temp = reinterpret_cast<Rpp16f *>(static_cast<Rpp8u *>(output) + dstDescPtr->offsetInBytes);
+        for (int i = 0; i < oBufferSize; i++)
+        {
+            *outputTemp = static_cast<Rpp8u>(validate_pixel_range(static_cast<float>(*outputf16Temp) * invConversionFactor));
+            outputf16Temp++;
+            outputTemp++;
+        }
+    }
+    else if ((inputBitDepth == 2) || (inputBitDepth == 4))
+    {
+        Rpp8u *outputTemp = outputu8 + dstDescPtr->offsetInBytes;
+        Rpp32f *outputf32Temp = reinterpret_cast<Rpp32f *>(static_cast<Rpp8u *>(output) + dstDescPtr->offsetInBytes);
+        for (int i = 0; i < oBufferSize; i++)
+        {
+            *outputTemp = static_cast<Rpp8u>(validate_pixel_range(*outputf32Temp * invConversionFactor));
+            outputf32Temp++;
+            outputTemp++;
+        }
+    }
+    else if ((inputBitDepth == 5) || (inputBitDepth == 6))
+    {
+        Rpp8u *outputTemp = outputu8 + dstDescPtr->offsetInBytes;
+        Rpp8s *outputi8Temp = static_cast<Rpp8s *>(output) + dstDescPtr->offsetInBytes;
+        for (int i = 0; i < oBufferSize; i++)
+        {
+            *outputTemp = static_cast<Rpp8u>(validate_pixel_range((static_cast<Rpp32s>(*outputi8Temp) + 128)));
+            outputi8Temp++;
+            outputTemp++;
+        }
+    }
+}
+
+// updates dstImg sizes
 inline void update_dst_sizes_with_roi(RpptROI *roiTensorPtrSrc, RpptImagePatchPtr dstImageSize, RpptRoiType roiType, int batchSize)
 {
     if(roiType == RpptRoiType::XYWH)
@@ -317,6 +549,7 @@ inline void update_dst_sizes_with_roi(RpptROI *roiTensorPtrSrc, RpptImagePatchPt
     }
 }
 
+// converts image data from PLN3 to PKD3
 inline void convert_pln3_to_pkd3(Rpp8u *output, RpptDescPtr descPtr)
 {
     unsigned long long bufferSize = ((unsigned long long)descPtr->h * (unsigned long long)descPtr->w * (unsigned long long)descPtr->c * (unsigned long long)descPtr->n) + descPtr->offsetInBytes;
@@ -356,6 +589,7 @@ inline void convert_pln3_to_pkd3(Rpp8u *output, RpptDescPtr descPtr)
     free(outputCopy);
 }
 
+// converts image data from PKD3 to PLN3
 inline void convert_pkd3_to_pln3(Rpp8u *input, RpptDescPtr descPtr)
 {
     unsigned long long bufferSize = ((unsigned long long)descPtr->h * (unsigned long long)descPtr->w * (unsigned long long)descPtr->c * (unsigned long long)descPtr->n) + descPtr->offsetInBytes;
@@ -395,13 +629,97 @@ inline void convert_pkd3_to_pln3(Rpp8u *input, RpptDescPtr descPtr)
     free(inputCopy);
 }
 
-inline void read_image_batch_opencv(Rpp8u *input, RpptDescPtr descPtr, string imageNames[])
+// Opens a folder and recursively search for .jpg files
+void open_folder(const string& folderPath, vector<string>& imageNames, vector<string>& imageNamesPath)
+{
+    auto src_dir = opendir(folderPath.c_str());
+    struct dirent* entity;
+    std::string fileName = " ";
+
+    if (src_dir == nullptr)
+        std::cerr << "\n ERROR: Failed opening the directory at " <<folderPath;
+
+    while((entity = readdir(src_dir)) != nullptr)
+    {
+        string entry_name(entity->d_name);
+        if (entry_name == "." || entry_name == "..")
+            continue;
+        fileName = entity->d_name;
+        std::string filePath = folderPath;
+        filePath.append("/");
+        filePath.append(entity->d_name);
+        fs::path pathObj(filePath);
+        if(fs::exists(pathObj) && fs::is_directory(pathObj))
+            open_folder(filePath, imageNames, imageNamesPath);
+
+        if (fileName.size() > 4 && fileName.substr(fileName.size() - 4) == ".jpg")
+        {
+            imageNamesPath.push_back(filePath);
+            imageNames.push_back(entity->d_name);
+        }
+    }
+    if(imageNames.empty())
+        std::cerr << "\n Did not load any file from " << folderPath;
+
+    closedir(src_dir);
+}
+
+// Searches for .jpg files in input folders
+void search_jpg_files(const string& folder_path, vector<string>& imageNames, vector<string>& imageNamesPath)
+{
+    vector<string> entry_list;
+    string full_path = folder_path;
+    auto sub_dir = opendir(folder_path.c_str());
+    if (!sub_dir)
+    {
+        std::cerr << "ERROR: Failed opening the directory at "<< folder_path << std::endl;
+        exit(0);
+    }
+
+    struct dirent* entity;
+    while ((entity = readdir(sub_dir)) != nullptr)
+    {
+        string entry_name(entity->d_name);
+        if (entry_name == "." || entry_name == "..")
+            continue;
+        entry_list.push_back(entry_name);
+    }
+    closedir(sub_dir);
+    sort(entry_list.begin(), entry_list.end());
+
+    for (unsigned dir_count = 0; dir_count < entry_list.size(); ++dir_count)
+    {
+        string subfolder_path = full_path + "/" + entry_list[dir_count];
+        fs::path pathObj(subfolder_path);
+        if (fs::exists(pathObj) && fs::is_regular_file(pathObj))
+        {
+            // ignore files with extensions .tar, .zip, .7z
+            auto file_extension_idx = subfolder_path.find_last_of(".");
+            if (file_extension_idx != std::string::npos)
+            {
+                std::string file_extension = subfolder_path.substr(file_extension_idx+1);
+                if ((file_extension == "tar") || (file_extension == "zip") || (file_extension == "7z") || (file_extension == "rar"))
+                    continue;
+            }
+            if (entry_list[dir_count].size() > 4 && entry_list[dir_count].substr(entry_list[dir_count].size() - 4) == ".jpg")
+            {
+                imageNames.push_back(entry_list[dir_count]);
+                imageNamesPath.push_back(subfolder_path);
+            }
+        }
+        else if (fs::exists(pathObj) && fs::is_directory(pathObj))
+            open_folder(subfolder_path, imageNames, imageNamesPath);
+    }
+}
+
+// Read a batch of images using the OpenCV library
+inline void read_image_batch_opencv(Rpp8u *input, RpptDescPtr descPtr, vector<string>::const_iterator imagesNamesStart)
 {
     for(int i = 0; i < descPtr->n; i++)
     {
-        Rpp8u *inputTemp = input + descPtr->offsetInBytes + (i * descPtr->strides.nStride);
-        string inputImagePath = imageNames[i];
-        cv::Mat image, imageBgr;
+        Rpp8u *inputTemp = input + (i * descPtr->strides.nStride);
+        string inputImagePath = *(imagesNamesStart + i);
+        Mat image, imageBgr;
         if (descPtr->c == 3)
         {
             imageBgr = imread(inputImagePath, 1);
@@ -418,12 +736,13 @@ inline void read_image_batch_opencv(Rpp8u *input, RpptDescPtr descPtr, string im
         {
             memcpy(inputTemp, inputImage, elementsInRow * sizeof(Rpp8u));
             inputImage += elementsInRow;
-            inputTemp += descPtr->w * descPtr->c;
+            inputTemp += descPtr->w * descPtr->c;;
         }
     }
 }
 
-inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, string imageNames[])
+// Read a batch of images using the turboJpeg decoder
+inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, vector<string>::const_iterator imagesNamesStart)
 {
     tjhandle m_jpegDecompressor = tjInitDecompress();
 
@@ -431,10 +750,10 @@ inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, string
     for (int i = 0; i < descPtr->n; i++)
     {
         // Read the JPEG compressed data from a file
-        std::string inputImagePath = imageNames[i];
+        std::string inputImagePath = *(imagesNamesStart + i);
         FILE* fp = fopen(inputImagePath.c_str(), "rb");
         if(!fp)
-            std::cerr<<"\n unable to open file : "<<inputImagePath;
+            std::cerr << "\n unable to open file : "<<inputImagePath;
         fseek(fp, 0, SEEK_END);
         long jpegSize = ftell(fp);
         rewind(fp);
@@ -445,22 +764,22 @@ inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, string
         // Decompress the JPEG data into an RGB image buffer
         int width, height, subsamp, color_space;
         if(tjDecompressHeader2(m_jpegDecompressor, jpegBuf, jpegSize, &width, &height, &color_space) != 0)
-            std::cerr<<"\n Jpeg image decode failed in tjDecompressHeader2";
+            std::cerr << "\n Jpeg image decode failed in tjDecompressHeader2";
         Rpp8u* rgbBuf;
         int elementsInRow;
         if(descPtr->c == 3)
         {
             elementsInRow = width * descPtr->c;
             rgbBuf= (Rpp8u*)malloc(width * height * 3);
-            if(tjDecompress2(m_jpegDecompressor, jpegBuf, jpegSize, rgbBuf, width, width * 3, height, TJPF_RGB, TJFLAG_FASTDCT) != 0)
-                std::cerr<<"\n Jpeg image decode failed ";
+            if(tjDecompress2(m_jpegDecompressor, jpegBuf, jpegSize, rgbBuf, width, width * 3, height, TJPF_RGB, TJFLAG_ACCURATEDCT) != 0)
+                std::cerr << "\n Jpeg image decode failed ";
         }
         else
         {
             elementsInRow = width;
             rgbBuf= (Rpp8u*)malloc(width * height);
             if(tjDecompress2(m_jpegDecompressor, jpegBuf, jpegSize, rgbBuf, width, width, height, TJPF_GRAY, 0) != 0)
-                std::cerr<<"\n Jpeg image decode failed ";
+                std::cerr << "\n Jpeg image decode failed ";
         }
         // Copy the decompressed image buffer to the RPP input buffer
         Rpp8u *inputTemp = input + descPtr->offsetInBytes + (i * descPtr->strides.nStride);
@@ -478,21 +797,23 @@ inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, string
     tjDestroy(m_jpegDecompressor);
 }
 
-inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDescPtr dstDescPtr, vector<string> imageNames, RpptImagePatch *dstImgSizes)
+// Write a batch of images using the OpenCV library
+inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDescPtr dstDescPtr, vector<string>::const_iterator imagesNamesStart, RpptImagePatch *dstImgSizes, int maxImageDump)
 {
     // create output folder
     mkdir(outputFolder.c_str(), 0700);
     outputFolder += "/";
+    static int cnt = 1;
+    static int imageCnt = 0;
 
     Rpp32u elementsInRowMax = dstDescPtr->w * dstDescPtr->c;
     Rpp8u *offsettedOutput = output + dstDescPtr->offsetInBytes;
-    for (int j = 0; j < dstDescPtr->n; j++)
+    for (int j = 0; (j < dstDescPtr->n) && (imageCnt < maxImageDump) ; j++, imageCnt++)
     {
         Rpp32u height = dstImgSizes[j].height;
         Rpp32u width = dstImgSizes[j].width;
         Rpp32u elementsInRow = width * dstDescPtr->c;
         Rpp32u outputSize = height * width * dstDescPtr->c;
-
         Rpp8u *tempOutput = (Rpp8u *)calloc(outputSize, sizeof(Rpp8u));
         Rpp8u *tempOutputRow = tempOutput;
         Rpp8u *outputRow = offsettedOutput + j * dstDescPtr->strides.nStride;
@@ -502,8 +823,7 @@ inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDes
             tempOutputRow += elementsInRow;
             outputRow += elementsInRowMax;
         }
-
-        string outputImagePath = outputFolder + imageNames[j];
+        string outputImagePath = outputFolder + *(imagesNamesStart + j);
         Mat matOutputImage, matOutputImageRgb;
         if (dstDescPtr->c == 1)
             matOutputImage = Mat(height, width, CV_8UC1, tempOutput);
@@ -515,7 +835,15 @@ inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDes
             cvtColor(matOutputImageRgb, matOutputImage, COLOR_RGB2BGR);
         }
 
-        imwrite(outputImagePath, matOutputImage);
+        fs::path pathObj(outputImagePath);
+        if (fs::exists(pathObj))
+        {
+            std::string outPath = outputImagePath.substr(0, outputImagePath.find_last_of('.')) + "_" + to_string(cnt) + outputImagePath.substr(outputImagePath.find_last_of('.'));
+            imwrite(outPath, matOutputImage);
+            cnt++;
+        }
+        else
+            imwrite(outputImagePath, matOutputImage);
         free(tempOutput);
     }
 }
@@ -530,13 +858,85 @@ inline void remove_substring(string &str, string &pattern)
    }
 }
 
+// compares the output of PKD3-PKD3 variants
+void compare_outputs_pkd(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
+{
+    Rpp8u *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef;
+    for(int imageCnt = 0; imageCnt < dstDescPtr->n; imageCnt++)
+    {
+        outputTemp = output + imageCnt * dstDescPtr->strides.nStride;
+        outputTempRef = refOutput + imageCnt * refOutputSize;
+        int height = dstImgSizes[imageCnt].height;
+        int width = dstImgSizes[imageCnt].width * dstDescPtr->c;;
+        int matched_idx = 0;
+        int refOutputHstride = refOutputWidth * dstDescPtr->c;
+
+        for(int i = 0; i < height; i++)
+        {
+            rowTemp = outputTemp + i * dstDescPtr->strides.hStride;
+            rowTempRef = outputTempRef + i * refOutputHstride;
+            for(int j = 0; j < width; j++)
+            {
+                outVal = rowTemp + j;
+                outRefVal = rowTempRef + j;
+                int diff = abs(*outVal - *outRefVal);
+                if(diff <= CUTOFF)
+                    matched_idx++;
+            }
+        }
+        if(matched_idx == (height * width) && matched_idx !=0)
+            fileMatch++;
+    }
+}
+
+// compares the output of PLN3-PLN3 and PLN1-PLN1 variants
+void compare_outputs_pln(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
+{
+    Rpp8u *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef, *outputTempChn, *outputTempRefChn;
+    for(int imageCnt = 0; imageCnt < dstDescPtr->n; imageCnt++)
+    {
+        outputTemp = output + imageCnt * dstDescPtr->strides.nStride;
+        outputTempRef = refOutput + imageCnt * refOutputSize;
+        int height = dstImgSizes[imageCnt].height;
+        int width = dstImgSizes[imageCnt].width;
+        int matched_idx = 0;
+        int refOutputHstride = refOutputWidth;
+        int refOutputCstride = refOutputHeight * refOutputWidth;
+
+        for(int c = 0; c < dstDescPtr->c; c++)
+        {
+            outputTempChn = outputTemp + c * dstDescPtr->strides.cStride;
+            outputTempRefChn = outputTempRef + c * refOutputCstride;
+            for(int i = 0; i < height; i++)
+            {
+                rowTemp = outputTempChn + i * dstDescPtr->strides.hStride;
+                rowTempRef = outputTempRefChn + i * refOutputHstride;
+                for(int j = 0; j < width; j++)
+                {
+                    outVal = rowTemp + j;
+                    outRefVal = rowTempRef + j ;
+                    int diff = abs(*outVal - *outRefVal);
+                    if(diff <= CUTOFF)
+                        matched_idx++;
+                }
+            }
+        }
+        if(matched_idx == (height * width * dstDescPtr->c) && matched_idx !=0)
+            fileMatch++;
+    }
+}
+
 template <typename T>
-inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int noOfImages, string interpolationTypeName, int testCase, string dst)
+inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int noOfImages, string interpolationTypeName, string noiseTypeName, int testCase, string dst)
 {
     string func = funcName;
     string refPath = get_current_dir_name();
     string pattern = "/build";
     string refFile = "";
+    int refOutputWidth = ((GOLDEN_OUTPUT_MAX_WIDTH / 8) * 8) + 8;    // obtain next multiple of 8 after GOLDEN_OUTPUT_MAX_WIDTH
+    int refOutputHeight = GOLDEN_OUTPUT_MAX_HEIGHT;
+    int refOutputSize = refOutputHeight * refOutputWidth * dstDescPtr->c;
+
     remove_substring(refPath, pattern);
     string dataType[4] = {"_u8_", "_f16_", "_f32_", "_i8_"};
 
@@ -560,12 +960,14 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     }
     if(testCase == 21 ||testCase == 23 || testCase == 24)
         refFile = refPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ func + "_interpolationType" + interpolationTypeName + ".csv";
+    else if(testCase == 8)
+        refFile = refPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ func + "_noiseType" + noiseTypeName + ".csv";
     else
         refFile = refPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ func + ".csv";
 
     ifstream file(refFile);
     Rpp8u *refOutput;
-    refOutput = (Rpp8u *)malloc(noOfImages * dstDescPtr->strides.nStride * sizeof(Rpp8u));
+    refOutput = (Rpp8u *)malloc(dstDescPtr->n * refOutputSize * sizeof(Rpp8u));
     string line,word;
     int index = 0;
 
@@ -589,49 +991,21 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     }
 
     int fileMatch = 0;
-    Rpp8u *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef;
-    for(int c = 0; c < noOfImages; c++)
-    {
-        outputTemp = output + c * dstDescPtr->strides.nStride;
-        outputTempRef = refOutput + c * dstDescPtr->strides.nStride;
-        int height = dstImgSizes[c].height;
-        int width = dstImgSizes[c].width;
-        int matched_idx = 0;
+    if(dstDescPtr->layout == RpptLayout::NHWC)
+        compare_outputs_pkd(output, refOutput, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+    else
+        compare_outputs_pln(output, refOutput, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
 
-        if(dstDescPtr->layout == RpptLayout::NHWC)
-            width = dstImgSizes[c].width * dstDescPtr->c;
-        else
-        {
-            if (dstDescPtr->c == 3)
-                height = dstImgSizes[c].height * dstDescPtr->c;
-        }
-
-        for(int i = 0; i < height; i++)
-        {
-            rowTemp = outputTemp + i * dstDescPtr->strides.hStride;
-            rowTempRef = outputTempRef + i * dstDescPtr->strides.hStride;
-            for(int j = 0; j < width; j++)
-            {
-                outVal = rowTemp + j;
-                outRefVal = rowTempRef + j;
-                int diff = abs(*outVal - *outRefVal);
-                if(diff <= CUTOFF)
-                    matched_idx++;
-            }
-        }
-        if(matched_idx == (height * width) && matched_idx !=0)
-            fileMatch++;
-    }
-    std::cerr<<std::endl<<"Results for "<<func<<" :"<<std::endl;
+    std::cerr << std::endl << "Results for " << func << " :" << std::endl;
     std::string status = func + ": ";
     if(fileMatch == dstDescPtr->n)
     {
-        std::cerr<<"PASSED!"<<std::endl;
+        std::cerr << "PASSED!" << std::endl;
         status += "PASSED";
     }
     else
     {
-        std::cerr<<"FAILED! "<<fileMatch<<"/"<<dstDescPtr->n<<" outputs are matching with reference outputs"<<std::endl;
+        std::cerr << "FAILED! " << fileMatch << "/" << dstDescPtr->n << " outputs are matching with reference outputs" << std::endl;
         status += "FAILED";
     }
 

@@ -37,27 +37,11 @@ THE SOFTWARE.
 #include <half/half.hpp>
 #include <fstream>
 
-#define DEBUG_MODE 0
-
 using namespace cv;
 using namespace std;
 
 using half_float::half;
 typedef half Rpp16f;
-
-inline size_t get_size_of_data_type(RpptDataType dataType)
-{
-    if(dataType == RpptDataType::U8)
-        return sizeof(Rpp8u);
-    else if(dataType == RpptDataType::I8)
-        return sizeof(Rpp8s);
-    else if(dataType == RpptDataType::F16)
-        return sizeof(Rpp16f);
-    else if(dataType == RpptDataType::F32)
-        return sizeof(Rpp32f);
-    else
-        return 0;
-}
 
 int main(int argc, char **argv)
 {
@@ -71,13 +55,16 @@ int main(int argc, char **argv)
     int inputBitDepth = atoi(argv[4]);
     unsigned int outputFormatToggle = atoi(argv[5]);
     int testCase = atoi(argv[6]);
-    int numIterations = atoi(argv[8]);
+    int numRuns = atoi(argv[8]);
     int testType = atoi(argv[9]);     // 0 for unit and 1 for performance test
     int layoutType = atoi(argv[10]); // 0 for pkd3 / 1 for pln3 / 2 for pln1
     int qaFlag = atoi(argv[12]);
     int decoderType = atoi(argv[13]);
+    int batchSize = atoi(argv[14]);
 
     bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23 || testCase == 24);
+    bool dualInputCase = (testCase == 2);
+    bool randomOutputCase = (testCase == 84);
     bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24);
     bool noiseTypeCase = (testCase == 8);
     bool pln1OutTypeCase = (testCase == 86);
@@ -93,18 +80,19 @@ int main(int argc, char **argv)
             printf("\ndst = %s", argv[3]);
         printf("\nu8 / f16 / f32 / u8->f16 / u8->f32 / i8 / u8->i8 (0/1/2/3/4/5/6) = %s", argv[4]);
         printf("\noutputFormatToggle (pkd->pkd = 0 / pkd->pln = 1) = %s", argv[5]);
-        printf("\ncase number (0:86) = %s", argv[6]);
+        printf("\ncase number (0:84) = %s", argv[6]);
         printf("\nnumber of times to run = %s", argv[8]);
         printf("\ntest type - (0 = unit tests / 1 = performance tests) = %s", argv[9]);
         printf("\nlayout type - (0 = PKD3/ 1 = PLN3/ 2 = PLN1) = %s", argv[10]);
         printf("\nqa mode - 0/1 = %s", argv[12]);
         printf("\ndecoder type - (0 = TurboJPEG / 1 = OpenCV) = %s", argv[13]);
+        printf("\nbatch size = %s", argv[14]);
     }
 
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
-        printf("\nUsage: <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:86> <number of iterations > 0> <verbosity = 0/1>>\n");
+        printf("\nUsage: <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:84> <number of iterations > 0>  <batch size > 1> <verbosity = 0/1>>\n");
     }
 
     if (layoutType == 2)
@@ -119,6 +107,12 @@ int main(int argc, char **argv)
             printf("\nPLN1 cases don't have outputFormatToggle! Please input outputFormatToggle = 0\n");
             return -1;
         }
+    }
+
+    if(batchSize > MAX_BATCH_SIZE)
+    {
+        std::cerr << "\n Batchsize should be less than or equal to "<< MAX_BATCH_SIZE << " Aborting!";
+        exit(0);
     }
 
     // Get function name
@@ -170,6 +164,7 @@ int main(int argc, char **argv)
 
     RpptInterpolationType interpolationType = RpptInterpolationType::BILINEAR;
     std::string interpolationTypeName = "";
+    std::string noiseTypeName = "";
 
     if (interpolationTypeCase)
     {
@@ -179,7 +174,6 @@ int main(int argc, char **argv)
     }
     else if (noiseTypeCase)
     {
-        std::string noiseTypeName;
         noiseTypeName = get_noise_type(additionalParam);
         func += "_noiseType";
         func += noiseTypeName.c_str();
@@ -192,33 +186,46 @@ int main(int argc, char **argv)
     }
 
     // Get number of images and image Names
-    struct dirent *de;
-    DIR *dr = opendir(src);
-    vector<string> imageNames;
-    while ((de = readdir(dr)) != NULL)
+    vector<string> imageNames, imageNamesSecond, imageNamesPath, imageNamesPathSecond;
+    search_jpg_files(src, imageNames, imageNamesPath);
+    if(dualInputCase)
     {
-        if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0)
-            continue;
-        noOfImages += 1;
-        imageNames.push_back(de->d_name);
+        search_jpg_files(srcSecond, imageNamesSecond, imageNamesPathSecond);
+        if(imageNames.size() != imageNamesSecond.size())
+        {
+            std::cerr << " \n The number of images in the input folders must be the same.";
+            exit(0);
+        }
     }
-    closedir(dr);
+    noOfImages = imageNames.size();
+
+    if(noOfImages < batchSize || ((noOfImages % batchSize) != 0))
+    {
+        replicate_last_image_to_fill_batch(imageNamesPath[noOfImages - 1], imageNamesPath, imageNames, imageNames[noOfImages - 1], noOfImages, batchSize);
+        if(dualInputCase)
+            replicate_last_image_to_fill_batch(imageNamesPathSecond[noOfImages - 1], imageNamesPathSecond, imageNamesSecond, imageNamesSecond[noOfImages - 1], noOfImages, batchSize);
+        noOfImages = imageNames.size();
+    }
 
     if(!noOfImages)
     {
-        std::cerr<<"Not able to find any images in the folder specified. Please check the input path";
+        std::cerr << "Not able to find any images in the folder specified. Please check the input path";
         exit(0);
     }
 
-    if(qaFlag)
+    if(qaFlag || DEBUG_MODE)
+    {
         sort(imageNames.begin(), imageNames.end());
+        if(dualInputCase)
+            sort(imageNamesSecond.begin(), imageNamesSecond.end());
+    }
 
     // Initialize ROI tensors for src/dst
-    RpptROI *roiTensorPtrSrc = static_cast<RpptROI *>(calloc(noOfImages, sizeof(RpptROI)));
-    RpptROI *roiTensorPtrDst = static_cast<RpptROI *>(calloc(noOfImages, sizeof(RpptROI)));
+    RpptROI *roiTensorPtrSrc = static_cast<RpptROI *>(calloc(batchSize, sizeof(RpptROI)));
+    RpptROI *roiTensorPtrDst = static_cast<RpptROI *>(calloc(batchSize, sizeof(RpptROI)));
 
     // Initialize the ImagePatch for dst
-    RpptImagePatch *dstImgSizes = static_cast<RpptImagePatch *>(calloc(noOfImages, sizeof(RpptImagePatch)));
+    RpptImagePatch *dstImgSizes = static_cast<RpptImagePatch *>(calloc(batchSize, sizeof(RpptImagePatch)));
 
     // Set ROI tensors types for src/dst
     RpptRoiType roiTypeSrc, roiTypeDst;
@@ -228,50 +235,26 @@ int main(int argc, char **argv)
     // Initialize roi that can be updated in case-wise augmentations if needed
     RpptROI roi;
 
-    // Set maxHeight, maxWidth and ROIs for src/dst
-    const int images = noOfImages;
-
-    for(int i = 0; i < imageNames.size(); i++)
-    {
-        string temp = inputPath;
-        temp += imageNames[i];
-        if (layoutType == 0 || layoutType == 1)
-            image = imread(temp, 1);
-        else
-            image = imread(temp, 0);
-
-        roiTensorPtrSrc[i].xywhROI = {0, 0, image.cols, image.rows};
-        roiTensorPtrDst[i].xywhROI = {0, 0, image.cols, image.rows};
-        dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth;
-        dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight;
-
-        maxHeight = std::max(maxHeight, roiTensorPtrSrc[i].xywhROI.roiHeight);
-        maxWidth = std::max(maxWidth, roiTensorPtrSrc[i].xywhROI.roiWidth);
-        maxDstHeight = std::max(maxDstHeight, roiTensorPtrDst[i].xywhROI.roiHeight);
-        maxDstWidth = std::max(maxDstWidth, roiTensorPtrDst[i].xywhROI.roiWidth);
-
-        count++;
-    }
-
-    // Check if any of maxWidth and maxHeight is less than or equal to 0
-    if(maxHeight <= 0 || maxWidth <= 0)
-    {
-        std::cerr<<"Unable to read images properly.Please check the input path of the files specified";
-        exit(0);
-    }
-
     Rpp32u outputChannels = inputChannels;
     if(pln1OutTypeCase)
         outputChannels = 1;
     Rpp32u offsetInBytes = 0;
 
-    // Set numDims, offset, n/c/h/w values, strides for src/dst
-    set_descriptor_dims_and_strides(srcDescPtr, noOfImages, maxHeight, maxWidth, inputChannels, offsetInBytes);
-    set_descriptor_dims_and_strides(dstDescPtr, noOfImages, maxDstHeight, maxDstWidth, outputChannels, offsetInBytes);
+    set_max_dimensions(imageNamesPath, maxHeight, maxWidth);
 
-    // Set buffer sizes for src/dst
-    ioBufferSize = (Rpp64u)srcDescPtr->h * (Rpp64u)srcDescPtr->w * (Rpp64u)srcDescPtr->c * (Rpp64u)noOfImages;
-    oBufferSize = (Rpp64u)dstDescPtr->h * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)noOfImages;
+    // Set numDims, offset, n/c/h/w values, strides for src/dst
+    set_descriptor_dims_and_strides(srcDescPtr, batchSize, maxHeight, maxWidth, inputChannels, offsetInBytes);
+    set_descriptor_dims_and_strides(dstDescPtr, batchSize, maxHeight, maxWidth, outputChannels, offsetInBytes);
+
+    // Factors to convert U8 data to F32, F16 data to 0-1 range and reconvert them back to 0 -255 range
+    Rpp32f conversionFactor = 1.0f / 255.0;
+    if(testCase == 38)
+        conversionFactor = 1.0;
+    Rpp32f invConversionFactor = 1.0f / conversionFactor;
+
+    // Set buffer sizes in pixels for src/dst
+    ioBufferSize = (Rpp64u)srcDescPtr->h * (Rpp64u)srcDescPtr->w * (Rpp64u)srcDescPtr->c * (Rpp64u)batchSize;
+    oBufferSize = (Rpp64u)dstDescPtr->h * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)batchSize;
 
     // Set buffer sizes in bytes for src/dst (including offsets)
     Rpp64u ioBufferSizeInBytes_u8 = ioBufferSize + srcDescPtr->offsetInBytes;
@@ -283,436 +266,454 @@ int main(int argc, char **argv)
     Rpp8u *inputu8 = static_cast<Rpp8u *>(calloc(ioBufferSizeInBytes_u8, 1));
     Rpp8u *inputu8Second = static_cast<Rpp8u *>(calloc(ioBufferSizeInBytes_u8, 1));
     Rpp8u *outputu8 = static_cast<Rpp8u *>(calloc(oBufferSizeInBytes_u8, 1));
+    if (testCase == 40) memset(inputu8, 0xFF, ioBufferSizeInBytes_u8);
 
     Rpp8u *offsettedInput, *offsettedInputSecond;
     offsettedInput = inputu8 + srcDescPtr->offsetInBytes;
     offsettedInputSecond = inputu8Second + srcDescPtr->offsetInBytes;
-    string imageNamesPath[images];
-    string imageNamesPathSecond[images];
-    for(int i = 0; i < images; i++)
-    {
-        imageNamesPath[i] = inputPath + "/" + imageNames[i];
-        imageNamesPathSecond[i] = inputPathSecond + "/" + imageNames[i];
-    }
-
-    // Read images
-    if(decoderType == 0)
-    {
-        read_image_batch_turbojpeg(inputu8, srcDescPtr, imageNamesPath);
-        read_image_batch_turbojpeg(inputu8Second, srcDescPtr, imageNamesPathSecond);
-    }
-    else
-    {
-        read_image_batch_opencv(inputu8, srcDescPtr, imageNamesPath);
-        read_image_batch_opencv(inputu8Second, srcDescPtr, imageNamesPathSecond);
-    }
-
-    // if the input layout requested is PLN3, convert PKD3 inputs to PLN3 for first and second input batch
-    if (layoutType == 1)
-    {
-        convert_pkd3_to_pln3(inputu8, srcDescPtr);
-        convert_pkd3_to_pln3(inputu8Second, srcDescPtr);
-    }
-
-    // Factors to convert U8 data to F32, F16 data to 0-1 range and reconvert them back to 0 -255 range
-    Rpp32f conversionFactor = 1.0f / 255.0;
-    if(testCase == 38)
-        conversionFactor = 1.0;
-    Rpp32f invConversionFactor = 1.0f / conversionFactor;
 
     void *input, *input_second, *output;
+
     input = static_cast<Rpp8u *>(calloc(inputBufferSize, 1));
     input_second = static_cast<Rpp8u *>(calloc(inputBufferSize, 1));
     output = static_cast<Rpp8u *>(calloc(outputBufferSize, 1));
 
-    // Convert inputs to correponding bit depth specified by user
-    if (inputBitDepth == 0)
-    {
-        memcpy(input, inputu8, inputBufferSize);
-        memcpy(input_second, inputu8Second, inputBufferSize);
-    }
-    else if (inputBitDepth == 1)
-    {
-        Rpp8u *inputTemp, *inputSecondTemp;
-        Rpp16f *inputf16Temp, *inputf16SecondTemp;
-        inputTemp = inputu8 + srcDescPtr->offsetInBytes;
-        inputSecondTemp = inputu8Second + srcDescPtr->offsetInBytes;
-        inputf16Temp = reinterpret_cast<Rpp16f *>(static_cast<Rpp8u *>(input) + srcDescPtr->offsetInBytes);
-        inputf16SecondTemp = reinterpret_cast<Rpp16f *>(static_cast<Rpp8u *>(input_second) + srcDescPtr->offsetInBytes);
-
-        for (int i = 0; i < ioBufferSize; i++)
-        {
-            *inputf16Temp++ = static_cast<Rpp16f>((static_cast<float>(*inputTemp++)) * conversionFactor);
-            *inputf16SecondTemp++ = static_cast<Rpp16f>((static_cast<float>(*inputSecondTemp++)) * conversionFactor);
-        }
-    }
-    else if (inputBitDepth == 2)
-    {
-        Rpp8u *inputTemp, *inputSecondTemp;
-        Rpp32f *inputf32Temp, *inputf32SecondTemp;
-        inputTemp = inputu8 + srcDescPtr->offsetInBytes;
-        inputSecondTemp = inputu8Second + srcDescPtr->offsetInBytes;
-        inputf32Temp = reinterpret_cast<Rpp32f *>(static_cast<Rpp8u *>(input) + srcDescPtr->offsetInBytes);
-        inputf32SecondTemp = reinterpret_cast<Rpp32f *>(static_cast<Rpp8u *>(input_second) + srcDescPtr->offsetInBytes);
-
-        for (int i = 0; i < ioBufferSize; i++)
-        {
-            *inputf32Temp++ = (static_cast<Rpp32f>(*inputTemp++)) * conversionFactor;
-            *inputf32SecondTemp++ = (static_cast<Rpp32f>(*inputSecondTemp++)) * conversionFactor;
-        }
-    }
-    else if (inputBitDepth == 5)
-    {
-        Rpp8u *inputTemp, *inputSecondTemp;
-        Rpp8s *inputi8Temp, *inputi8SecondTemp;
-
-        inputTemp = inputu8 + srcDescPtr->offsetInBytes;
-        inputSecondTemp = inputu8Second + srcDescPtr->offsetInBytes;
-        inputi8Temp = static_cast<Rpp8s *>(input) + srcDescPtr->offsetInBytes;
-        inputi8SecondTemp = static_cast<Rpp8s *>(input_second) + srcDescPtr->offsetInBytes;
-
-        for (int i = 0; i < ioBufferSize; i++)
-        {
-            *inputi8Temp++ = static_cast<Rpp8s>((static_cast<Rpp32s> (*inputTemp++)) - 128);
-            *inputi8SecondTemp++ = static_cast<Rpp8s>((static_cast<Rpp32s>(*inputSecondTemp++)) - 128);
-        }
-    }
-
-    // Run case-wise RPP API and measure time
-    rppHandle_t handle;
-
     // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
     // If numThreads value passed is 0, number of OpenMP threads used by RPP will be set to batch size
     Rpp32u numThreads = 0;
+    rppHandle_t handle;
     rppCreateWithBatchSize(&handle, noOfImages, numThreads);
 
+    int noOfIterations = (int)imageNames.size() / batchSize;
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0;
     double cpuTime, wallTime;
     string testCaseName;
 
-    // Uncomment to run test case with an xywhROI override
-    // roi.xywhROI = {0, 0, 25, 25};
-    // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, images);
-    // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
-
-    // Uncomment to run test case with an ltrbROI override
-    // roiTypeSrc = RpptRoiType::LTRB;
-    // convert_roi(roiTensorPtrSrc, roiTypeSrc, images);
-    // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, images);
-
     // case-wise RPP API and measure time script for Unit and Performance test
-    printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numIterations, noOfImages);
-    for (int perfRunCount = 0; perfRunCount < numIterations; perfRunCount++)
+    printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
+    for (int perfRunCount = 0; perfRunCount < numRuns; perfRunCount++)
     {
-        clock_t startCpuTime, endCpuTime;
-        double startWallTime, endWallTime;
-        switch (testCase)
+        for(int iterCount = 0; iterCount < noOfIterations; iterCount++)
         {
-            case 0:
+            vector<string>::const_iterator imagesPathStart = imageNamesPath.begin() + (iterCount * batchSize);
+            vector<string>::const_iterator imagesPathEnd = imagesPathStart + batchSize;
+            vector<string>::const_iterator imageNamesStart = imageNames.begin() + (iterCount * batchSize);
+            vector<string>::const_iterator imageNamesEnd = imageNamesStart + batchSize;
+            vector<string>::const_iterator imagesPathSecondStart = imageNamesPathSecond.begin() + (iterCount * batchSize);
+            vector<string>::const_iterator imagesPathSecondEnd = imagesPathSecondStart + batchSize;
+
+            // Set ROIs for src/dst
+            set_src_and_dst_roi(imagesPathStart, imagesPathEnd, roiTensorPtrSrc, roiTensorPtrDst, dstImgSizes);
+
+            //Read images
+            if(decoderType == 0)
+                read_image_batch_turbojpeg(inputu8, srcDescPtr, imagesPathStart);
+            else
+                read_image_batch_opencv(inputu8, srcDescPtr, imagesPathStart);
+
+            // if the input layout requested is PLN3, convert PKD3 inputs to PLN3 for first and second input batch
+            if (layoutType == 1)
+                convert_pkd3_to_pln3(inputu8, srcDescPtr);
+
+            if(dualInputCase)
             {
-                testCaseName = "brightness";
-
-                Rpp32f alpha[images];
-                Rpp32f beta[images];
-                for (i = 0; i < images; i++)
-                {
-                    alpha[i] = 1.75;
-                    beta[i] = 50;
-                }
-
-                startWallTime = omp_get_wtime();
-                startCpuTime = clock();
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_brightness_host(input, srcDescPtr, output, dstDescPtr, alpha, beta, roiTensorPtrSrc, roiTypeSrc, handle);
+                if(decoderType == 0)
+                    read_image_batch_turbojpeg(inputu8Second, srcDescPtr, imagesPathSecondStart);
                 else
-                    missingFuncFlag = 1;
-
-                break;
+                    read_image_batch_opencv(inputu8Second, srcDescPtr, imagesPathSecondStart);
+                if (layoutType == 1)
+                    convert_pkd3_to_pln3(inputu8Second, srcDescPtr);
             }
-            case 2:
+
+            // Convert inputs to correponding bit depth specified by user
+            convert_input_bitdepth(input, input_second, inputu8, inputu8Second, inputBitDepth, ioBufferSize, inputBufferSize, srcDescPtr, dualInputCase, conversionFactor);
+
+            // Uncomment to run test case with an xywhROI override
+            // roi.xywhROI = {0, 0, 25, 25};
+            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, batchSize);
+            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, batchSize);
+
+            // Uncomment to run test case with an ltrbROI override
+            // roiTypeSrc = RpptRoiType::LTRB;
+            // convert_roi(roiTensorPtrSrc, roiTypeSrc, batchSize);
+            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, batchSize);
+
+            clock_t startCpuTime, endCpuTime;
+            double startWallTime, endWallTime;
+            switch (testCase)
             {
-                testCaseName = "blend";
-
-                Rpp32f alpha[images];
-                for (i = 0; i < images; i++)
+                case 0:
                 {
-                    alpha[i] = 0.4;
-                }
-
-                startWallTime = omp_get_wtime();
-                startCpuTime = clock();
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_blend_host(input, input_second, srcDescPtr, output, dstDescPtr, alpha, roiTensorPtrSrc, roiTypeSrc, handle);
-                else
-                    missingFuncFlag = 1;
-
-                break;
-            }
-            case 4:
-            {
-                testCaseName = "contrast";
-
-                Rpp32f contrastFactor[images];
-                Rpp32f contrastCenter[images];
-                for (i = 0; i < images; i++)
-                {
-                    contrastFactor[i] = 2.96;
-                    contrastCenter[i] = 128;
-                }
-
-                startWallTime = omp_get_wtime();
-                startCpuTime = clock();
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_contrast_host(input, srcDescPtr, output, dstDescPtr, contrastFactor, contrastCenter, roiTensorPtrSrc, roiTypeSrc, handle);
-                else
-                    missingFuncFlag = 1;
-
-                break;
-            }
-            case 13:
-            {
-                testCaseName = "exposure";
-
-                Rpp32f exposureFactor[images];
-                for (i = 0; i < images; i++)
-                {
-                    exposureFactor[i] = 1.4;
-                }
-
-                startWallTime = omp_get_wtime();
-                startCpuTime = clock();
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_exposure_host(input, srcDescPtr, output, dstDescPtr, exposureFactor, roiTensorPtrSrc, roiTypeSrc, handle);
-                else
-                    missingFuncFlag = 1;
-
-                break;
-            }
-            case 31:
-            {
-                testCaseName = "color_cast";
-
-                RpptRGB rgbTensor[images];
-                Rpp32f alphaTensor[images];
-                for (i = 0; i < images; i++)
-                {
-                    rgbTensor[i].R = 0;
-                    rgbTensor[i].G = 0;
-                    rgbTensor[i].B = 100;
-                    alphaTensor[i] = 0.5;
-                }
-
-                startWallTime = omp_get_wtime();
-                startCpuTime = clock();
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_color_cast_host(input, srcDescPtr, output, dstDescPtr, rgbTensor, alphaTensor, roiTensorPtrSrc, roiTypeSrc, handle);
-                else
-                    missingFuncFlag = 1;
-
-                break;
-            }
-            case 36:
-            {
-                testCaseName = "color_twist";
-
-                Rpp32f brightness[images];
-                Rpp32f contrast[images];
-                Rpp32f hue[images];
-                Rpp32f saturation[images];
-                for (i = 0; i < images; i++)
-                {
-                    brightness[i] = 1.4;
-                    contrast[i] = 0.0;
-                    hue[i] = 60.0;
-                    saturation[i] = 1.9;
-                }
-
-                startWallTime = omp_get_wtime();
-                startCpuTime = clock();
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_color_twist_host(input, srcDescPtr, output, dstDescPtr, brightness, contrast, hue, saturation, roiTensorPtrSrc, roiTypeSrc, handle);
-                else
-                    missingFuncFlag = 1;
-
-                break;
-            }
-            case 38:
-            {
-                testCaseName = "crop_mirror_normalize";
-                Rpp32f multiplier[images * srcDescPtr->c];
-                Rpp32f offset[images * srcDescPtr->c];
-                Rpp32u mirror[images];
-                if (srcDescPtr->c == 3)
-                {
-                    Rpp32f meanParam[3] = { 60.0f, 80.0f, 100.0f };
-                    Rpp32f stdDevParam[3] = { 0.9f, 0.9f, 0.9f };
-                    Rpp32f offsetParam[3] = { - meanParam[0] / stdDevParam[0], - meanParam[1] / stdDevParam[1], - meanParam[2] / stdDevParam[2] };
-                    Rpp32f multiplierParam[3] = {  1.0f / stdDevParam[0], 1.0f / stdDevParam[1], 1.0f / stdDevParam[2] };
-
-                    for (i = 0, j = 0; i < images; i++, j += 3)
+                    testCaseName = "brightness";
+                    Rpp32f alpha[batchSize];
+                    Rpp32f beta[batchSize];
+                    for (i = 0; i < batchSize; i++)
                     {
-                        multiplier[j] = multiplierParam[0];
-                        offset[j] = offsetParam[0];
-                        multiplier[j + 1] = multiplierParam[1];
-                        offset[j + 1] = offsetParam[1];
-                        multiplier[j + 2] = multiplierParam[2];
-                        offset[j + 2] = offsetParam[2];
-                        mirror[i] = 1;
+                        alpha[i] = 1.75;
+                        beta[i] = 50;
                     }
-                }
-                else if(srcDescPtr->c == 1)
-                {
-                    Rpp32f meanParam = 100.0f;
-                    Rpp32f stdDevParam = 0.9f;
-                    Rpp32f offsetParam = - meanParam / stdDevParam;
-                    Rpp32f multiplierParam = 1.0f / stdDevParam;
 
-                    for (i = 0; i < images; i++)
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_brightness_host(input, srcDescPtr, output, dstDescPtr, alpha, beta, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 1:
+                {
+                    testCaseName = "gamma_correction";
+
+                    Rpp32f gammaVal[batchSize];
+                    for (i = 0; i < batchSize; i++)
+                        gammaVal[i] = 1.9;
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_gamma_correction_host(input, srcDescPtr, output, dstDescPtr, gammaVal, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 2:
+                {
+                    testCaseName = "blend";
+
+                    Rpp32f alpha[batchSize];
+                    for (i = 0; i < batchSize; i++)
+                        alpha[i] = 0.4;
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_blend_host(input, input_second, srcDescPtr, output, dstDescPtr, alpha, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 4:
+                {
+                    testCaseName = "contrast";
+
+                    Rpp32f contrastFactor[batchSize];
+                    Rpp32f contrastCenter[batchSize];
+                    for (i = 0; i < batchSize; i++)
                     {
-                        multiplier[i] = multiplierParam;
-                        offset[i] = offsetParam;
-                        mirror[i] = 1;
+                        contrastFactor[i] = 2.96;
+                        contrastCenter[i] = 128;
                     }
-                }
 
-                for (i = 0; i < images; i++)
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_contrast_host(input, srcDescPtr, output, dstDescPtr, contrastFactor, contrastCenter, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 13:
                 {
-                    roiTensorPtrDst[i].xywhROI.xy.x = 10;
-                    roiTensorPtrDst[i].xywhROI.xy.y = 10;
-                    dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
-                    dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiHeight / 2;
+                    testCaseName = "exposure";
+
+                    Rpp32f exposureFactor[batchSize];
+                    for (i = 0; i < batchSize; i++)
+                        exposureFactor[i] = 1.4;
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_exposure_host(input, srcDescPtr, output, dstDescPtr, exposureFactor, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 31:
+                {
+                    testCaseName = "color_cast";
+
+                    RpptRGB rgbTensor[batchSize];
+                    Rpp32f alphaTensor[batchSize];
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        rgbTensor[i].R = 0;
+                        rgbTensor[i].G = 0;
+                        rgbTensor[i].B = 100;
+                        alphaTensor[i] = 0.5;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_color_cast_host(input, srcDescPtr, output, dstDescPtr, rgbTensor, alphaTensor, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 34:
+                {
+                    testCaseName = "lut";
+
+                    Rpp32f lutBuffer[65536] = {0};
+                    Rpp8u *lut8u = reinterpret_cast<Rpp8u *>(lutBuffer);
+                    Rpp16f *lut16f = reinterpret_cast<Rpp16f *>(lutBuffer);
+                    Rpp32f *lut32f = reinterpret_cast<Rpp32f *>(lutBuffer);
+                    Rpp8s *lut8s = reinterpret_cast<Rpp8s *>(lutBuffer);
+                    if (inputBitDepth == 0)
+                        for (j = 0; j < 256; j++)
+                            lut8u[j] = (Rpp8u)(255 - j);
+                    else if (inputBitDepth == 3)
+                        for (j = 0; j < 256; j++)
+                            lut16f[j] = (Rpp16f)((255 - j) * ONE_OVER_255);
+                    else if (inputBitDepth == 4)
+                        for (j = 0; j < 256; j++)
+                            lut32f[j] = (Rpp32f)((255 - j) * ONE_OVER_255);
+                    else if (inputBitDepth == 5)
+                        for (j = 0; j < 256; j++)
+                            lut8s[j] = (Rpp8s)(255 - j - 128);
+
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0)
+                        rppt_lut_host(input, srcDescPtr, output, dstDescPtr, lut8u, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else if (inputBitDepth == 3)
+                        rppt_lut_host(input, srcDescPtr, output, dstDescPtr, lut16f, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else if (inputBitDepth == 4)
+                        rppt_lut_host(input, srcDescPtr, output, dstDescPtr, lut32f, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else if (inputBitDepth == 5)
+                        rppt_lut_host(input, srcDescPtr, output, dstDescPtr, lut8s, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 36:
+                {
+                    testCaseName = "color_twist";
+
+                    Rpp32f brightness[batchSize];
+                    Rpp32f contrast[batchSize];
+                    Rpp32f hue[batchSize];
+                    Rpp32f saturation[batchSize];
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        brightness[i] = 1.4;
+                        contrast[i] = 0.0;
+                        hue[i] = 60.0;
+                        saturation[i] = 1.9;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_color_twist_host(input, srcDescPtr, output, dstDescPtr, brightness, contrast, hue, saturation, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag =
+                         1;
+
+                    break;
+                }
+                case 37:
+                {
+                    testCaseName = "crop";
+
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        roiTensorPtrDst[i].xywhROI.xy.x = 10;
+                        roiTensorPtrDst[i].xywhROI.xy.y = 10;
+                        dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
+                        dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiHeight / 2;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_crop_host(input, srcDescPtr, output, dstDescPtr, roiTensorPtrDst, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 38:
+                {
+                    testCaseName = "crop_mirror_normalize";
+                    Rpp32f multiplier[batchSize * srcDescPtr->c];
+                    Rpp32f offset[batchSize * srcDescPtr->c];
+                    Rpp32u mirror[batchSize];
+                    if (srcDescPtr->c == 3)
+                    {
+                        Rpp32f meanParam[3] = { 60.0f, 80.0f, 100.0f };
+                        Rpp32f stdDevParam[3] = { 0.9f, 0.9f, 0.9f };
+                        Rpp32f offsetParam[3] = { - meanParam[0] / stdDevParam[0], - meanParam[1] / stdDevParam[1], - meanParam[2] / stdDevParam[2] };
+                        Rpp32f multiplierParam[3] = {  1.0f / stdDevParam[0], 1.0f / stdDevParam[1], 1.0f / stdDevParam[2] };
+
+                        for (i = 0, j = 0; i < batchSize; i++, j += 3)
+                        {
+                            multiplier[j] = multiplierParam[0];
+                            offset[j] = offsetParam[0];
+                            multiplier[j + 1] = multiplierParam[1];
+                            offset[j + 1] = offsetParam[1];
+                            multiplier[j + 2] = multiplierParam[2];
+                            offset[j + 2] = offsetParam[2];
+                            mirror[i] = 1;
+                        }
+                    }
+                    else if(srcDescPtr->c == 1)
+                    {
+                        Rpp32f meanParam = 100.0f;
+                        Rpp32f stdDevParam = 0.9f;
+                        Rpp32f offsetParam = - meanParam / stdDevParam;
+                        Rpp32f multiplierParam = 1.0f / stdDevParam;
+
+                        for (i = 0; i < batchSize; i++)
+                        {
+                            multiplier[i] = multiplierParam;
+                            offset[i] = offsetParam;
+                            mirror[i] = 1;
+                        }
+                    }
+
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        roiTensorPtrDst[i].xywhROI.xy.x = 10;
+                        roiTensorPtrDst[i].xywhROI.xy.y = 10;
+                        dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
+                        dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiHeight / 2;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 3 || inputBitDepth == 4 || inputBitDepth == 5)
+                        rppt_crop_mirror_normalize_host(input, srcDescPtr, output, dstDescPtr, offset, multiplier, mirror, roiTensorPtrDst, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 84:
+                {
+                    testCaseName = "spatter";
+
+                    RpptRGB spatterColor;
+
+                    // Mud Spatter
+                    spatterColor.R = 65;
+                    spatterColor.G = 50;
+                    spatterColor.B = 23;
+
+                    // Blood Spatter
+                    // spatterColor.R = 98;
+                    // spatterColor.G = 3;
+                    // spatterColor.B = 3;
+
+                    // Ink Spatter
+                    // spatterColor.R = 5;
+                    // spatterColor.G = 20;
+                    // spatterColor.B = 64;
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_spatter_host(input, srcDescPtr, output, dstDescPtr, spatterColor, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                default:
+                    missingFuncFlag = 1;
+                    break;
+            }
+
+            endCpuTime = clock();
+            endWallTime = omp_get_wtime();
+            cpuTime = ((double)(endCpuTime - startCpuTime)) / CLOCKS_PER_SEC;
+            wallTime = endWallTime - startWallTime;
+            if (missingFuncFlag == 1)
+            {
+                printf("\nThe functionality %s doesn't yet exist in RPP\n", func.c_str());
+                return -1;
+            }
+
+            maxWallTime = std::max(maxWallTime, wallTime);
+            minWallTime = std::min(minWallTime, wallTime);
+            avgWallTime += wallTime;
+            cpuTime *= 1000;
+            wallTime *= 1000;
+
+            if (testType == 0)
+            {
+                cout <<"\n\n";
+                cout <<"CPU Backend Clock Time: "<< cpuTime <<" ms/batch"<< endl;
+                cout <<"CPU Backend Wall Time: "<< wallTime <<" ms/batch"<< endl;
+
+                // Reconvert other bit depths to 8u for output display purposes
+                convert_output_bitdepth_to_u8(output, outputu8, inputBitDepth, oBufferSize, outputBufferSize, dstDescPtr, invConversionFactor);
+
+                // If DEBUG_MODE is set to 1 dump the outputs to csv files for debugging
+                if(DEBUG_MODE && iterCount == 0)
+                {
+                    std::ofstream refFile;
+                    refFile.open(func + ".csv");
+                    for (int i = 0; i < oBufferSize; i++)
+                        refFile << static_cast<int>(*(outputu8 + i)) << ",";
+                    refFile.close();
                 }
 
-                startWallTime = omp_get_wtime();
-                startCpuTime = clock();
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 3 || inputBitDepth == 4 || inputBitDepth == 5)
-                    rppt_crop_mirror_normalize_host(input, srcDescPtr, output, dstDescPtr, offset, multiplier, mirror, roiTensorPtrDst, roiTypeSrc, handle);
-                else
-                    missingFuncFlag = 1;
+                /*Compare the output of the function with golden outputs only if
+                1.QA Flag is set
+                2.input bit depth 0 (U8)
+                3.source and destination layout are the same*/
+                if(qaFlag && inputBitDepth == 0 && (srcDescPtr->layout == dstDescPtr->layout) && !(randomOutputCase))
+                    compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, batchSize, interpolationTypeName, noiseTypeName, testCase, dst);
 
-                break;
+                // Calculate exact dstROI in XYWH format for OpenCV dump
+                if (roiTypeSrc == RpptRoiType::LTRB)
+                    convert_roi(roiTensorPtrDst, RpptRoiType::XYWH, dstDescPtr->n);
+
+                // Check if the ROI values for each input is within the bounds of the max buffer allocated
+                RpptROI roiDefault;
+                RpptROIPtr roiPtrDefault = &roiDefault;
+                roiPtrDefault->xywhROI =  {0, 0, static_cast<Rpp32s>(dstDescPtr->w), static_cast<Rpp32s>(dstDescPtr->h)};
+                for (int i = 0; i < dstDescPtr->n; i++)
+                {
+                    roiTensorPtrDst[i].xywhROI.roiWidth = std::min(roiPtrDefault->xywhROI.roiWidth - roiTensorPtrDst[i].xywhROI.xy.x, roiTensorPtrDst[i].xywhROI.roiWidth);
+                    roiTensorPtrDst[i].xywhROI.roiHeight = std::min(roiPtrDefault->xywhROI.roiHeight - roiTensorPtrDst[i].xywhROI.xy.y, roiTensorPtrDst[i].xywhROI.roiHeight);
+                    roiTensorPtrDst[i].xywhROI.xy.x = std::max(roiPtrDefault->xywhROI.xy.x, roiTensorPtrDst[i].xywhROI.xy.x);
+                    roiTensorPtrDst[i].xywhROI.xy.y = std::max(roiPtrDefault->xywhROI.xy.y, roiTensorPtrDst[i].xywhROI.xy.y);
+                }
+
+                // Convert any PLN3 outputs to the corresponding PKD3 version for OpenCV dump
+                if (layoutType == 0 || layoutType == 1)
+                {
+                    if ((dstDescPtr->c == 3) && (dstDescPtr->layout == RpptLayout::NCHW))
+                        convert_pln3_to_pkd3(outputu8, dstDescPtr);
+                }
+
+                // OpenCV dump (if testType is unit test and QA mode is not set)
+                if(!qaFlag)
+                    write_image_batch_opencv(dst, outputu8, dstDescPtr, imageNamesStart, dstImgSizes, MAX_IMAGE_DUMP);
             }
-            default:
-                missingFuncFlag = 1;
-                break;
         }
-
-        endCpuTime = clock();
-        endWallTime = omp_get_wtime();
-        cpuTime = ((double)(endCpuTime - startCpuTime)) / CLOCKS_PER_SEC;
-        wallTime = endWallTime - startWallTime;
-        if (missingFuncFlag == 1)
-        {
-            printf("\nThe functionality %s doesn't yet exist in RPP\n", func.c_str());
-            return -1;
-        }
-
-        maxWallTime = max(maxWallTime, wallTime);
-        minWallTime = min(minWallTime, wallTime);
-        avgWallTime += wallTime;
     }
 
-    // converts units to milliseconds
-    cpuTime *= 1000;
-    wallTime *= 1000;
-    maxWallTime *= 1000;
-    minWallTime *= 1000;
-    avgWallTime *= 1000;
+    rppDestroyHost(handle);
 
-    if (testType == 0)
-    {
-        cout <<"\n\n";
-        cout <<"CPU Backend Clock Time: "<< cpuTime <<" ms/batch"<< endl;
-        cout <<"CPU Backend Wall Time: "<< wallTime <<" ms/batch"<< endl;
-
-       // Reconvert other bit depths to 8u for output display purposes
-        if (inputBitDepth == 0)
-        {
-            memcpy(outputu8, output, outputBufferSize);
-        }
-        else if ((inputBitDepth == 1) || (inputBitDepth == 3))
-        {
-            Rpp8u *outputTemp = outputu8 + dstDescPtr->offsetInBytes;
-            Rpp16f *outputf16Temp = reinterpret_cast<Rpp16f *>(static_cast<Rpp8u *>(output) + dstDescPtr->offsetInBytes);
-            for (int i = 0; i < oBufferSize; i++)
-            {
-                *outputTemp = static_cast<Rpp8u>(validate_pixel_range(static_cast<float>(*outputf16Temp) * invConversionFactor));
-                outputf16Temp++;
-                outputTemp++;
-            }
-        }
-        else if ((inputBitDepth == 2) || (inputBitDepth == 4))
-        {
-            Rpp8u *outputTemp = outputu8 + dstDescPtr->offsetInBytes;
-            Rpp32f *outputf32Temp = reinterpret_cast<Rpp32f *>(static_cast<Rpp8u *>(output) + dstDescPtr->offsetInBytes);
-            for (int i = 0; i < oBufferSize; i++)
-            {
-                *outputTemp = static_cast<Rpp8u>(validate_pixel_range(*outputf32Temp * invConversionFactor));
-                outputf32Temp++;
-                outputTemp++;
-            }
-        }
-        else if ((inputBitDepth == 5) || (inputBitDepth == 6))
-        {
-            Rpp8u *outputTemp = outputu8 + dstDescPtr->offsetInBytes;
-            Rpp8s *outputi8Temp = static_cast<Rpp8s *>(output) + dstDescPtr->offsetInBytes;
-            for (int i = 0; i < oBufferSize; i++)
-            {
-                *outputTemp = static_cast<Rpp8u>(validate_pixel_range((static_cast<Rpp32s>(*outputi8Temp) + 128)));
-                outputi8Temp++;
-                outputTemp++;
-            }
-        }
-
-        // If DEBUG_MODE is set to 1 dump the outputs to csv files for debugging
-        if(DEBUG_MODE)
-        {
-            std::ofstream refFile;
-            refFile.open(func + ".csv");
-            for (int i = 0; i < oBufferSize; i++)
-                refFile << static_cast<int>(*(outputu8 + i)) << ",";
-            refFile.close();
-        }
-
-        /*Compare the output of the function with golden outputs only if
-          1.QA Flag is set
-          2.input bit depth 0 (U8)
-          3.source and destination layout are the same*/
-        if(qaFlag && inputBitDepth == 0 && (srcDescPtr->layout == dstDescPtr->layout))
-            compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, noOfImages, interpolationTypeName, testCase, dst);
-
-        // Calculate exact dstROI in XYWH format for OpenCV dump
-        if (roiTypeSrc == RpptRoiType::LTRB)
-            convert_roi(roiTensorPtrDst, RpptRoiType::XYWH, dstDescPtr->n);
-
-        // Check if the ROI values for each input is within the bounds of the max buffer allocated
-        RpptROI roiDefault;
-        RpptROIPtr roiPtrDefault = &roiDefault;
-        roiPtrDefault->xywhROI =  {0, 0, static_cast<Rpp32s>(dstDescPtr->w), static_cast<Rpp32s>(dstDescPtr->h)};
-        for (int i = 0; i < dstDescPtr->n; i++)
-        {
-            roiTensorPtrDst[i].xywhROI.roiWidth = std::min(roiPtrDefault->xywhROI.roiWidth - roiTensorPtrDst[i].xywhROI.xy.x, roiTensorPtrDst[i].xywhROI.roiWidth);
-            roiTensorPtrDst[i].xywhROI.roiHeight = std::min(roiPtrDefault->xywhROI.roiHeight - roiTensorPtrDst[i].xywhROI.xy.y, roiTensorPtrDst[i].xywhROI.roiHeight);
-            roiTensorPtrDst[i].xywhROI.xy.x = std::max(roiPtrDefault->xywhROI.xy.x, roiTensorPtrDst[i].xywhROI.xy.x);
-            roiTensorPtrDst[i].xywhROI.xy.y = std::max(roiPtrDefault->xywhROI.xy.y, roiTensorPtrDst[i].xywhROI.xy.y);
-        }
-
-        // Convert any PLN3 outputs to the corresponding PKD3 version for OpenCV dump
-        if (layoutType == 0 || layoutType == 1)
-        {
-            if ((dstDescPtr->c == 3) && (dstDescPtr->layout == RpptLayout::NCHW))
-                convert_pln3_to_pkd3(outputu8, dstDescPtr);
-        }
-        rppDestroyHost(handle);
-
-        // OpenCV dump (if testType is unit test and QA mode is not set)
-        if(!qaFlag)
-            write_image_batch_opencv(dst, outputu8, dstDescPtr, imageNames, dstImgSizes);
-    }
-    else
+    if(testType == 1)
     {
         // Display measured times
-        avgWallTime /= numIterations;
+        maxWallTime *= 1000;
+        minWallTime *= 1000;
+        avgWallTime *= 1000;
+        avgWallTime /= (numRuns * noOfIterations);
         cout << fixed << "\nmax,min,avg wall times in ms/batch = " << maxWallTime << "," << minWallTime << "," << avgWallTime;
     }
 
@@ -723,10 +724,10 @@ int main(int argc, char **argv)
     free(roiTensorPtrDst);
     free(dstImgSizes);
     free(input);
-    free(input_second);
-    free(output);
     free(inputu8);
     free(inputu8Second);
     free(outputu8);
+    free(input_second);
+    free(output);
     return 0;
 }
