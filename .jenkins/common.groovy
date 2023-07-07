@@ -8,6 +8,7 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
     String buildTypeDir = debug ? 'debug' : 'release'
     String backend = ''
     String enableSCL = 'echo build-rpp'
+    String slesCMD = 'echo RPP Deps'
 
     if (platform.jenkinsLabel.contains('centos')) {
         backend = 'CPU'
@@ -18,12 +19,16 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
     else if (platform.jenkinsLabel.contains('ubuntu20')) {
         backend = 'OCL'
     }
+    else if (platform.jenkinsLabel.contains('sles')) {
+        slesCMD = 'zypper -n remove llvm7 && zypper -n --no-gpg-checks install clang-tools'
+    }
     else {
         backend = 'HIP'
     }
 
     def command = """#!/usr/bin/env bash
                 set -x
+                ${slesCMD}
                 wget https://sourceforge.net/projects/half/files/half/1.12.0/half-1.12.0.zip
                 unzip half-1.12.0.zip -d half-files
                 sudo mkdir -p /usr/local/include/half
