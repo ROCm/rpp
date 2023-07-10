@@ -1164,6 +1164,13 @@ inline void rpp_store16_f32_to_u8_avx(Rpp8u *dstPtr, __m256 *p)
     _mm_storeu_si128((__m128i *)dstPtr, px[0]);
 }
 
+inline void rpp_load8_u8_to_f32_avx(Rpp8u *srcPtr, __m256 *p)
+{
+    __m128i px;
+    px = _mm_loadu_si128((__m128i *)srcPtr);
+    p[0] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px, xmm_pxMask00To03), _mm_shuffle_epi8(px, xmm_pxMask04To07)));    /* Contains pixels 01-08 */
+}
+
 inline void rpp_load24_f32pkd3_to_f32pln3_avx(Rpp32f *srcPtr, __m256 *p)
 {
     __m128 p128[8];

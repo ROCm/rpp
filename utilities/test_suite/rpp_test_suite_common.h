@@ -70,6 +70,7 @@ std::map<int, string> augmentationMap =
     {37, "crop"},
     {38, "crop_mirror_normalize"},
     {84, "spatter"},
+    {90, "image_mean"},
 };
 
 template <typename T>
