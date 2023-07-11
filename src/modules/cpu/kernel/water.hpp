@@ -70,32 +70,11 @@ RppStatus water_u8_u8_host_tensor(Rpp8u *srcPtr,
         srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
-        // Rpp32s vectorIncrementPerChannel = 4;
-        // Rpp32s vectorIncrementPkd = 12;
-        // Rpp32u alignedLength = bufferLength & ~3;   // Align dst width to process 4 dst pixels per iteration
-        // Rpp32s srcLocArray[4] = {0};         // Since 4 dst pixels are processed per iteration
-        // Rpp32s invalidLoad[4] = {0};         // Since 4 dst pixels are processed per iteration
-
-        // __m128 pSrcStrideH = _mm_set1_ps(srcDescPtr->strides.hStride);
-        // __m128 pRoiLTRB[4];
-        // pRoiLTRB[0] = _mm_set1_ps(roiLTRB.ltrbROI.lt.x);
-        // pRoiLTRB[1] = _mm_set1_ps(roiLTRB.ltrbROI.lt.y);
-        // pRoiLTRB[2] = _mm_set1_ps(roiLTRB.ltrbROI.rb.x);
-        // pRoiLTRB[3] = _mm_set1_ps(roiLTRB.ltrbROI.rb.y);
-
-        // __m128 pWaterParams[6];
-        // pWaterParams[0] = _mm_set1_ps(amplX);
-        // pWaterParams[1] = _mm_set1_ps(amplY);
-        // pWaterParams[2] = _mm_set1_ps(freqX);
-        // pWaterParams[3] = _mm_set1_ps(freqY);
-        // pWaterParams[4] = _mm_set1_ps(phaseX);
-        // pWaterParams[5] = _mm_set1_ps(phaseY);
-
         Rpp32s vectorIncrementPerChannel = 8;
         Rpp32s vectorIncrementPkd = 24;
         Rpp32u alignedLength = bufferLength & ~7;   // Align dst width to process 8 dst pixels per iteration
-        Rpp32s srcLocArray[8] = {0};         // Since 8 dst pixels are processed per iteration
-        Rpp32s invalidLoad[8] = {0};         // Since 8 dst pixels are processed per iteration
+        Rpp32s srcLocArray[8] = {0};                // Since 8 dst pixels are processed per iteration
+        Rpp32s invalidLoad[8] = {0};                // Since 8 dst pixels are processed per iteration
 
         __m256 pSrcStrideH = _mm256_set1_ps(srcDescPtr->strides.hStride);
         __m256 pRoiLTRB[4];
@@ -355,9 +334,9 @@ RppStatus water_f32_f32_host_tensor(Rpp32f *srcPtr,
 
         Rpp32s vectorIncrementPerChannel = 8;
         Rpp32s vectorIncrementPkd = 24;
-        Rpp32u alignedLength = bufferLength & ~7;   // Align dst width to process 4 dst pixels per iteration
-        Rpp32s srcLocArray[8] = {0};         // Since 4 dst pixels are processed per iteration
-        Rpp32s invalidLoad[8] = {0};         // Since 4 dst pixels are processed per iteration
+        Rpp32u alignedLength = bufferLength & ~7;   // Align dst width to process 8 dst pixels per iteration
+        Rpp32s srcLocArray[8] = {0};                // Since 8 dst pixels are processed per iteration
+        Rpp32s invalidLoad[8] = {0};                // Since 8 dst pixels are processed per iteration
 
         __m256 pSrcStrideH = _mm256_set1_ps(srcDescPtr->strides.hStride);
         __m256 pRoiLTRB[4];
@@ -517,7 +496,7 @@ RppStatus water_f32_f32_host_tensor(Rpp32f *srcPtr,
             }
         }
 
-        // Water with fused output-layout toggle (NCHW -> NCHW)
+        // Water without fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp32f *dstPtrRow;
@@ -709,7 +688,7 @@ RppStatus water_f16_f16_host_tensor(Rpp16f *srcPtr,
             }
         }
 
-        // Water with fused output-layout toggle (NCHW -> NCHW)
+        // Water without fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp16f *dstPtrRow;
@@ -786,8 +765,8 @@ RppStatus water_i8_i8_host_tensor(Rpp8s *srcPtr,
         Rpp32s vectorIncrementPerChannel = 8;
         Rpp32s vectorIncrementPkd = 24;
         Rpp32u alignedLength = bufferLength & ~7;   // Align dst width to process 4 dst pixels per iteration
-        Rpp32s srcLocArray[8] = {0};         // Since 4 dst pixels are processed per iteration
-        Rpp32s invalidLoad[8] = {0};    // Since 4 dst pixels are processed per iteration
+        Rpp32s srcLocArray[8] = {0};                // Since 8 dst pixels are processed per iteration
+        Rpp32s invalidLoad[8] = {0};                // Since 8 dst pixels are processed per iteration
 
         __m256 pSrcStrideH = _mm256_set1_ps(srcDescPtr->strides.hStride);
         __m256 pRoiLTRB[4];
@@ -947,7 +926,7 @@ RppStatus water_i8_i8_host_tensor(Rpp8s *srcPtr,
             }
         }
 
-        // Water with fused output-layout toggle (NCHW -> NCHW)
+        // Water without fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp8s *dstPtrRow;
