@@ -50,6 +50,18 @@ RppStatus rppt_image_sum_host(RppPtr_t srcPtr,
         if (imageSumArrLength < srcDescPtr->n * 4)  // sum of each channel, and total sum of all 3 channels
             return RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH;
     }
+    if (roiType == RpptRoiType::XYWH)
+    {
+        for(int i = 0; i < srcDescPtr->n; i++)
+            if ((roiTensorPtrSrc[i].xywhROI.roiWidth > REDUCTION_MAX_WIDTH) || (roiTensorPtrSrc[i].xywhROI.roiHeight > REDUCTION_MAX_HEIGHT))
+                return RPP_ERROR_HIGH_SRC_DIMENSION;
+    }
+    else if (roiType == RpptRoiType::LTRB)
+    {
+        for(int i = 0; i < srcDescPtr->n; i++)
+            if ((roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x > REDUCTION_MAX_XDIM) || (roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y > REDUCTION_MAX_YDIM))
+                return RPP_ERROR_HIGH_SRC_DIMENSION;
+    }
 
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
 
@@ -118,6 +130,18 @@ RppStatus rppt_image_sum_gpu(RppPtr_t srcPtr,
     {
         if (imageSumArrLength < srcDescPtr->n * 4)  // sum of each channel, and total sum of all 3 channels
             return RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH;
+    }
+    if (roiType == RpptRoiType::XYWH)
+    {
+        for(int i = 0; i < srcDescPtr->n; i++)
+            if ((roiTensorPtrSrc[i].xywhROI.roiWidth > REDUCTION_MAX_WIDTH) || (roiTensorPtrSrc[i].xywhROI.roiHeight > REDUCTION_MAX_HEIGHT))
+                return RPP_ERROR_HIGH_SRC_DIMENSION;
+    }
+    else if (roiType == RpptRoiType::LTRB)
+    {
+        for(int i = 0; i < srcDescPtr->n; i++)
+            if ((roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x > REDUCTION_MAX_XDIM) || (roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y > REDUCTION_MAX_YDIM))
+                return RPP_ERROR_HIGH_SRC_DIMENSION;
     }
 
     if (srcDescPtr->dataType == RpptDataType::U8)

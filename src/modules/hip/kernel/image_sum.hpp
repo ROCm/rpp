@@ -1,5 +1,6 @@
 #include <hip/hip_runtime.h>
 #include "rpp_hip_common.hpp"
+#include "reduction.hpp"
 
 // -------------------- Set 0 - Reduction Stage 2 --------------------
 
@@ -10,8 +11,8 @@ __global__ void image_sum_grid_result_tensor(float *srcPtr,
     int id_x = hipThreadIdx_x * 8;
     int id_z = hipBlockIdx_z;
 
-    __shared__ float partialSumLDS[256];                            // 1024 floats of src reduced to 256 in a 256 x 1 thread block
-    partialSumLDS[hipThreadIdx_x] = 0.0f;                           // initialization of LDS to 0 using all 256 x 1 threads
+    __shared__ float partialSumLDS[1024];                            // 2048 floats of src reduced to 1024 in a 1024 x 1 thread block
+    partialSumLDS[hipThreadIdx_x] = 0.0f;                           // initialization of LDS to 0 using all 1024 x 1 threads
 
     if (id_x >= xBufferLength)
     {
@@ -34,8 +35,8 @@ __global__ void image_sum_grid_result_tensor(float *srcPtr,
                                       src_f8.f1[3]);                // perform small work of reducing float4s to float using 256 x 1 threads and store in LDS
     __syncthreads();                                                // syncthreads after LDS load
 
-    // Reduction of 256 floats on 256 threads per block in x dimension
-    for (int threadMax = 128; threadMax >= 1; threadMax /= 2)
+    // Reduction of 1024 floats on 1024 threads per block in x dimension
+    for (int threadMax = 512; threadMax >= 1; threadMax /= 2)
     {
         if (hipThreadIdx_x < threadMax)
             partialSumLDS[hipThreadIdx_x] += partialSumLDS[hipThreadIdx_x + threadMax];
@@ -54,9 +55,9 @@ __global__ void image_sum_grid_3channel_result_tensor(float *srcPtr,
     int id_x = hipThreadIdx_x * 8;
     int id_z = hipBlockIdx_z;
 
-    __shared__ float partialRSumLDS[256];                            // 1024 floats of src reduced to 256 in a 256 x 1 thread block
-    __shared__ float partialGSumLDS[256];
-    __shared__ float partialBSumLDS[256];
+    __shared__ float partialRSumLDS[1024];                            // 2048 floats of src reduced to 1024 in a 1024 x 1 thread block
+    __shared__ float partialGSumLDS[1024];
+    __shared__ float partialBSumLDS[1024];
     partialRSumLDS[hipThreadIdx_x] = 0.0f;                           // initialization of LDS to 0 using all 256 x 1 threads
     partialGSumLDS[hipThreadIdx_x] = 0.0f;
     partialBSumLDS[hipThreadIdx_x] = 0.0f;
@@ -99,8 +100,8 @@ __global__ void image_sum_grid_3channel_result_tensor(float *srcPtr,
 
     __syncthreads();                                                // syncthreads after LDS load
 
-    // Reduction of 256 floats on 256 threads per block in x dimension
-    for (int threadMax = 128; threadMax >= 1; threadMax /= 2)
+    // Reduction of 1024 floats on 1024 threads per block in x dimension
+    for (int threadMax = 512; threadMax >= 1; threadMax /= 2)
     {
         if (hipThreadIdx_x < threadMax)
         {
@@ -402,8 +403,8 @@ RppStatus hip_exec_image_sum_tensor(T *srcPtr,
         Rpp32u imagePartialSumArrLength = gridDim_x * gridDim_y * gridDim_z;
         float *imagePartialSumArr;
         imagePartialSumArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
-        hipMemset(imagePartialSumArr, 0, imagePartialSumArrLength * sizeof(float));
-        hipDeviceSynchronize();
+        hipMemsetAsync(imagePartialSumArr, 0, imagePartialSumArrLength * sizeof(float));
+        hipStreamSynchronize(handle.GetStream());
         hipLaunchKernelGGL(image_sum_pln1_tensor,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
                            dim3(localThreads_x, localThreads_y, localThreads_z),
@@ -413,10 +414,10 @@ RppStatus hip_exec_image_sum_tensor(T *srcPtr,
                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                            imagePartialSumArr,
                            roiTensorPtrSrc);
-        hipDeviceSynchronize();
+        hipStreamSynchronize(handle.GetStream());
         hipLaunchKernelGGL(image_sum_grid_result_tensor,
                            dim3(1, 1, gridDim_z),
-                           dim3(256, 1, 1),
+                           dim3(1024, 1, 1),
                            0,
                            handle.GetStream(),
                            imagePartialSumArr,
@@ -428,8 +429,8 @@ RppStatus hip_exec_image_sum_tensor(T *srcPtr,
         Rpp32u imagePartialSumArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
         float *imagePartialSumArr;
         imagePartialSumArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
-        hipMemset(imagePartialSumArr, 0, imagePartialSumArrLength * sizeof(float));
-        hipDeviceSynchronize();
+        hipMemsetAsync(imagePartialSumArr, 0, imagePartialSumArrLength * sizeof(float));
+        hipStreamSynchronize(handle.GetStream());
         hipLaunchKernelGGL(image_sum_pln3_tensor,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
                            dim3(localThreads_x, localThreads_y, localThreads_z),
@@ -439,10 +440,10 @@ RppStatus hip_exec_image_sum_tensor(T *srcPtr,
                            make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                            imagePartialSumArr,
                            roiTensorPtrSrc);
-        hipDeviceSynchronize();
+        hipStreamSynchronize(handle.GetStream());
         hipLaunchKernelGGL(image_sum_grid_3channel_result_tensor,
                            dim3(1, 1, gridDim_z),
-                           dim3(256, 1, 1),
+                           dim3(1024, 1, 1),
                            0,
                            handle.GetStream(),
                            imagePartialSumArr,
@@ -454,8 +455,8 @@ RppStatus hip_exec_image_sum_tensor(T *srcPtr,
         Rpp32u imagePartialSumArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
         float *imagePartialSumArr;
         imagePartialSumArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
-        hipMemset(imagePartialSumArr, 0, imagePartialSumArrLength * sizeof(float));
-        hipDeviceSynchronize();
+        hipMemsetAsync(imagePartialSumArr, 0, imagePartialSumArrLength * sizeof(float));
+        hipStreamSynchronize(handle.GetStream());
         hipLaunchKernelGGL(image_sum_pkd3_tensor,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
                            dim3(localThreads_x, localThreads_y, localThreads_z),
@@ -465,10 +466,10 @@ RppStatus hip_exec_image_sum_tensor(T *srcPtr,
                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                            imagePartialSumArr,
                            roiTensorPtrSrc);
-        hipDeviceSynchronize();
+        hipStreamSynchronize(handle.GetStream());
         hipLaunchKernelGGL(image_sum_grid_3channel_result_tensor,
                            dim3(1, 1, gridDim_z),
-                           dim3(256, 1, 1),
+                           dim3(1024, 1, 1),
                            0,
                            handle.GetStream(),
                            imagePartialSumArr,

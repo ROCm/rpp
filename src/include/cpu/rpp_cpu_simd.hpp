@@ -1,13 +1,16 @@
 /*
 Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
+
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
+
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
@@ -662,9 +665,9 @@ inline void rpp_load24_i8pln3_to_f64pln3_avx(Rpp8s *srcPtrR, Rpp8s *srcPtrG, Rpp
 {
     __m128i px[3];
 
-    px[0] = _mm_loadu_si128((__m128i *)srcPtrR);
-    px[1] = _mm_loadu_si128((__m128i *)srcPtrG);
-    px[2] = _mm_loadu_si128((__m128i *)srcPtrB);
+    px[0] = _mm_add_epi8(xmm_pxConvertI8, _mm_loadu_si128((__m128i *)srcPtrR));    /* add I8 conversion param to load [R01|R02|R03|R04|R05|R06|R07|R08|R09|R10|R11|R12|R13|R14|R15|R16] */
+    px[1] = _mm_add_epi8(xmm_pxConvertI8, _mm_loadu_si128((__m128i *)srcPtrG));    /* add I8 conversion param to load [G01|G02|G03|G04|G05|G06|G07|G08|G09|G10|G11|G12|G13|G14|G15|G16] */
+    px[2] = _mm_add_epi8(xmm_pxConvertI8, _mm_loadu_si128((__m128i *)srcPtrB));    /* add I8 conversion param to load [B01|B02|B03|B04|B05|B06|B07|B08|B09|B10|B11|B12|B13|B14|B15|B16] */
     p[0] = _mm256_cvtepi32_pd(_mm_shuffle_epi8(px[0], xmm_pxMask00To03));    /* Contains R01-04 */
     p[1] = _mm256_cvtepi32_pd(_mm_shuffle_epi8(px[0], xmm_pxMask04To07));    /* Contains R05-08 */
     p[2] = _mm256_cvtepi32_pd(_mm_shuffle_epi8(px[1], xmm_pxMask00To03));    /* Contains G01-04 */
@@ -1579,7 +1582,7 @@ inline void rpp_store16_f32_to_i8_avx(Rpp8s *dstPtr, __m256 *p)
 inline void rpp_load8_i8_to_f64_avx(Rpp8s *srcPtr, __m256d *p)
 {
     __m128i px;
-    px = _mm_loadu_si128((__m128i *)srcPtr);
+    px = _mm_add_epi8(xmm_pxConvertI8, _mm_loadu_si128((__m128i *)srcPtr));
     p[0] = _mm256_cvtepi32_pd(_mm_shuffle_epi8(px, xmm_pxMask00To03));    /* Contains pixels 01-04 */
     p[1] = _mm256_cvtepi32_pd(_mm_shuffle_epi8(px, xmm_pxMask04To07));    /* Contains pixels 05-08 */
 }

@@ -33,7 +33,7 @@ extern "C" {
 // Image sum finder operation for a NCHW/NHWC layout tensor
 
 // *param[in] srcPtr source tensor memory
-// *param[in] srcDescPtr source tensor descriptor
+// *param[in] srcDescPtr source tensor descriptor (srcDescPtr->w can be a maximum of 3840, srcDescPtr->h can be a maximum of 2160)
 // *param[out] imageSumArr destination array of minimum length (srcPtr->n * srcPtr->c)
 // *param[in] imageSumArrLength length of provided destination array (minimum length = srcPtr->n * srcPtr->c)
 // *param[in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
