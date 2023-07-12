@@ -173,7 +173,7 @@ do
     for ((bitDepth=0;bitDepth<7;bitDepth++))
     do
         printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n"
-        for ((outputFormatToggle=0;outputFormatToggle<1;outputFormatToggle++))
+        for ((outputFormatToggle=0;outputFormatToggle<2;outputFormatToggle++))
         do
 
             if [[ "$case" -eq 74 ]]
@@ -325,7 +325,7 @@ do
     for ((bitDepth=0;bitDepth<7;bitDepth++))
     do
         printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n"
-        for ((outputFormatToggle=0;outputFormatToggle<1;outputFormatToggle++))
+        for ((outputFormatToggle=0;outputFormatToggle<2;outputFormatToggle++))
         do
 
             if [[ "$case" -eq 74 ]]
