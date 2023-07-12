@@ -480,7 +480,7 @@ RppStatus water_f32_f32_host_tensor(Rpp32f *srcPtr,
                     compute_water_src_loc_avx(pDstY, pDstX, pSrcY, pSrcX, pWaterParams, pSinFactor, pCosFactor, pRoiLTRB[3], pRoiLTRB[2], pSrcStrideH, srcLocArray);
                     compute_generic_nn_srclocs_and_validate_avx(pSrcY, pSrcX, pRoiLTRB, pSrcStrideH, srcLocArray, invalidLoad, true);
                     rpp_simd_load(rpp_generic_nn_load_f32pkd3_to_f32pkd3_avx, srcPtrChannel, srcLocArray, invalidLoad, pRow);
-                    rpp_simd_store(rpp_store24_f32pkd3_to_f32pkd3, dstPtrTemp, pRow);
+                    rpp_simd_store(rpp_store24_f32pkd3_to_f32pkd3_avx, dstPtrTemp, pRow);
                     dstPtrTemp += vectorIncrementPkd;
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
