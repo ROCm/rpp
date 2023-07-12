@@ -8,6 +8,7 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
     String buildTypeDir = debug ? 'debug' : 'release'
     String backend = ''
     String enableSCL = 'echo build-rpp'
+    String slesCMD = 'echo RPP Deps'
 
     if (platform.jenkinsLabel.contains('centos')) {
         backend = 'CPU'
@@ -15,15 +16,19 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
             enableSCL = 'source scl_source enable llvm-toolset-7'
         }
     }
-    else if (platform.jenkinsLabel.contains('ubuntu18')) {
-         backend = 'OCL'
+    else if (platform.jenkinsLabel.contains('ubuntu20')) {
+        backend = 'OCL'
+    }
+    else if (platform.jenkinsLabel.contains('sles')) {
+        slesCMD = 'zypper -n remove llvm7 && zypper -n --no-gpg-checks install clang-tools'
     }
     else {
-         backend = 'HIP'
+        backend = 'HIP'
     }
 
     def command = """#!/usr/bin/env bash
                 set -x
+                ${slesCMD}
                 wget https://sourceforge.net/projects/half/files/half/1.12.0/half-1.12.0.zip
                 unzip half-1.12.0.zip -d half-files
                 sudo mkdir -p /usr/local/include/half
@@ -31,12 +36,13 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
                 echo Build RPP - ${buildTypeDir}
                 cd ${project.paths.project_build_prefix}
                 mkdir -p build/${buildTypeDir} && cd build/${buildTypeDir}
-                (${enableSCL}; cmake -DBACKEND=${backend} ${buildTypeArg} ../..)
+                ${enableSCL}
+                cmake -DBACKEND=${backend} ${buildTypeArg} ../..
                 make -j\$(nproc)
                 sudo make install
                 sudo make package
                 """
-    
+
     platform.runCommand(this, command)
 }
 
@@ -48,7 +54,7 @@ def runTestCommand (platform, project) {
                 """
 
     platform.runCommand(this, command)
-    // Unit tests - TBD
+// Unit tests - TBD
 }
 
 def runPackageCommand(platform, project) {
@@ -58,11 +64,12 @@ def runPackageCommand(platform, project) {
     String packageType = ""
     String packageInfo = ""
 
-    if (platform.jenkinsLabel.contains('centos'))
-    {
+    if (platform.jenkinsLabel.contains('centos') ||
+        platform.jenkinsLabel.contains('rhel') ||
+        platform.jenkinsLabel.contains('sles')) {
         packageType = 'rpm'
         packageInfo = 'rpm -qlp'
-    }
+        }
     else
     {
         packageType = 'deb'
