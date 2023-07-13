@@ -818,7 +818,6 @@ RppStatus image_sum_i8_i8_host_tensor(Rpp8s *srcPtr,
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
-            srcPtrChannel += srcDescPtr->strides.cStride;
 #if __AVX2__
             rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxR, &psumR);
             rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxG, &psumG);
