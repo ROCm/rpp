@@ -176,12 +176,6 @@ const __m128i xmm_char_maskB = _mm_setr_epi8(2, 5, 8, 11, 0x80, 0x80, 0x80, 0x80
 const __m128i xmm_pkd_mask = _mm_setr_epi8(0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14, 0x80, 0x80, 0x80, 0x80);
 const __m128i xmm_store4_pkd_pixels = _mm_setr_epi8(0, 1, 8, 2, 3, 9, 4, 5, 10, 6, 7, 11, 0x80, 0x80, 0x80, 0x80);
 const __m256i avx_store8_pkd_pixels = _mm256_set_epi8(0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 23, 15, 14, 22, 13, 12, 21, 11, 10, 20, 9, 8, 19, 7, 6, 18, 5, 4, 17, 3, 2, 16, 1, 0);
-// const __m256i ymm_char_maskR =_mm256_setr_m128i(xmm_char_maskR, xmm_char_maskR);
-// const __m256i ymm_char_maskG = _mm256_setr_m128i(xmm_char_maskG, xmm_char_maskG);
-// const __m256i ymm_char_maskB = _mm256_setr_m128i(xmm_char_maskB, xmm_char_maskB);
-const __m256i ymm_char_maskR = _mm256_set_epi8(0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 5, 2, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 15, 12, 9, 6, 3, 0);
-const __m256i ymm_char_maskG = _mm256_set_epi8(0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 6, 3, 0, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 13, 10, 7, 4, 1);
-const __m256i ymm_char_maskB = _mm256_set_epi8(0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 7, 4, 1, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 14, 11, 8, 5, 2);
 
 
 const __m128i xmm_pxStore4Pkd = _mm_setr_epi8(0, 4, 8, 1, 5, 9, 2, 6, 10, 3, 7, 11, 0x80, 0x80, 0x80, 0x80);
@@ -511,20 +505,6 @@ inline void rpp_store12_f32pln3_to_f32pln3(Rpp32f *dstPtrR, Rpp32f *dstPtrG, Rpp
     _mm_storeu_ps(dstPtrR, p[0]);
     _mm_storeu_ps(dstPtrG, p[1]);
     _mm_storeu_ps(dstPtrB, p[2]);
-}
-
-inline void rpp_store24_f32pln3_to_f32pln3(Rpp32f *dstPtrR, Rpp32f *dstPtrG, Rpp32f *dstPtrB, __m256 *p)
-{
-    _mm256_storeu_ps(dstPtrR, p[0]);
-    _mm256_storeu_ps(dstPtrG, p[1]);
-    _mm256_storeu_ps(dstPtrB, p[2]);
-}
-
-inline void rpp_store24_u8pln3_to_u8pln3(Rpp8u *dstPtrR, Rpp8u *dstPtrG, Rpp8u *dstPtrB, __m256i *p)
-{
-    _mm256_storeu_si256((__m256i *)dstPtrR, p[0]);
-    _mm256_storeu_si256((__m256i *)dstPtrG, p[1]);
-    _mm256_storeu_si256((__m256i *)dstPtrB, p[2]);
 }
 
 inline void rpp_load12_f32pln3_to_f32pln3(Rpp32f *srcPtrR, Rpp32f *srcPtrG, Rpp32f *srcPtrB, __m128 *p)
@@ -1325,11 +1305,6 @@ inline void rpp_load8_f32_to_f32_mirror_avx(Rpp32f *srcPtr, __m256 *p)
 inline void rpp_store8_f32_to_f32_avx(Rpp32f *dstPtr, __m256 *p)
 {
     _mm256_storeu_ps(dstPtr, p[0]);
-}
-
-inline void rpp_store8_f32_to_f32_pln1_avx(Rpp32f *dstPtr, __m256 p)
-{
-    _mm256_storeu_ps(dstPtr, p);
 }
 
 inline void rpp_store8_f32_to_f16_avx(Rpp16f *dstPtr, __m256 *p)

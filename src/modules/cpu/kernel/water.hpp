@@ -376,7 +376,7 @@ RppStatus water_f32_f32_host_tensor(Rpp32f *srcPtr,
                     compute_water_src_loc_avx(pDstY, pDstX, pSrcY, pSrcX, pWaterParams, pSinFactor, pCosFactor, pRoiLTRB[3], pRoiLTRB[2], pSrcStrideH, srcLocArray, true);
                     compute_generic_nn_srclocs_and_validate_avx(pSrcY, pSrcX, pRoiLTRB, pSrcStrideH, srcLocArray, invalidLoad, true);
                     rpp_simd_load(rpp_generic_nn_load_f32pkd3_to_f32pln3_avx, srcPtrChannel, srcLocArray, invalidLoad, pRow);
-                    rpp_simd_store(rpp_store24_f32pln3_to_f32pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, pRow);
+                    rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, pRow);
                     dstPtrTempR += vectorIncrementPerChannel;
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
@@ -520,7 +520,7 @@ RppStatus water_f32_f32_host_tensor(Rpp32f *srcPtr,
                     {
                         __m256 pRow;
                         rpp_simd_load(rpp_generic_nn_load_f32pln1_avx, srcPtrTempChn, srcLocArray, invalidLoad, pRow);
-                        rpp_simd_store(rpp_store8_f32_to_f32_pln1_avx, dstPtrTempChn, pRow);
+                        rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTempChn, &pRow);
                         srcPtrTempChn += srcDescPtr->strides.cStride;
                         dstPtrTempChn += dstDescPtr->strides.cStride;
                     }
