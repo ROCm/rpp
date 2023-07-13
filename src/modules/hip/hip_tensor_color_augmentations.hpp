@@ -30,5 +30,6 @@ THE SOFTWARE.
 #include "kernel/color_cast.hpp"
 #include "kernel/exposure.hpp"
 #include "kernel/contrast.hpp"
+#include "kernel/lut.hpp"
 
 #endif // HIP_TENSOR_COLOR_AUGMENTATIONS_HPP
