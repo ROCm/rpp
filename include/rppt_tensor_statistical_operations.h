@@ -33,9 +33,9 @@ extern "C" {
 // Image mean finder operation for a NCHW/NHWC layout tensor
 
 // *param[in] srcPtr source tensor memory
-// *param[in] srcDescPtr source tensor descriptor
-// *param[out] imageMeanArr destination array of minimum length (srcPtr->n * 4)
-// *param[in] imageMeanArrLength length of provided destination array (minimum length = srcPtr->n * 4)
+// *param[in] srcDescPtr source tensor descriptor (srcDescPtr->w can be a maximum of 3840, srcDescPtr->h can be a maximum of 2160)
+// *param[out] imageMeanArr destination array of minimum length (srcPtr->n * srcPtr->c)
+// *param[in] imageMeanArrLength length of provided destination array (minimum length = srcPtr->n * srcPtr->c)
 // *param[in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
 // *param[in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
 // *returns a  RppStatus enumeration.

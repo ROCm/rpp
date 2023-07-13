@@ -50,6 +50,18 @@ RppStatus rppt_image_mean_host(RppPtr_t srcPtr,
         if (imageMeanArrLength < srcDescPtr->n * 4)  // mean of each channel, and total mean of all 3 channels
             return RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH;
     }
+    if (roiType == RpptRoiType::XYWH)
+    {
+        for(int i = 0; i < srcDescPtr->n; i++)
+            if ((roiTensorPtrSrc[i].xywhROI.roiWidth > REDUCTION_MAX_WIDTH) || (roiTensorPtrSrc[i].xywhROI.roiHeight > REDUCTION_MAX_HEIGHT))
+                return RPP_ERROR_HIGH_SRC_DIMENSION;
+    }
+    else if (roiType == RpptRoiType::LTRB)
+    {
+        for(int i = 0; i < srcDescPtr->n; i++)
+            if ((roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x > REDUCTION_MAX_XDIM) || (roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y > REDUCTION_MAX_YDIM))
+                return RPP_ERROR_HIGH_SRC_DIMENSION;
+    }
 
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
 
@@ -62,7 +74,7 @@ RppStatus rppt_image_mean_host(RppPtr_t srcPtr,
                                      roiType,
                                      layoutParams);
     }
-    /*else if (srcDescPtr->dataType == RpptDataType::F16)
+    else if (srcDescPtr->dataType == RpptDataType::F16)
     {
         image_mean_f16_f16_host_tensor((Rpp16f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                        srcDescPtr,
@@ -88,7 +100,7 @@ RppStatus rppt_image_mean_host(RppPtr_t srcPtr,
                                      roiTensorPtrSrc,
                                      roiType,
                                      layoutParams);
-    }*/
+    }
 
     return RPP_SUCCESS;
 }
