@@ -69,7 +69,8 @@ std::map<int, string> augmentationMap =
     {36, "color_twist"},
     {37, "crop"},
     {38, "crop_mirror_normalize"},
-    {84, "spatter"},
+    {54, "gaussian_filter"},
+    {84, "spatter"}
 };
 
 template <typename T>
@@ -781,7 +782,7 @@ inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, vector
                 std::cerr << "\n Jpeg image decode failed ";
         }
         // Copy the decompressed image buffer to the RPP input buffer
-        Rpp8u *inputTemp = input + (i * descPtr->strides.nStride);
+        Rpp8u *inputTemp = input + descPtr->offsetInBytes + (i * descPtr->strides.nStride);
         for (int j = 0; j < height; j++)
         {
             memcpy(inputTemp, rgbBuf + j * elementsInRow, elementsInRow * sizeof(Rpp8u));

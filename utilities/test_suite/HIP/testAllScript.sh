@@ -4,7 +4,7 @@ cwd=$(pwd)
 
 # <<<<<<<<<<<<<< VALIDATION CHECK FOR FOLDER PATHS >>>>>>>>>>>>>>>>>>>>>>>>>>>>
 function VALIDATE_PATH {
-    if [ -z "$1" ]; then  #check if a string is empty 
+    if [ -z "$1" ]; then  #check if a string is empty
         echo "$1 Folder path is empty."
         exit
     fi
@@ -249,7 +249,7 @@ if [ "$TEST_TYPE" -eq 0 ]; then
                         continue
                     fi
 
-                    if [ "$case" -eq 40 ] || [ "$case" -eq 41 ] || [ "$case" -eq 49 ]
+                    if [ "$case" -eq 40 ] || [ "$case" -eq 41 ] || [ "$case" -eq 49 ] || [ "$case" -eq 54 ]
                     then
                         for ((kernelSize=3;kernelSize<=9;kernelSize+=2))
                         do
@@ -321,7 +321,7 @@ else
 
                     if [[ "$PROFILING_OPTION" -eq 0 ]]
                     then
-                        if [ "$case" -eq 40 ] || [ "$case" -eq 41 ] || [ "$case" -eq 49 ]
+                        if [ "$case" -eq 40 ] || [ "$case" -eq 41 ] || [ "$case" -eq 49 ] || [ "$case" -eq 54 ]
                         then
                             for ((kernelSize=3;kernelSize<=9;kernelSize+=2))
                             do
@@ -350,7 +350,7 @@ else
                         echo "------------------------------------------------------------------------------------------"
                     elif [[ "$PROFILING_OPTION" -eq 1 ]]
                     then
-                        if [ "$case" -eq 40 ] || [ "$case" -eq 41 ] || [ "$case" -eq 49 ]
+                        if [ "$case" -eq 40 ] || [ "$case" -eq 41 ] || [ "$case" -eq 49 ] || [ "$case" -eq 54 ]
                         then
                             for ((kernelSize=3;kernelSize<=9;kernelSize+=2))
                             do
