@@ -143,10 +143,11 @@ RppStatus image_sum_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
             }
             sum = sumR + sumG + sumB;
-            imageSumArr[batchCount * 4] = (Rpp32f)sumR;
-            imageSumArr[(batchCount * 4) + 1] = (Rpp32f)sumG;
-            imageSumArr[(batchCount * 4) + 2] = (Rpp32f)sumB;
-            imageSumArr[(batchCount * 4) + 3] = (Rpp32f)sum;
+            int index = batchCount * 4;
+            imageSumArr[index] = (Rpp32f)sumR;
+            imageSumArr[index + 1] = (Rpp32f)sumG;
+            imageSumArr[index + 2] = (Rpp32f)sumB;
+            imageSumArr[index + 3] = (Rpp32f)sum;
         }
 
         // Image Sum without fused output-layout toggle (NHWC)
@@ -204,10 +205,11 @@ RppStatus image_sum_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
             }
             sum = sumR + sumG + sumB;
-            imageSumArr[batchCount * 4] = (Rpp32f)sumR;
-            imageSumArr[(batchCount * 4) + 1] = (Rpp32f)sumG;
-            imageSumArr[(batchCount * 4) + 2] = (Rpp32f)sumB;
-            imageSumArr[(batchCount * 4) + 3] = (Rpp32f)sum;
+            int index = batchCount * 4;
+            imageSumArr[index] = (Rpp32f)sumR;
+            imageSumArr[index + 1] = (Rpp32f)sumG;
+            imageSumArr[index + 2] = (Rpp32f)sumB;
+            imageSumArr[index + 3] = (Rpp32f)sum;
         }
 
     }
@@ -355,10 +357,11 @@ RppStatus image_sum_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
             }
             sum = sumR + sumG + sumB;
-            imageSumArr[batchCount * 4] = (Rpp32f)sumR;
-            imageSumArr[(batchCount * 4) + 1] = (Rpp32f)sumG;
-            imageSumArr[(batchCount * 4) + 2] = (Rpp32f)sumB;
-            imageSumArr[(batchCount * 4) + 3] = (Rpp32f)sum;
+            int index = batchCount * 4;
+            imageSumArr[index] = (Rpp32f)sumR;
+            imageSumArr[index + 1] = (Rpp32f)sumG;
+            imageSumArr[index + 2] = (Rpp32f)sumB;
+            imageSumArr[index + 3] = (Rpp32f)sum;
         }
 
         // Image Sum with fused output-layout toggle (NHWC)
@@ -416,10 +419,11 @@ RppStatus image_sum_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
             }
             sum = sumR + sumG + sumB;
-            imageSumArr[batchCount * 4] = (Rpp32f)sumR;
-            imageSumArr[(batchCount * 4) + 1] = (Rpp32f)sumG;
-            imageSumArr[(batchCount * 4) + 2] = (Rpp32f)sumB;
-            imageSumArr[(batchCount * 4) + 3] = (Rpp32f)sum;
+            int index = batchCount * 4;
+            imageSumArr[index] = (Rpp32f)sumR;
+            imageSumArr[index + 1] = (Rpp32f)sumG;
+            imageSumArr[index + 2] = (Rpp32f)sumB;
+            imageSumArr[index + 3] = (Rpp32f)sum;
         }
     }
 
@@ -576,10 +580,11 @@ RppStatus image_sum_f16_f16_host_tensor(Rpp16f *srcPtr,
                 }
             }
             sum = sumR + sumG + sumB;
-            imageSumArr[batchCount * 4] = (Rpp32f)sumR;
-            imageSumArr[(batchCount * 4) + 1] = (Rpp32f)sumG;
-            imageSumArr[(batchCount * 4) + 2] = (Rpp32f)sumB;
-            imageSumArr[(batchCount * 4) + 3] = (Rpp32f)sum;
+            int index = batchCount * 4;
+            imageSumArr[index] = (Rpp32f)sumR;
+            imageSumArr[index + 1] = (Rpp32f)sumG;
+            imageSumArr[index + 2] = (Rpp32f)sumB;
+            imageSumArr[index + 3] = (Rpp32f)sum;
         }
 
         // Image Sum with fused output-layout toggle (NHWC)
@@ -640,10 +645,11 @@ RppStatus image_sum_f16_f16_host_tensor(Rpp16f *srcPtr,
                 }
             }
             sum = sumR + sumG + sumB;
-            imageSumArr[batchCount * 4] = (Rpp32f)sumR;
-            imageSumArr[(batchCount * 4) + 1] = (Rpp32f)sumG;
-            imageSumArr[(batchCount * 4) + 2] = (Rpp32f)sumB;
-            imageSumArr[(batchCount * 4) + 3] = (Rpp32f)sum;
+            int index = batchCount * 4;
+            imageSumArr[index] = (Rpp32f)sumR;
+            imageSumArr[index + 1] = (Rpp32f)sumG;
+            imageSumArr[index + 2] = (Rpp32f)sumB;
+            imageSumArr[index + 3] = (Rpp32f)sum;
         }
     }
 
@@ -795,10 +801,11 @@ RppStatus image_sum_i8_i8_host_tensor(Rpp8s *srcPtr,
             sumG -= 128.0 * totalPixelsPerChannel;
             sumB -= 128.0 * totalPixelsPerChannel;
             sum = sumR + sumG + sumB;
-            imageSumArr[batchCount * 4] = (Rpp32f)sumR;
-            imageSumArr[(batchCount * 4) + 1] = (Rpp32f)sumG;
-            imageSumArr[(batchCount * 4) + 2] = (Rpp32f)sumB;
-            imageSumArr[(batchCount * 4) + 3] = (Rpp32f)sum;
+            int index = batchCount * 4;
+            imageSumArr[index] = (Rpp32f)sumR;
+            imageSumArr[index + 1] = (Rpp32f)sumG;
+            imageSumArr[index + 2] = (Rpp32f)sumB;
+            imageSumArr[index + 3] = (Rpp32f)sum;
         }
 
         // Image Sum with fused output-layout toggle (NHWC)
@@ -859,10 +866,11 @@ RppStatus image_sum_i8_i8_host_tensor(Rpp8s *srcPtr,
             sumG -= 128.0 * totalPixelsPerChannel;
             sumB -= 128.0 * totalPixelsPerChannel;
             sum = sumR + sumG + sumB;
-            imageSumArr[batchCount * 4] = (Rpp32f)sumR;
-            imageSumArr[(batchCount * 4) + 1] = (Rpp32f)sumG;
-            imageSumArr[(batchCount * 4) + 2] = (Rpp32f)sumB;
-            imageSumArr[(batchCount * 4) + 3] = (Rpp32f)sum;
+            int index = batchCount * 4;
+            imageSumArr[index] = (Rpp32f)sumR;
+            imageSumArr[index + 1] = (Rpp32f)sumG;
+            imageSumArr[index + 2] = (Rpp32f)sumB;
+            imageSumArr[index + 3] = (Rpp32f)sum;
         }
     }
 

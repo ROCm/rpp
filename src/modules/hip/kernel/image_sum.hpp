@@ -11,7 +11,7 @@ __global__ void image_sum_grid_result_tensor(float *srcPtr,
     int id_x = hipThreadIdx_x * 8;
     int id_z = hipBlockIdx_z;
 
-    __shared__ float partialSumLDS[1024];                            // 2048 floats of src reduced to 1024 in a 1024 x 1 thread block
+    __shared__ float partialSumLDS[1024];                           // 8192 floats of src reduced to 1024 in a 1024 x 1 thread block
     partialSumLDS[hipThreadIdx_x] = 0.0f;                           // initialization of LDS to 0 using all 1024 x 1 threads
 
     if (id_x >= xBufferLength)
@@ -32,7 +32,7 @@ __global__ void image_sum_grid_result_tensor(float *srcPtr,
     partialSumLDS[hipThreadIdx_x] += (src_f8.f1[0] +
                                       src_f8.f1[1] +
                                       src_f8.f1[2] +
-                                      src_f8.f1[3]);                // perform small work of reducing float4s to float using 256 x 1 threads and store in LDS
+                                      src_f8.f1[3]);                // perform small work of reducing float4s to float using 1024 x 1 threads and store in LDS
     __syncthreads();                                                // syncthreads after LDS load
 
     // Reduction of 1024 floats on 1024 threads per block in x dimension
@@ -55,10 +55,10 @@ __global__ void image_sum_grid_3channel_result_tensor(float *srcPtr,
     int id_x = hipThreadIdx_x * 8;
     int id_z = hipBlockIdx_z;
 
-    __shared__ float partialRSumLDS[1024];                            // 2048 floats of src reduced to 1024 in a 1024 x 1 thread block
+    __shared__ float partialRSumLDS[1024];                                       // 8192 floats of src reduced to 1024 in a 1024 x 1 thread block
     __shared__ float partialGSumLDS[1024];
     __shared__ float partialBSumLDS[1024];
-    partialRSumLDS[hipThreadIdx_x] = 0.0f;                           // initialization of LDS to 0 using all 256 x 1 threads
+    partialRSumLDS[hipThreadIdx_x] = 0.0f;                                       // initialization of LDS to 0 using all 1024 x 1 threads
     partialGSumLDS[hipThreadIdx_x] = 0.0f;
     partialBSumLDS[hipThreadIdx_x] = 0.0f;
 
@@ -67,13 +67,13 @@ __global__ void image_sum_grid_3channel_result_tensor(float *srcPtr,
         return;
     }
 
-    int xAlignedLength = xBufferLength & ~7;                        // alignedLength for vectorized global loads
-    int xDiff = xBufferLength - xAlignedLength;               // difference between bufferLength and alignedLength
+    int xAlignedLength = xBufferLength & ~7;                                     // alignedLength for vectorized global loads
+    int xDiff = xBufferLength - xAlignedLength;                                  // difference between bufferLength and alignedLength
     uint srcIdx = ((id_z * xBufferLength) + id_x) * 3;
 
     d_float24 src_f24;
-    rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &src_f24);           // load 24 pixels to local mmemory
-    if (id_x + 8 > xBufferLength)                                                        // local memory reset of invalid values (from the vectorized global load) to 0.0f
+    rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &src_f24);   // load 24 pixels to local memory
+    if (id_x + 8 > xBufferLength)                                                // local memory reset of invalid values (from the vectorized global load) to 0.0f
     {
         for(int i = xDiff; i < 8; i++)
         {
@@ -82,23 +82,23 @@ __global__ void image_sum_grid_3channel_result_tensor(float *srcPtr,
             src_f24.f8[2].f1[i] = 0.0f;
         }
     }
-    src_f24.f8[0].f4[0] += src_f24.f8[0].f4[1];                                           // perform small work of vectorized float4 addition
+    src_f24.f8[0].f4[0] += src_f24.f8[0].f4[1];                                  // perform small work of vectorized float4 addition
     src_f24.f8[1].f4[0] += src_f24.f8[1].f4[1];
     src_f24.f8[2].f4[0] += src_f24.f8[2].f4[1];
     partialRSumLDS[hipThreadIdx_x] = (src_f24.f8[0].f1[0] +
                                       src_f24.f8[0].f1[1] +
                                       src_f24.f8[0].f1[2] +
-                                      src_f24.f8[0].f1[3]);                   // perform small work of reducing R float4s to float using 16 x 16 threads and store in LDS
+                                      src_f24.f8[0].f1[3]);                      // perform small work of reducing R float4s to float using 1024 threads and store in LDS
     partialGSumLDS[hipThreadIdx_x] = (src_f24.f8[1].f1[0] +
                                       src_f24.f8[1].f1[1] +
                                       src_f24.f8[1].f1[2] +
-                                      src_f24.f8[1].f1[3]);                   // perform small work of reducing G float4s to float using 16 x 16 threads and store in LDS
+                                      src_f24.f8[1].f1[3]);                      // perform small work of reducing G float4s to float using 1024 threads and store in LDS
     partialBSumLDS[hipThreadIdx_x] = (src_f24.f8[2].f1[0] +
                                       src_f24.f8[2].f1[1] +
                                       src_f24.f8[2].f1[2] +
-                                      src_f24.f8[2].f1[3]);                  // perform small work of reducing B float4s to float using 16 x 16 threads and store in LDS
+                                      src_f24.f8[2].f1[3]);                      // perform small work of reducing B float4s to float using 1024 threads and store in LDS
 
-    __syncthreads();                                                // syncthreads after LDS load
+    __syncthreads();                                                             // syncthreads after LDS load
 
     // Reduction of 1024 floats on 1024 threads per block in x dimension
     for (int threadMax = 512; threadMax >= 1; threadMax /= 2)
@@ -195,13 +195,13 @@ __global__ void image_sum_pln3_tensor(T *srcPtr,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    __shared__ float partialRSumLDS[16][16];                                 // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
+    __shared__ float partialRSumLDS[16][16];                                                    // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
     __shared__ float partialGSumLDS[16][16];
     __shared__ float partialBSumLDS[16][16];
-    float *partialRSumLDSRowPtr = &partialRSumLDS[hipThreadIdx_y][0];         // float pointer to beginning of each row in LDS
+    float *partialRSumLDSRowPtr = &partialRSumLDS[hipThreadIdx_y][0];                           // float pointer to beginning of each row in LDS
     float *partialGSumLDSRowPtr = &partialGSumLDS[hipThreadIdx_y][0];
     float *partialBSumLDSRowPtr = &partialBSumLDS[hipThreadIdx_y][0];
-    partialRSumLDSRowPtr[hipThreadIdx_x] = 0.0f;                             // initialization of LDS to 0 using all 16 x 16 threads
+    partialRSumLDSRowPtr[hipThreadIdx_x] = 0.0f;                                                // initialization of LDS to 0 using all 16 x 16 threads
     partialGSumLDSRowPtr[hipThreadIdx_x] = 0.0f;
     partialBSumLDSRowPtr[hipThreadIdx_x] = 0.0f;
 
@@ -210,13 +210,13 @@ __global__ void image_sum_pln3_tensor(T *srcPtr,
         return;
     }
 
-    int xAlignedLength = roiTensorPtrSrc[id_z].xywhROI.roiWidth & ~7;       // alignedLength for vectorized global loads
-    int xDiff = roiTensorPtrSrc[id_z].xywhROI.roiWidth - xAlignedLength;    // difference between roiWidth and alignedLength
+    int xAlignedLength = roiTensorPtrSrc[id_z].xywhROI.roiWidth & ~7;                           // alignedLength for vectorized global loads
+    int xDiff = roiTensorPtrSrc[id_z].xywhROI.roiWidth - xAlignedLength;                        // difference between roiWidth and alignedLength
     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
 
     d_float24 src_f24;
-    rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &src_f24);           // load 24 pixels to local mmemory
-    if (id_x + 8 > roiTensorPtrSrc[id_z].xywhROI.roiWidth)                                              // local memory reset of invalid values (from the vectorized global load) to 0.0f
+    rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &src_f24); // load 24 pixels to local mmemory
+    if (id_x + 8 > roiTensorPtrSrc[id_z].xywhROI.roiWidth)                                      // local memory reset of invalid values (from the vectorized global load) to 0.0f
     {
         for(int i = xDiff; i < 8; i++)
         {
@@ -225,23 +225,23 @@ __global__ void image_sum_pln3_tensor(T *srcPtr,
             src_f24.f8[2].f1[i] = 0.0f;
         }
     }
-    src_f24.f8[0].f4[0] += src_f24.f8[0].f4[1];                                           // perform small work of vectorized float4 addition
+    src_f24.f8[0].f4[0] += src_f24.f8[0].f4[1];                                                 // perform small work of vectorized float4 addition
     src_f24.f8[1].f4[0] += src_f24.f8[1].f4[1];
     src_f24.f8[2].f4[0] += src_f24.f8[2].f4[1];
     partialRSumLDSRowPtr[hipThreadIdx_x] = (src_f24.f8[0].f1[0] +
                                             src_f24.f8[0].f1[1] +
                                             src_f24.f8[0].f1[2] +
-                                            src_f24.f8[0].f1[3]);                   // perform small work of reducing R float4s to float using 16 x 16 threads and store in LDS
+                                            src_f24.f8[0].f1[3]);                               // perform small work of reducing R float4s to float using 16 x 16 threads and store in LDS
     partialGSumLDSRowPtr[hipThreadIdx_x] = (src_f24.f8[1].f1[0] +
                                             src_f24.f8[1].f1[1] +
                                             src_f24.f8[1].f1[2] +
-                                            src_f24.f8[1].f1[3]);                   // perform small work of reducing G float4s to float using 16 x 16 threads and store in LDS
+                                            src_f24.f8[1].f1[3]);                               // perform small work of reducing G float4s to float using 16 x 16 threads and store in LDS
     partialBSumLDSRowPtr[hipThreadIdx_x] = (src_f24.f8[2].f1[0] +
                                             src_f24.f8[2].f1[1] +
                                             src_f24.f8[2].f1[2] +
-                                            src_f24.f8[2].f1[3]);                   // perform small work of reducing B float4s to float using 16 x 16 threads and store in LDS
+                                            src_f24.f8[2].f1[3]);                               // perform small work of reducing B float4s to float using 16 x 16 threads and store in LDS
 
-    __syncthreads();                                                        // syncthreads after LDS load
+    __syncthreads();                                                                            // syncthreads after LDS load
 
     // Reduction of 16 floats on 16 threads per block in x dimension (for every y dimension)
     for (int threadMax = 8; threadMax >= 1; threadMax /= 2)
@@ -290,13 +290,13 @@ __global__ void image_sum_pkd3_tensor(T *srcPtr,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    __shared__ float partialRSumLDS[16][16];                                 // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
+    __shared__ float partialRSumLDS[16][16];                                        // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
     __shared__ float partialGSumLDS[16][16];
     __shared__ float partialBSumLDS[16][16];
-    float *partialRSumLDSRowPtr = &partialRSumLDS[hipThreadIdx_y][0];         // float pointer to beginning of each row in LDS
+    float *partialRSumLDSRowPtr = &partialRSumLDS[hipThreadIdx_y][0];               // float pointer to beginning of each row in LDS
     float *partialGSumLDSRowPtr = &partialGSumLDS[hipThreadIdx_y][0];
     float *partialBSumLDSRowPtr = &partialBSumLDS[hipThreadIdx_y][0];
-    partialRSumLDSRowPtr[hipThreadIdx_x] = 0.0f;                             // initialization of LDS to 0 using all 16 x 16 threads
+    partialRSumLDSRowPtr[hipThreadIdx_x] = 0.0f;                                    // initialization of LDS to 0 using all 16 x 16 threads
     partialGSumLDSRowPtr[hipThreadIdx_x] = 0.0f;
     partialBSumLDSRowPtr[hipThreadIdx_x] = 0.0f;
 
@@ -305,13 +305,13 @@ __global__ void image_sum_pkd3_tensor(T *srcPtr,
         return;
     }
 
-    int xAlignedLength = roiTensorPtrSrc[id_z].xywhROI.roiWidth & ~7;       // alignedLength for vectorized global loads
-    int xDiff = roiTensorPtrSrc[id_z].xywhROI.roiWidth - xAlignedLength;    // difference between roiWidth and alignedLength
+    int xAlignedLength = roiTensorPtrSrc[id_z].xywhROI.roiWidth & ~7;               // alignedLength for vectorized global loads
+    int xDiff = roiTensorPtrSrc[id_z].xywhROI.roiWidth - xAlignedLength;            // difference between roiWidth and alignedLength
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
 
     d_float24 src_f24;
-    rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &src_f24);           // load 24 pixels to local mmemory
-    if (id_x + 8 > roiTensorPtrSrc[id_z].xywhROI.roiWidth)                               // local memory reset of invalid values (from the vectorized global load) to 0.0f
+    rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &src_f24);      // load 24 pixels to local mmemory
+    if (id_x + 8 > roiTensorPtrSrc[id_z].xywhROI.roiWidth)                          // local memory reset of invalid values (from the vectorized global load) to 0.0f
     {
         for(int i = xDiff; i < 8; i++)
         {
@@ -320,7 +320,7 @@ __global__ void image_sum_pkd3_tensor(T *srcPtr,
             src_f24.f8[2].f1[i] = 0.0f;
         }
     }
-    src_f24.f8[0].f4[0] += src_f24.f8[0].f4[1];                                           // perform small work of vectorized float4 addition
+    src_f24.f8[0].f4[0] += src_f24.f8[0].f4[1];                                     // perform small work of vectorized float4 addition
     src_f24.f8[1].f4[0] += src_f24.f8[1].f4[1];
     src_f24.f8[2].f4[0] += src_f24.f8[2].f4[1];
     partialRSumLDSRowPtr[hipThreadIdx_x] = (src_f24.f8[0].f1[0] +
@@ -336,7 +336,7 @@ __global__ void image_sum_pkd3_tensor(T *srcPtr,
                                             src_f24.f8[2].f1[2] +
                                             src_f24.f8[2].f1[3]);                   // perform small work of reducing B float4s to float using 16 x 16 threads and store in LDS
 
-    __syncthreads();                                                        // syncthreads after LDS load
+    __syncthreads();                                                                // syncthreads after LDS load
 
     // Reduction of 16 floats on 16 threads per block in x dimension (for every y dimension)
     for (int threadMax = 8; threadMax >= 1; threadMax /= 2)
