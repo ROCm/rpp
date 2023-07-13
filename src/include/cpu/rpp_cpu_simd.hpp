@@ -2320,9 +2320,7 @@ inline void rpp_generic_nn_load_f32pln1_avx(Rpp32f *srcPtrChannel, Rpp32s *srcLo
     for(int i = 0; i < 8; i++)
     {
         if(!(invalidLoad[i]))
-        {
             buffer[i] = *(srcPtrChannel + srcLoc[i]);
-        }
     }
     p = _mm256_loadu_ps(buffer);
 }
@@ -2352,25 +2350,14 @@ inline void rpp_generic_nn_load_i8pln1(Rpp8s *srcPtrChannel, Rpp32s *srcLoc, Rpp
 
 inline void rpp_generic_nn_load_i8pln1_avx(Rpp8s *srcPtrChannel, Rpp32s *srcLoc, Rpp32s *invalidLoad, __m256i &p)
 {
-    __m128i px[8];
-    px[0] = invalidLoad[0] ? xmm_px0 : _mm_loadu_si128((__m128i *)(srcPtrChannel + srcLoc[0]));  // LOC0 load [R01|R02|R03|R04|R05|R06...] - Need R01
-    px[1] = invalidLoad[1] ? xmm_px0 : _mm_loadu_si128((__m128i *)(srcPtrChannel + srcLoc[1]));  // LOC1 load [R11|R12|R13|R14|R15|R16...] - Need R11
-    px[2] = invalidLoad[2] ? xmm_px0 : _mm_loadu_si128((__m128i *)(srcPtrChannel + srcLoc[2]));  // LOC2 load [R21|R22|R23|R24|R25|R26...] - Need R21
-    px[3] = invalidLoad[3] ? xmm_px0 : _mm_loadu_si128((__m128i *)(srcPtrChannel + srcLoc[3]));  // LOC3 load [R31|R32|R33|R34|R35|R36...] - Need R31
-    px[4] = invalidLoad[4] ? xmm_px0 : _mm_loadu_si128((__m128i *)(srcPtrChannel + srcLoc[4]));  // LOC0 load [R41|R42|R43|R44|R45|R46...] - Need R41
-    px[5] = invalidLoad[5] ? xmm_px0 : _mm_loadu_si128((__m128i *)(srcPtrChannel + srcLoc[5]));  // LOC1 load [R51|R52|R53|R54|R55|R56...] - Need R51
-    px[6] = invalidLoad[6] ? xmm_px0 : _mm_loadu_si128((__m128i *)(srcPtrChannel + srcLoc[6]));  // LOC2 load [R61|R62|R63|R64|R65|R66...] - Need R61
-    px[7] = invalidLoad[7] ? xmm_px0 : _mm_loadu_si128((__m128i *)(srcPtrChannel + srcLoc[7]));  // LOC3 load [R71|R72|R73|R74|R75|R76...] - Need R71
-
-    px[0] = _mm_unpacklo_epi8(px[0], px[2]);    // unpack 8 lo-pixels of px[0] and px[2] - [R01|R21|R02|R22.... R08|R28]
-    px[1] = _mm_unpacklo_epi8(px[1], px[3]);    // unpack 8 lo-pixels of px[1] and px[3] - [R11|R31|R12|R32.... R18|R38]
-    px[2] = _mm_unpacklo_epi8(px[4], px[6]);    // unpack 8 lo-pixels of px[4] and px[6] - [R41|R61|R42|R62.... R48|R68]
-    px[3] = _mm_unpacklo_epi8(px[5], px[7]);    // unpack 8 lo-pixels of px[5] and px[7] - [R51|R71|R12|R32.... R18|R38]
-
-    px[0] = _mm_unpacklo_epi8(px[0], px[1]);   // unpack to obtain [R01|R11|R21|R31|00|00|00|00|00|00|00|00|00|00|00|00]
-    px[1] = _mm_unpacklo_epi8(px[2], px[3]);   // unpack to obtain [R41|R51|R61|R71|00|00|00|00|00|00|00|00|00|00|00|00]
-    px[0] = _mm_unpacklo_epi32(px[0], px[1]);  // unpack to obtain [R01|R11|R21|R31|R41|R51|R61|R71|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00]
-    p = _mm256_setr_m128i(px[0], xmm_px0);
+    Rpp8s buffer[16] = {0};
+    for(int i = 0; i < 8; i++)
+    {
+        if(!invalidLoad[i])
+            buffer[i] = *(srcPtrChannel + srcLoc[i]) + (char)128;
+    }
+    __m128i px = _mm_loadu_si128((__m128i *)buffer);
+    p = _mm256_setr_m128i(px, xmm_px0);
 }
 
 inline void rpp_generic_bilinear_load_mask_avx(__m256 &pSrcY, __m256 &pSrcX, __m256 *pRoiLTRB, Rpp32s *invalidLoadMask)
@@ -3294,30 +3281,25 @@ inline void rpp_store4_u8_to_u8(Rpp8u* dstPtr, __m128i &p)
     _mm_storeu_si128((__m128i *)(dstPtr), p);
 }
 
-inline void rpp_store8_u8_to_u8(Rpp8u* dstPtr, __m256i &p)
+inline void rpp_store24_u8_to_u8_avx(Rpp8u* dstPtr, __m256i &p)
 {
     _mm256_storeu_si256((__m256i *)(dstPtr), p);
 }
 
-inline void rpp_store8_i8_to_i8(Rpp8s* dstPtr, __m256i &p)
+inline void rpp_store24_i8_to_i8_avx(Rpp8s* dstPtr, __m256i &p)
 {
     _mm256_storeu_si256((__m256i *)(dstPtr), p);
-}
-
-inline void rpp_store4_u8pln1_to_u8pln1(Rpp8u* dstPtr, __m128i &p)
-{
-    _mm_storeu_si32((__m128i *)(dstPtr), p);
 }
 
 inline void rpp_store8_u8pln1_to_u8pln1_avx(Rpp8u* dstPtr, __m256i &p)
 {
-    __m128i pTemp = _mm256_extracti128_si256(p, 0);
+    __m128i pTemp = _mm256_castsi256_si128(p);
     _mm_storeu_si64((__m128i *)(dstPtr), pTemp);
 }
 
 inline void rpp_store8_i8pln1_to_i8pln1(Rpp8s* dstPtr, __m256i &p)
 {
-    __m128i pTemp = _mm256_extracti128_si256(p, 0);
+    __m128i pTemp = _mm256_castsi256_si128(p);
     _mm_storeu_si64((__m128i *)(dstPtr), pTemp);
 }
 
@@ -3347,33 +3329,18 @@ inline void rpp_store24_u8pln3_to_u8pkd3_avx(Rpp8u* dstPtr, __m256i *p)
 
 inline void rpp_store24_i8pln3_to_i8pkd3_avx(Rpp8s* dstPtr, __m256i *p)
 {
-    __m128i splitMask1 = _mm_setr_epi8(0, 1, 2, 3, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80);
-    __m128i splitMask2 = _mm_setr_epi8(4, 5, 6, 7, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80);
-    __m128i chn[6];
+    __m128i px[5];
+    px[0] = _mm256_castsi256_si128(p[0]);            // [R01|R11|R21|R31|R41|R51|R61|R71|00|00|00|00|00|00|00|00]
+    px[1] = _mm256_castsi256_si128(p[1]);            // [G01|G11|G21|G31|G41|G51|G61|G71|00|00|00|00|00|00|00|00]
+    px[2] = _mm256_castsi256_si128(p[2]);            // [B01|B11|B21|B31|B41|B51|B61|B71|00|00|00|00|00|00|00|00]
 
-    __m128i R = _mm256_extracti128_si256(p[0], 0);
-    // px[1] = _mm256_extracti128_si256(p[0], 1);
-    __m128i G = _mm256_extracti128_si256(p[1], 0);
-    // px[3] = _mm256_extracti128_si256(p[1], 1);
-    __m128i B = _mm256_extracti128_si256(p[2], 0);
-    // px[5] = _mm256_extracti128_si256(p[2], 1);
+    px[3] = _mm_unpacklo_epi8(px[0], px[1]);         // [R01|G01|R11|G11|R21|G21|R31|G31|R41|G41|R51|G51|R61|G61|R71|G71]
+    px[4] = _mm_unpacklo_epi64(px[3], px[2]);        // [R01|G01|R11|G11|R21|G21|R31|G31|B01|B11|B21|B31|B41|B51|B61|B71]
+    _mm_storeu_si128((__m128i *)(dstPtr), _mm_shuffle_epi8(px[4], xmm_store4_pkd_pixels)); // shuffle to get RGB 00-03
 
-    chn[0] = _mm_shuffle_epi8(R, splitMask1);
-    chn[1] = _mm_shuffle_epi8(G, splitMask1);
-    chn[2] = _mm_shuffle_epi8(B, splitMask1);
-
-    __m128i px[2];
-    px[0] = _mm_unpacklo_epi8(chn[0], chn[1]);
-    px[1] = _mm_unpacklo_epi64(px[0], chn[2]);
-    _mm_storeu_si128((__m128i *)(dstPtr), _mm_shuffle_epi8(px[1], xmm_store4_pkd_pixels));
-
-    chn[3] = _mm_shuffle_epi8(R, splitMask2);
-    chn[4] = _mm_shuffle_epi8(G, splitMask2);
-    chn[5] = _mm_shuffle_epi8(B, splitMask2);
-
-    px[0] = _mm_unpacklo_epi8(chn[3], chn[4]);
-    px[1] = _mm_unpacklo_epi64(px[0], chn[5]);
-    _mm_storeu_si128((__m128i *)(dstPtr + 12), _mm_shuffle_epi8(px[1], xmm_store4_pkd_pixels));
+    const __m128i xmm_shuffle_mask = _mm_setr_epi8(0, 1, 12, 2, 3, 13, 4, 5, 14, 6, 7, 15, 0x80, 0x80, 0x80, 0x80);
+    px[4] = _mm_unpackhi_epi64(px[3], px[4]);        // [R41|G41|R51|G51|R61|G61|R71|G71|B01|B11|B21|B31|B41|B51|B61|B71]
+    _mm_storeu_si128((__m128i *)(dstPtr + 12), _mm_shuffle_epi8(px[4], xmm_shuffle_mask)); // shuffle to get RGB 04-07
 
 }
 
@@ -3387,11 +3354,6 @@ inline void rpp_store12_i8pkd3_to_i8pln3(Rpp8s* dstPtrR, Rpp8s* dstPtrG, Rpp8s* 
 inline void rpp_store4_i8_to_i8(Rpp8s* dstPtr, __m128i &p)
 {
     _mm_storeu_si128((__m128i *)(dstPtr), p);
-}
-
-inline void rpp_store4_i8pln1_to_i8pln1(Rpp8s* dstPtr, __m128i &p)
-{
-    _mm_storeu_si32((__m128i *)(dstPtr), p);
 }
 
 inline void rpp_store12_i8pln3_to_i8pkd3(Rpp8s* dstPtr, __m128i *p)

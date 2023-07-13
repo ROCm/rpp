@@ -210,7 +210,7 @@ RppStatus water_u8_u8_host_tensor(Rpp8u *srcPtr,
                     compute_water_src_loc_avx(pDstY, pDstX, pSrcY, pSrcX, pWaterParams, pSinFactor, pCosFactor, pRoiLTRB[3], pRoiLTRB[2], pSrcStrideH, srcLocArray, true);
                     compute_generic_nn_srclocs_and_validate_avx(pSrcY, pSrcX, pRoiLTRB, pSrcStrideH, srcLocArray, invalidLoad, true);
                     rpp_simd_load(rpp_generic_nn_load_u8pkd3_avx, srcPtrChannel, srcLocArray, invalidLoad, pRow);
-                    rpp_simd_store(rpp_store8_u8_to_u8, dstPtrTemp, pRow);
+                    rpp_simd_store(rpp_store24_u8_to_u8_avx, dstPtrTemp, pRow);
                     dstPtrTemp += vectorIncrementPkd;
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
@@ -901,7 +901,7 @@ RppStatus water_i8_i8_host_tensor(Rpp8s *srcPtr,
                     compute_water_src_loc_avx(pDstY, pDstX, pSrcY, pSrcX, pWaterParams, pSinFactor, pCosFactor, pRoiLTRB[3], pRoiLTRB[2], pSrcStrideH, srcLocArray, true);
                     compute_generic_nn_srclocs_and_validate_avx(pSrcY, pSrcX, pRoiLTRB, pSrcStrideH, srcLocArray, invalidLoad, true);
                     rpp_simd_load(rpp_generic_nn_load_i8pkd3_avx, srcPtrChannel, srcLocArray, invalidLoad, pRow);
-                    rpp_simd_store(rpp_store8_i8_to_i8, dstPtrTemp, pRow);
+                    rpp_simd_store(rpp_store24_i8_to_i8_avx, dstPtrTemp, pRow);
                     dstPtrTemp += vectorIncrementPkd;
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
