@@ -1292,11 +1292,11 @@ inline void rpp_load24_f32pkd3_to_f64pln3_avx(Rpp32f *srcPtr, __m256d *p)
     p128[7] = _mm_loadu_ps(srcPtr + 21);
     _MM_TRANSPOSE4_PS(p128[4], p128[5], p128[6], p128[7]);
     p[0] = _mm256_cvtps_pd(p128[0]);
-    p[1] = _mm256_cvtps_pd(p128[1]);
-    p[2] = _mm256_cvtps_pd(p128[2]);
-    p[3] = _mm256_cvtps_pd(p128[3]);
-    p[4] = _mm256_cvtps_pd(p128[4]);
-    p[5] = _mm256_cvtps_pd(p128[5]);
+    p[1] = _mm256_cvtps_pd(p128[4]);
+    p[2] = _mm256_cvtps_pd(p128[1]);
+    p[3] = _mm256_cvtps_pd(p128[5]);
+    p[4] = _mm256_cvtps_pd(p128[2]);
+    p[5] = _mm256_cvtps_pd(p128[6]);
 }
 
 inline void rpp_load24_f32pln3_to_f32pln3_avx(Rpp32f *srcPtrR, Rpp32f *srcPtrG, Rpp32f *srcPtrB, __m256 *p)
