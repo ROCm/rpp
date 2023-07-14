@@ -459,7 +459,7 @@ int main(int argc, char **argv)
                 Rpp32f phaseX[batchSize];
                 Rpp32f phaseY[batchSize];
 
-                for (i = 0; i < images; i++)
+                for (i = 0; i < batchSize; i++)
                 {
                     amplX[i] = 2.0f;
                     amplY[i] = 5.0f;
