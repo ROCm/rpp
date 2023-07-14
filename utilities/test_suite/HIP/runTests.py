@@ -387,10 +387,14 @@ else:
 
 # print the results of qa tests
 supportedCaseList = ['0', '1', '2', '4', '13', '29', '31', '34', '36', '37', '38','84']
+nonQACaseList = ['84']
 supportedCases = 0
 for num in caseList:
-    if num in supportedCaseList:
+    if qaMode == 1 and num not in nonQACaseList:
         supportedCases += 1
+    elif qaMode == 0 and num in supportedCaseList:
+        supportedCases += 1
+
 caseInfo = "Tests are run for " + str(supportedCases) + " supported cases out of the " + str(len(caseList)) + " cases requested"
 if qaMode and testType == 0:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")

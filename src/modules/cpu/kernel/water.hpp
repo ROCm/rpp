@@ -101,7 +101,7 @@ RppStatus water_u8_u8_host_tensor(Rpp8u *srcPtr,
                 Rpp32f dstX, dstY, sinFactor;
                 __m256 pDstX, pDstY, pSinFactor;
                 dstY = (Rpp32f)i;
-                sinFactor= std::sin((freqX * dstY) + phaseX);
+                sinFactor = std::sin((freqX * dstY) + phaseX);
                 pDstX = avx_pDstLocInit;
                 pDstY = _mm256_set1_ps(dstY);
                 pSinFactor = _mm256_set1_ps(sinFactor);
@@ -151,7 +151,7 @@ RppStatus water_u8_u8_host_tensor(Rpp8u *srcPtr,
                 Rpp32f dstX, dstY, sinFactor;
                 __m256 pDstX, pDstY, pSinFactor;
                 dstY = (Rpp32f)i;
-                sinFactor= std::sin((freqX * dstY) + phaseX);
+                sinFactor = std::sin((freqX * dstY) + phaseX);
                 pDstX = avx_pDstLocInit;
                 pDstY = _mm256_set1_ps(dstY);
                 pSinFactor = _mm256_set1_ps(sinFactor);
@@ -196,7 +196,7 @@ RppStatus water_u8_u8_host_tensor(Rpp8u *srcPtr,
                 Rpp32f dstX, dstY, sinFactor;
                 __m256 pDstX, pDstY, pSinFactor;
                 dstY = (Rpp32f)i;
-                sinFactor= std::sin((freqX * dstY) + phaseX);
+                sinFactor = std::sin((freqX * dstY) + phaseX);
                 pDstX = avx_pDstLocInit;
                 pDstY = _mm256_set1_ps(dstY);
                 pSinFactor = _mm256_set1_ps(sinFactor);
@@ -240,7 +240,7 @@ RppStatus water_u8_u8_host_tensor(Rpp8u *srcPtr,
                 Rpp32f dstX, dstY, sinFactor;
                 __m256 pDstX, pDstY, pSinFactor;
                 dstY = (Rpp32f)i;
-                sinFactor= std::sin((freqX * dstY) + phaseX);
+                sinFactor = std::sin((freqX * dstY) + phaseX);
                 pDstX = avx_pDstLocInit;
                 pDstY = _mm256_set1_ps(dstY);
                 pSinFactor = _mm256_set1_ps(sinFactor);
@@ -363,7 +363,7 @@ RppStatus water_f32_f32_host_tensor(Rpp32f *srcPtr,
                 Rpp32f dstX, dstY, sinFactor;
                 __m256 pDstX, pDstY, pSinFactor;
                 dstY = (Rpp32f)i;
-                sinFactor= std::sin((freqX * dstY) + phaseX);
+                sinFactor = std::sin((freqX * dstY) + phaseX);
                 pDstX = avx_pDstLocInit;
                 pDstY = _mm256_set1_ps(dstY);
                 pSinFactor = _mm256_set1_ps(sinFactor);
@@ -413,7 +413,7 @@ RppStatus water_f32_f32_host_tensor(Rpp32f *srcPtr,
                 Rpp32f dstX, dstY, sinFactor;
                 __m256 pDstX, pDstY, pSinFactor;
                 dstY = (Rpp32f)i;
-                sinFactor= std::sin((freqX * dstY) + phaseX);
+                sinFactor = std::sin((freqX * dstY) + phaseX);
                 pDstX = avx_pDstLocInit;
                 pDstY = _mm256_set1_ps(dstY);
                 pSinFactor = _mm256_set1_ps(sinFactor);
@@ -458,7 +458,7 @@ RppStatus water_f32_f32_host_tensor(Rpp32f *srcPtr,
                 Rpp32f dstX, dstY, sinFactor;
                 __m256 pDstX, pDstY, pSinFactor;
                 dstY = (Rpp32f)i;
-                sinFactor= std::sin((freqX * dstY) + phaseX);
+                sinFactor = std::sin((freqX * dstY) + phaseX);
                 pDstX = avx_pDstLocInit;
                 pDstY = _mm256_set1_ps(dstY);
                 pSinFactor = _mm256_set1_ps(sinFactor);
@@ -501,7 +501,7 @@ RppStatus water_f32_f32_host_tensor(Rpp32f *srcPtr,
                 Rpp32f dstX, dstY, sinFactor;
                 __m256 pDstX, pDstY, pSinFactor;
                 dstY = (Rpp32f)i;
-                sinFactor= std::sin((freqX * dstY) + phaseX);
+                sinFactor = std::sin((freqX * dstY) + phaseX);
                 pDstX = avx_pDstLocInit;
                 pDstY = _mm256_set1_ps(dstY);
                 pSinFactor = _mm256_set1_ps(sinFactor);
@@ -603,7 +603,7 @@ RppStatus water_f16_f16_host_tensor(Rpp16f *srcPtr,
 
                 Rpp32f dstX, dstY, sinFactor;
                 dstY = (Rpp32f)i;
-                sinFactor= std::sin((freqX * dstY) + phaseX);
+                sinFactor = std::sin((freqX * dstY) + phaseX);
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
@@ -636,7 +636,7 @@ RppStatus water_f16_f16_host_tensor(Rpp16f *srcPtr,
 
                 Rpp32f dstX, dstY, sinFactor;
                 dstY = (Rpp32f)i;
-                sinFactor= std::sin((freqX * dstY) + phaseX);
+                sinFactor = std::sin((freqX * dstY) + phaseX);
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
@@ -664,7 +664,7 @@ RppStatus water_f16_f16_host_tensor(Rpp16f *srcPtr,
 
                 Rpp32f dstX, dstY, sinFactor;
                 dstY = (Rpp32f)i;
-                sinFactor= std::sin((freqX * dstY) + phaseX);
+                sinFactor = std::sin((freqX * dstY) + phaseX);
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
@@ -692,7 +692,7 @@ RppStatus water_f16_f16_host_tensor(Rpp16f *srcPtr,
 
                 Rpp32f dstX, dstY, sinFactor;
                 dstY = (Rpp32f)i;
-                sinFactor= std::sin((freqX * dstY) + phaseX);
+                sinFactor = std::sin((freqX * dstY) + phaseX);
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
@@ -793,7 +793,7 @@ RppStatus water_i8_i8_host_tensor(Rpp8s *srcPtr,
                 Rpp32f dstX, dstY, sinFactor;
                 __m256 pDstX, pDstY, pSinFactor;
                 dstY = (Rpp32f)i;
-                sinFactor= std::sin((freqX * dstY) + phaseX);
+                sinFactor = std::sin((freqX * dstY) + phaseX);
                 pDstX = avx_pDstLocInit;
                 pDstY = _mm256_set1_ps(dstY);
                 pSinFactor = _mm256_set1_ps(sinFactor);
@@ -843,7 +843,7 @@ RppStatus water_i8_i8_host_tensor(Rpp8s *srcPtr,
                 Rpp32f dstX, dstY, sinFactor;
                 __m256 pDstX, pDstY, pSinFactor;
                 dstY = (Rpp32f)i;
-                sinFactor= std::sin((freqX * dstY) + phaseX);
+                sinFactor = std::sin((freqX * dstY) + phaseX);
                 pDstX = avx_pDstLocInit;
                 pDstY = _mm256_set1_ps(dstY);
                 pSinFactor = _mm256_set1_ps(sinFactor);
@@ -887,7 +887,7 @@ RppStatus water_i8_i8_host_tensor(Rpp8s *srcPtr,
                 Rpp32f dstX, dstY, sinFactor;
                 __m256 pDstX, pDstY, pSinFactor;
                 dstY = (Rpp32f)i;
-                sinFactor= std::sin((freqX * dstY) + phaseX);
+                sinFactor = std::sin((freqX * dstY) + phaseX);
                 pDstX = avx_pDstLocInit;
                 pDstY = _mm256_set1_ps(dstY);
                 pSinFactor = _mm256_set1_ps(sinFactor);
@@ -931,7 +931,7 @@ RppStatus water_i8_i8_host_tensor(Rpp8s *srcPtr,
                 Rpp32f dstX, dstY, sinFactor;
                 __m256 pDstX, pDstY, pSinFactor;
                 dstY = (Rpp32f)i;
-                sinFactor= std::sin((freqX * dstY) + phaseX);
+                sinFactor = std::sin((freqX * dstY) + phaseX);
                 pDstX = avx_pDstLocInit;
                 pDstY = _mm256_set1_ps(dstY);
                 pSinFactor = _mm256_set1_ps(sinFactor);
