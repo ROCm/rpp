@@ -112,7 +112,6 @@ int main(int argc, char **argv)
     if (reductionTypeCase && outputFormatToggle)
     {
         printf("\nReduction Kernels don't have outputFormatToggle! Please input outputFormatToggle = 0\n");
-        outputFormatToggle = 0;
         return -1;
     }
     if(batchSize > MAX_BATCH_SIZE)
@@ -299,7 +298,7 @@ int main(int argc, char **argv)
     Rpp32f *reductionFuncResultArr;
     Rpp32u reductionFuncResultArrLength = srcDescPtr->n * 4;
     if(reductionTypeCase)
-        reductionFuncResultArr = (Rpp32f *)malloc(reductionFuncResultArrLength * sizeof(Rpp32f));
+        reductionFuncResultArr = static_cast<Rpp32f *>malloc(reductionFuncResultArrLength * sizeof(Rpp32f));
 
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);

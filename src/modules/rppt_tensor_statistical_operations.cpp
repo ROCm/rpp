@@ -76,7 +76,7 @@ RppStatus rppt_image_mean_host(RppPtr_t srcPtr,
     }
     else if (srcDescPtr->dataType == RpptDataType::F16)
     {
-        image_mean_f16_f16_host_tensor((Rpp16f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+        image_mean_f16_f16_host_tensor(reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                        srcDescPtr,
                                        static_cast<Rpp32f*>(imageMeanArr),
                                        roiTensorPtrSrc,
@@ -85,7 +85,7 @@ RppStatus rppt_image_mean_host(RppPtr_t srcPtr,
     }
     else if (srcDescPtr->dataType == RpptDataType::F32)
     {
-        image_mean_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+        image_mean_f32_f32_host_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                        srcDescPtr,
                                        static_cast<Rpp32f*>(imageMeanArr),
                                        roiTensorPtrSrc,
