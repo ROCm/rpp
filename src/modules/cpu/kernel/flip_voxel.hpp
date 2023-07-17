@@ -37,9 +37,9 @@ RppStatus flip_voxel_f32_f32_host_tensor(Rpp32f *srcPtr,
                                          rpp::Handle& handle)
 {
     RpptROI3D roiDefault;
-    if(srcGenericDescPtr->layout==RpptLayout::NCDHW)
+    if (srcGenericDescPtr->layout==RpptLayout::NCDHW)
         roiDefault = {0, 0, 0, (Rpp32s)srcGenericDescPtr->dims[4], (Rpp32s)srcGenericDescPtr->dims[3], (Rpp32s)srcGenericDescPtr->dims[2]};
-    else if(srcGenericDescPtr->layout==RpptLayout::NDHWC)
+    else if (srcGenericDescPtr->layout==RpptLayout::NDHWC)
         roiDefault = {0, 0, 0, (Rpp32s)srcGenericDescPtr->dims[3], (Rpp32s)srcGenericDescPtr->dims[2], (Rpp32s)srcGenericDescPtr->dims[1]};
     Rpp32u numThreads = handle.GetNumThreads();
 
@@ -68,7 +68,7 @@ RppStatus flip_voxel_f32_f32_host_tensor(Rpp32f *srcPtr,
         auto load8Fn = &rpp_load8_f32_to_f32_avx;
 
         //Update the load functions, hFactor, vFactor and hStrideSrcIncrement based on the flags enabled
-        if(horizontalFlag == 1)
+        if (horizontalFlag == 1)
             load8Fn = &rpp_load8_f32_to_f32_mirror_avx;
 
         Rpp32f *srcPtrChannel, *dstPtrChannel;
@@ -83,20 +83,27 @@ RppStatus flip_voxel_f32_f32_host_tensor(Rpp32f *srcPtr,
         Rpp32s srcPtrIncrementPerPixel = (horizontalFlag) ? -1 : 1;
 
         // flip without fused output-layout toggle (NCDHW -> NCDHW)
-        if((srcGenericDescPtr->layout == RpptLayout::NCDHW) && (dstGenericDescPtr->layout == RpptLayout::NCDHW))
+        if ((srcGenericDescPtr->layout == RpptLayout::NCDHW) && (dstGenericDescPtr->layout == RpptLayout::NCDHW))
         {
             Rpp32u hFactor = roi.xyzwhdROI.xyz.z * srcGenericDescPtr->strides[2] + roi.xyzwhdROI.xyz.x * layoutParams.bufferMultiplier;
             Rpp32u vFactor = roi.xyzwhdROI.xyz.y * srcGenericDescPtr->strides[3];
+            Rpp32u dFactor = 0;
             Rpp32s hStrideSrcIncrement = srcGenericDescPtr->strides[3];
+            Rpp32s depthStrideIncrement = srcGenericDescPtr->strides[2];
 
-            if(horizontalFlag == 1)
+            if (horizontalFlag)
                 hFactor += (roi.xyzwhdROI.roiWidth - vectorIncrementPerChannel) * layoutParams.bufferMultiplier;
-            if(verticalFlag == 1)
+            if (verticalFlag)
             {
                 vFactor += (roi.xyzwhdROI.roiHeight - 1) * srcGenericDescPtr->strides[3];
                 hStrideSrcIncrement = -srcGenericDescPtr->strides[3];
             }
-            srcPtrChannel = srcPtrImage + vFactor + hFactor;
+            if (depthFlag)
+            {
+                dFactor =  (roi.xyzwhdROI.roiDepth - 2) * srcGenericDescPtr->strides[2];
+                depthStrideIncrement = -srcGenericDescPtr->strides[2];
+            }
+            srcPtrChannel = srcPtrImage + dFactor + vFactor + hFactor;
 
             for(int c = 0; c < layoutParams.channelParam; c++)
             {
@@ -106,6 +113,7 @@ RppStatus flip_voxel_f32_f32_host_tensor(Rpp32f *srcPtr,
 
                 for(int i = 0; i < roi.xyzwhdROI.roiDepth; i++)
                 {
+                    std::cerr<<"frame: "<<i<<std::endl;
                     Rpp32f *srcPtrRow, *dstPtrRow;
                     srcPtrRow = srcPtrDepth;
                     dstPtrRow = dstPtrDepth;
@@ -136,7 +144,7 @@ RppStatus flip_voxel_f32_f32_host_tensor(Rpp32f *srcPtr,
                         srcPtrRow += hStrideSrcIncrement;
                         dstPtrRow += dstGenericDescPtr->strides[3];
                     }
-                    srcPtrDepth += srcGenericDescPtr->strides[2];
+                    srcPtrDepth += depthStrideIncrement;
                     dstPtrDepth += dstGenericDescPtr->strides[2];
                 }
                 srcPtrChannel += srcGenericDescPtr->strides[1];
