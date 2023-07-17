@@ -442,7 +442,7 @@ int main(int argc, char * argv[])
                 {
                     horizontalTensor[i] = 1;
                     verticalTensor[i] = 1;
-                    depthTensor[i] = 0;
+                    depthTensor[i] = 1;
                 }
 
                 startWallTime = omp_get_wtime();
