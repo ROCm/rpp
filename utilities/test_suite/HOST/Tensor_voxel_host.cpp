@@ -277,7 +277,7 @@ int main(int argc, char * argv[])
         fprintf(stderr, "\nUsage: %s <header file> <data file> <layoutType = 0 for NCDHW / 1 for NDHWC>\n", argv[0]);
         exit(1);
     }
-    if ((testCase < 0) || (testCase > 1))
+    if ((testCase < 0) || (testCase > 2))
     {
         fprintf(stderr, "\nUsage: %s <header file> <data file> <layoutType = 0 for NCDHW / 1 for NDHWC>\n", argv[0]);
         exit(1);
@@ -440,8 +440,8 @@ int main(int argc, char * argv[])
 
                 for (int i = 0; i < batchSize; i++)
                 {
-                    horizontalTensor[i] = 0;
-                    verticalTensor[i] = 0;
+                    horizontalTensor[i] = 1;
+                    verticalTensor[i] = 1;
                     depthTensor[i] = 0;
                 }
 

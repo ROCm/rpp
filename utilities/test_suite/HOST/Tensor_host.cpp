@@ -313,7 +313,7 @@ int main(int argc, char **argv)
 
             // if the input layout requested is PLN3, convert PKD3 inputs to PLN3 for first and second input batch
             if (layoutType == 1)
-                convert_pkd3_to_pln3(inputu8, srcDescPtr);
+                // convert_pkd3_to_pln3(inputu8, srcDescPtr);
 
             if(dualInputCase)
             {
@@ -694,8 +694,8 @@ int main(int argc, char **argv)
                 // Convert any PLN3 outputs to the corresponding PKD3 version for OpenCV dump
                 if (layoutType == 0 || layoutType == 1)
                 {
-                    if ((dstDescPtr->c == 3) && (dstDescPtr->layout == RpptLayout::NCHW))
-                        convert_pln3_to_pkd3(outputu8, dstDescPtr);
+                    // if ((dstDescPtr->c == 3) && (dstDescPtr->layout == RpptLayout::NCHW))
+                        // convert_pln3_to_pkd3(outputu8, dstDescPtr);
                 }
 
                 // OpenCV dump (if testType is unit test and QA mode is not set)
