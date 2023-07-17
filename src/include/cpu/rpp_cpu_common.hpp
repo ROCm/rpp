@@ -5860,9 +5860,21 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
     }
 }
 
-inline void compute_sum_8_host(__m256d *p1, __m256d *pSum)
+inline void compute_sum_16_host(__m256 *p, __m256 *pSum)
 {
-    pSum[0] = _mm256_add_pd(_mm256_add_pd(p1[0], p1[1]), pSum[0]); //add 8 values and bring it down to 4
+    pSum[0] = _mm256_add_ps(_mm256_add_ps(p[0], p[1]), pSum[0]); //add 16 values to 8
+}
+
+inline void compute_sum_48_host(__m256 *p, __m256 *pSumR, __m256 *pSumG, __m256 *pSumB)
+{
+    pSumR[0] = _mm256_add_ps(_mm256_add_ps(p[0], p[1]), pSumR[0]); //add 16R values and bring it down to 8
+    pSumG[0] = _mm256_add_ps(_mm256_add_ps(p[2], p[3]), pSumG[0]); //add 16G values and bring it down to 8
+    pSumB[0] = _mm256_add_ps(_mm256_add_ps(p[4], p[5]), pSumB[0]); //add 16B values and bring it down to 8
+}
+
+inline void compute_sum_8_host(__m256d *p, __m256d *pSum)
+{
+    pSum[0] = _mm256_add_pd(_mm256_add_pd(p[0], p[1]), pSum[0]); //add 8 values and bring it down to 4
 }
 
 inline void compute_sum_24_host(__m256d *p, __m256d *pSumR, __m256d *pSumG, __m256d *pSumB)
