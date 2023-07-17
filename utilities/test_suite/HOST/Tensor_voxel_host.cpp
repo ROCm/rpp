@@ -411,32 +411,49 @@ int main(int argc, char * argv[])
     {
         switch (testCase)
         {
-        case 0:
-        {
-            Rpp32f *mulTensor = reinterpret_cast<Rpp32f *>(pinnedMemArgs);
-            Rpp32f *addTensor = mulTensor + batchSize;
-
-            for (int i = 0; i < batchSize; i++)
+            case 0:
             {
-                mulTensor[i] = 80;
-                addTensor[i] = 5;
-            }
+                Rpp32f *mulTensor = reinterpret_cast<Rpp32f *>(pinnedMemArgs);
+                Rpp32f *addTensor = mulTensor + batchSize;
 
-            startWallTime = omp_get_wtime();
-            rppt_fmadd_scalar_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, mulTensor, addTensor, roiGenericSrcPtr, roiTypeSrc, handle);
-            break;
-        }
-        case 1:
-        {
-            startWallTime = omp_get_wtime();
-            rppt_slice_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, roiGenericSrcPtr, roiTypeSrc, handle);
-            break;
-        }
-        default:
-        {
-            missingFuncFlag = 1;
-            break;
-        }
+                for (int i = 0; i < batchSize; i++)
+                {
+                    mulTensor[i] = 80;
+                    addTensor[i] = 5;
+                }
+
+                startWallTime = omp_get_wtime();
+                rppt_fmadd_scalar_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, mulTensor, addTensor, roiGenericSrcPtr, roiTypeSrc, handle);
+                break;
+            }
+            case 1:
+            {
+                startWallTime = omp_get_wtime();
+                rppt_slice_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, roiGenericSrcPtr, roiTypeSrc, handle);
+                break;
+            }
+            case 2:
+            {
+                Rpp32u horizontalTensor[batchSize];
+                Rpp32u verticalTensor[batchSize];
+                Rpp32u depthTensor[batchSize];
+
+                for (int i = 0; i < batchSize; i++)
+                {
+                    horizontalTensor[i] = 0;
+                    verticalTensor[i] = 0;
+                    depthTensor[i] = 0;
+                }
+
+                startWallTime = omp_get_wtime();
+                rppt_flip_voxel_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, horizontalTensor, verticalTensor, depthTensor, roiGenericSrcPtr, roiTypeSrc, handle);
+                break;
+            }
+            default:
+            {
+                missingFuncFlag = 1;
+                break;
+            }
         }
 
         endWallTime = omp_get_wtime();

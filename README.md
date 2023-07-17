@@ -23,6 +23,12 @@ AMD ROCm Performance Primitives (**RPP**) library is a comprehensive high-perfor
 
 <p align="center"><img width="90%" src="docs/data/supported_functionalities_samples.jpg" /></p>
 
+### Supported 3D Functionalities Samples
+
+Input<br>(nifti1 .nii medical image) | fmadd_scalar<br>(brightened 3D image) | slice<br>(tensor cube sliced in X and Z dims) | fmadd_scalar with slice<br>(tensor cube sliced in X and Z dims and brightened)
+:-------------------------:|:-------------------------:|:-------------------------:|:-------------------------:
+![](docs/data/niftiInput.gif)  |  ![](docs/data/niftiOutputBrightened.gif)  | ![](docs/data/niftiOutputSlicedXZ.gif) | ![](docs/data/niftiOutputBrightenedSlicedXYZ.gif)
+
 ## Documentation
 
 Run the steps below to build documentation locally.
@@ -141,7 +147,22 @@ python3 -m sphinx -T -E -b html -d _build/doctrees -D language=en . _build/html
   sudo make install
   ```
 
-## Build & Install RPP 
+* Imagemagick
+  ```
+  sudo apt-get install imagemagick
+  ```
+
+* Nifti-Imaging nifti_clib
+  ```
+  git clone https://github.com/NIFTI-Imaging/nifti_clib.git
+  cd nifti_clib
+  mkdir build
+  cd build
+  cmake ..
+  sudo make -j$nproc install
+  ```
+
+## Build & Install RPP
 
 The ROCm Performance Primitives (RPP) library has support for three backends: HIP, OpenCL, and CPU:
 
