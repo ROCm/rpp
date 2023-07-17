@@ -549,6 +549,45 @@ inline void update_dst_sizes_with_roi(RpptROI *roiTensorPtrSrc, RpptImagePatchPt
 }
 
 // converts image data from PLN3 to PKD3
+inline void convert_pln3_to_pkd3(Rpp8u *output, RpptDescPtr descPtr)
+{
+    unsigned long long bufferSize = ((unsigned long long)descPtr->h * (unsigned long long)descPtr->w * (unsigned long long)descPtr->c * (unsigned long long)descPtr->n) + descPtr->offsetInBytes;
+    Rpp8u *outputCopy = (Rpp8u *)calloc(bufferSize, sizeof(Rpp8u));
+    memcpy(outputCopy, output, bufferSize * sizeof(Rpp8u));
+
+    Rpp8u *outputCopyTemp;
+    outputCopyTemp = outputCopy + descPtr->offsetInBytes;
+
+    omp_set_dynamic(0);
+#pragma omp parallel for num_threads(descPtr->n)
+    for (int count = 0; count < descPtr->n; count++)
+    {
+        Rpp8u *outputCopyTempR, *outputCopyTempG, *outputCopyTempB;
+        outputCopyTempR = outputCopyTemp + count * descPtr->strides.nStride;
+        outputCopyTempG = outputCopyTempR + descPtr->strides.cStride;
+        outputCopyTempB = outputCopyTempG + descPtr->strides.cStride;
+        Rpp8u *outputTemp = output + descPtr->offsetInBytes + count * descPtr->strides.nStride;
+
+        for (int i = 0; i < descPtr->h; i++)
+        {
+            for (int j = 0; j < descPtr->w; j++)
+            {
+                *outputTemp = *outputCopyTempR;
+                outputTemp++;
+                outputCopyTempR++;
+                *outputTemp = *outputCopyTempG;
+                outputTemp++;
+                outputCopyTempG++;
+                *outputTemp = *outputCopyTempB;
+                outputTemp++;
+                outputCopyTempB++;
+            }
+        }
+    }
+
+    free(outputCopy);
+}
+
 inline void convert_pln3_to_pkd3(Rpp32f *input, RpptGenericDescPtr descPtr)
 {
     unsigned long long bufferSize = ((unsigned long long)descPtr->dims[2] * (unsigned long long)descPtr->dims[3] * (unsigned long long)descPtr->dims[4] * (unsigned long long)descPtr->dims[1] * (unsigned long long)descPtr->dims[0]) + descPtr->offsetInBytes;
@@ -587,6 +626,45 @@ inline void convert_pln3_to_pkd3(Rpp32f *input, RpptGenericDescPtr descPtr)
 }
 
 // converts image data from PKD3 to PLN3
+inline void convert_pkd3_to_pln3(Rpp8u *input, RpptDescPtr descPtr)
+{
+    unsigned long long bufferSize = ((unsigned long long)descPtr->h * (unsigned long long)descPtr->w * (unsigned long long)descPtr->c * (unsigned long long)descPtr->n) + descPtr->offsetInBytes;
+    Rpp8u *inputCopy = (Rpp8u *)calloc(bufferSize, sizeof(Rpp8u));
+    memcpy(inputCopy, input, bufferSize * sizeof(Rpp8u));
+
+    Rpp8u *inputTemp, *inputCopyTemp;
+    inputTemp = input + descPtr->offsetInBytes;
+
+    omp_set_dynamic(0);
+#pragma omp parallel for num_threads(descPtr->n)
+    for (int count = 0; count < descPtr->n; count++)
+    {
+        Rpp8u *inputTempR, *inputTempG, *inputTempB;
+        inputTempR = inputTemp + count * descPtr->strides.nStride;
+        inputTempG = inputTempR + descPtr->strides.cStride;
+        inputTempB = inputTempG + descPtr->strides.cStride;
+        Rpp8u *inputCopyTemp = inputCopy + descPtr->offsetInBytes + count * descPtr->strides.nStride;
+
+        for (int i = 0; i < descPtr->h; i++)
+        {
+            for (int j = 0; j < descPtr->w; j++)
+            {
+                *inputTempR = *inputCopyTemp;
+                inputCopyTemp++;
+                inputTempR++;
+                *inputTempG = *inputCopyTemp;
+                inputCopyTemp++;
+                inputTempG++;
+                *inputTempB = *inputCopyTemp;
+                inputCopyTemp++;
+                inputTempB++;
+            }
+        }
+    }
+
+    free(inputCopy);
+}
+
 inline void convert_pkd3_to_pln3(Rpp32f *output, RpptGenericDescPtr descPtr)
 {
     unsigned long long bufferSize = ((unsigned long long)descPtr->dims[1] * (unsigned long long)descPtr->dims[2] * (unsigned long long)descPtr->dims[3] * (unsigned long long)descPtr->dims[4] * (unsigned long long)descPtr->dims[0]) + descPtr->offsetInBytes;
