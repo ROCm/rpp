@@ -7,7 +7,7 @@ __device__ void gaussian_filter_3x3_row_hip_compute(uchar *srcPtr, d_float8 *dst
 {
     float src_f1;
     uint3 src_ui3;
-    src_ui3 = *(uint3 *)srcPtr;
+    src_ui3 = *(reinterpret_cast<uint3 *>(srcPtr));
     src_f1 = rpp_hip_unpack0(src_ui3.x);
     dst_f8->f1[0] = fmaf(src_f1, filter[0], dst_f8->f1[0]);
     src_f1 = rpp_hip_unpack1(src_ui3.x);
@@ -48,7 +48,7 @@ __device__ void gaussian_filter_5x5_row_hip_compute(uchar *srcPtr, d_float8 *dst
 {
     float src_f1;
     uint3 src_ui3;
-    src_ui3 = *(uint3 *)srcPtr;
+    src_ui3 = *(reinterpret_cast<uint3 *>(srcPtr));
     src_f1 = rpp_hip_unpack0(src_ui3.x);
     dst_f8->f1[0] = fmaf(src_f1, filter[0], dst_f8->f1[0]);
     src_f1 = rpp_hip_unpack1(src_ui3.x);
@@ -106,7 +106,7 @@ __device__ void gaussian_filter_5x5_row_hip_compute(uchar *srcPtr, d_float8 *dst
 __device__ void gaussian_filter_7x7_row_hip_compute(uchar *srcPtr, d_float8 *dst_f8, float *filter)
 {
     float src_f1;
-    uint4 src_ui4 = *(uint4 *)srcPtr;
+    uint4 src_ui4 = *(reinterpret_cast<uint4 *>(srcPtr));
     src_f1 = rpp_hip_unpack0(src_ui4.x);
     dst_f8->f1[0] = fmaf(src_f1, filter[0], dst_f8->f1[0]);
     src_f1 = rpp_hip_unpack1(src_ui4.x);
@@ -182,7 +182,7 @@ __device__ void gaussian_filter_7x7_row_hip_compute(uchar *srcPtr, d_float8 *dst
 __device__ void gaussian_filter_9x9_row_hip_compute(uchar *srcPtr, d_float8 *dst_f8, float *filter)
 {
     float src_f1;
-    uint4 src_ui4 = *(uint4 *)srcPtr;
+    uint4 src_ui4 = *(reinterpret_cast<uint4 *>(srcPtr));
     src_f1 = rpp_hip_unpack0(src_ui4.x);
     dst_f8->f1[0] = fmaf(src_f1, filter[0], dst_f8->f1[0]);
     src_f1 = rpp_hip_unpack1(src_ui4.x);
@@ -302,12 +302,12 @@ __global__ void gaussian_filter_3x3_pkd_tensor(T *srcPtr,
     float *filter_row1 = &filter_f9.f1[0];
     float *filter_row2 = &filter_f9.f1[3];
     float *filter_row3 = &filter_f9.f1[6];
-    sum_f24.f4[0] = (float4) 0;
-    sum_f24.f4[1] = (float4) 0;
-    sum_f24.f4[2] = (float4) 0;
-    sum_f24.f4[3] = (float4) 0;
-    sum_f24.f4[4] = (float4) 0;
-    sum_f24.f4[5] = (float4) 0;
+    sum_f24.f4[0] = static_cast<float4>(0);
+    sum_f24.f4[1] = static_cast<float4>(0);
+    sum_f24.f4[2] = static_cast<float4>(0);
+    sum_f24.f4[3] = static_cast<float4>(0);
+    sum_f24.f4[4] = static_cast<float4>(0);
+    sum_f24.f4[5] = static_cast<float4>(0);
 
     int3 hipThreadIdx_y_channel;
     hipThreadIdx_y_channel.x = hipThreadIdx_y;
@@ -326,9 +326,9 @@ __global__ void gaussian_filter_3x3_pkd_tensor(T *srcPtr,
     }
     else
     {
-        *(uint2 *)src_lds_channel[0] = (uint2)0;
-        *(uint2 *)src_lds_channel[1] = (uint2)0;
-        *(uint2 *)src_lds_channel[2] = (uint2)0;
+        *(reinterpret_cast<uint2 *>(src_lds_channel[0])) = static_cast<uint2>(0);
+        *(reinterpret_cast<uint2 *>(src_lds_channel[1])) = static_cast<uint2>(0);
+        *(reinterpret_cast<uint2 *>(src_lds_channel[2])) = static_cast<uint2>(0);
     }
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -379,12 +379,12 @@ __global__ void gaussian_filter_5x5_pkd_tensor(T *srcPtr,
     float *filter_row3 = &filter_f25.f1[10];
     float *filter_row4 = &filter_f25.f1[15];
     float *filter_row5 = &filter_f25.f1[20];
-    sum_f24.f4[0] = (float4) 0;
-    sum_f24.f4[1] = (float4) 0;
-    sum_f24.f4[2] = (float4) 0;
-    sum_f24.f4[3] = (float4) 0;
-    sum_f24.f4[4] = (float4) 0;
-    sum_f24.f4[5] = (float4) 0;
+    sum_f24.f4[0] = static_cast<float4>(0);
+    sum_f24.f4[1] = static_cast<float4>(0);
+    sum_f24.f4[2] = static_cast<float4>(0);
+    sum_f24.f4[3] = static_cast<float4>(0);
+    sum_f24.f4[4] = static_cast<float4>(0);
+    sum_f24.f4[5] = static_cast<float4>(0);
 
     int3 hipThreadIdx_y_channel;
     hipThreadIdx_y_channel.x = hipThreadIdx_y;
@@ -403,9 +403,9 @@ __global__ void gaussian_filter_5x5_pkd_tensor(T *srcPtr,
     }
     else
     {
-        *(uint2 *)src_lds_channel[0] = (uint2)0;
-        *(uint2 *)src_lds_channel[1] = (uint2)0;
-        *(uint2 *)src_lds_channel[2] = (uint2)0;
+        *(reinterpret_cast<uint2 *>(src_lds_channel[0])) = static_cast<uint2>(0);
+        *(reinterpret_cast<uint2 *>(src_lds_channel[1])) = static_cast<uint2>(0);
+        *(reinterpret_cast<uint2 *>(src_lds_channel[2])) = static_cast<uint2>(0);
     }
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -464,12 +464,12 @@ __global__ void gaussian_filter_7x7_pkd_tensor(T *srcPtr,
     float *filter_row5 = &filter_f49.f1[28];
     float *filter_row6 = &filter_f49.f1[35];
     float *filter_row7 = &filter_f49.f1[42];
-    sum_f24.f4[0] = (float4) 0;
-    sum_f24.f4[1] = (float4) 0;
-    sum_f24.f4[2] = (float4) 0;
-    sum_f24.f4[3] = (float4) 0;
-    sum_f24.f4[4] = (float4) 0;
-    sum_f24.f4[5] = (float4) 0;
+    sum_f24.f4[0] = static_cast<float4>(0);
+    sum_f24.f4[1] = static_cast<float4>(0);
+    sum_f24.f4[2] = static_cast<float4>(0);
+    sum_f24.f4[3] = static_cast<float4>(0);
+    sum_f24.f4[4] = static_cast<float4>(0);
+    sum_f24.f4[5] = static_cast<float4>(0);
 
     int3 hipThreadIdx_y_channel;
     hipThreadIdx_y_channel.x = hipThreadIdx_y;
@@ -488,9 +488,9 @@ __global__ void gaussian_filter_7x7_pkd_tensor(T *srcPtr,
     }
     else
     {
-        *(uint2 *)src_lds_channel[0] = (uint2)0;
-        *(uint2 *)src_lds_channel[1] = (uint2)0;
-        *(uint2 *)src_lds_channel[2] = (uint2)0;
+        *(reinterpret_cast<uint2 *>(src_lds_channel[0])) = static_cast<uint2>(0);
+        *(reinterpret_cast<uint2 *>(src_lds_channel[1])) = static_cast<uint2>(0);
+        *(reinterpret_cast<uint2 *>(src_lds_channel[2])) = static_cast<uint2>(0);
     }
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -557,12 +557,12 @@ __global__ void gaussian_filter_9x9_pkd_tensor(T *srcPtr,
     float *filter_row7 = &filter_f81.f1[54];
     float *filter_row8 = &filter_f81.f1[63];
     float *filter_row9 = &filter_f81.f1[72];
-    sum_f24.f4[0] = (float4) 0;
-    sum_f24.f4[1] = (float4) 0;
-    sum_f24.f4[2] = (float4) 0;
-    sum_f24.f4[3] = (float4) 0;
-    sum_f24.f4[4] = (float4) 0;
-    sum_f24.f4[5] = (float4) 0;
+    sum_f24.f4[0] = static_cast<float4>(0);
+    sum_f24.f4[1] = static_cast<float4>(0);
+    sum_f24.f4[2] = static_cast<float4>(0);
+    sum_f24.f4[3] = static_cast<float4>(0);
+    sum_f24.f4[4] = static_cast<float4>(0);
+    sum_f24.f4[5] = static_cast<float4>(0);
 
     int3 hipThreadIdx_y_channel;
     hipThreadIdx_y_channel.x = hipThreadIdx_y;
@@ -581,9 +581,9 @@ __global__ void gaussian_filter_9x9_pkd_tensor(T *srcPtr,
     }
     else
     {
-        *(uint2 *)src_lds_channel[0] = (uint2)0;
-        *(uint2 *)src_lds_channel[1] = (uint2)0;
-        *(uint2 *)src_lds_channel[2] = (uint2)0;
+        *(reinterpret_cast<uint2 *>(src_lds_channel[0])) = static_cast<uint2>(0);
+        *(reinterpret_cast<uint2 *>(src_lds_channel[1])) = static_cast<uint2>(0);
+        *(reinterpret_cast<uint2 *>(src_lds_channel[2])) = static_cast<uint2>(0);
     }
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -654,13 +654,13 @@ __global__ void gaussian_filter_3x3_pln_tensor(T *srcPtr,
     float *filter_row1 = &filter_f9.f1[0];
     float *filter_row2 = &filter_f9.f1[3];
     float *filter_row3 = &filter_f9.f1[6];
-    sum_f8.f4[0] = (float4) 0;
-    sum_f8.f4[1] = (float4) 0;
+    sum_f8.f4[0] = static_cast<float4>(0);
+    sum_f8.f4[1] = static_cast<float4>(0);
     if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
         rpp_hip_load8_to_uchar8(srcPtr + srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
     else
-        *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = (uint2)0;
+        *(reinterpret_cast<uint2 *>(&src_lds[hipThreadIdx_y][hipThreadIdx_x8])) = static_cast<uint2>(0);
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
@@ -679,13 +679,13 @@ __global__ void gaussian_filter_3x3_pln_tensor(T *srcPtr,
         __syncthreads();
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
-        sum_f8.f4[0] = (float4) 0;
-        sum_f8.f4[1] = (float4) 0;
+        sum_f8.f4[0] = static_cast<float4>(0);
+        sum_f8.f4[1] = static_cast<float4>(0);
         if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
             rpp_hip_load8_to_uchar8(srcPtr + srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
         else
-            *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = (uint2)0;
+            *(reinterpret_cast<uint2 *>(&src_lds[hipThreadIdx_y][hipThreadIdx_x8])) = static_cast<uint2>(0);
         __syncthreads();
         if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
@@ -702,13 +702,13 @@ __global__ void gaussian_filter_3x3_pln_tensor(T *srcPtr,
         __syncthreads();
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
-        sum_f8.f4[0] = (float4) 0;
-        sum_f8.f4[1] = (float4) 0;
+        sum_f8.f4[0] = static_cast<float4>(0);
+        sum_f8.f4[1] = static_cast<float4>(0);
         if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
             rpp_hip_load8_to_uchar8(srcPtr + srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
         else
-            *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = (uint2)0;
+            *(reinterpret_cast<uint2 *>(&src_lds[hipThreadIdx_y][hipThreadIdx_x8])) = static_cast<uint2>(0);
         __syncthreads();
         if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
@@ -754,13 +754,13 @@ __global__ void gaussian_filter_5x5_pln_tensor(T *srcPtr,
     float *filter_row3 = &filter_f25.f1[10];
     float *filter_row4 = &filter_f25.f1[15];
     float *filter_row5 = &filter_f25.f1[20];
-    sum_f8.f4[0] = (float4) 0;
-    sum_f8.f4[1] = (float4) 0;
+    sum_f8.f4[0] = static_cast<float4>(0);
+    sum_f8.f4[1] = static_cast<float4>(0);
     if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
         rpp_hip_load8_to_uchar8(srcPtr + srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
     else
-        *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = (uint2)0;
+        *(reinterpret_cast<uint2 *>(&src_lds[hipThreadIdx_y][hipThreadIdx_x8])) = static_cast<uint2>(0);
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
@@ -781,13 +781,13 @@ __global__ void gaussian_filter_5x5_pln_tensor(T *srcPtr,
         __syncthreads();
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
-        sum_f8.f4[0] = (float4) 0;
-        sum_f8.f4[1] = (float4) 0;
+        sum_f8.f4[0] = static_cast<float4>(0);
+        sum_f8.f4[1] = static_cast<float4>(0);
         if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
             rpp_hip_load8_to_uchar8(srcPtr + srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
         else
-            *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = (uint2)0;
+            *(reinterpret_cast<uint2 *>(&src_lds[hipThreadIdx_y][hipThreadIdx_x8])) = static_cast<uint2>(0);
         __syncthreads();
         if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
@@ -806,13 +806,13 @@ __global__ void gaussian_filter_5x5_pln_tensor(T *srcPtr,
         __syncthreads();
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
-        sum_f8.f4[0] = (float4) 0;
-        sum_f8.f4[1] = (float4) 0;
+        sum_f8.f4[0] = static_cast<float4>(0);
+        sum_f8.f4[1] = static_cast<float4>(0);
         if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
             rpp_hip_load8_to_uchar8(srcPtr + srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
         else
-            *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = (uint2)0;
+            *(reinterpret_cast<uint2 *>(&src_lds[hipThreadIdx_y][hipThreadIdx_x8])) = static_cast<uint2>(0);
         __syncthreads();
         if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
@@ -862,13 +862,13 @@ __global__ void gaussian_filter_7x7_pln_tensor(T *srcPtr,
     float *filter_row5 = &filter_f49.f1[28];
     float *filter_row6 = &filter_f49.f1[35];
     float *filter_row7 = &filter_f49.f1[42];
-    sum_f8.f4[0] = (float4) 0;
-    sum_f8.f4[1] = (float4) 0;
+    sum_f8.f4[0] = static_cast<float4>(0);
+    sum_f8.f4[1] = static_cast<float4>(0);
     if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
         rpp_hip_load8_to_uchar8(srcPtr + srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
     else
-        *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = (uint2)0;
+        *(reinterpret_cast<uint2 *>(&src_lds[hipThreadIdx_y][hipThreadIdx_x8])) = static_cast<uint2>(0);
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
@@ -891,13 +891,13 @@ __global__ void gaussian_filter_7x7_pln_tensor(T *srcPtr,
         __syncthreads();
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
-        sum_f8.f4[0] = (float4) 0;
-        sum_f8.f4[1] = (float4) 0;
+        sum_f8.f4[0] = static_cast<float4>(0);
+        sum_f8.f4[1] = static_cast<float4>(0);
         if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
             rpp_hip_load8_to_uchar8(srcPtr + srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
         else
-            *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = (uint2)0;
+            *(reinterpret_cast<uint2 *>(&src_lds[hipThreadIdx_y][hipThreadIdx_x8])) = static_cast<uint2>(0);
         __syncthreads();
         if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
@@ -918,13 +918,13 @@ __global__ void gaussian_filter_7x7_pln_tensor(T *srcPtr,
         __syncthreads();
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
-        sum_f8.f4[0] = (float4) 0;
-        sum_f8.f4[1] = (float4) 0;
+        sum_f8.f4[0] = static_cast<float4>(0);
+        sum_f8.f4[1] = static_cast<float4>(0);
         if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
             rpp_hip_load8_to_uchar8(srcPtr + srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
         else
-            *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = (uint2)0;
+            *(reinterpret_cast<uint2 *>(&src_lds[hipThreadIdx_y][hipThreadIdx_x8])) = static_cast<uint2>(0);
         __syncthreads();
         if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
@@ -978,13 +978,13 @@ __global__ void gaussian_filter_9x9_pln_tensor(T *srcPtr,
     float *filter_row7 = &filter_f81.f1[54];
     float *filter_row8 = &filter_f81.f1[63];
     float *filter_row9 = &filter_f81.f1[72];
-    sum_f8.f4[0] = (float4) 0;
-    sum_f8.f4[1] = (float4) 0;
+    sum_f8.f4[0] = static_cast<float4>(0);
+    sum_f8.f4[1] = static_cast<float4>(0);
     if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
         rpp_hip_load8_to_uchar8(srcPtr + srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
     else
-        *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = (uint2)0;
+        *(reinterpret_cast<uint2 *>(&src_lds[hipThreadIdx_y][hipThreadIdx_x8])) = static_cast<uint2>(0);
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
         (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
@@ -1009,13 +1009,13 @@ __global__ void gaussian_filter_9x9_pln_tensor(T *srcPtr,
         __syncthreads();
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
-        sum_f8.f4[0] = (float4) 0;
-        sum_f8.f4[1] = (float4) 0;
+        sum_f8.f4[0] = static_cast<float4>(0);
+        sum_f8.f4[1] = static_cast<float4>(0);
         if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
             rpp_hip_load8_to_uchar8(srcPtr + srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
         else
-            *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = (uint2)0;
+            *(reinterpret_cast<uint2 *>(&src_lds[hipThreadIdx_y][hipThreadIdx_x8])) = static_cast<uint2>(0);
         __syncthreads();
         if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
@@ -1038,13 +1038,13 @@ __global__ void gaussian_filter_9x9_pln_tensor(T *srcPtr,
         __syncthreads();
         srcIdx += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
-        sum_f8.f4[0] = (float4) 0;
-        sum_f8.f4[1] = (float4) 0;
+        sum_f8.f4[0] = static_cast<float4>(0);
+        sum_f8.f4[1] = static_cast<float4>(0);
         if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_i >= 0) && (id_y_i < roiTensorPtrSrc[id_z].xywhROI.roiHeight))
             rpp_hip_load8_to_uchar8(srcPtr + srcIdx, &src_lds[hipThreadIdx_y][hipThreadIdx_x8]);
         else
-            *(uint2 *)&src_lds[hipThreadIdx_y][hipThreadIdx_x8] = (uint2)0;
+            *(reinterpret_cast<uint2 *>(&src_lds[hipThreadIdx_y][hipThreadIdx_x8])) = static_cast<uint2>(0);
         __syncthreads();
         if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
             (id_y_o < roiTensorPtrSrc[id_z].xywhROI.roiHeight) &&
@@ -1095,12 +1095,12 @@ __global__ void gaussian_filter_3x3_pkd3_pln3_tensor(T *srcPtr,
     float *filter_row1 = &filter_f9.f1[0];
     float *filter_row2 = &filter_f9.f1[3];
     float *filter_row3 = &filter_f9.f1[6];
-    sum_f24.f4[0] = (float4) 0;
-    sum_f24.f4[1] = (float4) 0;
-    sum_f24.f4[2] = (float4) 0;
-    sum_f24.f4[3] = (float4) 0;
-    sum_f24.f4[4] = (float4) 0;
-    sum_f24.f4[5] = (float4) 0;
+    sum_f24.f4[0] = static_cast<float4>(0);
+    sum_f24.f4[1] = static_cast<float4>(0);
+    sum_f24.f4[2] = static_cast<float4>(0);
+    sum_f24.f4[3] = static_cast<float4>(0);
+    sum_f24.f4[4] = static_cast<float4>(0);
+    sum_f24.f4[5] = static_cast<float4>(0);
 
     int3 hipThreadIdx_y_channel;
     hipThreadIdx_y_channel.x = hipThreadIdx_y;
@@ -1119,9 +1119,9 @@ __global__ void gaussian_filter_3x3_pkd3_pln3_tensor(T *srcPtr,
     }
     else
     {
-        *(uint2 *)src_lds_channel[0] = (uint2)0;
-        *(uint2 *)src_lds_channel[1] = (uint2)0;
-        *(uint2 *)src_lds_channel[2] = (uint2)0;
+        *(reinterpret_cast<uint2 *>(src_lds_channel[0])) = static_cast<uint2>(0);
+        *(reinterpret_cast<uint2 *>(src_lds_channel[1])) = static_cast<uint2>(0);
+        *(reinterpret_cast<uint2 *>(src_lds_channel[2])) = static_cast<uint2>(0);
     }
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -1172,12 +1172,12 @@ __global__ void gaussian_filter_5x5_pkd3_pln3_tensor(T *srcPtr,
     float *filter_row3 = &filter_f25.f1[10];
     float *filter_row4 = &filter_f25.f1[15];
     float *filter_row5 = &filter_f25.f1[20];
-    sum_f24.f4[0] = (float4) 0;
-    sum_f24.f4[1] = (float4) 0;
-    sum_f24.f4[2] = (float4) 0;
-    sum_f24.f4[3] = (float4) 0;
-    sum_f24.f4[4] = (float4) 0;
-    sum_f24.f4[5] = (float4) 0;
+    sum_f24.f4[0] = static_cast<float4>(0);
+    sum_f24.f4[1] = static_cast<float4>(0);
+    sum_f24.f4[2] = static_cast<float4>(0);
+    sum_f24.f4[3] = static_cast<float4>(0);
+    sum_f24.f4[4] = static_cast<float4>(0);
+    sum_f24.f4[5] = static_cast<float4>(0);
 
     int3 hipThreadIdx_y_channel;
     hipThreadIdx_y_channel.x = hipThreadIdx_y;
@@ -1196,9 +1196,9 @@ __global__ void gaussian_filter_5x5_pkd3_pln3_tensor(T *srcPtr,
     }
     else
     {
-        *(uint2 *)src_lds_channel[0] = (uint2)0;
-        *(uint2 *)src_lds_channel[1] = (uint2)0;
-        *(uint2 *)src_lds_channel[2] = (uint2)0;
+        *(reinterpret_cast<uint2 *>(src_lds_channel[0])) = static_cast<uint2>(0);
+        *(reinterpret_cast<uint2 *>(src_lds_channel[1])) = static_cast<uint2>(0);
+        *(reinterpret_cast<uint2 *>(src_lds_channel[2])) = static_cast<uint2>(0);
     }
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -1257,12 +1257,12 @@ __global__ void gaussian_filter_7x7_pkd3_pln3_tensor(T *srcPtr,
     float *filter_row5 = &filter_f49.f1[28];
     float *filter_row6 = &filter_f49.f1[35];
     float *filter_row7 = &filter_f49.f1[42];
-    sum_f24.f4[0] = (float4) 0;
-    sum_f24.f4[1] = (float4) 0;
-    sum_f24.f4[2] = (float4) 0;
-    sum_f24.f4[3] = (float4) 0;
-    sum_f24.f4[4] = (float4) 0;
-    sum_f24.f4[5] = (float4) 0;
+    sum_f24.f4[0] = static_cast<float4>(0);
+    sum_f24.f4[1] = static_cast<float4>(0);
+    sum_f24.f4[2] = static_cast<float4>(0);
+    sum_f24.f4[3] = static_cast<float4>(0);
+    sum_f24.f4[4] = static_cast<float4>(0);
+    sum_f24.f4[5] = static_cast<float4>(0);
 
     int3 hipThreadIdx_y_channel;
     hipThreadIdx_y_channel.x = hipThreadIdx_y;
@@ -1281,9 +1281,9 @@ __global__ void gaussian_filter_7x7_pkd3_pln3_tensor(T *srcPtr,
     }
     else
     {
-        *(uint2 *)src_lds_channel[0] = (uint2)0;
-        *(uint2 *)src_lds_channel[1] = (uint2)0;
-        *(uint2 *)src_lds_channel[2] = (uint2)0;
+        *(reinterpret_cast<uint2 *>(src_lds_channel[0])) = static_cast<uint2>(0);
+        *(reinterpret_cast<uint2 *>(src_lds_channel[1])) = static_cast<uint2>(0);
+        *(reinterpret_cast<uint2 *>(src_lds_channel[2])) = static_cast<uint2>(0);
     }
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -1350,12 +1350,12 @@ __global__ void gaussian_filter_9x9_pkd3_pln3_tensor(T *srcPtr,
     float *filter_row7 = &filter_f81.f1[54];
     float *filter_row8 = &filter_f81.f1[63];
     float *filter_row9 = &filter_f81.f1[72];
-    sum_f24.f4[0] = (float4) 0;
-    sum_f24.f4[1] = (float4) 0;
-    sum_f24.f4[2] = (float4) 0;
-    sum_f24.f4[3] = (float4) 0;
-    sum_f24.f4[4] = (float4) 0;
-    sum_f24.f4[5] = (float4) 0;
+    sum_f24.f4[0] = static_cast<float4>(0);
+    sum_f24.f4[1] = static_cast<float4>(0);
+    sum_f24.f4[2] = static_cast<float4>(0);
+    sum_f24.f4[3] = static_cast<float4>(0);
+    sum_f24.f4[4] = static_cast<float4>(0);
+    sum_f24.f4[5] = static_cast<float4>(0);
 
     int3 hipThreadIdx_y_channel;
     hipThreadIdx_y_channel.x = hipThreadIdx_y;
@@ -1374,9 +1374,9 @@ __global__ void gaussian_filter_9x9_pkd3_pln3_tensor(T *srcPtr,
     }
     else
     {
-        *(uint2 *)src_lds_channel[0] = (uint2)0;
-        *(uint2 *)src_lds_channel[1] = (uint2)0;
-        *(uint2 *)src_lds_channel[2] = (uint2)0;
+        *(reinterpret_cast<uint2 *>(src_lds_channel[0])) = static_cast<uint2>(0);
+        *(reinterpret_cast<uint2 *>(src_lds_channel[1])) = static_cast<uint2>(0);
+        *(reinterpret_cast<uint2 *>(src_lds_channel[2])) = static_cast<uint2>(0);
     }
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -1448,12 +1448,12 @@ __global__ void gaussian_filter_3x3_pln3_pkd3_tensor(T *srcPtr,
     float *filter_row1 = &filter_f9.f1[0];
     float *filter_row2 = &filter_f9.f1[3];
     float *filter_row3 = &filter_f9.f1[6];
-    sum_f24.f4[0] = (float4) 0;
-    sum_f24.f4[1] = (float4) 0;
-    sum_f24.f4[2] = (float4) 0;
-    sum_f24.f4[3] = (float4) 0;
-    sum_f24.f4[4] = (float4) 0;
-    sum_f24.f4[5] = (float4) 0;
+    sum_f24.f4[0] = static_cast<float4>(0);
+    sum_f24.f4[1] = static_cast<float4>(0);
+    sum_f24.f4[2] = static_cast<float4>(0);
+    sum_f24.f4[3] = static_cast<float4>(0);
+    sum_f24.f4[4] = static_cast<float4>(0);
+    sum_f24.f4[5] = static_cast<float4>(0);
 
     int3 hipThreadIdx_y_channel;
     hipThreadIdx_y_channel.x = hipThreadIdx_y;
@@ -1469,9 +1469,9 @@ __global__ void gaussian_filter_3x3_pln3_pkd3_tensor(T *srcPtr,
     }
     else
     {
-        *(uint2 *)&src_lds[hipThreadIdx_y_channel.x][hipThreadIdx_x8] = (uint2)0;
-        *(uint2 *)&src_lds[hipThreadIdx_y_channel.y][hipThreadIdx_x8] = (uint2)0;
-        *(uint2 *)&src_lds[hipThreadIdx_y_channel.z][hipThreadIdx_x8] = (uint2)0;
+        *(reinterpret_cast<uint2 *>(&src_lds[hipThreadIdx_y_channel.x][hipThreadIdx_x8])) = static_cast<uint2>(0);
+        *(reinterpret_cast<uint2 *>(&src_lds[hipThreadIdx_y_channel.y][hipThreadIdx_x8])) = static_cast<uint2>(0);
+        *(reinterpret_cast<uint2 *>(&src_lds[hipThreadIdx_y_channel.z][hipThreadIdx_x8])) = static_cast<uint2>(0);
     }
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -1525,12 +1525,12 @@ __global__ void gaussian_filter_5x5_pln3_pkd3_tensor(T *srcPtr,
     float *filter_row3 = &filter_f25.f1[10];
     float *filter_row4 = &filter_f25.f1[15];
     float *filter_row5 = &filter_f25.f1[20];
-    sum_f24.f4[0] = (float4) 0;
-    sum_f24.f4[1] = (float4) 0;
-    sum_f24.f4[2] = (float4) 0;
-    sum_f24.f4[3] = (float4) 0;
-    sum_f24.f4[4] = (float4) 0;
-    sum_f24.f4[5] = (float4) 0;
+    sum_f24.f4[0] = static_cast<float4>(0);
+    sum_f24.f4[1] = static_cast<float4>(0);
+    sum_f24.f4[2] = static_cast<float4>(0);
+    sum_f24.f4[3] = static_cast<float4>(0);
+    sum_f24.f4[4] = static_cast<float4>(0);
+    sum_f24.f4[5] = static_cast<float4>(0);
 
     int3 hipThreadIdx_y_channel;
     hipThreadIdx_y_channel.x = hipThreadIdx_y;
@@ -1546,9 +1546,9 @@ __global__ void gaussian_filter_5x5_pln3_pkd3_tensor(T *srcPtr,
     }
     else
     {
-        *(uint2 *)&src_lds[hipThreadIdx_y_channel.x][hipThreadIdx_x8] = (uint2)0;
-        *(uint2 *)&src_lds[hipThreadIdx_y_channel.y][hipThreadIdx_x8] = (uint2)0;
-        *(uint2 *)&src_lds[hipThreadIdx_y_channel.z][hipThreadIdx_x8] = (uint2)0;
+        *(reinterpret_cast<uint2 *>(&src_lds[hipThreadIdx_y_channel.x][hipThreadIdx_x8])) = static_cast<uint2>(0);
+        *(reinterpret_cast<uint2 *>(&src_lds[hipThreadIdx_y_channel.y][hipThreadIdx_x8])) = static_cast<uint2>(0);
+        *(reinterpret_cast<uint2 *>(&src_lds[hipThreadIdx_y_channel.z][hipThreadIdx_x8])) = static_cast<uint2>(0);
     }
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -1610,12 +1610,12 @@ __global__ void gaussian_filter_7x7_pln3_pkd3_tensor(T *srcPtr,
     float *filter_row5 = &filter_f49.f1[28];
     float *filter_row6 = &filter_f49.f1[35];
     float *filter_row7 = &filter_f49.f1[42];
-    sum_f24.f4[0] = (float4) 0;
-    sum_f24.f4[1] = (float4) 0;
-    sum_f24.f4[2] = (float4) 0;
-    sum_f24.f4[3] = (float4) 0;
-    sum_f24.f4[4] = (float4) 0;
-    sum_f24.f4[5] = (float4) 0;
+    sum_f24.f4[0] = static_cast<float4>(0);
+    sum_f24.f4[1] = static_cast<float4>(0);
+    sum_f24.f4[2] = static_cast<float4>(0);
+    sum_f24.f4[3] = static_cast<float4>(0);
+    sum_f24.f4[4] = static_cast<float4>(0);
+    sum_f24.f4[5] = static_cast<float4>(0);
 
     int3 hipThreadIdx_y_channel;
     hipThreadIdx_y_channel.x = hipThreadIdx_y;
@@ -1631,9 +1631,9 @@ __global__ void gaussian_filter_7x7_pln3_pkd3_tensor(T *srcPtr,
     }
     else
     {
-        *(uint2 *)&src_lds[hipThreadIdx_y_channel.x][hipThreadIdx_x8] = (uint2)0;
-        *(uint2 *)&src_lds[hipThreadIdx_y_channel.y][hipThreadIdx_x8] = (uint2)0;
-        *(uint2 *)&src_lds[hipThreadIdx_y_channel.z][hipThreadIdx_x8] = (uint2)0;
+        *(reinterpret_cast<uint2 *>(&src_lds[hipThreadIdx_y_channel.x][hipThreadIdx_x8])) = static_cast<uint2>(0);
+        *(reinterpret_cast<uint2 *>(&src_lds[hipThreadIdx_y_channel.y][hipThreadIdx_x8])) = static_cast<uint2>(0);
+        *(reinterpret_cast<uint2 *>(&src_lds[hipThreadIdx_y_channel.z][hipThreadIdx_x8])) = static_cast<uint2>(0);
     }
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -1703,12 +1703,12 @@ __global__ void gaussian_filter_9x9_pln3_pkd3_tensor(T *srcPtr,
     float *filter_row7 = &filter_f81.f1[54];
     float *filter_row8 = &filter_f81.f1[63];
     float *filter_row9 = &filter_f81.f1[72];
-    sum_f24.f4[0] = (float4) 0;
-    sum_f24.f4[1] = (float4) 0;
-    sum_f24.f4[2] = (float4) 0;
-    sum_f24.f4[3] = (float4) 0;
-    sum_f24.f4[4] = (float4) 0;
-    sum_f24.f4[5] = (float4) 0;
+    sum_f24.f4[0] = static_cast<float4>(0);
+    sum_f24.f4[1] = static_cast<float4>(0);
+    sum_f24.f4[2] = static_cast<float4>(0);
+    sum_f24.f4[3] = static_cast<float4>(0);
+    sum_f24.f4[4] = static_cast<float4>(0);
+    sum_f24.f4[5] = static_cast<float4>(0);
 
     int3 hipThreadIdx_y_channel;
     hipThreadIdx_y_channel.x = hipThreadIdx_y;
@@ -1724,9 +1724,9 @@ __global__ void gaussian_filter_9x9_pln3_pkd3_tensor(T *srcPtr,
     }
     else
     {
-        *(uint2 *)&src_lds[hipThreadIdx_y_channel.x][hipThreadIdx_x8] = (uint2)0;
-        *(uint2 *)&src_lds[hipThreadIdx_y_channel.y][hipThreadIdx_x8] = (uint2)0;
-        *(uint2 *)&src_lds[hipThreadIdx_y_channel.z][hipThreadIdx_x8] = (uint2)0;
+        *(reinterpret_cast<uint2 *>(&src_lds[hipThreadIdx_y_channel.x][hipThreadIdx_x8])) = static_cast<uint2>(0);
+        *(reinterpret_cast<uint2 *>(&src_lds[hipThreadIdx_y_channel.y][hipThreadIdx_x8])) = static_cast<uint2>(0);
+        *(reinterpret_cast<uint2 *>(&src_lds[hipThreadIdx_y_channel.z][hipThreadIdx_x8])) = static_cast<uint2>(0);
     }
     __syncthreads();
     if ((id_x_o < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -1859,7 +1859,7 @@ static RppStatus hip_exec_create_gaussian_kernel(Rpp32f *filterTensor,
                            dim3(localThreads_x, localThreads_y, localThreads_z),
                            0,
                            handle.GetStream(),
-                           (d_float9 *)filterTensor,
+                           reinterpret_cast<d_float9 *>(filterTensor),
                            rowType,
                            stdDevTensor,
                            kernelSize,
@@ -1874,7 +1874,7 @@ static RppStatus hip_exec_create_gaussian_kernel(Rpp32f *filterTensor,
                            dim3(localThreads_x, localThreads_y, localThreads_z),
                            0,
                            handle.GetStream(),
-                           (d_float25 *)filterTensor,
+                           reinterpret_cast<d_float25 *>(filterTensor),
                            rowType,
                            stdDevTensor,
                            kernelSize,
@@ -1889,7 +1889,7 @@ static RppStatus hip_exec_create_gaussian_kernel(Rpp32f *filterTensor,
                            dim3(localThreads_x, localThreads_y, localThreads_z),
                            0,
                            handle.GetStream(),
-                           (d_float49 *)filterTensor,
+                           reinterpret_cast<d_float49 *>(filterTensor),
                            rowType,
                            stdDevTensor,
                            kernelSize,
@@ -1904,7 +1904,7 @@ static RppStatus hip_exec_create_gaussian_kernel(Rpp32f *filterTensor,
                            dim3(localThreads_x, localThreads_y, localThreads_z),
                            0,
                            handle.GetStream(),
-                           (d_float81 *)filterTensor,
+                           reinterpret_cast<d_float81 *>(filterTensor),
                            rowType,
                            stdDevTensor,
                            kernelSize,
@@ -1945,22 +1945,11 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
 
     // Create a filter of size (kernel size x kernel size)
     float *filterTensor = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
-    hip_exec_create_gaussian_kernel((float *)filterTensor,
+    hip_exec_create_gaussian_kernel(filterTensor,
                                     kernelSize,
                                     handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
                                     handle);
 
-    // float *tempFilter = (float *)malloc(handle.GetBatchSize() * kernelSize * kernelSize * sizeof(float));
-    // hipMemcpy(tempFilter, filterTensor, handle.GetBatchSize() * kernelSize * kernelSize * sizeof(float), hipMemcpyDeviceToHost);
-    // printf("\nPrinting filter values\n");
-    // for (int i = 0; i < kernelSize; i++)
-    // {
-    //     for (int j = 0; j < kernelSize; j++)
-    //     {
-    //         std::cerr<<tempFilter[i * kernelSize + j]<<" ";
-    //     }
-    //     std::cerr<<std::endl;
-    // }
 
     if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
     {
@@ -1980,8 +1969,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                padLength,
                                tileSize,
                                roiTensorPtrSrc,
-                               (d_float9 *)filterTensor);
-
+                               reinterpret_cast<d_float9 *>(filterTensor));
         }
         else if (kernelSize == 5)
         {
@@ -1997,8 +1985,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                padLength,
                                tileSize,
                                roiTensorPtrSrc,
-                               (d_float25 *)filterTensor);
-
+                               reinterpret_cast<d_float25 *>(filterTensor));
         }
         else if (kernelSize == 7)
         {
@@ -2014,8 +2001,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                padLength,
                                tileSize,
                                roiTensorPtrSrc,
-                               (d_float49 *)filterTensor);
-
+                               reinterpret_cast<d_float49 *>(filterTensor));
         }
         else if (kernelSize == 9)
         {
@@ -2031,8 +2017,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                padLength,
                                tileSize,
                                roiTensorPtrSrc,
-                               (d_float81 *)filterTensor);
-
+                               reinterpret_cast<d_float81 *>(filterTensor));
         }
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -2052,7 +2037,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                padLength,
                                tileSize,
                                roiTensorPtrSrc,
-                               (d_float9 *)filterTensor);
+                               reinterpret_cast<d_float9 *>(filterTensor));
         }
         else if (kernelSize == 5)
         {
@@ -2069,7 +2054,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                padLength,
                                tileSize,
                                roiTensorPtrSrc,
-                               (d_float25 *)filterTensor);
+                               reinterpret_cast<d_float25 *>(filterTensor));
         }
         else if (kernelSize == 7)
         {
@@ -2086,7 +2071,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                padLength,
                                tileSize,
                                roiTensorPtrSrc,
-                               (d_float49 *)filterTensor);
+                               reinterpret_cast<d_float49 *>(filterTensor));
         }
         else if (kernelSize == 9)
         {
@@ -2103,7 +2088,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                padLength,
                                tileSize,
                                roiTensorPtrSrc,
-                               (d_float81 *)filterTensor);
+                               reinterpret_cast<d_float81 *>(filterTensor));
         }
     }
     else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
@@ -2124,8 +2109,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                    padLength,
                                    tileSize,
                                    roiTensorPtrSrc,
-                                   (d_float9 *)filterTensor);
-
+                                   reinterpret_cast<d_float9 *>(filterTensor));
             }
             else if (kernelSize == 5)
             {
@@ -2141,7 +2125,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                    padLength,
                                    tileSize,
                                    roiTensorPtrSrc,
-                                   (d_float25 *)filterTensor);
+                                   reinterpret_cast<d_float25 *>(filterTensor));
             }
             else if (kernelSize == 7)
             {
@@ -2157,7 +2141,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                    padLength,
                                    tileSize,
                                    roiTensorPtrSrc,
-                                   (d_float49 *)filterTensor);
+                                   reinterpret_cast<d_float49 *>(filterTensor));
             }
             else if (kernelSize == 9)
             {
@@ -2173,7 +2157,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                    padLength,
                                    tileSize,
                                    roiTensorPtrSrc,
-                                   (d_float81 *)filterTensor);
+                                   reinterpret_cast<d_float81 *>(filterTensor));
             }
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
@@ -2194,7 +2178,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                    padLength,
                                    tileSize,
                                    roiTensorPtrSrc,
-                                   (d_float9 *)filterTensor);
+                                   reinterpret_cast<d_float9 *>(filterTensor));
             }
             else if (kernelSize == 5)
             {
@@ -2210,7 +2194,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                    padLength,
                                    tileSize,
                                    roiTensorPtrSrc,
-                                   (d_float25 *)filterTensor);
+                                   reinterpret_cast<d_float25 *>(filterTensor));
             }
             else if (kernelSize == 7)
             {
@@ -2226,7 +2210,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                    padLength,
                                    tileSize,
                                    roiTensorPtrSrc,
-                                   (d_float49 *)filterTensor);
+                                   reinterpret_cast<d_float49 *>(filterTensor));
             }
             else if (kernelSize == 9)
             {
@@ -2242,7 +2226,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                    padLength,
                                    tileSize,
                                    roiTensorPtrSrc,
-                                   (d_float81 *)filterTensor);
+                                   reinterpret_cast<d_float81 *>(filterTensor));
             }
         }
     }
