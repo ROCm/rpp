@@ -661,11 +661,11 @@ int main(int argc, char **argv)
                     testCaseName = "image_stddev";
                     Rpp32f mean[batchSize];
 
-                    for (i = 0; i < 3; i++)
+                    for (i = 0; i < 3; i++) //Default mean values for 3 img dataset
                     {
-                        mean[0] = 334225.000;
-                        mean[1] = 813471.000;
-                        mean[2] = 2631125.000;
+                        mean[0] = 126.932;
+                        mean[1] = 77.117;
+                        mean[2] = 121.833;
                     }
 
                     if(srcDescPtr->c == 1)
