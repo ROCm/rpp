@@ -1835,7 +1835,7 @@ __global__ void create_gaussian_kernel(T *filterTensor,
         }
     }
 
-    *(T *)filter = filter_temp;
+    *(T *)(filter) = filter_temp;
 }
 
 static RppStatus hip_exec_create_gaussian_kernel(Rpp32f *filterTensor,
