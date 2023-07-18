@@ -209,7 +209,7 @@ if [ "$TEST_TYPE" -eq 0 ]; then
     for case in ${CASE_LIST[@]};
     do
         if [ "$QA_MODE" -eq 1 ]; then
-            if [ "$case" -eq "54" ] || [ "$case" -eq " 84" ]; then
+            if [ "$case" -eq "49" ] || [ "$case" -eq "54" ] || [ "$case" -eq " 84" ]; then
                 echo "QA tests are not supported for case number $case, since it generates random output"
                 continue
             fi

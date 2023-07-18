@@ -292,7 +292,7 @@ else:
             f.close()
     elif (testType == 1 and profilingOption == "YES"):
         subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numRuns), "1", str(qaMode), str(decoderType), str(preserveOutput), str(batchSize), " ".join(caseList)])  # nosec
-        NEW_FUNC_GROUP_LIST = [0, 15, 20, 29, 36, 40, 42, 49, 56, 65, 69]
+        NEW_FUNC_GROUP_LIST = [0, 15, 20, 29, 36, 40, 42, 49, 54, 56, 65, 69]
 
         RESULTS_DIR = ""
         RESULTS_DIR = "../OUTPUT_PERFORMANCE_LOGS_HIP_" + timestamp
@@ -333,17 +333,17 @@ else:
                 for BIT_DEPTH in BIT_DEPTH_LIST:
                     # Loop through output format toggle cases
                     for OFT in OFT_LIST:
-                        if (CASE_NUM == 40 or CASE_NUM == 41 or CASE_NUM == 49) and TYPE.startswith("Tensor"):
+                        if (CASE_NUM == str(40) or CASE_NUM == str(41) or CASE_NUM == str(49) or CASE_NUM == str(54)) and TYPE.startswith("Tensor"):
                             KSIZE_LIST = [3, 5, 7, 9]
                             # Loop through extra param kSize
                             for KSIZE in KSIZE_LIST:
                                 # Write into csv file
-                                CASE_FILE_PATH = CASE_RESULTS_DIR + "/output_case" + str(CASE_NUM) + "_bitDepth" + str(BIT_DEPTH) + "_oft" + str(OFT) + "_kSize" + str(KSIZE) + ".stats.csv"
+                                CASE_FILE_PATH = CASE_RESULTS_DIR + "/output_case" + str(CASE_NUM) + "_bitDepth" + str(BIT_DEPTH) + "_oft" + str(OFT) + "_kernelSize" + str(KSIZE) + ".stats.csv"
                                 print("CASE_FILE_PATH = " + CASE_FILE_PATH)
                                 fileCheck = case_file_check(CASE_FILE_PATH)
                                 if fileCheck == False:
                                     continue
-                        elif (CASE_NUM == 24 or CASE_NUM == 21) and TYPE.startswith("Tensor"):
+                        elif (CASE_NUM == str(24) or CASE_NUM == str(21)) and TYPE.startswith("Tensor"):
                             INTERPOLATIONTYPE_LIST = [0, 1, 2, 3, 4, 5]
                             # Loop through extra param interpolationType
                             for INTERPOLATIONTYPE in INTERPOLATIONTYPE_LIST:
@@ -353,7 +353,7 @@ else:
                                 fileCheck = case_file_check(CASE_FILE_PATH)
                                 if fileCheck == False:
                                     continue
-                        elif (CASE_NUM == 8) and TYPE.startswith("Tensor"):
+                        elif (CASE_NUM == str(8)) and TYPE.startswith("Tensor"):
                             NOISETYPE_LIST = [0, 1, 2]
                             # Loop through extra param noiseType
                             for NOISETYPE in NOISETYPE_LIST:

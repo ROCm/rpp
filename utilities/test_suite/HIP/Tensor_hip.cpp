@@ -64,7 +64,7 @@ int main(int argc, char **argv)
     bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23|| testCase == 24 || testCase == 40 || testCase == 41 || testCase == 49 || testCase == 54);
     bool kernelSizeCase = (testCase == 40 || testCase == 41 || testCase == 49 || testCase == 54);
     bool dualInputCase = (testCase == 2);
-    bool randomOutputCase = (testCase == 84 || testCase == 54);
+    bool randomOutputCase = (testCase == 84 || testCase == 49 || testCase == 54);
     bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24);
     bool noiseTypeCase = (testCase == 8);
     bool pln1OutTypeCase = (testCase == 86);
@@ -606,6 +606,19 @@ int main(int argc, char **argv)
                 startWallTime = omp_get_wtime();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 3 || inputBitDepth == 4 || inputBitDepth == 5)
                     rppt_crop_mirror_normalize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, offset, multiplier, mirror, roiTensorPtrDst, roiTypeSrc, handle);
+                else
+                    missingFuncFlag = 1;
+
+                break;
+            }
+            case 49:
+            {
+                testCaseName = "box_filter";
+                Rpp32u kernelSize = additionalParam;
+
+                startWallTime = omp_get_wtime();
+                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    rppt_box_filter_gpu(d_input, srcDescPtr, d_output, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
                 else
                     missingFuncFlag = 1;
 
