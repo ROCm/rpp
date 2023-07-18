@@ -294,6 +294,7 @@ inline void convert_output_Rpp32f_to_niftitype_generic(Rpp32f *outputF32, RpptGe
     }
     else if (descriptorPtr3D->layout == RpptLayout::NDHWC)
     {
+        std::cerr<<"processing output"<<std::endl;
         int increment = descriptorPtr3D->dims[3] - hdr.dim[1];
         for (int n = 0; n < descriptorPtr3D->dims[0]; n++)
         {
@@ -484,9 +485,9 @@ int main(int argc, char * argv[])
 
                 for (int i = 0; i < batchSize; i++)
                 {
-                    horizontalTensor[i] = 1;
-                    verticalTensor[i] = 1;
-                    depthTensor[i] = 1;
+                    horizontalTensor[i] = 0;
+                    verticalTensor[i] = 0;
+                    depthTensor[i] = 0;
                 }
 
                 startWallTime = omp_get_wtime();
@@ -542,7 +543,7 @@ int main(int argc, char * argv[])
             else
                 increment = 1;
 
-            convert_output_Rpp32f_to_niftitype_generic(inputF32 + i * increment, descriptorPtr3D, niftiData, &niftiHeader);
+            convert_output_Rpp32f_to_niftitype_generic(outputF32 + i * increment, descriptorPtr3D, niftiData, &niftiHeader);
 
             NIFTI_DATATYPE min = niftiData[0];
             NIFTI_DATATYPE max = niftiData[0];

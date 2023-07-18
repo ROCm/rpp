@@ -37,9 +37,9 @@ RppStatus flip_voxel_f32_f32_host_tensor(Rpp32f *srcPtr,
                                          rpp::Handle& handle)
 {
     RpptROI3D roiDefault;
-    if (srcGenericDescPtr->layout==RpptLayout::NCDHW)
+    if (srcGenericDescPtr->layout == RpptLayout::NCDHW)
         roiDefault = {0, 0, 0, (Rpp32s)srcGenericDescPtr->dims[4], (Rpp32s)srcGenericDescPtr->dims[3], (Rpp32s)srcGenericDescPtr->dims[2]};
-    else if (srcGenericDescPtr->layout==RpptLayout::NDHWC)
+    else if (srcGenericDescPtr->layout == RpptLayout::NDHWC)
         roiDefault = {0, 0, 0, (Rpp32s)srcGenericDescPtr->dims[3], (Rpp32s)srcGenericDescPtr->dims[2], (Rpp32s)srcGenericDescPtr->dims[1]};
     Rpp32u numThreads = handle.GetNumThreads();
 
@@ -60,16 +60,20 @@ RppStatus flip_voxel_f32_f32_host_tensor(Rpp32f *srcPtr,
         dstPtrImage = dstPtr + batchCount * dstGenericDescPtr->strides[0];
 
         Rpp32u bufferLength = roi.xyzwhdROI.roiWidth * layoutParams.bufferMultiplier;
-        Rpp32u vectorIncrement = 8;
+        Rpp32u vectorIncrement = 24;
         Rpp32u vectorIncrementPerChannel = 8;
-        Rpp32u alignedLength = bufferLength & ~(vectorIncrement - 1);
+        Rpp32u alignedLength = (bufferLength / vectorIncrement) * vectorIncrement;
 
         //Initialize load functions with default values
+        auto load24FnPkdPln = &rpp_load24_f32pkd3_to_f32pln3_avx;
         auto load8Fn = &rpp_load8_f32_to_f32_avx;
 
         //Update the load functions, hFactor, vFactor and hStrideSrcIncrement based on the flags enabled
         if (horizontalFlag == 1)
+        {
+            load24FnPkdPln = &rpp_load24_f32pkd3_to_f32pln3_mirror_avx;
             load8Fn = &rpp_load8_f32_to_f32_mirror_avx;
+        }
 
         Rpp32f *srcPtrChannel, *dstPtrChannel;
         dstPtrChannel = dstPtrImage;
@@ -85,6 +89,7 @@ RppStatus flip_voxel_f32_f32_host_tensor(Rpp32f *srcPtr,
         // flip without fused output-layout toggle (NCDHW -> NCDHW)
         if ((srcGenericDescPtr->layout == RpptLayout::NCDHW) && (dstGenericDescPtr->layout == RpptLayout::NCDHW))
         {
+            alignedLength = (bufferLength / 8) * 8;
             Rpp32u hFactor = roi.xyzwhdROI.xyz.z * srcGenericDescPtr->strides[2] + roi.xyzwhdROI.xyz.x * layoutParams.bufferMultiplier;
             Rpp32u vFactor = roi.xyzwhdROI.xyz.y * srcGenericDescPtr->strides[3];
             Rpp32u dFactor = 0;
@@ -113,7 +118,6 @@ RppStatus flip_voxel_f32_f32_host_tensor(Rpp32f *srcPtr,
 
                 for(int i = 0; i < roi.xyzwhdROI.roiDepth; i++)
                 {
-                    std::cerr<<"frame: "<<i<<std::endl;
                     Rpp32f *srcPtrRow, *dstPtrRow;
                     srcPtrRow = srcPtrDepth;
                     dstPtrRow = dstPtrDepth;
@@ -125,7 +129,7 @@ RppStatus flip_voxel_f32_f32_host_tensor(Rpp32f *srcPtr,
                         dstPtrTemp = dstPtrRow;
 
                         int vectorLoopCount = 0;
-                        for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
+                        for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                         {
 #if __AVX2__
                             __m256 p[1];
@@ -135,6 +139,7 @@ RppStatus flip_voxel_f32_f32_host_tensor(Rpp32f *srcPtr,
                             srcPtrTemp += srcPtrIncrementPerChannel;
                             dstPtrTemp += vectorIncrementPerChannel;
                         }
+                        srcPtrTemp += hFlipFactorPerChannel;
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
                             *dstPtrTemp = *srcPtrTemp;
@@ -149,6 +154,78 @@ RppStatus flip_voxel_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
                 srcPtrChannel += srcGenericDescPtr->strides[1];
                 dstPtrChannel += srcGenericDescPtr->strides[1];
+            }
+        }
+
+        // flip without fused output-layout toggle (NDHWC -> NDHWC)
+        else if ((srcGenericDescPtr->layout == RpptLayout::NDHWC) && (dstGenericDescPtr->layout == RpptLayout::NDHWC))
+        {
+            std::cerr<<"coming to pkd case"<<std::endl;
+            std::cerr<<"aligned length, buffer length: "<<alignedLength<<", "<<bufferLength<<std::endl;
+            Rpp32u hFactor = roi.xyzwhdROI.xyz.z * srcGenericDescPtr->strides[1] + roi.xyzwhdROI.xyz.x * layoutParams.bufferMultiplier;
+            Rpp32u vFactor = roi.xyzwhdROI.xyz.y * srcGenericDescPtr->strides[2];
+            Rpp32u dFactor = 0;
+            Rpp32s hStrideSrcIncrement = srcGenericDescPtr->strides[2];
+            Rpp32s depthStrideIncrement = srcGenericDescPtr->strides[1];
+
+            std::cerr<<"hStride: "<<hStrideSrcIncrement<<std::endl;
+            std::cerr<<"dStride: "<<depthStrideIncrement<<std::endl;
+
+            if (horizontalFlag)
+                hFactor += (roi.xyzwhdROI.roiWidth - vectorIncrementPerChannel) * layoutParams.bufferMultiplier;
+            if (verticalFlag)
+            {
+                vFactor += (roi.xyzwhdROI.roiHeight - 1) * srcGenericDescPtr->strides[2];
+                hStrideSrcIncrement = -srcGenericDescPtr->strides[2];
+            }
+            if (depthFlag)
+            {
+                dFactor =  (roi.xyzwhdROI.roiDepth - 2) * srcGenericDescPtr->strides[1];
+                depthStrideIncrement = -srcGenericDescPtr->strides[1];
+            }
+            srcPtrChannel = srcPtrImage + dFactor + vFactor + hFactor;
+            std::cerr<<"hFactor, vFactor, dFactor: "<<hFactor<<", "<<vFactor<<", "<<dFactor<<std::endl;
+            std::cerr<<"roi width, roi height, roi depth: "<<roi.xyzwhdROI.roiWidth<<", "<<roi.xyzwhdROI.roiHeight<<", "<<roi.xyzwhdROI.roiDepth<<std::endl;
+            Rpp32f *srcPtrDepth = srcPtrChannel;
+            Rpp32f *dstPtrDepth = dstPtrChannel;
+
+            for(int i = 0; i < roi.xyzwhdROI.roiDepth; i++)
+            {
+                Rpp32f *srcPtrRow, *dstPtrRow;
+                srcPtrRow = srcPtrDepth;
+                dstPtrRow = dstPtrDepth;
+
+                for(int j = 0; j < roi.xyzwhdROI.roiHeight; j++)
+                {
+                    Rpp32f *srcPtrTemp, *dstPtrTemp;
+                    srcPtrTemp = srcPtrRow;
+                    dstPtrTemp = dstPtrRow;
+
+                    int vectorLoopCount = 0;
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
+                    {
+#if __AVX2__
+                        __m256 p[6];
+                        rpp_simd_load(load24FnPkdPln, srcPtrTemp, p);    // simd loads
+                        rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, p);  // simd stores
+#endif
+                        srcPtrTemp += srcPtrIncrement;
+                        dstPtrTemp += vectorIncrement;
+                    }
+                    srcPtrTemp += hFlipFactor;
+                    for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
+                    {
+                        dstPtrTemp[0] = srcPtrTemp[0];
+                        dstPtrTemp[1] = srcPtrTemp[1];
+                        dstPtrTemp[2] = srcPtrTemp[2];
+                        srcPtrTemp += srcPtrIncrementPerRGB;
+                        dstPtrTemp += 3;
+                    }
+                    srcPtrRow += hStrideSrcIncrement;
+                    dstPtrRow += dstGenericDescPtr->strides[2];
+                }
+                srcPtrDepth += depthStrideIncrement;
+                dstPtrDepth += dstGenericDescPtr->strides[1];
             }
         }
     }
