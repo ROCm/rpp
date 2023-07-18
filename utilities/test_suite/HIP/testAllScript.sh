@@ -169,7 +169,7 @@ directory_name_generator() {
         elif [ "$case" -lt 42 ]
         then
             FUNCTIONALITY_GROUP="morphological_operations"
-        elif [ "$case" -eq 49 ]
+        elif [ "$case" -eq 49 ] || [ "$case" -eq 54 ]
         then
             FUNCTIONALITY_GROUP="filter_augmentations"
         elif [ "$case" -lt 86 ]

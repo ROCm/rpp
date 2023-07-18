@@ -84,7 +84,7 @@ def func_group_finder(case_number):
         return "geometric_augmentations"
     elif case_number < 42:
         return "morphological_operations"
-    elif case_number == 49:
+    elif case_number == 49 or case_number == 54:
         return "filter_augmentations"
     elif case_number < 86:
         return "data_exchange_operations"
