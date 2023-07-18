@@ -7,13 +7,13 @@ __device__ void water_roi_and_srclocs_hip_compute(int id_x, int id_y, float4 *am
     d_float8 increment_f8, locDst_f8x, locDst_f8y;
     increment_f8.f4[0] = make_float4(0.0f, 1.0f, 2.0f, 3.0f);
     increment_f8.f4[1] = make_float4(4.0f, 5.0f, 6.0f, 7.0f);
-    locDst_f8x.f4[0] = (float4)id_x + increment_f8.f4[0];
-    locDst_f8x.f4[1] = (float4)id_x + increment_f8.f4[1];
-    locDst_f8y.f4[0] = (float4)id_y;
-    locDst_f8y.f4[1] = (float4)id_y;
+    locDst_f8x.f4[0] = static_cast<float4>(id_x) + increment_f8.f4[0];
+    locDst_f8x.f4[1] = static_cast<float4>(id_x) + increment_f8.f4[1];
+    locDst_f8y.f4[0] = static_cast<float4>(id_y);
+    locDst_f8y.f4[1] = static_cast<float4>(id_y);
 
     d_float8 sinFactor_f8, cosFactor_f8;
-    sinFactor_f8.f4[0] = (float4)(sinf(fmaf(freqX, (float)id_y, phaseX)));
+    sinFactor_f8.f4[0] = static_cast<float4>((sinf(fmaf(freqX, static_cast<float>(id_y), phaseX))));
     sinFactor_f8.f4[1] = sinFactor_f8.f4[0];
     cosFactor_f8.f1[0] = cosf(fmaf(freqY, locDst_f8x.f1[0], phaseY));
     cosFactor_f8.f1[1] = cosf(fmaf(freqY, locDst_f8x.f1[1], phaseY));
@@ -55,14 +55,14 @@ __global__ void water_pkd_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNH.x);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
-    float4 amplX_f4 = (float4)amplXTensor[id_z];
-    float4 amplY_f4 = (float4)amplYTensor[id_z];
+    float4 amplX_f4 = static_cast<float4>(amplXTensor[id_z]);
+    float4 amplY_f4 = static_cast<float4>(amplYTensor[id_z]);
     float freqX = freqXTensor[id_z];
     float freqY = freqYTensor[id_z];
     float phaseX = phaseXTensor[id_z];
     float phaseY = phaseYTensor[id_z];
 
-    int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
+    int4 srcRoi_i4 = *(reinterpret_cast<int4 *>(&roiTensorPtrSrc[id_z]));
     d_float16 locSrc_f16;
     water_roi_and_srclocs_hip_compute(id_x, id_y, &amplX_f4, &amplY_f4, freqX, freqY, phaseX, phaseY, &locSrc_f16);
 
@@ -97,14 +97,14 @@ __global__ void water_pln_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNCH.x);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-    float4 amplX_f4 = (float4)amplXTensor[id_z];
-    float4 amplY_f4 = (float4)amplYTensor[id_z];
+    float4 amplX_f4 = static_cast<float4>(amplXTensor[id_z]);
+    float4 amplY_f4 = static_cast<float4>(amplYTensor[id_z]);
     float freqX = freqXTensor[id_z];
     float freqY = freqYTensor[id_z];
     float phaseX = phaseXTensor[id_z];
     float phaseY = phaseYTensor[id_z];
 
-    int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
+    int4 srcRoi_i4 = *(reinterpret_cast<int4 *>(&roiTensorPtrSrc[id_z]));
     d_float16 locSrc_f16;
     water_roi_and_srclocs_hip_compute(id_x, id_y, &amplX_f4, &amplY_f4, freqX, freqY, phaseX, phaseY, &locSrc_f16);
 
@@ -153,14 +153,14 @@ __global__ void water_pkd3_pln3_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNH.x);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-    float4 amplX_f4 = (float4)amplXTensor[id_z];
-    float4 amplY_f4 = (float4)amplYTensor[id_z];
+    float4 amplX_f4 = static_cast<float4>(amplXTensor[id_z]);
+    float4 amplY_f4 = static_cast<float4>(amplYTensor[id_z]);
     float freqX = freqXTensor[id_z];
     float freqY = freqYTensor[id_z];
     float phaseX = phaseXTensor[id_z];
     float phaseY = phaseYTensor[id_z];
 
-    int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
+    int4 srcRoi_i4 = *(reinterpret_cast<int4 *>(&roiTensorPtrSrc[id_z]));
     d_float16 locSrc_f16;
     water_roi_and_srclocs_hip_compute(id_x, id_y, &amplX_f4, &amplY_f4, freqX, freqY, phaseX, phaseY, &locSrc_f16);
 
@@ -194,14 +194,14 @@ __global__ void water_pln3_pkd3_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNCH.x);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
-    float4 amplX_f4 = (float4)amplXTensor[id_z];
-    float4 amplY_f4 = (float4)amplYTensor[id_z];
+    float4 amplX_f4 = static_cast<float4>(amplXTensor[id_z]);
+    float4 amplY_f4 = static_cast<float4>(amplYTensor[id_z]);
     float freqX = freqXTensor[id_z];
     float freqY = freqYTensor[id_z];
     float phaseX = phaseXTensor[id_z];
     float phaseY = phaseYTensor[id_z];
 
-    int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
+    int4 srcRoi_i4 = *(reinterpret_cast<int4 *>(&roiTensorPtrSrc[id_z]));
     d_float16 locSrc_f16;
     water_roi_and_srclocs_hip_compute(id_x, id_y, &amplX_f4, &amplY_f4, freqX, freqY, phaseX, phaseY, &locSrc_f16);
 
@@ -232,7 +232,7 @@ RppStatus hip_exec_water_tensor(T *srcPtr,
     if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
     {
         hipLaunchKernelGGL(water_pkd_tensor,
-                           dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                           dim3(ceil(static_cast<float>(globalThreads_x)/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                            dim3(localThreads_x, localThreads_y, localThreads_z),
                            0,
                            handle.GetStream(),
@@ -251,7 +251,7 @@ RppStatus hip_exec_water_tensor(T *srcPtr,
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
         hipLaunchKernelGGL(water_pln_tensor,
-                           dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                           dim3(ceil(static_cast<float>(globalThreads_x)/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                            dim3(localThreads_x, localThreads_y, localThreads_z),
                            0,
                            handle.GetStream(),
@@ -273,7 +273,7 @@ RppStatus hip_exec_water_tensor(T *srcPtr,
         if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             hipLaunchKernelGGL(water_pkd3_pln3_tensor,
-                               dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                               dim3(ceil(static_cast<float>(globalThreads_x)/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                                dim3(localThreads_x, localThreads_y, localThreads_z),
                                0,
                                handle.GetStream(),
@@ -293,7 +293,7 @@ RppStatus hip_exec_water_tensor(T *srcPtr,
         {
             globalThreads_x = (srcDescPtr->strides.hStride + 7) >> 3;
             hipLaunchKernelGGL(water_pln3_pkd3_tensor,
-                               dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                               dim3(ceil(static_cast<float>(globalThreads_x)/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                                dim3(localThreads_x, localThreads_y, localThreads_z),
                                0,
                                handle.GetStream(),
