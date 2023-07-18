@@ -4,7 +4,7 @@ cwd=$(pwd)
 
 # <<<<<<<<<<<<<< VALIDATION CHECK FOR FOLDER PATHS >>>>>>>>>>>>>>>>>>>>>>>>>>>>
 function VALIDATE_PATH {
-    if [ -z "$1" ]; then  #check if a string is empty 
+    if [ -z "$1" ]; then  #check if a string is empty
         echo "$1 Folder path is empty."
         exit
     fi
@@ -208,6 +208,12 @@ echo "##########################################################################
 if [ "$TEST_TYPE" -eq 0 ]; then
     for case in ${CASE_LIST[@]};
     do
+        if [ "$QA_MODE" -eq 1 ]; then
+            if [ "$case" -eq " 84" ]; then
+                echo "QA tests are not supported for case number $case, since it generates random output"
+                continue
+            fi
+        fi
         if [ "$case" -lt "0" ] || [ "$case" -gt " 84" ]; then
             echo "Invalid case number $case. case number must be in the 0:84 range!"
             continue
