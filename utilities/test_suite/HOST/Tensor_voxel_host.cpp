@@ -189,23 +189,26 @@ template<typename T>
 inline void convert_input_niftitype_to_Rpp32f_generic(T *niftyInput, nifti_1_header *niftiHeader, Rpp32f *inputF32, RpptGenericDescPtr descriptorPtr3D)
 {
     nifti_1_header hdr = *niftiHeader;
-    int increment = descriptorPtr3D->strides[3] - hdr.dim[1];
-    bool replicateToAllChannels = (descriptorPtr3D->dims[1] == 3 && hdr.dim[4] == 1);
-    if (descriptorPtr3D->dims[1] == 3 && replicateToAllChannels)
+    Rpp32u channelStride;
+    Rpp32u channelIncrement;
+    bool replicateToAllChannels;
+    Rpp32u increment;
+    if (descriptorPtr3D->layout == RpptLayout::NCDHW)
     {
-        Rpp32u channelStride;
-        Rpp32u channelIncrement;
-        if (descriptorPtr3D->layout == RpptLayout::NCDHW)
-        {
-            channelStride = descriptorPtr3D->strides[1];
-            channelIncrement = 1;
-        }
-        else if (descriptorPtr3D->layout == RpptLayout::NDHWC)
-        {
-            channelStride = 1;
-            channelIncrement = 3;
-        }
-
+        replicateToAllChannels = (descriptorPtr3D->dims[1] == 3 && hdr.dim[4] == 1);
+        channelStride = descriptorPtr3D->strides[1];
+        channelIncrement = 1;
+        increment = descriptorPtr3D->strides[3] - hdr.dim[1];
+    }
+    else if (descriptorPtr3D->layout == RpptLayout::NDHWC)
+    {
+        replicateToAllChannels = (descriptorPtr3D->dims[4] == 3 && hdr.dim[4] == 1);
+        channelStride = 1;
+        channelIncrement = 3;
+        increment = descriptorPtr3D->dims[3] - hdr.dim[1];
+    }
+    if (replicateToAllChannels)
+    {
         for (int batchcount = 0; batchcount < descriptorPtr3D->dims[0]; batchcount++)
         {
             T *niftyTemp = niftyInput + batchcount * descriptorPtr3D->strides[0];
@@ -291,7 +294,25 @@ inline void convert_output_Rpp32f_to_niftitype_generic(Rpp32f *outputF32, RpptGe
     }
     else if (descriptorPtr3D->layout == RpptLayout::NDHWC)
     {
-        // TODO: to be implemented
+        int increment = descriptorPtr3D->dims[3] - hdr.dim[1];
+        for (int n = 0; n < descriptorPtr3D->dims[0]; n++)
+        {
+            for (int d = 0; d < hdr.dim[3]; d++)
+            {
+                for (int h = 0; h < hdr.dim[2]; h++)
+                {
+                    for (int w = 0; w < hdr.dim[1]; w++)
+                    {
+                        *outputF32Temp = RPPRANGECHECK(*outputF32Temp);
+                        *outputTemp = (T)*outputF32Temp;
+
+                        outputF32Temp += 3;
+                        outputTemp++;
+                    }
+                    outputF32Temp += increment;
+                }
+            }
+        }
     }
 }
 
@@ -506,7 +527,6 @@ int main(int argc, char * argv[])
 
     if(testType == 0)
     {
-
         for(int i = 0; i < numChannels; i++) // temporary changes to process pln3
         {
             int xyFrameSize = niftiHeader.dim[1] * niftiHeader.dim[2];
@@ -516,8 +536,13 @@ int main(int argc, char * argv[])
             uchar *outputBufferOpenCV = (uchar *)calloc(xyFrameSizeROI, sizeof(uchar));
 
             // Convert RpptDataType::F32 strided buffer to default NIFTI_DATATYPE unstrided buffer
-            Rpp64u increment = ((Rpp64u)descriptorPtr3D->strides[1] * (Rpp64u)descriptorPtr3D->dims[0]);
-            convert_output_Rpp32f_to_niftitype_generic(outputF32 + i * increment, descriptorPtr3D, niftiData, &niftiHeader);
+            Rpp64u increment;
+            if (descriptorPtr3D->layout == RpptLayout::NCDHW)
+                increment = ((Rpp64u)descriptorPtr3D->strides[1] * (Rpp64u)descriptorPtr3D->dims[0]);
+            else
+                increment = 1;
+
+            convert_output_Rpp32f_to_niftitype_generic(inputF32 + i * increment, descriptorPtr3D, niftiData, &niftiHeader);
 
             NIFTI_DATATYPE min = niftiData[0];
             NIFTI_DATATYPE max = niftiData[0];
