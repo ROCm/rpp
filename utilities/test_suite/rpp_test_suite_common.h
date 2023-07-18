@@ -1023,21 +1023,21 @@ inline void set_generic_descriptor(RpptGenericDescPtr descriptorPtr3D, int noOfI
 
     if (layoutType == 0)
     {
-        descriptorPtr3D->layout = RpptLayout::NCDHW;
-        descriptorPtr3D->dims[0] = noOfImages;
-        descriptorPtr3D->dims[1] = numChannels;
-        descriptorPtr3D->dims[2] = maxZ;
-        descriptorPtr3D->dims[3] = maxY;
-        descriptorPtr3D->dims[4] = maxX;
-    }
-    else if (layoutType == 1)
-    {
         descriptorPtr3D->layout = RpptLayout::NDHWC;
         descriptorPtr3D->dims[0] = noOfImages;
         descriptorPtr3D->dims[1] = maxZ;
         descriptorPtr3D->dims[2] = maxY;
         descriptorPtr3D->dims[3] = maxX;
         descriptorPtr3D->dims[4] = numChannels;
+    }
+    else if (layoutType == 1 || layoutType == 2)
+    {
+        descriptorPtr3D->layout = RpptLayout::NCDHW;
+        descriptorPtr3D->dims[0] = noOfImages;
+        descriptorPtr3D->dims[1] = numChannels;
+        descriptorPtr3D->dims[2] = maxZ;
+        descriptorPtr3D->dims[3] = maxY;
+        descriptorPtr3D->dims[4] = maxX;
     }
 
     descriptorPtr3D->strides[0] = descriptorPtr3D->dims[1] * descriptorPtr3D->dims[2] * descriptorPtr3D->dims[3] * descriptorPtr3D->dims[4];
