@@ -33,7 +33,7 @@ RppStatus water_u8_u8_host_tensor(Rpp8u *srcPtr,
                                   RppLayoutParams layoutParams,
                                   rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = {0, 0, static_cast<Rpp32s>(srcDescPtr->w), static_cast<Rpp32s>(srcDescPtr->h)};
     Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
@@ -85,8 +85,7 @@ RppStatus water_u8_u8_host_tensor(Rpp8u *srcPtr,
         // Water with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp8u *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
-            srcPtrRow = srcPtrChannel;
+            Rpp8u *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             dstPtrRowR = dstPtrChannel;
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
@@ -100,7 +99,7 @@ RppStatus water_u8_u8_host_tensor(Rpp8u *srcPtr,
 
                 Rpp32f dstX, dstY, sinFactor;
                 __m256 pDstX, pDstY, pSinFactor;
-                dstY = (Rpp32f)i;
+                dstY = static_cast<Rpp32f>(i);
                 sinFactor = std::sin((freqX * dstY) + phaseX);
                 pDstX = avx_pDstLocInit;
                 pDstY = _mm256_set1_ps(dstY);
@@ -150,7 +149,7 @@ RppStatus water_u8_u8_host_tensor(Rpp8u *srcPtr,
 
                 Rpp32f dstX, dstY, sinFactor;
                 __m256 pDstX, pDstY, pSinFactor;
-                dstY = (Rpp32f)i;
+                dstY = static_cast<Rpp32f>(i);
                 sinFactor = std::sin((freqX * dstY) + phaseX);
                 pDstX = avx_pDstLocInit;
                 pDstY = _mm256_set1_ps(dstY);
@@ -195,7 +194,7 @@ RppStatus water_u8_u8_host_tensor(Rpp8u *srcPtr,
 
                 Rpp32f dstX, dstY, sinFactor;
                 __m256 pDstX, pDstY, pSinFactor;
-                dstY = (Rpp32f)i;
+                dstY = static_cast<Rpp32f>(i);
                 sinFactor = std::sin((freqX * dstY) + phaseX);
                 pDstX = avx_pDstLocInit;
                 pDstY = _mm256_set1_ps(dstY);
@@ -239,7 +238,7 @@ RppStatus water_u8_u8_host_tensor(Rpp8u *srcPtr,
 
                 Rpp32f dstX, dstY, sinFactor;
                 __m256 pDstX, pDstY, pSinFactor;
-                dstY = (Rpp32f)i;
+                dstY = static_cast<Rpp32f>(i);
                 sinFactor = std::sin((freqX * dstY) + phaseX);
                 pDstX = avx_pDstLocInit;
                 pDstY = _mm256_set1_ps(dstY);
@@ -295,7 +294,7 @@ RppStatus water_f32_f32_host_tensor(Rpp32f *srcPtr,
                                     RppLayoutParams layoutParams,
                                     rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = {0, 0, static_cast<Rpp32s>(srcDescPtr->w), static_cast<Rpp32s>(srcDescPtr->h)};
     Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
@@ -347,8 +346,7 @@ RppStatus water_f32_f32_host_tensor(Rpp32f *srcPtr,
         // Water with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32f *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
-            srcPtrRow = srcPtrChannel;
+            Rpp32f *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             dstPtrRowR = dstPtrChannel;
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
@@ -362,7 +360,7 @@ RppStatus water_f32_f32_host_tensor(Rpp32f *srcPtr,
 
                 Rpp32f dstX, dstY, sinFactor;
                 __m256 pDstX, pDstY, pSinFactor;
-                dstY = (Rpp32f)i;
+                dstY = static_cast<Rpp32f>(i);
                 sinFactor = std::sin((freqX * dstY) + phaseX);
                 pDstX = avx_pDstLocInit;
                 pDstY = _mm256_set1_ps(dstY);
@@ -412,7 +410,7 @@ RppStatus water_f32_f32_host_tensor(Rpp32f *srcPtr,
 
                 Rpp32f dstX, dstY, sinFactor;
                 __m256 pDstX, pDstY, pSinFactor;
-                dstY = (Rpp32f)i;
+                dstY = static_cast<Rpp32f>(i);
                 sinFactor = std::sin((freqX * dstY) + phaseX);
                 pDstX = avx_pDstLocInit;
                 pDstY = _mm256_set1_ps(dstY);
@@ -457,7 +455,7 @@ RppStatus water_f32_f32_host_tensor(Rpp32f *srcPtr,
 
                 Rpp32f dstX, dstY, sinFactor;
                 __m256 pDstX, pDstY, pSinFactor;
-                dstY = (Rpp32f)i;
+                dstY = static_cast<Rpp32f>(i);
                 sinFactor = std::sin((freqX * dstY) + phaseX);
                 pDstX = avx_pDstLocInit;
                 pDstY = _mm256_set1_ps(dstY);
@@ -500,7 +498,7 @@ RppStatus water_f32_f32_host_tensor(Rpp32f *srcPtr,
 
                 Rpp32f dstX, dstY, sinFactor;
                 __m256 pDstX, pDstY, pSinFactor;
-                dstY = (Rpp32f)i;
+                dstY = static_cast<Rpp32f>(i);
                 sinFactor = std::sin((freqX * dstY) + phaseX);
                 pDstX = avx_pDstLocInit;
                 pDstY = _mm256_set1_ps(dstY);
@@ -557,7 +555,7 @@ RppStatus water_f16_f16_host_tensor(Rpp16f *srcPtr,
                                     RppLayoutParams layoutParams,
                                     rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = {0, 0, static_cast<Rpp32s>(srcDescPtr->w), static_cast<Rpp32s>(srcDescPtr->h)};
     Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
@@ -588,8 +586,7 @@ RppStatus water_f16_f16_host_tensor(Rpp16f *srcPtr,
         // Water with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp16f *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
-            srcPtrRow = srcPtrChannel;
+            Rpp16f *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             dstPtrRowR = dstPtrChannel;
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
@@ -602,7 +599,7 @@ RppStatus water_f16_f16_host_tensor(Rpp16f *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 Rpp32f dstX, dstY, sinFactor;
-                dstY = (Rpp32f)i;
+                dstY = static_cast<Rpp32f>(i);
                 sinFactor = std::sin((freqX * dstY) + phaseX);
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
@@ -624,10 +621,6 @@ RppStatus water_f16_f16_host_tensor(Rpp16f *srcPtr,
         {
             Rpp16f *dstPtrRow;
             dstPtrRow = dstPtrChannel;
-            Rpp16f *srcPtrChannelR, *srcPtrChannelG, *srcPtrChannelB;
-            srcPtrChannelR = srcPtrChannel;
-            srcPtrChannelG = srcPtrChannelR + srcDescPtr->strides.cStride;
-            srcPtrChannelB = srcPtrChannelG + srcDescPtr->strides.cStride;
 
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
@@ -635,7 +628,7 @@ RppStatus water_f16_f16_host_tensor(Rpp16f *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 Rpp32f dstX, dstY, sinFactor;
-                dstY = (Rpp32f)i;
+                dstY = static_cast<Rpp32f>(i);
                 sinFactor = std::sin((freqX * dstY) + phaseX);
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
@@ -663,7 +656,7 @@ RppStatus water_f16_f16_host_tensor(Rpp16f *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 Rpp32f dstX, dstY, sinFactor;
-                dstY = (Rpp32f)i;
+                dstY = static_cast<Rpp32f>(i);
                 sinFactor = std::sin((freqX * dstY) + phaseX);
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
@@ -691,7 +684,7 @@ RppStatus water_f16_f16_host_tensor(Rpp16f *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 Rpp32f dstX, dstY, sinFactor;
-                dstY = (Rpp32f)i;
+                dstY = static_cast<Rpp32f>(i);
                 sinFactor = std::sin((freqX * dstY) + phaseX);
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
@@ -725,7 +718,7 @@ RppStatus water_i8_i8_host_tensor(Rpp8s *srcPtr,
                                   RppLayoutParams layoutParams,
                                   rpp::Handle& handle)
 {
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    RpptROI roiDefault = {0, 0, static_cast<Rpp32s>(srcDescPtr->w), static_cast<Rpp32s>(srcDescPtr->h)};
     Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
@@ -777,8 +770,7 @@ RppStatus water_i8_i8_host_tensor(Rpp8s *srcPtr,
         // Water with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp8s *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
-            srcPtrRow = srcPtrChannel;
+            Rpp8s *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             dstPtrRowR = dstPtrChannel;
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
@@ -792,7 +784,7 @@ RppStatus water_i8_i8_host_tensor(Rpp8s *srcPtr,
 
                 Rpp32f dstX, dstY, sinFactor;
                 __m256 pDstX, pDstY, pSinFactor;
-                dstY = (Rpp32f)i;
+                dstY = static_cast<Rpp32f>(i);
                 sinFactor = std::sin((freqX * dstY) + phaseX);
                 pDstX = avx_pDstLocInit;
                 pDstY = _mm256_set1_ps(dstY);
@@ -842,7 +834,7 @@ RppStatus water_i8_i8_host_tensor(Rpp8s *srcPtr,
 
                 Rpp32f dstX, dstY, sinFactor;
                 __m256 pDstX, pDstY, pSinFactor;
-                dstY = (Rpp32f)i;
+                dstY = static_cast<Rpp32f>(i);
                 sinFactor = std::sin((freqX * dstY) + phaseX);
                 pDstX = avx_pDstLocInit;
                 pDstY = _mm256_set1_ps(dstY);
@@ -886,7 +878,7 @@ RppStatus water_i8_i8_host_tensor(Rpp8s *srcPtr,
 
                 Rpp32f dstX, dstY, sinFactor;
                 __m256 pDstX, pDstY, pSinFactor;
-                dstY = (Rpp32f)i;
+                dstY = static_cast<Rpp32f>(i);
                 sinFactor = std::sin((freqX * dstY) + phaseX);
                 pDstX = avx_pDstLocInit;
                 pDstY = _mm256_set1_ps(dstY);
@@ -930,7 +922,7 @@ RppStatus water_i8_i8_host_tensor(Rpp8s *srcPtr,
 
                 Rpp32f dstX, dstY, sinFactor;
                 __m256 pDstX, pDstY, pSinFactor;
-                dstY = (Rpp32f)i;
+                dstY = static_cast<Rpp32f>(i);
                 sinFactor = std::sin((freqX * dstY) + phaseX);
                 pDstX = avx_pDstLocInit;
                 pDstY = _mm256_set1_ps(dstY);
@@ -962,9 +954,6 @@ RppStatus water_i8_i8_host_tensor(Rpp8s *srcPtr,
                     cosFactor = std::cos((freqY * dstX) + phaseY);
                     compute_water_src_loc(dstY, dstX, srcY, srcX, amplY, amplX, sinFactor, cosFactor, &roiLTRB);
 
-                    Rpp8s *dstPtrTempChn, *srcPtrTempChn;
-                    srcPtrTempChn = srcPtrChannel;
-                    dstPtrTempChn = dstPtrTemp;
                     for(int i = 0; i < srcDescPtr->c; i++)
                         compute_generic_nn_interpolation_pln_to_pln(srcY, srcX, &roiLTRB, dstPtrTemp++, srcPtrChannel, srcDescPtr, dstDescPtr);
                 }
