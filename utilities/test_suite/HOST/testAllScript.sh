@@ -47,7 +47,7 @@ DEFAULT_SRC_FOLDER_2="$cwd/../TEST_IMAGES/three_images_mixed_src2"
 # <<<<<<<<<<<<<< PROCESSING OF INPUT ARGUMENTS (NEED NOT CHANGE) >>>>>>>>>>>>>>
 
 CASE_MIN=0
-CASE_MAX=90
+CASE_MAX=91
 if (( "$#" < 3 )); then
     SRC_FOLDER_1="$DEFAULT_SRC_FOLDER_1"
     SRC_FOLDER_2="$DEFAULT_SRC_FOLDER_2"
@@ -97,8 +97,8 @@ elif [[ "$PRESERVE_OUTPUT" -ne 0 ]] && [[ "$PRESERVE_OUTPUT" -ne 1 ]]; then
 fi
 
 for case in $CASE_LIST; do
-    if [[ $case -lt 0 || $case -gt 90 ]]; then
-        echo "The case# must be in the 0:90 range!"
+    if [[ $case -lt 0 || $case -gt 91 ]]; then
+        echo "The case# must be in the 0:91 range!"
     fi
 done
 
@@ -173,7 +173,7 @@ directory_name_generator() {
         elif [ "$case" -lt 86 ]
         then
             FUNCTIONALITY_GROUP="data_exchange_operations"
-        elif [ "$case" -lt 91 ]
+        elif [ "$case" -lt 92 ]
         then
             FUNCTIONALITY_GROUP="statistical_operations"
         else
@@ -203,8 +203,8 @@ echo "##########################################################################
 if [ "$TEST_TYPE" -eq 0 ]; then
     for case in ${CASE_LIST[@]};
     do
-        if [ "$case" -lt "0" ] || [ "$case" -gt " 90" ]; then
-            echo "Invalid case number $case. case number must be in the 0:90 range!"
+        if [ "$case" -lt "0" ] || [ "$case" -gt " 91" ]; then
+            echo "Invalid case number $case. case number must be in the 0:91 range!"
             continue
         fi
         for ((layout=0;layout<3;layout++))
@@ -271,8 +271,8 @@ if [ "$TEST_TYPE" -eq 0 ]; then
 else
     for case in ${CASE_LIST[@]};
     do
-        if [ "$case" -lt "0" ] || [ "$case" -gt " 90" ]; then
-            echo "Invalid case number $case. case number must be in the 0:90 range!"
+        if [ "$case" -lt "0" ] || [ "$case" -gt " 91" ]; then
+            echo "Invalid case number $case. case number must be in the 0:91 range!"
             continue
         fi
         for ((layout=0;layout<3;layout++))

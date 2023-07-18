@@ -47,6 +47,27 @@ RppStatus rppt_image_mean_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t
 RppStatus rppt_image_mean_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t imageMeanArr, Rpp32u imageMeanArrLength, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
+/******************** image_stddev ********************/
+
+// Image stddev finder operation for a NCHW/NHWC layout tensor
+
+// *param[in] srcPtr source tensor memory
+// *param[in] srcDescPtr source tensor descriptor (srcDescPtr->w can be a maximum of 3840, srcDescPtr->h can be a maximum of 2160)
+// *param[out] imageStddevArr destination array of minimum length (srcPtr->n * srcPtr->c)
+// *param[in] imageStddevArrLength length of provided destination array (minimum length = srcPtr->n * srcPtr->c)
+// *param[in] meanTensor mean values for stddev calculation (1D tensor of size batchSize)
+// *param[in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+// *param[in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+// *returns a  RppStatus enumeration.
+// *retval RPP_SUCCESS : succesful completion
+// *retval RPP_ERROR : Error
+
+RppStatus rppt_image_stddev_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t imageStddevArr, Rpp32u imageStddevArrLength, Rpp32f *meanTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+#ifdef GPU_SUPPORT
+//RppStatus rppt_image_stddev_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t imageStddevArr, Rpp32u imageStddevArrLength, Rpp32f *meanTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
+
+
 #ifdef __cplusplus
 }
 #endif

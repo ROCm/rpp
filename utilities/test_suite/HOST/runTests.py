@@ -63,8 +63,8 @@ def rpp_test_suite_parser_and_validator():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_path1", type = str, default = inFilePath1, help = "Path to the input folder 1")
     parser.add_argument("--input_path2", type = str, default = inFilePath2, help = "Path to the input folder 2")
-    parser.add_argument("--case_start", type = int, default = 0, help = "Testing range starting case # - (0:90)")
-    parser.add_argument("--case_end", type = int, default = 90, help = "Testing range ending case # - (0:90)")
+    parser.add_argument("--case_start", type = int, default = 0, help = "Testing range starting case # - (0:91)")
+    parser.add_argument("--case_end", type = int, default = 91, help = "Testing range ending case # - (0:91)")
     parser.add_argument('--test_type', type = int, default = 0, help = "Type of Test - (0 = Unit tests / 1 = Performance tests)")
     parser.add_argument('--case_list', nargs = "+", help = "List of case numbers to list", required = False)
     parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Output images from tests will be compared with golden outputs - (0 / 1)", required = False)
@@ -80,8 +80,8 @@ def rpp_test_suite_parser_and_validator():
     validate_path(qaInputFile)
 
     # validate the parameters passed by user
-    if ((args.case_start < 0 or args.case_start > 90) or (args.case_end < 0 or args.case_end > 90)):
-        print("Starting case# and Ending case# must be in the 0:90 range. Aborting!")
+    if ((args.case_start < 0 or args.case_start > 91) or (args.case_end < 0 or args.case_end > 91)):
+        print("Starting case# and Ending case# must be in the 0:91 range. Aborting!")
         exit(0)
     elif args.case_end < args.case_start:
         print("Ending case# must be greater than starting case#. Aborting!")
@@ -95,7 +95,7 @@ def rpp_test_suite_parser_and_validator():
     elif args.decoder_type < 0 or args.decoder_type > 1:
         print("Decoder Type must be in the 0/1 (0 = OpenCV / 1 = TurboJPEG). Aborting")
         exit(0)
-    elif args.case_list is not None and args.case_start > 0 and args.case_end < 90:
+    elif args.case_list is not None and args.case_start > 0 and args.case_end < 91:
         print("Invalid input! Please provide only 1 option between case_list, case_start and case_end")
         exit(0)
     elif args.num_runs <= 0:
@@ -113,8 +113,8 @@ def rpp_test_suite_parser_and_validator():
         args.case_list = [str(x) for x in args.case_list]
     else:
         for case in args.case_list:
-            if int(case) < 0 or int(case) > 90:
-                 print("The case# must be in the 0:90 range!")
+            if int(case) < 0 or int(case) > 91:
+                 print("The case# must be in the 0:91 range!")
                  exit(0)
 
     # if QA mode is enabled overwrite the input folders with the folders used for generating golden outputs
@@ -162,7 +162,7 @@ dstPath = outFilePath
 subprocess.call(["./testAllScript.sh", srcPath1, args.input_path2, str(testType), str(numRuns), str(qaMode), str(decoderType), str(preserveOutput), str(batchSize), " ".join(caseList)])  # nosec
 
 # print the results of qa tests
-supportedCaseList = ['0', '1', '2', '4', '13', '31', '34', '36', '37', '38', '84', '90']
+supportedCaseList = ['0', '1', '2', '4', '13', '31', '34', '36', '37', '38', '84', '90', '91']
 supportedCases = 0
 for num in caseList:
     if num in supportedCaseList:

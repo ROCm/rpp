@@ -5872,4 +5872,20 @@ inline void compute_sum_24_host(__m256d *p, __m256d *pSumR, __m256d *pSumG, __m2
     pSumB[0] = _mm256_add_pd(_mm256_add_pd(p[4], p[5]), pSumB[0]); //add 8B values and bring it down to 4
 }
 
+inline void compute_var_8_host(__m256d *p1, __m256d *pMean, __m256d *pVar)
+{
+    pVar[0] = _mm256_add_pd(_mm256_mul_pd(_mm256_sub_pd(pMean[0], p1[0]), _mm256_sub_pd(pMean[0], p1[0])), pVar[0]);
+    pVar[0] = _mm256_add_pd(_mm256_mul_pd(_mm256_sub_pd(pMean[0], p1[1]), _mm256_sub_pd(pMean[0], p1[1])), pVar[0]);
+}
+
+inline void compute_var_24_host(__m256d *p1, __m256d *pMean, __m256d *pVarR, __m256d *pVarG, __m256d *pVarB)
+{
+    pVarR[0] = _mm256_add_pd(_mm256_mul_pd(_mm256_sub_pd(pMean[0], p1[0]), _mm256_sub_pd(pMean[0], p1[0])), pVarR[0]);
+    pVarR[0] = _mm256_add_pd(_mm256_mul_pd(_mm256_sub_pd(pMean[0], p1[1]), _mm256_sub_pd(pMean[0], p1[1])), pVarR[0]);
+    pVarG[0] = _mm256_add_pd(_mm256_mul_pd(_mm256_sub_pd(pMean[0], p1[2]), _mm256_sub_pd(pMean[0], p1[2])), pVarG[0]);
+    pVarG[0] = _mm256_add_pd(_mm256_mul_pd(_mm256_sub_pd(pMean[0], p1[3]), _mm256_sub_pd(pMean[0], p1[3])), pVarG[0]);
+    pVarB[0] = _mm256_add_pd(_mm256_mul_pd(_mm256_sub_pd(pMean[0], p1[4]), _mm256_sub_pd(pMean[0], p1[4])), pVarB[0]);
+    pVarB[0] = _mm256_add_pd(_mm256_mul_pd(_mm256_sub_pd(pMean[0], p1[5]), _mm256_sub_pd(pMean[0], p1[5])), pVarB[0]);
+}
+
 #endif //RPP_CPU_COMMON_H

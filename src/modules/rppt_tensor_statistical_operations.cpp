@@ -105,6 +105,86 @@ RppStatus rppt_image_mean_host(RppPtr_t srcPtr,
     return RPP_SUCCESS;
 }
 
+/******************** image_stddev ********************/
+
+RppStatus rppt_image_stddev_host(RppPtr_t srcPtr,
+                                 RpptDescPtr srcDescPtr,
+                                 RppPtr_t imageStddevArr,
+                                 Rpp32u imageStddevArrLength,
+                                 Rpp32f *meanTensor,
+                                 RpptROIPtr roiTensorPtrSrc,
+                                 RpptRoiType roiType,
+                                 rppHandle_t rppHandle)
+{
+    if (srcDescPtr->c == 1)
+    {
+        if (imageStddevArrLength < srcDescPtr->n)      // mean of single channel
+            return RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH;
+    }
+    else if (srcDescPtr->c == 3)
+    {
+        if (imageStddevArrLength < srcDescPtr->n * 4)  // mean of each channel, and total mean of all 3 channels
+            return RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH;
+    }
+    if (roiType == RpptRoiType::XYWH)
+    {
+        for(int i = 0; i < srcDescPtr->n; i++)
+            if ((roiTensorPtrSrc[i].xywhROI.roiWidth > REDUCTION_MAX_WIDTH) || (roiTensorPtrSrc[i].xywhROI.roiHeight > REDUCTION_MAX_HEIGHT))
+                return RPP_ERROR_HIGH_SRC_DIMENSION;
+    }
+    else if (roiType == RpptRoiType::LTRB)
+    {
+        for(int i = 0; i < srcDescPtr->n; i++)
+            if ((roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x > REDUCTION_MAX_XDIM) || (roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y > REDUCTION_MAX_YDIM))
+                return RPP_ERROR_HIGH_SRC_DIMENSION;
+    }
+
+    RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+
+    if (srcDescPtr->dataType == RpptDataType::U8)
+    {
+        image_stddev_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                       srcDescPtr,
+                                       static_cast<Rpp32f*>(imageStddevArr),
+                                       meanTensor,
+                                       roiTensorPtrSrc,
+                                       roiType,
+                                       layoutParams);
+    }
+    /*else if (srcDescPtr->dataType == RpptDataType::F16)
+    {
+        image_stddev_f16_f16_host_tensor(reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                         srcDescPtr,
+                                         static_cast<Rpp32f*>(imageStddevArr),
+                                         meanTensor,
+                                         roiTensorPtrSrc,
+                                         roiType,
+                                         layoutParams);
+    }
+    else if (srcDescPtr->dataType == RpptDataType::F32)
+    {
+        image_stddev_f32_f32_host_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                         srcDescPtr,
+                                         static_cast<Rpp32f*>(imageStddevArr),
+                                         meanTensor,
+                                         roiTensorPtrSrc,
+                                         roiType,
+                                         layoutParams);
+    }
+    else if (srcDescPtr->dataType == RpptDataType::I8)
+    {
+        image_stddev_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                       srcDescPtr,
+                                       static_cast<Rpp32f*>(imageStddevArr),
+                                       meanTensor,
+                                       roiTensorPtrSrc,
+                                       roiType,
+                                       layoutParams);
+    }*/
+
+    return RPP_SUCCESS;
+}
+
 /********************************************************************************************************************/
 /*********************************************** RPP_GPU_SUPPORT = ON ***********************************************/
 /********************************************************************************************************************/
