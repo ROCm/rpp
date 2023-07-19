@@ -659,17 +659,38 @@ int main(int argc, char **argv)
                 case 91:
                 {
                     testCaseName = "image_stddev";
-                    Rpp32f mean[batchSize];
-
-                    for (i = 0; i < 3; i++) //Default mean values for 3 img dataset
-                    {
-                        mean[0] = 126.932;
-                        mean[1] = 77.117;
-                        mean[2] = 121.833;
-                    }
 
                     if(srcDescPtr->c == 1)
                         reductionFuncResultArrLength = srcDescPtr->n;
+                    Rpp32f mean[reductionFuncResultArrLength];
+
+                    if(srcDescPtr->c == 1)
+                    {
+                        for (i = 0; i < reductionFuncResultArrLength; i++) //Default mean values for 3 img dataset
+                        {
+                            mean[0] = 133.690;
+                            mean[1] = 81.347;
+                            mean[2] = 116.939;
+                        }
+                    }
+                    else
+                    {
+                        for (i = 0; i < reductionFuncResultArrLength; i++) //Default mean values for 3 img dataset
+                        {
+                            mean[0] = 139.352;
+                            mean[1] = 136.397;
+                            mean[2] = 105.046;
+                            mean[3] = 126.932;
+                            mean[4] = 105.655;
+                            mean[5] = 74.951;
+                            mean[6] = 50.744;
+                            mean[7] = 77.117;
+                            mean[8] = 96.473;
+                            mean[9] = 121.439;
+                            mean[10] = 147.587;
+                            mean[11] = 121.833;
+                        }
+                    }
 
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();

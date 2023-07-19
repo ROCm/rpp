@@ -5878,7 +5878,17 @@ inline void compute_var_8_host(__m256d *p1, __m256d *pMean, __m256d *pVar)
     pVar[0] = _mm256_add_pd(_mm256_mul_pd(_mm256_sub_pd(pMean[0], p1[1]), _mm256_sub_pd(pMean[0], p1[1])), pVar[0]);
 }
 
-inline void compute_var_24_host(__m256d *p1, __m256d *pMean, __m256d *pVarR, __m256d *pVarG, __m256d *pVarB)
+inline void compute_varchannel_24_host(__m256d *p1, __m256d *pMeanR, __m256d *pMeanG, __m256d *pMeanB, __m256d *pVarR, __m256d *pVarG, __m256d *pVarB)
+{
+    pVarR[0] = _mm256_add_pd(_mm256_mul_pd(_mm256_sub_pd(pMeanR[0], p1[0]), _mm256_sub_pd(pMeanR[0], p1[0])), pVarR[0]);
+    pVarR[0] = _mm256_add_pd(_mm256_mul_pd(_mm256_sub_pd(pMeanR[0], p1[1]), _mm256_sub_pd(pMeanR[0], p1[1])), pVarR[0]);
+    pVarG[0] = _mm256_add_pd(_mm256_mul_pd(_mm256_sub_pd(pMeanG[0], p1[2]), _mm256_sub_pd(pMeanG[0], p1[2])), pVarG[0]);
+    pVarG[0] = _mm256_add_pd(_mm256_mul_pd(_mm256_sub_pd(pMeanG[0], p1[3]), _mm256_sub_pd(pMeanG[0], p1[3])), pVarG[0]);
+    pVarB[0] = _mm256_add_pd(_mm256_mul_pd(_mm256_sub_pd(pMeanB[0], p1[4]), _mm256_sub_pd(pMeanB[0], p1[4])), pVarB[0]);
+    pVarB[0] = _mm256_add_pd(_mm256_mul_pd(_mm256_sub_pd(pMeanB[0], p1[5]), _mm256_sub_pd(pMeanB[0], p1[5])), pVarB[0]);
+}
+
+inline void compute_varRGB_24_host(__m256d *p1, __m256d *pMean, __m256d *pVarR, __m256d *pVarG, __m256d *pVarB)
 {
     pVarR[0] = _mm256_add_pd(_mm256_mul_pd(_mm256_sub_pd(pMean[0], p1[0]), _mm256_sub_pd(pMean[0], p1[0])), pVarR[0]);
     pVarR[0] = _mm256_add_pd(_mm256_mul_pd(_mm256_sub_pd(pMean[0], p1[1]), _mm256_sub_pd(pMean[0], p1[1])), pVarR[0]);

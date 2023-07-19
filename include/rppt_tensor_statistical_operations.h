@@ -55,7 +55,7 @@ RppStatus rppt_image_mean_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t 
 // *param[in] srcDescPtr source tensor descriptor (srcDescPtr->w can be a maximum of 3840, srcDescPtr->h can be a maximum of 2160)
 // *param[out] imageStddevArr destination array of minimum length (srcPtr->n * srcPtr->c)
 // *param[in] imageStddevArrLength length of provided destination array (minimum length = srcPtr->n * srcPtr->c)
-// *param[in] meanTensor mean values for stddev calculation (1D tensor of size batchSize)
+// *param[in] meanTensor mean values for stddev calculation (1D tensor of size batchSize * 4 in format (MeanR, MeanG, MeanB, MeanImage) for each image in batch)
 // *param[in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
 // *param[in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
 // *returns a  RppStatus enumeration.
