@@ -468,7 +468,7 @@ int main(int argc, char * argv[])
     // Run case-wise RPP API and measure time
     int numRuns = 1;
     if(testType == 1)
-        numRuns = 100;
+        numRuns = 1000;
 
     int missingFuncFlag = 0;
     double startWallTime, endWallTime, wallTime;
