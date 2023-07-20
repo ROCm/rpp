@@ -68,7 +68,7 @@ int main(int argc, char **argv)
     bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24);
     bool noiseTypeCase = (testCase == 8);
     bool pln1OutTypeCase = (testCase == 86);
-    bool reductionTypeCase = (testCase == 90);
+    bool reductionTypeCase = (testCase == 90 || testCase == 91);
 
     unsigned int verbosity = atoi(argv[11]);
     unsigned int additionalParam = additionalParamCase ? atoi(argv[7]) : 1;
@@ -82,7 +82,7 @@ int main(int argc, char **argv)
             printf("\ndst = %s", argv[3]);
         printf("\nu8 / f16 / f32 / u8->f16 / u8->f32 / i8 / u8->i8 (0/1/2/3/4/5/6) = %s", argv[4]);
         printf("\noutputFormatToggle (pkd->pkd = 0 / pkd->pln = 1) = %s", argv[5]);
-        printf("\ncase number (0:90) = %s", argv[6]);
+        printf("\ncase number (0:91) = %s", argv[6]);
         printf("\nnumber of times to run = %s", argv[8]);
         printf("\ntest type - (0 = unit tests / 1 = performance tests) = %s", argv[9]);
         printf("\nlayout type - (0 = PKD3/ 1 = PLN3/ 2 = PLN1) = %s", argv[10]);
@@ -94,7 +94,7 @@ int main(int argc, char **argv)
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
-        printf("\nUsage: <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:90> <number of iterations > 0> <verbosity = 0/1>>\n");
+        printf("\nUsage: <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:91> <number of iterations > 0> <verbosity = 0/1>>\n");
         return -1;
     }
 
@@ -664,6 +664,51 @@ int main(int argc, char **argv)
 
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                     rppt_image_mean_gpu(d_input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
+                else
+                    missingFuncFlag = 1;
+
+                break;
+            }
+            case 91:
+            {
+                testCaseName = "image_stddev";
+
+                if(srcDescPtr->c == 1)
+                        reductionFuncResultArrLength = srcDescPtr->n;
+                    Rpp32f mean[reductionFuncResultArrLength];
+
+                    if(srcDescPtr->c == 1)
+                    {
+                        for (i = 0; i < reductionFuncResultArrLength; i++) //Default mean values for 3 img dataset
+                        {
+                            mean[0] = 133.690;
+                            mean[1] = 81.347;
+                            mean[2] = 116.939;
+                        }
+                    }
+                    else
+                    {
+                        for (i = 0; i < reductionFuncResultArrLength; i++) //Default mean values for 3 img dataset
+                        {
+                            mean[0] = 139.352;
+                            mean[1] = 136.397;
+                            mean[2] = 105.046;
+                            mean[3] = 126.932;
+                            mean[4] = 105.655;
+                            mean[5] = 74.951;
+                            mean[6] = 50.744;
+                            mean[7] = 77.117;
+                            mean[8] = 96.473;
+                            mean[9] = 121.439;
+                            mean[10] = 147.587;
+                            mean[11] = 121.833;
+                        }
+                    }
+
+                startWallTime = omp_get_wtime();
+
+                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    rppt_image_stddev_gpu(d_input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, mean, roiTensorPtrSrc, roiTypeSrc, handle);
                 else
                     missingFuncFlag = 1;
 

@@ -298,7 +298,7 @@ int main(int argc, char **argv)
     Rpp32f *reductionFuncResultArr;
     Rpp32u reductionFuncResultArrLength = srcDescPtr->n * 4;
     if(reductionTypeCase)
-        reductionFuncResultArr = static_cast<Rpp32f *>(malloc(reductionFuncResultArrLength * sizeof(Rpp32f)));
+        reductionFuncResultArr = static_cast<Rpp32f *>(calloc(reductionFuncResultArrLength, sizeof(Rpp32f)));
 
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
@@ -668,10 +668,14 @@ int main(int argc, char **argv)
                     {
                         for (i = 0; i < reductionFuncResultArrLength; i++) //Default mean values for 3 img dataset
                         {
+                            mean[0] = 124;
+                        }
+                        /*for (i = 0; i < reductionFuncResultArrLength; i++) //Default mean values for 3 img dataset
+                        {
                             mean[0] = 133.690;
                             mean[1] = 81.347;
                             mean[2] = 116.939;
-                        }
+                        }*/
                     }
                     else
                     {
