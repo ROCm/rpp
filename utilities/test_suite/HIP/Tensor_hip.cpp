@@ -324,8 +324,8 @@ int main(int argc, char **argv)
                 read_image_batch_opencv(inputu8, srcDescPtr, imagesPathStart);
 
             // if the input layout requested is PLN3, convert PKD3 inputs to PLN3 for first and second input batch
-            if (layoutType == 1)
-                convert_pkd3_to_pln3(inputu8, srcDescPtr);
+            // if (layoutType == 1)
+            //     convert_pkd3_to_pln3(inputu8, srcDescPtr);
 
             if(dualInputCase)
             {
@@ -333,8 +333,8 @@ int main(int argc, char **argv)
                     read_image_batch_turbojpeg(inputu8Second, srcDescPtr, imagesPathSecondStart);
                 else
                     read_image_batch_opencv(inputu8Second, srcDescPtr, imagesPathSecondStart);
-                if (layoutType == 1)
-                    convert_pkd3_to_pln3(inputu8Second, srcDescPtr);
+                // if (layoutType == 1)
+                //     convert_pkd3_to_pln3(inputu8Second, srcDescPtr);
             }
 
             // Convert inputs to correponding bit depth specified by user
@@ -701,8 +701,8 @@ int main(int argc, char **argv)
                 // Convert any PLN3 outputs to the corresponding PKD3 version for OpenCV dump
                 if (layoutType == 0 || layoutType == 1)
                 {
-                    if ((dstDescPtr->c == 3) && (dstDescPtr->layout == RpptLayout::NCHW))
-                        convert_pln3_to_pkd3(outputu8, dstDescPtr);
+                    // if ((dstDescPtr->c == 3) && (dstDescPtr->layout == RpptLayout::NCHW))
+                    //     convert_pln3_to_pkd3(outputu8, dstDescPtr);
                 }
                 // OpenCV dump (if testType is unit test and QA mode is not set)
                 if(!qaFlag)
