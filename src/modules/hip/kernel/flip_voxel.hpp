@@ -6,7 +6,7 @@ __global__ void flip_ncdhw_tensor(float *srcPtr,
                                   float *dstPtr,
                                   uint3 dstStridesCDH,
                                   int channels,
-                                  uint3 mirrorTensorXYZ,
+                                  uint3 mirrorXYZ,
                                   RpptROI3DPtr roiGenericPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;        // W - inner most dim vectorized
@@ -18,16 +18,39 @@ __global__ void flip_ncdhw_tensor(float *srcPtr,
         return;
     }
 
-    uint srcIdx = ((id_z + roiGenericPtrSrc->xyzwhdROI.xyz.z) * srcStridesCDH.y) + ((id_y + roiGenericPtrSrc->xyzwhdROI.xyz.y) * srcStridesCDH.z) + (id_x + roiGenericPtrSrc->xyzwhdROI.xyz.x);
     uint dstIdx = (id_z * dstStridesCDH.y) + (id_y * dstStridesCDH.z) + id_x;
+    uint hFactor =  roiGenericPtrSrc->xyzwhdROI.xyz.x;
+    uint vFactor = (id_y + roiGenericPtrSrc->xyzwhdROI.xyz.y) * srcStridesCDH.z;
+    uint dFactor = (id_z + roiGenericPtrSrc->xyzwhdROI.xyz.z) * srcStridesCDH.y;
 
-    d_float8 val_f8;
-    for(int c = 0; c < channels; c++)
+    if (mirrorXYZ.y)
+        vFactor = (roiGenericPtrSrc->xyzwhdROI.roiHeight - 1 - id_y) * srcStridesCDH.z;
+    if (mirrorXYZ.z)
+        dFactor = (roiGenericPtrSrc->xyzwhdROI.roiDepth - 1 - id_z) * srcStridesCDH.y;
+    if (mirrorXYZ.x)
     {
-        rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &val_f8);
-        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &val_f8);
-        srcIdx += srcStridesCDH.x;
-        dstIdx += dstStridesCDH.x;
+        hFactor = (roiGenericPtrSrc->xyzwhdROI.xyz.x + roiGenericPtrSrc->xyzwhdROI.roiWidth - id_x - 8);
+        uint srcIdx = dFactor + vFactor + hFactor;
+        d_float8 pix_f8;
+        for(int c = 0; c < channels; c++)
+        {
+            rpp_hip_load8_and_unpack_to_float8_mirror(srcPtr + srcIdx, &pix_f8);
+            rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
+            srcIdx += srcStridesCDH.x;
+            dstIdx += dstStridesCDH.x;
+        }
+    }
+    else
+    {
+        uint srcIdx = dFactor + vFactor + hFactor;
+        d_float8 pix_f8;
+        for(int c = 0; c < channels; c++)
+        {
+            rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &pix_f8);
+            rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
+            srcIdx += srcStridesCDH.x;
+            dstIdx += dstStridesCDH.x;
+        }
     }
 }
 
