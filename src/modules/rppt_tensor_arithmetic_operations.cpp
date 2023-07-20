@@ -38,9 +38,9 @@ RppStatus rppt_fmadd_scalar_host(RppPtr_t srcPtr,
                                  rppHandle_t rppHandle)
 {
     RppLayoutParams layoutParams;
-    if(srcGenericDescPtr->layout==RpptLayout::NCDHW)
+    if ((srcGenericDescPtr->layout == RpptLayout::NCDHW) && (dstGenericDescPtr->layout == RpptLayout::NCDHW))
         layoutParams = get_layout_params(srcGenericDescPtr->layout, srcGenericDescPtr->dims[1]);
-    else if(srcGenericDescPtr->layout==RpptLayout::NDHWC)
+    else if ((srcGenericDescPtr->layout == RpptLayout::NDHWC) && (dstGenericDescPtr->layout == RpptLayout::NDHWC))
         layoutParams = get_layout_params(srcGenericDescPtr->layout, srcGenericDescPtr->dims[4]);
 
     if (srcGenericDescPtr->dataType != RpptDataType::F32) return RPP_ERROR_INVALID_SRC_DATATYPE;
