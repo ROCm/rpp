@@ -360,7 +360,7 @@ int main(int argc, char * argv[])
         fprintf(stderr, "\nUsage: %s <header file> <data file> <layoutType = 0 - PKD3/ 1 - PLN3/ 2 - PLN1>\n", argv[0]);
         exit(1);
     }
-    if ((testCase < 0) || (testCase > 2))
+    if ((testCase < 0) || (testCase > 3))
     {
         fprintf(stderr, "\nUsage: %s <header file> <data file> <layoutType = 0 for NCDHW / 1 for NDHWC>\n", argv[0]);
         exit(1);
@@ -502,6 +502,17 @@ int main(int argc, char * argv[])
 
                 startWallTime = omp_get_wtime();
                 rppt_flip_voxel_gpu(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, horizontalTensor, verticalTensor, depthTensor, roiGenericSrcPtr, roiTypeSrc, handle);
+                break;
+            }
+            case 3:
+            {
+                Rpp32f addTensor[batchSize];
+
+                for (int i = 0; i < batchSize; i++)
+                    addTensor[i] = 40;
+
+                startWallTime = omp_get_wtime();
+                rppt_add_scalar_gpu(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, addTensor, roiGenericSrcPtr, roiTypeSrc, handle);
                 break;
             }
             default:
