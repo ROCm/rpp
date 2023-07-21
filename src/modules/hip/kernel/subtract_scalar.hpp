@@ -2,13 +2,13 @@
 #include "rpp_hip_common.hpp"
 
 
-__global__ void add_scalar_ncdhw_tensor(float *srcPtr,
-                                        uint3 srcStridesCDH,
-                                        float *dstPtr,
-                                        uint3 dstStridesCDH,
-                                        int channels,
-                                        float addParam,
-                                        RpptROI3DPtr roiGenericPtrSrc)
+__global__ void subtract_scalar_ncdhw_tensor(float *srcPtr,
+                                             uint3 srcStridesCDH,
+                                             float *dstPtr,
+                                             uint3 dstStridesCDH,
+                                             int channels,
+                                             float subtractParam,
+                                             RpptROI3DPtr roiGenericPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;        // W - inner most dim vectorized
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;              // H - second to inner
@@ -26,18 +26,18 @@ __global__ void add_scalar_ncdhw_tensor(float *srcPtr,
     for(int c = 0; c < channels; c++)
     {
         rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &val_f8);
-        rpp_hip_math_add8_const(&val_f8, &val_f8, static_cast<float4>(addParam));
+        rpp_hip_math_subtract8_const(&val_f8, &val_f8, static_cast<float4>(subtractParam));
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &val_f8);
         srcIdx += srcStridesCDH.x;
         dstIdx += dstStridesCDH.x;
     }
 }
 
-__global__ void add_scalar_ndhwc_tensor(float *srcPtr,
+__global__ void subtract_scalar_ndhwc_tensor(float *srcPtr,
                                         uint2 srcStridesDH,
                                         float *dstPtr,
                                         uint2 dstStridesDH,
-                                        float addParam,
+                                        float subtractParam,
                                         RpptROI3DPtr roiGenericPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;        // WC - inner most dim vectorized
@@ -54,17 +54,17 @@ __global__ void add_scalar_ndhwc_tensor(float *srcPtr,
 
     d_float24 val_f24;
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &val_f24);
-    rpp_hip_math_add24_const(&val_f24, &val_f24, static_cast<float4>(addParam));
+    rpp_hip_math_subtract24_const(&val_f24, &val_f24, static_cast<float4>(subtractParam));
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &val_f24);
 }
 
-RppStatus hip_exec_add_scalar_tensor(Rpp32f *srcPtr,
-                                     RpptGenericDescPtr srcGenericDescPtr,
-                                     Rpp32f *dstPtr,
-                                     RpptGenericDescPtr dstGenericDescPtr,
-                                     RpptROI3DPtr roiGenericPtrSrc,
-                                     Rpp32f *addTensor,
-                                     rpp::Handle& handle)
+RppStatus hip_exec_subtract_scalar_tensor(Rpp32f *srcPtr,
+                                          RpptGenericDescPtr srcGenericDescPtr,
+                                          Rpp32f *dstPtr,
+                                          RpptGenericDescPtr dstGenericDescPtr,
+                                          RpptROI3DPtr roiGenericPtrSrc,
+                                          Rpp32f *subtractTensor,
+                                          rpp::Handle& handle)
 {
     if (dstGenericDescPtr->layout == RpptLayout::NCDHW)
     {
@@ -77,7 +77,7 @@ RppStatus hip_exec_add_scalar_tensor(Rpp32f *srcPtr,
 
         for(int batchCount = 0; batchCount < dstGenericDescPtr->dims[0]; batchCount++)
         {
-            hipLaunchKernelGGL(add_scalar_ncdhw_tensor,
+            hipLaunchKernelGGL(subtract_scalar_ncdhw_tensor,
                                dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                                dim3(localThreads_x, localThreads_y, localThreads_z),
                                0,
@@ -87,7 +87,7 @@ RppStatus hip_exec_add_scalar_tensor(Rpp32f *srcPtr,
                                dstPtr + (batchCount * dstGenericDescPtr->strides[0]),
                                make_uint3(dstGenericDescPtr->strides[1], dstGenericDescPtr->strides[2], dstGenericDescPtr->strides[3]),
                                dstGenericDescPtr->dims[1],
-                               addTensor[batchCount],
+                               subtractTensor[batchCount],
                                &roiGenericPtrSrc[batchCount]);
         }
     }
@@ -102,7 +102,7 @@ RppStatus hip_exec_add_scalar_tensor(Rpp32f *srcPtr,
 
         for(int batchCount = 0; batchCount < dstGenericDescPtr->dims[0]; batchCount++)
         {
-            hipLaunchKernelGGL(add_scalar_ndhwc_tensor,
+            hipLaunchKernelGGL(subtract_scalar_ndhwc_tensor,
                                dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                                dim3(localThreads_x, localThreads_y, localThreads_z),
                                0,
@@ -111,7 +111,7 @@ RppStatus hip_exec_add_scalar_tensor(Rpp32f *srcPtr,
                                make_uint2(srcGenericDescPtr->strides[1], srcGenericDescPtr->strides[2]),
                                dstPtr + (batchCount * dstGenericDescPtr->strides[0]),
                                make_uint2(dstGenericDescPtr->strides[1], dstGenericDescPtr->strides[2]),
-                               addTensor[batchCount],
+                               subtractTensor[batchCount],
                                &roiGenericPtrSrc[batchCount]);
         }
     }
