@@ -360,7 +360,7 @@ int main(int argc, char * argv[])
         fprintf(stderr, "\nUsage: %s <header file> <data file> <layoutType = 0 - PKD3/ 1 - PLN3/ 2 - PLN1>\n", argv[0]);
         exit(1);
     }
-    if ((testCase < 0) || (testCase > 3))
+    if ((testCase < 0) || (testCase > 4))
     {
         fprintf(stderr, "\nUsage: %s <header file> <data file> <layoutType = 0 for NCDHW / 1 for NDHWC>\n", argv[0]);
         exit(1);
@@ -517,14 +517,24 @@ int main(int argc, char * argv[])
             }
             case 3:
             {
-                Rpp32f *mulTensor = reinterpret_cast<Rpp32f *>(pinnedMemArgs);
-                Rpp32f *addTensor = mulTensor + batchSize;
+                Rpp32f addTensor[batchSize];
 
                 for (int i = 0; i < batchSize; i++)
                     addTensor[i] = 40;
 
                 startWallTime = omp_get_wtime();
                 rppt_add_scalar_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, addTensor, roiGenericSrcPtr, roiTypeSrc, handle);
+                break;
+            }
+            case 4:
+            {
+                Rpp32f subtractTensor[batchSize];
+
+                for (int i = 0; i < batchSize; i++)
+                    subtractTensor[i] = -40;
+
+                startWallTime = omp_get_wtime();
+                rppt_subtract_scalar_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, subtractTensor, roiGenericSrcPtr, roiTypeSrc, handle);
                 break;
             }
             default:
