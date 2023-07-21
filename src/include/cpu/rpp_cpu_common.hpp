@@ -2427,6 +2427,12 @@ inline RppStatus custom_convolve_image_host(T* srcPtr, RppiSize srcSize, U* dstP
 
 // Compute Functions for RPP Tensor API
 
+inline void compute_add_16_host(__m256 *p, __m256 *pAddParam)
+{
+    p[0] = _mm256_add_ps(p[0], pAddParam[0]);    // add adjustment
+    p[1] = _mm256_add_ps(p[1], pAddParam[0]);    // add adjustment
+}
+
 inline void compute_rmn_24_host(__m256 *p, __m256 *pRMNParams)
 {
     p[0] = _mm256_mul_ps(_mm256_sub_ps(p[0], pRMNParams[0]), pRMNParams[1]);
