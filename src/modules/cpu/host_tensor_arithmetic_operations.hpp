@@ -24,5 +24,6 @@ THE SOFTWARE.
 #define HOST_TENSOR_ARITHMETIC_OPERATIONS_HPP
 
 #include "kernel/fmadd_scalar.hpp"
+#include "kernel/add_scalar.hpp"
 
 #endif // HOST_TENSOR_ARITHMETIC_OPERATIONS_HPP
