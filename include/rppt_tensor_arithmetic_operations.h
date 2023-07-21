@@ -124,6 +124,28 @@ RppStatus rppt_add_scalar_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDes
 RppStatus rppt_add_scalar_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32f *addTensor, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
+/******************** subtract_scalar ********************/
+
+/*! \brief  subtract augmentation HOST
+ * \details This function performs the subtraction operation on a batch of 4D tensors.
+ *          It subtracts a corresponding element from the 'subtractTensor' from sourceTensor, and stores the result in the destination tensor.
+ *          Support added for f32 -> f32 dataype.
+ * \param [in] srcPtr source tensor memory
+ * \param[in] srcGenericDescPtr source tensor descriptor
+ * \param[out] dstPtr destination tensor memory
+ * \param[in] dstGenericDescPtr destination tensor descriptor
+ * \param[in] subtractTensor subtract values for used for subtraction (1D tensor of batchSize Rpp32f values)
+ * \param[in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
+ * \param[in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
+ * \param [in] rppHandle Host-handle
+ * \return <tt> RppStatus enum</tt>.
+ * \returns RPP_SUCCESS <tt>\ref RppStatus</tt> on successful completion.
+ * Else return RPP_ERROR
+ * \ingroup group_tensor_arithmetic
+ */
+
+RppStatus rppt_subtract_scalar_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32f *subtractTensor, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle);
+
 #ifdef __cplusplus
 }
 #endif
