@@ -20,10 +20,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+
 #include "rppdefs.h"
 #include "rppi_validate.hpp"
 #include "rppt_tensor_arithmetic_operations.h"
 #include "cpu/host_tensor_arithmetic_operations.hpp"
+
+#ifdef HIP_COMPILE
+    #include <hip/hip_fp16.h>
+    #include "hip/hip_tensor_arithmetic_operations.hpp"
+#endif // HIP_COMPILE
 
 /******************** fmadd_scalar ********************/
 
@@ -143,3 +149,44 @@ RppStatus rppt_subtract_scalar_host(RppPtr_t srcPtr,
 
     return RPP_SUCCESS;
 }
+
+
+/********************************************************************************************************************/
+/*********************************************** RPP_GPU_SUPPORT = ON ***********************************************/
+/********************************************************************************************************************/
+
+#ifdef GPU_SUPPORT
+
+/******************** add_scalar ********************/
+
+RppStatus rppt_add_scalar_gpu(RppPtr_t srcPtr,
+                              RpptGenericDescPtr srcGenericDescPtr,
+                              RppPtr_t dstPtr,
+                              RpptGenericDescPtr dstGenericDescPtr,
+                              Rpp32f *addTensor,
+                              RpptROI3DPtr roiGenericPtrSrc,
+                              RpptRoi3DType roiType,
+                              rppHandle_t rppHandle)
+{
+#ifdef HIP_COMPILE
+    if (srcGenericDescPtr->dataType != RpptDataType::F32) return RPP_ERROR_INVALID_SRC_DATATYPE;
+    if (dstGenericDescPtr->dataType != RpptDataType::F32) return RPP_ERROR_INVALID_DST_DATATYPE;
+    if ((srcGenericDescPtr->layout != RpptLayout::NCDHW) && (srcGenericDescPtr->layout != RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
+    if ((dstGenericDescPtr->layout != RpptLayout::NCDHW) && (dstGenericDescPtr->layout != RpptLayout::NDHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
+    if (srcGenericDescPtr->layout != dstGenericDescPtr->layout) return RPP_ERROR_INVALID_ARGUMENTS;
+
+    hip_exec_add_scalar_tensor(reinterpret_cast<Rpp32f *>(static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes),
+                               srcGenericDescPtr,
+                               reinterpret_cast<Rpp32f *>(static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
+                               dstGenericDescPtr,
+                               roiGenericPtrSrc,
+                               addTensor,
+                               rpp::deref(rppHandle));
+
+    return RPP_SUCCESS;
+#elif defined(OCL_COMPILE)
+    return RPP_ERROR_NOT_IMPLEMENTED;
+#endif // backend
+}
+
+#endif // GPU_SUPPORT
