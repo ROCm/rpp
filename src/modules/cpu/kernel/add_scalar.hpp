@@ -24,16 +24,15 @@ THE SOFTWARE.
 #include "rpp_cpu_simd.hpp"
 #include "rpp_cpu_common.hpp"
 
-RppStatus fmadd_scalar_f32_f32_host_tensor(Rpp32f *srcPtr,
-                                           RpptGenericDescPtr srcGenericDescPtr,
-                                           Rpp32f *dstPtr,
-                                           RpptGenericDescPtr dstGenericDescPtr,
-                                           Rpp32f *mulTensor,
-                                           Rpp32f *addTensor,
-                                           RpptROI3DPtr roiGenericPtrSrc,
-                                           RpptRoi3DType roiType,
-                                           RppLayoutParams layoutParams,
-                                           rpp::Handle& handle)
+RppStatus add_scalar_f32_f32_host_tensor(Rpp32f *srcPtr,
+                                         RpptGenericDescPtr srcGenericDescPtr,
+                                         Rpp32f *dstPtr,
+                                         RpptGenericDescPtr dstGenericDescPtr,
+                                         Rpp32f *addTensor,
+                                         RpptROI3DPtr roiGenericPtrSrc,
+                                         RpptRoi3DType roiType,
+                                         RppLayoutParams layoutParams,
+                                         rpp::Handle& handle)
 {
     RpptROI3D roiDefault;
     if(srcGenericDescPtr->layout==RpptLayout::NCDHW)
@@ -50,28 +49,20 @@ RppStatus fmadd_scalar_f32_f32_host_tensor(Rpp32f *srcPtr,
         RpptROI3DPtr roiPtrInput = &roiGenericPtrSrc[batchCount];
         compute_roi3D_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
-        Rpp32f mulParam = mulTensor[batchCount];
-        Rpp32f addParam = addTensor[batchCount];
-
         Rpp32f *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcGenericDescPtr->strides[0];
         dstPtrImage = dstPtr + batchCount * dstGenericDescPtr->strides[0];
 
-        Rpp32u bufferLength = roi.xyzwhdROI.roiWidth * layoutParams.bufferMultiplier;
-
+        Rpp32f addParam = addTensor[batchCount];
         Rpp32f *srcPtrChannel, *dstPtrChannel;
         dstPtrChannel = dstPtrImage;
 
-#if __AVX2__
-        Rpp32u vectorIncrement = 8;
+        Rpp32u vectorIncrement = 16;
+        Rpp32u bufferLength = roi.xyzwhdROI.roiWidth * layoutParams.bufferMultiplier;
+        Rpp32u alignedLength = (bufferLength / vectorIncrement) * vectorIncrement;
+        __m256 pAddParam = _mm256_set1_ps(addParam);
 
-        __m256 pFmaddParams[2];
-        pFmaddParams[0] = _mm256_set1_ps(mulParam);
-        pFmaddParams[1] = _mm256_set1_ps(addParam);
-
-        Rpp32u alignedLength = bufferLength & ~(vectorIncrement-1);
-#endif
-        // Fmadd without fused output-layout toggle (NCDHW -> NCDHW)
+        // Add without fused output-layout toggle (NCDHW -> NCDHW)
         if((srcGenericDescPtr->layout == RpptLayout::NCDHW) && (dstGenericDescPtr->layout == RpptLayout::NCDHW))
         {
             srcPtrChannel = srcPtrImage + (roi.xyzwhdROI.xyz.z * srcGenericDescPtr->strides[2]) + (roi.xyzwhdROI.xyz.y * srcGenericDescPtr->strides[3]) + (roi.xyzwhdROI.xyz.x * layoutParams.bufferMultiplier);
@@ -81,64 +72,53 @@ RppStatus fmadd_scalar_f32_f32_host_tensor(Rpp32f *srcPtr,
                 Rpp32f *srcPtrDepth, *dstPtrDepth;
                 srcPtrDepth = srcPtrChannel;
                 dstPtrDepth = dstPtrChannel;
-
                 for(int i = 0; i < roi.xyzwhdROI.roiDepth; i++)
                 {
                     Rpp32f *srcPtrRow, *dstPtrRow;
                     srcPtrRow = srcPtrDepth;
                     dstPtrRow = dstPtrDepth;
-
                     for(int j = 0; j < roi.xyzwhdROI.roiHeight; j++)
                     {
                         Rpp32f *srcPtrTemp, *dstPtrTemp;
                         srcPtrTemp = srcPtrRow;
                         dstPtrTemp = dstPtrRow;
-
                         int vectorLoopCount = 0;
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                         {
-#if __AVX2__
-                            __m256 p[1];
-
-                            rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrTemp, p);    // simd loads
-                            compute_fmadd_8_host(p, pFmaddParams);                     // fmadd adjustment
-                            rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp, p);  // simd stores
-#endif
+                            __m256 p[2];
+                            rpp_simd_load(rpp_load16_f32_to_f32_avx, srcPtrTemp, p);    // simd loads
+                            compute_add_16_host(p, &pAddParam);                         // Add adjustment
+                            rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrTemp, p);  // simd stores
                             srcPtrTemp += vectorIncrement;
                             dstPtrTemp += vectorIncrement;
                         }
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            *dstPtrTemp = (*srcPtrTemp * mulParam) + addParam;
-
+                            *dstPtrTemp = *srcPtrTemp + addParam;
                             srcPtrTemp++;
                             dstPtrTemp++;
                         }
-
                         srcPtrRow += srcGenericDescPtr->strides[3];
                         dstPtrRow += dstGenericDescPtr->strides[3];
                     }
                     srcPtrDepth += srcGenericDescPtr->strides[2];
                     dstPtrDepth += dstGenericDescPtr->strides[2];
                 }
-
                 srcPtrChannel += srcGenericDescPtr->strides[1];
                 dstPtrChannel += srcGenericDescPtr->strides[1];
             }
         }
-        // Fmadd without fused output-layout toggle (NDHWC -> NDHWC)
+        // Add without fused output-layout toggle (NDHWC -> NDHWC)
         else if((srcGenericDescPtr->layout == RpptLayout::NDHWC) && (dstGenericDescPtr->layout == RpptLayout::NDHWC))
         {
             srcPtrChannel = srcPtrImage + (roi.xyzwhdROI.xyz.z * srcGenericDescPtr->strides[1]) + (roi.xyzwhdROI.xyz.y * srcGenericDescPtr->strides[2]) + (roi.xyzwhdROI.xyz.x * layoutParams.bufferMultiplier);
             Rpp32f *srcPtrDepth = srcPtrChannel;
             Rpp32f *dstPtrDepth = dstPtrChannel;
-
             for(int i = 0; i < roi.xyzwhdROI.roiDepth; i++)
             {
                 Rpp32f *srcPtrRow, *dstPtrRow;
                 srcPtrRow = srcPtrDepth;
                 dstPtrRow = dstPtrDepth;
-
                 for(int j = 0; j < roi.xyzwhdROI.roiHeight; j++)
                 {
                     Rpp32f *srcPtrTemp, *dstPtrTemp;
@@ -148,20 +128,16 @@ RppStatus fmadd_scalar_f32_f32_host_tensor(Rpp32f *srcPtr,
                     int vectorLoopCount = 0;
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
-#if __AVX2__
-                        __m256 p[1];
-
-                        rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrTemp, p);    // simd loads
-                        compute_fmadd_8_host(p, pFmaddParams);                     // fmadd adjustment
-                        rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp, p);  // simd stores
-#endif
+                        __m256 p[2];
+                        rpp_simd_load(rpp_load16_f32_to_f32_avx, srcPtrTemp, p);    // simd loads
+                        compute_add_16_host(p, &pAddParam);                         // Add adjustment
+                        rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrTemp, p);  // simd stores
                         srcPtrTemp += vectorIncrement;
                         dstPtrTemp += vectorIncrement;
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        *dstPtrTemp = (*srcPtrTemp * mulParam) + addParam;
-
+                        *dstPtrTemp = *srcPtrTemp + addParam;
                         srcPtrTemp++;
                         dstPtrTemp++;
                     }
