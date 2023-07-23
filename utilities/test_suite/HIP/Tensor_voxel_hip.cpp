@@ -28,14 +28,196 @@ THE SOFTWARE.
 #include <opencv2/opencv.hpp>
 #include <iostream>
 #include "rpp.h"
-#include "../rpp_test_suite_common.h"
 #include "nifti1.h"
+#include <time.h>
+#include <omp.h>
+#include <fstream>
+#include <unistd.h>
 
 using namespace std;
 typedef int16_t NIFTI_DATATYPE;
 
 #define MIN_HEADER_SIZE 348
 #define RPPRANGECHECK(value)     (value < -32768) ? -32768 : ((value < 32767) ? value : 32767)
+#define DEBUG_MODE 1
+#define TOLERANCE 0.01
+
+// Opens a folder and recursively search for .nii files
+void open_folder(const string& folderPath, vector<string>& niiFileNames, vector<string>& niiFilePath)
+{
+    auto src_dir = opendir(folderPath.c_str());
+    struct dirent* entity;
+    std::string fileName = " ";
+
+    if (src_dir == nullptr)
+        std::cerr << "\n ERROR: Failed opening the directory at " <<folderPath;
+
+    while((entity = readdir(src_dir)) != nullptr)
+    {
+        string entry_name(entity->d_name);
+        if (entry_name == "." || entry_name == "..")
+            continue;
+        fileName = entity->d_name;
+        std::string filePath = folderPath;
+        filePath.append("/");
+        filePath.append(entity->d_name);
+        fs::path pathObj(filePath);
+        if(fs::exists(pathObj) && fs::is_directory(pathObj))
+            open_folder(filePath, niiFileNames, niiFilePath);
+
+        if (fileName.size() > 4 && fileName.substr(fileName.size() - 4) == ".nii")
+        {
+            niiFilePath.push_back(filePath);
+            niiFileNames.push_back(entity->d_name);
+        }
+    }
+    if(niiFileNames.empty())
+        std::cerr << "\n Did not load any file from " << folderPath;
+
+    closedir(src_dir);
+}
+
+// Searches for .nii files in input folders
+void search_nii_files(const string& folder_path, vector<string>& niiFileNames, vector<string>& niiFilePath)
+{
+    vector<string> entry_list;
+    string full_path = folder_path;
+    auto sub_dir = opendir(folder_path.c_str());
+    if (!sub_dir)
+    {
+        std::cerr << "ERROR: Failed opening the directory at "<< folder_path << std::endl;
+        exit(0);
+    }
+
+    struct dirent* entity;
+    while ((entity = readdir(sub_dir)) != nullptr)
+    {
+        string entry_name(entity->d_name);
+        if (entry_name == "." || entry_name == "..")
+            continue;
+        entry_list.push_back(entry_name);
+    }
+    closedir(sub_dir);
+    sort(entry_list.begin(), entry_list.end());
+
+    for (unsigned dir_count = 0; dir_count < entry_list.size(); ++dir_count)
+    {
+        string subfolder_path = full_path + "/" + entry_list[dir_count];
+        fs::path pathObj(subfolder_path);
+        if (fs::exists(pathObj) && fs::is_regular_file(pathObj))
+        {
+            // ignore files with extensions .tar, .zip, .7z
+            auto file_extension_idx = subfolder_path.find_last_of(".");
+            if (file_extension_idx != std::string::npos)
+            {
+                std::string file_extension = subfolder_path.substr(file_extension_idx+1);
+                if ((file_extension == "tar") || (file_extension == "zip") || (file_extension == "7z") || (file_extension == "rar"))
+                    continue;
+            }
+            if (entry_list[dir_count].size() > 4 && entry_list[dir_count].substr(entry_list[dir_count].size() - 4) == ".nii")
+            {
+                niiFileNames.push_back(entry_list[dir_count]);
+                niiFilePath.push_back(subfolder_path);
+            }
+        }
+        else if (fs::exists(pathObj) && fs::is_directory(pathObj))
+            open_folder(subfolder_path, niiFileNames, niiFilePath);
+    }
+}
+
+inline void remove_substring(string &str, string &pattern)
+{
+    std::string::size_type i = str.find(pattern);
+    while (i != std::string::npos)
+    {
+        str.erase(i, pattern.length());
+        i = str.find(pattern, i);
+   }
+}
+
+inline void compare_output(Rpp32f* output, Rpp64u oBufferSize, string func)
+{
+    string refPath = get_current_dir_name();
+    string pattern = "/build";
+    remove_substring(refPath, pattern);
+    string refFile = refPath + "/../REFERENCE_OUTPUT_VOXEL/nifti_single.csv";
+
+    ifstream file(refFile);
+    Rpp32f *refOutput;
+    refOutput = (Rpp32f *)malloc(oBufferSize * sizeof(Rpp32f));
+    string line,word;
+    int index = 0;
+    int mismatches = 0;
+
+    // Load the refennce output values from files and store in vector
+    if(file.is_open())
+    {
+        while(getline(file, line))
+        {
+            stringstream str(line);
+            while(getline(str, word, ','))
+            {
+                refOutput[index] = stof(word);
+                index++;
+            }
+        }
+    }
+    else
+    {
+        cout<<"Could not open the reference output. Please check the path specified\n";
+        return;
+    }
+    for(int i = 0; i < oBufferSize; i++)
+    {
+        if(refOutput[i] != output[i])
+            mismatches++;
+    }
+    std::cerr << std::endl << "Results for " << func << " :" << std::endl;
+    std::string status = func + ": ";
+    if(mismatches <= (TOLERANCE * oBufferSize))
+    {
+        std::cerr << "PASSED!" << std::endl;
+        status += "PASSED";
+    }
+    else
+    {
+        std::cerr << "FAILED! ";
+        status += "FAILED";
+    }
+}
+
+// sets generic descriptor dimensions and strides of src/dst
+inline void set_generic_descriptor(RpptGenericDescPtr descriptorPtr3D, int noOfImages, int maxX, int maxY, int maxZ, int numChannels, int offsetInBytes, int layoutType)
+{
+    descriptorPtr3D->numDims = 5;
+    descriptorPtr3D->offsetInBytes = offsetInBytes;
+    descriptorPtr3D->dataType = RpptDataType::F32;
+
+    if (layoutType == 0)
+    {
+        descriptorPtr3D->layout = RpptLayout::NDHWC;
+        descriptorPtr3D->dims[0] = noOfImages;
+        descriptorPtr3D->dims[1] = maxZ;
+        descriptorPtr3D->dims[2] = maxY;
+        descriptorPtr3D->dims[3] = maxX;
+        descriptorPtr3D->dims[4] = numChannels;
+    }
+    else if (layoutType == 1 || layoutType == 2)
+    {
+        descriptorPtr3D->layout = RpptLayout::NCDHW;
+        descriptorPtr3D->dims[0] = noOfImages;
+        descriptorPtr3D->dims[1] = numChannels;
+        descriptorPtr3D->dims[2] = maxZ;
+        descriptorPtr3D->dims[3] = maxY;
+        descriptorPtr3D->dims[4] = maxX;
+    }
+
+    descriptorPtr3D->strides[0] = descriptorPtr3D->dims[1] * descriptorPtr3D->dims[2] * descriptorPtr3D->dims[3] * descriptorPtr3D->dims[4];
+    descriptorPtr3D->strides[1] = descriptorPtr3D->dims[2] * descriptorPtr3D->dims[3] * descriptorPtr3D->dims[4];
+    descriptorPtr3D->strides[2] = descriptorPtr3D->dims[3] * descriptorPtr3D->dims[4];
+    descriptorPtr3D->strides[3] = descriptorPtr3D->dims[4];
+    descriptorPtr3D->strides[4] = 1;
+}
 
 // reads nifti-1 header file
 static int read_nifti_header_file(char* const header_file, nifti_1_header *niftiHeader)
