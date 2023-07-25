@@ -627,6 +627,7 @@ typedef struct
     hipMemROI roiPoints;
     hipMemRpp32f floatArr[10];
     hipMemRpp32f float3Arr[10];
+    hipMemRpp32f float4Arr[10];
     hipMemRpp64f doubleArr[10];
     hipMemRpp32u uintArr[10];
     hipMemRpp32s intArr[10];

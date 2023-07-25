@@ -241,6 +241,13 @@ inline void copy_param_RpptRGB(RpptRGB *param, rpp::Handle& handle)
 #endif // backend
 }
 
+inline void copy_reduction_param_float(float *param, rpp::Handle& handle, Rpp32u paramIndex)
+{
+#ifdef HIP_COMPILE
+    hipMemcpy(handle.GetInitHandle()->mem.mgpu.float4Arr[paramIndex].floatmem, param, sizeof(Rpp32f) * handle.GetBatchSize() * 4, hipMemcpyHostToDevice);
+#endif
+}
+
 inline void copy_srcMaxSize(RppiSize maxSrcSize, rpp::Handle& handle)
 {
     for(int i = 0; i < handle.GetBatchSize(); i++)

@@ -44,6 +44,7 @@ typedef struct { uchar  data[24]; } d_uchar24_s;
 typedef struct { schar  data[24]; } d_schar24sc1s_s;
 
 // float
+typedef union { float f1[4];                                                  }   d_float4;
 typedef union { float f1[6];    float2 f2[3];                                                   }   d_float6;
 typedef union { float f1[8];    float2 f2[4];   float4 f4[2];                                   }   d_float8;
 typedef union { float f1[12];   float4 f4[3];                                                   }   d_float12;

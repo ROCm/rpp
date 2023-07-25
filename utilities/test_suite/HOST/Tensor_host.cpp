@@ -668,14 +668,10 @@ int main(int argc, char **argv)
                     {
                         for (i = 0; i < reductionFuncResultArrLength; i++) //Default mean values for 3 img dataset
                         {
-                            mean[0] = 124;
-                        }
-                        /*for (i = 0; i < reductionFuncResultArrLength; i++) //Default mean values for 3 img dataset
-                        {
                             mean[0] = 133.690;
                             mean[1] = 81.347;
                             mean[2] = 116.939;
-                        }*/
+                        }
                     }
                     else
                     {

@@ -123,20 +123,17 @@ __global__ void image_stddev_grid_3channel_result_tensor(float *srcPtr,
     if (hipThreadIdx_x == 0)
     {
         int totalElements = roiTensorPtrSrc[id_z].xywhROI.roiHeight * roiTensorPtrSrc[id_z].xywhROI.roiWidth;
-        printf("\noutside flag check varR:%f\t varG:%f\t varB:%f\n", partialRVarLDS[0], partialGVarLDS[0], partialBVarLDS[0]);
-        float sum = partialRVarLDS[0] + partialGVarLDS[0] + partialBVarLDS[0];
+        float var = partialRVarLDS[0] + partialGVarLDS[0] + partialBVarLDS[0];
         int idx = id_z * 4;
         if (!flag)
         {
-            printf("\nvarR:%f\t varG:%f\t varB:%f\t totalElements:%d\n", partialRVarLDS[0], partialGVarLDS[0], partialBVarLDS[0], totalElements);
             dstPtr[idx] = sqrt(partialRVarLDS[0] / totalElements);
             dstPtr[idx + 1] = sqrt(partialGVarLDS[0] / totalElements);
             dstPtr[idx + 2] = sqrt(partialBVarLDS[0] / totalElements);
         }
         else
         {
-            printf("\nsum:%f\t totalElements:%d\n", sum, totalElements);
-            dstPtr[idx + 3] = sqrt(sum  / (totalElements * 3));
+            dstPtr[idx + 3] = sqrt(var  / (totalElements * 3));
         }
     }
 }
@@ -230,10 +227,10 @@ __global__ void channel_var_pln3_tensor(T *srcPtr,
     partialGVarLDSRowPtr[hipThreadIdx_x] = 0.0f;
     partialBVarLDSRowPtr[hipThreadIdx_x] = 0.0f;
 
-    int index           = id_z * 4;
-    float4 meanR_f4     = (float4)mean[index];
-    float4 meanG_f4     = (float4)mean[index + 1];
-    float4 meanB_f4     = (float4)mean[index + 2];
+    int index       = id_z * 4;
+    float4 meanR_f4 = (float4)mean[index];
+    float4 meanG_f4 = (float4)mean[index + 1];
+    float4 meanB_f4 = (float4)mean[index + 2];
 
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
     {
@@ -441,10 +438,10 @@ __global__ void channel_var_pkd3_tensor(T *srcPtr,
     partialGVarLDSRowPtr[hipThreadIdx_x] = 0.0f;
     partialBVarLDSRowPtr[hipThreadIdx_x] = 0.0f;
 
-    int index           = id_z * 4;
-    float4 meanR_f4     = (float4)mean[index];
-    float4 meanG_f4     = (float4)mean[index + 1];
-    float4 meanB_f4     = (float4)mean[index + 2];
+    int index       = id_z * 4;
+    float4 meanR_f4 = (float4)mean[index];
+    float4 meanG_f4 = (float4)mean[index + 1];
+    float4 meanB_f4 = (float4)mean[index + 2];
 
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
     {
@@ -637,6 +634,7 @@ template <typename T, typename U>
 RppStatus hip_exec_image_stddev_tensor(T *srcPtr,
                                        RpptDescPtr srcDescPtr,
                                        U *imageStddevArr,
+                                       Rpp32f *meanTensor,
                                        RpptROIPtr roiTensorPtrSrc,
                                        RpptRoiType roiType,
                                        rpp::Handle& handle)
@@ -698,7 +696,7 @@ RppStatus hip_exec_image_stddev_tensor(T *srcPtr,
                            srcPtr,
                            make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                            imagePartialVarArr,
-                           handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                           handle.GetInitHandle()->mem.mgpu.float4Arr[0].floatmem,
                            roiTensorPtrSrc);
         hipStreamSynchronize(handle.GetStream());
         hipLaunchKernelGGL(image_stddev_grid_3channel_result_tensor,
@@ -722,7 +720,7 @@ RppStatus hip_exec_image_stddev_tensor(T *srcPtr,
                            srcPtr,
                            make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                            imagePartialVarArr,
-                           handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                           handle.GetInitHandle()->mem.mgpu.float4Arr[0].floatmem,
                            roiTensorPtrSrc);
         hipStreamSynchronize(handle.GetStream());
         hipLaunchKernelGGL(image_stddev_grid_3channel_result_tensor,
@@ -753,7 +751,7 @@ RppStatus hip_exec_image_stddev_tensor(T *srcPtr,
                            srcPtr,
                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                            imagePartialVarArr,
-                           handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                           handle.GetInitHandle()->mem.mgpu.float4Arr[0].floatmem,
                            roiTensorPtrSrc);
         hipStreamSynchronize(handle.GetStream());
         hipLaunchKernelGGL(image_stddev_grid_3channel_result_tensor,
@@ -777,7 +775,7 @@ RppStatus hip_exec_image_stddev_tensor(T *srcPtr,
                            srcPtr,
                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                            imagePartialVarArr,
-                           handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                           handle.GetInitHandle()->mem.mgpu.float4Arr[0].floatmem,
                            roiTensorPtrSrc);
         hipStreamSynchronize(handle.GetStream());
         hipLaunchKernelGGL(image_stddev_grid_3channel_result_tensor,
