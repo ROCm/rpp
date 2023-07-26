@@ -69,6 +69,7 @@ std::map<int, string> augmentationMap =
     {36, "color_twist"},
     {37, "crop"},
     {38, "crop_mirror_normalize"},
+    {82, "ricap"},
     {84, "spatter"},
 };
 
@@ -1016,4 +1017,23 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
         qaResults << status << std::endl;
         qaResults.close();
     }
+}
+
+inline void randomize(unsigned int arr[], unsigned int n)
+{
+    // Use a different seed value each time
+    srand (time(NULL));
+    for (unsigned int i = n - 1; i > 0; i--)
+    {
+        // Pick a random index from 0 to i
+        unsigned int j = rand() % (i + 1);
+        std::swap(arr[i], arr[j]);
+    }
+}
+
+int inline random_val(int min, int max)
+{
+    if(max<0)
+        return -1;
+    return rand() % (max - min + 1) + min;
 }
