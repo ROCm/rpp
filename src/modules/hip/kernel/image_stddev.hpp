@@ -2,9 +2,31 @@
 #include "rpp_hip_common.hpp"
 #include "reduction.hpp"
 
-// -------------------- Set 0 - Reduction Stage 2 --------------------
+// ----------------------- Helper Functions --------------------------
+__device__ void stddev_hip_compute(uchar *srcPtr, float src, float *dst)
+{
+    *dst = src;
+}
 
-__global__ void image_stddev_grid_result_tensor(float *srcPtr,
+__device__ void stddev_hip_compute(float *srcPtr, float src, float *dst)
+{
+    *dst = src * 255;
+}
+
+__device__ void stddev_hip_compute(signed char *srcPtr, float src, float *dst)
+{
+    *dst = src;
+}
+
+__device__ void stddev_hip_compute(half *srcPtr, float src, float *dst)
+{
+    *dst = src * 255;
+}
+
+// -------------------- Set 0 - Reduction Stage 2 --------------------
+template <typename T>
+__global__ void image_stddev_grid_result_tensor(T *inputSrcPtr,
+                                                float *srcPtr,
                                                 uint xBufferLength,
                                                 float *dstPtr,
                                                 RpptROIPtr roiTensorPtrSrc)
@@ -48,11 +70,13 @@ __global__ void image_stddev_grid_result_tensor(float *srcPtr,
     if (hipThreadIdx_x == 0)
     {
         int totalElements = roiTensorPtrSrc[id_z].xywhROI.roiHeight * roiTensorPtrSrc[id_z].xywhROI.roiWidth;
-        dstPtr[id_z] = sqrt(partialVarLDS[0] / totalElements);
+        stddev_hip_compute(inputSrcPtr, sqrt(partialVarLDS[0] / totalElements), &dstPtr[id_z]);
     }
 }
 
-__global__ void image_stddev_grid_3channel_result_tensor(float *srcPtr,
+template <typename T>
+__global__ void image_stddev_grid_3channel_result_tensor(T *inputSrcPtr,
+                                                         float *srcPtr,
                                                          uint xBufferLength,
                                                          float *dstPtr,
                                                          bool flag,
@@ -127,13 +151,13 @@ __global__ void image_stddev_grid_3channel_result_tensor(float *srcPtr,
         int idx = id_z * 4;
         if (!flag)
         {
-            dstPtr[idx] = sqrt(partialRVarLDS[0] / totalElements);
-            dstPtr[idx + 1] = sqrt(partialGVarLDS[0] / totalElements);
-            dstPtr[idx + 2] = sqrt(partialBVarLDS[0] / totalElements);
+            stddev_hip_compute(inputSrcPtr, sqrt(partialRVarLDS[0] / totalElements), &dstPtr[idx]);
+            stddev_hip_compute(inputSrcPtr, sqrt(partialGVarLDS[0] / totalElements), &dstPtr[idx + 1]);
+            stddev_hip_compute(inputSrcPtr, sqrt(partialBVarLDS[0] / totalElements), &dstPtr[idx + 2]);
         }
         else
         {
-            dstPtr[idx + 3] = sqrt(var  / (totalElements * 3));
+            stddev_hip_compute(inputSrcPtr, sqrt(var  / (totalElements * 3)), &dstPtr[idx + 3]);
         }
     }
 }
@@ -634,7 +658,6 @@ template <typename T, typename U>
 RppStatus hip_exec_image_stddev_tensor(T *srcPtr,
                                        RpptDescPtr srcDescPtr,
                                        U *imageStddevArr,
-                                       Rpp32f *meanTensor,
                                        RpptROIPtr roiTensorPtrSrc,
                                        RpptRoiType roiType,
                                        rpp::Handle& handle)
@@ -675,6 +698,7 @@ RppStatus hip_exec_image_stddev_tensor(T *srcPtr,
                            dim3(1024, 1, 1),
                            0,
                            handle.GetStream(),
+                           srcPtr,
                            imagePartialVarArr,
                            gridDim_x * gridDim_y,
                            imageStddevArr,
@@ -704,6 +728,7 @@ RppStatus hip_exec_image_stddev_tensor(T *srcPtr,
                            dim3(1024, 1, 1),
                            0,
                            handle.GetStream(),
+                           srcPtr,
                            imagePartialVarArr,
                            gridDim_x * gridDim_y,
                            imageStddevArr,
@@ -728,6 +753,7 @@ RppStatus hip_exec_image_stddev_tensor(T *srcPtr,
                            dim3(1024, 1, 1),
                            0,
                            handle.GetStream(),
+                           srcPtr,
                            imagePartialVarArr,
                            gridDim_x * gridDim_y,
                            imageStddevArr,
@@ -759,6 +785,7 @@ RppStatus hip_exec_image_stddev_tensor(T *srcPtr,
                            dim3(1024, 1, 1),
                            0,
                            handle.GetStream(),
+                           srcPtr,
                            imagePartialVarArr,
                            gridDim_x * gridDim_y,
                            imageStddevArr,
@@ -783,6 +810,7 @@ RppStatus hip_exec_image_stddev_tensor(T *srcPtr,
                            dim3(1024, 1, 1),
                            0,
                            handle.GetStream(),
+                           srcPtr,
                            imagePartialVarArr,
                            gridDim_x * gridDim_y,
                            imageStddevArr,
