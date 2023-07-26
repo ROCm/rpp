@@ -674,41 +674,42 @@ int main(int argc, char **argv)
                 testCaseName = "image_stddev";
 
                 if(srcDescPtr->c == 1)
-                        reductionFuncResultArrLength = srcDescPtr->n;
-                    Rpp32f mean[reductionFuncResultArrLength];
+                    reductionFuncResultArrLength = srcDescPtr->n;
+                Rpp32f mean[reductionFuncResultArrLength];
+                int flag = 2; // compute both image and channel stddev by default
 
-                    if(srcDescPtr->c == 1)
+                if(srcDescPtr->c == 1)
+                {
+                    for (i = 0; i < reductionFuncResultArrLength; i++) //Default mean values for 3 img dataset
                     {
-                        for (i = 0; i < reductionFuncResultArrLength; i++) //Default mean values for 3 img dataset
-                        {
-                            mean[0] = 133.690;
-                            mean[1] = 81.347;
-                            mean[2] = 116.939;
-                        }
+                        mean[0] = 133.690;
+                        mean[1] = 81.347;
+                        mean[2] = 116.939;
                     }
-                    else
+                }
+                else
+                {
+                    for (i = 0; i < reductionFuncResultArrLength; i++) //Default mean values for 3 img dataset
                     {
-                        for (i = 0; i < reductionFuncResultArrLength; i++) //Default mean values for 3 img dataset
-                        {
-                            mean[0] = 139.352;
-                            mean[1] = 136.397;
-                            mean[2] = 105.046;
-                            mean[3] = 126.932;
-                            mean[4] = 105.655;
-                            mean[5] = 74.951;
-                            mean[6] = 50.744;
-                            mean[7] = 77.117;
-                            mean[8] = 96.473;
-                            mean[9] = 121.439;
-                            mean[10] = 147.587;
-                            mean[11] = 121.833;
-                        }
+                        mean[0] = 139.352;
+                        mean[1] = 136.397;
+                        mean[2] = 105.046;
+                        mean[3] = 126.932;
+                        mean[4] = 105.655;
+                        mean[5] = 74.951;
+                        mean[6] = 50.744;
+                        mean[7] = 77.117;
+                        mean[8] = 96.473;
+                        mean[9] = 121.439;
+                        mean[10] = 147.587;
+                        mean[11] = 121.833;
                     }
+                }
 
                 startWallTime = omp_get_wtime();
 
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_image_stddev_gpu(d_input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, mean, roiTensorPtrSrc, roiTypeSrc, handle);
+                    rppt_image_stddev_gpu(d_input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, mean, flag, roiTensorPtrSrc, roiTypeSrc, handle);
                 else
                     missingFuncFlag = 1;
 
