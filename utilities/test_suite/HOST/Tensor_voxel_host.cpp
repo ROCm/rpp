@@ -352,7 +352,7 @@ int main(int argc, char * argv[])
     header_file = argv[1];
     data_file = argv[2];
     layoutType = atoi(argv[3]); // 0 for PKD3 // 1 for PLN3 // 2 for PLN1
-    testCase = atoi(argv[4]); // 0 to 1
+    testCase = atoi(argv[4]); // 0 to 4
     testType = atoi(argv[5]); // 0 - unit test / 1 - performance test
 
     if ((layoutType < 0) || (layoutType > 2))
@@ -500,13 +500,15 @@ int main(int argc, char * argv[])
             }
             case 2:
             {
+                Rpp32u horizontalTensor[batchSize];
+                Rpp32u verticalTensor[batchSize];
                 Rpp32u depthTensor[batchSize];
 
                 for (int i = 0; i < batchSize; i++)
                 {
                     horizontalTensor[i] = 1;
-                    verticalTensor[i] = 0;
-                    depthTensor[i] = 0;
+                    verticalTensor[i] = 1;
+                    depthTensor[i] = 1;
                 }
 
                 startWallTime = omp_get_wtime();
@@ -529,7 +531,7 @@ int main(int argc, char * argv[])
                 Rpp32f subtractTensor[batchSize];
 
                 for (int i = 0; i < batchSize; i++)
-                    subtractTensor[i] = -40;
+                    subtractTensor[i] = 40;
 
                 startWallTime = omp_get_wtime();
                 rppt_subtract_scalar_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, subtractTensor, roiGenericSrcPtr, roiTypeSrc, handle);

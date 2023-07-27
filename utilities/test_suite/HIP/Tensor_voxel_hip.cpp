@@ -352,7 +352,7 @@ int main(int argc, char * argv[])
     header_file = argv[1];
     data_file = argv[2];
     layoutType = atoi(argv[3]); // 0 for PKD3 // 1 for PLN3 // 2 for PLN1
-    testCase = atoi(argv[4]); // 0 to 1
+    testCase = atoi(argv[4]); // 0 to 4
     testType = atoi(argv[5]); // 0 - unit test / 1 - performance test
 
     if ((layoutType < 0) || (layoutType > 2))
