@@ -408,7 +408,9 @@ int main(int argc, char * argv[])
 
     // set src/dst xyzwhd ROI tensors
     //RpptRoiXyzwhd *roiGenericSrcPtr = reinterpret_cast<RpptRoiXyzwhd *>(calloc(batchSize, sizeof(RpptRoiXyzwhd)));
-    RpptROI3D *roiGenericSrcPtr = (RpptROI3D *) calloc(batchSize, sizeof(RpptROI3D));
+    void *pinnedMemROI;
+    hipHostMalloc(&pinnedMemROI, batchSize * sizeof(RpptROI3D));
+    RpptROI3D *roiGenericSrcPtr = reinterpret_cast<RpptROI3D *>(pinnedMemROI);
 
     // optionally pick full image as ROI or a smaller slice of the 3D tensor in X/Y/Z dimensions
     // option 1 - test using roi as the whole 3D image - not sliced (example for 240 x 240 x 155 x 1)
@@ -455,6 +457,14 @@ int main(int argc, char * argv[])
     // Convert default NIFTI_DATATYPE unstrided buffer to RpptDataType::F32 strided buffer
     convert_input_niftitype_to_Rpp32f_generic(niftiData, &niftiHeader, inputF32 , descriptorPtr3D);
 
+    // Allocate hip memory in float for RPP strided buffer
+    void *d_inputF32, *d_outputF32;
+    hipMalloc(&d_inputF32, iBufferSizeInBytes);
+    hipMalloc(&d_outputF32, oBufferSizeInBytes);
+
+    // Copy input buffer to hip
+    hipMemcpy(d_inputF32, inputF32, iBufferSizeInBytes, hipMemcpyHostToDevice);
+
     // set argument tensors
     void *pinnedMemArgs;
     pinnedMemArgs = calloc(2 * batchSize , sizeof(Rpp32f));
@@ -477,40 +487,21 @@ int main(int argc, char * argv[])
     {
         switch (testCase)
         {
-            case 0:
-            {
-                Rpp32f *mulTensor = reinterpret_cast<Rpp32f *>(pinnedMemArgs);
-                Rpp32f *addTensor = mulTensor + batchSize;
-
-                for (int i = 0; i < batchSize; i++)
-                {
-                    mulTensor[i] = 80;
-                    addTensor[i] = 5;
-                }
-
-                startWallTime = omp_get_wtime();
-                rppt_fmadd_scalar_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, mulTensor, addTensor, roiGenericSrcPtr, roiTypeSrc, handle);
-                break;
-            }
-            case 1:
-            {
-                startWallTime = omp_get_wtime();
-                rppt_slice_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, roiGenericSrcPtr, roiTypeSrc, handle);
-                break;
-            }
             case 2:
             {
+                Rpp32u horizontalTensor[batchSize];
+                Rpp32u verticalTensor[batchSize];
                 Rpp32u depthTensor[batchSize];
 
                 for (int i = 0; i < batchSize; i++)
                 {
                     horizontalTensor[i] = 1;
-                    verticalTensor[i] = 0;
-                    depthTensor[i] = 0;
+                    verticalTensor[i] = 1;
+                    depthTensor[i] = 1;
                 }
 
                 startWallTime = omp_get_wtime();
-                rppt_flip_voxel_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, horizontalTensor, verticalTensor, depthTensor, roiGenericSrcPtr, roiTypeSrc, handle);
+                rppt_flip_voxel_gpu(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, horizontalTensor, verticalTensor, depthTensor, roiGenericSrcPtr, roiTypeSrc, handle);
                 break;
             }
             case 3:
@@ -521,7 +512,7 @@ int main(int argc, char * argv[])
                     addTensor[i] = 40;
 
                 startWallTime = omp_get_wtime();
-                rppt_add_scalar_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, addTensor, roiGenericSrcPtr, roiTypeSrc, handle);
+                rppt_add_scalar_gpu(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, addTensor, roiGenericSrcPtr, roiTypeSrc, handle);
                 break;
             }
             case 4:
@@ -529,10 +520,10 @@ int main(int argc, char * argv[])
                 Rpp32f subtractTensor[batchSize];
 
                 for (int i = 0; i < batchSize; i++)
-                    subtractTensor[i] = -40;
+                    subtractTensor[i] = 40;
 
                 startWallTime = omp_get_wtime();
-                rppt_subtract_scalar_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, subtractTensor, roiGenericSrcPtr, roiTypeSrc, handle);
+                rppt_subtract_scalar_gpu(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, subtractTensor, roiGenericSrcPtr, roiTypeSrc, handle);
                 break;
             }
             default:
@@ -555,6 +546,9 @@ int main(int argc, char * argv[])
         }
         if(testType == 0)
             cout << "\n\nCPU Backend Wall Time: " << wallTime <<" ms per nifti file"<< endl;
+
+        // Copy output buffer to host
+        hipMemcpy(outputF32, d_outputF32, oBufferSizeInBytes, hipMemcpyDeviceToHost);
     }
 
     if(testType == 1)
@@ -603,37 +597,21 @@ int main(int argc, char * argv[])
                 write_image_from_nifti_opencv(niftiDataU8Temp, niftiHeader.dim[1], (RpptRoiXyzwhd *)roiGenericSrcPtr, outputBufferOpenCV, zPlane, i);
                 niftiDataU8Temp += xyFrameSize;
             }
-
-            write_nifti_file(&niftiHeader, niftiData);
-
-            if(i == 0)
-            {
-                std::string command = "convert -delay 10 -loop 0 $(ls -v | grep jpg | grep chn_0_) niftiOutput_chn" + std::to_string(i) + ".gif";
-                system(command.c_str());
-            }
-            if(i == 1)
-            {
-                std::string command = "convert -delay 10 -loop 0 $(ls -v | grep jpg | grep chn_1_) niftiOutput_chn" + std::to_string(i) + ".gif";
-                system(command.c_str());
-            }
-            if(i == 2)
-            {
-                std::string command = "convert -delay 10 -loop 0 $(ls -v | grep jpg | grep chn_2_) niftiOutput_chn" + std::to_string(i) + ".gif";
-                system(command.c_str());
-            }
-
             free(niftiDataU8);
             free(outputBufferOpenCV);
         }
     }
+
     rppDestroyHost(handle);
 
     // Free memory
     free(niftiData);
     free(inputF32);
     free(outputF32);
-    free(roiGenericSrcPtr);
-    free(pinnedMemArgs);
+    hipHostFree(pinnedMemROI);
+    hipHostFree(pinnedMemArgs);
+    hipFree(d_inputF32);
+    hipFree(d_outputF32);
 
     return(0);
 }

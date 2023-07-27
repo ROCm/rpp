@@ -40,6 +40,8 @@ endif()
 find_package(OpenCV QUIET)
 find_package(TurboJpeg QUIET)
 find_package(NIFTI REQUIRED)
+# find_package(NIFTI 2.1.0 CONFIG REQUIRED)
+
 # BOOST
 set(BOOST_COMPONENTS filesystem system)
 find_package(Boost COMPONENTS ${BOOST_COMPONENTS} REQUIRED)

@@ -20,17 +20,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#ifndef HOST_TENSOR_GEOMETRIC_AUGMENTATIONS_HPP
-#define HOST_TENSOR_GEOMETRIC_AUGMENTATIONS_HPP
+#ifndef HIP_TENSOR_ARITHMETIC_OPERATIONS_HPP
+#define HIP_TENSOR_ARITHMETIC_OPERATIONS_HPP
 
-#include "kernel/crop.hpp"
-#include "kernel/crop_mirror_normalize.hpp"
-#include "kernel/flip.hpp"
-#include "kernel/resize.hpp"
-#include "kernel/resize_mirror_normalize.hpp"
-#include "kernel/resize_crop_mirror.hpp"
-#include "kernel/warp_affine.hpp"
-#include "kernel/slice.hpp"
-#include "kernel/flip_voxel.hpp"
+#include "kernel/add_scalar.hpp"
+#include "kernel/subtract_scalar.hpp"
 
-#endif // HOST_TENSOR_GEOMETRIC_AUGMENTATIONS_HPP
+#endif // HIP_TENSOR_ARITHMETIC_OPERATIONS_HPP
