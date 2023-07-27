@@ -487,6 +487,27 @@ int main(int argc, char * argv[])
     {
         switch (testCase)
         {
+            case 0:
+            {
+                Rpp32f *mulTensor = reinterpret_cast<Rpp32f *>(pinnedMemArgs);
+                Rpp32f *addTensor = mulTensor + batchSize;
+
+                for (int i = 0; i < batchSize; i++)
+                {
+                    mulTensor[i] = 80;
+                    addTensor[i] = 5;
+                }
+
+                startWallTime = omp_get_wtime();
+                rppt_fmadd_scalar_gpu(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, mulTensor, addTensor, roiGenericSrcPtr, roiTypeSrc,  handle);
+                break;
+            }
+            case 1:
+            {
+                startWallTime = omp_get_wtime();
+                rppt_slice_gpu(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, roiGenericSrcPtr, roiTypeSrc,  handle);
+                break;
+            }
             case 2:
             {
                 Rpp32u horizontalTensor[batchSize];

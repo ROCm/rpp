@@ -23,6 +23,7 @@ THE SOFTWARE.
 #ifndef HIP_TENSOR_ARITHMETIC_OPERATIONS_HPP
 #define HIP_TENSOR_ARITHMETIC_OPERATIONS_HPP
 
+#include "kernel/fmadd_scalar.hpp"
 #include "kernel/add_scalar.hpp"
 #include "kernel/subtract_scalar.hpp"
 
