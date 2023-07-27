@@ -54,8 +54,8 @@ namespace fs = boost::filesystem;
 #define DEBUG_MODE 0
 #define MAX_IMAGE_DUMP 20
 #define MAX_BATCH_SIZE 512
-#define GOLDEN_OUTPUT_MAX_HEIGHT 150    // Golden outputs are generated with MAX_HEIGHT set to 150. Changing this constant will result in QA test failures
-#define GOLDEN_OUTPUT_MAX_WIDTH 150     // Golden outputs are generated with MAX_WIDTH set to 150. Changing this constant will result in QA test failures
+#define GOLDEN_OUTPUT_MAX_HEIGHT 224    // Golden outputs are generated with MAX_HEIGHT set to 150. Changing this constant will result in QA test failures
+#define GOLDEN_OUTPUT_MAX_WIDTH 224     // Golden outputs are generated with MAX_WIDTH set to 150. Changing this constant will result in QA test failures
 
 std::map<int, string> augmentationMap =
 {

@@ -605,19 +605,23 @@ int main(int argc, char **argv)
                 case 82:
                 {
                     testCaseName = "ricap";
+                    double randFromDist, randFromDist1;
 
-                    float _beta_param = 0.3;
-                    std::random_device rd;
-                    std::mt19937 gen(rd());
-                    static std::uniform_real_distribution<double> unif(0.3, 0.7);
-                    double p = unif(gen);
-                    double randFromDist = boost::math::ibeta_inv(_beta_param, _beta_param, p);
+                    if(!qaFlag)
+                    {
+                        float _beta_param = 0.3;
+                        std::random_device rd;
+                        std::mt19937 gen(rd());
+                        static std::uniform_real_distribution<double> unif(0.3, 0.7);
+                        double p = unif(gen);
+                        randFromDist = boost::math::ibeta_inv(_beta_param, _beta_param, p);
 
-                    std::random_device rd1;
-                    std::mt19937 gen1(rd1());
-                    static std::uniform_real_distribution<double> unif1(0.3, 0.7);
-                    double p1 = unif1(gen1);
-                    double randFromDist1 = boost::math::ibeta_inv(_beta_param, _beta_param, p1);
+                        std::random_device rd1;
+                        std::mt19937 gen1(rd1());
+                        static std::uniform_real_distribution<double> unif1(0.3, 0.7);
+                        double p1 = unif1(gen1);
+                        randFromDist1 = boost::math::ibeta_inv(_beta_param, _beta_param, p1);
+                    }
 
                     uint32_t iX = maxWidth;
                     uint32_t iY = maxHeight;
@@ -627,14 +631,25 @@ int main(int argc, char **argv)
                     {
                         initialPermuteArray[i] = i;
                     }
-                    randomize(initialPermuteArray, batchSize);
-                    memcpy(permutedArray, initialPermuteArray, batchSize * sizeof(Rpp32u));
-                    randomize(initialPermuteArray, batchSize);
-                    memcpy(permutedArray + batchSize, initialPermuteArray, batchSize * sizeof(Rpp32u));
-                    randomize(initialPermuteArray, batchSize);
-                    memcpy(permutedArray + (batchSize * 2), initialPermuteArray, batchSize * sizeof(Rpp32u));
-                    randomize(initialPermuteArray, batchSize);
-                    memcpy(permutedArray + (batchSize * 3), initialPermuteArray, batchSize * sizeof(Rpp32u));
+
+                    if(qaFlag)
+                    {
+                        memcpy(permutedArray, initialPermuteArray, batchSize * sizeof(Rpp32u));
+                        memcpy(permutedArray + batchSize, initialPermuteArray, batchSize * sizeof(Rpp32u));
+                        memcpy(permutedArray + (batchSize * 2), initialPermuteArray, batchSize * sizeof(Rpp32u));
+                        memcpy(permutedArray + (batchSize * 3), initialPermuteArray, batchSize * sizeof(Rpp32u));
+                    }
+                    else
+                    {
+                        randomize(initialPermuteArray, batchSize);
+                        memcpy(permutedArray, initialPermuteArray, batchSize * sizeof(Rpp32u));
+                        randomize(initialPermuteArray, batchSize);
+                        memcpy(permutedArray + batchSize, initialPermuteArray, batchSize * sizeof(Rpp32u));
+                        randomize(initialPermuteArray, batchSize);
+                        memcpy(permutedArray + (batchSize * 2), initialPermuteArray, batchSize * sizeof(Rpp32u));
+                        randomize(initialPermuteArray, batchSize);
+                        memcpy(permutedArray + (batchSize * 3), initialPermuteArray, batchSize * sizeof(Rpp32u));
+                    }
 
                     for (uint i = 0, j = 0; i < batchSize, j < batchSize * 4; i++, j += 4)
                     {
@@ -646,25 +661,46 @@ int main(int argc, char **argv)
 
                     RpptROI roiPtrInputCropRegion[4];
 
+                    if(qaFlag)
+                    {
+                        roiPtrInputCropRegion[0].xywhROI.roiWidth = std::round(0.3 * iX);                    // w1
+                        roiPtrInputCropRegion[0].xywhROI.roiHeight = std::round(0.5 * iY);                  // h1
+                        roiPtrInputCropRegion[1].xywhROI.roiWidth = iX - roiPtrInputCropRegion[0].xywhROI.roiWidth;   // w2
+                        roiPtrInputCropRegion[1].xywhROI.roiHeight = roiPtrInputCropRegion[0].xywhROI.roiHeight;      // h2
+                        roiPtrInputCropRegion[2].xywhROI.roiWidth = roiPtrInputCropRegion[0].xywhROI.roiWidth;        // w3
+                        roiPtrInputCropRegion[2].xywhROI.roiHeight = iY - roiPtrInputCropRegion[0].xywhROI.roiHeight; // h3
+                        roiPtrInputCropRegion[3].xywhROI.roiWidth = iX - roiPtrInputCropRegion[0].xywhROI.roiWidth;   // w4
+                        roiPtrInputCropRegion[3].xywhROI.roiHeight = iY - roiPtrInputCropRegion[0].xywhROI.roiHeight; // h4
+                        roiPtrInputCropRegion[0].xywhROI.xy.x = random_val(0, iX - roiPtrInputCropRegion[0].xywhROI.roiWidth);  // x1
+                        roiPtrInputCropRegion[0].xywhROI.xy.y = random_val(0, iY - roiPtrInputCropRegion[0].xywhROI.roiHeight); // y1
+                        roiPtrInputCropRegion[1].xywhROI.xy.x = random_val(0, iX - roiPtrInputCropRegion[1].xywhROI.roiWidth);  // x2
+                        roiPtrInputCropRegion[1].xywhROI.xy.y = random_val(0, iY - roiPtrInputCropRegion[1].xywhROI.roiHeight); // y2
+                        roiPtrInputCropRegion[2].xywhROI.xy.x = random_val(0, iX - roiPtrInputCropRegion[2].xywhROI.roiWidth);  // x3
+                        roiPtrInputCropRegion[2].xywhROI.xy.y = random_val(0, iY - roiPtrInputCropRegion[2].xywhROI.roiHeight); // y3
+                        roiPtrInputCropRegion[3].xywhROI.xy.x = random_val(0, iX - roiPtrInputCropRegion[3].xywhROI.roiWidth);  // x4
+                        roiPtrInputCropRegion[3].xywhROI.xy.y = random_val(0, iY - roiPtrInputCropRegion[3].xywhROI.roiHeight); // y4
+                    }
+
                     // Uncomment to run test case with an xywhROI override
-                    // /*
-                    roiPtrInputCropRegion[0].xywhROI.roiWidth = std::round(randFromDist * iX);                    // w1
-                    roiPtrInputCropRegion[0].xywhROI.roiHeight = std::round(randFromDist1 * iY);                  // h1
-                    roiPtrInputCropRegion[1].xywhROI.roiWidth = iX - roiPtrInputCropRegion[0].xywhROI.roiWidth;   // w2
-                    roiPtrInputCropRegion[1].xywhROI.roiHeight = roiPtrInputCropRegion[0].xywhROI.roiHeight;      // h2
-                    roiPtrInputCropRegion[2].xywhROI.roiWidth = roiPtrInputCropRegion[0].xywhROI.roiWidth;        // w3
-                    roiPtrInputCropRegion[2].xywhROI.roiHeight = iY - roiPtrInputCropRegion[0].xywhROI.roiHeight; // h3
-                    roiPtrInputCropRegion[3].xywhROI.roiWidth = iX - roiPtrInputCropRegion[0].xywhROI.roiWidth;   // w4
-                    roiPtrInputCropRegion[3].xywhROI.roiHeight = iY - roiPtrInputCropRegion[0].xywhROI.roiHeight; // h4
-                    roiPtrInputCropRegion[0].xywhROI.xy.x = random_val(0, iX - roiPtrInputCropRegion[0].xywhROI.roiWidth);  // x1
-                    roiPtrInputCropRegion[0].xywhROI.xy.y = random_val(0, iY - roiPtrInputCropRegion[0].xywhROI.roiHeight); // y1
-                    roiPtrInputCropRegion[1].xywhROI.xy.x = random_val(0, iX - roiPtrInputCropRegion[1].xywhROI.roiWidth);  // x2
-                    roiPtrInputCropRegion[1].xywhROI.xy.y = random_val(0, iY - roiPtrInputCropRegion[1].xywhROI.roiHeight); // y2
-                    roiPtrInputCropRegion[2].xywhROI.xy.x = random_val(0, iX - roiPtrInputCropRegion[2].xywhROI.roiWidth);  // x3
-                    roiPtrInputCropRegion[2].xywhROI.xy.y = random_val(0, iY - roiPtrInputCropRegion[2].xywhROI.roiHeight); // y3
-                    roiPtrInputCropRegion[3].xywhROI.xy.x = random_val(0, iX - roiPtrInputCropRegion[3].xywhROI.roiWidth);  // x4
-                    roiPtrInputCropRegion[3].xywhROI.xy.y = random_val(0, iY - roiPtrInputCropRegion[3].xywhROI.roiHeight); // y4
-                    // */
+                    else
+                    {
+                        roiPtrInputCropRegion[0].xywhROI.roiWidth = std::round(randFromDist * iX);                    // w1
+                        roiPtrInputCropRegion[0].xywhROI.roiHeight = std::round(randFromDist1 * iY);                  // h1
+                        roiPtrInputCropRegion[1].xywhROI.roiWidth = iX - roiPtrInputCropRegion[0].xywhROI.roiWidth;   // w2
+                        roiPtrInputCropRegion[1].xywhROI.roiHeight = roiPtrInputCropRegion[0].xywhROI.roiHeight;      // h2
+                        roiPtrInputCropRegion[2].xywhROI.roiWidth = roiPtrInputCropRegion[0].xywhROI.roiWidth;        // w3
+                        roiPtrInputCropRegion[2].xywhROI.roiHeight = iY - roiPtrInputCropRegion[0].xywhROI.roiHeight; // h3
+                        roiPtrInputCropRegion[3].xywhROI.roiWidth = iX - roiPtrInputCropRegion[0].xywhROI.roiWidth;   // w4
+                        roiPtrInputCropRegion[3].xywhROI.roiHeight = iY - roiPtrInputCropRegion[0].xywhROI.roiHeight; // h4
+                        roiPtrInputCropRegion[0].xywhROI.xy.x = random_val(0, iX - roiPtrInputCropRegion[0].xywhROI.roiWidth);  // x1
+                        roiPtrInputCropRegion[0].xywhROI.xy.y = random_val(0, iY - roiPtrInputCropRegion[0].xywhROI.roiHeight); // y1
+                        roiPtrInputCropRegion[1].xywhROI.xy.x = random_val(0, iX - roiPtrInputCropRegion[1].xywhROI.roiWidth);  // x2
+                        roiPtrInputCropRegion[1].xywhROI.xy.y = random_val(0, iY - roiPtrInputCropRegion[1].xywhROI.roiHeight); // y2
+                        roiPtrInputCropRegion[2].xywhROI.xy.x = random_val(0, iX - roiPtrInputCropRegion[2].xywhROI.roiWidth);  // x3
+                        roiPtrInputCropRegion[2].xywhROI.xy.y = random_val(0, iY - roiPtrInputCropRegion[2].xywhROI.roiHeight); // y3
+                        roiPtrInputCropRegion[3].xywhROI.xy.x = random_val(0, iX - roiPtrInputCropRegion[3].xywhROI.roiWidth);  // x4
+                        roiPtrInputCropRegion[3].xywhROI.xy.y = random_val(0, iY - roiPtrInputCropRegion[3].xywhROI.roiHeight); // y4
+                    }
 
                     // Uncomment to run test case with an ltrbROI override
                     /*
