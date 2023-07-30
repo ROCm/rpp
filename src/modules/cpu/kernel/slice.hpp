@@ -100,12 +100,14 @@ RppStatus slice_f32_f32_host_tensor(Rpp32f *srcPtr,
         else if((srcGenericDescPtr->layout == RpptLayout::NDHWC) && (dstGenericDescPtr->layout == RpptLayout::NDHWC))
         {
             srcPtrChannel = srcPtrImage + (roi.xyzwhdROI.xyz.z * srcGenericDescPtr->strides[1]) + (roi.xyzwhdROI.xyz.y * srcGenericDescPtr->strides[2]) + (roi.xyzwhdROI.xyz.x * layoutParams.bufferMultiplier);
+            Rpp32f *srcPtrDepth = srcPtrChannel;
+            Rpp32f *dstPtrDepth = dstPtrChannel;
 
             for(int i = 0; i < roi.xyzwhdROI.roiDepth; i++)
             {
                 Rpp32f *srcPtrRow, *dstPtrRow;
-                srcPtrRow = srcPtrChannel;
-                dstPtrRow = srcPtrChannel;
+                srcPtrRow = srcPtrDepth;
+                dstPtrRow = dstPtrDepth;
 
                 for(int j = 0; j < roi.xyzwhdROI.roiHeight; j++)
                 {
@@ -121,8 +123,8 @@ RppStatus slice_f32_f32_host_tensor(Rpp32f *srcPtr,
                     srcPtrRow += srcGenericDescPtr->strides[2];
                     dstPtrRow += dstGenericDescPtr->strides[2];
                 }
-                srcPtrChannel += srcGenericDescPtr->strides[1];
-                srcPtrChannel += dstGenericDescPtr->strides[1];
+                srcPtrDepth += srcGenericDescPtr->strides[1];
+                dstPtrDepth += dstGenericDescPtr->strides[1];
             }
         }
     }
