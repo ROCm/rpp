@@ -112,6 +112,7 @@ RppStatus rppt_image_stddev_host(RppPtr_t srcPtr,
                                  RppPtr_t imageStddevArr,
                                  Rpp32u imageStddevArrLength,
                                  Rpp32f *meanTensor,
+                                 int flag,
                                  RpptROIPtr roiTensorPtrSrc,
                                  RpptRoiType roiType,
                                  rppHandle_t rppHandle)
@@ -143,43 +144,83 @@ RppStatus rppt_image_stddev_host(RppPtr_t srcPtr,
 
     if (srcDescPtr->dataType == RpptDataType::U8)
     {
-        image_stddev_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                       srcDescPtr,
-                                       static_cast<Rpp32f*>(imageStddevArr),
-                                       meanTensor,
-                                       roiTensorPtrSrc,
-                                       roiType,
-                                       layoutParams);
+        if(!flag || flag == 1)
+            custom_stddev_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                            srcDescPtr,
+                                            static_cast<Rpp32f*>(imageStddevArr),
+                                            meanTensor,
+                                            flag,
+                                            roiTensorPtrSrc,
+                                            roiType,
+                                            layoutParams);
+        if(flag == 2)
+            image_stddev_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                           srcDescPtr,
+                                           static_cast<Rpp32f*>(imageStddevArr),
+                                           meanTensor,
+                                           roiTensorPtrSrc,
+                                           roiType,
+                                           layoutParams);
     }
     else if (srcDescPtr->dataType == RpptDataType::F16)
     {
-        image_stddev_f16_f16_host_tensor(reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                         srcDescPtr,
-                                         static_cast<Rpp32f*>(imageStddevArr),
-                                         meanTensor,
-                                         roiTensorPtrSrc,
-                                         roiType,
-                                         layoutParams);
+        if(!flag || flag == 1)
+            custom_stddev_f16_f16_host_tensor(reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                              srcDescPtr,
+                                              static_cast<Rpp32f*>(imageStddevArr),
+                                              meanTensor,
+                                              flag,
+                                              roiTensorPtrSrc,
+                                              roiType,
+                                              layoutParams);
+        if(flag == 2)
+            image_stddev_f16_f16_host_tensor(reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                             srcDescPtr,
+                                             static_cast<Rpp32f*>(imageStddevArr),
+                                             meanTensor,
+                                             roiTensorPtrSrc,
+                                             roiType,
+                                             layoutParams);
     }
     else if (srcDescPtr->dataType == RpptDataType::F32)
     {
-        image_stddev_f32_f32_host_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                         srcDescPtr,
-                                         static_cast<Rpp32f*>(imageStddevArr),
-                                         meanTensor,
-                                         roiTensorPtrSrc,
-                                         roiType,
-                                         layoutParams);
+        if(!flag || flag == 1)
+            custom_stddev_f32_f32_host_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                              srcDescPtr,
+                                              static_cast<Rpp32f*>(imageStddevArr),
+                                              meanTensor,
+                                              flag,
+                                              roiTensorPtrSrc,
+                                              roiType,
+                                              layoutParams);
+        if(flag == 2)
+            image_stddev_f32_f32_host_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                             srcDescPtr,
+                                             static_cast<Rpp32f*>(imageStddevArr),
+                                             meanTensor,
+                                             roiTensorPtrSrc,
+                                             roiType,
+                                             layoutParams);
     }
     else if (srcDescPtr->dataType == RpptDataType::I8)
     {
-        image_stddev_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                       srcDescPtr,
-                                       static_cast<Rpp32f*>(imageStddevArr),
-                                       meanTensor,
-                                       roiTensorPtrSrc,
-                                       roiType,
-                                       layoutParams);
+        if(!flag || flag == 1)
+            custom_stddev_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                            srcDescPtr,
+                                            static_cast<Rpp32f*>(imageStddevArr),
+                                            meanTensor,
+                                            flag,
+                                            roiTensorPtrSrc,
+                                            roiType,
+                                            layoutParams);
+        if(flag == 2)
+            image_stddev_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                           srcDescPtr,
+                                           static_cast<Rpp32f*>(imageStddevArr),
+                                           meanTensor,
+                                           roiTensorPtrSrc,
+                                           roiType,
+                                           layoutParams);
     }
 
     return RPP_SUCCESS;

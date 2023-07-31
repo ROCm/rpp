@@ -63,7 +63,7 @@ RppStatus rppt_image_mean_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t 
 // *retval RPP_SUCCESS : succesful completion
 // *retval RPP_ERROR : Error
 
-RppStatus rppt_image_stddev_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t imageStddevArr, Rpp32u imageStddevArrLength, Rpp32f *meanTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+RppStatus rppt_image_stddev_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t imageStddevArr, Rpp32u imageStddevArrLength, Rpp32f *meanTensor, int flag, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #ifdef GPU_SUPPORT
 RppStatus rppt_image_stddev_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t imageStddevArr, Rpp32u imageStddevArrLength, Rpp32f *meanTensor, int flag, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
