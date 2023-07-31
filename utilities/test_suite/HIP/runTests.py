@@ -102,7 +102,7 @@ def process_layout(layout, qaMode, case, dstPath):
     elif layout == 2:
         dstPathTemp = directory_name_generator(qaMode, "hip", "pln1", case, dstPath)
         log_file_layout = "pln1"
-    
+
     return dstPathTemp, log_file_layout
 
 # Validate if a path exists and is a directory
@@ -324,13 +324,13 @@ if(testType == 0):
             print("--------------------------------")
             print("Running a New Functionality...")
             print("--------------------------------")
-            
+
             for bitDepth in range(7):
                 print("\n\n\nRunning New Bit Depth...\n-------------------------\n\n")
-                
+
                 for outputFormatToggle in range(2):
                     # There is no layout toggle for PLN1 case, so skip this case
-                    if layout == 2 and outputFormatToggle == 1: 
+                    if layout == 2 and outputFormatToggle == 1:
                         continue
 
                     if case == 40 or case == 41 or case == 49:
@@ -377,10 +377,10 @@ else:
                 print("--------------------------------")
                 print("Running a New Functionality...")
                 print("--------------------------------")
-                
+
                 for bitDepth in range(7):
                     print("\n\n\nRunning New Bit Depth...\n-------------------------\n\n")
-                    
+
                     for outputFormatToggle in range(2):
                         # There is no layout toggle for PLN1 case, so skip this case
                         if layout == 2 and outputFormatToggle == 1:
@@ -506,10 +506,10 @@ else:
                 print("--------------------------------")
                 print("Running a New Functionality...")
                 print("--------------------------------")
-                
+
                 for bitDepth in range(7):
                     print("\n\n\nRunning New Bit Depth...\n-------------------------\n\n")
-                    
+
                     for outputFormatToggle in range(2):
                         # There is no layout toggle for PLN1 case, so skip this case
                         if layout == 2 and outputFormatToggle == 1:
@@ -761,7 +761,7 @@ else:
             print("Unable to open results in " + RESULTS_DIR + "/consolidated_results_" + TYPE + ".stats.csv")
 
 # print the results of qa tests
-supportedCaseList = ['0', '1', '2', '4', '13', '31', '34', '36', '37', '38','84']
+supportedCaseList = ['0', '1', '2', '4', '13', '23', '31', '34', '36', '37', '38','84']
 supportedCases = 0
 for num in caseList:
     if num in supportedCaseList:

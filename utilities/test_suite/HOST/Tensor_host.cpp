@@ -435,6 +435,32 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 23:
+                {
+                    testCaseName = "rotate";
+                    std::cerr<<"executing rotate"<<std::endl;
+
+                    if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR))
+                    {
+                        missingFuncFlag = 1;
+                        break;
+                    }
+
+                    Rpp32f angle[batchSize];
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        angle[i] = 50;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_rotate_host(input, srcDescPtr, output, dstDescPtr, angle, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 case 31:
                 {
                     testCaseName = "color_cast";
@@ -682,7 +708,7 @@ int main(int argc, char **argv)
                 convert_output_bitdepth_to_u8(output, outputu8, inputBitDepth, oBufferSize, outputBufferSize, dstDescPtr, invConversionFactor);
 
                 // If DEBUG_MODE is set to 1 dump the outputs to csv files for debugging
-                if(DEBUG_MODE && iterCount == 0)
+                if(DEBUG_MODE && iterCount == 0 && inputBitDepth == 0)
                 {
                     std::ofstream refFile;
                     refFile.open(func + ".csv");

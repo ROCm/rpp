@@ -17,8 +17,6 @@ __device__ void warp_affine_roi_and_srclocs_hip_compute(int4 *srcRoiPtr_i4, int 
     float2 locDst_f2, locSrc_f2;
     int roiHalfWidth = (srcRoiPtr_i4->z - srcRoiPtr_i4->x + 1) >> 1;
     int roiHalfHeight = (srcRoiPtr_i4->w - srcRoiPtr_i4->y + 1) >> 1;
-    srcRoiPtr_i4->z -= 1;
-    srcRoiPtr_i4->w -= 1;
     locDst_f2.x = (float) (id_x - roiHalfWidth);
     locDst_f2.y = (float) (id_y - roiHalfHeight);
     locSrc_f2.x = fmaf(locDst_f2.x, affineMatrix_f6->f1[0], fmaf(locDst_f2.y, affineMatrix_f6->f1[1], affineMatrix_f6->f1[2])) + roiHalfWidth;

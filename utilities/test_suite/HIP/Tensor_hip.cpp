@@ -449,6 +449,30 @@ int main(int argc, char **argv)
 
                 break;
             }
+            case 23:
+            {
+                testCaseName = "rotate";
+
+                if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR))
+                {
+                    missingFuncFlag = 1;
+                    break;
+                }
+
+                Rpp32f angle[batchSize];
+                for (i = 0; i < batchSize; i++)
+                {
+                    angle[i] = 50;
+                }
+
+                startWallTime = omp_get_wtime();
+                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    rppt_rotate_gpu(d_input, srcDescPtr, d_output, dstDescPtr, angle, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
+                else
+                    missingFuncFlag = 1;
+
+                break;
+            }
             case 31:
             {
                 testCaseName = "color_cast";
