@@ -338,12 +338,12 @@ if(testType == 0):
                             print(f"./Tensor_hip {srcPath1} {srcPath2} {dstPath} {bitDepth} {outputFormatToggle} {case} {kernelSize}")
                             result = subprocess.run(["./Tensor_hip", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(kernelSize), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE)
                             print(result.stdout.decode())
-                    elif case == 8:
+                    elif case == "8":
                         for noiseType in range(3):
                             print(f"./Tensor_hip {srcPath1} {srcPath2} {dstPathTemp} {bitDepth} {outputFormatToggle} {case} {noiseType} ")
                             result = subprocess.run(["./Tensor_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(noiseType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE)
                             print(result.stdout.decode())
-                    elif case == 21 or case == 23 or case == 24:
+                    elif case == "21" or case == "23" or case == "24":
                         for interpolationType in range(6):
                             print(f"./Tensor_hip {srcPath1} {srcPath2} {dstPathTemp} {bitDepth} {outputFormatToggle} {case} {interpolationType}")
                             result = subprocess.run(["./Tensor_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(interpolationType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE)
@@ -712,7 +712,7 @@ else:
                 for BIT_DEPTH in BIT_DEPTH_LIST:
                     # Loop through output format toggle cases
                     for OFT in OFT_LIST:
-                        if (CASE_NUM == 40 or CASE_NUM == 41 or CASE_NUM == 49) and TYPE.startswith("Tensor"):
+                        if (CASE_NUM == "40" or CASE_NUM == "41" or CASE_NUM == "49") and TYPE.startswith("Tensor"):
                             KSIZE_LIST = [3, 5, 7, 9]
                             # Loop through extra param kSize
                             for KSIZE in KSIZE_LIST:
@@ -722,7 +722,7 @@ else:
                                 fileCheck = case_file_check(CASE_FILE_PATH)
                                 if fileCheck == False:
                                     continue
-                        elif (CASE_NUM == 24 or CASE_NUM == 21) and TYPE.startswith("Tensor"):
+                        elif (CASE_NUM == "24" or CASE_NUM == "21" or CASE_NUM == "23") and TYPE.startswith("Tensor"):
                             INTERPOLATIONTYPE_LIST = [0, 1, 2, 3, 4, 5]
                             # Loop through extra param interpolationType
                             for INTERPOLATIONTYPE in INTERPOLATIONTYPE_LIST:
@@ -732,7 +732,7 @@ else:
                                 fileCheck = case_file_check(CASE_FILE_PATH)
                                 if fileCheck == False:
                                     continue
-                        elif (CASE_NUM == 8) and TYPE.startswith("Tensor"):
+                        elif (CASE_NUM == "8") and TYPE.startswith("Tensor"):
                             NOISETYPE_LIST = [0, 1, 2]
                             # Loop through extra param noiseType
                             for NOISETYPE in NOISETYPE_LIST:
