@@ -1019,7 +1019,6 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     }
 }
 
-template <typename T>
 inline void compare_reduction_output(Rpp64u* output, string funcName, RpptDescPtr srcDescPtr, int testCase, string dst)
 {
     string func = funcName;
@@ -1075,7 +1074,7 @@ inline void compare_reduction_output(Rpp64u* output, string funcName, RpptDescPt
     {
         for(int i = 0; i < srcDescPtr->n; i++)
         {
-            int diff = abs(output[i] - refOutput[i]);
+            int diff = output[i] - refOutput[i];
             if(diff <= CUTOFF)
                 fileMatch++;
         }
@@ -1087,7 +1086,7 @@ inline void compare_reduction_output(Rpp64u* output, string funcName, RpptDescPt
             matched_values = 0;
             for(int j = 0; j < 4; j++)
             {
-                int diff = abs(output[i] - refOutput[i]);
+                int diff = output[i] - refOutput[i];
                 if(diff <= CUTOFF)
                     matched_values++;
             }
