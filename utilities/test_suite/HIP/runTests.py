@@ -333,21 +333,25 @@ if(testType == 0):
                     if layout == 2 and outputFormatToggle == 1:
                         continue
 
-                    if case == 40 or case == 41 or case == 49:
+                    if case == "40" or case == "41" or case == "49":
                         for kernelSize in range(3, 10, 2):
                             print(f"./Tensor_hip {srcPath1} {srcPath2} {dstPath} {bitDepth} {outputFormatToggle} {case} {kernelSize}")
-                            subprocess.run(["./Tensor_hip", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(kernelSize), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList)
+                            result = subprocess.run(["./Tensor_hip", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(kernelSize), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE)
+                            print(result.stdout.decode())
                     elif case == 8:
                         for noiseType in range(3):
                             print(f"./Tensor_hip {srcPath1} {srcPath2} {dstPathTemp} {bitDepth} {outputFormatToggle} {case} {noiseType} ")
-                            subprocess.run(["./Tensor_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(noiseType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList)
+                            result = subprocess.run(["./Tensor_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(noiseType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE)
+                            print(result.stdout.decode())
                     elif case == 21 or case == 23 or case == 24:
                         for interpolationType in range(6):
                             print(f"./Tensor_hip {srcPath1} {srcPath2} {dstPathTemp} {bitDepth} {outputFormatToggle} {case} {interpolationType}")
-                            subprocess.run(["./Tensor_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(interpolationType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList)
+                            result = subprocess.run(["./Tensor_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(interpolationType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE)
+                            print(result.stdout.decode())
                     else:
                         print(f"./Tensor_hip {srcPath1} {srcPath2} {dstPathTemp} {bitDepth} {outputFormatToggle} {case} 0 {numRuns} {testType} {layout}")
-                        subprocess.run(["./Tensor_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), "0", str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList)
+                        result = subprocess.run(["./Tensor_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), "0", str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE)
+                        print(result.stdout.decode())
 
                     print("------------------------------------------------------------------------------------------")
     layoutDict = {0:"PKD3", 1:"PLN3", 2:"PLN1"}
@@ -386,7 +390,7 @@ else:
                         if layout == 2 and outputFormatToggle == 1:
                             continue
 
-                        if case == 40 or case == 41 or case == 49:
+                        if case == "40" or case == "41" or case == "49":
                             for kernelSize in range(3, 10, 2):
                                 with open(f"{loggingFolder}/Tensor_hip_{log_file_layout}_raw_performance_log.txt", "a") as log_file:
                                     print(f"./Tensor_hip {srcPath1} {srcPath2} {dstPath} {bitDepth} {outputFormatToggle} {case} {kernelSize}")
@@ -397,7 +401,7 @@ else:
                                             break
                                         print(output.strip())
                                         log_file.write(output)
-                        elif case == 8:
+                        elif case == "8":
                             for noiseType in range(3):
                                 with open(f"{loggingFolder}/Tensor_hip_{log_file_layout}_raw_performance_log.txt", "a") as log_file:
                                     print(f"./Tensor_hip {srcPath1} {srcPath2} {dstPath} {bitDepth} {outputFormatToggle} {case} {noiseType} ")
@@ -408,7 +412,7 @@ else:
                                             break
                                         print(output.strip())
                                         log_file.write(output)
-                        elif case == 21 or case == 23 or case == 24:
+                        elif case == "21" or case == "23" or case == "24":
                             for interpolationType in range(6):
                                 with open(f"{loggingFolder}/Tensor_hip_{log_file_layout}_raw_performance_log.txt", "a") as log_file:
                                     print(f"./Tensor_hip {srcPath1} {srcPath2} {dstPath} {bitDepth} {outputFormatToggle} {case} {interpolationType}")
@@ -515,7 +519,7 @@ else:
                         if layout == 2 and outputFormatToggle == 1:
                             continue
 
-                        if case == 40 or case == 41 or case == 49:
+                        if case == "40" or case == "41" or case == "49":
                             for kernelSize in range(3, 10, 2):
                                 if layout == 0:
                                     if not os.path.isdir(f"{dstPath}/Tensor_PKD3/case_{case}"):
@@ -553,7 +557,7 @@ else:
                                                 break
                                             print(output.strip())
                                             log_file.write(output)
-                        elif case == 8:
+                        elif case == "8":
                             for noiseType in range(3):
                                 if layout == 0:
                                     if not os.path.isdir(f"{dstPath}/Tensor_PKD3/case_{case}"):
@@ -591,7 +595,7 @@ else:
                                                 break
                                             print(output.strip())
                                             log_file.write(output)
-                        elif case == 21 or case == 23 or case == 24:
+                        elif case == "21" or case == "23" or case == "24":
                             for interpolationType in range(6):
                                 if layout == 0:
                                     if not os.path.exists(f"{dstPath}/Tensor_PKD3/case_{case}"):

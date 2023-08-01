@@ -560,6 +560,8 @@ int main(int argc, char **argv)
                 }
                 case 23:
                 {
+                    testCaseName = "rotate";
+
                     if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR))
                     {
                         missingFuncFlag = 1;
