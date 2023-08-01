@@ -294,7 +294,7 @@ __global__ void gaussian_filter_3x3_pkd_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float24 sum_f24;
-    __shared__ uchar src_lds[48][128];
+    __shared__ uchar src_lds[LDS_LENGTH_Y_3C][LDS_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
@@ -369,7 +369,7 @@ __global__ void gaussian_filter_5x5_pkd_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float24 sum_f24;
-    __shared__ uchar src_lds[48][128];
+    __shared__ uchar src_lds[LDS_LENGTH_Y_3C][LDS_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
@@ -452,7 +452,7 @@ __global__ void gaussian_filter_7x7_pkd_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float24 sum_f24;
-    __shared__ uchar src_lds[48][128];
+    __shared__ uchar src_lds[LDS_LENGTH_Y_3C][LDS_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
@@ -543,7 +543,7 @@ __global__ void gaussian_filter_9x9_pkd_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float24 sum_f24;
-    __shared__ uchar src_lds[48][128];
+    __shared__ uchar src_lds[LDS_LENGTH_Y_3C][LDS_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
@@ -646,7 +646,7 @@ __global__ void gaussian_filter_3x3_pln_tensor(T *srcPtr,
     int id_y_i = id_y_o - padLength;
 
     d_float8 sum_f8;
-    __shared__ uchar src_lds[16][128];
+    __shared__ uchar src_lds[LDS_LENGTH_Y_1C][LDS_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
@@ -744,7 +744,7 @@ __global__ void gaussian_filter_5x5_pln_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float8 sum_f8;
-    __shared__ uchar src_lds[16][128];
+    __shared__ uchar src_lds[LDS_LENGTH_Y_1C][LDS_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
@@ -850,7 +850,7 @@ __global__ void gaussian_filter_7x7_pln_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float8 sum_f8;
-    __shared__ uchar src_lds[16][128];
+    __shared__ uchar src_lds[LDS_LENGTH_Y_1C][LDS_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
@@ -964,7 +964,7 @@ __global__ void gaussian_filter_9x9_pln_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float8 sum_f8;
-    __shared__ uchar src_lds[16][128];
+    __shared__ uchar src_lds[LDS_LENGTH_Y_1C][LDS_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
@@ -1087,7 +1087,7 @@ __global__ void gaussian_filter_3x3_pkd3_pln3_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float24 sum_f24;
-    __shared__ uchar src_lds[48][128];
+    __shared__ uchar src_lds[LDS_LENGTH_Y_3C][LDS_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
@@ -1162,7 +1162,7 @@ __global__ void gaussian_filter_5x5_pkd3_pln3_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float24 sum_f24;
-    __shared__ uchar src_lds[48][128];
+    __shared__ uchar src_lds[LDS_LENGTH_Y_3C][LDS_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
@@ -1245,7 +1245,7 @@ __global__ void gaussian_filter_7x7_pkd3_pln3_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float24 sum_f24;
-    __shared__ uchar src_lds[48][128];
+    __shared__ uchar src_lds[LDS_LENGTH_Y_3C][LDS_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
@@ -1336,7 +1336,7 @@ __global__ void gaussian_filter_9x9_pkd3_pln3_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float24 sum_f24;
-    __shared__ uchar src_lds[48][128];
+    __shared__ uchar src_lds[LDS_LENGTH_Y_3C][LDS_LENGTH_X];
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
@@ -1437,7 +1437,7 @@ __global__ void gaussian_filter_3x3_pln3_pkd3_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float24 sum_f24;
-    __shared__ uchar src_lds[48][128];
+    __shared__ uchar src_lds[LDS_LENGTH_Y_3C][LDS_LENGTH_X];
 
     int3 srcIdx;
     srcIdx.x = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
@@ -1512,7 +1512,7 @@ __global__ void gaussian_filter_5x5_pln3_pkd3_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float24 sum_f24;
-    __shared__ uchar src_lds[48][128];
+    __shared__ uchar src_lds[LDS_LENGTH_Y_3C][LDS_LENGTH_X];
 
     int3 srcIdx;
     srcIdx.x = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
@@ -1595,7 +1595,7 @@ __global__ void gaussian_filter_7x7_pln3_pkd3_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float24 sum_f24;
-    __shared__ uchar src_lds[48][128];
+    __shared__ uchar src_lds[LDS_LENGTH_Y_3C][LDS_LENGTH_X];
 
     int3 srcIdx;
     srcIdx.x = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
@@ -1686,7 +1686,7 @@ __global__ void gaussian_filter_9x9_pln3_pkd3_tensor(T *srcPtr,
     int id_x_i = id_x_o - padLength;
     int id_y_i = id_y_o - padLength;
     d_float24 sum_f24;
-    __shared__ uchar src_lds[48][128];
+    __shared__ uchar src_lds[LDS_LENGTH_Y_3C][LDS_LENGTH_X];
 
     int3 srcIdx;
     srcIdx.x = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
@@ -1940,7 +1940,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
     uint padLength = kernelSize / 2;
     uint padLengthTwice = padLength * 2;
     uint2 tileSize;
-    tileSize.x = (128 - padLengthTwice) / 8;
+    tileSize.x = (LDS_LENGTH_X - padLengthTwice) / 8;
     tileSize.y = 16 - padLengthTwice;
 
     // Create a filter of size (kernel size x kernel size)
