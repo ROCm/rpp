@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -69,7 +69,7 @@ RppStatus rppt_image_sum_host(RppPtr_t srcPtr,
     {
         image_sum_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
                                     srcDescPtr,
-                                    static_cast<Rpp32f*>(imageSumArr),
+                                    static_cast<Rpp64u*>(imageSumArr),
                                     roiTensorPtrSrc,
                                     roiType,
                                     layoutParams);
@@ -96,7 +96,7 @@ RppStatus rppt_image_sum_host(RppPtr_t srcPtr,
     {
         image_sum_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
                                     srcDescPtr,
-                                    static_cast<Rpp32f*>(imageSumArr),
+                                    static_cast<Rpp64s*>(imageSumArr),
                                     roiTensorPtrSrc,
                                     roiType,
                                     layoutParams);

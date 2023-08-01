@@ -295,10 +295,10 @@ int main(int argc, char **argv)
     string testCaseName;
 
     // Initialize buffers for any reductionType functions
-    Rpp32f *reductionFuncResultArr;
+    void *reductionFuncResultArr;
     Rpp32u reductionFuncResultArrLength = srcDescPtr->n * 4;
     if(reductionTypeCase)
-        reductionFuncResultArr = static_cast<Rpp32f *>malloc(reductionFuncResultArrLength * sizeof(Rpp32f));
+        reductionFuncResultArr = (Rpp8u *)calloc(reductionFuncResultArrLength, get_size_of_data_type(dstDescPtr->dataType));
 
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
@@ -691,8 +691,30 @@ int main(int argc, char **argv)
                     else if(srcDescPtr->c == 1)
                         printf("\nReduction result (Batch of 1 channel images produces 1 result per image in batch): ");
 
-                    for (int i = 0; i < reductionFuncResultArrLength; i++)
-                        printf(" %0.3f ", reductionFuncResultArr[i]);
+                    if(dstDescPtr->dataType == RpptDataType::U8)
+                    {
+                        Rpp64u *reductionOutPtr = static_cast<Rpp64u*>(reductionFuncResultArr);
+                        for (int i = 0; i < reductionFuncResultArrLength; i++)
+                            printf(" %llu ", reductionOutPtr[i]);
+                    }
+                    else if(dstDescPtr->dataType == RpptDataType::F16)
+                    {
+                        Rpp16f *reductionOutPtr = static_cast<Rpp16f *>(reductionFuncResultArr);
+                        for (int i = 0; i < reductionFuncResultArrLength; i++)
+                            printf(" %0.3f ", (float)reductionOutPtr[i]);
+                    }
+                    else if(dstDescPtr->dataType == RpptDataType::F32)
+                    {
+                        Rpp32f *reductionOutPtr = static_cast<Rpp32f *>(reductionFuncResultArr);
+                        for (int i = 0; i < reductionFuncResultArrLength; i++)
+                            printf(" %0.3f ", (float)reductionOutPtr[i]);
+                    }
+                    else if(dstDescPtr->dataType == RpptDataType::I8)
+                    {
+                        Rpp64s *reductionOutPtr = static_cast<Rpp64s *>(reductionFuncResultArr);
+                        for (int i = 0; i < reductionFuncResultArrLength; i++)
+                            printf(" %lld ", reductionOutPtr[i]);
+                    }
 
                     printf("\n");
 
@@ -701,8 +723,8 @@ int main(int argc, char **argv)
                     2.input bit depth 0 (U8)
                     3.source and destination layout are the same*/
                     if(qaFlag && inputBitDepth == 0 && (srcDescPtr->layout == dstDescPtr->layout) && !(randomOutputCase))
-                        compare_reduction_output<Rpp8u>(reductionFuncResultArr, testCaseName, srcDescPtr, testCase, dst);
-                }
+                        <Rpp8u>((uint64_t*)reductionFuncResultArr, testCaseName, srcDescPtr, testCase, dst);
+                }compare_reduction_output
                 else
                 {
                     // Reconvert other bit depths to 8u for output display purposes

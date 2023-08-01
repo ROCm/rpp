@@ -1020,7 +1020,7 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
 }
 
 template <typename T>
-inline void compare_reduction_output(Rpp32f* output, string funcName, RpptDescPtr srcDescPtr, int testCase, string dst)
+inline void compare_reduction_output(Rpp64u* output, string funcName, RpptDescPtr srcDescPtr, int testCase, string dst)
 {
     string func = funcName;
     string refPath = get_current_dir_name();
@@ -1045,8 +1045,8 @@ inline void compare_reduction_output(Rpp32f* output, string funcName, RpptDescPt
     refFile = refPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ func + ".csv";
 
     ifstream file(refFile);
-    Rpp32f *refOutput;
-    refOutput = (Rpp32f *)malloc(srcDescPtr->n * 4 * sizeof(Rpp32f));
+    Rpp64u *refOutput;
+    refOutput = (Rpp64u *)malloc(srcDescPtr->n * 4 * sizeof(Rpp64u));
     string line,word;
     int index = 0;
 
