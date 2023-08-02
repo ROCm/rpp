@@ -663,22 +663,22 @@ int main(int argc, char **argv)
 
                     if(qaFlag)
                     {
-                        roiPtrInputCropRegion[0].xywhROI.roiWidth = std::round(0.3 * iX);                    // w1
-                        roiPtrInputCropRegion[0].xywhROI.roiHeight = std::round(0.5 * iY);                  // h1
+                        roiPtrInputCropRegion[0].xywhROI.roiWidth = (int)std::round(((int)std::round(0.3 * iX) >> 3)) << 3;                 // w1
+                        roiPtrInputCropRegion[0].xywhROI.roiHeight = (int)std::round(((int)std::round(0.5 * iY) >> 3)) << 3;                // h1
                         roiPtrInputCropRegion[1].xywhROI.roiWidth = iX - roiPtrInputCropRegion[0].xywhROI.roiWidth;   // w2
                         roiPtrInputCropRegion[1].xywhROI.roiHeight = roiPtrInputCropRegion[0].xywhROI.roiHeight;      // h2
                         roiPtrInputCropRegion[2].xywhROI.roiWidth = roiPtrInputCropRegion[0].xywhROI.roiWidth;        // w3
                         roiPtrInputCropRegion[2].xywhROI.roiHeight = iY - roiPtrInputCropRegion[0].xywhROI.roiHeight; // h3
                         roiPtrInputCropRegion[3].xywhROI.roiWidth = iX - roiPtrInputCropRegion[0].xywhROI.roiWidth;   // w4
                         roiPtrInputCropRegion[3].xywhROI.roiHeight = iY - roiPtrInputCropRegion[0].xywhROI.roiHeight; // h4
-                        roiPtrInputCropRegion[0].xywhROI.xy.x = random_val(0, iX - roiPtrInputCropRegion[0].xywhROI.roiWidth);  // x1
-                        roiPtrInputCropRegion[0].xywhROI.xy.y = random_val(0, iY - roiPtrInputCropRegion[0].xywhROI.roiHeight); // y1
-                        roiPtrInputCropRegion[1].xywhROI.xy.x = random_val(0, iX - roiPtrInputCropRegion[1].xywhROI.roiWidth);  // x2
-                        roiPtrInputCropRegion[1].xywhROI.xy.y = random_val(0, iY - roiPtrInputCropRegion[1].xywhROI.roiHeight); // y2
-                        roiPtrInputCropRegion[2].xywhROI.xy.x = random_val(0, iX - roiPtrInputCropRegion[2].xywhROI.roiWidth);  // x3
-                        roiPtrInputCropRegion[2].xywhROI.xy.y = random_val(0, iY - roiPtrInputCropRegion[2].xywhROI.roiHeight); // y3
-                        roiPtrInputCropRegion[3].xywhROI.xy.x = random_val(0, iX - roiPtrInputCropRegion[3].xywhROI.roiWidth);  // x4
-                        roiPtrInputCropRegion[3].xywhROI.xy.y = random_val(0, iY - roiPtrInputCropRegion[3].xywhROI.roiHeight); // y4
+                        roiPtrInputCropRegion[0].xywhROI.xy.x = iX - roiPtrInputCropRegion[0].xywhROI.roiWidth;  // x1
+                        roiPtrInputCropRegion[0].xywhROI.xy.y = 0; // y1
+                        roiPtrInputCropRegion[1].xywhROI.xy.x = iX - roiPtrInputCropRegion[1].xywhROI.roiWidth;  // x2
+                        roiPtrInputCropRegion[1].xywhROI.xy.y = 0; // y2
+                        roiPtrInputCropRegion[2].xywhROI.xy.x = 0;  // x3
+                        roiPtrInputCropRegion[2].xywhROI.xy.y = iY - roiPtrInputCropRegion[2].xywhROI.roiHeight; // y3
+                        roiPtrInputCropRegion[3].xywhROI.xy.x = 0;  // x4
+                        roiPtrInputCropRegion[3].xywhROI.xy.y = iY - roiPtrInputCropRegion[3].xywhROI.roiHeight; // y4
                     }
 
                     // Uncomment to run test case with an xywhROI override
