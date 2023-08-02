@@ -298,7 +298,16 @@ int main(int argc, char **argv)
     void *reductionFuncResultArr;
     Rpp32u reductionFuncResultArrLength = srcDescPtr->n * 4;
     if(reductionTypeCase)
-        reductionFuncResultArr = (Rpp8u *)calloc(reductionFuncResultArrLength, get_size_of_data_type(dstDescPtr->dataType));
+    {
+        if(dstDescPtr->dataType == RpptDataType::U8)
+            reductionFuncResultArr = (Rpp64u *)calloc(reductionFuncResultArrLength, sizeof(Rpp64u));
+        else if(dstDescPtr->dataType == RpptDataType::F16)
+            reductionFuncResultArr = (Rpp32f *)calloc(reductionFuncResultArrLength, sizeof(Rpp32f));
+        else if(dstDescPtr->dataType == RpptDataType::F32)
+            reductionFuncResultArr = (Rpp32f *)calloc(reductionFuncResultArrLength, sizeof(Rpp32f));
+        else if(dstDescPtr->dataType == RpptDataType::I8)
+            reductionFuncResultArr = (Rpp64s *)calloc(reductionFuncResultArrLength, sizeof(Rpp64s));
+    }
 
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
@@ -699,7 +708,7 @@ int main(int argc, char **argv)
                     }
                     else if(dstDescPtr->dataType == RpptDataType::F16)
                     {
-                        Rpp16f *reductionOutPtr = static_cast<Rpp16f *>(reductionFuncResultArr);
+                        Rpp32f *reductionOutPtr = static_cast<Rpp32f *>(reductionFuncResultArr);
                         for (int i = 0; i < reductionFuncResultArrLength; i++)
                             printf(" %0.3f ", (float)reductionOutPtr[i]);
                     }
