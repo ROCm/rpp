@@ -655,7 +655,7 @@ int main(int argc, char **argv)
             }
             case 87:
             {
-                testCaseName = "image_sum";
+                testCaseName = "tensor_sum";
 
                 if(srcDescPtr->c == 1)
                     reductionFuncResultArrLength = srcDescPtr->n;
@@ -663,7 +663,7 @@ int main(int argc, char **argv)
                 startWallTime = omp_get_wtime();
 
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_image_sum_gpu(d_input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
+                    rppt_tensor_sum_gpu(d_input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
                 else
                     missingFuncFlag = 1;
 

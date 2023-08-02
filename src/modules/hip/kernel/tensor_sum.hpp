@@ -4,9 +4,9 @@
 
 // -------------------- Set 0 - Reduction Stage 2 --------------------
 
-__global__ void image_sum_grid_result_tensor(float *srcPtr,
-                                             uint xBufferLength,
-                                             float *dstPtr)
+__global__ void tensor_sum_grid_result(float *srcPtr,
+                                       uint xBufferLength,
+                                       float *dstPtr)
 {
     int id_x = hipThreadIdx_x * 8;
     int id_z = hipBlockIdx_z;
@@ -48,9 +48,9 @@ __global__ void image_sum_grid_result_tensor(float *srcPtr,
         dstPtr[hipBlockIdx_z] = partialSumLDS[0];
 }
 
-__global__ void image_sum_grid_3channel_result_tensor(float *srcPtr,
-                                                      uint xBufferLength,
-                                                      float *dstPtr)
+__global__ void tensor_sum_grid_3channel_result(float *srcPtr,
+                                                uint xBufferLength,
+                                                float *dstPtr)
 {
     int id_x = hipThreadIdx_x * 8;
     int id_z = hipBlockIdx_z;
@@ -127,10 +127,10 @@ __global__ void image_sum_grid_3channel_result_tensor(float *srcPtr,
 // -------------------- Set 1 - Reduction Stage 1 --------------------
 
 template <typename T, typename U>
-__global__ void image_sum_pln1_tensor(T *srcPtr,
-                                      uint2 srcStridesNH,
-                                      U *imageSumArr,
-                                      RpptROIPtr roiTensorPtrSrc)
+__global__ void tensor_sum_pln1(T *srcPtr,
+                                uint2 srcStridesNH,
+                                U *imageSumArr,
+                                RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -186,10 +186,10 @@ __global__ void image_sum_pln1_tensor(T *srcPtr,
 }
 
 template <typename T, typename U>
-__global__ void image_sum_pln3_tensor(T *srcPtr,
-                                      uint3 srcStridesNCH,
-                                      U *imageSumArr,
-                                      RpptROIPtr roiTensorPtrSrc)
+__global__ void tensor_sum_pln3(T *srcPtr,
+                                uint3 srcStridesNCH,
+                                U *imageSumArr,
+                                RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -281,10 +281,10 @@ __global__ void image_sum_pln3_tensor(T *srcPtr,
 }
 
 template <typename T, typename U>
-__global__ void image_sum_pkd3_tensor(T *srcPtr,
-                                      uint2 srcStridesNH,
-                                      U *imageSumArr,
-                                      RpptROIPtr roiTensorPtrSrc)
+__global__ void tensor_sum_pkd3(T *srcPtr,
+                                uint2 srcStridesNH,
+                                U *imageSumArr,
+                                RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -378,12 +378,12 @@ __global__ void image_sum_pkd3_tensor(T *srcPtr,
 // -------------------- Set 2 - Kernel Executors --------------------
 
 template <typename T, typename U>
-RppStatus hip_exec_image_sum_tensor(T *srcPtr,
-                                    RpptDescPtr srcDescPtr,
-                                    U *imageSumArr,
-                                    RpptROIPtr roiTensorPtrSrc,
-                                    RpptRoiType roiType,
-                                    rpp::Handle& handle)
+RppStatus hip_exec_tensor_sum(T *srcPtr,
+                              RpptDescPtr srcDescPtr,
+                              U *imageSumArr,
+                              RpptROIPtr roiTensorPtrSrc,
+                              RpptRoiType roiType,
+                              rpp::Handle& handle)
 {
     if (roiType == RpptRoiType::LTRB)
         hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
@@ -405,7 +405,7 @@ RppStatus hip_exec_image_sum_tensor(T *srcPtr,
         imagePartialSumArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
         hipMemsetAsync(imagePartialSumArr, 0, imagePartialSumArrLength * sizeof(float));
         hipStreamSynchronize(handle.GetStream());
-        hipLaunchKernelGGL(image_sum_pln1_tensor,
+        hipLaunchKernelGGL(tensor_sum_pln1,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
                            dim3(localThreads_x, localThreads_y, localThreads_z),
                            0,
@@ -415,7 +415,7 @@ RppStatus hip_exec_image_sum_tensor(T *srcPtr,
                            imagePartialSumArr,
                            roiTensorPtrSrc);
         hipStreamSynchronize(handle.GetStream());
-        hipLaunchKernelGGL(image_sum_grid_result_tensor,
+        hipLaunchKernelGGL(tensor_sum_grid_result,
                            dim3(1, 1, gridDim_z),
                            dim3(1024, 1, 1),
                            0,
@@ -431,7 +431,7 @@ RppStatus hip_exec_image_sum_tensor(T *srcPtr,
         imagePartialSumArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
         hipMemsetAsync(imagePartialSumArr, 0, imagePartialSumArrLength * sizeof(float));
         hipStreamSynchronize(handle.GetStream());
-        hipLaunchKernelGGL(image_sum_pln3_tensor,
+        hipLaunchKernelGGL(tensor_sum_pln3,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
                            dim3(localThreads_x, localThreads_y, localThreads_z),
                            0,
@@ -441,7 +441,7 @@ RppStatus hip_exec_image_sum_tensor(T *srcPtr,
                            imagePartialSumArr,
                            roiTensorPtrSrc);
         hipStreamSynchronize(handle.GetStream());
-        hipLaunchKernelGGL(image_sum_grid_3channel_result_tensor,
+        hipLaunchKernelGGL(tensor_sum_grid_3channel_result,
                            dim3(1, 1, gridDim_z),
                            dim3(1024, 1, 1),
                            0,
@@ -457,7 +457,7 @@ RppStatus hip_exec_image_sum_tensor(T *srcPtr,
         imagePartialSumArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
         hipMemsetAsync(imagePartialSumArr, 0, imagePartialSumArrLength * sizeof(float));
         hipStreamSynchronize(handle.GetStream());
-        hipLaunchKernelGGL(image_sum_pkd3_tensor,
+        hipLaunchKernelGGL(tensor_sum_pkd3,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
                            dim3(localThreads_x, localThreads_y, localThreads_z),
                            0,
@@ -467,7 +467,7 @@ RppStatus hip_exec_image_sum_tensor(T *srcPtr,
                            imagePartialSumArr,
                            roiTensorPtrSrc);
         hipStreamSynchronize(handle.GetStream());
-        hipLaunchKernelGGL(image_sum_grid_3channel_result_tensor,
+        hipLaunchKernelGGL(tensor_sum_grid_3channel_result,
                            dim3(1, 1, gridDim_z),
                            dim3(1024, 1, 1),
                            0,

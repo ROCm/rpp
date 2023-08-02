@@ -23,6 +23,6 @@ THE SOFTWARE.
 #ifndef HOST_TENSOR_STATISTICAL_OPERATIONS_HPP
 #define HOST_TENSOR_STATISTICAL_OPERATIONS_HPP
 
-#include "kernel/image_sum.hpp"
+#include "kernel/tensor_sum.hpp"
 
 #endif // HOST_TENSOR_STATISTICAL_OPERATIONS_HPP

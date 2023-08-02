@@ -20,6 +20,6 @@ THE SOFTWARE.
 #ifndef HIP_TENSOR_STATISTICAL_OPERATIONS_HPP
 #define HIP_TENSOR_STATISTICAL_OPERATIONS_HPP
 
-#include "kernel/image_sum.hpp"
+#include "kernel/tensor_sum.hpp"
 
 #endif // HIP_TENSOR_STATISTICAL_OPERATIONS_HPP
