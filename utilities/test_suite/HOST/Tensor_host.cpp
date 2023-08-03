@@ -663,6 +663,7 @@ int main(int argc, char **argv)
                     if(srcDescPtr->c == 1)
                         reductionFuncResultArrLength = srcDescPtr->n;
                     Rpp32f mean[reductionFuncResultArrLength];
+                    int flag = 2; // compute both image and channel stddev by default
 
                     if(srcDescPtr->c == 1)
                     {
@@ -696,7 +697,7 @@ int main(int argc, char **argv)
                     startCpuTime = clock();
 
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_image_stddev_host(input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, mean, roiTensorPtrSrc, roiTypeSrc, handle);
+                        rppt_image_stddev_host(input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, mean, flag, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
