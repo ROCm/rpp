@@ -91,6 +91,55 @@ void verify_non_silent_region_detection(float *detectedIndex, float *detectionLe
         std::cerr<<"FAILED! "<<file_match<<"/"<<bs<<" outputs are matching with reference outputs"<<std::endl;
 }
 
+void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dstDims, string test_case, char audioNames[][1000])
+{
+    fstream ref_file;
+    string ref_path = get_current_dir_name();
+    string pattern = "HOST/audio/build";
+    remove_substring(ref_path, pattern);
+    ref_path = ref_path + "REFERENCE_OUTPUTS_AUDIO/";
+    int file_match = 0;
+    for (int batchcount = 0; batchcount < dstDescPtr->n; batchcount++)
+    {
+        string current_file_name = audioNames[batchcount];
+        size_t last_index = current_file_name.find_last_of(".");
+        current_file_name = current_file_name.substr(0, last_index);  // Remove extension from file name
+        string out_file = ref_path + test_case + "/" + test_case + "_ref_" + current_file_name + ".txt";
+        ref_file.open(out_file, ios::in);
+        if(!ref_file.is_open())
+        {
+            cerr<<"Unable to open the file specified! Please check the path of the file given as input"<<endl;
+            break;
+        }
+        int matched_indices = 0;
+        Rpp32f ref_val, out_val;
+        Rpp32f *dstPtrCurrent = dstPtr + batchcount * dstDescPtr->strides.nStride;
+        Rpp32f *dstPtrRow = dstPtrCurrent;
+        for(int i = 0; i < dstDims[batchcount].height; i++)
+        {
+            Rpp32f *dstPtrTemp = dstPtrRow;
+            for(int j = 0; j < dstDims[batchcount].width; j++)
+            {
+                ref_file>>ref_val;
+                out_val = dstPtrTemp[j];
+                bool invalid_comparision = ((out_val == 0.0f) && (ref_val != 0.0f));
+                if(!invalid_comparision && abs(out_val - ref_val) < 1e-20)
+                    matched_indices += 1;
+            }
+            dstPtrRow += dstDescPtr->strides.hStride;
+        }
+        ref_file.close();
+        if(matched_indices == (dstDims[batchcount].width * dstDims[batchcount].height) && matched_indices !=0)
+            file_match++;
+    }
+
+    std::cerr<<std::endl<<"Results for Test case: "<<test_case<<std::endl;
+    if(file_match == dstDescPtr->n)
+        std::cerr<<"PASSED!"<<std::endl;
+    else
+        std::cerr<<"FAILED! "<<file_match<<"/"<<dstDescPtr->n<<" outputs are matching with reference outputs"<<std::endl;
+}
+
 int main(int argc, char **argv)
 {
     // Handle inputs
@@ -113,6 +162,9 @@ int main(int argc, char **argv)
     {
         case 0:
             strcpy(funcName, "non_silent_region_detection");
+            break;
+        case 1:
+            strcpy(funcName, "to_decibels");
             break;
         default:
             strcpy(funcName, "testCase");
@@ -334,6 +386,31 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
 
             verify_non_silent_region_detection(detectedIndex, detectionLength, testCaseName, noOfAudioFiles, audioNames);
+            break;
+        }
+        case 1:
+        {
+            testCaseName = "to_decibels";
+            Rpp32f cutOffDB = std::log(1e-20);
+            Rpp32f multiplier = std::log(10);
+            Rpp32f referenceMagnitude = 1.0f;
+
+            for (i = 0; i < noOfAudioFiles; i++)
+            {
+                srcDims[i].height = srcLengthTensor[i];
+                srcDims[i].width = 1;
+            }
+
+            startWallTime = omp_get_wtime();
+            startCpuTime = clock();
+            if (inputBitDepth == 2)
+            {
+                rppt_to_decibels_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcDims, cutOffDB, multiplier, referenceMagnitude, handle);
+            }
+            else
+                missingFuncFlag = 1;
+
+            verify_output(outputf32, dstDescPtr, dstDims, testCaseName, audioNames);
             break;
         }
         default:
