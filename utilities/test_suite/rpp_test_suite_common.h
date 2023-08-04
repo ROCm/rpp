@@ -970,11 +970,10 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
             func += "Tensor_PLN1";
     }
     if(testCase == 21 ||testCase == 23 || testCase == 24)
-        refFile = refPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ func + "_interpolationType" + interpolationTypeName + ".csv";
+        func += "_interpolationType" + interpolationTypeName;
     else if(testCase == 8)
-        refFile = refPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ func + "_noiseType" + noiseTypeName + ".csv";
-    else
-        refFile = refPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ func + ".csv";
+        func += "_noiseType" + noiseTypeName;
+    refFile = refPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ func + ".csv";
 
     ifstream file(refFile);
     Rpp8u *refOutput;

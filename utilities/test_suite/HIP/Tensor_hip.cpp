@@ -62,15 +62,16 @@ int main(int argc, char **argv)
     int batchSize = atoi(argv[14]);
 
     bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23|| testCase == 24 || testCase == 40 || testCase == 41 || testCase == 49);
-    bool dualInputCase = (testCase == 2);
+    bool dualInputCase = (testCase == 2 || testCase == 30);
     bool randomOutputCase = (testCase == 84);
     bool kernelSizeCase = (testCase == 40 || testCase == 41 || testCase == 49);
     bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24);
     bool noiseTypeCase = (testCase == 8);
     bool pln1OutTypeCase = (testCase == 86);
+    int userROI = atoi(argv[15]);
     unsigned int verbosity = atoi(argv[11]);
     unsigned int additionalParam = additionalParamCase ? atoi(argv[7]) : 1;
-    int roiList[4] = { atoi(argv[15]), atoi(argv[16]), atoi(argv[17]), atoi(argv[18])};
+    int roiList[4] = { atoi(argv[16]), atoi(argv[17]), atoi(argv[18]), atoi(argv[19])};
 
     if (verbosity == 1)
     {
@@ -690,12 +691,27 @@ int main(int argc, char **argv)
             {
                 testCaseName = "crop";
 
-                for (i = 0; i < batchSize; i++)
+                if(userROI)
                 {
-                    roiTensorPtrSrc[i].xywhROI.xy.x = 10;
-                    roiTensorPtrSrc[i].xywhROI.xy.y = 10;
-                    dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
-                    dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiHeight / 2;
+                for (i = 0; i < batchSize; i++)
+                for (i = 0; i < batchSize; i++)
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        roiTensorPtrDst[i].xywhROI.xy.x = roiList[0];
+                        roiTensorPtrDst[i].xywhROI.xy.y = roiList[1];
+                        dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiList[2];
+                        dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiList[3];
+                    }
+                }
+                else
+                {
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        roiTensorPtrDst[i].xywhROI.xy.x = 10;
+                        roiTensorPtrDst[i].xywhROI.xy.y = 10;
+                        dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
+                        dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiHeight / 2;
+                    }
                 }
 
                 startWallTime = omp_get_wtime();
@@ -745,12 +761,25 @@ int main(int argc, char **argv)
                     }
                 }
 
-                for (i = 0; i < batchSize; i++)
+                if(userROI)
                 {
-                    roiTensorPtrDst[i].xywhROI.xy.x = 10;
-                    roiTensorPtrDst[i].xywhROI.xy.y = 10;
-                    dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
-                    dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiHeight / 2;
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        roiTensorPtrDst[i].xywhROI.xy.x = roiList[0];
+                        roiTensorPtrDst[i].xywhROI.xy.y = roiList[1];
+                        dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiList[2];
+                        dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiList[3];
+                    }
+                }
+                else
+                {
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        roiTensorPtrDst[i].xywhROI.xy.x = 10;
+                        roiTensorPtrDst[i].xywhROI.xy.y = 10;
+                        dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
+                        dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiHeight / 2;
+                    }
                 }
 
                 startWallTime = omp_get_wtime();

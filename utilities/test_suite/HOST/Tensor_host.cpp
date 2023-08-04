@@ -63,14 +63,15 @@ int main(int argc, char **argv)
     int batchSize = atoi(argv[14]);
 
     bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23 || testCase == 24);
-    bool dualInputCase = (testCase == 2);
+    bool dualInputCase = (testCase == 2 || testCase == 30);
     bool randomOutputCase = (testCase == 84);
     bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24);
     bool noiseTypeCase = (testCase == 8);
     bool pln1OutTypeCase = (testCase == 86);
+    int userROI = atoi(argv[15]);
     unsigned int verbosity = atoi(argv[11]);
     unsigned int additionalParam = additionalParamCase ? atoi(argv[7]) : 1;
-    int roiList[4] = { atoi(argv[15]), atoi(argv[16]), atoi(argv[17]), atoi(argv[18])};
+    int roiList[4] = { atoi(argv[16]), atoi(argv[17]), atoi(argv[18]), atoi(argv[19])};
 
     if (verbosity == 1)
     {
@@ -685,7 +686,17 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "crop";
 
-                    if(sizeof(roiList) == 0)
+                    if(userROI)
+                    {
+                        for (i = 0; i < batchSize; i++)
+                        {
+                            roiTensorPtrDst[i].xywhROI.xy.x = roiList[0];
+                            roiTensorPtrDst[i].xywhROI.xy.y = roiList[1];
+                            dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiList[2];
+                            dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiList[3];
+                        }
+                    }
+                    else
                     {
                         for (i = 0; i < batchSize; i++)
                         {
@@ -694,14 +705,6 @@ int main(int argc, char **argv)
                             dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
                             dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiHeight / 2;
                         }
-                    }
-
-                    for (i = 0; i < batchSize; i++)
-                    {
-                        roiTensorPtrDst[i].xywhROI.xy.x = roiList[0];
-                        roiTensorPtrDst[i].xywhROI.xy.y = roiList[1];
-                        dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiList[2];
-                        dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiList[3];
                     }
 
                     startWallTime = omp_get_wtime();
@@ -752,7 +755,17 @@ int main(int argc, char **argv)
                         }
                     }
 
-                    if(sizeof(roiList) == 0)
+                    if(userROI)
+                    {
+                        for (i = 0; i < batchSize; i++)
+                        {
+                            roiTensorPtrDst[i].xywhROI.xy.x = roiList[0];
+                            roiTensorPtrDst[i].xywhROI.xy.y = roiList[1];
+                            dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiList[2];
+                            dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiList[3];
+                        }
+                    }
+                    else
                     {
                         for (i = 0; i < batchSize; i++)
                         {
@@ -763,13 +776,6 @@ int main(int argc, char **argv)
                         }
                     }
 
-                    for (i = 0; i < batchSize; i++)
-                    {
-                        roiTensorPtrDst[i].xywhROI.xy.x = roiList[0];
-                        roiTensorPtrDst[i].xywhROI.xy.y = roiList[1];
-                        dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiList[2];
-                        dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiList[3];
-                    }
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 3 || inputBitDepth == 4 || inputBitDepth == 5)

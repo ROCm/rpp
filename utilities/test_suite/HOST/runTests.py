@@ -214,6 +214,7 @@ numRuns = args.num_runs
 preserveOutput = args.preserve_output
 batchSize = args.batch_size
 roiList = ['0', '0', '0', '0'] if args.roi is None else args.roi
+userRoi = 0 if args.roi is None else 1
 
 if preserveOutput == 0:
     validate_and_remove_folders(cwd, "OUTPUT_IMAGES_HOST")
@@ -290,18 +291,20 @@ if testType == 0:
                         continue
 
                     if case == "8":
+                        # Run all variants of noise type functions with additional argument of noiseType = gausssianNoise / shotNoise / saltandpepperNoise
                         for noiseType in range(3):
                             print(f"./Tensor_host {srcPath1} {srcPath2} {dstPathTemp} {bitDepth} {outputFormatToggle} {case} {noiseType} 0 ")
-                            result = subprocess.run(["./Tensor_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(noiseType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE)
+                            result = subprocess.run(["./Tensor_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(noiseType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize), str(userRoi)] + roiList, stdout=subprocess.PIPE)
                             print(result.stdout.decode())
                     elif case == "21" or case == "23" or case == "24":
+                        # Run all variants of interpolation functions with additional argument of interpolationType = bicubic / bilinear / gaussian / nearestneigbor / lanczos / triangular
                         for interpolationType in range(6):
                             print(f"./Tensor_host {srcPath1} {srcPath2} {dstPathTemp} {bitDepth} {outputFormatToggle} {case} {interpolationType} 0")
-                            result = subprocess.run(["./Tensor_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(interpolationType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE)
+                            result = subprocess.run(["./Tensor_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(interpolationType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize), str(userRoi)] + roiList, stdout=subprocess.PIPE)
                             print(result.stdout.decode())
                     else:
                         print(f"./Tensor_host {srcPath1} {srcPath2} {dstPathTemp} {bitDepth} {outputFormatToggle} {case} 0 {numRuns} {testType} {layout} 0")
-                        result = subprocess.run(["./Tensor_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), "0", str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE)
+                        result = subprocess.run(["./Tensor_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), "0", str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize), str(userRoi), str(userRoi)] + roiList, stdout=subprocess.PIPE)
                         print(result.stdout.decode())
 
                     print("------------------------------------------------------------------------------------------")
@@ -329,10 +332,11 @@ else:
                     if layout == 2 and outputFormatToggle == 1:
                         continue
                     if case == "8":
+                        # Run all variants of noise type functions with additional argument of noiseType = gausssianNoise / shotNoise / saltandpepperNoise
                         for noiseType in range(3):
                             with open(f"{loggingFolder}/Tensor_host_{log_file_layout}_raw_performance_log.txt", "a") as log_file:
                                 print(f"./Tensor_host {srcPath1} {srcPath2} {dstPath} {bitDepth} {outputFormatToggle} {case} {noiseType} 0 ")
-                                process = subprocess.Popen(["./Tensor_host", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(noiseType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+                                process = subprocess.Popen(["./Tensor_host", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(noiseType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize), str(userRoi)] + roiList, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
                                 while True:
                                     output = process.stdout.readline()
                                     if not output and process.poll() is not None:
@@ -340,10 +344,11 @@ else:
                                     print(output.strip())
                                     log_file.write(output)
                     elif case == "21" or case == "23" or case == "24":
+                        # Run all variants of interpolation functions with additional argument of interpolationType = bicubic / bilinear / gaussian / nearestneigbor / lanczos / triangular
                         for interpolationType in range(6):
                             with open(f"{loggingFolder}/Tensor_host_{log_file_layout}_raw_performance_log.txt", "a") as log_file:
                                 print(f"./Tensor_host {srcPath1} {srcPath2} {dstPath} {bitDepth} {outputFormatToggle} {case} {interpolationType} 0")
-                                process = subprocess.Popen(["./Tensor_host", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(interpolationType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+                                process = subprocess.Popen(["./Tensor_host", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(interpolationType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize), str(userRoi)] + roiList, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
                                 while True:
                                     output = process.stdout.readline()
                                     if not output and process.poll() is not None:
@@ -353,7 +358,7 @@ else:
                     else:
                         with open(f"{loggingFolder}/Tensor_host_{log_file_layout}_raw_performance_log.txt", "a") as log_file:
                             print(f"./Tensor_host {srcPath1} {srcPath2} {dstPath} {bitDepth} {outputFormatToggle} {case} 0 {numRuns} {testType} {layout} 0")
-                            process = subprocess.Popen(["./Tensor_host", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), "0", str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+                            process = subprocess.Popen(["./Tensor_host", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), "0", str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize), str(userRoi)] + roiList, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
                             while True:
                                 output = process.stdout.readline()
                                 if not output and process.poll() is not None:
@@ -365,19 +370,24 @@ else:
 
 # print the results of qa tests
 supportedCaseList = ['0', '1', '2', '4', '8', '13', '20', '21', '23', '24', '30', '31', '36', '37', '38', '39', '70', '80', '81', '83', '84', '85', '86']
+nonQACaseList = ['8', '24', '84']
 supportedCases = 0
 for num in caseList:
-    if num in supportedCaseList:
+    if qaMode == 1 and num not in nonQACaseList:
+        supportedCases += 1
+    elif qaMode == 0 and num in supportedCaseList:
         supportedCases += 1
 caseInfo = "Tests are run for " + str(supportedCases) + " supported cases out of the " + str(len(caseList)) + " cases requested"
 if qaMode and testType == 0:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
-    f = open(qaFilePath, 'r+')
-    print("---------------------------------- Results of QA Test ----------------------------------\n")
-    for line in f:
-        sys.stdout.write(line)
-        sys.stdout.flush()
-    f.write(caseInfo)
+    checkFile = os.path.isfile(qaFilePath)
+    if checkFile:
+        f = open(qaFilePath, 'r+')
+        print("---------------------------------- Results of QA Test ----------------------------------\n")
+        for line in f:
+            sys.stdout.write(line)
+            sys.stdout.flush()
+        f.write(caseInfo)
 print("\n-------------- " + caseInfo + " --------------")
 
 layoutDict = {0:"PKD3", 1:"PLN3", 2:"PLN1"}
