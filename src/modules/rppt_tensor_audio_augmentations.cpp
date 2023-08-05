@@ -149,3 +149,35 @@ RppStatus rppt_down_mixing_host(RppPtr_t srcPtr,
         return RPP_ERROR_NOT_IMPLEMENTED;
     }
 }
+
+/******************** slice_audio ********************/
+
+RppStatus rppt_slice_audio_host(RppPtr_t srcPtr,
+                                RpptDescPtr srcDescPtr,
+                                RppPtr_t dstPtr,
+                                RpptDescPtr dstDescPtr,
+                                Rpp32s *srcLengthTensor,
+                                Rpp32f *anchorTensor,
+                                Rpp32f *shapeTensor,
+                                Rpp32f *fillValues,
+                                rppHandle_t rppHandle)
+{
+    if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        slice_audio_host_tensor(static_cast<Rpp32f*>(srcPtr),
+                                srcDescPtr,
+                                static_cast<Rpp32f*>(dstPtr),
+                                dstDescPtr,
+                                srcLengthTensor,
+                                anchorTensor,
+                                shapeTensor,
+                                fillValues,
+                                rpp::deref(rppHandle));
+
+        return RPP_SUCCESS;
+    }
+    else
+    {
+        return RPP_ERROR_NOT_IMPLEMENTED;
+    }
+}

@@ -172,6 +172,9 @@ int main(int argc, char **argv)
         case 3:
             strcpy(funcName, "down_mixing");
             break;
+        case 4:
+            strcpy(funcName, "slice_audio");
+            break;
         default:
             strcpy(funcName, "testCase");
             break;
@@ -449,6 +452,37 @@ int main(int argc, char **argv)
             if (inputBitDepth == 2)
             {
                 rppt_down_mixing_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcLengthTensor, channelsTensor, normalizeWeights, handle);
+            }
+            else
+                missingFuncFlag = 1;
+
+            verify_output(outputf32, dstDescPtr, dstDims, testCaseName, audioNames);
+            break;
+        }
+        case 4:
+        {
+            testCaseName = "slice_audio";
+
+            Rpp32f fillValues[noOfAudioFiles];
+            Rpp32s srcDimsTensor[noOfAudioFiles * 2];
+            Rpp32f anchor[noOfAudioFiles];
+            Rpp32f shape[noOfAudioFiles];
+
+            // 1D slice arguments
+            for (i = 0, j = i * 2; i < noOfAudioFiles; i++, j += 2)
+            {
+                srcDimsTensor[j] = srcLengthTensor[i];
+                srcDimsTensor[j + 1] = 1;
+                shape[i] =  dstDims[i].width = 200;
+                anchor[i] = 100;
+            }
+            fillValues[0] = 0.0f;
+
+            startWallTime = omp_get_wtime();
+            startCpuTime = clock();
+            if (inputBitDepth == 2)
+            {
+                rppt_slice_audio_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcDimsTensor, anchor, shape, fillValues, handle);
             }
             else
                 missingFuncFlag = 1;
