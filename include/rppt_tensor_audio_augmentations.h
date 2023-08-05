@@ -167,6 +167,26 @@ RppStatus rppt_mel_filter_bank_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rpp
 
 RppStatus rppt_spectrogram_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcLengthTensor, bool centerWindows, bool reflectPadding, Rpp32f *windowFunction, Rpp32s nfft, Rpp32s power, Rpp32s windowLength, Rpp32s windowStep, RpptSpectrogramLayout layout, rppHandle_t rppHandle);
 
+/******************** resample ********************/
+
+// Resample audio buffer based on the target sample rate
+
+// *param[in] srcPtr source tensor memory
+// *param[in] srcDescPtr source tensor descriptor
+// *param[out] dstPtr destination tensor memory
+// *param[in] dstDescPtr destination tensor descriptor
+// *param[in] inRate Input sampling rate (1D tensor of size batchSize)
+// *param[in] outRate Output sampling rate (1D tensor of size batchSize)
+// *param[in] srcLengthTensor source audio buffer length (1D tensor of size batchSize)
+// *param[in] channelsTensor number of channels in audio buffer (1D tensor of size batchSize)
+// *param[in] quality resampling quality, where 0 is the lowest, and 100 is the highest
+// *param[in] rppHandle HIP-handle for "_gpu" variants and Host-handle for "_host" variants
+// *returns a  RppStatus enumeration.
+// *retval RPP_SUCCESS : successful completion
+// *retval RPP_ERROR : Error
+
+RppStatus rppt_resample_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *inRateTensor, Rpp32f *outRateTensor, Rpp32s *srcLengthTensor, Rpp32s *channelsTensor, Rpp32f quality, rppHandle_t rppHandle);
+
 #ifdef __cplusplus
 }
 #endif

@@ -236,6 +236,9 @@ int main(int argc, char **argv)
         case 6:
             strcpy(funcName, "spectrogram");
             break;
+        case 7:
+            strcpy(funcName, "resample");
+            break;
         default:
             strcpy(funcName, "testCase");
             break;
@@ -672,6 +675,48 @@ int main(int argc, char **argv)
             if (inputBitDepth == 2)
             {
                 rppt_spectrogram_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcLengthTensor, centerWindows, reflectPadding, windowFn, nfft, power, windowLength, windowStep, layout, handle);
+            }
+            else
+                missingFuncFlag = 1;
+
+            verify_output(outputf32, dstDescPtr, dstDims, testCaseName, audioNames);
+            break;
+        }
+        case 7:
+        {
+            testCaseName = "resample";
+
+            Rpp32f inRateTensor[noOfAudioFiles];
+            Rpp32f outRateTensor[noOfAudioFiles];
+
+            maxDstWidth = 0;
+            for(int i = 0; i < noOfAudioFiles; i++)
+            {
+                inRateTensor[i] = 16000;
+                outRateTensor[i] = 16000 * 1.15f;
+                Rpp32f scaleRatio = outRateTensor[i] / inRateTensor[i];
+                dstDims[i].width = (int)std::ceil(scaleRatio * srcLengthTensor[i]);
+                maxDstWidth = std::max(maxDstWidth, (int)dstDims[i].width);
+            }
+            Rpp32f quality = 50.0f;
+            dstDescPtr->w = maxDstWidth;
+
+            dstDescPtr->strides.nStride = dstDescPtr->c * dstDescPtr->w * dstDescPtr->h;
+            dstDescPtr->strides.hStride = dstDescPtr->c * dstDescPtr->w;
+            dstDescPtr->strides.wStride = dstDescPtr->c;
+            dstDescPtr->strides.cStride = 1;
+
+            // Set buffer sizes for dst
+            unsigned long long resampleBufferSize = (unsigned long long)dstDescPtr->h * (unsigned long long)dstDescPtr->w * (unsigned long long)dstDescPtr->c * (unsigned long long)dstDescPtr->n;
+
+            // Initialize host buffers for output
+            outputf32 = (Rpp32f *)realloc(outputf32, sizeof(Rpp32f) * resampleBufferSize);
+
+            startWallTime = omp_get_wtime();
+            startCpuTime = clock();
+            if (inputBitDepth == 2)
+            {
+                rppt_resample_host(inputf32, srcDescPtr, outputf32, dstDescPtr, inRateTensor, outRateTensor, srcLengthTensor, channelsTensor, quality, handle);
             }
             else
                 missingFuncFlag = 1;
