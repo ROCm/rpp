@@ -262,6 +262,12 @@ typedef enum
     REFLECT
 } RpptAudioBorderType;
 
+typedef enum
+{
+    SLANEY = 0,
+    HTK,
+}RpptMelScaleFormula;
+
 typedef struct
 {
     RppiPoint lt, rb;
