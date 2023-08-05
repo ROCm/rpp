@@ -143,6 +143,30 @@ RppStatus rppt_slice_audio_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_
 
 RppStatus rppt_mel_filter_bank_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr srcDims, Rpp32f maxFreq, Rpp32f minFreq, RpptMelScaleFormula melFormula, Rpp32s numFilter, Rpp32f sampleRate, bool normalize, rppHandle_t rppHandle);
 
+/******************** spectrogram ********************/
+
+// Produces a spectrogram from a 1D audio buffer
+
+// *param[in] srcPtr source tensor memory
+// *param[in] srcDescPtr source tensor descriptor
+// *param[out] dstPtr destination tensor memory
+// *param[in] dstDescPtr destination tensor descriptor
+// *param[in] srcLengthTensor source audio buffer length (1D tensor of size batchSize)
+// *param[in] centerWindows Indicates whether extracted windows should be padded so that the window function is centered at multiples of window_step
+// *param[in] reflectPadding Indicates the padding policy when sampling outside the bounds of the signal
+// *param[in] windowFunction Samples of the window function that will be multiplied to each extracted window when calculating the STFT
+// *param[in] nfft Size of the FFT
+// *param[in] power Exponent of the magnitude of the spectrum
+// *param[in] windowLength Window size in number of samples
+// *param[in] windowStep Step betweeen the STFT windows in number of samples
+// *param[in] layout output layout of spectrogram
+// *param[in] rppHandle HIP-handle for "_gpu" variants and Host-handle for "_host" variants
+// *returns a  RppStatus enumeration.
+// *retval RPP_SUCCESS : successful completion
+// *retval RPP_ERROR : Error
+
+RppStatus rppt_spectrogram_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcLengthTensor, bool centerWindows, bool reflectPadding, Rpp32f *windowFunction, Rpp32s nfft, Rpp32s power, Rpp32s windowLength, Rpp32s windowStep, RpptSpectrogramLayout layout, rppHandle_t rppHandle);
+
 #ifdef __cplusplus
 }
 #endif

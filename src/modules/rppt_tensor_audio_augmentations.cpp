@@ -219,3 +219,45 @@ RppStatus rppt_mel_filter_bank_host(RppPtr_t srcPtr,
         return RPP_ERROR_NOT_IMPLEMENTED;
     }
 }
+
+/******************** spectrogram ********************/
+
+RppStatus rppt_spectrogram_host(RppPtr_t srcPtr,
+                                RpptDescPtr srcDescPtr,
+                                RppPtr_t dstPtr,
+								RpptDescPtr dstDescPtr,
+                                Rpp32s *srcLengthTensor,
+                                bool centerWindows,
+                                bool reflectPadding,
+                                Rpp32f *windowFunction,
+                                Rpp32s nfft,
+                                Rpp32s power,
+                                Rpp32s windowLength,
+                                Rpp32s windowStep,
+                                RpptSpectrogramLayout layout,
+                                rppHandle_t rppHandle)
+{
+    if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        spectrogram_host_tensor(static_cast<Rpp32f*>(srcPtr),
+                                srcDescPtr,
+                                static_cast<Rpp32f*>(dstPtr),
+                                dstDescPtr,
+                                srcLengthTensor,
+                                centerWindows,
+                                reflectPadding,
+                                windowFunction,
+                                nfft,
+                                power,
+                                windowLength,
+                                windowStep,
+                                layout,
+                                rpp::deref(rppHandle));
+
+        return RPP_SUCCESS;
+    }
+    else
+    {
+        return RPP_ERROR_NOT_IMPLEMENTED;
+    }
+}

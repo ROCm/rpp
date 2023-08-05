@@ -274,6 +274,12 @@ typedef struct
 
 } RpptRoiLtrb;
 
+typedef enum
+{
+    FT = 0,
+    TF,
+}RpptSpectrogramLayout;
+
 typedef struct
 {
     RppiPoint xy;
