@@ -89,3 +89,33 @@ RppStatus rppt_to_decibels_host(RppPtr_t srcPtr,
         return RPP_ERROR_NOT_IMPLEMENTED;
     }
 }
+
+/******************** pre_emphasis_filter ********************/
+
+RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr,
+                                        RpptDescPtr srcDescPtr,
+                                        RppPtr_t dstPtr,
+                                        RpptDescPtr dstDescPtr,
+                                        Rpp32s *srcLengthTensor,
+                                        Rpp32f *coeffTensor,
+                                        RpptAudioBorderType borderType,
+                                        rppHandle_t rppHandle)
+{
+    if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        pre_emphasis_filter_host_tensor(static_cast<Rpp32f*>(srcPtr),
+                                        srcDescPtr,
+                                        static_cast<Rpp32f*>(dstPtr),
+                                        dstDescPtr,
+                                        srcLengthTensor,
+                                        coeffTensor,
+                                        borderType,
+                                        rpp::deref(rppHandle));
+
+        return RPP_SUCCESS;
+    }
+    else
+    {
+        return RPP_ERROR_NOT_IMPLEMENTED;
+    }
+}
