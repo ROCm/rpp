@@ -148,7 +148,7 @@ RppStatus rppt_tensor_sum_gpu(RppPtr_t srcPtr,
     {
         hip_exec_tensor_sum(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
                             srcDescPtr,
-                            static_cast<Rpp32f*>(tensorSumArr),
+                            static_cast<Rpp64u*>(tensorSumArr),
                             roiTensorPtrSrc,
                             roiType,
                             rpp::deref(rppHandle));
@@ -175,7 +175,7 @@ RppStatus rppt_tensor_sum_gpu(RppPtr_t srcPtr,
     {
         hip_exec_tensor_sum(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
                             srcDescPtr,
-                            static_cast<Rpp32f*>(tensorSumArr),
+                            static_cast<Rpp64s*>(tensorSumArr),
                             roiTensorPtrSrc,
                             roiType,
                             rpp::deref(rppHandle));
