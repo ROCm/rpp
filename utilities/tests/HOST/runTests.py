@@ -121,13 +121,13 @@ def directory_name_generator(qaMode, affinity, type, case, path):
 # Process the layout based on the given parameters and generate the directory name and log file layout.
 def process_layout(layout, qaMode, case, dstPath):
     if layout == 0:
-        dstPathTemp = directory_name_generator(qaMode, "hip", "pkd3", case, dstPath)
+        dstPathTemp = directory_name_generator(qaMode, "host", "pkd3", case, dstPath)
         log_file_layout = "pkd3"
     elif layout == 1:
-        dstPathTemp = directory_name_generator(qaMode, "hip", "pln3", case, dstPath)
+        dstPathTemp = directory_name_generator(qaMode, "host", "pln3", case, dstPath)
         log_file_layout = "pln3"
     elif layout == 2:
-        dstPathTemp = directory_name_generator(qaMode, "hip", "pln1", case, dstPath)
+        dstPathTemp = directory_name_generator(qaMode, "host", "pln1", case, dstPath)
         log_file_layout = "pln1"
 
     return dstPathTemp, log_file_layout
