@@ -185,9 +185,10 @@ int main(int argc, char **argv)
         hipMemcpy(d_dstPtr, dstPtr, 36 * sizeof(Rpp8u), hipMemcpyHostToDevice);
 
         start = clock();
-        
-        rppi_tensor_transpose_u8_gpu(d_srcPtr1, d_dstPtr, inTensorDim, perm, handle);
-      
+        if (ip_bitDepth == 0)
+        {
+            rppi_tensor_transpose_u8_gpu(d_srcPtr1, d_dstPtr, inTensorDim, perm, handle);
+        }      
         end = clock();
 
         if (missingFuncFlag != 1)
