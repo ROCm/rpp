@@ -48,6 +48,7 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 # RPP Default Options
 set(DEFAULT_BUILD_TYPE "Release")
+option(BUILD_WITH_AMD_ADVANCE "Build MIVisionX for advanced AMD GPU Architecture"    OFF)
 
 # Set message options
 if(NOT WIN32)
@@ -178,7 +179,10 @@ if("${BACKEND}" STREQUAL "HIP")
         endif()
     endif()
     list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/hip ${ROCM_PATH})
-    set(DEFAULT_AMDGPU_TARGETS "gfx803;gfx900;gfx906;gfx908;gfx90a;gfx940;gfx941;gfx1030")
+    set(DEFAULT_AMDGPU_TARGETS "gfx803;gfx900;gfx906;gfx908;gfx90a;gfx940;gfx1030")
+    if (BUILD_WITH_AMD_ADVANCE)
+        set(DEFAULT_AMDGPU_TARGETS ${DEFAULT_AMDGPU_TARGETS} "gfx941")
+    endif()
     set(AMDGPU_TARGETS "${DEFAULT_AMDGPU_TARGETS}" CACHE STRING "List of specific machine types for library to target")
     find_package(HIP QUIET)
     if(HIP_FOUND)
