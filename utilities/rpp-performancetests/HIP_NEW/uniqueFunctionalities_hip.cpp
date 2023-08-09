@@ -132,6 +132,12 @@ int main(int argc, char **argv)
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
+        printf("Usage\n");
+        for (auto elem : augmentationBitDepthMap)
+        {
+            for(unsigned j = 0; j < elem.second.size(); j++)
+                printf("./uniqueFunctionalities_hip %s %d\n", elem.second[j].c_str(), elem.first);
+        }
         return -1;
     }
     if(test_case < 0 || test_case == 6 || test_case == 7 || test_case > 8)
