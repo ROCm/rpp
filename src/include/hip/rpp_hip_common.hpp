@@ -42,6 +42,10 @@ typedef struct { float  data[24]; } d_float24_s;
 typedef struct { half   data[24]; } d_half24_s;
 typedef struct { uchar  data[24]; } d_uchar24_s;
 typedef struct { schar  data[24]; } d_schar24sc1s_s;
+typedef struct { uchar  data[ 8]; } d_uchar8_s;
+typedef struct { schar  data[ 4]; } d_schar4_s;
+typedef struct { uint   data[24]; } d_uint24_s;
+typedef struct { int    data[24]; } d_int24_s;
 
 // float
 typedef union { float f1[6];    float2 f2[3];                                                   }   d_float6;
@@ -52,13 +56,13 @@ typedef union { float f1[24];   float2 f2[12];  float3 f3[8];   float4 f4[6];   
 
 // uint
 typedef union { uint ui1[6];    uint2 ui2[3];                                                   }   d_uint6;
-typedef union { uint ui1[8];                                                                    }   d_uint8;
-typedef union { uint ui1[24];   d_uint8 ui8[3];                                                 }   d_uint24;
+typedef union { uint ui1[8];    uint4 ui4[2];                                                   }   d_uint8;
+typedef union { uint ui1[24];   uint4 ui4[6];   d_uint8 ui8[3];                                 }   d_uint24;
 
 // int
 typedef union { int i1[6];      int2 i2[3];                                                     }   d_int6;
-typedef union { int i1[8];                                                                      }   d_int8;
-typedef union { int ui1[24];    d_int8 i8[3];                                                   }   d_int24;
+typedef union { int i1[8];      int4 i4[2];                                                     }   d_int8;
+typedef union { int ui1[24];    int4 i4[6];     d_int8 i8[3];                                   }   d_int24;
 
 // half
 typedef struct { half h1[3];                                                                    }   d_half3_s;
@@ -69,12 +73,12 @@ typedef union { half h1[24];    half2 h2[12];   d_half3_s h3[8];    d_half8 h8[3
 
 // uchar
 typedef union { uchar uc1[8];   uchar4 uc4[2];                                                  }   d_uchar8;
-typedef union { uchar uc1[24];  uchar3 uc3[8];  d_uchar8 uc8[3];                                }   d_uchar24;
+typedef union { uchar uc1[24];  uchar4 uc4[6];   uchar3 uc3[8];  d_uchar8 uc8[3];               }   d_uchar24;
 
 // schar
 typedef struct { schar sc1[3];                                                                  }   d_schar3_s;
-typedef struct { schar sc1[8];                                                                  }   d_schar8_s;
-typedef struct { d_schar8_s sc8[3];   d_schar3_s sc3[8];                                        }   d_schar24_s;
+typedef struct { schar sc1[8];        d_schar4_s sc4[3];                                        }   d_schar8_s;
+typedef struct { d_schar8_s sc8[3];   d_schar4_s sc4[6];  d_schar3_s sc3[8];                    }   d_schar24_s;
 
 enum class RPPTensorDataType
 {
@@ -348,6 +352,32 @@ __device__ __forceinline__ uint rpp_hip_pack_i8(float4 src)
     dst_c4.x = (schar)(src.x);
 
     return *(uint *)&dst_c4;
+}
+
+// Packing to Uints
+
+__device__ __forceinline__ uint4 rpp_hip_pack_uint4(uchar4 src)
+{
+    uint4 dst_ui4;
+    dst_ui4.w = (uint)(src.w);
+    dst_ui4.z = (uint)(src.z);
+    dst_ui4.y = (uint)(src.y);
+    dst_ui4.x = (uint)(src.x);
+
+    return *(uint4 *)&dst_ui4;
+}
+
+// Packing to Ints
+
+__device__ __forceinline__ int4 rpp_hip_pack_int4(d_schar4_s src)
+{
+    int4 dst_i4;
+    dst_i4.w = (int)(src.data[3] + 128) - 128;
+    dst_i4.z = (int)(src.data[2] + 128) - 128;
+    dst_i4.y = (int)(src.data[1] + 128) - 128;
+    dst_i4.x = (int)(src.data[0] + 128) - 128;
+
+    return *(int4 *)&dst_i4;
 }
 
 // -------------------- Set 2 - Un-Packing --------------------
@@ -1432,6 +1462,90 @@ __device__ __forceinline__ void rpp_hip_layouttoggle24_pln3_to_pkd3(T *pixpln3Pt
     pixpkd3_T24.data[23] = pixpln3Ptr_T24->data[23];
 
     *pixpln3Ptr_T24 = pixpkd3_T24;
+}
+
+// ------------------------- Set 8 - Loads to uint / int --------------------------
+
+__device__ __forceinline__ void rpp_hip_load8_to_uint8(uchar *srcPtr, d_uint8 *srcPtr_ui8)
+{
+    d_uchar8 src_uc8;
+    *(d_uchar8_s *)&src_uc8 = *(d_uchar8_s *)srcPtr;
+
+    srcPtr_ui8->ui4[0] = rpp_hip_pack_uint4(src_uc8.uc4[0]);
+    srcPtr_ui8->ui4[1] = rpp_hip_pack_uint4(src_uc8.uc4[1]);
+}
+
+__device__ __forceinline__ void rpp_hip_load8_to_int8(schar *srcPtr, d_int8 *srcPtr_i8)
+{
+    d_schar8_s src_sc8;
+    *(d_schar8_s *)&src_sc8 = *(d_schar8_s *)srcPtr;
+
+    srcPtr_i8->i4[0] = rpp_hip_pack_int4(src_sc8.sc4[0]);
+    srcPtr_i8->i4[1] = rpp_hip_pack_int4(src_sc8.sc4[1]);
+}
+
+__device__ __forceinline__ void rpp_hip_load24_pln3_to_uint24_pln3(uchar *srcPtr, uint increment, d_uint24 *srcPtr_ui24)
+{
+    d_uchar24 src_uc24;
+    *(d_uchar8_s *)&src_uc24.uc8[0] = *(d_uchar8_s *)srcPtr;
+    srcPtr += increment;
+    *(d_uchar8_s *)&src_uc24.uc8[1] = *(d_uchar8_s *)srcPtr;
+    srcPtr += increment;
+    *(d_uchar8_s *)&src_uc24.uc8[2] = *(d_uchar8_s *)srcPtr;
+
+    srcPtr_ui24->ui4[0] = rpp_hip_pack_uint4(src_uc24.uc4[0]);    // write R00-R03
+    srcPtr_ui24->ui4[1] = rpp_hip_pack_uint4(src_uc24.uc4[1]);    // write R04-R07
+    srcPtr_ui24->ui4[2] = rpp_hip_pack_uint4(src_uc24.uc4[2]);    // write G00-G03
+    srcPtr_ui24->ui4[3] = rpp_hip_pack_uint4(src_uc24.uc4[3]);    // write G04-G07
+    srcPtr_ui24->ui4[4] = rpp_hip_pack_uint4(src_uc24.uc4[4]);    // write B00-B03
+    srcPtr_ui24->ui4[5] = rpp_hip_pack_uint4(src_uc24.uc4[5]);    // write B04-B07
+}
+
+__device__ __forceinline__ void rpp_hip_load24_pln3_to_int24_pln3(schar *srcPtr, uint increment, d_int24 *srcPtr_i24)
+{
+    d_schar24_s src_sc24;
+    *(d_schar8_s *)&src_sc24.sc8[0] = *(d_schar8_s *)srcPtr;
+    srcPtr += increment;
+    *(d_schar8_s *)&src_sc24.sc8[1] = *(d_schar8_s *)srcPtr;
+    srcPtr += increment;
+    *(d_schar8_s *)&src_sc24.sc8[2] = *(d_schar8_s *)srcPtr;
+
+    srcPtr_i24->i4[0] = rpp_hip_pack_int4(src_sc24.sc4[0]);    // write R00-R03
+    srcPtr_i24->i4[1] = rpp_hip_pack_int4(src_sc24.sc4[1]);    // write R04-R07
+    srcPtr_i24->i4[2] = rpp_hip_pack_int4(src_sc24.sc4[2]);    // write G00-G03
+    srcPtr_i24->i4[3] = rpp_hip_pack_int4(src_sc24.sc4[3]);    // write G04-G07
+    srcPtr_i24->i4[4] = rpp_hip_pack_int4(src_sc24.sc4[4]);    // write B00-B03
+    srcPtr_i24->i4[5] = rpp_hip_pack_int4(src_sc24.sc4[5]);    // write B04-B07
+}
+
+__device__ __forceinline__ void rpp_hip_load24_pkd3_to_uint24_pln3(uchar *srcPtr, d_uint24 *srcPtr_ui24)
+{
+    d_uchar24 src_uc24;
+    *(d_uchar24_s *)&src_uc24 = *(d_uchar24_s *)srcPtr;
+    rpp_hip_layouttoggle24_pkd3_to_pln3((d_uchar24_s *)&src_uc24);
+
+
+    srcPtr_ui24->ui4[0] = rpp_hip_pack_uint4(src_uc24.uc4[0]);    // write R00-R03
+    srcPtr_ui24->ui4[1] = rpp_hip_pack_uint4(src_uc24.uc4[1]);    // write R04-R07
+    srcPtr_ui24->ui4[2] = rpp_hip_pack_uint4(src_uc24.uc4[2]);    // write G00-G03
+    srcPtr_ui24->ui4[3] = rpp_hip_pack_uint4(src_uc24.uc4[3]);    // write G04-G07
+    srcPtr_ui24->ui4[4] = rpp_hip_pack_uint4(src_uc24.uc4[4]);    // write B00-B03
+    srcPtr_ui24->ui4[5] = rpp_hip_pack_uint4(src_uc24.uc4[5]);    // write B04-B07
+}
+
+__device__ __forceinline__ void rpp_hip_load24_pkd3_to_int24_pln3(schar *srcPtr, d_int24 *srcPtr_i24)
+{
+    d_schar24_s src_sc24;
+    *(d_schar24_s *)&src_sc24 = *(d_schar24_s *)srcPtr;
+    rpp_hip_layouttoggle24_pkd3_to_pln3((d_schar24sc1s_s *)&src_sc24);
+
+
+    srcPtr_i24->i4[0] = rpp_hip_pack_int4(src_sc24.sc4[0]);    // write R00-R03
+    srcPtr_i24->i4[1] = rpp_hip_pack_int4(src_sc24.sc4[1]);    // write R04-R07
+    srcPtr_i24->i4[2] = rpp_hip_pack_int4(src_sc24.sc4[2]);    // write G00-G03
+    srcPtr_i24->i4[3] = rpp_hip_pack_int4(src_sc24.sc4[3]);    // write G04-G07
+    srcPtr_i24->i4[4] = rpp_hip_pack_int4(src_sc24.sc4[4]);    // write B00-B03
+    srcPtr_i24->i4[5] = rpp_hip_pack_int4(src_sc24.sc4[5]);    // write B04-B07
 }
 
 // /******************** DEVICE MATH HELPER FUNCTIONS ********************/
