@@ -663,7 +663,7 @@ int main(int argc, char **argv)
                     memcpy(permutedArray + (batchSize * 3), initialPermuteArray, batchSize * sizeof(Rpp32u));
                 }
 
-                for (uint i = 0, j = 0; j < batchSize * 4; i++, j += 4)
+                for (uint i = 0, j = 0; i < batchSize, j < (batchSize * 4); i++, j += 4)
                 {
                     permutationTensor[j] = permutedArray[i];
                     permutationTensor[j + 1] = permutedArray[i + batchSize];
