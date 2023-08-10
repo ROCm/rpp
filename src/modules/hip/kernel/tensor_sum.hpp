@@ -28,7 +28,7 @@ __global__ void tensor_sum_grid_result(Rpp32u *srcPtr,
     if (id_x + 8 > xBufferLength)
         for(int i = xDiff; i < 8; i++)
             src_ui8->ui1[i] = 0;                                    // local memory reset of invalid values (from the vectorized global load) to 0
-    src_ui8->ui4[0] += src_ui8->ui4[1];                                        // perform small work of vectorized uint4 addition
+    src_ui8->ui4[0] += src_ui8->ui4[1];                             // perform small work of vectorized uint4 addition
     partialSumShared[hipThreadIdx_x] += (src_ui8->ui1[0] +
                                          src_ui8->ui1[1] +
                                          src_ui8->ui1[2] +
@@ -99,8 +99,8 @@ __global__ void tensor_sum_grid_result(float *srcPtr,
     int id_x = hipThreadIdx_x * 8;
     int id_z = hipBlockIdx_z;
 
-    __shared__ float partialSumShared[1024];                           // 8192 floats of src reduced to 1024 in a 1024 x 1 thread block
-    partialSumShared[hipThreadIdx_x] = 0.0f;                           // initialization of Shared to 0 using all 1024 x 1 threads
+    __shared__ float partialSumShared[1024];                        // 8192 floats of src reduced to 1024 in a 1024 x 1 thread block
+    partialSumShared[hipThreadIdx_x] = 0.0f;                        // initialization of Shared to 0 using all 1024 x 1 threads
 
     if (id_x >= xBufferLength)
     {
@@ -144,7 +144,7 @@ __global__ void tensor_sum_grid_3channel_result(Rpp32u *srcPtr,
     int id_x = hipThreadIdx_x * 8;
     int id_z = hipBlockIdx_z;
 
-    __shared__ uint partialRSumShared[1024];                                       // 8192 uints of src reduced to 1024 in a 1024 x 1 thread block
+    __shared__ uint partialRSumShared[1024];                                     // 8192 uints of src reduced to 1024 in a 1024 x 1 thread block
     __shared__ uint partialGSumShared[1024];
     __shared__ uint partialBSumShared[1024];
     partialRSumShared[hipThreadIdx_x] = 0;                                       // initialization of Shared to 0 using all 1024 x 1 threads
@@ -162,7 +162,7 @@ __global__ void tensor_sum_grid_3channel_result(Rpp32u *srcPtr,
 
     d_uint24 *src_ui24;
     src_ui24 = (d_uint24 *)(srcPtr + srcIdx);
-    rpp_hip_layouttoggle24_pkd3_to_pln3((d_uint24_s *)&src_ui24);
+    rpp_hip_layouttoggle24_pkd3_to_pln3((d_uint24_s *)src_ui24);
 
     if (id_x + 8 > xBufferLength)                                                // local memory reset of invalid values (from the vectorized global load) to 0.0f
     {
@@ -173,21 +173,22 @@ __global__ void tensor_sum_grid_3channel_result(Rpp32u *srcPtr,
             src_ui24->ui8[2].ui1[i] = 0;
         }
     }
+
     src_ui24->ui8[0].ui4[0] += src_ui24->ui8[0].ui4[1];
     src_ui24->ui8[1].ui4[0] += src_ui24->ui8[1].ui4[1];
     src_ui24->ui8[2].ui4[0] += src_ui24->ui8[2].ui4[1];
     partialRSumShared[hipThreadIdx_x] = (src_ui24->ui8[0].ui1[0] +
                                          src_ui24->ui8[0].ui1[1] +
                                          src_ui24->ui8[0].ui1[2] +
-                                         src_ui24->ui8[0].ui1[3]);                      // perform small work of reducing R uint32s to uint using 1024 threads and store in Shared
+                                         src_ui24->ui8[0].ui1[3]);               // perform small work of reducing R uint32s to uint using 1024 threads and store in Shared
     partialGSumShared[hipThreadIdx_x] = (src_ui24->ui8[1].ui1[0] +
                                          src_ui24->ui8[1].ui1[1] +
                                          src_ui24->ui8[1].ui1[2] +
-                                         src_ui24->ui8[1].ui1[3]);                      // perform small work of reducing G uint32s to uint using 1024 threads and store in Shared
+                                         src_ui24->ui8[1].ui1[3]);               // perform small work of reducing G uint32s to uint using 1024 threads and store in Shared
     partialBSumShared[hipThreadIdx_x] = (src_ui24->ui8[2].ui1[0] +
                                          src_ui24->ui8[2].ui1[1] +
                                          src_ui24->ui8[2].ui1[2] +
-                                         src_ui24->ui8[2].ui1[3]);                      // perform small work of reducing B uint32s to uint using 1024 threads and store in Shared
+                                         src_ui24->ui8[2].ui1[3]);               // perform small work of reducing B uint32s to uint using 1024 threads and store in Shared
 
     __syncthreads();                                                             // syncthreads after Shared load
 
@@ -222,7 +223,7 @@ __global__ void tensor_sum_grid_3channel_result(Rpp32s *srcPtr,
     int id_x = hipThreadIdx_x * 8;
     int id_z = hipBlockIdx_z;
 
-    __shared__ int partialRSumShared[1024];                                       // 8192 uints of src reduced to 1024 in a 1024 x 1 thread block
+    __shared__ int partialRSumShared[1024];                                      // 8192 uints of src reduced to 1024 in a 1024 x 1 thread block
     __shared__ int partialGSumShared[1024];
     __shared__ int partialBSumShared[1024];
     partialRSumShared[hipThreadIdx_x] = 0;                                       // initialization of Shared to 0 using all 1024 x 1 threads
@@ -240,7 +241,7 @@ __global__ void tensor_sum_grid_3channel_result(Rpp32s *srcPtr,
 
     d_int24 *src_i24;
     src_i24 = (d_int24 *)(srcPtr + srcIdx);
-    rpp_hip_layouttoggle24_pkd3_to_pln3((d_int24_s *)&src_i24);
+    rpp_hip_layouttoggle24_pkd3_to_pln3((d_int24_s *)src_i24);
 
     if (id_x + 8 > xBufferLength)                                                // local memory reset of invalid values (from the vectorized global load) to 0
     {
@@ -251,21 +252,22 @@ __global__ void tensor_sum_grid_3channel_result(Rpp32s *srcPtr,
             src_i24->i8[2].i1[i] = 0;
         }
     }
+
     src_i24->i8[0].i4[0] += src_i24->i8[0].i4[1];
     src_i24->i8[1].i4[0] += src_i24->i8[1].i4[1];
     src_i24->i8[2].i4[0] += src_i24->i8[2].i4[1];
     partialRSumShared[hipThreadIdx_x] = (src_i24->i8[0].i1[0] +
                                          src_i24->i8[0].i1[1] +
                                          src_i24->i8[0].i1[2] +
-                                         src_i24->i8[0].i1[3]);                      // perform small work of reducing R int32s to int using 1024 threads and store in Shared
+                                         src_i24->i8[0].i1[3]);                  // perform small work of reducing R int32s to int using 1024 threads and store in Shared
     partialGSumShared[hipThreadIdx_x] = (src_i24->i8[1].i1[0] +
                                          src_i24->i8[1].i1[1] +
                                          src_i24->i8[1].i1[2] +
-                                         src_i24->i8[1].i1[3]);                      // perform small work of reducing G int32s to int using 1024 threads and store in Shared
+                                         src_i24->i8[1].i1[3]);                  // perform small work of reducing G int32s to int using 1024 threads and store in Shared
     partialBSumShared[hipThreadIdx_x] = (src_i24->i8[2].i1[0] +
                                          src_i24->i8[2].i1[1] +
                                          src_i24->i8[2].i1[2] +
-                                         src_i24->i8[2].i1[3]);                      // perform small work of reducing B int32s to int using 1024 threads and store in Shared
+                                         src_i24->i8[2].i1[3]);                  // perform small work of reducing B int32s to int using 1024 threads and store in Shared
 
     __syncthreads();                                                             // syncthreads after Shared load
 
@@ -300,10 +302,10 @@ __global__ void tensor_sum_grid_3channel_result(float *srcPtr,
     int id_x = hipThreadIdx_x * 8;
     int id_z = hipBlockIdx_z;
 
-    __shared__ float partialRSumShared[1024];                                       // 8192 floats of src reduced to 1024 in a 1024 x 1 thread block
+    __shared__ float partialRSumShared[1024];                                    // 8192 floats of src reduced to 1024 in a 1024 x 1 thread block
     __shared__ float partialGSumShared[1024];
     __shared__ float partialBSumShared[1024];
-    partialRSumShared[hipThreadIdx_x] = 0.0f;                                       // initialization of Shared to 0 using all 1024 x 1 threads
+    partialRSumShared[hipThreadIdx_x] = 0.0f;                                    // initialization of Shared to 0 using all 1024 x 1 threads
     partialGSumShared[hipThreadIdx_x] = 0.0f;
     partialBSumShared[hipThreadIdx_x] = 0.0f;
 
@@ -399,12 +401,12 @@ __global__ void tensor_sum_pln1(Rpp8u *srcPtr,
     if (id_x + 8 > roiTensorPtrSrc[id_z].xywhROI.roiWidth)
         for(int i = xDiff; i < 8; i++)
             src_ui8.ui1[i] = 0;                                            // local memory reset of invalid values (from the vectorized global load) to 0
-    src_ui8.ui4[0] += src_ui8.ui4[1];                                        // perform small work of vectorized uint4 addition
+    src_ui8.ui4[0] += src_ui8.ui4[1];                                      // perform small work of vectorized uint4 addition
     partialSumSharedRowPtr[hipThreadIdx_x] += (src_ui8.ui1[0] +
                                                src_ui8.ui1[1] +
                                                src_ui8.ui1[2] +
-                                               src_ui8.ui1[3]);      // perform small work of reducing uint8s to uint using 16 x 16 threads and store in Shared
-    __syncthreads();                                                        // syncthreads after Shared load
+                                               src_ui8.ui1[3]);            // perform small work of reducing uint8s to uint using 16 x 16 threads and store in Shared
+    __syncthreads();                                                       // syncthreads after Shared load
 
     // Reduction of 16 uints on 16 threads per block in x dimension (for every y dimension)
     for (int threadMax = 8; threadMax >= 1; threadMax /= 2)
@@ -454,16 +456,16 @@ __global__ void tensor_sum_pln1(Rpp8s *srcPtr,
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
 
     d_int8 src_i8;
-    rpp_hip_load8_to_int8(srcPtr + srcIdx, &src_i8);                             // load 8 pixels to local memory
+    rpp_hip_load8_to_int8(srcPtr + srcIdx, &src_i8);                        // load 8 pixels to local memory
 
     if (id_x + 8 > roiTensorPtrSrc[id_z].xywhROI.roiWidth)
         for(int i = xDiff; i < 8; i++)
-            src_i8.i1[i] = 0;                                             // local memory reset of invalid values (from the vectorized global load) to 0
+            src_i8.i1[i] = 0;                                               // local memory reset of invalid values (from the vectorized global load) to 0
     src_i8.i4[0] += src_i8.i4[1];
     partialSumSharedRowPtr[hipThreadIdx_x] += (src_i8.i1[0] +
                                                src_i8.i1[1] +
                                                src_i8.i1[2] +
-                                               src_i8.i1[3]);       // perform small work of reducing int4s to int using 16 x 16 threads and store in Shared
+                                               src_i8.i1[3]);               // perform small work of reducing int4s to int using 16 x 16 threads and store in Shared
     __syncthreads();                                                        // syncthreads after Shared load
 
     // Reduction of 16 ints on 16 threads per block in x dimension (for every y dimension)
@@ -501,9 +503,9 @@ __global__ void tensor_sum_pln1(T *srcPtr,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    __shared__ float partialSumShared[16][16];                                 // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
-    float *partialSumSharedRowPtr = &partialSumShared[hipThreadIdx_y][0];         // float pointer to beginning of each row in Shared
-    partialSumSharedRowPtr[hipThreadIdx_x] = 0.0f;                             // initialization of Shared to 0 using all 16 x 16 threads
+    __shared__ float partialSumShared[16][16];                              // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
+    float *partialSumSharedRowPtr = &partialSumShared[hipThreadIdx_y][0];   // float pointer to beginning of each row in Shared
+    partialSumSharedRowPtr[hipThreadIdx_x] = 0.0f;                          // initialization of Shared to 0.0f using all 16 x 16 threads
 
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
     {
@@ -560,10 +562,10 @@ __global__ void tensor_sum_pln3(Rpp8u *srcPtr,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    __shared__ uint partialRSumShared[16][16];                                                    // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
+    __shared__ uint partialRSumShared[16][16];                                                  // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
     __shared__ uint partialGSumShared[16][16];
     __shared__ uint partialBSumShared[16][16];
-    uint *partialRSumSharedRowPtr = &partialRSumShared[hipThreadIdx_y][0];                           // uint pointer to beginning of each row in Shared
+    uint *partialRSumSharedRowPtr = &partialRSumShared[hipThreadIdx_y][0];                      // uint pointer to beginning of each row in Shared
     uint *partialGSumSharedRowPtr = &partialGSumShared[hipThreadIdx_y][0];
     uint *partialBSumSharedRowPtr = &partialBSumShared[hipThreadIdx_y][0];
     partialRSumSharedRowPtr[hipThreadIdx_x] = 0;                                                // initialization of Shared to 0 using all 16 x 16 threads
@@ -597,17 +599,17 @@ __global__ void tensor_sum_pln3(Rpp8u *srcPtr,
     partialRSumSharedRowPtr[hipThreadIdx_x] = (src_ui24.ui8[0].ui1[0] +
                                                src_ui24.ui8[0].ui1[1] +
                                                src_ui24.ui8[0].ui1[2] +
-                                               src_ui24.ui8[0].ui1[3]);                               // perform small work of reducing R uint4s to uint using 16 x 16 threads and store in Shared
+                                               src_ui24.ui8[0].ui1[3]);                          // perform small work of reducing R uint4s to uint using 16 x 16 threads and store in Shared
     partialGSumSharedRowPtr[hipThreadIdx_x] = (src_ui24.ui8[1].ui1[0] +
                                                src_ui24.ui8[1].ui1[1] +
                                                src_ui24.ui8[1].ui1[2] +
-                                               src_ui24.ui8[1].ui1[3]);                               // perform small work of reducing G uint4s to uint using 16 x 16 threads and store in Shared
+                                               src_ui24.ui8[1].ui1[3]);                          // perform small work of reducing G uint4s to uint using 16 x 16 threads and store in Shared
     partialBSumSharedRowPtr[hipThreadIdx_x] = (src_ui24.ui8[2].ui1[0] +
                                                src_ui24.ui8[2].ui1[1] +
                                                src_ui24.ui8[2].ui1[2] +
-                                               src_ui24.ui8[2].ui1[3]);                               // perform small work of reducing B uint4s to uint using 16 x 16 threads and store in Shared
+                                               src_ui24.ui8[2].ui1[3]);                          // perform small work of reducing B uint4s to uint using 16 x 16 threads and store in Shared
 
-    __syncthreads();                                                                            // syncthreads after Shared load
+    __syncthreads();                                                                             // syncthreads after Shared load
 
     // Reduction of 16 uints on 16 threads per block in x dimension (for every y dimension)
     for (int threadMax = 8; threadMax >= 1; threadMax /= 2)
@@ -656,10 +658,10 @@ __global__ void tensor_sum_pln3(Rpp8s *srcPtr,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    __shared__ int partialRSumShared[16][16];                                                    // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
+    __shared__ int partialRSumShared[16][16];                                                   // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
     __shared__ int partialGSumShared[16][16];
     __shared__ int partialBSumShared[16][16];
-    int *partialRSumSharedRowPtr = &partialRSumShared[hipThreadIdx_y][0];                           // int pointer to beginning of each row in Shared
+    int *partialRSumSharedRowPtr = &partialRSumShared[hipThreadIdx_y][0];                       // int pointer to beginning of each row in Shared
     int *partialGSumSharedRowPtr = &partialGSumShared[hipThreadIdx_y][0];
     int *partialBSumSharedRowPtr = &partialBSumShared[hipThreadIdx_y][0];
     partialRSumSharedRowPtr[hipThreadIdx_x] = 0;                                                // initialization of Shared to 0 using all 16 x 16 threads
@@ -693,15 +695,15 @@ __global__ void tensor_sum_pln3(Rpp8s *srcPtr,
     partialRSumSharedRowPtr[hipThreadIdx_x] = (src_i24.i8[0].i1[0] +
                                                src_i24.i8[0].i1[1] +
                                                src_i24.i8[0].i1[2] +
-                                               src_i24.i8[0].i1[3]);                               // perform small work of reducing R int4s to int using 16 x 16 threads and store in Shared
+                                               src_i24.i8[0].i1[3]);                            // perform small work of reducing R int4s to int using 16 x 16 threads and store in Shared
     partialGSumSharedRowPtr[hipThreadIdx_x] = (src_i24.i8[1].i1[0] +
                                                src_i24.i8[1].i1[1] +
                                                src_i24.i8[1].i1[2] +
-                                               src_i24.i8[1].i1[3]);                               // perform small work of reducing G int4s to int using 16 x 16 threads and store in Shared
+                                               src_i24.i8[1].i1[3]);                            // perform small work of reducing G int4s to int using 16 x 16 threads and store in Shared
     partialBSumSharedRowPtr[hipThreadIdx_x] = (src_i24.i8[2].i1[0] +
                                                src_i24.i8[2].i1[1] +
                                                src_i24.i8[2].i1[2] +
-                                               src_i24.i8[2].i1[3]);                               // perform small work of reducing B int4s to int using 16 x 16 threads and store in Shared
+                                               src_i24.i8[2].i1[3]);                            // perform small work of reducing B int4s to int using 16 x 16 threads and store in Shared
 
     __syncthreads();                                                                            // syncthreads after Shared load
 
@@ -753,16 +755,15 @@ __global__ void tensor_sum_pln3(T *srcPtr,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    __shared__ float partialRSumShared[16][16];                                                    // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
+    __shared__ float partialRSumShared[16][16];                                                 // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
     __shared__ float partialGSumShared[16][16];
     __shared__ float partialBSumShared[16][16];
-    float *partialRSumSharedRowPtr = &partialRSumShared[hipThreadIdx_y][0];                           // float pointer to beginning of each row in Shared
+    float *partialRSumSharedRowPtr = &partialRSumShared[hipThreadIdx_y][0];                     // float pointer to beginning of each row in Shared
     float *partialGSumSharedRowPtr = &partialGSumShared[hipThreadIdx_y][0];
     float *partialBSumSharedRowPtr = &partialBSumShared[hipThreadIdx_y][0];
-    partialRSumSharedRowPtr[hipThreadIdx_x] = 0.0f;                                                // initialization of Shared to 0 using all 16 x 16 threads
+    partialRSumSharedRowPtr[hipThreadIdx_x] = 0.0f;                                             // initialization of Shared to 0 using all 16 x 16 threads
     partialGSumSharedRowPtr[hipThreadIdx_x] = 0.0f;
     partialBSumSharedRowPtr[hipThreadIdx_x] = 0.0f;
-    //check tensorSumArr if everything is set to 0's
 
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
     {
@@ -849,10 +850,10 @@ __global__ void tensor_sum_pkd3(Rpp8u *srcPtr,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    __shared__ uint partialRSumShared[16][16];                                        // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
+    __shared__ uint partialRSumShared[16][16];                                      // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
     __shared__ uint partialGSumShared[16][16];
     __shared__ uint partialBSumShared[16][16];
-    uint *partialRSumSharedRowPtr = &partialRSumShared[hipThreadIdx_y][0];               // uint pointer to beginning of each row in Shared
+    uint *partialRSumSharedRowPtr = &partialRSumShared[hipThreadIdx_y][0];          // uint pointer to beginning of each row in Shared
     uint *partialGSumSharedRowPtr = &partialGSumShared[hipThreadIdx_y][0];
     uint *partialBSumSharedRowPtr = &partialBSumShared[hipThreadIdx_y][0];
     partialRSumSharedRowPtr[hipThreadIdx_x] = 0;                                    // initialization of Shared to 0 using all 16 x 16 threads
@@ -886,15 +887,15 @@ __global__ void tensor_sum_pkd3(Rpp8u *srcPtr,
     partialRSumSharedRowPtr[hipThreadIdx_x] = (src_ui24.ui8[0].ui1[0] +
                                                src_ui24.ui8[0].ui1[1] +
                                                src_ui24.ui8[0].ui1[2] +
-                                               src_ui24.ui8[0].ui1[3]);                   // perform small work of reducing R uchar8s to uint using 16 x 16 threads and store in Shared
+                                               src_ui24.ui8[0].ui1[3]);             // perform small work of reducing R uchar8s to uint using 16 x 16 threads and store in Shared
     partialGSumSharedRowPtr[hipThreadIdx_x] = (src_ui24.ui8[1].ui1[0] +
                                                src_ui24.ui8[1].ui1[1] +
                                                src_ui24.ui8[1].ui1[2] +
-                                               src_ui24.ui8[1].ui1[3]);                   // perform small work of reducing G uchar8s to uint using 16 x 16 threads and store in Shared
+                                               src_ui24.ui8[1].ui1[3]);             // perform small work of reducing G uchar8s to uint using 16 x 16 threads and store in Shared
     partialBSumSharedRowPtr[hipThreadIdx_x] = (src_ui24.ui8[2].ui1[0] +
                                                src_ui24.ui8[2].ui1[1] +
                                                src_ui24.ui8[2].ui1[2] +
-                                               src_ui24.ui8[2].ui1[3]);                   // perform small work of reducing B uchar8s to uint using 16 x 16 threads and store in Shared
+                                               src_ui24.ui8[2].ui1[3]);             // perform small work of reducing B uchar8s to uint using 16 x 16 threads and store in Shared
 
     __syncthreads();                                                                // syncthreads after Shared load
     // Reduction of 16 uints on 16 threads per block in x dimension (for every y dimension)
@@ -944,10 +945,10 @@ __global__ void tensor_sum_pkd3(Rpp8s *srcPtr,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    __shared__ int partialRSumShared[16][16];                                        // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
+    __shared__ int partialRSumShared[16][16];                                       // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
     __shared__ int partialGSumShared[16][16];
     __shared__ int partialBSumShared[16][16];
-    int *partialRSumSharedRowPtr = &partialRSumShared[hipThreadIdx_y][0];               // int pointer to beginning of each row in Shared
+    int *partialRSumSharedRowPtr = &partialRSumShared[hipThreadIdx_y][0];           // int pointer to beginning of each row in Shared
     int *partialGSumSharedRowPtr = &partialGSumShared[hipThreadIdx_y][0];
     int *partialBSumSharedRowPtr = &partialBSumShared[hipThreadIdx_y][0];
     partialRSumSharedRowPtr[hipThreadIdx_x] = 0;                                    // initialization of Shared to 0 using all 16 x 16 threads
@@ -981,15 +982,15 @@ __global__ void tensor_sum_pkd3(Rpp8s *srcPtr,
     partialRSumSharedRowPtr[hipThreadIdx_x] = (src_i24.i8[0].i1[0] +
                                                src_i24.i8[0].i1[1] +
                                                src_i24.i8[0].i1[2] +
-                                               src_i24.i8[0].i1[3]);                   // perform small work of reducing R schar4s to int using 16 x 16 threads and store in Shared
+                                               src_i24.i8[0].i1[3]);                // perform small work of reducing R schar4s to int using 16 x 16 threads and store in Shared
     partialGSumSharedRowPtr[hipThreadIdx_x] = (src_i24.i8[1].i1[0] +
                                                src_i24.i8[1].i1[1] +
                                                src_i24.i8[1].i1[2] +
-                                               src_i24.i8[1].i1[3]);                   // perform small work of reducing G schar4s to int using 16 x 16 threads and store in Shared
+                                               src_i24.i8[1].i1[3]);                // perform small work of reducing G schar4s to int using 16 x 16 threads and store in Shared
     partialBSumSharedRowPtr[hipThreadIdx_x] = (src_i24.i8[2].i1[0] +
                                                src_i24.i8[2].i1[1] +
                                                src_i24.i8[2].i1[2] +
-                                               src_i24.i8[2].i1[3]);                   // perform small work of reducing B schar4s to int using 16 x 16 threads and store in Shared
+                                               src_i24.i8[2].i1[3]);                // perform small work of reducing B schar4s to int using 16 x 16 threads and store in Shared
 
     __syncthreads();                                                                // syncthreads after Shared load
 
@@ -1041,13 +1042,13 @@ __global__ void tensor_sum_pkd3(T *srcPtr,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    __shared__ float partialRSumShared[16][16];                                        // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
+    __shared__ float partialRSumShared[16][16];                                     // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
     __shared__ float partialGSumShared[16][16];
     __shared__ float partialBSumShared[16][16];
-    float *partialRSumSharedRowPtr = &partialRSumShared[hipThreadIdx_y][0];               // float pointer to beginning of each row in Shared
+    float *partialRSumSharedRowPtr = &partialRSumShared[hipThreadIdx_y][0];         // float pointer to beginning of each row in Shared
     float *partialGSumSharedRowPtr = &partialGSumShared[hipThreadIdx_y][0];
     float *partialBSumSharedRowPtr = &partialBSumShared[hipThreadIdx_y][0];
-    partialRSumSharedRowPtr[hipThreadIdx_x] = 0.0f;                                    // initialization of Shared to 0 using all 16 x 16 threads
+    partialRSumSharedRowPtr[hipThreadIdx_x] = 0.0f;                                 // initialization of Shared to 0 using all 16 x 16 threads
     partialGSumSharedRowPtr[hipThreadIdx_x] = 0.0f;
     partialBSumSharedRowPtr[hipThreadIdx_x] = 0.0f;
 
@@ -1152,9 +1153,8 @@ RppStatus hip_exec_tensor_sum(Rpp8u *srcPtr,
     {
         Rpp32u partialSumArrLength = gridDim_x * gridDim_y * gridDim_z;
         Rpp32u *partialSumArr;
-        partialSumArr = handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem;
-        hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(uint));
-        hipStreamSynchronize(handle.GetStream());
+        hipMalloc(&partialSumArr, sizeof(Rpp32u) * partialSumArrLength);
+        hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(uint), handle.GetStream());
         hipLaunchKernelGGL(tensor_sum_pln1,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
                            dim3(localThreads_x, localThreads_y, localThreads_z),
@@ -1173,14 +1173,14 @@ RppStatus hip_exec_tensor_sum(Rpp8u *srcPtr,
                            partialSumArr,
                            gridDim_x * gridDim_y,
                            tensorSumArr);
+        hipFree(partialSumArr);
     }
     else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
     {
         Rpp32u partialSumArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
         Rpp32u *partialSumArr;
-        partialSumArr = handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem;
-        hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(Rpp32u));
-        hipStreamSynchronize(handle.GetStream());
+        hipMalloc(&partialSumArr, sizeof(Rpp32u) * partialSumArrLength);
+        hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(Rpp32u), handle.GetStream());
         hipLaunchKernelGGL(tensor_sum_pln3,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
                            dim3(localThreads_x, localThreads_y, localThreads_z),
@@ -1199,14 +1199,14 @@ RppStatus hip_exec_tensor_sum(Rpp8u *srcPtr,
                            partialSumArr,
                            gridDim_x * gridDim_y,
                            tensorSumArr);
+        hipFree(partialSumArr);
     }
     else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
     {
         Rpp32u partialSumArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
         Rpp32u *partialSumArr;
-        partialSumArr = handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem;
-        hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(Rpp32u));
-        hipStreamSynchronize(handle.GetStream());
+        hipMalloc(&partialSumArr, sizeof(Rpp32u) * partialSumArrLength);
+        hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(Rpp32u), handle.GetStream());
         hipLaunchKernelGGL(tensor_sum_pkd3,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
                            dim3(localThreads_x, localThreads_y, localThreads_z),
@@ -1225,6 +1225,7 @@ RppStatus hip_exec_tensor_sum(Rpp8u *srcPtr,
                            partialSumArr,
                            gridDim_x * gridDim_y,
                            tensorSumArr);
+        hipFree(partialSumArr);
     }
 
     return RPP_SUCCESS;
@@ -1255,9 +1256,8 @@ RppStatus hip_exec_tensor_sum(Rpp8s *srcPtr,
     {
         Rpp32u partialSumArrLength = gridDim_x * gridDim_y * gridDim_z;
         Rpp32s *partialSumArr;
-        partialSumArr = handle.GetInitHandle()->mem.mgpu.intArr[0].intmem;
-        hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(Rpp32s));
-        hipStreamSynchronize(handle.GetStream());
+        hipMalloc(&partialSumArr, sizeof(Rpp32s) * partialSumArrLength);
+        hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(Rpp32s), handle.GetStream());
         hipLaunchKernelGGL(tensor_sum_pln1,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
                            dim3(localThreads_x, localThreads_y, localThreads_z),
@@ -1276,14 +1276,14 @@ RppStatus hip_exec_tensor_sum(Rpp8s *srcPtr,
                            partialSumArr,
                            gridDim_x * gridDim_y,
                            tensorSumArr);
+        hipFree(partialSumArr);
     }
     else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
     {
         Rpp32u partialSumArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
         Rpp32s *partialSumArr;
-        partialSumArr = handle.GetInitHandle()->mem.mgpu.intArr[0].intmem;
-        hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(Rpp32s));
-        hipStreamSynchronize(handle.GetStream());
+        hipMalloc(&partialSumArr, sizeof(Rpp32s) * partialSumArrLength);
+        hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(Rpp32s), handle.GetStream());
         hipLaunchKernelGGL(tensor_sum_pln3,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
                            dim3(localThreads_x, localThreads_y, localThreads_z),
@@ -1302,14 +1302,14 @@ RppStatus hip_exec_tensor_sum(Rpp8s *srcPtr,
                            partialSumArr,
                            gridDim_x * gridDim_y,
                            tensorSumArr);
+        hipFree(partialSumArr);
     }
     else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
     {
         Rpp32u partialSumArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
         Rpp32s *partialSumArr;
-        partialSumArr = handle.GetInitHandle()->mem.mgpu.intArr[0].intmem;
-        hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(Rpp32s));
-        hipStreamSynchronize(handle.GetStream());
+        hipMalloc(&partialSumArr, sizeof(Rpp32s) * partialSumArrLength);
+        hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(Rpp32s), handle.GetStream());
         hipLaunchKernelGGL(tensor_sum_pkd3,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
                            dim3(localThreads_x, localThreads_y, localThreads_z),
@@ -1328,6 +1328,7 @@ RppStatus hip_exec_tensor_sum(Rpp8s *srcPtr,
                            partialSumArr,
                            gridDim_x * gridDim_y,
                            tensorSumArr);
+        hipFree(partialSumArr);
     }
 
     return RPP_SUCCESS;
@@ -1359,8 +1360,7 @@ RppStatus hip_exec_tensor_sum(T *srcPtr,
         Rpp32u partialSumArrLength = gridDim_x * gridDim_y * gridDim_z;
         float *partialSumArr;
         partialSumArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
-        hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(float));
-        hipStreamSynchronize(handle.GetStream());
+        hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(float), handle.GetStream());
         hipLaunchKernelGGL(tensor_sum_pln1,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
                            dim3(localThreads_x, localThreads_y, localThreads_z),
@@ -1385,8 +1385,7 @@ RppStatus hip_exec_tensor_sum(T *srcPtr,
         Rpp32u partialSumArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
         float *partialSumArr;
         partialSumArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
-        hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(float));
-        hipStreamSynchronize(handle.GetStream());
+        hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(float), handle.GetStream());
         hipLaunchKernelGGL(tensor_sum_pln3,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
                            dim3(localThreads_x, localThreads_y, localThreads_z),
@@ -1411,8 +1410,7 @@ RppStatus hip_exec_tensor_sum(T *srcPtr,
         Rpp32u partialSumArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
         float *partialSumArr;
         partialSumArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
-        hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(float));
-        hipStreamSynchronize(handle.GetStream());
+        hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(float), handle.GetStream());
         hipLaunchKernelGGL(tensor_sum_pkd3,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
                            dim3(localThreads_x, localThreads_y, localThreads_z),
