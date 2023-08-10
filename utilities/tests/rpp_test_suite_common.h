@@ -967,7 +967,17 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
         if (dstDescPtr->c == 3)
             func += "Tensor_PLN3";
         else
-            func += "Tensor_PLN1";
+        {
+            if(testCase == 86)
+            {
+                if(srcDescPtr->layout == RpptLayout::NHWC)
+                    func += "Tensor_PKD3";
+                else
+                    func += "Tensor_PLN3";
+            }
+            else
+                func += "Tensor_PLN1";
+        }
     }
     if(testCase == 21 ||testCase == 23 || testCase == 24)
         func += "_interpolationType" + interpolationTypeName;

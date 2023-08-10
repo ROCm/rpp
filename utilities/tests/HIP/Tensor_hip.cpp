@@ -112,6 +112,12 @@ int main(int argc, char **argv)
         }
     }
 
+    if(pln1OutTypeCase && outputFormatToggle !=0)
+    {
+        printf("\ntest case %d don't have outputFormatToggle! Please input outputFormatToggle = 0\n", testCase);
+        return -1;
+    }
+
     if(batchSize > MAX_BATCH_SIZE)
     {
         std::cerr << "\n Batchsize should be less than or equal to "<< MAX_BATCH_SIZE << " Aborting!";
@@ -990,7 +996,7 @@ int main(int argc, char **argv)
                 1.QA Flag is set
                 2.input bit depth 0 (Input U8 && Output U8)
                 3.source and destination layout are the same*/
-                if(qaFlag && inputBitDepth == 0 && (srcDescPtr->layout == dstDescPtr->layout) && !(randomOutputCase))
+                if(qaFlag && inputBitDepth == 0 && ((srcDescPtr->layout == dstDescPtr->layout) || pln1OutTypeCase) && !(randomOutputCase))
                     compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, batchSize, interpolationTypeName, noiseTypeName, testCase, dst);
 
                 // Calculate exact dstROI in XYWH format for OpenCV dump

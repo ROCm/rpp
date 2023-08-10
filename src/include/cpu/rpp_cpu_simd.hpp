@@ -2231,7 +2231,7 @@ inline void rpp_generic_bilinear_load_mask_avx(__m256 &pSrcY, __m256 &pSrcX, __m
 {
     _mm256_storeu_si256((__m256i*) invalidLoadMask, _mm256_cvtps_epi32(_mm256_or_ps(                                    // Vectorized ROI boundary check for 8 locations
         _mm256_or_ps(_mm256_cmp_ps(pSrcX, pRoiLTRB[0], _CMP_LT_OQ), _mm256_cmp_ps(pSrcY, pRoiLTRB[1], _CMP_LT_OQ)),
-        _mm256_or_ps(_mm256_cmp_ps(pSrcX, _mm256_add_ps(pRoiLTRB[2], avx_p1), _CMP_GT_OQ), _mm256_cmp_ps(pSrcY, _mm256_add_ps(pRoiLTRB[3], avx_p1), _CMP_GT_OQ))
+        _mm256_or_ps(_mm256_cmp_ps(_mm256_floor_ps(pSrcX), pRoiLTRB[2], _CMP_GT_OQ), _mm256_cmp_ps(_mm256_floor_ps(pSrcY), pRoiLTRB[3], _CMP_GT_OQ))
     )));
 }
 

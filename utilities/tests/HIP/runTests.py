@@ -127,9 +127,9 @@ def create_layout_directories(dst_path, layout_dict):
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list(preserveOutput):
     return [
-        "../OUTPUT_PERFORMANCE_LOGS_HIP_" + timestamp + "/Tensor_hip_pkd3_raw_performance_log.txt",
-        "../OUTPUT_PERFORMANCE_LOGS_HIP_" + timestamp + "/Tensor_hip_pln3_raw_performance_log.txt",
-        "../OUTPUT_PERFORMANCE_LOGS_HIP_" + timestamp + "/Tensor_hip_pln1_raw_performance_log.txt"
+        "../../OUTPUT_PERFORMANCE_LOGS_HIP_" + timestamp + "/Tensor_hip_pkd3_raw_performance_log.txt",
+        "../../OUTPUT_PERFORMANCE_LOGS_HIP_" + timestamp + "/Tensor_hip_pln3_raw_performance_log.txt",
+        "../../OUTPUT_PERFORMANCE_LOGS_HIP_" + timestamp + "/Tensor_hip_pln1_raw_performance_log.txt"
     ]
 
 # Functionality group finder
@@ -275,8 +275,8 @@ if(testType == 0):
         outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_IMAGES_HIP_' + timestamp)
     numRuns = 1
 elif(testType == 1):
-    if numRuns == 0:
-        numRuns = 100 #default numRuns for running performance tests
+    if "--num_runs" not in sys.argv:
+        numRuns = 1000 #default numRuns for running performance tests
     outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_PERFORMANCE_LOGS_HIP_' + timestamp)
 else:
     print("Invalid TEST_TYPE specified. TEST_TYPE should be 0/1 (0 = Unittests / 1 = Performancetests)")
@@ -776,7 +776,7 @@ supportedCaseList = ['0', '1', '2', '4', '8', '13', '20', '21', '23', '24', '30'
 nonQACaseList = ['8', '24', '84']
 supportedCases = 0
 for num in caseList:
-    if qaMode == 1 and num not in nonQACaseList:
+    if qaMode == 1 and num not in nonQACaseList and num in supportedCaseList:
         supportedCases += 1
     elif qaMode == 0 and num in supportedCaseList:
         supportedCases += 1

@@ -171,13 +171,11 @@ include(CheckCXXCompilerFlag)
 # Check AVX flag
 check_cxx_compiler_flag("-mavx" COMPILER_SUPPORTS_AVX)
 if(COMPILER_SUPPORTS_AVX)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx")
     add_definitions(-D__AVX2__)
 else()
     # Check SSE flag
     check_cxx_compiler_flag("-msse4" COMPILER_SUPPORTS_SSE)
     if(COMPILER_SUPPORTS_SSE)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4")
         add_definitions(-D__SSE4_1__)
     endif()
 endif()

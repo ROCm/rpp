@@ -86,9 +86,9 @@ def validate_path(input_path):
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list(preserveOutput):
     return [
-        "../OUTPUT_PERFORMANCE_LOGS_HOST_" + timestamp + "/Tensor_host_pkd3_raw_performance_log.txt",
-        "../OUTPUT_PERFORMANCE_LOGS_HOST_" + timestamp + "/Tensor_host_pln3_raw_performance_log.txt",
-        "../OUTPUT_PERFORMANCE_LOGS_HOST_" + timestamp + "/Tensor_host_pln1_raw_performance_log.txt"
+        "../../OUTPUT_PERFORMANCE_LOGS_HOST_" + timestamp + "/Tensor_host_pkd3_raw_performance_log.txt",
+        "../../OUTPUT_PERFORMANCE_LOGS_HOST_" + timestamp + "/Tensor_host_pln3_raw_performance_log.txt",
+        "../../OUTPUT_PERFORMANCE_LOGS_HOST_" + timestamp + "/Tensor_host_pln1_raw_performance_log.txt"
     ]
 
 # Functionality group finder
@@ -236,8 +236,8 @@ if(testType == 0):
         outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_IMAGES_HOST_' + timestamp)
     numRuns = 1
 elif(testType == 1):
-    if numRuns == 0:
-        numRuns = 100 #default numRuns for running performance tests
+    if "--num_runs" not in sys.argv:
+        numRuns = 1000 #default numRuns for running performance tests
     outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_PERFORMANCE_LOGS_HOST_' + timestamp)
 else:
     print("Invalid TEST_TYPE specified. TEST_TYPE should be 0/1 (0 = Unittests / 1 = Performancetests)")
@@ -369,11 +369,11 @@ else:
                     print("------------------------------------------------------------------------------------------")
 
 # print the results of qa tests
-supportedCaseList = ['0', '1', '2', '4', '8', '13', '20', '21', '23', '24', '30', '31', '36', '37', '38', '39', '70', '80', '81', '83', '84', '85', '86']
+supportedCaseList = ['0', '1', '2', '4', '13', '20', '21', '23', '30', '31', '36', '37', '38', '39', '70', '80', '81', '83', '84', '85', '86']
 nonQACaseList = ['8', '24', '84']
 supportedCases = 0
 for num in caseList:
-    if qaMode == 1 and num not in nonQACaseList:
+    if qaMode == 1 and num not in nonQACaseList and num in supportedCaseList:
         supportedCases += 1
     elif qaMode == 0 and num in supportedCaseList:
         supportedCases += 1
