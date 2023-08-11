@@ -4892,7 +4892,7 @@ inline void compute_generic_bilinear_srclocs_and_interpolate(T *srcPtrChannel, R
     srcLT.y = (Rpp32s) srcY;                                    // Bilinear LT point y value
     srcLT.y = std::min(srcLT.y, roiLTRB->ltrbROI.rb.y - 1);
     srcRB.y = std::min(srcLT.y + 1, roiLTRB->ltrbROI.rb.y - 1); // Bilinear RB point y value
-    srcLT.x = (Rpp32s) srcX;                                    // Bilinear LT point x value                                   // Bilinear RB point x value
+    srcLT.x = (Rpp32s) srcX;                                    // Bilinear LT point x value
     srcLT.x = std::min(srcLT.x, roiLTRB->ltrbROI.rb.x - 1);
     srcRB.x = std::min(srcLT.x + 1, roiLTRB->ltrbROI.rb.x - 1); // Bilinear RB point x value
     weightParams[0] = srcY - srcLT.y;                           // weightedHeight
