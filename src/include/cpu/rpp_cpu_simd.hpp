@@ -2348,21 +2348,14 @@ inline void rpp_generic_nn_load_i8pln1(Rpp8s *srcPtrChannel, Rpp32s *srcLoc, Rpp
 
 inline void rpp_generic_nn_load_i8pln1_avx(Rpp8s *srcPtrChannel, Rpp32s *srcLoc, Rpp32s *invalidLoad, __m256i &p)
 {
-    // Rpp8s buffer[16] = {0};
-    // for(int i = 0; i < 8; i++)
-    // {
-    //     if(!invalidLoad[i])
-    //         buffer[i] = *(srcPtrChannel + srcLoc[i]);
-    // }
-    // __m128i px = _mm_loadu_si128((__m128i *)buffer);
-    // p = _mm256_setr_m128i(px, xmm_px0);
-
-    __m256i pxLoadMask = _mm256_setr_epi32((!invalidLoad[0]) ? 0x80000000 : 0, (!invalidLoad[1]) ? 0x80000000 : 0,
-                                          (!invalidLoad[2]) ? 0x80000000 : 0, (!invalidLoad[3]) ? 0x80000000 : 0,
-                                          (!invalidLoad[4]) ? 0x80000000 : 0, (!invalidLoad[5]) ? 0x80000000 : 0,
-                                          (!invalidLoad[6]) ? 0x80000000 : 0, (!invalidLoad[7]) ? 0x80000000 : 0);
-    __m256i pSrcLoc = _mm256_loadu_si256((__m256i *)srcLoc);
-    p = _mm256_mask_i32gather_epi32(avx_px0, srcPtrChannel, pSrcLoc, pxLoadMask, 1);
+    Rpp8s buffer[16] = {0};
+    for(int i = 0; i < 8; i++)
+    {
+        if(!invalidLoad[i])
+            buffer[i] = *(srcPtrChannel + srcLoc[i]);
+    }
+    __m128i px = _mm_loadu_si128((__m128i *)buffer);
+    p = _mm256_setr_m128i(px, xmm_px0);
 }
 
 inline void rpp_generic_bilinear_load_mask_avx(__m256 &pSrcY, __m256 &pSrcX, __m256 *pRoiLTRB, Rpp32s *invalidLoadMask)
