@@ -65,14 +65,17 @@ python3 -m sphinx -T -E -b html -d _build/doctrees -D language=en . _build/html
     sudo yum install clang
     ```
 
-  + SLES `15-SP3`
+  + SLES `15-SP4`
     ```
-    sudo zypper install llvm-clang
+    zypper -n --no-gpg-checks install clang
+    update-alternatives --install /usr/bin/clang clang /opt/rocm-*/llvm/bin/clang 100
+    update-alternatives --install /usr/bin/clang++ clang++ /opt/rocm-*/llvm/bin/clang++ 100
     ```
+    **NOTE:** Use `ROCm LLVM Clang`
 
 * CMake Version `3.5` and above
 
-* Boost Version `1.72` and above
+* Boost Version `1.66` and above
   ```
   wget https://boostorg.jfrog.io/artifactory/main/release/1.72.0/source/boost_1_72_0.tar.gz
   tar -xzvf boost_1_72_0.tar.gz
@@ -214,7 +217,7 @@ Review all notable [changes](CHANGELOG.md#changelog) with the latest release
   + Ubuntu - `20.04` / `22.04`
   + CentOS - `7` / `8`
   + RedHat - `8` / `9`
-  + SLES - `15-SP3`
+  + SLES - `15-SP4`
 * ROCm: rocm-core - `5.4.0.50400-72`
 * Protobuf - [V3.12.4](https://github.com/protocolbuffers/protobuf/releases/tag/v3.12.4)
 * OpenCV - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
