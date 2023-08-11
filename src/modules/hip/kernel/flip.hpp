@@ -41,7 +41,7 @@ __global__ void flip_pkd_tensor(T *srcPtr,
         if((id_z == 0) && (id_y == 0) && (id_x + 8) > roiTensorPtrSrc[id_z].xywhROI.roiWidth)
         {
             srcIdx += ((id_y + roiTensorPtrSrc[id_z].ltrbROI.lt.y) * srcStridesNH.y) + roiTensorPtrSrc[id_z].ltrbROI.lt.x * 3;
-            dstIdx -= (id_x + 7 - roiTensorPtrSrc[id_z].xywhROI.roiWidth) * 3;
+            dstIdx -= (id_x + 8 - (roiTensorPtrSrc[id_z].ltrbROI.rb.x - roiTensorPtrSrc[id_z].ltrbROI.lt.x + 1)) * 3;
         }
         else
             srcIdx += ((id_y + roiTensorPtrSrc[id_z].ltrbROI.lt.y) * srcStridesNH.y) + (roiTensorPtrSrc[id_z].ltrbROI.rb.x - id_x - 7) * 3;
@@ -90,7 +90,7 @@ __global__ void flip_pln_tensor(T *srcPtr,
         if((id_z == 0) && (id_y == 0) && (id_x + 8) > roiTensorPtrSrc[id_z].xywhROI.roiWidth)
         {
             srcIdx += ((id_y + roiTensorPtrSrc[id_z].ltrbROI.lt.y) * srcStridesNCH.z) + roiTensorPtrSrc[id_z].ltrbROI.lt.x;
-            dstIdx -= (id_x + 7 - roiTensorPtrSrc[id_z].xywhROI.roiWidth);
+            dstIdx -= (id_x + 8 -(roiTensorPtrSrc[id_z].ltrbROI.rb.x - roiTensorPtrSrc[id_z].ltrbROI.lt.x + 1));
         }
         else
             srcIdx += ((id_y + roiTensorPtrSrc[id_z].ltrbROI.lt.y) * srcStridesNCH.z) + (roiTensorPtrSrc[id_z].ltrbROI.rb.x - id_x - 7);
@@ -182,7 +182,7 @@ __global__ void flip_pkd3_pln3_tensor(T *srcPtr,
         if((id_z == 0) && (id_y == 0) && (id_x + 8) > roiTensorPtrSrc[id_z].xywhROI.roiWidth)
         {
             srcIdx += ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + roiTensorPtrSrc[id_z].xywhROI.xy.x * 3;
-            dstIdx -= (id_x + 7 - roiTensorPtrSrc[id_z].xywhROI.roiWidth);
+            dstIdx -= (id_x + 8 - (roiTensorPtrSrc[id_z].ltrbROI.rb.x - roiTensorPtrSrc[id_z].ltrbROI.lt.x + 1));
         }
         else
             srcIdx += ((id_y + roiTensorPtrSrc[id_z].ltrbROI.lt.y) * srcStridesNH.y) + (roiTensorPtrSrc[id_z].ltrbROI.rb.x - id_x - 7) * 3;
@@ -237,7 +237,7 @@ __global__ void flip_pln3_pkd3_tensor(T *srcPtr,
         if((id_z == 0) && (id_y == 0) && (id_x + 8) > roiTensorPtrSrc[id_z].xywhROI.roiWidth)
         {
             srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + roiTensorPtrSrc[id_z].xywhROI.xy.x;
-            dstIdx -= (id_x + 8 - roiTensorPtrSrc[id_z].xywhROI.roiWidth) * 3;
+            dstIdx -= (id_x + 8 -(roiTensorPtrSrc[id_z].ltrbROI.rb.x - roiTensorPtrSrc[id_z].ltrbROI.lt.x + 1)) * 3;
         }
         else
             srcIdx += ((id_y + roiTensorPtrSrc[id_z].ltrbROI.lt.y) * srcStridesNCH.z) + (roiTensorPtrSrc[id_z].ltrbROI.rb.x - id_x - 7);

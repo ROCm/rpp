@@ -45,7 +45,7 @@ using namespace std;
 int main(int argc, char **argv)
 {
     // Handle inputs
-    const int MIN_ARG_COUNT = 13;
+    const int MIN_ARG_COUNT = 18;
 
     char *src = argv[1];
     char *srcSecond = argv[2];
@@ -68,10 +68,9 @@ int main(int argc, char **argv)
     bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24);
     bool noiseTypeCase = (testCase == 8);
     bool pln1OutTypeCase = (testCase == 86);
-    int userROI = atoi(argv[15]);
     unsigned int verbosity = atoi(argv[11]);
     unsigned int additionalParam = additionalParamCase ? atoi(argv[7]) : 1;
-    int roiList[4] = { atoi(argv[16]), atoi(argv[17]), atoi(argv[18]), atoi(argv[19])};
+    int roiList[4] = {atoi(argv[15]), atoi(argv[16]), atoi(argv[17]), atoi(argv[18])};
 
     if (verbosity == 1)
     {
@@ -94,7 +93,7 @@ int main(int argc, char **argv)
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
-        printf("\nUsage: <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:86> <number of iterations > 0> <batch size > 1> <verbosity = 0/1>>\n");
+        printf("\nUsage: <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:86> <number of runs > 0> <layout type (layout type - (0 = PKD3/ 1 = PLN3/ 2 = PLN1)> < qa mode (0/1)> <decoder type (0/1)> <batch size > 1> <roiList> <verbosity = 0/1>>\n");
         return -1;
     }
 
@@ -112,7 +111,7 @@ int main(int argc, char **argv)
         }
     }
 
-    if(pln1OutTypeCase && outputFormatToggle !=0)
+    if(pln1OutTypeCase && outputFormatToggle != 0)
     {
         printf("\ntest case %d don't have outputFormatToggle! Please input outputFormatToggle = 0\n", testCase);
         return -1;
@@ -354,6 +353,27 @@ int main(int argc, char **argv)
             if(dualInputCase)
                 hipMemcpy(d_input_second, input_second, inputBufferSize, hipMemcpyHostToDevice);
 
+            int roiHeightList[batchSize], roiWidthList[batchSize];
+
+            if(roiList[0] == 0 && roiList[1] == 0 && roiList[2] == 0 && roiList[3] == 0)
+            {
+                for(int i = 0; i < batchSize ; i++)
+                {
+                    roiList[0] = 10;
+                    roiList[1] = 10;
+                    roiWidthList[i] = roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
+                    roiHeightList[i] = roiTensorPtrSrc[i].xywhROI.roiHeight / 2;
+                }
+            }
+            else
+            {
+                for(int i = 0; i < batchSize ; i++)
+                {
+                    roiWidthList[i] = roiList[2];
+                    roiHeightList[i] = roiList[3];
+                }
+            }
+
             // Uncomment to run test case with an xywhROI override
             // roi.xywhROI = {0, 0, 25, 25};
             // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, batchSize);
@@ -394,9 +414,7 @@ int main(int argc, char **argv)
 
                 Rpp32f gammaVal[batchSize];
                 for (i = 0; i < batchSize; i++)
-                {
                     gammaVal[i] = 1.9;
-                }
 
                 startWallTime = omp_get_wtime();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
@@ -412,9 +430,7 @@ int main(int argc, char **argv)
 
                 Rpp32f alpha[batchSize];
                 for (i = 0; i < batchSize; i++)
-                {
                     alpha[i] = 0.4;
-                }
 
                 startWallTime = omp_get_wtime();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
@@ -450,9 +466,7 @@ int main(int argc, char **argv)
 
                 Rpp32f exposureFactor[batchSize];
                 for (i = 0; i < batchSize; i++)
-                {
                     exposureFactor[i] = 1.4;
-                }
 
                 startWallTime = omp_get_wtime();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
@@ -512,9 +526,7 @@ int main(int argc, char **argv)
 
                 Rpp32f angle[batchSize];
                 for (i = 0; i < batchSize; i++)
-                {
                     angle[i] = 50;
-                }
 
                 startWallTime = omp_get_wtime();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
@@ -530,9 +542,7 @@ int main(int argc, char **argv)
 
                 Rpp32f stdDev[batchSize];
                 for (i = 0; i < batchSize; i++)
-                {
                     stdDev[i] = 50.0;
-                }
 
                 startWallTime = omp_get_wtime();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
@@ -565,6 +575,46 @@ int main(int argc, char **argv)
 
                 break;
             }
+            case 34:
+            {
+                testCaseName = "lut";
+
+                Rpp32f *lutBuffer;
+                hipHostMalloc(&lutBuffer, 65536 * sizeof(Rpp32f));
+                hipMemset(lutBuffer, 0, 65536 * sizeof(Rpp32f));
+                Rpp8u *lut8u = reinterpret_cast<Rpp8u *>(lutBuffer);
+                Rpp16f *lut16f = reinterpret_cast<Rpp16f *>(lutBuffer);
+                Rpp32f *lut32f = reinterpret_cast<Rpp32f *>(lutBuffer);
+                Rpp8s *lut8s = reinterpret_cast<Rpp8s *>(lutBuffer);
+                if (inputBitDepth == 0)
+                    for (j = 0; j < 256; j++)
+                        lut8u[j] = (Rpp8u)(255 - j);
+                else if (inputBitDepth == 3)
+                    for (j = 0; j < 256; j++)
+                        lut16f[j] = (Rpp16f)((255 - j) * ONE_OVER_255);
+                else if (inputBitDepth == 4)
+                    for (j = 0; j < 256; j++)
+                        lut32f[j] = (Rpp32f)((255 - j) * ONE_OVER_255);
+                else if (inputBitDepth == 5)
+                    for (j = 0; j < 256; j++)
+                        lut8s[j] = (Rpp8s)(255 - j - 128);
+
+                startWallTime = omp_get_wtime();
+                if (inputBitDepth == 0)
+                    rppt_lut_gpu(d_input, srcDescPtr, d_output, dstDescPtr, lut8u, roiTensorPtrSrc, roiTypeSrc, handle);
+                else if (inputBitDepth == 3)
+                    rppt_lut_gpu(d_input, srcDescPtr, d_output, dstDescPtr, lut16f, roiTensorPtrSrc, roiTypeSrc, handle);
+                else if (inputBitDepth == 4)
+                    rppt_lut_gpu(d_input, srcDescPtr, d_output, dstDescPtr, lut32f, roiTensorPtrSrc, roiTypeSrc, handle);
+                else if (inputBitDepth == 5)
+                    rppt_lut_gpu(d_input, srcDescPtr, d_output, dstDescPtr, lut8s, roiTensorPtrSrc, roiTypeSrc, handle);
+                else
+                    missingFuncFlag = 1;
+
+                break;
+
+                hipHostFree(lutBuffer);
+            }
             case 36:
             {
                 testCaseName = "color_twist";
@@ -593,27 +643,12 @@ int main(int argc, char **argv)
             {
                 testCaseName = "crop";
 
-                if(userROI)
-                {
                 for (i = 0; i < batchSize; i++)
-                for (i = 0; i < batchSize; i++)
-                    for (i = 0; i < batchSize; i++)
-                    {
-                        roiTensorPtrDst[i].xywhROI.xy.x = roiList[0];
-                        roiTensorPtrDst[i].xywhROI.xy.y = roiList[1];
-                        dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiList[2];
-                        dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiList[3];
-                    }
-                }
-                else
                 {
-                    for (i = 0; i < batchSize; i++)
-                    {
-                        roiTensorPtrDst[i].xywhROI.xy.x = 10;
-                        roiTensorPtrDst[i].xywhROI.xy.y = 10;
-                        dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
-                        dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiHeight / 2;
-                    }
+                    roiTensorPtrDst[i].xywhROI.xy.x = roiList[0];
+                    roiTensorPtrDst[i].xywhROI.xy.y = roiList[1];
+                    dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiList[2];
+                    dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiList[3];
                 }
 
                 startWallTime = omp_get_wtime();
@@ -663,25 +698,12 @@ int main(int argc, char **argv)
                     }
                 }
 
-                if(userROI)
+                for (i = 0; i < batchSize; i++)
                 {
-                    for (i = 0; i < batchSize; i++)
-                    {
-                        roiTensorPtrDst[i].xywhROI.xy.x = roiList[0];
-                        roiTensorPtrDst[i].xywhROI.xy.y = roiList[1];
-                        dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiList[2];
-                        dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiList[3];
-                    }
-                }
-                else
-                {
-                    for (i = 0; i < batchSize; i++)
-                    {
-                        roiTensorPtrDst[i].xywhROI.xy.x = 10;
-                        roiTensorPtrDst[i].xywhROI.xy.y = 10;
-                        dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
-                        dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiHeight / 2;
-                    }
+                    roiTensorPtrDst[i].xywhROI.xy.x = roiList[0];
+                    roiTensorPtrDst[i].xywhROI.xy.y = roiList[1];
+                    dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiWidthList[i];
+                    dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiHeightList[i];
                 }
 
                 startWallTime = omp_get_wtime();
@@ -704,9 +726,7 @@ int main(int argc, char **argv)
 
                 Rpp32u mirror[batchSize];
                 for (i = 0; i < batchSize; i++)
-                {
                     mirror[i] = 1;
-                }
 
                 for (i = 0; i < batchSize; i++)
                 {
