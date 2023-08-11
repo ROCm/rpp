@@ -2239,15 +2239,15 @@ inline void rpp_generic_nn_load_f32pkd3_to_f32pln3(Rpp32f *srcPtrChannel, Rpp32s
 
 inline void rpp_generic_nn_load_f32pkd3_to_f32pln3_avx(Rpp32f *srcPtrChannel, Rpp32s *srcLoc, Rpp32s *invalidLoad, __m256 *p)
 {
-    p[0] = _mm256_setr_ps((!invalidLoad[0]) ? srcPtrChannel[srcLoc[0]]: 0, (!invalidLoad[1]) ? srcPtrChannel[srcLoc[1]]: 0,
+    p[0] = _mm256_setr_ps((!invalidLoad[0]) ? srcPtrChannel[srcLoc[0]]: 0, (!invalidLoad[1]) ? srcPtrChannel[srcLoc[1]]: 0,           // Get R01-R08. load the values from input using srcLoc buffer if invalidLoad is 0, else set the values to 0
                           (!invalidLoad[2]) ? srcPtrChannel[srcLoc[2]]: 0, (!invalidLoad[3]) ? srcPtrChannel[srcLoc[3]]: 0,
                           (!invalidLoad[4]) ? srcPtrChannel[srcLoc[4]]: 0, (!invalidLoad[5]) ? srcPtrChannel[srcLoc[5]]: 0,
                           (!invalidLoad[6]) ? srcPtrChannel[srcLoc[6]]: 0, (!invalidLoad[7]) ? srcPtrChannel[srcLoc[7]]: 0);
-    p[1] = _mm256_setr_ps((!invalidLoad[0]) ? srcPtrChannel[srcLoc[0] + 1]: 0, (!invalidLoad[1]) ? srcPtrChannel[srcLoc[1] + 1]: 0,
+    p[1] = _mm256_setr_ps((!invalidLoad[0]) ? srcPtrChannel[srcLoc[0] + 1]: 0, (!invalidLoad[1]) ? srcPtrChannel[srcLoc[1] + 1]: 0,   // Get G01-R08. load the values from input using srcLoc buffer if invalidLoad is 0, else set the values to 0
                           (!invalidLoad[2]) ? srcPtrChannel[srcLoc[2] + 1]: 0, (!invalidLoad[3]) ? srcPtrChannel[srcLoc[3] + 1]: 0,
                           (!invalidLoad[4]) ? srcPtrChannel[srcLoc[4] + 1]: 0, (!invalidLoad[5]) ? srcPtrChannel[srcLoc[5] + 1]: 0,
                           (!invalidLoad[6]) ? srcPtrChannel[srcLoc[6] + 1]: 0, (!invalidLoad[7]) ? srcPtrChannel[srcLoc[7] + 1]: 0);
-    p[2] = _mm256_setr_ps((!invalidLoad[0]) ? srcPtrChannel[srcLoc[0] + 2]: 0, (!invalidLoad[1]) ? srcPtrChannel[srcLoc[1] + 2]: 0,
+    p[2] = _mm256_setr_ps((!invalidLoad[0]) ? srcPtrChannel[srcLoc[0] + 2]: 0, (!invalidLoad[1]) ? srcPtrChannel[srcLoc[1] + 2]: 0,   // Get B01-R08. load the values from input using srcLoc buffer if invalidLoad is 0, else set the values to 0
                           (!invalidLoad[2]) ? srcPtrChannel[srcLoc[2] + 2]: 0, (!invalidLoad[3]) ? srcPtrChannel[srcLoc[3] + 2]: 0,
                           (!invalidLoad[4]) ? srcPtrChannel[srcLoc[4] + 2]: 0, (!invalidLoad[5]) ? srcPtrChannel[srcLoc[5] + 2]: 0,
                           (!invalidLoad[6]) ? srcPtrChannel[srcLoc[6] + 2]: 0, (!invalidLoad[7]) ? srcPtrChannel[srcLoc[7] + 2]: 0);
@@ -2263,16 +2263,16 @@ inline void rpp_generic_nn_load_f32pkd3_to_f32pkd3(Rpp32f *srcPtrChannel, Rpp32s
 
 inline void rpp_generic_nn_load_f32pkd3_to_f32pkd3_avx(Rpp32f *srcPtrChannel, Rpp32s *srcLoc, Rpp32s *invalidLoad, __m256 *p)
 {
-    p[0] = _mm256_setr_ps((!invalidLoad[0]) ? srcPtrChannel[srcLoc[0]]: 0, (!invalidLoad[0]) ? srcPtrChannel[srcLoc[0] + 1]: 0,
-                          (!invalidLoad[0]) ? srcPtrChannel[srcLoc[0] + 2]: 0, (!invalidLoad[1]) ? srcPtrChannel[srcLoc[1]]: 0,
+    p[0] = _mm256_setr_ps((!invalidLoad[0]) ? srcPtrChannel[srcLoc[0]]: 0, (!invalidLoad[0]) ? srcPtrChannel[srcLoc[0] + 1]: 0,        // Get R01|G01|B01|R02|B02|G02|R03|G03
+                          (!invalidLoad[0]) ? srcPtrChannel[srcLoc[0] + 2]: 0, (!invalidLoad[1]) ? srcPtrChannel[srcLoc[1]]: 0,        // load the values from input using srcLoc buffer if invalidLoad is 0, else set the values to 0
                           (!invalidLoad[1]) ? srcPtrChannel[srcLoc[1] + 1]: 0, (!invalidLoad[1]) ? srcPtrChannel[srcLoc[1] + 2]: 0,
                           (!invalidLoad[2]) ? srcPtrChannel[srcLoc[2]]: 0, (!invalidLoad[2]) ? srcPtrChannel[srcLoc[2] + 1]: 0);
-    p[1] = _mm256_setr_ps((!invalidLoad[2]) ? srcPtrChannel[srcLoc[2] + 2]: 0, (!invalidLoad[3]) ? srcPtrChannel[srcLoc[3]]: 0,
-                          (!invalidLoad[3]) ? srcPtrChannel[srcLoc[3] + 1]: 0, (!invalidLoad[3]) ? srcPtrChannel[srcLoc[3] + 2]: 0,
+    p[1] = _mm256_setr_ps((!invalidLoad[2]) ? srcPtrChannel[srcLoc[2] + 2]: 0, (!invalidLoad[3]) ? srcPtrChannel[srcLoc[3]]: 0,        // Get B03|R04|G04|B04|R05|G05|B05|R06
+                          (!invalidLoad[3]) ? srcPtrChannel[srcLoc[3] + 1]: 0, (!invalidLoad[3]) ? srcPtrChannel[srcLoc[3] + 2]: 0,    // load the values from input using srcLoc buffer if invalidLoad is 0, else set the values to 0
                           (!invalidLoad[4]) ? srcPtrChannel[srcLoc[4]]: 0, (!invalidLoad[4]) ? srcPtrChannel[srcLoc[4] + 1]: 0,
                           (!invalidLoad[4]) ? srcPtrChannel[srcLoc[4] + 2]: 0, (!invalidLoad[5]) ? srcPtrChannel[srcLoc[5]]: 0);
-    p[2] = _mm256_setr_ps((!invalidLoad[5]) ? srcPtrChannel[srcLoc[5] + 1]: 0, (!invalidLoad[5]) ? srcPtrChannel[srcLoc[5] + 2]: 0,
-                          (!invalidLoad[6]) ? srcPtrChannel[srcLoc[6]]: 0, (!invalidLoad[6]) ? srcPtrChannel[srcLoc[6] + 1]: 0,
+    p[2] = _mm256_setr_ps((!invalidLoad[5]) ? srcPtrChannel[srcLoc[5] + 1]: 0, (!invalidLoad[5]) ? srcPtrChannel[srcLoc[5] + 2]: 0,    // Get G06|B06|R07|G07|B07|R08|G08|B08
+                          (!invalidLoad[6]) ? srcPtrChannel[srcLoc[6]]: 0, (!invalidLoad[6]) ? srcPtrChannel[srcLoc[6] + 1]: 0,        // load the values from input using srcLoc buffer if invalidLoad is 0, else set the values to 0
                           (!invalidLoad[6]) ? srcPtrChannel[srcLoc[6] + 2]: 0, (!invalidLoad[7]) ? srcPtrChannel[srcLoc[7]]: 0,
                           (!invalidLoad[7]) ? srcPtrChannel[srcLoc[7] + 1]: 0, (!invalidLoad[7]) ? srcPtrChannel[srcLoc[7] + 2]: 0);
 }
@@ -2291,13 +2291,13 @@ inline void rpp_generic_nn_load_f32pln1(Rpp32f *srcPtrChanel, Rpp32s *srcLoc, Rp
 
 inline void rpp_generic_nn_load_f32pln1_avx(Rpp32f *srcPtrChannel, Rpp32s *srcLoc, Rpp32s *invalidLoad, __m256 &p)
 {
-    __m256i pxLoadMask = _mm256_setr_epi32((!invalidLoad[0]) ? 0x80000000 : 0, (!invalidLoad[1]) ? 0x80000000 : 0,
+    __m256i pxLoadMask = _mm256_setr_epi32((!invalidLoad[0]) ? 0x80000000 : 0, (!invalidLoad[1]) ? 0x80000000 : 0,  // Set MSB of 32 bit value to 1 if invalidLoad value is 0
                                           (!invalidLoad[2]) ? 0x80000000 : 0, (!invalidLoad[3]) ? 0x80000000 : 0,
                                           (!invalidLoad[4]) ? 0x80000000 : 0, (!invalidLoad[5]) ? 0x80000000 : 0,
                                           (!invalidLoad[6]) ? 0x80000000 : 0, (!invalidLoad[7]) ? 0x80000000 : 0);
-    __m256i pxSrcLoc = _mm256_loadu_si256((__m256i *)srcLoc);
-    __m256 pSrcLoc = _mm256_castsi256_ps(pxSrcLoc);
-    p = _mm256_mask_i32gather_ps(avx_p0, srcPtrChannel, pSrcLoc, pxLoadMask, 4);
+    __m256i pxSrcLoc = _mm256_loadu_si256((__m256i *)srcLoc);   // Load the source location values passed
+    __m256 pSrcLoc = _mm256_castsi256_ps(pxSrcLoc);   // cast to float
+    p = _mm256_mask_i32gather_ps(avx_p0, srcPtrChannel, pSrcLoc, pxLoadMask, 4);   // if the MSB of 32 bit value is set, then load from corresponding location value in pSrcLoc. Otherwise set the 32 bit value to 0
 }
 
 inline void rpp_generic_nn_load_i8pkd3(Rpp8s *srcPtrChannel, Rpp32s *srcLoc, Rpp32s *invalidLoad, __m128i &p)
@@ -2348,14 +2348,21 @@ inline void rpp_generic_nn_load_i8pln1(Rpp8s *srcPtrChannel, Rpp32s *srcLoc, Rpp
 
 inline void rpp_generic_nn_load_i8pln1_avx(Rpp8s *srcPtrChannel, Rpp32s *srcLoc, Rpp32s *invalidLoad, __m256i &p)
 {
-    Rpp8s buffer[16] = {0};
-    for(int i = 0; i < 8; i++)
-    {
-        if(!invalidLoad[i])
-            buffer[i] = *(srcPtrChannel + srcLoc[i]);
-    }
-    __m128i px = _mm_loadu_si128((__m128i *)buffer);
-    p = _mm256_setr_m128i(px, xmm_px0);
+    // Rpp8s buffer[16] = {0};
+    // for(int i = 0; i < 8; i++)
+    // {
+    //     if(!invalidLoad[i])
+    //         buffer[i] = *(srcPtrChannel + srcLoc[i]);
+    // }
+    // __m128i px = _mm_loadu_si128((__m128i *)buffer);
+    // p = _mm256_setr_m128i(px, xmm_px0);
+
+    __m256i pxLoadMask = _mm256_setr_epi32((!invalidLoad[0]) ? 0x80000000 : 0, (!invalidLoad[1]) ? 0x80000000 : 0,
+                                          (!invalidLoad[2]) ? 0x80000000 : 0, (!invalidLoad[3]) ? 0x80000000 : 0,
+                                          (!invalidLoad[4]) ? 0x80000000 : 0, (!invalidLoad[5]) ? 0x80000000 : 0,
+                                          (!invalidLoad[6]) ? 0x80000000 : 0, (!invalidLoad[7]) ? 0x80000000 : 0);
+    __m256i pSrcLoc = _mm256_loadu_si256((__m256i *)srcLoc);
+    p = _mm256_mask_i32gather_epi32(avx_px0, srcPtrChannel, pSrcLoc, pxLoadMask, 1);
 }
 
 inline void rpp_generic_bilinear_load_mask_avx(__m256 &pSrcY, __m256 &pSrcX, __m256 *pRoiLTRB, Rpp32s *invalidLoadMask)
