@@ -34,6 +34,10 @@ cwd = os.getcwd()
 inFilePath1 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src1')
 inFilePath2 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src2')
 qaInputFile = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src1')
+# Use input images of same dimensions for RICAP Testcase 82
+# inFilePath1 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_224x224_src1')
+# inFilePath2 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_224x224_src1')
+# qaInputFile = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_224x224_src1')
 
 def case_file_check(CASE_FILE_PATH):
     try:
@@ -78,7 +82,7 @@ def get_log_file_list(preserveOutput):
 def func_group_finder(case_number):
     if case_number < 5 or case_number == 13 or case_number == 36:
         return "color_augmentations"
-    elif case_number == 8 or case_number == 30 or case_number == 83 or case_number == 84:
+    elif case_number == 8 or case_number == 30 or case_number == 82 or case_number == 83 or case_number == 84:
         return "effects_augmentations"
     elif case_number < 40:
         return "geometric_augmentations"

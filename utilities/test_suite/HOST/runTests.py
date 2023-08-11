@@ -33,9 +33,11 @@ os.environ["TIMESTAMP"] = timestamp
 cwd = os.getcwd()
 inFilePath1 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src1')
 inFilePath2 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src2')
-# Use input images of same dimensions for RICAP Testcase 82
-# qaInputFile = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_224x224_src1')
 qaInputFile = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src1')
+# Use input images of same dimensions for RICAP Testcase 82
+# inFilePath1 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_224x224_src1')
+# inFilePath2 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_224x224_src1')
+# qaInputFile = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_224x224_src1')
 
 def validate_path(input_path):
     if not os.path.exists(input_path):

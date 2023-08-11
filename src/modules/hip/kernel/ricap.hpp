@@ -7,7 +7,7 @@ __global__ void ricap_pkd_tensor(T *srcPtr,
                                  T *dstPtr,
                                  uint2 dstStridesNH,
                                  uint *permutedIndices,
-                                 RpptROIPtr crop_region,
+                                 RpptROIPtr cropRegion,
                                  uint2 srcWH)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -21,14 +21,14 @@ __global__ void ricap_pkd_tensor(T *srcPtr,
 
     uint srcIdx;
     uint permuteIdx = id_z * 4;
-    if ((id_x >= 0) && (id_y >= 0) && (id_y < crop_region[0].xywhROI.roiHeight) && (id_x < crop_region[0].xywhROI.roiWidth * 3))
-        srcIdx = (permutedIndices[permuteIdx] * srcStridesNH.x) + ((id_y + crop_region[0].xywhROI.xy.y) * srcStridesNH.y) + (id_x + (crop_region[0].xywhROI.xy.x) * 3);
-    else if ((id_y >= 0) && (id_x >= crop_region[0].xywhROI.roiWidth * 3) && (id_y < (crop_region[1].xywhROI.roiHeight)) && (id_x < (srcWH.x * 3)))
-        srcIdx = (permutedIndices[permuteIdx + 1] * srcStridesNH.x) + ((id_y + crop_region[1].xywhROI.xy.y) * srcStridesNH.y) + (id_x - (crop_region[0].xywhROI.roiWidth) * 3 + (crop_region[1].xywhROI.xy.x) * 3);
-    else if ((id_y >= crop_region[1].xywhROI.roiHeight) && (id_x >= 0) && (id_y < (srcWH.y)) && (id_x < crop_region[2].xywhROI.roiWidth * 3))
-        srcIdx = (permutedIndices[permuteIdx + 2] * srcStridesNH.x) + ((id_y - crop_region[1].xywhROI.roiHeight + crop_region[2].xywhROI.xy.y) * srcStridesNH.y) + (id_x + (crop_region[2].xywhROI.xy.x) * 3);
-    else if ((id_y >= crop_region[1].xywhROI.roiHeight) && (id_x >= crop_region[2].xywhROI.roiWidth * 3) && (id_y < (srcWH.y)) && (id_x < (srcWH.x * 3)))
-        srcIdx = (permutedIndices[permuteIdx + 3] * srcStridesNH.x) + ((id_y - crop_region[1].xywhROI.roiHeight + crop_region[3].xywhROI.xy.y) * srcStridesNH.y) + (id_x - (crop_region[2].xywhROI.roiWidth) * 3 + (crop_region[3].xywhROI.xy.x) * 3);
+    if ((id_x >= 0) && (id_y >= 0) && (id_y < cropRegion[0].xywhROI.roiHeight) && (id_x < cropRegion[0].xywhROI.roiWidth * 3))
+        srcIdx = (permutedIndices[permuteIdx] * srcStridesNH.x) + ((id_y + cropRegion[0].xywhROI.xy.y) * srcStridesNH.y) + (id_x + (cropRegion[0].xywhROI.xy.x) * 3);
+    else if ((id_y >= 0) && (id_x >= cropRegion[0].xywhROI.roiWidth * 3) && (id_y < (cropRegion[1].xywhROI.roiHeight)) && (id_x < (srcWH.x * 3)))
+        srcIdx = (permutedIndices[permuteIdx + 1] * srcStridesNH.x) + ((id_y + cropRegion[1].xywhROI.xy.y) * srcStridesNH.y) + (id_x - (cropRegion[0].xywhROI.roiWidth) * 3 + (cropRegion[1].xywhROI.xy.x) * 3);
+    else if ((id_y >= cropRegion[1].xywhROI.roiHeight) && (id_x >= 0) && (id_y < (srcWH.y)) && (id_x < cropRegion[2].xywhROI.roiWidth * 3))
+        srcIdx = (permutedIndices[permuteIdx + 2] * srcStridesNH.x) + ((id_y - cropRegion[1].xywhROI.roiHeight + cropRegion[2].xywhROI.xy.y) * srcStridesNH.y) + (id_x + (cropRegion[2].xywhROI.xy.x) * 3);
+    else if ((id_y >= cropRegion[1].xywhROI.roiHeight) && (id_x >= cropRegion[2].xywhROI.roiWidth * 3) && (id_y < (srcWH.y)) && (id_x < (srcWH.x * 3)))
+        srcIdx = (permutedIndices[permuteIdx + 3] * srcStridesNH.x) + ((id_y - cropRegion[1].xywhROI.roiHeight + cropRegion[3].xywhROI.xy.y) * srcStridesNH.y) + (id_x - (cropRegion[2].xywhROI.roiWidth) * 3 + (cropRegion[3].xywhROI.xy.x) * 3);
 
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x;
 
@@ -44,7 +44,7 @@ __global__ void ricap_pln_tensor(T *srcPtr,
                                  uint3 dstStridesNCH,
                                  int channelsDst,
                                  uint *permutedIndices,
-                                 RpptROIPtr crop_region,
+                                 RpptROIPtr cropRegion,
                                  uint2 srcWH)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -58,14 +58,14 @@ __global__ void ricap_pln_tensor(T *srcPtr,
 
     uint srcIdx;
     uint permuteIdx = id_z * 4;
-    if ((id_x >= 0) && (id_y >= 0) && (id_y < crop_region[0].xywhROI.roiHeight) && (id_x < crop_region[0].xywhROI.roiWidth))
-        srcIdx = (permutedIndices[permuteIdx] * srcStridesNCH.x) + ((id_y + crop_region[0].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + crop_region[0].xywhROI.xy.x);
-    else if ((id_y >= 0) && (id_x >= crop_region[0].xywhROI.roiWidth) && (id_y < (crop_region[1].xywhROI.roiHeight)) && (id_x < (srcWH.x)))
-        srcIdx = (permutedIndices[permuteIdx + 1] * srcStridesNCH.x) + ((id_y + crop_region[1].xywhROI.xy.y) * srcStridesNCH.z) + (id_x - crop_region[0].xywhROI.roiWidth + crop_region[1].xywhROI.xy.x);
-    else if ((id_y >= crop_region[1].xywhROI.roiHeight) && (id_x >= 0) && (id_y < (srcWH.y)) && (id_x < crop_region[2].xywhROI.roiWidth))
-        srcIdx = (permutedIndices[permuteIdx + 2] * srcStridesNCH.x) + ((id_y - crop_region[1].xywhROI.roiHeight + crop_region[2].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + crop_region[2].xywhROI.xy.x);
-    else if ((id_y >= crop_region[1].xywhROI.roiHeight) && (id_x >= crop_region[2].xywhROI.roiWidth) && (id_y < (srcWH.y)) && (id_x < (srcWH.x)))
-        srcIdx = (permutedIndices[permuteIdx + 3] * srcStridesNCH.x) + ((id_y - crop_region[1].xywhROI.roiHeight + crop_region[3].xywhROI.xy.y) * srcStridesNCH.z) + (id_x - crop_region[2].xywhROI.roiWidth + crop_region[3].xywhROI.xy.x);
+    if ((id_x >= 0) && (id_y >= 0) && (id_y < cropRegion[0].xywhROI.roiHeight) && (id_x < cropRegion[0].xywhROI.roiWidth))
+        srcIdx = (permutedIndices[permuteIdx] * srcStridesNCH.x) + ((id_y + cropRegion[0].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + cropRegion[0].xywhROI.xy.x);
+    else if ((id_y >= 0) && (id_x >= cropRegion[0].xywhROI.roiWidth) && (id_y < (cropRegion[1].xywhROI.roiHeight)) && (id_x < (srcWH.x)))
+        srcIdx = (permutedIndices[permuteIdx + 1] * srcStridesNCH.x) + ((id_y + cropRegion[1].xywhROI.xy.y) * srcStridesNCH.z) + (id_x - cropRegion[0].xywhROI.roiWidth + cropRegion[1].xywhROI.xy.x);
+    else if ((id_y >= cropRegion[1].xywhROI.roiHeight) && (id_x >= 0) && (id_y < (srcWH.y)) && (id_x < cropRegion[2].xywhROI.roiWidth))
+        srcIdx = (permutedIndices[permuteIdx + 2] * srcStridesNCH.x) + ((id_y - cropRegion[1].xywhROI.roiHeight + cropRegion[2].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + cropRegion[2].xywhROI.xy.x);
+    else if ((id_y >= cropRegion[1].xywhROI.roiHeight) && (id_x >= cropRegion[2].xywhROI.roiWidth) && (id_y < (srcWH.y)) && (id_x < (srcWH.x)))
+        srcIdx = (permutedIndices[permuteIdx + 3] * srcStridesNCH.x) + ((id_y - cropRegion[1].xywhROI.roiHeight + cropRegion[3].xywhROI.xy.y) * srcStridesNCH.z) + (id_x - cropRegion[2].xywhROI.roiWidth + cropRegion[3].xywhROI.xy.x);
 
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
@@ -95,7 +95,7 @@ __global__ void ricap_pkd3_pln3_tensor(T *srcPtr,
                                        T *dstPtr,
                                        uint3 dstStridesNCH,
                                        uint *permutedIndices,
-                                       RpptROIPtr crop_region,
+                                       RpptROIPtr cropRegion,
                                        uint2 srcWH)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -109,14 +109,14 @@ __global__ void ricap_pkd3_pln3_tensor(T *srcPtr,
 
     uint srcIdx;
     uint permuteIdx = id_z * 4;
-    if ((id_x >= 0) && (id_y >= 0) && (id_y < crop_region[0].xywhROI.roiHeight) && (id_x < crop_region[0].xywhROI.roiWidth))
-        srcIdx = (permutedIndices[permuteIdx] * srcStridesNH.x) + ((id_y + crop_region[0].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + crop_region[0].xywhROI.xy.x)*3);
-    else if ((id_y >= 0) && (id_x >= crop_region[0].xywhROI.roiWidth) && (id_y < (crop_region[1].xywhROI.roiHeight)) && (id_x < (srcWH.x)))
-        srcIdx = (permutedIndices[permuteIdx + 1] * srcStridesNH.x) + ((id_y + crop_region[1].xywhROI.xy.y) * srcStridesNH.y) + ((id_x - crop_region[0].xywhROI.roiWidth + crop_region[1].xywhROI.xy.x)*3);
-    else if ((id_y >= crop_region[1].xywhROI.roiHeight) && (id_x >= 0) && (id_y < (srcWH.y)) && (id_x < crop_region[2].xywhROI.roiWidth))
-        srcIdx = (permutedIndices[permuteIdx + 2] * srcStridesNH.x) + ((id_y - crop_region[1].xywhROI.roiHeight + crop_region[2].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + crop_region[2].xywhROI.xy.x)*3);
-    else if ((id_y >= crop_region[1].xywhROI.roiHeight) && (id_x >= crop_region[2].xywhROI.roiWidth) && (id_y < (srcWH.y)) && (id_x < (srcWH.x)))
-        srcIdx = (permutedIndices[permuteIdx + 3] * srcStridesNH.x) + ((id_y - crop_region[1].xywhROI.roiHeight + crop_region[3].xywhROI.xy.y) * srcStridesNH.y) + ((id_x - crop_region[2].xywhROI.roiWidth + crop_region[3].xywhROI.xy.x)*3);
+    if ((id_x >= 0) && (id_y >= 0) && (id_y < cropRegion[0].xywhROI.roiHeight) && (id_x < cropRegion[0].xywhROI.roiWidth))
+        srcIdx = (permutedIndices[permuteIdx] * srcStridesNH.x) + ((id_y + cropRegion[0].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + cropRegion[0].xywhROI.xy.x)*3);
+    else if ((id_y >= 0) && (id_x >= cropRegion[0].xywhROI.roiWidth) && (id_y < (cropRegion[1].xywhROI.roiHeight)) && (id_x < (srcWH.x)))
+        srcIdx = (permutedIndices[permuteIdx + 1] * srcStridesNH.x) + ((id_y + cropRegion[1].xywhROI.xy.y) * srcStridesNH.y) + ((id_x - cropRegion[0].xywhROI.roiWidth + cropRegion[1].xywhROI.xy.x)*3);
+    else if ((id_y >= cropRegion[1].xywhROI.roiHeight) && (id_x >= 0) && (id_y < (srcWH.y)) && (id_x < cropRegion[2].xywhROI.roiWidth))
+        srcIdx = (permutedIndices[permuteIdx + 2] * srcStridesNH.x) + ((id_y - cropRegion[1].xywhROI.roiHeight + cropRegion[2].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + cropRegion[2].xywhROI.xy.x)*3);
+    else if ((id_y >= cropRegion[1].xywhROI.roiHeight) && (id_x >= cropRegion[2].xywhROI.roiWidth) && (id_y < (srcWH.y)) && (id_x < (srcWH.x)))
+        srcIdx = (permutedIndices[permuteIdx + 3] * srcStridesNH.x) + ((id_y - cropRegion[1].xywhROI.roiHeight + cropRegion[3].xywhROI.xy.y) * srcStridesNH.y) + ((id_x - cropRegion[2].xywhROI.roiWidth + cropRegion[3].xywhROI.xy.x)*3);
 
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
@@ -131,7 +131,7 @@ __global__ void ricap_pln3_pkd3_tensor(T *srcPtr,
                                        T *dstPtr,
                                        uint2 dstStridesNH,
                                        uint *permutedIndices,
-                                       RpptROIPtr crop_region,
+                                       RpptROIPtr cropRegion,
                                        uint2 srcWH)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -145,14 +145,14 @@ __global__ void ricap_pln3_pkd3_tensor(T *srcPtr,
 
     uint srcIdx;
     uint permuteIdx = id_z * 4;
-    if ((id_x >= 0) && (id_y >= 0) && (id_y < crop_region[0].xywhROI.roiHeight) && (id_x < crop_region[0].xywhROI.roiWidth))
-        srcIdx = (permutedIndices[permuteIdx] * srcStridesNCH.x) + ((id_y + crop_region[0].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + crop_region[0].xywhROI.xy.x);
-    else if ((id_y >= 0) && (id_x >= crop_region[0].xywhROI.roiWidth) && (id_y < (crop_region[1].xywhROI.roiHeight)) && (id_x < (srcWH.x)))
-        srcIdx = (permutedIndices[permuteIdx + 1] * srcStridesNCH.x) + ((id_y + crop_region[1].xywhROI.xy.y) * srcStridesNCH.z) + (id_x - crop_region[0].xywhROI.roiWidth + crop_region[1].xywhROI.xy.x);
-    else if ((id_y >= crop_region[1].xywhROI.roiHeight) && (id_x >= 0) && (id_y < (srcWH.y)) && (id_x < crop_region[2].xywhROI.roiWidth))
-        srcIdx = (permutedIndices[permuteIdx + 2] * srcStridesNCH.x) + ((id_y - crop_region[1].xywhROI.roiHeight + crop_region[2].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + crop_region[2].xywhROI.xy.x);
-    else if ((id_y >= crop_region[1].xywhROI.roiHeight) && (id_x >= crop_region[2].xywhROI.roiWidth) && (id_y < (srcWH.y)) && (id_x < (srcWH.x)))
-        srcIdx = (permutedIndices[permuteIdx + 3] * srcStridesNCH.x) + ((id_y - crop_region[1].xywhROI.roiHeight + crop_region[3].xywhROI.xy.y) * srcStridesNCH.z) + (id_x - crop_region[2].xywhROI.roiWidth + crop_region[3].xywhROI.xy.x);
+    if ((id_x >= 0) && (id_y >= 0) && (id_y < cropRegion[0].xywhROI.roiHeight) && (id_x < cropRegion[0].xywhROI.roiWidth))
+        srcIdx = (permutedIndices[permuteIdx] * srcStridesNCH.x) + ((id_y + cropRegion[0].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + cropRegion[0].xywhROI.xy.x);
+    else if ((id_y >= 0) && (id_x >= cropRegion[0].xywhROI.roiWidth) && (id_y < (cropRegion[1].xywhROI.roiHeight)) && (id_x < (srcWH.x)))
+        srcIdx = (permutedIndices[permuteIdx + 1] * srcStridesNCH.x) + ((id_y + cropRegion[1].xywhROI.xy.y) * srcStridesNCH.z) + (id_x - cropRegion[0].xywhROI.roiWidth + cropRegion[1].xywhROI.xy.x);
+    else if ((id_y >= cropRegion[1].xywhROI.roiHeight) && (id_x >= 0) && (id_y < (srcWH.y)) && (id_x < cropRegion[2].xywhROI.roiWidth))
+        srcIdx = (permutedIndices[permuteIdx + 2] * srcStridesNCH.x) + ((id_y - cropRegion[1].xywhROI.roiHeight + cropRegion[2].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + cropRegion[2].xywhROI.xy.x);
+    else if ((id_y >= cropRegion[1].xywhROI.roiHeight) && (id_x >= cropRegion[2].xywhROI.roiWidth) && (id_y < (srcWH.y)) && (id_x < (srcWH.x)))
+        srcIdx = (permutedIndices[permuteIdx + 3] * srcStridesNCH.x) + ((id_y - cropRegion[1].xywhROI.roiHeight + cropRegion[3].xywhROI.xy.y) * srcStridesNCH.z) + (id_x - cropRegion[2].xywhROI.roiWidth + cropRegion[3].xywhROI.xy.x);
 
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 

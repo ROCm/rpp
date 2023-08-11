@@ -347,7 +347,7 @@ inline int check_roi_out_of_bounds(RpptROIPtr roiPtrImage, RpptDescPtr srcDescPt
         w = ((roiPtrImage->xywhROI.roiWidth) <= srcDescPtr->w) ? roiPtrImage->xywhROI.roiWidth : -1;
         h = ((roiPtrImage->xywhROI.roiHeight) <= srcDescPtr->h) ? roiPtrImage->xywhROI.roiHeight : -1;
     }
-    else
+    else if (type == RpptRoiType::LTRB)
     {
         x = (0 <= roiPtrImage->ltrbROI.lt.x < srcDescPtr->w) ? roiPtrImage->ltrbROI.lt.x : -1;
         y = (0 <= roiPtrImage->ltrbROI.lt.y < srcDescPtr->h) ? roiPtrImage->ltrbROI.lt.y : -1;
