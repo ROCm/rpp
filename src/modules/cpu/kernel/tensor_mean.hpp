@@ -3,12 +3,12 @@
 #include "rpp_cpu_common.hpp"
 #include "reduction.hpp"
 
-RppStatus tensor_mean_u8_u8_host(Rpp8u *srcPtr,
-                                 RpptDescPtr srcDescPtr,
-                                 Rpp32f *tensorMeanArr,
-                                 RpptROIPtr roiTensorPtrSrc,
-                                 RpptRoiType roiType,
-                                 RppLayoutParams layoutParams)
+RppStatus tensor_mean_u8_f32_host(Rpp8u *srcPtr,
+                                  RpptDescPtr srcDescPtr,
+                                  Rpp32f *tensorMeanArr,
+                                  RpptROIPtr roiTensorPtrSrc,
+                                  RpptRoiType roiType,
+                                  RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
@@ -28,25 +28,24 @@ RppStatus tensor_mean_u8_u8_host(Rpp8u *srcPtr,
         Rpp8u *srcPtrChannel;
         srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
 
-        Rpp32u alignedLength = (bufferLength / 24) * 24;
-        Rpp32u vectorIncrement = 24;
-        Rpp32u vectorIncrementPerChannel = 8;
+        Rpp32u alignedLength = (bufferLength / 48) * 48;
+        Rpp32u vectorIncrement = 48;
+        Rpp32u vectorIncrementPerChannel = 16;
         Rpp32f totalPixelsPerChannel = roi.xywhROI.roiWidth * roi.xywhROI.roiHeight;
         int idx = batchCount * 4;
 
         // Tensor Mean without fused output-layout toggle (NCHW)
         if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
-            alignedLength = (bufferLength / 8) * 8;
-            vectorIncrement = 8;
+            alignedLength = (bufferLength / 16) * 16;
             Rpp32f mean = 0.0;
-            Rpp64f sum = 0.0;
-            Rpp64f sumAvx[4] = {0.0};
+            Rpp32u sum = 0;
+            Rpp32u sumAvx[8] = {0};
 
             Rpp8u *srcPtrRow;
             srcPtrRow = srcPtrChannel;
 #if __AVX2__
-            __m256d pSum = _mm256_setzero_pd();
+            __m256i psum = _mm256_setzero_si256();
 #endif
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
@@ -55,49 +54,50 @@ RppStatus tensor_mean_u8_u8_host(Rpp8u *srcPtr,
 
                 int vectorLoopCount = 0;
 #if __AVX2__
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
-                    __m256d p1[2];
-                    rpp_simd_load(rpp_load8_u8_to_f64_avx, srcPtrTemp, p1);
-                    compute_sum_8_host(p1, &pSum);
+                    __m256i p1[2];
+                    rpp_simd_load(rpp_load16_u8_to_u32_avx, srcPtrTemp, p1);
+                    compute_sum_16_host(p1, &psum);
 
-                    srcPtrTemp += vectorIncrement;
+                    srcPtrTemp += vectorIncrementPerChannel;
                 }
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    sum += (Rpp64f)(*srcPtrTemp);
+                    sum += (Rpp32u)(*srcPtrTemp);
                     srcPtrTemp++;
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvx, &pSum);
+            rpp_simd_store(rpp_store8_u32_to_u32_avx, sumAvx, &psum);
 
-            for(int i = 0; i < 2; i++)
-                sum += (sumAvx[i] + sumAvx[i + 2]);
+            for(int i = 0; i < 4; i++)
+                sum += (sumAvx[i] + sumAvx[i + 4]);
 #endif
-            mean = (Rpp32f)(sum / totalPixelsPerChannel);
+            mean = (Rpp32f)sum / totalPixelsPerChannel;
             tensorMeanArr[batchCount] = mean;
         }
 
         // Tensor Mean without fused output-layout toggle 3 channel (NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp64f sum, sumR = 0.0, sumG = 0.0, sumB = 0.0;
+            Rpp64u sum;
+            Rpp32u sumR = 0, sumG = 0, sumB = 0;
             Rpp32f mean, meanR = 0.0, meanG = 0.0, meanB = 0.0;
-            Rpp64f sumAvxR[4] = {0.0};
-            Rpp64f sumAvxG[4] = {0.0};
-            Rpp64f sumAvxB[4] = {0.0};
+            Rpp32u sumAvxR[8] = {0};
+            Rpp32u sumAvxG[8] = {0};
+            Rpp32u sumAvxB[8] = {0};
 
             Rpp8u *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
             srcPtrRowR = srcPtrChannel;
             srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
             srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
 #if __AVX2__
-            __m256d pSumR = _mm256_setzero_pd();
-            __m256d pSumG = _mm256_setzero_pd();
-            __m256d pSumB = _mm256_setzero_pd();
+            __m256i psumR = _mm256_setzero_si256();
+            __m256i psumG = _mm256_setzero_si256();
+            __m256i psumB = _mm256_setzero_si256();
 #endif
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
@@ -110,9 +110,9 @@ RppStatus tensor_mean_u8_u8_host(Rpp8u *srcPtr,
 #if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
-                    __m256d p[6];
-                    rpp_simd_load(rpp_load24_u8pln3_to_f64pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);
-                    compute_sum_24_host(p, &pSumR, &pSumG, &pSumB);
+                    __m256i p[6];
+                    rpp_simd_load(rpp_load48_u8pln3_to_u32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);
+                    compute_sum_48_host(p, &psumR, &psumG, &psumB);
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
                     srcPtrTempB += vectorIncrementPerChannel;
@@ -120,9 +120,9 @@ RppStatus tensor_mean_u8_u8_host(Rpp8u *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    sumR += (Rpp64f)(*srcPtrTempR);
-                    sumG += (Rpp64f)(*srcPtrTempG);
-                    sumB += (Rpp64f)(*srcPtrTempB);
+                    sumR += (Rpp32u)(*srcPtrTempR);
+                    sumG += (Rpp32u)(*srcPtrTempG);
+                    sumB += (Rpp32u)(*srcPtrTempB);
                     srcPtrTempR++;
                     srcPtrTempG++;
                     srcPtrTempB++;
@@ -132,21 +132,21 @@ RppStatus tensor_mean_u8_u8_host(Rpp8u *srcPtr,
                 srcPtrRowB += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxR, &pSumR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxG, &pSumG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxB, &pSumB);
-            for(int i = 0; i < 2; i++)
+            rpp_simd_store(rpp_store8_u32_to_u32_avx, sumAvxR, &psumR);
+            rpp_simd_store(rpp_store8_u32_to_u32_avx, sumAvxG, &psumG);
+            rpp_simd_store(rpp_store8_u32_to_u32_avx, sumAvxB, &psumB);
+            for(int i = 0; i < 4; i++)
             {
-                sumR += (sumAvxR[i] + sumAvxR[i + 2]);
-                sumG += (sumAvxG[i] + sumAvxG[i + 2]);
-                sumB += (sumAvxB[i] + sumAvxB[i + 2]);
+                sumR += (sumAvxR[i] + sumAvxR[i + 4]);
+                sumG += (sumAvxG[i] + sumAvxG[i + 4]);
+                sumB += (sumAvxB[i] + sumAvxB[i + 4]);
             }
 #endif
-            sum = sumR + sumG + sumB;
-            mean = (Rpp32f)(sum / (totalPixelsPerChannel * 3));
-            meanR = (Rpp32f)(sumR / totalPixelsPerChannel);
-            meanG = (Rpp32f)(sumG / totalPixelsPerChannel);
-            meanB = (Rpp32f)(sumB / totalPixelsPerChannel);
+            sum = (Rpp64u)sumR + (Rpp64u)sumG + (Rpp64u)sumB;
+            mean = ((Rpp64f)sum / (totalPixelsPerChannel * 3));
+            meanR = ((Rpp32f)sumR / totalPixelsPerChannel);
+            meanG = ((Rpp32f)sumG / totalPixelsPerChannel);
+            meanB = ((Rpp32f)sumB / totalPixelsPerChannel);
             tensorMeanArr[idx] = meanR;
             tensorMeanArr[idx + 1] = meanG;
             tensorMeanArr[idx + 2] = meanB;
@@ -156,18 +156,19 @@ RppStatus tensor_mean_u8_u8_host(Rpp8u *srcPtr,
         // Tensor Mean without fused output-layout toggle (NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp64f sum, sumR = 0.0, sumG = 0.0, sumB = 0.0;
+            Rpp64u sum;
+            Rpp32u sumR = 0, sumG = 0, sumB = 0;
             Rpp32f mean, meanR = 0.0, meanG = 0.0, meanB = 0.0;
-            Rpp64f sumAvxR[4] = {0.0};
-            Rpp64f sumAvxG[4] = {0.0};
-            Rpp64f sumAvxB[4] = {0.0};
+            Rpp32u sumAvxR[8] = {0};
+            Rpp32u sumAvxG[8] = {0};
+            Rpp32u sumAvxB[8] = {0};
 
             Rpp8u *srcPtrRow;
             srcPtrRow = srcPtrChannel;
 #if __AVX2__
-            __m256d pSumR = _mm256_setzero_pd();
-            __m256d pSumG = _mm256_setzero_pd();
-            __m256d pSumB = _mm256_setzero_pd();
+            __m256i psumR = _mm256_setzero_si256();
+            __m256i psumG = _mm256_setzero_si256();
+            __m256i psumB = _mm256_setzero_si256();
 #endif
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
@@ -178,37 +179,37 @@ RppStatus tensor_mean_u8_u8_host(Rpp8u *srcPtr,
 #if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
-                    __m256d p[6];
-                    rpp_simd_load(rpp_load24_u8pkd3_to_f64pln3_avx, srcPtrTemp, p);
-                    compute_sum_24_host(p, &pSumR, &pSumG, &pSumB);
+                    __m256i p[6];
+                    rpp_simd_load(rpp_load48_u8pkd3_to_u32pln3_avx, srcPtrTemp, p);
+                    compute_sum_48_host(p, &psumR, &psumG, &psumB);
                     srcPtrTemp += vectorIncrement;
                 }
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    sumR += (Rpp64f)(srcPtrTemp[0]);
-                    sumG += (Rpp64f)(srcPtrTemp[1]);
-                    sumB += (Rpp64f)(srcPtrTemp[2]);
+                    sumR += (Rpp32u)(srcPtrTemp[0]);
+                    sumG += (Rpp32u)(srcPtrTemp[1]);
+                    sumB += (Rpp32u)(srcPtrTemp[2]);
                     srcPtrTemp += 3;
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxR, &pSumR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxG, &pSumG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxB, &pSumB);
-            for(int i = 0; i < 2; i++)
+            rpp_simd_store(rpp_store8_u32_to_u32_avx, sumAvxR, &psumR);
+            rpp_simd_store(rpp_store8_u32_to_u32_avx, sumAvxG, &psumG);
+            rpp_simd_store(rpp_store8_u32_to_u32_avx, sumAvxB, &psumB);
+            for(int i = 0; i < 4; i++)
             {
-                sumR += (sumAvxR[i] + sumAvxR[i + 2]);
-                sumG += (sumAvxG[i] + sumAvxG[i + 2]);
-                sumB += (sumAvxB[i] + sumAvxB[i + 2]);
+                sumR += (sumAvxR[i] + sumAvxR[i + 4]);
+                sumG += (sumAvxG[i] + sumAvxG[i + 4]);
+                sumB += (sumAvxB[i] + sumAvxB[i + 4]);
             }
 #endif
-            sum = sumR + sumG + sumB;
-            mean = (Rpp32f)(sum / (totalPixelsPerChannel * 3));
-            meanR = (Rpp32f)(sumR / totalPixelsPerChannel);
-            meanG = (Rpp32f)(sumG / totalPixelsPerChannel);
-            meanB = (Rpp32f)(sumB / totalPixelsPerChannel);
+            sum = (Rpp64u)sumR + (Rpp64u)sumG + (Rpp64u)sumB;
+            mean = ((Rpp64f)sum / (totalPixelsPerChannel * 3));
+            meanR = ((Rpp32f)sumR / totalPixelsPerChannel);
+            meanG = ((Rpp32f)sumG / totalPixelsPerChannel);
+            meanB = ((Rpp32f)sumB / totalPixelsPerChannel);
             tensorMeanArr[idx] = meanR;
             tensorMeanArr[idx + 1] = meanG;
             tensorMeanArr[idx + 2] = meanB;
@@ -436,7 +437,7 @@ RppStatus tensor_mean_f32_f32_host(Rpp32f *srcPtr,
     return RPP_SUCCESS;
 }
 
-RppStatus tensor_mean_f16_f16_host(Rpp16f *srcPtr,
+RppStatus tensor_mean_f16_f32_host(Rpp16f *srcPtr,
                                    RpptDescPtr srcDescPtr,
                                    Rpp32f *tensorMeanArr,
                                    RpptROIPtr roiTensorPtrSrc,
@@ -666,12 +667,12 @@ RppStatus tensor_mean_f16_f16_host(Rpp16f *srcPtr,
     return RPP_SUCCESS;
 }
 
-RppStatus tensor_mean_i8_i8_host(Rpp8s *srcPtr,
-                                 RpptDescPtr srcDescPtr,
-                                 Rpp32f *tensorMeanArr,
-                                 RpptROIPtr roiTensorPtrSrc,
-                                 RpptRoiType roiType,
-                                 RppLayoutParams layoutParams)
+RppStatus tensor_mean_i8_f32_host(Rpp8s *srcPtr,
+                                  RpptDescPtr srcDescPtr,
+                                  Rpp32f *tensorMeanArr,
+                                  RpptROIPtr roiTensorPtrSrc,
+                                  RpptRoiType roiType,
+                                  RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
@@ -691,25 +692,25 @@ RppStatus tensor_mean_i8_i8_host(Rpp8s *srcPtr,
         Rpp8s *srcPtrChannel;
         srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
 
-        Rpp32u alignedLength = (bufferLength / 24) * 24;
-        Rpp32u vectorIncrement = 24;
-        Rpp32u vectorIncrementPerChannel = 8;
+        Rpp32u alignedLength = (bufferLength / 48) * 48;
+        Rpp32u vectorIncrement = 48;
+        Rpp32u vectorIncrementPerChannel = 16;
         Rpp32f totalPixelsPerChannel = roi.xywhROI.roiWidth * roi.xywhROI.roiHeight;
         int idx = batchCount * 4;
 
         // Tensor Mean without fused output-layout toggle (NCHW)
         if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
-            alignedLength = (bufferLength / 8) * 8;
-            vectorIncrement = 8;
+            alignedLength = (bufferLength / 16) * 16;
+            vectorIncrement = 16;
             Rpp32f mean = 0.0;
-            Rpp64f sum = 0.0;
-            Rpp64f sumAvx[4] = {0.0};
+            Rpp32s sum = 0;
+            Rpp32s sumAvx[8] = {0};
 
             Rpp8s *srcPtrRow;
             srcPtrRow = srcPtrChannel;
 #if __AVX2__
-            __m256d pSum = _mm256_setzero_pd();
+            __m256i psum = _mm256_setzero_si256();
 #endif
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
@@ -720,45 +721,46 @@ RppStatus tensor_mean_i8_i8_host(Rpp8s *srcPtr,
 #if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
-                    __m256d p1[2];
-                    rpp_simd_load(rpp_load8_i8_to_f64_avx, srcPtrTemp, p1);
-                    compute_sum_8_host(p1, &pSum);
+                    __m256i p1[2];
+                    rpp_simd_load(rpp_load16_i8_to_i32_avx, srcPtrTemp, p1);
+                    compute_sum_16_host(p1, &psum);
                     srcPtrTemp += vectorIncrement;
                 }
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    sum += (Rpp64f)(*srcPtrTemp + 128);
+                    sum += (Rpp32s)(*srcPtrTemp);
                     srcPtrTemp++;
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvx, &pSum);
-            for(int i = 0; i < 2; i++)
-                sum += (sumAvx[i] + sumAvx[i + 2]);
+            rpp_simd_store(rpp_store8_i32_to_i32_avx, sumAvx, &psum);
+            for(int i = 0; i < 4; i++)
+                sum += (sumAvx[i] + sumAvx[i + 4]);
 #endif
-            mean = (Rpp32f)((sum  / totalPixelsPerChannel) - 128);
+            mean = (Rpp32f)sum  / totalPixelsPerChannel;
             tensorMeanArr[batchCount] = mean;
         }
 
         // Tensor Mean without fused output-layout toggle 3 channel (NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp64f sum, sumR = 0.0, sumG = 0.0, sumB = 0.0;
+            Rpp64s sum;
+            Rpp32s sumR = 0, sumG = 0, sumB = 0;
             Rpp32f mean, meanR = 0.0, meanG = 0.0, meanB = 0.0;
-            Rpp64f sumAvxR[4] = {0.0};
-            Rpp64f sumAvxG[4] = {0.0};
-            Rpp64f sumAvxB[4] = {0.0};
+            Rpp32s sumAvxR[8] = {0};
+            Rpp32s sumAvxG[8] = {0};
+            Rpp32s sumAvxB[8] = {0};
 
             Rpp8s *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
             srcPtrRowR = srcPtrChannel;
             srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
             srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
 #if __AVX2__
-            __m256d pSumR = _mm256_setzero_pd();
-            __m256d pSumG = _mm256_setzero_pd();
-            __m256d pSumB = _mm256_setzero_pd();
+            __m256i psumR = _mm256_setzero_si256();
+            __m256i psumG = _mm256_setzero_si256();
+            __m256i psumB = _mm256_setzero_si256();
 #endif
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
@@ -771,9 +773,9 @@ RppStatus tensor_mean_i8_i8_host(Rpp8s *srcPtr,
 #if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
-                    __m256d p[6];
-                    rpp_simd_load(rpp_load24_i8pln3_to_f64pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);
-                    compute_sum_24_host(p, &pSumR, &pSumG, &pSumB);
+                    __m256i p[6];
+                    rpp_simd_load(rpp_load48_i8pln3_to_i32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);
+                    compute_sum_48_host(p, &psumR, &psumG, &psumB);
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
                     srcPtrTempB += vectorIncrementPerChannel;
@@ -781,9 +783,9 @@ RppStatus tensor_mean_i8_i8_host(Rpp8s *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    sumR += (Rpp64f)(*srcPtrTempR + 128);
-                    sumG += (Rpp64f)(*srcPtrTempG + 128);
-                    sumB += (Rpp64f)(*srcPtrTempB + 128);
+                    sumR += (Rpp32s)(*srcPtrTempR);
+                    sumG += (Rpp32s)(*srcPtrTempG);
+                    sumB += (Rpp32s)(*srcPtrTempB);
                     srcPtrTempR++;
                     srcPtrTempG++;
                     srcPtrTempB++;
@@ -793,21 +795,31 @@ RppStatus tensor_mean_i8_i8_host(Rpp8s *srcPtr,
                 srcPtrRowB += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxR, &pSumR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxG, &pSumG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxB, &pSumB);
-            for(int i = 0; i < 2; i++)
+            rpp_simd_store(rpp_store8_i32_to_i32_avx, sumAvxR, &psumR);
+            rpp_simd_store(rpp_store8_i32_to_i32_avx, sumAvxG, &psumG);
+            rpp_simd_store(rpp_store8_i32_to_i32_avx, sumAvxB, &psumB);
+            for(int i = 0; i < 4; i++)
             {
-                sumR += (sumAvxR[i] + sumAvxR[i + 2]);
-                sumG += (sumAvxG[i] + sumAvxG[i + 2]);
-                sumB += (sumAvxB[i] + sumAvxB[i + 2]);
+                sumR += (sumAvxR[i] + sumAvxR[i + 4]);
+                sumG += (sumAvxG[i] + sumAvxG[i + 4]);
+                sumB += (sumAvxB[i] + sumAvxB[i + 4]);
             }
 #endif
-            sum = sumR + sumG + sumB;
+            /*sum = sumR + sumG + sumB;
             mean = (Rpp32f)((sum / (totalPixelsPerChannel * 3)) - 128);
             meanR = (Rpp32f)((sumR / totalPixelsPerChannel) - 128);
             meanG = (Rpp32f)((sumG / totalPixelsPerChannel) - 128);
             meanB = (Rpp32f)((sumB / totalPixelsPerChannel) - 128);
+            tensorMeanArr[idx] = meanR;
+            tensorMeanArr[idx + 1] = meanG;
+            tensorMeanArr[idx + 2] = meanB;
+            tensorMeanArr[idx + 3] = mean;*/
+
+            sum = (Rpp64u)sumR + (Rpp64u)sumG + (Rpp64u)sumB;
+            mean = ((Rpp64f)sum / (totalPixelsPerChannel * 3));
+            meanR = ((Rpp32f)sumR / totalPixelsPerChannel);
+            meanG = ((Rpp32f)sumG / totalPixelsPerChannel);
+            meanB = ((Rpp32f)sumB / totalPixelsPerChannel);
             tensorMeanArr[idx] = meanR;
             tensorMeanArr[idx + 1] = meanG;
             tensorMeanArr[idx + 2] = meanB;
@@ -817,18 +829,19 @@ RppStatus tensor_mean_i8_i8_host(Rpp8s *srcPtr,
         // Tensor Mean without fused output-layout toggle (NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp64f sum, sumR = 0.0, sumG = 0.0, sumB = 0.0;
+            Rpp64s sum;
+            Rpp32s sumR = 0, sumG = 0, sumB = 0;
             Rpp32f mean, meanR = 0.0, meanG = 0.0, meanB = 0.0;
-            Rpp64f sumAvxR[4] = {0.0};
-            Rpp64f sumAvxG[4] = {0.0};
-            Rpp64f sumAvxB[4] = {0.0};
+            Rpp32s sumAvxR[8] = {0};
+            Rpp32s sumAvxG[8] = {0};
+            Rpp32s sumAvxB[8] = {0};
 
             Rpp8s *srcPtrRow;
             srcPtrRow = srcPtrChannel;
 #if __AVX2__
-            __m256d pSumR = _mm256_setzero_pd();
-            __m256d pSumG = _mm256_setzero_pd();
-            __m256d pSumB = _mm256_setzero_pd();
+            __m256i psumR = _mm256_setzero_si256();
+            __m256i psumG = _mm256_setzero_si256();
+            __m256i psumB = _mm256_setzero_si256();
 #endif
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
@@ -839,37 +852,47 @@ RppStatus tensor_mean_i8_i8_host(Rpp8s *srcPtr,
 #if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
-                    __m256d p[6];
-                    rpp_simd_load(rpp_load24_i8pkd3_to_f64pln3_avx, srcPtrTemp, p);
-                    compute_sum_24_host(p, &pSumR, &pSumG, &pSumB);
+                    __m256i p[6];
+                    rpp_simd_load(rpp_load48_i8pkd3_to_i32pln3_avx, srcPtrTemp, p);
+                    compute_sum_48_host(p, &psumR, &psumG, &psumB);
                     srcPtrTemp += vectorIncrement;
                 }
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    sumR += (Rpp64f)(srcPtrTemp[0] + 128);
-                    sumG += (Rpp64f)(srcPtrTemp[1] + 128);
-                    sumB += (Rpp64f)(srcPtrTemp[2] + 128);
+                    sumR += (Rpp32s)(srcPtrTemp[0]);
+                    sumG += (Rpp32s)(srcPtrTemp[1]);
+                    sumB += (Rpp32s)(srcPtrTemp[2]);
                     srcPtrTemp += 3;
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxR, &pSumR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxG, &pSumG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxB, &pSumB);
-            for(int i = 0; i < 2; i++)
+            rpp_simd_store(rpp_store8_i32_to_i32_avx, sumAvxR, &psumR);
+            rpp_simd_store(rpp_store8_i32_to_i32_avx, sumAvxG, &psumG);
+            rpp_simd_store(rpp_store8_i32_to_i32_avx, sumAvxB, &psumB);
+            for(int i = 0; i < 4; i++)
             {
-                sumR += (sumAvxR[i] + sumAvxR[i + 2]);
-                sumG += (sumAvxG[i] + sumAvxG[i + 2]);
-                sumB += (sumAvxB[i] + sumAvxB[i + 2]);
+                sumR += (sumAvxR[i] + sumAvxR[i + 4]);
+                sumG += (sumAvxG[i] + sumAvxG[i + 4]);
+                sumB += (sumAvxB[i] + sumAvxB[i + 4]);
             }
 #endif
-            sum = sumR + sumG + sumB;
+            /*sum = sumR + sumG + sumB;
             mean = (Rpp32f)((sum / (totalPixelsPerChannel * 3)) - 128);
             meanR = (Rpp32f)((sumR / totalPixelsPerChannel) - 128);
             meanG = (Rpp32f)((sumG / totalPixelsPerChannel) - 128);
             meanB = (Rpp32f)((sumB / totalPixelsPerChannel) - 128);
+            tensorMeanArr[idx] = meanR;
+            tensorMeanArr[idx + 1] = meanG;
+            tensorMeanArr[idx + 2] = meanB;
+            tensorMeanArr[idx + 3] = mean;*/
+
+            sum = (Rpp64u)sumR + (Rpp64u)sumG + (Rpp64u)sumB;
+            mean = ((Rpp64f)sum / (totalPixelsPerChannel * 3));
+            meanR = ((Rpp32f)sumR / totalPixelsPerChannel);
+            meanG = ((Rpp32f)sumG / totalPixelsPerChannel);
+            meanB = ((Rpp32f)sumB / totalPixelsPerChannel);
             tensorMeanArr[idx] = meanR;
             tensorMeanArr[idx + 1] = meanG;
             tensorMeanArr[idx + 2] = meanB;

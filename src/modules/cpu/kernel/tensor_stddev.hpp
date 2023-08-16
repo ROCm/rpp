@@ -3,13 +3,13 @@
 #include "rpp_cpu_common.hpp"
 #include "reduction.hpp"
 
-RppStatus tensor_stddev_u8_u8_host(Rpp8u *srcPtr,
-                                   RpptDescPtr srcDescPtr,
-                                   Rpp32f *tensorStddevArr,
-                                   Rpp32f *meanTensor,
-                                   RpptROIPtr roiTensorPtrSrc,
-                                   RpptRoiType roiType,
-                                   RppLayoutParams layoutParams)
+RppStatus tensor_stddev_u8_f32_host(Rpp8u *srcPtr,
+                                    RpptDescPtr srcDescPtr,
+                                    Rpp32f *tensorStddevArr,
+                                    Rpp32f *meanTensor,
+                                    RpptROIPtr roiTensorPtrSrc,
+                                    RpptRoiType roiType,
+                                    RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
@@ -546,7 +546,7 @@ RppStatus tensor_stddev_f32_f32_host(Rpp32f *srcPtr,
     return RPP_SUCCESS;
 }
 
-RppStatus tensor_stddev_f16_f16_host(Rpp16f *srcPtr,
+RppStatus tensor_stddev_f16_f32_host(Rpp16f *srcPtr,
                                      RpptDescPtr srcDescPtr,
                                      Rpp32f *tensorStddevArr,
                                      Rpp32f *meanTensor,
@@ -835,13 +835,13 @@ RppStatus tensor_stddev_f16_f16_host(Rpp16f *srcPtr,
     return RPP_SUCCESS;
 }
 
-RppStatus tensor_stddev_i8_i8_host(Rpp8s *srcPtr,
-                                   RpptDescPtr srcDescPtr,
-                                   Rpp32f *tensorStddevArr,
-                                   Rpp32f *meanTensor,
-                                   RpptROIPtr roiTensorPtrSrc,
-                                   RpptRoiType roiType,
-                                   RppLayoutParams layoutParams)
+RppStatus tensor_stddev_i8_f32_host(Rpp8s *srcPtr,
+                                    RpptDescPtr srcDescPtr,
+                                    Rpp32f *tensorStddevArr,
+                                    Rpp32f *meanTensor,
+                                    RpptROIPtr roiTensorPtrSrc,
+                                    RpptRoiType roiType,
+                                    RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
@@ -1107,14 +1107,14 @@ RppStatus tensor_stddev_i8_i8_host(Rpp8s *srcPtr,
     return RPP_SUCCESS;
 }
 
-RppStatus custom_stddev_u8_u8_host(Rpp8u *srcPtr,
-                                   RpptDescPtr srcDescPtr,
-                                   Rpp32f *tensorStddevArr,
-                                   Rpp32f *meanTensor,
-                                   int flag,
-                                   RpptROIPtr roiTensorPtrSrc,
-                                   RpptRoiType roiType,
-                                   RppLayoutParams layoutParams)
+RppStatus custom_stddev_u8_f32_host(Rpp8u *srcPtr,
+                                    RpptDescPtr srcDescPtr,
+                                    Rpp32f *tensorStddevArr,
+                                    Rpp32f *meanTensor,
+                                    int flag,
+                                    RpptROIPtr roiTensorPtrSrc,
+                                    RpptRoiType roiType,
+                                    RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
@@ -1847,7 +1847,7 @@ RppStatus custom_stddev_f32_f32_host(Rpp32f *srcPtr,
     return RPP_SUCCESS;
 }
 
-RppStatus custom_stddev_f16_f16_host(Rpp16f *srcPtr,
+RppStatus custom_stddev_f16_f32_host(Rpp16f *srcPtr,
                                      RpptDescPtr srcDescPtr,
                                      Rpp32f *tensorStddevArr,
                                      Rpp32f *meanTensor,
@@ -2247,14 +2247,14 @@ RppStatus custom_stddev_f16_f16_host(Rpp16f *srcPtr,
     return RPP_SUCCESS;
 }
 
-RppStatus custom_stddev_i8_i8_host(Rpp8s *srcPtr,
-                                   RpptDescPtr srcDescPtr,
-                                   Rpp32f *tensorStddevArr,
-                                   Rpp32f *meanTensor,
-                                   int flag,
-                                   RpptROIPtr roiTensorPtrSrc,
-                                   RpptRoiType roiType,
-                                   RppLayoutParams layoutParams)
+RppStatus custom_stddev_i8_f32_host(Rpp8s *srcPtr,
+                                    RpptDescPtr srcDescPtr,
+                                    Rpp32f *tensorStddevArr,
+                                    Rpp32f *meanTensor,
+                                    int flag,
+                                    RpptROIPtr roiTensorPtrSrc,
+                                    RpptRoiType roiType,
+                                    RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
