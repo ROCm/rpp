@@ -25,17 +25,17 @@ __device__ void stddev_hip_compute(half *srcPtr, float src, float *dst)
 
 // -------------------- Set 0 - Reduction Stage 2 --------------------
 template <typename T>
-__global__ void image_stddev_grid_result_tensor(T *inputSrcPtr,
-                                                float *srcPtr,
-                                                uint xBufferLength,
-                                                float *dstPtr,
-                                                RpptROIPtr roiTensorPtrSrc)
+__global__ void tensor_stddev_grid_result(T *inputSrcPtr,
+                                          float *srcPtr,
+                                          uint xBufferLength,
+                                          float *dstPtr,
+                                          RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = hipThreadIdx_x * 8;
     int id_z = hipBlockIdx_z;
 
-    __shared__ float partialVarLDS[1024];                           // 8192 floats of src reduced to 1024 in a 1024 x 1 thread block
-    partialVarLDS[hipThreadIdx_x] = 0.0f;                           // initialization of LDS to 0 using all 1024 x 1 threads
+    __shared__ float partialVarShared[1024];                        // 8192 floats of src reduced to 1024 in a 1024 x 1 thread block
+    partialVarShared[hipThreadIdx_x] = 0.0f;                        // initialization of Shared to 0 using all 1024 x 1 threads
 
     if (id_x >= xBufferLength)
     {
@@ -52,17 +52,17 @@ __global__ void image_stddev_grid_result_tensor(T *inputSrcPtr,
         for(int i = xDiff; i < 8; i++)
             src_f8.f1[i] = 0.0f;                                    // local memory reset of invalid values (from the vectorized global load) to 0.0f
     src_f8.f4[0] += src_f8.f4[1];                                   // perform small work of vectorized float4 addition
-    partialVarLDS[hipThreadIdx_x] += (src_f8.f1[0] +
-                                      src_f8.f1[1] +
-                                      src_f8.f1[2] +
-                                      src_f8.f1[3]);                // perform small work of reducing float4s to float using 1024 x 1 threads and store in LDS
-    __syncthreads();                                                // syncthreads after LDS load
+    partialVarShared[hipThreadIdx_x] += (src_f8.f1[0] +
+                                         src_f8.f1[1] +
+                                         src_f8.f1[2] +
+                                         src_f8.f1[3]);             // perform small work of reducing float4s to float using 1024 x 1 threads and store in Shared
+    __syncthreads();                                                // syncthreads after Shared load
 
     // Reduction of 1024 floats on 1024 threads per block in x dimension
     for (int threadMax = 512; threadMax >= 1; threadMax /= 2)
     {
         if (hipThreadIdx_x < threadMax)
-            partialVarLDS[hipThreadIdx_x] += partialVarLDS[hipThreadIdx_x + threadMax];
+            partialVarShared[hipThreadIdx_x] += partialVarShared[hipThreadIdx_x + threadMax];
         __syncthreads();
     }
 
@@ -70,28 +70,28 @@ __global__ void image_stddev_grid_result_tensor(T *inputSrcPtr,
     if (hipThreadIdx_x == 0)
     {
         int totalElements = roiTensorPtrSrc[id_z].xywhROI.roiHeight * roiTensorPtrSrc[id_z].xywhROI.roiWidth;
-        stddev_hip_compute(inputSrcPtr, sqrt(partialVarLDS[0] / totalElements), &dstPtr[id_z]);
+        stddev_hip_compute(inputSrcPtr, sqrt(partialVarShared[0] / totalElements), &dstPtr[id_z]);
     }
 }
 
 template <typename T>
-__global__ void image_stddev_grid_3channel_result_tensor(T *inputSrcPtr,
-                                                         float *srcPtr,
-                                                         uint xBufferLength,
-                                                         float *dstPtr,
-                                                         bool flag,
-                                                         RpptROIPtr roiTensorPtrSrc)
+__global__ void tensor_stddev_grid_3channel_result(T *inputSrcPtr,
+                                                   float *srcPtr,
+                                                   uint xBufferLength,
+                                                   float *dstPtr,
+                                                   bool flag,
+                                                   RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = hipThreadIdx_x * 8;
     int id_z = hipBlockIdx_z;
 
     /* Stores individual channel Variations computed from channel Means to compute Stddev of individual channels*/
-    __shared__ float partialRVarLDS[1024];                                       // 8192 floats of src reduced to 1024 in a 1024 x 1 thread block
-    __shared__ float partialGVarLDS[1024];
-    __shared__ float partialBVarLDS[1024];
-    partialRVarLDS[hipThreadIdx_x] = 0.0f;                                       // initialization of LDS to 0 using all 1024 x 1 threads
-    partialGVarLDS[hipThreadIdx_x] = 0.0f;
-    partialBVarLDS[hipThreadIdx_x] = 0.0f;
+    __shared__ float partialRVarShared[1024];                                    // 8192 floats of src reduced to 1024 in a 1024 x 1 thread block
+    __shared__ float partialGVarShared[1024];
+    __shared__ float partialBVarShared[1024];
+    partialRVarShared[hipThreadIdx_x] = 0.0f;                                    // initialization of Shared to 0 using all 1024 x 1 threads
+    partialGVarShared[hipThreadIdx_x] = 0.0f;
+    partialBVarShared[hipThreadIdx_x] = 0.0f;
 
     if (id_x >= xBufferLength)
     {
@@ -116,29 +116,29 @@ __global__ void image_stddev_grid_3channel_result_tensor(T *inputSrcPtr,
     src_f24.f8[0].f4[0] += src_f24.f8[0].f4[1];                                  // perform small work of vectorized float4 addition
     src_f24.f8[1].f4[0] += src_f24.f8[1].f4[1];
     src_f24.f8[2].f4[0] += src_f24.f8[2].f4[1];
-    partialRVarLDS[hipThreadIdx_x] = (src_f24.f8[0].f1[0] +
-                                      src_f24.f8[0].f1[1] +
-                                      src_f24.f8[0].f1[2] +
-                                      src_f24.f8[0].f1[3]);                      // perform small work of reducing R float4s to float using 1024 threads and store in LDS
-    partialGVarLDS[hipThreadIdx_x] = (src_f24.f8[1].f1[0] +
-                                      src_f24.f8[1].f1[1] +
-                                      src_f24.f8[1].f1[2] +
-                                      src_f24.f8[1].f1[3]);                      // perform small work of reducing G float4s to float using 1024 threads and store in LDS
-    partialBVarLDS[hipThreadIdx_x] = (src_f24.f8[2].f1[0] +
-                                      src_f24.f8[2].f1[1] +
-                                      src_f24.f8[2].f1[2] +
-                                      src_f24.f8[2].f1[3]);                      // perform small work of reducing B float4s to float using 1024 threads and store in LDS
+    partialRVarShared[hipThreadIdx_x] = (src_f24.f8[0].f1[0] +
+                                         src_f24.f8[0].f1[1] +
+                                         src_f24.f8[0].f1[2] +
+                                         src_f24.f8[0].f1[3]);                   // perform small work of reducing R float4s to float using 1024 threads and store in Shared
+    partialGVarShared[hipThreadIdx_x] = (src_f24.f8[1].f1[0] +
+                                         src_f24.f8[1].f1[1] +
+                                         src_f24.f8[1].f1[2] +
+                                         src_f24.f8[1].f1[3]);                   // perform small work of reducing G float4s to float using 1024 threads and store in Shared
+    partialBVarShared[hipThreadIdx_x] = (src_f24.f8[2].f1[0] +
+                                         src_f24.f8[2].f1[1] +
+                                         src_f24.f8[2].f1[2] +
+                                         src_f24.f8[2].f1[3]);                   // perform small work of reducing B float4s to float using 1024 threads and store in Shared
 
-    __syncthreads();                                                             // syncthreads after LDS load
+    __syncthreads();                                                             // syncthreads after Shared load
 
     // Reduction of 1024 floats on 1024 threads per block in x dimension
     for (int threadMax = 512; threadMax >= 1; threadMax /= 2)
     {
         if (hipThreadIdx_x < threadMax)
         {
-            partialRVarLDS[hipThreadIdx_x] += partialRVarLDS[hipThreadIdx_x + threadMax];
-            partialGVarLDS[hipThreadIdx_x] += partialGVarLDS[hipThreadIdx_x + threadMax];
-            partialBVarLDS[hipThreadIdx_x] += partialBVarLDS[hipThreadIdx_x + threadMax];
+            partialRVarShared[hipThreadIdx_x] += partialRVarShared[hipThreadIdx_x + threadMax];
+            partialGVarShared[hipThreadIdx_x] += partialGVarShared[hipThreadIdx_x + threadMax];
+            partialBVarShared[hipThreadIdx_x] += partialBVarShared[hipThreadIdx_x + threadMax];
         }
         __syncthreads();
     }
@@ -147,13 +147,13 @@ __global__ void image_stddev_grid_3channel_result_tensor(T *inputSrcPtr,
     if (hipThreadIdx_x == 0)
     {
         int totalElements = roiTensorPtrSrc[id_z].xywhROI.roiHeight * roiTensorPtrSrc[id_z].xywhROI.roiWidth;
-        float var = partialRVarLDS[0] + partialGVarLDS[0] + partialBVarLDS[0];
+        float var = partialRVarShared[0] + partialGVarShared[0] + partialBVarShared[0];
         int idx = id_z * 4;
         if (!flag)
         {
-            stddev_hip_compute(inputSrcPtr, sqrt(partialRVarLDS[0] / totalElements), &dstPtr[idx]);
-            stddev_hip_compute(inputSrcPtr, sqrt(partialGVarLDS[0] / totalElements), &dstPtr[idx + 1]);
-            stddev_hip_compute(inputSrcPtr, sqrt(partialBVarLDS[0] / totalElements), &dstPtr[idx + 2]);
+            stddev_hip_compute(inputSrcPtr, sqrt(partialRVarShared[0] / totalElements), &dstPtr[idx]);
+            stddev_hip_compute(inputSrcPtr, sqrt(partialGVarShared[0] / totalElements), &dstPtr[idx + 1]);
+            stddev_hip_compute(inputSrcPtr, sqrt(partialBVarShared[0] / totalElements), &dstPtr[idx + 2]);
         }
         else
             stddev_hip_compute(inputSrcPtr, sqrt(var  / (totalElements * 3)), &dstPtr[idx + 3]);
@@ -163,11 +163,11 @@ __global__ void image_stddev_grid_3channel_result_tensor(T *inputSrcPtr,
 // -------------------- Set 1 - Reduction Stage 1 --------------------
 
 template <typename T, typename U>
-__global__ void image_var_pln1_tensor(T *srcPtr,
-                                      uint2 srcStridesNH,
-                                      U *imageVarArr,
-                                      Rpp32f *mean,
-                                      RpptROIPtr roiTensorPtrSrc)
+__global__ void tensor_var_pln1(T *srcPtr,
+                                uint2 srcStridesNH,
+                                U *tensorVarArr,
+                                Rpp32f *mean,
+                                RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -175,9 +175,9 @@ __global__ void image_var_pln1_tensor(T *srcPtr,
 
     float4 mean_f4 = (float4)mean[id_z];
 
-    __shared__ float partialVarLDS[16][16];                                 // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
-    float *partialVarLDSRowPtr = &partialVarLDS[hipThreadIdx_y][0];         // float pointer to beginning of each row in LDS
-    partialVarLDSRowPtr[hipThreadIdx_x] = 0.0f;                             // initialization of LDS to 0 using all 16 x 16 threads
+    __shared__ float partialVarShared[16][16];                              // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
+    float *partialVarSharedRowPtr = &partialVarShared[hipThreadIdx_y][0];   // float pointer to beginning of each row in Shared
+    partialVarSharedRowPtr[hipThreadIdx_x] = 0.0f;                          // initialization of Shared to 0 using all 16 x 16 threads
 
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
     {
@@ -197,17 +197,17 @@ __global__ void image_var_pln1_tensor(T *srcPtr,
         for(int i = xDiff; i < 8; i++)
             tempSq_f8.f1[i] = 0.0f;
     tempSq_f8.f4[0] += tempSq_f8.f4[1];                                     // perform small work of vectorized float4 addition
-    partialVarLDSRowPtr[hipThreadIdx_x] = (tempSq_f8.f1[0] +
-                                           tempSq_f8.f1[1] +
-                                           tempSq_f8.f1[2] +
-                                           tempSq_f8.f1[3]);
-    __syncthreads();                                                        // syncthreads after LDS load
+    partialVarSharedRowPtr[hipThreadIdx_x] = (tempSq_f8.f1[0] +
+                                              tempSq_f8.f1[1] +
+                                              tempSq_f8.f1[2] +
+                                              tempSq_f8.f1[3]);
+    __syncthreads();                                                        // syncthreads after Shared load
 
     // Reduction of 16 floats on 16 threads per block in x dimension (for every y dimension)
     for (int threadMax = 8; threadMax >= 1; threadMax /= 2)
     {
         if (hipThreadIdx_x < threadMax)
-            partialVarLDSRowPtr[hipThreadIdx_x] += partialVarLDSRowPtr[hipThreadIdx_x + threadMax];
+            partialVarSharedRowPtr[hipThreadIdx_x] += partialVarSharedRowPtr[hipThreadIdx_x + threadMax];
         __syncthreads();
     }
 
@@ -217,37 +217,37 @@ __global__ void image_var_pln1_tensor(T *srcPtr,
         for (int threadMax = 8, increment = 128; threadMax >= 1; threadMax /= 2, increment /= 2)
         {
             if (hipThreadIdx_y < threadMax)
-                partialVarLDSRowPtr[0] += partialVarLDSRowPtr[increment];
+                partialVarSharedRowPtr[0] += partialVarSharedRowPtr[increment];
             __syncthreads();
         }
 
         // Final store to dst
         if (hipThreadIdx_y == 0)
-            imageVarArr[(hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x] = partialVarLDSRowPtr[0];
+            tensorVarArr[(hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x] = partialVarSharedRowPtr[0];
     }
 }
 
 template <typename T, typename U>
-__global__ void channel_var_pln3_tensor(T *srcPtr,
-                                        uint3 srcStridesNCH,
-                                        U *imageVarArr,
-                                        Rpp32f *mean,
-                                        RpptROIPtr roiTensorPtrSrc)
+__global__ void channel_var_pln3(T *srcPtr,
+                                 uint3 srcStridesNCH,
+                                 U *tensorVarArr,
+                                 Rpp32f *mean,
+                                 RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
     /* Stores individual channel Variations computed from channel Means to compute Stddev of individual channels*/
-    __shared__ float partialRVarLDS[16][16];                                                    // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
-    __shared__ float partialGVarLDS[16][16];
-    __shared__ float partialBVarLDS[16][16];
-    float *partialRVarLDSRowPtr = &partialRVarLDS[hipThreadIdx_y][0];                           // float pointer to beginning of each row in LDS
-    float *partialGVarLDSRowPtr = &partialGVarLDS[hipThreadIdx_y][0];
-    float *partialBVarLDSRowPtr = &partialBVarLDS[hipThreadIdx_y][0];
-    partialRVarLDSRowPtr[hipThreadIdx_x] = 0.0f;                                                // initialization of LDS to 0 using all 16 x 16 threads
-    partialGVarLDSRowPtr[hipThreadIdx_x] = 0.0f;
-    partialBVarLDSRowPtr[hipThreadIdx_x] = 0.0f;
+    __shared__ float partialRVarShared[16][16];                                                 // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
+    __shared__ float partialGVarShared[16][16];
+    __shared__ float partialBVarShared[16][16];
+    float *partialRVarSharedRowPtr = &partialRVarShared[hipThreadIdx_y][0];                     // float pointer to beginning of each row in Shared
+    float *partialGVarSharedRowPtr = &partialGVarShared[hipThreadIdx_y][0];
+    float *partialBVarSharedRowPtr = &partialBVarShared[hipThreadIdx_y][0];
+    partialRVarSharedRowPtr[hipThreadIdx_x] = 0.0f;                                             // initialization of Shared to 0 using all 16 x 16 threads
+    partialGVarSharedRowPtr[hipThreadIdx_x] = 0.0f;
+    partialBVarSharedRowPtr[hipThreadIdx_x] = 0.0f;
 
     int index       = id_z * 4;
     float4 meanR_f4 = (float4)mean[index];
@@ -284,29 +284,29 @@ __global__ void channel_var_pln3_tensor(T *srcPtr,
     tempChSq_f24.f8[0].f4[0] += tempChSq_f24.f8[0].f4[1];                                       // perform small work of vectorized float4 addition
     tempChSq_f24.f8[1].f4[0] += tempChSq_f24.f8[1].f4[1];
     tempChSq_f24.f8[2].f4[0] += tempChSq_f24.f8[2].f4[1];
-    partialRVarLDSRowPtr[hipThreadIdx_x] = (tempChSq_f24.f8[0].f1[0] +
-                                            tempChSq_f24.f8[0].f1[1] +
-                                            tempChSq_f24.f8[0].f1[2] +
-                                            tempChSq_f24.f8[0].f1[3]);                          // perform small work of reducing R float4s to float using 16 x 16 threads and store in LDS
-    partialGVarLDSRowPtr[hipThreadIdx_x] = (tempChSq_f24.f8[1].f1[0] +
-                                            tempChSq_f24.f8[1].f1[1] +
-                                            tempChSq_f24.f8[1].f1[2] +
-                                            tempChSq_f24.f8[1].f1[3]);                          // perform small work of reducing G float4s to float using 16 x 16 threads and store in LDS
-    partialBVarLDSRowPtr[hipThreadIdx_x] = (tempChSq_f24.f8[2].f1[0] +
-                                            tempChSq_f24.f8[2].f1[1] +
-                                            tempChSq_f24.f8[2].f1[2] +
-                                            tempChSq_f24.f8[2].f1[3]);                          // perform small work of reducing B float4s to float using 16 x 16 threads and store in LDS
+    partialRVarSharedRowPtr[hipThreadIdx_x] = (tempChSq_f24.f8[0].f1[0] +
+                                               tempChSq_f24.f8[0].f1[1] +
+                                               tempChSq_f24.f8[0].f1[2] +
+                                               tempChSq_f24.f8[0].f1[3]);                       // perform small work of reducing R float4s to float using 16 x 16 threads and store in Shared
+    partialGVarSharedRowPtr[hipThreadIdx_x] = (tempChSq_f24.f8[1].f1[0] +
+                                               tempChSq_f24.f8[1].f1[1] +
+                                               tempChSq_f24.f8[1].f1[2] +
+                                               tempChSq_f24.f8[1].f1[3]);                       // perform small work of reducing G float4s to float using 16 x 16 threads and store in Shared
+    partialBVarSharedRowPtr[hipThreadIdx_x] = (tempChSq_f24.f8[2].f1[0] +
+                                               tempChSq_f24.f8[2].f1[1] +
+                                               tempChSq_f24.f8[2].f1[2] +
+                                               tempChSq_f24.f8[2].f1[3]);                       // perform small work of reducing B float4s to float using 16 x 16 threads and store in Shared
 
-    __syncthreads();                                                                            // syncthreads after LDS load
+    __syncthreads();                                                                            // syncthreads after Shared load
 
     // Reduction of 16 floats on 16 threads per block in x dimension (for every y dimension)
     for (int threadMax = 8; threadMax >= 1; threadMax /= 2)
     {
         if (hipThreadIdx_x < threadMax)
         {
-            partialRVarLDSRowPtr[hipThreadIdx_x] += partialRVarLDSRowPtr[hipThreadIdx_x + threadMax];
-            partialGVarLDSRowPtr[hipThreadIdx_x] += partialGVarLDSRowPtr[hipThreadIdx_x + threadMax];
-            partialBVarLDSRowPtr[hipThreadIdx_x] += partialBVarLDSRowPtr[hipThreadIdx_x + threadMax];
+            partialRVarSharedRowPtr[hipThreadIdx_x] += partialRVarSharedRowPtr[hipThreadIdx_x + threadMax];
+            partialGVarSharedRowPtr[hipThreadIdx_x] += partialGVarSharedRowPtr[hipThreadIdx_x + threadMax];
+            partialBVarSharedRowPtr[hipThreadIdx_x] += partialBVarSharedRowPtr[hipThreadIdx_x + threadMax];
         }
         __syncthreads();
     }
@@ -318,9 +318,9 @@ __global__ void channel_var_pln3_tensor(T *srcPtr,
         {
             if (hipThreadIdx_y < threadMax)
             {
-                partialRVarLDSRowPtr[0] += partialRVarLDSRowPtr[increment];
-                partialGVarLDSRowPtr[0] += partialGVarLDSRowPtr[increment];
-                partialBVarLDSRowPtr[0] += partialBVarLDSRowPtr[increment];
+                partialRVarSharedRowPtr[0] += partialRVarSharedRowPtr[increment];
+                partialGVarSharedRowPtr[0] += partialGVarSharedRowPtr[increment];
+                partialBVarSharedRowPtr[0] += partialBVarSharedRowPtr[increment];
             }
             __syncthreads();
         }
@@ -329,34 +329,34 @@ __global__ void channel_var_pln3_tensor(T *srcPtr,
         if (hipThreadIdx_y == 0)
         {
             int idx = ((hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x) * 3;
-            imageVarArr[idx] = partialRVarLDSRowPtr[0];
-            imageVarArr[idx + 1] = partialGVarLDSRowPtr[0];
-            imageVarArr[idx + 2] = partialBVarLDSRowPtr[0];
+            tensorVarArr[idx] = partialRVarSharedRowPtr[0];
+            tensorVarArr[idx + 1] = partialGVarSharedRowPtr[0];
+            tensorVarArr[idx + 2] = partialBVarSharedRowPtr[0];
         }
     }
 }
 
 template <typename T, typename U>
-__global__ void image_var_pln3_tensor(T *srcPtr,
-                                      uint3 srcStridesNCH,
-                                      U *imageVarArr,
-                                      Rpp32f *mean,
-                                      RpptROIPtr roiTensorPtrSrc)
+__global__ void tensor_var_pln3(T *srcPtr,
+                                uint3 srcStridesNCH,
+                                U *tensorVarArr,
+                                Rpp32f *mean,
+                                RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
     /* Stores individual channel Variations computed from Image Mean to compute Stddev of Image*/
-    __shared__ float partialImageRVarLDS[16][16];
-    __shared__ float partialImageGVarLDS[16][16];
-    __shared__ float partialImageBVarLDS[16][16];
-    float *partialImageRVarLDSRowPtr = &partialImageRVarLDS[hipThreadIdx_y][0];
-    float *partialImageGVarLDSRowPtr = &partialImageGVarLDS[hipThreadIdx_y][0];
-    float *partialImageBVarLDSRowPtr = &partialImageBVarLDS[hipThreadIdx_y][0];
-    partialImageRVarLDSRowPtr[hipThreadIdx_x] = 0.0f;
-    partialImageGVarLDSRowPtr[hipThreadIdx_x] = 0.0f;
-    partialImageBVarLDSRowPtr[hipThreadIdx_x] = 0.0f;
+    __shared__ float partialChannelRVarShared[16][16];
+    __shared__ float partialChannelGVarShared[16][16];
+    __shared__ float partialChannelBVarShared[16][16];
+    float *partialChannelRVarSharedRowPtr = &partialChannelRVarShared[hipThreadIdx_y][0];
+    float *partialChannelGVarSharedRowPtr = &partialChannelGVarShared[hipThreadIdx_y][0];
+    float *partialChannelBVarSharedRowPtr = &partialChannelBVarShared[hipThreadIdx_y][0];
+    partialChannelRVarSharedRowPtr[hipThreadIdx_x] = 0.0f;
+    partialChannelGVarSharedRowPtr[hipThreadIdx_x] = 0.0f;
+    partialChannelBVarSharedRowPtr[hipThreadIdx_x] = 0.0f;
 
     int index           = (id_z * 4) + 3;
     float4 meanImage_f4 = (float4)mean[index];
@@ -387,29 +387,29 @@ __global__ void image_var_pln3_tensor(T *srcPtr,
     tempSq_f24.f8[0].f4[0] += tempSq_f24.f8[0].f4[1];                                           // perform small work of vectorized float4 addition
     tempSq_f24.f8[1].f4[0] += tempSq_f24.f8[1].f4[1];
     tempSq_f24.f8[2].f4[0] += tempSq_f24.f8[2].f4[1];
-    partialImageRVarLDSRowPtr[hipThreadIdx_x] = (tempSq_f24.f8[0].f1[0] +
-                                                 tempSq_f24.f8[0].f1[1] +
-                                                 tempSq_f24.f8[0].f1[2] +
-                                                 tempSq_f24.f8[0].f1[3]);                       // perform small work of reducing R float4s to float using 16 x 16 threads and store in LDS
-    partialImageGVarLDSRowPtr[hipThreadIdx_x] = (tempSq_f24.f8[1].f1[0] +
-                                                 tempSq_f24.f8[1].f1[1] +
-                                                 tempSq_f24.f8[1].f1[2] +
-                                                 tempSq_f24.f8[1].f1[3]);                       // perform small work of reducing G float4s to float using 16 x 16 threads and store in LDS
-    partialImageBVarLDSRowPtr[hipThreadIdx_x] = (tempSq_f24.f8[2].f1[0] +
-                                                 tempSq_f24.f8[2].f1[1] +
-                                                 tempSq_f24.f8[2].f1[2] +
-                                                 tempSq_f24.f8[2].f1[3]);                       // perform small work of reducing B float4s to float using 16 x 16 threads and store in LDS                      // perform small work of reducing B float4s to float using 16 x 16 threads and store in LDS
+    partialChannelRVarSharedRowPtr[hipThreadIdx_x] = (tempSq_f24.f8[0].f1[0] +
+                                                      tempSq_f24.f8[0].f1[1] +
+                                                      tempSq_f24.f8[0].f1[2] +
+                                                      tempSq_f24.f8[0].f1[3]);                  // perform small work of reducing R float4s to float using 16 x 16 threads and store in Shared
+    partialChannelGVarSharedRowPtr[hipThreadIdx_x] = (tempSq_f24.f8[1].f1[0] +
+                                                      tempSq_f24.f8[1].f1[1] +
+                                                      tempSq_f24.f8[1].f1[2] +
+                                                      tempSq_f24.f8[1].f1[3]);                  // perform small work of reducing G float4s to float using 16 x 16 threads and store in Shared
+    partialChannelBVarSharedRowPtr[hipThreadIdx_x] = (tempSq_f24.f8[2].f1[0] +
+                                                      tempSq_f24.f8[2].f1[1] +
+                                                      tempSq_f24.f8[2].f1[2] +
+                                                      tempSq_f24.f8[2].f1[3]);                  // perform small work of reducing B float4s to float using 16 x 16 threads and store in Shared                      // perform small work of reducing B float4s to float using 16 x 16 threads and store in Shared
 
-    __syncthreads();                                                                            // syncthreads after LDS load
+    __syncthreads();                                                                            // syncthreads after Shared load
 
     // Reduction of 16 floats on 16 threads per block in x dimension (for every y dimension)
     for (int threadMax = 8; threadMax >= 1; threadMax /= 2)
     {
         if (hipThreadIdx_x < threadMax)
         {
-            partialImageRVarLDSRowPtr[hipThreadIdx_x] += partialImageRVarLDSRowPtr[hipThreadIdx_x + threadMax];
-            partialImageGVarLDSRowPtr[hipThreadIdx_x] += partialImageGVarLDSRowPtr[hipThreadIdx_x + threadMax];
-            partialImageBVarLDSRowPtr[hipThreadIdx_x] += partialImageBVarLDSRowPtr[hipThreadIdx_x + threadMax];
+            partialChannelRVarSharedRowPtr[hipThreadIdx_x] += partialChannelRVarSharedRowPtr[hipThreadIdx_x + threadMax];
+            partialChannelGVarSharedRowPtr[hipThreadIdx_x] += partialChannelGVarSharedRowPtr[hipThreadIdx_x + threadMax];
+            partialChannelBVarSharedRowPtr[hipThreadIdx_x] += partialChannelBVarSharedRowPtr[hipThreadIdx_x + threadMax];
         }
         __syncthreads();
     }
@@ -421,9 +421,9 @@ __global__ void image_var_pln3_tensor(T *srcPtr,
         {
             if (hipThreadIdx_y < threadMax)
             {
-                partialImageRVarLDSRowPtr[0] += partialImageRVarLDSRowPtr[increment];
-                partialImageGVarLDSRowPtr[0] += partialImageGVarLDSRowPtr[increment];
-                partialImageBVarLDSRowPtr[0] += partialImageBVarLDSRowPtr[increment];
+                partialChannelRVarSharedRowPtr[0] += partialChannelRVarSharedRowPtr[increment];
+                partialChannelGVarSharedRowPtr[0] += partialChannelGVarSharedRowPtr[increment];
+                partialChannelBVarSharedRowPtr[0] += partialChannelBVarSharedRowPtr[increment];
             }
             __syncthreads();
         }
@@ -432,33 +432,33 @@ __global__ void image_var_pln3_tensor(T *srcPtr,
         if (hipThreadIdx_y == 0)
         {
             int idx = ((hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x) * 3;
-            imageVarArr[idx] = partialImageRVarLDSRowPtr[0];
-            imageVarArr[idx + 1] = partialImageGVarLDSRowPtr[0];
-            imageVarArr[idx + 2] = partialImageBVarLDSRowPtr[0];
+            tensorVarArr[idx] = partialChannelRVarSharedRowPtr[0];
+            tensorVarArr[idx + 1] = partialChannelGVarSharedRowPtr[0];
+            tensorVarArr[idx + 2] = partialChannelBVarSharedRowPtr[0];
         }
     }
 }
 
 template <typename T, typename U>
-__global__ void channel_var_pkd3_tensor(T *srcPtr,
-                                        uint2 srcStridesNH,
-                                        U *imageVarArr,
-                                        Rpp32f *mean,
-                                        RpptROIPtr roiTensorPtrSrc)
+__global__ void channel_var_pkd3(T *srcPtr,
+                                 uint2 srcStridesNH,
+                                 U *tensorVarArr,
+                                 Rpp32f *mean,
+                                 RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    __shared__ float partialRVarLDS[16][16];                                           // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
-    __shared__ float partialGVarLDS[16][16];
-    __shared__ float partialBVarLDS[16][16];
-    float *partialRVarLDSRowPtr = &partialRVarLDS[hipThreadIdx_y][0];                  // float pointer to beginning of each row in LDS
-    float *partialGVarLDSRowPtr = &partialGVarLDS[hipThreadIdx_y][0];
-    float *partialBVarLDSRowPtr = &partialBVarLDS[hipThreadIdx_y][0];
-    partialRVarLDSRowPtr[hipThreadIdx_x] = 0.0f;                                       // initialization of LDS to 0 using all 16 x 16 threads
-    partialGVarLDSRowPtr[hipThreadIdx_x] = 0.0f;
-    partialBVarLDSRowPtr[hipThreadIdx_x] = 0.0f;
+    __shared__ float partialRVarShared[16][16];                                        // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
+    __shared__ float partialGVarShared[16][16];
+    __shared__ float partialBVarShared[16][16];
+    float *partialRVarSharedRowPtr = &partialRVarShared[hipThreadIdx_y][0];            // float pointer to beginning of each row in Shared
+    float *partialGVarSharedRowPtr = &partialGVarShared[hipThreadIdx_y][0];
+    float *partialBVarSharedRowPtr = &partialBVarShared[hipThreadIdx_y][0];
+    partialRVarSharedRowPtr[hipThreadIdx_x] = 0.0f;                                    // initialization of Shared to 0 using all 16 x 16 threads
+    partialGVarSharedRowPtr[hipThreadIdx_x] = 0.0f;
+    partialBVarSharedRowPtr[hipThreadIdx_x] = 0.0f;
 
     int index       = id_z * 4;
     float4 meanR_f4 = (float4)mean[index];
@@ -495,29 +495,29 @@ __global__ void channel_var_pkd3_tensor(T *srcPtr,
     tempChSq_f24.f8[0].f4[0] += tempChSq_f24.f8[0].f4[1];                              // perform small work of vectorized float4 addition
     tempChSq_f24.f8[1].f4[0] += tempChSq_f24.f8[1].f4[1];
     tempChSq_f24.f8[2].f4[0] += tempChSq_f24.f8[2].f4[1];
-    partialRVarLDSRowPtr[hipThreadIdx_x] = (tempChSq_f24.f8[0].f1[0] +
-                                            tempChSq_f24.f8[0].f1[1] +
-                                            tempChSq_f24.f8[0].f1[2] +
-                                            tempChSq_f24.f8[0].f1[3]);                 // perform small work of reducing R float4s to float using 16 x 16 threads and store in LDS
-    partialGVarLDSRowPtr[hipThreadIdx_x] = (tempChSq_f24.f8[1].f1[0] +
-                                            tempChSq_f24.f8[1].f1[1] +
-                                            tempChSq_f24.f8[1].f1[2] +
-                                            tempChSq_f24.f8[1].f1[3]);                 // perform small work of reducing G float4s to float using 16 x 16 threads and store in LDS
-    partialBVarLDSRowPtr[hipThreadIdx_x] = (tempChSq_f24.f8[2].f1[0] +
-                                            tempChSq_f24.f8[2].f1[1] +
-                                            tempChSq_f24.f8[2].f1[2] +
-                                            tempChSq_f24.f8[2].f1[3]);                 // perform small work of reducing B float4s to float using 16 x 16 threads and store in LDS
+    partialRVarSharedRowPtr[hipThreadIdx_x] = (tempChSq_f24.f8[0].f1[0] +
+                                               tempChSq_f24.f8[0].f1[1] +
+                                               tempChSq_f24.f8[0].f1[2] +
+                                               tempChSq_f24.f8[0].f1[3]);              // perform small work of reducing R float4s to float using 16 x 16 threads and store in Shared
+    partialGVarSharedRowPtr[hipThreadIdx_x] = (tempChSq_f24.f8[1].f1[0] +
+                                               tempChSq_f24.f8[1].f1[1] +
+                                               tempChSq_f24.f8[1].f1[2] +
+                                               tempChSq_f24.f8[1].f1[3]);              // perform small work of reducing G float4s to float using 16 x 16 threads and store in Shared
+    partialBVarSharedRowPtr[hipThreadIdx_x] = (tempChSq_f24.f8[2].f1[0] +
+                                               tempChSq_f24.f8[2].f1[1] +
+                                               tempChSq_f24.f8[2].f1[2] +
+                                               tempChSq_f24.f8[2].f1[3]);              // perform small work of reducing B float4s to float using 16 x 16 threads and store in Shared
 
-    __syncthreads();                                                                   // syncthreads after LDS load
+    __syncthreads();                                                                   // syncthreads after Shared load
 
     // Reduction of 16 floats on 16 threads per block in x dimension (for every y dimension)
     for (int threadMax = 8; threadMax >= 1; threadMax /= 2)
     {
         if (hipThreadIdx_x < threadMax)
         {
-            partialRVarLDSRowPtr[hipThreadIdx_x] += partialRVarLDSRowPtr[hipThreadIdx_x + threadMax];
-            partialGVarLDSRowPtr[hipThreadIdx_x] += partialGVarLDSRowPtr[hipThreadIdx_x + threadMax];
-            partialBVarLDSRowPtr[hipThreadIdx_x] += partialBVarLDSRowPtr[hipThreadIdx_x + threadMax];
+            partialRVarSharedRowPtr[hipThreadIdx_x] += partialRVarSharedRowPtr[hipThreadIdx_x + threadMax];
+            partialGVarSharedRowPtr[hipThreadIdx_x] += partialGVarSharedRowPtr[hipThreadIdx_x + threadMax];
+            partialBVarSharedRowPtr[hipThreadIdx_x] += partialBVarSharedRowPtr[hipThreadIdx_x + threadMax];
         }
         __syncthreads();
     }
@@ -529,9 +529,9 @@ __global__ void channel_var_pkd3_tensor(T *srcPtr,
         {
             if (hipThreadIdx_y < threadMax)
             {
-                partialRVarLDSRowPtr[0] += partialRVarLDSRowPtr[increment];
-                partialGVarLDSRowPtr[0] += partialGVarLDSRowPtr[increment];
-                partialBVarLDSRowPtr[0] += partialBVarLDSRowPtr[increment];
+                partialRVarSharedRowPtr[0] += partialRVarSharedRowPtr[increment];
+                partialGVarSharedRowPtr[0] += partialGVarSharedRowPtr[increment];
+                partialBVarSharedRowPtr[0] += partialBVarSharedRowPtr[increment];
             }
             __syncthreads();
         }
@@ -540,34 +540,34 @@ __global__ void channel_var_pkd3_tensor(T *srcPtr,
         if (hipThreadIdx_y == 0)
         {
             int idx = ((hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x) * 3;
-            imageVarArr[idx] = partialRVarLDSRowPtr[0];
-            imageVarArr[idx + 1] = partialGVarLDSRowPtr[0];
-            imageVarArr[idx + 2] = partialBVarLDSRowPtr[0];
+            tensorVarArr[idx] = partialRVarSharedRowPtr[0];
+            tensorVarArr[idx + 1] = partialGVarSharedRowPtr[0];
+            tensorVarArr[idx + 2] = partialBVarSharedRowPtr[0];
         }
     }
 }
 
 template <typename T, typename U>
-__global__ void image_var_pkd3_tensor(T *srcPtr,
-                                      uint2 srcStridesNH,
-                                      U *imageVarArr,
-                                      Rpp32f *mean,
-                                      RpptROIPtr roiTensorPtrSrc)
+__global__ void tensor_var_pkd3(T *srcPtr,
+                                uint2 srcStridesNH,
+                                U *tensorVarArr,
+                                Rpp32f *mean,
+                                RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
     /* Stores individual channel Variations computed from Image Mean to compute Stddev of Image*/
-    __shared__ float partialImageRVarLDS[16][16];
-    __shared__ float partialImageGVarLDS[16][16];
-    __shared__ float partialImageBVarLDS[16][16];
-    float *partialImageRVarLDSRowPtr = &partialImageRVarLDS[hipThreadIdx_y][0];
-    float *partialImageGVarLDSRowPtr = &partialImageGVarLDS[hipThreadIdx_y][0];
-    float *partialImageBVarLDSRowPtr = &partialImageBVarLDS[hipThreadIdx_y][0];
-    partialImageRVarLDSRowPtr[hipThreadIdx_x] = 0.0f;
-    partialImageGVarLDSRowPtr[hipThreadIdx_x] = 0.0f;
-    partialImageBVarLDSRowPtr[hipThreadIdx_x] = 0.0f;
+    __shared__ float partialChannelRVarShared[16][16];
+    __shared__ float partialChannelGVarShared[16][16];
+    __shared__ float partialChannelBVarShared[16][16];
+    float *partialChannelRVarSharedRowPtr = &partialChannelRVarShared[hipThreadIdx_y][0];
+    float *partialChannelGVarSharedRowPtr = &partialChannelGVarShared[hipThreadIdx_y][0];
+    float *partialChannelBVarSharedRowPtr = &partialChannelBVarShared[hipThreadIdx_y][0];
+    partialChannelRVarSharedRowPtr[hipThreadIdx_x] = 0.0f;
+    partialChannelGVarSharedRowPtr[hipThreadIdx_x] = 0.0f;
+    partialChannelBVarSharedRowPtr[hipThreadIdx_x] = 0.0f;
 
     int index           = (id_z * 4) + 3;
     float4 meanImage_f4 = (float4)mean[index];
@@ -598,29 +598,29 @@ __global__ void image_var_pkd3_tensor(T *srcPtr,
     tempSq_f24.f8[0].f4[0] += tempSq_f24.f8[0].f4[1];                                           // perform small work of vectorized float4 addition
     tempSq_f24.f8[1].f4[0] += tempSq_f24.f8[1].f4[1];
     tempSq_f24.f8[2].f4[0] += tempSq_f24.f8[2].f4[1];
-    partialImageRVarLDSRowPtr[hipThreadIdx_x] = (tempSq_f24.f8[0].f1[0] +
-                                                 tempSq_f24.f8[0].f1[1] +
-                                                 tempSq_f24.f8[0].f1[2] +
-                                                 tempSq_f24.f8[0].f1[3]);                       // perform small work of reducing R float4s to float using 16 x 16 threads and store in LDS
-    partialImageGVarLDSRowPtr[hipThreadIdx_x] = (tempSq_f24.f8[1].f1[0] +
-                                                 tempSq_f24.f8[1].f1[1] +
-                                                 tempSq_f24.f8[1].f1[2] +
-                                                 tempSq_f24.f8[1].f1[3]);                       // perform small work of reducing G float4s to float using 16 x 16 threads and store in LDS
-    partialImageBVarLDSRowPtr[hipThreadIdx_x] = (tempSq_f24.f8[2].f1[0] +
-                                                 tempSq_f24.f8[2].f1[1] +
-                                                 tempSq_f24.f8[2].f1[2] +
-                                                 tempSq_f24.f8[2].f1[3]);                       // perform small work of reducing B float4s to float using 16 x 16 threads and store in LDS                      // perform small work of reducing B float4s to float using 16 x 16 threads and store in LDS
+    partialChannelRVarSharedRowPtr[hipThreadIdx_x] = (tempSq_f24.f8[0].f1[0] +
+                                                      tempSq_f24.f8[0].f1[1] +
+                                                      tempSq_f24.f8[0].f1[2] +
+                                                      tempSq_f24.f8[0].f1[3]);                  // perform small work of reducing R float4s to float using 16 x 16 threads and store in Shared
+    partialChannelGVarSharedRowPtr[hipThreadIdx_x] = (tempSq_f24.f8[1].f1[0] +
+                                                      tempSq_f24.f8[1].f1[1] +
+                                                      tempSq_f24.f8[1].f1[2] +
+                                                      tempSq_f24.f8[1].f1[3]);                  // perform small work of reducing G float4s to float using 16 x 16 threads and store in Shared
+    partialChannelBVarSharedRowPtr[hipThreadIdx_x] = (tempSq_f24.f8[2].f1[0] +
+                                                      tempSq_f24.f8[2].f1[1] +
+                                                      tempSq_f24.f8[2].f1[2] +
+                                                      tempSq_f24.f8[2].f1[3]);                  // perform small work of reducing B float4s to float using 16 x 16 threads and store in Shared                      // perform small work of reducing B float4s to float using 16 x 16 threads and store in Shared
 
-    __syncthreads();                                                                            // syncthreads after LDS load
+    __syncthreads();                                                                            // syncthreads after Shared load
 
     // Reduction of 16 floats on 16 threads per block in x dimension (for every y dimension)
     for (int threadMax = 8; threadMax >= 1; threadMax /= 2)
     {
         if (hipThreadIdx_x < threadMax)
         {
-            partialImageRVarLDSRowPtr[hipThreadIdx_x] += partialImageRVarLDSRowPtr[hipThreadIdx_x + threadMax];
-            partialImageGVarLDSRowPtr[hipThreadIdx_x] += partialImageGVarLDSRowPtr[hipThreadIdx_x + threadMax];
-            partialImageBVarLDSRowPtr[hipThreadIdx_x] += partialImageBVarLDSRowPtr[hipThreadIdx_x + threadMax];
+            partialChannelRVarSharedRowPtr[hipThreadIdx_x] += partialChannelRVarSharedRowPtr[hipThreadIdx_x + threadMax];
+            partialChannelGVarSharedRowPtr[hipThreadIdx_x] += partialChannelGVarSharedRowPtr[hipThreadIdx_x + threadMax];
+            partialChannelBVarSharedRowPtr[hipThreadIdx_x] += partialChannelBVarSharedRowPtr[hipThreadIdx_x + threadMax];
         }
         __syncthreads();
     }
@@ -632,9 +632,9 @@ __global__ void image_var_pkd3_tensor(T *srcPtr,
         {
             if (hipThreadIdx_y < threadMax)
             {
-                partialImageRVarLDSRowPtr[0] += partialImageRVarLDSRowPtr[increment];
-                partialImageGVarLDSRowPtr[0] += partialImageGVarLDSRowPtr[increment];
-                partialImageBVarLDSRowPtr[0] += partialImageBVarLDSRowPtr[increment];
+                partialChannelRVarSharedRowPtr[0] += partialChannelRVarSharedRowPtr[increment];
+                partialChannelGVarSharedRowPtr[0] += partialChannelGVarSharedRowPtr[increment];
+                partialChannelBVarSharedRowPtr[0] += partialChannelBVarSharedRowPtr[increment];
             }
             __syncthreads();
         }
@@ -643,9 +643,9 @@ __global__ void image_var_pkd3_tensor(T *srcPtr,
         if (hipThreadIdx_y == 0)
         {
             int idx = ((hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x) * 3;
-            imageVarArr[idx] = partialImageRVarLDSRowPtr[0];
-            imageVarArr[idx + 1] = partialImageGVarLDSRowPtr[0];
-            imageVarArr[idx + 2] = partialImageBVarLDSRowPtr[0];
+            tensorVarArr[idx] = partialChannelRVarSharedRowPtr[0];
+            tensorVarArr[idx + 1] = partialChannelGVarSharedRowPtr[0];
+            tensorVarArr[idx + 2] = partialChannelBVarSharedRowPtr[0];
         }
     }
 }
@@ -653,13 +653,13 @@ __global__ void image_var_pkd3_tensor(T *srcPtr,
 // -------------------- Set 2 - Kernel Executors --------------------
 
 template <typename T, typename U>
-RppStatus hip_exec_image_stddev_tensor(T *srcPtr,
-                                       RpptDescPtr srcDescPtr,
-                                       U *imageStddevArr,
-                                       int flag,
-                                       RpptROIPtr roiTensorPtrSrc,
-                                       RpptRoiType roiType,
-                                       rpp::Handle& handle)
+RppStatus hip_exec_tensor_stddev(T *srcPtr,
+                                 RpptDescPtr srcDescPtr,
+                                 U *imageStddevArr,
+                                 int flag,
+                                 RpptROIPtr roiTensorPtrSrc,
+                                 RpptRoiType roiType,
+                                 rpp::Handle& handle)
 {
     if (roiType == RpptRoiType::LTRB)
         hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
@@ -676,60 +676,60 @@ RppStatus hip_exec_image_stddev_tensor(T *srcPtr,
 
     if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
     {
-        Rpp32u imagePartialVarArrLength = gridDim_x * gridDim_y * gridDim_z;
-        float *imagePartialVarArr;
-        imagePartialVarArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
-        hipMemsetAsync(imagePartialVarArr, 0, imagePartialVarArrLength * sizeof(float));
+        Rpp32u tensorPartialVarArrLength = gridDim_x * gridDim_y * gridDim_z;
+        float *tensorPartialVarArr;
+        tensorPartialVarArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
+        hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float));
         hipStreamSynchronize(handle.GetStream());
-        hipLaunchKernelGGL(image_var_pln1_tensor,
+        hipLaunchKernelGGL(tensor_var_pln1,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
                            dim3(localThreads_x, localThreads_y, localThreads_z),
                            0,
                            handle.GetStream(),
                            srcPtr,
                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
-                           imagePartialVarArr,
+                           tensorPartialVarArr,
                            handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
                            roiTensorPtrSrc);
         hipStreamSynchronize(handle.GetStream());
-        hipLaunchKernelGGL(image_stddev_grid_result_tensor,
+        hipLaunchKernelGGL(tensor_stddev_grid_result,
                            dim3(1, 1, gridDim_z),
                            dim3(1024, 1, 1),
                            0,
                            handle.GetStream(),
                            srcPtr,
-                           imagePartialVarArr,
+                           tensorPartialVarArr,
                            gridDim_x * gridDim_y,
                            imageStddevArr,
                            roiTensorPtrSrc);
     }
     else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
     {
-        Rpp32u imagePartialVarArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
-        float *imagePartialVarArr;
-        imagePartialVarArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
+        Rpp32u tensorPartialVarArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
+        float *tensorPartialVarArr;
+        tensorPartialVarArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
         if(!flag)
         {
-            hipMemsetAsync(imagePartialVarArr, 0, imagePartialVarArrLength * sizeof(float));
+            hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float));
             hipStreamSynchronize(handle.GetStream());
-            hipLaunchKernelGGL(channel_var_pln3_tensor,
+            hipLaunchKernelGGL(channel_var_pln3,
                             dim3(gridDim_x, gridDim_y, gridDim_z),
                             dim3(localThreads_x, localThreads_y, localThreads_z),
                             0,
                             handle.GetStream(),
                             srcPtr,
                             make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                            imagePartialVarArr,
+                            tensorPartialVarArr,
                             handle.GetInitHandle()->mem.mgpu.float4Arr[0].floatmem,
                             roiTensorPtrSrc);
             hipStreamSynchronize(handle.GetStream());
-            hipLaunchKernelGGL(image_stddev_grid_3channel_result_tensor,
+            hipLaunchKernelGGL(tensor_stddev_grid_3channel_result,
                             dim3(1, 1, gridDim_z),
                             dim3(1024, 1, 1),
                             0,
                             handle.GetStream(),
                             srcPtr,
-                            imagePartialVarArr,
+                            tensorPartialVarArr,
                             gridDim_x * gridDim_y,
                             imageStddevArr,
                             flag,
@@ -737,26 +737,26 @@ RppStatus hip_exec_image_stddev_tensor(T *srcPtr,
         }
         if(flag == 1)
         {
-            hipMemsetAsync(imagePartialVarArr, 0, imagePartialVarArrLength * sizeof(float));
+            hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float));
             hipStreamSynchronize(handle.GetStream());
-            hipLaunchKernelGGL(image_var_pln3_tensor,
+            hipLaunchKernelGGL(tensor_var_pln3,
                             dim3(gridDim_x, gridDim_y, gridDim_z),
                             dim3(localThreads_x, localThreads_y, localThreads_z),
                             0,
                             handle.GetStream(),
                             srcPtr,
                             make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                            imagePartialVarArr,
+                            tensorPartialVarArr,
                             handle.GetInitHandle()->mem.mgpu.float4Arr[0].floatmem,
                             roiTensorPtrSrc);
             hipStreamSynchronize(handle.GetStream());
-            hipLaunchKernelGGL(image_stddev_grid_3channel_result_tensor,
+            hipLaunchKernelGGL(tensor_stddev_grid_3channel_result,
                             dim3(1, 1, gridDim_z),
                             dim3(1024, 1, 1),
                             0,
                             handle.GetStream(),
                             srcPtr,
-                            imagePartialVarArr,
+                            tensorPartialVarArr,
                             gridDim_x * gridDim_y,
                             imageStddevArr,
                             flag,
@@ -764,50 +764,50 @@ RppStatus hip_exec_image_stddev_tensor(T *srcPtr,
         }
         if(flag == 2)
         {
-            hipMemsetAsync(imagePartialVarArr, 0, imagePartialVarArrLength * sizeof(float));
+            hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float));
             hipStreamSynchronize(handle.GetStream());
-            hipLaunchKernelGGL(channel_var_pln3_tensor,
+            hipLaunchKernelGGL(channel_var_pln3,
                             dim3(gridDim_x, gridDim_y, gridDim_z),
                             dim3(localThreads_x, localThreads_y, localThreads_z),
                             0,
                             handle.GetStream(),
                             srcPtr,
                             make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                            imagePartialVarArr,
+                            tensorPartialVarArr,
                             handle.GetInitHandle()->mem.mgpu.float4Arr[0].floatmem,
                             roiTensorPtrSrc);
             hipStreamSynchronize(handle.GetStream());
-            hipLaunchKernelGGL(image_stddev_grid_3channel_result_tensor,
+            hipLaunchKernelGGL(tensor_stddev_grid_3channel_result,
                             dim3(1, 1, gridDim_z),
                             dim3(1024, 1, 1),
                             0,
                             handle.GetStream(),
                             srcPtr,
-                            imagePartialVarArr,
+                            tensorPartialVarArr,
                             gridDim_x * gridDim_y,
                             imageStddevArr,
                             0, //setting flag to 0 here to compute individual channel stddev
                             roiTensorPtrSrc);
-            hipMemsetAsync(imagePartialVarArr, 0, imagePartialVarArrLength * sizeof(float));
+            hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float));
             hipStreamSynchronize(handle.GetStream());
-            hipLaunchKernelGGL(image_var_pln3_tensor,
+            hipLaunchKernelGGL(tensor_var_pln3,
                             dim3(gridDim_x, gridDim_y, gridDim_z),
                             dim3(localThreads_x, localThreads_y, localThreads_z),
                             0,
                             handle.GetStream(),
                             srcPtr,
                             make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                            imagePartialVarArr,
+                            tensorPartialVarArr,
                             handle.GetInitHandle()->mem.mgpu.float4Arr[0].floatmem,
                             roiTensorPtrSrc);
             hipStreamSynchronize(handle.GetStream());
-            hipLaunchKernelGGL(image_stddev_grid_3channel_result_tensor,
+            hipLaunchKernelGGL(tensor_stddev_grid_3channel_result,
                             dim3(1, 1, gridDim_z),
                             dim3(1024, 1, 1),
                             0,
                             handle.GetStream(),
                             srcPtr,
-                            imagePartialVarArr,
+                            tensorPartialVarArr,
                             gridDim_x * gridDim_y,
                             imageStddevArr,
                             1, //setting flag to 1 here to compute image stddev
@@ -817,31 +817,31 @@ RppStatus hip_exec_image_stddev_tensor(T *srcPtr,
     }
     else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
     {
-        Rpp32u imagePartialVarArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
-        float *imagePartialVarArr;
-        imagePartialVarArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
+        Rpp32u tensorPartialVarArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
+        float *tensorPartialVarArr;
+        tensorPartialVarArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
         if(!flag)
         {
-            hipMemsetAsync(imagePartialVarArr, 0, imagePartialVarArrLength * sizeof(float));
+            hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float));
             hipStreamSynchronize(handle.GetStream());
-            hipLaunchKernelGGL(channel_var_pkd3_tensor,
+            hipLaunchKernelGGL(channel_var_pkd3,
                             dim3(gridDim_x, gridDim_y, gridDim_z),
                             dim3(localThreads_x, localThreads_y, localThreads_z),
                             0,
                             handle.GetStream(),
                             srcPtr,
                             make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
-                            imagePartialVarArr,
+                            tensorPartialVarArr,
                             handle.GetInitHandle()->mem.mgpu.float4Arr[0].floatmem,
                             roiTensorPtrSrc);
             hipStreamSynchronize(handle.GetStream());
-            hipLaunchKernelGGL(image_stddev_grid_3channel_result_tensor,
+            hipLaunchKernelGGL(tensor_stddev_grid_3channel_result,
                             dim3(1, 1, gridDim_z),
                             dim3(1024, 1, 1),
                             0,
                             handle.GetStream(),
                             srcPtr,
-                            imagePartialVarArr,
+                            tensorPartialVarArr,
                             gridDim_x * gridDim_y,
                             imageStddevArr,
                             flag,
@@ -849,26 +849,26 @@ RppStatus hip_exec_image_stddev_tensor(T *srcPtr,
         }
         if(flag == 1)
         {
-            hipMemsetAsync(imagePartialVarArr, 0, imagePartialVarArrLength * sizeof(float));
+            hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float));
             hipStreamSynchronize(handle.GetStream());
-            hipLaunchKernelGGL(image_var_pkd3_tensor,
+            hipLaunchKernelGGL(tensor_var_pkd3,
                             dim3(gridDim_x, gridDim_y, gridDim_z),
                             dim3(localThreads_x, localThreads_y, localThreads_z),
                             0,
                             handle.GetStream(),
                             srcPtr,
                             make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
-                            imagePartialVarArr,
+                            tensorPartialVarArr,
                             handle.GetInitHandle()->mem.mgpu.float4Arr[0].floatmem,
                             roiTensorPtrSrc);
             hipStreamSynchronize(handle.GetStream());
-            hipLaunchKernelGGL(image_stddev_grid_3channel_result_tensor,
+            hipLaunchKernelGGL(tensor_stddev_grid_3channel_result,
                             dim3(1, 1, gridDim_z),
                             dim3(1024, 1, 1),
                             0,
                             handle.GetStream(),
                             srcPtr,
-                            imagePartialVarArr,
+                            tensorPartialVarArr,
                             gridDim_x * gridDim_y,
                             imageStddevArr,
                             flag,
@@ -876,50 +876,50 @@ RppStatus hip_exec_image_stddev_tensor(T *srcPtr,
         }
         if(flag == 2)
         {
-            hipMemsetAsync(imagePartialVarArr, 0, imagePartialVarArrLength * sizeof(float));
+            hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float));
             hipStreamSynchronize(handle.GetStream());
-            hipLaunchKernelGGL(channel_var_pkd3_tensor,
+            hipLaunchKernelGGL(channel_var_pkd3,
                             dim3(gridDim_x, gridDim_y, gridDim_z),
                             dim3(localThreads_x, localThreads_y, localThreads_z),
                             0,
                             handle.GetStream(),
                             srcPtr,
                             make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
-                            imagePartialVarArr,
+                            tensorPartialVarArr,
                             handle.GetInitHandle()->mem.mgpu.float4Arr[0].floatmem,
                             roiTensorPtrSrc);
             hipStreamSynchronize(handle.GetStream());
-            hipLaunchKernelGGL(image_stddev_grid_3channel_result_tensor,
+            hipLaunchKernelGGL(tensor_stddev_grid_3channel_result,
                             dim3(1, 1, gridDim_z),
                             dim3(1024, 1, 1),
                             0,
                             handle.GetStream(),
                             srcPtr,
-                            imagePartialVarArr,
+                            tensorPartialVarArr,
                             gridDim_x * gridDim_y,
                             imageStddevArr,
                             0, //setting flag to 0 here to compute individual channel stddev
                             roiTensorPtrSrc);
-            hipMemsetAsync(imagePartialVarArr, 0, imagePartialVarArrLength * sizeof(float));
+            hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float));
             hipStreamSynchronize(handle.GetStream());
-            hipLaunchKernelGGL(image_var_pkd3_tensor,
+            hipLaunchKernelGGL(tensor_var_pkd3,
                             dim3(gridDim_x, gridDim_y, gridDim_z),
                             dim3(localThreads_x, localThreads_y, localThreads_z),
                             0,
                             handle.GetStream(),
                             srcPtr,
                             make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
-                            imagePartialVarArr,
+                            tensorPartialVarArr,
                             handle.GetInitHandle()->mem.mgpu.float4Arr[0].floatmem,
                             roiTensorPtrSrc);
             hipStreamSynchronize(handle.GetStream());
-            hipLaunchKernelGGL(image_stddev_grid_3channel_result_tensor,
+            hipLaunchKernelGGL(tensor_stddev_grid_3channel_result,
                             dim3(1, 1, gridDim_z),
                             dim3(1024, 1, 1),
                             0,
                             handle.GetStream(),
                             srcPtr,
-                            imagePartialVarArr,
+                            tensorPartialVarArr,
                             gridDim_x * gridDim_y,
                             imageStddevArr,
                             1, //setting flag to 1 here to compute image stddev

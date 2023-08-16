@@ -655,7 +655,7 @@ int main(int argc, char **argv)
             }
             case 90:
             {
-                testCaseName = "image_mean";
+                testCaseName = "tensor_mean";
 
                 if(srcDescPtr->c == 1)
                     reductionFuncResultArrLength = srcDescPtr->n;
@@ -663,7 +663,7 @@ int main(int argc, char **argv)
                 startWallTime = omp_get_wtime();
 
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_image_mean_gpu(d_input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
+                    rppt_tensor_mean_gpu(d_input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
                 else
                     missingFuncFlag = 1;
 
@@ -671,7 +671,7 @@ int main(int argc, char **argv)
             }
             case 91:
             {
-                testCaseName = "image_stddev";
+                testCaseName = "tensor_stddev";
 
                 if(srcDescPtr->c == 1)
                     reductionFuncResultArrLength = srcDescPtr->n;
@@ -709,7 +709,7 @@ int main(int argc, char **argv)
                 startWallTime = omp_get_wtime();
 
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_image_stddev_gpu(d_input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, mean, flag, roiTensorPtrSrc, roiTypeSrc, handle);
+                    rppt_tensor_stddev_gpu(d_input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, mean, flag, roiTensorPtrSrc, roiTypeSrc, handle);
                 else
                     missingFuncFlag = 1;
 

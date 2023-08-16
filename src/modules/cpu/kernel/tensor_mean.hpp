@@ -3,12 +3,12 @@
 #include "rpp_cpu_common.hpp"
 #include "reduction.hpp"
 
-RppStatus image_mean_u8_u8_host_tensor(Rpp8u *srcPtr,
-                                       RpptDescPtr srcDescPtr,
-                                       Rpp32f *imageMeanArr,
-                                       RpptROIPtr roiTensorPtrSrc,
-                                       RpptRoiType roiType,
-                                       RppLayoutParams layoutParams)
+RppStatus tensor_mean_u8_u8_host(Rpp8u *srcPtr,
+                                 RpptDescPtr srcDescPtr,
+                                 Rpp32f *tensorMeanArr,
+                                 RpptROIPtr roiTensorPtrSrc,
+                                 RpptRoiType roiType,
+                                 RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
@@ -34,7 +34,7 @@ RppStatus image_mean_u8_u8_host_tensor(Rpp8u *srcPtr,
         Rpp32f totalPixelsPerChannel = roi.xywhROI.roiWidth * roi.xywhROI.roiHeight;
         int idx = batchCount * 4;
 
-        // Image Sum without fused output-layout toggle (NCHW)
+        // Tensor Mean without fused output-layout toggle (NCHW)
         if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
             alignedLength = (bufferLength / 8) * 8;
@@ -78,10 +78,10 @@ RppStatus image_mean_u8_u8_host_tensor(Rpp8u *srcPtr,
                 sum += (sumAvx[i] + sumAvx[i + 2]);
 #endif
             mean = (Rpp32f)(sum / totalPixelsPerChannel);
-            imageMeanArr[batchCount] = mean;
+            tensorMeanArr[batchCount] = mean;
         }
 
-        // Image Sum without fused output-layout toggle 3 channel (NCHW)
+        // Tensor Mean without fused output-layout toggle 3 channel (NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp64f sum, sumR = 0.0, sumG = 0.0, sumB = 0.0;
@@ -147,13 +147,13 @@ RppStatus image_mean_u8_u8_host_tensor(Rpp8u *srcPtr,
             meanR = (Rpp32f)(sumR / totalPixelsPerChannel);
             meanG = (Rpp32f)(sumG / totalPixelsPerChannel);
             meanB = (Rpp32f)(sumB / totalPixelsPerChannel);
-            imageMeanArr[idx] = meanR;
-            imageMeanArr[idx + 1] = meanG;
-            imageMeanArr[idx + 2] = meanB;
-            imageMeanArr[idx + 3] = mean;
+            tensorMeanArr[idx] = meanR;
+            tensorMeanArr[idx + 1] = meanG;
+            tensorMeanArr[idx + 2] = meanB;
+            tensorMeanArr[idx + 3] = mean;
         }
 
-        // Image Sum without fused output-layout toggle (NHWC)
+        // Tensor Mean without fused output-layout toggle (NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp64f sum, sumR = 0.0, sumG = 0.0, sumB = 0.0;
@@ -209,22 +209,22 @@ RppStatus image_mean_u8_u8_host_tensor(Rpp8u *srcPtr,
             meanR = (Rpp32f)(sumR / totalPixelsPerChannel);
             meanG = (Rpp32f)(sumG / totalPixelsPerChannel);
             meanB = (Rpp32f)(sumB / totalPixelsPerChannel);
-            imageMeanArr[idx] = meanR;
-            imageMeanArr[idx + 1] = meanG;
-            imageMeanArr[idx + 2] = meanB;
-            imageMeanArr[idx + 3] = mean;
+            tensorMeanArr[idx] = meanR;
+            tensorMeanArr[idx + 1] = meanG;
+            tensorMeanArr[idx + 2] = meanB;
+            tensorMeanArr[idx + 3] = mean;
         }
     }
 
     return RPP_SUCCESS;
 }
 
-RppStatus image_mean_f32_f32_host_tensor(Rpp32f *srcPtr,
-                                         RpptDescPtr srcDescPtr,
-                                         Rpp32f *imageMeanArr,
-                                         RpptROIPtr roiTensorPtrSrc,
-                                         RpptRoiType roiType,
-                                         RppLayoutParams layoutParams)
+RppStatus tensor_mean_f32_f32_host(Rpp32f *srcPtr,
+                                   RpptDescPtr srcDescPtr,
+                                   Rpp32f *tensorMeanArr,
+                                   RpptROIPtr roiTensorPtrSrc,
+                                   RpptRoiType roiType,
+                                   RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
@@ -250,7 +250,7 @@ RppStatus image_mean_f32_f32_host_tensor(Rpp32f *srcPtr,
         Rpp32f totalPixelsPerChannel = roi.xywhROI.roiWidth * roi.xywhROI.roiHeight;
         int idx = batchCount * 4;
 
-        // Image Sum without fused output-layout toggle (NCHW)
+        // Tensor Mean without fused output-layout toggle (NCHW)
         if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp32u alignedLength = bufferLength & ~(vectorIncrementPerChannel-1);
@@ -293,10 +293,10 @@ RppStatus image_mean_f32_f32_host_tensor(Rpp32f *srcPtr,
                 sum += (sumAvx[i] + sumAvx[i + 2]);
 
             mean = (Rpp32f)(sum / totalPixelsPerChannel);
-            imageMeanArr[batchCount] = mean;
+            tensorMeanArr[batchCount] = mean;
         }
 
-        // Image Sum without fused output-layout toggle 3 channel (NCHW)
+        // Tensor Mean without fused output-layout toggle 3 channel (NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp64f sum, sumR = 0.0, sumG = 0.0, sumB = 0.0;
@@ -363,13 +363,13 @@ RppStatus image_mean_f32_f32_host_tensor(Rpp32f *srcPtr,
             meanR = (Rpp32f)(sumR / totalPixelsPerChannel);
             meanG = (Rpp32f)(sumG / totalPixelsPerChannel);
             meanB = (Rpp32f)(sumB / totalPixelsPerChannel);
-            imageMeanArr[idx] = meanR;
-            imageMeanArr[idx + 1] = meanG;
-            imageMeanArr[idx + 2] = meanB;
-            imageMeanArr[idx + 3] = mean;
+            tensorMeanArr[idx] = meanR;
+            tensorMeanArr[idx + 1] = meanG;
+            tensorMeanArr[idx + 2] = meanB;
+            tensorMeanArr[idx + 3] = mean;
         }
 
-        // Image Sum without fused output-layout toggle (NHWC)
+        // Tensor Mean without fused output-layout toggle (NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp64f sum, sumR = 0.0, sumG = 0.0, sumB = 0.0;
@@ -426,22 +426,22 @@ RppStatus image_mean_f32_f32_host_tensor(Rpp32f *srcPtr,
             meanR = (Rpp32f)(sumR / totalPixelsPerChannel);
             meanG = (Rpp32f)(sumG / totalPixelsPerChannel);
             meanB = (Rpp32f)(sumB / totalPixelsPerChannel);
-            imageMeanArr[idx] = meanR;
-            imageMeanArr[idx + 1] = meanG;
-            imageMeanArr[idx + 2] = meanB;
-            imageMeanArr[idx + 3] = mean;
+            tensorMeanArr[idx] = meanR;
+            tensorMeanArr[idx + 1] = meanG;
+            tensorMeanArr[idx + 2] = meanB;
+            tensorMeanArr[idx + 3] = mean;
         }
     }
 
     return RPP_SUCCESS;
 }
 
-RppStatus image_mean_f16_f16_host_tensor(Rpp16f *srcPtr,
-                                        RpptDescPtr srcDescPtr,
-                                        Rpp32f *imageMeanArr,
-                                        RpptROIPtr roiTensorPtrSrc,
-                                        RpptRoiType roiType,
-                                        RppLayoutParams layoutParams)
+RppStatus tensor_mean_f16_f16_host(Rpp16f *srcPtr,
+                                   RpptDescPtr srcDescPtr,
+                                   Rpp32f *tensorMeanArr,
+                                   RpptROIPtr roiTensorPtrSrc,
+                                   RpptRoiType roiType,
+                                   RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
@@ -467,7 +467,7 @@ RppStatus image_mean_f16_f16_host_tensor(Rpp16f *srcPtr,
         Rpp32f totalPixelsPerChannel = roi.xywhROI.roiWidth * roi.xywhROI.roiHeight;
         int idx = batchCount * 4;
 
-        // Image Sum without fused output-layout toggle (NCHW)
+        // Tensor Mean without fused output-layout toggle (NCHW)
         if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
             alignedLength = bufferLength & ~(vectorIncrementPerChannel-1);
@@ -513,10 +513,10 @@ RppStatus image_mean_f16_f16_host_tensor(Rpp16f *srcPtr,
                 sum += (sumAvx[i] + sumAvx[i + 2]);
 
             mean = (Rpp32f)(sum / totalPixelsPerChannel);
-            imageMeanArr[batchCount] = mean;
+            tensorMeanArr[batchCount] = mean;
         }
 
-        // Image Sum without fused output-layout toggle 3 channel (NCHW)
+        // Tensor Mean without fused output-layout toggle 3 channel (NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp64f sum, sumR = 0.0, sumG = 0.0, sumB = 0.0;
@@ -590,13 +590,13 @@ RppStatus image_mean_f16_f16_host_tensor(Rpp16f *srcPtr,
             meanR = (Rpp32f)(sumR / totalPixelsPerChannel);
             meanG = (Rpp32f)(sumG / totalPixelsPerChannel);
             meanB = (Rpp32f)(sumB / totalPixelsPerChannel);
-            imageMeanArr[idx] = meanR;
-            imageMeanArr[idx + 1] = meanG;
-            imageMeanArr[idx + 2] = meanB;
-            imageMeanArr[idx + 3] = mean;
+            tensorMeanArr[idx] = meanR;
+            tensorMeanArr[idx + 1] = meanG;
+            tensorMeanArr[idx + 2] = meanB;
+            tensorMeanArr[idx + 3] = mean;
         }
 
-        // Image Sum without fused output-layout toggle (NHWC)
+        // Tensor Mean without fused output-layout toggle (NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp64f sum, sumR = 0.0, sumG = 0.0, sumB = 0.0;
@@ -656,22 +656,22 @@ RppStatus image_mean_f16_f16_host_tensor(Rpp16f *srcPtr,
             meanR = (Rpp32f)(sumR / totalPixelsPerChannel);
             meanG = (Rpp32f)(sumG / totalPixelsPerChannel);
             meanB = (Rpp32f)(sumB / totalPixelsPerChannel);
-            imageMeanArr[idx] = meanR;
-            imageMeanArr[idx + 1] = meanG;
-            imageMeanArr[idx + 2] = meanB;
-            imageMeanArr[idx + 3] = mean;
+            tensorMeanArr[idx] = meanR;
+            tensorMeanArr[idx + 1] = meanG;
+            tensorMeanArr[idx + 2] = meanB;
+            tensorMeanArr[idx + 3] = mean;
         }
     }
 
     return RPP_SUCCESS;
 }
 
-RppStatus image_mean_i8_i8_host_tensor(Rpp8s *srcPtr,
-                                       RpptDescPtr srcDescPtr,
-                                       Rpp32f *imageMeanArr,
-                                       RpptROIPtr roiTensorPtrSrc,
-                                       RpptRoiType roiType,
-                                       RppLayoutParams layoutParams)
+RppStatus tensor_mean_i8_i8_host(Rpp8s *srcPtr,
+                                 RpptDescPtr srcDescPtr,
+                                 Rpp32f *tensorMeanArr,
+                                 RpptROIPtr roiTensorPtrSrc,
+                                 RpptRoiType roiType,
+                                 RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
@@ -697,7 +697,7 @@ RppStatus image_mean_i8_i8_host_tensor(Rpp8s *srcPtr,
         Rpp32f totalPixelsPerChannel = roi.xywhROI.roiWidth * roi.xywhROI.roiHeight;
         int idx = batchCount * 4;
 
-        // Image Sum without fused output-layout toggle (NCHW)
+        // Tensor Mean without fused output-layout toggle (NCHW)
         if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
             alignedLength = (bufferLength / 8) * 8;
@@ -739,10 +739,10 @@ RppStatus image_mean_i8_i8_host_tensor(Rpp8s *srcPtr,
                 sum += (sumAvx[i] + sumAvx[i + 2]);
 #endif
             mean = (Rpp32f)((sum  / totalPixelsPerChannel) - 128);
-            imageMeanArr[batchCount] = mean;
+            tensorMeanArr[batchCount] = mean;
         }
 
-        // Image Sum without fused output-layout toggle 3 channel (NCHW)
+        // Tensor Mean without fused output-layout toggle 3 channel (NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp64f sum, sumR = 0.0, sumG = 0.0, sumB = 0.0;
@@ -808,13 +808,13 @@ RppStatus image_mean_i8_i8_host_tensor(Rpp8s *srcPtr,
             meanR = (Rpp32f)((sumR / totalPixelsPerChannel) - 128);
             meanG = (Rpp32f)((sumG / totalPixelsPerChannel) - 128);
             meanB = (Rpp32f)((sumB / totalPixelsPerChannel) - 128);
-            imageMeanArr[idx] = meanR;
-            imageMeanArr[idx + 1] = meanG;
-            imageMeanArr[idx + 2] = meanB;
-            imageMeanArr[idx + 3] = mean;
+            tensorMeanArr[idx] = meanR;
+            tensorMeanArr[idx + 1] = meanG;
+            tensorMeanArr[idx + 2] = meanB;
+            tensorMeanArr[idx + 3] = mean;
         }
 
-        // Image Sum without fused output-layout toggle (NHWC)
+        // Tensor Mean without fused output-layout toggle (NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp64f sum, sumR = 0.0, sumG = 0.0, sumB = 0.0;
@@ -870,10 +870,10 @@ RppStatus image_mean_i8_i8_host_tensor(Rpp8s *srcPtr,
             meanR = (Rpp32f)((sumR / totalPixelsPerChannel) - 128);
             meanG = (Rpp32f)((sumG / totalPixelsPerChannel) - 128);
             meanB = (Rpp32f)((sumB / totalPixelsPerChannel) - 128);
-            imageMeanArr[idx] = meanR;
-            imageMeanArr[idx + 1] = meanG;
-            imageMeanArr[idx + 2] = meanB;
-            imageMeanArr[idx + 3] = mean;
+            tensorMeanArr[idx] = meanR;
+            tensorMeanArr[idx + 1] = meanG;
+            tensorMeanArr[idx + 2] = meanB;
+            tensorMeanArr[idx + 3] = mean;
         }
     }
 

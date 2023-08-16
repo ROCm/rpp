@@ -3,13 +3,13 @@
 #include "rpp_cpu_common.hpp"
 #include "reduction.hpp"
 
-RppStatus image_stddev_u8_u8_host_tensor(Rpp8u *srcPtr,
-                                         RpptDescPtr srcDescPtr,
-                                         Rpp32f *imageStddevArr,
-                                         Rpp32f *meanTensor,
-                                         RpptROIPtr roiTensorPtrSrc,
-                                         RpptRoiType roiType,
-                                         RppLayoutParams layoutParams)
+RppStatus tensor_stddev_u8_u8_host(Rpp8u *srcPtr,
+                                   RpptDescPtr srcDescPtr,
+                                   Rpp32f *tensorStddevArr,
+                                   Rpp32f *meanTensor,
+                                   RpptROIPtr roiTensorPtrSrc,
+                                   RpptRoiType roiType,
+                                   RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
@@ -35,7 +35,7 @@ RppStatus image_stddev_u8_u8_host_tensor(Rpp8u *srcPtr,
         Rpp32f totalPixelsPerChannel = roi.xywhROI.roiWidth * roi.xywhROI.roiHeight;
         int idx = batchCount * 4;
 
-        // Image Stdev without fused output-layout toggle (NCHW)
+        // Tensor Stddev without fused output-layout toggle (NCHW)
         if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
             alignedLength = bufferLength & ~(vectorIncrementPerChannel-1);
@@ -80,10 +80,10 @@ RppStatus image_stddev_u8_u8_host_tensor(Rpp8u *srcPtr,
                 var += (varAvx[i] + varAvx[i + 2]);
 #endif
             stddev = sqrt(var / totalPixelsPerChannel);
-            imageStddevArr[batchCount] = (Rpp32f)stddev;
+            tensorStddevArr[batchCount] = (Rpp32f)stddev;
         }
 
-        // Image Stddev without fused output-layout toggle 3 channel (NCHW)
+        // Tensor Stddev without fused output-layout toggle 3 channel (NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp64f varR, varG, varB, varImageR, varImageG, varImageB, varImage;
@@ -176,13 +176,13 @@ RppStatus image_stddev_u8_u8_host_tensor(Rpp8u *srcPtr,
             stddevR     = (Rpp32f)sqrt(varR / totalPixelsPerChannel);
             stddevG     = (Rpp32f)sqrt(varG / totalPixelsPerChannel);
             stddevB     = (Rpp32f)sqrt(varB / totalPixelsPerChannel);
-            imageStddevArr[idx] = stddevR;
-            imageStddevArr[idx + 1] = stddevG;
-            imageStddevArr[idx + 2] = stddevB;
-            imageStddevArr[idx + 3] = stddevImage;
+            tensorStddevArr[idx] = stddevR;
+            tensorStddevArr[idx + 1] = stddevG;
+            tensorStddevArr[idx + 2] = stddevB;
+            tensorStddevArr[idx + 3] = stddevImage;
         }
 
-        // Image Sum without fused output-layout toggle (NHWC)
+        // Tensor Stddev without fused output-layout toggle (NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp64f varR, varG, varB, varImageR, varImageG, varImageB, varImage;
@@ -265,23 +265,23 @@ RppStatus image_stddev_u8_u8_host_tensor(Rpp8u *srcPtr,
             stddevR     = (Rpp32f)sqrt(varR / totalPixelsPerChannel);
             stddevG     = (Rpp32f)sqrt(varG / totalPixelsPerChannel);
             stddevB     = (Rpp32f)sqrt(varB / totalPixelsPerChannel);
-            imageStddevArr[idx] = stddevR;
-            imageStddevArr[idx + 1] = stddevG;
-            imageStddevArr[idx + 2] = stddevB;
-            imageStddevArr[idx + 3] = stddevImage;
+            tensorStddevArr[idx] = stddevR;
+            tensorStddevArr[idx + 1] = stddevG;
+            tensorStddevArr[idx + 2] = stddevB;
+            tensorStddevArr[idx + 3] = stddevImage;
         }
     }
 
     return RPP_SUCCESS;
 }
 
-RppStatus image_stddev_f32_f32_host_tensor(Rpp32f *srcPtr,
-                                           RpptDescPtr srcDescPtr,
-                                           Rpp32f *imageStddevArr,
-                                           Rpp32f *meanTensor,
-                                           RpptROIPtr roiTensorPtrSrc,
-                                           RpptRoiType roiType,
-                                           RppLayoutParams layoutParams)
+RppStatus tensor_stddev_f32_f32_host(Rpp32f *srcPtr,
+                                     RpptDescPtr srcDescPtr,
+                                     Rpp32f *tensorStddevArr,
+                                     Rpp32f *meanTensor,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
@@ -307,7 +307,7 @@ RppStatus image_stddev_f32_f32_host_tensor(Rpp32f *srcPtr,
         Rpp32f totalPixelsPerChannel = roi.xywhROI.roiWidth * roi.xywhROI.roiHeight;
         int idx = batchCount * 4;
 
-        // Image Sum without fused output-layout toggle (NCHW)
+        // Tensor Stddev without fused output-layout toggle (NCHW)
         if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
             alignedLength = bufferLength & ~(vectorIncrementPerChannel-1);
@@ -351,10 +351,10 @@ RppStatus image_stddev_f32_f32_host_tensor(Rpp32f *srcPtr,
                 var += (varAvx[i] + varAvx[i + 2]);
 #endif
             stddev = sqrt(var / totalPixelsPerChannel) * 255;
-            imageStddevArr[batchCount] = (Rpp32f)stddev;
+            tensorStddevArr[batchCount] = (Rpp32f)stddev;
         }
 
-        // Image Sum without fused output-layout toggle 3 channel (NCHW)
+        // Tensor Stddev without fused output-layout toggle 3 channel (NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp64f varR, varG, varB, varImageR, varImageG, varImageB, varImage;
@@ -447,13 +447,13 @@ RppStatus image_stddev_f32_f32_host_tensor(Rpp32f *srcPtr,
             stddevR     = (Rpp32f)sqrt(varR / totalPixelsPerChannel) * 255;
             stddevG     = (Rpp32f)sqrt(varG / totalPixelsPerChannel) * 255;
             stddevB     = (Rpp32f)sqrt(varB / totalPixelsPerChannel) * 255;
-            imageStddevArr[idx] = stddevR;
-            imageStddevArr[idx + 1] = stddevG;
-            imageStddevArr[idx + 2] = stddevB;
-            imageStddevArr[idx + 3] = stddevImage;
+            tensorStddevArr[idx] = stddevR;
+            tensorStddevArr[idx + 1] = stddevG;
+            tensorStddevArr[idx + 2] = stddevB;
+            tensorStddevArr[idx + 3] = stddevImage;
         }
 
-        // Image Sum without fused output-layout toggle (NHWC)
+        // Tensor Stddev without fused output-layout toggle (NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp64f varR, varG, varB, varImageR, varImageG, varImageB, varImage;
@@ -536,23 +536,23 @@ RppStatus image_stddev_f32_f32_host_tensor(Rpp32f *srcPtr,
             stddevR     = (Rpp32f)sqrt(varR / totalPixelsPerChannel) * 255;
             stddevG     = (Rpp32f)sqrt(varG / totalPixelsPerChannel) * 255;
             stddevB     = (Rpp32f)sqrt(varB / totalPixelsPerChannel) * 255;
-            imageStddevArr[idx] = stddevR;
-            imageStddevArr[idx + 1] = stddevG;
-            imageStddevArr[idx + 2] = stddevB;
-            imageStddevArr[idx + 3] = stddevImage;
+            tensorStddevArr[idx] = stddevR;
+            tensorStddevArr[idx + 1] = stddevG;
+            tensorStddevArr[idx + 2] = stddevB;
+            tensorStddevArr[idx + 3] = stddevImage;
         }
     }
 
     return RPP_SUCCESS;
 }
 
-RppStatus image_stddev_f16_f16_host_tensor(Rpp16f *srcPtr,
-                                           RpptDescPtr srcDescPtr,
-                                           Rpp32f *imageStddevArr,
-                                           Rpp32f *meanTensor,
-                                           RpptROIPtr roiTensorPtrSrc,
-                                           RpptRoiType roiType,
-                                           RppLayoutParams layoutParams)
+RppStatus tensor_stddev_f16_f16_host(Rpp16f *srcPtr,
+                                     RpptDescPtr srcDescPtr,
+                                     Rpp32f *tensorStddevArr,
+                                     Rpp32f *meanTensor,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
@@ -578,7 +578,7 @@ RppStatus image_stddev_f16_f16_host_tensor(Rpp16f *srcPtr,
         Rpp32f totalPixelsPerChannel = roi.xywhROI.roiWidth * roi.xywhROI.roiHeight;
         int idx = batchCount * 4;
 
-        // Image Sum without fused output-layout toggle (NCHW)
+        // Tensor Stddev without fused output-layout toggle (NCHW)
         if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
             alignedLength = bufferLength & ~(vectorIncrementPerChannel-1);
@@ -627,10 +627,10 @@ RppStatus image_stddev_f16_f16_host_tensor(Rpp16f *srcPtr,
                 var += (varAvx[i] + varAvx[i + 2]);
 #endif
             stddev = sqrt(var / totalPixelsPerChannel) * 255;
-            imageStddevArr[batchCount] = (Rpp32f)stddev;
+            tensorStddevArr[batchCount] = (Rpp32f)stddev;
         }
 
-        // Image Sum without fused output-layout toggle 3 channel (NCHW)
+        // Tensor Stddev without fused output-layout toggle 3 channel (NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp64f varR, varG, varB, varImageR, varImageG, varImageB, varImage;
@@ -731,13 +731,13 @@ RppStatus image_stddev_f16_f16_host_tensor(Rpp16f *srcPtr,
             stddevR     = (Rpp32f)sqrt(varR / totalPixelsPerChannel) * 255;
             stddevG     = (Rpp32f)sqrt(varG / totalPixelsPerChannel) * 255;
             stddevB     = (Rpp32f)sqrt(varB / totalPixelsPerChannel) * 255;
-            imageStddevArr[idx] = stddevR;
-            imageStddevArr[idx + 1] = stddevG;
-            imageStddevArr[idx + 2] = stddevB;
-            imageStddevArr[idx + 3] = stddevImage;
+            tensorStddevArr[idx] = stddevR;
+            tensorStddevArr[idx + 1] = stddevG;
+            tensorStddevArr[idx + 2] = stddevB;
+            tensorStddevArr[idx + 3] = stddevImage;
         }
 
-        // Image Sum without fused output-layout toggle (NHWC)
+        // Tensor Stddev without fused output-layout toggle (NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp64f varR, varG, varB, varImageR, varImageG, varImageB, varImage;
@@ -825,23 +825,23 @@ RppStatus image_stddev_f16_f16_host_tensor(Rpp16f *srcPtr,
             stddevR     = (Rpp32f)sqrt(varR / totalPixelsPerChannel) * 255;
             stddevG     = (Rpp32f)sqrt(varG / totalPixelsPerChannel) * 255;
             stddevB     = (Rpp32f)sqrt(varB / totalPixelsPerChannel) * 255;
-            imageStddevArr[idx] = stddevR;
-            imageStddevArr[idx + 1] = stddevG;
-            imageStddevArr[idx + 2] = stddevB;
-            imageStddevArr[idx + 3] = stddevImage;
+            tensorStddevArr[idx] = stddevR;
+            tensorStddevArr[idx + 1] = stddevG;
+            tensorStddevArr[idx + 2] = stddevB;
+            tensorStddevArr[idx + 3] = stddevImage;
         }
     }
 
     return RPP_SUCCESS;
 }
 
-RppStatus image_stddev_i8_i8_host_tensor(Rpp8s *srcPtr,
-                                         RpptDescPtr srcDescPtr,
-                                         Rpp32f *imageStddevArr,
-                                         Rpp32f *meanTensor,
-                                         RpptROIPtr roiTensorPtrSrc,
-                                         RpptRoiType roiType,
-                                         RppLayoutParams layoutParams)
+RppStatus tensor_stddev_i8_i8_host(Rpp8s *srcPtr,
+                                   RpptDescPtr srcDescPtr,
+                                   Rpp32f *tensorStddevArr,
+                                   Rpp32f *meanTensor,
+                                   RpptROIPtr roiTensorPtrSrc,
+                                   RpptRoiType roiType,
+                                   RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
@@ -867,7 +867,7 @@ RppStatus image_stddev_i8_i8_host_tensor(Rpp8s *srcPtr,
         Rpp32f totalPixelsPerChannel = roi.xywhROI.roiWidth * roi.xywhROI.roiHeight;
         int idx = batchCount * 4;
 
-        // Image Sum without fused output-layout toggle (NCHW)
+        // Tensor Stddev without fused output-layout toggle (NCHW)
         if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
             alignedLength = bufferLength & ~(vectorIncrementPerChannel-1);
@@ -912,10 +912,10 @@ RppStatus image_stddev_i8_i8_host_tensor(Rpp8s *srcPtr,
                 var += (varAvx[i] + varAvx[i + 2]);
 #endif
             stddev = sqrt(var / totalPixelsPerChannel);
-            imageStddevArr[batchCount] = (Rpp32f)stddev;
+            tensorStddevArr[batchCount] = (Rpp32f)stddev;
         }
 
-        // Image Sum without fused output-layout toggle 3 channel (NCHW)
+        // Tensor Stddev without fused output-layout toggle 3 channel (NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp64f varR, varG, varB, varImageR, varImageG, varImageB, varImage;
@@ -1008,13 +1008,13 @@ RppStatus image_stddev_i8_i8_host_tensor(Rpp8s *srcPtr,
             stddevR     = (Rpp32f)sqrt(varR / totalPixelsPerChannel);
             stddevG     = (Rpp32f)sqrt(varG / totalPixelsPerChannel);
             stddevB     = (Rpp32f)sqrt(varB / totalPixelsPerChannel);
-            imageStddevArr[idx] = stddevR;
-            imageStddevArr[idx + 1] = stddevG;
-            imageStddevArr[idx + 2] = stddevB;
-            imageStddevArr[idx + 3] = stddevImage;
+            tensorStddevArr[idx] = stddevR;
+            tensorStddevArr[idx + 1] = stddevG;
+            tensorStddevArr[idx + 2] = stddevB;
+            tensorStddevArr[idx + 3] = stddevImage;
         }
 
-        // Image Sum without fused output-layout toggle (NHWC)
+        // Tensor Stddev without fused output-layout toggle (NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp64f varR, varG, varB, varImageR, varImageG, varImageB, varImage;
@@ -1097,24 +1097,24 @@ RppStatus image_stddev_i8_i8_host_tensor(Rpp8s *srcPtr,
             stddevR     = (Rpp32f)sqrt(varR / totalPixelsPerChannel);
             stddevG     = (Rpp32f)sqrt(varG / totalPixelsPerChannel);
             stddevB     = (Rpp32f)sqrt(varB / totalPixelsPerChannel);
-            imageStddevArr[idx] = stddevR;
-            imageStddevArr[idx + 1] = stddevG;
-            imageStddevArr[idx + 2] = stddevB;
-            imageStddevArr[idx + 3] = stddevImage;
+            tensorStddevArr[idx] = stddevR;
+            tensorStddevArr[idx + 1] = stddevG;
+            tensorStddevArr[idx + 2] = stddevB;
+            tensorStddevArr[idx + 3] = stddevImage;
         }
     }
 
     return RPP_SUCCESS;
 }
 
-RppStatus custom_stddev_u8_u8_host_tensor(Rpp8u *srcPtr,
-                                          RpptDescPtr srcDescPtr,
-                                          Rpp32f *imageStddevArr,
-                                          Rpp32f *meanTensor,
-                                          int flag,
-                                          RpptROIPtr roiTensorPtrSrc,
-                                          RpptRoiType roiType,
-                                          RppLayoutParams layoutParams)
+RppStatus custom_stddev_u8_u8_host(Rpp8u *srcPtr,
+                                   RpptDescPtr srcDescPtr,
+                                   Rpp32f *tensorStddevArr,
+                                   Rpp32f *meanTensor,
+                                   int flag,
+                                   RpptROIPtr roiTensorPtrSrc,
+                                   RpptRoiType roiType,
+                                   RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
@@ -1140,7 +1140,7 @@ RppStatus custom_stddev_u8_u8_host_tensor(Rpp8u *srcPtr,
         Rpp32f totalPixelsPerChannel = roi.xywhROI.roiWidth * roi.xywhROI.roiHeight;
         int idx = batchCount * 4;
 
-        // Image Stdev without fused output-layout toggle (NCHW)
+        // Tensor Stddev without fused output-layout toggle (NCHW)
         if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
             alignedLength = bufferLength & ~(vectorIncrementPerChannel-1);
@@ -1185,10 +1185,10 @@ RppStatus custom_stddev_u8_u8_host_tensor(Rpp8u *srcPtr,
                 var += (varAvx[i] + varAvx[i + 2]);
 #endif
             stddev = sqrt(var / totalPixelsPerChannel);
-            imageStddevArr[batchCount] = (Rpp32f)stddev;
+            tensorStddevArr[batchCount] = (Rpp32f)stddev;
         }
 
-        // Image Stddev without fused output-layout toggle 3 channel (NCHW)
+        // Tensor Channel Stddev without fused output-layout toggle 3 channel (NCHW)
         else if ((!flag) && (srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp64f varR, varG, varB;
@@ -1264,11 +1264,12 @@ RppStatus custom_stddev_u8_u8_host_tensor(Rpp8u *srcPtr,
             stddevR     = (Rpp32f)sqrt(varR / totalPixelsPerChannel);
             stddevG     = (Rpp32f)sqrt(varG / totalPixelsPerChannel);
             stddevB     = (Rpp32f)sqrt(varB / totalPixelsPerChannel);
-            imageStddevArr[idx] = stddevR;
-            imageStddevArr[idx + 1] = stddevG;
-            imageStddevArr[idx + 2] = stddevB;
+            tensorStddevArr[idx] = stddevR;
+            tensorStddevArr[idx + 1] = stddevG;
+            tensorStddevArr[idx + 2] = stddevB;
         }
 
+        // Tensor Stddev without fused output-layout toggle 3 channel (NCHW)
         else if (flag && (srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp64f varImageR, varImageG, varImageB, varImage;
@@ -1338,10 +1339,10 @@ RppStatus custom_stddev_u8_u8_host_tensor(Rpp8u *srcPtr,
 #endif
             varImage = varImageR + varImageG + varImageB;
             stddevImage = (Rpp32f)sqrt(varImage / (totalPixelsPerChannel * 3));
-            imageStddevArr[idx + 3] = stddevImage;
+            tensorStddevArr[idx + 3] = stddevImage;
         }
 
-        // Image Sum without fused output-layout toggle (NHWC)
+        // Tensor Stddev without fused output-layout toggle (NHWC)
         else if ((!flag) && (srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp64f varR, varG, varB;
@@ -1406,9 +1407,9 @@ RppStatus custom_stddev_u8_u8_host_tensor(Rpp8u *srcPtr,
             stddevR     = (Rpp32f)sqrt(varR / totalPixelsPerChannel);
             stddevG     = (Rpp32f)sqrt(varG / totalPixelsPerChannel);
             stddevB     = (Rpp32f)sqrt(varB / totalPixelsPerChannel);
-            imageStddevArr[idx] = stddevR;
-            imageStddevArr[idx + 1] = stddevG;
-            imageStddevArr[idx + 2] = stddevB;
+            tensorStddevArr[idx] = stddevR;
+            tensorStddevArr[idx + 1] = stddevG;
+            tensorStddevArr[idx + 2] = stddevB;
         }
 
         else if (flag && (srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
@@ -1470,21 +1471,21 @@ RppStatus custom_stddev_u8_u8_host_tensor(Rpp8u *srcPtr,
 #endif
             varImage = varImageR + varImageG + varImageB;
             stddevImage = (Rpp32f)sqrt(varImage / (totalPixelsPerChannel * 3));
-            imageStddevArr[idx + 3] = stddevImage;
+            tensorStddevArr[idx + 3] = stddevImage;
         }
     }
 
     return RPP_SUCCESS;
 }
 
-RppStatus custom_stddev_f32_f32_host_tensor(Rpp32f *srcPtr,
-                                            RpptDescPtr srcDescPtr,
-                                            Rpp32f *imageStddevArr,
-                                            Rpp32f *meanTensor,
-                                            int flag,
-                                            RpptROIPtr roiTensorPtrSrc,
-                                            RpptRoiType roiType,
-                                            RppLayoutParams layoutParams)
+RppStatus custom_stddev_f32_f32_host(Rpp32f *srcPtr,
+                                     RpptDescPtr srcDescPtr,
+                                     Rpp32f *tensorStddevArr,
+                                     Rpp32f *meanTensor,
+                                     int flag,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
@@ -1510,7 +1511,7 @@ RppStatus custom_stddev_f32_f32_host_tensor(Rpp32f *srcPtr,
         Rpp32f totalPixelsPerChannel = roi.xywhROI.roiWidth * roi.xywhROI.roiHeight;
         int idx = batchCount * 4;
 
-        // Image Sum without fused output-layout toggle (NCHW)
+        // Tensor Stddev without fused output-layout toggle (NCHW)
         if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
             alignedLength = bufferLength & ~(vectorIncrementPerChannel-1);
@@ -1554,10 +1555,10 @@ RppStatus custom_stddev_f32_f32_host_tensor(Rpp32f *srcPtr,
                 var += (varAvx[i] + varAvx[i + 2]);
 #endif
             stddev = sqrt(var / totalPixelsPerChannel) * 255;
-            imageStddevArr[batchCount] = (Rpp32f)stddev;
+            tensorStddevArr[batchCount] = (Rpp32f)stddev;
         }
 
-        // Image Sum without fused output-layout toggle 3 channel (NCHW)
+        // Tensor Channel Stddev without fused output-layout toggle 3 channel (NCHW)
         else if ((!flag) && (srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp64f varR, varG, varB;
@@ -1632,11 +1633,12 @@ RppStatus custom_stddev_f32_f32_host_tensor(Rpp32f *srcPtr,
             stddevR     = (Rpp32f)sqrt(varR / totalPixelsPerChannel) * 255;
             stddevG     = (Rpp32f)sqrt(varG / totalPixelsPerChannel) * 255;
             stddevB     = (Rpp32f)sqrt(varB / totalPixelsPerChannel) * 255;
-            imageStddevArr[idx] = stddevR;
-            imageStddevArr[idx + 1] = stddevG;
-            imageStddevArr[idx + 2] = stddevB;
+            tensorStddevArr[idx] = stddevR;
+            tensorStddevArr[idx + 1] = stddevG;
+            tensorStddevArr[idx + 2] = stddevB;
         }
 
+        // Tensor Stddev without fused output-layout toggle 3 channel (NCHW)
         else if (flag && (srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp64f varImageR, varImageG, varImageB, varImage;
@@ -1706,10 +1708,10 @@ RppStatus custom_stddev_f32_f32_host_tensor(Rpp32f *srcPtr,
 #endif
             varImage = varImageR + varImageG + varImageB;
             stddevImage = (Rpp32f)sqrt(varImage / (totalPixelsPerChannel * 3)) * 255; // multiply by 255 to normalize variation
-            imageStddevArr[idx + 3] = stddevImage;
+            tensorStddevArr[idx + 3] = stddevImage;
         }
 
-        // Image Sum without fused output-layout toggle (NHWC)
+        // Tensor Stddev without fused output-layout toggle (NHWC)
         else if ((!flag) && (srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp64f varR, varG, varB;
@@ -1774,9 +1776,9 @@ RppStatus custom_stddev_f32_f32_host_tensor(Rpp32f *srcPtr,
             stddevR     = (Rpp32f)sqrt(varR / totalPixelsPerChannel) * 255;
             stddevG     = (Rpp32f)sqrt(varG / totalPixelsPerChannel) * 255;
             stddevB     = (Rpp32f)sqrt(varB / totalPixelsPerChannel) * 255;
-            imageStddevArr[idx] = stddevR;
-            imageStddevArr[idx + 1] = stddevG;
-            imageStddevArr[idx + 2] = stddevB;
+            tensorStddevArr[idx] = stddevR;
+            tensorStddevArr[idx + 1] = stddevG;
+            tensorStddevArr[idx + 2] = stddevB;
         }
 
         else if (flag && (srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
@@ -1838,21 +1840,21 @@ RppStatus custom_stddev_f32_f32_host_tensor(Rpp32f *srcPtr,
 #endif
             varImage = varImageR + varImageG + varImageB;
             stddevImage = (Rpp32f)sqrt(varImage / (totalPixelsPerChannel * 3)) * 255;
-            imageStddevArr[idx + 3] = stddevImage;
+            tensorStddevArr[idx + 3] = stddevImage;
         }
     }
 
     return RPP_SUCCESS;
 }
 
-RppStatus custom_stddev_f16_f16_host_tensor(Rpp16f *srcPtr,
-                                            RpptDescPtr srcDescPtr,
-                                            Rpp32f *imageStddevArr,
-                                            Rpp32f *meanTensor,
-                                            int flag,
-                                            RpptROIPtr roiTensorPtrSrc,
-                                            RpptRoiType roiType,
-                                            RppLayoutParams layoutParams)
+RppStatus custom_stddev_f16_f16_host(Rpp16f *srcPtr,
+                                     RpptDescPtr srcDescPtr,
+                                     Rpp32f *tensorStddevArr,
+                                     Rpp32f *meanTensor,
+                                     int flag,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
@@ -1878,7 +1880,7 @@ RppStatus custom_stddev_f16_f16_host_tensor(Rpp16f *srcPtr,
         Rpp32f totalPixelsPerChannel = roi.xywhROI.roiWidth * roi.xywhROI.roiHeight;
         int idx = batchCount * 4;
 
-        // Image Sum without fused output-layout toggle (NCHW)
+        // Tensor Stddev without fused output-layout toggle (NCHW)
         if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
             alignedLength = bufferLength & ~(vectorIncrementPerChannel-1);
@@ -1927,10 +1929,10 @@ RppStatus custom_stddev_f16_f16_host_tensor(Rpp16f *srcPtr,
                 var += (varAvx[i] + varAvx[i + 2]);
 #endif
             stddev = sqrt(var / totalPixelsPerChannel) * 255;
-            imageStddevArr[batchCount] = (Rpp32f)stddev;
+            tensorStddevArr[batchCount] = (Rpp32f)stddev;
         }
 
-        // Image Sum without fused output-layout toggle 3 channel (NCHW)
+        // Tensor Channel Stddev without fused output-layout toggle 3 channel (NCHW)
         else if ((!flag) && (srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp64f varR, varG, varB;
@@ -2013,11 +2015,12 @@ RppStatus custom_stddev_f16_f16_host_tensor(Rpp16f *srcPtr,
             stddevR     = (Rpp32f)sqrt(varR / totalPixelsPerChannel) * 255;
             stddevG     = (Rpp32f)sqrt(varG / totalPixelsPerChannel) * 255;
             stddevB     = (Rpp32f)sqrt(varB / totalPixelsPerChannel) * 255;
-            imageStddevArr[idx] = stddevR;
-            imageStddevArr[idx + 1] = stddevG;
-            imageStddevArr[idx + 2] = stddevB;
+            tensorStddevArr[idx] = stddevR;
+            tensorStddevArr[idx + 1] = stddevG;
+            tensorStddevArr[idx + 2] = stddevB;
         }
 
+        // Tensor Stddev without fused output-layout toggle 3 channel (NCHW)
         else if (flag && (srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp64f varImageR, varImageG, varImageB, varImage;
@@ -2095,10 +2098,10 @@ RppStatus custom_stddev_f16_f16_host_tensor(Rpp16f *srcPtr,
 #endif
             varImage = varImageR + varImageG + varImageB;
             stddevImage = (Rpp32f)sqrt(varImage / (totalPixelsPerChannel * 3)) * 255; // multiply by 255 to normalize variation
-            imageStddevArr[idx + 3] = stddevImage;
+            tensorStddevArr[idx + 3] = stddevImage;
         }
 
-        // Image Sum without fused output-layout toggle (NHWC)
+        // Tensor Stddev without fused output-layout toggle (NHWC)
         else if ((!flag) && (srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp64f varR, varG, varB;
@@ -2168,9 +2171,9 @@ RppStatus custom_stddev_f16_f16_host_tensor(Rpp16f *srcPtr,
             stddevR     = (Rpp32f)sqrt(varR / totalPixelsPerChannel) * 255;
             stddevG     = (Rpp32f)sqrt(varG / totalPixelsPerChannel) * 255;
             stddevB     = (Rpp32f)sqrt(varB / totalPixelsPerChannel) * 255;
-            imageStddevArr[idx] = stddevR;
-            imageStddevArr[idx + 1] = stddevG;
-            imageStddevArr[idx + 2] = stddevB;
+            tensorStddevArr[idx] = stddevR;
+            tensorStddevArr[idx + 1] = stddevG;
+            tensorStddevArr[idx + 2] = stddevB;
         }
 
         else if (flag && (srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
@@ -2237,21 +2240,21 @@ RppStatus custom_stddev_f16_f16_host_tensor(Rpp16f *srcPtr,
 #endif
             varImage = varImageR + varImageG + varImageB;
             stddevImage = (Rpp32f)sqrt(varImage / (totalPixelsPerChannel * 3)) * 255;
-            imageStddevArr[idx + 3] = stddevImage;
+            tensorStddevArr[idx + 3] = stddevImage;
         }
     }
 
     return RPP_SUCCESS;
 }
 
-RppStatus custom_stddev_i8_i8_host_tensor(Rpp8s *srcPtr,
-                                          RpptDescPtr srcDescPtr,
-                                          Rpp32f *imageStddevArr,
-                                          Rpp32f *meanTensor,
-                                          int flag,
-                                          RpptROIPtr roiTensorPtrSrc,
-                                          RpptRoiType roiType,
-                                          RppLayoutParams layoutParams)
+RppStatus custom_stddev_i8_i8_host(Rpp8s *srcPtr,
+                                   RpptDescPtr srcDescPtr,
+                                   Rpp32f *tensorStddevArr,
+                                   Rpp32f *meanTensor,
+                                   int flag,
+                                   RpptROIPtr roiTensorPtrSrc,
+                                   RpptRoiType roiType,
+                                   RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
@@ -2277,7 +2280,7 @@ RppStatus custom_stddev_i8_i8_host_tensor(Rpp8s *srcPtr,
         Rpp32f totalPixelsPerChannel = roi.xywhROI.roiWidth * roi.xywhROI.roiHeight;
         int idx = batchCount * 4;
 
-        // Image Sum without fused output-layout toggle (NCHW)
+        // Tensor Stddev without fused output-layout toggle (NCHW)
         if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
             alignedLength = bufferLength & ~(vectorIncrementPerChannel-1);
@@ -2322,10 +2325,10 @@ RppStatus custom_stddev_i8_i8_host_tensor(Rpp8s *srcPtr,
                 var += (varAvx[i] + varAvx[i + 2]);
 #endif
             stddev = sqrt(var / totalPixelsPerChannel);
-            imageStddevArr[batchCount] = (Rpp32f)stddev;
+            tensorStddevArr[batchCount] = (Rpp32f)stddev;
         }
 
-        // Image Sum without fused output-layout toggle 3 channel (NCHW)
+        // Tensor Channel Stddev without fused output-layout toggle 3 channel (NCHW)
         else if ((!flag) && (srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp64f varR, varG, varB;
@@ -2400,11 +2403,12 @@ RppStatus custom_stddev_i8_i8_host_tensor(Rpp8s *srcPtr,
             stddevR     = (Rpp32f)sqrt(varR / totalPixelsPerChannel);
             stddevG     = (Rpp32f)sqrt(varG / totalPixelsPerChannel);
             stddevB     = (Rpp32f)sqrt(varB / totalPixelsPerChannel);
-            imageStddevArr[idx] = stddevR;
-            imageStddevArr[idx + 1] = stddevG;
-            imageStddevArr[idx + 2] = stddevB;
+            tensorStddevArr[idx] = stddevR;
+            tensorStddevArr[idx + 1] = stddevG;
+            tensorStddevArr[idx + 2] = stddevB;
         }
 
+        // Tensor Stddev without fused output-layout toggle 3 channel (NCHW)
         else if (flag && (srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp64f varImageR, varImageG, varImageB, varImage;
@@ -2474,10 +2478,10 @@ RppStatus custom_stddev_i8_i8_host_tensor(Rpp8s *srcPtr,
 #endif
             varImage = varImageR + varImageG + varImageB;
             stddevImage = (Rpp32f)sqrt(varImage / (totalPixelsPerChannel * 3));
-            imageStddevArr[idx + 3] = stddevImage;
+            tensorStddevArr[idx + 3] = stddevImage;
         }
 
-        // Image Sum without fused output-layout toggle (NHWC)
+        // Tensor Stddev without fused output-layout toggle (NHWC)
         else if ((!flag) && (srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp64f varR, varG, varB;
@@ -2542,9 +2546,9 @@ RppStatus custom_stddev_i8_i8_host_tensor(Rpp8s *srcPtr,
             stddevR     = (Rpp32f)sqrt(varR / totalPixelsPerChannel);
             stddevG     = (Rpp32f)sqrt(varG / totalPixelsPerChannel);
             stddevB     = (Rpp32f)sqrt(varB / totalPixelsPerChannel);
-            imageStddevArr[idx] = stddevR;
-            imageStddevArr[idx + 1] = stddevG;
-            imageStddevArr[idx + 2] = stddevB;
+            tensorStddevArr[idx] = stddevR;
+            tensorStddevArr[idx + 1] = stddevG;
+            tensorStddevArr[idx + 2] = stddevB;
         }
 
         else if (flag && (srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
@@ -2606,7 +2610,7 @@ RppStatus custom_stddev_i8_i8_host_tensor(Rpp8s *srcPtr,
 #endif
             varImage = varImageR + varImageG + varImageB;
             stddevImage = (Rpp32f)sqrt(varImage / (totalPixelsPerChannel * 3));
-            imageStddevArr[idx + 3] = stddevImage;
+            tensorStddevArr[idx + 3] = stddevImage;
         }
     }
 

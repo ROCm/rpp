@@ -20,7 +20,7 @@ THE SOFTWARE.
 #ifndef HIP_TENSOR_STATISTICAL_OPERATIONS_HPP
 #define HIP_TENSOR_STATISTICAL_OPERATIONS_HPP
 
-#include "kernel/image_mean.hpp"
-#include "kernel/image_stddev.hpp"
+#include "kernel/tensor_mean.hpp"
+#include "kernel/tensor_stddev.hpp"
 
 #endif // HIP_TENSOR_STATISTICAL_OPERATIONS_HPP
