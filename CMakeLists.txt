@@ -25,7 +25,7 @@ set(CMAKE_CXX_STANDARD 14)
 project(rpp CXX)
 
 # RPP Version
-set(VERSION "1.2.0")
+set(VERSION "1.3.0")
 
 set(CMAKE_INSTALL_LIBDIR "lib" CACHE STRING "Library install directory")
 include(GNUInstallDirs)
@@ -48,6 +48,7 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 # RPP Default Options
 set(DEFAULT_BUILD_TYPE "Release")
+option(BUILD_WITH_AMD_ADVANCE "Build RPP for advanced AMD GPU Architecture"    OFF)
 
 # Set message options
 if(NOT WIN32)
@@ -179,6 +180,9 @@ if("${BACKEND}" STREQUAL "HIP")
     endif()
     list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/hip ${ROCM_PATH})
     set(DEFAULT_AMDGPU_TARGETS "gfx803;gfx900;gfx906;gfx908;gfx90a;gfx940;gfx1030")
+    if (BUILD_WITH_AMD_ADVANCE)
+        set(DEFAULT_AMDGPU_TARGETS ${DEFAULT_AMDGPU_TARGETS} "gfx941")
+    endif()
     set(AMDGPU_TARGETS "${DEFAULT_AMDGPU_TARGETS}" CACHE STRING "List of specific machine types for library to target")
     find_package(HIP QUIET)
     if(HIP_FOUND)
@@ -321,10 +325,20 @@ if(DEFINED ENV{ROCM_LIBPATCH_VERSION})
     set(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}.$ENV{ROCM_LIBPATCH_VERSION}")
 endif()
 
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "rocm-core")
+set(CPACK_RPM_PACKAGE_REQUIRES "rocm-core")
 set(CPACK_DEBIAN_FILE_NAME       "DEB-DEFAULT")
 set(CPACK_RPM_FILE_NAME          "RPM-DEFAULT")
 set(CPACK_DEBIAN_PACKAGE_RELEASE "local")
 set(CPACK_RPM_PACKAGE_RELEASE    "local")
+
+set(ROCM_DEP_ROCMCORE TRUE CACHE BOOL "Add dependency on rocm-core package")
+if(NOT ROCM_DEP_ROCMCORE)
+    string(REGEX REPLACE ",? ?rocm-core" "" CPACK_RPM_PACKAGE_REQUIRES
+                 ${CPACK_RPM_PACKAGE_REQUIRES})
+    string(REGEX REPLACE ",? ?rocm-core" "" CPACK_DEBIAN_PACKAGE_DEPENDS
+                 ${CPACK_DEBIAN_PACKAGE_DEPENDS})
+endif()
 
 if(DEFINED ENV{CPACK_DEBIAN_PACKAGE_RELEASE})
     set(CPACK_DEBIAN_PACKAGE_RELEASE $ENV{CPACK_DEBIAN_PACKAGE_RELEASE})
