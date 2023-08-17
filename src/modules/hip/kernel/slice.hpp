@@ -2,9 +2,10 @@
 #include <omp.h>
 #include "rpp_hip_common.hpp"
 
-__global__ void slice_ncdhw_tensor(float *srcPtr,
+template <typename T>
+__global__ void slice_ncdhw_tensor(T *srcPtr,
                                    uint3 srcStridesCDH,
-                                   float *dstPtr,
+                                   T *dstPtr,
                                    uint3 dstStridesCDH,
                                    int channels,
                                    RpptROI3DPtr roiGenericPtrSrc)
@@ -31,9 +32,10 @@ __global__ void slice_ncdhw_tensor(float *srcPtr,
     }
 }
 
-__global__ void slice_ndhwc_tensor(float *srcPtr,
+template <typename T>
+__global__ void slice_ndhwc_tensor(T *srcPtr,
                                    uint2 srcStridesDH,
-                                   float *dstPtr,
+                                   T *dstPtr,
                                    uint2 dstStridesDH,
                                    RpptROI3DPtr roiGenericPtrSrc)
 {
@@ -54,9 +56,10 @@ __global__ void slice_ndhwc_tensor(float *srcPtr,
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &val_f24);
 }
 
-RppStatus hip_exec_slice_tensor(Rpp32f *srcPtr,
+template <typename T>
+RppStatus hip_exec_slice_tensor(T *srcPtr,
                                 RpptGenericDescPtr srcGenericDescPtr,
-                                Rpp32f *dstPtr,
+                                T *dstPtr,
                                 RpptGenericDescPtr dstGenericDescPtr,
                                 RpptROI3DPtr roiGenericPtrSrc,
                                 rpp::Handle& handle)

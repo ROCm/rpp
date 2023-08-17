@@ -483,6 +483,26 @@ int main(int argc, char * argv[])
     int missingFuncFlag = 0;
     double startWallTime, endWallTime, wallTime;
     double maxWallTime = 0, minWallTime = 5000, avgWallTime = 0;
+    
+    Rpp8u *inputU8 = NULL;
+    Rpp8u *outputU8 = NULL;
+    void *d_inputU8 = NULL, *d_outputU8 = NULL;
+    int inputBitDepth = 0;
+    if(inputBitDepth == 0)
+    {
+        Rpp64u iBufferSizeU8 = iBufferSize * sizeof(Rpp8u) + descriptorPtr3D->offsetInBytes;
+        inputU8 = static_cast<Rpp8u *>(calloc(iBufferSizeU8, 1));
+        outputU8 = static_cast<Rpp8u *>(calloc(iBufferSizeU8, 1));
+        
+        for(int i = 0; i < iBufferSizeU8; i++)
+            inputU8[i] = static_cast<unsigned char>(inputF32[i]);
+        
+        hipMalloc(&d_inputU8, iBufferSizeU8);
+        hipMalloc(&d_outputU8, iBufferSizeU8);
+        
+        // Copy input buffer to hip
+        hipMemcpy(d_inputU8, inputU8, iBufferSizeU8, hipMemcpyHostToDevice);
+    }
     for (int perfRunCount = 0; perfRunCount < numRuns; perfRunCount++)
     {
         switch (testCase)
@@ -505,7 +525,14 @@ int main(int argc, char * argv[])
             case 1:
             {
                 startWallTime = omp_get_wtime();
-                rppt_slice_gpu(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, roiGenericSrcPtr, roiTypeSrc,  handle);
+                if (inputBitDepth == 0)
+                {
+                    descriptorPtr3D->dataType = RpptDataType::U8;
+                    rppt_slice_gpu(d_inputU8, descriptorPtr3D, d_outputU8, descriptorPtr3D, roiGenericSrcPtr, roiTypeSrc,  handle);
+                    descriptorPtr3D->dataType = RpptDataType::F32;
+                }
+                else
+                    rppt_slice_gpu(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, roiGenericSrcPtr, roiTypeSrc,  handle);
                 break;
             }
             case 2:
@@ -522,7 +549,14 @@ int main(int argc, char * argv[])
                 }
 
                 startWallTime = omp_get_wtime();
-                rppt_flip_voxel_gpu(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, horizontalTensor, verticalTensor, depthTensor, roiGenericSrcPtr, roiTypeSrc, handle);
+                if (inputBitDepth == 0)
+                {
+                    descriptorPtr3D->dataType = RpptDataType::U8;
+                    rppt_flip_voxel_gpu(d_inputU8, descriptorPtr3D, d_outputU8, descriptorPtr3D, horizontalTensor, verticalTensor, depthTensor, roiGenericSrcPtr, roiTypeSrc, handle);
+                    descriptorPtr3D->dataType = RpptDataType::F32;
+                }
+                else
+                    rppt_flip_voxel_gpu(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, horizontalTensor, verticalTensor, depthTensor, roiGenericSrcPtr, roiTypeSrc, handle);
                 break;
             }
             case 3:
@@ -584,6 +618,15 @@ int main(int argc, char * argv[])
 
     if(testType == 0)
     {
+        if(inputBitDepth == 0)
+        {
+            Rpp64u bufferLength = iBufferSize * sizeof(Rpp8u) + descriptorPtr3D->offsetInBytes;
+            hipMemcpy(outputU8, d_outputU8, bufferLength, hipMemcpyDeviceToHost);
+            
+            // Copy U8 buffer to F32 buffer for display purposes
+            for(int i = 0; i < bufferLength; i++)
+                outputF32[i] = static_cast<float>(outputU8[i]);
+        }
         for(int i = 0; i < numChannels; i++) // temporary changes to process pln3
         {
             int xyFrameSize = niftiHeader.dim[1] * niftiHeader.dim[2];
@@ -633,6 +676,17 @@ int main(int argc, char * argv[])
     hipHostFree(pinnedMemArgs);
     hipFree(d_inputF32);
     hipFree(d_outputF32);
-
+    if(inputBitDepth == 0)
+    {
+        if(inputU8 != NULL)
+            free(inputU8);
+        if(outputU8 != NULL)
+            free(outputU8);
+        if(d_inputU8 != NULL)
+            hipFree(d_inputU8);
+        if(d_outputU8 != NULL)
+            hipFree(d_outputU8);
+    }
+    
     return(0);
 }

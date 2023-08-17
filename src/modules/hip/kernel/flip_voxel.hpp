@@ -98,9 +98,10 @@ __global__ void flip_ndhwc_tensor(T *srcPtr,
     }
 }
 
-RppStatus hip_exec_flip_voxel_tensor(Rpp32f *srcPtr,
+template <typename T>
+RppStatus hip_exec_flip_voxel_tensor(T *srcPtr,
                                      RpptGenericDescPtr srcGenericDescPtr,
-                                     Rpp32f *dstPtr,
+                                     T *dstPtr,
                                      RpptGenericDescPtr dstGenericDescPtr,
                                      RpptROI3DPtr roiGenericPtrSrc,
                                      Rpp32u *horizontalTensor,
