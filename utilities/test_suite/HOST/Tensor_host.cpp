@@ -732,6 +732,13 @@ int main(int argc, char **argv)
                         for (int i = 0; i < reductionFuncResultArrLength; i++)
                             printf("%d\n", (int)reductionOutPtr[i]);
                     }
+
+                    /*Compare the output of the function with golden outputs only if
+                    1.QA Flag is set
+                    2.input bit depth 0 (U8)
+                    3.source and destination layout are the same*/
+                    if(qaFlag && inputBitDepth == 0 && (srcDescPtr->layout == dstDescPtr->layout) && !(randomOutputCase))
+                        compare_reduction_output<Rpp8u>((Rpp8u*)reductionFuncResultArr, testCaseName, srcDescPtr, testCase, dst);
                 }
                 else
                 {
