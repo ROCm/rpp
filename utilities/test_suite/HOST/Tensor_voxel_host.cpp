@@ -340,12 +340,12 @@ inline void convert_output_Rpp32f_to_niftitype_generic(Rpp32f *input, RpptGeneri
 
 int main(int argc, char * argv[])
 {
-    int layoutType, testCase, testType;
+    int layoutType, testCase, testType, inputBitDepth;
     char *header_file, *data_file;
 
-    if (argc != 6)
+    if (argc != 7)
     {
-        fprintf(stderr, "\nUsage: %s <header file> <data file> <layoutType = 0 - PKD3/ 1 - PLN3/ 2 - PLN1> <testCase = 0 to 1> <testType = 0 - unit test/ 1 - performance test>\n", argv[0]);
+        fprintf(stderr, "\nUsage: %s <header file> <data file> <layoutType = 0 - PKD3/ 1 - PLN3/ 2 - PLN1> <testCase = 0 to 1> <testType = 0 - unit test/ 1 - performance test> <inputBitDepth = 0 - U8/ 2 - F32>\n", argv[0]);
         exit(1);
     }
 
@@ -354,6 +354,7 @@ int main(int argc, char * argv[])
     layoutType = atoi(argv[3]); // 0 for PKD3 // 1 for PLN3 // 2 for PLN1
     testCase = atoi(argv[4]); // 0 to 4
     testType = atoi(argv[5]); // 0 - unit test / 1 - performance test
+    inputBitDepth = atoi(argv[6]); // 0 for U8 / 2 for F32
 
     if ((layoutType < 0) || (layoutType > 2))
     {
@@ -474,7 +475,6 @@ int main(int argc, char * argv[])
     double startWallTime, endWallTime, wallTime;
     double maxWallTime = 0, minWallTime = 5000, avgWallTime = 0;
     
-    int inputBitDepth = 0;
     Rpp8u *inputU8 = NULL;
     Rpp8u *outputU8 = NULL;
     if(inputBitDepth == 0)
@@ -528,8 +528,8 @@ int main(int argc, char * argv[])
 
                 for (int i = 0; i < batchSize; i++)
                 {
-                    horizontalTensor[i] = 0;
-                    verticalTensor[i] = 0;
+                    horizontalTensor[i] = 1;
+                    verticalTensor[i] = 1;
                     depthTensor[i] = 1;
                 }
 
@@ -539,7 +539,6 @@ int main(int argc, char * argv[])
                     descriptorPtr3D->dataType = RpptDataType::U8;
                     rppt_flip_voxel_host(inputU8, descriptorPtr3D, outputU8, descriptorPtr3D, horizontalTensor, verticalTensor, depthTensor, roiGenericSrcPtr, roiTypeSrc, handle);
                     descriptorPtr3D->dataType = RpptDataType::F32;
-                    std::cerr<<"completed processing flip"<<std::endl;
                 }
                 else
                     rppt_flip_voxel_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, horizontalTensor, verticalTensor, depthTensor, roiGenericSrcPtr, roiTypeSrc, handle);
