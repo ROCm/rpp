@@ -5,19 +5,20 @@
 ### Online Documentation
 [RPP Documentation](https://gpuopen-professionalcompute-libraries.github.io/rpp/)
 
-### RPP 1.2.0 (Unreleased)
+### RPP 1.2.0
 
 #### Added
-* 
+* Updated Unit Tests
 
 #### Optimizations
-* 
+* CMakeLists 
 
 #### Changed
-* 
+* Documentation
 
 #### Fixed
-* 
+* OCL Backend
+* Jenkins CI - OCL Build Test
 
 ### Tested Configurations
 * Linux distribution
