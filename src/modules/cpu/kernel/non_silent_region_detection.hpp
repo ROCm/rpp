@@ -25,11 +25,10 @@ THE SOFTWARE.
 
 Rpp32f getSquare(Rpp32f &value)
 {
-    Rpp32f res = value;
-    return (res * res);
+    return (value * value);
 }
 
-Rpp32f getMax(std::vector<Rpp32f> &values, Rpp32s srcLength)
+Rpp32f getMax(Rpp32f *values, Rpp32s srcLength)
 {
     Rpp32f max = values[0];
     for(int i = 1; i < srcLength; i++)
@@ -63,8 +62,7 @@ RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
 
         // Calculate buffer size for mms array and allocate mms buffer
         Rpp32s mmsBufferSize = srcLength;
-        std::vector<Rpp32f> mmsBuffer;
-        mmsBuffer.reserve(mmsBufferSize);
+        Rpp32f *mmsBuffer = static_cast<Rpp32f *>(calloc(mmsBufferSize, sizeof(Rpp32f)));
 
         // Calculate moving mean square of input array and store srcPtrTemp mms buffer
         Rpp32f meanFactor = 1.0f / windowLength;
@@ -130,6 +128,7 @@ RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
 
         detectedIndexTensor[batchCount] = detectBegin;
         detectionLengthTensor[batchCount] = detectEnd;
+        free(mmsBuffer);
     }
 
     return RPP_SUCCESS;
