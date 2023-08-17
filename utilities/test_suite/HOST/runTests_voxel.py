@@ -29,9 +29,9 @@ import shutil
 timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
 cwd = os.getcwd()
-headerFilePath = os.path.join(os.path.dirname(cwd), 'TEST_VOXEL_IMAGE', 'BraTS20_Training_002_flair')
-dataFilePath = os.path.join(os.path.dirname(cwd), 'TEST_VOXEL_IMAGE', 'BraTS20_Training_002_flair')
-qaInputFile = os.path.join(os.path.dirname(cwd), 'TEST_QA_IMAGES_VOXEL', '1_nifti_input_50x50x4')
+headerFilePath = os.path.join(os.path.dirname(cwd), 'TEST_QA_IMAGES_VOXEL')
+dataFilePath = os.path.join(os.path.dirname(cwd), 'TEST_QA_IMAGES_VOXEL')
+qaInputFile = os.path.join(os.path.dirname(cwd), 'TEST_QA_IMAGES_VOXEL')
 
 # Check if folder path is empty, if it is the root folder, or if it exists, and remove its contents
 def validate_and_remove_contents(path):
@@ -93,21 +93,12 @@ def get_log_file_list(preserveOutput):
 
 # Functionality group finder
 def func_group_finder(case_number):  #TODO: need to chnage
-    if case_number < 5 or case_number == 13 or case_number == 36 or case_number == 31:
-        return "color_augmentations"
-    elif case_number == 8 or case_number == 30 or case_number == 83 or case_number == 84:
-        return "effects_augmentations"
-    elif case_number < 40:
+    if case_number == 0 or case_number == 3 or case_number == 4:
+        return "arithmetic_operations"
+    elif case_number == 1 or case_number == 2:
         return "geometric_augmentations"
-    elif case_number < 42:
-        return "morphological_operations"
-    elif case_number == 49:
-        return "filter_augmentations"
-    elif case_number < 86:
-        return "data_exchange_operations"
     else:
         return "miscellaneous"
-
  # Generate a directory name based on certain parameters
 def directory_name_generator(qaMode, affinity, type, case, path): #TODO : need to change
     if qaMode == 0:
@@ -121,13 +112,13 @@ def directory_name_generator(qaMode, affinity, type, case, path): #TODO : need t
 # Process the layout based on the given parameters and generate the directory name and log file layout.
 def process_layout(layout, qaMode, case, dstPath):
     if layout == 0:
-        dstPathTemp = directory_name_generator(qaMode, "hip", "pkd3", case, dstPath)
+        dstPathTemp = directory_name_generator(qaMode, "host", "pkd3", case, dstPath)
         log_file_layout = "pkd3"
     elif layout == 1:
-        dstPathTemp = directory_name_generator(qaMode, "hip", "pln3", case, dstPath)
+        dstPathTemp = directory_name_generator(qaMode, "host", "pln3", case, dstPath)
         log_file_layout = "pln3"
     elif layout == 2:
-        dstPathTemp = directory_name_generator(qaMode, "hip", "pln1", case, dstPath)
+        dstPathTemp = directory_name_generator(qaMode, "host", "pln1", case, dstPath)
         log_file_layout = "pln1"
     
     return dstPathTemp, log_file_layout
@@ -135,10 +126,10 @@ def process_layout(layout, qaMode, case, dstPath):
 # Parse and validate command-line arguments for the RPP test suite
 def rpp_test_suite_parser_and_validator():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--header_path", type = str, default = headerFilePath, help = "Path to the input folder 1")
-    parser.add_argument("--data_path", type = str, default = dataFilePath, help = "Path to the input folder 2")
-    parser.add_argument("--case_start", type = int, default = 0, help = "Testing range starting case # - (0:84)")
-    parser.add_argument("--case_end", type = int, default = 84, help = "Testing range ending case # - (0:84)")
+    parser.add_argument("--header_path", type = str, default = headerFilePath, help = "Path to the nii header")
+    parser.add_argument("--data_path", type = str, default = dataFilePath, help = "Path to the nii data file")
+    parser.add_argument("--case_start", type = int, default = 0, help = "Testing range starting case # - (0:4)")
+    parser.add_argument("--case_end", type = int, default = 4, help = "Testing range ending case # - (0:4)")
     parser.add_argument('--test_type', type = int, default = 0, help = "Type of Test - (0 = Unit tests / 1 = Performance tests)")
     parser.add_argument('--case_list', nargs = "+", help = "List of case numbers to list", required = False)
     parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Output images from tests will be compared with golden outputs - (0 / 1)", required = False)
@@ -151,8 +142,8 @@ def rpp_test_suite_parser_and_validator():
     validate_path(qaInputFile)
 
     # validate the parameters passed by user
-    if ((args.case_start < 0 or args.case_start > 6) or (args.case_end < 0 or args.case_end > 6)):
-        print("Starting case# and Ending case# must be in the 0:84 range. Aborting!")
+    if ((args.case_start < 0 or args.case_start > 4) or (args.case_end < 0 or args.case_end > 4)):
+        print("Starting case# and Ending case# must be in the 0:4 range. Aborting!")
         exit(0)
     elif args.case_end < args.case_start:
         print("Ending case# must be greater than starting case#. Aborting!")
@@ -163,7 +154,7 @@ def rpp_test_suite_parser_and_validator():
     elif args.qa_mode < 0 or args.qa_mode > 1:
         print("QA mode must be in the 0 / 1. Aborting!")
         exit(0)
-    elif args.case_list is not None and args.case_start > 0 and args.case_end < 6:
+    elif args.case_list is not None and args.case_start > 0 and args.case_end < 4:
         print("Invalid input! Please provide only 1 option between case_list, case_start and case_end")
         exit(0)
     elif args.num_runs <= 0:
@@ -175,8 +166,8 @@ def rpp_test_suite_parser_and_validator():
         args.case_list = [str(x) for x in args.case_list]
     else:
         for case in args.case_list:
-            if int(case) < 0 or int(case) > 84:
-                 print("The case# must be in the 0:84 range!")
+            if int(case) < 0 or int(case) > 4:
+                 print("The case# must be in the 0:4 range!")
                  exit(0)
     # if QA mode is enabled overwrite the input folders with the folders used for generating golden outputs
     if args.qa_mode:
@@ -201,14 +192,14 @@ if qaMode and os.path.abspath(qaInputFile) != os.path.abspath(headerPath):
 
 if(testType == 0):
     if qaMode:
-        outFilePath = os.path.join(os.path.dirname(cwd), 'QA_RESULTS_HOST_' + timestamp)
+        outFilePath = os.path.join(os.path.dirname(cwd), 'QA_RESULTS_HOST_VOXEL' + timestamp)
     else:
-        outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_IMAGES_HOST_' + timestamp)
+        outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_IMAGES_HOST_VOXEL' + timestamp)
     numRuns = 1
 elif(testType == 1):
     if numRuns == 0:
         numRuns = 100 #default numRuns for running performance tests
-    outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_PERFORMANCE_LOGS_HOST_' + timestamp)
+    outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_PERFORMANCE_LOGS_HOST_VOXEL' + timestamp)
 else:
     print("Invalid TEST_TYPE specified. TEST_TYPE should be 0/1 (0 = Unittests / 1 = Performancetests)")
     exit()
@@ -235,10 +226,10 @@ print("#########################################################################
 print("Running all layout Inputs...")
 print("##########################################################################################")
 
-if testType == 0:
+if(testType == 0):
     for case in caseList:
-        if int(case) < 0 or int(case) > 6:
-            print(f"Invalid case number {case}. Case number must be in the range of 0 to 84!")
+        if int(case) < 0 or int(case) > 4:
+            print(f"Invalid case number {case}. Case number must be in the range of 0 to 4!")
             continue
         for layout in range(3):
             dstPathTemp, log_file_layout = process_layout(layout, qaMode, case, dstPath)
@@ -251,8 +242,8 @@ if testType == 0:
             print("--------------------------------")
             print("Running a New Functionality...")
             print("--------------------------------")
-            print(f"./Tensor_voxel_host {headerPath} {dataPath} {dstPathTemp} {bitDepth} {outputFormatToggle} {case} 0 {numRuns} {testType} {layout} 0")
-            subprocess.run(["./Tensor_voxel_host", headerPath, dataPath, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), "0", str(numRuns), str(testType), str(layout), "0", str(qaMode)])
+            print(f"./Tensor_voxel_host {headerPath} {dataPath} {dstPathTemp} {layout} {case} {numRuns} {testType} {qaMode}")
+            subprocess.run(["./Tensor_voxel_host", headerPath, dataPath, dstPath, str(layout), str(case), str(numRuns), str(testType), str(qaMode)])
 
             print("------------------------------------------------------------------------------------------")
     layoutDict = {0:"PKD3", 1:"PLN3", 2:"PLN1"}
@@ -260,8 +251,8 @@ if testType == 0:
         create_layout_directories(dstPath, layoutDict)
 else:
     for case in caseList:
-        if int(case) < 0 or int(case) > 6:
-            print(f"Invalid case number {case}. Case number must be in the range of 0 to 84!")
+        if int(case) < 0 or int(case) > 4:
+            print(f"Invalid case number {case}. Case number must be in the range of 0 to 4!")
             continue
         for layout in range(3):
             dstPathTemp, log_file_layout = process_layout(layout, qaMode, case, dstPath)
@@ -273,7 +264,7 @@ else:
 
             with open(f"{loggingFolder}/Tensor_voxel_host_{log_file_layout}_raw_performance_log.txt", "a") as log_file:
                 print(f"./Tensor_voxel_host {headerPath} {dataPath} {dstPath} {bitDepth} {outputFormatToggle} {case} 0 {numRuns} {testType} {layout} 0")
-                process = subprocess.Popen(["./Tensor_voxel_host", headerPath, dataPath, dstPath, str(bitDepth), str(outputFormatToggle), str(case), "0", str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+                process = subprocess.Popen(["./Tensor_voxel_host", headerPath, dataPath, dstPath, str(layout), str(case), str(numRuns), str(testType), str(qaMode)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
                 while True:
                     output = process.stdout.readline()
                     if not output and process.poll() is not None:

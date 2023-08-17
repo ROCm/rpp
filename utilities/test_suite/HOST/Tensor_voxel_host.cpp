@@ -144,7 +144,7 @@ inline void compare_output(Rpp32f* output, Rpp64u oBufferSize, string func, int 
     string pattern = "/build";
     remove_substring(refPath, pattern);
     string csvName = "";
-    if(layoutType = 0)
+    if(layoutType == 0)
         csvName = func + "_nifti_output_pkd3.csv";
     else if(layoutType == 1)
         csvName = func + "_nifti_output_pln3.csv";
@@ -168,7 +168,7 @@ inline void compare_output(Rpp32f* output, Rpp64u oBufferSize, string func, int 
             stringstream str(line);
             while(getline(str, word, ','))
             {
-                refOutput[index] = stoi(word);
+                refOutput[index] = stof(word);
                 index++;
             }
         }
@@ -180,10 +180,9 @@ inline void compare_output(Rpp32f* output, Rpp64u oBufferSize, string func, int 
     }
     for(int i = 0; i < oBufferSize; i++)
     {
-        if(refOutput[i] != static_cast<int>(output[i]))
+        if(refOutput[i] != output[i])
             mismatches++;
     }
-     std::cerr<<"\n "<<mismatches;
     std::cerr << std::endl << "Results for " << func << " :" << std::endl;
     std::string status = func + ": ";
     if(mismatches <= (TOLERANCE * oBufferSize))
@@ -532,8 +531,8 @@ inline void convert_output_Rpp32f_to_niftitype_generic(Rpp32f *input, RpptGeneri
 
 int main(int argc, char * argv[])
 {
-    int layoutType, testCase, testType, qaFlag;
-    char *header_file, *data_file;
+    int layoutType, testCase, testType, qaFlag, numRuns;
+    char *header_file, *data_file, *dst_path;
 
     if (argc < 7)
     {
@@ -543,10 +542,12 @@ int main(int argc, char * argv[])
 
     header_file = argv[1];
     data_file = argv[2];
-    layoutType = atoi(argv[3]); // 0 for PKD3 // 1 for PLN3 // 2 for PLN1
-    testCase = atoi(argv[4]); // 0 to 1
-    testType = atoi(argv[5]); // 0 - unit test / 1 - performance test
-    qaFlag = atoi(argv[6]); //0 - QA disabled / 1 - QA enabled
+    dst_path = argv[3];
+    layoutType = atoi(argv[4]); // 0 for PKD3 // 1 for PLN3 // 2 for PLN1
+    testCase = atoi(argv[5]); // 0 to 1
+    numRuns = atoi(argv[6]);
+    testType = atoi(argv[7]); // 0 - unit test / 1 - performance test
+    qaFlag = atoi(argv[8]); //0 - QA disabled / 1 - QA enabled
 
     if ((layoutType < 0) || (layoutType > 2))
     {
@@ -668,10 +669,6 @@ int main(int argc, char * argv[])
     rppCreateWithBatchSize(&handle, batchSize, numThreads);
 
     // Run case-wise RPP API and measure time
-    int numRuns = 1;
-    if(testType == 1)
-        numRuns = 1000;
-
     int missingFuncFlag = 0;
     double startWallTime, endWallTime, wallTime;
     double maxWallTime = 0, minWallTime = 5000, avgWallTime = 0;
@@ -784,7 +781,7 @@ int main(int argc, char * argv[])
             std::ofstream refFile;
             refFile.open("nifti_single.csv");
             for (int i = 0; i < oBufferSize; i++)
-                refFile << static_cast<int>(*(outputF32 + i)) << ",";
+                refFile << *(outputF32 + i) << ",";
             refFile.close();
         }
 

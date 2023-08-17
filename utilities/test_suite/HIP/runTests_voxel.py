@@ -29,9 +29,9 @@ import shutil
 timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
 cwd = os.getcwd()
-headerFilePath = os.path.join(os.path.dirname(cwd), 'TEST_VOXEL_IMAGE', 'BraTS20_Training_002_flair')
-dataFilePath = os.path.join(os.path.dirname(cwd), 'TEST_VOXEL_IMAGE', 'BraTS20_Training_002_flair')
-qaInputFile = os.path.join(os.path.dirname(cwd), 'TEST_QA_IMAGES_VOXEL', '1_nifti_input_50x50x4')
+headerFilePath = os.path.join(os.path.dirname(cwd), 'TEST_QA_IMAGES_VOXEL')
+dataFilePath = os.path.join(os.path.dirname(cwd), 'TEST_QA_IMAGES_VOXEL')
+qaInputFile = os.path.join(os.path.dirname(cwd), 'TEST_QA_IMAGES_VOXEL')
 
 # Check if folder path is empty, if it is the root folder, or if it exists, and remove its contents
 def validate_and_remove_contents(path):
@@ -124,28 +124,19 @@ def create_layout_directories(dst_path, layout_dict):
         for folder in folder_list:
             os.rename(dst_path + '/' + folder, dst_path + '/' + current_layout +  '/' + folder)
 
-# Get a list of log files based on a flag for preserving output
-def get_log_file_list(preserveOutput):
+def get_log_file_list():
     return [
-        "../OUTPUT_PERFORMANCE_LOGS_HIP_" + timestamp + "/Tensor_hip_pkd3_raw_performance_log.txt",
-        "../OUTPUT_PERFORMANCE_LOGS_HIP_" + timestamp + "/Tensor_hip_pln3_raw_performance_log.txt",
-        "../OUTPUT_PERFORMANCE_LOGS_HIP_" + timestamp + "/Tensor_hip_pln1_raw_performance_log.txt"
+        "../OUTPUT_PERFORMANCE_LOGS_HIP_" + timestamp + "/Tensor_voxel_hip_pkd3_raw_performance_log.txt",
+        "../OUTPUT_PERFORMANCE_LOGS_HIP_" + timestamp + "/Tensor_voxel_hip_pln3_raw_performance_log.txt",
+        "../OUTPUT_PERFORMANCE_LOGS_HIP_" + timestamp + "/Tensor_voxel_hip_pln1_raw_performance_log.txt"
     ]
 
 # Functionality group finder
 def func_group_finder(case_number):
-    if case_number < 5 or case_number == 13 or case_number == 36:
-        return "color_augmentations"
-    elif case_number == 8 or case_number == 30 or case_number == 83 or case_number == 84:
-        return "effects_augmentations"
-    elif case_number < 40:
+    if case_number == 0 or case_number == 3 or case_number == 4:
+        return "arithmetic_operations"
+    elif case_number == 1 or case_number == 2:
         return "geometric_augmentations"
-    elif case_number < 42:
-        return "morphological_operations"
-    elif case_number == 49:
-        return "filter_augmentations"
-    elif case_number < 86:
-        return "data_exchange_operations"
     else:
         return "miscellaneous"
 
@@ -168,10 +159,10 @@ def generate_performance_reports(d_counter, TYPE_LIST):
 # Parse and validate command-line arguments for the RPP test suite
 def rpp_test_suite_parser_and_validator():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--header_path", type = str, default = headerFilePath, help = "Path to the input folder 1")
-    parser.add_argument("--data_path", type = str, default = dataFilePath, help = "Path to the input folder 2")
-    parser.add_argument("--case_start", type = int, default = 0, help = "Testing range starting case # - (0:84)")
-    parser.add_argument("--case_end", type = int, default = 84, help = "Testing range ending case # - (0:84)")
+    parser.add_argument("--header_path", type = str, default = headerFilePath, help = "Path to the nii header")
+    parser.add_argument("--data_path", type = str, default = dataFilePath, help = "Path to the nii data file")
+    parser.add_argument("--case_start", type = int, default = 0, help = "Testing range starting case # - (0:4)")
+    parser.add_argument("--case_end", type = int, default = 4, help = "Testing range ending case # - (0:4)")
     parser.add_argument('--test_type', type = int, default = 0, help = "Type of Test - (0 = Unit tests / 1 = Performance tests)")
     parser.add_argument('--case_list', nargs = "+", help = "List of case numbers to list", required = False)
     parser.add_argument('--profiling', type = str , default = 'NO', help = 'Run with profiler? - (YES/NO)', required = False)
@@ -185,8 +176,8 @@ def rpp_test_suite_parser_and_validator():
     validate_path(qaInputFile)
 
     # validate the parameters passed by user
-    if ((args.case_start < 0 or args.case_start > 84) or (args.case_end < 0 or args.case_end > 84)):
-        print("Starting case# and Ending case# must be in the 0:84 range. Aborting!")
+    if ((args.case_start < 0 or args.case_start > 4) or (args.case_end < 0 or args.case_end > 4)):
+        print("Starting case# and Ending case# must be in the 0:4 range. Aborting!")
         exit(0)
     elif args.case_end < args.case_start:
         print("Ending case# must be greater than starting case#. Aborting!")
@@ -197,7 +188,7 @@ def rpp_test_suite_parser_and_validator():
     elif args.qa_mode < 0 or args.qa_mode > 1:
         print("QA mode must be in the 0 / 1. Aborting!")
         exit(0)
-    elif args.case_list is not None and args.case_start > 0 and args.case_end < 84:
+    elif args.case_list is not None and args.case_start > 0 and args.case_end < 4:
         print("Invalid input! Please provide only 1 option between case_list, case_start and case_end")
         exit(0)
     elif args.num_runs <= 0:
@@ -212,8 +203,8 @@ def rpp_test_suite_parser_and_validator():
         args.case_list = [str(x) for x in args.case_list]
     else:
         for case in args.case_list:
-            if int(case) < 0 or int(case) > 84:
-                 print("The case# must be in the 0:84 range!")
+            if int(case) < 0 or int(case) > 4:
+                 print("The case# must be in the 0:4 range!")
                  exit(0)
 
     # if QA mode is enabled overwrite the input folders with the folders used for generating golden outputs
@@ -240,14 +231,14 @@ if qaMode and os.path.abspath(qaInputFile) != os.path.abspath(headerPath):
 
 if(testType == 0):
     if qaMode:
-        outFilePath = os.path.join(os.path.dirname(cwd), 'QA_RESULTS_HIP_' + timestamp)
+        outFilePath = os.path.join(os.path.dirname(cwd), 'QA_RESULTS_HIP_VOXEL' + timestamp)
     else:
-        outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_IMAGES_HIP_' + timestamp)
+        outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_IMAGES_HIP_VOXEL' + timestamp)
     numRuns = 1
 elif(testType == 1):
     if numRuns == 0:
         numRuns = 100 #default numRuns for running performance tests
-    outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_PERFORMANCE_LOGS_HIP_' + timestamp)
+    outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_PERFORMANCE_LOGS_HIP_VOXEL' + timestamp)
 else:
     print("Invalid TEST_TYPE specified. TEST_TYPE should be 0/1 (0 = Unittests / 1 = Performancetests)")
     exit()
@@ -281,8 +272,8 @@ print("#########################################################################
 
 if(testType == 0):
     for case in caseList:
-        if int(case) < 0 or int(case) > 84:
-            print(f"Invalid case number {case}. Case number must be in the range of 0 to 84!")
+        if int(case) < 0 or int(case) > 4:
+            print(f"Invalid case number {case}. Case number must be in the range of 0 to 4!")
             continue
         for layout in range(3):
             dstPathTemp, log_file_layout = process_layout(layout, qaMode, case, dstPath)
@@ -295,15 +286,15 @@ if(testType == 0):
             print("--------------------------------")
             print("Running a New Functionality...")
             print("--------------------------------")
-            print(f"./Tensor_hip {headerPath} {dataPath} {dstPathTemp} {bitDepth} {outputFormatToggle} {case} 0 {numRuns} {testType} {layout}")
-            subprocess.run(["./Tensor_hip", headerPath, dataPath, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), "0", str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList)
+            print(f"./Tensor_hip {headerPath} {dataPath} {dstPathTemp} {layout} {case} {numRuns} {testType} {qaMode}")
+            subprocess.run(["./Tensor_voxel_hip", headerPath, dataPath, dstPath, str(layout), str(case), str(numRuns), str(testType), str(qaMode)])
 
-                    print("------------------------------------------------------------------------------------------")
+            print("------------------------------------------------------------------------------------------")
     layoutDict = {0:"PKD3", 1:"PLN3", 2:"PLN1"}
     if qaMode == 0:
         create_layout_directories(dstPath, layoutDict)
 else:
-    log_file_list = get_log_file_list(preserveOutput)
+    log_file_list = get_log_file_list()
 
     functionality_group_list = [
     "color_augmentations",
@@ -316,8 +307,8 @@ else:
 
     if (testType == 1 and profilingOption == "NO"):
         for case in caseList:
-            if int(case) < 0 or int(case) > 84:
-                print(f"Invalid case number {case}. Case number must be in the range of 0 to 84!")
+            if int(case) < 0 or int(case) > 4:
+                print(f"Invalid case number {case}. Case number must be in the range of 0 to 4!")
                 continue
             for layout in range(3):
                 dstPathTemp, log_file_layout = process_layout(layout, qaMode, case, dstPath)
@@ -328,8 +319,8 @@ else:
                 print("--------------------------------")
 
                 with open(f"{loggingFolder}/Tensor_hip_{log_file_layout}_raw_performance_log.txt", "a") as log_file:
-                    print(f"./Tensor_hip {headerPath} {dataPath} {dstPath} {bitDepth} {outputFormatToggle} {case} 0 {numRuns} {testType} {layout}")
-                    process = subprocess.Popen(["./Tensor_hip", headerPath, dataPath, dstPath, str(bitDepth), str(outputFormatToggle), str(case), "0", str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+                    print(f"./Tensor_hip {headerPath} {dataPath} {dstPath} {layout} {case}{numRuns} {testType} {qaMode}")
+                    process = subprocess.Popen(["./Tensor_voxel_hip", headerPath, dataPath, dstPath, str(layout), str(case), str(numRuns), str(testType), str(qaMode)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
                     while True:
                         output = process.stdout.readline()
                         if not output and process.poll() is not None:
@@ -401,8 +392,8 @@ else:
             f.close()
     elif (testType == 1 and profilingOption == "YES"):
         for case in caseList:
-            if int(case) < 0 or int(case) > 6:
-                print(f"Invalid case number {case}. Case number must be in the range of 0 to 84!")
+            if int(case) < 0 or int(case) > 4:
+                print(f"Invalid case number {case}. Case number must be in the range of 0 to 4!")
                 continue
             for layout in range(3):
                 dstPathTemp, log_file_layout = process_layout(layout, qaMode, case, dstPath)
@@ -415,8 +406,8 @@ else:
                 if not os.path.exists(f"{dstPath}/Tensor_PLN1/case_{case}"):
                     os.mkdir(f"{dstPath}/Tensor_PLN1/case_{case}")
                 with open(f"{loggingFolder}/Tensor_hip_{log_file_layout}_raw_performance_log.txt", "a") as log_file:
-                    print(f"\nrocprof --basenames on --timestamp on --stats -o {dstPath}/Tensor_PLN3/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}.csv ./Tensor_hip {headerPath} {dataPath} {dstPath} {bitDepth} {outputFormatToggle} {case} 0 0")
-                    process = subprocess.Popen([ 'rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f"{dstPath}/Tensor_PLN3/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}.csv", './Tensor_hip', headerPath, dataPath, dstPath, str(bitDepth), str(outputFormatToggle), str(case), '0', str(numRuns), str(testType), str(layout), '0', str(qaMode), str(decoderType), str(batchSize) ] + roiList, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                    print(f"\nrocprof --basenames on --timestamp on --stats -o {dstPath}/Tensor_PLN3/case_{case}/output_case{case}.csv ./Tensor_hip {headerPath} {dataPath} {dstPath}  {layout} {case}{numRuns} {testType} {qaMode}")
+                    process = subprocess.Popen([ 'rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f"{dstPath}/Tensor_PLN3/case_{case}/output_case{case}.csv", './Tensor_hip', headerPath, dataPath, dstPath, str(layout), str(case), str(numRuns), str(testType), str(qaMode)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                     while True:
                         output = process.stdout.readline()
                         if not output and process.poll() is not None:
@@ -436,7 +427,6 @@ else:
         TYPE_LIST = ["Tensor_PKD3", "Tensor_PLN1", "Tensor_PLN3"]
         TENSOR_TYPE_LIST = ["Tensor_PKD3", "Tensor_PLN1", "Tensor_PLN3"]
         CASE_NUM_LIST = caseList
-        BIT_DEPTH_LIST = range(0, 7, 1)
         OFT_LIST = range(0, 2, 1)
         d_counter = {"Tensor_PKD3":0, "Tensor_PLN1":0, "Tensor_PLN3":0}
 
@@ -460,48 +450,6 @@ else:
                 # Set results directory
                 CASE_RESULTS_DIR = RESULTS_DIR + "/" + TYPE + "/case_" + str(CASE_NUM)
                 print("CASE_RESULTS_DIR = " + CASE_RESULTS_DIR)
-
-                # Loop through bit depths
-                for BIT_DEPTH in BIT_DEPTH_LIST:
-                    # Loop through output format toggle cases
-                    for OFT in OFT_LIST:
-                        if (CASE_NUM == 40 or CASE_NUM == 41 or CASE_NUM == 49) and TYPE.startswith("Tensor"):
-                            KSIZE_LIST = [3, 5, 7, 9]
-                            # Loop through extra param kSize
-                            for KSIZE in KSIZE_LIST:
-                                # Write into csv file
-                                CASE_FILE_PATH = CASE_RESULTS_DIR + "/output_case" + str(CASE_NUM) + "_bitDepth" + str(BIT_DEPTH) + "_oft" + str(OFT) + "_kSize" + str(KSIZE) + ".stats.csv"
-                                print("CASE_FILE_PATH = " + CASE_FILE_PATH)
-                                fileCheck = case_file_check(CASE_FILE_PATH)
-                                if fileCheck == False:
-                                    continue
-                        elif (CASE_NUM == 24 or CASE_NUM == 21) and TYPE.startswith("Tensor"):
-                            INTERPOLATIONTYPE_LIST = [0, 1, 2, 3, 4, 5]
-                            # Loop through extra param interpolationType
-                            for INTERPOLATIONTYPE in INTERPOLATIONTYPE_LIST:
-                                # Write into csv file
-                                CASE_FILE_PATH = CASE_RESULTS_DIR + "/output_case" + str(CASE_NUM) + "_bitDepth" + str(BIT_DEPTH) + "_oft" + str(OFT) + "_interpolationType" + str(INTERPOLATIONTYPE) + ".stats.csv"
-                                print("CASE_FILE_PATH = " + CASE_FILE_PATH)
-                                fileCheck = case_file_check(CASE_FILE_PATH)
-                                if fileCheck == False:
-                                    continue
-                        elif (CASE_NUM == 8) and TYPE.startswith("Tensor"):
-                            NOISETYPE_LIST = [0, 1, 2]
-                            # Loop through extra param noiseType
-                            for NOISETYPE in NOISETYPE_LIST:
-                                # Write into csv file
-                                CASE_FILE_PATH = CASE_RESULTS_DIR + "/output_case" + str(CASE_NUM) + "_bitDepth" + str(BIT_DEPTH) + "_oft" + str(OFT) + "_noiseType" + str(NOISETYPE) + ".stats.csv"
-                                print("CASE_FILE_PATH = " + CASE_FILE_PATH)
-                                fileCheck = case_file_check(CASE_FILE_PATH)
-                                if fileCheck == False:
-                                    continue
-                        else:
-                            # Write into csv file
-                            CASE_FILE_PATH = CASE_RESULTS_DIR + "/output_case" + str(CASE_NUM) + "_bitDepth" + str(BIT_DEPTH) + "_oft" + str(OFT) + ".stats.csv"
-                            print("CASE_FILE_PATH = " + CASE_FILE_PATH)
-                            fileCheck = case_file_check(CASE_FILE_PATH)
-                            if fileCheck == False:
-                                continue
 
             new_file.close()
             subprocess.call(['chown', '{}:{}'.format(os.getuid(), os.getgid()), RESULTS_DIR + "/consolidated_results_" + TYPE + ".stats.csv"])  # nosec
