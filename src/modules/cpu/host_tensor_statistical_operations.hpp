@@ -20,7 +20,7 @@ THE SOFTWARE.
 #ifndef HOST_TENSOR_STATISTICAL_OPERATIONS_HPP
 #define HOST_TENSOR_STATISTICAL_OPERATIONS_HPP
 
-#include "kernel/image_min.hpp"
-#include "kernel/image_max.hpp"
+#include "kernel/tensor_min.hpp"
+#include "kernel/tensor_max.hpp"
 
 #endif // HOST_TENSOR_STATISTICAL_OPERATIONS_HPP

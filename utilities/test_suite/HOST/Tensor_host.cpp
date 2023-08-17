@@ -647,7 +647,7 @@ int main(int argc, char **argv)
             }
             case 88:
             {
-                testCaseName = "image_min";
+                testCaseName = "tensor_min";
 
                 if(srcDescPtr->c == 1)
                     reductionFuncResultArrLength = srcDescPtr->n;
@@ -656,7 +656,7 @@ int main(int argc, char **argv)
                 startCpuTime = clock();
 
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_image_min_host(input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
+                    rppt_tensor_min_host(input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
                 else
                     missingFuncFlag = 1;
 
@@ -664,7 +664,7 @@ int main(int argc, char **argv)
             }
             case 89:
             {
-                testCaseName = "image_max";
+                testCaseName = "tensor_max";
 
                 if(srcDescPtr->c == 1)
                     reductionFuncResultArrLength = srcDescPtr->n;
@@ -673,7 +673,7 @@ int main(int argc, char **argv)
                 startCpuTime = clock();
 
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_image_max_host(input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
+                    rppt_tensor_max_host(input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
                 else
                     missingFuncFlag = 1;
 

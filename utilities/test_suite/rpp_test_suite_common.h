@@ -51,8 +51,8 @@ std::map<int, string> augmentationMap =
     {34, "lut"},
     {36, "color_twist"},
     {38, "crop_mirror_normalize"},
-    {88, "image_min"},
-    {89, "image_max"},
+    {88, "tensor_min"},
+    {89, "tensor_max"},
 };
 
 template <typename T>

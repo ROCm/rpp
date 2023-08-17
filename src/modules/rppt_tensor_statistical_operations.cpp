@@ -27,24 +27,24 @@ THE SOFTWARE.
     //#include "hip/hip_tensor_statistical_operations.hpp"
 #endif // HIP_COMPILE
 
-/******************** image_min ********************/
+/******************** tensor_min ********************/
 
-RppStatus rppt_image_min_host(RppPtr_t srcPtr,
-                              RpptDescPtr srcDescPtr,
-                              RppPtr_t imageMinArr,
-                              Rpp32u imageMinArrLength,
-                              RpptROIPtr roiTensorPtrSrc,
-                              RpptRoiType roiType,
-                              rppHandle_t rppHandle)
+RppStatus rppt_tensor_min_host(RppPtr_t srcPtr,
+                               RpptDescPtr srcDescPtr,
+                               RppPtr_t minArr,
+                               Rpp32u minArrLength,
+                               RpptROIPtr roiTensorPtrSrc,
+                               RpptRoiType roiType,
+                               rppHandle_t rppHandle)
 {
     if (srcDescPtr->c == 1)
     {
-        if (imageMinArrLength < srcDescPtr->n)      // 1 min for each image
+        if (minArrLength < srcDescPtr->n)      // 1 min for each image
             return RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH;
     }
     else if (srcDescPtr->c == 3)
     {
-        if (imageMinArrLength < srcDescPtr->n * 4)  // min of each channel, and min of all 3 channels
+        if (minArrLength < srcDescPtr->n * 4)  // min of each channel, and min of all 3 channels
             return RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH;
     }
 
@@ -52,66 +52,66 @@ RppStatus rppt_image_min_host(RppPtr_t srcPtr,
 
     if (srcDescPtr->dataType == RpptDataType::U8)
     {
-        image_min_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                    srcDescPtr,
-                                    static_cast<Rpp8u*>(imageMinArr),
-                                    imageMinArrLength,
-                                    roiTensorPtrSrc,
-                                    roiType,
-                                    layoutParams);
+        tensor_min_u8_u8_host(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                              srcDescPtr,
+                              static_cast<Rpp8u*>(minArr),
+                              minArrLength,
+                              roiTensorPtrSrc,
+                              roiType,
+                              layoutParams);
     }
     else if (srcDescPtr->dataType == RpptDataType::F16)
     {
-        image_min_f16_f16_host_tensor((Rpp16f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                       srcDescPtr,
-                                       static_cast<Rpp16f*>(imageMinArr),
-                                       imageMinArrLength,
-                                       roiTensorPtrSrc,
-                                       roiType,
-                                       layoutParams);
+        tensor_min_f16_f16_host((Rpp16f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                 srcDescPtr,
+                                 static_cast<Rpp16f*>(minArr),
+                                 minArrLength,
+                                 roiTensorPtrSrc,
+                                 roiType,
+                                 layoutParams);
     }
     else if (srcDescPtr->dataType == RpptDataType::F32)
     {
-        image_min_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                       srcDescPtr,
-                                       static_cast<Rpp32f*>(imageMinArr),
-                                       imageMinArrLength,
-                                       roiTensorPtrSrc,
-                                       roiType,
-                                       layoutParams);
+        tensor_min_f32_f32_host((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                 srcDescPtr,
+                                 static_cast<Rpp32f*>(minArr),
+                                 minArrLength,
+                                 roiTensorPtrSrc,
+                                 roiType,
+                                 layoutParams);
     }
     else if (srcDescPtr->dataType == RpptDataType::I8)
     {
-        image_min_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                    srcDescPtr,
-                                    static_cast<Rpp8s*>(imageMinArr),
-                                    imageMinArrLength,
-                                    roiTensorPtrSrc,
-                                    roiType,
-                                    layoutParams);
+        tensor_min_i8_i8_host(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                              srcDescPtr,
+                              static_cast<Rpp8s*>(minArr),
+                              minArrLength,
+                              roiTensorPtrSrc,
+                              roiType,
+                              layoutParams);
     }
 
     return RPP_SUCCESS;
 }
 
-/******************** image_max ********************/
+/******************** tensor_max ********************/
 
-RppStatus rppt_image_max_host(RppPtr_t srcPtr,
-                              RpptDescPtr srcDescPtr,
-                              RppPtr_t imageMaxArr,
-                              Rpp32u imageMaxArrLength,
-                              RpptROIPtr roiTensorPtrSrc,
-                              RpptRoiType roiType,
-                              rppHandle_t rppHandle)
+RppStatus rppt_tensor_max_host(RppPtr_t srcPtr,
+                               RpptDescPtr srcDescPtr,
+                               RppPtr_t maxArr,
+                               Rpp32u maxArrLength,
+                               RpptROIPtr roiTensorPtrSrc,
+                               RpptRoiType roiType,
+                               rppHandle_t rppHandle)
 {
     if (srcDescPtr->c == 1)
     {
-        if (imageMaxArrLength < srcDescPtr->n)      // 1 min for each image
+        if (maxArrLength < srcDescPtr->n)      // 1 min for each image
             return RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH;
     }
     else if (srcDescPtr->c == 3)
     {
-        if (imageMaxArrLength < srcDescPtr->n * 4)  // min of each channel, and min of all 3 channels
+        if (maxArrLength < srcDescPtr->n * 4)  // min of each channel, and min of all 3 channels
             return RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH;
     }
 
@@ -119,43 +119,43 @@ RppStatus rppt_image_max_host(RppPtr_t srcPtr,
 
     if (srcDescPtr->dataType == RpptDataType::U8)
     {
-        image_max_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                    srcDescPtr,
-                                    static_cast<Rpp8u*>(imageMaxArr),
-                                    imageMaxArrLength,
-                                    roiTensorPtrSrc,
-                                    roiType,
-                                    layoutParams);
+        tensor_max_u8_u8_host(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                              srcDescPtr,
+                              static_cast<Rpp8u*>(maxArr),
+                              maxArrLength,
+                              roiTensorPtrSrc,
+                              roiType,
+                              layoutParams);
     }
     else if (srcDescPtr->dataType == RpptDataType::F16)
     {
-        image_max_f16_f16_host_tensor((Rpp16f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                       srcDescPtr,
-                                       static_cast<Rpp16f*>(imageMaxArr),
-                                       imageMaxArrLength,
-                                       roiTensorPtrSrc,
-                                       roiType,
-                                       layoutParams);
+        tensor_max_f16_f16_host((Rpp16f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                 srcDescPtr,
+                                 static_cast<Rpp16f*>(maxArr),
+                                 maxArrLength,
+                                 roiTensorPtrSrc,
+                                 roiType,
+                                 layoutParams);
     }
     else if (srcDescPtr->dataType == RpptDataType::F32)
     {
-        image_max_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                       srcDescPtr,
-                                       static_cast<Rpp32f*>(imageMaxArr),
-                                       imageMaxArrLength,
-                                       roiTensorPtrSrc,
-                                       roiType,
-                                       layoutParams);
+        tensor_max_f32_f32_host((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                 srcDescPtr,
+                                 static_cast<Rpp32f*>(maxArr),
+                                 maxArrLength,
+                                 roiTensorPtrSrc,
+                                 roiType,
+                                 layoutParams);
     }
     else if (srcDescPtr->dataType == RpptDataType::I8)
     {
-        image_max_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                    srcDescPtr,
-                                    static_cast<Rpp8s*>(imageMaxArr),
-                                    imageMaxArrLength,
-                                    roiTensorPtrSrc,
-                                    roiType,
-                                    layoutParams);
+        tensor_max_i8_i8_host(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                              srcDescPtr,
+                              static_cast<Rpp8s*>(maxArr),
+                              maxArrLength,
+                              roiTensorPtrSrc,
+                              roiType,
+                              layoutParams);
     }
 
     return RPP_SUCCESS;
