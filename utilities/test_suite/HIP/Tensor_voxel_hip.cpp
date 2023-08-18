@@ -27,11 +27,17 @@ THE SOFTWARE.
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/opencv.hpp>
 #include <iostream>
+#include <time.h>
+#include <omp.h>
+#include <fstream>
+#include <unistd.h>
+#include <dirent.h>
+#include <boost/filesystem.hpp>
 #include "rpp.h"
-#include "../rpp_test_suite_common.h"
 #include "nifti1.h"
 
 using namespace std;
+namespace fs = boost::filesystem;
 typedef int16_t NIFTI_DATATYPE;
 
 #define MIN_HEADER_SIZE 348
@@ -99,15 +105,15 @@ inline void read_nifti_data_file(char* const data_file, nifti_1_header *niftiHea
     fclose(fp);
 }
 
-inline void write_nifti_file(nifti_1_header *niftiHeader, NIFTI_DATATYPE *niftiData)
+inline void write_nifti_file(nifti_1_header *niftiHeader, NIFTI_DATATYPE *niftiData, int batchCount)
 {
     nifti_1_header hdr = *niftiHeader;
-    nifti1_extender pad = {0,0,0,0};
+    // nifti1_extender pad = {0,0,0,0};
     FILE *fp;
     int ret, i;
 
     // write first hdr.vox_offset bytes of header
-    string niiOutputString = "nifti_output.nii";
+    string niiOutputString = std::to_string(batchCount)+"_nifti_output.nii";
     const char *niiOutputFile = niiOutputString.c_str();
     fp = fopen(niiOutputFile,"w");
     if (fp == NULL)
@@ -123,7 +129,7 @@ inline void write_nifti_file(nifti_1_header *niftiHeader, NIFTI_DATATYPE *niftiD
     }
 
     // for nii files, write extender pad and image data
-    ret = fwrite(&pad, 4, 1, fp);
+    // ret = fwrite(&pad, 4, 1, fp);
     if (ret != 1)
     {
         fprintf(stderr, "\nError writing header file extension pad %s\n",niiOutputFile);
@@ -140,18 +146,18 @@ inline void write_nifti_file(nifti_1_header *niftiHeader, NIFTI_DATATYPE *niftiD
     fclose(fp);
 }
 
-inline void write_image_from_nifti_opencv(uchar *niftiDataXYFrameU8, int niftiHeaderImageWidth, RpptRoiXyzwhd *roiGenericSrcPtr, uchar *outputBufferOpenCV, int zPlane, int Channel)
+inline void write_image_from_nifti_opencv(uchar *niftiDataXYFrameU8, int niftiHeaderImageWidth, RpptRoiXyzwhd *roiGenericSrcPtr, uchar *outputBufferOpenCV, int zPlane, int Channel, int batchCount)
 {
     uchar *outputBufferOpenCVRow = outputBufferOpenCV;
     uchar *niftiDataXYFrameU8Row = niftiDataXYFrameU8;
-    for(int i = 0; i < roiGenericSrcPtr[0].roiHeight; i++)
+    for(int i = 0; i < roiGenericSrcPtr[batchCount].roiHeight; i++)
     {
-        memcpy(outputBufferOpenCVRow, niftiDataXYFrameU8Row, roiGenericSrcPtr[0].roiWidth);
-        outputBufferOpenCVRow += roiGenericSrcPtr[0].roiWidth;
+        memcpy(outputBufferOpenCVRow, niftiDataXYFrameU8Row, roiGenericSrcPtr[batchCount].roiWidth);
+        outputBufferOpenCVRow += roiGenericSrcPtr[batchCount].roiWidth;
         niftiDataXYFrameU8Row += niftiHeaderImageWidth;
     }
-    cv::Mat matOutputImage = cv::Mat(roiGenericSrcPtr[0].roiHeight, roiGenericSrcPtr[0].roiWidth, CV_8UC1, outputBufferOpenCV);
-    string fileName = "nifti_single_zPlane_chn_"+ std::to_string(Channel)+ "_" + std::to_string(zPlane) + ".jpg";
+    cv::Mat matOutputImage = cv::Mat(roiGenericSrcPtr[batchCount].roiHeight, roiGenericSrcPtr[batchCount].roiWidth, CV_8UC1, outputBufferOpenCV);
+    string fileName = "nifti_" + std::to_string(batchCount) + "_zPlane_chn_"+ std::to_string(Channel)+ "_" + std::to_string(zPlane) + ".jpg";
     cv::imwrite(fileName, matOutputImage);
 
     // nifti_1_header hdr = *niftiHeader;
@@ -186,20 +192,22 @@ inline void write_image_from_nifti_opencv(uchar *niftiDataXYFrameU8, int niftiHe
 
 // Convert default NIFTI_DATATYPE unstrided buffer to RpptDataType::F32 strided buffer
 template<typename T>
-inline void convert_input_niftitype_to_Rpp32f_generic(T *niftyInput, nifti_1_header *niftiHeader, Rpp32f *inputF32, RpptGenericDescPtr descriptorPtr3D)
+inline void convert_input_niftitype_to_Rpp32f_generic(T **niftyInput, nifti_1_header headerData[], Rpp32f *inputF32, RpptGenericDescPtr descriptorPtr3D)
 {
-    bool replicateToAllChannels;
-    nifti_1_header headerData = *niftiHeader;
+     bool replicateToAllChannels = false;
+    // nifti_1_header headerData[] = niftiHeader;
     Rpp32u depthStride, rowStride, channelStride, channelIncrement;
-    Rpp32u niftyStride = headerData.dim[1] * headerData.dim[2] * headerData.dim[3];
+    // Rpp32u niftyStride = headerData.dim[1] * headerData.dim[2] * headerData.dim[3];
     if (descriptorPtr3D->layout == RpptLayout::NCDHW)
     {
         depthStride = descriptorPtr3D->strides[2];
         rowStride = descriptorPtr3D->strides[3];
         channelStride = descriptorPtr3D->strides[1];
         channelIncrement = 1;
-        niftyStride = niftyStride * descriptorPtr3D->dims[1];
-        replicateToAllChannels = (descriptorPtr3D->dims[1] == 3 && headerData.dim[4] == 1);
+        // niftyStride = niftyStride * descriptorPtr3D->dims[1];
+        // replicateToAllChannels = (descriptorPtr3D->dims[1] == 3 && headerData.dim[4] == 1);
+        if(descriptorPtr3D->dims[1] == 3)
+            replicateToAllChannels = true;                            //temporary chnage to replicate the data for pln3 using pln1 data
     }
     else if (descriptorPtr3D->layout == RpptLayout::NDHWC)
     {
@@ -207,33 +215,31 @@ inline void convert_input_niftitype_to_Rpp32f_generic(T *niftyInput, nifti_1_hea
         rowStride = descriptorPtr3D->strides[2];
         channelStride = 1;
         channelIncrement = 3;
-        niftyStride = niftyStride * descriptorPtr3D->dims[4];
-        replicateToAllChannels = (descriptorPtr3D->dims[4] == 3 && headerData.dim[4] == 1);
+        // niftyStride = niftyStride * descriptorPtr3D->dims[4];
+        // replicateToAllChannels = (descriptorPtr3D->dims[4] == 3 && headerData.dim[4] == 1);
+        replicateToAllChannels = true;
     }
     if (replicateToAllChannels)
     {
         for (int batchcount = 0; batchcount < descriptorPtr3D->dims[0]; batchcount++)
         {
-            T *niftyInputTemp = niftyInput + batchcount * niftyStride;
+            T *niftyInputTemp = niftyInput[batchcount];
             Rpp32f *outputF32Temp = inputF32 + batchcount * descriptorPtr3D->strides[0];
             Rpp32f *outputChannelR = outputF32Temp;
             Rpp32f *outputChannelG = outputChannelR + channelStride;
             Rpp32f *outputChannelB = outputChannelG + channelStride;
-            for (int d = 0; d < headerData.dim[3]; d++)
+            for (int d = 0; d < headerData[batchcount].dim[3]; d++)
             {
                 Rpp32f *outputDepthR = outputChannelR;
                 Rpp32f *outputDepthG = outputChannelG;
                 Rpp32f *outputDepthB = outputChannelB;
-                for (int h = 0; h < headerData.dim[2]; h++)
+                for (int h = 0; h < headerData[batchcount].dim[2]; h++)
                 {
                     Rpp32f *outputRowR = outputDepthR;
                     Rpp32f *outputRowG = outputDepthG;
                     Rpp32f *outputRowB = outputDepthB;
-                    for (int w = 0; w < headerData.dim[1]; w++)
-                    {
-                        *outputRowR = static_cast<Rpp32f>(*niftyInputTemp);
+                    for (int w = 0; w < headerData[batchcount].dim[1]; w++)
                         *outputRowG = static_cast<Rpp32f>(*niftyInputTemp);
-                        *outputRowB = static_cast<Rpp32f>(*niftyInputTemp);
 
                         niftyInputTemp++;
                         outputRowR += channelIncrement;
@@ -254,18 +260,18 @@ inline void convert_input_niftitype_to_Rpp32f_generic(T *niftyInput, nifti_1_hea
     {
         for (int batchcount = 0; batchcount < descriptorPtr3D->dims[0]; batchcount++)
         {
-            T *niftyInputTemp = niftyInput + batchcount * niftyStride;
+            T *niftyInputTemp = niftyInput[batchcount];
             Rpp32f *outputTemp = inputF32 + batchcount * descriptorPtr3D->strides[0];
-            for (int c = 0; c < headerData.dim[4]; c++)
+            for (int c = 0; c < headerData[batchcount].dim[4]; c++)
             {
                 Rpp32f *outputChannel = outputTemp;
-                for (int d = 0; d < headerData.dim[3]; d++)
+                for (int d = 0; d < headerData[batchcount].dim[3]; d++)
                 {
                     Rpp32f *outputDepth = outputChannel;
-                    for (int h = 0; h < headerData.dim[2]; h++)
+                    for (int h = 0; h < headerData[batchcount].dim[2]; h++)
                     {
                         Rpp32f *outputRow = outputDepth;
-                        for (int w = 0; w < headerData.dim[1]; w++)
+                        for (int w = 0; w < headerData[batchcount].dim[1]; w++)
                         {
                             *outputRow++ = static_cast<Rpp32f>(*niftyInputTemp++);
                         }
@@ -288,73 +294,69 @@ inline void convert_output_Rpp32f_to_niftitype_generic(Rpp32f *input, RpptGeneri
     if (descriptorPtr3D->layout == RpptLayout::NCDHW)
     {
         niftyStride = niftyStride * descriptorPtr3D->dims[1];
-        for (int batchCount = 0; batchCount < descriptorPtr3D->dims[0]; batchCount++)
+        Rpp32f *inputTemp = input;
+        T *niftyOutputTemp = niftyOutput;
+        for (int d = 0; d < headerData.dim[3]; d++)
         {
-            Rpp32f *inputTemp = input + batchCount * descriptorPtr3D->dims[0];
-            T *niftyOutputTemp = niftyOutput + batchCount * niftyStride;
-            for (int d = 0; d < headerData.dim[3]; d++)
+            Rpp32f *inputDepth = inputTemp;
+            for (int h = 0; h < headerData.dim[2]; h++)
             {
-                Rpp32f *inputDepth = inputTemp;
-                for (int h = 0; h < headerData.dim[2]; h++)
+                Rpp32f *inputRow = inputDepth;
+                for (int w = 0; w < headerData.dim[1]; w++)
                 {
-                    Rpp32f *inputRow = inputDepth;
-                    for (int w = 0; w < headerData.dim[1]; w++)
-                    {
-                        *inputRow = RPPRANGECHECK(*inputRow);
-                        *niftyOutputTemp++ = (T)*inputRow++;
-                    }
-                    inputDepth += descriptorPtr3D->strides[3];
+                    *inputRow = RPPRANGECHECK(*inputRow);
+                    *niftyOutputTemp++ = (T)*inputRow++;
                 }
-                inputTemp += descriptorPtr3D->strides[2];
+                inputDepth += descriptorPtr3D->strides[3];
             }
+            inputTemp += descriptorPtr3D->strides[2];
         }
     }
     else if (descriptorPtr3D->layout == RpptLayout::NDHWC)
     {
         niftyStride = niftyStride * descriptorPtr3D->dims[4];
-        for (int batchCount = 0; batchCount < descriptorPtr3D->dims[0]; batchCount++)
+        Rpp32f *inputTemp = input;
+        T *niftyOutputTemp = niftyOutput;
+        for (int d = 0; d < headerData.dim[3]; d++)
         {
-            Rpp32f *inputTemp = input + batchCount * descriptorPtr3D->dims[0];
-            T *niftyOutputTemp = niftyOutput + batchCount * niftyStride;
-            for (int d = 0; d < headerData.dim[3]; d++)
+            Rpp32f *inputDepth = inputTemp;
+            for (int h = 0; h < headerData.dim[2]; h++)
             {
-                Rpp32f *inputDepth = inputTemp;
-                for (int h = 0; h < headerData.dim[2]; h++)
+                Rpp32f *inputRow = inputDepth;
+                for (int w = 0; w < headerData.dim[1]; w++)
                 {
-                    Rpp32f *inputRow = inputDepth;
-                    for (int w = 0; w < headerData.dim[1]; w++)
-                    {
-                        *inputRow = RPPRANGECHECK(*inputRow);
-                        *niftyOutputTemp = (T)*inputRow;
+                    *inputRow = RPPRANGECHECK(*inputRow);
+                    *niftyOutputTemp = (T)*inputRow;
 
-                        inputRow += 3;
-                        niftyOutputTemp++;
-                    }
-                    inputDepth += descriptorPtr3D->strides[2];
+                    inputRow += 3;
+                    niftyOutputTemp++;
                 }
-                inputTemp += descriptorPtr3D->strides[1];
+                inputDepth += descriptorPtr3D->strides[2];
             }
+            inputTemp += descriptorPtr3D->strides[1];
         }
     }
 }
 
 int main(int argc, char * argv[])
 {
-    int layoutType, testCase, testType, inputBitDepth;
-    char *header_file, *data_file;
+    int layoutType, testCase, testType, qaFlag, numRuns;
+    char *header_file, *data_file, *dst_path;
 
-    if (argc != 7)
+    if (argc < 7)
     {
-        fprintf(stderr, "\nUsage: %s <header file> <data file> <layoutType = 0 - PKD3/ 1 - PLN3/ 2 - PLN1> <testCase = 0 to 1> <testType = 0 - unit test/ 1 - performance test> <inputBitDepth = 0 - U8/ 2 - F32>\n", argv[0]);
+        fprintf(stderr, "\nUsage: %s <header file> <data file> <layoutType = 0 - PKD3/ 1 - PLN3/ 2 - PLN1> <testCase = 0 to 1> <testType = 0 - unit test/ 1 - performance test>\n", argv[0]);
         exit(1);
     }
 
     header_file = argv[1];
     data_file = argv[2];
-    layoutType = atoi(argv[3]); // 0 for PKD3 // 1 for PLN3 // 2 for PLN1
-    testCase = atoi(argv[4]); // 0 to 4
-    testType = atoi(argv[5]); // 0 - unit test / 1 - performance test
-    inputBitDepth = atoi(argv[6]); // 0 for U8 / 2 for F32
+    dst_path = argv[3];
+    layoutType = atoi(argv[4]); // 0 for PKD3 // 1 for PLN3 // 2 for PLN1
+    testCase = atoi(argv[5]); // 0 to 1
+    numRuns = atoi(argv[6]);
+    testType = atoi(argv[7]); // 0 - unit test / 1 - performance test
+    qaFlag = atoi(argv[8]); //0 - QA disabled / 1 - QA enabled
 
     if ((layoutType < 0) || (layoutType > 2))
     {
@@ -367,35 +369,41 @@ int main(int argc, char * argv[])
         exit(1);
     }
 
-    NIFTI_DATATYPE *niftiData = NULL;
-    nifti_1_header niftiHeader;
+    int numChannels, offsetInBytes;
+    int batchSize = 0, maxX = 0, maxY = 0, maxZ = 0;
+    vector<string> headerNames, headerPath, dataFileNames, dataFilePath;
+    search_nii_files(header_file, headerNames, headerPath);
+    search_nii_files(data_file, dataFileNames, dataFilePath);
+    batchSize = dataFileNames.size();
+
+    // NIFTI_DATATYPE *niftiData = NULL;
+    NIFTI_DATATYPE** niftiDataArray = (NIFTI_DATATYPE**)malloc(batchSize * sizeof(NIFTI_DATATYPE*));
+    nifti_1_header niftiHeader[batchSize];
 
     // read nifti header file
-    read_nifti_header_file(header_file, &niftiHeader);
+    for(int i = 0; i < batchSize; i++)
+    {
+        read_nifti_header_file((char *)headerPath[i].c_str(), &niftiHeader[i]);
+        // allocate buffer and read first 3D volume from data file
+        uint dataSize = niftiHeader[i].dim[1] * niftiHeader[i].dim[2] * niftiHeader[i].dim[3];
+        uint dataSizeInBytes = dataSize * sizeof(NIFTI_DATATYPE);
+        niftiDataArray[i] = (NIFTI_DATATYPE *) calloc(dataSizeInBytes, 1);
+        if (niftiDataArray[i] == NULL)
+        {
+            fprintf(stderr, "\nError allocating data buffer for %s\n",data_file);
+            exit(1);
+        }
+        // read nifti data file
+        read_nifti_data_file((char *)dataFilePath[i].c_str(), &niftiHeader[i], niftiDataArray[i]);
+        maxX = max(static_cast<int>(niftiHeader[i].dim[1]), maxX);
+        maxY = max(static_cast<int>(niftiHeader[i].dim[2]), maxY);
+        maxZ = max(static_cast<int>(niftiHeader[i].dim[3]), maxZ);
+    }
 
-	// Set ROI tensors types for src
+    // Set ROI tensors types for src
     RpptRoi3DType roiTypeSrc;
     roiTypeSrc = RpptRoi3DType::XYZWHD;
 
-    // allocate buffer and read first 3D volume from data file
-    uint dataSize = niftiHeader.dim[1] * niftiHeader.dim[2] * niftiHeader.dim[3];
-    uint dataSizeInBytes = dataSize * sizeof(NIFTI_DATATYPE);
-    niftiData = (NIFTI_DATATYPE *) calloc(dataSizeInBytes, 1);
-    if (niftiData == NULL)
-    {
-        fprintf(stderr, "\nError allocating data buffer for %s\n",data_file);
-        exit(1);
-    }
-
-    // read nifti data file
-    read_nifti_data_file(data_file, &niftiHeader, niftiData);
-
-    // set parameters to load into descriptor3D
-    int batchSize, maxX, maxY, maxZ, numChannels, offsetInBytes;
-    batchSize = 1;                                             // Can be modified for batch processing
-    maxX = niftiHeader.dim[1];                                 // Can be modified to obtain maxX of multiple 3D images for batch processing
-    maxY = niftiHeader.dim[2];                                 // Can be modified to obtain maxY of multiple 3D images for batch processing
-    maxZ = niftiHeader.dim[3];                                 // Can be modified to obtain maxZ of multiple 3D images for batch processing
     numChannels = (layoutType == 2) ? 1: 3;                    //Temporary value set to 3 for running pln3, the actual value should be obtained from niftiHeader.dim[4].
     offsetInBytes = 0;
 
@@ -414,34 +422,37 @@ int main(int argc, char * argv[])
     RpptROI3D *roiGenericSrcPtr = reinterpret_cast<RpptROI3D *>(pinnedMemROI);
 
     // optionally pick full image as ROI or a smaller slice of the 3D tensor in X/Y/Z dimensions
-    // option 1 - test using roi as the whole 3D image - not sliced (example for 240 x 240 x 155 x 1)
-    roiGenericSrcPtr[0].xyzwhdROI.xyz.x = 0;                              // start X dim = 0
-    roiGenericSrcPtr[0].xyzwhdROI.xyz.y = 0;                              // start Y dim = 0
-    roiGenericSrcPtr[0].xyzwhdROI.xyz.z = 0;                              // start Z dim = 0
-    roiGenericSrcPtr[0].xyzwhdROI.roiWidth = niftiHeader.dim[1];          // length in X dim = 240
-    roiGenericSrcPtr[0].xyzwhdROI.roiHeight = niftiHeader.dim[2];         // length in Y dim = 240
-    roiGenericSrcPtr[0].xyzwhdROI.roiDepth = niftiHeader.dim[3];          // length in Z dim = 155
-    // option 2 - test using roi as a smaller 3D tensor slice - sliced in X, Y and Z dims (example for 240 x 240 x 155 x 1)
-    // roiGenericSrcPtr[0].xyzwhdROI.xyz.x = niftiHeader.dim[1] / 4;         // start X dim = 60
-    // roiGenericSrcPtr[0].xyzwhdROI.xyz.y = niftiHeader.dim[2] / 4;         // start Y dim = 60
-    // roiGenericSrcPtr[0].xyzwhdROI.xyz.z = niftiHeader.dim[3] / 3;         // start Z dim = 51
-    // roiGenericSrcPtr[0].xyzwhdROI.roiWidth = niftiHeader.dim[1] / 2;      // length in X dim = 120
-    // roiGenericSrcPtr[0].xyzwhdROI.roiHeight = niftiHeader.dim[2] / 2;     // length in Y dim = 120
-    // roiGenericSrcPtr[0].xyzwhdROI.roiDepth = niftiHeader.dim[3] / 3;      // length in Z dim = 51
-    // option 3 - test using roi as a smaller 3D tensor slice - sliced in only Z dim (example for 240 x 240 x 155 x 1)
-    // roiGenericSrcPtr[0].xyzwhdROI.xyz.x = 0;                              // start X dim = 0
-    // roiGenericSrcPtr[0].xyzwhdROI.xyz.y = 0;                              // start Y dim = 0
-    // roiGenericSrcPtr[0].xyzwhdROI.xyz.z = niftiHeader.dim[3] / 3;         // start Z dim = 51
-    // roiGenericSrcPtr[0].xyzwhdROI.roiWidth = niftiHeader.dim[1];          // length in X dim = 240
-    // roiGenericSrcPtr[0].xyzwhdROI.roiHeight = niftiHeader.dim[2];         // length in Y dim = 240
-    // roiGenericSrcPtr[0].xyzwhdROI.roiDepth = niftiHeader.dim[3] / 3;      // length in Z dim = 51
-    // option 4 - test using roi as a smaller 3D tensor slice - sliced in only X and Z dim (example for 240 x 240 x 155 x 1)
-    // roiGenericSrcPtr[0].xyzwhdROI.xyz.x = niftiHeader.dim[1] / 5;         // start X dim = 48
-    // roiGenericSrcPtr[0].xyzwhdROI.xyz.y = 0;                              // start Y dim = 0
-    // roiGenericSrcPtr[0].xyzwhdROI.xyz.z = niftiHeader.dim[3] / 3;         // start Z dim = 51
-    // roiGenericSrcPtr[0].xyzwhdROI.roiWidth = niftiHeader.dim[1] * 3 / 5;  // length in X dim = 144
-    // roiGenericSrcPtr[0].xyzwhdROI.roiHeight = niftiHeader.dim[2];         // length in Y dim = 240
-    // roiGenericSrcPtr[0].xyzwhdROI.roiDepth = niftiHeader.dim[3] / 3;      // length in Z dim = 51
+    for(int i = 0; i < batchSize; i++)
+    {
+        // option 1 - test using roi as the whole 3D image - not sliced (example for 240 x 240 x 155 x 1)
+        roiGenericSrcPtr[i].xyzwhdROI.xyz.x = 0;                              // start X dim = 0
+        roiGenericSrcPtr[i].xyzwhdROI.xyz.y = 0;                              // start Y dim = 0
+        roiGenericSrcPtr[i].xyzwhdROI.xyz.z = 0;                              // start Z dim = 0
+        roiGenericSrcPtr[i].xyzwhdROI.roiWidth = niftiHeader[i].dim[1];          // length in X dim
+        roiGenericSrcPtr[i].xyzwhdROI.roiHeight = niftiHeader[i].dim[2];         // length in Y dim
+        roiGenericSrcPtr[i].xyzwhdROI.roiDepth = niftiHeader[i].dim[3];          // length in Z dim
+        // option 2 - test using roi as a smaller 3D tensor slice - sliced in X, Y and Z dims (example for 240 x 240 x 155 x 1)
+        // roiGenericSrcPtr[i].xyzwhdROI.xyz.x = niftiHeader.dim[1] / 4;         // start X dim = 60
+        // roiGenericSrcPtr[i].xyzwhdROI.xyz.y = niftiHeader[i].dim[2] / 4;         // start Y dim = 60
+        // roiGenericSrcPtr[i].xyzwhdROI.xyz.z = niftiHeader[i].dim[3] / 3;         // start Z dim = 51
+        // roiGenericSrcPtr[i].xyzwhdROI.roiWidth = niftiHeader[i].dim[1] / 2;      // length in X dim = 120
+        // roiGenericSrcPtr[i].xyzwhdROI.roiHeight = niftiHeader[i].dim[2] / 2;     // length in Y dim = 120
+        // roiGenericSrcPtr[i].xyzwhdROI.roiDepth = niftiHeader[i].dim[3] / 3;      // length in Z dim = 51
+        // option 3 - test using roi as a smaller 3D tensor slice - sliced in only Z dim (example for 240 x 240 x 155 x 1)
+        // roiGenericSrcPtr[i].xyzwhdROI.xyz.x = 0;                              // start X dim = 0
+        // roiGenericSrcPtr[i].xyzwhdROI.xyz.y = 0;                              // start Y dim = 0
+        // roiGenericSrcPtr[i].xyzwhdROI.xyz.z = niftiHeader[i].dim[3] / 3;         // start Z dim = 51
+        // roiGenericSrcPtr[i].xyzwhdROI.roiWidth = niftiHeader[i].dim[1];          // length in X dim = 240
+        // roiGenericSrcPtr[i].xyzwhdROI.roiHeight = niftiHeader[i].dim[2];         // length in Y dim = 240
+        // roiGenericSrcPtr[i].xyzwhdROI.roiDepth = niftiHeader[i].dim[3] / 3;      // length in Z dim = 51
+        // option 4 - test using roi as a smaller 3D tensor slice - sliced in only X and Z dim (example for 240 x 240 x 155 x 1)
+        // roiGenericSrcPtr[i].xyzwhdROI.xyz.x = niftiHeader[i].dim[1] / 5;         // start X dim = 48
+        // roiGenericSrcPtr[i].xyzwhdROI.xyz.y = 0;                              // start Y dim = 0
+        // roiGenericSrcPtr[i].xyzwhdROI.xyz.z = niftiHeader[i].dim[3] / 3;         // start Z dim = 51
+        // roiGenericSrcPtr[i].xyzwhdROI.roiWidth = niftiHeader[i].dim[1] * 3 / 5;  // length in X dim = 144
+        // roiGenericSrcPtr[i].xyzwhdROI.roiHeight = niftiHeader[i].dim[2];         // length in Y dim = 240
+        // roiGenericSrcPtr[i].xyzwhdROI.roiDepth = niftiHeader[i].dim[3] / 3;      // length in Z dim = 51
+    }
 
     // Set buffer sizes in pixels for src/dst
     Rpp64u iBufferSize = (Rpp64u)descriptorPtr3D->strides[0] * (Rpp64u)descriptorPtr3D->dims[0]; //  (d x h x w x c) x (n)
@@ -456,7 +467,7 @@ int main(int argc, char * argv[])
     Rpp32f *outputF32 = static_cast<Rpp32f *>(calloc(oBufferSizeInBytes, 1));
 
     // Convert default NIFTI_DATATYPE unstrided buffer to RpptDataType::F32 strided buffer
-    convert_input_niftitype_to_Rpp32f_generic(niftiData, &niftiHeader, inputF32 , descriptorPtr3D);
+    convert_input_niftitype_to_Rpp32f_generic(niftiDataArray, niftiHeader, inputF32 , descriptorPtr3D);
 
     // Allocate hip memory in float for RPP strided buffer
     void *d_inputF32, *d_outputF32;
@@ -477,32 +488,10 @@ int main(int argc, char * argv[])
     rppCreateWithBatchSize(&handle, batchSize, numThreads);
 
     // Run case-wise RPP API and measure time
-    int numRuns = 1;
-    if(testType == 1)
-        numRuns = 1000;
-
     int missingFuncFlag = 0;
     double startWallTime, endWallTime, wallTime;
     double maxWallTime = 0, minWallTime = 5000, avgWallTime = 0;
-    
-    Rpp8u *inputU8 = NULL;
-    Rpp8u *outputU8 = NULL;
-    void *d_inputU8 = NULL, *d_outputU8 = NULL;
-    if(inputBitDepth == 0)
-    {
-        Rpp64u iBufferSizeU8 = iBufferSize * sizeof(Rpp8u) + descriptorPtr3D->offsetInBytes;
-        inputU8 = static_cast<Rpp8u *>(calloc(iBufferSizeU8, 1));
-        outputU8 = static_cast<Rpp8u *>(calloc(iBufferSizeU8, 1));
-        
-        for(int i = 0; i < iBufferSizeU8; i++)
-            inputU8[i] = static_cast<unsigned char>(inputF32[i]);
-        
-        hipMalloc(&d_inputU8, iBufferSizeU8);
-        hipMalloc(&d_outputU8, iBufferSizeU8);
-        
-        // Copy input buffer to hip
-        hipMemcpy(d_inputU8, inputU8, iBufferSizeU8, hipMemcpyHostToDevice);
-    }
+    string testCaseName;
     for (int perfRunCount = 0; perfRunCount < numRuns; perfRunCount++)
     {
         switch (testCase)
@@ -600,7 +589,7 @@ int main(int argc, char * argv[])
             return -1;
         }
         if(testType == 0)
-            cout << "\n\nCPU Backend Wall Time: " << wallTime <<" ms per nifti file"<< endl;
+            cout << "\n\nGPU Backend Wall Time: " << wallTime <<" ms per nifti file"<< endl;
 
         // Copy output buffer to host
         hipMemcpy(outputF32, d_outputF32, oBufferSizeInBytes, hipMemcpyDeviceToHost);
@@ -622,7 +611,7 @@ int main(int argc, char * argv[])
         {
             Rpp64u bufferLength = iBufferSize * sizeof(Rpp8u) + descriptorPtr3D->offsetInBytes;
             hipMemcpy(outputU8, d_outputU8, bufferLength, hipMemcpyDeviceToHost);
-            
+
             // Copy U8 buffer to F32 buffer for display purposes
             for(int i = 0; i < bufferLength; i++)
                 outputF32[i] = static_cast<float>(outputU8[i]);
@@ -669,7 +658,7 @@ int main(int argc, char * argv[])
     rppDestroyHost(handle);
 
     // Free memory
-    free(niftiData);
+    free(niftiDataArray);
     free(inputF32);
     free(outputF32);
     hipHostFree(pinnedMemROI);
@@ -687,6 +676,6 @@ int main(int argc, char * argv[])
         if(d_outputU8 != NULL)
             hipFree(d_outputU8);
     }
-    
+
     return(0);
 }

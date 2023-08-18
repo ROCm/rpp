@@ -297,7 +297,7 @@ RppStatus flip_voxel_u8_u8_host_tensor(Rpp8u *srcPtr,
             Rpp32u dFactor = roi.xyzwhdROI.xyz.z * srcGenericDescPtr->strides[2];
             Rpp32s hStrideSrcIncrement = srcGenericDescPtr->strides[3];
             Rpp32s depthStrideIncrement = srcGenericDescPtr->strides[2];
-            
+
             if (horizontalFlag)
                 hFactor += (roi.xyzwhdROI.roiWidth - vectorIncrementPerChannel) * layoutParams.bufferMultiplier;
             if (verticalFlag)
