@@ -72,7 +72,7 @@ RppStatus rppt_to_decibels_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_
 // *param[in] srcDescPtr source tensor descriptor
 // *param[out] dstPtr destination tensor memory
 // *param[in] dstDescPtr destination tensor descriptor
-// *param[in] srcSize source audio buffer length
+// *param[in] srcSizeTensor source audio buffer length
 // *param[in] coeffTensor preemphasis coefficient
 // *param[in] borderType border value policy
 // *param[in] rppHandle HIP-handle for "_gpu" variants and Host-handle for "_host" variants
