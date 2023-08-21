@@ -27,14 +27,14 @@ __device__ void rmn_hip_compute(half *srcPtr, half *dstPtr, d_float8 *pix_f8, d_
 
 __device__ void rmn_hip_compute(uchar *srcPtr, float *dstPtr, d_float8 *pix_f8, d_float8 *rmnParamsf8)
 {
-    pix_f8->f4[0] = rpp_hip_pixel_check_0to1((pix_f8->f4[0] - rmnParamsf8->f4[0]) * rmnParamsf8->f4[1] * (float4) ONE_OVER_255);
-    pix_f8->f4[1] = rpp_hip_pixel_check_0to1((pix_f8->f4[1] - rmnParamsf8->f4[0]) * rmnParamsf8->f4[1] * (float4) ONE_OVER_255);
+    pix_f8->f4[0] = (pix_f8->f4[0] - rmnParamsf8->f4[0]) * rmnParamsf8->f4[1];
+    pix_f8->f4[1] = (pix_f8->f4[1] - rmnParamsf8->f4[0]) * rmnParamsf8->f4[1];
 }
 
 __device__ void rmn_hip_compute(uchar *srcPtr, half *dstPtr, d_float8 *pix_f8, d_float8 *rmnParamsf8)
 {
-    pix_f8->f4[0] = rpp_hip_pixel_check_0to1((pix_f8->f4[0] - rmnParamsf8->f4[0]) * rmnParamsf8->f4[1] * (float4) ONE_OVER_255);
-    pix_f8->f4[1] = rpp_hip_pixel_check_0to1((pix_f8->f4[1] - rmnParamsf8->f4[0]) * rmnParamsf8->f4[1] * (float4) ONE_OVER_255);
+    pix_f8->f4[0] = (pix_f8->f4[0] - rmnParamsf8->f4[0]) * rmnParamsf8->f4[1];
+    pix_f8->f4[1] = (pix_f8->f4[1] - rmnParamsf8->f4[0]) * rmnParamsf8->f4[1];
 }
 
 __device__ void resize_mirror_normalize_roi_and_srclocs_hip_compute(int4 *srcRoiPtr_i4, uint2 *dstDimsWH, int id_x, int id_y, d_float16 *locSrc_f16)
@@ -327,8 +327,9 @@ RppStatus hip_exec_resize_mirror_normalize_tensor(T *srcPtr,
         int globalThreads_y = dstDescPtr->h;
         int globalThreads_z = handle.GetBatchSize();
 
-        // Set non ROI pixels to zero
-        hipMemset(dstPtr, 0, dstDescPtr->n * dstDescPtr->strides.nStride * sizeof(U));
+        // Set output pixels to zero
+        hipMemsetAsync(dstPtr, 0, dstDescPtr->n * dstDescPtr->strides.nStride * sizeof(U), handle.GetStream());
+        hipStreamSynchronize(handle.GetStream());
 
         if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
