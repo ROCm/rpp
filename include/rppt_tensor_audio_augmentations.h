@@ -92,6 +92,7 @@ RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr,
 // *param[in] dstDescPtr destination tensor descriptor
 // *param[in] srcLengthTensor number of samples per channel
 // *param[in] channelsTensor number of channels in audio buffer
+// *param[in] normalizeWeights indicates normalization of weights used in down_mixing
 // *param[in] rppHandle HIP-handle for "_gpu" variants and Host-handle for "_host" variants
 // *returns a  RppStatus enumeration.
 // *retval RPP_SUCCESS : successful completion
