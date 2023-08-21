@@ -108,12 +108,9 @@ RppStatus rppt_down_mixing_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_
 // *param[out] dstPtr destination tensor memory
 // *param[in] dstDescPtr destination tensor descriptor
 // *param[in] srcLengthTensor number of samples per channel
-// *param[in] anchor starting index of the slice
-// *param[in] shape length of the slice
-// *param[in] axes axes along which slice is needed
+// *param[in] anchorTensor starting index of the slice
+// *param[in] shapeTensor length of the slice
 // *param[in] fillValues fill values based on out of Bound policy
-// *param[in] normalized anchor determines whether the anchor positional input should be interpreted as normalized or as absolute coordinates
-// *param[in] normalized shape determines whether the shape positional input should be interpreted as normalized or as absolute coordinates
 // *param[in] rppHandle HIP-handle for "_gpu" variants and Host-handle for "_host" variants
 // *returns a  RppStatus enumeration.
 // *retval RPP_SUCCESS : successful completion
