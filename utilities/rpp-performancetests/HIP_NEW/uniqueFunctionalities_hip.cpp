@@ -194,7 +194,10 @@ int main(int argc, char **argv)
         if (ip_bitDepth == 0)
         {
             rppi_tensor_transpose_u8_gpu(d_srcPtr1, d_dstPtr, inTensorDim, perm, handle);
-        }      
+        }
+        else
+            missingFuncFlag = 1;  
+                
         end = clock();
 
         if (missingFuncFlag != 1)
