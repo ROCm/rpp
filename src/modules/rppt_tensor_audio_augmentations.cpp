@@ -159,6 +159,7 @@ RppStatus rppt_slice_audio_host(RppPtr_t srcPtr,
                                 Rpp32s *srcLengthTensor,
                                 Rpp32f *anchorTensor,
                                 Rpp32f *shapeTensor,
+                                Rpp32s *axesTensor,
                                 Rpp32f *fillValues,
                                 rppHandle_t rppHandle)
 {
@@ -171,6 +172,7 @@ RppStatus rppt_slice_audio_host(RppPtr_t srcPtr,
                                 srcLengthTensor,
                                 anchorTensor,
                                 shapeTensor,
+                                axesTensor,
                                 fillValues,
                                 rpp::deref(rppHandle));
 

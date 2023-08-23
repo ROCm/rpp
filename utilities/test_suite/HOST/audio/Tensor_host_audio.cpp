@@ -467,6 +467,7 @@ int main(int argc, char **argv)
             Rpp32s srcDimsTensor[noOfAudioFiles * 2];
             Rpp32f anchor[noOfAudioFiles];
             Rpp32f shape[noOfAudioFiles];
+            Rpp32s axes[2]; // to be changed based on audio dimensions.
 
             // 1D slice arguments
             for (i = 0, j = i * 2; i < noOfAudioFiles; i++, j += 2)
@@ -477,12 +478,14 @@ int main(int argc, char **argv)
                 anchor[i] = 100;
             }
             fillValues[0] = 0.0f;
+            axes[0] = 0;
+            axes[1] = 1;
 
             startWallTime = omp_get_wtime();
             startCpuTime = clock();
             if (inputBitDepth == 2)
             {
-                rppt_slice_audio_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcDimsTensor, anchor, shape, fillValues, handle);
+                rppt_slice_audio_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcDimsTensor, anchor, shape, axes, fillValues, handle);
             }
             else
                 missingFuncFlag = 1;

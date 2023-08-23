@@ -110,13 +110,14 @@ RppStatus rppt_down_mixing_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_
 // *param[in] srcLengthTensor number of samples per channel
 // *param[in] anchorTensor starting index of the slice
 // *param[in] shapeTensor length of the slice
+// *param[in] axesTensor axes along which slice is needed
 // *param[in] fillValues fill values based on out of Bound policy
 // *param[in] rppHandle HIP-handle for "_gpu" variants and Host-handle for "_host" variants
 // *returns a  RppStatus enumeration.
 // *retval RPP_SUCCESS : successful completion
 // *retval RPP_ERROR : Error
 
-RppStatus rppt_slice_audio_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcLengthTensor, Rpp32f *anchorTensor, Rpp32f *shapeTensor, Rpp32f *fillValues, rppHandle_t rppHandle);
+RppStatus rppt_slice_audio_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcLengthTensor, Rpp32f *anchorTensor, Rpp32f *shapeTensor, Rpp32s *axesTensor, Rpp32f *fillValues, rppHandle_t rppHandle);
 
 #ifdef __cplusplus
 }
