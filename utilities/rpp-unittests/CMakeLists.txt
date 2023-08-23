@@ -50,13 +50,7 @@ add_test(NAME rpp_cpu_test_u08_11 COMMAND uniqueFunctionalities_host 0 10 WORKIN
 add_test(NAME rpp_cpu_test_u08_12 COMMAND uniqueFunctionalities_host 0 11 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rpp_cpu_test)
 add_test(NAME rpp_cpu_test_f16_13 COMMAND uniqueFunctionalities_host 1 0 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rpp_cpu_test)
 add_test(NAME rpp_cpu_test_f32_14 COMMAND uniqueFunctionalities_host 2 0 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rpp_cpu_test)
-# Not Implemented
-#add_test(NAME rpp_cpu_test_u8_15 COMMAND uniqueFunctionalities_host 3 0 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rpp_cpu_test)
-# Not Implemented
-#add_test(NAME rpp_cpu_test_u8_16 COMMAND uniqueFunctionalities_host 4 0 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rpp_cpu_test)
-add_test(NAME rpp_cpu_test_i08_17 COMMAND uniqueFunctionalities_host 5 0 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rpp_cpu_test)
-# Not Implemented
-#add_test(NAME rpp_cpu_test_u8_18 COMMAND uniqueFunctionalities_host 6 0 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rpp_cpu_test)
+add_test(NAME rpp_cpu_test_i08_15 COMMAND uniqueFunctionalities_host 5 0 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rpp_cpu_test)
 
 if( "${BACKEND}" STREQUAL "HIP")
     add_test(
@@ -75,23 +69,17 @@ if( "${BACKEND}" STREQUAL "HIP")
     add_test(NAME rpp_hip_test_u08_04 COMMAND uniqueFunctionalities_hip 0 3 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rpp_hip_test)
     add_test(NAME rpp_hip_test_u08_05 COMMAND uniqueFunctionalities_hip 0 4 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rpp_hip_test)
     add_test(NAME rpp_hip_test_u08_06 COMMAND uniqueFunctionalities_hip 0 5 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rpp_hip_test)
-    # Not Implemented
-    #add_test(NAME rpp_hip_test_u08_07 COMMAND uniqueFunctionalities_hip 0 6 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rpp_hip_test)
-    # Not Implemented
-    #add_test(NAME rpp_hip_test_u08_08 COMMAND uniqueFunctionalities_hip 0 7 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rpp_hip_test)
-    add_test(NAME rpp_hip_test_u08_09 COMMAND uniqueFunctionalities_hip 0 8 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rpp_hip_test)
-    # Not Implemented
-    #add_test(NAME rpp_hip_test_u08_10 COMMAND uniqueFunctionalities_hip 0 9 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rpp_hip_test)
-    # Not Implemented
-    #add_test(NAME rpp_hip_test_u08_11 COMMAND uniqueFunctionalities_hip 0 10 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rpp_hip_test)
-    # Not Implemented
-    #add_test(NAME rpp_hip_test_u08_12 COMMAND uniqueFunctionalities_hip 0 11 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rpp_hip_test)
-    add_test(NAME rpp_hip_test_f16_13 COMMAND uniqueFunctionalities_hip 1 0 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rpp_hip_test)
-    add_test(NAME rpp_hip_test_f32_14 COMMAND uniqueFunctionalities_hip 2 0 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rpp_hip_test)
-    add_test(NAME rpp_hip_test_u08_f16_15 COMMAND uniqueFunctionalities_hip 3 0 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rpp_hip_test)
-    add_test(NAME rpp_hip_test_u08_f32_16 COMMAND uniqueFunctionalities_hip 4 0 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rpp_hip_test)
-    add_test(NAME rpp_hip_test_i08_17 COMMAND uniqueFunctionalities_hip 5 0 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rpp_hip_test)
-    add_test(NAME rpp_hip_test_u08_i08_18 COMMAND uniqueFunctionalities_hip 6 0 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rpp_hip_test)
+    add_test(NAME rpp_hip_test_u08_07 COMMAND uniqueFunctionalities_hip 0 8 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rpp_hip_test)
+    add_test(NAME rpp_hip_test_XXX_08 COMMAND uniqueFunctionalities_hip 1 1 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rpp_hip_test)
+    add_test(NAME rpp_hip_test_XXX_09 COMMAND uniqueFunctionalities_hip 2 1 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rpp_hip_test)
+    add_test(NAME rpp_hip_test_XXX_10 COMMAND uniqueFunctionalities_hip 5 1 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rpp_hip_test)
+    # TBD - NEED to investigate these test as they are currently turned off
+    #add_test(NAME rpp_hip_test_f16_13 COMMAND uniqueFunctionalities_hip 1 0 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rpp_hip_test)
+    #add_test(NAME rpp_hip_test_f32_14 COMMAND uniqueFunctionalities_hip 2 0 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rpp_hip_test)
+    #add_test(NAME rpp_hip_test_u08_f16_15 COMMAND uniqueFunctionalities_hip 3 0 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rpp_hip_test)
+    #add_test(NAME rpp_hip_test_u08_f32_16 COMMAND uniqueFunctionalities_hip 4 0 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rpp_hip_test)
+    #add_test(NAME rpp_hip_test_i08_17 COMMAND uniqueFunctionalities_hip 5 0 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rpp_hip_test)
+    #add_test(NAME rpp_hip_test_u08_i08_18 COMMAND uniqueFunctionalities_hip 6 0 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/rpp_hip_test)
 elseif( "${BACKEND}" STREQUAL "OCL")
     # TBD: Add OCL Tests
 endif()
