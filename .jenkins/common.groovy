@@ -32,6 +32,7 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
                 cmake -DBACKEND=${backend} ${buildTypeArg} ../..
                 make -j\$(nproc)
                 sudo make install
+                make test ARGS="-VV"
                 sudo make package
                 """
 
