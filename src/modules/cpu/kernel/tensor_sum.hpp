@@ -35,7 +35,7 @@ RppStatus tensor_sum_u8_u64_host(Rpp8u *srcPtr,
         // Tensor Sum without fused output-layout toggle (NCHW)
         if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
-            alignedLength = (bufferLength / 16) * 16;
+            alignedLength = bufferLength & ~15;
             Rpp32u sum = 0;
             Rpp32u sumAvx[8] = {0};
 
@@ -242,7 +242,7 @@ RppStatus tensor_sum_f32_f32_host(Rpp32f *srcPtr,
         // Tensor Sum without fused output-layout toggle (NCHW)
         if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
-            alignedLength = bufferLength & ~(vectorIncrementPerChannel-1);
+            alignedLength = bufferLength & ~7;
             vectorIncrement = 8;
             Rpp64f sum = 0.0;
             Rpp64f sumAvx[4] = {0.0};
@@ -447,7 +447,7 @@ RppStatus tensor_sum_f16_f32_host(Rpp16f *srcPtr,
         // Tensor Sum without fused output-layout toggle (NCHW)
         if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
-            alignedLength = bufferLength & ~(vectorIncrementPerChannel-1);
+            alignedLength = bufferLength & ~7;
             vectorIncrement = 8;
             Rpp64f sum = 0.0;
             Rpp64f sumAvx[4] = {0.0};
@@ -666,7 +666,7 @@ RppStatus tensor_sum_i8_i64_host(Rpp8s *srcPtr,
         // Tensor Sum without fused output-layout toggle (NCHW)
         if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
-            alignedLength = (bufferLength / 16) * 16;
+            alignedLength = bufferLength & ~15;
             vectorIncrement = 16;
             Rpp32s sum = 0;
             Rpp32s sumAvx[8] = {0};
