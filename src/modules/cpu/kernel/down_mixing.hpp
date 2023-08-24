@@ -76,7 +76,7 @@ RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
         else
         {
             Rpp32f *weights = static_cast<Rpp32f *>(malloc(channels * sizeof(Rpp32f)));
-            std::fill(weights, weights+channels, 1.f / channels);
+            std::fill(weights, weights + channels, 1.f / channels);
 
             if(normalizeWeights)
             {
