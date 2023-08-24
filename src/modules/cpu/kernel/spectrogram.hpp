@@ -24,10 +24,10 @@ THE SOFTWARE.
 #include "../../../../third_party/ffts/include/ffts.h"
 #include "../../../../third_party/ffts/include/ffts_attributes.h"
 
-bool is_pow2(Rpp64s n) { return (n & (n-1)) == 0; }
-inline bool can_use_real_impl(Rpp64s n) { return is_pow2(n); }
-inline Rpp64s size_in_buf(Rpp64s n) { return can_use_real_impl(n) ? n : 2 * n; }
-inline Rpp64s size_out_buf(Rpp64s n) { return can_use_real_impl(n) ? n + 2 : 2 * n; }
+bool is_pow2(Rpp32s n) { return (n & (n-1)) == 0; }
+inline bool can_use_real_impl(Rpp32s n) { return is_pow2(n); }
+inline Rpp32s size_in_buf(Rpp32s n) { return can_use_real_impl(n) ? n : 2 * n; }
+inline Rpp32s size_out_buf(Rpp32s n) { return can_use_real_impl(n) ? n + 2 : 2 * n; }
 
 inline void hann_window(Rpp32f *output, Rpp32s windowSize)
 {
@@ -93,13 +93,12 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
     const auto fftInSize = size_in_buf(nfft);
     const auto fftOutSize = size_out_buf(nfft);
 
-    std::vector<Rpp32f> windowFn;
-    windowFn.resize(windowLength);
+    Rpp32f *windowFn = static_cast<Rpp32f *>(calloc(windowLength, sizeof(Rpp32f)));
     // Generate hanning window
     if (windowFunction == NULL)
-        hann_window(windowFn.data(), windowLength);
+        hann_window(windowFn, windowLength);
     else
-        memcpy(windowFn.data(), windowFunction, windowLength * sizeof(Rpp32f));
+        memcpy(windowFn, windowFunction, windowLength * sizeof(Rpp32f));
     Rpp32u numThreads = handle.GetNumThreads();
 
     // Get windows output
@@ -113,15 +112,15 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
         Rpp32s numWindows = get_num_windows(bufferLength, windowLength, windowStep, centerWindows);
         Rpp32f windowOutput[numWindows * nfft];
         std::fill_n(windowOutput, numWindows * nfft, 0);
-        for (Rpp64s w = 0; w < numWindows; w++)
+        for (Rpp32s w = 0; w < numWindows; w++)
         {
-            Rpp64s windowStart = w * windowStep - windowCenterOffset;
+            Rpp32s windowStart = w * windowStep - windowCenterOffset;
             Rpp32f *windowOutputTemp = windowOutput + (w * nfft);
             if (windowStart < 0 || (windowStart + windowLength) > bufferLength)
             {
                 for (Rpp32s t = 0; t < windowLength; t++)
                 {
-                    Rpp64s inIdx = windowStart + t;
+                    Rpp32s inIdx = windowStart + t;
                     if (reflectPadding)
                     {
                         inIdx = get_idx_reflect(inIdx, 0, bufferLength);
@@ -139,7 +138,8 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
             else
             {
                 Rpp32f *srcPtrWindowTemp = srcPtrTemp + windowStart;
-                Rpp32f *windowFnTemp = windowFn.data();
+                Rpp32f *windowFnTemp = static_cast<Rpp32f *>(malloc(windowLength * sizeof(Rpp32f)));
+                memcpy(windowFnTemp, windowFn, windowLength * sizeof(Rpp32f));
                 Rpp32s t = 0;
                 for (; t < alignedWindowLength; t += 8)
                 {
@@ -173,7 +173,7 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
         Rpp32f FFTS_ALIGN(32) *fftInBuf = (Rpp32f *)_mm_malloc(fftInSize * sizeof(Rpp32f), 32); // ffts requires 32-byte aligned memory
         Rpp32f FFTS_ALIGN(32) *fftOutBuf = (Rpp32f *)_mm_malloc(fftOutSize * sizeof(Rpp32f), 32); // ffts requires 32-byte aligned memory
 
-        for (Rpp64s w = 0; w < numWindows; w++)
+        for (Rpp32s w = 0; w < numWindows; w++)
         {
             Rpp32f *dstPtrBinTemp = dstPtrTemp + (w * hStride);
             Rpp32f *windowOutputTemp = windowOutput + (w * nfft);
@@ -194,7 +194,7 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
             {
                 for (int i = 0; i < windowLength; i++)
                 {
-                    Rpp64s off = 2 * (inWindowStart + i);
+                    Rpp32s off = 2 * (inWindowStart + i);
                     fftInBuf[off] = windowOutputTemp[i];
                     fftInBuf[off + 1] = 0.0f;
                 }
@@ -206,7 +206,7 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
             {
                 if (vertical)
                 {
-                    Rpp64s outIdx = (i * hStride + w);
+                    Rpp32s outIdx = (i * hStride + w);
                     if (power == 1)
                         dstPtrTemp[outIdx] = std::abs(complexFft[i]);
                     else
