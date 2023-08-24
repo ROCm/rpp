@@ -66,14 +66,14 @@ RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
 
         // Calculate moving mean square of input array and store srcPtrTemp mms buffer
         Rpp32f meanFactor = 1.0f / windowLength;
-        Rpp64s windowBegin = -windowLength + 1;
-        for (Rpp64s outPos = 0; outPos < srcLength;)
+        Rpp32s windowBegin = -windowLength + 1;
+        for (Rpp32s outPos = 0; outPos < srcLength;)
         {
             Rpp32f sumOfSquares = 0.0f;
-            for (Rpp64s i = std::max<Rpp64s>(windowBegin, 0); i < outPos; i++)
+            for (Rpp32s i = std::max<Rpp32s>(windowBegin, 0); i < outPos; i++)
                 sumOfSquares += getSquare(srcPtrTemp[i]);
 
-            Rpp64s intervalEndIdx = std::min<Rpp64s>(srcLength, outPos + resetLength);
+            Rpp32s intervalEndIdx = std::min<Rpp32s>(srcLength, outPos + resetLength);
             for (; outPos < intervalEndIdx; outPos++, windowBegin++)
             {
                 sumOfSquares += getSquare(srcPtrTemp[outPos]);
