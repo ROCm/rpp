@@ -278,15 +278,15 @@ RppStatus rppt_resample_host(RppPtr_t srcPtr,
     if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
         resample_host_tensor(static_cast<Rpp32f*>(srcPtr),
-                            srcDescPtr,
-                            static_cast<Rpp32f*>(dstPtr),
-                            dstDescPtr,
-                            inRateTensor,
-                            outRateTensor,
-                            srcLengthTensor,
-                            channelsTensor,
-                            quality,
-                            rpp::deref(rppHandle));
+                             srcDescPtr,
+                             static_cast<Rpp32f*>(dstPtr),
+                             dstDescPtr,
+                             inRateTensor,
+                             outRateTensor,
+                             srcLengthTensor,
+                             channelsTensor,
+                             quality,
+                             rpp::deref(rppHandle));
 
         return RPP_SUCCESS;
     }
