@@ -48,6 +48,10 @@ RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
                                                   rpp::Handle& handle)
 {
     Rpp32u numThreads = handle.GetNumThreads();
+    Rpp32u maxSrcLength = *std::max_element(srcLengthTensor, (srcLengthTensor + srcDescPtr->n));
+    Rpp32f *mmsBuffer = static_cast<Rpp32f *>(calloc(maxSrcLength, sizeof(Rpp32f)));
+
+    Rpp32f cutOff = std::pow(10.0f, cutOffDB * 0.1f);
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
@@ -62,7 +66,6 @@ RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
 
         // Calculate buffer size for mms array and allocate mms buffer
         Rpp32s mmsBufferSize = srcLength;
-        Rpp32f *mmsBuffer = static_cast<Rpp32f *>(calloc(mmsBufferSize, sizeof(Rpp32f)));
 
         // Calculate moving mean square of input array and store srcPtrTemp mms buffer
         Rpp32f meanFactor = 1.0f / windowLength;
@@ -85,7 +88,7 @@ RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
 
         // Convert cutOff from DB to magnitude
         Rpp32f base = (referenceMax) ? getMax(mmsBuffer, mmsBufferSize) : referencePower;
-        Rpp32f cutOffMag = base * std::pow(10.0f, cutOffDB * 0.1f);
+        Rpp32f cutOffMag = base * cutOff;
 
         // Calculate begining index, length of non silent region from the mms buffer
         Rpp32s endIdx = mmsBufferSize;
@@ -128,8 +131,7 @@ RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
 
         detectedIndexTensor[batchCount] = detectBegin;
         detectionLengthTensor[batchCount] = detectEnd;
-        free(mmsBuffer);
     }
-
+    free(mmsBuffer);
     return RPP_SUCCESS;
 }
