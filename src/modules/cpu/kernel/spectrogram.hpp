@@ -94,6 +94,8 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
     const auto fftOutSize = size_out_buf(nfft);
 
     Rpp32f *windowFn = static_cast<Rpp32f *>(calloc(windowLength, sizeof(Rpp32f)));
+    Rpp32f *windowFnTemp = static_cast<Rpp32f *>(malloc(windowLength * sizeof(Rpp32f)));
+
     // Generate hanning window
     if (windowFunction == NULL)
         hann_window(windowFn, windowLength);
@@ -138,7 +140,6 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
             else
             {
                 Rpp32f *srcPtrWindowTemp = srcPtrTemp + windowStart;
-                Rpp32f *windowFnTemp = static_cast<Rpp32f *>(malloc(windowLength * sizeof(Rpp32f)));
                 memcpy(windowFnTemp, windowFn, windowLength * sizeof(Rpp32f));
                 Rpp32s t = 0;
                 for (; t < alignedWindowLength; t += 8)
@@ -225,5 +226,7 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
         _mm_free(fftInBuf);
         _mm_free(fftOutBuf);
     }
+    free(windowFnTemp);
+    free(windowFn);
     return RPP_SUCCESS;
 }
