@@ -94,7 +94,6 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
     const auto fftOutSize = size_out_buf(nfft);
 
     Rpp32f *windowFn = static_cast<Rpp32f *>(calloc(windowLength, sizeof(Rpp32f)));
-    Rpp32f *windowFnTemp = static_cast<Rpp32f *>(malloc(windowLength * sizeof(Rpp32f)));
 
     // Generate hanning window
     if (windowFunction == NULL)
@@ -140,7 +139,7 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
             else
             {
                 Rpp32f *srcPtrWindowTemp = srcPtrTemp + windowStart;
-                memcpy(windowFnTemp, windowFn, windowLength * sizeof(Rpp32f));
+                Rpp32f *windowFnTemp = windowFn;
                 Rpp32s t = 0;
                 for (; t < alignedWindowLength; t += 8)
                 {
@@ -165,7 +164,8 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
         else
             p = ffts_init_1d(nfft, FFTS_FORWARD);
 
-        if (!p) {
+        if (!p)
+        {
             printf("FFT Plan is unsupported. Exiting the code\n");
             exit(0);
         }
@@ -226,7 +226,6 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
         _mm_free(fftInBuf);
         _mm_free(fftOutBuf);
     }
-    free(windowFnTemp);
     free(windowFn);
     return RPP_SUCCESS;
 }
