@@ -116,7 +116,7 @@ struct HIPOCProgramImpl
     	hipDeviceProp_t props;
 	int device = 0;
 	hipGetDeviceProperties(&props, device);
-    	std::string gfxName = "gfx" + std::to_string(props.gcnArch);
+      std::string gfxName(props.gcnArchName);
     	std::string sarg = "--gpu-architecture=" + gfxName;
 	const char* options[] = {
         	sarg.c_str()
