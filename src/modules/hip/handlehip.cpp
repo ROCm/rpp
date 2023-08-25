@@ -245,8 +245,6 @@ struct HandleImpl
 
         hipMalloc(&(this->initHandle->mem.mgpu.rgbArr.rgbmem), sizeof(RpptRGB) * this->nBatchSize);
         hipMalloc(&(this->initHandle->mem.mgpu.maskArr.floatmem), sizeof(Rpp32f) * 8294400);    // 3840 x 2160
-        hipMalloc(&(this->initHandle->mem.mgpu.uintReductionArr.uintmem), sizeof(Rpp32u) * 8294400);
-        hipMalloc(&(this->initHandle->mem.mgpu.intReductionArr.intmem), sizeof(Rpp32s) * 8294400);
     }
 };
 
@@ -364,8 +362,6 @@ void Handle::rpp_destroy_object_gpu()
 
     hipFree(this->GetInitHandle()->mem.mgpu.rgbArr.rgbmem);
     hipFree(this->GetInitHandle()->mem.mgpu.maskArr.floatmem);
-    hipFree(this->GetInitHandle()->mem.mgpu.uintReductionArr.uintmem);
-    hipFree(this->GetInitHandle()->mem.mgpu.intReductionArr.intmem);
 }
 
 void Handle::rpp_destroy_object_host()
