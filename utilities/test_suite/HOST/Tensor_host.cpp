@@ -295,10 +295,19 @@ int main(int argc, char **argv)
     string testCaseName;
 
     // Initialize buffers for any reductionType functions
-    Rpp32f *reductionFuncResultArr;
+    void *reductionFuncResultArr;
     Rpp32u reductionFuncResultArrLength = srcDescPtr->n * 4;
     if(reductionTypeCase)
-        reductionFuncResultArr = static_cast<Rpp32f *>(calloc(reductionFuncResultArrLength, sizeof(Rpp32f)));
+    {
+        if(dstDescPtr->dataType == RpptDataType::U8)
+            reductionFuncResultArr = (Rpp64u *)calloc(reductionFuncResultArrLength, sizeof(Rpp64u));
+        else if(dstDescPtr->dataType == RpptDataType::F16)
+            reductionFuncResultArr = (Rpp32f *)calloc(reductionFuncResultArrLength, sizeof(Rpp32f));
+        else if(dstDescPtr->dataType == RpptDataType::F32)
+            reductionFuncResultArr = (Rpp32f *)calloc(reductionFuncResultArrLength, sizeof(Rpp32f));
+        else if(dstDescPtr->dataType == RpptDataType::I8)
+            reductionFuncResultArr = (Rpp64s *)calloc(reductionFuncResultArrLength, sizeof(Rpp64s));
+    }
 
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
@@ -641,7 +650,7 @@ int main(int argc, char **argv)
                 }
                 case 87:
                 {
-                    testCaseName = "image_sum";
+                    testCaseName = "tensor_sum";
 
                     if(srcDescPtr->c == 1)
                         reductionFuncResultArrLength = srcDescPtr->n;
@@ -650,7 +659,7 @@ int main(int argc, char **argv)
                     startCpuTime = clock();
 
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_image_sum_host(input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
+                        rppt_tensor_sum_host(input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
@@ -691,8 +700,30 @@ int main(int argc, char **argv)
                     else if(srcDescPtr->c == 1)
                         printf("\nReduction result (Batch of 1 channel images produces 1 result per image in batch): ");
 
-                    for (int i = 0; i < reductionFuncResultArrLength; i++)
-                        printf(" %0.3f ", reductionFuncResultArr[i]);
+                    if(dstDescPtr->dataType == RpptDataType::U8)
+                    {
+                        Rpp64u *reductionOutPtr = static_cast<Rpp64u*>(reductionFuncResultArr);
+                        for (int i = 0; i < reductionFuncResultArrLength; i++)
+                            printf(" %llu ", reductionOutPtr[i]);
+                    }
+                    else if(dstDescPtr->dataType == RpptDataType::F16)
+                    {
+                        Rpp32f *reductionOutPtr = static_cast<Rpp32f *>(reductionFuncResultArr);
+                        for (int i = 0; i < reductionFuncResultArrLength; i++)
+                            printf(" %0.3f ", (float)reductionOutPtr[i]);
+                    }
+                    else if(dstDescPtr->dataType == RpptDataType::F32)
+                    {
+                        Rpp32f *reductionOutPtr = static_cast<Rpp32f *>(reductionFuncResultArr);
+                        for (int i = 0; i < reductionFuncResultArrLength; i++)
+                            printf(" %0.3f ", (float)reductionOutPtr[i]);
+                    }
+                    else if(dstDescPtr->dataType == RpptDataType::I8)
+                    {
+                        Rpp64s *reductionOutPtr = static_cast<Rpp64s *>(reductionFuncResultArr);
+                        for (int i = 0; i < reductionFuncResultArrLength; i++)
+                            printf(" %lld ", reductionOutPtr[i]);
+                    }
 
                     printf("\n");
 
@@ -701,7 +732,7 @@ int main(int argc, char **argv)
                     2.input bit depth 0 (U8)
                     3.source and destination layout are the same*/
                     if(qaFlag && inputBitDepth == 0 && (srcDescPtr->layout == dstDescPtr->layout) && !(randomOutputCase))
-                        compare_reduction_output<Rpp8u>(reductionFuncResultArr, testCaseName, srcDescPtr, testCase, dst);
+                        compare_reduction_output((Rpp64u *)reductionFuncResultArr, testCaseName, srcDescPtr, testCase, dst);
                 }
                 else
                 {

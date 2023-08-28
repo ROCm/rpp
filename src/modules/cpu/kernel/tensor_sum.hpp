@@ -3,12 +3,12 @@
 #include "rpp_cpu_common.hpp"
 #include "reduction.hpp"
 
-RppStatus image_sum_u8_u8_host_tensor(Rpp8u *srcPtr,
-                                      RpptDescPtr srcDescPtr,
-                                      Rpp32f *imageSumArr,
-                                      RpptROIPtr roiTensorPtrSrc,
-                                      RpptRoiType roiType,
-                                      RppLayoutParams layoutParams)
+RppStatus tensor_sum_u8_u64_host(Rpp8u *srcPtr,
+                                 RpptDescPtr srcDescPtr,
+                                 Rpp64u *tensorSumArr,
+                                 RpptROIPtr roiTensorPtrSrc,
+                                 RpptRoiType roiType,
+                                 RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
@@ -28,22 +28,21 @@ RppStatus image_sum_u8_u8_host_tensor(Rpp8u *srcPtr,
         Rpp8u *srcPtrChannel;
         srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
 
-        Rpp32u alignedLength = (bufferLength / 24) * 24;
-        Rpp32u vectorIncrement = 24;
-        Rpp32u vectorIncrementPerChannel = 8;
+        Rpp32u alignedLength = (bufferLength / 48) * 48;
+        Rpp32u vectorIncrement = 48;
+        Rpp32u vectorIncrementPerChannel = 16;
 
-        // Image Sum without fused output-layout toggle (NCHW)
+        // Tensor Sum without fused output-layout toggle (NCHW)
         if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
-            alignedLength = (bufferLength / 8) * 8;
-            vectorIncrement = 8;
-            Rpp64f sum = 0.0;
-            Rpp64f sumAvx[4] = {0.0};
+            alignedLength = bufferLength & ~15;
+            Rpp32u sum = 0;
+            Rpp32u sumAvx[8] = {0};
 
             Rpp8u *srcPtrRow;
             srcPtrRow = srcPtrChannel;
 #if __AVX2__
-            __m256d psum = _mm256_setzero_pd();
+            __m256i psum = _mm256_setzero_si256();
 #endif
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
@@ -51,47 +50,48 @@ RppStatus image_sum_u8_u8_host_tensor(Rpp8u *srcPtr,
                 srcPtrTemp = srcPtrRow;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
 #if __AVX2__
-                    __m256d p1[2];
-                    rpp_simd_load(rpp_load8_u8_to_f64_avx, srcPtrTemp, p1);
-                    compute_sum_8_host(p1, &psum);
+                    __m256i p1[2];
+                    rpp_simd_load(rpp_load16_u8_to_u32_avx, srcPtrTemp, p1);
+                    compute_sum_16_host(p1, &psum);
 #endif
-                    srcPtrTemp += vectorIncrement;
+                    srcPtrTemp += vectorIncrementPerChannel;
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    sum += (Rpp64f)(*srcPtrTemp);
+                    sum += (Rpp32u)(*srcPtrTemp);
                     srcPtrTemp++;
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvx, &psum);
+            rpp_simd_store(rpp_store8_u32_to_u32_avx, sumAvx, &psum);
 #endif
-            for(int i = 0; i < 2; i++)
-                sum += (sumAvx[i] + sumAvx[i + 2]);
+            for(int i = 0; i < 4; i++)
+                sum += (sumAvx[i] + sumAvx[i + 4]);
 
-            imageSumArr[batchCount] = (Rpp32f)sum;
+            tensorSumArr[batchCount] = (Rpp64u)sum;
         }
 
-        // Image Sum without fused output-layout toggle 3 channel (NCHW)
+        // Tensor Sum without fused output-layout toggle 3 channel (NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp64f sum, sumR = 0.0, sumG = 0.0, sumB = 0.0;
-            Rpp64f sumAvxR[4] = {0.0};
-            Rpp64f sumAvxG[4] = {0.0};
-            Rpp64f sumAvxB[4] = {0.0};
+            Rpp64u sum;
+            Rpp32u sumR = 0, sumG = 0, sumB = 0;
+            Rpp32u sumAvxR[8] = {0};
+            Rpp32u sumAvxG[8] = {0};
+            Rpp32u sumAvxB[8] = {0};
 
             Rpp8u *srcPtrRowR, *srcPtrRowG, *srcPtrRowB;
             srcPtrRowR = srcPtrChannel;
             srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
             srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
 #if __AVX2__
-            __m256d psumR = _mm256_setzero_pd();
-            __m256d psumG = _mm256_setzero_pd();
-            __m256d psumB = _mm256_setzero_pd();
+            __m256i psumR = _mm256_setzero_si256();
+            __m256i psumG = _mm256_setzero_si256();
+            __m256i psumB = _mm256_setzero_si256();
 #endif
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
@@ -104,9 +104,9 @@ RppStatus image_sum_u8_u8_host_tensor(Rpp8u *srcPtr,
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
 #if __AVX2__
-                    __m256d p[6];
-                    rpp_simd_load(rpp_load24_u8pln3_to_f64pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);
-                    compute_sum_24_host(p, &psumR, &psumG, &psumB);
+                    __m256i p[6];
+                    rpp_simd_load(rpp_load48_u8pln3_to_u32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);
+                    compute_sum_48_host(p, &psumR, &psumG, &psumB);
 #endif
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
@@ -114,9 +114,9 @@ RppStatus image_sum_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    sumR += (Rpp64f)(*srcPtrTempR);
-                    sumG += (Rpp64f)(*srcPtrTempG);
-                    sumB += (Rpp64f)(*srcPtrTempB);
+                    sumR += (Rpp32u)(*srcPtrTempR);
+                    sumG += (Rpp32u)(*srcPtrTempG);
+                    sumB += (Rpp32u)(*srcPtrTempB);
                     srcPtrTempR++;
                     srcPtrTempG++;
                     srcPtrTempB++;
@@ -126,39 +126,40 @@ RppStatus image_sum_u8_u8_host_tensor(Rpp8u *srcPtr,
                 srcPtrRowB += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxR, &psumR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxG, &psumG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxB, &psumB);
+            rpp_simd_store(rpp_store8_u32_to_u32_avx, sumAvxR, &psumR);
+            rpp_simd_store(rpp_store8_u32_to_u32_avx, sumAvxG, &psumG);
+            rpp_simd_store(rpp_store8_u32_to_u32_avx, sumAvxB, &psumB);
 #endif
-            for(int i = 0; i < 2; i++)
+            for(int i = 0; i < 4; i++)
             {
-                sumR += (sumAvxR[i] + sumAvxR[i + 2]);
-                sumG += (sumAvxG[i] + sumAvxG[i + 2]);
-                sumB += (sumAvxB[i] + sumAvxB[i + 2]);
+                sumR += (sumAvxR[i] + sumAvxR[i + 4]);
+                sumG += (sumAvxG[i] + sumAvxG[i + 4]);
+                sumB += (sumAvxB[i] + sumAvxB[i + 4]);
             }
 
-            sum = sumR + sumG + sumB;
+            sum = (Rpp64u)sumR + (Rpp64u)sumG + (Rpp64u)sumB;
             int index = batchCount * 4;
-            imageSumArr[index] = (Rpp32f)sumR;
-            imageSumArr[index + 1] = (Rpp32f)sumG;
-            imageSumArr[index + 2] = (Rpp32f)sumB;
-            imageSumArr[index + 3] = (Rpp32f)sum;
+            tensorSumArr[index] = (Rpp64u)sumR;
+            tensorSumArr[index + 1] = (Rpp64u)sumG;
+            tensorSumArr[index + 2] = (Rpp64u)sumB;
+            tensorSumArr[index + 3] = sum;
         }
 
-        // Image Sum without fused output-layout toggle (NHWC)
+        // Tensor Sum without fused output-layout toggle (NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp64f sum, sumR = 0.0, sumG = 0.0, sumB = 0.0;
-            Rpp64f sumAvxR[4] = {0.0};
-            Rpp64f sumAvxG[4] = {0.0};
-            Rpp64f sumAvxB[4] = {0.0};
+            Rpp64u sum;
+            Rpp32u sumR = 0, sumG = 0, sumB = 0;
+            Rpp32u sumAvxR[8] = {0};
+            Rpp32u sumAvxG[8] = {0};
+            Rpp32u sumAvxB[8] = {0};
 
             Rpp8u *srcPtrRow;
             srcPtrRow = srcPtrChannel;
 #if __AVX2__
-            __m256d psumR = _mm256_setzero_pd();
-            __m256d psumG = _mm256_setzero_pd();
-            __m256d psumB = _mm256_setzero_pd();
+            __m256i psumR = _mm256_setzero_si256();
+            __m256i psumG = _mm256_setzero_si256();
+            __m256i psumB = _mm256_setzero_si256();
 #endif
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
@@ -169,39 +170,39 @@ RppStatus image_sum_u8_u8_host_tensor(Rpp8u *srcPtr,
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
 #if __AVX2__
-                    __m256d p[6];
-                    rpp_simd_load(rpp_load24_u8pkd3_to_f64pln3_avx, srcPtrTemp, p);
-                    compute_sum_24_host(p, &psumR, &psumG, &psumB);
+                    __m256i p[6];
+                    rpp_simd_load(rpp_load48_u8pkd3_to_u32pln3_avx, srcPtrTemp, p);
+                    compute_sum_48_host(p, &psumR, &psumG, &psumB);
 #endif
                     srcPtrTemp += vectorIncrement;
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    sumR += (Rpp64f)(srcPtrTemp[0]);
-                    sumG += (Rpp64f)(srcPtrTemp[1]);
-                    sumB += (Rpp64f)(srcPtrTemp[2]);
+                    sumR += (Rpp32u)(srcPtrTemp[0]);
+                    sumG += (Rpp32u)(srcPtrTemp[1]);
+                    sumB += (Rpp32u)(srcPtrTemp[2]);
                     srcPtrTemp += 3;
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxR, &psumR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxG, &psumG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxB, &psumB);
+            rpp_simd_store(rpp_store8_u32_to_u32_avx, sumAvxR, &psumR);
+            rpp_simd_store(rpp_store8_u32_to_u32_avx, sumAvxG, &psumG);
+            rpp_simd_store(rpp_store8_u32_to_u32_avx, sumAvxB, &psumB);
 #endif
-            for(int i = 0; i < 2; i++)
+            for(int i = 0; i < 4; i++)
             {
-                sumR += (sumAvxR[i] + sumAvxR[i + 2]);
-                sumG += (sumAvxG[i] + sumAvxG[i + 2]);
-                sumB += (sumAvxB[i] + sumAvxB[i + 2]);
+                sumR += (sumAvxR[i] + sumAvxR[i + 4]);
+                sumG += (sumAvxG[i] + sumAvxG[i + 4]);
+                sumB += (sumAvxB[i] + sumAvxB[i + 4]);
             }
 
-            sum = sumR + sumG + sumB;
+            sum = (Rpp64u)sumR + (Rpp64u)sumG + (Rpp64u)sumB;
             int index = batchCount * 4;
-            imageSumArr[index] = (Rpp32f)sumR;
-            imageSumArr[index + 1] = (Rpp32f)sumG;
-            imageSumArr[index + 2] = (Rpp32f)sumB;
-            imageSumArr[index + 3] = (Rpp32f)sum;
+            tensorSumArr[index] = (Rpp64u)sumR;
+            tensorSumArr[index + 1] = (Rpp64u)sumG;
+            tensorSumArr[index + 2] = (Rpp64u)sumB;
+            tensorSumArr[index + 3] = sum;
         }
 
     }
@@ -209,12 +210,12 @@ RppStatus image_sum_u8_u8_host_tensor(Rpp8u *srcPtr,
     return RPP_SUCCESS;
 }
 
-RppStatus image_sum_f32_f32_host_tensor(Rpp32f *srcPtr,
-                                        RpptDescPtr srcDescPtr,
-                                        Rpp32f *imageSumArr,
-                                        RpptROIPtr roiTensorPtrSrc,
-                                        RpptRoiType roiType,
-                                        RppLayoutParams layoutParams)
+RppStatus tensor_sum_f32_f32_host(Rpp32f *srcPtr,
+                                  RpptDescPtr srcDescPtr,
+                                  Rpp32f *tensorSumArr,
+                                  RpptROIPtr roiTensorPtrSrc,
+                                  RpptRoiType roiType,
+                                  RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
@@ -238,10 +239,10 @@ RppStatus image_sum_f32_f32_host_tensor(Rpp32f *srcPtr,
         Rpp32u vectorIncrement = 24;
         Rpp32u vectorIncrementPerChannel = 8;
 
-        // Image Sum without fused output-layout toggle (NCHW)
+        // Tensor Sum without fused output-layout toggle (NCHW)
         if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u alignedLength = bufferLength & ~(vectorIncrementPerChannel-1);
+            alignedLength = bufferLength & ~7;
             vectorIncrement = 8;
             Rpp64f sum = 0.0;
             Rpp64f sumAvx[4] = {0.0};
@@ -279,10 +280,10 @@ RppStatus image_sum_f32_f32_host_tensor(Rpp32f *srcPtr,
             for(int i = 0; i < 2; i++)
                 sum += (sumAvx[i] + sumAvx[i + 2]);
 
-            imageSumArr[batchCount] = (Rpp32f)sum;
+            tensorSumArr[batchCount] = (Rpp32f)sum;
         }
 
-        // Image Sum with fused output-layout toggle (NCHW)
+        // Tensor Sum with fused output-layout toggle (NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp64f sum, sumR = 0.0, sumG = 0.0, sumB = 0.0;
@@ -345,13 +346,13 @@ RppStatus image_sum_f32_f32_host_tensor(Rpp32f *srcPtr,
 
             sum = sumR + sumG + sumB;
             int index = batchCount * 4;
-            imageSumArr[index] = (Rpp32f)sumR;
-            imageSumArr[index + 1] = (Rpp32f)sumG;
-            imageSumArr[index + 2] = (Rpp32f)sumB;
-            imageSumArr[index + 3] = (Rpp32f)sum;
+            tensorSumArr[index] = (Rpp32f)sumR;
+            tensorSumArr[index + 1] = (Rpp32f)sumG;
+            tensorSumArr[index + 2] = (Rpp32f)sumB;
+            tensorSumArr[index + 3] = (Rpp32f)sum;
         }
 
-        // Image Sum with fused output-layout toggle (NHWC)
+        // Tensor Sum with fused output-layout toggle (NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp64f sum, sumR = 0.0, sumG = 0.0, sumB = 0.0;
@@ -404,22 +405,22 @@ RppStatus image_sum_f32_f32_host_tensor(Rpp32f *srcPtr,
 
             sum = sumR + sumG + sumB;
             int index = batchCount * 4;
-            imageSumArr[index] = (Rpp32f)sumR;
-            imageSumArr[index + 1] = (Rpp32f)sumG;
-            imageSumArr[index + 2] = (Rpp32f)sumB;
-            imageSumArr[index + 3] = (Rpp32f)sum;
+            tensorSumArr[index] = (Rpp32f)sumR;
+            tensorSumArr[index + 1] = (Rpp32f)sumG;
+            tensorSumArr[index + 2] = (Rpp32f)sumB;
+            tensorSumArr[index + 3] = (Rpp32f)sum;
         }
     }
 
     return RPP_SUCCESS;
 }
 
-RppStatus image_sum_f16_f16_host_tensor(Rpp16f *srcPtr,
-                                        RpptDescPtr srcDescPtr,
-                                        Rpp32f *imageSumArr,
-                                        RpptROIPtr roiTensorPtrSrc,
-                                        RpptRoiType roiType,
-                                        RppLayoutParams layoutParams)
+RppStatus tensor_sum_f16_f32_host(Rpp16f *srcPtr,
+                                  RpptDescPtr srcDescPtr,
+                                  Rpp32f *tensorSumArr,
+                                  RpptROIPtr roiTensorPtrSrc,
+                                  RpptRoiType roiType,
+                                  RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
@@ -443,10 +444,10 @@ RppStatus image_sum_f16_f16_host_tensor(Rpp16f *srcPtr,
         Rpp32u vectorIncrement = 24;
         Rpp32u vectorIncrementPerChannel = 8;
 
-        // Image Sum without fused output-layout toggle (NCHW)
+        // Tensor Sum without fused output-layout toggle (NCHW)
         if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
-            alignedLength = bufferLength & ~(vectorIncrementPerChannel-1);
+            alignedLength = bufferLength & ~7;
             vectorIncrement = 8;
             Rpp64f sum = 0.0;
             Rpp64f sumAvx[4] = {0.0};
@@ -487,10 +488,10 @@ RppStatus image_sum_f16_f16_host_tensor(Rpp16f *srcPtr,
             for(int i = 0; i < 2; i++)
                 sum += (sumAvx[i] + sumAvx[i + 2]);
 
-            imageSumArr[batchCount] = (Rpp32f)sum;
+            tensorSumArr[batchCount] = (Rpp32f)sum;
         }
 
-        // Image Sum with fused output-layout toggle (NCHW)
+        // Tensor Sum with fused output-layout toggle (NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp64f sum, sumR = 0.0, sumG = 0.0, sumB = 0.0;
@@ -560,13 +561,13 @@ RppStatus image_sum_f16_f16_host_tensor(Rpp16f *srcPtr,
 
             sum = sumR + sumG + sumB;
             int index = batchCount * 4;
-            imageSumArr[index] = (Rpp32f)sumR;
-            imageSumArr[index + 1] = (Rpp32f)sumG;
-            imageSumArr[index + 2] = (Rpp32f)sumB;
-            imageSumArr[index + 3] = (Rpp32f)sum;
+            tensorSumArr[index] = (Rpp32f)sumR;
+            tensorSumArr[index + 1] = (Rpp32f)sumG;
+            tensorSumArr[index + 2] = (Rpp32f)sumB;
+            tensorSumArr[index + 3] = (Rpp32f)sum;
         }
 
-        // Image Sum with fused output-layout toggle (NHWC)
+        // Tensor Sum with fused output-layout toggle (NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp64f sum, sumR = 0.0, sumG = 0.0, sumB = 0.0;
@@ -622,22 +623,22 @@ RppStatus image_sum_f16_f16_host_tensor(Rpp16f *srcPtr,
 
             sum = sumR + sumG + sumB;
             int index = batchCount * 4;
-            imageSumArr[index] = (Rpp32f)sumR;
-            imageSumArr[index + 1] = (Rpp32f)sumG;
-            imageSumArr[index + 2] = (Rpp32f)sumB;
-            imageSumArr[index + 3] = (Rpp32f)sum;
+            tensorSumArr[index] = (Rpp32f)sumR;
+            tensorSumArr[index + 1] = (Rpp32f)sumG;
+            tensorSumArr[index + 2] = (Rpp32f)sumB;
+            tensorSumArr[index + 3] = (Rpp32f)sum;
         }
     }
 
     return RPP_SUCCESS;
 }
 
-RppStatus image_sum_i8_i8_host_tensor(Rpp8s *srcPtr,
-                                      RpptDescPtr srcDescPtr,
-                                      Rpp32f *imageSumArr,
-                                      RpptROIPtr roiTensorPtrSrc,
-                                      RpptRoiType roiType,
-                                      RppLayoutParams layoutParams)
+RppStatus tensor_sum_i8_i64_host(Rpp8s *srcPtr,
+                                 RpptDescPtr srcDescPtr,
+                                 Rpp64s *tensorSumArr,
+                                 RpptROIPtr roiTensorPtrSrc,
+                                 RpptRoiType roiType,
+                                 RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
@@ -657,23 +658,23 @@ RppStatus image_sum_i8_i8_host_tensor(Rpp8s *srcPtr,
         Rpp8s *srcPtrChannel;
         srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
 
-        Rpp32u alignedLength = (bufferLength / 24) * 24;
-        Rpp32u vectorIncrement = 24;
-        Rpp32u vectorIncrementPerChannel = 8;
+        Rpp32u alignedLength = (bufferLength / 48) * 48;
+        Rpp32u vectorIncrement = 48;
+        Rpp32u vectorIncrementPerChannel = 16;
         Rpp32u totalPixelsPerChannel = roi.xywhROI.roiWidth * roi.xywhROI.roiHeight;
 
-        // Image Sum without fused output-layout toggle (NCHW)
+        // Tensor Sum without fused output-layout toggle (NCHW)
         if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
-            alignedLength = (bufferLength / 8) * 8;
-            vectorIncrement = 8;
-            Rpp64f sum = 0.0;
-            Rpp64f sumAvx[4] = {0.0};
+            alignedLength = bufferLength & ~15;
+            vectorIncrement = 16;
+            Rpp32s sum = 0;
+            Rpp32s sumAvx[8] = {0};
 
             Rpp8s *srcPtrRow;
             srcPtrRow = srcPtrChannel;
 #if __AVX2__
-            __m256d psum = _mm256_setzero_pd();
+            __m256i psum = _mm256_setzero_si256();
 #endif
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
@@ -684,45 +685,45 @@ RppStatus image_sum_i8_i8_host_tensor(Rpp8s *srcPtr,
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
 #if __AVX2__
-                    __m256d p1[2];
-                    rpp_simd_load(rpp_load8_i8_to_f64_avx, srcPtrTemp, p1);
-                    compute_sum_8_host(p1, &psum);
+                    __m256i p1[2];
+                    rpp_simd_load(rpp_load16_i8_to_i32_avx, srcPtrTemp, p1);
+                    compute_sum_16_host(p1, &psum);
 #endif
                     srcPtrTemp += vectorIncrement;
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    sum += (Rpp64f)(*srcPtrTemp + 128);
+                    sum += (Rpp32s)(*srcPtrTemp);
                     srcPtrTemp++;
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvx, &psum);
+            rpp_simd_store(rpp_store8_i32_to_i32_avx, sumAvx, &psum);
 #endif
-            for(int i = 0; i < 2; i++)
-                sum += (sumAvx[i] + sumAvx[i + 2]);
+            for(int i = 0; i < 4; i++)
+                sum += (sumAvx[i] + sumAvx[i + 4]);
 
-            sum -= 128.0 * totalPixelsPerChannel;
-            imageSumArr[batchCount] = (Rpp32f)sum;
+            tensorSumArr[batchCount] = (Rpp64s)sum;
         }
 
-        // Image Sum with fused output-layout toggle (NCHW)
+        // Tensor Sum with fused output-layout toggle (NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp64f sum, sumR = 0.0, sumG = 0.0, sumB = 0.0;
-            Rpp64f sumAvxR[4] = {0.0};
-            Rpp64f sumAvxG[4] = {0.0};
-            Rpp64f sumAvxB[4] = {0.0};
+            Rpp64s sum;
+            Rpp32s sumR = 0, sumG = 0, sumB = 0;
+            Rpp32s sumAvxR[8] = {0};
+            Rpp32s sumAvxG[8] = {0};
+            Rpp32s sumAvxB[8] = {0};
 
             Rpp8s *srcPtrRowR, *srcPtrRowG, *srcPtrRowB;
             srcPtrRowR = srcPtrChannel;
             srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
             srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
 #if __AVX2__
-            __m256d psumR = _mm256_setzero_pd();
-            __m256d psumG = _mm256_setzero_pd();
-            __m256d psumB = _mm256_setzero_pd();
+            __m256i psumR = _mm256_setzero_si256();
+            __m256i psumG = _mm256_setzero_si256();
+            __m256i psumB = _mm256_setzero_si256();
 #endif
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
@@ -735,9 +736,9 @@ RppStatus image_sum_i8_i8_host_tensor(Rpp8s *srcPtr,
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
 #if __AVX2__
-                    __m256d p[6];
-                    rpp_simd_load(rpp_load24_i8pln3_to_f64pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);
-                    compute_sum_24_host(p, &psumR, &psumG, &psumB);
+                    __m256i p[6];
+                    rpp_simd_load(rpp_load48_i8pln3_to_i32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);
+                    compute_sum_48_host(p, &psumR, &psumG, &psumB);
 #endif
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
@@ -745,9 +746,9 @@ RppStatus image_sum_i8_i8_host_tensor(Rpp8s *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    sumR += (Rpp64f)(*srcPtrTempR + 128);
-                    sumG += (Rpp64f)(*srcPtrTempG + 128);
-                    sumB += (Rpp64f)(*srcPtrTempB + 128);
+                    sumR += (Rpp32s)(*srcPtrTempR);
+                    sumG += (Rpp32s)(*srcPtrTempG);
+                    sumB += (Rpp32s)(*srcPtrTempB);
                     srcPtrTempR++;
                     srcPtrTempG++;
                     srcPtrTempB++;
@@ -757,42 +758,40 @@ RppStatus image_sum_i8_i8_host_tensor(Rpp8s *srcPtr,
                 srcPtrRowB += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxR, &psumR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxG, &psumG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxB, &psumB);
+            rpp_simd_store(rpp_store8_i32_to_i32_avx, sumAvxR, &psumR);
+            rpp_simd_store(rpp_store8_i32_to_i32_avx, sumAvxG, &psumG);
+            rpp_simd_store(rpp_store8_i32_to_i32_avx, sumAvxB, &psumB);
 #endif
-            for(int i = 0; i < 2; i++)
+            for(int i = 0; i < 4; i++)
             {
-                sumR += (sumAvxR[i] + sumAvxR[i + 2]);
-                sumG += (sumAvxG[i] + sumAvxG[i + 2]);
-                sumB += (sumAvxB[i] + sumAvxB[i + 2]);
+                sumR += (sumAvxR[i] + sumAvxR[i + 4]);
+                sumG += (sumAvxG[i] + sumAvxG[i + 4]);
+                sumB += (sumAvxB[i] + sumAvxB[i + 4]);
             }
 
-            sumR -= 128.0 * totalPixelsPerChannel;
-            sumG -= 128.0 * totalPixelsPerChannel;
-            sumB -= 128.0 * totalPixelsPerChannel;
-            sum = sumR + sumG + sumB;
+            sum = (Rpp64s)sumR + (Rpp64s)sumG + (Rpp64s)sumB;
             int index = batchCount * 4;
-            imageSumArr[index] = (Rpp32f)sumR;
-            imageSumArr[index + 1] = (Rpp32f)sumG;
-            imageSumArr[index + 2] = (Rpp32f)sumB;
-            imageSumArr[index + 3] = (Rpp32f)sum;
+            tensorSumArr[index] = (Rpp64s)sumR;
+            tensorSumArr[index + 1] = (Rpp64s)sumG;
+            tensorSumArr[index + 2] = (Rpp64s)sumB;
+            tensorSumArr[index + 3] = sum;
         }
 
-        // Image Sum with fused output-layout toggle (NHWC)
+        // Tensor Sum with fused output-layout toggle (NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp64f sum, sumR = 0.0, sumG = 0.0, sumB = 0.0;
-            Rpp64f sumAvxR[4] = {0.0};
-            Rpp64f sumAvxG[4] = {0.0};
-            Rpp64f sumAvxB[4] = {0.0};
+            Rpp64s sum;
+            Rpp32s sumR = 0, sumG = 0, sumB = 0;
+            Rpp32s sumAvxR[8] = {0};
+            Rpp32s sumAvxG[8] = {0};
+            Rpp32s sumAvxB[8] = {0};
 
             Rpp8s *srcPtrRow;
             srcPtrRow = srcPtrChannel;
 #if __AVX2__
-            __m256d psumR = _mm256_setzero_pd();
-            __m256d psumG = _mm256_setzero_pd();
-            __m256d psumB = _mm256_setzero_pd();
+            __m256i psumR = _mm256_setzero_si256();
+            __m256i psumG = _mm256_setzero_si256();
+            __m256i psumB = _mm256_setzero_si256();
 #endif
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
@@ -803,42 +802,39 @@ RppStatus image_sum_i8_i8_host_tensor(Rpp8s *srcPtr,
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
 #if __AVX2__
-                    __m256d p[6];
-                    rpp_simd_load(rpp_load24_i8pkd3_to_f64pln3_avx, srcPtrTemp, p);
-                    compute_sum_24_host(p, &psumR, &psumG, &psumB);
+                    __m256i p[6];
+                    rpp_simd_load(rpp_load48_i8pkd3_to_i32pln3_avx, srcPtrTemp, p);
+                    compute_sum_48_host(p, &psumR, &psumG, &psumB);
 #endif
                     srcPtrTemp += vectorIncrement;
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    sumR += (Rpp64f)(srcPtrTemp[0] + 128);
-                    sumG += (Rpp64f)(srcPtrTemp[1] + 128);
-                    sumB += (Rpp64f)(srcPtrTemp[2] + 128);
+                    sumR += (Rpp32s)(srcPtrTemp[0]);
+                    sumG += (Rpp32s)(srcPtrTemp[1]);
+                    sumB += (Rpp32s)(srcPtrTemp[2]);
                     srcPtrTemp += 3;
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxR, &psumR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxG, &psumG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxB, &psumB);
+            rpp_simd_store(rpp_store8_i32_to_i32_avx, sumAvxR, &psumR);
+            rpp_simd_store(rpp_store8_i32_to_i32_avx, sumAvxG, &psumG);
+            rpp_simd_store(rpp_store8_i32_to_i32_avx, sumAvxB, &psumB);
 #endif
-            for(int i = 0; i < 2; i++)
+            for(int i = 0; i < 4; i++)
             {
-                sumR += (sumAvxR[i] + sumAvxR[i + 2]);
-                sumG += (sumAvxG[i] + sumAvxG[i + 2]);
-                sumB += (sumAvxB[i] + sumAvxB[i + 2]);
+                sumR += (sumAvxR[i] + sumAvxR[i + 4]);
+                sumG += (sumAvxG[i] + sumAvxG[i + 4]);
+                sumB += (sumAvxB[i] + sumAvxB[i + 4]);
             }
 
-            sumR -= 128.0 * totalPixelsPerChannel;
-            sumG -= 128.0 * totalPixelsPerChannel;
-            sumB -= 128.0 * totalPixelsPerChannel;
-            sum = sumR + sumG + sumB;
+            sum = (Rpp64s)sumR + (Rpp64s)sumG + (Rpp64s)sumB;
             int index = batchCount * 4;
-            imageSumArr[index] = (Rpp32f)sumR;
-            imageSumArr[index + 1] = (Rpp32f)sumG;
-            imageSumArr[index + 2] = (Rpp32f)sumB;
-            imageSumArr[index + 3] = (Rpp32f)sum;
+            tensorSumArr[index] = (Rpp64s)sumR;
+            tensorSumArr[index + 1] = (Rpp64s)sumG;
+            tensorSumArr[index + 2] = (Rpp64s)sumB;
+            tensorSumArr[index + 3] = sum;
         }
     }
 

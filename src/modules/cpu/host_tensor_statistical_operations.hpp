@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,6 +23,6 @@ THE SOFTWARE.
 #ifndef HOST_TENSOR_STATISTICAL_OPERATIONS_HPP
 #define HOST_TENSOR_STATISTICAL_OPERATIONS_HPP
 
-#include "kernel/image_sum.hpp"
+#include "kernel/tensor_sum.hpp"
 
 #endif // HOST_TENSOR_STATISTICAL_OPERATIONS_HPP

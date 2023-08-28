@@ -70,7 +70,7 @@ std::map<int, string> augmentationMap =
     {37, "crop"},
     {38, "crop_mirror_normalize"},
     {84, "spatter"},
-    {87, "image_sum"},
+    {87, "tensor_sum"},
 };
 
 template <typename T>
@@ -1019,8 +1019,7 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     }
 }
 
-template <typename T>
-inline void compare_reduction_output(Rpp32f* output, string funcName, RpptDescPtr srcDescPtr, int testCase, string dst)
+inline void compare_reduction_output(Rpp64u* output, string funcName, RpptDescPtr srcDescPtr, int testCase, string dst)
 {
     string func = funcName;
     string refPath = get_current_dir_name();
@@ -1045,8 +1044,8 @@ inline void compare_reduction_output(Rpp32f* output, string funcName, RpptDescPt
     refFile = refPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ func + ".csv";
 
     ifstream file(refFile);
-    Rpp32f *refOutput;
-    refOutput = (Rpp32f *)malloc(srcDescPtr->n * 4 * sizeof(Rpp32f));
+    Rpp64u *refOutput;
+    refOutput = (Rpp64u *)calloc(srcDescPtr->n * 4, sizeof(Rpp64u));
     string line,word;
     int index = 0;
 
@@ -1075,7 +1074,7 @@ inline void compare_reduction_output(Rpp32f* output, string funcName, RpptDescPt
     {
         for(int i = 0; i < srcDescPtr->n; i++)
         {
-            int diff = abs(output[i] - refOutput[i]);
+            int diff = output[i] - refOutput[i];
             if(diff <= CUTOFF)
                 fileMatch++;
         }
@@ -1087,7 +1086,7 @@ inline void compare_reduction_output(Rpp32f* output, string funcName, RpptDescPt
             matched_values = 0;
             for(int j = 0; j < 4; j++)
             {
-                int diff = abs(output[i] - refOutput[i]);
+                int diff = output[(i * 4) + j] - refOutput[(i * 4) + j];
                 if(diff <= CUTOFF)
                     matched_values++;
             }
