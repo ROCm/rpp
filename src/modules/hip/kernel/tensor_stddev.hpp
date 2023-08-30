@@ -34,8 +34,8 @@ __global__ void tensor_stddev_grid_result(T *inputSrcPtr,
     int id_x = hipThreadIdx_x * 8;
     int id_z = hipBlockIdx_z;
 
-    __shared__ float partialVarShared[1024];                        // 8192 floats of src reduced to 1024 in a 1024 x 1 thread block
-    partialVarShared[hipThreadIdx_x] = 0.0f;                        // initialization of Shared to 0 using all 1024 x 1 threads
+    __shared__ float partialVar_smem[1024];                         // 8192 floats of src reduced to 1024 in a 1024 x 1 thread block
+    partialVar_smem[hipThreadIdx_x] = 0.0f;                        // initialization of _smem to 0 using all 1024 x 1 threads
 
     if (id_x >= xBufferLength)
     {
@@ -52,17 +52,17 @@ __global__ void tensor_stddev_grid_result(T *inputSrcPtr,
         for(int i = xDiff; i < 8; i++)
             src_f8.f1[i] = 0.0f;                                    // local memory reset of invalid values (from the vectorized global load) to 0.0f
     src_f8.f4[0] += src_f8.f4[1];                                   // perform small work of vectorized float4 addition
-    partialVarShared[hipThreadIdx_x] += (src_f8.f1[0] +
-                                         src_f8.f1[1] +
-                                         src_f8.f1[2] +
-                                         src_f8.f1[3]);             // perform small work of reducing float4s to float using 1024 x 1 threads and store in Shared
-    __syncthreads();                                                // syncthreads after Shared load
+    partialVar_smem[hipThreadIdx_x] += (src_f8.f1[0] +
+                                        src_f8.f1[1] +
+                                        src_f8.f1[2] +
+                                        src_f8.f1[3]);              // perform small work of reducing float4s to float using 1024 x 1 threads and store in _smem
+    __syncthreads();                                                // syncthreads after _smem load
 
     // Reduction of 1024 floats on 1024 threads per block in x dimension
     for (int threadMax = 512; threadMax >= 1; threadMax /= 2)
     {
         if (hipThreadIdx_x < threadMax)
-            partialVarShared[hipThreadIdx_x] += partialVarShared[hipThreadIdx_x + threadMax];
+            partialVar_smem[hipThreadIdx_x] += partialVar_smem[hipThreadIdx_x + threadMax];
         __syncthreads();
     }
 
@@ -70,7 +70,7 @@ __global__ void tensor_stddev_grid_result(T *inputSrcPtr,
     if (hipThreadIdx_x == 0)
     {
         int totalElements = roiTensorPtrSrc[id_z].xywhROI.roiHeight * roiTensorPtrSrc[id_z].xywhROI.roiWidth;
-        stddev_hip_compute(inputSrcPtr, sqrt(partialVarShared[0] / totalElements), &dstPtr[id_z]);
+        stddev_hip_compute(inputSrcPtr, sqrt(partialVar_smem[0] / totalElements), &dstPtr[id_z]);
     }
 }
 
@@ -86,12 +86,12 @@ __global__ void tensor_stddev_grid_3channel_result(T *inputSrcPtr,
     int id_z = hipBlockIdx_z;
 
     /* Stores individual channel Variations computed from channel Means to compute Stddev of individual channels*/
-    __shared__ float partialRVarShared[1024];                                    // 8192 floats of src reduced to 1024 in a 1024 x 1 thread block
-    __shared__ float partialGVarShared[1024];
-    __shared__ float partialBVarShared[1024];
-    partialRVarShared[hipThreadIdx_x] = 0.0f;                                    // initialization of Shared to 0 using all 1024 x 1 threads
-    partialGVarShared[hipThreadIdx_x] = 0.0f;
-    partialBVarShared[hipThreadIdx_x] = 0.0f;
+    __shared__ float partialRVar_smem[1024];                                     // 8192 floats of src reduced to 1024 in a 1024 x 1 thread block
+    __shared__ float partialGVar_smem[1024];
+    __shared__ float partialBVar_smem[1024];
+    partialRVar_smem[hipThreadIdx_x] = 0.0f;                                     // initialization of _smem to 0 using all 1024 x 1 threads
+    partialGVar_smem[hipThreadIdx_x] = 0.0f;
+    partialBVar_smem[hipThreadIdx_x] = 0.0f;
 
     if (id_x >= xBufferLength)
     {
@@ -116,29 +116,29 @@ __global__ void tensor_stddev_grid_3channel_result(T *inputSrcPtr,
     src_f24.f8[0].f4[0] += src_f24.f8[0].f4[1];                                  // perform small work of vectorized float4 addition
     src_f24.f8[1].f4[0] += src_f24.f8[1].f4[1];
     src_f24.f8[2].f4[0] += src_f24.f8[2].f4[1];
-    partialRVarShared[hipThreadIdx_x] = (src_f24.f8[0].f1[0] +
-                                         src_f24.f8[0].f1[1] +
-                                         src_f24.f8[0].f1[2] +
-                                         src_f24.f8[0].f1[3]);                   // perform small work of reducing R float4s to float using 1024 threads and store in Shared
-    partialGVarShared[hipThreadIdx_x] = (src_f24.f8[1].f1[0] +
-                                         src_f24.f8[1].f1[1] +
-                                         src_f24.f8[1].f1[2] +
-                                         src_f24.f8[1].f1[3]);                   // perform small work of reducing G float4s to float using 1024 threads and store in Shared
-    partialBVarShared[hipThreadIdx_x] = (src_f24.f8[2].f1[0] +
-                                         src_f24.f8[2].f1[1] +
-                                         src_f24.f8[2].f1[2] +
-                                         src_f24.f8[2].f1[3]);                   // perform small work of reducing B float4s to float using 1024 threads and store in Shared
+    partialRVar_smem[hipThreadIdx_x] = (src_f24.f8[0].f1[0] +
+                                        src_f24.f8[0].f1[1] +
+                                        src_f24.f8[0].f1[2] +
+                                        src_f24.f8[0].f1[3]);                    // perform small work of reducing R float4s to float using 1024 threads and store in _smem
+    partialGVar_smem[hipThreadIdx_x] = (src_f24.f8[1].f1[0] +
+                                        src_f24.f8[1].f1[1] +
+                                        src_f24.f8[1].f1[2] +
+                                        src_f24.f8[1].f1[3]);                    // perform small work of reducing G float4s to float using 1024 threads and store in _smem
+    partialBVar_smem[hipThreadIdx_x] = (src_f24.f8[2].f1[0] +
+                                        src_f24.f8[2].f1[1] +
+                                        src_f24.f8[2].f1[2] +
+                                        src_f24.f8[2].f1[3]);                    // perform small work of reducing B float4s to float using 1024 threads and store in _smem
 
-    __syncthreads();                                                             // syncthreads after Shared load
+    __syncthreads();                                                             // syncthreads after _smem load
 
     // Reduction of 1024 floats on 1024 threads per block in x dimension
     for (int threadMax = 512; threadMax >= 1; threadMax /= 2)
     {
         if (hipThreadIdx_x < threadMax)
         {
-            partialRVarShared[hipThreadIdx_x] += partialRVarShared[hipThreadIdx_x + threadMax];
-            partialGVarShared[hipThreadIdx_x] += partialGVarShared[hipThreadIdx_x + threadMax];
-            partialBVarShared[hipThreadIdx_x] += partialBVarShared[hipThreadIdx_x + threadMax];
+            partialRVar_smem[hipThreadIdx_x] += partialRVar_smem[hipThreadIdx_x + threadMax];
+            partialGVar_smem[hipThreadIdx_x] += partialGVar_smem[hipThreadIdx_x + threadMax];
+            partialBVar_smem[hipThreadIdx_x] += partialBVar_smem[hipThreadIdx_x + threadMax];
         }
         __syncthreads();
     }
@@ -147,13 +147,13 @@ __global__ void tensor_stddev_grid_3channel_result(T *inputSrcPtr,
     if (hipThreadIdx_x == 0)
     {
         int totalElements = roiTensorPtrSrc[id_z].xywhROI.roiHeight * roiTensorPtrSrc[id_z].xywhROI.roiWidth;
-        float var = partialRVarShared[0] + partialGVarShared[0] + partialBVarShared[0];
+        float var = partialRVar_smem[0] + partialGVar_smem[0] + partialBVar_smem[0];
         int idx = id_z * 4;
         if (!flag)
         {
-            stddev_hip_compute(inputSrcPtr, sqrt(partialRVarShared[0] / totalElements), &dstPtr[idx]);
-            stddev_hip_compute(inputSrcPtr, sqrt(partialGVarShared[0] / totalElements), &dstPtr[idx + 1]);
-            stddev_hip_compute(inputSrcPtr, sqrt(partialBVarShared[0] / totalElements), &dstPtr[idx + 2]);
+            stddev_hip_compute(inputSrcPtr, sqrt(partialRVar_smem[0] / totalElements), &dstPtr[idx]);
+            stddev_hip_compute(inputSrcPtr, sqrt(partialGVar_smem[0] / totalElements), &dstPtr[idx + 1]);
+            stddev_hip_compute(inputSrcPtr, sqrt(partialBVar_smem[0] / totalElements), &dstPtr[idx + 2]);
         }
         else
             stddev_hip_compute(inputSrcPtr, sqrt(var  / (totalElements * 3)), &dstPtr[idx + 3]);
@@ -175,9 +175,9 @@ __global__ void tensor_var_pln1(T *srcPtr,
 
     float4 mean_f4 = (float4)mean[id_z];
 
-    __shared__ float partialVarShared[16][16];                              // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
-    float *partialVarSharedRowPtr = &partialVarShared[hipThreadIdx_y][0];   // float pointer to beginning of each row in Shared
-    partialVarSharedRowPtr[hipThreadIdx_x] = 0.0f;                          // initialization of Shared to 0 using all 16 x 16 threads
+    __shared__ float partialVar_smem[16][16];                               // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
+    float *partialVarRowPtr_smem = &partialVar_smem[hipThreadIdx_y][0];    // float pointer to beginning of each row in _smem
+    partialVarRowPtr_smem[hipThreadIdx_x] = 0.0f;                          // initialization of _smem to 0 using all 16 x 16 threads
 
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
     {
@@ -190,24 +190,24 @@ __global__ void tensor_var_pln1(T *srcPtr,
 
     d_float8 src_f8, temp_f8, tempSq_f8;
     rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);           // load 8 pixels to local memory
-    rpp_hip_math_subtract8_const(&src_f8, &temp_f8, mean_f4);               //subtract mean from each pixel
-    rpp_hip_math_multiply8(&temp_f8, &temp_f8, &tempSq_f8);                 //square the temporary value
+    rpp_hip_math_subtract8_const(&src_f8, &temp_f8, mean_f4);               // subtract mean from each pixel
+    rpp_hip_math_multiply8(&temp_f8, &temp_f8, &tempSq_f8);                 // square the temporary value
 
     if (id_x + 8 > roiTensorPtrSrc[id_z].xywhROI.roiWidth)
         for(int i = xDiff; i < 8; i++)
             tempSq_f8.f1[i] = 0.0f;
     tempSq_f8.f4[0] += tempSq_f8.f4[1];                                     // perform small work of vectorized float4 addition
-    partialVarSharedRowPtr[hipThreadIdx_x] = (tempSq_f8.f1[0] +
-                                              tempSq_f8.f1[1] +
-                                              tempSq_f8.f1[2] +
-                                              tempSq_f8.f1[3]);
-    __syncthreads();                                                        // syncthreads after Shared load
+    partialVarRowPtr_smem[hipThreadIdx_x] = (tempSq_f8.f1[0] +
+                                             tempSq_f8.f1[1] +
+                                             tempSq_f8.f1[2] +
+                                             tempSq_f8.f1[3]);
+    __syncthreads();                                                        // syncthreads after _smem load
 
     // Reduction of 16 floats on 16 threads per block in x dimension (for every y dimension)
     for (int threadMax = 8; threadMax >= 1; threadMax /= 2)
     {
         if (hipThreadIdx_x < threadMax)
-            partialVarSharedRowPtr[hipThreadIdx_x] += partialVarSharedRowPtr[hipThreadIdx_x + threadMax];
+            partialVarRowPtr_smem[hipThreadIdx_x] += partialVarRowPtr_smem[hipThreadIdx_x + threadMax];
         __syncthreads();
     }
 
@@ -217,13 +217,13 @@ __global__ void tensor_var_pln1(T *srcPtr,
         for (int threadMax = 8, increment = 128; threadMax >= 1; threadMax /= 2, increment /= 2)
         {
             if (hipThreadIdx_y < threadMax)
-                partialVarSharedRowPtr[0] += partialVarSharedRowPtr[increment];
+                partialVarRowPtr_smem[0] += partialVarRowPtr_smem[increment];
             __syncthreads();
         }
 
         // Final store to dst
         if (hipThreadIdx_y == 0)
-            tensorVarArr[(hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x] = partialVarSharedRowPtr[0];
+            tensorVarArr[(hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x] = partialVarRowPtr_smem[0];
     }
 }
 
@@ -239,15 +239,15 @@ __global__ void channel_var_pln3(T *srcPtr,
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
     /* Stores individual channel Variations computed from channel Means to compute Stddev of individual channels*/
-    __shared__ float partialRVarShared[16][16];                                                 // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
-    __shared__ float partialGVarShared[16][16];
-    __shared__ float partialBVarShared[16][16];
-    float *partialRVarSharedRowPtr = &partialRVarShared[hipThreadIdx_y][0];                     // float pointer to beginning of each row in Shared
-    float *partialGVarSharedRowPtr = &partialGVarShared[hipThreadIdx_y][0];
-    float *partialBVarSharedRowPtr = &partialBVarShared[hipThreadIdx_y][0];
-    partialRVarSharedRowPtr[hipThreadIdx_x] = 0.0f;                                             // initialization of Shared to 0 using all 16 x 16 threads
-    partialGVarSharedRowPtr[hipThreadIdx_x] = 0.0f;
-    partialBVarSharedRowPtr[hipThreadIdx_x] = 0.0f;
+    __shared__ float partialRVar_smem[16][16];                                                   // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
+    __shared__ float partialGVar_smem[16][16];
+    __shared__ float partialBVar_smem[16][16];
+    float *partialRVarRowPtr_smem = &partialRVar_smem[hipThreadIdx_y][0];                       // float pointer to beginning of each row in _smem
+    float *partialGVarRowPtr_smem = &partialGVar_smem[hipThreadIdx_y][0];
+    float *partialBVarRowPtr_smem = &partialBVar_smem[hipThreadIdx_y][0];
+    partialRVarRowPtr_smem[hipThreadIdx_x] = 0.0f;                                              // initialization of _smem to 0 using all 16 x 16 threads
+    partialGVarRowPtr_smem[hipThreadIdx_x] = 0.0f;
+    partialBVarRowPtr_smem[hipThreadIdx_x] = 0.0f;
 
     int index       = id_z * 4;
     float4 meanR_f4 = (float4)mean[index];
@@ -265,8 +265,8 @@ __global__ void channel_var_pln3(T *srcPtr,
 
     d_float24 src_f24, tempCh_f24, tempChSq_f24;
     rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &src_f24); // load 24 pixels to local memory
-    rpp_hip_math_subtract8_const(&src_f24.f8[0], &tempCh_f24.f8[0], meanR_f4);                  //subtract mean from each pixel
-    rpp_hip_math_multiply8(&tempCh_f24.f8[0], &tempCh_f24.f8[0], &tempChSq_f24.f8[0]);          //square the temporary value
+    rpp_hip_math_subtract8_const(&src_f24.f8[0], &tempCh_f24.f8[0], meanR_f4);                  // subtract mean from each pixel
+    rpp_hip_math_multiply8(&tempCh_f24.f8[0], &tempCh_f24.f8[0], &tempChSq_f24.f8[0]);          // square the temporary value
     rpp_hip_math_subtract8_const(&src_f24.f8[1], &tempCh_f24.f8[1], meanG_f4);
     rpp_hip_math_multiply8(&tempCh_f24.f8[1], &tempCh_f24.f8[1], &tempChSq_f24.f8[1]);
     rpp_hip_math_subtract8_const(&src_f24.f8[2], &tempCh_f24.f8[2], meanB_f4);
@@ -284,29 +284,29 @@ __global__ void channel_var_pln3(T *srcPtr,
     tempChSq_f24.f8[0].f4[0] += tempChSq_f24.f8[0].f4[1];                                       // perform small work of vectorized float4 addition
     tempChSq_f24.f8[1].f4[0] += tempChSq_f24.f8[1].f4[1];
     tempChSq_f24.f8[2].f4[0] += tempChSq_f24.f8[2].f4[1];
-    partialRVarSharedRowPtr[hipThreadIdx_x] = (tempChSq_f24.f8[0].f1[0] +
-                                               tempChSq_f24.f8[0].f1[1] +
-                                               tempChSq_f24.f8[0].f1[2] +
-                                               tempChSq_f24.f8[0].f1[3]);                       // perform small work of reducing R float4s to float using 16 x 16 threads and store in Shared
-    partialGVarSharedRowPtr[hipThreadIdx_x] = (tempChSq_f24.f8[1].f1[0] +
-                                               tempChSq_f24.f8[1].f1[1] +
-                                               tempChSq_f24.f8[1].f1[2] +
-                                               tempChSq_f24.f8[1].f1[3]);                       // perform small work of reducing G float4s to float using 16 x 16 threads and store in Shared
-    partialBVarSharedRowPtr[hipThreadIdx_x] = (tempChSq_f24.f8[2].f1[0] +
-                                               tempChSq_f24.f8[2].f1[1] +
-                                               tempChSq_f24.f8[2].f1[2] +
-                                               tempChSq_f24.f8[2].f1[3]);                       // perform small work of reducing B float4s to float using 16 x 16 threads and store in Shared
+    partialRVarRowPtr_smem[hipThreadIdx_x] = (tempChSq_f24.f8[0].f1[0] +
+                                              tempChSq_f24.f8[0].f1[1] +
+                                              tempChSq_f24.f8[0].f1[2] +
+                                              tempChSq_f24.f8[0].f1[3]);                        // perform small work of reducing R float4s to float using 16 x 16 threads and store in _smem
+    partialGVarRowPtr_smem[hipThreadIdx_x] = (tempChSq_f24.f8[1].f1[0] +
+                                              tempChSq_f24.f8[1].f1[1] +
+                                              tempChSq_f24.f8[1].f1[2] +
+                                              tempChSq_f24.f8[1].f1[3]);                        // perform small work of reducing G float4s to float using 16 x 16 threads and store in _smem
+    partialBVarRowPtr_smem[hipThreadIdx_x] = (tempChSq_f24.f8[2].f1[0] +
+                                              tempChSq_f24.f8[2].f1[1] +
+                                              tempChSq_f24.f8[2].f1[2] +
+                                              tempChSq_f24.f8[2].f1[3]);                        // perform small work of reducing B float4s to float using 16 x 16 threads and store in _smem
 
-    __syncthreads();                                                                            // syncthreads after Shared load
+    __syncthreads();                                                                            // syncthreads after _smem load
 
     // Reduction of 16 floats on 16 threads per block in x dimension (for every y dimension)
     for (int threadMax = 8; threadMax >= 1; threadMax /= 2)
     {
         if (hipThreadIdx_x < threadMax)
         {
-            partialRVarSharedRowPtr[hipThreadIdx_x] += partialRVarSharedRowPtr[hipThreadIdx_x + threadMax];
-            partialGVarSharedRowPtr[hipThreadIdx_x] += partialGVarSharedRowPtr[hipThreadIdx_x + threadMax];
-            partialBVarSharedRowPtr[hipThreadIdx_x] += partialBVarSharedRowPtr[hipThreadIdx_x + threadMax];
+            partialRVarRowPtr_smem[hipThreadIdx_x] += partialRVarRowPtr_smem[hipThreadIdx_x + threadMax];
+            partialGVarRowPtr_smem[hipThreadIdx_x] += partialGVarRowPtr_smem[hipThreadIdx_x + threadMax];
+            partialBVarRowPtr_smem[hipThreadIdx_x] += partialBVarRowPtr_smem[hipThreadIdx_x + threadMax];
         }
         __syncthreads();
     }
@@ -318,9 +318,9 @@ __global__ void channel_var_pln3(T *srcPtr,
         {
             if (hipThreadIdx_y < threadMax)
             {
-                partialRVarSharedRowPtr[0] += partialRVarSharedRowPtr[increment];
-                partialGVarSharedRowPtr[0] += partialGVarSharedRowPtr[increment];
-                partialBVarSharedRowPtr[0] += partialBVarSharedRowPtr[increment];
+                partialRVarRowPtr_smem[0] += partialRVarRowPtr_smem[increment];
+                partialGVarRowPtr_smem[0] += partialGVarRowPtr_smem[increment];
+                partialBVarRowPtr_smem[0] += partialBVarRowPtr_smem[increment];
             }
             __syncthreads();
         }
@@ -329,9 +329,9 @@ __global__ void channel_var_pln3(T *srcPtr,
         if (hipThreadIdx_y == 0)
         {
             int idx = ((hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x) * 3;
-            tensorVarArr[idx] = partialRVarSharedRowPtr[0];
-            tensorVarArr[idx + 1] = partialGVarSharedRowPtr[0];
-            tensorVarArr[idx + 2] = partialBVarSharedRowPtr[0];
+            tensorVarArr[idx] = partialRVarRowPtr_smem[0];
+            tensorVarArr[idx + 1] = partialGVarRowPtr_smem[0];
+            tensorVarArr[idx + 2] = partialBVarRowPtr_smem[0];
         }
     }
 }
@@ -348,15 +348,15 @@ __global__ void tensor_var_pln3(T *srcPtr,
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
     /* Stores individual channel Variations computed from Image Mean to compute Stddev of Image*/
-    __shared__ float partialChannelRVarShared[16][16];
-    __shared__ float partialChannelGVarShared[16][16];
-    __shared__ float partialChannelBVarShared[16][16];
-    float *partialChannelRVarSharedRowPtr = &partialChannelRVarShared[hipThreadIdx_y][0];
-    float *partialChannelGVarSharedRowPtr = &partialChannelGVarShared[hipThreadIdx_y][0];
-    float *partialChannelBVarSharedRowPtr = &partialChannelBVarShared[hipThreadIdx_y][0];
-    partialChannelRVarSharedRowPtr[hipThreadIdx_x] = 0.0f;
-    partialChannelGVarSharedRowPtr[hipThreadIdx_x] = 0.0f;
-    partialChannelBVarSharedRowPtr[hipThreadIdx_x] = 0.0f;
+    __shared__ float partialChannelRVar_smem[16][16];
+    __shared__ float partialChannelGVar_smem[16][16];
+    __shared__ float partialChannelBVar_smem[16][16];
+    float *partialChannelRVarRowPtr_smem = &partialChannelRVar_smem[hipThreadIdx_y][0];
+    float *partialChannelGVarRowPtr_smem = &partialChannelGVar_smem[hipThreadIdx_y][0];
+    float *partialChannelBVarRowPtr_smem = &partialChannelBVar_smem[hipThreadIdx_y][0];
+    partialChannelRVarRowPtr_smem[hipThreadIdx_x] = 0.0f;
+    partialChannelGVarRowPtr_smem[hipThreadIdx_x] = 0.0f;
+    partialChannelBVarRowPtr_smem[hipThreadIdx_x] = 0.0f;
 
     int index           = (id_z * 4) + 3;
     float4 meanImage_f4 = (float4)mean[index];
@@ -372,8 +372,8 @@ __global__ void tensor_var_pln3(T *srcPtr,
 
     d_float24 src_f24, temp_f24, tempSq_f24;
     rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &src_f24); // load 24 pixels to local memory
-    rpp_hip_math_subtract24_const(&src_f24, &temp_f24, meanImage_f4);                           //subtract mean from each pixel
-    rpp_hip_math_multiply24(&temp_f24, &temp_f24, &tempSq_f24);                                 //square the temporary value
+    rpp_hip_math_subtract24_const(&src_f24, &temp_f24, meanImage_f4);                           // subtract mean from each pixel
+    rpp_hip_math_multiply24(&temp_f24, &temp_f24, &tempSq_f24);                                 // square the temporary value
 
     if (id_x + 8 > roiTensorPtrSrc[id_z].xywhROI.roiWidth)                                      // local memory reset of invalid values (from the vectorized global load) to 0.0f
     {
@@ -387,29 +387,29 @@ __global__ void tensor_var_pln3(T *srcPtr,
     tempSq_f24.f8[0].f4[0] += tempSq_f24.f8[0].f4[1];                                           // perform small work of vectorized float4 addition
     tempSq_f24.f8[1].f4[0] += tempSq_f24.f8[1].f4[1];
     tempSq_f24.f8[2].f4[0] += tempSq_f24.f8[2].f4[1];
-    partialChannelRVarSharedRowPtr[hipThreadIdx_x] = (tempSq_f24.f8[0].f1[0] +
-                                                      tempSq_f24.f8[0].f1[1] +
-                                                      tempSq_f24.f8[0].f1[2] +
-                                                      tempSq_f24.f8[0].f1[3]);                  // perform small work of reducing R float4s to float using 16 x 16 threads and store in Shared
-    partialChannelGVarSharedRowPtr[hipThreadIdx_x] = (tempSq_f24.f8[1].f1[0] +
-                                                      tempSq_f24.f8[1].f1[1] +
-                                                      tempSq_f24.f8[1].f1[2] +
-                                                      tempSq_f24.f8[1].f1[3]);                  // perform small work of reducing G float4s to float using 16 x 16 threads and store in Shared
-    partialChannelBVarSharedRowPtr[hipThreadIdx_x] = (tempSq_f24.f8[2].f1[0] +
-                                                      tempSq_f24.f8[2].f1[1] +
-                                                      tempSq_f24.f8[2].f1[2] +
-                                                      tempSq_f24.f8[2].f1[3]);                  // perform small work of reducing B float4s to float using 16 x 16 threads and store in Shared                      // perform small work of reducing B float4s to float using 16 x 16 threads and store in Shared
+    partialChannelRVarRowPtr_smem[hipThreadIdx_x] = (tempSq_f24.f8[0].f1[0] +
+                                                     tempSq_f24.f8[0].f1[1] +
+                                                     tempSq_f24.f8[0].f1[2] +
+                                                     tempSq_f24.f8[0].f1[3]);                   // perform small work of reducing R float4s to float using 16 x 16 threads and store in _smem
+    partialChannelGVarRowPtr_smem[hipThreadIdx_x] = (tempSq_f24.f8[1].f1[0] +
+                                                     tempSq_f24.f8[1].f1[1] +
+                                                     tempSq_f24.f8[1].f1[2] +
+                                                     tempSq_f24.f8[1].f1[3]);                   // perform small work of reducing G float4s to float using 16 x 16 threads and store in _smem
+    partialChannelBVarRowPtr_smem[hipThreadIdx_x] = (tempSq_f24.f8[2].f1[0] +
+                                                     tempSq_f24.f8[2].f1[1] +
+                                                     tempSq_f24.f8[2].f1[2] +
+                                                     tempSq_f24.f8[2].f1[3]);                   // perform small work of reducing B float4s to float using 16 x 16 threads and store in _smem                      // perform small work of reducing B float4s to float using 16 x 16 threads and store in _smem
 
-    __syncthreads();                                                                            // syncthreads after Shared load
+    __syncthreads();                                                                            // syncthreads after _smem load
 
     // Reduction of 16 floats on 16 threads per block in x dimension (for every y dimension)
     for (int threadMax = 8; threadMax >= 1; threadMax /= 2)
     {
         if (hipThreadIdx_x < threadMax)
         {
-            partialChannelRVarSharedRowPtr[hipThreadIdx_x] += partialChannelRVarSharedRowPtr[hipThreadIdx_x + threadMax];
-            partialChannelGVarSharedRowPtr[hipThreadIdx_x] += partialChannelGVarSharedRowPtr[hipThreadIdx_x + threadMax];
-            partialChannelBVarSharedRowPtr[hipThreadIdx_x] += partialChannelBVarSharedRowPtr[hipThreadIdx_x + threadMax];
+            partialChannelRVarRowPtr_smem[hipThreadIdx_x] += partialChannelRVarRowPtr_smem[hipThreadIdx_x + threadMax];
+            partialChannelGVarRowPtr_smem[hipThreadIdx_x] += partialChannelGVarRowPtr_smem[hipThreadIdx_x + threadMax];
+            partialChannelBVarRowPtr_smem[hipThreadIdx_x] += partialChannelBVarRowPtr_smem[hipThreadIdx_x + threadMax];
         }
         __syncthreads();
     }
@@ -421,9 +421,9 @@ __global__ void tensor_var_pln3(T *srcPtr,
         {
             if (hipThreadIdx_y < threadMax)
             {
-                partialChannelRVarSharedRowPtr[0] += partialChannelRVarSharedRowPtr[increment];
-                partialChannelGVarSharedRowPtr[0] += partialChannelGVarSharedRowPtr[increment];
-                partialChannelBVarSharedRowPtr[0] += partialChannelBVarSharedRowPtr[increment];
+                partialChannelRVarRowPtr_smem[0] += partialChannelRVarRowPtr_smem[increment];
+                partialChannelGVarRowPtr_smem[0] += partialChannelGVarRowPtr_smem[increment];
+                partialChannelBVarRowPtr_smem[0] += partialChannelBVarRowPtr_smem[increment];
             }
             __syncthreads();
         }
@@ -432,9 +432,9 @@ __global__ void tensor_var_pln3(T *srcPtr,
         if (hipThreadIdx_y == 0)
         {
             int idx = ((hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x) * 3;
-            tensorVarArr[idx] = partialChannelRVarSharedRowPtr[0];
-            tensorVarArr[idx + 1] = partialChannelGVarSharedRowPtr[0];
-            tensorVarArr[idx + 2] = partialChannelBVarSharedRowPtr[0];
+            tensorVarArr[idx] = partialChannelRVarRowPtr_smem[0];
+            tensorVarArr[idx + 1] = partialChannelGVarRowPtr_smem[0];
+            tensorVarArr[idx + 2] = partialChannelBVarRowPtr_smem[0];
         }
     }
 }
@@ -450,15 +450,15 @@ __global__ void channel_var_pkd3(T *srcPtr,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    __shared__ float partialRVarShared[16][16];                                        // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
-    __shared__ float partialGVarShared[16][16];
-    __shared__ float partialBVarShared[16][16];
-    float *partialRVarSharedRowPtr = &partialRVarShared[hipThreadIdx_y][0];            // float pointer to beginning of each row in Shared
-    float *partialGVarSharedRowPtr = &partialGVarShared[hipThreadIdx_y][0];
-    float *partialBVarSharedRowPtr = &partialBVarShared[hipThreadIdx_y][0];
-    partialRVarSharedRowPtr[hipThreadIdx_x] = 0.0f;                                    // initialization of Shared to 0 using all 16 x 16 threads
-    partialGVarSharedRowPtr[hipThreadIdx_x] = 0.0f;
-    partialBVarSharedRowPtr[hipThreadIdx_x] = 0.0f;
+    __shared__ float partialRVar_smem[16][16];                                          // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
+    __shared__ float partialGVar_smem[16][16];
+    __shared__ float partialBVar_smem[16][16];
+    float *partialRVarRowPtr_smem = &partialRVar_smem[hipThreadIdx_y][0];              // float pointer to beginning of each row in _smem
+    float *partialGVarRowPtr_smem = &partialGVar_smem[hipThreadIdx_y][0];
+    float *partialBVarRowPtr_smem = &partialBVar_smem[hipThreadIdx_y][0];
+    partialRVarRowPtr_smem[hipThreadIdx_x] = 0.0f;                                     // initialization of _smem to 0 using all 16 x 16 threads
+    partialGVarRowPtr_smem[hipThreadIdx_x] = 0.0f;
+    partialBVarRowPtr_smem[hipThreadIdx_x] = 0.0f;
 
     int index       = id_z * 4;
     float4 meanR_f4 = (float4)mean[index];
@@ -476,8 +476,8 @@ __global__ void channel_var_pkd3(T *srcPtr,
 
     d_float24 src_f24, tempCh_f24, tempChSq_f24;
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &src_f24);         // load 24 pixels to local memory
-    rpp_hip_math_subtract8_const(&src_f24.f8[0], &tempCh_f24.f8[0], meanR_f4);         //subtract mean from each pixel
-    rpp_hip_math_multiply8(&tempCh_f24.f8[0], &tempCh_f24.f8[0], &tempChSq_f24.f8[0]); //square the temporary value
+    rpp_hip_math_subtract8_const(&src_f24.f8[0], &tempCh_f24.f8[0], meanR_f4);         // subtract mean from each pixel
+    rpp_hip_math_multiply8(&tempCh_f24.f8[0], &tempCh_f24.f8[0], &tempChSq_f24.f8[0]); // square the temporary value
     rpp_hip_math_subtract8_const(&src_f24.f8[1], &tempCh_f24.f8[1], meanG_f4);
     rpp_hip_math_multiply8(&tempCh_f24.f8[1], &tempCh_f24.f8[1], &tempChSq_f24.f8[1]);
     rpp_hip_math_subtract8_const(&src_f24.f8[2], &tempCh_f24.f8[2], meanB_f4);
@@ -495,29 +495,29 @@ __global__ void channel_var_pkd3(T *srcPtr,
     tempChSq_f24.f8[0].f4[0] += tempChSq_f24.f8[0].f4[1];                              // perform small work of vectorized float4 addition
     tempChSq_f24.f8[1].f4[0] += tempChSq_f24.f8[1].f4[1];
     tempChSq_f24.f8[2].f4[0] += tempChSq_f24.f8[2].f4[1];
-    partialRVarSharedRowPtr[hipThreadIdx_x] = (tempChSq_f24.f8[0].f1[0] +
-                                               tempChSq_f24.f8[0].f1[1] +
-                                               tempChSq_f24.f8[0].f1[2] +
-                                               tempChSq_f24.f8[0].f1[3]);              // perform small work of reducing R float4s to float using 16 x 16 threads and store in Shared
-    partialGVarSharedRowPtr[hipThreadIdx_x] = (tempChSq_f24.f8[1].f1[0] +
-                                               tempChSq_f24.f8[1].f1[1] +
-                                               tempChSq_f24.f8[1].f1[2] +
-                                               tempChSq_f24.f8[1].f1[3]);              // perform small work of reducing G float4s to float using 16 x 16 threads and store in Shared
-    partialBVarSharedRowPtr[hipThreadIdx_x] = (tempChSq_f24.f8[2].f1[0] +
-                                               tempChSq_f24.f8[2].f1[1] +
-                                               tempChSq_f24.f8[2].f1[2] +
-                                               tempChSq_f24.f8[2].f1[3]);              // perform small work of reducing B float4s to float using 16 x 16 threads and store in Shared
+    partialRVarRowPtr_smem[hipThreadIdx_x] = (tempChSq_f24.f8[0].f1[0] +
+                                              tempChSq_f24.f8[0].f1[1] +
+                                              tempChSq_f24.f8[0].f1[2] +
+                                              tempChSq_f24.f8[0].f1[3]);               // perform small work of reducing R float4s to float using 16 x 16 threads and store in _smem
+    partialGVarRowPtr_smem[hipThreadIdx_x] = (tempChSq_f24.f8[1].f1[0] +
+                                              tempChSq_f24.f8[1].f1[1] +
+                                              tempChSq_f24.f8[1].f1[2] +
+                                              tempChSq_f24.f8[1].f1[3]);               // perform small work of reducing G float4s to float using 16 x 16 threads and store in _smem
+    partialBVarRowPtr_smem[hipThreadIdx_x] = (tempChSq_f24.f8[2].f1[0] +
+                                              tempChSq_f24.f8[2].f1[1] +
+                                              tempChSq_f24.f8[2].f1[2] +
+                                              tempChSq_f24.f8[2].f1[3]);               // perform small work of reducing B float4s to float using 16 x 16 threads and store in _smem
 
-    __syncthreads();                                                                   // syncthreads after Shared load
+    __syncthreads();                                                                   // syncthreads after _smem load
 
     // Reduction of 16 floats on 16 threads per block in x dimension (for every y dimension)
     for (int threadMax = 8; threadMax >= 1; threadMax /= 2)
     {
         if (hipThreadIdx_x < threadMax)
         {
-            partialRVarSharedRowPtr[hipThreadIdx_x] += partialRVarSharedRowPtr[hipThreadIdx_x + threadMax];
-            partialGVarSharedRowPtr[hipThreadIdx_x] += partialGVarSharedRowPtr[hipThreadIdx_x + threadMax];
-            partialBVarSharedRowPtr[hipThreadIdx_x] += partialBVarSharedRowPtr[hipThreadIdx_x + threadMax];
+            partialRVarRowPtr_smem[hipThreadIdx_x] += partialRVarRowPtr_smem[hipThreadIdx_x + threadMax];
+            partialGVarRowPtr_smem[hipThreadIdx_x] += partialGVarRowPtr_smem[hipThreadIdx_x + threadMax];
+            partialBVarRowPtr_smem[hipThreadIdx_x] += partialBVarRowPtr_smem[hipThreadIdx_x + threadMax];
         }
         __syncthreads();
     }
@@ -529,9 +529,9 @@ __global__ void channel_var_pkd3(T *srcPtr,
         {
             if (hipThreadIdx_y < threadMax)
             {
-                partialRVarSharedRowPtr[0] += partialRVarSharedRowPtr[increment];
-                partialGVarSharedRowPtr[0] += partialGVarSharedRowPtr[increment];
-                partialBVarSharedRowPtr[0] += partialBVarSharedRowPtr[increment];
+                partialRVarRowPtr_smem[0] += partialRVarRowPtr_smem[increment];
+                partialGVarRowPtr_smem[0] += partialGVarRowPtr_smem[increment];
+                partialBVarRowPtr_smem[0] += partialBVarRowPtr_smem[increment];
             }
             __syncthreads();
         }
@@ -540,9 +540,9 @@ __global__ void channel_var_pkd3(T *srcPtr,
         if (hipThreadIdx_y == 0)
         {
             int idx = ((hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x) * 3;
-            tensorVarArr[idx] = partialRVarSharedRowPtr[0];
-            tensorVarArr[idx + 1] = partialGVarSharedRowPtr[0];
-            tensorVarArr[idx + 2] = partialBVarSharedRowPtr[0];
+            tensorVarArr[idx] = partialRVarRowPtr_smem[0];
+            tensorVarArr[idx + 1] = partialGVarRowPtr_smem[0];
+            tensorVarArr[idx + 2] = partialBVarRowPtr_smem[0];
         }
     }
 }
@@ -559,15 +559,15 @@ __global__ void tensor_var_pkd3(T *srcPtr,
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
     /* Stores individual channel Variations computed from Image Mean to compute Stddev of Image*/
-    __shared__ float partialChannelRVarShared[16][16];
-    __shared__ float partialChannelGVarShared[16][16];
-    __shared__ float partialChannelBVarShared[16][16];
-    float *partialChannelRVarSharedRowPtr = &partialChannelRVarShared[hipThreadIdx_y][0];
-    float *partialChannelGVarSharedRowPtr = &partialChannelGVarShared[hipThreadIdx_y][0];
-    float *partialChannelBVarSharedRowPtr = &partialChannelBVarShared[hipThreadIdx_y][0];
-    partialChannelRVarSharedRowPtr[hipThreadIdx_x] = 0.0f;
-    partialChannelGVarSharedRowPtr[hipThreadIdx_x] = 0.0f;
-    partialChannelBVarSharedRowPtr[hipThreadIdx_x] = 0.0f;
+    __shared__ float partialChannelRVar_smem[16][16];
+    __shared__ float partialChannelGVar_smem[16][16];
+    __shared__ float partialChannelBVar_smem[16][16];
+    float *partialChannelRVarRowPtr_smem = &partialChannelRVar_smem[hipThreadIdx_y][0];
+    float *partialChannelGVarRowPtr_smem = &partialChannelGVar_smem[hipThreadIdx_y][0];
+    float *partialChannelBVarRowPtr_smem = &partialChannelBVar_smem[hipThreadIdx_y][0];
+    partialChannelRVarRowPtr_smem[hipThreadIdx_x] = 0.0f;
+    partialChannelGVarRowPtr_smem[hipThreadIdx_x] = 0.0f;
+    partialChannelBVarRowPtr_smem[hipThreadIdx_x] = 0.0f;
 
     int index           = (id_z * 4) + 3;
     float4 meanImage_f4 = (float4)mean[index];
@@ -583,8 +583,8 @@ __global__ void tensor_var_pkd3(T *srcPtr,
 
     d_float24 src_f24, temp_f24, tempSq_f24;
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &src_f24);                  // load 24 pixels to local memory
-    rpp_hip_math_subtract24_const(&src_f24, &temp_f24, meanImage_f4);                           //subtract mean from each pixel
-    rpp_hip_math_multiply24(&temp_f24, &temp_f24, &tempSq_f24);                                 //square the temporary value
+    rpp_hip_math_subtract24_const(&src_f24, &temp_f24, meanImage_f4);                           // subtract mean from each pixel
+    rpp_hip_math_multiply24(&temp_f24, &temp_f24, &tempSq_f24);                                 // square the temporary value
 
     if (id_x + 8 > roiTensorPtrSrc[id_z].xywhROI.roiWidth)                                      // local memory reset of invalid values (from the vectorized global load) to 0.0f
     {
@@ -598,29 +598,29 @@ __global__ void tensor_var_pkd3(T *srcPtr,
     tempSq_f24.f8[0].f4[0] += tempSq_f24.f8[0].f4[1];                                           // perform small work of vectorized float4 addition
     tempSq_f24.f8[1].f4[0] += tempSq_f24.f8[1].f4[1];
     tempSq_f24.f8[2].f4[0] += tempSq_f24.f8[2].f4[1];
-    partialChannelRVarSharedRowPtr[hipThreadIdx_x] = (tempSq_f24.f8[0].f1[0] +
-                                                      tempSq_f24.f8[0].f1[1] +
-                                                      tempSq_f24.f8[0].f1[2] +
-                                                      tempSq_f24.f8[0].f1[3]);                  // perform small work of reducing R float4s to float using 16 x 16 threads and store in Shared
-    partialChannelGVarSharedRowPtr[hipThreadIdx_x] = (tempSq_f24.f8[1].f1[0] +
-                                                      tempSq_f24.f8[1].f1[1] +
-                                                      tempSq_f24.f8[1].f1[2] +
-                                                      tempSq_f24.f8[1].f1[3]);                  // perform small work of reducing G float4s to float using 16 x 16 threads and store in Shared
-    partialChannelBVarSharedRowPtr[hipThreadIdx_x] = (tempSq_f24.f8[2].f1[0] +
-                                                      tempSq_f24.f8[2].f1[1] +
-                                                      tempSq_f24.f8[2].f1[2] +
-                                                      tempSq_f24.f8[2].f1[3]);                  // perform small work of reducing B float4s to float using 16 x 16 threads and store in Shared                      // perform small work of reducing B float4s to float using 16 x 16 threads and store in Shared
+    partialChannelRVarRowPtr_smem[hipThreadIdx_x] = (tempSq_f24.f8[0].f1[0] +
+                                                     tempSq_f24.f8[0].f1[1] +
+                                                     tempSq_f24.f8[0].f1[2] +
+                                                     tempSq_f24.f8[0].f1[3]);                   // perform small work of reducing R float4s to float using 16 x 16 threads and store in _smem
+    partialChannelGVarRowPtr_smem[hipThreadIdx_x] = (tempSq_f24.f8[1].f1[0] +
+                                                     tempSq_f24.f8[1].f1[1] +
+                                                     tempSq_f24.f8[1].f1[2] +
+                                                     tempSq_f24.f8[1].f1[3]);                   // perform small work of reducing G float4s to float using 16 x 16 threads and store in _smem
+    partialChannelBVarRowPtr_smem[hipThreadIdx_x] = (tempSq_f24.f8[2].f1[0] +
+                                                     tempSq_f24.f8[2].f1[1] +
+                                                     tempSq_f24.f8[2].f1[2] +
+                                                     tempSq_f24.f8[2].f1[3]);                   // perform small work of reducing B float4s to float using 16 x 16 threads and store in _smem                      // perform small work of reducing B float4s to float using 16 x 16 threads and store in _smem
 
-    __syncthreads();                                                                            // syncthreads after Shared load
+    __syncthreads();                                                                            // syncthreads after _smem load
 
     // Reduction of 16 floats on 16 threads per block in x dimension (for every y dimension)
     for (int threadMax = 8; threadMax >= 1; threadMax /= 2)
     {
         if (hipThreadIdx_x < threadMax)
         {
-            partialChannelRVarSharedRowPtr[hipThreadIdx_x] += partialChannelRVarSharedRowPtr[hipThreadIdx_x + threadMax];
-            partialChannelGVarSharedRowPtr[hipThreadIdx_x] += partialChannelGVarSharedRowPtr[hipThreadIdx_x + threadMax];
-            partialChannelBVarSharedRowPtr[hipThreadIdx_x] += partialChannelBVarSharedRowPtr[hipThreadIdx_x + threadMax];
+            partialChannelRVarRowPtr_smem[hipThreadIdx_x] += partialChannelRVarRowPtr_smem[hipThreadIdx_x + threadMax];
+            partialChannelGVarRowPtr_smem[hipThreadIdx_x] += partialChannelGVarRowPtr_smem[hipThreadIdx_x + threadMax];
+            partialChannelBVarRowPtr_smem[hipThreadIdx_x] += partialChannelBVarRowPtr_smem[hipThreadIdx_x + threadMax];
         }
         __syncthreads();
     }
@@ -632,9 +632,9 @@ __global__ void tensor_var_pkd3(T *srcPtr,
         {
             if (hipThreadIdx_y < threadMax)
             {
-                partialChannelRVarSharedRowPtr[0] += partialChannelRVarSharedRowPtr[increment];
-                partialChannelGVarSharedRowPtr[0] += partialChannelGVarSharedRowPtr[increment];
-                partialChannelBVarSharedRowPtr[0] += partialChannelBVarSharedRowPtr[increment];
+                partialChannelRVarRowPtr_smem[0] += partialChannelRVarRowPtr_smem[increment];
+                partialChannelGVarRowPtr_smem[0] += partialChannelGVarRowPtr_smem[increment];
+                partialChannelBVarRowPtr_smem[0] += partialChannelBVarRowPtr_smem[increment];
             }
             __syncthreads();
         }
@@ -643,9 +643,9 @@ __global__ void tensor_var_pkd3(T *srcPtr,
         if (hipThreadIdx_y == 0)
         {
             int idx = ((hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x) * 3;
-            tensorVarArr[idx] = partialChannelRVarSharedRowPtr[0];
-            tensorVarArr[idx + 1] = partialChannelGVarSharedRowPtr[0];
-            tensorVarArr[idx + 2] = partialChannelBVarSharedRowPtr[0];
+            tensorVarArr[idx] = partialChannelRVarRowPtr_smem[0];
+            tensorVarArr[idx + 1] = partialChannelGVarRowPtr_smem[0];
+            tensorVarArr[idx + 2] = partialChannelBVarRowPtr_smem[0];
         }
     }
 }
