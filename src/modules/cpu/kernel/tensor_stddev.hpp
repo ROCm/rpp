@@ -75,9 +75,7 @@ RppStatus tensor_stddev_u8_f32_host(Rpp8u *srcPtr,
             }
 #if __AVX2__
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvx, &pVar);
-
-            for(int i = 0; i < 2; i++)
-                var += (varAvx[i] + varAvx[i + 2]);
+            var += (varAvx[0] + varAvx[1] + varAvx[2] + varAvx[3]);
 #endif
             stddev = sqrt(var / totalPixelsPerChannel);
             tensorStddevArr[batchCount] = (Rpp32f)stddev;
@@ -161,15 +159,12 @@ RppStatus tensor_stddev_u8_f32_host(Rpp8u *srcPtr,
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageG, &pVarImageG);
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageB, &pVarImageB);
 
-            for(int i = 0; i < 2; i++)
-            {
-                varR += (varAvxR[i] + varAvxR[i + 2]);
-                varG += (varAvxG[i] + varAvxG[i + 2]);
-                varB += (varAvxB[i] + varAvxB[i + 2]);
-                varImageR += (varAvxImageR[i] + varAvxImageR[i + 2]);
-                varImageG += (varAvxImageG[i] + varAvxImageG[i + 2]);
-                varImageB += (varAvxImageB[i] + varAvxImageB[i + 2]);
-            }
+            varR += (varAvxR[0] + varAvxR[1] + varAvxR[2] + varAvxR[3]);
+            varG += (varAvxG[0] + varAvxG[1] + varAvxG[2] + varAvxG[3]);
+            varB += (varAvxB[0] + varAvxB[1] + varAvxB[2] + varAvxB[3]);
+            varImageR += (varAvxImageR[0] + varAvxImageR[1] + varAvxImageR[2] + varAvxImageR[3]);
+            varImageG += (varAvxImageG[0] + varAvxImageG[1] + varAvxImageG[2] + varAvxImageG[3]);
+            varImageB += (varAvxImageB[0] + varAvxImageB[1] + varAvxImageB[2] + varAvxImageB[3]);
 #endif
             varImage = varImageR + varImageG + varImageB;
             stddevImage = (Rpp32f)sqrt(varImage / (totalPixelsPerChannel * 3));
@@ -250,15 +245,12 @@ RppStatus tensor_stddev_u8_f32_host(Rpp8u *srcPtr,
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageG, &pVarImageG);
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageB, &pVarImageB);
 
-            for(int i = 0; i < 2; i++)
-            {
-                varR += (varAvxR[i] + varAvxR[i + 2]);
-                varG += (varAvxG[i] + varAvxG[i + 2]);
-                varB += (varAvxB[i] + varAvxB[i + 2]);
-                varImageR += (varAvxImageR[i] + varAvxImageR[i + 2]);
-                varImageG += (varAvxImageG[i] + varAvxImageG[i + 2]);
-                varImageB += (varAvxImageB[i] + varAvxImageB[i + 2]);
-            }
+            varR += (varAvxR[0] + varAvxR[1] + varAvxR[2] + varAvxR[3]);
+            varG += (varAvxG[0] + varAvxG[1] + varAvxG[2] + varAvxG[3]);
+            varB += (varAvxB[0] + varAvxB[1] + varAvxB[2] + varAvxB[3]);
+            varImageR += (varAvxImageR[0] + varAvxImageR[1] + varAvxImageR[2] + varAvxImageR[3]);
+            varImageG += (varAvxImageG[0] + varAvxImageG[1] + varAvxImageG[2] + varAvxImageG[3]);
+            varImageB += (varAvxImageB[0] + varAvxImageB[1] + varAvxImageB[2] + varAvxImageB[3]);
 #endif
             varImage = varImageR + varImageG + varImageB;
             stddevImage = (Rpp32f)sqrt(varImage / (totalPixelsPerChannel * 3));
@@ -346,9 +338,7 @@ RppStatus tensor_stddev_f32_f32_host(Rpp32f *srcPtr,
             }
 #if __AVX2__
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvx, &pVar);
-
-            for(int i = 0; i < 2; i++)
-                var += (varAvx[i] + varAvx[i + 2]);
+            var += (varAvx[0] + varAvx[1] + varAvx[2] + varAvx[3]);
 #endif
             stddev = sqrt(var / totalPixelsPerChannel) * 255;
             tensorStddevArr[batchCount] = (Rpp32f)stddev;
@@ -432,15 +422,12 @@ RppStatus tensor_stddev_f32_f32_host(Rpp32f *srcPtr,
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageG, &pVarImageG);
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageB, &pVarImageB);
 
-            for(int i = 0; i < 2; i++)
-            {
-                varR += (varAvxR[i] + varAvxR[i + 2]);
-                varG += (varAvxG[i] + varAvxG[i + 2]);
-                varB += (varAvxB[i] + varAvxB[i + 2]);
-                varImageR += (varAvxImageR[i] + varAvxImageR[i + 2]);
-                varImageG += (varAvxImageG[i] + varAvxImageG[i + 2]);
-                varImageB += (varAvxImageB[i] + varAvxImageB[i + 2]);
-            }
+            varR += (varAvxR[0] + varAvxR[1] + varAvxR[2] + varAvxR[3]);
+            varG += (varAvxG[0] + varAvxG[1] + varAvxG[2] + varAvxG[3]);
+            varB += (varAvxB[0] + varAvxB[1] + varAvxB[2] + varAvxB[3]);
+            varImageR += (varAvxImageR[0] + varAvxImageR[1] + varAvxImageR[2] + varAvxImageR[3]);
+            varImageG += (varAvxImageG[0] + varAvxImageG[1] + varAvxImageG[2] + varAvxImageG[3]);
+            varImageB += (varAvxImageB[0] + varAvxImageB[1] + varAvxImageB[2] + varAvxImageB[3]);
 #endif
             varImage = varImageR + varImageG + varImageB;
             stddevImage = (Rpp32f)sqrt(varImage / (totalPixelsPerChannel * 3)) * 255; // multiply by 255 to normalize variation
@@ -521,15 +508,12 @@ RppStatus tensor_stddev_f32_f32_host(Rpp32f *srcPtr,
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageG, &pVarImageG);
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageB, &pVarImageB);
 
-            for(int i = 0; i < 2; i++)
-            {
-                varR += (varAvxR[i] + varAvxR[i + 2]);
-                varG += (varAvxG[i] + varAvxG[i + 2]);
-                varB += (varAvxB[i] + varAvxB[i + 2]);
-                varImageR += (varAvxImageR[i] + varAvxImageR[i + 2]);
-                varImageG += (varAvxImageG[i] + varAvxImageG[i + 2]);
-                varImageB += (varAvxImageB[i] + varAvxImageB[i + 2]);
-            }
+            varR += (varAvxR[0] + varAvxR[1] + varAvxR[2] + varAvxR[3]);
+            varG += (varAvxG[0] + varAvxG[1] + varAvxG[2] + varAvxG[3]);
+            varB += (varAvxB[0] + varAvxB[1] + varAvxB[2] + varAvxB[3]);
+            varImageR += (varAvxImageR[0] + varAvxImageR[1] + varAvxImageR[2] + varAvxImageR[3]);
+            varImageG += (varAvxImageG[0] + varAvxImageG[1] + varAvxImageG[2] + varAvxImageG[3]);
+            varImageB += (varAvxImageB[0] + varAvxImageB[1] + varAvxImageB[2] + varAvxImageB[3]);
 #endif
             varImage = varImageR + varImageG + varImageB;
             stddevImage = (Rpp32f)sqrt(varImage / (totalPixelsPerChannel * 3)) * 255;
@@ -622,9 +606,7 @@ RppStatus tensor_stddev_f16_f32_host(Rpp16f *srcPtr,
             }
 #if __AVX2__
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvx, &pVar);
-
-            for(int i = 0; i < 2; i++)
-                var += (varAvx[i] + varAvx[i + 2]);
+            var += (varAvx[0] + varAvx[1] + varAvx[2] + varAvx[3]);
 #endif
             stddev = sqrt(var / totalPixelsPerChannel) * 255;
             tensorStddevArr[batchCount] = (Rpp32f)stddev;
@@ -716,15 +698,12 @@ RppStatus tensor_stddev_f16_f32_host(Rpp16f *srcPtr,
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageG, &pVarImageG);
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageB, &pVarImageB);
 
-            for(int i = 0; i < 2; i++)
-            {
-                varR += (varAvxR[i] + varAvxR[i + 2]);
-                varG += (varAvxG[i] + varAvxG[i + 2]);
-                varB += (varAvxB[i] + varAvxB[i + 2]);
-                varImageR += (varAvxImageR[i] + varAvxImageR[i + 2]);
-                varImageG += (varAvxImageG[i] + varAvxImageG[i + 2]);
-                varImageB += (varAvxImageB[i] + varAvxImageB[i + 2]);
-            }
+            varR += (varAvxR[0] + varAvxR[1] + varAvxR[2] + varAvxR[3]);
+            varG += (varAvxG[0] + varAvxG[1] + varAvxG[2] + varAvxG[3]);
+            varB += (varAvxB[0] + varAvxB[1] + varAvxB[2] + varAvxB[3]);
+            varImageR += (varAvxImageR[0] + varAvxImageR[1] + varAvxImageR[2] + varAvxImageR[3]);
+            varImageG += (varAvxImageG[0] + varAvxImageG[1] + varAvxImageG[2] + varAvxImageG[3]);
+            varImageB += (varAvxImageB[0] + varAvxImageB[1] + varAvxImageB[2] + varAvxImageB[3]);
 #endif
             varImage = varImageR + varImageG + varImageB;
             stddevImage = (Rpp32f)sqrt(varImage / (totalPixelsPerChannel * 3)) * 255; // multiply by 255 to normalize variation
@@ -810,15 +789,12 @@ RppStatus tensor_stddev_f16_f32_host(Rpp16f *srcPtr,
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageG, &pVarImageG);
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageB, &pVarImageB);
 
-            for(int i = 0; i < 2; i++)
-            {
-                varR += (varAvxR[i] + varAvxR[i + 2]);
-                varG += (varAvxG[i] + varAvxG[i + 2]);
-                varB += (varAvxB[i] + varAvxB[i + 2]);
-                varImageR += (varAvxImageR[i] + varAvxImageR[i + 2]);
-                varImageG += (varAvxImageG[i] + varAvxImageG[i + 2]);
-                varImageB += (varAvxImageB[i] + varAvxImageB[i + 2]);
-            }
+            varR += (varAvxR[0] + varAvxR[1] + varAvxR[2] + varAvxR[3]);
+            varG += (varAvxG[0] + varAvxG[1] + varAvxG[2] + varAvxG[3]);
+            varB += (varAvxB[0] + varAvxB[1] + varAvxB[2] + varAvxB[3]);
+            varImageR += (varAvxImageR[0] + varAvxImageR[1] + varAvxImageR[2] + varAvxImageR[3]);
+            varImageG += (varAvxImageG[0] + varAvxImageG[1] + varAvxImageG[2] + varAvxImageG[3]);
+            varImageB += (varAvxImageB[0] + varAvxImageB[1] + varAvxImageB[2] + varAvxImageB[3]);
 #endif
             varImage = varImageR + varImageG + varImageB;
             stddevImage = (Rpp32f)sqrt(varImage / (totalPixelsPerChannel * 3)) * 255;
@@ -907,9 +883,7 @@ RppStatus tensor_stddev_i8_f32_host(Rpp8s *srcPtr,
             }
 #if __AVX2__
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvx, &pVar);
-
-            for(int i = 0; i < 2; i++)
-                var += (varAvx[i] + varAvx[i + 2]);
+            var += (varAvx[0] + varAvx[1] + varAvx[2] + varAvx[3]);
 #endif
             stddev = sqrt(var / totalPixelsPerChannel);
             tensorStddevArr[batchCount] = (Rpp32f)stddev;
@@ -993,15 +967,12 @@ RppStatus tensor_stddev_i8_f32_host(Rpp8s *srcPtr,
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageG, &pVarImageG);
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageB, &pVarImageB);
 
-            for(int i = 0; i < 2; i++)
-            {
-                varR += (varAvxR[i] + varAvxR[i + 2]);
-                varG += (varAvxG[i] + varAvxG[i + 2]);
-                varB += (varAvxB[i] + varAvxB[i + 2]);
-                varImageR += (varAvxImageR[i] + varAvxImageR[i + 2]);
-                varImageG += (varAvxImageG[i] + varAvxImageG[i + 2]);
-                varImageB += (varAvxImageB[i] + varAvxImageB[i + 2]);
-            }
+            varR += (varAvxR[0] + varAvxR[1] + varAvxR[2] + varAvxR[3]);
+            varG += (varAvxG[0] + varAvxG[1] + varAvxG[2] + varAvxG[3]);
+            varB += (varAvxB[0] + varAvxB[1] + varAvxB[2] + varAvxB[3]);
+            varImageR += (varAvxImageR[0] + varAvxImageR[1] + varAvxImageR[2] + varAvxImageR[3]);
+            varImageG += (varAvxImageG[0] + varAvxImageG[1] + varAvxImageG[2] + varAvxImageG[3]);
+            varImageB += (varAvxImageB[0] + varAvxImageB[1] + varAvxImageB[2] + varAvxImageB[3]);
 #endif
             varImage = varImageR + varImageG + varImageB;
             stddevImage = (Rpp32f)sqrt(varImage / (totalPixelsPerChannel * 3));
@@ -1082,15 +1053,12 @@ RppStatus tensor_stddev_i8_f32_host(Rpp8s *srcPtr,
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageG, &pVarImageG);
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageB, &pVarImageB);
 
-            for(int i = 0; i < 2; i++)
-            {
-                varR += (varAvxR[i] + varAvxR[i + 2]);
-                varG += (varAvxG[i] + varAvxG[i + 2]);
-                varB += (varAvxB[i] + varAvxB[i + 2]);
-                varImageR += (varAvxImageR[i] + varAvxImageR[i + 2]);
-                varImageG += (varAvxImageG[i] + varAvxImageG[i + 2]);
-                varImageB += (varAvxImageB[i] + varAvxImageB[i + 2]);
-            }
+            varR += (varAvxR[0] + varAvxR[1] + varAvxR[2] + varAvxR[3]);
+            varG += (varAvxG[0] + varAvxG[1] + varAvxG[2] + varAvxG[3]);
+            varB += (varAvxB[0] + varAvxB[1] + varAvxB[2] + varAvxB[3]);
+            varImageR += (varAvxImageR[0] + varAvxImageR[1] + varAvxImageR[2] + varAvxImageR[3]);
+            varImageG += (varAvxImageG[0] + varAvxImageG[1] + varAvxImageG[2] + varAvxImageG[3]);
+            varImageB += (varAvxImageB[0] + varAvxImageB[1] + varAvxImageB[2] + varAvxImageB[3]);
 #endif
             varImage = varImageR + varImageG + varImageB;
             stddevImage = (Rpp32f)sqrt(varImage / (totalPixelsPerChannel * 3));
@@ -1180,9 +1148,7 @@ RppStatus custom_stddev_u8_f32_host(Rpp8u *srcPtr,
             }
 #if __AVX2__
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvx, &pVar);
-
-            for(int i = 0; i < 2; i++)
-                var += (varAvx[i] + varAvx[i + 2]);
+            var += (varAvx[0] + varAvx[1] + varAvx[2] + varAvx[3]);
 #endif
             stddev = sqrt(var / totalPixelsPerChannel);
             tensorStddevArr[batchCount] = (Rpp32f)stddev;
@@ -1253,12 +1219,10 @@ RppStatus custom_stddev_u8_f32_host(Rpp8u *srcPtr,
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxG, &pVarG);
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxB, &pVarB);
 
-            for(int i = 0; i < 2; i++)
-            {
-                varR += (varAvxR[i] + varAvxR[i + 2]);
-                varG += (varAvxG[i] + varAvxG[i + 2]);
-                varB += (varAvxB[i] + varAvxB[i + 2]);
-            }
+            varR += (varAvxR[0] + varAvxR[1] + varAvxR[2] + varAvxR[3]);
+            varG += (varAvxG[0] + varAvxG[1] + varAvxG[2] + varAvxG[3]);
+            varB += (varAvxB[0] + varAvxB[1] + varAvxB[2] + varAvxB[3]);
+
 #endif
 
             stddevR     = (Rpp32f)sqrt(varR / totalPixelsPerChannel);
@@ -1330,12 +1294,9 @@ RppStatus custom_stddev_u8_f32_host(Rpp8u *srcPtr,
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageG, &pVarImageG);
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageB, &pVarImageB);
 
-            for(int i = 0; i < 2; i++)
-            {
-                varImageR += (varAvxImageR[i] + varAvxImageR[i + 2]);
-                varImageG += (varAvxImageG[i] + varAvxImageG[i + 2]);
-                varImageB += (varAvxImageB[i] + varAvxImageB[i + 2]);
-            }
+            varImageR += (varAvxImageR[0] + varAvxImageR[1] + varAvxImageR[2] + varAvxImageR[3]);
+            varImageG += (varAvxImageG[0] + varAvxImageG[1] + varAvxImageG[2] + varAvxImageG[3]);
+            varImageB += (varAvxImageB[0] + varAvxImageB[1] + varAvxImageB[2] + varAvxImageB[3]);
 #endif
             varImage = varImageR + varImageG + varImageB;
             stddevImage = (Rpp32f)sqrt(varImage / (totalPixelsPerChannel * 3));
@@ -1397,12 +1358,9 @@ RppStatus custom_stddev_u8_f32_host(Rpp8u *srcPtr,
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxG, &pVarG);
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxB, &pVarB);
 
-            for(int i = 0; i < 2; i++)
-            {
-                varR += (varAvxR[i] + varAvxR[i + 2]);
-                varG += (varAvxG[i] + varAvxG[i + 2]);
-                varB += (varAvxB[i] + varAvxB[i + 2]);
-            }
+            varR += (varAvxR[0] + varAvxR[1] + varAvxR[2] + varAvxR[3]);
+            varG += (varAvxG[0] + varAvxG[1] + varAvxG[2] + varAvxG[3]);
+            varB += (varAvxB[0] + varAvxB[1] + varAvxB[2] + varAvxB[3]);
 #endif
             stddevR     = (Rpp32f)sqrt(varR / totalPixelsPerChannel);
             stddevG     = (Rpp32f)sqrt(varG / totalPixelsPerChannel);
@@ -1462,12 +1420,9 @@ RppStatus custom_stddev_u8_f32_host(Rpp8u *srcPtr,
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageG, &pVarImageG);
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageB, &pVarImageB);
 
-            for(int i = 0; i < 2; i++)
-            {
-                varImageR += (varAvxImageR[i] + varAvxImageR[i + 2]);
-                varImageG += (varAvxImageG[i] + varAvxImageG[i + 2]);
-                varImageB += (varAvxImageB[i] + varAvxImageB[i + 2]);
-            }
+            varImageR += (varAvxImageR[0] + varAvxImageR[1] + varAvxImageR[2] + varAvxImageR[3]);
+            varImageG += (varAvxImageG[0] + varAvxImageG[1] + varAvxImageG[2] + varAvxImageG[3]);
+            varImageB += (varAvxImageB[0] + varAvxImageB[1] + varAvxImageB[2] + varAvxImageB[3]);
 #endif
             varImage = varImageR + varImageG + varImageB;
             stddevImage = (Rpp32f)sqrt(varImage / (totalPixelsPerChannel * 3));
@@ -1550,9 +1505,7 @@ RppStatus custom_stddev_f32_f32_host(Rpp32f *srcPtr,
             }
 #if __AVX2__
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvx, &pVar);
-
-            for(int i = 0; i < 2; i++)
-                var += (varAvx[i] + varAvx[i + 2]);
+            var += (varAvx[0] + varAvx[1] + varAvx[2] + varAvx[3]);
 #endif
             stddev = sqrt(var / totalPixelsPerChannel) * 255;
             tensorStddevArr[batchCount] = (Rpp32f)stddev;
@@ -1623,12 +1576,9 @@ RppStatus custom_stddev_f32_f32_host(Rpp32f *srcPtr,
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxG, &pVarG);
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxB, &pVarB);
 
-            for(int i = 0; i < 2; i++)
-            {
-                varR += (varAvxR[i] + varAvxR[i + 2]);
-                varG += (varAvxG[i] + varAvxG[i + 2]);
-                varB += (varAvxB[i] + varAvxB[i + 2]);
-            }
+            varR += (varAvxR[0] + varAvxR[1] + varAvxR[2] + varAvxR[3]);
+            varG += (varAvxG[0] + varAvxG[1] + varAvxG[2] + varAvxG[3]);
+            varB += (varAvxB[0] + varAvxB[1] + varAvxB[2] + varAvxB[3]);
 #endif
             stddevR     = (Rpp32f)sqrt(varR / totalPixelsPerChannel) * 255;
             stddevG     = (Rpp32f)sqrt(varG / totalPixelsPerChannel) * 255;
@@ -1699,12 +1649,9 @@ RppStatus custom_stddev_f32_f32_host(Rpp32f *srcPtr,
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageG, &pVarImageG);
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageB, &pVarImageB);
 
-            for(int i = 0; i < 2; i++)
-            {
-                varImageR += (varAvxImageR[i] + varAvxImageR[i + 2]);
-                varImageG += (varAvxImageG[i] + varAvxImageG[i + 2]);
-                varImageB += (varAvxImageB[i] + varAvxImageB[i + 2]);
-            }
+            varImageR += (varAvxImageR[0] + varAvxImageR[1] + varAvxImageR[2] + varAvxImageR[3]);
+            varImageG += (varAvxImageG[0] + varAvxImageG[1] + varAvxImageG[2] + varAvxImageG[3]);
+            varImageB += (varAvxImageB[0] + varAvxImageB[1] + varAvxImageB[2] + varAvxImageB[3]);
 #endif
             varImage = varImageR + varImageG + varImageB;
             stddevImage = (Rpp32f)sqrt(varImage / (totalPixelsPerChannel * 3)) * 255; // multiply by 255 to normalize variation
@@ -1766,12 +1713,9 @@ RppStatus custom_stddev_f32_f32_host(Rpp32f *srcPtr,
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxG, &pVarG);
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxB, &pVarB);
 
-            for(int i = 0; i < 2; i++)
-            {
-                varR += (varAvxR[i] + varAvxR[i + 2]);
-                varG += (varAvxG[i] + varAvxG[i + 2]);
-                varB += (varAvxB[i] + varAvxB[i + 2]);
-            }
+            varR += (varAvxR[0] + varAvxR[1] + varAvxR[2] + varAvxR[3]);
+            varG += (varAvxG[0] + varAvxG[1] + varAvxG[2] + varAvxG[3]);
+            varB += (varAvxB[0] + varAvxB[1] + varAvxB[2] + varAvxB[3]);
 #endif
             stddevR     = (Rpp32f)sqrt(varR / totalPixelsPerChannel) * 255;
             stddevG     = (Rpp32f)sqrt(varG / totalPixelsPerChannel) * 255;
@@ -1831,12 +1775,9 @@ RppStatus custom_stddev_f32_f32_host(Rpp32f *srcPtr,
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageG, &pVarImageG);
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageB, &pVarImageB);
 
-            for(int i = 0; i < 2; i++)
-            {
-                varImageR += (varAvxImageR[i] + varAvxImageR[i + 2]);
-                varImageG += (varAvxImageG[i] + varAvxImageG[i + 2]);
-                varImageB += (varAvxImageB[i] + varAvxImageB[i + 2]);
-            }
+            varImageR += (varAvxImageR[0] + varAvxImageR[1] + varAvxImageR[2] + varAvxImageR[3]);
+            varImageG += (varAvxImageG[0] + varAvxImageG[1] + varAvxImageG[2] + varAvxImageG[3]);
+            varImageB += (varAvxImageB[0] + varAvxImageB[1] + varAvxImageB[2] + varAvxImageB[3]);
 #endif
             varImage = varImageR + varImageG + varImageB;
             stddevImage = (Rpp32f)sqrt(varImage / (totalPixelsPerChannel * 3)) * 255;
@@ -1924,9 +1865,7 @@ RppStatus custom_stddev_f16_f32_host(Rpp16f *srcPtr,
             }
 #if __AVX2__
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvx, &pVar);
-
-            for(int i = 0; i < 2; i++)
-                var += (varAvx[i] + varAvx[i + 2]);
+            var += (varAvx[0] + varAvx[1] + varAvx[2] + varAvx[3]);
 #endif
             stddev = sqrt(var / totalPixelsPerChannel) * 255;
             tensorStddevArr[batchCount] = (Rpp32f)stddev;
@@ -2005,12 +1944,9 @@ RppStatus custom_stddev_f16_f32_host(Rpp16f *srcPtr,
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxG, &pVarG);
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxB, &pVarB);
 
-            for(int i = 0; i < 2; i++)
-            {
-                varR += (varAvxR[i] + varAvxR[i + 2]);
-                varG += (varAvxG[i] + varAvxG[i + 2]);
-                varB += (varAvxB[i] + varAvxB[i + 2]);
-            }
+            varR += (varAvxR[0] + varAvxR[1] + varAvxR[2] + varAvxR[3]);
+            varG += (varAvxG[0] + varAvxG[1] + varAvxG[2] + varAvxG[3]);
+            varB += (varAvxB[0] + varAvxB[1] + varAvxB[2] + varAvxB[3]);
 #endif
             stddevR     = (Rpp32f)sqrt(varR / totalPixelsPerChannel) * 255;
             stddevG     = (Rpp32f)sqrt(varG / totalPixelsPerChannel) * 255;
@@ -2089,12 +2025,9 @@ RppStatus custom_stddev_f16_f32_host(Rpp16f *srcPtr,
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageG, &pVarImageG);
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageB, &pVarImageB);
 
-            for(int i = 0; i < 2; i++)
-            {
-                varImageR += (varAvxImageR[i] + varAvxImageR[i + 2]);
-                varImageG += (varAvxImageG[i] + varAvxImageG[i + 2]);
-                varImageB += (varAvxImageB[i] + varAvxImageB[i + 2]);
-            }
+            varImageR += (varAvxImageR[0] + varAvxImageR[1] + varAvxImageR[2] + varAvxImageR[3]);
+            varImageG += (varAvxImageG[0] + varAvxImageG[1] + varAvxImageG[2] + varAvxImageG[3]);
+            varImageB += (varAvxImageB[0] + varAvxImageB[1] + varAvxImageB[2] + varAvxImageB[3]);
 #endif
             varImage = varImageR + varImageG + varImageB;
             stddevImage = (Rpp32f)sqrt(varImage / (totalPixelsPerChannel * 3)) * 255; // multiply by 255 to normalize variation
@@ -2161,12 +2094,9 @@ RppStatus custom_stddev_f16_f32_host(Rpp16f *srcPtr,
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxG, &pVarG);
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxB, &pVarB);
 
-            for(int i = 0; i < 2; i++)
-            {
-                varR += (varAvxR[i] + varAvxR[i + 2]);
-                varG += (varAvxG[i] + varAvxG[i + 2]);
-                varB += (varAvxB[i] + varAvxB[i + 2]);
-            }
+            varR += (varAvxR[0] + varAvxR[1] + varAvxR[2] + varAvxR[3]);
+            varG += (varAvxG[0] + varAvxG[1] + varAvxG[2] + varAvxG[3]);
+            varB += (varAvxB[0] + varAvxB[1] + varAvxB[2] + varAvxB[3]);
 #endif
             stddevR     = (Rpp32f)sqrt(varR / totalPixelsPerChannel) * 255;
             stddevG     = (Rpp32f)sqrt(varG / totalPixelsPerChannel) * 255;
@@ -2231,12 +2161,9 @@ RppStatus custom_stddev_f16_f32_host(Rpp16f *srcPtr,
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageG, &pVarImageG);
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageB, &pVarImageB);
 
-            for(int i = 0; i < 2; i++)
-            {
-                varImageR += (varAvxImageR[i] + varAvxImageR[i + 2]);
-                varImageG += (varAvxImageG[i] + varAvxImageG[i + 2]);
-                varImageB += (varAvxImageB[i] + varAvxImageB[i + 2]);
-            }
+            varImageR += (varAvxImageR[0] + varAvxImageR[1] + varAvxImageR[2] + varAvxImageR[3]);
+            varImageG += (varAvxImageG[0] + varAvxImageG[1] + varAvxImageG[2] + varAvxImageG[3]);
+            varImageB += (varAvxImageB[0] + varAvxImageB[1] + varAvxImageB[2] + varAvxImageB[3]);
 #endif
             varImage = varImageR + varImageG + varImageB;
             stddevImage = (Rpp32f)sqrt(varImage / (totalPixelsPerChannel * 3)) * 255;
@@ -2320,9 +2247,7 @@ RppStatus custom_stddev_i8_f32_host(Rpp8s *srcPtr,
             }
 #if __AVX2__
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvx, &pVar);
-
-            for(int i = 0; i < 2; i++)
-                var += (varAvx[i] + varAvx[i + 2]);
+            var += (varAvx[0] + varAvx[1] + varAvx[2] + varAvx[3]);
 #endif
             stddev = sqrt(var / totalPixelsPerChannel);
             tensorStddevArr[batchCount] = (Rpp32f)stddev;
@@ -2393,12 +2318,9 @@ RppStatus custom_stddev_i8_f32_host(Rpp8s *srcPtr,
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxG, &pVarG);
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxB, &pVarB);
 
-            for(int i = 0; i < 2; i++)
-            {
-                varR += (varAvxR[i] + varAvxR[i + 2]);
-                varG += (varAvxG[i] + varAvxG[i + 2]);
-                varB += (varAvxB[i] + varAvxB[i + 2]);
-            }
+            varR += (varAvxR[0] + varAvxR[1] + varAvxR[2] + varAvxR[3]);
+            varG += (varAvxG[0] + varAvxG[1] + varAvxG[2] + varAvxG[3]);
+            varB += (varAvxB[0] + varAvxB[1] + varAvxB[2] + varAvxB[3]);
 #endif
             stddevR     = (Rpp32f)sqrt(varR / totalPixelsPerChannel);
             stddevG     = (Rpp32f)sqrt(varG / totalPixelsPerChannel);
@@ -2469,12 +2391,9 @@ RppStatus custom_stddev_i8_f32_host(Rpp8s *srcPtr,
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageG, &pVarImageG);
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageB, &pVarImageB);
 
-            for(int i = 0; i < 2; i++)
-            {
-                varImageR += (varAvxImageR[i] + varAvxImageR[i + 2]);
-                varImageG += (varAvxImageG[i] + varAvxImageG[i + 2]);
-                varImageB += (varAvxImageB[i] + varAvxImageB[i + 2]);
-            }
+            varImageR += (varAvxImageR[0] + varAvxImageR[1] + varAvxImageR[2] + varAvxImageR[3]);
+            varImageG += (varAvxImageG[0] + varAvxImageG[1] + varAvxImageG[2] + varAvxImageG[3]);
+            varImageB += (varAvxImageB[0] + varAvxImageB[1] + varAvxImageB[2] + varAvxImageB[3]);
 #endif
             varImage = varImageR + varImageG + varImageB;
             stddevImage = (Rpp32f)sqrt(varImage / (totalPixelsPerChannel * 3));
@@ -2536,12 +2455,9 @@ RppStatus custom_stddev_i8_f32_host(Rpp8s *srcPtr,
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxG, &pVarG);
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxB, &pVarB);
 
-            for(int i = 0; i < 2; i++)
-            {
-                varR += (varAvxR[i] + varAvxR[i + 2]);
-                varG += (varAvxG[i] + varAvxG[i + 2]);
-                varB += (varAvxB[i] + varAvxB[i + 2]);
-            }
+            varR += (varAvxR[0] + varAvxR[1] + varAvxR[2] + varAvxR[3]);
+            varG += (varAvxG[0] + varAvxG[1] + varAvxG[2] + varAvxG[3]);
+            varB += (varAvxB[0] + varAvxB[1] + varAvxB[2] + varAvxB[3]);
 #endif
             stddevR     = (Rpp32f)sqrt(varR / totalPixelsPerChannel);
             stddevG     = (Rpp32f)sqrt(varG / totalPixelsPerChannel);
@@ -2601,12 +2517,9 @@ RppStatus custom_stddev_i8_f32_host(Rpp8s *srcPtr,
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageG, &pVarImageG);
             rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageB, &pVarImageB);
 
-            for(int i = 0; i < 2; i++)
-            {
-                varImageR += (varAvxImageR[i] + varAvxImageR[i + 2]);
-                varImageG += (varAvxImageG[i] + varAvxImageG[i + 2]);
-                varImageB += (varAvxImageB[i] + varAvxImageB[i + 2]);
-            }
+            varImageR += (varAvxImageR[0] + varAvxImageR[1] + varAvxImageR[2] + varAvxImageR[3]);
+            varImageG += (varAvxImageG[0] + varAvxImageG[1] + varAvxImageG[2] + varAvxImageG[3]);
+            varImageB += (varAvxImageB[0] + varAvxImageB[1] + varAvxImageB[2] + varAvxImageB[3]);
 #endif
             varImage = varImageR + varImageG + varImageB;
             stddevImage = (Rpp32f)sqrt(varImage / (totalPixelsPerChannel * 3));
