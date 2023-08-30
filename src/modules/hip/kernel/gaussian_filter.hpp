@@ -1765,7 +1765,7 @@ __global__ void create_gaussian_kernel_3x3(float *filterTensor,
     if(id_x >= batchSize)
         return;
 
-    float *filter = &filterTensor[id_x * 9];
+    float *filter = &filterTensor[id_x * 9];    // set pointer to id_x'th filter, each is of size 3x3=9 elements
     float stdDev = stdDevTensor[id_x];
     float mulFactor = 1 / (2 * stdDev * stdDev);
     int rowIdx = 0;
@@ -1801,7 +1801,7 @@ __global__ void create_gaussian_kernel_5x5(float *filterTensor,
     if(id_x >= batchSize)
         return;
 
-    float *filter = &filterTensor[id_x * 25];
+    float *filter = &filterTensor[id_x * 25];    // set pointer to id_x'th filter, each is of size 5x5=25 elements
     float stdDev = stdDevTensor[id_x];
     float mulFactor = 1 / (2 * stdDev * stdDev);
     int rowIdx = 0;
@@ -1838,7 +1838,7 @@ __global__ void create_gaussian_kernel_7x7(float *filterTensor,
     if(id_x >= batchSize)
         return;
 
-    float *filter = &filterTensor[id_x * 49];
+    float *filter = &filterTensor[id_x * 49];    // set pointer to id_x'th filter, each is of size 7x7=49 elements
     float stdDev = stdDevTensor[id_x];
     float mulFactor = 1 / (2 * stdDev * stdDev);
     int rowIdx = 0;
@@ -1876,7 +1876,7 @@ __global__ void create_gaussian_kernel_9x9(float *filterTensor,
     if(id_x >= batchSize)
         return;
 
-    float *filter = &filterTensor[id_x * 81];
+    float *filter = &filterTensor[id_x * 81];    // set pointer to id_x'th filter, each is of size 9x9=81 elements
     float stdDev = stdDevTensor[id_x];
     float mulFactor = 1 / (2 * stdDev * stdDev);
     int rowIdx = 0;
