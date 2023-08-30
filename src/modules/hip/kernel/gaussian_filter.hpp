@@ -284,7 +284,7 @@ __global__ void gaussian_filter_3x3_pkd_tensor(T *srcPtr,
                                                uint padLength,
                                                uint2 tileSize,
                                                RpptROIPtr roiTensorPtrSrc,
-                                               d_float9 *filterTensor)
+                                               float *filterTensor)
 {
     int hipThreadIdx_x8 = hipThreadIdx_x << 3;
     int id_x_o = (hipBlockIdx_x * tileSize.x * 8) + hipThreadIdx_x8;
@@ -298,10 +298,9 @@ __global__ void gaussian_filter_3x3_pkd_tensor(T *srcPtr,
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
-    d_float9 filter_f9 = filterTensor[id_z];
-    float *filter_row1 = &filter_f9.f1[0];
-    float *filter_row2 = &filter_f9.f1[3];
-    float *filter_row3 = &filter_f9.f1[6];
+    float *filter_row1 = &filterTensor[id_z * 9];
+    float *filter_row2 = &filter_row1[3];
+    float *filter_row3 = &filter_row1[6];
     sum_f24.f4[0] = static_cast<float4>(0);
     sum_f24.f4[1] = static_cast<float4>(0);
     sum_f24.f4[2] = static_cast<float4>(0);
@@ -359,7 +358,7 @@ __global__ void gaussian_filter_5x5_pkd_tensor(T *srcPtr,
                                                uint padLength,
                                                uint2 tileSize,
                                                RpptROIPtr roiTensorPtrSrc,
-                                               d_float25 *filterTensor)
+                                               float *filterTensor)
 {
     int hipThreadIdx_x8 = hipThreadIdx_x << 3;
     int id_x_o = (hipBlockIdx_x * tileSize.x * 8) + hipThreadIdx_x8;
@@ -373,12 +372,11 @@ __global__ void gaussian_filter_5x5_pkd_tensor(T *srcPtr,
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
-    d_float25 filter_f25 = filterTensor[id_z];
-    float *filter_row1 = &filter_f25.f1[0];
-    float *filter_row2 = &filter_f25.f1[5];
-    float *filter_row3 = &filter_f25.f1[10];
-    float *filter_row4 = &filter_f25.f1[15];
-    float *filter_row5 = &filter_f25.f1[20];
+    float *filter_row1 = &filterTensor[id_z * 25];
+    float *filter_row2 = &filter_row1[5];
+    float *filter_row3 = &filter_row1[10];
+    float *filter_row4 = &filter_row1[15];
+    float *filter_row5 = &filter_row1[20];
     sum_f24.f4[0] = static_cast<float4>(0);
     sum_f24.f4[1] = static_cast<float4>(0);
     sum_f24.f4[2] = static_cast<float4>(0);
@@ -442,7 +440,7 @@ __global__ void gaussian_filter_7x7_pkd_tensor(T *srcPtr,
                                                uint padLength,
                                                uint2 tileSize,
                                                RpptROIPtr roiTensorPtrSrc,
-                                               d_float49 *filterTensor)
+                                               float *filterTensor)
 {
     int hipThreadIdx_x8 = hipThreadIdx_x << 3;
     int id_x_o = (hipBlockIdx_x * tileSize.x * 8) + hipThreadIdx_x8;
@@ -456,14 +454,13 @@ __global__ void gaussian_filter_7x7_pkd_tensor(T *srcPtr,
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
-    d_float49 filter_f49 = filterTensor[id_z];
-    float *filter_row1 = &filter_f49.f1[0];
-    float *filter_row2 = &filter_f49.f1[7];
-    float *filter_row3 = &filter_f49.f1[14];
-    float *filter_row4 = &filter_f49.f1[21];
-    float *filter_row5 = &filter_f49.f1[28];
-    float *filter_row6 = &filter_f49.f1[35];
-    float *filter_row7 = &filter_f49.f1[42];
+    float *filter_row1 = &filterTensor[id_z * 49];
+    float *filter_row2 = &filter_row1[7];
+    float *filter_row3 = &filter_row1[14];
+    float *filter_row4 = &filter_row1[21];
+    float *filter_row5 = &filter_row1[28];
+    float *filter_row6 = &filter_row1[35];
+    float *filter_row7 = &filter_row1[42];
     sum_f24.f4[0] = static_cast<float4>(0);
     sum_f24.f4[1] = static_cast<float4>(0);
     sum_f24.f4[2] = static_cast<float4>(0);
@@ -533,7 +530,7 @@ __global__ void gaussian_filter_9x9_pkd_tensor(T *srcPtr,
                                                uint padLength,
                                                uint2 tileSize,
                                                RpptROIPtr roiTensorPtrSrc,
-                                               d_float81 *filterTensor)
+                                               float *filterTensor)
 {
     int hipThreadIdx_x8 = hipThreadIdx_x << 3;
     int id_x_o = (hipBlockIdx_x * tileSize.x * 8) + hipThreadIdx_x8;
@@ -547,16 +544,15 @@ __global__ void gaussian_filter_9x9_pkd_tensor(T *srcPtr,
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
-    d_float81 filter_f81 = filterTensor[id_z];
-    float *filter_row1 = &filter_f81.f1[0];
-    float *filter_row2 = &filter_f81.f1[9];
-    float *filter_row3 = &filter_f81.f1[18];
-    float *filter_row4 = &filter_f81.f1[27];
-    float *filter_row5 = &filter_f81.f1[36];
-    float *filter_row6 = &filter_f81.f1[45];
-    float *filter_row7 = &filter_f81.f1[54];
-    float *filter_row8 = &filter_f81.f1[63];
-    float *filter_row9 = &filter_f81.f1[72];
+    float *filter_row1 = &filterTensor[id_z * 81];
+    float *filter_row2 = &filter_row1[9];
+    float *filter_row3 = &filter_row1[18];
+    float *filter_row4 = &filter_row1[27];
+    float *filter_row5 = &filter_row1[36];
+    float *filter_row6 = &filter_row1[45];
+    float *filter_row7 = &filter_row1[54];
+    float *filter_row8 = &filter_row1[63];
+    float *filter_row9 = &filter_row1[72];
     sum_f24.f4[0] = static_cast<float4>(0);
     sum_f24.f4[1] = static_cast<float4>(0);
     sum_f24.f4[2] = static_cast<float4>(0);
@@ -635,7 +631,7 @@ __global__ void gaussian_filter_3x3_pln_tensor(T *srcPtr,
                                                uint padLength,
                                                uint2 tileSize,
                                                RpptROIPtr roiTensorPtrSrc,
-                                               d_float9 *filterTensor)
+                                               float *filterTensor)
 {
     int hipThreadIdx_x8 = hipThreadIdx_x << 3;
     int id_x_o = (hipBlockIdx_x * tileSize.x * 8) + hipThreadIdx_x8;
@@ -650,10 +646,9 @@ __global__ void gaussian_filter_3x3_pln_tensor(T *srcPtr,
 
     int srcIdx = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
-    d_float9 filter_f9 = filterTensor[id_z];
-    float *filter_row1 = &filter_f9.f1[0];
-    float *filter_row2 = &filter_f9.f1[3];
-    float *filter_row3 = &filter_f9.f1[6];
+    float *filter_row1 = &filterTensor[id_z * 9];
+    float *filter_row2 = &filter_row1[3];
+    float *filter_row3 = &filter_row1[6];
     sum_f8.f4[0] = static_cast<float4>(0);
     sum_f8.f4[1] = static_cast<float4>(0);
     if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -734,7 +729,7 @@ __global__ void gaussian_filter_5x5_pln_tensor(T *srcPtr,
                                                uint padLength,
                                                uint2 tileSize,
                                                RpptROIPtr roiTensorPtrSrc,
-                                               d_float25 *filterTensor)
+                                               float *filterTensor)
 {
     int hipThreadIdx_x8 = hipThreadIdx_x << 3;
     int id_x_o = (hipBlockIdx_x * tileSize.x * 8) + hipThreadIdx_x8;
@@ -748,12 +743,11 @@ __global__ void gaussian_filter_5x5_pln_tensor(T *srcPtr,
 
     int srcIdx = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
-    d_float25 filter_f25 = filterTensor[id_z];
-    float *filter_row1 = &filter_f25.f1[0];
-    float *filter_row2 = &filter_f25.f1[5];
-    float *filter_row3 = &filter_f25.f1[10];
-    float *filter_row4 = &filter_f25.f1[15];
-    float *filter_row5 = &filter_f25.f1[20];
+    float *filter_row1 = &filterTensor[id_z * 25];
+    float *filter_row2 = &filter_row1[5];
+    float *filter_row3 = &filter_row1[10];
+    float *filter_row4 = &filter_row1[15];
+    float *filter_row5 = &filter_row1[20];
     sum_f8.f4[0] = static_cast<float4>(0);
     sum_f8.f4[1] = static_cast<float4>(0);
     if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -840,7 +834,7 @@ __global__ void gaussian_filter_7x7_pln_tensor(T *srcPtr,
                                                uint padLength,
                                                uint2 tileSize,
                                                RpptROIPtr roiTensorPtrSrc,
-                                               d_float49 *filterTensor)
+                                               float *filterTensor)
 {
     int hipThreadIdx_x8 = hipThreadIdx_x << 3;
     int id_x_o = (hipBlockIdx_x * tileSize.x * 8) + hipThreadIdx_x8;
@@ -854,14 +848,13 @@ __global__ void gaussian_filter_7x7_pln_tensor(T *srcPtr,
 
     int srcIdx = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
-    d_float49 filter_f49 = filterTensor[id_z];
-    float *filter_row1 = &filter_f49.f1[0];
-    float *filter_row2 = &filter_f49.f1[7];
-    float *filter_row3 = &filter_f49.f1[14];
-    float *filter_row4 = &filter_f49.f1[21];
-    float *filter_row5 = &filter_f49.f1[28];
-    float *filter_row6 = &filter_f49.f1[35];
-    float *filter_row7 = &filter_f49.f1[42];
+    float *filter_row1 = &filterTensor[id_z * 49];
+    float *filter_row2 = &filter_row1[7];
+    float *filter_row3 = &filter_row1[14];
+    float *filter_row4 = &filter_row1[21];
+    float *filter_row5 = &filter_row1[28];
+    float *filter_row6 = &filter_row1[35];
+    float *filter_row7 = &filter_row1[42];
     sum_f8.f4[0] = static_cast<float4>(0);
     sum_f8.f4[1] = static_cast<float4>(0);
     if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -954,7 +947,7 @@ __global__ void gaussian_filter_9x9_pln_tensor(T *srcPtr,
                                                uint padLength,
                                                uint2 tileSize,
                                                RpptROIPtr roiTensorPtrSrc,
-                                               d_float81 *filterTensor)
+                                               float *filterTensor)
 {
     int hipThreadIdx_x8 = hipThreadIdx_x << 3;
     int id_x_o = (hipBlockIdx_x * tileSize.x * 8) + hipThreadIdx_x8;
@@ -968,16 +961,15 @@ __global__ void gaussian_filter_9x9_pln_tensor(T *srcPtr,
 
     int srcIdx = (id_z * srcStridesNCH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
-    d_float81 filter_f81 = filterTensor[id_z];
-    float *filter_row1 = &filter_f81.f1[0];
-    float *filter_row2 = &filter_f81.f1[9];
-    float *filter_row3 = &filter_f81.f1[18];
-    float *filter_row4 = &filter_f81.f1[27];
-    float *filter_row5 = &filter_f81.f1[36];
-    float *filter_row6 = &filter_f81.f1[45];
-    float *filter_row7 = &filter_f81.f1[54];
-    float *filter_row8 = &filter_f81.f1[63];
-    float *filter_row9 = &filter_f81.f1[72];
+    float *filter_row1 = &filterTensor[id_z * 81];
+    float *filter_row2 = &filter_row1[9];
+    float *filter_row3 = &filter_row1[18];
+    float *filter_row4 = &filter_row1[27];
+    float *filter_row5 = &filter_row1[36];
+    float *filter_row6 = &filter_row1[45];
+    float *filter_row7 = &filter_row1[54];
+    float *filter_row8 = &filter_row1[63];
+    float *filter_row9 = &filter_row1[72];
     sum_f8.f4[0] = static_cast<float4>(0);
     sum_f8.f4[1] = static_cast<float4>(0);
     if ((id_x_i >= -(int)padLength) && (id_x_i < roiTensorPtrSrc[id_z].xywhROI.roiWidth) &&
@@ -1077,7 +1069,7 @@ __global__ void gaussian_filter_3x3_pkd3_pln3_tensor(T *srcPtr,
                                                      uint padLength,
                                                      uint2 tileSize,
                                                      RpptROIPtr roiTensorPtrSrc,
-                                                     d_float9 *filterTensor)
+                                                     float *filterTensor)
 {
     int hipThreadIdx_x8 = hipThreadIdx_x << 3;
     int id_x_o = (hipBlockIdx_x * tileSize.x * 8) + hipThreadIdx_x8;
@@ -1091,10 +1083,9 @@ __global__ void gaussian_filter_3x3_pkd3_pln3_tensor(T *srcPtr,
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
-    d_float9 filter_f9 = filterTensor[id_z];
-    float *filter_row1 = &filter_f9.f1[0];
-    float *filter_row2 = &filter_f9.f1[3];
-    float *filter_row3 = &filter_f9.f1[6];
+    float *filter_row1 = &filterTensor[id_z * 9];
+    float *filter_row2 = &filter_row1[3];
+    float *filter_row3 = &filter_row1[6];
     sum_f24.f4[0] = static_cast<float4>(0);
     sum_f24.f4[1] = static_cast<float4>(0);
     sum_f24.f4[2] = static_cast<float4>(0);
@@ -1152,7 +1143,7 @@ __global__ void gaussian_filter_5x5_pkd3_pln3_tensor(T *srcPtr,
                                                      uint padLength,
                                                      uint2 tileSize,
                                                      RpptROIPtr roiTensorPtrSrc,
-                                                     d_float25 *filterTensor)
+                                                     float *filterTensor)
 {
     int hipThreadIdx_x8 = hipThreadIdx_x << 3;
     int id_x_o = (hipBlockIdx_x * tileSize.x * 8) + hipThreadIdx_x8;
@@ -1166,12 +1157,11 @@ __global__ void gaussian_filter_5x5_pkd3_pln3_tensor(T *srcPtr,
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
-    d_float25 filter_f25 = filterTensor[id_z];
-    float *filter_row1 = &filter_f25.f1[0];
-    float *filter_row2 = &filter_f25.f1[5];
-    float *filter_row3 = &filter_f25.f1[10];
-    float *filter_row4 = &filter_f25.f1[15];
-    float *filter_row5 = &filter_f25.f1[20];
+    float *filter_row1 = &filterTensor[id_z * 25];
+    float *filter_row2 = &filter_row1[5];
+    float *filter_row3 = &filter_row1[10];
+    float *filter_row4 = &filter_row1[15];
+    float *filter_row5 = &filter_row1[20];
     sum_f24.f4[0] = static_cast<float4>(0);
     sum_f24.f4[1] = static_cast<float4>(0);
     sum_f24.f4[2] = static_cast<float4>(0);
@@ -1235,7 +1225,7 @@ __global__ void gaussian_filter_7x7_pkd3_pln3_tensor(T *srcPtr,
                                                      uint padLength,
                                                      uint2 tileSize,
                                                      RpptROIPtr roiTensorPtrSrc,
-                                                     d_float49 *filterTensor)
+                                                     float *filterTensor)
 {
     int hipThreadIdx_x8 = hipThreadIdx_x << 3;
     int id_x_o = (hipBlockIdx_x * tileSize.x * 8) + hipThreadIdx_x8;
@@ -1249,14 +1239,13 @@ __global__ void gaussian_filter_7x7_pkd3_pln3_tensor(T *srcPtr,
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
-    d_float49 filter_f49 = filterTensor[id_z];
-    float *filter_row1 = &filter_f49.f1[0];
-    float *filter_row2 = &filter_f49.f1[7];
-    float *filter_row3 = &filter_f49.f1[14];
-    float *filter_row4 = &filter_f49.f1[21];
-    float *filter_row5 = &filter_f49.f1[28];
-    float *filter_row6 = &filter_f49.f1[35];
-    float *filter_row7 = &filter_f49.f1[42];
+    float *filter_row1 = &filterTensor[id_z * 49];
+    float *filter_row2 = &filter_row1[7];
+    float *filter_row3 = &filter_row1[14];
+    float *filter_row4 = &filter_row1[21];
+    float *filter_row5 = &filter_row1[28];
+    float *filter_row6 = &filter_row1[35];
+    float *filter_row7 = &filter_row1[42];
     sum_f24.f4[0] = static_cast<float4>(0);
     sum_f24.f4[1] = static_cast<float4>(0);
     sum_f24.f4[2] = static_cast<float4>(0);
@@ -1326,7 +1315,7 @@ __global__ void gaussian_filter_9x9_pkd3_pln3_tensor(T *srcPtr,
                                                      uint padLength,
                                                      uint2 tileSize,
                                                      RpptROIPtr roiTensorPtrSrc,
-                                                     d_float81 *filterTensor)
+                                                     float *filterTensor)
 {
     int hipThreadIdx_x8 = hipThreadIdx_x << 3;
     int id_x_o = (hipBlockIdx_x * tileSize.x * 8) + hipThreadIdx_x8;
@@ -1340,16 +1329,15 @@ __global__ void gaussian_filter_9x9_pkd3_pln3_tensor(T *srcPtr,
 
     int srcIdx = (id_z * srcStridesNH.x) + ((id_y_i + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x_i + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     int dstIdx = (id_z * dstStridesNCH.x) + (id_y_o * dstStridesNCH.z) + id_x_o;
-    d_float81 filter_f81 = filterTensor[id_z];
-    float *filter_row1 = &filter_f81.f1[0];
-    float *filter_row2 = &filter_f81.f1[9];
-    float *filter_row3 = &filter_f81.f1[18];
-    float *filter_row4 = &filter_f81.f1[27];
-    float *filter_row5 = &filter_f81.f1[36];
-    float *filter_row6 = &filter_f81.f1[45];
-    float *filter_row7 = &filter_f81.f1[54];
-    float *filter_row8 = &filter_f81.f1[63];
-    float *filter_row9 = &filter_f81.f1[72];
+    float *filter_row1 = &filterTensor[id_z * 81];
+    float *filter_row2 = &filter_row1[9];
+    float *filter_row3 = &filter_row1[18];
+    float *filter_row4 = &filter_row1[27];
+    float *filter_row5 = &filter_row1[36];
+    float *filter_row6 = &filter_row1[45];
+    float *filter_row7 = &filter_row1[54];
+    float *filter_row8 = &filter_row1[63];
+    float *filter_row9 = &filter_row1[72];
     sum_f24.f4[0] = static_cast<float4>(0);
     sum_f24.f4[1] = static_cast<float4>(0);
     sum_f24.f4[2] = static_cast<float4>(0);
@@ -1427,7 +1415,7 @@ __global__ void gaussian_filter_3x3_pln3_pkd3_tensor(T *srcPtr,
                                                      uint padLength,
                                                      uint2 tileSize,
                                                      RpptROIPtr roiTensorPtrSrc,
-                                                     d_float9 *filterTensor)
+                                                     float *filterTensor)
 {
     int hipThreadIdx_x8 = hipThreadIdx_x << 3;
     int id_x_o = (hipBlockIdx_x * tileSize.x * 8) + hipThreadIdx_x8;
@@ -1444,10 +1432,9 @@ __global__ void gaussian_filter_3x3_pln3_pkd3_tensor(T *srcPtr,
     srcIdx.y = srcIdx.x + srcStridesNCH.y;
     srcIdx.z = srcIdx.y + srcStridesNCH.y;
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
-    d_float9 filter_f9 = filterTensor[id_z];
-    float *filter_row1 = &filter_f9.f1[0];
-    float *filter_row2 = &filter_f9.f1[3];
-    float *filter_row3 = &filter_f9.f1[6];
+    float *filter_row1 = &filterTensor[id_z * 9];
+    float *filter_row2 = &filter_row1[3];
+    float *filter_row3 = &filter_row1[6];
     sum_f24.f4[0] = static_cast<float4>(0);
     sum_f24.f4[1] = static_cast<float4>(0);
     sum_f24.f4[2] = static_cast<float4>(0);
@@ -1502,7 +1489,7 @@ __global__ void gaussian_filter_5x5_pln3_pkd3_tensor(T *srcPtr,
                                                      uint padLength,
                                                      uint2 tileSize,
                                                      RpptROIPtr roiTensorPtrSrc,
-                                                     d_float25 *filterTensor)
+                                                     float *filterTensor)
 {
     int hipThreadIdx_x8 = hipThreadIdx_x << 3;
     int id_x_o = (hipBlockIdx_x * tileSize.x * 8) + hipThreadIdx_x8;
@@ -1519,12 +1506,11 @@ __global__ void gaussian_filter_5x5_pln3_pkd3_tensor(T *srcPtr,
     srcIdx.y = srcIdx.x + srcStridesNCH.y;
     srcIdx.z = srcIdx.y + srcStridesNCH.y;
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
-    d_float25 filter_f25 = filterTensor[id_z];
-    float *filter_row1 = &filter_f25.f1[0];
-    float *filter_row2 = &filter_f25.f1[5];
-    float *filter_row3 = &filter_f25.f1[10];
-    float *filter_row4 = &filter_f25.f1[15];
-    float *filter_row5 = &filter_f25.f1[20];
+    float *filter_row1 = &filterTensor[id_z * 25];
+    float *filter_row2 = &filter_row1[5];
+    float *filter_row3 = &filter_row1[10];
+    float *filter_row4 = &filter_row1[15];
+    float *filter_row5 = &filter_row1[20];
     sum_f24.f4[0] = static_cast<float4>(0);
     sum_f24.f4[1] = static_cast<float4>(0);
     sum_f24.f4[2] = static_cast<float4>(0);
@@ -1585,7 +1571,7 @@ __global__ void gaussian_filter_7x7_pln3_pkd3_tensor(T *srcPtr,
                                                      uint padLength,
                                                      uint2 tileSize,
                                                      RpptROIPtr roiTensorPtrSrc,
-                                                     d_float49 *filterTensor)
+                                                     float *filterTensor)
 {
     int hipThreadIdx_x8 = hipThreadIdx_x << 3;
     int id_x_o = (hipBlockIdx_x * tileSize.x * 8) + hipThreadIdx_x8;
@@ -1602,14 +1588,13 @@ __global__ void gaussian_filter_7x7_pln3_pkd3_tensor(T *srcPtr,
     srcIdx.y = srcIdx.x + srcStridesNCH.y;
     srcIdx.z = srcIdx.y + srcStridesNCH.y;
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
-    d_float49 filter_f49 = filterTensor[id_z];
-    float *filter_row1 = &filter_f49.f1[0];
-    float *filter_row2 = &filter_f49.f1[7];
-    float *filter_row3 = &filter_f49.f1[14];
-    float *filter_row4 = &filter_f49.f1[21];
-    float *filter_row5 = &filter_f49.f1[28];
-    float *filter_row6 = &filter_f49.f1[35];
-    float *filter_row7 = &filter_f49.f1[42];
+    float *filter_row1 = &filterTensor[id_z * 49];
+    float *filter_row2 = &filter_row1[7];
+    float *filter_row3 = &filter_row1[14];
+    float *filter_row4 = &filter_row1[21];
+    float *filter_row5 = &filter_row1[28];
+    float *filter_row6 = &filter_row1[35];
+    float *filter_row7 = &filter_row1[42];
     sum_f24.f4[0] = static_cast<float4>(0);
     sum_f24.f4[1] = static_cast<float4>(0);
     sum_f24.f4[2] = static_cast<float4>(0);
@@ -1676,7 +1661,7 @@ __global__ void gaussian_filter_9x9_pln3_pkd3_tensor(T *srcPtr,
                                                      uint padLength,
                                                      uint2 tileSize,
                                                      RpptROIPtr roiTensorPtrSrc,
-                                                     d_float81 *filterTensor)
+                                                     float *filterTensor)
 {
     int hipThreadIdx_x8 = hipThreadIdx_x << 3;
     int id_x_o = (hipBlockIdx_x * tileSize.x * 8) + hipThreadIdx_x8;
@@ -1693,16 +1678,15 @@ __global__ void gaussian_filter_9x9_pln3_pkd3_tensor(T *srcPtr,
     srcIdx.y = srcIdx.x + srcStridesNCH.y;
     srcIdx.z = srcIdx.y + srcStridesNCH.y;
     int dstIdx = (id_z * dstStridesNH.x) + (id_y_o * dstStridesNH.y) + id_x_o * 3;
-    d_float81 filter_f81 = filterTensor[id_z];
-    float *filter_row1 = &filter_f81.f1[0];
-    float *filter_row2 = &filter_f81.f1[9];
-    float *filter_row3 = &filter_f81.f1[18];
-    float *filter_row4 = &filter_f81.f1[27];
-    float *filter_row5 = &filter_f81.f1[36];
-    float *filter_row6 = &filter_f81.f1[45];
-    float *filter_row7 = &filter_f81.f1[54];
-    float *filter_row8 = &filter_f81.f1[63];
-    float *filter_row9 = &filter_f81.f1[72];
+    float *filter_row1 = &filterTensor[id_z * 81];
+    float *filter_row2 = &filter_row1[9];
+    float *filter_row3 = &filter_row1[18];
+    float *filter_row4 = &filter_row1[27];
+    float *filter_row5 = &filter_row1[36];
+    float *filter_row6 = &filter_row1[45];
+    float *filter_row7 = &filter_row1[54];
+    float *filter_row8 = &filter_row1[63];
+    float *filter_row9 = &filter_row1[72];
     sum_f24.f4[0] = static_cast<float4>(0);
     sum_f24.f4[1] = static_cast<float4>(0);
     sum_f24.f4[2] = static_cast<float4>(0);
@@ -1773,6 +1757,156 @@ __device__ float gaussian(int iSquare, int j, float mulFactor)
     return expFactor;
 }
 
+__global__ void create_gaussian_kernel_3x3(float *filterTensor,
+                                           float *stdDevTensor,
+                                           int batchSize)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
+    if(id_x >= batchSize)
+        return;
+
+    float *filter = &filterTensor[id_x * 9];
+    float stdDev = stdDevTensor[id_x];
+    float mulFactor = 1 / (2 * stdDev * stdDev);
+    int rowIdx = 0;
+
+    // compute values for only top left quarter and replicate the values
+    for(int i = -1; i <= 0; i++, rowIdx += 3)
+    {
+        int iSquare = i * i;
+        filter[rowIdx + 2] = filter[rowIdx] = gaussian(iSquare, -1, mulFactor);
+        filter[rowIdx + 1] = gaussian(iSquare, 0, mulFactor);
+
+        // Copy symmetric rows
+        if((6 - rowIdx) != rowIdx)  // Index of last row of filter = 2 rows * 3 cols = 6
+            *(float3 *)(&filter[6 - rowIdx]) = *(float3 *)(&filter[rowIdx]);
+    }
+
+    // Find the sum of 9 values in 3x3 kernel
+    float kernelSum = 0.0f;
+    for(int i = 0; i < 9; i++)
+        kernelSum += filter[i];
+    kernelSum = (1.0f / kernelSum);
+
+    // Multiply kernel values by (1 / kernelSum)
+    for(int i = 0; i < 9; i++)
+        filter[i] *= kernelSum;
+}
+
+__global__ void create_gaussian_kernel_5x5(float *filterTensor,
+                                           float *stdDevTensor,
+                                           int batchSize)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
+    if(id_x >= batchSize)
+        return;
+
+    float *filter = &filterTensor[id_x * 25];
+    float stdDev = stdDevTensor[id_x];
+    float mulFactor = 1 / (2 * stdDev * stdDev);
+    int rowIdx = 0;
+
+    // compute values for only top left quarter and replicate the values
+    for(int i = -2; i <= 0; i++, rowIdx += 5)
+    {
+        int iSquare = i * i;
+        filter[rowIdx + 4] = filter[rowIdx] = gaussian(iSquare, -2, mulFactor);
+        filter[rowIdx + 3] = filter[rowIdx + 1] = gaussian(iSquare, -1, mulFactor);
+        filter[rowIdx + 2] = gaussian(iSquare, 0, mulFactor);
+
+        // Copy symmetric rows
+        if((20 - rowIdx) != rowIdx) // Index of last row of filter = 4 rows * 5 cols = 20
+            *(d_float5 *)(&filter[20 - rowIdx]) = *(d_float5 *)(&filter[rowIdx]);
+    }
+
+    // Find the sum of 25 values in 5x5 kernel
+    float kernelSum = 0.0f;
+    for(int i = 0; i < 25; i++)
+        kernelSum += filter[i];
+    kernelSum = (1.0f / kernelSum);
+
+    // Multiply kernel values by (1 / kernelSum)
+    for(int i = 0; i < 25; i++)
+        filter[i] *= kernelSum;
+}
+
+__global__ void create_gaussian_kernel_7x7(float *filterTensor,
+                                           float *stdDevTensor,
+                                           int batchSize)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
+    if(id_x >= batchSize)
+        return;
+
+    float *filter = &filterTensor[id_x * 49];
+    float stdDev = stdDevTensor[id_x];
+    float mulFactor = 1 / (2 * stdDev * stdDev);
+    int rowIdx = 0;
+
+    // compute values for only top left quarter and replicate the values
+    for(int i = -3; i <= 0; i++, rowIdx += 7)
+    {
+        int iSquare = i * i;
+        filter[rowIdx + 6] = filter[rowIdx] = gaussian(iSquare, -3, mulFactor);
+        filter[rowIdx + 5] = filter[rowIdx + 1] = gaussian(iSquare, -2, mulFactor);
+        filter[rowIdx + 4] = filter[rowIdx + 2] = gaussian(iSquare, -1, mulFactor);
+        filter[rowIdx + 3] = gaussian(iSquare, 0, mulFactor);
+
+        // Copy symmetric rows
+        if((42 - rowIdx) != rowIdx) // Index of last row of filter = 6 rows * 7 cols = 42
+            *(d_float7 *)(&filter[42 - rowIdx]) = *(d_float7 *)(&filter[rowIdx]);
+    }
+
+    // Find the sum of 49 values in 7x7 kernel
+    float kernelSum = 0.0f;
+    for(int i = 0; i < 49; i++)
+        kernelSum += filter[i];
+    kernelSum = (1.0f / kernelSum);
+
+    // Multiply kernel values by (1 / kernelSum)
+    for(int i = 0; i < 49; i++)
+        filter[i] *= kernelSum;
+}
+
+__global__ void create_gaussian_kernel_9x9(float *filterTensor,
+                                           float *stdDevTensor,
+                                           int batchSize)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
+    if(id_x >= batchSize)
+        return;
+
+    float *filter = &filterTensor[id_x * 81];
+    float stdDev = stdDevTensor[id_x];
+    float mulFactor = 1 / (2 * stdDev * stdDev);
+    int rowIdx = 0;
+
+    // compute values for only top left quarter and replicate the values
+    for(int i = -4; i <= 0; i++, rowIdx += 9)
+    {
+        int iSquare = i * i;
+        filter[rowIdx + 8] = filter[rowIdx] = gaussian(iSquare, -4, mulFactor);
+        filter[rowIdx + 7] = filter[rowIdx + 1] = gaussian(iSquare, -3, mulFactor);
+        filter[rowIdx + 6] = filter[rowIdx + 2] = gaussian(iSquare, -2, mulFactor);
+        filter[rowIdx + 5] = filter[rowIdx + 3] = gaussian(iSquare, -1, mulFactor);
+        filter[rowIdx + 4] = gaussian(iSquare, 0, mulFactor);
+
+        // Copy symmetric rows
+        if((72 - rowIdx) != rowIdx) // Index of last row of filter = 8 rows * 9 cols = 72
+            *(d_float9 *)(&filter[72 - rowIdx]) = *(d_float9 *)(&filter[rowIdx]);
+    }
+
+    // Find the sum of 81 values in 9x9 kernel
+    float kernelSum = 0.0f;
+    for(int i = 0; i < 81; i++)
+        kernelSum += filter[i];
+    kernelSum = (1.0f / kernelSum);
+
+    // Multiply kernel values by (1 / kernelSum)
+    for(int i = 0; i < 81; i++)
+        filter[i] *= kernelSum;
+}
+
 template <typename T, typename U>
 __global__ void create_gaussian_kernel(T *filterTensor,
                                        U *rowType,
@@ -1809,7 +1943,6 @@ __global__ void create_gaussian_kernel(T *filterTensor,
         if((lastRowIdx - rowIdx) != rowIdx)
             *(U *)(&filter_temp.f1[lastRowIdx - rowIdx]) = *(U *)(&filter_temp.f1[rowIdx]); // To check, if branching inside if for loop cause degration in performance
     }
-
 
     // Find the sum of kernel values
     int cnt = 0;
@@ -1849,66 +1982,49 @@ static RppStatus hip_exec_create_gaussian_kernel(Rpp32f *filterTensor,
     int globalThreads_x = handle.GetBatchSize();
     int globalThreads_y = 1;
     int globalThreads_z = 1;
-    int numValues = kernelSize * kernelSize;
 
     if (kernelSize == 3)
     {
-        float3 *rowType = NULL;
-        hipLaunchKernelGGL(create_gaussian_kernel,
+        hipLaunchKernelGGL(create_gaussian_kernel_3x3,
                            dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                            dim3(localThreads_x, localThreads_y, localThreads_z),
                            0,
                            handle.GetStream(),
-                           reinterpret_cast<d_float9 *>(filterTensor),
-                           rowType,
+                           filterTensor,
                            stdDevTensor,
-                           kernelSize,
-                           numValues,
                            handle.GetBatchSize());
     }
     else if (kernelSize == 5)
     {
-        d_float5 *rowType = NULL;
-        hipLaunchKernelGGL(create_gaussian_kernel,
+        hipLaunchKernelGGL(create_gaussian_kernel_5x5,
                            dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                            dim3(localThreads_x, localThreads_y, localThreads_z),
                            0,
                            handle.GetStream(),
-                           reinterpret_cast<d_float25 *>(filterTensor),
-                           rowType,
+                           filterTensor,
                            stdDevTensor,
-                           kernelSize,
-                           numValues,
                            handle.GetBatchSize());
     }
     else if (kernelSize == 7)
     {
-        d_float7 *rowType = NULL;
-        hipLaunchKernelGGL(create_gaussian_kernel,
+        hipLaunchKernelGGL(create_gaussian_kernel_7x7,
                            dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                            dim3(localThreads_x, localThreads_y, localThreads_z),
                            0,
                            handle.GetStream(),
-                           reinterpret_cast<d_float49 *>(filterTensor),
-                           rowType,
+                           filterTensor,
                            stdDevTensor,
-                           kernelSize,
-                           numValues,
                            handle.GetBatchSize());
     }
     else if (kernelSize == 9)
     {
-        d_float9 *rowType = NULL;
-        hipLaunchKernelGGL(create_gaussian_kernel,
+        hipLaunchKernelGGL(create_gaussian_kernel_9x9,
                            dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                            dim3(localThreads_x, localThreads_y, localThreads_z),
                            0,
                            handle.GetStream(),
-                           reinterpret_cast<d_float81 *>(filterTensor),
-                           rowType,
+                           filterTensor,
                            stdDevTensor,
-                           kernelSize,
-                           numValues,
                            handle.GetBatchSize());
     }
 
@@ -1969,7 +2085,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                padLength,
                                tileSize,
                                roiTensorPtrSrc,
-                               reinterpret_cast<d_float9 *>(filterTensor));
+                               filterTensor);
         }
         else if (kernelSize == 5)
         {
@@ -1985,7 +2101,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                padLength,
                                tileSize,
                                roiTensorPtrSrc,
-                               reinterpret_cast<d_float25 *>(filterTensor));
+                               filterTensor);
         }
         else if (kernelSize == 7)
         {
@@ -2001,7 +2117,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                padLength,
                                tileSize,
                                roiTensorPtrSrc,
-                               reinterpret_cast<d_float49 *>(filterTensor));
+                               filterTensor);
         }
         else if (kernelSize == 9)
         {
@@ -2017,7 +2133,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                padLength,
                                tileSize,
                                roiTensorPtrSrc,
-                               reinterpret_cast<d_float81 *>(filterTensor));
+                               filterTensor);
         }
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -2037,7 +2153,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                padLength,
                                tileSize,
                                roiTensorPtrSrc,
-                               reinterpret_cast<d_float9 *>(filterTensor));
+                               filterTensor);
         }
         else if (kernelSize == 5)
         {
@@ -2054,7 +2170,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                padLength,
                                tileSize,
                                roiTensorPtrSrc,
-                               reinterpret_cast<d_float25 *>(filterTensor));
+                               filterTensor);
         }
         else if (kernelSize == 7)
         {
@@ -2071,7 +2187,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                padLength,
                                tileSize,
                                roiTensorPtrSrc,
-                               reinterpret_cast<d_float49 *>(filterTensor));
+                               filterTensor);
         }
         else if (kernelSize == 9)
         {
@@ -2088,7 +2204,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                padLength,
                                tileSize,
                                roiTensorPtrSrc,
-                               reinterpret_cast<d_float81 *>(filterTensor));
+                               filterTensor);
         }
     }
     else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
@@ -2109,7 +2225,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                    padLength,
                                    tileSize,
                                    roiTensorPtrSrc,
-                                   reinterpret_cast<d_float9 *>(filterTensor));
+                                   filterTensor);
             }
             else if (kernelSize == 5)
             {
@@ -2125,7 +2241,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                    padLength,
                                    tileSize,
                                    roiTensorPtrSrc,
-                                   reinterpret_cast<d_float25 *>(filterTensor));
+                                   filterTensor);
             }
             else if (kernelSize == 7)
             {
@@ -2141,7 +2257,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                    padLength,
                                    tileSize,
                                    roiTensorPtrSrc,
-                                   reinterpret_cast<d_float49 *>(filterTensor));
+                                   filterTensor);
             }
             else if (kernelSize == 9)
             {
@@ -2157,7 +2273,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                    padLength,
                                    tileSize,
                                    roiTensorPtrSrc,
-                                   reinterpret_cast<d_float81 *>(filterTensor));
+                                   filterTensor);
             }
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
@@ -2178,7 +2294,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                    padLength,
                                    tileSize,
                                    roiTensorPtrSrc,
-                                   reinterpret_cast<d_float9 *>(filterTensor));
+                                   filterTensor);
             }
             else if (kernelSize == 5)
             {
@@ -2194,7 +2310,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                    padLength,
                                    tileSize,
                                    roiTensorPtrSrc,
-                                   reinterpret_cast<d_float25 *>(filterTensor));
+                                   filterTensor);
             }
             else if (kernelSize == 7)
             {
@@ -2210,7 +2326,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                    padLength,
                                    tileSize,
                                    roiTensorPtrSrc,
-                                   reinterpret_cast<d_float49 *>(filterTensor));
+                                   filterTensor);
             }
             else if (kernelSize == 9)
             {
@@ -2226,7 +2342,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                    padLength,
                                    tileSize,
                                    roiTensorPtrSrc,
-                                   reinterpret_cast<d_float81 *>(filterTensor));
+                                   filterTensor);
             }
         }
     }
