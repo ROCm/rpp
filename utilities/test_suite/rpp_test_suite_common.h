@@ -63,13 +63,26 @@ std::map<int, string> augmentationMap =
     {1, "gamma_correction"},
     {2, "blend"},
     {4, "contrast"},
+    {8, "noise"},
     {13, "exposure"},
+    {20, "flip"},
+    {21, "resize"},
+    {23, "rotate"},
+    {24, "warp_affine"},
+    {30, "non_linear_blend"},
     {31, "color_cast"},
     {34, "lut"},
     {36, "color_twist"},
     {37, "crop"},
     {38, "crop_mirror_normalize"},
+    {39, "resize_crop_mirror"},
+    {70, "copy"},
+    {80, "resize_mirror_normalize"},
+    {81, "color_jitter"},
+    {83, "gridmask"},
     {84, "spatter"},
+    {85, "swap_channels"},
+    {86, "color_to_greyscale"},
 };
 
 template <typename T>
@@ -955,14 +968,23 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
         if (dstDescPtr->c == 3)
             func += "Tensor_PLN3";
         else
-            func += "Tensor_PLN1";
+        {
+            if(testCase == 86)
+            {
+                if(srcDescPtr->layout == RpptLayout::NHWC)
+                    func += "Tensor_PKD3";
+                else
+                    func += "Tensor_PLN3";
+            }
+            else
+                func += "Tensor_PLN1";
+        }
     }
     if(testCase == 21 ||testCase == 23 || testCase == 24)
-        refFile = refPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ func + "_interpolationType" + interpolationTypeName + ".csv";
+        func += "_interpolationType" + interpolationTypeName;
     else if(testCase == 8)
-        refFile = refPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ func + "_noiseType" + noiseTypeName + ".csv";
-    else
-        refFile = refPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ func + ".csv";
+        func += "_noiseType" + noiseTypeName;
+    refFile = refPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ func + ".csv";
 
     ifstream file(refFile);
     Rpp8u *refOutput;
@@ -995,16 +1017,16 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     else
         compare_outputs_pln(output, refOutput, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
 
-    std::cerr << std::endl << "Results for " << func << " :" << std::endl;
+    std::cout << std::endl << "Results for " << func << " :" << std::endl;
     std::string status = func + ": ";
     if(fileMatch == dstDescPtr->n)
     {
-        std::cerr << "PASSED!" << std::endl;
+        std::cout << "PASSED!" << std::endl;
         status += "PASSED";
     }
     else
     {
-        std::cerr << "FAILED! " << fileMatch << "/" << dstDescPtr->n << " outputs are matching with reference outputs" << std::endl;
+        std::cout << "FAILED! " << fileMatch << "/" << dstDescPtr->n << " outputs are matching with reference outputs" << std::endl;
         status += "FAILED";
     }
 
