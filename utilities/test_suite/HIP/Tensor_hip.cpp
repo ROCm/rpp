@@ -647,8 +647,8 @@ int main(int argc, char **argv)
                 {
                     roiTensorPtrDst[i].xywhROI.xy.x = roiList[0];
                     roiTensorPtrDst[i].xywhROI.xy.y = roiList[1];
-                    dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiWidthList[2];
-                    dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiHeightList[3];
+                    dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiWidthList[i];
+                    dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiHeightList[i];
                 }
 
                 startWallTime = omp_get_wtime();
