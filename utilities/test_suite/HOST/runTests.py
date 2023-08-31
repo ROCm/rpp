@@ -44,7 +44,17 @@ def validate_and_remove_files(path):
         exit()
 
     elif os.path.exists(path):  # check if the folder exists
-        os.system("rm -rvf {}/*".format(path))  # Delete the directory if it exists
+        # Get a list of files and directories within the specified path
+        items = os.listdir(path)
+
+        if items:
+            # The directory is not empty, delete its contents
+            for item in items:
+                item_path = os.path.join(path, item)
+                if os.path.isfile(item_path):
+                    os.remove(item_path)
+                elif os.path.isdir(item_path):
+                    shutil.rmtree(item_path)     # Delete the directory if it exists
 
     else:
         print("Path is invalid or does not exist.")
@@ -62,7 +72,7 @@ def validate_and_remove_folders(path, folder):
         for folder_name in output_folders:
             folder_path = os.path.join(path, "..", folder_name)
             if os.path.isdir(folder_path):
-                os.system("rm -rf {}".format(folder_path))  # Delete the directory if it exists
+                shutil.rmtree(folder_path)  # Delete the directory if it exists
                 print("Deleted directory:", folder_path)
             else:
                 print("Directory not found:", folder_path)
@@ -132,13 +142,13 @@ def process_layout(layout, qaMode, case, dstPath):
     return dstPathTemp, log_file_layout
 
 def run_unit_test(srcPath1, srcPath2, dstPathTemp, bitDepth, outputFormatToggle, case, additionalParam, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
-    result = subprocess.run(["./Tensor_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE)
+    result = subprocess.run(["./Tensor_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE)    # nosec
     print(result.stdout.decode())
 
 def run_performance_test(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, additionalParam, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
     with open("{}/Tensor_host_{}_raw_performance_log.txt".format(loggingFolder, log_file_layout), "a") as log_file:
         print(f"./Tensor_host {srcPath1} {srcPath2} {dstPath} {bitDepth} {outputFormatToggle} {case} {additionalParam} 0 ")
-        process = subprocess.Popen(["./Tensor_host", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        process = subprocess.Popen(["./Tensor_host", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
         while True:
             output = process.stdout.readline()
             if not output and process.poll() is not None:
@@ -274,8 +284,8 @@ os.makedirs("build")
 os.chdir("build")
 
 # Run cmake and make commands
-subprocess.run(["cmake", ".."])
-subprocess.run(["make", "-j16"])
+subprocess.run(["cmake", ".."], cwd=".")   # nosec
+subprocess.run(["make", "-j16"], cwd=".")    # nosec
 
 print("\n\n\n\n\n")
 print("##########################################################################################")
