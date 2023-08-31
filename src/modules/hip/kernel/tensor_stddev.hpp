@@ -35,7 +35,7 @@ __global__ void tensor_stddev_grid_result(T *inputSrcPtr,
     int id_z = hipBlockIdx_z;
 
     __shared__ float partialVar_smem[1024];                         // 8192 floats of src reduced to 1024 in a 1024 x 1 thread block
-    partialVar_smem[hipThreadIdx_x] = 0.0f;                        // initialization of _smem to 0 using all 1024 x 1 threads
+    partialVar_smem[hipThreadIdx_x] = 0.0f;                         // initialization of _smem to 0 using all 1024 x 1 threads
 
     if (id_x >= xBufferLength)
     {

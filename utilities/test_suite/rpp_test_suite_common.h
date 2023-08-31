@@ -1047,7 +1047,7 @@ inline void compare_reduction_output(Rpp32f* output, string funcName, RpptDescPt
 
     ifstream file(refFile);
     Rpp32f *refOutput;
-    refOutput = (Rpp32f *)malloc(srcDescPtr->n * 4 * sizeof(Rpp32f));
+    refOutput = (Rpp32f *)calloc(srcDescPtr->n * 4, sizeof(Rpp32f));
     string line,word;
     int index = 0;
 
@@ -1088,7 +1088,7 @@ inline void compare_reduction_output(Rpp32f* output, string funcName, RpptDescPt
             matched_values = 0;
             for(int j = 0; j < 4; j++)
             {
-                int diff = abs(output[i] - refOutput[i]);
+                int diff = output[(i * 4) + j] - refOutput[(i * 4) + j];
                 if(diff <= CUTOFF)
                     matched_values++;
             }
