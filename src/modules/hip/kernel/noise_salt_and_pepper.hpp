@@ -44,7 +44,7 @@ __device__ void salt_and_pepper_noise_adjusted_input_hip_compute(schar *srcPtr, 
 __device__ void salt_and_pepper_noise_adjusted_input_hip_compute(half *srcPtr, float *saltValue, float *pepperValue) {}
 
 template <typename T>
-__global__ void salt_and_pepper_noise_pkd_tensor(T *srcPtr,
+__global__ void salt_and_pepper_noise_pkd_hip_tensor(T *srcPtr,
                                                  uint2 srcStridesNH,
                                                  T *dstPtr,
                                                  uint2 dstStridesNH,
@@ -94,7 +94,7 @@ __global__ void salt_and_pepper_noise_pkd_tensor(T *srcPtr,
 }
 
 template <typename T>
-__global__ void salt_and_pepper_noise_pln_tensor(T *srcPtr,
+__global__ void salt_and_pepper_noise_pln_hip_tensor(T *srcPtr,
                                                  uint3 srcStridesNCH,
                                                  T *dstPtr,
                                                  uint3 dstStridesNCH,
@@ -161,7 +161,7 @@ __global__ void salt_and_pepper_noise_pln_tensor(T *srcPtr,
 }
 
 template <typename T>
-__global__ void salt_and_pepper_noise_pkd3_pln3_tensor(T *srcPtr,
+__global__ void salt_and_pepper_noise_pkd3_pln3_hip_tensor(T *srcPtr,
                                                        uint2 srcStridesNH,
                                                        T *dstPtr,
                                                        uint3 dstStridesNCH,
@@ -211,7 +211,7 @@ __global__ void salt_and_pepper_noise_pkd3_pln3_tensor(T *srcPtr,
 }
 
 template <typename T>
-__global__ void salt_and_pepper_noise_pln3_pkd3_tensor(T *srcPtr,
+__global__ void salt_and_pepper_noise_pln3_pkd3_hip_tensor(T *srcPtr,
                                                        uint3 srcStridesNCH,
                                                        T *dstPtr,
                                                        uint2 dstStridesNH,
@@ -287,7 +287,7 @@ RppStatus hip_exec_salt_and_pepper_noise_tensor(T *srcPtr,
     if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
     {
         globalThreads_x = (dstDescPtr->strides.hStride / 3 + 7) >> 3;
-        hipLaunchKernelGGL(salt_and_pepper_noise_pkd_tensor,
+        hipLaunchKernelGGL(salt_and_pepper_noise_pkd_hip_tensor,
                            dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                            dim3(localThreads_x, localThreads_y, localThreads_z),
                            0,
@@ -306,7 +306,7 @@ RppStatus hip_exec_salt_and_pepper_noise_tensor(T *srcPtr,
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
-        hipLaunchKernelGGL(salt_and_pepper_noise_pln_tensor,
+        hipLaunchKernelGGL(salt_and_pepper_noise_pln_hip_tensor,
                            dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                            dim3(localThreads_x, localThreads_y, localThreads_z),
                            0,
@@ -328,7 +328,7 @@ RppStatus hip_exec_salt_and_pepper_noise_tensor(T *srcPtr,
     {
         if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            hipLaunchKernelGGL(salt_and_pepper_noise_pkd3_pln3_tensor,
+            hipLaunchKernelGGL(salt_and_pepper_noise_pkd3_pln3_hip_tensor,
                                dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                                dim3(localThreads_x, localThreads_y, localThreads_z),
                                0,
@@ -348,7 +348,7 @@ RppStatus hip_exec_salt_and_pepper_noise_tensor(T *srcPtr,
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             globalThreads_x = (srcDescPtr->strides.hStride + 7) >> 3;
-            hipLaunchKernelGGL(salt_and_pepper_noise_pln3_pkd3_tensor,
+            hipLaunchKernelGGL(salt_and_pepper_noise_pln3_pkd3_hip_tensor,
                                dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                                dim3(localThreads_x, localThreads_y, localThreads_z),
                                0,

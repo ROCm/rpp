@@ -26,7 +26,7 @@ __device__ void brightness_hip_compute(half *srcPtr, d_float8 *src_f8, d_float8 
 }
 
 template <typename T>
-__global__ void brightness_pkd_tensor(T *srcPtr,
+__global__ void brightness_pkd_hip_tensor(T *srcPtr,
                                       uint2 srcStridesNH,
                                       T *dstPtr,
                                       uint2 dstStridesNH,
@@ -57,7 +57,7 @@ __global__ void brightness_pkd_tensor(T *srcPtr,
 }
 
 template <typename T>
-__global__ void brightness_pln_tensor(T *srcPtr,
+__global__ void brightness_pln_hip_tensor(T *srcPtr,
                                       uint3 srcStridesNCH,
                                       T *dstPtr,
                                       uint3 dstStridesNCH,
@@ -106,7 +106,7 @@ __global__ void brightness_pln_tensor(T *srcPtr,
 }
 
 template <typename T>
-__global__ void brightness_pkd3_pln3_tensor(T *srcPtr,
+__global__ void brightness_pkd3_pln3_hip_tensor(T *srcPtr,
                                             uint2 srcStridesNH,
                                             T *dstPtr,
                                             uint3 dstStridesNCH,
@@ -139,7 +139,7 @@ __global__ void brightness_pkd3_pln3_tensor(T *srcPtr,
 }
 
 template <typename T>
-__global__ void brightness_pln3_pkd3_tensor(T *srcPtr,
+__global__ void brightness_pln3_pkd3_hip_tensor(T *srcPtr,
                                             uint3 srcStridesNCH,
                                             T *dstPtr,
                                             uint2 dstStridesNH,
@@ -192,7 +192,7 @@ RppStatus hip_exec_brightness_tensor(T *srcPtr,
 
     if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
     {
-        hipLaunchKernelGGL(brightness_pkd_tensor,
+        hipLaunchKernelGGL(brightness_pkd_hip_tensor,
                            dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                            dim3(localThreads_x, localThreads_y, localThreads_z),
                            0,
@@ -207,7 +207,7 @@ RppStatus hip_exec_brightness_tensor(T *srcPtr,
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
-        hipLaunchKernelGGL(brightness_pln_tensor,
+        hipLaunchKernelGGL(brightness_pln_hip_tensor,
                            dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                            dim3(localThreads_x, localThreads_y, localThreads_z),
                            0,
@@ -225,7 +225,7 @@ RppStatus hip_exec_brightness_tensor(T *srcPtr,
     {
         if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            hipLaunchKernelGGL(brightness_pkd3_pln3_tensor,
+            hipLaunchKernelGGL(brightness_pkd3_pln3_hip_tensor,
                                dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                                dim3(localThreads_x, localThreads_y, localThreads_z),
                                0,
@@ -241,7 +241,7 @@ RppStatus hip_exec_brightness_tensor(T *srcPtr,
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             globalThreads_x = (srcDescPtr->strides.hStride + 7) >> 3;
-            hipLaunchKernelGGL(brightness_pln3_pkd3_tensor,
+            hipLaunchKernelGGL(brightness_pln3_pkd3_hip_tensor,
                                dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                                dim3(localThreads_x, localThreads_y, localThreads_z),
                                0,

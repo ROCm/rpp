@@ -35,7 +35,7 @@ __device__ void resize_roi_generic_srcloc_and_weight_hip_compute(int roiLoc, int
 // -------------------- Set 1 - Nearest Neighbor Interpolation --------------------
 
 template <typename T>
-__global__ void resize_nearest_neighbor_pkd_tensor(T *srcPtr,
+__global__ void resize_nearest_neighbor_pkd_hip_tensor(T *srcPtr,
                                                    uint2 srcStridesNH,
                                                    T *dstPtr,
                                                    uint2 dstStridesNH,
@@ -68,7 +68,7 @@ __global__ void resize_nearest_neighbor_pkd_tensor(T *srcPtr,
 }
 
 template <typename T>
-__global__ void resize_nearest_neighbor_pln_tensor(T *srcPtr,
+__global__ void resize_nearest_neighbor_pln_hip_tensor(T *srcPtr,
                                                    uint3 srcStridesNCH,
                                                    T *dstPtr,
                                                    uint3 dstStridesNCH,
@@ -117,7 +117,7 @@ __global__ void resize_nearest_neighbor_pln_tensor(T *srcPtr,
 }
 
 template <typename T>
-__global__ void resize_nearest_neighbor_pkd3_pln3_tensor(T *srcPtr,
+__global__ void resize_nearest_neighbor_pkd3_pln3_hip_tensor(T *srcPtr,
                                                          uint2 srcStridesNH,
                                                          T *dstPtr,
                                                          uint3 dstStridesNCH,
@@ -150,7 +150,7 @@ __global__ void resize_nearest_neighbor_pkd3_pln3_tensor(T *srcPtr,
 }
 
 template <typename T>
-__global__ void resize_nearest_neighbor_pln3_pkd3_tensor(T *srcPtr,
+__global__ void resize_nearest_neighbor_pln3_pkd3_hip_tensor(T *srcPtr,
                                                          uint3 srcStridesNCH,
                                                          T *dstPtr,
                                                          uint2 dstStridesNH,
@@ -185,7 +185,7 @@ __global__ void resize_nearest_neighbor_pln3_pkd3_tensor(T *srcPtr,
 // -------------------- Set 2 - Bilinear Interpolation --------------------
 
 template <typename T>
-__global__ void resize_bilinear_pkd_tensor(T *srcPtr,
+__global__ void resize_bilinear_pkd_hip_tensor(T *srcPtr,
                                            uint2 srcStridesNH,
                                            T *dstPtr,
                                            uint2 dstStridesNH,
@@ -218,7 +218,7 @@ __global__ void resize_bilinear_pkd_tensor(T *srcPtr,
 }
 
 template <typename T>
-__global__ void resize_bilinear_pln_tensor(T *srcPtr,
+__global__ void resize_bilinear_pln_hip_tensor(T *srcPtr,
                                            uint3 srcStridesNCH,
                                            T *dstPtr,
                                            uint3 dstStridesNCH,
@@ -267,7 +267,7 @@ __global__ void resize_bilinear_pln_tensor(T *srcPtr,
 }
 
 template <typename T>
-__global__ void resize_bilinear_pkd3_pln3_tensor(T *srcPtr,
+__global__ void resize_bilinear_pkd3_pln3_hip_tensor(T *srcPtr,
                                                  uint2 srcStridesNH,
                                                  T *dstPtr,
                                                  uint3 dstStridesNCH,
@@ -300,7 +300,7 @@ __global__ void resize_bilinear_pkd3_pln3_tensor(T *srcPtr,
 }
 
 template <typename T>
-__global__ void resize_bilinear_pln3_pkd3_tensor(T *srcPtr,
+__global__ void resize_bilinear_pln3_pkd3_hip_tensor(T *srcPtr,
                                                  uint3 srcStridesNCH,
                                                  T *dstPtr,
                                                  uint2 dstStridesNH,
@@ -333,7 +333,7 @@ __global__ void resize_bilinear_pln3_pkd3_tensor(T *srcPtr,
 }
 
 template <typename T>
-__global__ void resize_generic_pkd_tensor(T *srcPtr,
+__global__ void resize_generic_pkd_hip_tensor(T *srcPtr,
                                           uint2 srcStridesNH,
                                           T *dstPtr,
                                           uint2 dstStridesNH,
@@ -407,7 +407,7 @@ __global__ void resize_generic_pkd_tensor(T *srcPtr,
 }
 
 template <typename T>
-__global__ void resize_generic_pln3_tensor(T *srcPtr,
+__global__ void resize_generic_pln3_hip_tensor(T *srcPtr,
                                            uint3 srcStridesNCH,
                                            T *dstPtr,
                                            uint3 dstStridesNCH,
@@ -487,7 +487,7 @@ __global__ void resize_generic_pln3_tensor(T *srcPtr,
 }
 
 template <typename T>
-__global__ void resize_generic_pln1_tensor(T *srcPtr,
+__global__ void resize_generic_pln1_hip_tensor(T *srcPtr,
                                            uint3 srcStridesNCH,
                                            T *dstPtr,
                                            uint3 dstStridesNCH,
@@ -559,7 +559,7 @@ __global__ void resize_generic_pln1_tensor(T *srcPtr,
 }
 
 template <typename T>
-__global__ void resize_generic_pkd3_pln3_tensor(T *srcPtr,
+__global__ void resize_generic_pkd3_pln3_hip_tensor(T *srcPtr,
                                                 uint2 srcStridesNH,
                                                 T *dstPtr,
                                                 uint3 dstStridesNCH,
@@ -632,7 +632,7 @@ __global__ void resize_generic_pkd3_pln3_tensor(T *srcPtr,
 }
 
 template <typename T>
-__global__ void resize_generic_pln3_pkd3_tensor(T *srcPtr,
+__global__ void resize_generic_pln3_pkd3_hip_tensor(T *srcPtr,
                                                 uint3 srcStridesNCH,
                                                 T *dstPtr,
                                                 uint2 dstStridesNH,
@@ -737,7 +737,7 @@ RppStatus hip_exec_resize_tensor(T *srcPtr,
         int globalThreads_z = handle.GetBatchSize();
         if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            hipLaunchKernelGGL(resize_nearest_neighbor_pkd_tensor,
+            hipLaunchKernelGGL(resize_nearest_neighbor_pkd_hip_tensor,
                             dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                             dim3(localThreads_x, localThreads_y, localThreads_z),
                             0,
@@ -751,7 +751,7 @@ RppStatus hip_exec_resize_tensor(T *srcPtr,
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            hipLaunchKernelGGL(resize_nearest_neighbor_pln_tensor,
+            hipLaunchKernelGGL(resize_nearest_neighbor_pln_hip_tensor,
                             dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                             dim3(localThreads_x, localThreads_y, localThreads_z),
                             0,
@@ -768,7 +768,7 @@ RppStatus hip_exec_resize_tensor(T *srcPtr,
         {
             if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
             {
-                hipLaunchKernelGGL(resize_nearest_neighbor_pkd3_pln3_tensor,
+                hipLaunchKernelGGL(resize_nearest_neighbor_pkd3_pln3_hip_tensor,
                                 dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                                 dim3(localThreads_x, localThreads_y, localThreads_z),
                                 0,
@@ -783,7 +783,7 @@ RppStatus hip_exec_resize_tensor(T *srcPtr,
             else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
                 globalThreads_x = (srcDescPtr->strides.hStride + 7) >> 3;
-                hipLaunchKernelGGL(resize_nearest_neighbor_pln3_pkd3_tensor,
+                hipLaunchKernelGGL(resize_nearest_neighbor_pln3_pkd3_hip_tensor,
                                 dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                                 dim3(localThreads_x, localThreads_y, localThreads_z),
                                 0,
@@ -807,7 +807,7 @@ RppStatus hip_exec_resize_tensor(T *srcPtr,
         int globalThreads_z = handle.GetBatchSize();
         if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            hipLaunchKernelGGL(resize_bilinear_pkd_tensor,
+            hipLaunchKernelGGL(resize_bilinear_pkd_hip_tensor,
                                dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                                dim3(localThreads_x, localThreads_y, localThreads_z),
                                0,
@@ -821,7 +821,7 @@ RppStatus hip_exec_resize_tensor(T *srcPtr,
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            hipLaunchKernelGGL(resize_bilinear_pln_tensor,
+            hipLaunchKernelGGL(resize_bilinear_pln_hip_tensor,
                                dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                                dim3(localThreads_x, localThreads_y, localThreads_z),
                                0,
@@ -838,7 +838,7 @@ RppStatus hip_exec_resize_tensor(T *srcPtr,
         {
             if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
             {
-                hipLaunchKernelGGL(resize_bilinear_pkd3_pln3_tensor,
+                hipLaunchKernelGGL(resize_bilinear_pkd3_pln3_hip_tensor,
                                    dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                                    dim3(localThreads_x, localThreads_y, localThreads_z),
                                    0,
@@ -852,7 +852,7 @@ RppStatus hip_exec_resize_tensor(T *srcPtr,
             }
             else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
-                hipLaunchKernelGGL(resize_bilinear_pln3_pkd3_tensor,
+                hipLaunchKernelGGL(resize_bilinear_pln3_pkd3_hip_tensor,
                                    dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                                    dim3(localThreads_x, localThreads_y, localThreads_z),
                                    0,
@@ -877,7 +877,7 @@ RppStatus hip_exec_resize_tensor(T *srcPtr,
 
         if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            hipLaunchKernelGGL(resize_generic_pkd_tensor,
+            hipLaunchKernelGGL(resize_generic_pkd_hip_tensor,
                                dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                                dim3(localThreads_x, localThreads_y, localThreads_z),
                                0,
@@ -894,7 +894,7 @@ RppStatus hip_exec_resize_tensor(T *srcPtr,
         {
             if (srcDescPtr->c == 3)
             {
-                hipLaunchKernelGGL(resize_generic_pln3_tensor,
+                hipLaunchKernelGGL(resize_generic_pln3_hip_tensor,
                                    dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                                    dim3(localThreads_x, localThreads_y, localThreads_z),
                                    0,
@@ -909,7 +909,7 @@ RppStatus hip_exec_resize_tensor(T *srcPtr,
             }
             else if (srcDescPtr->c == 1)
             {
-                hipLaunchKernelGGL(resize_generic_pln1_tensor,
+                hipLaunchKernelGGL(resize_generic_pln1_hip_tensor,
                                    dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                                    dim3(localThreads_x, localThreads_y, localThreads_z),
                                    0,
@@ -927,7 +927,7 @@ RppStatus hip_exec_resize_tensor(T *srcPtr,
         {
             if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
             {
-                hipLaunchKernelGGL(resize_generic_pkd3_pln3_tensor,
+                hipLaunchKernelGGL(resize_generic_pkd3_pln3_hip_tensor,
                                     dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                                     dim3(localThreads_x, localThreads_y, localThreads_z),
                                     0,
@@ -942,7 +942,7 @@ RppStatus hip_exec_resize_tensor(T *srcPtr,
             }
             else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
-                hipLaunchKernelGGL(resize_generic_pln3_pkd3_tensor,
+                hipLaunchKernelGGL(resize_generic_pln3_pkd3_hip_tensor,
                                    dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                                    dim3(localThreads_x, localThreads_y, localThreads_z),
                                    0,
