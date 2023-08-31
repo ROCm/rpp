@@ -54,8 +54,11 @@ namespace fs = boost::filesystem;
 #define DEBUG_MODE 0
 #define MAX_IMAGE_DUMP 20
 #define MAX_BATCH_SIZE 512
-#define GOLDEN_OUTPUT_MAX_HEIGHT 224    // Golden outputs are generated with MAX_HEIGHT set to 150. Changing this constant will result in QA test failures
-#define GOLDEN_OUTPUT_MAX_WIDTH 224     // Golden outputs are generated with MAX_WIDTH set to 150. Changing this constant will result in QA test failures
+#define GOLDEN_OUTPUT_MAX_HEIGHT 150    // Golden outputs are generated with MAX_HEIGHT set to 150. Changing this constant will result in QA test failures
+#define GOLDEN_OUTPUT_MAX_WIDTH 150     // Golden outputs are generated with MAX_WIDTH set to 150. Changing this constant will result in QA test failures
+// Set GOLDEN_OUTPUT_MAX_HEIGHT and GOLDEN_OUTPUT_MAX_WIDTH as 224 for RICAP QA tests alone.
+// #define GOLDEN_OUTPUT_MAX_HEIGHT 224    // Golden outputs are generated with MAX_HEIGHT set to 224.
+// #define GOLDEN_OUTPUT_MAX_WIDTH 224     // Golden outputs are generated with MAX_WIDTH set to 224.
 
 std::map<int, string> augmentationMap =
 {
@@ -1019,6 +1022,7 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     }
 }
 
+// Used to randomly swap values present in array of size n
 inline void randomize(unsigned int arr[], unsigned int n)
 {
     // Use a different seed value each time
@@ -1031,6 +1035,7 @@ inline void randomize(unsigned int arr[], unsigned int n)
     }
 }
 
+// Generates a random value between given min and max values
 int inline random_val(int min, int max)
 {
     if(max<0)

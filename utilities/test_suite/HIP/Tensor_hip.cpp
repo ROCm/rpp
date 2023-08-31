@@ -617,9 +617,25 @@ int main(int argc, char **argv)
             case 82:
             {
                 testCaseName = "ricap";
-                double randFromDist, randFromDist1;
 
-                if(!qaFlag)
+                int iX = maxWidth;
+                int iY = maxHeight;
+
+                Rpp32u initialPermuteArray[batchSize], permutedArray[batchSize * 4], permutationTensor[batchSize * 4];
+                double randFromDist, randFromDist1;
+                RpptROI *roiPtrInputCropRegion;
+                hipHostMalloc(&roiPtrInputCropRegion, 4 * sizeof(RpptROI));
+                for (uint i = 0; i < batchSize; i++)
+                {
+                    initialPermuteArray[i] = i;
+                }
+
+                if(qaFlag)
+                {
+                    for(int i=0;i<4;i++)
+                        memcpy(permutedArray + (batchSize * i), initialPermuteArray, batchSize * sizeof(Rpp32u));
+                }
+                else
                 {
                     float betaParam = 0.3;
                     std::random_device rd;
@@ -633,24 +649,7 @@ int main(int argc, char **argv)
                     static std::uniform_real_distribution<double> unif1(0.3, 0.7);
                     double p1 = unif1(gen1);
                     randFromDist1 = boost::math::ibeta_inv(betaParam, betaParam, p1);
-                }
 
-                int iX = maxWidth;
-                int iY = maxHeight;
-
-                Rpp32u initialPermuteArray[batchSize], permutedArray[batchSize * 4], permutationTensor[batchSize * 4];
-                for (uint i = 0; i < batchSize; i++)
-                {
-                    initialPermuteArray[i] = i;
-                }
-
-                if(qaFlag)
-                {
-                    for(int i=0;i<4;i++)
-                        memcpy(permutedArray + (batchSize * i), initialPermuteArray, batchSize * sizeof(Rpp32u));
-                }
-                else
-                {
                     for(int i=0;i<4;i++)
                     {
                         randomize(initialPermuteArray, batchSize);
@@ -665,9 +664,6 @@ int main(int argc, char **argv)
                     permutationTensor[j + 2] = permutedArray[i + (batchSize * 2)];
                     permutationTensor[j + 3] = permutedArray[i + (batchSize * 3)];
                 }
-
-                RpptROI *roiPtrInputCropRegion;
-                hipHostMalloc(&roiPtrInputCropRegion, 4 * sizeof(RpptROI));
 
                 if(qaFlag)
                 {
@@ -693,7 +689,7 @@ int main(int argc, char **argv)
                     rppt_ricap_gpu(d_input, srcDescPtr, d_output, dstDescPtr, permutationTensor, roiPtrInputCropRegion, roiTypeSrc, handle);
                 else
                     missingFuncFlag = 1;
-
+                hipHostFree(roiPtrInputCropRegion);
                 break;
             }
             case 84:
