@@ -1669,7 +1669,7 @@ RppStatus hip_exec_box_filter_tensor(T *srcPtr,
         if (kernelSize == 3)
         {
             hipLaunchKernelGGL(box_filter_3x3_pkd_tensor,
-                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/localThreads_z)),
+                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
                                handle.GetStream(),
@@ -1684,7 +1684,7 @@ RppStatus hip_exec_box_filter_tensor(T *srcPtr,
         else if (kernelSize == 5)
         {
             hipLaunchKernelGGL(box_filter_5x5_pkd_tensor,
-                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/localThreads_z)),
+                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
                                handle.GetStream(),
@@ -1699,7 +1699,7 @@ RppStatus hip_exec_box_filter_tensor(T *srcPtr,
         else if (kernelSize == 7)
         {
             hipLaunchKernelGGL(box_filter_7x7_pkd_tensor,
-                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/localThreads_z)),
+                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
                                handle.GetStream(),
@@ -1714,7 +1714,7 @@ RppStatus hip_exec_box_filter_tensor(T *srcPtr,
         else if (kernelSize == 9)
         {
             hipLaunchKernelGGL(box_filter_9x9_pkd_tensor,
-                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/localThreads_z)),
+                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
                                handle.GetStream(),
@@ -1732,7 +1732,7 @@ RppStatus hip_exec_box_filter_tensor(T *srcPtr,
         if (kernelSize == 3)
         {
             hipLaunchKernelGGL(box_filter_3x3_pln_tensor,
-                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/localThreads_z)),
+                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
                                handle.GetStream(),
@@ -1748,7 +1748,7 @@ RppStatus hip_exec_box_filter_tensor(T *srcPtr,
         else if (kernelSize == 5)
         {
             hipLaunchKernelGGL(box_filter_5x5_pln_tensor,
-                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/localThreads_z)),
+                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
                                handle.GetStream(),
@@ -1764,7 +1764,7 @@ RppStatus hip_exec_box_filter_tensor(T *srcPtr,
         else if (kernelSize == 7)
         {
             hipLaunchKernelGGL(box_filter_7x7_pln_tensor,
-                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/localThreads_z)),
+                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
                                handle.GetStream(),
@@ -1780,7 +1780,7 @@ RppStatus hip_exec_box_filter_tensor(T *srcPtr,
         else if (kernelSize == 9)
         {
             hipLaunchKernelGGL(box_filter_9x9_pln_tensor,
-                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/localThreads_z)),
+                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
                                handle.GetStream(),
@@ -1801,7 +1801,7 @@ RppStatus hip_exec_box_filter_tensor(T *srcPtr,
             if (kernelSize == 3)
             {
                 hipLaunchKernelGGL(box_filter_3x3_pkd3_pln3_tensor,
-                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/localThreads_z)),
+                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                    dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                    0,
                                    handle.GetStream(),
@@ -1816,7 +1816,7 @@ RppStatus hip_exec_box_filter_tensor(T *srcPtr,
             else if (kernelSize == 5)
             {
                 hipLaunchKernelGGL(box_filter_5x5_pkd3_pln3_tensor,
-                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/localThreads_z)),
+                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                    dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                    0,
                                    handle.GetStream(),
@@ -1831,7 +1831,7 @@ RppStatus hip_exec_box_filter_tensor(T *srcPtr,
             else if (kernelSize == 7)
             {
                 hipLaunchKernelGGL(box_filter_7x7_pkd3_pln3_tensor,
-                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/localThreads_z)),
+                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                    dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                    0,
                                    handle.GetStream(),
@@ -1846,7 +1846,7 @@ RppStatus hip_exec_box_filter_tensor(T *srcPtr,
             else if (kernelSize == 9)
             {
                 hipLaunchKernelGGL(box_filter_9x9_pkd3_pln3_tensor,
-                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/localThreads_z)),
+                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                    dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                    0,
                                    handle.GetStream(),
@@ -1866,7 +1866,7 @@ RppStatus hip_exec_box_filter_tensor(T *srcPtr,
             if (kernelSize == 3)
             {
                 hipLaunchKernelGGL(box_filter_3x3_pln3_pkd3_tensor,
-                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/localThreads_z)),
+                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                    dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                    0,
                                    handle.GetStream(),
@@ -1881,7 +1881,7 @@ RppStatus hip_exec_box_filter_tensor(T *srcPtr,
             else if (kernelSize == 5)
             {
                 hipLaunchKernelGGL(box_filter_5x5_pln3_pkd3_tensor,
-                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/localThreads_z)),
+                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                    dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                    0,
                                    handle.GetStream(),
@@ -1896,7 +1896,7 @@ RppStatus hip_exec_box_filter_tensor(T *srcPtr,
             else if (kernelSize == 7)
             {
                 hipLaunchKernelGGL(box_filter_7x7_pln3_pkd3_tensor,
-                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/localThreads_z)),
+                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                    dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                    0,
                                    handle.GetStream(),
@@ -1911,7 +1911,7 @@ RppStatus hip_exec_box_filter_tensor(T *srcPtr,
             else if (kernelSize == 9)
             {
                 hipLaunchKernelGGL(box_filter_9x9_pln3_pkd3_tensor,
-                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/localThreads_z)),
+                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                    dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                    0,
                                    handle.GetStream(),
