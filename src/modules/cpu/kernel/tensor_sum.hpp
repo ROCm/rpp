@@ -50,15 +50,15 @@ RppStatus tensor_sum_u8_u64_host(Rpp8u *srcPtr,
                 srcPtrTemp = srcPtrRow;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
-#if __AVX2__
                     __m256i p1[2];
                     rpp_simd_load(rpp_load16_u8_to_u32_avx, srcPtrTemp, p1);
                     compute_sum_16_host(p1, &psum);
-#endif
                     srcPtrTemp += vectorIncrementPerChannel;
                 }
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     sum += (Rpp32u)(*srcPtrTemp++);
@@ -67,9 +67,8 @@ RppStatus tensor_sum_u8_u64_host(Rpp8u *srcPtr,
             }
 #if __AVX2__
             rpp_simd_store(rpp_store8_u32_to_u32_avx, sumAvx, &psum);
-#endif
             sum += (sumAvx[0] + sumAvx[1] + sumAvx[2] + sumAvx[3] + sumAvx[4] + sumAvx[5] + sumAvx[6] + sumAvx[7]);
-
+#endif
             tensorSumArr[batchCount] = (Rpp64u)sum;
         }
 
@@ -99,17 +98,17 @@ RppStatus tensor_sum_u8_u64_host(Rpp8u *srcPtr,
                 srcPtrTempB = srcPtrRowB;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
-#if __AVX2__
                     __m256i p[6];
                     rpp_simd_load(rpp_load48_u8pln3_to_u32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);
                     compute_sum_48_host(p, &psumR, &psumG, &psumB);
-#endif
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
                     srcPtrTempB += vectorIncrementPerChannel;
                 }
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     sumR += (Rpp32u)(*srcPtrTempR++);
@@ -124,11 +123,10 @@ RppStatus tensor_sum_u8_u64_host(Rpp8u *srcPtr,
             rpp_simd_store(rpp_store8_u32_to_u32_avx, sumAvxR, &psumR);
             rpp_simd_store(rpp_store8_u32_to_u32_avx, sumAvxG, &psumG);
             rpp_simd_store(rpp_store8_u32_to_u32_avx, sumAvxB, &psumB);
-#endif
             sumR += (sumAvxR[0] + sumAvxR[1] + sumAvxR[2] + sumAvxR[3] + sumAvxR[4] + sumAvxR[5] + sumAvxR[6] + sumAvxR[7]);
             sumG += (sumAvxG[0] + sumAvxG[1] + sumAvxG[2] + sumAvxG[3] + sumAvxG[4] + sumAvxG[5] + sumAvxG[6] + sumAvxG[7]);
             sumB += (sumAvxB[0] + sumAvxB[1] + sumAvxB[2] + sumAvxB[3] + sumAvxB[4] + sumAvxB[5] + sumAvxB[6] + sumAvxB[7]);
-
+#endif
             sum = (Rpp64u)sumR + (Rpp64u)sumG + (Rpp64u)sumB;
             int index = batchCount * 4;
             tensorSumArr[index] = (Rpp64u)sumR;
@@ -159,15 +157,15 @@ RppStatus tensor_sum_u8_u64_host(Rpp8u *srcPtr,
                 srcPtrTemp = srcPtrRow;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
-#if __AVX2__
                     __m256i p[6];
                     rpp_simd_load(rpp_load48_u8pkd3_to_u32pln3_avx, srcPtrTemp, p);
                     compute_sum_48_host(p, &psumR, &psumG, &psumB);
-#endif
                     srcPtrTemp += vectorIncrement;
                 }
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     sumR += (Rpp32u)(srcPtrTemp[0]);
@@ -181,11 +179,10 @@ RppStatus tensor_sum_u8_u64_host(Rpp8u *srcPtr,
             rpp_simd_store(rpp_store8_u32_to_u32_avx, sumAvxR, &psumR);
             rpp_simd_store(rpp_store8_u32_to_u32_avx, sumAvxG, &psumG);
             rpp_simd_store(rpp_store8_u32_to_u32_avx, sumAvxB, &psumB);
-#endif
             sumR += (sumAvxR[0] + sumAvxR[1] + sumAvxR[2] + sumAvxR[3] + sumAvxR[4] + sumAvxR[5] + sumAvxR[6] + sumAvxR[7]);
             sumG += (sumAvxG[0] + sumAvxG[1] + sumAvxG[2] + sumAvxG[3] + sumAvxG[4] + sumAvxG[5] + sumAvxG[6] + sumAvxG[7]);
             sumB += (sumAvxB[0] + sumAvxB[1] + sumAvxB[2] + sumAvxB[3] + sumAvxB[4] + sumAvxB[5] + sumAvxB[6] + sumAvxB[7]);
-
+#endif
             sum = (Rpp64u)sumR + (Rpp64u)sumG + (Rpp64u)sumB;
             int index = batchCount * 4;
             tensorSumArr[index] = (Rpp64u)sumR;
@@ -247,15 +244,15 @@ RppStatus tensor_sum_f32_f32_host(Rpp32f *srcPtr,
                 srcPtrTemp = srcPtrRow;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
-#if __AVX2__
                     __m256d p1[2];
                     rpp_simd_load(rpp_load8_f32_to_f64_avx, srcPtrTemp, p1);
                     compute_sum_8_host(p1, &psum);
-#endif
                     srcPtrTemp += vectorIncrement;
                 }
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     sum += (Rpp64f)(*srcPtrTemp++);
@@ -264,8 +261,8 @@ RppStatus tensor_sum_f32_f32_host(Rpp32f *srcPtr,
             }
 #if __AVX2__
             rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvx, &psum);
-#endif
             sum += (sumAvx[0] + sumAvx[1] + sumAvx[2] + sumAvx[3]);
+#endif
 
             tensorSumArr[batchCount] = (Rpp32f)sum;
         }
@@ -295,17 +292,17 @@ RppStatus tensor_sum_f32_f32_host(Rpp32f *srcPtr,
                 srcPtrTempB = srcPtrRowB;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
-#if __AVX2__
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_f32pln3_to_f64pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);
                     compute_sum_24_host(p, &psumR, &psumG, &psumB);
-#endif
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
                     srcPtrTempB += vectorIncrementPerChannel;
                 }
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     sumR += (Rpp64f)(*srcPtrTempR++);
@@ -320,11 +317,10 @@ RppStatus tensor_sum_f32_f32_host(Rpp32f *srcPtr,
             rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxR, &psumR);
             rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxG, &psumG);
             rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxB, &psumB);
-#endif
             sumR += (sumAvxR[0] + sumAvxR[1] + sumAvxR[2] + sumAvxR[3]);
             sumG += (sumAvxG[0] + sumAvxG[1] + sumAvxG[2] + sumAvxG[3]);
             sumB += (sumAvxB[0] + sumAvxB[1] + sumAvxB[2] + sumAvxB[3]);
-
+#endif
             sum = sumR + sumG + sumB;
             int index = batchCount * 4;
             tensorSumArr[index] = (Rpp32f)sumR;
@@ -354,15 +350,15 @@ RppStatus tensor_sum_f32_f32_host(Rpp32f *srcPtr,
                 srcPtrTemp = srcPtrRow;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
-#if __AVX2__
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_f32pkd3_to_f64pln3_avx, srcPtrTemp, p);
                     compute_sum_24_host(p, &psumR, &psumG, &psumB);
-#endif
                     srcPtrTemp += vectorIncrement;
                 }
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     sumR += (Rpp64f)(srcPtrTemp[0]);
@@ -376,11 +372,10 @@ RppStatus tensor_sum_f32_f32_host(Rpp32f *srcPtr,
             rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxR, &psumR);
             rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxG, &psumG);
             rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxB, &psumB);
-#endif
             sumR += (sumAvxR[0] + sumAvxR[1] + sumAvxR[2] + sumAvxR[3]);
             sumG += (sumAvxG[0] + sumAvxG[1] + sumAvxG[2] + sumAvxG[3]);
             sumB += (sumAvxB[0] + sumAvxB[1] + sumAvxB[2] + sumAvxB[3]);
-
+#endif
             sum = sumR + sumG + sumB;
             int index = batchCount * 4;
             tensorSumArr[index] = (Rpp32f)sumR;
@@ -441,18 +436,18 @@ RppStatus tensor_sum_f16_f32_host(Rpp16f *srcPtr,
                 srcPtrTemp = srcPtrRow;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     Rpp32f srcPtrTemp_ps[8];
                     for(int cnt = 0; cnt < vectorIncrement; cnt++)
                         srcPtrTemp_ps[cnt] = (Rpp32f) srcPtrTemp[cnt];
-#if __AVX2__
                     __m256d p1[2];
                     rpp_simd_load(rpp_load8_f32_to_f64_avx, srcPtrTemp_ps, p1);
                     compute_sum_8_host(p1, &psum);
-#endif
                     srcPtrTemp += vectorIncrement;
                 }
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     sum += (Rpp64f)(*srcPtrTemp++);
@@ -461,9 +456,8 @@ RppStatus tensor_sum_f16_f32_host(Rpp16f *srcPtr,
             }
 #if __AVX2__
             rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvx, &psum);
-#endif
             sum += (sumAvx[0] + sumAvx[1] + sumAvx[2] + sumAvx[3]);
-
+#endif
             tensorSumArr[batchCount] = (Rpp32f)sum;
         }
 
@@ -492,6 +486,7 @@ RppStatus tensor_sum_f16_f32_host(Rpp16f *srcPtr,
                 srcPtrTempB = srcPtrRowB;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     Rpp32f srcPtrTempR_ps[8], srcPtrTempG_ps[8], srcPtrTempB_ps[8];
@@ -501,15 +496,14 @@ RppStatus tensor_sum_f16_f32_host(Rpp16f *srcPtr,
                         srcPtrTempG_ps[cnt] = (Rpp32f) srcPtrTempG[cnt];
                         srcPtrTempB_ps[cnt] = (Rpp32f) srcPtrTempB[cnt];
                     }
-#if __AVX2__
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_f32pln3_to_f64pln3_avx, srcPtrTempR_ps, srcPtrTempG_ps, srcPtrTempB_ps, p);
                     compute_sum_24_host(p, &psumR, &psumG, &psumB);
-#endif
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
                     srcPtrTempB += vectorIncrementPerChannel;
                 }
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     sumR += (Rpp64f)(*srcPtrTempR++);
@@ -524,11 +518,10 @@ RppStatus tensor_sum_f16_f32_host(Rpp16f *srcPtr,
             rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxR, &psumR);
             rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxG, &psumG);
             rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxB, &psumB);
-#endif
             sumR += (sumAvxR[0] + sumAvxR[1] + sumAvxR[2] + sumAvxR[3]);
             sumG += (sumAvxG[0] + sumAvxG[1] + sumAvxG[2] + sumAvxG[3]);
             sumB += (sumAvxB[0] + sumAvxB[1] + sumAvxB[2] + sumAvxB[3]);
-
+#endif
             sum = sumR + sumG + sumB;
             int index = batchCount * 4;
             tensorSumArr[index] = (Rpp32f)sumR;
@@ -558,18 +551,18 @@ RppStatus tensor_sum_f16_f32_host(Rpp16f *srcPtr,
                 srcPtrTemp = srcPtrRow;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     Rpp32f srcPtrTemp_ps[24];
                     for(int cnt = 0; cnt < vectorIncrement; cnt++)
                         srcPtrTemp_ps[cnt] = (Rpp32f) srcPtrTemp[cnt];
-#if __AVX2__
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_f32pkd3_to_f64pln3_avx, srcPtrTemp_ps, p);
                     compute_sum_24_host(p, &psumR, &psumG, &psumB);
-#endif
                     srcPtrTemp += vectorIncrement;
                 }
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     sumR += (Rpp64f)(srcPtrTemp[0]);
@@ -583,11 +576,10 @@ RppStatus tensor_sum_f16_f32_host(Rpp16f *srcPtr,
             rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxR, &psumR);
             rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxG, &psumG);
             rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxB, &psumB);
-#endif
             sumR += (sumAvxR[0] + sumAvxR[1] + sumAvxR[2] + sumAvxR[3]);
             sumG += (sumAvxG[0] + sumAvxG[1] + sumAvxG[2] + sumAvxG[3]);
             sumB += (sumAvxB[0] + sumAvxB[1] + sumAvxB[2] + sumAvxB[3]);
-
+#endif
             sum = sumR + sumG + sumB;
             int index = batchCount * 4;
             tensorSumArr[index] = (Rpp32f)sumR;
@@ -649,15 +641,15 @@ RppStatus tensor_sum_i8_i64_host(Rpp8s *srcPtr,
                 srcPtrTemp = srcPtrRow;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
-#if __AVX2__
                     __m256i p1[2];
                     rpp_simd_load(rpp_load16_i8_to_i32_avx, srcPtrTemp, p1);
                     compute_sum_16_host(p1, &psum);
-#endif
                     srcPtrTemp += vectorIncrement;
                 }
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     sum += (Rpp32s)(*srcPtrTemp++);
@@ -666,9 +658,8 @@ RppStatus tensor_sum_i8_i64_host(Rpp8s *srcPtr,
             }
 #if __AVX2__
             rpp_simd_store(rpp_store8_i32_to_i32_avx, sumAvx, &psum);
-#endif
             sum += (sumAvx[0] + sumAvx[1] + sumAvx[2] + sumAvx[3] + sumAvx[4] + sumAvx[5] + sumAvx[6] + sumAvx[7]);
-
+#endif
             tensorSumArr[batchCount] = (Rpp64s)sum;
         }
 
@@ -698,17 +689,17 @@ RppStatus tensor_sum_i8_i64_host(Rpp8s *srcPtr,
                 srcPtrTempB = srcPtrRowB;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
-#if __AVX2__
                     __m256i p[6];
                     rpp_simd_load(rpp_load48_i8pln3_to_i32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);
                     compute_sum_48_host(p, &psumR, &psumG, &psumB);
-#endif
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
                     srcPtrTempB += vectorIncrementPerChannel;
                 }
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     sumR += (Rpp32s)(*srcPtrTempR++);
@@ -723,11 +714,10 @@ RppStatus tensor_sum_i8_i64_host(Rpp8s *srcPtr,
             rpp_simd_store(rpp_store8_i32_to_i32_avx, sumAvxR, &psumR);
             rpp_simd_store(rpp_store8_i32_to_i32_avx, sumAvxG, &psumG);
             rpp_simd_store(rpp_store8_i32_to_i32_avx, sumAvxB, &psumB);
-#endif
             sumR += (sumAvxR[0] + sumAvxR[1] + sumAvxR[2] + sumAvxR[3] + sumAvxR[4] + sumAvxR[5] + sumAvxR[6] + sumAvxR[7]);
             sumG += (sumAvxG[0] + sumAvxG[1] + sumAvxG[2] + sumAvxG[3] + sumAvxG[4] + sumAvxG[5] + sumAvxG[6] + sumAvxG[7]);
             sumB += (sumAvxB[0] + sumAvxB[1] + sumAvxB[2] + sumAvxB[3] + sumAvxB[4] + sumAvxB[5] + sumAvxB[6] + sumAvxB[7]);
-
+#endif
             sum = (Rpp64s)sumR + (Rpp64s)sumG + (Rpp64s)sumB;
             int index = batchCount * 4;
             tensorSumArr[index] = (Rpp64s)sumR;
@@ -758,15 +748,15 @@ RppStatus tensor_sum_i8_i64_host(Rpp8s *srcPtr,
                 srcPtrTemp = srcPtrRow;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
-#if __AVX2__
                     __m256i p[6];
                     rpp_simd_load(rpp_load48_i8pkd3_to_i32pln3_avx, srcPtrTemp, p);
                     compute_sum_48_host(p, &psumR, &psumG, &psumB);
-#endif
                     srcPtrTemp += vectorIncrement;
                 }
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     sumR += (Rpp32s)(srcPtrTemp[0]);
@@ -780,11 +770,10 @@ RppStatus tensor_sum_i8_i64_host(Rpp8s *srcPtr,
             rpp_simd_store(rpp_store8_i32_to_i32_avx, sumAvxR, &psumR);
             rpp_simd_store(rpp_store8_i32_to_i32_avx, sumAvxG, &psumG);
             rpp_simd_store(rpp_store8_i32_to_i32_avx, sumAvxB, &psumB);
-#endif
             sumR += (sumAvxR[0] + sumAvxR[1] + sumAvxR[2] + sumAvxR[3] + sumAvxR[4] + sumAvxR[5] + sumAvxR[6] + sumAvxR[7]);
             sumG += (sumAvxG[0] + sumAvxG[1] + sumAvxG[2] + sumAvxG[3] + sumAvxG[4] + sumAvxG[5] + sumAvxG[6] + sumAvxG[7]);
             sumB += (sumAvxB[0] + sumAvxB[1] + sumAvxB[2] + sumAvxB[3] + sumAvxB[4] + sumAvxB[5] + sumAvxB[6] + sumAvxB[7]);
-
+#endif
             sum = (Rpp64s)sumR + (Rpp64s)sumG + (Rpp64s)sumB;
             int index = batchCount * 4;
             tensorSumArr[index] = (Rpp64s)sumR;
