@@ -82,10 +82,7 @@ RppStatus slice_audio_host_tensor(Rpp32f *srcPtr,
                         dstPtrTemp += vectorIncrement;
                     }
                     for (; dstIdx < leftPadLength; dstIdx++)
-                    {
-                        *dstPtrTemp = fillValue;
-                        dstPtrTemp++;
-                    }
+                        *dstPtrTemp++ = fillValue;
 
                     anchor += leftPadLength;
                 }
@@ -107,10 +104,7 @@ RppStatus slice_audio_host_tensor(Rpp32f *srcPtr,
                         dstPtrTemp += vectorIncrement;
                     }
                     for (; dstIdx < shape; dstIdx++)
-                    {
-                        *dstPtrTemp = fillValue;
-                        dstPtrTemp++;
-                    }
+                        *dstPtrTemp++ = fillValue;
                 }
             }
         }
