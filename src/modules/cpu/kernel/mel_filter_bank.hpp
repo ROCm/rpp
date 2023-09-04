@@ -101,7 +101,6 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
             break;
     }
     Rpp32u numThreads = handle.GetNumThreads();
-    Rpp32f *normFactors = static_cast<Rpp32f *>(malloc(numFilter * sizeof(Rpp32f)));
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
@@ -131,6 +130,7 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
         fftBinEnd = std::min(fftBinEnd, numBins);
 
         Rpp32f *weightsDown = static_cast<Rpp32f *>(calloc(numBins, sizeof(Rpp32f)));
+        Rpp32f *normFactors = static_cast<Rpp32f *>(malloc(numFilter * sizeof(Rpp32f)));
         std::fill(normFactors, normFactors + numFilter, 1.f);
 
         Rpp32s *intervals = static_cast<Rpp32s *>(malloc(numBins * sizeof(Rpp32s)));
@@ -207,11 +207,7 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
                 }
 
                 for (; vectorLoopCount < numFrames; vectorLoopCount++)
-                {
-                    (*dstRowPtrTemp) += weightDown * (*srcRowPtrTemp);
-                    dstRowPtrTemp++;
-                    srcRowPtrTemp++;
-                }
+                    (*dstRowPtrTemp++) += weightDown * (*srcRowPtrTemp++);
             }
 
             if (filterUp >= 0 && filterUp < numFilter)
@@ -236,19 +232,15 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
                 }
 
                 for (; vectorLoopCount < numFrames; vectorLoopCount++)
-                {
-                    (*dstRowPtrTemp) += weightUp * (*srcRowPtrTemp);
-                    dstRowPtrTemp++;
-                    srcRowPtrTemp++;
-                }
+                    (*dstRowPtrTemp++) += weightUp * (*srcRowPtrTemp++);
             }
 
             srcRowPtr += srcDescPtr->strides.hStride;
         }
         free(intervals);
+        free(normFactors);
         free(weightsDown);
     }
-    free(normFactors);
     delete melScalePtr;
 
     return RPP_SUCCESS;
