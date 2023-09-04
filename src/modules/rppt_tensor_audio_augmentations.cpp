@@ -70,6 +70,8 @@ RppStatus rppt_to_decibels_host(RppPtr_t srcPtr,
                                 Rpp32f referenceMagnitude,
                                 rppHandle_t rppHandle)
 {
+    if (multiplier == 0)
+        return RPP_ERROR_ZERO_DIVISION;
     if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
         to_decibels_host_tensor(static_cast<Rpp32f*>(srcPtr),
