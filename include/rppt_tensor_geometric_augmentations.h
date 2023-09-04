@@ -439,6 +439,24 @@ RppStatus rppt_slice_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, 
 /*! @}
  */
 
+/******************** transpose_generic ********************/
+
+// transpose augmentation for a generic ND Tensor
+
+// *param[in] srcPtr source tensor memory
+// *param[in] srcGenericDescPtr source tensor descriptor
+// *param[out] dstPtr destination tensor memory
+// *param[in] dstGenericDescPtr destination tensor descriptor
+// *param[in] permTensor
+// *param[in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
+// *param[in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
+// *param[in] rppHandle HIP-handle for "_gpu" variants and Host-handle for "_host" variants
+// *returns a  RppStatus enumeration.
+// *retval RPP_SUCCESS : succesful completion
+// *retval RPP_ERROR : Error
+
+RppStatus rppt_transpose_generic_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *permTensor, Rpp32u *roiTensor, rppHandle_t rppHandle);
+
 #ifdef __cplusplus
 }
 #endif
