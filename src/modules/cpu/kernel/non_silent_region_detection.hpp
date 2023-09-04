@@ -48,10 +48,7 @@ RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
                                                   rpp::Handle& handle)
 {
     Rpp32u numThreads = handle.GetNumThreads();
-    Rpp32u maxSrcLength = *std::max_element(srcLengthTensor, (srcLengthTensor + srcDescPtr->n));
-    Rpp32f *mmsBuffer = static_cast<Rpp32f *>(calloc(maxSrcLength, sizeof(Rpp32f)));
-
-    Rpp32f cutOff = std::pow(10.0f, cutOffDB * 0.1f);
+    const Rpp32f cutOff = std::pow(10.0f, cutOffDB * 0.1f);
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
@@ -59,6 +56,7 @@ RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
     {
         Rpp32f *srcPtrTemp = srcPtr + batchCount * srcDescPtr->strides.nStride;
         Rpp32s srcLength = srcLengthTensor[batchCount];
+        Rpp32f *mmsBufferPtr = static_cast<Rpp32f *>(calloc(srcLength, sizeof(Rpp32f)));
         bool referenceMax = (referencePower == 0.0f);
 
         // set reset interval based on the user input
@@ -131,7 +129,7 @@ RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
 
         detectedIndexTensor[batchCount] = detectBegin;
         detectionLengthTensor[batchCount] = detectEnd;
+        free(mmsBuffer);
     }
-    free(mmsBuffer);
     return RPP_SUCCESS;
 }
