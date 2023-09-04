@@ -56,7 +56,7 @@ RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
     {
         Rpp32f *srcPtrTemp = srcPtr + batchCount * srcDescPtr->strides.nStride;
         Rpp32s srcLength = srcLengthTensor[batchCount];
-        Rpp32f *mmsBufferPtr = static_cast<Rpp32f *>(calloc(srcLength, sizeof(Rpp32f)));
+        Rpp32f *mmsBuffer = static_cast<Rpp32f *>(calloc(srcLength, sizeof(Rpp32f)));
         bool referenceMax = (referencePower == 0.0f);
 
         // set reset interval based on the user input
