@@ -37,11 +37,6 @@ void compute_strides(Rpp32u *strides, Rpp32u *shape, Rpp32u nDim)
         }
         strides[0] = v;
     }
-    // cerr<<"stride values: "<<endl;
-    // for (int i = 0; i < nDim; i++)
-    //     cerr<<strides[i]<<endl;
-
-    // cerr<<endl;
 }
 
 void transpose(Rpp32f *dst, Rpp32u *dstStrides, Rpp32f *src, Rpp32u *srcStrides, Rpp32u *dstShape, Rpp32u nDim) 
@@ -84,8 +79,8 @@ RppStatus transpose_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
     for(int batchCount = 0; batchCount < batchSize; batchCount++)
     {
         Rpp32f *srcPtrTemp, *dstPtrTemp;
-        srcPtrTemp = srcPtr; //+ batchCount * srcGenericDescPtr->strides[0];
-        dstPtrTemp = dstPtr; //+ batchCount * dstGenericDescPtr->strides[0];
+        srcPtrTemp = srcPtr + batchCount * srcGenericDescPtr->strides[0];
+        dstPtrTemp = dstPtr + batchCount * dstGenericDescPtr->strides[0];
         
         Rpp32u *dstShape = dstShapeTensor + batchCount * nDim;
         Rpp32u *roi = roiTensor + batchCount * nDim;
@@ -115,4 +110,3 @@ RppStatus transpose_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
 
     return RPP_SUCCESS;
 }
-
