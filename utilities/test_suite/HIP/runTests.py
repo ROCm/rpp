@@ -44,7 +44,17 @@ def validate_and_remove_files(path):
         exit()
 
     elif os.path.exists(path):  # check if the folder exists
-        os.system("rm -rvf {}/*".format(path))  # Delete the directory if it exists
+        # Get a list of files and directories within the specified path
+        items = os.listdir(path)
+
+        if items:
+            # The directory is not empty, delete its contents
+            for item in items:
+                item_path = os.path.join(path, item)
+                if os.path.isfile(item_path):
+                    os.remove(item_path)
+                elif os.path.isdir(item_path):
+                    shutil.rmtree(item_path)     # Delete the directory if it exists
 
     else:
         print("Path is invalid or does not exist.")
@@ -62,7 +72,7 @@ def validate_and_remove_folders(path, folder):
         for folder_name in output_folders:
             folder_path = os.path.join(path, "..", folder_name)
             if os.path.isdir(folder_path):
-                os.system("rm -rf {}".format(folder_path))  # Delete the directory if it exists
+                shutil.rmtree(folder_path)  # Delete the directory if it exists
                 print("Deleted directory:", folder_path)
             else:
                 print("Directory not found:", folder_path)
@@ -163,14 +173,48 @@ def generate_performance_reports(d_counter, TYPE_LIST):
         dfPrint_noIndices = dfPrint_noIndices.to_string(index = False)
         print(dfPrint_noIndices)
 
-def run_unit_test(srcPath1, srcPath2, dstPathTemp, bitDepth, outputFormatToggle, case, additionalParam, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
-    result = subprocess.run(["./Tensor_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE)
-    print(result.stdout.decode())
+def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
+    print("\n\n\n\n")
+    print("--------------------------------")
+    print("Running a New Functionality...")
+    print("--------------------------------")
 
-def run_performance_test(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, additionalParam, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
+    for bitDepth in range(7):
+        print("\n\n\nRunning New Bit Depth...\n-------------------------\n\n")
+
+        for outputFormatToggle in range(2):
+            # There is no layout toggle for PLN1 case, so skip this case
+            if layout == 2 and outputFormatToggle == 1:
+                continue
+
+            if case == "40" or case == "41" or case == "49":
+                for kernelSize in range(3, 10, 2):
+                    print(f"./Tensor_hip {srcPath1} {srcPath2} {dstPath} {bitDepth} {outputFormatToggle} {case} {kernelSize}")
+                    result = subprocess.run(["./Tensor_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(kernelSize), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE)    # nosec
+                    print(result.stdout.decode())
+            elif case == "8":
+                # Run all variants of noise type functions with additional argument of noiseType = gausssianNoise / shotNoise / saltandpepperNoise
+                for noiseType in range(3):
+                    print(f"./Tensor_hip {srcPath1} {srcPath2} {dstPathTemp} {bitDepth} {outputFormatToggle} {case} {noiseType} ")
+                    result = subprocess.run(["./Tensor_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(noiseType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE)    # nosec
+                    print(result.stdout.decode())
+            elif case == "21" or case == "23" or case == "24":
+                # Run all variants of interpolation functions with additional argument of interpolationType = bicubic / bilinear / gaussian / nearestneigbor / lanczos / triangular
+                for interpolationType in range(6):
+                    print(f"./Tensor_hip {srcPath1} {srcPath2} {dstPathTemp} {bitDepth} {outputFormatToggle} {case} {interpolationType}")
+                    result = subprocess.run(["./Tensor_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(interpolationType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE)    # nosec
+                    print(result.stdout.decode())
+            else:
+                print(f"./Tensor_hip {srcPath1} {srcPath2} {dstPathTemp} {bitDepth} {outputFormatToggle} {case} 0 {numRuns} {testType} {layout}")
+                result = subprocess.run(["./Tensor_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), "0", str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE)    # nosec
+                print(result.stdout.decode())
+
+            print("------------------------------------------------------------------------------------------")
+
+def run_performance_test_cmd(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, additionalParam, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
     with open("{}/Tensor_hip_{}_raw_performance_log.txt".format(loggingFolder, log_file_layout), "a") as log_file:
         print(f"./Tensor_hip {srcPath1} {srcPath2} {dstPath} {bitDepth} {outputFormatToggle} {case} {additionalParam} 0 ")
-        process = subprocess.Popen(["./Tensor_hip", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        process = subprocess.Popen(["./Tensor_hip", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)   # nosec
         while True:
             output = process.stdout.readline()
             if not output and process.poll() is not None:
@@ -178,13 +222,42 @@ def run_performance_test(loggingFolder, log_file_layout, srcPath1, srcPath2, dst
             print(output.strip())
             log_file.write(output)
 
+def run_performance_test(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
+    print("\n\n\n\n")
+    print("--------------------------------")
+    print("Running a New Functionality...")
+    print("--------------------------------")
+
+    for bitDepth in range(7):
+        print("\n\n\nRunning New Bit Depth...\n-------------------------\n\n")
+
+        for outputFormatToggle in range(2):
+            # There is no layout toggle for PLN1 case, so skip this case
+            if layout == 2 and outputFormatToggle == 1:
+                continue
+
+            if case == "40" or case == "41" or case == "49":
+                for kernelSize in range(3, 10, 2):
+                    run_performance_test_cmd(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, kernelSize, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
+            elif case == "8":
+                # Run all variants of noise type functions with additional argument of noiseType = gausssianNoise / shotNoise / saltandpepperNoise
+                for noiseType in range(3):
+                    run_performance_test_cmd(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, noiseType, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
+            elif case == "21" or case == "23" or case == "24":
+                # Run all variants of interpolation functions with additional argument of interpolationType = bicubic / bilinear / gaussian / nearestneigbor / lanczos / triangular
+                for interpolationType in range(6):
+                    run_performance_test_cmd(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, interpolationType, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
+            else:
+                run_performance_test_cmd(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, "0", numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
+                print("------------------------------------------------------------------------------------------")
+
 def run_performance_test_with_profiler(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, additionalParam, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
     if layout == 0:
         if not os.path.isdir(f"{dstPath}/Tensor_PKD3/case_{case}"):
             os.mkdir(f"{dstPath}/Tensor_PKD3/case_{case}")
         with open(f"{loggingFolder}/Tensor_hip_{log_file_layout}_raw_performance_log.txt", "a") as log_file:
             print(f'rocprof --basenames on --timestamp on --stats -o {dstPath}/Tensor_PKD3/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}_kernelSize{additionalParam}.csv ./Tensor_hip {srcPath1} {srcPath2} {bitDepth} {outputFormatToggle} {case} {additionalParam} 0')
-            process = subprocess.Popen(['rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f'{dstPath}/Tensor_PKD3/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}_kernelSize{additionalParam}.csv', './Tensor_hip', srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), str(numRuns), str(testType), str(layout), '0', str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            process = subprocess.Popen(['rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f'{dstPath}/Tensor_PKD3/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}_kernelSize{additionalParam}.csv', './Tensor_hip', srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), str(numRuns), str(testType), str(layout), '0', str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)   # nosec
             while True:
                 output = process.stdout.readline()
                 if not output and process.poll() is not None:
@@ -197,7 +270,7 @@ def run_performance_test_with_profiler(loggingFolder, log_file_layout, srcPath1,
             os.mkdir(f"{dstPath}/Tensor_PLN3/case_{case}")
         with open(f"{loggingFolder}/Tensor_hip_{log_file_layout}_raw_performance_log.txt", "a") as log_file:
             print(f'rocprof --basenames on --timestamp on --stats -o {dstPath}/Tensor_PLN3/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}_kernelSize{additionalParam}.csv ./Tensor_hip {srcPath1} {srcPath2} {bitDepth} {outputFormatToggle} {case} {additionalParam} 0')
-            process = subprocess.Popen(['rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f'{dstPath}/Tensor_PLN3/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}_kernelSize{additionalParam}.csv', './Tensor_hip', srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), str(numRuns), str(testType), str(layout), '0', str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            process = subprocess.Popen(['rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f'{dstPath}/Tensor_PLN3/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}_kernelSize{additionalParam}.csv', './Tensor_hip', srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), str(numRuns), str(testType), str(layout), '0', str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)    # nosec
             while True:
                 output = process.stdout.readline()
                 if not output and process.poll() is not None:
@@ -207,10 +280,10 @@ def run_performance_test_with_profiler(loggingFolder, log_file_layout, srcPath1,
                 log_file.write(output_str)
     elif layout == 2:
         if not os.path.isdir(f"{dstPath}/Tensor_PLN1/case_{case}"):
-            os.mkdir(f"{dstPath}/Tensor_PLN1/case_{case}")
+            os.mkdir(f"{dstPath}/Tensor_P[LN1/case_{case}")
         with open(f"{loggingFolder}/Tensor_hip_{log_file_layout}_raw_performance_log.txt", "a") as log_file:
             print(f'rocprof --basenames on --timestamp on --stats -o "{dstPath}/Tensor_PLN1/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}_kernelSize{additionalParam}.csv" "./Tensor_hip {srcPath1} {srcPath2} {bitDepth} {outputFormatToggle} {case} {additionalParam} 0"')
-            process = subprocess.Popen(['rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f'{dstPath}/Tensor_PLN1/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}_kernelSize{additionalParam}.csv', './Tensor_hip', srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), str(numRuns), str(testType), str(layout), '0', str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            process = subprocess.Popen(['rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f'{dstPath}/Tensor_PLN1/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}_kernelSize{additionalParam}.csv', './Tensor_hip', srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), str(numRuns), str(testType), str(layout), '0', str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)   # nosec
             while True:
                 output = process.stdout.readline()
                 if not output and process.poll() is not None:
@@ -351,8 +424,8 @@ os.makedirs("build")
 os.chdir("build")
 
 # Run cmake and make commands
-subprocess.run(["cmake", ".."])
-subprocess.run(["make", "-j16"])
+subprocess.run(["cmake", ".."], cwd=".")   # nosec
+subprocess.run(["make", "-j16"], cwd=".")    # nosec
 
 # Create folders based on testType and profilingOption
 if testType == 1 and profilingOption == "YES":
@@ -377,51 +450,12 @@ if(testType == 0):
                 if not os.path.isdir(dstPathTemp):
                     os.mkdir(dstPathTemp)
 
-            print("\n\n\n\n")
-            print("--------------------------------")
-            print("Running a New Functionality...")
-            print("--------------------------------")
+            run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
 
-            for bitDepth in range(7):
-                print("\n\n\nRunning New Bit Depth...\n-------------------------\n\n")
-
-                for outputFormatToggle in range(2):
-                    # There is no layout toggle for PLN1 case, so skip this case
-                    if layout == 2 and outputFormatToggle == 1:
-                        continue
-
-                    if case == "40" or case == "41" or case == "49":
-                        for kernelSize in range(3, 10, 2):
-                            print(f"./Tensor_hip {srcPath1} {srcPath2} {dstPath} {bitDepth} {outputFormatToggle} {case} {kernelSize}")
-                            run_unit_test(srcPath1, srcPath2, dstPathTemp, bitDepth, outputFormatToggle, case, kernelSize, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
-                    elif case == "8":
-                        # Run all variants of noise type functions with additional argument of noiseType = gausssianNoise / shotNoise / saltandpepperNoise
-                        for noiseType in range(3):
-                            print(f"./Tensor_hip {srcPath1} {srcPath2} {dstPathTemp} {bitDepth} {outputFormatToggle} {case} {noiseType} ")
-                            run_unit_test(srcPath1, srcPath2, dstPathTemp, bitDepth, outputFormatToggle, case, noiseType, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
-                    elif case == "21" or case == "23" or case == "24":
-                        # Run all variants of interpolation functions with additional argument of interpolationType = bicubic / bilinear / gaussian / nearestneigbor / lanczos / triangular
-                        for interpolationType in range(6):
-                            print(f"./Tensor_hip {srcPath1} {srcPath2} {dstPathTemp} {bitDepth} {outputFormatToggle} {case} {interpolationType}")
-                            run_unit_test(srcPath1, srcPath2, dstPathTemp, bitDepth, outputFormatToggle, case, interpolationType, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
-                    else:
-                        print(f"./Tensor_hip {srcPath1} {srcPath2} {dstPathTemp} {bitDepth} {outputFormatToggle} {case} 0 {numRuns} {testType} {layout}")
-                        run_unit_test(srcPath1, srcPath2, dstPathTemp, bitDepth, outputFormatToggle, case, "0", numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
-
-                    print("------------------------------------------------------------------------------------------")
     layoutDict = {0:"PKD3", 1:"PLN3", 2:"PLN1"}
     if qaMode == 0:
         create_layout_directories(dstPath, layoutDict)
 else:
-    log_file_list = get_log_file_list(preserveOutput)
-
-    functionality_group_list = [
-    "color_augmentations",
-    "data_exchange_operations",
-    "effects_augmentations",
-    "geometric_augmentations",
-    ]
-
     if (testType == 1 and profilingOption == "NO"):
         for case in caseList:
             if int(case) < 0 or int(case) > 86:
@@ -430,95 +464,8 @@ else:
             for layout in range(3):
                 dstPathTemp, log_file_layout = process_layout(layout, qaMode, case, dstPath)
 
-                print("\n\n\n\n")
-                print("--------------------------------")
-                print("Running a New Functionality...")
-                print("--------------------------------")
+                run_performance_test(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
 
-                for bitDepth in range(7):
-                    print("\n\n\nRunning New Bit Depth...\n-------------------------\n\n")
-
-                    for outputFormatToggle in range(2):
-                        # There is no layout toggle for PLN1 case, so skip this case
-                        if layout == 2 and outputFormatToggle == 1:
-                            continue
-
-                        if case == "40" or case == "41" or case == "49":
-                            for kernelSize in range(3, 10, 2):
-                                run_performance_test(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, kernelSize, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
-                        elif case == "8":
-                            # Run all variants of noise type functions with additional argument of noiseType = gausssianNoise / shotNoise / saltandpepperNoise
-                            for noiseType in range(3):
-                                run_performance_test(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, noiseType, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
-                        elif case == "21" or case == "23" or case == "24":
-                            # Run all variants of interpolation functions with additional argument of interpolationType = bicubic / bilinear / gaussian / nearestneigbor / lanczos / triangular
-                            for interpolationType in range(6):
-                                run_performance_test(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, interpolationType, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
-                        else:
-                            run_performance_test(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, "0", numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
-                            print("------------------------------------------------------------------------------------------")
-
-        for log_file in log_file_list:
-            # Opening log file
-            try:
-                f = open(log_file,"r")
-                print("\n\n\nOpened log file -> " + log_file)
-            except IOError:
-                print("Skipping file -> " + log_file)
-                continue
-
-            stats = []
-            maxVals = []
-            minVals = []
-            avgVals = []
-            functions = []
-            frames = []
-            prevLine = ""
-            funcCount = 0
-
-            # Loop over each line
-            for line in f:
-                for functionality_group in functionality_group_list:
-                    if functionality_group in line:
-                        functions.extend([" ", functionality_group, " "])
-                        frames.extend([" ", " ", " "])
-                        maxVals.extend([" ", " ", " "])
-                        minVals.extend([" ", " ", " "])
-                        avgVals.extend([" ", " ", " "])
-
-                if "max,min,avg wall times in ms/batch" in line:
-                    split_word_start = "Running "
-                    split_word_end = " "+ str(numRuns)
-                    prevLine = prevLine.partition(split_word_start)[2].partition(split_word_end)[0]
-                    if prevLine not in functions:
-                        functions.append(prevLine)
-                        frames.append(str(numRuns))
-                        split_word_start = "max,min,avg wall times in ms/batch = "
-                        split_word_end = "\n"
-                        stats = line.partition(split_word_start)[2].partition(split_word_end)[0].split(",")
-                        maxVals.append(stats[0])
-                        minVals.append(stats[1])
-                        avgVals.append(stats[2])
-                        funcCount += 1
-
-                if line != "\n":
-                    prevLine = line
-
-            # Print log lengths
-            print("Functionalities - " + str(funcCount))
-
-            # Print summary of log
-            print("\n\nFunctionality\t\t\t\t\t\tFrames Count\tmax(ms/batch)\t\tmin(ms/batch)\t\tavg(ms/batch)\n")
-            if len(functions) != 0:
-                maxCharLength = len(max(functions, key = len))
-                functions = [x + (' ' * (maxCharLength - len(x))) for x in functions]
-                for i, func in enumerate(functions):
-                    print(func + "\t" + str(frames[i]) + "\t\t" + str(maxVals[i]) + "\t" + str(minVals[i]) + "\t" + str(avgVals[i]))
-            else:
-                print("No variants under this category")
-
-            # Closing log file
-            f.close()
     elif (testType == 1 and profilingOption == "YES"):
         NEW_FUNC_GROUP_LIST = [0, 15, 20, 29, 36, 40, 42, 49, 56, 65, 69]
 
@@ -649,6 +596,77 @@ else:
 
         except IOError:
             print("Unable to open results in " + RESULTS_DIR + "/consolidated_results_" + TYPE + ".stats.csv")
+
+if (testType == 1 and profilingOption == "NO"):
+    log_file_list = get_log_file_list(preserveOutput)
+
+    functionality_group_list = [
+    "color_augmentations",
+    "data_exchange_operations",
+    "effects_augmentations",
+    "geometric_augmentations",
+    ]
+    for log_file in log_file_list:
+        # Opening log file
+        try:
+            f = open(log_file,"r")
+            print("\n\n\nOpened log file -> " + log_file)
+        except IOError:
+            print("Skipping file -> " + log_file)
+            continue
+
+        stats = []
+        maxVals = []
+        minVals = []
+        avgVals = []
+        functions = []
+        frames = []
+        prevLine = ""
+        funcCount = 0
+
+        # Loop over each line
+        for line in f:
+            for functionality_group in functionality_group_list:
+                if functionality_group in line:
+                    functions.extend([" ", functionality_group, " "])
+                    frames.extend([" ", " ", " "])
+                    maxVals.extend([" ", " ", " "])
+                    minVals.extend([" ", " ", " "])
+                    avgVals.extend([" ", " ", " "])
+
+            if "max,min,avg wall times in ms/batch" in line:
+                split_word_start = "Running "
+                split_word_end = " "+ str(numRuns)
+                prevLine = prevLine.partition(split_word_start)[2].partition(split_word_end)[0]
+                if prevLine not in functions:
+                    functions.append(prevLine)
+                    frames.append(str(numRuns))
+                    split_word_start = "max,min,avg wall times in ms/batch = "
+                    split_word_end = "\n"
+                    stats = line.partition(split_word_start)[2].partition(split_word_end)[0].split(",")
+                    maxVals.append(stats[0])
+                    minVals.append(stats[1])
+                    avgVals.append(stats[2])
+                    funcCount += 1
+
+            if line != "\n":
+                prevLine = line
+
+        # Print log lengths
+        print("Functionalities - " + str(funcCount))
+
+        # Print summary of log
+        print("\n\nFunctionality\t\t\t\t\t\tFrames Count\tmax(ms/batch)\t\tmin(ms/batch)\t\tavg(ms/batch)\n")
+        if len(functions) != 0:
+            maxCharLength = len(max(functions, key = len))
+            functions = [x + (' ' * (maxCharLength - len(x))) for x in functions]
+            for i, func in enumerate(functions):
+                print(func + "\t" + str(frames[i]) + "\t\t" + str(maxVals[i]) + "\t" + str(minVals[i]) + "\t" + str(avgVals[i]))
+        else:
+            print("No variants under this category")
+
+        # Closing log file
+        f.close()
 
 # print the results of qa tests
 supportedCaseList = ['0', '1', '2', '4', '8', '13', '20', '21', '23', '24', '30', '31', '34', '36', '37', '38', '39', '70', '80', '81', '83', '84', '85', '86']

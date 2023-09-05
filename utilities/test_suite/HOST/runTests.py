@@ -44,7 +44,17 @@ def validate_and_remove_files(path):
         exit()
 
     elif os.path.exists(path):  # check if the folder exists
-        os.system("rm -rvf {}/*".format(path))  # Delete the directory if it exists
+        # Get a list of files and directories within the specified path
+        items = os.listdir(path)
+
+        if items:
+            # The directory is not empty, delete its contents
+            for item in items:
+                item_path = os.path.join(path, item)
+                if os.path.isfile(item_path):
+                    os.remove(item_path)
+                elif os.path.isdir(item_path):
+                    shutil.rmtree(item_path)     # Delete the directory if it exists
 
     else:
         print("Path is invalid or does not exist.")
@@ -62,7 +72,7 @@ def validate_and_remove_folders(path, folder):
         for folder_name in output_folders:
             folder_path = os.path.join(path, "..", folder_name)
             if os.path.isdir(folder_path):
-                os.system("rm -rf {}".format(folder_path))  # Delete the directory if it exists
+                shutil.rmtree(folder_path)  # Delete the directory if it exists
                 print("Deleted directory:", folder_path)
             else:
                 print("Directory not found:", folder_path)
@@ -131,20 +141,73 @@ def process_layout(layout, qaMode, case, dstPath):
 
     return dstPathTemp, log_file_layout
 
-def run_unit_test(srcPath1, srcPath2, dstPathTemp, bitDepth, outputFormatToggle, case, additionalParam, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
-    result = subprocess.run(["./Tensor_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE)
-    print(result.stdout.decode())
+def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
+    print("\n\n\n\n")
+    print("--------------------------------")
+    print("Running a New Functionality...")
+    print("--------------------------------")
+    for bitDepth in range(7):
+        print("\n\n\nRunning New Bit Depth...\n-------------------------\n\n")
 
-def run_performance_test(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, additionalParam, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
+        for outputFormatToggle in range(2):
+            # There is no layout toggle for PLN1 case, so skip this case
+            if layout == 2 and outputFormatToggle == 1:
+                continue
+
+            if case == "8":
+                # Run all variants of noise type functions with additional argument of noiseType = gausssianNoise / shotNoise / saltandpepperNoise
+                for noiseType in range(3):
+                    print(f"./Tensor_host {srcPath1} {srcPath2} {dstPathTemp} {bitDepth} {outputFormatToggle} {case} {noiseType} 0 ")
+                    result = subprocess.run(["./Tensor_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(noiseType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE)    # nosec
+                    print(result.stdout.decode())
+            elif case == "21" or case == "23" or case == "24":
+                # Run all variants of interpolation functions with additional argument of interpolationType = bicubic / bilinear / gaussian / nearestneigbor / lanczos / triangular
+                for interpolationType in range(6):
+                    print(f"./Tensor_host {srcPath1} {srcPath2} {dstPathTemp} {bitDepth} {outputFormatToggle} {case} {interpolationType} 0")
+                    result = subprocess.run(["./Tensor_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(interpolationType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE)    # nosec
+                    print(result.stdout.decode())
+            else:
+                print(f"./Tensor_host {srcPath1} {srcPath2} {dstPathTemp} {bitDepth} {outputFormatToggle} {case} 0 {numRuns} {testType} {layout} 0")
+                result = subprocess.run(["./Tensor_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), "0", str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE)    # nosec
+                print(result.stdout.decode())
+
+            print("------------------------------------------------------------------------------------------")
+
+def run_performance_test_cmd(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, additionalParam, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
     with open("{}/Tensor_host_{}_raw_performance_log.txt".format(loggingFolder, log_file_layout), "a") as log_file:
         print(f"./Tensor_host {srcPath1} {srcPath2} {dstPath} {bitDepth} {outputFormatToggle} {case} {additionalParam} 0 ")
-        process = subprocess.Popen(["./Tensor_host", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        process = subprocess.Popen(["./Tensor_host", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
         while True:
             output = process.stdout.readline()
             if not output and process.poll() is not None:
                 break
             print(output.strip())
             log_file.write(output)
+
+def run_performance_test(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
+    print("\n\n\n\n")
+    print("--------------------------------")
+    print("Running a New Functionality...")
+    print("--------------------------------")
+
+    for bitDepth in range(7):
+        print("\n\n\nRunning New Bit Depth...\n-------------------------\n\n")
+
+        for outputFormatToggle in range(2):
+            # There is no layout toggle for PLN1 case, so skip this case
+            if layout == 2 and outputFormatToggle == 1:
+                continue
+            if case == "8":
+                # Run all variants of noise type functions with additional argument of noiseType = gausssianNoise / shotNoise / saltandpepperNoise
+                for noiseType in range(3):
+                    run_performance_test_cmd(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, noiseType, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
+            elif case == "21" or case == "23" or case == "24":
+                # Run all variants of interpolation functions with additional argument of interpolationType = bicubic / bilinear / gaussian / nearestneigbor / lanczos / triangular
+                for interpolationType in range(6):
+                    run_performance_test_cmd(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, interpolationType, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
+            else:
+                run_performance_test_cmd(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, "0", numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
+            print("------------------------------------------------------------------------------------------")
 
 # Parse and validate command-line arguments for the RPP test suite
 def rpp_test_suite_parser_and_validator():
@@ -274,8 +337,8 @@ os.makedirs("build")
 os.chdir("build")
 
 # Run cmake and make commands
-subprocess.run(["cmake", ".."])
-subprocess.run(["make", "-j16"])
+subprocess.run(["cmake", ".."], cwd=".")   # nosec
+subprocess.run(["make", "-j16"], cwd=".")    # nosec
 
 print("\n\n\n\n\n")
 print("##########################################################################################")
@@ -294,34 +357,7 @@ if testType == 0:
                 if not os.path.isdir(dstPathTemp):
                     os.mkdir(dstPathTemp)
 
-            print("\n\n\n\n")
-            print("--------------------------------")
-            print("Running a New Functionality...")
-            print("--------------------------------")
-
-            for bitDepth in range(7):
-                print("\n\n\nRunning New Bit Depth...\n-------------------------\n\n")
-
-                for outputFormatToggle in range(2):
-                    # There is no layout toggle for PLN1 case, so skip this case
-                    if layout == 2 and outputFormatToggle == 1:
-                        continue
-
-                    if case == "8":
-                        # Run all variants of noise type functions with additional argument of noiseType = gausssianNoise / shotNoise / saltandpepperNoise
-                        for noiseType in range(3):
-                            print(f"./Tensor_host {srcPath1} {srcPath2} {dstPathTemp} {bitDepth} {outputFormatToggle} {case} {noiseType} 0 ")
-                            run_unit_test(srcPath1, srcPath2, dstPathTemp, bitDepth, outputFormatToggle, case, noiseType, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
-                    elif case == "21" or case == "23" or case == "24":
-                        # Run all variants of interpolation functions with additional argument of interpolationType = bicubic / bilinear / gaussian / nearestneigbor / lanczos / triangular
-                        for interpolationType in range(6):
-                            print(f"./Tensor_host {srcPath1} {srcPath2} {dstPathTemp} {bitDepth} {outputFormatToggle} {case} {interpolationType} 0")
-                            run_unit_test(srcPath1, srcPath2, dstPathTemp, bitDepth, outputFormatToggle, case, interpolationType, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
-                    else:
-                        print(f"./Tensor_host {srcPath1} {srcPath2} {dstPathTemp} {bitDepth} {outputFormatToggle} {case} 0 {numRuns} {testType} {layout} 0")
-                        run_unit_test(srcPath1, srcPath2, dstPathTemp, bitDepth, outputFormatToggle, case, "0", numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
-
-                    print("------------------------------------------------------------------------------------------")
+            run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
     layoutDict = {0:"PKD3", 1:"PLN3", 2:"PLN1"}
     if qaMode == 0:
         create_layout_directories(dstPath, layoutDict)
@@ -333,29 +369,7 @@ else:
         for layout in range(3):
             dstPathTemp, log_file_layout = process_layout(layout, qaMode, case, dstPath)
 
-            print("\n\n\n\n")
-            print("--------------------------------")
-            print("Running a New Functionality...")
-            print("--------------------------------")
-
-            for bitDepth in range(7):
-                print("\n\n\nRunning New Bit Depth...\n-------------------------\n\n")
-
-                for outputFormatToggle in range(2):
-                    # There is no layout toggle for PLN1 case, so skip this case
-                    if layout == 2 and outputFormatToggle == 1:
-                        continue
-                    if case == "8":
-                        # Run all variants of noise type functions with additional argument of noiseType = gausssianNoise / shotNoise / saltandpepperNoise
-                        for noiseType in range(3):
-                            run_performance_test(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, noiseType, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
-                    elif case == "21" or case == "23" or case == "24":
-                        # Run all variants of interpolation functions with additional argument of interpolationType = bicubic / bilinear / gaussian / nearestneigbor / lanczos / triangular
-                        for interpolationType in range(6):
-                            run_performance_test(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, interpolationType, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
-                    else:
-                        run_performance_test(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, "0", numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
-                    print("------------------------------------------------------------------------------------------")
+            run_performance_test(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
 
 # print the results of qa tests
 supportedCaseList = ['0', '1', '2', '4', '13', '20', '21', '23', '30', '31', '34', '36', '37', '38', '39', '70', '80', '81', '83', '84', '85', '86']
