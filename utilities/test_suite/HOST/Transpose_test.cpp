@@ -229,8 +229,10 @@ int main(int argc, char **argv)
     }
     else
     {    
-        for (int i = 0; i < nDim; i++)
-            roiTensor[i] = i + 2;
+        // for (int i = 0; i < nDim; i++)
+        //     roiTensor[i] = 15;
+        roiTensor[0] = 5;
+        roiTensor[1] = 6;
             
          for (int i = 0; i < nDim; i++)
             permTensor[i] = nDim - 1 - i;
@@ -261,7 +263,23 @@ int main(int argc, char **argv)
     }
     
     rppt_transpose_generic_host(inputF32, descriptorPtrND, outputF32, descriptorPtrND, permTensor, roiTensor, handle);
+    std::cerr<<"\nprinting input values: "<<std::endl;
+    for(int i = 0; i < numValues; i++)
+    {
+        if(i % roiTensor[1] == 0)
+            std::cerr<<std::endl;
+        
+        std::cerr<<inputF32[i]<<" ";
+    }
     
+    std::cerr<<"\n\nprinting output values: "<<std::endl;
+    for(int i = 0; i < numValues; i++)
+    {
+        if(i % roiTensor[0] == 0)
+            std::cerr<<std::endl;
+        
+        std::cerr<<outputF32[i]<<" ";
+    }
     // compare outputs
     if(qaMode)
         compare_output(outputF32, nDim, batchSize);

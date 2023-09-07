@@ -100,9 +100,85 @@ RppStatus transpose_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
         compute_strides(tempStrides, roi, nDim);
         for(int i = 0; i < nDim; i++)
             srcStrides[i] = tempStrides[perm[i]];
-            
-        // perform transpose as per the permute order
-        transpose(dstPtrTemp, dstStrides, srcPtrTemp, srcStrides, dstShape, nDim);
+        
+        if (nDim == 2)
+        {
+            if(perm[0] == 0 && perm[1] == 1)
+            {
+                // Do memcpy since output order is same as input order
+                memcpy(dstPtrTemp, srcPtrTemp, (size_t)(srcGenericDescPtr->strides[0] * sizeof(Rpp32f)));
+            }
+            else if(perm[0] == 1 && perm[1] == 0)
+            {
+               
+                Rpp32u height = roi[0];
+                Rpp32u width = roi[1];
+                Rpp32u alignedRows = (roi[0] / 4) * 4;
+                Rpp32u alignedCols = (roi[1] / 4) * 4;
+                Rpp32u vectorIncrement = 4;
+                int i = 0;
+                for(; i < alignedRows; i += vectorIncrement)
+                {
+                    Rpp32s k = (i / 4);
+                    Rpp32f *srcPtrRow[4] = {srcPtrTemp + i * width, srcPtrTemp + (i + 1) * width, srcPtrTemp + (i + 2) * width, srcPtrTemp + (i + 3) * width};
+                    Rpp32f *dstPtrRow[4] = {dstPtrTemp + k * vectorIncrement, dstPtrTemp + height + k * vectorIncrement, dstPtrTemp + 2 * height + k * vectorIncrement, dstPtrTemp + 3 * height + k * vectorIncrement};
+                    Rpp32u vectorLoopCount = 0;
+                    for(; vectorLoopCount < alignedCols; vectorLoopCount += vectorIncrement)
+                    {
+                        __m128 pSrc[4];
+                        pSrc[0] = _mm_loadu_ps(srcPtrRow[0]);
+                        pSrc[1] = _mm_loadu_ps(srcPtrRow[1]);
+                        pSrc[2] = _mm_loadu_ps(srcPtrRow[2]);
+                        pSrc[3] = _mm_loadu_ps(srcPtrRow[3]);
+                        _MM_TRANSPOSE4_PS(pSrc[0], pSrc[1], pSrc[2], pSrc[3]);
+                        _mm_storeu_ps(dstPtrRow[0], pSrc[0]);
+                        _mm_storeu_ps(dstPtrRow[1], pSrc[1]);
+                        _mm_storeu_ps(dstPtrRow[2], pSrc[2]);
+                        _mm_storeu_ps(dstPtrRow[3], pSrc[3]);
+                        
+                        srcPtrRow[0] += vectorIncrement;
+                        srcPtrRow[1] += vectorIncrement;
+                        srcPtrRow[2] += vectorIncrement;
+                        srcPtrRow[3] += vectorIncrement;
+                        dstPtrRow[0] += vectorIncrement * height;
+                        dstPtrRow[1] += vectorIncrement * height;
+                        dstPtrRow[2] += vectorIncrement * height;
+                        dstPtrRow[3] += vectorIncrement * height;
+                    }
+                }
+                
+                // Handle remaining cols
+                for(int k = 0; k < alignedRows; k++)
+                {
+                    Rpp32f *srcPtrRow = srcPtrTemp + k * width + alignedCols;
+                    Rpp32f *dstPtrRow = dstPtrTemp + alignedCols * height + k;
+                    for(int j = alignedCols; j < width; j++)
+                    {
+                        *dstPtrRow = *srcPtrRow;
+                        srcPtrRow++;
+                        dstPtrRow += height;
+                    }
+                }
+                
+                // Handle remaining rows
+                for( ; i < height; i++)
+                {
+                    Rpp32f *srcPtrRow = srcPtrTemp + i * width;
+                    Rpp32f *dstPtrRow = dstPtrTemp + i;
+                    for(int j = 0; j < width; j++)
+                    {
+                        *dstPtrRow = *srcPtrRow;
+                        srcPtrRow++;
+                        dstPtrRow += height;
+                    }  
+                } 
+            }
+        }
+        else
+        {
+            // perform transpose as per the permute order
+            transpose(dstPtrTemp, dstStrides, srcPtrTemp, srcStrides, dstShape, nDim);   
+        }
     }
     free(srcStridesTensor);
     free(dstStridesTensor);
