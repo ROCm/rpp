@@ -45,7 +45,7 @@ DEFAULT_SRC_FOLDER_1="$cwd/../TEST_IMAGES/three_images_mixed_src1"
 DEFAULT_SRC_FOLDER_2="$cwd/../TEST_IMAGES/three_images_mixed_src2"
 
 #Input Images - Three images (same size) - for RICAP input images should be of same size
-RICAP_SRC_FOLDER="$cwd/../TEST_IMAGES/three_images_224x224_src1"
+RICAP_SRC_FOLDER="$cwd/../TEST_IMAGES/three_images_150x150_src1"
 
 # <<<<<<<<<<<<<< PROCESSING OF INPUT ARGUMENTS (NEED NOT CHANGE) >>>>>>>>>>>>>>
 
@@ -60,11 +60,16 @@ if (( "$#" < 4 )); then
     DECODER_TYPE="0"
     NUM_RUNS="1"
     PRESERVE_OUTPUT="1"
-    BATCH_SIZE="1"
     CASE_LIST=()
     for ((case="$CASE_MIN";case<="$CASE_MAX";case++))
     do
         CASE_LIST+=("$case")
+        if [ "$case" -eq "82" ]
+        then
+            BATCH_SIZE="3"
+        else
+            BATCH_SIZE="1"
+        fi
     done
 else
     SRC_FOLDER_1="$1"
@@ -104,6 +109,10 @@ fi
 for case in $CASE_LIST; do
     if [[ $case -lt 0 || $case -gt 84 ]]; then
         echo "The case# must be in the 0:84 range!"
+    fi
+    if [ $case -eq 82 ]
+    then
+        BATCH_SIZE="3"
     fi
 done
 
@@ -244,7 +253,7 @@ if [ "$TEST_TYPE" -eq 0 ]; then
                 printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n"
                 for ((outputFormatToggle=0;outputFormatToggle<2;outputFormatToggle++))
                 do
-                     if [ "$case" -eq "82" ] || [ "$QA_MODE" -eq "1" ]; then
+                    if [ "$case" -eq "82" ]; then
                         SRC_FOLDER_1_TEMP="$RICAP_SRC_FOLDER"
                         SRC_FOLDER_2_TEMP="$RICAP_SRC_FOLDER"
                     else
@@ -319,8 +328,13 @@ else
                 printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n"
                 for ((outputFormatToggle=0;outputFormatToggle<2;outputFormatToggle++))
                 do
-                    SRC_FOLDER_1_TEMP="$SRC_FOLDER_1"
-                    SRC_FOLDER_2_TEMP="$SRC_FOLDER_2"
+                    if [ "$case" -eq "82" ]; then
+                        SRC_FOLDER_1_TEMP="$RICAP_SRC_FOLDER"
+                        SRC_FOLDER_2_TEMP="$RICAP_SRC_FOLDER"
+                    else
+                        SRC_FOLDER_1_TEMP="$SRC_FOLDER_1"
+                        SRC_FOLDER_2_TEMP="$SRC_FOLDER_2"
+                    fi
 
                     # There is no layout toggle for PLN1 case, so skip this case
                     if [[ $layout -eq 2 ]] && [[ $outputFormatToggle -eq 1 ]]; then

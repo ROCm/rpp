@@ -36,6 +36,10 @@ THE SOFTWARE.
 #include <fstream>
 #include <turbojpeg.h>
 #include <boost/filesystem.hpp>
+#include <random>
+#include <boost/math/distributions.hpp>
+#include <boost/math/special_functions/beta.hpp>
+using namespace boost::math;
 
 #ifdef GPU_SUPPORT
     #include <hip/hip_fp16.h>
@@ -56,9 +60,6 @@ namespace fs = boost::filesystem;
 #define MAX_BATCH_SIZE 512
 #define GOLDEN_OUTPUT_MAX_HEIGHT 150    // Golden outputs are generated with MAX_HEIGHT set to 150. Changing this constant will result in QA test failures
 #define GOLDEN_OUTPUT_MAX_WIDTH 150     // Golden outputs are generated with MAX_WIDTH set to 150. Changing this constant will result in QA test failures
-// Set GOLDEN_OUTPUT_MAX_HEIGHT and GOLDEN_OUTPUT_MAX_WIDTH as 224 for RICAP QA tests alone.
-// #define GOLDEN_OUTPUT_MAX_HEIGHT 224    // Golden outputs are generated with MAX_HEIGHT set to 224.
-// #define GOLDEN_OUTPUT_MAX_WIDTH 224     // Golden outputs are generated with MAX_WIDTH set to 224.
 
 std::map<int, string> augmentationMap =
 {
@@ -1036,9 +1037,79 @@ inline void randomize(unsigned int arr[], unsigned int n)
 }
 
 // Generates a random value between given min and max values
-int inline random_val(int min, int max)
+int inline randrange(int min, int max)
 {
-    if(max<0)
+    if(max < 0)
         return -1;
     return rand() % (max - min + 1) + min;
+}
+
+void inline init_ricap_qa(int width, int height, int batchSize, Rpp32u *permutationTensor, RpptROIPtr roiPtrInputCropRegion)
+{
+    Rpp32u initialPermuteArray[batchSize], permutedArray[batchSize * 4];
+    int part0Width = 40; //Set part0 width around 1/3 of image width
+    int part0Height = 72; //Set part0 height around 1/2 of image height
+
+    for (uint i = 0; i < batchSize; i++)
+        initialPermuteArray[i] = i;
+
+    for(int i=0;i<4;i++)
+        memcpy(permutedArray + (batchSize * i), initialPermuteArray, batchSize * sizeof(Rpp32u));
+
+    for (uint i = 0, j = 0; j < batchSize * 4; i++, j += 4)
+    {
+        permutationTensor[j] = permutedArray[i];
+        permutationTensor[j + 1] = permutedArray[i + batchSize];
+        permutationTensor[j + 2] = permutedArray[i + (batchSize * 2)];
+        permutationTensor[j + 3] = permutedArray[i + (batchSize * 3)];
+    }
+
+    roiPtrInputCropRegion[0].xywhROI = {width - part0Width, 0, part0Width, part0Height};
+    roiPtrInputCropRegion[1].xywhROI = {part0Width, 0, width - part0Width, part0Height};
+    roiPtrInputCropRegion[2].xywhROI = {0, part0Height, part0Width, height - part0Height};
+    roiPtrInputCropRegion[3].xywhROI = {0, part0Height, width - part0Width, height - part0Height};
+}
+
+void inline init_ricap(int width, int height, int batchSize, Rpp32u *permutationTensor, RpptROIPtr roiPtrInputCropRegion)
+{
+    Rpp32u initialPermuteArray[batchSize], permutedArray[batchSize * 4];
+    double randFromDist, randFromDist1;
+
+    for (uint i = 0; i < batchSize; i++)
+        initialPermuteArray[i] = i;
+
+    // Using boost "inverse incomplete Beta" as a fast (and simple) way to simulate Betas
+    float betaParam = 0.3;
+    std::random_device rd;
+    std::mt19937 gen(rd()); // Pseudo random number generator
+    static std::uniform_real_distribution<double> unif(0.3, 0.7); // Generates a uniform real distribution between 0.3 and 0.7
+    double p = unif(gen);
+    randFromDist = boost::math::ibeta_inv(betaParam, betaParam, p); // Computes the inverse of the incomplete beta function on parameter
+
+    std::random_device rd1;
+    std::mt19937 gen1(rd1());
+    static std::uniform_real_distribution<double> unif1(0.3, 0.7);
+    double p1 = unif1(gen1);
+    randFromDist1 = boost::math::ibeta_inv(betaParam, betaParam, p1);
+
+    for(int i=0;i<4;i++)
+    {
+        randomize(initialPermuteArray, batchSize);
+        memcpy(permutedArray + (batchSize * i), initialPermuteArray, batchSize * sizeof(Rpp32u));
+    }
+
+    for (uint i = 0, j = 0; j < batchSize * 4; i++, j += 4)
+    {
+        permutationTensor[j] = permutedArray[i];
+        permutationTensor[j + 1] = permutedArray[i + batchSize];
+        permutationTensor[j + 2] = permutedArray[i + (batchSize * 2)];
+        permutationTensor[j + 3] = permutedArray[i + (batchSize * 3)];
+    }
+
+    int part0Width = std::round(randFromDist * width);
+    int part0Height = std::round(randFromDist1 * height);
+    roiPtrInputCropRegion[0].xywhROI = {randrange(0, width - part0Width), randrange(0, height - part0Height), part0Width, part0Height};
+    roiPtrInputCropRegion[1].xywhROI = {randrange(0, part0Width), randrange(0, height - part0Height), width - part0Width, part0Height};
+    roiPtrInputCropRegion[2].xywhROI = {randrange(0, width - part0Width), randrange(0, part0Height), part0Width, height - part0Height};
+    roiPtrInputCropRegion[3].xywhROI = {randrange(0, width - part0Width), randrange(0, part0Height), width - part0Width, height - part0Height};
 }

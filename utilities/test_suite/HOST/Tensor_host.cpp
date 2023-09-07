@@ -36,10 +36,7 @@ THE SOFTWARE.
 #include <omp.h>
 #include <half/half.hpp>
 #include <fstream>
-#include <random>
-#include <boost/math/distributions.hpp>
-#include <boost/math/special_functions/beta.hpp>
-using namespace boost::math;
+
 
 using namespace cv;
 using namespace std;
@@ -150,7 +147,6 @@ int main(int argc, char **argv)
     int missingFuncFlag = 0;
     int i = 0, j = 0;
     int maxHeight = 0, maxWidth = 0;
-    //int maxDstHeight = 0, maxDstWidth = 0;
     Rpp64u count = 0;
     Rpp64u ioBufferSize = 0;
     Rpp64u oBufferSize = 0;
@@ -606,70 +602,13 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "ricap";
 
-                    int iX = maxWidth;
-                    int iY = maxHeight;
-
-                    Rpp32u initialPermuteArray[batchSize], permutedArray[batchSize * 4], permutationTensor[batchSize * 4];
-                    double randFromDist, randFromDist1;
+                    Rpp32u permutationTensor[batchSize * 4];
                     RpptROI roiPtrInputCropRegion[4];
-                    for (uint i = 0; i < batchSize; i++)
-                    {
-                        initialPermuteArray[i] = i;
-                    }
 
                     if(qaFlag)
-                    {
-                        for(int i=0;i<4;i++)
-                        memcpy(permutedArray + (batchSize * i), initialPermuteArray, batchSize * sizeof(Rpp32u));
-                    }
+                        init_ricap_qa(maxWidth, maxHeight, batchSize, permutationTensor, roiPtrInputCropRegion);
                     else
-                    {
-                        float betaParam = 0.3;
-                        std::random_device rd;
-                        std::mt19937 gen(rd());
-                        static std::uniform_real_distribution<double> unif(0.3, 0.7);
-                        double p = unif(gen);
-                        randFromDist = boost::math::ibeta_inv(betaParam, betaParam, p);
-
-                        std::random_device rd1;
-                        std::mt19937 gen1(rd1());
-                        static std::uniform_real_distribution<double> unif1(0.3, 0.7);
-                        double p1 = unif1(gen1);
-                        randFromDist1 = boost::math::ibeta_inv(betaParam, betaParam, p1);
-
-                        for(int i=0;i<4;i++)
-                        {
-                            randomize(initialPermuteArray, batchSize);
-                            memcpy(permutedArray + (batchSize * i), initialPermuteArray, batchSize * sizeof(Rpp32u));
-                        }
-                    }
-
-                    for (uint i = 0, j = 0; j < batchSize * 4; i++, j += 4)
-                    {
-                        permutationTensor[j] = permutedArray[i];
-                        permutationTensor[j + 1] = permutedArray[i + batchSize];
-                        permutationTensor[j + 2] = permutedArray[i + (batchSize * 2)];
-                        permutationTensor[j + 3] = permutedArray[i + (batchSize * 3)];
-                    }
-
-                    if(qaFlag)
-                    {
-                        int part0Width = (int)std::round(((int)std::round(0.3 * iX) >> 3)) << 3;
-                        int part0Height = (int)std::round(((int)std::round(0.5 * iY) >> 3)) << 3;
-                        roiPtrInputCropRegion[0].xywhROI = {iX - part0Width, 0, part0Width, part0Height};
-                        roiPtrInputCropRegion[1].xywhROI = {part0Width, 0, iX - part0Width, part0Height};
-                        roiPtrInputCropRegion[2].xywhROI = {0, part0Height, part0Width, iY - part0Height};
-                        roiPtrInputCropRegion[3].xywhROI = {0, part0Height, iX - part0Width, iY - part0Height};
-                    }
-                    else
-                    {
-                        int part0Width = std::round(randFromDist * iX);
-                        int part0Height = std::round(randFromDist1 * iY);
-                        roiPtrInputCropRegion[0].xywhROI = {random_val(0, iX - part0Width), random_val(0, iY - part0Height), part0Width, part0Height};
-                        roiPtrInputCropRegion[1].xywhROI = {random_val(0, part0Width), random_val(0, iY - part0Height), iX - part0Width, part0Height};
-                        roiPtrInputCropRegion[2].xywhROI = {random_val(0, iX - part0Width), random_val(0, part0Height), part0Width, iY - part0Height};
-                        roiPtrInputCropRegion[3].xywhROI = {random_val(0, iX - part0Width), random_val(0, part0Height), iX - part0Width, iY - part0Height};
-                    }
+                        init_ricap(maxWidth, maxHeight, batchSize, permutationTensor, roiPtrInputCropRegion);
 
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();
