@@ -22,29 +22,52 @@ THE SOFTWARE.
 
 #ifndef RPPT_TENSOR_FILTER_AUGMENTATIONS_H
 #define RPPT_TENSOR_FILTER_AUGMENTATIONS_H
+
+/*!
+ * \file
+ * \brief RPPT Tensor Filter Augmentation Functions.
+ *
+ * \defgroup group_tensor_filter
+ * \brief Tensor Filter Augmentations.
+ */
+
 #include "rpp.h"
 #include "rppdefs.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/******************** box_filter ********************/
-
-// Box Filter augmentation for a NCHW/NHWC layout tensor
-
-// *param[in] srcPtr source tensor memory
-// *param[in] srcDescPtr source tensor descriptor (srcDescPtr->offsetInBytes must be at least 12 * (kernelSize / 2))
-// *param[out] dstPtr destination tensor memory
-// *param[in] dstDescPtr destination tensor descriptor
-// *param[in] kernelSize kernel size for box_filter (a single Rpp32u odd number with kernelSize = 3/5/7/9 that applies to all images in the batch)
-// *param[in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
-// *param[in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
-// *param[in] rppHandle HIP-handle for "_gpu" variants and Host-handle for "_host" variants
-// *returns a  RppStatus enumeration.
-// *retval RPP_SUCCESS : succesful completion
-// *retval RPP_ERROR : Error
-
+/*! \brief Box Filter augmentation HOST
+ * \details Box Filter augmentation for a NCHW/NHWC layout tensor
+ * \param [in] srcPtr source tensor memory
+ * \param [in] srcDescPtr source tensor descriptor
+ * \param [out] dstPtr destination tensor memory
+ * \param [in] dstDescPtr destination tensor descriptor
+ * \param [in] kernelSize kernel size for box_filter (a single Rpp32u odd number with kernelSize = 3/5/7/9 that applies to all images in the batch)
+ * \param [in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+ * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+ * \param [in] rppHandle Host-handle
+ * \return <tt> Rppt_Status enum</tt>.
+ * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
+ * Else return RPP_ERROR
+ * \ingroup group_tensor_color
+ */
 #ifdef GPU_SUPPORT
+/*! \brief Box Filter augmentation GPU
+ * \details Box Filter augmentation for a NCHW/NHWC layout tensor
+ * \param [in] srcPtr source tensor memory
+ * \param [in] srcDescPtr source tensor descriptor
+ * \param [out] dstPtr destination tensor memory
+ * \param [in] dstDescPtr destination tensor descriptor
+ * \param [in] kernelSize kernel size for box_filter (a single Rpp32u odd number with kernelSize = 3/5/7/9 that applies to all images in the batch)
+ * \param [in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+ * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+ * \param [in] rppHandle HIP-handle
+ * \return <tt> Rppt_Status enum</tt>.
+ * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
+ * Else return RPP_ERROR
+ * \ingroup group_tensor_color
+ */
 RppStatus rppt_box_filter_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u kernelSize, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
