@@ -194,10 +194,10 @@ int main(int argc, char **argv)
 
     // Get number of images and image Names
     vector<string> imageNames, imageNamesSecond, imageNamesPath, imageNamesPathSecond;
-    search_jpg_files(src, imageNames, imageNamesPath);
+    search_files_recursive(src, imageNames, imageNamesPath, ".jpg");
     if(dualInputCase)
     {
-        search_jpg_files(srcSecond, imageNamesSecond, imageNamesPathSecond);
+        search_files_recursive(srcSecond, imageNamesSecond, imageNamesPathSecond, ".jpg");
         if(imageNames.size() != imageNamesSecond.size())
         {
             std::cerr << " \n The number of images in the input folders must be the same.";
@@ -208,9 +208,9 @@ int main(int argc, char **argv)
 
     if(noOfImages < batchSize || ((noOfImages % batchSize) != 0))
     {
-        replicate_last_image_to_fill_batch(imageNamesPath[noOfImages - 1], imageNamesPath, imageNames, imageNames[noOfImages - 1], noOfImages, batchSize);
+        replicate_last_file_to_fill_batch(imageNamesPath[noOfImages - 1], imageNamesPath, imageNames, imageNames[noOfImages - 1], noOfImages, batchSize);
         if(dualInputCase)
-            replicate_last_image_to_fill_batch(imageNamesPathSecond[noOfImages - 1], imageNamesPathSecond, imageNamesSecond, imageNamesSecond[noOfImages - 1], noOfImages, batchSize);
+            replicate_last_file_to_fill_batch(imageNamesPathSecond[noOfImages - 1], imageNamesPathSecond, imageNamesSecond, imageNamesSecond[noOfImages - 1], noOfImages, batchSize);
         noOfImages = imageNames.size();
     }
 

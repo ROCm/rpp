@@ -72,3 +72,22 @@ if (OpenCV_FOUND)
 else()
     message("-- ${Yellow}Error: OpenCV must be installed to install ${PROJECT_NAME} successfully!${ColourReset}")
 endif()
+
+find_library(libsnd_LIBS
+    NAMES sndfile libsndfile
+    PATHS ${CMAKE_SYSTEM_PREFIX_PATH} ${LIBSND_ROOT_DIR} "/usr/local"
+    PATH_SUFFIXES lib lib64)
+
+if(NOT libsnd_LIBS)
+    message("-- ${Yellow}Error: libsndfile must be installed to install ${PROJECT_NAME} successfully!${ColourReset}")
+else()
+    message("-- ${Green}${PROJECT_NAME} set to build with rpp and libsndfile ${ColourReset}")
+    include_directories(${ROCM_PATH}/include ${ROCM_PATH}/include/rpp /usr/local/include)
+    link_directories(${ROCM_PATH}/lib /usr/local/lib)
+    include_directories(${SndFile_INCLUDE_DIRS})
+    link_directories(${SndFile_LIBRARIES_DIR} /usr/local/lib/)
+
+    add_executable(Tensor_host_audio Tensor_host_audio.cpp)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++14")
+    target_link_libraries(Tensor_host_audio ${libsnd_LIBS} -lsndfile -lrpp pthread ${LINK_LIBRARY_LIST} ${OpenCV_LIBS})
+endif()
