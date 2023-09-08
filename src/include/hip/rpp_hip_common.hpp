@@ -49,8 +49,11 @@ typedef struct { uint   data[ 8]; } d_uint8_s;
 typedef struct { int    data[ 8]; } d_int8_s;
 
 // float
+typedef union { float f1[5];                                                                    }   d_float5;
 typedef union { float f1[6];    float2 f2[3];                                                   }   d_float6;
+typedef union { float f1[7];                                                                    }   d_float7;
 typedef union { float f1[8];    float2 f2[4];   float4 f4[2];                                   }   d_float8;
+typedef union { float f1[9];                                                                    }   d_float9;
 typedef union { float f1[12];   float4 f4[3];                                                   }   d_float12;
 typedef union { float f1[16];   float4 f4[4];   d_float8 f8[2];                                 }   d_float16;
 typedef union { float f1[24];   float2 f2[12];  float3 f3[8];   float4 f4[6];   d_float8 f8[3]; }   d_float24;
@@ -131,6 +134,9 @@ struct RPPTensorFunctionMetaData
 #define RPP_2POW32_INV_DIV_2            1.164153218e-10f    // RPP_2POW32_INV / 2
 #define RPP_2POW32_INV_MUL_2PI          1.46291812e-09f     // (1 / 2^32) * 2PI
 #define RPP_2POW32_INV_MUL_2PI_DIV_2    7.3145906e-10f      // RPP_2POW32_INV_MUL_2PI / 2
+#define SMEM_LENGTH_X                   128                 // Shared memory length of 128 cols to efficiently utilize all 16 LOCAL_THREADS_X as 16 * 8-byte vectorized global read/writes per thread = 128 bytes, fitting in 32 banks 4 byte wide
+#define SMEM_LENGTH_Y_1C                16                  // Shared memory length of 16 rows to efficiently utilize all 16 LOCAL_THREADS_Y as 1 128-byte-long row per thread (single channel greyscale)
+#define SMEM_LENGTH_Y_3C                48                  // Shared memory length of 48 rows to efficiently utilize all 16 LOCAL_THREADS_Y as 3 128-byte-long rows per thread (three channel rgb)
 
 #define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
 #define BYTE_TO_BINARY(byte)  \
