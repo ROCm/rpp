@@ -34,10 +34,6 @@ cwd = os.getcwd()
 inFilePath1 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src1')
 inFilePath2 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src2')
 qaInputFile = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src1')
-# Use input images of same dimensions for RICAP Testcase 82
-# inFilePath1 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_150x150_src1')
-# inFilePath2 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_150x150_src1')
-# qaInputFile = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_150x150_src1')
 
 def case_file_check(CASE_FILE_PATH):
     try:

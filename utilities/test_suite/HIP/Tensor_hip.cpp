@@ -147,6 +147,7 @@ int main(int argc, char **argv)
     int missingFuncFlag = 0;
     int i = 0, j = 0;
     int maxHeight = 0, maxWidth = 0;
+    int maxDstHeight = 0, maxDstWidth = 0;
     Rpp64u count = 0;
     Rpp64u ioBufferSize = 0;
     Rpp64u oBufferSize = 0;
@@ -244,8 +245,9 @@ int main(int argc, char **argv)
     if(pln1OutTypeCase)
         outputChannels = 1;
     Rpp32u offsetInBytes = 0;
+    int imagesMixed = 0; // Flag used to check if all images in dataset is of same dimensions
 
-    set_max_dimensions(imageNamesPath, maxHeight, maxWidth);
+    set_max_dimensions(imageNamesPath, maxHeight, maxWidth, imagesMixed);
 
     // Set numDims, offset, n/c/h/w values, strides for src/dst
     set_descriptor_dims_and_strides(srcDescPtr, batchSize, maxHeight, maxWidth, inputChannels, offsetInBytes);
@@ -294,11 +296,27 @@ int main(int argc, char **argv)
     double wallTime;
     string testCaseName;
 
+    if(testCase == 82 && imagesMixed)
+    {
+        std::cerr<<"\n RICAP only works with same dimension images";
+        exit(0);
+    }
+
+    if(testCase == 82 && batchSize<2)
+    {
+        std::cerr<<"\n RICAP only works with BatchSize > 1";
+        exit(0);
+    }
+
     //Allocate hip memory for src/dst
     hipMalloc(&d_input, inputBufferSize);
     hipMalloc(&d_output, outputBufferSize);
     if(dualInputCase)
         hipMalloc(&d_input_second, inputBufferSize);
+
+    RpptROI *roiPtrInputCropRegion;
+    if(testCase == 82)
+        hipHostMalloc(&roiPtrInputCropRegion, 4 * sizeof(RpptROI));
 
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
@@ -614,20 +632,23 @@ int main(int argc, char **argv)
                 testCaseName = "ricap";
 
                 Rpp32u permutationTensor[batchSize * 4];
-                RpptROI *roiPtrInputCropRegion;
-                hipHostMalloc(&roiPtrInputCropRegion, 4 * sizeof(RpptROI));
+
+                if(imagesMixed)
+                {
+                    std::cerr<<"\n RICAP only works with same dimension images";
+                    break;
+                }
 
                 if(qaFlag)
-                        init_ricap_qa(maxWidth, maxHeight, batchSize, permutationTensor, roiPtrInputCropRegion);
-                    else
-                        init_ricap(maxWidth, maxHeight, batchSize, permutationTensor, roiPtrInputCropRegion);
+                    init_ricap_qa(maxWidth, maxHeight, batchSize, permutationTensor, roiPtrInputCropRegion);
+                else
+                    init_ricap(maxWidth, maxHeight, batchSize, permutationTensor, roiPtrInputCropRegion);
 
                 startWallTime = omp_get_wtime();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                     rppt_ricap_gpu(d_input, srcDescPtr, d_output, dstDescPtr, permutationTensor, roiPtrInputCropRegion, roiTypeSrc, handle);
                 else
                     missingFuncFlag = 1;
-                hipHostFree(roiPtrInputCropRegion);
                 break;
             }
             case 84:
@@ -745,6 +766,8 @@ int main(int argc, char **argv)
     hipHostFree(roiTensorPtrSrc);
     hipHostFree(roiTensorPtrDst);
     hipHostFree(dstImgSizes);
+    if(testCase == 82)
+        hipHostFree(roiPtrInputCropRegion);
     free(input);
     free(input_second);
     free(output);

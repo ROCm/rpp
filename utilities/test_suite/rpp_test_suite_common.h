@@ -299,7 +299,7 @@ inline void set_descriptor_layout( RpptDescPtr srcDescPtr, RpptDescPtr dstDescPt
 }
 
 // sets values of maxHeight and maxWidth
-inline void set_max_dimensions(vector<string>imagePaths, int& maxHeight, int& maxWidth)
+inline void set_max_dimensions(vector<string>imagePaths, int& maxHeight, int& maxWidth, int& imagesMixed)
 {
     tjhandle tjInstance = tjInitDecompress();
     for (const std::string& imagePath : imagePaths)
@@ -324,6 +324,9 @@ inline void set_max_dimensions(vector<string>imagePaths, int& maxHeight, int& ma
             std::cerr << "Error decompressing file: " << imagePath << std::endl;
             continue;
         }
+
+        if((maxWidth && maxWidth != width) || (maxHeight && maxHeight != height))
+            imagesMixed = 1;
 
         maxWidth = max(maxWidth, width);
         maxHeight = max(maxHeight, height);
@@ -1044,6 +1047,7 @@ int inline randrange(int min, int max)
     return rand() % (max - min + 1) + min;
 }
 
+// RICAP Input Crop Region initializer for QA testing and golden output match
 void inline init_ricap_qa(int width, int height, int batchSize, Rpp32u *permutationTensor, RpptROIPtr roiPtrInputCropRegion)
 {
     Rpp32u initialPermuteArray[batchSize], permutedArray[batchSize * 4];
@@ -1053,7 +1057,7 @@ void inline init_ricap_qa(int width, int height, int batchSize, Rpp32u *permutat
     for (uint i = 0; i < batchSize; i++)
         initialPermuteArray[i] = i;
 
-    for(int i=0;i<4;i++)
+    for(int i = 0; i < 4; i++)
         memcpy(permutedArray + (batchSize * i), initialPermuteArray, batchSize * sizeof(Rpp32u));
 
     for (uint i = 0, j = 0; j < batchSize * 4; i++, j += 4)
@@ -1070,6 +1074,7 @@ void inline init_ricap_qa(int width, int height, int batchSize, Rpp32u *permutat
     roiPtrInputCropRegion[3].xywhROI = {0, part0Height, width - part0Width, height - part0Height};
 }
 
+// RICAP Input Crop Region initializer for unit and performance testing
 void inline init_ricap(int width, int height, int batchSize, Rpp32u *permutationTensor, RpptROIPtr roiPtrInputCropRegion)
 {
     Rpp32u initialPermuteArray[batchSize], permutedArray[batchSize * 4];
@@ -1092,7 +1097,7 @@ void inline init_ricap(int width, int height, int batchSize, Rpp32u *permutation
     double p1 = unif1(gen1);
     randFromDist1 = boost::math::ibeta_inv(betaParam, betaParam, p1);
 
-    for(int i=0;i<4;i++)
+    for(int i = 0; i < 4; i++)
     {
         randomize(initialPermuteArray, batchSize);
         memcpy(permutedArray + (batchSize * i), initialPermuteArray, batchSize * sizeof(Rpp32u));
