@@ -124,7 +124,6 @@ RppStatus transpose_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
             }
             else if(perm[0] == 1 && perm[1] == 0)
             {
-               
                 Rpp32u height = roi[0];
                 Rpp32u width = roi[1];
                 Rpp32u alignedRows = (roi[0] / 4) * 4;
@@ -252,6 +251,24 @@ RppStatus transpose_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
                     increment_ndim_ptr(dstPtrChannel, 16, width);
                 }
             }
+            else if(perm[0] == 1 && perm[1] == 0 && perm[2] == 2)
+            {
+                Rpp32f *srcPtrRow = srcPtrTemp;  
+                Rpp32f *dstPtrRow = dstPtrTemp;
+                for(int i = 0; i < roi[0]; i++)
+                {
+                    Rpp32f *srcPtrRowTemp = srcPtrRow;
+                    Rpp32f *dstPtrRowTemp = dstPtrRow;
+                    for(int j = 0; j < roi[1]; j++)
+                    {
+                        memcpy(dstPtrRowTemp, srcPtrRowTemp, roi[2] * sizeof(Rpp32f));
+                        srcPtrRowTemp += roi[2];
+                        dstPtrRowTemp += roi[0] * roi[2];
+                    }
+                    srcPtrRow += roi[1] * roi[2];
+                    dstPtrRow += roi[2];
+                }
+            }   
         }
         else
         {
