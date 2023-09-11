@@ -45,6 +45,14 @@ void increment_ndim_ptr(Rpp32f **dstPtr, Rpp32u nDim, Rpp32u increment)
         dstPtr[i] += increment;
 }
 
+void rpp_store16_f32_f32_channelwise(Rpp32f **dstPtr, __m128 *p)
+{
+    _mm_storeu_ps(dstPtr[0], p[0]);
+    _mm_storeu_ps(dstPtr[1], p[4]);
+    _mm_storeu_ps(dstPtr[2], p[8]);
+    _mm_storeu_ps(dstPtr[3], p[12]);
+}
+
 void transpose(Rpp32f *dst, Rpp32u *dstStrides, Rpp32f *src, Rpp32u *srcStrides, Rpp32u *dstShape, Rpp32u nDim) 
 {
     if (nDim == 0) 
@@ -212,54 +220,22 @@ RppStatus transpose_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
                     for( ; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
                         __m128 pSrc[16];
-                        // Load 0C0 - 0C16
-                        pSrc[0] = _mm_loadu_ps(srcPtrRow);
-                        pSrc[1] = _mm_loadu_ps(srcPtrRow + 4);
-                        pSrc[2] = _mm_loadu_ps(srcPtrRow + 8);
-                        pSrc[3] = _mm_loadu_ps(srcPtrRow + 12);
-                        
-                        // Load 1C0 - 1C16
-                        pSrc[4] = _mm_loadu_ps(srcPtrRow + 16);
-                        pSrc[5] = _mm_loadu_ps(srcPtrRow + 20);
-                        pSrc[6] = _mm_loadu_ps(srcPtrRow + 24);
-                        pSrc[7] = _mm_loadu_ps(srcPtrRow + 28);
-                        
-                        // Load 2C0 - 2C16
-                        pSrc[8] = _mm_loadu_ps(srcPtrRow + 32);
-                        pSrc[9] = _mm_loadu_ps(srcPtrRow + 36);
-                        pSrc[10] = _mm_loadu_ps(srcPtrRow + 40);
-                        pSrc[11] = _mm_loadu_ps(srcPtrRow + 44);
-                        
-                        // Load 3C0 - 3C16
-                        pSrc[12] = _mm_loadu_ps(srcPtrRow + 48);
-                        pSrc[13] = _mm_loadu_ps(srcPtrRow + 52);
-                        pSrc[14] = _mm_loadu_ps(srcPtrRow + 56);
-                        pSrc[15] = _mm_loadu_ps(srcPtrRow + 60);
+                        // Load 64 values for source
+                        rpp_load16_f32_to_f32(srcPtrRow, &pSrc[0]);
+                        rpp_load16_f32_to_f32(srcPtrRow + 16, &pSrc[4]);
+                        rpp_load16_f32_to_f32(srcPtrRow + 32, &pSrc[8]);
+                        rpp_load16_f32_to_f32(srcPtrRow + 48, &pSrc[12]);
                         
                         _MM_TRANSPOSE4_PS(pSrc[0], pSrc[4], pSrc[8], pSrc[12]);
                         _MM_TRANSPOSE4_PS(pSrc[1], pSrc[5], pSrc[9], pSrc[13]);
                         _MM_TRANSPOSE4_PS(pSrc[2], pSrc[6], pSrc[10], pSrc[14]);
                         _MM_TRANSPOSE4_PS(pSrc[3], pSrc[7], pSrc[11], pSrc[15]);
                         
-                        _mm_storeu_ps(dstPtrTempChannel[0], pSrc[0]);
-                        _mm_storeu_ps(dstPtrTempChannel[1], pSrc[4]);
-                        _mm_storeu_ps(dstPtrTempChannel[2], pSrc[8]);
-                        _mm_storeu_ps(dstPtrTempChannel[3], pSrc[12]);
-                        
-                        _mm_storeu_ps(dstPtrTempChannel[4], pSrc[1]);
-                        _mm_storeu_ps(dstPtrTempChannel[5], pSrc[5]);
-                        _mm_storeu_ps(dstPtrTempChannel[6], pSrc[9]);
-                        _mm_storeu_ps(dstPtrTempChannel[7], pSrc[13]);
-                        
-                        _mm_storeu_ps(dstPtrTempChannel[8], pSrc[2]);
-                        _mm_storeu_ps(dstPtrTempChannel[9], pSrc[6]);
-                        _mm_storeu_ps(dstPtrTempChannel[10], pSrc[10]);
-                        _mm_storeu_ps(dstPtrTempChannel[11], pSrc[14]);
-                        
-                        _mm_storeu_ps(dstPtrTempChannel[12], pSrc[3]);
-                        _mm_storeu_ps(dstPtrTempChannel[13], pSrc[7]);
-                        _mm_storeu_ps(dstPtrTempChannel[14], pSrc[11]);
-                        _mm_storeu_ps(dstPtrTempChannel[15], pSrc[15]);
+                        // Store 4 values per in output per channel
+                        rpp_store16_f32_f32_channelwise(&dstPtrTempChannel[0], &pSrc[0]);
+                        rpp_store16_f32_f32_channelwise(&dstPtrTempChannel[4], &pSrc[1]);
+                        rpp_store16_f32_f32_channelwise(&dstPtrTempChannel[8], &pSrc[2]);
+                        rpp_store16_f32_f32_channelwise(&dstPtrTempChannel[12], &pSrc[3]);
                         
                         srcPtrRow += vectorIncrement;
                         increment_ndim_ptr(dstPtrTempChannel, 16, vectorIncrementPerChannel);
