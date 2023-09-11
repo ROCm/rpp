@@ -23,7 +23,7 @@ __global__ void tensor_sum_grid_result(Rpp32u *srcPtr,
     uint srcIdx = (id_z * xBufferLength) + id_x;
 
     d_uint8 src_ui8;
-    *(d_uint8_s *)(&src_ui8) = *(d_uint8_s *)(srcPtr + srcIdx);
+    *reinterpret_cast<d_uint8_s *>(&src_ui8) = *reinterpret_cast<d_uint8_s *>(srcPtr + srcIdx);
 
     if (id_x + 8 > xBufferLength)
         for(int i = xDiff; i < 8; i++)
@@ -69,7 +69,7 @@ __global__ void tensor_sum_grid_result(Rpp32s *srcPtr,
     uint srcIdx = (id_z * xBufferLength) + id_x;
 
     d_int8 src_i8;
-    *(d_int8_s *)(&src_i8) = *(d_int8_s *)(srcPtr + srcIdx);
+    *reinterpret_cast<d_int8_s *>(&src_i8) = *reinterpret_cast<d_int8_s *>(srcPtr + srcIdx);
     if (id_x + 8 > xBufferLength)
         for(int i = xDiff; i < 8; i++)
             src_i8.i1[i] = 0;                                       // local memory reset of invalid values (from the vectorized global load) to 0
@@ -165,8 +165,8 @@ __global__ void tensor_sum_grid_3channel_result(Rpp32u *srcPtr,
     uint srcIdx = ((id_z * xBufferLength) + id_x) * 3;
 
     d_uint24 src_ui24;
-    *(d_uint24_s *)(&src_ui24) = *(d_uint24_s *)(srcPtr + srcIdx);
-    rpp_hip_layouttoggle24_pkd3_to_pln3((d_uint24_s *)&src_ui24);
+    *reinterpret_cast<d_uint24_s *>(&src_ui24) = *reinterpret_cast<d_uint24_s *>(srcPtr + srcIdx);
+    rpp_hip_layouttoggle24_pkd3_to_pln3(reinterpret_cast<d_uint24_s *>(&src_ui24));
 
     if (id_x + 8 > xBufferLength)                                                // local memory reset of invalid values (from the vectorized global load) to 0.0f
     {
@@ -244,8 +244,8 @@ __global__ void tensor_sum_grid_3channel_result(Rpp32s *srcPtr,
     uint srcIdx = ((id_z * xBufferLength) + id_x) * 3;
 
     d_int24 src_i24;
-    *(d_int24_s *)(&src_i24) = *(d_int24_s *)(srcPtr + srcIdx);
-    rpp_hip_layouttoggle24_pkd3_to_pln3((d_int24_s *)&src_i24);
+    *reinterpret_cast<d_int24_s *>(&src_i24) = *reinterpret_cast<d_int24_s *>(srcPtr + srcIdx);
+    rpp_hip_layouttoggle24_pkd3_to_pln3(reinterpret_cast<d_int24_s *>(&src_i24));
 
     if (id_x + 8 > xBufferLength)                                                // local memory reset of invalid values (from the vectorized global load) to 0
     {

@@ -61,12 +61,12 @@ typedef union { float f1[24];   float2 f2[12];  float3 f3[8];   float4 f4[6];   
 // uint
 typedef union { uint ui1[6];    uint2 ui2[3];                                                   }   d_uint6;
 typedef union { uint ui1[8];    uint4 ui4[2];                                                   }   d_uint8;
-typedef union { uint ui1[24];   uint4 ui4[6];   d_uint8 ui8[3];                                 }   d_uint24;
+typedef union { uint4 ui4[6];   d_uint8 ui8[3];                                                 }   d_uint24;
 
 // int
 typedef union { int i1[6];      int2 i2[3];                                                     }   d_int6;
 typedef union { int i1[8];      int4 i4[2];                                                     }   d_int8;
-typedef union { int i1[24];     int4 i4[6];     d_int8 i8[3];                                   }   d_int24;
+typedef union { int4 i4[6];     d_int8 i8[3];                                                   }   d_int24;
 
 // half
 typedef struct { half h1[3];                                                                    }   d_half3_s;
@@ -80,7 +80,6 @@ typedef union { uchar uc1[8];   uchar4 uc4[2];                                  
 typedef union { uchar uc1[24];  uchar4 uc4[6];  uchar3 uc3[8];    d_uchar8 uc8[3];              }   d_uchar24;
 
 // schar
-typedef struct { schar sc1[3];                                                                  }   d_schar3_s;
 typedef struct { schar sc1[8];                                                                  }   d_schar8_s;
 typedef struct { d_schar8_s sc8[3];                                                             }   d_schar24_s;
 

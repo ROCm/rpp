@@ -300,13 +300,13 @@ int main(int argc, char **argv)
     if(reductionTypeCase)
     {
         if(dstDescPtr->dataType == RpptDataType::U8)
-            reductionFuncResultArr = (Rpp64u *)calloc(reductionFuncResultArrLength, sizeof(Rpp64u));
+            reductionFuncResultArr = static_cast<Rpp64u*>(calloc(reductionFuncResultArrLength, sizeof(Rpp64u)));
         else if(dstDescPtr->dataType == RpptDataType::F16)
-            reductionFuncResultArr = (Rpp32f *)calloc(reductionFuncResultArrLength, sizeof(Rpp32f));
+            reductionFuncResultArr = static_cast<Rpp32f*>(calloc(reductionFuncResultArrLength, sizeof(Rpp32f)));
         else if(dstDescPtr->dataType == RpptDataType::F32)
-            reductionFuncResultArr = (Rpp32f *)calloc(reductionFuncResultArrLength, sizeof(Rpp32f));
+            reductionFuncResultArr = static_cast<Rpp32f*>(calloc(reductionFuncResultArrLength, sizeof(Rpp32f)));
         else if(dstDescPtr->dataType == RpptDataType::I8)
-            reductionFuncResultArr = (Rpp64s *)calloc(reductionFuncResultArrLength, sizeof(Rpp64s));
+            reductionFuncResultArr = static_cast<Rpp64s*>(calloc(reductionFuncResultArrLength, sizeof(Rpp64s)));
     }
 
     // case-wise RPP API and measure time script for Unit and Performance test
@@ -732,7 +732,7 @@ int main(int argc, char **argv)
                     2.input bit depth 0 (U8)
                     3.source and destination layout are the same*/
                     if(qaFlag && inputBitDepth == 0 && (srcDescPtr->layout == dstDescPtr->layout) && !(randomOutputCase))
-                        compare_reduction_output((Rpp64u *)reductionFuncResultArr, testCaseName, srcDescPtr, testCase, dst);
+                        compare_reduction_output(static_cast<Rpp64u *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst);
                 }
                 else
                 {
