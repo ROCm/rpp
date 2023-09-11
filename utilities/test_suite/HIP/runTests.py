@@ -78,7 +78,7 @@ def get_log_file_list(preserveOutput):
 def func_group_finder(case_number):
     if case_number < 5 or case_number == 13 or case_number == 36:
         return "color_augmentations"
-    elif case_number == 8 or case_number == 30 or case_number == 83 or case_number == 84:
+    elif case_number == 8 or case_number == 30 or case_number == 82 or case_number == 83 or case_number == 84:
         return "effects_augmentations"
     elif case_number < 40:
         return "geometric_augmentations"
@@ -386,7 +386,7 @@ else:
             print("Unable to open results in " + RESULTS_DIR + "/consolidated_results_" + TYPE + ".stats.csv")
 
 # print the results of qa tests
-supportedCaseList = ['0', '1', '2', '4', '13', '31', '34', '36', '37', '38','84']
+supportedCaseList = ['0', '1', '2', '4', '13', '31', '34', '36', '37', '38', '82', '84']
 supportedCases = 0
 for num in caseList:
     if num in supportedCaseList:

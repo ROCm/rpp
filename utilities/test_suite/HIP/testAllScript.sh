@@ -4,7 +4,7 @@ cwd=$(pwd)
 
 # <<<<<<<<<<<<<< VALIDATION CHECK FOR FOLDER PATHS >>>>>>>>>>>>>>>>>>>>>>>>>>>>
 function VALIDATE_PATH {
-    if [ -z "$1" ]; then  #check if a string is empty 
+    if [ -z "$1" ]; then  #check if a string is empty
         echo "$1 Folder path is empty."
         exit
     fi
@@ -43,6 +43,9 @@ function VALIDATE_FOLDERS {
 #Input Images - Three images (mixed size)
 DEFAULT_SRC_FOLDER_1="$cwd/../TEST_IMAGES/three_images_mixed_src1"
 DEFAULT_SRC_FOLDER_2="$cwd/../TEST_IMAGES/three_images_mixed_src2"
+
+#Input Images - Three images (same size) - for RICAP input images should be of same size
+RICAP_SRC_FOLDER="$cwd/../TEST_IMAGES/three_images_150x150_src1"
 
 # <<<<<<<<<<<<<< PROCESSING OF INPUT ARGUMENTS (NEED NOT CHANGE) >>>>>>>>>>>>>>
 
@@ -160,7 +163,7 @@ directory_name_generator() {
         if [ "$case" -lt 5 ] || [ "$case" -eq 13 ] || [ "$case" -eq 31 ] || [ "$case" -eq 34 ] || [ "$case" -eq 36 ]
         then
             FUNCTIONALITY_GROUP="color_augmentations"
-        elif [ "$case" -eq 8 ] || [ "$case" -eq 30 ] || [ "$case" -eq 83 ] || [ "$case" -eq 84 ]
+        elif [ "$case" -eq 8 ] || [ "$case" -eq 30 ] || [ "$case" -eq 82 ] || [ "$case" -eq 83 ] || [ "$case" -eq 84 ]
         then
             FUNCTIONALITY_GROUP="effects_augmentations"
         elif [ "$case" -lt 40 ]
@@ -241,8 +244,13 @@ if [ "$TEST_TYPE" -eq 0 ]; then
                 printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n"
                 for ((outputFormatToggle=0;outputFormatToggle<2;outputFormatToggle++))
                 do
-                    SRC_FOLDER_1_TEMP="$SRC_FOLDER_1"
-                    SRC_FOLDER_2_TEMP="$SRC_FOLDER_2"
+                    if [[ $case -eq 82 ]] && [[ "$QA_MODE" -eq 1 ]]; then
+                        SRC_FOLDER_1_TEMP="$RICAP_SRC_FOLDER"
+                        SRC_FOLDER_2_TEMP="$RICAP_SRC_FOLDER"
+                    else
+                        SRC_FOLDER_1_TEMP="$SRC_FOLDER_1"
+                        SRC_FOLDER_2_TEMP="$SRC_FOLDER_2"
+                    fi
 
                     # There is no layout toggle for PLN1 case, so skip this case
                     if [[ $layout -eq 2 ]] && [[ $outputFormatToggle -eq 1 ]]; then

@@ -164,6 +164,27 @@ RppStatus rppt_non_linear_blend_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDes
 RppStatus rppt_non_linear_blend_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *stdDevTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
+/******************** ricap ********************/
+
+// Ricap(Random image crop and patch) augmentation for a NCHW/NHWC layout tensor
+
+// *param[in] srcPtr source tensor memory
+// *param[in] srcDesc source tensor descriptor
+// *param[out] dstPtr destination tensor memory
+// *param[in] dstDesc destination tensor descriptor
+// *param[in] permutedIndicesTensor Array of batchSize permutation sets (2D tensor of batchSize * 4. Each set of 4 permutations contains Rpp32u image indices for each region in the respective RICAP-output-image in the batch)
+// *param[in] roiPtrInputCropRegion Array of 4 ROIs (2D tensor of size 4 * 4-elements per ROI, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+// *param[in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+// *param[in] rppHandle HIP-handle for "_gpu" variants and Host-handle for "_host" variants
+// *returns a  RppStatus enumeration.
+// *retval RPP_SUCCESS : succesful completion
+// *retval RPP_ERROR : Error
+//NOTE: Requires dimensions of input images to be the same across entire batch and Batchsize > 1.
+
+RppStatus rppt_ricap_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u *permutedIndicesTensor, RpptROIPtr roiPtrInputCropRegion, RpptRoiType roiType, rppHandle_t rppHandle);
+#ifdef GPU_SUPPORT
+RppStatus rppt_ricap_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u *permutedIndicesTensor, RpptROIPtr roiPtrInputCropRegion, RpptRoiType roiType, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
 #ifdef __cplusplus
 }
 #endif

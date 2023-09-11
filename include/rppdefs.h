@@ -69,7 +69,8 @@ typedef enum
     RPP_ERROR_INVALID_DST_CHANNELS      = -8,
     RPP_ERROR_INVALID_SRC_LAYOUT        = -9,
     RPP_ERROR_INVALID_DST_LAYOUT        = -10,
-    RPP_ERROR_INVALID_SRC_DATATYPE      = -11
+    RPP_ERROR_INVALID_SRC_DATATYPE      = -11,
+    RPP_ERROR_OUT_OF_BOUND_SRC_ROI      = -12,
 } RppStatus;
 
 typedef enum

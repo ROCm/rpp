@@ -7,8 +7,8 @@ The AMD ROCm Performance Primitives (RPP) test suite can be used to validate the
 The test suite accepts the following command line arguments:
 -   input_path1: The path to the input folder 1. Default is $cwd/../TEST_IMAGES/three_images_mixed_src1
 -   input_path2: The path to the input folder 2. Default is $cwd/../TEST_IMAGES/three_images_mixed_src2
--   case_start: The starting case number for the test range (0-38). Default is 0
--   case_end: The ending case number for the test range (0-38). Default is 38
+-   case_start: The starting case number for the test range (0-84). Default is 0
+-   case_end: The ending case number for the test range (0-84). Default is 84
 -   test_type: The type of test to run (0 = Unit tests, 1 = Performance tests). Default is 0
 -   case_list: A list of specific case numbers to run. Must be used in conjunction with --test_type
 -   profiling: Run the tests with a profiler (YES/NO). Default is NO. This option is only available with HIP backend
@@ -30,15 +30,17 @@ python runTests.py --input_path1 <input_path1> --input_path2 <input_path2> --cas
 -   QA mode - Tolerance based PASS/FAIL tests for RPP HIP/HOST functionalities checking pixelwise match between C/SSE/AVX/HIP versions after comparison to preset golden outputs. Please note that QA mode is only supported with a batch size of 3.
 Note: QA mode is not supported for case 84 due to run-to-run variation of outputs.
 ``` python
-python runTests.py --case_start 0 --case_end 38 --test_type 0 --qa_mode 1 --batch_size 3
+python runTests.py --case_start 0 --case_end 84 --test_type 0 --qa_mode 1 --batch_size 3
 ```
 -   Unit test mode - Unit tests allowing users to pass a path to a folder containing images, to execute the desired functionality and variant once, report RPP execution wall time, save and view output images
+Note: For testcase 82(RICAP) Please use images of same resolution and Batchsize > 1
 ``` python
-python runTests.py --case_start 0 --case_end 38 --test_type 0 --qa_mode 0
+python runTests.py --case_start 0 --case_end 84 --test_type 0 --qa_mode 0
 ```
 -   Performance test mode - Performance tests that execute the desired functionality and variant 100 times by default, and report max/min/avg RPP execution wall time, or optionally, AMD rocprof kernel profiler max/min/avg time for HIP backend variants.
+Note: For testcase 82(RICAP) Please use images of same resolution and Batchsize > 1
 ``` python
-python runTests.py --case_start 0 --case_end 38 --test_type 1
+python runTests.py --case_start 0 --case_end 84 --test_type 1
 ```
 
 To run the unit tests / performance tests for specific case numbers. please case use case_list parameter. Example as below
