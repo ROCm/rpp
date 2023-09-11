@@ -169,7 +169,7 @@ directory_name_generator() {
         elif [ "$case" -lt 42 ]
         then
             FUNCTIONALITY_GROUP="morphological_operations"
-        elif [ "$case" -eq 49 ]
+        elif [ "$case" -eq 49 ] || [ "$case" -eq 54 ]
         then
             FUNCTIONALITY_GROUP="filter_augmentations"
         elif [ "$case" -lt 86 ]
@@ -209,7 +209,7 @@ if [ "$TEST_TYPE" -eq 0 ]; then
     for case in ${CASE_LIST[@]};
     do
         if [ "$QA_MODE" -eq 1 ]; then
-            if [ "$case" -eq " 84" ]; then
+            if [ "$case" -eq "49" ] || [ "$case" -eq "54" ] || [ "$case" -eq " 84" ]; then
                 echo "QA tests are not supported for case number $case, since it generates random output"
                 continue
             fi
@@ -255,7 +255,7 @@ if [ "$TEST_TYPE" -eq 0 ]; then
                         continue
                     fi
 
-                    if [ "$case" -eq 40 ] || [ "$case" -eq 41 ] || [ "$case" -eq 49 ]
+                    if [ "$case" -eq 40 ] || [ "$case" -eq 41 ] || [ "$case" -eq 49 ] || [ "$case" -eq 54 ]
                     then
                         for ((kernelSize=3;kernelSize<=9;kernelSize+=2))
                         do
@@ -327,7 +327,7 @@ else
 
                     if [[ "$PROFILING_OPTION" -eq 0 ]]
                     then
-                        if [ "$case" -eq 40 ] || [ "$case" -eq 41 ] || [ "$case" -eq 49 ]
+                        if [ "$case" -eq 40 ] || [ "$case" -eq 41 ] || [ "$case" -eq 49 ] || [ "$case" -eq 54 ]
                         then
                             for ((kernelSize=3;kernelSize<=9;kernelSize+=2))
                             do
@@ -356,7 +356,7 @@ else
                         echo "------------------------------------------------------------------------------------------"
                     elif [[ "$PROFILING_OPTION" -eq 1 ]]
                     then
-                        if [ "$case" -eq 40 ] || [ "$case" -eq 41 ] || [ "$case" -eq 49 ]
+                        if [ "$case" -eq 40 ] || [ "$case" -eq 41 ] || [ "$case" -eq 49 ] || [ "$case" -eq 54 ]
                         then
                             for ((kernelSize=3;kernelSize<=9;kernelSize+=2))
                             do
