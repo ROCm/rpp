@@ -39,6 +39,12 @@ void compute_strides(Rpp32u *strides, Rpp32u *shape, Rpp32u nDim)
     }
 }
 
+void increment_ndim_ptr(Rpp32f **dstPtr, Rpp32u nDim, Rpp32u increment)
+{
+    for(int i = 0; i < nDim; i++)
+        dstPtr[i] += increment;
+}
+
 void transpose(Rpp32f *dst, Rpp32u *dstStrides, Rpp32f *src, Rpp32u *srcStrides, Rpp32u *dstShape, Rpp32u nDim) 
 {
     if (nDim == 0) 
@@ -172,6 +178,103 @@ RppStatus transpose_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
                         dstPtrRow += height;
                     }  
                 } 
+            }
+        }
+        else if (nDim == 3)
+        {
+            if(perm[0] == 2 && perm[1] == 0 && perm[2] == 1 && roi[2] == 16)
+            {
+                Rpp32u bufferLength = roi[1] * roi[2];
+                Rpp32u alignedLength = (bufferLength / 64) * 64;
+                Rpp32u vectorIncrement = 64;
+                Rpp32u vectorIncrementPerChannel = 4;
+                Rpp32u srcOuterStride = roi[1] * roi[2];
+                Rpp32u dstOuterStride = roi[0] * roi[1];
+                Rpp32u height = roi[0];
+                Rpp32u width = roi[1];
+                
+                // initialize pointers for 16 channel
+                Rpp32f *dstPtrChannel[16];                
+                for(int i = 0; i < 16; i++)
+                    dstPtrChannel[i] = dstPtrTemp + i * dstOuterStride;
+                
+                // loop over rows
+                for(int i = 0; i < height; i++)
+                {
+                    Rpp32f *srcPtrRow = srcPtrTemp;  
+                    
+                    // update temporary pointers for 16 channel
+                    Rpp32f *dstPtrTempChannel[16];
+                    for(int k = 0; k < 16; k++)
+                        dstPtrTempChannel[k] = dstPtrChannel[k];
+                    
+                    Rpp32u vectorLoopCount = 0;
+                    for( ; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
+                    {
+                        __m128 pSrc[16];
+                        // Load 0C0 - 0C16
+                        pSrc[0] = _mm_loadu_ps(srcPtrRow);
+                        pSrc[1] = _mm_loadu_ps(srcPtrRow + 4);
+                        pSrc[2] = _mm_loadu_ps(srcPtrRow + 8);
+                        pSrc[3] = _mm_loadu_ps(srcPtrRow + 12);
+                        
+                        // Load 1C0 - 1C16
+                        pSrc[4] = _mm_loadu_ps(srcPtrRow + 16);
+                        pSrc[5] = _mm_loadu_ps(srcPtrRow + 20);
+                        pSrc[6] = _mm_loadu_ps(srcPtrRow + 24);
+                        pSrc[7] = _mm_loadu_ps(srcPtrRow + 28);
+                        
+                        // Load 2C0 - 2C16
+                        pSrc[8] = _mm_loadu_ps(srcPtrRow + 32);
+                        pSrc[9] = _mm_loadu_ps(srcPtrRow + 36);
+                        pSrc[10] = _mm_loadu_ps(srcPtrRow + 40);
+                        pSrc[11] = _mm_loadu_ps(srcPtrRow + 44);
+                        
+                        // Load 3C0 - 3C16
+                        pSrc[12] = _mm_loadu_ps(srcPtrRow + 48);
+                        pSrc[13] = _mm_loadu_ps(srcPtrRow + 52);
+                        pSrc[14] = _mm_loadu_ps(srcPtrRow + 56);
+                        pSrc[15] = _mm_loadu_ps(srcPtrRow + 60);
+                        
+                        _MM_TRANSPOSE4_PS(pSrc[0], pSrc[4], pSrc[8], pSrc[12]);
+                        _MM_TRANSPOSE4_PS(pSrc[1], pSrc[5], pSrc[9], pSrc[13]);
+                        _MM_TRANSPOSE4_PS(pSrc[2], pSrc[6], pSrc[10], pSrc[14]);
+                        _MM_TRANSPOSE4_PS(pSrc[3], pSrc[7], pSrc[11], pSrc[15]);
+                        
+                        _mm_storeu_ps(dstPtrTempChannel[0], pSrc[0]);
+                        _mm_storeu_ps(dstPtrTempChannel[1], pSrc[4]);
+                        _mm_storeu_ps(dstPtrTempChannel[2], pSrc[8]);
+                        _mm_storeu_ps(dstPtrTempChannel[3], pSrc[12]);
+                        
+                        _mm_storeu_ps(dstPtrTempChannel[4], pSrc[1]);
+                        _mm_storeu_ps(dstPtrTempChannel[5], pSrc[5]);
+                        _mm_storeu_ps(dstPtrTempChannel[6], pSrc[9]);
+                        _mm_storeu_ps(dstPtrTempChannel[7], pSrc[13]);
+                        
+                        _mm_storeu_ps(dstPtrTempChannel[8], pSrc[2]);
+                        _mm_storeu_ps(dstPtrTempChannel[9], pSrc[6]);
+                        _mm_storeu_ps(dstPtrTempChannel[10], pSrc[10]);
+                        _mm_storeu_ps(dstPtrTempChannel[11], pSrc[14]);
+                        
+                        _mm_storeu_ps(dstPtrTempChannel[12], pSrc[3]);
+                        _mm_storeu_ps(dstPtrTempChannel[13], pSrc[7]);
+                        _mm_storeu_ps(dstPtrTempChannel[14], pSrc[11]);
+                        _mm_storeu_ps(dstPtrTempChannel[15], pSrc[15]);
+                        
+                        srcPtrRow += vectorIncrement;
+                        increment_ndim_ptr(dstPtrTempChannel, 16, vectorIncrementPerChannel);
+                    }
+                    for( ; vectorLoopCount < bufferLength; vectorLoopCount += 16)
+                    {
+                        for(int k = 0; k < 16; k++)
+                            *dstPtrTempChannel[k] = srcPtrRow[k];
+                        
+                        srcPtrRow += 16;
+                        increment_ndim_ptr(dstPtrTempChannel, 16, 1);
+                    }
+                    srcPtrTemp += srcOuterStride;
+                    increment_ndim_ptr(dstPtrChannel, 16, width);
+                }
             }
         }
         else
