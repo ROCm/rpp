@@ -296,7 +296,7 @@ int main(int argc, char **argv)
         exit(0);
     }
 
-    if(testCase == 82 && batchSize<2)
+    if(testCase == 82 && batchSize < 2)
     {
         std::cerr<<"\n RICAP only works with BatchSize > 1";
         exit(0);
