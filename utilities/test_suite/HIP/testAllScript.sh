@@ -4,7 +4,7 @@ cwd=$(pwd)
 
 # <<<<<<<<<<<<<< VALIDATION CHECK FOR FOLDER PATHS >>>>>>>>>>>>>>>>>>>>>>>>>>>>
 function VALIDATE_PATH {
-    if [ -z "$1" ]; then  #check if a string is empty 
+    if [ -z "$1" ]; then  #check if a string is empty
         echo "$1 Folder path is empty."
         exit
     fi
@@ -169,7 +169,7 @@ directory_name_generator() {
         elif [ "$case" -lt 42 ]
         then
             FUNCTIONALITY_GROUP="morphological_operations"
-        elif [ "$case" -eq 49 ]
+        elif [ "$case" -eq 49 ] || [ "$case" -eq 54 ]
         then
             FUNCTIONALITY_GROUP="filter_augmentations"
         elif [ "$case" -lt 86 ]
@@ -208,6 +208,12 @@ echo "##########################################################################
 if [ "$TEST_TYPE" -eq 0 ]; then
     for case in ${CASE_LIST[@]};
     do
+        if [ "$QA_MODE" -eq 1 ]; then
+            if [ "$case" -eq "49" ] || [ "$case" -eq "54" ] || [ "$case" -eq " 84" ]; then
+                echo "QA tests are not supported for case number $case, since it generates random output"
+                continue
+            fi
+        fi
         if [ "$case" -lt "0" ] || [ "$case" -gt " 84" ]; then
             echo "Invalid case number $case. case number must be in the 0:84 range!"
             continue
@@ -249,7 +255,7 @@ if [ "$TEST_TYPE" -eq 0 ]; then
                         continue
                     fi
 
-                    if [ "$case" -eq 40 ] || [ "$case" -eq 41 ] || [ "$case" -eq 49 ]
+                    if [ "$case" -eq 40 ] || [ "$case" -eq 41 ] || [ "$case" -eq 49 ] || [ "$case" -eq 54 ]
                     then
                         for ((kernelSize=3;kernelSize<=9;kernelSize+=2))
                         do
@@ -321,7 +327,7 @@ else
 
                     if [[ "$PROFILING_OPTION" -eq 0 ]]
                     then
-                        if [ "$case" -eq 40 ] || [ "$case" -eq 41 ] || [ "$case" -eq 49 ]
+                        if [ "$case" -eq 40 ] || [ "$case" -eq 41 ] || [ "$case" -eq 49 ] || [ "$case" -eq 54 ]
                         then
                             for ((kernelSize=3;kernelSize<=9;kernelSize+=2))
                             do
@@ -350,7 +356,7 @@ else
                         echo "------------------------------------------------------------------------------------------"
                     elif [[ "$PROFILING_OPTION" -eq 1 ]]
                     then
-                        if [ "$case" -eq 40 ] || [ "$case" -eq 41 ] || [ "$case" -eq 49 ]
+                        if [ "$case" -eq 40 ] || [ "$case" -eq 41 ] || [ "$case" -eq 49 ] || [ "$case" -eq 54 ]
                         then
                             for ((kernelSize=3;kernelSize<=9;kernelSize+=2))
                             do

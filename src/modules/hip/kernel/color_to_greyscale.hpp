@@ -99,9 +99,6 @@ RppStatus hip_exec_color_to_greyscale_tensor(T *srcPtr,
                                              Rpp32f *channelWeights,
                                              rpp::Handle& handle)
 {
-    int localThreads_x = LOCAL_THREADS_X;
-    int localThreads_y = LOCAL_THREADS_Y;
-    int localThreads_z = LOCAL_THREADS_Z;
     int globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
     int globalThreads_y = dstDescPtr->h;
     int globalThreads_z = handle.GetBatchSize();
@@ -110,8 +107,8 @@ RppStatus hip_exec_color_to_greyscale_tensor(T *srcPtr,
     {
         globalThreads_x = (srcDescPtr->strides.hStride / 3 + 7) >> 3;
         hipLaunchKernelGGL(color_to_greyscale_pkd3_pln1_hip_tensor,
-                           dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                           dim3(localThreads_x, localThreads_y, localThreads_z),
+                           dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                            0,
                            handle.GetStream(),
                            srcPtr,
@@ -124,8 +121,8 @@ RppStatus hip_exec_color_to_greyscale_tensor(T *srcPtr,
     else if (srcDescPtr->layout == RpptLayout::NCHW)
     {
         hipLaunchKernelGGL(color_to_greyscale_pln3_pln1_hip_tensor,
-                           dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                           dim3(localThreads_x, localThreads_y, localThreads_z),
+                           dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                            0,
                            handle.GetStream(),
                            srcPtr,
