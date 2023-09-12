@@ -13,7 +13,6 @@ OUTPUT_IMAGES*
 OUTPUT_PERFORMANCE*
 QA_RESULTS*
 OUTPUT_AUDIO*
-QA_AUDIO*
 
 # documentation artifacts
 _build/

@@ -23,7 +23,7 @@ python runAudioTests.py --input_path <input_path> --case_start <case_start> --ca
 ``` python
 python runAudioTests.py --case_start 0 --case_end 0 --test_type 0 --qa_mode 1 --batch_size 8
 ```
--   Unit test mode - Unit tests allowing users to pass a path to a folder containing audio files, to execute the desired functionality and variant once, report RPP execution wall time, save and view output
+-   Unit test mode - Unit tests allowing users to pass a path to a folder containing audio files, to execute the desired functionality and variant once, report RPP execution wall time.
 ``` python
 python runAudioTests.py --case_start 0 --case_end 0 --test_type 0 --qa_mode 0
 ```
@@ -38,14 +38,14 @@ To run the unit tests / performance tests for specific case numbers. please case
 ``` python
 python runTests.py --case_list 0 1 2 --test_type 0
 ```
--   To run performance tests for case numbers 0, 1, 1
+-   To run performance tests for case numbers 0, 1, 2
 ``` python
 python runTests.py --case_list 0 1 2 --test_type 1
 ```
 
 ## Features
 The suite includes:
--   Unit tests that execute the desired functionality and variant once, report RPP execution wall time and save output
+-   Unit tests that execute the desired functionality and variant once, report RPP execution wall time.
 -   Performance tests that execute the desired functionality and variant 100 times by default, and report max/min/avg RPP execution wall time.
 -   Unit and Performance tests are included for one input/output bitdepth F32.
 -   Support for output referencing against golden outputs, and functionality validation checking, by tolerance-based pass/fail criterions for each variant.

@@ -343,7 +343,7 @@ int main(int argc, char **argv)
                 {
                     readcount = (int) sf_read_float (infile, inputTempF32, bufferLength);
                     if (readcount != bufferLength)
-                        std::cerr<<"F32 Unable to read audio file completely"<<std::endl;
+                        cout << "F32 Unable to read audio file completely " << std::endl;
                 }
                 fileCnt++;
                 count++;
@@ -374,7 +374,7 @@ int main(int argc, char **argv)
                     else
                         missingFuncFlag = 1;
 
-                    if ((testType == 0 || qaFlag == 1) && batchSize == 8)
+                    if (qaFlag == 1 && batchSize == 8)
                         verify_non_silent_region_detection(detectedIndex, detectionLength, testCaseName, batchSize, audioNames, dst, qaFlag);
 
                     break;
@@ -403,7 +403,7 @@ int main(int argc, char **argv)
 
             if (testType == 0)
             {
-                if ((qaFlag == 1 || testType == 0) && (batchSize == 8 && testCase !=0))
+                if (qaFlag == 1&& (batchSize == 8 && testCase !=0))
                     verify_output(outputf32, dstDescPtr, dstDims, testCaseName, audioNames, dst, qaFlag);
 
                 cout <<"\n\n";

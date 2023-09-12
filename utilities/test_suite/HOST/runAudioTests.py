@@ -85,7 +85,7 @@ def validate_path(input_path):
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list(preserveOutput):
     return [
-        "../../OUTPUT_AUDIO_PERFORMANCE_LOGS_HOST_" + timestamp + "/Tensor_host_audio_raw_performance_log.txt",
+        "../../OUTPUT_PERFORMANCE_AUDIO_LOGS_HOST_" + timestamp + "/Tensor_host_audio_raw_performance_log.txt",
     ]
 
 def run_unit_test(srcPath, case, numRuns, testType, bitDepth, batchSize, qaMode, outFilePath):
@@ -190,19 +190,19 @@ outFilePath = " "
 
 if preserveOutput == 0:
     validate_and_remove_folders(cwd, "OUTPUT_AUDIO_HOST")
-    validate_and_remove_folders(cwd, "QA_AUDIO_RESULTS_HOST")
-    validate_and_remove_folders(cwd, "OUTPUT_AUDIO_PERFORMANCE_LOGS_HOST")
+    validate_and_remove_folders(cwd, "QA_RESULTS_HOST")
+    validate_and_remove_folders(cwd, "OUTPUT_PERFORMANCE_AUDIO_LOGS_HOST")
 
 if(testType == 0):
     if qaMode:
-        outFilePath = os.path.join(os.path.dirname(cwd), 'QA_AUDIO_RESULTS_HOST_' + timestamp)
+        outFilePath = os.path.join(os.path.dirname(cwd), 'QA_RESULTS_HOST_' + timestamp)
     else:
         outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_AUDIO_HOST_' + timestamp)
     numRuns = 1
 elif(testType == 1):
     if "--num_runs" not in sys.argv:
-        numRuns = 100#default numRuns for running performance tests
-    outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_AUDIO_PERFORMANCE_LOGS_HOST_' + timestamp)
+        numRuns = 100 #default numRuns for running performance tests
+    outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_PERFORMANCE_AUDIO_LOGS_HOST_' + timestamp)
 else:
     print("Invalid TEST_TYPE specified. TEST_TYPE should be 0/1 (0 = Unittests / 1 = Performancetests)")
     exit()
