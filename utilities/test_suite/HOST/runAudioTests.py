@@ -97,8 +97,9 @@ def run_unit_test(srcPath, case, numRuns, testType, bitDepth, batchSize, qaMode,
     result = subprocess.run(["./Tensor_host_audio", srcPath, str(bitDepth), str(case), str(testType), str(numRuns), str(batchSize), str(qaMode), outFilePath], stdout=subprocess.PIPE)    # nosec
     print(result.stdout.decode())
     file_path = os.path.join(outFilePath, "results.txt")
-    with open(file_path, 'a') as file:
-        file.write(result.stdout.decode())
+    if not qaMode:
+        with open(file_path, 'a') as file:
+            file.write(result.stdout.decode())
 
     print("------------------------------------------------------------------------------------------")
 
@@ -122,8 +123,8 @@ def run_performance_test(loggingFolder, srcPath, case, numRuns, testType, bitDep
 def rpp_test_suite_parser_and_validator():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_path", type = str, default = inFilePath, help = "Path to the input folder")
-    parser.add_argument("--case_start", type = int, default = 0, help = "Testing range starting case # - (0:8)")
-    parser.add_argument("--case_end", type = int, default = 8, help = "Testing range ending case # - (0:8)")
+    parser.add_argument("--case_start", type = int, default = 0, help = "Testing range starting case # - (0:0)")
+    parser.add_argument("--case_end", type = int, default = 0, help = "Testing range ending case # - (0:0)")
     parser.add_argument('--test_type', type = int, default = 0, help = "Type of Test - (0 = Unit tests / 1 = Performance tests)")
     parser.add_argument('--case_list', nargs = "+", help = "List of case numbers to list", required = False)
     parser.add_argument('--num_runs', type = int, default = 1, help = "Specifies the number of runs for running the performance tests")
@@ -137,8 +138,8 @@ def rpp_test_suite_parser_and_validator():
     validate_path(args.input_path)
 
     # validate the parameters passed by user
-    if ((args.case_start < 0 or args.case_start > 8) or (args.case_end < 0 or args.case_end > 8)):
-        print("Starting case# and Ending case# must be in the 0:8 range. Aborting!")
+    if ((args.case_start < 0 or args.case_start > 0) or (args.case_end < 0 or args.case_end > 0)):
+        print("Starting case# and Ending case# must be in the 0:0 range. Aborting!")
         exit(0)
     elif args.case_end < args.case_start:
         print("Ending case# must be greater than starting case#. Aborting!")
@@ -146,7 +147,7 @@ def rpp_test_suite_parser_and_validator():
     elif args.test_type < 0 or args.test_type > 1:
         print("Test Type# must be in the 0 / 1. Aborting!")
         exit(0)
-    elif args.case_list is not None and args.case_start > 0 and args.case_end < 8:
+    elif args.case_list is not None and args.case_start > 0 and args.case_end < 0:
         print("Invalid input! Please provide only 1 option between case_list, case_start and case_end")
         exit(0)
     elif args.num_runs <= 0:
@@ -168,8 +169,8 @@ def rpp_test_suite_parser_and_validator():
         args.case_list = [str(x) for x in args.case_list]
     else:
         for case in args.case_list:
-            if int(case) < 0 or int(case) > 8:
-                 print("The case# must be in the 0:8 range!")
+            if int(case) != 0:
+                 print("The case# must be 0!")
                  exit(0)
 
     return args
@@ -188,7 +189,8 @@ bitDepth = 2
 outFilePath = " "
 
 if preserveOutput == 0:
-    validate_and_remove_folders(cwd, "AUDIO_OUTPUT_HOST")
+    validate_and_remove_folders(cwd, "OUTPUT_AUDIO_HOST")
+    validate_and_remove_folders(cwd, "QA_AUDIO_RESULTS_HOST")
     validate_and_remove_folders(cwd, "OUTPUT_AUDIO_PERFORMANCE_LOGS_HOST")
 
 if(testType == 0):
@@ -224,33 +226,24 @@ subprocess.run(["make", "-j16"], cwd=".")    # nosec
 
 if testType == 0:
     for case in caseList:
-        if "--case_list" not in sys.argv:
-            if case == "3":
-                srcPath = os.path.join(os.path.dirname(cwd), "TEST_AUDIO_FILES/single_sample_multi_channel_src1/")
-        if qaMode and case != "3" and batchSize != 8:
+        if qaMode and batchSize != 8:
             print("QA mode can only run with a batch size of 8.")
             exit(0)
-        if qaMode and case == "3" and batchSize != 1:
-            print("QA mode can only run with a batch size of 1.")
-            exit(0)
-        if int(case) < 0 or int(case) > 8:
-            print(f"Invalid case number {case}. Case number must be in the range of 0 to 8!")
+        if int(case) != 0:
+            print(f"Invalid case number {case}. Case number must be 0!")
             continue
 
         run_unit_test(srcPath, case, numRuns, testType, bitDepth, batchSize, qaMode, outFilePath)
 else:
     for case in caseList:
-        if "--case_list" not in sys.argv:
-            if case == "3":
-                srcPath = os.path.join(os.path.dirname(cwd), "TEST_AUDIO_FILES/single_sample_multi_channel_src1/")
-        if int(case) < 0 or int(case) > 8:
-            print(f"Invalid case number {case}. Case number must be in the range of 0 to 8!")
+        if int(case) != 0:
+            print(f"Invalid case number {case}. Case number must be 0 !")
             continue
 
         run_performance_test(loggingFolder, srcPath, case, numRuns, testType, bitDepth, batchSize, qaMode, outFilePath)
 
 # print the results of qa tests
-supportedCaseList = ['0', '1', '2', '3', '4', '5', '6', '7', '8']
+supportedCaseList = ['0']
 supportedCases = 0
 for num in caseList:
     if num in supportedCaseList:
@@ -270,61 +263,32 @@ print("\n-------------- " + caseInfo + " --------------")
 if (testType == 1):
     log_file_list = get_log_file_list(preserveOutput)
 
-    for log_file in log_file_list:
-        # Opening log file
-        try:
-            f = open(log_file,"r")
-            print("\n\n\nOpened log file -> "+ log_file)
-        except IOError:
-            print("Skipping file -> "+ log_file)
-            continue
+    # Initialize data structures to store the parsed data
+    functionality = []
+    max_wall_times = []
+    min_wall_times = []
+    avg_wall_times = []
 
-        stats = []
-        maxVals = []
-        minVals = []
-        avgVals = []
-        functions = []
-        frames = []
-        prevLine = ""
-        funcCount = 0
+    # Read the log file
+    with open(log_file_list[0], 'r') as file:
+        for line in file:
+            if line.startswith("Running"):
+                functionality.append(line.strip())
+            elif line.startswith("max,min,avg wall times"):
+                parts = line.strip().split("=")
+                wall_times = parts[1].strip().split(',')
+                max_wall_times.append(float(wall_times[0]))
+                min_wall_times.append(float(wall_times[1]))
+                avg_wall_times.append(float(wall_times[2]))
 
-        # Loop over each line
-        for line in f:
-            functions.extend([" ", " "])
-            frames.extend([" ", " ", " "])
-            maxVals.extend([" ", " ", " "])
-            minVals.extend([" ", " ", " "])
-            avgVals.extend([" ", " ", " "])
+    # Print the summary in a well-formatted table
+    print("\nFunctionality\tMax (ms/batch)\tMin (ms/batch)\tAvg (ms/batch)\n")
 
-            if "max,min,avg wall times in ms/batch" in line:
-                split_word_start = "Running "
-                split_word_end = " " +str(numRuns)
-                prevLine = prevLine.partition(split_word_start)[2].partition(split_word_end)[0]
-                if prevLine not in functions:
-                    functions.append(prevLine)
-                    frames.append(numRuns)
-                    split_word_start = "max,min,avg wall times in ms/batch = "
-                    split_word_end = "\n"
-                    stats = line.partition(split_word_start)[2].partition(split_word_end)[0].split(",")
-                    maxVals.append(stats[0])
-                    minVals.append(stats[1])
-                    avgVals.append(stats[2])
-                    funcCount += 1
-            if line != "\n":
-                prevLine = line
+    if len(functionality) > 0:
+        max_func_length = max(len(func) for func in functionality)
 
-        # Print log lengths
-        print("Functionalities - "+ str(funcCount))
-
-        # Print summary of log
-        print("\n\nFunctionality\t\t\t\t\t\tFrames Count\tmax(ms/batch)\t\tmin(ms/batch)\t\tavg(ms/batch)\n")
-        if len(functions) != 0:
-            maxCharLength = len(max(functions, key = len))
-            functions = [x + (' ' * (maxCharLength - len(x))) for x in functions]
-            for i, func in enumerate(functions):
-                print(func.replace('\n', '') + "\t\t\t\t\t" + str(frames[i + 3]) + "\t\t" + str(maxVals[i + 3]) + "\t" + str(minVals[i + 3]) + "\t" + str(avgVals[i + 3]))
-        else:
-            print("No variants under this category")
-
-        # Closing log file
-        f.close()
+        for i, func in enumerate(functionality):
+            print("{:<{width}}\t{:<15.6f}\t{:<15.6f}\t{:<15.6f}".format(
+                func.replace("Running ", ""), max_wall_times[i], min_wall_times[i], avg_wall_times[i], width=max_func_length))
+    else:
+        print("No functionality data found in the log file.")
