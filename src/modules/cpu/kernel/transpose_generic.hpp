@@ -53,6 +53,70 @@ void rpp_store16_f32_f32_channelwise(Rpp32f **dstPtr, __m128 *p)
     _mm_storeu_ps(dstPtr[3], p[12]);
 }
 
+void compute_2d_transpose(Rpp32f *srcPtrTemp, Rpp32f *dstPtrTemp, Rpp32u height, Rpp32u width)
+{
+    Rpp32u alignedRows = (height / 4) * 4;
+    Rpp32u alignedCols = (width / 4) * 4;
+    Rpp32u vectorIncrement = 4;
+
+    int i = 0;
+    for(; i < alignedRows; i += vectorIncrement)
+    {
+        Rpp32s k = (i / 4);
+        Rpp32f *srcPtrRow[4] = {srcPtrTemp + i * width, srcPtrTemp + (i + 1) * width, srcPtrTemp + (i + 2) * width, srcPtrTemp + (i + 3) * width};
+        Rpp32f *dstPtrRow[4] = {dstPtrTemp + k * vectorIncrement, dstPtrTemp + height + k * vectorIncrement, dstPtrTemp + 2 * height + k * vectorIncrement, dstPtrTemp + 3 * height + k * vectorIncrement};
+        Rpp32u vectorLoopCount = 0;
+        for(; vectorLoopCount < alignedCols; vectorLoopCount += vectorIncrement)
+        {
+            __m128 pSrc[4];
+            pSrc[0] = _mm_loadu_ps(srcPtrRow[0]);
+            pSrc[1] = _mm_loadu_ps(srcPtrRow[1]);
+            pSrc[2] = _mm_loadu_ps(srcPtrRow[2]);
+            pSrc[3] = _mm_loadu_ps(srcPtrRow[3]);
+            _MM_TRANSPOSE4_PS(pSrc[0], pSrc[1], pSrc[2], pSrc[3]);
+            _mm_storeu_ps(dstPtrRow[0], pSrc[0]);
+            _mm_storeu_ps(dstPtrRow[1], pSrc[1]);
+            _mm_storeu_ps(dstPtrRow[2], pSrc[2]);
+            _mm_storeu_ps(dstPtrRow[3], pSrc[3]);
+            
+            srcPtrRow[0] += vectorIncrement;
+            srcPtrRow[1] += vectorIncrement;
+            srcPtrRow[2] += vectorIncrement;
+            srcPtrRow[3] += vectorIncrement;
+            dstPtrRow[0] += vectorIncrement * height;
+            dstPtrRow[1] += vectorIncrement * height;
+            dstPtrRow[2] += vectorIncrement * height;
+            dstPtrRow[3] += vectorIncrement * height;
+        }
+    }
+        
+    // Handle remaining cols
+    for(int k = 0; k < alignedRows; k++)
+    {
+        Rpp32f *srcPtrRow = srcPtrTemp + k * width + alignedCols;
+        Rpp32f *dstPtrRow = dstPtrTemp + alignedCols * height + k;
+        for(int j = alignedCols; j < width; j++)
+        {
+            *dstPtrRow = *srcPtrRow;
+            srcPtrRow++;
+            dstPtrRow += height;
+        }
+    }
+    
+    // Handle remaining rows
+    for( ; i < height; i++)
+    {
+        Rpp32f *srcPtrRow = srcPtrTemp + i * width;
+        Rpp32f *dstPtrRow = dstPtrTemp + i;
+        for(int j = 0; j < width; j++)
+        {
+            *dstPtrRow = *srcPtrRow;
+            srcPtrRow++;
+            dstPtrRow += height;
+        }  
+    } 
+}
+
 void transpose(Rpp32f *dst, Rpp32u *dstStrides, Rpp32f *src, Rpp32u *srcStrides, Rpp32u *dstShape, Rpp32u nDim) 
 {
     if (nDim == 0) 
@@ -124,68 +188,8 @@ RppStatus transpose_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
             }
             else if(perm[0] == 1 && perm[1] == 0)
             {
-                Rpp32u height = roi[0];
-                Rpp32u width = roi[1];
-                Rpp32u alignedRows = (roi[0] / 4) * 4;
-                Rpp32u alignedCols = (roi[1] / 4) * 4;
-                Rpp32u vectorIncrement = 4;
-                int i = 0;
-                for(; i < alignedRows; i += vectorIncrement)
-                {
-                    Rpp32s k = (i / 4);
-                    Rpp32f *srcPtrRow[4] = {srcPtrTemp + i * width, srcPtrTemp + (i + 1) * width, srcPtrTemp + (i + 2) * width, srcPtrTemp + (i + 3) * width};
-                    Rpp32f *dstPtrRow[4] = {dstPtrTemp + k * vectorIncrement, dstPtrTemp + height + k * vectorIncrement, dstPtrTemp + 2 * height + k * vectorIncrement, dstPtrTemp + 3 * height + k * vectorIncrement};
-                    Rpp32u vectorLoopCount = 0;
-                    for(; vectorLoopCount < alignedCols; vectorLoopCount += vectorIncrement)
-                    {
-                        __m128 pSrc[4];
-                        pSrc[0] = _mm_loadu_ps(srcPtrRow[0]);
-                        pSrc[1] = _mm_loadu_ps(srcPtrRow[1]);
-                        pSrc[2] = _mm_loadu_ps(srcPtrRow[2]);
-                        pSrc[3] = _mm_loadu_ps(srcPtrRow[3]);
-                        _MM_TRANSPOSE4_PS(pSrc[0], pSrc[1], pSrc[2], pSrc[3]);
-                        _mm_storeu_ps(dstPtrRow[0], pSrc[0]);
-                        _mm_storeu_ps(dstPtrRow[1], pSrc[1]);
-                        _mm_storeu_ps(dstPtrRow[2], pSrc[2]);
-                        _mm_storeu_ps(dstPtrRow[3], pSrc[3]);
-                        
-                        srcPtrRow[0] += vectorIncrement;
-                        srcPtrRow[1] += vectorIncrement;
-                        srcPtrRow[2] += vectorIncrement;
-                        srcPtrRow[3] += vectorIncrement;
-                        dstPtrRow[0] += vectorIncrement * height;
-                        dstPtrRow[1] += vectorIncrement * height;
-                        dstPtrRow[2] += vectorIncrement * height;
-                        dstPtrRow[3] += vectorIncrement * height;
-                    }
-                }
-                
-                // Handle remaining cols
-                for(int k = 0; k < alignedRows; k++)
-                {
-                    Rpp32f *srcPtrRow = srcPtrTemp + k * width + alignedCols;
-                    Rpp32f *dstPtrRow = dstPtrTemp + alignedCols * height + k;
-                    for(int j = alignedCols; j < width; j++)
-                    {
-                        *dstPtrRow = *srcPtrRow;
-                        srcPtrRow++;
-                        dstPtrRow += height;
-                    }
-                }
-                
-                // Handle remaining rows
-                for( ; i < height; i++)
-                {
-                    Rpp32f *srcPtrRow = srcPtrTemp + i * width;
-                    Rpp32f *dstPtrRow = dstPtrTemp + i;
-                    for(int j = 0; j < width; j++)
-                    {
-                        *dstPtrRow = *srcPtrRow;
-                        srcPtrRow++;
-                        dstPtrRow += height;
-                    }  
-                } 
-            }
+                compute_2d_transpose(srcPtrTemp, dstPtrTemp, roi[0], roi[1]);
+            }   
         }
         else if (nDim == 3)
         {
@@ -267,6 +271,21 @@ RppStatus transpose_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
                     }
                     srcPtrRow += roi[1] * roi[2];
                     dstPtrRow += roi[2];
+                }
+            } 
+            else if(perm[0] == 0 && perm[1] == 2 && perm[2] == 1)
+            {
+                Rpp32f *srcPtrRow = srcPtrTemp;  
+                Rpp32f *dstPtrRow = dstPtrTemp;
+                Rpp32u stride = roi[1] * roi[2];
+                
+                for(int i = 0; i < roi[0]; i++)
+                {
+                    compute_2d_transpose(srcPtrTemp, dstPtrTemp, roi[1], roi[2]);
+                    
+                    // increment src and dst pointers
+                    srcPtrTemp += stride;
+                    dstPtrTemp += stride;
                 }
             }   
         }
