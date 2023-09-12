@@ -185,7 +185,7 @@ numRuns = args.num_runs
 qaMode = args.qa_mode
 preserveOutput = args.preserve_output
 batchSize = args.batch_size
-bitDepth = 2
+bitDepth = 2 # Current audio test suite only supports bit depth 2
 outFilePath = " "
 
 if preserveOutput == 0:
