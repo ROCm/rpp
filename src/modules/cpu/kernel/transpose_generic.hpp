@@ -58,9 +58,10 @@ void compute_2d_transpose(Rpp32f *srcPtrTemp, Rpp32f *dstPtrTemp, Rpp32u height,
     Rpp32u alignedRows = (height / 4) * 4;
     Rpp32u alignedCols = (width / 4) * 4;
     Rpp32u vectorIncrement = 4;
+    Rpp32u dstStride = vectorIncrement * height;
 
     int i = 0;
-    for(; i < alignedRows; i += vectorIncrement)
+    for(; i < alignedRows; i += 4)
     {
         Rpp32s k = (i / 4);
         Rpp32f *srcPtrRow[4] = {srcPtrTemp + i * width, srcPtrTemp + (i + 1) * width, srcPtrTemp + (i + 2) * width, srcPtrTemp + (i + 3) * width};
@@ -83,36 +84,36 @@ void compute_2d_transpose(Rpp32f *srcPtrTemp, Rpp32f *dstPtrTemp, Rpp32u height,
             srcPtrRow[1] += vectorIncrement;
             srcPtrRow[2] += vectorIncrement;
             srcPtrRow[3] += vectorIncrement;
-            dstPtrRow[0] += vectorIncrement * height;
-            dstPtrRow[1] += vectorIncrement * height;
-            dstPtrRow[2] += vectorIncrement * height;
-            dstPtrRow[3] += vectorIncrement * height;
+            dstPtrRow[0] += dstStride;
+            dstPtrRow[1] += dstStride;
+            dstPtrRow[2] += dstStride;
+            dstPtrRow[3] += dstStride;
         }
     }
         
     // Handle remaining cols
     for(int k = 0; k < alignedRows; k++)
     {
-        Rpp32f *srcPtrRow = srcPtrTemp + k * width + alignedCols;
-        Rpp32f *dstPtrRow = dstPtrTemp + alignedCols * height + k;
+        Rpp32f *srcPtrRowTemp = srcPtrTemp + k * width + alignedCols;
+        Rpp32f *dstPtrRowTemp = dstPtrTemp + alignedCols * height + k;
         for(int j = alignedCols; j < width; j++)
         {
-            *dstPtrRow = *srcPtrRow;
-            srcPtrRow++;
-            dstPtrRow += height;
+            *dstPtrRowTemp = *srcPtrRowTemp;
+            srcPtrRowTemp++;
+            dstPtrRowTemp += height;
         }
     }
     
     // Handle remaining rows
     for( ; i < height; i++)
     {
-        Rpp32f *srcPtrRow = srcPtrTemp + i * width;
-        Rpp32f *dstPtrRow = dstPtrTemp + i;
+        Rpp32f *srcPtrRowTemp = srcPtrTemp + i * width;
+        Rpp32f *dstPtrRowTemp = dstPtrTemp + i;
         for(int j = 0; j < width; j++)
         {
-            *dstPtrRow = *srcPtrRow;
-            srcPtrRow++;
-            dstPtrRow += height;
+            *dstPtrRowTemp = *srcPtrRowTemp;
+            srcPtrRowTemp++;
+            dstPtrRowTemp += height;
         }  
     } 
 }
