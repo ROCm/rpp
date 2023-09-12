@@ -53,32 +53,65 @@ void rpp_store16_f32_f32_channelwise(Rpp32f **dstPtr, __m128 *p)
     _mm_storeu_ps(dstPtr[3], p[12]);
 }
 
+void rpp_transpose4x8_avx(__m256 *pSrc, __m128 *pDst)
+{
+  __m256 tmp0, tmp1, tmp2, tmp3; 
+  tmp0 = _mm256_shuffle_ps(pSrc[0], pSrc[1], 0x44);
+  tmp2 = _mm256_shuffle_ps(pSrc[0], pSrc[1], 0xEE);
+  tmp1 = _mm256_shuffle_ps(pSrc[2], pSrc[3], 0x44);
+  tmp3 = _mm256_shuffle_ps(pSrc[2], pSrc[3], 0xEE);
+  pSrc[0] = _mm256_shuffle_ps(tmp0, tmp1, 0x88);
+  pSrc[1] = _mm256_shuffle_ps(tmp0, tmp1, 0xDD);
+  pSrc[2] = _mm256_shuffle_ps(tmp2, tmp3, 0x88);
+  pSrc[3] = _mm256_shuffle_ps(tmp2, tmp3, 0xDD);
+  
+  pDst[0] = _mm256_castps256_ps128(pSrc[0]);
+  pDst[1] = _mm256_castps256_ps128(pSrc[1]);
+  pDst[2] = _mm256_castps256_ps128(pSrc[2]);
+  pDst[3] = _mm256_castps256_ps128(pSrc[3]);
+  pDst[4] = _mm256_extractf128_ps(pSrc[0], 1);
+  pDst[5] = _mm256_extractf128_ps(pSrc[1], 1);
+  pDst[6] = _mm256_extractf128_ps(pSrc[2], 1);
+  pDst[7] = _mm256_extractf128_ps(pSrc[3], 1);
+}
+
 void compute_2d_transpose(Rpp32f *srcPtrTemp, Rpp32f *dstPtrTemp, Rpp32u height, Rpp32u width)
 {
     Rpp32u alignedRows = (height / 4) * 4;
-    Rpp32u alignedCols = (width / 4) * 4;
-    Rpp32u vectorIncrement = 4;
+    Rpp32u alignedCols = (width / 8) * 8;
+    Rpp32u vectorIncrement = 8;
     Rpp32u dstStride = vectorIncrement * height;
 
     int i = 0;
     for(; i < alignedRows; i += 4)
     {
         Rpp32s k = (i / 4);
-        Rpp32f *srcPtrRow[4] = {srcPtrTemp + i * width, srcPtrTemp + (i + 1) * width, srcPtrTemp + (i + 2) * width, srcPtrTemp + (i + 3) * width};
-        Rpp32f *dstPtrRow[4] = {dstPtrTemp + k * vectorIncrement, dstPtrTemp + height + k * vectorIncrement, dstPtrTemp + 2 * height + k * vectorIncrement, dstPtrTemp + 3 * height + k * vectorIncrement};
+        Rpp32f *srcPtrRow[4], *dstPtrRow[8];
+        
+        for(int j = 0; j < 4; j++)
+            srcPtrRow[j] = srcPtrTemp + (i + j) * width;
+        for(int j = 0; j < 8; j++)
+            dstPtrRow[j] = dstPtrTemp + j * height + k * 4;
+       
         Rpp32u vectorLoopCount = 0;
         for(; vectorLoopCount < alignedCols; vectorLoopCount += vectorIncrement)
         {
-            __m128 pSrc[4];
-            pSrc[0] = _mm_loadu_ps(srcPtrRow[0]);
-            pSrc[1] = _mm_loadu_ps(srcPtrRow[1]);
-            pSrc[2] = _mm_loadu_ps(srcPtrRow[2]);
-            pSrc[3] = _mm_loadu_ps(srcPtrRow[3]);
-            _MM_TRANSPOSE4_PS(pSrc[0], pSrc[1], pSrc[2], pSrc[3]);
-            _mm_storeu_ps(dstPtrRow[0], pSrc[0]);
-            _mm_storeu_ps(dstPtrRow[1], pSrc[1]);
-            _mm_storeu_ps(dstPtrRow[2], pSrc[2]);
-            _mm_storeu_ps(dstPtrRow[3], pSrc[3]);
+            __m256 pSrc[4];
+            pSrc[0] = _mm256_loadu_ps(srcPtrRow[0]);
+            pSrc[1] = _mm256_loadu_ps(srcPtrRow[1]);
+            pSrc[2] = _mm256_loadu_ps(srcPtrRow[2]);
+            pSrc[3] = _mm256_loadu_ps(srcPtrRow[3]);
+            
+            __m128 pDst[8];
+            rpp_transpose4x8_avx(pSrc, pDst);
+            _mm_storeu_ps(dstPtrRow[0], pDst[0]);
+            _mm_storeu_ps(dstPtrRow[1], pDst[1]);
+            _mm_storeu_ps(dstPtrRow[2], pDst[2]);
+            _mm_storeu_ps(dstPtrRow[3], pDst[3]);
+            _mm_storeu_ps(dstPtrRow[4], pDst[4]);
+            _mm_storeu_ps(dstPtrRow[5], pDst[5]);
+            _mm_storeu_ps(dstPtrRow[6], pDst[6]);
+            _mm_storeu_ps(dstPtrRow[7], pDst[7]);
             
             srcPtrRow[0] += vectorIncrement;
             srcPtrRow[1] += vectorIncrement;
@@ -88,6 +121,10 @@ void compute_2d_transpose(Rpp32f *srcPtrTemp, Rpp32f *dstPtrTemp, Rpp32u height,
             dstPtrRow[1] += dstStride;
             dstPtrRow[2] += dstStride;
             dstPtrRow[3] += dstStride;
+            dstPtrRow[4] += dstStride;
+            dstPtrRow[5] += dstStride;
+            dstPtrRow[6] += dstStride;
+            dstPtrRow[7] += dstStride;
         }
     }
         
