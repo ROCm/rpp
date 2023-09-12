@@ -162,20 +162,25 @@ dstPath = outFilePath
 subprocess.call(["./testAllScript.sh", srcPath1, args.input_path2, str(testType), str(numRuns), str(qaMode), str(decoderType), str(preserveOutput), str(batchSize), " ".join(caseList)])  # nosec
 
 # print the results of qa tests
-supportedCaseList = ['0', '1', '2', '4', '13', '31', '34', '36', '37', '38', '82', '84']
+supportedCaseList = ['0', '1', '2', '4', '13', '31', '34', '36', '37', '38', '82']
+nonQACaseList = ['54', '84']
 supportedCases = 0
 for num in caseList:
-    if num in supportedCaseList:
+    if qaMode == 1 and num not in nonQACaseList:
+        supportedCases += 1
+    elif qaMode == 0 and num in supportedCaseList:
         supportedCases += 1
 caseInfo = "Tests are run for " + str(supportedCases) + " supported cases out of the " + str(len(caseList)) + " cases requested"
 if qaMode and testType == 0:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
-    f = open(qaFilePath, 'r+')
-    print("---------------------------------- Results of QA Test ----------------------------------\n")
-    for line in f:
-        sys.stdout.write(line)
-        sys.stdout.flush()
-    f.write(caseInfo)
+    checkFile = os.path.isfile(qaFilePath)
+    if checkFile:
+        f = open(qaFilePath, 'r+')
+        print("---------------------------------- Results of QA Test ----------------------------------\n")
+        for line in f:
+            sys.stdout.write(line)
+            sys.stdout.flush()
+        f.write(caseInfo)
 print("\n-------------- " + caseInfo + " --------------")
 
 layoutDict = {0:"PKD3", 1:"PLN3", 2:"PLN1"}
