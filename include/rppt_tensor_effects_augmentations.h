@@ -293,6 +293,7 @@ RppStatus rppt_ricap_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstP
 #ifdef GPU_SUPPORT
 RppStatus rppt_ricap_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u *permutedIndicesTensor, RpptROIPtr roiPtrInputCropRegion, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
+
 #ifdef __cplusplus
 }
 #endif
