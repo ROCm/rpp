@@ -1485,7 +1485,7 @@ __device__ __forceinline__ void rpp_hip_load8_to_uint8(uchar *srcPtr, d_uint8 *s
 __device__ __forceinline__ void rpp_hip_load8_to_int8(schar *srcPtr, d_int8 *srcPtr_i8)
 {
     d_schar8_s src_sc8;
-    *(d_schar8_s *)&src_sc8 = *(d_schar8_s *)srcPtr;
+    *reinterpret_cast<d_schar8_s *>(&src_sc8) = *reinterpret_cast<d_schar8_s *>(srcPtr);
 
     rpp_hip_pack_int8(&src_sc8, srcPtr_i8);
 }
