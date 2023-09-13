@@ -550,7 +550,7 @@ else:
                             # Loop through extra param kSize
                             for KSIZE in KSIZE_LIST:
                                 # Write into csv file
-                                CASE_FILE_PATH = CASE_RESULTS_DIR + "/output_case" + str(CASE_NUM) + "_bitDepth" + str(BIT_DEPTH) + "_oft" + str(OFT) + "_kSize" + str(KSIZE) + ".stats.csv"
+                                CASE_FILE_PATH = CASE_RESULTS_DIR + "/output_case" + str(CASE_NUM) + "_bitDepth" + str(BIT_DEPTH) + "_oft" + str(OFT) + "_kernelSize" + str(KSIZE) + ".stats.csv"
                                 print("CASE_FILE_PATH = " + CASE_FILE_PATH)
                                 fileCheck = case_file_check(CASE_FILE_PATH)
                                 if fileCheck == False:

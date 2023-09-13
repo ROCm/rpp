@@ -251,13 +251,14 @@ int main(int argc, char **argv)
     Rpp32u outputChannels = inputChannels;
     if(pln1OutTypeCase)
         outputChannels = 1;
-    Rpp32u offsetInBytes = 0;
+    Rpp32u srcOffsetInBytes = (kernelSizeCase) ? (12 * (additionalParam / 2)) : 0;
+    Rpp32u dstOffsetInBytes = 0;
 
     set_max_dimensions(imageNamesPath, maxHeight, maxWidth);
 
     // Set numDims, offset, n/c/h/w values, strides for src/dst
-    set_descriptor_dims_and_strides(srcDescPtr, batchSize, maxHeight, maxWidth, inputChannels, offsetInBytes);
-    set_descriptor_dims_and_strides(dstDescPtr, batchSize, maxHeight, maxWidth, outputChannels, offsetInBytes);
+    set_descriptor_dims_and_strides(srcDescPtr, batchSize, maxHeight, maxWidth, inputChannels, srcOffsetInBytes);
+    set_descriptor_dims_and_strides(dstDescPtr, batchSize, maxHeight, maxWidth, outputChannels, dstOffsetInBytes);
 
     // Factors to convert U8 data to F32, F16 data to 0-1 range and reconvert them back to 0 -255 range
     Rpp32f conversionFactor = 1.0f / 255.0;
