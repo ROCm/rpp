@@ -204,133 +204,137 @@ RppStatus transpose_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
         Rpp32u *srcStrides = srcStridesTensor + batchCount * nDim;
         Rpp32u *dstStrides = dstStridesTensor + batchCount * nDim;
         
-        // compute output shape
-        for(Rpp32u i = 0; i < nDim; i++)
-            dstShape[i] = roi[perm[i]];
-        
-        // compute output strides
-        compute_strides(dstStrides, dstShape, nDim);
-        
-        // compute input strides and update as per the permute order
-        Rpp32u tempStrides[RPPT_MAX_DIMS];
-        compute_strides(tempStrides, roi, nDim);
+        bool copyInput = true;
         for(int i = 0; i < nDim; i++)
-            srcStrides[i] = tempStrides[perm[i]];
-        
-        if (nDim == 2)
+            copyInput *= (perm[i] == i);
+            
+        // do memcpy of input to output since output order is same as input order
+        if(copyInput)
         {
-            if(perm[0] == 0 && perm[1] == 1)
-            {
-                // Do memcpy since output order is same as input order
-                memcpy(dstPtrTemp, srcPtrTemp, (size_t)(srcGenericDescPtr->strides[0] * sizeof(Rpp32f)));
-            }
-            else if(perm[0] == 1 && perm[1] == 0)
-            {
-                compute_2d_transpose(srcPtrTemp, dstPtrTemp, roi[0], roi[1]);
-            }   
-        }
-        else if (nDim == 3)
-        {
-            if(perm[0] == 2 && perm[1] == 0 && perm[2] == 1 && roi[2] == 16)
-            {
-                Rpp32u bufferLength = roi[1] * roi[2];
-                Rpp32u alignedLength = (bufferLength / 64) * 64;
-                Rpp32u vectorIncrement = 64;
-                Rpp32u vectorIncrementPerChannel = 4;
-                Rpp32u srcOuterStride = roi[1] * roi[2];
-                Rpp32u dstOuterStride = roi[0] * roi[1];
-                Rpp32u height = roi[0];
-                Rpp32u width = roi[1];
-                
-                // initialize pointers for 16 channel
-                Rpp32f *dstPtrChannel[16];                
-                for(int i = 0; i < 16; i++)
-                    dstPtrChannel[i] = dstPtrTemp + i * dstOuterStride;
-                
-                // loop over rows
-                for(int i = 0; i < height; i++)
-                {
-                    Rpp32f *srcPtrRow = srcPtrTemp;  
-                    
-                    // update temporary pointers for 16 channel
-                    Rpp32f *dstPtrTempChannel[16];
-                    for(int k = 0; k < 16; k++)
-                        dstPtrTempChannel[k] = dstPtrChannel[k];
-                    
-                    Rpp32u vectorLoopCount = 0;
-                    for( ; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
-                    {
-                        __m128 pSrc[16];
-                        // Load 64 values for source
-                        rpp_load16_f32_to_f32(srcPtrRow, &pSrc[0]);
-                        rpp_load16_f32_to_f32(srcPtrRow + 16, &pSrc[4]);
-                        rpp_load16_f32_to_f32(srcPtrRow + 32, &pSrc[8]);
-                        rpp_load16_f32_to_f32(srcPtrRow + 48, &pSrc[12]);
-                        
-                        _MM_TRANSPOSE4_PS(pSrc[0], pSrc[4], pSrc[8], pSrc[12]);
-                        _MM_TRANSPOSE4_PS(pSrc[1], pSrc[5], pSrc[9], pSrc[13]);
-                        _MM_TRANSPOSE4_PS(pSrc[2], pSrc[6], pSrc[10], pSrc[14]);
-                        _MM_TRANSPOSE4_PS(pSrc[3], pSrc[7], pSrc[11], pSrc[15]);
-                        
-                        // Store 4 values per in output per channel
-                        rpp_store16_f32_f32_channelwise(&dstPtrTempChannel[0], &pSrc[0]);
-                        rpp_store16_f32_f32_channelwise(&dstPtrTempChannel[4], &pSrc[1]);
-                        rpp_store16_f32_f32_channelwise(&dstPtrTempChannel[8], &pSrc[2]);
-                        rpp_store16_f32_f32_channelwise(&dstPtrTempChannel[12], &pSrc[3]);
-                        
-                        srcPtrRow += vectorIncrement;
-                        increment_ndim_ptr(dstPtrTempChannel, 16, vectorIncrementPerChannel);
-                    }
-                    for( ; vectorLoopCount < bufferLength; vectorLoopCount += 16)
-                    {
-                        for(int k = 0; k < 16; k++)
-                            *dstPtrTempChannel[k] = srcPtrRow[k];
-                        
-                        srcPtrRow += 16;
-                        increment_ndim_ptr(dstPtrTempChannel, 16, 1);
-                    }
-                    srcPtrTemp += srcOuterStride;
-                    increment_ndim_ptr(dstPtrChannel, 16, width);
-                }
-            }
-            else if(perm[0] == 1 && perm[1] == 0 && perm[2] == 2)
-            {
-                Rpp32f *srcPtrRow = srcPtrTemp;  
-                Rpp32f *dstPtrRow = dstPtrTemp;
-                for(int i = 0; i < roi[0]; i++)
-                {
-                    Rpp32f *srcPtrRowTemp = srcPtrRow;
-                    Rpp32f *dstPtrRowTemp = dstPtrRow;
-                    for(int j = 0; j < roi[1]; j++)
-                    {
-                        memcpy(dstPtrRowTemp, srcPtrRowTemp, roi[2] * sizeof(Rpp32f));
-                        srcPtrRowTemp += roi[2];
-                        dstPtrRowTemp += roi[0] * roi[2];
-                    }
-                    srcPtrRow += roi[1] * roi[2];
-                    dstPtrRow += roi[2];
-                }
-            } 
-            else if(perm[0] == 0 && perm[1] == 2 && perm[2] == 1)
-            {
-                Rpp32f *srcPtrRow = srcPtrTemp;  
-                Rpp32f *dstPtrRow = dstPtrTemp;
-                Rpp32u stride = roi[1] * roi[2];
-                
-                for(int i = 0; i < roi[0]; i++)
-                {
-                    compute_2d_transpose(srcPtrTemp, dstPtrTemp, roi[1], roi[2]);
-                    
-                    // increment src and dst pointers
-                    srcPtrTemp += stride;
-                    dstPtrTemp += stride;
-                }
-            }   
+            memcpy(dstPtrTemp, srcPtrTemp, (size_t)(srcGenericDescPtr->strides[0] * sizeof(Rpp32f)));
         }
         else
         {
-            // perform transpose as per the permute order
-            transpose(dstPtrTemp, dstStrides, srcPtrTemp, srcStrides, dstShape, nDim);   
+            // compute output shape
+            for(Rpp32u i = 0; i < nDim; i++)
+                dstShape[i] = roi[perm[i]];
+            
+            // compute output strides
+            compute_strides(dstStrides, dstShape, nDim);
+            
+            // compute input strides and update as per the permute order
+            Rpp32u tempStrides[RPPT_MAX_DIMS];
+            compute_strides(tempStrides, roi, nDim);
+            for(int i = 0; i < nDim; i++)
+                srcStrides[i] = tempStrides[perm[i]];
+            
+            if (nDim == 2 && perm[0] == 1 && perm[1] == 0)
+            {
+                compute_2d_transpose(srcPtrTemp, dstPtrTemp, roi[0], roi[1]);
+            }   
+            else if (nDim == 3)
+            {
+                if(perm[0] == 2 && perm[1] == 0 && perm[2] == 1 && roi[2] == 16)
+                {
+                    Rpp32u bufferLength = roi[1] * roi[2];
+                    Rpp32u alignedLength = (bufferLength / 64) * 64;
+                    Rpp32u vectorIncrement = 64;
+                    Rpp32u vectorIncrementPerChannel = 4;
+                    Rpp32u srcOuterStride = roi[1] * roi[2];
+                    Rpp32u dstOuterStride = roi[0] * roi[1];
+                    Rpp32u height = roi[0];
+                    Rpp32u width = roi[1];
+                    
+                    // initialize pointers for 16 channel
+                    Rpp32f *dstPtrChannel[16];                
+                    for(int i = 0; i < 16; i++)
+                        dstPtrChannel[i] = dstPtrTemp + i * dstOuterStride;
+                    
+                    // loop over rows
+                    for(int i = 0; i < height; i++)
+                    {
+                        Rpp32f *srcPtrRow = srcPtrTemp;  
+                        
+                        // update temporary pointers for 16 channel
+                        Rpp32f *dstPtrTempChannel[16];
+                        for(int k = 0; k < 16; k++)
+                            dstPtrTempChannel[k] = dstPtrChannel[k];
+                        
+                        Rpp32u vectorLoopCount = 0;
+                        for( ; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
+                        {
+                            __m128 pSrc[16];
+                            // Load 64 values for source
+                            rpp_load16_f32_to_f32(srcPtrRow, &pSrc[0]);
+                            rpp_load16_f32_to_f32(srcPtrRow + 16, &pSrc[4]);
+                            rpp_load16_f32_to_f32(srcPtrRow + 32, &pSrc[8]);
+                            rpp_load16_f32_to_f32(srcPtrRow + 48, &pSrc[12]);
+                            
+                            _MM_TRANSPOSE4_PS(pSrc[0], pSrc[4], pSrc[8], pSrc[12]);
+                            _MM_TRANSPOSE4_PS(pSrc[1], pSrc[5], pSrc[9], pSrc[13]);
+                            _MM_TRANSPOSE4_PS(pSrc[2], pSrc[6], pSrc[10], pSrc[14]);
+                            _MM_TRANSPOSE4_PS(pSrc[3], pSrc[7], pSrc[11], pSrc[15]);
+                            
+                            // Store 4 values per in output per channel
+                            rpp_store16_f32_f32_channelwise(&dstPtrTempChannel[0], &pSrc[0]);
+                            rpp_store16_f32_f32_channelwise(&dstPtrTempChannel[4], &pSrc[1]);
+                            rpp_store16_f32_f32_channelwise(&dstPtrTempChannel[8], &pSrc[2]);
+                            rpp_store16_f32_f32_channelwise(&dstPtrTempChannel[12], &pSrc[3]);
+                            
+                            srcPtrRow += vectorIncrement;
+                            increment_ndim_ptr(dstPtrTempChannel, 16, vectorIncrementPerChannel);
+                        }
+                        for( ; vectorLoopCount < bufferLength; vectorLoopCount += 16)
+                        {
+                            for(int k = 0; k < 16; k++)
+                                *dstPtrTempChannel[k] = srcPtrRow[k];
+                            
+                            srcPtrRow += 16;
+                            increment_ndim_ptr(dstPtrTempChannel, 16, 1);
+                        }
+                        srcPtrTemp += srcOuterStride;
+                        increment_ndim_ptr(dstPtrChannel, 16, width);
+                    }
+                }
+                else if(perm[0] == 1 && perm[1] == 0 && perm[2] == 2)
+                {
+                    Rpp32f *srcPtrRow = srcPtrTemp;  
+                    Rpp32f *dstPtrRow = dstPtrTemp;
+                    for(int i = 0; i < roi[0]; i++)
+                    {
+                        Rpp32f *srcPtrRowTemp = srcPtrRow;
+                        Rpp32f *dstPtrRowTemp = dstPtrRow;
+                        for(int j = 0; j < roi[1]; j++)
+                        {
+                            memcpy(dstPtrRowTemp, srcPtrRowTemp, roi[2] * sizeof(Rpp32f));
+                            srcPtrRowTemp += roi[2];
+                            dstPtrRowTemp += roi[0] * roi[2];
+                        }
+                        srcPtrRow += roi[1] * roi[2];
+                        dstPtrRow += roi[2];
+                    }
+                } 
+                else if(perm[0] == 0 && perm[1] == 2 && perm[2] == 1)
+                {
+                    Rpp32f *srcPtrRow = srcPtrTemp;  
+                    Rpp32f *dstPtrRow = dstPtrTemp;
+                    Rpp32u stride = roi[1] * roi[2];
+                    
+                    for(int i = 0; i < roi[0]; i++)
+                    {
+                        compute_2d_transpose(srcPtrTemp, dstPtrTemp, roi[1], roi[2]);
+                        
+                        // increment src and dst pointers
+                        srcPtrTemp += stride;
+                        dstPtrTemp += stride;
+                    }
+                }   
+            }
+            else
+            {
+                // perform transpose as per the permute order
+                transpose(dstPtrTemp, dstStrides, srcPtrTemp, srcStrides, dstShape, nDim);   
+            }
         }
     }
     free(srcStridesTensor);
