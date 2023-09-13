@@ -588,43 +588,6 @@ inline void convert_pln3_to_pkd3(Rpp8u *output, RpptDescPtr descPtr)
     free(outputCopy);
 }
 
-inline void convert_pln3_to_pkd3(Rpp32f *input, RpptGenericDescPtr descPtr)
-{
-    unsigned long long bufferSize = ((unsigned long long)descPtr->dims[2] * (unsigned long long)descPtr->dims[3] * (unsigned long long)descPtr->dims[4] * (unsigned long long)descPtr->dims[1] * (unsigned long long)descPtr->dims[0]) + descPtr->offsetInBytes;
-    Rpp32f *inputCopy = (Rpp32f *)calloc(bufferSize, sizeof(Rpp32f));
-    memcpy(inputCopy, input, bufferSize * sizeof(Rpp32f));
-
-    Rpp32f *inputCopyTemp;
-    inputCopyTemp = inputCopy + descPtr->offsetInBytes;
-
-    omp_set_dynamic(0);
-#pragma omp parallel for num_threads(descPtr->dims[0])
-    for (int count = 0; count < descPtr->dims[0]; count++)
-    {
-        Rpp32f *inputTemp, *inputCopyTempR, *inputCopyTempG, *inputCopyTempB;
-        inputTemp = input + descPtr->offsetInBytes + count * descPtr->strides[0];
-        inputCopyTempR = inputCopyTemp + count * descPtr->strides[0];
-        inputCopyTempG = inputCopyTempR + descPtr->strides[1];
-        inputCopyTempB = inputCopyTempG + descPtr->strides[1];
-
-        for (int i = 0; i < descPtr->dims[2]; i++)
-        {
-            for (int j = 0; j < descPtr->dims[3]; j++)
-            {
-                for (int k = 0; k < descPtr->dims[4]; k++)
-                {
-                    inputTemp[0] = *inputCopyTempR++;
-                    inputTemp[1] = *inputCopyTempG++;
-                    inputTemp[2] = *inputCopyTempB++;
-                    inputTemp += 3;
-                }
-            }
-        }
-    }
-
-    free(inputCopy);
-}
-
 // converts image data from PKD3 to PLN3
 inline void convert_pkd3_to_pln3(Rpp8u *input, RpptDescPtr descPtr)
 {
@@ -663,43 +626,6 @@ inline void convert_pkd3_to_pln3(Rpp8u *input, RpptDescPtr descPtr)
     }
 
     free(inputCopy);
-}
-
-inline void convert_pkd3_to_pln3(Rpp32f *output, RpptGenericDescPtr descPtr)
-{
-    unsigned long long bufferSize = ((unsigned long long)descPtr->dims[1] * (unsigned long long)descPtr->dims[2] * (unsigned long long)descPtr->dims[3] * (unsigned long long)descPtr->dims[4] * (unsigned long long)descPtr->dims[0]) + descPtr->offsetInBytes;
-    Rpp32f *outputCopy = (Rpp32f *)calloc(bufferSize, sizeof(Rpp32f));
-    memcpy(outputCopy, output, bufferSize * sizeof(Rpp32f));
-
-    Rpp32f *outputTemp, *outputCopyTemp;
-    outputTemp = output + descPtr->offsetInBytes;
-
-    omp_set_dynamic(0);
-#pragma omp parallel for num_threads(descPtr->dims[0])
-    for (int count = 0; count < descPtr->dims[0]; count++)
-    {
-        Rpp32f *outputTempR, *outputTempG, *outputTempB;
-        outputTempR = outputTemp + count * descPtr->strides[0];
-        outputTempG = outputTempR + descPtr->strides[4];
-        outputTempB = outputTempG + descPtr->strides[4];
-        Rpp32f *outputCopyTemp = outputCopy + descPtr->offsetInBytes + count * descPtr->strides[0];
-
-        for (int i = 0; i < descPtr->dims[1]; i++)
-        {
-            for (int j = 0; j < descPtr->dims[2]; j++)
-            {
-                for (int k = 0; k < descPtr->dims[3]; k++)
-                {
-                    *outputTempR++ = outputCopyTemp[0];
-                    *outputTempG++ = outputCopyTemp[1];
-                    *outputTempB++ = outputCopyTemp[2];
-                    outputCopyTemp += 3;
-                }
-            }
-        }
-    }
-
-    free(outputCopy);
 }
 
 // Opens a folder and recursively search for .jpg files
@@ -1090,37 +1016,4 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
         qaResults << status << std::endl;
         qaResults.close();
     }
-}
-
-// sets generic descriptor dimensions and strides of src/dst
-inline void set_generic_descriptor(RpptGenericDescPtr descriptorPtr3D, int noOfImages, int maxX, int maxY, int maxZ, int numChannels, int offsetInBytes, int layoutType)
-{
-    descriptorPtr3D->numDims = 5;
-    descriptorPtr3D->offsetInBytes = offsetInBytes;
-    descriptorPtr3D->dataType = RpptDataType::F32;
-
-    if (layoutType == 0)
-    {
-        descriptorPtr3D->layout = RpptLayout::NCDHW;
-        descriptorPtr3D->dims[0] = noOfImages;
-        descriptorPtr3D->dims[1] = numChannels;
-        descriptorPtr3D->dims[2] = maxZ;
-        descriptorPtr3D->dims[3] = maxY;
-        descriptorPtr3D->dims[4] = maxX;
-    }
-    else if (layoutType == 1)
-    {
-        descriptorPtr3D->layout = RpptLayout::NDHWC;
-        descriptorPtr3D->dims[0] = noOfImages;
-        descriptorPtr3D->dims[1] = maxZ;
-        descriptorPtr3D->dims[2] = maxY;
-        descriptorPtr3D->dims[3] = maxX;
-        descriptorPtr3D->dims[4] = numChannels;
-    }
-
-    descriptorPtr3D->strides[0] = descriptorPtr3D->dims[1] * descriptorPtr3D->dims[2] * descriptorPtr3D->dims[3] * descriptorPtr3D->dims[4];
-    descriptorPtr3D->strides[1] = descriptorPtr3D->dims[2] * descriptorPtr3D->dims[3] * descriptorPtr3D->dims[4];
-    descriptorPtr3D->strides[2] = descriptorPtr3D->dims[3] * descriptorPtr3D->dims[4];
-    descriptorPtr3D->strides[3] = descriptorPtr3D->dims[4];
-    descriptorPtr3D->strides[4] = 1;
 }
