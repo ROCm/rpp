@@ -135,10 +135,8 @@ __global__ void tensor_sum_grid_result(float *srcPtr,
     }
 
     // Final store to dst
-    if (hipThreadIdx_x == 0){
+    if (hipThreadIdx_x == 0)
         dstPtr[hipBlockIdx_z] = partialSum_smem[0];
-        printf("\n dstPtr[%d]: %lf\n",(int)hipBlockIdx_z, dstPtr[hipBlockIdx_z]);
-    }
 }
 
 __global__ void tensor_sum_grid_3channel_result(Rpp32u *srcPtr,
