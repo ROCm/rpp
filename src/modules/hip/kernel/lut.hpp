@@ -35,7 +35,7 @@ __device__ void lut_hip_compute(signed char *srcPtr, d_float8 *src_f8, d_float8 
 }
 
 template <typename T1, typename T2>
-__global__ void lut_pkd_tensor(T1 *srcPtr,
+__global__ void lut_pkd_hip_tensor(T1 *srcPtr,
                                uint2 srcStridesNH,
                                T2 *dstPtr,
                                uint2 dstStridesNH,
@@ -62,7 +62,7 @@ __global__ void lut_pkd_tensor(T1 *srcPtr,
 }
 
 template <typename T1, typename T2>
-__global__ void lut_pln_tensor(T1 *srcPtr,
+__global__ void lut_pln_hip_tensor(T1 *srcPtr,
                                uint3 srcStridesNCH,
                                T2 *dstPtr,
                                uint3 dstStridesNCH,
@@ -107,7 +107,7 @@ __global__ void lut_pln_tensor(T1 *srcPtr,
 }
 
 template <typename T1, typename T2>
-__global__ void lut_pkd3_pln3_tensor(T1 *srcPtr,
+__global__ void lut_pkd3_pln3_hip_tensor(T1 *srcPtr,
                                      uint2 srcStridesNH,
                                      T2 *dstPtr,
                                      uint3 dstStridesNCH,
@@ -136,7 +136,7 @@ __global__ void lut_pkd3_pln3_tensor(T1 *srcPtr,
 }
 
 template <typename T1, typename T2>
-__global__ void lut_pln3_pkd3_tensor(T1 *srcPtr,
+__global__ void lut_pln3_pkd3_hip_tensor(T1 *srcPtr,
                                      uint3 srcStridesNCH,
                                      T2 *dstPtr,
                                      uint2 dstStridesNH,
@@ -183,7 +183,7 @@ RppStatus hip_exec_lut_tensor(T1 *srcPtr,
 
     if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
     {
-        hipLaunchKernelGGL(lut_pkd_tensor,
+        hipLaunchKernelGGL(lut_pkd_hip_tensor,
                            dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                            0,
@@ -197,7 +197,7 @@ RppStatus hip_exec_lut_tensor(T1 *srcPtr,
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
-        hipLaunchKernelGGL(lut_pln_tensor,
+        hipLaunchKernelGGL(lut_pln_hip_tensor,
                            dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                            0,
@@ -214,7 +214,7 @@ RppStatus hip_exec_lut_tensor(T1 *srcPtr,
     {
         if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            hipLaunchKernelGGL(lut_pkd3_pln3_tensor,
+            hipLaunchKernelGGL(lut_pkd3_pln3_hip_tensor,
                                dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
@@ -229,7 +229,7 @@ RppStatus hip_exec_lut_tensor(T1 *srcPtr,
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             globalThreads_x = (srcDescPtr->strides.hStride + 7) >> 3;
-            hipLaunchKernelGGL(lut_pln3_pkd3_tensor,
+            hipLaunchKernelGGL(lut_pln3_pkd3_hip_tensor,
                                dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,

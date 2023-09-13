@@ -351,7 +351,7 @@ __device__ void gridmask_result_pln3_pkd3_hip_compute(half *srcPtr, uint srcStri
 // Gridmask kernels
 
 template <typename T>
-__global__ void gridmask_pkd_tensor(T *srcPtr,
+__global__ void gridmask_pkd_hip_tensor(T *srcPtr,
                                     uint2 srcStridesNH,
                                     T *dstPtr,
                                     uint2 dstStridesNH,
@@ -381,7 +381,7 @@ __global__ void gridmask_pkd_tensor(T *srcPtr,
 }
 
 template <typename T>
-__global__ void gridmask_pln_tensor(T *srcPtr,
+__global__ void gridmask_pln_hip_tensor(T *srcPtr,
                                     uint3 srcStridesNCH,
                                     T *dstPtr,
                                     uint3 dstStridesNCH,
@@ -416,7 +416,7 @@ __global__ void gridmask_pln_tensor(T *srcPtr,
 }
 
 template <typename T>
-__global__ void gridmask_pkd3_pln3_tensor(T *srcPtr,
+__global__ void gridmask_pkd3_pln3_hip_tensor(T *srcPtr,
                                           uint2 srcStridesNH,
                                           T *dstPtr,
                                           uint3 dstStridesNCH,
@@ -446,7 +446,7 @@ __global__ void gridmask_pkd3_pln3_tensor(T *srcPtr,
 }
 
 template <typename T>
-__global__ void gridmask_pln3_pkd3_tensor(T *srcPtr,
+__global__ void gridmask_pln3_pkd3_hip_tensor(T *srcPtr,
                                           uint3 srcStridesNCH,
                                           T *dstPtr,
                                           uint2 dstStridesNH,
@@ -501,7 +501,7 @@ RppStatus hip_exec_gridmask_tensor(T *srcPtr,
 
     if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
     {
-        hipLaunchKernelGGL(gridmask_pkd_tensor,
+        hipLaunchKernelGGL(gridmask_pkd_hip_tensor,
                            dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                            0,
@@ -517,7 +517,7 @@ RppStatus hip_exec_gridmask_tensor(T *srcPtr,
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
-        hipLaunchKernelGGL(gridmask_pln_tensor,
+        hipLaunchKernelGGL(gridmask_pln_hip_tensor,
                            dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                            0,
@@ -536,7 +536,7 @@ RppStatus hip_exec_gridmask_tensor(T *srcPtr,
     {
         if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            hipLaunchKernelGGL(gridmask_pkd3_pln3_tensor,
+            hipLaunchKernelGGL(gridmask_pkd3_pln3_hip_tensor,
                                dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
@@ -552,7 +552,7 @@ RppStatus hip_exec_gridmask_tensor(T *srcPtr,
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            hipLaunchKernelGGL(gridmask_pln3_pkd3_tensor,
+            hipLaunchKernelGGL(gridmask_pln3_pkd3_hip_tensor,
                                dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
