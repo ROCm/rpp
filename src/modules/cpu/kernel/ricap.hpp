@@ -24,7 +24,7 @@ THE SOFTWARE.
 #include "rpp_cpu_simd.hpp"
 #include "rpp_cpu_common.hpp"
 
-    //           RICAP output image profile
+    // RICAP output image profile as per "Data Augmentation using Random Image Cropping and Patching for Deep CNNs" available at https://arxiv.org/pdf/1811.09030.pdf
     // |------img-roi-1------|------img-roi-2------|
     // |------img-roi-1------|------img-roi-2------|
     // |------img-roi-1------|------img-roi-2------|
