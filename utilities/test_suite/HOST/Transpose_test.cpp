@@ -85,8 +85,8 @@ void read_data(Rpp32f *data, Rpp32u nDim, Rpp32u readType, Rpp32u bufferLength, 
     Rpp32u sampleLength = bufferLength / batchSize;
     if(nDim != 2 && nDim != 4 && nDim != 6)
     {
-        std::cerr<<"Inputs / Outputs are generated only for 2D / 4D / 6D data"<<std::endl;
-        return;
+        std::cerr<<"\nGolden Inputs / Outputs are generated only for 2D / 4D / 6D data"<<std::endl;
+        exit(0);
     }
     
     string refPath = get_path(nDim, readType);
@@ -186,21 +186,29 @@ void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize)
             fileMatch++;
     }    
     if (fileMatch == batchSize)
-        std::cerr<<"PASSED!"<<std::endl;
+        std::cerr<<"\nPASSED!"<<std::endl;
     else
-        std::cerr << "FAILED! " << fileMatch << "/" << batchSize << " outputs are matching with reference outputs" << std::endl;
+        std::cerr << "\nFAILED! " << fileMatch << "/" << batchSize << " outputs are matching with reference outputs" << std::endl;
     
     free(refOutput);
 }
 
 int main(int argc, char **argv)
 {
-    Rpp32u nDim, batchSize;
+    Rpp32u nDim, batchSize, testType;
     bool qaMode;
-    
+
     nDim = atoi(argv[1]);
     batchSize = atoi(argv[2]);
-    qaMode = atoi(argv[3]);
+    testType = atoi(argv[3]);
+    qaMode = atoi(argv[4]);
+    
+    if (qaMode && batchSize != 3)
+    {
+        std::cerr<<"QA mode can only run with batchsize 3"<<std::endl;
+        return -1;
+    }
+        
     
     // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
     // If numThreads value passed is 0, number of OpenMP threads used by RPP will be set to batch size
@@ -208,13 +216,29 @@ int main(int argc, char **argv)
     rppHandle_t handle;
     rppCreateWithBatchSize(&handle, batchSize, numThreads);
     
+    double startWallTime, endWallTime;
+    double avgWallTime = 0, wallTime = 0;
+    Rpp32u numRuns = 1;
+    if (testType)
+        numRuns = 100;
+    
+    // case-wise RPP API and measure time script for Unit and Performance test
+    printf("\nRunning transpose %d times (each time with a batch size of %d) and computing mean statistics...", numRuns, batchSize);
+    
     // set src/dst generic tensor descriptors
-    RpptGenericDesc descriptor;
-    RpptGenericDescPtr descriptorPtrND = &descriptor;
-    descriptorPtrND->numDims = nDim;
-    descriptorPtrND->offsetInBytes = 0;
-    descriptorPtrND->dataType = RpptDataType::F32;
-    descriptorPtrND->layout = RpptLayout::NDHWC;
+    RpptGenericDesc srcDescriptor, dstDescriptor;
+    RpptGenericDescPtr srcDescriptorPtrND, dstDescriptorPtrND;
+    srcDescriptorPtrND  = &srcDescriptor;
+    srcDescriptorPtrND->numDims = nDim;
+    srcDescriptorPtrND->offsetInBytes = 0;
+    srcDescriptorPtrND->dataType = RpptDataType::F32;
+    srcDescriptorPtrND->layout = RpptLayout::NDHWC;
+    
+    dstDescriptorPtrND  = &dstDescriptor;
+    dstDescriptorPtrND->numDims = nDim;
+    dstDescriptorPtrND->offsetInBytes = 0;
+    dstDescriptorPtrND->dataType = RpptDataType::F32;
+    dstDescriptorPtrND->layout = RpptLayout::NDHWC;
     
     Rpp32u *permTensor = (Rpp32u *)calloc(nDim, sizeof(Rpp32u));
     Rpp32u *roiTensor = (Rpp32u *)calloc(nDim * batchSize, sizeof(Rpp32u));
@@ -223,30 +247,57 @@ int main(int argc, char **argv)
     // fill roi and perm values based on mode choosen
     if (qaMode)
     {
-        batchSize = 3;
         Rpp32u bufferLength = get_buffer_length(nDim);
         fill_roi_and_perm_values(nDim, batchSize, roiTensor, permTensor);
     }
+    else if(testType)
+    {
+        if(nDim == 2)
+        {
+            for(int i = 0; i < batchSize * 2; i += 2)
+            {
+                roiTensor[i] = 1920;
+                roiTensor[i + 1] = 1080;
+            }
+            permTensor[0] = 1;
+            permTensor[1] = 0;
+        }
+        else if(nDim == 3)
+        {
+            for(int i = 0; i < batchSize * 3; i += 3)
+            {
+                roiTensor[i] = 1152;
+                roiTensor[i + 1] = 768;
+                roiTensor[i + 2] = 16;
+            }
+            permTensor[0] = 2;
+            permTensor[1] = 0;
+            permTensor[2] = 1;
+        }
+    }
     else
-    {    
-        // for (int i = 0; i < nDim; i++)
-        //     roiTensor[i] = 15;
-        roiTensor[0] = 5;
-        roiTensor[1] = 6;
-            
-         for (int i = 0; i < nDim; i++)
-            permTensor[i] = nDim - 1 - i;
+    {   // limiting max value in a dimension to 150 for testing purposes 
+        for(int i = 0; i < batchSize * nDim; i++)
+            roiTensor[i] = std::rand() % 150;
+        
+        for(int i = 0; i < nDim; i++)
+            permTensor[i] = nDim - 1 - i;       
     }
     
-    // set strides
-    descriptorPtrND->dims[0] = batchSize;
+    // set dims and compute strides
+    srcDescriptorPtrND->dims[0] = batchSize;
+    dstDescriptorPtrND->dims[0] = batchSize;
     for(int i = 1; i <= nDim; i++)
-        descriptorPtrND->dims[i] = roiTensor[i - 1];
-    compute_strides(descriptorPtrND);
+    {
+        srcDescriptorPtrND->dims[i] = roiTensor[i - 1];
+        dstDescriptorPtrND->dims[i] = roiTensor[permTensor[i - 1]];
+    }
+    compute_strides(srcDescriptorPtrND);
+    compute_strides(dstDescriptorPtrND);
     
     Rpp32u numValues = 1;
     for(int i = 0; i <= nDim; i++)
-        numValues *= descriptorPtrND->dims[i];
+        numValues *= srcDescriptorPtrND->dims[i];
         
     // allocate memory for input / output
     inputF32 = (Rpp32f *)calloc(numValues, sizeof(Rpp32f));
@@ -262,27 +313,60 @@ int main(int argc, char **argv)
             inputF32[i] = (float)(std::rand() % 255);
     }
     
-    rppt_transpose_generic_host(inputF32, descriptorPtrND, outputF32, descriptorPtrND, permTensor, roiTensor, handle);
-    std::cerr<<"\nprinting input values: "<<std::endl;
-    for(int i = 0; i < numValues; i++)
+    for(int i = 0; i < numRuns; i++)
     {
-        if(i % roiTensor[1] == 0)
-            std::cerr<<std::endl;
+        startWallTime = omp_get_wtime();
+        rppt_transpose_generic_host(inputF32, srcDescriptorPtrND, outputF32, dstDescriptorPtrND, permTensor, roiTensor, handle);
+        endWallTime = omp_get_wtime();
         
-        std::cerr<<inputF32[i]<<" ";
+        wallTime = endWallTime - startWallTime;
+        avgWallTime += wallTime;
     }
     
-    std::cerr<<"\n\nprinting output values: "<<std::endl;
-    for(int i = 0; i < numValues; i++)
-    {
-        if(i % roiTensor[0] == 0)
-            std::cerr<<std::endl;
-        
-        std::cerr<<outputF32[i]<<" ";
-    }
     // compare outputs
     if(qaMode)
         compare_output(outputF32, nDim, batchSize);
+    else
+    {
+        avgWallTime *= 1000;
+        avgWallTime /= numRuns;
+        cout << fixed << "\navg wall times in ms/batch = " << avgWallTime << endl;
+
+        // if (testType == 0 && qaMode == 0)
+        // {
+        //     std::cerr<<"\nprinting input values: "<<std::endl;
+        //     int cnt = 0;
+        //     for(int i = 0; i < roiTensor[0]; i++)   
+        //     {
+        //         for(int j = 0; j < roiTensor[1]; j++)
+        //         {
+        //             for(int k = 0; k < roiTensor[2]; k++)
+        //             {
+        //                 std::cerr<<inputF32[cnt]<<" ";
+        //                 cnt++;
+        //             }
+        //             std::cerr<<std::endl;
+        //         }  
+        //         std::cerr<<std::endl;
+        //     }
+            
+        //     cnt = 0;
+        //     std::cerr<<"\n\nprinting output values: "<<std::endl;
+        //     for(int i = 0; i < roiTensor[permTensor[0]]; i++)   
+        //     {
+        //         for(int j = 0; j < roiTensor[permTensor[1]]; j++)
+        //         {
+        //             for(int k = 0; k < roiTensor[permTensor[2]]; k++)
+        //             {
+        //                 std::cerr<<outputF32[cnt]<<" ";
+        //                 cnt++;
+        //             }
+        //             std::cerr<<std::endl;
+        //         } 
+        //         std::cerr<<std::endl; 
+        //     }
+        // }
+    }
     
     free(inputF32);
     free(outputF32);
