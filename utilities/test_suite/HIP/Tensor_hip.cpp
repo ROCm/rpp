@@ -201,10 +201,10 @@ int main(int argc, char **argv)
 
     // Get number of images and image Names
     vector<string> imageNames, imageNamesSecond, imageNamesPath, imageNamesPathSecond;
-    search_jpg_files(src, imageNames, imageNamesPath);
+    search_files_recursive(src, imageNames, imageNamesPath, ".jpg");
     if(dualInputCase)
     {
-        search_jpg_files(srcSecond, imageNamesSecond, imageNamesPathSecond);
+        search_files_recursive(srcSecond, imageNamesSecond, imageNamesPathSecond, ".jpg");
         if(imageNames.size() != imageNamesSecond.size())
         {
             std::cerr << " \n The number of images in the input folders must be the same.";
@@ -215,9 +215,9 @@ int main(int argc, char **argv)
 
     if(noOfImages < batchSize || ((noOfImages % batchSize) != 0))
     {
-        replicate_last_image_to_fill_batch(imageNamesPath[noOfImages - 1], imageNamesPath, imageNames, imageNames[noOfImages - 1], noOfImages, batchSize);
+        replicate_last_file_to_fill_batch(imageNamesPath[noOfImages - 1], imageNamesPath, imageNames, imageNames[noOfImages - 1], noOfImages, batchSize);
         if(dualInputCase)
-            replicate_last_image_to_fill_batch(imageNamesPathSecond[noOfImages - 1], imageNamesPathSecond, imageNamesSecond, imageNamesSecond[noOfImages - 1], noOfImages, batchSize);
+            replicate_last_file_to_fill_batch(imageNamesPathSecond[noOfImages - 1], imageNamesPathSecond, imageNamesSecond, imageNamesSecond[noOfImages - 1], noOfImages, batchSize);
         noOfImages = imageNames.size();
     }
 
@@ -251,13 +251,14 @@ int main(int argc, char **argv)
     Rpp32u outputChannels = inputChannels;
     if(pln1OutTypeCase)
         outputChannels = 1;
-    Rpp32u offsetInBytes = 0;
+    Rpp32u srcOffsetInBytes = (kernelSizeCase) ? (12 * (additionalParam / 2)) : 0;
+    Rpp32u dstOffsetInBytes = 0;
 
     set_max_dimensions(imageNamesPath, maxHeight, maxWidth);
 
     // Set numDims, offset, n/c/h/w values, strides for src/dst
-    set_descriptor_dims_and_strides(srcDescPtr, batchSize, maxHeight, maxWidth, inputChannels, offsetInBytes);
-    set_descriptor_dims_and_strides(dstDescPtr, batchSize, maxHeight, maxWidth, outputChannels, offsetInBytes);
+    set_descriptor_dims_and_strides(srcDescPtr, batchSize, maxHeight, maxWidth, inputChannels, srcOffsetInBytes);
+    set_descriptor_dims_and_strides(dstDescPtr, batchSize, maxHeight, maxWidth, outputChannels, dstOffsetInBytes);
 
     // Factors to convert U8 data to F32, F16 data to 0-1 range and reconvert them back to 0 -255 range
     Rpp32f conversionFactor = 1.0f / 255.0;

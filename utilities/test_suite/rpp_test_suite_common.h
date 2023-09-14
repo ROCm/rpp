@@ -93,7 +93,7 @@ inline T validate_pixel_range(T pixel)
 }
 
 // replicates the last image in a batch to fill the remaining images in a batch
-void replicate_last_image_to_fill_batch(const string& lastFilePath, vector<string>& imageNamesPath, vector<string>& imageNames, const string& lastFileName, int noOfImages, int batchCount)
+void replicate_last_file_to_fill_batch(const string& lastFilePath, vector<string>& imageNamesPath, vector<string>& imageNames, const string& lastFileName, int noOfImages, int batchCount)
 {
     int remainingImages = batchCount - (noOfImages % batchCount);
     std::string filePath = lastFilePath;
@@ -641,8 +641,8 @@ inline void convert_pkd3_to_pln3(Rpp8u *input, RpptDescPtr descPtr)
     free(inputCopy);
 }
 
-// Opens a folder and recursively search for .jpg files
-void open_folder(const string& folderPath, vector<string>& imageNames, vector<string>& imageNamesPath)
+// Opens a folder and recursively search for files with given extension
+void open_folder(const string& folderPath, vector<string>& imageNames, vector<string>& imageNamesPath, string extension)
 {
     auto src_dir = opendir(folderPath.c_str());
     struct dirent* entity;
@@ -662,9 +662,9 @@ void open_folder(const string& folderPath, vector<string>& imageNames, vector<st
         filePath.append(entity->d_name);
         fs::path pathObj(filePath);
         if(fs::exists(pathObj) && fs::is_directory(pathObj))
-            open_folder(filePath, imageNames, imageNamesPath);
+            open_folder(filePath, imageNames, imageNamesPath, extension);
 
-        if (fileName.size() > 4 && fileName.substr(fileName.size() - 4) == ".jpg")
+        if (fileName.size() > 4 && fileName.substr(fileName.size() - 4) == extension)
         {
             imageNamesPath.push_back(filePath);
             imageNames.push_back(entity->d_name);
@@ -676,8 +676,8 @@ void open_folder(const string& folderPath, vector<string>& imageNames, vector<st
     closedir(src_dir);
 }
 
-// Searches for .jpg files in input folders
-void search_jpg_files(const string& folder_path, vector<string>& imageNames, vector<string>& imageNamesPath)
+// Searches for files with the provided extensions in input folders
+void search_files_recursive(const string& folder_path, vector<string>& imageNames, vector<string>& imageNamesPath, string extension)
 {
     vector<string> entry_list;
     string full_path = folder_path;
@@ -713,14 +713,14 @@ void search_jpg_files(const string& folder_path, vector<string>& imageNames, vec
                 if ((file_extension == "tar") || (file_extension == "zip") || (file_extension == "7z") || (file_extension == "rar"))
                     continue;
             }
-            if (entry_list[dir_count].size() > 4 && entry_list[dir_count].substr(entry_list[dir_count].size() - 4) == ".jpg")
+            if (entry_list[dir_count].size() > 4 && entry_list[dir_count].substr(entry_list[dir_count].size() - 4) == extension)
             {
                 imageNames.push_back(entry_list[dir_count]);
                 imageNamesPath.push_back(subfolder_path);
             }
         }
         else if (fs::exists(pathObj) && fs::is_directory(pathObj))
-            open_folder(subfolder_path, imageNames, imageNamesPath);
+            open_folder(subfolder_path, imageNames, imageNamesPath, extension);
     }
 }
 
@@ -794,7 +794,7 @@ inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, vector
                 std::cerr << "\n Jpeg image decode failed ";
         }
         // Copy the decompressed image buffer to the RPP input buffer
-        Rpp8u *inputTemp = input + (i * descPtr->strides.nStride);
+        Rpp8u *inputTemp = input + descPtr->offsetInBytes + (i * descPtr->strides.nStride);
         for (int j = 0; j < height; j++)
         {
             memcpy(inputTemp, rgbBuf + j * elementsInRow, elementsInRow * sizeof(Rpp8u));
