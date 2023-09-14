@@ -25,7 +25,7 @@ using half_float::half;
 
 typedef half Rpp16f;
 
-void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dstDims, string testCase, vector<string> audioNames, string dst, int qaFlag)
+void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dstDims, string testCase, vector<string> audioNames, string dst)
 {
     fstream refFile;
     string refPath = get_current_dir_name();
@@ -78,19 +78,16 @@ void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dst
         cout << "FAILED! " << fileMatch << "/" << dstDescPtr->n << " outputs are matching with reference outputs" << std::endl;
         status += "FAILED";
     }
-    if (qaFlag)
+    std::string qaResultsPath = dst + "/QA_results.txt";
+    std:: ofstream qaResults(qaResultsPath, ios_base::app);
+    if (qaResults.is_open())
     {
-        std::string qaResultsPath = dst + "/QA_results.txt";
-        std:: ofstream qaResults(qaResultsPath, ios_base::app);
-        if (qaResults.is_open())
-        {
-            qaResults << status << std::endl;
-            qaResults.close();
-        }
+        qaResults << status << std::endl;
+        qaResults.close();
     }
 }
 
-void verify_non_silent_region_detection(float *detectedIndex, float *detectionLength, string testCase, int bs, vector<string> audioNames, string dst, int qaFlag)
+void verify_non_silent_region_detection(float *detectedIndex, float *detectionLength, string testCase, int bs, vector<string> audioNames, string dst)
 {
     fstream refFile;
     string refPath = get_current_dir_name();
@@ -134,15 +131,13 @@ void verify_non_silent_region_detection(float *detectedIndex, float *detectionLe
         cout << "FAILED! "<< fileMatch << "/" << bs << " outputs are matching with reference outputs" << std::endl;
         status += "FAILED";
     }
-    if (qaFlag)
+
+    std::string qaResultsPath = dst + "/QA_results.txt";
+    std:: ofstream qaResults(qaResultsPath, ios_base::app);
+    if (qaResults.is_open())
     {
-        std::string qaResultsPath = dst + "/QA_results.txt";
-        std:: ofstream qaResults(qaResultsPath, ios_base::app);
-        if (qaResults.is_open())
-        {
-            qaResults << status << std::endl;
-            qaResults.close();
-        }
+        qaResults << status << std::endl;
+        qaResults.close();
     }
 }
 
@@ -154,7 +149,7 @@ int main(int argc, char **argv)
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
-        printf("\nUsage: ./Tensor_host_audio <src folder> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <case number = 0:3> <test type 0/1> <numRuns> <batchSize> <qaFlag>\n");
+        printf("\nUsage: ./Tensor_host_audio <src folder> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <case number = 0:3> <test type 0/1> <numRuns> <batchSize>\n");
         return -1;
     }
 
@@ -164,8 +159,7 @@ int main(int argc, char **argv)
     int testType = atoi(argv[4]);
     int numRuns = atoi(argv[5]);
     int batchSize = atoi(argv[6]);
-    int qaFlag = atoi(argv[7]);
-    char *dst = argv[8];
+    char *dst = argv[7];
 
     // Set case names
     string funcName = audioAugmentationMap[testCase];
@@ -374,8 +368,8 @@ int main(int argc, char **argv)
                     else
                         missingFuncFlag = 1;
 
-                    if (testType == 0 && qaFlag == 1 && batchSize == 8)
-                        verify_non_silent_region_detection(detectedIndex, detectionLength, testCaseName, batchSize, audioNames, dst, qaFlag);
+                    if (testType == 0 && batchSize == 8)
+                        verify_non_silent_region_detection(detectedIndex, detectionLength, testCaseName, batchSize, audioNames, dst);
 
                     break;
                 }
@@ -403,8 +397,8 @@ int main(int argc, char **argv)
 
             if (testType == 0)
             {
-                if (qaFlag == 1&& (batchSize == 8 && testCase !=0))
-                    verify_output(outputf32, dstDescPtr, dstDims, testCaseName, audioNames, dst, qaFlag);
+                if (batchSize == 8 && testCase !=0)
+                    verify_output(outputf32, dstDescPtr, dstDims, testCaseName, audioNames, dst);
 
                 cout <<"\n\n";
                 cout <<"CPU Backend Clock Time: "<< cpuTime <<" ms/batch"<< endl;
