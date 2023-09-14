@@ -374,7 +374,7 @@ int main(int argc, char **argv)
                     else
                         missingFuncFlag = 1;
 
-                    if (qaFlag == 1 && batchSize == 8)
+                    if (testType == 0 && qaFlag == 1 && batchSize == 8)
                         verify_non_silent_region_detection(detectedIndex, detectionLength, testCaseName, batchSize, audioNames, dst, qaFlag);
 
                     break;

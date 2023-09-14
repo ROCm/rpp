@@ -96,10 +96,6 @@ def run_unit_test(srcPath, case, numRuns, testType, bitDepth, batchSize, qaMode,
     print(f"./Tensor_host_audio {srcPath} {bitDepth} {case} {numRuns} {testType} {numRuns} {batchSize} {qaMode}")
     result = subprocess.run(["./Tensor_host_audio", srcPath, str(bitDepth), str(case), str(testType), str(numRuns), str(batchSize), str(qaMode), outFilePath], stdout=subprocess.PIPE)    # nosec
     print(result.stdout.decode())
-    file_path = os.path.join(outFilePath, "results.txt")
-    if not qaMode:
-        with open(file_path, 'a') as file:
-            file.write(result.stdout.decode())
 
     print("------------------------------------------------------------------------------------------")
 
@@ -189,30 +185,29 @@ bitDepth = 2 # Current audio test suite only supports bit depth 2
 outFilePath = " "
 
 if preserveOutput == 0:
-    validate_and_remove_folders(cwd, "OUTPUT_AUDIO_HOST")
-    validate_and_remove_folders(cwd, "QA_RESULTS_HOST")
+    validate_and_remove_folders(cwd, "QA_RESULTS_AUDIO_HOST")
     validate_and_remove_folders(cwd, "OUTPUT_PERFORMANCE_AUDIO_LOGS_HOST")
 
 if(testType == 0):
     if qaMode:
-        outFilePath = os.path.join(os.path.dirname(cwd), 'QA_RESULTS_HOST_' + timestamp)
-    else:
-        outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_AUDIO_HOST_' + timestamp)
+        outFilePath = os.path.join(os.path.dirname(cwd), 'QA_RESULTS_AUDIO_HOST_' + timestamp)
     numRuns = 1
 elif(testType == 1):
     if "--num_runs" not in sys.argv:
-        numRuns = 100 #default numRuns for running performance tests
+        numRuns = 100#default numRuns for running performance tests
     outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_PERFORMANCE_AUDIO_LOGS_HOST_' + timestamp)
 else:
     print("Invalid TEST_TYPE specified. TEST_TYPE should be 0/1 (0 = Unittests / 1 = Performancetests)")
     exit()
 
-os.mkdir(outFilePath)
+if((testType == 0 and qaMode) or testType == 1):
+    os.mkdir(outFilePath)
 loggingFolder = outFilePath
 dstPath = outFilePath
 
 # Validate DST_FOLDER
-validate_and_remove_files(dstPath)
+if not qaMode == 0 and testType == 0:
+    validate_and_remove_files(dstPath)
 
 # Enable extglob
 if os.path.exists("build"):

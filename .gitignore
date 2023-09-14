@@ -12,7 +12,6 @@ hip_build/
 OUTPUT_IMAGES*
 OUTPUT_PERFORMANCE*
 QA_RESULTS*
-OUTPUT_AUDIO*
 
 # documentation artifacts
 _build/
