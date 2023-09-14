@@ -63,15 +63,28 @@ std::map<int, string> augmentationMap =
     {1, "gamma_correction"},
     {2, "blend"},
     {4, "contrast"},
+    {8, "noise"},
     {13, "exposure"},
+    {20, "flip"},
+    {21, "resize"},
+    {23, "rotate"},
+    {24, "warp_affine"},
+    {30, "non_linear_blend"},
     {31, "color_cast"},
     {34, "lut"},
     {36, "color_twist"},
     {37, "crop"},
     {38, "crop_mirror_normalize"},
+    {39, "resize_crop_mirror"},
     {49, "box_filter"},
     {54, "gaussian_filter"},
-    {84, "spatter"}
+    {70, "copy"},
+    {80, "resize_mirror_normalize"},
+    {81, "color_jitter"},
+    {83, "gridmask"},
+    {84, "spatter"},
+    {85, "swap_channels"},
+    {86, "color_to_greyscale"},
 };
 
 template <typename T>
@@ -82,7 +95,7 @@ inline T validate_pixel_range(T pixel)
 }
 
 // replicates the last image in a batch to fill the remaining images in a batch
-void replicate_last_image_to_fill_batch(const string& lastFilePath, vector<string>& imageNamesPath, vector<string>& imageNames, const string& lastFileName, int noOfImages, int batchCount)
+void replicate_last_file_to_fill_batch(const string& lastFilePath, vector<string>& imageNamesPath, vector<string>& imageNames, const string& lastFileName, int noOfImages, int batchCount)
 {
     int remainingImages = batchCount - (noOfImages % batchCount);
     std::string filePath = lastFilePath;
@@ -630,8 +643,8 @@ inline void convert_pkd3_to_pln3(Rpp8u *input, RpptDescPtr descPtr)
     free(inputCopy);
 }
 
-// Opens a folder and recursively search for .jpg files
-void open_folder(const string& folderPath, vector<string>& imageNames, vector<string>& imageNamesPath)
+// Opens a folder and recursively search for files with given extension
+void open_folder(const string& folderPath, vector<string>& imageNames, vector<string>& imageNamesPath, string extension)
 {
     auto src_dir = opendir(folderPath.c_str());
     struct dirent* entity;
@@ -651,9 +664,9 @@ void open_folder(const string& folderPath, vector<string>& imageNames, vector<st
         filePath.append(entity->d_name);
         fs::path pathObj(filePath);
         if(fs::exists(pathObj) && fs::is_directory(pathObj))
-            open_folder(filePath, imageNames, imageNamesPath);
+            open_folder(filePath, imageNames, imageNamesPath, extension);
 
-        if (fileName.size() > 4 && fileName.substr(fileName.size() - 4) == ".jpg")
+        if (fileName.size() > 4 && fileName.substr(fileName.size() - 4) == extension)
         {
             imageNamesPath.push_back(filePath);
             imageNames.push_back(entity->d_name);
@@ -665,8 +678,8 @@ void open_folder(const string& folderPath, vector<string>& imageNames, vector<st
     closedir(src_dir);
 }
 
-// Searches for .jpg files in input folders
-void search_jpg_files(const string& folder_path, vector<string>& imageNames, vector<string>& imageNamesPath)
+// Searches for files with the provided extensions in input folders
+void search_files_recursive(const string& folder_path, vector<string>& imageNames, vector<string>& imageNamesPath, string extension)
 {
     vector<string> entry_list;
     string full_path = folder_path;
@@ -702,14 +715,14 @@ void search_jpg_files(const string& folder_path, vector<string>& imageNames, vec
                 if ((file_extension == "tar") || (file_extension == "zip") || (file_extension == "7z") || (file_extension == "rar"))
                     continue;
             }
-            if (entry_list[dir_count].size() > 4 && entry_list[dir_count].substr(entry_list[dir_count].size() - 4) == ".jpg")
+            if (entry_list[dir_count].size() > 4 && entry_list[dir_count].substr(entry_list[dir_count].size() - 4) == extension)
             {
                 imageNames.push_back(entry_list[dir_count]);
                 imageNamesPath.push_back(subfolder_path);
             }
         }
         else if (fs::exists(pathObj) && fs::is_directory(pathObj))
-            open_folder(subfolder_path, imageNames, imageNamesPath);
+            open_folder(subfolder_path, imageNames, imageNamesPath, extension);
     }
 }
 
@@ -957,14 +970,23 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
         if (dstDescPtr->c == 3)
             func += "Tensor_PLN3";
         else
-            func += "Tensor_PLN1";
+        {
+            if(testCase == 86)
+            {
+                if(srcDescPtr->layout == RpptLayout::NHWC)
+                    func += "Tensor_PKD3";
+                else
+                    func += "Tensor_PLN3";
+            }
+            else
+                func += "Tensor_PLN1";
+        }
     }
     if(testCase == 21 ||testCase == 23 || testCase == 24)
-        refFile = refPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ func + "_interpolationType" + interpolationTypeName + ".csv";
+        func += "_interpolationType" + interpolationTypeName;
     else if(testCase == 8)
-        refFile = refPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ func + "_noiseType" + noiseTypeName + ".csv";
-    else
-        refFile = refPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ func + ".csv";
+        func += "_noiseType" + noiseTypeName;
+    refFile = refPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ func + ".csv";
 
     ifstream file(refFile);
     Rpp8u *refOutput;
@@ -997,16 +1019,16 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     else
         compare_outputs_pln(output, refOutput, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
 
-    std::cerr << std::endl << "Results for " << func << " :" << std::endl;
+    std::cout << std::endl << "Results for " << func << " :" << std::endl;
     std::string status = func + ": ";
     if(fileMatch == dstDescPtr->n)
     {
-        std::cerr << "PASSED!" << std::endl;
+        std::cout << "PASSED!" << std::endl;
         status += "PASSED";
     }
     else
     {
-        std::cerr << "FAILED! " << fileMatch << "/" << dstDescPtr->n << " outputs are matching with reference outputs" << std::endl;
+        std::cout << "FAILED! " << fileMatch << "/" << dstDescPtr->n << " outputs are matching with reference outputs" << std::endl;
         status += "FAILED";
     }
 
