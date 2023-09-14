@@ -148,7 +148,7 @@ def get_log_file_list(preserveOutput):
 def func_group_finder(case_number):
     if case_number < 5 or case_number == 13 or case_number == 36:
         return "color_augmentations"
-    elif case_number == 8 or case_number == 30 or case_number == 83 or case_number == 84:
+    elif case_number == 8 or case_number == 30 or case_number == 82 or case_number == 83 or case_number == 84:
         return "effects_augmentations"
     elif case_number < 40:
         return "geometric_augmentations"
@@ -671,7 +671,7 @@ if (testType == 1 and profilingOption == "NO"):
         f.close()
 
 # print the results of qa tests
-supportedCaseList = ['0', '1', '2', '4', '8', '13', '20', '21', '23', '24', '29', '30', '31', '34', '36', '37', '38', '39', '70', '80', '81', '83', '84', '85', '86', '87']
+supportedCaseList = ['0', '1', '2', '4', '8', '13', '20', '21', '23', '24', '29', '30', '31', '34', '36', '37', '38', '39', '70', '80', '81', '82', '83', '84', '85', '86', '87']
 nonQACaseList = ['8', '24', '54', '84']
 supportedCases = 0
 for num in caseList:
