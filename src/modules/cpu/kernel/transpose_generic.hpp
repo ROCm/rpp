@@ -317,6 +317,48 @@ RppStatus transpose_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
                     }
                 }   
             }
+            else if (nDim == 4)
+            {
+                Rpp32u vectorIncrement = 4;
+                if(perm[0] == 1 && perm[1] == 2 && perm[2] == 3 && perm[3] == 0)
+                {
+                    Rpp32f *srcPtr0 = srcPtrTemp;  
+                    Rpp32f *dstPtr0 = dstPtrTemp;
+                    for(int i = 0; i < roi[perm[0]]; i++)
+                    {
+                        Rpp32f *srcPtr1 = srcPtr0;
+                        Rpp32f *dstPtr1 = dstPtr0;
+                        for(int j = 0; j < roi[perm[1]]; j++)
+                        {
+                            Rpp32f *srcPtr2 = srcPtr1;
+                            Rpp32f *dstPtr2 = dstPtr1;
+                            for(int k = 0; k < roi[perm[2]]; k++)
+                            {
+                                Rpp32f *srcPtr3 = srcPtr2;
+                                Rpp32f *dstPtr3 = dstPtr2;
+                                
+                                Rpp32u vectorLoopCount = 0;
+                                for( ; vectorLoopCount < roi[perm[3]]; vectorLoopCount += vectorIncrement)
+                                {
+                                    __m128 pSrc = _mm_setr_ps(*srcPtr3,
+                                                              *(srcPtr3 + srcGenericDescPtr->strides[1]),
+                                                              *(srcPtr3 + 2 * srcGenericDescPtr->strides[1]),
+                                                              *(srcPtr3 + 3 * srcGenericDescPtr->strides[1]));
+                                    _mm_storeu_ps(dstPtr3, pSrc);
+                                    srcPtr3 += vectorIncrement * srcGenericDescPtr->strides[1];
+                                    dstPtr3 += vectorIncrement;
+                                }
+                                srcPtr2 += 1;
+                                dstPtr2 += dstGenericDescPtr->strides[3];
+                            }
+                            srcPtr1 += srcGenericDescPtr->strides[3];
+                            dstPtr1 += dstGenericDescPtr->strides[2];
+                        }
+                        srcPtr0 +=  srcGenericDescPtr->strides[2];
+                        dstPtr0 += dstGenericDescPtr->strides[1];
+                    }
+                }
+            }
             else
             {
                 // compute output shape
