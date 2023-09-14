@@ -311,13 +311,13 @@ int main(int argc, char **argv)
     if(reductionTypeCase)
     {
         if(dstDescPtr->dataType == RpptDataType::U8)
-            hipMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * sizeof(Rpp64u));
+            hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * sizeof(Rpp64u));
         else if(dstDescPtr->dataType == RpptDataType::F16)
-            hipMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * sizeof(Rpp32f));
+            hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * sizeof(Rpp32f));
         else if(dstDescPtr->dataType == RpptDataType::F32)
-            hipMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * sizeof(Rpp32f));
+            hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * sizeof(Rpp32f));
         else if(dstDescPtr->dataType == RpptDataType::I8)
-            hipMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * sizeof(Rpp64s));
+            hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * sizeof(Rpp64s));
     }
 
     //Allocate hip memory for src/dst
