@@ -116,18 +116,17 @@ int main(int argc, char **argv)
         printf("\ntest case %d don't have outputFormatToggle! Please input outputFormatToggle = 0\n", testCase);
         return -1;
     }
-
-    if (reductionTypeCase && outputFormatToggle != 0)
+    else if (reductionTypeCase && outputFormatToggle != 0)
     {
         printf("\nReduction Kernels don't have outputFormatToggle! Please input outputFormatToggle = 0\n");
         return -1;
     }
-    if(batchSize > MAX_BATCH_SIZE)
+    else if(batchSize > MAX_BATCH_SIZE)
     {
         std::cerr << "\n Batchsize should be less than or equal to "<< MAX_BATCH_SIZE << " Aborting!";
         exit(0);
     }
-    if(testCase == 82 && batchSize < 2)
+    else if(testCase == 82 && batchSize < 2)
     {
         std::cerr<<"\n RICAP only works with BatchSize > 1";
         exit(0);
@@ -327,7 +326,7 @@ int main(int argc, char **argv)
         else if(dstDescPtr->dataType == RpptDataType::I8)
             reductionFuncResultArr = static_cast<Rpp64s*>(calloc(reductionFuncResultArrLength, sizeof(Rpp64s)));
     }
-    
+
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
     for (int perfRunCount = 0; perfRunCount < numRuns; perfRunCount++)
@@ -368,7 +367,6 @@ int main(int argc, char **argv)
             convert_input_bitdepth(input, input_second, inputu8, inputu8Second, inputBitDepth, ioBufferSize, inputBufferSize, srcDescPtr, dualInputCase, conversionFactor);
 
             int roiHeightList[batchSize], roiWidthList[batchSize];
-
             if(roiList[0] == 0 && roiList[1] == 0 && roiList[2] == 0 && roiList[3] == 0)
             {
                 for(int i = 0; i < batchSize ; i++)
@@ -1026,10 +1024,8 @@ int main(int argc, char **argv)
                 cout <<"\n\n";
                 cout <<"CPU Backend Clock Time: "<< cpuTime <<" ms/batch"<< endl;
                 cout <<"CPU Backend Wall Time: "<< wallTime <<" ms/batch"<< endl;
-
-
-                // If DEBUG_MODE is set to 1 dump the outputs to csv files for debugging
-                if(DEBUG_MODE && iterCount == 0 && inputBitDepth == 0)
+                
+                if (reductionTypeCase)
                 {
                     if(srcDescPtr->c == 3)
                         printf("\nReduction result (Batch of 3 channel images produces 4 results per image in batch): ");
@@ -1070,29 +1066,13 @@ int main(int argc, char **argv)
                     if(qaFlag && inputBitDepth == 0 && (srcDescPtr->layout == dstDescPtr->layout) && !(randomOutputCase))
                         compare_reduction_output(static_cast<Rpp64u *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst);
                 }
-
-                /*Compare the output of the function with golden outputs only if
-                1.QA Flag is set
-                2.input bit depth 0 (U8)
-                3.source and destination layout are the same*/
-                if(qaFlag && inputBitDepth == 0 && ((srcDescPtr->layout == dstDescPtr->layout) || pln1OutTypeCase) && !(randomOutputCase))
-                    compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, batchSize, interpolationTypeName, noiseTypeName, testCase, dst);
-
-                // Calculate exact dstROI in XYWH format for OpenCV dump
-                if (roiTypeSrc == RpptRoiType::LTRB)
-                    convert_roi(roiTensorPtrDst, RpptRoiType::XYWH, dstDescPtr->n);
-
-                // Check if the ROI values for each input is within the bounds of the max buffer allocated
-                RpptROI roiDefault;
-                RpptROIPtr roiPtrDefault = &roiDefault;
-                roiPtrDefault->xywhROI =  {0, 0, static_cast<Rpp32s>(dstDescPtr->w), static_cast<Rpp32s>(dstDescPtr->h)};
-                for (int i = 0; i < dstDescPtr->n; i++)
+                else
                 {
                     // Reconvert other bit depths to 8u for output display purposes
                     convert_output_bitdepth_to_u8(output, outputu8, inputBitDepth, oBufferSize, outputBufferSize, dstDescPtr, invConversionFactor);
 
                     // If DEBUG_MODE is set to 1 dump the outputs to csv files for debugging
-                    if(DEBUG_MODE && iterCount == 0)
+                    if(DEBUG_MODE && iterCount == 0 && inputBitDepth == 0)
                     {
                         std::ofstream refFile;
                         refFile.open(func + ".csv");

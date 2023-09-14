@@ -1078,23 +1078,7 @@ int main(int argc, char **argv)
                     if(qaFlag && inputBitDepth == 0 && (srcDescPtr->layout == dstDescPtr->layout) && !(randomOutputCase))
                         compare_reduction_output(static_cast<Rpp64u *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst);
                 }
-
-                /*Compare the output of the function with golden outputs only if
-                1.QA Flag is set
-                2.input bit depth 0 (Input U8 && Output U8)
-                3.source and destination layout are the same*/
-                if(qaFlag && inputBitDepth == 0 && ((srcDescPtr->layout == dstDescPtr->layout) || pln1OutTypeCase) && !(randomOutputCase))
-                    compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, batchSize, interpolationTypeName, noiseTypeName, testCase, dst);
-
-                // Calculate exact dstROI in XYWH format for OpenCV dump
-                if (roiTypeSrc == RpptRoiType::LTRB)
-                    convert_roi(roiTensorPtrDst, RpptRoiType::XYWH, dstDescPtr->n);
-
-                // Check if the ROI values for each input is within the bounds of the max buffer allocated
-                RpptROI roiDefault;
-                RpptROIPtr roiPtrDefault = &roiDefault;
-                roiPtrDefault->xywhROI =  {0, 0, static_cast<Rpp32s>(dstDescPtr->w), static_cast<Rpp32s>(dstDescPtr->h)};
-                for (int i = 0; i < dstDescPtr->n; i++)
+                else
                 {
                     hipMemcpy(output, d_output, outputBufferSize, hipMemcpyDeviceToHost);
 
@@ -1102,7 +1086,7 @@ int main(int argc, char **argv)
                     convert_output_bitdepth_to_u8(output, outputu8, inputBitDepth, oBufferSize, outputBufferSize, dstDescPtr, invConversionFactor);
 
                     // if DEBUG_MODE is set to 1, the output of the first iteration will be dumped to csv files for debugging purposes.
-                    if(DEBUG_MODE && iterCount == 0)
+                    if(DEBUG_MODE && iterCount == 0 && inputBitDepth == 0)
                     {
                         std::ofstream refFile;
                         refFile.open(func + ".csv");

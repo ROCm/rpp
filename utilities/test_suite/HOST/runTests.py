@@ -112,8 +112,12 @@ def func_group_finder(case_number):
         return "effects_augmentations"
     elif case_number < 40:
         return "geometric_augmentations"
-    elif case_number <= 86:
+    elif case_number < 42:
+        return "morphological_operations"
+    elif case_number < 87:
         return "data_exchange_operations"
+    elif case_number < 88:
+        return "statistical_operations"
     else:
         return "miscellaneous"
 
@@ -262,10 +266,6 @@ def rpp_test_suite_parser_and_validator():
     elif args.roi is not None and any(int(val) < 0 for val in args.roi[:2]):
         print(" Invalid ROI. Aborting")
         exit(0)
-    elif args.roi is not None and any(int(val) <= 0 for val in args.roi[2:]):
-        print(" Invalid ROI. Aborting")
-        exit(0)
-
 
     if args.case_list is None:
         args.case_list = range(args.case_start, args.case_end + 1)
@@ -347,7 +347,7 @@ print("#########################################################################
 
 if testType == 0:
     for case in caseList:
-        if int(case) < 0 or int(case) > 86:
+        if int(case) < 0 or int(case) > 87:
             print(f"Invalid case number {case}. Case number must be in the range of 0 to 86!")
             continue
         for layout in range(3):
@@ -363,7 +363,7 @@ if testType == 0:
         create_layout_directories(dstPath, layoutDict)
 else:
     for case in caseList:
-        if int(case) < 0 or int(case) > 86:
+        if int(case) < 0 or int(case) > 87:
             print(f"Invalid case number {case}. Case number must be in the range of 0 to 86!")
             continue
         for layout in range(3):

@@ -150,9 +150,13 @@ def func_group_finder(case_number):
         return "color_augmentations"
     elif case_number == 8 or case_number == 30 or case_number == 82 or case_number == 83 or case_number == 84:
         return "effects_augmentations"
+    elif case_number == 49 or case_number == 54:
+        return "filter_augmentations"
     elif case_number < 40:
         return "geometric_augmentations"
-    elif case_number <= 86:
+    elif case_number < 42:
+        return "morphological_operations"
+    elif case_number < 87:
         return "data_exchange_operations"
     elif case_number < 88:
         return "statistical_operations"
@@ -189,7 +193,7 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
             if layout == 2 and outputFormatToggle == 1:
                 continue
 
-            if case == "40" or case == "41" or case == "49":
+            if case == "40" or case == "41" or case == "49" or case == "54":
                 for kernelSize in range(3, 10, 2):
                     print(f"./Tensor_hip {srcPath1} {srcPath2} {dstPath} {bitDepth} {outputFormatToggle} {case} {kernelSize}")
                     result = subprocess.run(["./Tensor_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(kernelSize), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE)    # nosec
@@ -238,7 +242,7 @@ def run_performance_test(loggingFolder, log_file_layout, srcPath1, srcPath2, dst
             if layout == 2 and outputFormatToggle == 1:
                 continue
 
-            if case == "40" or case == "41" or case == "49":
+            if case == "40" or case == "41" or case == "49" or case == "54":
                 for kernelSize in range(3, 10, 2):
                     run_performance_test_cmd(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, kernelSize, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
             elif case == "8":
@@ -351,9 +355,6 @@ def rpp_test_suite_parser_and_validator():
     elif args.roi is not None and any(int(val) < 0 for val in args.roi[:2]):
         print(" Invalid ROI. Aborting")
         exit(0)
-    elif args.roi is not None and any(int(val) <= 0 for val in args.roi[2:]):
-        print(" Invalid ROI. Aborting")
-        exit(0)
 
     if args.case_list is None:
         args.case_list = range(args.case_start, args.case_end + 1)
@@ -442,8 +443,8 @@ print("#########################################################################
 
 if(testType == 0):
     for case in caseList:
-        if int(case) < 0 or int(case) > 86:
-            print(f"Invalid case number {case}. Case number must be in the range of 0 to 86!")
+        if int(case) < 0 or int(case) > 87:
+            print(f"Invalid case number {case}. Case number must be in the range of 0 to 87!")
             continue
         for layout in range(3):
             dstPathTemp, log_file_layout = process_layout(layout, qaMode, case, dstPath)
@@ -460,8 +461,8 @@ if(testType == 0):
 else:
     if (testType == 1 and profilingOption == "NO"):
         for case in caseList:
-            if int(case) < 0 or int(case) > 86:
-                print(f"Invalid case number {case}. Case number must be in the range of 0 to 86!")
+            if int(case) < 0 or int(case) > 87:
+                print(f"Invalid case number {case}. Case number must be in the range of 0 to 87!")
                 continue
             for layout in range(3):
                 dstPathTemp, log_file_layout = process_layout(layout, qaMode, case, dstPath)
@@ -472,7 +473,7 @@ else:
         NEW_FUNC_GROUP_LIST = [0, 15, 20, 29, 36, 40, 42, 49, 56, 65, 69]
 
         for case in caseList:
-            if int(case) < 0 or int(case) > 86:
+            if int(case) < 0 or int(case) > 87:
                 print(f"Invalid case number {case}. Case number must be in the range of 0 to 86!")
                 continue
             for layout in range(3):
@@ -491,10 +492,9 @@ else:
                         if layout == 2 and outputFormatToggle == 1:
                             continue
 
-                        if case == "40" or case == "41" or case == "49":
+                        if case == "40" or case == "41" or case == "49" or case == "54"::
                             for kernelSize in range(3, 10, 2):
                                 run_performance_test_with_profiler(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, kernelSize, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
-
                         elif case == "8":
                             # Run all variants of noise type functions with additional argument of noiseType = gausssianNoise / shotNoise / saltandpepperNoise
                             for noiseType in range(3):
@@ -606,7 +606,9 @@ if (testType == 1 and profilingOption == "NO"):
     "color_augmentations",
     "data_exchange_operations",
     "effects_augmentations",
+    "filter_augmentations",
     "geometric_augmentations",
+    "morphological_operations"
     ]
     for log_file in log_file_list:
         # Opening log file
