@@ -93,7 +93,7 @@ python runAudioTests.py --input_path <input_path> --case_start <case_start> --ca
 ## Modes of operation (Rpp Audio Test Suite)
 -   QA mode - Tolerance based PASS/FAIL tests for RPP AUDIO HOST functionalities checking match between output and preset golden outputs. Please note that QA mode is only supported with a batch size of 8.
 ``` python
-python runAudioTests.py --case_start 0 --case_end 0 --test_type 0 --test_type 0 --batch_size 8
+python runAudioTests.py --case_start 0 --case_end 0 --test_type 0 --batch_size 8
 ```
 
 -   Performance test mode - Performance tests that execute the desired functionality and variant 100 times by default, and report max/min/avg RPP execution wall time.
