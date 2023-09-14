@@ -669,8 +669,8 @@ if (testType == 1 and profilingOption == "NO"):
         f.close()
 
 # print the results of qa tests
-supportedCaseList = ['0', '1', '2', '4', '8', '13', '20', '21', '23', '24', '30', '31', '34', '36', '37', '38', '39', '70', '80', '81', '83', '84', '85', '86']
-nonQACaseList = ['8', '24', '84']
+supportedCaseList = ['0', '1', '2', '4', '8', '13', '20', '21', '23', '24', '29', '30', '31', '34', '36', '37', '38', '39', '70', '80', '81', '83', '84', '85', '86']
+nonQACaseList = ['8', '24', '54', '84']
 supportedCases = 0
 for num in caseList:
     if qaMode == 1 and num not in nonQACaseList and num in supportedCaseList:
