@@ -319,7 +319,7 @@ RppStatus transpose_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
             }
             else if (nDim == 4)
             {
-                Rpp32u vectorIncrement = 4;
+                Rpp32u vectorIncrement = 8;
                 if(perm[0] == 1 && perm[1] == 2 && perm[2] == 3 && perm[3] == 0)
                 {
                     Rpp32f *srcPtr0 = srcPtrTemp;  
@@ -340,11 +340,15 @@ RppStatus transpose_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
                                 Rpp32u vectorLoopCount = 0;
                                 for( ; vectorLoopCount < roi[perm[3]]; vectorLoopCount += vectorIncrement)
                                 {
-                                    __m128 pSrc = _mm_setr_ps(*srcPtr3,
-                                                              *(srcPtr3 + srcGenericDescPtr->strides[1]),
-                                                              *(srcPtr3 + 2 * srcGenericDescPtr->strides[1]),
-                                                              *(srcPtr3 + 3 * srcGenericDescPtr->strides[1]));
-                                    _mm_storeu_ps(dstPtr3, pSrc);
+                                    __m256 pSrc = _mm256_setr_ps(*srcPtr3,
+                                                                 *(srcPtr3 + srcGenericDescPtr->strides[1]),
+                                                                 *(srcPtr3 + 2 * srcGenericDescPtr->strides[1]),
+                                                                 *(srcPtr3 + 3 * srcGenericDescPtr->strides[1]),
+                                                                 *(srcPtr3 + 4 * srcGenericDescPtr->strides[1]),
+                                                                 *(srcPtr3 + 5 * srcGenericDescPtr->strides[1]),
+                                                                 *(srcPtr3 + 6 * srcGenericDescPtr->strides[1]),
+                                                                 *(srcPtr3 + 7 * srcGenericDescPtr->strides[1]));
+                                    _mm256_storeu_ps(dstPtr3, pSrc);
                                     srcPtr3 += vectorIncrement * srcGenericDescPtr->strides[1];
                                     dstPtr3 += vectorIncrement;
                                 }
