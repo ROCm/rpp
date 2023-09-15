@@ -118,20 +118,17 @@ int main(int argc, char **argv)
         printf("\ntest case %d don't have outputFormatToggle! Please input outputFormatToggle = 0\n", testCase);
         return -1;
     }
-
-    if (reductionTypeCase && outputFormatToggle != 0)
+    else if (reductionTypeCase && outputFormatToggle != 0)
     {
         printf("\nReduction Kernels don't have outputFormatToggle! Please input outputFormatToggle = 0\n");
         return -1;
     }
-    
-    if(batchSize > MAX_BATCH_SIZE)
+    else if(batchSize > MAX_BATCH_SIZE)
     {
         std::cerr << "\n Batchsize should be less than or equal to "<< MAX_BATCH_SIZE << " Aborting!";
         exit(0);
     }
-    
-    if(testCase == 82 && batchSize < 2)
+    else if(testCase == 82 && batchSize < 2)
     {
         std::cerr<<"\n RICAP only works with BatchSize > 1";
         exit(0);
@@ -187,7 +184,6 @@ int main(int argc, char **argv)
     RpptInterpolationType interpolationType = RpptInterpolationType::BILINEAR;
     std::string interpolationTypeName = "";
     std::string noiseTypeName = "";
-
     if (kernelSizeCase)
     {
         char additionalParam_char[2];
@@ -331,15 +327,15 @@ int main(int argc, char **argv)
     if(reductionTypeCase)
     {
         if(dstDescPtr->dataType == RpptDataType::U8)
-            hipMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * sizeof(Rpp64u));
+            hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * sizeof(Rpp64u));
         else if(dstDescPtr->dataType == RpptDataType::F16)
-            hipMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * sizeof(Rpp32f));
+            hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * sizeof(Rpp32f));
         else if(dstDescPtr->dataType == RpptDataType::F32)
-            hipMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * sizeof(Rpp32f));
+            hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * sizeof(Rpp32f));
         else if(dstDescPtr->dataType == RpptDataType::I8)
-            hipMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * sizeof(Rpp64s));
+            hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * sizeof(Rpp64s));
     }
-    
+
     //Allocate hip memory for src/dst
     hipMalloc(&d_input, inputBufferSize);
     hipMalloc(&d_output, outputBufferSize);
@@ -396,7 +392,6 @@ int main(int argc, char **argv)
                 hipMemcpy(d_input_second, input_second, inputBufferSize, hipMemcpyHostToDevice);
 
             int roiHeightList[batchSize], roiWidthList[batchSize];
-
             if(roiList[0] == 0 && roiList[1] == 0 && roiList[2] == 0 && roiList[3] == 0)
             {
                 for(int i = 0; i < batchSize ; i++)
@@ -906,13 +901,6 @@ int main(int argc, char **argv)
                 testCaseName = "ricap";
 
                 Rpp32u permutationTensor[batchSize * 4];
-
-                if(imagesMixed)
-                {
-                    std::cerr<<"\n RICAP only works with same dimension images";
-                    break;
-                }
-
                 if(qaFlag)
                     init_ricap_qa(maxWidth, maxHeight, batchSize, permutationTensor, roiPtrInputCropRegion);
                 else
@@ -1086,7 +1074,7 @@ int main(int argc, char **argv)
                     convert_output_bitdepth_to_u8(output, outputu8, inputBitDepth, oBufferSize, outputBufferSize, dstDescPtr, invConversionFactor);
 
                     // if DEBUG_MODE is set to 1, the output of the first iteration will be dumped to csv files for debugging purposes.
-                    if(DEBUG_MODE && iterCount == 0 && inputBitDepth == 0)
+                    if(DEBUG_MODE && iterCount == 0)
                     {
                         std::ofstream refFile;
                         refFile.open(func + ".csv");
@@ -1098,8 +1086,9 @@ int main(int argc, char **argv)
                     /*Compare the output of the function with golden outputs only if
                     1.QA Flag is set
                     2.input bit depth 0 (Input U8 && Output U8)
-                    3.source and destination layout are the same*/
-                    if(qaFlag && inputBitDepth == 0 && (srcDescPtr->layout == dstDescPtr->layout) && !(randomOutputCase))
+                    3.source and destination layout are the same
+                    4.augmentation case does not generate random output*/
+                    if(qaFlag && inputBitDepth == 0 && ((srcDescPtr->layout == dstDescPtr->layout) || pln1OutTypeCase) && !(randomOutputCase))
                         compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, batchSize, interpolationTypeName, noiseTypeName, testCase, dst);
 
                     // Calculate exact dstROI in XYWH format for OpenCV dump

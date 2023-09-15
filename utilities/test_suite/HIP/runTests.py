@@ -355,6 +355,9 @@ def rpp_test_suite_parser_and_validator():
     elif args.roi is not None and any(int(val) < 0 for val in args.roi[:2]):
         print(" Invalid ROI. Aborting")
         exit(0)
+    elif args.roi is not None and any(int(val) <= 0 for val in args.roi[2:]):
+        print(" Invalid ROI. Aborting")
+        exit(0)
 
     if args.case_list is None:
         args.case_list = range(args.case_start, args.case_end + 1)
@@ -492,7 +495,7 @@ else:
                         if layout == 2 and outputFormatToggle == 1:
                             continue
 
-                        if case == "40" or case == "41" or case == "49" or case == "54"::
+                        if case == "40" or case == "41" or case == "49" or case == "54":
                             for kernelSize in range(3, 10, 2):
                                 run_performance_test_with_profiler(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, kernelSize, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
                         elif case == "8":

@@ -266,6 +266,9 @@ def rpp_test_suite_parser_and_validator():
     elif args.roi is not None and any(int(val) < 0 for val in args.roi[:2]):
         print(" Invalid ROI. Aborting")
         exit(0)
+    elif args.roi is not None and any(int(val) <= 0 for val in args.roi[2:]):
+        print(" Invalid ROI. Aborting")
+        exit(0)
 
     if args.case_list is None:
         args.case_list = range(args.case_start, args.case_end + 1)
