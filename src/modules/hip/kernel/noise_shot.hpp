@@ -50,7 +50,7 @@ __device__ void shot_noise_24_adjusted_output_hip_compute(schar *srcPtr, d_float
 __device__ void shot_noise_24_adjusted_output_hip_compute(half *srcPtr, d_float24 *pix_f24) { rpp_hip_math_multiply24_const(pix_f24, pix_f24, (float4)ONE_OVER_255); }
 
 template <typename T>
-__global__ void shot_noise_pkd_tensor(T *srcPtr,
+__global__ void shot_noise_pkd_hip_tensor(T *srcPtr,
                                       uint2 srcStridesNH,
                                       T *dstPtr,
                                       uint2 dstStridesNH,
@@ -101,7 +101,7 @@ __global__ void shot_noise_pkd_tensor(T *srcPtr,
 }
 
 template <typename T>
-__global__ void shot_noise_pln_tensor(T *srcPtr,
+__global__ void shot_noise_pln_hip_tensor(T *srcPtr,
                                       uint3 srcStridesNCH,
                                       T *dstPtr,
                                       uint3 dstStridesNCH,
@@ -200,7 +200,7 @@ __global__ void shot_noise_pln_tensor(T *srcPtr,
 }
 
 template <typename T>
-__global__ void shot_noise_pkd3_pln3_tensor(T *srcPtr,
+__global__ void shot_noise_pkd3_pln3_hip_tensor(T *srcPtr,
                                             uint2 srcStridesNH,
                                             T *dstPtr,
                                             uint3 dstStridesNCH,
@@ -251,7 +251,7 @@ __global__ void shot_noise_pkd3_pln3_tensor(T *srcPtr,
 }
 
 template <typename T>
-__global__ void shot_noise_pln3_pkd3_tensor(T *srcPtr,
+__global__ void shot_noise_pln3_pkd3_hip_tensor(T *srcPtr,
                                             uint3 srcStridesNCH,
                                             T *dstPtr,
                                             uint2 dstStridesNH,
@@ -325,7 +325,7 @@ RppStatus hip_exec_shot_noise_tensor(T *srcPtr,
     if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
     {
         globalThreads_x = (dstDescPtr->strides.hStride / 3 + 7) >> 3;
-        hipLaunchKernelGGL(shot_noise_pkd_tensor,
+        hipLaunchKernelGGL(shot_noise_pkd_hip_tensor,
                            dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                            0,
@@ -341,7 +341,7 @@ RppStatus hip_exec_shot_noise_tensor(T *srcPtr,
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
-        hipLaunchKernelGGL(shot_noise_pln_tensor,
+        hipLaunchKernelGGL(shot_noise_pln_hip_tensor,
                            dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                            0,
@@ -360,7 +360,7 @@ RppStatus hip_exec_shot_noise_tensor(T *srcPtr,
     {
         if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            hipLaunchKernelGGL(shot_noise_pkd3_pln3_tensor,
+            hipLaunchKernelGGL(shot_noise_pkd3_pln3_hip_tensor,
                                dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
@@ -377,7 +377,7 @@ RppStatus hip_exec_shot_noise_tensor(T *srcPtr,
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             globalThreads_x = (srcDescPtr->strides.hStride + 7) >> 3;
-            hipLaunchKernelGGL(shot_noise_pln3_pkd3_tensor,
+            hipLaunchKernelGGL(shot_noise_pln3_pkd3_hip_tensor,
                                dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
