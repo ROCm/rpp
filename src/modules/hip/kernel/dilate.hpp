@@ -277,7 +277,7 @@ __device__ void dilate_9x9_row_hip_compute(uchar *srcPtr, d_float8 *dst_f8)
 
 // kernelSize = 3
 template <typename T>
-__global__ void dilate_3x3_pkd_tensor(T *srcPtr,
+__global__ void dilate_3x3_pkd_hip_tensor(T *srcPtr,
                                       uint2 srcStridesNH,
                                       T *dstPtr,
                                       uint2 dstStridesNH,
@@ -347,7 +347,7 @@ __global__ void dilate_3x3_pkd_tensor(T *srcPtr,
 
 // kernelSize = 5
 template <typename T>
-__global__ void dilate_5x5_pkd_tensor(T *srcPtr,
+__global__ void dilate_5x5_pkd_hip_tensor(T *srcPtr,
                                       uint2 srcStridesNH,
                                       T *dstPtr,
                                       uint2 dstStridesNH,
@@ -423,7 +423,7 @@ __global__ void dilate_5x5_pkd_tensor(T *srcPtr,
 
 // kernelSize = 7
 template <typename T>
-__global__ void dilate_7x7_pkd_tensor(T *srcPtr,
+__global__ void dilate_7x7_pkd_hip_tensor(T *srcPtr,
                                       uint2 srcStridesNH,
                                       T *dstPtr,
                                       uint2 dstStridesNH,
@@ -505,7 +505,7 @@ __global__ void dilate_7x7_pkd_tensor(T *srcPtr,
 
 // kernelSize = 9
 template <typename T>
-__global__ void dilate_9x9_pkd_tensor(T *srcPtr,
+__global__ void dilate_9x9_pkd_hip_tensor(T *srcPtr,
                                       uint2 srcStridesNH,
                                       T *dstPtr,
                                       uint2 dstStridesNH,
@@ -595,7 +595,7 @@ __global__ void dilate_9x9_pkd_tensor(T *srcPtr,
 
 // kernelSize = 3
 template <typename T>
-__global__ void dilate_3x3_pln_tensor(T *srcPtr,
+__global__ void dilate_3x3_pln_hip_tensor(T *srcPtr,
                                       uint3 srcStridesNCH,
                                       T *dstPtr,
                                       uint3 dstStridesNCH,
@@ -688,7 +688,7 @@ __global__ void dilate_3x3_pln_tensor(T *srcPtr,
 
 // kernelSize = 5
 template <typename T>
-__global__ void dilate_5x5_pln_tensor(T *srcPtr,
+__global__ void dilate_5x5_pln_hip_tensor(T *srcPtr,
                                       uint3 srcStridesNCH,
                                       T *dstPtr,
                                       uint3 dstStridesNCH,
@@ -787,7 +787,7 @@ __global__ void dilate_5x5_pln_tensor(T *srcPtr,
 
 // kernelSize = 7
 template <typename T>
-__global__ void dilate_7x7_pln_tensor(T *srcPtr,
+__global__ void dilate_7x7_pln_hip_tensor(T *srcPtr,
                                       uint3 srcStridesNCH,
                                       T *dstPtr,
                                       uint3 dstStridesNCH,
@@ -892,7 +892,7 @@ __global__ void dilate_7x7_pln_tensor(T *srcPtr,
 
 // kernelSize = 9
 template <typename T>
-__global__ void dilate_9x9_pln_tensor(T *srcPtr,
+__global__ void dilate_9x9_pln_hip_tensor(T *srcPtr,
                                       uint3 srcStridesNCH,
                                       T *dstPtr,
                                       uint3 dstStridesNCH,
@@ -1005,7 +1005,7 @@ __global__ void dilate_9x9_pln_tensor(T *srcPtr,
 
 // kernelSize = 3
 template <typename T>
-__global__ void dilate_3x3_pkd3_pln3_tensor(T *srcPtr,
+__global__ void dilate_3x3_pkd3_pln3_hip_tensor(T *srcPtr,
                                             uint2 srcStridesNH,
                                             T *dstPtr,
                                             uint3 dstStridesNCH,
@@ -1075,7 +1075,7 @@ __global__ void dilate_3x3_pkd3_pln3_tensor(T *srcPtr,
 
 // kernelSize = 5
 template <typename T>
-__global__ void dilate_5x5_pkd3_pln3_tensor(T *srcPtr,
+__global__ void dilate_5x5_pkd3_pln3_hip_tensor(T *srcPtr,
                                             uint2 srcStridesNH,
                                             T *dstPtr,
                                             uint3 dstStridesNCH,
@@ -1151,7 +1151,7 @@ __global__ void dilate_5x5_pkd3_pln3_tensor(T *srcPtr,
 
 // kernelSize = 7
 template <typename T>
-__global__ void dilate_7x7_pkd3_pln3_tensor(T *srcPtr,
+__global__ void dilate_7x7_pkd3_pln3_hip_tensor(T *srcPtr,
                                             uint2 srcStridesNH,
                                             T *dstPtr,
                                             uint3 dstStridesNCH,
@@ -1233,7 +1233,7 @@ __global__ void dilate_7x7_pkd3_pln3_tensor(T *srcPtr,
 
 // kernelSize = 9
 template <typename T>
-__global__ void dilate_9x9_pkd3_pln3_tensor(T *srcPtr,
+__global__ void dilate_9x9_pkd3_pln3_hip_tensor(T *srcPtr,
                                             uint2 srcStridesNH,
                                             T *dstPtr,
                                             uint3 dstStridesNCH,
@@ -1323,7 +1323,7 @@ __global__ void dilate_9x9_pkd3_pln3_tensor(T *srcPtr,
 
 // kernelSize = 3
 template <typename T>
-__global__ void dilate_3x3_pln3_pkd3_tensor(T *srcPtr,
+__global__ void dilate_3x3_pln3_pkd3_hip_tensor(T *srcPtr,
                                             uint3 srcStridesNCH,
                                             T *dstPtr,
                                             uint2 dstStridesNH,
@@ -1393,7 +1393,7 @@ __global__ void dilate_3x3_pln3_pkd3_tensor(T *srcPtr,
 
 // kernelSize = 5
 template <typename T>
-__global__ void dilate_5x5_pln3_pkd3_tensor(T *srcPtr,
+__global__ void dilate_5x5_pln3_pkd3_hip_tensor(T *srcPtr,
                                             uint3 srcStridesNCH,
                                             T *dstPtr,
                                             uint2 dstStridesNH,
@@ -1469,7 +1469,7 @@ __global__ void dilate_5x5_pln3_pkd3_tensor(T *srcPtr,
 
 // kernelSize = 7
 template <typename T>
-__global__ void dilate_7x7_pln3_pkd3_tensor(T *srcPtr,
+__global__ void dilate_7x7_pln3_pkd3_hip_tensor(T *srcPtr,
                                             uint3 srcStridesNCH,
                                             T *dstPtr,
                                             uint2 dstStridesNH,
@@ -1551,7 +1551,7 @@ __global__ void dilate_7x7_pln3_pkd3_tensor(T *srcPtr,
 
 // kernelSize = 9
 template <typename T>
-__global__ void dilate_9x9_pln3_pkd3_tensor(T *srcPtr,
+__global__ void dilate_9x9_pln3_pkd3_hip_tensor(T *srcPtr,
                                             uint3 srcStridesNCH,
                                             T *dstPtr,
                                             uint2 dstStridesNH,
@@ -1668,7 +1668,7 @@ RppStatus hip_exec_dilate_tensor(T *srcPtr,
 
         if (kernelSize == 3)
         {
-            hipLaunchKernelGGL(dilate_3x3_pkd_tensor,
+            hipLaunchKernelGGL(dilate_3x3_pkd_hip_tensor,
                                dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
@@ -1683,7 +1683,7 @@ RppStatus hip_exec_dilate_tensor(T *srcPtr,
         }
         else if (kernelSize == 5)
         {
-            hipLaunchKernelGGL(dilate_5x5_pkd_tensor,
+            hipLaunchKernelGGL(dilate_5x5_pkd_hip_tensor,
                                dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
@@ -1698,7 +1698,7 @@ RppStatus hip_exec_dilate_tensor(T *srcPtr,
         }
         else if (kernelSize == 7)
         {
-            hipLaunchKernelGGL(dilate_7x7_pkd_tensor,
+            hipLaunchKernelGGL(dilate_7x7_pkd_hip_tensor,
                                dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
@@ -1713,7 +1713,7 @@ RppStatus hip_exec_dilate_tensor(T *srcPtr,
         }
         else if (kernelSize == 9)
         {
-            hipLaunchKernelGGL(dilate_9x9_pkd_tensor,
+            hipLaunchKernelGGL(dilate_9x9_pkd_hip_tensor,
                                dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
@@ -1731,7 +1731,7 @@ RppStatus hip_exec_dilate_tensor(T *srcPtr,
     {
         if (kernelSize == 3)
         {
-            hipLaunchKernelGGL(dilate_3x3_pln_tensor,
+            hipLaunchKernelGGL(dilate_3x3_pln_hip_tensor,
                                dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
@@ -1747,7 +1747,7 @@ RppStatus hip_exec_dilate_tensor(T *srcPtr,
         }
         else if (kernelSize == 5)
         {
-            hipLaunchKernelGGL(dilate_5x5_pln_tensor,
+            hipLaunchKernelGGL(dilate_5x5_pln_hip_tensor,
                                dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
@@ -1763,7 +1763,7 @@ RppStatus hip_exec_dilate_tensor(T *srcPtr,
         }
         else if (kernelSize == 7)
         {
-            hipLaunchKernelGGL(dilate_7x7_pln_tensor,
+            hipLaunchKernelGGL(dilate_7x7_pln_hip_tensor,
                                dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
@@ -1779,7 +1779,7 @@ RppStatus hip_exec_dilate_tensor(T *srcPtr,
         }
         else if (kernelSize == 9)
         {
-            hipLaunchKernelGGL(dilate_9x9_pln_tensor,
+            hipLaunchKernelGGL(dilate_9x9_pln_hip_tensor,
                                dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
@@ -1800,7 +1800,7 @@ RppStatus hip_exec_dilate_tensor(T *srcPtr,
         {
             if (kernelSize == 3)
             {
-                hipLaunchKernelGGL(dilate_3x3_pkd3_pln3_tensor,
+                hipLaunchKernelGGL(dilate_3x3_pkd3_pln3_hip_tensor,
                                    dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                    dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                    0,
@@ -1815,7 +1815,7 @@ RppStatus hip_exec_dilate_tensor(T *srcPtr,
             }
             else if (kernelSize == 5)
             {
-                hipLaunchKernelGGL(dilate_5x5_pkd3_pln3_tensor,
+                hipLaunchKernelGGL(dilate_5x5_pkd3_pln3_hip_tensor,
                                    dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                    dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                    0,
@@ -1830,7 +1830,7 @@ RppStatus hip_exec_dilate_tensor(T *srcPtr,
             }
             else if (kernelSize == 7)
             {
-                hipLaunchKernelGGL(dilate_7x7_pkd3_pln3_tensor,
+                hipLaunchKernelGGL(dilate_7x7_pkd3_pln3_hip_tensor,
                                    dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                    dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                    0,
@@ -1845,7 +1845,7 @@ RppStatus hip_exec_dilate_tensor(T *srcPtr,
             }
             else if (kernelSize == 9)
             {
-                hipLaunchKernelGGL(dilate_9x9_pkd3_pln3_tensor,
+                hipLaunchKernelGGL(dilate_9x9_pkd3_pln3_hip_tensor,
                                    dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                    dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                    0,
@@ -1865,7 +1865,7 @@ RppStatus hip_exec_dilate_tensor(T *srcPtr,
 
             if (kernelSize == 3)
             {
-                hipLaunchKernelGGL(dilate_3x3_pln3_pkd3_tensor,
+                hipLaunchKernelGGL(dilate_3x3_pln3_pkd3_hip_tensor,
                                    dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                    dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                    0,
@@ -1880,7 +1880,7 @@ RppStatus hip_exec_dilate_tensor(T *srcPtr,
             }
             else if (kernelSize == 5)
             {
-                hipLaunchKernelGGL(dilate_5x5_pln3_pkd3_tensor,
+                hipLaunchKernelGGL(dilate_5x5_pln3_pkd3_hip_tensor,
                                    dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                    dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                    0,
@@ -1895,7 +1895,7 @@ RppStatus hip_exec_dilate_tensor(T *srcPtr,
             }
             else if (kernelSize == 7)
             {
-                hipLaunchKernelGGL(dilate_7x7_pln3_pkd3_tensor,
+                hipLaunchKernelGGL(dilate_7x7_pln3_pkd3_hip_tensor,
                                    dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                    dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                    0,
@@ -1910,7 +1910,7 @@ RppStatus hip_exec_dilate_tensor(T *srcPtr,
             }
             else if (kernelSize == 9)
             {
-                hipLaunchKernelGGL(dilate_9x9_pln3_pkd3_tensor,
+                hipLaunchKernelGGL(dilate_9x9_pln3_pkd3_hip_tensor,
                                    dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                    dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                    0,

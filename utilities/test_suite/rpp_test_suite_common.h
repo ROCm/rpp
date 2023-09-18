@@ -36,6 +36,10 @@ THE SOFTWARE.
 #include <fstream>
 #include <turbojpeg.h>
 #include <boost/filesystem.hpp>
+#include <random>
+#include <boost/math/distributions.hpp>
+#include <boost/math/special_functions/beta.hpp>
+using namespace boost::math;
 
 #ifdef GPU_SUPPORT
     #include <hip/hip_fp16.h>
@@ -68,7 +72,7 @@ std::map<int, string> augmentationMap =
     {20, "flip"},
     {21, "resize"},
     {23, "rotate"},
-    {24, "warp_affine"},
+    {29, "water"},
     {30, "non_linear_blend"},
     {31, "color_cast"},
     {34, "lut"},
@@ -76,13 +80,17 @@ std::map<int, string> augmentationMap =
     {37, "crop"},
     {38, "crop_mirror_normalize"},
     {39, "resize_crop_mirror"},
+    {49, "box_filter"},
+    {54, "gaussian_filter"},
     {70, "copy"},
     {80, "resize_mirror_normalize"},
     {81, "color_jitter"},
+    {82, "ricap"},
     {83, "gridmask"},
     {84, "spatter"},
     {85, "swap_channels"},
     {86, "color_to_greyscale"},
+    {87, "tensor_sum"}
 };
 
 template <typename T>
@@ -307,7 +315,7 @@ inline void set_descriptor_layout( RpptDescPtr srcDescPtr, RpptDescPtr dstDescPt
 }
 
 // sets values of maxHeight and maxWidth
-inline void set_max_dimensions(vector<string>imagePaths, int& maxHeight, int& maxWidth)
+inline void set_max_dimensions(vector<string>imagePaths, int& maxHeight, int& maxWidth, int& imagesMixed)
 {
     tjhandle tjInstance = tjInitDecompress();
     for (const std::string& imagePath : imagePaths)
@@ -332,6 +340,9 @@ inline void set_max_dimensions(vector<string>imagePaths, int& maxHeight, int& ma
             std::cerr << "Error decompressing file: " << imagePath << std::endl;
             continue;
         }
+
+        if((maxWidth && maxWidth != width) || (maxHeight && maxHeight != height))
+            imagesMixed = 1;
 
         maxWidth = max(maxWidth, width);
         maxHeight = max(maxHeight, height);
@@ -1038,4 +1049,196 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
         qaResults << status << std::endl;
         qaResults.close();
     }
+}
+
+inline void compare_reduction_output(Rpp64u* output, string funcName, RpptDescPtr srcDescPtr, int testCase, string dst)
+{
+    string func = funcName;
+    string refPath = get_current_dir_name();
+    string pattern = "/build";
+    string refFile = "";
+
+    remove_substring(refPath, pattern);
+    string dataType[4] = {"_u8_", "_f16_", "_f32_", "_i8_"};
+
+    func += dataType[srcDescPtr->dataType];
+
+    if(srcDescPtr->layout == RpptLayout::NHWC)
+        func += "Tensor_PKD3";
+    else
+    {
+        if (srcDescPtr->c == 3)
+            func += "Tensor_PLN3";
+        else
+            func += "Tensor_PLN1";
+    }
+
+    refFile = refPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ func + ".csv";
+
+    ifstream file(refFile);
+    Rpp64u *refOutput;
+    refOutput = (Rpp64u *)calloc(srcDescPtr->n * 4, sizeof(Rpp64u));
+    string line,word;
+    int index = 0;
+
+    // Load the refennce output values from files and store in vector
+    if(file.is_open())
+    {
+        while(getline(file, line))
+        {
+            stringstream str(line);
+            while(getline(str, word, ','))
+            {
+                refOutput[index] = stoi(word);
+                index++;
+            }
+        }
+    }
+    else
+    {
+        cout<<"Could not open the reference output. Please check the path specified\n";
+        return;
+    }
+
+    int fileMatch = 0;
+    int matched_values = 0;
+    if(srcDescPtr->c == 1)
+    {
+        for(int i = 0; i < srcDescPtr->n; i++)
+        {
+            int diff = output[i] - refOutput[i];
+            if(diff <= CUTOFF)
+                fileMatch++;
+        }
+    }
+    else
+    {
+        for(int i = 0; i < srcDescPtr->n; i++)
+        {
+            matched_values = 0;
+            for(int j = 0; j < 4; j++)
+            {
+                int diff = output[(i * 4) + j] - refOutput[(i * 4) + j];
+                if(diff <= CUTOFF)
+                    matched_values++;
+            }
+            if(matched_values == 4)
+                fileMatch++;
+        }
+    }
+
+    std::cerr << std::endl << "Results for " << func << " :" << std::endl;
+    std::string status = func + ": ";
+    if(fileMatch == srcDescPtr->n)
+    {
+        std::cerr << "PASSED!" << std::endl;
+        status += "PASSED";
+    }
+    else
+    {
+        std::cerr << "FAILED! " << fileMatch << "/" << srcDescPtr->n << " outputs are matching with reference outputs" << std::endl;
+        status += "FAILED";
+    }
+
+    // Append the QA results to file
+    std::string qaResultsPath = dst + "/QA_results.txt";
+    std:: ofstream qaResults(qaResultsPath, ios_base::app);
+    if (qaResults.is_open())
+    {
+        qaResults << status << std::endl;
+        qaResults.close();
+    }
+}
+
+// Used to randomly swap values present in array of size n
+inline void randomize(unsigned int arr[], unsigned int n)
+{
+    // Use a different seed value each time
+    srand (time(NULL));
+    for (unsigned int i = n - 1; i > 0; i--)
+    {
+        // Pick a random index from 0 to i
+        unsigned int j = rand() % (i + 1);
+        std::swap(arr[i], arr[j]);
+    }
+}
+
+// Generates a random value between given min and max values
+int inline randrange(int min, int max)
+{
+    if(max < 0)
+        return -1;
+    return rand() % (max - min + 1) + min;
+}
+
+// RICAP Input Crop Region initializer for QA testing and golden output match
+void inline init_ricap_qa(int width, int height, int batchSize, Rpp32u *permutationTensor, RpptROIPtr roiPtrInputCropRegion)
+{
+    Rpp32u initialPermuteArray[batchSize], permutedArray[batchSize * 4];
+    int part0Width = 40; //Set part0 width around 1/3 of image width
+    int part0Height = 72; //Set part0 height around 1/2 of image height
+
+    for (uint i = 0; i < batchSize; i++)
+        initialPermuteArray[i] = i;
+
+    for(int i = 0; i < 4; i++)
+        memcpy(permutedArray + (batchSize * i), initialPermuteArray, batchSize * sizeof(Rpp32u));
+
+    for (uint i = 0, j = 0; j < batchSize * 4; i++, j += 4)
+    {
+        permutationTensor[j] = permutedArray[i];
+        permutationTensor[j + 1] = permutedArray[i + batchSize];
+        permutationTensor[j + 2] = permutedArray[i + (batchSize * 2)];
+        permutationTensor[j + 3] = permutedArray[i + (batchSize * 3)];
+    }
+
+    roiPtrInputCropRegion[0].xywhROI = {width - part0Width, 0, part0Width, part0Height};
+    roiPtrInputCropRegion[1].xywhROI = {part0Width, 0, width - part0Width, part0Height};
+    roiPtrInputCropRegion[2].xywhROI = {0, part0Height, part0Width, height - part0Height};
+    roiPtrInputCropRegion[3].xywhROI = {0, part0Height, width - part0Width, height - part0Height};
+}
+
+// RICAP Input Crop Region initializer for unit and performance testing
+void inline init_ricap(int width, int height, int batchSize, Rpp32u *permutationTensor, RpptROIPtr roiPtrInputCropRegion)
+{
+    Rpp32u initialPermuteArray[batchSize], permutedArray[batchSize * 4];
+    double randFromDist, randFromDist1;
+
+    for (uint i = 0; i < batchSize; i++)
+        initialPermuteArray[i] = i;
+
+    // Using boost "inverse incomplete Beta" as a fast (and simple) way to simulate Betas
+    float betaParam = 0.3;
+    std::random_device rd;
+    std::mt19937 gen(rd()); // Pseudo random number generator
+    static std::uniform_real_distribution<double> unif(0.3, 0.7); // Generates a uniform real distribution between 0.3 and 0.7
+    double p = unif(gen);
+    randFromDist = boost::math::ibeta_inv(betaParam, betaParam, p); // Computes the inverse of the incomplete beta function on parameter
+
+    std::random_device rd1;
+    std::mt19937 gen1(rd1());
+    static std::uniform_real_distribution<double> unif1(0.3, 0.7);
+    double p1 = unif1(gen1);
+    randFromDist1 = boost::math::ibeta_inv(betaParam, betaParam, p1);
+
+    for(int i = 0; i < 4; i++)
+    {
+        randomize(initialPermuteArray, batchSize);
+        memcpy(permutedArray + (batchSize * i), initialPermuteArray, batchSize * sizeof(Rpp32u));
+    }
+
+    for (uint i = 0, j = 0; j < batchSize * 4; i++, j += 4)
+    {
+        permutationTensor[j] = permutedArray[i];
+        permutationTensor[j + 1] = permutedArray[i + batchSize];
+        permutationTensor[j + 2] = permutedArray[i + (batchSize * 2)];
+        permutationTensor[j + 3] = permutedArray[i + (batchSize * 3)];
+    }
+
+    int part0Width = std::round(randFromDist * width);
+    int part0Height = std::round(randFromDist1 * height);
+    roiPtrInputCropRegion[0].xywhROI = {randrange(0, width - part0Width), randrange(0, height - part0Height), part0Width, part0Height};
+    roiPtrInputCropRegion[1].xywhROI = {randrange(0, part0Width), randrange(0, height - part0Height), width - part0Width, part0Height};
+    roiPtrInputCropRegion[2].xywhROI = {randrange(0, width - part0Width), randrange(0, part0Height), part0Width, height - part0Height};
+    roiPtrInputCropRegion[3].xywhROI = {randrange(0, width - part0Width), randrange(0, part0Height), width - part0Width, height - part0Height};
 }

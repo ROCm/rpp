@@ -5061,6 +5061,20 @@ inline void compute_generic_nn_srclocs_and_validate_sse(__m128 pSrcY, __m128 pSr
     _mm_storeu_si128((__m128i*) srcLoc, pxSrcLoc);
 }
 
+inline void compute_generic_nn_srclocs_and_validate_avx(__m256 pSrcY, __m256 pSrcX, __m256 *pRoiLTRB, __m256 pSrcStrideH, Rpp32s *srcLoc, Rpp32s *invalidLoad, bool hasRGBChannels = false)
+{
+    pSrcY = _mm256_round_ps(pSrcY, (_MM_FROUND_TO_NEAREST_INT |_MM_FROUND_NO_EXC));              // Nearest Neighbor Y location vector
+    pSrcX = _mm256_round_ps(pSrcX, (_MM_FROUND_TO_NEAREST_INT |_MM_FROUND_NO_EXC));              // Nearest Neighbor X location vector
+    _mm256_storeu_si256((__m256i*) invalidLoad, _mm256_cvtps_epi32(_mm256_or_ps(                 // Vectorized ROI boundary check
+        _mm256_or_ps(_mm256_cmp_ps(pSrcX, pRoiLTRB[0], _CMP_LT_OQ), _mm256_cmp_ps(pSrcY, pRoiLTRB[1],_CMP_LT_OQ)),
+        _mm256_or_ps(_mm256_cmp_ps(pSrcX, pRoiLTRB[2], _CMP_GT_OQ), _mm256_cmp_ps(pSrcY, pRoiLTRB[3], _CMP_GT_OQ))
+    )));
+    if (hasRGBChannels)
+        pSrcX = _mm256_mul_ps(pSrcX, avx_p3);
+    __m256i pxSrcLoc = _mm256_cvtps_epi32(_mm256_fmadd_ps(pSrcY, pSrcStrideH, pSrcX));
+    _mm256_storeu_si256((__m256i*) srcLoc, pxSrcLoc);
+}
+
 template <typename T>
 inline void compute_generic_nn_interpolation_pkd3_to_pln3(Rpp32f srcY, Rpp32f srcX, RpptROI *roiLTRB, T *dstPtrTempR, T *dstPtrTempG, T *dstPtrTempB, T *srcPtrChannel, RpptDescPtr srcDescPtr)
 {
@@ -5875,6 +5889,30 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
             }
         }
     }
+}
+
+inline void compute_sum_16_host(__m256i *p, __m256i *pSum)
+{
+    pSum[0] = _mm256_add_epi32(_mm256_add_epi32(p[0], p[1]), pSum[0]); //add 16 values to 8
+}
+
+inline void compute_sum_48_host(__m256i *p, __m256i *pSumR, __m256i *pSumG, __m256i *pSumB)
+{
+    pSumR[0] = _mm256_add_epi32(_mm256_add_epi32(p[0], p[1]), pSumR[0]); //add 16R values and bring it down to 8
+    pSumG[0] = _mm256_add_epi32(_mm256_add_epi32(p[2], p[3]), pSumG[0]); //add 16G values and bring it down to 8
+    pSumB[0] = _mm256_add_epi32(_mm256_add_epi32(p[4], p[5]), pSumB[0]); //add 16B values and bring it down to 8
+}
+
+inline void compute_sum_8_host(__m256d *p, __m256d *pSum)
+{
+    pSum[0] = _mm256_add_pd(_mm256_add_pd(p[0], p[1]), pSum[0]); //add 8 values and bring it down to 4
+}
+
+inline void compute_sum_24_host(__m256d *p, __m256d *pSumR, __m256d *pSumG, __m256d *pSumB)
+{
+    pSumR[0] = _mm256_add_pd(_mm256_add_pd(p[0], p[1]), pSumR[0]); //add 8R values and bring it down to 4
+    pSumG[0] = _mm256_add_pd(_mm256_add_pd(p[2], p[3]), pSumG[0]); //add 8G values and bring it down to 4
+    pSumB[0] = _mm256_add_pd(_mm256_add_pd(p[4], p[5]), pSumB[0]); //add 8B values and bring it down to 4
 }
 
 #endif //RPP_CPU_COMMON_H

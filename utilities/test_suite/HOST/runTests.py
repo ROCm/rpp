@@ -112,8 +112,10 @@ def func_group_finder(case_number):
         return "effects_augmentations"
     elif case_number < 40:
         return "geometric_augmentations"
-    elif case_number <= 86:
+    elif case_number < 87:
         return "data_exchange_operations"
+    elif case_number < 88:
+        return "statistical_operations"
     else:
         return "miscellaneous"
 
@@ -214,8 +216,8 @@ def rpp_test_suite_parser_and_validator():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_path1", type = str, default = inFilePath1, help = "Path to the input folder 1")
     parser.add_argument("--input_path2", type = str, default = inFilePath2, help = "Path to the input folder 2")
-    parser.add_argument("--case_start", type = int, default = 0, help = "Testing range starting case # - (0:86)")
-    parser.add_argument("--case_end", type = int, default = 86, help = "Testing range ending case # - (0:86)")
+    parser.add_argument("--case_start", type = int, default = 0, help = "Testing range starting case # - (0:87)")
+    parser.add_argument("--case_end", type = int, default = 87, help = "Testing range ending case # - (0:87)")
     parser.add_argument('--test_type', type = int, default = 0, help = "Type of Test - (0 = Unit tests / 1 = Performance tests)")
     parser.add_argument('--case_list', nargs = "+", help = "List of case numbers to list", required = False)
     parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Output images from tests will be compared with golden outputs - (0 / 1)", required = False)
@@ -232,8 +234,8 @@ def rpp_test_suite_parser_and_validator():
     validate_path(qaInputFile)
 
     # validate the parameters passed by user
-    if ((args.case_start < 0 or args.case_start > 86) or (args.case_end < 0 or args.case_end > 86)):
-        print("Starting case# and Ending case# must be in the 0:86 range. Aborting!")
+    if ((args.case_start < 0 or args.case_start > 87) or (args.case_end < 0 or args.case_end > 87)):
+        print("Starting case# and Ending case# must be in the 0:87 range. Aborting!")
         exit(0)
     elif args.case_end < args.case_start:
         print("Ending case# must be greater than starting case#. Aborting!")
@@ -247,7 +249,7 @@ def rpp_test_suite_parser_and_validator():
     elif args.decoder_type < 0 or args.decoder_type > 1:
         print("Decoder Type must be in the 0/1 (0 = OpenCV / 1 = TurboJPEG). Aborting")
         exit(0)
-    elif args.case_list is not None and args.case_start > 0 and args.case_end < 86:
+    elif args.case_list is not None and args.case_start > 0 and args.case_end < 87:
         print("Invalid input! Please provide only 1 option between case_list, case_start and case_end")
         exit(0)
     elif args.num_runs <= 0:
@@ -266,14 +268,13 @@ def rpp_test_suite_parser_and_validator():
         print(" Invalid ROI. Aborting")
         exit(0)
 
-
     if args.case_list is None:
         args.case_list = range(args.case_start, args.case_end + 1)
         args.case_list = [str(x) for x in args.case_list]
     else:
         for case in args.case_list:
-            if int(case) < 0 or int(case) > 86:
-                 print("The case# must be in the 0:86 range!")
+            if int(case) < 0 or int(case) > 87:
+                 print("The case# must be in the 0:87 range!")
                  exit(0)
     # if QA mode is enabled overwrite the input folders with the folders used for generating golden outputs
     if args.qa_mode:
@@ -347,7 +348,7 @@ print("#########################################################################
 
 if testType == 0:
     for case in caseList:
-        if int(case) < 0 or int(case) > 86:
+        if int(case) < 0 or int(case) > 87:
             print(f"Invalid case number {case}. Case number must be in the range of 0 to 86!")
             continue
         for layout in range(3):
@@ -363,7 +364,7 @@ if testType == 0:
         create_layout_directories(dstPath, layoutDict)
 else:
     for case in caseList:
-        if int(case) < 0 or int(case) > 86:
+        if int(case) < 0 or int(case) > 87:
             print(f"Invalid case number {case}. Case number must be in the range of 0 to 86!")
             continue
         for layout in range(3):
@@ -372,8 +373,8 @@ else:
             run_performance_test(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
 
 # print the results of qa tests
-supportedCaseList = ['0', '1', '2', '4', '13', '20', '21', '23', '30', '31', '34', '36', '37', '38', '39', '70', '80', '81', '83', '84', '85', '86']
-nonQACaseList = ['8', '24', '84']
+supportedCaseList = ['0', '1', '2', '4', '13', '20', '21', '23', '29', '30', '31', '34', '36', '37', '38', '39', '70', '80', '81', '82', '83', '84', '85', '86', '87']
+nonQACaseList = ['8', '24', '54', '84']
 supportedCases = 0
 for num in caseList:
     if qaMode == 1 and num not in nonQACaseList and num in supportedCaseList:

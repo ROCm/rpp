@@ -37,7 +37,7 @@ __device__ void cmn_hip_compute(half *srcPtr, half *dstPtr, d_float8 *pix_f8, d_
 }
 
 template <typename T, typename U>
-__global__ void crop_mirror_normalize_pkd_tensor(T *srcPtr,
+__global__ void crop_mirror_normalize_pkd_hip_tensor(T *srcPtr,
                                                  uint2 srcStridesNH,
                                                  U *dstPtr,
                                                  uint2 dstStridesNH,
@@ -96,7 +96,7 @@ __global__ void crop_mirror_normalize_pkd_tensor(T *srcPtr,
 }
 
 template <typename T, typename U>
-__global__ void crop_mirror_normalize_pln_tensor(T *srcPtr,
+__global__ void crop_mirror_normalize_pln_hip_tensor(T *srcPtr,
                                                  uint3 srcStridesNCH,
                                                  U *dstPtr,
                                                  uint3 dstStridesNCH,
@@ -197,7 +197,7 @@ __global__ void crop_mirror_normalize_pln_tensor(T *srcPtr,
 }
 
 template <typename T, typename U>
-__global__ void crop_mirror_normalize_pkd3_pln3_tensor(T *srcPtr,
+__global__ void crop_mirror_normalize_pkd3_pln3_hip_tensor(T *srcPtr,
                                                        uint2 srcStridesNH,
                                                        U *dstPtr,
                                                        uint3 dstStridesNCH,
@@ -256,7 +256,7 @@ __global__ void crop_mirror_normalize_pkd3_pln3_tensor(T *srcPtr,
 }
 
 template <typename T, typename U>
-__global__ void crop_mirror_normalize_pln3_pkd3_tensor(T *srcPtr,
+__global__ void crop_mirror_normalize_pln3_pkd3_hip_tensor(T *srcPtr,
                                                        uint3 srcStridesNCH,
                                                        U *dstPtr,
                                                        uint2 dstStridesNH,
@@ -332,7 +332,7 @@ RppStatus hip_exec_crop_mirror_normalize_tensor(T *srcPtr,
 
     if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
     {
-        hipLaunchKernelGGL(crop_mirror_normalize_pkd_tensor,
+        hipLaunchKernelGGL(crop_mirror_normalize_pkd_hip_tensor,
                            dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                            0,
@@ -350,7 +350,7 @@ RppStatus hip_exec_crop_mirror_normalize_tensor(T *srcPtr,
     {
         if(srcDescPtr->c == 1)
         {
-            hipLaunchKernelGGL(crop_mirror_normalize_pln_tensor,
+            hipLaunchKernelGGL(crop_mirror_normalize_pln_hip_tensor,
                                dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
@@ -367,7 +367,7 @@ RppStatus hip_exec_crop_mirror_normalize_tensor(T *srcPtr,
         }
         else if(srcDescPtr->c == 3)
         {
-            hipLaunchKernelGGL(crop_mirror_normalize_pln_tensor,
+            hipLaunchKernelGGL(crop_mirror_normalize_pln_hip_tensor,
                                dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
@@ -387,7 +387,7 @@ RppStatus hip_exec_crop_mirror_normalize_tensor(T *srcPtr,
     {
         if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            hipLaunchKernelGGL(crop_mirror_normalize_pkd3_pln3_tensor,
+            hipLaunchKernelGGL(crop_mirror_normalize_pkd3_pln3_hip_tensor,
                                dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
@@ -404,7 +404,7 @@ RppStatus hip_exec_crop_mirror_normalize_tensor(T *srcPtr,
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             globalThreads_x = (srcDescPtr->strides.hStride + 7) >> 3;
-            hipLaunchKernelGGL(crop_mirror_normalize_pln3_pkd3_tensor,
+            hipLaunchKernelGGL(crop_mirror_normalize_pln3_pkd3_hip_tensor,
                                dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
