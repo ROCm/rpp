@@ -27,7 +27,7 @@ THE SOFTWARE.
  * \file
  * \brief RPPT Tensor Data Exchange Operation Functions.
  *
- * \defgroup group_tensor_data_exchange
+ * \defgroup group_tensor_data_exchange Operations: AMD RPP Tensor Data Exchange Operations
  * \brief Tensor Data Exchange Operations.
  */
 

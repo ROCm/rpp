@@ -27,7 +27,7 @@ THE SOFTWARE.
  * \file
  * \brief RPPT Tensor Geometric Augmentation Functions.
  *
- * \defgroup group_tensor_geometric
+ * \defgroup group_tensor_geometric Operations: AMD RPP Tensor Geometric Operations
  * \brief Tensor Geometric Augmentations.
  */
 
