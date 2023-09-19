@@ -27,7 +27,7 @@ THE SOFTWARE.
  * \file
  * \brief RPPT Tensor Color Augmentation Functions.
  *
- * \defgroup group_tensor_color
+ * \defgroup group_tensor_color Operations: AMD RPP Tensor Color Operations
  * \brief Tensor Color Augmentations.
  */
 

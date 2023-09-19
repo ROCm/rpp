@@ -27,7 +27,7 @@ THE SOFTWARE.
  * \file
  * \brief RPPT Tensor Morphological Augmentation Functions.
  *
- * \defgroup group_tensor_morph
+ * \defgroup group_tensor_morph Operations: AMD RPP Tensor Morphological Operations
  * \brief Tensor Morphological Augmentations.
  */
 
@@ -50,7 +50,7 @@ extern "C" {
  * \return <tt> Rppt_Status enum</tt>.
  * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
  * Else return RPP_ERROR
- * \ingroup group_tensor_color
+ * \ingroup group_tensor_morph
  */
 #ifdef GPU_SUPPORT
 /*! \brief Erode augmentation GPU
@@ -66,7 +66,7 @@ extern "C" {
  * \return <tt> Rppt_Status enum</tt>.
  * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
  * Else return RPP_ERROR
- * \ingroup group_tensor_color
+ * \ingroup group_tensor_morph
  */
 RppStatus rppt_erode_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u kernelSize, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
@@ -84,7 +84,7 @@ RppStatus rppt_erode_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPt
  * \return <tt> Rppt_Status enum</tt>.
  * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
  * Else return RPP_ERROR
- * \ingroup group_tensor_color
+ * \ingroup group_tensor_morph
  */
 #ifdef GPU_SUPPORT
 /*! \brief Dilate augmentation GPU
@@ -100,7 +100,7 @@ RppStatus rppt_erode_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPt
  * \return <tt> Rppt_Status enum</tt>.
  * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
  * Else return RPP_ERROR
- * \ingroup group_tensor_color
+ * \ingroup group_tensor_morph
  */
 RppStatus rppt_dilate_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u kernelSize, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
