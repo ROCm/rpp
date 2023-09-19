@@ -72,10 +72,10 @@ string get_path(Rpp32u nDim, Rpp32u readType)
     remove_substring(refPath, pattern);
     string dim = std::to_string(nDim) + "d";
 
-    if (readType == 0)
-        finalPath = refPath + "TRANSPOSE/input/" + dim;
+    if (readType == 0 || readType == 2 || readType == 3)
+        finalPath = refPath + "NORMALIZE/input/" + dim;
     else
-        finalPath = refPath + "TRANSPOSE/output/" + dim;
+        finalPath = refPath + "NORMALIZE/output/" + dim;
 
     return finalPath;
 }
@@ -104,22 +104,24 @@ void read_data(Rpp32f *data, Rpp32u nDim, Rpp32u readType, Rpp32u bufferLength, 
     string type = "input";
     if (readType == 1)
         type = "output";
-    if(readType = 2)
+    if(readType == 2)
         type = "mean";
-    if(readType = 3)
+    if(readType == 3)
         type = "stddev";
 
     for(int i = 0; i < batchSize; i++)
     {
-        string refFile = refPath + "/" + dimSpecifier + "_" + type + std::to_string(i) + ".txt";
+        string refFilePath = refPath + "/" + dimSpecifier + "_" + type + std::to_string(i) + ".txt";
         Rpp32f *curData = data + i * sampleLength;
-        ifstream file(refFile);
-        string line;
-        for(int j = 0; j < sampleLength; j++)
+        fstream refFile;
+        refFile.open(refFilePath, ios::in);
+        if(!refFile.is_open())
         {
-            std::getline(file, line);
-            curData[j] = static_cast<Rpp32f>(stoi(line));
+            cerr<<"Unable to open the file specified! Please check the path of the file given as input"<<endl;
+            break;
         }
+        for(int j = 0; j < sampleLength; j++)
+            refFile >> curData[j];
     }
 }
 
@@ -136,8 +138,9 @@ void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize)
         int cnt = 0;
         for(int j = 0; j < bufferLength; j++)
         {
-            if (out[j] == ref[j])
-                cnt++;
+            bool invalid_comparision = ((out[j] == 0.0f) && (ref[j] != 0.0f));
+            if(!invalid_comparision && abs(out[j] - ref[j]) < 1e-20)
+                cnt += 1;
         }
         if (cnt == bufferLength)
             fileMatch++;
@@ -160,11 +163,11 @@ int main(int argc, char **argv)
     testType = atoi(argv[3]);
     qaMode = atoi(argv[4]);
 
-    /*if (qaMode && batchSize != 3)
+    if (qaMode && batchSize != 1)
     {
-        std::cerr<<"QA mode can only run with batchsize 3"<<std::endl;
+        std::cerr<<"QA mode can only run with batchsize 1"<<std::endl;
         return -1;
-    }*/
+    }
 
 
     // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
@@ -219,8 +222,17 @@ int main(int argc, char **argv)
     }
     else
     {   // limiting max value in a dimension to 150 for testing purposes
-        for(int i = 0; i < batchSize * nDim; i++)
+        for(int i = 0; i < batchSize * nDim; i += 3)
+        {
             roiTensor[i] = std::rand() % 150;
+            roiTensor[i + 1] = std::rand() % 150;
+            roiTensor[i + 2] = std::rand() % 150;
+            for(int j = 0; j < roiTensor[i + 2]; j++)
+            {
+                meanTensor[j] = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+                stdDevTensor[j] = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+            }
+        }
     }
 
     // set dims and compute strides
@@ -251,8 +263,8 @@ int main(int argc, char **argv)
     }
 
     int axis_mask = 3;
-    int scale = 1;
-    int shift = 0;
+    float scale = 1.0;
+    float shift = 0.0;
     for(int i = 0; i < numRuns; i++)
     {
         startWallTime = omp_get_wtime();
@@ -271,25 +283,6 @@ int main(int argc, char **argv)
         avgWallTime *= 1000;
         avgWallTime /= numRuns;
         cout << fixed << "\navg wall times in ms/batch = " << avgWallTime << endl;
-
-        if (testType == 0 && qaMode == 0)
-        {
-            std::cerr<<"\nprinting input values: "<<std::endl;
-            int cnt = 0;
-            for(int i = 0; i < roiTensor[0]; i++)
-            {
-                for(int j = 0; j < roiTensor[1]; j++)
-                {
-                    for(int k = 0; k < roiTensor[2]; k++)
-                    {
-                        std::cerr<<inputF32[cnt]<<" ";
-                        cnt++;
-                    }
-                    std::cerr<<std::endl;
-                }
-                std::cerr<<std::endl;
-            }
-        }
     }
 
     free(inputF32);

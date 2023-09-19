@@ -44,12 +44,10 @@ void normalize_3D_tensor_axis3(Rpp32f *srcPtr, RpptGenericDescPtr srcGenericDesc
     Rpp32f *srcPtrTemp = srcPtr;
     Rpp32f *dstPtrTemp = dstPtr;
     Rpp32s paramIdx = 0;
-    Rpp32f invStdDev[dims[2]];
+    Rpp32f multiplier[dims[2]];
 
     for(int i = 0; i < dims[2]; i++)
-    {
-        invStdDev[i] = 1 / stdDevPtr[i];
-    }
+        multiplier[i] = scale / stdDevPtr[i];
 
     for(Rpp32u i = 0; i < dims[0]; i++)
     {
@@ -61,15 +59,15 @@ void normalize_3D_tensor_axis3(Rpp32f *srcPtr, RpptGenericDescPtr srcGenericDesc
             Rpp32f *dstPtrRowTemp = dstPtrRow;
             for(Rpp32u k = 0; k < dims[2]; k++)
             {
-                *dstPtrRowTemp++ = (scale * (*srcPtrRowTemp++ - meanPtr[paramIdx])) * invStdDev[paramIdx] + shift;
+                *dstPtrRowTemp++ = (*srcPtrRowTemp++ - meanPtr[paramIdx]) * multiplier[paramIdx] + shift;
                 paramIdx += paramStride[1];
             }
             paramIdx = (!paramStride[2]) ? 0 : paramIdx + paramStride[2];
-            srcPtrRow += srcGenericDescPtr->strides[1];
-            dstPtrRow += srcGenericDescPtr->strides[1];
+            srcPtrRow += srcGenericDescPtr->strides[2];
+            dstPtrRow += srcGenericDescPtr->strides[2];
         }
-        srcPtrTemp += srcGenericDescPtr->strides[0];
-        dstPtrTemp += srcGenericDescPtr->strides[0];
+        srcPtrTemp += srcGenericDescPtr->strides[1];
+        dstPtrTemp += srcGenericDescPtr->strides[1];
     }
 }
 
@@ -81,7 +79,7 @@ void normalize_3D_tensor_avx_axis3(Rpp32f *srcPtr, RpptGenericDescPtr srcGeneric
     Rpp32s paramIdx = 0;
     Rpp32u vectorIncrement = 8;
     Rpp32u bufferLength = dims[2];
-    Rpp32u alignedLength = (bufferLength / 8) * 8;
+    Rpp32u alignedLength = (bufferLength / 16) * 16;
     Rpp32u OuterDim = dims[0];
     Rpp32u numRows = dims[1];
 
@@ -92,38 +90,31 @@ void normalize_3D_tensor_avx_axis3(Rpp32f *srcPtr, RpptGenericDescPtr srcGeneric
     __m256 pMean2 = _mm256_loadu_ps(meanPtr + 8);
     __m256 pStdDev1 = _mm256_loadu_ps(stdDevPtr);
     __m256 pStdDev2 = _mm256_loadu_ps(stdDevPtr + 8);
-    __m256 pInvStdDev1 = _mm256_mul_ps(pScale, _mm256_div_ps(avx_p1, pStdDev1));
-    __m256 pInvStdDev2 = _mm256_mul_ps(pScale, _mm256_div_ps(avx_p1, pStdDev2));
+    __m256 pMultiplier1 = _mm256_div_ps(pScale, pStdDev1);
+    __m256 pMultiplier2 = _mm256_div_ps(pScale, pStdDev2);
 
     for(Rpp32u i = 0; i < OuterDim; i++)
     {
-        Rpp32f *srcPtrTempOuterDim = srcPtrTemp + i * srcGenericDescPtr->strides[0];
-        Rpp32f *dstPtrTempOuterDim = dstPtrTemp + i * dstGenericDescPtr->strides[0];
+        Rpp32f *srcPtrTempOuterDim = srcPtrTemp + i * srcGenericDescPtr->strides[1];
+        Rpp32f *dstPtrTempOuterDim = dstPtrTemp + i * dstGenericDescPtr->strides[1];
 
         for(Rpp32u j = 0; j < numRows; j++)
         {
-            Rpp32f *srcPtrTempRow = srcPtrTempOuterDim + i * srcGenericDescPtr->strides[1];
-            Rpp32f *dstPtrTempRow = dstPtrTempOuterDim + i * dstGenericDescPtr->strides[1];
+            Rpp32f *srcPtrTempRow = srcPtrTempOuterDim + j * srcGenericDescPtr->strides[2];
+            Rpp32f *dstPtrTempRow = dstPtrTempOuterDim + j * dstGenericDescPtr->strides[2];
 
             Rpp32u vectorLoopCount = 0;
             for(; vectorLoopCount < alignedLength ; vectorLoopCount += 16)
             {
                 __m256 pSrc1 = _mm256_loadu_ps(srcPtrTempRow);
                 __m256 pSrc2 = _mm256_loadu_ps(srcPtrTempRow + 8);
-                __m256 pDst1 = _mm256_add_ps(_mm256_mul_ps(_mm256_sub_ps(pSrc1, pMean1), pInvStdDev1), pShift);
-                __m256 pDst2 = _mm256_add_ps(_mm256_mul_ps(_mm256_sub_ps(pSrc2, pMean2), pInvStdDev2), pShift);
+                __m256 pDst1 = _mm256_add_ps(_mm256_mul_ps(_mm256_sub_ps(pSrc1, pMean1), pMultiplier1), pShift);
+                __m256 pDst2 = _mm256_add_ps(_mm256_mul_ps(_mm256_sub_ps(pSrc2, pMean2), pMultiplier2), pShift);
                 _mm256_storeu_ps(dstPtrTempRow, pDst1);
                 _mm256_storeu_ps(dstPtrTempRow + 8, pDst2);
                 srcPtrTempRow += 16;
                 dstPtrTempRow += 16;
             }
-            int k = 0;
-            for(; vectorLoopCount < dims[2] ; vectorLoopCount += 16)
-            {
-                *dstPtrTempRow++ = (scale * ((*srcPtrTempRow++ - meanPtr[k]) / stdDevPtr[k])) + shift;
-                k++;
-            }
-            k = 0;
         }
     }
 }
@@ -180,9 +171,9 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
                 //TODO
             }
 
-            //if((axis_mask == 3) && (roi[2] == 16))
-                //normalize_3D_tensor_avx_axis3(srcPtrTemp, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTemp, stdDevTemp, scale, shift, roi, paramStride);
-            //else if(axis_mask == 3)
+            if((axis_mask == 3) && (roi[2] == 16))
+                normalize_3D_tensor_avx_axis3(srcPtrTemp, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTemp, stdDevTemp, scale, shift, roi, paramStride);
+            else if(axis_mask == 3)
                 normalize_3D_tensor_axis3(srcPtrTemp, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTemp, stdDevTemp, scale, shift, roi, paramStride);
 
         }
