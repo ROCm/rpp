@@ -27,7 +27,7 @@ THE SOFTWARE.
  * \file
  * \brief RPPT Tensor Filter Augmentation Functions.
  *
- * \defgroup group_tensor_filter
+ * \defgroup group_tensor_filter Operations: AMD RPP Tensor Filter Operations
  * \brief Tensor Filter Augmentations.
  */
 
@@ -50,7 +50,7 @@ extern "C" {
  * \return <tt> Rppt_Status enum</tt>.
  * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
  * Else return RPP_ERROR
- * \ingroup group_tensor_color
+ * \ingroup group_tensor_filter
  */
 #ifdef GPU_SUPPORT
 /*! \brief Box Filter augmentation GPU
@@ -66,7 +66,7 @@ extern "C" {
  * \return <tt> Rppt_Status enum</tt>.
  * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
  * Else return RPP_ERROR
- * \ingroup group_tensor_color
+ * \ingroup group_tensor_filter
  */
 RppStatus rppt_box_filter_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u kernelSize, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
