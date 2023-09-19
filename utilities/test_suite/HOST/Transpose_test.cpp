@@ -83,9 +83,9 @@ Rpp32u get_buffer_length(Rpp32u nDim)
 void read_data(Rpp32f *data, Rpp32u nDim, Rpp32u readType, Rpp32u bufferLength, Rpp32u batchSize)
 {
     Rpp32u sampleLength = bufferLength / batchSize;
-    if(nDim != 2 && nDim != 4 && nDim != 6)
+    if(nDim != 2 && nDim != 3 && nDim != 4)
     {
-        std::cerr<<"\nGolden Inputs / Outputs are generated only for 2D / 4D / 6D data"<<std::endl;
+        std::cerr<<"\nGolden Inputs / Outputs are generated only for 2D / 3D / 4D data"<<std::endl;
         exit(0);
     }
     
@@ -99,12 +99,18 @@ void read_data(Rpp32f *data, Rpp32u nDim, Rpp32u readType, Rpp32u bufferLength, 
     {
         string refFile = refPath + "/" + dimSpecifier + "_" + type + std::to_string(i) + ".txt";
         Rpp32f *curData = data + i * sampleLength;
-        ifstream file(refFile);
-        string line;
+        fstream fileStream;
+        fileStream.open(refFile, ios::in);
+        if(!fileStream.is_open())
+        {
+            cerr<<"Unable to open the file specified! Please check the path of the file given as input"<<endl;
+            break;
+        }
         for(int j = 0; j < sampleLength; j++)
         {
-            std::getline(file, line);
-            curData[j] = static_cast<Rpp32f>(stoi(line));
+            Rpp32f val;
+            fileStream>>val;
+            curData[j] = val;
         }
     }
 }
@@ -118,11 +124,25 @@ void fill_roi_and_perm_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, 
             for(int i = 0; i < batchSize; i++)
             {
                 int sampleIdx = i * nDim;
-                roiTensor[sampleIdx] = 100;
-                roiTensor[sampleIdx + 1] = 100;
+                roiTensor[sampleIdx] = 125;
+                roiTensor[sampleIdx + 1] = 125;
             }
             permTensor[0] = 1;
             permTensor[1] = 0;
+            break;
+        }
+        case 3:
+        {
+            for(int i = 0; i < batchSize; i++)
+            {
+                int sampleIdx = i * nDim;
+                roiTensor[sampleIdx] = 100;
+                roiTensor[sampleIdx + 1] = 100;
+                roiTensor[sampleIdx + 2] = 16;
+            }
+            permTensor[0] = 2;
+            permTensor[1] = 0;
+            permTensor[2] = 1;
             break;
         }
         case 4:
@@ -136,29 +156,9 @@ void fill_roi_and_perm_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, 
                 roiTensor[sampleIdx + 3] = 3;
             }
             permTensor[0] = 1;
-            permTensor[1] = 0;
-            permTensor[2] = 2;
-            permTensor[3] = 3;
-            break;
-        }
-        case 6:
-        {
-            for(int i = 0; i < batchSize; i++)
-            {
-                int sampleIdx = i * nDim;
-                roiTensor[sampleIdx] = 50;
-                roiTensor[sampleIdx + 1] = 50;
-                roiTensor[sampleIdx + 2] = 2;
-                roiTensor[sampleIdx + 3] = 3;
-                roiTensor[sampleIdx + 4] = 4;
-                roiTensor[sampleIdx + 5] = 5;
-            }
-            permTensor[0] = 5;
-            permTensor[1] = 3;
-            permTensor[2] = 1;
+            permTensor[1] = 2;
+            permTensor[2] = 3;
             permTensor[3] = 0;
-            permTensor[4] = 2;
-            permTensor[5] = 4;
             break;
         }
         default:
@@ -179,7 +179,7 @@ void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize)
         int cnt = 0;
         for(int j = 0; j < bufferLength; j++)
         {
-            if (out[j] == ref[j])
+            if (abs(out[j] - ref[j]) < 1e-20)
                 cnt++;
         }
         if (cnt == bufferLength)
@@ -250,7 +250,7 @@ int main(int argc, char **argv)
         Rpp32u bufferLength = get_buffer_length(nDim);
         fill_roi_and_perm_values(nDim, batchSize, roiTensor, permTensor);
     }
-    else if(testType)
+    else if(testType && (nDim == 2 || nDim == 3 || nDim == 4))
     {
         if(nDim == 2)
         {
@@ -273,6 +273,20 @@ int main(int argc, char **argv)
             permTensor[0] = 2;
             permTensor[1] = 0;
             permTensor[2] = 1;
+        }
+        else if(nDim == 4)
+        {
+            for(int i = 0; i < batchSize * 4; i += 4)
+            {
+                roiTensor[i] = 1;
+                roiTensor[i + 1] =  128;
+                roiTensor[i + 2] = 128;
+                roiTensor[i + 3] = 128;
+            }
+            permTensor[0] = 1;
+            permTensor[1] = 2;
+            permTensor[3] = 3;
+            permTensor[0] = 0;
         }
     }
     else

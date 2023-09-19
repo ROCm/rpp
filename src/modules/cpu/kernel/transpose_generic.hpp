@@ -322,6 +322,8 @@ RppStatus transpose_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
                 Rpp32u vectorIncrement = 8;
                 if(perm[0] == 1 && perm[1] == 2 && perm[2] == 3 && perm[3] == 0)
                 {
+                    Rpp32u bufferLength = roi[perm[3]];
+                    Rpp32u alignedLength = (bufferLength / vectorIncrement) * vectorIncrement;
                     Rpp32f *srcPtr0 = srcPtrTemp;  
                     Rpp32f *dstPtr0 = dstPtrTemp;
                     for(int i = 0; i < roi[perm[0]]; i++)
@@ -338,7 +340,7 @@ RppStatus transpose_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
                                 Rpp32f *dstPtr3 = dstPtr2;
                                 
                                 Rpp32u vectorLoopCount = 0;
-                                for( ; vectorLoopCount < roi[perm[3]]; vectorLoopCount += vectorIncrement)
+                                for( ; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                                 {
                                     __m256 pSrc = _mm256_setr_ps(*srcPtr3,
                                                                  *(srcPtr3 + srcGenericDescPtr->strides[1]),
@@ -351,6 +353,12 @@ RppStatus transpose_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
                                     _mm256_storeu_ps(dstPtr3, pSrc);
                                     srcPtr3 += vectorIncrement * srcGenericDescPtr->strides[1];
                                     dstPtr3 += vectorIncrement;
+                                }
+                                for( ; vectorLoopCount < bufferLength; vectorLoopCount++)
+                                {
+                                    *dstPtr3 = *srcPtr3;
+                                    srcPtr3 += srcGenericDescPtr->strides[1];
+                                    dstPtr3++;
                                 }
                                 srcPtr2 += 1;
                                 dstPtr2 += dstGenericDescPtr->strides[3];
