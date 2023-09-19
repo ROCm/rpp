@@ -285,8 +285,8 @@ int main(int argc, char **argv)
             }
             permTensor[0] = 1;
             permTensor[1] = 2;
-            permTensor[3] = 3;
-            permTensor[0] = 0;
+            permTensor[2] = 3;
+            permTensor[3] = 0;
         }
     }
     else
