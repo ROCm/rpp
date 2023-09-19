@@ -28,10 +28,10 @@ THE SOFTWARE.
 
 /*!
  * \file
- * \brief ROCm Performance Primitive Definitions definitions.
+ * \brief ROCm Performance Primitive(RPP) - Definitions.
  *
  * \defgroup group_rppdefs RPP Handle API
- * \brief ROCm Performance Primitive Definitions.
+ * \brief ROCm Performance Primitives - Definitions.
  */
 
 #include <stddef.h>

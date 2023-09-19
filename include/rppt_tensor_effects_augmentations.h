@@ -27,7 +27,7 @@ THE SOFTWARE.
  * \file
  * \brief RPPT Tensor Effects Augmentation Functions.
  *
- * \defgroup group_tensor_effects
+ * \defgroup group_tensor_effects Operations: AMD RPP Tensor Effects Operations
  * \brief Tensor Effects Augmentations.
  */
 

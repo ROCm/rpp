@@ -27,8 +27,8 @@ THE SOFTWARE.
  * \file
  * \brief ROCm Performance Primitives(RPP) Library for high performance computer vision applications on AMD processors.
  *
- * \defgroup group_rpp RPP Handle API
- * \brief ROCm Performance Primitives.
+ * \defgroup group_rpp RPP API
+ * \brief ROCm Performance Primitives - Main.
  */
 
 #include <export.h>
