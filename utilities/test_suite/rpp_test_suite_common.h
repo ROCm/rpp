@@ -69,7 +69,10 @@ std::map<int, string> augmentationMap =
     {36, "color_twist"},
     {37, "crop"},
     {38, "crop_mirror_normalize"},
+    {49, "box_filter"},
+    {54, "gaussian_filter"},
     {84, "spatter"},
+    {87, "tensor_sum"}
 };
 
 std::map<int, string> audioAugmentationMap =
@@ -786,7 +789,7 @@ inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, vector
                 std::cerr << "\n Jpeg image decode failed ";
         }
         // Copy the decompressed image buffer to the RPP input buffer
-        Rpp8u *inputTemp = input + (i * descPtr->strides.nStride);
+        Rpp8u *inputTemp = input + descPtr->offsetInBytes + (i * descPtr->strides.nStride);
         for (int j = 0; j < height; j++)
         {
             memcpy(inputTemp, rgbBuf + j * elementsInRow, elementsInRow * sizeof(Rpp8u));
@@ -1010,6 +1013,105 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     else
     {
         std::cerr << "FAILED! " << fileMatch << "/" << dstDescPtr->n << " outputs are matching with reference outputs" << std::endl;
+        status += "FAILED";
+    }
+
+    // Append the QA results to file
+    std::string qaResultsPath = dst + "/QA_results.txt";
+    std:: ofstream qaResults(qaResultsPath, ios_base::app);
+    if (qaResults.is_open())
+    {
+        qaResults << status << std::endl;
+        qaResults.close();
+    }
+}
+
+inline void compare_reduction_output(Rpp64u* output, string funcName, RpptDescPtr srcDescPtr, int testCase, string dst)
+{
+    string func = funcName;
+    string refPath = get_current_dir_name();
+    string pattern = "/build";
+    string refFile = "";
+
+    remove_substring(refPath, pattern);
+    string dataType[4] = {"_u8_", "_f16_", "_f32_", "_i8_"};
+
+    func += dataType[srcDescPtr->dataType];
+
+    if(srcDescPtr->layout == RpptLayout::NHWC)
+        func += "Tensor_PKD3";
+    else
+    {
+        if (srcDescPtr->c == 3)
+            func += "Tensor_PLN3";
+        else
+            func += "Tensor_PLN1";
+    }
+
+    refFile = refPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ func + ".csv";
+
+    ifstream file(refFile);
+    Rpp64u *refOutput;
+    refOutput = (Rpp64u *)calloc(srcDescPtr->n * 4, sizeof(Rpp64u));
+    string line,word;
+    int index = 0;
+
+    // Load the refennce output values from files and store in vector
+    if(file.is_open())
+    {
+        while(getline(file, line))
+        {
+            stringstream str(line);
+            while(getline(str, word, ','))
+            {
+                refOutput[index] = stoi(word);
+                index++;
+            }
+        }
+    }
+    else
+    {
+        cout<<"Could not open the reference output. Please check the path specified\n";
+        return;
+    }
+
+    int fileMatch = 0;
+    int matched_values = 0;
+    if(srcDescPtr->c == 1)
+    {
+        for(int i = 0; i < srcDescPtr->n; i++)
+        {
+            int diff = output[i] - refOutput[i];
+            if(diff <= CUTOFF)
+                fileMatch++;
+        }
+    }
+    else
+    {
+        for(int i = 0; i < srcDescPtr->n; i++)
+        {
+            matched_values = 0;
+            for(int j = 0; j < 4; j++)
+            {
+                int diff = output[(i * 4) + j] - refOutput[(i * 4) + j];
+                if(diff <= CUTOFF)
+                    matched_values++;
+            }
+            if(matched_values == 4)
+                fileMatch++;
+        }
+    }
+
+    std::cerr << std::endl << "Results for " << func << " :" << std::endl;
+    std::string status = func + ": ";
+    if(fileMatch == srcDescPtr->n)
+    {
+        std::cerr << "PASSED!" << std::endl;
+        status += "PASSED";
+    }
+    else
+    {
+        std::cerr << "FAILED! " << fileMatch << "/" << srcDescPtr->n << " outputs are matching with reference outputs" << std::endl;
         status += "FAILED";
     }
 

@@ -1,0 +1,56 @@
+-- The C compiler identification is GNU 11.3.0
+-- The CXX compiler identification is GNU 11.3.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- [37mUsing Turbo JPEG -- 
+	Libraries:/lib/libturbojpeg.so 
+	Includes:/usr/include[m
+-- Found Boost: /usr/local/lib/cmake/Boost-1.72.0/BoostConfig.cmake (found version "1.72.0") found components: filesystem system 
+-- Found OpenMP_C: -fopenmp (found version "4.5") 
+-- Found OpenMP_CXX: -fopenmp (found version "4.5") 
+-- Found OpenMP: TRUE (found version "4.5")  
+-- [32mtest_suite/HOST set to build with rpp and TurboJpeg[m
+-- [32mtest_suite/HOST set to build with rpp and OpenCV[m
+-- [32mtest_suite/HOST set to build with rpp and libsndfile [m
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /media/sampath_rpp/utilities/test_suite/HOST/build
+[ 25%] Building CXX object CMakeFiles/Tensor_host.dir/Tensor_host.cpp.o
+[ 50%] Building CXX object CMakeFiles/Tensor_host_audio.dir/Tensor_host_audio.cpp.o
+[ 75%] Linking CXX executable Tensor_host_audio
+[100%] Linking CXX executable Tensor_host
+[100%] Built target Tensor_host_audio
+[100%] Built target Tensor_host
+
+
+
+
+
+--------------------------------
+Running a New Functionality...
+--------------------------------
+./Tensor_host_audio /media/sampath_rpp/utilities/test_suite/TEST_AUDIO_FILES/eight_samples_single_channel_src1 2 0 1 0 1 8
+
+Running non_silent_region_detection
+Results for Test case: non_silent_region_detection
+PASSED!
+
+
+CPU Backend Clock Time: 4.929 ms/batch
+CPU Backend Wall Time: 1.60026 ms/batch
+
+
+------------------------------------------------------------------------------------------
+---------------------------------- Results of QA Test ----------------------------------
+
+non_silent_region_detection: PASSED
+
+-------------- Tests are run for 1 supported cases out of the 1 cases requested --------------
