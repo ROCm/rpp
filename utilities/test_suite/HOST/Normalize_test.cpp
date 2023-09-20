@@ -226,8 +226,8 @@ int main(int argc, char **argv)
             // set dims and compute strides
             srcDescriptorPtrND->dims[0] = batchSize;
             dstDescriptorPtrND->dims[0] = batchSize;
-            srcDescriptorPtrND->dims[1] = dstDescriptorPtrND->dims[1] = ((roiGenericSrcPtr[0].xyzwhdROI.roiWidth / 8) * 8) + 8;
-            srcDescriptorPtrND->dims[2] = dstDescriptorPtrND->dims[2] = roiGenericSrcPtr[0].xyzwhdROI.roiHeight;
+            srcDescriptorPtrND->dims[1] = dstDescriptorPtrND->dims[1] = roiGenericSrcPtr[0].xyzwhdROI.roiHeight;
+            srcDescriptorPtrND->dims[2] = dstDescriptorPtrND->dims[2] = roiGenericSrcPtr[0].xyzwhdROI.roiWidth;
             srcDescriptorPtrND->dims[3] = dstDescriptorPtrND->dims[3] = 16;
             compute_strides(srcDescriptorPtrND);
             compute_strides(dstDescriptorPtrND);
@@ -251,8 +251,8 @@ int main(int argc, char **argv)
                 roiGenericSrcPtr[i].xyzwhdROI.xyz.x = 0;                              // start X dim = 0
                 roiGenericSrcPtr[i].xyzwhdROI.xyz.y = 0;                              // start Y dim = 0
                 roiGenericSrcPtr[i].xyzwhdROI.xyz.z = 0;                              // sart tart Z dim = 0
-                roiGenericSrcPtr[i].xyzwhdROI.roiWidth = 1152; //std::rand() % 150;           // length in X dim
-                roiGenericSrcPtr[i].xyzwhdROI.roiHeight = 768; //std::rand() % 150;          // length in Y dim
+                roiGenericSrcPtr[i].xyzwhdROI.roiWidth = std::rand() % 150;           // length in X dim
+                roiGenericSrcPtr[i].xyzwhdROI.roiHeight = std::rand() % 150;          // length in Y dim
                 roiGenericSrcPtr[i].xyzwhdROI.roiDepth = 0;                           // length in Z dim
             }
 
@@ -261,7 +261,7 @@ int main(int argc, char **argv)
             dstDescriptorPtrND->dims[0] = batchSize;
             srcDescriptorPtrND->dims[1] = dstDescriptorPtrND->dims[1] = roiGenericSrcPtr[0].xyzwhdROI.roiHeight;
             srcDescriptorPtrND->dims[2] = dstDescriptorPtrND->dims[2] = roiGenericSrcPtr[0].xyzwhdROI.roiWidth;
-            srcDescriptorPtrND->dims[3] = dstDescriptorPtrND->dims[3] = 16; //std::rand() % 150;
+            srcDescriptorPtrND->dims[3] = dstDescriptorPtrND->dims[3] = std::rand() % 150;
             compute_strides(srcDescriptorPtrND);
             compute_strides(dstDescriptorPtrND);
             srcDescriptorPtrND->layout = RpptLayout::NHWC;
