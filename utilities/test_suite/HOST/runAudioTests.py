@@ -35,11 +35,11 @@ inFilePath = os.path.join(os.path.dirname(cwd), 'TEST_AUDIO_FILES', 'eight_sampl
 def validate_and_remove_files(path):
     if not path:  # check if a string is empty
         print("Folder path is empty.")
-        exit()
+        exit(0)
 
     elif path == "/*":  # check if the root directory is passed to the function
         print("Root folder cannot be deleted.")
-        exit()
+        exit(0)
 
     elif os.path.exists(path):  # check if the folder exists
         # Get a list of files and directories within the specified path
@@ -56,13 +56,13 @@ def validate_and_remove_files(path):
 
     else:
         print("Path is invalid or does not exist.")
-        exit()
+        exit(0)
 
 # Check if the folder is the root folder or exists, and remove the specified subfolders
 def validate_and_remove_folders(path, folder):
     if path == "/*":  # check if the root directory is passed to the function
         print("Root folder cannot be deleted.")
-        exit()
+        exit(0)
     if path and os.path.isdir(path + "/.."):  # checks if directory string is not empty and it exists
         output_folders = [folder_name for folder_name in os.listdir(path + "/..") if folder_name.startswith(folder)]
 
@@ -121,12 +121,11 @@ def rpp_test_suite_parser_and_validator():
     parser.add_argument("--input_path", type = str, default = inFilePath, help = "Path to the input folder")
     parser.add_argument("--case_start", type = int, default = 0, help = "Testing range starting case # - (0:0)")
     parser.add_argument("--case_end", type = int, default = 0, help = "Testing range ending case # - (0:0)")
-    parser.add_argument('--test_type', type = int, default = 0, help = "Type of Test - (0 = Unit tests / 1 = Performance tests)")
-    parser.add_argument('--case_list', nargs = "+", help = "List of case numbers to list", required = False)
+    parser.add_argument('--test_type', type = int, default = 0, help = "Type of Test - (0 = QA tests / 1 = Performance tests)")
+    parser.add_argument('--case_list', nargs = "+", help = "List of case numbers to test", required = False)
     parser.add_argument('--num_runs', type = int, default = 1, help = "Specifies the number of runs for running the performance tests")
     parser.add_argument('--preserve_output', type = int, default = 1, help = "preserves the output of the program - (0 = override output / 1 = preserve output )" )
     parser.add_argument('--batch_size', type = int, default = 1, help = "Specifies the batch size to use for running tests. Default is 1.")
-
     args = parser.parse_args()
 
     # check if the folder exists
@@ -154,7 +153,9 @@ def rpp_test_suite_parser_and_validator():
     elif args.preserve_output < 0 or args.preserve_output > 1:
         print("Preserve Output must be in the 0/1 (0 = override / 1 = preserve). Aborting")
         exit(0)
-
+    elif args.test_type == 0 and args.input_path != inFilePath:
+        print("Invalid input path! QA mode can run only with path:", inFilePath)
+        exit(0)
 
     if args.case_list is None:
         args.case_list = range(args.case_start, args.case_end + 1)
@@ -164,7 +165,6 @@ def rpp_test_suite_parser_and_validator():
             if int(case) != 0:
                  print("The case# must be 0!")
                  exit(0)
-
     return args
 
 args = rpp_test_suite_parser_and_validator()
@@ -188,11 +188,11 @@ if(testType == 0):
     numRuns = 1
 elif(testType == 1):
     if "--num_runs" not in sys.argv:
-        numRuns = 100#default numRuns for running performance tests
+        numRuns = 100   #default numRuns for running performance tests
     outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_PERFORMANCE_AUDIO_LOGS_HOST_' + timestamp)
 else:
-    print("Invalid TEST_TYPE specified. TEST_TYPE should be 0/1 (0 = Unittests / 1 = Performancetests)")
-    exit()
+    print("Invalid TEST_TYPE specified. TEST_TYPE should be 0/1 (0 = QA tests / 1 = Performance tests)")
+    exit(0)
 
 os.mkdir(outFilePath)
 loggingFolder = outFilePath
@@ -224,7 +224,7 @@ if testType == 0:
 else:
     for case in caseList:
         if int(case) != 0:
-            print(f"Invalid case number {case}. Case number must be 0 !")
+            print(f"Invalid case number {case}. Case number must be 0!")
             continue
 
         run_performance_test(loggingFolder, srcPath, case, numRuns, testType, bitDepth, batchSize, outFilePath)

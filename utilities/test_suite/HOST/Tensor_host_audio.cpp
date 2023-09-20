@@ -1,19 +1,30 @@
-#include <stdio.h>
-#include <dirent.h>
-#include <string.h>
-#include <iostream>
-#include "rpp.h"
+/*
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+
 #include "../rpp_test_suite_common.h"
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <time.h>
-#include <omp.h>
 #include <half/half.hpp>
 #include <fstream>
 #include <iomanip>
 #include <vector>
-#include <boost/filesystem.hpp>
 
 namespace fs = boost::filesystem;
 
@@ -144,12 +155,11 @@ void verify_non_silent_region_detection(float *detectedIndex, float *detectionLe
 int main(int argc, char **argv)
 {
     // Handle inputs
-    const int MIN_ARG_COUNT = 3;
-
+    const int MIN_ARG_COUNT = 6;
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
-        printf("\nUsage: ./Tensor_host_audio <src folder> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <case number = 0:3> <test type 0/1> <numRuns> <batchSize>\n");
+        printf("\nUsage: ./Tensor_host_audio <src folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <case number = 0:0> <test type 0/1> <numRuns> <batchSize> <dst folder>\n");
         return -1;
     }
 
@@ -204,12 +214,9 @@ int main(int argc, char **argv)
     cout << "\nRunning " << func;
 
     // Get number of audio files
-    vector<string> audioNames;
-    vector<string> audioFilePath;
-
+    vector<string> audioNames, audioFilePath;
     search_files_recursive(src, audioNames, audioFilePath, ".wav");
     noOfAudioFiles = audioNames.size();
-
     if (noOfAudioFiles < batchSize || ((noOfAudioFiles % batchSize) != 0))
     {
         replicate_last_file_to_fill_batch(audioFilePath[noOfAudioFiles - 1], audioFilePath, audioNames, audioNames[noOfAudioFiles - 1], noOfAudioFiles, batchSize);
@@ -225,14 +232,13 @@ int main(int argc, char **argv)
     // Set Height as 1 for src, dst
     maxSrcHeight = 1;
     maxDstHeight = 1;
-
     for (int cnt = 0; cnt < noOfAudioFiles ; cnt++)
     {
         SNDFILE	*infile;
         SF_INFO sfinfo;
         int	readcount;
 
-        //The SF_INFO struct must be initialized before using it
+        // The SF_INFO struct must be initialized before using it
         memset (&sfinfo, 0, sizeof (sfinfo));
         if (!(infile = sf_open (audioFilePath[cnt].c_str(), SFM_READ, &sfinfo)))
         {
@@ -240,48 +246,39 @@ int main(int argc, char **argv)
             continue;
         }
 
-        srcLengthTensor[count] = sfinfo.frames;
-        channelsTensor[count] = sfinfo.channels;
-
-        srcDims[count].width = sfinfo.frames;
-        dstDims[count].width = sfinfo.frames;
-        srcDims[count].height = 1;
-        dstDims[count].height = 1;
-
-        maxSrcWidth = std::max(maxSrcWidth, srcLengthTensor[count]);
-        maxDstWidth = std::max(maxDstWidth, srcLengthTensor[count]);
-        maxChannels = std::max(maxChannels, channelsTensor[count]);
+        srcLengthTensor[cnt] = sfinfo.frames;
+        channelsTensor[cnt] = sfinfo.channels;
+        srcDims[cnt].width = sfinfo.frames;
+        dstDims[cnt].width = sfinfo.frames;
+        srcDims[cnt].height = 1;
+        dstDims[cnt].height = 1;
 
         // Close input
         sf_close (infile);
-        count++;
-
     }
-
+    maxSrcWidth = *std::max_element(srcLengthTensor, srcLengthTensor + noOfAudioFiles);
+    maxChannels = *std::max_element(channelsTensor, channelsTensor + noOfAudioFiles);
+    maxDstWidth = maxSrcWidth;
 
     // Set numDims, offset, n/c/h/w values for src/dst
     srcDescPtr->numDims = 4;
-    dstDescPtr->numDims = 4;
-
     srcDescPtr->offsetInBytes = 0;
-    dstDescPtr->offsetInBytes = 0;
-
     srcDescPtr->n = batchSize;
-    dstDescPtr->n = batchSize;
-
     srcDescPtr->h = maxSrcHeight;
-    dstDescPtr->h = maxDstHeight;
-
     srcDescPtr->w = maxSrcWidth;
-    dstDescPtr->w = maxDstWidth;
-
     srcDescPtr->c = maxChannels;
+
+    dstDescPtr->numDims = 4;
+    dstDescPtr->offsetInBytes = 0;
+    dstDescPtr->n = batchSize;
+    dstDescPtr->h = maxDstHeight;
+    dstDescPtr->w = maxDstWidth;
     if (testCase == 3)
         dstDescPtr->c = 1;
     else
         dstDescPtr->c = maxChannels;
 
-    // Optionally set w stride as a multiple of 8 for src
+    // Optionally set w stride as a multiple of 8 for src/dst
     srcDescPtr->w = ((srcDescPtr->w / 8) * 8) + 8;
     dstDescPtr->w = ((dstDescPtr->w / 8) * 8) + 8;
 
@@ -362,13 +359,11 @@ int main(int argc, char **argv)
                     startWallTime = omp_get_wtime();
                     startCpuTime= clock();
                     if (inputBitDepth == 2)
-                    {
                         rppt_non_silent_region_detection_host(inputf32, srcDescPtr, srcLengthTensor, detectedIndex, detectionLength, cutOffDB, windowLength, referencePower, resetInterval, handle);
-                    }
                     else
                         missingFuncFlag = 1;
 
-                    if (testType == 0 && batchSize == 8)
+                    if (testType == 0)
                         verify_non_silent_region_detection(detectedIndex, detectionLength, testCaseName, batchSize, audioNames, dst);
 
                     break;
@@ -379,6 +374,7 @@ int main(int argc, char **argv)
                     break;
                 }
             }
+
             endCpuTime = clock();
             endWallTime = omp_get_wtime();
             cpuTime = ((double)(endCpuTime - startCpuTime)) / CLOCKS_PER_SEC;
@@ -388,7 +384,6 @@ int main(int argc, char **argv)
                 printf("\nThe functionality %s doesn't yet exist in RPP\n", func.c_str());
                 return -1;
             }
-
             maxWallTime = std::max(maxWallTime, wallTime);
             minWallTime = std::min(minWallTime, wallTime);
             avgWallTime += wallTime;
@@ -397,7 +392,7 @@ int main(int argc, char **argv)
 
             if (testType == 0)
             {
-                if (batchSize == 8 && testCase !=0)
+                if (batchSize == 8 && testCase != 0)
                     verify_output(outputf32, dstDescPtr, dstDims, testCaseName, audioNames, dst);
 
                 cout <<"\n\n";
@@ -415,9 +410,10 @@ int main(int argc, char **argv)
                 }
             }
         }
+
+        // Reset fileIndex to 0 for next run
         fileCnt = 0;
     }
-
     rppDestroyHost(handle);
 
     if (testType == 1)
@@ -439,6 +435,5 @@ int main(int argc, char **argv)
     free(dstDims);
     free(inputf32);
     free(outputf32);
-
     return 0;
 }
