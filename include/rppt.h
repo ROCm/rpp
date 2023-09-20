@@ -23,6 +23,14 @@ THE SOFTWARE.
 #ifndef RPPT_H
 #define RPPT_H
 
+/*!
+ * \file
+ * \brief ROCm Performance Primitives(RPP) - Tensor Operations.
+ *
+ * \defgroup group_rpp_tensor RPP Tensor Operations
+ * \brief ROCm Performance Primitives - Tensor Operations.
+ */
+
 #include "rpp.h"
 #ifdef __cplusplus
 extern "C" {
@@ -35,6 +43,7 @@ extern "C" {
 #include "rppt_tensor_geometric_augmentations.h"
 #include "rppt_tensor_morphological_operations.h"
 #include "rppt_tensor_arithmetic_operations.h"
+#include "rppt_tensor_statistical_operations.h"
 
 #ifdef __cplusplus
 }

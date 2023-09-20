@@ -26,6 +26,14 @@ THE SOFTWARE.
 //extern "C" {
 //#endif
 
+/*!
+ * \file
+ * \brief ROCm Performance Primitive(RPP) - Definitions.
+ *
+ * \defgroup group_rppdefs RPP Handle API
+ * \brief ROCm Performance Primitives - Definitions.
+ */
+
 #include <stddef.h>
 #include <cmath>
 #ifdef OCL_COMPILE
@@ -57,6 +65,9 @@ typedef double              Rpp64f;
 typedef void*               RppPtr_t;
 typedef size_t              RppSize_t;
 
+/*! \brief RPP Status type enums
+ * \ingroup group_rppdefs
+ */
 typedef enum
 {
     RPP_SUCCESS                         = 0,
@@ -70,11 +81,16 @@ typedef enum
     RPP_ERROR_INVALID_DST_CHANNELS      = -8,
     RPP_ERROR_INVALID_SRC_LAYOUT        = -9,
     RPP_ERROR_INVALID_DST_LAYOUT        = -10,
-    RPP_ERROR_INVALID_SRC_DATA_TYPE     = -11,
-    RPP_ERROR_INVALID_DST_DATA_TYPE     = -12,
-    RPP_ERROR_INVALID_ROI_TYPE          = -13
+    RPP_ERROR_INVALID_SRC_DATATYPE      = -11,
+    RPP_ERROR_INVALID_DST_DATATYPE      = -12,
+    RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE     = -13,
+    RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH  = -14,
+    RPP_ERROR_INVALID_ROI_TYPE          = -15
 } RppStatus;
 
+/*! \brief RPP rppStatus_t type enums
+ * \ingroup group_rppdefs
+ */
 typedef enum
 {
     rppStatusSuccess        = 0,
@@ -88,6 +104,9 @@ typedef enum
     rppStatusUnsupportedOp  = -8,
 } rppStatus_t;
 
+/*! \brief RPP Axis type enum
+ * \ingroup group_rppdefs
+ */
 typedef enum
 {
     RPPI_HORIZONTAL_AXIS,
@@ -95,6 +114,9 @@ typedef enum
     RPPI_BOTH_AXIS
 } RppiAxis;
 
+/*! \brief RPP Operations type enum
+ * \ingroup group_rppdefs
+ */
 typedef enum
 {
     RPP_SCALAR_OP_AND       = 1,
@@ -116,47 +138,70 @@ typedef enum
     RPP_SCALAR_OP_MAX,
 } RppOp;
 
+/*! \brief RPP BitDepth Conversion type enum
+ * \ingroup group_rppdefs
+ */
 typedef enum
 {
     U8_S8,
     S8_U8,
 } RppConvertBitDepthMode;
 
+/*! \brief RPP Point Polar
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     Rpp32f rho;
     Rpp32f theta;
 } RppPointPolar;
 
+/*! \brief RPP Layout Params
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     Rpp32u channelParam;
     Rpp32u bufferMultiplier;
 } RppLayoutParams;
 
+/*! \brief Rpp32f6
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     Rpp32f data[6];
 } Rpp32f6;
 
+/*! \brief Rpp32s24
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     Rpp32s data[24];
 } Rpp32s24;
 
+/*! \brief Rpp32f24
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     Rpp32f data[24];
 } Rpp32f24;
 
 /******************** RPPI typedefs ********************/
-
+/*! \brief RPPI Color Convert Mode type enum
+ * \ingroup group_rppdefs
+ */
 typedef enum
 {
     RGB_HSV                 = 1,
     HSV_RGB
 } RppiColorConvertMode;
 
+/*! \brief RPPI FuzzyLevel type enum
+ * \ingroup group_rppdefs
+ */
 typedef enum
 {
     RPPI_LOW,
@@ -164,24 +209,36 @@ typedef enum
     RPPI_HIGH
 } RppiFuzzyLevel;
 
+/*! \brief RPPI Channel Format type enum
+ * \ingroup group_rppdefs
+ */
 typedef enum
 {
     RPPI_CHN_PLANAR,
     RPPI_CHN_PACKED
 } RppiChnFormat;
 
+/*! \brief RPPI Size(Dimensions)
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     unsigned int width;
     unsigned int height;
 } RppiSize;
 
+/*! \brief RPPI Point
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     int x;
     int y;
 } RppiPoint;
 
+/*! \brief RPPI Rect
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     int x;
@@ -197,6 +254,9 @@ typedef struct
     int height;
 } RppiRect;
 
+/*! \brief RPPI ROI
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     unsigned int x;
@@ -205,6 +265,9 @@ typedef struct
     unsigned int roiHeight;
 } RppiROI;
 
+/*! \brief RPPI Blur type enum
+ * \ingroup group_rppdefs
+ */
 typedef enum
 {
     GAUSS3,
@@ -215,12 +278,18 @@ typedef enum
     AVG5
 } RppiBlur;
 
+/*! \brief RPPI Pad type enum
+ * \ingroup group_rppdefs
+ */
 typedef enum
 {
     ZEROPAD,
     NOPAD
 } RppiPad;
 
+/*! \brief RPPI Format type enum
+ * \ingroup group_rppdefs
+ */
 typedef enum
 {
     RGB,
@@ -229,6 +298,9 @@ typedef enum
 
 /******************** RPPT typedefs ********************/
 
+/*! \brief RPPT Datatype enum
+ * \ingroup group_rppdefs
+ */
 typedef enum
 {
     U8,
@@ -237,6 +309,9 @@ typedef enum
     I8
 } RpptDataType;
 
+/*! \brief RPPT Layout type enum
+ * \ingroup group_rppdefs
+ */
 typedef enum
 {
     NCHW,
@@ -245,18 +320,27 @@ typedef enum
     NDHWC
 } RpptLayout;
 
+/*! \brief RPPT ROI type enum
+ * \ingroup group_rppdefs
+ */
 typedef enum
 {
     LTRB,
     XYWH
 } RpptRoiType;
 
+/*! \brief RPPT Subpixel Layout type enum
+ * \ingroup group_rppdefs
+ */
 typedef enum
 {
     RGBtype,
     BGRtype
 } RpptSubpixelLayout;
 
+/*! \brief RPPT Interpolation type enum
+ * \ingroup group_rppdefs
+ */
 typedef enum
 {
     NEAREST_NEIGHBOR = 0,
@@ -267,12 +351,18 @@ typedef enum
     TRIANGULAR
 } RpptInterpolationType;
 
+/*! \brief RPPT ROI LTRB
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     RppiPoint lt, rb;
 
 } RpptRoiLtrb;
 
+/*! \brief RPPT ROI XYWH
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     RppiPoint xy;
@@ -287,6 +377,9 @@ typedef struct
 
 } RpptRoiXyzwhd;
 
+/*! \brief RPPT ROI
+ * \ingroup group_rppdefs
+ */
 typedef union
 {
     RpptRoiLtrb ltrbROI;
@@ -294,6 +387,9 @@ typedef union
 
 } RpptROI, *RpptROIPtr;
 
+/*! \brief RPPT Strides
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     Rpp32u nStride;
@@ -302,6 +398,9 @@ typedef struct
     Rpp32u wStride;
 } RpptStrides;
 
+/*! \brief RPPT Descriptors
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     RppSize_t numDims;
@@ -312,6 +411,9 @@ typedef struct
     RpptLayout layout;
 } RpptDesc, *RpptDescPtr;
 
+/*! \brief RPPT RGB
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     RppSize_t numDims;
@@ -329,6 +431,9 @@ typedef struct
     Rpp8u B;
 } RpptRGB;
 
+/*! \brief RPPT Float RGB
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     Rpp32f R;
@@ -336,29 +441,44 @@ typedef struct
     Rpp32f B;
 } RpptFloatRGB;
 
+/*! \brief RPPT Uint Vector 2D
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     Rpp32u x;
     Rpp32u y;
 } RpptUintVector2D;
 
+/*! \brief RPPT Float Vector 2D
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     Rpp32f x;
     Rpp32f y;
 } RpptFloatVector2D;
 
+/*! \brief RPPT ImagePatch
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     Rpp32u width;
     Rpp32u height;
 } RpptImagePatch, *RpptImagePatchPtr;
 
+/*! \brief RPPT Random Number Generator(Xorwow)
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {   Rpp32u x[5];
     Rpp32u counter;
 } RpptXorwowState;
 
+/*! \brief RPPT Random Number Generator(XorwowStateBoxMuller)
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {   Rpp32s x[5];
     Rpp32s counter;
@@ -366,6 +486,9 @@ typedef struct
     float boxMullerExtra;
 } RpptXorwowStateBoxMuller;
 
+/*! \brief RPPT Bilinear Neighbour Location Vector of length 8
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     Rpp32s24 srcLocsTL;
@@ -374,6 +497,9 @@ typedef struct
     Rpp32s24 srcLocsBR;
 } RpptBilinearNbhoodLocsVecLen8;
 
+/*! \brief RPPT Bilinear Neighbour Values Vector of length 8
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     Rpp32f24 srcValsTL;
@@ -382,6 +508,9 @@ typedef struct
     Rpp32f24 srcValsBR;
 } RpptBilinearNbhoodValsVecLen8;
 
+/*! \brief RPPT Filter
+ * \ingroup group_rppdefs
+ */
 typedef struct Filter
 {
     Rpp32f scale = 1.0f;
@@ -438,47 +567,74 @@ typedef struct Filter
 
 /******************** HOST memory typedefs ********************/
 
+/*! \brief RPP Float64 Memory
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     Rpp64f *doublemem;
 } memRpp64f;
 
+/*! \brief RPP Float32 Memory
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     Rpp32f *floatmem;
 } memRpp32f;
 
+/*! \brief RPP Uint32 Memory
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     Rpp32u *uintmem;
 } memRpp32u;
 
+/*! \brief RPP Int32 Memory
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     Rpp32s *intmem;
 } memRpp32s;
 
+/*! \brief RPP Uint8 Memory
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     Rpp8u *ucharmem;
 } memRpp8u;
 
+/*! \brief RPP Int8 Memory
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     Rpp8s *charmem;
 } memRpp8s;
 
+/*! \brief RPP RGB Memory
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     RpptRGB* rgbmem;
 } memRpptRGB;
 
+/*! \brief Dimensions Memory
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     Rpp32u *height;
     Rpp32u *width;
 } memSize;
 
+/*! \brief ROI Memory
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     Rpp32u *x;
@@ -487,6 +643,9 @@ typedef struct
     Rpp32u *roiWidth;
 } memROI;
 
+/*! \brief CPU Memory
+ * \ingroup group_rppdefs
+ */
 typedef struct {
     RppiSize *srcSize;
     RppiSize *dstSize;
@@ -511,43 +670,66 @@ typedef struct {
 
 /******************** OCL memory typedefs ********************/
 
+/*! \brief CL Float32 Memory
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     cl_mem floatmem;
 } clmemRpp32f;
 
-
+/*! \brief CL Float64 Memory
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     cl_mem doublemem;
 } clmemRpp64f;
 
+/*! \brief CL Uint32 Memory
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     cl_mem uintmem;
 } clmemRpp32u;
 
+/*! \brief CL Int32 Memory
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     cl_mem intmem;
 } clmemRpp32s;
 
+/*! \brief CL Uint8 Memory
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     cl_mem ucharmem;
 } clmemRpp8u;
 
+/*! \brief CL Int8 Memory
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     cl_mem charmem;
 } clmemRpp8s;
 
+/*! \brief CL Size(Dimensions)Memory
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     cl_mem height;
     cl_mem width;
 } clmemSize;
 
+/*! \brief CL ROI Memory
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     cl_mem x;
@@ -556,6 +738,9 @@ typedef struct
     cl_mem roiWidth;
 } clmemROI;
 
+/*! \brief CL GPU Memory
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     memSize csrcSize;
@@ -580,6 +765,9 @@ typedef struct
     cl_mem dstInc;
 } memGPU;
 
+/*! \brief CL Management Memory
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     memCPU mcpu;
@@ -589,48 +777,74 @@ typedef struct
 #elif defined(HIP_COMPILE)
 
 /******************** HIP memory typedefs ********************/
-
+/*! \brief HIP Float32 Memory
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     Rpp32f* floatmem;
 } hipMemRpp32f;
 
+/*! \brief HIP Float64 Memory
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     Rpp64f* doublemem;
 } hipMemRpp64f;
 
+/*! \brief HIP Uint32 Memory
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     Rpp32u* uintmem;
 } hipMemRpp32u;
 
+/*! \brief HIP Int32 Memory
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     Rpp32s* intmem;
 } hipMemRpp32s;
 
+/*! \brief HIP Uint8 Memory
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     Rpp8u* ucharmem;
 } hipMemRpp8u;
 
+/*! \brief HIP Int8 Memory
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     Rpp8s* charmem;
 } hipMemRpp8s;
 
+/*! \brief HIP RGB Memory
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     RpptRGB* rgbmem;
 } hipMemRpptRGB;
 
+/*! \brief HIP Size(Dimensions) Memory
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     Rpp32u* height;
     Rpp32u* width;
 } hipMemSize;
 
+/*! \brief HIP ROI Memory
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     Rpp32u* x;
@@ -639,6 +853,9 @@ typedef struct
     Rpp32u* roiWidth;
 } hipMemROI;
 
+/*! \brief HIP GPU Memory
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     memSize csrcSize;
@@ -666,6 +883,9 @@ typedef struct
     Rpp32u* dstInc;
 } memGPU;
 
+/*! \brief Management Memory
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     memCPU mcpu;
@@ -674,6 +894,9 @@ typedef struct
 
 #else
 
+/*! \brief Management Memory
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     memCPU mcpu;
@@ -681,6 +904,9 @@ typedef struct
 
 #endif //BACKEND
 
+/*! \brief Initialize Handle
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     RppPtr_t cpuHandle;
