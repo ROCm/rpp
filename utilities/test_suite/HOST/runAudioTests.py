@@ -83,7 +83,7 @@ def validate_path(input_path):
         raise ValueError("path " + input_path + " is not a directory.")
 
 # Get a list of log files based on a flag for preserving output
-def get_log_file_list(preserveOutput):
+def get_log_file_list():
     return [
         "../../OUTPUT_PERFORMANCE_AUDIO_LOGS_HOST_" + timestamp + "/Tensor_host_audio_raw_performance_log.txt",
     ]
@@ -248,34 +248,52 @@ print("\n-------------- " + caseInfo + " --------------")
 
 # Performance tests
 if (testType == 1):
-    log_file_list = get_log_file_list(preserveOutput)
+    log_file_list = get_log_file_list()
+
+    try:
+        f = open(log_file_list[0], "r")
+        print("\n\n\nOpened log file -> "+ log_file_list[0])
+    except IOError:
+        print("Skipping file -> "+ log_file_list[0])
+        exit(0)
 
     # Initialize data structures to store the parsed data
-    functionality = []
+    functions = []
     max_wall_times = []
     min_wall_times = []
     avg_wall_times = []
+    prev_line = ""
+    funcCount = 0
 
-    # Read the log file
-    with open(log_file_list[0], 'r') as file:
-        for line in file:
-            if line.startswith("Running"):
-                functionality.append(line.strip())
-            elif line.startswith("max,min,avg wall times"):
-                parts = line.strip().split("=")
-                wall_times = parts[1].strip().split(',')
-                max_wall_times.append(float(wall_times[0]))
-                min_wall_times.append(float(wall_times[1]))
-                avg_wall_times.append(float(wall_times[2]))
+    for line in f:
+            if "max,min,avg wall times in ms/batch" in line:
+                split_word_start = "Running "
+                split_word_end = " " + str(numRuns)
+                prev_line = prev_line.partition(split_word_start)[2].partition(split_word_end)[0]
+                if prev_line not in functions:
+                    functions.append(prev_line)
+                    split_word_start = "max,min,avg wall times in ms/batch = "
+                    split_word_end = "\n"
+                    stats = line.partition(split_word_start)[2].partition(split_word_end)[0].split(",")
+                    max_wall_times.append(float(stats[0]))
+                    min_wall_times.append(float(stats[1]))
+                    avg_wall_times.append(float(stats[2]))
+                    funcCount += 1
+
+            if line != "\n":
+                prev_line = line
+
+    # Print log lengths
+    print("Functionalities - "+ str(funcCount))
 
     # Print the summary in a well-formatted table
-    print("\nFunctionality\tMax (ms/batch)\tMin (ms/batch)\tAvg (ms/batch)\n")
+    print("\n\nFunctionality\t\t\t\t\t\tnumRuns\t\tmax(ms/batch)\t\tmin(ms/batch)\t\tavg(ms/batch)\n")
 
-    if len(functionality) > 0:
-        max_func_length = max(len(func) for func in functionality)
+    if len(functions) > 0:
+        max_func_length = max(len(func) for func in functions)
 
-        for i, func in enumerate(functionality):
-            print("{:<{width}}\t{:<15.6f}\t{:<15.6f}\t{:<15.6f}".format(
-                func.replace("Running ", ""), max_wall_times[i], min_wall_times[i], avg_wall_times[i], width=max_func_length))
+        for i, func in enumerate(functions):
+            print("{func}\t\t\t\t{numRuns}\t{:<15.6f}\t{:<15.6f}\t{:<15.6f}".format(
+                max_wall_times[i], min_wall_times[i], avg_wall_times[i], func=func, numRuns=numRuns))
     else:
         print("No functionality data found in the log file.")

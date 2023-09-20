@@ -70,7 +70,6 @@ int main(int argc, char **argv)
     int maxChannels = 0;
     int maxSrcWidth = 0, maxSrcHeight = 0;
     int maxDstWidth = 0, maxDstHeight = 0;
-    unsigned long long count = 0;
     unsigned long long iBufferSize = 0;
     unsigned long long oBufferSize = 0;
     static int noOfAudioFiles = 0;
@@ -79,9 +78,7 @@ int main(int argc, char **argv)
     char src1[1000];
     strcpy(src1, src);
     strcat(src1, "/");
-
     string func = funcName;
-    cout << "\nRunning " << func;
 
     // Get number of audio files
     vector<string> audioNames, audioFilePath;
@@ -94,12 +91,12 @@ int main(int argc, char **argv)
     }
 
     // Initialize the AudioPatch for source
-    Rpp32s *srcLengthTensor = (Rpp32s *) calloc(noOfAudioFiles, sizeof(Rpp32s));
-    Rpp32s *channelsTensor = (Rpp32s *) calloc(noOfAudioFiles, sizeof(Rpp32s));
-    RpptImagePatch *srcDims = (RpptImagePatch *) calloc(noOfAudioFiles, sizeof(RpptImagePatch));
-    RpptImagePatch *dstDims = (RpptImagePatch *) calloc(noOfAudioFiles, sizeof(RpptImagePatch));
+    Rpp32s *srcLengthTensor = (Rpp32s *) calloc(batchSize, sizeof(Rpp32s));
+    Rpp32s *channelsTensor = (Rpp32s *) calloc(batchSize, sizeof(Rpp32s));
+    RpptImagePatch *srcDims = (RpptImagePatch *) calloc(batchSize, sizeof(RpptImagePatch));
+    RpptImagePatch *dstDims = (RpptImagePatch *) calloc(batchSize, sizeof(RpptImagePatch));
 
-    // Set Height as 1 for src, dst
+    // Find max audio dimensions in the input dataset
     maxSrcHeight = 1;
     maxDstHeight = 1;
     for (int cnt = 0; cnt < noOfAudioFiles ; cnt++)
@@ -116,18 +113,12 @@ int main(int argc, char **argv)
             continue;
         }
 
-        srcLengthTensor[cnt] = sfinfo.frames;
-        channelsTensor[cnt] = sfinfo.channels;
-        srcDims[cnt].width = sfinfo.frames;
-        dstDims[cnt].width = sfinfo.frames;
-        srcDims[cnt].height = 1;
-        dstDims[cnt].height = 1;
+        maxSrcWidth = std::max(maxSrcWidth, static_cast<int>(sfinfo.frames));
+        maxChannels = std::max(maxChannels, static_cast<int>(sfinfo.channels));
 
         // Close input
         sf_close (infile);
     }
-    maxSrcWidth = *std::max_element(srcLengthTensor, srcLengthTensor + noOfAudioFiles);
-    maxChannels = *std::max_element(channelsTensor, channelsTensor + noOfAudioFiles);
     maxDstWidth = maxSrcWidth;
 
     // Set numDims, offset, n/c/h/w values for src/dst
@@ -178,6 +169,7 @@ int main(int argc, char **argv)
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0;
     double cpuTime, wallTime;
     string testCaseName;
+    printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
     for (int perfRunCount = 0; perfRunCount < numRuns; perfRunCount++)
     {
         for (int iterCount = 0; iterCount < noOfIterations; iterCount++)
@@ -199,6 +191,13 @@ int main(int argc, char **argv)
                     continue;
                 }
 
+                srcLengthTensor[cnt] = sfinfo.frames;
+                channelsTensor[cnt] = sfinfo.channels;
+                srcDims[cnt].width = sfinfo.frames;
+                dstDims[cnt].width = sfinfo.frames;
+                srcDims[cnt].height = 1;
+                dstDims[cnt].height = 1;
+
                 int bufferLength = sfinfo.frames * sfinfo.channels;
                 if (inputBitDepth == 2)
                 {
@@ -207,7 +206,6 @@ int main(int argc, char **argv)
                         cout << "F32 Unable to read audio file completely " << std::endl;
                 }
                 fileCnt++;
-                count++;
 
                 // Close input
                 sf_close (infile);
