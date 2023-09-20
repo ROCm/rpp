@@ -24,40 +24,26 @@ THE SOFTWARE.
 #include "rpp_cpu_simd.hpp"
 #include "rpp_cpu_common.hpp"
 
-void compute_strides(Rpp32u *strides, Rpp32u *shape, Rpp32u nDim)
-{
-    if (nDim > 0)
-    {
-        uint64_t v = 1;
-        for (int i = nDim - 1; i > 0; i--)
-        {
-            strides[i] = v;
-            v *= shape[i];
-        }
-        strides[0] = v;
-    }
-}
-
 void normalize_3D_tensor_axis3(Rpp32f *srcPtr, RpptGenericDescPtr srcGenericDescPtr, Rpp32f *dstPtr, RpptGenericDescPtr dstGenericDescPtr,
-                         Rpp32f *meanPtr, Rpp32f *stdDevPtr, Rpp32f scale, Rpp32f shift, Rpp32u *dims, Rpp32u *paramStride)
+                         Rpp32f *meanPtr, Rpp32f *stdDevPtr, Rpp32f scale, Rpp32f shift, Rpp32u *paramStride)
 {
     Rpp32f *srcPtrTemp = srcPtr;
     Rpp32f *dstPtrTemp = dstPtr;
     Rpp32s paramIdx = 0;
-    Rpp32f multiplier[dims[2]];
+    Rpp32f multiplier[srcGenericDescPtr->dims[3]];
 
-    for(int i = 0; i < dims[2]; i++)
+    for(int i = 0; i < srcGenericDescPtr->dims[3]; i++)
         multiplier[i] = scale / stdDevPtr[i];
 
-    for(Rpp32u i = 0; i < dims[0]; i++)
+    for(Rpp32u i = 0; i < srcGenericDescPtr->dims[1]; i++)
     {
         Rpp32f *srcPtrRow = srcPtrTemp;
         Rpp32f *dstPtrRow = dstPtrTemp;
-        for(Rpp32u j = 0; j < dims[1]; j++)
+        for(Rpp32u j = 0; j < srcGenericDescPtr->dims[2]; j++)
         {
             Rpp32f *srcPtrRowTemp = srcPtrRow;
             Rpp32f *dstPtrRowTemp = dstPtrRow;
-            for(Rpp32u k = 0; k < dims[2]; k++)
+            for(Rpp32u k = 0; k < srcGenericDescPtr->dims[3]; k++)
             {
                 *dstPtrRowTemp++ = (*srcPtrRowTemp++ - meanPtr[paramIdx]) * multiplier[paramIdx] + shift;
                 paramIdx += paramStride[1];
@@ -72,16 +58,16 @@ void normalize_3D_tensor_axis3(Rpp32f *srcPtr, RpptGenericDescPtr srcGenericDesc
 }
 
 void normalize_3D_tensor_avx_axis3(Rpp32f *srcPtr, RpptGenericDescPtr srcGenericDescPtr, Rpp32f *dstPtr, RpptGenericDescPtr dstGenericDescPtr,
-                                   Rpp32f *meanPtr, Rpp32f *stdDevPtr, Rpp32f scale, Rpp32f shift, Rpp32u *dims, Rpp32u *paramStride)
+                                   Rpp32f *meanPtr, Rpp32f *stdDevPtr, Rpp32f scale, Rpp32f shift, Rpp32u *paramStride)
 {
     Rpp32f *srcPtrTemp = srcPtr;
     Rpp32f *dstPtrTemp = dstPtr;
     Rpp32s paramIdx = 0;
     Rpp32u vectorIncrement = 8;
-    Rpp32u bufferLength = dims[2];
+    Rpp32u bufferLength = srcGenericDescPtr->dims[3];
     Rpp32u alignedLength = (bufferLength / 16) * 16;
-    Rpp32u OuterDim = dims[0];
-    Rpp32u numRows = dims[1];
+    Rpp32u OuterDim = srcGenericDescPtr->dims[1];
+    Rpp32u numRows = srcGenericDescPtr->dims[2];
 
     // set shift, mean and stddev
     __m256 pShift = _mm256_set1_ps(shift);
@@ -128,36 +114,35 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
                                                 Rpp32f *stdDevTensor,
                                                 Rpp32f scale,
                                                 Rpp32f shift,
-                                                Rpp32u *roiTensor,
+                                                RpptROI3DPtr roiGenericPtrSrc,
+                                                RpptRoi3DType roiType,
                                                 RppLayoutParams layoutParams,
                                                 rpp::Handle& handle)
 {
 	Rpp32u numThreads = handle.GetNumThreads();
     Rpp32u nDim = srcGenericDescPtr->numDims;
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
-
-    Rpp32u *srcStridesTensor = (Rpp32u *)calloc(nDim * batchSize, sizeof(int));
+    RpptROI3D roiDefault;
+    if(nDim == 3)
+        roiDefault = {0, 0, 0, (Rpp32s)srcGenericDescPtr->dims[2], (Rpp32s)srcGenericDescPtr->dims[1], 0};
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
 	for(int batchCount = 0; batchCount < batchSize; batchCount++)
 	{
-        Rpp32f *srcPtrTemp, *dstPtrTemp, *meanTemp, *stdDevTemp;
+        RpptROI3D roi;
+        RpptROI3DPtr roiPtrInput = &roiGenericPtrSrc[batchCount];
+        compute_roi3D_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
+
+        Rpp32f *srcPtrTemp, *dstPtrTemp;
         srcPtrTemp = srcPtr + batchCount * srcGenericDescPtr->strides[0];
         dstPtrTemp = dstPtr + batchCount * dstGenericDescPtr->strides[0];
-        meanTemp = meanTensor + batchCount * dstGenericDescPtr->strides[0];
-        stdDevTemp = stdDevTensor + batchCount * dstGenericDescPtr->strides[0];
-
-        Rpp32u *roi = roiTensor + batchCount * nDim;
-        Rpp32u *srcStrides = srcStridesTensor + batchCount * nDim;
-
-        // compute output strides
-        compute_strides(srcStrides, roi, nDim);
 
         Rpp32u paramStride[nDim];
+        Rpp32f *srcPtrChannel;
         if(nDim == 3)
         {
-            if (axis_mask == 3) // Normalize across Channels
+            if (axis_mask == 1) // Normalize across Channels
             {
                 paramStride[0] = paramStride[1] = 1;
                 paramStride[2] = 0;
@@ -166,19 +151,20 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
             {
                 //TODO
             }
-            else if (axis_mask == 1) // Normalize across Height
+            else if (axis_mask == 3) // Normalize across Height
             {
                 //TODO
             }
 
-            if((axis_mask == 3) && (roi[2] == 16))
-                normalize_3D_tensor_avx_axis3(srcPtrTemp, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTemp, stdDevTemp, scale, shift, roi, paramStride);
-            else if(axis_mask == 3)
-                normalize_3D_tensor_axis3(srcPtrTemp, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTemp, stdDevTemp, scale, shift, roi, paramStride);
+            srcPtrChannel = srcPtrTemp + (roi.xyzwhdROI.xyz.y * srcGenericDescPtr->strides[1]) + (roi.xyzwhdROI.xyz.x * layoutParams.bufferMultiplier);
+
+            if((axis_mask == 1) && (srcGenericDescPtr->dims[3] == 16))
+                normalize_3D_tensor_avx_axis3(srcPtrChannel, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTensor, stdDevTensor, scale, shift, paramStride);
+            else if(axis_mask == 1)
+                normalize_3D_tensor_axis3(srcPtrChannel, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTensor, stdDevTensor, scale, shift, paramStride);
 
         }
     }
-    free(srcStridesTensor);
 
     return RPP_SUCCESS;
 }
