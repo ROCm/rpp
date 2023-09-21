@@ -366,7 +366,7 @@ typedef struct
 
 } RpptRoiLtrb;
 
-/*! \brief RPPT ROI XYWH
+/*! \brief RPPT ROI LTFRBB
  * \ingroup group_rppdefs
  */
 typedef struct
@@ -375,6 +375,9 @@ typedef struct
 
 } RpptRoiLtfrbb;
 
+/*! \brief RPPT ROI XYWH
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     RppiPoint xy;
@@ -382,7 +385,9 @@ typedef struct
 
 } RpptRoiXywh;
 
-
+/*! \brief RPPT ROI XYWHZWHD
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     RppiPoint3D xyz;
@@ -400,6 +405,9 @@ typedef union
 
 } RpptROI, *RpptROIPtr;
 
+/*! \brief RPPT ROI 3D
+ * \ingroup group_rppdefs
+ */
 typedef union
 {
     RpptRoiLtfrbb ltfrbbROI;
