@@ -253,6 +253,88 @@ __global__ void gaussian_noise_pln3_pkd3_hip_tensor(T *srcPtr,
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &pix_f24);
 }
 
+__global__ void gaussian_noise_3d_ncdhw_tensor(float *srcPtr,
+                                               uint3 srcStridesCDH,
+                                               float *dstPtr,
+                                               uint3 dstStridesCDH,
+                                               int channels,
+                                               float2 gaussianNoise3dParams_f2,
+                                               RpptXorwowStateBoxMuller *xorwowInitialStatePtr,
+                                               uint *xorwowSeedStream,
+                                               RpptRoiXyzwhd *roiGenericSrc)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;        // W - inner most dim vectorized
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;              // H - second to inner
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;              // D - outer most dim
+
+    if ((id_z >= roiGenericSrc->roiDepth) || (id_y >= roiGenericSrc->roiHeight) || (id_x >= roiGenericSrc->roiWidth))
+    {
+        return;
+    }
+
+    uint srcIdx = ((id_z + roiGenericSrc->xyz.z) * srcStridesCDH.y) + ((id_y + roiGenericSrc->xyz.y) * srcStridesCDH.z) + (id_x + roiGenericSrc->xyz.x);
+    uint dstIdx = (id_z * dstStridesCDH.y) + (id_y * dstStridesCDH.z) + id_x;
+    uint seedStreamIdx = (id_z * dstStridesCDH.y) + (id_y * dstStridesCDH.z) + (hipBlockIdx_x * hipBlockDim_x) + hipThreadIdx_x;
+    // uint seedStreamIdx = (id_y * dstStridesCDH.z) + (hipBlockIdx_x * hipBlockDim_x) + hipThreadIdx_x;
+
+    RpptXorwowStateBoxMuller xorwowState;
+    uint xorwowSeed = xorwowSeedStream[seedStreamIdx % SEED_STREAM_MAX_SIZE];
+    xorwowState.x[0] = xorwowInitialStatePtr->x[0] + xorwowSeed;
+    xorwowState.x[1] = xorwowInitialStatePtr->x[1] + xorwowSeed;
+    xorwowState.x[2] = xorwowInitialStatePtr->x[2] + xorwowSeed;
+    xorwowState.x[3] = xorwowInitialStatePtr->x[3] + xorwowSeed;
+    xorwowState.x[4] = xorwowInitialStatePtr->x[4] + xorwowSeed;
+    xorwowState.counter = xorwowInitialStatePtr->counter + xorwowSeed;
+
+    d_float8 val_f8;
+    for(int c = 0; c < channels; c++)
+    {
+        rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &val_f8);
+        gaussian_noise_8_hip_compute(&val_f8, &xorwowState, gaussianNoise3dParams_f2.x, gaussianNoise3dParams_f2.y);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &val_f8);
+        srcIdx += srcStridesCDH.x;
+        dstIdx += dstStridesCDH.x;
+    }
+}
+
+__global__ void gaussian_noise_3d_ndhwc_tensor(float *srcPtr,
+                                               uint2 srcStridesDH,
+                                               float *dstPtr,
+                                               uint2 dstStridesDH,
+                                               float2 gaussianNoise3dParams_f2,
+                                               RpptXorwowStateBoxMuller *xorwowInitialStatePtr,
+                                               uint *xorwowSeedStream,
+                                               RpptRoiXyzwhd *roiGenericSrc)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;        // WC - inner most dim vectorized
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;              // H - second to inner
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;              // D - outer most dim
+
+    if ((id_z >= roiGenericSrc->roiDepth) || (id_y >= roiGenericSrc->roiHeight) || (id_x >= roiGenericSrc->roiWidth))
+    {
+        return;
+    }
+
+    uint srcIdx = ((id_z + roiGenericSrc->xyz.z) * srcStridesDH.x) + ((id_y + roiGenericSrc->xyz.y) * srcStridesDH.y) + (id_x + roiGenericSrc->xyz.x) * 3;
+    uint dstIdx = (id_z * dstStridesDH.x) + (id_y * dstStridesDH.y) + id_x * 3;
+    uint seedStreamIdx = (id_z * dstStridesDH.x) + (id_y * dstStridesDH.y) + (hipBlockIdx_x * hipBlockDim_x) + hipThreadIdx_x;
+    // uint seedStreamIdx = (id_y * dstStridesDH.y) + (hipBlockIdx_x * hipBlockDim_x) + hipThreadIdx_x;
+
+    RpptXorwowStateBoxMuller xorwowState;
+    uint xorwowSeed = xorwowSeedStream[seedStreamIdx % SEED_STREAM_MAX_SIZE];
+    xorwowState.x[0] = xorwowInitialStatePtr->x[0] + xorwowSeed;
+    xorwowState.x[1] = xorwowInitialStatePtr->x[1] + xorwowSeed;
+    xorwowState.x[2] = xorwowInitialStatePtr->x[2] + xorwowSeed;
+    xorwowState.x[3] = xorwowInitialStatePtr->x[3] + xorwowSeed;
+    xorwowState.x[4] = xorwowInitialStatePtr->x[4] + xorwowSeed;
+    xorwowState.counter = xorwowInitialStatePtr->counter + xorwowSeed;
+
+    d_float24 val_f24;
+    rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &val_f24);
+    gaussian_noise_24_hip_compute(&val_f24, &xorwowState, gaussianNoise3dParams_f2.x, gaussianNoise3dParams_f2.y);
+    rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &val_f24);
+}
+
 template <typename T>
 RppStatus hip_exec_gaussian_noise_tensor(T *srcPtr,
                                          RpptDescPtr srcDescPtr,
@@ -346,6 +428,77 @@ RppStatus hip_exec_gaussian_noise_tensor(T *srcPtr,
                                xorwowInitialStatePtr,
                                xorwowSeedStream,
                                roiTensorPtrSrc);
+        }
+    }
+
+    return RPP_SUCCESS;
+}
+
+RppStatus hip_exec_gaussian_noise_3d_tensor(Rpp32f *srcPtr,
+                                            RpptGenericDescPtr srcGenericDescPtr,
+                                            Rpp32f *dstPtr,
+                                            RpptGenericDescPtr dstGenericDescPtr,
+                                            RpptXorwowStateBoxMuller *xorwowInitialStatePtr,
+                                            Rpp32f *meanTensor,
+                                            Rpp32f *stdDevTensor,
+                                            RpptRoiXyzwhd *roiGenericPtrSrc,
+                                            rpp::Handle& handle)
+{
+    Rpp32u *xorwowSeedStream;
+    xorwowSeedStream = (Rpp32u *)&xorwowInitialStatePtr[1];
+    hipMemcpy(xorwowSeedStream, rngSeedStream4050, SEED_STREAM_MAX_SIZE * sizeof(Rpp32u), hipMemcpyHostToDevice);
+
+    if (dstGenericDescPtr->layout == RpptLayout::NCDHW)
+    {
+        int localThreads_x = LOCAL_THREADS_X;
+        int localThreads_y = LOCAL_THREADS_Y;
+        int localThreads_z = LOCAL_THREADS_Z;
+        int globalThreads_x = (dstGenericDescPtr->strides[3] + 7) >> 3; // W - width (x direction) - vectorized for 8 element loads/stores per channel
+        int globalThreads_y = dstGenericDescPtr->dims[3];               // H - height (y direction)
+        int globalThreads_z = dstGenericDescPtr->dims[2];  
+
+        for(int batchCount = 0; batchCount < dstGenericDescPtr->dims[0]; batchCount++)
+        {
+            hipLaunchKernelGGL(gaussian_noise_3d_ncdhw_tensor,
+                               dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                               dim3(localThreads_x, localThreads_y, localThreads_z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr + (batchCount * srcGenericDescPtr->strides[0]),
+                               make_uint3(srcGenericDescPtr->strides[1], srcGenericDescPtr->strides[2], srcGenericDescPtr->strides[3]),
+                               dstPtr + (batchCount * dstGenericDescPtr->strides[0]),
+                               make_uint3(dstGenericDescPtr->strides[1], dstGenericDescPtr->strides[2], dstGenericDescPtr->strides[3]),
+                               dstGenericDescPtr->dims[1],
+                               make_float2(meanTensor[batchCount], stdDevTensor[batchCount]),
+                               xorwowInitialStatePtr,
+                               xorwowSeedStream,
+                               &roiGenericPtrSrc[batchCount]);
+        }
+    }
+    else if (dstGenericDescPtr->layout == RpptLayout::NDHWC)
+    {
+        int localThreads_x = LOCAL_THREADS_X;
+        int localThreads_y = LOCAL_THREADS_Y;
+        int localThreads_z = LOCAL_THREADS_Z;
+        int globalThreads_x = (dstGenericDescPtr->strides[2] / 3 + 7) >> 3; // W - width (x direction) - vectorized for 8 element loads/stores per channel
+        int globalThreads_y = dstGenericDescPtr->dims[2];               // H - height (y direction)
+        int globalThreads_z = dstGenericDescPtr->dims[1];               // D - depth (z direction)
+
+        for(int batchCount = 0; batchCount < dstGenericDescPtr->dims[0]; batchCount++)
+        {
+            hipLaunchKernelGGL(gaussian_noise_3d_ndhwc_tensor,
+                               dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
+                               dim3(localThreads_x, localThreads_y, localThreads_z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr + (batchCount * srcGenericDescPtr->strides[0]),
+                               make_uint2(srcGenericDescPtr->strides[1], srcGenericDescPtr->strides[2]),
+                               dstPtr + (batchCount * dstGenericDescPtr->strides[0]),
+                               make_uint2(dstGenericDescPtr->strides[1], dstGenericDescPtr->strides[2]),
+                               make_float2(meanTensor[batchCount], stdDevTensor[batchCount]),
+                               xorwowInitialStatePtr,
+                               xorwowSeedStream,
+                               &roiGenericPtrSrc[batchCount]);
         }
     }
 

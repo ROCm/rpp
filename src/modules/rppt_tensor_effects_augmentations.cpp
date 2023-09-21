@@ -1107,6 +1107,57 @@ RppStatus rppt_gaussian_noise_gpu(RppPtr_t srcPtr,
 #endif // backend
 }
 
+RppStatus rppt_gaussian_noise_3d_gpu(RppPtr_t srcPtr,
+                                     RpptGenericDescPtr srcGenericDescPtr,
+                                     RppPtr_t dstPtr,
+                                     RpptGenericDescPtr dstGenericDescPtr,
+                                     Rpp32f *meanTensor,
+                                     Rpp32f *stdDevTensor,
+                                     Rpp32u seed,
+                                     RpptRoiXyzwhd *roiGenericPtrSrc,
+                                     rppHandle_t rppHandle)
+{
+#ifdef HIP_COMPILE
+    if (srcGenericDescPtr->dataType != RpptDataType::F32) return RPP_ERROR_INVALID_SRC_DATATYPE;
+    if (dstGenericDescPtr->dataType != RpptDataType::F32) return RPP_ERROR_INVALID_DST_DATATYPE;
+    if ((srcGenericDescPtr->layout != RpptLayout::NCDHW) && (srcGenericDescPtr->layout != RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
+    if ((dstGenericDescPtr->layout != RpptLayout::NCDHW) && (dstGenericDescPtr->layout != RpptLayout::NDHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
+    if (srcGenericDescPtr->layout != dstGenericDescPtr->layout) return RPP_ERROR_INVALID_ARGUMENTS;
+
+    // Rpp32u paramIndex = 0;
+    // copy_param_float(meanTensor, rpp::deref(rppHandle), paramIndex++);
+    // copy_param_float(stdDevTensor, rpp::deref(rppHandle), paramIndex++);
+
+    RpptXorwowStateBoxMuller xorwowInitialState;
+    xorwowInitialState.x[0] = 0x75BCD15 + seed;
+    xorwowInitialState.x[1] = 0x159A55E5 + seed;
+    xorwowInitialState.x[2] = 0x1F123BB5 + seed;
+    xorwowInitialState.x[3] = 0x5491333 + seed;
+    xorwowInitialState.x[4] = 0x583F19 + seed;
+    xorwowInitialState.counter = 0x64F0C9 + seed;
+    xorwowInitialState.boxMullerFlag = 0;
+    xorwowInitialState.boxMullerExtra = 0.0f;
+
+    RpptXorwowStateBoxMuller *d_xorwowInitialStatePtr;
+    d_xorwowInitialStatePtr = (RpptXorwowStateBoxMuller *) rpp::deref(rppHandle).GetInitHandle()->mem.mgpu.maskArr.floatmem;
+    hipMemcpy(d_xorwowInitialStatePtr, &xorwowInitialState, sizeof(RpptXorwowStateBoxMuller), hipMemcpyHostToDevice);
+
+    hip_exec_gaussian_noise_3d_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes),
+                                      srcGenericDescPtr,
+                                      (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
+                                      dstGenericDescPtr,
+                                      d_xorwowInitialStatePtr,
+                                      meanTensor,
+                                      stdDevTensor,
+                                      roiGenericPtrSrc,
+                                      rpp::deref(rppHandle));
+
+    return RPP_SUCCESS;
+#elif defined(OCL_COMPILE)
+    return RPP_ERROR_NOT_IMPLEMENTED;
+#endif // backend
+}
+
 /******************** non_linear_blend ********************/
 
 RppStatus rppt_non_linear_blend_gpu(RppPtr_t srcPtr1,
