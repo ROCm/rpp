@@ -38,7 +38,9 @@ extern "C" {
 #endif
 
 /*! \brief  Fmadd augmentation HOST
- * \details fmadd_scalar for a generic 4D tensor
+ * \details This function performs the fmadd operation on a batch of 4D tensors.
+ *          It multiplies each element of the source tensor by a corresponding element in the 'mulTensor',
+ *          adds a corresponding element from the 'addTensor', and stores the result in the destination tensor.
  * \param [in] srcPtr source tensor memory
  * \param[in] srcGenericDescPtr source tensor descriptor
  * \param[out] dstPtr destination tensor memory

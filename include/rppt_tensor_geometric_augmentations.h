@@ -342,7 +342,9 @@ RppStatus rppt_rotate_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstP
 #endif // GPU_SUPPORT
 
 /*! \brief Slice augmentation HOST
- * \details Slice augmentation for a generic 4D tensor
+ * \details This function performs slice augmentation on a generic 4D tensor.
+ *          Slice augmentation involves selecting a region of interest (ROI) from the source tensor
+ *          and copying it to the destination tensor.
  * \param[in] srcPtr source tensor memory
  * \param[in] srcGenericDescPtr source tensor descriptor
  * \param[out] dstPtr destination tensor memory
