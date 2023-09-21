@@ -292,7 +292,12 @@ else:
                     if not output and process.poll() is not None:
                         break
                     print(output.strip())
-                    log_file.write(output)
+                    if "Running" in output or "max,min,avg wall times" in output:
+                        cleaned_output = ''.join(char for char in output if 32 <= ord(char) <= 126)  # Remove control characters
+                        cleaned_output = cleaned_output.strip()  # Remove leading/trailing whitespace
+                        log_file.write(cleaned_output + '\n')
+                        if "max,min,avg wall times" in output:
+                            log_file.write("\n")
 
         print("------------------------------------------------------------------------------------------")
 

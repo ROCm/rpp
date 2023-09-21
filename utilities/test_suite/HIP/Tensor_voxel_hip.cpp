@@ -267,64 +267,66 @@ int main(int argc, char * argv[])
                 {
                     compare_output(outputF32, oBufferSize, testCaseName, layoutType, descriptorPtr3D, (RpptRoiXyzwhd *)roiGenericSrcPtr, dst_path);
                 }
-
-                for(int batchCount = 0; batchCount < batchSize; batchCount++)
+                else
                 {
-                    int index = iterCount * batchSize + batchCount;
-                    Rpp32f *outputTemp = outputF32 + batchCount * descriptorPtr3D->strides[0];
-                    for(int i = 0; i < numChannels; i++) // temporary changes to process pln3
+                    for(int batchCount = 0; batchCount < batchSize; batchCount++)
                     {
-                        int xyFrameSize = niftiHeaderTemp[batchCount].dim[1] * niftiHeaderTemp[batchCount].dim[2];
-                        int xyFrameSizeROI = roiGenericSrcPtr[batchCount].roiWidth * roiGenericSrcPtr[batchCount].roiHeight;
-
-                        uint dataSize = niftiHeaderTemp[batchCount].dim[1] * niftiHeaderTemp[batchCount].dim[2] * niftiHeaderTemp[batchCount].dim[3];
-                        uchar *niftiDataU8 = (uchar *) malloc(dataSize * sizeof(uchar));
-                        uchar *outputBufferOpenCV = (uchar *)calloc(xyFrameSizeROI, sizeof(uchar));
-
-                        // Convert RpptDataType::F32 strided buffer to default NIFTI_DATATYPE unstrided buffer
-                        Rpp64u increment;
-                        if (descriptorPtr3D->layout == RpptLayout::NCDHW)
-                            increment = (Rpp64u)descriptorPtr3D->strides[1];
-                        else
-                            increment = 1;
-                        convert_output_Rpp32f_to_niftitype_generic(outputTemp + i * increment, descriptorPtr3D, niftiDataArray[batchCount], &niftiHeaderTemp[batchCount]);
-                        NIFTI_DATATYPE min = niftiDataArray[batchCount][0];
-                        NIFTI_DATATYPE max = niftiDataArray[batchCount][0];
-                        for (int i = 0; i < dataSize; i++)
+                        int index = iterCount * batchSize + batchCount;
+                        Rpp32f *outputTemp = outputF32 + batchCount * descriptorPtr3D->strides[0];
+                        for(int i = 0; i < numChannels; i++) // temporary changes to process pln3
                         {
-                            min = std::min(min, niftiDataArray[batchCount][i]);
-                            max = std::max(max, niftiDataArray[batchCount][i]);
-                        }
-                        Rpp32f multiplier = 255.0f / (max - min);
-                        for (int i = 0; i < dataSize; i++)
-                            niftiDataU8[i] = (uchar)((niftiDataArray[batchCount][i] - min) * multiplier);
+                            int xyFrameSize = niftiHeaderTemp[batchCount].dim[1] * niftiHeaderTemp[batchCount].dim[2];
+                            int xyFrameSizeROI = roiGenericSrcPtr[batchCount].roiWidth * roiGenericSrcPtr[batchCount].roiHeight;
 
-                        uchar *niftiDataU8Temp = niftiDataU8;
-                        for (int zPlane = roiGenericSrcPtr[batchCount].xyz.z; zPlane < roiGenericSrcPtr[batchCount].xyz.z + roiGenericSrcPtr[batchCount].roiDepth; zPlane++)
-                        {
-                            write_image_from_nifti_opencv(niftiDataU8Temp, niftiHeaderTemp[batchCount].dim[1], (RpptRoiXyzwhd *)roiGenericSrcPtr, outputBufferOpenCV, zPlane, i, batchCount, dst_path, testCaseName, index);
-                            niftiDataU8Temp += xyFrameSize;
-                        }
+                            uint dataSize = niftiHeaderTemp[batchCount].dim[1] * niftiHeaderTemp[batchCount].dim[2] * niftiHeaderTemp[batchCount].dim[3];
+                            uchar *niftiDataU8 = (uchar *) malloc(dataSize * sizeof(uchar));
+                            uchar *outputBufferOpenCV = (uchar *)calloc(xyFrameSizeROI, sizeof(uchar));
 
-                        write_nifti_file(&niftiHeaderTemp[batchCount], niftiDataArray[batchCount], index, i, dst_path, testCaseName);
+                            // Convert RpptDataType::F32 strided buffer to default NIFTI_DATATYPE unstrided buffer
+                            Rpp64u increment;
+                            if (descriptorPtr3D->layout == RpptLayout::NCDHW)
+                                increment = (Rpp64u)descriptorPtr3D->strides[1];
+                            else
+                                increment = 1;
+                            convert_output_Rpp32f_to_niftitype_generic(outputTemp + i * increment, descriptorPtr3D, niftiDataArray[batchCount], &niftiHeaderTemp[batchCount]);
+                            NIFTI_DATATYPE min = niftiDataArray[batchCount][0];
+                            NIFTI_DATATYPE max = niftiDataArray[batchCount][0];
+                            for (int i = 0; i < dataSize; i++)
+                            {
+                                min = std::min(min, niftiDataArray[batchCount][i]);
+                                max = std::max(max, niftiDataArray[batchCount][i]);
+                            }
+                            Rpp32f multiplier = 255.0f / (max - min);
+                            for (int i = 0; i < dataSize; i++)
+                                niftiDataU8[i] = (uchar)((niftiDataArray[batchCount][i] - min) * multiplier);
 
-                        if(i == 0)
-                        {
-                            std::string command = "convert -delay 10 -loop 0 " + std::string(dst_path) + "/" + testCaseName + "_nifti_" + std::to_string(index) + "_zPlane_chn_0_*.jpg " + std::string(dst_path) + "/" + testCaseName + "_niftiOutput_" + std::to_string(index) + "_chn_" + std::to_string(i) + ".gif";
-                            system(command.c_str());
+                            uchar *niftiDataU8Temp = niftiDataU8;
+                            for (int zPlane = roiGenericSrcPtr[batchCount].xyz.z; zPlane < roiGenericSrcPtr[batchCount].xyz.z + roiGenericSrcPtr[batchCount].roiDepth; zPlane++)
+                            {
+                                write_image_from_nifti_opencv(niftiDataU8Temp, niftiHeaderTemp[batchCount].dim[1], (RpptRoiXyzwhd *)roiGenericSrcPtr, outputBufferOpenCV, zPlane, i, batchCount, dst_path, testCaseName, index);
+                                niftiDataU8Temp += xyFrameSize;
+                            }
+
+                            write_nifti_file(&niftiHeaderTemp[batchCount], niftiDataArray[batchCount], index, i, dst_path, testCaseName);
+
+                            if(i == 0)
+                            {
+                                std::string command = "convert -delay 10 -loop 0 " + std::string(dst_path) + "/" + testCaseName + "_nifti_" + std::to_string(index) + "_zPlane_chn_0_*.jpg " + std::string(dst_path) + "/" + testCaseName + "_niftiOutput_" + std::to_string(index) + "_chn_" + std::to_string(i) + ".gif";
+                                system(command.c_str());
+                            }
+                            if(i == 1)
+                            {
+                                std::string command = "convert -delay 10 -loop 0 " + std::string(dst_path) + "/" + testCaseName + "_nifti_" + std::to_string(index) + "_zPlane_chn_1_*.jpg " + std::string(dst_path) + "/" + testCaseName + "_niftiOutput_" + std::to_string(index) + "_chn_" + std::to_string(i) + ".gif";
+                                system(command.c_str());
+                            }
+                            if(i == 2)
+                            {
+                                std::string command = "convert -delay 10 -loop 0 " + std::string(dst_path) + "/" + testCaseName + "_nifti_" + std::to_string(index) + "_zPlane_chn_2_*.jpg " + std::string(dst_path) + "/" + testCaseName + "_niftiOutput_" + std::to_string(index) + "_chn_" + std::to_string(i) + ".gif";
+                                system(command.c_str());
+                            }
+                            free(niftiDataU8);
+                            free(outputBufferOpenCV);
                         }
-                        if(i == 1)
-                        {
-                            std::string command = "convert -delay 10 -loop 0 " + std::string(dst_path) + "/" + testCaseName + "_nifti_" + std::to_string(index) + "_zPlane_chn_1_*.jpg " + std::string(dst_path) + "/" + testCaseName + "_niftiOutput_" + std::to_string(index) + "_chn_" + std::to_string(i) + ".gif";
-                            system(command.c_str());
-                        }
-                        if(i == 2)
-                        {
-                            std::string command = "convert -delay 10 -loop 0 " + std::string(dst_path) + "/" + testCaseName + "_nifti_" + std::to_string(index) + "_zPlane_chn_2_*.jpg " + std::string(dst_path) + "/" + testCaseName + "_niftiOutput_" + std::to_string(index) + "_chn_" + std::to_string(i) + ".gif";
-                            system(command.c_str());
-                        }
-                        free(niftiDataU8);
-                        free(outputBufferOpenCV);
                     }
                 }
             }
