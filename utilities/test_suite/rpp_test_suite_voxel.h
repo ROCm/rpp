@@ -250,7 +250,6 @@ inline void read_nifti_data_file(char* const data_file, nifti_1_header *niftiHea
 inline void write_nifti_file(nifti_1_header *niftiHeader, NIFTI_DATATYPE *niftiData, int batchCount, int chn, string dstPath, string func)
 {
     nifti_1_header hdr = *niftiHeader;
-    // nifti1_extender pad = {0,0,0,0};
     FILE *fp;
     int ret, i;
 
@@ -270,8 +269,6 @@ inline void write_nifti_file(nifti_1_header *niftiHeader, NIFTI_DATATYPE *niftiD
         exit(1);
     }
 
-    // for nii files, write extender pad and image data
-    // ret = fwrite(&pad, 4, 1, fp);
     if (ret != 1)
     {
         fprintf(stdout, "\nError writing header file extension pad %s\n",niiOutputFile);
@@ -305,36 +302,7 @@ inline void write_image_from_nifti_opencv(uchar *niftiDataXYFrameU8, int niftiHe
     string fileName = dst_path + "/" + func +"_nifti_" + std::to_string(index) + "_zPlane_chn_"+ std::to_string(Channel) + "_" + std::to_string(zPlane) + ".jpg";
     cv::imwrite(fileName, matOutputImage);
     imageCount++;
-
-    // nifti_1_header hdr = *niftiHeader;
-    // int xyFrameSize = hdr.dim[1] * hdr.dim[2];
-    // uchar *niftiDataU8Temp = &niftiDataU8[xyFrameSize * zPlane];
-    // cv::Mat matOutputImage = cv::Mat(hdr.dim[2], hdr.dim[1], CV_8UC1, niftiDataU8Temp);
-    // string fileName = "nifti_single_zPlane_" + std::to_string(zPlane) + ".jpg";
-    // cv::imwrite(fileName, matOutputImage);
 }
-
-// TODO: Fix issue in writing video
-// inline void write_video_from_nifti_opencv(uchar *niftiDataU8, nifti_1_header *niftiHeader, int zPlaneMin, int zPlaneMax)
-// {
-//     nifti_1_header hdr = *niftiHeader;
-//     int xyFrameSize = hdr.dim[1] * hdr.dim[2];
-//     uchar *niftiDataU8Temp = &niftiDataU8[xyFrameSize * zPlaneMin];
-
-//     //  opencv video writer create
-//     cv::Size frameSize(hdr.dim[1], hdr.dim[2]);
-//     cv::VideoWriter videoOutput("niftiVideoOutput.mp4", cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), 15, frameSize);
-
-//     for (int zPlane = zPlaneMin; zPlane < zPlaneMax; zPlane++)
-//     {
-//         cv::Mat matOutputImageU8 = cv::Mat(hdr.dim[2], hdr.dim[1], CV_8UC1, niftiDataU8Temp);
-//         videoOutput.write(matOutputImageU8);
-//         niftiDataU8Temp += xyFrameSize;
-//     }
-
-//     //  opencv video writer release
-//     videoOutput.release();
-// }
 
 // Convert default NIFTI_DATATYPE unstrided buffer to RpptDataType::F32 strided buffer
 template<typename T>

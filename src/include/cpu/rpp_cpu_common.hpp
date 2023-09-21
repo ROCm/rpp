@@ -222,6 +222,11 @@ inline Rpp32f rpp_host_math_exp_lim256approx(Rpp32f x)
   return x;
 }
 
+inline void rpp_host_math_fmadd8(__m256 *p, __m256 *pFmaddParams)
+{
+    p[0] = _mm256_fmadd_ps(p[0], pFmaddParams[0], pFmaddParams[1]);    // fmadd adjustment
+}
+
 template<Rpp32s STREAM_SIZE>
 inline void rpp_host_rng_xorwow_f32_initialize_multiseed_stream(RpptXorwowState *xorwowInitialState, Rpp32u seed)
 {
@@ -2564,11 +2569,6 @@ inline void compute_brightness_8_host(__m128 *p, __m128 *pBrightnessParams)
 inline void compute_brightness_4_host(__m128 *p, __m128 *pBrightnessParams)
 {
     p[0] = _mm_fmadd_ps(p[0], pBrightnessParams[0], pBrightnessParams[1]);    // brightness adjustment
-}
-
-inline void compute_fmadd_8_host(__m256 *p, __m256 *pFmaddParams)
-{
-    p[0] = _mm256_fmadd_ps(p[0], pFmaddParams[0], pFmaddParams[1]);    // fmadd adjustment
 }
 
 inline void compute_exposure_48_host(__m256 *p, __m256 &pExposureParam)

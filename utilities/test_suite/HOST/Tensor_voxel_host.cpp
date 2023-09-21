@@ -161,29 +161,29 @@ int main(int argc, char * argv[])
             for(int i = 0; i < batchSize; i++)
             {
                 // option 1 - test using roi as the whole 3D image - not sliced (example for 240 x 240 x 155 x 1)
-                roiGenericSrcPtr[i].xyzwhdROI.xyz.x = 0;                              // start X dim = 0
-                roiGenericSrcPtr[i].xyzwhdROI.xyz.y = 0;                              // start Y dim = 0
-                roiGenericSrcPtr[i].xyzwhdROI.xyz.z = 0;                              // start Z dim = 0
-                roiGenericSrcPtr[i].xyzwhdROI.roiWidth = niftiHeaderTemp[i].dim[1];          // length in X dim
-                roiGenericSrcPtr[i].xyzwhdROI.roiHeight = niftiHeaderTemp[i].dim[2];         // length in Y dim
-                roiGenericSrcPtr[i].xyzwhdROI.roiDepth = niftiHeaderTemp[i].dim[3];          // length in Z dim
+                roiGenericSrcPtr[i].xyzwhdROI.xyz.x = 0;                                    // start X dim = 0
+                roiGenericSrcPtr[i].xyzwhdROI.xyz.y = 0;                                    // start Y dim = 0
+                roiGenericSrcPtr[i].xyzwhdROI.xyz.z = 0;                                    // start Z dim = 0
+                roiGenericSrcPtr[i].xyzwhdROI.roiWidth = niftiHeaderTemp[i].dim[1];         // length in X dim
+                roiGenericSrcPtr[i].xyzwhdROI.roiHeight = niftiHeaderTemp[i].dim[2];        // length in Y dim
+                roiGenericSrcPtr[i].xyzwhdROI.roiDepth = niftiHeaderTemp[i].dim[3];         // length in Z dim
                 // option 2 - test using roi as a smaller 3D tensor slice - sliced in X, Y and Z dims (example for 240 x 240 x 155 x 1)
-                // roiGenericSrcPtr[i].xyzwhdROI.xyz.x = niftiHeader.dim[1] / 4;         // start X dim = 60
+                // roiGenericSrcPtr[i].xyzwhdROI.xyz.x = niftiHeader.dim[1] / 4;            // start X dim = 60
                 // roiGenericSrcPtr[i].xyzwhdROI.xyz.y = niftiHeader[i].dim[2] / 4;         // start Y dim = 60
                 // roiGenericSrcPtr[i].xyzwhdROI.xyz.z = niftiHeader[i].dim[3] / 3;         // start Z dim = 51
                 // roiGenericSrcPtr[i].xyzwhdROI.roiWidth = niftiHeader[i].dim[1] / 2;      // length in X dim = 120
                 // roiGenericSrcPtr[i].xyzwhdROI.roiHeight = niftiHeader[i].dim[2] / 2;     // length in Y dim = 120
                 // roiGenericSrcPtr[i].xyzwhdROI.roiDepth = niftiHeader[i].dim[3] / 3;      // length in Z dim = 51
                 // option 3 - test using roi as a smaller 3D tensor slice - sliced in only Z dim (example for 240 x 240 x 155 x 1)
-                // roiGenericSrcPtr[i].xyzwhdROI.xyz.x = 0;                              // start X dim = 0
-                // roiGenericSrcPtr[i].xyzwhdROI.xyz.y = 0;                              // start Y dim = 0
+                // roiGenericSrcPtr[i].xyzwhdROI.xyz.x = 0;                                 // start X dim = 0
+                // roiGenericSrcPtr[i].xyzwhdROI.xyz.y = 0;                                 // start Y dim = 0
                 // roiGenericSrcPtr[i].xyzwhdROI.xyz.z = niftiHeader[i].dim[3] / 3;         // start Z dim = 51
                 // roiGenericSrcPtr[i].xyzwhdROI.roiWidth = niftiHeader[i].dim[1];          // length in X dim = 240
                 // roiGenericSrcPtr[i].xyzwhdROI.roiHeight = niftiHeader[i].dim[2];         // length in Y dim = 240
                 // roiGenericSrcPtr[i].xyzwhdROI.roiDepth = niftiHeader[i].dim[3] / 3;      // length in Z dim = 51
                 // option 4 - test using roi as a smaller 3D tensor slice - sliced in only X and Z dim (example for 240 x 240 x 155 x 1)
                 // roiGenericSrcPtr[i].xyzwhdROI.xyz.x = niftiHeader[i].dim[1] / 5;         // start X dim = 48
-                // roiGenericSrcPtr[i].xyzwhdROI.xyz.y = 0;                              // start Y dim = 0
+                // roiGenericSrcPtr[i].xyzwhdROI.xyz.y = 0;                                 // start Y dim = 0
                 // roiGenericSrcPtr[i].xyzwhdROI.xyz.z = niftiHeader[i].dim[3] / 3;         // start Z dim = 51
                 // roiGenericSrcPtr[i].xyzwhdROI.roiWidth = niftiHeader[i].dim[1] * 3 / 5;  // length in X dim = 144
                 // roiGenericSrcPtr[i].xyzwhdROI.roiHeight = niftiHeader[i].dim[2];         // length in Y dim = 240
@@ -236,7 +236,7 @@ int main(int argc, char * argv[])
                 printf("\nThe functionality doesn't yet exist in RPP\n");
                 return -1;
             }
- 
+
             if(testType == 0)
             {
                 cout << "\n\nCPU Backend Wall Time: " << wallTime <<" ms per nifti file"<< endl;
