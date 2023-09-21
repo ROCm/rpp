@@ -69,12 +69,12 @@ if (OpenCV_FOUND)
 
     add_executable(Tensor_host Tensor_host.cpp)
     # add_executable(Tensor_voxel_host Tensor_voxel_host.cpp)
-    add_executable(Normalize_test Normalize_test.cpp)
+    add_executable(Tensor_normalize_host Tensor_normalize_host.cpp)
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++14")
     target_link_libraries(Tensor_host ${OpenCV_LIBS} -lturbojpeg -lrpp pthread ${LINK_LIBRARY_LIST})
     # target_link_libraries(Tensor_voxel_host ${OpenCV_LIBS} -lturbojpeg -lrpp pthread ${LINK_LIBRARY_LIST}  ${NIFTI_PACKAGE_PREFIX}NIFTI::${NIFTI_PACKAGE_PREFIX}niftiio)
-    target_link_libraries(Normalize_test ${OpenCV_LIBS} -lturbojpeg -lrpp pthread ${LINK_LIBRARY_LIST})
+    target_link_libraries(Tensor_normalize_host ${OpenCV_LIBS} -lturbojpeg -lrpp pthread ${LINK_LIBRARY_LIST})
 
 
 else()

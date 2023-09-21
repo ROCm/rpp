@@ -45,7 +45,7 @@ void normalize_3D_tensor_axis3(Rpp32f *srcPtr, RpptGenericDescPtr srcGenericDesc
             Rpp32f *dstPtrRowTemp = dstPtrRow;
             for(Rpp32u k = 0; k < srcGenericDescPtr->dims[3]; k++)
             {
-                *dstPtrRowTemp++ = (*srcPtrRowTemp++ - meanPtr[paramIdx]) * multiplier[paramIdx] + shift;
+                *dstPtrRowTemp++ = ((*srcPtrRowTemp++ - meanPtr[paramIdx]) * multiplier[paramIdx]) + shift;
                 paramIdx += paramStride[1];
             }
             paramIdx = (!paramStride[2]) ? 0 : paramIdx + paramStride[2];
@@ -58,16 +58,11 @@ void normalize_3D_tensor_axis3(Rpp32f *srcPtr, RpptGenericDescPtr srcGenericDesc
 }
 
 void normalize_3D_tensor_avx_axis3(Rpp32f *srcPtr, RpptGenericDescPtr srcGenericDescPtr, Rpp32f *dstPtr, RpptGenericDescPtr dstGenericDescPtr,
-                                   Rpp32f *meanPtr, Rpp32f *stdDevPtr, Rpp32f scale, Rpp32f shift, Rpp32u *paramStride)
+                                   Rpp32f *meanPtr, Rpp32f *stdDevPtr, Rpp32f scale, Rpp32f shift, Rpp32u *paramStride, Rpp32u bufferLength)
 {
-    Rpp32f *srcPtrTemp = srcPtr;
-    Rpp32f *dstPtrTemp = dstPtr;
     Rpp32s paramIdx = 0;
-    Rpp32u vectorIncrement = 8;
-    Rpp32u bufferLength = srcGenericDescPtr->dims[3];
-    Rpp32u alignedLength = (bufferLength / 16) * 16;
+    Rpp32u alignedLength = (bufferLength / 48) * 48;
     Rpp32u OuterDim = srcGenericDescPtr->dims[1];
-    Rpp32u numRows = srcGenericDescPtr->dims[2];
 
     // set shift, mean and stddev
     __m256 pShift = _mm256_set1_ps(shift);
@@ -81,26 +76,43 @@ void normalize_3D_tensor_avx_axis3(Rpp32f *srcPtr, RpptGenericDescPtr srcGeneric
 
     for(Rpp32u i = 0; i < OuterDim; i++)
     {
-        Rpp32f *srcPtrTempOuterDim = srcPtrTemp + i * srcGenericDescPtr->strides[1];
-        Rpp32f *dstPtrTempOuterDim = dstPtrTemp + i * dstGenericDescPtr->strides[1];
+        Rpp32f *srcPtrTemp = srcPtr + i * srcGenericDescPtr->strides[1];
+        Rpp32f *dstPtrTemp = dstPtr + i * dstGenericDescPtr->strides[1];
 
-        for(Rpp32u j = 0; j < numRows; j++)
+        Rpp32u vectorLoopCount = 0;
+        for(; vectorLoopCount < alignedLength ; vectorLoopCount += 48)
         {
-            Rpp32f *srcPtrTempRow = srcPtrTempOuterDim + j * srcGenericDescPtr->strides[2];
-            Rpp32f *dstPtrTempRow = dstPtrTempOuterDim + j * dstGenericDescPtr->strides[2];
-
-            Rpp32u vectorLoopCount = 0;
-            for(; vectorLoopCount < alignedLength ; vectorLoopCount += 16)
-            {
-                __m256 pSrc1 = _mm256_loadu_ps(srcPtrTempRow);
-                __m256 pSrc2 = _mm256_loadu_ps(srcPtrTempRow + 8);
-                __m256 pDst1 = _mm256_add_ps(_mm256_mul_ps(_mm256_sub_ps(pSrc1, pMean1), pMultiplier1), pShift);
-                __m256 pDst2 = _mm256_add_ps(_mm256_mul_ps(_mm256_sub_ps(pSrc2, pMean2), pMultiplier2), pShift);
-                _mm256_storeu_ps(dstPtrTempRow, pDst1);
-                _mm256_storeu_ps(dstPtrTempRow + 8, pDst2);
-                srcPtrTempRow += 16;
-                dstPtrTempRow += 16;
-            }
+            __m256 pSrc1 = _mm256_loadu_ps(srcPtrTemp);
+            __m256 pSrc2 = _mm256_loadu_ps(srcPtrTemp + 8);
+            __m256 pSrc3 = _mm256_loadu_ps(srcPtrTemp + 16);
+            __m256 pSrc4 = _mm256_loadu_ps(srcPtrTemp + 24);
+            __m256 pSrc5 = _mm256_loadu_ps(srcPtrTemp + 32);
+            __m256 pSrc6 = _mm256_loadu_ps(srcPtrTemp + 40);
+            __m256 pDst1 = _mm256_fmadd_ps(_mm256_sub_ps(pSrc1, pMean1), pMultiplier1, pShift);
+            __m256 pDst2 = _mm256_fmadd_ps(_mm256_sub_ps(pSrc2, pMean2), pMultiplier2, pShift);
+            __m256 pDst3 = _mm256_fmadd_ps(_mm256_sub_ps(pSrc3, pMean1), pMultiplier1, pShift);
+            __m256 pDst4 = _mm256_fmadd_ps(_mm256_sub_ps(pSrc4, pMean2), pMultiplier2, pShift);
+            __m256 pDst5 = _mm256_fmadd_ps(_mm256_sub_ps(pSrc5, pMean1), pMultiplier1, pShift);
+            __m256 pDst6 = _mm256_fmadd_ps(_mm256_sub_ps(pSrc6, pMean2), pMultiplier2, pShift);
+            _mm256_storeu_ps(dstPtrTemp, pDst1);
+            _mm256_storeu_ps(dstPtrTemp + 8, pDst2);
+            _mm256_storeu_ps(dstPtrTemp + 16, pDst3);
+            _mm256_storeu_ps(dstPtrTemp + 24, pDst4);
+            _mm256_storeu_ps(dstPtrTemp + 32, pDst5);
+            _mm256_storeu_ps(dstPtrTemp + 40, pDst6);
+            srcPtrTemp += 48;
+            dstPtrTemp += 48;
+        }
+        for(; vectorLoopCount < bufferLength ; vectorLoopCount += 16)
+        {
+            __m256 pSrc1 = _mm256_loadu_ps(srcPtrTemp);
+            __m256 pSrc2 = _mm256_loadu_ps(srcPtrTemp + 8);
+            __m256 pDst1 = _mm256_fmadd_ps(_mm256_sub_ps(pSrc1, pMean1), pMultiplier1, pShift);
+            __m256 pDst2 = _mm256_fmadd_ps(_mm256_sub_ps(pSrc2, pMean2), pMultiplier2, pShift);
+            _mm256_storeu_ps(dstPtrTemp, pDst1);
+            _mm256_storeu_ps(dstPtrTemp + 8, pDst2);
+            srcPtrTemp += 16;
+            dstPtrTemp += 16;
         }
     }
 }
@@ -159,7 +171,7 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
             srcPtrChannel = srcPtrTemp + (roi.xyzwhdROI.xyz.y * srcGenericDescPtr->strides[1]) + (roi.xyzwhdROI.xyz.x * layoutParams.bufferMultiplier);
 
             if((axis_mask == 1) && (srcGenericDescPtr->dims[3] == 16))
-                normalize_3D_tensor_avx_axis3(srcPtrChannel, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTensor, stdDevTensor, scale, shift, paramStride);
+                normalize_3D_tensor_avx_axis3(srcPtrChannel, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTensor, stdDevTensor, scale, shift, paramStride, roi.xyzwhdROI.roiWidth * layoutParams.bufferMultiplier);
             else if(axis_mask == 1)
                 normalize_3D_tensor_axis3(srcPtrChannel, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTensor, stdDevTensor, scale, shift, paramStride);
 
