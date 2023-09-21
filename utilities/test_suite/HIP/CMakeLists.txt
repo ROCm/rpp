@@ -41,7 +41,7 @@ endif()
 find_package(hip QUIET)
 find_package(OpenCV QUIET)
 find_package(TurboJpeg QUIET)
-find_package(NIFTI 2.1.0 CONFIG REQUIRED)
+find_package(NIFTI QUIET)
 
 # BOOST
 set(BOOST_COMPONENTS filesystem system)
@@ -72,10 +72,22 @@ if (hip_FOUND AND OpenCV_FOUND)
     link_directories(${ROCM_PATH}/lib /usr/local/lib)
 
     add_executable(Tensor_hip Tensor_hip.cpp)
-    add_executable(Tensor_voxel_hip Tensor_voxel_hip.cpp)
+
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGPU_SUPPORT=1 -DRPP_BACKEND_HIP=1 -std=gnu++14")
     target_link_libraries(Tensor_hip ${OpenCV_LIBS} -lturbojpeg -lrpp ${hip_LIBRARIES} pthread ${LINK_LIBRARY_LIST} hip::device)
-    target_link_libraries(Tensor_voxel_hip ${OpenCV_LIBS} -lturbojpeg -lrpp ${hip_LIBRARIES} pthread ${LINK_LIBRARY_LIST} hip::device ${NIFTI_PACKAGE_PREFIX}NIFTI::${NIFTI_PACKAGE_PREFIX}niftiio)
 else()
     message("-- ${Yellow}Error: OpenCV and hip must be installed to install ${PROJECT_NAME} successfully!${ColourReset}")
+endif()
+
+if(NIFTI_FOUND AND OpenCV_FOUND)
+    message("-- ${Green}${PROJECT_NAME} set to build with rpp and libniftiio and OpenCV ${ColourReset}")
+    include_directories(${OpenCV_INCLUDE_DIRS})
+    include_directories(${ROCM_PATH}/include ${ROCM_PATH}/include/rpp /usr/local/include)
+    link_directories(${ROCM_PATH}/lib /usr/local/lib)
+
+    add_executable(Tensor_voxel_hip Tensor_voxel_hip.cpp)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++14")
+    target_link_libraries(Tensor_voxel_hip ${OpenCV_LIBS} -lturbojpeg -lrpp ${hip_LIBRARIES} pthread ${LINK_LIBRARY_LIST} hip::device ${NIFTI_PACKAGE_PREFIX}NIFTI::${NIFTI_PACKAGE_PREFIX}niftiio)
+else()
+    message("-- ${Yellow}Error: libniftiio must be installed to install ${PROJECT_NAME} successfully!${ColourReset}")
 endif()

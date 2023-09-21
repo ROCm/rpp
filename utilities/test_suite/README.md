@@ -93,9 +93,9 @@ The test suite can be run with the following command:
 python runTests_voxel.py --header_path <header_path> --data_path <data_path> --case_start <case_start> --case_end <case_end> --test_type <test_type> --profiling <profiling>
 
 ## Modes of operation (Rpp voxel Test Suite)
--   QA mode - Tolerance based PASS/FAIL tests for RPP HIP/HOST functionalities checking pixelwise match between C/SSE/AVX/HIP versions after comparison to preset golden outputs. 
+-   QA mode - Tolerance based PASS/FAIL tests for RPP HIP/HOST functionalities checking pixelwise match between C/SSE/AVX/HIP versions after comparison to preset golden outputs.
 ``` python
-python runTests_voxel.py --case_start 0 --case_end 4 --test_type 0 --qa_mode 1
+python runTests_voxel.py --case_start 0 --case_end 4 --test_type 0 --qa_mode 1 --batch_size 3
 ```
 -   Unit test mode - Unit tests allowing users to pass a path to a folder containing nii fikes, to execute the desired functionality and variant once, report RPP execution wall time, save and view output images, gifs and nii files
 ``` python

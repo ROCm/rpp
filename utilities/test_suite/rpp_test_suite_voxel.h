@@ -250,6 +250,7 @@ inline void read_nifti_data_file(char* const data_file, nifti_1_header *niftiHea
 inline void write_nifti_file(nifti_1_header *niftiHeader, NIFTI_DATATYPE *niftiData, int batchCount, int chn, string dstPath, string func)
 {
     nifti_1_header hdr = *niftiHeader;
+    //nifti1_extender pad = {0,0,0,0};
     FILE *fp;
     int ret, i;
 
@@ -269,6 +270,8 @@ inline void write_nifti_file(nifti_1_header *niftiHeader, NIFTI_DATATYPE *niftiD
         exit(1);
     }
 
+    // for nii files, write extender pad and image data
+    //ret = fwrite(&pad, 4, 1, fp);
     if (ret != 1)
     {
         fprintf(stdout, "\nError writing header file extension pad %s\n",niiOutputFile);
