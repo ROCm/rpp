@@ -173,7 +173,6 @@ int main(int argc, char **argv)
     RpptInterpolationType interpolationType = RpptInterpolationType::BILINEAR;
     std::string interpolationTypeName = "";
     std::string noiseTypeName = "";
-
     if (kernelSizeCase)
     {
         char additionalParam_char[2];
@@ -254,6 +253,8 @@ int main(int argc, char **argv)
         outputChannels = 1;
     Rpp32u srcOffsetInBytes = (kernelSizeCase) ? (12 * (additionalParam / 2)) : 0;
     Rpp32u dstOffsetInBytes = 0;
+
+    set_max_dimensions(imageNamesPath, maxHeight, maxWidth);
 
     set_max_dimensions(imageNamesPath, maxHeight, maxWidth);
 

@@ -385,7 +385,7 @@ typedef struct
 
 } RpptRoiXywh;
 
-/*! \brief RPPT ROI XYWHZWHD
+/*! \brief RPPT ROI XYZWHD
  * \ingroup group_rppdefs
  */
 typedef struct
@@ -412,7 +412,7 @@ typedef union
 {
     RpptRoiLtfrbb ltfrbbROI;
     RpptRoiXyzwhd xyzwhdROI;
-    
+
 } RpptROI3D, *RpptROI3DPtr;
 
 /*! \brief RPPT Strides
@@ -434,9 +434,9 @@ typedef struct
     RppSize_t numDims;
     Rpp32u offsetInBytes;
     RpptDataType dataType;
-    RpptLayout layout;
     Rpp32u n, c, h, w;
     RpptStrides strides;
+    RpptLayout layout;
 } RpptDesc, *RpptDescPtr;
 
 /*! \brief RPPT RGB

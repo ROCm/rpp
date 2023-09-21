@@ -366,6 +366,39 @@ inline void  set_src_and_dst_roi(vector<string>::const_iterator imagePathsStart,
     tjDestroy(tjInstance);
 }
 
+// sets generic descriptor dimensions and strides of src/dst
+inline void set_generic_descriptor(RpptGenericDescPtr descriptorPtr3D, int noOfImages, int maxX, int maxY, int maxZ, int numChannels, int offsetInBytes, int layoutType)
+{
+    descriptorPtr3D->numDims = 5;
+    descriptorPtr3D->offsetInBytes = offsetInBytes;
+    descriptorPtr3D->dataType = RpptDataType::F32;
+
+    if (layoutType == 0)
+    {
+        descriptorPtr3D->layout = RpptLayout::NCDHW;
+        descriptorPtr3D->dims[0] = noOfImages;
+        descriptorPtr3D->dims[1] = numChannels;
+        descriptorPtr3D->dims[2] = maxZ;
+        descriptorPtr3D->dims[3] = maxY;
+        descriptorPtr3D->dims[4] = maxX;
+    }
+    else if (layoutType == 1)
+    {
+        descriptorPtr3D->layout = RpptLayout::NDHWC;
+        descriptorPtr3D->dims[0] = noOfImages;
+        descriptorPtr3D->dims[1] = maxZ;
+        descriptorPtr3D->dims[2] = maxY;
+        descriptorPtr3D->dims[3] = maxX;
+        descriptorPtr3D->dims[4] = numChannels;
+    }
+
+    descriptorPtr3D->strides[0] = descriptorPtr3D->dims[1] * descriptorPtr3D->dims[2] * descriptorPtr3D->dims[3] * descriptorPtr3D->dims[4];
+    descriptorPtr3D->strides[1] = descriptorPtr3D->dims[2] * descriptorPtr3D->dims[3] * descriptorPtr3D->dims[4];
+    descriptorPtr3D->strides[2] = descriptorPtr3D->dims[3] * descriptorPtr3D->dims[4];
+    descriptorPtr3D->strides[3] = descriptorPtr3D->dims[4];
+    descriptorPtr3D->strides[4] = 1;
+}
+
 // sets descriptor dimensions and strides of src/dst
 inline void set_descriptor_dims_and_strides(RpptDescPtr descPtr, int noOfImages, int maxHeight, int maxWidth, int numChannels, int offsetInBytes)
 {
