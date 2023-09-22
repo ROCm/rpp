@@ -34,6 +34,12 @@ typedef half Rpp16f;
 // Include this header file to use functions from libsndfile
 #include <sndfile.h>
 
+std::map<int, string> audioAugmentationMap =
+{
+    {0, "non_silent_region_detection"},
+    {1, "to_decibels"},
+};
+
 void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dstDims, string testCase, vector<string> audioNames, string dst)
 {
     fstream refFile;

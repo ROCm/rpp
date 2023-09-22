@@ -29,7 +29,7 @@ int main(int argc, char **argv)
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
-        printf("\nUsage: ./Tensor_host_audio <src folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <case number = 0:0> <test type 0/1> <numRuns> <batchSize> <dst folder>\n");
+        printf("\nUsage: ./Tensor_host_audio <src folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <case number = 0:1> <test type 0/1> <numRuns> <batchSize> <dst folder>\n");
         return -1;
     }
 
@@ -233,6 +233,28 @@ int main(int argc, char **argv)
 
                     if (testType == 0)
                         verify_non_silent_region_detection(detectedIndex, detectionLength, testCaseName, batchSize, audioNames, dst);
+
+                    break;
+                }
+                case 1:
+                {
+                    testCaseName = "to_decibels";
+                    Rpp32f cutOffDB = std::log(1e-20);
+                    Rpp32f multiplier = std::log(10);
+                    Rpp32f referenceMagnitude = 1.0f;
+
+                    for (i = 0; i < noOfAudioFiles; i++)
+                    {
+                        srcDims[i].height = srcLengthTensor[i];
+                        srcDims[i].width = 1;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 2)
+                        rppt_to_decibels_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcDims, cutOffDB, multiplier, referenceMagnitude, handle);
+                    else
+                        missingFuncFlag = 1;
 
                     break;
                 }
