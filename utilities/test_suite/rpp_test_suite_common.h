@@ -75,11 +75,6 @@ std::map<int, string> augmentationMap =
     {87, "tensor_sum"}
 };
 
-std::map<int, string> audioAugmentationMap =
-{
-    {0, "non_silent_region_detection"},
-};
-
 template <typename T>
 inline T validate_pixel_range(T pixel)
 {
