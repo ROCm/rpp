@@ -64,23 +64,23 @@ RppStatus rppt_non_silent_region_detection_host(RppPtr_t srcPtr, RpptDescPtr src
 
 RppStatus rppt_to_decibels_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr srcDims, Rpp32f cutOffDB, Rpp32f multiplier, Rpp32f referenceMagnitude, rppHandle_t rppHandle);
 
-/******************** pre_emphasis_filter ********************/
+/*! \brief Pre Emphasis Filter augmentation HOST
+* \details Pre Emphasis Filter augmentation for audio data
+* \param[in] srcPtr source tensor memory
+* \param[in] srcDescPtr source tensor descriptor
+* \param[out] dstPtr destination tensor memory
+* \param[in] dstDescPtr destination tensor descriptor
+* \param[in] srcLengthTensor source audio buffer length (tensor of batchSize values)
+* \param[in] coeffTensor preemphasis coefficient (tensor of batchSize values)
+* \param[in] borderType border value policy
+* \param[in] rppHandle HIP-handle for "_gpu" variants and Host-handle for "_host" variants
+ * \return <tt> RppStatus enum</tt>.
+ * \returns RPP_SUCCESS <tt>\ref RppStatus</tt> on successful completion.
+ * Else return RPP_ERROR
+ * \ingroup group_tensor_audio
+ */
 
-// Pre Emphasis Filter augmentation for 1D audio buffer
-
-// *param[in] srcPtr source tensor memory
-// *param[in] srcDescPtr source tensor descriptor
-// *param[out] dstPtr destination tensor memory
-// *param[in] dstDescPtr destination tensor descriptor
-// *param[in] srcSizeTensor source audio buffer length
-// *param[in] coeffTensor preemphasis coefficient
-// *param[in] borderType border value policy
-// *param[in] rppHandle HIP-handle for "_gpu" variants and Host-handle for "_host" variants
-// *returns a  RppStatus enumeration.
-// *retval RPP_SUCCESS : successful completion
-// *retval RPP_ERROR : Error
-
-RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcSizeTensor, Rpp32f *coeffTensor, RpptAudioBorderType borderType, rppHandle_t rppHandle);
+RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcLengthTensor, Rpp32f *coeffTensor, RpptAudioBorderType borderType, rppHandle_t rppHandle);
 
 #ifdef __cplusplus
 }
