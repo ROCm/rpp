@@ -55,22 +55,22 @@ extern "C" {
  */
 RppStatus rppt_non_silent_region_detection_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rpp32s *srcLengthTensor, Rpp32f *detectedIndexTensor, Rpp32f *detectionLengthTensor, Rpp32f cutOffDB, Rpp32s windowLength, Rpp32f referencePower, Rpp32s resetInterval, rppHandle_t rppHandle);
 
-/******************** to_decibels ********************/
-
-// To Decibels augmentation for magnitude buffer
-
-// *param[in] srcPtr source tensor memory
-// *param[in] srcDescPtr source tensor descriptor
-// *param[out] dstPtr destination tensor memory
-// *param[in] dstDescPtr destination tensor descriptor
-// *param[in] srcDims source dimensions
-// *param[in] cutOffDB  minimum or cut-off ratio in dB
-// *param[in] multiplier factor by which the logarithm is multiplied
-// *param[in] referenceMagnitude Reference magnitude if not provided maximum value of input used as reference
-// *param[in] rppHandle HIP-handle for "_gpu" variants and Host-handle for "_host" variants
-// *returns a  RppStatus enumeration.
-// *retval RPP_SUCCESS : successful completion
-// *retval RPP_ERROR : Error
+/*! \brief To Decibels augmentation HOST
+* \details To Decibels augmentation that converts magnitude values to decibel values
+* \param[in] srcPtr source tensor memory
+* \param[in] srcDescPtr source tensor descriptor
+* \param[out] dstPtr destination tensor memory
+* \param[in] dstDescPtr destination tensor descriptor
+* \param[in] srcDims source tensor size (tensor of batchSize * 2 values)
+* \param[in] cutOffDB  minimum or cut-off ratio in dB
+* \param[in] multiplier factor by which the logarithm is multiplied
+* \param[in] referenceMagnitude Reference magnitude if not provided maximum value of input used as reference
+* \param[in] rppHandle HIP-handle for "_gpu" variants and Host-handle for "_host" variants
+ * \return <tt> RppStatus enum</tt>.
+ * \returns RPP_SUCCESS <tt>\ref RppStatus</tt> on successful completion.
+ * Else return RPP_ERROR
+ * \ingroup group_tensor_audio
+ */
 
 RppStatus rppt_to_decibels_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr srcDims, Rpp32f cutOffDB, Rpp32f multiplier, Rpp32f referenceMagnitude, rppHandle_t rppHandle);
 
