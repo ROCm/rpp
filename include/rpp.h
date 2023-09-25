@@ -18,10 +18,18 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-*/
+ */
 
 #ifndef RPP_H
 #define RPP_H
+
+/*!
+ * \file
+ * \brief ROCm Performance Primitives(RPP) Library for high performance computer vision applications on AMD processors.
+ *
+ * \defgroup group_rpp RPP API
+ * \brief ROCm Performance Primitives - Main.
+ */
 
 #include <export.h>
 
@@ -64,143 +72,175 @@ typedef rppHandle_t RppHandle_t;    // Create typedef for RppHandle_t
 #include "rppt.h"
 #include "rppversion.h"
 
-/******************** rppAllocatorFunction ********************/
-
-// Custom allocator function to allow for user-defined custom allocation
-// *param[in] context A pointer to a context
-// *param[in] sizeBytes Number of bytes to allocate
+/*! \brief Handles RPP context allocations.
+ * \details Custom allocator function to allow for user-defined custom allocation
+ * \param [in] context A pointer to a context.
+ * \param [in] sizeBytes Number of bytes to allocate.
+ * \ingroup group_rpp
+ */
 typedef void* (*rppAllocatorFunction)(void* context, size_t sizeBytes);
 
-/******************** rppDeallocatorFunction ********************/
-
-// Custom deallocator function to allow for user-defined custom deallocation
-// *param[in] context A pointer to a context
-// *param[in] memory A pointer to allocated memory
+/*! \brief Handles RPP context allocations.
+ * \details Custom deallocator function to allow for user-defined custom deallocation
+ * \param [in] context A pointer to a context
+ * \param [in] memory A pointer to allocated memory
+ * \ingroup group_rpp
+ */
 typedef void (*rppDeallocatorFunction)(void* context, void* memory);
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/******************** rppGetErrorString ********************/
-
-// Returns a NULL terminated character string of the passed error code
-// *param[in] error Error status of rppStatus_t type
-// *returns errorString
+/*! \brief Returns Error String
+ * \details Returns a NULL terminated character string of the passed error code
+ * \param [in] error Error status of rppStatus_t type
+ * \ingroup group_rpp
+ * \return <tt> string</tt>.
+ * \returns errorString
+ */
 extern "C" SHARED_PUBLIC const char* rppGetErrorString(rppStatus_t error);
 
-/******************** rppCreate ********************/
-
-// Function to create a rpp handle. To be called in the beginning to initialize the rpp environment
-// *param[in] handle A pointer to rpp handle of type rppHandle_t
-// *returns a rppStatus_t enumeration.
+/*! \brief Creates RPP Handle
+ * \details Function to create a rpp handle. To be called in the beginning to initialize the rpp environment
+ * \param [in] handle A pointer to rpp handle of type rppHandle_t
+ * \ingroup group_rpp
+ * \return <tt> enum</tt>.
+ * \returns a rppStatus_t enumeration.
+ */
 extern "C" SHARED_PUBLIC rppStatus_t rppCreate(rppHandle_t* handle);
 
-/******************** rppCreateWithBatchSize ********************/
-
-// Function to create a rpp handle for a batch. To be called in the beginning to initialize the rpp environment
-// *param[in] handle A pointer to rpp handle of type rppHandle_t
-// *param[in] nBatchSize Batch size
-// *param[in] numThreads number of threads to be used for OpenMP pragma
-// *returns a rppStatus_t enumeration.
+/*! \brief Creates RPP Handle for a Batch
+ * \details Function to create a rpp handle for a batch. To be called in the beginning to initialize the rpp environment
+ * \param [in] handle A pointer to rpp handle of type rppHandle_t
+ * \param [in] nBatchSize Batch size
+ * \param [in] numThreads number of threads to be used for OpenMP pragma
+ * \ingroup group_rpp
+ * \return <tt> enum</tt>.
+ * \returns a rppStatus_t enumeration.
+ */
 extern "C" SHARED_PUBLIC rppStatus_t rppCreateWithBatchSize(rppHandle_t* handle, size_t nBatchSize, Rpp32u numThreads = 0);
 
-/******************** rppDestroy ********************/
-
-// Function to destroy a rpp handle. To be called in the end to break down the rpp environment
-// *param[in] handle An rpp handle of type rppHandle_t
-// *returns a rppStatus_t enumeration.
+/*! \brief Destory RPP Handle
+ * \details Function to destroy a rpp handle. To be called in the end to break down the rpp environment
+ * \param [in] handle An rpp handle of type rppHandle_t
+ * \ingroup group_rpp
+ * \return <tt> enum</tt>.
+ * \returns a rppStatus_t enumeration.
+ */
 extern "C" SHARED_PUBLIC rppStatus_t rppDestroy(rppHandle_t handle);
 
-/******************** rppDestroyHost ********************/
-
-// Function to destroy a rpp handle's host memory allocation. To be called in the end to break down the rpp environment
-// *param[in] handle An rpp handle of type rppHandle_t
-// *returns a rppStatus_t enumeration.
+/*! \brief Destory RPP HOST Handle
+ * \details Function to destroy a rpp handle's host memory allocation. To be called in the end to break down the rpp environment
+ * \param [in] handle An rpp handle of type rppHandle_t
+ * \ingroup group_rpp
+ * \return <tt> enum</tt>.
+ * \returns a rppStatus_t enumeration.
+ */
 extern "C" SHARED_PUBLIC rppStatus_t rppDestroyHost(rppHandle_t handle);
 
-/******************** rppSetBatchSize ********************/
-
-// Function to set batch size for handle previously created
-// *param[in] handle An rpp handle of type rppHandle_t
-// *param[in] batchSize Batch size
-// *returns a rppStatus_t enumeration.
+/*! \brief Set BatchSize given a RPP Handle
+ * \details Function to set batch size for handle previously created
+ * \param [in] handle An rpp handle of type rppHandle_t
+ * \param [in] batchSize Batch size
+ * \ingroup group_rpp
+ * \return <tt> enum</tt>.
+ * \returns a rppStatus_t enumeration.
+ */
 extern "C" SHARED_PUBLIC rppStatus_t rppSetBatchSize(rppHandle_t handle, size_t batchSize);
 
-/******************** rppGetBatchSize ********************/
-
-// Function to get batch size for handle previously created
-// *param[in] handle An rpp handle of type rppHandle_t
-// *param[in] batchSize Batch size
-// *returns a rppStatus_t enumeration.
+/*! \brief Retrieve BatchSize given a RPP Handle
+ * \details Function to get batch size for handle previously created
+ * \param [in] handle An rpp handle of type rppHandle_t
+ * \param [in] batchSize Batch size
+ * \ingroup group_rpp
+ * \return <tt> enum</tt>.
+ * \returns a rppStatus_t enumeration.
+ */
 extern "C" SHARED_PUBLIC rppStatus_t rppGetBatchSize(rppHandle_t handle, size_t *batchSize);
 
 #if GPU_SUPPORT
 
-/******************** rppCreateWithStream ********************/
-
-// Function to create a rpp handle with an accelerator stream. To be called in the beginning to initialize the rpp environment
-// *param[in] handle A pointer to rpp handle of type rppHandle_t
-// *param[in] stream An accelerator queue of type rppAcceleratorQueue_t (hipStream_t for HIP and cl_command_queue for OpenCL)
-// *returns a rppStatus_t enumeration.
+/*! \brief Create RPP Handle with Stream
+ * \details Function to create a rpp handle with an accelerator stream. To be called in the beginning to initialize the rpp environment
+ * \param [in] handle A pointer to rpp handle of type rppHandle_t
+ * \param [in] stream An accelerator queue of type rppAcceleratorQueue_t (hipStream_t for HIP and cl_command_queue for OpenCL)
+ * \ingroup group_rpp
+ * \return <tt> enum</tt>.
+ * \returns a rppStatus_t enumeration.
+ */
 extern "C" SHARED_PUBLIC rppStatus_t rppCreateWithStream(rppHandle_t* handle, rppAcceleratorQueue_t stream);
 
-/******************** rppCreateWithStreamAndBatchSize ********************/
-
-// Function to create a rpp handle with an accelerator stream for a batch. To be called in the beginning to initialize the rpp environment
-// *param[in] handle A pointer to rpp handle of type rppHandle_t
-// *param[in] stream An accelerator queue of type rppAcceleratorQueue_t (hipStream_t for HIP and cl_command_queue for OpenCL)
-// *param[in] nBatchSize Batch size
-// *returns a rppStatus_t enumeration.
+/*! \brief Create RPP Handle with Stream for a Batch
+ * \details Function to create a rpp handle with an accelerator stream for a batch. To be called in the beginning to initialize the rpp environment
+ * \param [in] handle A pointer to rpp handle of type rppHandle_t
+ * \param [in] stream An accelerator queue of type rppAcceleratorQueue_t (hipStream_t for HIP and cl_command_queue for OpenCL)
+ * \param [in] nBatchSize Batch size
+ * \ingroup group_rpp
+ * \return <tt> enum</tt>.
+ * \returns a rppStatus_t enumeration.
+ */
 extern "C" SHARED_PUBLIC rppStatus_t rppCreateWithStreamAndBatchSize(rppHandle_t* handle, rppAcceleratorQueue_t stream, size_t nBatchSize);
 
-/******************** rppDestroyGPU ********************/
-
-// Function to destroy a rpp handle's device memory allocation. To be called in the end to break down the rpp environment
-// *param[in] handle An rpp handle of type rppHandle_t
-// *returns a rppStatus_t enumeration.
+/*! \brief Destory RPP GPU Handle
+ * \details Function to destroy a rpp handle's device memory allocation. To be called in the end to break down the rpp environment
+ * \param [in] handle An rpp handle of type rppHandle_t
+ * \ingroup group_rpp
+ * \return <tt> enum</tt>.
+ * \returns a rppStatus_t enumeration.
+ */
 extern "C" SHARED_PUBLIC rppStatus_t rppDestroyGPU(rppHandle_t handle);
 
-/******************** rppSetStream ********************/
-
-// Function to set an accelerator command queue previously created
-// *param[in] handle An rpp handle of type rppHandle_t
-// *param[in] stream An accelerator queue of type rppAcceleratorQueue_t (hipStream_t for HIP and cl_command_queue for OpenCL)
-// *returns a rppStatus_t enumeration.
+/*! \brief Set stream for a Handle
+ * \details Function to set an accelerator command queue previously created
+ * \param [in] handle An rpp handle of type rppHandle_t
+ * \param [in] stream An accelerator queue of type rppAcceleratorQueue_t (hipStream_t for HIP and cl_command_queue for OpenCL)
+ * \ingroup group_rpp
+ * \return <tt> enum</tt>.
+ * \returns a rppStatus_t enumeration.
+ */
 extern "C" SHARED_PUBLIC rppStatus_t rppSetStream(rppHandle_t handle, rppAcceleratorQueue_t streamID);
 
-/******************** rppGetStream ********************/
-
-// Function to get an accelerator command queue previously created
-// *param[in] handle An rpp handle of type rppHandle_t
-// *param[in] stream An accelerator queue of type rppAcceleratorQueue_t (hipStream_t for HIP and cl_command_queue for OpenCL)
-// *returns a rppStatus_t enumeration.
+/*! \brief Get stream for a Handle
+ * \details Function to get an accelerator command queue previously created
+ * \param [in] handle An rpp handle of type rppHandle_t
+ * \param [in] stream An accelerator queue of type rppAcceleratorQueue_t (hipStream_t for HIP and cl_command_queue for OpenCL)
+ * \ingroup group_rpp
+ * \return <tt> enum</tt>.
+ * \returns a rppStatus_t enumeration.
+ */
 extern "C" SHARED_PUBLIC rppStatus_t rppGetStream(rppHandle_t handle, rppAcceleratorQueue_t* streamID);
 
-/******************** rppSetAllocator ********************/
-
-// Function to set allocator for previously created rppHandle_t
-// *param[in] handle An rpp handle of type rppHandle_t
-// *param[in] allocator A callback function rpp will use for internal memory allocations. The provided callback function should allocate device memory with requested size and return a pointer to this memory. Passing 0 will restore the default RPP allocator and deallocator.
-// *param[in] deallocator A callback function rpp will use to for internal memory deallocation. The provided callback function should free the specified memory pointer.
-// *param[in] allocatorContext User-specified pointer which is passed to allocator and deallocator. This allows the callback function to access state set by the caller to this function, for example a stateful heap allocator or a c++ class.
-// *returns a rppStatus_t enumeration.
+/*! \brief Set Allocator for a Handle
+ * \details Function to set allocator for previously created rppHandle_t
+ * \param [in] handle An rpp handle of type rppHandle_t
+ * \param [in] allocator A callback function rpp will use for internal memory allocations. The provided callback function should allocate device memory with requested size and return a pointer to this memory. Passing 0 will restore the default RPP allocator and deallocator.
+ * \param [in] deallocator A callback function rpp will use to for internal memory deallocation. The provided callback function should free the specified memory pointer.
+ * \param [in] allocatorContext User-specified pointer which is passed to allocator and deallocator. This allows the callback function to access state set by the caller to this function, for example a stateful heap allocator or a c++ class.
+ * \ingroup group_rpp
+ * \return <tt> enum</tt>.
+ * \returns a rppStatus_t enumeration.
+ */
 extern "C" SHARED_PUBLIC rppStatus_t rppSetAllocator(rppHandle_t handle, rppAllocatorFunction allocator, rppDeallocatorFunction deallocator, void* allocatorContext);
 
-/******************** rppGetKernelTime ********************/
-
-// Function to get time for last kernel launched. This function is used only when profiling mode has been enabled.
-// *param[in] handle An rpp handle of type rppHandle_t
-// *param[in] time Pointer to a float type to contain kernel time in milliseconds
-// *returns a rppStatus_t enumeration.
+/*! \brief Get Time taken by previous Kernel
+ * \details Function to get time for last kernel launched. This function is used only when profiling mode has been enabled.
+ * \param [in] handle An rpp handle of type rppHandle_t
+ * \param [in] time Pointer to a float type to contain kernel time in milliseconds
+ * \ingroup group_rpp
+ * \return <tt> enum</tt>.
+ * \returns a rppStatus_t enumeration.
+ */
 extern "C" SHARED_PUBLIC rppStatus_t rppGetKernelTime(rppHandle_t handle, float* time);
 
-/******************** rppEnableProfiling ********************/
-
-// Function to enable profiling to retrieve kernel time
-// *param[in] handle An rpp handle of type rppHandle_t
-// *param[in] enable Boolean to toggle profiling
-// *returns a rppStatus_t enumeration.
+/*! \brief Enable Profiling
+ * \details Function to enable profiling to retrieve kernel time
+ * \param [in] handle An rpp handle of type rppHandle_t
+ * \param [in] enable Boolean to toggle profiling
+ * \ingroup group_rpp
+ * \return <tt> enum</tt>.
+ * \returns a rppStatus_t enumeration.
+ */
 extern "C" SHARED_PUBLIC rppStatus_t rppEnableProfiling(rppHandle_t handle, bool enable);
 
 #endif // GPU_SUPPORT

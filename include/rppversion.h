@@ -22,12 +22,21 @@ THE SOFTWARE.
 
 #ifndef RPPVERSION_H
 #define RPPVERSION_H
+
+/*!
+ * \file
+ * \brief ROCm Performance Primitives(RPP) - Version.
+ *
+ * \defgroup group_rpp_version RPP Version
+ * \brief ROCm Performance Primitives - Version
+ */
+
 #include "rpp.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
-#define RPP_VERSION_MAJOR 0
-#define RPP_VERSION_MINOR 93
+#define RPP_VERSION_MAJOR 1
+#define RPP_VERSION_MINOR 3
 #define RPP_VERSION_PATCH 0
 #ifdef __cplusplus
 }

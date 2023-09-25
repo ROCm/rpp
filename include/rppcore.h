@@ -22,6 +22,15 @@ THE SOFTWARE.
 
 #ifndef RPPCORE_H
 #define RPPCORE_H
+
+/*!
+ * \file
+ * \brief ROCm Performance Primitives(RPP) - Core.
+ *
+ * \defgroup group_rpp_core RPP CORE
+ * \brief ROCm Performance Primitives - Core.
+ */
+
 #ifdef __cplusplus
 extern "C" {
 #endif

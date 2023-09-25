@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 RppStatus rppt_non_silent_region_detection_host(RppPtr_t srcPtr,
                                                 RpptDescPtr srcDescPtr,
-                                                Rpp32s *srcSize,
+                                                Rpp32s *srcLengthTensor,
                                                 Rpp32f *detectedIndexTensor,
                                                 Rpp32f *detectionLengthTensor,
                                                 Rpp32f cutOffDB,
@@ -39,7 +39,7 @@ RppStatus rppt_non_silent_region_detection_host(RppPtr_t srcPtr,
     {
         non_silent_region_detection_host_tensor(static_cast<Rpp32f*>(srcPtr),
                                                 srcDescPtr,
-                                                srcSize,
+                                                srcLengthTensor,
                                                 detectedIndexTensor,
                                                 detectionLengthTensor,
                                                 cutOffDB,
@@ -70,6 +70,8 @@ RppStatus rppt_to_decibels_host(RppPtr_t srcPtr,
                                 Rpp32f referenceMagnitude,
                                 rppHandle_t rppHandle)
 {
+    if (multiplier == 0)
+        return RPP_ERROR_ZERO_DIVISION;
     if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
         to_decibels_host_tensor(static_cast<Rpp32f*>(srcPtr),
