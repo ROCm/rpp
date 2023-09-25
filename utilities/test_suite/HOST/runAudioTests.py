@@ -119,8 +119,8 @@ def run_performance_test(loggingFolder, srcPath, case, numRuns, testType, bitDep
 def rpp_test_suite_parser_and_validator():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_path", type = str, default = inFilePath, help = "Path to the input folder")
-    parser.add_argument("--case_start", type = int, default = 0, help = "Testing range starting case # - (0:1)")
-    parser.add_argument("--case_end", type = int, default = 1, help = "Testing range ending case # - (0:1)")
+    parser.add_argument("--case_start", type = int, default = 0, help = "Testing range starting case # - (0:2)")
+    parser.add_argument("--case_end", type = int, default = 2, help = "Testing range ending case # - (0:2)")
     parser.add_argument('--test_type', type = int, default = 0, help = "Type of Test - (0 = QA tests / 1 = Performance tests)")
     parser.add_argument('--case_list', nargs = "+", help = "List of case numbers to test", required = False)
     parser.add_argument('--num_runs', type = int, default = 1, help = "Specifies the number of runs for running the performance tests")
@@ -132,8 +132,8 @@ def rpp_test_suite_parser_and_validator():
     validate_path(args.input_path)
 
     # validate the parameters passed by user
-    if ((args.case_start < 0 or args.case_start > 1) or (args.case_end < 0 or args.case_end > 1)):
-        print("Starting case# and Ending case# must be in the 0:1 range. Aborting!")
+    if ((args.case_start < 0 or args.case_start > 2) or (args.case_end < 0 or args.case_end > 2)):
+        print("Starting case# and Ending case# must be in the 0:2 range. Aborting!")
         exit(0)
     elif args.case_end < args.case_start:
         print("Ending case# must be greater than starting case#. Aborting!")
@@ -141,7 +141,7 @@ def rpp_test_suite_parser_and_validator():
     elif args.test_type < 0 or args.test_type > 1:
         print("Test Type# must be in the 0 / 1. Aborting!")
         exit(0)
-    elif args.case_list is not None and args.case_start > 1 and args.case_end < 0:
+    elif args.case_list is not None and args.case_start > 2 and args.case_end < 0:
         print("Invalid input! Please provide only 1 option between case_list, case_start and case_end")
         exit(0)
     elif args.num_runs <= 0:
@@ -162,7 +162,7 @@ def rpp_test_suite_parser_and_validator():
         args.case_list = [str(x) for x in args.case_list]
     else:
         for case in args.case_list:
-            if int(case) < 0 or int(case) > 1:
+            if int(case) < 0 or int(case) > 2:
                  print("The case# must be 0-1 range!")
                  exit(0)
     return args
@@ -216,21 +216,21 @@ if testType == 0:
         if batchSize != 8:
             print("QA tests can only run with a batch size of 8.")
             exit(0)
-        if int(case) < 0 or int(case) > 1:
+        if int(case) < 0 or int(case) > 2:
             print(f"Invalid case number {case}. Case number must be 0-1 range!")
             continue
 
         run_unit_test(srcPath, case, numRuns, testType, bitDepth, batchSize, outFilePath)
 else:
     for case in caseList:
-        if int(case) < 0 or int(case) > 1:
+        if int(case) < 0 or int(case) > 2:
             print(f"Invalid case number {case}. Case number must be 0-1 range!")
             continue
 
         run_performance_test(loggingFolder, srcPath, case, numRuns, testType, bitDepth, batchSize, outFilePath)
 
 # print the results of qa tests
-supportedCaseList = ['0', '1']
+supportedCaseList = ['0', '1', '2']
 supportedCases = 0
 for num in caseList:
     if num in supportedCaseList:

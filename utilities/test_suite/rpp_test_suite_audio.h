@@ -38,6 +38,7 @@ std::map<int, string> audioAugmentationMap =
 {
     {0, "non_silent_region_detection"},
     {1, "to_decibels"},
+    {2, "pre_emphasis_filter"},
 };
 
 void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dstDims, string testCase, vector<string> audioNames, string dst)

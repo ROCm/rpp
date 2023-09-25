@@ -243,7 +243,7 @@ int main(int argc, char **argv)
                     Rpp32f multiplier = std::log(10);
                     Rpp32f referenceMagnitude = 1.0f;
 
-                    for (i = 0; i < noOfAudioFiles; i++)
+                    for (i = 0; i < batchSize; i++)
                     {
                         srcDims[i].height = srcLengthTensor[i];
                         srcDims[i].width = 1;
@@ -253,6 +253,23 @@ int main(int argc, char **argv)
                     startCpuTime = clock();
                     if (inputBitDepth == 2)
                         rppt_to_decibels_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcDims, cutOffDB, multiplier, referenceMagnitude, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 2:
+                {
+                    testCaseName = "pre_emphasis_filter";
+                    Rpp32f coeff[batchSize];
+                    for (i = 0; i < batchSize; i++)
+                        coeff[i] = 0.97;
+                    RpptAudioBorderType borderType = RpptAudioBorderType::CLAMP;
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 2)
+                        rppt_pre_emphasis_filter_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcLengthTensor, coeff, borderType, handle);
                     else
                         missingFuncFlag = 1;
 
