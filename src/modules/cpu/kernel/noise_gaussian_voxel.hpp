@@ -96,7 +96,6 @@ RppStatus gaussian_noise_voxel_f32_f32_host_tensor(Rpp32f *srcPtr,
             Rpp32f *srcPtrDepth, *dstPtrDepth;
             srcPtrDepth = srcPtrChannel;
             dstPtrDepth = dstPtrChannel;
-
             for(int i = 0; i < roi.xyzwhdROI.roiDepth; i++)
             {
                 Rpp32f *srcPtrRow, *dstPtrRow;
@@ -139,6 +138,133 @@ RppStatus gaussian_noise_voxel_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
                 srcPtrDepth += srcGenericDescPtr->strides[1];
                 dstPtrDepth += dstGenericDescPtr->strides[1];
+            }
+        }
+
+        // Gaussian Noise without fused output-layout toggle (NCDHW -> NCDHW)
+        else if ((srcGenericDescPtr->dims[1] == 3) && (srcGenericDescPtr->layout == RpptLayout::NCDHW) && (dstGenericDescPtr->layout == RpptLayout::NCDHW))
+        {
+            srcPtrChannel = srcPtrImage + (roi.xyzwhdROI.xyz.z * srcGenericDescPtr->strides[2]) + (roi.xyzwhdROI.xyz.y * srcGenericDescPtr->strides[3]) + (roi.xyzwhdROI.xyz.x * layoutParams.bufferMultiplier);
+
+            Rpp32f *srcPtrDepthR, *srcPtrDepthG, *srcPtrDepthB, *dstPtrDepthR, *dstPtrDepthG, *dstPtrDepthB;
+            srcPtrDepthR = srcPtrChannel;
+            srcPtrDepthG = srcPtrDepthR + srcGenericDescPtr->strides[1];
+            srcPtrDepthB = srcPtrDepthG + srcGenericDescPtr->strides[1];
+            dstPtrDepthR = dstPtrChannel;
+            dstPtrDepthG = dstPtrDepthR + dstGenericDescPtr->strides[1];
+            dstPtrDepthB = dstPtrDepthG + dstGenericDescPtr->strides[1];
+            for(int i = 0; i < roi.xyzwhdROI.roiDepth; i++)
+            {
+                Rpp32f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
+                srcPtrRowR = srcPtrDepthR;
+                srcPtrRowG = srcPtrDepthG;
+                srcPtrRowB = srcPtrDepthB;
+                dstPtrRowR = dstPtrDepthR;
+                dstPtrRowG = dstPtrDepthG;
+                dstPtrRowB = dstPtrDepthB;
+                for(int j = 0; j < roi.xyzwhdROI.roiHeight; j++)
+                {
+                    Rpp32f *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
+                    srcPtrTempR = srcPtrRowR;
+                    srcPtrTempG = srcPtrRowG;
+                    srcPtrTempB = srcPtrRowB;
+                    dstPtrTempR = dstPtrRowR;
+                    dstPtrTempG = dstPtrRowG;
+                    dstPtrTempB = dstPtrRowB;
+
+                    int vectorLoopCount = 0;
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                    {
+#if __AVX2__
+                        __m256 p[3];
+                        rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);     // simd loads
+                        compute_gaussian_noise_24_host(p, pxXorwowStateX, &pxXorwowStateCounter, pGaussianNoiseParams); // gaussian_noise adjustment
+                        rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);   // simd stores
+#else
+                        __m128 p[4];
+                        rpp_simd_load(rpp_load12_f32pln3_to_f32pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);         // simd loads
+                        compute_gaussian_noise_12_host(p, pxXorwowStateX, &pxXorwowStateCounter, pGaussianNoiseParams); // gaussian_noise adjustment
+                        rpp_simd_store(rpp_store12_f32pln3_to_f32pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);       // simd stores
+#endif
+                        srcPtrTempR += vectorIncrementPerChannel;
+                        srcPtrTempG += vectorIncrementPerChannel;
+                        srcPtrTempB += vectorIncrementPerChannel;
+                        dstPtrTempR += vectorIncrementPerChannel;
+                        dstPtrTempG += vectorIncrementPerChannel;
+                        dstPtrTempB += vectorIncrementPerChannel;
+                    }
+                    for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                    {
+                        *dstPtrTempR++ = compute_gaussian_noise_1_host(*srcPtrTempR++, &xorwowState, mean, stdDev);
+                        *dstPtrTempG++ = compute_gaussian_noise_1_host(*srcPtrTempG++, &xorwowState, mean, stdDev);
+                        *dstPtrTempB++ = compute_gaussian_noise_1_host(*srcPtrTempB++, &xorwowState, mean, stdDev);
+                    }
+                    srcPtrRowR += srcGenericDescPtr->strides[3];
+                    srcPtrRowG += srcGenericDescPtr->strides[3];
+                    srcPtrRowB += srcGenericDescPtr->strides[3];
+                    dstPtrRowR += srcGenericDescPtr->strides[3];
+                    dstPtrRowG += srcGenericDescPtr->strides[3];
+                    dstPtrRowB += srcGenericDescPtr->strides[3];
+                }
+                srcPtrDepthR += srcGenericDescPtr->strides[2];
+                srcPtrDepthG += srcGenericDescPtr->strides[2];
+                srcPtrDepthB += srcGenericDescPtr->strides[2];
+                dstPtrDepthR += srcGenericDescPtr->strides[2];
+                dstPtrDepthG += srcGenericDescPtr->strides[2];
+                dstPtrDepthB += srcGenericDescPtr->strides[2];
+            }
+        }
+
+        // Gaussian Noise without fused output-layout toggle single channel (NCDHW -> NCDHW)
+        else if ((srcGenericDescPtr->dims[1] == 1) && (srcGenericDescPtr->layout == RpptLayout::NCDHW) && (dstGenericDescPtr->layout == RpptLayout::NCDHW))
+        {
+            srcPtrChannel = srcPtrImage + (roi.xyzwhdROI.xyz.z * srcGenericDescPtr->strides[2]) + (roi.xyzwhdROI.xyz.y * srcGenericDescPtr->strides[3]) + (roi.xyzwhdROI.xyz.x * layoutParams.bufferMultiplier);
+#if __AVX2__
+            alignedLength = bufferLength & ~7;
+#else
+            alignedLength = bufferLength & ~3;
+#endif
+            Rpp32u vectorIncrementPerChannelDouble = 2 * vectorIncrementPerChannel;
+            Rpp32f *srcPtrDepth, *dstPtrDepth;
+            srcPtrDepth = srcPtrChannel;
+            dstPtrDepth = dstPtrChannel;
+            for(int i = 0; i < roi.xyzwhdROI.roiDepth; i++)
+            {
+                Rpp32f *srcPtrRow, *dstPtrRow;
+                srcPtrRow = srcPtrDepth;
+                dstPtrRow = dstPtrDepth;
+                for(int j = 0; j < roi.xyzwhdROI.roiHeight; j++)
+                {
+                    Rpp32f *srcPtrTemp, *dstPtrTemp;
+                    srcPtrTemp = srcPtrRow;
+                    dstPtrTemp = dstPtrRow;
+
+                    int vectorLoopCount = 0;
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannelDouble)
+                    {
+#if __AVX2__
+                        __m256 p[2];
+                        rpp_simd_load(rpp_load16_f32_to_f32_avx, srcPtrTemp, p);                                        // simd loads
+                        compute_gaussian_noise_16_host(p, pxXorwowStateX, &pxXorwowStateCounter, pGaussianNoiseParams); // gaussian_noise adjustment
+                        rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrTemp, p);                                      // simd stores
+#else
+                        __m128 p[2];
+                        rpp_simd_load(rpp_load8_f32_to_f32, srcPtrTemp, p);                                             // simd loads
+                        compute_gaussian_noise_8_host(p, pxXorwowStateX, &pxXorwowStateCounter, pGaussianNoiseParams);  // gaussian_noise adjustment
+                        rpp_simd_store(rpp_store8_f32_to_f32, dstPtrTemp, p);                                           // simd stores
+#endif
+                        srcPtrTemp += vectorIncrementPerChannelDouble;
+                        dstPtrTemp += vectorIncrementPerChannelDouble;
+                    }
+                    for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                    {
+                        *dstPtrTemp++ = compute_gaussian_noise_1_host(*srcPtrTemp++, &xorwowState, mean, stdDev);
+                    }
+                    srcPtrRow += srcGenericDescPtr->strides[3];
+                    dstPtrRow += dstGenericDescPtr->strides[3];
+                }
+                srcPtrDepth += srcGenericDescPtr->strides[2];
+                dstPtrDepth += dstGenericDescPtr->strides[2];
             }
         }
     }
