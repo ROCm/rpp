@@ -434,6 +434,44 @@ RppStatus rppt_gaussian_noise_host(RppPtr_t srcPtr,
     return RPP_SUCCESS;
 }
 
+RppStatus rppt_gaussian_noise_voxel_host(RppPtr_t srcPtr,
+                                         RpptGenericDescPtr srcGenericDescPtr,
+                                         RppPtr_t dstPtr,
+                                         RpptGenericDescPtr dstGenericDescPtr,
+                                         Rpp32f *meanTensor,
+                                         Rpp32f *stdDevTensor,
+                                         Rpp32u seed,
+                                         RpptROI3DPtr roiGenericPtrSrc,
+                                         RpptRoi3DType roiType,
+                                         rppHandle_t rppHandle)
+{
+    RppLayoutParams layoutParams;
+    if ((srcGenericDescPtr->layout == RpptLayout::NCDHW) && (dstGenericDescPtr->layout == RpptLayout::NCDHW))
+        layoutParams = get_layout_params(srcGenericDescPtr->layout, srcGenericDescPtr->dims[1]);
+    else if ((srcGenericDescPtr->layout == RpptLayout::NDHWC) && (dstGenericDescPtr->layout == RpptLayout::NDHWC))
+        layoutParams = get_layout_params(srcGenericDescPtr->layout, srcGenericDescPtr->dims[4]);
+
+    RpptXorwowStateBoxMuller xorwowInitialState[SIMD_FLOAT_VECTOR_LENGTH];
+    rpp_host_rng_xorwow_f32_initialize_multiseed_stream_boxmuller<SIMD_FLOAT_VECTOR_LENGTH>(xorwowInitialState, seed);
+
+    if ((srcGenericDescPtr->dataType == RpptDataType::F32) && (dstGenericDescPtr->dataType == RpptDataType::F32))
+    {
+        gaussian_noise_voxel_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes),
+                                                 srcGenericDescPtr,
+                                                 (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
+                                                 dstGenericDescPtr,
+                                                 meanTensor,
+                                                 stdDevTensor,
+                                                 xorwowInitialState,
+                                                 roiGenericPtrSrc,
+                                                 roiType,
+                                                 layoutParams,
+                                                 rpp::deref(rppHandle));
+    }
+
+    return RPP_SUCCESS;
+}
+
 /******************** non_linear_blend ********************/
 
 RppStatus rppt_non_linear_blend_host(RppPtr_t srcPtr1,

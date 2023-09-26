@@ -444,6 +444,8 @@ RppStatus rppt_gaussian_noise_3d_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcDesc
 /*! @}
  */
 
+RppStatus rppt_gaussian_noise_voxel_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32f *meanTensor, Rpp32f *stdDevTensor, Rpp32u seed, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle);
+
 #ifdef __cplusplus
 }
 #endif
