@@ -41,6 +41,12 @@ int main(int argc, char **argv)
     int batchSize = atoi(argv[6]);
     char *dst = argv[7];
 
+    if (testType == 0 && batchSize != 8)
+    {
+        cout << "Error! QA Mode only runs with batchsize 8" << endl;
+        return -1;
+    }
+
     // Set case names
     string funcName = audioAugmentationMap[testCase];
     if (funcName.empty())
@@ -66,12 +72,12 @@ int main(int argc, char **argv)
 
     // Other initializations
     int missingFuncFlag = 0;
-    int i = 0, j = 0, fileCnt = 0;
-    int maxChannels = 0;
+    int i = 0, j = 0;
+    int maxSrcChannels = 0;
     int maxSrcWidth = 0, maxSrcHeight = 0;
     int maxDstWidth = 0, maxDstHeight = 0;
-    unsigned long long iBufferSize = 0;
-    unsigned long long oBufferSize = 0;
+    Rpp64u iBufferSize = 0;
+    Rpp64u oBufferSize = 0;
     static int noOfAudioFiles = 0;
 
     // String ops on function name
@@ -81,12 +87,12 @@ int main(int argc, char **argv)
     string func = funcName;
 
     // Get number of audio files
-    vector<string> audioNames, audioFilePath;
-    search_files_recursive(src, audioNames, audioFilePath, ".wav");
+    vector<string> audioNames, audioFilesPath;
+    search_files_recursive(src, audioNames, audioFilesPath, ".wav");
     noOfAudioFiles = audioNames.size();
     if (noOfAudioFiles < batchSize || ((noOfAudioFiles % batchSize) != 0))
     {
-        replicate_last_file_to_fill_batch(audioFilePath[noOfAudioFiles - 1], audioFilePath, audioNames, audioNames[noOfAudioFiles - 1], noOfAudioFiles, batchSize);
+        replicate_last_file_to_fill_batch(audioFilesPath[noOfAudioFiles - 1], audioFilesPath, audioNames, audioNames[noOfAudioFiles - 1], noOfAudioFiles, batchSize);
         noOfAudioFiles = audioNames.size();
     }
 
@@ -99,64 +105,20 @@ int main(int argc, char **argv)
     // Find max audio dimensions in the input dataset
     maxSrcHeight = 1;
     maxDstHeight = 1;
-    for (int cnt = 0; cnt < noOfAudioFiles ; cnt++)
-    {
-        SNDFILE	*infile;
-        SF_INFO sfinfo;
-        int	readcount;
-
-        // The SF_INFO struct must be initialized before using it
-        memset (&sfinfo, 0, sizeof (sfinfo));
-        if (!(infile = sf_open (audioFilePath[cnt].c_str(), SFM_READ, &sfinfo)))
-        {
-            sf_close (infile);
-            continue;
-        }
-
-        maxSrcWidth = std::max(maxSrcWidth, static_cast<int>(sfinfo.frames));
-        maxChannels = std::max(maxChannels, static_cast<int>(sfinfo.channels));
-
-        // Close input
-        sf_close (infile);
-    }
+    set_audio_max_dimensions(audioFilesPath, maxSrcWidth, maxSrcChannels);
     maxDstWidth = maxSrcWidth;
 
     // Set numDims, offset, n/c/h/w values for src/dst
-    srcDescPtr->numDims = 4;
-    srcDescPtr->offsetInBytes = 0;
-    srcDescPtr->n = batchSize;
-    srcDescPtr->h = maxSrcHeight;
-    srcDescPtr->w = maxSrcWidth;
-    srcDescPtr->c = maxChannels;
-
-    dstDescPtr->numDims = 4;
-    dstDescPtr->offsetInBytes = 0;
-    dstDescPtr->n = batchSize;
-    dstDescPtr->h = maxDstHeight;
-    dstDescPtr->w = maxDstWidth;
-    if (testCase == 3)
-        dstDescPtr->c = 1;
-    else
-        dstDescPtr->c = maxChannels;
-
-    // Optionally set w stride as a multiple of 8 for src/dst
-    srcDescPtr->w = ((srcDescPtr->w / 8) * 8) + 8;
-    dstDescPtr->w = ((dstDescPtr->w / 8) * 8) + 8;
-
-    // Set n/c/h/w strides for src/dst
-    srcDescPtr->strides.nStride = srcDescPtr->c * srcDescPtr->w * srcDescPtr->h;
-    srcDescPtr->strides.hStride = srcDescPtr->c * srcDescPtr->w;
-    srcDescPtr->strides.wStride = srcDescPtr->c;
-    srcDescPtr->strides.cStride = 1;
-
-    dstDescPtr->strides.nStride = dstDescPtr->c * dstDescPtr->w * dstDescPtr->h;
-    dstDescPtr->strides.hStride = dstDescPtr->c * dstDescPtr->w;
-    dstDescPtr->strides.wStride = dstDescPtr->c;
-    dstDescPtr->strides.cStride = 1;
+    Rpp32u offsetInBytes = 0;
+    set_audio_descriptor_dims_and_strides(srcDescPtr, batchSize, maxSrcHeight, maxSrcWidth, maxSrcChannels, offsetInBytes);
+    int maxDstChannels = maxSrcChannels;
+    if(testCase == 3)
+        maxDstChannels = 1;
+    set_audio_descriptor_dims_and_strides(dstDescPtr, batchSize, maxDstHeight, maxDstWidth, maxDstChannels, offsetInBytes);
 
     // Set buffer sizes for src/dst
-    iBufferSize = (unsigned long long)srcDescPtr->h * (unsigned long long)srcDescPtr->w * (unsigned long long)srcDescPtr->c * (unsigned long long)srcDescPtr->n;
-    oBufferSize = (unsigned long long)dstDescPtr->h * (unsigned long long)dstDescPtr->w * (unsigned long long)dstDescPtr->c * (unsigned long long)dstDescPtr->n;
+    iBufferSize = (Rpp64u)srcDescPtr->h * (Rpp64u)srcDescPtr->w * (Rpp64u)srcDescPtr->c * (Rpp64u)srcDescPtr->n;
+    oBufferSize = (Rpp64u)dstDescPtr->h * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
 
     // Initialize host buffers for input & output
     Rpp32f *inputf32 = (Rpp32f *)calloc(iBufferSize, sizeof(Rpp32f));
@@ -174,42 +136,10 @@ int main(int argc, char **argv)
     {
         for (int iterCount = 0; iterCount < noOfIterations; iterCount++)
         {
-            for (int cnt = 0; cnt < batchSize; cnt++)
-            {
-                Rpp32f *inputTempF32;
-                inputTempF32 = inputf32 + (cnt * srcDescPtr->strides.nStride);
+            // Read and decode audio and fill the audio dim values
+            if (inputBitDepth == 2)
+                read_audio_batch_and_fill_dims(srcDescPtr, inputf32, audioFilesPath, iterCount, srcLengthTensor, channelsTensor);
 
-                SNDFILE	*infile;
-                SF_INFO sfinfo;
-                int	readcount;
-
-                // The SF_INFO struct must be initialized before using it
-                memset (&sfinfo, 0, sizeof (sfinfo));
-                if (!(infile = sf_open (audioFilePath[fileCnt].c_str(), SFM_READ, &sfinfo)))
-                {
-                    sf_close (infile);
-                    continue;
-                }
-
-                srcLengthTensor[cnt] = sfinfo.frames;
-                channelsTensor[cnt] = sfinfo.channels;
-                srcDims[cnt].width = sfinfo.frames;
-                dstDims[cnt].width = sfinfo.frames;
-                srcDims[cnt].height = 1;
-                dstDims[cnt].height = 1;
-
-                int bufferLength = sfinfo.frames * sfinfo.channels;
-                if (inputBitDepth == 2)
-                {
-                    readcount = (int) sf_read_float (infile, inputTempF32, bufferLength);
-                    if (readcount != bufferLength)
-                        cout << "F32 Unable to read audio file completely " << std::endl;
-                }
-                fileCnt++;
-
-                // Close input
-                sf_close (infile);
-            }
             clock_t startCpuTime, endCpuTime;
             double startWallTime, endWallTime;
             switch (testCase)
@@ -231,6 +161,7 @@ int main(int argc, char **argv)
                     else
                         missingFuncFlag = 1;
 
+                    // QA mode - verify outputs with golden outputs. Below code doesn’t run for performance tests
                     if (testType == 0)
                         verify_non_silent_region_detection(detectedIndex, detectionLength, testCaseName, batchSize, audioNames, dst);
 
@@ -243,10 +174,10 @@ int main(int argc, char **argv)
                     Rpp32f multiplier = std::log(10);
                     Rpp32f referenceMagnitude = 1.0f;
 
-                    for (i = 0; i < batchSize; i++)
+                    for (int i = 0; i < batchSize; i++)
                     {
-                        srcDims[i].height = srcLengthTensor[i];
-                        srcDims[i].width = 1;
+                        srcDims[i].height = dstDims[i].height = srcLengthTensor[i];
+                        srcDims[i].width = dstDims[i].width = 1;
                     }
 
                     startWallTime = omp_get_wtime();
@@ -262,8 +193,12 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "pre_emphasis_filter";
                     Rpp32f coeff[batchSize];
-                    for (i = 0; i < batchSize; i++)
+                    for (int i = 0; i < batchSize; i++)
+                    {
                         coeff[i] = 0.97;
+                        dstDims[i].height = srcLengthTensor[i];
+                        dstDims[i].width = 1;
+                    }
                     RpptAudioBorderType borderType = RpptAudioBorderType::CLAMP;
 
                     startWallTime = omp_get_wtime();
@@ -284,29 +219,31 @@ int main(int argc, char **argv)
 
             endCpuTime = clock();
             endWallTime = omp_get_wtime();
-            cpuTime = ((double)(endCpuTime - startCpuTime)) / CLOCKS_PER_SEC;
-            wallTime = endWallTime - startWallTime;
             if (missingFuncFlag == 1)
             {
                 printf("\nThe functionality %s doesn't yet exist in RPP\n", func.c_str());
                 return -1;
             }
+
+            cpuTime = ((double)(endCpuTime - startCpuTime)) / CLOCKS_PER_SEC;
+            wallTime = endWallTime - startWallTime;
             maxWallTime = std::max(maxWallTime, wallTime);
             minWallTime = std::min(minWallTime, wallTime);
             avgWallTime += wallTime;
-            cpuTime *= 1000;
-            wallTime *= 1000;
 
+            // QA mode - verify outputs with golden outputs. Below code doesn’t run for performance tests
             if (testType == 0)
             {
-                if (batchSize == 8 && testCase != 0)
+                /* Run only if testCase is not 0
+                For testCase 0 verify_non_silent_region_detection function is used for QA testing */
+                if (testCase != 0)
                     verify_output(outputf32, dstDescPtr, dstDims, testCaseName, audioNames, dst);
 
-                cout <<"\n\n";
-                cout <<"CPU Backend Clock Time: "<< cpuTime <<" ms/batch"<< endl;
-                cout <<"CPU Backend Wall Time: "<< wallTime <<" ms/batch"<< endl;
-
-                // If DEBUG_MODE is set to 1 dump the outputs to csv files for debugging
+                /* Dump the outputs to csv files for debugging
+                Runs only if
+                1. DEBUG_MODE is enabled
+                2. Current iteration is 1st iteration
+                3. Test case is not 0 */
                 if (DEBUG_MODE && iterCount == 0 && testCase != 0)
                 {
                     std::ofstream refFile;
@@ -317,12 +254,10 @@ int main(int argc, char **argv)
                 }
             }
         }
-
-        // Reset fileIndex to 0 for next run
-        fileCnt = 0;
     }
     rppDestroyHost(handle);
 
+    // performance test mode
     if (testType == 1)
     {
         // Display measured times

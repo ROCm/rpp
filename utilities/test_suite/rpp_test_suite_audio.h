@@ -41,6 +41,86 @@ std::map<int, string> audioAugmentationMap =
     {2, "pre_emphasis_filter"},
 };
 
+// sets descriptor dimensions and strides of src/dst
+inline void set_audio_descriptor_dims_and_strides(RpptDescPtr descPtr, int batchSize, int maxHeight, int maxWidth, int maxChannels, int offsetInBytes)
+{
+    descPtr->numDims = 4;
+    descPtr->offsetInBytes = offsetInBytes;
+    descPtr->n = batchSize;
+    descPtr->h = maxHeight;
+    descPtr->w = maxWidth;
+    descPtr->c = maxChannels;
+
+    // Optionally set w stride as a multiple of 8 for src/dst
+    descPtr->w = ((descPtr->w / 8) * 8) + 8;
+    descPtr->strides.nStride = descPtr->c * descPtr->w * descPtr->h;
+    descPtr->strides.hStride = descPtr->c * descPtr->w;
+    descPtr->strides.wStride = descPtr->c;
+    descPtr->strides.cStride = 1;
+}
+
+// sets values of maxHeight and maxWidth
+inline void set_audio_max_dimensions(vector<string> audioFilesPath, int& maxWidth, int& maxChannels)
+{
+    for (const std::string& audioPath : audioFilesPath)
+    {
+        SNDFILE	*infile;
+        SF_INFO sfinfo;
+        int	readcount;
+
+        // The SF_INFO struct must be initialized before using it
+        memset (&sfinfo, 0, sizeof (sfinfo));
+        if (!(infile = sf_open (audioPath.c_str(), SFM_READ, &sfinfo)))
+        {
+            sf_close (infile);
+            continue;
+        }
+
+        maxWidth = std::max(maxWidth, static_cast<int>(sfinfo.frames));
+        maxChannels = std::max(maxChannels, static_cast<int>(sfinfo.channels));
+
+        // Close input
+        sf_close (infile);
+    }
+}
+
+void read_audio_batch_and_fill_dims(RpptDescPtr descPtr, Rpp32f *inputf32, vector<string> audioFilesPath, int iterCount, Rpp32s *srcLengthTensor, Rpp32s *channelsTensor)
+{
+    auto fileIndex = iterCount * descPtr->n;
+    for (int i = 0, j = fileIndex; i < descPtr->n, j < fileIndex + descPtr->n; i++, j++)
+    {
+        Rpp32f *inputTempF32;
+        inputTempF32 = inputf32 + (i * descPtr->strides.nStride);
+
+        // Read and decode data
+        SNDFILE	*infile;
+        SF_INFO sfinfo;
+        int	readcount;
+
+        // The SF_INFO struct must be initialized before using it
+        memset (&sfinfo, 0, sizeof (sfinfo));
+        if (!(infile = sf_open (audioFilesPath[j].c_str(), SFM_READ, &sfinfo)))
+        {
+            sf_close (infile);
+            continue;
+        }
+
+        srcLengthTensor[i] = sfinfo.frames;
+        channelsTensor[i] = sfinfo.channels;
+
+        int bufferLength = sfinfo.frames * sfinfo.channels;
+        readcount = (int) sf_read_float (infile, inputTempF32, bufferLength);
+        if (readcount != bufferLength)
+        {
+            std::cout << "Unable to read audio file: "<<audioFilesPath[j].c_str() << std::endl;
+            exit(0);
+        }
+
+        // Close input
+        sf_close (infile);
+    }
+}
+
 void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dstDims, string testCase, vector<string> audioNames, string dst)
 {
     fstream refFile;
@@ -65,6 +145,10 @@ void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dst
         Rpp32f refVal, outVal;
         Rpp32f *dstPtrCurrent = dstPtr + batchCount * dstDescPtr->strides.nStride;
         Rpp32f *dstPtrRow = dstPtrCurrent;
+        Rpp32u hStride = dstDescPtr->strides.hStride;
+        if (dstDims[batchCount].width == 1)
+            hStride = 1;
+
         for (int i = 0; i < dstDims[batchCount].height; i++)
         {
             Rpp32f *dstPtrTemp = dstPtrRow;
@@ -76,7 +160,7 @@ void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dst
                 if (!invalidComparision && abs(outVal - refVal) < 1e-20)
                     matchedIndices += 1;
             }
-            dstPtrRow += dstDescPtr->strides.hStride;
+            dstPtrRow += hStride;
         }
         refFile.close();
         if (matchedIndices == (dstDims[batchCount].width * dstDims[batchCount].height) && matchedIndices !=0)

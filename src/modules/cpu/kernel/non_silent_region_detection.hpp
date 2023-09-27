@@ -28,14 +28,6 @@ Rpp32f getSquare(Rpp32f &value)
     return (value * value);
 }
 
-Rpp32f getMax(Rpp32f *values, Rpp32s srcLength)
-{
-    Rpp32f max = values[0];
-    for(int i = 1; i < srcLength; i++)
-        max = std::max(max, values[i]);
-    return max;
-}
-
 RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
                                                   RpptDescPtr srcDescPtr,
                                                   Rpp32s *srcLengthTensor,
@@ -56,16 +48,16 @@ RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
     {
         Rpp32f *srcPtrTemp = srcPtr + batchCount * srcDescPtr->strides.nStride;
         Rpp32s srcLength = srcLengthTensor[batchCount];
+
+        // mmsBuffer length is equal to input audio length and can vary dynamically for each input in a batch
+        // preallocating a static buffer for entire batchsize will be too big, so allocate mmsBuffer for each sample dynamically
         Rpp32f *mmsBuffer = static_cast<Rpp32f *>(calloc(srcLength, sizeof(Rpp32f)));
         bool referenceMax = (referencePower == 0.0f);
 
         // set reset interval based on the user input
         Rpp32s resetLength = (resetInterval == -1) ? srcLength : resetInterval;
 
-        // Calculate buffer size for mms array and allocate mms buffer
-        Rpp32s mmsBufferSize = srcLength;
-
-        // Calculate moving mean square of input array and store srcPtrTemp mms buffer
+        // calculate moving mean square of input
         Rpp32f meanFactor = 1.0f / windowLength;
         Rpp32s windowBegin = -windowLength + 1;
         for (Rpp32s outPos = 0; outPos < srcLength;)
@@ -84,12 +76,12 @@ RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
             }
         }
 
-        // Convert cutOff from DB to magnitude
-        Rpp32f base = (referenceMax) ? getMax(mmsBuffer, mmsBufferSize) : referencePower;
+        // convert cutoff from DB to magnitude
+        Rpp32f base = (referenceMax) ? *std::max_element(mmsBuffer, mmsBuffer + srcLength) : referencePower;
         Rpp32f cutOffMag = base * cutOff;
 
-        // Calculate begining index, length of non silent region from the mms buffer
-        Rpp32s endIdx = mmsBufferSize;
+        // calculate begining index, length of non silent region from the mms buffer
+        Rpp32s endIdx = srcLength;
         Rpp32s beginIdx = endIdx;
         Rpp32s detectBegin, detectEnd;
         for(int i = 0; i < endIdx; i++)
@@ -119,7 +111,7 @@ RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
             detectEnd = endIdx - beginIdx + 1;
         }
 
-        // Extend non silent region
+        // extend non silent region
         if(detectBegin != 0 && detectEnd != 0)
         {
             Rpp32s newBegin = std::max<Rpp32s>(detectBegin - (windowLength - 1), 0);
