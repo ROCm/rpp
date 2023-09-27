@@ -41,6 +41,12 @@ int main(int argc, char **argv)
     int batchSize = atoi(argv[6]);
     char *dst = argv[7];
 
+    if (testType == 0 && batchSize != 8)
+    {
+        cout << "Error! QA Mode only runs with batchsize 8" << endl;
+        return -1;
+    }
+
     // Set case names
     string funcName = audioAugmentationMap[testCase];
     if (funcName.empty())
@@ -170,10 +176,8 @@ int main(int argc, char **argv)
 
                     for (int i = 0; i < batchSize; i++)
                     {
-                        srcDims[i].height = srcLengthTensor[i];
-                        srcDims[i].width = 1;
-                        dstDims[i].height = srcDims[i].height;
-                        dstDims[i].width = 1;
+                        srcDims[i].height = dstDims[i].height = srcLengthTensor[i];
+                        srcDims[i].width = dstDims[i].width = 1;
                     }
 
                     startWallTime = omp_get_wtime();
