@@ -334,6 +334,12 @@ typedef enum
  */
 typedef enum
 {
+    LTFRBB,
+    XYZWHD
+} RpptRoi3DType;
+
+typedef enum
+{
     RGBtype,
     BGRtype
 } RpptSubpixelLayout;
@@ -360,6 +366,15 @@ typedef struct
 
 } RpptRoiLtrb;
 
+/*! \brief RPPT ROI LTFRBB
+ * \ingroup group_rppdefs
+ */
+typedef struct
+{
+    RppiPoint3D ltf, rbb;
+
+} RpptRoiLtfrbb;
+
 /*! \brief RPPT ROI XYWH
  * \ingroup group_rppdefs
  */
@@ -370,6 +385,9 @@ typedef struct
 
 } RpptRoiXywh;
 
+/*! \brief RPPT ROI XYZWHD
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     RppiPoint3D xyz;
@@ -386,6 +404,16 @@ typedef union
     RpptRoiXywh xywhROI;
 
 } RpptROI, *RpptROIPtr;
+
+/*! \brief RPPT ROI 3D
+ * \ingroup group_rppdefs
+ */
+typedef union
+{
+    RpptRoiLtfrbb ltfrbbROI;
+    RpptRoiXyzwhd xyzwhdROI;
+
+} RpptROI3D, *RpptROI3DPtr;
 
 /*! \brief RPPT Strides
  * \ingroup group_rppdefs
