@@ -148,6 +148,11 @@ doxygen .Doxyfile
   make -j$nproc
   sudo make install
   ```
+* Libsndfile installation
+  ```
+  sudo apt-get update
+  sudo apt-get install libsndfile1-dev
+  ```
 
 ## Build & Install RPP 
 
