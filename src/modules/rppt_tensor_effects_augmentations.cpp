@@ -454,7 +454,21 @@ RppStatus rppt_gaussian_noise_voxel_host(RppPtr_t srcPtr,
     RpptXorwowStateBoxMuller xorwowInitialState[SIMD_FLOAT_VECTOR_LENGTH];
     rpp_host_rng_xorwow_f32_initialize_multiseed_stream_boxmuller<SIMD_FLOAT_VECTOR_LENGTH>(xorwowInitialState, seed);
 
-    if ((srcGenericDescPtr->dataType == RpptDataType::F32) && (dstGenericDescPtr->dataType == RpptDataType::F32))
+    if ((srcGenericDescPtr->dataType == RpptDataType::U8) && (dstGenericDescPtr->dataType == RpptDataType::U8))
+    {
+        gaussian_noise_voxel_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes,
+                                               srcGenericDescPtr,
+                                               static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes,
+                                               dstGenericDescPtr,
+                                               meanTensor,
+                                               stdDevTensor,
+                                               xorwowInitialState,
+                                               roiGenericPtrSrc,
+                                               roiType,
+                                               layoutParams,
+                                               rpp::deref(rppHandle));
+    }
+    else if ((srcGenericDescPtr->dataType == RpptDataType::F32) && (dstGenericDescPtr->dataType == RpptDataType::F32))
     {
         gaussian_noise_voxel_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes),
                                                  srcGenericDescPtr,
@@ -467,6 +481,20 @@ RppStatus rppt_gaussian_noise_voxel_host(RppPtr_t srcPtr,
                                                  roiType,
                                                  layoutParams,
                                                  rpp::deref(rppHandle));
+    }
+    else if ((srcGenericDescPtr->dataType == RpptDataType::I8) && (dstGenericDescPtr->dataType == RpptDataType::I8))
+    {
+        gaussian_noise_voxel_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcGenericDescPtr->offsetInBytes,
+                                               srcGenericDescPtr,
+                                               static_cast<Rpp8s*>(dstPtr) + dstGenericDescPtr->offsetInBytes,
+                                               dstGenericDescPtr,
+                                               meanTensor,
+                                               stdDevTensor,
+                                               xorwowInitialState,
+                                               roiGenericPtrSrc,
+                                               roiType,
+                                               layoutParams,
+                                               rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;
