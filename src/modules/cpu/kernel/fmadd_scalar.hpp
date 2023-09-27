@@ -95,18 +95,17 @@ RppStatus fmadd_scalar_f32_f32_host_tensor(Rpp32f *srcPtr,
                         dstPtrTemp = dstPtrRow;
 
                         int vectorLoopCount = 0;
+#if __AVX2__
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                         {
-#if __AVX2__
                             __m256 p[1];
-
                             rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrTemp, p);    // simd loads
                             rpp_host_math_fmadd8(p, pFmaddParams);                     // fmadd adjustment
                             rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp, p);  // simd stores
-#endif
                             srcPtrTemp += vectorIncrement;
                             dstPtrTemp += vectorIncrement;
                         }
+#endif
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                             *dstPtrTemp++ = (*srcPtrTemp++ * mulParam) + addParam;
 
@@ -141,18 +140,17 @@ RppStatus fmadd_scalar_f32_f32_host_tensor(Rpp32f *srcPtr,
                     dstPtrTemp = dstPtrRow;
 
                     int vectorLoopCount = 0;
+#if __AVX2__
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
-#if __AVX2__
                         __m256 p[1];
-
                         rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrTemp, p);    // simd loads
                         rpp_host_math_fmadd8(p, pFmaddParams);                     // fmadd adjustment
                         rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp, p);  // simd stores
-#endif
                         srcPtrTemp += vectorIncrement;
                         dstPtrTemp += vectorIncrement;
                     }
+#endif
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         *dstPtrTemp++ = (*srcPtrTemp++ * mulParam) + addParam;
 
