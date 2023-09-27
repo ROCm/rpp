@@ -61,7 +61,7 @@ void normalize_3D_tensor_avx_axis3(Rpp32f *srcPtr, RpptGenericDescPtr srcGeneric
                                    Rpp32f *meanPtr, Rpp32f *stdDevPtr, Rpp32f scale, Rpp32f shift, Rpp32u *paramStride, Rpp32u bufferLength)
 {
     Rpp32s paramIdx = 0;
-    Rpp32u alignedLength = (bufferLength / 48) * 48;
+    Rpp32u alignedLength = (bufferLength / 16) * 16;
     Rpp32u OuterDim = srcGenericDescPtr->dims[1];
 
     // set shift, mean and stddev
@@ -71,7 +71,7 @@ void normalize_3D_tensor_avx_axis3(Rpp32f *srcPtr, RpptGenericDescPtr srcGeneric
     __m256 pMean2 = _mm256_loadu_ps(meanPtr + 8);
     __m256 pStdDev1 = _mm256_loadu_ps(stdDevPtr);
     __m256 pStdDev2 = _mm256_loadu_ps(stdDevPtr + 8);
-    __m256 pMultiplier1 = _mm256_div_ps(pScale, pStdDev1);
+    __m256 pMultiplier1 = _mm256_div_ps(pScale, pStdDev1); // Using division operation as stddev is a vector and scale is a scalar thus can't be pre-divided
     __m256 pMultiplier2 = _mm256_div_ps(pScale, pStdDev2);
 
     for(Rpp32u i = 0; i < OuterDim; i++)
@@ -80,30 +80,7 @@ void normalize_3D_tensor_avx_axis3(Rpp32f *srcPtr, RpptGenericDescPtr srcGeneric
         Rpp32f *dstPtrTemp = dstPtr + i * dstGenericDescPtr->strides[1];
 
         Rpp32u vectorLoopCount = 0;
-        for(; vectorLoopCount < alignedLength ; vectorLoopCount += 48)
-        {
-            __m256 pSrc1 = _mm256_loadu_ps(srcPtrTemp);
-            __m256 pSrc2 = _mm256_loadu_ps(srcPtrTemp + 8);
-            __m256 pSrc3 = _mm256_loadu_ps(srcPtrTemp + 16);
-            __m256 pSrc4 = _mm256_loadu_ps(srcPtrTemp + 24);
-            __m256 pSrc5 = _mm256_loadu_ps(srcPtrTemp + 32);
-            __m256 pSrc6 = _mm256_loadu_ps(srcPtrTemp + 40);
-            __m256 pDst1 = _mm256_fmadd_ps(_mm256_sub_ps(pSrc1, pMean1), pMultiplier1, pShift);
-            __m256 pDst2 = _mm256_fmadd_ps(_mm256_sub_ps(pSrc2, pMean2), pMultiplier2, pShift);
-            __m256 pDst3 = _mm256_fmadd_ps(_mm256_sub_ps(pSrc3, pMean1), pMultiplier1, pShift);
-            __m256 pDst4 = _mm256_fmadd_ps(_mm256_sub_ps(pSrc4, pMean2), pMultiplier2, pShift);
-            __m256 pDst5 = _mm256_fmadd_ps(_mm256_sub_ps(pSrc5, pMean1), pMultiplier1, pShift);
-            __m256 pDst6 = _mm256_fmadd_ps(_mm256_sub_ps(pSrc6, pMean2), pMultiplier2, pShift);
-            _mm256_storeu_ps(dstPtrTemp, pDst1);
-            _mm256_storeu_ps(dstPtrTemp + 8, pDst2);
-            _mm256_storeu_ps(dstPtrTemp + 16, pDst3);
-            _mm256_storeu_ps(dstPtrTemp + 24, pDst4);
-            _mm256_storeu_ps(dstPtrTemp + 32, pDst5);
-            _mm256_storeu_ps(dstPtrTemp + 40, pDst6);
-            srcPtrTemp += 48;
-            dstPtrTemp += 48;
-        }
-        for(; vectorLoopCount < bufferLength ; vectorLoopCount += 16)
+        for(; vectorLoopCount < alignedLength ; vectorLoopCount += 16)
         {
             __m256 pSrc1 = _mm256_loadu_ps(srcPtrTemp);
             __m256 pSrc2 = _mm256_loadu_ps(srcPtrTemp + 8);
