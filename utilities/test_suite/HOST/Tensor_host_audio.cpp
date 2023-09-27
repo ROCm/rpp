@@ -41,6 +41,12 @@ int main(int argc, char **argv)
     int batchSize = atoi(argv[6]);
     char *dst = argv[7];
 
+    if (testType == 0 && batchSize != 8)
+    {
+        cout << "Error! QA Mode only runs with batchsize 8" << endl;
+        return -1;
+    }
+
     // Set case names
     string funcName = audioAugmentationMap[testCase];
     if (funcName.empty())
