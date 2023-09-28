@@ -33,19 +33,19 @@ THE SOFTWARE.
 #include <cstdlib>
 #include <ctime>
 #include <algorithm>
-#include <iterator> 
+#include <iterator>
 #include "rpp.h"
 #include "../rpp_test_suite_common.h"
 
 using namespace std;
 namespace fs = boost::filesystem;
 
-void compute_strides(RpptGenericDescPtr descriptorPtr) 
+void compute_strides(RpptGenericDescPtr descriptorPtr)
 {
-    if (descriptorPtr->numDims > 0) 
+    if (descriptorPtr->numDims > 0)
     {
         uint64_t v = 1;
-        for (int i = descriptorPtr->numDims; i > 0; i--) 
+        for (int i = descriptorPtr->numDims; i > 0; i--)
         {
             descriptorPtr->strides[i] = v;
             v *= descriptorPtr->dims[i];
@@ -61,12 +61,12 @@ string get_path(Rpp32u nDim, Rpp32u readType)
     string finalPath = "";
     remove_substring(refPath, pattern);
     string dim = std::to_string(nDim) + "d";
-    
+
     if (readType == 0)
         finalPath = refPath + "TRANSPOSE/input/" + dim;
     else
-        finalPath = refPath + "TRANSPOSE/output/" + dim;  
-    
+        finalPath = refPath + "TRANSPOSE/output/" + dim;
+
     return finalPath;
 }
 
@@ -88,13 +88,13 @@ void read_data(Rpp32f *data, Rpp32u nDim, Rpp32u readType, Rpp32u bufferLength, 
         std::cerr<<"\nGolden Inputs / Outputs are generated only for 2D / 3D / 4D data"<<std::endl;
         exit(0);
     }
-    
+
     string refPath = get_path(nDim, readType);
     string dimSpecifier = std::to_string(nDim) + "d";
     string type = "input";
     if (readType == 1)
         type = "output";
-    
+
     for(int i = 0; i < batchSize; i++)
     {
         string refFile = refPath + "/" + dimSpecifier + "_" + type + std::to_string(i) + ".txt";
@@ -121,11 +121,15 @@ void fill_roi_and_perm_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, 
     {
         case 2:
         {
-            for(int i = 0; i < batchSize; i++)
+            for(int i = 0; i < batchSize * 4; i += 4)
             {
-                int sampleIdx = i * nDim;
-                roiTensor[sampleIdx] = 125;
-                roiTensor[sampleIdx + 1] = 125;
+                // fill begin values for each dimension
+                roiTensor[i] = 0;
+                roiTensor[i + 1] = 0;
+
+                // fill length values for each dimension
+                roiTensor[i + 2] = 125;
+                roiTensor[i + 3] = 125;
             }
             permTensor[0] = 1;
             permTensor[1] = 0;
@@ -133,12 +137,17 @@ void fill_roi_and_perm_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, 
         }
         case 3:
         {
-            for(int i = 0; i < batchSize; i++)
+            for(int i = 0; i < batchSize * 6; i += 6)
             {
-                int sampleIdx = i * nDim;
-                roiTensor[sampleIdx] = 100;
-                roiTensor[sampleIdx + 1] = 100;
-                roiTensor[sampleIdx + 2] = 16;
+                // fill begin values for each dimension
+                roiTensor[i] = 0;
+                roiTensor[i + 1] = 0;
+                roiTensor[i + 2] = 0;
+
+                // fill length values for each dimension
+                roiTensor[i + 3] = 100;
+                roiTensor[i + 4] = 100;
+                roiTensor[i + 5] = 16;
             }
             permTensor[0] = 2;
             permTensor[1] = 0;
@@ -147,13 +156,19 @@ void fill_roi_and_perm_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, 
         }
         case 4:
         {
-            for(int i = 0; i < batchSize; i++)
+            for(int i = 0; i < batchSize * 8; i += 8)
             {
-                int sampleIdx = i * nDim;
-                roiTensor[sampleIdx] = 75;
-                roiTensor[sampleIdx + 1] = 75;
-                roiTensor[sampleIdx + 2] = 4;
-                roiTensor[sampleIdx + 3] = 3;
+                // fill begin values for each dimension
+                roiTensor[i] = 0;
+                roiTensor[i + 1] = 0;
+                roiTensor[i + 2] = 0;
+                roiTensor[i + 3] = 0;
+
+                // fill length values for each dimension
+                roiTensor[i + 4] = 75;
+                roiTensor[i + 5] = 75;
+                roiTensor[i + 6] = 4;
+                roiTensor[i + 7] = 3;
             }
             permTensor[0] = 1;
             permTensor[1] = 2;
@@ -184,12 +199,12 @@ void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize)
         }
         if (cnt == bufferLength)
             fileMatch++;
-    }    
+    }
     if (fileMatch == batchSize)
         std::cerr<<"\nPASSED!"<<std::endl;
     else
         std::cerr << "\nFAILED! " << fileMatch << "/" << batchSize << " outputs are matching with reference outputs" << std::endl;
-    
+
     free(refOutput);
 }
 
@@ -202,29 +217,29 @@ int main(int argc, char **argv)
     batchSize = atoi(argv[2]);
     testType = atoi(argv[3]);
     qaMode = atoi(argv[4]);
-    
+
     if (qaMode && batchSize != 3)
     {
         std::cerr<<"QA mode can only run with batchsize 3"<<std::endl;
         return -1;
     }
-        
-    
+
+
     // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
     // If numThreads value passed is 0, number of OpenMP threads used by RPP will be set to batch size
     Rpp32u numThreads = 0;
     rppHandle_t handle;
     rppCreateWithBatchSize(&handle, batchSize, numThreads);
-    
+
     double startWallTime, endWallTime;
     double avgWallTime = 0, wallTime = 0;
     Rpp32u numRuns = 1;
     if (testType)
         numRuns = 100;
-    
+
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning transpose %d times (each time with a batch size of %d) and computing mean statistics...", numRuns, batchSize);
-    
+
     // set src/dst generic tensor descriptors
     RpptGenericDesc srcDescriptor, dstDescriptor;
     RpptGenericDescPtr srcDescriptorPtrND, dstDescriptorPtrND;
@@ -233,17 +248,17 @@ int main(int argc, char **argv)
     srcDescriptorPtrND->offsetInBytes = 0;
     srcDescriptorPtrND->dataType = RpptDataType::F32;
     srcDescriptorPtrND->layout = RpptLayout::NDHWC;
-    
+
     dstDescriptorPtrND  = &dstDescriptor;
     dstDescriptorPtrND->numDims = nDim;
     dstDescriptorPtrND->offsetInBytes = 0;
     dstDescriptorPtrND->dataType = RpptDataType::F32;
     dstDescriptorPtrND->layout = RpptLayout::NDHWC;
-    
+
     Rpp32u *permTensor = (Rpp32u *)calloc(nDim, sizeof(Rpp32u));
-    Rpp32u *roiTensor = (Rpp32u *)calloc(nDim * batchSize, sizeof(Rpp32u));
-    Rpp32f *inputF32 = NULL, *outputF32 = NULL;  
-    
+    Rpp32u *roiTensor = (Rpp32u *)calloc(nDim * 2 * batchSize, sizeof(Rpp32u));
+    Rpp32f *inputF32 = NULL, *outputF32 = NULL;
+
     // fill roi and perm values based on mode choosen
     if (qaMode)
     {
@@ -254,21 +269,28 @@ int main(int argc, char **argv)
     {
         if(nDim == 2)
         {
-            for(int i = 0; i < batchSize * 2; i += 2)
+            for(int i = 0; i < batchSize * 4; i += 4)
             {
-                roiTensor[i] = 1920;
-                roiTensor[i + 1] = 1080;
+                roiTensor[i] = 0;
+                roiTensor[i + 1] = 0;
+
+                roiTensor[i + 2] = 1920;
+                roiTensor[i + 3] = 1080;
             }
             permTensor[0] = 1;
             permTensor[1] = 0;
         }
         else if(nDim == 3)
         {
-            for(int i = 0; i < batchSize * 3; i += 3)
+            for(int i = 0; i < batchSize * 6; i += 6)
             {
-                roiTensor[i] = 1152;
-                roiTensor[i + 1] = 768;
-                roiTensor[i + 2] = 16;
+                roiTensor[i] = 0;
+                roiTensor[i + 1] = 0;
+                roiTensor[i + 2] = 0;
+
+                roiTensor[i + 3] = 1152;
+                roiTensor[i + 4] = 768;
+                roiTensor[i + 5] = 16;
             }
             permTensor[0] = 2;
             permTensor[1] = 0;
@@ -276,12 +298,17 @@ int main(int argc, char **argv)
         }
         else if(nDim == 4)
         {
-            for(int i = 0; i < batchSize * 4; i += 4)
+            for(int i = 0; i < batchSize * 8; i += 8)
             {
-                roiTensor[i] = 1;
-                roiTensor[i + 1] =  128;
-                roiTensor[i + 2] = 128;
-                roiTensor[i + 3] = 128;
+                roiTensor[i] = 0;
+                roiTensor[i + 1] = 0;
+                roiTensor[i + 2] = 0;
+                roiTensor[i + 3] = 0;
+
+                roiTensor[i + 4] = 1;
+                roiTensor[i + 5] = 128;
+                roiTensor[i + 6] = 128;
+                roiTensor[i + 7] = 128;
             }
             permTensor[0] = 1;
             permTensor[1] = 2;
@@ -290,53 +317,62 @@ int main(int argc, char **argv)
         }
     }
     else
-    {   // limiting max value in a dimension to 150 for testing purposes 
-        for(int i = 0; i < batchSize * nDim; i++)
-            roiTensor[i] = std::rand() % 150;
-        
+    {
+        // Fill the starting indices of ROI values
+        for(int i = 0; i < batchSize; i++)
+        {
+            int startIndex = i * nDim * 2;
+            int lengthIndex = startIndex + nDim;
+            for(int j = 0; j < nDim; j++)
+            {
+                roiTensor[startIndex + j] = 0;
+                roiTensor[lengthIndex + j] = std::rand() % 50;  // limiting max value in a dimension to 50 for testing purposes
+            }
+        }
+
         for(int i = 0; i < nDim; i++)
-            permTensor[i] = nDim - 1 - i;       
+            permTensor[i] = nDim - 1 - i;
     }
-    
+
     // set dims and compute strides
     srcDescriptorPtrND->dims[0] = batchSize;
     dstDescriptorPtrND->dims[0] = batchSize;
     for(int i = 1; i <= nDim; i++)
     {
-        srcDescriptorPtrND->dims[i] = roiTensor[i - 1];
-        dstDescriptorPtrND->dims[i] = roiTensor[permTensor[i - 1]];
+        srcDescriptorPtrND->dims[i] = roiTensor[nDim + i - 1];
+        dstDescriptorPtrND->dims[i] = roiTensor[nDim + permTensor[i - 1]];
     }
     compute_strides(srcDescriptorPtrND);
     compute_strides(dstDescriptorPtrND);
-    
+
     Rpp32u numValues = 1;
     for(int i = 0; i <= nDim; i++)
         numValues *= srcDescriptorPtrND->dims[i];
-        
+
     // allocate memory for input / output
     inputF32 = (Rpp32f *)calloc(numValues, sizeof(Rpp32f));
-    outputF32 = (Rpp32f *)calloc(numValues, sizeof(Rpp32f));    
-    
+    outputF32 = (Rpp32f *)calloc(numValues, sizeof(Rpp32f));
+
     // read input data
     if(qaMode)
         read_data(inputF32, nDim, 0,  numValues, batchSize);
     else
     {
-        std::srand(0); 
+        std::srand(0);
         for(int i = 0; i < numValues; i++)
             inputF32[i] = (float)(std::rand() % 255);
     }
-    
+
     for(int i = 0; i < numRuns; i++)
     {
         startWallTime = omp_get_wtime();
         rppt_transpose_generic_host(inputF32, srcDescriptorPtrND, outputF32, dstDescriptorPtrND, permTensor, roiTensor, handle);
         endWallTime = omp_get_wtime();
-        
+
         wallTime = endWallTime - startWallTime;
         avgWallTime += wallTime;
     }
-    
+
     // compare outputs
     if(qaMode)
         compare_output(outputF32, nDim, batchSize);
@@ -350,7 +386,7 @@ int main(int argc, char **argv)
         // {
         //     std::cerr<<"\nprinting input values: "<<std::endl;
         //     int cnt = 0;
-        //     for(int i = 0; i < roiTensor[0]; i++)   
+        //     for(int i = 0; i < roiTensor[0]; i++)
         //     {
         //         for(int j = 0; j < roiTensor[1]; j++)
         //         {
@@ -360,13 +396,13 @@ int main(int argc, char **argv)
         //                 cnt++;
         //             }
         //             std::cerr<<std::endl;
-        //         }  
+        //         }
         //         std::cerr<<std::endl;
         //     }
-            
+
         //     cnt = 0;
         //     std::cerr<<"\n\nprinting output values: "<<std::endl;
-        //     for(int i = 0; i < roiTensor[permTensor[0]]; i++)   
+        //     for(int i = 0; i < roiTensor[permTensor[0]]; i++)
         //     {
         //         for(int j = 0; j < roiTensor[permTensor[1]]; j++)
         //         {
@@ -376,15 +412,15 @@ int main(int argc, char **argv)
         //                 cnt++;
         //             }
         //             std::cerr<<std::endl;
-        //         } 
-        //         std::cerr<<std::endl; 
+        //         }
+        //         std::cerr<<std::endl;
         //     }
         // }
     }
-    
+
     free(inputF32);
     free(outputF32);
     free(permTensor);
-    free(roiTensor);   
+    free(roiTensor);
     return 0;
 }

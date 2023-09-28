@@ -200,7 +200,9 @@ RppStatus transpose_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
         dstPtrTemp = dstPtr + batchCount * dstGenericDescPtr->strides[0];
 
         Rpp32u *dstShape = dstShapeTensor + batchCount * nDim;
-        Rpp32u *roi = roiTensor + batchCount * nDim;
+        Rpp32u *roi = roiTensor + batchCount * nDim * 2;
+        Rpp32u *begin = roi;
+        Rpp32u *length = &roi[nDim];
         Rpp32u *perm = permTensor;
         Rpp32u *srcStrides = srcStridesTensor + batchCount * nDim;
         Rpp32u *dstStrides = dstStridesTensor + batchCount * nDim;
@@ -218,14 +220,14 @@ RppStatus transpose_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
         {
             if (nDim == 2 && perm[0] == 1 && perm[1] == 0)
             {
-                compute_2d_transpose(srcPtrTemp, dstPtrTemp, roi[0], roi[1], srcGenericDescPtr->strides[1], dstGenericDescPtr->strides[1]);
+                compute_2d_transpose(srcPtrTemp, dstPtrTemp, length[0], length[1], srcGenericDescPtr->strides[1], dstGenericDescPtr->strides[1]);
             }
             else if (nDim == 3)
             {
-                if(perm[0] == 2 && perm[1] == 0 && perm[2] == 1 && roi[2] == 16)
+                if(perm[0] == 2 && perm[1] == 0 && perm[2] == 1 && length[2] == 16)
                 {
-                    Rpp32u height = roi[0];
-                    Rpp32u width = roi[1];
+                    Rpp32u height = length[0];
+                    Rpp32u width = length[1];
                     Rpp32u channels = 16;
                     Rpp32u bufferLength = width * channels;
                     Rpp32u alignedLength = (bufferLength / 64) * 64;
@@ -291,9 +293,9 @@ RppStatus transpose_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
                 {
                     Rpp32f *srcPtrRow = srcPtrTemp;
                     Rpp32f *dstPtrRow = dstPtrTemp;
-                    Rpp32u height = roi[0];
-                    Rpp32u width = roi[1];
-                    Rpp32u channels = roi[2];
+                    Rpp32u height = length[0];
+                    Rpp32u width = length[1];
+                    Rpp32u channels = length[2];
                     for(int i = 0; i < height; i++)
                     {
                         Rpp32f *srcPtrRowTemp = srcPtrRow;
@@ -312,9 +314,9 @@ RppStatus transpose_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
                 {
                     Rpp32f *srcPtrRow = srcPtrTemp;
                     Rpp32f *dstPtrRow = dstPtrTemp;
-                    for(int i = 0; i < roi[0]; i++)
+                    for(int i = 0; i < length[0]; i++)
                     {
-                        compute_2d_transpose(srcPtrTemp, dstPtrTemp, roi[1], roi[2], srcGenericDescPtr->strides[2], dstGenericDescPtr->strides[2]);
+                        compute_2d_transpose(srcPtrTemp, dstPtrTemp, length[1], length[2], srcGenericDescPtr->strides[2], dstGenericDescPtr->strides[2]);
 
                         // increment src and dst pointers
                         srcPtrTemp += srcGenericDescPtr->strides[1];
@@ -327,19 +329,19 @@ RppStatus transpose_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
                 Rpp32u vectorIncrement = 8;
                 if(perm[0] == 1 && perm[1] == 2 && perm[2] == 3 && perm[3] == 0)
                 {
-                    Rpp32u bufferLength = roi[perm[3]];
+                    Rpp32u bufferLength = length[perm[3]];
                     Rpp32u alignedLength = (bufferLength / vectorIncrement) * vectorIncrement;
                     Rpp32f *srcPtr0 = srcPtrTemp;
                     Rpp32f *dstPtr0 = dstPtrTemp;
-                    for(int i = 0; i < roi[perm[0]]; i++)
+                    for(int i = 0; i < length[perm[0]]; i++)
                     {
                         Rpp32f *srcPtr1 = srcPtr0;
                         Rpp32f *dstPtr1 = dstPtr0;
-                        for(int j = 0; j < roi[perm[1]]; j++)
+                        for(int j = 0; j < length[perm[1]]; j++)
                         {
                             Rpp32f *srcPtr2 = srcPtr1;
                             Rpp32f *dstPtr2 = dstPtr1;
-                            for(int k = 0; k < roi[perm[2]]; k++)
+                            for(int k = 0; k < length[perm[2]]; k++)
                             {
                                 Rpp32f *srcPtr3 = srcPtr2;
                                 Rpp32f *dstPtr3 = dstPtr2;
@@ -380,7 +382,7 @@ RppStatus transpose_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
             {
                 // compute output shape
                 for(Rpp32u i = 0; i < nDim; i++)
-                    dstShape[i] = roi[perm[i]];
+                    dstShape[i] = length[perm[i]];
 
                 // compute output strides
                 compute_strides(dstStrides, dstShape, nDim);
@@ -431,26 +433,38 @@ RppStatus transpose_generic_host_tensor(T *srcPtr,
         dstPtrTemp = dstPtr + batchCount * dstGenericDescPtr->strides[0];
 
         Rpp32u *dstShape = dstShapeTensor + batchCount * nDim;
-        Rpp32u *roi = roiTensor + batchCount * nDim;
+        Rpp32u *roi = roiTensor + batchCount * nDim * 2;
         Rpp32u *perm = permTensor;
         Rpp32u *srcStrides = srcStridesTensor + batchCount * nDim;
         Rpp32u *dstStrides = dstStridesTensor + batchCount * nDim;
 
-        // compute output shape
-        for(Rpp32u i = 0; i < nDim; i++)
-            dstShape[i] = roi[perm[i]];
-
-        // compute output strides
-        compute_strides(dstStrides, dstShape, nDim);
-
-        // compute input strides and update as per the permute order
-        Rpp32u tempStrides[RPPT_MAX_DIMS];
-        compute_strides(tempStrides, roi, nDim);
+        bool copyInput = true;
         for(int i = 0; i < nDim; i++)
-            srcStrides[i] = tempStrides[perm[i]];
+            copyInput *= (perm[i] == i);
 
-        // perform transpose as per the permute order
-        transpose(dstPtrTemp, dstStrides, srcPtrTemp, srcStrides, dstShape, nDim);
+        // do memcpy of input to output since output order is same as input order
+        if(copyInput)
+        {
+            memcpy(dstPtrTemp, srcPtrTemp, (size_t)(srcGenericDescPtr->strides[0] * sizeof(T)));
+        }
+        else
+        {
+            // compute output shape
+            for(Rpp32u i = 0; i < nDim; i++)
+                dstShape[i] = roi[perm[i]];
+
+            // compute output strides
+            compute_strides(dstStrides, dstShape, nDim);
+
+            // compute input strides and update as per the permute order
+            Rpp32u tempStrides[RPPT_MAX_DIMS];
+            compute_strides(tempStrides, roi, nDim);
+            for(int i = 0; i < nDim; i++)
+                srcStrides[i] = tempStrides[perm[i]];
+
+            // perform transpose as per the permute order
+            transpose(dstPtrTemp, dstStrides, srcPtrTemp, srcStrides, dstShape, nDim);
+        }
     }
     free(srcStridesTensor);
     free(dstStridesTensor);
