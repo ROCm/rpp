@@ -72,7 +72,6 @@ int main(int argc, char **argv)
 
     // Other initializations
     int missingFuncFlag = 0;
-    int i = 0, j = 0;
     int maxSrcChannels = 0;
     int maxSrcWidth = 0, maxSrcHeight = 0;
     int maxDstWidth = 0, maxDstHeight = 0;
@@ -127,7 +126,6 @@ int main(int argc, char **argv)
     rppCreateWithBatchSize(&handle, srcDescPtr->n, 8);
     int noOfIterations = (int)audioNames.size() / batchSize;
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0;
-    double cpuTime, wallTime;
     string testCaseName;
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
     for (int perfRunCount = 0; perfRunCount < numRuns; perfRunCount++)
@@ -140,6 +138,7 @@ int main(int argc, char **argv)
 
             clock_t startCpuTime, endCpuTime;
             double startWallTime, endWallTime;
+            double cpuTime, wallTime;
             switch (testCase)
             {
                 case 0:
