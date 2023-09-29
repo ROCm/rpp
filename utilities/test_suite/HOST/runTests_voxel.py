@@ -42,7 +42,17 @@ def validate_and_remove_contents(path):
         print("Root folder cannot be deleted.")
         exit()
     if os.path.exists(path):  # check if the folder exists
-        os.system("rm -rvf {}/*".format(path))  # Delete the directory if it exists
+        # Get a list of files and directories within the specified path
+        items = os.listdir(path)
+
+        if items:
+            # The directory is not empty, delete its contents
+            for item in items:
+                item_path = os.path.join(path, item)
+                if os.path.isfile(item_path):
+                    os.remove(item_path)
+                elif os.path.isdir(item_path):
+                    shutil.rmtree(item_path)     # Delete the directory if it exists
     else:
         print("Path is invalid or does not exist.")
         exit()
@@ -59,7 +69,7 @@ def validate_and_remove_folders(path, folder):
         for folder_name in output_folders:
             folder_path = os.path.join(path, "..", folder_name)
             if os.path.isdir(folder_path):
-                os.system("rm -rf {}".format(folder_path))  # Delete the directory if it exists
+                shutil.rmtree(folder_path)  # Delete the directory if it exists
                 print("Deleted directory:", folder_path)
             else:
                 print("Directory not found:", folder_path)
@@ -100,10 +110,10 @@ def func_group_finder(case_number):
     else:
         return "miscellaneous"
  # Generate a directory name based on certain parameters
-def directory_name_generator(qaMode, affinity, type, case, path): #TODO : need to change
+def directory_name_generator(qaMode, affinity, layoutType, case, path):
     if qaMode == 0:
         functionality_group = func_group_finder(int(case))
-        dst_folder_temp = f"{path}/rpp_{affinity}_{type}_{functionality_group}"
+        dst_folder_temp = "{}/rpp_{}_{}_{}".format(path, affinity, layoutType, functionality_group)
     else:
         dst_folder_temp = path
 
@@ -239,15 +249,15 @@ os.makedirs("build")
 os.chdir("build")
 
 # Run cmake and make commands
-subprocess.run(["cmake", ".."])
-subprocess.run(["make", "-j16"])
+subprocess.run(["cmake", ".."], cwd=".")   # nosec
+subprocess.run(["make", "-j16"], cwd=".")  # nosec
 
 print("\n\n\n\n\n")
 print("##########################################################################################")
 print("Running all layout Inputs...")
 print("##########################################################################################")
 
-if(testType == 0):
+if testType == 0:
     for case in caseList:
         if int(case) < 0 or int(case) > 1:
             print(f"Invalid case number {case}. Case number must be in the range of 0 to 1!")
@@ -264,7 +274,7 @@ if(testType == 0):
             print("Running a New Functionality...")
             print("--------------------------------")
             print(f"./Tensor_voxel_host {headerPath} {dataPath} {dstPathTemp} {layout} {case} {numRuns} {testType} {qaMode} {batchSize}")
-            result = subprocess.run(["./Tensor_voxel_host", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize)], stdout=subprocess.PIPE)
+            result = subprocess.run(["./Tensor_voxel_host", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize)], stdout=subprocess.PIPE) # nosec
             print(result.stdout.decode())
 
             print("------------------------------------------------------------------------------------------")
@@ -286,7 +296,7 @@ else:
 
             with open(f"{loggingFolder}/Tensor_voxel_host_{log_file_layout}_raw_performance_log.txt", "a") as log_file:
                 print(f"./Tensor_voxel_host {headerPath} {dataPath} {dstPathTemp} {layout} {case} {numRuns} {testType} {qaMode} {batchSize}")
-                process = subprocess.Popen(["./Tensor_voxel_host", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+                process = subprocess.Popen(["./Tensor_voxel_host", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True) # nosec
                 while True:
                     output = process.stdout.readline()
                     if not output and process.poll() is not None:
