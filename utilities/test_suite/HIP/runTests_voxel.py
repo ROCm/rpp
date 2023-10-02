@@ -38,11 +38,21 @@ def validate_and_remove_contents(path):
     if not path:  # check if a string is empty
         print("Folder path is empty.")
         exit()
-    if path == "/*":  # check if the root directory is passed to the function
+    elif path == "/*":  # check if the root directory is passed to the function
         print("Root folder cannot be deleted.")
         exit()
-    if os.path.exists(path):  # check if the folder exists
-        os.system("rm -rvf {}/*".format(path))  # Delete the directory if it exists
+    elif os.path.exists(path):  # check if the folder exists
+        # Get a list of files and directories within the specified path
+        items = os.listdir(path)
+
+        if items:
+            # The directory is not empty, delete its contents
+            for item in items:
+                item_path = os.path.join(path, item)
+                if os.path.isfile(item_path):
+                    os.remove(item_path)
+                elif os.path.isdir(item_path):
+                    shutil.rmtree(item_path)     # Delete the directory if it exists
     else:
         print("Path is invalid or does not exist.")
         exit()
@@ -59,7 +69,7 @@ def validate_and_remove_folders(path, folder):
         for folder_name in output_folders:
             folder_path = os.path.join(path, "..", folder_name)
             if os.path.isdir(folder_path):
-                os.system("rm -rf {}".format(folder_path))  # Delete the directory if it exists
+                shutil.rmtree(folder_path)  # Delete the directory if it exists
                 print("Deleted directory:", folder_path)
             else:
                 print("Directory not found:", folder_path)
@@ -81,11 +91,10 @@ def case_file_check(CASE_FILE_PATH):
         return False
 
  # Generate a directory name based on certain parameters
-def directory_name_generator(qaMode, affinity, type, case, path):
+def directory_name_generator(qaMode, affinity, layoutType, case, path):
     if qaMode == 0:
         functionality_group = func_group_finder(int(case))
-
-        dst_folder_temp = f"{path}/rpp_{affinity}_{type}_{functionality_group}"
+        dst_folder_temp = "{}/rpp_{}_{}_{}".format(path, affinity, layoutType, functionality_group)
     else:
         dst_folder_temp = path
 
@@ -276,8 +285,8 @@ os.makedirs("build")
 os.chdir("build")
 
 # Run cmake and make commands
-subprocess.run(["cmake", ".."])
-subprocess.run(["make", "-j16"])
+subprocess.run(["cmake", ".."], cwd=".")   # nosec
+subprocess.run(["make", "-j16"], cwd=".")  # nosec
 
 # Create folders based on testType and profilingOption
 if testType == 1 and profilingOption == "YES":
@@ -290,7 +299,7 @@ print("#########################################################################
 print("Running all layout Inputs...")
 print("##########################################################################################")
 
-if(testType == 0):
+if testType == 0:
     for case in caseList:
         if int(case) < 0 or int(case) > 1:
             print(f"Invalid case number {case}. Case number must be in the range of 0 to 1!")
@@ -307,7 +316,7 @@ if(testType == 0):
             print("Running a New Functionality...")
             print("--------------------------------")
             print(f"./Tensor_voxel_hip {headerPath} {dataPath} {dstPathTemp} {layout} {case} {numRuns} {testType} {qaMode} {batchSize}")
-            result = subprocess.run(["./Tensor_voxel_hip", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize)], stdout=subprocess.PIPE)
+            result = subprocess.run(["./Tensor_voxel_hip", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize)], stdout=subprocess.PIPE) # nosec
             print(result.stdout.decode())
 
             print("------------------------------------------------------------------------------------------")
@@ -330,7 +339,7 @@ else:
 
                 with open(f"{loggingFolder}/Tensor_voxel_hip_{log_file_layout}_raw_performance_log.txt", "a") as log_file:
                     print(f"./Tensor_voxel_hip {headerPath} {dataPath} {dstPathTemp} {layout} {case}{numRuns} {testType} {qaMode}")
-                    process = subprocess.Popen(["./Tensor_voxel_hip", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+                    process = subprocess.Popen(["./Tensor_voxel_hip", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True) # nosec
                     while True:
                         output = process.stdout.readline()
                         if not output and process.poll() is not None:
@@ -365,7 +374,7 @@ else:
                         os.mkdir(f"{dstPath}/Tensor_PKD3/case_{case}")
                     with open(f"{loggingFolder}/Tensor_voxel_hip_{log_file_layout}_raw_performance_log.txt", "a") as log_file:
                         print(f"\nrocprof --basenames on --timestamp on --stats -o {dstPathTemp}/Tensor_PKD3/case_{case}/output_case{case}.csv ./Tensor_voxel_hip {headerPath} {dataPath} {dstPathTemp}  {layout} {case}{numRuns} {testType} {qaMode} {batchSize}")
-                        process = subprocess.Popen([ 'rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f"{dstPath}/Tensor_PKD3/case_{case}/output_case{case}.csv", './Tensor_voxel_hip', headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                        process = subprocess.Popen([ 'rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f"{dstPath}/Tensor_PKD3/case_{case}/output_case{case}.csv", './Tensor_voxel_hip', headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) # nosec
                         while True:
                             output = process.stdout.readline()
                             if not output and process.poll() is not None:
@@ -377,7 +386,7 @@ else:
                         os.mkdir(f"{dstPath}/Tensor_PLN3/case_{case}")
                     with open(f"{loggingFolder}/Tensor_voxel_hip_{log_file_layout}_raw_performance_log.txt", "a") as log_file:
                         print(f"\nrocprof --basenames on --timestamp on --stats -o {dstPathTemp}/Tensor_PLN3/case_{case}/output_case{case}.csv ./Tensor_voxel_hip {headerPath} {dataPath} {dstPathTemp}  {layout} {case}{numRuns} {testType} {qaMode}")
-                        process = subprocess.Popen([ 'rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f"{dstPath}/Tensor_PLN3/case_{case}/output_case{case}.csv", './Tensor_voxel_hip', headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                        process = subprocess.Popen([ 'rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f"{dstPath}/Tensor_PLN3/case_{case}/output_case{case}.csv", './Tensor_voxel_hip', headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) # nosec
                         while True:
                             output = process.stdout.readline()
                             if not output and process.poll() is not None:
@@ -389,7 +398,7 @@ else:
                         os.mkdir(f"{dstPath}/Tensor_PLN1/case_{case}")
                     with open(f"{loggingFolder}/Tensor_voxel_hip_{log_file_layout}_raw_performance_log.txt", "a") as log_file:
                         print(f"\nrocprof --basenames on --timestamp on --stats -o {dstPathTemp}/Tensor_PLN1/case_{case}/output_case{case}.csv ./Tensor_voxel_hip {headerPath} {dataPath} {dstPathTemp}  {layout} {case}{numRuns} {testType} {qaMode}")
-                        process = subprocess.Popen([ 'rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f"{dstPath}/Tensor_PLN1/case_{case}/output_case{case}.csv", './Tensor_voxel_hip', headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                        process = subprocess.Popen([ 'rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f"{dstPath}/Tensor_PLN1/case_{case}/output_case{case}.csv", './Tensor_voxel_hip', headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) # nosec
                         while True:
                             output = process.stdout.readline()
                             if not output and process.poll() is not None:
