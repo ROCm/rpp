@@ -32,9 +32,9 @@ extern "C"
 
 /*!
  * \file
- * \brief RPPI Image Operations - Advanced Augmentations - DEPRERCATED.
+ * \brief RPPI Image Operations - Advanced Augmentations - To be deprecated.
  * \defgroup group_rppi_advanced_augmentations RPPI Image Operations - Advanced Augmentations
- * \brief RPPI Image Operations - Advanced Augmentations - DEPRERCATED.
+ * \brief RPPI Image Operations - Advanced Augmentations - To be deprecated.
  */
 
 /*! \addtogroup group_rppi_advanced_augmentations

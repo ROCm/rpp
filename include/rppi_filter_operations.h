@@ -31,9 +31,9 @@ extern "C" {
 
 /*!
  * \file
- * \brief RPPI Image Operations - Filter Operations - DEPRERCATED.
+ * \brief RPPI Image Operations - Filter Operations - To be deprecated.
  * \defgroup group_rppi_filter_operations RPPI Image Operations - Filter Operations
- * \brief RPPI Image Operations - Filter Operations - DEPRERCATED.
+ * \brief RPPI Image Operations - Filter Operations - To be deprecated.
  */
 
 /*! \addtogroup group_rppi_filter_operations

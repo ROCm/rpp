@@ -112,7 +112,7 @@ extern "C" {
  */
 extern "C" SHARED_PUBLIC const char* rppGetErrorString(rppStatus_t error);
 
-/*! \brief Creates RPP handle for HOST single image processing - DEPRECATED.
+/*! \brief Creates RPP handle for HOST single image processing - To be deprecated.
  * \details Function to create a RPP handle. To be called in the beginning to initialize the RPP environment.
  * \param [in] handle A pointer to RPP handle of type <tt> \ref rppHandle_t</tt>.
  * \ingroup group_rpp
@@ -165,7 +165,7 @@ extern "C" SHARED_PUBLIC rppStatus_t rppCreateWithBatchSize(rppHandle_t* handle,
  */
 extern "C" SHARED_PUBLIC rppStatus_t rppDestroy(rppHandle_t handle);
 
-/*! \brief Destory RPP HOST handle - DEPRERCATED.
+/*! \brief Destory RPP HOST handle - To be deprecated.
  * \details Function to destroy a RPP handle's host memory allocation. To be called in the end to break down the rpp environment.
  * \param [in] handle RPP handle of type <tt> \ref rppHandle_t</tt>.
  * \ingroup group_rpp
@@ -220,7 +220,7 @@ extern "C" SHARED_PUBLIC rppStatus_t rppGetBatchSize(rppHandle_t handle, size_t 
 
 #if GPU_SUPPORT
 
-/*! \brief Creates RPP handle with accelerator stream for GPU single image processing - DEPRECATED.
+/*! \brief Creates RPP handle with accelerator stream for GPU single image processing - To be deprecated.
  * \details Function to create a RPP handle with an accelerator stream. To be called in the beginning to initialize the RPP environment.
  * \param [in] handle A pointer to RPP handle of type <tt> \ref rppHandle_t</tt>.
  * \param [in] stream An accelerator queue of type <tt> \ref rppAcceleratorQueue_t</tt> (hipStream_t for HIP and cl_command_queue for OpenCL).

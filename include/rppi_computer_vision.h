@@ -31,9 +31,9 @@ extern "C" {
 
 /*!
  * \file
- * \brief RPPI Image Operations - Computer Vision - DEPRERCATED.
+ * \brief RPPI Image Operations - Computer Vision - To be deprecated.
  * \defgroup group_rppi_computer_vision RPPI Image Operations - Computer Vision
- * \brief RPPI Image Operations - Computer Vision - DEPRERCATED.
+ * \brief RPPI Image Operations - Computer Vision - To be deprecated.
  */
 
 /*! \addtogroup group_rppi_computer_vision

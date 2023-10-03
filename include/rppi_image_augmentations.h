@@ -31,9 +31,9 @@ extern "C" {
 
 /*!
  * \file
- * \brief RPPI Image Operations - Image Augmentations - DEPRERCATED.
+ * \brief RPPI Image Operations - Image Augmentations - To be deprecated.
  * \defgroup group_rppi_image_augmentations RPPI Image Operations - Image Augmentations
- * \brief RPPI Image Operations - Image Augmentations - DEPRERCATED.
+ * \brief RPPI Image Operations - Image Augmentations - To be deprecated.
  */
 
 /*! \addtogroup group_rppi_image_augmentations

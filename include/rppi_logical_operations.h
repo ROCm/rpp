@@ -31,9 +31,9 @@ extern "C" {
 
 /*!
  * \file
- * \brief RPPI Image Operations - Logical Operations - DEPRERCATED.
+ * \brief RPPI Image Operations - Logical Operations - To be deprecated.
  * \defgroup group_rppi_logical_operations RPPI Image Operations - Logical Operations
- * \brief RPPI Image Operations - Logical Operations - DEPRERCATED.
+ * \brief RPPI Image Operations - Logical Operations - To be deprecated.
  */
 
 /*! \addtogroup group_rppi_logical_operations

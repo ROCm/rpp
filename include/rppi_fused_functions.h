@@ -32,9 +32,9 @@ extern "C"
 
 /*!
  * \file
- * \brief RPPI Image Operations - Fused Functions - DEPRERCATED.
+ * \brief RPPI Image Operations - Fused Functions - To be deprecated.
  * \defgroup group_rppi_fused_functions RPPI Image Operations - Fused Functions
- * \brief RPPI Image Operations - Fused Functions - DEPRERCATED.
+ * \brief RPPI Image Operations - Fused Functions - To be deprecated.
  */
 
 /*! \addtogroup group_rppi_fused_functions
