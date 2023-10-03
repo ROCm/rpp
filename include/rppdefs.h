@@ -505,15 +505,15 @@ typedef struct
     Rpp32f24 srcValsBR;
 } RpptBilinearNbhoodValsVecLen8;
 
-/*! \brief RPPT Tensor filter struct
+/*! \brief RPPT Tensor GenericFilter type struct
  * \ingroup group_rppdefs
  */
-typedef struct Filter
+typedef struct GenericFilter
 {
     Rpp32f scale = 1.0f;
     Rpp32f radius = 1.0f;
     Rpp32s size;
-    Filter(RpptInterpolationType interpolationType, Rpp32s in_size, Rpp32s out_size, Rpp32f scaleRatio)
+    GenericFilter(RpptInterpolationType interpolationType, Rpp32s in_size, Rpp32s out_size, Rpp32f scaleRatio)
     {
         switch(interpolationType)
         {
@@ -560,7 +560,7 @@ typedef struct Filter
         }
         this->size = std::ceil(2 * this->radius);
     }
-}Filter;
+}GenericFilter;
 
 /******************** HOST memory typedefs ********************/
 
