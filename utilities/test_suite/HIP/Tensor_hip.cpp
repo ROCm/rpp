@@ -100,7 +100,7 @@ int main(int argc, char **argv)
 
     if (layoutType == 2)
     {
-        if(testCase == 36 || testCase == 31 || testCase == 86)
+        if(testCase == 36 || testCase == 31 || testCase == 86 || testCase == 35)
         {
             printf("\ncase %d does not exist for PLN1 layout\n", testCase);
             return -1;
@@ -539,14 +539,14 @@ int main(int argc, char **argv)
             case 35:
             {
                 testCaseName = "glitch";
-                Rpp32u xOffsetR[images];
-                Rpp32u yOffsetR[images];
-                Rpp32u xOffsetG[images];
-                Rpp32u yOffsetG[images];
-                Rpp32u xOffsetB[images];
-                Rpp32u yOffsetB[images];
+                Rpp32u xOffsetR[batchSize];
+                Rpp32u yOffsetR[batchSize];
+                Rpp32u xOffsetG[batchSize];
+                Rpp32u yOffsetG[batchSize];
+                Rpp32u xOffsetB[batchSize];
+                Rpp32u yOffsetB[batchSize];
 
-                for (i = 0; i < images; i++)
+                for (i = 0; i < batchSize; i++)
                 {
                     xOffsetR[i] = 10;
                     yOffsetR[i] = 10;
@@ -554,7 +554,6 @@ int main(int argc, char **argv)
                     yOffsetG[i] = 0;
                     xOffsetB[i] = 5;
                     yOffsetB[i] = 5;
-
                 }
 
                 startWallTime = omp_get_wtime();

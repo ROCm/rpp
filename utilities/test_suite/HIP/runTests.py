@@ -388,7 +388,7 @@ else:
             print("Unable to open results in " + RESULTS_DIR + "/consolidated_results_" + TYPE + ".stats.csv")
 
 # print the results of qa tests
-supportedCaseList = ['0', '1', '2', '4', '13', '31', '34', '36', '37', '38', '54', '84', '87']
+supportedCaseList = ['0', '1', '2', '4', '13', '31', '34', '35', '36', '37', '38', '54', '84', '87']
 nonQACaseList = ['54', '84']
 supportedCases = 0
 for num in caseList:
