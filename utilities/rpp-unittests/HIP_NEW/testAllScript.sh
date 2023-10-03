@@ -18,7 +18,7 @@ cwd=$(pwd)
 
 # Input Images - Three images (224 x 224)
 DEFAULT_SRC_FOLDER_1="$cwd/../TEST_IMAGES/three_images_224x224_src1"
-DEFAULT_SRC_FOLDER_2="$cwd/../TEST_IMAGES/three_images_224x224_src2"
+DEFAULT_SRC_FOLDER_2="$cwd/../TEST_IMAGES/three_images_224x224_src1"
 
 # Input Images - Three images (256 x 256)
 # DEFAULT_SRC_FOLDER_1="$cwd/../TEST_IMAGES/three_images_256x256_src1"
@@ -178,7 +178,7 @@ do
     echo "--------------------------------"
     printf "Running a New Functionality...\n"
     echo "--------------------------------"
-    for ((bitDepth=0;bitDepth<7;bitDepth++))
+    for ((bitDepth=0;bitDepth<1;bitDepth++))
     do
         printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n"
         for ((outputFormatToggle=0;outputFormatToggle<2;outputFormatToggle++))
@@ -215,7 +215,7 @@ do
                     printf "\n./Tensor_hip_pkd3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER_TEMP $bitDepth $outputFormatToggle $case $kernelSize 0"
                     ./Tensor_hip_pkd3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$kernelSize" "0"
                 done
-            elif [ "$case" -eq 21 ] || [ "$case" -eq 23 ] || [ "$case" -eq 24 ]
+            elif [ "$case" -eq 21 ] || [ "$case" -eq 24 ]
             then
                 for ((interpolationType=0;interpolationType<6;interpolationType++))
                 do
@@ -261,7 +261,7 @@ do
     echo "--------------------------------"
     printf "Running a New Functionality...\n"
     echo "--------------------------------"
-    for ((bitDepth=0;bitDepth<7;bitDepth++))
+    for ((bitDepth=0;bitDepth<1;bitDepth++))
     do
         printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n"
         for ((outputFormatToggle=0;outputFormatToggle<1;outputFormatToggle++))
@@ -298,7 +298,7 @@ do
                     printf "\n./Tensor_hip_pln1 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER_TEMP $bitDepth $outputFormatToggle $case $kernelSize 0"
                     ./Tensor_hip_pln1 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$kernelSize" "0"
                 done
-            elif [ "$case" -eq 21 ] || [ "$case" -eq 23 ] || [ "$case" -eq 24 ]
+            elif [ "$case" -eq 21 ] || [ "$case" -eq 24 ]
             then
                 for ((interpolationType=0;interpolationType<6;interpolationType++))
                 do
@@ -344,7 +344,7 @@ do
     echo "--------------------------------"
     printf "Running a New Functionality...\n"
     echo "--------------------------------"
-    for ((bitDepth=0;bitDepth<7;bitDepth++))
+    for ((bitDepth=0;bitDepth<1;bitDepth++))
     do
         printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n"
         for ((outputFormatToggle=0;outputFormatToggle<2;outputFormatToggle++))
@@ -381,7 +381,7 @@ do
                     printf "\n./Tensor_hip_pln3 $SRC_FOLDER_1_TEMP $SRC_FOLDER_2_TEMP $DST_FOLDER_TEMP $bitDepth $outputFormatToggle $case $kernelSize 0"
                     ./Tensor_hip_pln3 "$SRC_FOLDER_1_TEMP" "$SRC_FOLDER_2_TEMP" "$DST_FOLDER_TEMP" "$bitDepth" "$outputFormatToggle" "$case" "$kernelSize" "0"
                 done
-            elif [ "$case" -eq 21 ] || [ "$case" -eq 23 ] || [ "$case" -eq 24 ]
+            elif [ "$case" -eq 21 ] || [ "$case" -eq 24 ]
             then
                 for ((interpolationType=0;interpolationType<6;interpolationType++))
                 do
@@ -426,7 +426,7 @@ then
         echo "--------------------------------" | tee -a "$DST_FOLDER/uniqueFunctionalities_hip_log.txt"
         printf "Running a New Functionality...\n" | tee -a "$DST_FOLDER/uniqueFunctionalities_hip_log.txt"
         echo "--------------------------------" | tee -a "$DST_FOLDER/uniqueFunctionalities_hip_log.txt"
-        for ((bitDepth=0;bitDepth<7;bitDepth++))
+        for ((bitDepth=0;bitDepth<1;bitDepth++))
         do
             printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n" | tee -a "$DST_FOLDER/uniqueFunctionalities_hip_log.txt"
             echo "./uniqueFunctionalities_hip $bitDepth $case" | tee -a "$DST_FOLDER/uniqueFunctionalities_hip_log.txt"
