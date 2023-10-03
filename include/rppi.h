@@ -25,10 +25,9 @@ THE SOFTWARE.
 
 /*!
  * \file
- * \brief ROCm Performance Primitives(RPP) - Image Operations.
- *
- * \defgroup group_rpp_images RPP Image Operations
- * \brief ROCm Performance Primitives - Image Operations.
+ * \brief RPP Image Operations - DEPRECATED
+ * \defgroup group_rppi RPP Image Operations
+ * \brief The header includes all files containing RPP Image Operations - DEPRECATED
  */
 
 #include "rpp.h"
