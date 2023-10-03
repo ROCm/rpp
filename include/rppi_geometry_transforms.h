@@ -30,6 +30,17 @@ extern "C"
 {
 #endif // cpusplus
 
+/*!
+ * \file
+ * \brief RPPI Image Operations - Geometry Transforms - DEPRERCATED.
+ * \defgroup group_rppi_geometry_transforms RPPI Image Operations - Geometry Transforms
+ * \brief RPPI Image Operations - Geometry Transforms - DEPRERCATED.
+ */
+
+/*! \addtogroup group_rppi_geometry_transforms
+ * @{
+ */
+
 /******************** flip ********************/
 
 // Performs a flip transformation for a batch of images
@@ -353,6 +364,9 @@ RppStatus rppi_warp_perspective_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *s
 RppStatus rppi_warp_perspective_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32f *perspectiveMatrix, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_warp_perspective_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32f *perspectiveMatrix, Rpp32u nbatchSize, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
+
+/*! @}
+ */
 
 #ifdef __cplusplus
 }

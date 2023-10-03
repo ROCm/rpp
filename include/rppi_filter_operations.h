@@ -29,6 +29,17 @@ THE SOFTWARE.
 extern "C" {
 #endif
 
+/*!
+ * \file
+ * \brief RPPI Image Operations - Filter Operations - DEPRERCATED.
+ * \defgroup group_rppi_filter_operations RPPI Image Operations - Filter Operations
+ * \brief RPPI Image Operations - Filter Operations - DEPRERCATED.
+ */
+
+/*! \addtogroup group_rppi_filter_operations
+ * @{
+ */
+
 /******************** box_filter ********************/
 
 // Applies the box filter over every pixel using a [kernelSize X kernelSize] square mask for a batch of images
@@ -198,6 +209,9 @@ RppStatus rppi_nonlinear_filter_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *s
 RppStatus rppi_nonlinear_filter_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *kernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_nonlinear_filter_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *kernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
+
+/*! @}
+ */
 
 #ifdef __cplusplus
 }
