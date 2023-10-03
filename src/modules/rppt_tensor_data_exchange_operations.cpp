@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -46,7 +46,8 @@ RppStatus rppt_copy_host(RppPtr_t srcPtr,
                                srcDescPtr,
                                static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                dstDescPtr,
-                               layoutParams);
+                               layoutParams,
+                               rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
@@ -54,7 +55,8 @@ RppStatus rppt_copy_host(RppPtr_t srcPtr,
                                  srcDescPtr,
                                  (Rpp16f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                  dstDescPtr,
-                                 layoutParams);
+                                 layoutParams,
+                                 rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
@@ -62,7 +64,8 @@ RppStatus rppt_copy_host(RppPtr_t srcPtr,
                                  srcDescPtr,
                                  (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                  dstDescPtr,
-                                 layoutParams);
+                                 layoutParams,
+                                 rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
@@ -70,7 +73,8 @@ RppStatus rppt_copy_host(RppPtr_t srcPtr,
                                srcDescPtr,
                                static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                dstDescPtr,
-                               layoutParams);
+                               layoutParams,
+                               rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;
@@ -92,7 +96,8 @@ RppStatus rppt_swap_channels_host(RppPtr_t srcPtr,
                                         srcDescPtr,
                                         static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                         dstDescPtr,
-                                        layoutParams);
+                                        layoutParams,
+                                        rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
@@ -100,7 +105,8 @@ RppStatus rppt_swap_channels_host(RppPtr_t srcPtr,
                                           srcDescPtr,
                                           (Rpp16f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                           dstDescPtr,
-                                          layoutParams);
+                                          layoutParams,
+                                          rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
@@ -108,7 +114,8 @@ RppStatus rppt_swap_channels_host(RppPtr_t srcPtr,
                                           srcDescPtr,
                                           (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                           dstDescPtr,
-                                          layoutParams);
+                                          layoutParams,
+                                          rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
@@ -116,7 +123,8 @@ RppStatus rppt_swap_channels_host(RppPtr_t srcPtr,
                                         srcDescPtr,
                                         static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                         dstDescPtr,
-                                        layoutParams);
+                                        layoutParams,
+                                        rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;
@@ -161,7 +169,8 @@ RppStatus rppt_color_to_greyscale_host(RppPtr_t srcPtr,
                                              static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                              dstDescPtr,
                                              channelWeights,
-                                             layoutParams);
+                                             layoutParams,
+                                             rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
@@ -170,7 +179,8 @@ RppStatus rppt_color_to_greyscale_host(RppPtr_t srcPtr,
                                                (Rpp16f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                                dstDescPtr,
                                                channelWeights,
-                                               layoutParams);
+                                               layoutParams,
+                                               rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
@@ -179,7 +189,8 @@ RppStatus rppt_color_to_greyscale_host(RppPtr_t srcPtr,
                                                (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                                dstDescPtr,
                                                channelWeights,
-                                               layoutParams);
+                                               layoutParams,
+                                               rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
@@ -188,7 +199,8 @@ RppStatus rppt_color_to_greyscale_host(RppPtr_t srcPtr,
                                              static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                              dstDescPtr,
                                              channelWeights,
-                                             layoutParams);
+                                             layoutParams,
+                                             rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;

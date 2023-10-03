@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2017 - 2022 Advanced Micro Devices, Inc.
+ * Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,6 +29,7 @@
 #include <unistd.h>
 #endif
 
+#include <thread>
 #include "config.h"
 #include "rpp/device_name.hpp"
 #include "rpp/errors.hpp"
@@ -129,6 +130,7 @@ struct HandleImpl
     bool enable_profiling = false;
     float profiling_result = 0.0;
     size_t nBatchSize = 1;
+    Rpp32u numThreads = 0;
     InitHandle* initHandle = nullptr;
 
     HandleImpl() : ctx(get_ctx()) {}
@@ -277,9 +279,13 @@ Handle::Handle(rppAcceleratorQueue_t stream) : impl(new HandleImpl())
     RPP_LOG_I(*this);
 }
 
-Handle::Handle(size_t batchSize) : impl(new HandleImpl())
+Handle::Handle(size_t batchSize, Rpp32u numThreads) : impl(new HandleImpl())
 {
     impl->nBatchSize = batchSize;
+    numThreads = std::min(numThreads, std::thread::hardware_concurrency());
+    if(numThreads == 0)
+        numThreads = batchSize;
+    impl->numThreads = numThreads;
     this->SetAllocator(nullptr, nullptr, nullptr);
     impl->PreInitializeBufferCPU();
 }
@@ -297,6 +303,9 @@ Handle::Handle() : impl(new HandleImpl())
 #endif
     this->SetAllocator(nullptr, nullptr, nullptr);
     impl->PreInitializeBuffer();
+    impl->numThreads = std::min(impl->numThreads, std::thread::hardware_concurrency());
+    if(impl->numThreads == 0)
+        impl->numThreads = impl->nBatchSize;
     RPP_LOG_I(*this);
 }
 
@@ -383,6 +392,11 @@ void Handle::rpp_destroy_object_host()
 size_t Handle::GetBatchSize() const
 {
     return this->impl->nBatchSize;
+}
+
+Rpp32u Handle::GetNumThreads() const
+{
+    return this->impl->numThreads;
 }
 
 void Handle::SetBatchSize(size_t bSize) const
@@ -542,8 +556,8 @@ std::string Handle::GetDeviceName()
 {
     hipDeviceProp_t props{};
     hipGetDeviceProperties(&props, this->impl->device);
-    std::string n("gfx" + std::to_string(props.gcnArch));
-    return GetDeviceNameFromMap(n);
+    std::string name(props.gcnArchName);
+    return name;
 }
 
 std::ostream& Handle::Print(std::ostream& os) const

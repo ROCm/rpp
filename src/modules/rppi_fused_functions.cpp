@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -72,7 +72,8 @@ RppStatus color_twist_host_helper(RppiChnFormat chn_format,
                                       outputFormatToggle,
                                       rpp::deref(rppHandle).GetBatchSize(),
                                       chn_format,
-                                      num_of_channels);
+                                      num_of_channels,
+                                      rpp::deref(rppHandle));
     }
     else if (tensor_type == RPPTensorDataType::FP16)
     {
@@ -88,7 +89,8 @@ RppStatus color_twist_host_helper(RppiChnFormat chn_format,
                                            outputFormatToggle,
                                            rpp::deref(rppHandle).GetBatchSize(),
                                            chn_format,
-                                           num_of_channels);
+                                           num_of_channels,
+                                           rpp::deref(rppHandle));
     }
     else if (tensor_type == RPPTensorDataType::FP32)
     {
@@ -104,7 +106,8 @@ RppStatus color_twist_host_helper(RppiChnFormat chn_format,
                                            outputFormatToggle,
                                            rpp::deref(rppHandle).GetBatchSize(),
                                            chn_format,
-                                           num_of_channels);
+                                           num_of_channels,
+                                           rpp::deref(rppHandle));
     }
     else if (tensor_type == RPPTensorDataType::I8)
     {
@@ -120,7 +123,8 @@ RppStatus color_twist_host_helper(RppiChnFormat chn_format,
                                          outputFormatToggle,
                                          rpp::deref(rppHandle).GetBatchSize(),
                                          chn_format,
-                                         num_of_channels);
+                                         num_of_channels,
+                                         rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;
@@ -203,7 +207,8 @@ RppStatus crop_host_helper(RppiChnFormat chn_format,
                                    outputFormatToggle,
                                    rpp::deref(rppHandle).GetBatchSize(),
                                    chn_format,
-                                   num_of_channels);
+                                   num_of_channels,
+                                   rpp::deref(rppHandle));
         }
         else if (tensorOutType == RPPTensorDataType::FP16)
         {
@@ -218,7 +223,8 @@ RppStatus crop_host_helper(RppiChnFormat chn_format,
                                                outputFormatToggle,
                                                rpp::deref(rppHandle).GetBatchSize(),
                                                chn_format,
-                                               num_of_channels);
+                                               num_of_channels,
+                                               rpp::deref(rppHandle));
         }
         else if (tensorOutType == RPPTensorDataType::FP32)
         {
@@ -233,7 +239,8 @@ RppStatus crop_host_helper(RppiChnFormat chn_format,
                                                outputFormatToggle,
                                                rpp::deref(rppHandle).GetBatchSize(),
                                                chn_format,
-                                               num_of_channels);
+                                               num_of_channels,
+                                               rpp::deref(rppHandle));
         }
         else if (tensorOutType == RPPTensorDataType::I8)
         {
@@ -248,7 +255,8 @@ RppStatus crop_host_helper(RppiChnFormat chn_format,
                                               outputFormatToggle,
                                               rpp::deref(rppHandle).GetBatchSize(),
                                               chn_format,
-                                              num_of_channels);
+                                              num_of_channels,
+                                              rpp::deref(rppHandle));
         }
     }
     else if (tensorInType == RPPTensorDataType::FP16)
@@ -264,7 +272,8 @@ RppStatus crop_host_helper(RppiChnFormat chn_format,
                                 outputFormatToggle,
                                 rpp::deref(rppHandle).GetBatchSize(),
                                 chn_format,
-                                num_of_channels);
+                                num_of_channels,
+                                rpp::deref(rppHandle));
     }
     else if (tensorInType == RPPTensorDataType::FP32)
     {
@@ -279,7 +288,8 @@ RppStatus crop_host_helper(RppiChnFormat chn_format,
                                 outputFormatToggle,
                                 rpp::deref(rppHandle).GetBatchSize(),
                                 chn_format,
-                                num_of_channels);
+                                num_of_channels,
+                                rpp::deref(rppHandle));
     }
     else if (tensorInType == RPPTensorDataType::I8)
     {
@@ -294,7 +304,8 @@ RppStatus crop_host_helper(RppiChnFormat chn_format,
                                outputFormatToggle,
                                rpp::deref(rppHandle).GetBatchSize(),
                                chn_format,
-                               num_of_channels);
+                               num_of_channels,
+                               rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;
@@ -448,7 +459,8 @@ RppStatus crop_mirror_normalize_host_helper(RppiChnFormat chn_format,
                                                     outputFormatToggle,
                                                     rpp::deref(rppHandle).GetBatchSize(),
                                                     chn_format,
-                                                    num_of_channels);
+                                                    num_of_channels,
+                                                    rpp::deref(rppHandle));
         }
         else if (tensorOutType == RPPTensorDataType::FP16)
         {
@@ -466,7 +478,8 @@ RppStatus crop_mirror_normalize_host_helper(RppiChnFormat chn_format,
                                                                  outputFormatToggle,
                                                                  rpp::deref(rppHandle).GetBatchSize(),
                                                                  chn_format,
-                                                                 num_of_channels);
+                                                                 num_of_channels,
+                                                                 rpp::deref(rppHandle));
         }
         else if (tensorOutType == RPPTensorDataType::FP32)
         {
@@ -484,7 +497,8 @@ RppStatus crop_mirror_normalize_host_helper(RppiChnFormat chn_format,
                                                                  outputFormatToggle,
                                                                  rpp::deref(rppHandle).GetBatchSize(),
                                                                  chn_format,
-                                                                 num_of_channels);
+                                                                 num_of_channels,
+                                                                 rpp::deref(rppHandle));
         }
         else if (tensorOutType == RPPTensorDataType::I8)
         {
@@ -502,7 +516,8 @@ RppStatus crop_mirror_normalize_host_helper(RppiChnFormat chn_format,
                                                    outputFormatToggle,
                                                    rpp::deref(rppHandle).GetBatchSize(),
                                                    chn_format,
-                                                   num_of_channels);
+                                                   num_of_channels,
+                                                   rpp::deref(rppHandle));
         }
     }
     else if (tensorInType == RPPTensorDataType::FP16)
@@ -521,7 +536,8 @@ RppStatus crop_mirror_normalize_host_helper(RppiChnFormat chn_format,
                                              outputFormatToggle,
                                              rpp::deref(rppHandle).GetBatchSize(),
                                              chn_format,
-                                             num_of_channels);
+                                             num_of_channels,
+                                             rpp::deref(rppHandle));
     }
     else if (tensorInType == RPPTensorDataType::FP32)
     {
@@ -539,7 +555,8 @@ RppStatus crop_mirror_normalize_host_helper(RppiChnFormat chn_format,
                                              outputFormatToggle,
                                              rpp::deref(rppHandle).GetBatchSize(),
                                              chn_format,
-                                             num_of_channels);
+                                             num_of_channels,
+                                             rpp::deref(rppHandle));
     }
     else if (tensorInType == RPPTensorDataType::I8)
     {
@@ -557,7 +574,8 @@ RppStatus crop_mirror_normalize_host_helper(RppiChnFormat chn_format,
                                                 outputFormatToggle,
                                                 rpp::deref(rppHandle).GetBatchSize(),
                                                 chn_format,
-                                                num_of_channels);
+                                                num_of_channels,
+                                                rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;
@@ -708,7 +726,8 @@ RppStatus resize_crop_mirror_host_helper(RppiChnFormat chn_format,
                                              outputFormatToggle,
                                              rpp::deref(rppHandle).GetBatchSize(),
                                              chn_format,
-                                             num_of_channels);
+                                             num_of_channels,
+                                             rpp::deref(rppHandle));
     }
     else if (tensor_type == RPPTensorDataType::FP16)
     {
@@ -726,7 +745,8 @@ RppStatus resize_crop_mirror_host_helper(RppiChnFormat chn_format,
                                           outputFormatToggle,
                                           rpp::deref(rppHandle).GetBatchSize(),
                                           chn_format,
-                                          num_of_channels);
+                                          num_of_channels,
+                                          rpp::deref(rppHandle));
     }
     else if (tensor_type == RPPTensorDataType::FP32)
     {
@@ -744,7 +764,8 @@ RppStatus resize_crop_mirror_host_helper(RppiChnFormat chn_format,
                                           outputFormatToggle,
                                           rpp::deref(rppHandle).GetBatchSize(),
                                           chn_format,
-                                          num_of_channels);
+                                          num_of_channels,
+                                          rpp::deref(rppHandle));
     }
     else if (tensor_type == RPPTensorDataType::I8)
     {
@@ -762,7 +783,8 @@ RppStatus resize_crop_mirror_host_helper(RppiChnFormat chn_format,
                                              outputFormatToggle,
                                              rpp::deref(rppHandle).GetBatchSize(),
                                              chn_format,
-                                             num_of_channels);
+                                             num_of_channels,
+                                             rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;
@@ -864,7 +886,8 @@ RppStatus resize_mirror_normalize_host_helper(RppiChnFormat chn_format,
                                                   outputFormatToggle,
                                                   rpp::deref(rppHandle).GetBatchSize(),
                                                   chn_format,
-                                                  num_of_channels);
+                                                  num_of_channels,
+                                                  rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;

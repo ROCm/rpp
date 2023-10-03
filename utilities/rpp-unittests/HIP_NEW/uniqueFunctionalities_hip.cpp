@@ -1,3 +1,25 @@
+/*
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+
 #include <stdio.h>
 #include <dirent.h>
 #include <string.h>
@@ -20,6 +42,17 @@ using half_float::half;
 typedef half Rpp16f;
 
 #define RPPPIXELCHECK(pixel) (pixel < (Rpp32f)0) ? ((Rpp32f)0) : ((pixel < (Rpp32f)255) ? pixel : ((Rpp32f)255))
+
+std::map<int, std::vector<string>> augmentationBitDepthMap =
+{
+    {0, {"0"}},
+    {1, {"0", "1", "2", "5"}},
+    {2, {"0"}},
+    {3, {"0"}},
+    {4, {"0"}},
+    {5, {"0"}},
+    {8, {"0"}},
+};
 
 template <typename T>
 void displayTensor(T *pArr, Rpp32u size)
@@ -96,15 +129,36 @@ void displayPacked(T *pArr, RppiSize size, Rpp32u channel)
 int main(int argc, char **argv)
 {
     const int MIN_ARG_COUNT = 3;
-    printf("\nUsage: ./uniqueFunctionalities_gpu <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <case number = 0:12>\n");
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
+        printf("Usage\n");
+        for (auto elem : augmentationBitDepthMap)
+        {
+            for(unsigned j = 0; j < elem.second.size(); j++)
+                printf("./uniqueFunctionalities_hip %s %d\n", elem.second[j].c_str(), elem.first);
+        }
         return -1;
     }
 
     int ip_bitDepth = atoi(argv[1]);
     int test_case = atoi(argv[2]);
+    
+    if(test_case < 0 || test_case == 6 || test_case == 7 || test_case > 8)
+    {
+        printf("\nInvalid test_case! test_case value should be 0 / 1 / 2 / 3 / 4 / 5 / 8\n");
+        return -1;
+    }
+    std::vector<string> supportedBitDepths = augmentationBitDepthMap[test_case];
+    if (supportedBitDepths.size() == 1)
+        printf("\ntest_case %d supports only %s ip_bitDepth", test_case, supportedBitDepths[0].c_str());
+    else
+    {
+        std::string bitDepthMessage = "";
+        for(int i = 0; i < supportedBitDepths.size(); i++)
+            bitDepthMessage = bitDepthMessage + supportedBitDepths[i] + " ";
+        printf("\ntest_case %d supports %sip_bitDepths\n", test_case, bitDepthMessage.c_str());
+    }
 
     printf("\nip_bitDepth = %d\ntest_case = %d", ip_bitDepth, test_case);
 
@@ -138,9 +192,13 @@ int main(int argc, char **argv)
         hipMemcpy(d_dstPtr, dstPtr, 36 * sizeof(Rpp8u), hipMemcpyHostToDevice);
 
         start = clock();
-        
-        rppi_tensor_transpose_u8_gpu(d_srcPtr1, d_dstPtr, inTensorDim, perm, handle);
-      
+        if (ip_bitDepth == 0)
+        {
+            rppi_tensor_transpose_u8_gpu(d_srcPtr1, d_dstPtr, inTensorDim, perm, handle);
+        }
+        else
+            missingFuncFlag = 1;
+            
         end = clock();
 
         if (missingFuncFlag != 1)

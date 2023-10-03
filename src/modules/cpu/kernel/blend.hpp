@@ -1,3 +1,25 @@
+/*
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+
 #include "rppdefs.h"
 #include "rpp_cpu_simd.hpp"
 #include "rpp_cpu_common.hpp"
@@ -10,12 +32,14 @@ RppStatus blend_u8_u8_host_tensor(Rpp8u *srcPtr1,
                                   Rpp32f *alphaTensor,
                                   RpptROIPtr roiTensorPtrSrc,
                                   RpptRoiType roiType,
-                                  RppLayoutParams layoutParams)
+                                  RppLayoutParams layoutParams,
+                                  rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(dstDescPtr->n)
+#pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
@@ -88,9 +112,9 @@ RppStatus blend_u8_u8_host_tensor(Rpp8u *srcPtr1,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTempR = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (srcPtr1Temp[0]) - (Rpp32f) (srcPtr2Temp[0])) * alpha) + (Rpp32f) (srcPtr2Temp[0]));
-                    *dstPtrTempG = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (srcPtr1Temp[1]) - (Rpp32f) (srcPtr2Temp[1])) * alpha) + (Rpp32f) (srcPtr2Temp[1]));
-                    *dstPtrTempB = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (srcPtr1Temp[2]) - (Rpp32f) (srcPtr2Temp[2])) * alpha) + (Rpp32f) (srcPtr2Temp[2]));
+                    *dstPtrTempR = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (srcPtr1Temp[0]) - (Rpp32f) (srcPtr2Temp[0])) * alpha) + (Rpp32f) (srcPtr2Temp[0])));
+                    *dstPtrTempG = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (srcPtr1Temp[1]) - (Rpp32f) (srcPtr2Temp[1])) * alpha) + (Rpp32f) (srcPtr2Temp[1])));
+                    *dstPtrTempB = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (srcPtr1Temp[2]) - (Rpp32f) (srcPtr2Temp[2])) * alpha) + (Rpp32f) (srcPtr2Temp[2])));
 
                     srcPtr1Temp += 3;
                     srcPtr2Temp += 3;
@@ -163,9 +187,9 @@ RppStatus blend_u8_u8_host_tensor(Rpp8u *srcPtr1,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (*srcPtr1TempR) - (Rpp32f) (*srcPtr2TempR)) * alpha) + (Rpp32f) (*srcPtr2TempR));
-                    dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (*srcPtr1TempG) - (Rpp32f) (*srcPtr2TempG)) * alpha) + (Rpp32f) (*srcPtr2TempG));
-                    dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (*srcPtr1TempB) - (Rpp32f) (*srcPtr2TempB)) * alpha) + (Rpp32f) (*srcPtr2TempB));
+                    dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (*srcPtr1TempR) - (Rpp32f) (*srcPtr2TempR)) * alpha) + (Rpp32f) (*srcPtr2TempR)));
+                    dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (*srcPtr1TempG) - (Rpp32f) (*srcPtr2TempG)) * alpha) + (Rpp32f) (*srcPtr2TempG)));
+                    dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (*srcPtr1TempB) - (Rpp32f) (*srcPtr2TempB)) * alpha) + (Rpp32f) (*srcPtr2TempB)));
 
                     srcPtr1TempR++;
                     srcPtr2TempR++;
@@ -224,7 +248,7 @@ RppStatus blend_u8_u8_host_tensor(Rpp8u *srcPtr1,
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        *dstPtrTemp = (Rpp8u) RPPPIXELCHECK((((Rpp32f) (*srcPtr1Temp) - (Rpp32f) (*srcPtr2Temp)) * alpha) + (Rpp32f) (*srcPtr2Temp));
+                        *dstPtrTemp = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((((Rpp32f) (*srcPtr1Temp) - (Rpp32f) (*srcPtr2Temp)) * alpha) + (Rpp32f) (*srcPtr2Temp)));
 
                         srcPtr1Temp++;
                         srcPtr2Temp++;
@@ -254,12 +278,14 @@ RppStatus blend_f32_f32_host_tensor(Rpp32f *srcPtr1,
                                     Rpp32f *alphaTensor,
                                     RpptROIPtr roiTensorPtrSrc,
                                     RpptRoiType roiType,
-                                    RppLayoutParams layoutParams)
+                                    RppLayoutParams layoutParams,
+                                    rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(dstDescPtr->n)
+#pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
@@ -477,12 +503,14 @@ RppStatus blend_f16_f16_host_tensor(Rpp16f *srcPtr1,
                                     Rpp32f *alphaTensor,
                                     RpptROIPtr roiTensorPtrSrc,
                                     RpptRoiType roiType,
-                                    RppLayoutParams layoutParams)
+                                    RppLayoutParams layoutParams,
+                                    rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(dstDescPtr->n)
+#pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
@@ -746,12 +774,14 @@ RppStatus blend_i8_i8_host_tensor(Rpp8s *srcPtr1,
                                   Rpp32f *alphaTensor,
                                   RpptROIPtr roiTensorPtrSrc,
                                   RpptRoiType roiType,
-                                  RppLayoutParams layoutParams)
+                                  RppLayoutParams layoutParams,
+                                  rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(dstDescPtr->n)
+#pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;

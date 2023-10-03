@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2017 - 2022 Advanced Micro Devices, Inc.
+ * Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -116,8 +116,8 @@ struct HIPOCProgramImpl
     	hipDeviceProp_t props;
 	int device = 0;
 	hipGetDeviceProperties(&props, device);
-    	std::string gfxName = "gfx" + std::to_string(props.gcnArch);
-    	std::string sarg = "--gpu-architecture=" + gfxName;
+      	std::string archName(props.gcnArchName);
+    	std::string sarg = "--gpu-architecture=" + archName;
 	const char* options[] = {
         	sarg.c_str()
     	};

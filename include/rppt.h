@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,6 +23,14 @@ THE SOFTWARE.
 #ifndef RPPT_H
 #define RPPT_H
 
+/*!
+ * \file
+ * \brief ROCm Performance Primitives(RPP) - Tensor Operations.
+ *
+ * \defgroup group_rpp_tensor RPP Tensor Operations
+ * \brief ROCm Performance Primitives - Tensor Operations.
+ */
+
 #include "rpp.h"
 #ifdef __cplusplus
 extern "C" {
@@ -34,6 +42,7 @@ extern "C" {
 #include "rppt_tensor_filter_augmentations.h"
 #include "rppt_tensor_geometric_augmentations.h"
 #include "rppt_tensor_morphological_operations.h"
+#include "rppt_tensor_statistical_operations.h"
 
 #ifdef __cplusplus
 }

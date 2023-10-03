@@ -1,3 +1,23 @@
+# Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
 cmake_minimum_required(VERSION 3.5)
 project(rpp_performancetests/HIP_NEW)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../../../cmake)
@@ -50,14 +70,14 @@ if (hip_FOUND AND OpenCV_FOUND)
     # add_executable(Single_hip Single_hip.cpp)
     add_executable(uniqueFunctionalities_hip uniqueFunctionalities_hip.cpp)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGPU_SUPPORT=1 -DRPP_BACKEND_HIP=1 -std=gnu++14")
-    target_link_libraries(BatchPD_hip_pkd3 ${OpenCV_LIBS} -lamd_rpp ${hip_LIBRARIES} pthread ${LINK_LIBRARY_LIST} hip::device)
-    target_link_libraries(BatchPD_hip_pln1 ${OpenCV_LIBS} -lamd_rpp ${hip_LIBRARIES} pthread ${LINK_LIBRARY_LIST} hip::device)
-    target_link_libraries(BatchPD_hip_pln3 ${OpenCV_LIBS} -lamd_rpp ${hip_LIBRARIES} pthread ${LINK_LIBRARY_LIST} hip::device)
-    target_link_libraries(Tensor_hip_pkd3 ${OpenCV_LIBS} -lamd_rpp ${hip_LIBRARIES} pthread ${LINK_LIBRARY_LIST} hip::device)
-    target_link_libraries(Tensor_hip_pln1 ${OpenCV_LIBS} -lamd_rpp ${hip_LIBRARIES} pthread ${LINK_LIBRARY_LIST} hip::device)
-    target_link_libraries(Tensor_hip_pln3 ${OpenCV_LIBS} -lamd_rpp ${hip_LIBRARIES} pthread ${LINK_LIBRARY_LIST} hip::device)
-    # target_link_libraries(Single_hip ${OpenCV_LIBS} -lamd_rpp ${hip_LIBRARIES} pthread ${LINK_LIBRARY_LIST hip::device)
-    target_link_libraries(uniqueFunctionalities_hip ${OpenCV_LIBS} -lamd_rpp ${hip_LIBRARIES} pthread ${LINK_LIBRARY_LIST} hip::device)
+    target_link_libraries(BatchPD_hip_pkd3 ${OpenCV_LIBS} -lrpp ${hip_LIBRARIES} pthread ${LINK_LIBRARY_LIST} hip::device)
+    target_link_libraries(BatchPD_hip_pln1 ${OpenCV_LIBS} -lrpp ${hip_LIBRARIES} pthread ${LINK_LIBRARY_LIST} hip::device)
+    target_link_libraries(BatchPD_hip_pln3 ${OpenCV_LIBS} -lrpp ${hip_LIBRARIES} pthread ${LINK_LIBRARY_LIST} hip::device)
+    target_link_libraries(Tensor_hip_pkd3 ${OpenCV_LIBS} -lrpp ${hip_LIBRARIES} pthread ${LINK_LIBRARY_LIST} hip::device)
+    target_link_libraries(Tensor_hip_pln1 ${OpenCV_LIBS} -lrpp ${hip_LIBRARIES} pthread ${LINK_LIBRARY_LIST} hip::device)
+    target_link_libraries(Tensor_hip_pln3 ${OpenCV_LIBS} -lrpp ${hip_LIBRARIES} pthread ${LINK_LIBRARY_LIST} hip::device)
+    # target_link_libraries(Single_hip ${OpenCV_LIBS} -lrpp ${hip_LIBRARIES} pthread ${LINK_LIBRARY_LIST hip::device)
+    target_link_libraries(uniqueFunctionalities_hip ${OpenCV_LIBS} -lrpp ${hip_LIBRARIES} pthread ${LINK_LIBRARY_LIST} hip::device)
 else()
     message("-- ${Yellow}Error: OpenCV and hip must be installed to install ${PROJECT_NAME} successfully!${ColourReset}")
 endif()

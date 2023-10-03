@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2017 - 2022 Advanced Micro Devices, Inc.
+ * Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -58,9 +58,9 @@ extern "C" rppStatus_t rppCreate(rppHandle_t* handle)
     return rpp::try_([&] { rpp::deref(handle) = new rpp::Handle(); });
 }
 
-extern "C" rppStatus_t rppCreateWithBatchSize(rppHandle_t* handle, size_t nBatchSize)
+extern "C" rppStatus_t rppCreateWithBatchSize(rppHandle_t* handle, size_t nBatchSize, Rpp32u numThreads)
 {
-    return rpp::try_([&] { rpp::deref(handle) = new rpp::Handle(nBatchSize); });
+    return rpp::try_([&] { rpp::deref(handle) = new rpp::Handle(nBatchSize, numThreads); });
 }
 
 extern "C" rppStatus_t rppDestroy(rppHandle_t handle)
