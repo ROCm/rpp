@@ -23,19 +23,22 @@ THE SOFTWARE.
 #ifndef RPPT_TENSOR_EFFECTS_AUGMENTATIONS_H
 #define RPPT_TENSOR_EFFECTS_AUGMENTATIONS_H
 
-/*!
- * \file
- * \brief RPPT Tensor Effects Augmentation Functions.
- *
- * \defgroup group_tensor_effects Operations: AMD RPP Tensor Effects Operations
- * \brief Tensor Effects Augmentations.
- */
-
 #include "rpp.h"
 #include "rppdefs.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/*!
+ * \file
+ * \brief RPPT Tensor Operations - Effects Augmentations.
+ * \defgroup group_rppt_tensor_effects_augmentations RPPT Tensor Operations - Effects Augmentations.
+ * \brief RPPI Tensor Operations - Effects Augmentations.
+ */
+
+/*! \addtogroup group_rppt_tensor_effects_augmentations
+ * @{
+ */
 
 /*! \brief Gridmask augmentation HOST
  * \details Gridmask augmentation for a NCHW/NHWC layout tensor
@@ -53,7 +56,6 @@ extern "C" {
  * \return <tt> Rppt_Status enum</tt>.
  * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
  * Else return RPP_ERROR
- * \ingroup group_tensor_effects
  */
 RppStatus rppt_gridmask_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u tileWidth, Rpp32f gridRatio, Rpp32f gridAngle, RpptUintVector2D translateVector, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #ifdef GPU_SUPPORT
@@ -73,7 +75,6 @@ RppStatus rppt_gridmask_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t d
  * \return <tt> Rppt_Status enum</tt>.
  * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
  * Else return RPP_ERROR
- * \ingroup group_tensor_effects
  */
 RppStatus rppt_gridmask_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u tileWidth, Rpp32f gridRatio, Rpp32f gridAngle, RpptUintVector2D translateVector, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
@@ -91,7 +92,6 @@ RppStatus rppt_gridmask_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t ds
  * \return <tt> Rppt_Status enum</tt>.
  * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
  * Else return RPP_ERROR
- * \ingroup group_tensor_effects
  */
 RppStatus rppt_spatter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptRGB spatterColor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #ifdef GPU_SUPPORT
@@ -109,7 +109,6 @@ RppStatus rppt_spatter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t ds
  * \return <tt> Rppt_Status enum</tt>.
  * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
  * Else return RPP_ERROR
- * \ingroup group_tensor_effects
  */
 RppStatus rppt_spatter_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptRGB spatterColor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
@@ -131,7 +130,6 @@ RppStatus rppt_spatter_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dst
  * \return <tt> Rppt_Status enum</tt>.
  * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
  * Else return RPP_ERROR
- * \ingroup group_tensor_effects
  */
 RppStatus rppt_salt_and_pepper_noise_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *noiseProbabilityTensor, Rpp32f *saltProbabilityTensor, Rpp32f *saltValueTensor, Rpp32f *pepperValueTensor, Rpp32u seed, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #ifdef GPU_SUPPORT
@@ -152,7 +150,6 @@ RppStatus rppt_salt_and_pepper_noise_host(RppPtr_t srcPtr, RpptDescPtr srcDescPt
  * \return <tt> Rppt_Status enum</tt>.
  * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
  * Else return RPP_ERROR
- * \ingroup group_tensor_effects
  */
 RppStatus rppt_salt_and_pepper_noise_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *noiseProbabilityTensor, Rpp32f *saltProbabilityTensor, Rpp32f *saltValueTensor, Rpp32f *pepperValueTensor, Rpp32u seed, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
@@ -171,7 +168,6 @@ RppStatus rppt_salt_and_pepper_noise_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr
  * \return <tt> Rppt_Status enum</tt>.
  * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
  * Else return RPP_ERROR
- * \ingroup group_tensor_effects
  */
 RppStatus rppt_shot_noise_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *shotNoiseFactorTensor, Rpp32u seed, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #ifdef GPU_SUPPORT
@@ -189,7 +185,6 @@ RppStatus rppt_shot_noise_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t
  * \return <tt> Rppt_Status enum</tt>.
  * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
  * Else return RPP_ERROR
- * \ingroup group_tensor_effects
  */
 RppStatus rppt_shot_noise_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *shotNoiseFactorTensor, Rpp32u seed, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
@@ -209,7 +204,6 @@ RppStatus rppt_shot_noise_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t 
  * \return <tt> Rppt_Status enum</tt>.
  * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
  * Else return RPP_ERROR
- * \ingroup group_tensor_effects
  */
 RppStatus rppt_gaussian_noise_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *meanTensor, Rpp32f *stdDevTensor, Rpp32u seed, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #ifdef GPU_SUPPORT
@@ -228,7 +222,6 @@ RppStatus rppt_gaussian_noise_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppP
  * \return <tt> Rppt_Status enum</tt>.
  * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
  * Else return RPP_ERROR
- * \ingroup group_tensor_effects
  */
 RppStatus rppt_gaussian_noise_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *meanTensor, Rpp32f *stdDevTensor, Rpp32u seed, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
@@ -248,7 +241,6 @@ RppStatus rppt_gaussian_noise_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPt
  * \return <tt> Rppt_Status enum</tt>.
  * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
  * Else return RPP_ERROR
- * \ingroup group_tensor_effects
  */
 RppStatus rppt_non_linear_blend_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *stdDevTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #ifdef GPU_SUPPORT
@@ -267,10 +259,12 @@ RppStatus rppt_non_linear_blend_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDes
  * \return <tt> Rppt_Status enum</tt>.
  * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
  * Else return RPP_ERROR
- * \ingroup group_tensor_effects
  */
 RppStatus rppt_non_linear_blend_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *stdDevTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
+
+/*! @}
+ */
 
 #ifdef __cplusplus
 }

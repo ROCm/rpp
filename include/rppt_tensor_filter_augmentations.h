@@ -23,19 +23,22 @@ THE SOFTWARE.
 #ifndef RPPT_TENSOR_FILTER_AUGMENTATIONS_H
 #define RPPT_TENSOR_FILTER_AUGMENTATIONS_H
 
-/*!
- * \file
- * \brief RPPT Tensor Filter Augmentation Functions.
- *
- * \defgroup group_tensor_filter Operations: AMD RPP Tensor Filter Operations
- * \brief Tensor Filter Augmentations.
- */
-
 #include "rpp.h"
 #include "rppdefs.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/*!
+ * \file
+ * \brief RPPT Tensor Operations - Filter Augmentations.
+ * \defgroup group_rppt_tensor_filter_augmentations RPPT Tensor Operations - Filter Augmentations.
+ * \brief RPPI Tensor Operations - Filter Augmentations.
+ */
+
+/*! \addtogroup group_rppt_tensor_filter_augmentations
+ * @{
+ */
 
 /*! \brief Box Filter augmentation HOST
  * \details Box Filter augmentation for a NCHW/NHWC layout tensor
@@ -50,7 +53,6 @@ extern "C" {
  * \return <tt> Rppt_Status enum</tt>.
  * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
  * Else return RPP_ERROR
- * \ingroup group_tensor_filter
  */
 #ifdef GPU_SUPPORT
 /*! \brief Box Filter augmentation GPU
@@ -66,7 +68,6 @@ extern "C" {
  * \return <tt> Rppt_Status enum</tt>.
  * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
  * Else return RPP_ERROR
- * \ingroup group_tensor_filter
  */
 RppStatus rppt_box_filter_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u kernelSize, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
@@ -90,6 +91,9 @@ RppStatus rppt_box_filter_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t 
 #ifdef GPU_SUPPORT
 RppStatus rppt_gaussian_filter_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *stdDevTensor, Rpp32u kernelSize, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
+
+/*! @}
+ */
 
 #ifdef __cplusplus
 }

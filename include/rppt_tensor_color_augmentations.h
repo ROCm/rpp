@@ -23,19 +23,22 @@ THE SOFTWARE.
 #ifndef RPPT_TENSOR_COLOR_AUGMENTATIONS_H
 #define RPPT_TENSOR_COLOR_AUGMENTATIONS_H
 
-/*!
- * \file
- * \brief RPPT Tensor Color Augmentation Functions.
- *
- * \defgroup group_tensor_color Operations: AMD RPP Tensor Color Operations
- * \brief Tensor Color Augmentations.
- */
-
 #include "rpp.h"
 #include "rppdefs.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/*!
+ * \file
+ * \brief RPPT Tensor Operations - Color Augmentations.
+ * \defgroup group_rppt_tensor_color_augmentations RPPT Tensor Operations - Color Augmentations.
+ * \brief RPPI Tensor Operations - Color Augmentations.
+ */
+
+/*! \addtogroup group_rppt_tensor_color_augmentations
+ * @{
+ */
 
 /*! \brief Brightness augmentation HOST
  * \details Brightness augmentation for a NCHW/NHWC layout tensor
@@ -51,7 +54,6 @@ extern "C" {
  * \return <tt> Rppt_Status enum</tt>.
  * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
  * Else return RPP_ERROR
- * \ingroup group_tensor_color
  */
 RppStatus rppt_brightness_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *alphaTensor, Rpp32f *betaTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #ifdef GPU_SUPPORT
@@ -69,7 +71,6 @@ RppStatus rppt_brightness_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t
  * \return <tt> Rppt_Status enum</tt>.
  * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
  * Else return RPP_ERROR
- * \ingroup group_tensor_color
  */
 RppStatus rppt_brightness_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *alphaTensor, Rpp32f *betaTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
@@ -87,7 +88,6 @@ RppStatus rppt_brightness_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t 
  * \return <tt> Rppt_Status enum</tt>.
  * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
  * Else return RPP_ERROR
- * \ingroup group_tensor_color
  */
 RppStatus rppt_gamma_correction_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *gammaTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #ifdef GPU_SUPPORT
@@ -105,7 +105,6 @@ RppStatus rppt_gamma_correction_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rp
  * \return <tt> Rppt_Status enum</tt>.
  * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
  * Else return RPP_ERROR
- * \ingroup group_tensor_color
  */
 RppStatus rppt_gamma_correction_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *gammaTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
@@ -124,7 +123,6 @@ RppStatus rppt_gamma_correction_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rpp
  * \return <tt> Rppt_Status enum</tt>.
  * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
  * Else return RPP_ERROR
- * \ingroup group_tensor_color
  */
 RppStatus rppt_blend_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *alpha, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #ifdef GPU_SUPPORT
@@ -142,7 +140,6 @@ RppStatus rppt_blend_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDescPtr srcDes
  * \return <tt> Rppt_Status enum</tt>.
  * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
  * Else return RPP_ERROR
- * \ingroup group_tensor_color
  */
 RppStatus rppt_blend_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *alpha, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
@@ -163,7 +160,6 @@ RppStatus rppt_blend_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDescPtr srcDesc
  * \return <tt> Rppt_Status enum</tt>.
  * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
  * Else return RPP_ERROR
- * \ingroup group_tensor_color
  */
 RppStatus rppt_color_twist_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *brightnessTensor, Rpp32f *contrastTensor, Rpp32f *hueTensor, Rpp32f *saturationTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #ifdef GPU_SUPPORT
@@ -183,7 +179,6 @@ RppStatus rppt_color_twist_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_
  * \return <tt> Rppt_Status enum</tt>.
  * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
  * Else return RPP_ERROR
- * \ingroup group_tensor_color
  */
 RppStatus rppt_color_twist_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *brightnessTensor, Rpp32f *contrastTensor, Rpp32f *hueTensor, Rpp32f *saturationTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
@@ -204,7 +199,6 @@ RppStatus rppt_color_twist_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t
  * \return <tt> Rppt_Status enum</tt>.
  * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
  * Else return RPP_ERROR
- * \ingroup group_tensor_color
  */
 RppStatus rppt_color_jitter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *brightnessTensor, Rpp32f *contrastTensor, Rpp32f *hueTensor, Rpp32f *saturationTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 
@@ -222,7 +216,6 @@ RppStatus rppt_color_jitter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr
  * \return <tt> Rppt_Status enum</tt>.
  * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
  * Else return RPP_ERROR
- * \ingroup group_tensor_color
  */
 RppStatus rppt_color_cast_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptRGB *rgbTensor, Rpp32f *alphaTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #ifdef GPU_SUPPORT
@@ -240,7 +233,6 @@ RppStatus rppt_color_cast_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t
  * \return <tt> Rppt_Status enum</tt>.
  * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
  * Else return RPP_ERROR
- * \ingroup group_tensor_color
  */
 RppStatus rppt_color_cast_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptRGB *rgbTensor, Rpp32f *alphaTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
@@ -258,7 +250,6 @@ RppStatus rppt_color_cast_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t 
  * \return <tt> Rppt_Status enum</tt>.
  * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
  * Else return RPP_ERROR
- * \ingroup group_tensor_color
  */
 RppStatus rppt_exposure_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *exposureFactorTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #ifdef GPU_SUPPORT
@@ -275,7 +266,6 @@ RppStatus rppt_exposure_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t d
  * \return <tt> Rppt_Status enum</tt>.
  * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
  * Else return RPP_ERROR
- * \ingroup group_tensor_color
  */
 RppStatus rppt_exposure_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *exposureFactorTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
@@ -294,7 +284,6 @@ RppStatus rppt_exposure_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t ds
  * \return <tt> Rppt_Status enum</tt>.
  * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
  * Else return RPP_ERROR
- * \ingroup group_tensor_color
  */
 RppStatus rppt_contrast_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *contrastFactorTensor, Rpp32f *contrastCenterTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #ifdef GPU_SUPPORT
@@ -312,7 +301,6 @@ RppStatus rppt_contrast_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t d
  * \return <tt> Rppt_Status enum</tt>.
  * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
  * Else return RPP_ERROR
- * \ingroup group_tensor_color
  */
 RppStatus rppt_contrast_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *contrastFactorTensor, Rpp32f *contrastCenterTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
@@ -330,7 +318,6 @@ RppStatus rppt_contrast_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t ds
  * \return <tt> Rppt_Status enum</tt>.
  * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
  * Else return RPP_ERROR
- * \ingroup group_tensor_color
  */
 
 RppStatus rppt_lut_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RppPtr_t lutPtr, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
@@ -348,10 +335,12 @@ RppStatus rppt_lut_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr
  * \return <tt> Rppt_Status enum</tt>.
  * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
  * Else return RPP_ERROR
- * \ingroup group_tensor_color
  */
 RppStatus rppt_lut_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RppPtr_t lutPtr, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
+
+/*! @}
+ */
 
 #ifdef __cplusplus
 }

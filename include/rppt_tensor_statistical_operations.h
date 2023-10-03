@@ -23,23 +23,25 @@ THE SOFTWARE.
 #ifndef RPPT_TENSOR_STATISTICAL_OPERATIONS_H
 #define RPPT_TENSOR_STATISTICAL_OPERATIONS_H
 
-/*!
- * \file
- * \brief RPPT Tensor Statistical Augmentation Functions.
- *
- * \defgroup group_tensor_stat Operations: AMD RPP Tensor Statistical Operations
- * \brief RPP Tensor Statistical Augmentations.
- */
-
 #include "rpp.h"
 #include "rppdefs.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+/*!
+ * \file
+ * \brief RPPT Tensor Operations - Statistical Operations.
+ * \defgroup group_rppt_tensor_statistical_operations RPPT Tensor Operations - Statistical Operations.
+ * \brief RPPI Tensor Operations - Statistical Operations.
+ */
+
+/*! \addtogroup group_rppt_tensor_statistical_operations
+ * @{
+ */
+
 /*! \brief rppt_tensor_sum_host
 * \details Tensor sum finder operation for a NCHW/NHWC layout tensor
-* \ingroup group_tensor_stat
 * \param [in] srcPtr source tensor memory
 * \param [in] srcDescPtr source tensor descriptor (srcDescPtr->w can be a maximum of 3840, srcDescPtr->h can be a maximum of 2160)
 * \param [out] tensorSumArr destination array of minimum length (srcPtr->n * srcPtr->c)
@@ -52,6 +54,9 @@ RppStatus rppt_tensor_sum_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t
 #ifdef GPU_SUPPORT
 RppStatus rppt_tensor_sum_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t tensorSumArr, Rpp32u tensorSumArrLength, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
+
+/*! @}
+ */
 
 #ifdef __cplusplus
 }
