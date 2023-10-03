@@ -74,22 +74,6 @@ def validate_and_remove_folders(path, folder):
             else:
                 print("Directory not found:", folder_path)
 
-# Check if a case file exists and filter its contents based on certain conditions
-def case_file_check(CASE_FILE_PATH):
-    try:
-        case_file = open(CASE_FILE_PATH,'r')
-        for line in case_file:
-            print(line)
-            if not(line.startswith('"Name"')):
-                if TYPE in TENSOR_TYPE_LIST:
-                    new_file.write(line)
-                    d_counter[TYPE] = d_counter[TYPE] + 1
-        case_file.close()
-        return True
-    except IOError:
-        print("Unable to open case results")
-        return False
-
  # Generate a directory name based on certain parameters
 def directory_name_generator(qaMode, affinity, layoutType, case, path):
     if qaMode == 0:
@@ -548,12 +532,12 @@ if (testType == 1 and profilingOption == "NO"):
         print("Functionalities - "+ str(funcCount))
 
         # Print summary of log
-        print("\n\nFunctionality\t\t\t\t\t\tFrames Count\tmax(ms/batch)\t\tmin(ms/batch)\t\tavg(ms/batch)\n")
+        print("\n\nFunctionality\t\t\t\t\t\tFrames Count\t\tmax(ms/batch)\t\tmin(ms/batch)\t\tavg(ms/batch)\n")
         if len(functions) != 0:
             maxCharLength = len(max(functions, key = len))
             functions = [x + (' ' * (maxCharLength - len(x))) for x in functions]
             for i, func in enumerate(functions):
-                print(func + "\t" + str(frames[i]) + "\t\t" + str(maxVals[i]) + "\t" + str(minVals[i]) + "\t" + str(avgVals[i]))
+                print(func + "\t\t\t\t\t\t\t\t" + str(frames[i]) + "\t\t" + str(maxVals[i]) + "\t\t" + str(minVals[i]) + "\t\t" + str(avgVals[i]))
         else:
             print("No variants under this category")
 

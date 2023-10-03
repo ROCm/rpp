@@ -27,18 +27,18 @@ __global__ void fmadd_scalar_ncdhw_hip_tensor(float *srcPtr,
                                               uint3 dstStridesCDH,
                                               int channels,
                                               float2 fmaddParams_f2,
-                                              RpptRoiXyzwhd *roiGenericSrc)
+                                              RpptROI3DPtr roiGenericSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;        // W - inner most dim vectorized
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;              // H - second to inner
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;              // D - outer most dim
 
-    if ((id_z >= roiGenericSrc->roiDepth) || (id_y >= roiGenericSrc->roiHeight) || (id_x >= roiGenericSrc->roiWidth))
+    if ((id_z >= roiGenericSrc->xyzwhdROI.roiDepth) || (id_y >= roiGenericSrc->xyzwhdROI.roiHeight) || (id_x >= roiGenericSrc->xyzwhdROI.roiWidth))
     {
         return;
     }
 
-    uint srcIdx = ((id_z + roiGenericSrc->xyz.z) * srcStridesCDH.y) + ((id_y + roiGenericSrc->xyz.y) * srcStridesCDH.z) + (id_x + roiGenericSrc->xyz.x);
+    uint srcIdx = ((id_z + roiGenericSrc->xyzwhdROI.xyz.z) * srcStridesCDH.y) + ((id_y + roiGenericSrc->xyzwhdROI.xyz.y) * srcStridesCDH.z) + (id_x + roiGenericSrc->xyzwhdROI.xyz.x);
     uint dstIdx = (id_z * dstStridesCDH.y) + (id_y * dstStridesCDH.z) + id_x;
 
     d_float8 val_f8;
@@ -57,18 +57,18 @@ __global__ void fmadd_scalar_ndhwc_hip_tensor(float *srcPtr,
                                               float *dstPtr,
                                               uint2 dstStridesDH,
                                               float2 fmaddParams_f2,
-                                              RpptRoiXyzwhd *roiGenericSrc)
+                                              RpptROI3DPtr roiGenericSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;        // WC - inner most dim vectorized
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;              // H - second to inner
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;              // D - outer most dim
 
-    if ((id_z >= roiGenericSrc->roiDepth) || (id_y >= roiGenericSrc->roiHeight) || (id_x >= roiGenericSrc->roiWidth))
+    if ((id_z >= roiGenericSrc->xyzwhdROI.roiDepth) || (id_y >= roiGenericSrc->xyzwhdROI.roiHeight) || (id_x >= roiGenericSrc->xyzwhdROI.roiWidth))
     {
         return;
     }
 
-    uint srcIdx = ((id_z + roiGenericSrc->xyz.z) * srcStridesDH.x) + ((id_y + roiGenericSrc->xyz.y) * srcStridesDH.y) + (id_x + roiGenericSrc->xyz.x) * 3;
+    uint srcIdx = ((id_z + roiGenericSrc->xyzwhdROI.xyz.z) * srcStridesDH.x) + ((id_y + roiGenericSrc->xyzwhdROI.xyz.y) * srcStridesDH.y) + (id_x + roiGenericSrc->xyzwhdROI.xyz.x) * 3;
     uint dstIdx = (id_z * dstStridesDH.x) + (id_y * dstStridesDH.y) + id_x * 3;
 
     d_float24 val_f24;
@@ -81,7 +81,7 @@ RppStatus hip_exec_fmadd_scalar_tensor(Rpp32f *srcPtr,
                                        RpptGenericDescPtr srcGenericDescPtr,
                                        Rpp32f *dstPtr,
                                        RpptGenericDescPtr dstGenericDescPtr,
-                                       RpptRoiXyzwhd *roiGenericPtrSrc,
+                                       RpptROI3DPtr roiGenericPtrSrc,
                                        Rpp32f *mulTensor,
                                        Rpp32f *addTensor,
                                        rpp::Handle& handle)

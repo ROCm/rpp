@@ -146,6 +146,20 @@ int main(int argc, char * argv[])
     double maxWallTime = 0, minWallTime = 5000, avgWallTime = 0;
     int noOfIterations = (int)noOfFiles / batchSize;
     string testCaseName;
+
+    int inputBitDepth = 0;
+    Rpp8u *inputU8 = NULL;
+    Rpp8u *outputU8 = NULL;
+    if(inputBitDepth == 0)
+    {
+        Rpp64u iBufferSizeU8 = iBufferSize * sizeof(Rpp8u) + descriptorPtr3D->offsetInBytes;
+        inputU8 = static_cast<Rpp8u *>(calloc(iBufferSizeU8, 1));
+        outputU8 = static_cast<Rpp8u *>(calloc(iBufferSizeU8, 1));
+
+        for(int i = 0; i < iBufferSizeU8; i++)
+            inputU8[i] = static_cast<unsigned char>(inputF32[i]);
+    }
+
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
     for (int perfRunCount = 0; perfRunCount < numRuns; perfRunCount++)
     {
@@ -215,7 +229,15 @@ int main(int argc, char * argv[])
                 {
                     testCaseName = "slice";
                     startWallTime = omp_get_wtime();
-                    rppt_slice_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, roiGenericSrcPtr, roiTypeSrc, handle);
+                    if(inputBitDepth == 0)
+                    {
+                        descriptorPtr3D->dataType = RpptDataType::U8;
+                        rppt_slice_host(inputU8, descriptorPtr3D, outputU8, descriptorPtr3D, roiGenericSrcPtr, roiTypeSrc, handle);
+                        descriptorPtr3D->dataType = RpptDataType::F32;
+                    }
+                    else
+                        rppt_slice_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, roiGenericSrcPtr, roiTypeSrc, handle);
+
                     break;
                 }
                 default:
@@ -256,10 +278,17 @@ int main(int argc, char * argv[])
                     refFile.close();
                 }
 
-                if(qaFlag)
+                if(inputBitDepth == 0)
                 {
-                    compare_output(outputF32, oBufferSize, testCaseName, layoutType, descriptorPtr3D, (RpptRoiXyzwhd *)roiGenericSrcPtr, dst_path);
+                    Rpp64u bufferLength = iBufferSize * sizeof(Rpp8u) + descriptorPtr3D->offsetInBytes;
+
+                    // Copy U8 buffer to F32 buffer for display purposes
+                    for(int i = 0; i < bufferLength; i++)
+                        outputF32[i] = static_cast<float>(outputU8[i]);
                 }
+
+                if(qaFlag)
+                    compare_output(outputF32, oBufferSize, testCaseName, layoutType, descriptorPtr3D, (RpptRoiXyzwhd *)roiGenericSrcPtr, dst_path);
                 else
                 {
                     for(int batchCount = 0; batchCount < batchSize; batchCount++)
@@ -344,6 +373,13 @@ int main(int argc, char * argv[])
     free(outputF32);
     free(roiGenericSrcPtr);
     free(pinnedMemArgs);
+    if(inputBitDepth == 0)
+    {
+        if(inputU8 != NULL)
+            free(inputU8);
+        if(outputU8 != NULL)
+            free(outputU8);
+    }
 
     return(0);
 }
