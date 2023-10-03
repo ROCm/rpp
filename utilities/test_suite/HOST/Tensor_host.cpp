@@ -515,6 +515,36 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 35:
+                {
+                    testCaseName = "glitch";
+                    Rpp32u xOffsetR[images];
+                    Rpp32u yOffsetR[images];
+                    Rpp32u xOffsetG[images];
+                    Rpp32u yOffsetG[images];
+                    Rpp32u xOffsetB[images];
+                    Rpp32u yOffsetB[images];
+
+                    for (i = 0; i < images; i++)
+                    {
+                        xOffsetR[i] = 10;
+                        yOffsetR[i] = 10;
+                        xOffsetG[i] = 0;
+                        yOffsetG[i] = 0;
+                        xOffsetB[i] = 5;
+                        yOffsetB[i] = 5;
+
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_glitch_host(input, srcDescPtr, output, dstDescPtr, xOffsetR, yOffsetR, xOffsetG, yOffsetG, xOffsetB, yOffsetB, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 case 36:
                 {
                     testCaseName = "color_twist";
