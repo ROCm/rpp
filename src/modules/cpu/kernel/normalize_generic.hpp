@@ -24,7 +24,7 @@ THE SOFTWARE.
 #include "rpp_cpu_simd.hpp"
 #include "rpp_cpu_common.hpp"
 
-void normalize_3D_tensor_axis3(Rpp32f *srcPtr, RpptGenericDescPtr srcGenericDescPtr, Rpp32f *dstPtr, RpptGenericDescPtr dstGenericDescPtr,
+void normalize_3D_tensor_axis3_nontoggle(Rpp32f *srcPtr, RpptGenericDescPtr srcGenericDescPtr, Rpp32f *dstPtr, RpptGenericDescPtr dstGenericDescPtr,
                          Rpp32f *meanPtr, Rpp32f *stdDevPtr, Rpp32f scale, Rpp32f shift, Rpp32u *paramStride)
 {
     Rpp32f *srcPtrTemp = srcPtr;
@@ -50,10 +50,53 @@ void normalize_3D_tensor_axis3(Rpp32f *srcPtr, RpptGenericDescPtr srcGenericDesc
             }
             paramIdx = (!paramStride[2]) ? 0 : paramIdx + paramStride[2];
             srcPtrRow += srcGenericDescPtr->strides[2];
-            dstPtrRow += srcGenericDescPtr->strides[2];
+            dstPtrRow += dstGenericDescPtr->strides[2];
         }
         srcPtrTemp += srcGenericDescPtr->strides[1];
-        dstPtrTemp += srcGenericDescPtr->strides[1];
+        dstPtrTemp += dstGenericDescPtr->strides[1];
+    }
+}
+
+void normalize_3D_tensor_axis3_toggle(Rpp32f *srcPtr, RpptGenericDescPtr srcGenericDescPtr, Rpp32f *dstPtr, RpptGenericDescPtr dstGenericDescPtr,
+                         Rpp32f *meanPtr, Rpp32f *stdDevPtr, Rpp32f scale, Rpp32f shift, Rpp32u *paramStride)
+{
+    Rpp32f *srcPtrTemp = srcPtr;
+    Rpp32f *dstPtrTemp[srcGenericDescPtr->dims[3]];
+    dstPtrTemp[0] = dstPtr;
+    for(int i = 1; i < srcGenericDescPtr->dims[3]; i++)
+        dstPtrTemp[i] = dstPtrTemp[i-1] + dstGenericDescPtr->strides[1];
+
+    Rpp32s paramIdx = 0;
+    Rpp32f multiplier[srcGenericDescPtr->dims[3]];
+
+    for(int i = 0; i < srcGenericDescPtr->dims[3]; i++)
+        multiplier[i] = scale / stdDevPtr[i];
+
+    for(Rpp32u i = 0; i < srcGenericDescPtr->dims[1]; i++)
+    {
+        Rpp32f *srcPtrRow = srcPtrTemp;
+        Rpp32f *dstPtrRow[srcGenericDescPtr->dims[3]];
+        for(int l = 0; l < srcGenericDescPtr->dims[3]; l++)
+            dstPtrRow[l] = dstPtrTemp[l];
+        for(Rpp32u j = 0; j < srcGenericDescPtr->dims[2]; j++)
+        {
+            Rpp32f *srcPtrRowTemp = srcPtrRow;
+            Rpp32f *dstPtrRowTemp[srcGenericDescPtr->dims[3]];
+            for(int l = 0; l < srcGenericDescPtr->dims[3]; l++)
+                dstPtrRowTemp[l] = dstPtrRow[l];
+            for(Rpp32u k = 0; k < srcGenericDescPtr->dims[3]; k++)
+            {
+                *dstPtrRowTemp[k]++ = ((*srcPtrRowTemp++ - meanPtr[paramIdx]) * multiplier[paramIdx]) + shift;
+                paramIdx += paramStride[1];
+            }
+            paramIdx = (!paramStride[2]) ? 0 : paramIdx + paramStride[2];
+            srcPtrRow += srcGenericDescPtr->strides[2];
+            for(int l = 0; l < srcGenericDescPtr->dims[3]; l++)
+                dstPtrRow[l] += dstGenericDescPtr->strides[3];
+        }
+        srcPtrTemp += srcGenericDescPtr->strides[1];
+        for(int l = 0; l < srcGenericDescPtr->dims[3]; l++)
+            dstPtrTemp[l] += dstGenericDescPtr->strides[2];
     }
 }
 
@@ -144,14 +187,13 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
             {
                 //TODO
             }
-
             srcPtrChannel = srcPtrTemp + (roi.xyzwhdROI.xyz.y * srcGenericDescPtr->strides[1]) + (roi.xyzwhdROI.xyz.x * layoutParams.bufferMultiplier);
-
-            if((axis_mask == 1) && (srcGenericDescPtr->dims[3] == 16))
+            if((axis_mask == 1) && (srcGenericDescPtr->layout == RpptLayout::NHWC) && (dstGenericDescPtr->layout == RpptLayout::NHWC) && (srcGenericDescPtr->dims[3] == 16))
                 normalize_3D_tensor_avx_axis3(srcPtrChannel, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTensor, stdDevTensor, scale, shift, paramStride, roi.xyzwhdROI.roiWidth * layoutParams.bufferMultiplier);
-            else if(axis_mask == 1)
-                normalize_3D_tensor_axis3(srcPtrChannel, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTensor, stdDevTensor, scale, shift, paramStride);
-
+            else if((axis_mask == 1) && (srcGenericDescPtr->layout == RpptLayout::NHWC) && (dstGenericDescPtr->layout == RpptLayout::NHWC))
+                normalize_3D_tensor_axis3_nontoggle(srcPtrChannel, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTensor, stdDevTensor, scale, shift, paramStride);
+            else if((axis_mask == 1) && (srcGenericDescPtr->layout == RpptLayout::NHWC) && (dstGenericDescPtr->layout == RpptLayout::NCHW))
+                normalize_3D_tensor_axis3_toggle(srcPtrChannel, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTensor, stdDevTensor, scale, shift, paramStride);
         }
     }
 

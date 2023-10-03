@@ -155,13 +155,14 @@ void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize)
 
 int main(int argc, char **argv)
 {
-    Rpp32u nDim, batchSize, testType;
+    Rpp32u nDim, batchSize, testType, toggle;
     bool qaMode;
 
     nDim = atoi(argv[1]);
     batchSize = atoi(argv[2]);
     testType = atoi(argv[3]);
-    qaMode = atoi(argv[4]);
+    toggle = atoi(argv[4]);
+    qaMode = atoi(argv[5]);
 
     if (qaMode && batchSize != 1)
     {
@@ -243,14 +244,14 @@ int main(int argc, char **argv)
     }
     else
     {
-        if(nDim == 3)
+        if(nDim == 3 && !toggle)
         {
             // limiting max value in a dimension to 150 for testing purposes
             for(int i = 0; i < batchSize; i++)
             {
                 roiGenericSrcPtr[i].xyzwhdROI.xyz.x = 0;                              // start X dim = 0
                 roiGenericSrcPtr[i].xyzwhdROI.xyz.y = 0;                              // start Y dim = 0
-                roiGenericSrcPtr[i].xyzwhdROI.xyz.z = 0;                              // sart tart Z dim = 0
+                roiGenericSrcPtr[i].xyzwhdROI.xyz.z = 0;                              // start Z dim = 0
                 roiGenericSrcPtr[i].xyzwhdROI.roiWidth = std::rand() % 150;           // length in X dim
                 roiGenericSrcPtr[i].xyzwhdROI.roiHeight = std::rand() % 150;          // length in Y dim
                 roiGenericSrcPtr[i].xyzwhdROI.roiDepth = 0;                           // length in Z dim
@@ -276,6 +277,42 @@ int main(int argc, char **argv)
                 stdDevTensor[j] = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
             }
         }
+        if(nDim == 3 && toggle)
+        {
+            for(int i = 0; i < batchSize; i++)
+            {
+                roiGenericSrcPtr[i].xyzwhdROI.xyz.x = 0;                              // start X dim = 0
+                roiGenericSrcPtr[i].xyzwhdROI.xyz.y = 0;                              // start Y dim = 0
+                roiGenericSrcPtr[i].xyzwhdROI.xyz.z = 0;                              // start Z dim = 0
+                roiGenericSrcPtr[i].xyzwhdROI.roiWidth = std::rand() % 150;           // length in X dim
+                roiGenericSrcPtr[i].xyzwhdROI.roiHeight = std::rand() % 150;          // length in Y dim
+                roiGenericSrcPtr[i].xyzwhdROI.roiDepth = 0;                           // length in Z dim
+            }
+
+            // set dims and compute strides
+            srcDescriptorPtrND->dims[0] = batchSize;
+            dstDescriptorPtrND->dims[0] = batchSize;
+            srcDescriptorPtrND->dims[1] = roiGenericSrcPtr[0].xyzwhdROI.roiHeight;
+            dstDescriptorPtrND->dims[1] = std::rand() % 150;
+            srcDescriptorPtrND->dims[2] = roiGenericSrcPtr[0].xyzwhdROI.roiWidth;
+            dstDescriptorPtrND->dims[2] = roiGenericSrcPtr[0].xyzwhdROI.roiHeight;
+            srcDescriptorPtrND->dims[3] = dstDescriptorPtrND->dims[1]
+            dstDescriptorPtrND->dims[3] = roiGenericSrcPtr[0].xyzwhdROI.roiWidth;
+            compute_strides(srcDescriptorPtrND);
+            compute_strides(dstDescriptorPtrND);
+            srcDescriptorPtrND->layout = RpptLayout::NHWC;
+            dstDescriptorPtrND->layout = RpptLayout::NCHW;
+
+            meanTensor = (Rpp32f *)calloc(srcDescriptorPtrND->dims[3], sizeof(Rpp32f));
+            stdDevTensor = (Rpp32f *)calloc(srcDescriptorPtrND->dims[3], sizeof(Rpp32f));
+
+            for(int j = 0; j < srcDescriptorPtrND->dims[3]; j++)
+            {
+                meanTensor[j] = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+                stdDevTensor[j] = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+            }
+        }
+
     }
 
     Rpp32u numValues = 1;
