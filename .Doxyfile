@@ -945,7 +945,6 @@ WARN_LOGFILE           =
 
 INPUT                  = README.md \
                         include/rpp.h \
-                        include/rppcore.h \
                         include/rppi.h \
                         include/rppt.h \
                         include/rppversion.h \
