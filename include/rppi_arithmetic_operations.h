@@ -34,6 +34,7 @@ extern "C" {
  * \brief RPPI Image Operations - Arithmetic Operations - To be deprecated.
  * \defgroup group_rppi_arithmetic_operations RPPI Image Operations - Arithmetic Operations
  * \brief RPPI Image Operations - Arithmetic Operations - To be deprecated.
+ * \deprecated
  */
 
 /*! \addtogroup group_rppi_arithmetic_operations

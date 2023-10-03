@@ -34,6 +34,7 @@ extern "C" {
  * \brief RPPI Image Operations - Statistical Operations - To be deprecated.
  * \defgroup group_rppi_statistical_operations RPPI Image Operations - Statistical Operations
  * \brief RPPI Image Operations - Statistical Operations - To be deprecated.
+ * \deprecated
  */
 
 /*! \addtogroup group_rppi_statistical_operations

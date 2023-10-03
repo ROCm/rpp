@@ -34,6 +34,7 @@ extern "C" {
  * \brief RPPI Image Operations - Morphological Transforms - To be deprecated.
  * \defgroup group_rppi_morphological_transforms RPPI Image Operations - Morphological Transforms
  * \brief RPPI Image Operations - Morphological Transforms - To be deprecated.
+ * \deprecated
  */
 
 /*! \addtogroup group_rppi_morphological_transforms

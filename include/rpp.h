@@ -126,6 +126,7 @@ extern "C" SHARED_PUBLIC const char* rppGetErrorString(rppStatus_t error);
  * \retval rppStatusNotImplemented
  * \retval rppStatusUnknownError
  * \retval rppStatusUnsupportedOp
+ * \deprecated
  */
 extern "C" SHARED_PUBLIC rppStatus_t rppCreate(rppHandle_t* handle);
 
@@ -179,6 +180,7 @@ extern "C" SHARED_PUBLIC rppStatus_t rppDestroy(rppHandle_t handle);
  * \retval rppStatusNotImplemented
  * \retval rppStatusUnknownError
  * \retval rppStatusUnsupportedOp
+ * \deprecated
  */
 extern "C" SHARED_PUBLIC rppStatus_t rppDestroyHost(rppHandle_t handle);
 
@@ -235,6 +237,7 @@ extern "C" SHARED_PUBLIC rppStatus_t rppGetBatchSize(rppHandle_t handle, size_t 
  * \retval rppStatusNotImplemented
  * \retval rppStatusUnknownError
  * \retval rppStatusUnsupportedOp
+ * \deprecated
  */
 extern "C" SHARED_PUBLIC rppStatus_t rppCreateWithStream(rppHandle_t* handle, rppAcceleratorQueue_t stream);
 

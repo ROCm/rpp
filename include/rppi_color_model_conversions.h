@@ -34,6 +34,7 @@ extern "C" {
  * \brief RPPI Image Operations - Color Model Conversions - To be deprecated.
  * \defgroup group_rppi_color_model_conversions RPPI Image Operations - Color Model Conversions
  * \brief RPPI Image Operations - Color Model Conversions - To be deprecated.
+ * \deprecated
  */
 
 /*! \addtogroup group_rppi_color_model_conversions

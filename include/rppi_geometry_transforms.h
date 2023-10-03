@@ -35,6 +35,7 @@ extern "C"
  * \brief RPPI Image Operations - Geometry Transforms - To be deprecated.
  * \defgroup group_rppi_geometry_transforms RPPI Image Operations - Geometry Transforms
  * \brief RPPI Image Operations - Geometry Transforms - To be deprecated.
+ * \deprecated
  */
 
 /*! \addtogroup group_rppi_geometry_transforms
