@@ -146,32 +146,29 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
                                                 Rpp32f *stdDevTensor,
                                                 Rpp32f scale,
                                                 Rpp32f shift,
-                                                RpptROI3DPtr roiGenericPtrSrc,
-                                                RpptRoi3DType roiType,
+                                                Rpp32u *roiTensor,
                                                 RppLayoutParams layoutParams,
                                                 rpp::Handle& handle)
 {
 	Rpp32u numThreads = handle.GetNumThreads();
     Rpp32u nDim = srcGenericDescPtr->numDims;
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
-    RpptROI3D roiDefault;
-    if(nDim == 3)
-        roiDefault = {0, 0, 0, (Rpp32s)srcGenericDescPtr->dims[2], (Rpp32s)srcGenericDescPtr->dims[1], 0};
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
 	for(int batchCount = 0; batchCount < batchSize; batchCount++)
 	{
-        RpptROI3D roi;
-        RpptROI3DPtr roiPtrInput = &roiGenericPtrSrc[batchCount];
-        compute_roi3D_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
-
         Rpp32f *srcPtrTemp, *dstPtrTemp;
         srcPtrTemp = srcPtr + batchCount * srcGenericDescPtr->strides[0];
         dstPtrTemp = dstPtr + batchCount * dstGenericDescPtr->strides[0];
 
+        Rpp32u *roi = roiTensor + batchCount * nDim * 2;
+        Rpp32u *begin = roi;
+        Rpp32u *length = &roi[nDim];
+
         Rpp32u paramStride[nDim];
         Rpp32f *srcPtrChannel;
+
         if(nDim == 3)
         {
             if (axis_mask == 1) // Normalize across Channels
@@ -187,13 +184,17 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
             {
                 //TODO
             }
-            srcPtrChannel = srcPtrTemp + (roi.xyzwhdROI.xyz.y * srcGenericDescPtr->strides[1]) + (roi.xyzwhdROI.xyz.x * layoutParams.bufferMultiplier);
+            srcPtrChannel = srcPtrTemp + (begin[1] * srcGenericDescPtr->strides[1]) + (begin[0] * layoutParams.bufferMultiplier);
             if((axis_mask == 1) && (srcGenericDescPtr->layout == RpptLayout::NHWC) && (dstGenericDescPtr->layout == RpptLayout::NHWC) && (srcGenericDescPtr->dims[3] == 16))
-                normalize_3D_tensor_avx_axis3(srcPtrChannel, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTensor, stdDevTensor, scale, shift, paramStride, roi.xyzwhdROI.roiWidth * layoutParams.bufferMultiplier);
+                normalize_3D_tensor_avx_axis3(srcPtrChannel, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTensor, stdDevTensor, scale, shift, paramStride, length[1] * layoutParams.bufferMultiplier);
             else if((axis_mask == 1) && (srcGenericDescPtr->layout == RpptLayout::NHWC) && (dstGenericDescPtr->layout == RpptLayout::NHWC))
                 normalize_3D_tensor_axis3_nontoggle(srcPtrChannel, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTensor, stdDevTensor, scale, shift, paramStride);
             else if((axis_mask == 1) && (srcGenericDescPtr->layout == RpptLayout::NHWC) && (dstGenericDescPtr->layout == RpptLayout::NCHW))
                 normalize_3D_tensor_axis3_toggle(srcPtrChannel, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTensor, stdDevTensor, scale, shift, paramStride);
+        }
+        else
+        {
+            
         }
     }
 

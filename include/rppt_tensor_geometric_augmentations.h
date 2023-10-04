@@ -264,15 +264,14 @@ RppStatus rppt_flip_voxel_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDesc
 // *param[in] stdDevTensor standard deviation values to scale the input
 // *param[in] scale value to be multiplied with data after subtracting from mean
 // *param[in] shift value to be added finally
-// *param[in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
-// *param[in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
+// *param[in] roiTensor values to represent dimensions of input tensor
 // *param[in] rppHandle HIP-handle for "_gpu" variants and Host-handle for "_host" variants
 // *returns a RppStatus enumeration.
 // *retval RPP_SUCCESS : successful completion
 // *retval RPP_ERROR : Error
 
 RppStatus rppt_normalize_generic_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u axisMask,
-                                      Rpp32f *meanTensor, Rpp32f *stdDevTensor, Rpp32f scale, Rpp32f shift, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle);
+                                      Rpp32f *meanTensor, Rpp32f *stdDevTensor, Rpp32f scale, Rpp32f shift, Rpp32u *roiTensor, rppHandle_t rppHandle);
 
 
 #ifdef __cplusplus

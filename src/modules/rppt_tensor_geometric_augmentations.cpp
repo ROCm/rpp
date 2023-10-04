@@ -1013,13 +1013,12 @@ RppStatus rppt_normalize_generic_host(RppPtr_t srcPtr,
                                       Rpp32f *stdDevTensor,
                                       Rpp32f scale,
                                       Rpp32f shift,
-                                      RpptROI3DPtr roiGenericPtrSrc,
-                                      RpptRoi3DType roiType,
+                                      Rpp32u *roiTensor,
                                       rppHandle_t rppHandle)
 {
     RppLayoutParams layoutParams;
     Rpp32u nDim = srcGenericDescPtr->numDims;
-    if (nDim == 3 && (srcGenericDescPtr->layout == RpptLayout::NHWC) && (dstGenericDescPtr->layout == RpptLayout::NHWC))
+    if (nDim == 3 && (srcGenericDescPtr->layout == RpptLayout::NHWC))
         layoutParams = get_layout_params(srcGenericDescPtr->layout, srcGenericDescPtr->dims[3]);
     else if ((srcGenericDescPtr->layout == RpptLayout::NCDHW) && (dstGenericDescPtr->layout == RpptLayout::NCDHW))
         layoutParams = get_layout_params(srcGenericDescPtr->layout, srcGenericDescPtr->dims[1]);
@@ -1027,8 +1026,7 @@ RppStatus rppt_normalize_generic_host(RppPtr_t srcPtr,
         layoutParams = get_layout_params(srcGenericDescPtr->layout, srcGenericDescPtr->dims[4]);
 
     if ((srcGenericDescPtr->layout != RpptLayout::NHWC) && (srcGenericDescPtr->layout != RpptLayout::NCDHW) && (srcGenericDescPtr->layout != RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
-    if ((dstGenericDescPtr->layout != RpptLayout::NHWC) && (dstGenericDescPtr->layout != RpptLayout::NCDHW) && (dstGenericDescPtr->layout != RpptLayout::NDHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
-    if (srcGenericDescPtr->layout != dstGenericDescPtr->layout) return RPP_ERROR_INVALID_ARGUMENTS;
+    if ((dstGenericDescPtr->layout != RpptLayout::NHWC && dstGenericDescPtr->layout != RpptLayout::NCHW) && (dstGenericDescPtr->layout != RpptLayout::NCDHW) && (dstGenericDescPtr->layout != RpptLayout::NDHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
 
     if ((srcGenericDescPtr->dataType == RpptDataType::F32) && (dstGenericDescPtr->dataType == RpptDataType::F32))
     {
@@ -1041,8 +1039,7 @@ RppStatus rppt_normalize_generic_host(RppPtr_t srcPtr,
                                               stdDevTensor,
                                               scale,
                                               shift,
-                                              roiGenericPtrSrc,
-                                              roiType,
+                                              roiTensor,
                                               layoutParams,
                                               rpp::deref(rppHandle));
 
