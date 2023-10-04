@@ -141,6 +141,8 @@ void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize)
             bool invalid_comparision = ((out[j] == 0.0f) && (ref[j] != 0.0f));
             if(!invalid_comparision && abs(out[j] - ref[j]) < 1e-20)
                 cnt += 1;
+        }
+        if (cnt == bufferLength)
             fileMatch++;
     }
     if (fileMatch == batchSize)
@@ -311,7 +313,7 @@ int main(int argc, char **argv)
     for(int i = 0; i < numRuns; i++)
     {
         startWallTime = omp_get_wtime();
-        rppt_normalize_generic_host(inputF32, srcDescriptorPtrND, outputF32, dstDescriptorPtrND, axis_mask, meanTensor, stdDevTensor, scale, shift, roiGenericSrcPtr, roiTypeSrc, handle);
+        rppt_normalize_generic_host(inputF32, srcDescriptorPtrND, outputF32, dstDescriptorPtrND, axis_mask, meanTensor, stdDevTensor, scale, shift, roiTensor, handle);
         endWallTime = omp_get_wtime();
 
         wallTime = endWallTime - startWallTime;
