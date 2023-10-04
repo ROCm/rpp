@@ -76,7 +76,7 @@ def validate_and_remove_folders(path, folder):
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list():
     return [
-        "../../OUTPUT_PERFORMANCE_MISC_LOGS_HOST_" + timestamp + "/Tensor_transpose_host_raw_performance_log.txt",
+        "../../OUTPUT_PERFORMANCE_MISC_LOGS_HOST_" + timestamp + "/Tensor_misc_host_raw_performance_log.txt",
     ]
 
 def run_unit_test(numDims, case, numRuns, testType, bitDepth, batchSize, outFilePath):
@@ -84,8 +84,8 @@ def run_unit_test(numDims, case, numRuns, testType, bitDepth, batchSize, outFile
     print("--------------------------------")
     print("Running a New Functionality...")
     print("--------------------------------")
-    print(f"./Tensor_transpose_host {case} {testType} {numDims} {batchSize} {numRuns}")
-    result = subprocess.run(["./Tensor_transpose_host", str(case), str(testType), str(numDims), str(batchSize), str(numRuns), outFilePath], stdout=subprocess.PIPE)    # nosec
+    print(f"./Tensor_misc_host {case} {testType} {numDims} {batchSize} {numRuns}")
+    result = subprocess.run(["./Tensor_misc_host", str(case), str(testType), str(numDims), str(batchSize), str(numRuns), outFilePath], stdout=subprocess.PIPE)    # nosec
     print(result.stdout.decode())
 
     print("------------------------------------------------------------------------------------------")
@@ -95,9 +95,9 @@ def run_performance_test(loggingFolder, numDims, case, numRuns, testType, bitDep
     print("--------------------------------")
     print("Running a New Functionality...")
     print("--------------------------------")
-    with open("{}/Tensor_transpose_host_raw_performance_log.txt".format(loggingFolder), "a") as log_file:
-        print(f"./Tensor_transpose_host {case} {testType} {numDims} {batchSize} {numRuns}")
-        process = subprocess.Popen(["./Tensor_transpose_host", str(case), str(testType), str(numDims), str(batchSize), str(numRuns) , outFilePath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
+    with open("{}/Tensor_misc_host_raw_performance_log.txt".format(loggingFolder), "a") as log_file:
+        print(f"./Tensor_misc_host {case} {testType} {numDims} {batchSize} {numRuns}")
+        process = subprocess.Popen(["./Tensor_misc_host", str(case), str(testType), str(numDims), str(batchSize), str(numRuns) , outFilePath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
         while True:
             output = process.stdout.readline()
             if not output and process.poll() is not None:
@@ -138,7 +138,7 @@ def rpp_test_suite_parser_and_validator():
     elif args.batch_size <= 0:
         print("Batch size must be greater than 0. Aborting!")
         exit(0)
-    elif args.test_type == 0 and (args.num_dims != 2 or args.num_dims != 3 or args.num_dims != 4):
+    elif args.test_type == 0 and args.num_dims != 2 and args.num_dims != 3 and args.num_dims != 4:
         print("Inavlid Input! QA mode is supported only for num_dims = 2 / 3 / 4!")
         exit(0)
 
@@ -165,8 +165,8 @@ bitDepth = 2 # Current audio test suite only supports bit depth 2
 outFilePath = " "
 
 if preserveOutput == 0:
-    validate_and_remove_folders(cwd, "QA_RESULTS")
-    validate_and_remove_folders(cwd, "OUTPUT_PERFORMANCE")
+    validate_and_remove_folders(cwd, "QA_RESULTS_MISC_HOST")
+    validate_and_remove_folders(cwd, "OUTPUT_PERFORMANCE_MISC_LOGS_HOST")
 
 if(testType == 0):
     outFilePath = os.path.join(os.path.dirname(cwd), 'QA_RESULTS_MISC_HOST_' + timestamp)
