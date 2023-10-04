@@ -115,69 +115,154 @@ void read_data(Rpp32f *data, Rpp32u nDim, Rpp32u readType, Rpp32u bufferLength, 
     }
 }
 
-void fill_roi_and_perm_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, Rpp32u *permTensor)
+void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMode)
 {
     switch(nDim)
     {
         case 2:
         {
-            for(int i = 0; i < batchSize * 4; i += 4)
+            if (qaMode)
             {
-                // fill begin values for each dimension
-                roiTensor[i] = 0;
-                roiTensor[i + 1] = 0;
-
-                // fill length values for each dimension
-                roiTensor[i + 2] = 125;
-                roiTensor[i + 3] = 125;
+                for(int i = 0; i < batchSize * 4; i += 4)
+                {
+                    roiTensor[i] = 0;
+                    roiTensor[i + 1] = 0;
+                    roiTensor[i + 2] = 125;
+                    roiTensor[i + 3] = 125;
+                }
             }
-            permTensor[0] = 1;
-            permTensor[1] = 0;
+            else
+            {
+                for(int i = 0; i < batchSize * 4; i += 4)
+                {
+                    roiTensor[i] = 0;
+                    roiTensor[i + 1] = 0;
+                    roiTensor[i + 2] = 1920;
+                    roiTensor[i + 3] = 1080;
+                }
+            }
             break;
         }
         case 3:
         {
-            for(int i = 0; i < batchSize * 6; i += 6)
+            if (qaMode)
             {
-                // fill begin values for each dimension
-                roiTensor[i] = 0;
-                roiTensor[i + 1] = 0;
-                roiTensor[i + 2] = 0;
-
-                // fill length values for each dimension
-                roiTensor[i + 3] = 100;
-                roiTensor[i + 4] = 100;
-                roiTensor[i + 5] = 16;
+                for(int i = 0; i < batchSize * 6; i += 6)
+                {
+                    roiTensor[i] = 0;
+                    roiTensor[i + 1] = 0;
+                    roiTensor[i + 2] = 0;
+                    roiTensor[i + 3] = 100;
+                    roiTensor[i + 4] = 100;
+                    roiTensor[i + 5] = 16;
+                }
             }
-            permTensor[0] = 2;
-            permTensor[1] = 0;
-            permTensor[2] = 1;
+            else
+            {
+                for(int i = 0; i < batchSize * 6; i += 6)
+                {
+                    roiTensor[i] = 0;
+                    roiTensor[i + 1] = 0;
+                    roiTensor[i + 2] = 0;
+                    roiTensor[i + 3] = 1152;
+                    roiTensor[i + 4] = 768;
+                    roiTensor[i + 5] = 16;
+                }
+            }
             break;
         }
         case 4:
         {
-            for(int i = 0; i < batchSize * 8; i += 8)
+            if (qaMode)
             {
-                // fill begin values for each dimension
-                roiTensor[i] = 0;
-                roiTensor[i + 1] = 0;
-                roiTensor[i + 2] = 0;
-                roiTensor[i + 3] = 0;
-
-                // fill length values for each dimension
-                roiTensor[i + 4] = 75;
-                roiTensor[i + 5] = 75;
-                roiTensor[i + 6] = 4;
-                roiTensor[i + 7] = 3;
+                for(int i = 0; i < batchSize * 8; i += 8)
+                {
+                    roiTensor[i] = 0;
+                    roiTensor[i + 1] = 0;
+                    roiTensor[i + 2] = 0;
+                    roiTensor[i + 3] = 0;
+                    roiTensor[i + 4] = 75;
+                    roiTensor[i + 5] = 75;
+                    roiTensor[i + 6] = 4;
+                    roiTensor[i + 7] = 3;
+                }
             }
-            permTensor[0] = 1;
-            permTensor[1] = 2;
-            permTensor[2] = 3;
-            permTensor[3] = 0;
+            else
+            {
+                for(int i = 0; i < batchSize * 8; i += 8)
+                {
+                    roiTensor[i] = 0;
+                    roiTensor[i + 1] = 0;
+                    roiTensor[i + 2] = 0;
+                    roiTensor[i + 3] = 0;
+                    roiTensor[i + 4] = 1;
+                    roiTensor[i + 5] = 128;
+                    roiTensor[i + 6] = 128;
+                    roiTensor[i + 7] = 128;
+                }
+            }
             break;
         }
         default:
+        {
+            // if nDim is not 2/3/4 and mode choosen is not QA
+            if(!qaMode)
+            {
+                for(int i = 0; i < batchSize; i++)
+                {
+                    int startIndex = i * nDim * 2;
+                    int lengthIndex = startIndex + nDim;
+                    for(int j = 0; j < nDim; j++)
+                    {
+                        roiTensor[startIndex + j] = 0;
+                        roiTensor[lengthIndex + j] = std::rand() % 10;  // limiting max value in a dimension to 10 for testing purposes
+                    }
+                }
+            }
             break;
+        }
+    }
+}
+
+// fill the permuation values used for transpose
+void fill_perm_values(Rpp32u nDim, Rpp32u *permTensor, bool qaMode)
+{
+    if(qaMode)
+    {
+        switch(nDim)
+        {
+            case 2:
+            {
+                permTensor[0] = 1;
+                permTensor[1] = 0;
+                break;
+            }
+            case 3:
+            {
+                permTensor[0] = 2;
+                permTensor[1] = 0;
+                permTensor[2] = 1;
+                break;
+            }
+            case 4:
+            {
+                permTensor[0] = 1;
+                permTensor[1] = 2;
+                permTensor[2] = 3;
+                permTensor[3] = 0;
+                break;
+            }
+            default:
+            {
+                cout << "Error! QA mode is supported only for 2 / 3 / 4 Dimension inputs" << endl;
+                exit(0);
+            }
+        }
+    }
+    else
+    {
+        for(int i = 0; i < nDim; i++)
+            permTensor[i] = nDim - 1 - i;
     }
 }
 
@@ -210,13 +295,24 @@ void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize)
 
 int main(int argc, char **argv)
 {
-    Rpp32u nDim, batchSize, testType;
+    // Handle inputs
+    const int MIN_ARG_COUNT = 5;
+    if (argc < MIN_ARG_COUNT)
+    {
+        printf("\nImproper Usage! Needs all arguments!\n");
+        printf("\nUsage: ./Tensor_transpose_host <case number = 0:0> <test type 0/1> <number of dimensions> <batch size> <num runs>\n");
+        return -1;
+    }
+
+    Rpp32u testCase, testType, nDim, batchSize, numRuns;
     bool qaMode;
 
-    nDim = atoi(argv[1]);
-    batchSize = atoi(argv[2]);
-    testType = atoi(argv[3]);
-    qaMode = atoi(argv[4]);
+    testCase = atoi(argv[1]);
+    testType = atoi(argv[2]);
+    nDim = atoi(argv[3]);
+    batchSize = atoi(argv[4]);
+    numRuns = atoi(argv[5]);
+    qaMode = (testType == 0);
 
     if (qaMode && batchSize != 3)
     {
@@ -224,21 +320,9 @@ int main(int argc, char **argv)
         return -1;
     }
 
-
-    // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
-    // If numThreads value passed is 0, number of OpenMP threads used by RPP will be set to batch size
-    Rpp32u numThreads = 0;
-    rppHandle_t handle;
-    rppCreateWithBatchSize(&handle, batchSize, numThreads);
-
-    double startWallTime, endWallTime;
-    double avgWallTime = 0, wallTime = 0;
-    Rpp32u numRuns = 1;
-    if (testType)
-        numRuns = 100;
-
-    // case-wise RPP API and measure time script for Unit and Performance test
-    printf("\nRunning transpose %d times (each time with a batch size of %d) and computing mean statistics...", numRuns, batchSize);
+    // fill roi based on mode and number of dimensions
+    Rpp32u *roiTensor = (Rpp32u *)calloc(nDim * 2 * batchSize, sizeof(Rpp32u));
+    fill_roi_values(nDim, batchSize, roiTensor, qaMode);
 
     // set src/dst generic tensor descriptors
     RpptGenericDesc srcDescriptor, dstDescriptor;
@@ -255,101 +339,26 @@ int main(int argc, char **argv)
     dstDescriptorPtrND->dataType = RpptDataType::F32;
     dstDescriptorPtrND->layout = RpptLayout::NDHWC;
 
-    Rpp32u *permTensor = (Rpp32u *)calloc(nDim, sizeof(Rpp32u));
-    Rpp32u *roiTensor = (Rpp32u *)calloc(nDim * 2 * batchSize, sizeof(Rpp32u));
-    Rpp32f *inputF32 = NULL, *outputF32 = NULL;
-
-    // fill roi and perm values based on mode choosen
-    if (qaMode)
-    {
-        Rpp32u bufferLength = get_buffer_length(nDim);
-        fill_roi_and_perm_values(nDim, batchSize, roiTensor, permTensor);
-    }
-    else if(testType && (nDim == 2 || nDim == 3 || nDim == 4))
-    {
-        if(nDim == 2)
-        {
-            for(int i = 0; i < batchSize * 4; i += 4)
-            {
-                roiTensor[i] = 0;
-                roiTensor[i + 1] = 0;
-
-                roiTensor[i + 2] = 1920;
-                roiTensor[i + 3] = 1080;
-            }
-            permTensor[0] = 1;
-            permTensor[1] = 0;
-        }
-        else if(nDim == 3)
-        {
-            for(int i = 0; i < batchSize * 6; i += 6)
-            {
-                roiTensor[i] = 0;
-                roiTensor[i + 1] = 0;
-                roiTensor[i + 2] = 0;
-
-                roiTensor[i + 3] = 1152;
-                roiTensor[i + 4] = 768;
-                roiTensor[i + 5] = 16;
-            }
-            permTensor[0] = 2;
-            permTensor[1] = 0;
-            permTensor[2] = 1;
-        }
-        else if(nDim == 4)
-        {
-            for(int i = 0; i < batchSize * 8; i += 8)
-            {
-                roiTensor[i] = 0;
-                roiTensor[i + 1] = 0;
-                roiTensor[i + 2] = 0;
-                roiTensor[i + 3] = 0;
-
-                roiTensor[i + 4] = 1;
-                roiTensor[i + 5] = 128;
-                roiTensor[i + 6] = 128;
-                roiTensor[i + 7] = 128;
-            }
-            permTensor[0] = 1;
-            permTensor[1] = 2;
-            permTensor[2] = 3;
-            permTensor[3] = 0;
-        }
-    }
-    else
-    {
-        // Fill the starting indices of ROI values
-        for(int i = 0; i < batchSize; i++)
-        {
-            int startIndex = i * nDim * 2;
-            int lengthIndex = startIndex + nDim;
-            for(int j = 0; j < nDim; j++)
-            {
-                roiTensor[startIndex + j] = 0;
-                roiTensor[lengthIndex + j] = std::rand() % 50;  // limiting max value in a dimension to 50 for testing purposes
-            }
-        }
-
-        for(int i = 0; i < nDim; i++)
-            permTensor[i] = nDim - 1 - i;
-    }
-
-    // set dims and compute strides
+    // set dims and compute strides for src
     srcDescriptorPtrND->dims[0] = batchSize;
     dstDescriptorPtrND->dims[0] = batchSize;
     for(int i = 1; i <= nDim; i++)
-    {
         srcDescriptorPtrND->dims[i] = roiTensor[nDim + i - 1];
-        dstDescriptorPtrND->dims[i] = roiTensor[nDim + permTensor[i - 1]];
-    }
     compute_strides(srcDescriptorPtrND);
-    compute_strides(dstDescriptorPtrND);
+
+    // if testCase is not transpose, then copy dims and strides from src to dst
+    if(testCase != 0)
+    {
+        memcpy(dstDescriptorPtrND->dims, srcDescriptorPtrND->dims, nDim * sizeof(Rpp32u));
+        memcpy(dstDescriptorPtrND->strides, srcDescriptorPtrND->strides, nDim * sizeof(Rpp32u));
+    }
 
     Rpp32u numValues = 1;
     for(int i = 0; i <= nDim; i++)
         numValues *= srcDescriptorPtrND->dims[i];
 
     // allocate memory for input / output
+    Rpp32f *inputF32 = NULL, *outputF32 = NULL;
     inputF32 = (Rpp32f *)calloc(numValues, sizeof(Rpp32f));
     outputF32 = (Rpp32f *)calloc(numValues, sizeof(Rpp32f));
 
@@ -363,17 +372,46 @@ int main(int argc, char **argv)
             inputF32[i] = (float)(std::rand() % 255);
     }
 
-    for(int i = 0; i < numRuns; i++)
-    {
-        startWallTime = omp_get_wtime();
-        rppt_transpose_generic_host(inputF32, srcDescriptorPtrND, outputF32, dstDescriptorPtrND, permTensor, roiTensor, handle);
-        endWallTime = omp_get_wtime();
+    // case-wise RPP API and measure time script for Unit and Performance test
+    printf("\nRunning transpose %d times (each time with a batch size of %d) and computing mean statistics...", numRuns, batchSize);
 
+    // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
+    // If numThreads value passed is 0, number of OpenMP threads used by RPP will be set to batch size
+    Rpp32u numThreads = 0;
+    rppHandle_t handle;
+    rppCreateWithBatchSize(&handle, batchSize, numThreads);
+
+    double startWallTime, endWallTime;
+    double avgWallTime = 0, wallTime = 0;
+    for(int perfCount = 0; perfCount < numRuns; perfCount++)
+    {
+        switch(testCase)
+        {
+            case 0:
+            {
+                Rpp32u permTensor[nDim];
+                fill_perm_values(nDim, permTensor, qaMode);
+
+                for(int i = 1; i <= nDim; i++)
+                    dstDescriptorPtrND->dims[i] = roiTensor[nDim + permTensor[i - 1]];
+                compute_strides(dstDescriptorPtrND);
+
+                startWallTime = omp_get_wtime();
+                rppt_transpose_generic_host(inputF32, srcDescriptorPtrND, outputF32, dstDescriptorPtrND, permTensor, roiTensor, handle);
+                break;
+            }
+            default:
+            {
+                cout << "functionality is not supported" << endl;
+                exit(0);
+            }
+        }
+        endWallTime = omp_get_wtime();
         wallTime = endWallTime - startWallTime;
         avgWallTime += wallTime;
     }
 
-    // compare outputs
+    // compare outputs if qaMode is true
     if(qaMode)
         compare_output(outputF32, nDim, batchSize);
     else
@@ -381,46 +419,10 @@ int main(int argc, char **argv)
         avgWallTime *= 1000;
         avgWallTime /= numRuns;
         cout << fixed << "\navg wall times in ms/batch = " << avgWallTime << endl;
-
-        // if (testType == 0 && qaMode == 0)
-        // {
-        //     std::cerr<<"\nprinting input values: "<<std::endl;
-        //     int cnt = 0;
-        //     for(int i = 0; i < roiTensor[0]; i++)
-        //     {
-        //         for(int j = 0; j < roiTensor[1]; j++)
-        //         {
-        //             for(int k = 0; k < roiTensor[2]; k++)
-        //             {
-        //                 std::cerr<<inputF32[cnt]<<" ";
-        //                 cnt++;
-        //             }
-        //             std::cerr<<std::endl;
-        //         }
-        //         std::cerr<<std::endl;
-        //     }
-
-        //     cnt = 0;
-        //     std::cerr<<"\n\nprinting output values: "<<std::endl;
-        //     for(int i = 0; i < roiTensor[permTensor[0]]; i++)
-        //     {
-        //         for(int j = 0; j < roiTensor[permTensor[1]]; j++)
-        //         {
-        //             for(int k = 0; k < roiTensor[permTensor[2]]; k++)
-        //             {
-        //                 std::cerr<<outputF32[cnt]<<" ";
-        //                 cnt++;
-        //             }
-        //             std::cerr<<std::endl;
-        //         }
-        //         std::cerr<<std::endl;
-        //     }
-        // }
     }
 
     free(inputF32);
     free(outputF32);
-    free(permTensor);
     free(roiTensor);
     return 0;
 }
