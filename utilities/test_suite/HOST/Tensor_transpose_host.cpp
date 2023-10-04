@@ -40,6 +40,11 @@ THE SOFTWARE.
 using namespace std;
 namespace fs = boost::filesystem;
 
+std::map<int, string> augmentationMiscMap =
+{
+    {0, "transpose"}
+};
+
 void compute_strides(RpptGenericDescPtr descriptorPtr)
 {
     if (descriptorPtr->numDims > 0)
@@ -85,7 +90,7 @@ void read_data(Rpp32f *data, Rpp32u nDim, Rpp32u readType, Rpp32u bufferLength, 
     Rpp32u sampleLength = bufferLength / batchSize;
     if(nDim != 2 && nDim != 3 && nDim != 4)
     {
-        std::cerr<<"\nGolden Inputs / Outputs are generated only for 2D / 3D / 4D data"<<std::endl;
+        std::cout << "\nGolden Inputs / Outputs are generated only for 2D / 3D / 4D data"<<std::endl;
         exit(0);
     }
 
@@ -103,7 +108,7 @@ void read_data(Rpp32f *data, Rpp32u nDim, Rpp32u readType, Rpp32u bufferLength, 
         fileStream.open(refFile, ios::in);
         if(!fileStream.is_open())
         {
-            cerr<<"Unable to open the file specified! Please check the path of the file given as input"<<endl;
+            cout << "Unable to open the file specified! Please check the path of the file given as input" << endl;
             break;
         }
         for(int j = 0; j < sampleLength; j++)
@@ -266,7 +271,7 @@ void fill_perm_values(Rpp32u nDim, Rpp32u *permTensor, bool qaMode)
     }
 }
 
-void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize)
+void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize, string dst, string funcName)
 {
     Rpp32u bufferLength = get_buffer_length(nDim);
     Rpp32f *refOutput = (Rpp32f *)calloc(bufferLength * batchSize, sizeof(Rpp32f));
@@ -285,18 +290,34 @@ void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize)
         if (cnt == bufferLength)
             fileMatch++;
     }
-    if (fileMatch == batchSize)
-        std::cerr<<"\nPASSED!"<<std::endl;
-    else
-        std::cerr << "\nFAILED! " << fileMatch << "/" << batchSize << " outputs are matching with reference outputs" << std::endl;
 
+    std::string status = funcName + ": ";
+    if (fileMatch == batchSize)
+    {
+        std::cout << "\nPASSED!"<<std::endl;
+        status += "PASSED";
+    }
+    else
+    {
+        std::cout << "\nFAILED! " << fileMatch << "/" << batchSize << " outputs are matching with reference outputs" << std::endl;
+        status += "FAILED";
+    }
     free(refOutput);
+
+    // Append the QA results to file
+    std::string qaResultsPath = dst + "/QA_results.txt";
+    std:: ofstream qaResults(qaResultsPath, ios_base::app);
+    if (qaResults.is_open())
+    {
+        qaResults << status << std::endl;
+        qaResults.close();
+    }
 }
 
 int main(int argc, char **argv)
 {
     // Handle inputs
-    const int MIN_ARG_COUNT = 5;
+    const int MIN_ARG_COUNT = 6;
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
@@ -312,11 +333,19 @@ int main(int argc, char **argv)
     nDim = atoi(argv[3]);
     batchSize = atoi(argv[4]);
     numRuns = atoi(argv[5]);
+    string dst = argv[6];
     qaMode = (testType == 0);
 
     if (qaMode && batchSize != 3)
     {
-        std::cerr<<"QA mode can only run with batchsize 3"<<std::endl;
+        std::cout << "QA mode can only run with batchsize 3"<<std::endl;
+        return -1;
+    }
+
+    string funcName = augmentationMiscMap[testCase];
+    if (funcName.empty())
+    {
+        printf("\ncase %d is not supported\n", testCase);
         return -1;
     }
 
@@ -382,7 +411,7 @@ int main(int argc, char **argv)
     rppCreateWithBatchSize(&handle, batchSize, numThreads);
 
     double startWallTime, endWallTime;
-    double avgWallTime = 0, wallTime = 0;
+    double maxWallTime = 0, minWallTime = 500, avgWallTime = 0, wallTime = 0;
     for(int perfCount = 0; perfCount < numRuns; perfCount++)
     {
         switch(testCase)
@@ -408,17 +437,21 @@ int main(int argc, char **argv)
         }
         endWallTime = omp_get_wtime();
         wallTime = endWallTime - startWallTime;
+        maxWallTime = std::max(maxWallTime, wallTime);
+        minWallTime = std::min(minWallTime, wallTime);
         avgWallTime += wallTime;
     }
 
     // compare outputs if qaMode is true
     if(qaMode)
-        compare_output(outputF32, nDim, batchSize);
+        compare_output(outputF32, nDim, batchSize, dst, funcName);
     else
     {
+        maxWallTime *= 1000;
+        minWallTime *= 1000;
         avgWallTime *= 1000;
         avgWallTime /= numRuns;
-        cout << fixed << "\navg wall times in ms/batch = " << avgWallTime << endl;
+        cout << fixed << "\nmax,min,avg wall times in ms/batch = " << maxWallTime << "," << minWallTime << "," << avgWallTime;
     }
 
     free(inputF32);
