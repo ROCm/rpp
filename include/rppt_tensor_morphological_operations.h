@@ -22,49 +22,86 @@ THE SOFTWARE.
 
 #ifndef RPPT_TENSOR_MORPHOLOGICAL_OPERATIONS_H
 #define RPPT_TENSOR_MORPHOLOGICAL_OPERATIONS_H
+
+/*!
+ * \file
+ * \brief RPPT Tensor Morphological Augmentation Functions.
+ *
+ * \defgroup group_tensor_morph Operations: AMD RPP Tensor Morphological Operations
+ * \brief Tensor Morphological Augmentations.
+ */
+
 #include "rpp.h"
 #include "rppdefs.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/******************** erode ********************/
-
-// Erode augmentation for a NCHW/NHWC layout tensor
-
-// *param[in] srcPtr source tensor memory
-// *param[in] srcDescPtr source tensor descriptor (srcDescPtr->offsetInBytes must be at least 12 * (kernelSize / 2), and any offset/row-padding/col-padding other than the image region should be set to 0xFF)
-// *param[out] dstPtr destination tensor memory
-// *param[in] dstDescPtr destination tensor descriptor
-// *param[in] kernelSize kernel size for erode (a single Rpp32u odd number with kernelSize = 3/5/7/9 that applies to all images in the batch)
-// *param[in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
-// *param[in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
-// *param[in] rppHandle HIP-handle for "_gpu" variants and Host-handle for "_host" variants
-// *returns a  RppStatus enumeration.
-// *retval RPP_SUCCESS : succesful completion
-// *retval RPP_ERROR : Error
-
+/*! \brief Erode augmentation HOST
+ * \details Erode augmentation for a NCHW/NHWC layout tensor
+ * \param [in] srcPtr source tensor memory
+ * \param [in] srcDescPtr source tensor descriptor
+ * \param [out] dstPtr destination tensor memory
+ * \param [in] dstDescPtr destination tensor descriptor
+ * \param [in] kernelSize kernel size for erode (a single Rpp32u odd number with kernelSize = 3/5/7/9 that applies to all images in the batch)
+ * \param [in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+ * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+ * \param [in] rppHandle Host-handle
+ * \return <tt> Rppt_Status enum</tt>.
+ * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
+ * Else return RPP_ERROR
+ * \ingroup group_tensor_morph
+ */
 #ifdef GPU_SUPPORT
+/*! \brief Erode augmentation GPU
+ * \details Erode augmentation for a NCHW/NHWC layout tensor
+ * \param [in] srcPtr source tensor memory
+ * \param [in] srcDescPtr source tensor descriptor
+ * \param [out] dstPtr destination tensor memory
+ * \param [in] dstDescPtr destination tensor descriptor
+ * \param [in] kernelSize kernel size for erode (a single Rpp32u odd number with kernelSize = 3/5/7/9 that applies to all images in the batch)
+ * \param [in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+ * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+ * \param [in] rppHandle HIP-handle
+ * \return <tt> Rppt_Status enum</tt>.
+ * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
+ * Else return RPP_ERROR
+ * \ingroup group_tensor_morph
+ */
 RppStatus rppt_erode_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u kernelSize, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
-/******************** dilate ********************/
-
-// Dilate augmentation for a NCHW/NHWC layout tensor
-
-// *param[in] srcPtr source tensor memory
-// *param[in] srcDescPtr source tensor descriptor (srcDescPtr->offsetInBytes must be at least 12 * (kernelSize / 2))
-// *param[out] dstPtr destination tensor memory
-// *param[in] dstDescPtr destination tensor descriptor
-// *param[in] kernelSize kernel size for dilate (a single Rpp32u odd number with kernelSize = 3/5/7/9 that applies to all images in the batch)
-// *param[in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
-// *param[in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
-// *param[in] rppHandle HIP-handle for "_gpu" variants and Host-handle for "_host" variants
-// *returns a  RppStatus enumeration.
-// *retval RPP_SUCCESS : succesful completion
-// *retval RPP_ERROR : Error
-
+/*! \brief Dilate augmentation HOST
+ * \details Dilate augmentation for a NCHW/NHWC layout tensor
+ * \param [in] srcPtr source tensor memory
+ * \param [in] srcDescPtr source tensor descriptor
+ * \param [out] dstPtr destination tensor memory
+ * \param [in] dstDescPtr destination tensor descriptor
+ * \param [in] kernelSize kernel size for dilate (a single Rpp32u odd number with kernelSize = 3/5/7/9 that applies to all images in the batch)
+ * \param [in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+ * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+ * \param [in] rppHandle Host-handle
+ * \return <tt> Rppt_Status enum</tt>.
+ * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
+ * Else return RPP_ERROR
+ * \ingroup group_tensor_morph
+ */
 #ifdef GPU_SUPPORT
+/*! \brief Dilate augmentation GPU
+ * \details Dilate augmentation for a NCHW/NHWC layout tensor
+ * \param [in] srcPtr source tensor memory
+ * \param [in] srcDescPtr source tensor descriptor
+ * \param [out] dstPtr destination tensor memory
+ * \param [in] dstDescPtr destination tensor descriptor
+ * \param [in] kernelSize kernel size for dilate (a single Rpp32u odd number with kernelSize = 3/5/7/9 that applies to all images in the batch)
+ * \param [in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+ * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+ * \param [in] rppHandle HIP-handle
+ * \return <tt> Rppt_Status enum</tt>.
+ * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
+ * Else return RPP_ERROR
+ * \ingroup group_tensor_morph
+ */
 RppStatus rppt_dilate_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u kernelSize, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 

@@ -84,10 +84,12 @@ def func_group_finder(case_number):
         return "geometric_augmentations"
     elif case_number < 42:
         return "morphological_operations"
-    elif case_number == 49:
+    elif case_number == 49 or case_number == 54:
         return "filter_augmentations"
     elif case_number < 86:
         return "data_exchange_operations"
+    elif case_number < 88:
+        return "statistical_operations"
     else:
         return "miscellaneous"
 
@@ -110,8 +112,8 @@ def rpp_test_suite_parser_and_validator():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_path1", type = str, default = inFilePath1, help = "Path to the input folder 1")
     parser.add_argument("--input_path2", type = str, default = inFilePath2, help = "Path to the input folder 2")
-    parser.add_argument("--case_start", type = int, default = 0, help = "Testing range starting case # - (0:84)")
-    parser.add_argument("--case_end", type = int, default = 84, help = "Testing range ending case # - (0:84)")
+    parser.add_argument("--case_start", type = int, default = 0, help = "Testing range starting case # - (0:87)")
+    parser.add_argument("--case_end", type = int, default = 87, help = "Testing range ending case # - (0:87)")
     parser.add_argument('--test_type', type = int, default = 0, help = "Type of Test - (0 = Unit tests / 1 = Performance tests)")
     parser.add_argument('--case_list', nargs = "+", help = "List of case numbers to list", required = False)
     parser.add_argument('--profiling', type = str , default = 'NO', help = 'Run with profiler? - (YES/NO)', required = False)
@@ -128,8 +130,8 @@ def rpp_test_suite_parser_and_validator():
     validate_path(qaInputFile)
 
     # validate the parameters passed by user
-    if ((args.case_start < 0 or args.case_start > 84) or (args.case_end < 0 or args.case_end > 84)):
-        print("Starting case# and Ending case# must be in the 0:84 range. Aborting!")
+    if ((args.case_start < 0 or args.case_start > 87) or (args.case_end < 0 or args.case_end > 87)):
+        print("Starting case# and Ending case# must be in the 0:87 range. Aborting!")
         exit(0)
     elif args.case_end < args.case_start:
         print("Ending case# must be greater than starting case#. Aborting!")
@@ -143,7 +145,7 @@ def rpp_test_suite_parser_and_validator():
     elif args.decoder_type < 0 or args.decoder_type > 1:
         print("Decoder Type must be in the 0/1 (0 = OpenCV / 1 = TurboJPEG). Aborting")
         exit(0)
-    elif args.case_list is not None and args.case_start > 0 and args.case_end < 84:
+    elif args.case_list is not None and args.case_start > 0 and args.case_end < 87:
         print("Invalid input! Please provide only 1 option between case_list, case_start and case_end")
         exit(0)
     elif args.num_runs <= 0:
@@ -164,8 +166,8 @@ def rpp_test_suite_parser_and_validator():
         args.case_list = [str(x) for x in args.case_list]
     else:
         for case in args.case_list:
-            if int(case) < 0 or int(case) > 84:
-                 print("The case# must be in the 0:84 range!")
+            if int(case) < 0 or int(case) > 87:
+                 print("The case# must be in the 0:87 range!")
                  exit(0)
 
     # if QA mode is enabled overwrite the input folders with the folders used for generating golden outputs
@@ -292,7 +294,7 @@ else:
             f.close()
     elif (testType == 1 and profilingOption == "YES"):
         subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numRuns), "1", str(qaMode), str(decoderType), str(preserveOutput), str(batchSize), " ".join(caseList)])  # nosec
-        NEW_FUNC_GROUP_LIST = [0, 15, 20, 29, 36, 40, 42, 49, 56, 65, 69]
+        NEW_FUNC_GROUP_LIST = [0, 15, 20, 29, 36, 40, 42, 49, 54, 56, 65, 69]
 
         RESULTS_DIR = ""
         RESULTS_DIR = "../OUTPUT_PERFORMANCE_LOGS_HIP_" + timestamp
@@ -333,17 +335,17 @@ else:
                 for BIT_DEPTH in BIT_DEPTH_LIST:
                     # Loop through output format toggle cases
                     for OFT in OFT_LIST:
-                        if (CASE_NUM == 40 or CASE_NUM == 41 or CASE_NUM == 49) and TYPE.startswith("Tensor"):
+                        if (CASE_NUM == str(40) or CASE_NUM == str(41) or CASE_NUM == str(49) or CASE_NUM == str(54)) and TYPE.startswith("Tensor"):
                             KSIZE_LIST = [3, 5, 7, 9]
                             # Loop through extra param kSize
                             for KSIZE in KSIZE_LIST:
                                 # Write into csv file
-                                CASE_FILE_PATH = CASE_RESULTS_DIR + "/output_case" + str(CASE_NUM) + "_bitDepth" + str(BIT_DEPTH) + "_oft" + str(OFT) + "_kSize" + str(KSIZE) + ".stats.csv"
+                                CASE_FILE_PATH = CASE_RESULTS_DIR + "/output_case" + str(CASE_NUM) + "_bitDepth" + str(BIT_DEPTH) + "_oft" + str(OFT) + "_kernelSize" + str(KSIZE) + ".stats.csv"
                                 print("CASE_FILE_PATH = " + CASE_FILE_PATH)
                                 fileCheck = case_file_check(CASE_FILE_PATH)
                                 if fileCheck == False:
                                     continue
-                        elif (CASE_NUM == 24 or CASE_NUM == 21) and TYPE.startswith("Tensor"):
+                        elif (CASE_NUM == str(24) or CASE_NUM == str(21)) and TYPE.startswith("Tensor"):
                             INTERPOLATIONTYPE_LIST = [0, 1, 2, 3, 4, 5]
                             # Loop through extra param interpolationType
                             for INTERPOLATIONTYPE in INTERPOLATIONTYPE_LIST:
@@ -353,7 +355,7 @@ else:
                                 fileCheck = case_file_check(CASE_FILE_PATH)
                                 if fileCheck == False:
                                     continue
-                        elif (CASE_NUM == 8) and TYPE.startswith("Tensor"):
+                        elif (CASE_NUM == str(8)) and TYPE.startswith("Tensor"):
                             NOISETYPE_LIST = [0, 1, 2]
                             # Loop through extra param noiseType
                             for NOISETYPE in NOISETYPE_LIST:
@@ -386,18 +388,23 @@ else:
             print("Unable to open results in " + RESULTS_DIR + "/consolidated_results_" + TYPE + ".stats.csv")
 
 # print the results of qa tests
-supportedCaseList = ['0', '1', '2', '4', '13', '31', '34', '36', '37', '38','84']
+supportedCaseList = ['0', '1', '2', '4', '13', '31', '34', '36', '37', '38', '54', '84', '87']
+nonQACaseList = ['54', '84']
 supportedCases = 0
 for num in caseList:
-    if num in supportedCaseList:
+    if qaMode == 1 and num not in nonQACaseList:
+        supportedCases += 1
+    elif qaMode == 0 and num in supportedCaseList:
         supportedCases += 1
 caseInfo = "Tests are run for " + str(supportedCases) + " supported cases out of the " + str(len(caseList)) + " cases requested"
 if qaMode and testType == 0:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
-    f = open(qaFilePath, 'r+')
-    print("---------------------------------- Results of QA Test ----------------------------------\n")
-    for line in f:
-        sys.stdout.write(line)
-        sys.stdout.flush()
-    f.write(caseInfo)
+    checkFile = os.path.isfile(qaFilePath)
+    if checkFile:
+        f = open(qaFilePath, 'r+')
+        print("---------------------------------- Results of QA Test ----------------------------------\n")
+        for line in f:
+            sys.stdout.write(line)
+            sys.stdout.flush()
+        f.write(caseInfo)
 print("\n-------------- " + caseInfo + " --------------")
