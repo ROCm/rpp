@@ -257,59 +257,66 @@ print("#########################################################################
 print("Running all layout Inputs...")
 print("##########################################################################################")
 
+bitDepths = [0, 2]
 if testType == 0:
-    for case in caseList:
-        if int(case) < 0 or int(case) > 1:
-            print(f"Invalid case number {case}. Case number must be in the range of 0 to 1!")
+    for bitDepth in bitDepths:
+        if qaMode and bitDepth == 0:
             continue
-        for layout in range(3):
-            dstPathTemp, log_file_layout = process_layout(layout, qaMode, case, dstPath)
+        for case in caseList:
+            if int(case) < 0 or int(case) > 1:
+                print(f"Invalid case number {case}. Case number must be in the range of 0 to 1!")
+                continue
+            for layout in range(3):
+                dstPathTemp, log_file_layout = process_layout(layout, qaMode, case, dstPath)
 
-            if qaMode == 0:
-                if not os.path.isdir(dstPathTemp):
-                    os.mkdir(dstPathTemp)
+                if qaMode == 0:
+                    if not os.path.isdir(dstPathTemp):
+                        os.mkdir(dstPathTemp)
 
-            print("\n\n\n\n")
-            print("--------------------------------")
-            print("Running a New Functionality...")
-            print("--------------------------------")
-            print(f"./Tensor_voxel_host {headerPath} {dataPath} {dstPathTemp} {layout} {case} {numRuns} {testType} {qaMode} {batchSize}")
-            result = subprocess.run(["./Tensor_voxel_host", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize)], stdout=subprocess.PIPE) # nosec
-            print(result.stdout.decode())
+                print("\n\n\n\n")
+                print("--------------------------------")
+                print("Running a New Functionality...")
+                print("--------------------------------")
+                print(f"./Tensor_voxel_host {headerPath} {dataPath} {dstPathTemp} {layout} {case} {numRuns} {testType} {qaMode} {batchSize} {bitDepth}")
+                result = subprocess.run(["./Tensor_voxel_host", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth)], stdout=subprocess.PIPE) # nosec
+                print(result.stdout.decode())
+
+                print("------------------------------------------------------------------------------------------")
+        layoutDict = {0:"PKD3", 1:"PLN3", 2:"PLN1"}
+        if qaMode == 0:
+            create_layout_directories(dstPath, layoutDict)
+else:
+    for bitDepth in bitDepths:
+        if qaMode and bitDepth == 0:
+            continue
+        for case in caseList:
+            if int(case) < 0 or int(case) > 1:
+                print(f"Invalid case number {case}. Case number must be in the range of 0 to 1!")
+                continue
+            for layout in range(3):
+                dstPathTemp, log_file_layout = process_layout(layout, qaMode, case, dstPath)
+
+                print("\n\n\n\n")
+                print("--------------------------------")
+                print("Running a New Functionality...")
+                print("--------------------------------")
+
+                with open(f"{loggingFolder}/Tensor_voxel_host_{log_file_layout}_raw_performance_log.txt", "a") as log_file:
+                    print(f"./Tensor_voxel_host {headerPath} {dataPath} {dstPathTemp} {layout} {case} {numRuns} {testType} {qaMode} {batchSize} {bitDepth}")
+                    process = subprocess.Popen(["./Tensor_voxel_host", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True) # nosec
+                    while True:
+                        output = process.stdout.readline()
+                        if not output and process.poll() is not None:
+                            break
+                        print(output.strip())
+                        if "Running" in output or "max,min,avg wall times" in output:
+                            cleaned_output = ''.join(char for char in output if 32 <= ord(char) <= 126)  # Remove control characters
+                            cleaned_output = cleaned_output.strip()  # Remove leading/trailing whitespace
+                            log_file.write(cleaned_output + '\n')
+                            if "max,min,avg wall times" in output:
+                                log_file.write("\n")
 
             print("------------------------------------------------------------------------------------------")
-    layoutDict = {0:"PKD3", 1:"PLN3", 2:"PLN1"}
-    if qaMode == 0:
-        create_layout_directories(dstPath, layoutDict)
-else:
-    for case in caseList:
-        if int(case) < 0 or int(case) > 1:
-            print(f"Invalid case number {case}. Case number must be in the range of 0 to 1!")
-            continue
-        for layout in range(3):
-            dstPathTemp, log_file_layout = process_layout(layout, qaMode, case, dstPath)
-
-            print("\n\n\n\n")
-            print("--------------------------------")
-            print("Running a New Functionality...")
-            print("--------------------------------")
-
-            with open(f"{loggingFolder}/Tensor_voxel_host_{log_file_layout}_raw_performance_log.txt", "a") as log_file:
-                print(f"./Tensor_voxel_host {headerPath} {dataPath} {dstPathTemp} {layout} {case} {numRuns} {testType} {qaMode} {batchSize}")
-                process = subprocess.Popen(["./Tensor_voxel_host", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True) # nosec
-                while True:
-                    output = process.stdout.readline()
-                    if not output and process.poll() is not None:
-                        break
-                    print(output.strip())
-                    if "Running" in output or "max,min,avg wall times" in output:
-                        cleaned_output = ''.join(char for char in output if 32 <= ord(char) <= 126)  # Remove control characters
-                        cleaned_output = cleaned_output.strip()  # Remove leading/trailing whitespace
-                        log_file.write(cleaned_output + '\n')
-                        if "max,min,avg wall times" in output:
-                            log_file.write("\n")
-
-        print("------------------------------------------------------------------------------------------")
 
 # print the results of qa tests
 supportedCaseList = ['0', '1']

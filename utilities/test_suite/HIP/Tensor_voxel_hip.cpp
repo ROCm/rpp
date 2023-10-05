@@ -24,7 +24,7 @@ THE SOFTWARE.
 
 int main(int argc, char * argv[])
 {
-    int layoutType, testCase, testType, qaFlag, numRuns, batchSize;
+    int layoutType, testCase, testType, qaFlag, numRuns, batchSize, inputBitDepth;
     char *header_file, *data_file, *dst_path;
 
     if (argc < 7)
@@ -42,6 +42,7 @@ int main(int argc, char * argv[])
     testType = atoi(argv[7]); // 0 - unit test / 1 - performance test
     qaFlag = atoi(argv[8]); //0 - QA disabled / 1 - QA enabled
     batchSize = atoi(argv[9]);
+    inputBitDepth = atoi(argv[10]);
 
     if ((layoutType < 0) || (layoutType > 2))
     {
@@ -152,7 +153,6 @@ int main(int argc, char * argv[])
     Rpp8u *inputU8 = NULL;
     Rpp8u *outputU8 = NULL;
     void *d_inputU8 = NULL, *d_outputU8 = NULL;
-    int inputBitDepth = 0;
     if(inputBitDepth == 0)
     {
         Rpp64u iBufferSizeU8 = iBufferSize * sizeof(Rpp8u) + descriptorPtr3D->offsetInBytes;
