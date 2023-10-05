@@ -61,8 +61,8 @@ int main(int argc, char * argv[])
         exit(0);
     }
 
-    string func = augmentationMap[testCase];
-    if (func.empty())
+    string funcName = augmentationMap[testCase];
+    if (funcName.empty())
     {
         if (testType == 0)
             printf("\ncase %d is not supported\n", testCase);
@@ -85,7 +85,7 @@ int main(int argc, char * argv[])
     }
 
     // NIFTI_DATATYPE *niftiData = NULL;
-    NIFTI_DATATYPE** niftiDataArray = (NIFTI_DATATYPE**)malloc(batchSize * sizeof(NIFTI_DATATYPE*));
+    NIFTI_DATATYPE** niftiDataArray = (NIFTI_DATATYPE**)malloc(noOfFiles * sizeof(NIFTI_DATATYPE*));
     nifti_1_header* niftiHeader = (nifti_1_header*)malloc(noOfFiles * sizeof(nifti_1_header));
 
     // read nifti header file
@@ -110,7 +110,16 @@ int main(int argc, char * argv[])
     // set src/dst generic tensor descriptors
     RpptGenericDesc descriptor3D;
     RpptGenericDescPtr descriptorPtr3D = &descriptor3D;
-    set_generic_descriptor(descriptorPtr3D, batchSize, maxX, maxY, maxZ, numChannels, offsetInBytes, layoutType);
+    set_generic_descriptor(descriptorPtr3D, batchSize, maxX, maxY, maxZ, numChannels, offsetInBytes, layoutType, inputBitDepth);
+
+    // update funcName based on bitdepth and layout
+    if(inputBitDepth == 0)
+        funcName += "_u8_";
+    else if(inputBitDepth == 2)
+        funcName += "_f32_";
+    int pln1OutTypeCase = 0, outputFormatToggle = 0;
+    string funcType = set_function_type(layoutType, pln1OutTypeCase, outputFormatToggle, "HOST");
+    funcName += funcType;
 
     // set src/dst xyzwhd ROI tensors
     //RpptRoiXyzwhd *roiGenericSrcPtr = reinterpret_cast<RpptRoiXyzwhd *>(calloc(batchSize, sizeof(RpptRoiXyzwhd)));
@@ -160,7 +169,7 @@ int main(int argc, char * argv[])
             inputU8[i] = static_cast<unsigned char>(inputF32[i]);
     }
 
-    printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
+    printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", funcName.c_str(), numRuns, batchSize);
     for (int perfRunCount = 0; perfRunCount < numRuns; perfRunCount++)
     {
         for(int iterCount = 0; iterCount < noOfIterations; iterCount++)
