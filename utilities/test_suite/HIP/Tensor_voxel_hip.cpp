@@ -25,7 +25,7 @@ THE SOFTWARE.
 int main(int argc, char * argv[])
 {
     int layoutType, testCase, testType, qaFlag, numRuns, batchSize, inputBitDepth;
-    char *header_file, *data_file, *dst_path;
+    char *headerFile, *dataFile, *dstPath;
 
     if (argc < 7)
     {
@@ -33,9 +33,9 @@ int main(int argc, char * argv[])
         exit(1);
     }
 
-    header_file = argv[1];
-    data_file = argv[2];
-    dst_path = argv[3];
+    headerFile = argv[1];
+    dataFile = argv[2];
+    dstPath = argv[3];
     layoutType = atoi(argv[4]); // 0 for PKD3 // 1 for PLN3 // 2 for PLN1
     testCase = atoi(argv[5]); // 0 to 1
     numRuns = atoi(argv[6]);
@@ -73,8 +73,8 @@ int main(int argc, char * argv[])
     int numChannels, offsetInBytes;
     int noOfFiles = 0, maxX = 0, maxY = 0, maxZ = 0;
     vector<string> headerNames, headerPath, dataFileNames, dataFilePath;
-    search_nii_files(header_file, headerNames, headerPath);
-    search_nii_files(data_file, dataFileNames, dataFilePath);
+    search_nii_files(headerFile, headerNames, headerPath);
+    search_nii_files(dataFile, dataFileNames, dataFilePath);
     noOfFiles = dataFileNames.size();
     if(noOfFiles < batchSize || ((noOfFiles % batchSize) != 0))
     {
@@ -162,20 +162,14 @@ int main(int argc, char * argv[])
     Rpp8u *inputU8 = NULL;
     Rpp8u *outputU8 = NULL;
     void *d_inputU8 = NULL, *d_outputU8 = NULL;
+    Rpp64u iBufferSizeU8 = iBufferSize * sizeof(Rpp8u) + descriptorPtr3D->offsetInBytes;
     if(inputBitDepth == 0)
     {
-        Rpp64u iBufferSizeU8 = iBufferSize * sizeof(Rpp8u) + descriptorPtr3D->offsetInBytes;
         inputU8 = static_cast<Rpp8u *>(calloc(iBufferSizeU8, 1));
         outputU8 = static_cast<Rpp8u *>(calloc(iBufferSizeU8, 1));
 
-        for(int i = 0; i < iBufferSizeU8; i++)
-            inputU8[i] = static_cast<unsigned char>(inputF32[i]);
-
         hipMalloc(&d_inputU8, iBufferSizeU8);
         hipMalloc(&d_outputU8, iBufferSizeU8);
-
-        // Copy input buffer to hip
-        hipMemcpy(d_inputU8, inputU8, iBufferSizeU8, hipMemcpyHostToDevice);
     }
 
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", funcName.c_str(), numRuns, batchSize);
@@ -225,6 +219,14 @@ int main(int argc, char * argv[])
             // Convert default NIFTI_DATATYPE unstrided buffer to RpptDataType::F32 strided buffer
             convert_input_niftitype_to_Rpp32f_generic(niftiDataArray, niftiHeaderTemp, inputF32 , descriptorPtr3D);
 
+            // Typecast input from F32 to U8 if input bitdepth requested is U8
+            if (inputBitDepth == 0)
+            {
+                for(int i = 0; i < iBufferSizeU8; i++)
+                    inputU8[i] = std::min(std::max(static_cast<unsigned char>(inputF32[i]), static_cast<unsigned char>(0)), static_cast<unsigned char>(255));
+                hipMemcpy(d_inputU8, inputU8, iBufferSizeU8, hipMemcpyHostToDevice);
+            }
+
             //Copy input buffer to hip
             hipMemcpy(d_inputF32, inputF32, iBufferSizeInBytes, hipMemcpyHostToDevice);
 
@@ -251,11 +253,7 @@ int main(int argc, char * argv[])
                     testCaseName = "slice";
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0)
-                    {
-                        descriptorPtr3D->dataType = RpptDataType::U8;
                         rppt_slice_gpu(d_inputU8, descriptorPtr3D, d_outputU8, descriptorPtr3D, roiGenericSrcPtr, roiTypeSrc, handle);
-                        descriptorPtr3D->dataType = RpptDataType::F32;
-                    }
                     else
                         rppt_slice_gpu(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, roiGenericSrcPtr, roiTypeSrc, handle);
                     break;
@@ -311,7 +309,7 @@ int main(int argc, char * argv[])
                 }
 
                 if(qaFlag)
-                    compare_output(outputF32, oBufferSize, testCaseName, layoutType, descriptorPtr3D, (RpptRoiXyzwhd *)roiGenericSrcPtr, dst_path);
+                    compare_output(outputF32, oBufferSize, testCaseName, layoutType, descriptorPtr3D, (RpptRoiXyzwhd *)roiGenericSrcPtr, dstPath);
                 else
                 {
                     for(int batchCount = 0; batchCount < batchSize; batchCount++)
@@ -348,25 +346,25 @@ int main(int argc, char * argv[])
                             uchar *niftiDataU8Temp = niftiDataU8;
                             for (int zPlane = roiGenericSrcPtr[batchCount].xyzwhdROI.xyz.z; zPlane < roiGenericSrcPtr[batchCount].xyzwhdROI.xyz.z + roiGenericSrcPtr[batchCount].xyzwhdROI.roiDepth; zPlane++)
                             {
-                                write_image_from_nifti_opencv(niftiDataU8Temp, niftiHeaderTemp[batchCount].dim[1], (RpptRoiXyzwhd *)roiGenericSrcPtr, outputBufferOpenCV, zPlane, i, batchCount, dst_path, testCaseName, index);
+                                write_image_from_nifti_opencv(niftiDataU8Temp, niftiHeaderTemp[batchCount].dim[1], (RpptRoiXyzwhd *)roiGenericSrcPtr, outputBufferOpenCV, zPlane, i, batchCount, dstPath, testCaseName, index);
                                 niftiDataU8Temp += xyFrameSize;
                             }
 
-                            write_nifti_file(&niftiHeaderTemp[batchCount], niftiDataArray[batchCount], index, i, dst_path, testCaseName);
+                            write_nifti_file(&niftiHeaderTemp[batchCount], niftiDataArray[batchCount], index, i, dstPath, testCaseName);
 
                             if(i == 0)
                             {
-                                std::string command = "convert -delay 10 -loop 0 " + std::string(dst_path) + "/" + testCaseName + "_nifti_" + std::to_string(index) + "_zPlane_chn_0_*.jpg " + std::string(dst_path) + "/" + testCaseName + "_niftiOutput_" + std::to_string(index) + "_chn_" + std::to_string(i) + ".gif";
+                                std::string command = "convert -delay 10 -loop 0 " + std::string(dstPath) + "/" + testCaseName + "_nifti_" + std::to_string(index) + "_zPlane_chn_0_*.jpg " + std::string(dstPath) + "/" + testCaseName + "_niftiOutput_" + std::to_string(index) + "_chn_" + std::to_string(i) + ".gif";
                                 system(command.c_str());
                             }
                             if(i == 1)
                             {
-                                std::string command = "convert -delay 10 -loop 0 " + std::string(dst_path) + "/" + testCaseName + "_nifti_" + std::to_string(index) + "_zPlane_chn_1_*.jpg " + std::string(dst_path) + "/" + testCaseName + "_niftiOutput_" + std::to_string(index) + "_chn_" + std::to_string(i) + ".gif";
+                                std::string command = "convert -delay 10 -loop 0 " + std::string(dstPath) + "/" + testCaseName + "_nifti_" + std::to_string(index) + "_zPlane_chn_1_*.jpg " + std::string(dstPath) + "/" + testCaseName + "_niftiOutput_" + std::to_string(index) + "_chn_" + std::to_string(i) + ".gif";
                                 system(command.c_str());
                             }
                             if(i == 2)
                             {
-                                std::string command = "convert -delay 10 -loop 0 " + std::string(dst_path) + "/" + testCaseName + "_nifti_" + std::to_string(index) + "_zPlane_chn_2_*.jpg " + std::string(dst_path) + "/" + testCaseName + "_niftiOutput_" + std::to_string(index) + "_chn_" + std::to_string(i) + ".gif";
+                                std::string command = "convert -delay 10 -loop 0 " + std::string(dstPath) + "/" + testCaseName + "_nifti_" + std::to_string(index) + "_zPlane_chn_2_*.jpg " + std::string(dstPath) + "/" + testCaseName + "_niftiOutput_" + std::to_string(index) + "_chn_" + std::to_string(i) + ".gif";
                                 system(command.c_str());
                             }
                             free(niftiDataU8);

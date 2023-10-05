@@ -308,9 +308,10 @@ if testType == 0:
                 print(result.stdout.decode())
 
                 print("------------------------------------------------------------------------------------------")
-        layoutDict = {0:"PKD3", 1:"PLN3", 2:"PLN1"}
-        if qaMode == 0:
-            create_layout_directories(dstPath, layoutDict)
+
+    layoutDict = {0:"PKD3", 1:"PLN3", 2:"PLN1"}
+    if qaMode == 0:
+        create_layout_directories(dstPath, layoutDict)
 elif (testType == 1 and profilingOption == "NO"):
     for bitDepth in bitDepths:
         if qaMode and bitDepth == 0:
