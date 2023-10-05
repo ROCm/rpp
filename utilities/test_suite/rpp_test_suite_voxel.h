@@ -42,7 +42,7 @@ typedef int16_t NIFTI_DATATYPE;
 
 #define MIN_HEADER_SIZE 348
 #define RPPRANGECHECK(value)     (value < -32768) ? -32768 : ((value < 32767) ? value : 32767)
-#define DEBUG_MODE 1
+#define DEBUG_MODE 0
 #define CUTOFF 1
 #define TOLERANCE 0.01
 #define MAX_IMAGE_DUMP 100
