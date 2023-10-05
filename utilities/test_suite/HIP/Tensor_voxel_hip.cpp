@@ -84,7 +84,7 @@ int main(int argc, char * argv[])
     }
 
     // NIFTI_DATATYPE *niftiData = NULL;
-    NIFTI_DATATYPE** niftiDataArray = (NIFTI_DATATYPE**)malloc(noOfFiles * sizeof(NIFTI_DATATYPE*));
+    NIFTI_DATATYPE** niftiDataArray = (NIFTI_DATATYPE**)malloc(batchSize * sizeof(NIFTI_DATATYPE*));
     nifti_1_header* niftiHeader = (nifti_1_header*)malloc(noOfFiles * sizeof(nifti_1_header));
 
     // read nifti header file
