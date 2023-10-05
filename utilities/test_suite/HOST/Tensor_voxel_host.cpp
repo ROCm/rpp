@@ -231,7 +231,11 @@ int main(int argc, char * argv[])
                     }
 
                     startWallTime = omp_get_wtime();
-                    rppt_fmadd_scalar_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, mulTensor, addTensor, roiGenericSrcPtr, roiTypeSrc, handle);
+                    if(inputBitDepth == 2)
+                        rppt_fmadd_scalar_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, mulTensor, addTensor, roiGenericSrcPtr, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
                     break;
                 }
                 case 1:
@@ -240,8 +244,10 @@ int main(int argc, char * argv[])
                     startWallTime = omp_get_wtime();
                     if(inputBitDepth == 0)
                         rppt_slice_host(inputU8, descriptorPtr3D, outputU8, descriptorPtr3D, roiGenericSrcPtr, roiTypeSrc, handle);
-                    else
+                    else if(inputBitDepth == 2)
                         rppt_slice_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, roiGenericSrcPtr, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
 
                     break;
                 }

@@ -245,17 +245,25 @@ int main(int argc, char * argv[])
                     }
 
                     startWallTime = omp_get_wtime();
-                    rppt_fmadd_scalar_gpu(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, mulTensor, addTensor, roiGenericSrcPtr, roiTypeSrc, handle);
+                    if(inputBitDepth == 2)
+                        rppt_fmadd_scalar_gpu(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, mulTensor, addTensor, roiGenericSrcPtr, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
                     break;
                 }
                 case 1:
                 {
                     testCaseName = "slice";
+
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0)
                         rppt_slice_gpu(d_inputU8, descriptorPtr3D, d_outputU8, descriptorPtr3D, roiGenericSrcPtr, roiTypeSrc, handle);
-                    else
+                    else if(inputBitDepth == 2)
                         rppt_slice_gpu(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, roiGenericSrcPtr, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
                     break;
                 }
                 default:

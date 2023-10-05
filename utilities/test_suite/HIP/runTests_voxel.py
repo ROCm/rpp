@@ -74,6 +74,21 @@ def validate_and_remove_folders(path, folder):
             else:
                 print("Directory not found:", folder_path)
 
+def case_file_check(CASE_FILE_PATH):
+    try:
+        case_file = open(CASE_FILE_PATH,'r')
+        for line in case_file:
+            print(line)
+            if not(line.startswith('"Name"')):
+                if TYPE in TENSOR_TYPE_LIST:
+                    new_file.write(line)
+                    d_counter[TYPE] = d_counter[TYPE] + 1
+        case_file.close()
+        return True
+    except IOError:
+        print("Unable to open case results")
+        return False
+
  # Generate a directory name based on certain parameters
 def directory_name_generator(qaMode, affinity, layoutType, case, path):
     if qaMode == 0:
