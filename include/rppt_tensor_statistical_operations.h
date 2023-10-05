@@ -33,7 +33,7 @@ extern "C" {
  * \file
  * \brief RPPT Tensor Operations - Statistical Operations.
  * \defgroup group_rppt_tensor_statistical_operations RPPT Tensor Operations - Statistical Operations.
- * \brief RPPI Tensor Operations - Statistical Operations.
+ * \brief RPPT Tensor Operations - Statistical Operations.
  */
 
 /*! \addtogroup group_rppt_tensor_statistical_operations

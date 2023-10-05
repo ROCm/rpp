@@ -33,7 +33,7 @@ extern "C" {
  * \file
  * \brief RPPT Tensor Operations - Morphological Operations.
  * \defgroup group_rppt_tensor_morphological_operations RPPT Tensor Operations - Morphological Operations.
- * \brief RPPI Tensor Operations - Morphological Operations.
+ * \brief RPPT Tensor Operations - Morphological Operations.
  */
 
 /*! \addtogroup group_rppt_tensor_morphological_operations

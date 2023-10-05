@@ -33,7 +33,7 @@ extern "C" {
  * \file
  * \brief RPPT Tensor Operations - Data Exchange Operations.
  * \defgroup group_rppt_tensor_data_exchange_operations RPPT Tensor Operations - Data Exchange Operations.
- * \brief RPPI Tensor Operations - Data Exchange Operations.
+ * \brief RPPT Tensor Operations - Data Exchange Operations.
  */
 
 /*! \addtogroup group_rppt_tensor_data_exchange_operations

@@ -33,7 +33,7 @@ extern "C" {
  * \file
  * \brief RPPT Tensor Operations - Geometric Augmentations.
  * \defgroup group_rppt_tensor_geometric_augmentations RPPT Tensor Operations - Geometric Augmentations.
- * \brief RPPI Tensor Operations - Geometric Augmentations.
+ * \brief RPPT Tensor Operations - Geometric Augmentations.
  */
 
 /*! \addtogroup group_rppt_tensor_geometric_augmentations

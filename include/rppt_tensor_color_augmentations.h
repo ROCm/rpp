@@ -33,7 +33,7 @@ extern "C" {
  * \file
  * \brief RPPT Tensor Operations - Color Augmentations.
  * \defgroup group_rppt_tensor_color_augmentations RPPT Tensor Operations - Color Augmentations.
- * \brief RPPI Tensor Operations - Color Augmentations.
+ * \brief RPPT Tensor Operations - Color Augmentations.
  */
 
 /*! \addtogroup group_rppt_tensor_color_augmentations

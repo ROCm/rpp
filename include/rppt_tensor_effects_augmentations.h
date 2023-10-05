@@ -33,7 +33,7 @@ extern "C" {
  * \file
  * \brief RPPT Tensor Operations - Effects Augmentations.
  * \defgroup group_rppt_tensor_effects_augmentations RPPT Tensor Operations - Effects Augmentations.
- * \brief RPPI Tensor Operations - Effects Augmentations.
+ * \brief RPPT Tensor Operations - Effects Augmentations.
  */
 
 /*! \addtogroup group_rppt_tensor_effects_augmentations

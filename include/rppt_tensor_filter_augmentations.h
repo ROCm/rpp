@@ -33,7 +33,7 @@ extern "C" {
  * \file
  * \brief RPPT Tensor Operations - Filter Augmentations.
  * \defgroup group_rppt_tensor_filter_augmentations RPPT Tensor Operations - Filter Augmentations.
- * \brief RPPI Tensor Operations - Filter Augmentations.
+ * \brief RPPT Tensor Operations - Filter Augmentations.
  */
 
 /*! \addtogroup group_rppt_tensor_filter_augmentations
