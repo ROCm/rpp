@@ -310,10 +310,13 @@ int main(int argc, char **argv)
     int axis_mask = 1; //Channel normalize
     float scale = 1.0;
     float shift = 0.0;
+    bool computeMean, computeStddev;
+    computeMean = computeStddev = 1;
+
     for(int i = 0; i < numRuns; i++)
     {
         startWallTime = omp_get_wtime();
-        rppt_normalize_generic_host(inputF32, srcDescriptorPtrND, outputF32, dstDescriptorPtrND, axis_mask, meanTensor, stdDevTensor, scale, shift, roiTensor, handle);
+        rppt_normalize_generic_host(inputF32, srcDescriptorPtrND, outputF32, dstDescriptorPtrND, axis_mask, meanTensor, stdDevTensor, computeMean, computeStddev, scale, shift, roiTensor, handle);
         endWallTime = omp_get_wtime();
 
         wallTime = endWallTime - startWallTime;

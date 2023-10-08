@@ -382,6 +382,8 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
                                                 Rpp32u axis_mask,
                                                 Rpp32f *meanTensor,
                                                 Rpp32f *stdDevTensor,
+                                                Rpp32u computeMean,
+                                                Rpp32u computeStddev,
                                                 Rpp32f scale,
                                                 Rpp32f shift,
                                                 Rpp32u *roiTensor,
@@ -450,9 +452,9 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
                 paramStride[0] = 0;
                 paramStride[1] = 1;
             }
-            if(!meanTensor[0])
+            if(computeMean)
                 compute_2D_mean(srcPtrTemp, meanTensor, srcReductionDims, srcStride);
-            if(!stdDevTensor[0])
+            if(computeStddev)
                 compute_2D_inv_std_dev(srcPtrTemp, meanTensor, stdDevTensor, srcReductionDims, srcStride);
 
             // Inv std dev calculations missing
