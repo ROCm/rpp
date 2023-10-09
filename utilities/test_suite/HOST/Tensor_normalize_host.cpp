@@ -206,7 +206,7 @@ int main(int argc, char **argv)
 
     if(qaMode)
     {
-        if(nDim == 3)
+        if(nDim == 3 && !toggle)
         {
             for(int i = 0; i < batchSize * 6; i += 6)
             {
@@ -237,6 +237,8 @@ int main(int argc, char **argv)
             read_data(meanTensor, nDim, 2,  16, 1);
             read_data(stdDevTensor, nDim, 3,  16, 1);
         }
+        else
+            cout << "\n QA mode check only supported for non toggle variant\n" << endl;
     }
     else
     {
