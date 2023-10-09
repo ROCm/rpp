@@ -416,13 +416,12 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
         if(nDim == 2)
         {
             Rpp32u srcAudioDims[2], srcReductionDims[2], srcStride[2];
-            srcAudioDims[0] = length[batchCount * 2 + 1];
-            srcAudioDims[1] = length[2 * (batchCount + 1)];
+            srcAudioDims[0] = length[0];
+            srcAudioDims[1] = length[1];
+            Rpp32u reductionDims;
             if (axis_mask == 3)
             {
-                Rpp32u reductionDims = 2 * (batchCount + 1);
-                meanTensor = (Rpp32f *)calloc(length[reductionDims], sizeof(Rpp32f));
-                stdDevTensor = (Rpp32f *)calloc(length[reductionDims], sizeof(Rpp32f));
+                reductionDims = 1;
                 srcStride[0] = srcStride[1] = srcGenericDescPtr->strides[2];
                 srcReductionDims[0] = 1;
                 srcReductionDims[1] = srcAudioDims[0] * srcAudioDims[1];
@@ -430,9 +429,7 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
             }
             else if (axis_mask == 1)
             {
-                Rpp32u reductionDims = 2 * (batchCount + 1);
-                meanTensor = (Rpp32f *)calloc(length[reductionDims], sizeof(Rpp32f));
-                stdDevTensor = (Rpp32f *)calloc(length[reductionDims], sizeof(Rpp32f));
+                reductionDims = 1;
                 srcStride[0] = srcGenericDescPtr->strides[1];
                 srcStride[1] = srcGenericDescPtr->strides[0];
                 srcReductionDims[0] = srcAudioDims[1];
@@ -442,9 +439,7 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
             }
             else if (axis_mask == 2)
             {
-                Rpp32u reductionDims = batchCount * 2 + 1;
-                meanTensor = (Rpp32f *)calloc(length[reductionDims], sizeof(Rpp32f));
-                stdDevTensor = (Rpp32f *)calloc(length[reductionDims], sizeof(Rpp32f));
+                reductionDims = 0;
                 srcStride[0] = srcGenericDescPtr->strides[0];
                 srcStride[1] = srcGenericDescPtr->strides[1];
                 srcReductionDims[0] = srcAudioDims[0];
@@ -452,6 +447,9 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
                 paramStride[0] = 0;
                 paramStride[1] = 1;
             }
+            meanTensor = (Rpp32f *)calloc(length[reductionDims], sizeof(Rpp32f));
+            stdDevTensor = (Rpp32f *)calloc(length[reductionDims], sizeof(Rpp32f));
+
             if(computeMean)
                 compute_2D_mean(srcPtrTemp, meanTensor, srcReductionDims, srcStride);
             if(computeStddev)

@@ -83,7 +83,7 @@ typedef enum
     RPP_ERROR_INVALID_DST_LAYOUT        = -10,
     RPP_ERROR_INVALID_SRC_DATATYPE      = -11,
     RPP_ERROR_INVALID_DST_DATATYPE      = -12,
-    RPP_ERROR_INVALID_ROI_TYPE          = -13
+    RPP_ERROR_NOT_ENOUGH_MEMORY          = -13
 } RppStatus;
 
 /*! \brief RPP rppStatus_t type enums

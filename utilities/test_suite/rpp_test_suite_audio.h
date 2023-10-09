@@ -54,17 +54,16 @@ void compute_strides(RpptGenericDescPtr descriptorPtr)
 }
 
 // sets descriptor dimensions and strides of src/dst
-inline void set_audio_descriptor_dims_and_strides(RpptGenericDescPtr descPtr, int batchSize, int maxHeight, int maxWidth, int maxChannels, int offsetInBytes)
+inline void set_audio_descriptor_dims_and_strides(RpptGenericDescPtr descPtr, int batchSize, int maxWidth, int maxChannels, int offsetInBytes)
 {
-    descPtr->numDims = 4;
+    descPtr->numDims = 2;
     descPtr->offsetInBytes = offsetInBytes;
     descPtr->dims[0] = batchSize;
-    descPtr->dims[1] = maxHeight;
-    descPtr->dims[2] = maxWidth;
-    descPtr->dims[3] = maxChannels;
+    descPtr->dims[1] = maxWidth;
+    descPtr->dims[2] = maxChannels;
 
     // Optionally set w stride as a multiple of 8 for src/dst
-    descPtr->dims[2] = ((descPtr->dims[2] / 8) * 8) + 8;
+    descPtr->dims[1] = ((descPtr->dims[1] / 8) * 8) + 8;
     compute_strides(descPtr);
 }
 
@@ -114,8 +113,10 @@ void read_audio_batch_and_fill_dims(RpptGenericDescPtr descPtr, Rpp32f *inputf32
             continue;
         }
 
-        roiTensor[i * 2] = sfinfo.frames;
-        roiTensor[(i * 2) + 1] = sfinfo.channels;
+        roiTensor[i * 4] = 0;
+        roiTensor[(i * 4) + 1] = 0;
+        roiTensor[(i * 4) + 2] = sfinfo.frames;
+        roiTensor[(i * 4) + 3] = sfinfo.channels;
 
         int bufferLength = sfinfo.frames * sfinfo.channels;
         readcount = (int) sf_read_float (infile, inputTempF32, bufferLength);
@@ -130,7 +131,7 @@ void read_audio_batch_and_fill_dims(RpptGenericDescPtr descPtr, Rpp32f *inputf32
     }
 }
 
-void verify_output(Rpp32f *dstPtr, RpptGenericDescPtr dstDescPtr, Rpp32u roiTensor, string testCase, vector<string> audioNames, string dst)
+void verify_output(Rpp32f *dstPtr, RpptGenericDescPtr dstDescPtr, Rpp32u* roiTensor, string testCase, vector<string> audioNames, string dst)
 {
     //Considering height dim as 1 always
     fstream refFile;
@@ -156,11 +157,11 @@ void verify_output(Rpp32f *dstPtr, RpptGenericDescPtr dstDescPtr, Rpp32u roiTens
         Rpp32f *dstPtrCurrent = dstPtr + batchCount * dstDescPtr->strides[0];
         Rpp32f *dstPtrRow = dstPtrCurrent;
         Rpp32u hStride = dstDescPtr->strides[1];
-        if (roiTensor[(batchCount * 2) + 1] == 1)
+        if (roiTensor[(batchCount * 4) + 2] == 1)
             hStride = 1;
 
         Rpp32f *dstPtrTemp = dstPtrRow;
-        for (int j = 0; j < roiTensor[(batchCount * 2) + 1]; j++)
+        for (int j = 0; j < roiTensor[(batchCount * 4) + 2]; j++)
         {
             refFile >> refVal;
             outVal = dstPtrTemp[j];
@@ -171,7 +172,7 @@ void verify_output(Rpp32f *dstPtr, RpptGenericDescPtr dstDescPtr, Rpp32u roiTens
         dstPtrRow += hStride;
 
         refFile.close();
-        if (matchedIndices == (roiTensor[(batchCount * 2) + 1]) && matchedIndices !=0)
+        if (matchedIndices == (roiTensor[(batchCount * 4) + 2]) && matchedIndices !=0)
             fileMatch++;
     }
     std::string status = testCase + ": ";

@@ -62,6 +62,7 @@ int main(int argc, char **argv)
     RpptGenericDescPtr srcDescriptorPtrND, dstDescriptorPtrND;
     srcDescriptorPtrND = &srcDescriptor;
     dstDescriptorPtrND = &dstDescriptor;
+    int nDim = 2;
 
     // Set src/dst data types in tensor descriptors
     if (inputBitDepth == 2)
@@ -69,6 +70,9 @@ int main(int argc, char **argv)
         srcDescriptorPtrND->dataType = RpptDataType::F32;
         dstDescriptorPtrND->dataType = RpptDataType::F32;
     }
+
+    srcDescriptorPtrND->layout = RpptLayout::NHWC;
+    dstDescriptorPtrND->layout = RpptLayout::NHWC;
 
     // Other initializations
     int missingFuncFlag = 0;
@@ -94,21 +98,19 @@ int main(int argc, char **argv)
     }
 
     // Initialize roi Tensor for audio
-    Rpp32u *roiTensor = (Rpp32u *)calloc(nDim * 2 * batchSize, sizeof(Rpp32u));
+    Rpp32u *roiTensor = (Rpp32u *)calloc(4 * batchSize, sizeof(Rpp32u));
 
     // Find max audio dimensions in the input dataset
-    maxSrcHeight = 1;
-    maxDstHeight = 1;
     set_audio_max_dimensions(audioFilesPath, maxSrcWidth, maxSrcChannels);
     maxDstWidth = maxSrcWidth;
 
     // Set numDims, offset, n/c/h/w values for src/dst
     Rpp32u offsetInBytes = 0;
-    set_audio_descriptor_dims_and_strides(srcDescriptorPtrND, batchSize, maxSrcHeight, maxSrcWidth, maxSrcChannels, offsetInBytes);
+    set_audio_descriptor_dims_and_strides(srcDescriptorPtrND, batchSize, maxSrcWidth, maxSrcChannels, offsetInBytes);
     int maxDstChannels = maxSrcChannels;
     if(testCase == 3)
         maxDstChannels = 1;
-    set_audio_descriptor_dims_and_strides(srcDescriptorPtrND, batchSize, maxDstHeight, maxDstWidth, maxDstChannels, offsetInBytes);
+    set_audio_descriptor_dims_and_strides(dstDescriptorPtrND, batchSize, maxDstWidth, maxDstChannels, offsetInBytes);
 
     Rpp64u numValues = 1;
     for(int i = 0; i <= nDim; i++)
@@ -144,24 +146,20 @@ int main(int argc, char **argv)
                     Rpp32f scale, shift;
                     scale = shift = 0.0f;
                     Rpp32f *meanTensor, *stdDevTensor;
-                    meanTensor = (Rpp32f *)calloc(length[1], sizeof(Rpp32f));
-                    stdDevTensor = (Rpp32f *)calloc(length[1], sizeof(Rpp32f));
+                    meanTensor = (Rpp32f *)calloc(srcDescriptorPtrND->dims[3], sizeof(Rpp32f));
+                    stdDevTensor = (Rpp32f *)calloc(srcDescriptorPtrND->dims[3], sizeof(Rpp32f));
                     bool computeMean, computeStddev;
                     computeMean = computeStddev = 1;
-                    Rpp32s ddof = 0;
 
                     startWallTime = omp_get_wtime();
-                    startCpuTime = clock();
                     if (inputBitDepth == 2)
-                    {
-                        rppt_normalize_generic_host(inputF32, srcDescriptorPtrND, outputF32, dstDescriptorPtrND, axis_mask, meanTensor, stdDevTensor, computeMean, computeStddev, shift, roiTensor, handle);
-                    }
+                        rppt_normalize_generic_host(inputF32, srcDescriptorPtrND, outputF32, dstDescriptorPtrND, axis_mask, meanTensor, stdDevTensor, computeMean, computeStddev, scale, shift, roiTensor, handle);
                     else
                         missingFuncFlag = 1;
 
                     // QA mode - verify outputs with golden outputs. Below code doesn’t run for performance tests
                     if (testType == 0)
-                        verify_output(outputF32, dstDescriptorPtrND, roiTensor, testCaseName, audioNames);
+                        verify_output(outputF32, dstDescriptorPtrND, roiTensor, testCaseName, audioNames, dst);
                     break;
                 }
                 default:

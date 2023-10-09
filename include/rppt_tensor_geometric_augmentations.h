@@ -383,27 +383,30 @@ RppStatus rppt_flip_voxel_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDes
 RppStatus rppt_flip_voxel_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *horizontalTensor, Rpp32u *verticalTensor, Rpp32u *depthTensor, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
-/******************** normalize_generic ********************/
-
-// Normalizes the input generic ND buffer by removing the mean and dividing by the standard deviation
-
-// *param[in] srcPtr source tensor memory
-// *param[in] srcGenericDescPtr source tensor descriptor
-// *param[out] dstPtr destination tensor memory
-// *param[in] dstGenericDescPtr destination tensor descriptor
-// *param[in] axisMask axis along which normalization needs to be done
-// *param[in] meanTensor values to be subtracted from input
-// *param[in] stdDevTensor standard deviation values to scale the input
-// *param[in] scale value to be multiplied with data after subtracting from mean
-// *param[in] shift value to be added finally
-// *param[in] roiTensor values to represent dimensions of input tensor
-// *param[in] rppHandle HIP-handle for "_gpu" variants and Host-handle for "_host" variants
-// *returns a RppStatus enumeration.
-// *retval RPP_SUCCESS : successful completion
-// *retval RPP_ERROR : Error
+/*! \brief Normalize Generic HOST
+ * \details Normalizes the input generic ND buffer by removing the mean and dividing by the standard deviation for a given ND Tensor
+ * \param [in] srcPtr source tensor memory
+ * \param[in] srcGenericDescPtr source tensor descriptor
+ * \param[out] dstPtr destination tensor memory
+ * \param[in] dstGenericDescPtr destination tensor descriptor
+ * \param[in] axisMask axis along which normalization needs to be done (1- Channel / 2 - Width / 3 - Height)
+ * \param[in] meanTensor values to be subtracted from input
+ * \param[in] stdDevTensor standard deviation values to scale the input
+ * \param[in] computeMean flag to represent internal computation of mean, only supported for audio 1D
+ * \param[in] computeStddev flag to represent internal computation of stddev, only supported for audio 1D
+ * \param[in] scale value to be multiplied with data after subtracting from mean
+ * \param[in] shift value to be added finally
+ * \param[in] roiTensor values to represent dimensions of input tensor
+ * \param [in] rppHandle Host-handle
+ * \return <tt> Rppt_Status enum</tt>.
+ * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
+ * Else return RPP_ERROR
+ * \ingroup group_tensor_geometric
+ */
 
 RppStatus rppt_normalize_generic_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u axisMask,
-                                      Rpp32f *meanTensor, Rpp32f *stdDevTensor, Rpp32f scale, Rpp32f shift, Rpp32u *roiTensor, rppHandle_t rppHandle);
+                                      Rpp32f *meanTensor, Rpp32f *stdDevTensor, Rpp32u computeMean, Rpp32u computeStddev, Rpp32f scale, Rpp32f shift, Rpp32u *roiTensor,
+                                      rppHandle_t rppHandle);
 
 
 #ifdef __cplusplus

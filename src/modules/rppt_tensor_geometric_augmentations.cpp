@@ -1011,6 +1011,8 @@ RppStatus rppt_normalize_generic_host(RppPtr_t srcPtr,
                                       Rpp32u axisMask,
                                       Rpp32f *meanTensor,
                                       Rpp32f *stdDevTensor,
+                                      Rpp32u computeMean,
+                                      Rpp32u computeStddev,
                                       Rpp32f scale,
                                       Rpp32f shift,
                                       Rpp32u *roiTensor,
@@ -1024,6 +1026,8 @@ RppStatus rppt_normalize_generic_host(RppPtr_t srcPtr,
         layoutParams = get_layout_params(srcGenericDescPtr->layout, srcGenericDescPtr->dims[1]);
     else if ((srcGenericDescPtr->layout == RpptLayout::NDHWC) && (dstGenericDescPtr->layout == RpptLayout::NDHWC))
         layoutParams = get_layout_params(srcGenericDescPtr->layout, srcGenericDescPtr->dims[4]);
+    else if(nDim == 2 && (srcGenericDescPtr->layout == RpptLayout::NHWC))
+        layoutParams = get_layout_params(srcGenericDescPtr->layout, srcGenericDescPtr->dims[2]);
 
     if ((srcGenericDescPtr->layout != RpptLayout::NHWC) && (srcGenericDescPtr->layout != RpptLayout::NCDHW) && (srcGenericDescPtr->layout != RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
     if ((dstGenericDescPtr->layout != RpptLayout::NHWC && dstGenericDescPtr->layout != RpptLayout::NCHW) && (dstGenericDescPtr->layout != RpptLayout::NCDHW) && (dstGenericDescPtr->layout != RpptLayout::NDHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
@@ -1037,6 +1041,8 @@ RppStatus rppt_normalize_generic_host(RppPtr_t srcPtr,
                                               axisMask,
                                               meanTensor,
                                               stdDevTensor,
+                                              computeMean,
+                                              computeStddev,
                                               scale,
                                               shift,
                                               roiTensor,
