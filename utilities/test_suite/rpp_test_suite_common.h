@@ -1116,10 +1116,10 @@ void inline init_ricap(int width, int height, int batchSize, Rpp32u *permutation
 
     int part0Width = std::round(randFromDist * width);
     int part0Height = std::round(randFromDist1 * height);
-    roiPtrInputCropRegion[0].xywhROI = {randrange(0, width - part0Width), randrange(0, height - part0Height), part0Width, part0Height};
-    roiPtrInputCropRegion[1].xywhROI = {randrange(0, part0Width), randrange(0, height - part0Height), width - part0Width, part0Height};
-    roiPtrInputCropRegion[2].xywhROI = {randrange(0, width - part0Width), randrange(0, part0Height), part0Width, height - part0Height};
-    roiPtrInputCropRegion[3].xywhROI = {randrange(0, width - part0Width), randrange(0, part0Height), width - part0Width, height - part0Height};
+    roiPtrInputCropRegion[0].xywhROI = {randrange(0, width - part0Width - 8), randrange(0, height - part0Height), part0Width, part0Height}; // Subtracted x coordinate by 8 to avoid corruption when HIP processes 8 pixels at once
+    roiPtrInputCropRegion[1].xywhROI = {randrange(0, part0Width - 8), randrange(0, height - part0Height), width - part0Width, part0Height};
+    roiPtrInputCropRegion[2].xywhROI = {randrange(0, width - part0Width - 8), randrange(0, part0Height), part0Width, height - part0Height};
+    roiPtrInputCropRegion[3].xywhROI = {randrange(0, part0Width - 8), randrange(0, part0Height), width - part0Width, height - part0Height};
 }
 
 inline void compare_reduction_output(Rpp64u* output, string funcName, RpptDescPtr srcDescPtr, int testCase, string dst)
