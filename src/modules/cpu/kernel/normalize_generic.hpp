@@ -292,13 +292,14 @@ void normalize_3D_tensor_avx_axis1(Rpp32f *srcPtr, RpptGenericDescPtr srcGeneric
     }
 }
 
-void normalize_ND_tensor_nontoggle(Rpp32f *srcPtr, RpptGenericDescPtr srcGenericDescPtr, Rpp32f *dstPtr, RpptGenericDescPtr dstGenericDescPtr,
+template<typename T1, typename T2>
+void normalize_ND_tensor_nontoggle(T1 *srcPtr, RpptGenericDescPtr srcGenericDescPtr, T2 *dstPtr, RpptGenericDescPtr dstGenericDescPtr,
                          Rpp32f *meanPtr, Rpp32f *multiplierPtr, Rpp32f shift, Rpp32u *paramStride, Rpp32u *length, Rpp32u nDim, Rpp32u level, Rpp32u paramIdx)
 {
     if(nDim == 1)
     {
-        Rpp32f *srcPtrTemp = srcPtr;
-        Rpp32f *dstPtrTemp = dstPtr;
+        T1 *srcPtrTemp = srcPtr;
+        T2 *dstPtrTemp = dstPtr;
 
         for(Rpp32u k = 0; k < srcGenericDescPtr->dims[level]; k++)
         {
@@ -511,6 +512,65 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
             free(multiplier);
         }
             free(paramStride);
+    }
+
+    return RPP_SUCCESS;
+}
+template<typename T1, typename T2>
+RppStatus normalize_generic_host_tensor(T1 *srcPtr,
+                                        RpptGenericDescPtr srcGenericDescPtr,
+                                        T2 *dstPtr,
+                                        RpptGenericDescPtr dstGenericDescPtr,
+                                        Rpp32u axis_mask,
+                                        Rpp32f *meanTensor,
+                                        Rpp32f *stdDevTensor,
+                                        Rpp32u computeMean,
+                                        Rpp32u computeStddev,
+                                        Rpp32f scale,
+                                        Rpp32f shift,
+                                        Rpp32u *roiTensor,
+                                        RppLayoutParams layoutParams,
+                                        rpp::Handle& handle)
+{
+    Rpp32u numThreads = handle.GetNumThreads();
+    Rpp32u nDim = srcGenericDescPtr->numDims;
+    Rpp32u batchSize = dstGenericDescPtr->dims[0];
+
+    omp_set_dynamic(0);
+#pragma omp parallel for num_threads(numThreads)
+    for(int batchCount = 0; batchCount < batchSize; batchCount++)
+	{
+        T1 *srcPtrTemp;
+        T2 *dstPtrTemp;
+        srcPtrTemp = srcPtr + batchCount * srcGenericDescPtr->strides[0];
+        dstPtrTemp = dstPtr + batchCount * dstGenericDescPtr->strides[0];
+
+        // Set all values in dst buffer to 0.0
+        for(int cnt = 0; cnt < dstGenericDescPtr->strides[0]; cnt++)
+            dstPtrTemp[cnt] = 0.0f;
+
+        Rpp32u *roi = roiTensor + batchCount * nDim * 2;
+        Rpp32u *begin = roi;
+        Rpp32u *length = &roi[nDim];
+
+        Rpp32u *paramStride = (Rpp32u *) malloc(nDim * sizeof(Rpp32u));
+        T1 *srcPtrChannel;
+
+        srcPtrChannel = srcPtrTemp + (begin[0] * length[nDim]);
+        Rpp32u paramIdx = 0;
+        for(int i = 0; i < nDim; i++)
+        {
+            paramStride[i] = (i == nDim - axis_mask)? 1 : 0;
+            srcPtrChannel += begin[i + 1] * srcGenericDescPtr->strides[i + 1];
+        }
+
+        Rpp32f *multiplier = (Rpp32f *) calloc(length[nDim - axis_mask], sizeof(Rpp32f));
+        for(int i = 0; i < length[nDim - axis_mask]; i++)
+            multiplier[i] = scale / stdDevTensor[i];
+        normalize_ND_tensor_nontoggle(srcPtrChannel, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTensor, multiplier, shift, paramStride, length, nDim, 1, paramIdx);
+
+        free(multiplier);
+        free(paramStride);
     }
 
     return RPP_SUCCESS;

@@ -1029,10 +1029,41 @@ RppStatus rppt_normalize_generic_host(RppPtr_t srcPtr,
     else if(nDim == 2 && (srcGenericDescPtr->layout == RpptLayout::NHWC))
         layoutParams = get_layout_params(srcGenericDescPtr->layout, srcGenericDescPtr->dims[2]);
 
-    if ((srcGenericDescPtr->layout != RpptLayout::NHWC) && (srcGenericDescPtr->layout != RpptLayout::NCDHW) && (srcGenericDescPtr->layout != RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
-    if ((dstGenericDescPtr->layout != RpptLayout::NHWC && dstGenericDescPtr->layout != RpptLayout::NCHW) && (dstGenericDescPtr->layout != RpptLayout::NCDHW) && (dstGenericDescPtr->layout != RpptLayout::NDHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
-
-    if ((srcGenericDescPtr->dataType == RpptDataType::F32) && (dstGenericDescPtr->dataType == RpptDataType::F32))
+    if ((srcGenericDescPtr->dataType == RpptDataType::U8) && (dstGenericDescPtr->dataType == RpptDataType::F32))
+    {
+        normalize_generic_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes,
+                                      srcGenericDescPtr,
+                                      (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
+                                      dstGenericDescPtr,
+                                      axisMask,
+                                      meanTensor,
+                                      stdDevTensor,
+                                      computeMean,
+                                      computeStddev,
+                                      scale,
+                                      shift,
+                                      roiTensor,
+                                      layoutParams,
+                                      rpp::deref(rppHandle));
+    }
+    else if ((srcGenericDescPtr->dataType == RpptDataType::F16) && (dstGenericDescPtr->dataType == RpptDataType::F16))
+    {
+        normalize_generic_host_tensor((Rpp16f*) (static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes),
+                                      srcGenericDescPtr,
+                                      (Rpp16f*) (static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
+                                      dstGenericDescPtr,
+                                      axisMask,
+                                      meanTensor,
+                                      stdDevTensor,
+                                      computeMean,
+                                      computeStddev,
+                                      scale,
+                                      shift,
+                                      roiTensor,
+                                      layoutParams,
+                                      rpp::deref(rppHandle));
+    }
+    else if ((srcGenericDescPtr->dataType == RpptDataType::F32) && (dstGenericDescPtr->dataType == RpptDataType::F32))
     {
         normalize_generic_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes),
                                               srcGenericDescPtr,
@@ -1048,13 +1079,27 @@ RppStatus rppt_normalize_generic_host(RppPtr_t srcPtr,
                                               roiTensor,
                                               layoutParams,
                                               rpp::deref(rppHandle));
+    }
 
-        return RPP_SUCCESS;
-    }
-    else
+    else if ((srcGenericDescPtr->dataType == RpptDataType::I8) && (dstGenericDescPtr->dataType == RpptDataType::F32))
     {
-        return RPP_ERROR_NOT_IMPLEMENTED;
+        normalize_generic_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcGenericDescPtr->offsetInBytes,
+                                      srcGenericDescPtr,
+                                      (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
+                                      dstGenericDescPtr,
+                                      axisMask,
+                                      meanTensor,
+                                      stdDevTensor,
+                                      computeMean,
+                                      computeStddev,
+                                      scale,
+                                      shift,
+                                      roiTensor,
+                                      layoutParams,
+                                      rpp::deref(rppHandle));
     }
+
+    return RPP_SUCCESS;
 }
 
 /********************************************************************************************************************/
