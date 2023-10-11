@@ -241,22 +241,6 @@ RppStatus rppt_color_twist_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t
  */
 RppStatus rppt_color_jitter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *brightnessTensor, Rpp32f *contrastTensor, Rpp32f *hueTensor, Rpp32f *saturationTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 
-/*! \brief Color cast augmentation HOST
- * \details Color cast augmentation for a NCHW/NHWC layout tensor
- * \param [in] srcPtr source tensor memory
- * \param [in] srcDescPtr source tensor descriptor
- * \param [out] dstPtr destination tensor memory
- * \param [in] dstDescPtr destination tensor descriptor
- * \param [in] rgbTensor R/G/B values for color casting calculation (2D tensor of size sizeof(RpptRGB) * batchSize with 0 <= rgbTensor[n].<R/G/B> <= 255 for each image in batch)
- * \param [in] alphaTensor alpha values for color casting calculation (1D tensor of size sizeof(Rpp32f) * batchSize with alphaTensor[i] >= 0 for each image in batch)
- * \param [in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
- * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle Host-handle
- * \return <tt> Rppt_Status enum</tt>.
- * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
- * Else return RPP_ERROR
- */
-
 /*! \brief Color Cast augmentation on HOST backend for a NCHW/NHWC layout tensor
  * \details The color cast augmentation does an alpha-blending operation between srcPtr and constant R/G/B values taken as input, on a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
@@ -301,104 +285,130 @@ RppStatus rppt_color_cast_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t
 RppStatus rppt_color_cast_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptRGB *rgbTensor, Rpp32f *alphaTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
-/*! \brief Exposure augmentation HOST
- * \details Exposure augmentation for a NCHW/NHWC layout tensor
- * \param [in] srcPtr source tensor memory
- * \param [in] srcDescPtr source tensor descriptor
- * \param [out] dstPtr destination tensor memory
- * \param [in] dstDescPtr destination tensor descriptor
- * \param [in] exposureFactorTensor tensor containing an Rpp32f exposure factor for each image in the batch (exposureFactorTensor[n] >= 0)
- * \param [in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+/*! \brief Exposure augmentation on HOST backend for a NCHW/NHWC layout tensor
+ * \details The exposure augmentation adjusts image exposure, on a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+ * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
+ * - dstPtr depth ranges - Will be same depth as srcPtr.
+ * \image html img150x150.jpg Sample Input
+ * \image html color_augmentations_exposure_img150x150.jpg Sample Output
+ * \param [in] srcPtr source tensor in HOST memory
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
+ * \param [out] dstPtr destination tensor in HOST memory
+ * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
+ * \param [in] exposureFactorTensor exposure factor values for exposure adjustment (1D tensor in HOST memory, of size batchSize, with exposureFactorTensor[n] >= 0 for each image in the batch)
+ * \param [in] roiTensorSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle Host-handle
- * \return <tt> Rppt_Status enum</tt>.
- * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
- * Else return RPP_ERROR
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
  */
 RppStatus rppt_exposure_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *exposureFactorTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+
 #ifdef GPU_SUPPORT
-/*! \brief Exposure augmentation GPU
- * \details Exposure augmentation for a NCHW/NHWC layout tensor
- * \param [in] srcPtr source tensor memory
- * \param [in] srcDescPtr source tensor descriptor
- * \param [out] dstPtr destination tensor memory
- * \param [in] dstDescPtr destination tensor descriptor
- * \param [in] exposureFactorTensor tensor containing an Rpp32f exposure factor for each image in the batch (exposureFactorTensor[n] >= 0)
- * \param [in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+/*! \brief Exposure augmentation on HIP backend for a NCHW/NHWC layout tensor
+ * \details The exposure augmentation adjusts image exposure, on a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+ * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
+ * - dstPtr depth ranges - Will be same depth as srcPtr.
+ * \image html img150x150.jpg Sample Input
+ * \image html color_augmentations_exposure_img150x150.jpg Sample Output
+ * \param [in] srcPtr source tensor in HIP memory
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
+ * \param [out] dstPtr destination tensor in HIP memory
+ * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
+ * \param [in] exposureFactorTensor exposure factor values for exposure adjustment (1D tensor in pinned/HOST memory, of size batchSize, with exposureFactorTensor[n] >= 0 for each image in the batch)
+ * \param [in] roiTensorSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle HIP-handle
- * \return <tt> Rppt_Status enum</tt>.
- * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
- * Else return RPP_ERROR
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
  */
 RppStatus rppt_exposure_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *exposureFactorTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
-/*! \brief Contrast augmentation HOST
- * \details Contrast augmentation for a NCHW/NHWC layout tensor
- * \param [in] srcPtr source tensor memory
- * \param [in] srcDescPtr source tensor descriptor
- * \param [out] dstPtr destination tensor memory
- * \param [in] dstDescPtr destination tensor descriptor
- * \param [in] contrastFactorTensor contrast factor values for contrast calculation (1D tensor of size batchSize with contrastFactorTensor[n] > 0 for each image in a batch))
- * \param [in] contrastCenterTensor contrast center values for contrast calculation (1D tensor of size batchSize)
- * \param [in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+/*! \brief Contrast augmentation on HOST backend for a NCHW/NHWC layout tensor
+ * \details The contrast augmentation adjusts image contrast, on a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+ * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
+ * - dstPtr depth ranges - Will be same depth as srcPtr.
+ * \image html img150x150.jpg Sample Input
+ * \image html color_augmentations_contrast_img150x150.jpg Sample Output
+ * \param [in] srcPtr source tensor in HOST memory
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
+ * \param [out] dstPtr destination tensor in HOST memory
+ * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
+ * \param [in] contrastFactorTensor contrast factor values for contrast calculation (1D tensor in HOST memory, of size batchSize with contrastFactorTensor[n] > 0 for each image in a batch))
+ * \param [in] contrastCenterTensor contrast center values for contrast calculation (1D tensor in HOST memory, of size batchSize)
+ * \param [in] roiTensorSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle Host-handle
- * \return <tt> Rppt_Status enum</tt>.
- * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
- * Else return RPP_ERROR
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
  */
 RppStatus rppt_contrast_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *contrastFactorTensor, Rpp32f *contrastCenterTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+
 #ifdef GPU_SUPPORT
-/*! \brief Contrast augmentation GPU
- * \details Contrast augmentation for a NCHW/NHWC layout tensor
- * \param [in] srcPtr source tensor memory
- * \param [in] srcDescPtr source tensor descriptor
- * \param [out] dstPtr destination tensor memory
- * \param [in] dstDescPtr destination tensor descriptor
- * \param [in] contrastFactorTensor contrast factor values for contrast calculation (1D tensor of size batchSize with contrastFactorTensor[n] > 0 for each image in a batch))
- * \param [in] contrastCenterTensor contrast center values for contrast calculation (1D tensor of size batchSize)
- * \param [in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+/*! \brief Contrast augmentation on HIP backend for a NCHW/NHWC layout tensor
+ * \details The contrast augmentation adjusts image contrast, on a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+ * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
+ * - dstPtr depth ranges - Will be same depth as srcPtr.
+ * \image html img150x150.jpg Sample Input
+ * \image html color_augmentations_contrast_img150x150.jpg Sample Output
+ * \param [in] srcPtr source tensor in HIP memory
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
+ * \param [out] dstPtr destination tensor in HIP memory
+ * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
+ * \param [in] contrastFactorTensor contrast factor values for contrast calculation (1D tensor in pinned/HOST memory, of size batchSize with contrastFactorTensor[n] > 0 for each image in a batch))
+ * \param [in] contrastCenterTensor contrast center values for contrast calculation (1D tensor in pinned/HOST memory, of size batchSize)
+ * \param [in] roiTensorSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle HIP-handle
- * \return <tt> Rppt_Status enum</tt>.
- * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
- * Else return RPP_ERROR
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
  */
 RppStatus rppt_contrast_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *contrastFactorTensor, Rpp32f *contrastCenterTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
-/*! \brief Lookup augmentation HOST
- * \details Performs a table look-up for each pixel in a batch of images with NCHW/NHWC layout tensor
- * \param [in] srcPtr source tensor memory
- * \param [in] srcDescPtr source tensor descriptor
- * \param [out] dstPtr destination tensor memory
- * \param [in] dstDescPtr destination tensor descriptor
- * \param [in] lutPtr lut Array containing a single integer look up table of length 65536, to be used for all images in the batch
- * \param [in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+/*! \brief Look Up Table augmentation on HOST backend for a NCHW/NHWC layout tensor
+ * \details The lut augmentation provides support for a look-up-table based modification of a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+ * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
+ * - dstPtr depth ranges - Will be same depth as srcPtr.
+ * \image html img150x150.jpg Sample Input
+ * \image html color_augmentations_lut_img150x150.jpg Sample Output
+ * \param [in] srcPtr source tensor in HOST memory
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
+ * \param [out] dstPtr destination tensor in HOST memory
+ * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
+ * \param [in] lutPtr lut Array in HOST memory, containing a single integer look up table of length 65536, to be used for all images in the batch
+ * \param [in] roiTensorSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle Host-handle
- * \return <tt> Rppt_Status enum</tt>.
- * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
- * Else return RPP_ERROR
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
  */
-
 RppStatus rppt_lut_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RppPtr_t lutPtr, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+
 #ifdef GPU_SUPPORT
-/*! \brief Lookup augmentation GPU
- * \details Performs a table look-up for each pixel in a batch of images with NCHW/NHWC layout tensor
- * \param [in] srcPtr source tensor memory
- * \param [in] srcDescPtr source tensor descriptor
- * \param [out] dstPtr destination tensor memory
- * \param [in] dstDescPtr destination tensor descriptor
- * \param [in] lutPtr lut Array containing a single integer look up table of length 65536, to be used for all images in the batch
- * \param [in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+/*! \brief Look Up Table augmentation on HIP backend for a NCHW/NHWC layout tensor
+ * \details The lut augmentation provides support for a look-up-table based modification of a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+ * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
+ * - dstPtr depth ranges - Will be same depth as srcPtr.
+ * \image html img150x150.jpg Sample Input
+ * \image html color_augmentations_lut_img150x150.jpg Sample Output
+ * \param [in] srcPtr source tensor in HIP memory
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
+ * \param [out] dstPtr destination tensor in HIP memory
+ * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
+ * \param [in] lutPtr lut Array in pinned/HOST memory, containing a single integer look up table of length 65536, to be used for all images in the batch
+ * \param [in] roiTensorSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle HIP-handle
- * \return <tt> Rppt_Status enum</tt>.
- * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
- * Else return RPP_ERROR
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
  */
 RppStatus rppt_lut_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RppPtr_t lutPtr, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
