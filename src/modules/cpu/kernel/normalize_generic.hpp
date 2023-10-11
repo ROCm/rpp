@@ -303,8 +303,35 @@ void normalize_ND_tensor_nontoggle(T1 *srcPtr, RpptGenericDescPtr srcGenericDesc
 
         for(Rpp32u k = 0; k < srcGenericDescPtr->dims[level]; k++)
         {
-            *dstPtrTemp++ = ((*srcPtrTemp++ - meanPtr[paramIdx]) * multiplierPtr[paramIdx]) + shift;
+            *dstPtrTemp++ = (((T2)*srcPtrTemp++ - meanPtr[paramIdx]) * multiplierPtr[paramIdx]) + shift;
             paramIdx += paramStride[level - 1];
+        }
+    }
+    else
+    {
+        for (int i = 0; i < *length; i++)
+        {
+            normalize_ND_tensor_nontoggle(srcPtr, srcGenericDescPtr, dstPtr, dstGenericDescPtr, meanPtr, multiplierPtr, shift, paramStride, length + 1, nDim - 1, level + 1, paramIdx);
+            paramIdx = (!paramStride[level - 1]) ? 0 : paramIdx + paramStride[level - 1];
+            dstPtr += dstGenericDescPtr->strides[level];
+            srcPtr += srcGenericDescPtr->strides[level];
+        }
+    }
+}
+
+void normalize_ND_tensor_nontoggle(Rpp32s *srcPtr, RpptGenericDescPtr srcGenericDescPtr, Rpp32f *dstPtr, RpptGenericDescPtr dstGenericDescPtr,
+                         Rpp32f *meanPtr, Rpp32f *multiplierPtr, Rpp32f shift, Rpp32u *paramStride, Rpp32u *length, Rpp32u nDim, Rpp32u level, Rpp32u paramIdx)
+{
+    if(nDim == 1)
+    {
+        Rpp32s *srcPtrTemp = srcPtr;
+        Rpp32f *dstPtrTemp = dstPtr;
+
+        for(Rpp32u k = 0; k < srcGenericDescPtr->dims[level]; k++)
+        {
+            *dstPtrTemp++ = (((Rpp32f)(*srcPtrTemp + 128) - meanPtr[paramIdx]) * multiplierPtr[paramIdx]) + shift;
+            paramIdx += paramStride[level - 1];
+            *srcPtrTemp++;
         }
     }
     else
