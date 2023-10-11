@@ -384,12 +384,13 @@ RppStatus rppt_flip_voxel_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDesc
 #endif // GPU_SUPPORT
 
 /*! \brief Normalize Generic HOST
- * \details Normalizes the input generic ND buffer by removing the mean and dividing by the standard deviation for a given ND Tensor
+ * \details Normalizes the input generic ND buffer by removing the mean and dividing by the standard deviation for a given ND Tensor.
+ *          Supports u8->f32, i8->f32, f16->f16 and f32->f32 datatypes. Also has toggle variant(NHWC->NCHW) support for 3D.
  * \param [in] srcPtr source tensor memory
  * \param[in] srcGenericDescPtr source tensor descriptor
  * \param[out] dstPtr destination tensor memory
  * \param[in] dstGenericDescPtr destination tensor descriptor
- * \param[in] axisMask axis along which normalization needs to be done (1- Channel / 2 - Width / 3 - Height)
+ * \param[in] axisMask axis along which normalization needs to be done (1 - Channel / 2 - Width / 3 - Height / 4 - Depth likewise)
  * \param[in] meanTensor values to be subtracted from input
  * \param[in] stdDevTensor standard deviation values to scale the input
  * \param[in] computeMean flag to represent internal computation of mean, only supported for audio 1D
