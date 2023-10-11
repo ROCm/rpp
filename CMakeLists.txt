@@ -308,6 +308,12 @@ install(FILES ${PROJECT_BINARY_DIR}/include/rpp_backend.h
        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp
        COMPONENT dev)
 
+# set license information
+set(CPACK_RESOURCE_FILE_LICENSE  "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+install(FILES ${CPACK_RESOURCE_FILE_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR}-asan COMPONENT asan)
+install(FILES ${CPACK_RESOURCE_FILE_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR} COMPONENT dev)
+
+
 enable_testing()
 include(CTest)
 add_subdirectory(utilities/rpp-unittests)
