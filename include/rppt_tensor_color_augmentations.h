@@ -40,37 +40,41 @@ extern "C" {
  * @{
  */
 
-/*! \brief Brightness augmentation HOST
- * \details Brightness augmentation for a NCHW/NHWC layout tensor
- * \param [in] srcPtr source tensor memory
- * \param [in] srcDescPtr source tensor descriptor
- * \param [out] dstPtr destination tensor memory
- * \param [in] dstDescPtr destination tensor descriptor
- * \param [in] alphaTensor alpha values for brightness calculation (1D tensor of size batchSize with 0 <= alpha <= 20 for each image in batch)
- * \param [in] betaTensor beta values for brightness calculation (1D tensor of size batchSize with 0 <= beta <= 255 for each image in batch)
- * \param [in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+ /*! \brief Brightness augmentation on HOST backend for a NCHW/NHWC layout tensor
+ * \details The brightness augmentation changes brightness of a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+ * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
+ * - dstPtr depth ranges - Will be same depth as srcPtr.
+ * \param [in] srcPtr source tensor in HOST memory
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
+ * \param [out] dstPtr destination tensor in HOST memory
+ * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
+ * \param [in] alphaTensor alpha values for brightness calculation (1D tensor in HOST memory, of size batchSize, with 0 <= alpha <= 20 for each image in batch)
+ * \param [in] betaTensor beta values for brightness calculation (1D tensor in HOST memory, of size batchSize, with 0 <= beta <= 255 for each image in batch)
+ * \param [in] roiTensorSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle Host-handle
- * \return <tt> Rppt_Status enum</tt>.
- * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
- * Else return RPP_ERROR
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
  */
 RppStatus rppt_brightness_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *alphaTensor, Rpp32f *betaTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #ifdef GPU_SUPPORT
-/*! \brief Brightness augmentation GPU
- * \details Brightness augmentation for a NCHW/NHWC layout tensor
- * \param [in] srcPtr source tensor memory
- * \param [in] srcDescPtr source tensor descriptor
- * \param [out] dstPtr destination tensor memory
- * \param [in] dstDescPtr destination tensor descriptor
- * \param [in] alphaTensor alpha values for brightness calculation (1D tensor of size batchSize with 0 <= alpha <= 20 for each image in batch)
- * \param [in] betaTensor beta values for brightness calculation (1D tensor of size batchSize with 0 <= beta <= 255 for each image in batch)
- * \param [in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+ /*! \brief Brightness augmentation on HIP backend for a NCHW/NHWC layout tensor
+ * \details The brightness augmentation changes brightness of a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+ * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
+ * - dstPtr depth ranges - Will be same depth as srcPtr.
+ * \param [in] srcPtr source tensor in HIP memory
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
+ * \param [out] dstPtr destination tensor in HIP memory
+ * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
+ * \param [in] alphaTensor alpha values for brightness calculation (1D tensor in pinned/HOST memory, of size batchSize, with 0 <= alpha <= 20 for each image in batch)
+ * \param [in] betaTensor beta values for brightness calculation (1D tensor in pinned/HOST memory, of size batchSize, with 0 <= beta <= 255 for each image in batch)
+ * \param [in] roiTensorSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
- * \param [in] rppHandle HIP-handle
- * \return <tt> Rppt_Status enum</tt>.
- * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
- * Else return RPP_ERROR
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
  */
 RppStatus rppt_brightness_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *alphaTensor, Rpp32f *betaTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
