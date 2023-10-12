@@ -45,9 +45,7 @@ endif()
 
 find_package(OpenCV QUIET)
 find_package(TurboJpeg QUIET)
-# find_package(NIFTI REQUIRED)
-# find_package(NIFTI 2.1.0 CONFIG REQUIRED)
-
+find_package(NIFTI QUIET)
 # BOOST
 set(BOOST_COMPONENTS filesystem system)
 find_package(Boost COMPONENTS ${BOOST_COMPONENTS} REQUIRED)
@@ -74,14 +72,9 @@ if (OpenCV_FOUND)
     link_directories(${ROCM_PATH}/lib /usr/local/lib)
 
     add_executable(Tensor_host Tensor_host.cpp)
-    # add_executable(Tensor_voxel_host Tensor_voxel_host.cpp)
-    add_executable(Tensor_normalize_host Tensor_normalize_host.cpp)
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++14")
     target_link_libraries(Tensor_host ${OpenCV_LIBS} -lturbojpeg -lrpp pthread ${LINK_LIBRARY_LIST})
-    # target_link_libraries(Tensor_voxel_host ${OpenCV_LIBS} -lturbojpeg -lrpp pthread ${LINK_LIBRARY_LIST}  ${NIFTI_PACKAGE_PREFIX}NIFTI::${NIFTI_PACKAGE_PREFIX}niftiio)
-    target_link_libraries(Tensor_normalize_host ${OpenCV_LIBS} -lturbojpeg -lrpp pthread ${LINK_LIBRARY_LIST})
-
 
 else()
     message("-- ${Yellow}Error: OpenCV must be installed to install ${PROJECT_NAME} successfully!${ColourReset}")
@@ -104,4 +97,18 @@ else()
     add_executable(Tensor_audio_host Tensor_audio_host.cpp)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++14")
     target_link_libraries(Tensor_audio_host ${libsnd_LIBS} -lsndfile -lrpp pthread ${LINK_LIBRARY_LIST} ${OpenCV_LIBS})
+
+if(NIFTI_FOUND AND OpenCV_FOUND)
+    message("-- ${Green}${PROJECT_NAME} set to build with rpp and libniftiio and OpenCV ${ColourReset}")
+    include_directories(${OpenCV_INCLUDE_DIRS})
+    include_directories(${ROCM_PATH}/include ${ROCM_PATH}/include/rpp /usr/local/include)
+    link_directories(${ROCM_PATH}/lib /usr/local/lib)
+
+    add_executable(Tensor_voxel_host Tensor_voxel_host.cpp)
+    add_executable(Tensor_normalize_host Tensor_normalize_host.cpp)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++14")
+    target_link_libraries(Tensor_voxel_host ${OpenCV_LIBS} -lturbojpeg -lrpp pthread ${LINK_LIBRARY_LIST}  ${NIFTI_PACKAGE_PREFIX}NIFTI::${NIFTI_PACKAGE_PREFIX}niftiio)
+    target_link_libraries(Tensor_normalize_host ${OpenCV_LIBS} -lturbojpeg -lrpp pthread ${LINK_LIBRARY_LIST})
+else()
+    message("-- ${Yellow}Error: libniftiio must be installed to install ${PROJECT_NAME} successfully!${ColourReset}")
 endif()

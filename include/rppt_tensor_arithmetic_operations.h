@@ -22,28 +22,40 @@ THE SOFTWARE.
 
 #ifndef RPPT_TENSOR_ARITHMETIC_OPERATIONS_H
 #define RPPT_TENSOR_ARITHMETIC_OPERATIONS_H
+
+/*!
+ * \file
+ * \brief RPPT Tensor Arithmetic operation Functions.
+ *
+ * \defgroup group_tensor_arithmetic Operations: AMD RPP Tensor Arithmetic Operations
+ * \brief Tensor Color Augmentations.
+ */
+
 #include "rpp.h"
 #include "rppdefs.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/******************** fmadd_scalar ********************/
-
-// fmadd_scalar for a generic 4D tensor
-
-// *param[in] srcPtr source tensor memory
-// *param[in] srcGenericDescPtr source tensor descriptor
-// *param[out] dstPtr destination tensor memory
-// *param[in] dstGenericDescPtr destination tensor descriptor
-// *param[in] mulTensor mul values for fmadd calculation (1D tensor of batchSize Rpp32f values)
-// *param[in] addTensor add values for fmadd calculation (1D tensor of batchSize Rpp32f values)
-// *param[in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
-// *param[in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
-// *returns a  RppStatus enumeration.
-// *retval RPP_SUCCESS : succesful completion
-// *retval RPP_ERROR : Error
-
+/*! \brief  Fmadd augmentation HOST
+ * \details This function performs the fmadd operation on a batch of 4D tensors.
+ *          It multiplies each element of the source tensor by a corresponding element in the 'mulTensor',
+ *          adds a corresponding element from the 'addTensor', and stores the result in the destination tensor.
+ *          Support added for f32 -> f32 dataype.
+ * \param [in] srcPtr source tensor memory
+ * \param[in] srcGenericDescPtr source tensor descriptor
+ * \param[out] dstPtr destination tensor memory
+ * \param[in] dstGenericDescPtr destination tensor descriptor
+ * \param[in] mulTensor mul values for fmadd calculation (1D tensor of batchSize Rpp32f values)
+ * \param[in] addTensor add values for fmadd calculation (1D tensor of batchSize Rpp32f values)
+ * \param[in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
+ * \param[in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
+ * \param [in] rppHandle Host-handle
+ * \return <tt> RppStatus enum</tt>.
+ * \returns RPP_SUCCESS <tt>\ref RppStatus</tt> on successful completion.
+ * Else return RPP_ERROR
+ * \ingroup group_tensor_arithmetic
+ */
 RppStatus rppt_fmadd_scalar_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32f *mulTensor, Rpp32f *addTensor, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle);
 #ifdef GPU_SUPPORT
 RppStatus rppt_fmadd_scalar_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32f *mulTensor, Rpp32f *addTensor, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle);
@@ -87,6 +99,31 @@ RppStatus rppt_add_scalar_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDesc
 RppStatus rppt_subtract_scalar_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32f *subtractTensor, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle);
 #ifdef GPU_SUPPORT
 RppStatus rppt_subtract_scalar_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32f *subtractTensor, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
+
+
+/*! \brief  Fmadd augmentation GPU
+ * \details This function performs the fmadd operation on a batch of 4D tensors.
+ *          It multiplies each element of the source tensor by a corresponding element in the 'mulTensor',
+ *          adds a corresponding element from the 'addTensor', and stores the result in the destination tensor.
+ *          Support added for f32 -> f32 dataype.
+ * \param [in] srcPtr source tensor memory
+ * \param[in] srcGenericDescPtr source tensor descriptor
+ * \param[out] dstPtr destination tensor memory
+ * \param[in] dstGenericDescPtr destination tensor descriptor
+ * \param[in] mulTensor mul values for fmadd calculation (1D tensor of batchSize Rpp32f values)
+ * \param[in] addTensor add values for fmadd calculation (1D tensor of batchSize Rpp32f values)
+ * \param[in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
+ * \param[in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
+ * \param [in] rppHandle Hip-handle
+ * \return <tt> RppStatus enum</tt>.
+ * \returns RPP_SUCCESS <tt>\ref RppStatus</tt> on successful completion.
+ * Else return RPP_ERROR
+ * \ingroup group_tensor_arithmetic
+ */
+
+#ifdef GPU_SUPPORT
+RppStatus rppt_fmadd_scalar_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32f *mulTensor, Rpp32f *addTensor, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
 #ifdef __cplusplus

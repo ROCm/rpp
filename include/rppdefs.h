@@ -83,7 +83,8 @@ typedef enum
     RPP_ERROR_INVALID_DST_LAYOUT        = -10,
     RPP_ERROR_INVALID_SRC_DATATYPE      = -11,
     RPP_ERROR_INVALID_DST_DATATYPE      = -12,
-    RPP_ERROR_NOT_ENOUGH_MEMORY          = -13
+    RPP_ERROR_NOT_ENOUGH_MEMORY         = -13
+    RPP_ERROR_INVALID_ROI_TYPE          = -14
 } RppStatus;
 
 /*! \brief RPP rppStatus_t type enums
@@ -413,7 +414,6 @@ typedef union
 
 } RpptROI3D, *RpptROI3DPtr;
 
-
 /*! \brief RPPT Strides
  * \ingroup group_rppdefs
  */
@@ -433,9 +433,9 @@ typedef struct
     RppSize_t numDims;
     Rpp32u offsetInBytes;
     RpptDataType dataType;
-    RpptLayout layout;
     Rpp32u n, c, h, w;
     RpptStrides strides;
+    RpptLayout layout;
 } RpptDesc, *RpptDescPtr;
 
 /*! \brief RPPT Generic Descriptors

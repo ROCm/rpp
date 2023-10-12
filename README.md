@@ -41,7 +41,7 @@ pip3 install -r .sphinx/requirements.txt
 python3 -m sphinx -T -E -b html -d _build/doctrees -D language=en . _build/html
 ```
 
-* Doxygen 
+* Doxygen
 ```
 doxygen .Doxyfile
 ```
@@ -162,7 +162,7 @@ doxygen .Doxyfile
 
 * Nifti-Imaging nifti_clib
   ```
-  git clone https://github.com/NIFTI-Imaging/nifti_clib.git
+  git clone git@github.com:NIFTI-Imaging/nifti_clib.git
   cd nifti_clib
   mkdir build
   cd build
