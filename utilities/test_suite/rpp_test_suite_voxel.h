@@ -42,7 +42,7 @@ typedef int16_t NIFTI_DATATYPE;
 
 #define MIN_HEADER_SIZE 348
 #define RPPRANGECHECK(value)     (value < -32768) ? -32768 : ((value < 32767) ? value : 32767)
-#define DEBUG_MODE 1
+#define DEBUG_MODE 0
 #define CUTOFF 1
 #define TOLERANCE 0.01
 #define MAX_IMAGE_DUMP 100
@@ -153,11 +153,15 @@ void search_nii_files(const string& folder_path, vector<string>& niiFileNames, v
 }
 
 // sets generic descriptor dimensions and strides of src/dst
-inline void set_generic_descriptor(RpptGenericDescPtr descriptorPtr3D, int noOfImages, int maxX, int maxY, int maxZ, int numChannels, int offsetInBytes, int layoutType)
+inline void set_generic_descriptor(RpptGenericDescPtr descriptorPtr3D, int noOfImages, int maxX, int maxY, int maxZ,
+                                  int numChannels, int offsetInBytes, int layoutType, int inputBitDepth)
 {
     descriptorPtr3D->numDims = 5;
     descriptorPtr3D->offsetInBytes = offsetInBytes;
-    descriptorPtr3D->dataType = RpptDataType::F32;
+    if(inputBitDepth == 0)
+        descriptorPtr3D->dataType = RpptDataType::U8;
+    else if(inputBitDepth == 2)
+        descriptorPtr3D->dataType = RpptDataType::F32;
 
     if (layoutType == 0)
     {
@@ -183,6 +187,45 @@ inline void set_generic_descriptor(RpptGenericDescPtr descriptorPtr3D, int noOfI
     descriptorPtr3D->strides[2] = descriptorPtr3D->dims[3] * descriptorPtr3D->dims[4];
     descriptorPtr3D->strides[3] = descriptorPtr3D->dims[4];
     descriptorPtr3D->strides[4] = 1;
+}
+
+//returns function type
+inline string set_function_type(int layoutType, int pln1OutTypeCase, int outputFormatToggle, string backend)
+{
+    string funcType;
+    if(layoutType == 0)
+    {
+        funcType = "Tensor_" + backend + "_PKD3";
+        if (pln1OutTypeCase)
+            funcType += "_toPLN1";
+        else
+        {
+            if (outputFormatToggle)
+                funcType += "_toPLN3";
+            else
+                funcType += "_toPKD3";
+        }
+    }
+    else if (layoutType == 1)
+    {
+        funcType = "Tensor_" + backend + "_PLN3";
+        if (pln1OutTypeCase)
+            funcType += "_toPLN1";
+        else
+        {
+            if (outputFormatToggle)
+                funcType += "_toPKD3";
+            else
+                funcType += "_toPLN3";
+        }
+    }
+    else
+    {
+       funcType = "Tensor_" + backend + "_PLN1";
+       funcType += "_toPLN1";
+    }
+
+    return funcType;
 }
 
 // reads nifti-1 header file
@@ -611,6 +654,16 @@ inline void compare_output(Rpp32f* output, Rpp64u oBufferSize, string func, int 
         compare_outputs_pln(output, refOutput, fileMatch, descriptorPtr3D, roiGenericSrcPtr);
 
     std::cout << std::endl << "Results for " << func << " :" << std::endl;
+    if(descriptorPtr3D->layout == RpptLayout::NDHWC)
+        func += "_Tensor_PKD3";
+    else
+    {
+        if (descriptorPtr3D->dims[1] == 3)
+            func += "_Tensor_PLN3";
+        else
+            func += "_Tensor_PLN1";
+    }
+
     std::string status = func + ": ";
     if(fileMatch == descriptorPtr3D->dims[0])
     {

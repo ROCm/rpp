@@ -85,7 +85,8 @@ RppStatus rppt_fmadd_scalar_gpu(RppPtr_t srcPtr,
                                 RpptGenericDescPtr dstGenericDescPtr,
                                 Rpp32f *mulTensor,
                                 Rpp32f *addTensor,
-                                RpptRoiXyzwhd *roiGenericPtrSrc,
+                                RpptROI3DPtr roiGenericPtrSrc,
+                                RpptRoi3DType roiType,
                                 rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE

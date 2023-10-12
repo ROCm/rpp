@@ -344,7 +344,7 @@ RppStatus rppt_rotate_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstP
 /*! \brief Slice augmentation HOST
  * \details This function performs slice augmentation on a generic 4D tensor.
  *          Slice augmentation involves selecting a region of interest (ROI) from the source tensor
- *          and copying it to the destination tensor.
+ *          and copying it to the destination tensor. Support added for f32 -> f32 and u8 -> u8 dataypes.
  * \param[in] srcPtr source tensor memory
  * \param[in] srcGenericDescPtr source tensor descriptor
  * \param[out] dstPtr destination tensor memory
@@ -362,7 +362,7 @@ RppStatus rppt_slice_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr,
 /*! \brief Slice augmentation GPU
  * \details This function performs slice augmentation on a generic 4D tensor.
  *          Slice augmentation involves selecting a region of interest (ROI) from the source tensor
- *          and copying it to the destination tensor.
+ *          and copying it to the destination tensor. Support added for f32 -> f32 and u8 -> u8 dataypes.
  * \param[in] srcPtr source tensor memory
  * \param[in] srcGenericDescPtr source tensor descriptor
  * \param[out] dstPtr destination tensor memory
@@ -377,7 +377,7 @@ RppStatus rppt_slice_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr,
  */
 
 #ifdef GPU_SUPPORT
-RppStatus rppt_slice_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, RpptRoiXyzwhd *roiGenericPtrSrc, rppHandle_t rppHandle);
+RppStatus rppt_slice_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
 #ifdef __cplusplus

@@ -41,6 +41,7 @@ extern "C" {
  * \details This function performs the fmadd operation on a batch of 4D tensors.
  *          It multiplies each element of the source tensor by a corresponding element in the 'mulTensor',
  *          adds a corresponding element from the 'addTensor', and stores the result in the destination tensor.
+ *          Support added for f32 -> f32 dataype.
  * \param [in] srcPtr source tensor memory
  * \param[in] srcGenericDescPtr source tensor descriptor
  * \param[out] dstPtr destination tensor memory
@@ -62,6 +63,7 @@ RppStatus rppt_fmadd_scalar_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericD
  * \details This function performs the fmadd operation on a batch of 4D tensors.
  *          It multiplies each element of the source tensor by a corresponding element in the 'mulTensor',
  *          adds a corresponding element from the 'addTensor', and stores the result in the destination tensor.
+ *          Support added for f32 -> f32 dataype.
  * \param [in] srcPtr source tensor memory
  * \param[in] srcGenericDescPtr source tensor descriptor
  * \param[out] dstPtr destination tensor memory
@@ -78,7 +80,7 @@ RppStatus rppt_fmadd_scalar_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericD
  */
 
 #ifdef GPU_SUPPORT
-RppStatus rppt_fmadd_scalar_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32f *mulTensor, Rpp32f *addTensor, RpptRoiXyzwhd *roiGenericPtrSrc, rppHandle_t rppHandle);
+RppStatus rppt_fmadd_scalar_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32f *mulTensor, Rpp32f *addTensor, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
 #ifdef __cplusplus
