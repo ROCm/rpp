@@ -130,7 +130,8 @@ RppStatus rppt_gamma_correction_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rpp
  * \details The blend augmentation performs an alpha-blending operation for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
- * \image html img150x150.jpg Sample Input
+ * \image html img150x150.jpg Sample Input1
+ * \image html img150x150_2.jpg Sample Input2
  * \image html color_augmentations_blend_img150x150.jpg Sample Output
  * \param [in] srcPtr1 source1 tensor in HOST memory
  * \param [in] srcPtr2 source2 tensor in HOST memory
@@ -152,7 +153,8 @@ RppStatus rppt_blend_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDescPtr srcDes
  * \details The blend augmentation performs an alpha-blending operation for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
- * \image html img150x150.jpg Sample Input
+ * \image html img150x150.jpg Sample Input1
+ * \image html img150x150_2.jpg Sample Input2
  * \image html color_augmentations_blend_img150x150.jpg Sample Output
  * \param [in] srcPtr1 source1 tensor in HIP memory
  * \param [in] srcPtr2 source2 tensor in HIP memory
