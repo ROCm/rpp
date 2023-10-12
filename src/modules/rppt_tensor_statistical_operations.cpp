@@ -195,12 +195,12 @@ RppStatus rppt_tensor_min_gpu(RppPtr_t srcPtr,
 {
     if (srcDescPtr->c == 1)
     {
-        if (imageMinArrLength < srcDescPtr->n)   // min and max of single channel
+        if (imageMinArrLength < srcDescPtr->n)   // min of single channel
             return RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH;
     }
     else if (srcDescPtr->c == 3)
     {
-        if (imageMinArrLength < srcDescPtr->n * 4)   // min and max of each channel, and overall min and max of all 3 channels
+        if (imageMinArrLength < srcDescPtr->n * 4)   // min of each channel, and overall min of all 3 channels
             return RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH;
     }
 

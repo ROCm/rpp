@@ -73,8 +73,8 @@ std::map<int, string> augmentationMap =
     {54, "gaussian_filter"},
     {84, "spatter"},
     {87, "tensor_sum"},
-    {89, "image_min"},
-    {90, "image_max"},
+    {89, "tensor_min"},
+    {90, "tensor_max"},
 };
 
 template <typename T>
