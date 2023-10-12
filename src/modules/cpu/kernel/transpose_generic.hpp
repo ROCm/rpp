@@ -53,28 +53,6 @@ void rpp_store16_f32_f32_channelwise(Rpp32f **dstPtr, __m128 *p)
     _mm_storeu_ps(dstPtr[3], p[3]);
 }
 
-void rpp_transpose4x8_avx(__m256 *pSrc, __m128 *pDst)
-{
-  __m256 tmp0, tmp1, tmp2, tmp3;
-  tmp0 = _mm256_shuffle_ps(pSrc[0], pSrc[1], 0x44);
-  tmp2 = _mm256_shuffle_ps(pSrc[0], pSrc[1], 0xEE);
-  tmp1 = _mm256_shuffle_ps(pSrc[2], pSrc[3], 0x44);
-  tmp3 = _mm256_shuffle_ps(pSrc[2], pSrc[3], 0xEE);
-  pSrc[0] = _mm256_shuffle_ps(tmp0, tmp1, 0x88);
-  pSrc[1] = _mm256_shuffle_ps(tmp0, tmp1, 0xDD);
-  pSrc[2] = _mm256_shuffle_ps(tmp2, tmp3, 0x88);
-  pSrc[3] = _mm256_shuffle_ps(tmp2, tmp3, 0xDD);
-
-  pDst[0] = _mm256_castps256_ps128(pSrc[0]);
-  pDst[1] = _mm256_castps256_ps128(pSrc[1]);
-  pDst[2] = _mm256_castps256_ps128(pSrc[2]);
-  pDst[3] = _mm256_castps256_ps128(pSrc[3]);
-  pDst[4] = _mm256_extractf128_ps(pSrc[0], 1);
-  pDst[5] = _mm256_extractf128_ps(pSrc[1], 1);
-  pDst[6] = _mm256_extractf128_ps(pSrc[2], 1);
-  pDst[7] = _mm256_extractf128_ps(pSrc[3], 1);
-}
-
 void compute_2d_transpose(Rpp32f *srcPtrTemp, Rpp32f *dstPtrTemp, Rpp32u height, Rpp32u width, Rpp32u srcRowStride, Rpp32u dstRowStride)
 {
     Rpp32u alignedRows = (height / 4) * 4;
@@ -97,21 +75,21 @@ void compute_2d_transpose(Rpp32f *srcPtrTemp, Rpp32f *dstPtrTemp, Rpp32u height,
         for(; vectorLoopCount < alignedCols; vectorLoopCount += vectorIncrement)
         {
             __m256 pSrc[4];
-            pSrc[0] = _mm256_loadu_ps(srcPtrRow[0]);
-            pSrc[1] = _mm256_loadu_ps(srcPtrRow[1]);
-            pSrc[2] = _mm256_loadu_ps(srcPtrRow[2]);
-            pSrc[3] = _mm256_loadu_ps(srcPtrRow[3]);
+            rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrRow[0], &pSrc[0]);
+            rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrRow[1], &pSrc[1]);
+            rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrRow[2], &pSrc[2]);
+            rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrRow[3], &pSrc[3]);
 
             __m128 pDst[8];
-            rpp_transpose4x8_avx(pSrc, pDst);
-            _mm_storeu_ps(dstPtrRow[0], pDst[0]);
-            _mm_storeu_ps(dstPtrRow[1], pDst[1]);
-            _mm_storeu_ps(dstPtrRow[2], pDst[2]);
-            _mm_storeu_ps(dstPtrRow[3], pDst[3]);
-            _mm_storeu_ps(dstPtrRow[4], pDst[4]);
-            _mm_storeu_ps(dstPtrRow[5], pDst[5]);
-            _mm_storeu_ps(dstPtrRow[6], pDst[6]);
-            _mm_storeu_ps(dstPtrRow[7], pDst[7]);
+            compute_transpose4x8_avx(pSrc, pDst);
+            rpp_simd_store(rpp_store4_f32_to_f32, dstPtrRow[0], &pDst[0]);
+            rpp_simd_store(rpp_store4_f32_to_f32, dstPtrRow[1], &pDst[1]);
+            rpp_simd_store(rpp_store4_f32_to_f32, dstPtrRow[2], &pDst[2]);
+            rpp_simd_store(rpp_store4_f32_to_f32, dstPtrRow[3], &pDst[3]);
+            rpp_simd_store(rpp_store4_f32_to_f32, dstPtrRow[4], &pDst[4]);
+            rpp_simd_store(rpp_store4_f32_to_f32, dstPtrRow[5], &pDst[5]);
+            rpp_simd_store(rpp_store4_f32_to_f32, dstPtrRow[6], &pDst[6]);
+            rpp_simd_store(rpp_store4_f32_to_f32, dstPtrRow[7], &pDst[7]);
 
             srcPtrRow[0] += vectorIncrement;
             srcPtrRow[1] += vectorIncrement;
@@ -128,20 +106,19 @@ void compute_2d_transpose(Rpp32f *srcPtrTemp, Rpp32f *dstPtrTemp, Rpp32u height,
         }
     }
 
-    // Handle remaining cols
+    // handle remaining columns
     for(int k = 0; k < alignedRows; k++)
     {
         Rpp32f *srcPtrRowTemp = srcPtrTemp + k * srcRowStride + alignedCols;
         Rpp32f *dstPtrRowTemp = dstPtrTemp + alignedCols * dstRowStride + k;
         for(int j = alignedCols; j < width; j++)
         {
-            *dstPtrRowTemp = *srcPtrRowTemp;
-            srcPtrRowTemp++;
+            *dstPtrRowTemp = *srcPtrRowTemp++;
             dstPtrRowTemp += dstRowStride;
         }
     }
 
-    // Handle remaining rows
+    // handle remaining rows
     for( ; i < height; i++)
     {
         Rpp32f *srcPtrRowTemp = srcPtrTemp + i * srcRowStride;
@@ -156,7 +133,7 @@ void compute_2d_transpose(Rpp32f *srcPtrTemp, Rpp32f *dstPtrTemp, Rpp32u height,
 }
 
 template<typename T>
-void transpose(T *dst, Rpp32u *dstStrides, T *src, Rpp32u *srcStrides, Rpp32u *dstShape, Rpp32u nDim)
+void transpose_generic_nd_recursive(T *dst, Rpp32u *dstStrides, T *src, Rpp32u *srcStrides, Rpp32u *dstShape, Rpp32u nDim)
 {
     if (nDim == 0)
     {
@@ -166,7 +143,7 @@ void transpose(T *dst, Rpp32u *dstStrides, T *src, Rpp32u *srcStrides, Rpp32u *d
     {
         for (int i = 0; i < *dstShape; i++)
         {
-            transpose(dst, dstStrides + 1, src, srcStrides + 1, dstShape + 1, nDim - 1);
+            transpose_generic_nd_recursive(dst, dstStrides + 1, src, srcStrides + 1, dstShape + 1, nDim - 1);
             dst += *dstStrides;
             src += *srcStrides;
         }
@@ -199,13 +176,11 @@ RppStatus transpose_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
         srcPtrTemp = srcPtr + batchCount * srcGenericDescPtr->strides[0];
         dstPtrTemp = dstPtr + batchCount * dstGenericDescPtr->strides[0];
 
-        Rpp32u *dstShape = dstShapeTensor + batchCount * nDim;
+        // get the starting address of begin and length values from roiTensor
         Rpp32u *roi = roiTensor + batchCount * nDim * 2;
         Rpp32u *begin = roi;
         Rpp32u *length = &roi[nDim];
         Rpp32u *perm = permTensor;
-        Rpp32u *srcStrides = srcStridesTensor + batchCount * nDim;
-        Rpp32u *dstStrides = dstStridesTensor + batchCount * nDim;
 
         bool copyInput = true;
         for(int i = 0; i < nDim; i++)
@@ -256,22 +231,21 @@ RppStatus transpose_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
                         for( ; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                         {
                             __m256 pSrc[8];
-                            // Load 64 values for source
-                            pSrc[0] = _mm256_loadu_ps(srcPtrRow);
-                            pSrc[1] = _mm256_loadu_ps(srcPtrRow + 16);
-                            pSrc[2] = _mm256_loadu_ps(srcPtrRow + 32);
-                            pSrc[3] = _mm256_loadu_ps(srcPtrRow + 48);
-
-                            pSrc[4] = _mm256_loadu_ps(srcPtrRow + 8);
-                            pSrc[5] = _mm256_loadu_ps(srcPtrRow + 24);
-                            pSrc[6] = _mm256_loadu_ps(srcPtrRow + 40);
-                            pSrc[7] = _mm256_loadu_ps(srcPtrRow + 56);
+                            // load 64 values for source
+                            rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrRow, &pSrc[0]);
+                            rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrRow + 16, &pSrc[1]);
+                            rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrRow + 32, &pSrc[2]);
+                            rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrRow + 48, &pSrc[3]);
+                            rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrRow + 8, &pSrc[4]);
+                            rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrRow + 24, &pSrc[5]);
+                            rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrRow + 40, &pSrc[6]);
+                            rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrRow + 56, &pSrc[7]);
 
                             __m128 pDst[16];
-                            rpp_transpose4x8_avx(&pSrc[0], &pDst[0]);
-                            rpp_transpose4x8_avx(&pSrc[4], &pDst[8]);
+                            compute_transpose4x8_avx(&pSrc[0], &pDst[0]);
+                            compute_transpose4x8_avx(&pSrc[4], &pDst[8]);
 
-                            // Store 4 values per in output per channel
+                            // store 4 values per in output per channel
                             rpp_store16_f32_f32_channelwise(&dstPtrTempChannel[0], &pDst[0]);
                             rpp_store16_f32_f32_channelwise(&dstPtrTempChannel[4], &pDst[4]);
                             rpp_store16_f32_f32_channelwise(&dstPtrTempChannel[8], &pDst[8]);
@@ -360,15 +334,14 @@ RppStatus transpose_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
                                                                  *(srcPtr3 + 5 * srcGenericDescPtr->strides[1]),
                                                                  *(srcPtr3 + 6 * srcGenericDescPtr->strides[1]),
                                                                  *(srcPtr3 + 7 * srcGenericDescPtr->strides[1]));
-                                    _mm256_storeu_ps(dstPtr3, pSrc);
+                                    rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtr3, &pSrc);
                                     srcPtr3 += vectorIncrement * srcGenericDescPtr->strides[1];
                                     dstPtr3 += vectorIncrement;
                                 }
                                 for( ; vectorLoopCount < bufferLength; vectorLoopCount++)
                                 {
-                                    *dstPtr3 = *srcPtr3;
+                                    *dstPtr3++ = *srcPtr3;
                                     srcPtr3 += srcGenericDescPtr->strides[1];
-                                    dstPtr3++;
                                 }
                                 srcPtr2 += 1;
                                 dstPtr2 += dstGenericDescPtr->strides[3];
@@ -376,13 +349,17 @@ RppStatus transpose_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
                             srcPtr1 += srcGenericDescPtr->strides[3];
                             dstPtr1 += dstGenericDescPtr->strides[2];
                         }
-                        srcPtr0 +=  srcGenericDescPtr->strides[2];
+                        srcPtr0 += srcGenericDescPtr->strides[2];
                         dstPtr0 += dstGenericDescPtr->strides[1];
                     }
                 }
             }
             else
             {
+                Rpp32u *dstShape = dstShapeTensor + batchCount * nDim;
+                Rpp32u *srcStrides = srcStridesTensor + batchCount * nDim;
+                Rpp32u *dstStrides = dstStridesTensor + batchCount * nDim;
+
                 // compute output shape
                 for(Rpp32u i = 0; i < nDim; i++)
                     dstShape[i] = length[perm[i]];
@@ -397,7 +374,7 @@ RppStatus transpose_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
                     srcStrides[i] = tempStrides[perm[i]];
 
                 // perform transpose as per the permute order
-                transpose(dstPtrTemp, dstStrides, srcPtrTemp, srcStrides, dstShape, nDim);
+                transpose_generic_nd_recursive(dstPtrTemp, dstStrides, srcPtrTemp, srcStrides, dstShape, nDim);
             }
         }
     }
@@ -435,11 +412,13 @@ RppStatus transpose_generic_host_tensor(T *srcPtr,
         srcPtrTemp = srcPtr + batchCount * srcGenericDescPtr->strides[0];
         dstPtrTemp = dstPtr + batchCount * dstGenericDescPtr->strides[0];
 
-        Rpp32u *dstShape = dstShapeTensor + batchCount * nDim;
+        // get the starting address of begin and length values from roiTensor
         Rpp32u *roi = roiTensor + batchCount * nDim * 2;
         Rpp32u *begin = roi;
         Rpp32u *length = &roi[nDim];
+
         Rpp32u *perm = permTensor;
+        Rpp32u *dstShape = dstShapeTensor + batchCount * nDim;
         Rpp32u *srcStrides = srcStridesTensor + batchCount * nDim;
         Rpp32u *dstStrides = dstStridesTensor + batchCount * nDim;
 
@@ -471,7 +450,7 @@ RppStatus transpose_generic_host_tensor(T *srcPtr,
                 srcStrides[i] = tempStrides[perm[i]];
 
             // perform transpose as per the permute order
-            transpose(dstPtrTemp, dstStrides, srcPtrTemp, srcStrides, dstShape, nDim);
+            transpose_generic_nd_recursive(dstPtrTemp, dstStrides, srcPtrTemp, srcStrides, dstShape, nDim);
         }
     }
     free(srcStridesTensor);

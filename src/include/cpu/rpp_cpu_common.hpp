@@ -5958,4 +5958,26 @@ inline void compute_sum_24_host(__m256d *p, __m256d *pSumR, __m256d *pSumG, __m2
     pSumB[0] = _mm256_add_pd(_mm256_add_pd(p[4], p[5]), pSumB[0]); //add 8B values and bring it down to 4
 }
 
+inline void compute_transpose4x8_avx(__m256 *pSrc, __m128 *pDst)
+{
+  __m256 tmp0, tmp1, tmp2, tmp3;
+  tmp0 = _mm256_shuffle_ps(pSrc[0], pSrc[1], 0x44);
+  tmp2 = _mm256_shuffle_ps(pSrc[0], pSrc[1], 0xEE);
+  tmp1 = _mm256_shuffle_ps(pSrc[2], pSrc[3], 0x44);
+  tmp3 = _mm256_shuffle_ps(pSrc[2], pSrc[3], 0xEE);
+  pSrc[0] = _mm256_shuffle_ps(tmp0, tmp1, 0x88);
+  pSrc[1] = _mm256_shuffle_ps(tmp0, tmp1, 0xDD);
+  pSrc[2] = _mm256_shuffle_ps(tmp2, tmp3, 0x88);
+  pSrc[3] = _mm256_shuffle_ps(tmp2, tmp3, 0xDD);
+
+  pDst[0] = _mm256_castps256_ps128(pSrc[0]);
+  pDst[1] = _mm256_castps256_ps128(pSrc[1]);
+  pDst[2] = _mm256_castps256_ps128(pSrc[2]);
+  pDst[3] = _mm256_castps256_ps128(pSrc[3]);
+  pDst[4] = _mm256_extractf128_ps(pSrc[0], 1);
+  pDst[5] = _mm256_extractf128_ps(pSrc[1], 1);
+  pDst[6] = _mm256_extractf128_ps(pSrc[2], 1);
+  pDst[7] = _mm256_extractf128_ps(pSrc[3], 1);
+}
+
 #endif //RPP_CPU_COMMON_H
