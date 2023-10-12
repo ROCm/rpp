@@ -29,7 +29,7 @@
 #include <unistd.h>
 #endif
 
-#include<thread>
+#include <thread>
 #include "config.h"
 #include "rpp/device_name.hpp"
 #include "rpp/errors.hpp"
@@ -556,8 +556,8 @@ std::string Handle::GetDeviceName()
 {
     hipDeviceProp_t props{};
     hipGetDeviceProperties(&props, this->impl->device);
-    std::string n("gfx" + std::to_string(props.gcnArch));
-    return GetDeviceNameFromMap(n);
+    std::string name(props.gcnArchName);
+    return name;
 }
 
 std::ostream& Handle::Print(std::ostream& os) const

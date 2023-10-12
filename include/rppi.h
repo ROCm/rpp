@@ -23,6 +23,14 @@ THE SOFTWARE.
 #ifndef RPPI_H
 #define RPPI_H
 
+/*!
+ * \file
+ * \brief ROCm Performance Primitives(RPP) - Image Operations.
+ *
+ * \defgroup group_rpp_images RPP Image Operations
+ * \brief ROCm Performance Primitives - Image Operations.
+ */
+
 #include "rpp.h"
 #ifdef __cplusplus
 extern "C" {

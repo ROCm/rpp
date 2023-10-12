@@ -42,30 +42,42 @@ typedef struct { float  data[24]; } d_float24_s;
 typedef struct { half   data[24]; } d_half24_s;
 typedef struct { uchar  data[24]; } d_uchar24_s;
 typedef struct { schar  data[24]; } d_schar24sc1s_s;
+typedef struct { uchar  data[ 8]; } d_uchar8_s;
+typedef struct { uint   data[24]; } d_uint24_s;
+typedef struct { int    data[24]; } d_int24_s;
+typedef struct { uint   data[ 8]; } d_uint8_s;
+typedef struct { int    data[ 8]; } d_int8_s;
 
 // float
+typedef union { float f1[5];                                                                    }   d_float5;
 typedef union { float f1[6];    float2 f2[3];                                                   }   d_float6;
+typedef union { float f1[7];                                                                    }   d_float7;
 typedef union { float f1[8];    float2 f2[4];   float4 f4[2];                                   }   d_float8;
+typedef union { float f1[9];                                                                    }   d_float9;
 typedef union { float f1[12];   float4 f4[3];                                                   }   d_float12;
 typedef union { float f1[16];   float4 f4[4];   d_float8 f8[2];                                 }   d_float16;
 typedef union { float f1[24];   float2 f2[12];  float3 f3[8];   float4 f4[6];   d_float8 f8[3]; }   d_float24;
 
 // uint
 typedef union { uint ui1[6];    uint2 ui2[3];                                                   }   d_uint6;
+typedef union { uint ui1[8];    uint4 ui4[2];                                                   }   d_uint8;
+typedef union { uint4 ui4[6];   d_uint8 ui8[3];                                                 }   d_uint24;
 
 // int
 typedef union { int i1[6];      int2 i2[3];                                                     }   d_int6;
+typedef union { int i1[8];      int4 i4[2];                                                     }   d_int8;
+typedef union { int4 i4[6];     d_int8 i8[3];                                                   }   d_int24;
 
 // half
 typedef struct { half h1[3];                                                                    }   d_half3_s;
 typedef struct { half2 h2[3];                                                                   }   d_half6_s;
 typedef union { half h1[8];     half2 h2[4];                                                    }   d_half8;
 typedef union { half h1[12];    half2 h2[6];    d_half3_s h3[4];                                }   d_half12;
-typedef union { half h1[24];    half2 h2[12];   d_half3_s h3[8];    d_half8 h8[3];              }   d_half24;
+typedef union { half h1[24];    half2 h2[12];   d_half3_s h3[8];  d_half8 h8[3];                }   d_half24;
 
 // uchar
 typedef union { uchar uc1[8];   uchar4 uc4[2];                                                  }   d_uchar8;
-typedef union { uchar uc1[24];  uchar3 uc3[8];  d_uchar8 uc8[3];                                }   d_uchar24;
+typedef union { uchar uc1[24];  uchar4 uc4[6];  uchar3 uc3[8];    d_uchar8 uc8[3];              }   d_uchar24;
 
 // schar
 typedef struct { schar sc1[8];                                                                  }   d_schar8_s;
@@ -104,9 +116,12 @@ struct RPPTensorFunctionMetaData
     }
 };
 
-#define LOCAL_THREADS_X                 16
-#define LOCAL_THREADS_Y                 16
-#define LOCAL_THREADS_Z                 1
+#define LOCAL_THREADS_X                 16                  // default rpp hip thread launch config - local threads x = 16
+#define LOCAL_THREADS_Y                 16                  // default rpp hip thread launch config - local threads y = 16
+#define LOCAL_THREADS_Z                 1                   // default rpp hip thread launch config - local threads z = 1
+#define LOCAL_THREADS_X_1DIM            256                 // single dimension kernels rpp thread launch config - local threads x = 256
+#define LOCAL_THREADS_Y_1DIM            1                   // single dimension kernels rpp thread launch config - local threads x = 1
+#define LOCAL_THREADS_Z_1DIM            1                   // single dimension kernels rpp thread launch config - local threads x = 1
 #define ONE_OVER_255                    0.00392156862745f
 #define ONE_OVER_256                    0.00390625f
 #define SIX_OVER_360                    0.01666667f
@@ -121,6 +136,9 @@ struct RPPTensorFunctionMetaData
 #define RPP_2POW32_INV_DIV_2            1.164153218e-10f    // RPP_2POW32_INV / 2
 #define RPP_2POW32_INV_MUL_2PI          1.46291812e-09f     // (1 / 2^32) * 2PI
 #define RPP_2POW32_INV_MUL_2PI_DIV_2    7.3145906e-10f      // RPP_2POW32_INV_MUL_2PI / 2
+#define SMEM_LENGTH_X                   128                 // Shared memory length of 128 cols to efficiently utilize all 16 LOCAL_THREADS_X as 16 * 8-byte vectorized global read/writes per thread = 128 bytes, fitting in 32 banks 4 byte wide
+#define SMEM_LENGTH_Y_1C                16                  // Shared memory length of 16 rows to efficiently utilize all 16 LOCAL_THREADS_Y as 1 128-byte-long row per thread (single channel greyscale)
+#define SMEM_LENGTH_Y_3C                48                  // Shared memory length of 48 rows to efficiently utilize all 16 LOCAL_THREADS_Y as 3 128-byte-long rows per thread (three channel rgb)
 
 #define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
 #define BYTE_TO_BINARY(byte)  \
@@ -343,6 +361,33 @@ __device__ __forceinline__ uint rpp_hip_pack_i8(float4 src)
     dst_c4.x = (schar)(src.x);
 
     return *(uint *)&dst_c4;
+}
+
+// Packing to Uints
+
+__device__ __forceinline__ uint4 rpp_hip_pack_uint4(uchar4 src)
+{
+    uint4 dst_ui4;
+    dst_ui4.w = (uint)(src.w);
+    dst_ui4.z = (uint)(src.z);
+    dst_ui4.y = (uint)(src.y);
+    dst_ui4.x = (uint)(src.x);
+
+    return *(uint4 *)&dst_ui4;
+}
+
+// Packing to Ints
+
+__device__ __forceinline__ void rpp_hip_pack_int8(d_schar8_s *src_sc8, d_int8 *srcPtr_i8)
+{
+    srcPtr_i8->i1[0] = int(src_sc8->sc1[0]);
+    srcPtr_i8->i1[1] = int(src_sc8->sc1[1]);
+    srcPtr_i8->i1[2] = int(src_sc8->sc1[2]);
+    srcPtr_i8->i1[3] = int(src_sc8->sc1[3]);
+    srcPtr_i8->i1[4] = int(src_sc8->sc1[4]);
+    srcPtr_i8->i1[5] = int(src_sc8->sc1[5]);
+    srcPtr_i8->i1[6] = int(src_sc8->sc1[6]);
+    srcPtr_i8->i1[7] = int(src_sc8->sc1[7]);
 }
 
 // -------------------- Set 2 - Un-Packing --------------------
@@ -1427,6 +1472,81 @@ __device__ __forceinline__ void rpp_hip_layouttoggle24_pln3_to_pkd3(T *pixpln3Pt
     pixpkd3_T24.data[23] = pixpln3Ptr_T24->data[23];
 
     *pixpln3Ptr_T24 = pixpkd3_T24;
+}
+
+// ------------------------- Set 8 - Loads to uint / int --------------------------
+
+__device__ __forceinline__ void rpp_hip_load8_to_uint8(uchar *srcPtr, d_uint8 *srcPtr_ui8)
+{
+    d_uchar8 src_uc8;
+    *(d_uchar8_s *)&src_uc8 = *(d_uchar8_s *)srcPtr;
+
+    srcPtr_ui8->ui4[0] = rpp_hip_pack_uint4(src_uc8.uc4[0]);
+    srcPtr_ui8->ui4[1] = rpp_hip_pack_uint4(src_uc8.uc4[1]);
+}
+
+__device__ __forceinline__ void rpp_hip_load8_to_int8(schar *srcPtr, d_int8 *srcPtr_i8)
+{
+    d_schar8_s src_sc8;
+    *reinterpret_cast<d_schar8_s *>(&src_sc8) = *reinterpret_cast<d_schar8_s *>(srcPtr);
+
+    rpp_hip_pack_int8(&src_sc8, srcPtr_i8);
+}
+
+__device__ __forceinline__ void rpp_hip_load24_pln3_to_uint24_pln3(uchar *srcPtr, uint increment, d_uint24 *srcPtr_ui24)
+{
+    d_uchar24 src_uc24;
+    *(d_uchar8_s *)&src_uc24.uc8[0] = *(d_uchar8_s *)srcPtr;
+    srcPtr += increment;
+    *(d_uchar8_s *)&src_uc24.uc8[1] = *(d_uchar8_s *)srcPtr;
+    srcPtr += increment;
+    *(d_uchar8_s *)&src_uc24.uc8[2] = *(d_uchar8_s *)srcPtr;
+
+    srcPtr_ui24->ui4[0] = rpp_hip_pack_uint4(src_uc24.uc4[0]);    // write R00-R03
+    srcPtr_ui24->ui4[1] = rpp_hip_pack_uint4(src_uc24.uc4[1]);    // write R04-R07
+    srcPtr_ui24->ui4[2] = rpp_hip_pack_uint4(src_uc24.uc4[2]);    // write G00-G03
+    srcPtr_ui24->ui4[3] = rpp_hip_pack_uint4(src_uc24.uc4[3]);    // write G04-G07
+    srcPtr_ui24->ui4[4] = rpp_hip_pack_uint4(src_uc24.uc4[4]);    // write B00-B03
+    srcPtr_ui24->ui4[5] = rpp_hip_pack_uint4(src_uc24.uc4[5]);    // write B04-B07
+}
+
+__device__ __forceinline__ void rpp_hip_load24_pln3_to_int24_pln3(schar *srcPtr, uint increment, d_int24 *srcPtr_i24)
+{
+    d_schar24_s src_sc24;
+    *(d_schar8_s *)&src_sc24.sc8[0] = *(d_schar8_s *)srcPtr;
+    srcPtr += increment;
+    *(d_schar8_s *)&src_sc24.sc8[1] = *(d_schar8_s *)srcPtr;
+    srcPtr += increment;
+    *(d_schar8_s *)&src_sc24.sc8[2] = *(d_schar8_s *)srcPtr;
+
+    rpp_hip_pack_int8(&src_sc24.sc8[0], &srcPtr_i24->i8[0]);     // write R00-R07
+    rpp_hip_pack_int8(&src_sc24.sc8[1], &srcPtr_i24->i8[1]);     // write G00-G07
+    rpp_hip_pack_int8(&src_sc24.sc8[2], &srcPtr_i24->i8[2]);     // write B00-B07
+}
+
+__device__ __forceinline__ void rpp_hip_load24_pkd3_to_uint24_pln3(uchar *srcPtr, d_uint24 *srcPtr_ui24)
+{
+    d_uchar24 src_uc24;
+    *(d_uchar24_s *)&src_uc24 = *(d_uchar24_s *)srcPtr;
+    rpp_hip_layouttoggle24_pkd3_to_pln3((d_uchar24_s *)&src_uc24);
+
+    srcPtr_ui24->ui4[0] = rpp_hip_pack_uint4(src_uc24.uc4[0]);    // write R00-R03
+    srcPtr_ui24->ui4[1] = rpp_hip_pack_uint4(src_uc24.uc4[1]);    // write R04-R07
+    srcPtr_ui24->ui4[2] = rpp_hip_pack_uint4(src_uc24.uc4[2]);    // write G00-G03
+    srcPtr_ui24->ui4[3] = rpp_hip_pack_uint4(src_uc24.uc4[3]);    // write G04-G07
+    srcPtr_ui24->ui4[4] = rpp_hip_pack_uint4(src_uc24.uc4[4]);    // write B00-B03
+    srcPtr_ui24->ui4[5] = rpp_hip_pack_uint4(src_uc24.uc4[5]);    // write B04-B07
+}
+
+__device__ __forceinline__ void rpp_hip_load24_pkd3_to_int24_pln3(schar *srcPtr, d_int24 *srcPtr_i24)
+{
+    d_schar24_s src_sc24;
+    src_sc24 = *(d_schar24_s *)srcPtr;
+    rpp_hip_layouttoggle24_pkd3_to_pln3((d_schar24sc1s_s *)&src_sc24);
+
+    rpp_hip_pack_int8(&src_sc24.sc8[0], &srcPtr_i24->i8[0]);     // write R00-R07
+    rpp_hip_pack_int8(&src_sc24.sc8[1], &srcPtr_i24->i8[1]);     // write G00-G07
+    rpp_hip_pack_int8(&src_sc24.sc8[2], &srcPtr_i24->i8[2]);     // write B00-B07
 }
 
 // /******************** DEVICE MATH HELPER FUNCTIONS ********************/

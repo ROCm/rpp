@@ -6,7 +6,7 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
 
     String buildTypeArg = debug ? '-DCMAKE_BUILD_TYPE=Debug' : '-DCMAKE_BUILD_TYPE=Release'
     String buildTypeDir = debug ? 'debug' : 'release'
-    String backend = ''
+    String backend = 'HIP'
     String enableSCL = 'echo build-rpp'
 
     if (platform.jenkinsLabel.contains('centos')) {
@@ -15,11 +15,8 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
             enableSCL = 'source scl_source enable llvm-toolset-7'
         }
     }
-    else if (platform.jenkinsLabel.contains('ubuntu18')) {
+    else if (platform.jenkinsLabel.contains('ubuntu20')) {
         backend = 'OCL'
-    }
-    else {
-        backend = 'HIP'
     }
 
     def command = """#!/usr/bin/env bash
@@ -35,6 +32,7 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
                 cmake -DBACKEND=${backend} ${buildTypeArg} ../..
                 make -j\$(nproc)
                 sudo make install
+                make test ARGS="-VV"
                 sudo make package
                 """
 

@@ -23,19 +23,167 @@ THE SOFTWARE.
 #include "rppdefs.h"
 #include "rppi_validate.hpp"
 #include "rppt_tensor_statistical_operations.h"
+#include "cpu/host_tensor_statistical_operations.hpp"
 
 #ifdef HIP_COMPILE
     #include <hip/hip_fp16.h>
     #include "hip/hip_tensor_statistical_operations.hpp"
 #endif // HIP_COMPILE
 
+/******************** tensor_sum ********************/
+
+RppStatus rppt_tensor_sum_host(RppPtr_t srcPtr,
+                               RpptDescPtr srcDescPtr,
+                               RppPtr_t tensorSumArr,
+                               Rpp32u tensorSumArrLength,
+                               RpptROIPtr roiTensorPtrSrc,
+                               RpptRoiType roiType,
+                               rppHandle_t rppHandle)
+{
+    if (srcDescPtr->c == 1)
+    {
+        if (tensorSumArrLength < srcDescPtr->n)      // sum of single channel
+            return RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH;
+    }
+    else if (srcDescPtr->c == 3)
+    {
+        if (tensorSumArrLength < srcDescPtr->n * 4)  // sum of each channel, and total sum of all 3 channels
+            return RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH;
+    }
+    if (roiType == RpptRoiType::XYWH)
+    {
+        for(int i = 0; i < srcDescPtr->n; i++)
+            if ((roiTensorPtrSrc[i].xywhROI.roiWidth > REDUCTION_MAX_WIDTH) || (roiTensorPtrSrc[i].xywhROI.roiHeight > REDUCTION_MAX_HEIGHT))
+                return RPP_ERROR_HIGH_SRC_DIMENSION;
+    }
+    else if (roiType == RpptRoiType::LTRB)
+    {
+        for(int i = 0; i < srcDescPtr->n; i++)
+            if ((roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x > REDUCTION_MAX_XDIM) || (roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y > REDUCTION_MAX_YDIM))
+                return RPP_ERROR_HIGH_SRC_DIMENSION;
+    }
+
+    RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+
+    if (srcDescPtr->dataType == RpptDataType::U8)
+    {
+        tensor_sum_u8_u64_host(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                              srcDescPtr,
+                              static_cast<Rpp64u*>(tensorSumArr),
+                              roiTensorPtrSrc,
+                              roiType,
+                              layoutParams);
+    }
+    else if (srcDescPtr->dataType == RpptDataType::F16)
+    {
+        tensor_sum_f16_f32_host(reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                srcDescPtr,
+                                static_cast<Rpp32f*>(tensorSumArr),
+                                roiTensorPtrSrc,
+                                roiType,
+                                layoutParams);
+    }
+    else if (srcDescPtr->dataType == RpptDataType::F32)
+    {
+        tensor_sum_f32_f32_host(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                srcDescPtr,
+                                static_cast<Rpp32f*>(tensorSumArr),
+                                roiTensorPtrSrc,
+                                roiType,
+                                layoutParams);
+    }
+    else if (srcDescPtr->dataType == RpptDataType::I8)
+    {
+        tensor_sum_i8_i64_host(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                               srcDescPtr,
+                               static_cast<Rpp64s*>(tensorSumArr),
+                               roiTensorPtrSrc,
+                               roiType,
+                               layoutParams);
+    }
+
+    return RPP_SUCCESS;
+}
+
+
 /********************************************************************************************************************/
 /*********************************************** RPP_GPU_SUPPORT = ON ***********************************************/
 /********************************************************************************************************************/
 
-#ifdef GPU_SUPPORT
+/******************** tensor_sum ********************/
+#ifdef HIP_COMPILE
+RppStatus rppt_tensor_sum_gpu(RppPtr_t srcPtr,
+                              RpptDescPtr srcDescPtr,
+                              RppPtr_t tensorSumArr,
+                              Rpp32u tensorSumArrLength,
+                              RpptROIPtr roiTensorPtrSrc,
+                              RpptRoiType roiType,
+                              rppHandle_t rppHandle)
+{
+    if (srcDescPtr->c == 1)
+    {
+        if (tensorSumArrLength < srcDescPtr->n)      // sum of single channel
+            return RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH;
+    }
+    else if (srcDescPtr->c == 3)
+    {
+        if (tensorSumArrLength < srcDescPtr->n * 4)  // sum of each channel, and total sum of all 3 channels
+            return RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH;
+    }
+    if (roiType == RpptRoiType::XYWH)
+    {
+        for(int i = 0; i < srcDescPtr->n; i++)
+            if ((roiTensorPtrSrc[i].xywhROI.roiWidth > REDUCTION_MAX_WIDTH) || (roiTensorPtrSrc[i].xywhROI.roiHeight > REDUCTION_MAX_HEIGHT))
+                return RPP_ERROR_HIGH_SRC_DIMENSION;
+    }
+    else if (roiType == RpptRoiType::LTRB)
+    {
+        for(int i = 0; i < srcDescPtr->n; i++)
+            if ((roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x > REDUCTION_MAX_XDIM) || (roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y > REDUCTION_MAX_YDIM))
+                return RPP_ERROR_HIGH_SRC_DIMENSION;
+    }
 
-/******************** image_min ********************/
+    if (srcDescPtr->dataType == RpptDataType::U8)
+    {
+        hip_exec_tensor_sum(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                            srcDescPtr,
+                            static_cast<Rpp64u*>(tensorSumArr),
+                            roiTensorPtrSrc,
+                            roiType,
+                            rpp::deref(rppHandle));
+    }
+    else if (srcDescPtr->dataType == RpptDataType::F16)
+    {
+        hip_exec_tensor_sum(reinterpret_cast<half*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                            srcDescPtr,
+                            static_cast<Rpp32f*>(tensorSumArr),
+                            roiTensorPtrSrc,
+                            roiType,
+                            rpp::deref(rppHandle));
+    }
+    else if (srcDescPtr->dataType == RpptDataType::F32)
+    {
+        hip_exec_tensor_sum(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                            srcDescPtr,
+                            static_cast<Rpp32f*>(tensorSumArr),
+                            roiTensorPtrSrc,
+                            roiType,
+                            rpp::deref(rppHandle));
+    }
+    else if (srcDescPtr->dataType == RpptDataType::I8)
+    {
+        hip_exec_tensor_sum(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                            srcDescPtr,
+                            static_cast<Rpp64s*>(tensorSumArr),
+                            roiTensorPtrSrc,
+                            roiType,
+                            rpp::deref(rppHandle));
+    }
+
+    return RPP_SUCCESS;
+}
+
+/******************** tensor_min ********************/
 
 RppStatus rppt_image_min_gpu(RppPtr_t srcPtr,
                              RpptDescPtr srcDescPtr,
@@ -45,8 +193,6 @@ RppStatus rppt_image_min_gpu(RppPtr_t srcPtr,
                              RpptRoiType roiType,
                              rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
-
     if (srcDescPtr->c == 1)
     {
         if (imageMinArrLength < srcDescPtr->n)   // min and max of single channel
@@ -96,12 +242,9 @@ RppStatus rppt_image_min_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
-#endif // backend
 }
 
-/******************** image_max ********************/
+/******************** tensor_max ********************/
 
 RppStatus rppt_image_max_gpu(RppPtr_t srcPtr,
                              RpptDescPtr srcDescPtr,
@@ -111,7 +254,6 @@ RppStatus rppt_image_max_gpu(RppPtr_t srcPtr,
                              RpptRoiType roiType,
                              rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if (srcDescPtr->c == 1)
     {
         if (imageMaxArrLength < srcDescPtr->n)   // max of single channel
@@ -160,11 +302,6 @@ RppStatus rppt_image_max_gpu(RppPtr_t srcPtr,
                                   rpp::deref(rppHandle));
     }
 
-
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
-#endif // backend
 }
-
-#endif // GPU_SUPPORT
+#endif // backend
