@@ -31,7 +31,6 @@ THE SOFTWARE.
 #include "kernel/resize_crop_mirror.hpp"
 #include "kernel/warp_affine.hpp"
 #include "kernel/slice.hpp"
-#include "kernel/flip_voxel.hpp"
 #include "kernel/normalize_generic.hpp"
 
 #endif // HOST_TENSOR_GEOMETRIC_AUGMENTATIONS_HPP

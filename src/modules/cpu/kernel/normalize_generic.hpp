@@ -331,7 +331,7 @@ void normalize_ND_tensor_nontoggle(Rpp32s *srcPtr, RpptGenericDescPtr srcGeneric
         {
             *dstPtrTemp++ = (((Rpp32f)(*srcPtrTemp + 128) - meanPtr[paramIdx]) * multiplierPtr[paramIdx]) + shift;
             paramIdx += paramStride[level - 1];
-            *srcPtrTemp++;
+            srcPtrTemp++;
         }
     }
     else
@@ -440,7 +440,7 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
         Rpp32u *begin = roi;
         Rpp32u *length = &roi[nDim];
 
-        Rpp32u *paramStride = (Rpp32u *) malloc(nDim * sizeof(Rpp32u));
+        Rpp32u paramStride[nDim];
         Rpp32f *srcPtrChannel;
 
         if(nDim == 2)
@@ -452,7 +452,7 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
             if (axis_mask == 3)
             {
                 reductionDims = 1;
-                srcStride[0] = srcStride[1] = srcGenericDescPtr->strides[2];
+                srcStride[0] = srcStride[1] = srcGenericDescPtr->strides[1];
                 srcReductionDims[0] = 1;
                 srcReductionDims[1] = srcAudioDims[0] * srcAudioDims[1];
                 paramStride[0] = paramStride[1] = 0;
@@ -477,22 +477,28 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
                 paramStride[0] = 0;
                 paramStride[1] = 1;
             }
+            Rpp32f *invStdDevTensor;
+            std::cout<<"length or reduction dims: "<<length[reductionDims]<<std::endl;
             meanTensor = (Rpp32f *)calloc(length[reductionDims], sizeof(Rpp32f));
-            stdDevTensor = (Rpp32f *)calloc(length[reductionDims], sizeof(Rpp32f));
+            invStdDevTensor = (Rpp32f *)calloc(length[reductionDims], sizeof(Rpp32f));
 
             if(computeMean)
                 compute_2D_mean(srcPtrTemp, meanTensor, srcReductionDims, srcStride);
             if(computeStddev)
-                compute_2D_inv_std_dev(srcPtrTemp, meanTensor, stdDevTensor, srcReductionDims, srcStride);
+                compute_2D_inv_std_dev(srcPtrTemp, meanTensor, invStdDevTensor, srcReductionDims, srcStride);
 
             // Inv std dev calculations missing
-        if(axis_mask == 2)
-            normalize_2D_tensor_avx_axis2(srcPtrTemp, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTensor, stdDevTensor, shift, srcAudioDims, paramStride);
-        else
-            normalize_2D_tensor(srcPtrTemp, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTensor, stdDevTensor, shift, srcAudioDims, paramStride);
+            if(axis_mask == 2)
+                normalize_2D_tensor_avx_axis2(srcPtrTemp, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTensor, invStdDevTensor, shift, srcAudioDims, paramStride);
+            else
+                normalize_2D_tensor(srcPtrTemp, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTensor, invStdDevTensor, shift, srcAudioDims, paramStride);
 
-            free(meanTensor);
-            free(stdDevTensor);
+            if(meanTensor != NULL)
+            {
+                std::cout<<"Freeing meanTensor"<<std::endl;
+                //free(meanTensor);
+            }
+            free(invStdDevTensor);
         }
         else if(nDim == 3)
         {
@@ -538,7 +544,6 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
             normalize_ND_tensor_nontoggle(srcPtrChannel, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTensor, multiplier, shift, paramStride, length, nDim, 1, paramIdx);
             free(multiplier);
         }
-            free(paramStride);
     }
 
     return RPP_SUCCESS;

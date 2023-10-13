@@ -664,8 +664,8 @@ inline void convert_pkd3_to_pln3(Rpp8u *input, RpptDescPtr descPtr)
     free(inputCopy);
 }
 
-// Opens a folder and recursively search for .jpg files
-void open_folder(const string& folderPath, vector<string>& imageNames, vector<string>& imageNamesPath)
+// Opens a folder and recursively search for files with given extension
+void open_folder(const string& folderPath, vector<string>& imageNames, vector<string>& imageNamesPath, string extension)
 {
     auto src_dir = opendir(folderPath.c_str());
     struct dirent* entity;

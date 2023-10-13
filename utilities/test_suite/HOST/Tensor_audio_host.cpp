@@ -146,16 +146,26 @@ int main(int argc, char **argv)
                     Rpp32f scale, shift;
                     scale = shift = 0.0f;
                     Rpp32f *meanTensor, *stdDevTensor;
-                    meanTensor = (Rpp32f *)calloc(srcDescriptorPtrND->dims[3], sizeof(Rpp32f));
-                    stdDevTensor = (Rpp32f *)calloc(srcDescriptorPtrND->dims[3], sizeof(Rpp32f));
+                    int size = max(srcDescriptorPtrND->dims[1], srcDescriptorPtrND->dims[2]);
                     bool computeMean, computeStddev;
                     computeMean = computeStddev = 1;
+
+                    if(!(computeMean && computeStddev))
+                    {
+                        meanTensor = (Rpp32f *)calloc(size, sizeof(Rpp32f));
+                        stdDevTensor = (Rpp32f *)calloc(size, sizeof(Rpp32f));
+                    }
 
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 2)
                         rppt_normalize_generic_host(inputF32, srcDescriptorPtrND, outputF32, dstDescriptorPtrND, axis_mask, meanTensor, stdDevTensor, computeMean, computeStddev, scale, shift, roiTensor, handle);
                     else
                         missingFuncFlag = 1;
+
+                    if(meanTensor != NULL)
+                        free(meanTensor);
+                    if(stdDevTensor != NULL)
+                        free(stdDevTensor);
 
                     // QA mode - verify outputs with golden outputs. Below code doesn’t run for performance tests
                     if (testType == 0)
