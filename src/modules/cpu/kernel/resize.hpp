@@ -1790,8 +1790,8 @@ RppStatus resize_separable_host_tensor(T *srcPtr,
         compute_dst_size_cap_host(&dstImgSize[batchCount], dstDescPtr);
         Rpp32f wRatio = ((Rpp32f)(roi.xywhROI.roiWidth)) / ((Rpp32f)(dstImgSize[batchCount].width));
         Rpp32f hRatio = ((Rpp32f)(roi.xywhROI.roiHeight)) / ((Rpp32f)(dstImgSize[batchCount].height));
-        Filter vFilter(interpolationType, roi.xywhROI.roiHeight, dstImgSize[batchCount].height, hRatio);    // Initialize vertical resampling filter
-        Filter hFilter(interpolationType, roi.xywhROI.roiWidth, dstImgSize[batchCount].width, wRatio);      // Initialize Horizontal resampling filter
+        GenericFilter vFilter(interpolationType, roi.xywhROI.roiHeight, dstImgSize[batchCount].height, hRatio);    // Initialize vertical resampling filter
+        GenericFilter hFilter(interpolationType, roi.xywhROI.roiWidth, dstImgSize[batchCount].width, wRatio);      // Initialize Horizontal resampling filter
         Rpp32f hOffset = (hRatio - 1) * 0.5f - vFilter.radius;
         Rpp32f wOffset = (wRatio - 1) * 0.5f - hFilter.radius;
 
