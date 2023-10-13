@@ -25,10 +25,9 @@ THE SOFTWARE.
 
 /*!
  * \file
- * \brief ROCm Performance Primitives(RPP) - Tensor Operations.
- *
- * \defgroup group_rpp_tensor RPP Tensor Operations
- * \brief ROCm Performance Primitives - Tensor Operations.
+ * \brief RPP Tensor Operations
+ * \defgroup group_rppt RPP Tensor Operations
+ * \brief The header includes all files containing RPP Tensor Operations
  */
 
 #include "rpp.h"
