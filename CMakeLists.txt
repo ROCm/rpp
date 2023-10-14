@@ -20,7 +20,7 @@
 
 cmake_minimum_required(VERSION 3.5)
 set(CMAKE_CXX_COMPILER clang++)
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 
 project(rpp CXX)
 
@@ -120,13 +120,13 @@ if("${CMAKE_CURRENT_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
 endif()
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
-# BOOST
-option(Boost_USE_STATIC_LIBS "Use boost static libraries" OFF)
-set(BOOST_COMPONENTS filesystem system)
-add_definitions(-DBOOST_ALL_NO_LIB=1)
-find_package(Boost COMPONENTS ${BOOST_COMPONENTS} REQUIRED)
-include_directories(${Boost_INCLUDE_DIRS})
-set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY})
+# Check for filesystem support
+include(CheckCXXSourceCompiles)
+set(CMAKE_REQUIRED_FLAGS "${CMAKE_CXX_FLAGS}")
+set(CMAKE_REQUIRED_INCLUDES "")
+check_cxx_source_compiles("#include <filesystem>\nnamespace fs = std::filesystem;\nint main() { return 0; }" HAS_STD_FILESYSTEM)
+check_cxx_source_compiles("#include <experimental/filesystem>\nnamespace fs = std::experimental::filesystem;\nint main() { return 0; }" HAS_EXP_FILESYSTEM)
+set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} stdc++fs)
 
 # OpenMP
 find_package(OpenMP REQUIRED)
@@ -260,6 +260,12 @@ if("${SIMD_ENABLE}" STREQUAL "1")
 else()
     target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_SIMD_INTRINSICS=0)
     message("-- ${Red}${PROJECT_NAME} set to build without ENABLE_SIMD_INTRINSICS${ColourReset}")
+endif()
+
+if (HAS_STD_FILESYSTEM)
+target_compile_definitions(${PROJECT_NAME} PUBLIC USE_STD_FILESYSTEM)
+elseif (HAS_EXP_FILESYSTEM)
+target_compile_definitions(${PROJECT_NAME} PUBLIC USE_EXP_FILESYSTEM)
 endif()
 
 set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} stdc++)

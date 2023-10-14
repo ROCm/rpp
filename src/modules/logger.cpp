@@ -24,7 +24,6 @@
  *
  *******************************************************************************/
 #include <cstdlib>
-#include <config.h>
 
 #ifdef __linux__
 #include <unistd.h>

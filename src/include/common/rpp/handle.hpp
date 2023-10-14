@@ -32,10 +32,8 @@
 #include <memory>
 #include <vector>
 #include <unordered_map>
-#include <boost/range/adaptor/transformed.hpp>
 
 #include "rpp.h"
-#include "config.h"
 #include "rppdefs.h"
 #include "rpp/common.hpp"
 #include "rpp/kernel.hpp"

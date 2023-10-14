@@ -153,3 +153,10 @@ elseif( "${BACKEND}" STREQUAL "OCL")
         ${CMAKE_SOURCE_DIR}/src/include/cl
     )
 endif()
+
+#FileSystem
+if (HAS_STD_FILESYSTEM)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC USE_STD_FILESYSTEM)
+elseif (HAS_EXP_FILESYSTEM)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC USE_EXP_FILESYSTEM)
+endif()

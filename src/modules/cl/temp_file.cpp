@@ -20,8 +20,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include <boost/filesystem/fstream.hpp>
-#include <boost/filesystem.hpp>
+#include <fstream>
+#include <filesystem>
 
 #include "rpp/temp_file.hpp"
 #include "rpp/errors.hpp"
