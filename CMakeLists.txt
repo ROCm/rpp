@@ -120,12 +120,7 @@ if("${CMAKE_CURRENT_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
 endif()
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
-# Check for filesystem support
-include(CheckCXXSourceCompiles)
-set(CMAKE_REQUIRED_FLAGS "${CMAKE_CXX_FLAGS}")
-set(CMAKE_REQUIRED_INCLUDES "")
-check_cxx_source_compiles("#include <filesystem>\nnamespace fs = std::filesystem;\nint main() { return 0; }" HAS_STD_FILESYSTEM)
-check_cxx_source_compiles("#include <experimental/filesystem>\nnamespace fs = std::experimental::filesystem;\nint main() { return 0; }" HAS_EXP_FILESYSTEM)
+# Filesystem support
 set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} stdc++fs)
 
 # OpenMP
@@ -262,11 +257,6 @@ else()
     message("-- ${Red}${PROJECT_NAME} set to build without ENABLE_SIMD_INTRINSICS${ColourReset}")
 endif()
 
-if (HAS_STD_FILESYSTEM)
-target_compile_definitions(${PROJECT_NAME} PUBLIC USE_STD_FILESYSTEM)
-elseif (HAS_EXP_FILESYSTEM)
-target_compile_definitions(${PROJECT_NAME} PUBLIC USE_EXP_FILESYSTEM)
-endif()
 
 set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} stdc++)
 message("-- ${White}${PROJECT_NAME} -- Using Compiler - Path:" ${CMAKE_CXX_COMPILER} "\tVersion:" ${CMAKE_CXX_COMPILER_VERSION} "\tCompiler:" ${CMAKE_CXX_COMPILER_ID}${ColourReset})
