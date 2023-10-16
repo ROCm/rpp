@@ -27,7 +27,7 @@ THE SOFTWARE.
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/opencv.hpp>
 #include <iostream>
-#include <filesystem>
+#include "filesystem.h"
 #include "rpp.h"
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -649,8 +649,8 @@ void open_folder(const string& folderPath, vector<string>& imageNames, vector<st
         std::string filePath = folderPath;
         filePath.append("/");
         filePath.append(entity->d_name);
-        std::filesystem::path pathObj(filePath);
-        if(std::filesystem::exists(pathObj) && std::filesystem::is_directory(pathObj))
+        fs::path pathObj(filePath);
+        if(fs::exists(pathObj) && fs::is_directory(pathObj))
             open_folder(filePath, imageNames, imageNamesPath);
 
         if (fileName.size() > 4 && fileName.substr(fileName.size() - 4) == ".jpg")
@@ -691,8 +691,8 @@ void search_jpg_files(const string& folder_path, vector<string>& imageNames, vec
     for (unsigned dir_count = 0; dir_count < entry_list.size(); ++dir_count)
     {
         string subfolder_path = full_path + "/" + entry_list[dir_count];
-        std::filesystem::path pathObj(subfolder_path);
-        if (std::filesystem::exists(pathObj) && std::filesystem::is_regular_file(pathObj))
+        fs::path pathObj(subfolder_path);
+        if (fs::exists(pathObj) && fs::is_regular_file(pathObj))
         {
             // ignore files with extensions .tar, .zip, .7z
             auto file_extension_idx = subfolder_path.find_last_of(".");
@@ -708,7 +708,7 @@ void search_jpg_files(const string& folder_path, vector<string>& imageNames, vec
                 imageNamesPath.push_back(subfolder_path);
             }
         }
-        else if (std::filesystem::exists(pathObj) && std::filesystem::is_directory(pathObj))
+        else if (fs::exists(pathObj) && fs::is_directory(pathObj))
             open_folder(subfolder_path, imageNames, imageNamesPath);
     }
 }
@@ -836,8 +836,8 @@ inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDes
             cvtColor(matOutputImageRgb, matOutputImage, COLOR_RGB2BGR);
         }
 
-        std::filesystem::path pathObj(outputImagePath);
-        if (std::filesystem::exists(pathObj))
+        fs::path pathObj(outputImagePath);
+        if (fs::exists(pathObj))
         {
             std::string outPath = outputImagePath.substr(0, outputImagePath.find_last_of('.')) + "_" + to_string(cnt) + outputImagePath.substr(outputImagePath.find_last_of('.'));
             imwrite(outPath, matOutputImage);

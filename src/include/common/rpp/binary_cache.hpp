@@ -28,21 +28,21 @@
 #define GUARD_RPP_BINARY_CACHE_HPP
 
 #include <string>
-#include <filesystem>
+#include "filesystem.h"
 
 namespace rpp {
 
-std::filesystem::path GetCacheFile(const std::string& device,
+fs::path GetCacheFile(const std::string& device,
                                      const std::string& name,
                                      const std::string& args,
                                      bool is_kernel_str);
 
-std::filesystem::path GetCachePath();
+fs::path GetCachePath();
 std::string LoadBinary(const std::string& device,
                        const std::string& name,
                        const std::string& args,
                        bool is_kernel_str = false);
-void SaveBinary(const std::filesystem::path& binary_path,
+void SaveBinary(const fs::path& binary_path,
                 const std::string& device,
                 const std::string& name,
                 const std::string& args,

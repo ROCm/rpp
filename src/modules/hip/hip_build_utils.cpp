@@ -31,7 +31,7 @@ THE SOFTWARE.
 
 namespace rpp {
 
-std::filesystem::path HipBuild(std::optional<TmpDir>& tmp_dir,
+fs::path HipBuild(std::optional<TmpDir>& tmp_dir,
                                  const std::string& filename,
                                  std::string src,
                                  std::string params,
@@ -43,7 +43,7 @@ std::filesystem::path HipBuild(std::optional<TmpDir>& tmp_dir,
     // write out the include files
     auto inc_list = GetKernelIncList();
     auto inc_path = tmp_dir->path;
-    std::filesystem::create_directories(inc_path);
+    fs::create_directories(inc_path);
     for(auto inc_file : inc_list)
     {
         auto inc_src = GetKernelInc(inc_file);
@@ -61,13 +61,13 @@ std::filesystem::path HipBuild(std::optional<TmpDir>& tmp_dir,
     auto env = std::string("KMOPTLLC=-mattr=+enable-ds128");
     tmp_dir->Execute(env + std::string(" ") + "/opt/rocm/bin/hipcc",
                      params + filename + " -o " + bin_file.string());
-    if(!std::filesystem::exists(bin_file))
+    if(!fs::exists(bin_file))
         RPP_THROW(filename + " failed to compile");
-    auto hsaco = std::find_if(std::filesystem::directory_iterator{tmp_dir->path},
+    auto hsaco = std::find_if(fs::directory_iterator{tmp_dir->path},
                               {},
                               [](auto entry) { return (entry.path().extension() == ".hsaco"); });
 
-    if(hsaco == std::filesystem::directory_iterator{})
+    if(hsaco == fs::directory_iterator{})
     {
         RPP_LOG_E("failed to find *.hsaco in " << hsaco->path().string());
     }
@@ -80,7 +80,7 @@ std::filesystem::path HipBuild(std::optional<TmpDir>& tmp_dir,
 #endif
 }
 
-void bin_file_to_str(const std::filesystem::path& file, std::string& buf)
+void bin_file_to_str(const fs::path& file, std::string& buf)
 {
     std::ifstream bin_file_ptr(file.string().c_str(), std::ios::binary);
     std::ostringstream bin_file_strm;

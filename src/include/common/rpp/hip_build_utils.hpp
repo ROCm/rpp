@@ -32,11 +32,11 @@
 #include "rpp/write_file.hpp"
 
 namespace rpp {
-std::filesystem::path HipBuild(std::optional<rpp::TmpDir>& tmp_dir,
+fs::path HipBuild(std::optional<rpp::TmpDir>& tmp_dir,
                                  const std::string& filename,
                                  std::string src,
                                  std::string params,
                                  const std::string& dev_name);
 
-void bin_file_to_str(const std::filesystem::path& file, std::string& buf);
+void bin_file_to_str(const fs::path& file, std::string& buf);
 } // namespace rpp

@@ -21,7 +21,6 @@ THE SOFTWARE.
 */
 
 #include <fstream>
-#include <filesystem>
 
 #include "rpp/temp_file.hpp"
 #include "rpp/errors.hpp"

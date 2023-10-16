@@ -26,7 +26,7 @@
 
 #include <fstream>
 #include <iostream>
-#include <filesystem>
+#include "filesystem.h"
 #include "rpp.h"
 #include "rppversion.h"
 #include "rpp/binary_cache.hpp"
@@ -39,7 +39,7 @@ namespace rpp {
 
 RPP_DECLARE_ENV_VAR(RPP_DISABLE_CACHE)
 
-std::filesystem::path ComputeCachePath()
+fs::path ComputeCachePath()
 {
 #ifdef RPP_CACHE_DIR
     std::string cache_dir = RPP_CACHE_DIR;
@@ -48,9 +48,9 @@ std::filesystem::path ComputeCachePath()
                           std::to_string(RPP_VERSION_MINOR) + "." +
                           std::to_string(RPP_VERSION_PATCH);
 
-    auto p = std::filesystem::path{cache_dir} / version;
-    if(!std::filesystem::exists(p))
-        std::filesystem::create_directories(p);
+    auto p = fs::path{cache_dir} / version;
+    if(!fs::exists(p))
+        fs::create_directories(p);
     // auto p = cache_dir;
     //std::cerr<<"\n cache_dir"<<cache_dir;
     return p;
@@ -59,9 +59,9 @@ std::filesystem::path ComputeCachePath()
 #endif
 }
 
-std::filesystem::path GetCachePath()
+fs::path GetCachePath()
 {
-    static const std::filesystem::path path = ComputeCachePath();
+    static const fs::path path = ComputeCachePath();
     return path;
 }
 
@@ -76,7 +76,7 @@ bool IsCacheDisabled()
 #endif
 }
 
-std::filesystem::path GetCacheFile(const std::string& device,
+fs::path GetCacheFile(const std::string& device,
                                      const std::string& name,
                                      const std::string& args,
                                      bool is_kernel_str)
@@ -95,7 +95,7 @@ std::string LoadBinary(const std::string& device,
     if(rpp::IsCacheDisabled())
         return {};
     auto f = GetCacheFile(device, name, args, is_kernel_str);
-    if(std::filesystem::exists(f))
+    if(fs::exists(f))
     {
         return f.string();
     }
@@ -104,7 +104,7 @@ std::string LoadBinary(const std::string& device,
         return {};
     }
 }
-void SaveBinary(const std::filesystem::path& binary_path,
+void SaveBinary(const fs::path& binary_path,
                 const std::string& device,
                 const std::string& name,
                 const std::string& args,
@@ -112,13 +112,13 @@ void SaveBinary(const std::filesystem::path& binary_path,
 {
     if(rpp::IsCacheDisabled())
     {
-        std::filesystem::remove(binary_path);
+        fs::remove(binary_path);
     }
     else
     {
         auto p = GetCacheFile(device, name, args, is_kernel_str);
-        std::filesystem::create_directories(p.parent_path());
-        std::filesystem::rename(binary_path, p);
+        fs::create_directories(p.parent_path());
+        fs::rename(binary_path, p);
     }
 }
 

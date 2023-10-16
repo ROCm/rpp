@@ -285,7 +285,7 @@ static void AmdgcnAssembleQuiet(std::string& source, const std::string& params)
 
 static bool GcnAssemblerHasBug34765Impl()
 {
-    auto p = std::filesystem::temp_directory_path() / std::to_string(std::chrono::system_clock::now().time_since_epoch().count());
+    auto p = fs::temp_directory_path() / std::to_string(std::chrono::system_clock::now().time_since_epoch().count());
     rpp::WriteFile(rpp::GetKernelSrc("bugzilla_34765_detect"), p);
     auto src = p.string();
     try
@@ -308,7 +308,7 @@ bool GcnAssemblerHasBug34765()
 
 static bool GcnAssemblerSupportsOption(const std::string& option)
 {
-    auto p = std::filesystem::temp_directory_path() / std::to_string(std::chrono::system_clock::now().time_since_epoch().count());
+    auto p = fs::temp_directory_path() / std::to_string(std::chrono::system_clock::now().time_since_epoch().count());
     rpp::WriteFile(rpp::GetKernelSrc("dummy_kernel"), p);
     auto src = p.string();
     try
