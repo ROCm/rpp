@@ -156,14 +156,12 @@ void verify_output(Rpp32f *dstPtr, RpptGenericDescPtr dstDescPtr, Rpp32u* roiTen
         Rpp32f refVal, outVal;
         Rpp32f *dstPtrCurrent = dstPtr + batchCount * dstDescPtr->strides[0];
         Rpp32f *dstPtrTemp = dstPtrCurrent;
-        
-        cout<<"width: "<<roiTensor[(batchCount * 4) + 2]<<endl;
+
         for (int j = 0; j < roiTensor[(batchCount * 4) + 2]; j++)
         {
             refFile >> refVal;
             outVal = dstPtrTemp[j];
             bool invalidComparision = ((outVal == 0.0f) && (refVal != 0.0f));
-            cout<<"refVal: "<<refVal<<"outVal: "<<outVal<<endl;
             if (!invalidComparision && abs(outVal - refVal) < 1e-20)
                 matchedIndices += 1;
         }
@@ -171,7 +169,6 @@ void verify_output(Rpp32f *dstPtr, RpptGenericDescPtr dstDescPtr, Rpp32u* roiTen
         refFile.close();
         if (matchedIndices == (roiTensor[(batchCount * 4) + 2]) && matchedIndices !=0)
             fileMatch++;
-        cout<<"file checked"<<endl;
     }
     std::string status = testCase + ": ";
     cout << std::endl << "Results for Test case: " << testCase << std::endl;

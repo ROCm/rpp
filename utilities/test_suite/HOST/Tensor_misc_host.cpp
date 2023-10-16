@@ -257,12 +257,9 @@ void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize, string dst
             bool invalid_comparision = ((out[j] == 0.0f) && (ref[j] != 0.0f));
             if(!invalid_comparision && abs(out[j] - ref[j]) < 1e-20)
                 cnt++;
-            else
-                cout<<"ref: "<<ref[j]<<"out: "<<out[j]<<endl;
         }
         if (cnt == bufferLength)
             fileMatch++;
-        cout<<"One file done"<<endl;
     }
 
     std::string status = funcName + ": ";
@@ -424,8 +421,7 @@ int main(int argc, char **argv)
                 exit(0);
             }
         }
-
-	    endWallTime = omp_get_wtime();
+        endWallTime = omp_get_wtime();
 
         wallTime = endWallTime - startWallTime;
         maxWallTime = std::max(maxWallTime, wallTime);

@@ -477,27 +477,22 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
                 paramStride[0] = 0;
                 paramStride[1] = 1;
             }
-            Rpp32f *invStdDevTensor;
-            std::cout<<"length or reduction dims: "<<length[reductionDims]<<std::endl;
-            meanTensor = (Rpp32f *)calloc(length[reductionDims], sizeof(Rpp32f));
+            Rpp32f *invStdDevTensor, *meanInternalTensor;
+            meanInternalTensor = (Rpp32f *)calloc(length[reductionDims], sizeof(Rpp32f));
             invStdDevTensor = (Rpp32f *)calloc(length[reductionDims], sizeof(Rpp32f));
 
             if(computeMean)
-                compute_2D_mean(srcPtrTemp, meanTensor, srcReductionDims, srcStride);
+                compute_2D_mean(srcPtrTemp, meanInternalTensor, srcReductionDims, srcStride);
             if(computeStddev)
-                compute_2D_inv_std_dev(srcPtrTemp, meanTensor, invStdDevTensor, srcReductionDims, srcStride);
+                compute_2D_inv_std_dev(srcPtrTemp, meanInternalTensor, invStdDevTensor, srcReductionDims, srcStride);
 
             // Inv std dev calculations missing
             if(axis_mask == 2)
-                normalize_2D_tensor_avx_axis2(srcPtrTemp, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTensor, invStdDevTensor, shift, srcAudioDims, paramStride);
+                normalize_2D_tensor_avx_axis2(srcPtrTemp, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanInternalTensor, invStdDevTensor, shift, srcAudioDims, paramStride);
             else
-                normalize_2D_tensor(srcPtrTemp, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTensor, invStdDevTensor, shift, srcAudioDims, paramStride);
+                normalize_2D_tensor(srcPtrTemp, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanInternalTensor, invStdDevTensor, shift, srcAudioDims, paramStride);
 
-            if(meanTensor != NULL)
-            {
-                std::cout<<"Freeing meanTensor"<<std::endl;
-                //free(meanTensor);
-            }
+            free(meanInternalTensor);
             free(invStdDevTensor);
         }
         else if(nDim == 3)

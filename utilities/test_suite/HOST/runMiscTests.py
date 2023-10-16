@@ -79,25 +79,25 @@ def get_log_file_list():
         "../../OUTPUT_PERFORMANCE_MISC_LOGS_HOST_" + timestamp + "/Tensor_misc_host_raw_performance_log.txt",
     ]
 
-def run_unit_test(numDims, case, numRuns, testType, bitDepth, batchSize, outFilePath):
+def run_unit_test(numDims, case, numRuns, testType, toggle, bitDepth, batchSize, outFilePath):
     print("\n\n\n\n")
     print("--------------------------------")
     print("Running a New Functionality...")
     print("--------------------------------")
     print(f"./Tensor_misc_host {case} {testType} {numDims} {batchSize} {numRuns}")
-    result = subprocess.run(["./Tensor_misc_host", str(case), str(testType), str(numDims), str(batchSize), str(numRuns), outFilePath], stdout=subprocess.PIPE)    # nosec
+    result = subprocess.run(["./Tensor_misc_host", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), outFilePath], stdout=subprocess.PIPE)    # nosec
     print(result.stdout.decode())
 
     print("------------------------------------------------------------------------------------------")
 
-def run_performance_test(loggingFolder, numDims, case, numRuns, testType, bitDepth, batchSize, outFilePath):
+def run_performance_test(loggingFolder, numDims, case, numRuns, testType, toggle, bitDepth, batchSize, outFilePath):
     print("\n\n\n\n")
     print("--------------------------------")
     print("Running a New Functionality...")
     print("--------------------------------")
     with open("{}/Tensor_misc_host_raw_performance_log.txt".format(loggingFolder), "a") as log_file:
-        print(f"./Tensor_misc_host {case} {testType} {numDims} {batchSize} {numRuns}")
-        process = subprocess.Popen(["./Tensor_misc_host", str(case), str(testType), str(numDims), str(batchSize), str(numRuns) , outFilePath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
+        print(f"./Tensor_misc_host {case} {testType} {toggle} {numDims} {batchSize} {numRuns}")
+        process = subprocess.Popen(["./Tensor_misc_host", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns) , outFilePath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
         while True:
             output = process.stdout.readline()
             if not output and process.poll() is not None:
@@ -112,6 +112,7 @@ def rpp_test_suite_parser_and_validator():
     parser.add_argument("--case_start", type = int, default = 1, help = "Testing range starting case # - (1:1)")
     parser.add_argument("--case_end", type = int, default = 1, help = "Testing range ending case # - (1:1)")
     parser.add_argument('--test_type', type = int, default = 0, help = "Type of Test - (0 = QA tests / 1 = Performance tests)")
+    parser.add_argument('--toggle', type = int, default = 0, help = "Toggle outputs")
     parser.add_argument('--case_list', nargs = "+", help = "List of case numbers to test", required = False)
     parser.add_argument("--num_dims", type = int, default = 2, help = "Number of dimensions for input")
     parser.add_argument('--num_runs', type = int, default = 1, help = "Specifies the number of runs for running the performance tests")
@@ -139,7 +140,7 @@ def rpp_test_suite_parser_and_validator():
         print("Batch size must be greater than 0. Aborting!")
         exit(0)
     elif args.test_type == 0 and args.num_dims != 3:
-        print("Inavlid Input! QA mode is supported only for num_dims = 3!")
+        print("Invalid Input! QA mode is supported only for num_dims = 3!")
         exit(0)
 
     if args.case_list is None:
@@ -156,6 +157,7 @@ args = rpp_test_suite_parser_and_validator()
 caseStart = args.case_start
 caseEnd = args.case_end
 testType = args.test_type
+toggle = args.toggle
 caseList = args.case_list
 numDims = args.num_dims
 numRuns = args.num_runs
@@ -202,17 +204,17 @@ if testType == 0:
             print(f"Invalid case number {case}. Case number must be 1!")
             continue
 
-        run_unit_test(numDims, case, numRuns, testType, bitDepth, batchSize, outFilePath)
+        run_unit_test(numDims, case, numRuns, testType, toggle, bitDepth, batchSize, outFilePath)
 else:
     for case in caseList:
-        if int(case) != 0:
+        if int(case) != 1:
             print(f"Invalid case number {case}. Case number must be 1!")
             continue
 
-        run_performance_test(loggingFolder, numDims, case, numRuns, testType, bitDepth, batchSize, outFilePath)
+        run_performance_test(loggingFolder, numDims, case, numRuns, testType, toggle, bitDepth, batchSize, outFilePath)
 
 # print the results of qa tests
-supportedCaseList = ['0']
+supportedCaseList = ['1']
 supportedCases = 0
 for num in caseList:
     if num in supportedCaseList:
