@@ -84,7 +84,7 @@ def run_unit_test(numDims, case, numRuns, testType, toggle, bitDepth, batchSize,
     print("--------------------------------")
     print("Running a New Functionality...")
     print("--------------------------------")
-    print(f"./Tensor_misc_host {case} {testType} {numDims} {batchSize} {numRuns}")
+    print(f"./Tensor_misc_host {case} {testType} {toggle} {numDims} {batchSize} {numRuns}")
     result = subprocess.run(["./Tensor_misc_host", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), outFilePath], stdout=subprocess.PIPE)    # nosec
     print(result.stdout.decode())
 
@@ -199,6 +199,9 @@ if testType == 0:
     for case in caseList:
         if batchSize != 1:
             print("QA tests can only run with a batch size of 1")
+            exit(0)
+        if toggle == 1:
+            print("Only Toggle variant is QA tested for test Type 0. Aborting!")
             exit(0)
         if int(case) != 1:
             print(f"Invalid case number {case}. Case number must be 1!")

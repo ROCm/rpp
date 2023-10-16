@@ -179,7 +179,7 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
 // Set layout for generic descriptor
 void set_generic_descriptor_layout(RpptGenericDescPtr srcDescriptorPtrND, RpptGenericDescPtr dstDescriptorPtrND, Rpp32u nDim, int toggle, int qaMode)
 {
-    if(qaMode)
+    if(qaMode && !toggle)
     {
         switch(nDim)
         {
@@ -430,7 +430,7 @@ int main(int argc, char **argv)
     }
 
     // compare outputs if qaMode is true
-    if(qaMode)
+    if(qaMode && !toggle)
         compare_output(outputF32, nDim, batchSize, dst, funcName);
     else
     {
