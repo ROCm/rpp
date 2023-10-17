@@ -23,8 +23,6 @@ THE SOFTWARE.
 #ifndef RPPDEFS_H
 #define RPPDEFS_H
 
-#define HIP_COMPILE 1
-
 /*! \file
  * \brief RPP common HOST/GPU typedef, enum and structure definitions.
  * \defgroup group_rppdefs RPP common definitions
