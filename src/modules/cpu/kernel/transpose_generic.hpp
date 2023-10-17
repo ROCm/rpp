@@ -150,6 +150,30 @@ void transpose_generic_nd_recursive(T *dst, Rpp32u *dstStrides, T *src, Rpp32u *
     }
 }
 
+template<typename T>
+void transpose_generic_setup_and_run(T *srcPtrTemp, T *dstPtrTemp, Rpp32u *length, Rpp32u *perm, Rpp32u nDim)
+{
+    Rpp32u dstShape[RPPT_MAX_DIMS];
+    Rpp32u srcStrides[RPPT_MAX_DIMS];
+    Rpp32u dstStrides[RPPT_MAX_DIMS];
+
+    // compute output shape
+    for(Rpp32u i = 0; i < nDim; i++)
+        dstShape[i] = length[perm[i]];
+
+    // compute output strides
+    compute_strides(dstStrides, dstShape, nDim);
+
+    // compute input strides and update as per the permute order
+    Rpp32u tempStrides[RPPT_MAX_DIMS];
+    compute_strides(tempStrides, length, nDim);
+    for(int i = 0; i < nDim; i++)
+        srcStrides[i] = tempStrides[perm[i]];
+
+    // perform transpose as per the permute order
+    transpose_generic_nd_recursive(dstPtrTemp, dstStrides, srcPtrTemp, srcStrides, dstShape, nDim);
+}
+
 RppStatus transpose_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
                                                 RpptGenericDescPtr srcGenericDescPtr,
                                                 Rpp32f *dstPtr,
@@ -162,11 +186,6 @@ RppStatus transpose_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
     Rpp32u numThreads = handle.GetNumThreads();
     Rpp32u nDim = dstGenericDescPtr->numDims;
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
-
-    // allocate buffer for input strides, output strides, output shapes
-    Rpp32u *srcStridesTensor = (Rpp32u *)calloc(nDim * batchSize, sizeof(int));
-    Rpp32u *dstStridesTensor = (Rpp32u *)calloc(nDim * batchSize, sizeof(int));
-    Rpp32u *dstShapeTensor = (Rpp32u *)calloc(nDim * batchSize, sizeof(int));
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
@@ -300,6 +319,10 @@ RppStatus transpose_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
                         dstPtrTemp += dstGenericDescPtr->strides[1];
                     }
                 }
+                else
+                {
+                    transpose_generic_setup_and_run(srcPtrTemp, dstPtrTemp, length, perm, nDim);
+                }
             }
             else if (nDim == 4)
             {
@@ -353,34 +376,17 @@ RppStatus transpose_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
                         dstPtr0 += dstGenericDescPtr->strides[1];
                     }
                 }
+                else
+                {
+                    transpose_generic_setup_and_run(srcPtrTemp, dstPtrTemp, length, perm, nDim);
+                }
             }
             else
             {
-                Rpp32u *dstShape = dstShapeTensor + batchCount * nDim;
-                Rpp32u *srcStrides = srcStridesTensor + batchCount * nDim;
-                Rpp32u *dstStrides = dstStridesTensor + batchCount * nDim;
-
-                // compute output shape
-                for(Rpp32u i = 0; i < nDim; i++)
-                    dstShape[i] = length[perm[i]];
-
-                // compute output strides
-                compute_strides(dstStrides, dstShape, nDim);
-
-                // compute input strides and update as per the permute order
-                Rpp32u tempStrides[RPPT_MAX_DIMS];
-                compute_strides(tempStrides, roi, nDim);
-                for(int i = 0; i < nDim; i++)
-                    srcStrides[i] = tempStrides[perm[i]];
-
-                // perform transpose as per the permute order
-                transpose_generic_nd_recursive(dstPtrTemp, dstStrides, srcPtrTemp, srcStrides, dstShape, nDim);
+                transpose_generic_setup_and_run(srcPtrTemp, dstPtrTemp, length, perm, nDim);
             }
         }
     }
-    free(srcStridesTensor);
-    free(dstStridesTensor);
-    free(dstShapeTensor);
 
     return RPP_SUCCESS;
 }
@@ -399,10 +405,6 @@ RppStatus transpose_generic_host_tensor(T *srcPtr,
     Rpp32u nDim = dstGenericDescPtr->numDims;
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
 
-    // allocate buffer for input strides, output strides, output shapes
-    Rpp32u *srcStridesTensor = (Rpp32u *)calloc(nDim * batchSize, sizeof(int));
-    Rpp32u *dstStridesTensor = (Rpp32u *)calloc(nDim * batchSize, sizeof(int));
-    Rpp32u *dstShapeTensor = (Rpp32u *)calloc(nDim * batchSize, sizeof(int));
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
@@ -416,11 +418,7 @@ RppStatus transpose_generic_host_tensor(T *srcPtr,
         Rpp32u *roi = roiTensor + batchCount * nDim * 2;
         Rpp32u *begin = roi;
         Rpp32u *length = &roi[nDim];
-
         Rpp32u *perm = permTensor;
-        Rpp32u *dstShape = dstShapeTensor + batchCount * nDim;
-        Rpp32u *srcStrides = srcStridesTensor + batchCount * nDim;
-        Rpp32u *dstStrides = dstStridesTensor + batchCount * nDim;
 
         bool copyInput = true;
         for(int i = 0; i < nDim; i++)
@@ -435,27 +433,9 @@ RppStatus transpose_generic_host_tensor(T *srcPtr,
         {
             for(int i = 1; i < nDim; i++)
                 srcPtrTemp += begin[i] * srcGenericDescPtr->strides[i];
-
-            // compute output shape
-            for(Rpp32u i = 0; i < nDim; i++)
-                dstShape[i] = length[perm[i]];
-
-            // compute output strides
-            compute_strides(dstStrides, dstShape, nDim);
-
-            // compute input strides and update as per the permute order
-            Rpp32u tempStrides[RPPT_MAX_DIMS];
-            compute_strides(tempStrides, roi, nDim);
-            for(int i = 0; i < nDim; i++)
-                srcStrides[i] = tempStrides[perm[i]];
-
-            // perform transpose as per the permute order
-            transpose_generic_nd_recursive(dstPtrTemp, dstStrides, srcPtrTemp, srcStrides, dstShape, nDim);
+            transpose_generic_setup_and_run(srcPtrTemp, dstPtrTemp, length, perm, nDim);
         }
     }
-    free(srcStridesTensor);
-    free(dstStridesTensor);
-    free(dstShapeTensor);
 
     return RPP_SUCCESS;
 }
