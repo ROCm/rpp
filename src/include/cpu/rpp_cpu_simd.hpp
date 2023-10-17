@@ -199,6 +199,22 @@ inline void rpp_mm_print_epi8(__m128i vPrintArray)
     }
 }
 
+inline void rpp_storeu_si32(void *__p,
+                        	__m128i __b) {
+  struct __storeu_si32 {
+    int __v;
+  } __attribute__((__packed__, __may_alias__));
+  ((struct __storeu_si32 *)__p)->__v = ((__v4si)__b)[0];
+}
+
+inline void rpp_storeu_si64(void *__p,
+                            __m128i __b) {
+  struct __storeu_si64 {
+    long long __v;
+  } __attribute__((__packed__, __may_alias__));
+  ((struct __storeu_si64 *)__p)->__v = ((__v2di)__b)[0];
+}
+
 inline void rpp_mm_print_epi32(__m128i vPrintArray)
 {
     int printArray[4];
@@ -3393,45 +3409,45 @@ inline void rpp_resize_nn_load_i8pln1(Rpp8s *srcRowPtrsForInterp, Rpp32s *loc, _
 
 inline void rpp_store12_u8pkd3_to_u8pln3(Rpp8u* dstPtrR, Rpp8u* dstPtrG, Rpp8u* dstPtrB, __m128i &p)
 {
-    _mm_storeu_si32((__m128i *)(dstPtrR), _mm_shuffle_epi8(p, xmm_char_maskR)); /* Shuffle and extract the R pixels*/
-    _mm_storeu_si32((__m128i *)(dstPtrG), _mm_shuffle_epi8(p, xmm_char_maskG)); /* Shuffle and extract the G pixels*/
-    _mm_storeu_si32((__m128i *)(dstPtrB), _mm_shuffle_epi8(p, xmm_char_maskB)); /* Shuffle and extract the B pixels*/
+    rpp_storeu_si32((__m128i *)(dstPtrR), _mm_shuffle_epi8(p, xmm_char_maskR)); /* Shuffle and extract the R pixels*/
+    rpp_storeu_si32((__m128i *)(dstPtrG), _mm_shuffle_epi8(p, xmm_char_maskG)); /* Shuffle and extract the G pixels*/
+    rpp_storeu_si32((__m128i *)(dstPtrB), _mm_shuffle_epi8(p, xmm_char_maskB)); /* Shuffle and extract the B pixels*/
 }
 
 inline void rpp_store24_u8pkd3_to_u8pln3_avx(Rpp8u* dstPtrR, Rpp8u* dstPtrG, Rpp8u* dstPtrB, __m256i &p)
 {
     __m128i p128[2];
     p128[0] = _mm256_castsi256_si128(p); /* R01|G01|B01|R11|G11|B11|R21|G21|B21|R31|G31|B31|R41|G41|B41|R51 */
-    _mm_storeu_si32((__m128i *)(dstPtrR), _mm_shuffle_epi8(p128[0], xmm_char_maskR)); /* shuffle to get R01-R04*/
-    _mm_storeu_si32((__m128i *)(dstPtrG), _mm_shuffle_epi8(p128[0], xmm_char_maskG)); /* shuffle to get G01-G04*/
-    _mm_storeu_si32((__m128i *)(dstPtrB), _mm_shuffle_epi8(p128[0], xmm_char_maskB)); /* shuffle to get B01-B04*/
+    rpp_storeu_si32((__m128i *)(dstPtrR), _mm_shuffle_epi8(p128[0], xmm_char_maskR)); /* shuffle to get R01-R04*/
+    rpp_storeu_si32((__m128i *)(dstPtrG), _mm_shuffle_epi8(p128[0], xmm_char_maskG)); /* shuffle to get G01-G04*/
+    rpp_storeu_si32((__m128i *)(dstPtrB), _mm_shuffle_epi8(p128[0], xmm_char_maskB)); /* shuffle to get B01-B04*/
 
     p128[1] = _mm256_extractf128_si256(p, 1); /* G51|B51|R61|G61|B61|R71|G71|B71|00|00|00|00|00|00|00|00 */
     const __m128i shuffleMask = _mm_setr_epi8(12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 0x80, 0x80, 0x80, 0x80);
     p128[0] = _mm_unpackhi_epi64(p128[0], xmm_p0); /* B21|R31|G31|B31|R41|G41|B41|R51|00|00|00|00|00|00|00|00 */
     p128[1] = _mm_unpacklo_epi64(p128[1], p128[0]); /* G51|B51|R61|G61|B61|R71|G71|B71|B21|R31|G31|B31|R41|G41|B41|R51 */
     p128[1] = _mm_shuffle_epi8(p128[1], shuffleMask); /* R41|G41|B41|R51|G51|B51|R61|G61|B61|R71|G71|B71|00|00|00|00 */
-    _mm_storeu_si32((__m128i *)(dstPtrR + 4), _mm_shuffle_epi8(p128[1], xmm_char_maskR)); /* shuffle to get R05-R08*/
-    _mm_storeu_si32((__m128i *)(dstPtrG + 4), _mm_shuffle_epi8(p128[1], xmm_char_maskG)); /* shuffle to get G05-G08*/
-    _mm_storeu_si32((__m128i *)(dstPtrB + 4), _mm_shuffle_epi8(p128[1], xmm_char_maskB)); /* shuffle to get B05-B08*/
+    rpp_storeu_si32((__m128i *)(dstPtrR + 4), _mm_shuffle_epi8(p128[1], xmm_char_maskR)); /* shuffle to get R05-R08*/
+    rpp_storeu_si32((__m128i *)(dstPtrG + 4), _mm_shuffle_epi8(p128[1], xmm_char_maskG)); /* shuffle to get G05-G08*/
+    rpp_storeu_si32((__m128i *)(dstPtrB + 4), _mm_shuffle_epi8(p128[1], xmm_char_maskB)); /* shuffle to get B05-B08*/
 }
 
 inline void rpp_store24_i8pkd3_to_i8pln3_avx(Rpp8s* dstPtrR, Rpp8s* dstPtrG, Rpp8s* dstPtrB, __m256i &p)
 {
     __m128i p128[2];
     p128[0] = _mm256_castsi256_si128(p); /* R01|G01|B01|R11|G11|B11|R21|G21|B21|R31|G31|B31|R41|G41|B41|R51 */
-    _mm_storeu_si32((__m128i *)(dstPtrR), _mm_shuffle_epi8(p128[0], xmm_char_maskR)); /* shuffle to get R01-R04*/
-    _mm_storeu_si32((__m128i *)(dstPtrG), _mm_shuffle_epi8(p128[0], xmm_char_maskG)); /* shuffle to get G01-G04*/
-    _mm_storeu_si32((__m128i *)(dstPtrB), _mm_shuffle_epi8(p128[0], xmm_char_maskB)); /* shuffle to get B01-B04*/
+    rpp_storeu_si32((__m128i *)(dstPtrR), _mm_shuffle_epi8(p128[0], xmm_char_maskR)); /* shuffle to get R01-R04*/
+    rpp_storeu_si32((__m128i *)(dstPtrG), _mm_shuffle_epi8(p128[0], xmm_char_maskG)); /* shuffle to get G01-G04*/
+    rpp_storeu_si32((__m128i *)(dstPtrB), _mm_shuffle_epi8(p128[0], xmm_char_maskB)); /* shuffle to get B01-B04*/
 
     p128[1] = _mm256_extractf128_si256(p, 1); /* G51|B51|R61|G61|B61|R71|G71|B71|00|00|00|00|00|00|00|00 */
     const __m128i shuffleMask = _mm_setr_epi8(12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 0x80, 0x80, 0x80, 0x80);
     p128[0] = _mm_unpackhi_epi64(p128[0], xmm_p0); /* B21|R31|G31|B31|R41|G41|B41|R51|00|00|00|00|00|00|00|00 */
     p128[1] = _mm_unpacklo_epi64(p128[1], p128[0]); /* G51|B51|R61|G61|B61|R71|G71|B71|B21|R31|G31|B31|R41|G41|B41|R51 */
     p128[1] = _mm_shuffle_epi8(p128[1], shuffleMask); /* R41|G41|B41|R51|G51|B51|R61|G61|B61|R71|G71|B71|00|00|00|00 */
-    _mm_storeu_si32((__m128i *)(dstPtrR + 4), _mm_shuffle_epi8(p128[1], xmm_char_maskR)); /* shuffle to get R05-R08*/
-    _mm_storeu_si32((__m128i *)(dstPtrG + 4), _mm_shuffle_epi8(p128[1], xmm_char_maskG)); /* shuffle to get G05-G08*/
-    _mm_storeu_si32((__m128i *)(dstPtrB + 4), _mm_shuffle_epi8(p128[1], xmm_char_maskB)); /* shuffle to get B05-B08*/
+    rpp_storeu_si32((__m128i *)(dstPtrR + 4), _mm_shuffle_epi8(p128[1], xmm_char_maskR)); /* shuffle to get R05-R08*/
+    rpp_storeu_si32((__m128i *)(dstPtrG + 4), _mm_shuffle_epi8(p128[1], xmm_char_maskG)); /* shuffle to get G05-G08*/
+    rpp_storeu_si32((__m128i *)(dstPtrB + 4), _mm_shuffle_epi8(p128[1], xmm_char_maskB)); /* shuffle to get B05-B08*/
 }
 
 inline void rpp_store4_u8_to_u8(Rpp8u* dstPtr, __m128i &p)
@@ -3452,13 +3468,13 @@ inline void rpp_store24_i8_to_i8_avx(Rpp8s* dstPtr, __m256i &p)
 inline void rpp_store8_u8pln1_to_u8pln1_avx(Rpp8u* dstPtr, __m256i &p)
 {
     __m128i pTemp = _mm256_castsi256_si128(p);
-    _mm_storeu_si64((__m128i *)(dstPtr), pTemp);
+    rpp_storeu_si64((__m128i *)(dstPtr), pTemp);
 }
 
 inline void rpp_store8_i8pln1_to_i8pln1(Rpp8s* dstPtr, __m256i &p)
 {
     __m128i pTemp = _mm256_castsi256_si128(p);
-    _mm_storeu_si64((__m128i *)(dstPtr), pTemp);
+    rpp_storeu_si64((__m128i *)(dstPtr), pTemp);
 }
 
 inline void rpp_store12_u8pln3_to_u8pkd3(Rpp8u* dstPtr, __m128i *p)
@@ -3487,9 +3503,9 @@ inline void rpp_store24_u8pln3_to_u8pkd3_avx(Rpp8u* dstPtr, __m256i *p)
 
 inline void rpp_store12_i8pkd3_to_i8pln3(Rpp8s* dstPtrR, Rpp8s* dstPtrG, Rpp8s* dstPtrB, __m128i &p)
 {
-    _mm_storeu_si32((__m128i *)(dstPtrR), _mm_shuffle_epi8(p, xmm_char_maskR)); /* Shuffle and extract the R pixels*/
-    _mm_storeu_si32((__m128i *)(dstPtrG), _mm_shuffle_epi8(p, xmm_char_maskG)); /* Shuffle and extract the G pixels*/
-    _mm_storeu_si32((__m128i *)(dstPtrB), _mm_shuffle_epi8(p, xmm_char_maskB)); /* Shuffle and extract the B pixels*/
+    rpp_storeu_si32((__m128i *)(dstPtrR), _mm_shuffle_epi8(p, xmm_char_maskR)); /* Shuffle and extract the R pixels*/
+    rpp_storeu_si32((__m128i *)(dstPtrG), _mm_shuffle_epi8(p, xmm_char_maskG)); /* Shuffle and extract the G pixels*/
+    rpp_storeu_si32((__m128i *)(dstPtrB), _mm_shuffle_epi8(p, xmm_char_maskB)); /* Shuffle and extract the B pixels*/
 }
 
 inline void rpp_store4_i8_to_i8(Rpp8s* dstPtr, __m128i &p)
