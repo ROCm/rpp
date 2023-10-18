@@ -1114,19 +1114,14 @@ RppStatus rppt_gaussian_noise_3d_gpu(RppPtr_t srcPtr,
                                      Rpp32f *meanTensor,
                                      Rpp32f *stdDevTensor,
                                      Rpp32u seed,
-                                     RpptRoiXyzwhd *roiGenericPtrSrc,
+                                     RpptROI3DPtr roiGenericPtrSrc,
+                                     RpptRoi3DType roiType,
                                      rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
-    if (srcGenericDescPtr->dataType != RpptDataType::F32) return RPP_ERROR_INVALID_SRC_DATATYPE;
-    if (dstGenericDescPtr->dataType != RpptDataType::F32) return RPP_ERROR_INVALID_DST_DATATYPE;
     if ((srcGenericDescPtr->layout != RpptLayout::NCDHW) && (srcGenericDescPtr->layout != RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
     if ((dstGenericDescPtr->layout != RpptLayout::NCDHW) && (dstGenericDescPtr->layout != RpptLayout::NDHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
     if (srcGenericDescPtr->layout != dstGenericDescPtr->layout) return RPP_ERROR_INVALID_ARGUMENTS;
-
-    // Rpp32u paramIndex = 0;
-    // copy_param_float(meanTensor, rpp::deref(rppHandle), paramIndex++);
-    // copy_param_float(stdDevTensor, rpp::deref(rppHandle), paramIndex++);
 
     RpptXorwowStateBoxMuller xorwowInitialState;
     xorwowInitialState.x[0] = 0x75BCD15 + seed;
@@ -1142,15 +1137,18 @@ RppStatus rppt_gaussian_noise_3d_gpu(RppPtr_t srcPtr,
     d_xorwowInitialStatePtr = (RpptXorwowStateBoxMuller *) rpp::deref(rppHandle).GetInitHandle()->mem.mgpu.maskArr.floatmem;
     hipMemcpy(d_xorwowInitialStatePtr, &xorwowInitialState, sizeof(RpptXorwowStateBoxMuller), hipMemcpyHostToDevice);
 
-    hip_exec_gaussian_noise_3d_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes),
-                                      srcGenericDescPtr,
-                                      (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
-                                      dstGenericDescPtr,
-                                      d_xorwowInitialStatePtr,
-                                      meanTensor,
-                                      stdDevTensor,
-                                      roiGenericPtrSrc,
-                                      rpp::deref(rppHandle));
+    if ((srcGenericDescPtr->dataType == RpptDataType::F32) && (dstGenericDescPtr->dataType == RpptDataType::F32))
+    {
+        hip_exec_gaussian_noise_3d_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes),
+                                          srcGenericDescPtr,
+                                          (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
+                                          dstGenericDescPtr,
+                                          d_xorwowInitialStatePtr,
+                                          meanTensor,
+                                          stdDevTensor,
+                                          roiGenericPtrSrc,
+                                          rpp::deref(rppHandle));
+    }
 
     return RPP_SUCCESS;
 #elif defined(OCL_COMPILE)

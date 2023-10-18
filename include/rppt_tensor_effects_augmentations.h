@@ -419,7 +419,27 @@ RppStatus rppt_ricap_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPt
 #endif // GPU_SUPPORT
 
 RppStatus rppt_gaussian_noise_3d_host(RppPtr_t srcPtr, RpptGenericDescPtr srcDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstDescPtr, Rpp32f *meanTensor, Rpp32f *stdDevTensor, Rpp32u seed, RpptRoiXyzwhd *roiGenericPtrSrc, rppHandle_t rppHandle);
-RppStatus rppt_gaussian_noise_3d_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstDescPtr, Rpp32f *meanTensor, Rpp32f *stdDevTensor, Rpp32u seed, RpptRoiXyzwhd *roiGenericPtrSrc, rppHandle_t rppHandle);
+#ifdef GPU_SUPPORT
+/*! \brief  Gaussian Noise augmentation GPU
+ * \details This function adds gaussian noise to a batch of 4D tensors.
+ *          Support added for f32 -> f32 dataype.
+ * \param [in] srcPtr source tensor memory
+ * \param[in] srcGenericDescPtr source tensor descriptor
+ * \param[out] dstPtr destination tensor memory
+ * \param[in] dstGenericDescPtr destination tensor descriptor
+ * \param [in] meanTensor mean values for each image, which are used to compute the generalized Box-Mueller transforms in a gaussian distribution (1D tensor of size batchSize with meanTensor[i] >= 0 for each image in batch)
+ * \param [in] stdDevTensor stdDev values for each image, which are used to compute the generalized Box-Mueller transforms in a gaussian distribution (1D tensor of size batchSize with stdDevTensor[i] >= 0 for each image in batch)
+ * \param [in] seed A user-defined seed value (single Rpp32u value)
+ * \param[in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
+ * \param[in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
+ * \param [in] rppHandle Hip-handle
+ * \return <tt> RppStatus enum</tt>.
+ * \returns RPP_SUCCESS <tt>\ref RppStatus</tt> on successful completion.
+ * Else return RPP_ERROR
+ * \ingroup group_tensor_arithmetic
+ */
+RppStatus rppt_gaussian_noise_3d_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstDescPtr, Rpp32f *meanTensor, Rpp32f *stdDevTensor, Rpp32u seed, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
 
 /*! @}
  */
