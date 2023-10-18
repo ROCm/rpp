@@ -1237,12 +1237,6 @@ RppStatus rppt_water_gpu(RppPtr_t srcPtr,
                               roiTensorPtrSrc,
                               roiType,
                               rpp::deref(rppHandle));
-                                         srcDescPtr,
-                                         static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                         dstDescPtr,
-                                         roiTensorPtrSrc,
-                                         roiType,
-                                         rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;
