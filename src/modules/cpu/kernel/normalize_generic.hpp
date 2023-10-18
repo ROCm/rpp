@@ -26,17 +26,16 @@ THE SOFTWARE.
 
 void compute_diff_square_sum(Rpp32f &output, Rpp32f *input, Rpp32s inputStride, Rpp32s numElements, Rpp32f mean)
 {
-    const Rpp32s stride = 1;
     if (numElements > 32)
     {
         Rpp32s currElements = numElements >> 1;
         Rpp32f tmp1 = 0, tmp2 = 0;
 
         // reduce first half and accumulate
-        compute_diff_square_sum(tmp1, input, stride, currElements, mean);
+        compute_diff_square_sum(tmp1, input, inputStride, currElements, mean);
 
         // reduce second half and accumulate
-        compute_diff_square_sum(tmp2, input + currElements * stride, stride, numElements - currElements, mean);
+        compute_diff_square_sum(tmp2, input + currElements * inputStride, inputStride, numElements - currElements, mean);
 
         tmp1 += tmp2;
         output += tmp1;
@@ -47,7 +46,7 @@ void compute_diff_square_sum(Rpp32f &output, Rpp32f *input, Rpp32s inputStride, 
         Rpp32f tmp = 0;
         for (Rpp32s i = 0; i < numElements; i++)
         {
-            Rpp32f curr = (input[i * stride] - mean);
+            Rpp32f curr = (input[i * inputStride] - mean);
             auto curnew = curr * curr;
             tmp += curnew;
         }
@@ -59,17 +58,16 @@ void compute_diff_square_sum(Rpp32f &output, Rpp32f *input, Rpp32s inputStride, 
 
 void compute_sum(Rpp32f &output, Rpp32f *input, Rpp32s inputStride, Rpp32s numElements)
 {
-    const Rpp32s stride = 1;
     if (numElements > 32)
     {
         Rpp32s currElements = numElements >> 1;
         Rpp32f tmp1 = 0, tmp2 = 0;
 
         // reduce first half and accumulate
-        compute_sum(tmp1, input, stride, currElements);
+        compute_sum(tmp1, input, inputStride, currElements);
 
         // reduce second half and accumulate
-        compute_sum(tmp2, input + currElements * stride, stride, numElements - currElements);
+        compute_sum(tmp2, input + currElements * inputStride, inputStride, numElements - currElements);
 
         tmp1 += tmp2;
         output += tmp1;
@@ -79,7 +77,7 @@ void compute_sum(Rpp32f &output, Rpp32f *input, Rpp32s inputStride, Rpp32s numEl
         // reduce to a temporary
         Rpp32f tmp = 0;
         for (Rpp32s i = 0; i < numElements; i++)
-            tmp += input[i * stride];
+            tmp += input[i * inputStride];
 
         // accumulate in target value
         output += tmp;
@@ -220,7 +218,7 @@ void normalize_3D_tensor_nontoggle(Rpp32f *srcPtr, RpptGenericDescPtr srcGeneric
     Rpp32f *srcPtrTemp = srcPtr;
     Rpp32f *dstPtrTemp = dstPtr;
     Rpp32s paramIdx = 0;
-    int size = sizeof(stdDevPtr) / sizeof(Rpp32f);
+    int size = sizeof(stdDevPtr[0]) / sizeof(Rpp32f);
     Rpp32f *multiplier = (Rpp32f *) calloc(size, sizeof(Rpp32f));
 
     for(int i = 0; i < size; i++)
@@ -261,7 +259,7 @@ void normalize_3D_tensor_axis3_toggle(Rpp32f *srcPtr, RpptGenericDescPtr srcGene
         dstPtrTemp[i] = dstPtrTemp[i-1] + dstGenericDescPtr->strides[1];
 
     Rpp32s paramIdx = 0;
-    int size = sizeof(stdDevPtr) / sizeof(Rpp32f);
+    int size = sizeof(stdDevPtr[0]) / sizeof(Rpp32f);
     Rpp32f *multiplier = (Rpp32f *) calloc(size, sizeof(Rpp32f));
 
     for(int i = 0; i < size; i++)
@@ -539,103 +537,115 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
         {
             Rpp32u srcReductionDims[3], srcStride[3];
             Rpp32u reductionDims;
-            if(axis_mask == 0) // Normalize axes 0
+            switch(axis_mask)
             {
-                reductionDims = length[1] * length[2];
-                paramStride[0] = 0;
-                paramStride[1] = paramStride[2] = 1;
-                srcReductionDims[0] = length[1];
-                srcReductionDims[1] = length[2];
-                srcReductionDims[2] = length[0];
-                srcStride[0] = srcGenericDescPtr->strides[0];
-                srcStride[1] = srcGenericDescPtr->strides[2];
-                srcStride[2] = srcGenericDescPtr->strides[1];
-            }
-            else if(axis_mask == 1) // Normalize axes 1
-            {
-                reductionDims = length[0] * length[2];
-                paramStride[1] = 0;
-                paramStride[0] = paramStride[2] = 1;
-                srcReductionDims[0] = length[0];
-                srcReductionDims[1] = length[2];
-                srcReductionDims[2] = length[1];
-                srcStride[0] = srcGenericDescPtr->strides[1];
-                srcStride[1] = srcGenericDescPtr->strides[2];
-                srcStride[2] = srcGenericDescPtr->strides[0];
-            }
-            else if(axis_mask == 2) // Normalize across 2
-            {
-                reductionDims = length[0] * length[1];
-                paramStride[2] = 0;
-                paramStride[0] = paramStride[1] = 1;
-                srcReductionDims[0] = length[0];
-                srcReductionDims[1] = length[1];
-                srcReductionDims[2] = length[2];
-                srcStride[0] = srcGenericDescPtr->strides[2];
-                srcStride[1] = srcGenericDescPtr->strides[1];
-                srcStride[2] = srcGenericDescPtr->strides[0];
-            }
-            else if(axis_mask == 3) // Normalize across 0,1
-            {
-                reductionDims = length[2];
-                paramStride[0] = paramStride[1] = 0;
-                paramStride[2] = 1;
-                // srcReductionDims[0] = length[0];
-                // srcReductionDims[1] = length[1];
-                // srcReductionDims[2] = length[2];
-                // srcStride[0] = srcGenericDescPtr->strides[2];
-                // srcStride[1] = srcGenericDescPtr->strides[1];
-                // srcStride[2] = srcGenericDescPtr->strides[0];
-            }
-            else if(axis_mask == 4) // Normalize across 0,2
-            {
-                reductionDims = length[1];
-                paramStride[0] = paramStride[2] = 0;
-                paramStride[1] = 1;
-                // srcReductionDims[0] = length[0];
-                // srcReductionDims[1] = length[1];
-                // srcReductionDims[2] = length[2];
-                // srcStride[0] = srcGenericDescPtr->strides[2];
-                // srcStride[1] = srcGenericDescPtr->strides[1];
-                // srcStride[2] = srcGenericDescPtr->strides[0];
-            }
-            else if(axis_mask == 5) // Normalize across 1,2
-            {
-                reductionDims = length[0];
-                paramStride[1] = paramStride[2] = 0;
-                paramStride[0] = 1;
-                // srcReductionDims[0] = length[0];
-                // srcReductionDims[1] = length[1];
-                // srcReductionDims[2] = length[2];
-                // srcStride[0] = srcGenericDescPtr->strides[2];
-                // srcStride[1] = srcGenericDescPtr->strides[1];
-                // srcStride[2] = srcGenericDescPtr->strides[0];
-            }
-            else if(axis_mask == 6) // Normalize across 0,1,2
-            {
-                reductionDims = 1;
-                paramStride[0] = paramStride[1] = paramStride[2] = 0;
-                // srcReductionDims[0] = length[0];
-                // srcReductionDims[1] = length[1];
-                // srcReductionDims[2] = length[2];
-                // srcStride[0] = srcGenericDescPtr->strides[2];
-                // srcStride[1] = srcGenericDescPtr->strides[1];
-                // srcStride[2] = srcGenericDescPtr->strides[0];
+                case 1: // Normalize axes 0
+                {
+                    reductionDims = length[1] * length[2];
+                    paramStride[0] = 0;
+                    paramStride[1] = paramStride[2] = 1;
+                    srcReductionDims[0] = length[1];
+                    srcReductionDims[1] = length[2];
+                    srcReductionDims[2] = length[0];
+                    srcStride[0] = srcGenericDescPtr->strides[0];
+                    srcStride[1] = srcGenericDescPtr->strides[2];
+                    srcStride[2] = srcGenericDescPtr->strides[1];
+                    break;
+                }
+                case 2: // Normalize axes 1
+                {
+                    reductionDims = length[0] * length[2];
+                    paramStride[1] = 0;
+                    paramStride[0] = paramStride[2] = 1;
+                    srcReductionDims[0] = length[0];
+                    srcReductionDims[1] = length[2];
+                    srcReductionDims[2] = length[1];
+                    srcStride[0] = srcGenericDescPtr->strides[1];
+                    srcStride[1] = srcGenericDescPtr->strides[2];
+                    srcStride[2] = srcGenericDescPtr->strides[0];
+                    break;
+                }
+                case 3: // Normalize axes 0,1
+                {
+                    reductionDims = length[2];
+                    paramStride[0] = paramStride[1] = 0;
+                    paramStride[2] = 1;
+                    srcReductionDims[0] = 1;
+                    srcReductionDims[1] = length[2];
+                    srcReductionDims[2] = length[0] * length[1];
+                    srcStride[0] = srcGenericDescPtr->strides[1];
+                    srcStride[1] = srcGenericDescPtr->strides[2];
+                    srcStride[2] = srcGenericDescPtr->strides[2];
+                    break;
+                }
+                case 4: // Normalize across 2
+                {
+                    reductionDims = length[0] * length[1];
+                    paramStride[2] = 0;
+                    paramStride[0] = paramStride[1] = 1;
+                    srcReductionDims[0] = length[0];
+                    srcReductionDims[1] = length[1];
+                    srcReductionDims[2] = length[2];
+                    srcStride[0] = srcGenericDescPtr->strides[2];
+                    srcStride[1] = srcGenericDescPtr->strides[1];
+                    srcStride[2] = srcGenericDescPtr->strides[0];
+                    break;
+                }
+                case 5: // Normalize across 0,2
+                {
+                    reductionDims = length[1];
+                    paramStride[0] = paramStride[2] = 0;
+                    paramStride[1] = 1;
+                    srcReductionDims[0] = 1;
+                    srcReductionDims[1] = length[1];
+                    srcReductionDims[2] = length[0] * length[2];
+                    srcStride[0] = srcGenericDescPtr->strides[0];
+                    srcStride[1] = srcGenericDescPtr->strides[1];
+                    srcStride[2] = srcGenericDescPtr->strides[2];
+                    break;
+                }
+                case 6: // Normalize across 1,2
+                {
+                    reductionDims = length[0];
+                    paramStride[1] = paramStride[2] = 0;
+                    paramStride[0] = 1;
+                    srcReductionDims[0] = 1;
+                    srcReductionDims[1] = length[0];
+                    srcReductionDims[2] = length[1] * length[2];
+                    srcStride[0] = srcGenericDescPtr->strides[2];
+                    srcStride[1] = srcGenericDescPtr->strides[0];
+                    srcStride[2] = srcGenericDescPtr->strides[2];
+                    break;
+                }
+                case 7: // Normalize across 0,1,2
+                {
+                    reductionDims = 1;
+                    paramStride[0] = paramStride[1] = paramStride[2] = 0;
+                    srcReductionDims[0] = 1;
+                    srcReductionDims[1] = 1;
+                    srcReductionDims[2] = length[0] * length[1] * length[2];
+                    srcStride[0] = srcStride[1] = srcStride[2] = srcGenericDescPtr->strides[2];
+                    break;
+                }
+                default:
+                {
+                    std::cout<<"Invalid Axis mask"<<std::endl;
+                }
             }
 
             Rpp32f *invStdDevTensor, *meanInternalTensor;
-            meanInternalTensor = (Rpp32f *)calloc(length[reductionDims], sizeof(Rpp32f));
-            invStdDevTensor = (Rpp32f *)calloc(length[reductionDims], sizeof(Rpp32f));
+            meanInternalTensor = (Rpp32f *)calloc(reductionDims, sizeof(Rpp32f));
+            invStdDevTensor = (Rpp32f *)calloc(reductionDims, sizeof(Rpp32f));
 
             if(computeMean)
             {
                 compute_3D_mean(srcPtrTemp, meanInternalTensor, srcReductionDims, srcStride);
-                memcpy(meanTensor, meanInternalTensor, sizeof(meanInternalTensor));
+                memcpy(&meanTensor, &meanInternalTensor, sizeof(meanInternalTensor));
             }
             if(computeStddev)
             {
                 compute_3D_inv_std_dev(srcPtrTemp, meanInternalTensor, invStdDevTensor, srcReductionDims, srcStride);
-                memcpy(stdDevTensor, invStdDevTensor, sizeof(invStdDevTensor));
+                memcpy(&stdDevTensor, &invStdDevTensor, sizeof(invStdDevTensor));
             }
 
             srcPtrChannel = srcPtrTemp + (begin[0] * layoutParams.bufferMultiplier);
@@ -658,12 +668,13 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
             Rpp32u paramIdx = 0;
             for(int i = 0; i < nDim; i++)
             {
-                paramStride[i] = (i == nDim - axis_mask)? 1 : 0;
+                paramStride[i] = ((axis_mask & (2 ^ i)) >= 1) ? 0 : 1;
                 srcPtrChannel += begin[i + 1] * srcGenericDescPtr->strides[i + 1];
             }
 
-            Rpp32f *multiplier = (Rpp32f *) calloc(length[nDim - axis_mask], sizeof(Rpp32f));
-            for(int i = 0; i < length[nDim - axis_mask]; i++)
+            int size = sizeof(stdDevTensor[0]) / sizeof(Rpp32f);
+            Rpp32f *multiplier = (Rpp32f *) calloc(size, sizeof(Rpp32f));
+            for(int i = 0; i < size; i++)
                 multiplier[i] = scale / stdDevTensor[i];
             normalize_ND_tensor_nontoggle(srcPtrChannel, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTensor, multiplier, shift, paramStride, length, nDim, 1, paramIdx);
             free(multiplier);
@@ -716,15 +727,15 @@ RppStatus normalize_generic_host_tensor(T1 *srcPtr,
         Rpp32u paramIdx = 0;
         for(int i = 0; i < nDim; i++)
         {
-            paramStride[i] = (i == nDim - axis_mask)? 1 : 0;
+            paramStride[i] = ((axis_mask & (2 ^ i)) >= 1) ? 0 : 1;
             srcPtrChannel += begin[i + 1] * srcGenericDescPtr->strides[i + 1];
         }
 
-        Rpp32f *multiplier = (Rpp32f *) calloc(length[nDim - axis_mask], sizeof(Rpp32f));
-        for(int i = 0; i < length[nDim - axis_mask]; i++)
+        int size = sizeof(stdDevTensor[0]) / sizeof(Rpp32f);
+        Rpp32f *multiplier = (Rpp32f *) calloc(size, sizeof(Rpp32f));
+        for(int i = 0; i < size; i++)
             multiplier[i] = scale / stdDevTensor[i];
         normalize_ND_tensor_nontoggle(srcPtrChannel, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTensor, multiplier, shift, paramStride, length, nDim, 1, paramIdx);
-
         free(multiplier);
         free(paramStride);
     }

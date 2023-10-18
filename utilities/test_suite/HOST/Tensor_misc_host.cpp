@@ -390,19 +390,21 @@ int main(int argc, char **argv)
         {
             case 1:
             {
-                int axis_mask = 1; // Channel normalize
+                int axis_mask = 3; // Channel normalize axes(0,1)
                 float scale = 1.0;
                 float shift = 0.0;
                 bool computeMean, computeStddev;
                 computeMean = computeStddev = 0;
                 Rpp32f *meanTensor;
                 Rpp32f *stdDevTensor;
-                Rpp32u size = (2 * nDim) - axis_mask; // Used to point to length of mean and stddev tensor given a axis_mask in roiTensor
+                Rpp32u size = 1; // length of input tensors differ based on axis_mask and nDim
+                for(int i = 0; i < nDim; i++)
+                    size *= ((axis_mask & (2 ^ i)) >= 1) ? 1 : roiTensor[nDim + i];
 
                 if(!(computeMean && computeStddev))
                 {
-                    meanTensor = (Rpp32f *)calloc(roiTensor[size], sizeof(Rpp32f));
-                    stdDevTensor = (Rpp32f *)calloc(roiTensor[size], sizeof(Rpp32f));
+                    meanTensor = (Rpp32f *)calloc(size, sizeof(Rpp32f));
+                    stdDevTensor = (Rpp32f *)calloc(size, sizeof(Rpp32f));
                     fill_mean_stddev_values(nDim, size, meanTensor, stdDevTensor, qaMode);
                 }
 
