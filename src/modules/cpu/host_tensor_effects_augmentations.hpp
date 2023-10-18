@@ -29,6 +29,7 @@ THE SOFTWARE.
 #include "kernel/noise_shot.hpp"
 #include "kernel/noise_gaussian.hpp"
 #include "kernel/non_linear_blend.hpp"
+#include "kernel/water.hpp"
 #include "kernel/ricap.hpp"
 
 #endif // HOST_TENSOR_EFFECTS_AUGMENTATIONS_HPP
