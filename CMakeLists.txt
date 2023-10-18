@@ -177,7 +177,7 @@ if("${BACKEND}" STREQUAL "HIP")
             set(HIP_PATH $ENV{HIP_PATH} CACHE PATH "Path to which HIP has been installed")
         endif()
     endif()
-    list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH} ${ROCM_PATH}/hip)
+    list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/hip ${ROCM_PATH})
     set(DEFAULT_AMDGPU_TARGETS "gfx803;gfx900;gfx906;gfx908;gfx90a;gfx940;gfx1030;gfx1100")
     if (BUILD_WITH_AMD_ADVANCE)
         set(DEFAULT_AMDGPU_TARGETS ${DEFAULT_AMDGPU_TARGETS} "gfx941")
@@ -297,22 +297,10 @@ add_subdirectory(addkernels)
 
 # Installation
 # install RPP libs -- {ROCM_PATH}/lib
-install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT dev)
-install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT asan)
-
+install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 # install RPP include files -- {ROCM_PATH}/include/rpp/
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp
-       COMPONENT dev
-       PATTERN "*.h.in" EXCLUDE)
-install(FILES ${PROJECT_BINARY_DIR}/include/rpp_backend.h
-       DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp
-       COMPONENT dev)
-
-# set license information
-set(CPACK_RESOURCE_FILE_LICENSE  "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
-install(FILES ${CPACK_RESOURCE_FILE_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR}-asan COMPONENT asan)
-install(FILES ${CPACK_RESOURCE_FILE_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR} COMPONENT dev)
-
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp PATTERN "*.h.in" EXCLUDE)
+install(FILES ${PROJECT_BINARY_DIR}/include/rpp_backend.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp)
 
 enable_testing()
 include(CTest)
@@ -391,43 +379,4 @@ else()
     endif()
 endif()
 
-set(CPACK_DEB_COMPONENT_INSTALL ON)
-set(CPACK_DEBIAN_DEV_PACKAGE_NAME "${PROJECT_NAME}-dev")
-set(CPACK_DEBIAN_DEV_PACKAGE_DEPENDS "${PROJECT_NAME}, rocm-core")
-# Debian package specific variable for ASAN
-set(CPACK_DEBIAN_ASAN_PACKAGE_NAME "${PROJECT_NAME}-asan" )
-set(CPACK_DEBIAN_ASAN_PACKAGE_DEPENDS "rocm-core-asan" )
-set(CPACK_RPM_COMPONENT_INSTALL ON)
-set(CPACK_RPM_DEV_PACKAGE_NAME "${PROJECT_NAME}-devel")
-set(CPACK_RPM_DEV_PACKAGE_REQUIRES "${PROJECT_NAME}, rocm-core")
-set(CPACK_RPM_DEV_PACKAGE_PROVIDES "${PROJECT_NAME}-dev")
-set(CPACK_RPM_DEV_PACKAGE_OBSOLETES "${PROJECT_NAME}-dev")
-# RPM package specific variable for ASAN
-set(CPACK_RPM_ASAN_PACKAGE_NAME "${PROJECT_NAME}-asan" )
-set(CPACK_RPM_ASAN_PACKAGE_REQUIRES "rocm-core-asan" )
-
-
-if(NOT ROCM_DEP_ROCMCORE)
-  string(REGEX REPLACE ",? ?rocm-core" "" CPACK_RPM_DEV_PACKAGE_REQUIRES ${CPACK_RPM_DEV_PACKAGE_REQUIRES})
-  string(REGEX REPLACE ",? ?rocm-core-asan" "" CPACK_RPM_ASAN_PACKAGE_REQUIRES ${CPACK_RPM_ASAN_PACKAGE_REQUIRES})
-  string(REGEX REPLACE ",? ?rocm-core" "" CPACK_DEBIAN_DEV_PACKAGE_DEPENDS ${CPACK_DEBIAN_DEV_PACKAGE_DEPENDS})
-  string(REGEX REPLACE ",? ?rocm-core-asan" "" CPACK_DEBIAN_ASAN_PACKAGE_DEPENDS ${CPACK_DEBIAN_ASAN_PACKAGE_DEPENDS})
-endif()
-
-if(ENABLE_ASAN_PACKAGING)
-  # ASAN Package requires asan component with only libraries and license file
-  set(CPACK_COMPONENTS_ALL asan)
-else()
-  set(CPACK_COMPONENTS_ALL dev)
-endif()
-
 include(CPack)
-
-cpack_add_component(dev
-  DISPLAY_NAME "Devel"
-  DESCRIPTION "Header files and documentation for RPP")
-
-cpack_add_component(asan
-  DISPLAY_NAME "ASAN"
-  DESCRIPTION "ASAN libraries for the RPP")
-
