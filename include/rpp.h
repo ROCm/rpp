@@ -23,9 +23,6 @@ THE SOFTWARE.
 #ifndef RPP_H
 #define RPP_H
 
-#define GPU_SUPPORT 1
-#define RPP_BACKEND_HIP 1
-
 /*! \file
  * \brief RPP top-level header with RPP handle API.
  * \defgroup group_rpp RPP handle API
