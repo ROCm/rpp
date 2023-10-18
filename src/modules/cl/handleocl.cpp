@@ -728,7 +728,8 @@ auto Handle::GetKernels(const std::string& algorithm, const std::string& network
 {
     auto kernels = this->GetKernelsImpl(algorithm, network_config);
     
-    std::vector<Kernel> transformedKernels;
+    std::vector<KernelInvoke> transformedKernels;
+
     transformedKernels.reserve(kernels.size());
 
     std::transform(kernels.begin(), kernels.end(), std::back_inserter(transformedKernels),
