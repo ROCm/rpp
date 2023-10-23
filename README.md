@@ -44,7 +44,7 @@ doxygen .Doxyfile
 
 * **OS**
   + Ubuntu `20.04`/`22.04`
-  + CentOS `7`/`8`
+  + CentOS `7`
   + RHEL `8`/`9`
   + SLES - `15-SP4`
 
@@ -65,7 +65,7 @@ doxygen .Doxyfile
     scl enable llvm-toolset-7 bash
     ```
 
-  + CentOS `8` and RHEL `8`/`9`
+  + RHEL `8`/`9`
     ```
     sudo yum install clang
     ```
@@ -210,7 +210,7 @@ Review all notable [changes](CHANGELOG.md#changelog) with the latest release
 
 * Linux distribution
   + Ubuntu - `20.04` / `22.04`
-  + CentOS - `7` / `8`
+  + CentOS - `7`
   + RedHat - `8` / `9`
   + SLES - `15-SP4`
 * ROCm: rocm-core - `5.7.0.50700-63`
