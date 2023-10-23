@@ -120,6 +120,8 @@ elseif( "${BACKEND}" STREQUAL "CPU")
     set(INCLUDE_LIST ${CMAKE_SOURCE_DIR}/src/include/common/)
 endif()
 message("-- ${White}AMD RPP ${PROJECT_NAME} -- Include Directories:${INCLUDE_LIST}${ColourReset}")
+add_compile_options("-Wno-unused-result")
+
 # Kernels and includes additions
 
 add_kernels("${RPP_KERNELS}")
