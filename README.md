@@ -80,17 +80,6 @@ doxygen .Doxyfile
 
 * CMake Version `3.5` and above
 
-* Boost Version `1.66` and above
-  ```
-  wget https://boostorg.jfrog.io/artifactory/main/release/1.72.0/source/boost_1_72_0.tar.gz
-  tar -xzvf boost_1_72_0.tar.gz
-  cd boost_1_72_0
-  ./bootstrap.sh --prefix=${RPP_DEPS_LOCATION} --with-python=python3
-  ./b2 install
-  ```
-  + **NOTE:** [Install from source](https://www.boost.org/doc/libs/1_72_0/more/getting_started/unix-variants.html#easy-build-and-install)
-  + **--prefix=${RPP_DEPS_LOCATION}:** `ENV RPP_DEPS_LOCATION=/usr/local/rpp-deps`
-
 * IEEE 754-based half-precision floating-point library - half.hpp
 
   ```

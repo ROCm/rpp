@@ -15,6 +15,7 @@
 
 #### Changed
 * Documentation
+* Replaced the boost functions with std c++ library to remove boost library dependency
 
 #### Fixed
 * OCL Backend
