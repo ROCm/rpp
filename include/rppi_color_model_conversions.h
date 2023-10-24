@@ -29,6 +29,18 @@ THE SOFTWARE.
 extern "C" {
 #endif
 
+/*!
+ * \file
+ * \brief RPPI Image Operations - Color Model Conversions - To be deprecated.
+ * \defgroup group_rppi_color_model_conversions RPPI Image Operations - Color Model Conversions
+ * \brief RPPI Image Operations - Color Model Conversions - To be deprecated.
+ * \deprecated
+ */
+
+/*! \addtogroup group_rppi_color_model_conversions
+ * @{
+ */
+
 /******************** hue ********************/
 
 // Adjusts hue of a batch of images
@@ -232,6 +244,9 @@ RppStatus rppi_look_up_table_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcS
 // *retval RPP_ERROR : Error
 
 RppStatus rppi_tensor_look_up_table_u8_host(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t lutPtr, Rpp32u tensorDimension, RppPtr_t tensorDimensionValues);
+
+/*! @}
+ */
 
 #ifdef __cplusplus
 }

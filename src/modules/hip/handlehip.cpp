@@ -24,20 +24,17 @@
  *
  *******************************************************************************/
 
-#include <boost/filesystem.hpp>
 #ifndef _WIN32
 #include <unistd.h>
 #endif
 
 #include <thread>
-#include "config.h"
 #include "rpp/device_name.hpp"
 #include "rpp/errors.hpp"
 #include "rpp/logger.hpp"
 #include "rpp/handle.hpp"
 #include "rpp/kernel_cache.hpp"
 #include "rpp/binary_cache.hpp"
-#include "rpp/handle_lock.hpp"
 
 namespace rpp {
 
@@ -484,7 +481,7 @@ const std::vector<Kernel>& Handle::GetKernelsImpl(const std::string& algorithm, 
 KernelInvoke Handle::Run(Kernel k)
 {
     this->impl->set_ctx();
-    if(this->impl->enable_profiling || RPP_GPU_SYNC)
+    if(this->impl->enable_profiling)
         return k.Invoke(this->GetStream(), this->impl->elapsed_time_handler());
     else
         return k.Invoke(this->GetStream());
@@ -593,14 +590,12 @@ std::size_t Handle::GetMaxComputeUnits()
 
 Allocator::ManageDataPtr Handle::Create(std::size_t sz)
 {
-    RPP_HANDLE_LOCK
     this->Finish();
     return this->impl->allocator(sz);
 }
 
 Allocator::ManageDataPtr& Handle::WriteTo(const void* data, Allocator::ManageDataPtr& ddata, std::size_t sz)
 {
-    RPP_HANDLE_LOCK
     this->Finish();
     auto status = hipMemcpy(ddata.get(), data, sz, hipMemcpyHostToDevice);
     if(status != hipSuccess)
@@ -610,7 +605,6 @@ Allocator::ManageDataPtr& Handle::WriteTo(const void* data, Allocator::ManageDat
 
 void Handle::ReadTo(void* data, const Allocator::ManageDataPtr& ddata, std::size_t sz)
 {
-    RPP_HANDLE_LOCK
     this->Finish();
     auto status = hipMemcpy(data, ddata.get(), sz, hipMemcpyDeviceToHost);
     if(status != hipSuccess)
@@ -619,7 +613,6 @@ void Handle::ReadTo(void* data, const Allocator::ManageDataPtr& ddata, std::size
 
 void Handle::Copy(ConstData_t src, Data_t dest, std::size_t size)
 {
-    RPP_HANDLE_LOCK
     this->impl->set_ctx();
     auto status = hipMemcpy(dest, src, size, hipMemcpyDeviceToDevice);
     if(status != hipSuccess)
