@@ -29,6 +29,18 @@ THE SOFTWARE.
 extern "C" {
 #endif
 
+/*!
+ * \file
+ * \brief RPPI Image Operations - Image Augmentations - To be deprecated.
+ * \defgroup group_rppi_image_augmentations RPPI Image Operations - Image Augmentations
+ * \brief RPPI Image Operations - Image Augmentations - To be deprecated.
+ * \deprecated
+ */
+
+/*! \addtogroup group_rppi_image_augmentations
+ * @{
+ */
+
 /******************** brightness ********************/
 
 // Adjusts brightness for a batch of images
@@ -403,6 +415,9 @@ RppStatus rppi_histogram_balance_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *
 RppStatus rppi_histogram_balance_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_histogram_balance_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
+
+/*! @}
+ */
 
 #ifdef __cplusplus
 }

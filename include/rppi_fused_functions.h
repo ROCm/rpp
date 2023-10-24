@@ -30,6 +30,18 @@ extern "C"
 {
 #endif // cpusplus
 
+/*!
+ * \file
+ * \brief RPPI Image Operations - Fused Functions - To be deprecated.
+ * \defgroup group_rppi_fused_functions RPPI Image Operations - Fused Functions
+ * \brief RPPI Image Operations - Fused Functions - To be deprecated.
+ * \deprecated
+ */
+
+/*! \addtogroup group_rppi_fused_functions
+ * @{
+ */
+
 /******************** color_twist ********************/
 
 // Performs a fused color twist augmentation for a batch of images
@@ -271,6 +283,9 @@ RppStatus rppi_resize_crop_mirror_i8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize 
 RppStatus rppi_resize_mirror_normalize_u8_pln1_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32f *batch_mean, Rpp32f *batch_stdDev, Rpp32u *mirrorFlag, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_resize_mirror_normalize_u8_pln3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32f *batch_mean, Rpp32f *batch_stdDev, Rpp32u *mirrorFlag,Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_resize_mirror_normalize_u8_pkd3_batchPD_host(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32f *batch_mean, Rpp32f *batch_stdDev, Rpp32u *mirrorFlag, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
+
+/*! @}
+ */
 
 #ifdef __cplusplus
 }
