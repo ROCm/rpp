@@ -350,8 +350,8 @@ typedef enum
  */
 typedef enum
 {
-    LTRB,
-    XYWH
+    LTRB,    // Left-Top-Right-Bottom
+    XYWH     // X-Y-Width-Height
 } RpptRoiType;
 
 /*! \brief RPPT Tensor subpixel layout type enum
@@ -359,8 +359,8 @@ typedef enum
  */
 typedef enum
 {
-    LTFRBB,
-    XYZWHD
+    LTFRBB,    // Left-Top-Front-Right-Bottom-Back
+    XYZWHD     // X-Y-Z-Width-Height-Depth
 } RpptRoi3DType;
 
 typedef enum
@@ -387,7 +387,7 @@ typedef enum
  */
 typedef struct
 {
-    RppiPoint lt, rb;
+    RppiPoint lt, rb;    // Left-Top point and Right-Bottom point
 
 } RpptRoiLtrb;
 
@@ -396,7 +396,7 @@ typedef struct
  */
 typedef struct
 {
-    RppiPoint3D ltf, rbb;
+    RppiPoint3D ltf, rbb; // Left-Top-Front point and Right-Bottom-Back point
 
 } RpptRoiLtfrbb;
 
@@ -425,8 +425,8 @@ typedef struct
  */
 typedef union
 {
-    RpptRoiLtrb ltrbROI;
-    RpptRoiXywh xywhROI;
+    RpptRoiLtrb ltrbROI;    // ROI defined as Left-Top-Right-Bottom
+    RpptRoiXywh xywhROI;    // ROI defined as X-Y-Width-Height
 
 } RpptROI, *RpptROIPtr;
 
@@ -435,8 +435,8 @@ typedef union
  */
 typedef union
 {
-    RpptRoiLtfrbb ltfrbbROI;
-    RpptRoiXyzwhd xyzwhdROI;
+    RpptRoiLtfrbb ltfrbbROI;    // ROI defined as Left-Top-Front-Right-Bottom-Back
+    RpptRoiXyzwhd xyzwhdROI;    // ROI defined as X-Y-Z-Width-Height-Depth
 
 } RpptROI3D, *RpptROI3DPtr;
 
