@@ -77,7 +77,10 @@ def runPackageCommand(platform, project) {
                 sudo make package
                 mkdir -p package
                 mv *.${packageType} package/
-                ${packageInfo} package/*.${packageType}
+                for pkg in package/*.${packageType}
+                do
+                  ${packageInfo} ${pkg}
+                done
                 """
 
     platform.runCommand(this, command)
