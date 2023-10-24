@@ -21,7 +21,7 @@ __device__ void fmaf_scalar_hip_compute(d_float24 *val_f24, float2 *fmaddParams_
     fmaf_scalar_hip_compute(&(val_f24->f8[2]), fmaddParams_f2);
 }
 
-__global__ void fmadd_scalar_ncdhw_hip_tensor(float *srcPtr,
+__global__ void fused_multiply_add_scalar_ncdhw_hip_tensor(float *srcPtr,
                                               uint3 srcStridesCDH,
                                               float *dstPtr,
                                               uint3 dstStridesCDH,
@@ -52,7 +52,7 @@ __global__ void fmadd_scalar_ncdhw_hip_tensor(float *srcPtr,
     }
 }
 
-__global__ void fmadd_scalar_ndhwc_hip_tensor(float *srcPtr,
+__global__ void fused_multiply_add_scalar_ndhwc_hip_tensor(float *srcPtr,
                                               uint2 srcStridesDH,
                                               float *dstPtr,
                                               uint2 dstStridesDH,
@@ -77,7 +77,7 @@ __global__ void fmadd_scalar_ndhwc_hip_tensor(float *srcPtr,
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &val_f24);
 }
 
-RppStatus hip_exec_fmadd_scalar_tensor(Rpp32f *srcPtr,
+RppStatus hip_exec_fused_multiply_add_scalar_tensor(Rpp32f *srcPtr,
                                        RpptGenericDescPtr srcGenericDescPtr,
                                        Rpp32f *dstPtr,
                                        RpptGenericDescPtr dstGenericDescPtr,
@@ -94,7 +94,7 @@ RppStatus hip_exec_fmadd_scalar_tensor(Rpp32f *srcPtr,
 
         for(int batchCount = 0; batchCount < dstGenericDescPtr->dims[0]; batchCount++)
         {
-            hipLaunchKernelGGL(fmadd_scalar_ncdhw_hip_tensor,
+            hipLaunchKernelGGL(fused_multiply_add_scalar_ncdhw_hip_tensor,
                                dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
@@ -116,7 +116,7 @@ RppStatus hip_exec_fmadd_scalar_tensor(Rpp32f *srcPtr,
 
         for(int batchCount = 0; batchCount < dstGenericDescPtr->dims[0]; batchCount++)
         {
-            hipLaunchKernelGGL(fmadd_scalar_ndhwc_hip_tensor,
+            hipLaunchKernelGGL(fused_multiply_add_scalar_ndhwc_hip_tensor,
                                dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,

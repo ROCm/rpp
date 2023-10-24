@@ -30,9 +30,9 @@ THE SOFTWARE.
     #include "hip/hip_tensor_arithmetic_operations.hpp"
 #endif // HIP_COMPILE
 
-/******************** fmadd_scalar ********************/
+/******************** fused_multiply_add_scalar ********************/
 
-RppStatus rppt_fmadd_scalar_host(RppPtr_t srcPtr,
+RppStatus rppt_fused_multiply_add_scalar_host(RppPtr_t srcPtr,
                                  RpptGenericDescPtr srcGenericDescPtr,
                                  RppPtr_t dstPtr,
                                  RpptGenericDescPtr dstGenericDescPtr,
@@ -56,7 +56,7 @@ RppStatus rppt_fmadd_scalar_host(RppPtr_t srcPtr,
 
     if ((srcGenericDescPtr->dataType == RpptDataType::F32) && (dstGenericDescPtr->dataType == RpptDataType::F32))
     {
-        fmadd_scalar_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes),
+        fused_multiply_add_scalar_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes),
                                          srcGenericDescPtr,
                                          (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
                                          dstGenericDescPtr,
@@ -77,9 +77,9 @@ RppStatus rppt_fmadd_scalar_host(RppPtr_t srcPtr,
 
 #ifdef GPU_SUPPORT
 
-/******************** fmadd_scalar ********************/
+/******************** fused_multiply_add_scalar ********************/
 
-RppStatus rppt_fmadd_scalar_gpu(RppPtr_t srcPtr,
+RppStatus rppt_fused_multiply_add_scalar_gpu(RppPtr_t srcPtr,
                                 RpptGenericDescPtr srcGenericDescPtr,
                                 RppPtr_t dstPtr,
                                 RpptGenericDescPtr dstGenericDescPtr,
@@ -96,7 +96,7 @@ RppStatus rppt_fmadd_scalar_gpu(RppPtr_t srcPtr,
     if ((dstGenericDescPtr->layout != RpptLayout::NCDHW) && (dstGenericDescPtr->layout != RpptLayout::NDHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
     if (srcGenericDescPtr->layout != dstGenericDescPtr->layout) return RPP_ERROR_INVALID_ARGUMENTS;
 
-    hip_exec_fmadd_scalar_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes),
+    hip_exec_fused_multiply_add_scalar_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes),
                                  srcGenericDescPtr,
                                  (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
                                  dstGenericDescPtr,
