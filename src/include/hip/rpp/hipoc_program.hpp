@@ -27,9 +27,8 @@
 #define GUARD_RPP_HIPOC_PROGRAM_HPP
 
 #include <string>
-#include <boost/filesystem/path.hpp>
 #include <hip/hip_runtime_api.h>
-
+#include "filesystem.h"
 #include "rpp/manage_ptr.hpp"
 
 namespace rpp {
@@ -44,10 +43,10 @@ struct HIPOCProgram
                  bool is_kernel_str,
                  std::string dev_name,
                  const std::string& kernel_src);
-    HIPOCProgram(const std::string& program_name, const boost::filesystem::path& hsaco);
+    HIPOCProgram(const std::string& program_name, const fs::path& hsaco);
     std::shared_ptr<const HIPOCProgramImpl> impl;
     hipModule_t GetModule() const;
-    boost::filesystem::path GetBinary() const;
+    fs::path GetBinary() const;
 };
 } // namespace rpp
 
