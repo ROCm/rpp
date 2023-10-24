@@ -146,7 +146,7 @@ ClProgramPtr LoadProgram(cl_context ctx, cl_device_id device, const std::string&
     {
         std::string device_name = rpp::GetDeviceInfo<CL_DEVICE_NAME>(device);
         ParseDevName(device_name);
-        boost::optional<rpp::TmpDir> dir(program_name);
+        std::optional<rpp::TmpDir> dir(program_name);
 #if RPP_BUILD_DEV
         params += " -Werror";
 #ifdef __linux__

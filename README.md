@@ -50,7 +50,7 @@ doxygen .Doxyfile
 
 * **OS**
   + Ubuntu `20.04`/`22.04`
-  + CentOS `7`/`8`
+  + CentOS `7`
   + RHEL `8`/`9`
   + SLES - `15-SP4`
 
@@ -71,7 +71,7 @@ doxygen .Doxyfile
     scl enable llvm-toolset-7 bash
     ```
 
-  + CentOS `8` and RHEL `8`/`9`
+  + RHEL `8`/`9`
     ```
     sudo yum install clang
     ```
@@ -85,16 +85,6 @@ doxygen .Doxyfile
     **NOTE:** Use `ROCm LLVM Clang`
 
 * CMake Version `3.5` and above
-
-* Boost Version `1.66` and above
-  ```
-  wget https://boostorg.jfrog.io/artifactory/main/release/1.72.0/source/boost_1_72_0.tar.gz
-  tar -xzvf boost_1_72_0.tar.gz
-  cd boost_1_72_0
-  ./bootstrap.sh
-  ./b2 install
-  ```
-  + **NOTE:** [Install from source](https://www.boost.org/doc/libs/1_72_0/more/getting_started/unix-variants.html#easy-build-and-install)
 
 * IEEE 754-based half-precision floating-point library - half.hpp
 
@@ -241,9 +231,8 @@ Review all notable [changes](CHANGELOG.md#changelog) with the latest release
 
 * Linux distribution
   + Ubuntu - `20.04` / `22.04`
-  + CentOS - `7` / `8`
+  + CentOS - `7`
   + RedHat - `8` / `9`
   + SLES - `15-SP4`
 * ROCm: rocm-core - `5.7.0.50700-63`
-* Protobuf - [V3.12.4](https://github.com/protocolbuffers/protobuf/releases/tag/v3.12.4)
 * OpenCV - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)

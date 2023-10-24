@@ -29,6 +29,18 @@ THE SOFTWARE.
 extern "C" {
 #endif
 
+/*!
+ * \file
+ * \brief RPPI Image Operations - Arithmetic Operations - To be deprecated.
+ * \defgroup group_rppi_arithmetic_operations RPPI Image Operations - Arithmetic Operations
+ * \brief RPPI Image Operations - Arithmetic Operations - To be deprecated.
+ * \deprecated
+ */
+
+/*! \addtogroup group_rppi_arithmetic_operations
+ * @{
+ */
+
 /******************** add ********************/
 
 // Adds corresponding pixels of two batches of images
@@ -298,6 +310,9 @@ RppStatus rppi_tensor_multiply_u8_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPt
 #ifdef GPU_SUPPORT
 RppStatus rppi_tensor_multiply_u8_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppPtr_t dstPtr, Rpp32u tensorDimension, RppPtr_t tensorDimensionValues, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
+
+/*! @}
+ */
 
 #ifdef __cplusplus
 }
