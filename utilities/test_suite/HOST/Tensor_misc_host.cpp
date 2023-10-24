@@ -390,24 +390,24 @@ int main(int argc, char **argv)
         {
             case 1:
             {
-                int axis_mask = 3; // Channel normalize axes(0,1)
+                int axis_mask = 3; // 3D HWC Channel normalize axes(0,1)
                 float scale = 1.0;
                 float shift = 0.0;
                 bool computeMean, computeStddev;
-                computeMean = computeStddev = 0;
+                computeMean = computeStddev = 1;
                 Rpp32f *meanTensor;
                 Rpp32f *stdDevTensor;
-                Rpp32u size = 1; // length of input tensors differ based on axis_mask and nDim
-                for(int i = 0; i < nDim; i++)
-                    size *= ((axis_mask & (2 ^ i)) >= 1) ? 1 : roiTensor[nDim + i];
 
                 if(!(computeMean && computeStddev))
                 {
+                    Rpp32u size = 1; // length of input tensors differ based on axis_mask and nDim
+                    for(int i = 0; i < nDim; i++)
+                        size *= ((axis_mask & (int)(pow(2,i))) >= 1) ? 1 : roiTensor[nDim + i];
+
                     meanTensor = (Rpp32f *)calloc(size, sizeof(Rpp32f));
                     stdDevTensor = (Rpp32f *)calloc(size, sizeof(Rpp32f));
                     fill_mean_stddev_values(nDim, size, meanTensor, stdDevTensor, qaMode);
                 }
-
                 startWallTime = omp_get_wtime();
                 rppt_normalize_generic_host(inputF32, srcDescriptorPtrND, outputF32, dstDescriptorPtrND, axis_mask, meanTensor, stdDevTensor, computeMean, computeStddev, scale, shift, roiTensor, handle);
 

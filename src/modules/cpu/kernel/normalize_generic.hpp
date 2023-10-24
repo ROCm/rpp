@@ -664,20 +664,70 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
         }
         else
         {
+            Rpp32u axis[nDim];
             srcPtrChannel = srcPtrTemp + (begin[0] * length[nDim]);
             Rpp32u paramIdx = 0;
+            int skipped = 0;
+            int prev = -2;
+            int size = 1;
+            int k = 0, newAxis[nDim], newDims[nDim];
+            memset(newAxis, 0, sizeof(newAxis));
+            memset(newDims, 0, sizeof(newDims));
+
             for(int i = 0; i < nDim; i++)
             {
-                paramStride[i] = ((axis_mask & (2 ^ i)) >= 1) ? 0 : 1;
+                paramStride[i] = ((axis_mask & (int)(pow(2,i))) >= 1) ? 0 : 1;
+                size *= length[i];
+                axis[i] = !paramStride[i];
                 srcPtrChannel += begin[i + 1] * srcGenericDescPtr->strides[i + 1];
             }
+            for(int i = 0; i < nDim; i++)
+            {
+                if(axis[i])
+                {
+                    int temp = i - skipped;
+                    if(temp != prev + 1)
+                    {
+                        newAxis[k] = 1;
+                        newDims[k] = length[i];
+                        prev = i;
+                        k++;
+                    }
+                    else if(prev >= 0)
+                    {
+                        newDims[prev] *= length[i];
+                        skipped++;
+                    }
+                }
+                else
+                {
+                    newDims[k] = length[i];
+                    k++;
+                }
+            }
+            nDim -= skipped;
 
-            int size = sizeof(stdDevTensor[0]) / sizeof(Rpp32f);
+            /*if(computeMean)
+            {
+                Rpp32f *meanInternalTensor;
+                meanInternalTensor = (Rpp32f *)calloc(size, sizeof(Rpp32f));
+                compute_3D_mean(srcPtrTemp, meanInternalTensor, srcReductionDims, srcStride);
+                memcpy(&meanTensor, &meanInternalTensor, sizeof(meanInternalTensor));
+            }
+            if(computeStddev)
+            {
+                Rpp32f *invStdDevTensor;
+                invStdDevTensor = (Rpp32f *)calloc(size, sizeof(Rpp32f));
+                compute_3D_inv_std_dev(srcPtrTemp, meanInternalTensor, invStdDevTensor, srcReductionDims, srcStride);
+                memcpy(&stdDevTensor, &invStdDevTensor, sizeof(invStdDevTensor));
+            }*/
+
+            /*int size = sizeof(stdDevTensor[0]) / sizeof(Rpp32f);
             Rpp32f *multiplier = (Rpp32f *) calloc(size, sizeof(Rpp32f));
             for(int i = 0; i < size; i++)
                 multiplier[i] = scale / stdDevTensor[i];
             normalize_ND_tensor_nontoggle(srcPtrChannel, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTensor, multiplier, shift, paramStride, length, nDim, 1, paramIdx);
-            free(multiplier);
+            free(multiplier);*/
         }
     }
 
@@ -727,7 +777,7 @@ RppStatus normalize_generic_host_tensor(T1 *srcPtr,
         Rpp32u paramIdx = 0;
         for(int i = 0; i < nDim; i++)
         {
-            paramStride[i] = ((axis_mask & (2 ^ i)) >= 1) ? 0 : 1;
+            paramStride[i] = ((axis_mask & (int)(pow(2,i))) >= 1) ? 0 : 1;
             srcPtrChannel += begin[i + 1] * srcGenericDescPtr->strides[i + 1];
         }
 
