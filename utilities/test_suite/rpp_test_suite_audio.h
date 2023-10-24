@@ -21,7 +21,6 @@ THE SOFTWARE.
 */
 
 #include "rpp_test_suite_common.h"
-#include <fstream>
 #include <iomanip>
 #include <vector>
 #include <half/half.hpp>
