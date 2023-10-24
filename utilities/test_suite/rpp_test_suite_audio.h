@@ -26,7 +26,6 @@ THE SOFTWARE.
 #include <vector>
 #include <half/half.hpp>
 
-namespace fs = boost::filesystem;
 using half_float::half;
 using namespace std;
 typedef half Rpp16f;

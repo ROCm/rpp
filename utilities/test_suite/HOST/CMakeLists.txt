@@ -68,7 +68,7 @@ if (OpenCV_FOUND)
     add_executable(Tensor_host Tensor_host.cpp)
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++14")
-    target_link_libraries(Tensor_host ${OpenCV_LIBS} -lturbojpeg -lrpp pthread ${LINK_LIBRARY_LIST})
+    target_link_libraries(Tensor_host ${OpenCV_LIBS} -lturbojpeg -lrpp -lstdc++fs pthread ${LINK_LIBRARY_LIST})
 
 else()
     message("-- ${Yellow}Error: OpenCV must be installed to install ${PROJECT_NAME} successfully!${ColourReset}")
@@ -90,5 +90,5 @@ else()
 
     add_executable(Tensor_host_audio Tensor_host_audio.cpp)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++14")
-    target_link_libraries(Tensor_host_audio ${libsnd_LIBS} -lsndfile -lrpp pthread ${LINK_LIBRARY_LIST} ${OpenCV_LIBS})
+    target_link_libraries(Tensor_host_audio ${libsnd_LIBS} -lsndfile -lrpp -lstdc++fs pthread ${LINK_LIBRARY_LIST})
 endif()
