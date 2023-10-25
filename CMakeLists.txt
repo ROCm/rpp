@@ -20,12 +20,12 @@
 
 cmake_minimum_required(VERSION 3.5)
 set(CMAKE_CXX_COMPILER clang++)
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 
 project(rpp CXX)
 
 # RPP Version
-set(VERSION "1.3.0")
+set(VERSION "1.5.0")
 
 set(CMAKE_INSTALL_LIBDIR "lib" CACHE STRING "Library install directory")
 include(GNUInstallDirs)
@@ -39,7 +39,13 @@ find_program(RPMBUILD_EXE rpmbuild)
 find_program(DPKG_EXE dpkg)
 
 # ROCm Path
-set(ROCM_PATH /opt/rocm CACHE PATH "RPP default ROCm installation path")
+if(DEFINED ENV{ROCM_PATH})
+  set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
+elseif(ROCM_PATH)
+  message("-- INFO:ROCM_PATH Set -- ${ROCM_PATH}")
+else()
+  set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
+endif()
 # Avoid setting the default path to /usr/local
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   set(CMAKE_INSTALL_PREFIX ${ROCM_PATH} CACHE PATH "RPP default ROCm installation path" FORCE)
@@ -120,14 +126,6 @@ if("${CMAKE_CURRENT_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
 endif()
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
-# BOOST
-option(Boost_USE_STATIC_LIBS "Use boost static libraries" OFF)
-set(BOOST_COMPONENTS filesystem system)
-add_definitions(-DBOOST_ALL_NO_LIB=1)
-find_package(Boost COMPONENTS ${BOOST_COMPONENTS} REQUIRED)
-include_directories(${Boost_INCLUDE_DIRS})
-set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY})
-
 # OpenMP
 find_package(OpenMP REQUIRED)
 if(APPLE)
@@ -147,10 +145,12 @@ if(APPLE)
         set(OpenMP_libgomp_LIBRARY ${OpenMP_CXX_LIB_NAMES})
         set(OpenMP_libiomp5_LIBRARY ${OpenMP_CXX_LIB_NAMES})
     endif()
+    include_directories(/usr/local/include)
 else()
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()
+include_directories(${OpenMP_INCLUDE_DIRS})
 set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} OpenMP::OpenMP_CXX)
 
 # Threads
@@ -162,8 +162,8 @@ set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} Threads::Threads)
 # -fPIC -- Generate position-independent code if possible.
 # -mavx2 -- Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX and AVX2 built-in functions and code generation.
 # -mfma -- Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX and FMA built-in functions and code generation.
-# -std=gnu++14 -- Conform to the ISO 2014 C++ standard with GNU extensions.
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -mavx2 -mf16c -mfma -std=gnu++14")
+# -std=gnu++17 -- Conform to the ISO 2017 C++ standard with GNU extensions.
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -mavx2 -mf16c -mfma -std=gnu++17")
 
 # Backend specific settings
 if("${BACKEND}" STREQUAL "HIP")
@@ -262,7 +262,6 @@ else()
     message("-- ${Red}${PROJECT_NAME} set to build without ENABLE_SIMD_INTRINSICS${ColourReset}")
 endif()
 
-set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} stdc++)
 message("-- ${White}${PROJECT_NAME} -- Using Compiler - Path:" ${CMAKE_CXX_COMPILER} "\tVersion:" ${CMAKE_CXX_COMPILER_VERSION} "\tCompiler:" ${CMAKE_CXX_COMPILER_ID}${ColourReset})
 message("-- ${White}${PROJECT_NAME} -- CMAKE_CXX_FLAGS:${CMAKE_CXX_FLAGS}${ColourReset}")
 message("-- ${White}${PROJECT_NAME} -- Link Libraries: ${LINK_LIBRARY_LIST}${ColourReset}")

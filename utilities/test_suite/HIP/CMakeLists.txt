@@ -42,11 +42,6 @@ find_package(hip QUIET)
 find_package(OpenCV QUIET)
 find_package(TurboJpeg QUIET)
 
-# BOOST
-set(BOOST_COMPONENTS filesystem system)
-find_package(Boost COMPONENTS ${BOOST_COMPONENTS} REQUIRED)
-include_directories(${Boost_INCLUDE_DIRS})
-set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY})
 # OpenMP
 find_package(OpenMP REQUIRED)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
@@ -72,7 +67,7 @@ if (hip_FOUND AND OpenCV_FOUND)
 
     add_executable(Tensor_hip Tensor_hip.cpp)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGPU_SUPPORT=1 -DRPP_BACKEND_HIP=1 -std=gnu++14")
-    target_link_libraries(Tensor_hip ${OpenCV_LIBS} -lturbojpeg -lrpp ${hip_LIBRARIES} pthread ${LINK_LIBRARY_LIST} hip::device)
+    target_link_libraries(Tensor_hip ${OpenCV_LIBS} -lturbojpeg -lrpp -lstdc++fs ${hip_LIBRARIES} pthread ${LINK_LIBRARY_LIST} hip::device)
 else()
     message("-- ${Yellow}Error: OpenCV and hip must be installed to install ${PROJECT_NAME} successfully!${ColourReset}")
 endif()

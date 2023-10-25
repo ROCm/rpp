@@ -51,7 +51,7 @@ RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
 
         // mmsBuffer length is equal to input audio length and can vary dynamically for each input in a batch
         // preallocating a static buffer for entire batchsize will be too big, so allocate mmsBuffer for each sample dynamically
-        Rpp32f *mmsBuffer = static_cast<Rpp32f *>(calloc(srcLength, sizeof(Rpp32f)));
+        Rpp32f *mmsBuffer = new Rpp32f[srcLength];
         bool referenceMax = (referencePower == 0.0f);
 
         // set reset interval based on the user input
@@ -121,7 +121,7 @@ RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
 
         detectedIndexTensor[batchCount] = detectBegin;
         detectionLengthTensor[batchCount] = detectEnd;
-        free(mmsBuffer);
+        delete[] mmsBuffer;
     }
     return RPP_SUCCESS;
 }
