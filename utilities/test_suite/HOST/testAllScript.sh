@@ -245,7 +245,7 @@ if [ "$TEST_TYPE" -eq 0 ]; then
                 printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n"
                 for ((outputFormatToggle=0;outputFormatToggle<2;outputFormatToggle++))
                 do
-                    if [[ $case -eq 82 ]] && [[ "$QA_MODE" -eq 1 ]]; then
+                    if [[ $case -eq 82 ]]; then
                         SRC_FOLDER_1_TEMP="$RICAP_SRC_FOLDER"
                         SRC_FOLDER_2_TEMP="$RICAP_SRC_FOLDER"
                     else
