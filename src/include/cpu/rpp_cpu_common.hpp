@@ -3476,7 +3476,7 @@ inline Rpp32f compute_gaussian_noise_1_host(Rpp32f pixVal, RpptXorwowStateBoxMul
     rngVal = rngVal * stdDev + mean;
     pixSqrt = sqrt(pixVal);
 
-    return RPPPIXELCHECKF32(pixSqrt * rngVal + pixVal);
+    return pixSqrt * rngVal + pixVal;
 }
 
 inline void compute_offset_i8_1c_avx(__m256 &p)

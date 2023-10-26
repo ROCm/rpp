@@ -1839,9 +1839,9 @@ RppStatus gaussian_noise_3d_f32_f32_host_tensor(Rpp32f *srcPtr,
         {
             srcPtrChannel = srcPtrImage + (roi.xyzwhdROI.xyz.z * srcGenericDescPtr->strides[2]) + (roi.xyzwhdROI.xyz.y * srcGenericDescPtr->strides[3]) + (roi.xyzwhdROI.xyz.x * layoutParams.bufferMultiplier);
 #if __AVX2__
-            alignedLength = bufferLength & ~7;
+            alignedLength = bufferLength & ~15;
 #else
-            alignedLength = bufferLength & ~3;
+            alignedLength = bufferLength & ~7;
 #endif
             Rpp32u vectorIncrementPerChannelDouble = 2 * vectorIncrementPerChannel;
             Rpp32f *srcPtrDepth, *dstPtrDepth;
