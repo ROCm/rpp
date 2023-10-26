@@ -22,17 +22,11 @@ cmake_minimum_required(VERSION 3.5)
 set(CMAKE_CXX_COMPILER clang++)
 set(CMAKE_CXX_STANDARD 17)
 
-project(rpp CXX)
-
-project(rpp VERSION 1.4.0)
-
-if(${ROCM_PATCH_VERSION})
-   set(PROJECT_VERSION_PATCH ${ROCM_PATCH_VERSION})
-   set(PROJECT_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
-endif()
-
 # RPP Version
 set(VERSION "1.4.0")
+
+# Set Project Version and Language
+project(rpp VERSION ${VERSION} LANGUAGES CXX)
 
 set(CMAKE_INSTALL_LIBDIR "lib" CACHE STRING "Library install directory")
 include(GNUInstallDirs)
