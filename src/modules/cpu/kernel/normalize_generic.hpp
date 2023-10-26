@@ -24,6 +24,20 @@ THE SOFTWARE.
 #include "rpp_cpu_simd.hpp"
 #include "rpp_cpu_common.hpp"
 
+void compute_strides(Rpp32u *strides, Rpp32u *shape, Rpp32u nDim)
+{
+    if (nDim > 0)
+    {
+        uint64_t v = 1;
+        for (int i = nDim - 1; i > 0; i--)
+        {
+            strides[i] = v;
+            v *= shape[i];
+        }
+        strides[0] = v;
+    }
+}
+
 void compute_diff_square_sum(Rpp32f &output, Rpp32f *input, Rpp32s inputStride, Rpp32s numElements, Rpp32f mean)
 {
     if (numElements > 32)
@@ -210,6 +224,61 @@ void compute_3D_inv_std_dev(Rpp32f *srcPtr, Rpp32f *meanPtr, Rpp32f *stdDevPtr, 
         srcPtrTemp += stride[2];
     }
     rpp_rsqrt_avx(stdDevPtr, (Rpp32s)(dims[0] * dims[1]), 0, normFactor, 1);
+}
+
+void compute_ND_mean(Rpp32f *srcPtr, Rpp32f *meanPtr, Rpp32u *dims, Rpp32u *stride, Rpp32u *axis, Rpp32u nDim, Rpp32u level, Rpp32u index, Rpp32u size, Rpp32u norm, Rpp32u numAxisNorm)
+{
+    if(level == nDim-1 && axis[nDim-1]) // Calls computeSum when last dimension is to be normalized
+    {
+        std::cout<<"level == nDim-1 and axis set at "<< level <<std::endl;
+        std::cout<<"src: "<<srcPtr[0]<<"stride: "<<stride[level]<<"dims: "<<dims[level]<<std::endl;
+        compute_sum(meanPtr[index], srcPtr, stride[level], dims[level]);
+        std::cout<<"meanPtr at"<<index <<": "<< meanPtr[index];
+    }
+    else if(level == nDim) // Calls computeSum when only 1st axis need to be normalized
+    {
+        std::cout<<"level == nDim and axis not set at "<< level <<std::endl;
+        std::cout<<"src: "<<srcPtr[0]<<"stride: "<<stride[norm]<<"dims: "<<dims[norm]<<std::endl;
+        compute_sum(meanPtr[index], srcPtr, stride[norm], dims[norm]);
+        std::cout<<"meanPtr at"<<index <<": "<< meanPtr[index];
+    }
+    else if (!axis[level]) // By default split srcPtr and modify meanPtr index
+    {
+        std::cout<<"axis not set at"<< level <<std::endl;
+        for(int i = 0; i < dims[level]; i++)
+            compute_ND_mean(srcPtr + (i * stride[level]), meanPtr, dims, stride, axis, nDim, level + 1, index + (i * (size / dims[level])), size / dims[level], norm, numAxisNorm);
+    }
+    else if(!level && axis[level] && (numAxisNorm == 1))
+    {
+        std::cout<<"!level and axis set at"<< level <<std::endl;
+        compute_ND_mean(srcPtr, meanPtr, dims, stride, axis, nDim, level + 1, index, size, level, numAxisNorm);
+    }
+    else if(axis[level]) // Called when that particular axis need to be normalized
+    {
+        std::cout<<"level && axis set at"<< level <<std::endl;
+        for(int i = 0; i < dims[level]; i++)
+            compute_ND_mean(srcPtr + (i * stride[level]), meanPtr, dims, stride, axis, nDim, level + 1, index, size, level, numAxisNorm);
+    }
+}
+
+void compute_ND_stddev(Rpp32f *srcPtr, Rpp32f *meanPtr, Rpp32f *stdDevPtr, Rpp32u *dims, Rpp32u *stride, Rpp32u *axis, Rpp32u nDim, Rpp32u level, Rpp32u index, Rpp32u size, Rpp32u norm, Rpp32u numAxisNorm)
+{
+    if(level == nDim-1 && axis[nDim-1]) // Calls computeSum when last dimension is to be normalized
+        compute_diff_square_sum(stdDevPtr[index], srcPtr, stride[level], dims[level], meanPtr[index]);
+    else if(level == nDim) // Calls computeSum when only 1st axis need to be normalized
+        compute_diff_square_sum(stdDevPtr[index], srcPtr, stride[norm], dims[norm], meanPtr[index]);
+    else if (!axis[level]) // By default split srcPtr and modify meanPtr index
+    {
+        for(int i = 0; i < dims[level]; i++)
+            compute_ND_stddev(srcPtr + (i * stride[level]), meanPtr, stdDevPtr, dims, stride, axis, nDim, level + 1, index + (i * (size / dims[level])), size / dims[level], norm, numAxisNorm);
+    }
+    else if(!level && axis[level] && (numAxisNorm == 1))
+        compute_ND_stddev(srcPtr, meanPtr, stdDevPtr, dims, stride, axis, nDim, level + 1, index, size, level, numAxisNorm);
+    else if(axis[level]) // Called when that particular axis need to be normalized
+    {
+        for(int i = 0; i < dims[level]; i++)
+            compute_ND_stddev(srcPtr + (i * stride[level]), meanPtr, stdDevPtr, dims, stride, axis, nDim, level + 1, index, size, level, numAxisNorm);
+    }
 }
 
 void normalize_3D_tensor_nontoggle(Rpp32f *srcPtr, RpptGenericDescPtr srcGenericDescPtr, Rpp32f *dstPtr, RpptGenericDescPtr dstGenericDescPtr,
@@ -478,11 +547,11 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
         Rpp32u *begin = roi;
         Rpp32u *length = &roi[nDim];
 
-        Rpp32u paramStride[nDim];
         Rpp32f *srcPtrChannel;
 
         if(nDim == 2)
         {
+            Rpp32u paramStride[2];
             Rpp32u srcAudioDims[2], srcReductionDims[2], srcStride[2];
             srcAudioDims[0] = length[0];
             srcAudioDims[1] = length[1];
@@ -535,6 +604,7 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
         }
         else if(nDim == 3)
         {
+            Rpp32u paramStride[3];
             Rpp32u srcReductionDims[3], srcStride[3];
             Rpp32u reductionDims;
             switch(axis_mask)
@@ -667,18 +737,18 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
             Rpp32u axis[nDim];
             srcPtrChannel = srcPtrTemp + (begin[0] * length[nDim]);
             Rpp32u paramIdx = 0;
-            int skipped = 0;
-            int prev = -2;
-            int size = 1;
-            int k = 0, newAxis[nDim], newDims[nDim];
+            int skipped = 0, prev = -2, size = 1, totalElements = 1;
+            int k = 0, numAxisNorm = 0;
+            Rpp32u newAxis[nDim], newDims[nDim];
             memset(newAxis, 0, sizeof(newAxis));
             memset(newDims, 0, sizeof(newDims));
-
+            std::cout<<"\n axis_mask: "<<axis_mask<<std::endl;
             for(int i = 0; i < nDim; i++)
             {
-                paramStride[i] = ((axis_mask & (int)(pow(2,i))) >= 1) ? 0 : 1;
-                size *= length[i];
-                axis[i] = !paramStride[i];
+                axis[i] = ((axis_mask & (int)(pow(2,i))) >= 1) ? 1 : 0;
+                size *= !axis[i] ? length[i] : 1;
+                totalElements *= axis[i] ? length[i] : 1;
+
                 srcPtrChannel += begin[i + 1] * srcGenericDescPtr->strides[i + 1];
             }
             for(int i = 0; i < nDim; i++)
@@ -706,28 +776,60 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
             }
             nDim -= skipped;
-
-            /*if(computeMean)
+            Rpp32u paramStride[nDim];
+            for(int i=0;i<nDim;i++)
             {
-                Rpp32f *meanInternalTensor;
+                std::cout<<"newAxis: "<<newAxis[i]<<"newDim: "<<newDims[i]<<std::endl;
+                if(newAxis[i])
+                    numAxisNorm++;
+            }
+
+            std::cout<<"numAxisNorm: "<<numAxisNorm<<std::endl;
+
+            Rpp32u srcStride[nDim];
+            compute_strides(srcStride, newDims, nDim);
+            for(int i=0;i<nDim;i++)
+            {
+                std::cout<<"stride: "<<srcStride[i]<<std::endl;
+            }
+            Rpp32f *meanInternalTensor;
+            if(computeMean)
+            {
                 meanInternalTensor = (Rpp32f *)calloc(size, sizeof(Rpp32f));
-                compute_3D_mean(srcPtrTemp, meanInternalTensor, srcReductionDims, srcStride);
+                std::cout<<"size: "<<size<<std::endl;
+                compute_ND_mean(srcPtrTemp, meanInternalTensor, newDims, srcStride, newAxis, nDim, 0, 0, size, 0, numAxisNorm);
+                Rpp32f normFactor = 1.0 / totalElements;
+                for(int i = 0; i < size; i++)
+                {
+                    meanInternalTensor[i] *= normFactor;
+                    std::cout<<"mean: "<<meanInternalTensor[i]<<std::endl;
+                }
+
                 memcpy(&meanTensor, &meanInternalTensor, sizeof(meanInternalTensor));
             }
             if(computeStddev)
             {
                 Rpp32f *invStdDevTensor;
                 invStdDevTensor = (Rpp32f *)calloc(size, sizeof(Rpp32f));
-                compute_3D_inv_std_dev(srcPtrTemp, meanInternalTensor, invStdDevTensor, srcReductionDims, srcStride);
+                compute_ND_stddev(srcPtrTemp, meanInternalTensor, invStdDevTensor, newDims, srcStride, newAxis, nDim, 0, 0, size, 0, numAxisNorm);
+                Rpp32f normFactor = 1.0 / totalElements;
+                rpp_rsqrt_avx(invStdDevTensor, (Rpp32s)totalElements, 0, normFactor, 1);
                 memcpy(&stdDevTensor, &invStdDevTensor, sizeof(invStdDevTensor));
-            }*/
+            }
 
-            /*int size = sizeof(stdDevTensor[0]) / sizeof(Rpp32f);
+            //int size = sizeof(stdDevTensor[0]) / sizeof(Rpp32f);
             Rpp32f *multiplier = (Rpp32f *) calloc(size, sizeof(Rpp32f));
             for(int i = 0; i < size; i++)
                 multiplier[i] = scale / stdDevTensor[i];
+            for(int i = 0; i < nDim; i++)
+                paramStride[i] = ((axis_mask & (int)(pow(2,i))) >= 1) ? 0 : 1;
             normalize_ND_tensor_nontoggle(srcPtrChannel, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTensor, multiplier, shift, paramStride, length, nDim, 1, paramIdx);
-            free(multiplier);*/
+            free(multiplier);
+
+            if(meanTensor != NULL)
+                free(meanTensor);
+            if(stdDevTensor != NULL)
+                free(stdDevTensor);
         }
     }
 
@@ -785,7 +887,7 @@ RppStatus normalize_generic_host_tensor(T1 *srcPtr,
         Rpp32f *multiplier = (Rpp32f *) calloc(size, sizeof(Rpp32f));
         for(int i = 0; i < size; i++)
             multiplier[i] = scale / stdDevTensor[i];
-        normalize_ND_tensor_nontoggle(srcPtrChannel, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTensor, multiplier, shift, paramStride, length, nDim, 1, paramIdx);
+        normalize_ND_tensor_nontoggle(srcPtrChannel, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTensor, multiplier, shift, paramStride, newDims, nDim, 1, paramIdx);
         free(multiplier);
         free(paramStride);
     }

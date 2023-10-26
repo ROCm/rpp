@@ -411,9 +411,9 @@ int main(int argc, char **argv)
                 startWallTime = omp_get_wtime();
                 rppt_normalize_generic_host(inputF32, srcDescriptorPtrND, outputF32, dstDescriptorPtrND, axis_mask, meanTensor, stdDevTensor, computeMean, computeStddev, scale, shift, roiTensor, handle);
 
-                if(meanTensor != NULL)
+                if(!computeMean)
                     free(meanTensor);
-                if(stdDevTensor != NULL)
+                if(!computeStddev)
                     free(stdDevTensor);
                 break;
             }
