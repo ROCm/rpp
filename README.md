@@ -50,7 +50,9 @@ doxygen .Doxyfile
 
 * [ROCm supported hardware](https://docs.amd.com/bundle/Hardware_and_Software_Reference_Guide/page/Hardware_and_Software_Support.html)
 
-* [ROCm](https://docs.amd.com/bundle/ROCm-Installation-Guide-v5.4.3/page/How_to_Install_ROCm.html) `5.4.3` and above
+* [ROCm](https://docs.amd.com/bundle/ROCm-Installation-Guide-v5.4.3/page/How_to_Install_ROCm.html) `5.6.1` and above
+
+* [HIP](https://github.com/ROCm-Developer-Tools/HIP)
 
 * Clang Version `5.0.1` and above
 
@@ -88,6 +90,9 @@ doxygen .Doxyfile
   sudo mkdir /usr/local/include/half
   sudo cp half-files/include/half.hpp /usr/local/include/half
   ```
+* C++ Version `17` and above
+
+* OpenMP
 
 ## Prerequisites for Test Suite
 
