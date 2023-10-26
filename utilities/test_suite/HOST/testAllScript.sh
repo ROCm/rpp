@@ -203,11 +203,13 @@ echo "##########################################################################
 if [ "$TEST_TYPE" -eq 0 ]; then
     for case in ${CASE_LIST[@]};
     do
+        endBitDepth=7
         if [ "$QA_MODE" -eq 1 ]; then
             if [ "$case" -eq "54" ] || [ "$case" -eq " 84" ]; then
                 echo "QA tests are not supported for case number $case, since it generates random output"
                 continue
             fi
+            endBitDepth=1
         fi
         if [ "$case" -lt "0" ] || [ "$case" -gt " 87" ]; then
             echo "Invalid case number $case. case number must be in the 0:87 range!"
@@ -237,7 +239,7 @@ if [ "$TEST_TYPE" -eq 0 ]; then
             echo "--------------------------------"
             printf "Running a New Functionality...\n"
             echo "--------------------------------"
-            for ((bitDepth=0;bitDepth<7;bitDepth++))
+            for ((bitDepth=0;bitDepth<$endBitDepth;bitDepth++))
             do
                 printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n"
                 for ((outputFormatToggle=0;outputFormatToggle<2;outputFormatToggle++))
