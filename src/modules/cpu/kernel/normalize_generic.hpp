@@ -822,7 +822,7 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
             for(int i = 0; i < size; i++)
                 multiplier[i] = scale / stdDevTensor[i];
             for(int i = 0; i < nDim; i++)
-                paramStride[i] = ((axis_mask & (int)(pow(2,i))) >= 1) ? 0 : 1;
+                paramStride[i] = !newAxis[i];
             normalize_ND_tensor_nontoggle(srcPtrChannel, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTensor, multiplier, shift, paramStride, length, nDim, 1, paramIdx);
             free(multiplier);
 
