@@ -304,6 +304,7 @@ install(FILES ${PROJECT_BINARY_DIR}/include/rpp_backend.h DESTINATION ${CMAKE_IN
 enable_testing()
 include(CTest)
 add_subdirectory(utilities/rpp-unittests)
+add_subdirectory(utilities/test_suite)
 
 # Set package information
 set(CPACK_PACKAGE_VERSION       ${VERSION})
