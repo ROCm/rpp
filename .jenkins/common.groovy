@@ -76,11 +76,9 @@ def runPackageCommand(platform, project) {
                 cd ${project.paths.project_build_prefix}/build/release
                 sudo make package
                 mkdir -p package
-                mv *.${packageType} package/
-                for pkg in package/*.${packageType}
-                do
-                  ${packageInfo} \$(pkg)
-                done
+                mv rpp*.${packageType} package/
+                ${packageInfo} package/rpp-dev*.${packageType}
+                ${packageInfo} package/rpp_*.${packageType}
                 """
 
     platform.runCommand(this, command)
