@@ -19,6 +19,7 @@
 # THE SOFTWARE.
 
 cmake_minimum_required(VERSION 3.5)
+set(CMAKE_CXX_COMPILER clang++)
 set(CMAKE_CXX_STANDARD 17)
 project(test_suite/HOST)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../../../cmake)
