@@ -1,5 +1,11 @@
 #!/bin/bash
 
+echo "testAllScript info:"
+echo "basename: [$(basename "$0")]"
+echo "dirname : [$(dirname "$0")]"
+echo "pwd     : [$(pwd)]"
+
+cd $(dirname "$0")
 cwd=$(pwd)
 
 # <<<<<<<<<<<<<< VALIDATION CHECK FOR FOLDER PATHS >>>>>>>>>>>>>>>>>>>>>>>>>>>>

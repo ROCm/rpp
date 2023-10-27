@@ -30,10 +30,10 @@ timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 # Set the value of an environment variable
 os.environ["TIMESTAMP"] = timestamp
 
-cwd = os.getcwd()
-inFilePath1 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src1')
-inFilePath2 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src2')
-qaInputFile = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src1')
+scriptPath = os.path.dirname(os.path.realpath(__file__))
+inFilePath1 = scriptPath + "/../TEST_IMAGES/three_images_mixed_src1"
+inFilePath2 = scriptPath + "/../TEST_IMAGES/three_images_mixed_src2"
+qaInputFile = scriptPath + "/../TEST_IMAGES/three_images_mixed_src1"
 
 def case_file_check(CASE_FILE_PATH):
     try:
@@ -69,9 +69,9 @@ def create_layout_directories(dst_path, layout_dict):
 
 def get_log_file_list(preserveOutput):
     return [
-        "../OUTPUT_PERFORMANCE_LOGS_HIP_" + timestamp + "/Tensor_hip_pkd3_raw_performance_log.txt",
-        "../OUTPUT_PERFORMANCE_LOGS_HIP_" + timestamp + "/Tensor_hip_pln3_raw_performance_log.txt",
-        "../OUTPUT_PERFORMANCE_LOGS_HIP_" + timestamp + "/Tensor_hip_pln1_raw_performance_log.txt"
+        scriptPath + "/../OUTPUT_PERFORMANCE_LOGS_HIP_" + timestamp + "/Tensor_hip_pkd3_raw_performance_log.txt",
+        scriptPath + "/../OUTPUT_PERFORMANCE_LOGS_HIP_" + timestamp + "/Tensor_hip_pln3_raw_performance_log.txt",
+        scriptPath + "/../OUTPUT_PERFORMANCE_LOGS_HIP_" + timestamp + "/Tensor_hip_pln1_raw_performance_log.txt"
     ]
 
 # Functionality group finder
@@ -201,18 +201,18 @@ if qaMode and batchSize != 3:
 
 if(testType == 0):
     if qaMode:
-        outFilePath = os.path.join(os.path.dirname(cwd), 'QA_RESULTS_HIP_' + timestamp)
+        outFilePath = scriptPath + "/../QA_RESULTS_HIP_" + timestamp
     else:
-        outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_IMAGES_HIP_' + timestamp)
+        outFilePath = scriptPath + "/../OUTPUT_IMAGES_HIP_" + timestamp
     numRuns = 1
 elif(testType == 1):
     if numRuns == 0:
         numRuns = 100 #default numRuns for running performance tests
-    outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_PERFORMANCE_LOGS_HIP_' + timestamp)
+    outFilePath = scriptPath + "/../OUTPUT_PERFORMANCE_LOGS_HIP_" + timestamp
 dstPath = outFilePath
 
 if(testType == 0):
-    subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numRuns), "0", str(qaMode), str(decoderType), str(preserveOutput), str(batchSize), " ".join(caseList)])  # nosec
+    subprocess.call([scriptPath + "/testAllScript.sh", srcPath1, srcPath2, str(testType), str(numRuns), "0", str(qaMode), str(decoderType), str(preserveOutput), str(batchSize), " ".join(caseList)])  # nosec
 
     layoutDict = {0:"PKD3", 1:"PLN3", 2:"PLN1"}
     if qaMode == 0:
@@ -230,7 +230,7 @@ else:
     ]
 
     if (testType == 1 and profilingOption == "NO"):
-        subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numRuns), "0", str(qaMode), str(decoderType), str(preserveOutput), str(batchSize), " ".join(caseList)])  # nosec
+        subprocess.call([scriptPath + "/testAllScript.sh", srcPath1, srcPath2, str(testType), str(numRuns), "0", str(qaMode), str(decoderType), str(preserveOutput), str(batchSize), " ".join(caseList)])  # nosec
         for log_file in log_file_list:
             # Opening log file
             try:
@@ -293,11 +293,10 @@ else:
             # Closing log file
             f.close()
     elif (testType == 1 and profilingOption == "YES"):
-        subprocess.call(["./testAllScript.sh", srcPath1, srcPath2, str(testType), str(numRuns), "1", str(qaMode), str(decoderType), str(preserveOutput), str(batchSize), " ".join(caseList)])  # nosec
+        subprocess.call([scriptPath + "/testAllScript.sh", srcPath1, srcPath2, str(testType), str(numRuns), "1", str(qaMode), str(decoderType), str(preserveOutput), str(batchSize), " ".join(caseList)])  # nosec
         NEW_FUNC_GROUP_LIST = [0, 15, 20, 29, 36, 40, 42, 49, 54, 56, 65, 69]
 
-        RESULTS_DIR = ""
-        RESULTS_DIR = "../OUTPUT_PERFORMANCE_LOGS_HIP_" + timestamp
+        RESULTS_DIR = scriptPath + "/../OUTPUT_PERFORMANCE_LOGS_HIP_" + timestamp
         print("RESULTS_DIR = " + RESULTS_DIR)
         CONSOLIDATED_FILE_TENSOR_PKD3 = RESULTS_DIR + "/consolidated_results_Tensor_PKD3.stats.csv"
         CONSOLIDATED_FILE_TENSOR_PLN1 = RESULTS_DIR + "/consolidated_results_Tensor_PLN1.stats.csv"
@@ -406,11 +405,11 @@ if qaMode and testType == 0:
                 numPassed += 1
             sys.stdout.flush()
         resultsInfo = "\n\nFinal Results of Tests:"
-        resultsInfo += "\n    - Total test cases including all subvariants available = " + str(numLines)
+        resultsInfo += "\n    - Total test cases including all subvariants REQUESTED = " + str(numLines)
         resultsInfo += "\n    - Total test cases including all subvariants PASSED = " + str(numPassed)
         resultsInfo += "\n\nGeneral information on Tensor test suite availability:"
         resultsInfo += "\n    - Total augmentations supported in Tensor test suite = " + str(len(supportedCaseList))
         resultsInfo += "\n    - Total augmentations with golden output QA test support = " + str(len(supportedCaseList) - len(nonQACaseList))
         resultsInfo += "\n    - Total augmentations without golden ouput QA test support (due to randomization involved) = " + str(len(nonQACaseList))
         f.write(resultsInfo)
-print("\n-------------------------------------------------------------------" + resultsInfo + "\n\n-------------------------------------------------------------------")
+    print("\n-------------------------------------------------------------------" + resultsInfo + "\n\n-------------------------------------------------------------------")
