@@ -79,7 +79,7 @@ def runPackageCommand(platform, project) {
                 mv *.${packageType} package/
                 for pkg in package/*.${packageType}
                 do
-                  ${packageInfo} ${pkg}
+                  ${packageInfo} \$(pkg)
                 done
                 """
 
