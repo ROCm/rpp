@@ -64,20 +64,6 @@ if (OpenCV_FOUND)
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++14")
     target_link_libraries(Tensor_host ${OpenCV_LIBS} -lturbojpeg -lrpp pthread ${LINK_LIBRARY_LIST})
-
-    set(Python3_FIND_VIRTUALENV FIRST)
-    find_package(Python3 QUIET)
-
-    # CI tests on HOST and HIP, for HIP backend
-    if(Python3_FOUND)
-        add_test(
-            NAME rpp_qa_tests_host 
-            COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/runTests.py --qa_mode 1 --batch_size 3
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-            )
-    else()
-        message("-- ${Yellow}Error: Python3 must be installed to run RPP tests successfully!${ColourReset}")
-    endif(Python3_FOUND)
 else()
     message("-- ${Yellow}Error: OpenCV must be installed to install ${PROJECT_NAME} successfully!${ColourReset}")
 endif()
