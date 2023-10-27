@@ -734,20 +734,10 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
             }
 
-            Rpp32f *invStdDevTensor, *meanInternalTensor;
-            meanInternalTensor = (Rpp32f *)calloc(reductionDims, sizeof(Rpp32f));
-            invStdDevTensor = (Rpp32f *)calloc(reductionDims, sizeof(Rpp32f));
-
             if(computeMean)
-            {
-                compute_3D_mean(srcPtrTemp, meanInternalTensor, srcReductionDims, srcStride);
-                memcpy(&meanTensor, &meanInternalTensor, sizeof(meanInternalTensor));
-            }
+                compute_3D_mean(srcPtrTemp, meanTensor, srcReductionDims, srcStride);
             if(computeStddev)
-            {
-                compute_3D_inv_std_dev(srcPtrTemp, meanInternalTensor, invStdDevTensor, srcReductionDims, srcStride, scale);
-                memcpy(&stdDevTensor, &invStdDevTensor, sizeof(invStdDevTensor));
-            }
+                compute_3D_inv_std_dev(srcPtrTemp, meanTensor, stdDevTensor, srcReductionDims, srcStride, scale);
             else
             {
                 for(int i = 0; i < reductionDims; i++)
@@ -763,9 +753,6 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
                 normalize_3D_tensor_nontoggle(srcPtrChannel, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTensor, stdDevTensor, shift, paramStride);
             else if((axisMask == 3) && (srcGenericDescPtr->layout == RpptLayout::NHWC) && (dstGenericDescPtr->layout == RpptLayout::NCHW))
                 normalize_3D_tensor_axis3_toggle(srcPtrChannel, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTensor, stdDevTensor, shift, paramStride);
-
-            free(meanInternalTensor);
-            free(invStdDevTensor);
         }
         else // Called when any other ND tensor is passed to kernel
         {
