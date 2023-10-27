@@ -887,7 +887,7 @@ RppStatus normalize_generic_host_tensor(T1 *srcPtr,
         Rpp32f *multiplier = (Rpp32f *) calloc(size, sizeof(Rpp32f));
         for(int i = 0; i < size; i++)
             multiplier[i] = scale / stdDevTensor[i];
-        normalize_ND_tensor_nontoggle(srcPtrChannel, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTensor, multiplier, shift, paramStride, newDims, nDim, 1, paramIdx);
+        normalize_ND_tensor_nontoggle(srcPtrChannel, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTensor, multiplier, shift, paramStride, length, nDim, 1, paramIdx);
         free(multiplier);
         free(paramStride);
     }
