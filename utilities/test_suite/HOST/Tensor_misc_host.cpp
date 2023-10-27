@@ -390,31 +390,26 @@ int main(int argc, char **argv)
         {
             case 1:
             {
-                int axis_mask = 3; // 3D HWC Channel normalize axes(0,1)
+                int axisMask = 3; // 3D HWC Channel normalize axes(0,1)
                 float scale = 1.0;
                 float shift = 0.0;
                 bool computeMean, computeStddev;
                 computeMean = computeStddev = 1;
-                Rpp32f *meanTensor;
-                Rpp32f *stdDevTensor;
+
+                Rpp32u size = 1; // length of input tensors differ based on axisMask and nDim
+                for(int i = 0; i < nDim; i++)
+                    size *= ((axisMask & (int)(pow(2,i))) >= 1) ? 1 : roiTensor[nDim + i];
+
+                Rpp32f *meanTensor = (Rpp32f *)calloc(size * batchSize, sizeof(Rpp32f));
+                Rpp32f *stdDevTensor = (Rpp32f *)calloc(size * batchSize, sizeof(Rpp32f));
 
                 if(!(computeMean && computeStddev))
-                {
-                    Rpp32u size = 1; // length of input tensors differ based on axis_mask and nDim
-                    for(int i = 0; i < nDim; i++)
-                        size *= ((axis_mask & (int)(pow(2,i))) >= 1) ? 1 : roiTensor[nDim + i];
-
-                    meanTensor = (Rpp32f *)calloc(size, sizeof(Rpp32f));
-                    stdDevTensor = (Rpp32f *)calloc(size, sizeof(Rpp32f));
                     fill_mean_stddev_values(nDim, size, meanTensor, stdDevTensor, qaMode);
-                }
-                startWallTime = omp_get_wtime();
-                rppt_normalize_generic_host(inputF32, srcDescriptorPtrND, outputF32, dstDescriptorPtrND, axis_mask, meanTensor, stdDevTensor, computeMean, computeStddev, scale, shift, roiTensor, handle);
 
-                if(!computeMean)
-                    free(meanTensor);
-                if(!computeStddev)
-                    free(stdDevTensor);
+                startWallTime = omp_get_wtime();
+                rppt_normalize_generic_host(inputF32, srcDescriptorPtrND, outputF32, dstDescriptorPtrND, axisMask, meanTensor, stdDevTensor, computeMean, computeStddev, scale, shift, roiTensor, handle);
+                free(meanTensor);
+                free(stdDevTensor);
                 break;
             }
             default:
