@@ -2,7 +2,24 @@
 
 Full documentation for RPP is available at (https://rocm.docs.amd.com/projects/rpp/en/latest/).
 
-## RPP 1.4.0 (Unreleased)
+## RPP 1.5.0 (Unreleased)
+
+### Changes
+
+* Prerequisites
+
+### Tested configurations
+
+* Linux distribution
+  * Ubuntu - `20.04` / `22.04`
+  * CentOS - `7`
+  * RHEL - `8`/`9`
+* ROCm: rocm-core - `5.5.0.50500-63`
+* Clang - Version `5.0.1` and above
+* CMake - Version `3.22.3`
+* IEEE 754-based half-precision floating-point library - Version `1.12.0`
+
+## RPP 1.4.0
 
 ### Additions
 
