@@ -149,6 +149,8 @@ if(APPLE)
 else()
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    # STD Filesystem
+    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} stdc++fs)
 endif()
 include_directories(${OpenMP_INCLUDE_DIRS})
 set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} OpenMP::OpenMP_CXX)
@@ -157,10 +159,6 @@ set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} OpenMP::OpenMP_CXX)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} Threads::Threads)
-
-# STD Filesystem
-#find_package(Filesystem REQUIRED)
-#set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} std::filesystem)
 
 # set global compiler flags for the project
 # -fPIC -- Generate position-independent code if possible.

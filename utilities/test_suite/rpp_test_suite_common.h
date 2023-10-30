@@ -932,7 +932,7 @@ template <typename T>
 inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int noOfImages, string interpolationTypeName, string noiseTypeName, int testCase, string dst)
 {
     string func = funcName;
-    string refPath = get_current_dir_name();
+    string refPath = std::filesystem::current_path();
     string pattern = "/build";
     string refFile = "";
     int refOutputWidth = ((GOLDEN_OUTPUT_MAX_WIDTH / 8) * 8) + 8;    // obtain next multiple of 8 after GOLDEN_OUTPUT_MAX_WIDTH
@@ -1024,7 +1024,7 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
 inline void compare_reduction_output(Rpp64u* output, string funcName, RpptDescPtr srcDescPtr, int testCase, string dst)
 {
     string func = funcName;
-    string refPath = get_current_dir_name();
+    string refPath = std::filesystem::current_path();
     string pattern = "/build";
     string refFile = "";
 
