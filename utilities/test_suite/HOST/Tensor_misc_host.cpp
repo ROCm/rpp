@@ -212,7 +212,7 @@ void set_generic_descriptor_layout(RpptGenericDescPtr srcDescriptorPtrND, RpptGe
 }
 
 // fill the mean and stddev values used for normalize
-void fill_mean_stddev_values(Rpp32u nDim, Rpp32u size, Rpp32f *meanTensor, Rpp32f *stdDevTensor, bool qaMode)
+void fill_mean_stddev_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u size, Rpp32f *meanTensor, Rpp32f *stdDevTensor, bool qaMode)
 {
     if(qaMode)
     {
@@ -220,8 +220,44 @@ void fill_mean_stddev_values(Rpp32u nDim, Rpp32u size, Rpp32f *meanTensor, Rpp32
         {
             case 3:
             {
-                read_data(meanTensor, nDim, 2,  16, 1);
-                read_data(stdDevTensor, nDim, 3,  16, 1);
+                for(int i = 0; i < batchSize * 16; i += 16)
+                {
+                    meanTensor[i] = 0.10044092854408704;
+                    meanTensor[i + 1] = 0.9923954479926445;
+                    meanTensor[i + 2] = 0.1463966240511576;
+                    meanTensor[i + 3] = 0.8511748753528452;
+                    meanTensor[i + 4] = 0.241989919160714;
+                    meanTensor[i + 5] = 0.724488856565572;
+                    meanTensor[i + 6] = 0.42082916847069873;
+                    meanTensor[i + 7] = 0.46859982127051925;
+                    meanTensor[i + 8] = 0.3775650937841545;
+                    meanTensor[i + 9] = 0.4495086677760334;
+                    meanTensor[i + 10] = 0.8382375156517684;
+                    meanTensor[i + 11] = 0.4477761580072823;
+                    meanTensor[i + 12] = 0.32061482730987134;
+                    meanTensor[i + 13] = 0.3844935131563223;
+                    meanTensor[i + 14] = 0.7987222326619818;
+                    meanTensor[i + 15] = 0.10494099481214858;
+
+                    stdDevTensor[i] = 0.23043620850364177;
+                    stdDevTensor[i + 1] = 0.1455208174769702;
+                    stdDevTensor[i + 2] = 0.8719780160981172;
+                    stdDevTensor[i + 3] = 0.414600410599096;
+                    stdDevTensor[i + 4] = 0.6735379720722622;
+                    stdDevTensor[i + 5] = 0.6898490355115773;
+                    stdDevTensor[i + 6] = 0.928227311970384;
+                    stdDevTensor[i + 7] = 0.2256026577060809;
+                    stdDevTensor[i + 8] = 0.06284357739269342;
+                    stdDevTensor[i + 9] = 0.5563155411432268;
+                    stdDevTensor[i + 10] = 0.21911684022872935;
+                    stdDevTensor[i + 11] = 0.3947508370853534;
+                    stdDevTensor[i + 12] = 0.7577237777839925;
+                    stdDevTensor[i + 13] = 0.8079874528633991;
+                    stdDevTensor[i + 14] = 0.21589143239793473;
+                    stdDevTensor[i + 15] = 0.7972578943669427;
+                }
+                // read_data(meanTensor, nDim, 2, 16, 1);
+                // read_data(stdDevTensor, nDim, 3, 16, 1);
                 break;
             }
             default:
@@ -308,9 +344,9 @@ int main(int argc, char **argv)
     string dst = argv[7];
     qaMode = (testType == 0);
 
-    if (qaMode && batchSize != 1)
+    if (qaMode && batchSize != 3)
     {
-        std::cout<<"QA mode can only run with batchsize 1"<<std::endl;
+        std::cout<<"QA mode can only run with batchsize 3"<<std::endl;
         return -1;
     }
 
@@ -404,12 +440,13 @@ int main(int argc, char **argv)
                 Rpp32f *stdDevTensor = (Rpp32f *)calloc(size * batchSize, sizeof(Rpp32f));
 
                 if(!(computeMean && computeStddev))
-                    fill_mean_stddev_values(nDim, size, meanTensor, stdDevTensor, qaMode);
+                    fill_mean_stddev_values(nDim, batchSize, size, meanTensor, stdDevTensor, qaMode);
 
                 startWallTime = omp_get_wtime();
                 rppt_normalize_generic_host(inputF32, srcDescriptorPtrND, outputF32, dstDescriptorPtrND, axisMask, meanTensor, stdDevTensor, computeMean, computeStddev, scale, shift, roiTensor, handle);
                 free(meanTensor);
                 free(stdDevTensor);
+                std::cerr<<"coming outside kernel"<<std::endl;
                 break;
             }
             default:
