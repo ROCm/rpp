@@ -84,7 +84,7 @@ else()
         set(BACKEND "OCL")
     elseif("${BACKEND}" STREQUAL "HIP" OR "${BACKEND}" STREQUAL "hip")
         set(BACKEND "HIP")
-    elseif("${BACKEND}" STREQUAL "host" OR "${BACKEND}" STREQUAL "CPU" OR "${BACKEND}" STREQUAL "cpu")
+    elseif("${BACKEND}" STREQUAL "host" OR "${BACKEND}" STREQUAL "HOST" OR "${BACKEND}" STREQUAL "CPU" OR "${BACKEND}" STREQUAL "cpu")
         set(BACKEND "CPU")
     else()
         message("-- ${Red}Warning: ${PROJECT_NAME} backend option: ${BACKEND} -- unknown${ColourReset}")
@@ -150,6 +150,8 @@ if(APPLE)
 else()
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    # STD Filesystem
+    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} stdc++fs)
 endif()
 include_directories(${OpenMP_INCLUDE_DIRS})
 set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} OpenMP::OpenMP_CXX)
@@ -243,6 +245,7 @@ endif()
 if("${BACKEND}" STREQUAL "CPU")
     # Add modules
     set(MODULES_LIST modules)
+    include_directories(${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR})
     foreach(MOD_NAME ${MODULES_LIST})
         add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/${MOD_NAME})
     endforeach(MOD_NAME)
@@ -320,7 +323,8 @@ install(FILES ${CPACK_RESOURCE_FILE_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR}
 
 enable_testing()
 include(CTest)
-add_subdirectory(utilities/rpp-unittests)
+add_subdirectory(utilities/rpp-unittests) # TBD - phaseout unittests
+add_subdirectory(utilities/test_suite) # TBD - Expand use-cases
 
 # Set package information
 set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
