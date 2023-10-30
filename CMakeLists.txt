@@ -83,7 +83,7 @@ else()
         set(BACKEND "OCL")
     elseif("${BACKEND}" STREQUAL "HIP" OR "${BACKEND}" STREQUAL "hip")
         set(BACKEND "HIP")
-    elseif("${BACKEND}" STREQUAL "host" OR "${BACKEND}" STREQUAL "CPU" OR "${BACKEND}" STREQUAL "cpu")
+    elseif("${BACKEND}" STREQUAL "host" OR "${BACKEND}" STREQUAL "HOST" OR "${BACKEND}" STREQUAL "CPU" OR "${BACKEND}" STREQUAL "cpu")
         set(BACKEND "CPU")
     else()
         message("-- ${Red}Warning: ${PROJECT_NAME} backend option: ${BACKEND} -- unknown${ColourReset}")
@@ -157,6 +157,10 @@ set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} OpenMP::OpenMP_CXX)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} Threads::Threads)
+
+# STD Filesystem
+#find_package(Filesystem REQUIRED)
+#set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} std::filesystem)
 
 # set global compiler flags for the project
 # -fPIC -- Generate position-independent code if possible.
@@ -241,6 +245,7 @@ endif()
 if("${BACKEND}" STREQUAL "CPU")
     # Add modules
     set(MODULES_LIST modules)
+    include_directories(${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR})
     foreach(MOD_NAME ${MODULES_LIST})
         add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/${MOD_NAME})
     endforeach(MOD_NAME)
@@ -303,8 +308,8 @@ install(FILES ${PROJECT_BINARY_DIR}/include/rpp_backend.h DESTINATION ${CMAKE_IN
 
 enable_testing()
 include(CTest)
-add_subdirectory(utilities/rpp-unittests)
-add_subdirectory(utilities/test_suite)
+add_subdirectory(utilities/rpp-unittests) # TBD - phaseout unittests
+add_subdirectory(utilities/test_suite) # TBD - Expand use-cases
 
 # Set package information
 set(CPACK_PACKAGE_VERSION       ${VERSION})

@@ -195,7 +195,7 @@ directory_name_generator() {
 VALIDATE_PATH "$DST_FOLDER"
 
 shopt -s extglob
-mkdir build
+mkdir -p build
 rm -rvf build/*
 cd build
 cmake ..

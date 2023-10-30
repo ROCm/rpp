@@ -30,11 +30,21 @@ find_package(Python3 QUIET)
 
 if(Python3_FOUND)
 
-  add_test(NAME rpp_qa_tests_host 
+  add_test(NAME rpp_qa_tests_host_all 
         COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HOST/runTests.py 
         --qa_mode 1 --batch_size 3
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
       )
+  add_test(NAME rpp_qa_tests_host_brightness 
+      COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HOST/runTests.py 
+      --qa_mode 1 --batch_size 3 --case_list 0
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+  add_test(NAME rpp_qa_tests_host_gamma_correction 
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HOST/runTests.py 
+    --qa_mode 1 --batch_size 3 --case_list 1
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+  )
 
   if( "${BACKEND}" STREQUAL "HIP")
     add_test(NAME rpp_qa_tests_hip 
