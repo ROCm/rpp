@@ -395,9 +395,8 @@ void normalize_3D_tensor_avx_axis3(Rpp32f *srcPtr, RpptGenericDescPtr srcGeneric
 /* Computes normalize for ND non toggle variants */
 template<typename T1, typename T2>
 void normalize_ND_tensor_nontoggle(T1 *srcPtr, Rpp32u *srcStride, T2 *dstPtr, RpptGenericDescPtr dstGenericDescPtr,
-                         Rpp32f *meanPtr, Rpp32f *multiplierPtr, Rpp32f shift, Rpp32u *paramStride, Rpp32u *length, Rpp32u nDim, Rpp32u level)
+                                   Rpp32f *meanPtr, Rpp32f *multiplierPtr, Rpp32f shift, Rpp32u *paramStride, Rpp32u *length, Rpp32u nDim, Rpp32u level, Rpp32u& idx)
 {
-    static Rpp32u idx = 0;
     Rpp32u idx1 = 0;
     if(nDim == 1)
     {
@@ -418,7 +417,6 @@ void normalize_ND_tensor_nontoggle(T1 *srcPtr, Rpp32u *srcStride, T2 *dstPtr, Rp
             dstPtrTemp++;
         }
         std::cout<<"idx at the end of if loop: "<<idx<<std::endl;
-
     }
     else
     {
@@ -427,7 +425,7 @@ void normalize_ND_tensor_nontoggle(T1 *srcPtr, Rpp32u *srcStride, T2 *dstPtr, Rp
         idx1 = idx;
         for (int i = 0; i < length[level]; i++)
         {
-            normalize_ND_tensor_nontoggle(srcPtr, srcStride, dstPtr, dstGenericDescPtr, meanPtr, multiplierPtr, shift, paramStride, length, nDim - 1, level + 1);
+            normalize_ND_tensor_nontoggle(srcPtr, srcStride, dstPtr, dstGenericDescPtr, meanPtr, multiplierPtr, shift, paramStride, length, nDim - 1, level + 1, idx);
             std::cout<<"idx in else loop b4 inc: "<<idx<<std::endl;
             if(i < length[level] - 1)
                 idx = (!paramStride[level]) ? idx1 : idx + paramStride[level];
@@ -441,9 +439,8 @@ void normalize_ND_tensor_nontoggle(T1 *srcPtr, Rpp32u *srcStride, T2 *dstPtr, Rp
 
 /* Computes normalize for ND non toggle variants for i8 dataype */
 void normalize_ND_tensor_nontoggle(Rpp32s *srcPtr, Rpp32u *srcStride, Rpp32f *dstPtr, RpptGenericDescPtr dstGenericDescPtr,
-                         Rpp32f *meanPtr, Rpp32f *multiplierPtr, Rpp32f shift, Rpp32u *paramStride, Rpp32u *length, Rpp32u nDim, Rpp32u level)
+                                   Rpp32f *meanPtr, Rpp32f *multiplierPtr, Rpp32f shift, Rpp32u *paramStride, Rpp32u *length, Rpp32u nDim, Rpp32u level, Rpp32u& idx)
 {
-    static Rpp32u idx = 0;
     Rpp32u idx1 = 0;
     if(nDim == 1)
     {
@@ -463,7 +460,7 @@ void normalize_ND_tensor_nontoggle(Rpp32s *srcPtr, Rpp32u *srcStride, Rpp32f *ds
         idx1 = idx;
         for (int i = 0; i < length[level]; i++)
         {
-            normalize_ND_tensor_nontoggle(srcPtr, srcStride, dstPtr, dstGenericDescPtr, meanPtr, multiplierPtr, shift, paramStride, length + 1, nDim - 1, level + 1);
+            normalize_ND_tensor_nontoggle(srcPtr, srcStride, dstPtr, dstGenericDescPtr, meanPtr, multiplierPtr, shift, paramStride, length + 1, nDim - 1, level + 1, idx);
             if(i < length[level] - 1)
                 idx = (!paramStride[level]) ? idx1 : idx + paramStride[level];
             dstPtr += srcStride[level];
@@ -774,7 +771,7 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
 
 
             for(int i = 1; i < nDim; i++)
-                srcPtrChannel += begin[i-1] * srcGenericDescPtr->strides[i];
+                srcPtrChannel += begin[i - 1] * srcGenericDescPtr->strides[i];
 
             if((axisMask == 3) && (srcGenericDescPtr->layout == RpptLayout::NHWC) && (dstGenericDescPtr->layout == RpptLayout::NHWC) && (srcGenericDescPtr->dims[3] == 16))
                 normalize_3D_tensor_avx_axis3(srcPtrChannel, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTensor, stdDevTensor, shift, paramStride, length[1] * layoutParams.bufferMultiplier);
@@ -788,8 +785,8 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
             int totalElements = 1;
             Rpp32u lastNormAxis = 0;
             Rpp32u axis[nDim], newAxis[nDim], newDims[nDim];
-            memset(newAxis, 0, sizeof(newAxis));
-            memset(newDims, 0, sizeof(newDims));
+            memset(newAxis, 0, nDim * sizeof(Rpp32u));
+            memset(newDims, 0, nDim * sizeof(Rpp32u));
 
             for(int i = 0; i < nDim; i++)
             {
@@ -801,7 +798,7 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
             Rpp32u paramStride[nDim], srcStride[nDim];
             collapse_axis(&nDim, axis, length, newAxis, newDims, &lastNormAxis);
             compute_strides(srcStride, newDims, nDim);
-            for(int i=0;i<nDim;i++)
+            for(int i = 0; i < nDim ; i++)
                 std::cout<<"newAxis: "<<newAxis[i]<<"newDims: "<<newDims[i]<<"strides: "<<srcStride[i]<<std::endl;
 
             if(computeMean)
@@ -837,7 +834,8 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
                 std::cout<<"newDims: "<<newDims[i]<<"paramStride: "<<paramStride[i]<<std::endl;
             }
 
-            normalize_ND_tensor_nontoggle(srcPtrTemp, srcStride, dstPtrTemp, dstGenericDescPtr, meanTensor, stdDevTensor, shift, paramStride, newDims, nDim, 0);
+            Rpp32u idx = 0;
+            normalize_ND_tensor_nontoggle(srcPtrTemp, srcStride, dstPtrTemp, dstGenericDescPtr, meanTensor, stdDevTensor, shift, paramStride, newDims, nDim, 0, idx);
         }
     }
 
@@ -924,7 +922,9 @@ RppStatus normalize_generic_host_tensor(T1 *srcPtr,
 
         for(int i = 0; i < nDim; i++)
             paramStride[i] = !newAxis[i];
-        normalize_ND_tensor_nontoggle(srcPtrTemp, srcStride, dstPtrTemp, dstGenericDescPtr, meanTensor, stdDevTensor, shift, paramStride, newDims, nDim, 0);
+
+        Rpp32u idx = 0;
+        normalize_ND_tensor_nontoggle(srcPtrTemp, srcStride, dstPtrTemp, dstGenericDescPtr, meanTensor, stdDevTensor, shift, paramStride, newDims, nDim, 0, idx);
     }
 
     return RPP_SUCCESS;
