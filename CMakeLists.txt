@@ -127,6 +127,10 @@ if("${CMAKE_CURRENT_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
 endif()
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
+# Half
+find_package(HALF REQUIRED)
+include_directories(${HALF_INCLUDE_DIRS})
+
 # OpenMP
 find_package(OpenMP REQUIRED)
 if(APPLE)
@@ -146,7 +150,6 @@ if(APPLE)
         set(OpenMP_libgomp_LIBRARY ${OpenMP_CXX_LIB_NAMES})
         set(OpenMP_libiomp5_LIBRARY ${OpenMP_CXX_LIB_NAMES})
     endif()
-    include_directories(/usr/local/include)
 else()
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
@@ -245,7 +248,6 @@ endif()
 if("${BACKEND}" STREQUAL "CPU")
     # Add modules
     set(MODULES_LIST modules)
-    include_directories(${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR})
     foreach(MOD_NAME ${MODULES_LIST})
         add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/${MOD_NAME})
     endforeach(MOD_NAME)

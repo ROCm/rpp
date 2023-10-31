@@ -83,16 +83,27 @@ doxygen .Doxyfile
 * CMake Version `3.5` and above
 
 * IEEE 754-based half-precision floating-point library - half.hpp
+  + Use `half` package with ROCm
 
-  ```
-  wget https://sourceforge.net/projects/half/files/half/1.12.0/half-1.12.0.zip
-  unzip half-1.12.0.zip -d half-files
-  sudo mkdir /usr/local/include/half
-  sudo cp half-files/include/half.hpp /usr/local/include/half
-  ```
-* C++ Version `17` and above
+    ```
+    sudo apt-get install half
+    ```
+    **NOTE:** use the right package-management utility - `zypper`/`yum`
+ 
+  + Install from source
+
+    ```
+    wget https://sourceforge.net/projects/half/files/half/1.12.0/half-1.12.0.zip
+    unzip half-1.12.0.zip -d half-files
+    sudo mkdir /usr/local/include/half
+    sudo cp half-files/include/half.hpp /usr/local/include/half
+    ```
+
+* Compiler with support for C++ Version `17` and above
 
 * OpenMP
+  
+* Threads
 
 ## Prerequisites for Test Suite
 
