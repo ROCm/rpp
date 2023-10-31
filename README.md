@@ -97,9 +97,7 @@ To use RPP, you must have installed the following:
   ```
 
 * Compiler with support for C++ Version `17` and above
-
 * OpenMP
-
 * Threads
 
 ### Test suite prerequisites
