@@ -582,7 +582,7 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
                                                 rpp::Handle& handle)
 {
     Rpp32u numThreads = handle.GetNumThreads();
-    Rpp32u nDim = srcGenericDescPtr->numDims;
+    Rpp32u numDims = srcGenericDescPtr->numDims;
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
 
     omp_set_dynamic(0);
@@ -590,6 +590,7 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
     for(int batchCount = 0; batchCount < batchSize; batchCount++)
 	{
         int size = 1;
+        Rpp32u nDim = numDims;
         Rpp32u *roi = roiTensor + batchCount * nDim * 2;
         Rpp32u *begin = roi;
         Rpp32u *length = &roi[nDim];
