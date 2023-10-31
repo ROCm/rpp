@@ -37,14 +37,14 @@ You can build our documentation locally using the following code:
 ## Prerequisites
 
 Refer to our
-[Linux GPU and OS support](https://rocm.docs.amd.com/en/develop/about/compatibility/linux-support.html)
+[Linux GPU and OS support](https://rocm.docs.amd.com/en/latest/release/gpu_os_support.html)
 page to see if your system is supported.
 
 To use RPP, you must have installed the following:
 
 * ROCm
   For ROCm installation instructions, see
-  [Linux quick-start](https://rocm.docs.amd.com/en/develop/install/linux/install-quick.html).
+  [Linux quick-start](https://rocm.docs.amd.com/en/latest/deploy/linux/quick_start.html).
 
 * Clang Version `5.0.1` and above
 
