@@ -761,7 +761,6 @@ int main(int argc, char **argv)
                 cout <<"CPU Backend Clock Time: "<< cpuTime <<" ms/batch"<< endl;
                 cout <<"CPU Backend Wall Time: "<< wallTime <<" ms/batch"<< endl;
 
-
                 if (reductionTypeCase)
                 {
                     if(srcDescPtr->c == 3)

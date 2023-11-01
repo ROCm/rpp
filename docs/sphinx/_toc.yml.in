@@ -7,6 +7,7 @@ subtrees:
     - file: design
     - file: supported_fxn
     - file: prereq
+    - file: doxygen/html/index
     - file: prereq_test
     - file: build
     - file: test
@@ -14,3 +15,6 @@ subtrees:
     - file: misc
     - file: tech_support
     - file: release
+  - caption: About
+    entries:
+    - file: license
