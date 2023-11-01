@@ -41,6 +41,7 @@ endif()
 
 find_package(OpenCV QUIET)
 find_package(TurboJpeg QUIET)
+find_package(NIFTI QUIET)
 
 # OpenMP
 find_package(OpenMP REQUIRED)
@@ -77,7 +78,7 @@ if(NIFTI_FOUND AND OpenCV_FOUND)
     link_directories(${ROCM_PATH}/lib /usr/local/lib)
 
     add_executable(Tensor_voxel_host Tensor_voxel_host.cpp)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++14")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++17")
     target_link_libraries(Tensor_voxel_host ${OpenCV_LIBS} -lturbojpeg -lrpp pthread ${LINK_LIBRARY_LIST}  ${NIFTI_PACKAGE_PREFIX}NIFTI::${NIFTI_PACKAGE_PREFIX}niftiio)
 else()
     message("-- ${Yellow}Error: libniftiio must be installed to install ${PROJECT_NAME} successfully!${ColourReset}")
