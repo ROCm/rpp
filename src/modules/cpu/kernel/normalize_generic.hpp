@@ -621,8 +621,9 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
         Rpp32f *srcPtrTemp, *dstPtrTemp, *meanTensor, *stdDevTensor;
         srcPtrTemp = srcPtr + batchCount * srcGenericDescPtr->strides[0];
         dstPtrTemp = dstPtr + batchCount * dstGenericDescPtr->strides[0];
-        meanTensor = meanTensorPtr + batchCount * size;
-        stdDevTensor = stdDevTensorPtr + batchCount * size;
+        int maxSize = sizeof(meanTensorPtr) / sizeof(Rpp32f);
+        meanTensor = meanTensorPtr + batchCount * maxSize;
+        stdDevTensor = stdDevTensorPtr + batchCount * maxSize;
 
         // Set all values in dst buffer to 0.0
         for(int cnt = 0; cnt < dstGenericDescPtr->strides[0]; cnt++)
@@ -633,35 +634,29 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
         if(nDim == 2) // Called for audio testcase and for anyother 2D case
         {
             Rpp32u paramStride[2];
-            Rpp32u srcAudioDims[2], srcReductionDims[2], srcStride[2];
-            srcAudioDims[0] = length[0];
-            srcAudioDims[1] = length[1];
-            Rpp32u reductionDims;
+            Rpp32u srcReductionDims[2], srcStride[2];
             if (axisMask == 3)
             {
-                reductionDims = 1;
                 srcStride[0] = srcStride[1] = srcGenericDescPtr->strides[2];
                 srcReductionDims[0] = 1;
-                srcReductionDims[1] = srcAudioDims[0] * srcAudioDims[1];
+                srcReductionDims[1] = length[0] * length[1];
                 paramStride[0] = paramStride[1] = 0;
             }
             else if (axisMask == 1)
             {
-                reductionDims = 1;
-                srcStride[0] = srcGenericDescPtr->strides[2];
-                srcStride[1] = srcGenericDescPtr->strides[1];
-                srcReductionDims[0] = srcAudioDims[1];
-                srcReductionDims[1] = srcAudioDims[0];
+                srcStride[0] = srcGenericDescPtr->strides[1];
+                srcStride[1] = srcGenericDescPtr->strides[2];
+                srcReductionDims[0] = length[1];
+                srcReductionDims[1] = length[0];
                 paramStride[0] = 1;
                 paramStride[1] = 0;
             }
             else if (axisMask == 2)
             {
-                reductionDims = 0;
-                srcStride[0] = srcGenericDescPtr->strides[1];
-                srcStride[1] = srcGenericDescPtr->strides[2];
-                srcReductionDims[0] = srcAudioDims[0];
-                srcReductionDims[1] = srcAudioDims[1];
+                srcStride[0] = srcGenericDescPtr->strides[2];
+                srcStride[1] = srcGenericDescPtr->strides[1];
+                srcReductionDims[0] = length[0];
+                srcReductionDims[1] = length[1];
                 paramStride[0] = 0;
                 paramStride[1] = 1;
             }
@@ -673,9 +668,9 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
 
             // Inv std dev calculations missing
             if(axisMask == 2)
-                normalize_2D_tensor_avx_axis2(srcPtrTemp, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTensor, stdDevTensor, shift, srcAudioDims, paramStride);
+                normalize_2D_tensor_avx_axis2(srcPtrTemp, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTensor, stdDevTensor, shift, length, paramStride);
             else
-                normalize_2D_tensor(srcPtrTemp, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTensor, stdDevTensor, shift, srcAudioDims, paramStride);
+                normalize_2D_tensor(srcPtrTemp, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTensor, stdDevTensor, shift, length, paramStride);
         }
         else if(nDim == 3) // Called when a 3D tensor is passed to kernel
         {
@@ -778,10 +773,13 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
             }
 
+            for(Rpp32u i = 1; i < nDim; i++)
+                srcPtrChannel += begin[i - 1] * srcGenericDescPtr->strides[i];
+
             if(computeMean)
-                compute_3D_mean(srcPtrTemp, meanTensor, srcReductionDims, srcStride);
+                compute_3D_mean(srcPtrChannel, meanTensor, srcReductionDims, srcStride);
             if(computeStddev)
-                compute_3D_inv_std_dev(srcPtrTemp, meanTensor, stdDevTensor, srcReductionDims, srcStride, scale);
+                compute_3D_inv_std_dev(srcPtrChannel, meanTensor, stdDevTensor, srcReductionDims, srcStride, scale);
             else
             {
                 for(Rpp32u i = 0; i < reductionDims; i++)
@@ -793,10 +791,6 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
 
             for(int i=0;i<reductionDims;i++)
                 std::cout<<"stddev: "<<stdDevTensor[i]<<std::endl;
-
-
-            for(Rpp32u i = 1; i < nDim; i++)
-                srcPtrChannel += begin[i - 1] * srcGenericDescPtr->strides[i];
 
             if((axisMask == 3) && (srcGenericDescPtr->layout == RpptLayout::NHWC) && (dstGenericDescPtr->layout == RpptLayout::NHWC) && (srcGenericDescPtr->dims[3] == 16))
                 normalize_3D_tensor_avx_axis3(srcPtrChannel, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTensor, stdDevTensor, shift, paramStride, length[1] * layoutParams.bufferMultiplier, length);
@@ -828,7 +822,7 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
 
             if(computeMean)
             {
-                compute_ND_mean(srcPtrTemp, meanTensor, newDims, srcStride, newAxis, nDim, 0, 0, size, 0, lastNormAxis);
+                compute_ND_mean(srcPtrChannel, meanTensor, newDims, srcStride, newAxis, nDim, 0, 0, size, 0, lastNormAxis);
                 Rpp32f normFactor = 1.0 / totalElements;
                 std::cout<<"te: "<<totalElements<<std::endl;
                 for(int i = 0; i < size; i++)
@@ -839,7 +833,7 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
             }
             if(computeStddev)
             {
-                compute_ND_stddev(srcPtrTemp, meanTensor, stdDevTensor, newDims, srcStride, newAxis, nDim, 0, 0, size, 0, lastNormAxis);
+                compute_ND_stddev(srcPtrChannel, meanTensor, stdDevTensor, newDims, srcStride, newAxis, nDim, 0, 0, size, 0, lastNormAxis);
                 Rpp32f normFactor = (Rpp32f)(1.0 / totalElements);
                 rpp_rsqrt_avx(stdDevTensor, (Rpp32s)size, 0, normFactor, scale);
                 /*std::cout<<"before stddev is set "<<std::endl;
@@ -860,7 +854,7 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
             }
 
             Rpp32u idx = 0;
-            normalize_ND_tensor_nontoggle(srcPtrTemp, srcStride, dstPtrTemp, dstGenericDescPtr, meanTensor, stdDevTensor, shift, paramStride, newDims, nDim, 0, idx);
+            normalize_ND_tensor_nontoggle(srcPtrChannel, srcStride, dstPtrTemp, dstGenericDescPtr, meanTensor, stdDevTensor, shift, paramStride, newDims, nDim, 0, idx);
         }
     }
 
@@ -907,7 +901,7 @@ RppStatus normalize_generic_host_tensor(T1 *srcPtr,
         for(int cnt = 0; cnt < dstGenericDescPtr->strides[0]; cnt++)
             dstPtrTemp[cnt] = 0.0f;
 
-        T1 *srcPtrChannel;
+        T1 *srcPtrChannel = srcPtrTemp;
 
         int totalElements = 1;
         Rpp32u lastNormAxis = 0;
@@ -928,14 +922,14 @@ RppStatus normalize_generic_host_tensor(T1 *srcPtr,
 
         if(computeMean)
         {
-            compute_ND_mean(srcPtrTemp, meanTensor, newDims, srcStride, newAxis, nDim, 0, 0, size, 0, lastNormAxis);
+            compute_ND_mean(srcPtrChannel, meanTensor, newDims, srcStride, newAxis, nDim, 0, 0, size, 0, lastNormAxis);
             Rpp32f normFactor = 1.0 / totalElements;
             for(int i = 0; i < size; i++)
                 meanTensor[i] *= normFactor;
         }
         if(computeStddev)
         {
-            compute_ND_stddev(srcPtrTemp, meanTensor, stdDevTensor, newDims, srcStride, newAxis, nDim, 0, 0, size, 0, lastNormAxis);
+            compute_ND_stddev(srcPtrChannel, meanTensor, stdDevTensor, newDims, srcStride, newAxis, nDim, 0, 0, size, 0, lastNormAxis);
             Rpp32f normFactor = (Rpp32f)(1.0 / totalElements);
             rpp_rsqrt_avx(stdDevTensor, (Rpp32s)size, 0, normFactor, scale);
         }
@@ -949,7 +943,7 @@ RppStatus normalize_generic_host_tensor(T1 *srcPtr,
             paramStride[i] = !newAxis[i];
 
         Rpp32u idx = 0;
-        normalize_ND_tensor_nontoggle(srcPtrTemp, srcStride, dstPtrTemp, dstGenericDescPtr, meanTensor, stdDevTensor, shift, paramStride, newDims, nDim, 0, idx);
+        normalize_ND_tensor_nontoggle(srcPtrChannel, srcStride, dstPtrTemp, dstGenericDescPtr, meanTensor, stdDevTensor, shift, paramStride, newDims, nDim, 0, idx);
     }
 
     return RPP_SUCCESS;

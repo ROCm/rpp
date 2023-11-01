@@ -142,30 +142,32 @@ int main(int argc, char **argv)
                 case 8:
                 {
                     testCaseName = "normalize";
-                    Rpp32s axis_mask = 1;
-                    Rpp32f scale, shift;
-                    scale = shift = 0.0f;
-                    Rpp32f *meanTensor, *stdDevTensor;
-                    int size = max(srcDescriptorPtrND->dims[1], srcDescriptorPtrND->dims[2]);
+                    int axisMask = 1;
+                    float scale = 1.0;
+                    float shift = 0.0;
+                    Rpp32u size = 1; // length of input tensors differ based on axisMask and nDim
+                    Rpp32u maxSize = 1;
+                    for(int batch = 0; batch < batchSize; batch++)
+                    {
+                        for(int i = 0; i < nDim; i++)
+                            size *= ((axisMask & (int)(pow(2,i))) >= 1) ? 1 : roiTensor[(nDim * batch) + i];
+                        maxSize = max(maxSize, size);
+                    }
                     bool computeMean, computeStddev;
                     computeMean = computeStddev = 1;
 
-                    if(!(computeMean && computeStddev))
-                    {
-                        meanTensor = (Rpp32f *)calloc(size, sizeof(Rpp32f));
-                        stdDevTensor = (Rpp32f *)calloc(size, sizeof(Rpp32f));
-                    }
+                    Rpp32f *meanTensor = (Rpp32f *)calloc(maxSize * batchSize, sizeof(Rpp32f));
+                    Rpp32f *stdDevTensor = (Rpp32f *)calloc(maxSize * batchSize, sizeof(Rpp32f));
 
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 2)
-                        rppt_normalize_generic_host(inputF32, srcDescriptorPtrND, outputF32, dstDescriptorPtrND, axis_mask, meanTensor, stdDevTensor, computeMean, computeStddev, scale, shift, roiTensor, handle);
+                    {
+                        rppt_normalize_generic_host(inputF32, srcDescriptorPtrND, outputF32, dstDescriptorPtrND, axisMask, meanTensor, stdDevTensor, computeMean, computeStddev, scale, shift, roiTensor, handle);
+                        free(meanTensor);
+                        free(stdDevTensor);
+                    }
                     else
                         missingFuncFlag = 1;
-
-                    if(meanTensor != NULL)
-                        free(meanTensor);
-                    if(stdDevTensor != NULL)
-                        free(stdDevTensor);
 
                     // QA mode - verify outputs with golden outputs. Below code doesn’t run for performance tests
                     if (testType == 0)

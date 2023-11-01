@@ -93,7 +93,7 @@ def run_unit_test(srcPath, case, numRuns, testType, bitDepth, batchSize, outFile
     print("--------------------------------")
     print("Running a New Functionality...")
     print("--------------------------------")
-    print(f"./Tensor_audio_host {srcPath} {bitDepth} {case} {numRuns} {testType} {numRuns} {batchSize}")
+    print(f"./Tensor_audio_host {srcPath} {bitDepth} {case} {testType} {numRuns} {batchSize}")
     result = subprocess.run(["./Tensor_audio_host", srcPath, str(bitDepth), str(case), str(testType), str(numRuns), str(batchSize), outFilePath], stdout=subprocess.PIPE)    # nosec
     print(result.stdout.decode())
 
@@ -105,7 +105,7 @@ def run_performance_test(loggingFolder, srcPath, case, numRuns, testType, bitDep
     print("Running a New Functionality...")
     print("--------------------------------")
     with open("{}/Tensor_host_audio_raw_performance_log.txt".format(loggingFolder), "a") as log_file:
-        print(f"./Tensor_audio_host {srcPath} {bitDepth} {case} {numRuns} {testType} {numRuns} {batchSize} ")
+        print(f"./Tensor_audio_host {srcPath} {bitDepth} {case} {testType} {numRuns} {batchSize} ")
         process = subprocess.Popen(["./Tensor_audio_host", srcPath, str(bitDepth), str(case), str(testType), str(numRuns), str(batchSize), outFilePath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
         while True:
             output = process.stdout.readline()

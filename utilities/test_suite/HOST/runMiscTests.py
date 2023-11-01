@@ -197,8 +197,8 @@ subprocess.run(["make", "-j16"], cwd=".")    # nosec
 
 if testType == 0:
     for case in caseList:
-        if batchSize != 1:
-            print("QA tests can only run with a batch size of 1")
+        if batchSize != 3:
+            print("QA tests can only run with a batch size of 3")
             exit(0)
         if toggle == 1:
             print("Only Toggle variant is QA tested for test Type 0. Aborting!")

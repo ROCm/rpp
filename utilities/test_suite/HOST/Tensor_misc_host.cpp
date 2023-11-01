@@ -433,11 +433,16 @@ int main(int argc, char **argv)
                 computeMean = computeStddev = 1;
 
                 Rpp32u size = 1; // length of input tensors differ based on axisMask and nDim
-                for(int i = 0; i < nDim; i++)
-                    size *= ((axisMask & (int)(pow(2,i))) >= 1) ? 1 : roiTensor[nDim + i];
+                Rpp32u maxSize = 1;
+                for(int batch = 0; batch < batchSize; batch++)
+                {
+                    for(int i = 0; i < nDim; i++)
+                        size *= ((axisMask & (int)(pow(2,i))) >= 1) ? 1 : roiTensor[(nDim * batch) + i];
+                    maxSize = max(maxSize, size);
+                }
 
-                Rpp32f *meanTensor = (Rpp32f *)calloc(size * batchSize, sizeof(Rpp32f));
-                Rpp32f *stdDevTensor = (Rpp32f *)calloc(size * batchSize, sizeof(Rpp32f));
+                Rpp32f *meanTensor = (Rpp32f *)calloc(maxSize * batchSize, sizeof(Rpp32f));
+                Rpp32f *stdDevTensor = (Rpp32f *)calloc(maxSize * batchSize, sizeof(Rpp32f));
 
                 if(!(computeMean && computeStddev))
                     fill_mean_stddev_values(nDim, batchSize, size, meanTensor, stdDevTensor, qaMode);
