@@ -303,18 +303,16 @@ void normalize_3D_tensor_nontoggle(Rpp32f *srcPtr, RpptGenericDescPtr srcGeneric
     Rpp32f *dstPtrTemp = dstPtr;
     Rpp32s paramIdx = 0;
     Rpp32s idx1 = 0;
-    Rpp32s idx2 = 0;
 
     for(Rpp32u i = 0; i < length[0]; i++)
     {
         Rpp32f *srcPtrRow = srcPtrTemp;
         Rpp32f *dstPtrRow = dstPtrTemp;
-        idx1 = paramIdx;
         for(Rpp32u j = 0; j < length[1]; j++)
         {
             Rpp32f *srcPtrRowTemp = srcPtrRow;
             Rpp32f *dstPtrRowTemp = dstPtrRow;
-            idx2 = idx1;
+            idx1 = paramIdx;
             for(Rpp32u k = 0; k < length[2]; k++)
             {
                 *dstPtrRowTemp = ((*srcPtrRowTemp - meanPtr[paramIdx]) * multiplierPtr[paramIdx]) + shift;
@@ -330,7 +328,7 @@ void normalize_3D_tensor_nontoggle(Rpp32f *srcPtr, RpptGenericDescPtr srcGeneric
             dstPtrRow += dstGenericDescPtr->strides[2];
         }
         if(i < length[0] - 1)
-            paramIdx = (!paramStride[0]) ? idx2 : paramIdx + paramStride[0];
+            paramIdx = (!paramStride[0]) ? 0 : paramIdx + paramStride[0];
         srcPtrTemp += srcGenericDescPtr->strides[1];
         dstPtrTemp += dstGenericDescPtr->strides[1];
     }
