@@ -1,136 +1,143 @@
-# ROCm Performance Primitives Library
+# Changelog for RPP
 
-## Changelog
+Full documentation for RPP is available at (https://rocm.docs.amd.com/projects/rpp/en/latest/).
 
-### Online Documentation
-[RPP Documentation](https://gpuopen-professionalcompute-libraries.github.io/rpp/)
+### RPP 1.5.0 (unreleased)
 
-### RPP 1.5.0 (Unreleased)
+### Changes
 
-#### Added
-* 
+* Prerequisites
 
-#### Optimizations
-* 
+### Tested configurations
 
-#### Changed
-* Prerequisites 
-
-#### Fixed
-* 
-
-### Tested Configurations
 * Linux distribution
-  + Ubuntu - `20.04` / `22.04`
-  + CentOS - `7`
-  + RHEL - `8`/`9`
+  * Ubuntu - `20.04` / `22.04`
+  * CentOS - `7`
+  * RHEL - `8`/`9`
 * ROCm: rocm-core - `5.5.0.50500-63`
 * Clang - Version `5.0.1` and above
 * CMake - Version `3.22.3`
 * IEEE 754-based half-precision floating-point library - Version `1.12.0`
 
-### RPP 1.4.0
+## RPP 1.4.0
 
-#### Added
-* Updated Unit Tests
-* Component based packaging enabled for dev/runtime/asan
-* ASAN build install/Package changes added
-* License file added to package.
-* Jenkins Groovy CI scripts enhanced to support multi component package testing.
+### Additions
 
-#### Optimizations
-* CMakeLists 
+* Updated unit tests
+* Component-based packaging enabled for dev/runtime/ASan
+* ASas build install/package changes added
+* License file added to package
+* Jenkins Groovy CI scripts enhanced to support multi-component package testing
 
-#### Changed
+### Optimizations
+
+* CMakeLists
+
+### Changes
+
 * Documentation
-* Replaced the boost functions with std c++ library to remove boost library dependency
+* Replaced boost functions with the standard C++ library to remove boost library dependency
 
-#### Fixed
-* OCL Backend
+### Fixes
 
-### Tested Configurations
-* Linux distribution
-  + Ubuntu - `20.04` / `22.04`
-  + CentOS - `7`
-  + RHEL - `8`/`9`
+* OCL backend
+
+### Tested configurations
+
+* Linux
+  * Ubuntu - `20.04` / `22.04`
+  * CentOS - `7`
+  * RHEL - `8`/`9`
 * ROCm: rocm-core - `5.5.0.50500-63`
 * Clang - Version `5.0.1` and above
 * CMake - Version `3.22.3`
 * IEEE 754-based half-precision floating-point library - Version `1.12.0`
 
-### RPP 1.3.0
+## RPP 1.3.0
 
-#### Added
-* Updated Unit Tests
+### Additions
 
-#### Optimizations
-* CMakeLists 
+* Updated unit tests
 
-#### Changed
+### Optimizations
+
+* CMakeLists
+
+### Changes
+
 * Documentation
 
-#### Fixed
-* OCL Backend
+### Fixes
 
-### Tested Configurations
-* Linux distribution
-  + Ubuntu - `20.04` / `22.04`
-  + CentOS - `7`
-  + RHEL - `8`/`9`
+* OCL backend
+
+### Tested configurations
+
+* Linux
+  * Ubuntu - `20.04` / `22.04`
+  * CentOS - `7`
+  * RHEL - `8`/`9`
 * ROCm: rocm-core - `5.5.0.50500-63`
 * Clang - Version `5.0.1` and above
 * CMake - Version `3.22.3`
 * Boost - Version `1.72`
 * IEEE 754-based half-precision floating-point library - Version `1.12.0`
 
-### RPP 1.2.0
+## RPP 1.2.0
 
-#### Added
-* Updated Unit Tests
+### Additions
 
-#### Optimizations
-* CMakeLists 
+* Updated unit tests
 
-#### Changed
+### Optimizations
+
+* CMakeLists
+
+### Changes
+
 * Documentation
 
-#### Fixed
-* OCL Backend
+### Fixes
+
+* OCL backend
 * Jenkins CI - OCL Build Test
 
-### Tested Configurations
-* Linux distribution
-  + Ubuntu - `20.04` / `22.04`
-  + CentOS - `7`
-  + RHEL - `8`/`9`
+### Tested configurations
+
+* Linux
+  * Ubuntu - `20.04` / `22.04`
+  * CentOS - `7`
+  * RHEL - `8`/`9`
 * ROCm: rocm-core - `5.5.0.50500-63`
 * Clang - Version `5.0.1` and above
 * CMake - Version `3.22.3`
 * Boost - Version `1.72`
 * IEEE 754-based half-precision floating-point library - Version `1.12.0`
 
-### Known issues
-* 
+## RPP 1.1.0
 
-### RPP 1.1.0
+### Additions
 
-#### Added
-* OpenMP - parameter support for OpenMP numthreads
+* Parameter support for OpenMP numthreads
 
-#### Optimizations
-* Readme Updates
+### Optimizations
 
-#### Changed
-* RPP - API Updated
+* Readme updates
 
-#### Fixed
+### Changes
+
+* RPP API updates
+
+### Fixes
+
 * Minor bugs
 
-### Tested Configurations
-* Linux distribution
-  + Ubuntu - `20.04` / `22.04`
-  + CentOS - `7`
-  + RHEL - `8`/`9`
+### Tested configurations
+
+* Linux
+  * Ubuntu - `20.04` / `22.04`
+  * CentOS - `7`
+  * RHEL - `8`/`9`
 * ROCm: rocm-core - `5.5.0.50500-63`
 * Clang - Version `5.0.1` and above
 * CMake - Version `3.22.3`
@@ -138,144 +145,162 @@
 * IEEE 754-based half-precision floating-point library - Version `1.12.0`
 
 ### Known issues
-* SLES - Clang package missing with latest updates. Need manual Clang install.
 
-### RPP 1.0.0
+* SLES - the Clang package is missing in the latest updates, which means Clang must be manually
+  installed.
 
-#### Added
+## RPP 1.0.0
+
+### Additions
+
 * Test Suite for all backends
 
-#### Optimizations
-* Readme Updates
+### Optimizations
+
+* Readme updates
 * Tests
-* Build & Prerequisites 
+* Build and prerequisites
 
-#### Changed
-* Radeon Performance Primitives to ROCm Performance Primitives
-* Lib Name - `amd_rpp` to `rpp`
+### Changes
 
-#### Fixed
+* Our name has changed from *Radeon Performance Primitives* to *ROCm Performance Primitives*
+* Lib name: `amd_rpp` to `rpp`
+
+### Fixes
+
 * Minor bugs
 * Tests
 * Readme
 
-### Tested Configurations
-* Linux distribution
-  + Ubuntu - `20.04` / `22.04`
-  + CentOS - `7`
-  + RHEL - `8`/`9`
+### Tested configurations
+
+* Linux
+  * Ubuntu - `20.04` / `22.04`
+  * CentOS - `7`
+  * RHEL - `8`/`9`
 * ROCm: rocm-core - `5.4.0.50400-72`
 * Clang - Version `5.0.1` and above
-* CMake - Version `3.22.3` 
+* CMake - Version `3.22.3`
 * Boost - Version `1.72`
 * IEEE 754-based half-precision floating-point library - Version `1.12.0`
 
 ### Known issues
-* SLES - Clang package missing with latest updates. Need manual Clang install.
 
-### RPP 0.99
+* SLES - the Clang package is missing in the latest updates, which means Clang must be manually
+  installed.
 
-#### Added
-* Linux Dockers
+## RPP 0.99
 
-#### Optimizations
-* Readme Updates
+### Additions
 
-#### Changed
+* Linux dockers
+
+### Optimizations
+
+* Readme updates
+
+### Changes
+
 * CMakeList
 
-#### Fixed
+### Fixes
+
 * Minor bugs and warnings
 
-### Tested Configurations
+### Tested configurations
+
 * Linux distribution
-  + Ubuntu - `20.04` / `22.04`
-  + CentOS - `7`/`8`
+  * Ubuntu - `20.04` / `22.04`
+  * CentOS - `7`/`8`
 * ROCm: rocm-core - `5.4.0.50400-72`
 * Clang - Version `5.0.1` and above
-* CMake - Version `3.22.3` 
+* CMake - Version `3.22.3`
 * Boost - Version `1.72`
 * IEEE 754-based half-precision floating-point library - Version `1.12.0`
 
-### Known issues
-* 
+## RPP 0.98
 
-### RPP 0.98
-
-#### Added
+### Additions
 * Dockers
 
-#### Optimizations
-* Readme Updates
 
-#### Changed
+### Optimizations
+
+* Readme updates
+
+#### Changes
+
 * CMakeList
 
-#### Fixed
+#### Fixes
+
 * Minor bugs and warnings
 
-### Tested Configurations
-* Linux distribution
-  + Ubuntu - `20.04` / `22.04`
-  + CentOS - `7`/`8`
+### Tested configurations
+
+* Linux
+  * Ubuntu - `20.04` / `22.04`
+  * CentOS - `7`/`8`
 * ROCm: rocm-core - `5.3.0.50300-63`
 * Clang - Version `5.0.1` and above
-* CMake - Version `3.22.3` 
+* CMake - Version `3.22.3`
 * Boost - Version `1.72`
 * IEEE 754-based half-precision floating-point library - Version `1.12.0`
 
-### Known issues
-* 
+## RPP 0.97
 
-### RPP 0.97
+### Additions
 
-#### Added
 * Support for CentOS 7 & SLES 15 SP2
-* Support for ROCm 5.3+ 
+* Support for ROCm 5.3+
 * Support for Ubuntu 22.04
 
-#### Optimizations
-* Readme Updates
+### Optimizations
 
-#### Changed
+* Readme updates
 
-* CMakeList Updates
+### Changes
 
-#### Fixed
+* CMakeList updates
+
+### Fixes
+
 * Minor bugs and warnings
 
-### Tested Configurations
+### Tested configurations
+
 * Linux distribution
-  + Ubuntu - `20.04` / `22.04`
-  + CentOS - `7`/`8`
+  * Ubuntu - `20.04` / `22.04`
+  * CentOS - `7`/`8`
 * ROCm: rocm-core - `5.3.0.50300-36`
 * Clang - Version `5.0.1` and above
-* CMake - Version `3.22.3` 
+* CMake - Version `3.22.3`
 * Boost - Version `1.72`
 * IEEE 754-based half-precision floating-point library - Version `1.12.0`
 
-### Known issues
-* 
+## RPP 0.96
 
-### RPP 0.96
+### Additions
 
-#### Added
-* New Tests
+* New tests
 
-#### Optimizations
-* Readme Updates
+### Optimizations
 
-#### Changed
+* Readme updates
 
-* `CPU`/`HIP`/`OpenCL` Backend Updates
+### Changes
 
-#### Fixed
+* `CPU`/`HIP`/`OpenCL` backend updates
+
+### Fixes
+
 * Minor bugs and warnings
 
-### Tested Configurations
-* Linux distribution
-  + Ubuntu - `18.04` / `20.04`
-  + CentOS - `8`
+### Tested configurations
+
+* Linux
+  * Ubuntu - `18.04` / `20.04`
+  * CentOS - `8`
 * ROCm: rocm-core - `5.2.0.50200-65`
 * Clang - Version `6.0+`
 * CMake - Version `3.22.3`
@@ -283,27 +308,33 @@
 * IEEE 754-based half-precision floating-point library - Version `1.12.0`
 
 ### Known issues
-* RPP Build on CentOS 7 & SLES SP2 Not Supported
 
-### RPP 0.95
+* RPP is not supported on CentOS 7 and SLES SP2
 
-#### Added
-* New Tests
+## RPP 0.95
 
-#### Optimizations
-* Readme Updates
+### Additions
 
-#### Changed
-* **Backend** - Default Backend set to `HIP`
-* CPU Backend Added
+* New tests
+* CPU backend support
 
-#### Fixed
+### Optimizations
+
+* Readme updates
+
+### Changes
+
+* `HIP` is now the default backend
+
+### Fixes
+
 * Minor bugs and warnings
 
-### Tested Configurations
-* Linux distribution
-  + Ubuntu - `18.04` / `20.04`
-  + CentOS - `8`
+### Tested configurations
+
+* Linux
+  * Ubuntu - `18.04` / `20.04`
+  * CentOS - `8`
 * ROCm: rocm-core - `5.2.0.50200-65`
 * Clang - Version `6.0`
 * CMake - Version `3.22.3`
@@ -311,26 +342,32 @@
 * IEEE 754-based half-precision floating-point library - Version `1.12.0`
 
 ### Known issues
-* `ROCm reorganization` - install updates does not match ROCm specification 
 
-### RPP 0.93
+* ROCm reorganization: install updates no longer match ROCm specifications
 
-#### Added
-* New Tests
+## RPP 0.93
 
-#### Optimizations
-* Readme Updates
+### Additions
 
-#### Changed
-* **Backend** - Default Backend set to `HIP`
+* New tests
 
-#### Fixed
+### Optimizations
+
+* Readme updates
+
+### Changes
+
+* `HIP` is now the default backend
+
+### Fixes
+
 * Minor bugs and warnings
 
-### Tested Configurations
-* Linux distribution
-  + Ubuntu - `18.04` / `20.04`
-  + CentOS - `8`
+### Tested configurations
+
+* Linux
+  * Ubuntu - `18.04` / `20.04`
+  * CentOS - `8`
 * ROCm: rocm-core - `5.0.0.50000-49`
 * Clang - Version `6.0`
 * CMake - Version `3.22.3`
@@ -338,4 +375,5 @@
 * IEEE 754-based half-precision floating-point library - Version `1.12.0`
 
 ### Known issues
-* `CPU` only backend not enabled
+
+* `CPU` backend is not enabled
