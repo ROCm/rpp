@@ -603,6 +603,15 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
     Rpp32u numDims = srcGenericDescPtr->numDims;
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
 
+    Rpp32u maxSize = 1;
+    for(int batch = 0; batch < batchSize; batch++)
+    {
+        Rpp32u size = 1; // length of input tensors differ based on axisMask and nDim
+        for(int i = 0; i < numDims; i++)
+            size *= ((axisMask & (int)(pow(2,i))) >= 1) ? 1 : roiTensor[(numDims * batch) + i];
+        maxSize = std::max(maxSize, size);
+    }
+
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < batchSize; batchCount++)
@@ -621,7 +630,6 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
         Rpp32f *srcPtrTemp, *dstPtrTemp, *meanTensor, *stdDevTensor;
         srcPtrTemp = srcPtr + batchCount * srcGenericDescPtr->strides[0];
         dstPtrTemp = dstPtr + batchCount * dstGenericDescPtr->strides[0];
-        int maxSize = sizeof(meanTensorPtr) / sizeof(Rpp32f);
         meanTensor = meanTensorPtr + batchCount * maxSize;
         stdDevTensor = stdDevTensorPtr + batchCount * maxSize;
 

@@ -149,6 +149,7 @@ int main(int argc, char **argv)
                     Rpp32u maxSize = 1;
                     for(int batch = 0; batch < batchSize; batch++)
                     {
+                        size = 1;
                         for(int i = 0; i < nDim; i++)
                             size *= ((axisMask & (int)(pow(2,i))) >= 1) ? 1 : roiTensor[(nDim * batch) + i];
                         maxSize = max(maxSize, size);
