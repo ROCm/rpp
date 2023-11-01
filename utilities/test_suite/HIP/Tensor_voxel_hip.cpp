@@ -234,7 +234,7 @@ int main(int argc, char * argv[])
             {
                 case 0:
                 {
-                    testCaseName = "fmadd";
+                    testCaseName = "fused_multiply_add_scalar";
                     Rpp32f *mulTensor = reinterpret_cast<Rpp32f *>(pinnedMemArgs);
                     Rpp32f *addTensor = mulTensor + batchSize;
 
