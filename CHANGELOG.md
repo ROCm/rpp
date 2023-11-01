@@ -9,6 +9,10 @@
 
 #### Added
 * Updated Unit Tests
+* Component based packaging enabled for dev/runtime/asan
+* ASAN build install/Package changes added
+* License file added to package.
+* Jenkins Groovy CI scripts enhanced to support multi component package testing.
 
 #### Optimizations
 * CMakeLists 
