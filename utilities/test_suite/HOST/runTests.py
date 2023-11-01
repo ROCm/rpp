@@ -30,10 +30,10 @@ timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 # Set the value of an environment variable
 os.environ["TIMESTAMP"] = timestamp
 
-cwd = os.getcwd()
-inFilePath1 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src1')
-inFilePath2 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src2')
-qaInputFile = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src1')
+scriptPath = os.path.dirname(os.path.realpath(__file__))
+inFilePath1 = scriptPath + "/../TEST_IMAGES/three_images_mixed_src1"
+inFilePath2 = scriptPath + "/../TEST_IMAGES/three_images_mixed_src2"
+qaInputFile = scriptPath + "/../TEST_IMAGES/three_images_mixed_src1"
 
 def validate_path(input_path):
     if not os.path.exists(input_path):
@@ -54,9 +54,9 @@ def create_layout_directories(dst_path, layout_dict):
 
 def get_log_file_list(preserveOutput):
     return [
-        "../OUTPUT_PERFORMANCE_LOGS_HOST_" + timestamp + "/Tensor_host_pkd3_raw_performance_log.txt",
-        "../OUTPUT_PERFORMANCE_LOGS_HOST_" + timestamp + "/Tensor_host_pln3_raw_performance_log.txt",
-        "../OUTPUT_PERFORMANCE_LOGS_HOST_" + timestamp + "/Tensor_host_pln1_raw_performance_log.txt"
+        scriptPath + "/../OUTPUT_PERFORMANCE_LOGS_HOST_" + timestamp + "/Tensor_host_pkd3_raw_performance_log.txt",
+        scriptPath + "/../OUTPUT_PERFORMANCE_LOGS_HOST_" + timestamp + "/Tensor_host_pln3_raw_performance_log.txt",
+        scriptPath + "/../OUTPUT_PERFORMANCE_LOGS_HOST_" + timestamp + "/Tensor_host_pln1_raw_performance_log.txt"
     ]
 
 def rpp_test_suite_parser_and_validator():
@@ -148,41 +148,46 @@ if qaMode and batchSize != 3:
 # set the output folders and number of runs based on type of test (unit test / performance test)
 if(testType == 0):
     if qaMode:
-        outFilePath = os.path.join(os.path.dirname(cwd), 'QA_RESULTS_HOST_' + timestamp)
+        outFilePath = scriptPath + "/../QA_RESULTS_HOST_" + timestamp
     else:
-        outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_IMAGES_HOST_' + timestamp)
+        outFilePath = scriptPath + "/../OUTPUT_IMAGES_HOST_" + timestamp
     numRuns = 1
 elif(testType == 1):
     if numRuns == 0:
         numRuns = 100  #default numRuns for running performance tests
-    outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_PERFORMANCE_LOGS_HOST_' + timestamp)
+    outFilePath = scriptPath + "/../OUTPUT_PERFORMANCE_LOGS_HOST_" + timestamp
 dstPath = outFilePath
 
 # run the shell script
-subprocess.call(["./testAllScript.sh", srcPath1, args.input_path2, str(testType), str(numRuns), str(qaMode), str(decoderType), str(preserveOutput), str(batchSize), " ".join(caseList)])  # nosec
+subprocess.call([scriptPath + "/testAllScript.sh", srcPath1, args.input_path2, str(testType), str(numRuns), str(qaMode), str(decoderType), str(preserveOutput), str(batchSize), " ".join(caseList)])  # nosec
 
 # print the results of qa tests
 supportedCaseList = ['0', '1', '2', '4', '13', '29', '31', '34', '36', '37', '38', '84', '87']
 nonQACaseList = ['54', '84']
-supportedCases = 0
-for num in caseList:
-    if qaMode == 1 and num not in nonQACaseList:
-        supportedCases += 1
-    elif qaMode == 0 and num in supportedCaseList:
-        supportedCases += 1
 
-caseInfo = "Tests are run for " + str(supportedCases) + " supported cases out of the " + str(len(caseList)) + " cases requested"
 if qaMode and testType == 0:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
         f = open(qaFilePath, 'r+')
         print("---------------------------------- Results of QA Test ----------------------------------\n")
+        numLines = 0
+        numPassed = 0
         for line in f:
             sys.stdout.write(line)
+            numLines += 1
+            if "PASSED" in line:
+                numPassed += 1
             sys.stdout.flush()
-        f.write(caseInfo)
-print("\n-------------- " + caseInfo + " --------------")
+        resultsInfo = "\n\nFinal Results of Tests:"
+        resultsInfo += "\n    - Total test cases including all subvariants REQUESTED = " + str(numLines)
+        resultsInfo += "\n    - Total test cases including all subvariants PASSED = " + str(numPassed)
+        resultsInfo += "\n\nGeneral information on Tensor test suite availability:"
+        resultsInfo += "\n    - Total augmentations supported in Tensor test suite = " + str(len(supportedCaseList))
+        resultsInfo += "\n    - Total augmentations with golden output QA test support = " + str(len(supportedCaseList) - len(nonQACaseList))
+        resultsInfo += "\n    - Total augmentations without golden ouput QA test support (due to randomization involved) = " + str(len(nonQACaseList))
+        f.write(resultsInfo)
+    print("\n-------------------------------------------------------------------" + resultsInfo + "\n\n-------------------------------------------------------------------")
 
 layoutDict = {0:"PKD3", 1:"PLN3", 2:"PLN1"}
 # unit tests and QA mode disabled

@@ -61,14 +61,14 @@ PROJECT_BRIEF          = "AMD ROCm Performance Primitives (RPP) library is a com
 # pixels and the maximum width should not exceed 200 pixels. Doxygen will copy
 # the logo to the output directory.
 
-PROJECT_LOGO           = "docs/data/rocm.png"
+PROJECT_LOGO           = "../data/rocm.png"
 
 # The OUTPUT_DIRECTORY tag is used to specify the (relative or absolute) path
 # into which the generated documentation will be written. If a relative path is
 # entered, it will be relative to the location where doxygen was started. If
 # left blank the current directory will be used.
 
-OUTPUT_DIRECTORY       = doxygen_output
+OUTPUT_DIRECTORY       = .
 
 # If the CREATE_SUBDIRS tag is set to YES then doxygen will create up to 4096
 # sub-directories (in 2 levels) under the output directory of each output format
@@ -815,7 +815,7 @@ FILE_VERSION_FILTER    =
 # DoxygenLayout.xml, doxygen will parse it automatically even if the LAYOUT_FILE
 # tag is left empty.
 
-LAYOUT_FILE            = .DoxygenLayout.xml
+LAYOUT_FILE            = ../../.DoxygenLayout.xml
 
 # The CITE_BIB_FILES tag can be used to specify one or more bib files containing
 # the reference definitions. This must be a list of .bib files. The .bib
@@ -943,31 +943,30 @@ WARN_LOGFILE           =
 # spaces. See also FILE_PATTERNS and EXTENSION_MAPPING
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = README.md \
-                        include/rpp.h \
-                        include/rppi.h \
-                        include/rppt.h \
-                        include/rppversion.h \
-                        include/rppdefs.h \
-                        include/rppi_advanced_augmentations.h \
-                        include/rppi_arithmetic_operations.h \
-                        include/rppi_color_model_conversions.h \
-                        include/rppi_computer_vision.h \
-                        include/rppi_filter_operations.h \
-                        include/rppi_fused_functions.h \
-                        include/rppi_geometry_transforms.h \
-                        include/rppi_image_augmentations.h \
-                        include/rppi_logical_operations.h \
-                        include/rppi_morphological_transforms.h \
-                        include/rppi_statistical_operations.h \
-                        include/rppt_tensor_color_augmentations.h \
-                        include/rppt_tensor_data_exchange_operations.h \
-                        include/rppt_tensor_effects_augmentations.h \
-                        include/rppt_tensor_filter_augmentations.h \
-                        include/rppt_tensor_geometric_augmentations.h \
-                        include/rppt_tensor_morphological_operations.h \
-                        include/rppt_tensor_statistical_operations.h \
-                        include/rppt_tensor_audio_augmentations.h
+INPUT                  = ../../README.md \
+                        ../../include/rpp.h \
+                        ../../include/rppi.h \
+                        ../../include/rppt.h \
+                        ../../include/rppversion.h \
+                        ../../include/rppdefs.h \
+                        ../../include/rppi_advanced_augmentations.h \
+                        ../../include/rppi_arithmetic_operations.h \
+                        ../../include/rppi_color_model_conversions.h \
+                        ../../include/rppi_computer_vision.h \
+                        ../../include/rppi_filter_operations.h \
+                        ../../include/rppi_fused_functions.h \
+                        ../../include/rppi_geometry_transforms.h \
+                        ../../include/rppi_image_augmentations.h \
+                        ../../include/rppi_logical_operations.h \
+                        ../../include/rppi_morphological_transforms.h \
+                        ../../include/rppi_statistical_operations.h \
+                        ../../include/rppt_tensor_color_augmentations.h \
+                        ../../include/rppt_tensor_data_exchange_operations.h \
+                        ../../include/rppt_tensor_effects_augmentations.h \
+                        ../../include/rppt_tensor_filter_augmentations.h \
+                        ../../include/rppt_tensor_geometric_augmentations.h \
+                        ../../include/rppt_tensor_morphological_operations.h \
+                        ../../include/rppt_tensor_statistical_operations.h
 
 
 # This tag can be used to specify the character encoding of the source files
@@ -1118,8 +1117,8 @@ EXAMPLE_RECURSIVE      = NO
 # that contain images that are to be included in the documentation (see the
 # \image command).
 
-IMAGE_PATH             = docs/data/doxygenInputs \
-                         docs/data/doxygenOutputs
+IMAGE_PATH             = ../../data/doxygenInputs \
+                         ../../data/doxygenOutputs
 
 # The INPUT_FILTER tag can be used to specify a program that doxygen should
 # invoke to filter for each input file. Doxygen will invoke the filter program
@@ -1180,7 +1179,7 @@ FILTER_SOURCE_PATTERNS =
 # (index.html). This can be useful if you have a project on for instance GitHub
 # and want to reuse the introduction page also for the doxygen output.
 
-USE_MDFILE_AS_MAINPAGE = README.md
+USE_MDFILE_AS_MAINPAGE = ../../README.md
 
 # The Fortran standard specifies that for fixed formatted Fortran code all
 # characters from position 72 are to be considered as comment. A common
@@ -1867,7 +1866,7 @@ MATHJAX_CODEFILE       =
 # The default value is: YES.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-SEARCHENGINE           = YES
+SEARCHENGINE           = NO
 
 # When the SERVER_BASED_SEARCH tag is enabled the search engine will be
 # implemented using a web server instead of a web client using JavaScript. There
@@ -2227,7 +2226,7 @@ MAN_LINKS              = NO
 # captures the structure of the code including all documentation.
 # The default value is: NO.
 
-GENERATE_XML           = NO
+GENERATE_XML           = YES
 
 # The XML_OUTPUT tag is used to specify where the XML pages will be put. If a
 # relative path is entered the value of OUTPUT_DIRECTORY will be put in front of
@@ -2423,7 +2422,7 @@ TAGFILES               =
 # tag file that is based on the input files it reads. See section "Linking to
 # external documentation" for more information about the usage of tag files.
 
-GENERATE_TAGFILE       =
+GENERATE_TAGFILE       = html/tagfile.xml
 
 # If the ALLEXTERNALS tag is set to YES, all external class will be listed in
 # the class index. If set to NO, only the inherited external classes will be
@@ -2670,7 +2669,7 @@ DIR_GRAPH_MAX_DEPTH    = 1
 # The default value is: png.
 # This tag requires that the tag HAVE_DOT is set to YES.
 
-DOT_IMAGE_FORMAT       = png
+DOT_IMAGE_FORMAT       = svg
 
 # If DOT_IMAGE_FORMAT is set to svg, then this option can be set to YES to
 # enable generation of interactive SVG images that allow zooming and panning.
@@ -2682,7 +2681,7 @@ DOT_IMAGE_FORMAT       = png
 # The default value is: NO.
 # This tag requires that the tag HAVE_DOT is set to YES.
 
-INTERACTIVE_SVG        = NO
+INTERACTIVE_SVG        = YES
 
 # The DOT_PATH tag can be used to specify the path where the dot tool can be
 # found. If left blank, it is assumed the dot tool can be found in the path.
