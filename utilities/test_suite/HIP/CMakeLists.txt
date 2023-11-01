@@ -19,6 +19,8 @@
 # THE SOFTWARE.
 
 cmake_minimum_required(VERSION 3.5)
+set(CMAKE_CXX_COMPILER clang++)
+set(CMAKE_CXX_STANDARD 17)
 project(test_suite/HIP)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../../../cmake)
 set(ROCM_PATH /opt/rocm CACHE PATH "default ROCm installation path")
@@ -67,8 +69,7 @@ if (hip_FOUND AND OpenCV_FOUND)
     link_directories(${ROCM_PATH}/lib /usr/local/lib)
 
     add_executable(Tensor_hip Tensor_hip.cpp)
-
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGPU_SUPPORT=1 -DRPP_BACKEND_HIP=1 -std=gnu++14")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGPU_SUPPORT=1 -DRPP_BACKEND_HIP=1 -std=gnu++17")
     target_link_libraries(Tensor_hip ${OpenCV_LIBS} -lturbojpeg -lrpp ${hip_LIBRARIES} pthread ${LINK_LIBRARY_LIST} hip::device)
 else()
     message("-- ${Yellow}Error: OpenCV and hip must be installed to install ${PROJECT_NAME} successfully!${ColourReset}")
@@ -81,7 +82,7 @@ if(NIFTI_FOUND AND OpenCV_FOUND)
     link_directories(${ROCM_PATH}/lib /usr/local/lib)
 
     add_executable(Tensor_voxel_hip Tensor_voxel_hip.cpp)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++14")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++17")
     target_link_libraries(Tensor_voxel_hip ${OpenCV_LIBS} -lturbojpeg -lrpp ${hip_LIBRARIES} pthread ${LINK_LIBRARY_LIST} hip::device ${NIFTI_PACKAGE_PREFIX}NIFTI::${NIFTI_PACKAGE_PREFIX}niftiio)
 else()
     message("-- ${Yellow}Error: libniftiio must be installed to install ${PROJECT_NAME} successfully!${ColourReset}")

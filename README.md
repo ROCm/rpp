@@ -34,10 +34,10 @@ Input<br>(nifti1 .nii medical image) | fused_multiply_add_scalar<br>(brightened 
 
 Run the steps below to build documentation locally.
 
-* sphinx documentation
+* Sphinx documentation
 ```bash
 cd docs
-pip3 install -r .sphinx/requirements.txt
+pip3 install -r sphinx/requirements.txt
 python3 -m sphinx -T -E -b html -d _build/doctrees -D language=en . _build/html
 ```
 
@@ -56,7 +56,9 @@ doxygen .Doxyfile
 
 * [ROCm supported hardware](https://docs.amd.com/bundle/Hardware_and_Software_Reference_Guide/page/Hardware_and_Software_Support.html)
 
-* [ROCm](https://docs.amd.com/bundle/ROCm-Installation-Guide-v5.4.3/page/How_to_Install_ROCm.html) `5.4.3` and above
+* [ROCm](https://docs.amd.com/bundle/ROCm-Installation-Guide-v5.4.3/page/How_to_Install_ROCm.html) `5.6.1` and above
+
+* [HIP](https://github.com/ROCm-Developer-Tools/HIP)
 
 * Clang Version `5.0.1` and above
 
@@ -87,13 +89,27 @@ doxygen .Doxyfile
 * CMake Version `3.5` and above
 
 * IEEE 754-based half-precision floating-point library - half.hpp
+  + Use `half` package with ROCm
 
-  ```
-  wget https://sourceforge.net/projects/half/files/half/1.12.0/half-1.12.0.zip
-  unzip half-1.12.0.zip -d half-files
-  sudo mkdir /usr/local/include/half
-  sudo cp half-files/include/half.hpp /usr/local/include/half
-  ```
+    ```
+    sudo apt-get install half
+    ```
+    **NOTE:** use the right package-management utility - `zypper`/`yum`
+ 
+  + Install from source
+
+    ```
+    wget https://sourceforge.net/projects/half/files/half/1.12.0/half-1.12.0.zip
+    unzip half-1.12.0.zip -d half-files
+    sudo mkdir /usr/local/include/half
+    sudo cp half-files/include/half.hpp /usr/local/include/half
+    ```
+
+* Compiler with support for C++ Version `17` and above
+
+* OpenMP
+  
+* Threads
 
 ## Prerequisites for Test Suite
 
