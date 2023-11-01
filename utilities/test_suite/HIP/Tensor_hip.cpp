@@ -262,8 +262,9 @@ int main(int argc, char **argv)
         outputChannels = 1;
     Rpp32u srcOffsetInBytes = (kernelSizeCase) ? (12 * (additionalParam / 2)) : 0;
     Rpp32u dstOffsetInBytes = 0;
+    int imagesMixed = 0; // Flag used to check if all images in dataset is of same dimensions
 
-    set_max_dimensions(imageNamesPath, maxHeight, maxWidth);
+    set_max_dimensions(imageNamesPath, maxHeight, maxWidth, imagesMixed);
 
     // Set numDims, offset, n/c/h/w values, strides for src/dst
     set_descriptor_dims_and_strides(srcDescPtr, batchSize, maxHeight, maxWidth, inputChannels, srcOffsetInBytes);
@@ -312,6 +313,18 @@ int main(int argc, char **argv)
     double wallTime;
     string testCaseName;
 
+    if(testCase == 82 && imagesMixed)
+    {
+        std::cerr<<"\n RICAP only works with same dimension images";
+        exit(0);
+    }
+
+    if(testCase == 82 && batchSize < 2)
+    {
+        std::cerr<<"\n RICAP only works with BatchSize > 1";
+        exit(0);
+    }
+  
     // Initialize buffers for any reductionType functions
     void *reductionFuncResultArr;
     Rpp32u reductionFuncResultArrLength = srcDescPtr->n * 4;
@@ -333,6 +346,10 @@ int main(int argc, char **argv)
     CHECK(hipMalloc(&d_output, outputBufferSize));
     if(dualInputCase)
         CHECK(hipMalloc(&d_input_second, inputBufferSize));
+
+    RpptROI *roiPtrInputCropRegion;
+    if(testCase == 82)
+        CHECK(hipHostMalloc(&roiPtrInputCropRegion, 4 * sizeof(RpptROI)));
 
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
@@ -704,6 +721,30 @@ int main(int argc, char **argv)
 
                 break;
             }
+            case 82:
+            {
+                testCaseName = "ricap";
+
+                Rpp32u permutationTensor[batchSize * 4];
+
+                if(imagesMixed)
+                {
+                    std::cerr<<"\n RICAP only works with same dimension images";
+                    break;
+                }
+
+                if(qaFlag)
+                    init_ricap_qa(maxWidth, maxHeight, batchSize, permutationTensor, roiPtrInputCropRegion);
+                else
+                    init_ricap(maxWidth, maxHeight, batchSize, permutationTensor, roiPtrInputCropRegion);
+
+                startWallTime = omp_get_wtime();
+                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    rppt_ricap_gpu(d_input, srcDescPtr, d_output, dstDescPtr, permutationTensor, roiPtrInputCropRegion, roiTypeSrc, handle);
+                else
+                    missingFuncFlag = 1;
+                break;
+            }
             case 84:
             {
                 testCaseName = "spatter";
@@ -881,6 +922,8 @@ int main(int argc, char **argv)
     CHECK(hipHostFree(roiTensorPtrSrc));
     CHECK(hipHostFree(roiTensorPtrDst));
     CHECK(hipHostFree(dstImgSizes));
+    if(testCase == 82)
+        CHECK(hipHostFree(roiPtrInputCropRegion));
     if (reductionTypeCase)
         CHECK(hipHostFree(reductionFuncResultArr));
     free(input);
