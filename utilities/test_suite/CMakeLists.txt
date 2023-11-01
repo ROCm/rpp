@@ -30,31 +30,61 @@ find_package(Python3 QUIET)
 
 if(Python3_FOUND)
 
-  add_test(NAME rpp_qa_tests_host_all 
-        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HOST/runTests.py 
-        --qa_mode 1 --batch_size 3
+    # Running all HOST tests
+    add_test(
+        NAME rpp_qa_tests_tensor_host_all
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HOST/runTests.py --qa_mode 1 --batch_size 3
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-      )
-  add_test(NAME rpp_qa_tests_host_brightness 
-      COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HOST/runTests.py 
-      --qa_mode 1 --batch_size 3 --case_list 0
-      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
-  add_test(NAME rpp_qa_tests_host_gamma_correction 
-    COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HOST/runTests.py 
-    --qa_mode 1 --batch_size 3 --case_list 1
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-  )
+    add_test(
+        NAME rpp_qa_tests_tensor_voxel_host_all
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HOST/runTests_voxel.py --qa_mode 1 --batch_size 3
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
 
-  if( "${BACKEND}" STREQUAL "HIP")
-    add_test(NAME rpp_qa_tests_hip 
-          COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HIP/runTests.py 
-          --qa_mode 1 --batch_size 3
-          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    # Running case by case - one sample for brightness (in tensor_host) and one sample for slice in (tensor_voxel_host)
+    add_test(
+        NAME rpp_qa_tests_tensor_host_brightness
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HOST/runTests.py --qa_mode 1 --batch_size 3 --case_list 0
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+    add_test(
+        NAME rpp_qa_tests_tensor_voxel_host_slice
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HOST/runTests_voxel.py --qa_mode 1 --batch_size 3 --case_list 1
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+
+    if( "${BACKEND}" STREQUAL "HIP")
+        
+        # Running all HIP tests
+        add_test(
+            NAME rpp_qa_tests_tensor_hip_all
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HIP/runTests.py --qa_mode 1 --batch_size 3
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )
-  elseif( "${BACKEND}" STREQUAL "OCL")
-    # TBD: Add OCL Tests
-  endif()
+        add_test(
+            NAME rpp_qa_tests_tensor_voxel_hip_all
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HOST/runTests_voxel.py --qa_mode 1 --batch_size 3
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        )
+
+        # Running case by case - one sample for brightness (in tensor_host) and one sample for slice in (tensor_voxel_host)
+        add_test(
+            NAME rpp_qa_tests_tensor_hip_brightness
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HOST/runTests.py --qa_mode 1 --batch_size 3 --case_list 0
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        )
+        add_test(
+            NAME rpp_qa_tests_tensor_voxel_hip_slice
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HOST/runTests_voxel.py --qa_mode 1 --batch_size 3 --case_list 1
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}m
+        )
+    
+    elseif( "${BACKEND}" STREQUAL "OCL")
+        
+        # TBD: Add OCL Tests
+    
+    endif()
 
 else()
   message("-- ${Yellow}Test Warning: Python3 must be installed to run RPP test_suite successfully!${ColourReset}")
