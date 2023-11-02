@@ -98,10 +98,6 @@ void read_data(Rpp32f *data, Rpp32u nDim, Rpp32u readType, Rpp32u bufferLength, 
     string type = "input";
     if (readType == 1)
         type = "output";
-    if(readType == 2)
-        type = "mean";
-    if(readType == 3)
-        type = "stddev";
 
     for(int i = 0; i < batchSize; i++)
     {
@@ -255,8 +251,6 @@ void fill_mean_stddev_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u size, Rpp32f 
                     stdDevTensor[i + 14] = 0.21589143239793473;
                     stdDevTensor[i + 15] = 0.7972578943669427;
                 }
-                // read_data(meanTensor, nDim, 2, 16, 1);
-                // read_data(stdDevTensor, nDim, 3, 16, 1);
                 break;
             }
             default:
@@ -429,7 +423,13 @@ int main(int argc, char **argv)
                 float scale = 1.0;
                 float shift = 0.0;
                 bool computeMean, computeStddev;
-                computeMean = computeStddev = 1;
+                computeMean = computeStddev = 0;
+
+                if (qaMode && nDim == 3 && (computeMean || computeStddev))
+                {
+                    std::cout<<"QA mode can only run with mean and stddev input from user when nDim is 3"<<std::endl;
+                    return -1;
+                }
 
                 Rpp32u size = 1; // length of input tensors differ based on axisMask and nDim
                 Rpp32u maxSize = 1;
@@ -437,7 +437,7 @@ int main(int argc, char **argv)
                 {
                     size = 1;
                     for(int i = 0; i < nDim; i++)
-                        size *= ((axisMask & (int)(pow(2,i))) >= 1) ? 1 : roiTensor[(nDim * batch) + i];
+                        size *= ((axisMask & (int)(pow(2,i))) >= 1) ? 1 : roiTensor[(nDim * 2 * batch) + nDim + i];
                     maxSize = max(maxSize, size);
                 }
 
@@ -451,7 +451,6 @@ int main(int argc, char **argv)
                 rppt_normalize_generic_host(inputF32, srcDescriptorPtrND, outputF32, dstDescriptorPtrND, axisMask, meanTensor, stdDevTensor, computeMean, computeStddev, scale, shift, roiTensor, handle);
                 free(meanTensor);
                 free(stdDevTensor);
-                std::cerr<<"coming outside kernel"<<std::endl;
                 break;
             }
             default:
