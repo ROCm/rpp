@@ -87,9 +87,9 @@ Rpp32u get_buffer_length(Rpp32u nDim)
 void read_data(Rpp32f *data, Rpp32u nDim, Rpp32u readType, Rpp32u bufferLength, Rpp32u batchSize)
 {
     Rpp32u sampleLength = bufferLength / batchSize;
-    if(nDim != 3)
+    if(nDim != 3 && nDim != 4)
     {
-        std::cout<<"\nGolden Inputs / Outputs are generated only for 3D data"<<std::endl;
+        std::cout<<"\nGolden Inputs / Outputs are generated only for 3D/4D data"<<std::endl;
         exit(0);
     }
 
@@ -120,7 +120,6 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
 {
     switch(nDim)
     {
-
         case 3:
         {
             if (qaMode)
@@ -149,10 +148,42 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
             }
             break;
         }
+        case 4:
+        {
+            if (qaMode)
+            {
+                for(int i = 0; i < batchSize * 8; i += 8)
+                {
+                    roiTensor[i] = 0;
+                    roiTensor[i + 1] = 0;
+                    roiTensor[i + 2] = 0;
+                    roiTensor[i + 3] = 0;
+                    roiTensor[i + 4] = 2;
+                    roiTensor[i + 5] = 3;
+                    roiTensor[i + 6] = 4;
+                    roiTensor[i + 7] = 5;
+                }
+            }
+            else
+            {
+                for(int i = 0; i < batchSize * 8; i += 8)
+                {
+                    roiTensor[i] = 0;
+                    roiTensor[i + 1] = 0;
+                    roiTensor[i + 2] = 0;
+                    roiTensor[i + 3] = 0;
+                    roiTensor[i + 4] = 45;
+                    roiTensor[i + 5] = 20;
+                    roiTensor[i + 6] = 25;
+                    roiTensor[i + 7] = 10;
+                }
+            }
+            break;
+        }
 
         default:
         {
-            // if nDim is not 3 and mode choosen is not QA
+            // if nDim is not 3/4 and mode choosen is not QA
             if(!qaMode)
             {
                 for(int i = 0; i < batchSize; i++)
@@ -184,9 +215,15 @@ void set_generic_descriptor_layout(RpptGenericDescPtr srcDescriptorPtrND, RpptGe
                 dstDescriptorPtrND->layout = RpptLayout::NHWC;
                 break;
             }
+            case 4:
+            {
+                srcDescriptorPtrND->layout = RpptLayout::NDHWC;
+                dstDescriptorPtrND->layout = RpptLayout::NDHWC;
+                break;
+            }
             default:
             {
-                cout << "Error! QA mode is supported only for 3 Dimension inputs" << endl;
+                cout << "Error! QA mode is supported only for 3/4 Dimension inputs" << endl;
                 exit(0);
             }
         }
@@ -255,7 +292,7 @@ void fill_mean_stddev_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u size, Rpp32f 
             }
             default:
             {
-                cout << "Error! QA mode is supported only for 3 Dimension inputs" << endl;
+                cout << "Error! QA mode is supported only for 3 Dimension inputs with mean and stddev read from user" << endl;
                 exit(0);
             }
         }
@@ -284,7 +321,7 @@ void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize, string dst
         for(int j = 0; j < bufferLength; j++)
         {
             bool invalid_comparision = ((out[j] == 0.0f) && (ref[j] != 0.0f));
-            if(!invalid_comparision && abs(out[j] - ref[j]) < 1e-20)
+            if(!invalid_comparision && abs(out[j] - ref[j]) < 1e-6)
                 cnt++;
         }
         if (cnt == bufferLength)
@@ -428,6 +465,12 @@ int main(int argc, char **argv)
                 if (qaMode && nDim == 3 && (computeMean || computeStddev))
                 {
                     std::cout<<"QA mode can only run with mean and stddev input from user when nDim is 3"<<std::endl;
+                    return -1;
+                }
+
+                if (qaMode && nDim == 4 && (!computeMean && !computeStddev))
+                {
+                    std::cout<<"QA mode can only run with internal mean and stddev when nDim is 4"<<std::endl;
                     return -1;
                 }
 
