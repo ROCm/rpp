@@ -28,8 +28,8 @@ import shutil
 # Set the timestamp
 timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-cwd = os.getcwd()
-inFilePath = os.path.join(os.path.dirname(cwd), 'TEST_AUDIO_FILES', 'eight_samples_single_channel_src1')
+scriptPath = os.path.dirname(os.path.realpath(__file__))
+inFilePath = scriptPath + "/../TEST_AUDIO_FILES/eight_samples_single_channel_src1"
 
 # Checks if the folder path is empty, or is it a root folder, or if it exists, and remove its contents
 def validate_and_remove_files(path):
@@ -85,7 +85,7 @@ def validate_path(input_path):
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list():
     return [
-        "../../OUTPUT_PERFORMANCE_AUDIO_LOGS_HOST_" + timestamp + "/Tensor_host_audio_raw_performance_log.txt",
+        scriptPath + "../../OUTPUT_PERFORMANCE_AUDIO_LOGS_HOST_" + timestamp + "/Tensor_host_audio_raw_performance_log.txt",
     ]
 
 def run_unit_test(srcPath, case, numRuns, testType, bitDepth, batchSize, outFilePath):
@@ -94,7 +94,7 @@ def run_unit_test(srcPath, case, numRuns, testType, bitDepth, batchSize, outFile
     print("Running a New Functionality...")
     print("--------------------------------")
     print(f"./Tensor_host_audio {srcPath} {bitDepth} {case} {numRuns} {testType} {numRuns} {batchSize}")
-    result = subprocess.run(["./Tensor_host_audio", srcPath, str(bitDepth), str(case), str(testType), str(numRuns), str(batchSize), outFilePath], stdout=subprocess.PIPE)    # nosec
+    result = subprocess.run([scriptPath + "/build/Tensor_host_audio", srcPath, str(bitDepth), str(case), str(testType), str(numRuns), str(batchSize), outFilePath], stdout=subprocess.PIPE)    # nosec
     print(result.stdout.decode())
 
     print("------------------------------------------------------------------------------------------")
@@ -106,7 +106,7 @@ def run_performance_test(loggingFolder, srcPath, case, numRuns, testType, bitDep
     print("--------------------------------")
     with open("{}/Tensor_host_audio_raw_performance_log.txt".format(loggingFolder), "a") as log_file:
         print(f"./Tensor_host_audio {srcPath} {bitDepth} {case} {numRuns} {testType} {numRuns} {batchSize} ")
-        process = subprocess.Popen(["./Tensor_host_audio", srcPath, str(bitDepth), str(case), str(testType), str(numRuns), str(batchSize), outFilePath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
+        process = subprocess.Popen([scriptPath + "/build/Tensor_host_audio", srcPath, str(bitDepth), str(case), str(testType), str(numRuns), str(batchSize), outFilePath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
         while True:
             output = process.stdout.readline()
             if not output and process.poll() is not None:
@@ -180,16 +180,16 @@ bitDepth = 2 # Current audio test suite only supports bit depth 2
 outFilePath = " "
 
 if preserveOutput == 0:
-    validate_and_remove_folders(cwd, "QA_RESULTS_AUDIO_HOST")
-    validate_and_remove_folders(cwd, "OUTPUT_PERFORMANCE_AUDIO_LOGS_HOST")
+    validate_and_remove_folders(scriptPath, "QA_RESULTS_AUDIO_HOST")
+    validate_and_remove_folders(scriptPath, "OUTPUT_PERFORMANCE_AUDIO_LOGS_HOST")
 
 if(testType == 0):
-    outFilePath = os.path.join(os.path.dirname(cwd), 'QA_RESULTS_AUDIO_HOST_' + timestamp)
+    outFilePath = scriptPath + "/../QA_RESULTS_AUDIO_HOST_" + timestamp
     numRuns = 1
 elif(testType == 1):
     if "--num_runs" not in sys.argv:
         numRuns = 100   #default numRuns for running performance tests
-    outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_PERFORMANCE_AUDIO_LOGS_HOST_' + timestamp)
+    outFilePath = scriptPath + "/../OUTPUT_PERFORMANCE_AUDIO_LOGS_HOST_" + timestamp
 else:
     print("Invalid TEST_TYPE specified. TEST_TYPE should be 0/1 (0 = QA tests / 1 = Performance tests)")
     exit(0)
@@ -202,10 +202,10 @@ dstPath = outFilePath
 validate_and_remove_files(dstPath)
 
 # Enable extglob
-if os.path.exists("build"):
-    shutil.rmtree("build")
-os.makedirs("build")
-os.chdir("build")
+if os.path.exists(scriptPath + "/build"):
+    shutil.rmtree(scriptPath + "/build")
+os.makedirs(scriptPath + "/build")
+os.chdir(scriptPath + "/build")
 
 # Run cmake and make commands
 subprocess.run(["cmake", ".."], cwd=".")   # nosec
@@ -231,20 +231,31 @@ else:
 
 # print the results of qa tests
 supportedCaseList = ['0']
-supportedCases = 0
-for num in caseList:
-    if num in supportedCaseList:
-        supportedCases += 1
-caseInfo = "Tests are run for " + str(supportedCases) + " supported cases out of the " + str(len(caseList)) + " cases requested"
+nonQACaseList = [] # Add cases present in supportedCaseList, but without QA support
+
 if testType == 0:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
-    f = open(qaFilePath, 'r+')
-    print("---------------------------------- Results of QA Test ----------------------------------\n")
-    for line in f:
-        sys.stdout.write(line)
-        sys.stdout.flush()
-    f.write(caseInfo)
-print("\n-------------- " + caseInfo + " --------------")
+    checkFile = os.path.isfile(qaFilePath)
+    if checkFile:
+        f = open(qaFilePath, 'r+')
+        print("---------------------------------- Results of QA Test - Tensor_host_audio -----------------------------------\n")
+        numLines = 0
+        numPassed = 0
+        for line in f:
+            sys.stdout.write(line)
+            numLines += 1
+            if "PASSED" in line:
+                numPassed += 1
+            sys.stdout.flush()
+        resultsInfo = "\n\nFinal Results of Tests:"
+        resultsInfo += "\n    - Total test cases including all subvariants REQUESTED = " + str(numLines)
+        resultsInfo += "\n    - Total test cases including all subvariants PASSED = " + str(numPassed)
+        resultsInfo += "\n\nGeneral information on Tensor test suite availability:"
+        resultsInfo += "\n    - Total augmentations supported in Tensor test suite = " + str(len(supportedCaseList))
+        resultsInfo += "\n    - Total augmentations with golden output QA test support = " + str(len(supportedCaseList) - len(nonQACaseList))
+        resultsInfo += "\n    - Total augmentations without golden ouput QA test support (due to randomization involved) = " + str(len(nonQACaseList))
+        f.write(resultsInfo)
+    print("\n-------------------------------------------------------------------" + resultsInfo + "\n\n-------------------------------------------------------------------")
 
 # Performance tests
 if (testType == 1):

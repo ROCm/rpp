@@ -24,31 +24,37 @@
 #
 ################################################################################
 cmake_minimum_required (VERSION 3.5)
+project(test_suite)
 
 set(Python3_FIND_VIRTUALENV FIRST)
 find_package(Python3 QUIET)
 
 if(Python3_FOUND)
 
-  add_test(NAME rpp_qa_tests_host_all 
-        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HOST/runTests.py 
+  add_test(NAME rpp_qa_tests_host_all
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HOST/runTests.py
         --qa_mode 1 --batch_size 3
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
       )
-  add_test(NAME rpp_qa_tests_host_brightness 
-      COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HOST/runTests.py 
+  add_test(NAME rpp_qa_tests_host_brightness
+      COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HOST/runTests.py
       --qa_mode 1 --batch_size 3 --case_list 0
       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
-  add_test(NAME rpp_qa_tests_host_gamma_correction 
-    COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HOST/runTests.py 
+  add_test(NAME rpp_qa_tests_host_gamma_correction
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HOST/runTests.py
     --qa_mode 1 --batch_size 3 --case_list 1
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   )
+  add_test(
+        NAME rpp_qa_tests_tensor_host_non_silent_region_detection
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HOST/runAudioTests.py --case_list 0 --test_type 0 --batch_size 8
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+  )
 
   if( "${BACKEND}" STREQUAL "HIP")
-    add_test(NAME rpp_qa_tests_hip 
-          COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HIP/runTests.py 
+    add_test(NAME rpp_qa_tests_hip
+          COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HIP/runTests.py
           --qa_mode 1 --batch_size 3
           WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )
