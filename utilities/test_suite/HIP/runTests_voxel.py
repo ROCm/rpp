@@ -477,24 +477,31 @@ elif (testType == 1 and profilingOption == "YES"):
 
 # print the results of qa tests
 supportedCaseList = ['0', '1']
-supportedCases = 0
-for num in caseList:
-    if qaMode == 1 and num in supportedCaseList:
-        supportedCases += 1
-    elif qaMode == 0 and num in supportedCaseList:
-        supportedCases += 1
-caseInfo = "Tests are run for " + str(supportedCases) + " supported cases out of the " + str(len(caseList)) + " cases requested"
+nonQACaseList = [] # Add cases present in supportedCaseList, but without QA support
+
 if qaMode and testType == 0:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
         f = open(qaFilePath, 'r+')
         print("---------------------------------- Results of QA Test ----------------------------------\n")
+        numLines = 0
+        numPassed = 0
         for line in f:
             sys.stdout.write(line)
+            numLines += 1
+            if "PASSED" in line:
+                numPassed += 1
             sys.stdout.flush()
-        f.write(caseInfo)
-print("\n-------------- " + caseInfo + " --------------")
+        resultsInfo = "\n\nFinal Results of Tests:"
+        resultsInfo += "\n    - Total test cases including all subvariants REQUESTED = " + str(numLines)
+        resultsInfo += "\n    - Total test cases including all subvariants PASSED = " + str(numPassed)
+        resultsInfo += "\n\nGeneral information on Tensor test suite availability:"
+        resultsInfo += "\n    - Total augmentations supported in Tensor test suite = " + str(len(supportedCaseList))
+        resultsInfo += "\n    - Total augmentations with golden output QA test support = " + str(len(supportedCaseList) - len(nonQACaseList))
+        resultsInfo += "\n    - Total augmentations without golden ouput QA test support (due to randomization involved) = " + str(len(nonQACaseList))
+        f.write(resultsInfo)
+    print("\n-------------------------------------------------------------------" + resultsInfo + "\n\n-------------------------------------------------------------------")
 
 # Performance tests
 if (testType == 1 and profilingOption == "NO"):
