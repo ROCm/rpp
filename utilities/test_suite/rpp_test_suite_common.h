@@ -27,6 +27,7 @@ THE SOFTWARE.
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/opencv.hpp>
 #include <iostream>
+#include "filesystem.h"
 #include "rpp.h"
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -35,7 +36,6 @@ THE SOFTWARE.
 #include <omp.h>
 #include <fstream>
 #include <turbojpeg.h>
-#include <boost/filesystem.hpp>
 
 #ifdef GPU_SUPPORT
     #include <hip/hip_fp16.h>
@@ -48,7 +48,6 @@ typedef half Rpp16f;
 
 using namespace cv;
 using namespace std;
-namespace fs = boost::filesystem;
 
 #define CUTOFF 1
 #define DEBUG_MODE 0
@@ -64,6 +63,7 @@ std::map<int, string> augmentationMap =
     {2, "blend"},
     {4, "contrast"},
     {13, "exposure"},
+    {29, "water"},
     {31, "color_cast"},
     {34, "lut"},
     {36, "color_twist"},
@@ -932,7 +932,7 @@ template <typename T>
 inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int noOfImages, string interpolationTypeName, string noiseTypeName, int testCase, string dst)
 {
     string func = funcName;
-    string refPath = get_current_dir_name();
+    string refPath = fs::current_path();
     string pattern = "/build";
     string refFile = "";
     int refOutputWidth = ((GOLDEN_OUTPUT_MAX_WIDTH / 8) * 8) + 8;    // obtain next multiple of 8 after GOLDEN_OUTPUT_MAX_WIDTH
@@ -1024,7 +1024,7 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
 inline void compare_reduction_output(Rpp64u* output, string funcName, RpptDescPtr srcDescPtr, int testCase, string dst)
 {
     string func = funcName;
-    string refPath = get_current_dir_name();
+    string refPath = fs::current_path();
     string pattern = "/build";
     string refFile = "";
 

@@ -21,12 +21,10 @@ THE SOFTWARE.
 */
 
 #include "rpp_test_suite_common.h"
-#include <fstream>
 #include <iomanip>
 #include <vector>
 #include <half/half.hpp>
 
-namespace fs = boost::filesystem;
 using half_float::half;
 using namespace std;
 typedef half Rpp16f;

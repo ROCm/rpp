@@ -29,6 +29,18 @@ THE SOFTWARE.
 extern "C" {
 #endif
 
+/*!
+ * \file
+ * \brief RPPI Image Operations - Computer Vision - To be deprecated.
+ * \defgroup group_rppi_computer_vision RPPI Image Operations - Computer Vision
+ * \brief RPPI Image Operations - Computer Vision - To be deprecated.
+ * \deprecated
+ */
+
+/*! \addtogroup group_rppi_computer_vision
+ * @{
+ */
+
 /******************** local_binary_pattern ********************/
 
 // Performs the 8 neighbor Local Binary Pattern (LBP), where the LBP for each pixel is defined by comparing the pixel value against its 8 neighbors, for a batch of images
@@ -390,6 +402,9 @@ RppStatus rppi_convert_bit_depth_u8s8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize
 RppStatus rppi_convert_bit_depth_u8u16_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_convert_bit_depth_u8s16_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
+
+/*! @}
+ */
 
 #ifdef __cplusplus
 }

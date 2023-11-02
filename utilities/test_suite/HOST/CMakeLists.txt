@@ -25,6 +25,8 @@
 ################################################################################
 
 cmake_minimum_required(VERSION 3.5)
+set(CMAKE_CXX_COMPILER clang++)
+set(CMAKE_CXX_STANDARD 17)
 project(test_suite/HOST)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../../../cmake)
 set(ROCM_PATH /opt/rocm CACHE PATH "default ROCm installation path")
@@ -45,11 +47,6 @@ endif()
 
 find_package(OpenCV QUIET)
 find_package(TurboJpeg QUIET)
-# BOOST
-set(BOOST_COMPONENTS filesystem system)
-find_package(Boost COMPONENTS ${BOOST_COMPONENTS} REQUIRED)
-include_directories(${Boost_INCLUDE_DIRS})
-set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY})
 # OpenMP
 find_package(OpenMP REQUIRED)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} -ggdb -O0")
@@ -71,10 +68,8 @@ if (OpenCV_FOUND)
     link_directories(${ROCM_PATH}/lib /usr/local/lib)
 
     add_executable(Tensor_host Tensor_host.cpp)
-
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++14")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++17")
     target_link_libraries(Tensor_host ${OpenCV_LIBS} -lturbojpeg -lrpp pthread ${LINK_LIBRARY_LIST})
-
 else()
     message("-- ${Yellow}Error: OpenCV must be installed to install ${PROJECT_NAME} successfully!${ColourReset}")
 endif()
@@ -94,6 +89,6 @@ else()
     link_directories(${SndFile_LIBRARIES_DIR} /usr/local/lib/)
 
     add_executable(Tensor_host_audio Tensor_host_audio.cpp)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++14")
-    target_link_libraries(Tensor_host_audio ${libsnd_LIBS} -lsndfile -lrpp pthread ${LINK_LIBRARY_LIST} ${OpenCV_LIBS})
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++17")
+    target_link_libraries(Tensor_host_audio ${libsnd_LIBS} -lsndfile -lrpp -lstdc++fs pthread ${LINK_LIBRARY_LIST})
 endif()

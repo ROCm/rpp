@@ -136,9 +136,8 @@ int main(int argc, char **argv)
             if (inputBitDepth == 2)
                 read_audio_batch_and_fill_dims(srcDescPtr, inputf32, audioFilesPath, iterCount, srcLengthTensor, channelsTensor);
 
-            clock_t startCpuTime, endCpuTime;
             double startWallTime, endWallTime;
-            double cpuTime, wallTime;
+            double wallTime;
             switch (testCase)
             {
                 case 0:
@@ -152,7 +151,6 @@ int main(int argc, char **argv)
                     Rpp32s resetInterval = 8192;
 
                     startWallTime = omp_get_wtime();
-                    startCpuTime= clock();
                     if (inputBitDepth == 2)
                         rppt_non_silent_region_detection_host(inputf32, srcDescPtr, srcLengthTensor, detectedIndex, detectionLength, cutOffDB, windowLength, referencePower, resetInterval, handle);
                     else
@@ -171,7 +169,6 @@ int main(int argc, char **argv)
                 }
             }
 
-            endCpuTime = clock();
             endWallTime = omp_get_wtime();
             if (missingFuncFlag == 1)
             {
@@ -179,7 +176,6 @@ int main(int argc, char **argv)
                 return -1;
             }
 
-            cpuTime = ((double)(endCpuTime - startCpuTime)) / CLOCKS_PER_SEC;
             wallTime = endWallTime - startWallTime;
             maxWallTime = std::max(maxWallTime, wallTime);
             minWallTime = std::min(minWallTime, wallTime);
