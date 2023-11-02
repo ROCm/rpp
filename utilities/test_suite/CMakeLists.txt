@@ -65,19 +65,19 @@ if(Python3_FOUND)
         )
         add_test(
             NAME rpp_qa_tests_tensor_voxel_hip_all
-            COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HOST/runTests_voxel.py --qa_mode 1 --batch_size 3
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HIP/runTests_voxel.py --qa_mode 1 --batch_size 3
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )
 
-        # Running case by case - one sample for brightness (in tensor_host) and one sample for slice in (tensor_voxel_host)
+        # Running case by case - one sample for brightness (in tensor_hip) and one sample for slice in (tensor_voxel_hip)
         add_test(
             NAME rpp_qa_tests_tensor_hip_brightness
-            COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HOST/runTests.py --qa_mode 1 --batch_size 3 --case_list 0
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HIP/runTests.py --qa_mode 1 --batch_size 3 --case_list 0
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )
         add_test(
             NAME rpp_qa_tests_tensor_voxel_hip_slice
-            COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HOST/runTests_voxel.py --qa_mode 1 --batch_size 3 --case_list 1
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HIP/runTests_voxel.py --qa_mode 1 --batch_size 3 --case_list 1
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}m
         )
     
