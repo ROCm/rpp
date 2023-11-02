@@ -22,6 +22,7 @@ THE SOFTWARE.
 
 #include "rppdefs.h"
 #include <omp.h>
+#include <algorithm>
 
 Rpp32f getSquare(Rpp32f &value)
 {
