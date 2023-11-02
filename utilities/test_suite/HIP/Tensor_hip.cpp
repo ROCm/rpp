@@ -257,8 +257,6 @@ int main(int argc, char **argv)
 
     set_max_dimensions(imageNamesPath, maxHeight, maxWidth, imagesMixed);
 
-    set_max_dimensions(imageNamesPath, maxHeight, maxWidth);
-
     // Set numDims, offset, n/c/h/w values, strides for src/dst
     set_descriptor_dims_and_strides(srcDescPtr, batchSize, maxHeight, maxWidth, inputChannels, srcOffsetInBytes);
     set_descriptor_dims_and_strides(dstDescPtr, batchSize, maxHeight, maxWidth, outputChannels, dstOffsetInBytes);
