@@ -5,10 +5,38 @@
 ### Online Documentation
 [RPP Documentation](https://gpuopen-professionalcompute-libraries.github.io/rpp/)
 
-### RPP 1.4.0 (Unreleased)
+### RPP 1.5.0 (Unreleased)
+
+#### Added
+* 
+
+#### Optimizations
+* 
+
+#### Changed
+* Prerequisites 
+
+#### Fixed
+* 
+
+### Tested Configurations
+* Linux distribution
+  + Ubuntu - `20.04` / `22.04`
+  + CentOS - `7`
+  + RHEL - `8`/`9`
+* ROCm: rocm-core - `5.5.0.50500-63`
+* Clang - Version `5.0.1` and above
+* CMake - Version `3.22.3`
+* IEEE 754-based half-precision floating-point library - Version `1.12.0`
+
+### RPP 1.4.0
 
 #### Added
 * Updated Unit Tests
+* Component based packaging enabled for dev/runtime/asan
+* ASAN build install/Package changes added
+* License file added to package.
+* Jenkins Groovy CI scripts enhanced to support multi component package testing.
 
 #### Optimizations
 * CMakeLists 
