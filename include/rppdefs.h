@@ -101,15 +101,15 @@ typedef enum
     /*! \brief Invalid dst tensor layout. (Needs to adhere to function specification.) \ingroup group_rppdefs */
     RPP_ERROR_INVALID_DST_LAYOUT        = -10,
     /*! \brief Invalid src tensor datatype. (Needs to adhere to function specification.) \ingroup group_rppdefs */
-    RPP_ERROR_INVALID_SRC_DATATYPE     = -11,
+    RPP_ERROR_INVALID_SRC_DATATYPE      = -11,
     /*! \brief Invalid dst tensor datatype. (Needs to adhere to function specification.) \ingroup group_rppdefs */
-    RPP_ERROR_INVALID_DST_DATATYPE     = -12,
+    RPP_ERROR_INVALID_DST_DATATYPE      = -12,
     /*! \brief Invalid src/dst tensor datatype. (Needs to adhere to function specification.) \ingroup group_rppdefs */
-    RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE      = -13,
+    RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE       = -13,
     /*! \brief Insufficient dst buffer length provided. (Needs to adhere to function specification.) \ingroup group_rppdefs */
     RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH    = -14,
     /*! \brief Invalid datatype \ingroup group_rppdefs */
-    RPP_ERROR_INVALID_DATATYPE          = -15,
+    RPP_ERROR_INVALID_PARAMETER_DATATYPE        = -15,
     /*! \brief Not enough memory \ingroup group_rppdefs */
     RPP_ERROR_NOT_ENOUGH_MEMORY         = -16,
     /*! \brief Out of bound source ROI \ingroup group_rppdefs */
