@@ -37,14 +37,6 @@ THE SOFTWARE.
 #include <hip/hip_fp16.h>
 #include <fstream>
 
-#define CHECK(x) do { \
-  int retval = (x); \
-  if (retval != 0) { \
-    fprintf(stderr, "Runtime error: %s returned %d at %s:%d", #x, retval, __FILE__, __LINE__); \
-    exit(-1); \
-  } \
-} while (0)
-
 typedef half Rpp16f;
 
 using namespace cv;
