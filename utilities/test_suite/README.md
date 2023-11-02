@@ -138,7 +138,6 @@ The image test suite includes:
 
 RPP test suite uses a sample ".nii" image usage from the BraTS2020 Dataset at https://www.kaggle.com/code/rastislav/3d-mri-brain-tumor-segmentation-u-net/input as per the following Data Usage Agreement present at the dataset link above.
 
-```
 Data Usage Agreement / Citations:
 You are free to use and/or refer to the BraTS datasets in your own research, provided that you always cite the following three manuscripts:
 
@@ -147,4 +146,3 @@ You are free to use and/or refer to the BraTS datasets in your own research, pro
 [2] S. Bakas, H. Akbari, A. Sotiras, M. Bilello, M. Rozycki, J.S. Kirby, et al., "Advancing The Cancer Genome Atlas glioma MRI collections with expert segmentation labels and radiomic features", Nature Scientific Data, 4:170117 (2017) DOI: 10.1038/sdata.2017.117
 
 [3] S. Bakas, M. Reyes, A. Jakab, S. Bauer, M. Rempfler, A. Crimi, et al., "Identifying the Best Machine Learning Algorithms for Brain Tumor Segmentation, Progression Assessment, and Overall Survival Prediction in the BRATS Challenge", arXiv preprint arXiv:1811.02629 (2018)
-```
