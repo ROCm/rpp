@@ -48,6 +48,14 @@ typedef int16_t NIFTI_DATATYPE;
 #define MAX_IMAGE_DUMP 100
 #define MAX_BATCH_SIZE 512
 
+#define CHECK(x) do { \
+  int retval = (x); \
+  if (retval != 0) { \
+    fprintf(stderr, "Runtime error: %s returned %d at %s:%d", #x, retval, __FILE__, __LINE__); \
+    exit(-1); \
+  } \
+} while (0)
+
 std::map<int, string> augmentationMap =
 {
     {0, "fused_multiply_add_scalar"},
