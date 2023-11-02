@@ -202,49 +202,88 @@ void compute_2D_inv_std_dev(Rpp32f *srcPtr, Rpp32f *meanPtr, Rpp32f *stdDevPtr, 
 }
 
 /* Computes mean for 3D inputs */
-void compute_3D_mean(Rpp32f *srcPtr, Rpp32f *meanPtr, Rpp32u *dims, Rpp32u *stride)
+void compute_3D_mean(Rpp32f *srcPtr, Rpp32f *meanPtr, Rpp32u *dims, Rpp32u *stride, bool isConsecutive = true)
 {
     Rpp32f *srcPtrTemp = srcPtr;
-    Rpp32f normFactor = 1.0 / dims[2];
     std::cout<<"dims[0]: "<<dims[0]<<"dims[1]: "<<dims[1]<<"dims[2]: "<<dims[2]<<std::endl;
-    for(Rpp32u i = 0; i < dims[0]; i++)
+    if(isConsecutive)
     {
-        float *srcPtrRow = srcPtrTemp;
-        for(Rpp32u j = 0; j < dims[1]; j++)
+        Rpp32f normFactor = 1.0 / dims[2];
+        for(Rpp32u i = 0; i < dims[0]; i++)
         {
-            Rpp32u index = i * dims[1] + j;
-            meanPtr[index] = 0;
-            std::cout<<"srcPtr: "<<srcPtrRow[0]<<std::endl;
-            compute_sum(meanPtr[index], srcPtrRow, stride[0], dims[2]);
-            srcPtrRow += stride[1];
-            std::cout<<"j: "<<j<<"srcPtr: "<<srcPtrRow[0]<<"stride[0]: "<<stride[0]<<"stride[1]: "<<stride[1]<<std::endl;
-            meanPtr[index] = meanPtr[index] * normFactor;
-            std::cout<<"meanPtr["<<index<<"]: "<<meanPtr[index]<<std::endl;
+            float *srcPtrRow = srcPtrTemp;
+            for(Rpp32u j = 0; j < dims[1]; j++)
+            {
+                Rpp32u index = i * dims[1] + j;
+                meanPtr[index] = 0;
+                std::cout<<"srcPtr: "<<srcPtrRow[0]<<std::endl;
+                compute_sum(meanPtr[index], srcPtrRow, stride[0], dims[2]);
+                srcPtrRow += stride[1];
+                std::cout<<"j: "<<j<<"srcPtr: "<<srcPtrRow[0]<<"stride[0]: "<<stride[0]<<"stride[1]: "<<stride[1]<<std::endl;
+                meanPtr[index] = meanPtr[index] * normFactor;
+                std::cout<<"meanPtr["<<index<<"]: "<<meanPtr[index]<<std::endl;
+            }
+            srcPtrTemp += stride[2];
+            std::cout<<"stride[2]: "<<stride[2]<<"srcPtr: "<<srcPtrTemp[0]<<std::endl;
         }
-        srcPtrTemp += stride[2];
-        std::cout<<"stride[2]: "<<stride[2]<<"srcPtr: "<<srcPtrTemp[0]<<std::endl;
+    }
+    else
+    {
+        Rpp32f normFactor = 1.0 / (dims[1] * dims[2]);
+        for(Rpp32u i = 0; i < dims[0]; i++)
+        {
+            Rpp32u index = i;
+            meanPtr[index] = 0;
+            Rpp32f *srcPtrRow = srcPtrTemp;
+            for(Rpp32u j = 0; j < dims[1]; j++)
+            {
+                compute_sum(meanPtr[index], srcPtrRow, stride[0], dims[2]);
+                srcPtrRow += stride[1];
+            }
+            meanPtr[index] = meanPtr[index] * normFactor;
+            srcPtrTemp += stride[2];
+        }
     }
 }
 
 /* Computes inverse stddev for 3D inputs */
-void compute_3D_inv_std_dev(Rpp32f *srcPtr, Rpp32f *meanPtr, Rpp32f *stdDevPtr, Rpp32u *dims, Rpp32u *stride, Rpp32f scale)
+void compute_3D_inv_std_dev(Rpp32f *srcPtr, Rpp32f *meanPtr, Rpp32f *stdDevPtr, Rpp32u *dims, Rpp32u *stride, Rpp32f scale, bool isConsecutive = true)
 {
-
     Rpp32f *srcPtrTemp = srcPtr;
-    Rpp32f normFactor = (Rpp32f)(1.0 / dims[2]);
-    for(Rpp32u i = 0; i < dims[0]; i++)
+    if(isConsecutive)
     {
-        float *srcPtrRow = srcPtrTemp;
-        for(Rpp32u j = 0; j < dims[1]; j++)
+        Rpp32f normFactor = (Rpp32f)(1.0 / dims[2]);
+        for(Rpp32u i = 0; i < dims[0]; i++)
         {
-            Rpp32u index = i * dims[1] + j;
-            stdDevPtr[index] = 0;
-            compute_diff_square_sum(stdDevPtr[index], srcPtrRow, stride[0], dims[2], meanPtr[index]);
-            srcPtrRow += stride[1];
+            float *srcPtrRow = srcPtrTemp;
+            for(Rpp32u j = 0; j < dims[1]; j++)
+            {
+                Rpp32u index = i * dims[1] + j;
+                stdDevPtr[index] = 0;
+                compute_diff_square_sum(stdDevPtr[index], srcPtrRow, stride[0], dims[2], meanPtr[index]);
+                srcPtrRow += stride[1];
+            }
+            srcPtrTemp += stride[2];
         }
-        srcPtrTemp += stride[2];
+        rpp_rsqrt_avx(stdDevPtr, (Rpp32s)(dims[0] * dims[1]), 0, normFactor, scale);
     }
-    rpp_rsqrt_avx(stdDevPtr, (Rpp32s)(dims[0] * dims[1]), 0, normFactor, scale);
+    else
+    {
+        Rpp32f normFactor = (Rpp32f)(1.0 / (dims[1] * dims[2]));
+        for(Rpp32u i = 0; i < dims[0]; i++)
+        {
+            Rpp32u index = i;
+            stdDevPtr[index] = 0;
+            Rpp32f *srcPtrRow = srcPtrTemp;
+            for(Rpp32u j = 0; j < dims[1]; j++)
+            {
+                compute_diff_square_sum(stdDevPtr[index], srcPtrRow, stride[0], dims[2], meanPtr[index]);
+                srcPtrRow += stride[1];
+            }
+            srcPtrTemp += stride[2];
+        }
+        rpp_rsqrt_avx(stdDevPtr, (Rpp32s)(dims[0]), 0, normFactor, scale);
+    }
 }
 
 /* Computes mean for ND inputs */
@@ -683,6 +722,7 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
             Rpp32u paramStride[3];
             Rpp32u srcReductionDims[3], srcStride[3];
             Rpp32u reductionDims;
+            bool isConsecutive = true;
             switch(axisMask)
             {
                 case 1: // Normalize axes 0
@@ -742,12 +782,13 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
                     reductionDims = length[1];
                     paramStride[0] = paramStride[2] = 0;
                     paramStride[1] = 1;
-                    srcReductionDims[0] = 1;
-                    srcReductionDims[1] = length[1];
-                    srcReductionDims[2] = length[0] * length[2];
-                    srcStride[0] = length[1];
-                    srcStride[1] = srcGenericDescPtr->strides[3];
-                    srcStride[2] = srcGenericDescPtr->strides[3];
+                    srcReductionDims[0] = length[1];
+                    srcReductionDims[1] = length[0];
+                    srcReductionDims[2] = length[2];
+                    srcStride[0] = srcGenericDescPtr->strides[3];
+                    srcStride[1] = srcGenericDescPtr->strides[1];
+                    srcStride[2] = srcGenericDescPtr->strides[2];
+                    isConsecutive = false;
                     break;
                 }
                 case 6: // Normalize across 1,2
@@ -783,9 +824,9 @@ RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
                 srcPtrChannel += begin[i - 1] * srcGenericDescPtr->strides[i];
 
             if(computeMean)
-                compute_3D_mean(srcPtrChannel, meanTensor, srcReductionDims, srcStride);
+                compute_3D_mean(srcPtrChannel, meanTensor, srcReductionDims, srcStride, isConsecutive);
             if(computeStddev)
-                compute_3D_inv_std_dev(srcPtrChannel, meanTensor, stdDevTensor, srcReductionDims, srcStride, scale);
+                compute_3D_inv_std_dev(srcPtrChannel, meanTensor, stdDevTensor, srcReductionDims, srcStride, scale, isConsecutive);
             else
             {
                 for(Rpp32u i = 0; i < reductionDims; i++)
