@@ -28,10 +28,10 @@ import shutil
 # Set the timestamp
 timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-cwd = os.getcwd()
-headerFilePath = os.path.join(os.path.dirname(cwd), 'TEST_QA_IMAGES_VOXEL')
-dataFilePath = os.path.join(os.path.dirname(cwd), 'TEST_QA_IMAGES_VOXEL')
-qaInputFile = os.path.join(os.path.dirname(cwd), 'TEST_QA_IMAGES_VOXEL')
+scriptPath = os.path.dirname(os.path.realpath(__file__))
+headerFilePath = scriptPath + "/../TEST_QA_IMAGES_VOXEL"
+dataFilePath = scriptPath + "/../TEST_QA_IMAGES_VOXEL"
+qaInputFile = scriptPath + "/../TEST_QA_IMAGES_VOXEL"
 
 # Check if folder path is empty, if it is the root folder, or if it exists, and remove its contents
 def validate_and_remove_contents(path):
@@ -218,22 +218,22 @@ if qaMode and batchSize != 3:
 # set the output folders and number of runs based on type of test (unit test / performance test)
 if(testType == 0):
     if qaMode:
-        outFilePath = os.path.join(os.path.dirname(cwd), 'QA_RESULTS_HOST_VOXEL_' + timestamp)
+        outFilePath = os.path.join(scriptPath + "/../QA_RESULTS_HOST_VOXEL_" + timestamp)
     else:
-        outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_VOXEL_HOST_' + timestamp)
+        outFilePath = os.path.join(scriptPath + "/../OUTPUT_VOXEL_HOST_" + timestamp)
     numRuns = 1
 elif(testType == 1):
     if "--num_runs" not in sys.argv:
         numRuns = 100 #default numRuns for running performance tests
-    outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_PERFORMANCE_LOGS_HOST_VOXEL_' + timestamp)
+    outFilePath = os.path.join(scriptPath + "/../OUTPUT_PERFORMANCE_LOGS_HOST_VOXEL_" + timestamp)
 else:
     print("Invalid TEST_TYPE specified. TEST_TYPE should be 0/1 (0 = Unittests / 1 = Performancetests)")
     exit()
 
 if preserveOutput == 0:
-    validate_and_remove_folders(cwd, "OUTPUT_VOXEL_HOST")
-    validate_and_remove_folders(cwd, "QA_RESULTS_HOST_VOXEL")
-    validate_and_remove_folders(cwd, "OUTPUT_PERFORMANCE_LOGS_HOST_VOXEL")
+    validate_and_remove_folders(scriptPath, "OUTPUT_VOXEL_HOST")
+    validate_and_remove_folders(scriptPath, "QA_RESULTS_HOST_VOXEL")
+    validate_and_remove_folders(scriptPath, "OUTPUT_PERFORMANCE_LOGS_HOST_VOXEL")
 
 os.mkdir(outFilePath)
 loggingFolder = outFilePath
@@ -243,10 +243,10 @@ dstPath = outFilePath
 validate_and_remove_contents(dstPath)
 
 # Enable extglob
-if os.path.exists("build"):
-    shutil.rmtree("build")
-os.makedirs("build")
-os.chdir("build")
+if os.path.exists(scriptPath + "/build"):
+    shutil.rmtree(scriptPath + "/build")
+os.makedirs(scriptPath + "/build")
+os.chdir(scriptPath + "/build")
 
 # Run cmake and make commands
 subprocess.run(["cmake", ".."], cwd=".")   # nosec
@@ -278,7 +278,7 @@ if testType == 0:
                 print("Running a New Functionality...")
                 print("--------------------------------")
                 print(f"./Tensor_voxel_host {headerPath} {dataPath} {dstPathTemp} {layout} {case} {numRuns} {testType} {qaMode} {batchSize} {bitDepth}")
-                result = subprocess.run(["./Tensor_voxel_host", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth)], stdout=subprocess.PIPE) # nosec
+                result = subprocess.run([scriptPath + "/build/Tensor_voxel_host", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth)], stdout=subprocess.PIPE) # nosec
                 print(result.stdout.decode())
 
                 print("------------------------------------------------------------------------------------------")
@@ -303,7 +303,7 @@ else:
 
                 with open(f"{loggingFolder}/Tensor_voxel_host_{log_file_layout}_raw_performance_log.txt", "a") as log_file:
                     print(f"./Tensor_voxel_host {headerPath} {dataPath} {dstPathTemp} {layout} {case} {numRuns} {testType} {qaMode} {batchSize} {bitDepth}")
-                    process = subprocess.Popen(["./Tensor_voxel_host", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True) # nosec
+                    process = subprocess.Popen([scriptPath + "/build/Tensor_voxel_host", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True) # nosec
                     while True:
                         output = process.stdout.readline()
                         if not output and process.poll() is not None:
