@@ -108,8 +108,12 @@ typedef enum
     RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE      = -13,
     /*! \brief Insufficient dst buffer length provided. (Needs to adhere to function specification.) \ingroup group_rppdefs */
     RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH    = -14,
-    /*! \brief Invalid ROI type \ingroup group_rppdefs */
-    RPP_ERROR_INVALID_ROI_TYPE          = -15
+    /*! \brief Invalid datatype \ingroup group_rppdefs */
+    RPP_ERROR_INVALID_DATATYPE          = -15,
+    /*! \brief Not enough memory \ingroup group_rppdefs */
+    RPP_ERROR_NOT_ENOUGH_MEMORY         = -16,
+    /*! \brief Out of bound source ROI \ingroup group_rppdefs */
+    RPP_ERROR_OUT_OF_BOUND_SRC_ROI      = -17
 } RppStatus;
 
 /*! \brief RPP rppStatus_t type enums

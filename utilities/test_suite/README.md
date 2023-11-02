@@ -35,10 +35,14 @@ Note: QA mode is not supported for case 84 due to run-to-run variation of output
 python runTests.py --case_start 0 --case_end 87 --test_type 0 --qa_mode 1 --batch_size 3
 ```
 -   Unit test mode - Unit tests allowing users to pass a path to a folder containing images, to execute the desired functionality and variant once, report RPP execution wall time, save and view output images
+Note: For testcase 82(RICAP) Please use images of same resolution and Batchsize > 1
+      RICAP dataset path: rpp/utilities/test_suite/TEST_IMAGES/three_images_150x150_src1
 ``` python
 python runTests.py --case_start 0 --case_end 87 --test_type 0 --qa_mode 0
 ```
 -   Performance test mode - Performance tests that execute the desired functionality and variant 100 times by default, and report max/min/avg RPP execution wall time, or optionally, AMD rocprof kernel profiler max/min/avg time for HIP backend variants.
+Note: For testcase 82(RICAP) Please use images of same resolution and Batchsize > 1
+      RICAP dataset path: rpp/utilities/test_suite/TEST_IMAGES/three_images_150x150_src1
 ``` python
 python runTests.py --case_start 0 --case_end 87 --test_type 1
 ```
