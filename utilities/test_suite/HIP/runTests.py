@@ -395,7 +395,7 @@ if qaMode and testType == 0:
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
         f = open(qaFilePath, 'r+')
-        print("---------------------------------- Results of QA Test ----------------------------------\n")
+        print("---------------------------------- Results of QA Test - Tensor_hip ----------------------------------\n")
         numLines = 0
         numPassed = 0
         for line in f:
