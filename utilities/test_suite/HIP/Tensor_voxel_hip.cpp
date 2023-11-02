@@ -117,12 +117,12 @@ int main(int argc, char * argv[])
     else if(inputBitDepth == 2)
         funcName += "_f32_";
     int pln1OutTypeCase = 0, outputFormatToggle = 0;
-    string funcType = set_function_type(layoutType, pln1OutTypeCase, outputFormatToggle, "HOST");
+    string funcType = set_function_type(layoutType, pln1OutTypeCase, outputFormatToggle, "HIP");
     funcName += funcType;
 
     // set src/dst xyzwhd ROI tensors
     void *pinnedMemROI;
-    hipHostMalloc(&pinnedMemROI, noOfFiles * sizeof(RpptROI3D));
+    CHECK(hipHostMalloc(&pinnedMemROI, noOfFiles * sizeof(RpptROI3D)));
     RpptROI3D *roiGenericSrcPtr = reinterpret_cast<RpptROI3D *>(pinnedMemROI);
 
     // Set buffer sizes in pixels for src/dst
@@ -139,12 +139,12 @@ int main(int argc, char * argv[])
 
     // Allocate hip memory in float for RPP strided buffer
     void *d_inputF32, *d_outputF32;
-    hipMalloc(&d_inputF32, iBufferSizeInBytes);
-    hipMalloc(&d_outputF32, oBufferSizeInBytes);
+    CHECK(hipMalloc(&d_inputF32, iBufferSizeInBytes));
+    CHECK(hipMalloc(&d_outputF32, oBufferSizeInBytes));
 
     // set argument tensors
     void *pinnedMemArgs;
-    pinnedMemArgs = calloc(2 * noOfFiles , sizeof(Rpp32f));
+    CHECK(hipHostMalloc(&pinnedMemArgs, 2 * noOfFiles * sizeof(Rpp32f)));
 
     // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
     // If numThreads value passed is 0, number of OpenMP threads used by RPP will be set to batch size
@@ -168,8 +168,8 @@ int main(int argc, char * argv[])
         inputU8 = static_cast<Rpp8u *>(calloc(iBufferSizeU8, 1));
         outputU8 = static_cast<Rpp8u *>(calloc(iBufferSizeU8, 1));
 
-        hipMalloc(&d_inputU8, iBufferSizeU8);
-        hipMalloc(&d_outputU8, iBufferSizeU8);
+        CHECK(hipMalloc(&d_inputU8, iBufferSizeU8));
+        CHECK(hipMalloc(&d_outputU8, iBufferSizeU8));
     }
 
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", funcName.c_str(), numRuns, batchSize);
@@ -224,17 +224,17 @@ int main(int argc, char * argv[])
             {
                 for(int i = 0; i < iBufferSizeU8; i++)
                     inputU8[i] = std::min(std::max(static_cast<unsigned char>(inputF32[i]), static_cast<unsigned char>(0)), static_cast<unsigned char>(255));
-                hipMemcpy(d_inputU8, inputU8, iBufferSizeU8, hipMemcpyHostToDevice);
+                CHECK(hipMemcpy(d_inputU8, inputU8, iBufferSizeU8, hipMemcpyHostToDevice));
             }
 
             //Copy input buffer to hip
-            hipMemcpy(d_inputF32, inputF32, iBufferSizeInBytes, hipMemcpyHostToDevice);
+            CHECK(hipMemcpy(d_inputF32, inputF32, iBufferSizeInBytes, hipMemcpyHostToDevice));
 
             switch (testCase)
             {
                 case 0:
                 {
-                    testCaseName = "fmadd";
+                    testCaseName = "fused_multiply_add_scalar";
                     Rpp32f *mulTensor = reinterpret_cast<Rpp32f *>(pinnedMemArgs);
                     Rpp32f *addTensor = mulTensor + batchSize;
 
@@ -246,7 +246,7 @@ int main(int argc, char * argv[])
 
                     startWallTime = omp_get_wtime();
                     if(inputBitDepth == 2)
-                        rppt_fmadd_scalar_gpu(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, mulTensor, addTensor, roiGenericSrcPtr, roiTypeSrc, handle);
+                        rppt_fused_multiply_add_scalar_gpu(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, mulTensor, addTensor, roiGenericSrcPtr, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
@@ -273,7 +273,7 @@ int main(int argc, char * argv[])
                 }
             }
 
-            hipDeviceSynchronize();
+            CHECK(hipDeviceSynchronize());
             endWallTime = omp_get_wtime();
             wallTime = endWallTime - startWallTime;
             maxWallTime = std::max(maxWallTime, wallTime);
@@ -286,7 +286,7 @@ int main(int argc, char * argv[])
                 return -1;
             }
             // Copy output buffer to host
-            hipMemcpy(outputF32, d_outputF32, oBufferSizeInBytes, hipMemcpyDeviceToHost);
+            CHECK(hipMemcpy(outputF32, d_outputF32, oBufferSizeInBytes, hipMemcpyDeviceToHost));
             if(testType == 0)
             {
                 cout << "\n\nGPU Backend Wall Time: " << wallTime <<" ms per nifti file"<< endl;
@@ -309,7 +309,7 @@ int main(int argc, char * argv[])
                 if(inputBitDepth == 0)
                 {
                     Rpp64u bufferLength = iBufferSize * sizeof(Rpp8u) + descriptorPtr3D->offsetInBytes;
-                    hipMemcpy(outputU8, d_outputU8, bufferLength, hipMemcpyDeviceToHost);
+                    CHECK(hipMemcpy(outputU8, d_outputU8, bufferLength, hipMemcpyDeviceToHost));
 
                     // Copy U8 buffer to F32 buffer for display purposes
                     for(int i = 0; i < bufferLength; i++)
@@ -400,10 +400,10 @@ int main(int argc, char * argv[])
     free(niftiDataArray);
     free(inputF32);
     free(outputF32);
-    hipHostFree(pinnedMemROI);
-    hipHostFree(pinnedMemArgs);
-    hipFree(d_inputF32);
-    hipFree(d_outputF32);
+    CHECK(hipHostFree(pinnedMemROI));
+    CHECK(hipHostFree(pinnedMemArgs));
+    CHECK(hipFree(d_inputF32));
+    CHECK(hipFree(d_outputF32));
     if(inputBitDepth == 0)
     {
         if(inputU8 != NULL)
@@ -411,9 +411,9 @@ int main(int argc, char * argv[])
         if(outputU8 != NULL)
             free(outputU8);
         if(d_inputU8 != NULL)
-            hipFree(d_inputU8);
+            CHECK(hipFree(d_inputU8));
         if(d_outputU8 != NULL)
-            hipFree(d_outputU8);
+            CHECK(hipFree(d_outputU8));
     }
 
     return(0);

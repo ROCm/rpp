@@ -24,13 +24,11 @@
  *
  *******************************************************************************/
 
-#include <boost/filesystem.hpp>
 #ifndef _WIN32
 #include <unistd.h>
 #endif
 
 #include<thread>
-#include "config.h"
 #include "rpp/logger.hpp"
 #include "rpp/handle.hpp"
 

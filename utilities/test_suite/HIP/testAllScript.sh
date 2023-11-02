@@ -1,5 +1,11 @@
 #!/bin/bash
 
+echo "testAllScript info:"
+echo "basename: [$(basename "$0")]"
+echo "dirname : [$(dirname "$0")]"
+echo "pwd     : [$(pwd)]"
+
+cd $(dirname "$0")
 cwd=$(pwd)
 
 # <<<<<<<<<<<<<< VALIDATION CHECK FOR FOLDER PATHS >>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -43,6 +49,9 @@ function VALIDATE_FOLDERS {
 #Input Images - Three images (mixed size)
 DEFAULT_SRC_FOLDER_1="$cwd/../TEST_IMAGES/three_images_mixed_src1"
 DEFAULT_SRC_FOLDER_2="$cwd/../TEST_IMAGES/three_images_mixed_src2"
+
+#Input Images - Three images (same size) - for RICAP input images should be of same size
+RICAP_SRC_FOLDER="$cwd/../TEST_IMAGES/three_images_150x150_src1"
 
 # <<<<<<<<<<<<<< PROCESSING OF INPUT ARGUMENTS (NEED NOT CHANGE) >>>>>>>>>>>>>>
 
@@ -160,7 +169,7 @@ directory_name_generator() {
         if [ "$case" -lt 5 ] || [ "$case" -eq 13 ] || [ "$case" -eq 31 ] || [ "$case" -eq 34 ] || [ "$case" -eq 36 ]
         then
             FUNCTIONALITY_GROUP="color_augmentations"
-        elif [ "$case" -eq 8 ] || [ "$case" -eq 30 ] || [ "$case" -eq 83 ] || [ "$case" -eq 84 ]
+        elif [ "$case" -eq 8 ] || [ "$case" -eq 30 ] || [ "$case" -eq 82 ] || [ "$case" -eq 83 ] || [ "$case" -eq 84 ]
         then
             FUNCTIONALITY_GROUP="effects_augmentations"
         elif [ "$case" -lt 40 ]
@@ -191,7 +200,7 @@ directory_name_generator() {
 VALIDATE_PATH "$DST_FOLDER"
 
 shopt -s extglob
-mkdir build
+mkdir -p build
 rm -rvf build/*
 cd build
 cmake ..
@@ -211,11 +220,13 @@ echo "##########################################################################
 if [ "$TEST_TYPE" -eq 0 ]; then
     for case in ${CASE_LIST[@]};
     do
+        endBitDepth=7
         if [ "$QA_MODE" -eq 1 ]; then
             if [ "$case" -eq "49" ] || [ "$case" -eq "54" ] || [ "$case" -eq " 84" ]; then
                 echo "QA tests are not supported for case number $case, since it generates random output"
                 continue
             fi
+            endBitDepth=1
         fi
         if [ "$case" -lt "0" ] || [ "$case" -gt " 87" ]; then
             echo "Invalid case number $case. case number must be in the 0:87 range!"
@@ -245,13 +256,18 @@ if [ "$TEST_TYPE" -eq 0 ]; then
             echo "--------------------------------"
             printf "Running a New Functionality...\n"
             echo "--------------------------------"
-            for ((bitDepth=0;bitDepth<7;bitDepth++))
+            for ((bitDepth=0;bitDepth<$endBitDepth;bitDepth++))
             do
                 printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n"
                 for ((outputFormatToggle=0;outputFormatToggle<2;outputFormatToggle++))
                 do
-                    SRC_FOLDER_1_TEMP="$SRC_FOLDER_1"
-                    SRC_FOLDER_2_TEMP="$SRC_FOLDER_2"
+                    if [[ $case -eq 82 ]]; then
+                        SRC_FOLDER_1_TEMP="$RICAP_SRC_FOLDER"
+                        SRC_FOLDER_2_TEMP="$RICAP_SRC_FOLDER"
+                    else
+                        SRC_FOLDER_1_TEMP="$SRC_FOLDER_1"
+                        SRC_FOLDER_2_TEMP="$SRC_FOLDER_2"
+                    fi
 
                     # There is no layout toggle for PLN1 case, so skip this case
                     if [[ $layout -eq 2 ]] && [[ $outputFormatToggle -eq 1 ]]; then

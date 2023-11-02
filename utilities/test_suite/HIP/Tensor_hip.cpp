@@ -236,12 +236,12 @@ int main(int argc, char **argv)
 
     // Initialize ROI tensors for src/dst
     RpptROI *roiTensorPtrSrc, *roiTensorPtrDst;
-    hipHostMalloc(&roiTensorPtrSrc, batchSize * sizeof(RpptROI));
-    hipHostMalloc(&roiTensorPtrDst, batchSize * sizeof(RpptROI));
+    CHECK(hipHostMalloc(&roiTensorPtrSrc, batchSize * sizeof(RpptROI)));
+    CHECK(hipHostMalloc(&roiTensorPtrDst, batchSize * sizeof(RpptROI)));
 
     // Initialize the ImagePatch for dst
     RpptImagePatch *dstImgSizes;
-    hipHostMalloc(&dstImgSizes, batchSize * sizeof(RpptImagePatch));
+    CHECK(hipHostMalloc(&dstImgSizes, batchSize * sizeof(RpptImagePatch)));
 
     // Set ROI tensors types for src/dst
     RpptRoiType roiTypeSrc, roiTypeDst;
@@ -253,10 +253,9 @@ int main(int argc, char **argv)
         outputChannels = 1;
     Rpp32u srcOffsetInBytes = (kernelSizeCase) ? (12 * (additionalParam / 2)) : 0;
     Rpp32u dstOffsetInBytes = 0;
+    int imagesMixed = 0; // Flag used to check if all images in dataset is of same dimensions
 
-    set_max_dimensions(imageNamesPath, maxHeight, maxWidth);
-
-    set_max_dimensions(imageNamesPath, maxHeight, maxWidth);
+    set_max_dimensions(imageNamesPath, maxHeight, maxWidth, imagesMixed);
 
     // Set numDims, offset, n/c/h/w values, strides for src/dst
     set_descriptor_dims_and_strides(srcDescPtr, batchSize, maxHeight, maxWidth, inputChannels, srcOffsetInBytes);
@@ -297,7 +296,7 @@ int main(int argc, char **argv)
     // Run case-wise RPP API and measure time
     rppHandle_t handle;
     hipStream_t stream;
-    hipStreamCreate(&stream);
+    CHECK(hipStreamCreate(&stream));
     rppCreateWithStreamAndBatchSize(&handle, stream, batchSize);
 
     int noOfIterations = (int)imageNames.size() / batchSize;
@@ -305,6 +304,18 @@ int main(int argc, char **argv)
     double wallTime;
     string testCaseName;
 
+    if(testCase == 82 && imagesMixed)
+    {
+        std::cerr<<"\n RICAP only works with same dimension images";
+        exit(0);
+    }
+
+    if(testCase == 82 && batchSize < 2)
+    {
+        std::cerr<<"\n RICAP only works with BatchSize > 1";
+        exit(0);
+    }
+  
     // Initialize buffers for any reductionType functions
     void *reductionFuncResultArr;
     Rpp32u reductionFuncResultArrLength = srcDescPtr->n * 4;
@@ -312,20 +323,24 @@ int main(int argc, char **argv)
     if(reductionTypeCase)
     {
         if(dstDescPtr->dataType == RpptDataType::U8)
-            hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * sizeof(Rpp64u));
+            CHECK(hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * sizeof(Rpp64u)));
         else if(dstDescPtr->dataType == RpptDataType::F16)
-            hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * sizeof(Rpp32f));
+            CHECK(hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * sizeof(Rpp32f)));
         else if(dstDescPtr->dataType == RpptDataType::F32)
-            hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * sizeof(Rpp32f));
+            CHECK(hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * sizeof(Rpp32f)));
         else if(dstDescPtr->dataType == RpptDataType::I8)
-            hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * sizeof(Rpp64s));
+            CHECK(hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * sizeof(Rpp64s)));
     }
 
     //Allocate hip memory for src/dst
-    hipMalloc(&d_input, inputBufferSize);
-    hipMalloc(&d_output, outputBufferSize);
+    CHECK(hipMalloc(&d_input, inputBufferSize));
+    CHECK(hipMalloc(&d_output, outputBufferSize));
     if(dualInputCase)
-        hipMalloc(&d_input_second, inputBufferSize);
+        CHECK(hipMalloc(&d_input_second, inputBufferSize));
+
+    RpptROI *roiPtrInputCropRegion;
+    if(testCase == 82)
+        CHECK(hipHostMalloc(&roiPtrInputCropRegion, 4 * sizeof(RpptROI)));
 
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
@@ -367,10 +382,10 @@ int main(int argc, char **argv)
             convert_input_bitdepth(input, input_second, inputu8, inputu8Second, inputBitDepth, ioBufferSize, inputBufferSize, srcDescPtr, dualInputCase, conversionFactor);
 
             //copy decoded inputs to hip buffers
-            hipMemcpy(d_input, input, inputBufferSize, hipMemcpyHostToDevice);
-            hipMemcpy(d_output, output, outputBufferSize, hipMemcpyHostToDevice);
+            CHECK(hipMemcpy(d_input, input, inputBufferSize, hipMemcpyHostToDevice));
+            CHECK(hipMemcpy(d_output, output, outputBufferSize, hipMemcpyHostToDevice));
             if(dualInputCase)
-                hipMemcpy(d_input_second, input_second, inputBufferSize, hipMemcpyHostToDevice);
+                CHECK(hipMemcpy(d_input_second, input_second, inputBufferSize, hipMemcpyHostToDevice));
 
             // Uncomment to run test case with an xywhROI override
             // roi.xywhROI = {0, 0, 25, 25};
@@ -474,6 +489,35 @@ int main(int argc, char **argv)
 
                 break;
             }
+            case 29:
+            {
+                testCaseName = "water";
+
+                Rpp32f amplX[batchSize];
+                Rpp32f amplY[batchSize];
+                Rpp32f freqX[batchSize];
+                Rpp32f freqY[batchSize];
+                Rpp32f phaseX[batchSize];
+                Rpp32f phaseY[batchSize];
+
+                for (i = 0; i < batchSize; i++)
+                {
+                    amplX[i] = 2.0f;
+                    amplY[i] = 5.0f;
+                    freqX[i] = 5.8f;
+                    freqY[i] = 1.2f;
+                    phaseX[i] = 10.0f;
+                    phaseY[i] = 15.0f;
+                }
+
+                startWallTime = omp_get_wtime();
+                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    rppt_water_gpu(d_input, srcDescPtr, d_output, dstDescPtr, amplX, amplY, freqX, freqY, phaseX, phaseY, roiTensorPtrSrc, roiTypeSrc, handle);
+                else
+                    missingFuncFlag = 1;
+
+                break;
+            }
             case 31:
             {
                 testCaseName = "color_cast";
@@ -502,8 +546,8 @@ int main(int argc, char **argv)
                 testCaseName = "lut";
 
                 Rpp32f *lutBuffer;
-                hipHostMalloc(&lutBuffer, 65536 * sizeof(Rpp32f));
-                hipMemset(lutBuffer, 0, 65536 * sizeof(Rpp32f));
+                CHECK(hipHostMalloc(&lutBuffer, 65536 * sizeof(Rpp32f)));
+                CHECK(hipMemset(lutBuffer, 0, 65536 * sizeof(Rpp32f)));
                 Rpp8u *lut8u = reinterpret_cast<Rpp8u *>(lutBuffer);
                 Rpp16f *lut16f = reinterpret_cast<Rpp16f *>(lutBuffer);
                 Rpp32f *lut32f = reinterpret_cast<Rpp32f *>(lutBuffer);
@@ -535,7 +579,7 @@ int main(int argc, char **argv)
 
                 break;
 
-                hipHostFree(lutBuffer);
+                CHECK(hipHostFree(lutBuffer));
             }
             case 36:
             {
@@ -668,6 +712,30 @@ int main(int argc, char **argv)
 
                 break;
             }
+            case 82:
+            {
+                testCaseName = "ricap";
+
+                Rpp32u permutationTensor[batchSize * 4];
+
+                if(imagesMixed)
+                {
+                    std::cerr<<"\n RICAP only works with same dimension images";
+                    break;
+                }
+
+                if(qaFlag)
+                    init_ricap_qa(maxWidth, maxHeight, batchSize, permutationTensor, roiPtrInputCropRegion);
+                else
+                    init_ricap(maxWidth, maxHeight, batchSize, permutationTensor, roiPtrInputCropRegion);
+
+                startWallTime = omp_get_wtime();
+                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    rppt_ricap_gpu(d_input, srcDescPtr, d_output, dstDescPtr, permutationTensor, roiPtrInputCropRegion, roiTypeSrc, handle);
+                else
+                    missingFuncFlag = 1;
+                break;
+            }
             case 84:
             {
                 testCaseName = "spatter";
@@ -718,7 +786,7 @@ int main(int argc, char **argv)
                 break;
             }
 
-            hipDeviceSynchronize();
+            CHECK(hipDeviceSynchronize());
             endWallTime = omp_get_wtime();
             wallTime = endWallTime - startWallTime;
             if (missingFuncFlag == 1)
@@ -734,6 +802,7 @@ int main(int argc, char **argv)
             if (testType == 0)
             {
                 cout << "\n\nGPU Backend Wall Time: " << wallTime <<" ms/batch"<< endl;
+                
                 // Display results for reduction functions
                 if (reductionTypeCase)
                 {
@@ -778,7 +847,7 @@ int main(int argc, char **argv)
                 }
                 else
                 {
-                    hipMemcpy(output, d_output, outputBufferSize, hipMemcpyDeviceToHost);
+                    CHECK(hipMemcpy(output, d_output, outputBufferSize, hipMemcpyDeviceToHost));
 
                     // Reconvert other bit depths to 8u for output display purposes
                     convert_output_bitdepth_to_u8(output, outputu8, inputBitDepth, oBufferSize, outputBufferSize, dstDescPtr, invConversionFactor);
@@ -841,19 +910,22 @@ int main(int argc, char **argv)
     }
 
     // Free memory
-    hipHostFree(roiTensorPtrSrc);
-    hipHostFree(roiTensorPtrDst);
-    hipHostFree(dstImgSizes);
+    CHECK(hipHostFree(roiTensorPtrSrc));
+    CHECK(hipHostFree(roiTensorPtrDst));
+    CHECK(hipHostFree(dstImgSizes));
+    if(testCase == 82)
+        CHECK(hipHostFree(roiPtrInputCropRegion));
     if (reductionTypeCase)
-        hipHostFree(&reductionFuncResultArr);
+        CHECK(hipHostFree(reductionFuncResultArr));
     free(input);
     free(input_second);
     free(output);
     free(inputu8);
     free(inputu8Second);
     free(outputu8);
-    hipFree(d_input);
-    hipFree(d_input_second);
-    hipFree(d_output);
+    CHECK(hipFree(d_input));
+    if(dualInputCase)
+        CHECK(hipFree(d_input_second));
+    CHECK(hipFree(d_output));
     return 0;
 }

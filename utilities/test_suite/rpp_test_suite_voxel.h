@@ -28,6 +28,7 @@ THE SOFTWARE.
 #include <opencv2/opencv.hpp>
 #include <iostream>
 #include <time.h>
+#include <filesystem.h>
 #include <omp.h>
 #include <fstream>
 #include <unistd.h>
@@ -37,7 +38,6 @@ THE SOFTWARE.
 #include "nifti1.h"
 
 using namespace std;
-namespace fs = boost::filesystem;
 typedef int16_t NIFTI_DATATYPE;
 
 #define MIN_HEADER_SIZE 348
@@ -48,9 +48,17 @@ typedef int16_t NIFTI_DATATYPE;
 #define MAX_IMAGE_DUMP 100
 #define MAX_BATCH_SIZE 512
 
+#define CHECK(x) do { \
+  int retval = (x); \
+  if (retval != 0) { \
+    fprintf(stderr, "Runtime error: %s returned %d at %s:%d", #x, retval, __FILE__, __LINE__); \
+    exit(-1); \
+  } \
+} while (0)
+
 std::map<int, string> augmentationMap =
 {
-    {0, "fmadd"},
+    {0, "fused_multiply_add_scalar"},
     {1, "slice"},
 };
 
@@ -678,7 +686,7 @@ inline void compare_output(Rpp32f* output, Rpp64u oBufferSize, string func, int 
 
     // Append the QA results to file
     std::string qaResultsPath = dst + "/QA_results.txt";
-    std:: ofstream qaResults(qaResultsPath, ios_base::app);
+    std::ofstream qaResults(qaResultsPath, ios_base::app);
     if (qaResults.is_open())
     {
         qaResults << status << std::endl;

@@ -24,7 +24,7 @@ THE SOFTWARE.
 #include "rpp_cpu_simd.hpp"
 #include "rpp_cpu_common.hpp"
 
-RppStatus fmadd_scalar_f32_f32_host_tensor(Rpp32f *srcPtr,
+RppStatus fused_multiply_add_scalar_f32_f32_host_tensor(Rpp32f *srcPtr,
                                            RpptGenericDescPtr srcGenericDescPtr,
                                            Rpp32f *dstPtr,
                                            RpptGenericDescPtr dstGenericDescPtr,

@@ -38,7 +38,6 @@ THE SOFTWARE.
 #include "../rpp_test_suite_common.h"
 
 using namespace std;
-namespace fs = boost::filesystem;
 
 std::map<int, string> augmentationMiscMap =
 {

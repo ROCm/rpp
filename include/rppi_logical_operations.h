@@ -29,6 +29,18 @@ THE SOFTWARE.
 extern "C" {
 #endif
 
+/*!
+ * \file
+ * \brief RPPI Image Operations - Logical Operations - To be deprecated.
+ * \defgroup group_rppi_logical_operations RPPI Image Operations - Logical Operations
+ * \brief RPPI Image Operations - Logical Operations - To be deprecated.
+ * \deprecated
+ */
+
+/*! \addtogroup group_rppi_logical_operations
+ * @{
+ */
+
 /******************** bitwise_AND ********************/
 
 // Performs an element-wise bitwise AND between corresponding pixels of two batches of images
@@ -123,6 +135,9 @@ RppStatus rppi_inclusive_OR_u8_pln1_batchPD_gpu(RppPtr_t srcPtr1, RppPtr_t srcPt
 RppStatus rppi_inclusive_OR_u8_pln3_batchPD_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_inclusive_OR_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
+
+/*! @}
+ */
 
 #ifdef __cplusplus
 }

@@ -220,7 +220,7 @@ int main(int argc, char * argv[])
             {
                 case 0:
                 {
-                    testCaseName = "fmadd";
+                    testCaseName = "fused_multiply_add_scalar";
                     Rpp32f *mulTensor = reinterpret_cast<Rpp32f *>(pinnedMemArgs);
                     Rpp32f *addTensor = mulTensor + batchSize;
 
@@ -232,7 +232,7 @@ int main(int argc, char * argv[])
 
                     startWallTime = omp_get_wtime();
                     if(inputBitDepth == 2)
-                        rppt_fmadd_scalar_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, mulTensor, addTensor, roiGenericSrcPtr, roiTypeSrc, handle);
+                        rppt_fused_multiply_add_scalar_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, mulTensor, addTensor, roiGenericSrcPtr, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 

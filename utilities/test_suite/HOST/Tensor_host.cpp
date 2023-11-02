@@ -250,8 +250,9 @@ int main(int argc, char **argv)
     if(pln1OutTypeCase)
         outputChannels = 1;
     Rpp32u offsetInBytes = 0;
+    int imagesMixed = 0; // Flag used to check if all images in dataset is of same dimensions
 
-    set_max_dimensions(imageNamesPath, maxHeight, maxWidth);
+    set_max_dimensions(imageNamesPath, maxHeight, maxWidth, imagesMixed);
 
     // Set numDims, offset, n/c/h/w values, strides for src/dst
     set_descriptor_dims_and_strides(srcDescPtr, batchSize, maxHeight, maxWidth, inputChannels, offsetInBytes);
@@ -299,6 +300,18 @@ int main(int argc, char **argv)
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0;
     double cpuTime, wallTime;
     string testCaseName;
+
+    if(testCase == 82 && imagesMixed)
+    {
+        std::cerr<<"\n RICAP only works with same dimension images";
+        exit(0);
+    }
+
+    if(testCase == 82 && batchSize < 2)
+    {
+        std::cerr<<"\n RICAP only works with BatchSize > 1";
+        exit(0);
+    }
 
     // Initialize buffers for any reductionType functions
     void *reductionFuncResultArr;
@@ -455,6 +468,35 @@ int main(int argc, char **argv)
                     startCpuTime = clock();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_exposure_host(input, srcDescPtr, output, dstDescPtr, exposureFactor, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 29:
+                {
+                    testCaseName = "water";
+
+                    Rpp32f amplX[batchSize];
+                    Rpp32f amplY[batchSize];
+                    Rpp32f freqX[batchSize];
+                    Rpp32f freqY[batchSize];
+                    Rpp32f phaseX[batchSize];
+                    Rpp32f phaseY[batchSize];
+
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        amplX[i] = 2.0f;
+                        amplY[i] = 5.0f;
+                        freqX[i] = 5.8f;
+                        freqY[i] = 1.2f;
+                        phaseX[i] = 10.0f;
+                        phaseY[i] = 15.0f;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_water_host(input, srcDescPtr, output, dstDescPtr, amplX, amplY, freqX, freqY, phaseX, phaseY, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
@@ -624,6 +666,33 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 82:
+                {
+                    testCaseName = "ricap";
+
+                    Rpp32u permutationTensor[batchSize * 4];
+                    RpptROI roiPtrInputCropRegion[4];
+
+                    if(imagesMixed)
+                    {
+                        std::cerr<<"\n RICAP only works with same dimension images";
+                        break;
+                    }
+
+                    if(qaFlag)
+                        init_ricap_qa(maxWidth, maxHeight, batchSize, permutationTensor, roiPtrInputCropRegion);
+                    else
+                        init_ricap(maxWidth, maxHeight, batchSize, permutationTensor, roiPtrInputCropRegion);
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_ricap_host(input, srcDescPtr, output, dstDescPtr, permutationTensor, roiPtrInputCropRegion, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 case 84:
                 {
                     testCaseName = "spatter";
@@ -697,7 +766,6 @@ int main(int argc, char **argv)
                 cout <<"\n\n";
                 cout <<"CPU Backend Clock Time: "<< cpuTime <<" ms/batch"<< endl;
                 cout <<"CPU Backend Wall Time: "<< wallTime <<" ms/batch"<< endl;
-
 
                 if (reductionTypeCase)
                 {
