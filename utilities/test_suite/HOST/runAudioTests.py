@@ -29,7 +29,7 @@ import shutil
 timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
 scriptPath = os.path.dirname(os.path.realpath(__file__))
-inFilePath = scriptPath + "/../TEST_AUDIO_FILES/eight_samples_single_channel_src1"
+inFilePath = scriptPath + "/../TEST_AUDIO_FILES/three_samples_single_channel_src1"
 
 # Checks if the folder path is empty, or is it a root folder, or if it exists, and remove its contents
 def validate_and_remove_files(path):
@@ -122,6 +122,7 @@ def rpp_test_suite_parser_and_validator():
     parser.add_argument("--case_start", type = int, default = 0, help = "Testing range starting case # - (0:0)")
     parser.add_argument("--case_end", type = int, default = 0, help = "Testing range ending case # - (0:0)")
     parser.add_argument('--test_type', type = int, default = 0, help = "Type of Test - (0 = QA tests / 1 = Performance tests)")
+    parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Output audio data from tests will be compared with golden outputs - (0 / 1)", required = False)
     parser.add_argument('--case_list', nargs = "+", help = "List of case numbers to test", required = False)
     parser.add_argument('--num_runs', type = int, default = 1, help = "Specifies the number of runs for running the performance tests")
     parser.add_argument('--preserve_output', type = int, default = 1, help = "preserves the output of the program - (0 = override output / 1 = preserve output )" )
@@ -143,6 +144,9 @@ def rpp_test_suite_parser_and_validator():
         exit(0)
     elif args.case_list is not None and args.case_start > 0 and args.case_end < 0:
         print("Invalid input! Please provide only 1 option between case_list, case_start and case_end")
+        exit(0)
+    elif args.qa_mode < 0 or args.qa_mode > 1:
+        print("QA mode must be in the 0 / 1. Aborting!")
         exit(0)
     elif args.num_runs <= 0:
         print("Number of Runs must be greater than 0. Aborting!")
@@ -173,11 +177,17 @@ caseStart = args.case_start
 caseEnd = args.case_end
 testType = args.test_type
 caseList = args.case_list
+qaMode = args.qa_mode
 numRuns = args.num_runs
 preserveOutput = args.preserve_output
 batchSize = args.batch_size
 bitDepth = 2 # Current audio test suite only supports bit depth 2
 outFilePath = " "
+
+# Override testType to 0 if testType is 1 and qaMode is 1
+if testType == 1 and qaMode == 1:
+    print("WARNING: QA Mode cannot be run with testType = 1 (performance tests). Resetting testType to 0")
+    testType = 0
 
 if preserveOutput == 0:
     validate_and_remove_folders(scriptPath, "QA_RESULTS_AUDIO_HOST")
@@ -213,8 +223,8 @@ subprocess.run(["make", "-j16"], cwd=".")    # nosec
 
 if testType == 0:
     for case in caseList:
-        if batchSize != 8:
-            print("QA tests can only run with a batch size of 8.")
+        if batchSize != 3:
+            print("QA tests can only run with a batch size of 3.")
             exit(0)
         if int(case) != 0:
             print(f"Invalid case number {case}. Case number must be 0!")
@@ -251,7 +261,7 @@ if testType == 0:
         resultsInfo += "\n    - Total test cases including all subvariants REQUESTED = " + str(numLines)
         resultsInfo += "\n    - Total test cases including all subvariants PASSED = " + str(numPassed)
         resultsInfo += "\n\nGeneral information on Tensor test suite availability:"
-        resultsInfo += "\n    - Total augmentations supported in Tensor test suite = " + str(len(supportedCaseList))
+        resultsInfo += "\n    - Total augmentations supported in Tensor audio test suite = " + str(len(supportedCaseList))
         resultsInfo += "\n    - Total augmentations with golden output QA test support = " + str(len(supportedCaseList) - len(nonQACaseList))
         resultsInfo += "\n    - Total augmentations without golden ouput QA test support (due to randomization involved) = " + str(len(nonQACaseList))
         f.write(resultsInfo)

@@ -41,9 +41,9 @@ int main(int argc, char **argv)
     int batchSize = atoi(argv[6]);
     char *dst = argv[7];
 
-    if (testType == 0 && batchSize != 8)
+    if (testType == 0 && batchSize != 3)
     {
-        cout << "Error! QA Mode only runs with batchsize 8" << endl;
+        cout << "Error! QA Mode only runs with batchsize 3" << endl;
         return -1;
     }
 
@@ -123,7 +123,7 @@ int main(int argc, char **argv)
 
     // Run case-wise RPP API and measure time
     rppHandle_t handle;
-    rppCreateWithBatchSize(&handle, srcDescPtr->n, 8);
+    rppCreateWithBatchSize(&handle, srcDescPtr->n, 3);
     int noOfIterations = (int)audioNames.size() / batchSize;
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0;
     string testCaseName;
