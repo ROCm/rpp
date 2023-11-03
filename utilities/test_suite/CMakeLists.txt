@@ -39,7 +39,7 @@ if(Python3_FOUND)
     )
     add_test(
         NAME rpp_qa_tests_tensor_audio_host_all
-        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HOST/runAudioTests.py --test_type 0 --batch_size 8
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HOST/runAudioTests.py --qa_mode 1 --batch_size 3
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
 
@@ -51,12 +51,11 @@ if(Python3_FOUND)
     )
     add_test(
         NAME rpp_qa_tests_tensor_audio_host_non_silent_region
-        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HOST/runAudioTests.py --case_list 0 --test_type 0 --batch_size 8
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HOST/runAudioTests.py --case_list 0 --qa_mode 1 --batch_size 3
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
 
     if( "${BACKEND}" STREQUAL "HIP")
-        
         # Running all HIP tests
         add_test(
             NAME rpp_qa_tests_tensor_hip_all
@@ -70,11 +69,8 @@ if(Python3_FOUND)
             COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HIP/runTests.py --qa_mode 1 --batch_size 3 --case_list 0
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )
-    
     elseif( "${BACKEND}" STREQUAL "OCL")
-        
         # TBD: Add OCL Tests
-    
     endif()
 
 else()
