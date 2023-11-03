@@ -222,10 +222,11 @@ subprocess.run(["cmake", ".."], cwd=".")   # nosec
 subprocess.run(["make", "-j16"], cwd=".")    # nosec
 
 if testType == 0:
+    if batchSize != 3:
+        print("QA tests can only run with a batch size of 3.")
+        exit(0)
+
     for case in caseList:
-        if batchSize != 3:
-            print("QA tests can only run with a batch size of 3.")
-            exit(0)
         if int(case) != 0:
             print(f"Invalid case number {case}. Case number must be 0!")
             continue
