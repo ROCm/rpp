@@ -74,7 +74,7 @@ def validate_and_remove_folders(path, folder):
             else:
                 print("Directory not found:", folder_path)
 
-def case_file_check(CASE_FILE_PATH):
+def case_file_check(CASE_FILE_PATH, TYPE, TENSOR_TYPE_LIST, new_file):
     try:
         case_file = open(CASE_FILE_PATH,'r')
         for line in case_file:
@@ -177,7 +177,7 @@ def run_unit_test(headerPath, dataPath, dstPathTemp, layout, case, numRuns, test
         print(result.stdout.decode())
         print("------------------------------------------------------------------------------------------")
 
-def run_performance_test(loggingFolder, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
+def run_performance_test(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
     print("\n\n\n\n")
     print("--------------------------------")
     print("Running a New Functionality...")
@@ -392,7 +392,7 @@ elif (testType == 1 and profilingOption == "NO"):
     for case in caseList:
         for layout in range(3):
             dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath)
-            run_performance_test(loggingFolder, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize)
+            run_performance_test(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize)
 elif (testType == 1 and profilingOption == "YES"):
     NEW_FUNC_GROUP_LIST = [0, 1]
     for case in caseList:
@@ -442,7 +442,7 @@ elif (testType == 1 and profilingOption == "YES"):
                         # Write into csv file
                         CASE_FILE_PATH = CASE_RESULTS_DIR + "/output_case" + str(CASE_NUM) + ".stats.csv"
                         print("CASE_FILE_PATH = " + CASE_FILE_PATH)
-                        fileCheck = case_file_check(CASE_FILE_PATH)
+                        fileCheck = case_file_check(CASE_FILE_PATH, TYPE, TENSOR_TYPE_LIST, new_file)
                         if fileCheck == False:
                             continue
 

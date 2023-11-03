@@ -147,7 +147,7 @@ def run_unit_test(headerPath, dataPath, dstPathTemp, layout, case, numRuns, test
         print(result.stdout.decode())
         print("------------------------------------------------------------------------------------------")
 
-def run_performance_test(loggingFolder, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
+def run_performance_test(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
     print("\n\n\n\n")
     print("--------------------------------")
     print("Running a New Functionality...")
@@ -309,7 +309,7 @@ else:
     for case in caseList:
         for layout in range(3):
             dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath)
-            run_performance_test(loggingFolder, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize)
+            run_performance_test(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize)
 
 # print the results of qa tests
 supportedCaseList = ['0', '1']
