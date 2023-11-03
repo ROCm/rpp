@@ -19,6 +19,7 @@
 # THE SOFTWARE.
 
 cmake_minimum_required(VERSION 3.5)
+set(CMAKE_CXX_STANDARD 17)
 project(rpp_unittests/OCL_NEW)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../../../cmake)
 set(ROCM_PATH /opt/rocm CACHE PATH "default ROCm installation path")
@@ -40,11 +41,6 @@ endif()
 find_package(OpenCL QUIET)
 find_package(OpenCV QUIET)
 
-# BOOST
-set(BOOST_COMPONENTS filesystem system)
-find_package(Boost COMPONENTS ${BOOST_COMPONENTS} REQUIRED)
-include_directories(${Boost_INCLUDE_DIRS})
-set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY})
 # OpenMP
 find_package(OpenMP REQUIRED)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
@@ -62,11 +58,11 @@ if (OpenCL_FOUND AND OpenCV_FOUND)
     add_executable(BatchPD_ocl_pln3 BatchPD_ocl_pln3.cpp)
     # add_executable(Single_ocl Single_ocl.cpp)
     add_executable(uniqueFunctionalities_ocl uniqueFunctionalities_ocl.cpp)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGPU_SUPPORT=1 -DRPP_BACKEND_OPENCL=1 -std=gnu++14")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGPU_SUPPORT=1 -DRPP_BACKEND_OPENCL=1 -std=gnu++17")
     target_link_libraries(BatchPD_ocl_pkd3 ${OpenCV_LIBS} -lrpp ${OpenCL_LIBRARIES} pthread ${LINK_LIBRARY_LIST})
     target_link_libraries(BatchPD_ocl_pln1 ${OpenCV_LIBS} -lrpp ${OpenCL_LIBRARIES} pthread ${LINK_LIBRARY_LIST})
     target_link_libraries(BatchPD_ocl_pln3 ${OpenCV_LIBS} -lrpp ${OpenCL_LIBRARIES} pthread ${LINK_LIBRARY_LIST})
-    # target_link_libraries(Single_ocl ${OpenCV_LIBS} -lrpp ${OpenCL_LIBRARIES} pthread boost_filesystem boost_system)
+    # target_link_libraries(Single_ocl ${OpenCV_LIBS} -lrpp ${OpenCL_LIBRARIES} pthread )
     target_link_libraries(uniqueFunctionalities_ocl ${OpenCV_LIBS} -lrpp ${OpenCL_LIBRARIES} pthread ${LINK_LIBRARY_LIST})
 else()
     message("-- ${Yellow}Error: OpenCV and OpenCL must be installed to install ${PROJECT_NAME} successfully!${ColourReset}")

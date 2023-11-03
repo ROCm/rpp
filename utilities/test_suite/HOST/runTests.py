@@ -31,6 +31,7 @@ timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 cwd = os.getcwd()
 inFilePath1 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src1')
 inFilePath2 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src2')
+ricapInFilePath = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_150x150_src1')
 qaInputFile = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src1')
 
 # Checks if the folder path is empty, or is it a root folder, or if it exists, and remove its contents
@@ -108,7 +109,7 @@ def get_log_file_list(preserveOutput):
 def func_group_finder(case_number):
     if case_number < 5 or case_number == 13 or case_number == 36 or case_number == 31:
         return "color_augmentations"
-    elif case_number == 8 or case_number == 30 or case_number == 83 or case_number == 84:
+    elif case_number == 8 or case_number == 30 or case_number == 82 or case_number == 83 or case_number == 84:
         return "effects_augmentations"
     elif case_number < 40:
         return "geometric_augmentations"
@@ -276,10 +277,6 @@ def rpp_test_suite_parser_and_validator():
             if int(case) < 0 or int(case) > 87:
                  print("The case# must be in the 0:87 range!")
                  exit(0)
-    # if QA mode is enabled overwrite the input folders with the folders used for generating golden outputs
-    if args.qa_mode:
-        args.input_path1 = inFilePath1
-        args.input_path2 = inFilePath2
 
     return args
 
@@ -301,10 +298,6 @@ if preserveOutput == 0:
     validate_and_remove_folders(cwd, "OUTPUT_IMAGES_HOST")
     validate_and_remove_folders(cwd, "QA_RESULTS_HOST")
     validate_and_remove_folders(cwd, "OUTPUT_PERFORMANCE_LOGS_HOST")
-
-if qaMode and os.path.abspath(qaInputFile) != os.path.abspath(srcPath1):
-    print("QA mode should only run with the given Input path: ", qaInputFile)
-    exit(0)
 
 if qaMode and batchSize != 3:
     print("QA mode can only run with a batch size of 3.")
@@ -348,6 +341,13 @@ print("#########################################################################
 
 if testType == 0:
     for case in caseList:
+        if case == "82" and (("--input_path1" not in sys.argv and "--input_path2" not in sys.argv) or qaMode == 1):
+            srcPath1 = ricapInFilePath
+            srcPath2 = ricapInFilePath
+        # if QA mode is enabled overwrite the input folders with the folders used for generating golden outputs
+        if qaMode == 1 and case != "82":
+            srcPath1 = inFilePath1
+            srcPath2 = inFilePath2
         if int(case) < 0 or int(case) > 87:
             print(f"Invalid case number {case}. Case number must be in the range of 0 to 86!")
             continue
@@ -367,13 +367,16 @@ else:
         if int(case) < 0 or int(case) > 87:
             print(f"Invalid case number {case}. Case number must be in the range of 0 to 86!")
             continue
+        if case == "82" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
+                srcPath1 = ricapInFilePath
+                srcPath2 = ricapInFilePath
         for layout in range(3):
             dstPathTemp, log_file_layout = process_layout(layout, qaMode, case, dstPath)
 
             run_performance_test(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
 
 # print the results of qa tests
-supportedCaseList = ['0', '1', '2', '4', '13', '20', '21', '23', '29', '30', '31', '34', '36', '37', '38', '39', '70', '80', '81', '82', '83', '84', '85', '86', '87']
+supportedCaseList = ['0', '1', '2', '4', '8', '13', '20', '21', '23', '29', '30', '31', '34', '36', '37', '38', '39', '54', '70', '80', '81', '82', '83', '84', '85', '86', '87']
 nonQACaseList = ['8', '24', '54', '84']
 supportedCases = 0
 for num in caseList:
@@ -388,11 +391,23 @@ if qaMode and testType == 0:
     if checkFile:
         f = open(qaFilePath, 'r+')
         print("---------------------------------- Results of QA Test ----------------------------------\n")
+        numLines = 0
+        numPassed = 0
         for line in f:
             sys.stdout.write(line)
+            numLines += 1
+            if "PASSED" in line:
+                numPassed += 1
             sys.stdout.flush()
-        f.write(caseInfo)
-print("\n-------------- " + caseInfo + " --------------")
+        resultsInfo = "\n\nFinal Results of Tests:"
+        resultsInfo += "\n    - Total test cases including all subvariants REQUESTED = " + str(numLines)
+        resultsInfo += "\n    - Total test cases including all subvariants PASSED = " + str(numPassed)
+        resultsInfo += "\n\nGeneral information on Tensor test suite availability:"
+        resultsInfo += "\n    - Total augmentations supported in Tensor test suite = " + str(len(supportedCaseList))
+        resultsInfo += "\n    - Total augmentations with golden output QA test support = " + str(len(supportedCaseList) - len(nonQACaseList))
+        resultsInfo += "\n    - Total augmentations without golden ouput QA test support (due to randomization involved) = " + str(len(nonQACaseList))
+        f.write(resultsInfo)
+    print("\n-------------------------------------------------------------------" + resultsInfo + "\n\n-------------------------------------------------------------------")
 
 layoutDict = {0:"PKD3", 1:"PLN3", 2:"PLN1"}
 # unit tests and QA mode disabled

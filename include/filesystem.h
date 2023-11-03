@@ -20,14 +20,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#ifndef RPPCORE_H
-#define RPPCORE_H
-#ifdef __cplusplus
-extern "C" {
+#if __cplusplus >= 201703L && __has_include(<filesystem>)
+    #include <filesystem>
+    namespace fs = std::filesystem;
+#elif __has_include(<experimental/filesystem>)
+    #include <experimental/filesystem>
+    namespace fs = std::experimental::filesystem;
 #endif
-
-
-#ifdef __cplusplus
-}
-#endif
-#endif /* RPPCORE_H */

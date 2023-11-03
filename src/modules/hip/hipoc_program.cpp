@@ -25,9 +25,9 @@
  *******************************************************************************/
 
 #include <sstream>
+#include <optional>
 #include <unistd.h>
 #include <hip/hiprtc.h>
-#include <boost/optional.hpp>
 
 #include "rpp/errors.hpp"
 #include "rpp/gcn_asm_utils.hpp"
@@ -47,7 +47,7 @@ std::string remove_extension(const std::string& filename) {
     return filename.substr(0, lastdot);
 }
 
-hipModulePtr CreateModule(const boost::filesystem::path& hsaco_file)
+hipModulePtr CreateModule(const fs::path& hsaco_file)
 {
     hipModule_t raw_m;
     // std::cout<<"attempting to run hipModule Load of hsacofile:\n";// <<hsaco_file.string().c_str()<<std::endl;
@@ -69,7 +69,7 @@ hipModulePtr CreateModuleRTC(char** codeData)
 }
 struct HIPOCProgramImpl
 {
-    HIPOCProgramImpl(const std::string& program_name, const boost::filesystem::path& hsaco)
+    HIPOCProgramImpl(const std::string& program_name, const fs::path& hsaco)
         : name(program_name), hsaco_file(hsaco)
     {
         this->module = CreateModule(this->hsaco_file);
@@ -95,9 +95,9 @@ struct HIPOCProgramImpl
     }
     std::string name;
     std::string dev_name;
-    boost::filesystem::path hsaco_file;
+    fs::path hsaco_file;
     hipModulePtr module;
-    boost::optional<TmpDir> dir;
+    std::optional<TmpDir> dir;
     hipModulePtr BuildAndCreateModuleRTC(const std::string& program_name,
                      std::string params,
                      bool is_kernel_str,
@@ -198,7 +198,7 @@ struct HIPOCProgramImpl
             dir->Execute("/usr/local/bin/clang-ocl", params + " " + filename + " -o " + hsaco_file.string());
         }
         // std::cout<<"Done Building Module to get hsaco_file "<<hsaco_file.string().c_str()<<std::flush;
-        //if(!boost::filesystem::exists(hsaco_file))
+        //if(!fs::exists(hsaco_file))
           //  RPP_THROW("Cant find file: " + hsaco_file.string());
 
     ;
@@ -217,13 +217,13 @@ HIPOCProgram::HIPOCProgram(const std::string& program_name,
 {
 }
 
-HIPOCProgram::HIPOCProgram(const std::string& program_name, const boost::filesystem::path& hsaco)
+HIPOCProgram::HIPOCProgram(const std::string& program_name, const fs::path& hsaco)
     : impl(std::make_shared<HIPOCProgramImpl>(program_name, hsaco))
 {
 }
 
 hipModule_t HIPOCProgram::GetModule() const { return this->impl->module.get(); }
 
-boost::filesystem::path HIPOCProgram::GetBinary() const { return this->impl->hsaco_file; }
+fs::path HIPOCProgram::GetBinary() const { return this->impl->hsaco_file; }
 
 } // namespace rpp

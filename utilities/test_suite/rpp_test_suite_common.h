@@ -27,6 +27,7 @@ THE SOFTWARE.
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/opencv.hpp>
 #include <iostream>
+#include "filesystem.h"
 #include "rpp.h"
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -52,7 +53,6 @@ typedef half Rpp16f;
 
 using namespace cv;
 using namespace std;
-namespace fs = boost::filesystem;
 
 #define CUTOFF 1
 #define DEBUG_MODE 0
@@ -953,7 +953,7 @@ template <typename T>
 inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int noOfImages, string interpolationTypeName, string noiseTypeName, int testCase, string dst)
 {
     string func = funcName;
-    string refPath = get_current_dir_name();
+    string refPath = fs::current_path();
     string pattern = "/build";
     string refFile = "";
     int refOutputWidth = ((GOLDEN_OUTPUT_MAX_WIDTH / 8) * 8) + 8;    // obtain next multiple of 8 after GOLDEN_OUTPUT_MAX_WIDTH
@@ -1202,7 +1202,7 @@ void inline init_ricap_qa(int width, int height, int batchSize, Rpp32u *permutat
 void inline init_ricap(int width, int height, int batchSize, Rpp32u *permutationTensor, RpptROIPtr roiPtrInputCropRegion)
 {
     Rpp32u initialPermuteArray[batchSize], permutedArray[batchSize * 4];
-    double randFromDist, randFromDist1;
+    double randVal, randVal1;
 
     for (uint i = 0; i < batchSize; i++)
         initialPermuteArray[i] = i;
@@ -1213,13 +1213,13 @@ void inline init_ricap(int width, int height, int batchSize, Rpp32u *permutation
     std::mt19937 gen(rd()); // Pseudo random number generator
     static std::uniform_real_distribution<double> unif(0.3, 0.7); // Generates a uniform real distribution between 0.3 and 0.7
     double p = unif(gen);
-    randFromDist = boost::math::ibeta_inv(betaParam, betaParam, p); // Computes the inverse of the incomplete beta function on parameter
+    randVal = boost::math::ibeta_inv(betaParam, betaParam, p); // Computes the inverse of the incomplete beta function on parameter
 
     std::random_device rd1;
     std::mt19937 gen1(rd1());
     static std::uniform_real_distribution<double> unif1(0.3, 0.7);
     double p1 = unif1(gen1);
-    randFromDist1 = boost::math::ibeta_inv(betaParam, betaParam, p1);
+    randVal1 = boost::math::ibeta_inv(betaParam, betaParam, p1);
 
     for(int i = 0; i < 4; i++)
     {
@@ -1235,10 +1235,10 @@ void inline init_ricap(int width, int height, int batchSize, Rpp32u *permutation
         permutationTensor[j + 3] = permutedArray[i + (batchSize * 3)];
     }
 
-    int part0Width = std::round(randFromDist * width);
-    int part0Height = std::round(randFromDist1 * height);
-    roiPtrInputCropRegion[0].xywhROI = {randrange(0, width - part0Width), randrange(0, height - part0Height), part0Width, part0Height};
-    roiPtrInputCropRegion[1].xywhROI = {randrange(0, part0Width), randrange(0, height - part0Height), width - part0Width, part0Height};
-    roiPtrInputCropRegion[2].xywhROI = {randrange(0, width - part0Width), randrange(0, part0Height), part0Width, height - part0Height};
-    roiPtrInputCropRegion[3].xywhROI = {randrange(0, width - part0Width), randrange(0, part0Height), width - part0Width, height - part0Height};
+    int part0Width = std::round(randVal * width);
+    int part0Height = std::round(randVal1 * height);
+    roiPtrInputCropRegion[0].xywhROI = {randrange(0, width - part0Width - 8), randrange(0, height - part0Height), part0Width, part0Height}; // Subtracted x coordinate by 8 to avoid corruption when HIP processes 8 pixels at once
+    roiPtrInputCropRegion[1].xywhROI = {randrange(0, part0Width - 8), randrange(0, height - part0Height), width - part0Width, part0Height};
+    roiPtrInputCropRegion[2].xywhROI = {randrange(0, width - part0Width - 8), randrange(0, part0Height), part0Width, height - part0Height};
+    roiPtrInputCropRegion[3].xywhROI = {randrange(0, part0Width - 8), randrange(0, part0Height), width - part0Width, height - part0Height};
 }

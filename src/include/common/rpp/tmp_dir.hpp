@@ -24,7 +24,7 @@ THE SOFTWARE.
 #define GUARD_RPP_TMP_DIR_HPP
 
 #include <string>
-#include <boost/filesystem/path.hpp>
+#include "filesystem.h"
 
 namespace rpp {
 
@@ -32,7 +32,7 @@ void SystemCmd(std::string cmd);
 
 struct TmpDir
 {
-    boost::filesystem::path path;
+    fs::path path;
     TmpDir(std::string prefix);
 
     TmpDir(TmpDir const&) = delete;
