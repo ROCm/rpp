@@ -37,6 +37,14 @@ THE SOFTWARE.
 #include <hip/hip_fp16.h>
 #include <fstream>
 
+#define CHECK(x) do { \
+  int retval = (x); \
+  if (retval != 0) { \
+    fprintf(stderr, "Runtime error: %s returned %d at %s:%d", #x, retval, __FILE__, __LINE__); \
+    exit(-1); \
+  } \
+} while (0)
+
 typedef half Rpp16f;
 
 using namespace cv;
@@ -184,6 +192,7 @@ int main(int argc, char **argv)
     RpptInterpolationType interpolationType = RpptInterpolationType::BILINEAR;
     std::string interpolationTypeName = "";
     std::string noiseTypeName = "";
+
     if (kernelSizeCase)
     {
         char additionalParam_char[2];
@@ -247,12 +256,12 @@ int main(int argc, char **argv)
 
     // Initialize ROI tensors for src/dst
     RpptROI *roiTensorPtrSrc, *roiTensorPtrDst;
-    hipHostMalloc(&roiTensorPtrSrc, batchSize * sizeof(RpptROI));
-    hipHostMalloc(&roiTensorPtrDst, batchSize * sizeof(RpptROI));
+    CHECK(hipHostMalloc(&roiTensorPtrSrc, batchSize * sizeof(RpptROI)));
+    CHECK(hipHostMalloc(&roiTensorPtrDst, batchSize * sizeof(RpptROI)));
 
     // Initialize the ImagePatch for dst
     RpptImagePatch *dstImgSizes;
-    hipHostMalloc(&dstImgSizes, batchSize * sizeof(RpptImagePatch));
+    CHECK(hipHostMalloc(&dstImgSizes, batchSize * sizeof(RpptImagePatch)));
 
     // Set ROI tensors types for src/dst
     RpptRoiType roiTypeSrc, roiTypeDst;
@@ -312,7 +321,7 @@ int main(int argc, char **argv)
     // Run case-wise RPP API and measure time
     rppHandle_t handle;
     hipStream_t stream;
-    hipStreamCreate(&stream);
+    CHECK(hipStreamCreate(&stream));
     rppCreateWithStreamAndBatchSize(&handle, stream, batchSize);
 
     int noOfIterations = (int)imageNames.size() / batchSize;
@@ -327,24 +336,24 @@ int main(int argc, char **argv)
     if(reductionTypeCase)
     {
         if(dstDescPtr->dataType == RpptDataType::U8)
-            hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * sizeof(Rpp64u));
+            CHECK(hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * sizeof(Rpp64u)));
         else if(dstDescPtr->dataType == RpptDataType::F16)
-            hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * sizeof(Rpp32f));
+            CHECK(hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * sizeof(Rpp32f)));
         else if(dstDescPtr->dataType == RpptDataType::F32)
-            hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * sizeof(Rpp32f));
+            CHECK(hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * sizeof(Rpp32f)));
         else if(dstDescPtr->dataType == RpptDataType::I8)
-            hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * sizeof(Rpp64s));
+            CHECK(hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * sizeof(Rpp64s)));
     }
 
     //Allocate hip memory for src/dst
-    hipMalloc(&d_input, inputBufferSize);
-    hipMalloc(&d_output, outputBufferSize);
+    CHECK(hipMalloc(&d_input, inputBufferSize));
+    CHECK(hipMalloc(&d_output, outputBufferSize));
     if(dualInputCase)
-        hipMalloc(&d_input_second, inputBufferSize);
+        CHECK(hipMalloc(&d_input_second, inputBufferSize));
 
     RpptROI *roiPtrInputCropRegion;
     if(testCase == 82)
-        hipHostMalloc(&roiPtrInputCropRegion, 4 * sizeof(RpptROI));
+        CHECK(hipHostMalloc(&roiPtrInputCropRegion, 4 * sizeof(RpptROI)));
 
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
@@ -386,10 +395,10 @@ int main(int argc, char **argv)
             convert_input_bitdepth(input, input_second, inputu8, inputu8Second, inputBitDepth, ioBufferSize, inputBufferSize, srcDescPtr, dualInputCase, conversionFactor);
 
             //copy decoded inputs to hip buffers
-            hipMemcpy(d_input, input, inputBufferSize, hipMemcpyHostToDevice);
-            hipMemcpy(d_output, output, outputBufferSize, hipMemcpyHostToDevice);
+            CHECK(hipMemcpy(d_input, input, inputBufferSize, hipMemcpyHostToDevice));
+            CHECK(hipMemcpy(d_output, output, outputBufferSize, hipMemcpyHostToDevice));
             if(dualInputCase)
-                hipMemcpy(d_input_second, input_second, inputBufferSize, hipMemcpyHostToDevice);
+                CHECK(hipMemcpy(d_input_second, input_second, inputBufferSize, hipMemcpyHostToDevice));
 
             int roiHeightList[batchSize], roiWidthList[batchSize];
             if(roiList[0] == 0 && roiList[1] == 0 && roiList[2] == 0 && roiList[3] == 0)
@@ -646,8 +655,8 @@ int main(int argc, char **argv)
                 testCaseName = "lut";
 
                 Rpp32f *lutBuffer;
-                hipHostMalloc(&lutBuffer, 65536 * sizeof(Rpp32f));
-                hipMemset(lutBuffer, 0, 65536 * sizeof(Rpp32f));
+                CHECK(hipHostMalloc(&lutBuffer, 65536 * sizeof(Rpp32f)));
+                CHECK(hipMemset(lutBuffer, 0, 65536 * sizeof(Rpp32f)));
                 Rpp8u *lut8u = reinterpret_cast<Rpp8u *>(lutBuffer);
                 Rpp16f *lut16f = reinterpret_cast<Rpp16f *>(lutBuffer);
                 Rpp32f *lut32f = reinterpret_cast<Rpp32f *>(lutBuffer);
@@ -679,7 +688,7 @@ int main(int argc, char **argv)
 
                 break;
 
-                hipHostFree(lutBuffer);
+                CHECK(hipHostFree(lutBuffer));
             }
             case 36:
             {
@@ -945,8 +954,6 @@ int main(int argc, char **argv)
 
                 // Blood Spatter
                 // spatterColor.R = 98;
-                // spatterColor.G = 3;
-                // spatterColor.B = 3;
 
                 // Ink Spatter
                 // spatterColor.R = 5;
@@ -1008,7 +1015,7 @@ int main(int argc, char **argv)
                 break;
             }
 
-            hipDeviceSynchronize();
+            CHECK(hipDeviceSynchronize());
             endWallTime = omp_get_wtime();
             wallTime = endWallTime - startWallTime;
             if (missingFuncFlag == 1)
@@ -1068,7 +1075,7 @@ int main(int argc, char **argv)
                 }
                 else
                 {
-                    hipMemcpy(output, d_output, outputBufferSize, hipMemcpyDeviceToHost);
+                    CHECK(hipMemcpy(output, d_output, outputBufferSize, hipMemcpyDeviceToHost));
 
                     // Reconvert other bit depths to 8u for output display purposes
                     convert_output_bitdepth_to_u8(output, outputu8, inputBitDepth, oBufferSize, outputBufferSize, dstDescPtr, invConversionFactor);
@@ -1132,21 +1139,22 @@ int main(int argc, char **argv)
     }
 
     // Free memory
-    hipHostFree(roiTensorPtrSrc);
-    hipHostFree(roiTensorPtrDst);
-    hipHostFree(dstImgSizes);
-    if (reductionTypeCase)
-        hipHostFree(&reductionFuncResultArr);
+    CHECK(hipHostFree(roiTensorPtrSrc));
+    CHECK(hipHostFree(roiTensorPtrDst));
+    CHECK(hipHostFree(dstImgSizes));
     if(testCase == 82)
-        hipHostFree(roiPtrInputCropRegion);
+        CHECK(hipHostFree(roiPtrInputCropRegion));
+    if (reductionTypeCase)
+        CHECK(hipHostFree(reductionFuncResultArr));
     free(input);
     free(input_second);
     free(output);
     free(inputu8);
     free(inputu8Second);
     free(outputu8);
-    hipFree(d_input);
-    hipFree(d_input_second);
-    hipFree(d_output);
+    CHECK(hipFree(d_input));
+    if(dualInputCase)
+        CHECK(hipFree(d_input_second));
+    CHECK(hipFree(d_output));
     return 0;
 }

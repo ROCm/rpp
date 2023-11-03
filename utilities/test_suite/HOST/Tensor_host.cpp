@@ -1024,7 +1024,7 @@ int main(int argc, char **argv)
                 cout <<"\n\n";
                 cout <<"CPU Backend Clock Time: "<< cpuTime <<" ms/batch"<< endl;
                 cout <<"CPU Backend Wall Time: "<< wallTime <<" ms/batch"<< endl;
-                
+
                 if (reductionTypeCase)
                 {
                     if(srcDescPtr->c == 3)
@@ -1072,7 +1072,7 @@ int main(int argc, char **argv)
                     convert_output_bitdepth_to_u8(output, outputu8, inputBitDepth, oBufferSize, outputBufferSize, dstDescPtr, invConversionFactor);
 
                     // If DEBUG_MODE is set to 1 dump the outputs to csv files for debugging
-                    if(DEBUG_MODE && iterCount == 0 && inputBitDepth == 0)
+                    if(DEBUG_MODE && iterCount == 0)
                     {
                         std::ofstream refFile;
                         refFile.open(func + ".csv");
@@ -1083,7 +1083,7 @@ int main(int argc, char **argv)
 
                     /*Compare the output of the function with golden outputs only if
                     1.QA Flag is set
-                    2.input bit depth 0 (U8)
+                    2.input bit depth 0 (Input U8 && Output U8)
                     3.source and destination layout are the same
                     4.augmentation case does not generate random output*/
                     if(qaFlag && inputBitDepth == 0 && ((srcDescPtr->layout == dstDescPtr->layout) || pln1OutTypeCase) && !(randomOutputCase))

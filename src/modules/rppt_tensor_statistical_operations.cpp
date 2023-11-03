@@ -43,12 +43,12 @@ RppStatus rppt_tensor_sum_host(RppPtr_t srcPtr,
     if (srcDescPtr->c == 1)
     {
         if (tensorSumArrLength < srcDescPtr->n)      // sum of single channel
-            return RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH;
+            return RPP_ERROR_NOT_ENOUGH_MEMORY;
     }
     else if (srcDescPtr->c == 3)
     {
         if (tensorSumArrLength < srcDescPtr->n * 4)  // sum of each channel, and total sum of all 3 channels
-            return RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH;
+            return RPP_ERROR_NOT_ENOUGH_MEMORY;
     }
     if (roiType == RpptRoiType::XYWH)
     {
@@ -111,7 +111,7 @@ RppStatus rppt_tensor_sum_host(RppPtr_t srcPtr,
 /********************************************************************************************************************/
 
 /******************** tensor_sum ********************/
-
+#ifdef HIP_COMPILE
 RppStatus rppt_tensor_sum_gpu(RppPtr_t srcPtr,
                               RpptDescPtr srcDescPtr,
                               RppPtr_t tensorSumArr,
@@ -120,16 +120,15 @@ RppStatus rppt_tensor_sum_gpu(RppPtr_t srcPtr,
                               RpptRoiType roiType,
                               rppHandle_t rppHandle)
 {
-#ifdef HIP_COMPILE
     if (srcDescPtr->c == 1)
     {
         if (tensorSumArrLength < srcDescPtr->n)      // sum of single channel
-            return RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH;
+            return RPP_ERROR_NOT_ENOUGH_MEMORY;
     }
     else if (srcDescPtr->c == 3)
     {
         if (tensorSumArrLength < srcDescPtr->n * 4)  // sum of each channel, and total sum of all 3 channels
-            return RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH;
+            return RPP_ERROR_NOT_ENOUGH_MEMORY;
     }
     if (roiType == RpptRoiType::XYWH)
     {
@@ -182,7 +181,5 @@ RppStatus rppt_tensor_sum_gpu(RppPtr_t srcPtr,
     }
 
     return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
-#endif // backend
 }
+#endif // backend

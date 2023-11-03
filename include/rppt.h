@@ -23,6 +23,13 @@ THE SOFTWARE.
 #ifndef RPPT_H
 #define RPPT_H
 
+/*!
+ * \file
+ * \brief RPP Tensor Operations
+ * \defgroup group_rppt RPP Tensor Operations
+ * \brief The header includes all files containing RPP Tensor Operations
+ */
+
 #include "rpp.h"
 #ifdef __cplusplus
 extern "C" {
