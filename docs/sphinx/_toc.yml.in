@@ -1,20 +1,7 @@
 # Anywhere {branch} is used, the branch name will be substituted.
 # These comments will also be removed.
-root: index
+root: doxygen/html/index
 subtrees:
-  - numbered: False
-    entries:
-    - file: design
-    - file: supported_fxn
-    - file: prereq
-    - file: doxygen/html/index
-    - file: prereq_test
-    - file: build
-    - file: test
-    - file: mivisionx
-    - file: misc
-    - file: tech_support
-    - file: release
   - caption: About
     entries:
     - file: license
