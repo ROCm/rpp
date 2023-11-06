@@ -2,6 +2,9 @@
 # These comments will also be removed.
 root: doxygen/html/index
 subtrees:
+  - caption: Support
+    entries:
+    - file: tech_support
   - caption: About
     entries:
     - file: license
