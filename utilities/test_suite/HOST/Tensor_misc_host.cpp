@@ -74,17 +74,21 @@ string get_path(Rpp32u nDim, Rpp32u readType)
     return finalPath;
 }
 
-Rpp32u get_buffer_length(Rpp32u nDim)
+Rpp32u get_buffer_length(Rpp32u nDim, int axisMask)
 {
     string dimSpecifier = std::to_string(nDim) + "d";
     string refPath = get_path(nDim, 0);
-    string refFile = refPath + "/" + dimSpecifier + "_" + "input" + std::to_string(0) + ".txt";
+    string refFile;
+    if(axisMask != 6)
+        refFile = refPath + "/" + dimSpecifier + "_" + "input" + "_3x4x16.txt";
+    else
+        refFile = refPath + "/" + dimSpecifier + "_" + "input" + "_4x5x7.txt";
     ifstream file(refFile);
     Rpp32u bufferLength = std::count(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>(), '\n');
     return bufferLength;
 }
 
-void read_data(Rpp32f *data, Rpp32u nDim, Rpp32u readType, Rpp32u bufferLength, Rpp32u batchSize)
+void read_data(Rpp32f *data, Rpp32u nDim, Rpp32u readType, Rpp32u bufferLength, Rpp32u batchSize, Rpp32u axisMask)
 {
     Rpp32u sampleLength = bufferLength / batchSize;
     if(nDim != 3 && nDim != 4)
@@ -99,17 +103,24 @@ void read_data(Rpp32f *data, Rpp32u nDim, Rpp32u readType, Rpp32u bufferLength, 
     if (readType == 1)
         type = "output";
 
+    string refFilePath;
+    if (readType == 1)
+        refFilePath = refPath + "/" + dimSpecifier + "_axisMask" + std::to_string(axisMask) + ".txt";
+    else
+    {
+        if(axisMask != 6)
+            refFilePath = refPath + "/" + dimSpecifier + "_" + type + "_3x4x16.txt";
+        else
+            refFilePath = refPath + "/" + dimSpecifier + "_" + type + "_4x5x7.txt";
+    }
+    fstream refFile;
+    refFile.open(refFilePath, ios::in);
+    if(!refFile.is_open())
+        cout<<"Unable to open the file specified! Please check the path of the file given as input"<<endl;
+
     for(int i = 0; i < batchSize; i++)
     {
-        string refFilePath = refPath + "/" + dimSpecifier + "_" + type + std::to_string(i) + ".txt";
         Rpp32f *curData = data + i * sampleLength;
-        fstream refFile;
-        refFile.open(refFilePath, ios::in);
-        if(!refFile.is_open())
-        {
-            cout<<"Unable to open the file specified! Please check the path of the file given as input"<<endl;
-            break;
-        }
         for(int j = 0; j < sampleLength; j++)
             refFile >> curData[j];
     }
@@ -307,24 +318,25 @@ void fill_mean_stddev_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u size, Rpp32f 
     }
 }
 
-void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize, string dst, string funcName)
+void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize, string dst, string funcName, int axisMask)
 {
-    Rpp32u bufferLength = get_buffer_length(nDim);
-    Rpp32f *refOutput = (Rpp32f *)calloc(bufferLength * batchSize, sizeof(Rpp32f));
-    read_data(refOutput, nDim, 1, bufferLength * batchSize, batchSize);
+    Rpp32u bufferLength = get_buffer_length(nDim, axisMask);
+    Rpp32f *refOutput = (Rpp32f *)calloc(bufferLength, sizeof(Rpp32f));
+    read_data(refOutput, nDim, 1, bufferLength, batchSize, axisMask);
+    int sampleLength = bufferLength / batchSize;
     int fileMatch = 0;
     for(int i = 0; i < batchSize; i++)
     {
-        Rpp32f *ref = refOutput + i * bufferLength;
-        Rpp32f *out = outputF32 + i * bufferLength;
+        Rpp32f *ref = refOutput + i * sampleLength;
+        Rpp32f *out = outputF32 + i * sampleLength;
         int cnt = 0;
-        for(int j = 0; j < bufferLength; j++)
+        for(int j = 0; j < sampleLength; j++)
         {
             bool invalid_comparision = ((out[j] == 0.0f) && (ref[j] != 0.0f));
             if(!invalid_comparision && abs(out[j] - ref[j]) < 1e-6)
                 cnt++;
         }
-        if (cnt == bufferLength)
+        if (cnt == sampleLength)
             fileMatch++;
     }
 
@@ -429,16 +441,6 @@ int main(int argc, char **argv)
     inputF32 = (Rpp32f *)calloc(numValues, sizeof(Rpp32f));
     outputF32 = (Rpp32f *)calloc(numValues, sizeof(Rpp32f));
 
-    // read input data
-    if(qaMode)
-        read_data(inputF32, nDim, 0,  numValues, batchSize);
-    else
-    {
-        std::srand(0);
-        for(int i = 0; i < numValues; i++)
-            inputF32[i] = (float)(std::rand() % 255);
-    }
-
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning normalize %d times (each time with a batch size of %d) and computing mean statistics...", numRuns, batchSize);
 
@@ -456,15 +458,30 @@ int main(int argc, char **argv)
         {
             case 1:
             {
-                int axisMask = 3; // 3D HWC Channel normalize axes(0,1)
+                int axisMask = 4; // 3D HWC Channel normalize axes(0,1)
                 float scale = 1.0;
                 float shift = 0.0;
                 bool computeMean, computeStddev;
-                computeMean = computeStddev = 0;
+                computeMean = computeStddev = 1;
 
-                if (qaMode && nDim == 3 && (computeMean || computeStddev))
+                // read input data
+                if(qaMode)
+                    read_data(inputF32, nDim, 0,  numValues, batchSize, axisMask);
+                else
+                {
+                    std::srand(0);
+                    for(int i = 0; i < numValues; i++)
+                        inputF32[i] = (float)(std::rand() % 255);
+                }
+
+                if (qaMode && nDim == 3 && axisMask == 3 && (computeMean || computeStddev))
                 {
                     std::cout<<"QA mode can only run with mean and stddev input from user when nDim is 3"<<std::endl;
+                    return -1;
+                }
+                else if(qaMode && nDim == 3 && axisMask != 3 && (!computeMean || !computeStddev))
+                {
+                    std::cout<<"QA mode can only run with internal mean and stddev when nDim is 3"<<std::endl;
                     return -1;
                 }
 
@@ -494,11 +511,15 @@ int main(int argc, char **argv)
                 rppt_normalize_generic_host(inputF32, srcDescriptorPtrND, outputF32, dstDescriptorPtrND, axisMask, meanTensor, stdDevTensor, computeMean, computeStddev, scale, shift, roiTensor, handle);
                 free(meanTensor);
                 free(stdDevTensor);
+
+                // compare outputs if qaMode is true
+                if(qaMode)
+                    compare_output(outputF32, nDim, batchSize, dst, funcName, axisMask);
                 break;
             }
             default:
             {
-                cout << "functionality is not supported" << endl;
+                cout << "functionality is not supported" <<std::endl;
                 exit(0);
             }
         }
@@ -510,10 +531,7 @@ int main(int argc, char **argv)
         avgWallTime += wallTime;
     }
 
-    // compare outputs if qaMode is true
-    if(qaMode && !toggle)
-        compare_output(outputF32, nDim, batchSize, dst, funcName);
-    else
+    if(!qaMode)
     {
         maxWallTime *= 1000;
         minWallTime *= 1000;
