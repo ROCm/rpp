@@ -458,11 +458,12 @@ int main(int argc, char **argv)
         {
             case 1:
             {
-                int axisMask = 4; // 3D HWC Channel normalize axes(0,1)
+                // Modify ROI to 4x5x7 when checking QA for axisMask = 6 alone(calls direct c code internally)
+                int axisMask = 3; // 3D HWC Channel normalize axes(0,1)
                 float scale = 1.0;
                 float shift = 0.0;
                 bool computeMean, computeStddev;
-                computeMean = computeStddev = 1;
+                computeMean = computeStddev = 0;
 
                 // read input data
                 if(qaMode)
