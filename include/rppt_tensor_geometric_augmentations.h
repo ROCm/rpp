@@ -443,11 +443,11 @@ RppStatus rppt_slice_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, 
  * \param[in] srcGenericDescPtr source tensor descriptor
  * \param[out] dstPtr destination tensor memory
  * \param[in] dstGenericDescPtr destination tensor descriptor
- * \param[in] axisMask axis along which normalization needs to be done (1 - Channel / 2 - Width / 3 - Height / 4 - Depth likewise)
+ * \param[in] axisMask axis along which normalization needs to be done
  * \param[in] meanTensor values to be subtracted from input
  * \param[in] stdDevTensor standard deviation values to scale the input
- * \param[in] computeMean flag to represent internal computation of mean, only supported for audio 1D
- * \param[in] computeStddev flag to represent internal computation of stddev, only supported for audio 1D
+ * \param[in] computeMean flag to represent internal computation of mean
+ * \param[in] computeStddev flag to represent internal computation of stddev
  * \param[in] scale value to be multiplied with data after subtracting from mean
  * \param[in] shift value to be added finally
  * \param[in] roiTensor values to represent dimensions of input tensor

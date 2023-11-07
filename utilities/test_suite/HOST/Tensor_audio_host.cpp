@@ -151,7 +151,7 @@ int main(int argc, char **argv)
                     {
                         size = 1;
                         for(int i = 0; i < nDim; i++)
-                            size *= ((axisMask & (int)(pow(2,i))) >= 1) ? 1 : roiTensor[(nDim * batch) + i];
+                            size *= ((axisMask & (int)(pow(2,i))) >= 1) ? 1 : roiTensor[(nDim * 2 * batch) + nDim + i];
                         maxSize = max(maxSize, size);
                     }
                     bool computeMean, computeStddev;
