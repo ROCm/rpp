@@ -28,11 +28,11 @@ import shutil
 # Set the timestamp
 timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-cwd = os.getcwd()
-inFilePath1 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src1')
-inFilePath2 = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src2')
-ricapInFilePath = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_150x150_src1')
-qaInputFile = os.path.join(os.path.dirname(cwd), 'TEST_IMAGES', 'three_images_mixed_src1')
+scriptPath = os.path.dirname(os.path.realpath(__file__))
+inFilePath1 = scriptPath + "/../TEST_IMAGES/three_images_mixed_src1"
+inFilePath2 = scriptPath + "/../TEST_IMAGES/three_images_mixed_src2"
+ricapInFilePath = scriptPath + "/../TEST_IMAGES/three_images_150x150_src1"
+qaInputFile = scriptPath + "/../TEST_IMAGES/three_images_mixed_src1"
 
 # Checks if the folder path is empty, or is it a root folder, or if it exists, and remove its contents
 def validate_and_remove_files(path):
@@ -161,17 +161,17 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
                 # Run all variants of noise type functions with additional argument of noiseType = gausssianNoise / shotNoise / saltandpepperNoise
                 for noiseType in range(3):
                     print(f"./Tensor_host {srcPath1} {srcPath2} {dstPathTemp} {bitDepth} {outputFormatToggle} {case} {noiseType} 0 ")
-                    result = subprocess.run(["./Tensor_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(noiseType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE)    # nosec
+                    result = subprocess.run([scriptPath + "/build/Tensor_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(noiseType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE)    # nosec
                     print(result.stdout.decode())
             elif case == "21" or case == "23" or case == "24":
                 # Run all variants of interpolation functions with additional argument of interpolationType = bicubic / bilinear / gaussian / nearestneigbor / lanczos / triangular
                 for interpolationType in range(6):
                     print(f"./Tensor_host {srcPath1} {srcPath2} {dstPathTemp} {bitDepth} {outputFormatToggle} {case} {interpolationType} 0")
-                    result = subprocess.run(["./Tensor_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(interpolationType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE)    # nosec
+                    result = subprocess.run([scriptPath + "/build/Tensor_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(interpolationType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE)    # nosec
                     print(result.stdout.decode())
             else:
                 print(f"./Tensor_host {srcPath1} {srcPath2} {dstPathTemp} {bitDepth} {outputFormatToggle} {case} 0 {numRuns} {testType} {layout} 0")
-                result = subprocess.run(["./Tensor_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), "0", str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE)    # nosec
+                result = subprocess.run([scriptPath + "/build/Tensor_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), "0", str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE)    # nosec
                 print(result.stdout.decode())
 
             print("------------------------------------------------------------------------------------------")
@@ -179,7 +179,7 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
 def run_performance_test_cmd(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, additionalParam, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
     with open("{}/Tensor_host_{}_raw_performance_log.txt".format(loggingFolder, log_file_layout), "a") as log_file:
         print(f"./Tensor_host {srcPath1} {srcPath2} {dstPath} {bitDepth} {outputFormatToggle} {case} {additionalParam} 0 ")
-        process = subprocess.Popen(["./Tensor_host", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
+        process = subprocess.Popen([scriptPath + "/build/Tensor_host", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
         while True:
             output = process.stdout.readline()
             if not output and process.poll() is not None:
@@ -295,9 +295,9 @@ batchSize = args.batch_size
 roiList = ['0', '0', '0', '0'] if args.roi is None else args.roi
 
 if preserveOutput == 0:
-    validate_and_remove_folders(cwd, "OUTPUT_IMAGES_HOST")
-    validate_and_remove_folders(cwd, "QA_RESULTS_HOST")
-    validate_and_remove_folders(cwd, "OUTPUT_PERFORMANCE_LOGS_HOST")
+    validate_and_remove_folders(scriptPath, "OUTPUT_IMAGES_HOST")
+    validate_and_remove_folders(scriptPath, "QA_RESULTS_HOST")
+    validate_and_remove_folders(scriptPath, "OUTPUT_PERFORMANCE_LOGS_HOST")
 
 if qaMode and batchSize != 3:
     print("QA mode can only run with a batch size of 3.")
@@ -305,14 +305,14 @@ if qaMode and batchSize != 3:
 
 if(testType == 0):
     if qaMode:
-        outFilePath = os.path.join(os.path.dirname(cwd), 'QA_RESULTS_HOST_' + timestamp)
+        outFilePath = scriptPath + "/../QA_RESULTS_HOST_" + timestamp
     else:
-        outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_IMAGES_HOST_' + timestamp)
+        outFilePath = scriptPath + "/../OUTPUT_IMAGES_HOST_" + timestamp
     numRuns = 1
 elif(testType == 1):
     if "--num_runs" not in sys.argv:
         numRuns = 1000 #default numRuns for running performance tests
-    outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_PERFORMANCE_LOGS_HOST_' + timestamp)
+    outFilePath = scriptPath + "/../OUTPUT_PERFORMANCE_LOGS_HOST_" + timestamp
 else:
     print("Invalid TEST_TYPE specified. TEST_TYPE should be 0/1 (0 = Unittests / 1 = Performancetests)")
     exit()
@@ -325,10 +325,10 @@ dstPath = outFilePath
 validate_and_remove_files(dstPath)
 
 # Enable extglob
-if os.path.exists("build"):
-    shutil.rmtree("build")
-os.makedirs("build")
-os.chdir("build")
+if os.path.exists(scriptPath + "/build"):
+    shutil.rmtree(scriptPath + "/build")
+os.makedirs(scriptPath + "/build")
+os.chdir(scriptPath + "/build")
 
 # Run cmake and make commands
 subprocess.run(["cmake", ".."], cwd=".")   # nosec
@@ -377,20 +377,14 @@ else:
 
 # print the results of qa tests
 supportedCaseList = ['0', '1', '2', '4', '8', '13', '20', '21', '23', '29', '30', '31', '34', '36', '37', '38', '39', '54', '70', '80', '81', '82', '83', '84', '85', '86', '87']
-nonQACaseList = ['8', '24', '54', '84']
-supportedCases = 0
-for num in caseList:
-    if qaMode == 1 and num not in nonQACaseList and num in supportedCaseList:
-        supportedCases += 1
-    elif qaMode == 0 and num in supportedCaseList:
-        supportedCases += 1
-caseInfo = "Tests are run for " + str(supportedCases) + " supported cases out of the " + str(len(caseList)) + " cases requested"
+nonQACaseList = ['8', '24', '54', '84'] # Add cases present in supportedCaseList, but without QA support
+
 if qaMode and testType == 0:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
         f = open(qaFilePath, 'r+')
-        print("---------------------------------- Results of QA Test ----------------------------------\n")
+        print("---------------------------------- Results of QA Test - Tensor_host ----------------------------------\n")
         numLines = 0
         numPassed = 0
         for line in f:
