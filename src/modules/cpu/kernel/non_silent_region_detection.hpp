@@ -43,13 +43,13 @@ For the above example we will have
 Block1
 window begin = -2
 Iteration 0:    sum_of_squares = 1*1                              // window begin = -2
-	            store sum_of_squares * window_factor in MMS[0]
+                store sum_of_squares * window_factor in MMS[0]
 
 Iteration 1:    sum_of_squares = 1*1 + 2*2                        // window begin = -1
-	            store sum_of_squares * window_factor in MMS[1]
+                store sum_of_squares * window_factor in MMS[1]
 
 Iteration 2:    sum_of_squares = 1*1 + 2*2 + 3*3                  // window begin =  0
-	            store sum_of_squares * window_factor in MMS[2]
+                store sum_of_squares * window_factor in MMS[2]
                 sum_of_squares -= 1*1
 
 Iteration 3:    sum_of_squares = 2*2 + 3*3 + 4*4                  // window begin =  1
@@ -59,18 +59,18 @@ Iteration 3:    sum_of_squares = 2*2 + 3*3 + 4*4                  // window begi
 Block2
 Iteration 0:    sum_of_squares = 3*3 + 4*4 + 5*5                  // window begin = 2
                 store sum_of_squares * window_factor in MMS[4]
-	            sum_of_squares -= 3*3
+                sum_of_squares -= 3*3
 
 Iteration 1:    sum_of_squares = 4*4 + 5*5 + 6*6                 // window begin = 3
-	            store sum_of_squares * window_factor in MMS[5]
-	            sum_of_squares -= 4*4
+                store sum_of_squares * window_factor in MMS[5]
+                sum_of_squares -= 4*4
 
 Iteration 2:    sum_of_squares = 5*5 + 6*6 + 7*7                 // window begin = 4
-	            store sum_of_squares * window_factor in MMS[6]
+                store sum_of_squares * window_factor in MMS[6]
                 sum_of_squares -= 5*5
 
 Iteration 3:    sum_of_squares  = 6*6 + 7*7 + 8*8                // window begin = 5
-	            store sum_of_squares * window_factor in MMS[7]
+                store sum_of_squares * window_factor in MMS[7]
                 sum_of_squares -= 6*6
 */
 
