@@ -88,25 +88,25 @@ def get_log_file_list():
         scriptPath + "../../OUTPUT_PERFORMANCE_AUDIO_LOGS_HOST_" + timestamp + "/Tensor_host_audio_raw_performance_log.txt",
     ]
 
-def run_unit_test(srcPath, case, numRuns, testType, bitDepth, batchSize, outFilePath):
+def run_unit_test(srcPath, case, numRuns, testType, batchSize, outFilePath):
     print("\n\n\n\n")
     print("--------------------------------")
     print("Running a New Functionality...")
     print("--------------------------------")
-    print(f"./Tensor_host_audio {srcPath} {bitDepth} {case} {numRuns} {testType} {numRuns} {batchSize}")
-    result = subprocess.run([scriptPath + "/build/Tensor_host_audio", srcPath, str(bitDepth), str(case), str(testType), str(numRuns), str(batchSize), outFilePath], stdout=subprocess.PIPE)    # nosec
+    print(f"./Tensor_host_audio {srcPath} {case} {numRuns} {testType} {numRuns} {batchSize}")
+    result = subprocess.run([scriptPath + "/build/Tensor_host_audio", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath], stdout=subprocess.PIPE)    # nosec
     print(result.stdout.decode())
 
     print("------------------------------------------------------------------------------------------")
 
-def run_performance_test(loggingFolder, srcPath, case, numRuns, testType, bitDepth, batchSize, outFilePath):
+def run_performance_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath):
     print("\n\n\n\n")
     print("--------------------------------")
     print("Running a New Functionality...")
     print("--------------------------------")
     with open("{}/Tensor_host_audio_raw_performance_log.txt".format(loggingFolder), "a") as log_file:
-        print(f"./Tensor_host_audio {srcPath} {bitDepth} {case} {numRuns} {testType} {numRuns} {batchSize} ")
-        process = subprocess.Popen([scriptPath + "/build/Tensor_host_audio", srcPath, str(bitDepth), str(case), str(testType), str(numRuns), str(batchSize), outFilePath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
+        print(f"./Tensor_host_audio {srcPath} {case} {numRuns} {testType} {numRuns} {batchSize} ")
+        process = subprocess.Popen([scriptPath + "/build/Tensor_host_audio", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
         while True:
             output = process.stdout.readline()
             if not output and process.poll() is not None:
@@ -181,7 +181,6 @@ qaMode = args.qa_mode
 numRuns = args.num_runs
 preserveOutput = args.preserve_output
 batchSize = args.batch_size
-bitDepth = 2 # Current audio test suite only supports bit depth 2
 outFilePath = " "
 
 # Override testType to 0 if testType is 1 and qaMode is 1
@@ -231,14 +230,14 @@ if testType == 0:
             print(f"Invalid case number {case}. Case number must be 0!")
             continue
 
-        run_unit_test(srcPath, case, numRuns, testType, bitDepth, batchSize, outFilePath)
+        run_unit_test(srcPath, case, numRuns, testType, batchSize, outFilePath)
 else:
     for case in caseList:
         if int(case) != 0:
             print(f"Invalid case number {case}. Case number must be 0!")
             continue
 
-        run_performance_test(loggingFolder, srcPath, case, numRuns, testType, bitDepth, batchSize, outFilePath)
+        run_performance_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath)
 
 # print the results of qa tests
 supportedCaseList = ['0']

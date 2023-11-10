@@ -29,27 +29,21 @@ int main(int argc, char **argv)
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
-        printf("\nUsage: ./Tensor_host_audio <src folder> <f32 = 2> <case number = 0:0> <test type 0/1> <numRuns> <batchSize> <dst folder>\n");
+        printf("\nUsage: ./Tensor_host_audio <src folder> <case number = 0:0> <test type 0/1> <numRuns> <batchSize> <dst folder>\n");
         return -1;
     }
 
     char *src = argv[1];
-    int inputBitDepth = atoi(argv[2]);
-    int testCase = atoi(argv[3]);
-    int testType = atoi(argv[4]);
-    int numRuns = atoi(argv[5]);
-    int batchSize = atoi(argv[6]);
-    char *dst = argv[7];
+    int testCase = atoi(argv[2]);
+    int testType = atoi(argv[3]);
+    int numRuns = atoi(argv[4]);
+    int batchSize = atoi(argv[5]);
+    char *dst = argv[6];
 
     // validation checks
     if (testType == 0 && batchSize != 3)
     {
         cout << "Error! QA Mode only runs with batchsize 3" << endl;
-        return -1;
-    }
-    else if (inputBitDepth != 2)
-    {
-        cout << "Error! audio support is given only for f32 data type (bitDepth = 2)" << endl;
         return -1;
     }
 
@@ -136,8 +130,7 @@ int main(int argc, char **argv)
         for (int iterCount = 0; iterCount < noOfIterations; iterCount++)
         {
             // read and decode audio and fill the audio dim values
-            if (inputBitDepth == 2)
-                read_audio_batch_and_fill_dims(srcDescPtr, inputf32, audioFilesPath, iterCount, srcLengthTensor, channelsTensor);
+            read_audio_batch_and_fill_dims(srcDescPtr, inputf32, audioFilesPath, iterCount, srcLengthTensor, channelsTensor);
 
             double startWallTime, endWallTime;
             double wallTime;
@@ -154,10 +147,7 @@ int main(int argc, char **argv)
                     Rpp32s resetInterval = 8192;
 
                     startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 2)
-                        rppt_non_silent_region_detection_host(inputf32, srcDescPtr, srcLengthTensor, detectedIndex, detectionLength, cutOffDB, windowLength, referencePower, resetInterval, handle);
-                    else
-                        missingFuncFlag = 1;
+                    rppt_non_silent_region_detection_host(inputf32, srcDescPtr, srcLengthTensor, detectedIndex, detectionLength, cutOffDB, windowLength, referencePower, resetInterval, handle);
 
                     // QA mode - verify outputs with golden outputs. Below code doesn’t run for performance tests
                     if (testType == 0)
