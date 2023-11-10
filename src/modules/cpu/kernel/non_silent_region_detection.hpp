@@ -72,6 +72,14 @@ Iteration 2:    sum_of_squares = 5*5 + 6*6 + 7*7                 // window begin
 Iteration 3:    sum_of_squares  = 6*6 + 7*7 + 8*8                // window begin = 5
                 store sum_of_squares * window_factor in MMS[7]
                 sum_of_squares -= 6*6
+
+For computing beginning index and length of Non Silent Region in audio data we traverse over
+the entire MMS buffer and compare these values with the calculated cutoff value
+    - For beginning index, traverse over MMS buffer from 0 to audio_length - 1 and compare if any value
+      is greater than or equal to cutoff value. if yes, that is the beginning index
+    - For length, traverse over MMS buffer from audio_length - 1 to beginning index and compare if any value
+      is greater than or equal to cutoff value. if yes, that is the ending index of Non Silent Region. From this
+      data compute length with the formulae, length = ending index - beginning index + 1
 */
 
 #include "rppdefs.h"
@@ -167,8 +175,8 @@ RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
             detectEnd = endIdx - beginIdx + 1;
         }
 
-        /* if both starting index and length of nonsilent region is not 0
-        adjust the values as per the windowLength */
+        // if both starting index and length of nonsilent region is not 0
+        // adjust the values as per the windowLength
         if(detectBegin != 0 && detectEnd != 0)
         {
             Rpp32s newBegin = std::max<Rpp32s>(detectBegin - (windowLength - 1), 0);
