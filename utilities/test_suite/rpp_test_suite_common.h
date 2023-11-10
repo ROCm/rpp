@@ -72,6 +72,7 @@ std::map<int, string> augmentationMap =
     {38, "crop_mirror_normalize"},
     {49, "box_filter"},
     {54, "gaussian_filter"},
+    {63, "phase"},
     {82, "ricap"},
     {84, "spatter"},
     {87, "tensor_sum"}

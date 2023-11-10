@@ -170,7 +170,7 @@ directory_name_generator() {
         elif [ "$case" -eq 8 ] || [ "$case" -eq 30 ] || [ "$case" -eq 82 ] || [ "$case" -eq 83 ] || [ "$case" -eq 84 ]
         then
             FUNCTIONALITY_GROUP="effects_augmentations"
-        elif [ "$case" -lt 40 ]
+        elif [ "$case" -lt 40 ] || [ "$case" -eq 63 ]
         then
             FUNCTIONALITY_GROUP="geometric_augmentations"
         elif [ "$case" -lt 42 ]
