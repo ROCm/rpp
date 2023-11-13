@@ -74,6 +74,7 @@ The image test suite includes:
 ## Rpp Audio Test Suite
 The audio test suite can be executed to validate the functionality and performance of the AMD ROCm Performance Primitives (RPP) audio library.
 -   HOST backend - (On a CPU with HOST backend)
+-   F32 Bit Depth
 
 ## Command Line Arguments (Rpp Audio Test Suite)
 The audio test suite accepts the following command line arguments:
