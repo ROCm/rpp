@@ -79,6 +79,24 @@ RppStatus rppt_non_silent_region_detection_host(RppPtr_t srcPtr, RpptDescPtr src
 
 RppStatus rppt_to_decibels_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr srcDims, Rpp32f cutOffDB, Rpp32f multiplier, Rpp32f referenceMagnitude, rppHandle_t rppHandle);
 
+/*! \brief Pre Emphasis Filter augmentation HOST
+* \details Pre Emphasis Filter augmentation for audio data
+* \param[in] srcPtr source tensor memory
+* \param[in] srcDescPtr source tensor descriptor
+* \param[out] dstPtr destination tensor memory
+* \param[in] dstDescPtr destination tensor descriptor
+* \param[in] srcLengthTensor source audio buffer length (tensor of batchSize values)
+* \param[in] coeffTensor preemphasis coefficient (tensor of batchSize values)
+* \param[in] borderType border value policy
+* \param[in] rppHandle HIP-handle for "_gpu" variants and Host-handle for "_host" variants
+ * \return <tt> RppStatus enum</tt>.
+ * \returns RPP_SUCCESS <tt>\ref RppStatus</tt> on successful completion.
+ * Else return RPP_ERROR
+ * \ingroup group_tensor_audio
+ */
+
+RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcLengthTensor, Rpp32f *coeffTensor, RpptAudioBorderType borderType, rppHandle_t rppHandle);
+
 #ifdef __cplusplus
 }
 #endif

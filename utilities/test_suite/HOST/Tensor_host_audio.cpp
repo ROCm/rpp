@@ -177,6 +177,27 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 2:
+                {
+                    testCaseName = "pre_emphasis_filter";
+                    Rpp32f coeff[batchSize];
+                    for (int i = 0; i < batchSize; i++)
+                    {
+                        coeff[i] = 0.97;
+                        dstDims[i].height = srcLengthTensor[i];
+                        dstDims[i].width = 1;
+                    }
+                    RpptAudioBorderType borderType = RpptAudioBorderType::CLAMP;
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 2)
+                        rppt_pre_emphasis_filter_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcLengthTensor, coeff, borderType, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 default:
                 {
                     missingFuncFlag = 1;
