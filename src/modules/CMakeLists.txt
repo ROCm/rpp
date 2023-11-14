@@ -123,6 +123,8 @@ elseif( "${BACKEND}" STREQUAL "CPU")
     set_source_files_properties(rppt_tensor_audio_augmentations.cpp PROPERTIES COMPILE_FLAGS -mno-fma)
 endif()
 message("-- ${White}AMD RPP ${PROJECT_NAME} -- Include Directories:${INCLUDE_LIST}${ColourReset}")
+add_compile_options("-Wno-unused-result")
+
 # Kernels and includes additions
 
 add_kernels("${RPP_KERNELS}")

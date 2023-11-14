@@ -23,12 +23,12 @@
  * SOFTWARE.
  *
  *******************************************************************************/
+#include <chrono>
 #include <cassert>
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
-#include <config.h>
 #include <rpp/env.hpp>
 #include <rpp/errors.hpp>
 #include <rpp/gcn_asm_utils.hpp>
@@ -285,7 +285,7 @@ static void AmdgcnAssembleQuiet(std::string& source, const std::string& params)
 
 static bool GcnAssemblerHasBug34765Impl()
 {
-    auto p = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+    auto p = fs::temp_directory_path() / std::to_string(std::chrono::system_clock::now().time_since_epoch().count());
     rpp::WriteFile(rpp::GetKernelSrc("bugzilla_34765_detect"), p);
     auto src = p.string();
     try
@@ -308,7 +308,7 @@ bool GcnAssemblerHasBug34765()
 
 static bool GcnAssemblerSupportsOption(const std::string& option)
 {
-    auto p = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+    auto p = fs::temp_directory_path() / std::to_string(std::chrono::system_clock::now().time_since_epoch().count());
     rpp::WriteFile(rpp::GetKernelSrc("dummy_kernel"), p);
     auto src = p.string();
     try

@@ -1,13 +1,16 @@
 /*
 Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
+
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
+
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
@@ -22,10 +25,13 @@ THE SOFTWARE.
 
 /*!
  * \file
- * \brief RPPT Tensor Audio Augmentation Functions.
- *
- * \defgroup group_tensor_audio Operations: AMD RPP Tensor Audio Operations
- * \brief Tensor Audio Augmentations.
+ * \brief RPPT Tensor Operations - Audio Augmentations.
+ * \defgroup group_rppt_tensor_audio_augmentations RPPT Tensor Operations - Audio Augmentations.
+ * \brief RPPT Tensor Operations - Audio Augmentations.
+ */
+
+/*! \addtogroup group_rppt_tensor_audio_augmentations
+ * @{
  */
 
 #include "rpp.h"
@@ -34,24 +40,23 @@ THE SOFTWARE.
 extern "C" {
 #endif
 
-/*! \brief Non Silent Region Detection augmentation HOST
+/*! \brief Non Silent Region Detection augmentation on HOST backend
  * \details Non Silent Region Detection augmentation for 1D audio buffer
             \n Finds the starting index and length of non silent region in the audio buffer by comparing the
             calculated short-term power with cutoff value passed
- * \param[in] srcPtr source tensor memory
- * \param[in] srcDescPtr source tensor descriptor
- * \param[in] srcLengthTensor source audio buffer length (tensor of batchSize values)
- * \param[out] detectedIndexTensor beginning index of non silent region (tensor of batchSize values)
- * \param[out] detectionLengthTensor length of non silent region  (tensor of batchSize values)
- * \param[in] cutOffDB cutOff(dB) below which the signal is considered silent
+ * \param[in] srcPtr source tensor in HOST memory
+ * \param[in] srcDescPtr source tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
+ * \param[in] srcLengthTensor source audio buffer length (1D tensor in HOST memory, of size batchSize)
+ * \param[out] detectedIndexTensor beginning index of non silent region (1D tensor in HOST memory, of size batchSize)
+ * \param[out] detectionLengthTensor length of non silent region  (1D tensor in HOST memory, of size batchSize)
+ * \param[in] cutOffDB cutOff in dB below which the signal is considered silent
  * \param[in] windowLength window length used for computing short-term power of the signal
  * \param[in] referencePower reference power that is used to convert the signal to dB
- * \param[in] resetInterval number of samples after which the moving mean average is recalculated to avoid loss of precision
- * \param[in] rppHandle HIP-handle for "_gpu" variants and Host-handle for "_host" variants
- * \return <tt> RppStatus enum</tt>.
- * \returns RPP_SUCCESS <tt>\ref RppStatus</tt> on successful completion.
- * Else return RPP_ERROR
- * \ingroup group_tensor_audio
+ * \param[in] resetInterval number of samples after which the moving mean average is recalculated to avoid precision loss
+ * \param[in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
  */
 RppStatus rppt_non_silent_region_detection_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rpp32s *srcLengthTensor, Rpp32f *detectedIndexTensor, Rpp32f *detectionLengthTensor, Rpp32f cutOffDB, Rpp32s windowLength, Rpp32f referencePower, Rpp32s resetInterval, rppHandle_t rppHandle);
 
