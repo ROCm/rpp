@@ -157,6 +157,11 @@ To use RPP, you must have installed the following:
   make -j$nproc
   sudo make install
   ```
+* Libsndfile installation
+  ```
+  sudo apt-get update
+  sudo apt-get install libsndfile1-dev
+  ```
 
 ## Build and install RPP
 
