@@ -35,6 +35,7 @@ typedef half Rpp16f;
 std::map<int, string> audioAugmentationMap =
 {
     {0, "non_silent_region_detection"},
+    {1, "to_decibels"},
 };
 
 // Golden outputs for Non Silent Region Detection
@@ -149,6 +150,10 @@ void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dst
         Rpp32f refVal, outVal;
         Rpp32f *dstPtrCurrent = dstPtr + batchCount * dstDescPtr->strides.nStride;
         Rpp32f *dstPtrRow = dstPtrCurrent;
+        Rpp32u hStride = dstDescPtr->strides.hStride;
+        if (dstDims[batchCount].width == 1)
+            hStride = 1;
+
         for (int i = 0; i < dstDims[batchCount].height; i++)
         {
             Rpp32f *dstPtrTemp = dstPtrRow;
@@ -160,7 +165,7 @@ void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dst
                 if (!invalidComparision && abs(outVal - refVal) < 1e-20)
                     matchedIndices += 1;
             }
-            dstPtrRow += dstDescPtr->strides.hStride;
+            dstPtrRow += hStride;
         }
         refFile.close();
         if (matchedIndices == (dstDims[batchCount].width * dstDims[batchCount].height) && matchedIndices !=0)

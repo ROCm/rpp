@@ -155,6 +155,28 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 1:
+                {
+                    testCaseName = "to_decibels";
+                    Rpp32f cutOffDB = std::log(1e-20);
+                    Rpp32f multiplier = std::log(10);
+                    Rpp32f referenceMagnitude = 1.0f;
+
+                    for (int i = 0; i < batchSize; i++)
+                    {
+                        srcDims[i].height = dstDims[i].height = srcLengthTensor[i];
+                        srcDims[i].width = dstDims[i].width = 1;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 2)
+                        rppt_to_decibels_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcDims, cutOffDB, multiplier, referenceMagnitude, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 default:
                 {
                     missingFuncFlag = 1;
@@ -173,6 +195,29 @@ int main(int argc, char **argv)
             maxWallTime = std::max(maxWallTime, wallTime);
             minWallTime = std::min(minWallTime, wallTime);
             avgWallTime += wallTime;
+
+            // QA mode - verify outputs with golden outputs. Below code doesn’t run for performance tests
+            if (testType == 0)
+            {
+                /* Run only if testCase is not 0
+                For testCase 0 verify_non_silent_region_detection function is used for QA testing */
+                if (testCase != 0)
+                    verify_output(outputf32, dstDescPtr, dstDims, testCaseName, audioNames, dst);
+
+                /* Dump the outputs to csv files for debugging
+                Runs only if
+                1. DEBUG_MODE is enabled
+                2. Current iteration is 1st iteration
+                3. Test case is not 0 */
+                if (DEBUG_MODE && iterCount == 0 && testCase != 0)
+                {
+                    std::ofstream refFile;
+                    refFile.open(func + ".csv");
+                    for (int i = 0; i < oBufferSize; i++)
+                        refFile << *(outputf32 + i) << "\n";
+                    refFile.close();
+                }
+            }
         }
     }
     rppDestroyHost(handle);
