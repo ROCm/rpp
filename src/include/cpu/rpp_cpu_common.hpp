@@ -5044,6 +5044,20 @@ inline void compute_generic_nn_srclocs_and_validate_sse(__m128 pSrcY, __m128 pSr
     _mm_storeu_si128((__m128i*) srcLoc, pxSrcLoc);
 }
 
+inline void compute_generic_nn_srclocs_and_validate_avx(__m256 pSrcY, __m256 pSrcX, __m256 *pRoiLTRB, __m256 pSrcStrideH, Rpp32s *srcLoc, Rpp32s *invalidLoad, bool hasRGBChannels = false)
+{
+    pSrcY = _mm256_round_ps(pSrcY, (_MM_FROUND_TO_NEAREST_INT |_MM_FROUND_NO_EXC));              // Nearest Neighbor Y location vector
+    pSrcX = _mm256_round_ps(pSrcX, (_MM_FROUND_TO_NEAREST_INT |_MM_FROUND_NO_EXC));              // Nearest Neighbor X location vector
+    _mm256_storeu_si256((__m256i*) invalidLoad, _mm256_cvtps_epi32(_mm256_or_ps(                 // Vectorized ROI boundary check
+        _mm256_or_ps(_mm256_cmp_ps(pSrcX, pRoiLTRB[0], _CMP_LT_OQ), _mm256_cmp_ps(pSrcY, pRoiLTRB[1],_CMP_LT_OQ)),
+        _mm256_or_ps(_mm256_cmp_ps(pSrcX, pRoiLTRB[2], _CMP_GT_OQ), _mm256_cmp_ps(pSrcY, pRoiLTRB[3], _CMP_GT_OQ))
+    )));
+    if (hasRGBChannels)
+        pSrcX = _mm256_mul_ps(pSrcX, avx_p3);
+    __m256i pxSrcLoc = _mm256_cvtps_epi32(_mm256_fmadd_ps(pSrcY, pSrcStrideH, pSrcX));
+    _mm256_storeu_si256((__m256i*) srcLoc, pxSrcLoc);
+}
+
 template <typename T>
 inline void compute_generic_nn_interpolation_pkd3_to_pln3(Rpp32f srcY, Rpp32f srcX, RpptROI *roiLTRB, T *dstPtrTempR, T *dstPtrTempG, T *dstPtrTempB, T *srcPtrChannel, RpptDescPtr srcDescPtr)
 {
@@ -5253,7 +5267,7 @@ inline void compute_coefficient(RpptInterpolationType interpolationType, Rpp32f 
 }
 
 // Computes the row coefficients for separable resampling
-inline void compute_row_coefficients(RpptInterpolationType interpolationType, Filter &filter , Rpp32f weight, Rpp32f *coeffs, Rpp32u srcStride = 1)
+inline void compute_row_coefficients(RpptInterpolationType interpolationType, GenericFilter &filter , Rpp32f weight, Rpp32f *coeffs, Rpp32u srcStride = 1)
 {
     Rpp32f sum = 0;
     weight = weight - filter.radius;
@@ -5271,7 +5285,7 @@ inline void compute_row_coefficients(RpptInterpolationType interpolationType, Fi
 }
 
 // Computes the column coefficients for separable resampling
-inline void compute_col_coefficients(RpptInterpolationType interpolationType, Filter &filter, Rpp32f weight, Rpp32f *coeffs, Rpp32u srcStride = 1)
+inline void compute_col_coefficients(RpptInterpolationType interpolationType, GenericFilter &filter, Rpp32f weight, Rpp32f *coeffs, Rpp32u srcStride = 1)
 {
     Rpp32f sum = 0;
     weight = weight - filter.radius;
@@ -5390,7 +5404,7 @@ inline void compute_src_row_ptrs_for_bilinear_interpolation_pln(T **rowPtrsForIn
 // Perform resampling along the rows
 template <typename T>
 inline void compute_separable_vertical_resample(T *inputPtr, Rpp32f *outputPtr, RpptDescPtr inputDescPtr, RpptDescPtr outputDescPtr,
-                                                RpptImagePatch inputImgSize, RpptImagePatch outputImgSize, Rpp32s *index, Rpp32f *coeffs, Filter &filter)
+                                                RpptImagePatch inputImgSize, RpptImagePatch outputImgSize, Rpp32s *index, Rpp32f *coeffs, GenericFilter &filter)
 {
 
     static constexpr Rpp32s maxNumLanes = 16;                                  // Maximum number of pixels that can be present in a vector for U8 type
@@ -5533,7 +5547,7 @@ inline void compute_separable_vertical_resample(T *inputPtr, Rpp32f *outputPtr, 
 // Perform resampling along the columns
 template <typename T>
 inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr, RpptDescPtr inputDescPtr, RpptDescPtr outputDescPtr,
-                        RpptImagePatch inputImgSize, RpptImagePatch outputImgSize, Rpp32s *index, Rpp32f *coeffs, Filter &filter)
+                        RpptImagePatch inputImgSize, RpptImagePatch outputImgSize, Rpp32s *index, Rpp32f *coeffs, GenericFilter &filter)
 {
     static constexpr Rpp32s maxNumLanes = 16;                                   // Maximum number of pixels that can be present in a vector
     static constexpr Rpp32s numLanes = maxNumLanes / sizeof(T);                 // No of pixels that can be present in a vector wrt data type

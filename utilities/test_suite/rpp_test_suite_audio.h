@@ -21,12 +21,10 @@ THE SOFTWARE.
 */
 
 #include "rpp_test_suite_common.h"
-#include <fstream>
 #include <iomanip>
 #include <vector>
 #include <half/half.hpp>
 
-namespace fs = boost::filesystem;
 using half_float::half;
 using namespace std;
 typedef half Rpp16f;
@@ -38,6 +36,14 @@ std::map<int, string> audioAugmentationMap =
 {
     {0, "non_silent_region_detection"},
     {1, "to_decibels"},
+};
+
+// Golden outputs for Non Silent Region Detection
+std::map<string, std::vector<int>> NonSilentRegionReferenceOutputs =
+{
+    {"sample1", {0, 35840}},
+    {"sample2", {0, 33680}},
+    {"sample3", {0, 34160}}
 };
 
 // sets descriptor dimensions and strides of src/dst
@@ -188,35 +194,25 @@ void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dst
 
 void verify_non_silent_region_detection(float *detectedIndex, float *detectionLength, string testCase, int bs, vector<string> audioNames, string dst)
 {
-    fstream refFile;
-    string refPath = get_current_dir_name();
-    string pattern = "HOST/build";
-    remove_substring(refPath, pattern);
-    refPath = refPath + "REFERENCE_OUTPUTS_AUDIO/";
     int fileMatch = 0;
     for (int i = 0; i < bs; i++)
     {
         string currentFileName = audioNames[i];
         size_t lastIndex = currentFileName.find_last_of(".");
         currentFileName = currentFileName.substr(0, lastIndex);  // Remove extension from file name
-        string outFile = refPath + testCase + "/" + testCase + "_ref_" + currentFileName + ".txt";
-        refFile.open(outFile, ios::in);
-        if (!refFile.is_open())
+        std::vector<int> referenceOutput = NonSilentRegionReferenceOutputs[currentFileName];
+        if(referenceOutput.empty())
         {
-            cout << "\n Unable to open the file specified! Please check the path of the file given as input" << endl;
+            cout << "\nUnable to get the reference outputs for the file specified!" << endl;
             break;
         }
+        Rpp32s outBegin = detectedIndex[i];
+        Rpp32s outLength = detectionLength[i];
+        Rpp32s refBegin = referenceOutput[0];
+        Rpp32s refLength = referenceOutput[1];
 
-        Rpp32s refIndex, refLength;
-        Rpp32s outIndex, outLength;
-        refFile >> refIndex;
-        refFile >> refLength;
-        outIndex = detectedIndex[i];
-        outLength = detectionLength[i];
-
-        if ((outIndex == refIndex) && (outLength == refLength))
+        if ((outBegin == refBegin) && (outLength == refLength))
             fileMatch += 1;
-        refFile.close();
     }
     std::string status = testCase + ": ";
     cout << std::endl << "Results for Test case: " << testCase << std::endl;

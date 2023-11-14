@@ -29,6 +29,18 @@ THE SOFTWARE.
 extern "C" {
 #endif
 
+/*!
+ * \file
+ * \brief RPPI Image Operations - Morphological Transforms - To be deprecated.
+ * \defgroup group_rppi_morphological_transforms RPPI Image Operations - Morphological Transforms
+ * \brief RPPI Image Operations - Morphological Transforms - To be deprecated.
+ * \deprecated
+ */
+
+/*! \addtogroup group_rppi_morphological_transforms
+ * @{
+ */
+
 /******************** erode ********************/
 
 // Performs an erode operation, where the output pixel is computed as the minimum value of the pixels under a [kernelSize X kernelSize] square mask, for a batch of images
@@ -76,6 +88,9 @@ RppStatus rppi_dilate_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, Rp
 RppStatus rppi_dilate_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *kernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_dilate_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *kernelSize, Rpp32u nbatchSize, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
+
+/*! @}
+ */
 
 #ifdef __cplusplus
 }
