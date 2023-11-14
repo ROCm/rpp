@@ -1,10 +1,16 @@
 #!/bin/bash
 
+echo "testAllScript info:"
+echo "basename: [$(basename "$0")]"
+echo "dirname : [$(dirname "$0")]"
+echo "pwd     : [$(pwd)]"
+
+cd $(dirname "$0")
 cwd=$(pwd)
 
 # <<<<<<<<<<<<<< VALIDATION CHECK FOR FOLDER PATHS >>>>>>>>>>>>>>>>>>>>>>>>>>>>
 function VALIDATE_PATH {
-    if [ -z "$1" ]; then  #check if a string is empty 
+    if [ -z "$1" ]; then  #check if a string is empty
         echo "$1 Folder path is empty."
         exit
     fi
@@ -47,7 +53,7 @@ DEFAULT_SRC_FOLDER_2="$cwd/../TEST_IMAGES/three_images_mixed_src2"
 # <<<<<<<<<<<<<< PROCESSING OF INPUT ARGUMENTS (NEED NOT CHANGE) >>>>>>>>>>>>>>
 
 CASE_MIN=0
-CASE_MAX=84
+CASE_MAX=87
 if (( "$#" < 3 )); then
     SRC_FOLDER_1="$DEFAULT_SRC_FOLDER_1"
     SRC_FOLDER_2="$DEFAULT_SRC_FOLDER_2"
@@ -97,8 +103,8 @@ elif [[ "$PRESERVE_OUTPUT" -ne 0 ]] && [[ "$PRESERVE_OUTPUT" -ne 1 ]]; then
 fi
 
 for case in $CASE_LIST; do
-    if [[ $case -lt 0 || $case -gt 84 ]]; then
-        echo "The case# must be in the 0:84 range!"
+    if [[ $case -lt 0 || $case -gt 87 ]]; then
+        echo "The case# must be in the 0:87 range!"
     fi
 done
 
@@ -173,6 +179,9 @@ directory_name_generator() {
         elif [ "$case" -lt 86 ]
         then
             FUNCTIONALITY_GROUP="data_exchange_operations"
+        elif [ "$case" -lt 88 ]
+        then
+            FUNCTIONALITY_GROUP="statistical_operations"
         else
             FUNCTIONALITY_GROUP="miscellaneous"
         fi
@@ -186,7 +195,7 @@ directory_name_generator() {
 VALIDATE_PATH "$DST_FOLDER"
 
 shopt -s extglob
-mkdir build
+mkdir -p build
 rm -rvf build/*
 cd build
 cmake ..
@@ -200,8 +209,16 @@ echo "##########################################################################
 if [ "$TEST_TYPE" -eq 0 ]; then
     for case in ${CASE_LIST[@]};
     do
-        if [ "$case" -lt "0" ] || [ "$case" -gt " 84" ]; then
-            echo "Invalid case number $case. case number must be in the 0:84 range!"
+        endBitDepth=7
+        if [ "$QA_MODE" -eq 1 ]; then
+            if [ "$case" -eq "54" ] || [ "$case" -eq " 84" ]; then
+                echo "QA tests are not supported for case number $case, since it generates random output"
+                continue
+            fi
+            endBitDepth=1
+        fi
+        if [ "$case" -lt "0" ] || [ "$case" -gt " 87" ]; then
+            echo "Invalid case number $case. case number must be in the 0:87 range!"
             continue
         fi
         for ((layout=0;layout<3;layout++))
@@ -228,7 +245,7 @@ if [ "$TEST_TYPE" -eq 0 ]; then
             echo "--------------------------------"
             printf "Running a New Functionality...\n"
             echo "--------------------------------"
-            for ((bitDepth=0;bitDepth<7;bitDepth++))
+            for ((bitDepth=0;bitDepth<$endBitDepth;bitDepth++))
             do
                 printf "\n\n\nRunning New Bit Depth...\n-------------------------\n\n"
                 for ((outputFormatToggle=0;outputFormatToggle<2;outputFormatToggle++))
@@ -268,8 +285,8 @@ if [ "$TEST_TYPE" -eq 0 ]; then
 else
     for case in ${CASE_LIST[@]};
     do
-        if [ "$case" -lt "0" ] || [ "$case" -gt " 84" ]; then
-            echo "Invalid case number $case. case number must be in the 0:84 range!"
+        if [ "$case" -lt "0" ] || [ "$case" -gt " 87" ]; then
+            echo "Invalid case number $case. case number must be in the 0:87 range!"
             continue
         fi
         for ((layout=0;layout<3;layout++))

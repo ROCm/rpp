@@ -1,4 +1,5 @@
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![doc](https://img.shields.io/badge/doc-readthedocs-blueviolet)](https://gpuopen-professionalcompute-libraries.github.io/rpp/)
 [![Build Status](https://travis-ci.com/GPUOpen-ProfessionalCompute-Libraries/rpp.svg?branch=master)](https://travis-ci.com/GPUOpen-ProfessionalCompute-Libraries/rpp)
 
 # ROCm Performance Primitives Library
@@ -11,41 +12,47 @@ AMD ROCm Performance Primitives (**RPP**) library is a comprehensive high-perfor
 
 ## Top level design
 
-<p align="center"><img width="50%" src="docs/data/rpp_structure_4.png" /></p>
+<p align="center"><img width="50%" src="https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp/raw/master/docs/data/rpp_structure_4.png" /></p>
 
 ## Supported Functionalities and Variants
 
 ### Supported Functionalities List
 
-<p align="center"><img width="90%" src="docs/data/supported_functionalities.png" /></p>
+<p align="center"><img width="90%" src="https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp/raw/master/docs/data/supported_functionalities.png" /></p>
 
 ### Supported Functionalities Samples
 
-<p align="center"><img width="90%" src="docs/data/supported_functionalities_samples.jpg" /></p>
+<p align="center"><img width="90%" src="https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp/raw/master/docs/data/supported_functionalities_samples.jpg" /></p>
 
 ## Documentation
 
 Run the steps below to build documentation locally.
 
+* Sphinx documentation
 ```bash
 cd docs
-
-pip3 install -r .sphinx/requirements.txt
-
+pip3 install -r sphinx/requirements.txt
 python3 -m sphinx -T -E -b html -d _build/doctrees -D language=en . _build/html
+```
+
+* Doxygen 
+```
+doxygen .Doxyfile
 ```
 
 ## Prerequisites
 
 * **OS**
   + Ubuntu `20.04`/`22.04`
-  + CentOS `7`/`8`
+  + CentOS `7`
   + RHEL `8`/`9`
-  + SLES - `15-SP3`
+  + SLES - `15-SP4`
 
 * [ROCm supported hardware](https://docs.amd.com/bundle/Hardware_and_Software_Reference_Guide/page/Hardware_and_Software_Support.html)
 
-* [ROCm](https://docs.amd.com/bundle/ROCm-Installation-Guide-v5.4.3/page/How_to_Install_ROCm.html) `5.4.3` and above
+* [ROCm](https://docs.amd.com/bundle/ROCm-Installation-Guide-v5.4.3/page/How_to_Install_ROCm.html) `5.6.1` and above
+
+* [HIP](https://github.com/ROCm-Developer-Tools/HIP)
 
 * Clang Version `5.0.1` and above
 
@@ -60,7 +67,7 @@ python3 -m sphinx -T -E -b html -d _build/doctrees -D language=en . _build/html
     scl enable llvm-toolset-7 bash
     ```
 
-  + CentOS `8` and RHEL `8`/`9`
+  + RHEL `8`/`9`
     ```
     sudo yum install clang
     ```
@@ -75,24 +82,28 @@ python3 -m sphinx -T -E -b html -d _build/doctrees -D language=en . _build/html
 
 * CMake Version `3.5` and above
 
-* Boost Version `1.66` and above
-  ```
-  wget https://boostorg.jfrog.io/artifactory/main/release/1.72.0/source/boost_1_72_0.tar.gz
-  tar -xzvf boost_1_72_0.tar.gz
-  cd boost_1_72_0
-  ./bootstrap.sh
-  ./b2 install
-  ```
-  + **NOTE:** [Install from source](https://www.boost.org/doc/libs/1_72_0/more/getting_started/unix-variants.html#easy-build-and-install)
-
 * IEEE 754-based half-precision floating-point library - half.hpp
+  + Use `half` package with ROCm
 
-  ```
-  wget https://sourceforge.net/projects/half/files/half/1.12.0/half-1.12.0.zip
-  unzip half-1.12.0.zip -d half-files
-  sudo mkdir /usr/local/include/half
-  sudo cp half-files/include/half.hpp /usr/local/include/half
-  ```
+    ```
+    sudo apt-get install half
+    ```
+    **NOTE:** use the right package-management utility - `zypper`/`yum`
+ 
+  + Install from source
+
+    ```
+    wget https://sourceforge.net/projects/half/files/half/1.12.0/half-1.12.0.zip
+    unzip half-1.12.0.zip -d half-files
+    sudo mkdir /usr/local/include/half
+    sudo cp half-files/include/half.hpp /usr/local/include/half
+    ```
+
+* Compiler with support for C++ Version `17` and above
+
+* OpenMP
+  
+* Threads
 
 ## Prerequisites for Test Suite
 
@@ -220,9 +231,8 @@ Review all notable [changes](CHANGELOG.md#changelog) with the latest release
 
 * Linux distribution
   + Ubuntu - `20.04` / `22.04`
-  + CentOS - `7` / `8`
+  + CentOS - `7`
   + RedHat - `8` / `9`
   + SLES - `15-SP4`
-* ROCm: rocm-core - `5.4.0.50400-72`
-* Protobuf - [V3.12.4](https://github.com/protocolbuffers/protobuf/releases/tag/v3.12.4)
+* ROCm: rocm-core - `5.7.0.50700-63`
 * OpenCV - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
