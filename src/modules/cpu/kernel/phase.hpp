@@ -547,7 +547,7 @@ RppStatus phase_f16_f16_host_tensor(Rpp16f *srcPtr1,
                     p1[0] = _mm256_mul_ps(atan2_ps(p1[0], p2[0]), pMul);    // phase computation
                     p1[1] = _mm256_mul_ps(atan2_ps(p1[1], p2[1]), pMul);    // phase computation
                     p1[2] = _mm256_mul_ps(atan2_ps(p1[2], p2[2]), pMul);    // phase computation
-                    rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTemp_ps, dstPtrTemp_ps + 4, dstPtrTemp_ps + 8, p1);    // simd stores
+                    rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTemp_ps, dstPtrTemp_ps + 8, dstPtrTemp_ps + 16, p1);    // simd stores
 
                     for(int cnt = 0; cnt < 8; cnt++)
                     {
@@ -623,8 +623,8 @@ RppStatus phase_f16_f16_host_tensor(Rpp16f *srcPtr1,
 
                     __m256 p1[4], p2[4];
 
-                    rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtr1Temp_ps, srcPtr1Temp_ps + 4, srcPtr1Temp_ps + 8, p1);    // simd loads
-                    rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtr2Temp_ps, srcPtr2Temp_ps + 4, srcPtr2Temp_ps + 8, p2);    // simd loads
+                    rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtr1Temp_ps, srcPtr1Temp_ps + 8, srcPtr1Temp_ps + 16, p1);    // simd loads
+                    rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtr2Temp_ps, srcPtr2Temp_ps + 8, srcPtr2Temp_ps + 16, p2);    // simd loads
                     p1[0] = _mm256_mul_ps(atan2_ps(p1[0], p2[0]), pMul);    // phase computation
                     p1[1] = _mm256_mul_ps(atan2_ps(p1[1], p2[1]), pMul);    // phase computation
                     p1[2] = _mm256_mul_ps(atan2_ps(p1[2], p2[2]), pMul);    // phase computation
@@ -802,12 +802,12 @@ RppStatus phase_i8_i8_host_tensor(Rpp8s *srcPtr1,
 
                     rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3_avx, srcPtr1Temp, p1);    // simd loads
                     rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3_avx, srcPtr2Temp, p2);    // simd loads
-                    p1[0] = _mm256_mul_ps(atan2_ps(p1[0], p2[0]), pMul);    // phase computation
-                    p1[1] = _mm256_mul_ps(atan2_ps(p1[1], p2[1]), pMul);    // phase computation
-                    p1[2] = _mm256_mul_ps(atan2_ps(p1[2], p2[2]), pMul);    // phase computation
-                    p1[3] = _mm256_mul_ps(atan2_ps(p1[3], p2[3]), pMul);    // phase computation
-                    p1[4] = _mm256_mul_ps(atan2_ps(p1[4], p2[4]), pMul);    // phase computation
-                    p1[5] = _mm256_mul_ps(atan2_ps(p1[5], p2[5]), pMul);    // phase computation
+                    p1[0] = _mm256_round_ps(_mm256_mul_ps(atan2_ps(p1[0], p2[0]), pMul), _MM_FROUND_TO_ZERO);    // phase computation
+                    p1[1] = _mm256_round_ps(_mm256_mul_ps(atan2_ps(p1[1], p2[1]), pMul), _MM_FROUND_TO_ZERO);    // phase computation
+                    p1[2] = _mm256_round_ps(_mm256_mul_ps(atan2_ps(p1[2], p2[2]), pMul), _MM_FROUND_TO_ZERO);    // phase computation
+                    p1[3] = _mm256_round_ps(_mm256_mul_ps(atan2_ps(p1[3], p2[3]), pMul), _MM_FROUND_TO_ZERO);    // phase computation
+                    p1[4] = _mm256_round_ps(_mm256_mul_ps(atan2_ps(p1[4], p2[4]), pMul), _MM_FROUND_TO_ZERO);    // phase computation
+                    p1[5] = _mm256_round_ps(_mm256_mul_ps(atan2_ps(p1[5], p2[5]), pMul), _MM_FROUND_TO_ZERO);    // phase computation
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p1);    // simd stores
 
                     srcPtr1Temp += 48;
@@ -862,16 +862,16 @@ RppStatus phase_i8_i8_host_tensor(Rpp8s *srcPtr1,
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                 {
-                    __m256 p1[12], p2[12];
+                    __m256 p1[6], p2[6];
 
                     rpp_simd_load(rpp_load48_i8pln3_to_f32pln3_avx, srcPtr1TempR, srcPtr1TempG, srcPtr1TempB, p1);    // simd loads
                     rpp_simd_load(rpp_load48_i8pln3_to_f32pln3_avx, srcPtr2TempR, srcPtr2TempG, srcPtr2TempB, p2);    // simd loads
-                    p1[0] = _mm256_mul_ps(atan2_ps(p1[0], p2[0]), pMul);    // phase computation
-                    p1[1] = _mm256_mul_ps(atan2_ps(p1[1], p2[1]), pMul);    // phase computation
-                    p1[2] = _mm256_mul_ps(atan2_ps(p1[2], p2[2]), pMul);    // phase computation
-                    p1[3] = _mm256_mul_ps(atan2_ps(p1[3], p2[3]), pMul);    // phase computation
-                    p1[4] = _mm256_mul_ps(atan2_ps(p1[4], p2[4]), pMul);    // phase computation
-                    p1[5] = _mm256_mul_ps(atan2_ps(p1[5], p2[5]), pMul);    // phase computation
+                    p1[0] = _mm256_round_ps(_mm256_mul_ps(atan2_ps(p1[0], p2[0]), pMul), _MM_FROUND_TO_ZERO);    // phase computation
+                    p1[1] = _mm256_round_ps(_mm256_mul_ps(atan2_ps(p1[1], p2[1]), pMul), _MM_FROUND_TO_ZERO);    // phase computation
+                    p1[2] = _mm256_round_ps(_mm256_mul_ps(atan2_ps(p1[2], p2[2]), pMul), _MM_FROUND_TO_ZERO);    // phase computation
+                    p1[3] = _mm256_round_ps(_mm256_mul_ps(atan2_ps(p1[3], p2[3]), pMul), _MM_FROUND_TO_ZERO);    // phase computation
+                    p1[4] = _mm256_round_ps(_mm256_mul_ps(atan2_ps(p1[4], p2[4]), pMul), _MM_FROUND_TO_ZERO);    // phase computation
+                    p1[5] = _mm256_round_ps(_mm256_mul_ps(atan2_ps(p1[5], p2[5]), pMul), _MM_FROUND_TO_ZERO);    // phase computation
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3_avx, dstPtrTemp, p1);    // simd stores
 
                     srcPtr1TempR += 16;
@@ -884,9 +884,9 @@ RppStatus phase_i8_i8_host_tensor(Rpp8s *srcPtr1,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = (Rpp8s) RPPPIXELCHECKI8(atan(((Rpp32f) (*srcPtr1TempR)) / ((Rpp32f) (*srcPtr2TempR))) * multiplier);
-                    dstPtrTemp[1] = (Rpp8s) RPPPIXELCHECKI8(atan(((Rpp32f) (*srcPtr1TempG)) / ((Rpp32f) (*srcPtr2TempG))) * multiplier);
-                    dstPtrTemp[2] = (Rpp8s) RPPPIXELCHECKI8(atan(((Rpp32f) (*srcPtr1TempB)) / ((Rpp32f) (*srcPtr2TempB))) * multiplier);
+                    dstPtrTemp[0] = (Rpp8s) RPPPIXELCHECKI8((atan(((Rpp32f) (*srcPtr1TempR + 128)) / ((Rpp32f) (*srcPtr2TempR + 128))) * multiplier) -  128);
+                    dstPtrTemp[1] = (Rpp8s) RPPPIXELCHECKI8((atan(((Rpp32f) (*srcPtr1TempG + 128)) / ((Rpp32f) (*srcPtr2TempG + 128))) * multiplier) -  128);
+                    dstPtrTemp[2] = (Rpp8s) RPPPIXELCHECKI8((atan(((Rpp32f) (*srcPtr1TempB + 128)) / ((Rpp32f) (*srcPtr2TempB + 128))) * multiplier) -  128);
 
                     srcPtr1TempR++;
                     srcPtr1TempG++;
@@ -943,7 +943,7 @@ RppStatus phase_i8_i8_host_tensor(Rpp8s *srcPtr1,
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        *dstPtrTemp++ = (Rpp8s) RPPPIXELCHECKI8(atan(((Rpp32f) (*srcPtr1Temp)) / ((Rpp32f) (*srcPtr2Temp))) * multiplier);
+                        *dstPtrTemp++ = (Rpp8s) RPPPIXELCHECKI8((atan(((Rpp32f) (*srcPtr1Temp +  128)) / ((Rpp32f) (*srcPtr2Temp+  128))) * multiplier) -  128);
 
                         srcPtr1Temp++;
                         srcPtr2Temp++;

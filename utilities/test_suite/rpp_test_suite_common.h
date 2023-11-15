@@ -875,7 +875,7 @@ void compare_outputs_pkd(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr
         outputTemp = output + imageCnt * dstDescPtr->strides.nStride;
         outputTempRef = refOutput + imageCnt * refOutputSize;
         int height = dstImgSizes[imageCnt].height;
-        int width = dstImgSizes[imageCnt].width * dstDescPtr->c;;
+        int width = dstImgSizes[imageCnt].width * dstDescPtr->c;
         int matched_idx = 0;
         int refOutputHstride = refOutputWidth * dstDescPtr->c;
 
