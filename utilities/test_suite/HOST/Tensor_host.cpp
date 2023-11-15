@@ -70,7 +70,7 @@ int main(int argc, char **argv)
     bool pln1OutTypeCase = (testCase == 86);
     unsigned int verbosity = atoi(argv[11]);
     unsigned int additionalParam = additionalParamCase ? atoi(argv[7]) : 1;
-    bool reductionTypeCase = (testCase == 87);
+    bool reductionTypeCase = (testCase == 87 || testCase == 88 || testCase == 89);
     int roiList[4] = {atoi(argv[15]), atoi(argv[16]), atoi(argv[17]), atoi(argv[18])};
 
     if (verbosity == 1)
@@ -109,6 +109,12 @@ int main(int argc, char **argv)
             printf("\nPLN1 cases don't have outputFormatToggle! Please input outputFormatToggle = 0\n");
             return -1;
         }
+    }
+    if (reductionTypeCase && outputFormatToggle)
+    {
+        printf("\nReduction Kernels don't have outputFormatToggle! Please input outputFormatToggle = 0\n");
+        outputFormatToggle = 0;
+        return -1;
     }
 
     if(pln1OutTypeCase && outputFormatToggle != 0)
@@ -300,6 +306,14 @@ int main(int argc, char **argv)
     input = static_cast<Rpp8u *>(calloc(inputBufferSize, 1));
     input_second = static_cast<Rpp8u *>(calloc(inputBufferSize, 1));
     output = static_cast<Rpp8u *>(calloc(outputBufferSize, 1));
+
+    // Initialize buffers for any reductionType functions
+    void *reductionFuncResultArr;
+    Rpp32u reductionFuncResultArrLength = srcDescPtr->n * 4;
+    if(reductionTypeCase)
+    {
+        reductionFuncResultArr = (Rpp8u *)calloc(reductionFuncResultArrLength, get_size_of_data_type(dstDescPtr->dataType));
+    }
 
     // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
     // If numThreads value passed is 0, number of OpenMP threads used by RPP will be set to batch size
@@ -998,6 +1012,40 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 88:
+                {
+                    testCaseName = "tensor_min";
+
+                    if(srcDescPtr->c == 1)
+                        reductionFuncResultArrLength = srcDescPtr->n;
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_tensor_min_host(input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 89:
+                {
+                    testCaseName = "tensor_max";
+
+                    if(srcDescPtr->c == 1)
+                        reductionFuncResultArrLength = srcDescPtr->n;
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_tensor_max_host(input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 default:
                     missingFuncFlag = 1;
                     break;
@@ -1142,6 +1190,8 @@ int main(int argc, char **argv)
     free(inputu8);
     free(inputu8Second);
     free(outputu8);
+    if(reductionTypeCase)
+        free(reductionFuncResultArr);
     free(input_second);
     free(output);
     if(reductionTypeCase)
