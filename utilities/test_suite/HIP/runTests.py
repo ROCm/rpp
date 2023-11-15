@@ -444,8 +444,8 @@ if(testType == 0):
         if qaMode == 1 and case != "82":
             srcPath1 = inFilePath1
             srcPath2 = inFilePath2
-        if int(case) < 0 or int(case) > 87:
-            print(f"Invalid case number {case}. Case number must be in the range of 0 to 87!")
+        if int(case) < 0 or int(case) > 89:
+            print(f"Invalid case number {case}. Case number must be in the range of 0 to 89!")
             continue
         for layout in range(3):
             dstPathTemp, log_file_layout = process_layout(layout, qaMode, case, dstPath)
@@ -462,8 +462,8 @@ if(testType == 0):
 else:
     if (testType == 1 and profilingOption == "NO"):
         for case in caseList:
-            if int(case) < 0 or int(case) > 87:
-                print(f"Invalid case number {case}. Case number must be in the range of 0 to 87!")
+            if int(case) < 0 or int(case) > 89:
+                print(f"Invalid case number {case}. Case number must be in the range of 0 to 89!")
                 continue
             if case == "82" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
                 srcPath1 = ricapInFilePath
@@ -477,8 +477,8 @@ else:
         NEW_FUNC_GROUP_LIST = [0, 15, 20, 29, 36, 40, 42, 49, 56, 65, 69]
 
         for case in caseList:
-            if int(case) < 0 or int(case) > 87:
-                print(f"Invalid case number {case}. Case number must be in the range of 0 to 87!")
+            if int(case) < 0 or int(case) > 89:
+                print(f"Invalid case number {case}. Case number must be in the range of 0 to 89!")
                 continue
             if case == "82" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
                 srcPath1 = ricapInFilePath
