@@ -348,8 +348,8 @@ if testType == 0:
         if qaMode == 1 and case != "82":
             srcPath1 = inFilePath1
             srcPath2 = inFilePath2
-        if int(case) < 0 or int(case) > 87:
-            print(f"Invalid case number {case}. Case number must be in the range of 0 to 86!")
+        if int(case) < 0 or int(case) > 89:
+            print(f"Invalid case number {case}. Case number must be in the range of 0 to 89!")
             continue
         for layout in range(3):
             dstPathTemp, log_file_layout = process_layout(layout, qaMode, case, dstPath)
@@ -364,8 +364,8 @@ if testType == 0:
         create_layout_directories(dstPath, layoutDict)
 else:
     for case in caseList:
-        if int(case) < 0 or int(case) > 87:
-            print(f"Invalid case number {case}. Case number must be in the range of 0 to 86!")
+        if int(case) < 0 or int(case) > 89:
+            print(f"Invalid case number {case}. Case number must be in the range of 0 to 89!")
             continue
         if case == "82" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
                 srcPath1 = ricapInFilePath

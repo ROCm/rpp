@@ -312,7 +312,14 @@ int main(int argc, char **argv)
     Rpp32u reductionFuncResultArrLength = srcDescPtr->n * 4;
     if(reductionTypeCase)
     {
-        reductionFuncResultArr = (Rpp8u *)calloc(reductionFuncResultArrLength, get_size_of_data_type(dstDescPtr->dataType));
+        if(dstDescPtr->dataType == RpptDataType::U8)
+            reductionFuncResultArr = static_cast<Rpp64u*>(calloc(reductionFuncResultArrLength, sizeof(Rpp64u)));
+        else if(dstDescPtr->dataType == RpptDataType::F16)
+            reductionFuncResultArr = static_cast<Rpp32f*>(calloc(reductionFuncResultArrLength, sizeof(Rpp32f)));
+        else if(dstDescPtr->dataType == RpptDataType::F32)
+            reductionFuncResultArr = static_cast<Rpp32f*>(calloc(reductionFuncResultArrLength, sizeof(Rpp32f)));
+        else if(dstDescPtr->dataType == RpptDataType::I8)
+            reductionFuncResultArr = static_cast<Rpp64s*>(calloc(reductionFuncResultArrLength, sizeof(Rpp64s)));
     }
 
     // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
@@ -325,21 +332,6 @@ int main(int argc, char **argv)
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0;
     double cpuTime, wallTime;
     string testCaseName;
-
-    // Initialize buffers for any reductionType functions
-    void *reductionFuncResultArr;
-    Rpp32u reductionFuncResultArrLength = srcDescPtr->n * 4;
-    if(reductionTypeCase)
-    {
-        if(dstDescPtr->dataType == RpptDataType::U8)
-            reductionFuncResultArr = static_cast<Rpp64u*>(calloc(reductionFuncResultArrLength, sizeof(Rpp64u)));
-        else if(dstDescPtr->dataType == RpptDataType::F16)
-            reductionFuncResultArr = static_cast<Rpp32f*>(calloc(reductionFuncResultArrLength, sizeof(Rpp32f)));
-        else if(dstDescPtr->dataType == RpptDataType::F32)
-            reductionFuncResultArr = static_cast<Rpp32f*>(calloc(reductionFuncResultArrLength, sizeof(Rpp32f)));
-        else if(dstDescPtr->dataType == RpptDataType::I8)
-            reductionFuncResultArr = static_cast<Rpp64s*>(calloc(reductionFuncResultArrLength, sizeof(Rpp64s)));
-    }
 
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
@@ -1190,8 +1182,6 @@ int main(int argc, char **argv)
     free(inputu8);
     free(inputu8Second);
     free(outputu8);
-    if(reductionTypeCase)
-        free(reductionFuncResultArr);
     free(input_second);
     free(output);
     if(reductionTypeCase)

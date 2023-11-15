@@ -90,7 +90,7 @@ std::map<int, string> augmentationMap =
     {84, "spatter"},
     {85, "swap_channels"},
     {86, "color_to_greyscale"},
-    {87, "tensor_sum"}
+    {87, "tensor_sum"},
     {88, "tensor_min"},
     {89, "tensor_max"},
 };
