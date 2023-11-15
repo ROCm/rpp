@@ -76,7 +76,7 @@ int main(int argc, char **argv)
     bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24);
     bool noiseTypeCase = (testCase == 8);
     bool pln1OutTypeCase = (testCase == 86);
-    bool reductionTypeCase = (testCase == 87);
+    bool reductionTypeCase = (testCase == 87 || testCase == 88 || testCase == 89);
 
     unsigned int verbosity = atoi(argv[11]);
     unsigned int additionalParam = additionalParamCase ? atoi(argv[7]) : 1;
@@ -1005,6 +1005,30 @@ int main(int argc, char **argv)
 
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                     rppt_tensor_sum_gpu(d_input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
+                else
+                    missingFuncFlag = 1;
+
+                break;
+            }
+            case 88:
+            {
+                testCaseName = "tensor_min";
+
+                startWallTime = omp_get_wtime();
+                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    rppt_tensor_min_gpu(d_input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
+                else
+                    missingFuncFlag = 1;
+
+                break;
+            }
+            case 89:
+            {
+                testCaseName = "tensor_max";
+
+                startWallTime = omp_get_wtime();
+                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    rppt_tensor_max_gpu(d_input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
                 else
                     missingFuncFlag = 1;
 
