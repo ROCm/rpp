@@ -95,6 +95,8 @@ int main(int argc, char **argv)
     // initialize the buffers for audio length and channels
     Rpp32s *srcLengthTensor = (Rpp32s *) calloc(batchSize, sizeof(Rpp32s));
     Rpp32s *channelsTensor = (Rpp32s *) calloc(batchSize, sizeof(Rpp32s));
+    RpptImagePatch *srcDims = (RpptImagePatch *) calloc(batchSize, sizeof(RpptImagePatch));
+    RpptImagePatch *dstDims = (RpptImagePatch *) calloc(batchSize, sizeof(RpptImagePatch));
 
     // find max audio dimensions in the input dataset
     maxSrcHeight = 1;
@@ -169,11 +171,7 @@ int main(int argc, char **argv)
                     }
 
                     startWallTime = omp_get_wtime();
-                    startCpuTime = clock();
-                    if (inputBitDepth == 2)
-                        rppt_to_decibels_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcDims, cutOffDB, multiplier, referenceMagnitude, handle);
-                    else
-                        missingFuncFlag = 1;
+                    rppt_to_decibels_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcDims, cutOffDB, multiplier, referenceMagnitude, handle);
 
                     break;
                 }
@@ -259,6 +257,8 @@ int main(int argc, char **argv)
     // free memory
     free(srcLengthTensor);
     free(channelsTensor);
+    free(srcDims);
+    free(dstDims);
     free(inputf32);
     free(outputf32);
     return 0;
