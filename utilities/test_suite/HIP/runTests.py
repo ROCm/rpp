@@ -80,7 +80,7 @@ def func_group_finder(case_number):
         return "color_augmentations"
     elif case_number == 8 or case_number == 30 or case_number == 82 or case_number == 83 or case_number == 84:
         return "effects_augmentations"
-    elif case_number < 40:
+    elif case_number < 40 or case_number == 63:
         return "geometric_augmentations"
     elif case_number < 42:
         return "morphological_operations"
@@ -387,7 +387,7 @@ else:
             print("Unable to open results in " + RESULTS_DIR + "/consolidated_results_" + TYPE + ".stats.csv")
 
 # print the results of qa tests
-supportedCaseList = ['0', '1', '2', '4', '13', '29', '31', '34', '36', '37', '38', '54', '82', '84', '87']
+supportedCaseList = ['0', '1', '2', '4', '13', '29', '31', '34', '36', '37', '38', '54', '63', '82', '84', '87']
 nonQACaseList = ['54', '84']
 
 if qaMode and testType == 0:
