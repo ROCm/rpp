@@ -1,13 +1,16 @@
 /*
 Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
+
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
+
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
@@ -26,7 +29,7 @@ THE SOFTWARE.
 
 RppStatus rppt_non_silent_region_detection_host(RppPtr_t srcPtr,
                                                 RpptDescPtr srcDescPtr,
-                                                Rpp32s *srcSize,
+                                                Rpp32s *srcLengthTensor,
                                                 Rpp32f *detectedIndexTensor,
                                                 Rpp32f *detectionLengthTensor,
                                                 Rpp32f cutOffDB,
@@ -39,7 +42,7 @@ RppStatus rppt_non_silent_region_detection_host(RppPtr_t srcPtr,
     {
         non_silent_region_detection_host_tensor(static_cast<Rpp32f*>(srcPtr),
                                                 srcDescPtr,
-                                                srcSize,
+                                                srcLengthTensor,
                                                 detectedIndexTensor,
                                                 detectionLengthTensor,
                                                 cutOffDB,
@@ -70,6 +73,8 @@ RppStatus rppt_to_decibels_host(RppPtr_t srcPtr,
                                 Rpp32f referenceMagnitude,
                                 rppHandle_t rppHandle)
 {
+    if (multiplier == 0)
+        return RPP_ERROR_ZERO_DIVISION;
     if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
         to_decibels_host_tensor(static_cast<Rpp32f*>(srcPtr),

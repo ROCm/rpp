@@ -36,6 +36,7 @@ THE SOFTWARE.
 #include <omp.h>
 #include <fstream>
 #include <turbojpeg.h>
+#include <random>
 
 #ifdef GPU_SUPPORT
     #include <hip/hip_fp16.h>
@@ -71,6 +72,7 @@ std::map<int, string> augmentationMap =
     {38, "crop_mirror_normalize"},
     {49, "box_filter"},
     {54, "gaussian_filter"},
+    {82, "ricap"},
     {84, "spatter"},
     {87, "tensor_sum"}
 };
@@ -83,7 +85,7 @@ inline T validate_pixel_range(T pixel)
 }
 
 // replicates the last image in a batch to fill the remaining images in a batch
-void replicate_last_image_to_fill_batch(const string& lastFilePath, vector<string>& imageNamesPath, vector<string>& imageNames, const string& lastFileName, int noOfImages, int batchCount)
+void replicate_last_file_to_fill_batch(const string& lastFilePath, vector<string>& imageNamesPath, vector<string>& imageNames, const string& lastFileName, int noOfImages, int batchCount)
 {
     int remainingImages = batchCount - (noOfImages % batchCount);
     std::string filePath = lastFilePath;
@@ -297,7 +299,7 @@ inline void set_descriptor_layout( RpptDescPtr srcDescPtr, RpptDescPtr dstDescPt
 }
 
 // sets values of maxHeight and maxWidth
-inline void set_max_dimensions(vector<string>imagePaths, int& maxHeight, int& maxWidth)
+inline void set_max_dimensions(vector<string>imagePaths, int& maxHeight, int& maxWidth, int& imagesMixed)
 {
     tjhandle tjInstance = tjInitDecompress();
     for (const std::string& imagePath : imagePaths)
@@ -322,6 +324,9 @@ inline void set_max_dimensions(vector<string>imagePaths, int& maxHeight, int& ma
             std::cerr << "Error decompressing file: " << imagePath << std::endl;
             continue;
         }
+
+        if((maxWidth && maxWidth != width) || (maxHeight && maxHeight != height))
+            imagesMixed = 1;
 
         maxWidth = max(maxWidth, width);
         maxHeight = max(maxHeight, height);
@@ -631,8 +636,8 @@ inline void convert_pkd3_to_pln3(Rpp8u *input, RpptDescPtr descPtr)
     free(inputCopy);
 }
 
-// Opens a folder and recursively search for .jpg files
-void open_folder(const string& folderPath, vector<string>& imageNames, vector<string>& imageNamesPath)
+// Opens a folder and recursively search for files with given extension
+void open_folder(const string& folderPath, vector<string>& imageNames, vector<string>& imageNamesPath, string extension)
 {
     auto src_dir = opendir(folderPath.c_str());
     struct dirent* entity;
@@ -652,9 +657,9 @@ void open_folder(const string& folderPath, vector<string>& imageNames, vector<st
         filePath.append(entity->d_name);
         fs::path pathObj(filePath);
         if(fs::exists(pathObj) && fs::is_directory(pathObj))
-            open_folder(filePath, imageNames, imageNamesPath);
+            open_folder(filePath, imageNames, imageNamesPath, extension);
 
-        if (fileName.size() > 4 && fileName.substr(fileName.size() - 4) == ".jpg")
+        if (fileName.size() > 4 && fileName.substr(fileName.size() - 4) == extension)
         {
             imageNamesPath.push_back(filePath);
             imageNames.push_back(entity->d_name);
@@ -666,8 +671,8 @@ void open_folder(const string& folderPath, vector<string>& imageNames, vector<st
     closedir(src_dir);
 }
 
-// Searches for .jpg files in input folders
-void search_jpg_files(const string& folder_path, vector<string>& imageNames, vector<string>& imageNamesPath)
+// Searches for files with the provided extensions in input folders
+void search_files_recursive(const string& folder_path, vector<string>& imageNames, vector<string>& imageNamesPath, string extension)
 {
     vector<string> entry_list;
     string full_path = folder_path;
@@ -703,14 +708,14 @@ void search_jpg_files(const string& folder_path, vector<string>& imageNames, vec
                 if ((file_extension == "tar") || (file_extension == "zip") || (file_extension == "7z") || (file_extension == "rar"))
                     continue;
             }
-            if (entry_list[dir_count].size() > 4 && entry_list[dir_count].substr(entry_list[dir_count].size() - 4) == ".jpg")
+            if (entry_list[dir_count].size() > 4 && entry_list[dir_count].substr(entry_list[dir_count].size() - 4) == extension)
             {
                 imageNames.push_back(entry_list[dir_count]);
                 imageNamesPath.push_back(subfolder_path);
             }
         }
         else if (fs::exists(pathObj) && fs::is_directory(pathObj))
-            open_folder(subfolder_path, imageNames, imageNamesPath);
+            open_folder(subfolder_path, imageNames, imageNamesPath, extension);
     }
 }
 
@@ -1019,6 +1024,95 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
         qaResults << status << std::endl;
         qaResults.close();
     }
+}
+
+// Used to randomly swap values present in array of size n
+inline void randomize(unsigned int arr[], unsigned int n)
+{
+    // Use a different seed value each time
+    srand (time(NULL));
+    for (unsigned int i = n - 1; i > 0; i--)
+    {
+        // Pick a random index from 0 to i
+        unsigned int j = rand() % (i + 1);
+        std::swap(arr[i], arr[j]);
+    }
+}
+
+// Generates a random value between given min and max values
+int inline randrange(int min, int max)
+{
+    if(max < 0)
+        return -1;
+    return rand() % (max - min + 1) + min;
+}
+
+// RICAP Input Crop Region initializer for QA testing and golden output match
+void inline init_ricap_qa(int width, int height, int batchSize, Rpp32u *permutationTensor, RpptROIPtr roiPtrInputCropRegion)
+{
+    Rpp32u initialPermuteArray[batchSize], permutedArray[batchSize * 4];
+    int part0Width = 40; //Set part0 width around 1/3 of image width
+    int part0Height = 72; //Set part0 height around 1/2 of image height
+
+    for (uint i = 0; i < batchSize; i++)
+        initialPermuteArray[i] = i;
+
+    for(int i = 0; i < 4; i++)
+        memcpy(permutedArray + (batchSize * i), initialPermuteArray, batchSize * sizeof(Rpp32u));
+
+    for (uint i = 0, j = 0; j < batchSize * 4; i++, j += 4)
+    {
+        permutationTensor[j] = permutedArray[i];
+        permutationTensor[j + 1] = permutedArray[i + batchSize];
+        permutationTensor[j + 2] = permutedArray[i + (batchSize * 2)];
+        permutationTensor[j + 3] = permutedArray[i + (batchSize * 3)];
+    }
+
+    roiPtrInputCropRegion[0].xywhROI = {width - part0Width, 0, part0Width, part0Height};
+    roiPtrInputCropRegion[1].xywhROI = {part0Width, 0, width - part0Width, part0Height};
+    roiPtrInputCropRegion[2].xywhROI = {0, part0Height, part0Width, height - part0Height};
+    roiPtrInputCropRegion[3].xywhROI = {0, part0Height, width - part0Width, height - part0Height};
+}
+
+// RICAP Input Crop Region initializer for unit and performance testing
+void inline init_ricap(int width, int height, int batchSize, Rpp32u *permutationTensor, RpptROIPtr roiPtrInputCropRegion)
+{
+    Rpp32u initialPermuteArray[batchSize], permutedArray[batchSize * 4];
+    double randFromDist, randFromDist1;
+
+    for (uint i = 0; i < batchSize; i++)
+        initialPermuteArray[i] = i;
+
+    std::random_device rd;
+    std::mt19937 gen(rd()); // Pseudo random number generator
+    static std::uniform_real_distribution<double> unif(0.3, 0.7); // Generates a uniform real distribution between 0.3 and 0.7
+    double randVal = unif(gen);
+
+    std::random_device rd1;
+    std::mt19937 gen1(rd1());
+    static std::uniform_real_distribution<double> unif1(0.3, 0.7);
+    double randVal1 = unif1(gen1);
+
+    for(int i = 0; i < 4; i++)
+    {
+        randomize(initialPermuteArray, batchSize);
+        memcpy(permutedArray + (batchSize * i), initialPermuteArray, batchSize * sizeof(Rpp32u));
+    }
+
+    for (uint i = 0, j = 0; j < batchSize * 4; i++, j += 4)
+    {
+        permutationTensor[j] = permutedArray[i];
+        permutationTensor[j + 1] = permutedArray[i + batchSize];
+        permutationTensor[j + 2] = permutedArray[i + (batchSize * 2)];
+        permutationTensor[j + 3] = permutedArray[i + (batchSize * 3)];
+    }
+
+    int part0Width = std::round(randVal * width);
+    int part0Height = std::round(randVal1 * height);
+    roiPtrInputCropRegion[0].xywhROI = {randrange(0, width - part0Width - 8), randrange(0, height - part0Height), part0Width, part0Height}; // Subtracted x coordinate by 8 to avoid corruption when HIP processes 8 pixels at once
+    roiPtrInputCropRegion[1].xywhROI = {randrange(0, part0Width - 8), randrange(0, height - part0Height), width - part0Width, part0Height};
+    roiPtrInputCropRegion[2].xywhROI = {randrange(0, width - part0Width - 8), randrange(0, part0Height), part0Width, height - part0Height};
+    roiPtrInputCropRegion[3].xywhROI = {randrange(0, part0Width - 8), randrange(0, part0Height), width - part0Width, height - part0Height};
 }
 
 inline void compare_reduction_output(Rpp64u* output, string funcName, RpptDescPtr srcDescPtr, int testCase, string dst)

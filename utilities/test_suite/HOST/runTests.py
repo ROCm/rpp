@@ -162,7 +162,7 @@ dstPath = outFilePath
 subprocess.call([scriptPath + "/testAllScript.sh", srcPath1, args.input_path2, str(testType), str(numRuns), str(qaMode), str(decoderType), str(preserveOutput), str(batchSize), " ".join(caseList)])  # nosec
 
 # print the results of qa tests
-supportedCaseList = ['0', '1', '2', '4', '13', '29', '31', '34', '36', '37', '38', '84', '87']
+supportedCaseList = ['0', '1', '2', '4', '13', '29', '31', '34', '36', '37', '38', '82', '84', '87']
 nonQACaseList = ['54', '84']
 
 if qaMode and testType == 0:
