@@ -114,7 +114,6 @@ int main(int argc, char **argv)
     if (reductionTypeCase && outputFormatToggle)
     {
         printf("\nReduction Kernels don't have outputFormatToggle! Please input outputFormatToggle = 0\n");
-        outputFormatToggle = 0;
         return -1;
     }
 
