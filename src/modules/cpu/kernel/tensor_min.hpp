@@ -66,8 +66,7 @@ RppStatus tensor_min_u8_u8_host(Rpp8u *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    min = std::min(*srcPtrTemp, min);
-                    srcPtrTemp++;
+                    min = std::min(*srcPtrTemp++, min);
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
@@ -120,12 +119,9 @@ RppStatus tensor_min_u8_u8_host(Rpp8u *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    minR = std::min(*srcPtrTempR, minR);
-                    minG = std::min(*srcPtrTempG, minG);
-                    minB = std::min(*srcPtrTempB, minB);
-                    srcPtrTempR++;
-                    srcPtrTempG++;
-                    srcPtrTempB++;
+                    minR = std::min(*srcPtrTempR++, minR);
+                    minG = std::min(*srcPtrTempG++, minG);
+                    minB = std::min(*srcPtrTempB++, minB);
                 }
                 srcPtrRowR += srcDescPtr->strides.hStride;
                 srcPtrRowG += srcDescPtr->strides.hStride;
@@ -278,8 +274,7 @@ RppStatus tensor_min_f32_f32_host(Rpp32f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    min = std::min(*srcPtrTemp, min);
-                    srcPtrTemp++;
+                    min = std::min(*srcPtrTemp++, min);
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
@@ -331,12 +326,9 @@ RppStatus tensor_min_f32_f32_host(Rpp32f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    minR = std::min(*srcPtrTempR, minR);
-                    minG = std::min(*srcPtrTempG, minG);
-                    minB = std::min(*srcPtrTempB, minB);
-                    srcPtrTempR++;
-                    srcPtrTempG++;
-                    srcPtrTempB++;
+                    minR = std::min(*srcPtrTempR++, minR);
+                    minG = std::min(*srcPtrTempG++, minG);
+                    minB = std::min(*srcPtrTempB++, minB);
                 }
                 srcPtrRowR += srcDescPtr->strides.hStride;
                 srcPtrRowG += srcDescPtr->strides.hStride;
@@ -498,8 +490,7 @@ RppStatus tensor_min_f16_f16_host(Rpp16f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    min = std::min((Rpp32f)*srcPtrTemp, min);
-                    srcPtrTemp++;
+                    min = std::min((Rpp32f)*srcPtrTemp++, min);
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
@@ -558,12 +549,9 @@ RppStatus tensor_min_f16_f16_host(Rpp16f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    minR = std::min((Rpp32f)*srcPtrTempR, minR);
-                    minG = std::min((Rpp32f)*srcPtrTempG, minG);
-                    minB = std::min((Rpp32f)*srcPtrTempB, minB);
-                    srcPtrTempR++;
-                    srcPtrTempG++;
-                    srcPtrTempB++;
+                    minR = std::min((Rpp32f)*srcPtrTempR++, minR);
+                    minG = std::min((Rpp32f)*srcPtrTempG++, minG);
+                    minB = std::min((Rpp32f)*srcPtrTempB++, minB);
                 }
                 srcPtrRowR += srcDescPtr->strides.hStride;
                 srcPtrRowG += srcDescPtr->strides.hStride;
@@ -725,8 +713,7 @@ RppStatus tensor_min_i8_i8_host(Rpp8s *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    min = std::min((*srcPtrTemp), min);
-                    srcPtrTemp++;
+                    min = std::min((*srcPtrTemp++), min);
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
@@ -779,12 +766,9 @@ RppStatus tensor_min_i8_i8_host(Rpp8s *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    minR = std::min(*srcPtrTempR, minR);
-                    minG = std::min(*srcPtrTempG, minG);
-                    minB = std::min(*srcPtrTempB, minB);
-                    srcPtrTempR++;
-                    srcPtrTempG++;
-                    srcPtrTempB++;
+                    minR = std::min(*srcPtrTempR++, minR);
+                    minG = std::min(*srcPtrTempG++, minG);
+                    minB = std::min(*srcPtrTempB++, minB);
                 }
                 srcPtrRowR += srcDescPtr->strides.hStride;
                 srcPtrRowG += srcDescPtr->strides.hStride;

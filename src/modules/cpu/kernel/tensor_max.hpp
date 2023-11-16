@@ -66,8 +66,7 @@ RppStatus tensor_max_u8_u8_host(Rpp8u *srcPtr,
 #endif
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        max = std::max(*srcPtrTemp, max);
-                        srcPtrTemp++;
+                        max = std::max(*srcPtrTemp++, max);
                     }
                     srcPtrRow += srcDescPtr->strides.hStride;
                 }
@@ -121,12 +120,9 @@ RppStatus tensor_max_u8_u8_host(Rpp8u *srcPtr,
 #endif
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        maxR = std::max(*srcPtrTempR, maxR);
-                        maxG = std::max(*srcPtrTempG, maxG);
-                        maxB = std::max(*srcPtrTempB, maxB);
-                        srcPtrTempR++;
-                        srcPtrTempG++;
-                        srcPtrTempB++;
+                        maxR = std::max(*srcPtrTempR++, maxR);
+                        maxG = std::max(*srcPtrTempG++, maxG);
+                        maxB = std::max(*srcPtrTempB++, maxB);
                     }
                     srcPtrRowR += srcDescPtr->strides.hStride;
                     srcPtrRowG += srcDescPtr->strides.hStride;
@@ -283,8 +279,7 @@ RppStatus tensor_max_f32_f32_host(Rpp32f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    max = std::max(*srcPtrTemp, max);
-                    srcPtrTemp++;
+                    max = std::max(*srcPtrTemp++, max);
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
@@ -336,12 +331,9 @@ RppStatus tensor_max_f32_f32_host(Rpp32f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    maxR = std::max(*srcPtrTempR, maxR);
-                    maxG = std::max(*srcPtrTempG, maxG);
-                    maxB = std::max(*srcPtrTempB, maxB);
-                    srcPtrTempR++;
-                    srcPtrTempG++;
-                    srcPtrTempB++;
+                    maxR = std::max(*srcPtrTempR++, maxR);
+                    maxG = std::max(*srcPtrTempG++, maxG);
+                    maxB = std::max(*srcPtrTempB++, maxB);
                 }
                 srcPtrRowR += srcDescPtr->strides.hStride;
                 srcPtrRowG += srcDescPtr->strides.hStride;
@@ -503,8 +495,7 @@ RppStatus tensor_max_f16_f16_host(Rpp16f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    max = std::max((Rpp32f)*srcPtrTemp, max);
-                    srcPtrTemp++;
+                    max = std::max((Rpp32f)*srcPtrTemp++, max);
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
@@ -563,12 +554,9 @@ RppStatus tensor_max_f16_f16_host(Rpp16f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    maxR = std::max((Rpp32f)*srcPtrTempR, maxR);
-                    maxG = std::max((Rpp32f)*srcPtrTempG, maxG);
-                    maxB = std::max((Rpp32f)*srcPtrTempB, maxB);
-                    srcPtrTempR++;
-                    srcPtrTempG++;
-                    srcPtrTempB++;
+                    maxR = std::max((Rpp32f)*srcPtrTempR++, maxR);
+                    maxG = std::max((Rpp32f)*srcPtrTempG++, maxG);
+                    maxB = std::max((Rpp32f)*srcPtrTempB++, maxB);
                 }
                 srcPtrRowR += srcDescPtr->strides.hStride;
                 srcPtrRowG += srcDescPtr->strides.hStride;
@@ -730,8 +718,7 @@ RppStatus tensor_max_i8_i8_host(Rpp8s *srcPtr,
 #endif
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        max = std::max(*srcPtrTemp, max);
-                        srcPtrTemp++;
+                        max = std::max(*srcPtrTemp++, max);
                     }
                     srcPtrRow += srcDescPtr->strides.hStride;
                 }
@@ -785,12 +772,9 @@ RppStatus tensor_max_i8_i8_host(Rpp8s *srcPtr,
 #endif
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        maxR = std::max(*srcPtrTempR, maxR);
-                        maxG = std::max(*srcPtrTempG, maxG);
-                        maxB = std::max(*srcPtrTempB, maxB);
-                        srcPtrTempR++;
-                        srcPtrTempG++;
-                        srcPtrTempB++;
+                        maxR = std::max(*srcPtrTempR++, maxR);
+                        maxG = std::max(*srcPtrTempG++, maxG);
+                        maxB = std::max(*srcPtrTempB++, maxB);
                     }
                     srcPtrRowR += srcDescPtr->strides.hStride;
                     srcPtrRowG += srcDescPtr->strides.hStride;
