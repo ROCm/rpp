@@ -3,14 +3,14 @@
 
 __device__ void phase_hip_compute(uchar *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8, float *multiplier_f1)
 {
-    dst_f8->f1[0] = atan2f(src1_f8->f1[0], src2_f8->f1[0]) * *multiplier_f1;
-    dst_f8->f1[1] = atan2f(src1_f8->f1[1], src2_f8->f1[1]) * *multiplier_f1;
-    dst_f8->f1[2] = atan2f(src1_f8->f1[2], src2_f8->f1[2]) * *multiplier_f1;
-    dst_f8->f1[3] = atan2f(src1_f8->f1[3], src2_f8->f1[3]) * *multiplier_f1;
-    dst_f8->f1[4] = atan2f(src1_f8->f1[4], src2_f8->f1[4]) * *multiplier_f1;
-    dst_f8->f1[5] = atan2f(src1_f8->f1[5], src2_f8->f1[5]) * *multiplier_f1;
-    dst_f8->f1[6] = atan2f(src1_f8->f1[6], src2_f8->f1[6]) * *multiplier_f1;
-    dst_f8->f1[7] = atan2f(src1_f8->f1[7], src2_f8->f1[7]) * *multiplier_f1;
+    dst_f8->f1[0] = truncf(atan2f(src1_f8->f1[0], src2_f8->f1[0]) * *multiplier_f1);
+    dst_f8->f1[1] = truncf(atan2f(src1_f8->f1[1], src2_f8->f1[1]) * *multiplier_f1);
+    dst_f8->f1[2] = truncf(atan2f(src1_f8->f1[2], src2_f8->f1[2]) * *multiplier_f1);
+    dst_f8->f1[3] = truncf(atan2f(src1_f8->f1[3], src2_f8->f1[3]) * *multiplier_f1);
+    dst_f8->f1[4] = truncf(atan2f(src1_f8->f1[4], src2_f8->f1[4]) * *multiplier_f1);
+    dst_f8->f1[5] = truncf(atan2f(src1_f8->f1[5], src2_f8->f1[5]) * *multiplier_f1);
+    dst_f8->f1[6] = truncf(atan2f(src1_f8->f1[6], src2_f8->f1[6]) * *multiplier_f1);
+    dst_f8->f1[7] = truncf(atan2f(src1_f8->f1[7], src2_f8->f1[7]) * *multiplier_f1);
 }
 
 __device__ void phase_hip_compute(float *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8, float *multiplier_f1)
@@ -27,14 +27,14 @@ __device__ void phase_hip_compute(float *srcPtr, d_float8 *src1_f8, d_float8 *sr
 
 __device__ void phase_hip_compute(signed char *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8, float *multiplier_f1)
 {
-    dst_f8->f1[0] = rpp_hip_pixel_check_0to255(atan2f(src1_f8->f1[0] + 128, src2_f8->f1[0] + 128) * *multiplier_f1) - 128;
-    dst_f8->f1[1] = rpp_hip_pixel_check_0to255(atan2f(src1_f8->f1[1] + 128, src2_f8->f1[1] + 128) * *multiplier_f1) - 128;
-    dst_f8->f1[2] = rpp_hip_pixel_check_0to255(atan2f(src1_f8->f1[2] + 128, src2_f8->f1[2] + 128) * *multiplier_f1) - 128;
-    dst_f8->f1[3] = rpp_hip_pixel_check_0to255(atan2f(src1_f8->f1[3] + 128, src2_f8->f1[3] + 128) * *multiplier_f1) - 128;
-    dst_f8->f1[4] = rpp_hip_pixel_check_0to255(atan2f(src1_f8->f1[4] + 128, src2_f8->f1[4] + 128) * *multiplier_f1) - 128;
-    dst_f8->f1[5] = rpp_hip_pixel_check_0to255(atan2f(src1_f8->f1[5] + 128, src2_f8->f1[5] + 128) * *multiplier_f1) - 128;
-    dst_f8->f1[6] = rpp_hip_pixel_check_0to255(atan2f(src1_f8->f1[6] + 128, src2_f8->f1[6] + 128) * *multiplier_f1) - 128;
-    dst_f8->f1[7] = rpp_hip_pixel_check_0to255(atan2f(src1_f8->f1[7] + 128, src2_f8->f1[7] + 128) * *multiplier_f1) - 128;
+    dst_f8->f1[0] = rpp_hip_pixel_check_0to255(truncf(atan2f(src1_f8->f1[0] + 128, src2_f8->f1[0] + 128) * *multiplier_f1)) - 128;
+    dst_f8->f1[1] = rpp_hip_pixel_check_0to255(truncf(atan2f(src1_f8->f1[1] + 128, src2_f8->f1[1] + 128) * *multiplier_f1)) - 128;
+    dst_f8->f1[2] = rpp_hip_pixel_check_0to255(truncf(atan2f(src1_f8->f1[2] + 128, src2_f8->f1[2] + 128) * *multiplier_f1)) - 128;
+    dst_f8->f1[3] = rpp_hip_pixel_check_0to255(truncf(atan2f(src1_f8->f1[3] + 128, src2_f8->f1[3] + 128) * *multiplier_f1)) - 128;
+    dst_f8->f1[4] = rpp_hip_pixel_check_0to255(truncf(atan2f(src1_f8->f1[4] + 128, src2_f8->f1[4] + 128) * *multiplier_f1)) - 128;
+    dst_f8->f1[5] = rpp_hip_pixel_check_0to255(truncf(atan2f(src1_f8->f1[5] + 128, src2_f8->f1[5] + 128) * *multiplier_f1)) - 128;
+    dst_f8->f1[6] = rpp_hip_pixel_check_0to255(truncf(atan2f(src1_f8->f1[6] + 128, src2_f8->f1[6] + 128) * *multiplier_f1)) - 128;
+    dst_f8->f1[7] = rpp_hip_pixel_check_0to255(truncf(atan2f(src1_f8->f1[7] + 128, src2_f8->f1[7] + 128) * *multiplier_f1)) - 128;
 }
 
 __device__ void phase_hip_compute(half *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8, float *multiplier_f1)
