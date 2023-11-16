@@ -84,6 +84,7 @@ RppStatus tensor_max_u8_u8_host(Rpp8u *srcPtr,
         // Tensor max 3 channel (NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
+            Rpp32u maxArrIndex = batchCount * 4;
             Rpp8u maxC = 0, maxR = 0, maxG = 0, maxB = 0;
             Rpp8u resultAvx[16];
 
@@ -145,15 +146,16 @@ RppStatus tensor_max_u8_u8_host(Rpp8u *srcPtr,
 #endif
             }
             maxC = std::max(std::max(maxR, maxG), maxB);
-            maxArr[batchCount*4] = maxR;
-            maxArr[(batchCount*4) + 1] = maxG;
-            maxArr[(batchCount*4) + 2] = maxB;
-            maxArr[(batchCount*4) + 3] = maxC;
+            maxArr[maxArrIndex] = maxR;
+            maxArr[maxArrIndex + 1] = maxG;
+            maxArr[maxArrIndex + 2] = maxB;
+            maxArr[maxArrIndex + 3] = maxC;
         }
 
         // Tensor max 3 channel (NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
         {
+            Rpp32u maxArrIndex = batchCount * 4;
             Rpp32u alignedLength = (bufferLength / 48) * 48;
             Rpp32u vectorIncrement = 48;
             Rpp8u maxC = 0, maxR = 0, maxG = 0, maxB = 0;
@@ -208,10 +210,10 @@ RppStatus tensor_max_u8_u8_host(Rpp8u *srcPtr,
 
             }
 			maxC = std::max(std::max(maxR, maxG), maxB);
-            maxArr[batchCount*4] = maxR;
-			maxArr[(batchCount*4) + 1] = maxG;
-			maxArr[(batchCount*4) + 2] = maxB;
-			maxArr[(batchCount*4) + 3] = maxC;
+            maxArr[maxArrIndex] = maxR;
+			maxArr[maxArrIndex + 1] = maxG;
+			maxArr[maxArrIndex + 2] = maxB;
+			maxArr[maxArrIndex + 3] = maxC;
         }
     }
     return RPP_SUCCESS;
@@ -299,6 +301,7 @@ RppStatus tensor_max_f32_f32_host(Rpp32f *srcPtr,
         // Tensor max 3 channel (NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
+            Rpp32u maxArrIndex = batchCount * 4;
             Rpp32f maxC = 0.0, maxR = 0.0, maxG = 0.0, maxB = 0.0;
             Rpp32f resultAvx[8];
 
@@ -357,15 +360,16 @@ RppStatus tensor_max_f32_f32_host(Rpp32f *srcPtr,
             }
 #endif
 			maxC = std::max(std::max(maxR, maxG), maxB);
-            maxArr[batchCount*4] = maxR;
-			maxArr[(batchCount*4) + 1] = maxG;
-			maxArr[(batchCount*4) + 2] = maxB;
-			maxArr[(batchCount*4) + 3] = maxC;
+            maxArr[maxArrIndex] = maxR;
+			maxArr[maxArrIndex + 1] = maxG;
+			maxArr[maxArrIndex + 2] = maxB;
+			maxArr[maxArrIndex + 3] = maxC;
         }
 
         // Tensor max 3 channel (NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
         {
+            Rpp32u maxArrIndex = batchCount * 4;
             Rpp32u alignedLength = (bufferLength / 24) * 24;
             Rpp32u vectorIncrement = 24;
             Rpp32f maxC = 0.0, maxR = 0.0, maxG = 0.0, maxB = 0.0;
@@ -421,10 +425,10 @@ RppStatus tensor_max_f32_f32_host(Rpp32f *srcPtr,
 #endif
             }
 			maxC = std::max(std::max(maxR, maxG), maxB);
-            maxArr[batchCount*4] = maxR;
-			maxArr[(batchCount*4) + 1] = maxG;
-			maxArr[(batchCount*4) + 2] = maxB;
-			maxArr[(batchCount*4) + 3] = maxC;
+            maxArr[maxArrIndex] = maxR;
+			maxArr[maxArrIndex + 1] = maxG;
+			maxArr[maxArrIndex + 2] = maxB;
+			maxArr[maxArrIndex + 3] = maxC;
         }
     }
     return RPP_SUCCESS;
@@ -517,6 +521,7 @@ RppStatus tensor_max_f16_f16_host(Rpp16f *srcPtr,
         // Tensor max 3 channel (NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
+            Rpp32u maxArrIndex = batchCount * 4;
             Rpp32f maxC = 0.0, maxR = 0.0, maxG = 0.0, maxB = 0.0;
             Rpp32f resultAvx[8];
 
@@ -582,15 +587,16 @@ RppStatus tensor_max_f16_f16_host(Rpp16f *srcPtr,
             }
 #endif
 			maxC = std::max(std::max(maxR, maxG), maxB);
-            maxArr[batchCount*4] = (Rpp16f)maxR;
-			maxArr[(batchCount*4) + 1] = (Rpp16f)maxG;
-			maxArr[(batchCount*4) + 2] = (Rpp16f)maxB;
-			maxArr[(batchCount*4) + 3] = (Rpp16f)maxC;
+            maxArr[maxArrIndex] = (Rpp16f)maxR;
+			maxArr[maxArrIndex + 1] = (Rpp16f)maxG;
+			maxArr[maxArrIndex + 2] = (Rpp16f)maxB;
+			maxArr[maxArrIndex + 3] = (Rpp16f)maxC;
         }
 
         // Tensor max 3 channel (NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
         {
+            Rpp32u maxArrIndex = batchCount * 4;
             Rpp32u alignedLength = (bufferLength / 24) * 24;
             Rpp32u vectorIncrement = 24;
             Rpp32f maxC = 0.0, maxR = 0.0, maxG = 0.0, maxB = 0.0;
@@ -651,10 +657,10 @@ RppStatus tensor_max_f16_f16_host(Rpp16f *srcPtr,
 #endif
             }
 			maxC = std::max(std::max(maxR, maxG), maxB);
-            maxArr[batchCount*4] = (Rpp16f)maxR;
-			maxArr[(batchCount*4) + 1] = (Rpp16f)maxG;
-			maxArr[(batchCount*4) + 2] = (Rpp16f)maxB;
-			maxArr[(batchCount*4) + 3] = (Rpp16f)maxC;
+            maxArr[maxArrIndex] = (Rpp16f)maxR;
+			maxArr[maxArrIndex + 1] = (Rpp16f)maxG;
+			maxArr[maxArrIndex + 2] = (Rpp16f)maxB;
+			maxArr[maxArrIndex + 3] = (Rpp16f)maxC;
         }
     }
     return RPP_SUCCESS;
@@ -742,6 +748,7 @@ RppStatus tensor_max_i8_i8_host(Rpp8s *srcPtr,
         // Tensor max 3 channel (NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
+            Rpp32u maxArrIndex = batchCount * 4;
             Rpp8s maxC = INT8_MIN, maxR = INT8_MIN, maxG = INT8_MIN, maxB = INT8_MIN;
             Rpp8s resultAvx[16];
 
@@ -803,15 +810,16 @@ RppStatus tensor_max_i8_i8_host(Rpp8s *srcPtr,
 #endif
             }
             maxC = std::max(std::max(maxR, maxG), maxB);
-            maxArr[batchCount*4] = maxR;
-            maxArr[(batchCount*4) + 1] = maxG;
-            maxArr[(batchCount*4) + 2] = maxB;
-            maxArr[(batchCount*4) + 3] = maxC;
+            maxArr[maxArrIndex] = maxR;
+            maxArr[maxArrIndex + 1] = maxG;
+            maxArr[maxArrIndex + 2] = maxB;
+            maxArr[maxArrIndex + 3] = maxC;
         }
 
         // Tensor max 3 channel (NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
         {
+            Rpp32u maxArrIndex = batchCount * 4;
             Rpp32u alignedLength = (bufferLength / 48) * 48;
             Rpp32u vectorIncrement = 48;
             Rpp8s maxC = INT8_MIN, maxR = INT8_MIN, maxG = INT8_MIN, maxB = INT8_MIN;
@@ -866,10 +874,10 @@ RppStatus tensor_max_i8_i8_host(Rpp8s *srcPtr,
 
             }
 			maxC = std::max(std::max(maxR, maxG), maxB);
-            maxArr[batchCount*4] = maxR;
-			maxArr[(batchCount*4) + 1] = maxG;
-			maxArr[(batchCount*4) + 2] = maxB;
-			maxArr[(batchCount*4) + 3] = maxC;
+            maxArr[maxArrIndex] = maxR;
+			maxArr[maxArrIndex + 1] = maxG;
+			maxArr[maxArrIndex + 2] = maxB;
+			maxArr[maxArrIndex + 3] = maxC;
         }
     }
     return RPP_SUCCESS;

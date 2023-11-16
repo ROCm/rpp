@@ -85,6 +85,7 @@ RppStatus tensor_min_u8_u8_host(Rpp8u *srcPtr,
         // Tensor min 3 channel (NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
+            Rpp32u minArrIndex = batchCount * 4;
             Rpp8u minC = 255, minR = 255, minG = 255, minB = 255;
             Rpp8u resultAvx[16];
 
@@ -143,15 +144,16 @@ RppStatus tensor_min_u8_u8_host(Rpp8u *srcPtr,
             }
 #endif
 			minC = std::min(std::min(minR, minG), minB);
-            minArr[batchCount*4] = minR;
-			minArr[(batchCount*4) + 1] = minG;
-			minArr[(batchCount*4) + 2] = minB;
-			minArr[(batchCount*4) + 3] = minC;
+            minArr[minArrIndex] = minR;
+			minArr[minArrIndex + 1] = minG;
+			minArr[minArrIndex + 2] = minB;
+			minArr[minArrIndex + 3] = minC;
         }
 
         // Tensor min 3 channel (NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
         {
+            Rpp32u minArrIndex = batchCount * 4;
             Rpp32u alignedLength = (bufferLength / 48) * 48;
             Rpp32u vectorIncrement = 48;
             Rpp8u minC = 255, minR = 255, minG = 255, minB = 255;
@@ -203,10 +205,10 @@ RppStatus tensor_min_u8_u8_host(Rpp8u *srcPtr,
                 }
             }
 			minC = std::min(std::min(minR, minG), minB);
-            minArr[batchCount*4] = minR;
-			minArr[(batchCount*4) + 1] = minG;
-			minArr[(batchCount*4) + 2] = minB;
-			minArr[(batchCount*4) + 3] = minC;
+            minArr[minArrIndex] = minR;
+			minArr[minArrIndex + 1] = minG;
+			minArr[minArrIndex + 2] = minB;
+			minArr[minArrIndex + 3] = minC;
         }
     }
     return RPP_SUCCESS;
@@ -294,6 +296,7 @@ RppStatus tensor_min_f32_f32_host(Rpp32f *srcPtr,
         // Tensor min 3 channel (NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
+            Rpp32u minArrIndex = batchCount * 4;
             Rpp32f minC = 255.0, minR = 255.0, minG = 255.0, minB = 255.0;
             Rpp32f resultAvx[8];
 
@@ -352,15 +355,16 @@ RppStatus tensor_min_f32_f32_host(Rpp32f *srcPtr,
             }
 #endif
 			minC = std::min(std::min(minR, minG), minB);
-            minArr[batchCount*4] = minR;
-			minArr[(batchCount*4) + 1] = minG;
-			minArr[(batchCount*4) + 2] = minB;
-			minArr[(batchCount*4) + 3] = minC;
+            minArr[minArrIndex] = minR;
+			minArr[minArrIndex + 1] = minG;
+			minArr[minArrIndex + 2] = minB;
+			minArr[minArrIndex + 3] = minC;
         }
 
         // Tensor min 3 channel (NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
         {
+            Rpp32u minArrIndex = batchCount * 4;
             Rpp32u alignedLength = (bufferLength / 24) * 24;
             Rpp32u vectorIncrement = 24;
             Rpp32f minC = 255.0, minR = 255.0, minG = 255.0, minB = 255.0;
@@ -416,10 +420,10 @@ RppStatus tensor_min_f32_f32_host(Rpp32f *srcPtr,
 #endif
             }
 			minC = std::min(std::min(minR, minG), minB);
-            minArr[batchCount*4] = minR;
-			minArr[(batchCount*4) + 1] = minG;
-			minArr[(batchCount*4) + 2] = minB;
-			minArr[(batchCount*4) + 3] = minC;
+            minArr[minArrIndex] = minR;
+			minArr[minArrIndex + 1] = minG;
+			minArr[minArrIndex + 2] = minB;
+			minArr[minArrIndex + 3] = minC;
         }
     }
     return RPP_SUCCESS;
@@ -506,12 +510,13 @@ RppStatus tensor_min_f16_f16_host(Rpp16f *srcPtr,
             rpp_simd_store(rpp_store4_f32_to_f32, resultAvx, &result);
             min = std::min(std::min(resultAvx[0], resultAvx[1]), min);
 #endif
-            minArr[batchCount] = (Rpp16f)min;
+            minArr[batchCount] = (Rpp16f) min;
         }
 
         // Tensor min 3 channel (NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
+            Rpp32u minArrIndex = batchCount * 4;
             Rpp32f minC = 255.0, minR = 255.0, minG = 255.0, minB = 255.0;
             Rpp32f resultAvx[8];
 
@@ -577,15 +582,16 @@ RppStatus tensor_min_f16_f16_host(Rpp16f *srcPtr,
             }
 #endif
 			minC = std::min(std::min(minR, minG), minB);
-            minArr[batchCount*4] = (Rpp16f)minR;
-			minArr[(batchCount*4) + 1] = (Rpp16f)minG;
-			minArr[(batchCount*4) + 2] = (Rpp16f)minB;
-			minArr[(batchCount*4) + 3] = (Rpp16f)minC;
+            minArr[minArrIndex] = (Rpp16f) minR;
+			minArr[minArrIndex + 1] = (Rpp16f) minG;
+			minArr[minArrIndex + 2] = (Rpp16f) minB;
+			minArr[minArrIndex + 3] = (Rpp16f) minC;
         }
 
         // Tensor min 3 channel (NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
         {
+            Rpp32u minArrIndex = batchCount * 4;
             Rpp32u alignedLength = (bufferLength / 24) * 24;
             Rpp32u vectorIncrement = 24;
             Rpp32f minC = 255.0, minR = 255.0, minG = 255.0, minB = 255.0;
@@ -646,10 +652,10 @@ RppStatus tensor_min_f16_f16_host(Rpp16f *srcPtr,
 #endif
             }
 			minC = std::min(std::min(minR, minG), minB);
-            minArr[batchCount*4] = (Rpp16f)minR;
-			minArr[(batchCount*4) + 1] = (Rpp16f)minG;
-			minArr[(batchCount*4) + 2] = (Rpp16f)minB;
-			minArr[(batchCount*4) + 3] = (Rpp16f)minC;
+            minArr[minArrIndex] = (Rpp16f) minR;
+			minArr[minArrIndex + 1] = (Rpp16f) minG;
+			minArr[minArrIndex + 2] = (Rpp16f) minB;
+			minArr[minArrIndex + 3] = (Rpp16f) minC;
         }
     }
     return RPP_SUCCESS;
@@ -738,6 +744,7 @@ RppStatus tensor_min_i8_i8_host(Rpp8s *srcPtr,
         // Tensor min 3 channel (NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
         {
+            Rpp32u minArrIndex = batchCount * 4;
             Rpp8s minC = 127, minR = 127, minG = 127, minB = 127;
             Rpp8s resultAvx[16];
 
@@ -796,15 +803,16 @@ RppStatus tensor_min_i8_i8_host(Rpp8s *srcPtr,
             }
 #endif
 			minC = std::min(std::min(minR, minG), minB);
-            minArr[batchCount*4] = minR;
-			minArr[(batchCount*4) + 1] = minG;
-			minArr[(batchCount*4) + 2] = minB;
-			minArr[(batchCount*4) + 3] = minC;
+            minArr[minArrIndex] = minR;
+			minArr[minArrIndex + 1] = minG;
+			minArr[minArrIndex + 2] = minB;
+			minArr[minArrIndex + 3] = minC;
         }
 
         // Tensor min 3 channel (NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
         {
+            Rpp32u minArrIndex = batchCount * 4;
             Rpp32u alignedLength = (bufferLength / 48) * 48;
             Rpp32u vectorIncrement = 48;
             Rpp8s minC = 127, minR = 127, minG = 127, minB = 127;
@@ -856,10 +864,10 @@ RppStatus tensor_min_i8_i8_host(Rpp8s *srcPtr,
                 }
             }
 			minC = std::min(std::min(minR, minG), minB);
-            minArr[batchCount*4] = minR;
-			minArr[(batchCount*4) + 1] = minG;
-			minArr[(batchCount*4) + 2] = minB;
-			minArr[(batchCount*4) + 3] = minC;
+            minArr[minArrIndex] = minR;
+			minArr[minArrIndex + 1] = minG;
+			minArr[minArrIndex + 2] = minB;
+			minArr[minArrIndex + 3] = minC;
         }
     }
     return RPP_SUCCESS;
