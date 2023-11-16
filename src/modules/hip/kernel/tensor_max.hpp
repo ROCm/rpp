@@ -120,7 +120,7 @@ __global__ void tensor_max_grid_result_hip(float *srcPtr,
 template <typename T>
 __global__ void tensor_max_pkd3_hip(T *srcPtr,
                                 uint2 srcStridesNH,
-                                float *imageMaxArr,
+                                float *maxArr,
                                 RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -147,9 +147,9 @@ __global__ void tensor_max_pkd3_hip(T *srcPtr,
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
     {
         int idx = ((hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x) * 3;
-        imageMaxArr[idx] = srcRefR;
-        imageMaxArr[idx + 1] = srcRefG;
-        imageMaxArr[idx + 2] = srcRefB;
+        maxArr[idx] = srcRefR;
+        maxArr[idx + 1] = srcRefG;
+        maxArr[idx + 2] = srcRefB;
         return;
     }
 
@@ -204,9 +204,9 @@ __global__ void tensor_max_pkd3_hip(T *srcPtr,
         if (hipThreadIdx_y == 0)
         {
             int idx = ((hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x) * 3;
-            imageMaxArr[idx] = partialRMaxRowPtr_smem[0];
-            imageMaxArr[idx + 1] = partialGMaxRowPtr_smem[0];
-            imageMaxArr[idx + 2] = partialBMaxRowPtr_smem[0];
+            maxArr[idx] = partialRMaxRowPtr_smem[0];
+            maxArr[idx + 1] = partialGMaxRowPtr_smem[0];
+            maxArr[idx + 2] = partialBMaxRowPtr_smem[0];
         }
     }
 }
@@ -214,7 +214,7 @@ __global__ void tensor_max_pkd3_hip(T *srcPtr,
 template <typename T>
 __global__ void tensor_max_pln3_hip(T *srcPtr,
                                 uint3 srcStridesNCH,
-                                float *imageMaxArr,
+                                float *maxArr,
                                 RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -241,9 +241,9 @@ __global__ void tensor_max_pln3_hip(T *srcPtr,
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
     {
         int idx = ((hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x) * 3;
-        imageMaxArr[idx] = srcRefR;
-        imageMaxArr[idx + 1] = srcRefG;
-        imageMaxArr[idx + 2] = srcRefB;
+        maxArr[idx] = srcRefR;
+        maxArr[idx + 1] = srcRefG;
+        maxArr[idx + 2] = srcRefB;
         return;
     }
 
@@ -298,9 +298,9 @@ __global__ void tensor_max_pln3_hip(T *srcPtr,
         if (hipThreadIdx_y == 0)
         {
             int idx = ((hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x) * 3;
-            imageMaxArr[idx] = partialRMaxRowPtr_smem[0];
-            imageMaxArr[idx + 1] = partialGMaxRowPtr_smem[0];
-            imageMaxArr[idx + 2] = partialBMaxRowPtr_smem[0];
+            maxArr[idx] = partialRMaxRowPtr_smem[0];
+            maxArr[idx + 1] = partialGMaxRowPtr_smem[0];
+            maxArr[idx + 2] = partialBMaxRowPtr_smem[0];
         }
     }
 }
@@ -308,7 +308,7 @@ __global__ void tensor_max_pln3_hip(T *srcPtr,
 template <typename T>
 __global__ void tensor_max_pln1_hip(T *srcPtr,
                                 uint2 srcStridesNH,
-                                float *imageMaxArr,
+                                float *maxArr,
                                 RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -324,7 +324,7 @@ __global__ void tensor_max_pln1_hip(T *srcPtr,
 
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
     {
-        imageMaxArr[(hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x] = srcRef;
+        maxArr[(hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x] = srcRef;
         return;
     }
 
@@ -361,7 +361,7 @@ __global__ void tensor_max_pln1_hip(T *srcPtr,
 
         // Final store to dst
         if (hipThreadIdx_y == 0)
-            imageMaxArr[(hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x] = partialMaxRowPtr_smem[0];
+            maxArr[(hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x] = partialMaxRowPtr_smem[0];
     }
 }
 
@@ -371,7 +371,7 @@ __global__ void tensor_max_pln1_hip(T *srcPtr,
 template <typename T, typename U>
 RppStatus hip_exec_tensor_max(T *srcPtr,
                               RpptDescPtr srcDescPtr,
-                              U *imageMaxArr,
+                              U *maxArr,
                               RpptROIPtr roiTensorPtrSrc,
                               RpptRoiType roiType,
                               rpp::Handle& handle)
@@ -411,7 +411,7 @@ RppStatus hip_exec_tensor_max(T *srcPtr,
                            handle.GetStream(),
                            partialMaxArr,
                            gridDim_x * gridDim_y,
-                           imageMaxArr);
+                           maxArr);
     }
     else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
     {
@@ -437,7 +437,7 @@ RppStatus hip_exec_tensor_max(T *srcPtr,
                            handle.GetStream(),
                            partialMaxArr,
                            gridDim_x * gridDim_y,
-                           imageMaxArr);
+                           maxArr);
     }
     else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
     {
@@ -464,7 +464,7 @@ RppStatus hip_exec_tensor_max(T *srcPtr,
                            handle.GetStream(),
                            partialMaxArr,
                            gridDim_x * gridDim_y,
-                           imageMaxArr);
+                           maxArr);
     }
 
     return RPP_SUCCESS;

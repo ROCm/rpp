@@ -120,7 +120,7 @@ __global__ void tensor_min_grid_result_hip(float *srcPtr,
 template <typename T>
 __global__ void tensor_min_pkd3_hip(T *srcPtr,
                                 uint2 srcStridesNH,
-                                float *imageMinArr,
+                                float *minArr,
                                 RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -147,9 +147,9 @@ __global__ void tensor_min_pkd3_hip(T *srcPtr,
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
     {
         int idx = ((hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x) * 3;
-        imageMinArr[idx] = srcRefR;
-        imageMinArr[idx + 1] = srcRefG;
-        imageMinArr[idx + 2] = srcRefB;
+        minArr[idx] = srcRefR;
+        minArr[idx + 1] = srcRefG;
+        minArr[idx + 2] = srcRefB;
         return;
     }
 
@@ -204,9 +204,9 @@ __global__ void tensor_min_pkd3_hip(T *srcPtr,
         if (hipThreadIdx_y == 0)
         {
             int idx = ((hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x) * 3;
-            imageMinArr[idx] = partialRMinRowPtr_smem[0];
-            imageMinArr[idx + 1] = partialGMinRowPtr_smem[0];
-            imageMinArr[idx + 2] = partialBMinRowPtr_smem[0];
+            minArr[idx] = partialRMinRowPtr_smem[0];
+            minArr[idx + 1] = partialGMinRowPtr_smem[0];
+            minArr[idx + 2] = partialBMinRowPtr_smem[0];
         }
     }
 }
@@ -214,7 +214,7 @@ __global__ void tensor_min_pkd3_hip(T *srcPtr,
 template <typename T>
 __global__ void tensor_min_pln3_hip(T *srcPtr,
                                 uint3 srcStridesNCH,
-                                float *imageMinArr,
+                                float *minArr,
                                 RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -241,9 +241,9 @@ __global__ void tensor_min_pln3_hip(T *srcPtr,
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
     {
         int idx = ((hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x) * 3;
-        imageMinArr[idx] = srcRefR;
-        imageMinArr[idx + 1] = srcRefG;
-        imageMinArr[idx + 2] = srcRefB;
+        minArr[idx] = srcRefR;
+        minArr[idx + 1] = srcRefG;
+        minArr[idx + 2] = srcRefB;
         return;
     }
 
@@ -298,9 +298,9 @@ __global__ void tensor_min_pln3_hip(T *srcPtr,
         if (hipThreadIdx_y == 0)
         {
             int idx = ((hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x) * 3;
-            imageMinArr[idx] = partialRMinRowPtr_smem[0];
-            imageMinArr[idx + 1] = partialGMinRowPtr_smem[0];
-            imageMinArr[idx + 2] = partialBMinRowPtr_smem[0];
+            minArr[idx] = partialRMinRowPtr_smem[0];
+            minArr[idx + 1] = partialGMinRowPtr_smem[0];
+            minArr[idx + 2] = partialBMinRowPtr_smem[0];
         }
     }
 }
@@ -308,7 +308,7 @@ __global__ void tensor_min_pln3_hip(T *srcPtr,
 template <typename T>
 __global__ void tensor_min_pln1_hip(T *srcPtr,
                                 uint2 srcStridesNH,
-                                float *imageMinArr,
+                                float *minArr,
                                 RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -324,7 +324,7 @@ __global__ void tensor_min_pln1_hip(T *srcPtr,
 
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
     {
-        imageMinArr[(hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x] = srcRef;
+        minArr[(hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x] = srcRef;
         return;
     }
 
@@ -361,7 +361,7 @@ __global__ void tensor_min_pln1_hip(T *srcPtr,
 
         // Final store to dst
         if (hipThreadIdx_y == 0)
-            imageMinArr[(hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x] = partialMinRowPtr_smem[0];
+            minArr[(hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x] = partialMinRowPtr_smem[0];
     }
 }
 
@@ -371,7 +371,7 @@ __global__ void tensor_min_pln1_hip(T *srcPtr,
 template <typename T, typename U>
 RppStatus hip_exec_tensor_min(T *srcPtr,
                               RpptDescPtr srcDescPtr,
-                              U *imageMinArr,
+                              U *minArr,
                               RpptROIPtr roiTensorPtrSrc,
                               RpptRoiType roiType,
                               rpp::Handle& handle)
@@ -411,7 +411,7 @@ RppStatus hip_exec_tensor_min(T *srcPtr,
                            handle.GetStream(),
                            partialMinArr,
                            gridDim_x * gridDim_y,
-                           imageMinArr);
+                           minArr);
     }
     else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
     {
@@ -437,7 +437,7 @@ RppStatus hip_exec_tensor_min(T *srcPtr,
                            handle.GetStream(),
                            partialMinArr,
                            gridDim_x * gridDim_y,
-                           imageMinArr);
+                           minArr);
     }
     else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
     {
@@ -464,7 +464,7 @@ RppStatus hip_exec_tensor_min(T *srcPtr,
                            handle.GetStream(),
                            partialMinArr,
                            gridDim_x * gridDim_y,
-                           imageMinArr);
+                           minArr);
     }
 
     return RPP_SUCCESS;
