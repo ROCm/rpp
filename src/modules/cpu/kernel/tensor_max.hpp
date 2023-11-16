@@ -31,9 +31,6 @@ RppStatus tensor_max_u8_u8_host(Rpp8u *srcPtr,
         Rpp32u alignedLength = (bufferLength / 96) * 96;
         Rpp32u vectorIncrement = 96;
         Rpp32u vectorIncrementPerChannel = 32;
-        int flag_avx = 0;
-        if(alignedLength)
-            flag_avx = 1;
 
         // Tensor max 1 channel (NCHW)
         if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
@@ -70,7 +67,6 @@ RppStatus tensor_max_u8_u8_host(Rpp8u *srcPtr,
                     }
                     srcPtrRow += srcDescPtr->strides.hStride;
                 }
-                srcPtrChannel += srcDescPtr->strides.cStride;
 #if __AVX2__
                 __m128i result;
                 reduce_max_32_host(&pMax, &result);
@@ -129,16 +125,13 @@ RppStatus tensor_max_u8_u8_host(Rpp8u *srcPtr,
                     srcPtrRowB += srcDescPtr->strides.hStride;
                 }
 #if __AVX2__
-                if(flag_avx)
-                {
-                    __m128i result;
-                    reduce_max_96_host(&pMaxR, &pMaxG, &pMaxB, &result);
-                    rpp_simd_store(rpp_store16_u8_to_u8, resultAvx, &result);
+                __m128i result;
+                reduce_max_96_host(&pMaxR, &pMaxG, &pMaxB, &result);
+                rpp_simd_store(rpp_store16_u8_to_u8, resultAvx, &result);
 
-                    maxR = std::max(std::max(resultAvx[0], resultAvx[1]), maxR);
-                    maxG = std::max(std::max(resultAvx[2], resultAvx[3]), maxG);
-                    maxB = std::max(std::max(resultAvx[4], resultAvx[5]), maxB);
-                }
+                maxR = std::max(std::max(resultAvx[0], resultAvx[1]), maxR);
+                maxG = std::max(std::max(resultAvx[2], resultAvx[3]), maxG);
+                maxB = std::max(std::max(resultAvx[4], resultAvx[5]), maxB);
 #endif
             }
             maxC = std::max(std::max(maxR, maxG), maxB);
@@ -172,7 +165,7 @@ RppStatus tensor_max_u8_u8_host(Rpp8u *srcPtr,
                     srcPtrTemp = srcPtrRow;
 
                     int vectorLoopCount = 0;
-
+#if __AVX2__
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
                         __m128i p[3];
@@ -181,7 +174,7 @@ RppStatus tensor_max_u8_u8_host(Rpp8u *srcPtr,
 
                         srcPtrTemp += vectorIncrement;
                     }
-
+#endif
                     for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                     {
                         maxR = std::max(srcPtrTemp[0], maxR);
@@ -191,19 +184,15 @@ RppStatus tensor_max_u8_u8_host(Rpp8u *srcPtr,
                     }
                     srcPtrRow += srcDescPtr->strides.hStride;
                 }
-                srcPtrChannel += srcDescPtr->strides.cStride;
+#if __AVX2__
+                __m128i result;
+                reduce_max_48_host(&pMaxR, &pMaxG, &pMaxB, &result);
+                rpp_simd_store(rpp_store16_u8_to_u8, resultAvx, &result);
 
-                if(flag_avx)
-                {
-                    __m128i result;
-                    reduce_max_48_host(&pMaxR, &pMaxG, &pMaxB, &result);
-                    rpp_simd_store(rpp_store16_u8_to_u8, resultAvx, &result);
-
-                    maxR = std::max(std::max(resultAvx[0], resultAvx[1]), maxR);
-                    maxG = std::max(std::max(resultAvx[2], resultAvx[3]), maxG);
-                    maxB = std::max(std::max(resultAvx[4], resultAvx[5]), maxB);
-                }
-
+                maxR = std::max(std::max(resultAvx[0], resultAvx[1]), maxR);
+                maxG = std::max(std::max(resultAvx[2], resultAvx[3]), maxG);
+                maxB = std::max(std::max(resultAvx[4], resultAvx[5]), maxB);
+#endif
             }
 			maxC = std::max(std::max(maxR, maxG), maxB);
             maxArr[maxArrIndex] = maxR;
@@ -244,9 +233,6 @@ RppStatus tensor_max_f32_f32_host(Rpp32f *srcPtr,
         Rpp32u alignedLength = (bufferLength / 24) * 24;
         Rpp32u vectorIncrement = 24;
         Rpp32u vectorIncrementPerChannel = 8;
-        int flag_avx = 0;
-        if(alignedLength)
-            flag_avx = 1;
 
         // Tensor max 1 channel (NCHW)
         if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
@@ -283,7 +269,6 @@ RppStatus tensor_max_f32_f32_host(Rpp32f *srcPtr,
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
-            srcPtrChannel += srcDescPtr->strides.cStride;
 #if __AVX2__
             __m128 result;
             reduce_max_float8_host(&pMax, &result);
@@ -340,16 +325,13 @@ RppStatus tensor_max_f32_f32_host(Rpp32f *srcPtr,
                 srcPtrRowB += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            if(flag_avx)
-            {
-                __m256 result;
-                reduce_max_float24_host(&pMaxR, &pMaxG, &pMaxB, &result);
-                rpp_simd_store(rpp_store8_f32_to_f32_avx, resultAvx, &result);
+            __m256 result;
+            reduce_max_float24_host(&pMaxR, &pMaxG, &pMaxB, &result);
+            rpp_simd_store(rpp_store8_f32_to_f32_avx, resultAvx, &result);
 
-                maxR = std::max(std::max(resultAvx[0], resultAvx[1]), maxR);
-                maxG = std::max(std::max(resultAvx[2], resultAvx[3]), maxG);
-                maxB = std::max(std::max(resultAvx[4], resultAvx[5]), maxB);
-            }
+            maxR = std::max(std::max(resultAvx[0], resultAvx[1]), maxR);
+            maxG = std::max(std::max(resultAvx[2], resultAvx[3]), maxG);
+            maxB = std::max(std::max(resultAvx[4], resultAvx[5]), maxB);
 #endif
 			maxC = std::max(std::max(maxR, maxG), maxB);
             maxArr[maxArrIndex] = maxR;
@@ -402,18 +384,14 @@ RppStatus tensor_max_f32_f32_host(Rpp32f *srcPtr,
                     }
                     srcPtrRow += srcDescPtr->strides.hStride;
                 }
-                srcPtrChannel += srcDescPtr->strides.cStride;
 #if __AVX2__
-                if(flag_avx)
-                {
-                    __m256 result;
-                    reduce_max_float24_host(&pMaxR, &pMaxG, &pMaxB, &result);
-                    rpp_simd_store(rpp_store8_f32_to_f32_avx, resultAvx, &result);
+                __m256 result;
+                reduce_max_float24_host(&pMaxR, &pMaxG, &pMaxB, &result);
+                rpp_simd_store(rpp_store8_f32_to_f32_avx, resultAvx, &result);
 
-                    maxR = std::max(std::max(resultAvx[0], resultAvx[1]), maxR);
-                    maxG = std::max(std::max(resultAvx[2], resultAvx[3]), maxG);
-                    maxB = std::max(std::max(resultAvx[4], resultAvx[5]), maxB);
-                }
+                maxR = std::max(std::max(resultAvx[0], resultAvx[1]), maxR);
+                maxG = std::max(std::max(resultAvx[2], resultAvx[3]), maxG);
+                maxB = std::max(std::max(resultAvx[4], resultAvx[5]), maxB);
 #endif
             }
 			maxC = std::max(std::max(maxR, maxG), maxB);
@@ -455,9 +433,6 @@ RppStatus tensor_max_f16_f16_host(Rpp16f *srcPtr,
         Rpp32u alignedLength = (bufferLength / 24) * 24;
         Rpp32u vectorIncrement = 24;
         Rpp32u vectorIncrementPerChannel = 8;
-        int flag_avx = 0;
-        if(alignedLength)
-            flag_avx = 1;
 
         // Tensor max 1 channel (NCHW)
         if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
@@ -499,7 +474,6 @@ RppStatus tensor_max_f16_f16_host(Rpp16f *srcPtr,
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
-            srcPtrChannel += srcDescPtr->strides.cStride;
 #if __AVX2__
             __m128 result;
             reduce_max_float8_host(&pMax, &result);
@@ -563,16 +537,14 @@ RppStatus tensor_max_f16_f16_host(Rpp16f *srcPtr,
                 srcPtrRowB += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            if(flag_avx)
-            {
-                __m256 result;
-                reduce_max_float24_host(&pMaxR, &pMaxG, &pMaxB, &result);
-                rpp_simd_store(rpp_store8_f32_to_f32_avx, resultAvx, &result);
+            __m256 result;
+            reduce_max_float24_host(&pMaxR, &pMaxG, &pMaxB, &result);
+            rpp_simd_store(rpp_store8_f32_to_f32_avx, resultAvx, &result);
 
-                maxR = std::max(std::max(resultAvx[0], resultAvx[1]), maxR);
-                maxG = std::max(std::max(resultAvx[2], resultAvx[3]), maxG);
-                maxB = std::max(std::max(resultAvx[4], resultAvx[5]), maxB);
-            }
+            maxR = std::max(std::max(resultAvx[0], resultAvx[1]), maxR);
+            maxG = std::max(std::max(resultAvx[2], resultAvx[3]), maxG);
+            maxB = std::max(std::max(resultAvx[4], resultAvx[5]), maxB);
+
 #endif
 			maxC = std::max(std::max(maxR, maxG), maxB);
             maxArr[maxArrIndex] = (Rpp16f)maxR;
@@ -630,18 +602,14 @@ RppStatus tensor_max_f16_f16_host(Rpp16f *srcPtr,
                     }
                     srcPtrRow += srcDescPtr->strides.hStride;
                 }
-                srcPtrChannel += srcDescPtr->strides.cStride;
 #if __AVX2__
-                if(flag_avx)
-                {
-                    __m256 result;
-                    reduce_max_float24_host(&pMaxR, &pMaxG, &pMaxB, &result);
-                    rpp_simd_store(rpp_store8_f32_to_f32_avx, resultAvx, &result);
+                __m256 result;
+                reduce_max_float24_host(&pMaxR, &pMaxG, &pMaxB, &result);
+                rpp_simd_store(rpp_store8_f32_to_f32_avx, resultAvx, &result);
 
-                    maxR = std::max(std::max(resultAvx[0], resultAvx[1]), maxR);
-                    maxG = std::max(std::max(resultAvx[2], resultAvx[3]), maxG);
-                    maxB = std::max(std::max(resultAvx[4], resultAvx[5]), maxB);
-                }
+                maxR = std::max(std::max(resultAvx[0], resultAvx[1]), maxR);
+                maxG = std::max(std::max(resultAvx[2], resultAvx[3]), maxG);
+                maxB = std::max(std::max(resultAvx[4], resultAvx[5]), maxB);
 #endif
             }
 			maxC = std::max(std::max(maxR, maxG), maxB);
@@ -683,9 +651,6 @@ RppStatus tensor_max_i8_i8_host(Rpp8s *srcPtr,
         Rpp32u alignedLength = (bufferLength / 96) * 96;
         Rpp32u vectorIncrement = 96;
         Rpp32u vectorIncrementPerChannel = 32;
-        int flag_avx = 0;
-        if(alignedLength)
-            flag_avx = 1;
 
         // Tensor max 1 channel (NCHW)
         if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
@@ -722,7 +687,6 @@ RppStatus tensor_max_i8_i8_host(Rpp8s *srcPtr,
                     }
                     srcPtrRow += srcDescPtr->strides.hStride;
                 }
-                srcPtrChannel += srcDescPtr->strides.cStride;
 #if __AVX2__
                 __m128i result;
                 reduce_max_i32_host(&pMax, &result);
@@ -781,16 +745,13 @@ RppStatus tensor_max_i8_i8_host(Rpp8s *srcPtr,
                     srcPtrRowB += srcDescPtr->strides.hStride;
                 }
 #if __AVX2__
-                if(flag_avx)
-                {
-                    __m128i result;
-                    reduce_max_i96_host(&pMaxR, &pMaxG, &pMaxB, &result);
-                    rpp_simd_store(rpp_store16_i8, resultAvx, &result);
+                __m128i result;
+                reduce_max_i96_host(&pMaxR, &pMaxG, &pMaxB, &result);
+                rpp_simd_store(rpp_store16_i8, resultAvx, &result);
 
-                    maxR = std::max(std::max(resultAvx[0], resultAvx[1]), maxR);
-                    maxG = std::max(std::max(resultAvx[2], resultAvx[3]), maxG);
-                    maxB = std::max(std::max(resultAvx[4], resultAvx[5]), maxB);
-                }
+                maxR = std::max(std::max(resultAvx[0], resultAvx[1]), maxR);
+                maxG = std::max(std::max(resultAvx[2], resultAvx[3]), maxG);
+                maxB = std::max(std::max(resultAvx[4], resultAvx[5]), maxB);
 #endif
             }
             maxC = std::max(std::max(maxR, maxG), maxB);
@@ -824,7 +785,7 @@ RppStatus tensor_max_i8_i8_host(Rpp8s *srcPtr,
                     srcPtrTemp = srcPtrRow;
 
                     int vectorLoopCount = 0;
-
+#if __AVX2__
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
                         __m128i p[3];
@@ -833,7 +794,7 @@ RppStatus tensor_max_i8_i8_host(Rpp8s *srcPtr,
 
                         srcPtrTemp += vectorIncrement;
                     }
-
+#endif
                     for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                     {
                         maxR = std::max(srcPtrTemp[0], maxR);
@@ -843,19 +804,15 @@ RppStatus tensor_max_i8_i8_host(Rpp8s *srcPtr,
                     }
                     srcPtrRow += srcDescPtr->strides.hStride;
                 }
-                srcPtrChannel += srcDescPtr->strides.cStride;
+#if __AVX2__
+                __m128i result;
+                reduce_max_i48_host(&pMaxR, &pMaxG, &pMaxB, &result);
+                rpp_simd_store(rpp_store16_i8, resultAvx, &result);
 
-                if(flag_avx)
-                {
-                    __m128i result;
-                    reduce_max_i48_host(&pMaxR, &pMaxG, &pMaxB, &result);
-                    rpp_simd_store(rpp_store16_i8, resultAvx, &result);
-
-                    maxR = std::max(std::max(resultAvx[0], resultAvx[1]), maxR);
-                    maxG = std::max(std::max(resultAvx[2], resultAvx[3]), maxG);
-                    maxB = std::max(std::max(resultAvx[4], resultAvx[5]), maxB);
-                }
-
+                maxR = std::max(std::max(resultAvx[0], resultAvx[1]), maxR);
+                maxG = std::max(std::max(resultAvx[2], resultAvx[3]), maxG);
+                maxB = std::max(std::max(resultAvx[4], resultAvx[5]), maxB);
+#endif
             }
 			maxC = std::max(std::max(maxR, maxG), maxB);
             maxArr[maxArrIndex] = maxR;
