@@ -188,11 +188,7 @@ int main(int argc, char **argv)
                     RpptAudioBorderType borderType = RpptAudioBorderType::CLAMP;
 
                     startWallTime = omp_get_wtime();
-                    startCpuTime = clock();
-                    if (inputBitDepth == 2)
-                        rppt_pre_emphasis_filter_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcLengthTensor, coeff, borderType, handle);
-                    else
-                        missingFuncFlag = 1;
+                    rppt_pre_emphasis_filter_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcLengthTensor, coeff, borderType, handle);
 
                     break;
                 }
