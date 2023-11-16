@@ -388,10 +388,10 @@ RppStatus hip_exec_tensor_min(T *srcPtr,
 
     if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
     {
-        Rpp32u imagePartialMinArrLength = gridDim_x * gridDim_y * gridDim_z;
-        float *imagePartialMinArr;
-        imagePartialMinArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
-        hipMemset(imagePartialMinArr, 0, imagePartialMinArrLength * sizeof(float));
+        Rpp32u partialMinArrLength = gridDim_x * gridDim_y * gridDim_z;
+        float *partialMinArr;
+        partialMinArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
+        hipMemset(partialMinArr, 0, partialMinArrLength * sizeof(float));
         hipDeviceSynchronize();
 
         hipLaunchKernelGGL(tensor_min_pln1_hip,
@@ -401,7 +401,7 @@ RppStatus hip_exec_tensor_min(T *srcPtr,
                            handle.GetStream(),
                            srcPtr,
                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
-                           imagePartialMinArr,
+                           partialMinArr,
                            roiTensorPtrSrc);
         hipDeviceSynchronize();
         hipLaunchKernelGGL(tensor_min_grid_result_hip,
@@ -409,16 +409,16 @@ RppStatus hip_exec_tensor_min(T *srcPtr,
                            dim3(256, 1, 1),
                            0,
                            handle.GetStream(),
-                           imagePartialMinArr,
+                           partialMinArr,
                            gridDim_x * gridDim_y,
                            imageMinArr);
     }
     else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
     {
-        Rpp32u imagePartialMinArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
-        float *imagePartialMinArr;
-        imagePartialMinArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
-        hipMemset(imagePartialMinArr, 0, imagePartialMinArrLength * sizeof(float));
+        Rpp32u partialMinArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
+        float *partialMinArr;
+        partialMinArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
+        hipMemset(partialMinArr, 0, partialMinArrLength * sizeof(float));
         hipDeviceSynchronize();
 
         hipLaunchKernelGGL(tensor_min_pln3_hip,
@@ -428,23 +428,23 @@ RppStatus hip_exec_tensor_min(T *srcPtr,
                            handle.GetStream(),
                            srcPtr,
                            make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                           imagePartialMinArr,
+                           partialMinArr,
                            roiTensorPtrSrc);
         hipLaunchKernelGGL(tensor_min_grid_3channel_result_hip,
                            dim3(1, 1, gridDim_z),
                            dim3(256, 1, 1),
                            0,
                            handle.GetStream(),
-                           imagePartialMinArr,
+                           partialMinArr,
                            gridDim_x * gridDim_y,
                            imageMinArr);
     }
     else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
     {
-        Rpp32u imagePartialMinArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
-        float *imagePartialMinArr;
-        imagePartialMinArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
-        hipMemset(imagePartialMinArr, 0, imagePartialMinArrLength * sizeof(float));
+        Rpp32u partialMinArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
+        float *partialMinArr;
+        partialMinArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
+        hipMemset(partialMinArr, 0, partialMinArrLength * sizeof(float));
         hipDeviceSynchronize();
 
         hipLaunchKernelGGL(tensor_min_pkd3_hip,
@@ -454,7 +454,7 @@ RppStatus hip_exec_tensor_min(T *srcPtr,
                            handle.GetStream(),
                            srcPtr,
                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
-                           imagePartialMinArr,
+                           partialMinArr,
                            roiTensorPtrSrc);
         hipDeviceSynchronize();
         hipLaunchKernelGGL(tensor_min_grid_3channel_result_hip,
@@ -462,7 +462,7 @@ RppStatus hip_exec_tensor_min(T *srcPtr,
                            dim3(256, 1, 1),
                            0,
                            handle.GetStream(),
-                           imagePartialMinArr,
+                           partialMinArr,
                            gridDim_x * gridDim_y,
                            imageMinArr);
     }

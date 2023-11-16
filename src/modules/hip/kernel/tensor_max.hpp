@@ -388,10 +388,10 @@ RppStatus hip_exec_tensor_max(T *srcPtr,
 
     if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
     {
-        Rpp32u imagePartialMaxArrLength = gridDim_x * gridDim_y * gridDim_z;
-        float *imagePartialMaxArr;
-        imagePartialMaxArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
-        hipMemset(imagePartialMaxArr, 0, imagePartialMaxArrLength * sizeof(float));
+        Rpp32u partialMaxArrLength = gridDim_x * gridDim_y * gridDim_z;
+        float *partialMaxArr;
+        partialMaxArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
+        hipMemset(partialMaxArr, 0, partialMaxArrLength * sizeof(float));
         hipDeviceSynchronize();
 
         hipLaunchKernelGGL(tensor_max_pln1_hip,
@@ -401,7 +401,7 @@ RppStatus hip_exec_tensor_max(T *srcPtr,
                            handle.GetStream(),
                            srcPtr,
                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
-                           imagePartialMaxArr,
+                           partialMaxArr,
                            roiTensorPtrSrc);
         hipDeviceSynchronize();
         hipLaunchKernelGGL(tensor_max_grid_result_hip,
@@ -409,16 +409,16 @@ RppStatus hip_exec_tensor_max(T *srcPtr,
                            dim3(256, 1, 1),
                            0,
                            handle.GetStream(),
-                           imagePartialMaxArr,
+                           partialMaxArr,
                            gridDim_x * gridDim_y,
                            imageMaxArr);
     }
     else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
     {
-        Rpp32u imagePartialMaxArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
-        float *imagePartialMaxArr;
-        imagePartialMaxArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
-        hipMemset(imagePartialMaxArr, 0, imagePartialMaxArrLength * sizeof(float));
+        Rpp32u partialMaxArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
+        float *partialMaxArr;
+        partialMaxArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
+        hipMemset(partialMaxArr, 0, partialMaxArrLength * sizeof(float));
         hipDeviceSynchronize();
 
         hipLaunchKernelGGL(tensor_max_pln3_hip,
@@ -428,23 +428,23 @@ RppStatus hip_exec_tensor_max(T *srcPtr,
                            handle.GetStream(),
                            srcPtr,
                            make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                           imagePartialMaxArr,
+                           partialMaxArr,
                            roiTensorPtrSrc);
         hipLaunchKernelGGL(tensor_max_grid_3channel_result_hip,
                            dim3(1, 1, gridDim_z),
                            dim3(256, 1, 1),
                            0,
                            handle.GetStream(),
-                           imagePartialMaxArr,
+                           partialMaxArr,
                            gridDim_x * gridDim_y,
                            imageMaxArr);
     }
     else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
     {
-        Rpp32u imagePartialMaxArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
-        float *imagePartialMaxArr;
-        imagePartialMaxArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
-        hipMemset(imagePartialMaxArr, 0, imagePartialMaxArrLength * sizeof(float));
+        Rpp32u partialMaxArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
+        float *partialMaxArr;
+        partialMaxArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
+        hipMemset(partialMaxArr, 0, partialMaxArrLength * sizeof(float));
         hipDeviceSynchronize();
 
         hipLaunchKernelGGL(tensor_max_pkd3_hip,
@@ -454,7 +454,7 @@ RppStatus hip_exec_tensor_max(T *srcPtr,
                            handle.GetStream(),
                            srcPtr,
                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
-                           imagePartialMaxArr,
+                           partialMaxArr,
                            roiTensorPtrSrc);
         hipDeviceSynchronize();
         hipLaunchKernelGGL(tensor_max_grid_3channel_result_hip,
@@ -462,7 +462,7 @@ RppStatus hip_exec_tensor_max(T *srcPtr,
                            dim3(256, 1, 1),
                            0,
                            handle.GetStream(),
-                           imagePartialMaxArr,
+                           partialMaxArr,
                            gridDim_x * gridDim_y,
                            imageMaxArr);
     }
