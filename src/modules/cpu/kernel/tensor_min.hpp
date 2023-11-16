@@ -31,9 +31,6 @@ RppStatus tensor_min_u8_u8_host(Rpp8u *srcPtr,
         Rpp32u alignedLength = (bufferLength / 96) * 96;
         Rpp32u vectorIncrement = 96;
         Rpp32u vectorIncrementPerChannel = 32;
-        int flag_avx = 0;
-        if(alignedLength)
-            flag_avx = 1;
 
         // Tensor min 1 channel (NCHW)
         if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
@@ -70,7 +67,6 @@ RppStatus tensor_min_u8_u8_host(Rpp8u *srcPtr,
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
-            srcPtrChannel += srcDescPtr->strides.cStride;
 #if __AVX2__
             __m128i result;
             reduce_min_32_host(&pMin, &result);
@@ -128,16 +124,13 @@ RppStatus tensor_min_u8_u8_host(Rpp8u *srcPtr,
                 srcPtrRowB += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            if(flag_avx)
-            {
-                __m128i result;
-                reduce_min_96_host(&pMinR, &pMinG, &pMinB, &result);
-                rpp_simd_store(rpp_store16_u8_to_u8, resultAvx, &result);
+            __m128i result;
+            reduce_min_96_host(&pMinR, &pMinG, &pMinB, &result);
+            rpp_simd_store(rpp_store16_u8_to_u8, resultAvx, &result);
 
-                minR = std::min(std::min(resultAvx[0], resultAvx[1]), minR);
-                minG = std::min(std::min(resultAvx[2], resultAvx[3]), minG);
-                minB = std::min(std::min(resultAvx[4], resultAvx[5]), minB);
-            }
+            minR = std::min(std::min(resultAvx[0], resultAvx[1]), minR);
+            minG = std::min(std::min(resultAvx[2], resultAvx[3]), minG);
+            minB = std::min(std::min(resultAvx[4], resultAvx[5]), minB);
 #endif
 			minC = std::min(std::min(minR, minG), minB);
             minArr[minArrIndex] = minR;
@@ -188,17 +181,14 @@ RppStatus tensor_min_u8_u8_host(Rpp8u *srcPtr,
                     }
                     srcPtrRow += srcDescPtr->strides.hStride;
                 }
-                srcPtrChannel += srcDescPtr->strides.cStride;
-                if(flag_avx)
-                {
-                    __m128i result;
-                    reduce_min_48_host(&pMinR, &pMinG, &pMinB, &result);
-                    rpp_simd_store(rpp_store16_u8_to_u8, resultAvx, &result);
 
-                    minR = std::min(std::min(resultAvx[0], resultAvx[1]), minR);
-                    minG = std::min(std::min(resultAvx[2], resultAvx[3]), minG);
-                    minB = std::min(std::min(resultAvx[4], resultAvx[5]), minB);
-                }
+                __m128i result;
+                reduce_min_48_host(&pMinR, &pMinG, &pMinB, &result);
+                rpp_simd_store(rpp_store16_u8_to_u8, resultAvx, &result);
+
+                minR = std::min(std::min(resultAvx[0], resultAvx[1]), minR);
+                minG = std::min(std::min(resultAvx[2], resultAvx[3]), minG);
+                minB = std::min(std::min(resultAvx[4], resultAvx[5]), minB);
             }
 			minC = std::min(std::min(minR, minG), minB);
             minArr[minArrIndex] = minR;
@@ -239,9 +229,6 @@ RppStatus tensor_min_f32_f32_host(Rpp32f *srcPtr,
         Rpp32u alignedLength = (bufferLength / 24) * 24;
         Rpp32u vectorIncrement = 24;
         Rpp32u vectorIncrementPerChannel = 8;
-        int flag_avx = 0;
-        if(alignedLength)
-            flag_avx = 1;
 
         // Tensor min 1 channel (NCHW)
         if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
@@ -278,7 +265,7 @@ RppStatus tensor_min_f32_f32_host(Rpp32f *srcPtr,
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
-            srcPtrChannel += srcDescPtr->strides.cStride;
+
 #if __AVX2__
             __m128 result;
             reduce_min_float8_host(&pMin, &result);
@@ -335,16 +322,13 @@ RppStatus tensor_min_f32_f32_host(Rpp32f *srcPtr,
                 srcPtrRowB += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            if(flag_avx)
-            {
-                __m256 result;
-                reduce_min_float24_host(&pMinR, &pMinG, &pMinB, &result);
-                rpp_simd_store(rpp_store8_f32_to_f32_avx, resultAvx, &result);
+            __m256 result;
+            reduce_min_float24_host(&pMinR, &pMinG, &pMinB, &result);
+            rpp_simd_store(rpp_store8_f32_to_f32_avx, resultAvx, &result);
 
-                minR = std::min(std::min(resultAvx[0], resultAvx[1]), minR);
-                minG = std::min(std::min(resultAvx[2], resultAvx[3]), minG);
-                minB = std::min(std::min(resultAvx[4], resultAvx[5]), minB);
-            }
+            minR = std::min(std::min(resultAvx[0], resultAvx[1]), minR);
+            minG = std::min(std::min(resultAvx[2], resultAvx[3]), minG);
+            minB = std::min(std::min(resultAvx[4], resultAvx[5]), minB);
 #endif
 			minC = std::min(std::min(minR, minG), minB);
             minArr[minArrIndex] = minR;
@@ -397,18 +381,15 @@ RppStatus tensor_min_f32_f32_host(Rpp32f *srcPtr,
                     }
                     srcPtrRow += srcDescPtr->strides.hStride;
                 }
-                srcPtrChannel += srcDescPtr->strides.cStride;
-#if __AVX2__
-                if(flag_avx)
-                {
-                    __m256 result;
-                    reduce_min_float24_host(&pMinR, &pMinG, &pMinB, &result);
-                    rpp_simd_store(rpp_store8_f32_to_f32_avx, resultAvx, &result);
 
-                    minR = std::min(std::min(resultAvx[0], resultAvx[1]), minR);
-                    minG = std::min(std::min(resultAvx[2], resultAvx[3]), minG);
-                    minB = std::min(std::min(resultAvx[4], resultAvx[5]), minB);
-                }
+#if __AVX2__
+                __m256 result;
+                reduce_min_float24_host(&pMinR, &pMinG, &pMinB, &result);
+                rpp_simd_store(rpp_store8_f32_to_f32_avx, resultAvx, &result);
+
+                minR = std::min(std::min(resultAvx[0], resultAvx[1]), minR);
+                minG = std::min(std::min(resultAvx[2], resultAvx[3]), minG);
+                minB = std::min(std::min(resultAvx[4], resultAvx[5]), minB);
 #endif
             }
 			minC = std::min(std::min(minR, minG), minB);
@@ -450,9 +431,6 @@ RppStatus tensor_min_f16_f16_host(Rpp16f *srcPtr,
         Rpp32u alignedLength = (bufferLength / 24) * 24;
         Rpp32u vectorIncrement = 24;
         Rpp32u vectorIncrementPerChannel = 8;
-        int flag_avx = 0;
-        if(alignedLength)
-            flag_avx = 1;
 
         // Tensor min 1 channel (NCHW)
         if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
@@ -494,7 +472,7 @@ RppStatus tensor_min_f16_f16_host(Rpp16f *srcPtr,
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
-            srcPtrChannel += srcDescPtr->strides.cStride;
+
 #if __AVX2__
             __m128 result;
             reduce_min_float8_host(&pMin, &result);
@@ -558,16 +536,13 @@ RppStatus tensor_min_f16_f16_host(Rpp16f *srcPtr,
                 srcPtrRowB += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            if(flag_avx)
-            {
-                __m256 result;
-                reduce_min_float24_host(&pMinR, &pMinG, &pMinB, &result);
-                rpp_simd_store(rpp_store8_f32_to_f32_avx, resultAvx, &result);
+            __m256 result;
+            reduce_min_float24_host(&pMinR, &pMinG, &pMinB, &result);
+            rpp_simd_store(rpp_store8_f32_to_f32_avx, resultAvx, &result);
 
-                minR = std::min(std::min(resultAvx[0], resultAvx[1]), minR);
-                minG = std::min(std::min(resultAvx[2], resultAvx[3]), minG);
-                minB = std::min(std::min(resultAvx[4], resultAvx[5]), minB);
-            }
+            minR = std::min(std::min(resultAvx[0], resultAvx[1]), minR);
+            minG = std::min(std::min(resultAvx[2], resultAvx[3]), minG);
+            minB = std::min(std::min(resultAvx[4], resultAvx[5]), minB);
 #endif
 			minC = std::min(std::min(minR, minG), minB);
             minArr[minArrIndex] = (Rpp16f) minR;
@@ -625,18 +600,15 @@ RppStatus tensor_min_f16_f16_host(Rpp16f *srcPtr,
                     }
                     srcPtrRow += srcDescPtr->strides.hStride;
                 }
-                srcPtrChannel += srcDescPtr->strides.cStride;
-#if __AVX2__
-                if(flag_avx)
-                {
-                    __m256 result;
-                    reduce_min_float24_host(&pMinR, &pMinG, &pMinB, &result);
-                    rpp_simd_store(rpp_store8_f32_to_f32_avx, resultAvx, &result);
 
-                    minR = std::min(std::min(resultAvx[0], resultAvx[1]), minR);
-                    minG = std::min(std::min(resultAvx[2], resultAvx[3]), minG);
-                    minB = std::min(std::min(resultAvx[4], resultAvx[5]), minB);
-                }
+#if __AVX2__
+                __m256 result;
+                reduce_min_float24_host(&pMinR, &pMinG, &pMinB, &result);
+                rpp_simd_store(rpp_store8_f32_to_f32_avx, resultAvx, &result);
+
+                minR = std::min(std::min(resultAvx[0], resultAvx[1]), minR);
+                minG = std::min(std::min(resultAvx[2], resultAvx[3]), minG);
+                minB = std::min(std::min(resultAvx[4], resultAvx[5]), minB);
 #endif
             }
 			minC = std::min(std::min(minR, minG), minB);
@@ -678,9 +650,6 @@ RppStatus tensor_min_i8_i8_host(Rpp8s *srcPtr,
         Rpp32u alignedLength = (bufferLength / 96) * 96;
         Rpp32u vectorIncrement = 96;
         Rpp32u vectorIncrementPerChannel = 32;
-        int flag_avx = 0;
-        if(alignedLength)
-            flag_avx = 1;
 
         // Tensor min 1 channel (NCHW)
         if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
@@ -717,7 +686,7 @@ RppStatus tensor_min_i8_i8_host(Rpp8s *srcPtr,
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
-            srcPtrChannel += srcDescPtr->strides.cStride;
+
 #if __AVX2__
             __m128i result;
             reduce_min_i32_host(&pMin, &result);
@@ -775,16 +744,13 @@ RppStatus tensor_min_i8_i8_host(Rpp8s *srcPtr,
                 srcPtrRowB += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            if(flag_avx)
-            {
-                __m128i result;
-                reduce_min_i96_host(&pMinR, &pMinG, &pMinB, &result);
-                rpp_simd_store(rpp_store16_i8, resultAvx, &result);
+            __m128i result;
+            reduce_min_i96_host(&pMinR, &pMinG, &pMinB, &result);
+            rpp_simd_store(rpp_store16_i8, resultAvx, &result);
 
-                minR = std::min(std::min(resultAvx[0], resultAvx[1]), minR);
-                minG = std::min(std::min(resultAvx[2], resultAvx[3]), minG);
-                minB = std::min(std::min(resultAvx[4], resultAvx[5]), minB);
-            }
+            minR = std::min(std::min(resultAvx[0], resultAvx[1]), minR);
+            minG = std::min(std::min(resultAvx[2], resultAvx[3]), minG);
+            minB = std::min(std::min(resultAvx[4], resultAvx[5]), minB);
 #endif
 			minC = std::min(std::min(minR, minG), minB);
             minArr[minArrIndex] = minR;
@@ -817,7 +783,7 @@ RppStatus tensor_min_i8_i8_host(Rpp8s *srcPtr,
                     srcPtrTemp = srcPtrRow;
 
                     int vectorLoopCount = 0;
-
+#if __AVX2__
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
                         __m128i p[3];
@@ -826,6 +792,7 @@ RppStatus tensor_min_i8_i8_host(Rpp8s *srcPtr,
 
                         srcPtrTemp += vectorIncrement;
                     }
+#endif
                     for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                     {
                         minR = std::min(srcPtrTemp[0], minR);
@@ -835,17 +802,15 @@ RppStatus tensor_min_i8_i8_host(Rpp8s *srcPtr,
                     }
                     srcPtrRow += srcDescPtr->strides.hStride;
                 }
-                srcPtrChannel += srcDescPtr->strides.cStride;
-                if(flag_avx)
-                {
-                    __m128i result;
-                    reduce_min_i48_host(&pMinR, &pMinG, &pMinB, &result);
-                    rpp_simd_store(rpp_store16_i8, resultAvx, &result);
+#if __AVX2__
+                __m128i result;
+                reduce_min_i48_host(&pMinR, &pMinG, &pMinB, &result);
+                rpp_simd_store(rpp_store16_i8, resultAvx, &result);
 
-                    minR = std::min(std::min(resultAvx[0], resultAvx[1]), minR);
-                    minG = std::min(std::min(resultAvx[2], resultAvx[3]), minG);
-                    minB = std::min(std::min(resultAvx[4], resultAvx[5]), minB);
-                }
+                minR = std::min(std::min(resultAvx[0], resultAvx[1]), minR);
+                minG = std::min(std::min(resultAvx[2], resultAvx[3]), minG);
+                minB = std::min(std::min(resultAvx[4], resultAvx[5]), minB);
+#endif
             }
 			minC = std::min(std::min(minR, minG), minB);
             minArr[minArrIndex] = minR;
