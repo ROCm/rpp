@@ -21,7 +21,7 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
             backend = 'OCL'
         }
     }
-    else if(platform.jenkinsLabel.contains('rhel')) {
+    else if (platform.jenkinsLabel.contains('rhel')) {
         enableAudioTesting = 'sudo yum install libsndfile-devel'
     }
     
