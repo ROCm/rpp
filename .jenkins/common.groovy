@@ -23,7 +23,7 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
             backend = 'OCL'
         }
     }
-    else if(platform.jenkinsLabel.contains('rhel')) {
+    else if (platform.jenkinsLabel.contains('rhel')) {
         enableAudioTesting = 'sudo yum install libsndfile-devel'
         enableVoxelTesting = '(git clone https://github.com/NIFTI-Imaging/nifti_clib.git; cd nifti_clib; mkdir build; cd build; cmake ../; sudo make -j$nproc install)'
     }
