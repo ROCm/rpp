@@ -50,6 +50,7 @@ docs_core = ROCmDocs(left_nav_title)
 docs_core.run_doxygen(doxygen_root="doxygen", doxygen_path="doxygen/xml")
 docs_core.enable_api_reference()
 docs_core.setup()
+docs_core.myst_heading_anchors = 6
 
 external_projects_current_project = "rpp"
 
