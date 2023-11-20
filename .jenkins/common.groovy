@@ -32,6 +32,7 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
                 cmake -DBACKEND=${backend} ${buildTypeArg} ../..
                 make -j\$(nproc)
                 sudo make install
+                make test ARGS="-VV"
                 sudo make package
                 """
 
@@ -75,8 +76,9 @@ def runPackageCommand(platform, project) {
                 cd ${project.paths.project_build_prefix}/build/release
                 sudo make package
                 mkdir -p package
-                mv *.${packageType} package/
-                ${packageInfo} package/*.${packageType}
+                mv rpp*.${packageType} package/
+                ${packageInfo} package/rpp-dev*.${packageType}
+                ${packageInfo} package/rpp_*.${packageType}
                 """
 
     platform.runCommand(this, command)

@@ -38,7 +38,7 @@ __device__ void gamma_correction_hip_compute(half *srcPtr, d_float8 *src_f8, d_f
 }
 
 template <typename T>
-__global__ void gamma_correction_pkd_tensor(T *srcPtr,
+__global__ void gamma_correction_pkd_hip_tensor(T *srcPtr,
                                             uint2 srcStridesNH,
                                             T *dstPtr,
                                             uint2 dstStridesNH,
@@ -66,7 +66,7 @@ __global__ void gamma_correction_pkd_tensor(T *srcPtr,
 }
 
 template <typename T>
-__global__ void gamma_correction_pln_tensor(T *srcPtr,
+__global__ void gamma_correction_pln_hip_tensor(T *srcPtr,
                                             uint3 srcStridesNCH,
                                             T *dstPtr,
                                             uint3 dstStridesNCH,
@@ -112,7 +112,7 @@ __global__ void gamma_correction_pln_tensor(T *srcPtr,
 }
 
 template <typename T>
-__global__ void gamma_correction_pkd3_pln3_tensor(T *srcPtr,
+__global__ void gamma_correction_pkd3_pln3_hip_tensor(T *srcPtr,
                                                   uint2 srcStridesNH,
                                                   T *dstPtr,
                                                   uint3 dstStridesNCH,
@@ -142,7 +142,7 @@ __global__ void gamma_correction_pkd3_pln3_tensor(T *srcPtr,
 }
 
 template <typename T>
-__global__ void gamma_correction_pln3_pkd3_tensor(T *srcPtr,
+__global__ void gamma_correction_pln3_pkd3_hip_tensor(T *srcPtr,
                                                   uint3 srcStridesNCH,
                                                   T *dstPtr,
                                                   uint2 dstStridesNH,
@@ -223,9 +223,6 @@ RppStatus hip_exec_gamma_correction_tensor(T *srcPtr,
     if (roiType == RpptRoiType::LTRB)
         hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
 
-    int localThreads_x = 256;
-    int localThreads_y = 1;
-    int localThreads_z = 1;
     int globalThreads_x = (256 + 7) >> 3;
     int globalThreads_y = handle.GetBatchSize();
     int globalThreads_z = 1;
@@ -234,25 +231,25 @@ RppStatus hip_exec_gamma_correction_tensor(T *srcPtr,
     hipMalloc(&gammaLUT, 256 * handle.GetBatchSize() * sizeof(Rpp32f));
 
     hipLaunchKernelGGL(gamma_correction_lut_compute,
-                       dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                       dim3(localThreads_x, localThreads_y, localThreads_z),
+                       dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X_1DIM), ceil((float)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((float)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
+                       dim3(LOCAL_THREADS_X_1DIM, LOCAL_THREADS_Y_1DIM, LOCAL_THREADS_Z_1DIM),
                        0,
                        handle.GetStream(),
                        gammaLUT,
                        handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem);
 
-    localThreads_x = LOCAL_THREADS_X;
-    localThreads_y = LOCAL_THREADS_Y;
-    localThreads_z = LOCAL_THREADS_Z;
+    
+    
+    
     globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
     globalThreads_y = dstDescPtr->h;
     globalThreads_z = handle.GetBatchSize();
 
     if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
     {
-        hipLaunchKernelGGL(gamma_correction_pkd_tensor,
-                           dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                           dim3(localThreads_x, localThreads_y, localThreads_z),
+        hipLaunchKernelGGL(gamma_correction_pkd_hip_tensor,
+                           dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                            0,
                            handle.GetStream(),
                            srcPtr,
@@ -264,9 +261,9 @@ RppStatus hip_exec_gamma_correction_tensor(T *srcPtr,
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
-        hipLaunchKernelGGL(gamma_correction_pln_tensor,
-                           dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                           dim3(localThreads_x, localThreads_y, localThreads_z),
+        hipLaunchKernelGGL(gamma_correction_pln_hip_tensor,
+                           dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                            0,
                            handle.GetStream(),
                            srcPtr,
@@ -281,9 +278,9 @@ RppStatus hip_exec_gamma_correction_tensor(T *srcPtr,
     {
         if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            hipLaunchKernelGGL(gamma_correction_pkd3_pln3_tensor,
-                               dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                               dim3(localThreads_x, localThreads_y, localThreads_z),
+            hipLaunchKernelGGL(gamma_correction_pkd3_pln3_hip_tensor,
+                               dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
                                handle.GetStream(),
                                srcPtr,
@@ -296,9 +293,9 @@ RppStatus hip_exec_gamma_correction_tensor(T *srcPtr,
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             globalThreads_x = (srcDescPtr->strides.hStride + 7) >> 3;
-            hipLaunchKernelGGL(gamma_correction_pln3_pkd3_tensor,
-                               dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                               dim3(localThreads_x, localThreads_y, localThreads_z),
+            hipLaunchKernelGGL(gamma_correction_pln3_pkd3_hip_tensor,
+                               dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
                                handle.GetStream(),
                                srcPtr,

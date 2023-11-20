@@ -23,6 +23,14 @@ THE SOFTWARE.
 #ifndef RPPI_H
 #define RPPI_H
 
+/*!
+ * \file
+ * \brief RPP Image Operations - To be deprecated
+ * \defgroup group_rppi RPP Image Operations
+ * \brief The header includes all files containing RPP Image Operations - To be deprecated
+ * \deprecated
+ */
+
 #include "rpp.h"
 #ifdef __cplusplus
 extern "C" {

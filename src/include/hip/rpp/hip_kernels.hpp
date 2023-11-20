@@ -23,6 +23,8 @@ THE SOFTWARE.
 #ifndef HIP_KERNELS_H
 #define HIP_KERNELS_H
 
+#include <map>
+
 // color_model_conversions
 extern "C" __global__ void channel_extract_pln(unsigned char* input, unsigned char* output, const unsigned int height, const unsigned int width, const unsigned int channel, const unsigned int extractChannelNumber);
 extern "C" __global__ void channel_extract_pkd(unsigned char* input, unsigned char* output, const unsigned int height, const unsigned int width, const unsigned int channel, const unsigned int extractChannelNumber);
