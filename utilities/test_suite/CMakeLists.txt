@@ -29,6 +29,10 @@ project(test_suite)
 set(Python3_FIND_VIRTUALENV FIRST)
 find_package(Python3 QUIET)
 find_package(NIFTI QUIET)
+find_library(libsnd_LIBS
+     NAMES sndfile libsndfile
+     PATHS ${CMAKE_SYSTEM_PREFIX_PATH} ${LIBSND_ROOT_DIR} "/usr/local"
+     PATH_SUFFIXES lib lib64)
 
 if(Python3_FOUND)
 
@@ -45,8 +49,15 @@ if(Python3_FOUND)
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )
     endif(NIFTI_FOUND)
+    if(libsnd_LIBS)
+        add_test(
+            NAME rpp_qa_tests_tensor_audio_host_all
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HOST/runAudioTests.py --qa_mode 1 --batch_size 3
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        )
+    endif(libsnd_LIBS)
 
-    # Running case by case - one sample for brightness (in tensor_host) and one sample for slice (in tensor_voxel_host)
+    # Running case by case - one sample for brightness (in tensor_host) + one sample for slice (in tensor_voxel_host) + one sample for non_silent_region (in tensor_audio_host)
     add_test(
         NAME rpp_qa_tests_tensor_host_brightness
         COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HOST/runTests.py --qa_mode 1 --batch_size 3 --case_list 0
@@ -59,9 +70,16 @@ if(Python3_FOUND)
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )
     endif(NIFTI_FOUND)
+    if(libsnd_LIBS)
+        add_test(
+            NAME rpp_qa_tests_tensor_audio_host_non_silent_region
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HOST/runAudioTests.py --case_list 0 --qa_mode 1 --batch_size 3
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        )
+    endif(libsnd_LIBS)
 
     if( "${BACKEND}" STREQUAL "HIP")
-        
+
         # Running all HIP tests
         add_test(
             NAME rpp_qa_tests_tensor_hip_all
@@ -91,9 +109,8 @@ if(Python3_FOUND)
         endif(NIFTI_FOUND)
     
     elseif( "${BACKEND}" STREQUAL "OCL")
-        
         # TBD: Add OCL Tests
-    
+
     endif()
 
 else()

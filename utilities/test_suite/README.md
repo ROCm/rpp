@@ -1,9 +1,11 @@
 # AMD ROCm Performance Primitives (RPP) Test Suite
-This repository contains two test suites for the AMD ROCm Performance Primitives (RPP) library: one for image processing and one for 3D voxel processing. It can be executed under 2 backend scenarios - (HOST/HIP):
--   HOST backend - (On a CPU with HOST backend)
--   HIP backend - (On a GPU with HIP backend)
+
+This repository contains three test suites for the AMD ROCm Performance Primitives (RPP) library: for image/voxel/audio processing. These test suites can be used to validate the functionality and performance of the AMD ROCm Performance Primitives (RPP) image/voxel/audio libraries.
 
 ## Rpp Image Test Suite
+The image test suite can be executed under 2 backend scenarios - (HOST/HIP):
+-   HOST backend - (On a CPU with HOST backend)
+-   HIP backend - (On a GPU with HIP backend)
 
 ## Command Line Arguments (Rpp Image Test Suite)
 The image test suite accepts the following command line arguments:
@@ -73,6 +75,9 @@ The image test suite includes:
 -   Support for TurboJPEG and OpenCV decoder for decoding input images
 
 ## Rpp Voxel Test Suite
+The 3D Voxel test suite can be executed under 2 backend scenarios - (HOST/HIP):
+-   HOST backend - (On a CPU with HOST backend)
+-   HIP backend - (On a GPU with HIP backend)
 
 ## Command Line Arguments (Rpp voxel Test Suite)
 The voxel test suite accepts the following command line arguments:
@@ -135,7 +140,6 @@ The image test suite includes:
 -   Support for pixelwise output referencing against golden outputs, and functionality validation checking, by tolerance-based pass/fail criterions for each variant.
 
 ## References
-
 RPP test suite uses a sample ".nii" image usage from the BraTS2020 Dataset at https://www.kaggle.com/code/rastislav/3d-mri-brain-tumor-segmentation-u-net/input as per the following Data Usage Agreement present at the dataset link above.
 
 Data Usage Agreement / Citations:
@@ -144,3 +148,52 @@ You are free to use and/or refer to the BraTS datasets in your own research, pro
 -   B. H. Menze, A. Jakab, S. Bauer, J. Kalpathy-Cramer, K. Farahani, J. Kirby, et al. "The Multimodal Brain Tumor Image Segmentation Benchmark (BRATS)", IEEE Transactions on Medical Imaging 34(10), 1993-2024 (2015) DOI: 10.1109/TMI.2014.2377694
 -   S. Bakas, H. Akbari, A. Sotiras, M. Bilello, M. Rozycki, J.S. Kirby, et al., "Advancing The Cancer Genome Atlas glioma MRI collections with expert segmentation labels and radiomic features", Nature Scientific Data, 4:170117 (2017) DOI: 10.1038/sdata.2017.117
 -   S. Bakas, M. Reyes, A. Jakab, S. Bauer, M. Rempfler, A. Crimi, et al., "Identifying the Best Machine Learning Algorithms for Brain Tumor Segmentation, Progression Assessment, and Overall Survival Prediction in the BRATS Challenge", arXiv preprint arXiv:1811.02629 (2018)
+
+## Rpp Audio Test Suite
+The audio test suite can be executed to validate the functionality and performance of the AMD ROCm Performance Primitives (RPP) audio library.
+-   HOST backend - (On a CPU with HOST backend)
+-   F32 Bit Depth
+
+## Command Line Arguments (Rpp Audio Test Suite)
+The audio test suite accepts the following command line arguments:
+-   input_path: The path to the input folder. Default is $cwd/../TEST_AUDIO_FILES/eight_samples_single_channel_src1
+-   case_start: The starting case number for the test range (0-0). Default is 0
+-   case_end: The ending case number for the test range (0-0). Default is 0
+-   test_type: The type of test to run (0 = QA tests, 1 = Performance tests). Default is 0
+-   qa_mode: Output audio data from tests will be compared with golden outputs - (0 / 1). Default is 0
+-   case_list: A list of specific case numbers to run. Must be used in conjunction with --test_type
+-   num_runs: Specifies the number of runs for running the performance tests
+-   preserve_output: preserves the output or performance logs generated from the previous test suite run - (0 = remove output or performance logs / 1 = preserve output or performance logs). Default is 1
+-   batch_size: Specifies the batch size to use for running tests. Default is 1
+
+## Running the Tests for HOST Backend (Rpp Audio Test Suite)
+The test suite can be run with the following command:
+python runAudioTests.py --input_path <input_path> --case_start <case_start> --case_end <case_end> --test_type <test_type>
+
+## Modes of operation (Rpp Audio Test Suite)
+-   QA mode - Tolerance based PASS/FAIL tests for RPP AUDIO HOST functionalities checking match between output and preset golden outputs. Please note that QA mode is only supported with a batch size of 3.
+``` python
+python runAudioTests.py --case_start 0 --case_end 0 --qa_mode 1 --batch_size 3
+```
+
+-   Performance test mode - Performance tests that execute the desired functionality and variant 100 times by default, and report max/min/avg RPP execution wall time.
+``` python
+python runAudioTests.py --case_start 0 --case_end 0 --test_type 1
+```
+
+To run the QA tests / performance tests for specific case numbers. please case use case_list parameter. Example as below
+
+-   To run QA tests for case numbers 0, 1, 2
+``` python
+python runTests.py --case_list 0 1 2 --qa_mode 1 --batch_size 3
+```
+-   To run performance tests for case numbers 0, 1, 2
+``` python
+python runTests.py --case_list 0 1 2 --test_type 1
+```
+
+## Features (Rpp Audio Test Suite)
+The audio test suite includes:
+-   Performance tests that execute the desired functionality and variant 100 times by default, and report max/min/avg RPP execution wall time.
+-   QA and Performance tests are included for one input/output bitdepth F32.
+-   Support for output referencing against golden outputs, and functionality validation checking, by tolerance-based pass/fail criterions for each variant.
