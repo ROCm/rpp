@@ -25,10 +25,8 @@
  *******************************************************************************/
 
 #include <cmath>
-#include <boost/range/adaptors.hpp>
 
 #include "rpp/kernel_cache.hpp"
-#include "rpp/util.hpp"
 #include "rpp/logger.hpp"
 
 #define WG_SIZE 256
