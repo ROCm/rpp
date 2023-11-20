@@ -8,16 +8,22 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
     String buildTypeDir = debug ? 'debug' : 'release'
     String backend = 'HIP'
     String enableSCL = 'echo build-rpp'
+    String enableAudioTesting = 'echo audio-tests-not-supported'
 
     if (platform.jenkinsLabel.contains('centos')) {
         backend = 'CPU'
-        if (platform.jenkinsLabel.contains('centos7')) {
-            enableSCL = 'source scl_source enable llvm-toolset-7'
+        enableSCL = 'source scl_source enable llvm-toolset-7'
+    }
+    else if (platform.jenkinsLabel.contains('ubuntu')) {
+        enableAudioTesting = 'sudo apt-get install -y libsndfile1-dev'
+        if (platform.jenkinsLabel.contains('ubuntu20')) {
+            backend = 'OCL'
         }
     }
-    else if (platform.jenkinsLabel.contains('ubuntu20')) {
-        backend = 'OCL'
+    else if (platform.jenkinsLabel.contains('rhel')) {
+        enableAudioTesting = 'sudo yum install -y libsndfile-devel'
     }
+    
 
     def command = """#!/usr/bin/env bash
                 set -x
@@ -29,6 +35,7 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
                 cd ${project.paths.project_build_prefix}
                 mkdir -p build/${buildTypeDir} && cd build/${buildTypeDir}
                 ${enableSCL}
+                ${enableAudioTesting}
                 cmake -DBACKEND=${backend} ${buildTypeArg} ../..
                 make -j\$(nproc)
                 sudo make install
