@@ -32,7 +32,6 @@ THE SOFTWARE.
 #include <omp.h>
 #include <fstream>
 #include <turbojpeg.h>
-#include <experimental/filesystem>
 
 using namespace cv;
 using namespace std;

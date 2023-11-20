@@ -32,6 +32,20 @@ Rpp32f rpp_hsum_ps(__m128 x)
     return _mm_cvtss_f32(sums);
 }
 
+Rpp32f rpp_hsum256_ps(__m256 x)
+{
+    __m128 p0 = _mm256_extractf128_ps(x, 1); // Contains x7, x6, x5, x4
+    __m128 p1 = _mm256_castps256_ps128(x);   // Contains x3, x2, x1, x0
+    __m128 sum = _mm_add_ps(p0, p1);         // Contains x3 + x7, x2 + x6, x1 + x5, x0 + x4
+    p0 = sum;                                // Contains -, -, x1 + x5, x0 + x4
+    p1 = _mm_movehl_ps(sum, sum);            // Contains -, -, x3 + x7, x2 + x6
+    sum = _mm_add_ps(p0, p1);                // Contains -, -, x1 + x3 + x5 + x7, x0 + x2 + x4 + x6
+    p0 = sum;                                // Contains -, -, -, x0 + x2 + x4 + x6
+    p1 = _mm_shuffle_ps(sum, sum, 0x1);      // Contains -, -, -, x1 + x3 + x5 + x7
+    sum = _mm_add_ss(p0, p1);                // Contains -, -, -, x0 + x1 + x2 + x3 + x4 + x5 + x6 + x7
+    return _mm_cvtss_f32(sum);
+}
+
 RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
                                   RpptDescPtr srcDescPtr,
                                   Rpp32f *dstPtr,
@@ -52,6 +66,7 @@ RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
 
         Rpp32s channels = channelsTensor[batchCount];
         Rpp32s samples = srcLengthTensor[batchCount];
+        bool flag_avx = 0;
 
         if(channels == 1)
         {
@@ -60,14 +75,11 @@ RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
         }
         else
         {
-            std::vector<Rpp32f> weights;
-            weights.resize(channels, 1.f / channels);
-            std::vector<Rpp32f> normalizedWeights;
+            Rpp32f *weights = static_cast<Rpp32f *>(malloc(channels * sizeof(Rpp32f)));
+            std::fill(weights, weights + channels, 1.f / channels);
 
             if(normalizeWeights)
             {
-                normalizedWeights.resize(channels);
-
                 // Compute sum of the weights
                 Rpp32f sum = 0.0;
                 for(int i = 0; i < channels; i++)
@@ -76,36 +88,59 @@ RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
                 // Normalize the weights
                 Rpp32f invSum = 1.0 / sum;
                 for(int i = 0; i < channels; i++)
-                    normalizedWeights[i] = weights[i] * invSum;
-
-                weights = normalizedWeights;
+                    weights[i] *= invSum;
             }
 
             Rpp32s channelIncrement = 4;
             Rpp32s alignedChannels = (channels / 4) * 4;
 
+            if(channels > 6)
+            {
+                flag_avx = 1;
+                channelIncrement = 8;
+                alignedChannels = (channels / 8) * 8;
+            }
+
             // use weights to downmix to mono
             for(int64_t dstIdx = 0; dstIdx < samples; dstIdx++)
             {
-                __m128 pDst = _mm_setzero_ps();
                 Rpp32s channelLoopCount = 0;
-                for(; channelLoopCount < alignedChannels; channelLoopCount += channelIncrement)
+                if(flag_avx)
                 {
-                    __m128 pSrc, pWeights;
-                    pWeights = _mm_setr_ps(weights[channelLoopCount], weights[channelLoopCount + 1], weights[channelLoopCount + 2], weights[channelLoopCount + 3]);
-                    pSrc = _mm_loadu_ps(srcPtrTemp);
-                    pSrc = _mm_mul_ps(pSrc, pWeights);
-                    pDst = _mm_add_ps(pDst, pSrc);
-                    srcPtrTemp += channelIncrement;
+                    __m256 pDst = _mm256_setzero_ps();
+                    for(; channelLoopCount < alignedChannels; channelLoopCount += channelIncrement)
+                    {
+                        __m256 pSrc, pWeights;
+                        pWeights = _mm256_setr_ps(weights[channelLoopCount], weights[channelLoopCount + 1], weights[channelLoopCount + 2], weights[channelLoopCount + 3],
+                                weights[channelLoopCount + 4], weights[channelLoopCount + 5], weights[channelLoopCount + 6], weights[channelLoopCount + 7]);
+                        pSrc = _mm256_loadu_ps(srcPtrTemp);
+                        pSrc = _mm256_mul_ps(pSrc, pWeights);
+                        pDst = _mm256_add_ps(pDst, pSrc);
+                        srcPtrTemp += channelIncrement;
+                    }
+                    dstPtrTemp[dstIdx] = rpp_hsum256_ps(pDst);
+                    for(; channelLoopCount < channels; channelLoopCount++)
+                        dstPtrTemp[dstIdx] += ((*srcPtrTemp++) * weights[channelLoopCount]);
                 }
-
-                dstPtrTemp[dstIdx] = rpp_hsum_ps(pDst);
-                for(; channelLoopCount < channels; channelLoopCount++)
+                else
                 {
-                    dstPtrTemp[dstIdx] += ((*srcPtrTemp) * weights[channelLoopCount]);
-                    srcPtrTemp++;
+                    __m128 pDst = _mm_setzero_ps();
+                    for(; channelLoopCount < alignedChannels; channelLoopCount += channelIncrement)
+                    {
+                        __m128 pSrc, pWeights;
+                        pWeights = _mm_setr_ps(weights[channelLoopCount], weights[channelLoopCount + 1], weights[channelLoopCount + 2], weights[channelLoopCount + 3]);
+                        pSrc = _mm_loadu_ps(srcPtrTemp);
+                        pSrc = _mm_mul_ps(pSrc, pWeights);
+                        pDst = _mm_add_ps(pDst, pSrc);
+                        srcPtrTemp += channelIncrement;
+                    }
+
+                    dstPtrTemp[dstIdx] = rpp_hsum_ps(pDst);
+                    for(; channelLoopCount < channels; channelLoopCount++)
+                        dstPtrTemp[dstIdx] += ((*srcPtrTemp++) * weights[channelLoopCount]);
                 }
             }
+            free(weights);
         }
     }
 
