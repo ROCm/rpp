@@ -1198,7 +1198,6 @@ void inline init_ricap_qa(int width, int height, int batchSize, Rpp32u *permutat
 void inline init_ricap(int width, int height, int batchSize, Rpp32u *permutationTensor, RpptROIPtr roiPtrInputCropRegion)
 {
     Rpp32u initialPermuteArray[batchSize], permutedArray[batchSize * 4];
-    double randVal, randVal1;
 
     for (uint i = 0; i < batchSize; i++)
         initialPermuteArray[i] = i;
