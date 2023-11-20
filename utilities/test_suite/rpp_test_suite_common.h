@@ -36,7 +36,11 @@ THE SOFTWARE.
 #include <omp.h>
 #include <fstream>
 #include <turbojpeg.h>
+#include <boost/filesystem.hpp>
 #include <random>
+#include <boost/math/distributions.hpp>
+#include <boost/math/special_functions/beta.hpp>
+using namespace boost::math;
 
 #ifdef GPU_SUPPORT
     #include <hip/hip_fp16.h>
