@@ -14,15 +14,14 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
         backend = 'CPU'
         enableSCL = 'source scl_source enable llvm-toolset-7'
     }
-
-    if (platform.jenkinsLabel.contains('ubuntu')) {
-        enableAudioTesting = 'sudo apt-get install libsndfile1-dev'
+    else if (platform.jenkinsLabel.contains('ubuntu')) {
+        enableAudioTesting = 'sudo apt-get install -y libsndfile1-dev'
         if (platform.jenkinsLabel.contains('ubuntu20')) {
             backend = 'OCL'
         }
     }
     else if (platform.jenkinsLabel.contains('rhel')) {
-        enableAudioTesting = 'sudo yum install libsndfile-devel'
+        enableAudioTesting = 'sudo yum install -y libsndfile-devel'
     }
     
 
