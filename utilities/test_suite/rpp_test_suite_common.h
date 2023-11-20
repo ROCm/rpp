@@ -36,11 +36,7 @@ THE SOFTWARE.
 #include <omp.h>
 #include <fstream>
 #include <turbojpeg.h>
-#include <boost/filesystem.hpp>
 #include <random>
-#include <boost/math/distributions.hpp>
-#include <boost/math/special_functions/beta.hpp>
-using namespace boost::math;
 
 #ifdef GPU_SUPPORT
     #include <hip/hip_fp16.h>
@@ -1202,24 +1198,20 @@ void inline init_ricap_qa(int width, int height, int batchSize, Rpp32u *permutat
 void inline init_ricap(int width, int height, int batchSize, Rpp32u *permutationTensor, RpptROIPtr roiPtrInputCropRegion)
 {
     Rpp32u initialPermuteArray[batchSize], permutedArray[batchSize * 4];
-    double randVal, randVal1;
 
     for (uint i = 0; i < batchSize; i++)
         initialPermuteArray[i] = i;
 
-    // Using boost "inverse incomplete Beta" as a fast (and simple) way to simulate Betas
     float betaParam = 0.3;
     std::random_device rd;
     std::mt19937 gen(rd()); // Pseudo random number generator
     static std::uniform_real_distribution<double> unif(0.3, 0.7); // Generates a uniform real distribution between 0.3 and 0.7
-    double p = unif(gen);
-    randVal = boost::math::ibeta_inv(betaParam, betaParam, p); // Computes the inverse of the incomplete beta function on parameter
+    double randVal = unif(gen);
 
     std::random_device rd1;
     std::mt19937 gen1(rd1());
     static std::uniform_real_distribution<double> unif1(0.3, 0.7);
-    double p1 = unif1(gen1);
-    randVal1 = boost::math::ibeta_inv(betaParam, betaParam, p1);
+    double randVal1 = unif1(gen1);
 
     for(int i = 0; i < 4; i++)
     {
