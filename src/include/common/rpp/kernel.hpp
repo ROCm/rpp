@@ -30,8 +30,6 @@
 #include <string>
 #include <vector>
 
-#include "config.h"
-
 #ifdef HIP_COMPILE
 
 #include "rpp/hipoc_kernel.hpp"

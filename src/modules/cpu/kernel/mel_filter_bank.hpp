@@ -24,21 +24,24 @@ THE SOFTWARE.
 #include "rpp_cpu_simd.hpp"
 #include "rpp_cpu_common.hpp"
 
-struct BaseMelScale {
+struct BaseMelScale
+{
     public:
         virtual Rpp32f hz_to_mel(Rpp32f hz) = 0;
         virtual Rpp32f mel_to_hz(Rpp32f mel) = 0;
         virtual ~BaseMelScale() = default;
 };
 
-struct HtkMelScale : public BaseMelScale {
+struct HtkMelScale : public BaseMelScale
+{
     Rpp32f hz_to_mel(Rpp32f hz) { return 1127.0f * std::log(1.0f + hz / 700.0f); }
     Rpp32f mel_to_hz(Rpp32f mel) { return 700.0f * (std::exp(mel / 1127.0f) - 1.0f); }
     public:
         ~HtkMelScale() {};
 };
 
-struct SlaneyMelScale : public BaseMelScale {
+struct SlaneyMelScale : public BaseMelScale
+{
     const Rpp32f freq_low = 0;
     const Rpp32f fsp = 200.0 / 3.0;
     const Rpp32f min_log_hz = 1000.0;
@@ -49,17 +52,19 @@ struct SlaneyMelScale : public BaseMelScale {
     const Rpp32f inv_step_log = 1.0f / step_log;
     const Rpp32f inv_fsp = 1.0f / fsp;
 
-    Rpp32f hz_to_mel(Rpp32f hz) {
+    Rpp32f hz_to_mel(Rpp32f hz)
+    {
         Rpp32f mel = 0.0f;
         if (hz >= min_log_hz)
-            mel = min_log_mel + std::log(hz *inv_min_log_hz) * inv_step_log;
+            mel = min_log_mel + std::log(hz * inv_min_log_hz) * inv_step_log;
         else
             mel = (hz - freq_low) * inv_fsp;
 
         return mel;
     }
 
-    Rpp32f mel_to_hz(Rpp32f mel) {
+    Rpp32f mel_to_hz(Rpp32f mel)
+    {
         Rpp32f hz = 0.0f;
         if (mel >= min_log_mel)
             hz = min_log_hz * std::exp(step_log * (mel - min_log_mel));
@@ -85,7 +90,8 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
                                       rpp::Handle& handle)
 {
     BaseMelScale *melScalePtr;
-    switch(melFormula) {
+    switch(melFormula)
+    {
         case RpptMelScaleFormula::HTK:
             melScalePtr = new HtkMelScale;
             break;
@@ -110,7 +116,6 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
 
         Rpp32f maxFreq = maxFreqVal;
         Rpp32f minFreq = minFreqVal;
-        // if(maxFreq == 0.0f)
         maxFreq = sampleRate / 2;
 
         // Convert lower, higher freqeuncies to mel scale
@@ -124,34 +129,37 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
         Rpp32s fftBinEnd = std::ceil(maxFreq * invHzStep);
         fftBinEnd = std::min(fftBinEnd, numBins);
 
-        std::vector<Rpp32f> weightsDown, normFactors;
-        weightsDown.resize(numBins);
-        normFactors.resize(numFilter, 1.0f);
+        Rpp32f *weightsDown = static_cast<Rpp32f *>(calloc(numBins, sizeof(Rpp32f)));
+        Rpp32f *normFactors = static_cast<Rpp32f *>(malloc(numFilter * sizeof(Rpp32f)));
+        std::fill(normFactors, normFactors + numFilter, 1.f);
 
-        std::vector<Rpp32s> intervals;
-        intervals.resize(numBins, -1);
+        Rpp32s *intervals = static_cast<Rpp32s *>(malloc(numBins * sizeof(Rpp32s)));
+        memset(intervals, -1, sizeof(numBins * sizeof(Rpp32s)));
 
         Rpp32s fftBin = fftBinStart;
         Rpp64f mel0 = melLow, mel1 = melLow + melStep;
         Rpp64f f = fftBin * hzStep;
-        for (int interval = 0; interval < numFilter + 1; interval++, mel0 = mel1, mel1 += melStep) {
+        for (int interval = 0; interval < numFilter + 1; interval++, mel0 = mel1, mel1 += melStep)
+        {
             Rpp64f f0 = melScalePtr->mel_to_hz(mel0);
             Rpp64f f1 = melScalePtr->mel_to_hz(interval == numFilter ? melHigh : mel1);
             Rpp64f slope = 1. / (f1 - f0);
 
-            if (normalize && interval < numFilter) {
+            if (normalize && interval < numFilter)
+            {
                 Rpp64f f2 = melScalePtr->mel_to_hz(mel1 + melStep);
                 normFactors[interval] = 2.0 / (f2 - f0);
             }
 
-            for (; fftBin < fftBinEnd && f < f1; fftBin++, f = fftBin * hzStep) {
+            for (; fftBin < fftBinEnd && f < f1; fftBin++, f = fftBin * hzStep)
+            {
                 weightsDown[fftBin] = (f1 - f) * slope;
                 intervals[fftBin] = interval;
             }
         }
 
         Rpp32u maxFrames = std::min((Rpp32u)numFrames + 8, dstDescPtr->strides.hStride);
-        Rpp32u maxAlignedLength = (maxFrames / 8) * 8;
+        Rpp32u maxAlignedLength = maxFrames & ~7;
         Rpp32u vectorIncrement = 8;
 
         // Set ROI values in dst buffer to 0.0
@@ -168,7 +176,7 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
                 *dstPtrRow++ = 0.0f;
         }
 
-        Rpp32u alignedLength = (numFrames / 8) * 8;
+        Rpp32u alignedLength = numFrames & ~7;
         __m256 pSrc, pDst;
         Rpp32f *srcRowPtr = srcPtrTemp + fftBinStart * srcDescPtr->strides.hStride;
         for (int64_t fftBin = fftBinStart; fftBin < fftBinEnd; fftBin++) {
@@ -177,7 +185,8 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
             auto filterDown = filterUp - 1;
             auto weightDown = weightsDown[fftBin];
 
-            if (filterDown >= 0) {
+            if (filterDown >= 0)
+            {
                 Rpp32f *dstRowPtrTemp = dstPtrTemp + filterDown * dstDescPtr->strides.hStride;
                 Rpp32f *srcRowPtrTemp = srcRowPtr;
 
@@ -186,7 +195,8 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
                 __m256 pWeightDown = _mm256_set1_ps(weightDown);
 
                 int vectorLoopCount = 0;
-                for(; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement) {
+                for(; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
+                {
                     pSrc = _mm256_loadu_ps(srcRowPtrTemp);
                     pSrc = _mm256_mul_ps(pSrc, pWeightDown);
                     pDst = _mm256_loadu_ps(dstRowPtrTemp);
@@ -196,14 +206,12 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
                     srcRowPtrTemp += vectorIncrement;
                 }
 
-                for (; vectorLoopCount < numFrames; vectorLoopCount++) {
-                    (*dstRowPtrTemp) += weightDown * (*srcRowPtrTemp);
-                    dstRowPtrTemp++;
-                    srcRowPtrTemp++;
-                }
+                for (; vectorLoopCount < numFrames; vectorLoopCount++)
+                    (*dstRowPtrTemp++) += weightDown * (*srcRowPtrTemp++);
             }
 
-            if (filterUp >= 0 && filterUp < numFilter) {
+            if (filterUp >= 0 && filterUp < numFilter)
+            {
                 Rpp32f *dstRowPtrTemp = dstPtrTemp + filterUp *  dstDescPtr->strides.hStride;
                 Rpp32f *srcRowPtrTemp = srcRowPtr;
 
@@ -212,7 +220,8 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
                 __m256 pWeightUp = _mm256_set1_ps(weightUp);
 
                 int vectorLoopCount = 0;
-                for(; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement) {
+                for(; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
+                {
                     pSrc = _mm256_loadu_ps(srcRowPtrTemp);
                     pSrc = _mm256_mul_ps(pSrc, pWeightUp);
                     pDst = _mm256_loadu_ps(dstRowPtrTemp);
@@ -222,15 +231,15 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
                     srcRowPtrTemp += vectorIncrement;
                 }
 
-                for (; vectorLoopCount < numFrames; vectorLoopCount++) {
-                    (*dstRowPtrTemp) += weightUp * (*srcRowPtrTemp);
-                    dstRowPtrTemp++;
-                    srcRowPtrTemp++;
-                }
+                for (; vectorLoopCount < numFrames; vectorLoopCount++)
+                    (*dstRowPtrTemp++) += weightUp * (*srcRowPtrTemp++);
             }
 
             srcRowPtr += srcDescPtr->strides.hStride;
         }
+        free(intervals);
+        free(normFactors);
+        free(weightsDown);
     }
     delete melScalePtr;
 

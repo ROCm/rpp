@@ -27,14 +27,14 @@ __device__ void rmn_hip_compute(half *srcPtr, half *dstPtr, d_float8 *pix_f8, d_
 
 __device__ void rmn_hip_compute(uchar *srcPtr, float *dstPtr, d_float8 *pix_f8, d_float8 *rmnParamsf8)
 {
-    pix_f8->f4[0] = rpp_hip_pixel_check_0to1((pix_f8->f4[0] - rmnParamsf8->f4[0]) * rmnParamsf8->f4[1] * (float4) ONE_OVER_255);
-    pix_f8->f4[1] = rpp_hip_pixel_check_0to1((pix_f8->f4[1] - rmnParamsf8->f4[0]) * rmnParamsf8->f4[1] * (float4) ONE_OVER_255);
+    pix_f8->f4[0] = (pix_f8->f4[0] - rmnParamsf8->f4[0]) * rmnParamsf8->f4[1];
+    pix_f8->f4[1] = (pix_f8->f4[1] - rmnParamsf8->f4[0]) * rmnParamsf8->f4[1];
 }
 
 __device__ void rmn_hip_compute(uchar *srcPtr, half *dstPtr, d_float8 *pix_f8, d_float8 *rmnParamsf8)
 {
-    pix_f8->f4[0] = rpp_hip_pixel_check_0to1((pix_f8->f4[0] - rmnParamsf8->f4[0]) * rmnParamsf8->f4[1] * (float4) ONE_OVER_255);
-    pix_f8->f4[1] = rpp_hip_pixel_check_0to1((pix_f8->f4[1] - rmnParamsf8->f4[0]) * rmnParamsf8->f4[1] * (float4) ONE_OVER_255);
+    pix_f8->f4[0] = (pix_f8->f4[0] - rmnParamsf8->f4[0]) * rmnParamsf8->f4[1];
+    pix_f8->f4[1] = (pix_f8->f4[1] - rmnParamsf8->f4[0]) * rmnParamsf8->f4[1];
 }
 
 __device__ void resize_mirror_normalize_roi_and_srclocs_hip_compute(int4 *srcRoiPtr_i4, uint2 *dstDimsWH, int id_x, int id_y, d_float16 *locSrc_f16)
@@ -80,7 +80,7 @@ __device__ void resize_mirror_normalize_roi_and_srclocs_hip_compute_mirror(int4 
 }
 
 template <typename T, typename U>
-__global__ void resize_mirror_normalize_bilinear_pkd_tensor(T *srcPtr,
+__global__ void resize_mirror_normalize_bilinear_pkd_hip_tensor(T *srcPtr,
                                                             uint2 srcStridesNH,
                                                             U *dstPtr,
                                                             uint2 dstStridesNH,
@@ -132,7 +132,7 @@ __global__ void resize_mirror_normalize_bilinear_pkd_tensor(T *srcPtr,
 }
 
 template <typename T, typename U>
-__global__ void resize_mirror_normalize_bilinear_pln_tensor(T *srcPtr,
+__global__ void resize_mirror_normalize_bilinear_pln_hip_tensor(T *srcPtr,
                                                             uint3 srcStridesNCH,
                                                             U *dstPtr,
                                                             uint3 dstStridesNCH,
@@ -201,7 +201,7 @@ __global__ void resize_mirror_normalize_bilinear_pln_tensor(T *srcPtr,
 }
 
 template <typename T, typename U>
-__global__ void resize_mirror_normalize_bilinear_pkd3_pln3_tensor(T *srcPtr,
+__global__ void resize_mirror_normalize_bilinear_pkd3_pln3_hip_tensor(T *srcPtr,
                                                                   uint2 srcStridesNH,
                                                                   U *dstPtr,
                                                                   uint3 dstStridesNCH,
@@ -253,7 +253,7 @@ __global__ void resize_mirror_normalize_bilinear_pkd3_pln3_tensor(T *srcPtr,
 }
 
 template <typename T, typename U>
-__global__ void resize_mirror_normalize_bilinear_pln3_pkd3_tensor(T *srcPtr,
+__global__ void resize_mirror_normalize_bilinear_pln3_pkd3_hip_tensor(T *srcPtr,
                                                                   uint3 srcStridesNCH,
                                                                   U *dstPtr,
                                                                   uint2 dstStridesNH,
@@ -320,21 +320,19 @@ RppStatus hip_exec_resize_mirror_normalize_tensor(T *srcPtr,
         if (roiType == RpptRoiType::XYWH)
         hip_exec_roi_converison_xywh_to_ltrb(roiTensorPtrSrc, handle);
 
-        int localThreads_x = 16;
-        int localThreads_y = 16;
-        int localThreads_z = 1;
         int globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
         int globalThreads_y = dstDescPtr->h;
         int globalThreads_z = handle.GetBatchSize();
 
-        // Set non ROI pixels to zero
-        hipMemset(dstPtr, 0, dstDescPtr->n * dstDescPtr->strides.nStride * sizeof(U));
+        // Set output pixels to zero
+        hipMemsetAsync(dstPtr, 0, dstDescPtr->n * dstDescPtr->strides.nStride * sizeof(U), handle.GetStream());
+        hipStreamSynchronize(handle.GetStream());
 
         if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            hipLaunchKernelGGL(resize_mirror_normalize_bilinear_pkd_tensor,
-                               dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                               dim3(localThreads_x, localThreads_y, localThreads_z),
+            hipLaunchKernelGGL(resize_mirror_normalize_bilinear_pkd_hip_tensor,
+                               dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
                                handle.GetStream(),
                                srcPtr,
@@ -351,9 +349,9 @@ RppStatus hip_exec_resize_mirror_normalize_tensor(T *srcPtr,
         {
             if(srcDescPtr->c == 3)
             {
-                hipLaunchKernelGGL(resize_mirror_normalize_bilinear_pln_tensor,
-                                   dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                                   dim3(localThreads_x, localThreads_y, localThreads_z),
+                hipLaunchKernelGGL(resize_mirror_normalize_bilinear_pln_hip_tensor,
+                                   dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                    0,
                                    handle.GetStream(),
                                    srcPtr,
@@ -369,9 +367,9 @@ RppStatus hip_exec_resize_mirror_normalize_tensor(T *srcPtr,
             }
             else if(srcDescPtr->c == 1)
             {
-                hipLaunchKernelGGL(resize_mirror_normalize_bilinear_pln_tensor,
-                                   dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                                   dim3(localThreads_x, localThreads_y, localThreads_z),
+                hipLaunchKernelGGL(resize_mirror_normalize_bilinear_pln_hip_tensor,
+                                   dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                    0,
                                    handle.GetStream(),
                                    srcPtr,
@@ -390,9 +388,9 @@ RppStatus hip_exec_resize_mirror_normalize_tensor(T *srcPtr,
         {
             if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
             {
-                hipLaunchKernelGGL(resize_mirror_normalize_bilinear_pkd3_pln3_tensor,
-                                   dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                                   dim3(localThreads_x, localThreads_y, localThreads_z),
+                hipLaunchKernelGGL(resize_mirror_normalize_bilinear_pkd3_pln3_hip_tensor,
+                                   dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                    0,
                                    handle.GetStream(),
                                    srcPtr,
@@ -408,9 +406,9 @@ RppStatus hip_exec_resize_mirror_normalize_tensor(T *srcPtr,
             else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
                 globalThreads_x = (dstDescPtr->w + 7) >> 3;
-                hipLaunchKernelGGL(resize_mirror_normalize_bilinear_pln3_pkd3_tensor,
-                                   dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                                   dim3(localThreads_x, localThreads_y, localThreads_z),
+                hipLaunchKernelGGL(resize_mirror_normalize_bilinear_pln3_pkd3_hip_tensor,
+                                   dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                    0,
                                    handle.GetStream(),
                                    srcPtr,
