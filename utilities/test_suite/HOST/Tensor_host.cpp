@@ -132,6 +132,12 @@ int main(int argc, char **argv)
         exit(0);
     }
 
+    if(batchSize > MAX_BATCH_SIZE)
+    {
+        std::cerr << "\n Batchsize should be less than or equal to "<< MAX_BATCH_SIZE << " Aborting!";
+        exit(0);
+    }
+
     // Get function name
     string funcName = augmentationMap[testCase];
     if (funcName.empty())

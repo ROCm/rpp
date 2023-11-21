@@ -9,6 +9,7 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
     String backend = 'HIP'
     String enableSCL = 'echo build-rpp'
     String enableAudioTesting = 'echo audio-tests-not-supported'
+    String enableVoxelTesting = 'echo voxel-tests-not-supported'
 
     if (platform.jenkinsLabel.contains('centos')) {
         backend = 'CPU'
@@ -16,12 +17,14 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
     }
     else if (platform.jenkinsLabel.contains('ubuntu')) {
         enableAudioTesting = 'sudo apt-get install -y libsndfile1-dev'
+        enableVoxelTesting = '(git clone https://github.com/NIFTI-Imaging/nifti_clib.git; cd nifti_clib; mkdir build; cd build; cmake ../; sudo make -j$nproc install)'
         if (platform.jenkinsLabel.contains('ubuntu20')) {
             backend = 'OCL'
         }
     }
     else if (platform.jenkinsLabel.contains('rhel')) {
         enableAudioTesting = 'sudo yum install -y libsndfile-devel'
+        enableVoxelTesting = '(git clone https://github.com/NIFTI-Imaging/nifti_clib.git; cd nifti_clib; mkdir build; cd build; cmake ../; sudo make -j$nproc install)'
     }
     
 
@@ -36,6 +39,7 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
                 mkdir -p build/${buildTypeDir} && cd build/${buildTypeDir}
                 ${enableSCL}
                 ${enableAudioTesting}
+                ${enableVoxelTesting}
                 cmake -DBACKEND=${backend} ${buildTypeArg} ../..
                 make -j\$(nproc)
                 sudo make install

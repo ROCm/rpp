@@ -35,10 +35,12 @@ THE SOFTWARE.
 #include <CL/cl.h>
 #endif
 
-/*! \brief 8 bit unsigned char minimum \ingroup group_rppdefs \page subpage_rpp asdfsf*/
+/*! \brief 8 bit unsigned char minimum \ingroup group_rppdefs \page subpage_rpp */
 #define RPP_MIN_8U      ( 0 )
-/*! \brief 8 bit unsigned char maximum \ingroup group_rppdefs \page subpage_rppi asdfsfasdfds */
+/*! \brief 8 bit unsigned char maximum \ingroup group_rppdefs \page subpage_rppi */
 #define RPP_MAX_8U      ( 255 )
+/*! \brief RPP maximum dimensions in tensor \ingroup group_rppdefs \page subpage_rppt */
+#define RPPT_MAX_DIMS   ( 5 )
 
 const float ONE_OVER_6 = 1.0f / 6;
 const float ONE_OVER_3 = 1.0f / 3;
@@ -99,15 +101,15 @@ typedef enum
     /*! \brief Invalid dst tensor layout. (Needs to adhere to function specification.) \ingroup group_rppdefs */
     RPP_ERROR_INVALID_DST_LAYOUT        = -10,
     /*! \brief Invalid src tensor datatype. (Needs to adhere to function specification.) \ingroup group_rppdefs */
-    RPP_ERROR_INVALID_SRC_DATATYPE     = -11,
+    RPP_ERROR_INVALID_SRC_DATATYPE      = -11,
     /*! \brief Invalid dst tensor datatype. (Needs to adhere to function specification.) \ingroup group_rppdefs */
-    RPP_ERROR_INVALID_DST_DATATYPE     = -12,
+    RPP_ERROR_INVALID_DST_DATATYPE      = -12,
     /*! \brief Invalid src/dst tensor datatype. (Needs to adhere to function specification.) \ingroup group_rppdefs */
-    RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE      = -13,
+    RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE       = -13,
     /*! \brief Insufficient dst buffer length provided. (Needs to adhere to function specification.) \ingroup group_rppdefs */
     RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH    = -14,
     /*! \brief Invalid datatype \ingroup group_rppdefs */
-    RPP_ERROR_INVALID_DATATYPE          = -15,
+    RPP_ERROR_INVALID_PARAMETER_DATATYPE        = -15,
     /*! \brief Not enough memory \ingroup group_rppdefs */
     RPP_ERROR_NOT_ENOUGH_MEMORY         = -16,
     /*! \brief Out of bound source ROI \ingroup group_rppdefs */
@@ -301,6 +303,13 @@ typedef struct
 {
     int x;
     int y;
+    int z;
+} RppiPoint3D;
+
+typedef struct
+{
+    int x;
+    int y;
     int width;
     int height;
 } RppiRect;
@@ -335,7 +344,9 @@ typedef enum
 typedef enum
 {
     NCHW,
-    NHWC
+    NHWC,
+    NCDHW,
+    NDHWC
 } RpptLayout;
 
 /*! \brief RPPT Tensor 2D ROI type enum
@@ -343,13 +354,19 @@ typedef enum
  */
 typedef enum
 {
-    LTRB,
-    XYWH
+    LTRB,    // Left-Top-Right-Bottom
+    XYWH     // X-Y-Width-Height
 } RpptRoiType;
 
 /*! \brief RPPT Tensor subpixel layout type enum
  * \ingroup group_rppdefs
  */
+typedef enum
+{
+    LTFRBB,    // Left-Top-Front-Right-Bottom-Back
+    XYZWHD     // X-Y-Z-Width-Height-Depth
+} RpptRoi3DType;
+
 typedef enum
 {
     RGBtype,
@@ -374,9 +391,18 @@ typedef enum
  */
 typedef struct
 {
-    RppiPoint lt, rb;
+    RppiPoint lt, rb;    // Left-Top point and Right-Bottom point
 
 } RpptRoiLtrb;
+
+/*! \brief RPPT Tensor 3D ROI LTFRBB struct
+ * \ingroup group_rppdefs
+ */
+typedef struct
+{
+    RppiPoint3D ltf, rbb; // Left-Top-Front point and Right-Bottom-Back point
+
+} RpptRoiLtfrbb;
 
 /*! \brief RPPT Tensor 2D ROI XYWH struct
  * \ingroup group_rppdefs
@@ -388,15 +414,35 @@ typedef struct
 
 } RpptRoiXywh;
 
+/*! \brief RPPT Tensor 3D ROI XYZWHD struct
+ * \ingroup group_rppdefs
+ */
+typedef struct
+{
+    RppiPoint3D xyz;
+    int roiWidth, roiHeight, roiDepth;
+
+} RpptRoiXyzwhd;
+
 /*! \brief RPPT Tensor 2D ROI union
  * \ingroup group_rppdefs
  */
 typedef union
 {
-    RpptRoiLtrb ltrbROI;
-    RpptRoiXywh xywhROI;
+    RpptRoiLtrb ltrbROI;    // ROI defined as Left-Top-Right-Bottom
+    RpptRoiXywh xywhROI;    // ROI defined as X-Y-Width-Height
 
 } RpptROI, *RpptROIPtr;
+
+/*! \brief RPPT Tensor 3D ROI union
+ * \ingroup group_rppdefs
+ */
+typedef union
+{
+    RpptRoiLtfrbb ltfrbbROI;    // ROI defined as Left-Top-Front-Right-Bottom-Back
+    RpptRoiXyzwhd xyzwhdROI;    // ROI defined as X-Y-Z-Width-Height-Depth
+
+} RpptROI3D, *RpptROI3DPtr;
 
 /*! \brief RPPT Tensor strides type struct
  * \ingroup group_rppdefs
@@ -417,14 +463,24 @@ typedef struct
     RppSize_t numDims;
     Rpp32u offsetInBytes;
     RpptDataType dataType;
-    RpptLayout layout;
     Rpp32u n, c, h, w;
     RpptStrides strides;
+    RpptLayout layout;
 } RpptDesc, *RpptDescPtr;
 
 /*! \brief RPPT Tensor 8-bit uchar RGB type struct
  * \ingroup group_rppdefs
  */
+typedef struct
+{
+    RppSize_t numDims;
+    Rpp32u offsetInBytes;
+    RpptDataType dataType;
+    Rpp32u dims[RPPT_MAX_DIMS];
+    Rpp32u strides[RPPT_MAX_DIMS];
+    RpptLayout layout;
+} RpptGenericDesc, *RpptGenericDescPtr;
+
 typedef struct
 {
     Rpp8u R;

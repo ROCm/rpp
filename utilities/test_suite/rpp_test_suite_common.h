@@ -57,6 +57,14 @@ using namespace std;
 #define GOLDEN_OUTPUT_MAX_HEIGHT 150    // Golden outputs are generated with MAX_HEIGHT set to 150. Changing this constant will result in QA test failures
 #define GOLDEN_OUTPUT_MAX_WIDTH 150     // Golden outputs are generated with MAX_WIDTH set to 150. Changing this constant will result in QA test failures
 
+#define CHECK(x) do { \
+  int retval = (x); \
+  if (retval != 0) { \
+    fprintf(stderr, "Runtime error: %s returned %d at %s:%d", #x, retval, __FILE__, __LINE__); \
+    exit(-1); \
+  } \
+} while (0)
+
 std::map<int, string> augmentationMap =
 {
     {0, "brightness"},
@@ -381,6 +389,39 @@ inline void  set_src_and_dst_roi(vector<string>::const_iterator imagePathsStart,
         dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight;
     }
     tjDestroy(tjInstance);
+}
+
+// sets generic descriptor dimensions and strides of src/dst
+inline void set_generic_descriptor(RpptGenericDescPtr descriptorPtr3D, int noOfImages, int maxX, int maxY, int maxZ, int numChannels, int offsetInBytes, int layoutType)
+{
+    descriptorPtr3D->numDims = 5;
+    descriptorPtr3D->offsetInBytes = offsetInBytes;
+    descriptorPtr3D->dataType = RpptDataType::F32;
+
+    if (layoutType == 0)
+    {
+        descriptorPtr3D->layout = RpptLayout::NCDHW;
+        descriptorPtr3D->dims[0] = noOfImages;
+        descriptorPtr3D->dims[1] = numChannels;
+        descriptorPtr3D->dims[2] = maxZ;
+        descriptorPtr3D->dims[3] = maxY;
+        descriptorPtr3D->dims[4] = maxX;
+    }
+    else if (layoutType == 1)
+    {
+        descriptorPtr3D->layout = RpptLayout::NDHWC;
+        descriptorPtr3D->dims[0] = noOfImages;
+        descriptorPtr3D->dims[1] = maxZ;
+        descriptorPtr3D->dims[2] = maxY;
+        descriptorPtr3D->dims[3] = maxX;
+        descriptorPtr3D->dims[4] = numChannels;
+    }
+
+    descriptorPtr3D->strides[0] = descriptorPtr3D->dims[1] * descriptorPtr3D->dims[2] * descriptorPtr3D->dims[3] * descriptorPtr3D->dims[4];
+    descriptorPtr3D->strides[1] = descriptorPtr3D->dims[2] * descriptorPtr3D->dims[3] * descriptorPtr3D->dims[4];
+    descriptorPtr3D->strides[2] = descriptorPtr3D->dims[3] * descriptorPtr3D->dims[4];
+    descriptorPtr3D->strides[3] = descriptorPtr3D->dims[4];
+    descriptorPtr3D->strides[4] = 1;
 }
 
 // sets descriptor dimensions and strides of src/dst
