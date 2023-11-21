@@ -355,30 +355,17 @@ set(CPACK_PACKAGE_VENDOR        "AMD ROCm")
 set(CPACK_PACKAGE_GROUP         "Development/Tools")
 set(CPACK_PACKAGE_HOMEPAGE      "https://gpuopen-professionalcompute-libraries.github.io/rpp/")
 
-set(CPACK_DEBIAN_PACKAGE_DESCRIPTION   "ROCm Performance Primitives library is a comprehensive high performance computer vision library
-    ROCm Performance Primitives (RPP) library is a comprehensive high performance \
-    computer vision library for AMD (CPU and GPU) with HIP and OpenCL back-ends")
-set(CPACK_RPM_PACKAGE_SUMMARY          "ROCm Performance Primitives (RPP) library is a comprehensive high performance computer vision library for AMD (CPU and GPU) with HIP and OpenCL back-ends")
-
 if(DEFINED ENV{ROCM_LIBPATCH_VERSION})
     set(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}.$ENV{ROCM_LIBPATCH_VERSION}")
 endif()
 
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "rocm-core")
-set(CPACK_RPM_PACKAGE_REQUIRES "rocm-core")
-set(CPACK_DEBIAN_FILE_NAME       "DEB-DEFAULT")
-set(CPACK_RPM_FILE_NAME          "RPM-DEFAULT")
+# Set the dependent packages
+set(RPP_DEBIAN_PACKAGE_LIST  "half")
+set(RPP_RPM_PACKAGE_LIST     "half")
+
+# package release
 set(CPACK_DEBIAN_PACKAGE_RELEASE "local")
 set(CPACK_RPM_PACKAGE_RELEASE    "local")
-
-set(ROCM_DEP_ROCMCORE TRUE CACHE BOOL "Add dependency on rocm-core package")
-if(NOT ROCM_DEP_ROCMCORE)
-    string(REGEX REPLACE ",? ?rocm-core" "" CPACK_RPM_PACKAGE_REQUIRES
-                 ${CPACK_RPM_PACKAGE_REQUIRES})
-    string(REGEX REPLACE ",? ?rocm-core" "" CPACK_DEBIAN_PACKAGE_DEPENDS
-                 ${CPACK_DEBIAN_PACKAGE_DEPENDS})
-endif()
-
 if(DEFINED ENV{CPACK_DEBIAN_PACKAGE_RELEASE})
     set(CPACK_DEBIAN_PACKAGE_RELEASE $ENV{CPACK_DEBIAN_PACKAGE_RELEASE})
 endif()
@@ -395,11 +382,51 @@ if(PROC_RESULT EQUAL "0" AND NOT EVAL_RESULT STREQUAL "")
     string (APPEND CPACK_RPM_PACKAGE_RELEASE "%{?dist}")
 endif()
 
-set(CPACK_PACKAGING_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
-
+set(CPACK_PACKAGING_INSTALL_PREFIX  ${CMAKE_INSTALL_PREFIX})
 set(CPACK_DEBIAN_PACKAGE_HOMEPAGE   ${CPACK_PACKAGE_HOMEPAGE})
 set(CPACK_RPM_PACKAGE_URL           ${CPACK_PACKAGE_HOMEPAGE})
 set(CPACK_RPM_PACKAGE_AUTOREQPROV   "no")
+
+# Debian package
+set(CPACK_DEB_COMPONENT_INSTALL ON)
+set(CPACK_DEBIAN_RUNTIME_PACKAGE_NAME "${PROJECT_NAME}")
+set(CPACK_DEBIAN_RUNTIME_PACKAGE_DEPENDS "rocm-core, ${RPP_DEBIAN_PACKAGE_LIST}")
+set(CPACK_DEBIAN_DEV_PACKAGE_NAME "${PROJECT_NAME}-dev")
+set(CPACK_DEBIAN_DEV_PACKAGE_DEPENDS "rocm-core, ${PROJECT_NAME}, ${RPP_DEBIAN_PACKAGE_LIST}")
+set(CPACK_DEBIAN_PACKAGE_LICENSE "MIT" )
+# Debian package specific variable for ASAN
+set(CPACK_DEBIAN_ASAN_PACKAGE_NAME "${PROJECT_NAME}-asan" )
+set(CPACK_DEBIAN_ASAN_PACKAGE_DEPENDS "rocm-core-asan" )
+# RPM package specific variable for ASAN
+set(CPACK_RPM_ASAN_PACKAGE_NAME "${PROJECT_NAME}-asan" )
+set(CPACK_RPM_ASAN_PACKAGE_REQUIRES "rocm-core-asan" )
+# RPM package
+set(CPACK_RPM_COMPONENT_INSTALL ON)
+set(CPACK_RPM_RUNTIME_PACKAGE_NAME "${PROJECT_NAME}")
+set(CPACK_RPM_RUNTIME_PACKAGE_REQUIRES "rocm-core, ${RPP_RPM_PACKAGE_LIST}")
+set(CPACK_RPM_DEV_PACKAGE_NAME "${PROJECT_NAME}-devel")
+set(CPACK_RPM_DEV_PACKAGE_REQUIRES "rocm-core, ${PROJECT_NAME}, ${RPP_DEBIAN_PACKAGE_LIST}")
+set(CPACK_RPM_RUNTIME_PACKAGE_PROVIDES "${PROJECT_NAME}")
+set(CPACK_RPM_RUNTIME_PACKAGE_OBSOLETES "${PROJECT_NAME}")
+set(CPACK_RPM_DEV_PACKAGE_PROVIDES "${PROJECT_NAME}-devel")
+set(CPACK_RPM_DEV_PACKAGE_OBSOLETES "${PROJECT_NAME}-devel")
+set(CPACK_RPM_PACKAGE_LICENSE "MIT" )
+
+if(NOT ROCM_DEP_ROCMCORE)
+string(REGEX REPLACE ",? ?rocm-core," "" CPACK_RPM_RUNTIME_PACKAGE_REQUIRES ${CPACK_RPM_RUNTIME_PACKAGE_REQUIRES})
+string(REGEX REPLACE ",? ?rocm-core-asan," "" CPACK_RPM_ASAN_PACKAGE_REQUIRES ${CPACK_RPM_ASAN_PACKAGE_REQUIRES})
+string(REGEX REPLACE ",? ?rocm-core," "" CPACK_RPM_DEV_PACKAGE_REQUIRES ${CPACK_RPM_DEV_PACKAGE_REQUIRES})
+string(REGEX REPLACE ",? ?rocm-core," "" CPACK_DEBIAN_RUNTIME_PACKAGE_DEPENDS ${CPACK_DEBIAN_RUNTIME_PACKAGE_DEPENDS})
+string(REGEX REPLACE ",? ?rocm-core-asan," "" CPACK_DEBIAN_ASAN_PACKAGE_DEPENDS ${CPACK_DEBIAN_ASAN_PACKAGE_DEPENDS})
+string(REGEX REPLACE ",? ?rocm-core," "" CPACK_DEBIAN_DEV_PACKAGE_DEPENDS ${CPACK_DEBIAN_DEV_PACKAGE_DEPENDS})
+endif()
+
+if(ENABLE_ASAN_PACKAGING)
+  # ASAN Package requires asan component with only libraries and license file
+  set(CPACK_COMPONENTS_ALL asan)
+else()
+  set(CPACK_COMPONENTS_ALL runtime dev)
+endif()
 
 if(APPLE)
     set(CPACK_GENERATOR "Bundle")
@@ -413,69 +440,32 @@ else()
     endif()
     if(EXISTS ${RPMBUILD_EXE})
         list(APPEND CPACK_GENERATOR "RPM")
+        message("-- ${White}AMD ROCm RPP RunTime Package -- ${CPACK_RPM_DEV_PACKAGE_REQUIRES}${ColourReset}")
+        message("-- ${White}AMD ROCm RPP Dev Package -- ${CPACK_RPM_DEV_PACKAGE_DEPENDS}${ColourReset}")
     endif()
     if(EXISTS ${DPKG_EXE})
         list(APPEND CPACK_GENERATOR "DEB")
+        message("-- ${White}AMD ROCm rocDecode RunTime Package -- ${CPACK_DEBIAN_RUNTIME_PACKAGE_DEPENDS}${ColourReset}")
+        message("-- ${White}AMD ROCm rocDecode Dev Package -- ${CPACK_DEBIAN_DEV_PACKAGE_DEPENDS}${ColourReset}")
     endif()
-endif()
-
-
-set(CPACK_DEB_COMPONENT_INSTALL ON)
-set(CPACK_DEBIAN_RUNTIME_PACKAGE_NAME "${PROJECT_NAME}")
-set(CPACK_DEBIAN_RUNTIME_PACKAGE_DEPENDS "rocm-core")
-set(CPACK_DEBIAN_DEV_PACKAGE_NAME "${PROJECT_NAME}-dev")
-set(CPACK_DEBIAN_DEV_PACKAGE_DEPENDS "${PROJECT_NAME}, rocm-core")
-# Debian package specific variable for ASAN
-set(CPACK_DEBIAN_ASAN_PACKAGE_NAME "${PROJECT_NAME}-asan" )
-set(CPACK_DEBIAN_ASAN_PACKAGE_DEPENDS "${PROJECT_NAME},rocm-core-asan" )
-set(CPACK_RPM_COMPONENT_INSTALL ON)
-set(CPACK_RPM_RUNTIME_PACKAGE_NAME "${PROJECT_NAME}")
-set(CPACK_RPM_RUNTIME_PACKAGE_REQUIRES "rocm-core")
-set(CPACK_RPM_DEV_PACKAGE_NAME "${PROJECT_NAME}-devel")
-set(CPACK_RPM_DEV_PACKAGE_REQUIRES "${PROJECT_NAME}, rocm-core")
-set(CPACK_RPM_RUNTIME_PACKAGE_PROVIDES "${PROJECT_NAME}")
-set(CPACK_RPM_RUNTIME_PACKAGE_OBSOLETES "${PROJECT_NAME}")
-set(CPACK_RPM_DEV_PACKAGE_PROVIDES "${PROJECT_NAME}-dev")
-set(CPACK_RPM_DEV_PACKAGE_OBSOLETES "${PROJECT_NAME}-dev")
-set(CPACK_RPM_PACKAGE_LICENSE "MIT" )
-# RPM package specific variable for ASAN
-set(CPACK_RPM_ASAN_PACKAGE_NAME "${PROJECT_NAME}-asan" )
-set(CPACK_RPM_ASAN_PACKAGE_REQUIRES "rocm-core-asan" )
-
-
-if(NOT ROCM_DEP_ROCMCORE)
-  string(REGEX REPLACE ",? ?rocm-core" "" CPACK_RPM_RUNTIME_PACKAGE_REQUIRES ${CPACK_RPM_RUNTIME_PACKAGE_REQUIRES})
-  string(REGEX REPLACE ",? ?rocm-core-asan" "" CPACK_RPM_ASAN_PACKAGE_REQUIRES ${CPACK_RPM_ASAN_PACKAGE_REQUIRES})
-  string(REGEX REPLACE ",? ?rocm-core" "" CPACK_RPM_DEV_PACKAGE_REQUIRES ${CPACK_RPM_DEV_PACKAGE_REQUIRES})
-  string(REGEX REPLACE ",? ?rocm-core" "" CPACK_DEBIAN_RUNTIME_PACKAGE_DEPENDS ${CPACK_DEBIAN_RUNTIME_PACKAGE_DEPENDS})
-  string(REGEX REPLACE ",? ?rocm-core-asan" "" CPACK_DEBIAN_ASAN_PACKAGE_DEPENDS ${CPACK_DEBIAN_ASAN_PACKAGE_DEPENDS})
-  string(REGEX REPLACE ",? ?rocm-core" "" CPACK_DEBIAN_DEV_PACKAGE_DEPENDS ${CPACK_DEBIAN_DEV_PACKAGE_DEPENDS})
-endif()
-
-if(ENABLE_ASAN_PACKAGING)
-  # ASAN Package requires asan component with only libraries and license file
-  set(CPACK_COMPONENTS_ALL asan)
-else()
-  set(CPACK_COMPONENTS_ALL runtime dev)
 endif()
 
 include(CPack)
 
 cpack_add_component(runtime
    DISPLAY_NAME "RPP Runtime Package"
-   DESCRIPTION "ROCm Performance Primitives library is a comprehensive high performance
-   computer vision library for AMD (CPUs and GPUs) with HOST/HIP/OpenCL back-ends. 
-   RPP runtime package provides rpp library and license.txt")
+   DESCRIPTION "ROCm Performance Primitives library is a comprehensive high performance \
+computer vision library for AMD (CPUs and GPUs) with HOST/HIP/OpenCL back-ends. 
+RPP runtime package provides rpp library and license.txt")
 
 cpack_add_component(dev
     DISPLAY_NAME "RPP Develop Package"
-    DESCRIPTION "ROCm Performance Primitives library is a comprehensive high performance 
-    computer vision library for AMD (CPUs and GPUs) with HOST/HIP/OpenCL back-ends. 
-    RPP develop package provides rpp library, header files, and license.txt")
+    DESCRIPTION "ROCm Performance Primitives library is a comprehensive high performance \
+computer vision library for AMD (CPUs and GPUs) with HOST/HIP/OpenCL back-ends. \
+RPP develop package provides rpp library, header files, and license.txt")
 
 cpack_add_component(asan
     DISPLAY_NAME "RPP ASAN Package"
-    DESCRIPTION "ROCm Performance Primitives library is a comprehensive high performance 
-    computer vision library for AMD (CPUs and GPUs) with HOST/HIP/OpenCL back-ends. 
-    RPP ASAN package provides rpp ASAN libraries")
-
+    DESCRIPTION "ROCm Performance Primitives library is a comprehensive high performance \ 
+computer vision library for AMD (CPUs and GPUs) with HOST/HIP/OpenCL back-ends. \
+RPP ASAN package provides rpp ASAN libraries")
