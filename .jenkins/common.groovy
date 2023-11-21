@@ -76,6 +76,9 @@ def runPackageCommand(platform, project) {
         if (platform.jenkinsLabel.contains('sles')) {
             osType = 'sles'
         }
+        else if (platform.jenkinsLabel.contains('centos7')) {
+            osType = 'centos7'
+        }
         else if (platform.jenkinsLabel.contains('rhel8')) {
             osType = 'rhel8'
         }
