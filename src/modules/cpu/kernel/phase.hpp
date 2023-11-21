@@ -534,7 +534,7 @@ RppStatus phase_f16_f16_host_tensor(Rpp16f *srcPtr1,
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
-                    Rpp32f srcPtr1Temp_ps[24], srcPtr2Temp_ps[24], dstPtrTemp_ps[24];
+                    Rpp32f srcPtr1Temp_ps[24], srcPtr2Temp_ps[24];
 
                     for(int cnt = 0; cnt < vectorIncrement; cnt++)
                     {
@@ -549,14 +549,7 @@ RppStatus phase_f16_f16_host_tensor(Rpp16f *srcPtr1,
                     p1[0] = _mm256_mul_ps(atan2_ps(p1[0], p2[0]), pMul);    // phase computation
                     p1[1] = _mm256_mul_ps(atan2_ps(p1[1], p2[1]), pMul);    // phase computation
                     p1[2] = _mm256_mul_ps(atan2_ps(p1[2], p2[2]), pMul);    // phase computation
-                    rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTemp_ps, dstPtrTemp_ps + 8, dstPtrTemp_ps + 16, p1);    // simd stores
-
-                    for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
-                    {
-                        dstPtrTempR[cnt] = static_cast<Rpp16f>(dstPtrTemp_ps[cnt]);
-                        dstPtrTempG[cnt] = static_cast<Rpp16f>(dstPtrTemp_ps[cnt + 8]);
-                        dstPtrTempB[cnt] = static_cast<Rpp16f>(dstPtrTemp_ps[cnt + 16]);
-                    }
+                    rpp_simd_store(rpp_store24_f32pln3_to_f16pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p1);    // simd stores
 
                     srcPtr1Temp += vectorIncrement;
                     srcPtr2Temp += vectorIncrement;
@@ -608,7 +601,7 @@ RppStatus phase_f16_f16_host_tensor(Rpp16f *srcPtr1,
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
-                    Rpp32f srcPtr1Temp_ps[24], srcPtr2Temp_ps[24], dstPtrTemp_ps[25];
+                    Rpp32f srcPtr1Temp_ps[24], srcPtr2Temp_ps[24];
 
                     for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
                     {
@@ -628,12 +621,7 @@ RppStatus phase_f16_f16_host_tensor(Rpp16f *srcPtr1,
                     p1[0] = _mm256_mul_ps(atan2_ps(p1[0], p2[0]), pMul);    // phase computation
                     p1[1] = _mm256_mul_ps(atan2_ps(p1[1], p2[1]), pMul);    // phase computation
                     p1[2] = _mm256_mul_ps(atan2_ps(p1[2], p2[2]), pMul);    // phase computation
-                    rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp_ps, p1);    // simd stores
-
-                    for(int cnt = 0; cnt < vectorIncrement; cnt++)
-                    {
-                        dstPtrTemp[cnt] = static_cast<Rpp16f>(dstPtrTemp_ps[cnt]);
-                    }
+                    rpp_simd_store(rpp_store24_f32pln3_to_f16pkd3_avx, dstPtrTemp, p1);    // simd stores
 
                     srcPtr1TempR += vectorIncrementPerChannel;
                     srcPtr1TempG += vectorIncrementPerChannel;
@@ -690,7 +678,7 @@ RppStatus phase_f16_f16_host_tensor(Rpp16f *srcPtr1,
                     int vectorLoopCount = 0;
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                     {
-                        Rpp32f srcPtr1Temp_ps[8], srcPtr2Temp_ps[8], dstPtrTemp_ps[8];
+                        Rpp32f srcPtr1Temp_ps[8], srcPtr2Temp_ps[8];
 
                         for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
                         {
@@ -703,12 +691,7 @@ RppStatus phase_f16_f16_host_tensor(Rpp16f *srcPtr1,
                         rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtr1Temp_ps, p1);    // simd loads
                         rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtr2Temp_ps, p2);    // simd loads
                         p1[0] = _mm256_mul_ps(atan2_ps(p1[0], p2[0]), pMul);    // phase computation
-                        rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp_ps, p1);    // simd stores
-
-                        for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
-                        {
-                            dstPtrTemp[cnt] = static_cast<Rpp16f>(dstPtrTemp_ps[cnt]);
-                        }
+                        rpp_simd_store(rpp_store8_f32_to_f16_avx, dstPtrTemp, p1);    // simd stores
 
                         srcPtr1Temp += vectorIncrementPerChannel;
                         srcPtr2Temp += vectorIncrementPerChannel;
