@@ -104,7 +104,7 @@ if(Python3_FOUND)
             add_test(
                 NAME rpp_qa_tests_tensor_voxel_hip_slice
                 COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HIP/runTests_voxel.py --qa_mode 1 --batch_size 3 --case_list 1
-                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}m
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
             )
         endif(NIFTI_FOUND)
     
