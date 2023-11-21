@@ -126,7 +126,7 @@ struct RPPTensorFunctionMetaData
 #define ONE_OVER_256                    0.00390625f
 #define SIX_OVER_360                    0.01666667f
 #define RPP_255_OVER_1PT57              162.3380757272f     // (255 / 1.570796) - multiplier used in phase computation
-#define ONE_OVER_1PT57                  0.6366199048F       // (1 / 1.570796) - multiplier used in phase computation
+#define ONE_OVER_1PT57                  0.6366199048F       // (1 / 1.570796) i.e. 2/pi - multiplier used in phase computation
 #define PI                              3.14159265
 #define RGB_TO_GREY_WEIGHT_RED          0.299f
 #define RGB_TO_GREY_WEIGHT_GREEN        0.587f
@@ -220,10 +220,10 @@ __device__ __forceinline__ void rpp_hip_pixel_check_and_store(float pixel, half*
 
 __device__ __forceinline__ float4 rpp_hip_pixel_check_0to255(float4 src_f4)
 {
-    return make_float4(fminf(fmaxf(src_f4.x, 0), 255),
-                       fminf(fmaxf(src_f4.y, 0), 255),
-                       fminf(fmaxf(src_f4.z, 0), 255),
-                       fminf(fmaxf(src_f4.w, 0), 255));
+    return make_float4(fminf(fmaxf(src_f4.x, 0.0f), 255.0f),
+                       fminf(fmaxf(src_f4.y, 0.0f), 255.0f),
+                       fminf(fmaxf(src_f4.z, 0.0f), 255.0f),
+                       fminf(fmaxf(src_f4.w, 0.0f), 255.0f));
 }
 
 __device__ __forceinline__ float rpp_hip_pixel_check_0to255(float src_f1)

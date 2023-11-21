@@ -45,7 +45,7 @@ RppStatus phase_u8_u8_host_tensor(Rpp8u *srcPtr1,
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
-        Rpp32f multiplier = 255 / 1.570796;
+        Rpp32f multiplier = RPP_255_OVER_1PT57;
 
         Rpp8u *srcPtr1Image, *srcPtr2Image, *dstPtrImage;
         srcPtr1Image = srcPtr1 + batchCount * srcDescPtr->strides.nStride;
@@ -61,11 +61,13 @@ RppStatus phase_u8_u8_host_tensor(Rpp8u *srcPtr1,
         srcPtr2Channel = srcPtr2Image + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
+        Rpp32u alignedLength = (bufferLength / 48) * 48;
+        Rpp32u vectorIncrement = 48;
+        Rpp32u vectorIncrementPerChannel = 16;
+
         // Phase with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u alignedLength = (bufferLength / 48) * 48;
-
             Rpp8u *srcPtr1Row, *srcPtr2Row, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtr1Row = srcPtr1Channel;
             srcPtr2Row = srcPtr2Channel;
@@ -83,7 +85,7 @@ RppStatus phase_u8_u8_host_tensor(Rpp8u *srcPtr1,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += 48)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 p1[6], p2[6];
 
@@ -97,17 +99,17 @@ RppStatus phase_u8_u8_host_tensor(Rpp8u *srcPtr1,
                     p1[5] = _mm256_round_ps(_mm256_mul_ps(atan2_ps(p1[5], p2[5]), pMul), _MM_FROUND_TO_ZERO);    // phase computation
                     rpp_simd_store(rpp_store48_f32pln3_to_u8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p1);    // simd stores
 
-                    srcPtr1Temp += 48;
-                    srcPtr2Temp += 48;
-                    dstPtrTempR += 16;
-                    dstPtrTempG += 16;
-                    dstPtrTempB += 16;
+                    srcPtr1Temp += vectorIncrement;
+                    srcPtr2Temp += vectorIncrement;
+                    dstPtrTempR += vectorIncrementPerChannel;
+                    dstPtrTempG += vectorIncrementPerChannel;
+                    dstPtrTempB += vectorIncrementPerChannel;
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTempR++ = (Rpp8u) RPPPIXELCHECK(atan(((Rpp32f) (srcPtr1Temp[0])) / ((Rpp32f) (srcPtr2Temp[0]))) * multiplier);
-                    *dstPtrTempG++ = (Rpp8u) RPPPIXELCHECK(atan(((Rpp32f) (srcPtr1Temp[1])) / ((Rpp32f) (srcPtr2Temp[1]))) * multiplier);
-                    *dstPtrTempB++ = (Rpp8u) RPPPIXELCHECK(atan(((Rpp32f) (srcPtr1Temp[2])) / ((Rpp32f) (srcPtr2Temp[2]))) * multiplier);
+                    *dstPtrTempR++ = static_cast<Rpp8u>(RPPPIXELCHECK(atan(static_cast<Rpp32f>(srcPtr1Temp[0]) / static_cast<Rpp32f>(srcPtr2Temp[0])) * multiplier));
+                    *dstPtrTempG++ = static_cast<Rpp8u>(RPPPIXELCHECK(atan(static_cast<Rpp32f>(srcPtr1Temp[1]) / static_cast<Rpp32f>(srcPtr2Temp[1])) * multiplier));
+                    *dstPtrTempB++ = static_cast<Rpp8u>(RPPPIXELCHECK(atan(static_cast<Rpp32f>(srcPtr1Temp[2]) / static_cast<Rpp32f>(srcPtr2Temp[2])) * multiplier));
 
                     srcPtr1Temp += 3;
                     srcPtr2Temp += 3;
@@ -124,8 +126,6 @@ RppStatus phase_u8_u8_host_tensor(Rpp8u *srcPtr1,
         // Phase with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u alignedLength = (bufferLength / 48) * 48;
-
             Rpp8u *srcPtr1RowR, *srcPtr1RowG, *srcPtr1RowB, *srcPtr2RowR, *srcPtr2RowG, *srcPtr2RowB, *dstPtrRow;
             srcPtr1RowR = srcPtr1Channel;
             srcPtr1RowG = srcPtr1RowR + srcDescPtr->strides.cStride;
@@ -161,19 +161,19 @@ RppStatus phase_u8_u8_host_tensor(Rpp8u *srcPtr1,
                     p1[5] = _mm256_round_ps(_mm256_mul_ps(atan2_ps(p1[5], p2[5]), pMul), _MM_FROUND_TO_ZERO);    // phase computation
                     rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTemp, p1);    // simd stores
 
-                    srcPtr1TempR += 16;
-                    srcPtr1TempG += 16;
-                    srcPtr1TempB += 16;
-                    srcPtr2TempR += 16;
-                    srcPtr2TempG += 16;
-                    srcPtr2TempB += 16;
-                    dstPtrTemp += 48;
+                    srcPtr1TempR += vectorIncrementPerChannel;
+                    srcPtr1TempG += vectorIncrementPerChannel;
+                    srcPtr1TempB += vectorIncrementPerChannel;
+                    srcPtr2TempR += vectorIncrementPerChannel;
+                    srcPtr2TempG += vectorIncrementPerChannel;
+                    srcPtr2TempB += vectorIncrementPerChannel;
+                    dstPtrTemp += vectorIncrement;
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK(atan(((Rpp32f) (*srcPtr1TempR)) / ((Rpp32f) (*srcPtr2TempR))) * multiplier);
-                    dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK(atan(((Rpp32f) (*srcPtr1TempG)) / ((Rpp32f) (*srcPtr2TempG))) * multiplier);
-                    dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK(atan(((Rpp32f) (*srcPtr1TempB)) / ((Rpp32f) (*srcPtr2TempB))) * multiplier);
+                    dstPtrTemp[0] = static_cast<Rpp8u>(RPPPIXELCHECK(atan(static_cast<Rpp32f>(*srcPtr1TempR) / static_cast<Rpp32f>(*srcPtr2TempR)) * multiplier));
+                    dstPtrTemp[1] = static_cast<Rpp8u>(RPPPIXELCHECK(atan(static_cast<Rpp32f>(*srcPtr1TempG) / static_cast<Rpp32f>(*srcPtr2TempG)) * multiplier));
+                    dstPtrTemp[2] = static_cast<Rpp8u>(RPPPIXELCHECK(atan(static_cast<Rpp32f>(*srcPtr1TempB) / static_cast<Rpp32f>(*srcPtr2TempB)) * multiplier));
 
                     srcPtr1TempR++;
                     srcPtr1TempG++;
@@ -197,7 +197,7 @@ RppStatus phase_u8_u8_host_tensor(Rpp8u *srcPtr1,
         // Phase without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
         else
         {
-            Rpp32u alignedLength = bufferLength & ~15;
+            alignedLength = bufferLength & ~15;
 
             for(int c = 0; c < layoutParams.channelParam; c++)
             {
@@ -214,7 +214,7 @@ RppStatus phase_u8_u8_host_tensor(Rpp8u *srcPtr1,
                     dstPtrTemp = dstPtrRow;
 
                     int vectorLoopCount = 0;
-                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                     {
                         __m256 p1[2], p2[2];
 
@@ -224,13 +224,13 @@ RppStatus phase_u8_u8_host_tensor(Rpp8u *srcPtr1,
                         p1[1] = _mm256_round_ps(_mm256_mul_ps(atan2_ps(p1[1], p2[1]), pMul), _MM_FROUND_TO_ZERO);    // phase computation
                         rpp_simd_store(rpp_store16_f32_to_u8_avx, dstPtrTemp, p1);    // simd stores
 
-                        srcPtr1Temp += 16;
-                        srcPtr2Temp += 16;
-                        dstPtrTemp += 16;
+                        srcPtr1Temp += vectorIncrementPerChannel;
+                        srcPtr2Temp += vectorIncrementPerChannel;
+                        dstPtrTemp += vectorIncrementPerChannel;
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        *dstPtrTemp++ = (Rpp8u) RPPPIXELCHECK(atan(((Rpp32f) (*srcPtr1Temp)) / ((Rpp32f) (*srcPtr2Temp))) * multiplier);
+                        *dstPtrTemp++ = static_cast<Rpp8u>(RPPPIXELCHECK(atan(static_cast<Rpp32f>(*srcPtr1Temp) / static_cast<Rpp32f>(*srcPtr2Temp)) * multiplier));
 
                         srcPtr1Temp++;
                         srcPtr2Temp++;
@@ -272,7 +272,7 @@ RppStatus phase_f32_f32_host_tensor(Rpp32f *srcPtr1,
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
-        Rpp32f multiplier = 1 / 1.570796;
+        Rpp32f multiplier = ONE_OVER_1PT57;
 
         Rpp32f *srcPtr1Image, *srcPtr2Image, *dstPtrImage;
         srcPtr1Image = srcPtr1 + batchCount * srcDescPtr->strides.nStride;
@@ -288,11 +288,13 @@ RppStatus phase_f32_f32_host_tensor(Rpp32f *srcPtr1,
         srcPtr2Channel = srcPtr2Image + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
+        Rpp32u alignedLength = (bufferLength / 24) * 24;
+        Rpp32u vectorIncrement = 24;
+        Rpp32u vectorIncrementPerChannel = 8;
+
         // Phase with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u alignedLength = (bufferLength / 24) * 24;
-
             Rpp32f *srcPtr1Row, *srcPtr2Row, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtr1Row = srcPtr1Channel;
             srcPtr2Row = srcPtr2Channel;
@@ -310,7 +312,7 @@ RppStatus phase_f32_f32_host_tensor(Rpp32f *srcPtr1,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 p1[3], p2[3];
 
@@ -321,11 +323,11 @@ RppStatus phase_f32_f32_host_tensor(Rpp32f *srcPtr1,
                     p1[2] = _mm256_mul_ps(atan2_ps(p1[2], p2[2]), pMul);    // phase computation
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p1);    // simd stores
 
-                    srcPtr1Temp += 24;
-                    srcPtr2Temp += 24;
-                    dstPtrTempR += 8;
-                    dstPtrTempG += 8;
-                    dstPtrTempB += 8;
+                    srcPtr1Temp += vectorIncrement;
+                    srcPtr2Temp += vectorIncrement;
+                    dstPtrTempR += vectorIncrementPerChannel;
+                    dstPtrTempG += vectorIncrementPerChannel;
+                    dstPtrTempB += vectorIncrementPerChannel;
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
@@ -348,8 +350,6 @@ RppStatus phase_f32_f32_host_tensor(Rpp32f *srcPtr1,
         // Phase with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u alignedLength = (bufferLength / 24) * 24;
-
             Rpp32f *srcPtr1RowR, *srcPtr1RowG, *srcPtr1RowB, *srcPtr2RowR, *srcPtr2RowG, *srcPtr2RowB, *dstPtrRow;
             srcPtr1RowR = srcPtr1Channel;
             srcPtr1RowG = srcPtr1RowR + srcDescPtr->strides.cStride;
@@ -371,7 +371,7 @@ RppStatus phase_f32_f32_host_tensor(Rpp32f *srcPtr1,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 p1[3], p2[3];
 
@@ -382,13 +382,13 @@ RppStatus phase_f32_f32_host_tensor(Rpp32f *srcPtr1,
                     p1[2] = _mm256_mul_ps(atan2_ps(p1[2], p2[2]), pMul);    // phase computation
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, p1);    // simd stores
 
-                    srcPtr1TempR += 8;
-                    srcPtr1TempG += 8;
-                    srcPtr1TempB += 8;
-                    srcPtr2TempR += 8;
-                    srcPtr2TempG += 8;
-                    srcPtr2TempB += 8;
-                    dstPtrTemp += 24;
+                    srcPtr1TempR += vectorIncrementPerChannel;
+                    srcPtr1TempG += vectorIncrementPerChannel;
+                    srcPtr1TempB += vectorIncrementPerChannel;
+                    srcPtr2TempR += vectorIncrementPerChannel;
+                    srcPtr2TempG += vectorIncrementPerChannel;
+                    srcPtr2TempB += vectorIncrementPerChannel;
+                    dstPtrTemp += vectorIncrement;
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
@@ -418,7 +418,7 @@ RppStatus phase_f32_f32_host_tensor(Rpp32f *srcPtr1,
         // Phase without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
         else
         {
-            Rpp32u alignedLength = bufferLength & ~7;
+            alignedLength = bufferLength & ~7;
 
             for(int c = 0; c < layoutParams.channelParam; c++)
             {
@@ -435,7 +435,7 @@ RppStatus phase_f32_f32_host_tensor(Rpp32f *srcPtr1,
                     dstPtrTemp = dstPtrRow;
 
                     int vectorLoopCount = 0;
-                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                     {
                         __m256 p1[1], p2[1];
 
@@ -444,9 +444,9 @@ RppStatus phase_f32_f32_host_tensor(Rpp32f *srcPtr1,
                         p1[0] = _mm256_mul_ps(atan2_ps(p1[0], p2[0]), pMul);    // phase computation
                         rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp, p1);    // simd stores
 
-                        srcPtr1Temp += 8;
-                        srcPtr2Temp += 8;
-                        dstPtrTemp += 8;
+                        srcPtr1Temp += vectorIncrementPerChannel;
+                        srcPtr2Temp += vectorIncrementPerChannel;
+                        dstPtrTemp += vectorIncrementPerChannel;
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
@@ -492,7 +492,7 @@ RppStatus phase_f16_f16_host_tensor(Rpp16f *srcPtr1,
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
-        Rpp32f multiplier = 1 / 1.570796;
+        Rpp32f multiplier = ONE_OVER_1PT57;
 
         Rpp16f *srcPtr1Image, *srcPtr2Image, *dstPtrImage;
         srcPtr1Image = srcPtr1 + batchCount * srcDescPtr->strides.nStride;
@@ -508,11 +508,13 @@ RppStatus phase_f16_f16_host_tensor(Rpp16f *srcPtr1,
         srcPtr2Channel = srcPtr2Image + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
+        Rpp32u alignedLength = (bufferLength / 24) * 24;
+        Rpp32u vectorIncrement = 24;
+        Rpp32u vectorIncrementPerChannel = 8;
+
         // Phase with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u alignedLength = (bufferLength / 24) * 24;
-
             Rpp16f *srcPtr1Row, *srcPtr2Row, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtr1Row = srcPtr1Channel;
             srcPtr2Row = srcPtr2Channel;
@@ -530,14 +532,14 @@ RppStatus phase_f16_f16_host_tensor(Rpp16f *srcPtr1,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     Rpp32f srcPtr1Temp_ps[24], srcPtr2Temp_ps[24], dstPtrTemp_ps[24];
 
-                    for(int cnt = 0; cnt < 24; cnt++)
+                    for(int cnt = 0; cnt < vectorIncrement; cnt++)
                     {
-                        *(srcPtr1Temp_ps + cnt) = (Rpp32f) *(srcPtr1Temp + cnt);
-                        *(srcPtr2Temp_ps + cnt) = (Rpp32f) *(srcPtr2Temp + cnt);
+                        srcPtr1Temp_ps[cnt] = static_cast<Rpp32f>(srcPtr1Temp[cnt]);
+                        srcPtr2Temp_ps[cnt] = static_cast<Rpp32f>(srcPtr2Temp[cnt]);
                     }
 
                     __m256 p1[3], p2[3];
@@ -549,24 +551,24 @@ RppStatus phase_f16_f16_host_tensor(Rpp16f *srcPtr1,
                     p1[2] = _mm256_mul_ps(atan2_ps(p1[2], p2[2]), pMul);    // phase computation
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTemp_ps, dstPtrTemp_ps + 8, dstPtrTemp_ps + 16, p1);    // simd stores
 
-                    for(int cnt = 0; cnt < 8; cnt++)
+                    for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
                     {
-                        *(dstPtrTempR + cnt) = (Rpp16f) *(dstPtrTemp_ps + cnt);
-                        *(dstPtrTempG + cnt) = (Rpp16f) *(dstPtrTemp_ps + 8 + cnt);
-                        *(dstPtrTempB + cnt) = (Rpp16f) *(dstPtrTemp_ps + 16 + cnt);
+                        dstPtrTempR[cnt] = static_cast<Rpp16f>(dstPtrTemp_ps[cnt]);
+                        dstPtrTempG[cnt] = static_cast<Rpp16f>(dstPtrTemp_ps[cnt + 8]);
+                        dstPtrTempB[cnt] = static_cast<Rpp16f>(dstPtrTemp_ps[cnt + 16]);
                     }
 
-                    srcPtr1Temp += 24;
-                    srcPtr2Temp += 24;
-                    dstPtrTempR += 8;
-                    dstPtrTempG += 8;
-                    dstPtrTempB += 8;
+                    srcPtr1Temp += vectorIncrement;
+                    srcPtr2Temp += vectorIncrement;
+                    dstPtrTempR += vectorIncrementPerChannel;
+                    dstPtrTempG += vectorIncrementPerChannel;
+                    dstPtrTempB += vectorIncrementPerChannel;
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTempR++ = (Rpp16f) RPPPIXELCHECKF32(atan(srcPtr1Temp[0] / srcPtr2Temp[0]) * multiplier);
-                    *dstPtrTempG++ = (Rpp16f) RPPPIXELCHECKF32(atan(srcPtr1Temp[1] / srcPtr2Temp[1]) * multiplier);
-                    *dstPtrTempB++ = (Rpp16f) RPPPIXELCHECKF32(atan(srcPtr1Temp[2] / srcPtr2Temp[2]) * multiplier);
+                    *dstPtrTempR++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(atan(srcPtr1Temp[0] / srcPtr2Temp[0]) * multiplier));
+                    *dstPtrTempG++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(atan(srcPtr1Temp[1] / srcPtr2Temp[1]) * multiplier));
+                    *dstPtrTempB++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(atan(srcPtr1Temp[2] / srcPtr2Temp[2]) * multiplier));
 
                     srcPtr1Temp += 3;
                     srcPtr2Temp += 3;
@@ -583,8 +585,6 @@ RppStatus phase_f16_f16_host_tensor(Rpp16f *srcPtr1,
         // Phase with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u alignedLength = (bufferLength / 24) * 24;
-
             Rpp16f *srcPtr1RowR, *srcPtr1RowG, *srcPtr1RowB, *srcPtr2RowR, *srcPtr2RowG, *srcPtr2RowB, *dstPtrRow;
             srcPtr1RowR = srcPtr1Channel;
             srcPtr1RowG = srcPtr1RowR + srcDescPtr->strides.cStride;
@@ -606,19 +606,19 @@ RppStatus phase_f16_f16_host_tensor(Rpp16f *srcPtr1,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     Rpp32f srcPtr1Temp_ps[24], srcPtr2Temp_ps[24], dstPtrTemp_ps[25];
 
-                    for(int cnt = 0; cnt < 8; cnt++)
+                    for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
                     {
-                        *(srcPtr1Temp_ps + cnt) = (Rpp32f) *(srcPtr1TempR + cnt);
-                        *(srcPtr1Temp_ps + 8 + cnt) = (Rpp32f) *(srcPtr1TempG + cnt);
-                        *(srcPtr1Temp_ps + 16 + cnt) = (Rpp32f) *(srcPtr1TempB + cnt);
+                        srcPtr1Temp_ps[cnt] = static_cast<Rpp32f>(srcPtr1TempR[cnt]);
+                        srcPtr1Temp_ps[cnt + 8] = static_cast<Rpp32f>(srcPtr1TempG[cnt]);
+                        srcPtr1Temp_ps[cnt + 16] = static_cast<Rpp32f>(srcPtr1TempB[cnt]);
 
-                        *(srcPtr2Temp_ps + cnt) = (Rpp32f) *(srcPtr2TempR + cnt);
-                        *(srcPtr2Temp_ps + 8 + cnt) = (Rpp32f) *(srcPtr2TempG + cnt);
-                        *(srcPtr2Temp_ps + 16 + cnt) = (Rpp32f) *(srcPtr2TempB + cnt);
+                        srcPtr2Temp_ps[cnt] = static_cast<Rpp32f>(srcPtr2TempR[cnt]);
+                        srcPtr2Temp_ps[cnt + 8] = static_cast<Rpp32f>(srcPtr2TempG[cnt]);
+                        srcPtr2Temp_ps[cnt + 8] = static_cast<Rpp32f>(srcPtr2TempB[cnt]);
                     }
 
                     __m256 p1[4], p2[4];
@@ -630,24 +630,24 @@ RppStatus phase_f16_f16_host_tensor(Rpp16f *srcPtr1,
                     p1[2] = _mm256_mul_ps(atan2_ps(p1[2], p2[2]), pMul);    // phase computation
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp_ps, p1);    // simd stores
 
-                    for(int cnt = 0; cnt < 24; cnt++)
+                    for(int cnt = 0; cnt < vectorIncrement; cnt++)
                     {
-                        *(dstPtrTemp + cnt) = (Rpp16f) *(dstPtrTemp_ps + cnt);
+                        dstPtrTemp[cnt] = static_cast<Rpp16f>(dstPtrTemp_ps[cnt]);
                     }
 
-                    srcPtr1TempR += 8;
-                    srcPtr1TempG += 8;
-                    srcPtr1TempB += 8;
-                    srcPtr2TempR += 8;
-                    srcPtr2TempG += 8;
-                    srcPtr2TempB += 8;
-                    dstPtrTemp += 24;
+                    srcPtr1TempR += vectorIncrementPerChannel;
+                    srcPtr1TempG += vectorIncrementPerChannel;
+                    srcPtr1TempB += vectorIncrementPerChannel;
+                    srcPtr2TempR += vectorIncrementPerChannel;
+                    srcPtr2TempG += vectorIncrementPerChannel;
+                    srcPtr2TempB += vectorIncrementPerChannel;
+                    dstPtrTemp += vectorIncrement;
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = (Rpp16f) RPPPIXELCHECKF32(atan(*srcPtr1TempR / *srcPtr2TempR) * multiplier);
-                    dstPtrTemp[1] = (Rpp16f) RPPPIXELCHECKF32(atan(*srcPtr1TempG / *srcPtr2TempG) * multiplier);
-                    dstPtrTemp[2] = (Rpp16f) RPPPIXELCHECKF32(atan(*srcPtr1TempB / *srcPtr2TempB) * multiplier);
+                    dstPtrTemp[0] = static_cast<Rpp16f>(RPPPIXELCHECKF32(atan(*srcPtr1TempR / *srcPtr2TempR) * multiplier));
+                    dstPtrTemp[1] = static_cast<Rpp16f>(RPPPIXELCHECKF32(atan(*srcPtr1TempG / *srcPtr2TempG) * multiplier));
+                    dstPtrTemp[2] = static_cast<Rpp16f>(RPPPIXELCHECKF32(atan(*srcPtr1TempB / *srcPtr2TempB) * multiplier));
 
                     srcPtr1TempR++;
                     srcPtr1TempG++;
@@ -671,7 +671,7 @@ RppStatus phase_f16_f16_host_tensor(Rpp16f *srcPtr1,
         // Phase without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
         else
         {
-            Rpp32u alignedLength = bufferLength & ~7;
+            alignedLength = bufferLength & ~7;
 
             for(int c = 0; c < layoutParams.channelParam; c++)
             {
@@ -688,14 +688,14 @@ RppStatus phase_f16_f16_host_tensor(Rpp16f *srcPtr1,
                     dstPtrTemp = dstPtrRow;
 
                     int vectorLoopCount = 0;
-                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                     {
                         Rpp32f srcPtr1Temp_ps[8], srcPtr2Temp_ps[8], dstPtrTemp_ps[8];
 
-                        for(int cnt = 0; cnt < 8; cnt++)
+                        for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
                         {
-                            *(srcPtr1Temp_ps + cnt) = (Rpp16f) *(srcPtr1Temp + cnt);
-                            *(srcPtr2Temp_ps + cnt) = (Rpp16f) *(srcPtr2Temp + cnt);
+                            srcPtr1Temp_ps[cnt] = static_cast<Rpp16f>(srcPtr1Temp[cnt]);
+                            srcPtr2Temp_ps[cnt] = static_cast<Rpp16f>(srcPtr2Temp[cnt]);
                         }
 
                         __m256 p1[1], p2[1];
@@ -705,18 +705,18 @@ RppStatus phase_f16_f16_host_tensor(Rpp16f *srcPtr1,
                         p1[0] = _mm256_mul_ps(atan2_ps(p1[0], p2[0]), pMul);    // phase computation
                         rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp_ps, p1);    // simd stores
 
-                        for(int cnt = 0; cnt < 8; cnt++)
+                        for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
                         {
-                            *(dstPtrTemp + cnt) = (Rpp16f) *(dstPtrTemp_ps + cnt);
+                            dstPtrTemp[cnt] = static_cast<Rpp16f>(dstPtrTemp_ps[cnt]);
                         }
 
-                        srcPtr1Temp += 8;
-                        srcPtr2Temp += 8;
-                        dstPtrTemp += 8;
+                        srcPtr1Temp += vectorIncrementPerChannel;
+                        srcPtr2Temp += vectorIncrementPerChannel;
+                        dstPtrTemp += vectorIncrementPerChannel;
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        *dstPtrTemp++ = (Rpp16f) RPPPIXELCHECKF32(atan(*srcPtr1Temp / *srcPtr2Temp) * multiplier);
+                        *dstPtrTemp++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(atan(*srcPtr1Temp / *srcPtr2Temp) * multiplier));
 
                         srcPtr1Temp++;
                         srcPtr2Temp++;
@@ -758,7 +758,7 @@ RppStatus phase_i8_i8_host_tensor(Rpp8s *srcPtr1,
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
-        Rpp32f multiplier = 255 / 1.570796;
+        Rpp32f multiplier = RPP_255_OVER_1PT57;
 
         Rpp8s *srcPtr1Image, *srcPtr2Image, *dstPtrImage;
         srcPtr1Image = srcPtr1 + batchCount * srcDescPtr->strides.nStride;
@@ -774,11 +774,13 @@ RppStatus phase_i8_i8_host_tensor(Rpp8s *srcPtr1,
         srcPtr2Channel = srcPtr2Image + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
+        Rpp32u alignedLength = (bufferLength / 48) * 48;
+        Rpp32u vectorIncrement = 48;
+        Rpp32u vectorIncrementPerChannel = 16;
+
         // Phase with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u alignedLength = (bufferLength / 48) * 48;
-
             Rpp8s *srcPtr1Row, *srcPtr2Row, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtr1Row = srcPtr1Channel;
             srcPtr2Row = srcPtr2Channel;
@@ -796,7 +798,7 @@ RppStatus phase_i8_i8_host_tensor(Rpp8s *srcPtr1,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += 48)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 p1[6], p2[6];
 
@@ -810,17 +812,17 @@ RppStatus phase_i8_i8_host_tensor(Rpp8s *srcPtr1,
                     p1[5] = _mm256_round_ps(_mm256_mul_ps(atan2_ps(p1[5], p2[5]), pMul), _MM_FROUND_TO_ZERO);    // phase computation
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p1);    // simd stores
 
-                    srcPtr1Temp += 48;
-                    srcPtr2Temp += 48;
-                    dstPtrTempR += 16;
-                    dstPtrTempG += 16;
-                    dstPtrTempB += 16;
+                    srcPtr1Temp += vectorIncrement;
+                    srcPtr2Temp += vectorIncrement;
+                    dstPtrTempR += vectorIncrementPerChannel;
+                    dstPtrTempG += vectorIncrementPerChannel;
+                    dstPtrTempB += vectorIncrementPerChannel;
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTempR++ = (Rpp8s) RPPPIXELCHECKI8((atan(((Rpp32f) (srcPtr1Temp[0] + 128)) / ((Rpp32f) (srcPtr2Temp[0] + 128))) * multiplier) -  128);
-                    *dstPtrTempG++ = (Rpp8s) RPPPIXELCHECKI8((atan(((Rpp32f) (srcPtr1Temp[1] + 128)) / ((Rpp32f) (srcPtr2Temp[1] + 128))) * multiplier) -  128);
-                    *dstPtrTempB++ = (Rpp8s) RPPPIXELCHECKI8((atan(((Rpp32f) (srcPtr1Temp[2] + 128)) / ((Rpp32f) (srcPtr2Temp[2] + 128))) * multiplier) -  128);
+                    *dstPtrTempR++ = static_cast<Rpp8s>(RPPPIXELCHECKI8((atan(static_cast<Rpp32f>(srcPtr1Temp[0] + 128) / static_cast<Rpp32f>(srcPtr2Temp[0] + 128)) * multiplier) -  128));
+                    *dstPtrTempG++ = static_cast<Rpp8s>(RPPPIXELCHECKI8((atan(static_cast<Rpp32f>(srcPtr1Temp[1] + 128) / static_cast<Rpp32f>(srcPtr2Temp[1] + 128)) * multiplier) -  128));
+                    *dstPtrTempB++ = static_cast<Rpp8s>(RPPPIXELCHECKI8((atan(static_cast<Rpp32f>(srcPtr1Temp[2] + 128) / static_cast<Rpp32f>(srcPtr2Temp[2] + 128)) * multiplier) -  128));
 
                     srcPtr1Temp += 3;
                     srcPtr2Temp += 3;
@@ -837,8 +839,6 @@ RppStatus phase_i8_i8_host_tensor(Rpp8s *srcPtr1,
         // Phase with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u alignedLength = (bufferLength / 48) * 48;
-
             Rpp8s *srcPtr1RowR, *srcPtr1RowG, *srcPtr1RowB, *srcPtr2RowR, *srcPtr2RowG, *srcPtr2RowB, *dstPtrRow;
             srcPtr1RowR = srcPtr1Channel;
             srcPtr1RowG = srcPtr1RowR + srcDescPtr->strides.cStride;
@@ -874,19 +874,19 @@ RppStatus phase_i8_i8_host_tensor(Rpp8s *srcPtr1,
                     p1[5] = _mm256_round_ps(_mm256_mul_ps(atan2_ps(p1[5], p2[5]), pMul), _MM_FROUND_TO_ZERO);    // phase computation
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3_avx, dstPtrTemp, p1);    // simd stores
 
-                    srcPtr1TempR += 16;
-                    srcPtr1TempG += 16;
-                    srcPtr1TempB += 16;
-                    srcPtr2TempR += 16;
-                    srcPtr2TempG += 16;
-                    srcPtr2TempB += 16;
-                    dstPtrTemp += 48;
+                    srcPtr1TempR += vectorIncrementPerChannel;
+                    srcPtr1TempG += vectorIncrementPerChannel;
+                    srcPtr1TempB += vectorIncrementPerChannel;
+                    srcPtr2TempR += vectorIncrementPerChannel;
+                    srcPtr2TempG += vectorIncrementPerChannel;
+                    srcPtr2TempB += vectorIncrementPerChannel;
+                    dstPtrTemp += vectorIncrement;
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = (Rpp8s) RPPPIXELCHECKI8((atan(((Rpp32f) (*srcPtr1TempR + 128)) / ((Rpp32f) (*srcPtr2TempR + 128))) * multiplier) -  128);
-                    dstPtrTemp[1] = (Rpp8s) RPPPIXELCHECKI8((atan(((Rpp32f) (*srcPtr1TempG + 128)) / ((Rpp32f) (*srcPtr2TempG + 128))) * multiplier) -  128);
-                    dstPtrTemp[2] = (Rpp8s) RPPPIXELCHECKI8((atan(((Rpp32f) (*srcPtr1TempB + 128)) / ((Rpp32f) (*srcPtr2TempB + 128))) * multiplier) -  128);
+                    dstPtrTemp[0] = static_cast<Rpp8s>(RPPPIXELCHECKI8((atan(static_cast<Rpp32f>(*srcPtr1TempR + 128) / static_cast<Rpp32f>(*srcPtr2TempR + 128)) * multiplier) -  128));
+                    dstPtrTemp[1] = static_cast<Rpp8s>(RPPPIXELCHECKI8((atan(static_cast<Rpp32f>(*srcPtr1TempG + 128) / static_cast<Rpp32f>(*srcPtr2TempG + 128)) * multiplier) -  128));
+                    dstPtrTemp[2] = static_cast<Rpp8s>(RPPPIXELCHECKI8((atan(static_cast<Rpp32f>(*srcPtr1TempB + 128) / static_cast<Rpp32f>(*srcPtr2TempB + 128)) * multiplier) -  128));
 
                     srcPtr1TempR++;
                     srcPtr1TempG++;
@@ -910,7 +910,7 @@ RppStatus phase_i8_i8_host_tensor(Rpp8s *srcPtr1,
         // Phase without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
         else
         {
-            Rpp32u alignedLength = bufferLength & ~15;
+            alignedLength = bufferLength & ~15;
 
             for(int c = 0; c < layoutParams.channelParam; c++)
             {
@@ -927,7 +927,7 @@ RppStatus phase_i8_i8_host_tensor(Rpp8s *srcPtr1,
                     dstPtrTemp = dstPtrRow;
 
                     int vectorLoopCount = 0;
-                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                     {
                         __m256 p1[2], p2[2];
 
@@ -937,13 +937,13 @@ RppStatus phase_i8_i8_host_tensor(Rpp8s *srcPtr1,
                         p1[1] = _mm256_mul_ps(atan2_ps(p1[1], p2[1]), pMul);    // phase computation
                         rpp_simd_store(rpp_store16_f32_to_i8_avx, dstPtrTemp, p1);    // simd stores
 
-                        srcPtr1Temp += 16;
-                        srcPtr2Temp += 16;
-                        dstPtrTemp += 16;
+                        srcPtr1Temp += vectorIncrementPerChannel;
+                        srcPtr2Temp += vectorIncrementPerChannel;
+                        dstPtrTemp += vectorIncrementPerChannel;
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        *dstPtrTemp++ = (Rpp8s) RPPPIXELCHECKI8((atan(((Rpp32f) (*srcPtr1Temp +  128)) / ((Rpp32f) (*srcPtr2Temp+  128))) * multiplier) -  128);
+                        *dstPtrTemp++ = static_cast<Rpp8s>(RPPPIXELCHECKI8((atan(static_cast<Rpp32f>(*srcPtr1Temp +  128) / static_cast<Rpp32f>(*srcPtr2Temp+  128)) * multiplier) -  128));
 
                         srcPtr1Temp++;
                         srcPtr2Temp++;

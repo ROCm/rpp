@@ -69,6 +69,8 @@ typedef halfhpp Rpp16f;
 #define RPP_2POW32_INV_DIV_2            1.164153218e-10f    // RPP_2POW32_INV / 2
 #define RPP_2POW32_INV_MUL_2PI          1.46291812e-09f     // (1 / 2^32) * 2PI
 #define RPP_2POW32_INV_MUL_2PI_DIV_2    7.3145906e-10f      // RPP_2POW32_INV_MUL_2PI / 2
+#define RPP_255_OVER_1PT57              162.3380757272f     // (255 / 1.570796) - multiplier used in phase computation
+#define ONE_OVER_1PT57                  0.6366199048F       // (1 / 1.570796) i.e. 2/pi - multiplier used in phase computation
 
 const __m128 xmm_p2Pow32 = _mm_set1_ps(RPP_2POW32);
 const __m128 xmm_p2Pow32Inv = _mm_set1_ps(RPP_2POW32_INV);
