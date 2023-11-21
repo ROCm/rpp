@@ -611,7 +611,7 @@ RppStatus phase_f16_f16_host_tensor(Rpp16f *srcPtr1,
 
                         srcPtr2Temp_ps[cnt] = static_cast<Rpp32f>(srcPtr2TempR[cnt]);
                         srcPtr2Temp_ps[cnt + 8] = static_cast<Rpp32f>(srcPtr2TempG[cnt]);
-                        srcPtr2Temp_ps[cnt + 8] = static_cast<Rpp32f>(srcPtr2TempB[cnt]);
+                        srcPtr2Temp_ps[cnt + 16] = static_cast<Rpp32f>(srcPtr2TempB[cnt]);
                     }
 
                     __m256 p1[4], p2[4];
