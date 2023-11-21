@@ -1,52 +1,52 @@
 #include <hip/hip_runtime.h>
 #include "rpp_hip_common.hpp"
 
-__device__ void phase_hip_compute(uchar *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8, float *multiplier_f1)
+__device__ void phase_hip_compute(uchar *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8)
 {
-    dst_f8->f1[0] = truncf(atan2f(src1_f8->f1[0], src2_f8->f1[0]) * *multiplier_f1);
-    dst_f8->f1[1] = truncf(atan2f(src1_f8->f1[1], src2_f8->f1[1]) * *multiplier_f1);
-    dst_f8->f1[2] = truncf(atan2f(src1_f8->f1[2], src2_f8->f1[2]) * *multiplier_f1);
-    dst_f8->f1[3] = truncf(atan2f(src1_f8->f1[3], src2_f8->f1[3]) * *multiplier_f1);
-    dst_f8->f1[4] = truncf(atan2f(src1_f8->f1[4], src2_f8->f1[4]) * *multiplier_f1);
-    dst_f8->f1[5] = truncf(atan2f(src1_f8->f1[5], src2_f8->f1[5]) * *multiplier_f1);
-    dst_f8->f1[6] = truncf(atan2f(src1_f8->f1[6], src2_f8->f1[6]) * *multiplier_f1);
-    dst_f8->f1[7] = truncf(atan2f(src1_f8->f1[7], src2_f8->f1[7]) * *multiplier_f1);
+    dst_f8->f1[0] = truncf(atan2f(src1_f8->f1[0], src2_f8->f1[0]) * RPP_255_OVER_1PT57);
+    dst_f8->f1[1] = truncf(atan2f(src1_f8->f1[1], src2_f8->f1[1]) * RPP_255_OVER_1PT57);
+    dst_f8->f1[2] = truncf(atan2f(src1_f8->f1[2], src2_f8->f1[2]) * RPP_255_OVER_1PT57);
+    dst_f8->f1[3] = truncf(atan2f(src1_f8->f1[3], src2_f8->f1[3]) * RPP_255_OVER_1PT57);
+    dst_f8->f1[4] = truncf(atan2f(src1_f8->f1[4], src2_f8->f1[4]) * RPP_255_OVER_1PT57);
+    dst_f8->f1[5] = truncf(atan2f(src1_f8->f1[5], src2_f8->f1[5]) * RPP_255_OVER_1PT57);
+    dst_f8->f1[6] = truncf(atan2f(src1_f8->f1[6], src2_f8->f1[6]) * RPP_255_OVER_1PT57);
+    dst_f8->f1[7] = truncf(atan2f(src1_f8->f1[7], src2_f8->f1[7]) * RPP_255_OVER_1PT57);
 }
 
-__device__ void phase_hip_compute(float *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8, float *multiplier_f1)
+__device__ void phase_hip_compute(float *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8)
 {
-    dst_f8->f1[0] = atan2f(src1_f8->f1[0], src2_f8->f1[0]) * *multiplier_f1 * ONE_OVER_255;
-    dst_f8->f1[1] = atan2f(src1_f8->f1[1], src2_f8->f1[1]) * *multiplier_f1 * ONE_OVER_255;
-    dst_f8->f1[2] = atan2f(src1_f8->f1[2], src2_f8->f1[2]) * *multiplier_f1 * ONE_OVER_255;
-    dst_f8->f1[3] = atan2f(src1_f8->f1[3], src2_f8->f1[3]) * *multiplier_f1 * ONE_OVER_255;
-    dst_f8->f1[4] = atan2f(src1_f8->f1[4], src2_f8->f1[4]) * *multiplier_f1 * ONE_OVER_255;
-    dst_f8->f1[5] = atan2f(src1_f8->f1[5], src2_f8->f1[5]) * *multiplier_f1 * ONE_OVER_255;
-    dst_f8->f1[6] = atan2f(src1_f8->f1[6], src2_f8->f1[6]) * *multiplier_f1 * ONE_OVER_255;
-    dst_f8->f1[7] = atan2f(src1_f8->f1[7], src2_f8->f1[7]) * *multiplier_f1 * ONE_OVER_255;
+    dst_f8->f1[0] = atan2f(src1_f8->f1[0], src2_f8->f1[0]) * ONE_OVER_1PT57;
+    dst_f8->f1[1] = atan2f(src1_f8->f1[1], src2_f8->f1[1]) * ONE_OVER_1PT57;
+    dst_f8->f1[2] = atan2f(src1_f8->f1[2], src2_f8->f1[2]) * ONE_OVER_1PT57;
+    dst_f8->f1[3] = atan2f(src1_f8->f1[3], src2_f8->f1[3]) * ONE_OVER_1PT57;
+    dst_f8->f1[4] = atan2f(src1_f8->f1[4], src2_f8->f1[4]) * ONE_OVER_1PT57;
+    dst_f8->f1[5] = atan2f(src1_f8->f1[5], src2_f8->f1[5]) * ONE_OVER_1PT57;
+    dst_f8->f1[6] = atan2f(src1_f8->f1[6], src2_f8->f1[6]) * ONE_OVER_1PT57;
+    dst_f8->f1[7] = atan2f(src1_f8->f1[7], src2_f8->f1[7]) * ONE_OVER_1PT57;
 }
 
-__device__ void phase_hip_compute(signed char *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8, float *multiplier_f1)
+__device__ void phase_hip_compute(signed char *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8)
 {
-    dst_f8->f1[0] = rpp_hip_pixel_check_0to255(truncf(atan2f(src1_f8->f1[0] + 128, src2_f8->f1[0] + 128) * *multiplier_f1)) - 128;
-    dst_f8->f1[1] = rpp_hip_pixel_check_0to255(truncf(atan2f(src1_f8->f1[1] + 128, src2_f8->f1[1] + 128) * *multiplier_f1)) - 128;
-    dst_f8->f1[2] = rpp_hip_pixel_check_0to255(truncf(atan2f(src1_f8->f1[2] + 128, src2_f8->f1[2] + 128) * *multiplier_f1)) - 128;
-    dst_f8->f1[3] = rpp_hip_pixel_check_0to255(truncf(atan2f(src1_f8->f1[3] + 128, src2_f8->f1[3] + 128) * *multiplier_f1)) - 128;
-    dst_f8->f1[4] = rpp_hip_pixel_check_0to255(truncf(atan2f(src1_f8->f1[4] + 128, src2_f8->f1[4] + 128) * *multiplier_f1)) - 128;
-    dst_f8->f1[5] = rpp_hip_pixel_check_0to255(truncf(atan2f(src1_f8->f1[5] + 128, src2_f8->f1[5] + 128) * *multiplier_f1)) - 128;
-    dst_f8->f1[6] = rpp_hip_pixel_check_0to255(truncf(atan2f(src1_f8->f1[6] + 128, src2_f8->f1[6] + 128) * *multiplier_f1)) - 128;
-    dst_f8->f1[7] = rpp_hip_pixel_check_0to255(truncf(atan2f(src1_f8->f1[7] + 128, src2_f8->f1[7] + 128) * *multiplier_f1)) - 128;
+    dst_f8->f1[0] = rpp_hip_pixel_check_0to255(truncf(atan2f(src1_f8->f1[0] + 128, src2_f8->f1[0] + 128) * RPP_255_OVER_1PT57)) - 128;
+    dst_f8->f1[1] = rpp_hip_pixel_check_0to255(truncf(atan2f(src1_f8->f1[1] + 128, src2_f8->f1[1] + 128) * RPP_255_OVER_1PT57)) - 128;
+    dst_f8->f1[2] = rpp_hip_pixel_check_0to255(truncf(atan2f(src1_f8->f1[2] + 128, src2_f8->f1[2] + 128) * RPP_255_OVER_1PT57)) - 128;
+    dst_f8->f1[3] = rpp_hip_pixel_check_0to255(truncf(atan2f(src1_f8->f1[3] + 128, src2_f8->f1[3] + 128) * RPP_255_OVER_1PT57)) - 128;
+    dst_f8->f1[4] = rpp_hip_pixel_check_0to255(truncf(atan2f(src1_f8->f1[4] + 128, src2_f8->f1[4] + 128) * RPP_255_OVER_1PT57)) - 128;
+    dst_f8->f1[5] = rpp_hip_pixel_check_0to255(truncf(atan2f(src1_f8->f1[5] + 128, src2_f8->f1[5] + 128) * RPP_255_OVER_1PT57)) - 128;
+    dst_f8->f1[6] = rpp_hip_pixel_check_0to255(truncf(atan2f(src1_f8->f1[6] + 128, src2_f8->f1[6] + 128) * RPP_255_OVER_1PT57)) - 128;
+    dst_f8->f1[7] = rpp_hip_pixel_check_0to255(truncf(atan2f(src1_f8->f1[7] + 128, src2_f8->f1[7] + 128) * RPP_255_OVER_1PT57)) - 128;
 }
 
-__device__ void phase_hip_compute(half *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8, float *multiplier_f1)
+__device__ void phase_hip_compute(half *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8)
 {
-    dst_f8->f1[0] = atan2f(src1_f8->f1[0], src2_f8->f1[0]) * *multiplier_f1 * ONE_OVER_255;
-    dst_f8->f1[1] = atan2f(src1_f8->f1[1], src2_f8->f1[1]) * *multiplier_f1 * ONE_OVER_255;
-    dst_f8->f1[2] = atan2f(src1_f8->f1[2], src2_f8->f1[2]) * *multiplier_f1 * ONE_OVER_255;
-    dst_f8->f1[3] = atan2f(src1_f8->f1[3], src2_f8->f1[3]) * *multiplier_f1 * ONE_OVER_255;
-    dst_f8->f1[4] = atan2f(src1_f8->f1[4], src2_f8->f1[4]) * *multiplier_f1 * ONE_OVER_255;
-    dst_f8->f1[5] = atan2f(src1_f8->f1[5], src2_f8->f1[5]) * *multiplier_f1 * ONE_OVER_255;
-    dst_f8->f1[6] = atan2f(src1_f8->f1[6], src2_f8->f1[6]) * *multiplier_f1 * ONE_OVER_255;
-    dst_f8->f1[7] = atan2f(src1_f8->f1[7], src2_f8->f1[7]) * *multiplier_f1 * ONE_OVER_255;
+    dst_f8->f1[0] = atan2f(src1_f8->f1[0], src2_f8->f1[0]) * ONE_OVER_1PT57;
+    dst_f8->f1[1] = atan2f(src1_f8->f1[1], src2_f8->f1[1]) * ONE_OVER_1PT57;
+    dst_f8->f1[2] = atan2f(src1_f8->f1[2], src2_f8->f1[2]) * ONE_OVER_1PT57;
+    dst_f8->f1[3] = atan2f(src1_f8->f1[3], src2_f8->f1[3]) * ONE_OVER_1PT57;
+    dst_f8->f1[4] = atan2f(src1_f8->f1[4], src2_f8->f1[4]) * ONE_OVER_1PT57;
+    dst_f8->f1[5] = atan2f(src1_f8->f1[5], src2_f8->f1[5]) * ONE_OVER_1PT57;
+    dst_f8->f1[6] = atan2f(src1_f8->f1[6], src2_f8->f1[6]) * ONE_OVER_1PT57;
+    dst_f8->f1[7] = atan2f(src1_f8->f1[7], src2_f8->f1[7]) * ONE_OVER_1PT57;
 }
 
 template <typename T>
@@ -69,13 +69,11 @@ __global__ void phase_pkd_hip_tensor(T *srcPtr1,
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x * 3);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x;
 
-    float multiplier_f1 = (float)(255 / 1.570796);
-
     d_float8 src1_f8, src2_f8, dst_f8;
 
     rpp_hip_load8_and_unpack_to_float8(srcPtr1 + srcIdx, &src1_f8);
     rpp_hip_load8_and_unpack_to_float8(srcPtr2 + srcIdx, &src2_f8);
-    phase_hip_compute(srcPtr1, &src1_f8, &src2_f8, &dst_f8, &multiplier_f1);
+    phase_hip_compute(srcPtr1, &src1_f8, &src2_f8, &dst_f8);
     rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
 }
 
@@ -100,13 +98,11 @@ __global__ void phase_pln_hip_tensor(T *srcPtr1,
     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-    float multiplier_f1 = (float)(255 / 1.570796);
-
     d_float8 src1_f8, src2_f8, dst_f8;
 
     rpp_hip_load8_and_unpack_to_float8(srcPtr1 + srcIdx, &src1_f8);
     rpp_hip_load8_and_unpack_to_float8(srcPtr2 + srcIdx, &src2_f8);
-    phase_hip_compute(srcPtr1, &src1_f8, &src2_f8, &dst_f8, &multiplier_f1);
+    phase_hip_compute(srcPtr1, &src1_f8, &src2_f8, &dst_f8);
     rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
 
     if (channelsDst == 3)
@@ -116,7 +112,7 @@ __global__ void phase_pln_hip_tensor(T *srcPtr1,
 
         rpp_hip_load8_and_unpack_to_float8(srcPtr1 + srcIdx, &src1_f8);
         rpp_hip_load8_and_unpack_to_float8(srcPtr2 + srcIdx, &src2_f8);
-        phase_hip_compute(srcPtr1, &src1_f8, &src2_f8, &dst_f8, &multiplier_f1);
+        phase_hip_compute(srcPtr1, &src1_f8, &src2_f8, &dst_f8);
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
 
         srcIdx += srcStridesNCH.y;
@@ -124,7 +120,7 @@ __global__ void phase_pln_hip_tensor(T *srcPtr1,
 
         rpp_hip_load8_and_unpack_to_float8(srcPtr1 + srcIdx, &src1_f8);
         rpp_hip_load8_and_unpack_to_float8(srcPtr2 + srcIdx, &src2_f8);
-        phase_hip_compute(srcPtr1, &src1_f8, &src2_f8, &dst_f8, &multiplier_f1);
+        phase_hip_compute(srcPtr1, &src1_f8, &src2_f8, &dst_f8);
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
     }
 }
@@ -149,15 +145,13 @@ __global__ void phase_pkd3_pln3_hip_tensor(T *srcPtr1,
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-    float multiplier_f1 = (float)(255 / 1.570796);
-
     d_float24 src1_f24, src2_f24, dst_f24;
 
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr1 + srcIdx, &src1_f24);
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr2 + srcIdx, &src2_f24);
-    phase_hip_compute(srcPtr1, &src1_f24.f8[0], &src2_f24.f8[0], &dst_f24.f8[0], &multiplier_f1);
-    phase_hip_compute(srcPtr1, &src1_f24.f8[1], &src2_f24.f8[1], &dst_f24.f8[1], &multiplier_f1);
-    phase_hip_compute(srcPtr1, &src1_f24.f8[2], &src2_f24.f8[2], &dst_f24.f8[2], &multiplier_f1);
+    phase_hip_compute(srcPtr1, &src1_f24.f8[0], &src2_f24.f8[0], &dst_f24.f8[0]);
+    phase_hip_compute(srcPtr1, &src1_f24.f8[1], &src2_f24.f8[1], &dst_f24.f8[1]);
+    phase_hip_compute(srcPtr1, &src1_f24.f8[2], &src2_f24.f8[2], &dst_f24.f8[2]);
     rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &dst_f24);
 }
 
@@ -181,15 +175,13 @@ __global__ void phase_pln3_pkd3_hip_tensor(T *srcPtr1,
     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
-    float multiplier_f1 = (float)(255 / 1.570796);
-
     d_float24 src1_f24, src2_f24, dst_f24;
 
     rpp_hip_load24_pln3_and_unpack_to_float24_pkd3(srcPtr1 + srcIdx, srcStridesNCH.y, &src1_f24);
     rpp_hip_load24_pln3_and_unpack_to_float24_pkd3(srcPtr2 + srcIdx, srcStridesNCH.y, &src2_f24);
-    phase_hip_compute(srcPtr1, &src1_f24.f8[0], &src2_f24.f8[0], &dst_f24.f8[0], &multiplier_f1);
-    phase_hip_compute(srcPtr1, &src1_f24.f8[1], &src2_f24.f8[1], &dst_f24.f8[1], &multiplier_f1);
-    phase_hip_compute(srcPtr1, &src1_f24.f8[2], &src2_f24.f8[2], &dst_f24.f8[2], &multiplier_f1);
+    phase_hip_compute(srcPtr1, &src1_f24.f8[0], &src2_f24.f8[0], &dst_f24.f8[0]);
+    phase_hip_compute(srcPtr1, &src1_f24.f8[1], &src2_f24.f8[1], &dst_f24.f8[1]);
+    phase_hip_compute(srcPtr1, &src1_f24.f8[2], &src2_f24.f8[2], &dst_f24.f8[2]);
     rpp_hip_pack_float24_pkd3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
 }
 
