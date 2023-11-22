@@ -62,11 +62,11 @@ RppStatus rppt_non_silent_region_detection_host(RppPtr_t srcPtr, RpptDescPtr src
 
 /*! \brief To Decibels augmentation on HOST backend
  * \details To Decibels augmentation for 1D audio buffer converts magnitude values to decibel values
- * \param[in] srcPtr source tensor memory
+ * \param[in] srcPtr source tensor in HOST memory
  * \param[in] srcDescPtr source tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
- * \param[out] dstPtr destination tensor memory
+ * \param[out] dstPtr destination tensor in HOST memory
  * \param[in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
- * \param[in] srcDims source tensor size (tensor of batchSize * 2 values)
+ * \param[in] srcDims source tensor sizes for each element in batch (2D tensor in HOST memory, of size batchSize * 2)
  * \param[in] cutOffDB  minimum or cut-off ratio in dB
  * \param[in] multiplier factor by which the logarithm is multiplied
  * \param[in] referenceMagnitude Reference magnitude if not provided maximum value of input used as reference
