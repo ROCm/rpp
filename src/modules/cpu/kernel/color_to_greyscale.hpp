@@ -91,7 +91,7 @@ RppStatus color_to_greyscale_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTemp = (Rpp8u) RPPPIXELCHECK(std::fma((Rpp32f)srcPtrTemp[0], channelWeights[0], std::fma((Rpp32f)srcPtrTemp[1], channelWeights[1], (Rpp32f)srcPtrTemp[2] * channelWeights[2])));
+                    *dstPtrTemp = (Rpp8u) RPPPIXELCHECK(std::nearbyintf(std::fma((Rpp32f)srcPtrTemp[0], channelWeights[0], std::fma((Rpp32f)srcPtrTemp[1], channelWeights[1], (Rpp32f)srcPtrTemp[2] * channelWeights[2]))));
                     srcPtrTemp += 3;
                     dstPtrTemp++;
                 }
@@ -139,7 +139,7 @@ RppStatus color_to_greyscale_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    *dstPtrTemp = (Rpp8u) RPPPIXELCHECK(std::fma((Rpp32f)*srcPtrTempR, channelWeights[0], std::fma((Rpp32f)*srcPtrTempG, channelWeights[1], (Rpp32f)*srcPtrTempB * channelWeights[2])));
+                    *dstPtrTemp = (Rpp8u) RPPPIXELCHECK(std::nearbyintf(std::fma((Rpp32f)*srcPtrTempR, channelWeights[0], std::fma((Rpp32f)*srcPtrTempG, channelWeights[1], (Rpp32f)*srcPtrTempB * channelWeights[2]))));
                     srcPtrTempR++;
                     srcPtrTempG++;
                     srcPtrTempB++;
