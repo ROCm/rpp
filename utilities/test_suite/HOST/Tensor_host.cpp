@@ -111,11 +111,6 @@ int main(int argc, char **argv)
             return -1;
         }
     }
-    if (reductionTypeCase && outputFormatToggle)
-    {
-        printf("\nReduction Kernels don't have outputFormatToggle! Please input outputFormatToggle = 0\n");
-        return -1;
-    }
 
     if(pln1OutTypeCase && outputFormatToggle != 0)
     {
@@ -128,6 +123,17 @@ int main(int argc, char **argv)
         return -1;
     }
     else if(batchSize > MAX_BATCH_SIZE)
+    {
+        std::cerr << "\n Batchsize should be less than or equal to "<< MAX_BATCH_SIZE << " Aborting!";
+        exit(0);
+    }
+    else if(testCase == 82 && batchSize < 2)
+    {
+        std::cerr<<"\n RICAP only works with BatchSize > 1";
+        exit(0);
+    }
+
+    if(batchSize > MAX_BATCH_SIZE)
     {
         std::cerr << "\n Batchsize should be less than or equal to "<< MAX_BATCH_SIZE << " Aborting!";
         exit(0);

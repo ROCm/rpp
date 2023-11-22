@@ -16,6 +16,12 @@ The latest RPP release is: [![GitHub tag (latest SemVer)](https://img.shields.io
 
 <p align="center"><img width="90%" src="https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp/raw/master/docs/data/supported_functionalities_samples.jpg" /></p>
 
+### Supported 3D Functionalities Samples
+
+Input<br>(nifti1 .nii medical image) | fused_multiply_add_scalar<br>(brightened 3D image)
+:-------------------------:|:-------------------------:
+![](docs/data/niftiInput.gif)  |  ![](docs/data/niftiOutputBrightened.gif)
+
 ## Documentation
 
 You can build our documentation locally using the following code:
@@ -157,8 +163,58 @@ To use RPP, you must have installed the following:
   make -j$nproc
   sudo make install
   ```
+* Libsndfile installation
+  ```
+  sudo apt-get update
+  sudo apt-get install libsndfile1-dev
+  ```
 
-## Build and install RPP
+* Imagemagick
+  ```
+  sudo apt-get install imagemagick
+  ```
+
+* Nifti-Imaging nifti_clib
+  ```
+  git clone git@github.com:NIFTI-Imaging/nifti_clib.git
+  cd nifti_clib
+  mkdir build
+  cd build
+  cmake ..
+  sudo make -j$nproc install
+  ```
+
+## Build & Install RPP
+
+The ROCm Performance Primitives (RPP) library has support for three backends: HIP, OpenCL, and CPU:
+
+* Building RPP with the **HIP** backend **(default)**:
+```
+$ git clone https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git
+$ mkdir build && cd build
+$ cmake -DBACKEND=HIP ../rpp
+$ make -j8
+$ sudo make install
+```
+
+* Building RPP with the **OPENCL** backend:
+```
+$ git clone https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git
+$ mkdir build && cd build
+$ cmake -DBACKEND=OCL ../rpp
+$ make -j8
+$ sudo make install
+```
+
+* Building RPP with the **CPU** backend:
+```
+$ git clone https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git
+$ mkdir build && cd build
+$ cmake -DBACKEND=CPU ../rpp
+$ make -j8
+$ sudo make install
+```
+## Test Functionalities
 
 To build and install RPP, run the code shown for your backend:
 
