@@ -30,6 +30,18 @@ extern "C"
 {
 #endif // cpusplus
 
+/*!
+ * \file
+ * \brief RPPI Image Operations - Advanced Augmentations - To be deprecated.
+ * \defgroup group_rppi_advanced_augmentations RPPI Image Operations - Advanced Augmentations
+ * \brief RPPI Image Operations - Advanced Augmentations - To be deprecated.
+ * \deprecated
+ */
+
+/*! \addtogroup group_rppi_advanced_augmentations
+ * @{
+ */
+
 /******************** water ********************/
 
 // Performs a water augmentation for a batch of images
@@ -327,6 +339,9 @@ RppStatus rppi_glitch_f16_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, R
 RppStatus rppi_glitch_f32_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *x_offset_r, Rpp32u *y_offset_r, Rpp32u *x_offset_g, Rpp32u *y_offset_g, Rpp32u *x_offset_b, Rpp32u *y_offset_b, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_glitch_i8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u *x_offset_r, Rpp32u *y_offset_r, Rpp32u *x_offset_g, Rpp32u *y_offset_g, Rpp32u *x_offset_b, Rpp32u *y_offset_b, Rpp32u outputFormatToggle, Rpp32u nbatchSize, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
+
+/*! @}
+ */
 
 #ifdef __cplusplus
 }

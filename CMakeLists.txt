@@ -20,12 +20,13 @@
 
 cmake_minimum_required(VERSION 3.5)
 set(CMAKE_CXX_COMPILER clang++)
-set(CMAKE_CXX_STANDARD 14)
-
-project(rpp CXX)
+set(CMAKE_CXX_STANDARD 17)
 
 # RPP Version
-set(VERSION "1.3.0")
+set(VERSION "1.5.0")
+
+# Set Project Version and Language
+project(rpp VERSION ${VERSION} LANGUAGES CXX)
 
 set(CMAKE_INSTALL_LIBDIR "lib" CACHE STRING "Library install directory")
 include(GNUInstallDirs)
@@ -39,7 +40,13 @@ find_program(RPMBUILD_EXE rpmbuild)
 find_program(DPKG_EXE dpkg)
 
 # ROCm Path
-set(ROCM_PATH /opt/rocm CACHE PATH "RPP default ROCm installation path")
+if(DEFINED ENV{ROCM_PATH})
+  set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
+elseif(ROCM_PATH)
+  message("-- INFO:ROCM_PATH Set -- ${ROCM_PATH}")
+else()
+  set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
+endif()
 # Avoid setting the default path to /usr/local
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   set(CMAKE_INSTALL_PREFIX ${ROCM_PATH} CACHE PATH "RPP default ROCm installation path" FORCE)
@@ -77,7 +84,7 @@ else()
         set(BACKEND "OCL")
     elseif("${BACKEND}" STREQUAL "HIP" OR "${BACKEND}" STREQUAL "hip")
         set(BACKEND "HIP")
-    elseif("${BACKEND}" STREQUAL "host" OR "${BACKEND}" STREQUAL "CPU" OR "${BACKEND}" STREQUAL "cpu")
+    elseif("${BACKEND}" STREQUAL "host" OR "${BACKEND}" STREQUAL "HOST" OR "${BACKEND}" STREQUAL "CPU" OR "${BACKEND}" STREQUAL "cpu")
         set(BACKEND "CPU")
     else()
         message("-- ${Red}Warning: ${PROJECT_NAME} backend option: ${BACKEND} -- unknown${ColourReset}")
@@ -120,13 +127,9 @@ if("${CMAKE_CURRENT_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
 endif()
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
-# BOOST
-option(Boost_USE_STATIC_LIBS "Use boost static libraries" OFF)
-set(BOOST_COMPONENTS filesystem system)
-add_definitions(-DBOOST_ALL_NO_LIB=1)
-find_package(Boost COMPONENTS ${BOOST_COMPONENTS} REQUIRED)
-include_directories(${Boost_INCLUDE_DIRS})
-set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY})
+# Half
+find_package(HALF REQUIRED)
+include_directories(${HALF_INCLUDE_DIRS})
 
 # OpenMP
 find_package(OpenMP REQUIRED)
@@ -150,7 +153,10 @@ if(APPLE)
 else()
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    # STD Filesystem
+    set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} stdc++fs)
 endif()
+include_directories(${OpenMP_INCLUDE_DIRS})
 set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} OpenMP::OpenMP_CXX)
 
 # Threads
@@ -162,8 +168,23 @@ set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} Threads::Threads)
 # -fPIC -- Generate position-independent code if possible.
 # -mavx2 -- Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX and AVX2 built-in functions and code generation.
 # -mfma -- Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, AVX and FMA built-in functions and code generation.
-# -std=gnu++14 -- Conform to the ISO 2014 C++ standard with GNU extensions.
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -mavx2 -mf16c -mfma -std=gnu++14")
+# -std=gnu++17 -- Conform to the ISO 2017 C++ standard with GNU extensions.
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -mavx2 -mf16c -mfma -std=gnu++17")
+
+# Check AVX/SSE support
+include(CheckCXXCompilerFlag)
+
+# Check AVX flag
+check_cxx_compiler_flag("-mavx" COMPILER_SUPPORTS_AVX)
+if(COMPILER_SUPPORTS_AVX)
+    add_definitions(-D__AVX2__)
+else()
+    # Check SSE flag
+    check_cxx_compiler_flag("-msse4" COMPILER_SUPPORTS_SSE)
+    if(COMPILER_SUPPORTS_SSE)
+        add_definitions(-D__SSE4_1__)
+    endif()
+endif()
 
 # Backend specific settings
 if("${BACKEND}" STREQUAL "HIP")
@@ -177,7 +198,8 @@ if("${BACKEND}" STREQUAL "HIP")
             set(HIP_PATH $ENV{HIP_PATH} CACHE PATH "Path to which HIP has been installed")
         endif()
     endif()
-    list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/hip ${ROCM_PATH})
+
+    list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH} ${ROCM_PATH}/hip)
     set(DEFAULT_AMDGPU_TARGETS "gfx803;gfx900;gfx906;gfx908;gfx90a;gfx940;gfx1030;gfx1100")
     if (BUILD_WITH_AMD_ADVANCE)
         set(DEFAULT_AMDGPU_TARGETS ${DEFAULT_AMDGPU_TARGETS} "gfx941")
@@ -262,13 +284,15 @@ else()
     message("-- ${Red}${PROJECT_NAME} set to build without ENABLE_SIMD_INTRINSICS${ColourReset}")
 endif()
 
-set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} stdc++)
 message("-- ${White}${PROJECT_NAME} -- Using Compiler - Path:" ${CMAKE_CXX_COMPILER} "\tVersion:" ${CMAKE_CXX_COMPILER_VERSION} "\tCompiler:" ${CMAKE_CXX_COMPILER_ID}${ColourReset})
 message("-- ${White}${PROJECT_NAME} -- CMAKE_CXX_FLAGS:${CMAKE_CXX_FLAGS}${ColourReset}")
 message("-- ${White}${PROJECT_NAME} -- Link Libraries: ${LINK_LIBRARY_LIST}${ColourReset}")
 target_link_libraries(${PROJECT_NAME} ${LINK_LIBRARY_LIST})
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
+set_target_properties(${PROJECT_NAME} PROPERTIES
+                      VERSION ${PROJECT_VERSION}
+                      SOVERSION ${PROJECT_VERSION_MAJOR})
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC
@@ -297,17 +321,33 @@ add_subdirectory(addkernels)
 
 # Installation
 # install RPP libs -- {ROCM_PATH}/lib
-install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT runtime NAMELINK_SKIP)
+install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT dev NAMELINK_ONLY)
+install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT asan)
+
 # install RPP include files -- {ROCM_PATH}/include/rpp/
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp PATTERN "*.h.in" EXCLUDE)
-install(FILES ${PROJECT_BINARY_DIR}/include/rpp_backend.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp
+       COMPONENT dev
+       PATTERN "*.h.in" EXCLUDE)
+install(FILES ${PROJECT_BINARY_DIR}/include/rpp_backend.h
+       DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp
+       COMPONENT dev)
+
+# set license information
+set(CPACK_RESOURCE_FILE_LICENSE  "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+install(FILES ${CPACK_RESOURCE_FILE_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR}-asan COMPONENT asan)
+install(FILES ${CPACK_RESOURCE_FILE_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR} COMPONENT runtime)
 
 enable_testing()
 include(CTest)
-add_subdirectory(utilities/rpp-unittests)
+add_subdirectory(utilities/rpp-unittests) # TBD - phaseout unittests
+add_subdirectory(utilities/test_suite) # TBD - Expand use-cases
 
 # Set package information
-set(CPACK_PACKAGE_VERSION       ${VERSION})
+set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
+set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
+set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
+set(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
 set(CPACK_PACKAGE_NAME          "rpp")
 set(CPACK_PACKAGE_LICENSE       "MIT")
 set(CPACK_PACKAGE_CONTACT       "mivisionx support <mivisionx.support@amd.com>")
@@ -315,30 +355,19 @@ set(CPACK_PACKAGE_VENDOR        "AMD ROCm")
 set(CPACK_PACKAGE_GROUP         "Development/Tools")
 set(CPACK_PACKAGE_HOMEPAGE      "https://gpuopen-professionalcompute-libraries.github.io/rpp/")
 
-set(CPACK_DEBIAN_PACKAGE_DESCRIPTION   "ROCm Performance Primitives library is a comprehensive high performance computer vision library
-    ROCm Performance Primitives (RPP) library is a comprehensive high performance \
-    computer vision library for AMD (CPU and GPU) with HIP and OpenCL back-ends")
-set(CPACK_RPM_PACKAGE_SUMMARY          "ROCm Performance Primitives (RPP) library is a comprehensive high performance computer vision library for AMD (CPU and GPU) with HIP and OpenCL back-ends")
-
 if(DEFINED ENV{ROCM_LIBPATCH_VERSION})
     set(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}.$ENV{ROCM_LIBPATCH_VERSION}")
 endif()
 
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "rocm-core")
-set(CPACK_RPM_PACKAGE_REQUIRES "rocm-core")
+# Set the dependent packages
+set(RPP_DEBIAN_PACKAGE_LIST  "half")
+set(RPP_RPM_PACKAGE_LIST     "half")
+
+# package release
 set(CPACK_DEBIAN_FILE_NAME       "DEB-DEFAULT")
 set(CPACK_RPM_FILE_NAME          "RPM-DEFAULT")
 set(CPACK_DEBIAN_PACKAGE_RELEASE "local")
 set(CPACK_RPM_PACKAGE_RELEASE    "local")
-
-set(ROCM_DEP_ROCMCORE TRUE CACHE BOOL "Add dependency on rocm-core package")
-if(NOT ROCM_DEP_ROCMCORE)
-    string(REGEX REPLACE ",? ?rocm-core" "" CPACK_RPM_PACKAGE_REQUIRES
-                 ${CPACK_RPM_PACKAGE_REQUIRES})
-    string(REGEX REPLACE ",? ?rocm-core" "" CPACK_DEBIAN_PACKAGE_DEPENDS
-                 ${CPACK_DEBIAN_PACKAGE_DEPENDS})
-endif()
-
 if(DEFINED ENV{CPACK_DEBIAN_PACKAGE_RELEASE})
     set(CPACK_DEBIAN_PACKAGE_RELEASE $ENV{CPACK_DEBIAN_PACKAGE_RELEASE})
 endif()
@@ -355,11 +384,51 @@ if(PROC_RESULT EQUAL "0" AND NOT EVAL_RESULT STREQUAL "")
     string (APPEND CPACK_RPM_PACKAGE_RELEASE "%{?dist}")
 endif()
 
-set(CPACK_PACKAGING_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
-
+set(CPACK_PACKAGING_INSTALL_PREFIX  ${CMAKE_INSTALL_PREFIX})
 set(CPACK_DEBIAN_PACKAGE_HOMEPAGE   ${CPACK_PACKAGE_HOMEPAGE})
 set(CPACK_RPM_PACKAGE_URL           ${CPACK_PACKAGE_HOMEPAGE})
 set(CPACK_RPM_PACKAGE_AUTOREQPROV   "no")
+
+# Debian package
+set(CPACK_DEB_COMPONENT_INSTALL ON)
+set(CPACK_DEBIAN_RUNTIME_PACKAGE_NAME "${PROJECT_NAME}")
+set(CPACK_DEBIAN_RUNTIME_PACKAGE_DEPENDS "rocm-core, ${RPP_DEBIAN_PACKAGE_LIST}")
+set(CPACK_DEBIAN_DEV_PACKAGE_NAME "${PROJECT_NAME}-dev")
+set(CPACK_DEBIAN_DEV_PACKAGE_DEPENDS "rocm-core, ${PROJECT_NAME}, ${RPP_DEBIAN_PACKAGE_LIST}")
+set(CPACK_DEBIAN_PACKAGE_LICENSE "MIT" )
+# Debian package specific variable for ASAN
+set(CPACK_DEBIAN_ASAN_PACKAGE_NAME "${PROJECT_NAME}-asan" )
+set(CPACK_DEBIAN_ASAN_PACKAGE_DEPENDS "rocm-core-asan" )
+# RPM package specific variable for ASAN
+set(CPACK_RPM_ASAN_PACKAGE_NAME "${PROJECT_NAME}-asan" )
+set(CPACK_RPM_ASAN_PACKAGE_REQUIRES "rocm-core-asan" )
+# RPM package
+set(CPACK_RPM_COMPONENT_INSTALL ON)
+set(CPACK_RPM_RUNTIME_PACKAGE_NAME "${PROJECT_NAME}")
+set(CPACK_RPM_RUNTIME_PACKAGE_REQUIRES "rocm-core, ${RPP_RPM_PACKAGE_LIST}")
+set(CPACK_RPM_DEV_PACKAGE_NAME "${PROJECT_NAME}-devel")
+set(CPACK_RPM_DEV_PACKAGE_REQUIRES "rocm-core, ${PROJECT_NAME}, ${RPP_DEBIAN_PACKAGE_LIST}")
+set(CPACK_RPM_RUNTIME_PACKAGE_PROVIDES "${PROJECT_NAME}")
+set(CPACK_RPM_RUNTIME_PACKAGE_OBSOLETES "${PROJECT_NAME}")
+set(CPACK_RPM_DEV_PACKAGE_PROVIDES "${PROJECT_NAME}-devel")
+set(CPACK_RPM_DEV_PACKAGE_OBSOLETES "${PROJECT_NAME}-devel")
+set(CPACK_RPM_PACKAGE_LICENSE "MIT" )
+
+if(NOT ROCM_DEP_ROCMCORE)
+    string(REGEX REPLACE ",? ?rocm-core," "" CPACK_RPM_RUNTIME_PACKAGE_REQUIRES ${CPACK_RPM_RUNTIME_PACKAGE_REQUIRES})
+    string(REGEX REPLACE ",? ?rocm-core-asan," "" CPACK_RPM_ASAN_PACKAGE_REQUIRES ${CPACK_RPM_ASAN_PACKAGE_REQUIRES})
+    string(REGEX REPLACE ",? ?rocm-core," "" CPACK_RPM_DEV_PACKAGE_REQUIRES ${CPACK_RPM_DEV_PACKAGE_REQUIRES})
+    string(REGEX REPLACE ",? ?rocm-core," "" CPACK_DEBIAN_RUNTIME_PACKAGE_DEPENDS ${CPACK_DEBIAN_RUNTIME_PACKAGE_DEPENDS})
+    string(REGEX REPLACE ",? ?rocm-core-asan," "" CPACK_DEBIAN_ASAN_PACKAGE_DEPENDS ${CPACK_DEBIAN_ASAN_PACKAGE_DEPENDS})
+    string(REGEX REPLACE ",? ?rocm-core," "" CPACK_DEBIAN_DEV_PACKAGE_DEPENDS ${CPACK_DEBIAN_DEV_PACKAGE_DEPENDS})
+endif()
+
+if(ENABLE_ASAN_PACKAGING)
+  # ASAN Package requires asan component with only libraries and license file
+  set(CPACK_COMPONENTS_ALL asan)
+else()
+  set(CPACK_COMPONENTS_ALL runtime dev)
+endif()
 
 if(APPLE)
     set(CPACK_GENERATOR "Bundle")
@@ -373,10 +442,32 @@ else()
     endif()
     if(EXISTS ${RPMBUILD_EXE})
         list(APPEND CPACK_GENERATOR "RPM")
+        message("-- ${White}AMD ROCm RPP RunTime Package -- ${CPACK_RPM_DEV_PACKAGE_REQUIRES}${ColourReset}")
+        message("-- ${White}AMD ROCm RPP Dev Package -- ${CPACK_RPM_DEV_PACKAGE_DEPENDS}${ColourReset}")
     endif()
     if(EXISTS ${DPKG_EXE})
         list(APPEND CPACK_GENERATOR "DEB")
+        message("-- ${White}AMD ROCm RPP RunTime Package -- ${CPACK_DEBIAN_RUNTIME_PACKAGE_DEPENDS}${ColourReset}")
+        message("-- ${White}AMD ROCm RPP Dev Package -- ${CPACK_DEBIAN_DEV_PACKAGE_DEPENDS}${ColourReset}")
     endif()
 endif()
 
 include(CPack)
+
+cpack_add_component(runtime
+   DISPLAY_NAME "RPP Runtime Package"
+   DESCRIPTION "ROCm Performance Primitives library is a comprehensive high performance \
+computer vision library for AMD CPUs and GPUs with HOST/HIP/OpenCL back-ends. 
+RPP runtime package provides rpp library and license.txt")
+
+cpack_add_component(dev
+    DISPLAY_NAME "RPP Develop Package"
+    DESCRIPTION "ROCm Performance Primitives library is a comprehensive high performance \
+computer vision library for AMD CPUs and GPUs with HOST/HIP/OpenCL back-ends. \
+RPP develop package provides rpp library, header files, and license.txt")
+
+cpack_add_component(asan
+    DISPLAY_NAME "RPP ASAN Package"
+    DESCRIPTION "ROCm Performance Primitives library is a comprehensive high performance \ 
+computer vision library for AMD CPUs and GPUs with HOST/HIP/OpenCL back-ends. \
+RPP ASAN package provides rpp ASAN libraries")

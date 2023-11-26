@@ -25,10 +25,9 @@ THE SOFTWARE.
 
 /*!
  * \file
- * \brief ROCm Performance Primitives(RPP) - Tensor Operations.
- *
- * \defgroup group_rpp_tensor RPP Tensor Operations
- * \brief ROCm Performance Primitives - Tensor Operations.
+ * \brief RPP Tensor Operations
+ * \defgroup group_rppt RPP Tensor Operations
+ * \brief The header includes all files containing RPP Tensor Operations
  */
 
 #include "rpp.h"
@@ -42,7 +41,9 @@ extern "C" {
 #include "rppt_tensor_filter_augmentations.h"
 #include "rppt_tensor_geometric_augmentations.h"
 #include "rppt_tensor_morphological_operations.h"
+#include "rppt_tensor_arithmetic_operations.h"
 #include "rppt_tensor_statistical_operations.h"
+#include "rppt_tensor_audio_augmentations.h"
 
 #ifdef __cplusplus
 }

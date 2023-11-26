@@ -25,10 +25,9 @@ THE SOFTWARE.
 
 /*!
  * \file
- * \brief ROCm Performance Primitives(RPP) - Version.
- *
+ * \brief ROCm Performance Primitives (RPP) version
  * \defgroup group_rpp_version RPP Version
- * \brief ROCm Performance Primitives - Version
+ * \brief ROCm Performance Primitives (RPP) version
  */
 
 #include "rpp.h"

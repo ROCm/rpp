@@ -24,20 +24,18 @@
  *
  *******************************************************************************/
 
-#include <boost/filesystem.hpp>
+#include <chrono>
 #ifndef _WIN32
 #include <unistd.h>
 #endif
 
 #include <thread>
-#include "config.h"
 #include "rpp/device_name.hpp"
 #include "rpp/errors.hpp"
 #include "rpp/logger.hpp"
 #include "rpp/handle.hpp"
 #include "rpp/kernel_cache.hpp"
 #include "rpp/binary_cache.hpp"
-#include "rpp/handle_lock.hpp"
 #include "rpp/ocldeviceinfo.hpp"
 #include "rpp/load_file.hpp"
 
@@ -713,7 +711,7 @@ const std::vector<Kernel>& Handle::GetKernelsImpl(const std::string& algorithm, 
 KernelInvoke Handle::Run(Kernel k)
 {
     auto q = this->GetStream();
-    if(this->impl->enable_profiling || RPP_GPU_SYNC)
+    if(this->impl->enable_profiling)
     {
         return k.Invoke(q,
                         std::bind(&HandleImpl::SetProfilingResult,
@@ -728,8 +726,16 @@ KernelInvoke Handle::Run(Kernel k)
 
 auto Handle::GetKernels(const std::string& algorithm, const std::string& network_config)
 {
-    return this->GetKernelsImpl(algorithm, network_config) |
-            boost::adaptors::transformed([this](Kernel k) { return this->Run(k); });
+    auto kernels = this->GetKernelsImpl(algorithm, network_config);
+    
+    std::vector<KernelInvoke> transformedKernels;
+
+    transformedKernels.reserve(kernels.size());
+
+    std::transform(kernels.begin(), kernels.end(), std::back_inserter(transformedKernels),
+                   [this](Kernel k) { return this->Run(k); });
+
+    return transformedKernels;
 }
 
 KernelInvoke Handle::GetKernel(const std::string& algorithm, const std::string& network_config)
@@ -756,7 +762,7 @@ Program Handle::LoadProgram(const std::string& program_name, std::string params,
                                   kernel_src);
 
         // Save to cache
-        auto path = rpp::GetCachePath() / boost::filesystem::unique_path();
+        auto path = rpp::GetCachePath() / std::to_string(std::chrono::system_clock::now().time_since_epoch().count());
         rpp::SaveProgramBinary(p, path.string());
         rpp::SaveBinary(path.string(), this->GetDeviceName(), program_name, params, is_kernel_str);
 
@@ -821,14 +827,12 @@ std::size_t Handle::GetMaxComputeUnits()
 
 Allocator::ManageDataPtr Handle::Create(std::size_t sz)
 {
-    RPP_HANDLE_LOCK
     this->Finish();
     return this->impl->allocator(sz);
 }
 
 Allocator::ManageDataPtr& Handle::WriteTo(const void* data, Allocator::ManageDataPtr& ddata, std::size_t sz)
 {
-    RPP_HANDLE_LOCK
     this->Finish();
     cl_int status = clEnqueueWriteBuffer(this->GetStream(), ddata.get(), CL_TRUE, 0, sz, data, 0, nullptr, nullptr);
     if(status != CL_SUCCESS)
@@ -840,7 +844,6 @@ Allocator::ManageDataPtr& Handle::WriteTo(const void* data, Allocator::ManageDat
 
 void Handle::ReadTo(void* data, const Allocator::ManageDataPtr& ddata, std::size_t sz)
 {
-    RPP_HANDLE_LOCK
     this->Finish();
     auto status = clEnqueueReadBuffer(this->GetStream(), ddata.get(), CL_TRUE, 0, sz, data, 0, nullptr, nullptr);
     if(status != CL_SUCCESS)
@@ -851,7 +854,6 @@ void Handle::ReadTo(void* data, const Allocator::ManageDataPtr& ddata, std::size
 
 void Handle::Copy(ConstData_t src, Data_t dest, std::size_t size)
 {
-    RPP_HANDLE_LOCK
     this->Finish();
     auto status = clEnqueueCopyBuffer(this->GetStream(), src, dest, 0, 0, size, 0, nullptr, nullptr);
     if(status != CL_SUCCESS)
@@ -862,7 +864,6 @@ void Handle::Copy(ConstData_t src, Data_t dest, std::size_t size)
 
 shared<Data_t> Handle::CreateSubBuffer(Data_t data, std::size_t offset, std::size_t size)
 {
-    RPP_HANDLE_LOCK
     struct region
     {
         std::size_t origin;
