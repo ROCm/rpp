@@ -1749,4 +1749,5 @@ RppStatus rppt_slice_gpu(RppPtr_t srcPtr,
     return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
+
 #endif // GPU_SUPPORT
