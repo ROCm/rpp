@@ -396,6 +396,9 @@ typedef enum
     REFLECT
 } RpptAudioBorderType;
 
+/*! \brief RPPT Mel Scale Formula
+ * \ingroup group_rppdefs
+ */
 typedef enum
 {
     SLANEY = 0,
