@@ -22,7 +22,6 @@ THE SOFTWARE.
 
 #ifndef RPPT_TENSOR_STATISTICAL_OPERATIONS_H
 #define RPPT_TENSOR_STATISTICAL_OPERATIONS_H
-
 #include "rpp.h"
 #include "rppdefs.h"
 #ifdef __cplusplus
