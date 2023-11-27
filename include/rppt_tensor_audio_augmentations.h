@@ -95,8 +95,8 @@ RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr,
 
 /******************** down_mixing ********************/
 
-/*! \brief Pre Emphasis Filter augmentation HOST
-* \details Pre Emphasis Filter augmentation for audio data
+/*! \brief Down mixing augmentation HOST
+* \details Down mixing augmentation for audio data
 * \param[in] srcPtr source tensor memory
 * \param[in] srcDescPtr source tensor descriptor
 * \param[out] dstPtr destination tensor memory
@@ -115,21 +115,22 @@ RppStatus rppt_down_mixing_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_
 
 /******************** slice_audio ********************/
 
-// Extracts a subtensor or slice from the audio buffer
-
-// *param[in] srcPtr source tensor memory
-// *param[in] srcDescPtr source tensor descriptor
-// *param[out] dstPtr destination tensor memory
-// *param[in] dstDescPtr destination tensor descriptor
-// *param[in] srcLengthTensor number of samples per channel
-// *param[in] anchorTensor starting index of the slice
-// *param[in] shapeTensor length of the slice
-// *param[in] axesTensor axes along which slice is needed
-// *param[in] fillValues fill values based on out of Bound policy
-// *param[in] rppHandle HIP-handle for "_gpu" variants and Host-handle for "_host" variants
-// *returns a  RppStatus enumeration.
-// *retval RPP_SUCCESS : successful completion
-// *retval RPP_ERROR : Error
+/*! \brief Down mixing augmentation HOST
+* \details Down mixing augmentation for audio data
+* \param[in] srcPtr source tensor memory
+* \param[in] srcDescPtr source tensor descriptor
+* \param[out] dstPtr destination tensor memory
+* \param[in] dstDescPtr destination tensor descriptor
+* \param[in] srcLengthTensor source audio buffer length (tensor of batchSize values)
+* \param[in] anchorTensor starting index of the slice
+* \param[in] shapeTensor length of the slice
+* \param[in] axesTensor axes along which slice is needed
+* \param[in] fillValues fill values based on out of Bound policy
+* \param[in] rppHandle HIP-handle for "_gpu" variants and Host-handle for "_host" variants
+* \return A <tt> \ref RppStatus</tt> enumeration.
+* \retval RPP_SUCCESS Successful completion.
+* \retval RPP_ERROR* Unsuccessful completion.
+*/
 
 RppStatus rppt_slice_audio_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcLengthTensor, Rpp32f *anchorTensor, Rpp32f *shapeTensor, Rpp32s *axesTensor, Rpp32f *fillValues, rppHandle_t rppHandle);
 
