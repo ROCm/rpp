@@ -30,6 +30,8 @@ timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
 scriptPath = os.path.dirname(os.path.realpath(__file__))
 inFilePath = scriptPath + "/../TEST_AUDIO_FILES/three_samples_single_channel_src1"
+caseMin = 0
+caseMax = 6
 
 # Checks if the folder path is empty, or is it a root folder, or if it exists, and remove its contents
 def validate_and_remove_files(path):
@@ -119,8 +121,8 @@ def run_performance_test(loggingFolder, srcPath, case, numRuns, testType, batchS
 def rpp_test_suite_parser_and_validator():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_path", type = str, default = inFilePath, help = "Path to the input folder")
-    parser.add_argument("--case_start", type = int, default = 0, help = "Testing range starting case # - (0:6)")
-    parser.add_argument("--case_end", type = int, default = 6, help = "Testing range ending case # - (0:6)")
+    parser.add_argument("--case_start", type = int, default = caseMin, help = "Testing start case # - Range must be in [" + str(caseMin) + ":" + str(caseMax) + "]")
+    parser.add_argument("--case_end", type = int, default = caseMax, help = "Testing end case # - Range must be in [" + str(caseMin) + ":" + str(caseMax) + "]")
     parser.add_argument('--test_type', type = int, default = 0, help = "Type of Test - (0 = QA tests / 1 = Performance tests)")
     parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Output audio data from tests will be compared with golden outputs - (0 / 1)", required = False)
     parser.add_argument('--case_list', nargs = "+", help = "List of case numbers to test", required = False)
@@ -133,8 +135,8 @@ def rpp_test_suite_parser_and_validator():
     validate_path(args.input_path)
 
     # validate the parameters passed by user
-    if ((args.case_start < 0 or args.case_start > 6) or (args.case_end < 0 or args.case_end > 6)):
-        print("Starting case# and Ending case# must be in the 0:6 range. Aborting!")
+    if ((args.case_start < caseMin or args.case_start > caseMax) or (args.case_end < caseMin or args.case_end > caseMax)):
+        print(f"Starting case# and Ending case# must be in the {caseMin}:{caseMax} range. Aborting!")
         exit(0)
     elif args.case_end < args.case_start:
         print("Ending case# must be greater than starting case#. Aborting!")
@@ -142,7 +144,7 @@ def rpp_test_suite_parser_and_validator():
     elif args.test_type < 0 or args.test_type > 1:
         print("Test Type# must be in the 0 / 1. Aborting!")
         exit(0)
-    elif args.case_list is not None and args.case_start > 6 and args.case_end < 0:
+    elif args.case_list is not None and args.case_start != caseMin and args.case_end != caseMax:
         print("Invalid input! Please provide only 1 option between case_list, case_start and case_end")
         exit(0)
     elif args.qa_mode < 0 or args.qa_mode > 1:
@@ -166,9 +168,9 @@ def rpp_test_suite_parser_and_validator():
         args.case_list = [str(x) for x in args.case_list]
     else:
         for case in args.case_list:
-            if int(case) < 0 or int(case) > 6:
-                 print("The case# must be 0-6 range!")
-                 exit(0)
+            if int(case) < caseMin or int(case) > caseMax:
+                print(f"Invalid case number {case}! Case number must be in the {caseMin}:{caseMax} range. Aborting!")
+                exit(0)
     return args
 
 args = rpp_test_suite_parser_and_validator()
