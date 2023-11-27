@@ -95,8 +95,8 @@ RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr,
 
 /******************** down_mixing ********************/
 
-/*! \brief Pre Emphasis Filter augmentation HOST
-* \details Pre Emphasis Filter augmentation for audio data
+/*! \brief Down Mixing augmentation HOST
+* \details Down Mixing augmentation for audio data
 * \param[in] srcPtr source tensor memory
 * \param[in] srcDescPtr source tensor descriptor
 * \param[out] dstPtr destination tensor memory
