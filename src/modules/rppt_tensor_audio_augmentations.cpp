@@ -91,7 +91,7 @@ RppStatus rppt_to_decibels_host(RppPtr_t srcPtr,
     }
     else
     {
-        return RPP_ERROR_NOT_IMPLEMENTED;
+        return RPP_ERROR_INVALID_SRC_OR_DST_DATATYPE;
     }
 }
 
