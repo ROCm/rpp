@@ -71,11 +71,7 @@ RppStatus to_decibels_host_tensor(Rpp32f *srcPtr,
             }
         }
 
-        // Avoid division by zero
-        if(!refMag)
-            refMag = 1.0f;
-
-        Rpp32f invReferenceMagnitude = 1.f / refMag;
+        Rpp32f invReferenceMagnitude = (refMag) ? (1.f / refMag) : 1.0f;
         // Interpret as 1D array
         if(width == 1)
         {
@@ -84,20 +80,16 @@ RppStatus to_decibels_host_tensor(Rpp32f *srcPtr,
         }
         else
         {
-            Rpp32f *srcPtrRow, *dstPtrRow;
-            srcPtrRow = srcPtrCurrent;
-            dstPtrRow = dstPtrCurrent;
             for(int i = 0; i < height; i++)
             {
-                Rpp32f *srcPtrTemp, *dstPtrTemp;
-                srcPtrTemp = srcPtrRow;
-                dstPtrTemp = dstPtrRow;
-                Rpp32s vectorLoopCount = 0;
-                for(; vectorLoopCount < width; vectorLoopCount++)
-                    *dstPtrTemp++ = multiplier * std::log2(std::max(minRatio, (*srcPtrTemp++) * invReferenceMagnitude));
+                Rpp32f *srcPtrRow, *dstPtrRow;
+                srcPtrRow = srcPtrCurrent;
+                dstPtrRow = dstPtrCurrent;
+                for(Rpp32s vectorLoopCount = 0; vectorLoopCount < width; vectorLoopCount++)
+                    *dstPtrRow++ = multiplier * std::log2(std::max(minRatio, (*srcPtrRow++) * invReferenceMagnitude));
 
-                srcPtrRow += srcDescPtr->strides.hStride;
-                dstPtrRow += dstDescPtr->strides.hStride;
+                srcPtrCurrent += srcDescPtr->strides.hStride;
+                dstPtrCurrent += dstDescPtr->strides.hStride;
             }
         }
     }
