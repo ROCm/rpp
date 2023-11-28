@@ -1159,7 +1159,7 @@ inline void compare_reduction_output(T* output, string funcName, RpptDescPtr src
             matched_values = 0;
             for(int j = 0; j < 4; j++)
             {
-                int diff = output[(i*4)+j] - refOutput[(i*4)+j];
+                int diff = output[(i * 4) + j] - refOutput[(i * 4) + j];
                 if(diff <= CUTOFF)
                     matched_values++;
             }
