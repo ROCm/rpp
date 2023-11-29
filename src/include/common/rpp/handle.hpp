@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2017 - 2022 Advanced Micro Devices, Inc.
+ * Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,10 +32,8 @@
 #include <memory>
 #include <vector>
 #include <unordered_map>
-#include <boost/range/adaptor/transformed.hpp>
 
 #include "rpp.h"
-#include "config.h"
 #include "rppdefs.h"
 #include "rpp/common.hpp"
 #include "rpp/kernel.hpp"
@@ -66,12 +64,13 @@ using rocblas_handle_ptr = RPP_MANAGE_PTR(rocblas_handle, rocblas_destroy_handle
 struct Handle : rppHandle
 {
     Handle();
-    Handle(size_t nBatchSize);
+    Handle(size_t nBatchSize, Rpp32u numThreads = 0);
     Handle(Handle&&) noexcept;
     ~Handle();
 
     InitHandle* GetInitHandle() const;
     size_t GetBatchSize() const;
+    Rpp32u GetNumThreads() const;
     void SetBatchSize(size_t bSize) const;
     void rpp_destroy_object_host();
     std::unique_ptr<HandleImpl> impl;
@@ -83,11 +82,12 @@ struct Handle : rppHandle
 {
     // Host handle related
     Handle();
-    Handle(size_t nBatchSize);
+    Handle(size_t nBatchSize, Rpp32u numThreads = 0);
     Handle(Handle&&) noexcept;
     ~Handle();
     InitHandle*  GetInitHandle() const;
     size_t GetBatchSize() const;
+    Rpp32u GetNumThreads() const;
     void SetBatchSize(size_t bSize) const;
     void rpp_destroy_object_host();
 

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -29,6 +29,18 @@ THE SOFTWARE.
 extern "C"
 {
 #endif // cpusplus
+
+/*!
+ * \file
+ * \brief RPPI Image Operations - Geometry Transforms - To be deprecated.
+ * \defgroup group_rppi_geometry_transforms RPPI Image Operations - Geometry Transforms
+ * \brief RPPI Image Operations - Geometry Transforms - To be deprecated.
+ * \deprecated
+ */
+
+/*! \addtogroup group_rppi_geometry_transforms
+ * @{
+ */
 
 /******************** flip ********************/
 
@@ -353,6 +365,9 @@ RppStatus rppi_warp_perspective_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *s
 RppStatus rppi_warp_perspective_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32f *perspectiveMatrix, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_warp_perspective_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, RppiSize *dstSize, RppiSize maxDstSize, Rpp32f *perspectiveMatrix, Rpp32u nbatchSize, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
+
+/*! @}
+ */
 
 #ifdef __cplusplus
 }

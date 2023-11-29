@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -30,5 +30,6 @@ THE SOFTWARE.
 #include "kernel/resize_mirror_normalize.hpp"
 #include "kernel/resize_crop_mirror.hpp"
 #include "kernel/warp_affine.hpp"
+#include "kernel/slice.hpp"
 
 #endif // HOST_TENSOR_GEOMETRIC_AUGMENTATIONS_HPP

@@ -11,3 +11,15 @@ stb-test/
 hip_build/
 OUTPUT_IMAGES*
 OUTPUT_PERFORMANCE*
+QA_RESULTS*
+OUTPUT_VOXEL*
+doxygen_output*
+
+# documentation artifacts
+_build/
+_images/
+_static/
+_templates/
+_toc.yml
+docBin/
+_doxygen/

@@ -1,3 +1,25 @@
+/*
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+
 #include <stdio.h>
 #include <dirent.h>
 #include <string.h>
@@ -92,9 +114,9 @@ int main(int argc, char **argv)
     unsigned int outputFormatToggle = atoi(argv[5]);
     int test_case = atoi(argv[6]);
 
-    bool additionalParamCase = (test_case == 8 || test_case == 21 || test_case == 24);
+    bool additionalParamCase = (test_case == 8 || test_case == 21 || test_case == 23 || test_case == 24);
     bool kernelSizeCase = false;
-    bool interpolationTypeCase = (test_case == 21 || test_case == 24);
+    bool interpolationTypeCase = (test_case == 21 || test_case == 23 || test_case == 24);
     bool noiseTypeCase = (test_case == 8);
     bool pln1OutTypeCase = (test_case == 86);
 
@@ -148,8 +170,14 @@ int main(int argc, char **argv)
     case 21:
         strcpy(funcName, "resize");
         break;
+    case 23:
+        strcpy(funcName, "rotate");
+        break;
     case 24:
         strcpy(funcName, "warp_affine");
+        break;
+    case 30:
+        strcpy(funcName, "non_linear_blend");
         break;
     case 31:
         strcpy(funcName, "color_cast");
@@ -660,7 +688,11 @@ int main(int argc, char **argv)
     // Run case-wise RPP API and measure time
 
     rppHandle_t handle;
-    rppCreateWithBatchSize(&handle, noOfImages);
+
+    // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
+    // If numThreads value passed is 0, number of OpenMP threads used by RPP will be set to batch size
+    Rpp32u numThreads = 0;
+    rppCreateWithBatchSize(&handle, noOfImages, numThreads);
     clock_t start, end;
     double start_omp, end_omp;
     double cpu_time_used, omp_time_used;
@@ -1233,6 +1265,63 @@ int main(int argc, char **argv)
 
         break;
     }
+    case 23:
+    {
+        test_case_name = "rotate";
+
+        if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR))
+        {
+            missingFuncFlag = 1;
+            break;
+        }
+
+        Rpp32f angle[images];
+        for (i = 0; i < images; i++)
+        {
+            angle[i] = 50;
+        }
+
+        // Uncomment to run test case with an xywhROI override
+        /*for (i = 0; i < images; i++)
+        {
+            roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+            roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+            roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+            roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+        }*/
+
+        // Uncomment to run test case with an ltrbROI override
+        /*for (i = 0; i < images; i++)
+        {
+            roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+            roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+            roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+            roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+        }
+        roiTypeSrc = RpptRoiType::LTRB;
+        roiTypeDst = RpptRoiType::LTRB;*/
+
+        start_omp = omp_get_wtime();
+        start = clock();
+        if (ip_bitDepth == 0)
+            rppt_rotate_host(input, srcDescPtr, output, dstDescPtr, angle, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 1)
+            rppt_rotate_host(inputf16, srcDescPtr, outputf16, dstDescPtr, angle, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 2)
+            rppt_rotate_host(inputf32, srcDescPtr, outputf32, dstDescPtr, angle, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 3)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 4)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 5)
+            rppt_rotate_host(inputi8, srcDescPtr, outputi8, dstDescPtr, angle, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 6)
+            missingFuncFlag = 1;
+        else
+            missingFuncFlag = 1;
+
+        break;
+    }
     case 24:
     {
         test_case_name = "warp_affine";
@@ -1288,6 +1377,59 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
             rppt_warp_affine_host(inputi8, srcDescPtr, outputi8, dstDescPtr, affineTensor, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 6)
+            missingFuncFlag = 1;
+        else
+            missingFuncFlag = 1;
+
+        break;
+    }
+    case 30:
+    {
+        test_case_name = "non_linear_blend";
+
+        Rpp32f stdDev[images];
+        for (i = 0; i < images; i++)
+        {
+            stdDev[i] = 50.0;
+        }
+
+        // Uncomment to run test case with an xywhROI override
+        /*for (i = 0; i < images; i++)
+        {
+            roiTensorPtrSrc[i].xywhROI.xy.x = 0;
+            roiTensorPtrSrc[i].xywhROI.xy.y = 0;
+            dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
+            dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
+        }*/
+
+        // Uncomment to run test case with an ltrbROI override
+        /*for (i = 0; i < images; i++)
+        {
+            roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
+            roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
+            roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
+            roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
+            dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
+            dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
+        }
+        roiTypeSrc = RpptRoiType::LTRB;
+        roiTypeDst = RpptRoiType::LTRB;*/
+
+        start_omp = omp_get_wtime();
+        start = clock();
+        if (ip_bitDepth == 0)
+            rppt_non_linear_blend_host(input, input_second, srcDescPtr, output, dstDescPtr, stdDev, roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 1)
+            rppt_non_linear_blend_host(inputf16, inputf16_second, srcDescPtr, outputf16, dstDescPtr, stdDev, roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 2)
+            rppt_non_linear_blend_host(inputf32, inputf32_second, srcDescPtr, outputf32, dstDescPtr, stdDev, roiTensorPtrSrc, roiTypeSrc, handle);
+        else if (ip_bitDepth == 3)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 4)
+            missingFuncFlag = 1;
+        else if (ip_bitDepth == 5)
+            rppt_non_linear_blend_host(inputi8, inputi8_second, srcDescPtr, outputi8, dstDescPtr, stdDev, roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else
@@ -2144,6 +2286,8 @@ int main(int argc, char **argv)
 
     free(roiTensorPtrSrc);
     free(roiTensorPtrDst);
+    free(srcImgSizes);
+    free(dstImgSizes);
     free(input);
     free(input_second);
     free(output);

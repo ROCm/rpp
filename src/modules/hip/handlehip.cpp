@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2017 - 2022 Advanced Micro Devices, Inc.
+ * Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,19 +24,17 @@
  *
  *******************************************************************************/
 
-#include <boost/filesystem.hpp>
 #ifndef _WIN32
 #include <unistd.h>
 #endif
 
-#include "config.h"
+#include <thread>
 #include "rpp/device_name.hpp"
 #include "rpp/errors.hpp"
 #include "rpp/logger.hpp"
 #include "rpp/handle.hpp"
 #include "rpp/kernel_cache.hpp"
 #include "rpp/binary_cache.hpp"
-#include "rpp/handle_lock.hpp"
 
 namespace rpp {
 
@@ -129,6 +127,7 @@ struct HandleImpl
     bool enable_profiling = false;
     float profiling_result = 0.0;
     size_t nBatchSize = 1;
+    Rpp32u numThreads = 0;
     InitHandle* initHandle = nullptr;
 
     HandleImpl() : ctx(get_ctx()) {}
@@ -277,9 +276,13 @@ Handle::Handle(rppAcceleratorQueue_t stream) : impl(new HandleImpl())
     RPP_LOG_I(*this);
 }
 
-Handle::Handle(size_t batchSize) : impl(new HandleImpl())
+Handle::Handle(size_t batchSize, Rpp32u numThreads) : impl(new HandleImpl())
 {
     impl->nBatchSize = batchSize;
+    numThreads = std::min(numThreads, std::thread::hardware_concurrency());
+    if(numThreads == 0)
+        numThreads = batchSize;
+    impl->numThreads = numThreads;
     this->SetAllocator(nullptr, nullptr, nullptr);
     impl->PreInitializeBufferCPU();
 }
@@ -297,6 +300,9 @@ Handle::Handle() : impl(new HandleImpl())
 #endif
     this->SetAllocator(nullptr, nullptr, nullptr);
     impl->PreInitializeBuffer();
+    impl->numThreads = std::min(impl->numThreads, std::thread::hardware_concurrency());
+    if(impl->numThreads == 0)
+        impl->numThreads = impl->nBatchSize;
     RPP_LOG_I(*this);
 }
 
@@ -385,6 +391,11 @@ size_t Handle::GetBatchSize() const
     return this->impl->nBatchSize;
 }
 
+Rpp32u Handle::GetNumThreads() const
+{
+    return this->impl->numThreads;
+}
+
 void Handle::SetBatchSize(size_t bSize) const
 {
     this->impl->nBatchSize = bSize;
@@ -470,7 +481,7 @@ const std::vector<Kernel>& Handle::GetKernelsImpl(const std::string& algorithm, 
 KernelInvoke Handle::Run(Kernel k)
 {
     this->impl->set_ctx();
-    if(this->impl->enable_profiling || RPP_GPU_SYNC)
+    if(this->impl->enable_profiling)
         return k.Invoke(this->GetStream(), this->impl->elapsed_time_handler());
     else
         return k.Invoke(this->GetStream());
@@ -542,8 +553,8 @@ std::string Handle::GetDeviceName()
 {
     hipDeviceProp_t props{};
     hipGetDeviceProperties(&props, this->impl->device);
-    std::string n("gfx" + std::to_string(props.gcnArch));
-    return GetDeviceNameFromMap(n);
+    std::string name(props.gcnArchName);
+    return name;
 }
 
 std::ostream& Handle::Print(std::ostream& os) const
@@ -579,14 +590,12 @@ std::size_t Handle::GetMaxComputeUnits()
 
 Allocator::ManageDataPtr Handle::Create(std::size_t sz)
 {
-    RPP_HANDLE_LOCK
     this->Finish();
     return this->impl->allocator(sz);
 }
 
 Allocator::ManageDataPtr& Handle::WriteTo(const void* data, Allocator::ManageDataPtr& ddata, std::size_t sz)
 {
-    RPP_HANDLE_LOCK
     this->Finish();
     auto status = hipMemcpy(ddata.get(), data, sz, hipMemcpyHostToDevice);
     if(status != hipSuccess)
@@ -596,7 +605,6 @@ Allocator::ManageDataPtr& Handle::WriteTo(const void* data, Allocator::ManageDat
 
 void Handle::ReadTo(void* data, const Allocator::ManageDataPtr& ddata, std::size_t sz)
 {
-    RPP_HANDLE_LOCK
     this->Finish();
     auto status = hipMemcpy(data, ddata.get(), sz, hipMemcpyDeviceToHost);
     if(status != hipSuccess)
@@ -605,7 +613,6 @@ void Handle::ReadTo(void* data, const Allocator::ManageDataPtr& ddata, std::size
 
 void Handle::Copy(ConstData_t src, Data_t dest, std::size_t size)
 {
-    RPP_HANDLE_LOCK
     this->impl->set_ctx();
     auto status = hipMemcpy(dest, src, size, hipMemcpyDeviceToDevice);
     if(status != hipSuccess)

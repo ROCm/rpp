@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,12 +22,20 @@ THE SOFTWARE.
 
 #ifndef RPPVERSION_H
 #define RPPVERSION_H
+
+/*!
+ * \file
+ * \brief ROCm Performance Primitives (RPP) version
+ * \defgroup group_rpp_version RPP Version
+ * \brief ROCm Performance Primitives (RPP) version
+ */
+
 #include "rpp.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
-#define RPP_VERSION_MAJOR 0
-#define RPP_VERSION_MINOR 93
+#define RPP_VERSION_MAJOR 1
+#define RPP_VERSION_MINOR 3
 #define RPP_VERSION_PATCH 0
 #ifdef __cplusplus
 }

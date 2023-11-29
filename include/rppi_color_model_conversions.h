@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -28,6 +28,18 @@ THE SOFTWARE.
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/*!
+ * \file
+ * \brief RPPI Image Operations - Color Model Conversions - To be deprecated.
+ * \defgroup group_rppi_color_model_conversions RPPI Image Operations - Color Model Conversions
+ * \brief RPPI Image Operations - Color Model Conversions - To be deprecated.
+ * \deprecated
+ */
+
+/*! \addtogroup group_rppi_color_model_conversions
+ * @{
+ */
 
 /******************** hue ********************/
 
@@ -232,6 +244,9 @@ RppStatus rppi_look_up_table_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcS
 // *retval RPP_ERROR : Error
 
 RppStatus rppi_tensor_look_up_table_u8_host(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t lutPtr, Rpp32u tensorDimension, RppPtr_t tensorDimensionValues);
+
+/*! @}
+ */
 
 #ifdef __cplusplus
 }

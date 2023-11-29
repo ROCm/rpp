@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2017 - 2022 Advanced Micro Devices, Inc.
+ * Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,6 @@
  *******************************************************************************/
 
 #include "rpp/oclkernel.hpp"
-#include "rpp/handle_lock.hpp"
 #include "rpp/logger.hpp"
 
 namespace rpp {
@@ -59,8 +58,6 @@ void OCLKernelInvoke::run() const
                                    << ", local_work_dim = "
                                    << DimToFormattedString(local_work_dim.data(), work_dim));
 #endif // !NDEBUG
-
-    RPP_HANDLE_LOCK
 
     cl_event ev;
     /* way to run OCL group larger than 256

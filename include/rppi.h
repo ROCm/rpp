@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,6 +22,14 @@ THE SOFTWARE.
 
 #ifndef RPPI_H
 #define RPPI_H
+
+/*!
+ * \file
+ * \brief RPP Image Operations - To be deprecated
+ * \defgroup group_rppi RPP Image Operations
+ * \brief The header includes all files containing RPP Image Operations - To be deprecated
+ * \deprecated
+ */
 
 #include "rpp.h"
 #ifdef __cplusplus

@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2017 - 2022 Advanced Micro Devices, Inc.
+ * Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,7 +31,6 @@
 
 #include "rpp/errors.hpp"
 #include "rpp/hipoc_kernel.hpp"
-#include "rpp/handle_lock.hpp"
 #if defined(STATIC)
 #include "rpp/hip_kernels.hpp"
 #endif
@@ -61,8 +60,7 @@ void HIPOCKernelInvoke::run(void* args, std::size_t size) const
     }
 
 
-    RPP_HANDLE_LOCK
-
+    
 #if defined (HSACOO) || defined (HIPRTC)
 
             auto status = hipExtModuleLaunchKernel(fun,

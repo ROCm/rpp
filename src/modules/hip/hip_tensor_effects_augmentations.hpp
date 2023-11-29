@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -28,5 +28,8 @@ THE SOFTWARE.
 #include "kernel/noise_salt_and_pepper.hpp"
 #include "kernel/noise_shot.hpp"
 #include "kernel/noise_gaussian.hpp"
+#include "kernel/non_linear_blend.hpp"
+#include "kernel/water.hpp"
+#include "kernel/ricap.hpp"
 
 #endif // HIP_TENSOR_EFFECTS_AUGMENTATIONS_HPP

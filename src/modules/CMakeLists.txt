@@ -1,4 +1,4 @@
-# Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -92,6 +92,7 @@ if( "${BACKEND}" STREQUAL "HIP")
     # Set HIP compiler and flags
     set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_HIPCC_FLAGS}")
+    set_source_files_properties(rppt_tensor_audio_augmentations.cpp PROPERTIES COMPILE_FLAGS -mno-fma)
 
     # Add HIP specific preprocessor flags
     add_definitions(-DHIP_COMPILE)
@@ -105,6 +106,7 @@ elseif( "${BACKEND}" STREQUAL "OCL")
     file(GLOB MOD_CL_CPP "cl/*.cpp" )
     list(APPEND Rpp_Source ${CPPFILES} ${MOD_CL_CPP})
     message("-- ${Green}OpenCL kernels added!${ColourReset}")
+    set_source_files_properties(rppt_tensor_audio_augmentations.cpp PROPERTIES COMPILE_FLAGS -mno-fma)
 
     # Add OpenCL specific preprocessor flags
     add_definitions(-DOCL_COMPILE)
@@ -118,8 +120,11 @@ elseif( "${BACKEND}" STREQUAL "OCL")
 elseif( "${BACKEND}" STREQUAL "CPU")
     # Add CPU specific includes
     set(INCLUDE_LIST ${CMAKE_SOURCE_DIR}/src/include/common/)
+    set_source_files_properties(rppt_tensor_audio_augmentations.cpp PROPERTIES COMPILE_FLAGS -mno-fma)
 endif()
 message("-- ${White}AMD RPP ${PROJECT_NAME} -- Include Directories:${INCLUDE_LIST}${ColourReset}")
+add_compile_options("-Wno-unused-result")
+
 # Kernels and includes additions
 
 add_kernels("${RPP_KERNELS}")

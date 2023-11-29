@@ -1,3 +1,25 @@
+/*
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+
 #include "rppdefs.h"
 #include "rpp_cpu_simd.hpp"
 #include "rpp_cpu_common.hpp"
@@ -10,12 +32,14 @@ RppStatus color_cast_u8_u8_host_tensor(Rpp8u *srcPtr,
                                        Rpp32f *alphaTensor,
                                        RpptROIPtr roiTensorPtrSrc,
                                        RpptRoiType roiType,
-                                       RppLayoutParams layoutParams)
+                                       RppLayoutParams layoutParams,
+                                       rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(dstDescPtr->n)
+#pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
@@ -78,9 +102,9 @@ RppStatus color_cast_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTempR = (Rpp8u) RPPPIXELCHECK((alphaParam * (srcPtrTemp[0] - rParam)) + rParam);
-                    *dstPtrTempG = (Rpp8u) RPPPIXELCHECK((alphaParam * (srcPtrTemp[1] - gParam)) + gParam);
-                    *dstPtrTempB = (Rpp8u) RPPPIXELCHECK((alphaParam * (srcPtrTemp[2] - bParam)) + bParam);
+                    *dstPtrTempR = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((alphaParam * (srcPtrTemp[0] - bParam)) + bParam));
+                    *dstPtrTempG = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((alphaParam * (srcPtrTemp[1] - gParam)) + gParam));
+                    *dstPtrTempB = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((alphaParam * (srcPtrTemp[2] - rParam)) + rParam));
 
                     srcPtrTemp+=3;
                     dstPtrTempR++;
@@ -130,9 +154,9 @@ RppStatus color_cast_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK((alphaParam * (*srcPtrTempR - bParam)) + bParam);
-                    dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK((alphaParam * (*srcPtrTempG - gParam)) + gParam);
-                    dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK((alphaParam * (*srcPtrTempB - rParam)) + rParam);
+                    dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((alphaParam * (*srcPtrTempR - bParam)) + bParam));
+                    dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((alphaParam * (*srcPtrTempG - gParam)) + gParam));
+                    dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((alphaParam * (*srcPtrTempB - rParam)) + rParam));
 
                     srcPtrTempR++;
                     srcPtrTempG++;
@@ -176,9 +200,9 @@ RppStatus color_cast_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK((alphaParam * (srcPtrTemp[0] - rParam)) + rParam);
-                    dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK((alphaParam * (srcPtrTemp[1] - gParam)) + gParam);
-                    dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK((alphaParam * (srcPtrTemp[2] - bParam)) + bParam);
+                    dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((alphaParam * (srcPtrTemp[0] - bParam)) + bParam));
+                    dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((alphaParam * (srcPtrTemp[1] - gParam)) + gParam));
+                    dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((alphaParam * (srcPtrTemp[2] - rParam)) + rParam));
 
                     srcPtrTemp += 3;
                     dstPtrTemp += 3;
@@ -230,9 +254,9 @@ RppStatus color_cast_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    *dstPtrTempR = (Rpp8u) RPPPIXELCHECK((alphaParam * (*srcPtrTempR - bParam)) + bParam);
-                    *dstPtrTempG = (Rpp8u) RPPPIXELCHECK((alphaParam * (*srcPtrTempG - gParam)) + gParam);
-                    *dstPtrTempB = (Rpp8u) RPPPIXELCHECK((alphaParam * (*srcPtrTempB - rParam)) + rParam);
+                    *dstPtrTempR = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((alphaParam * (*srcPtrTempR - bParam)) + bParam));
+                    *dstPtrTempG = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((alphaParam * (*srcPtrTempG - gParam)) + gParam));
+                    *dstPtrTempB = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((alphaParam * (*srcPtrTempB - rParam)) + rParam));
 
                     srcPtrTempR++;
                     srcPtrTempG++;
@@ -263,12 +287,14 @@ RppStatus color_cast_f32_f32_host_tensor(Rpp32f *srcPtr,
                                          Rpp32f *alphaTensor,
                                          RpptROIPtr roiTensorPtrSrc,
                                          RpptRoiType roiType,
-                                         RppLayoutParams layoutParams)
+                                         RppLayoutParams layoutParams,
+                                         rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(dstDescPtr->n)
+#pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
@@ -331,9 +357,9 @@ RppStatus color_cast_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTempR = RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[0] - rParam)) + rParam);
+                    *dstPtrTempR = RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[0] - bParam)) + bParam);
                     *dstPtrTempG = RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[1] - gParam)) + gParam);
-                    *dstPtrTempB = RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[2] - bParam)) + bParam);
+                    *dstPtrTempB = RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[2] - rParam)) + rParam);
 
                     srcPtrTemp += 3;
                     dstPtrTempR++;
@@ -429,9 +455,9 @@ RppStatus color_cast_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    dstPtrTemp[0] = RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[0] - rParam)) + rParam);
+                    dstPtrTemp[0] = RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[0] - bParam)) + bParam);
                     dstPtrTemp[1] = RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[1] - gParam)) + gParam);
-                    dstPtrTemp[2] = RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[2] - bParam)) + bParam);
+                    dstPtrTemp[2] = RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[2] - rParam)) + rParam);
 
                     srcPtrTemp += 3;
                     dstPtrTemp += 3;
@@ -516,12 +542,14 @@ RppStatus color_cast_f16_f16_host_tensor(Rpp16f *srcPtr,
                                          Rpp32f *alphaTensor,
                                          RpptROIPtr roiTensorPtrSrc,
                                          RpptRoiType roiType,
-                                         RppLayoutParams layoutParams)
+                                         RppLayoutParams layoutParams,
+                                         rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(dstDescPtr->n)
+#pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
@@ -598,9 +626,9 @@ RppStatus color_cast_f16_f16_host_tensor(Rpp16f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTempR = (Rpp16f) RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[0] - rParam)) + rParam);
+                    *dstPtrTempR = (Rpp16f) RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[0] - bParam)) + bParam);
                     *dstPtrTempG = (Rpp16f) RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[1] - gParam)) + gParam);
-                    *dstPtrTempB = (Rpp16f) RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[2] - bParam)) + bParam);
+                    *dstPtrTempB = (Rpp16f) RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[2] - rParam)) + rParam);
 
                     srcPtrTemp += 3;
                     dstPtrTempR++;
@@ -722,9 +750,9 @@ RppStatus color_cast_f16_f16_host_tensor(Rpp16f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    dstPtrTemp[0] = (Rpp16f) RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[0] - rParam)) + rParam);
+                    dstPtrTemp[0] = (Rpp16f) RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[0] - bParam)) + bParam);
                     dstPtrTemp[1] = (Rpp16f) RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[1] - gParam)) + gParam);
-                    dstPtrTemp[2] = (Rpp16f) RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[2] - bParam)) + bParam);
+                    dstPtrTemp[2] = (Rpp16f) RPPPIXELCHECKF32((alphaParam * (srcPtrTemp[2] - rParam)) + rParam);
 
                     srcPtrTemp += 3;
                     dstPtrTemp += 3;
@@ -825,12 +853,14 @@ RppStatus color_cast_i8_i8_host_tensor(Rpp8s *srcPtr,
                                        Rpp32f *alphaTensor,
                                        RpptROIPtr roiTensorPtrSrc,
                                        RpptRoiType roiType,
-                                       RppLayoutParams layoutParams)
+                                       RppLayoutParams layoutParams,
+                                       rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(dstDescPtr->n)
+#pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
@@ -898,9 +928,9 @@ RppStatus color_cast_i8_i8_host_tensor(Rpp8s *srcPtr,
                     srcPtrTempI8[1] = (Rpp32f)srcPtrTemp[1] + 128;
                     srcPtrTempI8[2] = (Rpp32f)srcPtrTemp[2] + 128;
 
-                    *dstPtrTempR = (Rpp8s) RPPPIXELCHECKI8((alphaParam * (srcPtrTempI8[0] - rParam)) + rParam - 128);
+                    *dstPtrTempR = (Rpp8s) RPPPIXELCHECKI8((alphaParam * (srcPtrTempI8[0] - bParam)) + bParam - 128);
                     *dstPtrTempG = (Rpp8s) RPPPIXELCHECKI8((alphaParam * (srcPtrTempI8[1] - gParam)) + gParam - 128);
-                    *dstPtrTempB = (Rpp8s) RPPPIXELCHECKI8((alphaParam * (srcPtrTempI8[2] - bParam)) + bParam - 128);
+                    *dstPtrTempB = (Rpp8s) RPPPIXELCHECKI8((alphaParam * (srcPtrTempI8[2] - rParam)) + rParam - 128);
 
                     srcPtrTemp+=3;
                     dstPtrTempR++;
@@ -1006,9 +1036,9 @@ RppStatus color_cast_i8_i8_host_tensor(Rpp8s *srcPtr,
                     srcPtrTempI8[1] = (Rpp32f)srcPtrTemp[1] + 128;
                     srcPtrTempI8[2] = (Rpp32f)srcPtrTemp[2] + 128;
 
-                    dstPtrTemp[0] = (Rpp8s) RPPPIXELCHECKI8((alphaParam * (srcPtrTempI8[0] - rParam)) + rParam - 128);
+                    dstPtrTemp[0] = (Rpp8s) RPPPIXELCHECKI8((alphaParam * (srcPtrTempI8[0] - bParam)) + bParam - 128);
                     dstPtrTemp[1] = (Rpp8s) RPPPIXELCHECKI8((alphaParam * (srcPtrTempI8[1] - gParam)) + gParam - 128);
-                    dstPtrTemp[2] = (Rpp8s) RPPPIXELCHECKI8((alphaParam * (srcPtrTempI8[2] - bParam)) + bParam - 128);
+                    dstPtrTemp[2] = (Rpp8s) RPPPIXELCHECKI8((alphaParam * (srcPtrTempI8[2] - rParam)) + rParam - 128);
 
                     srcPtrTemp += 3;
                     dstPtrTemp += 3;

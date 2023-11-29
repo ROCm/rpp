@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -28,6 +28,18 @@ THE SOFTWARE.
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/*!
+ * \file
+ * \brief RPPI Image Operations - Statistical Operations - To be deprecated.
+ * \defgroup group_rppi_statistical_operations RPPI Image Operations - Statistical Operations
+ * \brief RPPI Image Operations - Statistical Operations - To be deprecated.
+ * \deprecated
+ */
+
+/*! \addtogroup group_rppi_statistical_operations
+ * @{
+ */
 
 /******************** thresholding ********************/
 
@@ -210,6 +222,9 @@ RppStatus rppi_mean_stddev_u8_pkd3_gpu(RppPtr_t srcPtr, RppiSize srcSize, Rpp32f
 RppStatus rppi_histogram_u8_pln1_host(RppPtr_t srcPtr, RppiSize srcSize, Rpp32u* outputHistogram, Rpp32u bins, rppHandle_t rppHandle);
 RppStatus rppi_histogram_u8_pln3_host(RppPtr_t srcPtr, RppiSize srcSize, Rpp32u* outputHistogram, Rpp32u bins, rppHandle_t rppHandle);
 RppStatus rppi_histogram_u8_pkd3_host(RppPtr_t srcPtr, RppiSize srcSize, Rpp32u* outputHistogram, Rpp32u bins, rppHandle_t rppHandle);
+
+/*! @}
+ */
 
 #ifdef __cplusplus
 }

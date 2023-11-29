@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -28,6 +28,18 @@ THE SOFTWARE.
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/*!
+ * \file
+ * \brief RPPI Image Operations - Image Augmentations - To be deprecated.
+ * \defgroup group_rppi_image_augmentations RPPI Image Operations - Image Augmentations
+ * \brief RPPI Image Operations - Image Augmentations - To be deprecated.
+ * \deprecated
+ */
+
+/*! \addtogroup group_rppi_image_augmentations
+ * @{
+ */
 
 /******************** brightness ********************/
 
@@ -403,6 +415,9 @@ RppStatus rppi_histogram_balance_u8_pln1_batchPD_gpu(RppPtr_t srcPtr, RppiSize *
 RppStatus rppi_histogram_balance_u8_pln3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
 RppStatus rppi_histogram_balance_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcSize, RppiSize maxSrcSize, RppPtr_t dstPtr, Rpp32u nbatchSize, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
+
+/*! @}
+ */
 
 #ifdef __cplusplus
 }

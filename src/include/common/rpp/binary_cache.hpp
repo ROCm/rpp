@@ -2,7 +2,7 @@
  *
  * MIT License
  *
- * Copyright (c) 2017 - 2022 Advanced Micro Devices, Inc.
+ * Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,21 +28,21 @@
 #define GUARD_RPP_BINARY_CACHE_HPP
 
 #include <string>
-#include <boost/filesystem/path.hpp>
+#include "filesystem.h"
 
 namespace rpp {
 
-boost::filesystem::path GetCacheFile(const std::string& device,
+fs::path GetCacheFile(const std::string& device,
                                      const std::string& name,
                                      const std::string& args,
                                      bool is_kernel_str);
 
-boost::filesystem::path GetCachePath();
+fs::path GetCachePath();
 std::string LoadBinary(const std::string& device,
                        const std::string& name,
                        const std::string& args,
                        bool is_kernel_str = false);
-void SaveBinary(const boost::filesystem::path& binary_path,
+void SaveBinary(const fs::path& binary_path,
                 const std::string& device,
                 const std::string& name,
                 const std::string& args,

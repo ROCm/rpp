@@ -1,3 +1,25 @@
+/*
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+
 #ifndef HOST_MORPHOLOGICAL_TRANSFORMS_HPP
 #define HOST_MORPHOLOGICAL_TRANSFORMS_HPP
 
@@ -9,12 +31,13 @@ template <typename T>
 RppStatus erode_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
                            Rpp32u *batch_kernelSize,
                            RppiROI *roiPoints, Rpp32u nbatchSize,
-                           RppiChnFormat chnFormat, Rpp32u channel)
+                           RppiChnFormat chnFormat, Rpp32u channel, rpp::Handle& handle)
 {
+    Rpp32u numThreads = handle.GetNumThreads();
     if(chnFormat == RPPI_CHN_PLANAR)
     {
         omp_set_dynamic(0);
-#pragma omp parallel for num_threads(nbatchSize)
+#pragma omp parallel for num_threads(numThreads)
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
@@ -182,7 +205,7 @@ RppStatus erode_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_s
     else if (chnFormat == RPPI_CHN_PACKED)
     {
         omp_set_dynamic(0);
-#pragma omp parallel for num_threads(nbatchSize)
+#pragma omp parallel for num_threads(numThreads)
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
@@ -418,12 +441,13 @@ template <typename T>
 RppStatus dilate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
                            Rpp32u *batch_kernelSize,
                            RppiROI *roiPoints, Rpp32u nbatchSize,
-                           RppiChnFormat chnFormat, Rpp32u channel)
+                           RppiChnFormat chnFormat, Rpp32u channel, rpp::Handle& handle)
 {
+    Rpp32u numThreads = handle.GetNumThreads();
     if(chnFormat == RPPI_CHN_PLANAR)
     {
         omp_set_dynamic(0);
-#pragma omp parallel for num_threads(nbatchSize)
+#pragma omp parallel for num_threads(numThreads)
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;
@@ -566,7 +590,7 @@ RppStatus dilate_host_batch(T* srcPtr, RppiSize *batch_srcSize, RppiSize *batch_
     else if (chnFormat == RPPI_CHN_PACKED)
     {
         omp_set_dynamic(0);
-#pragma omp parallel for num_threads(nbatchSize)
+#pragma omp parallel for num_threads(numThreads)
         for(int batchCount = 0; batchCount < nbatchSize; batchCount ++)
         {
             Rpp32u imageDimMax = batch_srcSizeMax[batchCount].height * batch_srcSizeMax[batchCount].width;

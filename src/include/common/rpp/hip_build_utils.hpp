@@ -2,7 +2,7 @@
 *
 * MIT License
 *
-* Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc.
+* Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -25,18 +25,18 @@
 *******************************************************************************/
 #pragma once
 
-#include <boost/optional.hpp>
+#include <optional>
 
 #include "rpp/kernel.hpp"
 #include "rpp/tmp_dir.hpp"
 #include "rpp/write_file.hpp"
 
 namespace rpp {
-boost::filesystem::path HipBuild(boost::optional<rpp::TmpDir>& tmp_dir,
+fs::path HipBuild(std::optional<rpp::TmpDir>& tmp_dir,
                                  const std::string& filename,
                                  std::string src,
                                  std::string params,
                                  const std::string& dev_name);
 
-void bin_file_to_str(const boost::filesystem::path& file, std::string& buf);
+void bin_file_to_str(const fs::path& file, std::string& buf);
 } // namespace rpp
