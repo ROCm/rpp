@@ -298,7 +298,10 @@ int main(int argc, char * argv[])
                         outputF32[i] = static_cast<float>(outputU8[i]);
                 }
 
-                if(qaFlag)
+                /*Compare the output of the function with golden outputs only if
+                1.QA Flag is set
+                2.input bit depth 2 (F32)*/
+                if(qaFlag && inputBitDepth == 2)
                     compare_output(outputF32, oBufferSize, testCaseName, layoutType, descriptorPtr3D, (RpptRoiXyzwhd *)roiGenericSrcPtr, dstPath);
                 else
                 {

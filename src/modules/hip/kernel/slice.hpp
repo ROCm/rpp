@@ -8,18 +8,18 @@ __global__ void slice_ncdhw_hip_tensor(T *srcPtr,
                                        T *dstPtr,
                                        uint3 dstStridesCDH,
                                        int channels,
-                                       RpptROI3DPtr roiGenericPtrSrc)
+                                       RpptROI3DPtr roiGenericSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;        // W - inner most dim vectorized
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;              // H - second to inner
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;              // D - outer most dim
 
-    if ((id_z >= roiGenericPtrSrc->xyzwhdROI.roiDepth) || (id_y >= roiGenericPtrSrc->xyzwhdROI.roiHeight) || (id_x >= roiGenericPtrSrc->xyzwhdROI.roiWidth))
+    if ((id_z >= roiGenericSrc->xyzwhdROI.roiDepth) || (id_y >= roiGenericSrc->xyzwhdROI.roiHeight) || (id_x >= roiGenericSrc->xyzwhdROI.roiWidth))
     {
         return;
     }
 
-    uint srcIdx = ((id_z + roiGenericPtrSrc->xyzwhdROI.xyz.z) * srcStridesCDH.y) + ((id_y + roiGenericPtrSrc->xyzwhdROI.xyz.y) * srcStridesCDH.z) + (id_x + roiGenericPtrSrc->xyzwhdROI.xyz.x);
+    uint srcIdx = ((id_z + roiGenericSrc->xyzwhdROI.xyz.z) * srcStridesCDH.y) + ((id_y + roiGenericSrc->xyzwhdROI.xyz.y) * srcStridesCDH.z) + (id_x + roiGenericSrc->xyzwhdROI.xyz.x);
     uint dstIdx = (id_z * dstStridesCDH.y) + (id_y * dstStridesCDH.z) + id_x;
 
     d_float8 val_f8;
@@ -37,18 +37,18 @@ __global__ void slice_ndhwc_hip_tensor(T *srcPtr,
                                        uint2 srcStridesDH,
                                        T *dstPtr,
                                        uint2 dstStridesDH,
-                                       RpptROI3DPtr roiGenericPtrSrc)
+                                       RpptROI3DPtr roiGenericSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;        // WC - inner most dim vectorized
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;              // H - second to inner
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;              // D - outer most dim
 
-    if ((id_z >= roiGenericPtrSrc->xyzwhdROI.roiDepth) || (id_y >= roiGenericPtrSrc->xyzwhdROI.roiHeight) || (id_x >= roiGenericPtrSrc->xyzwhdROI.roiWidth))
+    if ((id_z >= roiGenericSrc->xyzwhdROI.roiDepth) || (id_y >= roiGenericSrc->xyzwhdROI.roiHeight) || (id_x >= roiGenericSrc->xyzwhdROI.roiWidth))
     {
         return;
     }
 
-    uint srcIdx = ((id_z + roiGenericPtrSrc->xyzwhdROI.xyz.z) * srcStridesDH.x) + ((id_y + roiGenericPtrSrc->xyzwhdROI.xyz.y) * srcStridesDH.y) + (id_x + roiGenericPtrSrc->xyzwhdROI.xyz.x) * 3;
+    uint srcIdx = ((id_z + roiGenericSrc->xyzwhdROI.xyz.z) * srcStridesDH.x) + ((id_y + roiGenericSrc->xyzwhdROI.xyz.y) * srcStridesDH.y) + (id_x + roiGenericSrc->xyzwhdROI.xyz.x) * 3;
     uint dstIdx = (id_z * dstStridesDH.x) + (id_y * dstStridesDH.y) + id_x * 3;
 
     d_float24 val_f24;

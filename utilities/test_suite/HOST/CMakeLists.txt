@@ -16,7 +16,7 @@
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 # AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
@@ -48,6 +48,10 @@ endif()
 find_package(OpenCV QUIET)
 find_package(TurboJpeg QUIET)
 find_package(NIFTI QUIET)
+find_library(libsnd_LIBS
+    NAMES sndfile libsndfile
+    PATHS ${CMAKE_SYSTEM_PREFIX_PATH} ${LIBSND_ROOT_DIR} "/usr/local"
+    PATH_SUFFIXES lib lib64)
 
 # OpenMP
 find_package(OpenMP REQUIRED)
@@ -60,7 +64,7 @@ if(TurboJpeg_FOUND)
     include_directories(${TurboJpeg_INCLUDE_DIRS})
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${TurboJpeg_LIBRARIES_DIR})
 else()
-    message("-- ${Yellow}Error: TurboJpeg must be installed to install ${PROJECT_NAME} successfully!${ColourReset}")
+    message("-- ${Red}Error: TurboJpeg must be installed to install ${PROJECT_NAME} successfully!${ColourReset}")
 endif()
 
 if (OpenCV_FOUND)
@@ -77,26 +81,7 @@ if (OpenCV_FOUND)
     target_link_libraries(Tensor_misc_host ${OpenCV_LIBS} -lturbojpeg -lrpp pthread ${LINK_LIBRARY_LIST})
 
 else()
-    message("-- ${Yellow}Error: OpenCV must be installed to install ${PROJECT_NAME} successfully!${ColourReset}")
-endif()
-
-find_library(libsnd_LIBS
-    NAMES sndfile libsndfile
-    PATHS ${CMAKE_SYSTEM_PREFIX_PATH} ${LIBSND_ROOT_DIR} "/usr/local"
-    PATH_SUFFIXES lib lib64)
-
-if(NOT libsnd_LIBS)
-    message("-- ${Yellow}Error: libsndfile must be installed to install ${PROJECT_NAME} successfully!${ColourReset}")
-else()
-    message("-- ${Green}${PROJECT_NAME} set to build with rpp and libsndfile ${ColourReset}")
-    include_directories(${ROCM_PATH}/include ${ROCM_PATH}/include/rpp /usr/local/include)
-    link_directories(${ROCM_PATH}/lib /usr/local/lib)
-    include_directories(${SndFile_INCLUDE_DIRS})
-    link_directories(${SndFile_LIBRARIES_DIR} /usr/local/lib/)
-
-    add_executable(Tensor_audio_host Tensor_audio_host.cpp)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++14")
-    target_link_libraries(Tensor_audio_host ${libsnd_LIBS} -lsndfile -lrpp pthread ${LINK_LIBRARY_LIST} ${OpenCV_LIBS})
+    message("-- ${Red}Error: OpenCV must be installed to install ${PROJECT_NAME} successfully!${ColourReset}")
 endif()
 
 if(NIFTI_FOUND AND OpenCV_FOUND)
@@ -109,5 +94,19 @@ if(NIFTI_FOUND AND OpenCV_FOUND)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++17")
     target_link_libraries(Tensor_voxel_host ${OpenCV_LIBS} -lturbojpeg -lrpp pthread ${LINK_LIBRARY_LIST}  ${NIFTI_PACKAGE_PREFIX}NIFTI::${NIFTI_PACKAGE_PREFIX}niftiio)
 else()
-    message("-- ${Yellow}Error: libniftiio must be installed to install ${PROJECT_NAME} successfully!${ColourReset}")
+    message("-- ${Red}Warning: libniftiio must be installed to install ${PROJECT_NAME}/Tensor_voxel_host successfully!${ColourReset}")
+endif()
+
+if(NOT libsnd_LIBS)
+    message("-- ${Red}Warning: libsndfile must be installed to install ${PROJECT_NAME}/Tensor_voxel_host successfully!${ColourReset}")
+else()
+    message("-- ${Green}${PROJECT_NAME} set to build with rpp and libsndfile ${ColourReset}")
+    include_directories(${ROCM_PATH}/include ${ROCM_PATH}/include/rpp /usr/local/include)
+    link_directories(${ROCM_PATH}/lib /usr/local/lib)
+    include_directories(${SndFile_INCLUDE_DIRS})
+    link_directories(${SndFile_LIBRARIES_DIR} /usr/local/lib/)
+
+    add_executable(Tensor_host_audio Tensor_host_audio.cpp)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++17")
+    target_link_libraries(Tensor_host_audio ${libsnd_LIBS} -lsndfile -lrpp -lstdc++fs pthread ${LINK_LIBRARY_LIST})
 endif()

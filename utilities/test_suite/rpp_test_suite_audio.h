@@ -21,12 +21,10 @@ THE SOFTWARE.
 */
 
 #include "rpp_test_suite_common.h"
-#include <fstream>
 #include <iomanip>
 #include <vector>
 #include <half/half.hpp>
 
-namespace fs = boost::filesystem;
 using half_float::half;
 using namespace std;
 typedef half Rpp16f;
@@ -36,35 +34,33 @@ typedef half Rpp16f;
 
 std::map<int, string> audioAugmentationMap =
 {
-    {8, "normalize"},
+    {0, "non_silent_region_detection"},
 };
 
-void compute_strides(RpptGenericDescPtr descriptorPtr)
+// Golden outputs for Non Silent Region Detection
+std::map<string, std::vector<int>> NonSilentRegionReferenceOutputs =
 {
-    if (descriptorPtr->numDims > 0)
-    {
-        uint64_t v = 1;
-        for (int i = descriptorPtr->numDims; i > 0; i--)
-        {
-            descriptorPtr->strides[i] = v;
-            v *= descriptorPtr->dims[i];
-        }
-        descriptorPtr->strides[0] = v;
-    }
-}
+    {"sample1", {0, 35840}},
+    {"sample2", {0, 33680}},
+    {"sample3", {0, 34160}}
+};
 
 // sets descriptor dimensions and strides of src/dst
-inline void set_audio_descriptor_dims_and_strides(RpptGenericDescPtr descPtr, int batchSize, int maxWidth, int maxChannels, int offsetInBytes)
+inline void set_audio_descriptor_dims_and_strides(RpptDescPtr descPtr, int batchSize, int maxHeight, int maxWidth, int maxChannels, int offsetInBytes)
 {
-    descPtr->numDims = 2;
+    descPtr->numDims = 4;
     descPtr->offsetInBytes = offsetInBytes;
-    descPtr->dims[0] = batchSize;
-    descPtr->dims[1] = maxWidth;
-    descPtr->dims[2] = maxChannels;
+    descPtr->n = batchSize;
+    descPtr->h = maxHeight;
+    descPtr->w = maxWidth;
+    descPtr->c = maxChannels;
 
     // Optionally set w stride as a multiple of 8 for src/dst
-    descPtr->dims[1] = ((descPtr->dims[1] / 8) * 8) + 8;
-    compute_strides(descPtr);
+    descPtr->w = ((descPtr->w / 8) * 8) + 8;
+    descPtr->strides.nStride = descPtr->c * descPtr->w * descPtr->h;
+    descPtr->strides.hStride = descPtr->c * descPtr->w;
+    descPtr->strides.wStride = descPtr->c;
+    descPtr->strides.cStride = 1;
 }
 
 // sets values of maxHeight and maxWidth
@@ -92,13 +88,13 @@ inline void set_audio_max_dimensions(vector<string> audioFilesPath, int& maxWidt
     }
 }
 
-void read_audio_batch_and_fill_dims(RpptGenericDescPtr descPtr, Rpp32f *inputf32, vector<string> audioFilesPath, int iterCount, Rpp32u *roiTensor)
+void read_audio_batch_and_fill_dims(RpptDescPtr descPtr, Rpp32f *inputf32, vector<string> audioFilesPath, int iterCount, Rpp32s *srcLengthTensor, Rpp32s *channelsTensor)
 {
-    auto fileIndex = iterCount * descPtr->dims[0];
-    for (int i = 0, j = fileIndex; i < descPtr->dims[0], j < fileIndex + descPtr->dims[0]; i++, j++)
+    auto fileIndex = iterCount * descPtr->n;
+    for (int i = 0, j = fileIndex; i < descPtr->n, j < fileIndex + descPtr->n; i++, j++)
     {
         Rpp32f *inputTempF32;
-        inputTempF32 = inputf32 + (i * descPtr->strides[0]);
+        inputTempF32 = inputf32 + (i * descPtr->strides.nStride);
 
         // Read and decode data
         SNDFILE	*infile;
@@ -113,10 +109,8 @@ void read_audio_batch_and_fill_dims(RpptGenericDescPtr descPtr, Rpp32f *inputf32
             continue;
         }
 
-        roiTensor[i * 4] = 0;
-        roiTensor[(i * 4) + 1] = 0;
-        roiTensor[(i * 4) + 2] = sfinfo.frames;
-        roiTensor[(i * 4) + 3] = sfinfo.channels;
+        srcLengthTensor[i] = sfinfo.frames;
+        channelsTensor[i] = sfinfo.channels;
 
         int bufferLength = sfinfo.frames * sfinfo.channels;
         readcount = (int) sf_read_float (infile, inputTempF32, bufferLength);
@@ -131,16 +125,15 @@ void read_audio_batch_and_fill_dims(RpptGenericDescPtr descPtr, Rpp32f *inputf32
     }
 }
 
-void verify_output(Rpp32f *dstPtr, RpptGenericDescPtr dstDescPtr, Rpp32u* roiTensor, string testCase, vector<string> audioNames, string dst)
+void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dstDims, string testCase, vector<string> audioNames, string dst)
 {
-    //Considering height dim as 1 always
     fstream refFile;
     string refPath = get_current_dir_name();
     string pattern = "HOST/build";
     remove_substring(refPath, pattern);
     refPath = refPath + "REFERENCE_OUTPUTS_AUDIO/";
     int fileMatch = 0;
-    for (int batchCount = 0; batchCount < dstDescPtr->dims[0]; batchCount++)
+    for (int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         string currentFileName = audioNames[batchCount];
         size_t lastIndex = currentFileName.find_last_of(".");
@@ -154,34 +147,81 @@ void verify_output(Rpp32f *dstPtr, RpptGenericDescPtr dstDescPtr, Rpp32u* roiTen
         }
         int matchedIndices = 0;
         Rpp32f refVal, outVal;
-        Rpp32f *dstPtrCurrent = dstPtr + batchCount * dstDescPtr->strides[0];
-        Rpp32f *dstPtrTemp = dstPtrCurrent;
-
-        for (int j = 0; j < roiTensor[(batchCount * 4) + 2]; j++)
+        Rpp32f *dstPtrCurrent = dstPtr + batchCount * dstDescPtr->strides.nStride;
+        Rpp32f *dstPtrRow = dstPtrCurrent;
+        for (int i = 0; i < dstDims[batchCount].height; i++)
         {
-            refFile >> refVal;
-            outVal = dstPtrTemp[j];
-            bool invalidComparision = ((outVal == 0.0f) && (refVal != 0.0f));
-            if (!invalidComparision && abs(outVal - refVal) < 1e-20)
-                matchedIndices += 1;
+            Rpp32f *dstPtrTemp = dstPtrRow;
+            for (int j = 0; j < dstDims[batchCount].width; j++)
+            {
+                refFile >> refVal;
+                outVal = dstPtrTemp[j];
+                bool invalidComparision = ((outVal == 0.0f) && (refVal != 0.0f));
+                if (!invalidComparision && abs(outVal - refVal) < 1e-20)
+                    matchedIndices += 1;
+            }
+            dstPtrRow += dstDescPtr->strides.hStride;
         }
-
         refFile.close();
-        if (matchedIndices == (roiTensor[(batchCount * 4) + 2]) && matchedIndices !=0)
+        if (matchedIndices == (dstDims[batchCount].width * dstDims[batchCount].height) && matchedIndices !=0)
             fileMatch++;
     }
     std::string status = testCase + ": ";
     cout << std::endl << "Results for Test case: " << testCase << std::endl;
-    if (fileMatch == dstDescPtr->dims[0])
+    if (fileMatch == dstDescPtr->n)
     {
         cout << "PASSED!" << std::endl;
         status += "PASSED";
     }
     else
     {
-        cout << "FAILED! " << fileMatch << "/" << dstDescPtr->dims[0] << " outputs are matching with reference outputs" << std::endl;
+        cout << "FAILED! " << fileMatch << "/" << dstDescPtr->n << " outputs are matching with reference outputs" << std::endl;
         status += "FAILED";
     }
+    std::string qaResultsPath = dst + "/QA_results.txt";
+    std:: ofstream qaResults(qaResultsPath, ios_base::app);
+    if (qaResults.is_open())
+    {
+        qaResults << status << std::endl;
+        qaResults.close();
+    }
+}
+
+void verify_non_silent_region_detection(float *detectedIndex, float *detectionLength, string testCase, int bs, vector<string> audioNames, string dst)
+{
+    int fileMatch = 0;
+    for (int i = 0; i < bs; i++)
+    {
+        string currentFileName = audioNames[i];
+        size_t lastIndex = currentFileName.find_last_of(".");
+        currentFileName = currentFileName.substr(0, lastIndex);  // Remove extension from file name
+        std::vector<int> referenceOutput = NonSilentRegionReferenceOutputs[currentFileName];
+        if(referenceOutput.empty())
+        {
+            cout << "\nUnable to get the reference outputs for the file specified!" << endl;
+            break;
+        }
+        Rpp32s outBegin = detectedIndex[i];
+        Rpp32s outLength = detectionLength[i];
+        Rpp32s refBegin = referenceOutput[0];
+        Rpp32s refLength = referenceOutput[1];
+
+        if ((outBegin == refBegin) && (outLength == refLength))
+            fileMatch += 1;
+    }
+    std::string status = testCase + ": ";
+    cout << std::endl << "Results for Test case: " << testCase << std::endl;
+    if (fileMatch == bs)
+    {
+        cout << "PASSED!" << std::endl;
+        status += "PASSED";
+    }
+    else
+    {
+        cout << "FAILED! "<< fileMatch << "/" << bs << " outputs are matching with reference outputs" << std::endl;
+        status += "FAILED";
+    }
+
     std::string qaResultsPath = dst + "/QA_results.txt";
     std:: ofstream qaResults(qaResultsPath, ios_base::app);
     if (qaResults.is_open())
