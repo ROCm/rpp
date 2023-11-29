@@ -29,7 +29,6 @@ THE SOFTWARE.
 #include <fstream>
 #include <unistd.h>
 #include <dirent.h>
-#include <boost/filesystem.hpp>
 #include <cstdlib>
 #include <ctime>
 #include <algorithm>
@@ -38,7 +37,6 @@ THE SOFTWARE.
 #include "../rpp_test_suite_common.h"
 
 using namespace std;
-namespace fs = boost::filesystem;
 
 std::map<int, string> augmentationMiscMap =
 {
