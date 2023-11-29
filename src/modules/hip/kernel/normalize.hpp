@@ -7,47 +7,48 @@ __device__ void normalize_hip_compute(d_float8 *data_f8, d_float8 *mean_f8, d_fl
     data_f8->f4[1] = ((data_f8->f4[1] - mean_f8->f4[1]) * invStdDev_f8->f4[1]) + shift_f8->f4[1];
 }
 
-__device__ void load_normalize_params(d_int8 *locParam_i8, float *meanPtr, float *stdDevPtr, float scale, d_float8 *mean_f8,  d_float8 *invStdDev_f8)
+__device__ void load_normalize_params(d_uint8 *locParam_ui8, float *meanPtr, float *stdDevPtr, float scale, d_float8 *mean_f8,  d_float8 *invStdDev_f8)
 {
     for(int i = 0; i < 8; i++)
     {
-        mean_f8->f1[i] = meanPtr[locParam_i8->i1[i]];
-        float stdDev = stdDevPtr[locParam_i8->i1[i]];
+        mean_f8->f1[i] = meanPtr[locParam_ui8->ui1[i]];
+        float stdDev = stdDevPtr[locParam_ui8->ui1[i]];
         float stdDevSquare = stdDev * stdDev;
         float invStdDev = stdDevSquare ? rsqrt(stdDevSquare) * scale : 0;
         invStdDev_f8->f1[i] = invStdDev;
     }
 }
 
-__device__ int rpp_hip_mod(int a, int b)
+__device__ uint rpp_hip_mod(uint a, uint b)
 {
-    return (a >= b) ? a % b : b;
+    uint mod = (a < b) ? a : (a % b);
+    return mod;
 }
 
-__device__ int compute_2d_paramindex(int y, int x, uint *paramShape, uint *paramStrides)
+__device__ uint compute_2d_paramindex(uint y, uint x, uint *paramShape, uint *paramStrides)
 {
-    int yFactor =  (paramShape[0] > 1) ? (rpp_hip_mod(y, paramShape[0])) * paramStrides[0] : 0;
-    int xFactor =  (paramShape[1] > 1) ? (rpp_hip_mod(x, paramShape[1])) * paramStrides[1] : 0;
-    int paramIndex = yFactor + xFactor;
+    uint yFactor =  (paramShape[0] > 1) ? (rpp_hip_mod(y, paramShape[0])) * paramStrides[0] : 0;
+    uint xFactor =  (paramShape[1] > 1) ? (rpp_hip_mod(x, paramShape[1])) * paramStrides[1] : 0;
+    uint paramIndex = yFactor + xFactor;
     return paramIndex;
 }
 
-__device__ void normalize_2d_paramlocs_hip_compute(int id_y, int id_x, d_int8 *locParam_i8, uint *paramShape, uint *paramStrides)
+__device__ void normalize_2d_paramlocs_hip_compute(uint id_y, uint id_x, d_uint8 *locParam_ui8, uint *paramShape, uint *paramStrides)
 {
-    d_int8 increment_i8, locDstx_i8;
-    increment_i8.i4[0] = make_int4(0, 1, 2, 3);
-    increment_i8.i4[1] = make_int4(4, 5, 6, 7);
-    locDstx_i8.i4[0] = static_cast<int4>(id_x) + increment_i8.i4[0];
-    locDstx_i8.i4[1] = static_cast<int4>(id_x) + increment_i8.i4[1];
+    d_uint8 increment_ui8, locDstx_ui8;
+    increment_ui8.ui4[0] = make_uint4(0, 1, 2, 3);
+    increment_ui8.ui4[1] = make_uint4(4, 5, 6, 7);
+    locDstx_ui8.ui4[0] = static_cast<uint4>(id_x) + increment_ui8.ui4[0];
+    locDstx_ui8.ui4[1] = static_cast<uint4>(id_x) + increment_ui8.ui4[1];
 
-    locParam_i8->i1[0] = compute_2d_paramindex(id_y, locDstx_i8.i1[0], paramShape, paramStrides);
-    locParam_i8->i1[1] = compute_2d_paramindex(id_y, locDstx_i8.i1[1], paramShape, paramStrides);
-    locParam_i8->i1[2] = compute_2d_paramindex(id_y, locDstx_i8.i1[2], paramShape, paramStrides);
-    locParam_i8->i1[3] = compute_2d_paramindex(id_y, locDstx_i8.i1[3], paramShape, paramStrides);
-    locParam_i8->i1[4] = compute_2d_paramindex(id_y, locDstx_i8.i1[4], paramShape, paramStrides);
-    locParam_i8->i1[5] = compute_2d_paramindex(id_y, locDstx_i8.i1[5], paramShape, paramStrides);
-    locParam_i8->i1[6] = compute_2d_paramindex(id_y, locDstx_i8.i1[6], paramShape, paramStrides);
-    locParam_i8->i1[7] = compute_2d_paramindex(id_y, locDstx_i8.i1[7], paramShape, paramStrides);
+    locParam_ui8->ui1[0] = compute_2d_paramindex(id_y, locDstx_ui8.ui1[0], paramShape, paramStrides);
+    locParam_ui8->ui1[1] = compute_2d_paramindex(id_y, locDstx_ui8.ui1[1], paramShape, paramStrides);
+    locParam_ui8->ui1[2] = compute_2d_paramindex(id_y, locDstx_ui8.ui1[2], paramShape, paramStrides);
+    locParam_ui8->ui1[3] = compute_2d_paramindex(id_y, locDstx_ui8.ui1[3], paramShape, paramStrides);
+    locParam_ui8->ui1[4] = compute_2d_paramindex(id_y, locDstx_ui8.ui1[4], paramShape, paramStrides);
+    locParam_ui8->ui1[5] = compute_2d_paramindex(id_y, locDstx_ui8.ui1[5], paramShape, paramStrides);
+    locParam_ui8->ui1[6] = compute_2d_paramindex(id_y, locDstx_ui8.ui1[6], paramShape, paramStrides);
+    locParam_ui8->ui1[7] = compute_2d_paramindex(id_y, locDstx_ui8.ui1[7], paramShape, paramStrides);
 }
 
 __global__ void normalize_2d_hip_tensor(float *srcPtr,
@@ -63,9 +64,9 @@ __global__ void normalize_2d_hip_tensor(float *srcPtr,
                                         uint *paramStridesTensor,
                                         uint maxParamVolume)
 {
-    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8; // width
-    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y; // height
-    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z; // batchsize
+    uint id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8; // width
+    uint id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y; // height
+    uint id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z; // batchsize
 
     uint *roi = &roiTensor[id_z * 4 + 2];
     uint height = roi[0];
@@ -77,13 +78,13 @@ __global__ void normalize_2d_hip_tensor(float *srcPtr,
     uint *paramShape = &paramShapeTensor[id_z * 2];
     uint *paramStrides = &paramStridesTensor[id_z * 2];
 
-    d_int8 locParam_i8;
-    normalize_2d_paramlocs_hip_compute(id_y, id_x, &locParam_i8, paramShape, paramStrides);
+    d_uint8 locParam_ui8;
+    normalize_2d_paramlocs_hip_compute(id_y, id_x, &locParam_ui8, paramShape, paramStrides);
 
     d_float8 mean_f8, invStdDev_f8, shift_f8;
     float *meanPtr = &meanTensor[id_z * maxParamVolume];
     float *stdDevPtr = &stdDevTensor[id_z * maxParamVolume];
-    load_normalize_params(&locParam_i8, meanPtr, stdDevPtr, scale, &mean_f8, &invStdDev_f8);
+    load_normalize_params(&locParam_ui8, meanPtr, stdDevPtr, scale, &mean_f8, &invStdDev_f8);
     shift_f8.f4[0] = static_cast<float4>(shift);
     shift_f8.f4[1] = shift_f8.f4[0];
 
@@ -95,12 +96,12 @@ __global__ void normalize_2d_hip_tensor(float *srcPtr,
     rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &data_f8);
 }
 
-__device__ int compute_3d_paramindex(int z, int y, int x, uint *paramShape, uint *paramStrides)
+__device__ uint compute_3d_paramindex(uint z, uint y, uint x, uint *paramShape, uint *paramStrides)
 {
-    int zFactor =  (paramShape[0] > 1) ? rpp_hip_mod(z, paramShape[0]) * paramStrides[0] : 0;
-    int yFactor =  (paramShape[1] > 1) ? rpp_hip_mod(y, paramShape[1]) * paramStrides[1] : 0;
-    int xFactor =  (paramShape[2] > 1) ? rpp_hip_mod(x, paramShape[2]) * paramStrides[2] : 0;
-    int paramIndex = zFactor + yFactor + xFactor;
+    uint zFactor =  (paramShape[0] > 1) ? rpp_hip_mod(z, paramShape[0]) * paramStrides[0] : 0;
+    uint yFactor =  (paramShape[1] > 1) ? rpp_hip_mod(y, paramShape[1]) * paramStrides[1] : 0;
+    uint xFactor =  (paramShape[2] > 1) ? rpp_hip_mod(x, paramShape[2]) * paramStrides[2] : 0;
+    uint paramIndex = zFactor + yFactor + xFactor;
     return paramIndex;
 }
 
@@ -117,9 +118,9 @@ __global__ void normalize_3d_hip_tensor(float *srcPtr,
                                         uint *paramStridesTensor,
                                         uint maxParamVolume)
 {
-    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x; // width
-    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y; // height
-    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z; // depth
+    uint id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x; // width
+    uint id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y; // height
+    uint id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z; // depth
 
     uint *roi = roiTensor;
     uint width = roi[2];
@@ -131,7 +132,7 @@ __global__ void normalize_3d_hip_tensor(float *srcPtr,
 
     uint *paramShape = paramShapeTensor;
     uint *paramStrides = paramStridesTensor;
-    int paramIndex = compute_3d_paramindex(id_z, id_y, id_x, paramShape, paramStrides);
+    uint paramIndex = compute_3d_paramindex(id_z, id_y, id_x, paramShape, paramStrides);
 
     uint srcIdx = (id_z * srcStridesDH.x) + (id_y * srcStridesDH.y) + id_x;
     uint dstIdx = (id_z * dstStridesDH.x) + (id_y * dstStridesDH.y) + id_x;
@@ -142,11 +143,11 @@ __global__ void normalize_3d_hip_tensor(float *srcPtr,
     dstPtr[dstIdx] = fmaf((srcPtr[srcIdx] - mean), invStdDev, shift);
 }
 
-__device__ int validate_and_compute_paramindex_nd(int index, int numDims, uint *roi, uint *dims,
+__device__ int validate_and_compute_paramindex_nd(uint index, uint numDims, uint *roi, uint *dims,
                                                   uint *paramShape, uint *paramStrides, bool *isValid)
 {
-    int paramIndex = 0;
-    int product = 1;
+    uint paramIndex = 0;
+    uint product = 1;
 
     // excluding outer most dimension, calculate the co-ordinate for corresponding dimension from the 1D index
     // check if the co-ordinate is within ROI
@@ -184,15 +185,15 @@ __global__ void normalize_nd_hip_tensor(float *srcPtr,
                                         uint maxParamVolume,
                                         uint numDims)
 {
-    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
-    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+    uint id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    uint id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
     uint *roi = &roiTensor[id_z * numDims * 2 + numDims];
     uint *paramShape = &paramShapeTensor[id_z * numDims];
     uint *paramStrides = &paramStridesTensor[id_z * numDims];
 
     bool isValid = true;
-    int paramIndex = validate_and_compute_paramindex_nd(id_x, numDims, roi, srcStridedDims,
+    uint paramIndex = validate_and_compute_paramindex_nd(id_x, numDims, roi, srcStridedDims,
                                                         paramShape, paramStrides, &isValid);
     if(isValid)
     {
@@ -208,13 +209,13 @@ void normalize_setup(Rpp32u *roiTensor, Rpp32u batchSize, Rpp32u numDims, Rpp32u
                      Rpp32u *paramShapeTensor, Rpp32u *paramStridesTensor, Rpp32u &maxParamVolume)
 {
     maxParamVolume = 1;
-    for(int i = 0; i < batchSize; i++)
+    for(uint i = 0; i < batchSize; i++)
     {
         // calculate the param shape and param volume based on the axis mask
         Rpp32u paramVolume = 1;
         Rpp32u *roi = &roiTensor[numDims * 2 * i + numDims];
         Rpp32u *paramShape = &paramShapeTensor[i * numDims];
-        for(int j = 0; j < numDims; j++)
+        for(uint j = 0; j < numDims; j++)
         {
             paramShape[j] = ((axisMask & (int)(pow(2, j))) >= 1) ? 1 : roi[j];
             paramVolume *= paramShape[j];
@@ -224,7 +225,7 @@ void normalize_setup(Rpp32u *roiTensor, Rpp32u batchSize, Rpp32u numDims, Rpp32u
         // calculate the param strides from the param shape
         Rpp32u *paramStrides = &paramStridesTensor[i * numDims];
         Rpp32u val = 1;
-        for(int j = numDims - 1; j > 0; j--)
+        for(uint j = numDims - 1; j > 0; j--)
         {
             paramStrides[j] = val;
             val *= paramShape[j];

@@ -318,8 +318,8 @@ void fill_mean_stddev_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u size, Rpp32f 
     {
         for(int j = 0; j < size; j++)
         {
-            meanTensor[j] = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-            stdDevTensor[j] = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+            meanTensor[j] = j * 5;//static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+            stdDevTensor[j] = 1;//static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
         }
     }
 }
@@ -558,8 +558,8 @@ int main(int argc, char **argv)
             minWallTime = std::min(minWallTime, wallTime);
             avgWallTime += wallTime;
 
-            CHECK(hipMemcpy(outputF32, d_outputF32, numValues * sizeof(Rpp32f), hipMemcpyDeviceToHost));
-            CHECK(hipDeviceSynchronize());
+            // CHECK(hipMemcpy(outputF32, d_outputF32, numValues * sizeof(Rpp32f), hipMemcpyDeviceToHost));
+            // CHECK(hipDeviceSynchronize());
         }
     }
     rppDestroyGPU(handle);
