@@ -1,28 +1,15 @@
 #include <hip/hip_runtime.h>
 #include "rpp_hip_common.hpp"
 
-__device__ uint rpp_hip_mod(uint a, uint b)
+__device__ __forceinline__ uint rpp_hip_mod(uint a, uint b)
 {
-    uint d_ = b == 0 ? 1 : b;
-    uint32_t l_;
-
-    for (l_ = 0; l_ < 32; l_++)
-      if ((1U << l_) >= d_) break;
-
-    uint64_t one = 1;
-    uint64_t m = ((one << 32) * ((one << l_) - d_)) / d_ + 1;
-    uint32_t M_ = static_cast<uint32_t>(m);
-
-    uint32_t t = __umulhi(M_, a);
-    uint dn = (t + a) >> l_;
-    uint mod = a - dn * d_;
-    return mod;
+    return (a % b);
 }
 
 __device__ uint compute_2d_paramindex(uint y, uint x, uint *paramShape, uint *paramStrides)
 {
-    uint yFactor =  (paramShape[0] > 1) ? (rpp_hip_mod(y, paramShape[0])) * paramStrides[0] : 0;
-    uint xFactor =  (paramShape[1] > 1) ? (rpp_hip_mod(x, paramShape[1])) * paramStrides[1] : 0;
+    uint yFactor =  ((paramShape[0] > 1)) ? (rpp_hip_mod(y, paramShape[0])) * paramStrides[0] : 0;
+    uint xFactor =  ((paramShape[1] > 1)) ? (rpp_hip_mod(x, paramShape[1])) * paramStrides[1] : 0;
     uint paramIndex = yFactor + xFactor;
     return paramIndex;
 }
@@ -147,9 +134,9 @@ __global__ void normalize_2d_hip_tensor(float *srcPtr,
 
 __device__ uint compute_3d_paramindex(uint z, uint y, uint x, uint *paramShape, uint *paramStrides)
 {
-    uint zFactor =  (paramShape[0] > 1) ? rpp_hip_mod(z, paramShape[0]) * paramStrides[0] : 0;
-    uint yFactor =  (paramShape[1] > 1) ? rpp_hip_mod(y, paramShape[1]) * paramStrides[1] : 0;
-    uint xFactor =  (paramShape[2] > 1) ? rpp_hip_mod(x, paramShape[2]) * paramStrides[2] : 0;
+    uint zFactor =  ((paramShape[0] > 1)) ? rpp_hip_mod(z, paramShape[0]) * paramStrides[0] : 0;
+    uint yFactor =  ((paramShape[1] > 1)) ? rpp_hip_mod(y, paramShape[1]) * paramStrides[1] : 0;
+    uint xFactor =  ((paramShape[2] > 1)) ? rpp_hip_mod(x, paramShape[2]) * paramStrides[2] : 0;
     uint paramIndex = zFactor + yFactor + xFactor;
     return paramIndex;
 }
