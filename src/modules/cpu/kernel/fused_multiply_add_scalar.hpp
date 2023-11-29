@@ -165,3 +165,4 @@ RppStatus fused_multiply_add_scalar_f32_f32_host_tensor(Rpp32f *srcPtr,
 
     return RPP_SUCCESS;
 }
+

@@ -297,5 +297,4 @@ All notable changes for each release are added to our [changelog](CHANGELOG.md).
   * RedHat - `8` / `9`
   * SLES - `15-SP4`
 * ROCm: rocm-core - `5.7.0.50700-63`
-* Protobuf - [V3.12.4](https://github.com/protocolbuffers/protobuf/releases/tag/v3.12.4)
 * OpenCV - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)

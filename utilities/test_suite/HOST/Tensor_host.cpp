@@ -138,12 +138,6 @@ int main(int argc, char **argv)
         exit(0);
     }
 
-    if(batchSize > MAX_BATCH_SIZE)
-    {
-        std::cerr << "\n Batchsize should be less than or equal to "<< MAX_BATCH_SIZE << " Aborting!";
-        exit(0);
-    }
-
     // Get function name
     string funcName = augmentationMap[testCase];
     if (funcName.empty())
@@ -323,18 +317,6 @@ int main(int argc, char **argv)
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0;
     double cpuTime, wallTime;
     string testCaseName;
-
-    if(testCase == 82 && imagesMixed)
-    {
-        std::cerr<<"\n RICAP only works with same dimension images";
-        exit(0);
-    }
-
-    if(testCase == 82 && batchSize < 2)
-    {
-        std::cerr<<"\n RICAP only works with BatchSize > 1";
-        exit(0);
-    }
 
     // Initialize buffers for any reductionType functions
     void *reductionFuncResultArr;

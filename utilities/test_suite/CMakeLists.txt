@@ -107,7 +107,6 @@ if(Python3_FOUND)
                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
             )
         endif(NIFTI_FOUND)
-
     elseif( "${BACKEND}" STREQUAL "OCL")
         # TBD: Add OCL Tests
 

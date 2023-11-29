@@ -320,18 +320,6 @@ int main(int argc, char **argv)
     double wallTime;
     string testCaseName;
 
-    if(testCase == 82 && imagesMixed)
-    {
-        std::cerr<<"\n RICAP only works with same dimension images";
-        exit(0);
-    }
-
-    if(testCase == 82 && batchSize < 2)
-    {
-        std::cerr<<"\n RICAP only works with BatchSize > 1";
-        exit(0);
-    }
-
     // Initialize buffers for any reductionType functions
     void *reductionFuncResultArr;
     Rpp32u reductionFuncResultArrLength = srcDescPtr->n * 4;
@@ -381,8 +369,8 @@ int main(int argc, char **argv)
                 read_image_batch_opencv(inputu8, srcDescPtr, imagesPathStart);
 
             // if the input layout requested is PLN3, convert PKD3 inputs to PLN3 for first and second input batch
-            // if (layoutType == 1)
-            //     convert_pkd3_to_pln3(inputu8, srcDescPtr);
+            if (layoutType == 1)
+                convert_pkd3_to_pln3(inputu8, srcDescPtr);
 
             if(dualInputCase)
             {
@@ -390,8 +378,8 @@ int main(int argc, char **argv)
                     read_image_batch_turbojpeg(inputu8Second, srcDescPtr, imagesPathSecondStart);
                 else
                     read_image_batch_opencv(inputu8Second, srcDescPtr, imagesPathSecondStart);
-                // if (layoutType == 1)
-                //     convert_pkd3_to_pln3(inputu8Second, srcDescPtr);
+                if (layoutType == 1)
+                    convert_pkd3_to_pln3(inputu8Second, srcDescPtr);
             }
 
             // Convert inputs to correponding bit depth specified by user
