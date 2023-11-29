@@ -31,5 +31,6 @@ THE SOFTWARE.
 #include "kernel/resize_mirror_normalize.hpp"
 #include "kernel/resize_crop_mirror.hpp"
 #include "kernel/slice.hpp"
+#include "kernel/normalize.hpp"
 
 #endif // HIP_TENSOR_GEOMETRIC_AUGMENTATIONS_HPP
