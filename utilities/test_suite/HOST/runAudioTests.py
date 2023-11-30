@@ -234,7 +234,7 @@ else:
         run_performance_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath)
 
 # print the results of qa tests
-supportedCaseList = ['0']
+supportedCaseList = ['0', '1']
 nonQACaseList = [] # Add cases present in supportedCaseList, but without QA support
 
 if testType == 0:
@@ -259,7 +259,7 @@ if testType == 0:
         resultsInfo += "\n    - Total augmentations with golden output QA test support = " + str(len(supportedCaseList) - len(nonQACaseList))
         resultsInfo += "\n    - Total augmentations without golden ouput QA test support (due to randomization involved) = " + str(len(nonQACaseList))
         f.write(resultsInfo)
-    print("\n-------------------------------------------------------------------" + resultsInfo + "\n\n-------------------------------------------------------------------")
+        print("\n-------------------------------------------------------------------" + resultsInfo + "\n\n-------------------------------------------------------------------")
 
 # Performance tests
 if (testType == 1):
