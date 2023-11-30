@@ -141,8 +141,16 @@ void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dst
     Rpp32f *refOutput = static_cast<Rpp32f *>(malloc(oBufferSize * sizeof(float)));
     string outFile = refPath + testCase + "/" + testCase + ".bin";
     std::fstream fin(outFile, std::ios::in | std::ios::binary);
-    for(Rpp64u i = 0; i < oBufferSize ; i++)
-        fin.read(reinterpret_cast<char*>(&refOutput[i]), sizeof(float));
+    if(fin.is_open())
+    {
+        for(Rpp64u i = 0; i < oBufferSize ; i++)
+            fin.read(reinterpret_cast<char*>(&refOutput[i]), sizeof(float));
+    }
+    else
+    {
+        std::cout<<"\nCould not open the reference output. Please check the path specified\n";
+        return;
+    }
 
     // iterate over all samples in a batch and compare with reference outputs
     for (int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
