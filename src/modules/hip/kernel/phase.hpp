@@ -61,13 +61,13 @@ __global__ void phase_pkd_hip_tensor(T *srcPtr1,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth * 3))
+    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
     {
         return;
     }
 
-    uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x * 3);
-    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x;
+    uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3;
+    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
     d_float24 src1_f24, src2_f24, dst_f24;
 
@@ -200,7 +200,7 @@ RppStatus hip_exec_phase_tensor(T *srcPtr1,
     if (roiType == RpptRoiType::LTRB)
         hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
 
-    int globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
+    int globalThreads_x = (dstDescPtr->w + 7) >> 3;
     int globalThreads_y = dstDescPtr->h;
     int globalThreads_z = handle.GetBatchSize();
 
