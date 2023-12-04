@@ -146,9 +146,9 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
                     roiTensor[i] = 0;
                     roiTensor[i + 1] = 0;
                     roiTensor[i + 2] = 0;
-                    roiTensor[i + 3] = 2;
-                    roiTensor[i + 4] = 3;
-                    roiTensor[i + 5] = 4;
+                    roiTensor[i + 3] = 3;
+                    roiTensor[i + 4] = 4;
+                    roiTensor[i + 5] = 16;
                 }
             }
             else
@@ -318,8 +318,8 @@ void fill_mean_stddev_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u size, Rpp32f 
     {
         for(int j = 0; j < size; j++)
         {
-            meanTensor[j] = j * 5;//static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-            stdDevTensor[j] = 1;//static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+            meanTensor[j] = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+            stdDevTensor[j] = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
         }
     }
 }
@@ -471,7 +471,7 @@ int main(int argc, char **argv)
             case 1:
             {
                 // Modify ROI to 4x5x7 when checking QA for axisMask = 6 alone(calls direct c code internally)
-                int axisMask = 1; // 3D HWC Channel normalize axes(0,1)
+                int axisMask = 3; // 3D HWC Channel normalize axes(0,1)
                 float scale = 1.0;
                 float shift = 0.0;
                 bool computeMean, computeStddev;
