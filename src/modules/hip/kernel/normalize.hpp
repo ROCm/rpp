@@ -245,6 +245,10 @@ void normalize_setup(Rpp32u *roiTensor, Rpp32u batchSize, Rpp32u numDims, Rpp32u
                      Rpp32u *paramShapeTensor, Rpp32u *paramStridesTensor, Rpp32u &maxParamVolume)
 {
     maxParamVolume = 1;
+    uint axisSet[RPPT_MAX_DIMS];
+    for(int i = 0; i < numDims; i++)
+        axisSet[i] = ((axisMask & (int)(pow(2, i))) >= 1) ? 1 : 0;
+
     for(uint i = 0; i < batchSize; i++)
     {
         // calculate the param shape and param volume based on the axis mask
@@ -253,7 +257,7 @@ void normalize_setup(Rpp32u *roiTensor, Rpp32u batchSize, Rpp32u numDims, Rpp32u
         Rpp32u *paramShape = &paramShapeTensor[i * numDims];
         for(uint j = 0; j < numDims; j++)
         {
-            paramShape[j] = ((axisMask & (int)(pow(2, j))) >= 1) ? 1 : roi[j];
+            paramShape[j] = (axisSet[j]) ? 1 : roi[j];
             paramVolume *= paramShape[j];
         }
         maxParamVolume = std::max(maxParamVolume, paramVolume);
@@ -297,8 +301,8 @@ RppStatus hip_exec_normalize_tensor(Rpp32f *srcPtr,
     normalize_setup(roiTensor, batchSize, numDims, axisMask,
                     paramShape, paramStrides, maxParamVolume);
 
-    if((computeMean == 0) && (computeStdDev == 0))
-        maxParamVolume = 0;
+    // if((computeMean == 0) && (computeStdDev == 0))
+    //     maxParamVolume = 0;
 
     Rpp32u *srcStridedDims = nullptr;
     // based on number of dimensions call the corresponding kernel
@@ -362,13 +366,13 @@ RppStatus hip_exec_normalize_tensor(Rpp32f *srcPtr,
         int globalThreads_y = 1;
         int globalThreads_z = dstGenericDescPtr->dims[0];
 
-        // allocate tensor for source and dst strides
+        // allocate tensor for src strides
         hipHostMalloc(&srcStridedDims, numDims * sizeof(Rpp32u));
         memcpy(srcStridedDims, &srcGenericDescPtr->dims[1], numDims * sizeof(Rpp32u));
 
         hipLaunchKernelGGL(normalize_nd_hip_tensor,
-                           dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y), ceil((float)globalThreads_z)),
-                           dim3(LOCAL_THREADS_X, 1, 1),
+                           dim3(ceil((float)globalThreads_x/1024), ceil((float)globalThreads_y), ceil((float)globalThreads_z)),
+                           dim3(1024, 1, 1),
                            0,
                            handle.GetStream(),
                            srcPtr,
