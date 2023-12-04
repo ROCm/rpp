@@ -179,37 +179,9 @@ __global__ void normalize_3d_hip_tensor(float *srcPtr,
     dstPtr[dstIdx] = fmaf((srcPtr[srcIdx] - mean), invStdDev, shift);
 }
 
-__device__ int validate_and_compute_paramindex_nd(uint index, uint numDims, uint *roi, uint *dims,
-                                                  uint *paramShape, uint *paramStrides, bool *isValid)
-{
-    uint paramIndex = 0;
-    uint product = 1;
-
-    // excluding outer most dimension, calculate the co-ordinate for corresponding dimension from the 1D index
-    // check if the co-ordinate is within ROI
-    for(uint i = numDims - 1; i > 0; i--)
-    {
-        product *= dims[i];
-        uint coord = rpp_hip_mod(index, product) / (product / dims[i]);
-        *isValid = (coord < roi[i]);
-        if(*isValid == false)
-            break;
-        paramIndex += ((paramShape[i] > 1) ? rpp_hip_mod(coord, paramShape[i]) * paramStrides[i] : 0);
-    }
-
-    /// for outermost dimension, calculate and check if co-ordinate is within ROI
-    if(*isValid == true)
-    {
-        uint coord = index / product;
-        *isValid = (coord < roi[0]);
-        if(*isValid == true)
-            paramIndex += ((paramShape[0] > 1) ? rpp_hip_mod(coord, paramShape[0]) * paramStrides[0] : 0);
-    }
-    return paramIndex;
-}
-
 __global__ void normalize_nd_hip_tensor(float *srcPtr,
-                                        uint *srcStridedDims,
+                                        uint *srcMaxDims,
+                                        uint *srcStrides,
                                         float *dstPtr,
                                         float *meanTensor,
                                         float *stdDevTensor,
@@ -228,17 +200,20 @@ __global__ void normalize_nd_hip_tensor(float *srcPtr,
     uint *paramShape = &paramShapeTensor[id_z * numDims];
     uint *paramStrides = &paramStridesTensor[id_z * numDims];
 
-    bool isValid = true;
-    uint paramIndex = validate_and_compute_paramindex_nd(id_x, numDims, roi, srcStridedDims,
-                                                        paramShape, paramStrides, &isValid);
-    if(isValid)
+    uint paramIndex = 0;
+    for (int i = 0; i < numDims; i++)
     {
-        float mean = meanTensor[id_z * maxParamVolume + paramIndex];
-        float stdDev = stdDevTensor[id_z * maxParamVolume + paramIndex];
-        float stdDevSquare = stdDev * stdDev;
-        float invStdDev = stdDevSquare ? rsqrtf(stdDevSquare) * scale : 0;
-        dstPtr[id_x] = fmaf((srcPtr[id_x] - mean), invStdDev, shift);
+        uint coord = id_x / srcStrides[i] % srcMaxDims[i];
+        if(coord > roi[i])
+            return;
+        paramIndex += rpp_hip_mod(coord, paramShape[i]) * paramStrides[i];
     }
+
+    float mean = meanTensor[id_z * maxParamVolume + paramIndex];
+    float stdDev = stdDevTensor[id_z * maxParamVolume + paramIndex];
+    float stdDevSquare = stdDev * stdDev;
+    float invStdDev = stdDevSquare ? rsqrtf(stdDevSquare) * scale : 0;
+    dstPtr[id_x] = fmaf((srcPtr[id_x] - mean), invStdDev, shift);
 }
 
 void normalize_setup(Rpp32u *roiTensor, Rpp32u batchSize, Rpp32u numDims, Rpp32u axisMask,
@@ -366,8 +341,10 @@ RppStatus hip_exec_normalize_tensor(Rpp32f *srcPtr,
         int globalThreads_z = dstGenericDescPtr->dims[0];
 
         // allocate tensor for src strides
-        Rpp32u *srcStridedDims = handle.GetInitHandle()->mem.mgpu.scratchBuf.uintmem + (2 * batchSize * numDims);
-        memcpy(srcStridedDims, &srcGenericDescPtr->dims[1], numDims * sizeof(Rpp32u));
+        Rpp32u *srcMaxDims = handle.GetInitHandle()->mem.mgpu.scratchBuf.uintmem + (2 * batchSize * numDims);
+        Rpp32u *srcStrides = handle.GetInitHandle()->mem.mgpu.scratchBuf.uintmem + (3 * batchSize * numDims);
+        memcpy(srcMaxDims, &srcGenericDescPtr->dims[1], numDims * sizeof(Rpp32u));
+        memcpy(srcStrides, &srcGenericDescPtr->strides[1], numDims * sizeof(Rpp32u));
 
         hipLaunchKernelGGL(normalize_nd_hip_tensor,
                            dim3(ceil((float)globalThreads_x/1024), ceil((float)globalThreads_y), ceil((float)globalThreads_z)),
@@ -375,7 +352,8 @@ RppStatus hip_exec_normalize_tensor(Rpp32f *srcPtr,
                            0,
                            handle.GetStream(),
                            srcPtr,
-                           srcStridedDims,
+                           srcMaxDims,
+                           srcStrides,
                            dstPtr,
                            meanTensor,
                            stdDevTensor,
