@@ -293,18 +293,17 @@ RppStatus hip_exec_normalize_tensor(Rpp32f *srcPtr,
 
     // create buffer for paramShape and paramStride
     Rpp32u *paramShape, *paramStrides;
-    hipHostMalloc(&paramShape, batchSize * numDims * sizeof(Rpp32u));
-    hipHostMalloc(&paramStrides, batchSize * numDims * sizeof(Rpp32u));
+    paramShape =  handle.GetInitHandle()->mem.mgpu.scratchBuf.uintmem;
+    paramStrides = handle.GetInitHandle()->mem.mgpu.scratchBuf.uintmem + (batchSize * numDims);
 
     // do initial preprocessing and fill the values for paramShape and paramStrides
     Rpp32u maxParamVolume;
     normalize_setup(roiTensor, batchSize, numDims, axisMask,
                     paramShape, paramStrides, maxParamVolume);
 
-    // if((computeMean == 0) && (computeStdDev == 0))
-    //     maxParamVolume = 0;
+    if((computeMean == 0) && (computeStdDev == 0))
+        maxParamVolume = 0;
 
-    Rpp32u *srcStridedDims = nullptr;
     // based on number of dimensions call the corresponding kernel
     if (numDims == 2)
     {
@@ -367,7 +366,7 @@ RppStatus hip_exec_normalize_tensor(Rpp32f *srcPtr,
         int globalThreads_z = dstGenericDescPtr->dims[0];
 
         // allocate tensor for src strides
-        hipHostMalloc(&srcStridedDims, numDims * sizeof(Rpp32u));
+        Rpp32u *srcStridedDims = handle.GetInitHandle()->mem.mgpu.scratchBuf.uintmem + (2 * batchSize * numDims);
         memcpy(srcStridedDims, &srcGenericDescPtr->dims[1], numDims * sizeof(Rpp32u));
 
         hipLaunchKernelGGL(normalize_nd_hip_tensor,
@@ -388,14 +387,6 @@ RppStatus hip_exec_normalize_tensor(Rpp32f *srcPtr,
                            maxParamVolume,
                            numDims);
     }
-
-    hipStreamSynchronize(handle.GetStream());
-    hipHostFree(paramShape);
-    hipHostFree(paramStrides);
-
-    // free the memory if not NULL
-    if(srcStridedDims != nullptr)
-        hipHostFree(srcStridedDims);
 
     return RPP_SUCCESS;
 }

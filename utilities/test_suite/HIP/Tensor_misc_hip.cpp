@@ -146,9 +146,9 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
                     roiTensor[i] = 0;
                     roiTensor[i + 1] = 0;
                     roiTensor[i + 2] = 0;
-                    roiTensor[i + 3] = 3;
-                    roiTensor[i + 4] = 4;
-                    roiTensor[i + 5] = 16;
+                    roiTensor[i + 3] = 2;
+                    roiTensor[i + 4] = 3;
+                    roiTensor[i + 5] = 4;
                 }
             }
             else
@@ -158,9 +158,9 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
                     roiTensor[i] = 0;
                     roiTensor[i + 1] = 0;
                     roiTensor[i + 2] = 0;
-                    roiTensor[i + 3] = 192;
-                    roiTensor[i + 4] = 540;
-                    roiTensor[i + 5] = 30;
+                    roiTensor[i + 3] = 1920;
+                    roiTensor[i + 4] = 1080;
+                    roiTensor[i + 5] = 3;
                 }
             }
             break;
@@ -521,13 +521,13 @@ int main(int argc, char **argv)
 
                 // allocate memory if not memory is allocated
                 if(meanTensor == nullptr)
-                    CHECK(hipHostMalloc(&meanTensor, maxSize * batchSize * sizeof(Rpp32f)));
+                    CHECK(hipMalloc(&meanTensor, maxSize * batchSize * sizeof(Rpp32f)));
 
                 if(stdDevTensor == nullptr)
-                    CHECK(hipHostMalloc(&stdDevTensor, maxSize * batchSize * sizeof(Rpp32f)));
+                    CHECK(hipMalloc(&stdDevTensor, maxSize * batchSize * sizeof(Rpp32f)));
 
-                if(!(computeMean && computeStddev))
-                    fill_mean_stddev_values(nDim, batchSize, size, meanTensor, stdDevTensor, qaMode);
+                // if(!(computeMean && computeStddev))
+                //     fill_mean_stddev_values(nDim, batchSize, size, meanTensor, stdDevTensor, qaMode);
 
                 startWallTime = omp_get_wtime();
                 rppt_normalize_generic_gpu(d_inputF32, srcDescriptorPtrND, d_outputF32, dstDescriptorPtrND, axisMask, meanTensor, stdDevTensor, computeMean, computeStddev, scale, shift, roiTensor, handle);
@@ -558,7 +558,7 @@ int main(int argc, char **argv)
             minWallTime = std::min(minWallTime, wallTime);
             avgWallTime += wallTime;
 
-            // CHECK(hipMemcpy(outputF32, d_outputF32, numValues * sizeof(Rpp32f), hipMemcpyDeviceToHost));
+           // CHECK(hipMemcpy(outputF32, d_outputF32, numValues * sizeof(Rpp32f), hipMemcpyDeviceToHost));
             // CHECK(hipDeviceSynchronize());
         }
     }
@@ -566,6 +566,54 @@ int main(int argc, char **argv)
 
     if(!qaMode)
     {
+	/*
+	for(uint k = 0; k < batchSize; k++)
+        {
+            cout << "printing inputs for sample: " << k << endl;
+            Rpp32f *inputtemp = inputF32 + k * srcDescriptorPtrND->strides[0];
+
+            // NDHWC
+            Rpp32f *inputDepthTemp = inputtemp;
+            for(int i = 0; i < roiTensor[3]; i++)
+            {
+                Rpp32f *inputHeightTemp = inputDepthTemp;
+                for(int j = 0; j < roiTensor[4]; j++)
+                {
+                    Rpp32f *inputWidthTemp = inputHeightTemp;
+                    for(int m = 0; m < roiTensor[5]; m++)
+                    {
+                        cout << inputWidthTemp[m] << " ";
+                    }
+                    cout << endl;
+                    inputHeightTemp += srcDescriptorPtrND->strides[2];
+                }
+                cout << endl;
+                inputDepthTemp += srcDescriptorPtrND->strides[1];
+            }
+
+            cout << "printing outputs for sample: " << k << endl;
+            Rpp32f *outputtemp = outputF32 + k * srcDescriptorPtrND->strides[0];
+            // NDHWC
+            Rpp32f *outputDepthTemp = outputtemp;
+            for(int i = 0; i < roiTensor[3]; i++)
+            {
+                Rpp32f *outputHeightTemp = outputDepthTemp;
+                for(int j = 0; j < roiTensor[4]; j++)
+                {
+                    Rpp32f *outputWidthTemp = outputHeightTemp;
+                    for(int m = 0; m < roiTensor[5]; m++)
+                    {
+                        cout << outputWidthTemp[m] << " ";
+                    }
+                    cout << endl;
+                    outputHeightTemp += srcDescriptorPtrND->strides[2];
+                }
+                cout << endl;
+                outputDepthTemp += srcDescriptorPtrND->strides[1];
+            }
+        }
+	*/
+
         maxWallTime *= 1000;
         minWallTime *= 1000;
         avgWallTime *= 1000;
@@ -580,9 +628,9 @@ int main(int argc, char **argv)
     CHECK(hipFree(d_inputF32));
     CHECK(hipFree(d_outputF32));
     if(meanTensor != nullptr)
-        CHECK(hipHostFree(meanTensor));
+        CHECK(hipFree(meanTensor));
     if(stdDevTensor != nullptr)
-        CHECK(hipHostFree(stdDevTensor));
+        CHECK(hipFree(stdDevTensor));
 
     return 0;
 }
