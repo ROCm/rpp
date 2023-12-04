@@ -69,7 +69,7 @@ void compute_2d_transpose(Rpp32f *srcPtrTemp, Rpp32f *dstPtrTemp, Rpp32u height,
         for(int j = 0; j < 4; j++)
             srcPtrRow[j] = srcPtrTemp + (i + j) * srcRowStride;
         for(int j = 0; j < 8; j++)
-            dstPtrRow[j] = dstPtrTemp + j * dstRowStride + k * 4;
+            dstPtrRow[j] = dstPtrTemp + j * dstRowStride + i;
 
         Rpp32u vectorLoopCount = 0;
         for(; vectorLoopCount < alignedCols; vectorLoopCount += vectorIncrement)
@@ -184,7 +184,7 @@ RppStatus transpose_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
                                                 rpp::Handle& handle)
 {
     Rpp32u numThreads = handle.GetNumThreads();
-    Rpp32u nDim = dstGenericDescPtr->numDims;
+    Rpp32u nDim = dstGenericDescPtr->numDims - 1;
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
 
     omp_set_dynamic(0);
@@ -213,14 +213,16 @@ RppStatus transpose_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
         else
         {
             for(int i = 1; i < nDim; i++)
-                srcPtrTemp += begin[i] * srcGenericDescPtr->strides[i];
+                srcPtrTemp += begin[i - 1] * srcGenericDescPtr->strides[i];
 
             if (nDim == 2 && perm[0] == 1 && perm[1] == 0)
             {
+                // Optimized AVX version for 2D inputs
                 compute_2d_transpose(srcPtrTemp, dstPtrTemp, length[0], length[1], srcGenericDescPtr->strides[1], dstGenericDescPtr->strides[1]);
             }
             else if (nDim == 3)
             {
+                // Optimized AVX version for 3D inputs and permutation order (2, 0, 1)
                 if(perm[0] == 2 && perm[1] == 0 && perm[2] == 1 && length[2] == 16)
                 {
                     Rpp32u height = length[0];
@@ -264,7 +266,7 @@ RppStatus transpose_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
                             compute_transpose4x8_avx(&pSrc[0], &pDst[0]);
                             compute_transpose4x8_avx(&pSrc[4], &pDst[8]);
 
-                            // store 4 values per in output per channel
+                            // store 4 values in output per channel
                             rpp_store16_f32_f32_channelwise(&dstPtrTempChannel[0], &pDst[0]);
                             rpp_store16_f32_f32_channelwise(&dstPtrTempChannel[4], &pDst[4]);
                             rpp_store16_f32_f32_channelwise(&dstPtrTempChannel[8], &pDst[8]);
@@ -285,6 +287,7 @@ RppStatus transpose_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
                         increment_ndim_ptr(dstPtrChannel, 16, dstGenericDescPtr->dims[3]);
                     }
                 }
+                // Optimized AVX version for 3D inputs and permutation order (1, 0, 2)
                 else if(perm[0] == 1 && perm[1] == 0 && perm[2] == 2)
                 {
                     Rpp32f *srcPtrRow = srcPtrTemp;
@@ -306,6 +309,7 @@ RppStatus transpose_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
                         dstPtrRow += dstGenericDescPtr->strides[2];
                     }
                 }
+                // Optimized AVX version for 3D inputs and permutation order (0, 2, 1)
                 else if(perm[0] == 0 && perm[1] == 2 && perm[2] == 1)
                 {
                     Rpp32f *srcPtrRow = srcPtrTemp;
@@ -326,6 +330,7 @@ RppStatus transpose_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
             }
             else if (nDim == 4)
             {
+                // Optimized AVX version for 4D inputs and permutation order (1, 2, 3, 0)
                 Rpp32u vectorIncrement = 8;
                 if(perm[0] == 1 && perm[1] == 2 && perm[2] == 3 && perm[3] == 0)
                 {
@@ -402,9 +407,8 @@ RppStatus transpose_generic_host_tensor(T *srcPtr,
                                         rpp::Handle& handle)
 {
     Rpp32u numThreads = handle.GetNumThreads();
-    Rpp32u nDim = dstGenericDescPtr->numDims;
+    Rpp32u nDim = dstGenericDescPtr->numDims - 1;
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
-
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
@@ -432,7 +436,7 @@ RppStatus transpose_generic_host_tensor(T *srcPtr,
         else
         {
             for(int i = 1; i < nDim; i++)
-                srcPtrTemp += begin[i] * srcGenericDescPtr->strides[i];
+                srcPtrTemp += begin[i - 1] * srcGenericDescPtr->strides[i];
             transpose_generic_setup_and_run(srcPtrTemp, dstPtrTemp, length, perm, nDim);
         }
     }

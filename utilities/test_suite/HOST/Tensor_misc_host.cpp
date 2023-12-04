@@ -48,7 +48,7 @@ void compute_strides(RpptGenericDescPtr descriptorPtr)
     if (descriptorPtr->numDims > 0)
     {
         uint64_t v = 1;
-        for (int i = descriptorPtr->numDims; i > 0; i--)
+        for (int i = descriptorPtr->numDims - 1; i > 0; i--)
         {
             descriptorPtr->strides[i] = v;
             v *= descriptorPtr->dims[i];
@@ -355,13 +355,13 @@ int main(int argc, char **argv)
     RpptGenericDesc srcDescriptor, dstDescriptor;
     RpptGenericDescPtr srcDescriptorPtrND, dstDescriptorPtrND;
     srcDescriptorPtrND  = &srcDescriptor;
-    srcDescriptorPtrND->numDims = nDim;
+    srcDescriptorPtrND->numDims = nDim + 1;
     srcDescriptorPtrND->offsetInBytes = 0;
     srcDescriptorPtrND->dataType = RpptDataType::F32;
     srcDescriptorPtrND->layout = RpptLayout::NDHWC;
 
     dstDescriptorPtrND  = &dstDescriptor;
-    dstDescriptorPtrND->numDims = nDim;
+    dstDescriptorPtrND->numDims = nDim + 1;
     dstDescriptorPtrND->offsetInBytes = 0;
     dstDescriptorPtrND->dataType = RpptDataType::F32;
     dstDescriptorPtrND->layout = RpptLayout::NDHWC;
