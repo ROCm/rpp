@@ -92,7 +92,7 @@ inline void set_audio_max_dimensions(vector<string> audioFilesPath, int& maxWidt
 void read_audio_batch_and_fill_dims(RpptDescPtr descPtr, Rpp32f *inputf32, vector<string> audioFilesPath, int iterCount, Rpp32s *srcLengthTensor, Rpp32s *channelsTensor)
 {
     auto fileIndex = iterCount * descPtr->n;
-    for (int i = 0, j = fileIndex; i < descPtr->n, j < fileIndex + descPtr->n; i++, j++)
+    for (int i = 0, j = fileIndex; i < descPtr->n; i++, j++)
     {
         Rpp32f *inputTempF32;
         inputTempF32 = inputf32 + (i * descPtr->strides.nStride);
@@ -117,7 +117,7 @@ void read_audio_batch_and_fill_dims(RpptDescPtr descPtr, Rpp32f *inputf32, vecto
         readcount = (int) sf_read_float (infile, inputTempF32, bufferLength);
         if (readcount != bufferLength)
         {
-            std::cout << "Unable to read audio file: "<<audioFilesPath[j].c_str() << std::endl;
+            std::cout << "Unable to read audio file: "<< audioFilesPath[j].c_str() << std::endl;
             exit(0);
         }
 
@@ -143,7 +143,17 @@ void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dst
     if(fin.is_open())
     {
         for(Rpp64u i = 0; i < oBufferSize ; i++)
-            fin.read(reinterpret_cast<char*>(&refOutput[i]), sizeof(float));
+        {
+            if(fin.read(reinterpret_cast<char*>(&refOutput[i]), sizeof(float)))
+            {
+                continue;
+            }
+            else
+            {
+                std::cout<<"\nFile read error encountered before reading all necessary elements\n";
+                return;
+            }
+        }
     }
     else
     {
