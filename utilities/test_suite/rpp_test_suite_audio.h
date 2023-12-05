@@ -144,13 +144,10 @@ void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dst
     {
         for(Rpp64u i = 0; i < oBufferSize ; i++)
         {
-            if(fin.read(reinterpret_cast<char*>(&refOutput[i]), sizeof(float)))
+            ssize_t readRetVal = fin.read(reinterpret_cast<char*>(&refOutput[i]), sizeof(float))
+            if((readRetVal == -1 || readRetVal != sizeof(float))
             {
-                continue;
-            }
-            else
-            {
-                std::cout<<"\nFile read error encountered before reading all necessary elements\n";
+                std::cout<<"\nFile read error encountered before reading all necessary elements successfully!\n";
                 return;
             }
         }
