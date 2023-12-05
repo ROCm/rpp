@@ -2206,7 +2206,7 @@ static const __m256 _ps_atancof_p1_avx = _mm256_set1_ps(1.38776856032e-1);
 static const __m256 _ps_atancof_p2_avx = _mm256_set1_ps(1.99777106478e-1);
 static const __m256 _ps_atancof_p3_avx = _mm256_set1_ps(3.33329491539e-1);
 
-//AVX2 version of the atan2_ps SSE version
+// AVX2 version of the atan_ps() SSE version
 static inline __m256 atan_ps(__m256 x)
 {
     __m256 sign_bit, y;
@@ -2262,6 +2262,7 @@ static inline __m256 atan_ps(__m256 x)
     return y;
 }
 
+// AVX2 version of the atan2_ps() SSE version
 static inline __m256 atan2_ps(__m256 y, __m256 x)
 {
     __m256 x_eq_0 = _mm256_cmp_ps(x, avx_p0, _CMP_EQ_OQ);
