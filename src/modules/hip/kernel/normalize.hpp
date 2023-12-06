@@ -40,12 +40,13 @@ __global__ void normalize_2d_hip_tensor(float *srcPtr,
 
     uint *paramShape = &paramShapeTensor[id_z * 2];
     uint *paramStrides = &paramStridesTensor[id_z * 2];
-    uint paramIndex = compute_2d_paramindex(id_y, id_x, paramShape, paramStrides);
+    uint paramIndex = id_z * maxParamVolume;
+    paramIndex += (maxParamVolume == 1) ? 0 : compute_2d_paramindex(id_y, id_x, paramShape, paramStrides);
 
     uint srcIdx = (id_z * srcStridesNH.x) + (id_y * srcStridesNH.y) + id_x;
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x;
-    float mean = meanTensor[id_z * maxParamVolume + paramIndex];
-    float stdDev = stdDevTensor[id_z * maxParamVolume + paramIndex];
+    float mean = meanTensor[paramIndex];
+    float stdDev = stdDevTensor[paramIndex];
     float stdDevSquare = stdDev * stdDev;
     float invStdDev = stdDevSquare ? rsqrtf(stdDevSquare) * scale : 0;
     dstPtr[dstIdx] = fmaf((srcPtr[srcIdx] - mean), invStdDev, shift);
@@ -168,7 +169,8 @@ __global__ void normalize_3d_hip_tensor(float *srcPtr,
 
     uint *paramShape = paramShapeTensor;
     uint *paramStrides = paramStridesTensor;
-    uint paramIndex = compute_3d_paramindex(id_z, id_y, id_x, paramShape, paramStrides);
+    uint paramIndex = id_z * maxParamVolume;
+    paramIndex += (maxParamVolume == 1) ? 0 : compute_3d_paramindex(id_z, id_y, id_x, paramShape, paramStrides);
 
     uint srcIdx = (id_z * srcStridesDH.x) + (id_y * srcStridesDH.y) + id_x;
     uint dstIdx = (id_z * dstStridesDH.x) + (id_y * dstStridesDH.y) + id_x;
@@ -200,17 +202,20 @@ __global__ void normalize_nd_hip_tensor(float *srcPtr,
     uint *paramShape = &paramShapeTensor[id_z * numDims];
     uint *paramStrides = &paramStridesTensor[id_z * numDims];
 
-    uint paramIndex = 0;
-    for (int i = 0; i < numDims; i++)
+    uint paramIndex = id_z * maxParamVolume;
+    if (maxParamVolume != 1)
     {
-        uint coord = id_x / srcStrides[i] % srcMaxDims[i];
-        if(coord > roi[i])
-            return;
-        paramIndex += rpp_hip_mod(coord, paramShape[i]) * paramStrides[i];
+        for (int i = 0; i < numDims; i++)
+        {
+            uint coord = id_x / srcStrides[i] % srcMaxDims[i];
+            if(coord > roi[i])
+                return;
+            paramIndex += rpp_hip_mod(coord, paramShape[i]) * paramStrides[i];
+        }
     }
 
-    float mean = meanTensor[id_z * maxParamVolume + paramIndex];
-    float stdDev = stdDevTensor[id_z * maxParamVolume + paramIndex];
+    float mean = meanTensor[paramIndex];
+    float stdDev = stdDevTensor[paramIndex];
     float stdDevSquare = stdDev * stdDev;
     float invStdDev = stdDevSquare ? rsqrtf(stdDevSquare) * scale : 0;
     dstPtr[id_x] = fmaf((srcPtr[id_x] - mean), invStdDev, shift);
