@@ -142,20 +142,13 @@ void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dst
     std::fstream fin(outFile, std::ios::in | std::ios::binary);
     if(fin.is_open())
     {
-        for(Rpp64u i = 0; i < oBufferSize ; i++)
+        for(Rpp64u i = 0; i < oBufferSize; i++)
         {
-            if(fin)
-            {
+            if(!fin.eof())
                 fin.read(reinterpret_cast<char*>(&refOutput[i]), sizeof(float));
-                // if (!fin)
-                // {
-                //     std::cout << "\nFile read error encountered before reading all necessary elements successfully!\n";
-                //     return;
-                // }
-            }
             else
             {
-                std::cout << "\nFile read error encountered before reading all necessary elements successfully!\n";
+                std::cout<<"\nUnable to read all data from golden outputs\n";
                 return;
             }
         }
