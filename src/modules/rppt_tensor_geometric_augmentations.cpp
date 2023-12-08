@@ -967,7 +967,7 @@ RppStatus rppt_normalize_generic_host(RppPtr_t srcPtr,
                                       rppHandle_t rppHandle)
 {
     RppLayoutParams layoutParams;
-    Rpp32u nDim = srcGenericDescPtr->numDims;
+    Rpp32u nDim = srcGenericDescPtr->numDims - 1;
     if (nDim == 3 && (srcGenericDescPtr->layout == RpptLayout::NHWC))
         layoutParams = get_layout_params(srcGenericDescPtr->layout, srcGenericDescPtr->dims[3]);
     else if ((srcGenericDescPtr->layout == RpptLayout::NCDHW) && (dstGenericDescPtr->layout == RpptLayout::NCDHW))
