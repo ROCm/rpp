@@ -1268,4 +1268,71 @@ RppStatus rppt_lut_gpu(RppPtr_t srcPtr,
 #endif // backend
 }
 
+/******************** color_temperature ********************/
+
+RppStatus rppt_color_temperature_gpu(RppPtr_t srcPtr,
+                                     RpptDescPtr srcDescPtr,
+                                     RppPtr_t dstPtr,
+                                     RpptDescPtr dstDescPtr,
+                                     Rpp32s *adjustmentValueTensor,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     rppHandle_t rppHandle)
+{
+#ifdef HIP_COMPILE
+    if (srcDescPtr->c != 3)
+    {
+        return RPP_ERROR_INVALID_ARGUMENTS;
+    }
+
+    Rpp32u paramIndex = 0;
+    copy_param_int(adjustmentValueTensor, rpp::deref(rppHandle), paramIndex++);
+
+    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+    {
+        hip_exec_color_temperature_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                          srcDescPtr,
+                                          static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                          dstDescPtr,
+                                          roiTensorPtrSrc,
+                                          roiType,
+                                          rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+    {
+        hip_exec_color_temperature_tensor((half*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                          srcDescPtr,
+                                          (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                          dstDescPtr,
+                                          roiTensorPtrSrc,
+                                          roiType,
+                                          rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        hip_exec_color_temperature_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                          srcDescPtr,
+                                          (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                          dstDescPtr,
+                                          roiTensorPtrSrc,
+                                          roiType,
+                                          rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+    {
+        hip_exec_color_temperature_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                          srcDescPtr,
+                                          static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                          dstDescPtr,
+                                          roiTensorPtrSrc,
+                                          roiType,
+                                          rpp::deref(rppHandle));
+    }
+
+    return RPP_SUCCESS;
+#elif defined(OCL_COMPILE)
+    return RPP_ERROR_NOT_IMPLEMENTED;
+#endif // backend
+}
+
 #endif // GPU_SUPPORT
