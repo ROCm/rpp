@@ -3,13 +3,13 @@
 #include "rpp_hip_common.hpp"
 
 
-__global__ void add_scalar_ncdhw_tensor(float *srcPtr,
-                                        uint3 srcStridesCDH,
-                                        float *dstPtr,
-                                        uint3 dstStridesCDH,
-                                        int channels,
-                                        float addParam,
-                                        RpptROI3DPtr roiGenericPtrSrc)
+__global__ void add_scalar_ncdhw_hip_tensor(float *srcPtr,
+                                            uint3 srcStridesCDH,
+                                            float *dstPtr,
+                                            uint3 dstStridesCDH,
+                                            int channels,
+                                            float addParam,
+                                            RpptROI3DPtr roiGenericPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;        // W - inner most dim vectorized
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;              // H - second to inner
@@ -34,12 +34,12 @@ __global__ void add_scalar_ncdhw_tensor(float *srcPtr,
     }
 }
 
-__global__ void add_scalar_ndhwc_tensor(float *srcPtr,
-                                        uint2 srcStridesDH,
-                                        float *dstPtr,
-                                        uint2 dstStridesDH,
-                                        float addParam,
-                                        RpptROI3DPtr roiGenericPtrSrc)
+__global__ void add_scalar_ndhwc_hip_tensor(float *srcPtr,
+                                            uint2 srcStridesDH,
+                                            float *dstPtr,
+                                            uint2 dstStridesDH,
+                                            float addParam,
+                                            RpptROI3DPtr roiGenericPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;        // WC - inner most dim vectorized
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;              // H - second to inner
@@ -69,18 +69,15 @@ RppStatus hip_exec_add_scalar_tensor(Rpp32f *srcPtr,
 {
     if (dstGenericDescPtr->layout == RpptLayout::NCDHW)
     {
-        int localThreads_x = LOCAL_THREADS_X;
-        int localThreads_y = LOCAL_THREADS_Y;
-        int localThreads_z = LOCAL_THREADS_Z;
         int globalThreads_x = (dstGenericDescPtr->strides[3] + 7) >> 3; // W - width (x direction) - vectorized for 8 element loads/stores per channel
         int globalThreads_y = dstGenericDescPtr->dims[3];               // H - height (y direction)
         int globalThreads_z = dstGenericDescPtr->dims[2];               // D - depth (z direction)
 
         for(int batchCount = 0; batchCount < dstGenericDescPtr->dims[0]; batchCount++)
         {
-            hipLaunchKernelGGL(add_scalar_ncdhw_tensor,
-                               dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                               dim3(localThreads_x, localThreads_y, localThreads_z),
+            hipLaunchKernelGGL(add_scalar_ncdhw_hip_tensor,
+                               dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
                                handle.GetStream(),
                                srcPtr + (batchCount * srcGenericDescPtr->strides[0]),
@@ -94,18 +91,15 @@ RppStatus hip_exec_add_scalar_tensor(Rpp32f *srcPtr,
     }
     else if (dstGenericDescPtr->layout == RpptLayout::NDHWC)
     {
-        int localThreads_x = LOCAL_THREADS_X;
-        int localThreads_y = LOCAL_THREADS_Y;
-        int localThreads_z = LOCAL_THREADS_Z;
         int globalThreads_x = (dstGenericDescPtr->strides[2] / 3 + 7) >> 3; // W - width (x direction) - vectorized for 8 element loads/stores per channel
         int globalThreads_y = dstGenericDescPtr->dims[2];                   // H - height (y direction)
         int globalThreads_z = dstGenericDescPtr->dims[1];                   // D - depth (z direction)
 
         for(int batchCount = 0; batchCount < dstGenericDescPtr->dims[0]; batchCount++)
         {
-            hipLaunchKernelGGL(add_scalar_ndhwc_tensor,
-                               dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                               dim3(localThreads_x, localThreads_y, localThreads_z),
+            hipLaunchKernelGGL(add_scalar_ndhwc_hip_tensor,
+                               dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
                                handle.GetStream(),
                                srcPtr + (batchCount * srcGenericDescPtr->strides[0]),

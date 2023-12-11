@@ -83,22 +83,43 @@ RppStatus rppt_fused_multiply_add_scalar_host(RppPtr_t srcPtr, RpptGenericDescPt
 RppStatus rppt_fused_multiply_add_scalar_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32f *mulTensor, Rpp32f *addTensor, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
-/******************** add_scalar ********************/
-
-// add_scalar for a generic 4D tensor
-
-// *param[in] srcPtr source tensor memory
-// *param[in] srcGenericDescPtr source tensor descriptor
-// *param[out] dstPtr destination tensor memory
-// *param[in] dstGenericDescPtr destination tensor descriptor
-// *param[in] addTensor add values for add calculation (1D tensor of batchSize Rpp32f values)
-// *param[in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
-// *param[in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
-// *returns a  RppStatus enumeration.
-// *retval RPP_SUCCESS : succesful completion
-// *retval RPP_ERROR : Error
-
+/*! \brief  add augmentation HOST
+ * \details This function performs the add operation on a batch of 4D tensors.
+ *          It adds a corresponding element from the 'addTensor' to sourceTensor, and stores the result in the destination tensor.
+ *          Support added for f32 -> f32 dataype.
+ * \param [in] srcPtr source tensor memory
+ * \param[in] srcGenericDescPtr source tensor descriptor
+ * \param[out] dstPtr destination tensor memory
+ * \param[in] dstGenericDescPtr destination tensor descriptor
+ * \param[in] addTensor add values for used for addition (1D tensor of batchSize Rpp32f values)
+ * \param[in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
+ * \param[in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
+ * \param [in] rppHandle Host-handle
+ * \return <tt> RppStatus enum</tt>.
+ * \returns RPP_SUCCESS <tt>\ref RppStatus</tt> on successful completion.
+ * Else return RPP_ERROR
+ * \ingroup group_tensor_arithmetic
+ */
 RppStatus rppt_add_scalar_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32f *addTensor, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle);
+
+/*! \brief  add augmentation GPU
+ * \details This function performs the add operation on a batch of 4D tensors.
+ *          It adds a corresponding element from the 'addTensor' to sourceTensor, and stores the result in the destination tensor.
+ *          Support added for f32 -> f32 dataype.
+ * \param [in] srcPtr source tensor memory
+ * \param[in] srcGenericDescPtr source tensor descriptor
+ * \param[out] dstPtr destination tensor memory
+ * \param[in] dstGenericDescPtr destination tensor descriptor
+ * \param[in] addTensor add values for used for addition (1D tensor of batchSize Rpp32f values)
+ * \param[in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
+ * \param[in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
+ * \param [in] rppHandle Hip-handle
+ * \return <tt> RppStatus enum</tt>.
+ * \returns RPP_SUCCESS <tt>\ref RppStatus</tt> on successful completion.
+ * Else return RPP_ERROR
+ * \ingroup group_tensor_arithmetic
+ */
+
 #ifdef GPU_SUPPORT
 RppStatus rppt_add_scalar_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32f *addTensor, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
