@@ -301,6 +301,54 @@ void normalize_setup(Rpp32u *roiTensor, Rpp32u batchSize, Rpp32u numDims, Rpp32u
     }
 }
 
+RppStatus hip_exec_compute_mean_tensor(Rpp32f *srcPtr,
+                                       RpptGenericDescPtr srcGenericDescPtr,
+                                       Rpp32f *meanTensor,
+                                       Rpp32u *roiTensor,
+                                       Rpp32u axisMask,
+                                       Rpp32u numDims,
+                                       Rpp32u maxParamVolume,
+                                       rpp::Handle& handle)
+{
+    // based on number of dimensions call the corresponding kernel
+    if (numDims == 2)
+    {
+        // set the block and grid configuration based on axisMask
+        int globalThreads_x, globalThreads_y, globalThreads_z;
+        if(axisMask == 1)
+        {
+            globalThreads_x = srcGenericDescPtr->dims[2];
+            globalThreads_y = 1;
+        }
+        else if(axisMask == 2)
+        {
+            globalThreads_x = srcGenericDescPtr->dims[1];
+            globalThreads_y = 1;
+        }
+        else if(axisMask == 3)
+        {
+            globalThreads_x = 1;
+            globalThreads_y = 1;
+        }
+        globalThreads_z = srcGenericDescPtr->dims[0];
+
+        hipLaunchKernelGGL(compute_mean_2d_hip_tensor,
+                            dim3(ceil((float)globalThreads_x/1024), ceil((float)globalThreads_y), ceil((float)globalThreads_z)),
+                            dim3(1024, 1, 1),
+                            0,
+                            handle.GetStream(),
+                            srcPtr,
+                            make_uint2(srcGenericDescPtr->strides[0], srcGenericDescPtr->strides[1]),
+                            meanTensor,
+                            roiTensor,
+                            maxParamVolume,
+                            axisMask);
+    }
+    hipStreamSynchronize(handle.GetStream());
+
+    return RPP_SUCCESS;
+}
+
 RppStatus hip_exec_normalize_tensor(Rpp32f *srcPtr,
                                     RpptGenericDescPtr srcGenericDescPtr,
                                     Rpp32f *dstPtr,
@@ -330,6 +378,10 @@ RppStatus hip_exec_normalize_tensor(Rpp32f *srcPtr,
 
     if((computeMean == 0) && (computeStdDev == 0))
         maxParamVolume = 0;
+
+    // if computeMean is set compute mean values by processing over input based on axisMask values
+    if(computeMean)
+        hip_exec_compute_mean_tensor(srcPtr, srcGenericDescPtr, meanTensor, roiTensor, axisMask, numDims, maxParamVolume, handle);
 
     // based on number of dimensions call the corresponding kernel
     if (numDims == 2)
