@@ -14,6 +14,53 @@ __device__ uint compute_2d_paramindex(uint y, uint x, uint *paramShape, uint *pa
     return paramIndex;
 }
 
+__global__ void compute_mean_2d_hip_tensor(float *srcPtr,
+                                           uint2 srcStridesNH,
+                                           float *meanTensor,
+                                           uint *roiTensor,
+                                           uint maxParamVolume,
+                                           uint axisMask)
+{
+    uint id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    uint id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    uint *roi = &roiTensor[id_z * 4 + 2];
+    uint height = roi[0];
+    uint width = roi[1];
+    if(axisMask == 1)
+    {
+        uint stride = srcStridesNH.y;
+        uint srcIdx = id_z * srcStridesNH.x + id_x;
+        uint dstIdx = id_z * maxParamVolume + id_x;
+        if(id_x < width)
+        {
+            float accum = 0.0f;
+            for(int i = 0; i < height; i++)
+            {
+                accum += srcPtr[srcIdx];
+                srcIdx += stride;
+            }
+            meanTensor[dstIdx] = accum / static_cast<float>(height);
+        }
+    }
+    else if(axisMask == 2)
+    {
+        uint stride = 1;
+        uint srcIdx = id_z * srcStridesNH.x + id_x * srcStridesNH.y;
+        uint dstIdx = id_z * maxParamVolume + id_x;
+        if(id_x < height)
+        {
+            float accum = 0.0f;
+            for(int i = 0; i < width; i++)
+            {
+                accum += srcPtr[srcIdx];
+                srcIdx += stride;
+            }
+            meanTensor[dstIdx] = accum / static_cast<float>(width);
+        }
+    }
+}
+
 __global__ void normalize_2d_hip_tensor(float *srcPtr,
                                         uint2 srcStridesNH,
                                         float *dstPtr,
