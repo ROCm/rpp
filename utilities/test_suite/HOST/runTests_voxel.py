@@ -32,6 +32,8 @@ scriptPath = os.path.dirname(os.path.realpath(__file__))
 headerFilePath = scriptPath + "/../TEST_QA_IMAGES_VOXEL"
 dataFilePath = scriptPath + "/../TEST_QA_IMAGES_VOXEL"
 qaInputFile = scriptPath + "/../TEST_QA_IMAGES_VOXEL"
+caseMin = 0
+caseMax = 2
 
 # Check if folder path is empty, if it is the root folder, or if it exists, and remove its contents
 def validate_and_remove_contents(path):
@@ -109,7 +111,8 @@ def func_group_finder(case_number):
         return "geometric_augmentations"
     else:
         return "miscellaneous"
- # Generate a directory name based on certain parameters
+
+# Generate a directory name based on certain parameters
 def directory_name_generator(qaMode, affinity, layoutType, case, path):
     if qaMode == 0:
         functionality_group = func_group_finder(int(case))
@@ -176,8 +179,8 @@ def rpp_test_suite_parser_and_validator():
     parser = argparse.ArgumentParser()
     parser.add_argument("--header_path", type = str, default = headerFilePath, help = "Path to the nii header")
     parser.add_argument("--data_path", type = str, default = dataFilePath, help = "Path to the nii data file")
-    parser.add_argument("--case_start", type = int, default = 0, help = "Testing range starting case # - (0:1)")
-    parser.add_argument("--case_end", type = int, default = 1, help = "Testing range ending case # - (0:1)")
+    parser.add_argument("--case_start", type = int, default = caseMin, help = "Testing start case # - Range must be in [" + str(caseMin) + ":" + str(caseMax) + "]")
+    parser.add_argument("--case_end", type = int, default = caseMax, help = "Testing start case # - Range must be in [" + str(caseMin) + ":" + str(caseMax) + "]")
     parser.add_argument('--test_type', type = int, default = 0, help = "Type of Test - (0 = Unit tests / 1 = Performance tests)")
     parser.add_argument('--case_list', nargs = "+", help = "List of case numbers to list", required = False)
     parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Output images from tests will be compared with golden outputs - (0 / 1)", required = False)
@@ -192,7 +195,7 @@ def rpp_test_suite_parser_and_validator():
     validate_path(qaInputFile)
 
     # validate the parameters passed by user
-    if ((args.case_start < 0 or args.case_start > 1) or (args.case_end < 0 or args.case_end > 1)):
+    if ((args.case_start < caseMin or args.case_start > caseMax) or (args.case_end < caseMin or args.case_end > caseMax)):
         print("Starting case# and Ending case# must be in the 0:1 range. Aborting!")
         exit(0)
     elif args.case_end < args.case_start:
@@ -204,7 +207,7 @@ def rpp_test_suite_parser_and_validator():
     elif args.qa_mode < 0 or args.qa_mode > 1:
         print("QA mode must be in the 0 / 1. Aborting!")
         exit(0)
-    elif args.case_list is not None and args.case_start > 0 and args.case_end < 1:
+    elif args.case_list is not None and args.case_start > caseMin and args.case_end < caseMax:
         print("Invalid input! Please provide only 1 option between case_list, case_start and case_end")
         exit(0)
     elif args.num_runs <= 0:
@@ -222,7 +225,7 @@ def rpp_test_suite_parser_and_validator():
         args.case_list = [str(x) for x in args.case_list]
     else:
         for case in args.case_list:
-            if int(case) < 0 or int(case) > 1:
+            if int(case) < caseMin or int(case) > caseMax:
                  print("The case# must be in the 0:1 range!")
                  exit(0)
 
@@ -312,7 +315,7 @@ else:
             run_performance_test(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize)
 
 # print the results of qa tests
-supportedCaseList = ['0', '1']
+supportedCaseList = ['0', '1', '2']
 nonQACaseList = [] # Add cases present in supportedCaseList, but without QA support
 
 if qaMode and testType == 0:

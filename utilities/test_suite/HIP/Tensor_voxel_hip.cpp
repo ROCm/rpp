@@ -266,6 +266,22 @@ int main(int argc, char * argv[])
 
                     break;
                 }
+                case 2:
+                {
+                    testCaseName = "add_scalar";
+                    Rpp32f addTensor[batchSize];
+
+                    for (int i = 0; i < batchSize; i++)
+                        addTensor[i] = 40;
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 2)
+                        rppt_add_scalar_gpu(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, addTensor, roiGenericSrcPtr, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 default:
                 {
                     missingFuncFlag = 1;
