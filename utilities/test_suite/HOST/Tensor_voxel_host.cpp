@@ -267,6 +267,22 @@ int main(int argc, char * argv[])
 
                     break;
                 }
+                case 3:
+                {
+                    testCaseName = "subtract_scalar";
+                    Rpp32f subtractTensor[batchSize];
+
+                    for (int i = 0; i < batchSize; i++)
+                        subtractTensor[i] = 40;
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 2)
+                        rppt_subtract_scalar_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, subtractTensor, roiGenericSrcPtr, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 default:
                 {
                     missingFuncFlag = 1;

@@ -33,7 +33,7 @@ headerFilePath = scriptPath + "/../TEST_QA_IMAGES_VOXEL"
 dataFilePath = scriptPath + "/../TEST_QA_IMAGES_VOXEL"
 qaInputFile = scriptPath + "/../TEST_QA_IMAGES_VOXEL"
 caseMin = 0
-caseMax = 2
+caseMax = 3
 
 # Check if folder path is empty, if it is the root folder, or if it exists, and remove its contents
 def validate_and_remove_contents(path):
@@ -463,7 +463,7 @@ elif (testType == 1 and profilingOption == "YES"):
             print("Unable to open results in " + RESULTS_DIR + "/consolidated_results_" + TYPE + ".stats.csv")
 
 # print the results of qa tests
-supportedCaseList = ['0', '1', '2']
+supportedCaseList = ['0', '1', '2', '3']
 nonQACaseList = [] # Add cases present in supportedCaseList, but without QA support
 
 if qaMode and testType == 0:
