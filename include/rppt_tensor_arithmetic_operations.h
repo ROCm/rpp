@@ -37,7 +37,7 @@ THE SOFTWARE.
 extern "C" {
 #endif
 
-/*! \brief  Fmadd augmentation HOST
+/*! \brief Fmadd augmentation HOST
  * \details This function performs the fmadd operation on a batch of 4D tensors.
  *          It multiplies each element of the source tensor by a corresponding element in the 'mulTensor',
  *          adds a corresponding element from the 'addTensor', and stores the result in the destination tensor.
@@ -59,7 +59,7 @@ extern "C" {
 RppStatus rppt_fused_multiply_add_scalar_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32f *mulTensor, Rpp32f *addTensor, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle);
 
 
-/*! \brief  Fmadd augmentation GPU
+/*! \brief Fmadd augmentation GPU
  * \details This function performs the fmadd operation on a batch of 4D tensors.
  *          It multiplies each element of the source tensor by a corresponding element in the 'mulTensor',
  *          adds a corresponding element from the 'addTensor', and stores the result in the destination tensor.
@@ -83,7 +83,7 @@ RppStatus rppt_fused_multiply_add_scalar_host(RppPtr_t srcPtr, RpptGenericDescPt
 RppStatus rppt_fused_multiply_add_scalar_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32f *mulTensor, Rpp32f *addTensor, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
-/*! \brief  add augmentation HOST
+/*! \brief add augmentation HOST
  * \details This function performs the addition operation on a batch of 4D tensors.
  *          It adds a corresponding element from the 'addTensor' to source tensor, and stores the result in the destination tensor.
  *          Support added for f32 -> f32 dataype.
@@ -102,7 +102,7 @@ RppStatus rppt_fused_multiply_add_scalar_gpu(RppPtr_t srcPtr, RpptGenericDescPtr
  */
 RppStatus rppt_add_scalar_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32f *addTensor, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle);
 
-/*! \brief  add augmentation GPU
+/*! \brief add augmentation GPU
  * \details This function performs the addition operation on a batch of 4D tensors.
  *          It adds a corresponding element from the 'addTensor' to source tensor, and stores the result in the destination tensor.
  *          Support added for f32 -> f32 dataype.
@@ -126,7 +126,7 @@ RppStatus rppt_add_scalar_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDesc
 
 /******************** subtract_scalar ********************/
 
-/*! \brief  subtract augmentation HOST
+/*! \brief subtract augmentation HOST
  * \details This function performs the subtraction operation on a batch of 4D tensors.
  *          It takes a corresponding element from 'subtractTensor' and subtracts it from source tensor. Result is stored in the destination tensor.
  *          Support added for f32 -> f32 dataype.
@@ -146,7 +146,7 @@ RppStatus rppt_add_scalar_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDesc
 
 RppStatus rppt_subtract_scalar_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32f *subtractTensor, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle);
 
-/*! \brief  subtract augmentation GPU
+/*! \brief subtract augmentation GPU
  * \details This function performs the subtraction operation on a batch of 4D tensors.
  *          It takes a corresponding element from 'subtractTensor' and subtracts it from source tensor. Result is stored in the destination tensor.
  *          Support added for f32 -> f32 dataype.
