@@ -418,6 +418,8 @@ elif (testType == 1):
         "data_exchange_operations",
         "effects_augmentations",
         "geometric_augmentations",
+        "arithmetic_operations",
+        "statistical_operations",
     ]
 
     for log_file in log_file_list:
