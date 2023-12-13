@@ -180,7 +180,6 @@ RppStatus transpose_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
                                                 RpptGenericDescPtr dstGenericDescPtr,
                                                 Rpp32u *permTensor,
                                                 Rpp32u *roiTensor,
-                                                RppLayoutParams layoutParams,
                                                 rpp::Handle& handle)
 {
     Rpp32u numThreads = handle.GetNumThreads();
@@ -403,7 +402,6 @@ RppStatus transpose_generic_host_tensor(T *srcPtr,
                                         RpptGenericDescPtr dstGenericDescPtr,
                                         Rpp32u *permTensor,
                                         Rpp32u *roiTensor,
-                                        RppLayoutParams layoutParams,
                                         rpp::Handle& handle)
 {
     Rpp32u numThreads = handle.GetNumThreads();
