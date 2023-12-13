@@ -409,7 +409,7 @@ RppStatus rppt_color_cast_host(RppPtr_t srcPtr,
 {
     if (srcDescPtr->c != 3)
     {
-        return RPP_ERROR_INVALID_ARGUMENTS;
+        return RPP_ERROR_INVALID_CHANNELS;
     }
 
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
@@ -682,7 +682,7 @@ RppStatus rppt_color_temperature_host(RppPtr_t srcPtr,
 {
     if (srcDescPtr->c != 3)
     {
-        return RPP_ERROR_INVALID_ARGUMENTS;
+        return RPP_ERROR_INVALID_CHANNELS;
     }
 
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
@@ -951,7 +951,7 @@ RppStatus rppt_color_twist_gpu(RppPtr_t srcPtr,
 #ifdef HIP_COMPILE
     if (srcDescPtr->c != 3)
     {
-        return RPP_ERROR_INVALID_ARGUMENTS;
+        return RPP_ERROR_INVALID_CHANNELS;
     }
 
     Rpp32u paramIndex = 0;
@@ -1022,7 +1022,7 @@ RppStatus rppt_color_cast_gpu(RppPtr_t srcPtr,
 #ifdef HIP_COMPILE
     if (srcDescPtr->c != 3)
     {
-        return RPP_ERROR_INVALID_ARGUMENTS;
+        return RPP_ERROR_INVALID_CHANNELS;
     }
 
     Rpp32u paramIndex = 0;
@@ -1282,7 +1282,7 @@ RppStatus rppt_color_temperature_gpu(RppPtr_t srcPtr,
 #ifdef HIP_COMPILE
     if (srcDescPtr->c != 3)
     {
-        return RPP_ERROR_INVALID_ARGUMENTS;
+        return RPP_ERROR_INVALID_CHANNELS;
     }
 
     Rpp32u paramIndex = 0;

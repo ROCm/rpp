@@ -36,7 +36,7 @@ __device__ void color_temperature_hip_compute(half *srcPtr, d_float24 *pix_f24, 
 }
 
 template <typename T>
-__global__ void color_temperature_pkd_tensor(T *srcPtr,
+__global__ void color_temperature_pkd_hip_tensor(T *srcPtr,
                                              uint2 srcStridesNH,
                                              T *dstPtr,
                                              uint2 dstStridesNH,
@@ -65,7 +65,7 @@ __global__ void color_temperature_pkd_tensor(T *srcPtr,
 }
 
 template <typename T>
-__global__ void color_temperature_pln_tensor(T *srcPtr,
+__global__ void color_temperature_pln_hip_tensor(T *srcPtr,
                                              uint3 srcStridesNCH,
                                              T *dstPtr,
                                              uint3 dstStridesNCH,
@@ -94,7 +94,7 @@ __global__ void color_temperature_pln_tensor(T *srcPtr,
 }
 
 template <typename T>
-__global__ void color_temperature_pkd3_pln3_tensor(T *srcPtr,
+__global__ void color_temperature_pkd3_pln3_hip_tensor(T *srcPtr,
                                                    uint2 srcStridesNH,
                                                    T *dstPtr,
                                                    uint3 dstStridesNCH,
@@ -123,7 +123,7 @@ __global__ void color_temperature_pkd3_pln3_tensor(T *srcPtr,
 }
 
 template <typename T>
-__global__ void color_temperature_pln3_pkd3_tensor(T *srcPtr,
+__global__ void color_temperature_pln3_pkd3_hip_tensor(T *srcPtr,
                                                    uint3 srcStridesNCH,
                                                    T *dstPtr,
                                                    uint2 dstStridesNH,
@@ -165,9 +165,6 @@ RppStatus hip_exec_color_temperature_tensor(T *srcPtr,
 
     if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
     {
-        int localThreads_x = LOCAL_THREADS_X;
-        int localThreads_y = LOCAL_THREADS_Y;
-        int localThreads_z = LOCAL_THREADS_Z;
         int globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
         int globalThreads_y = dstDescPtr->h;
         int globalThreads_z = handle.GetBatchSize();
@@ -175,9 +172,9 @@ RppStatus hip_exec_color_temperature_tensor(T *srcPtr,
         if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             globalThreads_x = (dstDescPtr->strides.hStride / 3 + 7) >> 3;
-            hipLaunchKernelGGL(color_temperature_pkd_tensor,
-                               dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                               dim3(localThreads_x, localThreads_y, localThreads_z),
+            hipLaunchKernelGGL(color_temperature_pkd_hip_tensor,
+                               dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
                                handle.GetStream(),
                                srcPtr,
@@ -189,9 +186,9 @@ RppStatus hip_exec_color_temperature_tensor(T *srcPtr,
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            hipLaunchKernelGGL(color_temperature_pln_tensor,
-                               dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                               dim3(localThreads_x, localThreads_y, localThreads_z),
+            hipLaunchKernelGGL(color_temperature_pln_hip_tensor,
+                               dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
                                handle.GetStream(),
                                srcPtr,
@@ -203,9 +200,9 @@ RppStatus hip_exec_color_temperature_tensor(T *srcPtr,
         }
         else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            hipLaunchKernelGGL(color_temperature_pkd3_pln3_tensor,
-                               dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                               dim3(localThreads_x, localThreads_y, localThreads_z),
+            hipLaunchKernelGGL(color_temperature_pkd3_pln3_hip_tensor,
+                               dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
                                handle.GetStream(),
                                srcPtr,
@@ -218,9 +215,9 @@ RppStatus hip_exec_color_temperature_tensor(T *srcPtr,
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             globalThreads_x = (srcDescPtr->strides.hStride + 7) >> 3;
-            hipLaunchKernelGGL(color_temperature_pln3_pkd3_tensor,
-                               dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                               dim3(localThreads_x, localThreads_y, localThreads_z),
+            hipLaunchKernelGGL(color_temperature_pln3_pkd3_hip_tensor,
+                               dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
                                handle.GetStream(),
                                srcPtr,

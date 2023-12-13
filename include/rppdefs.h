@@ -113,7 +113,9 @@ typedef enum
     /*! \brief Not enough memory \ingroup group_rppdefs */
     RPP_ERROR_NOT_ENOUGH_MEMORY         = -16,
     /*! \brief Out of bound source ROI \ingroup group_rppdefs */
-    RPP_ERROR_OUT_OF_BOUND_SRC_ROI      = -17
+    RPP_ERROR_OUT_OF_BOUND_SRC_ROI      = -17,
+    /*! \brief Number of channels is invalid. (Needs to adhere to function specification.) \ingroup group_rppdefs */
+    RPP_ERROR_INVALID_CHANNELS          = -18
 } RppStatus;
 
 /*! \brief RPP rppStatus_t type enums

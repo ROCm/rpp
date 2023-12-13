@@ -416,7 +416,7 @@ RppStatus rppt_lut_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr,
 #endif // GPU_SUPPORT
 
 /*! \brief Color Temperature augmentation on HOST backend for a NCHW/NHWC layout tensor
- * \details The color temperature augmentation does an adjustment operation between srcPtr and adjustment taken as input, on a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+ * \details The color temperature augmentation does a image temperature adjustment operation, taking a pixel adjustment value as argument for each image in a batch of RGB(3 channel) with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
  * \image html img150x150.jpg Sample Input
@@ -437,7 +437,7 @@ RppStatus rppt_color_temperature_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, R
 
 #ifdef GPU_SUPPORT
 /*! \brief Color Temperature augmentation on HIP backend for a NCHW/NHWC layout tensor
- * \details The color temperature augmentation does an adjustment operation between srcPtr and adjustment taken as input, on a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+ * \details The color temperature augmentation does a image temperature adjustment operation, taking a pixel adjustment value as argument for each image in a batch of RGB(3 channel) with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
  * \image html img150x150.jpg Sample Input
