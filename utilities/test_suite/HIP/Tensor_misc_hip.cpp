@@ -54,6 +54,10 @@ void compute_strides(RpptGenericDescPtr descriptorPtr)
             v *= descriptorPtr->dims[i];
         }
         descriptorPtr->strides[0] = v;
+        printf("\ndescriptorPtr->strides[0] = %u", descriptorPtr->strides[0]);
+        printf("\ndescriptorPtr->strides[1] = %u", descriptorPtr->strides[1]);
+        printf("\ndescriptorPtr->strides[2] = %u", descriptorPtr->strides[2]);
+        printf("\ndescriptorPtr->strides[3] = %u", descriptorPtr->strides[3]);
     }
 }
 
