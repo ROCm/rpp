@@ -301,6 +301,230 @@ void normalize_setup(Rpp32u *roiTensor, Rpp32u batchSize, Rpp32u numDims, Rpp32u
     }
 }
 
+__global__ void reduce_final_axisMask2(float *partialSumTensor,
+                                       uint numPartialSums,
+                                       float *meanTensor,
+                                       uint *roiTensor,
+                                       uint axisMask)
+{
+    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    uint *roi = &roiTensor[id_z * 4 + 2];
+    uint height = roi[0];
+    uint width = roi[1];
+
+    __shared__ float partialSum_smem[16];
+    partialSum_smem[hipThreadIdx_x] = 0.0f;
+
+    uint meanFactor = width;
+    float accum = 0.0f;
+    while(id_x < numPartialSums)
+    {
+        uint srcIdx = (id_z * hipGridDim_y * numPartialSums) + (id_y * numPartialSums) + id_x;
+        accum += partialSumTensor[srcIdx];
+        id_x += hipBlockDim_x;
+    }
+    partialSum_smem[hipThreadIdx_x] = accum;
+    __syncthreads();
+
+    // Now do block level reduction sum
+    for(int i = 8; i > 0; i >>= 1)
+    {
+        if(hipThreadIdx_x < i)
+            partialSum_smem[hipThreadIdx_x] += partialSum_smem[hipThreadIdx_x + i];
+        __syncthreads();
+    }
+
+    // Final store to dst
+    if(hipThreadIdx_x == 0)
+        meanTensor[id_z * hipGridDim_y + id_y] = partialSum_smem[0] / meanFactor;
+}
+
+__global__ void reduce_final_axisMask3(float *srcPtr,
+                                       uint *roiTensor,
+                                       uint xBufferLength,
+                                       float *dstPtr)
+{
+    int id_x = hipThreadIdx_x * 8;
+    int id_z = hipBlockIdx_z;
+
+    __shared__ float partialSum_smem[1024];                         // 8192 floats of src reduced to 1024 in a 1024 x 1 thread block
+    partialSum_smem[hipThreadIdx_x] = 0.0f;                         // initialization of Shared to 0 using all 1024 x 1 threads
+
+    if (id_x >= xBufferLength)
+    {
+        return;
+    }
+
+    int xAlignedLength = xBufferLength & ~7;                        // alignedLength for vectorized global loads
+    int xDiff = xBufferLength - xAlignedLength;                     // difference between bufferLength and alignedLength
+    uint srcIdx = (id_z * xBufferLength) + id_x;
+
+    d_float8 src_f8;
+    rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);   // load 8 pixels to local memory
+    if (id_x + 8 > xBufferLength)
+        for(int i = xDiff; i < 8; i++)
+            src_f8.f1[i] = 0.0f;                                    // local memory reset of invalid values (from the vectorized global load) to 0.0f
+
+    src_f8.f4[0] += src_f8.f4[1];                                   // perform small work of vectorized float4 addition
+    partialSum_smem[hipThreadIdx_x] += (src_f8.f1[0] +
+                                        src_f8.f1[1] +
+                                        src_f8.f1[2] +
+                                        src_f8.f1[3]);              // perform small work of reducing float4s to float using 1024 x 1 threads and store in Shared
+    __syncthreads();                                                // syncthreads after Shared load
+
+    // Reduction of 1024 floats on 1024 threads per block in x dimension
+    for (int threadMax = 512; threadMax >= 1; threadMax /= 2)
+    {
+        if (hipThreadIdx_x < threadMax)
+            partialSum_smem[hipThreadIdx_x] += partialSum_smem[hipThreadIdx_x + threadMax];
+        __syncthreads();
+    }
+
+    uint *roi = &roiTensor[id_z * 4 + 2];
+    uint height = roi[0];
+    uint width = roi[1];
+
+    // Final store to dst
+    if (hipThreadIdx_x == 0)
+        dstPtr[hipBlockIdx_z] = partialSum_smem[0] / (height * width);
+}
+
+__global__ void compute_mean_2d_hip_tensor(float *srcPtr,
+                                           uint2 srcStridesNH,
+                                           float *meanTensor,
+                                           float *partialSumTensor,
+                                           uint *roiTensor,
+                                           uint maxParamVolume,
+                                           uint axisMask)
+{
+    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    uint *roi = &roiTensor[id_z * 4 + 2];
+    uint height = roi[0];
+    uint width = roi[1];
+
+    // perform column wise sum
+    if(axisMask == 1)
+    {
+        if ((id_y >= height) || (id_x >= width))
+        {
+            return;
+        }
+
+        uint srcIdx = id_z * srcStridesNH.x + id_x;
+        uint dstIdx = id_z * maxParamVolume + id_x;
+        if(id_x < width)
+        {
+            float accum = 0.0f;
+            for(int i = 0; i < height; i++)
+            {
+                accum += srcPtr[srcIdx];
+                srcIdx += srcStridesNH.y;
+            }
+            meanTensor[dstIdx] = accum / static_cast<float>(height);
+        }
+    }
+    // perform row wise sum
+    else if(axisMask == 2)
+    {
+        id_x *= 8;
+        __shared__ float partialRowSum_smem[256];
+        partialRowSum_smem[hipThreadIdx_x] = 0.0f;
+
+        if ((id_y >= height) || (id_x >= width))
+        {
+            return;
+        }
+
+        int xAlignedLength =  width & ~7;      // alignedLength for vectorized global loads
+        int xDiff = width - xAlignedLength;    // difference between roiWidth and alignedLength
+        uint srcIdx = (id_z * srcStridesNH.x) + (id_y * srcStridesNH.y) + id_x;
+
+        d_float8 src_f8;
+        rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);           // load 8 pixels to local memory
+        if (id_x + 8 > width)
+            for(int i = xDiff; i < 8; i++)
+                src_f8.f1[i] = 0.0f;                                            // local memory reset of invalid values (from the vectorized global load) to 0.0f
+        src_f8.f4[0] += src_f8.f4[1];                                           // perform small work of vectorized float4 addition
+        partialRowSum_smem[hipThreadIdx_x] = (src_f8.f1[0] +
+                                              src_f8.f1[1] +
+                                              src_f8.f1[2] +
+                                              src_f8.f1[3]);                                // perform small work of reducing float4s to float using 16 x 16 threads and store in Shared
+        __syncthreads();
+
+        // Now do block level reduction sum
+        for(int i = 128; i > 0; i >>= 1)
+        {
+            if(hipThreadIdx_x < i)
+                partialRowSum_smem[hipThreadIdx_x] += partialRowSum_smem[hipThreadIdx_x + i];
+            __syncthreads();
+        }
+
+        // Final store to dst
+        if(hipThreadIdx_x == 0)
+        {
+            uint paramIndex = (id_z * hipGridDim_y * hipGridDim_x) + (id_y * hipGridDim_x) + hipBlockIdx_x;
+            partialSumTensor[paramIndex] = partialRowSum_smem[0];
+        }
+    }
+    else if(axisMask == 3)
+    {
+        id_x *= 8;
+        __shared__ float sh_mem[16][16];                               // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
+        float *partialSumRowPtr_smem = &sh_mem[hipThreadIdx_y][0];     // float pointer to beginning of each row in Shared
+        partialSumRowPtr_smem[hipThreadIdx_x] = 0.0f;                           // initialization of Shared to 0.0f using all 16 x 16 threads
+
+        if ((id_y >= height) || (id_x >= width))
+        {
+            return;
+        }
+
+        int xAlignedLength =  width & ~7;       // alignedLength for vectorized global loads
+        int xDiff = width - xAlignedLength;    // difference between roiWidth and alignedLength
+        uint srcIdx = (id_z * srcStridesNH.x) + (id_y * srcStridesNH.y) + id_x;
+
+        d_float8 src_f8;
+        rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);           // load 8 pixels to local memory
+        if (id_x + 8 > width)
+            for(int i = xDiff; i < 8; i++)
+                src_f8.f1[i] = 0.0f;                                            // local memory reset of invalid values (from the vectorized global load) to 0.0f
+        src_f8.f4[0] += src_f8.f4[1];                                           // perform small work of vectorized float4 addition
+        partialSumRowPtr_smem[hipThreadIdx_x] = (src_f8.f1[0] +
+                                                src_f8.f1[1] +
+                                                src_f8.f1[2] +
+                                                src_f8.f1[3]);                 // perform small work of reducing float4s to float using 16 x 16 threads and store in Shared
+        __syncthreads();                                                        // syncthreads after Shared load
+
+        // Reduction of 16 floats on 16 threads per block in x dimension (for every y dimension)
+        for (int threadMax = 8; threadMax >= 1; threadMax /= 2)
+        {
+            if (hipThreadIdx_x < threadMax)
+                partialSumRowPtr_smem[hipThreadIdx_x] += partialSumRowPtr_smem[hipThreadIdx_x + threadMax];
+            __syncthreads();
+        }
+
+        if (hipThreadIdx_x == 0)
+        {
+            // Reduction of 16 floats on 16 threads per block in y dimension
+            for (int threadMax = 8, increment = 128; threadMax >= 1; threadMax /= 2, increment /= 2)
+            {
+                if (hipThreadIdx_y < threadMax)
+                    partialSumRowPtr_smem[0] += partialSumRowPtr_smem[increment];
+                __syncthreads();
+            }
+
+            // Final store to dst
+            if (hipThreadIdx_y == 0)
+                partialSumTensor[(hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x] = partialSumRowPtr_smem[0];
+        }
+    }
+}
+
 RppStatus hip_exec_compute_mean_tensor(Rpp32f *srcPtr,
                                        RpptGenericDescPtr srcGenericDescPtr,
                                        Rpp32f *meanTensor,
@@ -310,41 +534,109 @@ RppStatus hip_exec_compute_mean_tensor(Rpp32f *srcPtr,
                                        Rpp32u maxParamVolume,
                                        rpp::Handle& handle)
 {
+    Rpp32f *partialSumArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
+    Rpp32u partialSumArrLength, partialSumBlocksPerSample;
+
+    int globalThreads_x, globalThreads_y, globalThreads_z;
+    int localThreads_x, localThreads_y, localThreads_z;
     // based on number of dimensions call the corresponding kernel
     if (numDims == 2)
     {
         // set the block and grid configuration based on axisMask
-        int globalThreads_x, globalThreads_y, globalThreads_z;
         if(axisMask == 1)
         {
-            globalThreads_x = srcGenericDescPtr->dims[2];
+            localThreads_x = 256;
+            localThreads_y = 1;
+            localThreads_z = 1;
+            globalThreads_x = static_cast<int>(ceil((float)srcGenericDescPtr->dims[2] / localThreads_x));
             globalThreads_y = 1;
+            globalThreads_z = srcGenericDescPtr->dims[0];
+
+            hipLaunchKernelGGL(compute_mean_2d_hip_tensor,
+                               dim3(globalThreads_x, globalThreads_y, globalThreads_z),
+                               dim3(localThreads_x, localThreads_y, localThreads_z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint2(srcGenericDescPtr->strides[0], srcGenericDescPtr->strides[1]),
+                               meanTensor,
+                               partialSumArr,
+                               roiTensor,
+                               maxParamVolume,
+                               axisMask);
         }
         else if(axisMask == 2)
         {
-            globalThreads_x = srcGenericDescPtr->dims[1];
-            globalThreads_y = 1;
+            localThreads_x = 256;
+            localThreads_y = 1;
+            localThreads_z = 1;
+            globalThreads_x = static_cast<int> (ceil((float)((srcGenericDescPtr->dims[2] + 7) >> 3) / 256));
+            globalThreads_y = srcGenericDescPtr->dims[1];
+            globalThreads_z = srcGenericDescPtr->dims[0];
+
+            partialSumArrLength = srcGenericDescPtr->dims[0] * srcGenericDescPtr->dims[1] * globalThreads_x;
+            partialSumBlocksPerSample = globalThreads_x;
+            hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(Rpp32f), handle.GetStream());
+            hipLaunchKernelGGL(compute_mean_2d_hip_tensor,
+                               dim3(globalThreads_x, globalThreads_y, globalThreads_z),
+                               dim3(localThreads_x, localThreads_y, localThreads_z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint2(srcGenericDescPtr->strides[0], srcGenericDescPtr->strides[1]),
+                               meanTensor,
+                               partialSumArr,
+                               roiTensor,
+                               maxParamVolume,
+                               axisMask);
+            hipStreamSynchronize(handle.GetStream());
+            hipLaunchKernelGGL(reduce_final_axisMask2,
+                               dim3(ceil((float)partialSumBlocksPerSample/16), ceil((float)globalThreads_y), ceil((float)globalThreads_z)),
+                               dim3(16, 1, 1),
+                               0,
+                               handle.GetStream(),
+                               partialSumArr,
+                               partialSumBlocksPerSample,
+                               meanTensor,
+                               roiTensor,
+                               axisMask);
         }
         else if(axisMask == 3)
         {
-            globalThreads_x = 1;
-            globalThreads_y = 1;
-        }
-        globalThreads_z = srcGenericDescPtr->dims[0];
+            localThreads_x = 16;
+            localThreads_y = 16;
+            localThreads_z = 1;
+            globalThreads_x = static_cast<int> (ceil((float)((srcGenericDescPtr->dims[2] + 7) >> 3) / localThreads_x));
+            globalThreads_y = static_cast<int> (ceil((float)srcGenericDescPtr->dims[1] / localThreads_y));
+            globalThreads_z = srcGenericDescPtr->dims[0];
 
-        hipLaunchKernelGGL(compute_mean_2d_hip_tensor,
-                            dim3(ceil((float)globalThreads_x/1024), ceil((float)globalThreads_y), ceil((float)globalThreads_z)),
-                            dim3(1024, 1, 1),
-                            0,
-                            handle.GetStream(),
-                            srcPtr,
-                            make_uint2(srcGenericDescPtr->strides[0], srcGenericDescPtr->strides[1]),
-                            meanTensor,
-                            roiTensor,
-                            maxParamVolume,
-                            axisMask);
+            partialSumArrLength = globalThreads_x * globalThreads_y * globalThreads_z;
+            hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(Rpp32f), handle.GetStream());
+
+            hipLaunchKernelGGL(compute_mean_2d_hip_tensor,
+                               dim3(globalThreads_x, globalThreads_y, globalThreads_z),
+                               dim3(localThreads_x, localThreads_y, localThreads_z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint2(srcGenericDescPtr->strides[0], srcGenericDescPtr->strides[1]),
+                               meanTensor,
+                               partialSumArr,
+                               roiTensor,
+                               maxParamVolume,
+                               axisMask);
+            hipStreamSynchronize(handle.GetStream());
+            hipLaunchKernelGGL(reduce_final_axisMask3,
+                               dim3(1, 1, globalThreads_z),
+                               dim3(1024, 1, 1),
+                               0,
+                               handle.GetStream(),
+                               partialSumArr,
+                               roiTensor,
+                               globalThreads_x * globalThreads_y,
+                               meanTensor);
+        }
     }
-    hipStreamSynchronize(handle.GetStream());
 
     return RPP_SUCCESS;
 }
