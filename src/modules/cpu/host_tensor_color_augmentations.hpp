@@ -32,5 +32,6 @@ THE SOFTWARE.
 #include "kernel/exposure.hpp"
 #include "kernel/contrast.hpp"
 #include "kernel/lut.hpp"
+#include "kernel/color_temperature.hpp"
 
 #endif // HOST_TENSOR_COLOR_AUGMENTATIONS_HPP
