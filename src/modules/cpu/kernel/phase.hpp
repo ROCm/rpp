@@ -54,16 +54,17 @@ RppStatus phase_u8_u8_host_tensor(Rpp8u *srcPtr1,
 
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
 
-        __m256 pMul = _mm256_set1_ps(multiplier);
-
         Rpp8u *srcPtr1Channel, *srcPtr2Channel, *dstPtrChannel;
         srcPtr1Channel = srcPtr1Image + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         srcPtr2Channel = srcPtr2Image + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
+#if __AVX2__
+        __m256 pMul = _mm256_set1_ps(multiplier);
         Rpp32u alignedLength = (bufferLength / 48) * 48;
         Rpp32u vectorIncrement = 48;
         Rpp32u vectorIncrementPerChannel = 16;
+#endif
 
         // Phase with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -85,6 +86,7 @@ RppStatus phase_u8_u8_host_tensor(Rpp8u *srcPtr1,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 p1[6], p2[6];
@@ -105,6 +107,7 @@ RppStatus phase_u8_u8_host_tensor(Rpp8u *srcPtr1,
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
                 }
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     *dstPtrTempR++ = static_cast<Rpp8u>(RPPPIXELCHECK(atan(static_cast<Rpp32f>(srcPtr1Temp[0]) / static_cast<Rpp32f>(srcPtr2Temp[0])) * multiplier));
@@ -147,7 +150,8 @@ RppStatus phase_u8_u8_host_tensor(Rpp8u *srcPtr1,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
+#if __AVX2__
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 p1[6], p2[6];
 
@@ -169,6 +173,7 @@ RppStatus phase_u8_u8_host_tensor(Rpp8u *srcPtr1,
                     srcPtr2TempB += vectorIncrementPerChannel;
                     dstPtrTemp += vectorIncrement;
                 }
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     dstPtrTemp[0] = static_cast<Rpp8u>(RPPPIXELCHECK(atan(static_cast<Rpp32f>(*srcPtr1TempR) / static_cast<Rpp32f>(*srcPtr2TempR)) * multiplier));
@@ -197,7 +202,9 @@ RppStatus phase_u8_u8_host_tensor(Rpp8u *srcPtr1,
         // Phase without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
         else
         {
+#if __AVX2__
             alignedLength = bufferLength & ~15;
+#endif
 
             for(int c = 0; c < layoutParams.channelParam; c++)
             {
@@ -214,6 +221,7 @@ RppStatus phase_u8_u8_host_tensor(Rpp8u *srcPtr1,
                     dstPtrTemp = dstPtrRow;
 
                     int vectorLoopCount = 0;
+#if __AVX2__
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                     {
                         __m256 p1[2], p2[2];
@@ -228,6 +236,7 @@ RppStatus phase_u8_u8_host_tensor(Rpp8u *srcPtr1,
                         srcPtr2Temp += vectorIncrementPerChannel;
                         dstPtrTemp += vectorIncrementPerChannel;
                     }
+#endif
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         *dstPtrTemp++ = static_cast<Rpp8u>(RPPPIXELCHECK(atan(static_cast<Rpp32f>(*srcPtr1Temp) / static_cast<Rpp32f>(*srcPtr2Temp)) * multiplier));
@@ -281,16 +290,17 @@ RppStatus phase_f32_f32_host_tensor(Rpp32f *srcPtr1,
 
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
 
-        __m256 pMul = _mm256_set1_ps(multiplier);
-
         Rpp32f *srcPtr1Channel, *srcPtr2Channel, *dstPtrChannel;
         srcPtr1Channel = srcPtr1Image + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         srcPtr2Channel = srcPtr2Image + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
+#if __AVX2__
+        __m256 pMul = _mm256_set1_ps(multiplier);
         Rpp32u alignedLength = (bufferLength / 24) * 24;
         Rpp32u vectorIncrement = 24;
         Rpp32u vectorIncrementPerChannel = 8;
+#endif
 
         // Phase with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -312,6 +322,7 @@ RppStatus phase_f32_f32_host_tensor(Rpp32f *srcPtr1,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 p1[3], p2[3];
@@ -329,6 +340,7 @@ RppStatus phase_f32_f32_host_tensor(Rpp32f *srcPtr1,
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
                 }
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     *dstPtrTempR++ = RPPPIXELCHECKF32(atan(srcPtr1Temp[0] / srcPtr2Temp[0]) * multiplier);
@@ -371,6 +383,7 @@ RppStatus phase_f32_f32_host_tensor(Rpp32f *srcPtr1,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 p1[3], p2[3];
@@ -390,6 +403,7 @@ RppStatus phase_f32_f32_host_tensor(Rpp32f *srcPtr1,
                     srcPtr2TempB += vectorIncrementPerChannel;
                     dstPtrTemp += vectorIncrement;
                 }
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     dstPtrTemp[0] = RPPPIXELCHECKF32(atan(*srcPtr1TempR / *srcPtr2TempR) * multiplier);
@@ -418,7 +432,9 @@ RppStatus phase_f32_f32_host_tensor(Rpp32f *srcPtr1,
         // Phase without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
         else
         {
+#if __AVX2__
             alignedLength = bufferLength & ~7;
+#endif
 
             for(int c = 0; c < layoutParams.channelParam; c++)
             {
@@ -435,6 +451,7 @@ RppStatus phase_f32_f32_host_tensor(Rpp32f *srcPtr1,
                     dstPtrTemp = dstPtrRow;
 
                     int vectorLoopCount = 0;
+#if __AVX2__
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                     {
                         __m256 p1[1], p2[1];
@@ -448,6 +465,7 @@ RppStatus phase_f32_f32_host_tensor(Rpp32f *srcPtr1,
                         srcPtr2Temp += vectorIncrementPerChannel;
                         dstPtrTemp += vectorIncrementPerChannel;
                     }
+#endif
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         *dstPtrTemp++ = RPPPIXELCHECKF32(atan(*srcPtr1Temp / *srcPtr2Temp) * multiplier);
@@ -501,16 +519,17 @@ RppStatus phase_f16_f16_host_tensor(Rpp16f *srcPtr1,
 
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
 
-        __m256 pMul = _mm256_set1_ps(multiplier);
-
         Rpp16f *srcPtr1Channel, *srcPtr2Channel, *dstPtrChannel;
         srcPtr1Channel = srcPtr1Image + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         srcPtr2Channel = srcPtr2Image + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
+#if __AVX2__
+        __m256 pMul = _mm256_set1_ps(multiplier);
         Rpp32u alignedLength = (bufferLength / 24) * 24;
         Rpp32u vectorIncrement = 24;
         Rpp32u vectorIncrementPerChannel = 8;
+#endif
 
         // Phase with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -532,6 +551,7 @@ RppStatus phase_f16_f16_host_tensor(Rpp16f *srcPtr1,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     Rpp32f srcPtr1Temp_ps[24], srcPtr2Temp_ps[24];
@@ -557,6 +577,7 @@ RppStatus phase_f16_f16_host_tensor(Rpp16f *srcPtr1,
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
                 }
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     *dstPtrTempR++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(atan(srcPtr1Temp[0] / srcPtr2Temp[0]) * multiplier));
@@ -599,6 +620,7 @@ RppStatus phase_f16_f16_host_tensor(Rpp16f *srcPtr1,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     Rpp32f srcPtr1Temp_ps[24], srcPtr2Temp_ps[24];
@@ -631,6 +653,7 @@ RppStatus phase_f16_f16_host_tensor(Rpp16f *srcPtr1,
                     srcPtr2TempB += vectorIncrementPerChannel;
                     dstPtrTemp += vectorIncrement;
                 }
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     dstPtrTemp[0] = static_cast<Rpp16f>(RPPPIXELCHECKF32(atan(*srcPtr1TempR / *srcPtr2TempR) * multiplier));
@@ -659,7 +682,9 @@ RppStatus phase_f16_f16_host_tensor(Rpp16f *srcPtr1,
         // Phase without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
         else
         {
+#if __AVX2__
             alignedLength = bufferLength & ~7;
+#endif
 
             for(int c = 0; c < layoutParams.channelParam; c++)
             {
@@ -676,6 +701,7 @@ RppStatus phase_f16_f16_host_tensor(Rpp16f *srcPtr1,
                     dstPtrTemp = dstPtrRow;
 
                     int vectorLoopCount = 0;
+#if __AVX2__
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                     {
                         Rpp32f srcPtr1Temp_ps[8], srcPtr2Temp_ps[8];
@@ -697,6 +723,7 @@ RppStatus phase_f16_f16_host_tensor(Rpp16f *srcPtr1,
                         srcPtr2Temp += vectorIncrementPerChannel;
                         dstPtrTemp += vectorIncrementPerChannel;
                     }
+#endif
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         *dstPtrTemp++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(atan(*srcPtr1Temp / *srcPtr2Temp) * multiplier));
@@ -750,16 +777,17 @@ RppStatus phase_i8_i8_host_tensor(Rpp8s *srcPtr1,
 
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
 
-        __m256 pMul = _mm256_set1_ps(multiplier);
-
         Rpp8s *srcPtr1Channel, *srcPtr2Channel, *dstPtrChannel;
         srcPtr1Channel = srcPtr1Image + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         srcPtr2Channel = srcPtr2Image + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
+#if __AVX2__
+        __m256 pMul = _mm256_set1_ps(multiplier);
         Rpp32u alignedLength = (bufferLength / 48) * 48;
         Rpp32u vectorIncrement = 48;
         Rpp32u vectorIncrementPerChannel = 16;
+#endif
 
         // Phase with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -781,6 +809,7 @@ RppStatus phase_i8_i8_host_tensor(Rpp8s *srcPtr1,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 p1[6], p2[6];
@@ -801,6 +830,7 @@ RppStatus phase_i8_i8_host_tensor(Rpp8s *srcPtr1,
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
                 }
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     *dstPtrTempR++ = static_cast<Rpp8s>(RPPPIXELCHECKI8((atan(static_cast<Rpp32f>(srcPtr1Temp[0] + 128) / static_cast<Rpp32f>(srcPtr2Temp[0] + 128)) * multiplier) -  128));
@@ -843,7 +873,8 @@ RppStatus phase_i8_i8_host_tensor(Rpp8s *srcPtr1,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
+#if __AVX2__
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 p1[6], p2[6];
 
@@ -865,6 +896,7 @@ RppStatus phase_i8_i8_host_tensor(Rpp8s *srcPtr1,
                     srcPtr2TempB += vectorIncrementPerChannel;
                     dstPtrTemp += vectorIncrement;
                 }
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     dstPtrTemp[0] = static_cast<Rpp8s>(RPPPIXELCHECKI8((atan(static_cast<Rpp32f>(*srcPtr1TempR + 128) / static_cast<Rpp32f>(*srcPtr2TempR + 128)) * multiplier) -  128));
@@ -893,7 +925,9 @@ RppStatus phase_i8_i8_host_tensor(Rpp8s *srcPtr1,
         // Phase without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
         else
         {
+#if __AVX2__
             alignedLength = bufferLength & ~15;
+#endif
 
             for(int c = 0; c < layoutParams.channelParam; c++)
             {
@@ -910,6 +944,7 @@ RppStatus phase_i8_i8_host_tensor(Rpp8s *srcPtr1,
                     dstPtrTemp = dstPtrRow;
 
                     int vectorLoopCount = 0;
+#if __AVX2__
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                     {
                         __m256 p1[2], p2[2];
@@ -924,6 +959,7 @@ RppStatus phase_i8_i8_host_tensor(Rpp8s *srcPtr1,
                         srcPtr2Temp += vectorIncrementPerChannel;
                         dstPtrTemp += vectorIncrementPerChannel;
                     }
+#endif
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         *dstPtrTemp++ = static_cast<Rpp8s>(RPPPIXELCHECKI8((atan(static_cast<Rpp32f>(*srcPtr1Temp +  128) / static_cast<Rpp32f>(*srcPtr2Temp+  128)) * multiplier) -  128));
