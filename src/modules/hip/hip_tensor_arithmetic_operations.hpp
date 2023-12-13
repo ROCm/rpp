@@ -24,5 +24,7 @@ THE SOFTWARE.
 #define HIP_TENSOR_ARITHMEETIC_OPERATIONS_HPP
 
 #include "kernel/fused_multiply_add_scalar.hpp"
+#include "kernel/add_scalar.hpp"
+#include "kernel/subtract_scalar.hpp"
 
 #endif // HIP_TENSOR_ARITHMEETIC_OPERATIONS_HPP

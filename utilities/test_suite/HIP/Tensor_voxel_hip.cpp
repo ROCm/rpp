@@ -49,12 +49,6 @@ int main(int argc, char * argv[])
         fprintf(stdout, "\nUsage: %s <header file> <data file> <layoutType = 0 - PKD3/ 1 - PLN3/ 2 - PLN1>\n", argv[0]);
         exit(1);
     }
-    if ((testCase < 0) || (testCase > 4))
-    {
-        fprintf(stdout, "\nUsage: %s <header file> <data file> <layoutType = 0 for NCDHW / 1 for NDHWC>\n", argv[0]);
-        exit(1);
-    }
-
     if(batchSize > MAX_BATCH_SIZE)
     {
         std::cout << "\n Batchsize should be less than or equal to "<< MAX_BATCH_SIZE << " Aborting!";
@@ -261,6 +255,38 @@ int main(int argc, char * argv[])
                         rppt_slice_gpu(d_inputU8, descriptorPtr3D, d_outputU8, descriptorPtr3D, roiGenericSrcPtr, roiTypeSrc, handle);
                     else if(inputBitDepth == 2)
                         rppt_slice_gpu(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, roiGenericSrcPtr, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 2:
+                {
+                    testCaseName = "add_scalar";
+                    Rpp32f addTensor[batchSize];
+
+                    for (int i = 0; i < batchSize; i++)
+                        addTensor[i] = 40;
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 2)
+                        rppt_add_scalar_gpu(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, addTensor, roiGenericSrcPtr, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 3:
+                {
+                    testCaseName = "subtract_scalar";
+                    Rpp32f subtractTensor[batchSize];
+
+                    for (int i = 0; i < batchSize; i++)
+                        subtractTensor[i] = 40;
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 2)
+                        rppt_subtract_scalar_gpu(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, subtractTensor, roiGenericSrcPtr, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
