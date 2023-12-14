@@ -40,14 +40,14 @@ extern "C" {
  * @{
  */
 
-/*! \brief Fmadd augmentation HOST
+/*! \brief Fused multiply add scalar augmentation on HOST backend
  * \details This function performs the fmadd operation on a batch of 4D tensors.
  *          It multiplies each element of the source tensor by a corresponding element in the 'mulTensor',
  *          adds a corresponding element from the 'addTensor', and stores the result in the destination tensor.
  *          Support added for f32 -> f32 dataype.
- * \param [in] srcPtr source tensor memory
+ * \param [in] srcPtr source tensor in HOST memory
  * \param[in] srcGenericDescPtr source tensor descriptor
- * \param[out] dstPtr destination tensor memory
+ * \param[out] dstPtr destination tensor in HOST memory
  * \param[in] dstGenericDescPtr destination tensor descriptor
  * \param[in] mulTensor mul values for fmadd calculation (1D tensor of batchSize Rpp32f values)
  * \param[in] addTensor add values for fmadd calculation (1D tensor of batchSize Rpp32f values)
@@ -61,14 +61,14 @@ extern "C" {
 RppStatus rppt_fused_multiply_add_scalar_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32f *mulTensor, Rpp32f *addTensor, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle);
 
 #ifdef GPU_SUPPORT
-/*! \brief Fmadd augmentation GPU
+/*! \brief Fused multiply add scalar augmentation on HIP backend
  * \details This function performs the fmadd operation on a batch of 4D tensors.
  *          It multiplies each element of the source tensor by a corresponding element in the 'mulTensor',
  *          adds a corresponding element from the 'addTensor', and stores the result in the destination tensor.
  *          Support added for f32 -> f32 dataype.
- * \param [in] srcPtr source tensor memory
+ * \param [in] srcPtr source tensor in HIP memory
  * \param[in] srcGenericDescPtr source tensor descriptor
- * \param[out] dstPtr destination tensor memory
+ * \param[out] dstPtr destination tensor in HIP memory
  * \param[in] dstGenericDescPtr destination tensor descriptor
  * \param[in] mulTensor mul values for fmadd calculation (1D tensor of batchSize Rpp32f values)
  * \param[in] addTensor add values for fmadd calculation (1D tensor of batchSize Rpp32f values)
@@ -82,13 +82,13 @@ RppStatus rppt_fused_multiply_add_scalar_host(RppPtr_t srcPtr, RpptGenericDescPt
 RppStatus rppt_fused_multiply_add_scalar_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32f *mulTensor, Rpp32f *addTensor, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
-/*! \brief add augmentation HOST
+/*! \brief Add scalar augmentation on HOST backend
  * \details This function performs the addition operation on a batch of 4D tensors.
  *          It adds a corresponding element from the 'addTensor' to source tensor, and stores the result in the destination tensor.
  *          Support added for f32 -> f32 dataype.
- * \param [in] srcPtr source tensor memory
+ * \param [in] srcPtr source tensor in HOST memory
  * \param[in] srcGenericDescPtr source tensor descriptor
- * \param[out] dstPtr destination tensor memory
+ * \param[out] dstPtr destination tensor in HOST memory
  * \param[in] dstGenericDescPtr destination tensor descriptor
  * \param[in] addTensor add values for used for addition (1D tensor of batchSize Rpp32f values)
  * \param[in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
@@ -101,13 +101,13 @@ RppStatus rppt_fused_multiply_add_scalar_gpu(RppPtr_t srcPtr, RpptGenericDescPtr
 RppStatus rppt_add_scalar_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32f *addTensor, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle);
 
 #ifdef GPU_SUPPORT
-/*! \brief add augmentation GPU
+/*! \brief Add scalar augmentation on HIP backend
  * \details This function performs the addition operation on a batch of 4D tensors.
  *          It adds a corresponding element from the 'addTensor' to source tensor, and stores the result in the destination tensor.
  *          Support added for f32 -> f32 dataype.
- * \param [in] srcPtr source tensor memory
+ * \param [in] srcPtr source tensor in HIP memory
  * \param[in] srcGenericDescPtr source tensor descriptor
- * \param[out] dstPtr destination tensor memory
+ * \param[out] dstPtr destination tensor in HIP memory
  * \param[in] dstGenericDescPtr destination tensor descriptor
  * \param[in] addTensor add values for used for addition (1D tensor of batchSize Rpp32f values)
  * \param[in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
@@ -120,13 +120,13 @@ RppStatus rppt_add_scalar_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDes
 RppStatus rppt_add_scalar_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32f *addTensor, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
-/*! \brief subtract augmentation HOST
+/*! \brief Subtract scalar augmentation on HOST backend
  * \details This function performs the subtraction operation on a batch of 4D tensors.
  *          It takes a corresponding element from 'subtractTensor' and subtracts it from source tensor. Result is stored in the destination tensor.
  *          Support added for f32 -> f32 dataype.
- * \param [in] srcPtr source tensor memory
+ * \param [in] srcPtr source tensor in HOST memory
  * \param[in] srcGenericDescPtr source tensor descriptor
- * \param[out] dstPtr destination tensor memory
+ * \param[out] dstPtr destination tensor in HOST memory
  * \param[in] dstGenericDescPtr destination tensor descriptor
  * \param[in] subtractTensor subtract values for used for subtraction (1D tensor of batchSize Rpp32f values)
  * \param[in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
@@ -139,13 +139,13 @@ RppStatus rppt_add_scalar_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDesc
 RppStatus rppt_subtract_scalar_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32f *subtractTensor, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle);
 
 #ifdef GPU_SUPPORT
-/*! \brief subtract augmentation GPU
+/*! \brief Subtract scalar augmentation on HIP backend
  * \details This function performs the subtraction operation on a batch of 4D tensors.
  *          It takes a corresponding element from 'subtractTensor' and subtracts it from source tensor. Result is stored in the destination tensor.
  *          Support added for f32 -> f32 dataype.
- * \param [in] srcPtr source tensor memory
+ * \param [in] srcPtr source tensor in HIP memory
  * \param[in] srcGenericDescPtr source tensor descriptor
- * \param[out] dstPtr destination tensor memory
+ * \param[out] dstPtr destination tensor in HIP memory
  * \param[in] dstGenericDescPtr destination tensor descriptor
  * \param[in] subtractTensor subtract values for used for subtraction (1D tensor of batchSize Rpp32f values)
  * \param[in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
