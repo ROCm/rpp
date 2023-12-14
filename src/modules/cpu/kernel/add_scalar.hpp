@@ -87,16 +87,14 @@ RppStatus add_scalar_f32_f32_host_tensor(Rpp32f *srcPtr,
                         {
                             __m256 p[2];
                             rpp_simd_load(rpp_load16_f32_to_f32_avx, srcPtrTemp, p);    // simd loads
-                            compute_add_16_host(p, &pAddParam);                         // Add adjustment
+                            compute_add_16_host(p, &pAddParam);                         // add adjustment
                             rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrTemp, p);  // simd stores
                             srcPtrTemp += vectorIncrement;
                             dstPtrTemp += vectorIncrement;
                         }
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            *dstPtrTemp = *srcPtrTemp + addParam;
-                            srcPtrTemp++;
-                            dstPtrTemp++;
+                            *dstPtrTemp++ = *srcPtrTemp++ + addParam;
                         }
                         srcPtrRow += srcGenericDescPtr->strides[3];
                         dstPtrRow += dstGenericDescPtr->strides[3];
@@ -130,16 +128,14 @@ RppStatus add_scalar_f32_f32_host_tensor(Rpp32f *srcPtr,
                     {
                         __m256 p[2];
                         rpp_simd_load(rpp_load16_f32_to_f32_avx, srcPtrTemp, p);    // simd loads
-                        compute_add_16_host(p, &pAddParam);                         // Add adjustment
+                        compute_add_16_host(p, &pAddParam);                         // add adjustment
                         rpp_simd_store(rpp_store16_f32_to_f32_avx, dstPtrTemp, p);  // simd stores
                         srcPtrTemp += vectorIncrement;
                         dstPtrTemp += vectorIncrement;
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        *dstPtrTemp = *srcPtrTemp + addParam;
-                        srcPtrTemp++;
-                        dstPtrTemp++;
+                        *dstPtrTemp++ = *srcPtrTemp++ + addParam;
                     }
                     srcPtrRow += srcGenericDescPtr->strides[2];
                     dstPtrRow += dstGenericDescPtr->strides[2];
