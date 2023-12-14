@@ -67,11 +67,11 @@ void fill_perm_values(Rpp32u nDim, Rpp32u *permTensor, bool qaMode)
 int main(int argc, char **argv)
 {
     // Handle inputs
-    const int MIN_ARG_COUNT = 7;
+    const int MIN_ARG_COUNT = 6;
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
-        printf("\nUsage: ./Tensor_misc_hip <case number = 0:0> <test type 0/1> <number of dimensions> <batch size> <num runs> <output file path>\n");
+        printf("\nUsage: ./Tensor_transpose_host <case number = 0:0> <test type 0/1> <number of dimensions> <batch size> <num runs>\n");
         return -1;
     }
 
@@ -100,19 +100,19 @@ int main(int argc, char **argv)
     }
 
     // fill roi based on mode and number of dimensions
-    Rpp32u *roiTensor;
-    CHECK(hipHostMalloc(&roiTensor, nDim * 2 * batchSize * sizeof(Rpp32u)));
+    Rpp32u *roiTensor = (Rpp32u *)calloc(nDim * 2 * batchSize, sizeof(Rpp32u));
     fill_roi_values(nDim, batchSize, roiTensor, qaMode);
 
     // set src/dst generic tensor descriptors
+    RpptGenericDesc srcDescriptor, dstDescriptor;
     RpptGenericDescPtr srcDescriptorPtrND, dstDescriptorPtrND;
-    CHECK(hipHostMalloc(&srcDescriptorPtrND, sizeof(RpptGenericDesc)));
-    CHECK(hipHostMalloc(&dstDescriptorPtrND, sizeof(RpptGenericDesc)));
+    srcDescriptorPtrND  = &srcDescriptor;
     srcDescriptorPtrND->numDims = nDim + 1;
     srcDescriptorPtrND->offsetInBytes = 0;
     srcDescriptorPtrND->dataType = RpptDataType::F32;
     srcDescriptorPtrND->layout = RpptLayout::NDHWC;
 
+    dstDescriptorPtrND  = &dstDescriptor;
     dstDescriptorPtrND->numDims = nDim + 1;
     dstDescriptorPtrND->offsetInBytes = 0;
     dstDescriptorPtrND->dataType = RpptDataType::F32;
@@ -143,7 +143,7 @@ int main(int argc, char **argv)
 
     // read input data
     if(qaMode)
-        read_data(inputF32, nDim, 0,  numValues, batchSize, "HIP", funcName);
+        read_data(inputF32, nDim, 0,  numValues, batchSize, "HOST", funcName);
     else
     {
         std::srand(0);
@@ -151,26 +151,14 @@ int main(int argc, char **argv)
             inputF32[i] = (float)(std::rand() % 255);
     }
 
-    // allocate HIP memory for input/output
-    Rpp32f *d_inputF32 = NULL, *d_outputF32 = NULL;
-    CHECK(hipMalloc(&d_inputF32, numValues * sizeof(Rpp32f)));
-    CHECK(hipMalloc(&d_outputF32, numValues * sizeof(Rpp32f)));
-
-    Rpp32u *permTensor;
-    if (testCase == 0)
-        CHECK(hipHostMalloc(&permTensor, nDim * sizeof(Rpp32u)));
-
-    // copy src host to device
-    CHECK(hipMemcpy(d_inputF32, inputF32, numValues * sizeof(Rpp32f), hipMemcpyHostToDevice));
-
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning transpose %d times (each time with a batch size of %d) and computing mean statistics...", numRuns, batchSize);
 
-    // Run case-wise RPP API and measure time
+    // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
+    // If numThreads value passed is 0, number of OpenMP threads used by RPP will be set to batch size
+    Rpp32u numThreads = 0;
     rppHandle_t handle;
-    hipStream_t stream;
-    CHECK(hipStreamCreate(&stream));
-    rppCreateWithStreamAndBatchSize(&handle, stream, batchSize);
+    rppCreateWithBatchSize(&handle, batchSize, numThreads);
 
     double startWallTime, endWallTime;
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0, wallTime = 0;
@@ -180,6 +168,7 @@ int main(int argc, char **argv)
         {
             case 0:
             {
+                Rpp32u permTensor[nDim];
                 fill_perm_values(nDim, permTensor, qaMode);
 
                 for(int i = 1; i <= nDim; i++)
@@ -187,7 +176,7 @@ int main(int argc, char **argv)
                 compute_strides(dstDescriptorPtrND);
 
                 startWallTime = omp_get_wtime();
-                rppt_transpose_generic_gpu(d_inputF32, srcDescriptorPtrND, d_outputF32, dstDescriptorPtrND, permTensor, roiTensor, handle);
+                rppt_transpose_generic_host(inputF32, srcDescriptorPtrND, outputF32, dstDescriptorPtrND, permTensor, roiTensor, handle);
                 break;
             }
             default:
@@ -196,7 +185,6 @@ int main(int argc, char **argv)
                 exit(0);
             }
         }
-        CHECK(hipDeviceSynchronize());
         endWallTime = omp_get_wtime();
         wallTime = endWallTime - startWallTime;
         maxWallTime = std::max(maxWallTime, wallTime);
@@ -204,13 +192,9 @@ int main(int argc, char **argv)
         avgWallTime += wallTime;
     }
 
-    // copy dst device to host
-    CHECK(hipMemcpy(outputF32, d_outputF32, numValues * sizeof(Rpp32f), hipMemcpyDeviceToHost));
-    CHECK(hipDeviceSynchronize());
-
     // compare outputs if qaMode is true
     if(qaMode)
-        compare_output(outputF32, nDim, batchSize, dst, "HIP", funcName);
+        compare_output(outputF32, nDim, batchSize, dst, "HOST", funcName);
     else
     {
         maxWallTime *= 1000;
@@ -222,12 +206,6 @@ int main(int argc, char **argv)
 
     free(inputF32);
     free(outputF32);
-    CHECK(hipHostFree(roiTensor));
-    CHECK(hipHostFree(srcDescriptorPtrND));
-    CHECK(hipHostFree(dstDescriptorPtrND));
-    if (testCase == 0)
-        CHECK(hipHostFree(permTensor));
-    CHECK(hipFree(d_inputF32));
-    CHECK(hipFree(d_outputF32));
+    free(roiTensor);
     return 0;
 }

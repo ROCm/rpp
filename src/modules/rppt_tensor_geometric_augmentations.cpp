@@ -946,6 +946,59 @@ RppStatus rppt_slice_host(RppPtr_t srcPtr,
                                 layoutParams,
                                 rpp::deref(rppHandle));
     }
+    return RPP_SUCCESS;
+}
+
+/******************** transpose ********************/
+
+RppStatus rppt_transpose_generic_host(RppPtr_t srcPtr,
+                                      RpptGenericDescPtr srcGenericDescPtr,
+                                      RppPtr_t dstPtr,
+                                      RpptGenericDescPtr dstGenericDescPtr,
+                                      Rpp32u *permTensor,
+                                      Rpp32u *roiTensor,
+                                      rppHandle_t rppHandle)
+{
+    if ((srcGenericDescPtr->dataType == RpptDataType::U8) && (dstGenericDescPtr->dataType == RpptDataType::U8))
+    {
+        transpose_generic_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes,
+                                      srcGenericDescPtr,
+                                      static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes,
+                                      dstGenericDescPtr,
+                                      permTensor,
+                                      roiTensor,
+                                      rpp::deref(rppHandle));
+    }
+    else if ((srcGenericDescPtr->dataType == RpptDataType::F16) && (dstGenericDescPtr->dataType == RpptDataType::F16))
+    {
+        transpose_generic_host_tensor(reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes),
+                                      srcGenericDescPtr,
+                                      reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
+                                      dstGenericDescPtr,
+                                      permTensor,
+                                      roiTensor,
+                                      rpp::deref(rppHandle));
+    }
+    else if ((srcGenericDescPtr->dataType == RpptDataType::F32) && (dstGenericDescPtr->dataType == RpptDataType::F32))
+    {
+        transpose_generic_f32_f32_host_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes),
+                                              srcGenericDescPtr,
+                                              reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
+                                              dstGenericDescPtr,
+                                              permTensor,
+                                              roiTensor,
+                                              rpp::deref(rppHandle));
+    }
+    else if ((srcGenericDescPtr->dataType == RpptDataType::I8) && (dstGenericDescPtr->dataType == RpptDataType::I8))
+    {
+        transpose_generic_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcGenericDescPtr->offsetInBytes,
+                                      srcGenericDescPtr,
+                                      static_cast<Rpp8s*>(dstPtr) + dstGenericDescPtr->offsetInBytes,
+                                      dstGenericDescPtr,
+                                      permTensor,
+                                      roiTensor,
+                                      rpp::deref(rppHandle));
+    }
 
     return RPP_SUCCESS;
 }
@@ -1630,8 +1683,6 @@ RppStatus rppt_transpose_generic_gpu(RppPtr_t srcPtr,
                                      rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
-    if (srcGenericDescPtr->layout != dstGenericDescPtr->layout) return RPP_ERROR_INVALID_ARGUMENTS;
-
     if ((srcGenericDescPtr->dataType == RpptDataType::U8) && (dstGenericDescPtr->dataType == RpptDataType::U8))
     {
         // hip_exec_transpose_generic_tensor(static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes,

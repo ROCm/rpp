@@ -436,6 +436,25 @@ RppStatus rppt_slice_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr,
 RppStatus rppt_slice_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
+/******************** transpose_generic ********************/
+
+/*! \brief Transpose augmentation on HOST backend for a nD tensor
+ * \details The transpose augmentation performs an input-permutation based transpose on a generic nD tensor.
+ * \param[in] srcPtr source tensor in HOST memory
+ * \param[in] srcGenericDescPtr source tensor descriptor
+ * \param[out] dstPtr source tensor in HOST memory
+ * \param[in] dstGenericDescPtr destination tensor descriptor
+ * \param[in] permTensor permutation tensor for transpose operation
+ * \param[in] roiTensor ROI data for each element in source tensor (tensor of batchSize * number of dimensions * 2 values)
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+
+RppStatus rppt_transpose_generic_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *permTensor, Rpp32u *roiTensor, rppHandle_t rppHandle);
+
+#ifdef GPU_SUPPORT
 /*! \brief Transpose augmentation on HIP backend for a nD tensor
  * \details The transpose augmentation performs an input-permutation based transpose on a generic nD tensor.
  * \param[in] srcPtr source tensor in HIP memory
@@ -450,6 +469,7 @@ RppStatus rppt_slice_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, 
  * \retval RPP_ERROR* Unsuccessful completion.
  */
 RppStatus rppt_transpose_generic_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *permTensor, Rpp32u *roiTensor, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
 
 /*! @}
  */
