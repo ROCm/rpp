@@ -2429,8 +2429,8 @@ inline RppStatus custom_convolve_image_host(T* srcPtr, RppiSize srcSize, U* dstP
 
 inline void compute_subtract_16_host(__m256 *p, __m256 *pSubtractParam)
 {
-    p[0] = _mm256_sub_ps(p[0], pSubtractParam[0]);    // add adjustment
-    p[1] = _mm256_sub_ps(p[1], pSubtractParam[0]);    // add adjustment
+    p[0] = _mm256_sub_ps(p[0], pSubtractParam[0]);    // subtract adjustment
+    p[1] = _mm256_sub_ps(p[1], pSubtractParam[0]);    // subtract adjustment
 }
 
 inline void compute_add_16_host(__m256 *p, __m256 *pAddParam)
