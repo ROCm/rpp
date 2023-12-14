@@ -221,6 +221,8 @@ RppStatus rppt_add_scalar_gpu(RppPtr_t srcPtr,
 #endif // backend
 }
 
+/******************** subtract_scalar ********************/
+
 RppStatus rppt_subtract_scalar_gpu(RppPtr_t srcPtr,
                                    RpptGenericDescPtr srcGenericDescPtr,
                                    RppPtr_t dstPtr,
