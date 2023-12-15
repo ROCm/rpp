@@ -125,8 +125,6 @@ struct RPPTensorFunctionMetaData
 #define ONE_OVER_255                    0.00392156862745f
 #define ONE_OVER_256                    0.00390625f
 #define SIX_OVER_360                    0.01666667f
-#define RPP_255_OVER_1PT57              162.3380757272f     // (255 / 1.570796) - multiplier used in phase computation
-#define ONE_OVER_1PT57                  0.6366199048f       // (1 / 1.570796) i.e. 2/pi - multiplier used in phase computation
 #define PI                              3.14159265
 #define RGB_TO_GREY_WEIGHT_RED          0.299f
 #define RGB_TO_GREY_WEIGHT_GREEN        0.587f
@@ -138,6 +136,8 @@ struct RPPTensorFunctionMetaData
 #define RPP_2POW32_INV_DIV_2            1.164153218e-10f    // RPP_2POW32_INV / 2
 #define RPP_2POW32_INV_MUL_2PI          1.46291812e-09f     // (1 / 2^32) * 2PI
 #define RPP_2POW32_INV_MUL_2PI_DIV_2    7.3145906e-10f      // RPP_2POW32_INV_MUL_2PI / 2
+#define RPP_255_OVER_1PT57              162.3380757272f     // (255 / 1.570796) - multiplier used in phase computation
+#define ONE_OVER_1PT57                  0.6366199048f       // (1 / 1.570796) i.e. 2/pi - multiplier used in phase computation
 #define SMEM_LENGTH_X                   128                 // Shared memory length of 128 cols to efficiently utilize all 16 LOCAL_THREADS_X as 16 * 8-byte vectorized global read/writes per thread = 128 bytes, fitting in 32 banks 4 byte wide
 #define SMEM_LENGTH_Y_1C                16                  // Shared memory length of 16 rows to efficiently utilize all 16 LOCAL_THREADS_Y as 1 128-byte-long row per thread (single channel greyscale)
 #define SMEM_LENGTH_Y_3C                48                  // Shared memory length of 48 rows to efficiently utilize all 16 LOCAL_THREADS_Y as 3 128-byte-long rows per thread (three channel rgb)
