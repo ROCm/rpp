@@ -303,8 +303,8 @@ def rpp_test_suite_parser_and_validator():
     else:
         for case in args.case_list:
             if int(case) < caseMin or int(case) > caseMax:
-                 print("The case# must be in the 0:1 range!")
-                 exit(0)
+                print("The case# must be in [" + str(caseMin) + ":" + str(caseMax) + "]")
+                exit(0)
 
     # if QA mode is enabled overwrite the input folders with the folders used for generating golden outputs
     if args.qa_mode:

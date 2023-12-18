@@ -49,11 +49,6 @@ int main(int argc, char * argv[])
         fprintf(stdout, "\nUsage: %s <header file> <data file> <layoutType = 0 - PKD3/ 1 - PLN3/ 2 - PLN1>\n", argv[0]);
         exit(1);
     }
-    if ((testCase < 0) || (testCase > 1))
-    {
-        fprintf(stdout, "\nUsage: %s <header file> <data file> <layoutType = 0 for NCDHW / 1 for NDHWC>\n", argv[0]);
-        exit(1);
-    }
 
     if(batchSize > MAX_BATCH_SIZE)
     {
@@ -246,6 +241,22 @@ int main(int argc, char * argv[])
                         rppt_slice_host(inputU8, descriptorPtr3D, outputU8, descriptorPtr3D, roiGenericSrcPtr, roiTypeSrc, handle);
                     else if(inputBitDepth == 2)
                         rppt_slice_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, roiGenericSrcPtr, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 5:
+                {
+                    testCaseName = "multiply_scalar";
+                    Rpp32f mulTensor[batchSize];
+
+                    for (int i = 0; i < batchSize; i++)
+                        mulTensor[i] = 80;
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 2)
+                        rppt_multiply_scalar_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, mulTensor, roiGenericSrcPtr, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 

@@ -23,19 +23,22 @@ THE SOFTWARE.
 #ifndef RPPT_TENSOR_ARITHMETIC_OPERATIONS_H
 #define RPPT_TENSOR_ARITHMETIC_OPERATIONS_H
 
-/*!
- * \file
- * \brief RPPT Tensor Arithmetic operation Functions.
- *
- * \defgroup group_tensor_arithmetic Operations: AMD RPP Tensor Arithmetic Operations
- * \brief Tensor Color Augmentations.
- */
-
 #include "rpp.h"
 #include "rppdefs.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/*!
+ * \file
+ * \brief RPPT Tensor Operations - Arithmetic Operations.
+ * \defgroup group_tensor_arithmetic_operations RPPT Tensor Operations - Arithmetic Operations.
+ * \brief RPPT Tensor Operations - Arithmetic Operations.
+ */
+
+/*! \addtogroup group_rppt_tensor_arithmetic_operations
+ * @{
+ */
 
 /*! \brief  Fmadd augmentation HOST
  * \details This function performs the fmadd operation on a batch of 4D tensors.
@@ -85,27 +88,47 @@ RppStatus rppt_fused_multiply_add_scalar_gpu(RppPtr_t srcPtr, RpptGenericDescPtr
 
 /******************** multiply_scalar ********************/
 
-/*! \brief  multiply augmentation GPU
- * \details This function performs the multiply operation on a batch of 4D tensors.
- *          It multiplies a corresponding element from the 'mulTensor' to sourceTensor, and stores the result in the destination tensor.
+/*! \brief Multiply scalar augmentation on HOST backend
+ * \details This function performs the multiplication operation on a batch of 4D tensors.
+ *          It takes a corresponding element from 'multiplyTensor' and multiplies it with source tensor. Result is stored in the destination tensor.
  *          Support added for f32 -> f32 dataype.
- * \param [in] srcPtr source tensor memory
+ * \param [in] srcPtr source tensor in HOST memory
  * \param[in] srcGenericDescPtr source tensor descriptor
- * \param[out] dstPtr destination tensor memory
+ * \param[out] dstPtr destination tensor in HOST memory
  * \param[in] dstGenericDescPtr destination tensor descriptor
  * \param[in] mulTensor multiplier values for used for multiplication (1D tensor of batchSize Rpp32f values)
  * \param[in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
  * \param[in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
- * \param [in] rppHandle Hip-handle
- * \return <tt> RppStatus enum</tt>.
- * \returns RPP_SUCCESS <tt>\ref RppStatus</tt> on successful completion.
- * Else return RPP_ERROR
- * \ingroup group_tensor_arithmetic
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
  */
+RppStatus rppt_multiply_scalar_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32f *subtractTensor, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle);
 
 #ifdef GPU_SUPPORT
+/*! \brief Multiply scalar augmentation on HIP backend
+ * \details This function performs the multiplication operation on a batch of 4D tensors.
+ *          It takes a corresponding element from 'multiplyTensor' and multiplies it with source tensor. Result is stored in the destination tensor.
+ *          Support added for f32 -> f32 dataype.
+ * \param [in] srcPtr source tensor in HIP memory
+ * \param[in] srcGenericDescPtr source tensor descriptor
+ * \param[out] dstPtr destination tensor in HIP memory
+ * \param[in] dstGenericDescPtr destination tensor descriptor
+ * \param[in] mulTensor multiplier values for used for multiplication (1D tensor of batchSize Rpp32f values)
+ * \param[in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
+ * \param[in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+
 RppStatus rppt_multiply_scalar_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32f *mulTensor, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
+
+/*! @}
+ */
 
 #ifdef __cplusplus
 }
