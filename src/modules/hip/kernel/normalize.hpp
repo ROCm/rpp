@@ -525,6 +525,56 @@ __global__ void compute_mean_2d_hip_tensor(float *srcPtr,
     }
 }
 
+__global__ void compute_mean_3d_hip_tensor(float *srcPtr,
+                                           uint3 srcStridesNZY,
+                                           float *meanTensor,
+                                           uint *roiTensor,
+                                           uint maxParamVolume,
+                                           uint axisMask)
+{
+    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    uint *roi = &roiTensor[id_z * 6 + 3];
+    uint lengthZ = roi[0];
+    uint lengthY = roi[1];
+    uint lengthX = roi[2];
+
+    // compute mean along z direction
+    if(axisMask == 1)
+    {
+        if(id_x >= lengthX && id_y >= lengthY)
+            return;
+
+        uint srcIdx = id_z * srcStridesNZY.x + id_y * srcStridesNZY.z + id_x;
+        uint dstIdx = id_z * maxParamVolume + id_y * lengthX + id_x;
+        float accum = 0.0f;
+        for(uint i = 0; i < lengthZ; i++)
+        {
+            accum += srcPtr[srcIdx];
+            srcIdx += srcStridesNZY.y;
+        }
+        meanTensor[dstIdx] = accum / static_cast<float>(lengthZ);
+    }
+    // compute mean along y direction
+    else if(axisMask == 2)
+    {
+        if(id_x >= lengthX && id_y >= lengthZ)
+            return;
+
+        uint srcIdx = id_z * srcStridesNZY.x + id_y * srcStridesNZY.y + id_x;
+        uint dstIdx = id_z * maxParamVolume +  id_y * lengthX + id_x;
+        float accum = 0.0f;
+        for(uint i = 0; i < lengthY; i++)
+        {
+            accum += srcPtr[srcIdx];
+            srcIdx += srcStridesNZY.z;
+        }
+        meanTensor[dstIdx] = accum / static_cast<float>(lengthY);
+    }
+}
+
 RppStatus hip_exec_compute_mean_tensor(Rpp32f *srcPtr,
                                        RpptGenericDescPtr srcGenericDescPtr,
                                        Rpp32f *meanTensor,
@@ -637,6 +687,52 @@ RppStatus hip_exec_compute_mean_tensor(Rpp32f *srcPtr,
                                meanTensor);
         }
     }
+    else if (numDims == 3)
+    {
+        if(axisMask == 1)
+        {
+            localThreads_x = 16;
+            localThreads_y = 16;
+            localThreads_z = 1;
+            globalThreads_x = static_cast<int> (ceil((float)srcGenericDescPtr->dims[3] / localThreads_x));
+            globalThreads_y = static_cast<int> (ceil((float)srcGenericDescPtr->dims[2] / localThreads_y));
+            globalThreads_z = srcGenericDescPtr->dims[0];
+
+            hipLaunchKernelGGL(compute_mean_3d_hip_tensor,
+                               dim3(globalThreads_x, globalThreads_y, globalThreads_z),
+                               dim3(localThreads_x, localThreads_y, localThreads_z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint3(srcGenericDescPtr->strides[0], srcGenericDescPtr->strides[1], srcGenericDescPtr->strides[2]),
+                               meanTensor,
+                               roiTensor,
+                               maxParamVolume,
+                               axisMask);
+        }
+        else if(axisMask == 2)
+        {
+            localThreads_x = 16;
+            localThreads_y = 16;
+            localThreads_z = 1;
+            globalThreads_x = static_cast<int> (ceil((float)srcGenericDescPtr->dims[3] / localThreads_x));
+            globalThreads_y = static_cast<int> (ceil((float)srcGenericDescPtr->dims[1] / localThreads_y));
+            globalThreads_z = srcGenericDescPtr->dims[0];
+
+            hipLaunchKernelGGL(compute_mean_3d_hip_tensor,
+                               dim3(globalThreads_x, globalThreads_y, globalThreads_z),
+                               dim3(localThreads_x, localThreads_y, localThreads_z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint3(srcGenericDescPtr->strides[0], srcGenericDescPtr->strides[1], srcGenericDescPtr->strides[2]),
+                               meanTensor,
+                               roiTensor,
+                               maxParamVolume,
+                               axisMask);
+        }
+    }
+    hipStreamSynchronize(handle.GetStream());
 
     return RPP_SUCCESS;
 }
