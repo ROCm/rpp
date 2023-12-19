@@ -3,26 +3,26 @@
 
 __device__ void magnitude_hip_compute(uchar *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8)
 {
-    dst_f8->f1[0] = sqrt(fmaf(src1_f8->f1[0], src1_f8->f1[0], src2_f8->f1[0] * src2_f8->f1[0]));
-    dst_f8->f1[1] = sqrt(fmaf(src1_f8->f1[1], src1_f8->f1[1], src2_f8->f1[1] * src2_f8->f1[1]));
-    dst_f8->f1[2] = sqrt(fmaf(src1_f8->f1[2], src1_f8->f1[2], src2_f8->f1[2] * src2_f8->f1[2]));
-    dst_f8->f1[3] = sqrt(fmaf(src1_f8->f1[3], src1_f8->f1[3], src2_f8->f1[3] * src2_f8->f1[3]));
-    dst_f8->f1[4] = sqrt(fmaf(src1_f8->f1[4], src1_f8->f1[4], src2_f8->f1[4] * src2_f8->f1[4]));
-    dst_f8->f1[5] = sqrt(fmaf(src1_f8->f1[5], src1_f8->f1[5], src2_f8->f1[5] * src2_f8->f1[5]));
-    dst_f8->f1[6] = sqrt(fmaf(src1_f8->f1[6], src1_f8->f1[6], src2_f8->f1[6] * src2_f8->f1[6]));
-    dst_f8->f1[7] = sqrt(fmaf(src1_f8->f1[7], src1_f8->f1[7], src2_f8->f1[7] * src2_f8->f1[7]));
+    dst_f8->f1[0] = sqrtf(fmaf(src1_f8->f1[0], src1_f8->f1[0], src2_f8->f1[0] * src2_f8->f1[0]));
+    dst_f8->f1[1] = sqrtf(fmaf(src1_f8->f1[1], src1_f8->f1[1], src2_f8->f1[1] * src2_f8->f1[1]));
+    dst_f8->f1[2] = sqrtf(fmaf(src1_f8->f1[2], src1_f8->f1[2], src2_f8->f1[2] * src2_f8->f1[2]));
+    dst_f8->f1[3] = sqrtf(fmaf(src1_f8->f1[3], src1_f8->f1[3], src2_f8->f1[3] * src2_f8->f1[3]));
+    dst_f8->f1[4] = sqrtf(fmaf(src1_f8->f1[4], src1_f8->f1[4], src2_f8->f1[4] * src2_f8->f1[4]));
+    dst_f8->f1[5] = sqrtf(fmaf(src1_f8->f1[5], src1_f8->f1[5], src2_f8->f1[5] * src2_f8->f1[5]));
+    dst_f8->f1[6] = sqrtf(fmaf(src1_f8->f1[6], src1_f8->f1[6], src2_f8->f1[6] * src2_f8->f1[6]));
+    dst_f8->f1[7] = sqrtf(fmaf(src1_f8->f1[7], src1_f8->f1[7], src2_f8->f1[7] * src2_f8->f1[7]));
 }
 
 __device__ void magnitude_hip_compute(float *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8)
 {
-    dst_f8->f1[0] = sqrt(fmaf(src1_f8->f1[0], src1_f8->f1[0], src2_f8->f1[0] * src2_f8->f1[0]));
-    dst_f8->f1[1] = sqrt(fmaf(src1_f8->f1[1], src1_f8->f1[1], src2_f8->f1[1] * src2_f8->f1[1]));
-    dst_f8->f1[2] = sqrt(fmaf(src1_f8->f1[2], src1_f8->f1[2], src2_f8->f1[2] * src2_f8->f1[2]));
-    dst_f8->f1[3] = sqrt(fmaf(src1_f8->f1[3], src1_f8->f1[3], src2_f8->f1[3] * src2_f8->f1[3]));
-    dst_f8->f1[4] = sqrt(fmaf(src1_f8->f1[4], src1_f8->f1[4], src2_f8->f1[4] * src2_f8->f1[4]));
-    dst_f8->f1[5] = sqrt(fmaf(src1_f8->f1[5], src1_f8->f1[5], src2_f8->f1[5] * src2_f8->f1[5]));
-    dst_f8->f1[6] = sqrt(fmaf(src1_f8->f1[6], src1_f8->f1[6], src2_f8->f1[6] * src2_f8->f1[6]));
-    dst_f8->f1[7] = sqrt(fmaf(src1_f8->f1[7], src1_f8->f1[7], src2_f8->f1[7] * src2_f8->f1[7]));
+    dst_f8->f1[0] = sqrtf(fmaf(src1_f8->f1[0], src1_f8->f1[0], src2_f8->f1[0] * src2_f8->f1[0]));
+    dst_f8->f1[1] = sqrtf(fmaf(src1_f8->f1[1], src1_f8->f1[1], src2_f8->f1[1] * src2_f8->f1[1]));
+    dst_f8->f1[2] = sqrtf(fmaf(src1_f8->f1[2], src1_f8->f1[2], src2_f8->f1[2] * src2_f8->f1[2]));
+    dst_f8->f1[3] = sqrtf(fmaf(src1_f8->f1[3], src1_f8->f1[3], src2_f8->f1[3] * src2_f8->f1[3]));
+    dst_f8->f1[4] = sqrtf(fmaf(src1_f8->f1[4], src1_f8->f1[4], src2_f8->f1[4] * src2_f8->f1[4]));
+    dst_f8->f1[5] = sqrtf(fmaf(src1_f8->f1[5], src1_f8->f1[5], src2_f8->f1[5] * src2_f8->f1[5]));
+    dst_f8->f1[6] = sqrtf(fmaf(src1_f8->f1[6], src1_f8->f1[6], src2_f8->f1[6] * src2_f8->f1[6]));
+    dst_f8->f1[7] = sqrtf(fmaf(src1_f8->f1[7], src1_f8->f1[7], src2_f8->f1[7] * src2_f8->f1[7]));
 }
 
 __device__ void magnitude_hip_compute(signed char *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8)
@@ -31,28 +31,28 @@ __device__ void magnitude_hip_compute(signed char *srcPtr, d_float8 *src1_f8, d_
     src1_f8->f4[1] = src1_f8->f4[1] + (float4)128;
     src2_f8->f4[0] = src2_f8->f4[0] + (float4)128;
     src2_f8->f4[1] = src2_f8->f4[1] + (float4)128;
-    dst_f8->f1[0] = sqrt(fmaf(src1_f8->f1[0], src1_f8->f1[0], src2_f8->f1[0] * src2_f8->f1[0]));
-    dst_f8->f1[1] = sqrt(fmaf(src1_f8->f1[1], src1_f8->f1[1], src2_f8->f1[1] * src2_f8->f1[1]));
-    dst_f8->f1[2] = sqrt(fmaf(src1_f8->f1[2], src1_f8->f1[2], src2_f8->f1[2] * src2_f8->f1[2]));
-    dst_f8->f1[3] = sqrt(fmaf(src1_f8->f1[3], src1_f8->f1[3], src2_f8->f1[3] * src2_f8->f1[3]));
-    dst_f8->f1[4] = sqrt(fmaf(src1_f8->f1[4], src1_f8->f1[4], src2_f8->f1[4] * src2_f8->f1[4]));
-    dst_f8->f1[5] = sqrt(fmaf(src1_f8->f1[5], src1_f8->f1[5], src2_f8->f1[5] * src2_f8->f1[5]));
-    dst_f8->f1[6] = sqrt(fmaf(src1_f8->f1[6], src1_f8->f1[6], src2_f8->f1[6] * src2_f8->f1[6]));
-    dst_f8->f1[7] = sqrt(fmaf(src1_f8->f1[7], src1_f8->f1[7], src2_f8->f1[7] * src2_f8->f1[7]));
+    dst_f8->f1[0] = sqrtf(fmaf(src1_f8->f1[0], src1_f8->f1[0], src2_f8->f1[0] * src2_f8->f1[0]));
+    dst_f8->f1[1] = sqrtf(fmaf(src1_f8->f1[1], src1_f8->f1[1], src2_f8->f1[1] * src2_f8->f1[1]));
+    dst_f8->f1[2] = sqrtf(fmaf(src1_f8->f1[2], src1_f8->f1[2], src2_f8->f1[2] * src2_f8->f1[2]));
+    dst_f8->f1[3] = sqrtf(fmaf(src1_f8->f1[3], src1_f8->f1[3], src2_f8->f1[3] * src2_f8->f1[3]));
+    dst_f8->f1[4] = sqrtf(fmaf(src1_f8->f1[4], src1_f8->f1[4], src2_f8->f1[4] * src2_f8->f1[4]));
+    dst_f8->f1[5] = sqrtf(fmaf(src1_f8->f1[5], src1_f8->f1[5], src2_f8->f1[5] * src2_f8->f1[5]));
+    dst_f8->f1[6] = sqrtf(fmaf(src1_f8->f1[6], src1_f8->f1[6], src2_f8->f1[6] * src2_f8->f1[6]));
+    dst_f8->f1[7] = sqrtf(fmaf(src1_f8->f1[7], src1_f8->f1[7], src2_f8->f1[7] * src2_f8->f1[7]));
     dst_f8->f4[0] = rpp_hip_pixel_check_0to255(dst_f8->f4[0]) - (float4)128;
     dst_f8->f4[1] = rpp_hip_pixel_check_0to255(dst_f8->f4[1]) - (float4)128;
 }
 
 __device__ void magnitude_hip_compute(half *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8)
 {
-    dst_f8->f1[0] = sqrt(fmaf(src1_f8->f1[0], src1_f8->f1[0], src2_f8->f1[0] * src2_f8->f1[0]));
-    dst_f8->f1[1] = sqrt(fmaf(src1_f8->f1[1], src1_f8->f1[1], src2_f8->f1[1] * src2_f8->f1[1]));
-    dst_f8->f1[2] = sqrt(fmaf(src1_f8->f1[2], src1_f8->f1[2], src2_f8->f1[2] * src2_f8->f1[2]));
-    dst_f8->f1[3] = sqrt(fmaf(src1_f8->f1[3], src1_f8->f1[3], src2_f8->f1[3] * src2_f8->f1[3]));
-    dst_f8->f1[4] = sqrt(fmaf(src1_f8->f1[4], src1_f8->f1[4], src2_f8->f1[4] * src2_f8->f1[4]));
-    dst_f8->f1[5] = sqrt(fmaf(src1_f8->f1[5], src1_f8->f1[5], src2_f8->f1[5] * src2_f8->f1[5]));
-    dst_f8->f1[6] = sqrt(fmaf(src1_f8->f1[6], src1_f8->f1[6], src2_f8->f1[6] * src2_f8->f1[6]));
-    dst_f8->f1[7] = sqrt(fmaf(src1_f8->f1[7], src1_f8->f1[7], src2_f8->f1[7] * src2_f8->f1[7]));
+    dst_f8->f1[0] = sqrtf(fmaf(src1_f8->f1[0], src1_f8->f1[0], src2_f8->f1[0] * src2_f8->f1[0]));
+    dst_f8->f1[1] = sqrtf(fmaf(src1_f8->f1[1], src1_f8->f1[1], src2_f8->f1[1] * src2_f8->f1[1]));
+    dst_f8->f1[2] = sqrtf(fmaf(src1_f8->f1[2], src1_f8->f1[2], src2_f8->f1[2] * src2_f8->f1[2]));
+    dst_f8->f1[3] = sqrtf(fmaf(src1_f8->f1[3], src1_f8->f1[3], src2_f8->f1[3] * src2_f8->f1[3]));
+    dst_f8->f1[4] = sqrtf(fmaf(src1_f8->f1[4], src1_f8->f1[4], src2_f8->f1[4] * src2_f8->f1[4]));
+    dst_f8->f1[5] = sqrtf(fmaf(src1_f8->f1[5], src1_f8->f1[5], src2_f8->f1[5] * src2_f8->f1[5]));
+    dst_f8->f1[6] = sqrtf(fmaf(src1_f8->f1[6], src1_f8->f1[6], src2_f8->f1[6] * src2_f8->f1[6]));
+    dst_f8->f1[7] = sqrtf(fmaf(src1_f8->f1[7], src1_f8->f1[7], src2_f8->f1[7] * src2_f8->f1[7]));
 }
 
 template <typename T>

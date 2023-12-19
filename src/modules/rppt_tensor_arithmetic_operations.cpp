@@ -188,7 +188,6 @@ RppStatus rppt_magnitude_gpu(RppPtr_t srcPtr1,
                              rppHandle_t rppHandle)
 {
     #ifdef HIP_COMPILE
-    std::cout<<"Inside rppt_magnitude_gpu()"<<std::endl;
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
         hip_exec_magnitude_tensor(static_cast<Rpp8u*>(srcPtr1) + srcDescPtr->offsetInBytes,
