@@ -30,7 +30,7 @@ timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
 scriptPath = os.path.dirname(os.path.realpath(__file__))
 inFilePath = scriptPath + "/../TEST_AUDIO_FILES/three_samples_single_channel_src1"
-outFolderPath = scriptPath + "/../../../build"
+outFolderPath = os.getcwd()
 caseMin = 0
 caseMax = 0
 

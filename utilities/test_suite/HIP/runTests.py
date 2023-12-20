@@ -33,7 +33,7 @@ inFilePath1 = scriptPath + "/../TEST_IMAGES/three_images_mixed_src1"
 inFilePath2 = scriptPath + "/../TEST_IMAGES/three_images_mixed_src2"
 ricapInFilePath = scriptPath + "/../TEST_IMAGES/three_images_150x150_src1"
 qaInputFile = scriptPath + "/../TEST_IMAGES/three_images_mixed_src1"
-outFolderPath = scriptPath + "/../../../build"
+outFolderPath = os.getcwd()
 
 # Checks if the folder path is empty, or is it a root folder, or if it exists, and remove its contents
 def validate_and_remove_files(path):

@@ -32,7 +32,7 @@ scriptPath = os.path.dirname(os.path.realpath(__file__))
 headerFilePath = scriptPath + "/../TEST_QA_IMAGES_VOXEL"
 dataFilePath = scriptPath + "/../TEST_QA_IMAGES_VOXEL"
 qaInputFile = scriptPath + "/../TEST_QA_IMAGES_VOXEL"
-outFolderPath = scriptPath + "/../../../build"
+outFolderPath = os.getcwd()
 
 # Check if folder path is empty, if it is the root folder, or if it exists, and remove its contents
 def validate_and_remove_contents(path):
