@@ -60,6 +60,23 @@ extern "C" {
  */
 RppStatus rppt_non_silent_region_detection_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rpp32s *srcLengthTensor, Rpp32f *detectedIndexTensor, Rpp32f *detectionLengthTensor, Rpp32f cutOffDB, Rpp32s windowLength, Rpp32f referencePower, Rpp32s resetInterval, rppHandle_t rppHandle);
 
+/*! \brief To Decibels augmentation on HOST backend
+ * \details To Decibels augmentation for 1D audio buffer converts magnitude values to decibel values
+ * \param[in] srcPtr source tensor in HOST memory
+ * \param[in] srcDescPtr source tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
+ * \param[out] dstPtr destination tensor in HOST memory
+ * \param[in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
+ * \param[in] srcDims source tensor sizes for each element in batch (2D tensor in HOST memory, of size batchSize * 2)
+ * \param[in] cutOffDB  minimum or cut-off ratio in dB
+ * \param[in] multiplier factor by which the logarithm is multiplied
+ * \param[in] referenceMagnitude Reference magnitude if not provided maximum value of input used as reference
+ * \param[in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_to_decibels_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr srcDims, Rpp32f cutOffDB, Rpp32f multiplier, Rpp32f referenceMagnitude, rppHandle_t rppHandle);
+
 #ifdef __cplusplus
 }
 #endif
