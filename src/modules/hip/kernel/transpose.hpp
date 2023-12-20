@@ -2,7 +2,7 @@
 #include "rpp_hip_common.hpp"
 
 // Unvectorized src->dst
-template <typename T>
+/*template <typename T>
 __global__ void transpose_generic_hip_tensor(T *srcPtr,
                                              uint *srcStrides,
                                              uint *srcDims,
@@ -30,49 +30,47 @@ __global__ void transpose_generic_hip_tensor(T *srcPtr,
 
     if ((id_x < 1000) && (id_y == 0))
     {
-        printf("\nid_x = %d, srcIdx = %u, dstIdx = %u", id_x, srcIdx, dstIdx);
+        //printf("\nid_x = %d, srcIdx = %u, dstIdx = %u", id_x, srcIdx, dstIdx);
+        printf("\nsrc -> dst id_y = %d, id_x = %d || srcCoords[0] = %u, srcCoords[1] = %u, srcCoords[2] = %u || srcCoords[permTensor[0]] = %u, srcCoords[permTensor[1]] = %u, srcCoords[permTensor[2]] = %u || srcIdx = %u, dstIdx = %u", id_y, id_x, srcCoords[0], srcCoords[1], srcCoords[2], srcCoords[permTensor[0]], srcCoords[permTensor[1]], srcCoords[permTensor[2]], srcIdx, dstIdx);
+    }
+
+    dstPtr[dstIdx] = srcPtr[srcIdx];
+}*/
+
+// Unvectorized dst->src
+template <typename T>
+__global__ void transpose_generic_hip_tensor(T *srcPtr,
+                                             uint *srcStrides,
+                                             T *dstPtr,
+                                             uint *dstStrides,
+                                             uint *dstDims,
+                                             uint dstNumDims,
+                                             uint *permTensor,
+                                             uint *roiTensor)
+{
+    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+
+    uint dstIdx = (id_y * *dstStrides++);
+    uint srcIdx = (id_y * *srcStrides++);
+    uint dstCoords[RPPT_MAX_DIMS];
+
+    for (int i = 0; i < dstNumDims; i++)
+        dstCoords[i] = id_x / dstStrides[i] % dstDims[i];
+
+    for (int i = 0; i < dstNumDims; i++)
+    {
+        srcIdx += (dstCoords[permTensor[i]] * srcStrides[i]);
+        dstIdx += (dstCoords[i] * dstStrides[i]);
+    }
+
+    if ((id_x < 1000) && (id_y == 0))
+    {
+        printf("\n dst-> src id_y = %d, id_x = %d || dstCoords[0] = %u, dstCoords[1] = %u, dstCoords[2] = %u || dstCoords[permTensor[0]] = %u, dstCoords[permTensor[1]] = %u, dstCoords[permTensor[2]] = %u || srcIdx = %u, dstIdx = %u", id_y, id_x, dstCoords[0], dstCoords[1], dstCoords[2], dstCoords[permTensor[0]], dstCoords[permTensor[1]], dstCoords[permTensor[2]], srcIdx, dstIdx);
     }
 
     dstPtr[dstIdx] = srcPtr[srcIdx];
 }
-
-// Unvectorized dst->src
-// template <typename T>
-// __global__ void transpose_generic_hip_tensor(T *srcPtr,
-//                                              uint *srcStrides,
-//                                              T *dstPtr,
-//                                              uint *dstStrides,
-//                                              uint *dstDims,
-//                                              uint dstNumDims,
-//                                              uint *permTensor,
-//                                              uint *roiTensor)
-// {
-//     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
-//     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-
-//     uint dstIdx = (id_y * *dstStrides++);
-//     uint srcIdx = (id_y * *srcStrides++);
-//     uint dstCoords[RPPT_MAX_DIMS];
-
-//     for (int i = 0; i < dstNumDims; i++)
-//         dstCoords[i] = id_x / dstStrides[i] % dstDims[i];
-
-//     for (int i = 0; i < dstNumDims; i++)
-//     {
-//         srcIdx += (dstCoords[permTensor[i]] * srcStrides[permTensor[i]]);
-//         dstIdx += (dstCoords[i] * dstStrides[i]);
-//     }
-
-//     if ((id_x < 500) && (id_y == 0))
-//     {
-//         printf("\nid_y = %d, id_x = %d || dstCoords[0] = %u, dstCoords[1] = %u, dstCoords[2] = %u || dstCoords[permTensor[0]] = %u, dstCoords[permTensor[1]] = %u, dstCoords[permTensor[2]] = %u || srcIdx = %u, dstIdx = %u", id_y, id_x, dstCoords[0], dstCoords[1], dstCoords[2], dstCoords[permTensor[0]], dstCoords[permTensor[1]], dstCoords[permTensor[2]], srcIdx, dstIdx);
-//         // printf("\ndstCoords[0] = %u, dstCoords[1] = %u, dstCoords[2] = %u", dstCoords[0], dstCoords[1], dstCoords[2]);
-//         // printf("\ndstCoords[permTensor[0]] = %u, dstCoords[permTensor[1]] = %u, dstCoords[permTensor[2]] = %u", dstCoords[permTensor[0]], dstCoords[permTensor[1]], dstCoords[permTensor[2]]);
-//         // printf("\nsrcIdx = %u, dstIdx = %u", srcIdx, dstIdx);
-//     }
-
-//     dstPtr[dstIdx] = srcPtr[srcIdx];
-// }
 
 // Vectorized src->dst
 // template <typename T> // temporarily only float
@@ -170,12 +168,12 @@ RppStatus hip_exec_transpose_generic_tensor(T *srcPtr,
                        handle.GetStream(),
                        srcPtr,
                        srcGenericDescPtr->strides,
-                       srcGenericDescPtr->dims + 1,
-                       srcGenericDescPtr->numDims - 1,
+                       //srcGenericDescPtr->dims + 1,
+                       //srcGenericDescPtr->numDims - 1,
                        dstPtr,
                        dstGenericDescPtr->strides,
-                    //    dstGenericDescPtr->dims + 1,
-                    //    dstGenericDescPtr->numDims,
+                       dstGenericDescPtr->dims + 1,
+                       dstGenericDescPtr->numDims,
                        permTensor,
                        roiTensor);
 
