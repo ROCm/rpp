@@ -21,11 +21,9 @@ __device__ void magnitude_hip_compute(float *srcPtr, d_float8 *src1_f8, d_float8
 
 __device__ void magnitude_hip_compute(signed char *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8)
 {
-    src1_f8->f4[0] = src1_f8->f4[0] + (float4)128;
-    src1_f8->f4[1] = src1_f8->f4[1] + (float4)128;
-    src2_f8->f4[0] = src2_f8->f4[0] + (float4)128;
-    src2_f8->f4[1] = src2_f8->f4[1] + (float4)128;
     d_float8 src1Sq_f8, src2Sq_f8, sum_f8;
+    rpp_hip_math_add8_const(src1_f8, src1_f8, (float4)128);
+    rpp_hip_math_add8_const(src2_f8, src2_f8, (float4)128);
     rpp_hip_math_multiply8(src1_f8, src1_f8, &src1Sq_f8);
     rpp_hip_math_multiply8(src2_f8, src2_f8, &src2Sq_f8);
     rpp_hip_math_add8(&src1Sq_f8, &src2Sq_f8, &sum_f8);
