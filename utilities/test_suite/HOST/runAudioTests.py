@@ -31,7 +31,7 @@ timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 scriptPath = os.path.dirname(os.path.realpath(__file__))
 inFilePath = scriptPath + "/../TEST_AUDIO_FILES/three_samples_single_channel_src1"
 caseMin = 0
-caseMax = 0
+caseMax = 1
 
 # Checks if the folder path is empty, or is it a root folder, or if it exists, and remove its contents
 def validate_and_remove_files(path):
@@ -121,13 +121,13 @@ def run_performance_test(loggingFolder, srcPath, case, numRuns, testType, batchS
 def rpp_test_suite_parser_and_validator():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_path", type = str, default = inFilePath, help = "Path to the input folder")
-    parser.add_argument("--case_start", type = int, default = caseMin, help = "Testing range starting case # - (0:0)")
-    parser.add_argument("--case_end", type = int, default = caseMax, help = "Testing range ending case # - (0:0)")
+    parser.add_argument("--case_start", type = int, default = caseMin, help = "Testing start case # - Range must be in [" + str(caseMin) + ":" + str(caseMax) + "]")
+    parser.add_argument("--case_end", type = int, default = caseMax, help = "Testing end case # - Range must be in [" + str(caseMin) + ":" + str(caseMax) + "]")
     parser.add_argument('--test_type', type = int, default = 0, help = "Type of Test - (0 = QA tests / 1 = Performance tests)")
     parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Output audio data from tests will be compared with golden outputs - (0 / 1)", required = False)
     parser.add_argument('--case_list', nargs = "+", help = "List of case numbers to test", required = False)
     parser.add_argument('--num_runs', type = int, default = 1, help = "Specifies the number of runs for running the performance tests")
-    parser.add_argument('--preserve_output', type = int, default = 1, help = "preserves the output of the program - (0 = override output / 1 = preserve output )" )
+    parser.add_argument('--preserve_output', type = int, default = 1, help = "preserves the output of the program - (0 = override output / 1 = preserve output )")
     parser.add_argument('--batch_size', type = int, default = 1, help = "Specifies the batch size to use for running tests. Default is 1.")
     args = parser.parse_args()
 
@@ -234,7 +234,7 @@ else:
         run_performance_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath)
 
 # print the results of qa tests
-supportedCaseList = ['0']
+supportedCaseList = ['0', '1']
 nonQACaseList = [] # Add cases present in supportedCaseList, but without QA support
 
 if testType == 0:
@@ -259,7 +259,7 @@ if testType == 0:
         resultsInfo += "\n    - Total augmentations with golden output QA test support = " + str(len(supportedCaseList) - len(nonQACaseList))
         resultsInfo += "\n    - Total augmentations without golden ouput QA test support (due to randomization involved) = " + str(len(nonQACaseList))
         f.write(resultsInfo)
-    print("\n-------------------------------------------------------------------" + resultsInfo + "\n\n-------------------------------------------------------------------")
+        print("\n-------------------------------------------------------------------" + resultsInfo + "\n\n-------------------------------------------------------------------")
 
 # Performance tests
 if (testType == 1):

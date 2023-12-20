@@ -1243,7 +1243,6 @@ void inline init_ricap(int width, int height, int batchSize, Rpp32u *permutation
     for (uint i = 0; i < batchSize; i++)
         initialPermuteArray[i] = i;
 
-    float betaParam = 0.3;
     std::random_device rd;
     std::mt19937 gen(rd()); // Pseudo random number generator
     static std::uniform_real_distribution<double> unif(0.3, 0.7); // Generates a uniform real distribution between 0.3 and 0.7

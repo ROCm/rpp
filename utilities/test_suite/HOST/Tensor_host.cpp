@@ -318,6 +318,18 @@ int main(int argc, char **argv)
     double cpuTime, wallTime;
     string testCaseName;
 
+    if(testCase == 82 && imagesMixed)
+    {
+        std::cerr<<"\n RICAP only works with same dimension images";
+        exit(0);
+    }
+
+    if(testCase == 82 && batchSize < 2)
+    {
+        std::cerr<<"\n RICAP only works with BatchSize > 1";
+        exit(0);
+    }
+
     // Initialize buffers for any reductionType functions
     void *reductionFuncResultArr;
     Rpp32u reductionFuncResultArrLength = srcDescPtr->n * 4;
