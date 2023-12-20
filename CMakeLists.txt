@@ -340,7 +340,6 @@ install(FILES ${CPACK_RESOURCE_FILE_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR}
 
 enable_testing()
 include(CTest)
-add_subdirectory(utilities/rpp-unittests) # TBD - phaseout unittests
 add_subdirectory(utilities/test_suite) # TBD - Expand use-cases
 
 # Set package information
@@ -457,7 +456,7 @@ include(CPack)
 cpack_add_component(runtime
    DISPLAY_NAME "RPP Runtime Package"
    DESCRIPTION "ROCm Performance Primitives library is a comprehensive high performance \
-computer vision library for AMD CPUs and GPUs with HOST/HIP/OpenCL back-ends. 
+computer vision library for AMD CPUs and GPUs with HOST/HIP/OpenCL back-ends.
 RPP runtime package provides rpp library and license.txt")
 
 cpack_add_component(dev
@@ -468,6 +467,6 @@ RPP develop package provides rpp library, header files, and license.txt")
 
 cpack_add_component(asan
     DISPLAY_NAME "RPP ASAN Package"
-    DESCRIPTION "ROCm Performance Primitives library is a comprehensive high performance \ 
+    DESCRIPTION "ROCm Performance Primitives library is a comprehensive high performance \
 computer vision library for AMD CPUs and GPUs with HOST/HIP/OpenCL back-ends. \
 RPP ASAN package provides rpp ASAN libraries")
