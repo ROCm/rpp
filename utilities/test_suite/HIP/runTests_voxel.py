@@ -32,6 +32,7 @@ scriptPath = os.path.dirname(os.path.realpath(__file__))
 headerFilePath = scriptPath + "/../TEST_QA_IMAGES_VOXEL"
 dataFilePath = scriptPath + "/../TEST_QA_IMAGES_VOXEL"
 qaInputFile = scriptPath + "/../TEST_QA_IMAGES_VOXEL"
+outFolderPath = scriptPath + "/../../../build"
 
 # Check if folder path is empty, if it is the root folder, or if it exists, and remove its contents
 def validate_and_remove_contents(path):
@@ -62,12 +63,12 @@ def validate_and_remove_folders(path, folder):
     if path == "/*":  # check if the root directory is passed to the function
         print("Root folder cannot be deleted.")
         exit()
-    if path and os.path.isdir(path + "/.."):  # checks if directory string is not empty and it exists
-        output_folders = [folder_name for folder_name in os.listdir(path + "/..") if folder_name.startswith(folder)]
+    if path and os.path.isdir(path):  # checks if directory string is not empty and it exists
+        output_folders = [folder_name for folder_name in os.listdir(path) if folder_name.startswith(folder)]
 
         # Loop through each directory and delete it only if it exists
         for folder_name in output_folders:
-            folder_path = os.path.join(path, "..", folder_name)
+            folder_path = os.path.join(path, folder_name)
             if os.path.isdir(folder_path):
                 shutil.rmtree(folder_path)  # Delete the directory if it exists
                 print("Deleted directory:", folder_path)
@@ -332,24 +333,25 @@ if qaMode and batchSize != 3:
     print("QA mode can only run with a batch size of 3.")
     exit(0)
 
+# set the output folders and number of runs based on type of test (unit test / performance test)
 if(testType == 0):
     if qaMode:
-        outFilePath = scriptPath + "/../QA_RESULTS_HIP_VOXEL_" + timestamp
+        outFilePath = outFolderPath + "/QA_RESULTS_HIP_VOXEL_" + timestamp
     else:
-        outFilePath = scriptPath + "/../OUTPUT_VOXEL_HIP_" + timestamp
+        outFilePath = outFolderPath + "/OUTPUT_VOXEL_HIP_" + timestamp
     numRuns = 1
 elif(testType == 1):
     if "--num_runs" not in sys.argv:
         numRuns = 100 #default numRuns for running performance tests
-    outFilePath = scriptPath + "/../OUTPUT_PERFORMANCE_LOGS_HIP_VOXEL_" + timestamp
+    outFilePath = outFolderPath + "/OUTPUT_PERFORMANCE_LOGS_HIP_VOXEL_" + timestamp
 else:
     print("Invalid TEST_TYPE specified. TEST_TYPE should be 0/1 (0 = Unittests / 1 = Performancetests)")
     exit()
 
 if preserveOutput == 0:
-    validate_and_remove_folders(scriptPath, "OUTPUT_VOXEL_HIP")
-    validate_and_remove_folders(scriptPath, "QA_RESULTS_HIP_VOXEL")
-    validate_and_remove_folders(scriptPath, "OUTPUT_PERFORMANCE_LOGS_HIP_VOXEL")
+    validate_and_remove_folders(outFolderPath, "OUTPUT_VOXEL_HIP")
+    validate_and_remove_folders(outFolderPath, "QA_RESULTS_HIP_VOXEL")
+    validate_and_remove_folders(outFolderPath, "OUTPUT_PERFORMANCE_LOGS_HIP_VOXEL")
 
 os.mkdir(outFilePath)
 loggingFolder = outFilePath
