@@ -1269,21 +1269,11 @@ inline void rpp_load16_u8_to_u32_avx(Rpp8u *srcPtr, __m256i *p)
     p[1] = _mm256_setr_m128i(_mm_shuffle_epi8(px, xmm_pxMask08To11), _mm_shuffle_epi8(px, xmm_pxMask12To15));    /* Contains pixels 09-16 */
 }
 
-inline void rpp_load32_u8_avx(Rpp8u *srcPtr, __m256i *p)
-{
-    p[0] = _mm256_loadu_si256((__m256i *)srcPtr);
-}
-
 inline void rpp_load96_u8_avx(Rpp8u *srcPtrR, Rpp8u *srcPtrG, Rpp8u *srcPtrB, __m256i *p)
 {
     p[0] = _mm256_loadu_si256((__m256i *)srcPtrR);
     p[1] = _mm256_loadu_si256((__m256i *)srcPtrG);
     p[2] = _mm256_loadu_si256((__m256i *)srcPtrB);
-}
-
-inline void rpp_load32_i8_avx(Rpp8s *srcPtr, __m256i *p)
-{
-    p[0] = _mm256_load_si256((__m256i *)srcPtr);
 }
 
 inline void rpp_load96_i8_avx(Rpp8s *srcPtrR, Rpp8s *srcPtrG, Rpp8s *srcPtrB, __m256i *p)

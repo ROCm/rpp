@@ -54,9 +54,8 @@ RppStatus tensor_min_u8_u8_host(Rpp8u *srcPtr,
 #if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
-                    __m256i p1;
-                    rpp_simd_load(rpp_load32_u8_avx, srcPtrTemp, &p1);
-                    compute_min_32_host(&p1, &pMin);
+                    __m256i p1 = _mm256_loadu_si256((__m256i *)srcPtrTemp);
+                    pMin = _mm256_min_epu8(p1, pMin);
 
                     srcPtrTemp += vectorIncrement;
                 }
@@ -673,9 +672,8 @@ RppStatus tensor_min_i8_i8_host(Rpp8s *srcPtr,
 #if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
-                    __m256i p1;
-                    rpp_simd_load(rpp_load32_i8_avx, srcPtrTemp, &p1);
-                    compute_min_i32_host(&p1, &pMin);
+                    __m256i p1 = _mm256_load_si256((__m256i *)srcPtrTemp);
+                    pMin = _mm256_min_epi8(p1, pMin); //compare and store min of 32 values into global min
 
                     srcPtrTemp += vectorIncrement;
                 }

@@ -5958,11 +5958,6 @@ inline void compute_sum_24_host(__m256d *p, __m256d *pSumR, __m256d *pSumG, __m2
     pSumB[0] = _mm256_add_pd(_mm256_add_pd(p[4], p[5]), pSumB[0]); //add 8B values and bring it down to 4
 }
 
-inline void compute_min_32_host(__m256i *p1, __m256i *pMin)
-{
-    pMin[0] = _mm256_min_epu8(p1[0], pMin[0]); //compare and store min of 32 values into global min
-}
-
 inline void reduce_min_32_host(__m256i *pMin, __m128i *result)
 {
     __m128i px[3];
@@ -6044,11 +6039,6 @@ inline void reduce_min_48_host(__m128i *pMinR, __m128i *pMinG, __m128i *pMinB, _
     px[1] = _mm_min_epu32(_mm_unpacklo_epi32(zero, px[0]), _mm_unpackhi_epi32(zero, px[0]));
     px[2] = _mm_shuffle_epi8(px[1], mask);
     result[0] = _mm_unpacklo_epi32(px[3], px[2]);
-}
-
-inline void compute_max_32_host(__m256i *p1, __m256i *pMax)
-{
-    pMax[0] = _mm256_max_epu8(p1[0], pMax[0]); //compare and store max of 32 values into global max
 }
 
 inline void reduce_max_32_host(__m256i *pMax, __m128i *result)
@@ -6216,11 +6206,6 @@ inline void reduce_max_float24_host(__m256 *pMaxR, __m256 *pMaxG, __m256 *pMaxB,
     result[0] = _mm256_insertf128_ps(result[0], px[2], 1);
 }
 
-inline void compute_min_i32_host(__m256i *p1, __m256i *pMin)
-{
-    pMin[0] = _mm256_min_epi8(p1[0], pMin[0]); //compare and store min of 32 values into global min
-}
-
 inline void reduce_min_i32_host(__m256i *pMin, __m128i *result)
 {
     __m128i px[3];
@@ -6302,11 +6287,6 @@ inline void reduce_min_i48_host(__m128i *pMinR, __m128i *pMinG, __m128i *pMinB, 
     px[1] = _mm_min_epi32(_mm_unpacklo_epi32(zero, px[0]), _mm_unpackhi_epi32(zero, px[0]));
     px[2] = _mm_shuffle_epi8(px[1], mask);
     result[0] = _mm_unpacklo_epi32(px[3], px[2]);
-}
-
-inline void compute_max_i32_host(__m256i *p1, __m256i *pMax)
-{
-    pMax[0] = _mm256_max_epi8(p1[0], pMax[0]); //compare and store max of 32 values into global max
 }
 
 inline void reduce_max_i32_host(__m256i *pMax, __m128i *result)
