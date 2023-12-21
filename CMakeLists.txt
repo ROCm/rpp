@@ -202,7 +202,7 @@ if("${BACKEND}" STREQUAL "HIP")
     list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH} ${ROCM_PATH}/hip)
     set(DEFAULT_AMDGPU_TARGETS "gfx803;gfx900;gfx906;gfx908;gfx90a;gfx940;gfx1030;gfx1100")
     if (BUILD_WITH_AMD_ADVANCE)
-        set(DEFAULT_AMDGPU_TARGETS ${DEFAULT_AMDGPU_TARGETS} "gfx941")
+        set(DEFAULT_AMDGPU_TARGETS ${DEFAULT_AMDGPU_TARGETS} "gfx941;gfx942")
     endif()
     set(AMDGPU_TARGETS "${DEFAULT_AMDGPU_TARGETS}" CACHE STRING "List of specific machine types for library to target")
     find_package(HIP QUIET)
@@ -340,7 +340,6 @@ install(FILES ${CPACK_RESOURCE_FILE_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR}
 
 enable_testing()
 include(CTest)
-add_subdirectory(utilities/rpp-unittests) # TBD - phaseout unittests
 add_subdirectory(utilities/test_suite) # TBD - Expand use-cases
 
 # Set package information
@@ -457,7 +456,7 @@ include(CPack)
 cpack_add_component(runtime
    DISPLAY_NAME "RPP Runtime Package"
    DESCRIPTION "ROCm Performance Primitives library is a comprehensive high performance \
-computer vision library for AMD CPUs and GPUs with HOST/HIP/OpenCL back-ends. 
+computer vision library for AMD CPUs and GPUs with HOST/HIP/OpenCL back-ends.
 RPP runtime package provides rpp library and license.txt")
 
 cpack_add_component(dev
@@ -468,6 +467,6 @@ RPP develop package provides rpp library, header files, and license.txt")
 
 cpack_add_component(asan
     DISPLAY_NAME "RPP ASAN Package"
-    DESCRIPTION "ROCm Performance Primitives library is a comprehensive high performance \ 
+    DESCRIPTION "ROCm Performance Primitives library is a comprehensive high performance \
 computer vision library for AMD CPUs and GPUs with HOST/HIP/OpenCL back-ends. \
 RPP ASAN package provides rpp ASAN libraries")

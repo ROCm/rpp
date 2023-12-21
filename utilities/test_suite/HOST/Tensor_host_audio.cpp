@@ -93,10 +93,6 @@ int main(int argc, char **argv)
         noOfAudioFiles = audioNames.size();
     }
 
-    // initialize the buffers for audio length and channels
-    Rpp32s *srcLengthTensor = (Rpp32s *) calloc(batchSize, sizeof(Rpp32s));
-    Rpp32s *channelsTensor = (Rpp32s *) calloc(batchSize, sizeof(Rpp32s));
-
     // find max audio dimensions in the input dataset
     maxSrcHeight = 1;
     maxDstHeight = 1;
@@ -115,9 +111,17 @@ int main(int argc, char **argv)
     iBufferSize = (Rpp64u)srcDescPtr->h * (Rpp64u)srcDescPtr->w * (Rpp64u)srcDescPtr->c * (Rpp64u)srcDescPtr->n;
     oBufferSize = (Rpp64u)dstDescPtr->h * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
 
-    // initialize host buffers for input & output
+    // allocate host buffers for input & output
     Rpp32f *inputf32 = (Rpp32f *)calloc(iBufferSize, sizeof(Rpp32f));
     Rpp32f *outputf32 = (Rpp32f *)calloc(oBufferSize, sizeof(Rpp32f));
+
+    // allocate the buffers for audio length and channels
+    Rpp32s *srcLengthTensor = (Rpp32s *) calloc(batchSize, sizeof(Rpp32s));
+    Rpp32s *channelsTensor = (Rpp32s *) calloc(batchSize, sizeof(Rpp32s));
+
+    // allocate the buffers for src/dst dimensions for each element in batch
+    RpptImagePatch *srcDims = (RpptImagePatch *) calloc(batchSize, sizeof(RpptImagePatch));
+    RpptImagePatch *dstDims = (RpptImagePatch *) calloc(batchSize, sizeof(RpptImagePatch));
 
     // run case-wise RPP API and measure time
     rppHandle_t handle;
@@ -156,6 +160,41 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 1:
+                {
+                    testCaseName = "to_decibels";
+                    Rpp32f cutOffDB = std::log(1e-20);
+                    Rpp32f multiplier = std::log(10);
+                    Rpp32f referenceMagnitude = 1.0f;
+
+                    for (int i = 0; i < batchSize; i++)
+                    {
+                        srcDims[i].height = dstDims[i].height = srcLengthTensor[i];
+                        srcDims[i].width = dstDims[i].width = 1;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    rppt_to_decibels_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcDims, cutOffDB, multiplier, referenceMagnitude, handle);
+
+                    break;
+                }
+                case 2:
+                {
+                    testCaseName = "pre_emphasis_filter";
+                    Rpp32f coeff[batchSize];
+                    for (int i = 0; i < batchSize; i++)
+                    {
+                        coeff[i] = 0.97;
+                        dstDims[i].height = srcLengthTensor[i];
+                        dstDims[i].width = 1;
+                    }
+                    RpptAudioBorderType borderType = RpptAudioBorderType::CLAMP;
+
+                    startWallTime = omp_get_wtime();
+                    rppt_pre_emphasis_filter_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcLengthTensor, coeff, borderType, handle);
+
+                    break;
+                }
                 default:
                 {
                     missingFuncFlag = 1;
@@ -174,6 +213,29 @@ int main(int argc, char **argv)
             maxWallTime = std::max(maxWallTime, wallTime);
             minWallTime = std::min(minWallTime, wallTime);
             avgWallTime += wallTime;
+
+            // QA mode - verify outputs with golden outputs. Below code doesn’t run for performance tests
+            if (testType == 0)
+            {
+                /* Run only if testCase is not 0
+                For testCase 0 verify_non_silent_region_detection function is used for QA testing */
+                if (testCase != 0)
+                    verify_output(outputf32, dstDescPtr, dstDims, testCaseName, dst);
+
+                /* Dump the outputs to csv files for debugging
+                Runs only if
+                1. DEBUG_MODE is enabled
+                2. Current iteration is 1st iteration
+                3. Test case is not 0 */
+                if (DEBUG_MODE && iterCount == 0 && testCase != 0)
+                {
+                    std::ofstream refFile;
+                    refFile.open(func + ".csv");
+                    for (int i = 0; i < oBufferSize; i++)
+                        refFile << *(outputf32 + i) << "\n";
+                    refFile.close();
+                }
+            }
         }
     }
     rppDestroyHost(handle);
@@ -194,6 +256,8 @@ int main(int argc, char **argv)
     // free memory
     free(srcLengthTensor);
     free(channelsTensor);
+    free(srcDims);
+    free(dstDims);
     free(inputf32);
     free(outputf32);
     return 0;
