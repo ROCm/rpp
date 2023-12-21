@@ -25,7 +25,7 @@ THE SOFTWARE.
 int main(int argc, char **argv)
 {
     // handle inputs
-    const int MIN_ARG_COUNT = 6;
+    const int MIN_ARG_COUNT = 7;
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
@@ -39,6 +39,7 @@ int main(int argc, char **argv)
     int numRuns = atoi(argv[4]);
     int batchSize = atoi(argv[5]);
     char *dst = argv[6];
+    string scriptPath = argv[7];
 
     // validation checks
     if (testType == 0 && batchSize != 3)

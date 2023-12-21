@@ -125,20 +125,16 @@ void read_audio_batch_and_fill_dims(RpptDescPtr descPtr, Rpp32f *inputf32, vecto
     }
 }
 
-void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dstDims, string testCase, vector<string> audioNames, string dst)
+void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dstDims, string testCase, vector<string> audioNames, string dst, string scriptPath)
 {
     fstream refFile;
-    string refPath = get_current_dir_name();
-    string pattern = "HOST/build";
-    remove_substring(refPath, pattern);
-    refPath = refPath + "REFERENCE_OUTPUTS_AUDIO/";
     int fileMatch = 0;
     for (int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         string currentFileName = audioNames[batchCount];
         size_t lastIndex = currentFileName.find_last_of(".");
         currentFileName = currentFileName.substr(0, lastIndex);  // Remove extension from file name
-        string outFile = refPath + testCase + "/" + testCase + "_ref_" + currentFileName + ".txt";
+        string outFile = scriptPath + "/../REFERENCE_OUTPUTS_AUDIO/" + testCase + "/" + testCase + "_ref_" + currentFileName + ".txt";
         refFile.open(outFile, ios::in);
         if (!refFile.is_open())
         {
