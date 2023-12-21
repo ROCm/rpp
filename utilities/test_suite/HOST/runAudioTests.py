@@ -31,7 +31,7 @@ timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 scriptPath = os.path.dirname(os.path.realpath(__file__))
 inFilePath = scriptPath + "/../TEST_AUDIO_FILES/three_samples_single_channel_src1"
 caseMin = 0
-caseMax = 1
+caseMax = 2
 
 # Checks if the folder path is empty, or is it a root folder, or if it exists, and remove its contents
 def validate_and_remove_files(path):
@@ -234,7 +234,7 @@ else:
         run_performance_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath)
 
 # print the results of qa tests
-supportedCaseList = ['0', '1']
+supportedCaseList = ['0', '1', '2']
 nonQACaseList = [] # Add cases present in supportedCaseList, but without QA support
 
 if testType == 0:
