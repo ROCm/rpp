@@ -58,25 +58,26 @@ if(Python3_FOUND)
     endif(libsnd_LIBS)
 
     # Running case by case - one sample for brightness (in tensor_host) + one sample for slice (in tensor_voxel_host) + one sample for non_silent_region (in tensor_audio_host)
-    add_test(
-        NAME rpp_qa_tests_tensor_host_brightness
-        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HOST/runTests.py --qa_mode 1 --batch_size 3 --case_list 0
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    )
-    if(NIFTI_FOUND)
-        add_test(
-            NAME rpp_qa_tests_tensor_voxel_host_slice
-            COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HOST/runTests_voxel.py --qa_mode 1 --batch_size 3 --case_list 1
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        )
-    endif(NIFTI_FOUND)
-    if(libsnd_LIBS)
-        add_test(
-            NAME rpp_qa_tests_tensor_audio_host_non_silent_region
-            COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HOST/runAudioTests.py --case_list 0 --qa_mode 1 --batch_size 3
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        )
-    endif(libsnd_LIBS)
+    # TBD: Add each functionality test separately below, and comment/remove "_all" type testing above
+    # add_test(
+    #     NAME rpp_qa_tests_tensor_host_brightness
+    #     COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HOST/runTests.py --qa_mode 1 --batch_size 3 --case_list 0
+    #     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    # )
+    # if(NIFTI_FOUND)
+    #     add_test(
+    #         NAME rpp_qa_tests_tensor_voxel_host_slice
+    #         COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HOST/runTests_voxel.py --qa_mode 1 --batch_size 3 --case_list 1
+    #         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    #     )
+    # endif(NIFTI_FOUND)
+    # if(libsnd_LIBS)
+    #     add_test(
+    #         NAME rpp_qa_tests_tensor_audio_host_non_silent_region
+    #         COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HOST/runAudioTests.py --case_list 0 --qa_mode 1 --batch_size 3
+    #         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    #     )
+    # endif(libsnd_LIBS)
 
     if( "${BACKEND}" STREQUAL "HIP")
 
@@ -95,19 +96,20 @@ if(Python3_FOUND)
         endif(NIFTI_FOUND)
 
         # Running case by case - one sample for brightness (in tensor_hip) and one sample for slice (in tensor_voxel_hip)
-        add_test(
-            NAME rpp_qa_tests_tensor_hip_brightness
-            COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HIP/runTests.py --qa_mode 1 --batch_size 3 --case_list 0
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        )
-        if(NIFTI_FOUND)
-            add_test(
-                NAME rpp_qa_tests_tensor_voxel_hip_slice
-                COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HIP/runTests_voxel.py --qa_mode 1 --batch_size 3 --case_list 1
-                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-            )
-        endif(NIFTI_FOUND)
-    
+        # TBD: Add each functionality test separately below, and comment/remove "_all" type testing above
+        # add_test(
+        #     NAME rpp_qa_tests_tensor_hip_brightness
+        #     COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HIP/runTests.py --qa_mode 1 --batch_size 3 --case_list 0
+        #     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        # )
+        # if(NIFTI_FOUND)
+        #     add_test(
+        #         NAME rpp_qa_tests_tensor_voxel_hip_slice
+        #         COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/utilities/test_suite/HIP/runTests_voxel.py --qa_mode 1 --batch_size 3 --case_list 1
+        #         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        #     )
+        # endif(NIFTI_FOUND)
+
     elseif( "${BACKEND}" STREQUAL "OCL")
         # TBD: Add OCL Tests
 
