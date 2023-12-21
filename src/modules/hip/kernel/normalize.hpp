@@ -548,6 +548,8 @@ __global__ void reduce_final_3d_kernel1(float *partialSumTensor,
         meanFactor = lengthZ * lengthY;
     else if(axisMask == 6)
         meanFactor = lengthY * lengthX;
+    else if(axisMask == 7)
+        meanFactor = lengthZ * lengthY * lengthX;
 
     float accum = 0.0f;
     while(id_x < numPartialSums)
@@ -692,7 +694,7 @@ __global__ void compute_mean_3d_hip_tensor(float *srcPtr,
             meanTensor[dstIdx] = sh_mem[0] / static_cast<float>(lengthX * lengthZ);
     }
     // compute mean along x-y direction
-    else if(axisMask == 6)
+    else if(axisMask == 6 || axisMask == 7)
     {
         __shared__ float sh_mem[16][16];                                        // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
         float *partialSumRowPtr_smem = &sh_mem[hipThreadIdx_y][0];              // float pointer to beginning of each row in Shared
@@ -1058,6 +1060,42 @@ RppStatus hip_exec_compute_mean_tensor(Rpp32f *srcPtr,
             uint partialSumBlocksPerSample = globalThreads_y * globalThreads_z;
             hipLaunchKernelGGL(reduce_final_3d_kernel1,
                                dim3(ceil((float)partialSumBlocksPerSample/16), srcGenericDescPtr->dims[3], srcGenericDescPtr->dims[0]),
+                               dim3(16, 1, 1),
+                               0,
+                               handle.GetStream(),
+                               partialSumArr,
+                               partialSumBlocksPerSample,
+                               meanTensor,
+                               roiTensor,
+                               axisMask);
+        }
+        else if(axisMask == 7)
+        {
+            localThreads_x = 16;
+            localThreads_y = 16;
+            localThreads_z = 1;
+            globalThreads_x = static_cast<int> (ceil((float)srcGenericDescPtr->dims[3] / localThreads_x));
+            globalThreads_y = static_cast<int> (ceil((float)srcGenericDescPtr->dims[2] / localThreads_y));
+            globalThreads_z = srcGenericDescPtr->dims[0] * srcGenericDescPtr->dims[1];
+
+            partialSumArrLength = globalThreads_x * globalThreads_y * globalThreads_z;
+            hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(Rpp32f), handle.GetStream());
+            hipLaunchKernelGGL(compute_mean_3d_hip_tensor,
+                               dim3(globalThreads_x, globalThreads_y, globalThreads_z),
+                               dim3(localThreads_x, localThreads_y, localThreads_z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint3(srcGenericDescPtr->strides[0], srcGenericDescPtr->strides[1], srcGenericDescPtr->strides[2]),
+                               meanTensor,
+                               roiTensor,
+                               partialSumArr,
+                               maxParamVolume,
+                               axisMask);
+            hipStreamSynchronize(handle.GetStream());
+            uint partialSumBlocksPerSample = globalThreads_x * globalThreads_y * srcGenericDescPtr->dims[1];
+            hipLaunchKernelGGL(reduce_final_3d_kernel1,
+                               dim3(ceil((float)partialSumBlocksPerSample/16), 1, srcGenericDescPtr->dims[0]),
                                dim3(16, 1, 1),
                                0,
                                handle.GetStream(),
