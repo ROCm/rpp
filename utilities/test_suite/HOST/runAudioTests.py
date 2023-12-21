@@ -30,6 +30,7 @@ timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
 scriptPath = os.path.dirname(os.path.realpath(__file__))
 inFilePath = scriptPath + "/../TEST_AUDIO_FILES/three_samples_single_channel_src1"
+outFolderPath = os.getcwd()
 caseMin = 0
 caseMax = 2
 
@@ -65,12 +66,12 @@ def validate_and_remove_folders(path, folder):
     if path == "/*":  # check if the root directory is passed to the function
         print("Root folder cannot be deleted.")
         exit(0)
-    if path and os.path.isdir(path + "/.."):  # checks if directory string is not empty and it exists
-        output_folders = [folder_name for folder_name in os.listdir(path + "/..") if folder_name.startswith(folder)]
+    if path and os.path.isdir(path):  # checks if directory string is not empty and it exists
+        output_folders = [folder_name for folder_name in os.listdir(path) if folder_name.startswith(folder)]
 
         # Loop through each directory and delete it only if it exists
         for folder_name in output_folders:
-            folder_path = os.path.join(path, "..", folder_name)
+            folder_path = os.path.join(path, folder_name)
             if os.path.isdir(folder_path):
                 shutil.rmtree(folder_path)  # Delete the directory if it exists
                 print("Deleted directory:", folder_path)
@@ -190,20 +191,21 @@ if testType == 1 and qaMode == 1:
     print("WARNING: QA Mode cannot be run with testType = 1 (performance tests). Resetting testType to 0")
     testType = 0
 
-if preserveOutput == 0:
-    validate_and_remove_folders(scriptPath, "QA_RESULTS_AUDIO_HOST")
-    validate_and_remove_folders(scriptPath, "OUTPUT_PERFORMANCE_AUDIO_LOGS_HOST")
-
+# set the output folders and number of runs based on type of test (unit test / performance test)
 if(testType == 0):
-    outFilePath = scriptPath + "/../QA_RESULTS_AUDIO_HOST_" + timestamp
+    outFilePath = outFolderPath + "/QA_RESULTS_AUDIO_HOST_" + timestamp
     numRuns = 1
 elif(testType == 1):
     if "--num_runs" not in sys.argv:
         numRuns = 100   #default numRuns for running performance tests
-    outFilePath = scriptPath + "/../OUTPUT_PERFORMANCE_AUDIO_LOGS_HOST_" + timestamp
+    outFilePath = outFolderPath + "/OUTPUT_PERFORMANCE_AUDIO_LOGS_HOST_" + timestamp
 else:
     print("Invalid TEST_TYPE specified. TEST_TYPE should be 0/1 (0 = QA tests / 1 = Performance tests)")
     exit(0)
+
+if preserveOutput == 0:
+    validate_and_remove_folders(outFolderPath, "QA_RESULTS_AUDIO_HOST")
+    validate_and_remove_folders(outFolderPath, "OUTPUT_PERFORMANCE_AUDIO_LOGS_HOST")
 
 os.mkdir(outFilePath)
 loggingFolder = outFilePath
