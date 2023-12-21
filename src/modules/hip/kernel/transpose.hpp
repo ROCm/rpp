@@ -55,18 +55,19 @@ __global__ void transpose_generic_hip_tensor(T *srcPtr,
     uint srcIdx = (id_y * *srcStrides++);
     uint dstCoords[RPPT_MAX_DIMS];
 
-    for (int i = 0; i < dstNumDims; i++)
+    for (int i = 0; i < dstNumDims - 1; i++)
         dstCoords[i] = id_x / dstStrides[i] % dstDims[i];
 
-    for (int i = 0; i < dstNumDims; i++)
+
+    for (int i = 0; i < dstNumDims - 1; i++)
     {
-        srcIdx += (dstCoords[permTensor[i]] * srcStrides[i]);
+        srcIdx += (dstCoords[permTensor[i]] * srcStrides[permTensor[permTensor[i]]]);
         dstIdx += (dstCoords[i] * dstStrides[i]);
     }
 
     if ((id_x < 1000) && (id_y == 0))
     {
-        printf("\n dst-> src id_y = %d, id_x = %d || dstCoords[0] = %u, dstCoords[1] = %u, dstCoords[2] = %u || dstCoords[permTensor[0]] = %u, dstCoords[permTensor[1]] = %u, dstCoords[permTensor[2]] = %u || srcIdx = %u, dstIdx = %u", id_y, id_x, dstCoords[0], dstCoords[1], dstCoords[2], dstCoords[permTensor[0]], dstCoords[permTensor[1]], dstCoords[permTensor[2]], srcIdx, dstIdx);
+        printf("\n dst-> src dstNumDims: %u || id_y = %d, id_x = %d || dstCoords[0] = %u, dstCoords[1] = %u, dstCoords[2] = %u || dstCoords[permTensor[0]] = %u, dstCoords[permTensor[1]] = %u, dstCoords[permTensor[2]] = %u || srcStrides[permTensor[0]] = %d, srcStrides[permTensor[1]] = %d, srcStrides[permTensor[2]] = %d || srcIdx = %u, dstIdx = %u", dstNumDims, id_y, id_x, dstCoords[0], dstCoords[1], dstCoords[2], dstCoords[permTensor[0]], dstCoords[permTensor[1]], dstCoords[permTensor[2]], srcStrides[permTensor[0]], srcStrides[permTensor[1]], srcStrides[permTensor[2]], srcIdx, dstIdx);
     }
 
     dstPtr[dstIdx] = srcPtr[srcIdx];
@@ -74,7 +75,7 @@ __global__ void transpose_generic_hip_tensor(T *srcPtr,
 
 // Vectorized src->dst
 // template <typename T> // temporarily only float
-__global__ void transpose_generic_hip_tensor(float *srcPtr, // T *srcPtr, // temporarily only float
+/*__global__ void transpose_generic_hip_tensor(float *srcPtr, // T *srcPtr, // temporarily only float
                                              uint *srcStrides,
                                              uint *srcDims,
                                              uint srcNumDims,
@@ -145,7 +146,7 @@ __global__ void transpose_generic_hip_tensor(float *srcPtr, // T *srcPtr, // tem
     dstPtr[dstIdxs.ui1[6]] = src_f8.f1[6];  // temporarily only float
     dstPtr[dstIdxs.ui1[7]] = src_f8.f1[7];  // temporarily only float
     // *(d_uint8_s *)&dstPtr[dstIdx] = *(d_uint8_s *)&srcPtr[srcIdx];
-}
+}*/
 
 template <typename T>
 RppStatus hip_exec_transpose_generic_tensor(T *srcPtr,
