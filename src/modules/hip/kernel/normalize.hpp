@@ -301,6 +301,16 @@ void normalize_setup(Rpp32u *roiTensor, Rpp32u batchSize, Rpp32u numDims, Rpp32u
     }
 }
 
+__device__ __forceinline__ void reduction_sum_x_hip(float *partialSum_smem)
+{
+    for(uint threadMax = hipBlockDim_x / 2; threadMax >= 1; threadMax /= 2)
+    {
+        if(hipThreadIdx_x < threadMax)
+            partialSum_smem[hipThreadIdx_x] += partialSum_smem[hipThreadIdx_x + threadMax];
+        __syncthreads();
+    }
+}
+
 __global__ void reduce_final_result_hip(float *partialSumTensor,
                                         uint numPartialSums,
                                         float *meanTensor,
@@ -352,12 +362,7 @@ __global__ void reduce_final_result_hip(float *partialSumTensor,
     __syncthreads();
 
     // Now do block level reduction sum
-    for(int i = 8; i >= 1; i >>= 1)
-    {
-        if(hipThreadIdx_x < i)
-            partialSum_smem[hipThreadIdx_x] += partialSum_smem[hipThreadIdx_x + i];
-        __syncthreads();
-    }
+    reduction_sum_x_hip(partialSum_smem);
 
     // Final store to dst
     if(hipThreadIdx_x == 0)
@@ -430,12 +435,7 @@ __global__ void compute_mean_2d_hip_tensor(float *srcPtr,
         __syncthreads();
 
         // Now do block level reduction sum
-        for(int i = 128; i > 0; i >>= 1)
-        {
-            if(hipThreadIdx_x < i)
-                partialRowSum_smem[hipThreadIdx_x] += partialRowSum_smem[hipThreadIdx_x + i];
-            __syncthreads();
-        }
+        reduction_sum_x_hip(partialRowSum_smem);
 
         // Final store to dst
         if(hipThreadIdx_x == 0)
@@ -447,8 +447,8 @@ __global__ void compute_mean_2d_hip_tensor(float *srcPtr,
     else if(axisMask == 3)
     {
         id_x *= 8;
-        __shared__ float sh_mem[16][16];                               // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
-        float *partialSumRowPtr_smem = &sh_mem[hipThreadIdx_y][0];     // float pointer to beginning of each row in Shared
+        __shared__ float partialSum_smem[16][16];                               // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
+        float *partialSumRowPtr_smem = &partialSum_smem[hipThreadIdx_y][0];     // float pointer to beginning of each row in Shared
         partialSumRowPtr_smem[hipThreadIdx_x] = 0.0f;                           // initialization of Shared to 0.0f using all 16 x 16 threads
 
         if ((id_y >= height) || (id_x >= width))
@@ -473,12 +473,7 @@ __global__ void compute_mean_2d_hip_tensor(float *srcPtr,
         __syncthreads();                                                        // syncthreads after Shared load
 
         // Reduction of 16 floats on 16 threads per block in x dimension (for every y dimension)
-        for (int threadMax = 8; threadMax >= 1; threadMax /= 2)
-        {
-            if (hipThreadIdx_x < threadMax)
-                partialSumRowPtr_smem[hipThreadIdx_x] += partialSumRowPtr_smem[hipThreadIdx_x + threadMax];
-            __syncthreads();
-        }
+        reduction_sum_x_hip(partialSumRowPtr_smem);
 
         if (hipThreadIdx_x == 0)
         {
@@ -550,8 +545,8 @@ __global__ void compute_mean_3d_hip_tensor(float *srcPtr,
     // compute mean along x direction
     else if(axisMask == 4)
     {
-        __shared__ float sh_mem[32];
-        sh_mem[hipThreadIdx_x] = 0.0f;
+        __shared__ float partialSum_smem[32];
+        partialSum_smem[hipThreadIdx_x] = 0.0f;
 
         if(hipBlockIdx_x >= lengthY || hipBlockIdx_y >= lengthZ)
             return;
@@ -568,25 +563,20 @@ __global__ void compute_mean_3d_hip_tensor(float *srcPtr,
             srcIdx += hipBlockDim_x;
             tid_x += hipBlockDim_x;
         }
-        sh_mem[hipThreadIdx_x] = accum;
+        partialSum_smem[hipThreadIdx_x] = accum;
         __syncthreads();
 
         // perform reduction on shared memory sums
-        for(int i = hipBlockDim_x / 2; i >= 1 ; i /= 2)
-        {
-            if(hipThreadIdx_x < i)
-                sh_mem[hipThreadIdx_x] += sh_mem[hipThreadIdx_x + i];
-            __syncthreads();
-        }
+        reduction_sum_x_hip(partialSum_smem);
 
         if(hipThreadIdx_x == 0)
-            meanTensor[dstIdx] = sh_mem[0] / static_cast<float>(lengthX);
+            meanTensor[dstIdx] = partialSum_smem[0] / static_cast<float>(lengthX);
     }
     // compute mean along x-z direction
     else if(axisMask == 5)
     {
-        __shared__ float sh_mem[32];
-        sh_mem[hipThreadIdx_x] = 0.0f;
+        __shared__ float partialSum_smem[32];
+        partialSum_smem[hipThreadIdx_x] = 0.0f;
 
         if(hipBlockIdx_x >= lengthY)
             return;
@@ -603,26 +593,21 @@ __global__ void compute_mean_3d_hip_tensor(float *srcPtr,
                 tid_x += hipBlockDim_x;
             }
         }
-        sh_mem[hipThreadIdx_x] = accum;
+        partialSum_smem[hipThreadIdx_x] = accum;
         __syncthreads();
 
         // perform reduction on shared memory sums
-        for(int i = hipBlockDim_x / 2; i >= 1 ; i /= 2)
-        {
-            if(hipThreadIdx_x < i)
-                sh_mem[hipThreadIdx_x] += sh_mem[hipThreadIdx_x + i];
-            __syncthreads();
-        }
+        reduction_sum_x_hip(partialSum_smem);
 
         if(hipThreadIdx_x == 0)
-            meanTensor[dstIdx] = sh_mem[0] / static_cast<float>(lengthX * lengthZ);
+            meanTensor[dstIdx] = partialSum_smem[0] / static_cast<float>(lengthX * lengthZ);
     }
     // compute mean along x-y direction
     else if(axisMask == 6 || axisMask == 7)
     {
-        __shared__ float sh_mem[16][16];                                        // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
-        float *partialSumRowPtr_smem = &sh_mem[hipThreadIdx_y][0];              // float pointer to beginning of each row in Shared
-        partialSumRowPtr_smem[hipThreadIdx_x] = 0.0f;                           // initialization of Shared to 0.0f using all 16 x 16 threads
+        __shared__ float partialSum_smem[16][16];                                        // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
+        float *partialSumRowPtr_smem = &partialSum_smem[hipThreadIdx_y][0];              // float pointer to beginning of each row in Shared
+        partialSumRowPtr_smem[hipThreadIdx_x] = 0.0f;                                    // initialization of Shared to 0.0f using all 16 x 16 threads
 
         const uint maxLengthZ = srcStridesNZY.x / srcStridesNZY.y;
         uint z_index = id_z % maxLengthZ;
@@ -642,12 +627,7 @@ __global__ void compute_mean_3d_hip_tensor(float *srcPtr,
         __syncthreads();                                                                      // syncthreads after Shared load
 
         // Reduction of 16 floats on 16 threads per block in x dimension (for every y dimension)
-        for (int threadMax = 8; threadMax >= 1; threadMax /= 2)
-        {
-            if (hipThreadIdx_x < threadMax)
-                partialSumRowPtr_smem[hipThreadIdx_x] += partialSumRowPtr_smem[hipThreadIdx_x + threadMax];
-            __syncthreads();
-        }
+        reduction_sum_x_hip(partialSumRowPtr_smem);
 
         if (hipThreadIdx_x == 0)
         {
@@ -670,9 +650,9 @@ __global__ void compute_mean_3d_hip_tensor(float *srcPtr,
     // compute mean along y-z direction
     else if(axisMask == 3)
     {
-        __shared__ float sh_mem[16][16];                                        // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
-        float *partialSumRowPtr_smem = &sh_mem[hipThreadIdx_z][0];              // float pointer to beginning of each row in Shared
-        partialSumRowPtr_smem[hipThreadIdx_y] = 0.0f;                           // initialization of Shared to 0.0f using all 16 x 16 threads
+        __shared__ float partialSum_smem[16][16];                                        // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
+        float *partialSumRowPtr_smem = &partialSum_smem[hipThreadIdx_z][0];              // float pointer to beginning of each row in Shared
+        partialSumRowPtr_smem[hipThreadIdx_y] = 0.0f;                                    // initialization of Shared to 0.0f using all 16 x 16 threads
 
         const uint maxLengthX = srcStridesNZY.z;
         uint x_index = id_x % maxLengthX;
