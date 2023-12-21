@@ -86,6 +86,7 @@ std::map<int, string> augmentationMap =
     {39, "resize_crop_mirror"},
     {49, "box_filter"},
     {54, "gaussian_filter"},
+    {63, "phase"},
     {70, "copy"},
     {80, "resize_mirror_normalize"},
     {81, "color_jitter"},
@@ -927,7 +928,7 @@ void compare_outputs_pkd(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr
         outputTemp = output + imageCnt * dstDescPtr->strides.nStride;
         outputTempRef = refOutput + imageCnt * refOutputSize;
         int height = dstImgSizes[imageCnt].height;
-        int width = dstImgSizes[imageCnt].width * dstDescPtr->c;;
+        int width = dstImgSizes[imageCnt].width * dstDescPtr->c;
         int matched_idx = 0;
         int refOutputHstride = refOutputWidth * dstDescPtr->c;
 
