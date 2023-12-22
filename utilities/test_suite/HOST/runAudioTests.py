@@ -31,6 +31,7 @@ timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 scriptPath = os.path.dirname(os.path.realpath(__file__))
 inFilePath = scriptPath + "/../TEST_AUDIO_FILES/three_samples_single_channel_src1"
 outFolderPath = os.getcwd()
+buildFolderPath = os.getcwd()
 caseMin = 0
 caseMax = 2
 
@@ -88,7 +89,7 @@ def validate_path(input_path):
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list():
     return [
-        scriptPath + "../../OUTPUT_PERFORMANCE_AUDIO_LOGS_HOST_" + timestamp + "/Tensor_host_audio_raw_performance_log.txt",
+        outFolderPath + "/OUTPUT_PERFORMANCE_AUDIO_LOGS_HOST_" + timestamp + "/Tensor_host_audio_raw_performance_log.txt",
     ]
 
 def run_unit_test(srcPath, case, numRuns, testType, batchSize, outFilePath):
@@ -97,7 +98,7 @@ def run_unit_test(srcPath, case, numRuns, testType, batchSize, outFilePath):
     print("Running a New Functionality...")
     print("--------------------------------")
     print(f"./Tensor_host_audio {srcPath} {case} {numRuns} {testType} {numRuns} {batchSize}")
-    result = subprocess.run([scriptPath + "/build/Tensor_host_audio", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath], stdout=subprocess.PIPE)    # nosec
+    result = subprocess.run([buildFolderPath + "/build/Tensor_host_audio", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE)    # nosec
     print(result.stdout.decode())
 
     print("------------------------------------------------------------------------------------------")
@@ -109,7 +110,7 @@ def run_performance_test(loggingFolder, srcPath, case, numRuns, testType, batchS
     print("--------------------------------")
     with open("{}/Tensor_host_audio_raw_performance_log.txt".format(loggingFolder), "a") as log_file:
         print(f"./Tensor_host_audio {srcPath} {case} {numRuns} {testType} {numRuns} {batchSize} ")
-        process = subprocess.Popen([scriptPath + "/build/Tensor_host_audio", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
+        process = subprocess.Popen([buildFolderPath + "/build/Tensor_host_audio", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
         while True:
             output = process.stdout.readline()
             if not output and process.poll() is not None:
@@ -215,13 +216,13 @@ dstPath = outFilePath
 validate_and_remove_files(dstPath)
 
 # Enable extglob
-if os.path.exists(scriptPath + "/build"):
-    shutil.rmtree(scriptPath + "/build")
-os.makedirs(scriptPath + "/build")
-os.chdir(scriptPath + "/build")
+if os.path.exists(buildFolderPath + "/build"):
+    shutil.rmtree(buildFolderPath + "/build")
+os.makedirs(buildFolderPath + "/build")
+os.chdir(buildFolderPath + "/build")
 
 # Run cmake and make commands
-subprocess.run(["cmake", ".."], cwd=".")   # nosec
+subprocess.run(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.run(["make", "-j16"], cwd=".")    # nosec
 
 if testType == 0:

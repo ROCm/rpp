@@ -33,6 +33,7 @@ headerFilePath = scriptPath + "/../TEST_QA_IMAGES_VOXEL"
 dataFilePath = scriptPath + "/../TEST_QA_IMAGES_VOXEL"
 qaInputFile = scriptPath + "/../TEST_QA_IMAGES_VOXEL"
 outFolderPath = os.getcwd()
+buildFolderPath = os.getcwd()
 
 # Check if folder path is empty, if it is the root folder, or if it exists, and remove its contents
 def validate_and_remove_contents(path):
@@ -135,9 +136,9 @@ def create_layout_directories(dst_path, layout_dict):
 
 def get_log_file_list(preserveOutput):
     return [
-        "../../OUTPUT_PERFORMANCE_LOGS_HIP_VOXEL_" + timestamp + "/Tensor_voxel_hip_pkd3_raw_performance_log.txt",
-        "../../OUTPUT_PERFORMANCE_LOGS_HIP_VOXEL_" + timestamp + "/Tensor_voxel_hip_pln3_raw_performance_log.txt",
-        "../../OUTPUT_PERFORMANCE_LOGS_HIP_VOXEL_" + timestamp + "/Tensor_voxel_hip_pln1_raw_performance_log.txt"
+        outFolderPath + "/OUTPUT_PERFORMANCE_LOGS_HIP_VOXEL_" + timestamp + "/Tensor_voxel_hip_pkd3_raw_performance_log.txt",
+        outFolderPath + "/OUTPUT_PERFORMANCE_LOGS_HIP_VOXEL_" + timestamp + "/Tensor_voxel_hip_pln3_raw_performance_log.txt",
+        outFolderPath + "/OUTPUT_PERFORMANCE_LOGS_HIP_VOXEL_" + timestamp + "/Tensor_voxel_hip_pln1_raw_performance_log.txt"
     ]
 
 # Functionality group finder
@@ -174,7 +175,7 @@ def run_unit_test(headerPath, dataPath, dstPathTemp, layout, case, numRuns, test
     for bitDepth in bitDepths:
         print("\n\n\nRunning New Bit Depth...\n-------------------------\n\n")
         print(f"./Tensor_voxel_hip {headerPath} {dataPath} {dstPathTemp} {layout} {case} {numRuns} {testType} {qaMode} {batchSize} {bitDepth}")
-        result = subprocess.run([scriptPath + "/build/Tensor_voxel_hip", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth)], stdout=subprocess.PIPE) # nosec
+        result = subprocess.run([buildFolderPath + "/build/Tensor_voxel_hip", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE) # nosec
         print(result.stdout.decode())
         print("------------------------------------------------------------------------------------------")
 
@@ -187,7 +188,7 @@ def run_performance_test(loggingFolder, logFileLayout, headerPath, dataPath, dst
     for bitDepth in bitDepths:
         with open(f"{loggingFolder}/Tensor_voxel_hip_{logFileLayout}_raw_performance_log.txt", "a") as log_file:
             print(f"./Tensor_voxel_hip {headerPath} {dataPath} {dstPathTemp} {layout} {case}{numRuns} {testType} {qaMode} {batchSize} {bitDepth}")
-            process = subprocess.Popen([scriptPath + "/build/Tensor_voxel_hip", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True) # nosec
+            process = subprocess.Popen([buildFolderPath + "/build/Tensor_voxel_hip", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True) # nosec
             while True:
                 output = process.stdout.readline()
                 if not output and process.poll() is not None:
@@ -213,7 +214,7 @@ def run_performance_test_with_profiler(loggingFolder, logFileLayout, dstPath, he
                 os.mkdir(f"{dstPath}/Tensor_PKD3/case_{case}")
             with open(f"{loggingFolder}/Tensor_voxel_hip_{logFileLayout}_raw_performance_log.txt", "a") as log_file:
                 print(f"\nrocprof --basenames on --timestamp on --stats -o {dstPathTemp}/Tensor_PKD3/case_{case}/output_case{case}.csv ./Tensor_voxel_hip {headerPath} {dataPath} {dstPathTemp}  {layout} {case}{numRuns} {testType} {qaMode} {batchSize} {bitDepth}")
-                process = subprocess.Popen([ 'rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f"{dstPath}/Tensor_PKD3/case_{case}/output_case{case}.csv", scriptPath + "/build/Tensor_voxel_hip", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) # nosec
+                process = subprocess.Popen([ 'rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f"{dstPath}/Tensor_PKD3/case_{case}/output_case{case}.csv", buildFolderPath + "/build/Tensor_voxel_hip", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) # nosec
                 while True:
                     output = process.stdout.readline()
                     if not output and process.poll() is not None:
@@ -225,7 +226,7 @@ def run_performance_test_with_profiler(loggingFolder, logFileLayout, dstPath, he
                 os.mkdir(f"{dstPath}/Tensor_PLN3/case_{case}")
             with open(f"{loggingFolder}/Tensor_voxel_hip_{logFileLayout}_raw_performance_log.txt", "a") as log_file:
                 print(f"\nrocprof --basenames on --timestamp on --stats -o {dstPathTemp}/Tensor_PLN3/case_{case}/output_case{case}.csv ./Tensor_voxel_hip {headerPath} {dataPath} {dstPathTemp}  {layout} {case}{numRuns} {testType} {qaMode} {batchSize} {bitDepth}")
-                process = subprocess.Popen([ 'rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f"{dstPath}/Tensor_PLN3/case_{case}/output_case{case}.csv", scriptPath + "/build/Tensor_voxel_hip", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) # nosec
+                process = subprocess.Popen([ 'rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f"{dstPath}/Tensor_PLN3/case_{case}/output_case{case}.csv", buildFolderPath + "/build/Tensor_voxel_hip", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) # nosec
                 while True:
                     output = process.stdout.readline()
                     if not output and process.poll() is not None:
@@ -237,7 +238,7 @@ def run_performance_test_with_profiler(loggingFolder, logFileLayout, dstPath, he
                 os.mkdir(f"{dstPath}/Tensor_PLN1/case_{case}")
             with open(f"{loggingFolder}/Tensor_voxel_hip_{logFileLayout}_raw_performance_log.txt", "a") as log_file:
                 print(f"\nrocprof --basenames on --timestamp on --stats -o {dstPathTemp}/Tensor_PLN1/case_{case}/output_case{case}.csv ./Tensor_voxel_hip {headerPath} {dataPath} {dstPathTemp}  {layout} {case}{numRuns} {testType} {qaMode} {batchSize} {bitDepth}")
-                process = subprocess.Popen([ 'rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f"{dstPath}/Tensor_PLN1/case_{case}/output_case{case}.csv", scriptPath + "/build/Tensor_voxel_hip", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) # nosec
+                process = subprocess.Popen([ 'rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f"{dstPath}/Tensor_PLN1/case_{case}/output_case{case}.csv", buildFolderPath + "/build/Tensor_voxel_hip", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) # nosec
                 while True:
                     output = process.stdout.readline()
                     if not output and process.poll() is not None:
@@ -361,13 +362,13 @@ dstPath = outFilePath
 validate_and_remove_contents(dstPath)
 
 # Enable extglob
-if os.path.exists(scriptPath + "/build"):
-    shutil.rmtree(scriptPath + "/build")
-os.makedirs(scriptPath + "/build")
-os.chdir(scriptPath + "/build")
+if os.path.exists(buildFolderPath + "/build"):
+    shutil.rmtree(buildFolderPath + "/build")
+os.makedirs(buildFolderPath + "/build")
+os.chdir(buildFolderPath + "/build")
 
 # Run cmake and make commands
-subprocess.run(["cmake", ".."], cwd=".")   # nosec
+subprocess.run(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.run(["make", "-j16"], cwd=".")  # nosec
 
 # Create folders based on testType and profilingOption
@@ -403,7 +404,7 @@ elif (testType == 1 and profilingOption == "YES"):
             run_performance_test_with_profiler(loggingFolder, logFileLayout, dstPath, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize)
 
         RESULTS_DIR = ""
-        RESULTS_DIR = "../../OUTPUT_PERFORMANCE_LOGS_HIP_VOXEL_" + timestamp
+        RESULTS_DIR = outFolderPath + "/OUTPUT_PERFORMANCE_LOGS_HIP_VOXEL_" + timestamp
         print("RESULTS_DIR = " + RESULTS_DIR)
         CONSOLIDATED_FILE_TENSOR_PKD3 = RESULTS_DIR + "/consolidated_results_Tensor_PKD3.stats.csv"
         CONSOLIDATED_FILE_TENSOR_PLN1 = RESULTS_DIR + "/consolidated_results_Tensor_PLN1.stats.csv"
