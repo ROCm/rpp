@@ -38,7 +38,7 @@ __global__ void transpose_generic_hip_tensor(T *srcPtr,
 }*/
 
 // Unvectorized dst->src
-template <typename T>
+/*template <typename T>
 __global__ void transpose_generic_hip_tensor(T *srcPtr,
                                              uint *srcStrides,
                                              T *dstPtr,
@@ -71,7 +71,7 @@ __global__ void transpose_generic_hip_tensor(T *srcPtr,
     }
 
     dstPtr[dstIdx] = srcPtr[srcIdx];
-}
+}*/
 
 // Vectorized src->dst
 // template <typename T> // temporarily only float
@@ -148,6 +148,81 @@ __global__ void transpose_generic_hip_tensor(T *srcPtr,
     // *(d_uint8_s *)&dstPtr[dstIdx] = *(d_uint8_s *)&srcPtr[srcIdx];
 }*/
 
+// Vectorized dst->src
+// template <typename T> // temporarily only float
+__global__ void transpose_generic_hip_tensor(float *srcPtr,
+                                             uint *srcStrides,
+                                             float *dstPtr,
+                                             uint *dstStrides,
+                                             uint *dstDims,
+                                             uint dstNumDims,
+                                             uint *permTensor,
+                                             uint *roiTensor)
+{
+    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+
+    uint dstIdx = (id_y * *dstStrides++);
+    uint srcIdx = (id_y * *srcStrides++);
+    d_uint8 dstCoords[RPPT_MAX_DIMS], srcIdxs;
+    uint4 idx0123 = make_uint4(0, 1, 2, 3);
+    uint4 idx4567 = make_uint4(4, 5, 6, 7);
+    srcIdxs.ui4[0] = make_uint4(srcIdx, srcIdx, srcIdx, srcIdx);
+    srcIdxs.ui4[1] = make_uint4(srcIdx, srcIdx, srcIdx, srcIdx);
+
+    for (int i = 0; i < dstNumDims - 1; i++)
+    {
+        dstCoords[i].ui4[0] = idx0123 / dstStrides[i] % dstDims[i];
+        dstCoords[i].ui4[1] = idx4567 / dstStrides[i] % dstDims[i];
+    }
+
+    if ((id_x == 0) && (id_y == 0))
+    {
+        printf("\ndstCoords[0].ui1[0] = %u", dstCoords[0].ui1[0]);
+        printf("\ndstCoords[0].ui1[1] = %u", dstCoords[0].ui1[1]);
+        printf("\ndstCoords[0].ui1[2] = %u", dstCoords[0].ui1[2]);
+        printf("\ndstCoords[0].ui1[3] = %u", dstCoords[0].ui1[3]);
+        printf("\ndstCoords[0].ui1[4] = %u", dstCoords[0].ui1[4]);
+        printf("\ndstCoords[0].ui1[5] = %u", dstCoords[0].ui1[5]);
+        printf("\ndstCoords[0].ui1[6] = %u", dstCoords[0].ui1[6]);
+        printf("\ndstCoords[0].ui1[7] = %u", dstCoords[0].ui1[7]);
+        printf("\n");
+        printf("\ndstCoords[1].ui1[0] = %u", dstCoords[1].ui1[0]);
+        printf("\ndstCoords[1].ui1[1] = %u", dstCoords[1].ui1[1]);
+        printf("\ndstCoords[1].ui1[2] = %u", dstCoords[1].ui1[2]);
+        printf("\ndstCoords[1].ui1[3] = %u", dstCoords[1].ui1[3]);
+        printf("\ndstCoords[1].ui1[4] = %u", dstCoords[1].ui1[4]);
+        printf("\ndstCoords[1].ui1[5] = %u", dstCoords[1].ui1[5]);
+        printf("\ndstCoords[1].ui1[6] = %u", dstCoords[1].ui1[6]);
+        printf("\ndstCoords[1].ui1[7] = %u", dstCoords[1].ui1[7]);
+    }
+
+
+    for (int i = 0; i < dstNumDims - 1; i++)
+    {
+        for (int j = 0; j < 8; j++)
+            srcIdxs.ui1[j] += (dstCoords[permTensor[i]].ui1[j] * srcStrides[permTensor[permTensor[i]]]);
+        dstIdx += (dstCoords[i].ui1[0] * dstStrides[i]);
+    }
+
+    if ((id_x < 1000) && (id_y == 0))
+    {
+        printf("\nid_x = %d, dstIdx = %u | srcIdxs = %u, %u, %u, %u, %u, %u, %u, %u", id_x, dstIdx, srcIdxs.ui1[0], srcIdxs.ui1[1], srcIdxs.ui1[2], srcIdxs.ui1[3], srcIdxs.ui1[4], srcIdxs.ui1[5], srcIdxs.ui1[6], srcIdxs.ui1[7]);
+    }
+
+    d_float8 dst_f8;
+    dst_f8.f1[0] = srcPtr[srcIdxs.ui1[0]]; // load 8 src pixels
+    dst_f8.f1[1] = srcPtr[srcIdxs.ui1[1]];
+    dst_f8.f1[2] = srcPtr[srcIdxs.ui1[2]];
+    dst_f8.f1[3] = srcPtr[srcIdxs.ui1[3]];
+    dst_f8.f1[4] = srcPtr[srcIdxs.ui1[4]];
+    dst_f8.f1[5] = srcPtr[srcIdxs.ui1[5]];
+    dst_f8.f1[6] = srcPtr[srcIdxs.ui1[6]];
+    dst_f8.f1[7] = srcPtr[srcIdxs.ui1[7]];
+
+    rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
+}
+
 template <typename T>
 RppStatus hip_exec_transpose_generic_tensor(T *srcPtr,
                                             RpptGenericDescPtr srcGenericDescPtr,
@@ -157,8 +232,8 @@ RppStatus hip_exec_transpose_generic_tensor(T *srcPtr,
                                             Rpp32u *roiTensor,
                                             rpp::Handle& handle)
 {
-    int globalThreads_x = dstGenericDescPtr->strides[0];
-    // int globalThreads_x = (dstGenericDescPtr->strides[0] + 7) >> 3;
+    //int globalThreads_x = dstGenericDescPtr->strides[0];
+    int globalThreads_x = (dstGenericDescPtr->strides[0] + 7) >> 3;
     int globalThreads_y = handle.GetBatchSize();
     int globalThreads_z = 1;
 
