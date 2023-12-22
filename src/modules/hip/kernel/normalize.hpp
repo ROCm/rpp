@@ -216,8 +216,7 @@ __global__ void normalize_3d_hip_tensor(float *srcPtr,
 
     uint *paramShape = paramShapeTensor;
     uint *paramStrides = paramStridesTensor;
-    uint paramIndex = id_z * maxParamVolume;
-    paramIndex += (maxParamVolume == 1) ? 0 : compute_3d_paramindex(id_z, id_y, id_x, paramShape, paramStrides);
+    uint paramIndex = (maxParamVolume == 1) ? 0 : compute_3d_paramindex(id_z, id_y, id_x, paramShape, paramStrides);
 
     uint srcIdx = (id_z * srcStridesDH.x) + (id_y * srcStridesDH.y) + id_x;
     uint dstIdx = (id_z * dstStridesDH.x) + (id_y * dstStridesDH.y) + id_x;
@@ -659,7 +658,7 @@ __global__ void compute_mean_3d_hip_tensor(float *srcPtr,
     // compute mean along z direction
     if(axisMask == 1)
     {
-        if(id_x >= lengthX && id_y >= lengthY)
+        if(id_x >= lengthX || id_y >= lengthY)
             return;
 
         uint srcIdx = id_z * srcStridesNZY.x + id_y * srcStridesNZY.z + id_x;
@@ -675,7 +674,7 @@ __global__ void compute_mean_3d_hip_tensor(float *srcPtr,
     // compute mean along y direction
     else if(axisMask == 2)
     {
-        if(id_x >= lengthX && id_y >= lengthZ)
+        if(id_x >= lengthX || id_y >= lengthZ)
             return;
 
         uint srcIdx = id_z * srcStridesNZY.x + id_y * srcStridesNZY.y + id_x;
@@ -866,7 +865,7 @@ __global__ void compute_stddev_3d_hip_tensor(float *srcPtr,
     // compute stddev along z direction
     if(axisMask == 1)
     {
-        if(id_x >= lengthX && id_y >= lengthY)
+        if(id_x >= lengthX || id_y >= lengthY)
             return;
 
         uint srcIdx = id_z * srcStridesNZY.x + id_y * srcStridesNZY.z + id_x;
@@ -884,7 +883,7 @@ __global__ void compute_stddev_3d_hip_tensor(float *srcPtr,
     // compute stddev along y direction
     else if(axisMask == 2)
     {
-        if(id_x >= lengthX && id_y >= lengthZ)
+        if(id_x >= lengthX || id_y >= lengthZ)
             return;
 
         uint srcIdx = id_z * srcStridesNZY.x + id_y * srcStridesNZY.y + id_x;
@@ -1415,6 +1414,7 @@ RppStatus hip_exec_compute_mean_stddev_tensor(Rpp32f *srcPtr,
         }
     }
 
+    hipStreamSynchronize(handle.GetStream());
     return RPP_SUCCESS;
 }
 
