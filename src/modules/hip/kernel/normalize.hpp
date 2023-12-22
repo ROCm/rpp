@@ -982,7 +982,9 @@ __global__ void compute_stddev_3d_hip_tensor(float *srcPtr,
             return;
         }
 
-        uint paramIndex = batchIndex * maxParamVolume + z_index;
+        uint paramIndex = batchIndex * maxParamVolume;
+        if(axisMask == 6)
+            paramIndex += z_index;
         float mean = meanTensor[paramIndex];
         uint srcIdx = (batchIndex * srcStridesNZY.x) + (z_index * srcStridesNZY.y) + (id_y * srcStridesNZY.z) + id_x;                                           // perform small work of vectorized float4 addition
         float val = srcPtr[srcIdx] - mean;
