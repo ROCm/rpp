@@ -334,7 +334,8 @@ install(FILES ${PROJECT_BINARY_DIR}/include/rpp_backend.h
        COMPONENT dev)
 
 # install Test
-install(DIRECTORY utilities/test_suite/ DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/test COMPONENT test)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/cmake DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/test COMPONENT test)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/utilities/test_suite/ DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/test COMPONENT test)
 
 # set license information
 set(CPACK_RESOURCE_FILE_LICENSE  "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
@@ -344,6 +345,8 @@ install(FILES ${CPACK_RESOURCE_FILE_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR}
 install(FILES ${CPACK_RESOURCE_FILE_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR}-test COMPONENT test)
 
 # CTest - Needs RPP Installed
+enable_testing()
+include(CTest)
 add_subdirectory(utilities/test_suite)
 
 # Set package information

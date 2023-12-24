@@ -42,7 +42,7 @@ endif()
 
 # find RPP
 find_library(RPP_LIBRARY NAMES rpp HINTS ${ROCM_PATH}/lib)
-find_path(RPP_INCLUDE_DIR NAMES rpp.h PATHS ${ROCM_PATH}/include/rocdecode)
+find_path(RPP_INCLUDE_DIR NAMES rpp.h PATHS ${ROCM_PATH}/include/rpp)
 
 if(RPP_LIBRARY AND RPP_INCLUDE_DIR)
     set(RPP_FOUND TRUE)
