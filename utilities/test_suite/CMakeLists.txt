@@ -50,7 +50,7 @@ if(RPP_LIBRARY AND RPP_INCLUDE_DIR)
 endif()
 
 if(NOT RPP_FOUND)
-    message(FATAL_ERROR "${PROJECT_NAME} requires RPP. Install RPP and try again")
+    message("-- ${Yellow}${PROJECT_NAME} requires RPP. Install RPP before running CTests")
 endif(NOT RPP_FOUND)
 
 # find required libraries
