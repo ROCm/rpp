@@ -32,5 +32,6 @@ THE SOFTWARE.
 #include "kernel/resize_crop_mirror.hpp"
 #include "kernel/phase.hpp"
 #include "kernel/slice.hpp"
+#include "kernel/flip_voxel.hpp"
 
 #endif // HIP_TENSOR_GEOMETRIC_AUGMENTATIONS_HPP
