@@ -268,6 +268,7 @@ int main(int argc, char * argv[])
                 }
                 case 4:
                 {
+                    testCaseName = "flip_voxel";
                     Rpp32u horizontalTensor[batchSize];
                     Rpp32u verticalTensor[batchSize];
                     Rpp32u depthTensor[batchSize];
@@ -282,8 +283,11 @@ int main(int argc, char * argv[])
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0)
                         rppt_flip_voxel_gpu(d_inputU8, descriptorPtr3D, d_outputU8, descriptorPtr3D, horizontalTensor, verticalTensor, depthTensor, roiGenericSrcPtr, roiTypeSrc, handle);
-                    else
+                    else if(inputBitDepth == 2)
                         rppt_flip_voxel_gpu(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, horizontalTensor, verticalTensor, depthTensor, roiGenericSrcPtr, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
                     break;
                 }
                 default:
