@@ -255,6 +255,28 @@ int main(int argc, char * argv[])
 
                     break;
                 }
+                case 2:
+                {
+                    testCaseName = "flip_voxel";
+                    Rpp32u horizontalTensor[batchSize];
+                    Rpp32u verticalTensor[batchSize];
+                    Rpp32u depthTensor[batchSize];
+
+                    for (int i = 0; i < batchSize; i++)
+                    {
+                        horizontalTensor[i] = 1;
+                        verticalTensor[i] = 1;
+                        depthTensor[i] = 1;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    if(inputBitDepth == 0)
+                        rppt_flip_voxel_host(inputU8, descriptorPtr3D, outputU8, descriptorPtr3D, horizontalTensor, verticalTensor, depthTensor, roiGenericSrcPtr, roiTypeSrc, handle);
+                    else
+                        rppt_flip_voxel_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, horizontalTensor, verticalTensor, depthTensor, roiGenericSrcPtr, roiTypeSrc, handle);
+
+                    break;
+                }
                 default:
                 {
                     missingFuncFlag = 1;

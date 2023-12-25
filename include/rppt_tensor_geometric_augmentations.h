@@ -506,9 +506,9 @@ RppStatus rppt_flip_voxel_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDes
  * \param[in] srcGenericDescPtr source tensor descriptor
  * \param[out] dstPtr destination tensor memory
  * \param[in] dstGenericDescPtr destination tensor descriptor
- * \param [in] horizontalTensor horizontal flag values to set horizontal flip on/off (1D tensor in pinned/GPU memory, of size batchSize, with horizontalTensor[i] = 0/1)
- * \param [in] verticalTensor vertical flag values to set vertical flip on/off (1D tensor in pinned/GPU memory, of size batchSize, with verticalTensor[i] = 0/1)
- * \param [in] depthTensor depth flag values to set depth flip on/off (1D tensor in pinned/GPU memory, of size batchSize, with depthTensor[i] = 0/1)
+ * \param [in] horizontalTensor horizontal flag values to set horizontal flip on/off (1D tensor in pinned/HOST memory, of size batchSize, with horizontalTensor[i] = 0/1)
+ * \param [in] verticalTensor vertical flag values to set vertical flip on/off (1D tensor in pinned/HOST memory, of size batchSize, with verticalTensor[i] = 0/1)
+ * \param [in] depthTensor depth flag values to set depth flip on/off (1D tensor in pinned/HOST memory, of size batchSize, with depthTensor[i] = 0/1)
  * \param[in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
  * \param[in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
  * \param [in] rppHandle HIP-handle

@@ -270,6 +270,26 @@ int main(int argc, char * argv[])
 
                     break;
                 }
+                case 4:
+                {
+                    Rpp32u horizontalTensor[batchSize];
+                    Rpp32u verticalTensor[batchSize];
+                    Rpp32u depthTensor[batchSize];
+
+                    for (int i = 0; i < batchSize; i++)
+                    {
+                        horizontalTensor[i] = 1;
+                        verticalTensor[i] = 1;
+                        depthTensor[i] = 1;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0)
+                        rppt_flip_voxel_gpu(d_inputU8, descriptorPtr3D, d_outputU8, descriptorPtr3D, horizontalTensor, verticalTensor, depthTensor, roiGenericSrcPtr, roiTypeSrc, handle);
+                    else
+                        rppt_flip_voxel_gpu(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, horizontalTensor, verticalTensor, depthTensor, roiGenericSrcPtr, roiTypeSrc, handle);
+                    break;
+                }
                 default:
                 {
                     missingFuncFlag = 1;
