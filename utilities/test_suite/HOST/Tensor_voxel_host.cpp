@@ -53,11 +53,6 @@ int main(int argc, char * argv[])
         fprintf(stdout, "\nUsage: %s <header file> <data file> <layoutType = 0 - PKD3/ 1 - PLN3/ 2 - PLN1>\n", argv[0]);
         exit(1);
     }
-    if ((testCase < 0) || (testCase > 1))
-    {
-        fprintf(stdout, "\nUsage: %s <header file> <data file> <layoutType = 0 for NCDHW / 1 for NDHWC>\n", argv[0]);
-        exit(1);
-    }
 
     if(batchSize > MAX_BATCH_SIZE)
     {
@@ -255,7 +250,7 @@ int main(int argc, char * argv[])
 
                     break;
                 }
-                case 2:
+                case 4:
                 {
                     testCaseName = "flip_voxel";
                     Rpp32u horizontalTensor[batchSize];
@@ -265,8 +260,8 @@ int main(int argc, char * argv[])
                     for (int i = 0; i < batchSize; i++)
                     {
                         horizontalTensor[i] = 1;
-                        verticalTensor[i] = 1;
-                        depthTensor[i] = 1;
+                        verticalTensor[i] = 0;
+                        depthTensor[i] = 0;
                     }
 
                     startWallTime = omp_get_wtime();
