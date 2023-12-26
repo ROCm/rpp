@@ -239,10 +239,14 @@ __global__ void normalize_nd_hip_tensor(float *srcPtr,
                                         uint *paramShapeTensor,
                                         uint *paramStridesTensor,
                                         uint maxParamVolume,
-                                        uint numDims)
+                                        uint numDims,
+                                        uint maxBufferLength)
 {
     uint id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     uint id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    if(id_x >= maxBufferLength)
+        return;
 
     uint *roi = &roiTensor[id_z * numDims * 2 + numDims];
     uint *paramShape = &paramShapeTensor[id_z * numDims];
@@ -264,7 +268,9 @@ __global__ void normalize_nd_hip_tensor(float *srcPtr,
     float stdDev = stdDevTensor[paramIndex];
     float stdDevSquare = stdDev * stdDev;
     float invStdDev = stdDevSquare ? rsqrtf(stdDevSquare) * scale : 0;
-    dstPtr[id_x] = fmaf((srcPtr[id_x] - mean), invStdDev, shift);
+    uint srcIdx, dstIdx;
+    srcIdx = dstIdx = id_z * maxBufferLength + id_x;
+    dstPtr[dstIdx] = fmaf((srcPtr[srcIdx] - mean), invStdDev, shift);
 }
 
 void normalize_setup(Rpp32u *roiTensor, Rpp32u batchSize, Rpp32u numDims, Rpp32u axisMask,
@@ -1067,6 +1073,84 @@ __global__ void compute_stddev_3d_hip_tensor(float *srcPtr,
     }
 }
 
+__global__ void compute_mean_nd_hip_tensor(float *srcPtr,
+                                           uint *srcMaxDims,
+                                           uint *srcStrides,
+                                           float *meanTensor,
+                                           uint *roiTensor,
+                                           uint *paramShapeTensor,
+                                           uint *paramStridesTensor,
+                                           uint maxParamVolume,
+                                           uint numDims,
+                                           uint maxBufferLength)
+{
+    uint id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    uint id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    if(id_x >= maxBufferLength)
+        return;
+
+    uint *roi = &roiTensor[id_z * numDims * 2 + numDims];
+    uint *paramShape = &paramShapeTensor[id_z * numDims];
+    uint *paramStrides = &paramStridesTensor[id_z * numDims];
+
+    uint paramBase = id_z * maxParamVolume;
+    uint paramIndex = 0;
+    if (maxParamVolume != 1)
+    {
+        for (int i = 0; i < numDims; i++)
+        {
+            uint coord = id_x / srcStrides[i] % srcMaxDims[i];
+            if(coord > roi[i])
+                return;
+            paramIndex += rpp_hip_mod(coord, paramShape[i]) * paramStrides[i];
+        }
+    }
+
+    uint srcIdx = id_z * maxBufferLength + id_x;
+    atomicAdd(&meanTensor[paramBase + paramIndex], srcPtr[srcIdx]);
+}
+
+__global__ void compute_stddev_nd_hip_tensor(float *srcPtr,
+                                             uint *srcMaxDims,
+                                             uint *srcStrides,
+                                             float *meanTensor,
+                                             float *stdDevTensor,
+                                             uint *roiTensor,
+                                             uint *paramShapeTensor,
+                                             uint *paramStridesTensor,
+                                             uint maxParamVolume,
+                                             uint numDims,
+                                             uint maxBufferLength)
+{
+    uint id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    uint id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    if(id_x >= maxBufferLength)
+        return;
+
+    uint *roi = &roiTensor[id_z * numDims * 2 + numDims];
+    uint *paramShape = &paramShapeTensor[id_z * numDims];
+    uint *paramStrides = &paramStridesTensor[id_z * numDims];
+
+    uint paramBase = id_z * maxParamVolume;
+    uint paramIndex = 0;
+    if (maxParamVolume != 1)
+    {
+        for (int i = 0; i < numDims; i++)
+        {
+            uint coord = id_x / srcStrides[i] % srcMaxDims[i];
+            if(coord > roi[i])
+                return;
+            paramIndex += rpp_hip_mod(coord, paramShape[i]) * paramStrides[i];
+        }
+    }
+
+    uint srcIdx = id_z * maxBufferLength + id_x;
+    float val = srcPtr[srcIdx] - meanTensor[paramBase + paramIndex];
+    atomicAdd(&stdDevTensor[paramBase + paramIndex], (val * val));
+}
+
 void set_kernel_launch_config_2d(RpptGenericDescPtr srcGenericDescPtr,
                                  int &globalThreads_x,
                                  int &globalThreads_y,
@@ -1238,6 +1322,8 @@ RppStatus hip_exec_compute_mean_stddev_tensor(Rpp32f *srcPtr,
                                               Rpp32u axisMask,
                                               Rpp32u numDims,
                                               Rpp32u maxParamVolume,
+                                              Rpp32u *paramShape,
+                                              Rpp32u *paramStrides,
                                               rpp::Handle& handle)
 {
     Rpp32f *partialSumArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
@@ -1415,6 +1501,58 @@ RppStatus hip_exec_compute_mean_stddev_tensor(Rpp32f *srcPtr,
                                numDims);
         }
     }
+    else if(numDims > 3)
+    {
+        // interpret the input as 1D tensor
+        globalThreads_x = srcGenericDescPtr->strides[0];
+        globalThreads_y = 1;
+        globalThreads_z = srcGenericDescPtr->dims[0];
+        Rpp32u batchSize = globalThreads_z;
+
+        // allocate tensor for src strides
+        Rpp32u *srcMaxDims = handle.GetInitHandle()->mem.mgpu.scratchBuf.uintmem + (2 * batchSize * numDims);
+        Rpp32u *srcStrides = handle.GetInitHandle()->mem.mgpu.scratchBuf.uintmem + (3 * batchSize * numDims);
+        memcpy(srcMaxDims, &srcGenericDescPtr->dims[1], numDims * sizeof(Rpp32u));
+        memcpy(srcStrides, &srcGenericDescPtr->strides[1], numDims * sizeof(Rpp32u));
+
+        if(isMean)
+        {
+            hipLaunchKernelGGL(compute_mean_nd_hip_tensor,
+                               dim3(ceil((float)globalThreads_x/1024), ceil((float)globalThreads_y), ceil((float)globalThreads_z)),
+                               dim3(1024, 1, 1),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               srcMaxDims,
+                               srcStrides,
+                               meanTensor,
+                               roiTensor,
+                               paramShape,
+                               paramStrides,
+                               maxParamVolume,
+                               numDims,
+                               srcGenericDescPtr->strides[0]);
+        }
+        else
+        {
+            hipLaunchKernelGGL(compute_stddev_nd_hip_tensor,
+                               dim3(ceil((float)globalThreads_x/1024), ceil((float)globalThreads_y), ceil((float)globalThreads_z)),
+                               dim3(1024, 1, 1),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               srcMaxDims,
+                               srcStrides,
+                               meanTensor,
+                               stdDevTensor,
+                               roiTensor,
+                               paramShape,
+                               paramStrides,
+                               maxParamVolume,
+                               numDims,
+                               srcGenericDescPtr->strides[0]);
+        }
+    }
 
     hipStreamSynchronize(handle.GetStream());
     return RPP_SUCCESS;
@@ -1452,9 +1590,13 @@ RppStatus hip_exec_normalize_tensor(Rpp32f *srcPtr,
 
     // if computeMean is set compute mean values by processing over input based on axisMask values
     if(computeMean)
-        hip_exec_compute_mean_stddev_tensor(srcPtr, srcGenericDescPtr, meanTensor, stdDevTensor, true, roiTensor, axisMask, numDims, maxParamVolume, handle);
+        hip_exec_compute_mean_stddev_tensor(srcPtr, srcGenericDescPtr, meanTensor, stdDevTensor, true,
+                                            roiTensor, axisMask, numDims, maxParamVolume,
+                                            paramShape, paramStrides, handle);
     if(computeStdDev)
-        hip_exec_compute_mean_stddev_tensor(srcPtr, srcGenericDescPtr, meanTensor, stdDevTensor, false, roiTensor, axisMask, numDims, maxParamVolume, handle);
+        hip_exec_compute_mean_stddev_tensor(srcPtr, srcGenericDescPtr, meanTensor, stdDevTensor, false,
+                                            roiTensor, axisMask, numDims, maxParamVolume,
+                                            paramShape, paramStrides, handle);
 
     // based on number of dimensions call the corresponding kernel
     if (numDims == 2)
@@ -1540,7 +1682,8 @@ RppStatus hip_exec_normalize_tensor(Rpp32f *srcPtr,
                            paramShape,
                            paramStrides,
                            maxParamVolume,
-                           numDims);
+                           numDims,
+                           srcGenericDescPtr->strides[0]);
     }
 
     return RPP_SUCCESS;
