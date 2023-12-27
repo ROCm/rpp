@@ -423,28 +423,55 @@ RppStatus rppt_ricap_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPt
 }
 #endif
 
-/******************** glitch ********************/
+/*! \brief Glitch augmentation on HOST backend for a NCHW/NHWC layout tensor
+ * \details The glitch augmentation adds a glitch effect for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+ * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
+ * - dstPtr depth ranges - Will be same depth as srcPtr.
+ * \image html img150x150.jpg Sample Input
+ * \image html effects_augmentations_glitch_img150x150.jpg Sample Output
+ * \param [in] srcPtr source tensor in HOST memory
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
+ * \param [out] dstPtr destination tensor in HOST memory
+ * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
+ * \param [in] xOffset value for R channel (1D tensor of size batchsize with xOffsetR[n] >= 0 for each image in batch)
+ * \param [in] yOffset value for R channel (1D tensor of size batchsize with yOffsetR[n] >= 0 for each image in batch)
+ * \param [in] xOffset value for G channel (1D tensor of size batchsize with xOffsetG[n] >= 0 for each image in batch)
+ * \param [in] yOffset value for G channel (1D tensor of size batchsize with yOffsetG[n] >= 0 for each image in batch)
+ * \param [in] xOffset value for B channel (1D tensor of size batchsize with xOffsetB[n] >= 0 for each image in batch)
+ * \param [in] yOffset value for B channel (1D tensor of size batchsize with yOffsetB[n] >= 0 for each image in batch)
+ * \param [in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+ * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_glitch_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptChannelOffsets *rgbOffsets, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 
-// Performs a glitch augmentation for a batch of images
-
-// *param[in] srcPtr source tensor memory
-// *param[in] srcDescPtr source tensor descriptor
-// *param[out] dstPtr destination tensor memory
-// *param[in] dstDescPtr destination tensor descriptor
-// *param[in] xOffset value for R channel (1D tensor of size batchsize with xOffsetR[n] >= 0 for each image in batch)
-// *param[in] yOffset value for R channel (1D tensor of size batchsize with yOffsetR[n] >= 0 for each image in batch)
-// *param[in] xOffset value for G channel (1D tensor of size batchsize with xOffsetG[n] >= 0 for each image in batch)
-// *param[in] yOffset value for G channel (1D tensor of size batchsize with yOffsetG[n] >= 0 for each image in batch)
-// *param[in] xOffset value for B channel (1D tensor of size batchsize with xOffsetB[n] >= 0 for each image in batch)
-// *param[in] yOffset value for B channel (1D tensor of size batchsize with yOffsetB[n] >= 0 for each image in batch)
-// *param[in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
-// *param[in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
-// *returns a  RppStatus enumeration.
-// *retval RPP_SUCCESS : No error, Succesful completion
-// *retval RPP_ERROR : Error
-
-RppStatus rppt_glitch_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u *xOffsetR, Rpp32u *yOffsetR, Rpp32u *xOffsetG, Rpp32u *yOffsetG, Rpp32u *xOffsetB, Rpp32u *yOffsetB, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #ifdef GPU_SUPPORT
+/*! \brief Glitch augmentation on HIP backend for a NCHW/NHWC layout tensor
+ * \details The glitch augmentation adds a glitch effect for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+ * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
+ * - dstPtr depth ranges - Will be same depth as srcPtr.
+ * \image html img150x150.jpg Sample Input
+ * \image html effects_augmentations_glitch_img150x150.jpg Sample Output
+ * \param [in] srcPtr source tensor in HIP memory
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
+ * \param [out] dstPtr destination tensor in HIP memory
+ * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
+ * \param [in] xOffset value for R channel (1D tensor of size batchsize with xOffsetR[n] >= 0 for each image in batch)
+ * \param [in] yOffset value for R channel (1D tensor of size batchsize with yOffsetR[n] >= 0 for each image in batch)
+ * \param [in] xOffset value for G channel (1D tensor of size batchsize with xOffsetG[n] >= 0 for each image in batch)
+ * \param [in] yOffset value for G channel (1D tensor of size batchsize with yOffsetG[n] >= 0 for each image in batch)
+ * \param [in] xOffset value for B channel (1D tensor of size batchsize with xOffsetB[n] >= 0 for each image in batch)
+ * \param [in] yOffset value for B channel (1D tensor of size batchsize with yOffsetB[n] >= 0 for each image in batch)
+ * \param [in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+ * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
 RppStatus rppt_glitch_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u *xOffsetR, Rpp32u *yOffsetR, Rpp32u *xOffsetG, Rpp32u *yOffsetG, Rpp32u *xOffsetB, Rpp32u *yOffsetB, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 #endif // RPPT_TENSOR_EFFECTS_AUGMENTATIONS_H

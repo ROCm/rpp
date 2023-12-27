@@ -51,7 +51,7 @@ using namespace cv;
 using namespace std;
 
 #define CUTOFF 1
-#define DEBUG_MODE 0
+#define DEBUG_MODE 1
 #define MAX_IMAGE_DUMP 20
 #define MAX_BATCH_SIZE 512
 #define GOLDEN_OUTPUT_MAX_HEIGHT 150    // Golden outputs are generated with MAX_HEIGHT set to 150. Changing this constant will result in QA test failures
@@ -818,7 +818,7 @@ inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, vector
         fseek(fp, 0, SEEK_END);
         long jpegSize = ftell(fp);
         rewind(fp);
-        unsigned char* jpegBuf = (unsigned char*)malloc(jpegSize);
+        unsigned char* jpegBuf = (unsigned char*)calloc(jpegSize, sizeof(Rpp8u));
         fread(jpegBuf, 1, jpegSize, fp);
         fclose(fp);
 
@@ -831,14 +831,14 @@ inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, vector
         if(descPtr->c == 3)
         {
             elementsInRow = width * descPtr->c;
-            rgbBuf= (Rpp8u*)malloc(width * height * 3);
+            rgbBuf= (Rpp8u*)calloc(width * height * 3, sizeof(Rpp8u));
             if(tjDecompress2(m_jpegDecompressor, jpegBuf, jpegSize, rgbBuf, width, width * 3, height, TJPF_RGB, TJFLAG_ACCURATEDCT) != 0)
                 std::cerr << "\n Jpeg image decode failed ";
         }
         else
         {
             elementsInRow = width;
-            rgbBuf= (Rpp8u*)malloc(width * height);
+            rgbBuf= (Rpp8u*)calloc(width * height, sizeof(Rpp8u));
             if(tjDecompress2(m_jpegDecompressor, jpegBuf, jpegSize, rgbBuf, width, width, height, TJPF_GRAY, 0) != 0)
                 std::cerr << "\n Jpeg image decode failed ";
         }
