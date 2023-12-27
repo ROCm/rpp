@@ -25,7 +25,7 @@ __global__ void glitch_pkd_tensor(T *srcPtr,
 
     int xR, yR, xG, yG, xB, yB;
     xR = id_x + xOffsetR[id_z];
-    yR = id_y + yOffsetR[id_z];
+    yR = id_y + yOffsetR[id_z]; 
     xG = id_x + xOffsetG[id_z];
     yG = id_y + yOffsetG[id_z];
     xB = id_x + xOffsetB[id_z];
@@ -65,7 +65,7 @@ __global__ void glitch_pln_tensor(T *srcPtr,
                                   unsigned int *yOffsetB,
                                   RpptROIPtr roiTensorPtrSrc)
 {
-    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
@@ -96,18 +96,53 @@ __global__ void glitch_pln_tensor(T *srcPtr,
     dstIdxG = dstIdxR + dstStridesNCH.y;
     dstIdxB = dstIdxG + dstStridesNCH.y;
 
+
     if ((yR >= 0) && (yR < roiTensorPtrSrc[id_z].xywhROI.roiHeight) && (xR >= 0) && (xR < roiTensorPtrSrc[id_z].xywhROI.roiWidth))
+    {
+        if()
         srcIdxR = (id_z * srcStridesNCH.x) + ((yR + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (xR + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+        d_float8 pix_f8;
+        rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdxR, &pix_f8);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdxR, &pix_f8);
+    }
+    else
+    {
+        d_float8 pix_f8;
+        rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdxR, &pix_f8);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdxR, &pix_f8);
+    }
 
     if ((yG >= 0) && (yG < roiTensorPtrSrc[id_z].xywhROI.roiHeight) && (xG >= 0) && (xG < roiTensorPtrSrc[id_z].xywhROI.roiWidth))
+    {
         srcIdxG = (id_z * srcStridesNCH.x) + ((yG + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (xG + roiTensorPtrSrc[id_z].xywhROI.xy.x) + srcStridesNCH.y;
+        d_float8 pix_f8;
+        rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdxG, &pix_f8);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdxG, &pix_f8);
+    }
+    else
+    {
+        d_float8 pix_f8;
+        rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdxG, &pix_f8);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdxG, &pix_f8);
+    }
 
     if ((yB >= 0) && (yB < roiTensorPtrSrc[id_z].xywhROI.roiHeight) && (xB >= 0) && (xB < roiTensorPtrSrc[id_z].xywhROI.roiWidth))
+    {
         srcIdxB = (id_z * srcStridesNCH.x) + ((yB + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (xB + roiTensorPtrSrc[id_z].xywhROI.xy.x) + 2 * srcStridesNCH.y;
+        d_float8 pix_f8;
+        rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdxB, &pix_f8);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdxB, &pix_f8);
+    }
+    else
+    {
+        d_float8 pix_f8;
+        rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdxB, &pix_f8);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdxB, &pix_f8);
+    }
 
-    dstPtr[dstIdxR] = srcPtr[srcIdxR];
-    dstPtr[dstIdxG] = srcPtr[srcIdxG];
-    dstPtr[dstIdxB] = srcPtr[srcIdxB];
+    // dstPtr[dstIdxR] = srcPtr[srcIdxR];
+    // dstPtr[dstIdxG] = srcPtr[srcIdxG];
+    // dstPtr[dstIdxB] = srcPtr[srcIdxB];
 }
 
 template <typename T>
@@ -181,7 +216,7 @@ __global__ void glitch_pln3_pkd3_tensor(T *srcPtr,
                                       RpptROIPtr roiTensorPtrSrc)
 {
 
-    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
@@ -256,7 +291,7 @@ RppStatus hip_exec_glitch_tensor(T *srcPtr,
                            handle.GetInitHandle()->mem.mgpu.uintArr[3].uintmem,
                            handle.GetInitHandle()->mem.mgpu.uintArr[4].uintmem,
                            handle.GetInitHandle()->mem.mgpu.uintArr[5].uintmem,
-                          roiTensorPtrSrc);
+                           roiTensorPtrSrc);
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
     {
