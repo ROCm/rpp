@@ -1111,6 +1111,39 @@ __global__ void compute_mean_nd_hip_tensor(float *srcPtr,
     atomicAdd(&meanTensor[paramBase + paramIndex], srcPtr[srcIdx]);
 }
 
+__global__ void final_reduction_nd_hip_tensor(float *meanTensor,
+                                              float *stdDevTensor,
+                                              uint *paramShapeTensor,
+                                              uint *roiTensor,
+                                              uint numDims,
+                                              uint maxParamVolume,
+                                              bool isMean)
+{
+    uint id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    uint id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    uint *paramShape = &paramShapeTensor[id_z * numDims];
+    uint *roi = &roiTensor[id_z * numDims * 2 + numDims];
+
+    uint divisionFactor = 1;
+    uint paramVolume = 1;
+    for(int i = 0; i < numDims; i++)
+    {
+        paramVolume *= paramShape[i];
+        if(paramShape[i] == 1)
+            divisionFactor *= roi[i];
+    }
+
+    if(id_x >= paramVolume)
+        return;
+
+    uint paramIndex = id_z * maxParamVolume + id_x;
+    if(isMean)
+        meanTensor[paramIndex] = meanTensor[paramIndex] / divisionFactor;
+    else
+        stdDevTensor[paramIndex] = sqrtf(stdDevTensor[paramIndex] / divisionFactor);
+}
+
 __global__ void compute_stddev_nd_hip_tensor(float *srcPtr,
                                              uint *srcMaxDims,
                                              uint *srcStrides,
@@ -1552,8 +1585,19 @@ RppStatus hip_exec_compute_mean_stddev_tensor(Rpp32f *srcPtr,
                                numDims,
                                srcGenericDescPtr->strides[0]);
         }
+        hipLaunchKernelGGL(final_reduction_nd_hip_tensor,
+                           dim3(ceil((float)maxParamVolume/1024), 1, globalThreads_z),
+                           dim3(1024, 1, 1),
+                           0,
+                           handle.GetStream(),
+                           meanTensor,
+                           stdDevTensor,
+                           paramShape,
+                           roiTensor,
+                           numDims,
+                           maxParamVolume,
+                           isMean);
     }
-
     hipStreamSynchronize(handle.GetStream());
     return RPP_SUCCESS;
 }
