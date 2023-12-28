@@ -24,12 +24,15 @@ THE SOFTWARE.
 
 int main(int argc, char * argv[])
 {
+    // Handle inputs
+    const int MIN_ARG_COUNT = 11;
+
     int layoutType, testCase, testType, qaFlag, numRuns, batchSize, inputBitDepth;
     char *headerFile, *dataFile, *dstPath;
 
-    if (argc < 7)
+    if (argc < MIN_ARG_COUNT)
     {
-        fprintf(stdout, "\nUsage: %s <header file> <data file> <layoutType = 0 - PKD3/ 1 - PLN3/ 2 - PLN1> <testCase = 0 to 1> <testType = 0 - unit test/ 1 - performance test>\n", argv[0]);
+        printf("\nImproper Usage! Needs all arguments!\n");
         exit(1);
     }
 
@@ -43,6 +46,7 @@ int main(int argc, char * argv[])
     qaFlag = atoi(argv[8]); //0 - QA disabled / 1 - QA enabled
     batchSize = atoi(argv[9]);
     inputBitDepth = atoi(argv[10]);
+    string scriptPath = argv[11];
 
     if ((layoutType < 0) || (layoutType > 2))
     {
@@ -328,7 +332,7 @@ int main(int argc, char * argv[])
                 1.QA Flag is set
                 2.input bit depth 2 (F32)*/
                 if(qaFlag && inputBitDepth == 2)
-                    compare_output(outputF32, oBufferSize, testCaseName, layoutType, descriptorPtr3D, (RpptRoiXyzwhd *)roiGenericSrcPtr, dstPath);
+                    compare_output(outputF32, oBufferSize, testCaseName, layoutType, descriptorPtr3D, (RpptRoiXyzwhd *)roiGenericSrcPtr, dstPath, scriptPath);
                 else
                 {
                     for(int batchCount = 0; batchCount < batchSize; batchCount++)
