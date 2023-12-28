@@ -112,12 +112,15 @@ def runPackageCommand(platform, project) {
                 cd ${project.paths.project_build_prefix}/build/release
                 sudo make package
                 mkdir -p package
+                mv rpp-test*.${packageType} package/${osType}-rpp-test.${packageType}
                 mv rpp-dev*.${packageType} package/${osType}-rpp-dev.${packageType}
                 mv ${packageRunTime}.${packageType} package/${osType}-rpp.${packageType}
                 mv Testing/Temporary/LastTest.log ${osType}-LastTest.log
                 mv Testing/Temporary/LastTestsFailed.log ${osType}-LastTestsFailed.log
+                ${packageDetail} package/${osType}-rpp-test.${packageType}
                 ${packageDetail} package/${osType}-rpp-dev.${packageType}
                 ${packageDetail} package/${osType}-rpp.${packageType}
+                ${packageInfo} package/${osType}-rpp-test.${packageType}
                 ${packageInfo} package/${osType}-rpp-dev.${packageType}
                 ${packageInfo} package/${osType}-rpp.${packageType}
                 """

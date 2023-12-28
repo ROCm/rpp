@@ -22,8 +22,18 @@ cmake_minimum_required(VERSION 3.5)
 set(CMAKE_CXX_COMPILER clang++)
 set(CMAKE_CXX_STANDARD 17)
 project(test_suite/HIP)
-list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../../../cmake)
-set(ROCM_PATH /opt/rocm CACHE PATH "default ROCm installation path")
+
+# ROCM Path
+if(DEFINED ENV{ROCM_PATH})
+  set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
+elseif(ROCM_PATH)
+  message("-- INFO:ROCM_PATH Set -- ${ROCM_PATH}")
+else()
+  set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
+endif()
+
+list(APPEND CMAKE_MODULE_PATH ${ROCM_PATH}/share/rpp/test/cmake)
+
 list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH})
 
 # Set message options
