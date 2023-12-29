@@ -48,17 +48,15 @@ RppStatus multiply_scalar_f32_f32_host_tensor(Rpp32f *srcPtr,
         RpptROI3D roi;
         RpptROI3DPtr roiPtrInput = &roiGenericPtrSrc[batchCount];
         compute_roi3D_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
+        Rpp32u bufferLength = roi.xyzwhdROI.roiWidth * layoutParams.bufferMultiplier;
 
         Rpp32f mulParam = mulTensor[batchCount];
         Rpp32f *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcGenericDescPtr->strides[0];
         dstPtrImage = dstPtr + batchCount * dstGenericDescPtr->strides[0];
 
-        Rpp32u bufferLength = roi.xyzwhdROI.roiWidth * layoutParams.bufferMultiplier;
-
         Rpp32f *srcPtrChannel, *dstPtrChannel;
         dstPtrChannel = dstPtrImage;
-
 #if __AVX2__
         Rpp32u vectorIncrement = 16;
         __m256 pMulParam = _mm256_set1_ps(mulParam);
@@ -68,25 +66,21 @@ RppStatus multiply_scalar_f32_f32_host_tensor(Rpp32f *srcPtr,
         if((srcGenericDescPtr->layout == RpptLayout::NCDHW) && (dstGenericDescPtr->layout == RpptLayout::NCDHW))
         {
             srcPtrChannel = srcPtrImage + (roi.xyzwhdROI.xyz.z * srcGenericDescPtr->strides[2]) + (roi.xyzwhdROI.xyz.y * srcGenericDescPtr->strides[3]) + (roi.xyzwhdROI.xyz.x * layoutParams.bufferMultiplier);
-
             for(int c = 0; c < layoutParams.channelParam; c++)
             {
                 Rpp32f *srcPtrDepth, *dstPtrDepth;
                 srcPtrDepth = srcPtrChannel;
                 dstPtrDepth = dstPtrChannel;
-
                 for(int i = 0; i < roi.xyzwhdROI.roiDepth; i++)
                 {
                     Rpp32f *srcPtrRow, *dstPtrRow;
                     srcPtrRow = srcPtrDepth;
                     dstPtrRow = dstPtrDepth;
-
                     for(int j = 0; j < roi.xyzwhdROI.roiHeight; j++)
                     {
                         Rpp32f *srcPtrTemp, *dstPtrTemp;
                         srcPtrTemp = srcPtrRow;
                         dstPtrTemp = dstPtrRow;
-
                         int vectorLoopCount = 0;
 #if __AVX2__
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
@@ -108,7 +102,6 @@ RppStatus multiply_scalar_f32_f32_host_tensor(Rpp32f *srcPtr,
                     srcPtrDepth += srcGenericDescPtr->strides[2];
                     dstPtrDepth += dstGenericDescPtr->strides[2];
                 }
-
                 srcPtrChannel += srcGenericDescPtr->strides[1];
                 dstPtrChannel += srcGenericDescPtr->strides[1];
             }
@@ -119,19 +112,16 @@ RppStatus multiply_scalar_f32_f32_host_tensor(Rpp32f *srcPtr,
             srcPtrChannel = srcPtrImage + (roi.xyzwhdROI.xyz.z * srcGenericDescPtr->strides[1]) + (roi.xyzwhdROI.xyz.y * srcGenericDescPtr->strides[2]) + (roi.xyzwhdROI.xyz.x * layoutParams.bufferMultiplier);
             Rpp32f *srcPtrDepth = srcPtrChannel;
             Rpp32f *dstPtrDepth = dstPtrChannel;
-
             for(int i = 0; i < roi.xyzwhdROI.roiDepth; i++)
             {
                 Rpp32f *srcPtrRow, *dstPtrRow;
                 srcPtrRow = srcPtrDepth;
                 dstPtrRow = dstPtrDepth;
-
                 for(int j = 0; j < roi.xyzwhdROI.roiHeight; j++)
                 {
                     Rpp32f *srcPtrTemp, *dstPtrTemp;
                     srcPtrTemp = srcPtrRow;
                     dstPtrTemp = dstPtrRow;
-
                     int vectorLoopCount = 0;
 #if __AVX2__
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
