@@ -94,7 +94,7 @@ inline void set_audio_max_dimensions(vector<string> audioFilesPath, int& maxWidt
 void read_audio_batch_and_fill_dims(RpptDescPtr descPtr, Rpp32f *inputf32, vector<string> audioFilesPath, int iterCount, Rpp32s *srcLengthTensor, Rpp32s *channelsTensor)
 {
     auto fileIndex = iterCount * descPtr->n;
-    for (int i = 0, j = fileIndex; i < descPtr->n, j < fileIndex + descPtr->n; i++, j++)
+    for (int i = 0, j = fileIndex; i < descPtr->n; i++, j++)
     {
         Rpp32f *inputTempF32;
         inputTempF32 = inputf32 + (i * descPtr->strides.nStride);
@@ -119,7 +119,7 @@ void read_audio_batch_and_fill_dims(RpptDescPtr descPtr, Rpp32f *inputf32, vecto
         readcount = (int) sf_read_float (infile, inputTempF32, bufferLength);
         if (readcount != bufferLength)
         {
-            std::cout << "Unable to read audio file: "<<audioFilesPath[j].c_str() << std::endl;
+            std::cout << "Unable to read audio file: "<< audioFilesPath[j].c_str() << std::endl;
             exit(0);
         }
 
@@ -128,48 +128,63 @@ void read_audio_batch_and_fill_dims(RpptDescPtr descPtr, Rpp32f *inputf32, vecto
     }
 }
 
-void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dstDims, string testCase, vector<string> audioNames, string dst)
+void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dstDims, string testCase, string dst, string scriptPath)
 {
     fstream refFile;
-    string refPath = get_current_dir_name();
-    string pattern = "HOST/build";
-    remove_substring(refPath, pattern);
-    refPath = refPath + "REFERENCE_OUTPUTS_AUDIO/";
     int fileMatch = 0;
+
+    // read data from golden outputs
+    Rpp64u oBufferSize = dstDescPtr->n * dstDescPtr->strides.nStride;
+    Rpp32f *refOutput = static_cast<Rpp32f *>(malloc(oBufferSize * sizeof(float)));
+    string outFile = scriptPath + testCase + "/" + testCase + ".bin";
+    std::fstream fin(outFile, std::ios::in | std::ios::binary);
+    if(fin.is_open())
+    {
+        for(Rpp64u i = 0; i < oBufferSize; i++)
+        {
+            if(!fin.eof())
+                fin.read(reinterpret_cast<char*>(&refOutput[i]), sizeof(float));
+            else
+            {
+                std::cout<<"\nUnable to read all data from golden outputs\n";
+                return;
+            }
+        }
+    }
+    else
+    {
+        std::cout<<"\nCould not open the reference output. Please check the path specified\n";
+        return;
+    }
+
+    // iterate over all samples in a batch and compare with reference outputs
     for (int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
-        string currentFileName = audioNames[batchCount];
-        size_t lastIndex = currentFileName.find_last_of(".");
-        currentFileName = currentFileName.substr(0, lastIndex);  // Remove extension from file name
-        string outFile = refPath + testCase + "/" + testCase + "_ref_" + currentFileName + ".txt";
-        refFile.open(outFile, ios::in);
-        if (!refFile.is_open())
-        {
-            cout << "\n Unable to open the file specified! Please check the path of the file given as input" << endl;
-            break;
-        }
-        int matchedIndices = 0;
-        Rpp32f refVal, outVal;
         Rpp32f *dstPtrCurrent = dstPtr + batchCount * dstDescPtr->strides.nStride;
+        Rpp32f *refPtrCurrent = refOutput + batchCount * dstDescPtr->strides.nStride;
         Rpp32f *dstPtrRow = dstPtrCurrent;
+        Rpp32f *refPtrRow = refPtrCurrent;
         Rpp32u hStride = dstDescPtr->strides.hStride;
         if (dstDims[batchCount].width == 1)
             hStride = 1;
 
+        int matchedIndices = 0;
         for (int i = 0; i < dstDims[batchCount].height; i++)
         {
             Rpp32f *dstPtrTemp = dstPtrRow;
+            Rpp32f *refPtrTemp = refPtrRow;
             for (int j = 0; j < dstDims[batchCount].width; j++)
             {
-                refFile >> refVal;
+                Rpp32f refVal, outVal;
+                refVal = refPtrTemp[j];
                 outVal = dstPtrTemp[j];
                 bool invalidComparision = ((outVal == 0.0f) && (refVal != 0.0f));
                 if (!invalidComparision && abs(outVal - refVal) < 1e-20)
                     matchedIndices += 1;
             }
             dstPtrRow += hStride;
+            refPtrRow += hStride;
         }
-        refFile.close();
         if (matchedIndices == (dstDims[batchCount].width * dstDims[batchCount].height) && matchedIndices !=0)
             fileMatch++;
     }
@@ -192,6 +207,8 @@ void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dst
         qaResults << status << std::endl;
         qaResults.close();
     }
+
+    free(refOutput);
 }
 
 void verify_non_silent_region_detection(float *detectedIndex, float *detectionLength, string testCase, int bs, vector<string> audioNames, string dst)

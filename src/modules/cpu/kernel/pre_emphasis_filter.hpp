@@ -43,19 +43,9 @@ RppStatus pre_emphasis_filter_host_tensor(Rpp32f *srcPtr,
         Rpp32f *dstPtrTemp = dstPtr + batchCount * dstDescPtr->strides.nStride;
         Rpp32s bufferLength = srcLengthTensor[batchCount];
         Rpp32f coeff = coeffTensor[batchCount];
-
-        if(borderType == RpptAudioBorderType::ZERO)
-            dstPtrTemp[0] = srcPtrTemp[0];
-        else if(borderType == RpptAudioBorderType::CLAMP)
-        {
-            Rpp32f border = srcPtrTemp[0];
-            dstPtrTemp[0] = srcPtrTemp[0] - coeff * border;
-        }
-        else if(borderType == RpptAudioBorderType::REFLECT)
-        {
-            Rpp32f border = srcPtrTemp[1];
-            dstPtrTemp[0] = srcPtrTemp[0] - coeff * border;
-        }
+        Rpp32f border = (borderType == RpptAudioBorderType::CLAMP) ? srcPtrTemp[0] :
+                        (borderType == RpptAudioBorderType::REFLECT) ? srcPtrTemp[1] : 0;
+        dstPtrTemp[0] = srcPtrTemp[0] - coeff * border;
 
         Rpp32s vectorIncrement = 8;
         Rpp32s alignedLength = (bufferLength / 8) * 8;
@@ -74,13 +64,11 @@ RppStatus pre_emphasis_filter_host_tensor(Rpp32f *srcPtr,
             srcPtrTemp += vectorIncrement;
             dstPtrTemp += vectorIncrement;
         }
-
         for(; vectorLoopCount < bufferLength; vectorLoopCount++)
         {
             *dstPtrTemp++ = *srcPtrTemp - coeff * (*(srcPtrTemp - 1));
             srcPtrTemp++;
         }
-
     }
 
     return RPP_SUCCESS;
