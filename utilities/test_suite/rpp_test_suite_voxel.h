@@ -524,16 +524,6 @@ inline void read_nifti_data(vector<string>::const_iterator dataFilePathStart, ve
     }
 }
 
-inline void remove_substring(string &str, string &pattern)
-{
-    std::string::size_type i = str.find(pattern);
-    while (i != std::string::npos)
-    {
-        str.erase(i, pattern.length());
-        i = str.find(pattern, i);
-   }
-}
-
 // compares the output of PKD3-PKD3 variants
 void compare_outputs_pkd(Rpp32f* output, Rpp32f* refOutput, int &fileMatch, RpptGenericDescPtr descriptorPtr3D, RpptRoiXyzwhd *roiGenericSrcPtr)
 {
@@ -615,11 +605,8 @@ void compare_outputs_pln(Rpp32f* output, Rpp32f* refOutput, int &fileMatch, Rppt
     }
 }
 
-inline void compare_output(Rpp32f* output, Rpp64u oBufferSize, string func, int layoutType, RpptGenericDescPtr descriptorPtr3D, RpptRoiXyzwhd *roiGenericSrcPtr, string dst)
+inline void compare_output(Rpp32f* output, Rpp64u oBufferSize, string func, int layoutType, RpptGenericDescPtr descriptorPtr3D, RpptRoiXyzwhd *roiGenericSrcPtr, string dst, string scriptPath)
 {
-    string refPath = get_current_dir_name();
-    string pattern = "/build";
-    remove_substring(refPath, pattern);
     string csvName = "";
     if(layoutType == 0)
         csvName = func + "_nifti_output_pkd3.csv";
@@ -628,7 +615,7 @@ inline void compare_output(Rpp32f* output, Rpp64u oBufferSize, string func, int 
     else
         csvName = func + "_nifti_output_pln1.csv";
 
-    string refFile = refPath + "/../REFERENCE_OUTPUT_VOXEL/"+ func + "/" + csvName;
+    string refFile = scriptPath + "/../REFERENCE_OUTPUT_VOXEL/"+ func + "/" + csvName;
 
     ifstream file(refFile);
     float *refOutput;

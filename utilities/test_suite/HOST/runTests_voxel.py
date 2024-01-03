@@ -32,6 +32,8 @@ scriptPath = os.path.dirname(os.path.realpath(__file__))
 headerFilePath = scriptPath + "/../TEST_QA_IMAGES_VOXEL"
 dataFilePath = scriptPath + "/../TEST_QA_IMAGES_VOXEL"
 qaInputFile = scriptPath + "/../TEST_QA_IMAGES_VOXEL"
+outFolderPath = os.getcwd()
+buildFolderPath = os.getcwd()
 caseMin = 0
 caseMax = 3
 
@@ -64,12 +66,12 @@ def validate_and_remove_folders(path, folder):
     if path == "/*":  # check if the root directory is passed to the function
         print("Root folder cannot be deleted.")
         exit()
-    if path and os.path.isdir(path + "/.."):  # checks if directory string is not empty and it exists
-        output_folders = [folder_name for folder_name in os.listdir(path + "/..") if folder_name.startswith(folder)]
+    if path and os.path.isdir(path):  # checks if directory string is not empty and it exists
+        output_folders = [folder_name for folder_name in os.listdir(path) if folder_name.startswith(folder)]
 
         # Loop through each directory and delete it only if it exists
         for folder_name in output_folders:
-            folder_path = os.path.join(path, "..", folder_name)
+            folder_path = os.path.join(path, folder_name)
             if os.path.isdir(folder_path):
                 shutil.rmtree(folder_path)  # Delete the directory if it exists
                 print("Deleted directory:", folder_path)
@@ -98,9 +100,9 @@ def validate_path(input_path):
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list():
     return [
-        "../../OUTPUT_PERFORMANCE_LOGS_HOST_VOXEL_" + timestamp + "/Tensor_voxel_host_pkd3_raw_performance_log.txt",
-        "../../OUTPUT_PERFORMANCE_LOGS_HOST_VOXEL_" + timestamp + "/Tensor_voxel_host_pln3_raw_performance_log.txt",
-        "../../OUTPUT_PERFORMANCE_LOGS_HOST_VOXEL_" + timestamp + "/Tensor_voxel_host_pln1_raw_performance_log.txt"
+        outFolderPath + "/OUTPUT_PERFORMANCE_LOGS_HOST_VOXEL_" + timestamp + "/Tensor_voxel_host_pkd3_raw_performance_log.txt",
+        outFolderPath + "/OUTPUT_PERFORMANCE_LOGS_HOST_VOXEL_" + timestamp + "/Tensor_voxel_host_pln3_raw_performance_log.txt",
+        outFolderPath + "/OUTPUT_PERFORMANCE_LOGS_HOST_VOXEL_" + timestamp + "/Tensor_voxel_host_pln1_raw_performance_log.txt"
     ]
 
 # Functionality group finder
@@ -146,7 +148,7 @@ def run_unit_test(headerPath, dataPath, dstPathTemp, layout, case, numRuns, test
         print("\n\n\nRunning New Bit Depth...\n-------------------------\n\n")
         print("\n\n\n\n")
         print(f"./Tensor_voxel_host {headerPath} {dataPath} {dstPathTemp} {layout} {case} {numRuns} {testType} {qaMode} {batchSize} {bitDepth}")
-        result = subprocess.run([scriptPath + "/build/Tensor_voxel_host", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth)], stdout=subprocess.PIPE) # nosec
+        result = subprocess.run([buildFolderPath + "/build/Tensor_voxel_host", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE) # nosec
         print(result.stdout.decode())
         print("------------------------------------------------------------------------------------------")
 
@@ -159,7 +161,7 @@ def run_performance_test(loggingFolder, logFileLayout, headerPath, dataPath, dst
     for bitDepth in bitDepths:
         with open(f"{loggingFolder}/Tensor_voxel_host_{logFileLayout}_raw_performance_log.txt", "a") as log_file:
             print(f"./Tensor_voxel_host {headerPath} {dataPath} {dstPathTemp} {layout} {case} {numRuns} {testType} {qaMode} {batchSize} {bitDepth}")
-            process = subprocess.Popen([scriptPath + "/build/Tensor_voxel_host", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True) # nosec
+            process = subprocess.Popen([buildFolderPath + "/build/Tensor_voxel_host", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True) # nosec
             while True:
                 output = process.stdout.readline()
                 if not output and process.poll() is not None:
@@ -259,22 +261,22 @@ if qaMode and batchSize != 3:
 # set the output folders and number of runs based on type of test (unit test / performance test)
 if(testType == 0):
     if qaMode:
-        outFilePath = os.path.join(scriptPath + "/../QA_RESULTS_HOST_VOXEL_" + timestamp)
+        outFilePath = os.path.join(outFolderPath + "/QA_RESULTS_HOST_VOXEL_" + timestamp)
     else:
-        outFilePath = os.path.join(scriptPath + "/../OUTPUT_VOXEL_HOST_" + timestamp)
+        outFilePath = os.path.join(outFolderPath + "/OUTPUT_VOXEL_HOST_" + timestamp)
     numRuns = 1
 elif(testType == 1):
     if "--num_runs" not in sys.argv:
         numRuns = 100 #default numRuns for running performance tests
-    outFilePath = os.path.join(scriptPath + "/../OUTPUT_PERFORMANCE_LOGS_HOST_VOXEL_" + timestamp)
+    outFilePath = os.path.join(outFolderPath + "/OUTPUT_PERFORMANCE_LOGS_HOST_VOXEL_" + timestamp)
 else:
     print("Invalid TEST_TYPE specified. TEST_TYPE should be 0/1 (0 = Unittests / 1 = Performancetests)")
     exit()
 
 if preserveOutput == 0:
-    validate_and_remove_folders(scriptPath, "OUTPUT_VOXEL_HOST")
-    validate_and_remove_folders(scriptPath, "QA_RESULTS_HOST_VOXEL")
-    validate_and_remove_folders(scriptPath, "OUTPUT_PERFORMANCE_LOGS_HOST_VOXEL")
+    validate_and_remove_folders(outFolderPath, "OUTPUT_VOXEL_HOST")
+    validate_and_remove_folders(outFolderPath, "QA_RESULTS_HOST_VOXEL")
+    validate_and_remove_folders(outFolderPath, "OUTPUT_PERFORMANCE_LOGS_HOST_VOXEL")
 
 os.mkdir(outFilePath)
 loggingFolder = outFilePath
@@ -284,13 +286,13 @@ dstPath = outFilePath
 validate_and_remove_contents(dstPath)
 
 # Enable extglob
-if os.path.exists(scriptPath + "/build"):
-    shutil.rmtree(scriptPath + "/build")
-os.makedirs(scriptPath + "/build")
-os.chdir(scriptPath + "/build")
+if os.path.exists(buildFolderPath + "/build"):
+    shutil.rmtree(buildFolderPath + "/build")
+os.makedirs(buildFolderPath + "/build")
+os.chdir(buildFolderPath + "/build")
 
 # Run cmake and make commands
-subprocess.run(["cmake", ".."], cwd=".")   # nosec
+subprocess.run(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.run(["make", "-j16"], cwd=".")  # nosec
 
 print("\n\n\n\n\n")
