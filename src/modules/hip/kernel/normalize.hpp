@@ -1,6 +1,8 @@
 #include <hip/hip_runtime.h>
 #include "rpp_hip_common.hpp"
 
+#define MAX_SHARED_MEMORY_SIZE 1024
+
 __device__ __forceinline__ uint rpp_hip_mod(uint a, uint b)
 {
     return (a % b);
@@ -253,15 +255,12 @@ __global__ void normalize_nd_hip_tensor(float *srcPtr,
     uint *paramStrides = &paramStridesTensor[id_z * numDims];
 
     uint paramIndex = id_z * maxParamVolume;
-    if (maxParamVolume != 1)
+    for (int i = 0; i < numDims; i++)
     {
-        for (int i = 0; i < numDims; i++)
-        {
-            uint coord = id_x / srcStrides[i] % srcMaxDims[i];
-            if(coord > roi[i])
-                return;
-            paramIndex += rpp_hip_mod(coord, paramShape[i]) * paramStrides[i];
-        }
+        uint coord = id_x / srcStrides[i] % srcMaxDims[i];
+        if(coord >= roi[i])
+            return;
+        paramIndex += (maxParamVolume > 1) ? (rpp_hip_mod(coord, paramShape[i]) * paramStrides[i]) : 0;
     }
 
     float mean = meanTensor[paramIndex];
@@ -1087,28 +1086,59 @@ __global__ void compute_mean_nd_hip_tensor(float *srcPtr,
     uint id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     uint id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    if(id_x >= maxBufferLength)
-        return;
-
     uint *roi = &roiTensor[id_z * numDims * 2 + numDims];
     uint *paramShape = &paramShapeTensor[id_z * numDims];
     uint *paramStrides = &paramStridesTensor[id_z * numDims];
-
+    uint srcIdx = id_z * maxBufferLength + id_x;
     uint paramBase = id_z * maxParamVolume;
     uint paramIndex = 0;
-    if (maxParamVolume != 1)
+
+    if(maxParamVolume > MAX_SHARED_MEMORY_SIZE)
     {
+        if(id_x >= maxBufferLength)
+            return;
+
+        // validate if id_x is within the roi of input and compute paramIndex if valid
         for (int i = 0; i < numDims; i++)
         {
             uint coord = id_x / srcStrides[i] % srcMaxDims[i];
-            if(coord > roi[i])
+            if(coord >= roi[i])
                 return;
-            paramIndex += rpp_hip_mod(coord, paramShape[i]) * paramStrides[i];
+            paramIndex += (maxParamVolume > 1) ? (rpp_hip_mod(coord, paramShape[i]) * paramStrides[i]) : 0;
         }
+        atomicAdd(&meanTensor[paramBase + paramIndex], srcPtr[srcIdx]);
     }
+    else
+    {
 
-    uint srcIdx = id_z * maxBufferLength + id_x;
-    atomicAdd(&meanTensor[paramBase + paramIndex], srcPtr[srcIdx]);
+        if(id_x >= (hipBlockDim_x * hipGridDim_x))
+            return;
+
+        // if number of means needed to compute is within in the max shared memory size
+        // use shared memory for atomic addition to reduce global memory traffic
+        bool isValid = true;
+        for (int i = 0; i < numDims; i++)
+        {
+            uint coord = id_x / srcStrides[i] % srcMaxDims[i];
+            if(coord >= roi[i])
+            {
+                isValid = false;
+                break;
+            }
+            paramIndex += (maxParamVolume > 1) ? (rpp_hip_mod(coord, paramShape[i]) * paramStrides[i]) : 0;
+        }
+
+        extern __shared__ float sh_mem[];
+        sh_mem[hipThreadIdx_x] = 0.0f;
+        __syncthreads();
+
+        if(isValid && id_x < maxBufferLength)
+            atomicAdd(&sh_mem[paramIndex], srcPtr[srcIdx]);
+        __syncthreads();
+
+        if (hipThreadIdx_x < maxParamVolume)
+            atomicAdd(&meanTensor[paramBase + hipThreadIdx_x], sh_mem[hipThreadIdx_x]);
+    }
 }
 
 __global__ void final_reduction_nd_hip_tensor(float *meanTensor,
@@ -1159,29 +1189,63 @@ __global__ void compute_stddev_nd_hip_tensor(float *srcPtr,
     uint id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     uint id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    if(id_x >= maxBufferLength)
-        return;
-
     uint *roi = &roiTensor[id_z * numDims * 2 + numDims];
     uint *paramShape = &paramShapeTensor[id_z * numDims];
     uint *paramStrides = &paramStridesTensor[id_z * numDims];
-
+    uint srcIdx = id_z * maxBufferLength + id_x;
     uint paramBase = id_z * maxParamVolume;
     uint paramIndex = 0;
-    if (maxParamVolume != 1)
+
+    if(maxParamVolume > MAX_SHARED_MEMORY_SIZE)
     {
+        if(id_x >= maxBufferLength)
+            return;
+
+        // validate if id_x is within the roi of input and compute paramIndex if valid
         for (int i = 0; i < numDims; i++)
         {
             uint coord = id_x / srcStrides[i] % srcMaxDims[i];
-            if(coord > roi[i])
+            if(coord >= roi[i])
                 return;
-            paramIndex += rpp_hip_mod(coord, paramShape[i]) * paramStrides[i];
+            paramIndex += (maxParamVolume > 1) ? (rpp_hip_mod(coord, paramShape[i]) * paramStrides[i]) : 0;
         }
+        float val = srcPtr[srcIdx] - meanTensor[paramBase + paramIndex];
+        atomicAdd(&stdDevTensor[paramBase + paramIndex], (val * val));
     }
+    else
+    {
 
-    uint srcIdx = id_z * maxBufferLength + id_x;
-    float val = srcPtr[srcIdx] - meanTensor[paramBase + paramIndex];
-    atomicAdd(&stdDevTensor[paramBase + paramIndex], (val * val));
+        if(id_x >= (hipBlockDim_x * hipGridDim_x))
+            return;
+
+        // if number of means needed to compute is within in the max shared memory size
+        // use shared memory for atomic addition to reduce global memory traffic
+        bool isValid = true;
+        for (int i = 0; i < numDims; i++)
+        {
+            uint coord = id_x / srcStrides[i] % srcMaxDims[i];
+            if(coord >= roi[i])
+            {
+                isValid = false;
+                break;
+            }
+            paramIndex += (maxParamVolume > 1) ? (rpp_hip_mod(coord, paramShape[i]) * paramStrides[i]) : 0;
+        }
+
+        extern __shared__ float sh_mem[];
+        sh_mem[hipThreadIdx_x] = 0.0f;
+        __syncthreads();
+
+        if(isValid && id_x < maxBufferLength)
+        {
+            float val = srcPtr[srcIdx] - meanTensor[paramBase + paramIndex];
+            atomicAdd(&sh_mem[paramIndex], (val * val));
+        }
+        __syncthreads();
+
+        if (hipThreadIdx_x < maxParamVolume)
+            atomicAdd(&stdDevTensor[paramBase + hipThreadIdx_x], sh_mem[hipThreadIdx_x]);
+    }
 }
 
 void set_kernel_launch_config_2d(RpptGenericDescPtr srcGenericDescPtr,
@@ -1548,12 +1612,31 @@ RppStatus hip_exec_compute_mean_stddev_tensor(Rpp32f *srcPtr,
         memcpy(srcMaxDims, &srcGenericDescPtr->dims[1], numDims * sizeof(Rpp32u));
         memcpy(srcStrides, &srcGenericDescPtr->strides[1], numDims * sizeof(Rpp32u));
 
+        Rpp32u shared_memory_size = 0;
+        Rpp32u block_size = 1024;
+        if(maxParamVolume <= MAX_SHARED_MEMORY_SIZE)
+        {
+            if(maxParamVolume <= 32)
+                shared_memory_size = 32;
+            else if(maxParamVolume <= 64)
+                shared_memory_size = 64;
+            else if(maxParamVolume <= 128)
+                shared_memory_size = 128;
+            else if(maxParamVolume <= 256)
+                shared_memory_size = 256;
+            else if(maxParamVolume <= 512)
+                shared_memory_size = 512;
+            else
+                shared_memory_size = MAX_SHARED_MEMORY_SIZE;
+            block_size = shared_memory_size;
+        }
+
         if(isMean)
         {
             hipLaunchKernelGGL(compute_mean_nd_hip_tensor,
-                               dim3(ceil((float)globalThreads_x/1024), ceil((float)globalThreads_y), ceil((float)globalThreads_z)),
-                               dim3(1024, 1, 1),
-                               0,
+                               dim3(ceil((float)globalThreads_x/block_size), ceil((float)globalThreads_y), ceil((float)globalThreads_z)),
+                               dim3(block_size, 1, 1),
+                               shared_memory_size,
                                handle.GetStream(),
                                srcPtr,
                                srcMaxDims,
@@ -1569,9 +1652,9 @@ RppStatus hip_exec_compute_mean_stddev_tensor(Rpp32f *srcPtr,
         else
         {
             hipLaunchKernelGGL(compute_stddev_nd_hip_tensor,
-                               dim3(ceil((float)globalThreads_x/1024), ceil((float)globalThreads_y), ceil((float)globalThreads_z)),
-                               dim3(1024, 1, 1),
-                               0,
+                               dim3(ceil((float)globalThreads_x/block_size), ceil((float)globalThreads_y), ceil((float)globalThreads_z)),
+                               dim3(block_size, 1, 1),
+                               shared_memory_size,
                                handle.GetStream(),
                                srcPtr,
                                srcMaxDims,
