@@ -54,11 +54,9 @@ RppStatus bitwise_and_u8_u8_host_tensor(Rpp8u *srcPtr1,
         srcPtr2Channel = srcPtr2Image + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
-#if __AVX2__
         Rpp32u alignedLength = (bufferLength / 48) * 48;
         Rpp32u vectorIncrement = 48;
         Rpp32u vectorIncrementPerChannel = 16;
-#endif
 
         // Bitwise AND with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -80,20 +78,16 @@ RppStatus bitwise_and_u8_u8_host_tensor(Rpp8u *srcPtr1,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
-                    __m256 p1[6], p2[6];
+                    __m128i p1[3], p2[3];
 
-                    rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtr1Temp, p1);    // simd loads
-                    rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtr2Temp, p2);    // simd loads
-                    p1[0] = _mm256_and_ps(p1[0], p2[0]);    // bitwise_and computation
-                    p1[1] = _mm256_and_ps(p1[1], p2[1]);    // bitwise_and computation
-                    p1[2] = _mm256_and_ps(p1[2], p2[2]);    // bitwise_and computation
-                    p1[3] = _mm256_and_ps(p1[3], p2[3]);    // bitwise_and computation
-                    p1[4] = _mm256_and_ps(p1[4], p2[4]);    // bitwise_and computation
-                    p1[5] = _mm256_and_ps(p1[5], p2[5]);    // bitwise_and computation
-                    rpp_simd_store(rpp_store48_f32pln3_to_u8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p1);    // simd stores
+                    rpp_simd_load(rpp_load48_u8pkd3_to_u8pln3, srcPtr1Temp, p1);    // simd loads
+                    rpp_simd_load(rpp_load48_u8pkd3_to_u8pln3, srcPtr2Temp, p2);    // simd loads
+                    p1[0] = _mm_and_si128(p1[0], p2[0]);    // bitwise_and computation
+                    p1[1] = _mm_and_si128(p1[1], p2[1]);    // bitwise_and computation
+                    p1[2] = _mm_and_si128(p1[2], p2[2]);    // bitwise_and computation
+                    rpp_simd_store(rpp_store48_u8pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p1);    // simd stores
 
                     srcPtr1Temp += vectorIncrement;
                     srcPtr2Temp += vectorIncrement;
@@ -101,7 +95,7 @@ RppStatus bitwise_and_u8_u8_host_tensor(Rpp8u *srcPtr1,
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
                 }
-#endif
+
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     *dstPtrTempR++ = static_cast<Rpp8u>(RPPPIXELCHECK((srcPtr1Temp[0] & srcPtr2Temp[0])));
@@ -144,20 +138,16 @@ RppStatus bitwise_and_u8_u8_host_tensor(Rpp8u *srcPtr1,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
-                    __m256 p1[6], p2[6];
+                    __m128i p1[3], p2[3];
 
-                    rpp_simd_load(rpp_load48_u8pln3_to_f32pln3_avx, srcPtr1TempR, srcPtr1TempG, srcPtr1TempB, p1);    // simd loads
-                    rpp_simd_load(rpp_load48_u8pln3_to_f32pln3_avx, srcPtr2TempR, srcPtr2TempG, srcPtr2TempB, p2);    // simd loads
-                    p1[0] = _mm256_and_ps(p1[0], p2[0]);    // bitwise_and computation
-                    p1[1] = _mm256_and_ps(p1[1], p2[1]);    // bitwise_and computation
-                    p1[2] = _mm256_and_ps(p1[2], p2[2]);    // bitwise_and computation
-                    p1[3] = _mm256_and_ps(p1[3], p2[3]);    // bitwise_and computation
-                    p1[4] = _mm256_and_ps(p1[4], p2[4]);    // bitwise_and computation
-                    p1[5] = _mm256_and_ps(p1[5], p2[5]);    // bitwise_and computation
-                    rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTemp, p1);    // simd stores
+                    rpp_simd_load(rpp_load48_u8pln3_to_u8pln3, srcPtr1TempR, srcPtr1TempG, srcPtr1TempB, p1);    // simd loads
+                    rpp_simd_load(rpp_load48_u8pln3_to_u8pln3, srcPtr2TempR, srcPtr2TempG, srcPtr2TempB, p2);    // simd loads
+                    p1[0] = _mm_and_si128(p1[0], p2[0]);    // bitwise_and computation
+                    p1[1] = _mm_and_si128(p1[1], p2[1]);    // bitwise_and computation
+                    p1[2] = _mm_and_si128(p1[2], p2[2]);    // bitwise_and computation
+                    rpp_simd_store(rpp_store48_u8pln3_to_u8pkd3, dstPtrTemp, p1);    // simd stores
 
                     srcPtr1TempR += vectorIncrementPerChannel;
                     srcPtr1TempG += vectorIncrementPerChannel;
@@ -167,7 +157,7 @@ RppStatus bitwise_and_u8_u8_host_tensor(Rpp8u *srcPtr1,
                     srcPtr2TempB += vectorIncrementPerChannel;
                     dstPtrTemp += vectorIncrement;
                 }
-#endif
+
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     dstPtrTemp[0] = static_cast<Rpp8u>(RPPPIXELCHECK((*srcPtr1TempR & *srcPtr2TempR)));
@@ -196,9 +186,7 @@ RppStatus bitwise_and_u8_u8_host_tensor(Rpp8u *srcPtr1,
         // Bitwise AND without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
         else
         {
-#if __AVX2__
             alignedLength = bufferLength & ~15;
-#endif
 
             for(int c = 0; c < layoutParams.channelParam; c++)
             {
@@ -215,22 +203,20 @@ RppStatus bitwise_and_u8_u8_host_tensor(Rpp8u *srcPtr1,
                     dstPtrTemp = dstPtrRow;
 
                     int vectorLoopCount = 0;
-#if __AVX2__
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                     {
-                        __m256 p1[2], p2[2];
+                        __m128i p1, p2;
 
-                        rpp_simd_load(rpp_load16_u8_to_f32_avx, srcPtr1Temp, p1);    // simd loads
-                        rpp_simd_load(rpp_load16_u8_to_f32_avx, srcPtr2Temp, p2);    // simd loads
-                        p1[0] = _mm256_and_ps(p1[0], p2[0]);    // bitwise_and computation
-                        p1[1] = _mm256_and_ps(p1[1], p2[1]);    // bitwise_and computation
-                        rpp_simd_store(rpp_store16_f32_to_u8_avx, dstPtrTemp, p1);    // simd stores
+                        p1 = _mm_loadu_si128((__m128i *)srcPtr1Temp);   // simd loads
+                        p2 = _mm_loadu_si128((__m128i *)srcPtr2Temp);   // simd loads
+                        p1 = _mm_and_si128(p1, p2);    // bitwise_and computation
+                        _mm_storeu_si128((__m128i *)dstPtrTemp, p1);    // simd stores
 
                         srcPtr1Temp += vectorIncrementPerChannel;
                         srcPtr2Temp += vectorIncrementPerChannel;
                         dstPtrTemp += vectorIncrementPerChannel;
                     }
-#endif
+
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         *dstPtrTemp++ = static_cast<Rpp8u>(RPPPIXELCHECK((*srcPtr1Temp & *srcPtr2Temp)));
@@ -768,11 +754,9 @@ RppStatus bitwise_and_i8_i8_host_tensor(Rpp8s *srcPtr1,
         srcPtr2Channel = srcPtr2Image + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
-#if __AVX2__
         Rpp32u alignedLength = (bufferLength / 48) * 48;
         Rpp32u vectorIncrement = 48;
         Rpp32u vectorIncrementPerChannel = 16;
-#endif
 
         // Bitwise AND with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -794,20 +778,16 @@ RppStatus bitwise_and_i8_i8_host_tensor(Rpp8s *srcPtr1,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
-                    __m256 p1[6], p2[6];
+                    __m128i p1[3], p2[3];
 
-                    rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3_avx, srcPtr1Temp, p1);    // simd loads
-                    rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3_avx, srcPtr2Temp, p2);    // simd loads
-                    p1[0] = _mm256_and_ps(p1[0], p2[0]);    // bitwise_and computation
-                    p1[1] = _mm256_and_ps(p1[1], p2[1]);    // bitwise_and computation
-                    p1[2] = _mm256_and_ps(p1[2], p2[2]);    // bitwise_and computation
-                    p1[3] = _mm256_and_ps(p1[3], p2[3]);    // bitwise_and computation
-                    p1[4] = _mm256_and_ps(p1[4], p2[4]);    // bitwise_and computation
-                    p1[5] = _mm256_and_ps(p1[5], p2[5]);    // bitwise_and computation
-                    rpp_simd_store(rpp_store48_f32pln3_to_i8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p1);    // simd stores
+                    rpp_simd_load(rpp_load48_i8pkd3_to_u8pln3, srcPtr1Temp, p1);    // simd loads
+                    rpp_simd_load(rpp_load48_i8pkd3_to_u8pln3, srcPtr2Temp, p2);    // simd loads
+                    p1[0] = _mm_and_si128(p1[0], p2[0]);    // bitwise_and computation
+                    p1[1] = _mm_and_si128(p1[1], p2[1]);    // bitwise_and computation
+                    p1[2] = _mm_and_si128(p1[2], p2[2]);    // bitwise_and computation
+                    rpp_simd_store(rpp_store48_u8pln3_to_i8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p1);    // simd stores
 
                     srcPtr1Temp += vectorIncrement;
                     srcPtr2Temp += vectorIncrement;
@@ -815,7 +795,7 @@ RppStatus bitwise_and_i8_i8_host_tensor(Rpp8s *srcPtr1,
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
                 }
-#endif
+
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     *dstPtrTempR++ = static_cast<Rpp8s>(RPPPIXELCHECKI8(((srcPtr1Temp[0] + 128) & (srcPtr2Temp[0] + 128)) -  128));
@@ -858,20 +838,18 @@ RppStatus bitwise_and_i8_i8_host_tensor(Rpp8s *srcPtr1,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-#if __AVX2__
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
-                {
-                    __m256 p1[6], p2[6];
 
-                    rpp_simd_load(rpp_load48_i8pln3_to_f32pln3_avx, srcPtr1TempR, srcPtr1TempG, srcPtr1TempB, p1);    // simd loads
-                    rpp_simd_load(rpp_load48_i8pln3_to_f32pln3_avx, srcPtr2TempR, srcPtr2TempG, srcPtr2TempB, p2);    // simd loads
-                    p1[0] = _mm256_and_ps(p1[0], p2[0]);    // bitwise_and computation
-                    p1[1] = _mm256_and_ps(p1[1], p2[1]);    // bitwise_and computation
-                    p1[2] = _mm256_and_ps(p1[2], p2[2]);    // bitwise_and computation
-                    p1[3] = _mm256_and_ps(p1[3], p2[3]);    // bitwise_and computation
-                    p1[4] = _mm256_and_ps(p1[4], p2[4]);    // bitwise_and computation
-                    p1[5] = _mm256_and_ps(p1[5], p2[5]);    // bitwise_and computation
-                    rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3_avx, dstPtrTemp, p1);    // simd stores
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    __m128i p1[3], p2[3];
+
+                    rpp_simd_load(rpp_load48_i8pln3_to_u8pln3, srcPtr1TempR, srcPtr1TempG, srcPtr1TempB, p1);    // simd loads
+                    rpp_simd_load(rpp_load48_i8pln3_to_u8pln3, srcPtr2TempR, srcPtr2TempG, srcPtr2TempB, p2);    // simd loads
+                    p1[0] = _mm_and_si128(p1[0], p2[0]);    // bitwise_and computation
+                    p1[1] = _mm_and_si128(p1[1], p2[1]);    // bitwise_and computation
+                    p1[2] = _mm_and_si128(p1[2], p2[2]);    // bitwise_and computation
+                    rpp_simd_store(rpp_store48_u8pln3_to_i8pkd3, dstPtrTemp, p1);    // simd stores
+
 
                     srcPtr1TempR += vectorIncrementPerChannel;
                     srcPtr1TempG += vectorIncrementPerChannel;
@@ -881,7 +859,6 @@ RppStatus bitwise_and_i8_i8_host_tensor(Rpp8s *srcPtr1,
                     srcPtr2TempB += vectorIncrementPerChannel;
                     dstPtrTemp += vectorIncrement;
                 }
-#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     dstPtrTemp[0] = static_cast<Rpp8s>(RPPPIXELCHECKI8(((static_cast<Rpp8u>((*srcPtr1TempR + 128) & static_cast<Rpp8u>(*srcPtr2TempR + 128)))) -  128));
@@ -910,9 +887,7 @@ RppStatus bitwise_and_i8_i8_host_tensor(Rpp8s *srcPtr1,
         // Bitwise AND without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
         else
         {
-#if __AVX2__
             alignedLength = bufferLength & ~15;
-#endif
 
             for(int c = 0; c < layoutParams.channelParam; c++)
             {
@@ -929,25 +904,23 @@ RppStatus bitwise_and_i8_i8_host_tensor(Rpp8s *srcPtr1,
                     dstPtrTemp = dstPtrRow;
 
                     int vectorLoopCount = 0;
-#if __AVX2__
+
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                     {
-                        __m256 p1[2], p2[2];
+                        __m128i p1, p2;
 
-                        rpp_simd_load(rpp_load16_i8_to_f32_avx, srcPtr1Temp, p1);    // simd loads
-                        rpp_simd_load(rpp_load16_i8_to_f32_avx, srcPtr2Temp, p2);    // simd loads
-                        p1[0] = _mm256_and_ps(p1[0], p2[0]);    // bitwise_and computation
-                        p1[1] = _mm256_and_ps(p1[1], p2[1]);    // bitwise_and computation
-                        rpp_simd_store(rpp_store16_f32_to_i8_avx, dstPtrTemp, p1);    // simd stores
+                        p1 = _mm_add_epi8(xmm_pxConvertI8, _mm_loadu_si128((__m128i *)srcPtr1Temp));   // simd loads
+                        p2 = _mm_add_epi8(xmm_pxConvertI8, _mm_loadu_si128((__m128i *)srcPtr2Temp));   // simd loads
+                        p1 = _mm_and_si128(p1, p2);    // bitwise_and computation
+                        _mm_storeu_si128((__m128i *)dstPtrTemp, _mm_sub_epi8(p1, xmm_pxConvertI8));    // simd stores
 
                         srcPtr1Temp += vectorIncrementPerChannel;
                         srcPtr2Temp += vectorIncrementPerChannel;
                         dstPtrTemp += vectorIncrementPerChannel;
                     }
-#endif
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        *dstPtrTemp++ = static_cast<Rpp8s>(RPPPIXELCHECKI8(((static_cast<Rpp8u>((*srcPtr1Temp +  128) & static_cast<Rpp8u>(*srcPtr2Temp+  128)))) -  128));
+                        *dstPtrTemp++ = static_cast<Rpp8s>(RPPPIXELCHECKI8(((static_cast<Rpp8u>((*srcPtr1Temp +  128) & static_cast<Rpp8u>(*srcPtr2Temp +  128)))) -  128));
 
                         srcPtr1Temp++;
                         srcPtr2Temp++;
