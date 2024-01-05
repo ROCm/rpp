@@ -1063,9 +1063,19 @@ int main(int argc, char **argv)
                         else
                             print_array(static_cast<Rpp8u *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
                     }
-                    else if ((dstDescPtr->dataType == RpptDataType::F16) || (dstDescPtr->dataType == RpptDataType::F32))
+                    else if (dstDescPtr->dataType == RpptDataType::F16)
                     {
-                        print_array(static_cast<Rpp32f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
+                        if (testCase == 87)
+                            print_array(static_cast<Rpp64u *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
+                        else
+                            print_array(static_cast<Rpp16f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
+                    }
+                    else if (dstDescPtr->dataType == RpptDataType::F32)
+                    {
+                        if (testCase == 87)
+                            print_array(static_cast<Rpp64u *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
+                        else
+                            print_array(static_cast<Rpp32f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
                     }
                     else if (dstDescPtr->dataType == RpptDataType::I8)
                     {
