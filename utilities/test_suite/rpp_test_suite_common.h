@@ -87,6 +87,7 @@ std::map<int, string> augmentationMap =
     {49, "box_filter"},
     {54, "gaussian_filter"},
     {63, "phase"},
+    {65, "bitwise_AND"}
     {70, "copy"},
     {80, "resize_mirror_normalize"},
     {81, "color_jitter"},
