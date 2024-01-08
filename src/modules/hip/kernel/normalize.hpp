@@ -667,7 +667,7 @@ __global__ void compute_mean_3d_hip_tensor(float *srcPtr,
             }
             accum_f8.f4[0] += src_f8.f4[0];
             accum_f8.f4[1] += src_f8.f4[1];
-            srcIdx += i;
+            srcIdx += 8;
         }
         accum_f8.f4[0] += accum_f8.f4[1];
         accum_f8.f1[0] = (accum_f8.f1[0] + accum_f8.f1[1] + accum_f8.f1[2] + accum_f8.f1[3]);
@@ -926,7 +926,7 @@ __global__ void compute_stddev_3d_hip_tensor(float *srcPtr,
             }
             accum_f8.f4[0] += src_f8.f4[0];
             accum_f8.f4[1] += src_f8.f4[1];
-            srcIdx += i;
+            srcIdx += 8;
         }
         accum_f8.f4[0] += accum_f8.f4[1];
         accum_f8.f1[0] = (accum_f8.f1[0] + accum_f8.f1[1] + accum_f8.f1[2] + accum_f8.f1[3]);
