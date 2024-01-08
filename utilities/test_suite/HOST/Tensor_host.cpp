@@ -831,7 +831,7 @@ int main(int argc, char **argv)
                 }
                 case 65:
                 {
-                    testCaseName = "bitwise_AND";
+                    testCaseName = "bitwise_and";
 
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();
