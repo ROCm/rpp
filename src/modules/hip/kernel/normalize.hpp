@@ -25,8 +25,6 @@ __global__ void normalize_2d_hip_tensor(float *srcPtr,
                                         float scale,
                                         float shift,
                                         uint *roiTensor,
-                                        uint *paramShapeTensor,
-                                        uint *paramStridesTensor,
                                         uint maxParamVolume,
                                         uint axisMask)
 {
@@ -41,10 +39,7 @@ __global__ void normalize_2d_hip_tensor(float *srcPtr,
     if (id_x >= width || id_y >= height)
         return;
 
-    uint *paramShape = &paramShapeTensor[id_z * 2];
-    uint *paramStrides = &paramStridesTensor[id_z * 2];
     uint paramIndex = id_z * maxParamVolume;
-
     // update paramIndex based on axisMask value
     if(axisMask == 1)
         paramIndex += id_x;
@@ -159,25 +154,35 @@ __global__ void normalize_3d_hip_tensor(float *srcPtr,
                                         float scale,
                                         float shift,
                                         uint *roiTensor,
-                                        uint *paramShapeTensor,
-                                        uint *paramStridesTensor,
-                                        uint maxParamVolume)
+                                        uint maxParamVolume,
+                                        uint axisMask)
 {
-    uint id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x; // width
-    uint id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y; // height
-    uint id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z; // depth
+    uint id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x; // lengthX
+    uint id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y; // lengthY
+    uint id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z; // lengthZ
 
     uint *roi = roiTensor;
-    uint width = roi[2];
-    uint height = roi[1];
-    uint depth = roi[0];
+    uint lengthZ = roi[0];
+    uint lengthY = roi[1];
+    uint lengthX = roi[2];
 
-    if (id_x >= width || id_y >= height || id_z >= depth)
+    if (id_x >= lengthX || id_y >= lengthY || id_z >= lengthZ)
         return;
 
-    uint *paramShape = paramShapeTensor;
-    uint *paramStrides = paramStridesTensor;
-    uint paramIndex = (maxParamVolume == 1) ? 0 : compute_3d_paramindex(id_z, id_y, id_x, paramShape, paramStrides);
+    uint paramIndex = 0;
+    // update paramIndex based on axisMask value
+    if(axisMask == 1)
+        paramIndex += id_y * lengthX + id_x;
+    else if(axisMask == 2)
+        paramIndex += id_z * lengthX + id_x;
+    else if(axisMask == 4)
+        paramIndex += id_z * lengthY + id_y;
+    else if(axisMask == 3)
+        paramIndex += id_x;
+    else if(axisMask == 5)
+        paramIndex += id_y;
+    else if(axisMask == 6)
+        paramIndex += id_z;
 
     uint srcIdx = (id_z * srcStridesDH.x) + (id_y * srcStridesDH.y) + id_x;
     uint dstIdx = (id_z * dstStridesDH.x) + (id_y * dstStridesDH.y) + id_x;
@@ -231,8 +236,27 @@ __global__ void normalize_nd_hip_tensor(float *srcPtr,
     dstPtr[dstIdx] = fmaf((srcPtr[srcIdx] - mean), invStdDev, shift);
 }
 
-void normalize_setup(Rpp32u *roiTensor, Rpp32u batchSize, Rpp32u numDims, Rpp32u axisMask,
-                     Rpp32u *paramShapeTensor, Rpp32u *paramStridesTensor, Rpp32u &maxParamVolume)
+void normalize_setup(Rpp32u *roiTensor, Rpp32u batchSize, Rpp32u numDims,
+                     Rpp32u axisMask, Rpp32u &maxParamVolume)
+{
+    maxParamVolume = 1;
+    uint axisSet[RPPT_MAX_DIMS];
+    for(int i = 0; i < numDims; i++)
+        axisSet[i] = ((axisMask & (int)(pow(2, i))) >= 1) ? 1 : 0;
+
+    for(uint i = 0; i < batchSize; i++)
+    {
+        // calculate the max param volume
+        Rpp32u paramVolume = 1;
+        Rpp32u *roi = &roiTensor[numDims * 2 * i + numDims];
+        for(uint j = 0; j < numDims; j++)
+            paramVolume *= (axisSet[j]) ? 1 : roi[j];
+        maxParamVolume = std::max(maxParamVolume, paramVolume);
+    }
+}
+
+void normalize_setup_nd(Rpp32u *roiTensor, Rpp32u batchSize, Rpp32u numDims, Rpp32u axisMask,
+                        Rpp32u *paramShapeTensor, Rpp32u *paramStridesTensor, Rpp32u &maxParamVolume)
 {
     maxParamVolume = 1;
     uint axisSet[RPPT_MAX_DIMS];
@@ -1791,8 +1815,12 @@ RppStatus hip_exec_normalize_tensor(Rpp32f *srcPtr,
 
     // do initial preprocessing and fill the values for paramShape and paramStrides
     Rpp32u maxParamVolume;
-    normalize_setup(roiTensor, batchSize, numDims, axisMask,
-                    paramShape, paramStrides, maxParamVolume);
+    if(numDims == 2 || numDims == 3)
+        normalize_setup(roiTensor, batchSize, numDims,
+                        axisMask, maxParamVolume);
+    else
+        normalize_setup_nd(roiTensor, batchSize, numDims, axisMask,
+                           paramShape, paramStrides, maxParamVolume);
 
     if((computeMean == 0) && (computeStdDev == 0))
         maxParamVolume = 0;
@@ -1829,8 +1857,6 @@ RppStatus hip_exec_normalize_tensor(Rpp32f *srcPtr,
                            scale,
                            shift,
                            roiTensor,
-                           paramShape,
-                           paramStrides,
                            maxParamVolume,
                            axisMask);
     }
@@ -1857,9 +1883,8 @@ RppStatus hip_exec_normalize_tensor(Rpp32f *srcPtr,
                                scale,
                                shift,
                                &roiTensor[batchCount * 6 + 3],
-                               &paramShape[batchCount * 3],
-                               &paramStrides[batchCount * 3],
-                               maxParamVolume);
+                               maxParamVolume,
+                               axisMask);
         }
     }
     else
