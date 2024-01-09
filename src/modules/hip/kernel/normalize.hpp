@@ -765,31 +765,43 @@ __global__ void compute_mean_3d_hip_tensor(float *srcPtr,
     }
     else if(axisMask == 6)
     {
-        __shared__ float partialSum_smem[16];                                     // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
+        __shared__ float partialSum_smem[16];
         partialSum_smem[hipThreadIdx_x] = 0.0f;
         __syncthreads();
 
-        uint x_index = id_x % srcStridesNZY.z;
-        uint y_index = id_x / srcStridesNZY.z;
+        if(id_x >= lengthY || id_y >= lengthZ)
+            return;
+
         uint maxLengthZ = srcStridesNZY.x / srcStridesNZY.y;
-
-        roi = &roiTensor[id_z * 6 + 3];
-        lengthZ = roi[0];
-        lengthY = roi[1];
-        lengthX = roi[2];
-
-        uint srcIdx = (id_z * srcStridesNZY.x) + (id_y * srcStridesNZY.y) + id_x;
-        if((x_index < lengthX) && (y_index < lengthY) && (id_y < lengthZ))
-            partialSum_smem[hipThreadIdx_x] = srcPtr[srcIdx];
-        else
-            partialSum_smem[hipThreadIdx_x] = 0.0f;
+        uint srcIdx = id_z * srcStridesNZY.x + id_y * srcStridesNZY.y + id_x * srcStridesNZY.z;
+        d_float8 accum_f8;
+        accum_f8.f4[0] = (float4)0.0f;
+        accum_f8.f4[1] = (float4)0.0f;
+        for(int i = 0; i < lengthX; i += 8)
+        {
+            d_float8 src_f8;
+            rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);
+            if (i + 8 > lengthX)
+            {
+                int xDiff = lengthX - i;
+                for(int j = xDiff; j < 8; j++)
+                    src_f8.f1[j] = 0.0f;
+            }
+            accum_f8.f4[0] += src_f8.f4[0];
+            accum_f8.f4[1] += src_f8.f4[1];
+            srcIdx += 8;
+        }
+        accum_f8.f4[0] += accum_f8.f4[1];
+        accum_f8.f1[0] = (accum_f8.f1[0] + accum_f8.f1[1] + accum_f8.f1[2] + accum_f8.f1[3]);
+        partialSum_smem[hipThreadIdx_x] = accum_f8.f1[0];
         __syncthreads();
+
+        // Reduction of 16 floats on 16 threads per block in x dimension (for every y dimension)
         reduction_sum_x_hip(partialSum_smem);
 
-        // Final store to dst
-        if ((hipThreadIdx_y == 0) && (hipThreadIdx_x == 0))
+        if(hipThreadIdx_x == 0)
         {
-            uint dstIdx = id_z * maxLengthZ * hipGridDim_x + hipBlockIdx_y * hipGridDim_x + hipBlockIdx_x;
+            uint dstIdx = (id_z * maxLengthZ * hipGridDim_x) + hipBlockIdx_y * hipGridDim_x + hipBlockIdx_x;
             partialSumTensor[dstIdx] = partialSum_smem[0];
         }
     }
@@ -964,6 +976,55 @@ __global__ void compute_stddev_3d_hip_tensor(float *srcPtr,
 
         if(hipThreadIdx_x == 0)
             stdDevTensor[paramIndex] = sqrtf(partialSum_smem[0] / static_cast<float>(lengthX * lengthZ));
+    }
+    else if(axisMask == 6)
+    {
+        __shared__ float partialSum_smem[16];
+        partialSum_smem[hipThreadIdx_x] = 0.0f;
+        __syncthreads();
+
+        if(id_x >= lengthY || id_y >= lengthZ)
+            return;
+
+        uint maxLengthZ = srcStridesNZY.x / srcStridesNZY.y;
+        uint srcIdx = id_z * srcStridesNZY.x + id_y * srcStridesNZY.y + id_x * srcStridesNZY.z;
+
+        uint paramIndex = id_z * maxParamVolume + id_y;
+        float mean = meanTensor[paramIndex];
+        float4 mean_f4 = static_cast<float4>(mean);
+
+        d_float8 accum_f8;
+        accum_f8.f4[0] = (float4)0.0f;
+        accum_f8.f4[1] = (float4)0.0f;
+        for(int i = 0; i < lengthX; i += 8)
+        {
+            d_float8 src_f8;
+            rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);
+            rpp_hip_math_subtract8_const(&src_f8, &src_f8, mean_f4);
+            rpp_hip_math_multiply8(&src_f8, &src_f8, &src_f8);
+            if (i + 8 > lengthX)
+            {
+                int xDiff = lengthX - i;
+                for(int j = xDiff; j < 8; j++)
+                    src_f8.f1[j] = 0.0f;
+            }
+            accum_f8.f4[0] += src_f8.f4[0];
+            accum_f8.f4[1] += src_f8.f4[1];
+            srcIdx += 8;
+        }
+        accum_f8.f4[0] += accum_f8.f4[1];
+        accum_f8.f1[0] = (accum_f8.f1[0] + accum_f8.f1[1] + accum_f8.f1[2] + accum_f8.f1[3]);
+        partialSum_smem[hipThreadIdx_x] = accum_f8.f1[0];
+        __syncthreads();
+
+        // Reduction of 16 floats on 16 threads per block in x dimension (for every y dimension)
+        reduction_sum_x_hip(partialSum_smem);
+
+        if(hipThreadIdx_x == 0)
+        {
+            uint dstIdx = (id_z * maxLengthZ * hipGridDim_x) + hipBlockIdx_y * hipGridDim_x + hipBlockIdx_x;
+            partialSumTensor[dstIdx] = partialSum_smem[0];
+        }
     }
     // compute mean along x-y direction
     else if(axisMask == 7)
@@ -1397,9 +1458,8 @@ void set_kernel_launch_config_3d(RpptGenericDescPtr srcGenericDescPtr,
             localThreads_x = 16;
             localThreads_y = 1;
             localThreads_z = 1;
-            Rpp32u numValues = (srcGenericDescPtr->dims[2] * srcGenericDescPtr->dims[3]);
-            globalThreads_x = static_cast<int> (ceil((float)numValues / localThreads_x));
-            globalThreads_y = static_cast<int> (ceil((float)srcGenericDescPtr->dims[1] / localThreads_y));
+            globalThreads_x = static_cast<int> (ceil((float)srcGenericDescPtr->dims[2] / localThreads_x));
+            globalThreads_y = srcGenericDescPtr->dims[1];
             globalThreads_z = srcGenericDescPtr->dims[0];
 
             Rpp32u partialSumArrLength = globalThreads_x * globalThreads_y * globalThreads_z;
