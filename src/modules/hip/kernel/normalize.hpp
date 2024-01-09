@@ -27,7 +27,8 @@ __global__ void normalize_2d_hip_tensor(float *srcPtr,
                                         uint *roiTensor,
                                         uint *paramShapeTensor,
                                         uint *paramStridesTensor,
-                                        uint maxParamVolume)
+                                        uint maxParamVolume,
+                                        uint axisMask)
 {
     uint id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x; // width
     uint id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y; // height
@@ -43,7 +44,12 @@ __global__ void normalize_2d_hip_tensor(float *srcPtr,
     uint *paramShape = &paramShapeTensor[id_z * 2];
     uint *paramStrides = &paramStridesTensor[id_z * 2];
     uint paramIndex = id_z * maxParamVolume;
-    paramIndex += (maxParamVolume == 1) ? 0 : compute_2d_paramindex(id_y, id_x, paramShape, paramStrides);
+
+    // update paramIndex based on axisMask value
+    if(axisMask == 1)
+        paramIndex += id_x;
+    else if(axisMask == 2)
+        paramIndex += id_y;
 
     uint srcIdx = (id_z * srcStridesNH.x) + (id_y * srcStridesNH.y) + id_x;
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x;
@@ -1825,7 +1831,8 @@ RppStatus hip_exec_normalize_tensor(Rpp32f *srcPtr,
                            roiTensor,
                            paramShape,
                            paramStrides,
-                           maxParamVolume);
+                           maxParamVolume,
+                           axisMask);
     }
     else if (numDims == 3)
     {
