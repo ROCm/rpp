@@ -795,7 +795,7 @@ __global__ void compute_mean_3d_hip_tensor(float *srcPtr,
     }
     else if(axisMask == 6)
     {
-        __shared__ float partialSum_smem[16];
+        __shared__ float partialSum_smem[256];
         partialSum_smem[hipThreadIdx_x] = 0.0f;
         __syncthreads();
 
@@ -1009,7 +1009,7 @@ __global__ void compute_stddev_3d_hip_tensor(float *srcPtr,
     }
     else if(axisMask == 6)
     {
-        __shared__ float partialSum_smem[16];
+        __shared__ float partialSum_smem[256];
         partialSum_smem[hipThreadIdx_x] = 0.0f;
         __syncthreads();
 
@@ -1485,7 +1485,7 @@ void set_kernel_launch_config_3d(RpptGenericDescPtr srcGenericDescPtr,
         // compute along XY direction
         case 6:
         {
-            localThreads_x = 16;
+            localThreads_x = 256;
             localThreads_y = 1;
             localThreads_z = 1;
             globalThreads_x = static_cast<int> (ceil((float)srcGenericDescPtr->dims[2] / localThreads_x));
