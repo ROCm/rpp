@@ -154,7 +154,7 @@ RppStatus rppt_crop_and_patch_host(RppPtr_t srcPtr1,
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
         crop_and_patch_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr1) + srcDescPtr->offsetInBytes,
-                                         static_cast<Rpp8s*>(srcPtr1) + srcDescPtr->offsetInBytes,
+                                         static_cast<Rpp8s*>(srcPtr2) + srcDescPtr->offsetInBytes,
                                          srcDescPtr,
                                          static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                          dstDescPtr,
