@@ -161,6 +161,8 @@ def func_group_finder(case_number):
         return "filter_augmentations"
     elif case_number < 40:
         return "geometric_augmentations"
+    elif case_number < 65:
+        return "arithmetic_operations"
     elif case_number < 87:
         return "data_exchange_operations"
     elif case_number < 88:
@@ -688,7 +690,7 @@ if (testType == 1 and profilingOption == "NO"):
         f.close()
 
 # print the results of qa tests
-supportedCaseList = ['0', '1', '2', '4', '8', '13', '20', '21', '23', '29', '30', '31', '34', '36', '37', '38', '39', '54', '63', '70', '80', '82', '83', '84', '85', '86', '87']
+supportedCaseList = ['0', '1', '2', '4', '8', '13', '20', '21', '23', '29', '30', '31', '34', '36', '37', '38', '39', '54', '63', '65', '70', '80', '82', '83', '84', '85', '86', '87']
 nonQACaseList = ['8', '24', '54', '84'] # Add cases present in supportedCaseList, but without QA support
 
 if qaMode and testType == 0:
