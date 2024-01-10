@@ -480,6 +480,8 @@ RppStatus rppt_slice_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr,
 RppStatus rppt_slice_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
+RppStatus rppt_crop_and_patch_host(RppPtr_t srcPtr1,RppPtr_t srcPtr2, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptROIPtr roiTensorPtrDst,RpptROIPtr cropRoi, RpptROIPtr patchRoi, RpptRoiType roiType, rppHandle_t rppHandle);
+
 /*! @}
  */
 

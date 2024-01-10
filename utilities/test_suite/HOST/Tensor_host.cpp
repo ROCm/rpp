@@ -63,7 +63,7 @@ int main(int argc, char **argv)
     int batchSize = atoi(argv[14]);
 
     bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23 || testCase == 24);
-    bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 63);
+    bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 33 || testCase == 63);
     bool randomOutputCase = (testCase == 84);
     bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24);
     bool noiseTypeCase = (testCase == 8);
@@ -358,6 +358,8 @@ int main(int argc, char **argv)
             vector<string>::const_iterator imageNamesEnd = imageNamesStart + batchSize;
             vector<string>::const_iterator imagesPathSecondStart = imageNamesPathSecond.begin() + (iterCount * batchSize);
             vector<string>::const_iterator imagesPathSecondEnd = imagesPathSecondStart + batchSize;
+            int roiListBatch[4];
+            std::copy(std::begin(roiList), std::end(roiList), std::begin(roiListBatch));
 
             // Set ROIs for src/dst
             set_src_and_dst_roi(imagesPathStart, imagesPathEnd, roiTensorPtrSrc, roiTensorPtrDst, dstImgSizes);
@@ -386,12 +388,12 @@ int main(int argc, char **argv)
             convert_input_bitdepth(input, input_second, inputu8, inputu8Second, inputBitDepth, ioBufferSize, inputBufferSize, srcDescPtr, dualInputCase, conversionFactor);
 
             int roiHeightList[batchSize], roiWidthList[batchSize];
-            if(roiList[0] == 0 && roiList[1] == 0 && roiList[2] == 0 && roiList[3] == 0)
+            if(roiListBatch[0] == 0 && roiListBatch[1] == 0 && roiListBatch[2] == 0 && roiListBatch[3] == 0)
             {
                 for(int i = 0; i < batchSize ; i++)
                 {
-                    roiList[0] = 10;
-                    roiList[1] = 10;
+                    roiListBatch[0] = 10;
+                    roiListBatch[1] = 10;
                     roiWidthList[i] = roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
                     roiHeightList[i] = roiTensorPtrSrc[i].xywhROI.roiHeight / 2;
                 }
@@ -400,8 +402,8 @@ int main(int argc, char **argv)
             {
                 for(int i = 0; i < batchSize ; i++)
                 {
-                    roiWidthList[i] = roiList[2];
-                    roiHeightList[i] = roiList[3];
+                    roiWidthList[i] = roiListBatch[2];
+                    roiHeightList[i] = roiListBatch[3];
                 }
             }
 
@@ -706,14 +708,37 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 33:
+                {
+                    testCaseName = "crop_and_patch";
+
+                    RpptROI *cropRoi = static_cast<RpptROI *>(calloc(batchSize, sizeof(RpptROI)));
+                    RpptROI *patchRoi = static_cast<RpptROI *>(calloc(batchSize, sizeof(RpptROI)));
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        cropRoi[i].xywhROI.xy.x = patchRoi[i].xywhROI.xy.x = roiListBatch[0];
+                        cropRoi[i].xywhROI.xy.y = patchRoi[i].xywhROI.xy.y = roiListBatch[1];
+                        cropRoi[i].xywhROI.roiWidth = roiWidthList[i];
+                        cropRoi[i].xywhROI.roiHeight = roiHeightList[i];
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_crop_and_patch_host(input, input_second, srcDescPtr, output, dstDescPtr, roiTensorPtrDst, cropRoi, patchRoi, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 case 37:
                 {
                     testCaseName = "crop";
 
                     for (i = 0; i < batchSize; i++)
                     {
-                        roiTensorPtrDst[i].xywhROI.xy.x = roiList[0];
-                        roiTensorPtrDst[i].xywhROI.xy.y = roiList[1];
+                        roiTensorPtrDst[i].xywhROI.xy.x = roiListBatch[0];
+                        roiTensorPtrDst[i].xywhROI.xy.y = roiListBatch[1];
                         dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiWidthList[i];
                         dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiHeightList[i];
                     }
@@ -768,8 +793,8 @@ int main(int argc, char **argv)
 
                     for (i = 0; i < batchSize; i++)
                     {
-                        roiTensorPtrDst[i].xywhROI.xy.x = roiList[0];
-                        roiTensorPtrDst[i].xywhROI.xy.y = roiList[1];
+                        roiTensorPtrDst[i].xywhROI.xy.x = roiListBatch[0];
+                        roiTensorPtrDst[i].xywhROI.xy.y = roiListBatch[1];
                         dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiWidthList[i];
                         dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiHeightList[i];
                     }
