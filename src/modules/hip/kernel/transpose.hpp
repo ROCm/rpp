@@ -38,7 +38,7 @@ __global__ void transpose_generic_hip_tensor(T *srcPtr,
 }*/
 
 // Unvectorized dst->src
-/* template <typename T>
+/*template <typename T>
 __global__ void transpose_generic_hip_tensor(T *srcPtr,
                                              uint *srcStrides,
                                              T *dstPtr,
@@ -65,8 +65,13 @@ __global__ void transpose_generic_hip_tensor(T *srcPtr,
         dstIdx += (dstCoords[i] * dstStrides[i]);
     }
 
+    if ((id_x >= 31256) && (id_y == 0))
+    {
+        printf("\nid_x = %d, srcIdx = %u, dstIdx = %u", id_x, srcIdx, dstIdx);
+    }
+
     dstPtr[dstIdx] = srcPtr[srcIdx];
-} */
+}*/
 
 // Vectorized src->dst
 // template <typename T> // temporarily only float
@@ -117,10 +122,10 @@ __global__ void transpose_generic_hip_tensor(T *srcPtr,
 } */
 
 // Vectorized dst->src
-// template <typename T> // temporarily only float
-__global__ void transpose_generic_hip_tensor(float *srcPtr,
+template <typename T>
+__global__ void transpose_generic_hip_tensor(T *srcPtr,
                                              uint *srcStrides,
-                                             float *dstPtr,
+                                             T *dstPtr,
                                              uint *dstStrides,
                                              uint *dstDims,
                                              uint dstNumDims,
@@ -130,14 +135,14 @@ __global__ void transpose_generic_hip_tensor(float *srcPtr,
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
 
-    //if(id_x > (id_y * dstStrides[0]))
-        //return;
+    if(id_x >= dstStrides[0])
+        return;
 
+    int maxLength = dstStrides[0];
+    int xDiff = maxLength - (maxLength & ~7);
     uint dstIdx = (id_y * *dstStrides++);
     uint srcIdx = (id_y * *srcStrides++);
-
-    //if(id_x > dstIdx)
-        //return;
+    uint *roi = &roiTensor[id_y * dstNumDims * 2 + dstNumDims];
 
     d_uint8 dstCoords[RPPT_MAX_DIMS], srcIdxs;
     uint4 idx0123 = make_uint4(id_x, id_x + 1, id_x + 2, id_x + 3);
@@ -150,28 +155,25 @@ __global__ void transpose_generic_hip_tensor(float *srcPtr,
         dstCoords[i].ui4[0] = idx0123 / dstStrides[i] % dstDims[i];
         dstCoords[i].ui4[1] = idx4567 / dstStrides[i] % dstDims[i];
     }
-
     for (int i = 0; i < dstNumDims; i++)
     {
         for (int j = 0; j < 8; j++)
             srcIdxs.ui1[j] += (dstCoords[permTensor[i]].ui1[j] * srcStrides[permTensor[permTensor[i]]]);
         dstIdx += (dstCoords[i].ui1[0] * dstStrides[i]);
     }
-
-    if ((id_x > 15624) && (id_x < 46900) && (id_y == 0))
-    {
-        printf("\nid_x = %d, dstIdx = %u | srcIdxs = %u, %u, %u, %u, %u, %u, %u, %u", id_x, dstIdx, srcIdxs.ui1[0], srcIdxs.ui1[1], srcIdxs.ui1[2], srcIdxs.ui1[3], srcIdxs.ui1[4], srcIdxs.ui1[5], srcIdxs.ui1[6], srcIdxs.ui1[7]);
-    }
+    if((id_x + 8) > maxLength)
+        for(int i = xDiff; i < 8; i++)
+            srcIdxs.ui1[i] += maxLength;
 
     d_float8 dst_f8;
-    dst_f8.f1[0] = srcPtr[srcIdxs.ui1[0]]; // load 8 src pixels
-    dst_f8.f1[1] = srcPtr[srcIdxs.ui1[1]];
-    dst_f8.f1[2] = srcPtr[srcIdxs.ui1[2]];
-    dst_f8.f1[3] = srcPtr[srcIdxs.ui1[3]];
-    dst_f8.f1[4] = srcPtr[srcIdxs.ui1[4]];
-    dst_f8.f1[5] = srcPtr[srcIdxs.ui1[5]];
-    dst_f8.f1[6] = srcPtr[srcIdxs.ui1[6]];
-    dst_f8.f1[7] = srcPtr[srcIdxs.ui1[7]];
+    dst_f8.f1[0] = (float)srcPtr[srcIdxs.ui1[0]]; // load 8 src pixels
+    dst_f8.f1[1] = (float)srcPtr[srcIdxs.ui1[1]];
+    dst_f8.f1[2] = (float)srcPtr[srcIdxs.ui1[2]];
+    dst_f8.f1[3] = (float)srcPtr[srcIdxs.ui1[3]];
+    dst_f8.f1[4] = (float)srcPtr[srcIdxs.ui1[4]];
+    dst_f8.f1[5] = (float)srcPtr[srcIdxs.ui1[5]];
+    dst_f8.f1[6] = (float)srcPtr[srcIdxs.ui1[6]];
+    dst_f8.f1[7] = (float)srcPtr[srcIdxs.ui1[7]];
 
     rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
 }
@@ -191,8 +193,8 @@ RppStatus hip_exec_transpose_generic_tensor(T *srcPtr,
     int globalThreads_z = 1;
 
     hipLaunchKernelGGL(transpose_generic_hip_tensor,
-                       dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((float)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
-                       dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y_1DIM, LOCAL_THREADS_Z_1DIM),
+                       dim3(ceil((float)globalThreads_x/1024), ceil((float)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((float)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
+                       dim3(1024, LOCAL_THREADS_Y_1DIM, LOCAL_THREADS_Z_1DIM),
                        0,
                        handle.GetStream(),
                        srcPtr,
