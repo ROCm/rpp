@@ -63,7 +63,7 @@ int main(int argc, char **argv)
 
     bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23|| testCase == 24 || testCase == 40 || testCase == 41 || testCase == 49 || testCase == 54);
     bool kernelSizeCase = (testCase == 40 || testCase == 41 || testCase == 49 || testCase == 54);
-    bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 63);
+    bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 33 || testCase == 63);
     bool randomOutputCase = (testCase == 84 || testCase == 49 || testCase == 54);
     bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24);
     bool noiseTypeCase = (testCase == 8);
@@ -332,7 +332,7 @@ int main(int argc, char **argv)
         std::cerr<<"\n RICAP only works with BatchSize > 1";
         exit(0);
     }
-  
+
     // Initialize buffers for any reductionType functions
     void *reductionFuncResultArr;
     Rpp32u reductionFuncResultArrLength = srcDescPtr->n * 4;
@@ -409,10 +409,10 @@ int main(int argc, char **argv)
             {
                 for(int i = 0; i < batchSize ; i++)
                 {
-                    roiList[0] = 10;
-                    roiList[1] = 10;
-                    roiWidthList[i] = roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
-                    roiHeightList[i] = roiTensorPtrSrc[i].xywhROI.roiHeight / 2;
+                    roiList[0] = 0;
+                    roiList[1] = 0;
+                    roiWidthList[i] = roiTensorPtrSrc[i].xywhROI.roiWidth;
+                    roiHeightList[i] = roiTensorPtrSrc[i].xywhROI.roiHeight;
                 }
             }
             else
@@ -649,6 +649,31 @@ int main(int argc, char **argv)
                 startWallTime = omp_get_wtime();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                     rppt_color_cast_gpu(d_input, srcDescPtr, d_output, dstDescPtr, rgbTensor, alphaTensor, roiTensorPtrSrc, roiTypeSrc, handle);
+                else
+                    missingFuncFlag = 1;
+
+                break;
+            }
+            case 33:
+            {
+                testCaseName = "crop_and_patch";
+
+                RpptROI *cropRoi, *patchRoi;
+                CHECK(hipHostMalloc(&cropRoi, batchSize * sizeof(RpptROI)));
+                CHECK(hipHostMalloc(&patchRoi, batchSize * sizeof(RpptROI)));
+                for (i = 0; i < batchSize; i++)
+                {
+                    cropRoi[i].xywhROI.xy.x = 8;
+                    cropRoi[i].xywhROI.xy.y = 8;
+                    patchRoi[i].xywhROI.xy.x = 8;
+                    patchRoi[i].xywhROI.xy.y = 8;
+                    patchRoi[i].xywhROI.roiWidth = cropRoi[i].xywhROI.roiWidth = 99;//roiWidthList[i] / 2;
+                    patchRoi[i].xywhROI.roiHeight = cropRoi[i].xywhROI.roiHeight = 99;//roiHeightList[i] / 2;
+                }
+
+                startWallTime = omp_get_wtime();
+                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    rppt_crop_and_patch_gpu(d_input, d_input_second, srcDescPtr, d_output, dstDescPtr, roiTensorPtrSrc, cropRoi, patchRoi, roiTypeSrc, handle);
                 else
                     missingFuncFlag = 1;
 
@@ -1102,7 +1127,7 @@ int main(int argc, char **argv)
                         std::ofstream refFile;
                         refFile.open(func + ".csv");
                         for (int i = 0; i < oBufferSize; i++)
-                            refFile << static_cast<int>(*(outputu8 + i)) << ",";
+                            refFile << static_cast<int>(*(outputu8 + i)) << endl;
                         refFile.close();
                     }
 
