@@ -30,6 +30,7 @@ THE SOFTWARE.
 #include "kernel/resize.hpp"
 #include "kernel/resize_mirror_normalize.hpp"
 #include "kernel/resize_crop_mirror.hpp"
+#include "kernel/phase.hpp"
 #include "kernel/slice.hpp"
 #include "kernel/transpose.hpp"
 

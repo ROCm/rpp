@@ -386,6 +386,16 @@ typedef enum
     TRIANGULAR
 } RpptInterpolationType;
 
+/*! \brief RPPT Audio Border Type
+ * \ingroup group_rppdefs
+ */
+typedef enum
+{
+    ZERO = 0,
+    CLAMP,
+    REFLECT
+} RpptAudioBorderType;
+
 /*! \brief RPPT Tensor 2D ROI LTRB struct
  * \ingroup group_rppdefs
  */
