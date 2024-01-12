@@ -65,22 +65,32 @@ RppStatus hip_exec_transpose_generic_tensor(T *srcPtr,
                                             Rpp32u *roiTensor,
                                             rpp::Handle& handle)
 {
-    int globalThreads_x = (dstGenericDescPtr->strides[0] + 7) >> 3;
-    int globalThreads_y = handle.GetBatchSize();
-    int globalThreads_z = 1;
 
-    hipLaunchKernelGGL(transpose_generic_hip_tensor,
-                       dim3(ceil((float)globalThreads_x/1024), ceil((float)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((float)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
-                       dim3(1024, LOCAL_THREADS_Y_1DIM, LOCAL_THREADS_Z_1DIM),
-                       0,
-                       handle.GetStream(),
-                       srcPtr,
-                       srcGenericDescPtr->strides,
-                       dstPtr,
-                       dstGenericDescPtr->strides,
-                       dstGenericDescPtr->dims + 1,
-                       dstGenericDescPtr->numDims - 1,
-                       permTensor);
+    bool copyInput = true;
+        for(int i = 0; i < dstGenericDescPtr->numDims - 1; i++)
+            copyInput *= (permTensor[i] == i);
+
+    if (copyInput)
+        hipMemcpy(dstPtr, srcPtr, handle.GetBatchSize() * dstGenericDescPtr->strides[0] * sizeof(T), hipMemcpyDeviceToDevice);
+    else
+    {
+        int globalThreads_x = (dstGenericDescPtr->strides[0] + 7) >> 3;
+        int globalThreads_y = handle.GetBatchSize();
+        int globalThreads_z = 1;
+
+        hipLaunchKernelGGL(transpose_generic_hip_tensor,
+                        dim3(ceil((float)globalThreads_x/1024), ceil((float)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((float)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
+                        dim3(1024, LOCAL_THREADS_Y_1DIM, LOCAL_THREADS_Z_1DIM),
+                        0,
+                        handle.GetStream(),
+                        srcPtr,
+                        srcGenericDescPtr->strides,
+                        dstPtr,
+                        dstGenericDescPtr->strides,
+                        dstGenericDescPtr->dims + 1,
+                        dstGenericDescPtr->numDims - 1,
+                        permTensor);
+    }
 
     return RPP_SUCCESS;
 }
