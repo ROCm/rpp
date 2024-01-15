@@ -75,7 +75,7 @@ RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
         }
         else
         {
-            Rpp32f *weights = static_cast<Rpp32f *>(malloc(channels * sizeof(Rpp32f)));
+            Rpp32f *weights = handle.GetInitHandle()->mem.mcpu.tempFloatmem + batchCount * channels;
             std::fill(weights, weights + channels, 1.f / channels);
 
             if(normalizeWeights)
@@ -107,7 +107,7 @@ RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
                 Rpp32s channelLoopCount = 0;
                 if(flag_avx)
                 {
-                    __m256 pDst = _mm256_setzero_ps();
+                    __m256 pDst = avx_p0;
                     for(; channelLoopCount < alignedChannels; channelLoopCount += channelIncrement)
                     {
                         __m256 pSrc, pWeights;
@@ -124,7 +124,7 @@ RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
                 }
                 else
                 {
-                    __m128 pDst = _mm_setzero_ps();
+                    __m128 pDst = xmm_p0;
                     for(; channelLoopCount < alignedChannels; channelLoopCount += channelIncrement)
                     {
                         __m128 pSrc, pWeights;
@@ -140,7 +140,6 @@ RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
                         dstPtrTemp[dstIdx] += ((*srcPtrTemp++) * weights[channelLoopCount]);
                 }
             }
-            free(weights);
         }
     }
 
