@@ -21,7 +21,7 @@ __global__ void flip_ncdhw_tensor(T *srcPtr,
     }
 
     int dstIdx = (id_z * dstStridesCDH.y) + (id_y * dstStridesCDH.z) + id_x;
-    int xFactor =  id_x + roiGenericPtrSrc->xyzwhdROI.xyz.x;
+    int xFactor = id_x + roiGenericPtrSrc->xyzwhdROI.xyz.x;
     int yFactor = (id_y + roiGenericPtrSrc->xyzwhdROI.xyz.y) * srcStridesCDH.z;
     int zFactor = (id_z + roiGenericPtrSrc->xyzwhdROI.xyz.z) * srcStridesCDH.y;
 
