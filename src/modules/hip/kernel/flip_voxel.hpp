@@ -21,14 +21,9 @@ __global__ void flip_ncdhw_tensor(T *srcPtr,
     }
 
     int dstIdx = (id_z * dstStridesCDH.y) + (id_y * dstStridesCDH.z) + id_x;
+    int zFactor = ((mirrorXYZ.z) ? (roiGenericPtrSrc->xyzwhdROI.roiDepth - 1 - id_z) : (id_z + roiGenericPtrSrc->xyzwhdROI.xyz.z)) * srcStridesCDH.y;
+    int yFactor = ((mirrorXYZ.y) ? (roiGenericPtrSrc->xyzwhdROI.roiHeight - 1 - id_y) : (id_y + roiGenericPtrSrc->xyzwhdROI.xyz.y)) * srcStridesCDH.z;
     int xFactor = id_x + roiGenericPtrSrc->xyzwhdROI.xyz.x;
-    int yFactor = (id_y + roiGenericPtrSrc->xyzwhdROI.xyz.y) * srcStridesCDH.z;
-    int zFactor = (id_z + roiGenericPtrSrc->xyzwhdROI.xyz.z) * srcStridesCDH.y;
-
-    if (mirrorXYZ.y)
-        yFactor = (roiGenericPtrSrc->xyzwhdROI.roiHeight - 1 - id_y) * srcStridesCDH.z;
-    if (mirrorXYZ.z)
-        zFactor = (roiGenericPtrSrc->xyzwhdROI.roiDepth - 1 - id_z) * srcStridesCDH.y;
     if (mirrorXYZ.x)
     {
         // To handle the case when trying to load from invalid memory location when width is not a multiple of 8
@@ -93,18 +88,13 @@ __global__ void flip_ndhwc_tensor(T *srcPtr,
     }
 
     int dstIdx = (id_z * dstStridesDH.x) + (id_y * dstStridesDH.y) + id_x * 3;
+    int zFactor = ((mirrorXYZ.z) ? (roiGenericPtrSrc->xyzwhdROI.roiDepth - 1 - id_z) : (id_z + roiGenericPtrSrc->xyzwhdROI.xyz.z))  * srcStridesDH.x;
+    int yFactor = ((mirrorXYZ.y) ? (roiGenericPtrSrc->xyzwhdROI.roiHeight - 1 - id_y) : (id_y + roiGenericPtrSrc->xyzwhdROI.xyz.y)) * srcStridesDH.y;
     int xFactor =  (id_x + roiGenericPtrSrc->xyzwhdROI.xyz.x) * 3;
-    int yFactor = (id_y + roiGenericPtrSrc->xyzwhdROI.xyz.y) * srcStridesDH.y;
-    int zFactor = (id_z + roiGenericPtrSrc->xyzwhdROI.xyz.z) * srcStridesDH.x;
-
-    if (mirrorXYZ.y)
-        yFactor = (roiGenericPtrSrc->xyzwhdROI.roiHeight - 1 - id_y) * srcStridesDH.y;
-    if (mirrorXYZ.z)
-        zFactor = (roiGenericPtrSrc->xyzwhdROI.roiDepth - 1 - id_z) * srcStridesDH.x;
     if (mirrorXYZ.x)
     {
         // To handle the case when trying to load from invalid memory location when width is not a multiple of 8
-       if((batchIndex == 0) && (id_x + 8 > roiGenericPtrSrc->xyzwhdROI.roiWidth))
+        if((batchIndex == 0) && (id_x + 8 > roiGenericPtrSrc->xyzwhdROI.roiWidth))
         {
             bool yCheck = ((mirrorXYZ.y && id_y == roiGenericPtrSrc->xyzwhdROI.roiHeight - 1) || (!mirrorXYZ.y && id_y == 0));
             bool zCheck = ((mirrorXYZ.z && id_z == roiGenericPtrSrc->xyzwhdROI.roiDepth - 1) || (!mirrorXYZ.z && id_z == 0));
