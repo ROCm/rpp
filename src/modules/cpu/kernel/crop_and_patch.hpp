@@ -30,8 +30,8 @@ RppStatus crop_and_patch_u8_u8_host_tensor(Rpp8u *srcPtr1,
                                            Rpp8u *dstPtr,
                                            RpptDescPtr dstDescPtr,
                                            RpptROIPtr roiTensorPtrDst,
-                                           RpptROIPtr cropRoi,
-                                           RpptROIPtr patchRoi,
+                                           RpptROIPtr cropRoiTensor,
+                                           RpptROIPtr patchRoiTensor,
                                            RpptRoiType roiType,
                                            RppLayoutParams layoutParams,
                                            rpp::Handle& handle)
@@ -47,6 +47,8 @@ RppStatus crop_and_patch_u8_u8_host_tensor(Rpp8u *srcPtr1,
         RpptROIPtr roiPtrInput = &roiTensorPtrDst[batchCount];
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
+        RpptROIPtr cropRoi = &cropRoiTensor[batchCount];
+        RpptROIPtr patchRoi = &patchRoiTensor[batchCount];
         Rpp8u *srcPtr1Image, *srcPtr2Image, *dstPtrImage;
         srcPtr1Image = srcPtr1 + batchCount * srcDescPtr->strides.nStride;
         srcPtr2Image = srcPtr2 + batchCount * srcDescPtr->strides.nStride;
@@ -376,8 +378,8 @@ RppStatus crop_and_patch_f32_f32_host_tensor(Rpp32f *srcPtr1,
                                            Rpp32f *dstPtr,
                                            RpptDescPtr dstDescPtr,
                                            RpptROIPtr roiTensorPtrDst,
-                                           RpptROIPtr cropRoi,
-                                           RpptROIPtr patchRoi,
+                                           RpptROIPtr cropRoiTensor,
+                                           RpptROIPtr patchRoiTensor,
                                            RpptRoiType roiType,
                                            RppLayoutParams layoutParams,
                                            rpp::Handle& handle)
@@ -393,6 +395,8 @@ RppStatus crop_and_patch_f32_f32_host_tensor(Rpp32f *srcPtr1,
         RpptROIPtr roiPtrInput = &roiTensorPtrDst[batchCount];
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
+        RpptROIPtr cropRoi = &cropRoiTensor[batchCount];
+        RpptROIPtr patchRoi = &patchRoiTensor[batchCount];
         Rpp32f *srcPtr1Image, *srcPtr2Image, *dstPtrImage;
         srcPtr1Image = srcPtr1 + batchCount * srcDescPtr->strides.nStride;
         srcPtr2Image = srcPtr2 + batchCount * srcDescPtr->strides.nStride;
@@ -730,8 +734,8 @@ RppStatus crop_and_patch_f16_f16_host_tensor(Rpp16f *srcPtr1,
                                            Rpp16f *dstPtr,
                                            RpptDescPtr dstDescPtr,
                                            RpptROIPtr roiTensorPtrDst,
-                                           RpptROIPtr cropRoi,
-                                           RpptROIPtr patchRoi,
+                                           RpptROIPtr cropRoiTensor,
+                                           RpptROIPtr patchRoiTensor,
                                            RpptRoiType roiType,
                                            RppLayoutParams layoutParams,
                                            rpp::Handle& handle)
@@ -747,6 +751,8 @@ RppStatus crop_and_patch_f16_f16_host_tensor(Rpp16f *srcPtr1,
         RpptROIPtr roiPtrInput = &roiTensorPtrDst[batchCount];
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
+        RpptROIPtr cropRoi = &cropRoiTensor[batchCount];
+        RpptROIPtr patchRoi = &patchRoiTensor[batchCount];
         Rpp16f *srcPtr1Image, *srcPtr2Image, *dstPtrImage;
         srcPtr1Image = srcPtr1 + batchCount * srcDescPtr->strides.nStride;
         srcPtr2Image = srcPtr2 + batchCount * srcDescPtr->strides.nStride;
@@ -898,7 +904,7 @@ RppStatus crop_and_patch_f16_f16_host_tensor(Rpp16f *srcPtr1,
                         __m128 p[4];
                         rpp_simd_load(rpp_load12_f32pkd3_to_f32pln3, srcPtrTemp_ps, p);    // simd loads
                         rpp_simd_store(rpp_store12_f32pln3_to_f32pln3, dstPtrTemp_ps, dstPtrTemp_ps + 4, dstPtrTemp_ps + 8, p);    // simd stores
-                        
+
                         for(int cnt = 0; cnt < 4; cnt++)
                         {
                             *(dstPtrTempR + cnt) = (Rpp16f) *(dstPtrTemp_ps + cnt);
@@ -1036,7 +1042,7 @@ RppStatus crop_and_patch_f16_f16_host_tensor(Rpp16f *srcPtr1,
                         __m128 p[4];
                         rpp_simd_load(rpp_load12_f32pln3_to_f32pln3, srcPtrTemp_ps, srcPtrTemp_ps + 4, srcPtrTemp_ps + 8, p);    // simd loads
                         rpp_simd_store(rpp_store12_f32pln3_to_f32pkd3, dstPtrTemp_ps, p);    // simd stores
-                        
+
                         for(int cnt = 0; cnt < 12; cnt++)
                         {
                             *(dstPtrTemp + cnt) = (Rpp16f) *(dstPtrTemp_ps + cnt);
@@ -1189,8 +1195,8 @@ RppStatus crop_and_patch_i8_i8_host_tensor(Rpp8s *srcPtr1,
                                            Rpp8s *dstPtr,
                                            RpptDescPtr dstDescPtr,
                                            RpptROIPtr roiTensorPtrDst,
-                                           RpptROIPtr cropRoi,
-                                           RpptROIPtr patchRoi,
+                                           RpptROIPtr cropRoiTensor,
+                                           RpptROIPtr patchRoiTensor,
                                            RpptRoiType roiType,
                                            RppLayoutParams layoutParams,
                                            rpp::Handle& handle)
@@ -1206,6 +1212,8 @@ RppStatus crop_and_patch_i8_i8_host_tensor(Rpp8s *srcPtr1,
         RpptROIPtr roiPtrInput = &roiTensorPtrDst[batchCount];
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
+        RpptROIPtr cropRoi = &cropRoiTensor[batchCount];
+        RpptROIPtr patchRoi = &patchRoiTensor[batchCount];
         Rpp8s *srcPtr1Image, *srcPtr2Image, *dstPtrImage;
         srcPtr1Image = srcPtr1 + batchCount * srcDescPtr->strides.nStride;
         srcPtr2Image = srcPtr2 + batchCount * srcDescPtr->strides.nStride;

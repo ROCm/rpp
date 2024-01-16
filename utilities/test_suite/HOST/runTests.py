@@ -82,8 +82,7 @@ def validate_and_remove_folders(path, folder):
 
 # Create layout directories within a destination path based on a layout dictionary
 def create_layout_directories(dst_path, layout_dict):
-    for layout in range(1):
-        layout = 2
+    for layout in range(3):
         current_layout = layout_dict[layout]
         try:
             os.makedirs(dst_path + '/' + current_layout)
@@ -355,8 +354,7 @@ if testType == 0:
         if int(case) < 0 or int(case) > 87:
             print(f"Invalid case number {case}. Case number must be in the range of 0 to 86!")
             continue
-        for layout in range(1):
-            layout = 2
+        for layout in range(3):
             dstPathTemp, log_file_layout = process_layout(layout, qaMode, case, dstPath)
 
             if qaMode == 0:
@@ -375,8 +373,7 @@ else:
         if case == "82" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
                 srcPath1 = ricapInFilePath
                 srcPath2 = ricapInFilePath
-        for layout in range(1):
-            layout = 2
+        for layout in range(3):
             dstPathTemp, log_file_layout = process_layout(layout, qaMode, case, dstPath)
 
             run_performance_test(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)

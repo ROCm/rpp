@@ -392,10 +392,10 @@ int main(int argc, char **argv)
             {
                 for(int i = 0; i < batchSize ; i++)
                 {
-                    roiListBatch[0] = 0;
-                    roiListBatch[1] = 0;
-                    roiWidthList[i] = roiTensorPtrSrc[i].xywhROI.roiWidth;
-                    roiHeightList[i] = roiTensorPtrSrc[i].xywhROI.roiHeight;
+                    roiListBatch[0] = 10;
+                    roiListBatch[1] = 10;
+                    roiWidthList[i] = roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
+                    roiHeightList[i] = roiTensorPtrSrc[i].xywhROI.roiHeight / 2;
                 }
             }
             else
@@ -716,14 +716,10 @@ int main(int argc, char **argv)
                     RpptROI *patchRoi = static_cast<RpptROI *>(calloc(batchSize, sizeof(RpptROI)));
                     for (i = 0; i < batchSize; i++)
                     {
-                        cropRoi[i].xywhROI.xy.x = 8;
-                        cropRoi[i].xywhROI.xy.y = 8;
-                        cropRoi[i].xywhROI.roiWidth = 99;
-                        cropRoi[i].xywhROI.roiHeight = 99;
-                        patchRoi[i].xywhROI.xy.x = 8;
-                        patchRoi[i].xywhROI.xy.y = 8;
-                        patchRoi[i].xywhROI.roiWidth = 99;
-                        patchRoi[i].xywhROI.roiHeight = 99;
+                        cropRoi[i].xywhROI.xy.x = patchRoi[i].xywhROI.xy.x = roiListBatch[0];
+                        cropRoi[i].xywhROI.xy.y = patchRoi[i].xywhROI.xy.y = roiListBatch[1];
+                        cropRoi[i].xywhROI.roiWidth = patchRoi[i].xywhROI.roiWidth = roiWidthList[i];
+                        cropRoi[i].xywhROI.roiHeight = patchRoi[i].xywhROI.roiHeight = roiHeightList[i];
                     }
 
                     startWallTime = omp_get_wtime();
@@ -1138,7 +1134,7 @@ int main(int argc, char **argv)
                         std::ofstream refFile;
                         refFile.open(func + ".csv");
                         for (int i = 0; i < oBufferSize; i++)
-                            refFile << static_cast<int>(*(outputu8 + i)) << endl;
+                            refFile << static_cast<int>(*(outputu8 + i)) << ",";
                         refFile.close();
                     }
 
