@@ -346,6 +346,13 @@ int main(int argc, char **argv)
             reductionFuncResultArr = static_cast<Rpp64s*>(calloc(reductionFuncResultArrLength, sizeof(Rpp64s)));
     }
 
+    RpptROI *cropRoi, *patchRoi;
+    if(testCase == 33)
+    {
+        cropRoi = static_cast<RpptROI*>(calloc(batchSize, sizeof(RpptROI)));
+        patchRoi = static_cast<RpptROI*>(calloc(batchSize, sizeof(RpptROI)));
+    }
+
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
     for (int perfRunCount = 0; perfRunCount < numRuns; perfRunCount++)
@@ -712,8 +719,6 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "crop_and_patch";
 
-                    RpptROI *cropRoi = static_cast<RpptROI *>(calloc(batchSize, sizeof(RpptROI)));
-                    RpptROI *patchRoi = static_cast<RpptROI *>(calloc(batchSize, sizeof(RpptROI)));
                     for (i = 0; i < batchSize; i++)
                     {
                         cropRoi[i].xywhROI.xy.x = patchRoi[i].xywhROI.xy.x = roiListBatch[0];
@@ -1203,5 +1208,10 @@ int main(int argc, char **argv)
     free(output);
     if(reductionTypeCase)
         free(reductionFuncResultArr);
+    if(testCase == 33)
+    {
+        free(cropRoi);
+        free(patchRoi);
+    }
     return 0;
 }

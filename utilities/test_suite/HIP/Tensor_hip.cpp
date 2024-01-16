@@ -359,6 +359,13 @@ int main(int argc, char **argv)
     if(testCase == 82)
         CHECK(hipHostMalloc(&roiPtrInputCropRegion, 4 * sizeof(RpptROI)));
 
+    RpptROI *cropRoi, *patchRoi;
+    if(testCase == 33)
+    {
+        CHECK(hipHostMalloc(&cropRoi, batchSize * sizeof(RpptROI)));
+        CHECK(hipHostMalloc(&patchRoi, batchSize * sizeof(RpptROI)));
+    }
+
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
     for (int perfRunCount = 0; perfRunCount < numRuns; perfRunCount++)
@@ -657,10 +664,6 @@ int main(int argc, char **argv)
             case 33:
             {
                 testCaseName = "crop_and_patch";
-
-                RpptROI *cropRoi, *patchRoi;
-                CHECK(hipHostMalloc(&cropRoi, batchSize * sizeof(RpptROI)));
-                CHECK(hipHostMalloc(&patchRoi, batchSize * sizeof(RpptROI)));
                 for (i = 0; i < batchSize; i++)
                 {
                     cropRoi[i].xywhROI.xy.x = patchRoi[i].xywhROI.xy.x = roiList[0];
@@ -1183,6 +1186,11 @@ int main(int argc, char **argv)
     CHECK(hipHostFree(dstImgSizes));
     if(testCase == 82)
         CHECK(hipHostFree(roiPtrInputCropRegion));
+    if(testCase == 33)
+    {
+        CHECK(hipHostFree(cropRoi));
+        CHECK(hipHostFree(patchRoi));
+    }
     if (reductionTypeCase)
         CHECK(hipHostFree(reductionFuncResultArr));
     free(input);

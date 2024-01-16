@@ -23,13 +23,14 @@ __global__ void crop_and_patch_pkd_hip_tensor(T *srcPtr1,
 
     // check if the co-ordinates is within the patch region
     d_float24 pix_f24;
-    bool rowCheck = (id_y >= patchTensorPtrSrc[id_z].xywhROI.xy.y) && (id_y < (patchTensorPtrSrc[id_z].xywhROI.xy.y + patchTensorPtrSrc[id_z].xywhROI.roiHeight));
-    bool colCheck = (id_x >= patchTensorPtrSrc[id_z].xywhROI.xy.x) && (id_x < (patchTensorPtrSrc[id_z].xywhROI.xy.x + patchTensorPtrSrc[id_z].xywhROI.roiWidth));
+    bool rowCheck = (id_y >= patchTensorPtrSrc[id_z].xywhROI.xy.y) && (id_y < (patchTensorPtrSrc[id_z].xywhROI.xy.y + cropTensorPtrSrc[id_z].xywhROI.roiHeight));
+    bool colCheck = (id_x >= patchTensorPtrSrc[id_z].xywhROI.xy.x) && (id_x < (patchTensorPtrSrc[id_z].xywhROI.xy.x + cropTensorPtrSrc[id_z].xywhROI.roiWidth));
     if(rowCheck && colCheck)
     {
         uint srcIdx1 = (id_z * srcStridesNH.x) + (id_y - patchTensorPtrSrc[id_z].xywhROI.xy.y + cropTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y + (id_x - patchTensorPtrSrc[id_z].xywhROI.xy.x + cropTensorPtrSrc[id_z].xywhROI.xy.x) * 3;
-        uint patchEnd = patchTensorPtrSrc[id_z].xywhROI.xy.x + patchTensorPtrSrc[id_z].xywhROI.roiWidth;
+        uint patchEnd = patchTensorPtrSrc[id_z].xywhROI.xy.x + cropTensorPtrSrc[id_z].xywhROI.roiWidth;
         rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr1 + srcIdx1, &pix_f24);
+        // to handle the case when loaded data goes beyond the bounds of patch region
         if((id_x + 8) >= patchEnd)
         {
             uint srcIdx2 = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (patchEnd + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3;
@@ -47,6 +48,7 @@ __global__ void crop_and_patch_pkd_hip_tensor(T *srcPtr1,
         uint srcIdx2 = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3;
         uint patchStart = patchTensorPtrSrc[id_z].xywhROI.xy.x;
         rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr2 + srcIdx2, &pix_f24);
+        // to handle the case when loaded data goes beyond the input region and enters the patch region
         if(rowCheck && (id_x + 8) >= patchStart)
         {
             uint srcIdx1 = (id_z * srcStridesNH.x) + ((id_y - patchTensorPtrSrc[id_z].xywhROI.xy.y + cropTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + cropTensorPtrSrc[id_z].xywhROI.xy.x * 3;
@@ -85,17 +87,18 @@ __global__ void crop_and_patch_pln_hip_tensor(T *srcPtr1,
     }
 
     // check if the co-ordinates is within the patch region
-    bool rowCheck = (id_y >= patchTensorPtrSrc[id_z].xywhROI.xy.y) && (id_y < (patchTensorPtrSrc[id_z].xywhROI.xy.y + patchTensorPtrSrc[id_z].xywhROI.roiHeight));
-    bool colCheck = (id_x >= patchTensorPtrSrc[id_z].xywhROI.xy.x) && (id_x < (patchTensorPtrSrc[id_z].xywhROI.xy.x + patchTensorPtrSrc[id_z].xywhROI.roiWidth));
+    bool rowCheck = (id_y >= patchTensorPtrSrc[id_z].xywhROI.xy.y) && (id_y < (patchTensorPtrSrc[id_z].xywhROI.xy.y + cropTensorPtrSrc[id_z].xywhROI.roiHeight));
+    bool colCheck = (id_x >= patchTensorPtrSrc[id_z].xywhROI.xy.x) && (id_x < (patchTensorPtrSrc[id_z].xywhROI.xy.x + cropTensorPtrSrc[id_z].xywhROI.roiWidth));
     if(rowCheck && colCheck)
     {
         uint srcIdx1 = (id_z * srcStridesNCH.x) + (id_y - patchTensorPtrSrc[id_z].xywhROI.xy.y + cropTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z + (id_x - patchTensorPtrSrc[id_z].xywhROI.xy.x + cropTensorPtrSrc[id_z].xywhROI.xy.x);
         uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
-        uint patchEnd = patchTensorPtrSrc[id_z].xywhROI.xy.x + patchTensorPtrSrc[id_z].xywhROI.roiWidth;
+        uint patchEnd = patchTensorPtrSrc[id_z].xywhROI.xy.x + cropTensorPtrSrc[id_z].xywhROI.roiWidth;
 
         d_float8 pix_f8;
         rpp_hip_load8_and_unpack_to_float8(srcPtr1 + srcIdx1, &pix_f8);
         uint srcIdx2;
+        // to handle the case when loaded data goes beyond the bounds of patch region
         if((id_x + 8) >= patchEnd)
         {
             srcIdx2 = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (patchEnd + roiTensorPtrSrc[id_z].xywhROI.xy.x);
@@ -140,6 +143,7 @@ __global__ void crop_and_patch_pln_hip_tensor(T *srcPtr1,
         d_float8 pix_f8;
         rpp_hip_load8_and_unpack_to_float8(srcPtr2 + srcIdx2, &pix_f8);
         uint srcIdx1, patchBegin;
+        // to handle the case when loaded data goes beyond the input region and enters the patch region
         if(rowCheck && (id_x + 8) >= patchStart)
         {
             srcIdx1 = (id_z * srcStridesNCH.x) + ((id_y - patchTensorPtrSrc[id_z].xywhROI.xy.y + cropTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + cropTensorPtrSrc[id_z].xywhROI.xy.x;
@@ -199,13 +203,14 @@ __global__ void crop_and_patch_pkd3_pln3_hip_tensor(T *srcPtr1,
 
     // check if the co-ordinates is within the patch region
     d_float24 pix_f24;
-    bool rowCheck = (id_y >= patchTensorPtrSrc[id_z].xywhROI.xy.y) && (id_y < (patchTensorPtrSrc[id_z].xywhROI.xy.y + patchTensorPtrSrc[id_z].xywhROI.roiHeight));
-    bool colCheck = (id_x >= patchTensorPtrSrc[id_z].xywhROI.xy.x) && (id_x < (patchTensorPtrSrc[id_z].xywhROI.xy.x + patchTensorPtrSrc[id_z].xywhROI.roiWidth));
+    bool rowCheck = (id_y >= patchTensorPtrSrc[id_z].xywhROI.xy.y) && (id_y < (patchTensorPtrSrc[id_z].xywhROI.xy.y + cropTensorPtrSrc[id_z].xywhROI.roiHeight));
+    bool colCheck = (id_x >= patchTensorPtrSrc[id_z].xywhROI.xy.x) && (id_x < (patchTensorPtrSrc[id_z].xywhROI.xy.x + cropTensorPtrSrc[id_z].xywhROI.roiWidth));
     if(rowCheck && colCheck)
     {
         uint srcIdx1 = (id_z * srcStridesNH.x) + (id_y - patchTensorPtrSrc[id_z].xywhROI.xy.y + cropTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y + (id_x - patchTensorPtrSrc[id_z].xywhROI.xy.x + cropTensorPtrSrc[id_z].xywhROI.xy.x) * 3;
-        uint patchEnd = patchTensorPtrSrc[id_z].xywhROI.xy.x + patchTensorPtrSrc[id_z].xywhROI.roiWidth;
+        uint patchEnd = patchTensorPtrSrc[id_z].xywhROI.xy.x + cropTensorPtrSrc[id_z].xywhROI.roiWidth;
         rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr1 + srcIdx1, &pix_f24);
+        // to handle the case when loaded data goes beyond the bounds of patch region
         if((id_x + 8) >= patchEnd)
         {
             uint srcIdx2 = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (patchEnd + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3;
@@ -223,6 +228,7 @@ __global__ void crop_and_patch_pkd3_pln3_hip_tensor(T *srcPtr1,
         uint srcIdx2 = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3;
         uint patchStart = patchTensorPtrSrc[id_z].xywhROI.xy.x;
         rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr2 + srcIdx2, &pix_f24);
+        // to handle the case when loaded data goes beyond the input region and enters the patch region
         if(rowCheck && (id_x + 8) >= patchStart)
         {
             uint srcIdx1 = (id_z * srcStridesNH.x) + ((id_y - patchTensorPtrSrc[id_z].xywhROI.xy.y + cropTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + cropTensorPtrSrc[id_z].xywhROI.xy.x * 3;
@@ -261,15 +267,16 @@ __global__ void crop_and_patch_pln3_pkd3_hip_tensor(T *srcPtr1,
 
     d_float24 pix_f24;
     // check if the co-ordinates is within the patch region
-    bool rowCheck = (id_y >= patchTensorPtrSrc[id_z].xywhROI.xy.y) && (id_y < (patchTensorPtrSrc[id_z].xywhROI.xy.y + patchTensorPtrSrc[id_z].xywhROI.roiHeight));
-    bool colCheck = (id_x >= patchTensorPtrSrc[id_z].xywhROI.xy.x) && (id_x < (patchTensorPtrSrc[id_z].xywhROI.xy.x + patchTensorPtrSrc[id_z].xywhROI.roiWidth));
+    bool rowCheck = (id_y >= patchTensorPtrSrc[id_z].xywhROI.xy.y) && (id_y < (patchTensorPtrSrc[id_z].xywhROI.xy.y + cropTensorPtrSrc[id_z].xywhROI.roiHeight));
+    bool colCheck = (id_x >= patchTensorPtrSrc[id_z].xywhROI.xy.x) && (id_x < (patchTensorPtrSrc[id_z].xywhROI.xy.x + cropTensorPtrSrc[id_z].xywhROI.roiWidth));
     if(rowCheck && colCheck)
     {
         uint srcIdx1 = (id_z * srcStridesNCH.x) + (id_y - patchTensorPtrSrc[id_z].xywhROI.xy.y + cropTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z + (id_x - patchTensorPtrSrc[id_z].xywhROI.xy.x + cropTensorPtrSrc[id_z].xywhROI.xy.x);
-        uint patchEnd = patchTensorPtrSrc[id_z].xywhROI.xy.x + patchTensorPtrSrc[id_z].xywhROI.roiWidth;
+        uint patchEnd = patchTensorPtrSrc[id_z].xywhROI.xy.x + cropTensorPtrSrc[id_z].xywhROI.roiWidth;
 
         rpp_hip_load8_and_unpack_to_float8(srcPtr1 + srcIdx1, &pix_f24.f8[0]);
         uint srcIdx2;
+        // to handle the case when loaded data goes beyond the bounds of patch region
         if((id_x + 8) >= patchEnd)
         {
             srcIdx2 = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (patchEnd + roiTensorPtrSrc[id_z].xywhROI.xy.x);
@@ -306,6 +313,7 @@ __global__ void crop_and_patch_pln3_pkd3_hip_tensor(T *srcPtr1,
         d_float8 pix_f8;
         rpp_hip_load8_and_unpack_to_float8(srcPtr2 + srcIdx2, &pix_f24.f8[0]);
         uint srcIdx1, patchBegin;
+        // to handle the case when loaded data goes beyond the input region and enters the patch region
         if(rowCheck && (id_x + 8) >= patchStart)
         {
             srcIdx1 = (id_z * srcStridesNCH.x) + ((id_y - patchTensorPtrSrc[id_z].xywhROI.xy.y + cropTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + cropTensorPtrSrc[id_z].xywhROI.xy.x;
