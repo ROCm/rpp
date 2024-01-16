@@ -190,7 +190,7 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
     print("Running a New Functionality...")
     print("--------------------------------")
 
-    for bitDepth in range(1):
+    for bitDepth in range(7):
         print("\n\n\nRunning New Bit Depth...\n-------------------------\n\n")
 
         for outputFormatToggle in range(2):
@@ -239,7 +239,7 @@ def run_performance_test(loggingFolder, log_file_layout, srcPath1, srcPath2, dst
     print("Running a New Functionality...")
     print("--------------------------------")
 
-    for bitDepth in range(1):
+    for bitDepth in range(7):
         print("\n\n\nRunning New Bit Depth...\n-------------------------\n\n")
 
         for outputFormatToggle in range(2):
@@ -499,7 +499,7 @@ else:
                 print("Running a New Functionality...")
                 print("--------------------------------")
 
-                for bitDepth in range(1):
+                for bitDepth in range(7):
                     print("\n\n\nRunning New Bit Depth...\n-------------------------\n\n")
 
                     for outputFormatToggle in range(2):
