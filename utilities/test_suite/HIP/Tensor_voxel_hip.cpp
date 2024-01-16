@@ -53,11 +53,7 @@ int main(int argc, char * argv[])
         fprintf(stdout, "\nUsage: %s <header file> <data file> <layoutType = 0 - PKD3/ 1 - PLN3/ 2 - PLN1>\n", argv[0]);
         exit(1);
     }
-    if ((testCase < 0) || (testCase > 4))
-    {
-        fprintf(stdout, "\nUsage: %s <header file> <data file> <layoutType = 0 for NCDHW / 1 for NDHWC>\n", argv[0]);
-        exit(1);
-    }
+
 
     if(batchSize > MAX_BATCH_SIZE)
     {
@@ -265,6 +261,30 @@ int main(int argc, char * argv[])
                         rppt_slice_gpu(d_inputU8, descriptorPtr3D, d_outputU8, descriptorPtr3D, roiGenericSrcPtr, roiTypeSrc, handle);
                     else if(inputBitDepth == 2)
                         rppt_slice_gpu(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, roiGenericSrcPtr, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 4:
+                {
+                    testCaseName = "flip_voxel";
+                    Rpp32u horizontalTensor[batchSize];
+                    Rpp32u verticalTensor[batchSize];
+                    Rpp32u depthTensor[batchSize];
+
+                    for (int i = 0; i < batchSize; i++)
+                    {
+                        horizontalTensor[i] = 1;
+                        verticalTensor[i] = 0;
+                        depthTensor[i] = 0;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0)
+                        rppt_flip_voxel_gpu(d_inputU8, descriptorPtr3D, d_outputU8, descriptorPtr3D, horizontalTensor, verticalTensor, depthTensor, roiGenericSrcPtr, roiTypeSrc, handle);
+                    else if(inputBitDepth == 2)
+                        rppt_flip_voxel_gpu(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, horizontalTensor, verticalTensor, depthTensor, roiGenericSrcPtr, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
