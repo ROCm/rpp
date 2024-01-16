@@ -54,8 +54,8 @@ RppStatus crop_and_patch_u8_u8_host_tensor(Rpp8u *srcPtr1,
 
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
         Rpp32u cropBufferLength = cropRoi->xywhROI.roiWidth * layoutParams.bufferMultiplier;
-        Rpp32u patchBufferLength1 = cropRoi->xywhROI.xy.x * layoutParams.bufferMultiplier;
-        Rpp32u patchBufferLength2 = (roi.xywhROI.roiWidth - (cropRoi->xywhROI.xy.x + cropRoi->xywhROI.roiWidth)) * layoutParams.bufferMultiplier;
+        Rpp32u patchBufferLength1 = patchRoi->xywhROI.xy.x * layoutParams.bufferMultiplier;
+        Rpp32u patchBufferLength2 = (roi.xywhROI.roiWidth - (patchRoi->xywhROI.xy.x + cropRoi->xywhROI.roiWidth)) * layoutParams.bufferMultiplier;
 
         Rpp8u *srcPtr1Channel, *srcPtr2Channel, *dstPtrChannel;
         srcPtr1Channel = srcPtr1Image + (cropRoi->xywhROI.xy.y * srcDescPtr->strides.hStride) + (cropRoi->xywhROI.xy.x * layoutParams.bufferMultiplier);
@@ -397,11 +397,10 @@ RppStatus crop_and_patch_f32_f32_host_tensor(Rpp32f *srcPtr1,
         srcPtr1Image = srcPtr1 + batchCount * srcDescPtr->strides.nStride;
         srcPtr2Image = srcPtr2 + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
-std::cerr<<"\n layout multiplier "<<layoutParams.bufferMultiplier;
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
         Rpp32u cropBufferLength = cropRoi->xywhROI.roiWidth * layoutParams.bufferMultiplier;
-        Rpp32u patchBufferLength1 = cropRoi->xywhROI.xy.x * layoutParams.bufferMultiplier;
-        Rpp32u patchBufferLength2 = (roi.xywhROI.roiWidth - (cropRoi->xywhROI.xy.x + cropRoi->xywhROI.roiWidth)) * layoutParams.bufferMultiplier;
+        Rpp32u patchBufferLength1 = patchRoi->xywhROI.xy.x * layoutParams.bufferMultiplier;
+        Rpp32u patchBufferLength2 = (roi.xywhROI.roiWidth - (patchRoi->xywhROI.xy.x + cropRoi->xywhROI.roiWidth)) * layoutParams.bufferMultiplier;
 
         Rpp32f *srcPtr1Channel, *srcPtr2Channel, *dstPtrChannel;
         srcPtr1Channel = srcPtr1Image + (cropRoi->xywhROI.xy.y * srcDescPtr->strides.hStride) + (cropRoi->xywhROI.xy.x * layoutParams.bufferMultiplier);
@@ -755,8 +754,8 @@ RppStatus crop_and_patch_f16_f16_host_tensor(Rpp16f *srcPtr1,
 
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
         Rpp32u cropBufferLength = cropRoi->xywhROI.roiWidth * layoutParams.bufferMultiplier;
-        Rpp32u patchBufferLength1 = cropRoi->xywhROI.xy.x * layoutParams.bufferMultiplier;
-        Rpp32u patchBufferLength2 = (roi.xywhROI.roiWidth - (cropRoi->xywhROI.xy.x + cropRoi->xywhROI.roiWidth)) * layoutParams.bufferMultiplier;
+        Rpp32u patchBufferLength1 = patchRoi->xywhROI.xy.x * layoutParams.bufferMultiplier;
+        Rpp32u patchBufferLength2 = (roi.xywhROI.roiWidth - (patchRoi->xywhROI.xy.x + cropRoi->xywhROI.roiWidth)) * layoutParams.bufferMultiplier;
 
         Rpp16f *srcPtr1Channel, *srcPtr2Channel, *dstPtrChannel;
         srcPtr1Channel = srcPtr1Image + (cropRoi->xywhROI.xy.y * srcDescPtr->strides.hStride) + (cropRoi->xywhROI.xy.x * layoutParams.bufferMultiplier);
@@ -1214,8 +1213,8 @@ RppStatus crop_and_patch_i8_i8_host_tensor(Rpp8s *srcPtr1,
 
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
         Rpp32u cropBufferLength = cropRoi->xywhROI.roiWidth * layoutParams.bufferMultiplier;
-        Rpp32u patchBufferLength1 = cropRoi->xywhROI.xy.x * layoutParams.bufferMultiplier;
-        Rpp32u patchBufferLength2 = (roi.xywhROI.roiWidth - (cropRoi->xywhROI.xy.x + cropRoi->xywhROI.roiWidth)) * layoutParams.bufferMultiplier;
+        Rpp32u patchBufferLength1 = patchRoi->xywhROI.xy.x * layoutParams.bufferMultiplier;
+        Rpp32u patchBufferLength2 = (roi.xywhROI.roiWidth - (patchRoi->xywhROI.xy.x + cropRoi->xywhROI.roiWidth)) * layoutParams.bufferMultiplier;
 
         Rpp8s *srcPtr1Channel, *srcPtr2Channel, *dstPtrChannel;
         srcPtr1Channel = srcPtr1Image + (cropRoi->xywhROI.xy.y * srcDescPtr->strides.hStride) + (cropRoi->xywhROI.xy.x * layoutParams.bufferMultiplier);
