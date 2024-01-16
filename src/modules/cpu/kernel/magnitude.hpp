@@ -60,7 +60,7 @@ RppStatus magnitude_u8_u8_host_tensor(Rpp8u *srcPtr1,
         Rpp32u vectorIncrementPerChannel = 16;
 #endif
 
-        // Phase with fused output-layout toggle (NHWC -> NCHW)
+        // Magnitude with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp8u *srcPtr1Row, *srcPtr2Row, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -126,7 +126,7 @@ RppStatus magnitude_u8_u8_host_tensor(Rpp8u *srcPtr1,
             }
         }
 
-        // Phase with fused output-layout toggle (NCHW -> NHWC)
+        // Magnitude with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp8u *srcPtr1RowR, *srcPtr1RowG, *srcPtr1RowB, *srcPtr2RowR, *srcPtr2RowG, *srcPtr2RowB, *dstPtrRow;
@@ -205,7 +205,7 @@ RppStatus magnitude_u8_u8_host_tensor(Rpp8u *srcPtr1,
             }
         }
 
-        // Phase without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
+        // Magnitude without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
         else
         {
 #if __AVX2__
@@ -307,7 +307,7 @@ RppStatus magnitude_f32_f32_host_tensor(Rpp32f *srcPtr1,
         Rpp32u vectorIncrementPerChannel = 8;
 #endif
 
-        // Phase with fused output-layout toggle (NHWC -> NCHW)
+        // Magnitude with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp32f *srcPtr1Row, *srcPtr2Row, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -364,7 +364,7 @@ RppStatus magnitude_f32_f32_host_tensor(Rpp32f *srcPtr1,
             }
         }
 
-        // Phase with fused output-layout toggle (NCHW -> NHWC)
+        // Magnitude with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp32f *srcPtr1RowR, *srcPtr1RowG, *srcPtr1RowB, *srcPtr2RowR, *srcPtr2RowG, *srcPtr2RowB, *dstPtrRow;
@@ -434,7 +434,7 @@ RppStatus magnitude_f32_f32_host_tensor(Rpp32f *srcPtr1,
             }
         }
 
-        // Phase without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
+        // Magnitude without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
         else
         {
 #if __AVX2__
@@ -533,7 +533,7 @@ RppStatus magnitude_f16_f16_host_tensor(Rpp16f *srcPtr1,
         Rpp32u vectorIncrementPerChannel = 8;
 #endif
 
-        // Phase with fused output-layout toggle (NHWC -> NCHW)
+        // Magnitude with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp16f *srcPtr1Row, *srcPtr2Row, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -598,7 +598,7 @@ RppStatus magnitude_f16_f16_host_tensor(Rpp16f *srcPtr1,
             }
         }
 
-        // Phase with fused output-layout toggle (NCHW -> NHWC)
+        // Magnitude with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp16f *srcPtr1RowR, *srcPtr1RowG, *srcPtr1RowB, *srcPtr2RowR, *srcPtr2RowG, *srcPtr2RowB, *dstPtrRow;
@@ -681,7 +681,7 @@ RppStatus magnitude_f16_f16_host_tensor(Rpp16f *srcPtr1,
             }
         }
 
-        // Phase without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
+        // Magnitude without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
         else
         {
 #if __AVX2__
@@ -787,7 +787,7 @@ RppStatus magnitude_i8_i8_host_tensor(Rpp8s *srcPtr1,
         Rpp32u vectorIncrementPerChannel = 16;
 #endif
 
-        // Phase with fused output-layout toggle (NHWC -> NCHW)
+        // Magnitude with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp8s *srcPtr1Row, *srcPtr2Row, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -853,7 +853,7 @@ RppStatus magnitude_i8_i8_host_tensor(Rpp8s *srcPtr1,
             }
         }
 
-        // Phase with fused output-layout toggle (NCHW -> NHWC)
+        // Magnitude with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp8s *srcPtr1RowR, *srcPtr1RowG, *srcPtr1RowB, *srcPtr2RowR, *srcPtr2RowG, *srcPtr2RowB, *dstPtrRow;
@@ -932,7 +932,7 @@ RppStatus magnitude_i8_i8_host_tensor(Rpp8s *srcPtr1,
             }
         }
 
-        // Phase without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
+        // Magnitude without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
         else
         {
 #if __AVX2__
