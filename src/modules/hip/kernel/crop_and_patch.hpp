@@ -30,66 +30,87 @@ __global__ void crop_and_patch_pln_hip_tensor(T *srcPtr1,
         uint srcIdx1 = (id_z * srcStridesNCH.x) + (id_y - patchTensorPtrSrc[id_z].xywhROI.xy.y + cropTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z + (id_x - patchTensorPtrSrc[id_z].xywhROI.xy.x + cropTensorPtrSrc[id_z].xywhROI.xy.x);
         uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
         uint patchEnd = patchTensorPtrSrc[id_z].xywhROI.xy.x + patchTensorPtrSrc[id_z].xywhROI.roiWidth;
-        if((id_x + 8) >= patchEnd)
-        {
-
-        }
 
         d_float8 pix_f8;
         rpp_hip_load8_and_unpack_to_float8(srcPtr1 + srcIdx1, &pix_f8);
+        uint srcIdx2;
+        if((id_x + 8) >= patchEnd)
+        {
+            srcIdx2 = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (patchEnd + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+            uint tempLoc = srcIdx2;
+            for(uint i = patchEnd - id_x; i < 8; i++, tempLoc++)
+                pix_f8.f1[i] = static_cast<float>(srcPtr2[tempLoc]);
+        }
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
         if (channelsDst == 3)
         {
-            srcIdx += srcStridesNCH.y;
+            srcIdx1 += srcStridesNCH.y;
             dstIdx += dstStridesNCH.y;
             rpp_hip_load8_and_unpack_to_float8(srcPtr1 + srcIdx1, &pix_f8);
+            if((id_x + 8) >= patchEnd)
+            {
+                srcIdx2 += srcStridesNCH.y;
+                uint tempLoc = srcIdx2;
+                for(uint i = patchEnd - id_x; i < 8; i++, tempLoc++)
+                    pix_f8.f1[i] = static_cast<float>(srcPtr2[tempLoc]);
+            }
             rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
 
-            srcIdx += srcStridesNCH.y;
+            srcIdx1 += srcStridesNCH.y;
             dstIdx += dstStridesNCH.y;
             rpp_hip_load8_and_unpack_to_float8(srcPtr1 + srcIdx1, &pix_f8);
+            if((id_x + 8) >= patchEnd)
+            {
+                srcIdx2 += srcStridesNCH.y;
+                uint tempLoc = srcIdx2;
+                for(uint i = patchEnd - id_x; i < 8; i++, tempLoc++)
+                    pix_f8.f1[i] = static_cast<float>(srcPtr2[tempLoc]);
+            }
             rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
         }
     }
     else
     {
-        uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+        uint srcIdx2 = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
         uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
         uint patchStart = patchTensorPtrSrc[id_z].xywhROI.xy.x;
 
         d_float8 pix_f8;
-        rpp_hip_load8_and_unpack_to_float8(srcPtr2 + srcIdx, &pix_f8);
-        uint srcIdx2, patchBegin;
-        // if((id_x + 8) >= patchStart)
-        // {
-        //     srcIdx2 = (id_z * srcStridesNCH.x) + ((id_y + cropTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + cropTensorPtrSrc[id_z].xywhROI.xy.x;
-        //     patchBegin = patchStart - id_x;
-        //     for(uint i = patchBegin; i < 8; i++)
-        //         pix_f8.f1[i] = static_cast<float>(srcPtr1[srcIdx2]);
-        // }
+        rpp_hip_load8_and_unpack_to_float8(srcPtr2 + srcIdx2, &pix_f8);
+        uint srcIdx1, patchBegin;
+        if(rowCheck && (id_x + 8) >= patchStart)
+        {
+            srcIdx1 = (id_z * srcStridesNCH.x) + ((id_y - patchTensorPtrSrc[id_z].xywhROI.xy.y + cropTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + cropTensorPtrSrc[id_z].xywhROI.xy.x;
+            patchBegin = patchStart - id_x;
+            uint tempLoc = srcIdx1;
+            for(uint i = patchBegin; i < 8; i++, tempLoc++)
+                pix_f8.f1[i] = static_cast<float>(srcPtr1[tempLoc]);
+        }
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
         if (channelsDst == 3)
         {
-            srcIdx += srcStridesNCH.y;
+            srcIdx2 += srcStridesNCH.y;
             dstIdx += dstStridesNCH.y;
-            rpp_hip_load8_and_unpack_to_float8(srcPtr2 + srcIdx, &pix_f8);
-            // if((id_x + 8) >= patchStart)
-            // {
-            //     srcIdx2 += srcStridesNCH.y;
-            //     for(uint i = patchBegin; i < 8; i++)
-            //         pix_f8.f1[i] = static_cast<float>(srcPtr1[srcIdx2]);
-            // }
+            rpp_hip_load8_and_unpack_to_float8(srcPtr2 + srcIdx2, &pix_f8);
+            if(rowCheck && (id_x + 8) >= patchStart)
+            {
+                srcIdx1 += srcStridesNCH.y;
+                uint tempLoc = srcIdx1;
+                for(uint i = patchBegin; i < 8; i++, tempLoc++)
+                    pix_f8.f1[i] = static_cast<float>(srcPtr1[tempLoc]);
+            }
             rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
 
-            srcIdx += srcStridesNCH.y;
+            srcIdx2 += srcStridesNCH.y;
             dstIdx += dstStridesNCH.y;
-            rpp_hip_load8_and_unpack_to_float8(srcPtr2 + srcIdx, &pix_f8);
-            // if((id_x + 8) >= patchStart)
-            // {
-            //     srcIdx2 += srcStridesNCH.y;
-            //     for(uint i = patchBegin; i < 8; i++)
-            //         pix_f8.f1[i] = static_cast<float>(srcPtr1[srcIdx2]);
-            // }
+            rpp_hip_load8_and_unpack_to_float8(srcPtr2 + srcIdx2, &pix_f8);
+            if(rowCheck && (id_x + 8) >= patchStart)
+            {
+                srcIdx1 += srcStridesNCH.y;
+                uint tempLoc = srcIdx1;
+                for(uint i = patchBegin; i < 8; i++, tempLoc++)
+                    pix_f8.f1[i] = static_cast<float>(srcPtr1[tempLoc]);
+            }
             rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
         }
     }
