@@ -62,10 +62,10 @@ int main(int argc, char **argv)
     int decoderType = atoi(argv[13]);
     int batchSize = atoi(argv[14]);
 
-    bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23 || testCase == 24);
+    bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23 || testCase == 24 || testCase == 79);
     bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 63);
     bool randomOutputCase = (testCase == 84);
-    bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24);
+    bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24 || testCase == 79);
     bool noiseTypeCase = (testCase == 8);
     bool pln1OutTypeCase = (testCase == 86);
     unsigned int verbosity = atoi(argv[11]);
@@ -307,6 +307,9 @@ int main(int argc, char **argv)
     input = static_cast<Rpp8u *>(calloc(inputBufferSize, 1));
     input_second = static_cast<Rpp8u *>(calloc(inputBufferSize, 1));
     output = static_cast<Rpp8u *>(calloc(outputBufferSize, 1));
+
+    Rpp32f *rowRemapTable = (Rpp32f*) calloc(ioBufferSize, sizeof(Rpp32f));
+    Rpp32f *colRemapTable = (Rpp32f*) calloc(ioBufferSize, sizeof(Rpp32f));
 
     // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
     // If numThreads value passed is 0, number of OpenMP threads used by RPP will be set to batch size
@@ -842,6 +845,66 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 79:
+                {
+                    testCaseName = "remap";
+
+                    if (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR && interpolationType != RpptInterpolationType::BILINEAR)
+                    {
+                        missingFuncFlag = 1;
+                        break;
+                    }
+
+                    RpptDescPtr tableDescPtr;
+                    RpptDesc tableDesc;
+
+                    tableDescPtr = &tableDesc;
+                    tableDesc = srcDesc;
+                    tableDescPtr->c = 1;
+                    tableDescPtr->strides.nStride = srcDescPtr->h * srcDescPtr->w;
+                    tableDescPtr->strides.hStride = srcDescPtr->w;
+                    tableDescPtr->strides.wStride = tableDescPtr->strides.cStride = 1;
+
+                    for (Rpp32u count = 0; count < batchSize; count++)
+                    {
+                        Rpp32f *rowRemapTableTemp, *colRemapTableTemp;
+                        rowRemapTableTemp = rowRemapTable + count * tableDescPtr->strides.nStride;
+                        colRemapTableTemp = colRemapTable + count * tableDescPtr->strides.nStride;
+                        Rpp32u halfWidth = roiTensorPtrSrc[count].xywhROI.roiWidth / 2;
+                        for (Rpp32u i = 0; i < roiTensorPtrSrc[count].xywhROI.roiHeight; i++)
+                        {
+                            Rpp32f *rowRemapTableTempRow, *colRemapTableTempRow;
+                            rowRemapTableTempRow = rowRemapTableTemp + i * tableDescPtr->strides.hStride;
+                            colRemapTableTempRow = colRemapTableTemp + i * tableDescPtr->strides.hStride;
+                            Rpp32u j = 0;
+                            for (; j < halfWidth; j++)
+                            {
+                                *rowRemapTableTempRow = i;
+                                *colRemapTableTempRow = halfWidth - j;
+
+                                rowRemapTableTempRow++;
+                                colRemapTableTempRow++;
+                            }
+                            for (; j < roiTensorPtrSrc[count].xywhROI.roiWidth; j++)
+                            {
+                                *rowRemapTableTempRow = i;
+                                *colRemapTableTempRow = j;
+
+                                rowRemapTableTempRow++;
+                                colRemapTableTempRow++;
+                            }
+                        }
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_remap_host(input, srcDescPtr, output, dstDescPtr, rowRemapTable, colRemapTable, tableDescPtr, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 case 80:
                 {
                     testCaseName = "resize_mirror_normalize";
@@ -1176,6 +1239,8 @@ int main(int argc, char **argv)
     free(outputu8);
     free(input_second);
     free(output);
+    free(rowRemapTable);
+    free(colRemapTable);
     if(reductionTypeCase)
         free(reductionFuncResultArr);
     return 0;

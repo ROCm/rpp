@@ -61,11 +61,11 @@ int main(int argc, char **argv)
     int decoderType = atoi(argv[13]);
     int batchSize = atoi(argv[14]);
 
-    bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23|| testCase == 24 || testCase == 40 || testCase == 41 || testCase == 49 || testCase == 54);
+    bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23|| testCase == 24 || testCase == 40 || testCase == 41 || testCase == 49 || testCase == 54 || testCase == 79);
     bool kernelSizeCase = (testCase == 40 || testCase == 41 || testCase == 49 || testCase == 54);
     bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 63);
     bool randomOutputCase = (testCase == 84 || testCase == 49 || testCase == 54);
-    bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24);
+    bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24 || testCase == 79);
     bool noiseTypeCase = (testCase == 8);
     bool pln1OutTypeCase = (testCase == 86);
     bool reductionTypeCase = (testCase == 87);
@@ -310,6 +310,13 @@ int main(int argc, char **argv)
     input_second = static_cast<Rpp8u *>(calloc(inputBufferSize, 1));
     output = static_cast<Rpp8u *>(calloc(outputBufferSize, 1));
 
+    Rpp32f *rowRemapTable = (Rpp32f*) calloc(ioBufferSize, sizeof(Rpp32f));
+    Rpp32f *colRemapTable = (Rpp32f*) calloc(ioBufferSize, sizeof(Rpp32f));
+
+    void *d_rowRemapTable, *d_colRemapTable;
+    CHECK(hipMalloc(&d_rowRemapTable, ioBufferSize * sizeof(Rpp32u)));
+    CHECK(hipMalloc(&d_colRemapTable, ioBufferSize * sizeof(Rpp32u)));
+
     // Run case-wise RPP API and measure time
     rppHandle_t handle;
     hipStream_t stream;
@@ -332,7 +339,7 @@ int main(int argc, char **argv)
         std::cerr<<"\n RICAP only works with BatchSize > 1";
         exit(0);
     }
-  
+
     // Initialize buffers for any reductionType functions
     void *reductionFuncResultArr;
     Rpp32u reductionFuncResultArrLength = srcDescPtr->n * 4;
@@ -881,6 +888,68 @@ int main(int argc, char **argv)
 
                 break;
             }
+            case 79:
+            {
+                testCaseName = "remap";
+
+                if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR))
+                {
+                    missingFuncFlag = 1;
+                    break;
+                }
+
+                RpptDescPtr tableDescPtr;
+                RpptDesc tableDesc;
+
+                tableDescPtr = &tableDesc;
+                tableDesc = srcDesc;
+                tableDescPtr->c = 1;
+                tableDescPtr->strides.nStride = srcDescPtr->h * srcDescPtr->w;
+                tableDescPtr->strides.hStride = srcDescPtr->w;
+                tableDescPtr->strides.wStride = tableDescPtr->strides.cStride = 1;
+
+                for (Rpp32u count = 0; count < batchSize; count++)
+                {
+                    Rpp32f *rowRemapTableTemp, *colRemapTableTemp;
+                    rowRemapTableTemp = rowRemapTable + count * tableDescPtr->strides.nStride;
+                    colRemapTableTemp = colRemapTable + count * tableDescPtr->strides.nStride;
+                    Rpp32u halfWidth = roiTensorPtrSrc[count].xywhROI.roiWidth / 2;
+                    for (Rpp32u i = 0; i < roiTensorPtrSrc[count].xywhROI.roiHeight; i++)
+                    {
+                        Rpp32f *rowRemapTableTempRow, *colRemapTableTempRow;
+                        rowRemapTableTempRow = rowRemapTableTemp + i * tableDescPtr->strides.hStride;
+                        colRemapTableTempRow = colRemapTableTemp + i * tableDescPtr->strides.hStride;
+                        Rpp32u j = 0;
+                        for (; j < halfWidth; j++)
+                        {
+                            *rowRemapTableTempRow = i;
+                            *colRemapTableTempRow = halfWidth - j;
+
+                            rowRemapTableTempRow++;
+                            colRemapTableTempRow++;
+                        }
+                        for (; j < roiTensorPtrSrc[count].xywhROI.roiWidth; j++)
+                        {
+                            *rowRemapTableTempRow = i;
+                            *colRemapTableTempRow = j;
+
+                            rowRemapTableTempRow++;
+                            colRemapTableTempRow++;
+                        }
+                    }
+                }
+
+                CHECK(hipMemcpy(d_rowRemapTable, (void *)rowRemapTable, ioBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
+                CHECK(hipMemcpy(d_colRemapTable, (void *)colRemapTable, ioBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
+
+                startWallTime = omp_get_wtime();
+                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    rppt_remap_gpu(d_input, srcDescPtr, d_output, dstDescPtr, (Rpp32f *)d_rowRemapTable, (Rpp32f *)d_colRemapTable, tableDescPtr, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
+                else
+                    missingFuncFlag = 1;
+
+                break;
+            }
             case 80:
             {
                 testCaseName = "resize_mirror_normalize";
@@ -1168,7 +1237,11 @@ int main(int argc, char **argv)
     free(inputu8);
     free(inputu8Second);
     free(outputu8);
+    free(rowRemapTable);
+    free(colRemapTable);
     CHECK(hipFree(d_input));
+    CHECK(hipFree(d_rowRemapTable));
+    CHECK(hipFree(d_colRemapTable));
     if(dualInputCase)
         CHECK(hipFree(d_input_second));
     CHECK(hipFree(d_output));

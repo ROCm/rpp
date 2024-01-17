@@ -1029,7 +1029,7 @@ RppStatus rppt_remap_host(RppPtr_t srcPtr,
                           RpptRoiType roiType,
                           rppHandle_t rppHandle)
 {
-    RppLayoutParams srcLayoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+    RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
 
     if (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR && interpolationType != RpptInterpolationType::BILINEAR)
         return RPP_ERROR_NOT_IMPLEMENTED;
@@ -1047,7 +1047,7 @@ RppStatus rppt_remap_host(RppPtr_t srcPtr,
                                        tableDescPtr,
                                        roiTensorPtrSrc,
                                        roiType,
-                                       srcLayoutParams);
+                                       layoutParams);
         }
         else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
         {
@@ -1060,7 +1060,7 @@ RppStatus rppt_remap_host(RppPtr_t srcPtr,
                                          tableDescPtr,
                                          roiTensorPtrSrc,
                                          roiType,
-                                         srcLayoutParams);
+                                         layoutParams);
         }
         else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
         {
@@ -1073,7 +1073,7 @@ RppStatus rppt_remap_host(RppPtr_t srcPtr,
                                          tableDescPtr,
                                          roiTensorPtrSrc,
                                          roiType,
-                                         srcLayoutParams);
+                                         layoutParams);
         }
         else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
         {
@@ -1086,7 +1086,7 @@ RppStatus rppt_remap_host(RppPtr_t srcPtr,
                                        tableDescPtr,
                                        roiTensorPtrSrc,
                                        roiType,
-                                       srcLayoutParams);
+                                       layoutParams);
         }
     }
     else if(interpolationType == RpptInterpolationType::BILINEAR)
@@ -1102,7 +1102,7 @@ RppStatus rppt_remap_host(RppPtr_t srcPtr,
                                              tableDescPtr,
                                              roiTensorPtrSrc,
                                              roiType,
-                                             srcLayoutParams);
+                                             layoutParams);
         }
         else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
         {
@@ -1115,7 +1115,7 @@ RppStatus rppt_remap_host(RppPtr_t srcPtr,
                                                tableDescPtr,
                                                roiTensorPtrSrc,
                                                roiType,
-                                               srcLayoutParams);
+                                               layoutParams);
         }
         else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
         {
@@ -1128,7 +1128,7 @@ RppStatus rppt_remap_host(RppPtr_t srcPtr,
                                                tableDescPtr,
                                                roiTensorPtrSrc,
                                                roiType,
-                                               srcLayoutParams);
+                                               layoutParams);
         }
         else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
         {
@@ -1141,7 +1141,7 @@ RppStatus rppt_remap_host(RppPtr_t srcPtr,
                                              tableDescPtr,
                                              roiTensorPtrSrc,
                                              roiType,
-                                             srcLayoutParams);
+                                             layoutParams);
         }
     }
 

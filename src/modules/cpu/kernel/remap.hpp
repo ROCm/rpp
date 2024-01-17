@@ -147,7 +147,7 @@ omp_set_dynamic(0);
             Rpp8u *dstPtrRow;
             dstPtrRow = dstPtrChannel;
 
-            for(int dstLocRow = 0; dstLocRow < 1; dstLocRow++)
+            for(int dstLocRow = 0; dstLocRow < roi.xywhROI.roiHeight; dstLocRow++)
             {
                 Rpp8u *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
@@ -831,9 +831,10 @@ RppStatus remap_bilinear_u8_u8_host_tensor(Rpp8u *srcPtr,
                                            RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-
+#if __AVX2__
     __m256 pSrcChannel = _mm256_set1_ps(srcDescPtr->c);
     __m256 pSrcStride = _mm256_set1_ps(srcDescPtr->strides.hStride);
+#endif
 
 omp_set_dynamic(0);
 #pragma omp parallel for num_threads(dstDescPtr->n)
@@ -854,10 +855,11 @@ omp_set_dynamic(0);
         rowRemapTableImage = rowRemapTable + batchCount * remapTableDescPtr->strides.nStride;
         colRemapTableImage = colRemapTable + batchCount * remapTableDescPtr->strides.nStride;
 
-        Rpp32u alignedLength = roi.xywhROI.roiWidth & ~7;   // Align dst width to process 4 dst pixels per iteration
+        Rpp32u alignedLength = roi.xywhROI.roiWidth & ~7;   // Align dst width to process 8 dst pixels per iteration
         Rpp32s vectorIncrement = 8;
         Rpp32s vectorIncrementPkd = 24;
 
+#if __AVX2__
         __m256 pBilinearCoeffs[4];
         __m256 pSrcStrideH = _mm256_set1_ps(srcDescPtr->strides.hStride);
         __m256 pRoiLTRB[4];
@@ -870,6 +872,7 @@ omp_set_dynamic(0);
         pxSrcStridesCHW[1] = _mm256_set1_epi32(srcDescPtr->strides.hStride);
         pxSrcStridesCHW[2] = _mm256_set1_epi32(srcDescPtr->strides.wStride);
         RpptBilinearNbhoodLocsVecLen8 srcLocs;
+#endif
 
         // Remap with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -891,6 +894,7 @@ omp_set_dynamic(0);
                 colRemapTableTemp = colRemapTableImage;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 pSrcX = _mm256_loadu_ps(colRemapTableTemp);
@@ -906,10 +910,10 @@ omp_set_dynamic(0);
                     rowRemapTableTemp += vectorIncrement;
                     colRemapTableTemp += vectorIncrement;
                 }
+#endif
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
-                {
                     compute_generic_bilinear_interpolation_pkd3_to_pln3(*rowRemapTableTemp++, *colRemapTableTemp++, &roiLTRB, dstPtrTempR++, dstPtrTempG++, dstPtrTempB++, srcPtrChannel, srcDescPtr);
-                }
+
                 dstPtrRowR += dstDescPtr->strides.hStride;
                 dstPtrRowG += dstDescPtr->strides.hStride;
                 dstPtrRowB += dstDescPtr->strides.hStride;
@@ -934,6 +938,7 @@ omp_set_dynamic(0);
                 colRemapTableTemp = colRemapTableImage;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 pSrcX = _mm256_loadu_ps(colRemapTableTemp);
@@ -947,10 +952,10 @@ omp_set_dynamic(0);
                     rowRemapTableTemp += vectorIncrement;
                     colRemapTableTemp += vectorIncrement;
                 }
+#endif
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
-                {
                     compute_generic_bilinear_interpolation_pln3pkd3_to_pkd3(*rowRemapTableTemp++, *colRemapTableTemp++, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
-                }
+
                 dstPtrRow += dstDescPtr->strides.hStride;
                 rowRemapTableImage += remapTableDescPtr->strides.hStride;
                 colRemapTableImage += remapTableDescPtr->strides.hStride;
@@ -973,6 +978,7 @@ omp_set_dynamic(0);
                 colRemapTableTemp = colRemapTableImage;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 pSrcX = _mm256_loadu_ps(colRemapTableTemp);
@@ -986,10 +992,10 @@ omp_set_dynamic(0);
                     rowRemapTableTemp += vectorIncrement;
                     colRemapTableTemp += vectorIncrement;
                 }
+#endif
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
-                {
                     compute_generic_bilinear_interpolation_pln3pkd3_to_pkd3(*rowRemapTableTemp++, *colRemapTableTemp++, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
-                }
+
                 dstPtrRow += dstDescPtr->strides.hStride;
                 rowRemapTableImage += remapTableDescPtr->strides.hStride;
                 colRemapTableImage += remapTableDescPtr->strides.hStride;
@@ -1016,6 +1022,7 @@ omp_set_dynamic(0);
                 colRemapTableTemp = colRemapTableImage;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 pSrcX = _mm256_loadu_ps(colRemapTableTemp);
@@ -1031,10 +1038,10 @@ omp_set_dynamic(0);
                     rowRemapTableTemp += vectorIncrement;
                     colRemapTableTemp += vectorIncrement;
                 }
+#endif
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
-                {
                     compute_generic_bilinear_interpolation_pln_to_pln(*rowRemapTableTemp++, *colRemapTableTemp++, &roiLTRB, dstPtrTempR++, srcPtrChannel, srcDescPtr, dstDescPtr);
-                }
+
                 dstPtrRowR += dstDescPtr->strides.hStride;
                 dstPtrRowG += dstDescPtr->strides.hStride;
                 dstPtrRowB += dstDescPtr->strides.hStride;
@@ -1059,6 +1066,7 @@ omp_set_dynamic(0);
                 colRemapTableTemp = colRemapTableImage;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 pSrcX = _mm256_loadu_ps(colRemapTableTemp);
@@ -1072,10 +1080,10 @@ omp_set_dynamic(0);
                     rowRemapTableTemp += vectorIncrement;
                     colRemapTableTemp += vectorIncrement;
                 }
+#endif
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
-                {
                     compute_generic_bilinear_interpolation_pln_to_pln(*rowRemapTableTemp++, *colRemapTableTemp++, &roiLTRB, dstPtrTemp++, srcPtrChannel, srcDescPtr, dstDescPtr);
-                }
+
                 dstPtrRow += dstDescPtr->strides.hStride;
                 rowRemapTableImage += remapTableDescPtr->strides.hStride;
                 colRemapTableImage += remapTableDescPtr->strides.hStride;
@@ -1098,9 +1106,10 @@ RppStatus remap_bilinear_f32_f32_host_tensor(Rpp32f *srcPtr,
                                              RppLayoutParams layoutParams)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-
+#if __AVX2__
     __m256 pSrcChannel = _mm256_set1_ps(srcDescPtr->c);
     __m256 pSrcStride = _mm256_set1_ps(srcDescPtr->strides.hStride);
+#endif
 
 omp_set_dynamic(0);
 #pragma omp parallel for num_threads(dstDescPtr->n)
@@ -1121,10 +1130,11 @@ omp_set_dynamic(0);
         rowRemapTableImage = rowRemapTable + batchCount * remapTableDescPtr->strides.nStride;
         colRemapTableImage = colRemapTable + batchCount * remapTableDescPtr->strides.nStride;
 
-        Rpp32u alignedLength = roi.xywhROI.roiWidth & ~7;   // Align dst width to process 4 dst pixels per iteration
+        Rpp32u alignedLength = roi.xywhROI.roiWidth & ~7;   // Align dst width to process 8 dst pixels per iteration
         Rpp32s vectorIncrement = 8;
         Rpp32s vectorIncrementPkd = 24;
 
+#if __AVX2__
         __m256 pBilinearCoeffs[4];
         __m256 pSrcStrideH = _mm256_set1_ps(srcDescPtr->strides.hStride);
         __m256 pRoiLTRB[4];
@@ -1137,6 +1147,7 @@ omp_set_dynamic(0);
         pxSrcStridesCHW[1] = _mm256_set1_epi32(srcDescPtr->strides.hStride);
         pxSrcStridesCHW[2] = _mm256_set1_epi32(srcDescPtr->strides.wStride);
         RpptBilinearNbhoodLocsVecLen8 srcLocs;
+#endif
 
         // Remap with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -1158,6 +1169,7 @@ omp_set_dynamic(0);
                 colRemapTableTemp = colRemapTableImage;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 pSrcX = _mm256_loadu_ps(colRemapTableTemp);
@@ -1173,10 +1185,10 @@ omp_set_dynamic(0);
                     rowRemapTableTemp += vectorIncrement;
                     colRemapTableTemp += vectorIncrement;
                 }
+#endif
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
-                {
                     compute_generic_bilinear_interpolation_pkd3_to_pln3(*rowRemapTableTemp++, *colRemapTableTemp++, &roiLTRB, dstPtrTempR++, dstPtrTempG++, dstPtrTempB++, srcPtrChannel, srcDescPtr);
-                }
+
                 dstPtrRowR += dstDescPtr->strides.hStride;
                 dstPtrRowG += dstDescPtr->strides.hStride;
                 dstPtrRowB += dstDescPtr->strides.hStride;
@@ -1201,6 +1213,7 @@ omp_set_dynamic(0);
                 colRemapTableTemp = colRemapTableImage;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 pSrcX = _mm256_loadu_ps(colRemapTableTemp);
@@ -1214,10 +1227,10 @@ omp_set_dynamic(0);
                     rowRemapTableTemp += vectorIncrement;
                     colRemapTableTemp += vectorIncrement;
                 }
+#endif
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
-                {
                     compute_generic_bilinear_interpolation_pln3pkd3_to_pkd3(*rowRemapTableTemp++, *colRemapTableTemp++, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
-                }
+
                 dstPtrRow += dstDescPtr->strides.hStride;
                 rowRemapTableImage += remapTableDescPtr->strides.hStride;
                 colRemapTableImage += remapTableDescPtr->strides.hStride;
@@ -1240,6 +1253,7 @@ omp_set_dynamic(0);
                 colRemapTableTemp = colRemapTableImage;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 pSrcX = _mm256_loadu_ps(colRemapTableTemp);
@@ -1253,10 +1267,10 @@ omp_set_dynamic(0);
                     rowRemapTableTemp += vectorIncrement;
                     colRemapTableTemp += vectorIncrement;
                 }
+#endif
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
-                {
                     compute_generic_bilinear_interpolation_pln3pkd3_to_pkd3(*rowRemapTableTemp++, *colRemapTableTemp++, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
-                }
+
                 dstPtrRow += dstDescPtr->strides.hStride;
                 rowRemapTableImage += remapTableDescPtr->strides.hStride;
                 colRemapTableImage += remapTableDescPtr->strides.hStride;
@@ -1283,6 +1297,7 @@ omp_set_dynamic(0);
                 colRemapTableTemp = colRemapTableImage;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 pSrcX = _mm256_loadu_ps(colRemapTableTemp);
@@ -1298,10 +1313,10 @@ omp_set_dynamic(0);
                     rowRemapTableTemp += vectorIncrement;
                     colRemapTableTemp += vectorIncrement;
                 }
+#endif
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
-                {
                     compute_generic_bilinear_interpolation_pln_to_pln(*rowRemapTableTemp++, *colRemapTableTemp++, &roiLTRB, dstPtrTempR++, srcPtrChannel, srcDescPtr, dstDescPtr);
-                }
+
                 dstPtrRowR += dstDescPtr->strides.hStride;
                 dstPtrRowG += dstDescPtr->strides.hStride;
                 dstPtrRowB += dstDescPtr->strides.hStride;
@@ -1326,6 +1341,7 @@ omp_set_dynamic(0);
                 colRemapTableTemp = colRemapTableImage;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 pSrcX = _mm256_loadu_ps(colRemapTableTemp);
@@ -1339,10 +1355,10 @@ omp_set_dynamic(0);
                     rowRemapTableTemp += vectorIncrement;
                     colRemapTableTemp += vectorIncrement;
                 }
+#endif
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
-                {
                     compute_generic_bilinear_interpolation_pln_to_pln(*rowRemapTableTemp++, *colRemapTableTemp++, &roiLTRB, dstPtrTemp++, srcPtrChannel, srcDescPtr, dstDescPtr);
-                }
+
                 dstPtrRow += dstDescPtr->strides.hStride;
                 rowRemapTableImage += remapTableDescPtr->strides.hStride;
                 colRemapTableImage += remapTableDescPtr->strides.hStride;
@@ -1367,8 +1383,10 @@ RppStatus remap_bilinear_i8_i8_host_tensor(Rpp8s *srcPtr,
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
+#if __AVX2__
     __m256 pSrcChannel = _mm256_set1_ps(srcDescPtr->c);
     __m256 pSrcStride = _mm256_set1_ps(srcDescPtr->strides.hStride);
+#endif
 
 omp_set_dynamic(0);
 #pragma omp parallel for num_threads(dstDescPtr->n)
@@ -1389,10 +1407,11 @@ omp_set_dynamic(0);
         rowRemapTableImage = rowRemapTable + batchCount * remapTableDescPtr->strides.nStride;
         colRemapTableImage = colRemapTable + batchCount * remapTableDescPtr->strides.nStride;
 
-        Rpp32u alignedLength = roi.xywhROI.roiWidth & ~7;   // Align dst width to process 4 dst pixels per iteration
+        Rpp32u alignedLength = roi.xywhROI.roiWidth & ~7;   // Align dst width to process 8 dst pixels per iteration
         Rpp32s vectorIncrement = 8;
         Rpp32s vectorIncrementPkd = 24;
 
+#if __AVX2__
         __m256 pBilinearCoeffs[4];
         __m256 pSrcStrideH = _mm256_set1_ps(srcDescPtr->strides.hStride);
         __m256 pRoiLTRB[4];
@@ -1405,6 +1424,7 @@ omp_set_dynamic(0);
         pxSrcStridesCHW[1] = _mm256_set1_epi32(srcDescPtr->strides.hStride);
         pxSrcStridesCHW[2] = _mm256_set1_epi32(srcDescPtr->strides.wStride);
         RpptBilinearNbhoodLocsVecLen8 srcLocs;
+#endif
 
         // Remap with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -1426,6 +1446,7 @@ omp_set_dynamic(0);
                 colRemapTableTemp = colRemapTableImage;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 pSrcX = _mm256_loadu_ps(colRemapTableTemp);
@@ -1442,10 +1463,10 @@ omp_set_dynamic(0);
                     rowRemapTableTemp += vectorIncrement;
                     colRemapTableTemp += vectorIncrement;
                 }
+#endif
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
-                {
                     compute_generic_bilinear_interpolation_pkd3_to_pln3(*rowRemapTableTemp++, *colRemapTableTemp++, &roiLTRB, dstPtrTempR++, dstPtrTempG++, dstPtrTempB++, srcPtrChannel, srcDescPtr);
-                }
+
                 dstPtrRowR += dstDescPtr->strides.hStride;
                 dstPtrRowG += dstDescPtr->strides.hStride;
                 dstPtrRowB += dstDescPtr->strides.hStride;
@@ -1470,6 +1491,7 @@ omp_set_dynamic(0);
                 colRemapTableTemp = colRemapTableImage;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 pSrcX = _mm256_loadu_ps(colRemapTableTemp);
@@ -1484,10 +1506,10 @@ omp_set_dynamic(0);
                     rowRemapTableTemp += vectorIncrement;
                     colRemapTableTemp += vectorIncrement;
                 }
+#endif
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
-                {
                     compute_generic_bilinear_interpolation_pln3pkd3_to_pkd3(*rowRemapTableTemp++, *colRemapTableTemp++, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
-                }
+
                 dstPtrRow += dstDescPtr->strides.hStride;
                 rowRemapTableImage += remapTableDescPtr->strides.hStride;
                 colRemapTableImage += remapTableDescPtr->strides.hStride;
@@ -1510,6 +1532,7 @@ omp_set_dynamic(0);
                 colRemapTableTemp = colRemapTableImage;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 pSrcX = _mm256_loadu_ps(colRemapTableTemp);
@@ -1524,10 +1547,10 @@ omp_set_dynamic(0);
                     rowRemapTableTemp += vectorIncrement;
                     colRemapTableTemp += vectorIncrement;
                 }
+#endif
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
-                {
                     compute_generic_bilinear_interpolation_pln3pkd3_to_pkd3(*rowRemapTableTemp++, *colRemapTableTemp++, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
-                }
+
                 dstPtrRow += dstDescPtr->strides.hStride;
                 rowRemapTableImage += remapTableDescPtr->strides.hStride;
                 colRemapTableImage += remapTableDescPtr->strides.hStride;
@@ -1554,6 +1577,7 @@ omp_set_dynamic(0);
                 colRemapTableTemp = colRemapTableImage;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 pSrcX = _mm256_loadu_ps(colRemapTableTemp);
@@ -1570,10 +1594,10 @@ omp_set_dynamic(0);
                     rowRemapTableTemp += vectorIncrement;
                     colRemapTableTemp += vectorIncrement;
                 }
+#endif
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
-                {
                     compute_generic_bilinear_interpolation_pln_to_pln(*rowRemapTableTemp++, *colRemapTableTemp++, &roiLTRB, dstPtrTempR++, srcPtrChannel, srcDescPtr, dstDescPtr);
-                }
+
                 dstPtrRowR += dstDescPtr->strides.hStride;
                 dstPtrRowG += dstDescPtr->strides.hStride;
                 dstPtrRowB += dstDescPtr->strides.hStride;
@@ -1598,6 +1622,7 @@ omp_set_dynamic(0);
                 colRemapTableTemp = colRemapTableImage;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 pSrcX = _mm256_loadu_ps(colRemapTableTemp);
@@ -1612,10 +1637,10 @@ omp_set_dynamic(0);
                     rowRemapTableTemp += vectorIncrement;
                     colRemapTableTemp += vectorIncrement;
                 }
+#endif
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
-                {
                     compute_generic_bilinear_interpolation_pln_to_pln(*rowRemapTableTemp++, *colRemapTableTemp++, &roiLTRB, dstPtrTemp++, srcPtrChannel, srcDescPtr, dstDescPtr);
-                }
+
                 dstPtrRow += dstDescPtr->strides.hStride;
                 rowRemapTableImage += remapTableDescPtr->strides.hStride;
                 colRemapTableImage += remapTableDescPtr->strides.hStride;
@@ -1639,8 +1664,10 @@ RppStatus remap_bilinear_f16_f16_host_tensor(Rpp16f *srcPtr,
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 
+#if __AVX2__
     __m256 pSrcChannel = _mm256_set1_ps(srcDescPtr->c);
     __m256 pSrcStride = _mm256_set1_ps(srcDescPtr->strides.hStride);
+#endif
 
 omp_set_dynamic(0);
 #pragma omp parallel for num_threads(dstDescPtr->n)
@@ -1661,10 +1688,11 @@ omp_set_dynamic(0);
         rowRemapTableImage = rowRemapTable + batchCount * remapTableDescPtr->strides.nStride;
         colRemapTableImage = colRemapTable + batchCount * remapTableDescPtr->strides.nStride;
 
-        Rpp32u alignedLength = roi.xywhROI.roiWidth & ~7;   // Align dst width to process 4 dst pixels per iteration
+        Rpp32u alignedLength = roi.xywhROI.roiWidth & ~7;   // Align dst width to process 8 dst pixels per iteration
         Rpp32s vectorIncrement = 8;
         Rpp32s vectorIncrementPkd = 24;
 
+#if __AVX2__
         __m256 pBilinearCoeffs[4];
         __m256 pSrcStrideH = _mm256_set1_ps(srcDescPtr->strides.hStride);
         __m256 pRoiLTRB[4];
@@ -1677,6 +1705,7 @@ omp_set_dynamic(0);
         pxSrcStridesCHW[1] = _mm256_set1_epi32(srcDescPtr->strides.hStride);
         pxSrcStridesCHW[2] = _mm256_set1_epi32(srcDescPtr->strides.wStride);
         RpptBilinearNbhoodLocsVecLen8 srcLocs;
+#endif
 
         // Remap with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -1698,6 +1727,7 @@ omp_set_dynamic(0);
                 colRemapTableTemp = colRemapTableImage;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 pSrcX = _mm256_loadu_ps(colRemapTableTemp);
@@ -1720,10 +1750,10 @@ omp_set_dynamic(0);
                     rowRemapTableTemp += vectorIncrement;
                     colRemapTableTemp += vectorIncrement;
                 }
+#endif
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
-                {
                     compute_generic_bilinear_interpolation_pkd3_to_pln3(*rowRemapTableTemp++, *colRemapTableTemp++, &roiLTRB, dstPtrTempR++, dstPtrTempG++, dstPtrTempB++, srcPtrChannel, srcDescPtr);
-                }
+
                 dstPtrRowR += dstDescPtr->strides.hStride;
                 dstPtrRowG += dstDescPtr->strides.hStride;
                 dstPtrRowB += dstDescPtr->strides.hStride;
@@ -1748,6 +1778,7 @@ omp_set_dynamic(0);
                 colRemapTableTemp = colRemapTableImage;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 pSrcX = _mm256_loadu_ps(colRemapTableTemp);
@@ -1764,10 +1795,10 @@ omp_set_dynamic(0);
                     rowRemapTableTemp += vectorIncrement;
                     colRemapTableTemp += vectorIncrement;
                 }
+#endif
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
-                {
                     compute_generic_bilinear_interpolation_pln3pkd3_to_pkd3(*rowRemapTableTemp++, *colRemapTableTemp++, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
-                }
+
                 dstPtrRow += dstDescPtr->strides.hStride;
                 rowRemapTableImage += remapTableDescPtr->strides.hStride;
                 colRemapTableImage += remapTableDescPtr->strides.hStride;
@@ -1790,6 +1821,7 @@ omp_set_dynamic(0);
                 colRemapTableTemp = colRemapTableImage;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 pSrcX = _mm256_loadu_ps(colRemapTableTemp);
@@ -1806,10 +1838,10 @@ omp_set_dynamic(0);
                     rowRemapTableTemp += vectorIncrement;
                     colRemapTableTemp += vectorIncrement;
                 }
+#endif
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
-                {
                     compute_generic_bilinear_interpolation_pln3pkd3_to_pkd3(*rowRemapTableTemp++, *colRemapTableTemp++, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
-                }
+
                 dstPtrRow += dstDescPtr->strides.hStride;
                 rowRemapTableImage += remapTableDescPtr->strides.hStride;
                 colRemapTableImage += remapTableDescPtr->strides.hStride;
@@ -1836,6 +1868,7 @@ omp_set_dynamic(0);
                 colRemapTableTemp = colRemapTableImage;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 pSrcX = _mm256_loadu_ps(colRemapTableTemp);
@@ -1858,10 +1891,10 @@ omp_set_dynamic(0);
                     rowRemapTableTemp += vectorIncrement;
                     colRemapTableTemp += vectorIncrement;
                 }
+#endif
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
-                {
                     compute_generic_bilinear_interpolation_pln_to_pln(*rowRemapTableTemp++, *colRemapTableTemp++, &roiLTRB, dstPtrTempR++, srcPtrChannel, srcDescPtr, dstDescPtr);
-                }
+
                 dstPtrRowR += dstDescPtr->strides.hStride;
                 dstPtrRowG += dstDescPtr->strides.hStride;
                 dstPtrRowB += dstDescPtr->strides.hStride;
@@ -1886,6 +1919,7 @@ omp_set_dynamic(0);
                 colRemapTableTemp = colRemapTableImage;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 pSrcX = _mm256_loadu_ps(colRemapTableTemp);
@@ -1902,10 +1936,10 @@ omp_set_dynamic(0);
                     rowRemapTableTemp += vectorIncrement;
                     colRemapTableTemp += vectorIncrement;
                 }
+#endif
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
-                {
                     compute_generic_bilinear_interpolation_pln_to_pln(*rowRemapTableTemp++, *colRemapTableTemp++, &roiLTRB, dstPtrTemp++, srcPtrChannel, srcDescPtr, dstDescPtr);
-                }
+
                 dstPtrRow += dstDescPtr->strides.hStride;
                 rowRemapTableImage += remapTableDescPtr->strides.hStride;
                 colRemapTableImage += remapTableDescPtr->strides.hStride;
