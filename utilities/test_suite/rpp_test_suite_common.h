@@ -1017,7 +1017,7 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
                 func += "Tensor_PLN1";
         }
     }
-    if(testCase == 21 ||testCase == 23 || testCase == 24)
+    if(testCase == 21 ||testCase == 23 || testCase == 24 || testCase == 79)
         func += "_interpolationType" + interpolationTypeName;
     else if(testCase == 8)
         func += "_noiseType" + noiseTypeName;
