@@ -54,7 +54,7 @@ endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 
 # RPP Default Options
 set(DEFAULT_BUILD_TYPE "Release")
-option(BUILD_WITH_AMD_ADVANCE "Build RPP for advanced AMD GPU Architecture"    OFF)
+option(BUILD_WITH_AMD_ADVANCE "Build RPP for advanced AMD GPU Architecture"    ON)
 
 # Set message options
 if(NOT WIN32)
@@ -120,6 +120,12 @@ if(WIN32 AND CMAKE_CROSSCOMPILING)
 else()
     set(WINE_CMD)
 endif()
+
+message("-- ${Cyan}RPP Developer Options${ColourReset}")
+message("-- ${Cyan}     -D BUILD_WITH_AMD_ADVANCE=${BUILD_WITH_AMD_ADVANCE} [Turn ON/OFF Build for AMD advanced GPUs(default:ON)]${ColourReset}")
+message("-- ${Red}      NOTE: For ROCm Version 5.X.X Use -D BUILD_WITH_AMD_ADVANCE=OFF${ColourReset}")
+message("-- ${Cyan}     -D BACKEND=${BACKEND} [Select RPP Backend [options:CPU/OPENCL/HIP](default:HIP)]${ColourReset}")
+message("-- ${Cyan}     -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} [Select RPP build type [options:Debug/Release](default:Release)]${ColourReset}")
 
 # CMake checks and setups
 if("${CMAKE_CURRENT_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
@@ -359,15 +365,17 @@ set(CPACK_PACKAGE_LICENSE       "MIT")
 set(CPACK_PACKAGE_CONTACT       "mivisionx support <mivisionx.support@amd.com>")
 set(CPACK_PACKAGE_VENDOR        "AMD ROCm")
 set(CPACK_PACKAGE_GROUP         "Development/Tools")
-set(CPACK_PACKAGE_HOMEPAGE      "https://gpuopen-professionalcompute-libraries.github.io/rpp/")
+set(CPACK_PACKAGE_HOMEPAGE      "https://github.com/ROCm/rpp")
 
 if(DEFINED ENV{ROCM_LIBPATCH_VERSION})
     set(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}.$ENV{ROCM_LIBPATCH_VERSION}")
 endif()
 
 # Set the dependent packages
-set(RPP_DEBIAN_PACKAGE_LIST  "half")
-set(RPP_RPM_PACKAGE_LIST     "half")
+set(RPP_DEBIAN_PACKAGE_LIST  "rocm-hip-runtime, half")
+set(RPP_RPM_PACKAGE_LIST     "rocm-hip-runtime, half")
+set(RPP_DEBIAN_DEV_PACKAGE_LIST  "rocm-hip-runtime-dev")
+set(RPP_RPM_DEV_PACKAGE_LIST     "rocm-hip-runtime-devel")
 
 # package release
 set(CPACK_DEBIAN_FILE_NAME       "DEB-DEFAULT")
@@ -400,7 +408,7 @@ set(CPACK_DEB_COMPONENT_INSTALL ON)
 set(CPACK_DEBIAN_RUNTIME_PACKAGE_NAME "${PROJECT_NAME}")
 set(CPACK_DEBIAN_RUNTIME_PACKAGE_DEPENDS "rocm-core, ${RPP_DEBIAN_PACKAGE_LIST}")
 set(CPACK_DEBIAN_DEV_PACKAGE_NAME "${PROJECT_NAME}-dev")
-set(CPACK_DEBIAN_DEV_PACKAGE_DEPENDS "rocm-core, ${PROJECT_NAME}")
+set(CPACK_DEBIAN_DEV_PACKAGE_DEPENDS "rocm-core, ${PROJECT_NAME}, ${RPP_DEBIAN_DEV_PACKAGE_LIST}")
 set(CPACK_DEBIAN_TEST_PACKAGE_NAME "${PROJECT_NAME}-test")
 set(CPACK_DEBIAN_TEST_PACKAGE_DEPENDS "rocm-core, ${PROJECT_NAME}-dev")
 set(CPACK_DEBIAN_PACKAGE_LICENSE "MIT" )
@@ -414,7 +422,7 @@ set(CPACK_RPM_RUNTIME_PACKAGE_REQUIRES "rocm-core, ${RPP_RPM_PACKAGE_LIST}")
 set(CPACK_RPM_RUNTIME_PACKAGE_PROVIDES "${PROJECT_NAME}")
 set(CPACK_RPM_RUNTIME_PACKAGE_OBSOLETES "${PROJECT_NAME}")
 set(CPACK_RPM_DEV_PACKAGE_NAME "${PROJECT_NAME}-devel")
-set(CPACK_RPM_DEV_PACKAGE_REQUIRES "rocm-core, ${PROJECT_NAME}")
+set(CPACK_RPM_DEV_PACKAGE_REQUIRES "rocm-core, ${PROJECT_NAME}, ${RPP_RPM_DEV_PACKAGE_LIST}")
 set(CPACK_RPM_DEV_PACKAGE_PROVIDES "${PROJECT_NAME}-devel")
 set(CPACK_RPM_DEV_PACKAGE_OBSOLETES "${PROJECT_NAME}-devel")
 set(CPACK_RPM_TEST_PACKAGE_NAME "${PROJECT_NAME}-test")
