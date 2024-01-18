@@ -39,30 +39,30 @@ Input<br>(nifti1 .nii medical image) | fused_multiply_add_scalar<br>(brightened 
 
   * Ubuntu `20`/`22`
 
-    ```bash
-    sudo apt-get install clang
-    ```
+  ```shell
+  sudo apt-get install clang
+  ```
 
   * CentOS `7`
 
-    ```bash
-    sudo yum install llvm-toolset-7-clang llvm-toolset-7-clang-analyzer llvm-toolset-7-clang-tools-extra
-    scl enable llvm-toolset-7 bash
-    ```
+  ```shell
+  sudo yum install llvm-toolset-7-clang llvm-toolset-7-clang-analyzer llvm-toolset-7-clang-tools-extra
+  scl enable llvm-toolset-7 bash
+  ```
 
   * RHEL `8`/`9`
 
-    ```bash
-    sudo yum install clang
-    ```
+  ```shell
+  sudo yum install clang
+  ```
 
   * SLES `15-SP4` (use `ROCm LLVM Clang`)
 
-    ```bash
-    zypper -n --no-gpg-checks install clang
-    update-alternatives --install /usr/bin/clang clang /opt/rocm-*/llvm/bin/clang 100
-    update-alternatives --install /usr/bin/clang++ clang++ /opt/rocm-*/llvm/bin/clang++ 100
-    ```
+  ```shell
+  zypper -n --no-gpg-checks install clang
+  update-alternatives --install /usr/bin/clang clang /opt/rocm-*/llvm/bin/clang 100
+  update-alternatives --install /usr/bin/clang++ clang++ /opt/rocm-*/llvm/bin/clang++ 100
+  ```
 
 * CMake Version `3.5` and above
 
@@ -70,10 +70,10 @@ Input<br>(nifti1 .nii medical image) | fused_multiply_add_scalar<br>(brightened 
 
   * `half` package install
 
-    ```bash
-    sudo apt-get install half
-    ```
-   **Note:** Use appropriate package manager depending on the OS 
+  ```shell
+  sudo apt-get install half
+  ```
+  **Note:** Use appropriate package manager depending on the OS 
 
 * Compiler with support for C++ Version `17` and above
 
