@@ -954,7 +954,10 @@ omp_set_dynamic(0);
                 }
 #endif
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
+                {
                     compute_generic_bilinear_interpolation_pln3pkd3_to_pkd3(*rowRemapTableTemp++, *colRemapTableTemp++, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
+                    dstPtrTemp += 3;
+                }
 
                 dstPtrRow += dstDescPtr->strides.hStride;
                 rowRemapTableImage += remapTableDescPtr->strides.hStride;
@@ -994,7 +997,10 @@ omp_set_dynamic(0);
                 }
 #endif
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
+                {
                     compute_generic_bilinear_interpolation_pln3pkd3_to_pkd3(*rowRemapTableTemp++, *colRemapTableTemp++, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
+                    dstPtrTemp += 3;
+                }
 
                 dstPtrRow += dstDescPtr->strides.hStride;
                 rowRemapTableImage += remapTableDescPtr->strides.hStride;
@@ -1229,7 +1235,10 @@ omp_set_dynamic(0);
                 }
 #endif
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
+                {
                     compute_generic_bilinear_interpolation_pln3pkd3_to_pkd3(*rowRemapTableTemp++, *colRemapTableTemp++, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
+                    dstPtrTemp += 3;
+                }
 
                 dstPtrRow += dstDescPtr->strides.hStride;
                 rowRemapTableImage += remapTableDescPtr->strides.hStride;
@@ -1269,7 +1278,10 @@ omp_set_dynamic(0);
                 }
 #endif
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
+                {
                     compute_generic_bilinear_interpolation_pln3pkd3_to_pkd3(*rowRemapTableTemp++, *colRemapTableTemp++, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
+                    dstPtrTemp += 3;
+                }
 
                 dstPtrRow += dstDescPtr->strides.hStride;
                 rowRemapTableImage += remapTableDescPtr->strides.hStride;
@@ -1508,7 +1520,10 @@ omp_set_dynamic(0);
                 }
 #endif
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
+                {
                     compute_generic_bilinear_interpolation_pln3pkd3_to_pkd3(*rowRemapTableTemp++, *colRemapTableTemp++, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
+                    dstPtrTemp += 3;
+                }
 
                 dstPtrRow += dstDescPtr->strides.hStride;
                 rowRemapTableImage += remapTableDescPtr->strides.hStride;
@@ -1549,7 +1564,10 @@ omp_set_dynamic(0);
                 }
 #endif
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
+                {
                     compute_generic_bilinear_interpolation_pln3pkd3_to_pkd3(*rowRemapTableTemp++, *colRemapTableTemp++, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
+                    dstPtrTemp += 3;
+                }
 
                 dstPtrRow += dstDescPtr->strides.hStride;
                 rowRemapTableImage += remapTableDescPtr->strides.hStride;
@@ -1797,7 +1815,10 @@ omp_set_dynamic(0);
                 }
 #endif
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
+                {
                     compute_generic_bilinear_interpolation_pln3pkd3_to_pkd3(*rowRemapTableTemp++, *colRemapTableTemp++, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
+                    dstPtrTemp += 3;
+                }
 
                 dstPtrRow += dstDescPtr->strides.hStride;
                 rowRemapTableImage += remapTableDescPtr->strides.hStride;
@@ -1840,7 +1861,10 @@ omp_set_dynamic(0);
                 }
 #endif
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
+                {
                     compute_generic_bilinear_interpolation_pln3pkd3_to_pkd3(*rowRemapTableTemp++, *colRemapTableTemp++, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
+                    dstPtrTemp += 3;
+                }
 
                 dstPtrRow += dstDescPtr->strides.hStride;
                 rowRemapTableImage += remapTableDescPtr->strides.hStride;
