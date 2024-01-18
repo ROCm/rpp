@@ -179,6 +179,16 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
             print("------------------------------------------------------------------------------------------")
 
 def run_performance_test_cmd(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, additionalParam, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
+    if qaMode == 1:
+        with open("{}/BatchPD_host_{}_raw_performance_log.txt".format(loggingFolder, log_file_layout), "a") as log_file:
+            process = subprocess.Popen([buildFolderPath + "/build/BatchPD_host_" + log_file_layout, srcPath1, srcPath2, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), "0"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
+            while True:
+                output = process.stdout.readline()
+                if not output and process.poll() is not None:
+                    break
+                print(output.strip())
+                log_file.write(output)
+
     with open("{}/Tensor_host_{}_raw_performance_log.txt".format(loggingFolder, log_file_layout), "a") as log_file:
         print(f"./Tensor_host {srcPath1} {srcPath2} {dstPath} {bitDepth} {outputFormatToggle} {case} {additionalParam} 0 ")
         process = subprocess.Popen([buildFolderPath + "/build/Tensor_host", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
@@ -375,7 +385,6 @@ else:
                 srcPath2 = ricapInFilePath
         for layout in range(3):
             dstPathTemp, log_file_layout = process_layout(layout, qaMode, case, dstPath)
-
             run_performance_test(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
 
 # print the results of qa tests
@@ -411,7 +420,79 @@ layoutDict = {0:"PKD3", 1:"PLN3", 2:"PLN1"}
 if testType == 0 and qaMode == 0:
     create_layout_directories(dstPath, layoutDict)
 # Performance tests
-elif (testType == 1):
+elif (testType == 1 and qaMode == 1):
+    tensor_log_file_list = get_log_file_list(preserveOutput)
+    batchpd_log_file_list = [sub.replace("Tensor_host", "BatchPD_host") for sub in tensor_log_file_list] # will be needed only in qa mode
+
+    stats = []
+    tensorVal = []
+    batchpdVal = []
+    functions = []
+    funcCount = 0
+    for i in range(3):
+        tensor_log_file = tensor_log_file_list[i]
+        batchpd_log_file = batchpd_log_file_list[i]
+        # Opening log file
+        try:
+            tensor_file = open(tensor_log_file,"r")
+        except IOError:
+            print("Skipping file -> "+ tensor_log_file)
+            continue
+
+        # Opening log file
+        try:
+            batchpd_file = open(batchpd_log_file,"r")
+        except IOError:
+            print("Skipping file -> "+ batchpd_log_file)
+            continue
+
+        prevLine = ""
+        # Loop over each line
+        for line in tensor_file:
+            if "max,min,avg wall times in ms/batch" in line and "u8" in prevLine:
+                split_word_start = "Running "
+                split_word_end = " " + str(numRuns)
+                prevLine = prevLine.partition(split_word_start)[2].partition(split_word_end)[0]
+                split_word_start = "max,min,avg wall times in ms/batch = "
+                split_word_end = "\n"
+                if prevLine not in functions:
+                    functions.append(prevLine)
+                    stats = line.partition(split_word_start)[2].partition(split_word_end)[0].split(",")
+                    tensorVal.append(float(stats[2]))
+                    funcCount += 1
+
+            if line != "\n":
+                prevLine = line
+
+        # Closing log file
+        tensor_file.close()
+
+        prevLine = ""
+        for line in batchpd_file:
+            if "max,min,avg" in line and "u8" in prevLine:
+                split_word_start = "Running "
+                split_word_end = " " + str(numRuns)
+                prevLine = prevLine.partition(split_word_start)[2].partition(split_word_end)[0]
+                split_word_start = "max,min,avg"
+                split_word_end = "\n"
+                if prevLine not in functions:
+                    stats = line.partition(split_word_start)[2].partition(split_word_end)[0].split(",")
+                    batchpdVal.append(float(stats[2]) * 1000)
+
+            if line != "\n":
+                prevLine = line
+
+        # Closing log file
+        batchpd_file.close()
+
+    for i in range(len(functions)):
+        perf_improvement = int(((batchpdVal[i] - tensorVal[i]) / batchpdVal[i]) * 100)
+        if perf_improvement > 5:
+            print(functions[i] + ": PASSED")
+        else:
+            print(functions[i] + ": FAILED")
+
+elif (testType == 1 and qaMode == 0):
     log_file_list = get_log_file_list(preserveOutput)
 
     functionality_group_list = [
