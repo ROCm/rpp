@@ -25,5 +25,5 @@ ENV RPP_WORKSPACE=/workspace
 WORKDIR $RPP_WORKSPACE
 
 # install RPP
-RUN git clone https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git && mkdir build && cd build && \
+RUN git clone https://github.com/ROCm/rpp.git && mkdir build && cd build && \
         cmake ../rpp && make -j8 && make install
