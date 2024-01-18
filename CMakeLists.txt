@@ -54,7 +54,7 @@ endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 
 # RPP Default Options
 set(DEFAULT_BUILD_TYPE "Release")
-option(BUILD_WITH_AMD_ADVANCE "Build RPP for advanced AMD GPU Architecture"    OFF)
+option(BUILD_WITH_AMD_ADVANCE "Build RPP for advanced AMD GPU Architecture"    ON)
 
 # Set message options
 if(NOT WIN32)
@@ -120,6 +120,11 @@ if(WIN32 AND CMAKE_CROSSCOMPILING)
 else()
     set(WINE_CMD)
 endif()
+
+message("-- ${Cyan}RPP Developer Options${ColourReset}")
+message("-- ${Cyan}     -D BUILD_WITH_AMD_ADVANCE=${BUILD_WITH_AMD_ADVANCE} [Turn ON/OFF Build for AMD advanced GPUs(default:ON)]${ColourReset}")
+message("-- ${Cyan}     -D BACKEND=${BACKEND} [Select RPP Backend [options:CPU/OPENCL/HIP](default:HIP)]${ColourReset}")
+message("-- ${Cyan}     -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} [Select RPP build type [options:Debug/Release](default:Release)]${ColourReset}")
 
 # CMake checks and setups
 if("${CMAKE_CURRENT_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
