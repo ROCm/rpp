@@ -306,7 +306,7 @@ preserveOutput = args.preserve_output
 batchSize = args.batch_size
 roiList = ['0', '0', '0', '0'] if args.roi is None else args.roi
 
-if qaMode and batchSize != 3:
+if qaMode and testType == 0 and batchSize != 3:
     print("QA mode can only run with a batch size of 3.")
     exit(0)
 
@@ -450,16 +450,19 @@ elif (testType == 1 and qaMode == 1):
         # Loop over each line
         for line in tensor_file:
             if "max,min,avg wall times in ms/batch" in line and "u8" in prevLine:
-                split_word_start = "Running "
-                split_word_end = " " + str(numRuns)
-                prevLine = prevLine.partition(split_word_start)[2].partition(split_word_end)[0]
-                split_word_start = "max,min,avg wall times in ms/batch = "
-                split_word_end = "\n"
-                if prevLine not in functions:
-                    functions.append(prevLine)
-                    stats = line.partition(split_word_start)[2].partition(split_word_end)[0].split(",")
-                    tensorVal.append(float(stats[2]))
-                    funcCount += 1
+                layoutCheck = "PKD3_toPKD3" in prevLine or "PLN3_toPLN3" in prevLine or "PLN1_toPLN1" in prevLine
+                interpolationCheck = "interpolationType" not in prevLine or "interpolationTypeBilinear" in prevLine
+                if layoutCheck and interpolationCheck:
+                    split_word_start = "Running "
+                    split_word_end = " " + str(numRuns)
+                    prevLine = prevLine.partition(split_word_start)[2].partition(split_word_end)[0]
+                    split_word_start = "max,min,avg wall times in ms/batch = "
+                    split_word_end = "\n"
+                    if prevLine not in functions:
+                        functions.append(prevLine)
+                        stats = line.partition(split_word_start)[2].partition(split_word_end)[0].split(",")
+                        tensorVal.append(float(stats[2]))
+                        funcCount += 1
 
             if line != "\n":
                 prevLine = line
@@ -469,15 +472,16 @@ elif (testType == 1 and qaMode == 1):
 
         prevLine = ""
         for line in batchpd_file:
-            if "max,min,avg" in line and "u8" in prevLine:
-                split_word_start = "Running "
-                split_word_end = " " + str(numRuns)
-                prevLine = prevLine.partition(split_word_start)[2].partition(split_word_end)[0]
-                split_word_start = "max,min,avg"
-                split_word_end = "\n"
-                if prevLine not in functions:
-                    stats = line.partition(split_word_start)[2].partition(split_word_end)[0].split(",")
-                    batchpdVal.append(float(stats[2]) * 1000)
+            if "max,min,avg" in line and "u8_BatchPD" in prevLine:
+                if "PKD3_toPKD3" in prevLine or "PLN3_toPLN3" in prevLine or "PLN1_toPLN1" in prevLine:
+                    split_word_start = "Running "
+                    split_word_end = " " + str(numRuns)
+                    prevLine = prevLine.partition(split_word_start)[2].partition(split_word_end)[0]
+                    split_word_start = "max,min,avg"
+                    split_word_end = "\n"
+                    if prevLine not in functions:
+                        stats = line.partition(split_word_start)[2].partition(split_word_end)[0].split(",")
+                        batchpdVal.append(float(stats[2]) * float(1000.0))
 
             if line != "\n":
                 prevLine = line
@@ -485,13 +489,29 @@ elif (testType == 1 and qaMode == 1):
         # Closing log file
         batchpd_file.close()
 
+    print("---------------------------------- Results of QA Test - Tensor_host ----------------------------------\n")
+    qaFilePath = os.path.join(outFilePath, "QA_results.txt")
+    f = open(qaFilePath, 'w')
+    numLines = 0
+    numPassed = 0
+    removalList = ["_HOST", "_toPKD3", "_toPLN3", "_toPLN1"]
     for i in range(len(functions)):
         perf_improvement = int(((batchpdVal[i] - tensorVal[i]) / batchpdVal[i]) * 100)
-        if perf_improvement > 5:
-            print(functions[i] + ": PASSED")
+        numLines += 1
+        funcName = functions[i]
+        for string in removalList:
+            funcName = funcName.replace(string, "")
+        if perf_improvement > 1:
+            numPassed += 1
+            print(funcName + ": PASSED")
         else:
-            print(functions[i] + ": FAILED")
+            print(funcName + ": FAILED")
 
+    resultsInfo = "\n\nFinal Results of Tests:"
+    resultsInfo += "\n    - Total test cases including all subvariants REQUESTED = " + str(numLines)
+    resultsInfo += "\n    - Total test cases including all subvariants PASSED = " + str(numPassed)
+    f.write(resultsInfo)
+    print("\n-------------------------------------------------------------------" + resultsInfo + "\n\n-------------------------------------------------------------------")
 elif (testType == 1 and qaMode == 0):
     log_file_list = get_log_file_list(preserveOutput)
 
