@@ -421,46 +421,48 @@ if testType == 0 and qaMode == 0:
     create_layout_directories(dstPath, layoutDict)
 # Performance tests
 elif (testType == 1 and qaMode == 1):
-    tensor_log_file_list = get_log_file_list(preserveOutput)
-    batchpd_log_file_list = [sub.replace("Tensor_host", "BatchPD_host") for sub in tensor_log_file_list] # will be needed only in qa mode
+    tensorLogFileList = get_log_file_list(preserveOutput)
+    batchpdLogFileList = [sub.replace("Tensor_host", "BatchPD_host") for sub in tensorLogFileList] # will be needed only in qa mode
 
     stats = []
     tensorVal = []
     batchpdVal = []
     functions = []
+    functionsBatchPD = []
     funcCount = 0
+    thresholdDict = {"brightness": 5, "gamma_correction": 10, "blend": 10}
     for i in range(3):
-        tensor_log_file = tensor_log_file_list[i]
-        batchpd_log_file = batchpd_log_file_list[i]
+        tensorLogFile = tensorLogFileList[i]
+        batchpdLogFile = batchpdLogFileList[i]
         # Opening log file
         try:
-            tensor_file = open(tensor_log_file,"r")
+            tensorFile = open(tensorLogFile,"r")
         except IOError:
-            print("Skipping file -> "+ tensor_log_file)
+            print("Skipping file -> "+ tensorLogFile)
             continue
 
         # Opening log file
         try:
-            batchpd_file = open(batchpd_log_file,"r")
+            batchpdFile = open(batchpdLogFile,"r")
         except IOError:
-            print("Skipping file -> "+ batchpd_log_file)
+            print("Skipping file -> "+ batchpdLogFile)
             continue
 
         prevLine = ""
         # Loop over each line
-        for line in tensor_file:
-            if "max,min,avg wall times in ms/batch" in line and "u8" in prevLine:
+        for line in tensorFile:
+            if "max,min,avg wall times in ms/batch" in line and "u8_Tensor" in prevLine:
                 layoutCheck = "PKD3_toPKD3" in prevLine or "PLN3_toPLN3" in prevLine or "PLN1_toPLN1" in prevLine
                 interpolationCheck = "interpolationType" not in prevLine or "interpolationTypeBilinear" in prevLine
                 if layoutCheck and interpolationCheck:
-                    split_word_start = "Running "
-                    split_word_end = " " + str(numRuns)
-                    prevLine = prevLine.partition(split_word_start)[2].partition(split_word_end)[0]
-                    split_word_start = "max,min,avg wall times in ms/batch = "
-                    split_word_end = "\n"
+                    splitWordStart = "Running "
+                    splitWordEnd = " " + str(numRuns)
+                    prevLine = prevLine.partition(splitWordStart)[2].partition(splitWordEnd)[0]
+                    splitWordStart = "max,min,avg wall times in ms/batch = "
+                    splitWordEnd = "\n"
                     if prevLine not in functions:
                         functions.append(prevLine)
-                        stats = line.partition(split_word_start)[2].partition(split_word_end)[0].split(",")
+                        stats = line.partition(splitWordStart)[2].partition(splitWordEnd)[0].split(",")
                         tensorVal.append(float(stats[2]))
                         funcCount += 1
 
@@ -468,26 +470,28 @@ elif (testType == 1 and qaMode == 1):
                 prevLine = line
 
         # Closing log file
-        tensor_file.close()
+        tensorFile.close()
 
+        stats = []
         prevLine = ""
-        for line in batchpd_file:
+        for line in batchpdFile:
             if "max,min,avg" in line and "u8_BatchPD" in prevLine:
                 if "PKD3_toPKD3" in prevLine or "PLN3_toPLN3" in prevLine or "PLN1_toPLN1" in prevLine:
-                    split_word_start = "Running "
-                    split_word_end = " " + str(numRuns)
-                    prevLine = prevLine.partition(split_word_start)[2].partition(split_word_end)[0]
-                    split_word_start = "max,min,avg"
-                    split_word_end = "\n"
-                    if prevLine not in functions:
-                        stats = line.partition(split_word_start)[2].partition(split_word_end)[0].split(",")
+                    splitWordStart = "Running "
+                    splitWordEnd = " " + str(numRuns)
+                    prevLine = prevLine.partition(splitWordStart)[2].partition(splitWordEnd)[0]
+                    splitWordStart = "max,min,avg"
+                    splitWordEnd = "\n"
+                    if prevLine not in functionsBatchPD:
+                        functionsBatchPD.append(prevLine)
+                        stats = line.partition(splitWordStart)[2].partition(splitWordEnd)[0].split(",")
                         batchpdVal.append(float(stats[2]) * float(1000.0))
 
             if line != "\n":
                 prevLine = line
 
         # Closing log file
-        batchpd_file.close()
+        batchpdFile.close()
 
     print("---------------------------------- Results of QA Test - Tensor_host ----------------------------------\n")
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
@@ -495,13 +499,16 @@ elif (testType == 1 and qaMode == 1):
     numLines = 0
     numPassed = 0
     removalList = ["_HOST", "_toPKD3", "_toPLN3", "_toPLN1"]
+    caseNames = thresholdDict.keys()
     for i in range(len(functions)):
-        perf_improvement = int(((batchpdVal[i] - tensorVal[i]) / batchpdVal[i]) * 100)
+        perfImprovement = int(((batchpdVal[i] - tensorVal[i]) / batchpdVal[i]) * 100)
         numLines += 1
         funcName = functions[i]
+        caseName = funcName.split("_u8_")[0]
         for string in removalList:
             funcName = funcName.replace(string, "")
-        if perf_improvement > 1:
+        thresh = thresholdDict[caseName]
+        if perfImprovement > thresh:
             numPassed += 1
             print(funcName + ": PASSED")
         else:
