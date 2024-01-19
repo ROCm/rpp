@@ -25,15 +25,15 @@ __device__ void remap_srclocs_hip_compute(int4 *srcRoiPtr_i4, float *rowRemapTab
 // -------------------- Set 2 - Nearest Neighbor Interpolation --------------------
 
 template <typename T>
-__global__ void remap_nearest_neighbor_pkd_tensor(T *srcPtr,
-                                                  uint2 srcStridesNH,
-                                                  T *dstPtr,
-                                                  uint2 dstStridesNH,
-                                                  uint2 dstDimsWH,
-                                                  float *rowRemapTable,
-                                                  float *colRemapTable,
-                                                  uint2 remapTableStridesNH,
-                                                  RpptROIPtr roiTensorPtrSrc)
+__global__ void remap_nearest_neighbor_pkd_hip_tensor(T *srcPtr,
+                                                      uint2 srcStridesNH,
+                                                      T *dstPtr,
+                                                      uint2 dstStridesNH,
+                                                      uint2 dstDimsWH,
+                                                      float *rowRemapTable,
+                                                      float *colRemapTable,
+                                                      uint2 remapTableStridesNH,
+                                                      RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -60,16 +60,16 @@ __global__ void remap_nearest_neighbor_pkd_tensor(T *srcPtr,
 }
 
 template <typename T>
-__global__ void remap_nearest_neighbor_pln_tensor(T *srcPtr,
-                                                  uint3 srcStridesNCH,
-                                                  T *dstPtr,
-                                                  uint3 dstStridesNCH,
-                                                  uint2 dstDimsWH,
-                                                  int channelsDst,
-                                                  float *rowRemapTable,
-                                                  float *colRemapTable,
-                                                  uint2 remapTableStridesNH,
-                                                  RpptROIPtr roiTensorPtrSrc)
+__global__ void remap_nearest_neighbor_pln_hip_tensor(T *srcPtr,
+                                                      uint3 srcStridesNCH,
+                                                      T *dstPtr,
+                                                      uint3 dstStridesNCH,
+                                                      uint2 dstDimsWH,
+                                                      int channelsDst,
+                                                      float *rowRemapTable,
+                                                      float *colRemapTable,
+                                                      uint2 remapTableStridesNH,
+                                                      RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -111,16 +111,16 @@ __global__ void remap_nearest_neighbor_pln_tensor(T *srcPtr,
 }
 
 template <typename T>
-__global__ void remap_nearest_neighbor_pkd3_pln3_tensor(T *srcPtr,
-                                                        uint2 srcStridesNH,
-                                                        T *dstPtr,
-                                                        uint3 dstStridesNCH,
-                                                        uint2 dstDimsWH,
-                                                        int channelsDst,
-                                                        float *rowRemapTable,
-                                                        float *colRemapTable,
-                                                        uint2 remapTableStridesNH,
-                                                        RpptROIPtr roiTensorPtrSrc)
+__global__ void remap_nearest_neighbor_pkd3_pln3_hip_tensor(T *srcPtr,
+                                                            uint2 srcStridesNH,
+                                                            T *dstPtr,
+                                                            uint3 dstStridesNCH,
+                                                            uint2 dstDimsWH,
+                                                            int channelsDst,
+                                                            float *rowRemapTable,
+                                                            float *colRemapTable,
+                                                            uint2 remapTableStridesNH,
+                                                            RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -147,15 +147,15 @@ __global__ void remap_nearest_neighbor_pkd3_pln3_tensor(T *srcPtr,
 }
 
 template <typename T>
-__global__ void remap_nearest_neighbor_pln3_pkd3_tensor(T *srcPtr,
-                                                        uint3 srcStridesNCH,
-                                                        T *dstPtr,
-                                                        uint2 dstStridesNH,
-                                                        uint2 dstDimsWH,
-                                                        float *rowRemapTable,
-                                                        float *colRemapTable,
-                                                        uint2 remapTableStridesNH,
-                                                        RpptROIPtr roiTensorPtrSrc)
+__global__ void remap_nearest_neighbor_pln3_pkd3_hip_tensor(T *srcPtr,
+                                                            uint3 srcStridesNCH,
+                                                            T *dstPtr,
+                                                            uint2 dstStridesNH,
+                                                            uint2 dstDimsWH,
+                                                            float *rowRemapTable,
+                                                            float *colRemapTable,
+                                                            uint2 remapTableStridesNH,
+                                                            RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -184,15 +184,15 @@ __global__ void remap_nearest_neighbor_pln3_pkd3_tensor(T *srcPtr,
 // -------------------- Set 2 - Bilinear Interpolation --------------------
 
 template <typename T>
-__global__ void remap_bilinear_pkd_tensor(T *srcPtr,
-                                          uint2 srcStridesNH,
-                                          T *dstPtr,
-                                          uint2 dstStridesNH,
-                                          uint2 dstDimsWH,
-                                          float *rowRemapTable,
-                                          float *colRemapTable,
-                                          uint2 remapTableStridesNH,
-                                          RpptROIPtr roiTensorPtrSrc)
+__global__ void remap_bilinear_pkd_hip_tensor(T *srcPtr,
+                                              uint2 srcStridesNH,
+                                              T *dstPtr,
+                                              uint2 dstStridesNH,
+                                              uint2 dstDimsWH,
+                                              float *rowRemapTable,
+                                              float *colRemapTable,
+                                              uint2 remapTableStridesNH,
+                                              RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -219,16 +219,16 @@ __global__ void remap_bilinear_pkd_tensor(T *srcPtr,
 }
 
 template <typename T>
-__global__ void remap_bilinear_pln_tensor(T *srcPtr,
-                                          uint3 srcStridesNCH,
-                                          T *dstPtr,
-                                          uint3 dstStridesNCH,
-                                          uint2 dstDimsWH,
-                                          int channelsDst,
-                                          float *rowRemapTable,
-                                          float *colRemapTable,
-                                          uint2 remapTableStridesNH,
-                                          RpptROIPtr roiTensorPtrSrc)
+__global__ void remap_bilinear_pln_hip_tensor(T *srcPtr,
+                                              uint3 srcStridesNCH,
+                                              T *dstPtr,
+                                              uint3 dstStridesNCH,
+                                              uint2 dstDimsWH,
+                                              int channelsDst,
+                                              float *rowRemapTable,
+                                              float *colRemapTable,
+                                              uint2 remapTableStridesNH,
+                                              RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -270,16 +270,16 @@ __global__ void remap_bilinear_pln_tensor(T *srcPtr,
 }
 
 template <typename T>
-__global__ void remap_bilinear_pkd3_pln3_tensor(T *srcPtr,
-                                                uint2 srcStridesNH,
-                                                T *dstPtr,
-                                                uint3 dstStridesNCH,
-                                                uint2 dstDimsWH,
-                                                int channelsDst,
-                                                float *rowRemapTable,
-                                                float *colRemapTable,
-                                                uint2 remapTableStridesNH,
-                                                RpptROIPtr roiTensorPtrSrc)
+__global__ void remap_bilinear_pkd3_pln3_hip_tensor(T *srcPtr,
+                                                    uint2 srcStridesNH,
+                                                    T *dstPtr,
+                                                    uint3 dstStridesNCH,
+                                                    uint2 dstDimsWH,
+                                                    int channelsDst,
+                                                    float *rowRemapTable,
+                                                    float *colRemapTable,
+                                                    uint2 remapTableStridesNH,
+                                                    RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -306,15 +306,15 @@ __global__ void remap_bilinear_pkd3_pln3_tensor(T *srcPtr,
 }
 
 template <typename T>
-__global__ void remap_bilinear_pln3_pkd3_tensor(T *srcPtr,
-                                                uint3 srcStridesNCH,
-                                                T *dstPtr,
-                                                uint2 dstStridesNH,
-                                                uint2 dstDimsWH,
-                                                float *rowRemapTable,
-                                                float *colRemapTable,
-                                                uint2 remapTableStridesNH,
-                                                RpptROIPtr roiTensorPtrSrc)
+__global__ void remap_bilinear_pln3_pkd3_hip_tensor(T *srcPtr,
+                                                    uint3 srcStridesNCH,
+                                                    T *dstPtr,
+                                                    uint2 dstStridesNH,
+                                                    uint2 dstDimsWH,
+                                                    float *rowRemapTable,
+                                                    float *colRemapTable,
+                                                    uint2 remapTableStridesNH,
+                                                    RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -369,7 +369,7 @@ RppStatus hip_exec_remap_tensor(T *srcPtr,
     {
         if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            hipLaunchKernelGGL(remap_nearest_neighbor_pkd_tensor,
+            hipLaunchKernelGGL(remap_nearest_neighbor_pkd_hip_tensor,
                                dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                                dim3(localThreads_x, localThreads_y, localThreads_z),
                                0,
@@ -386,7 +386,7 @@ RppStatus hip_exec_remap_tensor(T *srcPtr,
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            hipLaunchKernelGGL(remap_nearest_neighbor_pln_tensor,
+            hipLaunchKernelGGL(remap_nearest_neighbor_pln_hip_tensor,
                                dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                                dim3(localThreads_x, localThreads_y, localThreads_z),
                                0,
@@ -404,7 +404,7 @@ RppStatus hip_exec_remap_tensor(T *srcPtr,
         }
         else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            hipLaunchKernelGGL(remap_nearest_neighbor_pkd3_pln3_tensor,
+            hipLaunchKernelGGL(remap_nearest_neighbor_pkd3_pln3_hip_tensor,
                                dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                                dim3(localThreads_x, localThreads_y, localThreads_z),
                                0,
@@ -422,7 +422,7 @@ RppStatus hip_exec_remap_tensor(T *srcPtr,
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            hipLaunchKernelGGL(remap_nearest_neighbor_pln3_pkd3_tensor,
+            hipLaunchKernelGGL(remap_nearest_neighbor_pln3_pkd3_hip_tensor,
                                dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                                dim3(localThreads_x, localThreads_y, localThreads_z),
                                0,
@@ -442,7 +442,7 @@ RppStatus hip_exec_remap_tensor(T *srcPtr,
     {
         if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            hipLaunchKernelGGL(remap_bilinear_pkd_tensor,
+            hipLaunchKernelGGL(remap_bilinear_pkd_hip_tensor,
                                dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                                dim3(localThreads_x, localThreads_y, localThreads_z),
                                0,
@@ -459,7 +459,7 @@ RppStatus hip_exec_remap_tensor(T *srcPtr,
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            hipLaunchKernelGGL(remap_bilinear_pln_tensor,
+            hipLaunchKernelGGL(remap_bilinear_pln_hip_tensor,
                                dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                                dim3(localThreads_x, localThreads_y, localThreads_z),
                                0,
@@ -477,7 +477,7 @@ RppStatus hip_exec_remap_tensor(T *srcPtr,
         }
         else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            hipLaunchKernelGGL(remap_bilinear_pkd3_pln3_tensor,
+            hipLaunchKernelGGL(remap_bilinear_pkd3_pln3_hip_tensor,
                                dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                                dim3(localThreads_x, localThreads_y, localThreads_z),
                                0,
@@ -495,7 +495,7 @@ RppStatus hip_exec_remap_tensor(T *srcPtr,
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            hipLaunchKernelGGL(remap_bilinear_pln3_pkd3_tensor,
+            hipLaunchKernelGGL(remap_bilinear_pln3_pkd3_hip_tensor,
                                dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
                                dim3(localThreads_x, localThreads_y, localThreads_z),
                                0,
