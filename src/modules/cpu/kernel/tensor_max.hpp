@@ -71,7 +71,7 @@ RppStatus tensor_max_u8_u8_host(Rpp8u *srcPtr,
                 reduce_max_32_host(&pMax, &result);
                 rpp_simd_store(rpp_store16_u8_to_u8, resultAvx, &result);
 
-                max = std::max(std::max(resultAvx[0], resultAvx[1]), max);
+                max = std::max(resultAvx[0], max);
 #endif
             maxArr[batchCount] = max;
         }
@@ -128,9 +128,9 @@ RppStatus tensor_max_u8_u8_host(Rpp8u *srcPtr,
                 reduce_max_96_host(&pMaxR, &pMaxG, &pMaxB, &result);
                 rpp_simd_store(rpp_store16_u8_to_u8, resultAvx, &result);
 
-                maxR = std::max(std::max(resultAvx[0], resultAvx[1]), maxR);
-                maxG = std::max(std::max(resultAvx[2], resultAvx[3]), maxG);
-                maxB = std::max(std::max(resultAvx[4], resultAvx[5]), maxB);
+                maxR = std::max(resultAvx[0], maxR);
+                maxG = std::max(resultAvx[1], maxG);
+                maxB = std::max(resultAvx[2], maxB);
 #endif
             }
             maxC = std::max(std::max(maxR, maxG), maxB);
@@ -188,9 +188,9 @@ RppStatus tensor_max_u8_u8_host(Rpp8u *srcPtr,
                 reduce_max_48_host(&pMaxR, &pMaxG, &pMaxB, &result);
                 rpp_simd_store(rpp_store16_u8_to_u8, resultAvx, &result);
 
-                maxR = std::max(std::max(resultAvx[0], resultAvx[1]), maxR);
-                maxG = std::max(std::max(resultAvx[2], resultAvx[3]), maxG);
-                maxB = std::max(std::max(resultAvx[4], resultAvx[5]), maxB);
+                maxR = std::max(resultAvx[0], maxR);
+                maxG = std::max(resultAvx[1], maxG);
+                maxB = std::max(resultAvx[2], maxB);
 #endif
             }
 			maxC = std::max(std::max(maxR, maxG), maxB);
@@ -690,7 +690,7 @@ RppStatus tensor_max_i8_i8_host(Rpp8s *srcPtr,
                 reduce_max_i32_host(&pMax, &result);
                 rpp_simd_store(rpp_store16_i8, resultAvx, &result);
 
-                max = std::max(std::max(resultAvx[0], resultAvx[1]), max);
+                max = std::max(resultAvx[0], max);
 #endif
             maxArr[batchCount] = max;
         }
@@ -747,9 +747,9 @@ RppStatus tensor_max_i8_i8_host(Rpp8s *srcPtr,
                 reduce_max_i96_host(&pMaxR, &pMaxG, &pMaxB, &result);
                 rpp_simd_store(rpp_store16_i8, resultAvx, &result);
 
-                maxR = std::max(std::max(resultAvx[0], resultAvx[1]), maxR);
-                maxG = std::max(std::max(resultAvx[2], resultAvx[3]), maxG);
-                maxB = std::max(std::max(resultAvx[4], resultAvx[5]), maxB);
+                maxR = std::max(resultAvx[0], maxR);
+                maxG = std::max(resultAvx[1], maxG);
+                maxB = std::max(resultAvx[2], maxB);
 #endif
             }
             maxC = std::max(std::max(maxR, maxG), maxB);
@@ -807,9 +807,9 @@ RppStatus tensor_max_i8_i8_host(Rpp8s *srcPtr,
                 reduce_max_i48_host(&pMaxR, &pMaxG, &pMaxB, &result);
                 rpp_simd_store(rpp_store16_i8, resultAvx, &result);
 
-                maxR = std::max(std::max(resultAvx[0], resultAvx[1]), maxR);
-                maxG = std::max(std::max(resultAvx[2], resultAvx[3]), maxG);
-                maxB = std::max(std::max(resultAvx[4], resultAvx[5]), maxB);
+                maxR = std::max(resultAvx[0], maxR);
+                maxG = std::max(resultAvx[1], maxG);
+                maxB = std::max(resultAvx[2], maxB);
 #endif
             }
 			maxC = std::max(std::max(maxR, maxG), maxB);
