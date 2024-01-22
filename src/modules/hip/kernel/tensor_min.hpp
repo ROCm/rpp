@@ -5,8 +5,8 @@
 
 template <typename T>
 __global__ void tensor_min_grid_3channel_result_hip(float *srcPtr,
-                                                uint xBufferLength,
-                                                T *dstPtr)
+                                                    uint xBufferLength,
+                                                    T *dstPtr)
 {
     int id_x = hipThreadIdx_x * 8;
     int id_z = hipBlockIdx_z;
@@ -73,8 +73,8 @@ __global__ void tensor_min_grid_3channel_result_hip(float *srcPtr,
 
 template <typename T>
 __global__ void tensor_min_grid_result_hip(float *srcPtr,
-                                       uint xBufferLength,
-                                       T *dstPtr)
+                                           uint xBufferLength,
+                                           T *dstPtr)
 {
     int id_x = hipThreadIdx_x * 8;
     int id_z = hipBlockIdx_z;
@@ -119,9 +119,9 @@ __global__ void tensor_min_grid_result_hip(float *srcPtr,
 
 template <typename T>
 __global__ void tensor_min_pkd3_hip(T *srcPtr,
-                                uint2 srcStridesNH,
-                                float *minArr,
-                                RpptROIPtr roiTensorPtrSrc)
+                                    uint2 srcStridesNH,
+                                    float *minArr,
+                                    RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -213,9 +213,9 @@ __global__ void tensor_min_pkd3_hip(T *srcPtr,
 
 template <typename T>
 __global__ void tensor_min_pln3_hip(T *srcPtr,
-                                uint3 srcStridesNCH,
-                                float *minArr,
-                                RpptROIPtr roiTensorPtrSrc)
+                                    uint3 srcStridesNCH,
+                                    float *minArr,
+                                    RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -307,9 +307,9 @@ __global__ void tensor_min_pln3_hip(T *srcPtr,
 
 template <typename T>
 __global__ void tensor_min_pln1_hip(T *srcPtr,
-                                uint2 srcStridesNH,
-                                float *minArr,
-                                RpptROIPtr roiTensorPtrSrc)
+                                    uint2 srcStridesNH,
+                                    float *minArr,
+                                    RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
