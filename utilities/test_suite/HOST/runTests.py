@@ -24,6 +24,7 @@ import argparse
 import sys
 import datetime
 import shutil
+import pandas as pd
 
 # Set the timestamp
 timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -421,6 +422,12 @@ if testType == 0 and qaMode == 0:
     create_layout_directories(dstPath, layoutDict)
 # Performance tests
 elif (testType == 1 and qaMode == 1):
+    columns = ['Data_Augmentation_Type', 'Expected_Improvement_Percentage', 'Achieved_Improvement_Percentage', 'Test_Result']
+    augVariations = []
+    expectedPerf = []
+    achievedPerf = []
+    status = []
+    df = pd.DataFrame(columns=columns)
     tensorLogFileList = get_log_file_list(preserveOutput)
     batchpdLogFileList = [sub.replace("Tensor_host", "BatchPD_host") for sub in tensorLogFileList] # will be needed only in qa mode
 
@@ -495,6 +502,7 @@ elif (testType == 1 and qaMode == 1):
 
     print("---------------------------------- Results of QA Test - Tensor_host ----------------------------------\n")
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
+    excelFilePath = os.path.join(outFilePath, "performance_qa_results.xlsx")
     f = open(qaFilePath, 'w')
     numLines = 0
     numPassed = 0
@@ -508,16 +516,32 @@ elif (testType == 1 and qaMode == 1):
         for string in removalList:
             funcName = funcName.replace(string, "")
         thresh = thresholdDict[caseName]
+        expectedPerf.append(thresh)
+        achievedPerf.append(perfImprovement)
+        augVariations.append(funcName)
         if perfImprovement > thresh:
             numPassed += 1
+            status.append("PASSED")
             print(funcName + ": PASSED")
         else:
+            status.append("FAILED")
             print(funcName + ": FAILED")
 
     resultsInfo = "\n\nFinal Results of Tests:"
     resultsInfo += "\n    - Total test cases including all subvariants REQUESTED = " + str(numLines)
     resultsInfo += "\n    - Total test cases including all subvariants PASSED = " + str(numPassed)
     f.write(resultsInfo)
+    df['Data_Augmentation_Type'] = augVariations
+    df['Expected_Improvement_Percentage'] = expectedPerf
+    df['Achieved_Improvement_Percentage'] = achievedPerf
+    df['Test_Result'] = status
+    # Calculate the number of cases passed and failed
+    num_passed = df['Test_Result'].eq('PASSED').sum()
+    num_failed = df['Test_Result'].eq('FAILED').sum()
+
+    df['Summary'] = 'Passed: ' + num_passed.astype(str) + ', Failed: ' + num_failed.astype(str)
+
+    df.to_excel(excelFilePath, index=False)
     print("\n-------------------------------------------------------------------" + resultsInfo + "\n\n-------------------------------------------------------------------")
 elif (testType == 1 and qaMode == 0):
     log_file_list = get_log_file_list(preserveOutput)
