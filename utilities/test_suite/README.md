@@ -31,10 +31,14 @@ The test suite can be run with the following command:
 python runTests.py --input_path1 <input_path1> --input_path2 <input_path2> --case_start <case_start> --case_end <case_end> --test_type <test_type> --profiling <profiling>
 
 ## Modes of operation (Rpp Image Test Suite)
--   QA mode - Tolerance based PASS/FAIL tests for RPP HIP/HOST functionalities checking pixelwise match between C/SSE/AVX/HIP versions after comparison to preset golden outputs. Please note that QA mode is only supported with a batch size of 3.
+-   QA mode(Unit tests) - Tolerance based PASS/FAIL tests for RPP HIP/HOST functionalities checking pixelwise match between C/SSE/AVX/HIP versions after comparison to preset golden outputs. Please note that QA mode is only supported with a batch size of 3.
 Note: QA mode is not supported for case 84 due to run-to-run variation of outputs.
 ``` python
 python runTests.py --case_start 0 --case_end 87 --test_type 0 --qa_mode 1 --batch_size 3
+```
+-   QA mode (Performance tests) - Tolerance based PASS/FAIL tests for RPP HIP/HOST functionalities checking achieved improvement in performance percentage over BatchPD versions after comparison to a threshold percentage of improvement
+``` python
+python runTests.py --case_list 21 36 63 --test_type 1 --qa_mode 1 --batch_size 6 --num_runs 100
 ```
 -   Unit test mode - Unit tests allowing users to pass a path to a folder containing images, to execute the desired functionality and variant once, report RPP execution wall time, save and view output images
 Note: For testcase 82(RICAP) Please use images of same resolution and Batchsize > 1

@@ -34,6 +34,7 @@ inFilePath1 = scriptPath + "/../TEST_IMAGES/three_images_mixed_src1"
 inFilePath2 = scriptPath + "/../TEST_IMAGES/three_images_mixed_src2"
 ricapInFilePath = scriptPath + "/../TEST_IMAGES/three_images_150x150_src1"
 qaInputFile = scriptPath + "/../TEST_IMAGES/three_images_mixed_src1"
+perfQaInputFile = scriptPath + "/../../rpp-unittests/TEST_IMAGES/six_images_mixed_src1"
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
 
@@ -246,6 +247,7 @@ def rpp_test_suite_parser_and_validator():
     validate_path(args.input_path1)
     validate_path(args.input_path2)
     validate_path(qaInputFile)
+    validate_path(perfQaInputFile)
 
     # validate the parameters passed by user
     if ((args.case_start < 0 or args.case_start > 87) or (args.case_end < 0 or args.case_end > 87)):
@@ -309,6 +311,10 @@ roiList = ['0', '0', '0', '0'] if args.roi is None else args.roi
 
 if qaMode and testType == 0 and batchSize != 3:
     print("QA mode can only run with a batch size of 3.")
+    exit(0)
+
+if qaMode and testType == 1 and batchSize != 6:
+    print("Performance QA mode can only run with a batch size of 6.")
     exit(0)
 
 # set the output folders and number of runs based on type of test (unit test / performance test)
@@ -381,9 +387,13 @@ else:
         if int(case) < 0 or int(case) > 87:
             print(f"Invalid case number {case}. Case number must be in the range of 0 to 86!")
             continue
+        # if QA mode is enabled overwrite the input folders with the folders used for generating golden outputs
+        if qaMode == 1 and case != "82":
+            srcPath1 = inFilePath1
+            srcPath2 = inFilePath2
         if case == "82" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
-                srcPath1 = ricapInFilePath
-                srcPath2 = ricapInFilePath
+            srcPath1 = ricapInFilePath
+            srcPath2 = ricapInFilePath
         for layout in range(3):
             dstPathTemp, log_file_layout = process_layout(layout, qaMode, case, dstPath)
             run_performance_test(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
@@ -437,7 +447,7 @@ elif (testType == 1 and qaMode == 1):
     functions = []
     functionsBatchPD = []
     funcCount = 0
-    thresholdDict = {"brightness": 5, "gamma_correction": 10, "blend": 10}
+    thresholdDict = {"resize": 20, "color_twist": 15, "phase":30}
     for i in range(3):
         tensorLogFile = tensorLogFileList[i]
         batchpdLogFile = batchpdLogFileList[i]
