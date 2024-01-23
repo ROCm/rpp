@@ -8,25 +8,22 @@ __device__ void color_temperature_hip_compute(T *srcPtr, d_float24 *pix_f24, flo
     if constexpr ((std::is_same<T, float>::value) || (std::is_same<T, half>::value))
     {
         adjustment_f4 = *adjustmentValue_f4 * (float4) ONE_OVER_255;
-        pix_f24->f4[0] += adjustment_f4;
-        pix_f24->f4[1] += adjustment_f4;
-        pix_f24->f4[4] -= adjustment_f4;
-        pix_f24->f4[5] -= adjustment_f4;
+        rpp_hip_math_add8_const(&pix_f24->f8[0], &pix_f24->f8[0], adjustment_f4);
+        rpp_hip_math_subtract8_const(&pix_f24->f8[2], &pix_f24->f8[2], adjustment_f4);
     }
-    else if constexpr (std::is_same<T, signed char>::value)
+    else if constexpr (std::is_same<T, schar>::value)
     {
-        adjustment_f4 = *adjustmentValue_f4 - (float4) 128;
-        pix_f24->f4[0] += adjustment_f4;
-        pix_f24->f4[1] += adjustment_f4;
-        pix_f24->f4[4] -= adjustment_f4;
-        pix_f24->f4[5] -= adjustment_f4;
+        adjustment_f4 = *adjustmentValue_f4;
+        rpp_hip_math_add24_const(pix_f24, pix_f24, (float4)128);
+        rpp_hip_math_add8_const(&pix_f24->f8[0], &pix_f24->f8[0], adjustment_f4);
+        rpp_hip_math_subtract8_const(&pix_f24->f8[2], &pix_f24->f8[2], adjustment_f4);
+        rpp_hip_pixel_check_0to255(pix_f24);
+        rpp_hip_math_subtract24_const(pix_f24, pix_f24, (float4)128);
     }
     else
     {
-        pix_f24->f4[0] += *adjustmentValue_f4;
-        pix_f24->f4[1] += *adjustmentValue_f4;
-        pix_f24->f4[4] -= *adjustmentValue_f4;
-        pix_f24->f4[5] -= *adjustmentValue_f4;
+        rpp_hip_math_add8_const(&pix_f24->f8[0], &pix_f24->f8[0], *adjustmentValue_f4);
+        rpp_hip_math_subtract8_const(&pix_f24->f8[2], &pix_f24->f8[2], *adjustmentValue_f4);
     }
 }
 
