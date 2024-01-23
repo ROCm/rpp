@@ -23,29 +23,6 @@ THE SOFTWARE.
 #include "rppdefs.h"
 #include <omp.h>
 
-Rpp32f rpp_hsum_ps(__m128 x)
-{
-    __m128 shuf = _mm_movehdup_ps(x);        // broadcast elements 3,1 to 2,0
-    __m128 sums = _mm_add_ps(x, shuf);
-    shuf = _mm_movehl_ps(shuf, sums);        // high half -> low half
-    sums = _mm_add_ss(sums, shuf);
-    return _mm_cvtss_f32(sums);
-}
-
-Rpp32f rpp_hsum256_ps(__m256 x)
-{
-    __m128 p0 = _mm256_extractf128_ps(x, 1); // Contains x7, x6, x5, x4
-    __m128 p1 = _mm256_castps256_ps128(x);   // Contains x3, x2, x1, x0
-    __m128 sum = _mm_add_ps(p0, p1);         // Contains x3 + x7, x2 + x6, x1 + x5, x0 + x4
-    p0 = sum;                                // Contains -, -, x1 + x5, x0 + x4
-    p1 = _mm_movehl_ps(sum, sum);            // Contains -, -, x3 + x7, x2 + x6
-    sum = _mm_add_ps(p0, p1);                // Contains -, -, x1 + x3 + x5 + x7, x0 + x2 + x4 + x6
-    p0 = sum;                                // Contains -, -, -, x0 + x2 + x4 + x6
-    p1 = _mm_shuffle_ps(sum, sum, 0x1);      // Contains -, -, -, x1 + x3 + x5 + x7
-    sum = _mm_add_ss(p0, p1);                // Contains -, -, -, x0 + x1 + x2 + x3 + x4 + x5 + x6 + x7
-    return _mm_cvtss_f32(sum);
-}
-
 RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
                                   RpptDescPtr srcDescPtr,
                                   Rpp32f *dstPtr,
@@ -66,7 +43,7 @@ RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
 
         Rpp32s channels = channelsTensor[batchCount];
         Rpp32s samples = srcLengthTensor[batchCount];
-        bool flag_avx = 0;
+        bool flagAVX = 0;
 
         if(channels == 1)
         {
@@ -93,10 +70,9 @@ RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
 
             Rpp32s channelIncrement = 4;
             Rpp32s alignedChannels = (channels / 4) * 4;
-
-            if(channels > 6)
+            if(channels > 7)
             {
-                flag_avx = 1;
+                flagAVX = 1;
                 channelIncrement = 8;
                 alignedChannels = (channels / 8) * 8;
             }
@@ -105,7 +81,8 @@ RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
             for(int64_t dstIdx = 0; dstIdx < samples; dstIdx++)
             {
                 Rpp32s channelLoopCount = 0;
-                if(flag_avx)
+                // if number of channels are greater than or equal to 8, use AVX implementation
+                if(flagAVX)
                 {
                     __m256 pDst = avx_p0;
                     for(; channelLoopCount < alignedChannels; channelLoopCount += channelIncrement)
@@ -118,7 +95,7 @@ RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
                         pDst = _mm256_add_ps(pDst, pSrc);
                         srcPtrTemp += channelIncrement;
                     }
-                    dstPtrTemp[dstIdx] = rpp_hsum256_ps(pDst);
+                    dstPtrTemp[dstIdx] = rpp_hsum_ps(pDst);
                     for(; channelLoopCount < channels; channelLoopCount++)
                         dstPtrTemp[dstIdx] += ((*srcPtrTemp++) * weights[channelLoopCount]);
                 }
