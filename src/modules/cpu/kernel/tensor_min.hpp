@@ -71,7 +71,7 @@ RppStatus tensor_min_u8_u8_host(Rpp8u *srcPtr,
             reduce_min_32_host(&pMin, &result);
             rpp_simd_store(rpp_store16_u8_to_u8, resultAvx, &result);
 
-            min = std::min(resultAvx[0], min);
+            min = std::min(std::min(resultAvx[0], resultAvx[1]), min);
 #endif
             minArr[batchCount] = min;
         }
@@ -127,9 +127,9 @@ RppStatus tensor_min_u8_u8_host(Rpp8u *srcPtr,
             reduce_min_96_host(&pMinR, &pMinG, &pMinB, &result);
             rpp_simd_store(rpp_store16_u8_to_u8, resultAvx, &result);
 
-            minR = std::max(resultAvx[0], minR);
-            minG = std::max(resultAvx[1], minG);
-            minB = std::max(resultAvx[2], minB);
+            minR = std::min(resultAvx[0], minR);
+            minG = std::min(resultAvx[1], minG);
+            minB = std::min(resultAvx[2], minB);
 #endif
 			minC = std::min(std::min(minR, minG), minB);
             minArr[minArrIndex] = minR;
@@ -185,9 +185,9 @@ RppStatus tensor_min_u8_u8_host(Rpp8u *srcPtr,
                 reduce_min_48_host(&pMinR, &pMinG, &pMinB, &result);
                 rpp_simd_store(rpp_store16_u8_to_u8, resultAvx, &result);
 
-                minR = std::max(resultAvx[0], minR);
-                minG = std::max(resultAvx[1], minG);
-                minB = std::max(resultAvx[2], minB);
+                minR = std::min(resultAvx[0], minR);
+                minG = std::min(resultAvx[1], minG);
+                minB = std::min(resultAvx[2], minB);
             }
 			minC = std::min(std::min(minR, minG), minB);
             minArr[minArrIndex] = minR;
@@ -690,7 +690,7 @@ RppStatus tensor_min_i8_i8_host(Rpp8s *srcPtr,
             reduce_min_i32_host(&pMin, &result);
             rpp_simd_store(rpp_store16_i8, resultAvx, &result);
 
-            min = std::min(resultAvx[0], min);
+            min = std::min(std::min(resultAvx[0], resultAvx[1]), min);
 #endif
             minArr[batchCount] = min;
         }
@@ -746,9 +746,9 @@ RppStatus tensor_min_i8_i8_host(Rpp8s *srcPtr,
             reduce_min_i96_host(&pMinR, &pMinG, &pMinB, &result);
             rpp_simd_store(rpp_store16_i8, resultAvx, &result);
 
-            minR = std::max(resultAvx[0], minR);
-            minG = std::max(resultAvx[1], minG);
-            minB = std::max(resultAvx[2], minB);
+            minR = std::min(resultAvx[0], minR);
+            minG = std::min(resultAvx[1], minG);
+            minB = std::min(resultAvx[2], minB);
 #endif
 			minC = std::min(std::min(minR, minG), minB);
             minArr[minArrIndex] = minR;
@@ -805,9 +805,9 @@ RppStatus tensor_min_i8_i8_host(Rpp8s *srcPtr,
                 reduce_min_i48_host(&pMinR, &pMinG, &pMinB, &result);
                 rpp_simd_store(rpp_store16_i8, resultAvx, &result);
 
-                minR = std::max(resultAvx[0], minR);
-                minG = std::max(resultAvx[1], minG);
-                minB = std::max(resultAvx[2], minB);
+                minR = std::min(resultAvx[0], minR);
+                minG = std::min(resultAvx[1], minG);
+                minB = std::min(resultAvx[2], minB);
 #endif
             }
 			minC = std::min(std::min(minR, minG), minB);
