@@ -43,8 +43,8 @@ def runCompileCommand(platform, project, jobName, boolean debug=false, boolean s
                 cmake -DBACKEND=${backend} ${buildTypeArg} ../..
                 make -j\$(nproc)
                 sudo make install
-                make test ARGS="-VV"
                 sudo make package
+                ldd -v /opt/rocm/lib/librpp.so
                 """
 
     platform.runCommand(this, command)
@@ -54,7 +54,8 @@ def runTestCommand (platform, project) {
 
     def command = """#!/usr/bin/env bash
                 set -x
-                ldd -v /opt/rocm/lib/librpp.so
+                cd ${project.paths.project_build_prefix}/build/release
+                make test ARGS="-VV"
                 """
 
     platform.runCommand(this, command)
