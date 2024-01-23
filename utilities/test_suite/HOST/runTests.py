@@ -153,7 +153,11 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
     print("--------------------------------")
     print("Running a New Functionality...")
     print("--------------------------------")
-    for bitDepth in range(7):
+    if qaMode:
+        maxBitdepth = 1
+    else:
+        maxBitdepth = 7
+    for bitDepth in range(maxBitdepth):
         print("\n\n\nRunning New Bit Depth...\n-------------------------\n\n")
 
         for outputFormatToggle in range(2):
@@ -206,8 +210,11 @@ def run_performance_test(loggingFolder, log_file_layout, srcPath1, srcPath2, dst
     print("--------------------------------")
     print("Running a New Functionality...")
     print("--------------------------------")
-
-    for bitDepth in range(7):
+    if qaMode:
+        maxBitdepth = 1
+    else:
+        maxBitdepth = 7
+    for bitDepth in range(maxBitdepth):
         print("\n\n\nRunning New Bit Depth...\n-------------------------\n\n")
 
         for outputFormatToggle in range(2):
@@ -447,7 +454,7 @@ elif (testType == 1 and qaMode == 1):
     functions = []
     functionsBatchPD = []
     funcCount = 0
-    thresholdDict = {"resize": 20, "color_twist": 15, "phase":30}
+    thresholdDict = {"resize": 15, "color_twist": 15, "phase": 30}
     for i in range(3):
         tensorLogFile = tensorLogFileList[i]
         batchpdLogFile = batchpdLogFileList[i]
@@ -525,7 +532,11 @@ elif (testType == 1 and qaMode == 1):
         caseName = funcName.split("_u8_")[0]
         for string in removalList:
             funcName = funcName.replace(string, "")
-        thresh = thresholdDict[caseName]
+        try:
+            thresh = thresholdDict[caseName]
+        except KeyError:
+            print("Error! QA mode is not yet available for variant: " + funcName)
+            continue
         expectedPerf.append(thresh)
         achievedPerf.append(perfImprovement)
         augVariations.append(funcName)

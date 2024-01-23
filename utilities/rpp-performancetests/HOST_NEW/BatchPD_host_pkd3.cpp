@@ -1354,8 +1354,8 @@ int main(int argc, char **argv)
 
             for (i = 0; i < images; i++)
             {
-                dstSize[i].height = srcSize[i].height / 3;
-                dstSize[i].width = srcSize[i].width / 1.1;
+                dstSize[i].height = srcSize[i].height / 2;
+                dstSize[i].width = srcSize[i].width / 2;
                 if (maxDstHeight < dstSize[i].height)
                     maxDstHeight = dstSize[i].height;
                 if (maxDstWidth < dstSize[i].width)
