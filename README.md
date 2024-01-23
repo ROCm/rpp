@@ -184,6 +184,11 @@ To use RPP, you must have installed the following:
   sudo make -j$nproc install
   ```
 
+* Openpyxl
+  ```
+  pip install openpyxl
+  ```
+
 ## Build & Install RPP
 
 The ROCm Performance Primitives (RPP) library has support for three backends: HIP, OpenCL, and CPU:
