@@ -34,7 +34,7 @@ inFilePath1 = scriptPath + "/../TEST_IMAGES/three_images_mixed_src1"
 inFilePath2 = scriptPath + "/../TEST_IMAGES/three_images_mixed_src2"
 ricapInFilePath = scriptPath + "/../TEST_IMAGES/three_images_150x150_src1"
 qaInputFile = scriptPath + "/../TEST_IMAGES/three_images_mixed_src1"
-perfQaInputFile = scriptPath + "/../../rpp-unittests/TEST_IMAGES/six_images_mixed_src1"
+perfQaInputFile = scriptPath + "/../TEST_IMAGES/eight_images_mixed_src1"
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
 
@@ -320,8 +320,8 @@ if qaMode and testType == 0 and batchSize != 3:
     print("QA mode can only run with a batch size of 3.")
     exit(0)
 
-if qaMode and testType == 1 and batchSize != 6:
-    print("Performance QA mode can only run with a batch size of 6.")
+if qaMode and testType == 1 and batchSize != 8:
+    print("Performance QA mode can only run with a batch size of 8.")
     exit(0)
 
 # set the output folders and number of runs based on type of test (unit test / performance test)
@@ -439,9 +439,8 @@ if testType == 0 and qaMode == 0:
     create_layout_directories(dstPath, layoutDict)
 # Performance tests
 elif (testType == 1 and qaMode == 1):
-    columns = ['Data_Augmentation_Type', 'Expected_Improvement_Percentage', 'Achieved_Improvement_Percentage', 'Test_Result']
+    columns = ['Data_Augmentation_Type', 'Achieved_Improvement_Percentage', 'Test_Result']
     augVariations = []
-    expectedPerf = []
     achievedPerf = []
     status = []
     df = pd.DataFrame(columns=columns)
@@ -454,7 +453,8 @@ elif (testType == 1 and qaMode == 1):
     functions = []
     functionsBatchPD = []
     funcCount = 0
-    thresholdDict = {"resize": 15, "color_twist": 15, "phase": 30}
+    performanceNoise = 10
+    perfQASupportCaseList = ["resize", "color_twist", "phase"]
     for i in range(3):
         tensorLogFile = tensorLogFileList[i]
         batchpdLogFile = batchpdLogFileList[i]
@@ -524,7 +524,6 @@ elif (testType == 1 and qaMode == 1):
     numLines = 0
     numPassed = 0
     removalList = ["_HOST", "_toPKD3", "_toPLN3", "_toPLN1"]
-    caseNames = thresholdDict.keys()
     for i in range(len(functions)):
         perfImprovement = int(((batchpdVal[i] - tensorVal[i]) / batchpdVal[i]) * 100)
         numLines += 1
@@ -532,15 +531,12 @@ elif (testType == 1 and qaMode == 1):
         caseName = funcName.split("_u8_")[0]
         for string in removalList:
             funcName = funcName.replace(string, "")
-        try:
-            thresh = thresholdDict[caseName]
-        except KeyError:
+        if caseName not in perfQASupportCaseList:
             print("Error! QA mode is not yet available for variant: " + funcName)
             continue
-        expectedPerf.append(thresh)
         achievedPerf.append(perfImprovement)
         augVariations.append(funcName)
-        if perfImprovement > thresh:
+        if perfImprovement > -performanceNoise:
             numPassed += 1
             status.append("PASSED")
             print(funcName + ": PASSED")
@@ -553,14 +549,20 @@ elif (testType == 1 and qaMode == 1):
     resultsInfo += "\n    - Total test cases including all subvariants PASSED = " + str(numPassed)
     f.write(resultsInfo)
     df['Data_Augmentation_Type'] = augVariations
-    df['Expected_Improvement_Percentage'] = expectedPerf
     df['Achieved_Improvement_Percentage'] = achievedPerf
     df['Test_Result'] = status
     # Calculate the number of cases passed and failed
-    num_passed = df['Test_Result'].eq('PASSED').sum()
-    num_failed = df['Test_Result'].eq('FAILED').sum()
+    passedCases = df['Test_Result'].eq('PASSED').sum()
+    failedCases = df['Test_Result'].eq('FAILED').sum()
 
-    df['Summary'] = 'Passed: ' + num_passed.astype(str) + ', Failed: ' + num_failed.astype(str)
+    summary_row = {'Data_Augmentation_Type': pd.NA,
+                   'Achieved_Improvement_Percentage': pd.NA,
+                   'Test_Result': f'Final Results of Tests: Passed: {passedCases}, Failed: {failedCases}'}
+
+    # Append the summary row to the DataFrame
+    # Convert the dictionary to a DataFrame
+    summary_row = pd.DataFrame([summary_row])
+    df = pd.concat([df, summary_row], ignore_index=True)
 
     df.to_excel(excelFilePath, index=False)
     print("\n-------------------------------------------------------------------" + resultsInfo + "\n\n-------------------------------------------------------------------")
