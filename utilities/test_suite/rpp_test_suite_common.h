@@ -940,8 +940,8 @@ void compare_outputs_pkd(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr
     }
 }
 
-// compares the output of PLN3-PLN3 and PLN1-PLN1 variants
-void compare_outputs_pln(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
+// compares the output of PLN1-PLN1 variants
+void compare_outputs_pln1(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
 {
     Rpp8u *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef, *outputTempChn, *outputTempRefChn;
     for(int imageCnt = 0; imageCnt < dstDescPtr->n; imageCnt++)
@@ -977,6 +977,42 @@ void compare_outputs_pln(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr
     }
 }
 
+// compares the output of PLN3-PLN3 variants
+void compare_outputs_pln3(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
+{
+    Rpp8u *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef, *outputTempChn, *outputTempRefChn;
+    for(int imageCnt = 0; imageCnt < dstDescPtr->n; imageCnt++)
+    {
+        outputTemp = output + imageCnt * dstDescPtr->strides.nStride;
+        outputTempRef = refOutput + imageCnt * refOutputSize;
+        int height = dstImgSizes[imageCnt].height;
+        int width = dstImgSizes[imageCnt].width;
+        int matched_idx = 0;
+        int refOutputHstride = refOutputWidth * dstDescPtr->c;
+
+        for(int c = 0; c < dstDescPtr->c; c++)
+        {
+            outputTempChn = outputTemp + c * dstDescPtr->strides.cStride;
+            outputTempRefChn = outputTempRef + c;
+            for(int i = 0; i < height; i++)
+            {
+                rowTemp = outputTempChn + i * dstDescPtr->strides.hStride;
+                rowTempRef = outputTempRefChn + i * refOutputHstride;
+                for(int j = 0; j < width; j++)
+                {
+                    outVal = rowTemp + j;
+                    outRefVal = rowTempRef + j * 3 ;
+                    int diff = abs(*outVal - *outRefVal);
+                    if(diff <= CUTOFF)
+                        matched_idx++;
+                }
+            }
+        }
+        if(matched_idx == (height * width * dstDescPtr->c) && matched_idx !=0)
+            fileMatch++;
+    }
+}
+
 template <typename T>
 inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int noOfImages, string interpolationTypeName, string noiseTypeName, int testCase, string dst, string scriptPath)
 {
@@ -985,6 +1021,7 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     int refOutputWidth = ((GOLDEN_OUTPUT_MAX_WIDTH / 8) * 8) + 8;    // obtain next multiple of 8 after GOLDEN_OUTPUT_MAX_WIDTH
     int refOutputHeight = GOLDEN_OUTPUT_MAX_HEIGHT;
     int refOutputSize = refOutputHeight * refOutputWidth * dstDescPtr->c;
+    int pln1RefStride = dstDescPtr->strides.nStride * dstDescPtr->n * 3;
 
     string dataType[4] = {"_u8_", "_f16_", "_f32_", "_i8_"};
 
@@ -996,6 +1033,8 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
         func.resize(func.size() - 1);
         func += dataType[dstDescPtr->dataType];
     }
+
+    std::string binFile = func + "Tensor";
 
     if(dstDescPtr->layout == RpptLayout::NHWC)
         func += "Tensor_PKD3";
@@ -1011,47 +1050,48 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
                     func += "Tensor_PKD3";
                 else
                     func += "Tensor_PLN3";
+                pln1RefStride = 0;
             }
             else
                 func += "Tensor_PLN1";
         }
     }
     if(testCase == 21 ||testCase == 23 || testCase == 24)
+    {
         func += "_interpolationType" + interpolationTypeName;
+        binFile += "_interpolationType" + interpolationTypeName;
+    }
     else if(testCase == 8)
+    {
         func += "_noiseType" + noiseTypeName;
-    refFile = scriptPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ func + ".csv";
-
-    ifstream file(refFile);
-    Rpp8u *refOutput;
-    refOutput = (Rpp8u *)malloc(dstDescPtr->n * refOutputSize * sizeof(Rpp8u));
+        binFile += "_noiseType" + noiseTypeName;
+    }
+    refFile = scriptPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ binFile + ".bin";
     string line,word;
     int index = 0;
 
-    // Load the refennce output values from files and store in vector
-    if(file.is_open())
-    {
-        while(getline(file, line))
-        {
-            stringstream str(line);
-            while(getline(str, word, ','))
-            {
-                refOutput[index] = stoi(word);
-                index++;
-            }
-        }
-    }
-    else
-    {
-        cout<<"Could not open the reference output. Please check the path specified\n";
-        return;
-    }
+    FILE *fp;
+    fp = fopen(refFile.c_str(), "rb");
+    if (fp == NULL)
+        printf("Error opening file");
+
+    fseek(fp, 0, SEEK_END);
+    long fsize = ftell(fp);
+    if (fsize == 0)
+        std::cerr << "File is empty";
+
+    fseek(fp, 0, SEEK_SET);
+    Rpp8u *binary_content = (Rpp8u *)malloc(fsize);
+    fread(binary_content, fsize, 1, fp);
+    fclose(fp);
 
     int fileMatch = 0;
     if(dstDescPtr->layout == RpptLayout::NHWC)
-        compare_outputs_pkd(output, refOutput, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+        compare_outputs_pkd(output, binary_content, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+    else if(dstDescPtr->layout == RpptLayout::NCHW && dstDescPtr->c == 3)
+        compare_outputs_pln3(output, binary_content, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
     else
-        compare_outputs_pln(output, refOutput, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+        compare_outputs_pln1(output, binary_content + pln1RefStride, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
 
     std::cout << std::endl << "Results for " << func << " :" << std::endl;
     std::string status = func + ": ";
@@ -1084,6 +1124,7 @@ inline void compare_reduction_output(Rpp64u* output, string funcName, RpptDescPt
     string dataType[4] = {"_u8_", "_f16_", "_f32_", "_i8_"};
 
     func += dataType[srcDescPtr->dataType];
+    std::string binFile = func + "Tensor";
 
     if(srcDescPtr->layout == RpptLayout::NHWC)
         func += "Tensor_PKD3";
@@ -1095,40 +1136,34 @@ inline void compare_reduction_output(Rpp64u* output, string funcName, RpptDescPt
             func += "Tensor_PLN1";
     }
 
-    refFile = scriptPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ func + ".csv";
+    refFile = scriptPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ binFile + ".bin";
 
-    ifstream file(refFile);
-    Rpp64u *refOutput;
-    refOutput = (Rpp64u *)calloc(srcDescPtr->n * 4, sizeof(Rpp64u));
+
     string line,word;
     int index = 0;
 
-    // Load the refennce output values from files and store in vector
-    if(file.is_open())
-    {
-        while(getline(file, line))
-        {
-            stringstream str(line);
-            while(getline(str, word, ','))
-            {
-                refOutput[index] = stoi(word);
-                index++;
-            }
-        }
-    }
-    else
-    {
-        cout<<"Could not open the reference output. Please check the path specified\n";
-        return;
-    }
+    FILE *fp;
+    fp = fopen(refFile.c_str(), "rb");
+    if (fp == NULL)
+        printf("Error opening file");
+
+    fseek(fp, 0, SEEK_END);
+    long fsize = ftell(fp);
+    if (fsize == 0)
+        std::cerr << "File is empty";
+
+    fseek(fp, 0, SEEK_SET);
+    Rpp64u *binary_content = (Rpp64u *)malloc(fsize);
+    fread(binary_content, fsize, 1, fp);
+    fclose(fp);
 
     int fileMatch = 0;
     int matched_values = 0;
     if(srcDescPtr->c == 1)
     {
-        for(int i = 0; i < srcDescPtr->n; i++)
+        for(int i = 0, j = srcDescPtr->n * 4; i < srcDescPtr->n; i++,j++)
         {
-            int diff = output[i] - refOutput[i];
+            int diff = output[i] - binary_content[j];
             if(diff <= CUTOFF)
                 fileMatch++;
         }
@@ -1140,7 +1175,7 @@ inline void compare_reduction_output(Rpp64u* output, string funcName, RpptDescPt
             matched_values = 0;
             for(int j = 0; j < 4; j++)
             {
-                int diff = output[(i * 4) + j] - refOutput[(i * 4) + j];
+                int diff = output[(i * 4) + j] - binary_content[(i * 4) + j];
                 if(diff <= CUTOFF)
                     matched_values++;
             }
@@ -1149,16 +1184,16 @@ inline void compare_reduction_output(Rpp64u* output, string funcName, RpptDescPt
         }
     }
 
-    std::cerr << std::endl << "Results for " << func << " :" << std::endl;
+    std::cout << std::endl << "Results for " << func << " :" << std::endl;
     std::string status = func + ": ";
     if(fileMatch == srcDescPtr->n)
     {
-        std::cerr << "PASSED!" << std::endl;
+        std::cout << "PASSED!" << std::endl;
         status += "PASSED";
     }
     else
     {
-        std::cerr << "FAILED! " << fileMatch << "/" << srcDescPtr->n << " outputs are matching with reference outputs" << std::endl;
+        std::cout << "FAILED! " << fileMatch << "/" << srcDescPtr->n << " outputs are matching with reference outputs" << std::endl;
         status += "FAILED";
     }
 
