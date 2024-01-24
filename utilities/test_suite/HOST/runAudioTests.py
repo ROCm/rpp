@@ -33,7 +33,7 @@ inFilePath = scriptPath + "/../TEST_AUDIO_FILES/three_samples_single_channel_src
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
 caseMin = 0
-caseMax = 3
+caseMax = 4
 
 # Checks if the folder path is empty, or is it a root folder, or if it exists, and remove its contents
 def validate_and_remove_files(path):
@@ -236,8 +236,8 @@ if testType == 0:
                 srcPath = scriptPath + "/../TEST_AUDIO_FILES/three_sample_multi_channel_src1"
             else:
                 srcPath = inFilePath
-        if int(case) < 0 or int(case) > 3:
-            print(f"Invalid case number {case}. Case number must be 0-3 range!")
+        if int(case) < 0 or int(case) > 4:
+            print(f"Invalid case number {case}. Case number must be 0-4 range!")
             continue
 
         run_unit_test(srcPath, case, numRuns, testType, batchSize, outFilePath)
@@ -248,14 +248,14 @@ else:
                 srcPath = scriptPath + "/../TEST_AUDIO_FILES/three_sample_multi_channel_src1"
             else:
                 srcPath = inFilePath
-        if int(case) < 0 or int(case) > 3:
-            print(f"Invalid case number {case}. Case number must be 0-3 range!")
+        if int(case) < 0 or int(case) > 4:
+            print(f"Invalid case number {case}. Case number must be 0-4 range!")
             continue
 
         run_performance_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath)
 
 # print the results of qa tests
-supportedCaseList = ['0', '1', '2', '3']
+supportedCaseList = ['0', '1', '2', '3', '4']
 nonQACaseList = [] # Add cases present in supportedCaseList, but without QA support
 
 if testType == 0:
