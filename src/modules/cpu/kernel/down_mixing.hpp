@@ -96,8 +96,6 @@ RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
                         srcPtrTemp += channelIncrement;
                     }
                     dstPtrTemp[dstIdx] = rpp_hsum_ps(pDst);
-                    for(; channelLoopCount < channels; channelLoopCount++)
-                        dstPtrTemp[dstIdx] += ((*srcPtrTemp++) * weights[channelLoopCount]);
                 }
                 else
                 {
@@ -111,11 +109,10 @@ RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
                         pDst = _mm_add_ps(pDst, pSrc);
                         srcPtrTemp += channelIncrement;
                     }
-
                     dstPtrTemp[dstIdx] = rpp_hsum_ps(pDst);
-                    for(; channelLoopCount < channels; channelLoopCount++)
-                        dstPtrTemp[dstIdx] += ((*srcPtrTemp++) * weights[channelLoopCount]);
                 }
+                for(; channelLoopCount < channels; channelLoopCount++)
+                    dstPtrTemp[dstIdx] += ((*srcPtrTemp++) * weights[channelLoopCount]);
             }
         }
     }
