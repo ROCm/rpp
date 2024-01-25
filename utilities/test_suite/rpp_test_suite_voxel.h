@@ -621,26 +621,23 @@ void compare_outputs_pln1(Rpp32f* output, Rpp32f* refOutput, int &fileMatch, Rpp
         int channelStride = descriptorPtr3D->strides[1];
         int matchedIdx = 0;
 
-        for(int c = 0; c < descriptorPtr3D->dims[1]; c++)
+        outputTempChn = outputTemp;
+        outputTempRefChn = outputTempRef;
+        for(int d = 0; d < depth; d++)
         {
-            outputTempChn = outputTemp + c * channelStride;
-            outputTempRefChn = outputTempRef + c * channelStride;
-            for(int d = 0; d < depth; d++)
+            depthTemp = outputTempChn + d * depthStride;
+            depthTempRef = outputTempRefChn + d * depthStride;
+            for(int i = 0; i < height; i++)
             {
-                depthTemp = outputTempChn + d * depthStride;
-                depthTempRef = outputTempRefChn + d * depthStride;
-                for(int i = 0; i < height; i++)
+                rowTemp = depthTemp + i * rowStride;
+                rowTempRef = depthTempRef + i * rowStride;
+                for(int j = 0; j < width; j++)
                 {
-                    rowTemp = depthTemp + i * rowStride;
-                    rowTempRef = depthTempRef + i * rowStride;
-                    for(int j = 0; j < width; j++)
-                    {
-                        outVal = rowTemp + j;
-                        outRefVal = rowTempRef + j ;
-                        int diff = abs(*outVal - *outRefVal);
-                        if(diff <= CUTOFF)
-                            matchedIdx++;
-                    }
+                    outVal = rowTemp + j;
+                    outRefVal = rowTempRef + j ;
+                    int diff = abs(*outVal - *outRefVal);
+                    if(diff <= CUTOFF)
+                        matchedIdx++;
                 }
             }
         }
@@ -654,12 +651,15 @@ inline void compare_output(Rpp32f* output, Rpp64u oBufferSize, string func, int 
     string binName = "";
     binName = func + "_nifti_output.bin";
     int pln1RefStride = descriptorPtr3D->strides[1] * descriptorPtr3D->dims[0] * 3;
+    int binOutputSize = descriptorPtr3D->strides[0] * 4;
+    binOutputSize = (layoutType == 2)? binOutputSize * 3 : binOutputSize;
 
     string refFile = scriptPath + "/../REFERENCE_OUTPUT_VOXEL/"+ func + "/" + binName;
 
     string line,word;
     int index = 0;
     int mismatches = 0;
+    float *refOutput = (float *)malloc(binOutputSize * sizeof(float));
 
     FILE *fp;
     fp = fopen(refFile.c_str(), "rb");
@@ -672,7 +672,6 @@ inline void compare_output(Rpp32f* output, Rpp64u oBufferSize, string func, int 
         std::cerr << "File is empty";
 
     fseek(fp, 0, SEEK_SET);
-    float *refOutput = (float *)malloc(fsize);
     fread(refOutput, fsize, 1, fp);
     fclose(fp);
 

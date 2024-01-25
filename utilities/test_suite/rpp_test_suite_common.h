@@ -858,6 +858,24 @@ inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, vector
     tjDestroy(m_jpegDecompressor);
 }
 
+template <typename T>
+inline void read_bin_file(string refFile, T *binaryContent)
+{
+    FILE *fp;
+    fp = fopen(refFile.c_str(), "rb");
+    if(!fp)
+        std::cerr << "\n unable to open file : "<<refFile;
+
+    fseek(fp, 0, SEEK_END);
+    long fsize = ftell(fp);
+    if (fsize == 0)
+        std::cerr << "File is empty";
+
+    fseek(fp, 0, SEEK_SET);
+    fread(binaryContent, fsize, 1, fp);
+    fclose(fp);
+}
+
 // Write a batch of images using the OpenCV library
 inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDescPtr dstDescPtr, vector<string>::const_iterator imagesNamesStart, RpptImagePatch *dstImgSizes, int maxImageDump)
 {
@@ -909,8 +927,8 @@ inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDes
     }
 }
 
-// compares the output of PKD3-PKD3 variants
-void compare_outputs_pkd(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
+// compares the output of PKD3-PKD3 and PLN1-PLN1 variants
+void compare_outputs_pkd_and_pln1(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
 {
     Rpp8u *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef;
     for(int imageCnt = 0; imageCnt < dstDescPtr->n; imageCnt++)
@@ -940,43 +958,6 @@ void compare_outputs_pkd(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr
     }
 }
 
-// compares the output of PLN1-PLN1 variants
-void compare_outputs_pln1(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
-{
-    Rpp8u *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef, *outputTempChn, *outputTempRefChn;
-    for(int imageCnt = 0; imageCnt < dstDescPtr->n; imageCnt++)
-    {
-        outputTemp = output + imageCnt * dstDescPtr->strides.nStride;
-        outputTempRef = refOutput + imageCnt * refOutputSize;
-        int height = dstImgSizes[imageCnt].height;
-        int width = dstImgSizes[imageCnt].width;
-        int matchedIdx = 0;
-        int refOutputHstride = refOutputWidth;
-        int refOutputCstride = refOutputHeight * refOutputWidth;
-
-        for(int c = 0; c < dstDescPtr->c; c++)
-        {
-            outputTempChn = outputTemp + c * dstDescPtr->strides.cStride;
-            outputTempRefChn = outputTempRef + c * refOutputCstride;
-            for(int i = 0; i < height; i++)
-            {
-                rowTemp = outputTempChn + i * dstDescPtr->strides.hStride;
-                rowTempRef = outputTempRefChn + i * refOutputHstride;
-                for(int j = 0; j < width; j++)
-                {
-                    outVal = rowTemp + j;
-                    outRefVal = rowTempRef + j ;
-                    int diff = abs(*outVal - *outRefVal);
-                    if(diff <= CUTOFF)
-                        matchedIdx++;
-                }
-            }
-        }
-        if(matchedIdx == (height * width * dstDescPtr->c) && matchedIdx !=0)
-            fileMatch++;
-    }
-}
-
 // compares the output of PLN3-PLN3 variants
 void compare_outputs_pln3(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
 {
@@ -1001,7 +982,7 @@ void compare_outputs_pln3(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPt
                 for(int j = 0; j < width; j++)
                 {
                     outVal = rowTemp + j;
-                    outRefVal = rowTempRef + j * 3 ;
+                    outRefVal = rowTempRef + j * 3;
                     int diff = abs(*outVal - *outRefVal);
                     if(diff <= CUTOFF)
                         matchedIdx++;
@@ -1021,6 +1002,7 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     int refOutputWidth = ((GOLDEN_OUTPUT_MAX_WIDTH / 8) * 8) + 8;    // obtain next multiple of 8 after GOLDEN_OUTPUT_MAX_WIDTH
     int refOutputHeight = GOLDEN_OUTPUT_MAX_HEIGHT;
     int refOutputSize = refOutputHeight * refOutputWidth * dstDescPtr->c;
+    Rpp64u binOutputSize = refOutputHeight * refOutputWidth * dstDescPtr->n * 4;
     int pln1RefStride = dstDescPtr->strides.nStride * dstDescPtr->n * 3;
 
     string dataType[4] = {"_u8_", "_f16_", "_f32_", "_i8_"};
@@ -1035,7 +1017,6 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     }
 
     std::string binFile = func + "Tensor";
-
     if(dstDescPtr->layout == RpptLayout::NHWC)
         func += "Tensor_PKD3";
     else
@@ -1069,29 +1050,17 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     refFile = scriptPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ binFile + ".bin";
     string line,word;
     int index = 0;
-
-    FILE *fp;
-    fp = fopen(refFile.c_str(), "rb");
-    if (fp == NULL)
-        printf("Error opening file");
-
-    fseek(fp, 0, SEEK_END);
-    long fsize = ftell(fp);
-    if (fsize == 0)
-        std::cerr << "File is empty";
-
-    fseek(fp, 0, SEEK_SET);
-    Rpp8u *binaryContent = (Rpp8u *)malloc(fsize);
-    fread(binaryContent, fsize, 1, fp);
-    fclose(fp);
-
     int fileMatch = 0;
+
+    Rpp8u *binaryContent = (Rpp8u *)malloc(binOutputSize * sizeof(Rpp8u));
+    read_bin_file(refFile, binaryContent);
+
     if(dstDescPtr->layout == RpptLayout::NHWC)
-        compare_outputs_pkd(output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+        compare_outputs_pkd_and_pln1(output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
     else if(dstDescPtr->layout == RpptLayout::NCHW && dstDescPtr->c == 3)
         compare_outputs_pln3(output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
     else
-        compare_outputs_pln1(output, binaryContent + pln1RefStride, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+        compare_outputs_pkd_and_pln1(output, binaryContent + pln1RefStride, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
 
     std::cout << std::endl << "Results for " << func << " :" << std::endl;
     std::string status = func + ": ";
@@ -1121,6 +1090,8 @@ inline void compare_reduction_output(Rpp64u* output, string funcName, RpptDescPt
 {
     string func = funcName;
     string refFile = "";
+    int pln1RefStride = srcDescPtr->n * 4;
+    Rpp64u binaryOutputSize = srcDescPtr->n * 5;
 
     string dataType[4] = {"_u8_", "_f16_", "_f32_", "_i8_"};
 
@@ -1139,32 +1110,19 @@ inline void compare_reduction_output(Rpp64u* output, string funcName, RpptDescPt
 
     refFile = scriptPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ binFile + ".bin";
 
-
     string line,word;
     int index = 0;
-
-    FILE *fp;
-    fp = fopen(refFile.c_str(), "rb");
-    if (fp == NULL)
-        printf("Error opening file");
-
-    fseek(fp, 0, SEEK_END);
-    long fsize = ftell(fp);
-    if (fsize == 0)
-        std::cerr << "File is empty";
-
-    fseek(fp, 0, SEEK_SET);
-    Rpp64u *binaryContent = (Rpp64u *)malloc(fsize);
-    fread(binaryContent, fsize, 1, fp);
-    fclose(fp);
-
     int fileMatch = 0;
     int matched_values = 0;
+    Rpp64u *binaryContent = (Rpp64u *)malloc(binaryOutputSize * sizeof(Rpp64u));
+    read_bin_file(refFile, binaryContent);
+
     if(srcDescPtr->c == 1)
     {
-        for(int i = 0, j = srcDescPtr->n * 4; i < srcDescPtr->n; i++, j++)
+        binaryContent += pln1RefStride;
+        for(int i = 0; i < srcDescPtr->n; i++)
         {
-            int diff = output[i] - binaryContent[j];
+            int diff = output[i] - binaryContent[i];
             if(diff <= CUTOFF)
                 fileMatch++;
         }
