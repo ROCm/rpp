@@ -526,16 +526,16 @@ inline void read_nifti_data(vector<string>::const_iterator dataFilePathStart, ve
 void compare_outputs_pkd(Rpp32f* output, Rpp32f* refOutput, int &fileMatch, RpptGenericDescPtr descriptorPtr3D, RpptRoiXyzwhd *roiGenericSrcPtr)
 {
     Rpp32f *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef, *depthTemp, *depthTempRef;
-    for(int Cnt = 0; Cnt < descriptorPtr3D->dims[0]; Cnt++)
+    for(int cnt = 0; cnt < descriptorPtr3D->dims[0]; cnt++)
     {
-        outputTemp = output + Cnt * descriptorPtr3D->strides[0];
-        outputTempRef = refOutput + Cnt * descriptorPtr3D->strides[0];
-        int height = roiGenericSrcPtr[Cnt].roiHeight;
-        int width = roiGenericSrcPtr[Cnt].roiWidth * descriptorPtr3D->dims[4];
-        int depth = roiGenericSrcPtr[Cnt].roiDepth;
+        outputTemp = output + cnt * descriptorPtr3D->strides[0];
+        outputTempRef = refOutput + cnt * descriptorPtr3D->strides[0];
+        int height = roiGenericSrcPtr[cnt].roiHeight;
+        int width = roiGenericSrcPtr[cnt].roiWidth * descriptorPtr3D->dims[4];
+        int depth = roiGenericSrcPtr[cnt].roiDepth;
         int depthStride = descriptorPtr3D->strides[1];
         int rowStride = descriptorPtr3D->strides[2];
-        int matched_idx = 0;
+        int matchedIdx = 0;
         for(int d = 0; d < depth; d++)
         {
             depthTemp = outputTemp + d * depthStride;
@@ -550,11 +550,11 @@ void compare_outputs_pkd(Rpp32f* output, Rpp32f* refOutput, int &fileMatch, Rppt
                     outRefVal = rowTempRef + j;
                     int diff = abs(*outVal - *outRefVal);
                     if(diff <= CUTOFF)
-                        matched_idx++;
+                        matchedIdx++;
                 }
             }
         }
-        if(matched_idx >= (1 - TOLERANCE) * (height * width * depth) && matched_idx !=0)
+        if(matchedIdx >= (1 - TOLERANCE) * (height * width * depth) && matchedIdx !=0)
             fileMatch++;
     }
 }
@@ -563,19 +563,19 @@ void compare_outputs_pkd(Rpp32f* output, Rpp32f* refOutput, int &fileMatch, Rppt
 void compare_outputs_pln3(Rpp32f* output, Rpp32f* refOutput, int &fileMatch, RpptGenericDescPtr descriptorPtr3D, RpptRoiXyzwhd *roiGenericSrcPtr)
 {
     Rpp32f *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef, *outputTempChn, *outputTempRefChn, *depthTemp, *depthTempRef;
-    for(int Cnt = 0; Cnt < descriptorPtr3D->dims[0]; Cnt++)
+    for(int cnt = 0; cnt < descriptorPtr3D->dims[0]; cnt++)
     {
-        outputTemp = output + Cnt * descriptorPtr3D->strides[0];
-        outputTempRef = refOutput + Cnt * descriptorPtr3D->strides[0];
-        int height = roiGenericSrcPtr[Cnt].roiHeight;
-        int width = roiGenericSrcPtr[Cnt].roiWidth;
-        int depth = roiGenericSrcPtr[Cnt].roiDepth;
+        outputTemp = output + cnt * descriptorPtr3D->strides[0];
+        outputTempRef = refOutput + cnt * descriptorPtr3D->strides[0];
+        int height = roiGenericSrcPtr[cnt].roiHeight;
+        int width = roiGenericSrcPtr[cnt].roiWidth;
+        int depth = roiGenericSrcPtr[cnt].roiDepth;
         int depthStride = descriptorPtr3D->strides[2];
         int refDepthStride = descriptorPtr3D->strides[2] * descriptorPtr3D->dims[1];
         int rowStride = descriptorPtr3D->strides[3];
         int refRowStride = descriptorPtr3D->strides[3] * 3;
         int channelStride = descriptorPtr3D->strides[1];
-        int matched_idx = 0;
+        int matchedIdx = 0;
 
         for(int c = 0; c < descriptorPtr3D->dims[1]; c++)
         {
@@ -595,12 +595,12 @@ void compare_outputs_pln3(Rpp32f* output, Rpp32f* refOutput, int &fileMatch, Rpp
                         outRefVal = rowTempRef + j * 3 ;
                         int diff = abs(*outVal - *outRefVal);
                         if(diff <= CUTOFF)
-                            matched_idx++;
+                            matchedIdx++;
                     }
                 }
             }
         }
-        if(matched_idx >= (1 - TOLERANCE) * (height * width * descriptorPtr3D->dims[1] * depth) && matched_idx !=0)
+        if(matchedIdx >= (1 - TOLERANCE) * (height * width * descriptorPtr3D->dims[1] * depth) && matchedIdx !=0)
             fileMatch++;
     }
 }
@@ -609,17 +609,17 @@ void compare_outputs_pln3(Rpp32f* output, Rpp32f* refOutput, int &fileMatch, Rpp
 void compare_outputs_pln1(Rpp32f* output, Rpp32f* refOutput, int &fileMatch, RpptGenericDescPtr descriptorPtr3D, RpptRoiXyzwhd *roiGenericSrcPtr)
 {
     Rpp32f *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef, *outputTempChn, *outputTempRefChn, *depthTemp, *depthTempRef;
-    for(int Cnt = 0; Cnt < descriptorPtr3D->dims[0]; Cnt++)
+    for(int cnt = 0; cnt < descriptorPtr3D->dims[0]; cnt++)
     {
-        outputTemp = output + Cnt * descriptorPtr3D->strides[0];
-        outputTempRef = refOutput + Cnt * descriptorPtr3D->strides[0];
-        int height = roiGenericSrcPtr[Cnt].roiHeight;
-        int width = roiGenericSrcPtr[Cnt].roiWidth;
-        int depth = roiGenericSrcPtr[Cnt].roiDepth;
+        outputTemp = output + cnt * descriptorPtr3D->strides[0];
+        outputTempRef = refOutput + cnt * descriptorPtr3D->strides[0];
+        int height = roiGenericSrcPtr[cnt].roiHeight;
+        int width = roiGenericSrcPtr[cnt].roiWidth;
+        int depth = roiGenericSrcPtr[cnt].roiDepth;
         int depthStride = descriptorPtr3D->strides[2];
         int rowStride = descriptorPtr3D->strides[3];
         int channelStride = descriptorPtr3D->strides[1];
-        int matched_idx = 0;
+        int matchedIdx = 0;
 
         for(int c = 0; c < descriptorPtr3D->dims[1]; c++)
         {
@@ -639,12 +639,12 @@ void compare_outputs_pln1(Rpp32f* output, Rpp32f* refOutput, int &fileMatch, Rpp
                         outRefVal = rowTempRef + j ;
                         int diff = abs(*outVal - *outRefVal);
                         if(diff <= CUTOFF)
-                            matched_idx++;
+                            matchedIdx++;
                     }
                 }
             }
         }
-        if(matched_idx >= (1 - TOLERANCE) * (height * width * descriptorPtr3D->dims[1] * depth) && matched_idx !=0)
+        if(matchedIdx >= (1 - TOLERANCE) * (height * width * descriptorPtr3D->dims[1] * depth) && matchedIdx !=0)
             fileMatch++;
     }
 }

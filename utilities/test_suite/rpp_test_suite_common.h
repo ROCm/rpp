@@ -919,7 +919,7 @@ void compare_outputs_pkd(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr
         outputTempRef = refOutput + imageCnt * refOutputSize;
         int height = dstImgSizes[imageCnt].height;
         int width = dstImgSizes[imageCnt].width * dstDescPtr->c;
-        int matched_idx = 0;
+        int matchedIdx = 0;
         int refOutputHstride = refOutputWidth * dstDescPtr->c;
 
         for(int i = 0; i < height; i++)
@@ -932,10 +932,10 @@ void compare_outputs_pkd(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr
                 outRefVal = rowTempRef + j;
                 int diff = abs(*outVal - *outRefVal);
                 if(diff <= CUTOFF)
-                    matched_idx++;
+                    matchedIdx++;
             }
         }
-        if(matched_idx == (height * width) && matched_idx !=0)
+        if(matchedIdx == (height * width) && matchedIdx !=0)
             fileMatch++;
     }
 }
@@ -950,7 +950,7 @@ void compare_outputs_pln1(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPt
         outputTempRef = refOutput + imageCnt * refOutputSize;
         int height = dstImgSizes[imageCnt].height;
         int width = dstImgSizes[imageCnt].width;
-        int matched_idx = 0;
+        int matchedIdx = 0;
         int refOutputHstride = refOutputWidth;
         int refOutputCstride = refOutputHeight * refOutputWidth;
 
@@ -968,11 +968,11 @@ void compare_outputs_pln1(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPt
                     outRefVal = rowTempRef + j ;
                     int diff = abs(*outVal - *outRefVal);
                     if(diff <= CUTOFF)
-                        matched_idx++;
+                        matchedIdx++;
                 }
             }
         }
-        if(matched_idx == (height * width * dstDescPtr->c) && matched_idx !=0)
+        if(matchedIdx == (height * width * dstDescPtr->c) && matchedIdx !=0)
             fileMatch++;
     }
 }
@@ -987,7 +987,7 @@ void compare_outputs_pln3(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPt
         outputTempRef = refOutput + imageCnt * refOutputSize;
         int height = dstImgSizes[imageCnt].height;
         int width = dstImgSizes[imageCnt].width;
-        int matched_idx = 0;
+        int matchedIdx = 0;
         int refOutputHstride = refOutputWidth * dstDescPtr->c;
 
         for(int c = 0; c < dstDescPtr->c; c++)
@@ -1004,11 +1004,11 @@ void compare_outputs_pln3(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPt
                     outRefVal = rowTempRef + j * 3 ;
                     int diff = abs(*outVal - *outRefVal);
                     if(diff <= CUTOFF)
-                        matched_idx++;
+                        matchedIdx++;
                 }
             }
         }
-        if(matched_idx == (height * width * dstDescPtr->c) && matched_idx !=0)
+        if(matchedIdx == (height * width * dstDescPtr->c) && matchedIdx !=0)
             fileMatch++;
     }
 }
@@ -1081,17 +1081,17 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
         std::cerr << "File is empty";
 
     fseek(fp, 0, SEEK_SET);
-    Rpp8u *binary_content = (Rpp8u *)malloc(fsize);
-    fread(binary_content, fsize, 1, fp);
+    Rpp8u *binaryContent = (Rpp8u *)malloc(fsize);
+    fread(binaryContent, fsize, 1, fp);
     fclose(fp);
 
     int fileMatch = 0;
     if(dstDescPtr->layout == RpptLayout::NHWC)
-        compare_outputs_pkd(output, binary_content, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+        compare_outputs_pkd(output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
     else if(dstDescPtr->layout == RpptLayout::NCHW && dstDescPtr->c == 3)
-        compare_outputs_pln3(output, binary_content, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+        compare_outputs_pln3(output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
     else
-        compare_outputs_pln1(output, binary_content + pln1RefStride, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+        compare_outputs_pln1(output, binaryContent + pln1RefStride, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
 
     std::cout << std::endl << "Results for " << func << " :" << std::endl;
     std::string status = func + ": ";
@@ -1114,6 +1114,7 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
         qaResults << status << std::endl;
         qaResults.close();
     }
+    free(binaryContent);
 }
 
 inline void compare_reduction_output(Rpp64u* output, string funcName, RpptDescPtr srcDescPtr, int testCase, string dst, string scriptPath)
@@ -1153,17 +1154,17 @@ inline void compare_reduction_output(Rpp64u* output, string funcName, RpptDescPt
         std::cerr << "File is empty";
 
     fseek(fp, 0, SEEK_SET);
-    Rpp64u *binary_content = (Rpp64u *)malloc(fsize);
-    fread(binary_content, fsize, 1, fp);
+    Rpp64u *binaryContent = (Rpp64u *)malloc(fsize);
+    fread(binaryContent, fsize, 1, fp);
     fclose(fp);
 
     int fileMatch = 0;
     int matched_values = 0;
     if(srcDescPtr->c == 1)
     {
-        for(int i = 0, j = srcDescPtr->n * 4; i < srcDescPtr->n; i++,j++)
+        for(int i = 0, j = srcDescPtr->n * 4; i < srcDescPtr->n; i++, j++)
         {
-            int diff = output[i] - binary_content[j];
+            int diff = output[i] - binaryContent[j];
             if(diff <= CUTOFF)
                 fileMatch++;
         }
@@ -1175,7 +1176,7 @@ inline void compare_reduction_output(Rpp64u* output, string funcName, RpptDescPt
             matched_values = 0;
             for(int j = 0; j < 4; j++)
             {
-                int diff = output[(i * 4) + j] - binary_content[(i * 4) + j];
+                int diff = output[(i * 4) + j] - binaryContent[(i * 4) + j];
                 if(diff <= CUTOFF)
                     matched_values++;
             }
@@ -1205,6 +1206,7 @@ inline void compare_reduction_output(Rpp64u* output, string funcName, RpptDescPt
         qaResults << status << std::endl;
         qaResults.close();
     }
+    free(binaryContent);
 }
 
 // Used to randomly swap values present in array of size n
