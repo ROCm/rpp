@@ -1,197 +1,28 @@
-#include <x86intrin.h>
-#include <smmintrin.h>
-#include <immintrin.h>
-#include <fstream>
-#include <cstring>
+/*
+Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+
 #include "rppdefs.h"
 #include "rpp_cpu_simd.hpp"
 #include "rpp_cpu_common.hpp"
-
-template <typename T> void convert_float_pln3_pkd3(T *srcPtrChannel, T *dstPtrChannel, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, int width)
-{
-    T *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
-    srcPtrRowR = srcPtrChannel;
-    srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
-    srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
-    dstPtrRow = dstPtrChannel;
-    for(int i = 0; i < srcDescPtr->h ; i++)
-    {
-        T *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *dstPtrTemp;
-        srcPtrTempR = srcPtrRowR;
-        srcPtrTempG = srcPtrRowG;
-        srcPtrTempB = srcPtrRowB;
-        dstPtrTemp = dstPtrRow;
-
-        int vectorLoopCount = 0;
-        for (; vectorLoopCount < width; vectorLoopCount += 8)
-        {
-            if(typeid(T) == typeid(Rpp32f))
-            {
-                __m256 p[3];
-                rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, (Rpp32f *)srcPtrTempR, (Rpp32f *)srcPtrTempG, (Rpp32f *)srcPtrTempB, p);
-                rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, (Rpp32f *)dstPtrTemp, p);
-            }
-            else if(typeid(T) == typeid(Rpp16f))
-            {
-                __m256 p[3];
-                Rpp32f srcPtrTempR_ps[8], srcPtrTempG_ps[8], srcPtrTempB_ps[8], dstPtrTemp_ps[25];
-                for(int cnt = 0; cnt < 8; cnt++)
-                {
-                    srcPtrTempR_ps[cnt] = (Rpp32f)srcPtrTempR[cnt];
-                    srcPtrTempG_ps[cnt] = (Rpp32f)srcPtrTempG[cnt];
-                    srcPtrTempB_ps[cnt] = (Rpp32f)srcPtrTempB[cnt];
-                }
-                rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtrTempR_ps, srcPtrTempG_ps, srcPtrTempB_ps, p);
-                rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp_ps, p);
-                for(int cnt = 0; cnt < 24; cnt++){
-                    dstPtrTemp[cnt] = (Rpp16f)dstPtrTemp_ps[cnt];
-                }
-            }
-            srcPtrTempR += 8;
-            srcPtrTempG += 8;
-            srcPtrTempB += 8;
-            dstPtrTemp += 24;
-        }
-        srcPtrRowR += srcDescPtr->strides.hStride;
-        srcPtrRowG += srcDescPtr->strides.hStride;
-        srcPtrRowB += srcDescPtr->strides.hStride;
-        dstPtrRow += dstDescPtr->strides.hStride;
-    }
-}
-
-template <typename T> void convert_float_pkd3_pln3(T *srcPtrChannel, T *dstPtrChannel, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, int height)
-{
-    T *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
-    srcPtrRow = srcPtrChannel;
-    dstPtrRowR = dstPtrChannel;
-    dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
-    dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
-
-    for(int i = 0; i < srcDescPtr->h; i++)
-    {
-        T *srcPtrTemp, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
-        srcPtrTemp = srcPtrRow;
-        dstPtrTempR = dstPtrRowR;
-        dstPtrTempG = dstPtrRowG;
-        dstPtrTempB = dstPtrRowB;
-
-        int vectorLoopCount = 0;
-        for (; vectorLoopCount < height; vectorLoopCount += 24)
-        {
-            if(typeid(T) == typeid(Rpp32f))
-            {
-                __m256 p[3];
-                rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, (Rpp32f *)srcPtrTemp, p);
-                rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, (Rpp32f *)dstPtrTempR, (Rpp32f *)dstPtrTempG, (Rpp32f *)dstPtrTempB, p);
-            }
-            else if(typeid(T) == typeid(Rpp16f)){
-                __m256 p[3];
-                Rpp32f srcPtrTemp_ps[24], dstPtrTempR_ps[8], dstPtrTempG_ps[8], dstPtrTempB_ps[8];
-                for(int cnt = 0; cnt < 24; cnt++){
-                    srcPtrTemp_ps[cnt] = (Rpp32f)srcPtrTemp[cnt];
-                }
-                rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp_ps, p);
-                rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR_ps, dstPtrTempG_ps, dstPtrTempB_ps, p);
-                for(int cnt = 0; cnt < 8; cnt++){
-                    dstPtrTempR[cnt] = (Rpp16f)dstPtrTempR_ps[cnt];
-                    dstPtrTempG[cnt] = (Rpp16f)dstPtrTempG_ps[cnt];
-                    dstPtrTempB[cnt] = (Rpp16f)dstPtrTempB_ps[cnt];
-                }
-            }
-            srcPtrTemp += 24;
-            dstPtrTempR += 8;
-            dstPtrTempG += 8;
-            dstPtrTempB += 8;
-        }
-        srcPtrRow += srcDescPtr->strides.hStride;
-        dstPtrRowR += dstDescPtr->strides.hStride;
-        dstPtrRowG += dstDescPtr->strides.hStride;
-        dstPtrRowB += dstDescPtr->strides.hStride;
-    }
-}
-
-template <typename T> void convert_pln3_pkd3( T *srcPtrChannel, T *dstPtrChannel, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, int width)
-{
-    T *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
-    srcPtrRowR = srcPtrChannel;
-    srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
-    srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
-    dstPtrRow = dstPtrChannel;
-
-    for(int i = 0; i < srcDescPtr->h; i++)
-    {
-        T *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *dstPtrTemp;
-        srcPtrTempR = srcPtrRowR;
-        srcPtrTempG = srcPtrRowG;
-        srcPtrTempB = srcPtrRowB;
-        dstPtrTemp = dstPtrRow;
-
-        int vectorLoopCount = 0;
-        for (; vectorLoopCount < width; vectorLoopCount += 16)
-        {
-            if(typeid(T) == typeid(Rpp8u)){
-                __m256 p[6];
-                rpp_simd_load(rpp_load48_u8pln3_to_f32pln3_avx, (Rpp8u *)srcPtrTempR, (Rpp8u *)srcPtrTempG, (Rpp8u *)srcPtrTempB, p);
-                rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, (Rpp8u *)dstPtrTemp, p);
-            }
-            else if(typeid(T) == typeid(Rpp8s)){
-                __m256 p[6];
-                rpp_simd_load(rpp_load48_i8pln3_to_f32pln3_avx, (Rpp8s *)srcPtrTempR, (Rpp8s *)srcPtrTempG, (Rpp8s *)srcPtrTempB, p);
-                rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3_avx, (Rpp8s *)dstPtrTemp, p);
-            }
-            srcPtrTempR += 16;
-            srcPtrTempG += 16;
-            srcPtrTempB += 16;
-            dstPtrTemp += 48;
-        }
-        srcPtrRowR += srcDescPtr->strides.hStride;
-        srcPtrRowG += srcDescPtr->strides.hStride;
-        srcPtrRowB += srcDescPtr->strides.hStride;
-        dstPtrRow += dstDescPtr->strides.hStride;
-    }
-}
-
-template <typename T> void convert_pkd3_pln3( T *srcPtrChannel, T *dstPtrChannel, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, int width)
-{
-    T *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
-    srcPtrRow = srcPtrChannel;
-    dstPtrRowR = dstPtrChannel;
-    dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
-    dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
-
-    for(int i = 0; i < srcDescPtr->h; i++)
-    {
-        T *srcPtrTemp, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
-        srcPtrTemp = srcPtrRow;
-        dstPtrTempR = dstPtrRowR;
-        dstPtrTempG = dstPtrRowG;
-        dstPtrTempB = dstPtrRowB;
-
-        int vectorLoopCount = 0;
-        for (; vectorLoopCount < width; vectorLoopCount += 48)
-        {
-            if(typeid(T) == typeid(Rpp8u))
-            {
-                __m256 p[6];
-                rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, (Rpp8u *)srcPtrTemp, p);
-                rpp_simd_store(rpp_store48_f32pln3_to_u8pln3_avx, (Rpp8u *)dstPtrTempR, (Rpp8u *)dstPtrTempG, (Rpp8u *)dstPtrTempB, p);
-            }
-            else if(typeid(T) == typeid(Rpp8s)){
-                __m256 p[6];
-                rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3_avx, (Rpp8s *)srcPtrTemp, p);
-                rpp_simd_store(rpp_store48_f32pln3_to_i8pln3_avx, (Rpp8s *)dstPtrTempR, (Rpp8s *)dstPtrTempG, (Rpp8s *)dstPtrTempB, p);
-            }
-            srcPtrTemp += 48;
-            dstPtrTempR += 16;
-            dstPtrTempG += 16;
-            dstPtrTempB += 16;
-        }
-        srcPtrRow += srcDescPtr->strides.hStride;
-        dstPtrRowR += dstDescPtr->strides.hStride;
-        dstPtrRowG += dstDescPtr->strides.hStride;
-        dstPtrRowB += dstDescPtr->strides.hStride;
-    }
-}
 
 RppStatus glitch_u8_u8_host_tensor(Rpp8u *srcPtr,
                                    RpptDescPtr srcDescPtr,
@@ -238,164 +69,402 @@ RppStatus glitch_u8_u8_host_tensor(Rpp8u *srcPtr,
 
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u srcVectorIncrement = 36;
-            Rpp32u dstVectorIncrement = 12;
-            __m128i mask1 = _mm_setr_epi8(0, 3, 6, 9, 12, 15, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80);
-            __m128i mask2 = _mm_setr_epi8(0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0, 3, 6, 9, 12, 15, 0x80, 0x80, 0x80, 0x80);
-            for(int c = 0; c < srcDescPtr->c; c++)
+            int yR = yOffsetRchn;
+            int yG = yOffsetGchn;
+            int yB = yOffsetBchn;
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
-                Rpp8u *srcPtrChannel, *dstPtrChannel;
-                Rpp8u *srcPtrChannelRow, *dstPtrChannelRow, *srcPtrChannelRowOffset;
-                srcPtrChannel = srcPtrImage + (c * srcDescPtr->strides.cStride);
-                dstPtrChannel = dstPtrImage + (c * dstDescPtr->strides.cStride);
-                srcPtrChannelRow = srcPtrChannel;
-                srcPtrChannelRowOffset = srcPtrChannel + (yOffsets[c] * srcDescPtr->strides.hStride);
-                dstPtrChannelRow = dstPtrChannel;
-                int currentRow = yOffsets[c];
-                for(; currentRow < roi.xywhROI.roiHeight; currentRow++)
+                int xR = xOffsetRchn;
+                int xG = xOffsetGchn;
+                int xB = xOffsetBchn;
+                Rpp8u *srcRowPtrR, *srcRowPtrG, *srcRowPtrB, *dstRowPtr;
+                srcRowPtrR = srcPtrImage + (yR * srcDescPtr->strides.hStride);
+                srcRowPtrG = srcPtrImage + (yG * srcDescPtr->strides.hStride);
+                srcRowPtrB = srcPtrImage + (yB * srcDescPtr->strides.hStride);
+                dstRowPtr = dstPtrImage + i * dstDescPtr->strides.hStride;
+                if((yR >= 0) && (yR < roi.xywhROI.roiHeight) && (yG >= 0) && (yG < roi.xywhROI.roiHeight) && (yB >= 0) && (yB < roi.xywhROI.roiHeight))
                 {
-                    Rpp8u *srcRowTempOffset, *dstRowTemp, *srcRowTemp;
-                    srcRowTempOffset = srcPtrChannelRowOffset + xOffsets[c] * 3;
-                    srcRowTemp = srcPtrChannelRow + (roi.xywhROI.roiWidth - xOffsets[c]) * 3;
-                    dstRowTemp = dstPtrChannelRow;
-                    int currentCol = xOffsets[c] * 3;
-                    Rpp32u alignedLength = (roi.xywhROI.roiWidth * 3 - currentCol) & ~35;
-                    if (((currentRow >= 0) && (currentRow < roi.xywhROI.roiHeight)) && ((currentCol >= 0) && (currentCol < roi.xywhROI.roiWidth * 3 )))
+                    Rpp8u *srcRowPtrTempR, *srcRowPtrTempG, *srcRowPtrTempB, *dstRowPtrTempR, *dstRowPtrTempG, *dstRowPtrTempB;
+                    srcRowPtrTempR = srcRowPtrR + xR * 3;
+                    srcRowPtrTempG = srcRowPtrG + xG * 3 + 1;
+                    srcRowPtrTempB = srcRowPtrB + xB * 3 + 2;
+                    dstRowPtrTempR = dstRowPtr;
+                    dstRowPtrTempG = dstRowPtr + dstDescPtr->strides.cStride;
+                    dstRowPtrTempB = dstRowPtr + 2 * dstDescPtr->strides.cStride;
+                    for (int j = 0; j < roi.xywhROI.roiWidth; j += 16)
                     {
-                        for( ; currentCol < alignedLength; currentCol += srcVectorIncrement)
+                        if((xR >= 0) && (xR <= roi.xywhROI.roiWidth - 16) && (xG >= 0) && (xG <= roi.xywhROI.roiWidth - 16) && (xB >= 0) && (xB < roi.xywhROI.roiWidth - 16))
                         {
-                            __m128i p[2];
-                            p[0] = _mm_loadu_epi8(srcRowTempOffset);
-                            p[1] = _mm_loadu_epi8(srcRowTempOffset + 18);
-                            p[0] = _mm_or_si128(_mm_shuffle_epi8(p[0], mask1) ,_mm_shuffle_epi8(p[1],mask2));
-                            _mm_storeu_si128((__m128i *)dstRowTemp, p[0]);
-                            srcRowTempOffset += srcVectorIncrement;
-                            dstRowTemp += dstVectorIncrement;
+                            __m128 p1[12], p2[12], p3[12];
+                            rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcRowPtrTempR, p1);    // simd loads
+                            rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcRowPtrTempG, p2);    // simd loads
+                            rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcRowPtrTempB, p3);    // simd loads
+                            for(int k = 0; k < 4; k++)
+                            {
+                                p1[k + 4] = p2[k];
+                                p1[k + 8] = p3[k];
+                            }
+                            rpp_simd_store(rpp_store48_f32pln3_to_u8pln3, dstRowPtrTempR, dstRowPtrTempG, dstRowPtrTempB, p1);    // simd stores
+                            xR += 16;
+                            xG += 16;
+                            xB += 16;
                         }
-                        for(; currentCol < roi.xywhROI.roiWidth * 3; currentCol+=3)
+                        else
                         {
-                            *dstRowTemp = *srcRowTempOffset;
-                            dstRowTemp += 1;
-                            srcRowTempOffset += 3;
+                            if(xR < roi.xywhROI.roiWidth)
+                            {
+                                for( ; xR < roi.xywhROI.roiWidth; xR++)
+                                {
+                                    *dstRowPtrTempR = *srcRowPtrTempR;
+                                    srcRowPtrTempR += 3;
+                                    dstRowPtrTempR++;
+                                }
+                            }
+                            if(xG < roi.xywhROI.roiWidth)
+                            {
+                                for( ; xG < roi.xywhROI.roiWidth; xG++)
+                                {
+                                   *dstRowPtrTempG = *srcRowPtrTempG;
+                                    srcRowPtrTempG += 3;
+                                    dstRowPtrTempG++;
+                                }
+                            }
+                            if(xB < roi.xywhROI.roiWidth)
+                            {
+                                for( ; xB < roi.xywhROI.roiWidth; xB++)
+                                {
+                                    *dstRowPtrTempB = *srcRowPtrTempB;
+                                    srcRowPtrTempB += 3;
+                                    dstRowPtrTempB++;
+                                }
+                            }
+                            break;
                         }
+                        srcRowPtrTempR += 48;
+                        srcRowPtrTempG += 48;
+                        srcRowPtrTempB += 48;
+                        dstRowPtrTempR += 16;
+                        dstRowPtrTempG += 16;
+                        dstRowPtrTempB += 16;
                     }
-                    for(int i = 0; i < xOffsets[c] * 3; i+=3)
-                    {
-                        *dstRowTemp = *srcRowTemp;
-                        dstRowTemp += 1;
-                        srcRowTemp += 3;
-                    }
-                    srcPtrChannelRowOffset += srcDescPtr->strides.hStride;
-                    dstPtrChannelRow += dstDescPtr->strides.hStride;
-                    srcPtrChannelRow += srcDescPtr->strides.hStride;
                 }
-                srcPtrChannelRow = srcPtrChannel + ((roi.xywhROI.roiHeight - yOffsets[c]) * srcDescPtr->strides.hStride);
-                for(int j = 0; j < yOffsets[c]; j++)
+                else
                 {
-                    Rpp8u *dstRowTemp, *srcRowTemp;
-                    srcRowTemp = srcPtrChannelRow;
-                    dstRowTemp = dstPtrChannelRow;
-                    Rpp32u alignedLength = roi.xywhROI.roiWidth * 3 & ~35;
-                    int currentCol = 0;
-                    for( ; currentCol < alignedLength; currentCol += srcVectorIncrement)
+                    Rpp8u *srcRowPtrTempR, *srcRowPtrTempG, *srcRowPtrTempB, *dstRowPtrTempR, *dstRowPtrTempG, *dstRowPtrTempB;
+                    srcRowPtrTempR = srcRowPtrR + xR * 3;
+                    srcRowPtrTempG = srcRowPtrG + xG * 3 + 1;
+                    srcRowPtrTempB = srcRowPtrB + xB * 3 + 2;
+                    dstRowPtrTempR = dstRowPtr;
+                    dstRowPtrTempG = dstRowPtr + dstDescPtr->strides.cStride;
+                    dstRowPtrTempB = dstRowPtr + 2 * dstDescPtr->strides.cStride;
+                    if(yR < roi.xywhROI.roiHeight && xR < roi.xywhROI.roiWidth)
                     {
-                        __m128i p[2];
-                        p[0] = _mm_loadu_epi8(srcRowTemp);
-                        p[1] = _mm_loadu_epi8(srcRowTemp + 18);
-                        p[0] = _mm_or_si128(_mm_shuffle_epi8(p[0], mask1), _mm_shuffle_epi8(p[1],mask2));
-                        _mm_storeu_si128((__m128i *)dstRowTemp, p[0]);
-                        srcRowTemp += srcVectorIncrement;
-                        dstRowTemp += dstVectorIncrement;
+                        for(; xR < roi.xywhROI.roiWidth; xR++)
+                        {
+                            *dstRowPtrTempR = *srcRowPtrTempR;
+                            srcRowPtrTempR += 3;
+                            dstRowPtrTempR++;
+                        }
                     }
-                    for(; currentCol < roi.xywhROI.roiWidth * 3; currentCol+=3)
+                    if(yG < roi.xywhROI.roiHeight && xG < roi.xywhROI.roiWidth)
                     {
-                        *dstRowTemp = *srcRowTemp;
-                        dstRowTemp += 1;
-                        srcRowTemp += 3;
+                        for(; xG < roi.xywhROI.roiWidth; xG++)
+                        {
+                            *dstRowPtrTempG = *srcRowPtrTempG;
+                            srcRowPtrTempG += 3;
+                            dstRowPtrTempG++;
+                        }
                     }
-                    srcPtrChannelRow += srcDescPtr->strides.hStride;
-                    dstPtrChannelRow += dstDescPtr->strides.hStride;
+                    if(yB < roi.xywhROI.roiHeight && xB < roi.xywhROI.roiWidth)
+                    {
+                        for(; xB < roi.xywhROI.roiWidth; xB++)
+                        {
+                            *dstRowPtrTempB = *srcRowPtrTempB;
+                            srcRowPtrTempB += 3;
+                            dstRowPtrTempB++;
+                        }
+                    }
                 }
+                if(yR < roi.xywhROI.roiHeight && xR >= roi.xywhROI.roiWidth)
+                {
+                    xR = xR - xOffsetRchn;
+                    Rpp8u *srcRowPtrTempR, *dstRowPtrTempR;
+                    srcRowPtrTempR = srcPtrImage + i * srcDescPtr->strides.hStride + xR * 3;
+                    dstRowPtrTempR = dstRowPtr + xR;
+                    for(; xR < roi.xywhROI.roiWidth; xR++)
+                    {
+                        *dstRowPtrTempR = *srcRowPtrTempR;
+                        srcRowPtrTempR += 3;
+                        dstRowPtrTempR++;
+                    }
+                }
+                if(yG < roi.xywhROI.roiHeight && xG >= roi.xywhROI.roiWidth)
+                {
+                    xG = xG - xOffsetGchn;
+                    Rpp8u *srcRowPtrTempG, *dstRowPtrTempG;
+                    srcRowPtrTempG = srcPtrImage + i * srcDescPtr->strides.hStride + xG * 3 + 1;
+                    dstRowPtrTempG = dstRowPtr + xG + dstDescPtr->strides.cStride;
+                    for(; xG < roi.xywhROI.roiWidth; xG++)
+                    {
+                        *dstRowPtrTempG = *srcRowPtrTempG;
+                        srcRowPtrTempG += 3;
+                        dstRowPtrTempG++;
+                    }
+                }
+                if(yB < roi.xywhROI.roiHeight && xB >= roi.xywhROI.roiWidth)
+                {
+                    xB = xB - xOffsetBchn;
+                    Rpp8u *srcRowPtrTempB, *dstRowPtrTempB;
+                    srcRowPtrTempB = srcPtrImage + i * srcDescPtr->strides.hStride + xB * 3 + 2;
+                    dstRowPtrTempB = dstRowPtr + xB+ 2 * dstDescPtr->strides.cStride;
+                    for(; xB < roi.xywhROI.roiWidth; xB++)
+                    {
+                        *dstRowPtrTempB = *srcRowPtrTempB;
+                        srcRowPtrTempB += 3;
+                        dstRowPtrTempB++;
+                    }
+                }
+                if(yR >= roi.xywhROI.roiHeight)
+                {
+                    int idx = yR - yOffsetRchn;
+                    Rpp8u *srcRowPtrTempR, *dstRowPtrTempR;
+                    srcRowPtrTempR = srcPtrImage + idx * srcDescPtr->strides.hStride;
+                    dstRowPtrTempR = dstPtrImage + idx * dstDescPtr->strides.hStride;
+                    for(int x = 0; x < roi.xywhROI.roiWidth; x++)
+                    {
+                        *dstRowPtrTempR = *srcRowPtrTempR;
+                        srcRowPtrTempR += 3;
+                        dstRowPtrTempR++;
+                    }
+                }
+                if(yG >= roi.xywhROI.roiHeight)
+                {
+                    int idx = yG - yOffsetGchn;
+                    Rpp8u *srcRowPtrTempG, *dstRowPtrTempG;
+                    srcRowPtrTempG = srcPtrImage + idx * srcDescPtr->strides.hStride + 1;
+                    dstRowPtrTempG = dstPtrImage + idx * dstDescPtr->strides.hStride + dstDescPtr->strides.cStride;
+                    for(int x = 0; x < roi.xywhROI.roiWidth; x++)
+                    {
+                        *dstRowPtrTempG = *srcRowPtrTempG;
+                        srcRowPtrTempG += 3;
+                        dstRowPtrTempG++;
+                    }
+                }
+                if(yB >= roi.xywhROI.roiHeight)
+                {
+                    int idx = yB - yOffsetBchn;
+                    Rpp8u *srcRowPtrTempB, *dstRowPtrTempB;
+                    srcRowPtrTempB = srcPtrImage + idx * srcDescPtr->strides.hStride + 2;
+                    dstRowPtrTempB = dstPtrImage + idx * dstDescPtr->strides.hStride + 2 * dstDescPtr->strides.cStride;
+                    for(int x = 0; x < roi.xywhROI.roiWidth; x++)
+                    {
+                        *dstRowPtrTempB = *srcRowPtrTempB;
+                        srcRowPtrTempB += 3;
+                        dstRowPtrTempB++;
+                    }
+                }
+                yR++;
+                yG++;
+                yB++;
             }
         }
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u vectorIncrement = 32;
-            for(int c = 0; c < srcDescPtr->c; c++)
+            int yR = yOffsetRchn;
+            int yG = yOffsetGchn;
+            int yB = yOffsetBchn;
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
-                Rpp8u *srcPtrChannel, *dstPtrChannel;
-                Rpp8u *srcPtrChannelRow, *dstPtrChannelRow, *srcPtrChannelRowOffset;
-                srcPtrChannel = srcPtrImage + (c * srcDescPtr->strides.cStride);
-                dstPtrChannel = dstPtrImage + (c * dstDescPtr->strides.cStride);
-                srcPtrChannelRow = srcPtrChannel;
-                srcPtrChannelRowOffset = srcPtrChannel + (yOffsets[c] * srcDescPtr->strides.hStride);
-                dstPtrChannelRow = dstPtrChannel;
-                int currentRow = yOffsets[c];
-                for(; currentRow < roi.xywhROI.roiHeight; currentRow++)
+                int xR = xOffsetRchn;
+                int xG = xOffsetGchn;
+                int xB = xOffsetBchn;
+                Rpp8u *srcRowPtrR, *srcRowPtrG, *srcRowPtrB, *dstRowPtr;
+                srcRowPtrR = srcPtrImage + (yR * srcDescPtr->strides.hStride);
+                srcRowPtrG = srcPtrImage + (yG * srcDescPtr->strides.hStride) + srcDescPtr->strides.cStride * 1;
+                srcRowPtrB = srcPtrImage + (yB * srcDescPtr->strides.hStride) + srcDescPtr->strides.cStride * 2;
+                dstRowPtr = dstPtrImage + i * dstDescPtr->strides.hStride;
+                if((yR >= 0) && (yR < roi.xywhROI.roiHeight) && (yG >= 0) && (yG < roi.xywhROI.roiHeight) && (yB >= 0) && (yB < roi.xywhROI.roiHeight))
                 {
-                    Rpp8u *srcRowTempOffset, *dstRowTemp, *srcRowTemp;
-                    srcRowTempOffset = srcPtrChannelRowOffset + xOffsets[c];
-                    srcRowTemp = srcPtrChannelRow + (roi.xywhROI.roiWidth - xOffsets[c]);
-                    dstRowTemp = dstPtrChannelRow;
-                    int currentCol = xOffsets[c];
-                    Rpp32u alignedLength = (roi.xywhROI.roiWidth - currentCol) & ~31;
-                    if (((currentRow >= 0) && (currentRow < roi.xywhROI.roiHeight)) && ((currentCol >= 0) && (currentCol < roi.xywhROI.roiWidth)))
+                    Rpp8u *srcRowPtrTempR, *srcRowPtrTempG, *srcRowPtrTempB, *dstRowPtrTempR, *dstRowPtrTempG, *dstRowPtrTempB;
+                    srcRowPtrTempR = srcRowPtrR + xR;
+                    srcRowPtrTempG = srcRowPtrG + xG;
+                    srcRowPtrTempB = srcRowPtrB + xB;
+                    dstRowPtrTempR = dstRowPtr;
+                    dstRowPtrTempG = dstRowPtr + 1;
+                    dstRowPtrTempB = dstRowPtr + 2;
+                    for (int j = 0; j < roi.xywhROI.roiWidth; j += 16)
                     {
-                        for( ; currentCol < alignedLength; currentCol += vectorIncrement)
+                        if((xR >= 0) && (xR <= roi.xywhROI.roiWidth - 16) && (xG >= 0) && (xG <= roi.xywhROI.roiWidth - 16) && (xB >= 0) && (xB < roi.xywhROI.roiWidth - 16))
                         {
-                            __m256i p;
-                            p = _mm256_loadu_epi8(srcRowTempOffset);
-                            _mm256_storeu_epi8(dstRowTemp, p);
-                            srcRowTempOffset += vectorIncrement;
-                            dstRowTemp += vectorIncrement;
+                            __m128 p[12];
+                            rpp_simd_load(rpp_load48_u8pln3_to_f32pln3, srcRowPtrTempR, srcRowPtrTempG, srcRowPtrTempB, p);    // simd loads
+                            rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3, dstRowPtrTempR, p);    // simd stores
+                            xR += 16;
+                            xG += 16;
+                            xB += 16;
                         }
-                        for(; currentCol < roi.xywhROI.roiWidth; currentCol++)
+                        else
                         {
-                            *dstRowTemp = *srcRowTempOffset;
-                            dstRowTemp++;
-                            srcRowTempOffset++;
+                            if(xR < roi.xywhROI.roiWidth)
+                            {
+                                for( ; xR < roi.xywhROI.roiWidth; xR++)
+                                {
+                                    *dstRowPtrTempR = *srcRowPtrTempR;
+                                    srcRowPtrTempR++;
+                                    dstRowPtrTempR += 3;
+                                }
+                            }
+                            if(xG < roi.xywhROI.roiWidth)
+                            {
+                                for( ; xG < roi.xywhROI.roiWidth; xG++)
+                                {
+                                   *dstRowPtrTempG = *srcRowPtrTempG;
+                                    srcRowPtrTempG++;
+                                    dstRowPtrTempG += 3;
+                                }
+                            }
+                            if(xB < roi.xywhROI.roiWidth)
+                            {
+                                for( ; xB < roi.xywhROI.roiWidth; xB++)
+                                {
+                                    *dstRowPtrTempB = *srcRowPtrTempB;
+                                    srcRowPtrTempB++;
+                                    dstRowPtrTempB += 3;
+                                }
+                            }
+                            break;
                         }
+                        srcRowPtrTempR += 16;
+                        srcRowPtrTempG += 16;
+                        srcRowPtrTempB += 16;
+                        dstRowPtrTempR += 48;
+                        dstRowPtrTempG += 48;
+                        dstRowPtrTempB += 48;
                     }
-                    for(int i = 0; i < xOffsets[c]; i++)
-                    {
-                        *dstRowTemp = *srcRowTemp;
-                        dstRowTemp++;
-                        srcRowTemp++;
-                    }
-                    srcPtrChannelRowOffset += srcDescPtr->strides.hStride;
-                    dstPtrChannelRow += dstDescPtr->strides.hStride;
-                    srcPtrChannelRow += srcDescPtr->strides.hStride;
                 }
-                srcPtrChannelRow = srcPtrChannel + ((roi.xywhROI.roiHeight - yOffsets[c]) * srcDescPtr->strides.hStride);
-                for(int j = 0; j < yOffsets[c]; j++)
+                else
                 {
-                    Rpp8u *dstRowTemp, *srcRowTemp;
-                    srcRowTemp = srcPtrChannelRow;
-                    dstRowTemp = dstPtrChannelRow;
-                    Rpp32u alignedLength = roi.xywhROI.roiWidth & ~31;
-                    int currentCol = 0;
-                    for( ; currentCol < alignedLength; currentCol += vectorIncrement)
+                    Rpp8u *srcRowPtrTempR, *srcRowPtrTempG, *srcRowPtrTempB, *dstRowPtrTempR, *dstRowPtrTempG, *dstRowPtrTempB;
+                    srcRowPtrTempR = srcRowPtrR + xR;
+                    srcRowPtrTempG = srcRowPtrG + xG;
+                    srcRowPtrTempB = srcRowPtrB + xB;
+                    dstRowPtrTempR = dstRowPtr;
+                    dstRowPtrTempG = dstRowPtr + 1;
+                    dstRowPtrTempB = dstRowPtr + 2;
+                    if(yR < roi.xywhROI.roiHeight && xR < roi.xywhROI.roiWidth)
                     {
-                        __m256i p;
-                        p = _mm256_loadu_epi8(srcRowTemp);
-                        _mm256_storeu_epi8(dstRowTemp, p);
-                        srcRowTemp += vectorIncrement;
-                        dstRowTemp += vectorIncrement;
+                        for(; xR < roi.xywhROI.roiWidth; xR++)
+                        {
+                            *dstRowPtrTempR = *srcRowPtrTempR;
+                            srcRowPtrTempR++;
+                            dstRowPtrTempR += 3;
+                        }
                     }
-                    for(; currentCol < roi.xywhROI.roiWidth; currentCol++)
+                    if(yG < roi.xywhROI.roiHeight && xG < roi.xywhROI.roiWidth)
                     {
-                        *dstRowTemp = *srcRowTemp;
-                        dstRowTemp++;
-                        srcRowTemp++;
+                        for(; xG < roi.xywhROI.roiWidth; xG++)
+                        {
+                            *dstRowPtrTempG = *srcRowPtrTempG;
+                            srcRowPtrTempG++;
+                            dstRowPtrTempG += 3;
+                        }
                     }
-                    srcPtrChannelRow += srcDescPtr->strides.hStride;
-                    dstPtrChannelRow += dstDescPtr->strides.hStride;
+                    if(yB < roi.xywhROI.roiHeight && xB < roi.xywhROI.roiWidth)
+                    {
+                        for(; xB < roi.xywhROI.roiWidth; xB++)
+                        {
+                            *dstRowPtrTempB = *srcRowPtrTempB;
+                            srcRowPtrTempB++;
+                            dstRowPtrTempB += 3;
+                        }
+                    }
                 }
+                if(yR < roi.xywhROI.roiHeight && xR >= roi.xywhROI.roiWidth)
+                {
+                    xR = xR - xOffsetRchn;
+                    Rpp8u *srcRowPtrTempR, *dstRowPtrTempR;
+                    srcRowPtrTempR = srcPtrImage + i * srcDescPtr->strides.hStride + xR;
+                    dstRowPtrTempR = dstRowPtr + xR * 3;
+                    for(; xR < roi.xywhROI.roiWidth; xR++)
+                    {
+                        *dstRowPtrTempR = *srcRowPtrTempR;
+                        srcRowPtrTempR++;
+                        dstRowPtrTempR += 3;
+                    }
+                }
+                if(yG < roi.xywhROI.roiHeight && xG >= roi.xywhROI.roiWidth)
+                {
+                    xG = xG - xOffsetGchn;
+                    Rpp8u *srcRowPtrTempG, *dstRowPtrTempG;
+                    srcRowPtrTempG = srcPtrImage + i * srcDescPtr->strides.hStride + srcDescPtr->strides.cStride + xG ;
+                    dstRowPtrTempG = dstRowPtr + xG * 3 + 1;
+                    for(; xG < roi.xywhROI.roiWidth; xG++)
+                    {
+                        *dstRowPtrTempG = *srcRowPtrTempG;
+                        srcRowPtrTempG++;
+                        dstRowPtrTempG += 3;
+                    }
+                }
+                if(yB < roi.xywhROI.roiHeight && xB >= roi.xywhROI.roiWidth)
+                {
+                    xB = xB - xOffsetBchn;
+                    Rpp8u *srcRowPtrTempB, *dstRowPtrTempB;
+                    srcRowPtrTempB = srcPtrImage + i * srcDescPtr->strides.hStride + xB + 2 * srcDescPtr->strides.cStride;
+                    dstRowPtrTempB = dstRowPtr + xB * 3 + 2;
+                    for(; xB < roi.xywhROI.roiWidth; xB++)
+                    {
+                        *dstRowPtrTempB = *srcRowPtrTempB;
+                        srcRowPtrTempB++;
+                        dstRowPtrTempB += 3;
+                    }
+                }
+                if(yR >= roi.xywhROI.roiHeight)
+                {
+                    int idx = yR - yOffsetRchn;
+                    Rpp8u *srcRowPtrTempR, *dstRowPtrTempR;
+                    srcRowPtrTempR = srcPtrImage + idx * srcDescPtr->strides.hStride;
+                    dstRowPtrTempR = dstPtrImage + idx * dstDescPtr->strides.hStride;
+                    for(int x = 0; x < roi.xywhROI.roiWidth; x++)
+                    {
+                        *dstRowPtrTempR = *srcRowPtrTempR;
+                        srcRowPtrTempR++;
+                        dstRowPtrTempR += 3;
+                    }
+                }
+                if(yG >= roi.xywhROI.roiHeight)
+                {
+                    int idx = yG - yOffsetGchn;
+                    Rpp8u *srcRowPtrTempG, *dstRowPtrTempG;
+                    srcRowPtrTempG = srcPtrImage + idx * srcDescPtr->strides.hStride + srcDescPtr->strides.cStride;
+                    dstRowPtrTempG = dstPtrImage + idx * dstDescPtr->strides.hStride + 1;
+                    for(int x = 0; x < roi.xywhROI.roiWidth; x++)
+                    {
+                        *dstRowPtrTempG = *srcRowPtrTempG;
+                        srcRowPtrTempG++;
+                        dstRowPtrTempG += 3;
+                    }
+                }
+                if(yB >= roi.xywhROI.roiHeight)
+                {
+                    int idx = yB - yOffsetBchn;
+                    Rpp8u *srcRowPtrTempB, *dstRowPtrTempB;
+                    srcRowPtrTempB = srcPtrImage + idx * srcDescPtr->strides.hStride + 2 * srcDescPtr->strides.cStride;
+                    dstRowPtrTempB = dstPtrImage + idx * dstDescPtr->strides.hStride + 2;
+                    for(int x = 0; x < roi.xywhROI.roiWidth; x++)
+                    {
+                        *dstRowPtrTempB = *srcRowPtrTempB;
+                        srcRowPtrTempB++;
+                        dstRowPtrTempB += 3;
+                    }
+                }
+                yR++;
+                yG++;
+                yB++;
             }
         }
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW ))
         {
-            Rpp32u vectorIncrement = 16;
+            Rpp32u vectorIncrement = 32;
             for(int c = 0; c < srcDescPtr->c; c++)
             {
                 Rpp8u *srcPtrChannel, *dstPtrChannel;
@@ -458,11 +527,649 @@ RppStatus glitch_u8_u8_host_tensor(Rpp8u *srcPtr,
         }
         else if((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u vectorIncrement = 18;
+            int yR = yOffsetRchn;
+            int yG = yOffsetGchn;
+            int yB = yOffsetBchn;
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            {
+                int xR = xOffsetRchn;
+                int xG = xOffsetGchn;
+                int xB = xOffsetBchn;
+                Rpp8u *srcRowPtrR, *srcRowPtrG, *srcRowPtrB, *dstRowPtr;
+                srcRowPtrR = srcPtrImage + (yR * srcDescPtr->strides.hStride);
+                srcRowPtrG = srcPtrImage + (yG * srcDescPtr->strides.hStride);
+                srcRowPtrB = srcPtrImage + (yB * srcDescPtr->strides.hStride);
+                dstRowPtr = dstPtrImage + i * dstDescPtr->strides.hStride;
+                if((yR >= 0) && (yR < roi.xywhROI.roiHeight) && (yG >= 0) && (yG < roi.xywhROI.roiHeight) && (yB >= 0) && (yB < roi.xywhROI.roiHeight))
+                {
+                    Rpp8u *srcRowPtrTempR, *srcRowPtrTempG, *srcRowPtrTempB, *dstRowPtrTempR, *dstRowPtrTempG, *dstRowPtrTempB;
+                    srcRowPtrTempR = srcRowPtrR + xR * 3;
+                    srcRowPtrTempG = srcRowPtrG + xG * 3 + 1;
+                    srcRowPtrTempB = srcRowPtrB + xB * 3 + 2;
+                    dstRowPtrTempR = dstRowPtr;
+                    dstRowPtrTempG = dstRowPtr + 1;
+                    dstRowPtrTempB = dstRowPtr + 2;
+                    for (int j = 0; j < roi.xywhROI.roiWidth; j += 16)
+                    {
+                        if((xR >= 0) && (xR <= roi.xywhROI.roiWidth - 16) && (xG >= 0) && (xG <= roi.xywhROI.roiWidth - 16) && (xB >= 0) && (xB < roi.xywhROI.roiWidth - 16))
+                        {
+                            __m128 p1[12], p2[12], p3[12];
+                            rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcRowPtrTempR, p1);    // simd loads
+                            rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcRowPtrTempG, p2);    // simd loads
+                            rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3, srcRowPtrTempB, p3);    // simd loads
+                            for(int k = 0; k < 4; k++)
+                            {
+                                p1[k + 4] = p2[k];
+                                p1[k + 8] = p3[k];
+                            }
+                            rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3, dstRowPtrTempR, p1);    // simd stores
+                            xR += 16;
+                            xG += 16;
+                            xB += 16;
+                        }
+                        else
+                        {
+                            if(xR < roi.xywhROI.roiWidth)
+                            {
+                                for( ; xR < roi.xywhROI.roiWidth; xR++)
+                                {
+                                    *dstRowPtrTempR = *srcRowPtrTempR;
+                                    dstRowPtrTempR += 3;
+                                    srcRowPtrTempR += 3;
+                                }
+                            }
+                            if(xG < roi.xywhROI.roiWidth)
+                            {
+                                for( ; xG < roi.xywhROI.roiWidth; xG++)
+                                {
+                                   *dstRowPtrTempG = *srcRowPtrTempG;
+                                    srcRowPtrTempG += 3;
+                                    dstRowPtrTempG += 3;
+                                }
+                            }
+                            if(xB < roi.xywhROI.roiWidth)
+                            {
+                                for( ; xB < roi.xywhROI.roiWidth; xB++)
+                                {
+                                    *dstRowPtrTempB = *srcRowPtrTempB;
+                                    dstRowPtrTempB += 3;
+                                    srcRowPtrTempB += 3;
+                                }
+                            }
+                            break;
+                        }
+                        srcRowPtrTempR += 48;
+                        srcRowPtrTempG += 48;
+                        srcRowPtrTempB += 48;
+                        dstRowPtrTempR += 48;
+                        dstRowPtrTempG += 48;
+                        dstRowPtrTempB += 48;
+                    }
+                }
+                else
+                {
+                    Rpp8u *srcRowPtrTempR, *srcRowPtrTempG, *srcRowPtrTempB, *dstRowPtrTempR, *dstRowPtrTempG, *dstRowPtrTempB;
+                    srcRowPtrTempR = srcRowPtrR + xR * 3;
+                    srcRowPtrTempG = srcRowPtrG + xG * 3 + 1;
+                    srcRowPtrTempB = srcRowPtrB + xB * 3 + 2;
+                    dstRowPtrTempR = dstRowPtr;
+                    dstRowPtrTempG = dstRowPtr + 1;
+                    dstRowPtrTempB = dstRowPtr + 2;
+                    if(yR < roi.xywhROI.roiHeight && xR < roi.xywhROI.roiWidth)
+                    {
+                        for(; xR < roi.xywhROI.roiWidth; xR++)
+                        {
+                            *dstRowPtrTempR = *srcRowPtrTempR;
+                            srcRowPtrTempR += 3;
+                            dstRowPtrTempR += 3;
+                        }
+                    }
+                    if(yG < roi.xywhROI.roiHeight && xG < roi.xywhROI.roiWidth)
+                    {
+                        for(; xG < roi.xywhROI.roiWidth; xG++)
+                        {
+                            *dstRowPtrTempG = *srcRowPtrTempG;
+                            srcRowPtrTempG += 3;
+                            dstRowPtrTempG += 3;
+                        }
+                    }
+                    if(yB < roi.xywhROI.roiHeight && xB < roi.xywhROI.roiWidth)
+                    {
+                        for(; xB < roi.xywhROI.roiWidth; xB++)
+                        {
+                            *dstRowPtrTempB = *srcRowPtrTempB;
+                            dstRowPtrTempB += 3;
+                            srcRowPtrTempB += 3;
+                        }
+                    }
+                }
+                if(yR < roi.xywhROI.roiHeight && xR >= roi.xywhROI.roiWidth)
+                {
+                    xR = xR - xOffsetRchn;
+                    Rpp8u *srcRowPtrTempR, *dstRowPtrTempR;
+                    srcRowPtrTempR = srcPtrImage + i * srcDescPtr->strides.hStride + xR * 3;
+                    dstRowPtrTempR = dstRowPtr + xR * 3;
+                    for(; xR < roi.xywhROI.roiWidth; xR++)
+                    {
+                        *dstRowPtrTempR = *srcRowPtrTempR;
+                        srcRowPtrTempR += 3;
+                        dstRowPtrTempR += 3;
+                    }
+                }
+                if(yG < roi.xywhROI.roiHeight && xG >= roi.xywhROI.roiWidth)
+                {
+                    xG = xG - xOffsetGchn;
+                    Rpp8u *srcRowPtrTempG, *dstRowPtrTempG;
+                    srcRowPtrTempG = srcPtrImage + i * srcDescPtr->strides.hStride + xG * 3 + 1;
+                    dstRowPtrTempG = dstRowPtr + xG * 3 + 1;
+                    for(; xG < roi.xywhROI.roiWidth; xG++)
+                    {
+                        *dstRowPtrTempG = *srcRowPtrTempG;
+                        srcRowPtrTempG += 3;
+                        dstRowPtrTempG += 3;
+                    }
+                }
+                if(yB < roi.xywhROI.roiHeight && xB >= roi.xywhROI.roiWidth)
+                {
+                    xB = xB - xOffsetBchn;
+                    Rpp8u *srcRowPtrTempB, *dstRowPtrTempB;
+                    srcRowPtrTempB = srcPtrImage + i * srcDescPtr->strides.hStride + xB * 3 + 2;
+                    dstRowPtrTempB = dstRowPtr + xB * 3 + 2;
+                    for(; xB < roi.xywhROI.roiWidth; xB++)
+                    {
+                        *dstRowPtrTempB = *srcRowPtrTempB;
+                        srcRowPtrTempB += 3;
+                        dstRowPtrTempB += 3;
+                    }
+                }
+                if(yR >= roi.xywhROI.roiHeight)
+                {
+                    int idx = yR - yOffsetRchn;
+                    Rpp8u *srcRowPtrTempR, *dstRowPtrTempR;
+                    srcRowPtrTempR = srcPtrImage + idx * srcDescPtr->strides.hStride;
+                    dstRowPtrTempR = dstPtrImage + idx * dstDescPtr->strides.hStride;
+                    for(int x = 0; x < roi.xywhROI.roiWidth; x++)
+                    {
+                        *dstRowPtrTempR = *srcRowPtrTempR;
+                        srcRowPtrTempR += 3;
+                        dstRowPtrTempR += 3;
+                    }
+                }
+                if(yG >= roi.xywhROI.roiHeight)
+                {
+                    int idx = yG - yOffsetGchn;
+                    Rpp8u *srcRowPtrTempG, *dstRowPtrTempG;
+                    srcRowPtrTempG = srcPtrImage + idx * srcDescPtr->strides.hStride + 1;
+                    dstRowPtrTempG = dstPtrImage + idx * dstDescPtr->strides.hStride + 1;
+                    for(int x = 0; x < roi.xywhROI.roiWidth; x++)
+                    {
+                        *dstRowPtrTempG = *srcRowPtrTempG;
+                        srcRowPtrTempG += 3;
+                        dstRowPtrTempG += 3;
+                    }
+                }
+                if(yB >= roi.xywhROI.roiHeight)
+                {
+                    int idx = yB - yOffsetBchn;
+                    Rpp8u *srcRowPtrTempB, *dstRowPtrTempB;
+                    srcRowPtrTempB = srcPtrImage + idx * srcDescPtr->strides.hStride + 2;
+                    dstRowPtrTempB = dstPtrImage + idx * dstDescPtr->strides.hStride + 2;
+                    for(int x = 0; x < roi.xywhROI.roiWidth; x++)
+                    {
+                        *dstRowPtrTempB = *srcRowPtrTempB;
+                        srcRowPtrTempB += 3;
+                        dstRowPtrTempB += 3;
+                    }
+                }
+                yR++;
+                yG++;
+                yB++;
+            }
+        }
+    }
+    return RPP_SUCCESS;
+}
+
+RppStatus glitch_f32_f32_host_tensor(Rpp32f *srcPtr,
+                                   RpptDescPtr srcDescPtr,
+                                   Rpp32f *dstPtr,
+                                   RpptDescPtr dstDescPtr,
+                                   RpptChannelOffsets *rgbOffsets,
+                                   RpptROIPtr roiTensorPtrSrc,
+                                   RpptRoiType roiType,
+                                   RppLayoutParams layoutParams)
+{
+    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    omp_set_dynamic(0);
+#pragma omp parallel for num_threads(dstDescPtr->n)
+    for (int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
+    {
+        RpptROI roi;
+        RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
+        compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
+
+        Rpp32u xOffsetRchn = rgbOffsets[batchCount].r.x;
+        Rpp32u yOffsetRchn = rgbOffsets[batchCount].r.y;
+        Rpp32u xOffsetGchn = rgbOffsets[batchCount].g.x;
+        Rpp32u yOffsetGchn = rgbOffsets[batchCount].g.y;
+        Rpp32u xOffsetBchn = rgbOffsets[batchCount].b.x;
+        Rpp32u yOffsetBchn = rgbOffsets[batchCount].b.y;
+
+        Rpp32u elementsInRowMax = srcDescPtr->w;
+
+        Rpp32u xOffsets[3] = {xOffsetRchn, xOffsetGchn, xOffsetBchn};
+        Rpp32u yOffsets[3] = {yOffsetRchn, yOffsetGchn, yOffsetBchn};
+        Rpp32u xOffsetsLoc[3] = {xOffsetRchn, xOffsetGchn, xOffsetBchn};
+        Rpp32u yOffsetsLoc[3] = {yOffsetRchn * elementsInRowMax, yOffsetGchn * elementsInRowMax, yOffsetBchn * elementsInRowMax};
+
+        Rpp32f *srcPtrImage, *dstPtrImage;
+        srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
+        dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
+
+        Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
+        Rpp32f *srcPtrChannel, *dstPtrChannel;
+        srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
+        dstPtrChannel = dstPtrImage;
+
+        if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            int yR = yOffsetRchn;
+            int yG = yOffsetGchn;
+            int yB = yOffsetBchn;
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            {
+                int xR = xOffsetRchn;
+                int xG = xOffsetGchn;
+                int xB = xOffsetBchn;
+                Rpp32f *srcRowPtrR, *srcRowPtrG, *srcRowPtrB, *dstRowPtr;
+                srcRowPtrR = srcPtrImage + (yR * srcDescPtr->strides.hStride);
+                srcRowPtrG = srcPtrImage + (yG * srcDescPtr->strides.hStride);
+                srcRowPtrB = srcPtrImage + (yB * srcDescPtr->strides.hStride);
+                dstRowPtr = dstPtrImage + i * dstDescPtr->strides.hStride;
+                if((yR >= 0) && (yR < roi.xywhROI.roiHeight) && (yG >= 0) && (yG < roi.xywhROI.roiHeight) && (yB >= 0) && (yB < roi.xywhROI.roiHeight))
+                {
+                    Rpp32f *srcRowPtrTempR, *srcRowPtrTempG, *srcRowPtrTempB, *dstRowPtrTempR, *dstRowPtrTempG, *dstRowPtrTempB;
+                    srcRowPtrTempR = srcRowPtrR + xR * 3;
+                    srcRowPtrTempG = srcRowPtrG + xG * 3 + 1;
+                    srcRowPtrTempB = srcRowPtrB + xB * 3 + 2;
+                    dstRowPtrTempR = dstRowPtr;
+                    dstRowPtrTempG = dstRowPtr + dstDescPtr->strides.cStride;
+                    dstRowPtrTempB = dstRowPtr + 2 * dstDescPtr->strides.cStride;
+                    for (int j = 0; j < roi.xywhROI.roiWidth; j += 4)
+                    {
+                        if((xR >= 0) && (xR <= roi.xywhROI.roiWidth - 4) && (xG >= 0) && (xG <= roi.xywhROI.roiWidth - 4) && (xB >= 0) && (xB < roi.xywhROI.roiWidth - 4))
+                        {
+                            __m128 p1[4], p2[4], p3[4];
+                            rpp_simd_load(rpp_load12_f32pkd3_to_f32pln3, srcRowPtrTempR, p1);    // simd loads
+                            rpp_simd_load(rpp_load12_f32pkd3_to_f32pln3, srcRowPtrTempG, p2);    // simd loads
+                            rpp_simd_load(rpp_load12_f32pkd3_to_f32pln3, srcRowPtrTempB, p3);    // simd loads
+                            p1[1] = p2[0];
+                            p1[2] = p3[0];
+                            rpp_simd_store(rpp_store12_f32pln3_to_f32pln3, dstRowPtrTempR, dstRowPtrTempG, dstRowPtrTempB, p1);    // simd stores
+                            xR += 4;
+                            xG += 4;
+                            xB += 4;
+                        }
+                        else
+                        {
+                            if(xR < roi.xywhROI.roiWidth)
+                            {
+                                for( ; xR < roi.xywhROI.roiWidth; xR++)
+                                {
+                                    *dstRowPtrTempR = *srcRowPtrTempR;
+                                    srcRowPtrTempR += 3;
+                                    dstRowPtrTempR++;
+                                }
+                            }
+                            if(xG < roi.xywhROI.roiWidth)
+                            {
+                                for( ; xG < roi.xywhROI.roiWidth; xG++)
+                                {
+                                   *dstRowPtrTempG = *srcRowPtrTempG;
+                                    srcRowPtrTempG += 3;
+                                    dstRowPtrTempG++;
+                                }
+                            }
+                            if(xB < roi.xywhROI.roiWidth)
+                            {
+                                for( ; xB < roi.xywhROI.roiWidth; xB++)
+                                {
+                                    *dstRowPtrTempB = *srcRowPtrTempB;
+                                    srcRowPtrTempB += 3;
+                                    dstRowPtrTempB++;
+                                }
+                            }
+                            break;
+                        }
+                        srcRowPtrTempR += 12;
+                        srcRowPtrTempG += 12;
+                        srcRowPtrTempB += 12;
+                        dstRowPtrTempR += 4;
+                        dstRowPtrTempG += 4;
+                        dstRowPtrTempB += 4;
+                    }
+                }
+                else
+                {
+                    Rpp32f *srcRowPtrTempR, *srcRowPtrTempG, *srcRowPtrTempB, *dstRowPtrTempR, *dstRowPtrTempG, *dstRowPtrTempB;
+                    srcRowPtrTempR = srcRowPtrR + xR * 3;
+                    srcRowPtrTempG = srcRowPtrG + xG * 3 + 1;
+                    srcRowPtrTempB = srcRowPtrB + xB * 3 + 2;
+                    dstRowPtrTempR = dstRowPtr;
+                    dstRowPtrTempG = dstRowPtr + dstDescPtr->strides.cStride;
+                    dstRowPtrTempB = dstRowPtr + 2 * dstDescPtr->strides.cStride;
+                    if(yR < roi.xywhROI.roiHeight && xR < roi.xywhROI.roiWidth)
+                    {
+                        for(; xR < roi.xywhROI.roiWidth; xR++)
+                        {
+                            *dstRowPtrTempR = *srcRowPtrTempR;
+                            srcRowPtrTempR += 3;
+                            dstRowPtrTempR++;
+                        }
+                    }
+                    if(yG < roi.xywhROI.roiHeight && xG < roi.xywhROI.roiWidth)
+                    {
+                        for(; xG < roi.xywhROI.roiWidth; xG++)
+                        {
+                            *dstRowPtrTempG = *srcRowPtrTempG;
+                            srcRowPtrTempG += 3;
+                            dstRowPtrTempG++;
+                        }
+                    }
+                    if(yB < roi.xywhROI.roiHeight && xB < roi.xywhROI.roiWidth)
+                    {
+                        for(; xB < roi.xywhROI.roiWidth; xB++)
+                        {
+                            *dstRowPtrTempB = *srcRowPtrTempB;
+                            srcRowPtrTempB += 3;
+                            dstRowPtrTempB++;
+                        }
+                    }
+                }
+                if(yR < roi.xywhROI.roiHeight && xR >= roi.xywhROI.roiWidth)
+                {
+                    xR = xR - xOffsetRchn;
+                    Rpp32f *srcRowPtrTempR, *dstRowPtrTempR;
+                    srcRowPtrTempR = srcPtrImage + i * srcDescPtr->strides.hStride + xR * 3;
+                    dstRowPtrTempR = dstRowPtr + xR;
+                    for(; xR < roi.xywhROI.roiWidth; xR++)
+                    {
+                        *dstRowPtrTempR = *srcRowPtrTempR;
+                        srcRowPtrTempR += 3;
+                        dstRowPtrTempR++;
+                    }
+                }
+                if(yG < roi.xywhROI.roiHeight && xG >= roi.xywhROI.roiWidth)
+                {
+                    xG = xG - xOffsetGchn;
+                    Rpp32f *srcRowPtrTempG, *dstRowPtrTempG;
+                    srcRowPtrTempG = srcPtrImage + i * srcDescPtr->strides.hStride + xG * 3 + 1;
+                    dstRowPtrTempG = dstRowPtr + xG + dstDescPtr->strides.cStride;
+                    for(; xG < roi.xywhROI.roiWidth; xG++)
+                    {
+                        *dstRowPtrTempG = *srcRowPtrTempG;
+                        srcRowPtrTempG += 3;
+                        dstRowPtrTempG++;
+                    }
+                }
+                if(yB < roi.xywhROI.roiHeight && xB >= roi.xywhROI.roiWidth)
+                {
+                    xB = xB - xOffsetBchn;
+                    Rpp32f *srcRowPtrTempB, *dstRowPtrTempB;
+                    srcRowPtrTempB = srcPtrImage + i * srcDescPtr->strides.hStride + xB * 3 + 2;
+                    dstRowPtrTempB = dstRowPtr + xB+ 2 * dstDescPtr->strides.cStride;
+                    for(; xB < roi.xywhROI.roiWidth; xB++)
+                    {
+                        *dstRowPtrTempB = *srcRowPtrTempB;
+                        srcRowPtrTempB += 3;
+                        dstRowPtrTempB++;
+                    }
+                }
+                if(yR >= roi.xywhROI.roiHeight)
+                {
+                    int idx = yR - yOffsetRchn;
+                    Rpp32f *srcRowPtrTempR, *dstRowPtrTempR;
+                    srcRowPtrTempR = srcPtrImage + idx * srcDescPtr->strides.hStride;
+                    dstRowPtrTempR = dstPtrImage + idx * dstDescPtr->strides.hStride;
+                    for(int x = 0; x < roi.xywhROI.roiWidth; x++)
+                    {
+                        *dstRowPtrTempR = *srcRowPtrTempR;
+                        srcRowPtrTempR += 3;
+                        dstRowPtrTempR++;
+                    }
+                }
+                if(yG >= roi.xywhROI.roiHeight)
+                {
+                    int idx = yG - yOffsetGchn;
+                    Rpp32f *srcRowPtrTempG, *dstRowPtrTempG;
+                    srcRowPtrTempG = srcPtrImage + idx * srcDescPtr->strides.hStride + 1;
+                    dstRowPtrTempG = dstPtrImage + idx * dstDescPtr->strides.hStride + dstDescPtr->strides.cStride;
+                    for(int x = 0; x < roi.xywhROI.roiWidth; x++)
+                    {
+                        *dstRowPtrTempG = *srcRowPtrTempG;
+                        srcRowPtrTempG += 3;
+                        dstRowPtrTempG++;
+                    }
+                }
+                if(yB >= roi.xywhROI.roiHeight)
+                {
+                    int idx = yB - yOffsetBchn;
+                    Rpp32f *srcRowPtrTempB, *dstRowPtrTempB;
+                    srcRowPtrTempB = srcPtrImage + idx * srcDescPtr->strides.hStride + 2;
+                    dstRowPtrTempB = dstPtrImage + idx * dstDescPtr->strides.hStride + 2 * dstDescPtr->strides.cStride;
+                    for(int x = 0; x < roi.xywhROI.roiWidth; x++)
+                    {
+                        *dstRowPtrTempB = *srcRowPtrTempB;
+                        srcRowPtrTempB += 3;
+                        dstRowPtrTempB++;
+                    }
+                }
+                yR++;
+                yG++;
+                yB++;
+            }
+        }
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            int yR = yOffsetRchn;
+            int yG = yOffsetGchn;
+            int yB = yOffsetBchn;
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            {
+                int xR = xOffsetRchn;
+                int xG = xOffsetGchn;
+                int xB = xOffsetBchn;
+                Rpp32f *srcRowPtrR, *srcRowPtrG, *srcRowPtrB, *dstRowPtr;
+                srcRowPtrR = srcPtrImage + (yR * srcDescPtr->strides.hStride);
+                srcRowPtrG = srcPtrImage + (yG * srcDescPtr->strides.hStride) + srcDescPtr->strides.cStride * 1;
+                srcRowPtrB = srcPtrImage + (yB * srcDescPtr->strides.hStride) + srcDescPtr->strides.cStride * 2;
+                dstRowPtr = dstPtrImage + i * dstDescPtr->strides.hStride;
+                if((yR >= 0) && (yR < roi.xywhROI.roiHeight) && (yG >= 0) && (yG < roi.xywhROI.roiHeight) && (yB >= 0) && (yB < roi.xywhROI.roiHeight))
+                {
+                    Rpp32f *srcRowPtrTempR, *srcRowPtrTempG, *srcRowPtrTempB, *dstRowPtrTempR, *dstRowPtrTempG, *dstRowPtrTempB;
+                    srcRowPtrTempR = srcRowPtrR + xR;
+                    srcRowPtrTempG = srcRowPtrG + xG;
+                    srcRowPtrTempB = srcRowPtrB + xB;
+                    dstRowPtrTempR = dstRowPtr;
+                    dstRowPtrTempG = dstRowPtr + 1;
+                    dstRowPtrTempB = dstRowPtr + 2;
+                    for (int j = 0; j < roi.xywhROI.roiWidth; j += 4)
+                    {
+                        if((xR >= 0) && (xR <= roi.xywhROI.roiWidth - 4) && (xG >= 0) && (xG <= roi.xywhROI.roiWidth - 4) && (xB >= 0) && (xB < roi.xywhROI.roiWidth - 4))
+                        {
+                            __m128 p[4];
+                            rpp_simd_load(rpp_load12_f32pln3_to_f32pln3, srcRowPtrTempR, srcRowPtrTempG, srcRowPtrTempB, p);    // simd loads
+                            rpp_simd_store(rpp_store12_f32pln3_to_f32pkd3, dstRowPtrTempR, p);    // simd stores
+                            xR += 4;
+                            xG += 4;
+                            xB += 4;
+                        }
+                        else
+                        {
+                            if(xR < roi.xywhROI.roiWidth)
+                            {
+                                for( ; xR < roi.xywhROI.roiWidth; xR++)
+                                {
+                                    *dstRowPtrTempR = *srcRowPtrTempR;
+                                    srcRowPtrTempR++;
+                                    dstRowPtrTempR += 3;
+                                }
+                            }
+                            if(xG < roi.xywhROI.roiWidth)
+                            {
+                                for( ; xG < roi.xywhROI.roiWidth; xG++)
+                                {
+                                   *dstRowPtrTempG = *srcRowPtrTempG;
+                                    srcRowPtrTempG++;
+                                    dstRowPtrTempG += 3;
+                                }
+                            }
+                            if(xB < roi.xywhROI.roiWidth)
+                            {
+                                for( ; xB < roi.xywhROI.roiWidth; xB++)
+                                {
+                                    *dstRowPtrTempB = *srcRowPtrTempB;
+                                    srcRowPtrTempB++;
+                                    dstRowPtrTempB += 3;
+                                }
+                            }
+                            break;
+                        }
+                        srcRowPtrTempR += 4;
+                        srcRowPtrTempG += 4;
+                        srcRowPtrTempB += 4;
+                        dstRowPtrTempR += 12;
+                        dstRowPtrTempG += 12;
+                        dstRowPtrTempB += 12;
+                    }
+                }
+                else
+                {
+                    Rpp32f *srcRowPtrTempR, *srcRowPtrTempG, *srcRowPtrTempB, *dstRowPtrTempR, *dstRowPtrTempG, *dstRowPtrTempB;
+                    srcRowPtrTempR = srcRowPtrR + xR;
+                    srcRowPtrTempG = srcRowPtrG + xG;
+                    srcRowPtrTempB = srcRowPtrB + xB;
+                    dstRowPtrTempR = dstRowPtr;
+                    dstRowPtrTempG = dstRowPtr + 1;
+                    dstRowPtrTempB = dstRowPtr + 2;
+                    if(yR < roi.xywhROI.roiHeight && xR < roi.xywhROI.roiWidth)
+                    {
+                        for(; xR < roi.xywhROI.roiWidth; xR++)
+                        {
+                            *dstRowPtrTempR = *srcRowPtrTempR;
+                            srcRowPtrTempR++;
+                            dstRowPtrTempR += 3;
+                        }
+                    }
+                    if(yG < roi.xywhROI.roiHeight && xG < roi.xywhROI.roiWidth)
+                    {
+                        for(; xG < roi.xywhROI.roiWidth; xG++)
+                        {
+                            *dstRowPtrTempG = *srcRowPtrTempG;
+                            srcRowPtrTempG++;
+                            dstRowPtrTempG += 3;
+                        }
+                    }
+                    if(yB < roi.xywhROI.roiHeight && xB < roi.xywhROI.roiWidth)
+                    {
+                        for(; xB < roi.xywhROI.roiWidth; xB++)
+                        {
+                            *dstRowPtrTempB = *srcRowPtrTempB;
+                            srcRowPtrTempB++;
+                            dstRowPtrTempB += 3;
+                        }
+                    }
+                }
+                if(yR < roi.xywhROI.roiHeight && xR >= roi.xywhROI.roiWidth)
+                {
+                    xR = xR - xOffsetRchn;
+                    Rpp32f *srcRowPtrTempR, *dstRowPtrTempR;
+                    srcRowPtrTempR = srcPtrImage + i * srcDescPtr->strides.hStride + xR;
+                    dstRowPtrTempR = dstRowPtr + xR * 3;
+                    for(; xR < roi.xywhROI.roiWidth; xR++)
+                    {
+                        *dstRowPtrTempR = *srcRowPtrTempR;
+                        srcRowPtrTempR++;
+                        dstRowPtrTempR += 3;
+                    }
+                }
+                if(yG < roi.xywhROI.roiHeight && xG >= roi.xywhROI.roiWidth)
+                {
+                    xG = xG - xOffsetGchn;
+                    Rpp32f *srcRowPtrTempG, *dstRowPtrTempG;
+                    srcRowPtrTempG = srcPtrImage + i * srcDescPtr->strides.hStride + srcDescPtr->strides.cStride + xG ;
+                    dstRowPtrTempG = dstRowPtr + xG * 3 + 1;
+                    for(; xG < roi.xywhROI.roiWidth; xG++)
+                    {
+                        *dstRowPtrTempG = *srcRowPtrTempG;
+                        srcRowPtrTempG++;
+                        dstRowPtrTempG += 3;
+                    }
+                }
+                if(yB < roi.xywhROI.roiHeight && xB >= roi.xywhROI.roiWidth)
+                {
+                    xB = xB - xOffsetBchn;
+                    Rpp32f *srcRowPtrTempB, *dstRowPtrTempB;
+                    srcRowPtrTempB = srcPtrImage + i * srcDescPtr->strides.hStride + xB + 2 * srcDescPtr->strides.cStride;
+                    dstRowPtrTempB = dstRowPtr + xB * 3 + 2;
+                    for(; xB < roi.xywhROI.roiWidth; xB++)
+                    {
+                        *dstRowPtrTempB = *srcRowPtrTempB;
+                        srcRowPtrTempB++;
+                        dstRowPtrTempB += 3;
+                    }
+                }
+                if(yR >= roi.xywhROI.roiHeight)
+                {
+                    int idx = yR - yOffsetRchn;
+                    Rpp32f *srcRowPtrTempR, *dstRowPtrTempR;
+                    srcRowPtrTempR = srcPtrImage + idx * srcDescPtr->strides.hStride;
+                    dstRowPtrTempR = dstPtrImage + idx * dstDescPtr->strides.hStride;
+                    for(int x = 0; x < roi.xywhROI.roiWidth; x++)
+                    {
+                        *dstRowPtrTempR = *srcRowPtrTempR;
+                        srcRowPtrTempR++;
+                        dstRowPtrTempR += 3;
+                    }
+                }
+                if(yG >= roi.xywhROI.roiHeight)
+                {
+                    int idx = yG - yOffsetGchn;
+                    Rpp32f *srcRowPtrTempG, *dstRowPtrTempG;
+                    srcRowPtrTempG = srcPtrImage + idx * srcDescPtr->strides.hStride + srcDescPtr->strides.cStride;
+                    dstRowPtrTempG = dstPtrImage + idx * dstDescPtr->strides.hStride + 1;
+                    for(int x = 0; x < roi.xywhROI.roiWidth; x++)
+                    {
+                        *dstRowPtrTempG = *srcRowPtrTempG;
+                        srcRowPtrTempG++;
+                        dstRowPtrTempG += 3;
+                    }
+                }
+                if(yB >= roi.xywhROI.roiHeight)
+                {
+                    int idx = yB - yOffsetBchn;
+                    Rpp32f *srcRowPtrTempB, *dstRowPtrTempB;
+                    srcRowPtrTempB = srcPtrImage + idx * srcDescPtr->strides.hStride + 2 * srcDescPtr->strides.cStride;
+                    dstRowPtrTempB = dstPtrImage + idx * dstDescPtr->strides.hStride + 2;
+                    for(int x = 0; x < roi.xywhROI.roiWidth; x++)
+                    {
+                        *dstRowPtrTempB = *srcRowPtrTempB;
+                        srcRowPtrTempB++;
+                        dstRowPtrTempB += 3;
+                    }
+                }
+                yR++;
+                yG++;
+                yB++;
+            }
+        }
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW ))
+        {
+            Rpp32u vectorIncrement = 8;
             for(int c = 0; c < srcDescPtr->c; c++)
             {
-                Rpp8u *srcPtrChannel, *dstPtrChannel;
-                Rpp8u *srcPtrChannelRow, *dstPtrChannelRow, *srcPtrChannelRowOffset;
+                Rpp32f *srcPtrChannel, *dstPtrChannel;
+                Rpp32f *srcPtrChannelRow, *dstPtrChannelRow, *srcPtrChannelRowOffset;
                 srcPtrChannel = srcPtrImage + (c * srcDescPtr->strides.cStride);
                 dstPtrChannel = dstPtrImage + (c * dstDescPtr->strides.cStride);
                 srcPtrChannelRow = srcPtrChannel;
@@ -471,42 +1178,27 @@ RppStatus glitch_u8_u8_host_tensor(Rpp8u *srcPtr,
                 int currentRow = yOffsets[c];
                 for(; currentRow < roi.xywhROI.roiHeight; currentRow++)
                 {
-                    Rpp8u *srcRowTempOffset, *dstRowTemp, *srcRowTemp;
-                    srcRowTempOffset = srcPtrChannelRowOffset + xOffsets[c] * 3;
-                    srcRowTemp = srcPtrChannelRow + (roi.xywhROI.roiWidth - xOffsets[c]) * 3;
+                    Rpp32f *srcRowTempOffset, *dstRowTemp, *srcRowTemp;
+                    srcRowTempOffset = srcPtrChannelRowOffset + xOffsets[c];
+                    srcRowTemp = srcPtrChannelRow + (roi.xywhROI.roiWidth - xOffsets[c]);
                     dstRowTemp = dstPtrChannelRow;
-                    int currentCol = xOffsets[c] * 3;
-                    int i = 0;
-                    Rpp32u alignedLength = (roi.xywhROI.roiWidth * 3 - currentCol) & ~17;
-                    if (((currentRow >= 0) && (currentRow < roi.xywhROI.roiHeight)) && ((currentCol >= 0) && (currentCol < roi.xywhROI.roiWidth * 3 )))
+                    int currentCol = xOffsets[c];
+                    Rpp32u alignedLength = (roi.xywhROI.roiWidth - currentCol) & ~7;
+                    if (((currentRow >= 0) && (currentRow < roi.xywhROI.roiHeight)) && ((currentCol >= 0) && (currentCol < roi.xywhROI.roiWidth)))
                     {
-                        for(; currentCol < alignedLength; currentCol += vectorIncrement)
+                        for( ; currentCol < alignedLength; currentCol += vectorIncrement)
                         {
-                            // __m128i p[2];
-                            // p[0] = _mm_loadu_epi8(srcRowTempOffset);
-                            // p[1] = _mm_loadu_epi8(dstRowTemp);
-                            // p[0] = _mm_or_si128(_mm_shuffle_epi8(p[0], maskR) ,_mm_shuffle_epi8(p[1],maskGB));
-                            // _mm_storeu_si128((__m128i *)dstRowTemp, p[0]);
-                            // srcRowTempOffset += vectorIncrement;
-                            // dstRowTemp += vectorIncrement;
-                            __m256i rgb1 = _mm256_loadu_si256((__m256i*)srcRowTempOffset);
-                            __m256i rgb2 = _mm256_loadu_si256((__m256i*)(srcRowTempOffset + 32));
-
-                            // Extract the red components
-                            __m256i red1 = _mm256_permute4x64_epi64(rgb1, 0xD8);  // 0xD8 = 11 01 10 00
-                            __m256i red2 = _mm256_permute4x64_epi64(rgb2, 0xD8);
-
-                            // Store the results in the destination buffer
-                            _mm256_storeu_si256((__m256i*)dstRowTemp, red1);
-                            _mm256_storeu_si256((__m256i*)(dstRowTemp + 32), red2);
-                            exit(0);
+                            __m256 p;
+                            p = _mm256_loadu_ps(srcRowTempOffset);
+                            _mm256_storeu_ps(dstRowTemp, p);
+                            srcRowTempOffset += vectorIncrement;
+                            dstRowTemp += vectorIncrement;
                         }
-                        for(; currentCol < roi.xywhROI.roiWidth * 3; currentCol += 3, i += 3) 
-                            *(dstRowTemp + i) = *(srcRowTempOffset + i);
+                        for(; currentCol < roi.xywhROI.roiWidth; currentCol++)
+                            *dstRowTemp++ = *srcRowTempOffset++;
                     }
-                    dstRowTemp += i;
-                    for(i = 0; i < xOffsets[c] * 3; i += 3)
-                        *(dstRowTemp + i) = *(srcRowTemp + i);
+                    for(int i = 0; i < xOffsets[c]; i++)
+                        *dstRowTemp++ = *srcRowTemp++;
                     srcPtrChannelRowOffset += srcDescPtr->strides.hStride;
                     dstPtrChannelRow += dstDescPtr->strides.hStride;
                     srcPtrChannelRow += srcDescPtr->strides.hStride;
@@ -514,26 +1206,973 @@ RppStatus glitch_u8_u8_host_tensor(Rpp8u *srcPtr,
                 srcPtrChannelRow = srcPtrChannel + ((roi.xywhROI.roiHeight - yOffsets[c]) * srcDescPtr->strides.hStride);
                 for(int j = 0; j < yOffsets[c]; j++)
                 {
-                    Rpp8u *dstRowTemp, *srcRowTemp;
+                    Rpp32f *dstRowTemp, *srcRowTemp;
                     srcRowTemp = srcPtrChannelRow;
                     dstRowTemp = dstPtrChannelRow;
-                    Rpp32u alignedLength = roi.xywhROI.roiWidth * 3 & ~17;
-                    int currentCol = 0, i = 0;
+                    Rpp32f alignedLength = roi.xywhROI.roiWidth & ~7;
+                    int currentCol = 0;
                     for( ; currentCol < alignedLength; currentCol += vectorIncrement)
                     {
-                        __m128i p[2];
-                        p[0] = _mm_loadu_epi8(srcRowTemp);
-                        p[1] = _mm_loadu_epi8(dstRowTemp);
-                        p[0] = _mm_or_si128(_mm_shuffle_epi8(p[0], maskR), _mm_shuffle_epi8(p[1],maskGB));
-                        _mm_storeu_si128((__m128i *)dstRowTemp, p[0]);
+                        __m256 p;
+                        p = _mm256_loadu_ps(srcRowTemp);
+                        _mm256_storeu_ps(dstRowTemp, p);
                         srcRowTemp += vectorIncrement;
                         dstRowTemp += vectorIncrement;
                     }
-                    for(; currentCol < roi.xywhROI.roiWidth * 3; currentCol += 3, i += 3)
-                        *(dstRowTemp + i) = *(srcRowTemp + i);
+                    for(; currentCol < roi.xywhROI.roiWidth; currentCol++)
+                        *dstRowTemp++ = *srcRowTemp++;
                     srcPtrChannelRow += srcDescPtr->strides.hStride;
                     dstPtrChannelRow += dstDescPtr->strides.hStride;
                 }
+            }
+        }
+        else if((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            int yR = yOffsetRchn;
+            int yG = yOffsetGchn;
+            int yB = yOffsetBchn;
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            {
+                int xR = xOffsetRchn;
+                int xG = xOffsetGchn;
+                int xB = xOffsetBchn;
+                Rpp32f *srcRowPtrR, *srcRowPtrG, *srcRowPtrB, *dstRowPtr;
+                srcRowPtrR = srcPtrImage + (yR * srcDescPtr->strides.hStride);
+                srcRowPtrG = srcPtrImage + (yG * srcDescPtr->strides.hStride);
+                srcRowPtrB = srcPtrImage + (yB * srcDescPtr->strides.hStride);
+                dstRowPtr = dstPtrImage + i * dstDescPtr->strides.hStride;
+                if((yR >= 0) && (yR < roi.xywhROI.roiHeight) && (yG >= 0) && (yG < roi.xywhROI.roiHeight) && (yB >= 0) && (yB < roi.xywhROI.roiHeight))
+                {
+                    Rpp32f *srcRowPtrTempR, *srcRowPtrTempG, *srcRowPtrTempB, *dstRowPtrTempR, *dstRowPtrTempG, *dstRowPtrTempB;
+                    srcRowPtrTempR = srcRowPtrR + xR * 3;
+                    srcRowPtrTempG = srcRowPtrG + xG * 3 + 1;
+                    srcRowPtrTempB = srcRowPtrB + xB * 3 + 2;
+                    dstRowPtrTempR = dstRowPtr;
+                    dstRowPtrTempG = dstRowPtr + 1;
+                    dstRowPtrTempB = dstRowPtr + 2;
+                    for (int j = 0; j < roi.xywhROI.roiWidth; j += 4)
+                    {
+                        if((xR >= 0) && (xR <= roi.xywhROI.roiWidth - 4) && (xG >= 0) && (xG <= roi.xywhROI.roiWidth - 4) && (xB >= 0) && (xB < roi.xywhROI.roiWidth - 4))
+                        {
+                            __m128 p1[4], p2[4], p3[4];
+                            rpp_simd_load(rpp_load12_f32pkd3_to_f32pln3, srcRowPtrTempR, p1);    // simd loads
+                            rpp_simd_load(rpp_load12_f32pkd3_to_f32pln3, srcRowPtrTempG, p2);    // simd loads
+                            rpp_simd_load(rpp_load12_f32pkd3_to_f32pln3, srcRowPtrTempB, p3);    // simd loads
+                            p1[1] = p2[0];
+                            p1[2] = p3[0];
+                            rpp_simd_store(rpp_store12_f32pln3_to_f32pkd3, dstRowPtrTempR, p1);    // simd stores
+                            xR += 4;
+                            xG += 4;
+                            xB += 4;
+                        }
+                        else
+                        {
+                            if(xR < roi.xywhROI.roiWidth)
+                            {
+                                for( ; xR < roi.xywhROI.roiWidth; xR++)
+                                {
+                                    *dstRowPtrTempR = *srcRowPtrTempR;
+                                    dstRowPtrTempR += 3;
+                                    srcRowPtrTempR += 3;
+                                }
+                            }
+                            if(xG < roi.xywhROI.roiWidth)
+                            {
+                                for( ; xG < roi.xywhROI.roiWidth; xG++)
+                                {
+                                   *dstRowPtrTempG = *srcRowPtrTempG;
+                                    srcRowPtrTempG += 3;
+                                    dstRowPtrTempG += 3;
+                                }
+                            }
+                            if(xB < roi.xywhROI.roiWidth)
+                            {
+                                for( ; xB < roi.xywhROI.roiWidth; xB++)
+                                {
+                                    *dstRowPtrTempB = *srcRowPtrTempB;
+                                    dstRowPtrTempB += 3;
+                                    srcRowPtrTempB += 3;
+                                }
+                            }
+                            break;
+                        }
+                        srcRowPtrTempR += 12;
+                        srcRowPtrTempG += 12;
+                        srcRowPtrTempB += 12;
+                        dstRowPtrTempR += 12;
+                        dstRowPtrTempG += 12;
+                        dstRowPtrTempB += 12;
+                    }
+                }
+                else
+                {
+                    Rpp32f *srcRowPtrTempR, *srcRowPtrTempG, *srcRowPtrTempB, *dstRowPtrTempR, *dstRowPtrTempG, *dstRowPtrTempB;
+                    srcRowPtrTempR = srcRowPtrR + xR * 3;
+                    srcRowPtrTempG = srcRowPtrG + xG * 3 + 1;
+                    srcRowPtrTempB = srcRowPtrB + xB * 3 + 2;
+                    dstRowPtrTempR = dstRowPtr;
+                    dstRowPtrTempG = dstRowPtr + 1;
+                    dstRowPtrTempB = dstRowPtr + 2;
+                    if(yR < roi.xywhROI.roiHeight && xR < roi.xywhROI.roiWidth)
+                    {
+                        for(; xR < roi.xywhROI.roiWidth; xR++)
+                        {
+                            *dstRowPtrTempR = *srcRowPtrTempR;
+                            srcRowPtrTempR += 3;
+                            dstRowPtrTempR += 3;
+                        }
+                    }
+                    if(yG < roi.xywhROI.roiHeight && xG < roi.xywhROI.roiWidth)
+                    {
+                        for(; xG < roi.xywhROI.roiWidth; xG++)
+                        {
+                            *dstRowPtrTempG = *srcRowPtrTempG;
+                            srcRowPtrTempG += 3;
+                            dstRowPtrTempG += 3;
+                        }
+                    }
+                    if(yB < roi.xywhROI.roiHeight && xB < roi.xywhROI.roiWidth)
+                    {
+                        for(; xB < roi.xywhROI.roiWidth; xB++)
+                        {
+                            *dstRowPtrTempB = *srcRowPtrTempB;
+                            dstRowPtrTempB += 3;
+                            srcRowPtrTempB += 3;
+                        }
+                    }
+                }
+                if(yR < roi.xywhROI.roiHeight && xR >= roi.xywhROI.roiWidth)
+                {
+                    xR = xR - xOffsetRchn;
+                    Rpp32f *srcRowPtrTempR, *dstRowPtrTempR;
+                    srcRowPtrTempR = srcPtrImage + i * srcDescPtr->strides.hStride + xR * 3;
+                    dstRowPtrTempR = dstRowPtr + xR * 3;
+                    for(; xR < roi.xywhROI.roiWidth; xR++)
+                    {
+                        *dstRowPtrTempR = *srcRowPtrTempR;
+                        srcRowPtrTempR += 3;
+                        dstRowPtrTempR += 3;
+                    }
+                }
+                if(yG < roi.xywhROI.roiHeight && xG >= roi.xywhROI.roiWidth)
+                {
+                    xG = xG - xOffsetGchn;
+                    Rpp32f *srcRowPtrTempG, *dstRowPtrTempG;
+                    srcRowPtrTempG = srcPtrImage + i * srcDescPtr->strides.hStride + xG * 3 + 1;
+                    dstRowPtrTempG = dstRowPtr + xG * 3 + 1;
+                    for(; xG < roi.xywhROI.roiWidth; xG++)
+                    {
+                        *dstRowPtrTempG = *srcRowPtrTempG;
+                        srcRowPtrTempG += 3;
+                        dstRowPtrTempG += 3;
+                    }
+                }
+                if(yB < roi.xywhROI.roiHeight && xB >= roi.xywhROI.roiWidth)
+                {
+                    xB = xB - xOffsetBchn;
+                    Rpp32f *srcRowPtrTempB, *dstRowPtrTempB;
+                    srcRowPtrTempB = srcPtrImage + i * srcDescPtr->strides.hStride + xB * 3 + 2;
+                    dstRowPtrTempB = dstRowPtr + xB * 3 + 2;
+                    for(; xB < roi.xywhROI.roiWidth; xB++)
+                    {
+                        *dstRowPtrTempB = *srcRowPtrTempB;
+                        srcRowPtrTempB += 3;
+                        dstRowPtrTempB += 3;
+                    }
+                }
+                if(yR >= roi.xywhROI.roiHeight)
+                {
+                    int idx = yR - yOffsetRchn;
+                    Rpp32f *srcRowPtrTempR, *dstRowPtrTempR;
+                    srcRowPtrTempR = srcPtrImage + idx * srcDescPtr->strides.hStride;
+                    dstRowPtrTempR = dstPtrImage + idx * dstDescPtr->strides.hStride;
+                    for(int x = 0; x < roi.xywhROI.roiWidth; x++)
+                    {
+                        *dstRowPtrTempR = *srcRowPtrTempR;
+                        srcRowPtrTempR += 3;
+                        dstRowPtrTempR += 3;
+                    }
+                }
+                if(yG >= roi.xywhROI.roiHeight)
+                {
+                    int idx = yG - yOffsetGchn;
+                    Rpp32f *srcRowPtrTempG, *dstRowPtrTempG;
+                    srcRowPtrTempG = srcPtrImage + idx * srcDescPtr->strides.hStride + 1;
+                    dstRowPtrTempG = dstPtrImage + idx * dstDescPtr->strides.hStride + 1;
+                    for(int x = 0; x < roi.xywhROI.roiWidth; x++)
+                    {
+                        *dstRowPtrTempG = *srcRowPtrTempG;
+                        srcRowPtrTempG += 3;
+                        dstRowPtrTempG += 3;
+                    }
+                }
+                if(yB >= roi.xywhROI.roiHeight)
+                {
+                    int idx = yB - yOffsetBchn;
+                    Rpp32f *srcRowPtrTempB, *dstRowPtrTempB;
+                    srcRowPtrTempB = srcPtrImage + idx * srcDescPtr->strides.hStride + 2;
+                    dstRowPtrTempB = dstPtrImage + idx * dstDescPtr->strides.hStride + 2;
+                    for(int x = 0; x < roi.xywhROI.roiWidth; x++)
+                    {
+                        *dstRowPtrTempB = *srcRowPtrTempB;
+                        srcRowPtrTempB += 3;
+                        dstRowPtrTempB += 3;
+                    }
+                }
+                yR++;
+                yG++;
+                yB++;
+            }
+        }
+    }
+    return RPP_SUCCESS;
+}
+
+RppStatus glitch_f16_f16_host_tensor(Rpp16f *srcPtr,
+                                   RpptDescPtr srcDescPtr,
+                                   Rpp16f *dstPtr,
+                                   RpptDescPtr dstDescPtr,
+                                   RpptChannelOffsets *rgbOffsets,
+                                   RpptROIPtr roiTensorPtrSrc,
+                                   RpptRoiType roiType,
+                                   RppLayoutParams layoutParams)
+{
+    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    omp_set_dynamic(0);
+#pragma omp parallel for num_threads(dstDescPtr->n)
+    for (int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
+    {
+        RpptROI roi;
+        RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
+        compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
+
+        Rpp32u xOffsetRchn = rgbOffsets[batchCount].r.x;
+        Rpp32u yOffsetRchn = rgbOffsets[batchCount].r.y;
+        Rpp32u xOffsetGchn = rgbOffsets[batchCount].g.x;
+        Rpp32u yOffsetGchn = rgbOffsets[batchCount].g.y;
+        Rpp32u xOffsetBchn = rgbOffsets[batchCount].b.x;
+        Rpp32u yOffsetBchn = rgbOffsets[batchCount].b.y;
+
+        Rpp32u elementsInRowMax = srcDescPtr->w;
+
+        Rpp32u xOffsets[3] = {xOffsetRchn, xOffsetGchn, xOffsetBchn};
+        Rpp32u yOffsets[3] = {yOffsetRchn, yOffsetGchn, yOffsetBchn};
+        Rpp32u xOffsetsLoc[3] = {xOffsetRchn, xOffsetGchn, xOffsetBchn};
+        Rpp32u yOffsetsLoc[3] = {yOffsetRchn * elementsInRowMax, yOffsetGchn * elementsInRowMax, yOffsetBchn * elementsInRowMax};
+
+        Rpp16f *srcPtrImage, *dstPtrImage;
+        srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
+        dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
+
+        Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
+        Rpp16f *srcPtrChannel, *dstPtrChannel;
+        srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
+        dstPtrChannel = dstPtrImage;
+
+        if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            int yR = yOffsetRchn;
+            int yG = yOffsetGchn;
+            int yB = yOffsetBchn;
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            {
+                int xR = xOffsetRchn;
+                int xG = xOffsetGchn;
+                int xB = xOffsetBchn;
+                Rpp16f *srcRowPtrR, *srcRowPtrG, *srcRowPtrB, *dstRowPtr;
+                srcRowPtrR = srcPtrImage + (yR * srcDescPtr->strides.hStride);
+                srcRowPtrG = srcPtrImage + (yG * srcDescPtr->strides.hStride);
+                srcRowPtrB = srcPtrImage + (yB * srcDescPtr->strides.hStride);
+                dstRowPtr = dstPtrImage + i * dstDescPtr->strides.hStride;
+                if((yR >= 0) && (yR < roi.xywhROI.roiHeight) && (yG >= 0) && (yG < roi.xywhROI.roiHeight) && (yB >= 0) && (yB < roi.xywhROI.roiHeight))
+                {
+                    Rpp16f *srcRowPtrTempR, *srcRowPtrTempG, *srcRowPtrTempB, *dstRowPtrTempR, *dstRowPtrTempG, *dstRowPtrTempB;
+                    srcRowPtrTempR = srcRowPtrR + xR * 3;
+                    srcRowPtrTempG = srcRowPtrG + xG * 3 + 1;
+                    srcRowPtrTempB = srcRowPtrB + xB * 3 + 2;
+                    dstRowPtrTempR = dstRowPtr;
+                    dstRowPtrTempG = dstRowPtr + dstDescPtr->strides.cStride;
+                    dstRowPtrTempB = dstRowPtr + 2 * dstDescPtr->strides.cStride;
+                    for (int j = 0; j < roi.xywhROI.roiWidth; j += 4)
+                    {
+                        if((xR >= 0) && (xR <= roi.xywhROI.roiWidth - 4) && (xG >= 0) && (xG <= roi.xywhROI.roiWidth - 4) && (xB >= 0) && (xB < roi.xywhROI.roiWidth - 4))
+                        {
+                            Rpp32f srcRowPtrTempR_ps[12], srcRowPtrTempG_ps[12], srcRowPtrTempB_ps[12], dstPtrTemp_ps[12];
+                            for(int cnt = 0; cnt < 12; cnt++)
+                            {
+                                *(srcRowPtrTempR_ps + cnt) = (Rpp32f) *(srcRowPtrTempR + cnt);
+                                *(srcRowPtrTempG_ps + cnt) = (Rpp32f) *(srcRowPtrTempG + cnt);
+                                *(srcRowPtrTempB_ps + cnt) = (Rpp32f) *(srcRowPtrTempB + cnt);
+                            }
+                            __m128 p1[4], p2[4], p3[4];
+                            rpp_simd_load(rpp_load12_f32pkd3_to_f32pln3, srcRowPtrTempR_ps, p1);    // simd loads
+                            rpp_simd_load(rpp_load12_f32pkd3_to_f32pln3, srcRowPtrTempG_ps, p2);    // simd loads
+                            rpp_simd_load(rpp_load12_f32pkd3_to_f32pln3, srcRowPtrTempB_ps, p3);    // simd loads
+                            p1[1] = p2[0];
+                            p1[2] = p3[0];
+                            rpp_simd_store(rpp_store12_f32pln3_to_f32pln3, dstPtrTemp_ps, dstPtrTemp_ps + 4, dstPtrTemp_ps + 8, p1);    // simd stores
+                            for(int cnt = 0; cnt < 4; cnt++)
+                            {
+                                *(dstRowPtrTempR + cnt) = (Rpp16f) *(dstPtrTemp_ps + cnt);
+                                *(dstRowPtrTempG + cnt) = (Rpp16f) *(dstPtrTemp_ps + 4 + cnt);
+                                *(dstRowPtrTempB + cnt) = (Rpp16f) *(dstPtrTemp_ps + 8 + cnt);
+                            }
+                            xR += 4;
+                            xG += 4;
+                            xB += 4;
+                        }
+                        else
+                        {
+                            if(xR < roi.xywhROI.roiWidth)
+                            {
+                                for( ; xR < roi.xywhROI.roiWidth; xR++)
+                                {
+                                    *dstRowPtrTempR = *srcRowPtrTempR;
+                                    srcRowPtrTempR += 3;
+                                    dstRowPtrTempR++;
+                                }
+                            }
+                            if(xG < roi.xywhROI.roiWidth)
+                            {
+                                for( ; xG < roi.xywhROI.roiWidth; xG++)
+                                {
+                                   *dstRowPtrTempG = *srcRowPtrTempG;
+                                    srcRowPtrTempG += 3;
+                                    dstRowPtrTempG++;
+                                }
+                            }
+                            if(xB < roi.xywhROI.roiWidth)
+                            {
+                                for( ; xB < roi.xywhROI.roiWidth; xB++)
+                                {
+                                    *dstRowPtrTempB = *srcRowPtrTempB;
+                                    srcRowPtrTempB += 3;
+                                    dstRowPtrTempB++;
+                                }
+                            }
+                            break;
+                        }
+                        srcRowPtrTempR += 12;
+                        srcRowPtrTempG += 12;
+                        srcRowPtrTempB += 12;
+                        dstRowPtrTempR += 4;
+                        dstRowPtrTempG += 4;
+                        dstRowPtrTempB += 4;
+                    }
+                }
+                else
+                {
+                    Rpp16f *srcRowPtrTempR, *srcRowPtrTempG, *srcRowPtrTempB, *dstRowPtrTempR, *dstRowPtrTempG, *dstRowPtrTempB;
+                    srcRowPtrTempR = srcRowPtrR + xR * 3;
+                    srcRowPtrTempG = srcRowPtrG + xG * 3 + 1;
+                    srcRowPtrTempB = srcRowPtrB + xB * 3 + 2;
+                    dstRowPtrTempR = dstRowPtr;
+                    dstRowPtrTempG = dstRowPtr + dstDescPtr->strides.cStride;
+                    dstRowPtrTempB = dstRowPtr + 2 * dstDescPtr->strides.cStride;
+                    if(yR < roi.xywhROI.roiHeight && xR < roi.xywhROI.roiWidth)
+                    {
+                        for(; xR < roi.xywhROI.roiWidth; xR++)
+                        {
+                            *dstRowPtrTempR = *srcRowPtrTempR;
+                            srcRowPtrTempR += 3;
+                            dstRowPtrTempR++;
+                        }
+                    }
+                    if(yG < roi.xywhROI.roiHeight && xG < roi.xywhROI.roiWidth)
+                    {
+                        for(; xG < roi.xywhROI.roiWidth; xG++)
+                        {
+                            *dstRowPtrTempG = *srcRowPtrTempG;
+                            srcRowPtrTempG += 3;
+                            dstRowPtrTempG++;
+                        }
+                    }
+                    if(yB < roi.xywhROI.roiHeight && xB < roi.xywhROI.roiWidth)
+                    {
+                        for(; xB < roi.xywhROI.roiWidth; xB++)
+                        {
+                            *dstRowPtrTempB = *srcRowPtrTempB;
+                            srcRowPtrTempB += 3;
+                            dstRowPtrTempB++;
+                        }
+                    }
+                }
+                if(yR < roi.xywhROI.roiHeight && xR >= roi.xywhROI.roiWidth)
+                {
+                    xR = xR - xOffsetRchn;
+                    Rpp16f *srcRowPtrTempR, *dstRowPtrTempR;
+                    srcRowPtrTempR = srcPtrImage + i * srcDescPtr->strides.hStride + xR * 3;
+                    dstRowPtrTempR = dstRowPtr + xR;
+                    for(; xR < roi.xywhROI.roiWidth; xR++)
+                    {
+                        *dstRowPtrTempR = *srcRowPtrTempR;
+                        srcRowPtrTempR += 3;
+                        dstRowPtrTempR++;
+                    }
+                }
+                if(yG < roi.xywhROI.roiHeight && xG >= roi.xywhROI.roiWidth)
+                {
+                    xG = xG - xOffsetGchn;
+                    Rpp16f *srcRowPtrTempG, *dstRowPtrTempG;
+                    srcRowPtrTempG = srcPtrImage + i * srcDescPtr->strides.hStride + xG * 3 + 1;
+                    dstRowPtrTempG = dstRowPtr + xG + dstDescPtr->strides.cStride;
+                    for(; xG < roi.xywhROI.roiWidth; xG++)
+                    {
+                        *dstRowPtrTempG = *srcRowPtrTempG;
+                        srcRowPtrTempG += 3;
+                        dstRowPtrTempG++;
+                    }
+                }
+                if(yB < roi.xywhROI.roiHeight && xB >= roi.xywhROI.roiWidth)
+                {
+                    xB = xB - xOffsetBchn;
+                    Rpp16f *srcRowPtrTempB, *dstRowPtrTempB;
+                    srcRowPtrTempB = srcPtrImage + i * srcDescPtr->strides.hStride + xB * 3 + 2;
+                    dstRowPtrTempB = dstRowPtr + xB+ 2 * dstDescPtr->strides.cStride;
+                    for(; xB < roi.xywhROI.roiWidth; xB++)
+                    {
+                        *dstRowPtrTempB = *srcRowPtrTempB;
+                        srcRowPtrTempB += 3;
+                        dstRowPtrTempB++;
+                    }
+                }
+                if(yR >= roi.xywhROI.roiHeight)
+                {
+                    int idx = yR - yOffsetRchn;
+                    Rpp16f *srcRowPtrTempR, *dstRowPtrTempR;
+                    srcRowPtrTempR = srcPtrImage + idx * srcDescPtr->strides.hStride;
+                    dstRowPtrTempR = dstPtrImage + idx * dstDescPtr->strides.hStride;
+                    for(int x = 0; x < roi.xywhROI.roiWidth; x++)
+                    {
+                        *dstRowPtrTempR = *srcRowPtrTempR;
+                        srcRowPtrTempR += 3;
+                        dstRowPtrTempR++;
+                    }
+                }
+                if(yG >= roi.xywhROI.roiHeight)
+                {
+                    int idx = yG - yOffsetGchn;
+                    Rpp16f *srcRowPtrTempG, *dstRowPtrTempG;
+                    srcRowPtrTempG = srcPtrImage + idx * srcDescPtr->strides.hStride + 1;
+                    dstRowPtrTempG = dstPtrImage + idx * dstDescPtr->strides.hStride + dstDescPtr->strides.cStride;
+                    for(int x = 0; x < roi.xywhROI.roiWidth; x++)
+                    {
+                        *dstRowPtrTempG = *srcRowPtrTempG;
+                        srcRowPtrTempG += 3;
+                        dstRowPtrTempG++;
+                    }
+                }
+                if(yB >= roi.xywhROI.roiHeight)
+                {
+                    int idx = yB - yOffsetBchn;
+                    Rpp16f *srcRowPtrTempB, *dstRowPtrTempB;
+                    srcRowPtrTempB = srcPtrImage + idx * srcDescPtr->strides.hStride + 2;
+                    dstRowPtrTempB = dstPtrImage + idx * dstDescPtr->strides.hStride + 2 * dstDescPtr->strides.cStride;
+                    for(int x = 0; x < roi.xywhROI.roiWidth; x++)
+                    {
+                        *dstRowPtrTempB = *srcRowPtrTempB;
+                        srcRowPtrTempB += 3;
+                        dstRowPtrTempB++;
+                    }
+                }
+                yR++;
+                yG++;
+                yB++;
+            }
+        }
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            int yR = yOffsetRchn;
+            int yG = yOffsetGchn;
+            int yB = yOffsetBchn;
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            {
+                int xR = xOffsetRchn;
+                int xG = xOffsetGchn;
+                int xB = xOffsetBchn;
+                Rpp16f *srcRowPtrR, *srcRowPtrG, *srcRowPtrB, *dstRowPtr;
+                srcRowPtrR = srcPtrImage + (yR * srcDescPtr->strides.hStride);
+                srcRowPtrG = srcPtrImage + (yG * srcDescPtr->strides.hStride) + srcDescPtr->strides.cStride * 1;
+                srcRowPtrB = srcPtrImage + (yB * srcDescPtr->strides.hStride) + srcDescPtr->strides.cStride * 2;
+                dstRowPtr = dstPtrImage + i * dstDescPtr->strides.hStride;
+                if((yR >= 0) && (yR < roi.xywhROI.roiHeight) && (yG >= 0) && (yG < roi.xywhROI.roiHeight) && (yB >= 0) && (yB < roi.xywhROI.roiHeight))
+                {
+                    Rpp16f *srcRowPtrTempR, *srcRowPtrTempG, *srcRowPtrTempB, *dstRowPtrTempR, *dstRowPtrTempG, *dstRowPtrTempB;
+                    srcRowPtrTempR = srcRowPtrR + xR;
+                    srcRowPtrTempG = srcRowPtrG + xG;
+                    srcRowPtrTempB = srcRowPtrB + xB;
+                    dstRowPtrTempR = dstRowPtr;
+                    dstRowPtrTempG = dstRowPtr + 1;
+                    dstRowPtrTempB = dstRowPtr + 2;
+                    for (int j = 0; j < roi.xywhROI.roiWidth; j += 4)
+                    {
+                        if((xR >= 0) && (xR <= roi.xywhROI.roiWidth - 4) && (xG >= 0) && (xG <= roi.xywhROI.roiWidth - 4) && (xB >= 0) && (xB < roi.xywhROI.roiWidth - 4))
+                        {
+                            Rpp32f srcRowPtrTemp_ps[12], dstPtrTemp_ps[12];
+                            for(int cnt = 0; cnt < 4; cnt++)
+                            {
+                                *(srcRowPtrTemp_ps + cnt) = (Rpp32f) *(srcRowPtrTempR + cnt);
+                                *(srcRowPtrTemp_ps + 4 + cnt) = (Rpp32f) *(srcRowPtrTempG + cnt);
+                                *(srcRowPtrTemp_ps + 8 + cnt) = (Rpp32f) *(srcRowPtrTempB + cnt);
+                            }
+                            __m128 p[4];
+                            rpp_simd_load(rpp_load12_f32pln3_to_f32pln3, srcRowPtrTemp_ps, srcRowPtrTemp_ps + 4, srcRowPtrTemp_ps + 8, p);    // simd loads
+                            rpp_simd_store(rpp_store12_f32pln3_to_f32pkd3, dstPtrTemp_ps, p);    // simd stores
+                            for(int cnt = 0; cnt < 12; cnt++)
+                            {
+                                *(dstRowPtrTempR + cnt) = (Rpp16f) *(dstPtrTemp_ps + cnt);
+                            }
+                            xR += 4;
+                            xG += 4;
+                            xB += 4;
+                        }
+                        else
+                        {
+                            if(xR < roi.xywhROI.roiWidth)
+                            {
+                                for( ; xR < roi.xywhROI.roiWidth; xR++)
+                                {
+                                    *dstRowPtrTempR = *srcRowPtrTempR;
+                                    srcRowPtrTempR++;
+                                    dstRowPtrTempR += 3;
+                                }
+                            }
+                            if(xG < roi.xywhROI.roiWidth)
+                            {
+                                for( ; xG < roi.xywhROI.roiWidth; xG++)
+                                {
+                                   *dstRowPtrTempG = *srcRowPtrTempG;
+                                    srcRowPtrTempG++;
+                                    dstRowPtrTempG += 3;
+                                }
+                            }
+                            if(xB < roi.xywhROI.roiWidth)
+                            {
+                                for( ; xB < roi.xywhROI.roiWidth; xB++)
+                                {
+                                    *dstRowPtrTempB = *srcRowPtrTempB;
+                                    srcRowPtrTempB++;
+                                    dstRowPtrTempB += 3;
+                                }
+                            }
+                            break;
+                        }
+                        srcRowPtrTempR += 4;
+                        srcRowPtrTempG += 4;
+                        srcRowPtrTempB += 4;
+                        dstRowPtrTempR += 12;
+                        dstRowPtrTempG += 12;
+                        dstRowPtrTempB += 12;
+                    }
+                }
+                else
+                {
+                    Rpp16f *srcRowPtrTempR, *srcRowPtrTempG, *srcRowPtrTempB, *dstRowPtrTempR, *dstRowPtrTempG, *dstRowPtrTempB;
+                    srcRowPtrTempR = srcRowPtrR + xR;
+                    srcRowPtrTempG = srcRowPtrG + xG;
+                    srcRowPtrTempB = srcRowPtrB + xB;
+                    dstRowPtrTempR = dstRowPtr;
+                    dstRowPtrTempG = dstRowPtr + 1;
+                    dstRowPtrTempB = dstRowPtr + 2;
+                    if(yR < roi.xywhROI.roiHeight && xR < roi.xywhROI.roiWidth)
+                    {
+                        for(; xR < roi.xywhROI.roiWidth; xR++)
+                        {
+                            *dstRowPtrTempR = *srcRowPtrTempR;
+                            srcRowPtrTempR++;
+                            dstRowPtrTempR += 3;
+                        }
+                    }
+                    if(yG < roi.xywhROI.roiHeight && xG < roi.xywhROI.roiWidth)
+                    {
+                        for(; xG < roi.xywhROI.roiWidth; xG++)
+                        {
+                            *dstRowPtrTempG = *srcRowPtrTempG;
+                            srcRowPtrTempG++;
+                            dstRowPtrTempG += 3;
+                        }
+                    }
+                    if(yB < roi.xywhROI.roiHeight && xB < roi.xywhROI.roiWidth)
+                    {
+                        for(; xB < roi.xywhROI.roiWidth; xB++)
+                        {
+                            *dstRowPtrTempB = *srcRowPtrTempB;
+                            srcRowPtrTempB++;
+                            dstRowPtrTempB += 3;
+                        }
+                    }
+                }
+                if(yR < roi.xywhROI.roiHeight && xR >= roi.xywhROI.roiWidth)
+                {
+                    xR = xR - xOffsetRchn;
+                    Rpp16f *srcRowPtrTempR, *dstRowPtrTempR;
+                    srcRowPtrTempR = srcPtrImage + i * srcDescPtr->strides.hStride + xR;
+                    dstRowPtrTempR = dstRowPtr + xR * 3;
+                    for(; xR < roi.xywhROI.roiWidth; xR++)
+                    {
+                        *dstRowPtrTempR = *srcRowPtrTempR;
+                        srcRowPtrTempR++;
+                        dstRowPtrTempR += 3;
+                    }
+                }
+                if(yG < roi.xywhROI.roiHeight && xG >= roi.xywhROI.roiWidth)
+                {
+                    xG = xG - xOffsetGchn;
+                    Rpp16f *srcRowPtrTempG, *dstRowPtrTempG;
+                    srcRowPtrTempG = srcPtrImage + i * srcDescPtr->strides.hStride + srcDescPtr->strides.cStride + xG ;
+                    dstRowPtrTempG = dstRowPtr + xG * 3 + 1;
+                    for(; xG < roi.xywhROI.roiWidth; xG++)
+                    {
+                        *dstRowPtrTempG = *srcRowPtrTempG;
+                        srcRowPtrTempG++;
+                        dstRowPtrTempG += 3;
+                    }
+                }
+                if(yB < roi.xywhROI.roiHeight && xB >= roi.xywhROI.roiWidth)
+                {
+                    xB = xB - xOffsetBchn;
+                    Rpp16f *srcRowPtrTempB, *dstRowPtrTempB;
+                    srcRowPtrTempB = srcPtrImage + i * srcDescPtr->strides.hStride + xB + 2 * srcDescPtr->strides.cStride;
+                    dstRowPtrTempB = dstRowPtr + xB * 3 + 2;
+                    for(; xB < roi.xywhROI.roiWidth; xB++)
+                    {
+                        *dstRowPtrTempB = *srcRowPtrTempB;
+                        srcRowPtrTempB++;
+                        dstRowPtrTempB += 3;
+                    }
+                }
+                if(yR >= roi.xywhROI.roiHeight)
+                {
+                    int idx = yR - yOffsetRchn;
+                    Rpp16f *srcRowPtrTempR, *dstRowPtrTempR;
+                    srcRowPtrTempR = srcPtrImage + idx * srcDescPtr->strides.hStride;
+                    dstRowPtrTempR = dstPtrImage + idx * dstDescPtr->strides.hStride;
+                    for(int x = 0; x < roi.xywhROI.roiWidth; x++)
+                    {
+                        *dstRowPtrTempR = *srcRowPtrTempR;
+                        srcRowPtrTempR++;
+                        dstRowPtrTempR += 3;
+                    }
+                }
+                if(yG >= roi.xywhROI.roiHeight)
+                {
+                    int idx = yG - yOffsetGchn;
+                    Rpp16f *srcRowPtrTempG, *dstRowPtrTempG;
+                    srcRowPtrTempG = srcPtrImage + idx * srcDescPtr->strides.hStride + srcDescPtr->strides.cStride;
+                    dstRowPtrTempG = dstPtrImage + idx * dstDescPtr->strides.hStride + 1;
+                    for(int x = 0; x < roi.xywhROI.roiWidth; x++)
+                    {
+                        *dstRowPtrTempG = *srcRowPtrTempG;
+                        srcRowPtrTempG++;
+                        dstRowPtrTempG += 3;
+                    }
+                }
+                if(yB >= roi.xywhROI.roiHeight)
+                {
+                    int idx = yB - yOffsetBchn;
+                    Rpp16f *srcRowPtrTempB, *dstRowPtrTempB;
+                    srcRowPtrTempB = srcPtrImage + idx * srcDescPtr->strides.hStride + 2 * srcDescPtr->strides.cStride;
+                    dstRowPtrTempB = dstPtrImage + idx * dstDescPtr->strides.hStride + 2;
+                    for(int x = 0; x < roi.xywhROI.roiWidth; x++)
+                    {
+                        *dstRowPtrTempB = *srcRowPtrTempB;
+                        srcRowPtrTempB++;
+                        dstRowPtrTempB += 3;
+                    }
+                }
+                yR++;
+                yG++;
+                yB++;
+            }
+        }
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW ))
+        {
+            Rpp32u vectorIncrement = 8;
+            for(int c = 0; c < srcDescPtr->c; c++)
+            {
+                Rpp16f *srcPtrChannel, *dstPtrChannel;
+                Rpp16f *srcPtrChannelRow, *dstPtrChannelRow, *srcPtrChannelRowOffset;
+                srcPtrChannel = srcPtrImage + (c * srcDescPtr->strides.cStride);
+                dstPtrChannel = dstPtrImage + (c * dstDescPtr->strides.cStride);
+                srcPtrChannelRow = srcPtrChannel;
+                srcPtrChannelRowOffset = srcPtrChannel + (yOffsets[c] * srcDescPtr->strides.hStride);
+                dstPtrChannelRow = dstPtrChannel;
+                int currentRow = yOffsets[c];
+                for(; currentRow < roi.xywhROI.roiHeight; currentRow++)
+                {
+                    Rpp16f *srcRowTempOffset, *dstRowTemp, *srcRowTemp;
+                    srcRowTempOffset = srcPtrChannelRowOffset + xOffsets[c];
+                    srcRowTemp = srcPtrChannelRow + (roi.xywhROI.roiWidth - xOffsets[c]);
+                    dstRowTemp = dstPtrChannelRow;
+                    int currentCol = xOffsets[c];
+                    Rpp32u alignedLength = (roi.xywhROI.roiWidth - currentCol) & ~7;
+                    if (((currentRow >= 0) && (currentRow < roi.xywhROI.roiHeight)) && ((currentCol >= 0) && (currentCol < roi.xywhROI.roiWidth)))
+                    {
+                        for( ; currentCol < alignedLength; currentCol += vectorIncrement)
+                        {
+                            Rpp32f srcPtrTemp_ps[8], dstPtrTemp_ps[8];
+                            for(int cnt = 0; cnt < 8; cnt++)
+                            {
+                                *(srcPtrTemp_ps + cnt) = (Rpp32f) *(srcRowTempOffset + cnt);
+                            }
+                            __m256 p;
+                            p = _mm256_loadu_ps(srcPtrTemp_ps);
+                            _mm256_storeu_ps(dstPtrTemp_ps, p);
+                            for(int cnt = 0; cnt < 8; cnt++)
+                            {
+                                *(dstRowTemp + cnt) = (Rpp16f) *(dstPtrTemp_ps + cnt);
+                            }
+                            srcRowTempOffset += vectorIncrement;
+                            dstRowTemp += vectorIncrement;
+                        }
+                        for(; currentCol < roi.xywhROI.roiWidth; currentCol++)
+                            *dstRowTemp++ = *srcRowTempOffset++;
+                    }
+                    for(int i = 0; i < xOffsets[c]; i++)
+                        *dstRowTemp++ = *srcRowTemp++;
+                    srcPtrChannelRowOffset += srcDescPtr->strides.hStride;
+                    dstPtrChannelRow += dstDescPtr->strides.hStride;
+                    srcPtrChannelRow += srcDescPtr->strides.hStride;
+                }
+                srcPtrChannelRow = srcPtrChannel + ((roi.xywhROI.roiHeight - yOffsets[c]) * srcDescPtr->strides.hStride);
+                for(int j = 0; j < yOffsets[c]; j++)
+                {
+                    Rpp16f *dstRowTemp, *srcRowTemp;
+                    srcRowTemp = srcPtrChannelRow;
+                    dstRowTemp = dstPtrChannelRow;
+                    Rpp32u alignedLength = roi.xywhROI.roiWidth & ~7;
+                    int currentCol = 0;
+                    for( ; currentCol < alignedLength; currentCol += vectorIncrement)
+                    {
+                        Rpp32f srcPtrTemp_ps[8], dstPtrTemp_ps[8];
+                        for(int cnt = 0; cnt < 8; cnt++)
+                        {
+                            *(srcPtrTemp_ps + cnt) = (Rpp32f) *(srcRowTemp + cnt);
+                        }
+                        __m256 p;
+                        p = _mm256_loadu_ps(srcPtrTemp_ps);
+                        _mm256_storeu_ps(dstPtrTemp_ps, p);
+                        for(int cnt = 0; cnt < 8; cnt++)
+                        {
+                            *(dstRowTemp + cnt) = (Rpp16f) *(dstPtrTemp_ps + cnt);
+                        }
+                        srcRowTemp += vectorIncrement;
+                        dstRowTemp += vectorIncrement;
+                    }
+                    for(; currentCol < roi.xywhROI.roiWidth; currentCol++)
+                        *dstRowTemp++ = *srcRowTemp++;
+                    srcPtrChannelRow += srcDescPtr->strides.hStride;
+                    dstPtrChannelRow += dstDescPtr->strides.hStride;
+                }
+            }
+        }
+        else if((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            int yR = yOffsetRchn;
+            int yG = yOffsetGchn;
+            int yB = yOffsetBchn;
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            {
+                int xR = xOffsetRchn;
+                int xG = xOffsetGchn;
+                int xB = xOffsetBchn;
+                Rpp16f *srcRowPtrR, *srcRowPtrG, *srcRowPtrB, *dstRowPtr;
+                srcRowPtrR = srcPtrImage + (yR * srcDescPtr->strides.hStride);
+                srcRowPtrG = srcPtrImage + (yG * srcDescPtr->strides.hStride);
+                srcRowPtrB = srcPtrImage + (yB * srcDescPtr->strides.hStride);
+                dstRowPtr = dstPtrImage + i * dstDescPtr->strides.hStride;
+                if((yR >= 0) && (yR < roi.xywhROI.roiHeight) && (yG >= 0) && (yG < roi.xywhROI.roiHeight) && (yB >= 0) && (yB < roi.xywhROI.roiHeight))
+                {
+                    Rpp16f *srcRowPtrTempR, *srcRowPtrTempG, *srcRowPtrTempB, *dstRowPtrTempR, *dstRowPtrTempG, *dstRowPtrTempB;
+                    srcRowPtrTempR = srcRowPtrR + xR * 3;
+                    srcRowPtrTempG = srcRowPtrG + xG * 3 + 1;
+                    srcRowPtrTempB = srcRowPtrB + xB * 3 + 2;
+                    dstRowPtrTempR = dstRowPtr;
+                    dstRowPtrTempG = dstRowPtr + 1;
+                    dstRowPtrTempB = dstRowPtr + 2;
+                    for (int j = 0; j < roi.xywhROI.roiWidth; j += 4)
+                    {
+                        if((xR >= 0) && (xR <= roi.xywhROI.roiWidth - 4) && (xG >= 0) && (xG <= roi.xywhROI.roiWidth - 4) && (xB >= 0) && (xB < roi.xywhROI.roiWidth - 4))
+                        {
+                            Rpp32f srcRowPtrTempR_ps[12], srcRowPtrTempG_ps[12], srcRowPtrTempB_ps[12], dstPtrTemp_ps[12];
+                            for(int cnt = 0; cnt < 12; cnt++)
+                            {
+                                *(srcRowPtrTempR_ps + cnt) = (Rpp32f) *(srcRowPtrTempR + cnt);
+                                *(srcRowPtrTempG_ps + cnt) = (Rpp32f) *(srcRowPtrTempG + cnt);
+                                *(srcRowPtrTempB_ps + cnt) = (Rpp32f) *(srcRowPtrTempB + cnt);
+                            }
+                            __m128 p1[4], p2[4], p3[4];
+                            rpp_simd_load(rpp_load12_f32pkd3_to_f32pln3, srcRowPtrTempR_ps, p1);    // simd loads
+                            rpp_simd_load(rpp_load12_f32pkd3_to_f32pln3, srcRowPtrTempG_ps, p2);    // simd loads
+                            rpp_simd_load(rpp_load12_f32pkd3_to_f32pln3, srcRowPtrTempB_ps, p3);    // simd loads
+                            p1[1] = p2[0];
+                            p1[2] = p3[0];
+                            rpp_simd_store(rpp_store12_f32pln3_to_f32pkd3, dstPtrTemp_ps, p1);    // simd stores
+                            for(int cnt = 0; cnt < 12; cnt++)
+                            {
+                                *(dstRowPtrTempR + cnt) = (Rpp16f) *(dstPtrTemp_ps + cnt);
+                            }
+                            xR += 4;
+                            xG += 4;
+                            xB += 4;
+                        }
+                        else
+                        {
+                            if(xR < roi.xywhROI.roiWidth)
+                            {
+                                for( ; xR < roi.xywhROI.roiWidth; xR++)
+                                {
+                                    *dstRowPtrTempR = *srcRowPtrTempR;
+                                    dstRowPtrTempR += 3;
+                                    srcRowPtrTempR += 3;
+                                }
+                            }
+                            if(xG < roi.xywhROI.roiWidth)
+                            {
+                                for( ; xG < roi.xywhROI.roiWidth; xG++)
+                                {
+                                   *dstRowPtrTempG = *srcRowPtrTempG;
+                                    srcRowPtrTempG += 3;
+                                    dstRowPtrTempG += 3;
+                                }
+                            }
+                            if(xB < roi.xywhROI.roiWidth)
+                            {
+                                for( ; xB < roi.xywhROI.roiWidth; xB++)
+                                {
+                                    *dstRowPtrTempB = *srcRowPtrTempB;
+                                    dstRowPtrTempB += 3;
+                                    srcRowPtrTempB += 3;
+                                }
+                            }
+                            break;
+                        }
+                        srcRowPtrTempR += 12;
+                        srcRowPtrTempG += 12;
+                        srcRowPtrTempB += 12;
+                        dstRowPtrTempR += 12;
+                        dstRowPtrTempG += 12;
+                        dstRowPtrTempB += 12;
+                    }
+                }
+                else
+                {
+                    Rpp16f *srcRowPtrTempR, *srcRowPtrTempG, *srcRowPtrTempB, *dstRowPtrTempR, *dstRowPtrTempG, *dstRowPtrTempB;
+                    srcRowPtrTempR = srcRowPtrR + xR * 3;
+                    srcRowPtrTempG = srcRowPtrG + xG * 3 + 1;
+                    srcRowPtrTempB = srcRowPtrB + xB * 3 + 2;
+                    dstRowPtrTempR = dstRowPtr;
+                    dstRowPtrTempG = dstRowPtr + 1;
+                    dstRowPtrTempB = dstRowPtr + 2;
+                    if(yR < roi.xywhROI.roiHeight && xR < roi.xywhROI.roiWidth)
+                    {
+                        for(; xR < roi.xywhROI.roiWidth; xR++)
+                        {
+                            *dstRowPtrTempR = *srcRowPtrTempR;
+                            srcRowPtrTempR += 3;
+                            dstRowPtrTempR += 3;
+                        }
+                    }
+                    if(yG < roi.xywhROI.roiHeight && xG < roi.xywhROI.roiWidth)
+                    {
+                        for(; xG < roi.xywhROI.roiWidth; xG++)
+                        {
+                            *dstRowPtrTempG = *srcRowPtrTempG;
+                            srcRowPtrTempG += 3;
+                            dstRowPtrTempG += 3;
+                        }
+                    }
+                    if(yB < roi.xywhROI.roiHeight && xB < roi.xywhROI.roiWidth)
+                    {
+                        for(; xB < roi.xywhROI.roiWidth; xB++)
+                        {
+                            *dstRowPtrTempB = *srcRowPtrTempB;
+                            dstRowPtrTempB += 3;
+                            srcRowPtrTempB += 3;
+                        }
+                    }
+                }
+                if(yR < roi.xywhROI.roiHeight && xR >= roi.xywhROI.roiWidth)
+                {
+                    xR = xR - xOffsetRchn;
+                    Rpp16f *srcRowPtrTempR, *dstRowPtrTempR;
+                    srcRowPtrTempR = srcPtrImage + i * srcDescPtr->strides.hStride + xR * 3;
+                    dstRowPtrTempR = dstRowPtr + xR * 3;
+                    for(; xR < roi.xywhROI.roiWidth; xR++)
+                    {
+                        *dstRowPtrTempR = *srcRowPtrTempR;
+                        srcRowPtrTempR += 3;
+                        dstRowPtrTempR += 3;
+                    }
+                }
+                if(yG < roi.xywhROI.roiHeight && xG >= roi.xywhROI.roiWidth)
+                {
+                    xG = xG - xOffsetGchn;
+                    Rpp16f *srcRowPtrTempG, *dstRowPtrTempG;
+                    srcRowPtrTempG = srcPtrImage + i * srcDescPtr->strides.hStride + xG * 3 + 1;
+                    dstRowPtrTempG = dstRowPtr + xG * 3 + 1;
+                    for(; xG < roi.xywhROI.roiWidth; xG++)
+                    {
+                        *dstRowPtrTempG = *srcRowPtrTempG;
+                        srcRowPtrTempG += 3;
+                        dstRowPtrTempG += 3;
+                    }
+                }
+                if(yB < roi.xywhROI.roiHeight && xB >= roi.xywhROI.roiWidth)
+                {
+                    xB = xB - xOffsetBchn;
+                    Rpp16f *srcRowPtrTempB, *dstRowPtrTempB;
+                    srcRowPtrTempB = srcPtrImage + i * srcDescPtr->strides.hStride + xB * 3 + 2;
+                    dstRowPtrTempB = dstRowPtr + xB * 3 + 2;
+                    for(; xB < roi.xywhROI.roiWidth; xB++)
+                    {
+                        *dstRowPtrTempB = *srcRowPtrTempB;
+                        srcRowPtrTempB += 3;
+                        dstRowPtrTempB += 3;
+                    }
+                }
+                if(yR >= roi.xywhROI.roiHeight)
+                {
+                    int idx = yR - yOffsetRchn;
+                    Rpp16f *srcRowPtrTempR, *dstRowPtrTempR;
+                    srcRowPtrTempR = srcPtrImage + idx * srcDescPtr->strides.hStride;
+                    dstRowPtrTempR = dstPtrImage + idx * dstDescPtr->strides.hStride;
+                    for(int x = 0; x < roi.xywhROI.roiWidth; x++)
+                    {
+                        *dstRowPtrTempR = *srcRowPtrTempR;
+                        srcRowPtrTempR += 3;
+                        dstRowPtrTempR += 3;
+                    }
+                }
+                if(yG >= roi.xywhROI.roiHeight)
+                {
+                    int idx = yG - yOffsetGchn;
+                    Rpp16f *srcRowPtrTempG, *dstRowPtrTempG;
+                    srcRowPtrTempG = srcPtrImage + idx * srcDescPtr->strides.hStride + 1;
+                    dstRowPtrTempG = dstPtrImage + idx * dstDescPtr->strides.hStride + 1;
+                    for(int x = 0; x < roi.xywhROI.roiWidth; x++)
+                    {
+                        *dstRowPtrTempG = *srcRowPtrTempG;
+                        srcRowPtrTempG += 3;
+                        dstRowPtrTempG += 3;
+                    }
+                }
+                if(yB >= roi.xywhROI.roiHeight)
+                {
+                    int idx = yB - yOffsetBchn;
+                    Rpp16f *srcRowPtrTempB, *dstRowPtrTempB;
+                    srcRowPtrTempB = srcPtrImage + idx * srcDescPtr->strides.hStride + 2;
+                    dstRowPtrTempB = dstPtrImage + idx * dstDescPtr->strides.hStride + 2;
+                    for(int x = 0; x < roi.xywhROI.roiWidth; x++)
+                    {
+                        *dstRowPtrTempB = *srcRowPtrTempB;
+                        srcRowPtrTempB += 3;
+                        dstRowPtrTempB += 3;
+                    }
+                }
+                yR++;
+                yG++;
+                yB++;
             }
         }
     }
@@ -583,652 +2222,663 @@ RppStatus glitch_i8_i8_host_tensor(Rpp8s *srcPtr,
         srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
-        if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW ))
+        if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u vectorIncrement = 32;
-            convert_pkd3_pln3<Rpp8s>(srcPtrChannel, dstPtrChannel, srcDescPtr, dstDescPtr, roi.xywhROI.roiWidth * 3);
-            for(int c = 0; c < 3; c++)
+            int yR = yOffsetRchn;
+            int yG = yOffsetGchn;
+            int yB = yOffsetBchn;
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
-                Rpp32u offset = yOffsetsLoc[c] + xOffsetsLoc[c];
-                Rpp8s *srcPtrImageTemp, *dstPtrImageTemp;
-                srcPtrImageTemp = dstPtrImage + (c * dstDescPtr->strides.cStride) + offset;
-                dstPtrImageTemp = dstPtrImage + (c * dstDescPtr->strides.cStride);
-                if(offset > 0)
+                int xR = xOffsetRchn;
+                int xG = xOffsetGchn;
+                int xB = xOffsetBchn;
+                Rpp8s *srcRowPtrR, *srcRowPtrG, *srcRowPtrB, *dstRowPtr;
+                srcRowPtrR = srcPtrImage + (yR * srcDescPtr->strides.hStride);
+                srcRowPtrG = srcPtrImage + (yG * srcDescPtr->strides.hStride);
+                srcRowPtrB = srcPtrImage + (yB * srcDescPtr->strides.hStride);
+                dstRowPtr = dstPtrImage + i * dstDescPtr->strides.hStride;
+                if((yR >= 0) && (yR < roi.xywhROI.roiHeight) && (yG >= 0) && (yG < roi.xywhROI.roiHeight) && (yB >= 0) && (yB < roi.xywhROI.roiHeight))
                 {
-                    for(int j = yOffsets[c]; j < roi.xywhROI.roiHeight; j++)
+                    Rpp8s *srcRowPtrTempR, *srcRowPtrTempG, *srcRowPtrTempB, *dstRowPtrTempR, *dstRowPtrTempG, *dstRowPtrTempB;
+                    srcRowPtrTempR = srcRowPtrR + xR * 3;
+                    srcRowPtrTempG = srcRowPtrG + xG * 3 + 1;
+                    srcRowPtrTempB = srcRowPtrB + xB * 3 + 2;
+                    dstRowPtrTempR = dstRowPtr;
+                    dstRowPtrTempG = dstRowPtr + dstDescPtr->strides.cStride;
+                    dstRowPtrTempB = dstRowPtr + 2 * dstDescPtr->strides.cStride;
+                    for (int j = 0; j < roi.xywhROI.roiWidth; j += 16)
                     {
-                        Rpp8s *srcPtrTemp = srcPtrImageTemp;
-                        Rpp8s *dstPtrTemp = dstPtrImageTemp;
-                        Rpp32u aligLen = ((roi.xywhROI.roiWidth - xOffsetsLoc[c]) / vectorIncrement) * vectorIncrement;
-                        Rpp32u remElemLen = roi.xywhROI.roiWidth - ( aligLen + xOffsetsLoc[c]);
-                        if(offset < dstDescPtr->strides.cStride)
+                        if((xR >= 0) && (xR <= roi.xywhROI.roiWidth - 16) && (xG >= 0) && (xG <= roi.xywhROI.roiWidth - 16) && (xB >= 0) && (xB < roi.xywhROI.roiWidth - 16))
                         {
-                            for(int i = 0; i < aligLen; i += vectorIncrement)
+                            __m128 p1[12], p2[12], p3[12];
+                            rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3, srcRowPtrTempR, p1);    // simd loads
+                            rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3, srcRowPtrTempG, p2);    // simd loads
+                            rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3, srcRowPtrTempB, p3);    // simd loads
+                            for(int k = 0; k < 4; k++)
                             {
-                                __m256i p;
-                                p = _mm256_loadu_epi8(srcPtrTemp);
-                                _mm256_storeu_epi8(dstPtrTemp, p);
-                                srcPtrTemp += vectorIncrement;
-                                dstPtrTemp += vectorIncrement;
+                                p1[k + 4] = p2[k];
+                                p1[k + 8] = p3[k];
                             }
-                            for(int i = 0; i < remElemLen; i++)
-                            {
-                                *dstPtrTemp = *srcPtrTemp;
-                                dstPtrTemp++;
-                                srcPtrTemp++;
-                            }
+                            rpp_simd_store(rpp_store48_f32pln3_to_i8pln3, dstRowPtrTempR, dstRowPtrTempG, dstRowPtrTempB, p1);    // simd stores
+                            xR += 16;
+                            xG += 16;
+                            xB += 16;
                         }
-                        srcPtrImageTemp += dstDescPtr->strides.hStride;
-                        dstPtrImageTemp += dstDescPtr->strides.hStride;
-                        offset += dstDescPtr->strides.hStride;
+                        else
+                        {
+                            if(xR < roi.xywhROI.roiWidth)
+                            {
+                                for( ; xR < roi.xywhROI.roiWidth; xR++)
+                                {
+                                    *dstRowPtrTempR = *srcRowPtrTempR;
+                                    srcRowPtrTempR += 3;
+                                    dstRowPtrTempR++;
+                                }
+                            }
+                            if(xG < roi.xywhROI.roiWidth)
+                            {
+                                for( ; xG < roi.xywhROI.roiWidth; xG++)
+                                {
+                                   *dstRowPtrTempG = *srcRowPtrTempG;
+                                    srcRowPtrTempG += 3;
+                                    dstRowPtrTempG++;
+                                }
+                            }
+                            if(xB < roi.xywhROI.roiWidth)
+                            {
+                                for( ; xB < roi.xywhROI.roiWidth; xB++)
+                                {
+                                    *dstRowPtrTempB = *srcRowPtrTempB;
+                                    srcRowPtrTempB += 3;
+                                    dstRowPtrTempB++;
+                                }
+                            }
+                            break;
+                        }
+                        srcRowPtrTempR += 48;
+                        srcRowPtrTempG += 48;
+                        srcRowPtrTempB += 48;
+                        dstRowPtrTempR += 16;
+                        dstRowPtrTempG += 16;
+                        dstRowPtrTempB += 16;
                     }
                 }
+                else
+                {
+                    Rpp8s *srcRowPtrTempR, *srcRowPtrTempG, *srcRowPtrTempB, *dstRowPtrTempR, *dstRowPtrTempG, *dstRowPtrTempB;
+                    srcRowPtrTempR = srcRowPtrR + xR * 3;
+                    srcRowPtrTempG = srcRowPtrG + xG * 3 + 1;
+                    srcRowPtrTempB = srcRowPtrB + xB * 3 + 2;
+                    dstRowPtrTempR = dstRowPtr;
+                    dstRowPtrTempG = dstRowPtr + dstDescPtr->strides.cStride;
+                    dstRowPtrTempB = dstRowPtr + 2 * dstDescPtr->strides.cStride;
+                    if(yR < roi.xywhROI.roiHeight && xR < roi.xywhROI.roiWidth)
+                    {
+                        for(; xR < roi.xywhROI.roiWidth; xR++)
+                        {
+                            *dstRowPtrTempR = *srcRowPtrTempR;
+                            srcRowPtrTempR += 3;
+                            dstRowPtrTempR++;
+                        }
+                    }
+                    if(yG < roi.xywhROI.roiHeight && xG < roi.xywhROI.roiWidth)
+                    {
+                        for(; xG < roi.xywhROI.roiWidth; xG++)
+                        {
+                            *dstRowPtrTempG = *srcRowPtrTempG;
+                            srcRowPtrTempG += 3;
+                            dstRowPtrTempG++;
+                        }
+                    }
+                    if(yB < roi.xywhROI.roiHeight && xB < roi.xywhROI.roiWidth)
+                    {
+                        for(; xB < roi.xywhROI.roiWidth; xB++)
+                        {
+                            *dstRowPtrTempB = *srcRowPtrTempB;
+                            srcRowPtrTempB += 3;
+                            dstRowPtrTempB++;
+                        }
+                    }
+                }
+                if(yR < roi.xywhROI.roiHeight && xR >= roi.xywhROI.roiWidth)
+                {
+                    xR = xR - xOffsetRchn;
+                    Rpp8s *srcRowPtrTempR, *dstRowPtrTempR;
+                    srcRowPtrTempR = srcPtrImage + i * srcDescPtr->strides.hStride + xR * 3;
+                    dstRowPtrTempR = dstRowPtr + xR;
+                    for(; xR < roi.xywhROI.roiWidth; xR++)
+                    {
+                        *dstRowPtrTempR = *srcRowPtrTempR;
+                        srcRowPtrTempR += 3;
+                        dstRowPtrTempR++;
+                    }
+                }
+                if(yG < roi.xywhROI.roiHeight && xG >= roi.xywhROI.roiWidth)
+                {
+                    xG = xG - xOffsetGchn;
+                    Rpp8s *srcRowPtrTempG, *dstRowPtrTempG;
+                    srcRowPtrTempG = srcPtrImage + i * srcDescPtr->strides.hStride + xG * 3 + 1;
+                    dstRowPtrTempG = dstRowPtr + xG + dstDescPtr->strides.cStride;
+                    for(; xG < roi.xywhROI.roiWidth; xG++)
+                    {
+                        *dstRowPtrTempG = *srcRowPtrTempG;
+                        srcRowPtrTempG += 3;
+                        dstRowPtrTempG++;
+                    }
+                }
+                if(yB < roi.xywhROI.roiHeight && xB >= roi.xywhROI.roiWidth)
+                {
+                    xB = xB - xOffsetBchn;
+                    Rpp8s *srcRowPtrTempB, *dstRowPtrTempB;
+                    srcRowPtrTempB = srcPtrImage + i * srcDescPtr->strides.hStride + xB * 3 + 2;
+                    dstRowPtrTempB = dstRowPtr + xB+ 2 * dstDescPtr->strides.cStride;
+                    for(; xB < roi.xywhROI.roiWidth; xB++)
+                    {
+                        *dstRowPtrTempB = *srcRowPtrTempB;
+                        srcRowPtrTempB += 3;
+                        dstRowPtrTempB++;
+                    }
+                }
+                if(yR >= roi.xywhROI.roiHeight)
+                {
+                    int idx = yR - yOffsetRchn;
+                    Rpp8s *srcRowPtrTempR, *dstRowPtrTempR;
+                    srcRowPtrTempR = srcPtrImage + idx * srcDescPtr->strides.hStride;
+                    dstRowPtrTempR = dstPtrImage + idx * dstDescPtr->strides.hStride;
+                    for(int x = 0; x < roi.xywhROI.roiWidth; x++)
+                    {
+                        *dstRowPtrTempR = *srcRowPtrTempR;
+                        srcRowPtrTempR += 3;
+                        dstRowPtrTempR++;
+                    }
+                }
+                if(yG >= roi.xywhROI.roiHeight)
+                {
+                    int idx = yG - yOffsetGchn;
+                    Rpp8s *srcRowPtrTempG, *dstRowPtrTempG;
+                    srcRowPtrTempG = srcPtrImage + idx * srcDescPtr->strides.hStride + 1;
+                    dstRowPtrTempG = dstPtrImage + idx * dstDescPtr->strides.hStride + dstDescPtr->strides.cStride;
+                    for(int x = 0; x < roi.xywhROI.roiWidth; x++)
+                    {
+                        *dstRowPtrTempG = *srcRowPtrTempG;
+                        srcRowPtrTempG += 3;
+                        dstRowPtrTempG++;
+                    }
+                }
+                if(yB >= roi.xywhROI.roiHeight)
+                {
+                    int idx = yB - yOffsetBchn;
+                    Rpp8s *srcRowPtrTempB, *dstRowPtrTempB;
+                    srcRowPtrTempB = srcPtrImage + idx * srcDescPtr->strides.hStride + 2;
+                    dstRowPtrTempB = dstPtrImage + idx * dstDescPtr->strides.hStride + 2 * dstDescPtr->strides.cStride;
+                    for(int x = 0; x < roi.xywhROI.roiWidth; x++)
+                    {
+                        *dstRowPtrTempB = *srcRowPtrTempB;
+                        srcRowPtrTempB += 3;
+                        dstRowPtrTempB++;
+                    }
+                }
+                yR++;
+                yG++;
+                yB++;
             }
         }
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u vectorIncrement = 32;
-            for(int c = 0; c < 3; c++)
+            int yR = yOffsetRchn;
+            int yG = yOffsetGchn;
+            int yB = yOffsetBchn;
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
-                Rpp32u offset = yOffsetsLoc[c] + xOffsetsLoc[c];
-                Rpp8s *srcPtrImageTemp, *dstPtrImageTemp;
-                srcPtrImageTemp = srcPtrImage + (c * srcDescPtr->strides.cStride) + offset;
-                dstPtrImageTemp = srcPtrImage + (c * srcDescPtr->strides.cStride);
-                if(offset > 0)
+                int xR = xOffsetRchn;
+                int xG = xOffsetGchn;
+                int xB = xOffsetBchn;
+                Rpp8s *srcRowPtrR, *srcRowPtrG, *srcRowPtrB, *dstRowPtr;
+                srcRowPtrR = srcPtrImage + (yR * srcDescPtr->strides.hStride);
+                srcRowPtrG = srcPtrImage + (yG * srcDescPtr->strides.hStride) + srcDescPtr->strides.cStride * 1;
+                srcRowPtrB = srcPtrImage + (yB * srcDescPtr->strides.hStride) + srcDescPtr->strides.cStride * 2;
+                dstRowPtr = dstPtrImage + i * dstDescPtr->strides.hStride;
+                if((yR >= 0) && (yR < roi.xywhROI.roiHeight) && (yG >= 0) && (yG < roi.xywhROI.roiHeight) && (yB >= 0) && (yB < roi.xywhROI.roiHeight))
                 {
-                    for(int j = yOffsets[c]; j < roi.xywhROI.roiHeight; j++)
+                    Rpp8s *srcRowPtrTempR, *srcRowPtrTempG, *srcRowPtrTempB, *dstRowPtrTempR, *dstRowPtrTempG, *dstRowPtrTempB;
+                    srcRowPtrTempR = srcRowPtrR + xR;
+                    srcRowPtrTempG = srcRowPtrG + xG;
+                    srcRowPtrTempB = srcRowPtrB + xB;
+                    dstRowPtrTempR = dstRowPtr;
+                    dstRowPtrTempG = dstRowPtr + 1;
+                    dstRowPtrTempB = dstRowPtr + 2;
+                    for (int j = 0; j < roi.xywhROI.roiWidth; j += 16)
                     {
-                        Rpp8s *srcPtrTemp = srcPtrImageTemp;
-                        Rpp8s *dstPtrTemp = dstPtrImageTemp;
-                        Rpp32u aligLen = ((roi.xywhROI.roiWidth - xOffsetsLoc[c]) / vectorIncrement) * vectorIncrement;
-                        Rpp32u remElemLen = roi.xywhROI.roiWidth - ( aligLen + xOffsetsLoc[c]);
-                        if(offset < srcDescPtr->strides.cStride)
+                        if((xR >= 0) && (xR <= roi.xywhROI.roiWidth - 16) && (xG >= 0) && (xG <= roi.xywhROI.roiWidth - 16) && (xB >= 0) && (xB < roi.xywhROI.roiWidth - 16))
                         {
-                            for(int i = 0; i < aligLen; i += vectorIncrement)
-                            {
-                                __m256i p;
-                                p = _mm256_loadu_epi8(srcPtrTemp);
-                                _mm256_storeu_epi8(dstPtrTemp, p);
-                                srcPtrTemp += vectorIncrement;
-                                dstPtrTemp += vectorIncrement;
-                            }
-                            for(int i = 0; i < remElemLen; i++)
-                            {
-                                *dstPtrTemp = *srcPtrTemp;
-                                dstPtrTemp++;
-                                srcPtrTemp++;
-                            }
+                            __m128 p[12];
+                            rpp_simd_load(rpp_load48_i8pln3_to_f32pln3, srcRowPtrTempR, srcRowPtrTempG, srcRowPtrTempB, p);    // simd loads
+                            rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3, dstRowPtrTempR, p);    // simd stores
+                            xR += 16;
+                            xG += 16;
+                            xB += 16;
                         }
-                        srcPtrImageTemp += srcDescPtr->strides.hStride;
-                        dstPtrImageTemp += srcDescPtr->strides.hStride;
-                        offset += srcDescPtr->strides.hStride;
+                        else
+                        {
+                            if(xR < roi.xywhROI.roiWidth)
+                            {
+                                for( ; xR < roi.xywhROI.roiWidth; xR++)
+                                {
+                                    *dstRowPtrTempR = *srcRowPtrTempR;
+                                    srcRowPtrTempR++;
+                                    dstRowPtrTempR += 3;
+                                }
+                            }
+                            if(xG < roi.xywhROI.roiWidth)
+                            {
+                                for( ; xG < roi.xywhROI.roiWidth; xG++)
+                                {
+                                   *dstRowPtrTempG = *srcRowPtrTempG;
+                                    srcRowPtrTempG++;
+                                    dstRowPtrTempG += 3;
+                                }
+                            }
+                            if(xB < roi.xywhROI.roiWidth)
+                            {
+                                for( ; xB < roi.xywhROI.roiWidth; xB++)
+                                {
+                                    *dstRowPtrTempB = *srcRowPtrTempB;
+                                    srcRowPtrTempB++;
+                                    dstRowPtrTempB += 3;
+                                }
+                            }
+                            break;
+                        }
+                        srcRowPtrTempR += 16;
+                        srcRowPtrTempG += 16;
+                        srcRowPtrTempB += 16;
+                        dstRowPtrTempR += 48;
+                        dstRowPtrTempG += 48;
+                        dstRowPtrTempB += 48;
                     }
                 }
+                else
+                {
+                    Rpp8s *srcRowPtrTempR, *srcRowPtrTempG, *srcRowPtrTempB, *dstRowPtrTempR, *dstRowPtrTempG, *dstRowPtrTempB;
+                    srcRowPtrTempR = srcRowPtrR + xR;
+                    srcRowPtrTempG = srcRowPtrG + xG;
+                    srcRowPtrTempB = srcRowPtrB + xB;
+                    dstRowPtrTempR = dstRowPtr;
+                    dstRowPtrTempG = dstRowPtr + 1;
+                    dstRowPtrTempB = dstRowPtr + 2;
+                    if(yR < roi.xywhROI.roiHeight && xR < roi.xywhROI.roiWidth)
+                    {
+                        for(; xR < roi.xywhROI.roiWidth; xR++)
+                        {
+                            *dstRowPtrTempR = *srcRowPtrTempR;
+                            srcRowPtrTempR++;
+                            dstRowPtrTempR += 3;
+                        }
+                    }
+                    if(yG < roi.xywhROI.roiHeight && xG < roi.xywhROI.roiWidth)
+                    {
+                        for(; xG < roi.xywhROI.roiWidth; xG++)
+                        {
+                            *dstRowPtrTempG = *srcRowPtrTempG;
+                            srcRowPtrTempG++;
+                            dstRowPtrTempG += 3;
+                        }
+                    }
+                    if(yB < roi.xywhROI.roiHeight && xB < roi.xywhROI.roiWidth)
+                    {
+                        for(; xB < roi.xywhROI.roiWidth; xB++)
+                        {
+                            *dstRowPtrTempB = *srcRowPtrTempB;
+                            srcRowPtrTempB++;
+                            dstRowPtrTempB += 3;
+                        }
+                    }
+                }
+                if(yR < roi.xywhROI.roiHeight && xR >= roi.xywhROI.roiWidth)
+                {
+                    xR = xR - xOffsetRchn;
+                    Rpp8s *srcRowPtrTempR, *dstRowPtrTempR;
+                    srcRowPtrTempR = srcPtrImage + i * srcDescPtr->strides.hStride + xR;
+                    dstRowPtrTempR = dstRowPtr + xR * 3;
+                    for(; xR < roi.xywhROI.roiWidth; xR++)
+                    {
+                        *dstRowPtrTempR = *srcRowPtrTempR;
+                        srcRowPtrTempR++;
+                        dstRowPtrTempR += 3;
+                    }
+                }
+                if(yG < roi.xywhROI.roiHeight && xG >= roi.xywhROI.roiWidth)
+                {
+                    xG = xG - xOffsetGchn;
+                    Rpp8s *srcRowPtrTempG, *dstRowPtrTempG;
+                    srcRowPtrTempG = srcPtrImage + i * srcDescPtr->strides.hStride + srcDescPtr->strides.cStride + xG ;
+                    dstRowPtrTempG = dstRowPtr + xG * 3 + 1;
+                    for(; xG < roi.xywhROI.roiWidth; xG++)
+                    {
+                        *dstRowPtrTempG = *srcRowPtrTempG;
+                        srcRowPtrTempG++;
+                        dstRowPtrTempG += 3;
+                    }
+                }
+                if(yB < roi.xywhROI.roiHeight && xB >= roi.xywhROI.roiWidth)
+                {
+                    xB = xB - xOffsetBchn;
+                    Rpp8s *srcRowPtrTempB, *dstRowPtrTempB;
+                    srcRowPtrTempB = srcPtrImage + i * srcDescPtr->strides.hStride + xB + 2 * srcDescPtr->strides.cStride;
+                    dstRowPtrTempB = dstRowPtr + xB * 3 + 2;
+                    for(; xB < roi.xywhROI.roiWidth; xB++)
+                    {
+                        *dstRowPtrTempB = *srcRowPtrTempB;
+                        srcRowPtrTempB++;
+                        dstRowPtrTempB += 3;
+                    }
+                }
+                if(yR >= roi.xywhROI.roiHeight)
+                {
+                    int idx = yR - yOffsetRchn;
+                    Rpp8s *srcRowPtrTempR, *dstRowPtrTempR;
+                    srcRowPtrTempR = srcPtrImage + idx * srcDescPtr->strides.hStride;
+                    dstRowPtrTempR = dstPtrImage + idx * dstDescPtr->strides.hStride;
+                    for(int x = 0; x < roi.xywhROI.roiWidth; x++)
+                    {
+                        *dstRowPtrTempR = *srcRowPtrTempR;
+                        srcRowPtrTempR++;
+                        dstRowPtrTempR += 3;
+                    }
+                }
+                if(yG >= roi.xywhROI.roiHeight)
+                {
+                    int idx = yG - yOffsetGchn;
+                    Rpp8s *srcRowPtrTempG, *dstRowPtrTempG;
+                    srcRowPtrTempG = srcPtrImage + idx * srcDescPtr->strides.hStride + srcDescPtr->strides.cStride;
+                    dstRowPtrTempG = dstPtrImage + idx * dstDescPtr->strides.hStride + 1;
+                    for(int x = 0; x < roi.xywhROI.roiWidth; x++)
+                    {
+                        *dstRowPtrTempG = *srcRowPtrTempG;
+                        srcRowPtrTempG++;
+                        dstRowPtrTempG += 3;
+                    }
+                }
+                if(yB >= roi.xywhROI.roiHeight)
+                {
+                    int idx = yB - yOffsetBchn;
+                    Rpp8s *srcRowPtrTempB, *dstRowPtrTempB;
+                    srcRowPtrTempB = srcPtrImage + idx * srcDescPtr->strides.hStride + 2 * srcDescPtr->strides.cStride;
+                    dstRowPtrTempB = dstPtrImage + idx * dstDescPtr->strides.hStride + 2;
+                    for(int x = 0; x < roi.xywhROI.roiWidth; x++)
+                    {
+                        *dstRowPtrTempB = *srcRowPtrTempB;
+                        srcRowPtrTempB++;
+                        dstRowPtrTempB += 3;
+                    }
+                }
+                yR++;
+                yG++;
+                yB++;
             }
-            convert_pln3_pkd3<Rpp8s>(srcPtrChannel, dstPtrChannel, srcDescPtr, dstDescPtr, roi.xywhROI.roiWidth);
         }
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW ))
         {
             Rpp32u vectorIncrement = 32;
-            memcpy(dstPtrImage, srcPtrImage, sizeof(Rpp8s) * srcDescPtr->strides.nStride);
-            for(int c = 0; c < 3; c++)
+            for(int c = 0; c < srcDescPtr->c; c++)
             {
-                Rpp32u offset = yOffsetsLoc[c] + xOffsetsLoc[c];
-                Rpp8s *srcPtrImageTemp, *dstPtrImageTemp;
-                srcPtrImageTemp = srcPtrImage + (c * srcDescPtr->strides.cStride) + offset;
-                dstPtrImageTemp = dstPtrImage + (c * srcDescPtr->strides.cStride);
-                if(offset > 0)
+                Rpp8s *srcPtrChannel, *dstPtrChannel;
+                Rpp8s *srcPtrChannelRow, *dstPtrChannelRow, *srcPtrChannelRowOffset;
+                srcPtrChannel = srcPtrImage + (c * srcDescPtr->strides.cStride);
+                dstPtrChannel = dstPtrImage + (c * dstDescPtr->strides.cStride);
+                srcPtrChannelRow = srcPtrChannel;
+                srcPtrChannelRowOffset = srcPtrChannel + (yOffsets[c] * srcDescPtr->strides.hStride);
+                dstPtrChannelRow = dstPtrChannel;
+                int currentRow = yOffsets[c];
+                for(; currentRow < roi.xywhROI.roiHeight; currentRow++)
                 {
-                    for(int j = yOffsets[c]; j < roi.xywhROI.roiHeight; j++)
+                    Rpp8s *srcRowTempOffset, *dstRowTemp, *srcRowTemp;
+                    srcRowTempOffset = srcPtrChannelRowOffset + xOffsets[c];
+                    srcRowTemp = srcPtrChannelRow + (roi.xywhROI.roiWidth - xOffsets[c]);
+                    dstRowTemp = dstPtrChannelRow;
+                    int currentCol = xOffsets[c];
+                    Rpp32u alignedLength = (roi.xywhROI.roiWidth - currentCol) & ~31;
+                    if (((currentRow >= 0) && (currentRow < roi.xywhROI.roiHeight)) && ((currentCol >= 0) && (currentCol < roi.xywhROI.roiWidth)))
                     {
-                        Rpp8s *srcPtrTemp = srcPtrImageTemp;
-                        Rpp8s *dstPtrTemp = dstPtrImageTemp;
-                        Rpp32u aligLen = ((roi.xywhROI.roiWidth - xOffsetsLoc[c]) / vectorIncrement) * vectorIncrement;
-                        Rpp32u remElemLen = roi.xywhROI.roiWidth - ( aligLen + xOffsetsLoc[c]);
-                        if(offset < srcDescPtr->strides.cStride)
+                        for( ; currentCol < alignedLength; currentCol += vectorIncrement)
                         {
-                            for(int i = 0; i < aligLen; i += vectorIncrement)
-                            {
-                                __m256i p;
-                                p = _mm256_loadu_epi8(srcPtrTemp);
-                                _mm256_storeu_epi8(dstPtrTemp, p);
-                                srcPtrTemp += vectorIncrement;
-                                dstPtrTemp += vectorIncrement;
-                            }
-                            for(int i = 0; i < remElemLen; i++)
-                            {
-                                *dstPtrTemp = *srcPtrTemp;
-                                dstPtrTemp++;
-                                srcPtrTemp++;
-                            }
+                            __m256i p;
+                            p = _mm256_loadu_epi8(srcRowTempOffset);
+                            _mm256_storeu_epi8(dstRowTemp, p);
+                            srcRowTempOffset += vectorIncrement;
+                            dstRowTemp += vectorIncrement;
                         }
-                        srcPtrImageTemp += srcDescPtr->strides.hStride;
-                        dstPtrImageTemp += srcDescPtr->strides.hStride;
-                        offset += srcDescPtr->strides.hStride;
+                        for(; currentCol < roi.xywhROI.roiWidth; currentCol++)
+                            *dstRowTemp++ = *srcRowTempOffset++;
                     }
+                    for(int i = 0; i < xOffsets[c]; i++)
+                        *dstRowTemp++ = *srcRowTemp++;
+                    srcPtrChannelRowOffset += srcDescPtr->strides.hStride;
+                    dstPtrChannelRow += dstDescPtr->strides.hStride;
+                    srcPtrChannelRow += srcDescPtr->strides.hStride;
+                }
+                srcPtrChannelRow = srcPtrChannel + ((roi.xywhROI.roiHeight - yOffsets[c]) * srcDescPtr->strides.hStride);
+                for(int j = 0; j < yOffsets[c]; j++)
+                {
+                    Rpp8s *dstRowTemp, *srcRowTemp;
+                    srcRowTemp = srcPtrChannelRow;
+                    dstRowTemp = dstPtrChannelRow;
+                    Rpp32u alignedLength = roi.xywhROI.roiWidth & ~31;
+                    int currentCol = 0;
+                    for( ; currentCol < alignedLength; currentCol += vectorIncrement)
+                    {
+                        __m256i p;
+                        p = _mm256_loadu_epi8(srcRowTemp);
+                        _mm256_storeu_epi8(dstRowTemp, p);
+                        srcRowTemp += vectorIncrement;
+                        dstRowTemp += vectorIncrement;
+                    }
+                    for(; currentCol < roi.xywhROI.roiWidth; currentCol++)
+                        *dstRowTemp++ = *srcRowTemp++;
+                    srcPtrChannelRow += srcDescPtr->strides.hStride;
+                    dstPtrChannelRow += dstDescPtr->strides.hStride;
                 }
             }
         }
-        else if((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC ))
+        else if((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u vectorIncrement = 18;
-            memcpy(dstPtrImage, srcPtrImage, sizeof(Rpp8s) * srcDescPtr->strides.nStride);
-            for(int c = 0; c < 3; c++)
+            int yR = yOffsetRchn;
+            int yG = yOffsetGchn;
+            int yB = yOffsetBchn;
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
-                Rpp8s *srcPtrRow, *dstPtrRow, *srcPtrRowOff;
-                Rpp32u offset = c + yOffsetsLoc[c] * 3 + xOffsetsLoc[c] * 3;
-                srcPtrRow = dstPtrImage + c;
-                srcPtrRowOff = srcPtrImage + offset;
-                dstPtrRow = dstPtrImage + c;
-                if(offset > 2)
+                int xR = xOffsetRchn;
+                int xG = xOffsetGchn;
+                int xB = xOffsetBchn;
+                Rpp8s *srcRowPtrR, *srcRowPtrG, *srcRowPtrB, *dstRowPtr;
+                srcRowPtrR = srcPtrImage + (yR * srcDescPtr->strides.hStride);
+                srcRowPtrG = srcPtrImage + (yG * srcDescPtr->strides.hStride);
+                srcRowPtrB = srcPtrImage + (yB * srcDescPtr->strides.hStride);
+                dstRowPtr = dstPtrImage + i * dstDescPtr->strides.hStride;
+                if((yR >= 0) && (yR < roi.xywhROI.roiHeight) && (yG >= 0) && (yG < roi.xywhROI.roiHeight) && (yB >= 0) && (yB < roi.xywhROI.roiHeight))
                 {
-                    for(int i = yOffsets[c]; i < roi.xywhROI.roiHeight; i++)
+                    Rpp8s *srcRowPtrTempR, *srcRowPtrTempG, *srcRowPtrTempB, *dstRowPtrTempR, *dstRowPtrTempG, *dstRowPtrTempB;
+                    srcRowPtrTempR = srcRowPtrR + xR * 3;
+                    srcRowPtrTempG = srcRowPtrG + xG * 3 + 1;
+                    srcRowPtrTempB = srcRowPtrB + xB * 3 + 2;
+                    dstRowPtrTempR = dstRowPtr;
+                    dstRowPtrTempG = dstRowPtr + 1;
+                    dstRowPtrTempB = dstRowPtr + 2;
+                    for (int j = 0; j < roi.xywhROI.roiWidth; j += 16)
                     {
-                        Rpp8s *srcPtrTemp, *dstPtrTemp, *srcOffTemp;
-                        srcPtrTemp = srcPtrRow;
-                        dstPtrTemp = dstPtrRow; 
-                        srcOffTemp = srcPtrRowOff;
-                        int aligLen = ((roi.xywhROI.roiWidth * 3 - (xOffsetsLoc[0] * 3)) / vectorIncrement) * vectorIncrement;
-                        Rpp32u remElemLen = roi.xywhROI.roiWidth * 3 - (aligLen + xOffsetsLoc[c] * 3);
-                        if(offset < srcDescPtr->strides.nStride)
+                        if((xR >= 0) && (xR <= roi.xywhROI.roiWidth - 16) && (xG >= 0) && (xG <= roi.xywhROI.roiWidth - 16) && (xB >= 0) && (xB < roi.xywhROI.roiWidth - 16))
                         {
-                            for(int j = 0; j < aligLen; j += vectorIncrement)
+                            __m128 p1[12], p2[12], p3[12];
+                            rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3, srcRowPtrTempR, p1);    // simd loads
+                            rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3, srcRowPtrTempG, p2);    // simd loads
+                            rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3, srcRowPtrTempB, p3);    // simd loads
+                            for(int k = 0; k < 4; k++)
                             {
-                               __m128i p[2];
-                               p[0] = _mm_loadu_si128((__m128i *)srcPtrTemp);
-                               p[1] = _mm_loadu_si128((__m128i *)srcOffTemp);
-                               p[1] = _mm_shuffle_epi8(p[1],maskR);
-                               p[0] = _mm_shuffle_epi8(p[0],maskGB);
-                               p[1] = _mm_or_si128(p[1],p[0]);
-                               _mm_storeu_si128((__m128i *)dstPtrTemp,p[1]);
-                               srcPtrTemp += vectorIncrement;
-                               dstPtrTemp += vectorIncrement;
-                               srcOffTemp += vectorIncrement; 
+                                p1[k + 4] = p2[k];
+                                p1[k + 8] = p3[k];
                             }
-                            for(int j = 0; j < remElemLen; j+=3)
-                            {
-                                *dstPtrTemp = *srcOffTemp;
-                                dstPtrTemp += 3;
-                                srcOffTemp += 3;
-                            }
-                            srcPtrRow += srcDescPtr->strides.hStride;
-                            srcPtrRowOff += srcDescPtr->strides.hStride;
-                            dstPtrRow += dstDescPtr->strides.hStride;
-                            offset += srcDescPtr->strides.hStride;
+                            rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3, dstRowPtrTempR, p1);    // simd stores
+                            xR += 16;
+                            xG += 16;
+                            xB += 16;
                         }
-                    }
-                }
-            }
-        }
-    }
-    return RPP_SUCCESS;
-}
-
-RppStatus glitch_f32_f32_host_tensor(Rpp32f *srcPtr,
-                                   RpptDescPtr srcDescPtr,
-                                   Rpp32f *dstPtr,
-                                   RpptDescPtr dstDescPtr,
-                                   RpptChannelOffsets *rgbOffsets,
-                                   RpptROIPtr roiTensorPtrSrc,
-                                   RpptRoiType roiType,
-                                   RppLayoutParams layoutParams)
-{
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    omp_set_dynamic(0);
-#pragma omp parallel for num_threads(dstDescPtr->n)
-    for (int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
-    {
-        RpptROI roi;
-        RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
-        compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
-
-        Rpp32u xOffsetRchn = rgbOffsets[batchCount].r.x;
-        Rpp32u yOffsetRchn = rgbOffsets[batchCount].r.y;
-        Rpp32u xOffsetGchn = rgbOffsets[batchCount].g.x;
-        Rpp32u yOffsetGchn = rgbOffsets[batchCount].g.y;
-        Rpp32u xOffsetBchn = rgbOffsets[batchCount].b.x;
-        Rpp32u yOffsetBchn = rgbOffsets[batchCount].b.y;
-
-        Rpp32u elementsInRowMax = srcDescPtr->w;
-
-        Rpp32u xOffsets[3] = {xOffsetRchn, xOffsetGchn, xOffsetBchn};
-        Rpp32u yOffsets[3] = {yOffsetRchn, yOffsetGchn, yOffsetBchn};
-        Rpp32u xOffsetsLoc[3] = {xOffsetRchn, xOffsetGchn, xOffsetBchn};
-        Rpp32u yOffsetsLoc[3] = {yOffsetRchn * elementsInRowMax, yOffsetGchn * elementsInRowMax, yOffsetBchn * elementsInRowMax};
-
-        Rpp32f *srcPtrImage, *dstPtrImage;
-        srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
-        dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
-
-        Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
-        Rpp32f *srcPtrChannel, *dstPtrChannel;
-        srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
-        dstPtrChannel = dstPtrImage;
-
-        Rpp32u vectorIncrement = 8;
-
-        if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW ))
-        {
-            convert_float_pkd3_pln3(srcPtrChannel, dstPtrChannel, srcDescPtr, dstDescPtr, roi.xywhROI.roiWidth * 3);
-            for(int c = 0; c < 3; c++)
-            {
-                Rpp32u offset = yOffsetsLoc[c] + xOffsetsLoc[c];
-                Rpp32f *srcPtrImageTemp, *dstPtrImageTemp;
-                srcPtrImageTemp = dstPtrImage + (c * dstDescPtr->strides.cStride) + offset;
-                dstPtrImageTemp = dstPtrImage + (c * dstDescPtr->strides.cStride);
-                if(offset > 0)
-                {
-                    for(int j = yOffsets[c]; j < roi.xywhROI.roiHeight; j++)
-                    {
-                        Rpp32f *srcPtrTemp = srcPtrImageTemp;
-                        Rpp32f *dstPtrTemp = dstPtrImageTemp;
-                        Rpp32u aligLen = ((roi.xywhROI.roiWidth - xOffsetsLoc[c]) / vectorIncrement) * vectorIncrement;
-                        Rpp32u remElemLen = roi.xywhROI.roiWidth - ( aligLen + xOffsetsLoc[c]);
-                        if(offset < dstDescPtr->strides.cStride)
+                        else
                         {
-                            for(int i = 0; i < aligLen; i += vectorIncrement)
+                            if(xR < roi.xywhROI.roiWidth)
                             {
-                                __m256 p;
-                                p = _mm256_loadu_ps(srcPtrTemp);
-                                _mm256_storeu_ps(dstPtrTemp, p);
-                                srcPtrTemp += vectorIncrement;
-                                dstPtrTemp += vectorIncrement;
-                            }
-                            for(int i = 0; i < remElemLen; i++)
-                            {
-                                *dstPtrTemp = *srcPtrTemp;
-                                dstPtrTemp++;
-                                srcPtrTemp++;
-                            }
-                        }
-                        srcPtrImageTemp += dstDescPtr->strides.hStride;
-                        dstPtrImageTemp += dstDescPtr->strides.hStride;
-                        offset += dstDescPtr->strides.hStride;
-                    }
-                }
-            }
-        }
-        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
-        {
-            for(int c = 0; c < 3; c++)
-            {
-                Rpp32u offset = yOffsetsLoc[c] + xOffsetsLoc[c];
-                Rpp32f *srcPtrImageTemp, *dstPtrImageTemp;
-                srcPtrImageTemp = srcPtrImage + (c * srcDescPtr->strides.cStride) + offset;
-                dstPtrImageTemp = srcPtrImage + (c * srcDescPtr->strides.cStride);
-                if(offset > 0)
-                {
-                    for(int j = yOffsets[c]; j < roi.xywhROI.roiHeight; j++)
-                    {
-                        Rpp32f *srcPtrTemp = srcPtrImageTemp;
-                        Rpp32f *dstPtrTemp = dstPtrImageTemp;
-                        Rpp32u aligLen = ((roi.xywhROI.roiWidth - xOffsetsLoc[c]) / vectorIncrement) * vectorIncrement;
-                        Rpp32u remElemLen = roi.xywhROI.roiWidth - ( aligLen + xOffsetsLoc[c]);
-                        if(offset < srcDescPtr->strides.cStride)
-                        {
-                            for(int i = 0; i < aligLen; i += vectorIncrement)
-                            {
-                                __m256 p;
-                                p = _mm256_loadu_ps(srcPtrTemp);
-                                _mm256_storeu_ps(dstPtrTemp, p);
-                                srcPtrTemp += vectorIncrement;
-                                dstPtrTemp += vectorIncrement;
-                            }
-                            for(int i = 0; i < remElemLen; i++)
-                            {
-                                *dstPtrTemp = *srcPtrTemp;
-                                dstPtrTemp++;
-                                srcPtrTemp++;
-                            }
-                        }
-                        srcPtrImageTemp += srcDescPtr->strides.hStride;
-                        dstPtrImageTemp += srcDescPtr->strides.hStride;
-                        offset += srcDescPtr->strides.hStride;
-                    }
-                }
-            }
-            convert_float_pln3_pkd3(srcPtrChannel, dstPtrChannel, srcDescPtr, dstDescPtr, roi.xywhROI.roiWidth);
-        }
-        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW ))
-        {
-            memcpy(dstPtrImage, srcPtrImage, sizeof(Rpp32f) * srcDescPtr->strides.nStride);
-            for(int c = 0; c < 3; c++)
-            {
-                Rpp32u offset = yOffsetsLoc[c] + xOffsetsLoc[c];
-                Rpp32f *srcPtrImageTemp, *dstPtrImageTemp;
-                srcPtrImageTemp = srcPtrImage + (c * srcDescPtr->strides.cStride) + offset;
-                dstPtrImageTemp = dstPtrImage + (c * srcDescPtr->strides.cStride);
-                if(offset > 0)
-                {
-                    for(int j = yOffsets[c]; j < roi.xywhROI.roiHeight; j++)
-                    {
-                        Rpp32f *srcPtrTemp = srcPtrImageTemp;
-                        Rpp32f *dstPtrTemp = dstPtrImageTemp;
-                        Rpp32u aligLen = ((roi.xywhROI.roiWidth - xOffsetsLoc[c]) / vectorIncrement) * vectorIncrement;
-                        Rpp32u remElemLen = roi.xywhROI.roiWidth - ( aligLen + xOffsetsLoc[c]);
-                        if(offset < srcDescPtr->strides.cStride)
-                        {
-                            for(int i = 0; i < aligLen; i += vectorIncrement)
-                            {
-                                __m256 p;
-                                p = _mm256_loadu_ps(srcPtrTemp);
-                                _mm256_storeu_ps(dstPtrTemp, p);
-                                srcPtrTemp += vectorIncrement;
-                                dstPtrTemp += vectorIncrement;
-                            }
-                            for(int i = 0; i < remElemLen; i++)
-                            {
-                                *dstPtrTemp = *srcPtrTemp;
-                                dstPtrTemp++;
-                                srcPtrTemp++;
-                            }
-                        }
-                        srcPtrImageTemp += srcDescPtr->strides.hStride;
-                        dstPtrImageTemp += srcDescPtr->strides.hStride;
-                        offset += srcDescPtr->strides.hStride;
-                    }
-                }
-            }
-        }
-        else if((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC ))
-        {
-            vectorIncrement = 24;
-            memcpy(dstPtrImage, srcPtrImage, sizeof(Rpp32f) * srcDescPtr->strides.nStride);
-            for(int c = 0; c < 3; c++)
-            {
-                Rpp32u offset = c + yOffsetsLoc[c] * 3 + xOffsetsLoc[c] * 3;
-                Rpp32f *srcPtrRow, *srcPtrRowChn, *dstPtrRow;
-                srcPtrRow = dstPtrImage + c;
-                srcPtrRowChn = srcPtrImage + offset;
-                dstPtrRow = dstPtrImage + c;
-                if(offset > 2)
-                {
-                    for( int i = yOffsets[c]; i < roi.xywhROI.roiHeight; i++)
-                    {
-                        Rpp32f *srcPtrTemp, *srcPtrTempChn, *dstPtrTemp;
-                        srcPtrTemp = srcPtrRow;
-                        srcPtrTempChn = srcPtrRowChn;
-                        dstPtrTemp = dstPtrRow;
-                        int aligLen = ((roi.xywhROI.roiWidth * 3 - (xOffsetsLoc[0] * 3)) / 24) * 24;
-                        Rpp32u remElemLen = roi.xywhROI.roiWidth * 3 - (aligLen + xOffsetsLoc[c] * 3);
-                        if(offset < srcDescPtr->strides.nStride)
-                        {
-                            for( int j = 0; j < aligLen; j += vectorIncrement)
-                            {
-                                __m256 p1[3], p2[3];
-                                rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp, p1);
-                                rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTempChn, p2);
-                                p1[0] = p2[0];
-                                rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, p1);
-                                dstPtrTemp += vectorIncrement;
-                                srcPtrTemp += vectorIncrement;
-                                srcPtrTempChn += vectorIncrement;
-                            }
-                            for(int j = 0; j < remElemLen; j+=3)
-                            {
-                                *dstPtrTemp = *srcPtrTempChn;
-                                dstPtrTemp += 3;
-                                srcPtrTempChn += 3;
-                            }
-                        }
-                        dstPtrRow += dstDescPtr->strides.hStride;
-                        srcPtrRow += srcDescPtr->strides.hStride;
-                        srcPtrRowChn += srcDescPtr->strides.hStride;
-                        offset += srcDescPtr->strides.hStride;
-                    }
-                }
-            }
-        }
-    }
-    return RPP_SUCCESS;
-}
-
-RppStatus glitch_f16_f16_host_tensor(Rpp16f *srcPtr,
-                                   RpptDescPtr srcDescPtr,
-                                   Rpp16f *dstPtr,
-                                   RpptDescPtr dstDescPtr,
-                                   RpptChannelOffsets *rgbOffsets,
-                                   RpptROIPtr roiTensorPtrSrc,
-                                   RpptRoiType roiType,
-                                   RppLayoutParams layoutParams)
-{
-    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-    omp_set_dynamic(0);
-#pragma omp parallel for num_threads(dstDescPtr->n)
-    for (int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
-    {
-        RpptROI roi;
-        RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
-        compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
-
-        Rpp32u xOffsetRchn = rgbOffsets[batchCount].r.x;
-        Rpp32u yOffsetRchn = rgbOffsets[batchCount].r.y;
-        Rpp32u xOffsetGchn = rgbOffsets[batchCount].g.x;
-        Rpp32u yOffsetGchn = rgbOffsets[batchCount].g.y;
-        Rpp32u xOffsetBchn = rgbOffsets[batchCount].b.x;
-        Rpp32u yOffsetBchn = rgbOffsets[batchCount].b.y;
-
-        Rpp32u elementsInRowMax = srcDescPtr->w;
-
-        Rpp32u xOffsets[3] = {xOffsetRchn, xOffsetGchn, xOffsetBchn};
-        Rpp32u yOffsets[3] = {yOffsetRchn, yOffsetGchn, yOffsetBchn};
-        Rpp32u xOffsetsLoc[3] = {xOffsetRchn, xOffsetGchn, xOffsetBchn};
-        Rpp32u yOffsetsLoc[3] = {yOffsetRchn * elementsInRowMax, yOffsetGchn * elementsInRowMax, yOffsetBchn * elementsInRowMax};
-
-        Rpp16f *srcPtrImage, *dstPtrImage;
-        srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
-        dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
-
-        Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
-        Rpp16f *srcPtrChannel, *dstPtrChannel;
-        srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
-        dstPtrChannel = dstPtrImage;
-
-        Rpp32u vectorIncrement = 8;
-        if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW ))
-        {
-            convert_float_pkd3_pln3<Rpp16f>(srcPtrChannel, dstPtrChannel, srcDescPtr, dstDescPtr, roi.xywhROI.roiWidth * 3);
-            for(int c = 0; c < 3; c++)
-            {
-                Rpp32u offset = yOffsetsLoc[c] + xOffsetsLoc[c];
-                Rpp16f *srcPtrImageTemp, *dstPtrImageTemp;
-                srcPtrImageTemp = dstPtrImage + (c * dstDescPtr->strides.cStride) + offset;
-                dstPtrImageTemp = dstPtrImage + (c * dstDescPtr->strides.cStride);
-                if(offset > 0)
-                {
-                    for(int j = yOffsets[c]; j < roi.xywhROI.roiHeight; j++)
-                    {
-                        Rpp16f *srcPtrTemp = srcPtrImageTemp;
-                        Rpp16f *dstPtrTemp = dstPtrImageTemp;
-                        Rpp32u aligLen = ((roi.xywhROI.roiWidth - xOffsetsLoc[c]) / vectorIncrement) * vectorIncrement;
-                        Rpp32u remElemLen = roi.xywhROI.roiWidth - ( aligLen + xOffsetsLoc[c]);
-                        if(offset < dstDescPtr->strides.cStride)
-                        {
-                            for(int i = 0; i < aligLen; i += vectorIncrement)
-                            {
-                                __m256 p;
-                                Rpp32f srcPtrTemp_ps[8], dstPtrTemp_ps[8];
-                                for(int cnt = 0; cnt < vectorIncrement; cnt++)
+                                for( ; xR < roi.xywhROI.roiWidth; xR++)
                                 {
-                                    srcPtrTemp_ps[cnt] = (Rpp32f)srcPtrTemp[cnt];
+                                    *dstRowPtrTempR = *srcRowPtrTempR;
+                                    dstRowPtrTempR += 3;
+                                    srcRowPtrTempR += 3;
                                 }
-                                p = _mm256_loadu_ps(srcPtrTemp_ps);
-                                _mm256_storeu_ps(dstPtrTemp_ps, p);
-                                for(int cnt = 0; cnt < vectorIncrement; cnt++)
-                                {
-                                    dstPtrTemp[cnt] = (Rpp16f)dstPtrTemp_ps[cnt];
-                                }
-                                srcPtrTemp += 8;
-                                dstPtrTemp += 8;
                             }
-                            for(int i = 0; i < remElemLen; i++)
+                            if(xG < roi.xywhROI.roiWidth)
                             {
-                                *dstPtrTemp = *srcPtrTemp;
-                                dstPtrTemp++;
-                                srcPtrTemp++;
+                                for( ; xG < roi.xywhROI.roiWidth; xG++)
+                                {
+                                   *dstRowPtrTempG = *srcRowPtrTempG;
+                                    srcRowPtrTempG += 3;
+                                    dstRowPtrTempG += 3;
+                                }
                             }
+                            if(xB < roi.xywhROI.roiWidth)
+                            {
+                                for( ; xB < roi.xywhROI.roiWidth; xB++)
+                                {
+                                    *dstRowPtrTempB = *srcRowPtrTempB;
+                                    dstRowPtrTempB += 3;
+                                    srcRowPtrTempB += 3;
+                                }
+                            }
+                            break;
                         }
-                        srcPtrImageTemp += dstDescPtr->strides.hStride;
-                        dstPtrImageTemp += dstDescPtr->strides.hStride;
-                        offset += dstDescPtr->strides.hStride;
+                        srcRowPtrTempR += 48;
+                        srcRowPtrTempG += 48;
+                        srcRowPtrTempB += 48;
+                        dstRowPtrTempR += 48;
+                        dstRowPtrTempG += 48;
+                        dstRowPtrTempB += 48;
                     }
                 }
-            }
-        }
-        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
-        {
-            for(int c = 0; c < 3; c++)
-            {
-                Rpp32u offset = yOffsetsLoc[c] + xOffsetsLoc[c];
-                Rpp16f *srcPtrImageTemp, *dstPtrImageTemp;
-                srcPtrImageTemp = srcPtrImage + (c * srcDescPtr->strides.cStride) + offset;
-                dstPtrImageTemp = srcPtrImage + (c * srcDescPtr->strides.cStride);
-                if(offset > 0)
+                else
                 {
-                    for(int j = yOffsets[c]; j < roi.xywhROI.roiHeight; j++)
+                    Rpp8s *srcRowPtrTempR, *srcRowPtrTempG, *srcRowPtrTempB, *dstRowPtrTempR, *dstRowPtrTempG, *dstRowPtrTempB;
+                    srcRowPtrTempR = srcRowPtrR + xR * 3;
+                    srcRowPtrTempG = srcRowPtrG + xG * 3 + 1;
+                    srcRowPtrTempB = srcRowPtrB + xB * 3 + 2;
+                    dstRowPtrTempR = dstRowPtr;
+                    dstRowPtrTempG = dstRowPtr + 1;
+                    dstRowPtrTempB = dstRowPtr + 2;
+                    if(yR < roi.xywhROI.roiHeight && xR < roi.xywhROI.roiWidth)
                     {
-                        Rpp16f *srcPtrTemp = srcPtrImageTemp;
-                        Rpp16f *dstPtrTemp = dstPtrImageTemp;
-                        Rpp32u aligLen = ((roi.xywhROI.roiWidth - xOffsetsLoc[c]) / vectorIncrement) * vectorIncrement;
-                        Rpp32u remElemLen = roi.xywhROI.roiWidth - ( aligLen + xOffsetsLoc[c]);
-                        if(offset < srcDescPtr->strides.cStride)
+                        for(; xR < roi.xywhROI.roiWidth; xR++)
                         {
-                            for(int i = 0; i < aligLen; i += vectorIncrement)
-                            {
-                                __m256 p;
-                                Rpp32f srcPtrTemp_ps[8], dstPtrTemp_ps[8];
-                                for(int cnt = 0; cnt < vectorIncrement; cnt++)
-                                {
-                                    srcPtrTemp_ps[cnt] = (Rpp32f)srcPtrTemp[cnt];
-                                }
-                                p = _mm256_loadu_ps(srcPtrTemp_ps);
-                                _mm256_storeu_ps(dstPtrTemp_ps, p);
-                                for(int cnt = 0; cnt < vectorIncrement; cnt++)
-                                {
-                                    dstPtrTemp[cnt] = (Rpp16f)dstPtrTemp_ps[cnt];
-                                }
-                                srcPtrTemp += 8;
-                                dstPtrTemp += 8;
-                             }
-                            for(int i = 0; i < remElemLen; i++)
-                            {
-                                *dstPtrTemp = *srcPtrTemp;
-                                dstPtrTemp++;
-                                srcPtrTemp++;
-                            }
+                            *dstRowPtrTempR = *srcRowPtrTempR;
+                            srcRowPtrTempR += 3;
+                            dstRowPtrTempR += 3;
                         }
-                        srcPtrImageTemp += srcDescPtr->strides.hStride;
-                        dstPtrImageTemp += srcDescPtr->strides.hStride;
-                        offset += srcDescPtr->strides.hStride;
+                    }
+                    if(yG < roi.xywhROI.roiHeight && xG < roi.xywhROI.roiWidth)
+                    {
+                        for(; xG < roi.xywhROI.roiWidth; xG++)
+                        {
+                            *dstRowPtrTempG = *srcRowPtrTempG;
+                            srcRowPtrTempG += 3;
+                            dstRowPtrTempG += 3;
+                        }
+                    }
+                    if(yB < roi.xywhROI.roiHeight && xB < roi.xywhROI.roiWidth)
+                    {
+                        for(; xB < roi.xywhROI.roiWidth; xB++)
+                        {
+                            *dstRowPtrTempB = *srcRowPtrTempB;
+                            dstRowPtrTempB += 3;
+                            srcRowPtrTempB += 3;
+                        }
                     }
                 }
-            }
-            convert_float_pln3_pkd3<Rpp16f>(srcPtrChannel, dstPtrChannel, srcDescPtr, dstDescPtr, roi.xywhROI.roiWidth);
-        }
-        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW ))
-        {
-            memcpy(dstPtrImage, srcPtrImage, sizeof(Rpp16f) * srcDescPtr->strides.nStride);
-            for(int c = 0; c < 3; c++)
-            {
-                Rpp32u offset = yOffsetsLoc[c] + xOffsetsLoc[c];
-                Rpp16f *srcPtrImageTemp, *dstPtrImageTemp;
-                srcPtrImageTemp = srcPtrImage + (c * srcDescPtr->strides.cStride) + offset;
-                dstPtrImageTemp = dstPtrImage + (c * srcDescPtr->strides.cStride);
-                if(offset > 0)
+                if(yR < roi.xywhROI.roiHeight && xR >= roi.xywhROI.roiWidth)
                 {
-                    for(int j = yOffsets[c]; j < roi.xywhROI.roiHeight; j++)
+                    xR = xR - xOffsetRchn;
+                    Rpp8s *srcRowPtrTempR, *dstRowPtrTempR;
+                    srcRowPtrTempR = srcPtrImage + i * srcDescPtr->strides.hStride + xR * 3;
+                    dstRowPtrTempR = dstRowPtr + xR * 3;
+                    for(; xR < roi.xywhROI.roiWidth; xR++)
                     {
-                        Rpp16f *srcPtrTemp = srcPtrImageTemp;
-                        Rpp16f *dstPtrTemp = dstPtrImageTemp;
-                        Rpp32u aligLen = ((roi.xywhROI.roiWidth - xOffsetsLoc[c]) / vectorIncrement) * vectorIncrement;
-                        Rpp32u remElemLen = roi.xywhROI.roiWidth - ( aligLen + xOffsetsLoc[c]);
-                        if(offset < srcDescPtr->strides.cStride)
-                        {
-                            for(int i = 0; i < aligLen; i += vectorIncrement)
-                            {
-                                Rpp32f srcPtrTemp_ps[8];
-                                Rpp32f dstPtrTemp_ps[8];
-                                for(int cnt = 0; cnt < vectorIncrement; cnt++)
-                                    srcPtrTemp_ps[cnt] = (Rpp32f)srcPtrTemp[cnt];
-                                __m256 p;
-                                p = _mm256_loadu_ps(srcPtrTemp_ps);
-                                _mm256_storeu_ps(dstPtrTemp_ps, p);
-                                for(int cnt = 0; cnt < vectorIncrement; cnt++)
-                                    dstPtrTemp[cnt] = (Rpp16f)dstPtrTemp_ps[cnt];
-                                srcPtrTemp += 8;
-                                dstPtrTemp += 8;
-                            }
-                            for(int i = 0; i < remElemLen; i++)
-                            {
-                                *dstPtrTemp = *srcPtrTemp;
-                                dstPtrTemp++;
-                                srcPtrTemp++;
-                            }
-                        }
-                        srcPtrImageTemp += srcDescPtr->strides.hStride;
-                        dstPtrImageTemp += srcDescPtr->strides.hStride;
-                        offset += srcDescPtr->strides.hStride;
+                        *dstRowPtrTempR = *srcRowPtrTempR;
+                        srcRowPtrTempR += 3;
+                        dstRowPtrTempR += 3;
                     }
                 }
-            }
-        }
-        else if((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC ))
-        {
-            vectorIncrement = 24;
-            memcpy(dstPtrImage, srcPtrImage, sizeof(Rpp16f) * srcDescPtr->strides.nStride);
-            for(int c = 0; c < 3; c++)
-            {
-                Rpp32u offset = c + yOffsetsLoc[c] * 3 + xOffsetsLoc[c] * 3;
-                Rpp16f *srcPtrRow, *srcPtrRowChn, *dstPtrRow;
-                srcPtrRow = dstPtrImage + c;
-                srcPtrRowChn = srcPtrImage + offset;
-                dstPtrRow = dstPtrImage + c;
-                if(offset > 0)
+                if(yG < roi.xywhROI.roiHeight && xG >= roi.xywhROI.roiWidth)
                 {
-                    for( int i = yOffsets[c]; i < roi.xywhROI.roiHeight; i++)
+                    xG = xG - xOffsetGchn;
+                    Rpp8s *srcRowPtrTempG, *dstRowPtrTempG;
+                    srcRowPtrTempG = srcPtrImage + i * srcDescPtr->strides.hStride + xG * 3 + 1;
+                    dstRowPtrTempG = dstRowPtr + xG * 3 + 1;
+                    for(; xG < roi.xywhROI.roiWidth; xG++)
                     {
-                        Rpp16f *srcPtrTemp, *srcPtrTempChn, *dstPtrTemp;
-                        srcPtrTemp = srcPtrRow;
-                        srcPtrTempChn = srcPtrRowChn;
-                        dstPtrTemp = dstPtrRow;
-                        int aligLen = ((roi.xywhROI.roiWidth * 3 - (xOffsetsLoc[0] * 3)) / vectorIncrement) * vectorIncrement;
-                        Rpp32u remElemLen = roi.xywhROI.roiWidth * 3 - (aligLen + xOffsetsLoc[c] * 3);
-                        if(offset < srcDescPtr->strides.nStride)
-                        {
-                            for( int j = 0; j < aligLen; j += vectorIncrement)
-                            {
-                                __m256 p1[3], p2[3];
-                                Rpp32f srcPtrTemp_ps[24], srcPtrTempChn_ps[24], dstPtrTemp_ps[25];
-                                for(int cnt = 0; cnt < vectorIncrement; cnt++)
-                                {
-                                    srcPtrTemp_ps[cnt] = (Rpp32f)srcPtrTemp[cnt];
-                                    srcPtrTempChn_ps[cnt] = (Rpp32f)srcPtrTempChn[cnt];
-                                }
-                                rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp_ps, p1);
-                                rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTempChn_ps, p2);
-                                p1[0] = p2[0];
-                                rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp_ps, p1);
-                                for(int cnt = 0; cnt < vectorIncrement; cnt++)
-                                {
-                                    dstPtrTemp[cnt] = (Rpp16f)dstPtrTemp_ps[cnt];
-                                }
-                                dstPtrTemp += vectorIncrement;
-                                srcPtrTemp += vectorIncrement;
-                                srcPtrTempChn += vectorIncrement;
-                            }
-                            for(int j = 0; j < remElemLen; j+=3)
-                            {
-                                *dstPtrTemp = *srcPtrTempChn;
-                                dstPtrTemp += 3;
-                                srcPtrTempChn += 3;
-                            }
-                        }
-                        dstPtrRow += dstDescPtr->strides.hStride;
-                        srcPtrRow += srcDescPtr->strides.hStride;
-                        srcPtrRowChn += srcDescPtr->strides.hStride;
-                        offset += srcDescPtr->strides.hStride;
+                        *dstRowPtrTempG = *srcRowPtrTempG;
+                        srcRowPtrTempG += 3;
+                        dstRowPtrTempG += 3;
                     }
                 }
+                if(yB < roi.xywhROI.roiHeight && xB >= roi.xywhROI.roiWidth)
+                {
+                    xB = xB - xOffsetBchn;
+                    Rpp8s *srcRowPtrTempB, *dstRowPtrTempB;
+                    srcRowPtrTempB = srcPtrImage + i * srcDescPtr->strides.hStride + xB * 3 + 2;
+                    dstRowPtrTempB = dstRowPtr + xB * 3 + 2;
+                    for(; xB < roi.xywhROI.roiWidth; xB++)
+                    {
+                        *dstRowPtrTempB = *srcRowPtrTempB;
+                        srcRowPtrTempB += 3;
+                        dstRowPtrTempB += 3;
+                    }
+                }
+                if(yR >= roi.xywhROI.roiHeight)
+                {
+                    int idx = yR - yOffsetRchn;
+                    Rpp8s *srcRowPtrTempR, *dstRowPtrTempR;
+                    srcRowPtrTempR = srcPtrImage + idx * srcDescPtr->strides.hStride;
+                    dstRowPtrTempR = dstPtrImage + idx * dstDescPtr->strides.hStride;
+                    for(int x = 0; x < roi.xywhROI.roiWidth; x++)
+                    {
+                        *dstRowPtrTempR = *srcRowPtrTempR;
+                        srcRowPtrTempR += 3;
+                        dstRowPtrTempR += 3;
+                    }
+                }
+                if(yG >= roi.xywhROI.roiHeight)
+                {
+                    int idx = yG - yOffsetGchn;
+                    Rpp8s *srcRowPtrTempG, *dstRowPtrTempG;
+                    srcRowPtrTempG = srcPtrImage + idx * srcDescPtr->strides.hStride + 1;
+                    dstRowPtrTempG = dstPtrImage + idx * dstDescPtr->strides.hStride + 1;
+                    for(int x = 0; x < roi.xywhROI.roiWidth; x++)
+                    {
+                        *dstRowPtrTempG = *srcRowPtrTempG;
+                        srcRowPtrTempG += 3;
+                        dstRowPtrTempG += 3;
+                    }
+                }
+                if(yB >= roi.xywhROI.roiHeight)
+                {
+                    int idx = yB - yOffsetBchn;
+                    Rpp8s *srcRowPtrTempB, *dstRowPtrTempB;
+                    srcRowPtrTempB = srcPtrImage + idx * srcDescPtr->strides.hStride + 2;
+                    dstRowPtrTempB = dstPtrImage + idx * dstDescPtr->strides.hStride + 2;
+                    for(int x = 0; x < roi.xywhROI.roiWidth; x++)
+                    {
+                        *dstRowPtrTempB = *srcRowPtrTempB;
+                        srcRowPtrTempB += 3;
+                        dstRowPtrTempB += 3;
+                    }
+                }
+                yR++;
+                yG++;
+                yB++;
             }
         }
     }
