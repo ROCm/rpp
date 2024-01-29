@@ -119,11 +119,14 @@ RppStatus color_temperature_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK(*srcPtrTempR++ + adjustmentValue);
-                    dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK(*srcPtrTempG++);
-                    dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK(*srcPtrTempB++ - adjustmentValue);
+                    dstPtrTemp[0] = (Rpp8u) RPPPIXELCHECK(*srcPtrTempR + adjustmentValue);
+                    dstPtrTemp[1] = (Rpp8u) RPPPIXELCHECK(*srcPtrTempG);
+                    dstPtrTemp[2] = (Rpp8u) RPPPIXELCHECK(*srcPtrTempB - adjustmentValue);
 
                     dstPtrTemp += 3;
+                    srcPtrTempR++;
+                    srcPtrTempG++;
+                    srcPtrTempB++;
                 }
 
                 srcPtrRowR += srcDescPtr->strides.hStride;
@@ -216,10 +219,13 @@ RppStatus color_temperature_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    *dstPtrTempR++ = (Rpp8u) RPPPIXELCHECK(*srcPtrTempR++ + adjustmentValue);
-                    *dstPtrTempG++ = (Rpp8u) RPPPIXELCHECK(*srcPtrTempG++);
-                    *dstPtrTempB++ = (Rpp8u) RPPPIXELCHECK(*srcPtrTempB++ - adjustmentValue);
+                    *dstPtrTempR++ = (Rpp8u) RPPPIXELCHECK(*srcPtrTempR + adjustmentValue);
+                    *dstPtrTempG++ = (Rpp8u) RPPPIXELCHECK(*srcPtrTempG);
+                    *dstPtrTempB++ = (Rpp8u) RPPPIXELCHECK(*srcPtrTempB - adjustmentValue);
 
+                    srcPtrTempR++;
+                    srcPtrTempG++;
+                    srcPtrTempB++;
                 }
 
                 srcPtrRowR += srcDescPtr->strides.hStride;
@@ -352,11 +358,14 @@ RppStatus color_temperature_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = RPPPIXELCHECKF32(*srcPtrTempR++ + adjustmentValue);
-                    dstPtrTemp[1] = RPPPIXELCHECKF32(*srcPtrTempG++);
-                    dstPtrTemp[2] = RPPPIXELCHECKF32(*srcPtrTempB++ - adjustmentValue);
+                    dstPtrTemp[0] = RPPPIXELCHECKF32(*srcPtrTempR + adjustmentValue);
+                    dstPtrTemp[1] = RPPPIXELCHECKF32(*srcPtrTempG);
+                    dstPtrTemp[2] = RPPPIXELCHECKF32(*srcPtrTempB - adjustmentValue);
 
                     dstPtrTemp += 3;
+                    srcPtrTempR++;
+                    srcPtrTempG++;
+                    srcPtrTempB++;
                 }
 
                 srcPtrRowR += srcDescPtr->strides.hStride;
@@ -449,9 +458,13 @@ RppStatus color_temperature_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    *dstPtrTempR++ = RPPPIXELCHECKF32(*srcPtrTempR++ + adjustmentValue);
-                    *dstPtrTempG++ = RPPPIXELCHECKF32(*srcPtrTempG++);
-                    *dstPtrTempB++ = RPPPIXELCHECKF32(*srcPtrTempB++ - adjustmentValue);
+                    *dstPtrTempR++ = RPPPIXELCHECKF32(*srcPtrTempR + adjustmentValue);
+                    *dstPtrTempG++ = RPPPIXELCHECKF32(*srcPtrTempG);
+                    *dstPtrTempB++ = RPPPIXELCHECKF32(*srcPtrTempB - adjustmentValue);
+
+                    srcPtrTempR++;
+                    srcPtrTempG++;
+                    srcPtrTempB++;
                 }
 
                 srcPtrRowR += srcDescPtr->strides.hStride;
@@ -611,11 +624,14 @@ RppStatus color_temperature_f16_f16_host_tensor(Rpp16f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = (Rpp16f) RPPPIXELCHECKF32(*srcPtrTempR++ + adjustmentValue);
-                    dstPtrTemp[1] = (Rpp16f) RPPPIXELCHECKF32(*srcPtrTempG++);
-                    dstPtrTemp[2] = (Rpp16f) RPPPIXELCHECKF32(*srcPtrTempB++ - adjustmentValue);
+                    dstPtrTemp[0] = (Rpp16f) RPPPIXELCHECKF32(*srcPtrTempR + adjustmentValue);
+                    dstPtrTemp[1] = (Rpp16f) RPPPIXELCHECKF32(*srcPtrTempG);
+                    dstPtrTemp[2] = (Rpp16f) RPPPIXELCHECKF32(*srcPtrTempB - adjustmentValue);
 
                     dstPtrTemp += 3;
+                    srcPtrTempR++;
+                    srcPtrTempG++;
+                    srcPtrTempB++;
                 }
 
                 srcPtrRowR += srcDescPtr->strides.hStride;
@@ -733,9 +749,13 @@ RppStatus color_temperature_f16_f16_host_tensor(Rpp16f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    *dstPtrTempR++ = (Rpp16f) RPPPIXELCHECKF32(*srcPtrTempR++ + adjustmentValue);
-                    *dstPtrTempG++ = (Rpp16f) RPPPIXELCHECKF32(*srcPtrTempG++);
-                    *dstPtrTempB++ = (Rpp16f) RPPPIXELCHECKF32(*srcPtrTempB++ - adjustmentValue);
+                    *dstPtrTempR++ = (Rpp16f) RPPPIXELCHECKF32(*srcPtrTempR + adjustmentValue);
+                    *dstPtrTempG++ = (Rpp16f) RPPPIXELCHECKF32(*srcPtrTempG);
+                    *dstPtrTempB++ = (Rpp16f) RPPPIXELCHECKF32(*srcPtrTempB - adjustmentValue);
+
+                    srcPtrTempR++;
+                    srcPtrTempG++;
+                    srcPtrTempB++;
                 }
 
                 srcPtrRowR += srcDescPtr->strides.hStride;
@@ -868,11 +888,14 @@ RppStatus color_temperature_i8_i8_host_tensor(Rpp8s *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = (Rpp8s) RPPPIXELCHECKI8(*srcPtrTempR++ + adjustmentValue);
-                    dstPtrTemp[1] = (Rpp8s) RPPPIXELCHECKI8(*srcPtrTempG++);
-                    dstPtrTemp[2] = (Rpp8s) RPPPIXELCHECKI8(*srcPtrTempB++ - adjustmentValue);
+                    dstPtrTemp[0] = (Rpp8s) RPPPIXELCHECKI8(*srcPtrTempR + adjustmentValue);
+                    dstPtrTemp[1] = (Rpp8s) RPPPIXELCHECKI8(*srcPtrTempG);
+                    dstPtrTemp[2] = (Rpp8s) RPPPIXELCHECKI8(*srcPtrTempB - adjustmentValue);
 
                     dstPtrTemp += 3;
+                    srcPtrTempR++;
+                    srcPtrTempG++;
+                    srcPtrTempB++;
                 }
 
                 srcPtrRowR += srcDescPtr->strides.hStride;
@@ -965,9 +988,13 @@ RppStatus color_temperature_i8_i8_host_tensor(Rpp8s *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    *dstPtrTempR++ = (Rpp8s) RPPPIXELCHECKI8(*srcPtrTempR++ + adjustmentValue);
-                    *dstPtrTempG++ = (Rpp8s) RPPPIXELCHECKI8(*srcPtrTempG++);
-                    *dstPtrTempB++ = (Rpp8s) RPPPIXELCHECKI8(*srcPtrTempB++ - adjustmentValue);
+                    *dstPtrTempR++ = (Rpp8s) RPPPIXELCHECKI8(*srcPtrTempR + adjustmentValue);
+                    *dstPtrTempG++ = (Rpp8s) RPPPIXELCHECKI8(*srcPtrTempG);
+                    *dstPtrTempB++ = (Rpp8s) RPPPIXELCHECKI8(*srcPtrTempB - adjustmentValue);
+
+                    srcPtrTempR++;
+                    srcPtrTempG++;
+                    srcPtrTempB++;
                 }
 
                 srcPtrRowR += srcDescPtr->strides.hStride;
