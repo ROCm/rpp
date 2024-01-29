@@ -124,3 +124,33 @@ RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr,
         return RPP_ERROR_NOT_IMPLEMENTED;
     }
 }
+
+/******************** down_mixing ********************/
+
+RppStatus rppt_down_mixing_host(RppPtr_t srcPtr,
+                                RpptDescPtr srcDescPtr,
+                                RppPtr_t dstPtr,
+                                RpptDescPtr dstDescPtr,
+                                Rpp32s *srcLengthTensor,
+                                Rpp32s *channelsTensor,
+                                bool  normalizeWeights,
+                                rppHandle_t rppHandle)
+{
+    if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        down_mixing_host_tensor(static_cast<Rpp32f*>(srcPtr),
+                                srcDescPtr,
+                                static_cast<Rpp32f*>(dstPtr),
+                                dstDescPtr,
+                                srcLengthTensor,
+                                channelsTensor,
+                                normalizeWeights,
+                                rpp::deref(rppHandle));
+
+        return RPP_SUCCESS;
+    }
+    else
+    {
+        return RPP_ERROR_NOT_IMPLEMENTED;
+    }
+}

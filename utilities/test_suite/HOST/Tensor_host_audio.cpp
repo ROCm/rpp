@@ -195,6 +195,22 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 3:
+                {
+                    testCaseName = "down_mixing";
+                    bool normalizeWeights = false;
+
+                    for (int i = 0; i < batchSize; i++)
+                    {
+                        srcDims[i].height = dstDims[i].height = srcLengthTensor[i];
+                        srcDims[i].width = dstDims[i].width = 1;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    rppt_down_mixing_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcLengthTensor, channelsTensor, normalizeWeights, handle);
+
+                    break;
+                }
                 default:
                 {
                     missingFuncFlag = 1;

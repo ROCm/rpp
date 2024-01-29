@@ -2436,6 +2436,29 @@ static inline __m128 log_ps(__m128 x)
     return x;
 }
 
+inline Rpp32f rpp_hsum_ps(__m128 x)
+{
+    __m128 shuf = _mm_movehdup_ps(x);        // broadcast elements 3,1 to 2,0
+    __m128 sums = _mm_add_ps(x, shuf);
+    shuf = _mm_movehl_ps(shuf, sums);        // high half -> low half
+    sums = _mm_add_ss(sums, shuf);
+    return _mm_cvtss_f32(sums);
+}
+
+inline Rpp32f rpp_hsum_ps(__m256 x)
+{
+    __m128 p0 = _mm256_extractf128_ps(x, 1); // Contains x7, x6, x5, x4
+    __m128 p1 = _mm256_castps256_ps128(x);   // Contains x3, x2, x1, x0
+    __m128 sum = _mm_add_ps(p0, p1);         // Contains x3 + x7, x2 + x6, x1 + x5, x0 + x4
+    p0 = sum;                                // Contains -, -, x1 + x5, x0 + x4
+    p1 = _mm_movehl_ps(sum, sum);            // Contains -, -, x3 + x7, x2 + x6
+    sum = _mm_add_ps(p0, p1);                // Contains -, -, x1 + x3 + x5 + x7, x0 + x2 + x4 + x6
+    p0 = sum;                                // Contains -, -, -, x0 + x2 + x4 + x6
+    p1 = _mm_shuffle_ps(sum, sum, 0x1);      // Contains -, -, -, x1 + x3 + x5 + x7
+    sum = _mm_add_ss(p0, p1);                // Contains -, -, -, x0 + x1 + x2 + x3 + x4 + x5 + x6 + x7
+    return _mm_cvtss_f32(sum);
+}
+
 static inline void fast_matmul4x4_sse(float *A, float *B, float *C)
 {
     __m128 row1 = _mm_load_ps(&B[0]);                   // Row 0 of B

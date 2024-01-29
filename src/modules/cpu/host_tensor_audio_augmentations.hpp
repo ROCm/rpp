@@ -23,5 +23,6 @@ THE SOFTWARE.
 #include "kernel/non_silent_region_detection.hpp"
 #include "kernel/to_decibels.hpp"
 #include "kernel/pre_emphasis_filter.hpp"
+#include "kernel/down_mixing.hpp"
 
 #endif // HOST_TENSOR_AUDIO_AUGMENTATIONS_HPP
