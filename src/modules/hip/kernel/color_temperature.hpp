@@ -1,47 +1,39 @@
 #include <hip/hip_runtime.h>
 #include "rpp_hip_common.hpp"
 
-__device__ void color_temperature_hip_compute(uchar *srcPtr, d_float24 *pix_f24, float4 *adjustmentValue_f4)
+template <typename T>
+__device__ void color_temperature_hip_compute(T *srcPtr, d_float24 *pix_f24, float4 *adjustmentValue_f4)
 {
-    pix_f24->f4[0] += *adjustmentValue_f4;
-    pix_f24->f4[1] += *adjustmentValue_f4;
-    pix_f24->f4[4] -= *adjustmentValue_f4;
-    pix_f24->f4[5] -= *adjustmentValue_f4;
-}
-
-__device__ void color_temperature_hip_compute(float *srcPtr, d_float24 *pix_f24, float4 *adjustmentValue_f4)
-{
-    float4 adjustment_f4 = *adjustmentValue_f4 * (float4) ONE_OVER_255;
-    pix_f24->f4[0] += adjustment_f4;
-    pix_f24->f4[1] += adjustment_f4;
-    pix_f24->f4[4] -= adjustment_f4;
-    pix_f24->f4[5] -= adjustment_f4;
-}
-
-__device__ void color_temperature_hip_compute(signed char *srcPtr, d_float24 *pix_f24, float4 *adjustmentValue_f4)
-{
-     pix_f24->f4[0] += *adjustmentValue_f4;
-    pix_f24->f4[1] += *adjustmentValue_f4;
-    pix_f24->f4[4] -= *adjustmentValue_f4;
-    pix_f24->f4[5] -= *adjustmentValue_f4;
-}
-
-__device__ void color_temperature_hip_compute(half *srcPtr, d_float24 *pix_f24, float4 *adjustmentValue_f4)
-{
-    float4 adjustment_f4 = *adjustmentValue_f4 * (float4) ONE_OVER_255;
-    pix_f24->f4[0] += adjustment_f4;
-    pix_f24->f4[1] += adjustment_f4;
-    pix_f24->f4[4] -= adjustment_f4;
-    pix_f24->f4[5] -= adjustment_f4;
+    float4 adjustment_f4;
+    if constexpr ((std::is_same<T, float>::value) || (std::is_same<T, half>::value))
+    {
+        adjustment_f4 = *adjustmentValue_f4 * (float4) ONE_OVER_255;
+        rpp_hip_math_add8_const(&pix_f24->f8[0], &pix_f24->f8[0], adjustment_f4);
+        rpp_hip_math_subtract8_const(&pix_f24->f8[2], &pix_f24->f8[2], adjustment_f4);
+    }
+    else if constexpr (std::is_same<T, schar>::value)
+    {
+        adjustment_f4 = *adjustmentValue_f4;
+        rpp_hip_math_add24_const(pix_f24, pix_f24, (float4)128);
+        rpp_hip_math_add8_const(&pix_f24->f8[0], &pix_f24->f8[0], adjustment_f4);
+        rpp_hip_math_subtract8_const(&pix_f24->f8[2], &pix_f24->f8[2], adjustment_f4);
+        rpp_hip_pixel_check_0to255(pix_f24);
+        rpp_hip_math_subtract24_const(pix_f24, pix_f24, (float4)128);
+    }
+    else
+    {
+        rpp_hip_math_add8_const(&pix_f24->f8[0], &pix_f24->f8[0], *adjustmentValue_f4);
+        rpp_hip_math_subtract8_const(&pix_f24->f8[2], &pix_f24->f8[2], *adjustmentValue_f4);
+    }
 }
 
 template <typename T>
 __global__ void color_temperature_pkd_hip_tensor(T *srcPtr,
-                                             uint2 srcStridesNH,
-                                             T *dstPtr,
-                                             uint2 dstStridesNH,
-                                             int *adjustmentValueTensor,
-                                             RpptROIPtr roiTensorPtrSrc)
+                                                 uint2 srcStridesNH,
+                                                 T *dstPtr,
+                                                 uint2 dstStridesNH,
+                                                 int *adjustmentValueTensor,
+                                                 RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -66,11 +58,11 @@ __global__ void color_temperature_pkd_hip_tensor(T *srcPtr,
 
 template <typename T>
 __global__ void color_temperature_pln_hip_tensor(T *srcPtr,
-                                             uint3 srcStridesNCH,
-                                             T *dstPtr,
-                                             uint3 dstStridesNCH,
-                                             int *adjustmentValueTensor,
-                                             RpptROIPtr roiTensorPtrSrc)
+                                                 uint3 srcStridesNCH,
+                                                 T *dstPtr,
+                                                 uint3 dstStridesNCH,
+                                                 int *adjustmentValueTensor,
+                                                 RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -95,11 +87,11 @@ __global__ void color_temperature_pln_hip_tensor(T *srcPtr,
 
 template <typename T>
 __global__ void color_temperature_pkd3_pln3_hip_tensor(T *srcPtr,
-                                                   uint2 srcStridesNH,
-                                                   T *dstPtr,
-                                                   uint3 dstStridesNCH,
-                                                   int *adjustmentValueTensor,
-                                                   RpptROIPtr roiTensorPtrSrc)
+                                                       uint2 srcStridesNH,
+                                                       T *dstPtr,
+                                                       uint3 dstStridesNCH,
+                                                       int *adjustmentValueTensor,
+                                                       RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -124,11 +116,11 @@ __global__ void color_temperature_pkd3_pln3_hip_tensor(T *srcPtr,
 
 template <typename T>
 __global__ void color_temperature_pln3_pkd3_hip_tensor(T *srcPtr,
-                                                   uint3 srcStridesNCH,
-                                                   T *dstPtr,
-                                                   uint2 dstStridesNH,
-                                                   int *adjustmentValueTensor,
-                                                   RpptROIPtr roiTensorPtrSrc)
+                                                       uint3 srcStridesNCH,
+                                                       T *dstPtr,
+                                                       uint2 dstStridesNH,
+                                                       int *adjustmentValueTensor,
+                                                       RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -171,7 +163,6 @@ RppStatus hip_exec_color_temperature_tensor(T *srcPtr,
 
         if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            globalThreads_x = (dstDescPtr->strides.hStride / 3 + 7) >> 3;
             hipLaunchKernelGGL(color_temperature_pkd_hip_tensor,
                                dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
@@ -214,7 +205,6 @@ RppStatus hip_exec_color_temperature_tensor(T *srcPtr,
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            globalThreads_x = (srcDescPtr->strides.hStride + 7) >> 3;
             hipLaunchKernelGGL(color_temperature_pln3_pkd3_hip_tensor,
                                dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
