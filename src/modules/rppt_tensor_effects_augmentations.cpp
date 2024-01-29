@@ -1278,7 +1278,7 @@ copy_param_uint(yOffsetB, rpp::deref(rppHandle), paramIndex++);
                                roiTensorPtrSrc,
                                roiType,
                                rpp::deref(rppHandle));
-   
+    }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
         hip_exec_glitch_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),

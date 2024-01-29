@@ -697,26 +697,21 @@ int main(int argc, char **argv)
             case 35:
             {
                 testCaseName = "glitch";
-                Rpp32u xOffsetR[batchSize];
-                Rpp32u yOffsetR[batchSize];
-                Rpp32u xOffsetG[batchSize];
-                Rpp32u yOffsetG[batchSize];
-                Rpp32u xOffsetB[batchSize];
-                Rpp32u yOffsetB[batchSize];
+                RpptChannelOffsets rgbOffsets[batchSize];
 
                 for (i = 0; i < batchSize; i++)
                 {
-                    xOffsetR[i] = 10;
-                    yOffsetR[i] = 10;
-                    xOffsetG[i] = 0;
-                    yOffsetG[i] = 0;
-                    xOffsetB[i] = 5;
-                    yOffsetB[i] = 5;
+                    rgbOffsets[i].r.x = 10;
+                    rgbOffsets[i].r.y = 10;
+                    rgbOffsets[i].g.x = 0;
+                    rgbOffsets[i].g.y = 0;
+                    rgbOffsets[i].b.x = 5;
+                    rgbOffsets[i].b.y = 5;
                 }
 
                 startWallTime = omp_get_wtime();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_glitch_gpu(d_input, srcDescPtr, d_output, dstDescPtr, xOffsetR, yOffsetR, xOffsetG, yOffsetG, xOffsetB, yOffsetB, roiTensorPtrSrc, roiTypeSrc, handle);
+                    rppt_glitch_gpu(d_input, srcDescPtr, d_output, dstDescPtr, rgbOffsets, roiTensorPtrSrc, roiTypeSrc, handle);
                 else
                     missingFuncFlag = 1;
 
