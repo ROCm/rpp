@@ -440,7 +440,7 @@ if testType == 0 and qaMode == 0:
     create_layout_directories(dstPath, layoutDict)
 # Performance tests
 elif (testType == 1 and qaMode == 1):
-    columns = ['Tensor_Augmentation_Type', 'BatchPD_Augmentation_Type', 'Performance Speedup (%)', 'Test_Result']
+    columns = ['BatchPD_Augmentation_Type', 'Tensor_Augmentation_Type', 'Performance Speedup (%)', 'Test_Result']
     tensorAugVariations = []
     batchPDAugVariations = []
     achievedPerf = []
@@ -559,10 +559,12 @@ elif (testType == 1 and qaMode == 1):
     passedCases = df['Test_Result'].eq('PASSED').sum()
     failedCases = df['Test_Result'].eq('FAILED').sum()
 
-    summary_row = {'Tensor_Augmentation_Type': pd.NA,
-                   'BatchPD_Augmentation_Type': pd.NA,
+    summary_row = {'BatchPD_Augmentation_Type': pd.NA,
+                   'Tensor_Augmentation_Type': pd.NA,
                    'Performance Speedup (%)': pd.NA,
                    'Test_Result': f'Final Results of Tests: Passed: {passedCases}, Failed: {failedCases}'}
+
+    print("\n",tabulate(df, headers = 'keys', tablefmt = 'psql'))
 
     # Append the summary row to the DataFrame
     # Convert the dictionary to a DataFrame
@@ -570,7 +572,6 @@ elif (testType == 1 and qaMode == 1):
     df = pd.concat([df, summary_row], ignore_index=True)
 
     df.to_excel(excelFilePath, index=False)
-    print("\n",tabulate(df, headers = 'keys', tablefmt = 'psql'))
     print("\n-------------------------------------------------------------------" + resultsInfo + "\n\n-------------------------------------------------------------------")
 elif (testType == 1 and qaMode == 0):
     log_file_list = get_log_file_list(preserveOutput)
