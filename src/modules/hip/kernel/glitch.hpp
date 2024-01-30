@@ -2,7 +2,7 @@
 #include "rpp_hip_common.hpp"
 
 template <typename T>
-__global__ void glitch_pkd_tensor(T *srcPtr,
+__global__ void glitch_pkd_hip_tensor(T *srcPtr,
                                   uint2 srcStridesNH,
                                   T *dstPtr,
                                   uint2 dstStridesNH,
@@ -19,7 +19,7 @@ __global__ void glitch_pkd_tensor(T *srcPtr,
     }
 
     int xR, yR, xG, yG, xB, yB;
-    xR = id_x + rgbOffsets[id_z].r.x
+    xR = id_x + rgbOffsets[id_z].r.x;
     yR = id_y + rgbOffsets[id_z].r.y;
     xG = id_x + rgbOffsets[id_z].g.x;
     yG = id_y + rgbOffsets[id_z].g.y;
@@ -158,7 +158,7 @@ __global__ void glitch_pkd_tensor(T *srcPtr,
     }
     if(yR < roiTensorPtrSrc[id_z].xywhROI.roiHeight && xR >= roiTensorPtrSrc[id_z].xywhROI.roiWidth && id_x < roiTensorPtrSrc[id_z].xywhROI.roiWidth)
     {
-        xR =  xR - xOffsetR[id_z];
+        xR =  xR - rgbOffsets[id_z].r.x;
         dstIdxR = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + xR * 3;
         srcIdxR = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (xR + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3;
         for( ; xR < roiTensorPtrSrc[id_z].xywhROI.roiWidth; xR++)
@@ -170,7 +170,7 @@ __global__ void glitch_pkd_tensor(T *srcPtr,
     }
     if(yG < roiTensorPtrSrc[id_z].xywhROI.roiHeight && xG >= roiTensorPtrSrc[id_z].xywhROI.roiWidth && id_x < roiTensorPtrSrc[id_z].xywhROI.roiWidth)
     {
-        xG =  xG - xOffsetG[id_z];
+        xG =  xG - rgbOffsets[id_z].g.x;
         dstIdxG = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + xG * 3 + 1;
         srcIdxG = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (xG + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3 + 1;
         for( ; xG < roiTensorPtrSrc[id_z].xywhROI.roiWidth; xG++)
@@ -182,7 +182,7 @@ __global__ void glitch_pkd_tensor(T *srcPtr,
     }
     if(yB < roiTensorPtrSrc[id_z].xywhROI.roiHeight && xB >= roiTensorPtrSrc[id_z].xywhROI.roiWidth && id_x < roiTensorPtrSrc[id_z].xywhROI.roiWidth)
     {
-        xB =  xB - xOffsetB[id_z];
+        xB =  xB - rgbOffsets[id_z].b.x;
         dstIdxB = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + xB * 3 + 2;
         srcIdxB = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (xB + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3 + 2;
         for( ; xB < roiTensorPtrSrc[id_z].xywhROI.roiWidth; xB++)
@@ -194,7 +194,7 @@ __global__ void glitch_pkd_tensor(T *srcPtr,
     }
     if(yR >= roiTensorPtrSrc[id_z].xywhROI.roiHeight && id_y < roiTensorPtrSrc[id_z].xywhROI.roiHeight && id_x == 0)
     {
-        yR = yR - yOffsetR[id_z];
+        yR = yR - rgbOffsets[id_z].r.y;
         dstIdxR = (id_z * dstStridesNH.x) + (yR * dstStridesNH.y) + id_x * 3;
         srcIdxR = (id_z * srcStridesNH.x) + ((yR + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3;
         for(int i = 0; i < roiTensorPtrSrc[id_z].xywhROI.roiWidth; i++)
@@ -206,7 +206,7 @@ __global__ void glitch_pkd_tensor(T *srcPtr,
     }
     if(yG >= roiTensorPtrSrc[id_z].xywhROI.roiHeight && id_y < roiTensorPtrSrc[id_z].xywhROI.roiHeight && id_x == 0)
     {
-        yG = yG - yOffsetG[id_z];
+        yG = yG - rgbOffsets[id_z].g.y;
         dstIdxG = (id_z * dstStridesNH.x) + (yG * dstStridesNH.y) + id_x * 3 + 1;
         srcIdxG = (id_z * srcStridesNH.x) + ((yG + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3 + 1;
         for(int i = 0 ; i < roiTensorPtrSrc[id_z].xywhROI.roiWidth; i++)
@@ -218,7 +218,7 @@ __global__ void glitch_pkd_tensor(T *srcPtr,
     }
     if(yB >= roiTensorPtrSrc[id_z].xywhROI.roiHeight && id_y < roiTensorPtrSrc[id_z].xywhROI.roiHeight)
     {
-        yB = yB - yOffsetB[id_z];
+        yB = yB - rgbOffsets[id_z].b.y;
         dstIdxB = (id_z * dstStridesNH.x) + (yB * dstStridesNH.y) + id_x * 3 + 2;
         srcIdxB = (id_z * srcStridesNH.x) + ((yB + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3 + 2;
         for(int i = 0; i < 8; i++)
@@ -231,7 +231,7 @@ __global__ void glitch_pkd_tensor(T *srcPtr,
 }
 
 template <typename T>
-__global__ void glitch_pln_tensor(T *srcPtr,
+__global__ void glitch_pln_hip_tensor(T *srcPtr,
                                   uint3 srcStridesNCH,
                                   T *dstPtr,
                                   uint3 dstStridesNCH,
@@ -248,7 +248,7 @@ __global__ void glitch_pln_tensor(T *srcPtr,
     }
 
     int xR, yR, xG, yG, xB, yB;
-    xR = id_x + rgbOffsets[id_z].r.x
+    xR = id_x + rgbOffsets[id_z].r.x;
     yR = id_y + rgbOffsets[id_z].r.y;
     xG = id_x + rgbOffsets[id_z].g.x;
     yG = id_y + rgbOffsets[id_z].g.y;
@@ -283,7 +283,7 @@ __global__ void glitch_pln_tensor(T *srcPtr,
             }
             if(xR >= roiTensorPtrSrc[id_z].xywhROI.roiWidth && id_x < roiTensorPtrSrc[id_z].xywhROI.roiWidth)
             {
-                xR =  roiTensorPtrSrc[id_z].xywhROI.roiWidth - xOffsetR[id_z];
+                xR =  roiTensorPtrSrc[id_z].xywhROI.roiWidth - rgbOffsets[id_z].r.x;
                 dstIdxR = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + xR;
                 srcIdxR = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (xR + roiTensorPtrSrc[id_z].xywhROI.xy.x);
                 for( ; xR < roiTensorPtrSrc[id_z].xywhROI.roiWidth; xR++)
@@ -292,7 +292,7 @@ __global__ void glitch_pln_tensor(T *srcPtr,
         }
         if(yR >= roiTensorPtrSrc[id_z].xywhROI.roiHeight && id_y < roiTensorPtrSrc[id_z].xywhROI.roiHeight)
         {
-            yR = yR - yOffsetR[id_z];
+            yR = yR - rgbOffsets[id_z].r.y;
             dstIdxR = (id_z * dstStridesNCH.x) + (yR * dstStridesNCH.z) + id_x;
             srcIdxR = (id_z * srcStridesNCH.x) + ((yR + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
             d_float8 pix_f8;
@@ -319,7 +319,7 @@ __global__ void glitch_pln_tensor(T *srcPtr,
             }
             if(xG >= roiTensorPtrSrc[id_z].xywhROI.roiWidth && id_x < roiTensorPtrSrc[id_z].xywhROI.roiWidth)
             {
-                xG =  roiTensorPtrSrc[id_z].xywhROI.roiWidth - xOffsetG[id_z];
+                xG =  roiTensorPtrSrc[id_z].xywhROI.roiWidth - rgbOffsets[id_z].g.x;
                 dstIdxG = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + xG + dstStridesNCH.y;
                 srcIdxG = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (xG + roiTensorPtrSrc[id_z].xywhROI.xy.x) + srcStridesNCH.y;
                 for( ; xG < roiTensorPtrSrc[id_z].xywhROI.roiWidth; xG++)
@@ -328,7 +328,7 @@ __global__ void glitch_pln_tensor(T *srcPtr,
         }
         if(yG >= roiTensorPtrSrc[id_z].xywhROI.roiHeight && id_y < roiTensorPtrSrc[id_z].xywhROI.roiHeight)
         {
-            yG = yG - yOffsetG[id_z];
+            yG = yG - rgbOffsets[id_z].g.y;
             dstIdxG = (id_z * dstStridesNCH.x) + (yG * dstStridesNCH.z) + id_x + dstStridesNCH.y;
             srcIdxG = (id_z * srcStridesNCH.x) + ((yG + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) + srcStridesNCH.y;
             d_float8 pix_f8;
@@ -355,7 +355,7 @@ __global__ void glitch_pln_tensor(T *srcPtr,
             }
             if(xB >= roiTensorPtrSrc[id_z].xywhROI.roiWidth && id_x < roiTensorPtrSrc[id_z].xywhROI.roiWidth)
             {
-                xB =  roiTensorPtrSrc[id_z].xywhROI.roiWidth - xOffsetB[id_z];
+                xB =  roiTensorPtrSrc[id_z].xywhROI.roiWidth - rgbOffsets[id_z].b.x;
                 dstIdxB = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + xB + 2 * dstStridesNCH.y;
                 srcIdxB = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (xB + roiTensorPtrSrc[id_z].xywhROI.xy.x) + 2 * srcStridesNCH.y;
                 for( ; xB < roiTensorPtrSrc[id_z].xywhROI.roiWidth; xB++)
@@ -364,7 +364,7 @@ __global__ void glitch_pln_tensor(T *srcPtr,
         }
         if(yB >= roiTensorPtrSrc[id_z].xywhROI.roiHeight && id_y < roiTensorPtrSrc[id_z].xywhROI.roiHeight)
         {
-            yB = yB - yOffsetB[id_z];
+            yB = yB - rgbOffsets[id_z].b.y;
             dstIdxB = (id_z * dstStridesNCH.x) + (yB * dstStridesNCH.z) + id_x + 2 * dstStridesNCH.y;
             srcIdxB = (id_z * srcStridesNCH.x) + ((yB + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) + 2 * srcStridesNCH.y;
             d_float8 pix_f8;
@@ -375,7 +375,7 @@ __global__ void glitch_pln_tensor(T *srcPtr,
 }
 
 template <typename T>
-__global__ void glitch_pkd3_pln3_tensor(T *srcPtr,
+__global__ void glitch_pkd3_pln3_hip_tensor(T *srcPtr,
                                       uint2 srcStridesNH,
                                       T *dstPtr,
                                       uint3 dstStridesNCH,
@@ -392,7 +392,7 @@ __global__ void glitch_pkd3_pln3_tensor(T *srcPtr,
     }
 
     int xR, yR, xG, yG, xB, yB;
-    xR = id_x + rgbOffsets[id_z].r.x
+    xR = id_x + rgbOffsets[id_z].r.x;
     yR = id_y + rgbOffsets[id_z].r.y;
     xG = id_x + rgbOffsets[id_z].g.x;
     yG = id_y + rgbOffsets[id_z].g.y;
@@ -432,7 +432,7 @@ __global__ void glitch_pkd3_pln3_tensor(T *srcPtr,
             }
             if(xR >= roiTensorPtrSrc[id_z].xywhROI.roiWidth && id_x < roiTensorPtrSrc[id_z].xywhROI.roiWidth)
             {
-                xR =  roiTensorPtrSrc[id_z].xywhROI.roiWidth - xOffsetR[id_z];
+                xR =  roiTensorPtrSrc[id_z].xywhROI.roiWidth - rgbOffsets[id_z].r.x;
                 dstIdxR = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + xR;
                 srcIdxR = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (xR + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3;
                 for( ; xR < roiTensorPtrSrc[id_z].xywhROI.roiWidth; xR++)
@@ -444,7 +444,7 @@ __global__ void glitch_pkd3_pln3_tensor(T *srcPtr,
         }
         if(yR >= roiTensorPtrSrc[id_z].xywhROI.roiHeight && id_y < roiTensorPtrSrc[id_z].xywhROI.roiHeight)
         {
-            yR = yR - yOffsetR[id_z];
+            yR = yR - rgbOffsets[id_z].r.y;
             dstIdxR = (id_z * dstStridesNCH.x) + (yR * dstStridesNCH.z) + id_x;
             srcIdxR = (id_z * srcStridesNH.x) + ((yR + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3;
             d_float8 pix_f8;
@@ -478,7 +478,7 @@ __global__ void glitch_pkd3_pln3_tensor(T *srcPtr,
             }
             if(xG >= roiTensorPtrSrc[id_z].xywhROI.roiWidth && id_x < roiTensorPtrSrc[id_z].xywhROI.roiWidth)
             {
-                xG =  roiTensorPtrSrc[id_z].xywhROI.roiWidth - xOffsetG[id_z];
+                xG =  roiTensorPtrSrc[id_z].xywhROI.roiWidth - rgbOffsets[id_z].g.x;
                 dstIdxG = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + xG + dstStridesNCH.y;
                 srcIdxG = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (xG + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3 + 1;
                 for( ; xG < roiTensorPtrSrc[id_z].xywhROI.roiWidth; xG++)
@@ -490,7 +490,7 @@ __global__ void glitch_pkd3_pln3_tensor(T *srcPtr,
         }
         if(yG >= roiTensorPtrSrc[id_z].xywhROI.roiHeight && id_y < roiTensorPtrSrc[id_z].xywhROI.roiHeight)
         {
-            yG = yG - yOffsetG[id_z];
+            yG = yG - rgbOffsets[id_z].g.y;
             dstIdxG = (id_z * dstStridesNCH.x) + (yG * dstStridesNCH.z) + id_x + dstStridesNCH.y;
             srcIdxG = (id_z * srcStridesNH.x) + ((yG + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3 + 1;
             d_float8 pix_f8;
@@ -524,7 +524,7 @@ __global__ void glitch_pkd3_pln3_tensor(T *srcPtr,
             }
             if(xB >= roiTensorPtrSrc[id_z].xywhROI.roiWidth && id_x < roiTensorPtrSrc[id_z].xywhROI.roiWidth)
             {
-                xB =  roiTensorPtrSrc[id_z].xywhROI.roiWidth - xOffsetB[id_z];
+                xB =  roiTensorPtrSrc[id_z].xywhROI.roiWidth - rgbOffsets[id_z].b.x;
                 dstIdxB = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + xB + 2 * dstStridesNCH.y;
                 srcIdxB = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (xB + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3 + 2;
                 for( ; xB < roiTensorPtrSrc[id_z].xywhROI.roiWidth; xB++)
@@ -536,7 +536,7 @@ __global__ void glitch_pkd3_pln3_tensor(T *srcPtr,
         }
         if(yB >= roiTensorPtrSrc[id_z].xywhROI.roiHeight && id_y < roiTensorPtrSrc[id_z].xywhROI.roiHeight)
         {
-            yB = yB - yOffsetB[id_z];
+            yB = yB - rgbOffsets[id_z].b.y;
             dstIdxB = (id_z * dstStridesNCH.x) + (yB * dstStridesNCH.z) + id_x + 2 * dstStridesNCH.y;
             srcIdxB = (id_z * srcStridesNH.x) + ((yB + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3 + 2;
             d_float8 pix_f8;
@@ -549,12 +549,12 @@ __global__ void glitch_pkd3_pln3_tensor(T *srcPtr,
 }
 
 template <typename T>
-__global__ void glitch_pln3_pkd3_tensor(T *srcPtr,
-                                      uint3 srcStridesNCH,
-                                      T *dstPtr,
-                                      uint2 dstStridesNH,
-                                      RpptChannelOffsets *rgbOffsets,
-                                      RpptROIPtr roiTensorPtrSrc)
+__global__ void glitch_pln3_pkd3_hip_tensor(T *srcPtr,
+                                            uint3 srcStridesNCH,
+                                            T *dstPtr,
+                                            uint2 dstStridesNH,
+                                            RpptChannelOffsets *rgbOffsets,
+                                            RpptROIPtr roiTensorPtrSrc)
 {
 
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -567,7 +567,7 @@ __global__ void glitch_pln3_pkd3_tensor(T *srcPtr,
     }
 
     int xR, yR, xG, yG, xB, yB;
-    xR = id_x + rgbOffsets[id_z].r.x
+    xR = id_x + rgbOffsets[id_z].r.x;
     yR = id_y + rgbOffsets[id_z].r.y;
     xG = id_x + rgbOffsets[id_z].g.x;
     yG = id_y + rgbOffsets[id_z].g.y;
@@ -701,7 +701,7 @@ __global__ void glitch_pln3_pkd3_tensor(T *srcPtr,
     }
     if(yR < roiTensorPtrSrc[id_z].xywhROI.roiHeight && xR >= roiTensorPtrSrc[id_z].xywhROI.roiWidth && id_x < roiTensorPtrSrc[id_z].xywhROI.roiWidth)
     {
-        xR =  xR - xOffsetR[id_z];
+        xR =  xR - rgbOffsets[id_z].r.x;
         dstIdxR = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + xR * 3;
         srcIdxR = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (xR + roiTensorPtrSrc[id_z].xywhROI.xy.x);
         for( ; xR < roiTensorPtrSrc[id_z].xywhROI.roiWidth; xR++)
@@ -712,7 +712,7 @@ __global__ void glitch_pln3_pkd3_tensor(T *srcPtr,
     }
     if(yG < roiTensorPtrSrc[id_z].xywhROI.roiHeight && xG >= roiTensorPtrSrc[id_z].xywhROI.roiWidth && id_x < roiTensorPtrSrc[id_z].xywhROI.roiWidth)
     {
-        xG =  xG - xOffsetG[id_z];
+        xG =  xG - rgbOffsets[id_z].g.x;
         dstIdxG = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + xG * 3 + 1;
         srcIdxG = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (xG + roiTensorPtrSrc[id_z].xywhROI.xy.x) + srcStridesNCH.y;
         for( ; xG < roiTensorPtrSrc[id_z].xywhROI.roiWidth; xG++)
@@ -723,7 +723,7 @@ __global__ void glitch_pln3_pkd3_tensor(T *srcPtr,
     }
     if(yB < roiTensorPtrSrc[id_z].xywhROI.roiHeight && xB >= roiTensorPtrSrc[id_z].xywhROI.roiWidth && id_x < roiTensorPtrSrc[id_z].xywhROI.roiWidth)
     {
-        xB =  xB - xOffsetB[id_z];
+        xB =  xB - rgbOffsets[id_z].b.x;
         dstIdxB = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + xB * 3 + 2;
         srcIdxB = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (xB + roiTensorPtrSrc[id_z].xywhROI.xy.x) + 2 * srcStridesNCH.y;
         for( ; xB < roiTensorPtrSrc[id_z].xywhROI.roiWidth; xB++)
@@ -734,7 +734,7 @@ __global__ void glitch_pln3_pkd3_tensor(T *srcPtr,
     }
     if(yR >= roiTensorPtrSrc[id_z].xywhROI.roiHeight && id_y < roiTensorPtrSrc[id_z].xywhROI.roiHeight && id_x == 0)
     {
-        yR = yR - yOffsetR[id_z];
+        yR = yR - rgbOffsets[id_z].r.y;
         dstIdxR = (id_z * dstStridesNH.x) + (yR * dstStridesNH.y) + id_x * 3;
         srcIdxR = (id_z * srcStridesNCH.x) + ((yR + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
         for(int i = 0; i < roiTensorPtrSrc[id_z].xywhROI.roiWidth; i++)
@@ -745,7 +745,7 @@ __global__ void glitch_pln3_pkd3_tensor(T *srcPtr,
     }
     if(yG >= roiTensorPtrSrc[id_z].xywhROI.roiHeight && id_y < roiTensorPtrSrc[id_z].xywhROI.roiHeight && id_x == 0)
     {
-        yG = yG - yOffsetG[id_z];
+        yG = yG - rgbOffsets[id_z].g.y;
         dstIdxG = (id_z * dstStridesNH.x) + (yG * dstStridesNH.y) + id_x * 3 + 1;
         srcIdxG = (id_z * srcStridesNCH.x) + ((yG + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) + srcStridesNCH.y;
         for(int i = 0 ; i < roiTensorPtrSrc[id_z].xywhROI.roiWidth; i++)
@@ -756,7 +756,7 @@ __global__ void glitch_pln3_pkd3_tensor(T *srcPtr,
     }
     if(yB >= roiTensorPtrSrc[id_z].xywhROI.roiHeight && id_y < roiTensorPtrSrc[id_z].xywhROI.roiHeight)
     {
-        yB = yB - yOffsetB[id_z];
+        yB = yB - rgbOffsets[id_z].b.y;
         dstIdxB = (id_z * dstStridesNH.x) + (yB * dstStridesNH.y) + id_x * 3 + 2;
         srcIdxB = (id_z * srcStridesNCH.x) + ((yB + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) + 2 * srcStridesNCH.y;
         for(int i = 0; i < 8; i++)
@@ -779,18 +779,15 @@ RppStatus hip_exec_glitch_tensor(T *srcPtr,
 {
     if (roiType == RpptRoiType::LTRB)
         hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
-    int localThreads_x = LOCAL_THREADS_X;
-    int localThreads_y = LOCAL_THREADS_Y;
-    int localThreads_z = LOCAL_THREADS_Z;
     int globalThreads_x = dstDescPtr->strides.hStride;
     int globalThreads_y = dstDescPtr->h;
     int globalThreads_z = handle.GetBatchSize();
 
     if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
-        hipLaunchKernelGGL(glitch_pln_tensor,
-                           dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                           dim3(localThreads_x, localThreads_y, localThreads_z),
+        hipLaunchKernelGGL(glitch_pln_hip_tensor,
+                           dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                            0,
                            handle.GetStream(),
                            srcPtr,
@@ -802,9 +799,9 @@ RppStatus hip_exec_glitch_tensor(T *srcPtr,
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
     {
-        hipLaunchKernelGGL(glitch_pln3_pkd3_tensor,
-                           dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                           dim3(localThreads_x, localThreads_y, localThreads_z),
+        hipLaunchKernelGGL(glitch_pln3_pkd3_hip_tensor,
+                           dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                            0,
                            handle.GetStream(),
                            srcPtr,
@@ -816,9 +813,9 @@ RppStatus hip_exec_glitch_tensor(T *srcPtr,
     }
     else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
-        hipLaunchKernelGGL(glitch_pkd3_pln3_tensor,
-                           dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                           dim3(localThreads_x, localThreads_y, localThreads_z),
+        hipLaunchKernelGGL(glitch_pkd3_pln3_hip_tensor,
+                           dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                            0,
                            handle.GetStream(),
                            srcPtr,
@@ -830,9 +827,9 @@ RppStatus hip_exec_glitch_tensor(T *srcPtr,
     }
     else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
     {
-        hipLaunchKernelGGL(glitch_pkd_tensor,
-                           dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                           dim3(localThreads_x, localThreads_y, localThreads_z),
+        hipLaunchKernelGGL(glitch_pkd_hip_tensor,
+                           dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                            0,
                            handle.GetStream(),
                            srcPtr,
