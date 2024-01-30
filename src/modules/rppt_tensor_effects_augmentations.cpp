@@ -1241,30 +1241,19 @@ RppStatus rppt_glitch_gpu(RppPtr_t srcPtr,
                           RpptDescPtr srcDescPtr,
                           RppPtr_t dstPtr,
                           RpptDescPtr dstDescPtr,
-                          Rpp32u *xOffsetR,
-                          Rpp32u *yOffsetR,
-                          Rpp32u *xOffsetG,
-                          Rpp32u *yOffsetG,
-                          Rpp32u *xOffsetB,
-                          Rpp32u *yOffsetB,
+                          RpptChannelOffsets *rgbOffsets,
                           RpptROIPtr roiTensorPtrSrc,
                           RpptRoiType roiType,
                           rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
-Rpp32u paramIndex = 0;
-copy_param_uint(xOffsetR, rpp::deref(rppHandle), paramIndex++);
-copy_param_uint(yOffsetR, rpp::deref(rppHandle), paramIndex++);
-copy_param_uint(xOffsetG, rpp::deref(rppHandle), paramIndex++);
-copy_param_uint(yOffsetG, rpp::deref(rppHandle), paramIndex++);
-copy_param_uint(xOffsetB, rpp::deref(rppHandle), paramIndex++);
-copy_param_uint(yOffsetB, rpp::deref(rppHandle), paramIndex++);
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
         hip_exec_glitch_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
                                srcDescPtr,
                                static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                dstDescPtr,
+                               rgbOffsets,
                                roiTensorPtrSrc,
                                roiType,
                                rpp::deref(rppHandle));
@@ -1275,6 +1264,7 @@ copy_param_uint(yOffsetB, rpp::deref(rppHandle), paramIndex++);
                                srcDescPtr,
                                (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                dstDescPtr,
+                               rgbOffsets,
                                roiTensorPtrSrc,
                                roiType,
                                rpp::deref(rppHandle));
@@ -1285,6 +1275,7 @@ copy_param_uint(yOffsetB, rpp::deref(rppHandle), paramIndex++);
                                srcDescPtr,
                                (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                dstDescPtr,
+                               rgbOffsets,
                                roiTensorPtrSrc,
                                roiType,
                                rpp::deref(rppHandle));
@@ -1295,6 +1286,7 @@ copy_param_uint(yOffsetB, rpp::deref(rppHandle), paramIndex++);
                                srcDescPtr,
                                static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                dstDescPtr,
+                               rgbOffsets,
                                roiTensorPtrSrc,
                                roiType,
                                rpp::deref(rppHandle));

@@ -6,12 +6,7 @@ __global__ void glitch_pkd_tensor(T *srcPtr,
                                   uint2 srcStridesNH,
                                   T *dstPtr,
                                   uint2 dstStridesNH,
-                                  unsigned int *xOffsetR,
-                                  unsigned int *yOffsetR,
-                                  unsigned int *xOffsetG,
-                                  unsigned int *yOffsetG,
-                                  unsigned int *xOffsetB,
-                                  unsigned int *yOffsetB,
+                                  RpptChannelOffsets *rgbOffsets,
                                   RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -24,12 +19,12 @@ __global__ void glitch_pkd_tensor(T *srcPtr,
     }
 
     int xR, yR, xG, yG, xB, yB;
-    xR = id_x + xOffsetR[id_z];
-    yR = id_y + yOffsetR[id_z]; 
-    xG = id_x + xOffsetG[id_z];
-    yG = id_y + yOffsetG[id_z];
-    xB = id_x + xOffsetB[id_z];
-    yB = id_y + yOffsetB[id_z];
+    xR = id_x + rgbOffsets[id_z].r.x
+    yR = id_y + rgbOffsets[id_z].r.y;
+    xG = id_x + rgbOffsets[id_z].g.x;
+    yG = id_y + rgbOffsets[id_z].g.y;
+    xB = id_x + rgbOffsets[id_z].b.x;
+    yB = id_y + rgbOffsets[id_z].b.y;
 
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
     uint srcIdxR, srcIdxG, srcIdxB, dstIdxR, dstIdxG, dstIdxB;
@@ -240,12 +235,7 @@ __global__ void glitch_pln_tensor(T *srcPtr,
                                   uint3 srcStridesNCH,
                                   T *dstPtr,
                                   uint3 dstStridesNCH,
-                                  unsigned int *xOffsetR,
-                                  unsigned int *yOffsetR,
-                                  unsigned int *xOffsetG,
-                                  unsigned int *yOffsetG,
-                                  unsigned int *xOffsetB,
-                                  unsigned int *yOffsetB,
+                                  RpptChannelOffsets *rgbOffsets,
                                   RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -258,12 +248,12 @@ __global__ void glitch_pln_tensor(T *srcPtr,
     }
 
     int xR, yR, xG, yG, xB, yB;
-    xR = id_x + xOffsetR[id_z];
-    yR = id_y + yOffsetR[id_z];
-    xG = id_x + xOffsetG[id_z];
-    yG = id_y + yOffsetG[id_z];
-    xB = id_x + xOffsetB[id_z];
-    yB = id_y + yOffsetB[id_z];
+    xR = id_x + rgbOffsets[id_z].r.x
+    yR = id_y + rgbOffsets[id_z].r.y;
+    xG = id_x + rgbOffsets[id_z].g.x;
+    yG = id_y + rgbOffsets[id_z].g.y;
+    xB = id_x + rgbOffsets[id_z].b.x;
+    yB = id_y + rgbOffsets[id_z].b.y;
 
     uint srcIdxR, srcIdxG, srcIdxB;
     srcIdxR = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
@@ -389,12 +379,7 @@ __global__ void glitch_pkd3_pln3_tensor(T *srcPtr,
                                       uint2 srcStridesNH,
                                       T *dstPtr,
                                       uint3 dstStridesNCH,
-                                      unsigned int *xOffsetR,
-                                      unsigned int *yOffsetR,
-                                      unsigned int *xOffsetG,
-                                      unsigned int *yOffsetG,
-                                      unsigned int *xOffsetB,
-                                      unsigned int *yOffsetB,
+                                      RpptChannelOffsets *rgbOffsets,
                                       RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -407,12 +392,12 @@ __global__ void glitch_pkd3_pln3_tensor(T *srcPtr,
     }
 
     int xR, yR, xG, yG, xB, yB;
-    xR = id_x + xOffsetR[id_z];
-    yR = id_y + yOffsetR[id_z];
-    xG = id_x + xOffsetG[id_z];
-    yG = id_y + yOffsetG[id_z];
-    xB = id_x + xOffsetB[id_z];
-    yB = id_y + yOffsetB[id_z];
+    xR = id_x + rgbOffsets[id_z].r.x
+    yR = id_y + rgbOffsets[id_z].r.y;
+    xG = id_x + rgbOffsets[id_z].g.x;
+    yG = id_y + rgbOffsets[id_z].g.y;
+    xB = id_x + rgbOffsets[id_z].b.x;
+    yB = id_y + rgbOffsets[id_z].b.y;
 
     uint dstIdxR, dstIdxG , dstIdxB;
     dstIdxR = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
@@ -568,12 +553,7 @@ __global__ void glitch_pln3_pkd3_tensor(T *srcPtr,
                                       uint3 srcStridesNCH,
                                       T *dstPtr,
                                       uint2 dstStridesNH,
-                                      unsigned int *xOffsetR,
-                                      unsigned int *yOffsetR,
-                                      unsigned int *xOffsetG,
-                                      unsigned int *yOffsetG,
-                                      unsigned int *xOffsetB,
-                                      unsigned int *yOffsetB,
+                                      RpptChannelOffsets *rgbOffsets,
                                       RpptROIPtr roiTensorPtrSrc)
 {
 
@@ -587,12 +567,12 @@ __global__ void glitch_pln3_pkd3_tensor(T *srcPtr,
     }
 
     int xR, yR, xG, yG, xB, yB;
-    xR = id_x + xOffsetR[id_z];
-    yR = id_y + yOffsetR[id_z];
-    xG = id_x + xOffsetG[id_z];
-    yG = id_y + yOffsetG[id_z];
-    xB = id_x + xOffsetB[id_z];
-    yB = id_y + yOffsetB[id_z];
+    xR = id_x + rgbOffsets[id_z].r.x
+    yR = id_y + rgbOffsets[id_z].r.y;
+    xG = id_x + rgbOffsets[id_z].g.x;
+    yG = id_y + rgbOffsets[id_z].g.y;
+    xB = id_x + rgbOffsets[id_z].b.x;
+    yB = id_y + rgbOffsets[id_z].b.y;
 
     uint srcIdx, dstIdx;
     srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
@@ -792,6 +772,7 @@ RppStatus hip_exec_glitch_tensor(T *srcPtr,
                                      RpptDescPtr srcDescPtr,
                                      T *dstPtr,
                                      RpptDescPtr dstDescPtr,
+                                     RpptChannelOffsets *rgbOffsets,
                                      RpptROIPtr roiTensorPtrSrc,
                                      RpptRoiType roiType,
                                      rpp::Handle& handle)
@@ -804,6 +785,7 @@ RppStatus hip_exec_glitch_tensor(T *srcPtr,
     int globalThreads_x = dstDescPtr->strides.hStride;
     int globalThreads_y = dstDescPtr->h;
     int globalThreads_z = handle.GetBatchSize();
+
     if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
         hipLaunchKernelGGL(glitch_pln_tensor,
@@ -815,12 +797,7 @@ RppStatus hip_exec_glitch_tensor(T *srcPtr,
                            make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                            dstPtr,
                            make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                           handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
-                           handle.GetInitHandle()->mem.mgpu.uintArr[1].uintmem,
-                           handle.GetInitHandle()->mem.mgpu.uintArr[2].uintmem,
-                           handle.GetInitHandle()->mem.mgpu.uintArr[3].uintmem,
-                           handle.GetInitHandle()->mem.mgpu.uintArr[4].uintmem,
-                           handle.GetInitHandle()->mem.mgpu.uintArr[5].uintmem,
+                           rgbOffsets,
                            roiTensorPtrSrc);
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
@@ -834,13 +811,8 @@ RppStatus hip_exec_glitch_tensor(T *srcPtr,
                            make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                            dstPtr,
                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                           handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
-                           handle.GetInitHandle()->mem.mgpu.uintArr[1].uintmem,
-                           handle.GetInitHandle()->mem.mgpu.uintArr[2].uintmem,
-                           handle.GetInitHandle()->mem.mgpu.uintArr[3].uintmem,
-                           handle.GetInitHandle()->mem.mgpu.uintArr[4].uintmem,
-                           handle.GetInitHandle()->mem.mgpu.uintArr[5].uintmem,
-                          roiTensorPtrSrc);
+                           rgbOffsets,
+                           roiTensorPtrSrc);
     }
     else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
@@ -853,13 +825,8 @@ RppStatus hip_exec_glitch_tensor(T *srcPtr,
                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                            dstPtr,
                            make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                           handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
-                           handle.GetInitHandle()->mem.mgpu.uintArr[1].uintmem,
-                           handle.GetInitHandle()->mem.mgpu.uintArr[2].uintmem,
-                           handle.GetInitHandle()->mem.mgpu.uintArr[3].uintmem,
-                           handle.GetInitHandle()->mem.mgpu.uintArr[4].uintmem,
-                           handle.GetInitHandle()->mem.mgpu.uintArr[5].uintmem,
-                          roiTensorPtrSrc);
+                           rgbOffsets,
+                           roiTensorPtrSrc);
     }
     else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
     {
@@ -872,13 +839,8 @@ RppStatus hip_exec_glitch_tensor(T *srcPtr,
                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                            dstPtr,
                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                           handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
-                           handle.GetInitHandle()->mem.mgpu.uintArr[1].uintmem,
-                           handle.GetInitHandle()->mem.mgpu.uintArr[2].uintmem,
-                           handle.GetInitHandle()->mem.mgpu.uintArr[3].uintmem,
-                           handle.GetInitHandle()->mem.mgpu.uintArr[4].uintmem,
-                           handle.GetInitHandle()->mem.mgpu.uintArr[5].uintmem,
-                          roiTensorPtrSrc);
+                           rgbOffsets,
+                           roiTensorPtrSrc);
     }
     return RPP_SUCCESS;
 }
