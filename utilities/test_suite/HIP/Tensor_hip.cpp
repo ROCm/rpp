@@ -697,7 +697,8 @@ int main(int argc, char **argv)
             case 35:
             {
                 testCaseName = "glitch";
-                RpptChannelOffsets rgbOffsets[batchSize];
+                RpptChannelOffsets *rgbOffsets;
+                CHECK(hipMalloc(&rgbOffsets, batchSize * sizeof(RpptChannelOffsets)));
 
                 for (i = 0; i < batchSize; i++)
                 {
