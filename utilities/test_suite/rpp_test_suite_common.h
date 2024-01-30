@@ -99,6 +99,20 @@ std::map<int, string> augmentationMap =
     {89, "tensor_max"},
 };
 
+// Golden outputs for Tensor min Kernel
+std::map<int, std::vector<int>> TensorMinReferenceOutputs =
+{
+    {1, {1, 1, 7}},
+    {3, {0, 0, 0, 0, 2, 0, 0, 0, 7, 9, 0, 0}}
+};
+
+// Golden outputs for Tensor max Kernel
+std::map<int, std::vector<int>> TensorMaxReferenceOutputs =
+{
+    {1, {239, 245, 255}},
+    {3, {255, 240, 236, 255, 255, 242, 241, 255, 253, 255, 255, 255}}
+};
+
 template <typename T>
 inline T validate_pixel_range(T pixel)
 {
@@ -1122,7 +1136,7 @@ inline void compare_reduction_output(T* output, string funcName, RpptDescPtr src
     string line, word;
     int index = 0;
 
-    // Load the refennce output values from files and store in vector
+    // Load the reference output values from files and store in vector
     if(file.is_open())
     {
         while(getline(file, line))
@@ -1137,8 +1151,23 @@ inline void compare_reduction_output(T* output, string funcName, RpptDescPtr src
     }
     else
     {
-        cout<<"Could not open the reference output. Please check the path specified\n";
-        return;
+        if(testCase == 88 || testCase == 89)
+        {
+            int numChannels = (srcDescPtr->c == 1) ? 1 : 3;
+            int numOutputs = (srcDescPtr->c == 1) ? srcDescPtr->n : srcDescPtr->n * 4;
+            std::vector<int> ref;
+            if(testCase == 88)
+                ref = TensorMinReferenceOutputs[numChannels];
+            else if(testCase == 89)
+                ref = TensorMaxReferenceOutputs[numChannels];
+            for(int i = 0; i < numOutputs; i++)
+                refOutput[i] = (T)ref[i];
+        }
+        else
+        {
+            cout<<"Could not open the reference output. Please check the path specified\n";
+            return;
+        }
     }
 
     int fileMatch = 0;
