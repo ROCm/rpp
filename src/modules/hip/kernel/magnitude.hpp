@@ -1,44 +1,26 @@
 #include <hip/hip_runtime.h>
 #include "rpp_hip_common.hpp"
 
-__device__ void magnitude_hip_compute(uchar *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8)
+template <typename T>
+__device__ void magnitude_hip_compute(T *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8)
 {
-    d_float8 src1Sq_f8, src2Sq_f8, sum_f8;
-    rpp_hip_math_multiply8(src1_f8, src1_f8, &src1Sq_f8);
-    rpp_hip_math_multiply8(src2_f8, src2_f8, &src2Sq_f8);
-    rpp_hip_math_add8(&src1Sq_f8, &src2Sq_f8, &sum_f8);
-    rpp_hip_math_sqrt8(&sum_f8, dst_f8);
-}
+    if constexpr (std::is_same<T, schar>::value)
+    {
+        rpp_hip_math_add8_const(src1_f8, src1_f8, (float4)128);
+        rpp_hip_math_add8_const(src2_f8, src2_f8, (float4)128);
+    }
 
-__device__ void magnitude_hip_compute(float *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8)
-{
     d_float8 src1Sq_f8, src2Sq_f8, sum_f8;
     rpp_hip_math_multiply8(src1_f8, src1_f8, &src1Sq_f8);
     rpp_hip_math_multiply8(src2_f8, src2_f8, &src2Sq_f8);
     rpp_hip_math_add8(&src1Sq_f8, &src2Sq_f8, &sum_f8);
     rpp_hip_math_sqrt8(&sum_f8, dst_f8);
-}
 
-__device__ void magnitude_hip_compute(signed char *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8)
-{
-    d_float8 src1Sq_f8, src2Sq_f8, sum_f8;
-    rpp_hip_math_add8_const(src1_f8, src1_f8, (float4)128);
-    rpp_hip_math_add8_const(src2_f8, src2_f8, (float4)128);
-    rpp_hip_math_multiply8(src1_f8, src1_f8, &src1Sq_f8);
-    rpp_hip_math_multiply8(src2_f8, src2_f8, &src2Sq_f8);
-    rpp_hip_math_add8(&src1Sq_f8, &src2Sq_f8, &sum_f8);
-    rpp_hip_math_sqrt8(&sum_f8, dst_f8);
-    dst_f8->f4[0] = rpp_hip_pixel_check_0to255(dst_f8->f4[0]) - (float4)128;
-    dst_f8->f4[1] = rpp_hip_pixel_check_0to255(dst_f8->f4[1]) - (float4)128;
-}
-
-__device__ void magnitude_hip_compute(half *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8)
-{
-    d_float8 src1Sq_f8, src2Sq_f8, sum_f8;
-    rpp_hip_math_multiply8(src1_f8, src1_f8, &src1Sq_f8);
-    rpp_hip_math_multiply8(src2_f8, src2_f8, &src2Sq_f8);
-    rpp_hip_math_add8(&src1Sq_f8, &src2Sq_f8, &sum_f8);
-    rpp_hip_math_sqrt8(&sum_f8, dst_f8);
+    if constexpr (std::is_same<T, schar>::value)
+    {
+        dst_f8->f4[0] = rpp_hip_pixel_check_0to255(dst_f8->f4[0]) - (float4)128;
+        dst_f8->f4[1] = rpp_hip_pixel_check_0to255(dst_f8->f4[1]) - (float4)128;
+    }
 }
 
 template <typename T>
