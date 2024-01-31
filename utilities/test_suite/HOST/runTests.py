@@ -439,8 +439,9 @@ if testType == 0 and qaMode == 0:
     create_layout_directories(dstPath, layoutDict)
 # Performance tests
 elif (testType == 1 and qaMode == 1):
-    columns = ['Data_Augmentation_Type', 'Achieved_Improvement_Percentage', 'Test_Result']
-    augVariations = []
+    columns = ['BatchPD_Augmentation_Type', 'Tensor_Augmentation_Type', 'Performance Speedup (%)', 'Test_Result']
+    tensorAugVariations = []
+    batchPDAugVariations = []
     achievedPerf = []
     status = []
     df = pd.DataFrame(columns=columns)
@@ -535,7 +536,7 @@ elif (testType == 1 and qaMode == 1):
             print("Error! QA mode is not yet available for variant: " + funcName)
             continue
         achievedPerf.append(perfImprovement)
-        augVariations.append(funcName)
+        tensorAugVariations.append(funcName)
         if perfImprovement > -performanceNoise:
             numPassed += 1
             status.append("PASSED")
@@ -548,16 +549,21 @@ elif (testType == 1 and qaMode == 1):
     resultsInfo += "\n    - Total test cases including all subvariants REQUESTED = " + str(numLines)
     resultsInfo += "\n    - Total test cases including all subvariants PASSED = " + str(numPassed)
     f.write(resultsInfo)
-    df['Data_Augmentation_Type'] = augVariations
-    df['Achieved_Improvement_Percentage'] = achievedPerf
+    batchPDAugVariations = [s.replace('Tensor', 'BatchPD') for s in tensorAugVariations]
+    df['Tensor_Augmentation_Type'] = tensorAugVariations
+    df['BatchPD_Augmentation_Type'] = batchPDAugVariations
+    df['Performance Speedup (%)'] = achievedPerf
     df['Test_Result'] = status
     # Calculate the number of cases passed and failed
     passedCases = df['Test_Result'].eq('PASSED').sum()
     failedCases = df['Test_Result'].eq('FAILED').sum()
 
-    summary_row = {'Data_Augmentation_Type': pd.NA,
-                   'Achieved_Improvement_Percentage': pd.NA,
+    summary_row = {'BatchPD_Augmentation_Type': pd.NA,
+                   'Tensor_Augmentation_Type': pd.NA,
+                   'Performance Speedup (%)': pd.NA,
                    'Test_Result': f'Final Results of Tests: Passed: {passedCases}, Failed: {failedCases}'}
+
+    print("\n", df.to_markdown())
 
     # Append the summary row to the DataFrame
     # Convert the dictionary to a DataFrame

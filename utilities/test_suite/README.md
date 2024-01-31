@@ -85,6 +85,11 @@ This repository contains three test suites for the AMD ROCm Performance Primitiv
   pip install openpyxl
   ```
 
+* Tabulate
+```
+pip install tabulate
+```
+
 ## Rpp Image Test Suite
 The image test suite can be executed under 2 backend scenarios - (HOST/HIP):
 -   HOST backend - (On a CPU with HOST backend)
