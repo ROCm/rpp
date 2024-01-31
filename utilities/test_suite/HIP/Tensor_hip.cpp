@@ -1093,7 +1093,7 @@ int main(int argc, char **argv)
                     if(qaFlag && inputBitDepth == 0 && (srcDescPtr->layout == dstDescPtr->layout) && !(randomOutputCase))
                     {
                         if (testCase == 87)
-                            compare_reduction_output(static_cast<Rpp64u *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst);
+                            compare_reduction_output(static_cast<uint64_t *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst);
                         else
                             compare_reduction_output(static_cast<Rpp8u *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst);
                     }
