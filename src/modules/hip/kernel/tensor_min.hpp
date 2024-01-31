@@ -11,6 +11,9 @@ __global__ void tensor_min_grid_3channel_result_hip(float *srcPtr,
     int id_x = hipThreadIdx_x * 8;
     int id_z = hipBlockIdx_z;
 
+    if (id_x >= xBufferLength)
+        return;
+
     __shared__ float partialRMin_smem[256];                           // 1024 floats of src reduced to 256 in a 256 x 1 thread block
     __shared__ float partialGMin_smem[256];                           // 1024 floats of src reduced to 256 in a 256 x 1 thread block
     __shared__ float partialBMin_smem[256];                           // 1024 floats of src reduced to 256 in a 256 x 1 thread block
@@ -24,24 +27,15 @@ __global__ void tensor_min_grid_3channel_result_hip(float *srcPtr,
     partialGMin_smem[hipThreadIdx_x] = srcRefG;                       // initialization of LDS for G channel to srcRefG using all 256 x 1 threads
     partialBMin_smem[hipThreadIdx_x] = srcRefB;                       // initialization of LDS for B channel to srcRefB using all 256 x 1 threads
 
-    if (id_x >= xBufferLength)
-        return;
-
     int xAlignedLength = xBufferLength & ~7;                        // alignedLength for vectorized global loads
     int xDiff = xBufferLength - xAlignedLength;                     // difference between bufferLength and alignedLength
     srcIdx += id_x * 3;
 
-    d_float24 src_f24;
-    rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &src_f24);           // load 24 pixels to local mmemory
     if (id_x + 8 > xBufferLength)
-    {
-        for(int i = xDiff; i < 8; i++)
-        {
-            src_f24.f8[0].f1[i] = srcRefR;                                              // local memory reset of invalid values (from the vectorized global load) to srcRefR
-            src_f24.f8[1].f1[i] = srcRefG;  	                                        // local memory reset of invalid values (from the vectorized global load) to srcRefG
-            src_f24.f8[2].f1[i] = srcRefB;                                              // local memory reset of invalid values (from the vectorized global load) to srcRefB
-        }
-    }
+        srcIdx -= ((8 - xDiff) * 3);
+
+    d_float24 src_f24;
+    rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &src_f24);           // load 24 pixels to local memory
 
     rpp_hip_math_min8(&src_f24.f8[0], &partialRMin_smem[hipThreadIdx_x]);
     rpp_hip_math_min8(&src_f24.f8[1], &partialGMin_smem[hipThreadIdx_x]);
@@ -92,12 +86,11 @@ __global__ void tensor_min_grid_result_hip(float *srcPtr,
     int xDiff = xBufferLength - xAlignedLength;                     // difference between bufferLength and alignedLength
     srcIdx += id_x;
 
-    d_float8 src_f8;
-    rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);   // load 8 pixels to local mmemory
     if (id_x + 8 > xBufferLength)
-        for(int i = xDiff; i < 8; i++)
-            src_f8.f1[i] = srcRef;                                  // local memory reset of invalid values (from the vectorized global load) to srcRef
+        srcIdx -= (8 - xDiff);
 
+    d_float8 src_f8;
+    rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);   // load 8 pixels to local memory
     rpp_hip_math_min8(&src_f8, &partialMin_smem[hipThreadIdx_x]);
     __syncthreads();                                                // syncthreads after LDS load
 
