@@ -25,7 +25,6 @@ import sys
 import datetime
 import shutil
 import pandas as pd
-from tabulate import tabulate
 
 # Set the timestamp
 timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -564,7 +563,7 @@ elif (testType == 1 and qaMode == 1):
                    'Performance Speedup (%)': pd.NA,
                    'Test_Result': f'Final Results of Tests: Passed: {passedCases}, Failed: {failedCases}'}
 
-    print("\n",tabulate(df, headers = 'keys', tablefmt = 'psql'))
+    print("\n", df.to_markdown())
 
     # Append the summary row to the DataFrame
     # Convert the dictionary to a DataFrame
