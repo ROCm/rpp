@@ -1,5 +1,7 @@
 
 /*
+MIT License
+
 Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
