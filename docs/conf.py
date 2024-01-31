@@ -41,7 +41,7 @@ left_nav_title = f"RPP {version_number} Documentation"
 # for PDF output on Read the Docs
 project = "RPP Documentation"
 author = "Advanced Micro Devices, Inc."
-copyright = "Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved."
+copyright = "Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc."
 version = version_number
 release = version_number
 
