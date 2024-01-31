@@ -84,9 +84,9 @@ if (OpenCV_FOUND)
     link_directories(${ROCM_PATH}/lib /usr/local/lib)
 
     add_executable(Tensor_host Tensor_host.cpp)
-    add_executable(BatchPD_host_pkd3 ${CMAKE_CURRENT_SOURCE_DIR}/../../rpp-performancetests/HOST_NEW/BatchPD_host_pkd3.cpp)
-    add_executable(BatchPD_host_pln1 ${CMAKE_CURRENT_SOURCE_DIR}/../../rpp-performancetests/HOST_NEW/BatchPD_host_pln1.cpp)
-    add_executable(BatchPD_host_pln3 ${CMAKE_CURRENT_SOURCE_DIR}/../../rpp-performancetests/HOST_NEW/BatchPD_host_pln3.cpp)
+    add_executable(BatchPD_host_pkd3 ${CMAKE_CURRENT_SOURCE_DIR}/../rpp-performancetests/HOST_NEW/BatchPD_host_pkd3.cpp)
+    add_executable(BatchPD_host_pln1 ${CMAKE_CURRENT_SOURCE_DIR}/../rpp-performancetests/HOST_NEW/BatchPD_host_pln1.cpp)
+    add_executable(BatchPD_host_pln3 ${CMAKE_CURRENT_SOURCE_DIR}/../rpp-performancetests/HOST_NEW/BatchPD_host_pln3.cpp)
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++17")
     target_link_libraries(Tensor_host ${OpenCV_LIBS} -lturbojpeg -lrpp pthread ${LINK_LIBRARY_LIST})
