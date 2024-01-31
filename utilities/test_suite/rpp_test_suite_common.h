@@ -86,6 +86,7 @@ std::map<int, string> augmentationMap =
     {39, "resize_crop_mirror"},
     {49, "box_filter"},
     {54, "gaussian_filter"},
+    {63, "phase"},
     {70, "copy"},
     {80, "resize_mirror_normalize"},
     {81, "color_jitter"},
@@ -924,16 +925,6 @@ inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDes
     }
 }
 
-inline void remove_substring(string &str, string &pattern)
-{
-    std::string::size_type i = str.find(pattern);
-    while (i != std::string::npos)
-    {
-        str.erase(i, pattern.length());
-        i = str.find(pattern, i);
-   }
-}
-
 // compares the output of PKD3-PKD3 variants
 void compare_outputs_pkd(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
 {
@@ -943,7 +934,7 @@ void compare_outputs_pkd(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr
         outputTemp = output + imageCnt * dstDescPtr->strides.nStride;
         outputTempRef = refOutput + imageCnt * refOutputSize;
         int height = dstImgSizes[imageCnt].height;
-        int width = dstImgSizes[imageCnt].width * dstDescPtr->c;;
+        int width = dstImgSizes[imageCnt].width * dstDescPtr->c;
         int matched_idx = 0;
         int refOutputHstride = refOutputWidth * dstDescPtr->c;
 
@@ -1003,17 +994,14 @@ void compare_outputs_pln(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr
 }
 
 template <typename T>
-inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int noOfImages, string interpolationTypeName, string noiseTypeName, int testCase, string dst)
+inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int noOfImages, string interpolationTypeName, string noiseTypeName, int testCase, string dst, string scriptPath)
 {
     string func = funcName;
-    string refPath = fs::current_path();
-    string pattern = "/build";
     string refFile = "";
     int refOutputWidth = ((GOLDEN_OUTPUT_MAX_WIDTH / 8) * 8) + 8;    // obtain next multiple of 8 after GOLDEN_OUTPUT_MAX_WIDTH
     int refOutputHeight = GOLDEN_OUTPUT_MAX_HEIGHT;
     int refOutputSize = refOutputHeight * refOutputWidth * dstDescPtr->c;
 
-    remove_substring(refPath, pattern);
     string dataType[4] = {"_u8_", "_f16_", "_f32_", "_i8_"};
 
     if(srcDescPtr->dataType == dstDescPtr->dataType)
@@ -1048,7 +1036,7 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
         func += "_interpolationType" + interpolationTypeName;
     else if(testCase == 8)
         func += "_noiseType" + noiseTypeName;
-    refFile = refPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ func + ".csv";
+    refFile = scriptPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ func + ".csv";
 
     ifstream file(refFile);
     Rpp8u *refOutput;
@@ -1106,14 +1094,11 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
 
 // compares reduction type functions outputs
 template <typename T>
-inline void compare_reduction_output(T* output, string funcName, RpptDescPtr srcDescPtr, int testCase, string dst)
+inline void compare_reduction_output(T* output, string funcName, RpptDescPtr srcDescPtr, int testCase, string dst, string scriptPath)
 {
     string func = funcName;
-    string refPath = get_current_dir_name();
-    string pattern = "/build";
     string refFile = "";
 
-    remove_substring(refPath, pattern);
     string dataType[4] = {"_u8_", "_f16_", "_f32_", "_i8_"};
 
     func += dataType[srcDescPtr->dataType];
@@ -1128,7 +1113,7 @@ inline void compare_reduction_output(T* output, string funcName, RpptDescPtr src
             func += "Tensor_PLN1";
     }
 
-    refFile = refPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ func + ".csv";
+    refFile = scriptPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ func + ".csv";
 
     ifstream file(refFile);
     T *refOutput;
