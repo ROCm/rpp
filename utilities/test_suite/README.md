@@ -2,7 +2,7 @@
 
 This repository contains three test suites for the AMD ROCm Performance Primitives (RPP) library: for image/voxel/audio processing. These test suites can be used to validate the functionality and performance of the AMD ROCm Performance Primitives (RPP) image/voxel/audio libraries.
 
-### Test suite prerequisites
+## Test suite prerequisites
 
 * OpenCV `3.4.0`/`4.5.5`
 
@@ -90,7 +90,7 @@ The image test suite can be executed under 2 backend scenarios - (HOST/HIP):
 -   HOST backend - (On a CPU with HOST backend)
 -   HIP backend - (On a GPU with HIP backend)
 
-## Command Line Arguments (Rpp Image Test Suite)
+### Command Line Arguments (RPP Image Test Suite)
 The image test suite accepts the following command line arguments:
 -   input_path1: The path to the input folder 1. Default is $cwd/../TEST_IMAGES/three_images_mixed_src1
 -   input_path2: The path to the input folder 2. Default is $cwd/../TEST_IMAGES/three_images_mixed_src2
@@ -105,16 +105,20 @@ The image test suite accepts the following command line arguments:
 -   preserve_output: preserves the output images or performance logs generated from the previous test suite run - (0 = remove output images or performance logs / 1 = preserve output images or performance logs). Default is 1
 -   batch_size: Specifies the batch size to use for running tests. Default is 1
 
-## Running the Tests for HOST Backend (Rpp Image Test Suite)
+### Running the Tests for HOST Backend (RPP Image Test Suite)
 The test suite can be run with the following command:
+``` python
 python runTests.py --input_path1 <input_path1> --input_path2 <input_path2> --case_start <case_start> --case_end <case_end> --test_type <test_type>
+```
 
-## Running the Tests for HIP Backend (Rpp Image Test Suite)
+### Running the Tests for HIP Backend (RPP Image Test Suite)
 The test suite can be run with the following command:
+``` python
 python runTests.py --input_path1 <input_path1> --input_path2 <input_path2> --case_start <case_start> --case_end <case_end> --test_type <test_type> --profiling <profiling>
+```
 
 ## Modes of operation (Rpp Image Test Suite)
--   QA mode(Unit tests) - Tolerance based PASS/FAIL tests for RPP HIP/HOST functionalities checking pixelwise match between C/SSE/AVX/HIP versions after comparison to preset golden outputs. Please note that QA mode is only supported with a batch size of 3.
+-   QA mode (Unit tests) - Tolerance based PASS/FAIL tests for RPP HIP/HOST functionalities checking pixelwise match between C/SSE/AVX/HIP versions after comparison to preset golden outputs. Please note that QA mode is only supported with a batch size of 3.
 Note: QA mode is not supported for case 84 due to run-to-run variation of outputs.
 ``` python
 python runTests.py --case_start 0 --case_end 87 --test_type 0 --qa_mode 1 --batch_size 3
@@ -152,7 +156,7 @@ To run performance tests with AMD rocprof kernel profiler for HIP backend varian
 python runTests.py --test_type 1 --profiling YES
 ```
 
-## Features (Rpp Image Test Suite)
+### Summary of features (RPP Image Test Suite)
 The image test suite includes:
 -   Unit tests that execute the desired functionality and variant once, report RPP execution wall time and save output images
 -   Performance tests that execute the desired functionality and variant 100 times by default, and report max/min/avg RPP execution wall time, or optionally, AMD rocprof kernel profiler max/min/avg time for HIP backend variants.
@@ -161,12 +165,12 @@ The image test suite includes:
 -   Support for pixelwise output referencing against golden outputs, and functionality validation checking, by tolerance-based pass/fail criterions for each variant. (Current support only for U8 variants)
 -   Support for TurboJPEG and OpenCV decoder for decoding input images
 
-## Rpp Voxel Test Suite
+## RPP Voxel Test Suite
 The 3D Voxel test suite can be executed under 2 backend scenarios - (HOST/HIP):
 -   HOST backend - (On a CPU with HOST backend)
 -   HIP backend - (On a GPU with HIP backend)
 
-## Command Line Arguments (Rpp voxel Test Suite)
+### Command Line Arguments (RPP Voxel Test Suite)
 The voxel test suite accepts the following command line arguments:
 -   header_path: Path to the nii header
 -   data_path: Path to the nii data file
@@ -180,15 +184,19 @@ The voxel test suite accepts the following command line arguments:
 -   preserve_output: preserves the output images or performance logs generated from the previous test suite run - (0 = remove output images or performance logs / 1 = preserve output images or performance logs). Default is 1
 -   batch_size: Specifies the batch size to use for running tests. Default is 1
 
-## Running the Tests for HOST Backend (Rpp voxel Test Suite)
+### Running the Tests for HOST Backend (RPP Voxel Test Suite)
 The test suite can be run with the following command:
+``` python
 python runTests_voxel.py --header_path <header_path> --data_path <data_path> --case_start <case_start> --case_end <case_end> --test_type <test_type>
+```
 
-## Running the Tests for HIP Backend (Rpp voxel Test Suite)
+### Running the Tests for HIP Backend (RPP Voxel Test Suite)
 The test suite can be run with the following command:
+``` python
 python runTests_voxel.py --header_path <header_path> --data_path <data_path> --case_start <case_start> --case_end <case_end> --test_type <test_type> --profiling <profiling>
+```
 
-## Modes of operation (Rpp voxel Test Suite)
+### Modes of operation (RPP Voxel Test Suite)
 -   QA mode - Tolerance based PASS/FAIL tests for RPP HIP/HOST functionalities checking pixelwise match between C/SSE/AVX/HIP versions after comparison to preset golden outputs.
 ``` python
 python runTests_voxel.py --case_start 0 --case_end 4 --test_type 0 --qa_mode 1 --batch_size 3
@@ -218,7 +226,7 @@ To run performance tests with AMD rocprof kernel profiler for HIP backend varian
 python runTests_voxel.py --test_type 1 --profiling YES
 ```
 
-## Features (Rpp voxel Test Suite)
+### Summary of features (RPP Voxel Test Suite)
 The image test suite includes:
 -   Unit tests that execute the desired functionality and variant once, report RPP execution wall time and save output images, gifs and nii files
 -   Performance tests that execute the desired functionality and variant 100 times by default, and report max/min/avg RPP execution wall time, or optionally, AMD rocprof kernel profiler max/min/avg time for HIP backend variants.
@@ -226,7 +234,7 @@ The image test suite includes:
 -   Unit and Performance tests are included for one input/output bitdepth F32.
 -   Support for pixelwise output referencing against golden outputs, and functionality validation checking, by tolerance-based pass/fail criterions for each variant.
 
-## References
+### References (RPP Voxel Test Suite)
 RPP test suite uses a sample ".nii" image usage from the BraTS2020 Dataset at https://www.kaggle.com/code/rastislav/3d-mri-brain-tumor-segmentation-u-net/input as per the following Data Usage Agreement present at the dataset link above.
 
 Data Usage Agreement / Citations:
@@ -236,12 +244,12 @@ You are free to use and/or refer to the BraTS datasets in your own research, pro
 -   S. Bakas, H. Akbari, A. Sotiras, M. Bilello, M. Rozycki, J.S. Kirby, et al., "Advancing The Cancer Genome Atlas glioma MRI collections with expert segmentation labels and radiomic features", Nature Scientific Data, 4:170117 (2017) DOI: 10.1038/sdata.2017.117
 -   S. Bakas, M. Reyes, A. Jakab, S. Bauer, M. Rempfler, A. Crimi, et al., "Identifying the Best Machine Learning Algorithms for Brain Tumor Segmentation, Progression Assessment, and Overall Survival Prediction in the BRATS Challenge", arXiv preprint arXiv:1811.02629 (2018)
 
-## Rpp Audio Test Suite
+## RPP Audio Test Suite
 The audio test suite can be executed to validate the functionality and performance of the AMD ROCm Performance Primitives (RPP) audio library.
 -   HOST backend - (On a CPU with HOST backend)
 -   F32 Bit Depth
 
-## Command Line Arguments (Rpp Audio Test Suite)
+### Command Line Arguments (RPP Audio Test Suite)
 The audio test suite accepts the following command line arguments:
 -   input_path: The path to the input folder. Default is $cwd/../TEST_AUDIO_FILES/eight_samples_single_channel_src1
 -   case_start: The starting case number for the test range (0-0). Default is 0
@@ -253,11 +261,13 @@ The audio test suite accepts the following command line arguments:
 -   preserve_output: preserves the output or performance logs generated from the previous test suite run - (0 = remove output or performance logs / 1 = preserve output or performance logs). Default is 1
 -   batch_size: Specifies the batch size to use for running tests. Default is 1
 
-## Running the Tests for HOST Backend (Rpp Audio Test Suite)
+### Running the Tests for HOST Backend (RPP Audio Test Suite)
 The test suite can be run with the following command:
+``` python
 python runAudioTests.py --input_path <input_path> --case_start <case_start> --case_end <case_end> --test_type <test_type>
+```
 
-## Modes of operation (Rpp Audio Test Suite)
+### Modes of operation (RPP Audio Test Suite)
 -   QA mode - Tolerance based PASS/FAIL tests for RPP AUDIO HOST functionalities checking match between output and preset golden outputs. Please note that QA mode is only supported with a batch size of 3.
 ``` python
 python runAudioTests.py --case_start 0 --case_end 0 --qa_mode 1 --batch_size 3
@@ -279,7 +289,7 @@ python runTests.py --case_list 0 1 2 --qa_mode 1 --batch_size 3
 python runTests.py --case_list 0 1 2 --test_type 1
 ```
 
-## Features (Rpp Audio Test Suite)
+### Summary of features (RPP Audio Test Suite)
 The audio test suite includes:
 -   Performance tests that execute the desired functionality and variant 100 times by default, and report max/min/avg RPP execution wall time.
 -   QA and Performance tests are included for one input/output bitdepth F32.
