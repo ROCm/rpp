@@ -95,9 +95,7 @@ RppStatus rppt_to_decibels_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_
  */
 RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcLengthTensor, Rpp32f *coeffTensor, RpptAudioBorderType borderType, rppHandle_t rppHandle);
 
-/******************** down_mixing ********************/
-
-/*! \brief Down Mixing augmentation HOST
+/*! \brief Down Mixing augmentation on HOST backend
 * \details Down Mixing augmentation for audio data
 * \param[in] srcPtr source tensor in HOST memory
 * \param[in] srcDescPtr source tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
