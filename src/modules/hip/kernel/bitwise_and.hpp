@@ -1,8 +1,21 @@
 #include <hip/hip_runtime.h>
 #include "rpp_hip_common.hpp"
 
-__device__ void bitwise_and_hip_compute(Rpp8u *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8)
+template <typename T>
+__device__ void bitwise_and_hip_compute(T *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8)
 {
+    float4 adjustment_f4;
+    if constexpr ((std::is_same<T, float>::value) || (std::is_same<T, half>::value))
+    {
+        rpp_hip_math_multiply8_const(src1_f8, src1_f8, (float4)255);
+        rpp_hip_math_multiply8_const(src2_f8, src2_f8, (float4)255);
+    }
+    else if constexpr (std::is_same<T, signed char>::value)
+    {
+        rpp_hip_math_add8_const(src1_f8, src1_f8, (float4)128);
+        rpp_hip_math_add8_const(src2_f8, src2_f8, (float4)128);
+    }
+
     dst_f8->f1[0] = (float)((uchar)(src1_f8->f1[0]) & (uchar)(src2_f8->f1[0]));
     dst_f8->f1[1] = (float)((uchar)(src1_f8->f1[1]) & (uchar)(src2_f8->f1[1]));
     dst_f8->f1[2] = (float)((uchar)(src1_f8->f1[2]) & (uchar)(src2_f8->f1[2]));
@@ -11,51 +24,12 @@ __device__ void bitwise_and_hip_compute(Rpp8u *srcPtr, d_float8 *src1_f8, d_floa
     dst_f8->f1[5] = (float)((uchar)(src1_f8->f1[5]) & (uchar)(src2_f8->f1[5]));
     dst_f8->f1[6] = (float)((uchar)(src1_f8->f1[6]) & (uchar)(src2_f8->f1[6]));
     dst_f8->f1[7] = (float)((uchar)(src1_f8->f1[7]) & (uchar)(src2_f8->f1[7]));
-}
 
-__device__ void bitwise_and_hip_compute(Rpp8s *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8)
-{
-    dst_f8->f1[0] = (float)((uchar)(src1_f8->f1[0] + (float)128) & (uchar)(src2_f8->f1[0] + (float)128));
-    dst_f8->f1[1] = (float)((uchar)(src1_f8->f1[1] + (float)128) & (uchar)(src2_f8->f1[1] + (float)128));
-    dst_f8->f1[2] = (float)((uchar)(src1_f8->f1[2] + (float)128) & (uchar)(src2_f8->f1[2] + (float)128));
-    dst_f8->f1[3] = (float)((uchar)(src1_f8->f1[3] + (float)128) & (uchar)(src2_f8->f1[3] + (float)128));
-    dst_f8->f1[4] = (float)((uchar)(src1_f8->f1[4] + (float)128) & (uchar)(src2_f8->f1[4] + (float)128));
-    dst_f8->f1[5] = (float)((uchar)(src1_f8->f1[5] + (float)128) & (uchar)(src2_f8->f1[5] + (float)128));
-    dst_f8->f1[6] = (float)((uchar)(src1_f8->f1[6] + (float)128) & (uchar)(src2_f8->f1[6] + (float)128));
-    dst_f8->f1[7] = (float)((uchar)(src1_f8->f1[7] + (float)128) & (uchar)(src2_f8->f1[7] + (float)128));
-    rpp_hip_math_subtract8_const(dst_f8, dst_f8, (float4)128);
+    if constexpr ((std::is_same<T, float>::value) || (std::is_same<T, half>::value))
+        rpp_hip_math_multiply8_const(dst_f8, dst_f8, (float4)ONE_OVER_255);
+    else if constexpr (std::is_same<T, signed char>::value)
+        rpp_hip_math_subtract8_const(dst_f8, dst_f8, (float4)128);
 }
-
-__device__ void bitwise_and_hip_compute(half *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8)
-{
-    rpp_hip_math_multiply8_const(src1_f8, src1_f8, (float4)255);
-    rpp_hip_math_multiply8_const(src2_f8, src2_f8, (float4)255);
-    dst_f8->f1[0] = (float)((uchar)(src1_f8->f1[0]) & (uchar)(src2_f8->f1[0]));
-    dst_f8->f1[1] = (float)((uchar)(src1_f8->f1[1]) & (uchar)(src2_f8->f1[1]));
-    dst_f8->f1[2] = (float)((uchar)(src1_f8->f1[2]) & (uchar)(src2_f8->f1[2]));
-    dst_f8->f1[3] = (float)((uchar)(src1_f8->f1[3]) & (uchar)(src2_f8->f1[3]));
-    dst_f8->f1[4] = (float)((uchar)(src1_f8->f1[4]) & (uchar)(src2_f8->f1[4]));
-    dst_f8->f1[5] = (float)((uchar)(src1_f8->f1[5]) & (uchar)(src2_f8->f1[5]));
-    dst_f8->f1[6] = (float)((uchar)(src1_f8->f1[6]) & (uchar)(src2_f8->f1[6]));
-    dst_f8->f1[7] = (float)((uchar)(src1_f8->f1[7]) & (uchar)(src2_f8->f1[7]));
-    rpp_hip_math_multiply8_const(dst_f8, dst_f8, (float4)ONE_OVER_255);
-}
-
-__device__ void bitwise_and_hip_compute(Rpp32f *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8)
-{
-    rpp_hip_math_multiply8_const(src1_f8, src1_f8, (float4)255);
-    rpp_hip_math_multiply8_const(src2_f8, src2_f8, (float4)255);
-    dst_f8->f1[0] = (float)((uchar)(src1_f8->f1[0]) & (uchar)(src2_f8->f1[0]));
-    dst_f8->f1[1] = (float)((uchar)(src1_f8->f1[1]) & (uchar)(src2_f8->f1[1]));
-    dst_f8->f1[2] = (float)((uchar)(src1_f8->f1[2]) & (uchar)(src2_f8->f1[2]));
-    dst_f8->f1[3] = (float)((uchar)(src1_f8->f1[3]) & (uchar)(src2_f8->f1[3]));
-    dst_f8->f1[4] = (float)((uchar)(src1_f8->f1[4]) & (uchar)(src2_f8->f1[4]));
-    dst_f8->f1[5] = (float)((uchar)(src1_f8->f1[5]) & (uchar)(src2_f8->f1[5]));
-    dst_f8->f1[6] = (float)((uchar)(src1_f8->f1[6]) & (uchar)(src2_f8->f1[6]));
-    dst_f8->f1[7] = (float)((uchar)(src1_f8->f1[7]) & (uchar)(src2_f8->f1[7]));
-    rpp_hip_math_multiply8_const(dst_f8, dst_f8, (float4)ONE_OVER_255);
-}
-
 
 template <typename T>
 __global__ void bitwise_and_pkd_hip_tensor(T *srcPtr1,
