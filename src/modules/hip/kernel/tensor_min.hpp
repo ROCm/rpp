@@ -11,21 +11,17 @@ __global__ void tensor_min_grid_3channel_result_hip(float *srcPtr,
     int id_x = hipThreadIdx_x * 8;
     int id_z = hipBlockIdx_z;
 
-    if (id_x >= xBufferLength)
-        return;
-
     __shared__ float partialRMin_smem[256];                           // 1024 floats of src reduced to 256 in a 256 x 1 thread block
     __shared__ float partialGMin_smem[256];                           // 1024 floats of src reduced to 256 in a 256 x 1 thread block
     __shared__ float partialBMin_smem[256];                           // 1024 floats of src reduced to 256 in a 256 x 1 thread block
 
     uint srcIdx = (id_z * xBufferLength) * 3;
-    float srcRefR = srcPtr[srcIdx];                                 // get starting value of R channel
-    float srcRefG = srcPtr[srcIdx + 1];                             // get starting value of G channel
-    float srcRefB = srcPtr[srcIdx + 2];                             // get starting value of B channel
+    partialRMin_smem[hipThreadIdx_x] = srcPtr[srcIdx];                       // initialization of LDS for R channel to start of R channel using all 256 x 1 threads
+    partialGMin_smem[hipThreadIdx_x] = srcPtr[srcIdx + 1];                   // initialization of LDS for G channel to start of G channel using all 256 x 1 threads
+    partialBMin_smem[hipThreadIdx_x] = srcPtr[srcIdx + 2];                   // initialization of LDS for B channel to start of B channel using all 256 x 1 threads
 
-    partialRMin_smem[hipThreadIdx_x] = srcRefR;                       // initialization of LDS for R channel to srcRefR using all 256 x 1 threads
-    partialGMin_smem[hipThreadIdx_x] = srcRefG;                       // initialization of LDS for G channel to srcRefG using all 256 x 1 threads
-    partialBMin_smem[hipThreadIdx_x] = srcRefB;                       // initialization of LDS for B channel to srcRefB using all 256 x 1 threads
+    if (id_x >= xBufferLength)
+        return;
 
     int xAlignedLength = xBufferLength & ~7;                        // alignedLength for vectorized global loads
     int xDiff = xBufferLength - xAlignedLength;                     // difference between bufferLength and alignedLength
@@ -40,7 +36,7 @@ __global__ void tensor_min_grid_3channel_result_hip(float *srcPtr,
     rpp_hip_math_min8(&src_f24.f8[0], &partialRMin_smem[hipThreadIdx_x]);
     rpp_hip_math_min8(&src_f24.f8[1], &partialGMin_smem[hipThreadIdx_x]);
     rpp_hip_math_min8(&src_f24.f8[2], &partialBMin_smem[hipThreadIdx_x]);
-    __syncthreads();                                                                    // syncthreads after LDS load
+    __syncthreads();                                                                    // syncthreads after min compute
 
     // Reduction of 256 floats on 256 threads per block in x dimension
     for (int threadMax = 128; threadMax >= 1; threadMax /= 2)
@@ -76,8 +72,7 @@ __global__ void tensor_min_grid_result_hip(float *srcPtr,
     __shared__ float partialMin_smem[256];                            // 1024 floats of src reduced to 256 in a 256 x 1 thread block
 
     uint srcIdx = (id_z * xBufferLength);
-    float srcRef = srcPtr[srcIdx];
-    partialMin_smem[hipThreadIdx_x] = srcRef;                         // initialization of LDS to srcRef using all 256 x 1 threads
+    partialMin_smem[hipThreadIdx_x] = srcPtr[srcIdx];                         // initialization of LDS to start of buffer using all 256 x 1 threads
 
     if (id_x >= xBufferLength)
         return;
@@ -92,7 +87,7 @@ __global__ void tensor_min_grid_result_hip(float *srcPtr,
     d_float8 src_f8;
     rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);   // load 8 pixels to local memory
     rpp_hip_math_min8(&src_f8, &partialMin_smem[hipThreadIdx_x]);
-    __syncthreads();                                                // syncthreads after LDS load
+    __syncthreads();                                                // syncthreads after min compute
 
     // Reduction of 256 floats on 256 threads per block in x dimension
     for (int threadMax = 128; threadMax >= 1; threadMax /= 2)
@@ -124,43 +119,33 @@ __global__ void tensor_min_pkd3_hip(T *srcPtr,
     __shared__ float partialGMin_smem[16][16];                                 // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block for G channel
     __shared__ float partialBMin_smem[16][16];                                 // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block for B channel
 
-    uint srcIdx = (id_z * srcStridesNH.x);
-    float srcRefR = srcPtr[srcIdx];                                          // get starting value of R channel
-    float srcRefG = srcPtr[srcIdx + 1];                                      // get starting value of G channel
-    float srcRefB = srcPtr[srcIdx + 2];                                      // get starting value of B channel
-
     float *partialRMinRowPtr_smem = &partialRMin_smem[hipThreadIdx_y][0];        // float pointer to beginning of each row in LDS for R Channel
     float *partialGMinRowPtr_smem = &partialGMin_smem[hipThreadIdx_y][0];        // float pointer to beginning of each row in LDS for G Channel
     float *partialBMinRowPtr_smem = &partialBMin_smem[hipThreadIdx_y][0];        // float pointer to beginning of each row in LDS for B Channel
 
-    partialRMinRowPtr_smem[hipThreadIdx_x] = srcRefR;                          // initialization of LDS for R channel to srcRefR using all 16 x 16 threads
-    partialGMinRowPtr_smem[hipThreadIdx_x] = srcRefG;                          // initialization of LDS for G channel to srcRefG using all 16 x 16 threads
-    partialBMinRowPtr_smem[hipThreadIdx_x] = srcRefB;                          // initialization of LDS for B channel to srcRefB using all 16 x 16 threads
+    uint srcIdx = (id_z * srcStridesNH.x);
+    partialRMinRowPtr_smem[hipThreadIdx_x] = srcPtr[srcIdx];                          // initialization of LDS for R channel to start value of R channel using all 16 x 16 threads
+    partialGMinRowPtr_smem[hipThreadIdx_x] = srcPtr[srcIdx + 1];                      // initialization of LDS for G channel to start value of G channel using all 16 x 16 threads
+    partialBMinRowPtr_smem[hipThreadIdx_x] = srcPtr[srcIdx + 2];                      // initialization of LDS for B channel to start value of B channel using all 16 x 16 threads
 
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
     {
-        int idx = ((hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x) * 3;
+        /*int idx = ((hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x) * 3;
         minArr[idx] = srcRefR;
         minArr[idx + 1] = srcRefG;
-        minArr[idx + 2] = srcRefB;
+        minArr[idx + 2] = srcRefB;*/
         return;
     }
 
-    int xAlignedLength = roiTensorPtrSrc[id_z].xywhROI.roiWidth & ~7;       // alignedLength for vectorized global loads
-    int xDiff = roiTensorPtrSrc[id_z].xywhROI.roiWidth - xAlignedLength;    // difference between roiWidth and alignedLength
+    int xAlignedLength = roiTensorPtrSrc[id_z].xywhROI.roiWidth & ~7;                    // alignedLength for vectorized global loads
+    int xDiff = roiTensorPtrSrc[id_z].xywhROI.roiWidth - xAlignedLength;                 // difference between roiWidth and alignedLength
     srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
 
-    d_float24 src_f24;
-    rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &src_f24);           // load 24 pixels to local mmemory
     if (id_x + 8 > roiTensorPtrSrc[id_z].xywhROI.roiWidth)
-    {
-        for(int i = xDiff; i < 8; i++)
-        {
-            src_f24.f8[0].f1[i] = srcRefR;
-            src_f24.f8[1].f1[i] = srcRefG;
-            src_f24.f8[2].f1[i] = srcRefB;
-        }
-    }
+        srcIdx -= (id_x + 8 - roiTensorPtrSrc[id_z].xywhROI.roiWidth) * 3;
+
+    d_float24 src_f24;
+    rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &src_f24);           // load 24 pixels to local memory
 
     rpp_hip_math_min8(&src_f24.f8[0], &partialRMinRowPtr_smem[hipThreadIdx_x]);
     rpp_hip_math_min8(&src_f24.f8[1], &partialGMinRowPtr_smem[hipThreadIdx_x]);
@@ -218,25 +203,21 @@ __global__ void tensor_min_pln3_hip(T *srcPtr,
     __shared__ float partialGMin_smem[16][16];                                 // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
     __shared__ float partialBMin_smem[16][16];                                 // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
 
-    uint srcIdx = (id_z * srcStridesNCH.x);
-    float srcRefR = srcPtr[srcIdx];
-    float srcRefG = srcPtr[srcIdx + srcStridesNCH.y];
-    float srcRefB = srcPtr[srcIdx + 2 * srcStridesNCH.y];
-
     float *partialRMinRowPtr_smem = &partialRMin_smem[hipThreadIdx_y][0];        // float pointer to beginning of each row in LDS
     float *partialGMinRowPtr_smem = &partialGMin_smem[hipThreadIdx_y][0];        // float pointer to beginning of each row in LDS
     float *partialBMinRowPtr_smem = &partialBMin_smem[hipThreadIdx_y][0];        // float pointer to beginning of each row in LDS
 
-    partialRMinRowPtr_smem[hipThreadIdx_x] = srcRefR;                          // initialization of LDS to 0 using all 16 x 16 threads
-    partialGMinRowPtr_smem[hipThreadIdx_x] = srcRefG;                          // initialization of LDS to 0 using all 16 x 16 threads
-    partialBMinRowPtr_smem[hipThreadIdx_x] = srcRefB;                          // initialization of LDS to 0 using all 16 x 16 threads
+    uint srcIdx = (id_z * srcStridesNCH.x);
+    partialRMinRowPtr_smem[hipThreadIdx_x] = srcPtr[srcIdx];                          // initialization of LDS for R channel to start value of R channel using all 16 x 16 threads
+    partialGMinRowPtr_smem[hipThreadIdx_x] = srcPtr[srcIdx + srcStridesNCH.y];        // initialization of LDS for G channel to start value of R channel using all 16 x 16 threads
+    partialBMinRowPtr_smem[hipThreadIdx_x] = srcPtr[srcIdx + 2 * srcStridesNCH.y];    // initialization of LDS for B channel to start value of R channel using all 16 x 16 threads
 
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
     {
-        int idx = ((hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x) * 3;
+        /*int idx = ((hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x) * 3;
         minArr[idx] = srcRefR;
         minArr[idx + 1] = srcRefG;
-        minArr[idx + 2] = srcRefB;
+        minArr[idx + 2] = srcRefB;*/
         return;
     }
 
@@ -244,22 +225,16 @@ __global__ void tensor_min_pln3_hip(T *srcPtr,
     int xDiff = roiTensorPtrSrc[id_z].xywhROI.roiWidth - xAlignedLength;     // difference between roiWidth and alignedLength
     srcIdx += ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
 
+    if (id_x + 8 > roiTensorPtrSrc[id_z].xywhROI.roiWidth)
+        srcIdx -= (id_x + 8 - roiTensorPtrSrc[id_z].xywhROI.roiWidth);
+
     d_float24 src_f24;
     rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &src_f24);
-    if (id_x + 8 > roiTensorPtrSrc[id_z].xywhROI.roiWidth)
-    {
-        for(int i = xDiff; i < 8; i++)
-        {
-            src_f24.f8[0].f1[i] = srcRefR;                                   // local memory reset of invalid values (from the vectorized global load) to srcRefR
-            src_f24.f8[1].f1[i] = srcRefG;                                   // local memory reset of invalid values (from the vectorized global load) to srcRefG
-            src_f24.f8[2].f1[i] = srcRefB;                                   // local memory reset of invalid values (from the vectorized global load) to srcRefB
-        }
-    }
 
     rpp_hip_math_min8(&src_f24.f8[0], &partialRMinRowPtr_smem[hipThreadIdx_x]);
     rpp_hip_math_min8(&src_f24.f8[1], &partialGMinRowPtr_smem[hipThreadIdx_x]);
     rpp_hip_math_min8(&src_f24.f8[2], &partialBMinRowPtr_smem[hipThreadIdx_x]);
-    __syncthreads();                                                         // syncthreads after LDS load
+    __syncthreads();                                                         // syncthreads after min compute
 
     // Reduction of 16 floats on 16 threads per block in x dimension (for every y dimension)
     for (int threadMax = 8; threadMax >= 1; threadMax /= 2)
@@ -311,13 +286,12 @@ __global__ void tensor_min_pln1_hip(T *srcPtr,
     __shared__ float partialMin_smem[16][16];                                 // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
 
     uint srcIdx = (id_z * srcStridesNH.x);
-    float srcRef = srcPtr[srcIdx];
     float *partialMinRowPtr_smem = &partialMin_smem[hipThreadIdx_y][0];         // float pointer to beginning of each row in LDS
-    partialMinRowPtr_smem[hipThreadIdx_x] = srcRef;                           // initialization of LDS to srcRefR using all 16 x 16 threads
+    partialMinRowPtr_smem[hipThreadIdx_x] = srcPtr[srcIdx];                     // initialization of LDS to start value using all 16 x 16 threads
 
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
     {
-        minArr[(hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x] = srcRef;
+        //minArr[(hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x] = srcRef;
         return;
     }
 
@@ -325,14 +299,13 @@ __global__ void tensor_min_pln1_hip(T *srcPtr,
     int xDiff = roiTensorPtrSrc[id_z].xywhROI.roiWidth - xAlignedLength;    // difference between roiWidth and alignedLength
     srcIdx += ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
 
-    d_float8 src_f8;
-    rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);           // load 8 pixels to local mmemory
     if (id_x + 8 > roiTensorPtrSrc[id_z].xywhROI.roiWidth)
-        for(int i = xDiff; i < 8; i++)
-            src_f8.f1[i] = srcRef;                                          // local memory reset of invalid values (from the vectorized global load) to srcRef
+        srcIdx -= (id_x + 8 - roiTensorPtrSrc[id_z].xywhROI.roiWidth);
 
+    d_float8 src_f8;
+    rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);           // load 8 pixels to local memory
     rpp_hip_math_min8(&src_f8, &partialMinRowPtr_smem[hipThreadIdx_x]);
-    __syncthreads();                                                        // syncthreads after LDS load
+    __syncthreads();                                                        // syncthreads after min compute
 
     // Reduction of 16 floats on 16 threads per block in x dimension (for every y dimension)
     for (int threadMax = 8; threadMax >= 1; threadMax /= 2)
@@ -384,7 +357,8 @@ RppStatus hip_exec_tensor_min(T *srcPtr,
         Rpp32u partialMinArrLength = gridDim_x * gridDim_y * gridDim_z;
         float *partialMinArr;
         partialMinArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
-        hipMemsetAsync(partialMinArr, 0, partialMinArrLength * sizeof(float), handle.GetStream());
+        hipMemsetAsync(partialMinArr, (T)(std::numeric_limits<T>::max()), partialMinArrLength * sizeof(float), handle.GetStream());
+        hipStreamSynchronize(handle.GetStream());
         hipLaunchKernelGGL(tensor_min_pln1_hip,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
@@ -409,7 +383,8 @@ RppStatus hip_exec_tensor_min(T *srcPtr,
         Rpp32u partialMinArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
         float *partialMinArr;
         partialMinArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
-        hipMemsetAsync(partialMinArr, 0, partialMinArrLength * sizeof(float), handle.GetStream());
+        hipMemsetAsync(partialMinArr, (T)(std::numeric_limits<T>::max()), partialMinArrLength * sizeof(float), handle.GetStream());
+        hipStreamSynchronize(handle.GetStream());
         hipLaunchKernelGGL(tensor_min_pln3_hip,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
@@ -434,7 +409,8 @@ RppStatus hip_exec_tensor_min(T *srcPtr,
         Rpp32u partialMinArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
         float *partialMinArr;
         partialMinArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
-        hipMemsetAsync(partialMinArr, 0, partialMinArrLength * sizeof(float), handle.GetStream());
+        hipMemsetAsync(partialMinArr, (T)(std::numeric_limits<T>::max()), partialMinArrLength * sizeof(float), handle.GetStream());
+        hipStreamSynchronize(handle.GetStream());
         hipLaunchKernelGGL(tensor_min_pkd3_hip,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
