@@ -129,13 +129,7 @@ __global__ void tensor_min_pkd3_hip(T *srcPtr,
     partialBMinRowPtr_smem[hipThreadIdx_x] = srcPtr[srcIdx + 2];                      // initialization of LDS for B channel to start value of B channel using all 16 x 16 threads
 
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
-    {
-        /*int idx = ((hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x) * 3;
-        minArr[idx] = srcRefR;
-        minArr[idx + 1] = srcRefG;
-        minArr[idx + 2] = srcRefB;*/
         return;
-    }
 
     int xAlignedLength = roiTensorPtrSrc[id_z].xywhROI.roiWidth & ~7;                    // alignedLength for vectorized global loads
     int xDiff = roiTensorPtrSrc[id_z].xywhROI.roiWidth - xAlignedLength;                 // difference between roiWidth and alignedLength
@@ -213,13 +207,7 @@ __global__ void tensor_min_pln3_hip(T *srcPtr,
     partialBMinRowPtr_smem[hipThreadIdx_x] = srcPtr[srcIdx + 2 * srcStridesNCH.y];    // initialization of LDS for B channel to start value of R channel using all 16 x 16 threads
 
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
-    {
-        /*int idx = ((hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x) * 3;
-        minArr[idx] = srcRefR;
-        minArr[idx + 1] = srcRefG;
-        minArr[idx + 2] = srcRefB;*/
         return;
-    }
 
     int xAlignedLength = roiTensorPtrSrc[id_z].xywhROI.roiWidth & ~7;        // alignedLength for vectorized global loads
     int xDiff = roiTensorPtrSrc[id_z].xywhROI.roiWidth - xAlignedLength;     // difference between roiWidth and alignedLength
@@ -290,10 +278,7 @@ __global__ void tensor_min_pln1_hip(T *srcPtr,
     partialMinRowPtr_smem[hipThreadIdx_x] = srcPtr[srcIdx];                     // initialization of LDS to start value using all 16 x 16 threads
 
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
-    {
-        //minArr[(hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x] = srcRef;
         return;
-    }
 
     int xAlignedLength = roiTensorPtrSrc[id_z].xywhROI.roiWidth & ~7;       // alignedLength for vectorized global loads
     int xDiff = roiTensorPtrSrc[id_z].xywhROI.roiWidth - xAlignedLength;    // difference between roiWidth and alignedLength
@@ -357,8 +342,7 @@ RppStatus hip_exec_tensor_min(T *srcPtr,
         Rpp32u partialMinArrLength = gridDim_x * gridDim_y * gridDim_z;
         float *partialMinArr;
         partialMinArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
-        hipMemsetAsync(partialMinArr, (T)(std::numeric_limits<T>::max()), partialMinArrLength * sizeof(float), handle.GetStream());
-        hipStreamSynchronize(handle.GetStream());
+        hipMemsetAsync(partialMinArr, 255, partialMinArrLength * sizeof(float), handle.GetStream());
         hipLaunchKernelGGL(tensor_min_pln1_hip,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
@@ -383,8 +367,7 @@ RppStatus hip_exec_tensor_min(T *srcPtr,
         Rpp32u partialMinArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
         float *partialMinArr;
         partialMinArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
-        hipMemsetAsync(partialMinArr, (T)(std::numeric_limits<T>::max()), partialMinArrLength * sizeof(float), handle.GetStream());
-        hipStreamSynchronize(handle.GetStream());
+        hipMemsetAsync(partialMinArr, 255, partialMinArrLength * sizeof(float), handle.GetStream());
         hipLaunchKernelGGL(tensor_min_pln3_hip,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
@@ -409,8 +392,7 @@ RppStatus hip_exec_tensor_min(T *srcPtr,
         Rpp32u partialMinArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
         float *partialMinArr;
         partialMinArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
-        hipMemsetAsync(partialMinArr, (T)(std::numeric_limits<T>::max()), partialMinArrLength * sizeof(float), handle.GetStream());
-        hipStreamSynchronize(handle.GetStream());
+        hipMemsetAsync(partialMinArr, 255, partialMinArrLength * sizeof(float), handle.GetStream());
         hipLaunchKernelGGL(tensor_min_pkd3_hip,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
