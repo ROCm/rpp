@@ -1134,7 +1134,7 @@ inline void compare_reduction_output(T* output, string funcName, RpptDescPtr src
     int matched_values = 0;
     if(testCase == 87)
     {
-        Rpp64u *binaryContent = (Rpp64u *)malloc(binaryOutputSize * sizeof(Rpp64u));
+        uint64_t *binaryContent = (uint64_t *)malloc(binaryOutputSize * sizeof(uint64_t));
         read_bin_file(refFile, binaryContent);
 
         if(srcDescPtr->c == 1)
