@@ -102,6 +102,13 @@ std::map<int, string> augmentationMap =
     {89, "tensor_max"},
 };
 
+// Golden outputs for Tensor sum Kernel
+std::map<int, std::vector<int>> TensorSumReferenceOutputs =
+{
+    {1, {334225, 813471, 2631125}},
+    {3, {348380, 340992, 262616, 951988, 1056552, 749506, 507441, 2313499, 2170646, 2732368, 3320699, 8223713}}
+};
+
 // Golden outputs for Tensor min Kernel
 std::map<int, std::vector<int>> TensorMinReferenceOutputs =
 {
@@ -1107,14 +1114,9 @@ template <typename T>
 inline void compare_reduction_output(T* output, string funcName, RpptDescPtr srcDescPtr, int testCase, string dst, string scriptPath)
 {
     string func = funcName;
-    string refFile = "";
-    int pln1RefStride = srcDescPtr->n * 4;
-    Rpp64u binaryOutputSize = srcDescPtr->n * 5;
-
     string dataType[4] = {"_u8_", "_f16_", "_f32_", "_i8_"};
 
     func += dataType[srcDescPtr->dataType];
-    std::string binFile = func + "Tensor";
 
     if(srcDescPtr->layout == RpptLayout::NHWC)
         func += "Tensor_PKD3";
@@ -1126,84 +1128,49 @@ inline void compare_reduction_output(T* output, string funcName, RpptDescPtr src
             func += "Tensor_PLN1";
     }
 
-    refFile = scriptPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ binFile + ".bin";
-
-    string line, word;
-    int index = 0;
     int fileMatch = 0;
     int matched_values = 0;
-    if(testCase == 87)
-    {
-        uint64_t *binaryContent = (uint64_t *)malloc(binaryOutputSize * sizeof(uint64_t));
-        read_bin_file(refFile, binaryContent);
 
-        if(srcDescPtr->c == 1)
-        {
-            binaryContent += pln1RefStride;
-            for(int i = 0; i < srcDescPtr->n; i++)
-            {
-                int diff = abs(output[i] - binaryContent[i]);
-                if(diff <= CUTOFF)
-                    fileMatch++;
-            }
-        }
-        else
-        {
-            for(int i = 0; i < srcDescPtr->n; i++)
-            {
-                matched_values = 0;
-                for(int j = 0; j < 4; j++)
-                {
-                    int diff = abs(output[(i * 4) + j] - binaryContent[(i * 4) + j]);
-                    if(diff <= CUTOFF)
-                        matched_values++;
-                }
-                if(matched_values == 4)
-                    fileMatch++;
-            }
-        }
-        free(binaryContent);
-    }
-    else if(testCase == 88 || testCase == 89)
-    {
-        T *refOutput;
-        refOutput = (T *)calloc(srcDescPtr->n * 4, sizeof(T));
-        int numChannels = (srcDescPtr->c == 1) ? 1 : 3;
-        int numOutputs = (srcDescPtr->c == 1) ? srcDescPtr->n : srcDescPtr->n * 4;
-        std::vector<int> ref;
-        if(testCase == 88)
-            ref = TensorMinReferenceOutputs[numChannels];
-        else if(testCase == 89)
-            ref = TensorMaxReferenceOutputs[numChannels];
-        for(int i = 0; i < numOutputs; i++)
-            refOutput[i] = (T)ref[i];
+    T *refOutput;
+    refOutput = (T *)calloc(srcDescPtr->n * 4, sizeof(T));
+    int numChannels = (srcDescPtr->c == 1) ? 1 : 3;
+    int numOutputs = (srcDescPtr->c == 1) ? srcDescPtr->n : srcDescPtr->n * 4;
+    std::vector<int> ref;
+    if(testCase == 88)
+        ref = TensorMinReferenceOutputs[numChannels];
+    else if(testCase == 89)
+        ref = TensorMaxReferenceOutputs[numChannels];
+    else if(testCase == 87)
+        ref = TensorSumReferenceOutputs[numChannels];
 
-        if(srcDescPtr->c == 1)
+    for (int i = 0; i < numOutputs; i++)
+        refOutput[i] = (T)ref[i];
+
+    if(srcDescPtr->c == 1)
+    {
+        for(int i = 0; i < srcDescPtr->n; i++)
         {
-            for(int i = 0; i < srcDescPtr->n; i++)
-            {
-                int diff = abs(output[i] - refOutput[i]);
-                if(diff <= CUTOFF)
-                    fileMatch++;
-            }
+            int diff = abs(output[i] - refOutput[i]);
+            if(diff <= CUTOFF)
+                fileMatch++;
         }
-        else
-        {
-            for(int i = 0; i < srcDescPtr->n; i++)
-            {
-                matched_values = 0;
-                for(int j = 0; j < 4; j++)
-                {
-                    int diff = abs(output[(i * 4) + j] - refOutput[(i * 4) + j]);
-                    if(diff <= CUTOFF)
-                        matched_values++;
-                }
-                if(matched_values == 4)
-                    fileMatch++;
-            }
-        }
-        free(refOutput);
     }
+    else
+    {
+        for(int i = 0; i < srcDescPtr->n; i++)
+        {
+            matched_values = 0;
+            for(int j = 0; j < 4; j++)
+            {
+                int diff = abs(output[(i * 4) + j] - refOutput[(i * 4) + j]);
+                if(diff <= CUTOFF)
+                    matched_values++;
+            }
+            if(matched_values == 4)
+                fileMatch++;
+        }
+    }
+    free(refOutput);
 
     std::cout << std::endl << "Results for " << func << " :" << std::endl;
     std::string status = func + ": ";
