@@ -119,7 +119,7 @@ def func_group_finder(case_number):
         return "effects_augmentations"
     elif case_number < 40:
         return "geometric_augmentations"
-    elif case_number < 65:
+    elif case_number < 65 or case_number == 92:
         return "arithmetic_operations"
     elif case_number < 87:
         return "data_exchange_operations"
@@ -243,7 +243,7 @@ def rpp_test_suite_parser_and_validator():
     validate_path(qaInputFile)
 
     # validate the parameters passed by user
-    if ((args.case_start < 0 or args.case_start > 87) or (args.case_end < 0 or args.case_end > 87)):
+    if ((args.case_start < 0 or args.case_start > 92) or (args.case_end < 0 or args.case_end > 92)):
         print("Starting case# and Ending case# must be in the 0:87 range. Aborting!")
         exit(0)
     elif args.case_end < args.case_start:
@@ -357,8 +357,8 @@ if testType == 0:
         if qaMode == 1 and case != "82":
             srcPath1 = inFilePath1
             srcPath2 = inFilePath2
-        if int(case) < 0 or int(case) > 87:
-            print(f"Invalid case number {case}. Case number must be in the range of 0 to 86!")
+        if int(case) < 0 or int(case) > 92:
+            print(f"Invalid case number {case}. Case number must be in the range of 0 to 92!")
             continue
         for layout in range(3):
             dstPathTemp, log_file_layout = process_layout(layout, qaMode, case, dstPath)
@@ -385,7 +385,7 @@ else:
             run_performance_test(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
 
 # print the results of qa tests
-supportedCaseList = ['0', '1', '2', '4', '8', '13', '20', '21', '23', '29', '30', '31', '34', '36', '37', '38', '39', '54', '63', '65', '70', '80', '81', '82', '83', '84', '85', '86', '87']
+supportedCaseList = ['0', '1', '2', '4', '8', '13', '20', '21', '23', '29', '30', '31', '34', '36', '37', '38', '39', '54', '63', '65', '70', '80', '81', '82', '83', '84', '85', '86', '87', '92']
 nonQACaseList = ['8', '24', '54', '84'] # Add cases present in supportedCaseList, but without QA support
 
 if qaMode and testType == 0:
