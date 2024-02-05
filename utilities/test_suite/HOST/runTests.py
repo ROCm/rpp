@@ -225,8 +225,8 @@ def rpp_test_suite_parser_and_validator():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_path1", type = str, default = inFilePath1, help = "Path to the input folder 1")
     parser.add_argument("--input_path2", type = str, default = inFilePath2, help = "Path to the input folder 2")
-    parser.add_argument("--case_start", type = int, default = 0, help = "Testing range starting case # - (0:87)")
-    parser.add_argument("--case_end", type = int, default = 87, help = "Testing range ending case # - (0:87)")
+    parser.add_argument("--case_start", type = int, default = 0, help = "Testing range starting case # - (0:92)")
+    parser.add_argument("--case_end", type = int, default = 92, help = "Testing range ending case # - (0:92)")
     parser.add_argument('--test_type', type = int, default = 0, help = "Type of Test - (0 = Unit tests / 1 = Performance tests)")
     parser.add_argument('--case_list', nargs = "+", help = "List of case numbers to list", required = False)
     parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Output images from tests will be compared with golden outputs - (0 / 1)", required = False)
@@ -244,7 +244,7 @@ def rpp_test_suite_parser_and_validator():
 
     # validate the parameters passed by user
     if ((args.case_start < 0 or args.case_start > 92) or (args.case_end < 0 or args.case_end > 92)):
-        print("Starting case# and Ending case# must be in the 0:87 range. Aborting!")
+        print("Starting case# and Ending case# must be in the 0:92 range. Aborting!")
         exit(0)
     elif args.case_end < args.case_start:
         print("Ending case# must be greater than starting case#. Aborting!")
@@ -258,7 +258,7 @@ def rpp_test_suite_parser_and_validator():
     elif args.decoder_type < 0 or args.decoder_type > 1:
         print("Decoder Type must be in the 0/1 (0 = OpenCV / 1 = TurboJPEG). Aborting")
         exit(0)
-    elif args.case_list is not None and args.case_start > 0 and args.case_end < 87:
+    elif args.case_list is not None and args.case_start > 0 and args.case_end < 92:
         print("Invalid input! Please provide only 1 option between case_list, case_start and case_end")
         exit(0)
     elif args.num_runs <= 0:
@@ -282,8 +282,8 @@ def rpp_test_suite_parser_and_validator():
         args.case_list = [str(x) for x in args.case_list]
     else:
         for case in args.case_list:
-            if int(case) < 0 or int(case) > 87:
-                 print("The case# must be in the 0:87 range!")
+            if int(case) < 0 or int(case) > 92:
+                 print("The case# must be in the 0:92 range!")
                  exit(0)
 
     return args
@@ -373,7 +373,7 @@ if testType == 0:
         create_layout_directories(dstPath, layoutDict)
 else:
     for case in caseList:
-        if int(case) < 0 or int(case) > 87:
+        if int(case) < 0 or int(case) > 92:
             print(f"Invalid case number {case}. Case number must be in the range of 0 to 86!")
             continue
         if case == "82" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
