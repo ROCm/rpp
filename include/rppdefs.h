@@ -401,9 +401,9 @@ typedef enum
  */
 typedef enum
 {
-    FT = 0,
-    TF,
-}RpptSpectrogramLayout;
+    FT = 0,  //Frequency Major
+    TF,      //Time Major
+} RpptSpectrogramLayout;
 
 /*! \brief RPPT Tensor 2D ROI LTRB struct
  * \ingroup group_rppdefs

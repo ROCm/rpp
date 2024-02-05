@@ -122,7 +122,7 @@ RppStatus rppt_down_mixing_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_
  * \param[in] srcLengthTensor source audio buffer length (1D tensor in HOST memory, of size batchSize)
  * \param[in] centerWindows indicates whether extracted windows should be padded so that the window function is centered at multiples of window_step
  * \param[in] reflectPadding indicates the padding policy when sampling outside the bounds of the signal
- * \param[in] windowFunction samples of the window function that will be multiplied to each extracted window when calculating the STFT
+ * \param[in] windowFunction samples of the window function that will be multiplied to each extracted window when calculating the Short Time Fourier Transform (STFT)
  * \param[in] nfft size of the FFT
  * \param[in] power exponent of the magnitude of the spectrum
  * \param[in] windowLength window size in number of samples

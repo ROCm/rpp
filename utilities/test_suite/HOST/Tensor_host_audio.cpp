@@ -250,13 +250,7 @@ int main(int argc, char **argv)
                         }
                     }
 
-                    dstDescPtr->w = maxDstWidth;
-                    dstDescPtr->h = maxDstHeight;
-
-                    dstDescPtr->strides.nStride = dstDescPtr->c * dstDescPtr->w * dstDescPtr->h;
-                    dstDescPtr->strides.hStride = dstDescPtr->c * dstDescPtr->w;
-                    dstDescPtr->strides.wStride = dstDescPtr->c;
-                    dstDescPtr->strides.cStride = 1;
+                    set_audio_descriptor_dims_and_strides(dstDescPtr, batchSize, maxDstHeight, maxDstWidth, maxDstChannels, offsetInBytes);
 
                     // Set buffer sizes for src/dst
                     unsigned long long spectrogramBufferSize = (unsigned long long)dstDescPtr->h * (unsigned long long)dstDescPtr->w * (unsigned long long)dstDescPtr->c * (unsigned long long)dstDescPtr->n;
@@ -264,7 +258,7 @@ int main(int argc, char **argv)
 
                     startWallTime = omp_get_wtime();
                     rppt_spectrogram_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcLengthTensor, centerWindows, reflectPadding, windowFn, nfft, power, windowLength, windowStep, layout, handle);
-            
+
                     break;
                 }
                 default:
