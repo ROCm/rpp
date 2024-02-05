@@ -67,6 +67,22 @@ inline void set_audio_descriptor_dims_and_strides(RpptDescPtr descPtr, int batch
     descPtr->strides.cStride = 1;
 }
 
+// sets descriptor dimensions and strides of src/dst
+inline void set_audio_descriptor_dims_and_strides_nostriding(RpptDescPtr descPtr, int batchSize, int maxHeight, int maxWidth, int maxChannels, int offsetInBytes)
+{
+    descPtr->numDims = 4;
+    descPtr->offsetInBytes = offsetInBytes;
+    descPtr->n = batchSize;
+    descPtr->h = maxHeight;
+    descPtr->w = maxWidth;
+    descPtr->c = maxChannels;
+
+    descPtr->strides.nStride = descPtr->c * descPtr->w * descPtr->h;
+    descPtr->strides.hStride = descPtr->c * descPtr->w;
+    descPtr->strides.wStride = descPtr->c;
+    descPtr->strides.cStride = 1;
+}
+
 // sets values of maxHeight and maxWidth
 inline void set_audio_max_dimensions(vector<string> audioFilesPath, int& maxWidth, int& maxChannels)
 {
