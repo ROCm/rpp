@@ -1,6 +1,16 @@
 #include <hip/hip_runtime.h>
 #include "rpp_hip_common.hpp"
 
+//Helper Function
+template <typename T>
+void getMinGivenDatatype(T *srcPtr, float *minimum)
+{
+    if constexpr (std::is_same<T, signed char>::value)
+        *minimum = -128.0;
+    else
+        *minimum = 0.0;
+}
+
 // -------------------- Set 0 - Reduction Stage 2 --------------------
 
 template <typename T>
@@ -326,13 +336,15 @@ RppStatus hip_exec_tensor_max(T *srcPtr,
     int gridDim_x = (int) ceil((float)globalThreads_x/LOCAL_THREADS_X);
     int gridDim_y = (int) ceil((float)globalThreads_y/LOCAL_THREADS_Y);
     int gridDim_z = (int) ceil((float)globalThreads_z/LOCAL_THREADS_Z);
+    float minimum;
+    getMinGivenDatatype(srcPtr, &minimum);
 
     if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
     {
         Rpp32u partialMaxArrLength = gridDim_x * gridDim_y * gridDim_z;
         float *partialMaxArr;
         partialMaxArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
-        hipMemsetAsync(partialMaxArr, 0, partialMaxArrLength * sizeof(float), handle.GetStream());
+        hipMemsetAsync(partialMaxArr, minimum, partialMaxArrLength * sizeof(float), handle.GetStream());
         hipLaunchKernelGGL(tensor_max_pln1_hip,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
@@ -357,7 +369,7 @@ RppStatus hip_exec_tensor_max(T *srcPtr,
         Rpp32u partialMaxArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
         float *partialMaxArr;
         partialMaxArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
-        hipMemsetAsync(partialMaxArr, 0, partialMaxArrLength * sizeof(float), handle.GetStream());
+        hipMemsetAsync(partialMaxArr, minimum, partialMaxArrLength * sizeof(float), handle.GetStream());
         hipLaunchKernelGGL(tensor_max_pln3_hip,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
@@ -382,7 +394,7 @@ RppStatus hip_exec_tensor_max(T *srcPtr,
         Rpp32u partialMaxArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
         float *partialMaxArr;
         partialMaxArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
-        hipMemsetAsync(partialMaxArr, 0, partialMaxArrLength * sizeof(float), handle.GetStream());
+        hipMemsetAsync(partialMaxArr, minimum, partialMaxArrLength * sizeof(float), handle.GetStream());
         hipLaunchKernelGGL(tensor_max_pkd3_hip,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
