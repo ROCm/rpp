@@ -27,5 +27,6 @@ SOFTWARE.
 
 #include "kernel/fused_multiply_add_scalar.hpp"
 #include "kernel/bitwise_and.hpp"
+#include "kernel/bitwise_or.hpp"
 
 #endif // HIP_TENSOR_ARITHMEETIC_OPERATIONS_HPP

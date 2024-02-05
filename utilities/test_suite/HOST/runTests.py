@@ -424,7 +424,10 @@ elif (testType == 1):
         "color_augmentations",
         "data_exchange_operations",
         "effects_augmentations",
+        "filter_augmentations",
         "geometric_augmentations",
+        "morphological_operations",
+        "arithmetic_operations",
     ]
 
     for log_file in log_file_list:
