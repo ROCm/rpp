@@ -201,15 +201,18 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "down_mixing";
                     bool normalizeWeights = false;
+                    Rpp32s srcDimsTensor[batchSize * 2];
 
-                    for (int i = 0; i < batchSize; i++)
+                    for (int i = 0, j = 0; i < batchSize; i++, j += 2)
                     {
-                        srcDims[i].height = dstDims[i].height = srcLengthTensor[i];
-                        srcDims[i].width = dstDims[i].width = 1;
+                        srcDimsTensor[j] = srcLengthTensor[i];
+                        srcDimsTensor[j + 1] = channelsTensor[i];
+                        dstDims[i].height = srcLengthTensor[i];
+                        dstDims[i].width = 1;
                     }
 
                     startWallTime = omp_get_wtime();
-                    rppt_down_mixing_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcLengthTensor, channelsTensor, normalizeWeights, handle);
+                    rppt_down_mixing_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcDimsTensor, normalizeWeights, handle);
 
                     break;
                 }
