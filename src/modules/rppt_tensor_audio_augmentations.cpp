@@ -133,8 +133,7 @@ RppStatus rppt_down_mixing_host(RppPtr_t srcPtr,
                                 RpptDescPtr srcDescPtr,
                                 RppPtr_t dstPtr,
                                 RpptDescPtr dstDescPtr,
-                                Rpp32s *srcLengthTensor,
-                                Rpp32s *channelsTensor,
+                                Rpp32s *srcDimsTensor,
                                 bool  normalizeWeights,
                                 rppHandle_t rppHandle)
 {
@@ -144,8 +143,7 @@ RppStatus rppt_down_mixing_host(RppPtr_t srcPtr,
                                 srcDescPtr,
                                 static_cast<Rpp32f*>(dstPtr),
                                 dstDescPtr,
-                                srcLengthTensor,
-                                channelsTensor,
+                                srcDimsTensor,
                                 normalizeWeights,
                                 rpp::deref(rppHandle));
 

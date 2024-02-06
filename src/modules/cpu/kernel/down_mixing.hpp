@@ -29,8 +29,7 @@ RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
                                   RpptDescPtr srcDescPtr,
                                   Rpp32f *dstPtr,
                                   RpptDescPtr dstDescPtr,
-                                  Rpp32s *srcLengthTensor,
-                                  Rpp32s *channelsTensor,
+                                  Rpp32s *srcDimsTensor,
                                   bool normalizeWeights,
                                   rpp::Handle& handle)
 {
@@ -43,8 +42,8 @@ RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
         Rpp32f *srcPtrTemp = srcPtr + batchCount * srcDescPtr->strides.nStride;
         Rpp32f *dstPtrTemp = dstPtr + batchCount * dstDescPtr->strides.nStride;
 
-        Rpp32s channels = channelsTensor[batchCount];
-        Rpp32s samples = srcLengthTensor[batchCount];
+        Rpp32s samples = srcDimsTensor[batchCount * 2];
+        Rpp32s channels = srcDimsTensor[batchCount * 2 + 1];
         bool flagAVX = 0;
 
         if(channels == 1)
