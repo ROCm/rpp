@@ -325,7 +325,7 @@ RppStatus hip_exec_tensor_min(T *srcPtr,
                               U *minArr,
                               RpptROIPtr roiTensorPtrSrc,
                               RpptRoiType roiType,
-                              rpp::Handle& handle)
+                              rpp::Handle &handle)
 {
     if (roiType == RpptRoiType::LTRB)
         hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
@@ -336,13 +336,16 @@ RppStatus hip_exec_tensor_min(T *srcPtr,
     int gridDim_x = (int) ceil((float)globalThreads_x/LOCAL_THREADS_X);
     int gridDim_y = (int) ceil((float)globalThreads_y/LOCAL_THREADS_Y);
     int gridDim_z = (int) ceil((float)globalThreads_z/LOCAL_THREADS_Z);
+    float2 bitDepthMinMax_f2;
+    getImageBitDepthMinMax(srcPtr, &bitDepthMinMax_f2);
+    float maximum = bitDepthMinMax_f2.y;
 
     if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
     {
         Rpp32u partialMinArrLength = gridDim_x * gridDim_y * gridDim_z;
         float *partialMinArr;
         partialMinArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
-        hipMemsetAsync(partialMinArr, 255, partialMinArrLength * sizeof(float), handle.GetStream());
+        hipMemsetAsync(partialMinArr, maximum, partialMinArrLength * sizeof(float), handle.GetStream());
         hipLaunchKernelGGL(tensor_min_pln1_hip,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
@@ -367,7 +370,7 @@ RppStatus hip_exec_tensor_min(T *srcPtr,
         Rpp32u partialMinArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
         float *partialMinArr;
         partialMinArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
-        hipMemsetAsync(partialMinArr, 255, partialMinArrLength * sizeof(float), handle.GetStream());
+        hipMemsetAsync(partialMinArr, maximum, partialMinArrLength * sizeof(float), handle.GetStream());
         hipLaunchKernelGGL(tensor_min_pln3_hip,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
@@ -392,7 +395,7 @@ RppStatus hip_exec_tensor_min(T *srcPtr,
         Rpp32u partialMinArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
         float *partialMinArr;
         partialMinArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
-        hipMemsetAsync(partialMinArr, 255, partialMinArrLength * sizeof(float), handle.GetStream());
+        hipMemsetAsync(partialMinArr, maximum, partialMinArrLength * sizeof(float), handle.GetStream());
         hipLaunchKernelGGL(tensor_min_pkd3_hip,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),

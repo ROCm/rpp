@@ -1,16 +1,6 @@
 #include <hip/hip_runtime.h>
 #include "rpp_hip_common.hpp"
 
-//Helper Function
-template <typename T>
-void getMinGivenDatatype(T *srcPtr, float *minimum)
-{
-    if constexpr (std::is_same<T, signed char>::value)
-        *minimum = -128.0;
-    else
-        *minimum = 0.0;
-}
-
 // -------------------- Set 0 - Reduction Stage 2 --------------------
 
 template <typename T>
@@ -336,8 +326,9 @@ RppStatus hip_exec_tensor_max(T *srcPtr,
     int gridDim_x = (int) ceil((float)globalThreads_x/LOCAL_THREADS_X);
     int gridDim_y = (int) ceil((float)globalThreads_y/LOCAL_THREADS_Y);
     int gridDim_z = (int) ceil((float)globalThreads_z/LOCAL_THREADS_Z);
-    float minimum;
-    getMinGivenDatatype(srcPtr, &minimum);
+    float2 bitDepthMinMax_f2;
+    getImageBitDepthMinMax(srcPtr, &bitDepthMinMax_f2);
+    float minimum = bitDepthMinMax_f2.x;
 
     if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
     {
