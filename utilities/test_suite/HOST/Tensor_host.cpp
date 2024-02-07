@@ -323,10 +323,15 @@ int main(int argc, char **argv)
     {
         int bitDepthByteSize = 0;
         if ((dstDescPtr->dataType == RpptDataType::U8) || (dstDescPtr->dataType == RpptDataType::I8))
+        {
             bitDepthByteSize = (testCase == 87) ? sizeof(Rpp64u) : sizeof(Rpp8u);
+            reductionFuncResultArr = static_cast<void *>(calloc(reductionFuncResultArrLength, bitDepthByteSize));
+        }
         else if ((dstDescPtr->dataType == RpptDataType::F16) || (dstDescPtr->dataType == RpptDataType::F32))
+        {
             bitDepthByteSize = sizeof(Rpp32f);  // using 32f outputs for 16f and 32f
-        reductionFuncResultArr = static_cast<void *>(calloc(reductionFuncResultArrLength, bitDepthByteSize));
+            reductionFuncResultArr = static_cast<Rpp32f *>(calloc(reductionFuncResultArrLength, bitDepthByteSize));
+        }
     }
 
     // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
@@ -350,21 +355,6 @@ int main(int argc, char **argv)
     {
         std::cerr<<"\n RICAP only works with BatchSize > 1";
         exit(0);
-    }
-
-    // Initialize buffers for any reductionType functions
-    void *reductionFuncResultArr;
-    Rpp32u reductionFuncResultArrLength = srcDescPtr->n * 4;
-    if(reductionTypeCase)
-    {
-        if(dstDescPtr->dataType == RpptDataType::U8)
-            reductionFuncResultArr = static_cast<Rpp64u*>(calloc(reductionFuncResultArrLength, sizeof(Rpp64u)));
-        else if(dstDescPtr->dataType == RpptDataType::F16)
-            reductionFuncResultArr = static_cast<Rpp32f*>(calloc(reductionFuncResultArrLength, sizeof(Rpp32f)));
-        else if(dstDescPtr->dataType == RpptDataType::F32)
-            reductionFuncResultArr = static_cast<Rpp32f*>(calloc(reductionFuncResultArrLength, sizeof(Rpp32f)));
-        else if(dstDescPtr->dataType == RpptDataType::I8)
-            reductionFuncResultArr = static_cast<Rpp64s*>(calloc(reductionFuncResultArrLength, sizeof(Rpp64s)));
     }
 
     // case-wise RPP API and measure time script for Unit and Performance test
@@ -1117,7 +1107,10 @@ int main(int argc, char **argv)
                     if(srcDescPtr->c == 3)
                         printf("\nReduction result (Batch of 3 channel images produces 4 results per image in batch): ");
                     else if(srcDescPtr->c == 1)
+                    {
                         printf("\nReduction result (Batch of 1 channel images produces 1 result per image in batch): ");
+                        reductionFuncResultArrLength = srcDescPtr->n;
+                    }
 
                     // print reduction functions output array based on different bit depths, and precision desired
                     int precision = ((dstDescPtr->dataType == RpptDataType::F32) || (dstDescPtr->dataType == RpptDataType::F16)) ? 3 : 0;
@@ -1128,9 +1121,19 @@ int main(int argc, char **argv)
                         else
                             print_array(static_cast<Rpp8u *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
                     }
-                    else if ((dstDescPtr->dataType == RpptDataType::F16) || (dstDescPtr->dataType == RpptDataType::F32))
+                    else if (dstDescPtr->dataType == RpptDataType::F16)
                     {
-                        print_array(static_cast<Rpp64u *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
+                        if (testCase == 87)
+                            print_array(static_cast<Rpp32f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
+                        else
+                            print_array(static_cast<Rpp16f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
+                    }
+                    else if (dstDescPtr->dataType == RpptDataType::F32)
+                    {
+                        if (testCase == 87)
+                            print_array(static_cast<Rpp32f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
+                        else
+                            print_array(static_cast<Rpp32f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
                     }
                     else if (dstDescPtr->dataType == RpptDataType::I8)
                     {
@@ -1148,7 +1151,7 @@ int main(int argc, char **argv)
                     if(qaFlag && inputBitDepth == 0 && (srcDescPtr->layout == dstDescPtr->layout) && !(randomOutputCase))
                     {
                         if (testCase == 87)
-                            compare_reduction_output(static_cast<Rpp64u *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
+                            compare_reduction_output(static_cast<uint64_t *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
                         else
                             compare_reduction_output(static_cast<Rpp8u *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
                     }

@@ -184,6 +184,13 @@ inline void generate_gaussian_kernel_gpu(Rpp32f stdDev, Rpp32f* kernel, Rpp32u k
     }
 }
 
+// Retrieve Min and Max given a datatype
+
+inline void getImageBitDepthMinMax(uchar *srcPtr, float2 *bitDepthMinMax_f2) { *bitDepthMinMax_f2 = make_float2(0, 255); }
+inline void getImageBitDepthMinMax(float *srcPtr, float2 *bitDepthMinMax_f2) { *bitDepthMinMax_f2 = make_float2(0, 255); }
+inline void getImageBitDepthMinMax(half *srcPtr, float2 *bitDepthMinMax_f2) { *bitDepthMinMax_f2 = make_float2(0, 255); }
+inline void getImageBitDepthMinMax(schar *srcPtr, float2 *bitDepthMinMax_f2) { *bitDepthMinMax_f2 = make_float2(-128, 127); }
+
 /******************** DEVICE FUNCTIONS ********************/
 
 // -------------------- Set 0 - Range checks and Range adjustment --------------------

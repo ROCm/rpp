@@ -75,7 +75,7 @@ typedef union
 
 #define SIMD_GET_PS(name) (*(const __m128  *)_xmm_const_##name)
 
-const __m128 xmm_p0 = _mm_set1_ps(0.0f);
+const __m128 xmm_p0 = _mm_setzero_ps();
 const __m128 xmm_p1 = _mm_set1_ps(1.0f);
 const __m128 xmm_p2 = _mm_set1_ps(2.0f);
 const __m128 xmm_pm2 = _mm_set1_ps(-2.0f);
