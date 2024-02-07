@@ -1,5 +1,7 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+MIT License
+
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -8,16 +10,16 @@ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 */
 
 #ifndef RPP_HIP_COMMON_H
@@ -136,6 +138,8 @@ struct RPPTensorFunctionMetaData
 #define RPP_2POW32_INV_DIV_2            1.164153218e-10f    // RPP_2POW32_INV / 2
 #define RPP_2POW32_INV_MUL_2PI          1.46291812e-09f     // (1 / 2^32) * 2PI
 #define RPP_2POW32_INV_MUL_2PI_DIV_2    7.3145906e-10f      // RPP_2POW32_INV_MUL_2PI / 2
+#define RPP_255_OVER_1PT57              162.3380757272f     // (255 / 1.570796) - multiplier used in phase computation
+#define ONE_OVER_1PT57                  0.6366199048f       // (1 / 1.570796) i.e. 2/pi - multiplier used in phase computation
 #define SMEM_LENGTH_X                   128                 // Shared memory length of 128 cols to efficiently utilize all 16 LOCAL_THREADS_X as 16 * 8-byte vectorized global read/writes per thread = 128 bytes, fitting in 32 banks 4 byte wide
 #define SMEM_LENGTH_Y_1C                16                  // Shared memory length of 16 rows to efficiently utilize all 16 LOCAL_THREADS_Y as 1 128-byte-long row per thread (single channel greyscale)
 #define SMEM_LENGTH_Y_3C                48                  // Shared memory length of 48 rows to efficiently utilize all 16 LOCAL_THREADS_Y as 3 128-byte-long rows per thread (three channel rgb)
@@ -218,10 +222,15 @@ __device__ __forceinline__ void rpp_hip_pixel_check_and_store(float pixel, half*
 
 __device__ __forceinline__ float4 rpp_hip_pixel_check_0to255(float4 src_f4)
 {
-    return make_float4(fminf(fmaxf(src_f4.x, 0), 255),
-                       fminf(fmaxf(src_f4.y, 0), 255),
-                       fminf(fmaxf(src_f4.z, 0), 255),
-                       fminf(fmaxf(src_f4.w, 0), 255));
+    return make_float4(fminf(fmaxf(src_f4.x, 0.0f), 255.0f),
+                       fminf(fmaxf(src_f4.y, 0.0f), 255.0f),
+                       fminf(fmaxf(src_f4.z, 0.0f), 255.0f),
+                       fminf(fmaxf(src_f4.w, 0.0f), 255.0f));
+}
+
+__device__ __forceinline__ float rpp_hip_pixel_check_0to255(float src_f1)
+{
+    return fminf(fmaxf(src_f1, 0), 255);
 }
 
 // float4 pixel check for 0-1 range

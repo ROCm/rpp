@@ -1,5 +1,7 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+MIT License
+
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -8,28 +10,31 @@ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 */
 
 #include "../rpp_test_suite_voxel.h"
 
 int main(int argc, char * argv[])
 {
+    // Handle inputs
+    const int MIN_ARG_COUNT = 11;
+
     int layoutType, testCase, testType, qaFlag, numRuns, batchSize, inputBitDepth;
     char *headerFile, *dataFile, *dstPath;
 
-    if (argc < 7)
+    if (argc < MIN_ARG_COUNT)
     {
-        fprintf(stdout, "\nUsage: %s <header file> <data file> <layoutType = 0 - PKD3/ 1 - PLN3/ 2 - PLN1> <testCase = 0 to 1> <testType = 0 - unit test/ 1 - performance test>\n", argv[0]);
+        printf("\nImproper Usage! Needs all arguments!\n");
         exit(1);
     }
 
@@ -43,6 +48,7 @@ int main(int argc, char * argv[])
     qaFlag = atoi(argv[8]); //0 - QA disabled / 1 - QA enabled
     batchSize = atoi(argv[9]);
     inputBitDepth = atoi(argv[10]);
+    string scriptPath = argv[11];
 
     if ((layoutType < 0) || (layoutType > 2))
     {
@@ -320,7 +326,7 @@ int main(int argc, char * argv[])
                 1.QA Flag is set
                 2.input bit depth 2 (F32)*/
                 if(qaFlag && inputBitDepth == 2)
-                    compare_output(outputF32, oBufferSize, testCaseName, layoutType, descriptorPtr3D, (RpptRoiXyzwhd *)roiGenericSrcPtr, dstPath);
+                    compare_output(outputF32, oBufferSize, testCaseName, layoutType, descriptorPtr3D, (RpptRoiXyzwhd *)roiGenericSrcPtr, dstPath, scriptPath);
                 else
                 {
                     for(int batchCount = 0; batchCount < batchSize; batchCount++)

@@ -1,5 +1,7 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+MIT License
+
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -8,16 +10,16 @@ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 */
 
 #ifndef AMD_RPP_RPP_CPU_SIMD_HPP
@@ -1880,13 +1882,13 @@ static const __m128 _ps_coscof_p1 = _mm_set1_ps(-1.388731625493765E-003f);
 static const __m128 _ps_coscof_p2 = _mm_set1_ps( 4.166664568298827E-002f);
 static const __m128 _ps_cephes_FOPI = _mm_set1_ps(1.27323954473516f); // 4 / M_PI
 
-static const __m256 _ps_1_avx = _mm256_set1_ps(1.f);
 static const __m256 _ps_0p5_avx = _mm256_set1_ps(0.5f);
 static const __m256 _ps_n0p5_avx = _mm256_set1_ps(-0.5f);
 static const __m256 _ps_1p5_avx = _mm256_set1_ps(1.5f);
 static const __m256 _ps_min_norm_pos_avx = set1_ps_hex_avx(0x00800000);
 static const __m256 _ps_inv_mant_mask_avx = set1_ps_hex_avx(~0x7f800000);
 static const __m256 _ps_sign_mask_avx = set1_ps_hex_avx(0x80000000);
+static const __m256 _ps_inv_sign_mask_avx = set1_ps_hex_avx(~0x80000000);
 
 static const __m256i _pi32_1_avx = _mm256_set1_epi32(1);
 static const __m256i _pi32_inv1_avx = _mm256_set1_epi32(~1);
@@ -1958,7 +1960,7 @@ static inline void sincos_ps(__m256 x, __m256 *s, __m256 *c)
     y = _mm256_mul_ps(y, _mm256_mul_ps(z, z));
     __m256 tmp = _mm256_mul_ps(z, _ps_0p5_avx);
     y = _mm256_sub_ps(y, tmp);
-    y = _mm256_add_ps(y, _ps_1_avx);
+    y = _mm256_add_ps(y, avx_p1);
 
     // Evaluate the second polynom  (Pi/4 <= x <= 0)
 
@@ -2072,9 +2074,9 @@ static const __m128 _ps_cephes_PIO2F = _mm_set1_ps(1.5707963267948966192);
 static const __m128 _ps_cephes_PIO4F = _mm_set1_ps(0.7853981633974483096);
 
 static const __m128 _ps_atancof_p0 = _mm_set1_ps(8.05374449538e-2);
-static const __m128 _ps_atancof_p1 = _mm_set1_ps(1.38776856032E-1);
-static const __m128 _ps_atancof_p2 = _mm_set1_ps(1.99777106478E-1);
-static const __m128 _ps_atancof_p3 = _mm_set1_ps(3.33329491539E-1);
+static const __m128 _ps_atancof_p1 = _mm_set1_ps(1.38776856032e-1);
+static const __m128 _ps_atancof_p2 = _mm_set1_ps(1.99777106478e-1);
+static const __m128 _ps_atancof_p3 = _mm_set1_ps(3.33329491539e-1);
 
 static inline __m128 atan_ps( __m128 x )
 {
@@ -2184,12 +2186,129 @@ static inline __m128 atan2_ps( __m128 y, __m128 x )
     return result;
 }
 
+static const __m256 _ps_atanrange_hi_avx = _mm256_set1_ps(2.414213562373095);
+static const __m256 _ps_atanrange_lo_avx = _mm256_set1_ps(0.4142135623730950);
+static const __m256 _ps_cephes_PIF_avx = _mm256_set1_ps(3.141592653589793238);
+static const __m256 _ps_cephes_PIO2F_avx = _mm256_set1_ps(1.5707963267948966192);
+static const __m256 _ps_cephes_PIO4F_avx = _mm256_set1_ps(0.7853981633974483096);
+
+static const __m256 _ps_atancof_p0_avx = _mm256_set1_ps(8.05374449538e-2);
+static const __m256 _ps_atancof_p1_avx = _mm256_set1_ps(1.38776856032e-1);
+static const __m256 _ps_atancof_p2_avx = _mm256_set1_ps(1.99777106478e-1);
+static const __m256 _ps_atancof_p3_avx = _mm256_set1_ps(3.33329491539e-1);
+
+// AVX2 version of the atan_ps() SSE version
+static inline __m256 atan_ps(__m256 x)
+{
+    __m256 sign_bit, y;
+
+    sign_bit = x;
+    // Take the absolute value
+    x = _mm256_and_ps(x, _ps_inv_sign_mask_avx);
+    // Extract the sign bit (upper one)
+    sign_bit = _mm256_and_ps(sign_bit, _ps_sign_mask_avx);
+
+    // Range reduction, init x and y depending on range
+    // x > 2.414213562373095
+    __m256 cmp0 = _mm256_cmp_ps(x, _ps_atanrange_hi_avx, _CMP_GT_OS);
+    // x > 0.4142135623730950
+    __m256 cmp1 = _mm256_cmp_ps(x, _ps_atanrange_lo_avx, _CMP_GT_OS);
+
+    // x > 0.4142135623730950 && !(x > 2.414213562373095)
+    __m256 cmp2 = _mm256_andnot_ps(cmp0, cmp1);
+
+    // -(1.0/x);
+    __m256 y0 = _mm256_and_ps(cmp0, _ps_cephes_PIO2F_avx);
+    __m256 x0 = _mm256_div_ps(avx_p1, x);
+    x0 = _mm256_xor_ps(x0, _ps_sign_mask_avx);
+
+    __m256 y1 = _mm256_and_ps(cmp2, _ps_cephes_PIO4F_avx);
+    // (x-1.0)/(x+1.0)
+    __m256 x1_o = _mm256_sub_ps(x, avx_p1);
+    __m256 x1_u = _mm256_add_ps(x, avx_p1);
+    __m256 x1 = _mm256_div_ps(x1_o, x1_u);
+
+    __m256 x2 = _mm256_and_ps(cmp2, x1);
+    x0 = _mm256_and_ps(cmp0, x0);
+    x2 = _mm256_or_ps(x2, x0);
+    cmp1 = _mm256_or_ps(cmp0, cmp2);
+    x2 = _mm256_and_ps(cmp1, x2);
+    x = _mm256_andnot_ps(cmp1, x);
+    x = _mm256_or_ps(x2, x);
+
+    y = _mm256_or_ps(y0, y1);
+
+    __m256 zz = _mm256_mul_ps(x, x);
+    __m256 acc = _ps_atancof_p0_avx;
+    acc = _mm256_fmsub_ps(acc, zz, _ps_atancof_p1_avx);
+    acc = _mm256_fmadd_ps(acc, zz, _ps_atancof_p2_avx);
+    acc = _mm256_fmsub_ps(acc, zz, _ps_atancof_p3_avx);
+    acc = _mm256_mul_ps(acc, zz);
+    acc = _mm256_fmadd_ps(acc, x, x);
+    y = _mm256_add_ps(y, acc);
+
+    // Update the sign
+    y = _mm256_xor_ps(y, sign_bit);
+
+    return y;
+}
+
+// AVX2 version of the atan2_ps() SSE version
+static inline __m256 atan2_ps(__m256 y, __m256 x)
+{
+    __m256 x_eq_0 = _mm256_cmp_ps(x, avx_p0, _CMP_EQ_OQ);
+    __m256 x_gt_0 = _mm256_cmp_ps(x, avx_p0, _CMP_GT_OS);
+    __m256 x_le_0 = _mm256_cmp_ps(x, avx_p0, _CMP_LE_OS);
+    __m256 y_eq_0 = _mm256_cmp_ps(y, avx_p0, _CMP_EQ_OQ);
+    __m256 x_lt_0 = _mm256_cmp_ps(x, avx_p0, _CMP_LT_OS);
+    __m256 y_lt_0 = _mm256_cmp_ps(y, avx_p0, _CMP_LT_OS);
+
+    // Computes a zero mask, set if either both x=y=0 or y=0&x>0
+    __m256 zero_mask = _mm256_and_ps(x_eq_0, y_eq_0);
+    __m256 zero_mask_other_case = _mm256_and_ps(y_eq_0, x_gt_0);
+    zero_mask = _mm256_or_ps(zero_mask, zero_mask_other_case);
+
+    // Computes pio2 intermediate result, set if (y!0 and x=0) & (pi/2 XOR (upper bit y<0))
+    __m256 pio2_mask = _mm256_andnot_ps(y_eq_0, x_eq_0);
+    __m256 pio2_mask_sign = _mm256_and_ps(y_lt_0, _ps_sign_mask_avx);
+    __m256 pio2_result = _ps_cephes_PIO2F_avx;
+    pio2_result = _mm256_xor_ps(pio2_result, pio2_mask_sign);
+    pio2_result = _mm256_and_ps(pio2_mask, pio2_result);
+
+    // Computes pi intermediate result, set if y=0&x<0 and pi
+    __m256 pi_mask = _mm256_and_ps(y_eq_0, x_le_0);
+    __m256 pi_result = _mm256_and_ps(pi_mask, _ps_cephes_PIF_avx);
+
+    // Computes swap_sign_mask_offset, set if x<0 & y<0 of sign bit(uppermost bit)
+    __m256 swap_sign_mask_offset = _mm256_and_ps(x_lt_0, y_lt_0);
+    swap_sign_mask_offset = _mm256_and_ps(swap_sign_mask_offset, _ps_sign_mask_avx);
+
+     // Computes offset, set based on pi, swap_sign_mask_offset and x<0
+    __m256 offset0 = _mm256_xor_ps(_ps_cephes_PIF_avx, swap_sign_mask_offset);
+    __m256 offset = _mm256_andnot_ps(x_lt_0, avx_p0);
+    offset = _mm256_and_ps(x_lt_0, offset0);
+
+    // Computes division of x,y
+    __m256 arg = _mm256_div_ps(y, x);
+    __m256 atan_result = atan_ps(arg);
+    atan_result = _mm256_add_ps(atan_result, offset);
+
+    // Select between zero_result, pio2_result and atan_result
+    __m256 result = _mm256_andnot_ps(zero_mask, pio2_result);
+    atan_result = _mm256_andnot_ps(pio2_mask, atan_result);
+    atan_result = _mm256_andnot_ps(pio2_mask, atan_result);
+    result = _mm256_or_ps(result, atan_result);
+    result = _mm256_or_ps(result, pi_result);
+
+    return result;
+}
+
 // Modified AVX2 version of the original SSE version at https://github.com/RJVB/sse_mathfun/blob/master/sse_mathfun.h
 static inline __m256 log_ps(__m256 x)
 {
     __m256 e;
     __m256i emm0;
-    __m256 one = *(__m256 *)&_ps_1_avx;
+    __m256 one = *(__m256 *)&avx_p1;
     __m256 invalid_mask = _mm256_cmp_ps(x, avx_p0, _CMP_LE_OQ);
 
     // cut off denormalized stuff

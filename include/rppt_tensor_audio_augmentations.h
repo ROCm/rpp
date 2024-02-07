@@ -1,5 +1,7 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+MIT License
+
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -8,16 +10,16 @@ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 */
 
 #ifndef RPPT_TENSOR_AUDIO_AUGMENTATIONS_H
@@ -59,6 +61,39 @@ extern "C" {
  * \retval RPP_ERROR* Unsuccessful completion.
  */
 RppStatus rppt_non_silent_region_detection_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rpp32s *srcLengthTensor, Rpp32f *detectedIndexTensor, Rpp32f *detectionLengthTensor, Rpp32f cutOffDB, Rpp32s windowLength, Rpp32f referencePower, Rpp32s resetInterval, rppHandle_t rppHandle);
+
+/*! \brief To Decibels augmentation on HOST backend
+ * \details To Decibels augmentation for 1D audio buffer converts magnitude values to decibel values
+ * \param[in] srcPtr source tensor in HOST memory
+ * \param[in] srcDescPtr source tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
+ * \param[out] dstPtr destination tensor in HOST memory
+ * \param[in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
+ * \param[in] srcDims source tensor sizes for each element in batch (2D tensor in HOST memory, of size batchSize * 2)
+ * \param[in] cutOffDB  minimum or cut-off ratio in dB
+ * \param[in] multiplier factor by which the logarithm is multiplied
+ * \param[in] referenceMagnitude Reference magnitude if not provided maximum value of input used as reference
+ * \param[in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_to_decibels_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr srcDims, Rpp32f cutOffDB, Rpp32f multiplier, Rpp32f referenceMagnitude, rppHandle_t rppHandle);
+
+/*! \brief Pre Emphasis Filter augmentation on HOST backend
+ * \details Pre Emphasis Filter augmentation for audio data
+ * \param[in] srcPtr source tensor in HOST memory
+ * \param[in] srcDescPtr source tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
+ * \param[out] dstPtr destination tensor in HOST memory
+ * \param[in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
+ * \param[in] srcLengthTensor source audio buffer length (1D tensor in HOST memory, of size batchSize)
+ * \param[in] coeffTensor preemphasis coefficient (1D tensor in HOST memory, of size batchSize)
+ * \param[in] borderType border value policy
+ * \param[in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcLengthTensor, Rpp32f *coeffTensor, RpptAudioBorderType borderType, rppHandle_t rppHandle);
 
 #ifdef __cplusplus
 }

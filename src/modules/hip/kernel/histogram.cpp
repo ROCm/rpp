@@ -39,9 +39,9 @@ void partial_histogram_pln( unsigned char *input,
         unsigned char pixelR = input[pixId];
         unsigned char pixelG = input[pixId + width * height];
         unsigned char pixelB = input[pixId + 2 * width * height];
-        atomicInc(&tmp_histogram[pixelR], 1);
-        atomicInc(&tmp_histogram[pixelG], 1);
-        atomicInc(&tmp_histogram[pixelB], 1);
+        atomicAdd(&tmp_histogram[pixelR], 1);
+        atomicAdd(&tmp_histogram[pixelG], 1);
+        atomicAdd(&tmp_histogram[pixelB], 1);
     }
     __syncthreads();
     if (local_size >= (256 ))
@@ -98,9 +98,9 @@ void partial_histogram_pkd( unsigned char *input,
         unsigned char pixelR = input[pixId];
         unsigned char pixelG = input[pixId + 1];
         unsigned char pixelB = input[pixId + 2];
-        atomicInc(&tmp_histogram[pixelR], 1);
-        atomicInc(&tmp_histogram[pixelG], 1);
-        atomicInc(&tmp_histogram[pixelB], 1);
+        atomicAdd(&tmp_histogram[pixelR], 1);
+        atomicAdd(&tmp_histogram[pixelG], 1);
+        atomicAdd(&tmp_histogram[pixelB], 1);
     }
     __syncthreads();
     if (local_size >= (256 ))
@@ -166,9 +166,9 @@ void partial_histogram_batch( unsigned char* input,
         unsigned char pixelR = input[pixId];
         unsigned char pixelG = input[pixId + inc[id_z]];
         unsigned char pixelB = input[pixId + 2 * inc[id_z]];
-        atomicInc(&tmp_histogram[pixelR], 1);
-        atomicInc(&tmp_histogram[pixelG], 1);
-        atomicInc(&tmp_histogram[pixelB], 1);
+        atomicAdd(&tmp_histogram[pixelR], 1);
+        atomicAdd(&tmp_histogram[pixelG], 1);
+        atomicAdd(&tmp_histogram[pixelB], 1);
     }
     __syncthreads();
     if (local_size >= (256 ))
@@ -234,9 +234,9 @@ void partial_histogram_semibatch( unsigned char* input,
         unsigned char pixelR = input[pixId];
         unsigned char pixelG = input[pixId + inc];
         unsigned char pixelB = input[pixId + 2 * inc];
-       atomicInc(&tmp_histogram[pixelR], 1);
-        atomicInc(&tmp_histogram[pixelG], 1);
-        atomicInc(&tmp_histogram[pixelB], 1);
+       atomicAdd(&tmp_histogram[pixelR], 1);
+        atomicAdd(&tmp_histogram[pixelG], 1);
+        atomicAdd(&tmp_histogram[pixelB], 1);
     }
     __syncthreads();
     if (local_size >= (256 ))
