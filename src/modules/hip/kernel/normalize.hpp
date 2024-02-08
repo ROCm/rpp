@@ -3,6 +3,8 @@
 
 #define MAX_SHARED_MEMORY_SIZE 1024
 
+// -------------------- Set 0 - normalization kernels device helpers --------------------
+
 __device__ __forceinline__ uint rpp_hip_mod(uint a, uint b)
 {
     return (a % b);
@@ -15,6 +17,71 @@ __device__ uint compute_2d_paramindex(uint y, uint x, uint *paramShape, uint *pa
     uint paramIndex = yFactor + xFactor;
     return paramIndex;
 }
+
+__device__ uint compute_3d_paramindex(uint z, uint y, uint x, uint *paramShape, uint *paramStrides)
+{
+    uint zFactor =  ((paramShape[0] > 1)) ? rpp_hip_mod(z, paramShape[0]) * paramStrides[0] : 0;
+    uint yFactor =  ((paramShape[1] > 1)) ? rpp_hip_mod(y, paramShape[1]) * paramStrides[1] : 0;
+    uint xFactor =  ((paramShape[2] > 1)) ? rpp_hip_mod(x, paramShape[2]) * paramStrides[2] : 0;
+    uint paramIndex = zFactor + yFactor + xFactor;
+    return paramIndex;
+}
+
+// -------------------- Set 1 - normalization kernel host helpers --------------------
+
+void normalize_setup(Rpp32u *roiTensor, Rpp32u batchSize, Rpp32u numDims,
+                     Rpp32u axisMask, Rpp32u &maxParamVolume)
+{
+    maxParamVolume = 1;
+    uint axisSet[RPPT_MAX_DIMS];
+    for(int i = 0; i < numDims; i++)
+        axisSet[i] = ((axisMask & (int)(pow(2, i))) >= 1) ? 1 : 0;
+
+    for(uint i = 0; i < batchSize; i++)
+    {
+        // calculate the max param volume
+        Rpp32u paramVolume = 1;
+        Rpp32u *roi = &roiTensor[numDims * 2 * i + numDims];
+        for(uint j = 0; j < numDims; j++)
+            paramVolume *= (axisSet[j]) ? 1 : roi[j];
+        maxParamVolume = std::max(maxParamVolume, paramVolume);
+    }
+}
+
+void normalize_setup_nd(Rpp32u *roiTensor, Rpp32u batchSize, Rpp32u numDims, Rpp32u axisMask,
+                        Rpp32u *paramShapeTensor, Rpp32u *paramStridesTensor, Rpp32u &maxParamVolume)
+{
+    maxParamVolume = 1;
+    uint axisSet[RPPT_MAX_DIMS];
+    for(int i = 0; i < numDims; i++)
+        axisSet[i] = ((axisMask & (int)(pow(2, i))) >= 1) ? 1 : 0;
+
+    for(uint i = 0; i < batchSize; i++)
+    {
+        // calculate the param shape and param volume based on the axis mask
+        Rpp32u paramVolume = 1;
+        Rpp32u *roi = &roiTensor[numDims * 2 * i + numDims];
+        Rpp32u *paramShape = &paramShapeTensor[i * numDims];
+        for(uint j = 0; j < numDims; j++)
+        {
+            paramShape[j] = (axisSet[j]) ? 1 : roi[j];
+            paramVolume *= paramShape[j];
+        }
+        maxParamVolume = std::max(maxParamVolume, paramVolume);
+
+        // calculate the param strides from the param shape
+        Rpp32u *paramStrides = &paramStridesTensor[i * numDims];
+        Rpp32u val = 1;
+        for(uint j = numDims - 1; j > 0; j--)
+        {
+            paramStrides[j] = val;
+            val *= paramShape[j];
+        }
+        paramStrides[0] = val;
+    }
+}
+
+// -------------------- Set 2 - normalization kernels --------------------
 
 __global__ void normalize_2d_hip_tensor(float *srcPtr,
                                         uint2 srcStridesNH,
@@ -136,15 +203,6 @@ __global__ void normalize_2d_hip_tensor(float *srcPtr,
 //     rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &data_f8);
 // }
 
-__device__ uint compute_3d_paramindex(uint z, uint y, uint x, uint *paramShape, uint *paramStrides)
-{
-    uint zFactor =  ((paramShape[0] > 1)) ? rpp_hip_mod(z, paramShape[0]) * paramStrides[0] : 0;
-    uint yFactor =  ((paramShape[1] > 1)) ? rpp_hip_mod(y, paramShape[1]) * paramStrides[1] : 0;
-    uint xFactor =  ((paramShape[2] > 1)) ? rpp_hip_mod(x, paramShape[2]) * paramStrides[2] : 0;
-    uint paramIndex = zFactor + yFactor + xFactor;
-    return paramIndex;
-}
-
 __global__ void normalize_3d_hip_tensor(float *srcPtr,
                                         uint2 srcStridesDH,
                                         float *dstPtr,
@@ -236,57 +294,7 @@ __global__ void normalize_nd_hip_tensor(float *srcPtr,
     dstPtr[dstIdx] = fmaf((srcPtr[srcIdx] - mean), invStdDev, shift);
 }
 
-void normalize_setup(Rpp32u *roiTensor, Rpp32u batchSize, Rpp32u numDims,
-                     Rpp32u axisMask, Rpp32u &maxParamVolume)
-{
-    maxParamVolume = 1;
-    uint axisSet[RPPT_MAX_DIMS];
-    for(int i = 0; i < numDims; i++)
-        axisSet[i] = ((axisMask & (int)(pow(2, i))) >= 1) ? 1 : 0;
-
-    for(uint i = 0; i < batchSize; i++)
-    {
-        // calculate the max param volume
-        Rpp32u paramVolume = 1;
-        Rpp32u *roi = &roiTensor[numDims * 2 * i + numDims];
-        for(uint j = 0; j < numDims; j++)
-            paramVolume *= (axisSet[j]) ? 1 : roi[j];
-        maxParamVolume = std::max(maxParamVolume, paramVolume);
-    }
-}
-
-void normalize_setup_nd(Rpp32u *roiTensor, Rpp32u batchSize, Rpp32u numDims, Rpp32u axisMask,
-                        Rpp32u *paramShapeTensor, Rpp32u *paramStridesTensor, Rpp32u &maxParamVolume)
-{
-    maxParamVolume = 1;
-    uint axisSet[RPPT_MAX_DIMS];
-    for(int i = 0; i < numDims; i++)
-        axisSet[i] = ((axisMask & (int)(pow(2, i))) >= 1) ? 1 : 0;
-
-    for(uint i = 0; i < batchSize; i++)
-    {
-        // calculate the param shape and param volume based on the axis mask
-        Rpp32u paramVolume = 1;
-        Rpp32u *roi = &roiTensor[numDims * 2 * i + numDims];
-        Rpp32u *paramShape = &paramShapeTensor[i * numDims];
-        for(uint j = 0; j < numDims; j++)
-        {
-            paramShape[j] = (axisSet[j]) ? 1 : roi[j];
-            paramVolume *= paramShape[j];
-        }
-        maxParamVolume = std::max(maxParamVolume, paramVolume);
-
-        // calculate the param strides from the param shape
-        Rpp32u *paramStrides = &paramStridesTensor[i * numDims];
-        Rpp32u val = 1;
-        for(uint j = numDims - 1; j > 0; j--)
-        {
-            paramStrides[j] = val;
-            val *= paramShape[j];
-        }
-        paramStrides[0] = val;
-    }
-}
+// -------------------- Set 3 - mean and stddev compute kernels device helpers --------------------
 
 __device__ __forceinline__ void reduction_sum_x_hip(float *partialSum_smem)
 {
@@ -298,70 +306,7 @@ __device__ __forceinline__ void reduction_sum_x_hip(float *partialSum_smem)
     }
 }
 
-__global__ void reduce_final_result_hip(float *partialSumTensor,
-                                        uint numPartialSums,
-                                        float *meanTensor,
-                                        float *stdDevTensor,
-                                        bool isMean,
-                                        uint *roiTensor,
-                                        uint axisMask,
-                                        uint numDims)
-{
-    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
-    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
-    uint *roi = &roiTensor[id_z * numDims * 2 + numDims];
-
-    uint meanFactor;
-    if(numDims == 3)
-    {
-        uint lengthZ = roi[0];
-        uint lengthY = roi[1];
-        uint lengthX = roi[2];
-
-        if(axisMask == 3)
-            meanFactor = lengthZ * lengthY;
-        else if(axisMask == 6)
-            meanFactor = lengthY * lengthX;
-        else if(axisMask == 7)
-            meanFactor = lengthZ * lengthY * lengthX;
-    }
-    else if(numDims == 2)
-    {
-        uint lengthY = roi[0];
-        uint lengthX = roi[1];
-
-        if(axisMask == 2)
-            meanFactor = lengthX;
-        else if(axisMask == 3)
-            meanFactor = lengthY * lengthX;
-    }
-
-    __shared__ float partialSum_smem[16];
-    partialSum_smem[hipThreadIdx_x] = 0.0f;
-
-    float accum = 0.0f;
-    while(id_x < numPartialSums)
-    {
-        uint srcIdx = (id_z * hipGridDim_y * numPartialSums) + (id_y * numPartialSums) + id_x;
-        accum += partialSumTensor[srcIdx];
-        id_x += hipBlockDim_x;
-    }
-    partialSum_smem[hipThreadIdx_x] = accum;
-    __syncthreads();
-
-    // Now do block level reduction sum
-    reduction_sum_x_hip(partialSum_smem);
-
-    // Final store to dst
-    if(hipThreadIdx_x == 0)
-    {
-        if(isMean)
-            meanTensor[id_z * hipGridDim_y + id_y] = partialSum_smem[0] / meanFactor;
-        else
-            stdDevTensor[id_z * hipGridDim_y + id_y] = sqrtf(partialSum_smem[0] / meanFactor);
-    }
-}
+// -------------------- Set 4 - mean compute kernels (reduction stage 1) --------------------
 
 __global__ void compute_mean_2d_hip_tensor(float *srcPtr,
                                            uint2 srcStridesNH,
@@ -485,146 +430,6 @@ __global__ void compute_mean_2d_hip_tensor(float *srcPtr,
         }
     }
 }
-
-__global__ void compute_stddev_2d_hip_tensor(float *srcPtr,
-                                             uint2 srcStridesNH,
-                                             float *meanTensor,
-                                             float *stdDevTensor,
-                                             float *partialSumTensor,
-                                             uint *roiTensor,
-                                             uint maxParamVolume,
-                                             uint axisMask)
-{
-    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
-    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
-
-    uint *roi = &roiTensor[id_z * 4 + 2];
-    uint height = roi[0];
-    uint width = roi[1];
-
-    // perform column wise stddev
-    if(axisMask == 1)
-    {
-        if ((id_y >= height) || (id_x >= width))
-        {
-            return;
-        }
-
-        uint srcIdx = id_z * srcStridesNH.x + id_x;
-        uint paramIndex = id_z * maxParamVolume + id_x;
-        float mean = meanTensor[paramIndex];
-        if(id_x < width)
-        {
-            float accum = 0.0f;
-            for(int i = 0; i < height; i++)
-            {
-                float val = (srcPtr[srcIdx] - mean);
-                accum += (val * val);
-                srcIdx += srcStridesNH.y;
-            }
-            stdDevTensor[paramIndex] = sqrtf(accum / static_cast<float>(height));
-        }
-    }
-    // perform row wise sum
-    else if(axisMask == 2)
-    {
-        id_x *= 8;
-        __shared__ float partialRowSum_smem[256];
-        partialRowSum_smem[hipThreadIdx_x] = 0.0f;
-
-        if ((id_y >= height) || (id_x >= width))
-        {
-            return;
-        }
-
-        int xAlignedLength =  width & ~7;      // alignedLength for vectorized global loads
-        int xDiff = width - xAlignedLength;    // difference between roiWidth and alignedLength
-        uint srcIdx = (id_z * srcStridesNH.x) + (id_y * srcStridesNH.y) + id_x;
-
-        uint paramIndex = id_z * maxParamVolume + id_x;
-        float mean = meanTensor[paramIndex];
-        float4 mean_f4 = static_cast<float4>(mean);
-
-        d_float8 src_f8;
-        rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);           // load 8 pixels to local memory
-        rpp_hip_math_subtract8_const(&src_f8, &src_f8, mean_f4);
-        rpp_hip_math_multiply8(&src_f8, &src_f8, &src_f8);
-
-        if (id_x + 8 > width)
-            for(int i = xDiff; i < 8; i++)
-                src_f8.f1[i] = 0.0f;                                            // local memory reset of invalid values (from the vectorized global load) to 0.0f
-        src_f8.f4[0] += src_f8.f4[1];                                           // perform small work of vectorized float4 addition
-        partialRowSum_smem[hipThreadIdx_x] = (src_f8.f1[0] +
-                                              src_f8.f1[1] +
-                                              src_f8.f1[2] +
-                                              src_f8.f1[3]);                                // perform small work of reducing float4s to float using 16 x 16 threads and store in Shared
-        __syncthreads();
-
-        // Now do block level reduction sum
-        reduction_sum_x_hip(partialRowSum_smem);
-
-        // Final store to dst
-        if(hipThreadIdx_x == 0)
-        {
-            uint paramIndex = (id_z * hipGridDim_y * hipGridDim_x) + (id_y * hipGridDim_x) + hipBlockIdx_x;
-            partialSumTensor[paramIndex] = partialRowSum_smem[0];
-        }
-    }
-    else if(axisMask == 3)
-    {
-        id_x *= 8;
-        __shared__ float partialSum_smem[16][16];                               // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
-        float *partialSumRowPtr_smem = &partialSum_smem[hipThreadIdx_y][0];     // float pointer to beginning of each row in Shared
-        partialSumRowPtr_smem[hipThreadIdx_x] = 0.0f;                           // initialization of Shared to 0.0f using all 16 x 16 threads
-
-        if ((id_y >= height) || (id_x >= width))
-        {
-            return;
-        }
-
-        int xAlignedLength =  width & ~7;       // alignedLength for vectorized global loads
-        int xDiff = width - xAlignedLength;    // difference between roiWidth and alignedLength
-        uint srcIdx = (id_z * srcStridesNH.x) + (id_y * srcStridesNH.y) + id_x;
-
-        uint paramIndex = id_z * maxParamVolume + id_x;
-        float mean = meanTensor[paramIndex];
-        float4 mean_f4 = static_cast<float4>(mean);
-
-        d_float8 src_f8;
-        rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);           // load 8 pixels to local memory
-        rpp_hip_math_subtract8_const(&src_f8, &src_f8, mean_f4);
-        rpp_hip_math_multiply8(&src_f8, &src_f8, &src_f8);
-        if (id_x + 8 > width)
-            for(int i = xDiff; i < 8; i++)
-                src_f8.f1[i] = 0.0f;                                            // local memory reset of invalid values (from the vectorized global load) to 0.0f
-        src_f8.f4[0] += src_f8.f4[1];                                           // perform small work of vectorized float4 addition
-        partialSumRowPtr_smem[hipThreadIdx_x] = (src_f8.f1[0] +
-                                                src_f8.f1[1] +
-                                                src_f8.f1[2] +
-                                                src_f8.f1[3]);                 // perform small work of reducing float4s to float using 16 x 16 threads and store in Shared
-        __syncthreads();                                                        // syncthreads after Shared load
-
-        // Reduction of 16 floats on 16 threads per block in x dimension (for every y dimension)
-        reduction_sum_x_hip(partialSumRowPtr_smem);
-
-        if (hipThreadIdx_x == 0)
-        {
-            // Reduction of 16 floats on 16 threads per block in y dimension
-            for (int threadMax = 8, increment = 128; threadMax >= 1; threadMax /= 2, increment /= 2)
-            {
-                if (hipThreadIdx_y < threadMax)
-                    partialSumRowPtr_smem[0] += partialSumRowPtr_smem[increment];
-                __syncthreads();
-            }
-
-            // Final store to dst
-            if (hipThreadIdx_y == 0)
-                partialSumTensor[(hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x] = partialSumRowPtr_smem[0];
-        }
-    }
-}
-
 
 __global__ void compute_mean_3d_hip_tensor(float *srcPtr,
                                            uint3 srcStridesNZY,
@@ -884,6 +689,216 @@ __global__ void compute_mean_3d_hip_tensor(float *srcPtr,
                 uint dstIdx = (id_z * hipGridDim_y * hipGridDim_x) + (hipBlockIdx_y * hipGridDim_x + hipBlockIdx_x);
                 partialSumTensor[dstIdx] = partialSumRowPtr_smem[0];
             }
+        }
+    }
+}
+
+__global__ void compute_mean_nd_hip_tensor(float *srcPtr,
+                                           uint *srcMaxDims,
+                                           uint *srcStrides,
+                                           float *meanTensor,
+                                           uint *roiTensor,
+                                           uint *paramShapeTensor,
+                                           uint *paramStridesTensor,
+                                           uint maxParamVolume,
+                                           uint numDims,
+                                           uint maxBufferLength)
+{
+    uint id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    uint id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    uint *roi = &roiTensor[id_z * numDims * 2 + numDims];
+    uint *paramShape = &paramShapeTensor[id_z * numDims];
+    uint *paramStrides = &paramStridesTensor[id_z * numDims];
+    uint srcIdx = id_z * maxBufferLength + id_x;
+    uint paramBase = id_z * maxParamVolume;
+    uint paramIndex = 0;
+
+    if(maxParamVolume > MAX_SHARED_MEMORY_SIZE)
+    {
+        if(id_x >= maxBufferLength)
+            return;
+
+        // validate if id_x is within the roi of input and compute paramIndex if valid
+        for (int i = 0; i < numDims; i++)
+        {
+            uint coord = id_x / srcStrides[i] % srcMaxDims[i];
+            if(coord >= roi[i])
+                return;
+            paramIndex += (maxParamVolume > 1) ? (rpp_hip_mod(coord, paramShape[i]) * paramStrides[i]) : 0;
+        }
+        atomicAdd(&meanTensor[paramBase + paramIndex], srcPtr[srcIdx]);
+    }
+    else
+    {
+
+        if(id_x >= (hipBlockDim_x * hipGridDim_x))
+            return;
+
+        // if number of means needed to compute is within in the max shared memory size
+        // use shared memory for atomic addition to reduce global memory traffic
+        bool isValid = true;
+        for (int i = 0; i < numDims; i++)
+        {
+            uint coord = id_x / srcStrides[i] % srcMaxDims[i];
+            if(coord >= roi[i])
+            {
+                isValid = false;
+                break;
+            }
+            paramIndex += (maxParamVolume > 1) ? (rpp_hip_mod(coord, paramShape[i]) * paramStrides[i]) : 0;
+        }
+
+        extern __shared__ float sh_mem[];
+        sh_mem[hipThreadIdx_x] = 0.0f;
+        __syncthreads();
+
+        if(isValid && id_x < maxBufferLength)
+            atomicAdd(&sh_mem[paramIndex], srcPtr[srcIdx]);
+        __syncthreads();
+
+        if (hipThreadIdx_x < maxParamVolume)
+            atomicAdd(&meanTensor[paramBase + hipThreadIdx_x], sh_mem[hipThreadIdx_x]);
+    }
+}
+
+// -------------------- Set 5 - stddev compute kernels (reduction stage 1) --------------------
+
+__global__ void compute_stddev_2d_hip_tensor(float *srcPtr,
+                                             uint2 srcStridesNH,
+                                             float *meanTensor,
+                                             float *stdDevTensor,
+                                             float *partialSumTensor,
+                                             uint *roiTensor,
+                                             uint maxParamVolume,
+                                             uint axisMask)
+{
+    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    uint *roi = &roiTensor[id_z * 4 + 2];
+    uint height = roi[0];
+    uint width = roi[1];
+
+    // perform column wise stddev
+    if(axisMask == 1)
+    {
+        if ((id_y >= height) || (id_x >= width))
+        {
+            return;
+        }
+
+        uint srcIdx = id_z * srcStridesNH.x + id_x;
+        uint paramIndex = id_z * maxParamVolume + id_x;
+        float mean = meanTensor[paramIndex];
+        if(id_x < width)
+        {
+            float accum = 0.0f;
+            for(int i = 0; i < height; i++)
+            {
+                float val = (srcPtr[srcIdx] - mean);
+                accum += (val * val);
+                srcIdx += srcStridesNH.y;
+            }
+            stdDevTensor[paramIndex] = sqrtf(accum / static_cast<float>(height));
+        }
+    }
+    // perform row wise sum
+    else if(axisMask == 2)
+    {
+        id_x *= 8;
+        __shared__ float partialRowSum_smem[256];
+        partialRowSum_smem[hipThreadIdx_x] = 0.0f;
+
+        if ((id_y >= height) || (id_x >= width))
+        {
+            return;
+        }
+
+        int xAlignedLength =  width & ~7;      // alignedLength for vectorized global loads
+        int xDiff = width - xAlignedLength;    // difference between roiWidth and alignedLength
+        uint srcIdx = (id_z * srcStridesNH.x) + (id_y * srcStridesNH.y) + id_x;
+
+        uint paramIndex = id_z * maxParamVolume + id_x;
+        float mean = meanTensor[paramIndex];
+        float4 mean_f4 = static_cast<float4>(mean);
+
+        d_float8 src_f8;
+        rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);           // load 8 pixels to local memory
+        rpp_hip_math_subtract8_const(&src_f8, &src_f8, mean_f4);
+        rpp_hip_math_multiply8(&src_f8, &src_f8, &src_f8);
+
+        if (id_x + 8 > width)
+            for(int i = xDiff; i < 8; i++)
+                src_f8.f1[i] = 0.0f;                                            // local memory reset of invalid values (from the vectorized global load) to 0.0f
+        src_f8.f4[0] += src_f8.f4[1];                                           // perform small work of vectorized float4 addition
+        partialRowSum_smem[hipThreadIdx_x] = (src_f8.f1[0] +
+                                              src_f8.f1[1] +
+                                              src_f8.f1[2] +
+                                              src_f8.f1[3]);                                // perform small work of reducing float4s to float using 16 x 16 threads and store in Shared
+        __syncthreads();
+
+        // Now do block level reduction sum
+        reduction_sum_x_hip(partialRowSum_smem);
+
+        // Final store to dst
+        if(hipThreadIdx_x == 0)
+        {
+            uint paramIndex = (id_z * hipGridDim_y * hipGridDim_x) + (id_y * hipGridDim_x) + hipBlockIdx_x;
+            partialSumTensor[paramIndex] = partialRowSum_smem[0];
+        }
+    }
+    else if(axisMask == 3)
+    {
+        id_x *= 8;
+        __shared__ float partialSum_smem[16][16];                               // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
+        float *partialSumRowPtr_smem = &partialSum_smem[hipThreadIdx_y][0];     // float pointer to beginning of each row in Shared
+        partialSumRowPtr_smem[hipThreadIdx_x] = 0.0f;                           // initialization of Shared to 0.0f using all 16 x 16 threads
+
+        if ((id_y >= height) || (id_x >= width))
+        {
+            return;
+        }
+
+        int xAlignedLength =  width & ~7;       // alignedLength for vectorized global loads
+        int xDiff = width - xAlignedLength;    // difference between roiWidth and alignedLength
+        uint srcIdx = (id_z * srcStridesNH.x) + (id_y * srcStridesNH.y) + id_x;
+
+        uint paramIndex = id_z * maxParamVolume + id_x;
+        float mean = meanTensor[paramIndex];
+        float4 mean_f4 = static_cast<float4>(mean);
+
+        d_float8 src_f8;
+        rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);           // load 8 pixels to local memory
+        rpp_hip_math_subtract8_const(&src_f8, &src_f8, mean_f4);
+        rpp_hip_math_multiply8(&src_f8, &src_f8, &src_f8);
+        if (id_x + 8 > width)
+            for(int i = xDiff; i < 8; i++)
+                src_f8.f1[i] = 0.0f;                                            // local memory reset of invalid values (from the vectorized global load) to 0.0f
+        src_f8.f4[0] += src_f8.f4[1];                                           // perform small work of vectorized float4 addition
+        partialSumRowPtr_smem[hipThreadIdx_x] = (src_f8.f1[0] +
+                                                src_f8.f1[1] +
+                                                src_f8.f1[2] +
+                                                src_f8.f1[3]);                 // perform small work of reducing float4s to float using 16 x 16 threads and store in Shared
+        __syncthreads();                                                        // syncthreads after Shared load
+
+        // Reduction of 16 floats on 16 threads per block in x dimension (for every y dimension)
+        reduction_sum_x_hip(partialSumRowPtr_smem);
+
+        if (hipThreadIdx_x == 0)
+        {
+            // Reduction of 16 floats on 16 threads per block in y dimension
+            for (int threadMax = 8, increment = 128; threadMax >= 1; threadMax /= 2, increment /= 2)
+            {
+                if (hipThreadIdx_y < threadMax)
+                    partialSumRowPtr_smem[0] += partialSumRowPtr_smem[increment];
+                __syncthreads();
+            }
+
+            // Final store to dst
+            if (hipThreadIdx_y == 0)
+                partialSumTensor[(hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x] = partialSumRowPtr_smem[0];
         }
     }
 }
@@ -1179,108 +1194,6 @@ __global__ void compute_stddev_3d_hip_tensor(float *srcPtr,
     }
 }
 
-__global__ void compute_mean_nd_hip_tensor(float *srcPtr,
-                                           uint *srcMaxDims,
-                                           uint *srcStrides,
-                                           float *meanTensor,
-                                           uint *roiTensor,
-                                           uint *paramShapeTensor,
-                                           uint *paramStridesTensor,
-                                           uint maxParamVolume,
-                                           uint numDims,
-                                           uint maxBufferLength)
-{
-    uint id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
-    uint id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
-
-    uint *roi = &roiTensor[id_z * numDims * 2 + numDims];
-    uint *paramShape = &paramShapeTensor[id_z * numDims];
-    uint *paramStrides = &paramStridesTensor[id_z * numDims];
-    uint srcIdx = id_z * maxBufferLength + id_x;
-    uint paramBase = id_z * maxParamVolume;
-    uint paramIndex = 0;
-
-    if(maxParamVolume > MAX_SHARED_MEMORY_SIZE)
-    {
-        if(id_x >= maxBufferLength)
-            return;
-
-        // validate if id_x is within the roi of input and compute paramIndex if valid
-        for (int i = 0; i < numDims; i++)
-        {
-            uint coord = id_x / srcStrides[i] % srcMaxDims[i];
-            if(coord >= roi[i])
-                return;
-            paramIndex += (maxParamVolume > 1) ? (rpp_hip_mod(coord, paramShape[i]) * paramStrides[i]) : 0;
-        }
-        atomicAdd(&meanTensor[paramBase + paramIndex], srcPtr[srcIdx]);
-    }
-    else
-    {
-
-        if(id_x >= (hipBlockDim_x * hipGridDim_x))
-            return;
-
-        // if number of means needed to compute is within in the max shared memory size
-        // use shared memory for atomic addition to reduce global memory traffic
-        bool isValid = true;
-        for (int i = 0; i < numDims; i++)
-        {
-            uint coord = id_x / srcStrides[i] % srcMaxDims[i];
-            if(coord >= roi[i])
-            {
-                isValid = false;
-                break;
-            }
-            paramIndex += (maxParamVolume > 1) ? (rpp_hip_mod(coord, paramShape[i]) * paramStrides[i]) : 0;
-        }
-
-        extern __shared__ float sh_mem[];
-        sh_mem[hipThreadIdx_x] = 0.0f;
-        __syncthreads();
-
-        if(isValid && id_x < maxBufferLength)
-            atomicAdd(&sh_mem[paramIndex], srcPtr[srcIdx]);
-        __syncthreads();
-
-        if (hipThreadIdx_x < maxParamVolume)
-            atomicAdd(&meanTensor[paramBase + hipThreadIdx_x], sh_mem[hipThreadIdx_x]);
-    }
-}
-
-__global__ void final_reduction_nd_hip_tensor(float *meanTensor,
-                                              float *stdDevTensor,
-                                              uint *paramShapeTensor,
-                                              uint *roiTensor,
-                                              uint numDims,
-                                              uint maxParamVolume,
-                                              bool isMean)
-{
-    uint id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
-    uint id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
-
-    uint *paramShape = &paramShapeTensor[id_z * numDims];
-    uint *roi = &roiTensor[id_z * numDims * 2 + numDims];
-
-    uint divisionFactor = 1;
-    uint paramVolume = 1;
-    for(int i = 0; i < numDims; i++)
-    {
-        paramVolume *= paramShape[i];
-        if(paramShape[i] == 1)
-            divisionFactor *= roi[i];
-    }
-
-    if(id_x >= paramVolume)
-        return;
-
-    uint paramIndex = id_z * maxParamVolume + id_x;
-    if(isMean)
-        meanTensor[paramIndex] = meanTensor[paramIndex] / divisionFactor;
-    else
-        stdDevTensor[paramIndex] = sqrtf(stdDevTensor[paramIndex] / divisionFactor);
-}
-
 __global__ void compute_stddev_nd_hip_tensor(float *srcPtr,
                                              uint *srcMaxDims,
                                              uint *srcStrides,
@@ -1354,6 +1267,108 @@ __global__ void compute_stddev_nd_hip_tensor(float *srcPtr,
             atomicAdd(&stdDevTensor[paramBase + hipThreadIdx_x], sh_mem[hipThreadIdx_x]);
     }
 }
+
+// -------------------- Set 6 - mean and stddev compute kernels (reduction stage 2) --------------------
+
+__global__ void reduce_final_result_hip(float *partialSumTensor,
+                                        uint numPartialSums,
+                                        float *meanTensor,
+                                        float *stdDevTensor,
+                                        bool isMean,
+                                        uint *roiTensor,
+                                        uint axisMask,
+                                        uint numDims)
+{
+    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+    uint *roi = &roiTensor[id_z * numDims * 2 + numDims];
+
+    uint meanFactor;
+    if(numDims == 3)
+    {
+        uint lengthZ = roi[0];
+        uint lengthY = roi[1];
+        uint lengthX = roi[2];
+
+        if(axisMask == 3)
+            meanFactor = lengthZ * lengthY;
+        else if(axisMask == 6)
+            meanFactor = lengthY * lengthX;
+        else if(axisMask == 7)
+            meanFactor = lengthZ * lengthY * lengthX;
+    }
+    else if(numDims == 2)
+    {
+        uint lengthY = roi[0];
+        uint lengthX = roi[1];
+
+        if(axisMask == 2)
+            meanFactor = lengthX;
+        else if(axisMask == 3)
+            meanFactor = lengthY * lengthX;
+    }
+
+    __shared__ float partialSum_smem[16];
+    partialSum_smem[hipThreadIdx_x] = 0.0f;
+
+    float accum = 0.0f;
+    while(id_x < numPartialSums)
+    {
+        uint srcIdx = (id_z * hipGridDim_y * numPartialSums) + (id_y * numPartialSums) + id_x;
+        accum += partialSumTensor[srcIdx];
+        id_x += hipBlockDim_x;
+    }
+    partialSum_smem[hipThreadIdx_x] = accum;
+    __syncthreads();
+
+    // Now do block level reduction sum
+    reduction_sum_x_hip(partialSum_smem);
+
+    // Final store to dst
+    if(hipThreadIdx_x == 0)
+    {
+        if(isMean)
+            meanTensor[id_z * hipGridDim_y + id_y] = partialSum_smem[0] / meanFactor;
+        else
+            stdDevTensor[id_z * hipGridDim_y + id_y] = sqrtf(partialSum_smem[0] / meanFactor);
+    }
+}
+
+__global__ void final_reduction_nd_hip_tensor(float *meanTensor,
+                                              float *stdDevTensor,
+                                              uint *paramShapeTensor,
+                                              uint *roiTensor,
+                                              uint numDims,
+                                              uint maxParamVolume,
+                                              bool isMean)
+{
+    uint id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    uint id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    uint *paramShape = &paramShapeTensor[id_z * numDims];
+    uint *roi = &roiTensor[id_z * numDims * 2 + numDims];
+
+    uint divisionFactor = 1;
+    uint paramVolume = 1;
+    for(int i = 0; i < numDims; i++)
+    {
+        paramVolume *= paramShape[i];
+        if(paramShape[i] == 1)
+            divisionFactor *= roi[i];
+    }
+
+    if(id_x >= paramVolume)
+        return;
+
+    uint paramIndex = id_z * maxParamVolume + id_x;
+    if(isMean)
+        meanTensor[paramIndex] = meanTensor[paramIndex] / divisionFactor;
+    else
+        stdDevTensor[paramIndex] = sqrtf(stdDevTensor[paramIndex] / divisionFactor);
+}
+
+// -------------------- Set 7 - mean and stddev compute kernels launch helpers --------------------
 
 void set_kernel_launch_config_2d(RpptGenericDescPtr srcGenericDescPtr,
                                  int &globalThreads_x,
@@ -1517,6 +1532,8 @@ void set_kernel_launch_config_3d(RpptGenericDescPtr srcGenericDescPtr,
         }
     }
 }
+
+// -------------------- Set 8 - mean and stddev compute kernels executor --------------------
 
 RppStatus hip_exec_compute_mean_stddev_tensor(Rpp32f *srcPtr,
                                               RpptGenericDescPtr srcGenericDescPtr,
@@ -1792,6 +1809,8 @@ RppStatus hip_exec_compute_mean_stddev_tensor(Rpp32f *srcPtr,
     hipStreamSynchronize(handle.GetStream());
     return RPP_SUCCESS;
 }
+
+// -------------------- Set 9 - normalization kernel executor --------------------
 
 RppStatus hip_exec_normalize_tensor(Rpp32f *srcPtr,
                                     RpptGenericDescPtr srcGenericDescPtr,
