@@ -90,6 +90,7 @@ std::map<int, string> augmentationMap =
     {54, "gaussian_filter"},
     {63, "phase"},
     {65, "bitwise_and"},
+    {68, "bitwise_or"},
     {70, "copy"},
     {80, "resize_mirror_normalize"},
     {81, "color_jitter"},
@@ -98,8 +99,7 @@ std::map<int, string> augmentationMap =
     {84, "spatter"},
     {85, "swap_channels"},
     {86, "color_to_greyscale"},
-    {87, "tensor_sum"},
-    {92, "bitwise_or"}
+    {87, "tensor_sum"}
 };
 
 template <typename T>
