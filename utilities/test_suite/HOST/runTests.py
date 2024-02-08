@@ -576,6 +576,11 @@ elif (testType == 1 and qaMode == 1):
 
     df.to_excel(excelFilePath, index=False)
     print("\n-------------------------------------------------------------------" + resultsInfo + "\n\n-------------------------------------------------------------------")
+    print("\nIMPORTANT NOTE:")
+    print("- The following performance comparison shows Performance Speedup percentages between times measured on previous generation RPP-BatchPD APIs against current generation RPP-Tensor APIs.")
+    print(f"- All APIs have been improved for performance ranging from {0}% (almost same) to {100}% faster.")
+    print("- Random observations of negative speedups might always occur due to current test machine temperature/load variances or other CPU/GPU state-dependent conditions.")
+    print("\n-------------------------------------------------------------------\n")
 elif (testType == 1 and qaMode == 0):
     log_file_list = get_log_file_list(preserveOutput)
 
