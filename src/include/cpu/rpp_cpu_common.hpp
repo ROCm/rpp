@@ -4997,8 +4997,8 @@ inline void compute_generic_bilinear_srclocs_1c_avx(__m256 &pSrcY, __m256 &pSrcX
 inline void compute_generic_bilinear_srclocs_3c_avx(__m256 &pSrcY, __m256 &pSrcX, RpptBilinearNbhoodLocsVecLen8 &srcLocs, __m256 *pBilinearCoeffs, __m256 &pSrcStrideH, __m256i *pxSrcStridesCHW, Rpp32s srcChannels, __m256 *pRoiLTRB, bool isSrcPKD3 = false)
 {
     __m256 pWeightParams[4], pSrcBilinearLTyx[4];
-    pSrcBilinearLTyx[0] = _mm256_round_ps(pSrcY, (_MM_FROUND_TO_NEAREST_INT |_MM_FROUND_NO_EXC));     // srcLT->y = (Rpp32s) srcY;
-    pSrcBilinearLTyx[1] = _mm256_round_ps(pSrcX, (_MM_FROUND_TO_NEAREST_INT |_MM_FROUND_NO_EXC));     // srcLT->x = (Rpp32s) srcX;
+    pSrcBilinearLTyx[0] = _mm256_round_ps(pSrcY, (_MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC));     // srcLT->y = (Rpp32s) srcY;
+    pSrcBilinearLTyx[1] = _mm256_round_ps(pSrcX, (_MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC));     // srcLT->x = (Rpp32s) srcX;
     pWeightParams[0] = _mm256_sub_ps(pSrcY, pSrcBilinearLTyx[0]);               // weightParams[0] = srcY - srcLT->y;
     pWeightParams[1] = _mm256_sub_ps(avx_p1, pWeightParams[0]);                 // weightParams[1] = 1 - weightParams[0];
     pWeightParams[2] = _mm256_sub_ps(pSrcX, pSrcBilinearLTyx[1]);               // weightParams[2] = srcX - srcLT->x;
