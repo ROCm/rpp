@@ -138,6 +138,7 @@ RppStatus rppt_resample_host(RppPtr_t srcPtr,
                              Rpp32s *srcLengthTensor,
                              Rpp32s *channelsTensor,
                              Rpp32f quality,
+                             RpptResamplingWindow &window,
                              rppHandle_t rppHandle)
 {
     if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
@@ -151,6 +152,7 @@ RppStatus rppt_resample_host(RppPtr_t srcPtr,
                              srcLengthTensor,
                              channelsTensor,
                              quality,
+                             window,
                              rpp::deref(rppHandle));
 
         return RPP_SUCCESS;

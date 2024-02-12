@@ -214,6 +214,11 @@ int main(int argc, char **argv)
                         maxDstWidth = std::max(maxDstWidth, (int)dstDims[i].width);
                     }
                     Rpp32f quality = 50.0f;
+                    Rpp32s lobes = std::round(0.007 * quality * quality - 0.09 * quality + 3);
+                    Rpp32s lookupSize = lobes * 64 + 1;
+                    RpptResamplingWindow window;
+                    windowed_sinc(window, lookupSize, lobes);
+
                     dstDescPtr->w = maxDstWidth;
                     dstDescPtr->strides.nStride = dstDescPtr->c * dstDescPtr->w * dstDescPtr->h;
 
@@ -229,7 +234,7 @@ int main(int argc, char **argv)
                     }
 
                     startWallTime = omp_get_wtime();
-                    rppt_resample_host(inputf32, srcDescPtr, outputf32, dstDescPtr, inRateTensor, outRateTensor, srcLengthTensor, channelsTensor, quality, handle);
+                    rppt_resample_host(inputf32, srcDescPtr, outputf32, dstDescPtr, inRateTensor, outRateTensor, srcLengthTensor, channelsTensor, quality, window, handle);
 
                     break;
                 }
