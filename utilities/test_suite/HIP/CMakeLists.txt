@@ -19,9 +19,21 @@
 # THE SOFTWARE.
 
 cmake_minimum_required(VERSION 3.5)
+set(CMAKE_CXX_COMPILER clang++)
+set(CMAKE_CXX_STANDARD 17)
 project(test_suite/HIP)
-list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../../../cmake)
-set(ROCM_PATH /opt/rocm CACHE PATH "default ROCm installation path")
+
+# ROCM Path
+if(DEFINED ENV{ROCM_PATH})
+  set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
+elseif(ROCM_PATH)
+  message("-- INFO:ROCM_PATH Set -- ${ROCM_PATH}")
+else()
+  set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
+endif()
+
+list(APPEND CMAKE_MODULE_PATH ${ROCM_PATH}/share/rpp/test/cmake)
+
 list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH})
 
 # Set message options
@@ -41,12 +53,8 @@ endif()
 find_package(hip QUIET)
 find_package(OpenCV QUIET)
 find_package(TurboJpeg QUIET)
+find_package(NIFTI QUIET)
 
-# BOOST
-set(BOOST_COMPONENTS filesystem system)
-find_package(Boost COMPONENTS ${BOOST_COMPONENTS} REQUIRED)
-include_directories(${Boost_INCLUDE_DIRS})
-set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY})
 # OpenMP
 find_package(OpenMP REQUIRED)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
@@ -57,7 +65,7 @@ if(TurboJpeg_FOUND)
     include_directories(${TurboJpeg_INCLUDE_DIRS})
     set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${TurboJpeg_LIBRARIES_DIR})
 else()
-    message("-- ${Yellow}Error: TurboJpeg must be installed to install ${PROJECT_NAME} successfully!${ColourReset}")
+    message("-- ${Red}Error: TurboJpeg must be installed to install ${PROJECT_NAME} successfully!${ColourReset}")
 endif()
 
 if (hip_FOUND AND OpenCV_FOUND)
@@ -71,8 +79,21 @@ if (hip_FOUND AND OpenCV_FOUND)
     link_directories(${ROCM_PATH}/lib /usr/local/lib)
 
     add_executable(Tensor_hip Tensor_hip.cpp)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGPU_SUPPORT=1 -DRPP_BACKEND_HIP=1 -std=gnu++14")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGPU_SUPPORT=1 -DRPP_BACKEND_HIP=1 -std=gnu++17")
     target_link_libraries(Tensor_hip ${OpenCV_LIBS} -lturbojpeg -lrpp ${hip_LIBRARIES} pthread ${LINK_LIBRARY_LIST} hip::device)
 else()
-    message("-- ${Yellow}Error: OpenCV and hip must be installed to install ${PROJECT_NAME} successfully!${ColourReset}")
+    message(FATAL_ERROR "-- ${Red}Error: OpenCV and hip must be installed to install ${PROJECT_NAME} successfully!${ColourReset}")
+endif()
+
+if(NIFTI_FOUND AND OpenCV_FOUND)
+    message("-- ${Green}${PROJECT_NAME} set to build with rpp and libniftiio and OpenCV ${ColourReset}")
+    include_directories(${OpenCV_INCLUDE_DIRS})
+    include_directories(${ROCM_PATH}/include ${ROCM_PATH}/include/rpp /usr/local/include)
+    link_directories(${ROCM_PATH}/lib /usr/local/lib)
+
+    add_executable(Tensor_voxel_hip Tensor_voxel_hip.cpp)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++17")
+    target_link_libraries(Tensor_voxel_hip ${OpenCV_LIBS} -lturbojpeg -lrpp ${hip_LIBRARIES} pthread ${LINK_LIBRARY_LIST} hip::device ${NIFTI_PACKAGE_PREFIX}NIFTI::${NIFTI_PACKAGE_PREFIX}niftiio)
+else()
+    message("-- ${Yellow}Warning: libniftiio must be installed to install ${PROJECT_NAME}/Tensor_voxel_hip successfully!${ColourReset}")
 endif()

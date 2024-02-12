@@ -30,6 +30,81 @@ THE SOFTWARE.
     #include "hip/hip_tensor_statistical_operations.hpp"
 #endif // HIP_COMPILE
 
+/******************** tensor_sum ********************/
+
+RppStatus rppt_tensor_sum_host(RppPtr_t srcPtr,
+                               RpptDescPtr srcDescPtr,
+                               RppPtr_t tensorSumArr,
+                               Rpp32u tensorSumArrLength,
+                               RpptROIPtr roiTensorPtrSrc,
+                               RpptRoiType roiType,
+                               rppHandle_t rppHandle)
+{
+    if (srcDescPtr->c == 1)
+    {
+        if (tensorSumArrLength < srcDescPtr->n)      // sum of single channel
+            return RPP_ERROR_NOT_ENOUGH_MEMORY;
+    }
+    else if (srcDescPtr->c == 3)
+    {
+        if (tensorSumArrLength < srcDescPtr->n * 4)  // sum of each channel, and total sum of all 3 channels
+            return RPP_ERROR_NOT_ENOUGH_MEMORY;
+    }
+    if (roiType == RpptRoiType::XYWH)
+    {
+        for(int i = 0; i < srcDescPtr->n; i++)
+            if ((roiTensorPtrSrc[i].xywhROI.roiWidth > REDUCTION_MAX_WIDTH) || (roiTensorPtrSrc[i].xywhROI.roiHeight > REDUCTION_MAX_HEIGHT))
+                return RPP_ERROR_HIGH_SRC_DIMENSION;
+    }
+    else if (roiType == RpptRoiType::LTRB)
+    {
+        for(int i = 0; i < srcDescPtr->n; i++)
+            if ((roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x > REDUCTION_MAX_XDIM) || (roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y > REDUCTION_MAX_YDIM))
+                return RPP_ERROR_HIGH_SRC_DIMENSION;
+    }
+
+    RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+
+    if (srcDescPtr->dataType == RpptDataType::U8)
+    {
+        tensor_sum_u8_u64_host(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                              srcDescPtr,
+                              static_cast<Rpp64u*>(tensorSumArr),
+                              roiTensorPtrSrc,
+                              roiType,
+                              layoutParams);
+    }
+    else if (srcDescPtr->dataType == RpptDataType::F16)
+    {
+        tensor_sum_f16_f32_host(reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                srcDescPtr,
+                                static_cast<Rpp32f*>(tensorSumArr),
+                                roiTensorPtrSrc,
+                                roiType,
+                                layoutParams);
+    }
+    else if (srcDescPtr->dataType == RpptDataType::F32)
+    {
+        tensor_sum_f32_f32_host(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                srcDescPtr,
+                                static_cast<Rpp32f*>(tensorSumArr),
+                                roiTensorPtrSrc,
+                                roiType,
+                                layoutParams);
+    }
+    else if (srcDescPtr->dataType == RpptDataType::I8)
+    {
+        tensor_sum_i8_i64_host(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                               srcDescPtr,
+                               static_cast<Rpp64s*>(tensorSumArr),
+                               roiTensorPtrSrc,
+                               roiType,
+                               layoutParams);
+    }
+
+    return RPP_SUCCESS;
+}
+
 /******************** tensor_mean ********************/
 
 RppStatus rppt_tensor_mean_host(RppPtr_t srcPtr,
@@ -43,18 +118,18 @@ RppStatus rppt_tensor_mean_host(RppPtr_t srcPtr,
     if (srcDescPtr->c == 1)
     {
         if (tensorMeanArrLength < srcDescPtr->n)      // mean of single channel
-            return RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH;
+            return RPP_ERROR_NOT_ENOUGH_MEMORY;
     }
     else if (srcDescPtr->c == 3)
     {
         if (tensorMeanArrLength < srcDescPtr->n * 4)  // mean of each channel, and total mean of all 3 channels
-            return RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH;
+            return RPP_ERROR_NOT_ENOUGH_MEMORY;
     }
     if (roiType == RpptRoiType::XYWH)
     {
         for(int i = 0; i < srcDescPtr->n; i++)
         {
-            if ((roiTensorPtrSrc[i].xywhROI.roiWidth > REDUCTION_MAX_WIDTH) || (roiTensorPtrSrc[i].xywhROI.roiHeight > REDUCTION_MAX_HEIGHT))
+            if ((roiTensorPtrSrc[i].xywhROI.roiWidth > REDUCTION_MAX_WIDTH)|| (roiTensorPtrSrc[i].xywhROI.roiHeight > REDUCTION_MAX_HEIGHT))
                 return RPP_ERROR_HIGH_SRC_DIMENSION;
         }
     }
@@ -124,12 +199,12 @@ RppStatus rppt_tensor_stddev_host(RppPtr_t srcPtr,
     if (srcDescPtr->c == 1)
     {
         if (tensorStddevArrLength < srcDescPtr->n)      // mean of single channel
-            return RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH;
+            return RPP_ERROR_NOT_ENOUGH_MEMORY;
     }
     else if (srcDescPtr->c == 3)
     {
         if (tensorStddevArrLength < srcDescPtr->n * 4)  // mean of each channel, and total mean of all 3 channels
-            return RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH;
+            return RPP_ERROR_NOT_ENOUGH_MEMORY;
     }
     if (roiType == RpptRoiType::XYWH)
     {
@@ -239,6 +314,82 @@ RppStatus rppt_tensor_stddev_host(RppPtr_t srcPtr,
 /********************************************************************************************************************/
 
 #ifdef GPU_SUPPORT
+/******************** tensor_sum ********************/
+
+RppStatus rppt_tensor_sum_gpu(RppPtr_t srcPtr,
+                              RpptDescPtr srcDescPtr,
+                              RppPtr_t tensorSumArr,
+                              Rpp32u tensorSumArrLength,
+                              RpptROIPtr roiTensorPtrSrc,
+                              RpptRoiType roiType,
+                              rppHandle_t rppHandle)
+{
+#ifdef HIP_COMPILE
+    if (srcDescPtr->c == 1)
+    {
+        if (tensorSumArrLength < srcDescPtr->n)      // sum of single channel
+            return RPP_ERROR_NOT_ENOUGH_MEMORY;
+    }
+    else if (srcDescPtr->c == 3)
+    {
+        if (tensorSumArrLength < srcDescPtr->n * 4)  // sum of each channel, and total sum of all 3 channels
+            return RPP_ERROR_NOT_ENOUGH_MEMORY;
+    }
+    if (roiType == RpptRoiType::XYWH)
+    {
+        for(int i = 0; i < srcDescPtr->n; i++)
+            if ((roiTensorPtrSrc[i].xywhROI.roiWidth > REDUCTION_MAX_WIDTH) || (roiTensorPtrSrc[i].xywhROI.roiHeight > REDUCTION_MAX_HEIGHT))
+                return RPP_ERROR_HIGH_SRC_DIMENSION;
+    }
+    else if (roiType == RpptRoiType::LTRB)
+    {
+        for(int i = 0; i < srcDescPtr->n; i++)
+            if ((roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x > REDUCTION_MAX_XDIM) || (roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y > REDUCTION_MAX_YDIM))
+                return RPP_ERROR_HIGH_SRC_DIMENSION;
+    }
+
+    if (srcDescPtr->dataType == RpptDataType::U8)
+    {
+        hip_exec_tensor_sum(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                            srcDescPtr,
+                            static_cast<Rpp64u*>(tensorSumArr),
+                            roiTensorPtrSrc,
+                            roiType,
+                            rpp::deref(rppHandle));
+    }
+    else if (srcDescPtr->dataType == RpptDataType::F16)
+    {
+        hip_exec_tensor_sum(reinterpret_cast<half*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                            srcDescPtr,
+                            static_cast<Rpp32f*>(tensorSumArr),
+                            roiTensorPtrSrc,
+                            roiType,
+                            rpp::deref(rppHandle));
+    }
+    else if (srcDescPtr->dataType == RpptDataType::F32)
+    {
+        hip_exec_tensor_sum(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                            srcDescPtr,
+                            static_cast<Rpp32f*>(tensorSumArr),
+                            roiTensorPtrSrc,
+                            roiType,
+                            rpp::deref(rppHandle));
+    }
+    else if (srcDescPtr->dataType == RpptDataType::I8)
+    {
+        hip_exec_tensor_sum(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                            srcDescPtr,
+                            static_cast<Rpp64s*>(tensorSumArr),
+                            roiTensorPtrSrc,
+                            roiType,
+                            rpp::deref(rppHandle));
+    }
+
+    return RPP_SUCCESS;
+#elif defined(OCL_COMPILE)
+    return RPP_ERROR_NOT_IMPLEMENTED;
+#endif // backend
+}
 
 /******************** tensor_mean ********************/
 
@@ -254,12 +405,12 @@ RppStatus rppt_tensor_mean_gpu(RppPtr_t srcPtr,
     if (srcDescPtr->c == 1)
     {
         if (tensorMeanArrLength < srcDescPtr->n)      // Mean of single channel
-            return RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH;
+            return RPP_ERROR_NOT_ENOUGH_MEMORY;
     }
     else if (srcDescPtr->c == 3)
     {
         if (tensorMeanArrLength < srcDescPtr->n * 4)  // Mean of each channel, and total Mean of all 3 channels
-            return RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH;
+            return RPP_ERROR_NOT_ENOUGH_MEMORY;
     }
     if (roiType == RpptRoiType::XYWH)
     {
@@ -338,14 +489,12 @@ RppStatus rppt_tensor_stddev_gpu(RppPtr_t srcPtr,
     if (srcDescPtr->c == 1)
     {
         if (tensorStddevArrLength < srcDescPtr->n)      // Mean of single channel
-            return RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH;
-        copy_param_float(meanTensor, rpp::deref(rppHandle), paramIndex++);
+            return RPP_ERROR_NOT_ENOUGH_MEMORY;
     }
     else if (srcDescPtr->c == 3)
     {
         if (tensorStddevArrLength < srcDescPtr->n * 4)  // Mean of each channel, and total Mean of all 3 channels
-            return RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH;
-        copy_reduction_param_float(meanTensor, rpp::deref(rppHandle), paramIndex++);
+            return RPP_ERROR_NOT_ENOUGH_MEMORY;
     }
     if (roiType == RpptRoiType::XYWH)
     {
@@ -369,6 +518,7 @@ RppStatus rppt_tensor_stddev_gpu(RppPtr_t srcPtr,
         hip_exec_tensor_stddev(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
                                srcDescPtr,
                                static_cast<Rpp32f*>(tensorStddevArr),
+							   meanTensor,
                                flag,
                                roiTensorPtrSrc,
                                roiType,
@@ -379,6 +529,7 @@ RppStatus rppt_tensor_stddev_gpu(RppPtr_t srcPtr,
         hip_exec_tensor_stddev(reinterpret_cast<half*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                srcDescPtr,
                                static_cast<Rpp32f*>(tensorStddevArr),
+							   meanTensor,
                                flag,
                                roiTensorPtrSrc,
                                roiType,
@@ -389,6 +540,7 @@ RppStatus rppt_tensor_stddev_gpu(RppPtr_t srcPtr,
         hip_exec_tensor_stddev(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                srcDescPtr,
                                static_cast<Rpp32f*>(tensorStddevArr),
+							   meanTensor,
                                flag,
                                roiTensorPtrSrc,
                                roiType,
@@ -399,6 +551,7 @@ RppStatus rppt_tensor_stddev_gpu(RppPtr_t srcPtr,
         hip_exec_tensor_stddev(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
                                srcDescPtr,
                                static_cast<Rpp32f*>(tensorStddevArr),
+							   meanTensor,
                                flag,
                                roiTensorPtrSrc,
                                roiType,
@@ -410,5 +563,5 @@ RppStatus rppt_tensor_stddev_gpu(RppPtr_t srcPtr,
     return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
-
 #endif // GPU_SUPPORT
+

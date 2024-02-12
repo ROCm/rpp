@@ -45,7 +45,7 @@ using namespace std;
 int main(int argc, char **argv)
 {
     // Handle inputs
-    const int MIN_ARG_COUNT = 13;
+    const int MIN_ARG_COUNT = 19;
 
     char *src = argv[1];
     char *srcSecond = argv[2];
@@ -61,17 +61,19 @@ int main(int argc, char **argv)
     int decoderType = atoi(argv[13]);
     int batchSize = atoi(argv[14]);
 
-    bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23|| testCase == 24 || testCase == 40 || testCase == 41 || testCase == 49);
-    bool dualInputCase = (testCase == 2);
-    bool randomOutputCase = (testCase == 84);
-    bool kernelSizeCase = (testCase == 40 || testCase == 41 || testCase == 49);
+    bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23|| testCase == 24 || testCase == 40 || testCase == 41 || testCase == 49 || testCase == 54);
+    bool kernelSizeCase = (testCase == 40 || testCase == 41 || testCase == 49 || testCase == 54);
+    bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 63);
+    bool randomOutputCase = (testCase == 84 || testCase == 49 || testCase == 54);
     bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24);
     bool noiseTypeCase = (testCase == 8);
     bool pln1OutTypeCase = (testCase == 86);
-    bool reductionTypeCase = (testCase == 90 || testCase == 91);
+    bool reductionTypeCase = (testCase == 87 || testCase == 90 || testCase == 91);
 
     unsigned int verbosity = atoi(argv[11]);
     unsigned int additionalParam = additionalParamCase ? atoi(argv[7]) : 1;
+    int roiList[4] = {atoi(argv[15]), atoi(argv[16]), atoi(argv[17]), atoi(argv[18])};
+    string scriptPath = argv[19];
 
     if (verbosity == 1)
     {
@@ -84,9 +86,6 @@ int main(int argc, char **argv)
         printf("\noutputFormatToggle (pkd->pkd = 0 / pkd->pln = 1) = %s", argv[5]);
         printf("\ncase number (0:91) = %s", argv[6]);
         printf("\nnumber of times to run = %s", argv[8]);
-        printf("\ntest type - (0 = unit tests / 1 = performance tests) = %s", argv[9]);
-        printf("\nlayout type - (0 = PKD3/ 1 = PLN3/ 2 = PLN1) = %s", argv[10]);
-        printf("\nqa mode - 0/1 = %s", argv[12]);
         printf("\ndecoder type - (0 = TurboJPEG / 1 = OpenCV) = %s", argv[13]);
         printf("\nbatch size = %s", argv[14]);
     }
@@ -94,7 +93,7 @@ int main(int argc, char **argv)
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
-        printf("\nUsage: <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:91> <number of iterations > 0> <verbosity = 0/1>>\n");
+        printf("\nUsage: <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:87> <number of runs > 0> <layout type (layout type - (0 = PKD3/ 1 = PLN3/ 2 = PLN1)> < qa mode (0/1)> <decoder type (0/1)> <batch size > 1> <roiList> <verbosity = 0/1>>\n");
         return -1;
     }
 
@@ -112,7 +111,12 @@ int main(int argc, char **argv)
         }
     }
 
-    if (reductionTypeCase && outputFormatToggle)
+    if(pln1OutTypeCase && outputFormatToggle != 0)
+    {
+        printf("\ntest case %d don't have outputFormatToggle! Please input outputFormatToggle = 0\n", testCase);
+        return -1;
+    }
+    else if (reductionTypeCase && outputFormatToggle != 0)
     {
         printf("\nReduction Kernels don't have outputFormatToggle! Please input outputFormatToggle = 0\n");
         return -1;
@@ -120,6 +124,11 @@ int main(int argc, char **argv)
     if(batchSize > MAX_BATCH_SIZE)
     {
         std::cerr << "\n Batchsize should be less than or equal to "<< MAX_BATCH_SIZE << " Aborting!";
+        exit(0);
+    }
+    else if(testCase == 82 && batchSize < 2)
+    {
+        std::cerr<<"\n RICAP only works with BatchSize > 1";
         exit(0);
     }
 
@@ -202,10 +211,10 @@ int main(int argc, char **argv)
 
     // Get number of images and image Names
     vector<string> imageNames, imageNamesSecond, imageNamesPath, imageNamesPathSecond;
-    search_jpg_files(src, imageNames, imageNamesPath);
+    search_files_recursive(src, imageNames, imageNamesPath, ".jpg");
     if(dualInputCase)
     {
-        search_jpg_files(srcSecond, imageNamesSecond, imageNamesPathSecond);
+        search_files_recursive(srcSecond, imageNamesSecond, imageNamesPathSecond, ".jpg");
         if(imageNames.size() != imageNamesSecond.size())
         {
             std::cerr << " \n The number of images in the input folders must be the same.";
@@ -216,9 +225,9 @@ int main(int argc, char **argv)
 
     if(noOfImages < batchSize || ((noOfImages % batchSize) != 0))
     {
-        replicate_last_image_to_fill_batch(imageNamesPath[noOfImages - 1], imageNamesPath, imageNames, imageNames[noOfImages - 1], noOfImages, batchSize);
+        replicate_last_file_to_fill_batch(imageNamesPath[noOfImages - 1], imageNamesPath, imageNames, imageNames[noOfImages - 1], noOfImages, batchSize);
         if(dualInputCase)
-            replicate_last_image_to_fill_batch(imageNamesPathSecond[noOfImages - 1], imageNamesPathSecond, imageNamesSecond, imageNamesSecond[noOfImages - 1], noOfImages, batchSize);
+            replicate_last_file_to_fill_batch(imageNamesPathSecond[noOfImages - 1], imageNamesPathSecond, imageNamesSecond, imageNamesSecond[noOfImages - 1], noOfImages, batchSize);
         noOfImages = imageNames.size();
     }
 
@@ -237,12 +246,12 @@ int main(int argc, char **argv)
 
     // Initialize ROI tensors for src/dst
     RpptROI *roiTensorPtrSrc, *roiTensorPtrDst;
-    hipHostMalloc(&roiTensorPtrSrc, batchSize * sizeof(RpptROI));
-    hipHostMalloc(&roiTensorPtrDst, batchSize * sizeof(RpptROI));
+    CHECK(hipHostMalloc(&roiTensorPtrSrc, batchSize * sizeof(RpptROI)));
+    CHECK(hipHostMalloc(&roiTensorPtrDst, batchSize * sizeof(RpptROI)));
 
     // Initialize the ImagePatch for dst
     RpptImagePatch *dstImgSizes;
-    hipHostMalloc(&dstImgSizes, batchSize * sizeof(RpptImagePatch));
+    CHECK(hipHostMalloc(&dstImgSizes, batchSize * sizeof(RpptImagePatch)));
 
     // Set ROI tensors types for src/dst
     RpptRoiType roiTypeSrc, roiTypeDst;
@@ -252,13 +261,20 @@ int main(int argc, char **argv)
     Rpp32u outputChannels = inputChannels;
     if(pln1OutTypeCase)
         outputChannels = 1;
-    Rpp32u offsetInBytes = 0;
+    Rpp32u srcOffsetInBytes = (kernelSizeCase) ? (12 * (additionalParam / 2)) : 0;
+    Rpp32u dstOffsetInBytes = 0;
+    int imagesMixed = 0; // Flag used to check if all images in dataset is of same dimensions
 
-    set_max_dimensions(imageNamesPath, maxHeight, maxWidth);
+    set_max_dimensions(imageNamesPath, maxHeight, maxWidth, imagesMixed);
+    if(testCase == 82 && imagesMixed)
+    {
+        std::cerr<<"\n RICAP only works with same dimension images";
+        exit(0);
+    }
 
     // Set numDims, offset, n/c/h/w values, strides for src/dst
-    set_descriptor_dims_and_strides(srcDescPtr, batchSize, maxHeight, maxWidth, inputChannels, offsetInBytes);
-    set_descriptor_dims_and_strides(dstDescPtr, batchSize, maxHeight, maxWidth, outputChannels, offsetInBytes);
+    set_descriptor_dims_and_strides(srcDescPtr, batchSize, maxHeight, maxWidth, inputChannels, srcOffsetInBytes);
+    set_descriptor_dims_and_strides(dstDescPtr, batchSize, maxHeight, maxWidth, outputChannels, dstOffsetInBytes);
 
     // Factors to convert U8 data to F32, F16 data to 0-1 range and reconvert them back to 0 -255 range
     Rpp32f conversionFactor = 1.0f / 255.0;
@@ -295,7 +311,7 @@ int main(int argc, char **argv)
     // Run case-wise RPP API and measure time
     rppHandle_t handle;
     hipStream_t stream;
-    hipStreamCreate(&stream);
+    CHECK(hipStreamCreate(&stream));
     rppCreateWithStreamAndBatchSize(&handle, stream, batchSize);
 
     int noOfIterations = (int)imageNames.size() / batchSize;
@@ -303,17 +319,43 @@ int main(int argc, char **argv)
     double wallTime;
     string testCaseName;
 
+    if(testCase == 82 && imagesMixed)
+    {
+        std::cerr<<"\n RICAP only works with same dimension images";
+        exit(0);
+    }
+
+    if(testCase == 82 && batchSize < 2)
+    {
+        std::cerr<<"\n RICAP only works with BatchSize > 1";
+        exit(0);
+    }
+
     // Initialize buffers for any reductionType functions
-    Rpp32f *reductionFuncResultArr;
+    void *reductionFuncResultArr;
     Rpp32u reductionFuncResultArrLength = srcDescPtr->n * 4;
+
     if(reductionTypeCase)
-        hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * sizeof(Rpp32f));
+    {
+        if(dstDescPtr->dataType == RpptDataType::U8)
+            CHECK(hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * sizeof(Rpp64u)));
+        else if(dstDescPtr->dataType == RpptDataType::F16)
+            CHECK(hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * sizeof(Rpp32f)));
+        else if(dstDescPtr->dataType == RpptDataType::F32)
+            CHECK(hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * sizeof(Rpp32f)));
+        else if(dstDescPtr->dataType == RpptDataType::I8)
+            CHECK(hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * sizeof(Rpp64s)));
+    }
 
     //Allocate hip memory for src/dst
-    hipMalloc(&d_input, inputBufferSize);
-    hipMalloc(&d_output, outputBufferSize);
+    CHECK(hipMalloc(&d_input, inputBufferSize));
+    CHECK(hipMalloc(&d_output, outputBufferSize));
     if(dualInputCase)
-        hipMalloc(&d_input_second, inputBufferSize);
+        CHECK(hipMalloc(&d_input_second, inputBufferSize));
+
+    RpptROI *roiPtrInputCropRegion;
+    if(testCase == 82)
+        CHECK(hipHostMalloc(&roiPtrInputCropRegion, 4 * sizeof(RpptROI)));
 
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
@@ -355,10 +397,30 @@ int main(int argc, char **argv)
             convert_input_bitdepth(input, input_second, inputu8, inputu8Second, inputBitDepth, ioBufferSize, inputBufferSize, srcDescPtr, dualInputCase, conversionFactor);
 
             //copy decoded inputs to hip buffers
-            hipMemcpy(d_input, input, inputBufferSize, hipMemcpyHostToDevice);
-            hipMemcpy(d_output, output, outputBufferSize, hipMemcpyHostToDevice);
+            CHECK(hipMemcpy(d_input, input, inputBufferSize, hipMemcpyHostToDevice));
+            CHECK(hipMemcpy(d_output, output, outputBufferSize, hipMemcpyHostToDevice));
             if(dualInputCase)
-                hipMemcpy(d_input_second, input_second, inputBufferSize, hipMemcpyHostToDevice);
+                CHECK(hipMemcpy(d_input_second, input_second, inputBufferSize, hipMemcpyHostToDevice));
+
+            int roiHeightList[batchSize], roiWidthList[batchSize];
+            if(roiList[0] == 0 && roiList[1] == 0 && roiList[2] == 0 && roiList[3] == 0)
+            {
+                for(int i = 0; i < batchSize ; i++)
+                {
+                    roiList[0] = 10;
+                    roiList[1] = 10;
+                    roiWidthList[i] = roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
+                    roiHeightList[i] = roiTensorPtrSrc[i].xywhROI.roiHeight / 2;
+                }
+            }
+            else
+            {
+                for(int i = 0; i < batchSize ; i++)
+                {
+                    roiWidthList[i] = roiList[2];
+                    roiHeightList[i] = roiList[3];
+                }
+            }
 
             // Uncomment to run test case with an xywhROI override
             // roi.xywhROI = {0, 0, 25, 25};
@@ -462,6 +524,111 @@ int main(int argc, char **argv)
 
                 break;
             }
+            case 20:
+            {
+                testCaseName = "flip";
+
+                Rpp32u horizontalFlag[batchSize];
+                Rpp32u verticalFlag[batchSize];
+                for (i = 0; i < batchSize; i++)
+                {
+                    horizontalFlag[i] = 1;
+                    verticalFlag[i] = 0;
+                }
+
+                startWallTime = omp_get_wtime();
+                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    rppt_flip_gpu(d_input, srcDescPtr, d_output, dstDescPtr, horizontalFlag, verticalFlag, roiTensorPtrSrc, roiTypeSrc, handle);
+                else
+                    missingFuncFlag = 1;
+
+                break;
+            }
+            case 21:
+            {
+                testCaseName = "resize";
+
+                for (i = 0; i < batchSize; i++)
+                {
+                    dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
+                    dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiHeight / 2;
+                }
+
+                startWallTime = omp_get_wtime();
+                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    rppt_resize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, dstImgSizes, interpolationType, roiTensorPtrDst, roiTypeSrc, handle);
+                else
+                    missingFuncFlag = 1;
+
+                break;
+            }
+            case 23:
+            {
+                testCaseName = "rotate";
+
+                if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR))
+                {
+                    missingFuncFlag = 1;
+                    break;
+                }
+
+                Rpp32f angle[batchSize];
+                for (i = 0; i < batchSize; i++)
+                    angle[i] = 50;
+
+                startWallTime = omp_get_wtime();
+                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    rppt_rotate_gpu(d_input, srcDescPtr, d_output, dstDescPtr, angle, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
+                else
+                    missingFuncFlag = 1;
+
+                break;
+            }
+            case 29:
+            {
+                testCaseName = "water";
+
+                Rpp32f amplX[batchSize];
+                Rpp32f amplY[batchSize];
+                Rpp32f freqX[batchSize];
+                Rpp32f freqY[batchSize];
+                Rpp32f phaseX[batchSize];
+                Rpp32f phaseY[batchSize];
+
+                for (i = 0; i < batchSize; i++)
+                {
+                    amplX[i] = 2.0f;
+                    amplY[i] = 5.0f;
+                    freqX[i] = 5.8f;
+                    freqY[i] = 1.2f;
+                    phaseX[i] = 10.0f;
+                    phaseY[i] = 15.0f;
+                }
+
+                startWallTime = omp_get_wtime();
+                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    rppt_water_gpu(d_input, srcDescPtr, d_output, dstDescPtr, amplX, amplY, freqX, freqY, phaseX, phaseY, roiTensorPtrSrc, roiTypeSrc, handle);
+                else
+                    missingFuncFlag = 1;
+
+                break;
+            }
+            case 30:
+            {
+                testCaseName = "non_linear_blend";
+
+                Rpp32f stdDev[batchSize];
+                for (i = 0; i < batchSize; i++)
+                    stdDev[i] = 50.0;
+
+                startWallTime = omp_get_wtime();
+                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    rppt_non_linear_blend_gpu(d_input, d_input_second, srcDescPtr, d_output, dstDescPtr, stdDev, roiTensorPtrSrc, roiTypeSrc, handle);
+                else
+                    missingFuncFlag = 1;
+
+                break;
+            }
             case 31:
             {
                 testCaseName = "color_cast";
@@ -490,8 +657,8 @@ int main(int argc, char **argv)
                 testCaseName = "lut";
 
                 Rpp32f *lutBuffer;
-                hipHostMalloc(&lutBuffer, 65536 * sizeof(Rpp32f));
-                hipMemset(lutBuffer, 0, 65536 * sizeof(Rpp32f));
+                CHECK(hipHostMalloc(&lutBuffer, 65536 * sizeof(Rpp32f)));
+                CHECK(hipMemset(lutBuffer, 0, 65536 * sizeof(Rpp32f)));
                 Rpp8u *lut8u = reinterpret_cast<Rpp8u *>(lutBuffer);
                 Rpp16f *lut16f = reinterpret_cast<Rpp16f *>(lutBuffer);
                 Rpp32f *lut32f = reinterpret_cast<Rpp32f *>(lutBuffer);
@@ -523,7 +690,7 @@ int main(int argc, char **argv)
 
                 break;
 
-                hipHostFree(lutBuffer);
+                CHECK(hipHostFree(lutBuffer));
             }
             case 36:
             {
@@ -555,10 +722,10 @@ int main(int argc, char **argv)
 
                 for (i = 0; i < batchSize; i++)
                 {
-                    roiTensorPtrDst[i].xywhROI.xy.x = 10;
-                    roiTensorPtrDst[i].xywhROI.xy.y = 10;
-                    dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
-                    dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiHeight / 2;
+                    roiTensorPtrDst[i].xywhROI.xy.x = roiList[0];
+                    roiTensorPtrDst[i].xywhROI.xy.y = roiList[1];
+                    dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiWidthList[i];
+                    dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiHeightList[i];
                 }
 
                 startWallTime = omp_get_wtime();
@@ -610,15 +777,179 @@ int main(int argc, char **argv)
 
                 for (i = 0; i < batchSize; i++)
                 {
-                    roiTensorPtrDst[i].xywhROI.xy.x = 10;
-                    roiTensorPtrDst[i].xywhROI.xy.y = 10;
-                    dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
-                    dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiHeight / 2;
+                    roiTensorPtrDst[i].xywhROI.xy.x = roiList[0];
+                    roiTensorPtrDst[i].xywhROI.xy.y = roiList[1];
+                    dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiWidthList[i];
+                    dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiHeightList[i];
                 }
 
                 startWallTime = omp_get_wtime();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 3 || inputBitDepth == 4 || inputBitDepth == 5)
                     rppt_crop_mirror_normalize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, offset, multiplier, mirror, roiTensorPtrDst, roiTypeSrc, handle);
+                else
+                    missingFuncFlag = 1;
+
+                break;
+            }
+            case 39:
+            {
+                testCaseName = "resize_crop_mirror";
+
+                if (interpolationType != RpptInterpolationType::BILINEAR)
+                {
+                    missingFuncFlag = 1;
+                    break;
+                }
+
+                Rpp32u mirror[batchSize];
+                for (i = 0; i < batchSize; i++)
+                    mirror[i] = 1;
+
+                for (i = 0; i < batchSize; i++)
+                {
+                    roiTensorPtrSrc[i].xywhROI.xy.x = 10;
+                    roiTensorPtrSrc[i].xywhROI.xy.y = 10;
+                    dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
+                    dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight / 2;
+                    roiTensorPtrDst[i].xywhROI.roiWidth = 50;
+                    roiTensorPtrDst[i].xywhROI.roiHeight = 50;
+                }
+
+                startWallTime = omp_get_wtime();
+                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 3 || inputBitDepth == 4 || inputBitDepth == 5)
+                    rppt_resize_crop_mirror_gpu(d_input, srcDescPtr, d_output, dstDescPtr, dstImgSizes, interpolationType, mirror, roiTensorPtrDst, roiTypeSrc, handle);
+                else
+                    missingFuncFlag = 1;
+
+                break;
+            }
+            case 49:
+            {
+                testCaseName = "box_filter";
+                Rpp32u kernelSize = additionalParam;
+
+                startWallTime = omp_get_wtime();
+                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    rppt_box_filter_gpu(d_input, srcDescPtr, d_output, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
+                else
+                    missingFuncFlag = 1;
+
+                break;
+            }
+            case 54:
+            {
+                testCaseName = "gaussian_filter";
+                Rpp32u kernelSize = additionalParam;
+
+                Rpp32f stdDevTensor[batchSize];
+                for (i = 0; i < batchSize; i++)
+                {
+                    stdDevTensor[i] = 5.0f;
+                }
+
+                startWallTime = omp_get_wtime();
+                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    rppt_gaussian_filter_gpu(d_input, srcDescPtr, d_output, dstDescPtr, stdDevTensor, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
+                else
+                    missingFuncFlag = 1;
+
+                break;
+            }
+            case 63:
+            {
+                testCaseName = "phase";
+
+                startWallTime = omp_get_wtime();
+                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    rppt_phase_gpu(d_input, d_input_second, srcDescPtr, d_output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
+                else
+                    missingFuncFlag = 1;
+
+                break;
+            }
+            case 70:
+            {
+                testCaseName = "copy";
+
+                startWallTime = omp_get_wtime();
+                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    rppt_copy_gpu(d_input, srcDescPtr, d_output, dstDescPtr, handle);
+                else
+                    missingFuncFlag = 1;
+
+                break;
+            }
+            case 80:
+            {
+                testCaseName = "resize_mirror_normalize";
+
+                if (interpolationType != RpptInterpolationType::BILINEAR)
+                {
+                    missingFuncFlag = 1;
+                    break;
+                }
+
+                for (i = 0; i < batchSize; i++)
+                {
+                    dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
+                    dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
+                }
+
+                Rpp32f mean[batchSize * 3];
+                Rpp32f stdDev[batchSize * 3];
+                Rpp32u mirror[batchSize];
+                for (i = 0, j = 0; i < batchSize; i++, j += 3)
+                {
+                    mean[j] = 60.0;
+                    stdDev[j] = 1.0;
+
+                    mean[j + 1] = 80.0;
+                    stdDev[j + 1] = 1.0;
+
+                    mean[j + 2] = 100.0;
+                    stdDev[j + 2] = 1.0;
+                    mirror[i] = 1;
+                }
+
+                startWallTime = omp_get_wtime();
+                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    rppt_resize_mirror_normalize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, dstImgSizes, interpolationType, mean, stdDev, mirror, roiTensorPtrDst, roiTypeSrc, handle);
+                else
+                    missingFuncFlag = 1;
+
+                break;
+            }
+            case 82:
+            {
+                testCaseName = "ricap";
+
+                Rpp32u permutationTensor[batchSize * 4];
+                if(qaFlag)
+                    init_ricap_qa(maxWidth, maxHeight, batchSize, permutationTensor, roiPtrInputCropRegion);
+                else
+                    init_ricap(maxWidth, maxHeight, batchSize, permutationTensor, roiPtrInputCropRegion);
+
+                startWallTime = omp_get_wtime();
+                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    rppt_ricap_gpu(d_input, srcDescPtr, d_output, dstDescPtr, permutationTensor, roiPtrInputCropRegion, roiTypeSrc, handle);
+                else
+                    missingFuncFlag = 1;
+                break;
+            }
+            case 83:
+            {
+                testCaseName = "gridmask";
+
+                Rpp32u tileWidth = 40;
+                Rpp32f gridRatio = 0.6;
+                Rpp32f gridAngle = 0.5;
+                RpptUintVector2D translateVector;
+                translateVector.x = 0.0;
+                translateVector.y = 0.0;
+
+                startWallTime = omp_get_wtime();
+                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    rppt_gridmask_gpu(d_input, srcDescPtr, d_output, dstDescPtr, tileWidth, gridRatio, gridAngle, translateVector, roiTensorPtrSrc, roiTypeSrc, handle);
                 else
                     missingFuncFlag = 1;
 
@@ -637,8 +968,6 @@ int main(int argc, char **argv)
 
                 // Blood Spatter
                 // spatterColor.R = 98;
-                // spatterColor.G = 3;
-                // spatterColor.B = 3;
 
                 // Ink Spatter
                 // spatterColor.R = 5;
@@ -648,6 +977,48 @@ int main(int argc, char **argv)
                 startWallTime = omp_get_wtime();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                     rppt_spatter_gpu(d_input, srcDescPtr, d_output, dstDescPtr, spatterColor, roiTensorPtrSrc, roiTypeSrc, handle);
+                else
+                    missingFuncFlag = 1;
+
+                break;
+            }
+            case 85:
+            {
+                testCaseName = "swap_channels";
+
+                startWallTime = omp_get_wtime();
+                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    rppt_swap_channels_gpu(d_input, srcDescPtr, d_output, dstDescPtr, handle);
+                else
+                    missingFuncFlag = 1;
+
+                break;
+            }
+            case 86:
+            {
+                testCaseName = "color_to_greyscale";
+
+                RpptSubpixelLayout srcSubpixelLayout = RpptSubpixelLayout::RGBtype;
+
+                startWallTime = omp_get_wtime();
+                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    rppt_color_to_greyscale_gpu(d_input, srcDescPtr, d_output, dstDescPtr, srcSubpixelLayout, handle);
+                else
+                    missingFuncFlag = 1;
+
+                break;
+            }
+            case 87:
+            {
+                testCaseName = "tensor_sum";
+
+                if(srcDescPtr->c == 1)
+                    reductionFuncResultArrLength = srcDescPtr->n;
+
+                startWallTime = omp_get_wtime();
+
+                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    rppt_tensor_sum_gpu(d_input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
                 else
                     missingFuncFlag = 1;
 
@@ -720,7 +1091,7 @@ int main(int argc, char **argv)
                 break;
             }
 
-            hipDeviceSynchronize();
+            CHECK(hipDeviceSynchronize());
             endWallTime = omp_get_wtime();
             wallTime = endWallTime - startWallTime;
             if (missingFuncFlag == 1)
@@ -744,10 +1115,31 @@ int main(int argc, char **argv)
                     else if(srcDescPtr->c == 1)
                         printf("\nReduction result (Batch of 1 channel images produces 1 result per image in batch): ");
 
-                    for (int i = 0; i < reductionFuncResultArrLength; i++)
+                    if(dstDescPtr->dataType == RpptDataType::U8)
                     {
-                        printf(" %0.3f ", reductionFuncResultArr[i]);
+                        Rpp64u *reductionOutPtr = static_cast<Rpp64u*>(reductionFuncResultArr);
+                        for (int i = 0; i < reductionFuncResultArrLength; i++)
+                            printf(" %llu ", reductionOutPtr[i]);
                     }
+                    else if(dstDescPtr->dataType == RpptDataType::F16)
+                    {
+                        Rpp32f *reductionOutPtr = static_cast<Rpp32f *>(reductionFuncResultArr);
+                        for (int i = 0; i < reductionFuncResultArrLength; i++)
+                            printf(" %0.3f ", (float)reductionOutPtr[i]);
+                    }
+                    else if(dstDescPtr->dataType == RpptDataType::F32)
+                    {
+                        Rpp32f *reductionOutPtr = static_cast<Rpp32f *>(reductionFuncResultArr);
+                        for (int i = 0; i < reductionFuncResultArrLength; i++)
+                            printf(" %0.3f ", (float)reductionOutPtr[i]);
+                    }
+                    else if(dstDescPtr->dataType == RpptDataType::I8)
+                    {
+                        Rpp64s *reductionOutPtr = static_cast<Rpp64s *>(reductionFuncResultArr);
+                        for (int i = 0; i < reductionFuncResultArrLength; i++)
+                            printf(" %lld ", reductionOutPtr[i]);
+                    }
+
                     printf("\n");
 
                     /*Compare the output of the function with golden outputs only if
@@ -755,11 +1147,11 @@ int main(int argc, char **argv)
                     2.input bit depth 0 (U8)
                     3.source and destination layout are the same*/
                     if(qaFlag && inputBitDepth == 0 && (srcDescPtr->layout == dstDescPtr->layout) && !(randomOutputCase))
-                        compare_reduction_output<Rpp8u>(reductionFuncResultArr, testCaseName, srcDescPtr, testCase, dst);
+                        compare_reduction_output(static_cast<Rpp64u *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
                 }
                 else
                 {
-                    hipMemcpy(output, d_output, outputBufferSize, hipMemcpyDeviceToHost);
+                    CHECK(hipMemcpy(output, d_output, outputBufferSize, hipMemcpyDeviceToHost));
 
                     // Reconvert other bit depths to 8u for output display purposes
                     convert_output_bitdepth_to_u8(output, outputu8, inputBitDepth, oBufferSize, outputBufferSize, dstDescPtr, invConversionFactor);
@@ -777,9 +1169,10 @@ int main(int argc, char **argv)
                     /*Compare the output of the function with golden outputs only if
                     1.QA Flag is set
                     2.input bit depth 0 (Input U8 && Output U8)
-                    3.source and destination layout are the same*/
-                    if(qaFlag && inputBitDepth == 0 && (srcDescPtr->layout == dstDescPtr->layout) && !(randomOutputCase))
-                        compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, batchSize, interpolationTypeName, noiseTypeName, testCase, dst);
+                    3.source and destination layout are the same
+                    4.augmentation case does not generate random output*/
+                    if(qaFlag && inputBitDepth == 0 && ((srcDescPtr->layout == dstDescPtr->layout) || pln1OutTypeCase) && !(randomOutputCase))
+                        compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, batchSize, interpolationTypeName, noiseTypeName, testCase, dst, scriptPath);
 
                     // Calculate exact dstROI in XYWH format for OpenCV dump
                     if (roiTypeSrc == RpptRoiType::LTRB)
@@ -822,19 +1215,22 @@ int main(int argc, char **argv)
     }
 
     // Free memory
-    hipHostFree(roiTensorPtrSrc);
-    hipHostFree(roiTensorPtrDst);
-    hipHostFree(dstImgSizes);
+    CHECK(hipHostFree(roiTensorPtrSrc));
+    CHECK(hipHostFree(roiTensorPtrDst));
+    CHECK(hipHostFree(dstImgSizes));
+    if(testCase == 82)
+        CHECK(hipHostFree(roiPtrInputCropRegion));
     if (reductionTypeCase)
-        hipHostFree(&reductionFuncResultArr);
+        CHECK(hipHostFree(reductionFuncResultArr));
     free(input);
     free(input_second);
     free(output);
     free(inputu8);
     free(inputu8Second);
     free(outputu8);
-    hipFree(d_input);
-    hipFree(d_input_second);
-    hipFree(d_output);
+    CHECK(hipFree(d_input));
+    if(dualInputCase)
+        CHECK(hipFree(d_input_second));
+    CHECK(hipFree(d_output));
     return 0;
 }

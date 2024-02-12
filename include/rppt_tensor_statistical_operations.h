@@ -28,46 +28,130 @@ THE SOFTWARE.
 extern "C" {
 #endif
 
-/******************** tensor_mean ********************/
+/*!
+ * \file
+ * \brief RPPT Tensor Operations - Statistical Operations.
+ * \defgroup group_rppt_tensor_statistical_operations RPPT Tensor Operations - Statistical Operations.
+ * \brief RPPT Tensor Operations - Statistical Operations.
+ */
 
-// Tensor mean finder operation for a NCHW/NHWC layout tensor
+/*! \addtogroup group_rppt_tensor_statistical_operations
+ * @{
+ */
 
-// *param[in] srcPtr source tensor memory
-// *param[in] srcDescPtr source tensor descriptor (srcDescPtr->w can be a maximum of 3840, srcDescPtr->h can be a maximum of 2160)
-// *param[out] tensorMeanArr destination array of minimum length (srcPtr->n * srcPtr->c)
-// *param[in] tensorMeanArrLength length of provided destination array (minimum length = srcPtr->n * srcPtr->c)
-// *param[in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
-// *param[in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
-// *returns a  RppStatus enumeration.
-// *retval RPP_SUCCESS : succesful completion
-// *retval RPP_ERROR : Error
+/*! \brief Tensor sum operation on HOST backend for a NCHW/NHWC layout tensor
+ * \details The tensor sum is a reduction operation that finds the channel-wise (R sum / G sum / B sum) and total sum for each image in a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+ * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
+ * - dstPtr depth ranges - Will be same depth as srcPtr.
+ * \param [in] srcPtr source tensor in HOST memory
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
+ * \param [out] tensorSumArr destination array in HOST memory
+ * \param [in] tensorSumArrLength length of provided destination array (Restrictions - if srcDescPtr->c == 1 then tensorSumArrLength >= srcDescPtr->n, and if srcDescPtr->c == 3 then tensorSumArrLength >= srcDescPtr->n * 4)
+ * \param [in] roiTensorSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y)) | (Restrictions - roiTensorSrc[i].xywhROI.roiWidth <= 3840 and roiTensorSrc[i].xywhROI.roiHeight <= 2160)
+ * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_tensor_sum_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t tensorSumArr, Rpp32u tensorSumArrLength, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 
-RppStatus rppt_tensor_mean_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t tensorMeanArr, Rpp32u tensorMeanArrLength, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #ifdef GPU_SUPPORT
+/*! \brief Tensor sum operation on HIP backend for a NCHW/NHWC layout tensor
+ * \details The tensor sum is a reduction operation that finds the channel-wise (R sum / G sum / B sum) and total sum for each image in a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+ * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
+ * - dstPtr depth ranges - Will be same depth as srcPtr.
+ * \param [in] srcPtr source tensor in HIP memory
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
+ * \param [out] tensorSumArr destination array in HIP memory
+ * \param [in] tensorSumArrLength length of provided destination array (Restrictions - if srcDescPtr->c == 1 then tensorMeanArrLength >= srcDescPtr->n, and if srcDescPtr->c == 3 then tensorMeanArrLength >= srcDescPtr->n * 4)
+ * \param [in] roiTensorSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y)) | (Restrictions - roiTensorSrc[i].xywhROI.roiWidth <= 3840 and roiTensorSrc[i].xywhROI.roiHeight <= 2160)
+ * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_tensor_sum_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t tensorSumArr, Rpp32u tensorSumArrLength, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
+
+/*! \brief Tensor mean operation on HOST backend for a NCHW/NHWC layout tensor
+ * \details The tensor mean is a reduction operation that finds the channel-wise (R sum / G sum / B sum) and total mean for each image in a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+ * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
+ * - dstPtr depth ranges - Will be same depth as srcPtr.
+ * \param [in] srcPtr source tensor in HOST memory
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
+ * \param [out] tensorMeanArr destination array in HOST memory
+ * \param [in] tensorMeanArrLength length of provided destination array (Restrictions - if srcDescPtr->c == 1 then tensorSumArrLength >= srcDescPtr->n, and if srcDescPtr->c == 3 then tensorSumArrLength >= srcDescPtr->n * 4)
+ * \param [in] roiTensorSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y)) | (Restrictions - roiTensorSrc[i].xywhROI.roiWidth <= 3840 and roiTensorSrc[i].xywhROI.roiHeight <= 2160)
+ * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_tensor_mean_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t tensorMeanArr, Rpp32u tensorMeanArrLength, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+
+#ifdef GPU_SUPPORT
+/*! \brief Tensor mean operation on HOST backend for a NCHW/NHWC layout tensor
+ * \details The tensor mean is a reduction operation that finds the channel-wise (R sum / G sum / B sum) and total mean for each image in a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+ * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
+ * - dstPtr depth ranges - Will be same depth as srcPtr.
+ * \param [in] srcPtr source tensor in HIP memory
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
+ * \param [out] tensorMeanArr destination array in HIP memory
+ * \param [in] tensorMeanArrLength length of provided destination array (Restrictions - if srcDescPtr->c == 1 then tensorMeanArrLength >= srcDescPtr->n, and if srcDescPtr->c == 3 then tensorMeanArrLength >= srcDescPtr->n * 4)
+ * \param [in] roiTensorSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y)) | (Restrictions - roiTensorSrc[i].xywhROI.roiWidth <= 3840 and roiTensorSrc[i].xywhROI.roiHeight <= 2160)
+ * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
 RppStatus rppt_tensor_mean_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t tensorMeanArr, Rpp32u tensorMeanArrLength, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
-/******************** tensor_stddev ********************/
-
-// Tensor stddev finder operation for a NCHW/NHWC layout tensor
-
-// *param[in] srcPtr source tensor memory
-// *param[in] srcDescPtr source tensor descriptor (srcDescPtr->w can be a maximum of 3840, srcDescPtr->h can be a maximum of 2160)
-// *param[out] tensorStddevArr destination array of minimum length (srcPtr->n * srcPtr->c)
-// *param[in] tensorStddevArrLength length of provided destination array (minimum length = srcPtr->n * srcPtr->c)
-// *param[in] meanTensor mean values for stddev calculation (1D tensor of size batchSize * 4 in format (MeanR, MeanG, MeanB, MeanImage) for each image in batch)
-// *param[in] flag to select one among 0- channel stddev / 1- image stddev / 2- both.
-// *param[in] roiTensorSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
-// *param[in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
-// *returns a  RppStatus enumeration.
-// *retval RPP_SUCCESS : succesful completion
-// *retval RPP_ERROR : Error
-
+/*! \brief Tensor stddev operation on HOST backend for a NCHW/NHWC layout tensor
+ * \details The tensor stddev is a reduction operation that finds the channel-wise (R sum / G sum / B sum) and total standard deviation for each image either with respect to channel mean or with respect to image mean in a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+ * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
+ * - dstPtr depth ranges - Will be same depth as srcPtr.
+ * \param [in] srcPtr source tensor in HOST memory
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
+ * \param [out] tensorStddevArr destination array in HOST memory
+ * \param [in] tensorStddevArrLength length of provided destination array (Restrictions - if srcDescPtr->c == 1 then tensorSumArrLength >= srcDescPtr->n, and if srcDescPtr->c == 3 then tensorSumArrLength >= srcDescPtr->n * 4)
+ * \param[in] meanTensor mean values for stddev calculation (1D tensor of size batchSize * 4 in format (MeanR, MeanG, MeanB, MeanImage) for each image in batch)
+ * \param[in] flag to select one among 0- channel stddev / 1- image stddev / 2- both.
+ * \param [in] roiTensorSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y)) | (Restrictions - roiTensorSrc[i].xywhROI.roiWidth <= 3840 and roiTensorSrc[i].xywhROI.roiHeight <= 2160)
+ * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
 RppStatus rppt_tensor_stddev_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t tensorStddevArr, Rpp32u tensorStddevArrLength, Rpp32f *meanTensor, int flag, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+
 #ifdef GPU_SUPPORT
+/*! \brief Tensor stddev operation on HOST backend for a NCHW/NHWC layout tensor
+ * \details The tensor stddev is a reduction operation that finds the channel-wise (R sum / G sum / B sum) and total standard deviation for each image either with respect to channel mean or with respect to image mean in a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+ * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
+ * - dstPtr depth ranges - Will be same depth as srcPtr.
+ * \param [in] srcPtr source tensor in HIP memory
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
+ * \param [out] tensorStddevArr destination array in HIP memory
+ * \param [in] tensorStddevArrLength length of provided destination array (Restrictions - if srcDescPtr->c == 1 then tensorSumArrLength >= srcDescPtr->n, and if srcDescPtr->c == 3 then tensorSumArrLength >= srcDescPtr->n * 4)
+ * \param[in] flag to select one among 0- channel stddev / 1- image stddev / 2- both.
+ * \param [in] roiTensorSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y)) | (Restrictions - roiTensorSrc[i].xywhROI.roiWidth <= 3840 and roiTensorSrc[i].xywhROI.roiHeight <= 2160)
+ * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
 RppStatus rppt_tensor_stddev_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t tensorStddevArr, Rpp32u tensorStddevArrLength, Rpp32f *meanTensor, int flag, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
+/*! @}
+ */
 
 #ifdef __cplusplus
 }

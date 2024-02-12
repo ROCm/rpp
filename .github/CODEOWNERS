@@ -1,0 +1,8 @@
+# Documentation files
+docs/* @saadrahim @LisaDelaney
+*.md  @saadrahim @LisaDelaney
+*.rst  @saadrahim @LisaDelaney
+# Header directory
+library/include/*  @saadrahim @LisaDelaney @kiritigowda @rrawther
+# Source code
+@kiritigowda @rrawther

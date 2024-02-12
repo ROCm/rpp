@@ -1,220 +1,231 @@
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Build Status](https://travis-ci.com/GPUOpen-ProfessionalCompute-Libraries/rpp.svg?branch=master)](https://travis-ci.com/GPUOpen-ProfessionalCompute-Libraries/rpp)
+[![doc](https://img.shields.io/badge/doc-readthedocs-blueviolet)](https://gpuopen-professionalcompute-libraries.github.io/rpp/)
 
-# ROCm Performance Primitives Library
+<p align="center"><img width="70%" src="https://github.com/ROCm/rpp/raw/master/docs/data/AMD_RPP_logo.png" /></p>
 
-AMD ROCm Performance Primitives (**RPP**) library is a comprehensive high-performance computer vision library for AMD processors with `HIP`/`OpenCL`/`CPU` back-ends.
+AMD ROCm Performance Primitives (RPP) library is a comprehensive, high-performance computer
+vision library for AMD processors that have `HIP`, `OpenCL`, or `CPU` backends.
 
-## Latest Release
+<p align="center"><img width="35%" src="https://github.com/ROCm/rpp/raw/master/docs/data/rpp_structure_4.png" /></p>
 
-[![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/GPUOpen-ProfessionalCompute-Libraries/rpp?style=for-the-badge)](https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp/releases)
+#### Latest release
+[![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/GPUOpen-ProfessionalCompute-Libraries/rpp?style=for-the-badge)](https://github.com/ROCm/rpp/releases)
 
-## Top level design
+## Supported functionalities and variants
 
-<p align="center"><img width="50%" src="docs/data/rpp_structure_4.png" /></p>
+<p align="center"><img width="90%" src="https://github.com/ROCm/rpp/raw/master/docs/data/supported_functionalities.png" /></p>
 
-## Supported Functionalities and Variants
+<p align="center"><img width="90%" src="https://github.com/ROCm/rpp/raw/master/docs/data/supported_functionalities_samples.jpg" /></p>
 
-### Supported Functionalities List
+### Supported 3D Functionalities Samples
 
-<p align="center"><img width="90%" src="docs/data/supported_functionalities.png" /></p>
-
-### Supported Functionalities Samples
-
-<p align="center"><img width="90%" src="docs/data/supported_functionalities_samples.jpg" /></p>
-
-## Documentation
-
-Run the steps below to build documentation locally.
-
-```bash
-cd docs
-
-pip3 install -r .sphinx/requirements.txt
-
-python3 -m sphinx -T -E -b html -d _build/doctrees -D language=en . _build/html
-```
+Input<br>(nifti1 .nii medical image) | fused_multiply_add_scalar<br>(brightened 3D image)
+:-------------------------:|:-------------------------:
+![](docs/data/niftiInput.gif)  |  ![](docs/data/niftiOutputBrightened.gif)
 
 ## Prerequisites
 
-* **OS**
-  + Ubuntu `20.04`/`22.04`
-  + CentOS `7`/`8`
-  + RHEL `8`/`9`
-  + SLES - `15-SP3`
+* Linux
+  * **Ubuntu** - `20.04` / `22.04`
+  * **CentOS** - `7`
+  * **RedHat** - `8` / `9`
+  * **SLES** - `15-SP4`
 
-* [ROCm supported hardware](https://docs.amd.com/bundle/Hardware_and_Software_Reference_Guide/page/Hardware_and_Software_Support.html)
+* [ROCm supported hardware](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html)
 
-* [ROCm](https://docs.amd.com/bundle/ROCm-Installation-Guide-v5.4.3/page/How_to_Install_ROCm.html) `5.4.3` and above
+* Install ROCm with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html) with `--usecase=graphics,rocm --no-32`
 
 * Clang Version `5.0.1` and above
 
-  + Ubuntu `20`/`22`
-    ```
-    sudo apt-get install clang
-    ```
+  * Ubuntu `20`/`22`
 
-  + CentOS `7`
-    ```
-    sudo yum install llvm-toolset-7-clang llvm-toolset-7-clang-analyzer llvm-toolset-7-clang-tools-extra
-    scl enable llvm-toolset-7 bash
-    ```
+  ```shell
+  sudo apt-get install clang
+  ```
 
-  + CentOS `8` and RHEL `8`/`9`
-    ```
-    sudo yum install clang
-    ```
+  * CentOS `7`
 
-  + SLES `15-SP3`
-    ```
-    sudo zypper install llvm-clang
-    ```
+  ```shell
+  sudo yum install llvm-toolset-7-clang llvm-toolset-7-clang-analyzer llvm-toolset-7-clang-tools-extra
+  scl enable llvm-toolset-7 bash
+  ```
+
+  * RHEL `8`/`9`
+
+  ```shell
+  sudo yum install clang
+  ```
+
+  * SLES `15-SP4` (use `ROCm LLVM Clang`)
+
+  ```shell
+  zypper -n --no-gpg-checks install clang
+  update-alternatives --install /usr/bin/clang clang /opt/rocm-*/llvm/bin/clang 100
+  update-alternatives --install /usr/bin/clang++ clang++ /opt/rocm-*/llvm/bin/clang++ 100
+  ```
 
 * CMake Version `3.5` and above
 
-* Boost Version `1.72` and above
-  ```
-  wget https://boostorg.jfrog.io/artifactory/main/release/1.72.0/source/boost_1_72_0.tar.gz
-  tar -xzvf boost_1_72_0.tar.gz
-  cd boost_1_72_0
-  ./bootstrap.sh
-  ./b2 install
-  ```
-  + **NOTE:** [Install from source](https://www.boost.org/doc/libs/1_72_0/more/getting_started/unix-variants.html#easy-build-and-install)
+* IEEE 754-based half-precision floating-point library (half.hpp)
 
-* IEEE 754-based half-precision floating-point library - half.hpp
+  * `half` package install
 
+  ```shell
+  sudo apt-get install half
   ```
-  wget https://sourceforge.net/projects/half/files/half/1.12.0/half-1.12.0.zip
-  unzip half-1.12.0.zip -d half-files
-  sudo mkdir /usr/local/include/half
-  sudo cp half-files/include/half.hpp /usr/local/include/half
-  ```
+  **Note:** Use appropriate package manager depending on the OS 
 
-## Prerequisites for Test Suite
+* Compiler with support for C++ Version `17` and above
 
-* OpenCV `3.4.0`/`4.5.5` - **pre-requisites**
-  ```
-  sudo apt-get update
-  sudo -S apt-get -y --allow-unauthenticated install build-essential libgtk2.0-dev libavcodec-dev libavformat-dev libswscale-dev python-dev python-numpy
-  sudo -S apt-get -y --allow-unauthenticated install libtbb2 libtbb-dev libjpeg-dev libpng-dev libtiff-dev libdc1394-22-dev unzip wget
-  ```
+* OpenMP
 
-* OpenCV `3.4.0` /`4.5.5` - **download**
-  ```
-  wget https://github.com/opencv/opencv/archive/3.4.0.zip
-  unzip 3.4.0.zip
-  cd opencv-3.4.0/
-  ```
-  OR
-  ```
-  wget https://github.com/opencv/opencv/archive/4.5.5.zip
-  unzip 4.5.5.zip
-  cd opencv-4.5.5/
-  ```
+* Threads
 
-* OpenCV `3.4.0`/`4.5.5` - **installation**
-  ```
-  mkdir build
-  cd build
-  cmake -D WITH_GTK=ON -D WITH_JPEG=ON -D BUILD_JPEG=ON -D WITH_OPENCL=OFF -D WITH_OPENCLAMDFFT=OFF -D WITH_OPENCLAMDBLAS=OFF -D WITH_VA_INTEL=OFF -D WITH_OPENCL_SVM=OFF -D CMAKE_INSTALL_PREFIX=/usr/local ..
-  sudo -S make -j128 <Or other number of threads to use>
-  sudo -S make install
-  sudo -S ldconfig
+## Build and install instructions
+
+### Package install
+
+Install RPP runtime, development, and test packages. 
+* Runtime package - `rpp` only provides the rpp library `librpp.so`
+* Development package - `rpp-dev`/`rpp-devel` provides the library, header files, and samples
+* Test package - `rpp-test` provides ctest to verify installation
+
+**NOTE:** Package install will auto install all dependencies.
+
+#### Ubuntu
+```shell
+sudo apt install rpp rpp-dev rpp-test
+```
+#### RHEL
+```shell
+sudo yum install rpp rpp-devel rpp-test
+```
+#### SLES
+```shell
+sudo zypper install rpp rpp-devel rpp-test
+```
+### Source build and install
+
+* Clone RPP git repository
+
+  ```shell
+  git clone https://github.com/ROCm/rpp.git
   ```
 
-* TurboJpeg installation
-  ```
-  sudo apt-get install nasm
-  sudo apt-get install wget
-  git clone -b 2.0.6.1 https://github.com/rrawther/libjpeg-turbo.git
-  cd libjpeg-turbo
-  mkdir build
-  cd build
-  cmake -DCMAKE_INSTALL_PREFIX=/usr \
-        -DCMAKE_BUILD_TYPE=RELEASE  \
-        -DENABLE_STATIC=FALSE       \
-        -DCMAKE_INSTALL_DOCDIR=/usr/share/doc/libjpeg-turbo-2.0.3 \
-        -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib  \
-        ..
-  make -j$nproc
+  **Note:** RPP has support for two GPU backends: **OPENCL** and **HIP**:
+
+* Instructions for building RPP with the **HIP** GPU backend (default GPU backend):
+
+  ```shell
+  mkdir build-hip
+  cd build-hip
+  cmake ../rpp
+  make -j8
   sudo make install
   ```
 
-## Build & Install RPP 
+  + Run tests - [test option instructions](https://github.com/ROCm/MIVisionX/wiki/CTest)
 
-The ROCm Performance Primitives (RPP) library has support for three backends: HIP, OpenCL, and CPU:
+  ```shell
+  make test
+  ```
+  **NOTE:** make test requires [test suite prerequisites](utilities/test_suite/README.md) installed
 
-* Building RPP with the **HIP** backend **(default)**:
-```
-$ git clone https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git
-$ mkdir build && cd build
-$ cmake -DBACKEND=HIP ../rpp
-$ make -j8
-$ sudo make install
+* Instructions for building RPP with **OPENCL** GPU backend
+
+  ```shell
+  mkdir build-ocl
+  cd build-ocl
+  cmake -DBACKEND=OCL ../rpp
+  make -j8
+  sudo make install
+  ```
+## Verify installation
+
+The installer will copy
+
+* Libraries into `/opt/rocm/lib`
+* Header files into `/opt/rocm/include/rpp`
+* Samples folder into `/opt/rocm/share/rpp`
+* Documents folder into `/opt/rocm/share/doc/rpp`
+
+**NOTE:** [Test suite prerequisites](utilities/test_suite/README.md) install required to run tests
+
+### Verify with rpp-test package
+
+Test package will install ctest module to test rpp. Follow below steps to test packge install
+
+```shell
+mkdir rpp-test && cd rpp-test
+cmake /opt/rocm/share/rpp/test/
+ctest -VV
 ```
 
-* Building RPP with the **OPENCL** backend:
-```
-$ git clone https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git
-$ mkdir build && cd build
-$ cmake -DBACKEND=OCL ../rpp
-$ make -j8
-$ sudo make install
-```
-
-* Building RPP with the **CPU** backend:
-```
-$ git clone https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git
-$ mkdir build && cd build
-$ cmake -DBACKEND=CPU ../rpp
-$ make -j8
-$ sudo make install
-```
 ## Test Functionalities
 
-### CPU installation
+To test the functionalities of RPP, run the code shown for your backend:
 
-    $ cd rpp/utilities/rpp-unittests/HOST_NEW
-    $ ./testAllScript.sh
+* HIP
 
-### OCL installation
+  ```bash
+    cd rpp/utilities/rpp-unittests/HIP_NEW
+    ./testAllScript.sh
+  ```
 
-    $ cd rpp/utilities/rpp-unittests/OCL_NEW
-    $ ./testAllScript.sh
+* OpenCL
 
-### HIP installation
+  ```bash
+    cd rpp/utilities/rpp-unittests/OCL_NEW
+    ./testAllScript.sh
+  ```
 
-    $ cd rpp/utilities/rpp-unittests/HIP_NEW
-    $ ./testAllScript.sh
+  * CPU
 
-## MIVisionX Support - OpenVX Extension
+  ```bash
+    cd rpp/utilities/rpp-unittests/HOST_NEW
+    ./testAllScript.sh
+  ```
 
-[MIVisionX](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX) RPP Extension [vx_rpp](https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/tree/master/amd_openvx_extensions/amd_rpp#amd-rpp-extension) supports RPP functionality through OpenVX Framework.
+## MIVisionX support - OpenVX extension
 
-## Technical Support
+[MIVisionX](https://github.com/ROCm/MIVisionX) RPP extension
+[vx_rpp](https://github.com/ROCm/MIVisionX/tree/master/amd_openvx_extensions/amd_rpp#amd-rpp-extension) supports RPP functionality through the OpenVX Framework.
 
-Please email `mivisionx.support@amd.com` for questions, and feedback on AMD RPP.
+## Technical support
 
-Please submit your feature requests, and bug reports on the [GitHub issues](https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp/issues) page.
+For RPP questions and feedback, you can contact us at `mivisionx.support@amd.com`.
 
-## Release Notes
+To submit feature requests and bug reports, use our
+[GitHub issues](https://github.com/ROCm/rpp/issues) page.
 
-### Latest Release
+## Documentation
 
-[![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/GPUOpen-ProfessionalCompute-Libraries/rpp?style=for-the-badge)](https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp/releases)
+You can build our documentation locally using the following code:
 
-### Changelog
+* Sphinx
 
-Review all notable [changes](CHANGELOG.md#changelog) with the latest release
+  ```bash
+  cd docs
+  pip3 install -r .sphinx/requirements.txt
+  python3 -m sphinx -T -E -b html -d _build/doctrees -D language=en . _build/html
+  ```
 
-### Tested configurations
+* Doxygen
+
+  ```bash
+  doxygen .Doxyfile
+  ```
+
+## Release notes
+
+All notable changes for each release are added to our [changelog](CHANGELOG.md).
+
+## Tested configurations
 
 * Linux distribution
-  + Ubuntu - `20.04` / `22.04`
-  + CentOS - `7` / `8`
-  + RedHat - `8` / `9`
-  + SLES - `15-SP3`
-* ROCm: rocm-core - `5.4.0.50400-72`
-* Protobuf - [V3.12.4](https://github.com/protocolbuffers/protobuf/releases/tag/v3.12.4)
+  * Ubuntu - `20.04` / `22.04`
+  * CentOS - `7`
+  * RedHat - `8` / `9`
+  * SLES - `15-SP4`
+* ROCm: rocm-core - `5.7.0.50700-63`
 * OpenCV - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)
