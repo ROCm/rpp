@@ -1,5 +1,7 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+MIT License
+
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -8,16 +10,16 @@ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 */
 
 #include <stdio.h>
@@ -59,6 +61,8 @@ std::map<int, string> augmentationMap =
 {
     {0, "fused_multiply_add_scalar"},
     {1, "slice"},
+    {2, "add_scalar"},
+    {3, "subtract_scalar"}
 };
 
 void replicate_last_file_to_fill_batch(const string& lastFilePath, vector<string>& filePathVector, vector<string>& fileNamesVector, const string& lastFileName, int noOfFiles, int batchCount)
@@ -522,30 +526,20 @@ inline void read_nifti_data(vector<string>::const_iterator dataFilePathStart, ve
     }
 }
 
-inline void remove_substring(string &str, string &pattern)
-{
-    std::string::size_type i = str.find(pattern);
-    while (i != std::string::npos)
-    {
-        str.erase(i, pattern.length());
-        i = str.find(pattern, i);
-   }
-}
-
 // compares the output of PKD3-PKD3 variants
 void compare_outputs_pkd(Rpp32f* output, Rpp32f* refOutput, int &fileMatch, RpptGenericDescPtr descriptorPtr3D, RpptRoiXyzwhd *roiGenericSrcPtr)
 {
     Rpp32f *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef, *depthTemp, *depthTempRef;
-    for(int Cnt = 0; Cnt < descriptorPtr3D->dims[0]; Cnt++)
+    for(int cnt = 0; cnt < descriptorPtr3D->dims[0]; cnt++)
     {
-        outputTemp = output + Cnt * descriptorPtr3D->strides[0];
-        outputTempRef = refOutput + Cnt * descriptorPtr3D->strides[0];
-        int height = roiGenericSrcPtr[Cnt].roiHeight;
-        int width = roiGenericSrcPtr[Cnt].roiWidth * descriptorPtr3D->dims[4];
-        int depth = roiGenericSrcPtr[Cnt].roiDepth;
+        outputTemp = output + cnt * descriptorPtr3D->strides[0];
+        outputTempRef = refOutput + cnt * descriptorPtr3D->strides[0];
+        int height = roiGenericSrcPtr[cnt].roiHeight;
+        int width = roiGenericSrcPtr[cnt].roiWidth * descriptorPtr3D->dims[4];
+        int depth = roiGenericSrcPtr[cnt].roiDepth;
         int depthStride = descriptorPtr3D->strides[1];
         int rowStride = descriptorPtr3D->strides[2];
-        int matched_idx = 0;
+        int matchedIdx = 0;
         for(int d = 0; d < depth; d++)
         {
             depthTemp = outputTemp + d * depthStride;
@@ -560,105 +554,138 @@ void compare_outputs_pkd(Rpp32f* output, Rpp32f* refOutput, int &fileMatch, Rppt
                     outRefVal = rowTempRef + j;
                     int diff = abs(*outVal - *outRefVal);
                     if(diff <= CUTOFF)
-                        matched_idx++;
+                        matchedIdx++;
                 }
             }
         }
-        if(matched_idx >= (1 - TOLERANCE) * (height * width * depth) && matched_idx !=0)
+        if(matchedIdx >= (1 - TOLERANCE) * (height * width * depth) && matchedIdx !=0)
             fileMatch++;
     }
 }
 
-// compares the output of PLN3-PLN3 and PLN1-PLN1 variants
-void compare_outputs_pln(Rpp32f* output, Rpp32f* refOutput, int &fileMatch, RpptGenericDescPtr descriptorPtr3D, RpptRoiXyzwhd *roiGenericSrcPtr)
+// compares the output of PLN3-PLN3 variants
+void compare_outputs_pln3(Rpp32f* output, Rpp32f* refOutput, int &fileMatch, RpptGenericDescPtr descriptorPtr3D, RpptRoiXyzwhd *roiGenericSrcPtr)
 {
     Rpp32f *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef, *outputTempChn, *outputTempRefChn, *depthTemp, *depthTempRef;
-    for(int Cnt = 0; Cnt < descriptorPtr3D->dims[0]; Cnt++)
+    for(int cnt = 0; cnt < descriptorPtr3D->dims[0]; cnt++)
     {
-        outputTemp = output + Cnt * descriptorPtr3D->strides[0];
-        outputTempRef = refOutput + Cnt * descriptorPtr3D->strides[0];
-        int height = roiGenericSrcPtr[Cnt].roiHeight;
-        int width = roiGenericSrcPtr[Cnt].roiWidth;
-        int depth = roiGenericSrcPtr[Cnt].roiDepth;
+        outputTemp = output + cnt * descriptorPtr3D->strides[0];
+        outputTempRef = refOutput + cnt * descriptorPtr3D->strides[0];
+        int height = roiGenericSrcPtr[cnt].roiHeight;
+        int width = roiGenericSrcPtr[cnt].roiWidth;
+        int depth = roiGenericSrcPtr[cnt].roiDepth;
         int depthStride = descriptorPtr3D->strides[2];
+        int refDepthStride = descriptorPtr3D->strides[2] * descriptorPtr3D->dims[1];
         int rowStride = descriptorPtr3D->strides[3];
+        int refRowStride = descriptorPtr3D->strides[3] * 3;
         int channelStride = descriptorPtr3D->strides[1];
-        int matched_idx = 0;
+        int matchedIdx = 0;
 
         for(int c = 0; c < descriptorPtr3D->dims[1]; c++)
         {
             outputTempChn = outputTemp + c * channelStride;
-            outputTempRefChn = outputTempRef + c * channelStride;
+            outputTempRefChn = outputTempRef + c;
             for(int d = 0; d < depth; d++)
             {
                 depthTemp = outputTempChn + d * depthStride;
-                depthTempRef = outputTempRefChn + d * depthStride;
+                depthTempRef = outputTempRefChn + d * refDepthStride;
                 for(int i = 0; i < height; i++)
                 {
                     rowTemp = depthTemp + i * rowStride;
-                    rowTempRef = depthTempRef + i * rowStride;
+                    rowTempRef = depthTempRef + i * refRowStride;
                     for(int j = 0; j < width; j++)
                     {
                         outVal = rowTemp + j;
-                        outRefVal = rowTempRef + j ;
+                        outRefVal = rowTempRef + j * 3 ;
                         int diff = abs(*outVal - *outRefVal);
                         if(diff <= CUTOFF)
-                            matched_idx++;
+                            matchedIdx++;
                     }
                 }
             }
         }
-        if(matched_idx >= (1 - TOLERANCE) * (height * width * descriptorPtr3D->dims[1] * depth) && matched_idx !=0)
+        if(matchedIdx >= (1 - TOLERANCE) * (height * width * descriptorPtr3D->dims[1] * depth) && matchedIdx !=0)
             fileMatch++;
     }
 }
 
-inline void compare_output(Rpp32f* output, Rpp64u oBufferSize, string func, int layoutType, RpptGenericDescPtr descriptorPtr3D, RpptRoiXyzwhd *roiGenericSrcPtr, string dst)
+// compares the output of PLN1-PLN1 variants
+void compare_outputs_pln1(Rpp32f* output, Rpp32f* refOutput, int &fileMatch, RpptGenericDescPtr descriptorPtr3D, RpptRoiXyzwhd *roiGenericSrcPtr)
 {
-    string refPath = get_current_dir_name();
-    string pattern = "/build";
-    remove_substring(refPath, pattern);
-    string csvName = "";
-    if(layoutType == 0)
-        csvName = func + "_nifti_output_pkd3.csv";
-    else if(layoutType == 1)
-        csvName = func + "_nifti_output_pln3.csv";
-    else
-        csvName = func + "_nifti_output_pln1.csv";
+    Rpp32f *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef, *outputTempChn, *outputTempRefChn, *depthTemp, *depthTempRef;
+    for(int cnt = 0; cnt < descriptorPtr3D->dims[0]; cnt++)
+    {
+        outputTemp = output + cnt * descriptorPtr3D->strides[0];
+        outputTempRef = refOutput + cnt * descriptorPtr3D->strides[0];
+        int height = roiGenericSrcPtr[cnt].roiHeight;
+        int width = roiGenericSrcPtr[cnt].roiWidth;
+        int depth = roiGenericSrcPtr[cnt].roiDepth;
+        int depthStride = descriptorPtr3D->strides[2];
+        int rowStride = descriptorPtr3D->strides[3];
+        int channelStride = descriptorPtr3D->strides[1];
+        int matchedIdx = 0;
 
-    string refFile = refPath + "/../REFERENCE_OUTPUT_VOXEL/"+ func + "/" + csvName;
+        outputTempChn = outputTemp;
+        outputTempRefChn = outputTempRef;
+        for(int d = 0; d < depth; d++)
+        {
+            depthTemp = outputTempChn + d * depthStride;
+            depthTempRef = outputTempRefChn + d * depthStride;
+            for(int i = 0; i < height; i++)
+            {
+                rowTemp = depthTemp + i * rowStride;
+                rowTempRef = depthTempRef + i * rowStride;
+                for(int j = 0; j < width; j++)
+                {
+                    outVal = rowTemp + j;
+                    outRefVal = rowTempRef + j ;
+                    int diff = abs(*outVal - *outRefVal);
+                    if(diff <= CUTOFF)
+                        matchedIdx++;
+                }
+            }
+        }
+        if(matchedIdx >= (1 - TOLERANCE) * (height * width * descriptorPtr3D->dims[1] * depth) && matchedIdx !=0)
+            fileMatch++;
+    }
+}
 
-    ifstream file(refFile);
-    float *refOutput;
-    refOutput = (float *)malloc(oBufferSize * sizeof(Rpp32f));
+inline void compare_output(Rpp32f* output, Rpp64u oBufferSize, string func, int layoutType, RpptGenericDescPtr descriptorPtr3D, RpptRoiXyzwhd *roiGenericSrcPtr, string dst, string scriptPath)
+{
+    string binName = "";
+    binName = func + "_nifti_output.bin";
+    int pln1RefStride = descriptorPtr3D->strides[1] * descriptorPtr3D->dims[0] * 3;
+    int binOutputSize = descriptorPtr3D->strides[0] * 4;
+    binOutputSize = (layoutType == 2)? binOutputSize * 3 : binOutputSize;
+
+    string refFile = scriptPath + "/../REFERENCE_OUTPUT_VOXEL/"+ func + "/" + binName;
+
     string line,word;
     int index = 0;
     int mismatches = 0;
+    float *refOutput = (float *)malloc(binOutputSize * sizeof(float));
 
-    // Load the refennce output values from files and store in vector
-    if(file.is_open())
-    {
-        while(getline(file, line))
-        {
-            stringstream str(line);
-            while(getline(str, word, ','))
-            {
-                refOutput[index] = stof(word);
-                index++;
-            }
-        }
-    }
-    else
-    {
-        cout<<"Could not open the reference output. Please check the path specified\n";
-        return;
-    }
+    FILE *fp;
+    fp = fopen(refFile.c_str(), "rb");
+    if (fp == NULL)
+        printf("Error opening file");
+
+    fseek(fp, 0, SEEK_END);
+    long fsize = ftell(fp);
+    if (fsize == 0)
+        std::cerr << "File is empty";
+
+    fseek(fp, 0, SEEK_SET);
+    fread(refOutput, fsize, 1, fp);
+    fclose(fp);
 
     int fileMatch = 0;
     if(layoutType == 0)
         compare_outputs_pkd(output, refOutput, fileMatch, descriptorPtr3D, roiGenericSrcPtr);
+    else if(layoutType == 1)
+        compare_outputs_pln3(output, refOutput, fileMatch, descriptorPtr3D, roiGenericSrcPtr);
     else
-        compare_outputs_pln(output, refOutput, fileMatch, descriptorPtr3D, roiGenericSrcPtr);
+        compare_outputs_pln1(output, refOutput + pln1RefStride, fileMatch, descriptorPtr3D, roiGenericSrcPtr);
 
     std::cout << std::endl << "Results for " << func << " :" << std::endl;
     if(descriptorPtr3D->layout == RpptLayout::NDHWC)

@@ -1,22 +1,26 @@
-# Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+"""
+MIT License
 
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
 
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+"""
 
 import os
 import subprocess  # nosec
@@ -32,6 +36,10 @@ scriptPath = os.path.dirname(os.path.realpath(__file__))
 headerFilePath = scriptPath + "/../TEST_QA_IMAGES_VOXEL"
 dataFilePath = scriptPath + "/../TEST_QA_IMAGES_VOXEL"
 qaInputFile = scriptPath + "/../TEST_QA_IMAGES_VOXEL"
+outFolderPath = os.getcwd()
+buildFolderPath = os.getcwd()
+caseMin = 0
+caseMax = 3
 
 # Check if folder path is empty, if it is the root folder, or if it exists, and remove its contents
 def validate_and_remove_contents(path):
@@ -62,12 +70,12 @@ def validate_and_remove_folders(path, folder):
     if path == "/*":  # check if the root directory is passed to the function
         print("Root folder cannot be deleted.")
         exit()
-    if path and os.path.isdir(path + "/.."):  # checks if directory string is not empty and it exists
-        output_folders = [folder_name for folder_name in os.listdir(path + "/..") if folder_name.startswith(folder)]
+    if path and os.path.isdir(path):  # checks if directory string is not empty and it exists
+        output_folders = [folder_name for folder_name in os.listdir(path) if folder_name.startswith(folder)]
 
         # Loop through each directory and delete it only if it exists
         for folder_name in output_folders:
-            folder_path = os.path.join(path, "..", folder_name)
+            folder_path = os.path.join(path, folder_name)
             if os.path.isdir(folder_path):
                 shutil.rmtree(folder_path)  # Delete the directory if it exists
                 print("Deleted directory:", folder_path)
@@ -96,9 +104,9 @@ def validate_path(input_path):
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list():
     return [
-        "../../OUTPUT_PERFORMANCE_LOGS_HOST_VOXEL_" + timestamp + "/Tensor_voxel_host_pkd3_raw_performance_log.txt",
-        "../../OUTPUT_PERFORMANCE_LOGS_HOST_VOXEL_" + timestamp + "/Tensor_voxel_host_pln3_raw_performance_log.txt",
-        "../../OUTPUT_PERFORMANCE_LOGS_HOST_VOXEL_" + timestamp + "/Tensor_voxel_host_pln1_raw_performance_log.txt"
+        outFolderPath + "/OUTPUT_PERFORMANCE_LOGS_HOST_VOXEL_" + timestamp + "/Tensor_voxel_host_pkd3_raw_performance_log.txt",
+        outFolderPath + "/OUTPUT_PERFORMANCE_LOGS_HOST_VOXEL_" + timestamp + "/Tensor_voxel_host_pln3_raw_performance_log.txt",
+        outFolderPath + "/OUTPUT_PERFORMANCE_LOGS_HOST_VOXEL_" + timestamp + "/Tensor_voxel_host_pln1_raw_performance_log.txt"
     ]
 
 # Functionality group finder
@@ -109,7 +117,8 @@ def func_group_finder(case_number):
         return "geometric_augmentations"
     else:
         return "miscellaneous"
- # Generate a directory name based on certain parameters
+
+# Generate a directory name based on certain parameters
 def directory_name_generator(qaMode, affinity, layoutType, case, path):
     if qaMode == 0:
         functionality_group = func_group_finder(int(case))
@@ -143,7 +152,7 @@ def run_unit_test(headerPath, dataPath, dstPathTemp, layout, case, numRuns, test
         print("\n\n\nRunning New Bit Depth...\n-------------------------\n\n")
         print("\n\n\n\n")
         print(f"./Tensor_voxel_host {headerPath} {dataPath} {dstPathTemp} {layout} {case} {numRuns} {testType} {qaMode} {batchSize} {bitDepth}")
-        result = subprocess.run([scriptPath + "/build/Tensor_voxel_host", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth)], stdout=subprocess.PIPE) # nosec
+        result = subprocess.run([buildFolderPath + "/build/Tensor_voxel_host", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE) # nosec
         print(result.stdout.decode())
         print("------------------------------------------------------------------------------------------")
 
@@ -156,7 +165,7 @@ def run_performance_test(loggingFolder, logFileLayout, headerPath, dataPath, dst
     for bitDepth in bitDepths:
         with open(f"{loggingFolder}/Tensor_voxel_host_{logFileLayout}_raw_performance_log.txt", "a") as log_file:
             print(f"./Tensor_voxel_host {headerPath} {dataPath} {dstPathTemp} {layout} {case} {numRuns} {testType} {qaMode} {batchSize} {bitDepth}")
-            process = subprocess.Popen([scriptPath + "/build/Tensor_voxel_host", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True) # nosec
+            process = subprocess.Popen([buildFolderPath + "/build/Tensor_voxel_host", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True) # nosec
             while True:
                 output = process.stdout.readline()
                 if not output and process.poll() is not None:
@@ -176,8 +185,8 @@ def rpp_test_suite_parser_and_validator():
     parser = argparse.ArgumentParser()
     parser.add_argument("--header_path", type = str, default = headerFilePath, help = "Path to the nii header")
     parser.add_argument("--data_path", type = str, default = dataFilePath, help = "Path to the nii data file")
-    parser.add_argument("--case_start", type = int, default = 0, help = "Testing range starting case # - (0:1)")
-    parser.add_argument("--case_end", type = int, default = 1, help = "Testing range ending case # - (0:1)")
+    parser.add_argument("--case_start", type = int, default = caseMin, help = "Testing start case # - Range must be in [" + str(caseMin) + ":" + str(caseMax) + "]")
+    parser.add_argument("--case_end", type = int, default = caseMax, help = "Testing start case # - Range must be in [" + str(caseMin) + ":" + str(caseMax) + "]")
     parser.add_argument('--test_type', type = int, default = 0, help = "Type of Test - (0 = Unit tests / 1 = Performance tests)")
     parser.add_argument('--case_list', nargs = "+", help = "List of case numbers to list", required = False)
     parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Output images from tests will be compared with golden outputs - (0 / 1)", required = False)
@@ -192,7 +201,7 @@ def rpp_test_suite_parser_and_validator():
     validate_path(qaInputFile)
 
     # validate the parameters passed by user
-    if ((args.case_start < 0 or args.case_start > 1) or (args.case_end < 0 or args.case_end > 1)):
+    if ((args.case_start < caseMin or args.case_start > caseMax) or (args.case_end < caseMin or args.case_end > caseMax)):
         print("Starting case# and Ending case# must be in the 0:1 range. Aborting!")
         exit(0)
     elif args.case_end < args.case_start:
@@ -204,7 +213,7 @@ def rpp_test_suite_parser_and_validator():
     elif args.qa_mode < 0 or args.qa_mode > 1:
         print("QA mode must be in the 0 / 1. Aborting!")
         exit(0)
-    elif args.case_list is not None and args.case_start > 0 and args.case_end < 1:
+    elif args.case_list is not None and args.case_start > caseMin and args.case_end < caseMax:
         print("Invalid input! Please provide only 1 option between case_list, case_start and case_end")
         exit(0)
     elif args.num_runs <= 0:
@@ -222,7 +231,7 @@ def rpp_test_suite_parser_and_validator():
         args.case_list = [str(x) for x in args.case_list]
     else:
         for case in args.case_list:
-            if int(case) < 0 or int(case) > 1:
+            if int(case) < caseMin or int(case) > caseMax:
                  print("The case# must be in the 0:1 range!")
                  exit(0)
 
@@ -256,22 +265,22 @@ if qaMode and batchSize != 3:
 # set the output folders and number of runs based on type of test (unit test / performance test)
 if(testType == 0):
     if qaMode:
-        outFilePath = os.path.join(scriptPath + "/../QA_RESULTS_HOST_VOXEL_" + timestamp)
+        outFilePath = os.path.join(outFolderPath + "/QA_RESULTS_HOST_VOXEL_" + timestamp)
     else:
-        outFilePath = os.path.join(scriptPath + "/../OUTPUT_VOXEL_HOST_" + timestamp)
+        outFilePath = os.path.join(outFolderPath + "/OUTPUT_VOXEL_HOST_" + timestamp)
     numRuns = 1
 elif(testType == 1):
     if "--num_runs" not in sys.argv:
         numRuns = 100 #default numRuns for running performance tests
-    outFilePath = os.path.join(scriptPath + "/../OUTPUT_PERFORMANCE_LOGS_HOST_VOXEL_" + timestamp)
+    outFilePath = os.path.join(outFolderPath + "/OUTPUT_PERFORMANCE_LOGS_HOST_VOXEL_" + timestamp)
 else:
     print("Invalid TEST_TYPE specified. TEST_TYPE should be 0/1 (0 = Unittests / 1 = Performancetests)")
     exit()
 
 if preserveOutput == 0:
-    validate_and_remove_folders(scriptPath, "OUTPUT_VOXEL_HOST")
-    validate_and_remove_folders(scriptPath, "QA_RESULTS_HOST_VOXEL")
-    validate_and_remove_folders(scriptPath, "OUTPUT_PERFORMANCE_LOGS_HOST_VOXEL")
+    validate_and_remove_folders(outFolderPath, "OUTPUT_VOXEL_HOST")
+    validate_and_remove_folders(outFolderPath, "QA_RESULTS_HOST_VOXEL")
+    validate_and_remove_folders(outFolderPath, "OUTPUT_PERFORMANCE_LOGS_HOST_VOXEL")
 
 os.mkdir(outFilePath)
 loggingFolder = outFilePath
@@ -281,13 +290,13 @@ dstPath = outFilePath
 validate_and_remove_contents(dstPath)
 
 # Enable extglob
-if os.path.exists(scriptPath + "/build"):
-    shutil.rmtree(scriptPath + "/build")
-os.makedirs(scriptPath + "/build")
-os.chdir(scriptPath + "/build")
+if os.path.exists(buildFolderPath + "/build"):
+    shutil.rmtree(buildFolderPath + "/build")
+os.makedirs(buildFolderPath + "/build")
+os.chdir(buildFolderPath + "/build")
 
 # Run cmake and make commands
-subprocess.run(["cmake", ".."], cwd=".")   # nosec
+subprocess.run(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.run(["make", "-j16"], cwd=".")  # nosec
 
 print("\n\n\n\n\n")
@@ -312,7 +321,7 @@ else:
             run_performance_test(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize)
 
 # print the results of qa tests
-supportedCaseList = ['0', '1']
+supportedCaseList = ['0', '1', '2', '3']
 nonQACaseList = [] # Add cases present in supportedCaseList, but without QA support
 
 if qaMode and testType == 0:

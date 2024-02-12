@@ -1,5 +1,7 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+MIT License
+
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -8,16 +10,16 @@ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 */
 
 #include "../rpp_test_suite_audio.h"
@@ -25,7 +27,7 @@ THE SOFTWARE.
 int main(int argc, char **argv)
 {
     // handle inputs
-    const int MIN_ARG_COUNT = 6;
+    const int MIN_ARG_COUNT = 7;
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
@@ -39,6 +41,7 @@ int main(int argc, char **argv)
     int numRuns = atoi(argv[4]);
     int batchSize = atoi(argv[5]);
     char *dst = argv[6];
+    string scriptPath = argv[7];
 
     // validation checks
     if (testType == 0 && batchSize != 3)
@@ -194,206 +197,6 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 3:
-                {
-                    testCaseName = "down_mixing";
-                    bool normalizeWeights = false;
-
-                    for (int i = 0; i < batchSize; i++)
-                    {
-                        srcDims[i].height = dstDims[i].height = srcLengthTensor[i];
-                        srcDims[i].width = dstDims[i].width = 1;
-                    }
-
-                    startWallTime = omp_get_wtime();
-                    rppt_down_mixing_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcLengthTensor, channelsTensor, normalizeWeights, handle);
-
-                    break;
-                }
-                case 4:
-                {
-                    testCaseName = "slice_audio";
-
-                    Rpp32f fillValues[batchSize];
-                    Rpp32s srcDimsTensor[batchSize * 2];
-                    Rpp32f anchor[batchSize];
-                    Rpp32f shape[batchSize];
-                    Rpp32s axes[2]; // to be changed based on audio dimensions.
-
-                    // 1D slice arguments
-                    for (int i = 0, j = i * 2; i < batchSize; i++, j += 2)
-                    {
-                        srcDimsTensor[j] = srcLengthTensor[i];
-                        dstDims[i].height = 1;
-                        srcDimsTensor[j + 1] = 1;
-                        shape[i] =  dstDims[i].width = 200;
-                        anchor[i] = 100;
-                    }
-                    fillValues[0] = 0.0f;
-                    axes[0] = 0;
-                    axes[1] = 1;
-
-                    startWallTime = omp_get_wtime();
-                    rppt_slice_audio_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcDimsTensor, anchor, shape, axes, fillValues, handle);
-
-                    break;
-                }
-                case 5:
-                {
-                    testCaseName = "mel_filter_bank";
-
-                    Rpp32f sampleRate = 16000;
-                    Rpp32f minFreq = 0.0;
-                    Rpp32f maxFreq = sampleRate / 2;
-                    RpptMelScaleFormula melFormula = RpptMelScaleFormula::SLANEY;
-                    Rpp32s numFilter = 80;
-                    bool normalize = true;
-
-                    for (int i = 0; i < batchSize; i++)
-                    {
-                        srcDims[i].height = dstDims[i].height = srcLengthTensor[i];
-                        srcDims[i].width = dstDims[i].width = 1;
-                    }
-
-                    // Read source dimension
-                    read_from_text_files(inputf32, srcDescPtr, srcDims, "spectrogram", 1, audioNames);
-
-                    maxDstHeight = 0;
-                    maxDstWidth = 0;
-                    maxSrcHeight = 0;
-                    maxSrcWidth = 0;
-                    for(int i = 0; i < batchSize; i++)
-                    {
-                        maxSrcHeight = std::max(maxSrcHeight, (int)srcDims[i].height);
-                        maxSrcWidth = std::max(maxSrcWidth, (int)srcDims[i].width);
-                        dstDims[i].height = numFilter;
-                        dstDims[i].width = srcDims[i].width;
-                        maxDstHeight = std::max(maxDstHeight, (int)dstDims[i].height);
-                        maxDstWidth = std::max(maxDstWidth, (int)dstDims[i].width);
-                    }
-
-                    srcDescPtr->h = maxSrcHeight;
-                    srcDescPtr->w = maxSrcWidth;
-                    dstDescPtr->h = maxDstHeight;
-                    dstDescPtr->w = maxDstWidth;
-
-                    srcDescPtr->strides.nStride = srcDescPtr->c * srcDescPtr->w * srcDescPtr->h;
-                    srcDescPtr->strides.hStride = srcDescPtr->c * srcDescPtr->w;
-                    srcDescPtr->strides.wStride = srcDescPtr->c;
-                    srcDescPtr->strides.cStride = 1;
-
-                    dstDescPtr->strides.nStride = dstDescPtr->c * dstDescPtr->w * dstDescPtr->h;
-                    dstDescPtr->strides.hStride = dstDescPtr->c * dstDescPtr->w;
-                    dstDescPtr->strides.wStride = dstDescPtr->c;
-                    dstDescPtr->strides.cStride = 1;
-
-                    // Set buffer sizes for src/dst
-                    unsigned long long spectrogramBufferSize = (unsigned long long)srcDescPtr->h * (unsigned long long)srcDescPtr->w * (unsigned long long)srcDescPtr->c * (unsigned long long)srcDescPtr->n;
-                    unsigned long long melFilterBufferSize = (unsigned long long)dstDescPtr->h * (unsigned long long)dstDescPtr->w * (unsigned long long)dstDescPtr->c * (unsigned long long)dstDescPtr->n;
-                    inputf32 = (Rpp32f *)realloc(inputf32, spectrogramBufferSize * sizeof(Rpp32f));
-                    outputf32 = (Rpp32f *)realloc(outputf32, melFilterBufferSize * sizeof(Rpp32f));
-
-                    // Read source data
-                    read_from_text_files(inputf32, srcDescPtr, srcDims, "spectrogram", 0, audioNames);
-
-                    startWallTime = omp_get_wtime();
-                    rppt_mel_filter_bank_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcDims, maxFreq, minFreq, melFormula, numFilter, sampleRate, normalize, handle);
-
-                    break;
-                }
-                case 6:
-                {
-                    testCaseName = "spectrogram";
-
-                    bool centerWindows = true;
-                    bool reflectPadding = true;
-                    Rpp32f *windowFn = NULL;
-                    Rpp32s power = 2;
-                    Rpp32s windowLength = 320;
-                    Rpp32s windowStep = 160;
-                    Rpp32s nfft = 512;
-                    RpptSpectrogramLayout layout = RpptSpectrogramLayout::FT;
-
-                    int windowOffset = 0;
-                    if(!centerWindows)
-                        windowOffset = windowLength;
-
-                    maxDstWidth = 0;
-                    maxDstHeight = 0;
-                    if(layout == RpptSpectrogramLayout::FT)
-                    {
-                        for(int i = 0; i < batchSize; i++)
-                        {
-                            dstDims[i].height = nfft / 2 + 1;
-                            dstDims[i].width = ((srcLengthTensor[i] - windowOffset) / windowStep) + 1;
-                            maxDstHeight = std::max(maxDstHeight, (int)dstDims[i].height);
-                            maxDstWidth = std::max(maxDstWidth, (int)dstDims[i].width);
-                        }
-                    }
-                    else
-                    {
-                        for(int i = 0; i < batchSize; i++)
-                        {
-                            dstDims[i].height = ((srcLengthTensor[i] - windowOffset) / windowStep) + 1;
-                            dstDims[i].width = nfft / 2 + 1;
-                            maxDstHeight = std::max(maxDstHeight, (int)dstDims[i].height);
-                            maxDstWidth = std::max(maxDstWidth, (int)dstDims[i].width);
-                        }
-                    }
-
-                    dstDescPtr->w = maxDstWidth;
-                    dstDescPtr->h = maxDstHeight;
-
-                    dstDescPtr->strides.nStride = dstDescPtr->c * dstDescPtr->w * dstDescPtr->h;
-                    dstDescPtr->strides.hStride = dstDescPtr->c * dstDescPtr->w;
-                    dstDescPtr->strides.wStride = dstDescPtr->c;
-                    dstDescPtr->strides.cStride = 1;
-
-                    // Set buffer sizes for src/dst
-                    unsigned long long spectrogramBufferSize = (unsigned long long)dstDescPtr->h * (unsigned long long)dstDescPtr->w * (unsigned long long)dstDescPtr->c * (unsigned long long)dstDescPtr->n;
-                    outputf32 = (Rpp32f *)realloc(outputf32, spectrogramBufferSize * sizeof(Rpp32f));
-
-                    startWallTime = omp_get_wtime();
-                    rppt_spectrogram_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcLengthTensor, centerWindows, reflectPadding, windowFn, nfft, power, windowLength, windowStep, layout, handle);
-
-                    break;
-                }
-                case 7:
-                {
-                    testCaseName = "resample";
-
-                    Rpp32f inRateTensor[batchSize];
-                    Rpp32f outRateTensor[batchSize];
-
-                    maxDstWidth = 0;
-                    for(int i = 0; i < batchSize; i++)
-                    {
-                        inRateTensor[i] = 16000;
-                        outRateTensor[i] = 16000 * 1.15f;
-                        Rpp32f scaleRatio = outRateTensor[i] / inRateTensor[i];
-                        dstDims[i].width = (int)std::ceil(scaleRatio * srcLengthTensor[i]);
-                        maxDstWidth = std::max(maxDstWidth, (int)dstDims[i].width);
-                        dstDims[i].height = 1;
-                    }
-                    Rpp32f quality = 50.0f;
-                    dstDescPtr->w = maxDstWidth;
-
-                    dstDescPtr->strides.nStride = dstDescPtr->c * dstDescPtr->w * dstDescPtr->h;
-                    dstDescPtr->strides.hStride = dstDescPtr->c * dstDescPtr->w;
-                    dstDescPtr->strides.wStride = dstDescPtr->c;
-                    dstDescPtr->strides.cStride = 1;
-
-                    // Set buffer sizes for dst
-                    unsigned long long resampleBufferSize = (unsigned long long)dstDescPtr->h * (unsigned long long)dstDescPtr->w * (unsigned long long)dstDescPtr->c * (unsigned long long)dstDescPtr->n;
-
-                    // Initialize host buffers for output
-                    outputf32 = (Rpp32f *)realloc(outputf32, sizeof(Rpp32f) * resampleBufferSize);
-
-                    startWallTime = omp_get_wtime();
-                    rppt_resample_host(inputf32, srcDescPtr, outputf32, dstDescPtr, inRateTensor, outRateTensor, srcLengthTensor, channelsTensor, quality, handle);
-
-                    break;
-                }
                 default:
                 {
                     missingFuncFlag = 1;
@@ -419,7 +222,7 @@ int main(int argc, char **argv)
                 /* Run only if testCase is not 0
                 For testCase 0 verify_non_silent_region_detection function is used for QA testing */
                 if (testCase != 0)
-                    verify_output(outputf32, dstDescPtr, dstDims, testCaseName, audioNames, dst);
+                    verify_output(outputf32, dstDescPtr, dstDims, testCaseName, dst, scriptPath);
 
                 /* Dump the outputs to csv files for debugging
                 Runs only if

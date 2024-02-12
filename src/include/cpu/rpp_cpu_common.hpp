@@ -1,5 +1,7 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+MIT License
+
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -8,16 +10,16 @@ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 */
 
 #ifndef RPP_CPU_COMMON_H
@@ -69,6 +71,8 @@ typedef halfhpp Rpp16f;
 #define RPP_2POW32_INV_DIV_2            1.164153218e-10f    // RPP_2POW32_INV / 2
 #define RPP_2POW32_INV_MUL_2PI          1.46291812e-09f     // (1 / 2^32) * 2PI
 #define RPP_2POW32_INV_MUL_2PI_DIV_2    7.3145906e-10f      // RPP_2POW32_INV_MUL_2PI / 2
+#define RPP_255_OVER_1PT57              162.3380757272f     // (255 / 1.570796) - multiplier used in phase computation
+#define ONE_OVER_1PT57                  0.6366199048f       // (1 / 1.570796) i.e. 2/pi - multiplier used in phase computation
 
 const __m128 xmm_p2Pow32 = _mm_set1_ps(RPP_2POW32);
 const __m128 xmm_p2Pow32Inv = _mm_set1_ps(RPP_2POW32_INV);
@@ -2427,6 +2431,18 @@ inline RppStatus custom_convolve_image_host(T* srcPtr, RppiSize srcSize, U* dstP
 
 // Compute Functions for RPP Tensor API
 
+inline void compute_subtract_16_host(__m256 *p, __m256 *pSubtractParam)
+{
+    p[0] = _mm256_sub_ps(p[0], pSubtractParam[0]);    // subtract adjustment
+    p[1] = _mm256_sub_ps(p[1], pSubtractParam[0]);    // subtract adjustment
+}
+
+inline void compute_add_16_host(__m256 *p, __m256 *pAddParam)
+{
+    p[0] = _mm256_add_ps(p[0], pAddParam[0]);    // add adjustment
+    p[1] = _mm256_add_ps(p[1], pAddParam[0]);    // add adjustment
+}
+
 inline void compute_rmn_24_host(__m256 *p, __m256 *pRMNParams)
 {
     p[0] = _mm256_mul_ps(_mm256_sub_ps(p[0], pRMNParams[0]), pRMNParams[1]);
@@ -3026,6 +3042,22 @@ inline void compute_color_cast_12_host(__m128 *p, __m128 pMul, __m128 *pAdd)
     p[0] = _mm_fmadd_ps(_mm_sub_ps(p[0], pAdd[0]), pMul, pAdd[0]);    // color_cast adjustment Rs
     p[1] = _mm_fmadd_ps(_mm_sub_ps(p[1], pAdd[1]), pMul, pAdd[1]);    // color_cast adjustment Rs
     p[2] = _mm_fmadd_ps(_mm_sub_ps(p[2], pAdd[2]), pMul, pAdd[2]);    // color_cast adjustment Rs
+}
+
+inline void compute_color_temperature_48_host(__m256 *p, __m256 pAdj)
+{
+    p[0] = _mm256_add_ps(p[0], pAdj);    // color_temperature adjustment Rs
+    p[1] = _mm256_add_ps(p[1], pAdj);    // color_temperature adjustment Rs
+    // no color_temperature adjustment Gs
+    p[4] = _mm256_sub_ps(p[4], pAdj);    // color_temperature adjustment Bs
+    p[5] = _mm256_sub_ps(p[5], pAdj);    // color_temperature adjustment Bs
+}
+
+inline void compute_color_temperature_24_host(__m256 *p, __m256 pAdj)
+{
+    p[0] = _mm256_add_ps(p[0], pAdj);    // color_temperature adjustment Rs
+    // no color_temperature adjustment Gs
+    p[2] = _mm256_sub_ps(p[2], pAdj);    // color_temperature adjustment Bs
 }
 
 inline void compute_xywh_from_ltrb_host(RpptROIPtr roiPtrInput, RpptROIPtr roiPtrImage)

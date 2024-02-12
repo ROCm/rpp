@@ -1,22 +1,26 @@
-# Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+"""
+MIT License
 
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
 
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+"""
 
 import os
 import subprocess  # nosec
@@ -30,8 +34,10 @@ timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
 scriptPath = os.path.dirname(os.path.realpath(__file__))
 inFilePath = scriptPath + "/../TEST_AUDIO_FILES/three_samples_single_channel_src1"
+outFolderPath = os.getcwd()
+buildFolderPath = os.getcwd()
 caseMin = 0
-caseMax = 7
+caseMax = 6
 
 # Checks if the folder path is empty, or is it a root folder, or if it exists, and remove its contents
 def validate_and_remove_files(path):
@@ -65,12 +71,12 @@ def validate_and_remove_folders(path, folder):
     if path == "/*":  # check if the root directory is passed to the function
         print("Root folder cannot be deleted.")
         exit(0)
-    if path and os.path.isdir(path + "/.."):  # checks if directory string is not empty and it exists
-        output_folders = [folder_name for folder_name in os.listdir(path + "/..") if folder_name.startswith(folder)]
+    if path and os.path.isdir(path):  # checks if directory string is not empty and it exists
+        output_folders = [folder_name for folder_name in os.listdir(path) if folder_name.startswith(folder)]
 
         # Loop through each directory and delete it only if it exists
         for folder_name in output_folders:
-            folder_path = os.path.join(path, "..", folder_name)
+            folder_path = os.path.join(path, folder_name)
             if os.path.isdir(folder_path):
                 shutil.rmtree(folder_path)  # Delete the directory if it exists
                 print("Deleted directory:", folder_path)
@@ -87,7 +93,7 @@ def validate_path(input_path):
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list():
     return [
-        scriptPath + "../../OUTPUT_PERFORMANCE_AUDIO_LOGS_HOST_" + timestamp + "/Tensor_host_audio_raw_performance_log.txt",
+        outFolderPath + "/OUTPUT_PERFORMANCE_AUDIO_LOGS_HOST_" + timestamp + "/Tensor_host_audio_raw_performance_log.txt",
     ]
 
 def run_unit_test(srcPath, case, numRuns, testType, batchSize, outFilePath):
@@ -96,7 +102,7 @@ def run_unit_test(srcPath, case, numRuns, testType, batchSize, outFilePath):
     print("Running a New Functionality...")
     print("--------------------------------")
     print(f"./Tensor_host_audio {srcPath} {case} {numRuns} {testType} {numRuns} {batchSize}")
-    result = subprocess.run([scriptPath + "/build/Tensor_host_audio", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath], stdout=subprocess.PIPE)    # nosec
+    result = subprocess.run([buildFolderPath + "/build/Tensor_host_audio", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE)    # nosec
     print(result.stdout.decode())
 
     print("------------------------------------------------------------------------------------------")
@@ -108,7 +114,7 @@ def run_performance_test(loggingFolder, srcPath, case, numRuns, testType, batchS
     print("--------------------------------")
     with open("{}/Tensor_host_audio_raw_performance_log.txt".format(loggingFolder), "a") as log_file:
         print(f"./Tensor_host_audio {srcPath} {case} {numRuns} {testType} {numRuns} {batchSize} ")
-        process = subprocess.Popen([scriptPath + "/build/Tensor_host_audio", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
+        process = subprocess.Popen([buildFolderPath + "/build/Tensor_host_audio", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
         while True:
             output = process.stdout.readline()
             if not output and process.poll() is not None:
@@ -190,20 +196,21 @@ if testType == 1 and qaMode == 1:
     print("WARNING: QA Mode cannot be run with testType = 1 (performance tests). Resetting testType to 0")
     testType = 0
 
-if preserveOutput == 0:
-    validate_and_remove_folders(scriptPath, "QA_RESULTS_AUDIO_HOST")
-    validate_and_remove_folders(scriptPath, "OUTPUT_PERFORMANCE_AUDIO_LOGS_HOST")
-
+# set the output folders and number of runs based on type of test (unit test / performance test)
 if(testType == 0):
-    outFilePath = scriptPath + "/../QA_RESULTS_AUDIO_HOST_" + timestamp
+    outFilePath = outFolderPath + "/QA_RESULTS_AUDIO_HOST_" + timestamp
     numRuns = 1
 elif(testType == 1):
     if "--num_runs" not in sys.argv:
         numRuns = 100   #default numRuns for running performance tests
-    outFilePath = scriptPath + "/../OUTPUT_PERFORMANCE_AUDIO_LOGS_HOST_" + timestamp
+    outFilePath = outFolderPath + "/OUTPUT_PERFORMANCE_AUDIO_LOGS_HOST_" + timestamp
 else:
     print("Invalid TEST_TYPE specified. TEST_TYPE should be 0/1 (0 = QA tests / 1 = Performance tests)")
     exit(0)
+
+if preserveOutput == 0:
+    validate_and_remove_folders(outFolderPath, "QA_RESULTS_AUDIO_HOST")
+    validate_and_remove_folders(outFolderPath, "OUTPUT_PERFORMANCE_AUDIO_LOGS_HOST")
 
 os.mkdir(outFilePath)
 loggingFolder = outFilePath
@@ -213,13 +220,13 @@ dstPath = outFilePath
 validate_and_remove_files(dstPath)
 
 # Enable extglob
-if os.path.exists(scriptPath + "/build"):
-    shutil.rmtree(scriptPath + "/build")
-os.makedirs(scriptPath + "/build")
-os.chdir(scriptPath + "/build")
+if os.path.exists(buildFolderPath + "/build"):
+    shutil.rmtree(buildFolderPath + "/build")
+os.makedirs(buildFolderPath + "/build")
+os.chdir(buildFolderPath + "/build")
 
 # Run cmake and make commands
-subprocess.run(["cmake", ".."], cwd=".")   # nosec
+subprocess.run(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.run(["make", "-j16"], cwd=".")    # nosec
 
 if testType == 0:
@@ -252,7 +259,7 @@ else:
         run_performance_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath)
 
 # print the results of qa tests
-supportedCaseList = ['0', '1', '2', '3', '4', '5', '6', '7']
+supportedCaseList = ['0', '1', '2', '6']
 nonQACaseList = [] # Add cases present in supportedCaseList, but without QA support
 
 if testType == 0:
@@ -277,7 +284,7 @@ if testType == 0:
         resultsInfo += "\n    - Total augmentations with golden output QA test support = " + str(len(supportedCaseList) - len(nonQACaseList))
         resultsInfo += "\n    - Total augmentations without golden ouput QA test support (due to randomization involved) = " + str(len(nonQACaseList))
         f.write(resultsInfo)
-    print("\n-------------------------------------------------------------------" + resultsInfo + "\n\n-------------------------------------------------------------------")
+        print("\n-------------------------------------------------------------------" + resultsInfo + "\n\n-------------------------------------------------------------------")
 
 # Performance tests
 if (testType == 1):

@@ -1,5 +1,7 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+MIT License
+
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -8,16 +10,16 @@ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 */
 
 #ifndef RPPT_TENSOR_AUDIO_AUGMENTATIONS_H
@@ -93,97 +95,7 @@ RppStatus rppt_to_decibels_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_
  */
 RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcLengthTensor, Rpp32f *coeffTensor, RpptAudioBorderType borderType, rppHandle_t rppHandle);
 
-/******************** down_mixing ********************/
-
-/*! \brief Down mixing augmentation HOST
-* \details Down mixing augmentation for audio data
-* \param[in] srcPtr source tensor memory
-* \param[in] srcDescPtr source tensor descriptor
-* \param[out] dstPtr destination tensor memory
-* \param[in] dstDescPtr destination tensor descriptor
-* \param[in] srcLengthTensor source audio buffer length (tensor of batchSize values)
-* \param[in] channelsTensor number of channels in audio buffer
-* \param[in] normalizeWeights indicates normalization of weights used in down_mixing
-* \param[in] rppHandle HIP-handle for "_gpu" variants and Host-handle for "_host" variants
-* \param[in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
-* \return A <tt> \ref RppStatus</tt> enumeration.
-* \retval RPP_SUCCESS Successful completion.
-* \retval RPP_ERROR* Unsuccessful completion.
-*/
-
-RppStatus rppt_down_mixing_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcLengthTensor, Rpp32s *channelsTensor, bool normalizeWeights, rppHandle_t rppHandle);
-
-/******************** slice_audio ********************/
-
-/*! \brief Slice audio augmentation HOST
-* \details Slice audio augmentation for audio data
-* \param[in] srcPtr source tensor memory
-* \param[in] srcDescPtr source tensor descriptor
-* \param[out] dstPtr destination tensor memory
-* \param[in] dstDescPtr destination tensor descriptor
-* \param[in] srcLengthTensor source audio buffer length (tensor of batchSize values)
-* \param[in] anchorTensor starting index of the slice
-* \param[in] shapeTensor length of the slice
-* \param[in] axesTensor axes along which slice is needed
-* \param[in] fillValues fill values based on out of Bound policy
-* \param[in] rppHandle HIP-handle for "_gpu" variants and Host-handle for "_host" variants
-* \return A <tt> \ref RppStatus</tt> enumeration.
-* \retval RPP_SUCCESS Successful completion.
-* \retval RPP_ERROR* Unsuccessful completion.
-*/
-
-RppStatus rppt_slice_audio_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcLengthTensor, Rpp32f *anchorTensor, Rpp32f *shapeTensor, Rpp32s *axesTensor, Rpp32f *fillValues, rppHandle_t rppHandle);
-
-/******************** mel_filter_bank ********************/
-
-/*! \brief Mel_filter_bank augmentation HOST
-* \details Mel_filter_bank augmentation for audio data
-* \param[in] srcPtr source tensor memory
-* \param[in] srcDescPtr source tensor descriptor
-* \param[out] dstPtr destination tensor memory
-* \param[in] dstDescPtr destination tensor descriptor
-* \param[in] srcDims source dimensions
-* \param[in] maxFreq maximum frequency if not provided maxFreq = sampleRate / 2
-* \param[in] minFreq minimum frequency
-* \param[in] melFormula formula used to convert frequencies from hertz to mel and from mel to hertz (SLANEY / HTK)
-* \param[in] numFilter number of mel filters
-* \param[in] sampleRate sampling rate of the audio
-* \param[in] normalize boolean variable that determine whether to normalize weights / not
-* \param[in] rppHandle HIP-handle for "_gpu" variants and Host-handle for "_host" variants
-* \return A <tt> \ref RppStatus</tt> enumeration.
-* \retval RPP_SUCCESS Successful completion.
-* \retval RPP_ERROR* Unsuccessful completion.
-*/
-
-RppStatus rppt_mel_filter_bank_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr srcDims, Rpp32f maxFreq, Rpp32f minFreq, RpptMelScaleFormula melFormula, Rpp32s numFilter, Rpp32f sampleRate, bool normalize, rppHandle_t rppHandle);
-
-/******************** spectrogram ********************/
-
-/*! \brief Spectrogram augmentation HOST
-* \details Spectrogram augmentation for audio data
-* \param[in] srcPtr source tensor memory
-* \param[in] srcDescPtr source tensor descriptor
-* \param[out] dstPtr destination tensor memory
-* \param[in] dstDescPtr destination tensor descriptor
-* \param[in] srcLengthTensor source audio buffer length (tensor of batchSize values)
-* \param[in] centerWindows Indicates whether extracted windows should be padded so that the window function is centered at multiples of window_step
-* \param[in] reflectPadding Indicates the padding policy when sampling outside the bounds of the signal
-* \param[in] windowFunction Samples of the window function that will be multiplied to each extracted window when calculating the STFT
-* \param[in] nfft Size of the FFT
-* \param[in] power Exponent of the magnitude of the spectrum
-* \param[in] windowLength Window size in number of samples
-* \param[in] windowStep Step betweeen the STFT windows in number of samples
-* \param[in] layout output layout of spectrogram
-* \param[in] rppHandle HIP-handle for "_gpu" variants and Host-handle for "_host" variants
-* \return A <tt> \ref RppStatus</tt> enumeration.
-* \retval RPP_SUCCESS Successful completion.
-* \retval RPP_ERROR* Unsuccessful completion.
-*/
-RppStatus rppt_spectrogram_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcLengthTensor, bool centerWindows, bool reflectPadding, Rpp32f *windowFunction, Rpp32s nfft, Rpp32s power, Rpp32s windowLength, Rpp32s windowStep, RpptSpectrogramLayout layout, rppHandle_t rppHandle);
-
-/******************** resample ********************/
-
-/*! \brief Resample augmentation HOST
+/*! \brief Resample augmentation on HOST backend
 * \details Resample augmentation for audio data
 * \param[in] srcPtr source tensor memory
 * \param[in] srcDescPtr source tensor descriptor

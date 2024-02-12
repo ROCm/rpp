@@ -1,5 +1,7 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+MIT License
+
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -8,16 +10,16 @@ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 */
 
 #include "rppdefs.h"
@@ -71,11 +73,7 @@ RppStatus to_decibels_host_tensor(Rpp32f *srcPtr,
             }
         }
 
-        // Avoid division by zero
-        if(!refMag)
-            refMag = 1.0f;
-
-        Rpp32f invReferenceMagnitude = 1.f / refMag;
+        Rpp32f invReferenceMagnitude = (refMag) ? (1.f / refMag) : 1.0f;
         // Interpret as 1D array
         if(width == 1)
         {
@@ -84,20 +82,16 @@ RppStatus to_decibels_host_tensor(Rpp32f *srcPtr,
         }
         else
         {
-            Rpp32f *srcPtrRow, *dstPtrRow;
-            srcPtrRow = srcPtrCurrent;
-            dstPtrRow = dstPtrCurrent;
             for(int i = 0; i < height; i++)
             {
-                Rpp32f *srcPtrTemp, *dstPtrTemp;
-                srcPtrTemp = srcPtrRow;
-                dstPtrTemp = dstPtrRow;
-                Rpp32s vectorLoopCount = 0;
-                for(; vectorLoopCount < width; vectorLoopCount++)
-                    *dstPtrTemp++ = multiplier * std::log2(std::max(minRatio, (*srcPtrTemp++) * invReferenceMagnitude));
+                Rpp32f *srcPtrRow, *dstPtrRow;
+                srcPtrRow = srcPtrCurrent;
+                dstPtrRow = dstPtrCurrent;
+                for(Rpp32s vectorLoopCount = 0; vectorLoopCount < width; vectorLoopCount++)
+                    *dstPtrRow++ = multiplier * std::log2(std::max(minRatio, (*srcPtrRow++) * invReferenceMagnitude));
 
-                srcPtrRow += srcDescPtr->strides.hStride;
-                dstPtrRow += dstDescPtr->strides.hStride;
+                srcPtrCurrent += srcDescPtr->strides.hStride;
+                dstPtrCurrent += dstDescPtr->strides.hStride;
             }
         }
     }
