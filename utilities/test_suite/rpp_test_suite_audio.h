@@ -139,7 +139,6 @@ void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dst
     Rpp64u oBufferSize = dstDescPtr->n * dstDescPtr->strides.nStride;
     Rpp32f *refOutput = static_cast<Rpp32f *>(malloc(oBufferSize * sizeof(float)));
     string outFile = scriptPath + "/../REFERENCE_OUTPUTS_AUDIO/" + testCase + "/" + testCase + ".bin";
-    std::cout << "outFile:" <<  outFile << std::endl;
     std::fstream fin(outFile, std::ios::in | std::ios::binary);
     if(fin.is_open())
     {
