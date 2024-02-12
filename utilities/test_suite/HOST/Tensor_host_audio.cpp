@@ -197,6 +197,42 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 6:
+                {
+                    testCaseName = "resample";
+                    Rpp32f inRateTensor[batchSize];
+                    Rpp32f outRateTensor[batchSize];
+
+                    maxDstWidth = 0;
+                    for(int i = 0; i < batchSize; i++)
+                    {
+                        inRateTensor[i] = 16000;
+                        outRateTensor[i] = 16000 * 1.15f;
+                        Rpp32f scaleRatio = outRateTensor[i] / inRateTensor[i];
+                        dstDims[i].width = (int)std::ceil(scaleRatio * srcLengthTensor[i]);
+                        dstDims[i].height = 1;
+                        maxDstWidth = std::max(maxDstWidth, (int)dstDims[i].width);
+                    }
+                    Rpp32f quality = 50.0f;
+                    dstDescPtr->w = maxDstWidth;
+                    dstDescPtr->strides.nStride = dstDescPtr->c * dstDescPtr->w * dstDescPtr->h;
+
+                    // Set buffer sizes for dst
+                    Rpp64u resampleBufferSize = (Rpp64u)dstDescPtr->h * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
+
+                    // Initialize host buffers for output
+                    outputf32 = (Rpp32f *)realloc(outputf32, sizeof(Rpp32f) * resampleBufferSize);
+                    if(!outputf32)
+                    {
+                        std::cout << "Unable to reallocate memory for output" << std::endl;
+                        break;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    rppt_resample_host(inputf32, srcDescPtr, outputf32, dstDescPtr, inRateTensor, outRateTensor, srcLengthTensor, channelsTensor, quality, handle);
+
+                    break;
+                }
                 default:
                 {
                     missingFuncFlag = 1;
