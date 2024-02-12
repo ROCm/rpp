@@ -97,21 +97,20 @@ RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr,
 
 /*! \brief Resample augmentation on HOST backend
 * \details Resample augmentation for audio data
-* \param[in] srcPtr source tensor memory
-* \param[in] srcDescPtr source tensor descriptor
-* \param[out] dstPtr destination tensor memory
-* \param[in] dstDescPtr destination tensor descriptor
-* \param[in] inRate Input sampling rate (1D tensor of size batchSize)
-* \param[in] outRate Output sampling rate (1D tensor of size batchSize)
-* \param[in] srcLengthTensor source audio buffer length (1D tensor of size batchSize)
-* \param[in] channelsTensor number of channels in audio buffer (1D tensor of size batchSize)
+* \param[in] srcPtr source tensor in HOST memory
+* \param[in] srcDescPtr source tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
+* \param[out] dstPtr destination tensor in HOST memory
+* \param[in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
+* \param[in] inRate Input sampling rate (1D tensor in HOST memory, of size batchSize)
+* \param[in] outRate Output sampling rate (1D tensor in HOST memory, of size batchSize)
+* \param[in] srcLengthTensor source audio buffer length (1D tensor in HOST memory, of size batchSize)
+* \param[in] channelsTensor number of channels in audio buffer (1D tensor in HOST memory, of size batchSize)
 * \param[in] quality resampling quality, where 0 is the lowest, and 100 is the highest
-* \param[in] rppHandle HIP-handle for "_gpu" variants and Host-handle for "_host" variants
+* \param[in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
 * \return A <tt> \ref RppStatus</tt> enumeration.
 * \retval RPP_SUCCESS Successful completion.
 * \retval RPP_ERROR* Unsuccessful completion.
 */
-
 RppStatus rppt_resample_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *inRateTensor, Rpp32f *outRateTensor, Rpp32s *srcLengthTensor, Rpp32s *channelsTensor, Rpp32f quality, rppHandle_t rppHandle);
 
 #ifdef __cplusplus
