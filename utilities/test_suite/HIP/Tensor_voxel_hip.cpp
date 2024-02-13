@@ -298,6 +298,22 @@ int main(int argc, char * argv[])
 
                     break;
                 }
+                case 5:
+                {
+                    testCaseName = "multiply_scalar";
+                    Rpp32f mulTensor[batchSize];
+
+                    for (int i = 0; i < batchSize; i++)
+                        mulTensor[i] = 80;
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 2)
+                        rppt_multiply_scalar_gpu(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, mulTensor, roiGenericSrcPtr, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 default:
                 {
                     missingFuncFlag = 1;
