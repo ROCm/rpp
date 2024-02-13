@@ -345,21 +345,6 @@ int main(int argc, char **argv)
     double cpuTime, wallTime;
     string testCaseName;
 
-    // Initialize buffers for any reductionType functions
-    void *reductionFuncResultArr;
-    Rpp32u reductionFuncResultArrLength = srcDescPtr->n * 4;
-    if(reductionTypeCase)
-    {
-        if(dstDescPtr->dataType == RpptDataType::U8)
-            reductionFuncResultArr = static_cast<Rpp64u*>(calloc(reductionFuncResultArrLength, sizeof(Rpp64u)));
-        else if(dstDescPtr->dataType == RpptDataType::F16)
-            reductionFuncResultArr = static_cast<Rpp32f*>(calloc(reductionFuncResultArrLength, sizeof(Rpp32f)));
-        else if(dstDescPtr->dataType == RpptDataType::F32)
-            reductionFuncResultArr = static_cast<Rpp32f*>(calloc(reductionFuncResultArrLength, sizeof(Rpp32f)));
-        else if(dstDescPtr->dataType == RpptDataType::I8)
-            reductionFuncResultArr = static_cast<Rpp64s*>(calloc(reductionFuncResultArrLength, sizeof(Rpp64s)));
-    }
-
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
     for (int perfRunCount = 0; perfRunCount < numRuns; perfRunCount++)
