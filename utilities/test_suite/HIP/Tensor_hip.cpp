@@ -104,7 +104,7 @@ int main(int argc, char **argv)
 
     if (layoutType == 2)
     {
-        if(testCase == 36 || testCase == 31 || testCase == 86)
+        if(testCase == 36 || testCase == 31 || testCase == 45 || testCase == 86)
         {
             printf("\ncase %d does not exist for PLN1 layout\n", testCase);
             return -1;
@@ -322,18 +322,6 @@ int main(int argc, char **argv)
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0;
     double wallTime;
     string testCaseName;
-
-    if(testCase == 82 && imagesMixed)
-    {
-        std::cerr<<"\n RICAP only works with same dimension images";
-        exit(0);
-    }
-
-    if(testCase == 82 && batchSize < 2)
-    {
-        std::cerr<<"\n RICAP only works with BatchSize > 1";
-        exit(0);
-    }
 
     // Initialize buffers for any reductionType functions
     void *reductionFuncResultArr;
@@ -822,6 +810,22 @@ int main(int argc, char **argv)
                 startWallTime = omp_get_wtime();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 3 || inputBitDepth == 4 || inputBitDepth == 5)
                     rppt_resize_crop_mirror_gpu(d_input, srcDescPtr, d_output, dstDescPtr, dstImgSizes, interpolationType, mirror, roiTensorPtrDst, roiTypeSrc, handle);
+                else
+                    missingFuncFlag = 1;
+
+                break;
+            }
+            case 45:
+            {
+                testCaseName = "color_temperature";
+
+                Rpp32s adjustment[batchSize];
+                for (i = 0; i < batchSize; i++)
+                    adjustment[i] = 70;
+
+                startWallTime = omp_get_wtime();
+                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    rppt_color_temperature_gpu(d_input, srcDescPtr, d_output, dstDescPtr, adjustment, roiTensorPtrSrc, roiTypeSrc, handle);
                 else
                     missingFuncFlag = 1;
 
