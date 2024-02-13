@@ -28,6 +28,7 @@ import argparse
 import sys
 import datetime
 import shutil
+import pandas as pd
 
 # Set the timestamp
 timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -37,6 +38,7 @@ inFilePath1 = scriptPath + "/../TEST_IMAGES/three_images_mixed_src1"
 inFilePath2 = scriptPath + "/../TEST_IMAGES/three_images_mixed_src2"
 ricapInFilePath = scriptPath + "/../TEST_IMAGES/three_images_150x150_src1"
 qaInputFile = scriptPath + "/../TEST_IMAGES/three_images_mixed_src1"
+perfQaInputFile = scriptPath + "/../TEST_IMAGES/eight_images_mixed_src1"
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
 
@@ -113,7 +115,7 @@ def get_log_file_list(preserveOutput):
 
 # Functionality group finder
 def func_group_finder(case_number):
-    if case_number < 5 or case_number == 13 or case_number == 36 or case_number == 31:
+    if case_number < 5 or case_number == 13 or case_number == 36 or case_number == 31 or case_number == 45:
         return "color_augmentations"
     elif case_number == 8 or case_number == 30 or case_number == 82 or case_number == 83 or case_number == 84:
         return "effects_augmentations"
@@ -155,7 +157,11 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
     print("--------------------------------")
     print("Running a New Functionality...")
     print("--------------------------------")
-    for bitDepth in range(7):
+    if qaMode:
+        maxBitdepth = 1
+    else:
+        maxBitdepth = 7
+    for bitDepth in range(maxBitdepth):
         print("\n\n\nRunning New Bit Depth...\n-------------------------\n\n")
 
         for outputFormatToggle in range(2):
@@ -183,6 +189,16 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
             print("------------------------------------------------------------------------------------------")
 
 def run_performance_test_cmd(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, additionalParam, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
+    if qaMode == 1:
+        with open("{}/BatchPD_host_{}_raw_performance_log.txt".format(loggingFolder, log_file_layout), "a") as log_file:
+            process = subprocess.Popen([buildFolderPath + "/build/BatchPD_host_" + log_file_layout, srcPath1, srcPath2, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), "0"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
+            while True:
+                output = process.stdout.readline()
+                if not output and process.poll() is not None:
+                    break
+                print(output.strip())
+                log_file.write(output)
+
     with open("{}/Tensor_host_{}_raw_performance_log.txt".format(loggingFolder, log_file_layout), "a") as log_file:
         print(f"./Tensor_host {srcPath1} {srcPath2} {dstPath} {bitDepth} {outputFormatToggle} {case} {additionalParam} 0 ")
         process = subprocess.Popen([buildFolderPath + "/build/Tensor_host", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
@@ -198,8 +214,11 @@ def run_performance_test(loggingFolder, log_file_layout, srcPath1, srcPath2, dst
     print("--------------------------------")
     print("Running a New Functionality...")
     print("--------------------------------")
-
-    for bitDepth in range(7):
+    if qaMode:
+        maxBitdepth = 1
+    else:
+        maxBitdepth = 7
+    for bitDepth in range(maxBitdepth):
         print("\n\n\nRunning New Bit Depth...\n-------------------------\n\n")
 
         for outputFormatToggle in range(2):
@@ -239,6 +258,7 @@ def rpp_test_suite_parser_and_validator():
     validate_path(args.input_path1)
     validate_path(args.input_path2)
     validate_path(qaInputFile)
+    validate_path(perfQaInputFile)
 
     # validate the parameters passed by user
     if ((args.case_start < 0 or args.case_start > 89) or (args.case_end < 0 or args.case_end > 89)):
@@ -300,8 +320,12 @@ preserveOutput = args.preserve_output
 batchSize = args.batch_size
 roiList = ['0', '0', '0', '0'] if args.roi is None else args.roi
 
-if qaMode and batchSize != 3:
+if qaMode and testType == 0 and batchSize != 3:
     print("QA mode can only run with a batch size of 3.")
+    exit(0)
+
+if qaMode and testType == 1 and batchSize != 8:
+    print("Performance QA mode can only run with a batch size of 8.")
     exit(0)
 
 # set the output folders and number of runs based on type of test (unit test / performance test)
@@ -374,16 +398,19 @@ else:
         if int(case) < 0 or int(case) > 89:
             print(f"Invalid case number {case}. Case number must be in the range of 0 to 89!")
             continue
+        # if QA mode is enabled overwrite the input folders with the folders used for generating golden outputs
+        if qaMode == 1 and case != "82":
+            srcPath1 = inFilePath1
+            srcPath2 = inFilePath2
         if case == "82" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
-                srcPath1 = ricapInFilePath
-                srcPath2 = ricapInFilePath
+            srcPath1 = ricapInFilePath
+            srcPath2 = ricapInFilePath
         for layout in range(3):
             dstPathTemp, log_file_layout = process_layout(layout, qaMode, case, dstPath)
-
             run_performance_test(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
 
 # print the results of qa tests
-supportedCaseList = ['0', '1', '2', '4', '8', '13', '20', '21', '23', '29', '30', '31', '34', '36', '37', '38', '39', '54', '63', '70', '80', '81', '82', '83', '84', '85', '86', '87', '88', '89']
+supportedCaseList = ['0', '1', '2', '4', '8', '13', '20', '21', '23', '29', '30', '31', '34', '36', '37', '38', '39', '45', '54', '63', '70', '80', '81', '82', '83', '84', '85', '86', '87', '88', '89']
 nonQACaseList = ['8', '24', '54', '84'] # Add cases present in supportedCaseList, but without QA support
 
 if qaMode and testType == 0:
@@ -415,7 +442,146 @@ layoutDict = {0:"PKD3", 1:"PLN3", 2:"PLN1"}
 if testType == 0 and qaMode == 0:
     create_layout_directories(dstPath, layoutDict)
 # Performance tests
-elif (testType == 1):
+elif (testType == 1 and qaMode == 1):
+    columns = ['BatchPD_Augmentation_Type', 'Tensor_Augmentation_Type', 'Performance Speedup (%)', 'Test_Result']
+    tensorAugVariations = []
+    batchPDAugVariations = []
+    achievedPerf = []
+    status = []
+    df = pd.DataFrame(columns=columns)
+    tensorLogFileList = get_log_file_list(preserveOutput)
+    batchpdLogFileList = [sub.replace("Tensor_host", "BatchPD_host") for sub in tensorLogFileList] # will be needed only in qa mode
+
+    stats = []
+    tensorVal = []
+    batchpdVal = []
+    functions = []
+    functionsBatchPD = []
+    funcCount = 0
+    performanceNoise = 10
+    perfQASupportCaseList = ["resize", "color_twist", "phase"]
+    for i in range(3):
+        tensorLogFile = tensorLogFileList[i]
+        batchpdLogFile = batchpdLogFileList[i]
+        # Opening log file
+        try:
+            tensorFile = open(tensorLogFile,"r")
+        except IOError:
+            print("Skipping file -> "+ tensorLogFile)
+            continue
+
+        # Opening log file
+        try:
+            batchpdFile = open(batchpdLogFile,"r")
+        except IOError:
+            print("Skipping file -> "+ batchpdLogFile)
+            continue
+
+        prevLine = ""
+        # Loop over each line
+        for line in tensorFile:
+            if "max,min,avg wall times in ms/batch" in line and "u8_Tensor" in prevLine:
+                layoutCheck = "PKD3_toPKD3" in prevLine or "PLN3_toPLN3" in prevLine or "PLN1_toPLN1" in prevLine
+                interpolationCheck = "interpolationType" not in prevLine or "interpolationTypeBilinear" in prevLine
+                if layoutCheck and interpolationCheck:
+                    splitWordStart = "Running "
+                    splitWordEnd = " " + str(numRuns)
+                    prevLine = prevLine.partition(splitWordStart)[2].partition(splitWordEnd)[0]
+                    splitWordStart = "max,min,avg wall times in ms/batch = "
+                    splitWordEnd = "\n"
+                    if prevLine not in functions:
+                        functions.append(prevLine)
+                        stats = line.partition(splitWordStart)[2].partition(splitWordEnd)[0].split(",")
+                        tensorVal.append(float(stats[2]))
+                        funcCount += 1
+
+            if line != "\n":
+                prevLine = line
+
+        # Closing log file
+        tensorFile.close()
+
+        stats = []
+        prevLine = ""
+        for line in batchpdFile:
+            if "max,min,avg" in line and "u8_BatchPD" in prevLine:
+                if "PKD3_toPKD3" in prevLine or "PLN3_toPLN3" in prevLine or "PLN1_toPLN1" in prevLine:
+                    splitWordStart = "Running "
+                    splitWordEnd = " " + str(numRuns)
+                    prevLine = prevLine.partition(splitWordStart)[2].partition(splitWordEnd)[0]
+                    splitWordStart = "max,min,avg"
+                    splitWordEnd = "\n"
+                    if prevLine not in functionsBatchPD:
+                        functionsBatchPD.append(prevLine)
+                        stats = line.partition(splitWordStart)[2].partition(splitWordEnd)[0].split(",")
+                        batchpdVal.append(float(stats[2]) * float(1000.0))
+
+            if line != "\n":
+                prevLine = line
+
+        # Closing log file
+        batchpdFile.close()
+
+    print("---------------------------------- Results of QA Test - Tensor_host ----------------------------------\n")
+    qaFilePath = os.path.join(outFilePath, "QA_results.txt")
+    excelFilePath = os.path.join(outFilePath, "performance_qa_results.xlsx")
+    f = open(qaFilePath, 'w')
+    numLines = 0
+    numPassed = 0
+    removalList = ["_HOST", "_toPKD3", "_toPLN3", "_toPLN1"]
+    for i in range(len(functions)):
+        perfImprovement = int(((batchpdVal[i] - tensorVal[i]) / batchpdVal[i]) * 100)
+        numLines += 1
+        funcName = functions[i]
+        caseName = funcName.split("_u8_")[0]
+        for string in removalList:
+            funcName = funcName.replace(string, "")
+        if caseName not in perfQASupportCaseList:
+            print("Error! QA mode is not yet available for variant: " + funcName)
+            continue
+        achievedPerf.append(perfImprovement)
+        tensorAugVariations.append(funcName)
+        if perfImprovement > -performanceNoise:
+            numPassed += 1
+            status.append("PASSED")
+            print(funcName + ": PASSED")
+        else:
+            status.append("FAILED")
+            print(funcName + ": FAILED")
+
+    resultsInfo = "\n\nFinal Results of Tests:"
+    resultsInfo += "\n    - Total test cases including all subvariants REQUESTED = " + str(numLines)
+    resultsInfo += "\n    - Total test cases including all subvariants PASSED = " + str(numPassed)
+    f.write(resultsInfo)
+    batchPDAugVariations = [s.replace('Tensor', 'BatchPD') for s in tensorAugVariations]
+    df['Tensor_Augmentation_Type'] = tensorAugVariations
+    df['BatchPD_Augmentation_Type'] = batchPDAugVariations
+    df['Performance Speedup (%)'] = achievedPerf
+    df['Test_Result'] = status
+    # Calculate the number of cases passed and failed
+    passedCases = df['Test_Result'].eq('PASSED').sum()
+    failedCases = df['Test_Result'].eq('FAILED').sum()
+
+    summary_row = {'BatchPD_Augmentation_Type': pd.NA,
+                   'Tensor_Augmentation_Type': pd.NA,
+                   'Performance Speedup (%)': pd.NA,
+                   'Test_Result': f'Final Results of Tests: Passed: {passedCases}, Failed: {failedCases}'}
+
+    print("\n", df.to_markdown())
+
+    # Append the summary row to the DataFrame
+    # Convert the dictionary to a DataFrame
+    summary_row = pd.DataFrame([summary_row])
+    df = pd.concat([df, summary_row], ignore_index=True)
+
+    df.to_excel(excelFilePath, index=False)
+    print("\n-------------------------------------------------------------------" + resultsInfo + "\n\n-------------------------------------------------------------------")
+    print("\nIMPORTANT NOTE:")
+    print("- The following performance comparison shows Performance Speedup percentages between times measured on previous generation RPP-BatchPD APIs against current generation RPP-Tensor APIs.")
+    print(f"- All APIs have been improved for performance ranging from {0}% (almost same) to {100}% faster.")
+    print("- Random observations of negative speedups might always occur due to current test machine temperature/load variances or other CPU/GPU state-dependent conditions.")
+    print("\n-------------------------------------------------------------------\n")
+elif (testType == 1 and qaMode == 0):
     log_file_list = get_log_file_list(preserveOutput)
 
     functionality_group_list = [

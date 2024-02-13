@@ -103,7 +103,7 @@ int main(int argc, char **argv)
 
     if (layoutType == 2)
     {
-        if(testCase == 36 || testCase == 31 || testCase == 86)
+        if(testCase == 31 || testCase == 36 || testCase == 45 || testCase == 86)
         {
             printf("\ncase %d does not exist for PLN1 layout\n", testCase);
             return -1;
@@ -345,16 +345,19 @@ int main(int argc, char **argv)
     double cpuTime, wallTime;
     string testCaseName;
 
-    if(testCase == 82 && imagesMixed)
+    // Initialize buffers for any reductionType functions
+    void *reductionFuncResultArr;
+    Rpp32u reductionFuncResultArrLength = srcDescPtr->n * 4;
+    if(reductionTypeCase)
     {
-        std::cerr<<"\n RICAP only works with same dimension images";
-        exit(0);
-    }
-
-    if(testCase == 82 && batchSize < 2)
-    {
-        std::cerr<<"\n RICAP only works with BatchSize > 1";
-        exit(0);
+        if(dstDescPtr->dataType == RpptDataType::U8)
+            reductionFuncResultArr = static_cast<Rpp64u*>(calloc(reductionFuncResultArrLength, sizeof(Rpp64u)));
+        else if(dstDescPtr->dataType == RpptDataType::F16)
+            reductionFuncResultArr = static_cast<Rpp32f*>(calloc(reductionFuncResultArrLength, sizeof(Rpp32f)));
+        else if(dstDescPtr->dataType == RpptDataType::F32)
+            reductionFuncResultArr = static_cast<Rpp32f*>(calloc(reductionFuncResultArrLength, sizeof(Rpp32f)));
+        else if(dstDescPtr->dataType == RpptDataType::I8)
+            reductionFuncResultArr = static_cast<Rpp64s*>(calloc(reductionFuncResultArrLength, sizeof(Rpp64s)));
     }
 
     // case-wise RPP API and measure time script for Unit and Performance test
@@ -822,6 +825,23 @@ int main(int argc, char **argv)
                     startCpuTime = clock();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 3 || inputBitDepth == 4 || inputBitDepth == 5)
                         rppt_resize_crop_mirror_host(input, srcDescPtr, output, dstDescPtr, dstImgSizes, interpolationType, mirror, roiTensorPtrDst, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 45:
+                {
+                    testCaseName = "color_temperature";
+
+                    Rpp8s adjustment[batchSize];
+                    for (i = 0; i < batchSize; i++)
+                        adjustment[i] = 70;
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_color_temperature_host(input, srcDescPtr, output, dstDescPtr, adjustment, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
