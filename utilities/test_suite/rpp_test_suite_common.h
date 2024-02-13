@@ -102,7 +102,7 @@ std::map<int, string> augmentationMap =
 };
 
 // Golden outputs for Tensor sum Kernel
-std::map<int, std::vector<int>> TensorSumReferenceOutputs =
+std::map<int, std::vector<Rpp64u>> TensorSumReferenceOutputs =
 {
     {1, {334225, 813471, 2631125}},
     {3, {348380, 340992, 262616, 951988, 1056552, 749506, 507441, 2313499, 2170646, 2732368, 3320699, 8223713}}
@@ -1117,15 +1117,11 @@ inline void compare_reduction_output(T* output, string funcName, RpptDescPtr src
     int matched_values = 0;
 
     T *refOutput;
-    refOutput = (T *)calloc(srcDescPtr->n * 4, sizeof(T));
     int numChannels = (srcDescPtr->c == 1) ? 1 : 3;
     int numOutputs = (srcDescPtr->c == 1) ? srcDescPtr->n : srcDescPtr->n * 4;
-    std::vector<int> ref;
+    std::vector<T> ref;
     if(testCase == 87)
-        ref = TensorSumReferenceOutputs[numChannels];
-
-    for (int i = 0; i < numOutputs; i++)
-        refOutput[i] = (T)ref[i];
+        refOutput = TensorSumReferenceOutputs[numChannels].data();
 
     if(srcDescPtr->c == 1)
     {
@@ -1151,7 +1147,6 @@ inline void compare_reduction_output(T* output, string funcName, RpptDescPtr src
                 fileMatch++;
         }
     }
-    free(refOutput);
 
     std::cout << std::endl << "Results for " << func << " :" << std::endl;
     std::string status = func + ": ";
