@@ -89,6 +89,7 @@ std::map<int, string> augmentationMap =
     {45, "color_temperature"},
     {49, "box_filter"},
     {54, "gaussian_filter"},
+    {61, "magnitude"},
     {63, "phase"},
     {70, "copy"},
     {80, "resize_mirror_normalize"},
