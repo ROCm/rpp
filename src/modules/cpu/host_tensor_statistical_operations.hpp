@@ -26,6 +26,6 @@ SOFTWARE.
 #define HOST_TENSOR_STATISTICAL_OPERATIONS_HPP
 
 #include "kernel/tensor_sum.hpp"
-#include "kernel/normalize_generic.hpp"
+#include "kernel/normalize.hpp"
 
 #endif // HOST_TENSOR_STATISTICAL_OPERATIONS_HPP

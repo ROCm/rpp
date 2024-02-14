@@ -109,19 +109,19 @@ RppStatus rppt_tensor_sum_host(RppPtr_t srcPtr,
 
 /******************** normalize_ND ********************/
 
-RppStatus rppt_normalize_generic_host(RppPtr_t srcPtr,
-                                      RpptGenericDescPtr srcGenericDescPtr,
-                                      RppPtr_t dstPtr,
-                                      RpptGenericDescPtr dstGenericDescPtr,
-                                      Rpp32u axisMask,
-                                      Rpp32f *meanTensor,
-                                      Rpp32f *stdDevTensor,
-                                      Rpp32u computeMean,
-                                      Rpp32u computeStddev,
-                                      Rpp32f scale,
-                                      Rpp32f shift,
-                                      Rpp32u *roiTensor,
-                                      rppHandle_t rppHandle)
+RppStatus rppt_normalize_host(RppPtr_t srcPtr,
+                              RpptGenericDescPtr srcGenericDescPtr,
+                              RppPtr_t dstPtr,
+                              RpptGenericDescPtr dstGenericDescPtr,
+                              Rpp32u axisMask,
+                              Rpp32f *meanTensor,
+                              Rpp32f *stdDevTensor,
+                              Rpp32u computeMean,
+                              Rpp32u computeStddev,
+                              Rpp32f scale,
+                              Rpp32f shift,
+                              Rpp32u *roiTensor,
+                              rppHandle_t rppHandle)
 {
     RppLayoutParams layoutParams;
     Rpp32u nDim = srcGenericDescPtr->numDims - 1;
@@ -170,20 +170,20 @@ RppStatus rppt_normalize_generic_host(RppPtr_t srcPtr,
     }
     else if ((srcGenericDescPtr->dataType == RpptDataType::F32) && (dstGenericDescPtr->dataType == RpptDataType::F32))
     {
-        normalize_generic_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes),
-                                              srcGenericDescPtr,
-                                              (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
-                                              dstGenericDescPtr,
-                                              axisMask,
-                                              meanTensor,
-                                              stdDevTensor,
-                                              computeMean,
-                                              computeStddev,
-                                              scale,
-                                              shift,
-                                              roiTensor,
-                                              layoutParams,
-                                              rpp::deref(rppHandle));
+        normalize_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes),
+                                      srcGenericDescPtr,
+                                      (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
+                                      dstGenericDescPtr,
+                                      axisMask,
+                                      meanTensor,
+                                      stdDevTensor,
+                                      computeMean,
+                                      computeStddev,
+                                      scale,
+                                      shift,
+                                      roiTensor,
+                                      layoutParams,
+                                      rpp::deref(rppHandle));
     }
 
     else if ((srcGenericDescPtr->dataType == RpptDataType::I8) && (dstGenericDescPtr->dataType == RpptDataType::F32))
@@ -284,19 +284,19 @@ RppStatus rppt_tensor_sum_gpu(RppPtr_t srcPtr,
     return RPP_SUCCESS;
 }
 
-RppStatus rppt_normalize_generic_gpu(RppPtr_t srcPtr,
-                                     RpptGenericDescPtr srcGenericDescPtr,
-                                     RppPtr_t dstPtr,
-                                     RpptGenericDescPtr dstGenericDescPtr,
-                                     Rpp32u axisMask,
-                                     Rpp32f *meanTensor,
-                                     Rpp32f *stdDevTensor,
-                                     Rpp32u computeMean,
-                                     Rpp32u computeStddev,
-                                     Rpp32f scale,
-                                     Rpp32f shift,
-                                     Rpp32u *roiTensor,
-                                     rppHandle_t rppHandle)
+RppStatus rppt_normalize_gpu(RppPtr_t srcPtr,
+                             RpptGenericDescPtr srcGenericDescPtr,
+                             RppPtr_t dstPtr,
+                             RpptGenericDescPtr dstGenericDescPtr,
+                             Rpp32u axisMask,
+                             Rpp32f *meanTensor,
+                             Rpp32f *stdDevTensor,
+                             Rpp32u computeMean,
+                             Rpp32u computeStddev,
+                             Rpp32f scale,
+                             Rpp32f shift,
+                             Rpp32u *roiTensor,
+                             rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
     if ((srcGenericDescPtr->dataType == RpptDataType::F32) && (dstGenericDescPtr->dataType == RpptDataType::F32))

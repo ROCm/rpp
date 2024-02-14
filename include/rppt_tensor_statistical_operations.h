@@ -78,12 +78,12 @@ RppStatus rppt_tensor_sum_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t
 RppStatus rppt_tensor_sum_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t tensorSumArr, Rpp32u tensorSumArrLength, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
-/*! \brief Normalize Generic HOST
+/*! \brief Normalize Generic augmentation on HOST backend
  * \details Normalizes the input generic ND buffer by removing the mean and dividing by the standard deviation for a given ND Tensor.
  *          Supports u8->f32, i8->f32, f16->f16 and f32->f32 datatypes. Also has toggle variant(NHWC->NCHW) support for 3D.
- * \param [in] srcPtr source tensor memory
+ * \param [in] srcPtr source tensor memory in HOST memory
  * \param[in] srcGenericDescPtr source tensor descriptor
- * \param[out] dstPtr destination tensor memory
+ * \param[out] dstPtr destination tensor memory in HOST memory
  * \param[in] dstGenericDescPtr destination tensor descriptor
  * \param[in] axisMask axis along which normalization needs to be done
  * \param[in] meanTensor values to be subtracted from input
@@ -93,22 +93,20 @@ RppStatus rppt_tensor_sum_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t 
  * \param[in] scale value to be multiplied with data after subtracting from mean
  * \param[in] shift value to be added finally
  * \param[in] roiTensor values to represent dimensions of input tensor
- * \param [in] rppHandle Host-handle
- * \return <tt> Rppt_Status enum</tt>.
- * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
- * Else return RPP_ERROR
- * \ingroup group_tensor_geometric
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
  */
 
-RppStatus rppt_normalize_generic_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u axisMask, Rpp32f *meanTensor, Rpp32f *stdDevTensor, Rpp32u computeMean, Rpp32u computeStddev, Rpp32f scale, Rpp32f shift, Rpp32u *roiTensor, rppHandle_t rppHandle);
+RppStatus rppt_normalize_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u axisMask, Rpp32f *meanTensor, Rpp32f *stdDevTensor, Rpp32u computeMean, Rpp32u computeStddev, Rpp32f scale, Rpp32f shift, Rpp32u *roiTensor, rppHandle_t rppHandle);
 
 #ifdef GPU_SUPPORT
-/*! \brief Normalize Generic HIP
+/*! \brief Normalize Generic augmentation on HIP backend
  * \details Normalizes the input generic ND buffer by removing the mean and dividing by the standard deviation for a given ND Tensor.
- *          Supports u8->f32, i8->f32, f16->f16 and f32->f32 datatypes. Also has toggle variant(NHWC->NCHW) support for 3D.
- * \param [in] srcPtr source tensor memory
+ * \param [in] srcPtr source tensor memory in HIP memory
  * \param[in] srcGenericDescPtr source tensor descriptor
- * \param[out] dstPtr destination tensor memory
+ * \param[out] dstPtr destination tensor memory in HIP memory
  * \param[in] dstGenericDescPtr destination tensor descriptor
  * \param[in] axisMask axis along which normalization needs to be done
  * \param[in] meanTensor values to be subtracted from input
@@ -118,14 +116,13 @@ RppStatus rppt_normalize_generic_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGen
  * \param[in] scale value to be multiplied with data after subtracting from mean
  * \param[in] shift value to be added finally
  * \param[in] roiTensor values to represent dimensions of input tensor
- * \param [in] rppHandle Host-handle
- * \return <tt> Rppt_Status enum</tt>.
- * \returns RPP_SUCCESS <tt>\ref Rppt_Status</tt> on successful completion.
- * Else return RPP_ERROR
- * \ingroup group_tensor_geometric
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
  */
 
-RppStatus rppt_normalize_generic_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u axisMask, Rpp32f *meanTensor, Rpp32f *stdDevTensor, Rpp32u computeMean, Rpp32u computeStddev, Rpp32f scale, Rpp32f shift, Rpp32u *roiTensor, rppHandle_t rppHandle);
+RppStatus rppt_normalize_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u axisMask, Rpp32f *meanTensor, Rpp32f *stdDevTensor, Rpp32u computeMean, Rpp32u computeStddev, Rpp32f scale, Rpp32f shift, Rpp32u *roiTensor, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
 /*! @}

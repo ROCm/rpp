@@ -163,7 +163,7 @@ int main(int argc, char **argv)
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 2)
                     {
-                        rppt_normalize_generic_host(inputF32, srcDescriptorPtrND, outputF32, dstDescriptorPtrND, axisMask, meanTensor, stdDevTensor, computeMean, computeStddev, scale, shift, roiTensor, handle);
+                        rppt_normalize_host(inputF32, srcDescriptorPtrND, outputF32, dstDescriptorPtrND, axisMask, meanTensor, stdDevTensor, computeMean, computeStddev, scale, shift, roiTensor, handle);
                         free(meanTensor);
                         free(stdDevTensor);
                     }

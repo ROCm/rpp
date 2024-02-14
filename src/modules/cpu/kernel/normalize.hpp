@@ -1,5 +1,7 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+MIT License
+
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -8,16 +10,16 @@ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 */
 
 #include "rppdefs.h"
@@ -106,8 +108,6 @@ void compute_sum(Rpp32f &output, T *input, Rpp32s inputStride, Rpp32s numElement
 /* Computes inverse square root */
 Rpp32f rpp_rsqrt_ps(Rpp32f x)
 {
-    // Use SSE intrinsic and one Newton-Raphson refinement step
-    // - faster and less hacky than the hack below.
     __m128 X = _mm_set_ss(x);
     __m128 tmp = _mm_rsqrt_ss(X);
     Rpp32f y = _mm_cvtss_f32(tmp);
@@ -598,20 +598,20 @@ void collapse_axis(Rpp32u *nDim, Rpp32u *axis, Rpp32u *length, Rpp32u *newAxis, 
     }
 }
 
-RppStatus normalize_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
-                                                RpptGenericDescPtr srcGenericDescPtr,
-                                                Rpp32f *dstPtr,
-                                                RpptGenericDescPtr dstGenericDescPtr,
-                                                Rpp32u axisMask,
-                                                Rpp32f *meanTensorPtr,
-                                                Rpp32f *stdDevTensorPtr,
-                                                Rpp32u computeMean,
-                                                Rpp32u computeStddev,
-                                                Rpp32f scale,
-                                                Rpp32f shift,
-                                                Rpp32u *roiTensor,
-                                                RppLayoutParams layoutParams,
-                                                rpp::Handle& handle)
+RppStatus normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
+                                        RpptGenericDescPtr srcGenericDescPtr,
+                                        Rpp32f *dstPtr,
+                                        RpptGenericDescPtr dstGenericDescPtr,
+                                        Rpp32u axisMask,
+                                        Rpp32f *meanTensorPtr,
+                                        Rpp32f *stdDevTensorPtr,
+                                        Rpp32u computeMean,
+                                        Rpp32u computeStddev,
+                                        Rpp32f scale,
+                                        Rpp32f shift,
+                                        Rpp32u *roiTensor,
+                                        RppLayoutParams layoutParams,
+                                        rpp::Handle& handle)
 {
     Rpp32u numThreads = handle.GetNumThreads();
     Rpp32u numDims = srcGenericDescPtr->numDims - 1;
