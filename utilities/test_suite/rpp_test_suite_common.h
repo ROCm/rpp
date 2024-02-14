@@ -1127,7 +1127,7 @@ inline void compare_reduction_output(T* output, string funcName, RpptDescPtr src
     {
         for(int i = 0; i < srcDescPtr->n; i++)
         {
-            int diff = abs(output[i] - refOutput[i]);
+            int diff = abs(static_cast<int>(output[i] - refOutput[i]));
             if(diff <= CUTOFF)
                 fileMatch++;
         }
@@ -1139,7 +1139,7 @@ inline void compare_reduction_output(T* output, string funcName, RpptDescPtr src
             matched_values = 0;
             for(int j = 0; j < 4; j++)
             {
-                int diff = abs(output[(i * 4) + j] - refOutput[(i * 4) + j]);
+                int diff = abs(static_cast<int>(output[(i * 4) + j] - refOutput[(i * 4) + j]));
                 if(diff <= CUTOFF)
                     matched_values++;
             }
