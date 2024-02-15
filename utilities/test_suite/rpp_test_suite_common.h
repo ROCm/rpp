@@ -81,6 +81,7 @@ std::map<int, string> augmentationMap =
     {29, "water"},
     {30, "non_linear_blend"},
     {31, "color_cast"},
+    {32, "erase"},
     {34, "lut"},
     {36, "color_twist"},
     {37, "crop"},

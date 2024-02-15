@@ -97,6 +97,7 @@ if( "${BACKEND}" STREQUAL "HIP")
     set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_HIPCC_FLAGS}")
     set_source_files_properties(rppt_tensor_audio_augmentations.cpp PROPERTIES COMPILE_FLAGS -mno-fma)
+    set_source_files_properties(rppt_tensor_advanced_augmentations.cpp PROPERTIES COMPILE_FLAGS -mno-fma)
 
     # Add HIP specific preprocessor flags
     add_definitions(-DHIP_COMPILE)
@@ -125,6 +126,7 @@ elseif( "${BACKEND}" STREQUAL "CPU")
     # Add CPU specific includes
     set(INCLUDE_LIST ${CMAKE_SOURCE_DIR}/src/include/common/)
     set_source_files_properties(rppt_tensor_audio_augmentations.cpp PROPERTIES COMPILE_FLAGS -mno-fma)
+    set_source_files_properties(rppt_tensor_advanced_augmentations.cpp PROPERTIES COMPILE_FLAGS -mno-fma)
 endif()
 message("-- ${White}AMD RPP ${PROJECT_NAME} -- Include Directories:${INCLUDE_LIST}${ColourReset}")
 add_compile_options("-Wno-unused-result")
