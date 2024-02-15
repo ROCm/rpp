@@ -235,27 +235,9 @@ if testType == 0:
         exit(0)
 
     for case in caseList:
-        if "--input_path" not in sys.argv:
-            if case == "3":
-                srcPath = scriptPath + "/../TEST_AUDIO_FILES/three_sample_multi_channel_src1"
-            else:
-                srcPath = inFilePath
-        if int(case) < 0 or int(case) > 7:
-            print(f"Invalid case number {case}. Case number must be 0-7 range!")
-            continue
-
         run_unit_test(srcPath, case, numRuns, testType, batchSize, outFilePath)
 else:
     for case in caseList:
-        if "--input_path" not in sys.argv:
-            if case == "3":
-                srcPath = scriptPath + "/../TEST_AUDIO_FILES/three_sample_multi_channel_src1"
-            else:
-                srcPath = inFilePath
-        if int(case) < 0 or int(case) > 7:
-            print(f"Invalid case number {case}. Case number must be 0-7 range!")
-            continue
-
         run_performance_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath)
 
 # print the results of qa tests

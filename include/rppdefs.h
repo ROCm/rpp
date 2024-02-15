@@ -418,15 +418,6 @@ typedef struct
 
 } RpptRoiLtrb;
 
-/*! \brief RPPT Spectrogram Layout
- * \ingroup group_rppdefs
- */
-typedef enum
-{
-    FT = 0,
-    TF,
-}RpptSpectrogramLayout;
-
 /*! \brief RPPT Tensor 3D ROI LTFRBB struct
  * \ingroup group_rppdefs
  */
@@ -657,7 +648,6 @@ typedef struct GenericFilter
 /*! \brief RPPT Tensor RpptResamplingWindow type struct
  * \ingroup group_rppdefs
  */
-
 typedef struct RpptResamplingWindow
 {
     inline void input_range(Rpp32f x, Rpp32s *loc0, Rpp32s *loc1)
@@ -696,7 +686,7 @@ typedef struct RpptResamplingWindow
     Rpp32s lookupSize = 0;
     std::vector<Rpp32f> lookup;
     __m128 pCenter, pScale;
-}RpptResamplingWindow;
+} RpptResamplingWindow;
 
 /******************** HOST memory typedefs ********************/
 
