@@ -695,7 +695,7 @@ int main(int argc, char **argv)
                         }
                         else
                         {
-                            int idx = (boxesInEachImage * 3 * i);
+                            int idx = (boxesInEachImage * i);
                             colorBuffer[idx] = 240;
                             colorBuffer[idx + 1] = 120;
                             colorBuffer[idx + 2] = 60;

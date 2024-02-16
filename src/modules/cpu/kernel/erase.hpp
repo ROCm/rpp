@@ -26,17 +26,35 @@ SOFTWARE.
 #include "rpp_cpu_simd.hpp"
 #include "rpp_cpu_common.hpp"
 
-RppStatus erase_u8_u8_host_tensor(Rpp8u *srcPtr,
-                                  RpptDescPtr srcDescPtr,
-                                  Rpp8u *dstPtr,
-                                  RpptDescPtr dstDescPtr,
-                                  RpptRoiLtrb *anchorBoxInfoTensor,
-                                  Rpp8u *colorsTensor,
-                                  Rpp32u *numBoxesTensor,
-                                  RpptROIPtr roiTensorPtrSrc,
-                                  RpptRoiType roiType,
-                                  RppLayoutParams layoutParams,
-                                  rpp::Handle& handle)
+// Overload memset to handle float datatype
+inline Rpp32f *memset (Rpp32f *ptr, Rpp32f value, size_t size)
+{
+    Rpp32u numValues = size / sizeof(Rpp32f);
+    for (int j = 0; j < numValues; j++)
+        ptr[j] = value;
+    return (ptr);
+}
+
+inline Rpp16f *memset (Rpp16f *ptr, Rpp16f value, size_t size)
+{
+    Rpp32u numValues = size / sizeof(Rpp16f);
+    for (int j = 0; j < numValues; j++)
+        ptr[j] = value;
+    return (ptr);
+}
+
+template <typename T>
+RppStatus erase_host_tensor(T *srcPtr,
+                            RpptDescPtr srcDescPtr,
+                            T *dstPtr,
+                            RpptDescPtr dstDescPtr,
+                            RpptRoiLtrb *anchorBoxInfoTensor,
+                            T *colorsTensor,
+                            Rpp32u *numBoxesTensor,
+                            RpptROIPtr roiTensorPtrSrc,
+                            RpptRoiType roiType,
+                            RppLayoutParams layoutParams,
+                            rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
     Rpp32u numThreads = handle.GetNumThreads();
@@ -51,21 +69,21 @@ RppStatus erase_u8_u8_host_tensor(Rpp8u *srcPtr,
 
         Rpp32u numBoxes = numBoxesTensor[batchCount];
         RpptRoiLtrb *anchorBoxInfo = anchorBoxInfoTensor + batchCount * numBoxes;
-        Rpp8u *colors = colorsTensor + batchCount * numBoxes * srcDescPtr->c;
+        T *colors = colorsTensor + batchCount * numBoxes * srcDescPtr->c;
 
-        Rpp8u *srcPtrImage, *dstPtrImage;
+        T *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
 
-        Rpp8u *srcPtrChannel, *dstPtrChannel;
+        T *srcPtrChannel, *dstPtrChannel;
         srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
-        Rpp8u *userPixel3 = (Rpp8u* )malloc(sizeof(Rpp8u) * 3);
+        T userPixel3[3];
 
         // Erase with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp8u *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
+            T *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtrRow = srcPtrChannel;
             dstPtrRowR = dstPtrChannel;
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
@@ -73,14 +91,14 @@ RppStatus erase_u8_u8_host_tensor(Rpp8u *srcPtr,
 
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
-                Rpp8u *srcPtrTemp, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
+                T *srcPtrTemp, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
                 srcPtrTemp = srcPtrRow;
                 dstPtrTempR = dstPtrRowR;
                 dstPtrTempG = dstPtrRowG;
                 dstPtrTempB = dstPtrRowB;
                 bool is_erase = false;
                 Rpp32u bufferLength = 0;
-                Rpp8u userPixelR, userPixelG, userPixelB;
+                T userPixelR, userPixelG, userPixelB;
                 int j;
 
                 for (j = 0; j < roi.xywhROI.roiWidth;)
@@ -91,9 +109,10 @@ RppStatus erase_u8_u8_host_tensor(Rpp8u *srcPtr,
                         Rpp32u y1 = (Rpp32u) RPPPRANGECHECK(anchorBoxInfo[count].lt.y, roi.xywhROI.xy.y, roi.xywhROI.roiHeight);
                         Rpp32u x2 = (Rpp32u) RPPPRANGECHECK(anchorBoxInfo[count].rb.x, x1, roi.xywhROI.roiWidth);
                         Rpp32u y2 = (Rpp32u) RPPPRANGECHECK(anchorBoxInfo[count].rb.y, y1, roi.xywhROI.roiHeight);
-                        userPixelR = colors[(count * 3)];
-                        userPixelG = colors[(count * 3) + 1];
-                        userPixelB = colors[(count * 3) + 2];
+                        Rpp32u countMul3 = count * 3;
+                        userPixelR = colors[countMul3];
+                        userPixelG = colors[countMul3 + 1];
+                        userPixelB = colors[countMul3 + 2];
                         if(i >= y1 && i <= y2 && j >= x1 && j <= x2)
                         {
                             is_erase = true;
@@ -103,9 +122,9 @@ RppStatus erase_u8_u8_host_tensor(Rpp8u *srcPtr,
                     }
                     if(is_erase && bufferLength)
                     {
-                        memset(dstPtrTempR, userPixelR, bufferLength * sizeof(Rpp8u));
-                        memset(dstPtrTempG, userPixelG, bufferLength * sizeof(Rpp8u));
-                        memset(dstPtrTempB, userPixelB, bufferLength * sizeof(Rpp8u));
+                        memset(dstPtrTempR, userPixelR, bufferLength * sizeof(T));
+                        memset(dstPtrTempG, userPixelG, bufferLength * sizeof(T));
+                        memset(dstPtrTempB, userPixelB, bufferLength * sizeof(T));
                         srcPtrTemp += 3 * bufferLength;
                         j += bufferLength;
                         dstPtrTempR += bufferLength;
@@ -133,7 +152,7 @@ RppStatus erase_u8_u8_host_tensor(Rpp8u *srcPtr,
         // Erase with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp8u *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
+            T *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
             srcPtrRowR = srcPtrChannel;
             srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
             srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
@@ -141,7 +160,7 @@ RppStatus erase_u8_u8_host_tensor(Rpp8u *srcPtr,
 
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
-                Rpp8u *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *dstPtrTemp;
+                T *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *dstPtrTemp;
                 srcPtrTempR = srcPtrRowR;
                 srcPtrTempG = srcPtrRowG;
                 srcPtrTempB = srcPtrRowB;
@@ -158,9 +177,10 @@ RppStatus erase_u8_u8_host_tensor(Rpp8u *srcPtr,
                         Rpp32u y1 = (Rpp32u) RPPPRANGECHECK(anchorBoxInfo[count].lt.y, roi.xywhROI.xy.y, roi.xywhROI.roiHeight);
                         Rpp32u x2 = (Rpp32u) RPPPRANGECHECK(anchorBoxInfo[count].rb.x, x1, roi.xywhROI.roiWidth);
                         Rpp32u y2 = (Rpp32u) RPPPRANGECHECK(anchorBoxInfo[count].rb.y, y1, roi.xywhROI.roiHeight);
-                        userPixel3[0] = colors[(count * 3)];
-                        userPixel3[1] = colors[(count * 3) + 1];
-                        userPixel3[2] = colors[(count * 3) + 2];
+                        Rpp32u countMul3 = count * 3;
+                        userPixel3[0] = colors[countMul3];
+                        userPixel3[1] = colors[countMul3 + 1];
+                        userPixel3[2] = colors[countMul3 + 2];
 
                         if(i >= y1 && i <= y2 && j >= x1 && j <= x2)
                         {
@@ -173,7 +193,7 @@ RppStatus erase_u8_u8_host_tensor(Rpp8u *srcPtr,
                     {
                         for (int k = 0; k < bufferLengthPerChannel; k++)
                         {
-                            memcpy(dstPtrTemp, userPixel3, sizeof(Rpp8u) * 3);
+                            memcpy(dstPtrTemp, userPixel3, sizeof(T) * 3);
                             dstPtrTemp += 3;
                         }
                         j += bufferLengthPerChannel;
@@ -199,10 +219,10 @@ RppStatus erase_u8_u8_host_tensor(Rpp8u *srcPtr,
             }
         }
 
-        // Erase without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
-        else
+        // Erase without fused output-layout toggle 3 channel(NCHW -> NCHW)
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            memcpy(dstPtrImage, srcPtrImage, dstDescPtr->strides.nStride * sizeof(Rpp8u));
+            memcpy(dstPtrImage, srcPtrImage, dstDescPtr->strides.nStride * sizeof(T));
 
             for(int count = 0; count < numBoxes; count++)
             {
@@ -213,24 +233,89 @@ RppStatus erase_u8_u8_host_tensor(Rpp8u *srcPtr,
 
                 Rpp32u pixelLocation = (y1 * srcDescPtr->strides.hStride) + (x1 * srcDescPtr->strides.wStride);
                 Rpp32u boxHeight = y2 - y1 + 1;
-                Rpp32u boxLength = x2 - x1 + 1;
-                Rpp8u *dstPtrTemp;
-                dstPtrTemp = dstPtrImage + pixelLocation;// * layoutParams.channelParam;
+                Rpp32u boxWidth = x2 - x1 + 1;
 
-                for (int c = 0; c < layoutParams.channelParam; c++)
+                T *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
+                dstPtrTempR = dstPtrImage + pixelLocation;
+                dstPtrTempG = dstPtrTempR + dstDescPtr->strides.cStride;
+                dstPtrTempB = dstPtrTempG + dstDescPtr->strides.cStride;
+                Rpp32u countMul3 = count * 3;
+                T userPixelR = colors[countMul3];
+                T userPixelG = colors[countMul3 + 1];
+                T userPixelB = colors[countMul3 + 2];
+                for (int i = 0; i < boxHeight; i++)
                 {
-                    Rpp8u *dstPtrTemp2 = dstPtrTemp;
-                    Rpp8u userPixel = colors[(count * layoutParams.channelParam) + c];
-                    for (int i = 0; i < boxHeight; i++)
-                    {
-                        memset(dstPtrTemp2, userPixel, boxLength * sizeof(Rpp8u));
-                        dstPtrTemp2 += dstDescPtr->strides.hStride;
-                    }
-                    dstPtrTemp += dstDescPtr->strides.cStride;
+                    memset(dstPtrTempR, userPixelR, boxWidth * sizeof(T));
+                    memset(dstPtrTempG, userPixelG, boxWidth * sizeof(T));
+                    memset(dstPtrTempB, userPixelB, boxWidth * sizeof(T));
+                    dstPtrTempR += dstDescPtr->strides.hStride;
+                    dstPtrTempG += dstDescPtr->strides.hStride;
+                    dstPtrTempB += dstDescPtr->strides.hStride;
                 }
             }
         }
-        free(userPixel3);
+        // Erase without fused output-layout toggle 1 channel(NCHW -> NCHW)
+        else if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            memcpy(dstPtrImage, srcPtrImage, dstDescPtr->strides.nStride * sizeof(T));
+
+            for (int count = 0; count < numBoxes; count++)
+            {
+                Rpp32u x1 = (Rpp32u)RPPPRANGECHECK(anchorBoxInfo[count].lt.x, roi.xywhROI.xy.x, roi.xywhROI.roiWidth);
+                Rpp32u y1 = (Rpp32u)RPPPRANGECHECK(anchorBoxInfo[count].lt.y, roi.xywhROI.xy.y, roi.xywhROI.roiHeight);
+                Rpp32u x2 = (Rpp32u)RPPPRANGECHECK(anchorBoxInfo[count].rb.x, x1, roi.xywhROI.roiWidth);
+                Rpp32u y2 = (Rpp32u)RPPPRANGECHECK(anchorBoxInfo[count].rb.y, y1, roi.xywhROI.roiHeight);
+
+                Rpp32u pixelLocation = (y1 * srcDescPtr->strides.hStride) + (x1 * srcDescPtr->strides.wStride);
+                Rpp32u boxHeight = y2 - y1 + 1;
+                Rpp32u boxWidth = x2 - x1 + 1;
+
+                T *dstPtrTemp;
+                dstPtrTemp = dstPtrImage + pixelLocation;
+
+                T userPixel = colors[count];
+                for (int i = 0; i < boxHeight; i++)
+                {
+                    memset(dstPtrTemp, userPixel, boxWidth * sizeof(T));
+                    dstPtrTemp += dstDescPtr->strides.hStride;
+                }
+            }
+        }
+
+        // Erase without fused output-layout toggle 3 channel(NHWC -> NHWC)
+        else
+        {
+            memcpy(dstPtrImage, srcPtrImage, dstDescPtr->strides.nStride * sizeof(T));
+
+            for(int count = 0; count < numBoxes; count++)
+            {
+                Rpp32u x1 = (Rpp32u) RPPPRANGECHECK(anchorBoxInfo[count].lt.x, roi.xywhROI.xy.x, roi.xywhROI.roiWidth);
+                Rpp32u y1 = (Rpp32u) RPPPRANGECHECK(anchorBoxInfo[count].lt.y, roi.xywhROI.xy.y, roi.xywhROI.roiHeight);
+                Rpp32u x2 = (Rpp32u) RPPPRANGECHECK(anchorBoxInfo[count].rb.x, x1, roi.xywhROI.roiWidth);
+                Rpp32u y2 = (Rpp32u) RPPPRANGECHECK(anchorBoxInfo[count].rb.y, y1, roi.xywhROI.roiHeight);
+                Rpp32u countMul3 = count * 3;
+                userPixel3[0] = colors[countMul3];
+                userPixel3[1] = colors[countMul3 + 1];
+                userPixel3[2] = colors[countMul3 + 2];
+
+                Rpp32u pixelLocation = (y1 * srcDescPtr->strides.hStride) + (x1 * srcDescPtr->strides.wStride);
+                Rpp32u boxHeight = y2 - y1 + 1;
+                Rpp32u boxWidth = x2 - x1 + 1;
+                T *dstPtrTemp;
+                dstPtrTemp = dstPtrImage + pixelLocation;
+
+                for (int i = 0; i < boxHeight; i++)
+                {
+                    T *dstPtrRow = dstPtrTemp;
+                    for (int j = 0; j < boxWidth; j++)
+                    {
+                        memcpy(dstPtrRow, userPixel3, sizeof(T) * 3);
+                        dstPtrRow += 3;
+                    }
+                    dstPtrTemp += dstDescPtr->strides.hStride;
+                }
+            }
+        }
     }
 
     return RPP_SUCCESS;
