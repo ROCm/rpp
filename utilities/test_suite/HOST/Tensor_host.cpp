@@ -683,12 +683,12 @@ int main(int argc, char **argv)
 
                             for (int j = 0; j < 9; j++)
                             {
-                                if (inputBitDepth == 0)
+                                if (!inputBitDepth)
                                     colors8u[idx + j] = (Rpp8u)(colorBuffer[idx + j]);
-                                else if (inputBitDepth == 4)
+                                else if (inputBitDepth == 1)
+                                    colors16f[idx + j] = (Rpp16f)colorBuffer[idx + j] * ONE_OVER_255;
+                                else if (inputBitDepth == 2)
                                     colors32f[idx + j] = (Rpp32f)colorBuffer[idx + j] * ONE_OVER_255;
-                                else if (inputBitDepth == 3)
-                                    colors16f[idx + j] = (Rpp16f)colors32f[idx + j];
                                 else if (inputBitDepth == 5)
                                     colors8s[idx + j] = (Rpp8s)(colorBuffer[idx + j] - 128);
                             }
@@ -702,12 +702,12 @@ int main(int argc, char **argv)
 
                             for (int j = 0; j < 3; j++)
                             {
-                                if (inputBitDepth == 0)
+                                if (!inputBitDepth)
                                     colors8u[idx + j] = (Rpp8u)(colorBuffer[idx + j]);
-                                else if (inputBitDepth == 4)
+                                else if (inputBitDepth == 1)
+                                    colors16f[idx + j] = (Rpp16f)colorBuffer[idx + j] * ONE_OVER_255;
+                                else if (inputBitDepth == 2)
                                     colors32f[idx + j] = (Rpp32f)colorBuffer[idx + j] * ONE_OVER_255;
-                                else if (inputBitDepth == 3)
-                                    colors16f[idx + j] = (Rpp16f)colors32f[idx + j];
                                 else if (inputBitDepth == 5)
                                     colors8s[idx + j] = (Rpp8s)(colorBuffer[idx + j] - 128);
                             }
@@ -716,14 +716,14 @@ int main(int argc, char **argv)
 
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();
-                    if (inputBitDepth == 0)
+                    if (!inputBitDepth)
                         rppt_erase_host(input, srcDescPtr, output, dstDescPtr, anchorBoxInfoTensor, colors8u, numOfBoxes, roiTensorPtrSrc, roiTypeSrc, handle);
-                    /*else if (inputBitDepth == 3)
+                    else if (inputBitDepth == 1)
                         rppt_erase_host(input, srcDescPtr, output, dstDescPtr, anchorBoxInfoTensor, colors16f, numOfBoxes, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else if (inputBitDepth == 4)
+                    else if (inputBitDepth == 2)
                         rppt_erase_host(input, srcDescPtr, output, dstDescPtr, anchorBoxInfoTensor, colors32f, numOfBoxes, roiTensorPtrSrc, roiTypeSrc, handle);
                     else if (inputBitDepth == 5)
-                        rppt_erase_host(input, srcDescPtr, output, dstDescPtr, anchorBoxInfoTensor, colors8s, numOfBoxes, roiTensorPtrSrc, roiTypeSrc, handle);*/
+                        rppt_erase_host(input, srcDescPtr, output, dstDescPtr, anchorBoxInfoTensor, colors8s, numOfBoxes, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
