@@ -11,24 +11,22 @@ __global__ void tensor_max_grid_3channel_result_hip(float *srcPtr,
     int id_x = hipThreadIdx_x * 8;
     int id_z = hipBlockIdx_z;
 
-    __shared__ float partialRMax_smem[256];                           // 1024 floats of src reduced to 256 in a 256 x 1 thread block
-    __shared__ float partialGMax_smem[256];                           // 1024 floats of src reduced to 256 in a 256 x 1 thread block
-    __shared__ float partialBMax_smem[256];                           // 1024 floats of src reduced to 256 in a 256 x 1 thread block
+    __shared__ float partialRMax_smem[256];                             // 1024 floats of src reduced to 256 in a 256 x 1 thread block
+    __shared__ float partialGMax_smem[256];                             // 1024 floats of src reduced to 256 in a 256 x 1 thread block
+    __shared__ float partialBMax_smem[256];                             // 1024 floats of src reduced to 256 in a 256 x 1 thread block
 
     uint srcIdx = (id_z * xBufferLength) * 3;
-    partialRMax_smem[hipThreadIdx_x] = srcPtr[srcIdx];                       // initialization of LDS for R channel to start of R channel using all 256 x 1 threads
-    partialGMax_smem[hipThreadIdx_x] = srcPtr[srcIdx + 1];                   // initialization of LDS for G channel to start of G channel using all 256 x 1 threads
-    partialBMax_smem[hipThreadIdx_x] = srcPtr[srcIdx + 2];                   // initialization of LDS for B channel to start of B channel using all 256 x 1 threads
+    partialRMax_smem[hipThreadIdx_x] = srcPtr[srcIdx];                  // initialization of LDS for R channel to start of R channel using all 256 x 1 threads
+    partialGMax_smem[hipThreadIdx_x] = srcPtr[srcIdx + 1];              // initialization of LDS for G channel to start of G channel using all 256 x 1 threads
+    partialBMax_smem[hipThreadIdx_x] = srcPtr[srcIdx + 2];              // initialization of LDS for B channel to start of B channel using all 256 x 1 threads
 
     if (id_x >= xBufferLength)
         return;
 
-    int xAlignedLength = xBufferLength & ~7;                        // alignedLength for vectorized global loads
-    int xDiff = xBufferLength - xAlignedLength;                     // difference between bufferLength and alignedLength
     srcIdx += id_x * 3;
 
     if (id_x + 8 > xBufferLength)
-        srcIdx -= ((8 - xDiff) * 3);
+        srcIdx -= ((8 - (xBufferLength - xBufferLength & ~7)) * 3);     // using difference between bufferLength and alignedLength, where alignedLength = xBufferLength & ~7
 
     d_float24 src_f24;
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &src_f24);           // load 24 pixels to local mmemory
@@ -77,12 +75,10 @@ __global__ void tensor_max_grid_result_hip(float *srcPtr,
     if (id_x >= xBufferLength)
         return;
 
-    int xAlignedLength = xBufferLength & ~7;                        // alignedLength for vectorized global loads
-    int xDiff = xBufferLength - xAlignedLength;                     // difference between bufferLength and alignedLength
     srcIdx += id_x;
 
     if (id_x + 8 > xBufferLength)
-        srcIdx -= (8 - xDiff);
+        srcIdx -= (8 - (xBufferLength - xBufferLength & ~7));       // using difference between bufferLength and alignedLength, where alignedLength = xBufferLength & ~7
 
     d_float8 src_f8;
     rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);   // load 8 pixels to local memory
