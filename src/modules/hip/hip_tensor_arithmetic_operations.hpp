@@ -28,6 +28,7 @@ SOFTWARE.
 #include "kernel/fused_multiply_add_scalar.hpp"
 #include "kernel/add_scalar.hpp"
 #include "kernel/subtract_scalar.hpp"
+#include "kernel/multiply_scalar.hpp"
 #include "kernel/magnitude.hpp"
 
 #endif // HIP_TENSOR_ARITHMEETIC_OPERATIONS_HPP
