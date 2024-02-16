@@ -32,9 +32,7 @@ RppStatus resample_host_tensor(Rpp32f *srcPtr,
                                RpptDescPtr dstDescPtr,
                                Rpp32f *inRateTensor,
                                Rpp32f *outRateTensor,
-                               Rpp32s *srcLengthTensor,
-                               Rpp32s *channelTensor,
-                               Rpp32f quality,
+                               Rpp32s *srcDimsTensor,
                                RpptResamplingWindow &window,
                                rpp::Handle& handle)
 {
@@ -49,8 +47,8 @@ RppStatus resample_host_tensor(Rpp32f *srcPtr,
 
         Rpp32f inRate = inRateTensor[batchCount];
         Rpp32f outRate = outRateTensor[batchCount];
-        Rpp32s srcLength = srcLengthTensor[batchCount];
-        Rpp32s numChannels = channelTensor[batchCount];
+        Rpp32s srcLength = srcDimsTensor[batchCount * 2];
+        Rpp32s numChannels = srcDimsTensor[batchCount * 2 + 1];
         if(outRate == inRate)
         {
             // No need of Resampling, do a direct memcpy

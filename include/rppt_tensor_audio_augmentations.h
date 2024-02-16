@@ -103,16 +103,14 @@ RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr,
 * \param[in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
 * \param[in] inRate Input sampling rate (1D tensor in HOST memory, of size batchSize)
 * \param[in] outRate Output sampling rate (1D tensor in HOST memory, of size batchSize)
-* \param[in] srcLengthTensor source audio buffer length (1D tensor in HOST memory, of size batchSize)
-* \param[in] channelsTensor number of channels in audio buffer (1D tensor in HOST memory, of size batchSize)
-* \param[in] quality resampling quality, where 0 is the lowest, and 100 is the highest
+* \param[in] srcDimsTensor source audio buffer length and number of channels (1D tensor in HOST memory, of size batchSize * 2)
 * \param[in] window Resampling window (struct of type RpptRpptResamplingWindow)
 * \param[in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
 * \return A <tt> \ref RppStatus</tt> enumeration.
 * \retval RPP_SUCCESS Successful completion.
 * \retval RPP_ERROR* Unsuccessful completion.
 */
-RppStatus rppt_resample_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *inRateTensor, Rpp32f *outRateTensor, Rpp32s *srcLengthTensor, Rpp32s *channelsTensor, Rpp32f quality, RpptResamplingWindow &window, rppHandle_t rppHandle);
+RppStatus rppt_resample_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *inRateTensor, Rpp32f *outRateTensor, Rpp32s *srcDimsTensor, RpptResamplingWindow &window, rppHandle_t rppHandle);
 
 #ifdef __cplusplus
 }

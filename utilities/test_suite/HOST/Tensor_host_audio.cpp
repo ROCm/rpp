@@ -202,16 +202,19 @@ int main(int argc, char **argv)
                     testCaseName = "resample";
                     Rpp32f inRateTensor[batchSize];
                     Rpp32f outRateTensor[batchSize];
+                    Rpp32s srcDimsTensor[batchSize * 2];
 
                     maxDstWidth = 0;
-                    for(int i = 0; i < batchSize; i++)
+                    for(int i = 0, j = 0; i < batchSize; i++, j += 2)
                     {
                         inRateTensor[i] = 16000;
                         outRateTensor[i] = 16000 * 1.15f;
                         Rpp32f scaleRatio = outRateTensor[i] / inRateTensor[i];
-                        dstDims[i].width = (int)std::ceil(scaleRatio * srcLengthTensor[i]);
+                        srcDimsTensor[j] = srcLengthTensor[i];
+                        srcDimsTensor[j + 1] = channelsTensor[i];
+                        dstDims[i].width = static_cast<int>(std::ceil(scaleRatio * srcLengthTensor[i]));
                         dstDims[i].height = 1;
-                        maxDstWidth = std::max(maxDstWidth, (int)dstDims[i].width);
+                        maxDstWidth = std::max(maxDstWidth, static_cast<int>(dstDims[i].width));
                     }
                     Rpp32f quality = 50.0f;
                     Rpp32s lobes = std::round(0.007 * quality * quality - 0.09 * quality + 3);
@@ -234,7 +237,7 @@ int main(int argc, char **argv)
                     }
 
                     startWallTime = omp_get_wtime();
-                    rppt_resample_host(inputf32, srcDescPtr, outputf32, dstDescPtr, inRateTensor, outRateTensor, srcLengthTensor, channelsTensor, quality, window, handle);
+                    rppt_resample_host(inputf32, srcDescPtr, outputf32, dstDescPtr, inRateTensor, outRateTensor, srcDimsTensor, window, handle);
 
                     break;
                 }

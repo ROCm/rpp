@@ -135,9 +135,7 @@ RppStatus rppt_resample_host(RppPtr_t srcPtr,
                              RpptDescPtr dstDescPtr,
                              Rpp32f *inRateTensor,
                              Rpp32f *outRateTensor,
-                             Rpp32s *srcLengthTensor,
-                             Rpp32s *channelsTensor,
-                             Rpp32f quality,
+                             Rpp32s *srcDimsTensor,
                              RpptResamplingWindow &window,
                              rppHandle_t rppHandle)
 {
@@ -149,9 +147,7 @@ RppStatus rppt_resample_host(RppPtr_t srcPtr,
                              dstDescPtr,
                              inRateTensor,
                              outRateTensor,
-                             srcLengthTensor,
-                             channelsTensor,
-                             quality,
+                             srcDimsTensor,
                              window,
                              rpp::deref(rppHandle));
 
