@@ -79,11 +79,12 @@ RppStatus resample_host_tensor(Rpp32f *srcPtr,
                             loc0 = -inBlockRounded;
                         if (loc1 + inBlockRounded > srcLength)
                             loc1 = srcLength - inBlockRounded;
-                        Rpp32f accum = 0.0f;
                         Rpp32s locInWindow = loc0;
+                        Rpp32f locBegin = locInWindow - inPos;
+                        __m128 pLocInWindow = _mm_setr_ps(locBegin, locBegin + 1, locBegin + 2, locBegin + 3);
 
+                        Rpp32f accum = 0.0f;
                         __m128 pAccum = xmm_p0;
-                        __m128 pLocInWindow = _mm_setr_ps(locInWindow - inPos, locInWindow + 1 - inPos, locInWindow + 2 - inPos, locInWindow + 3 - inPos);
                         for (; locInWindow + 3 < loc1; locInWindow += 4)
                         {
                             __m128 w4 = window(pLocInWindow);
