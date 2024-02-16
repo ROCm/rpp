@@ -151,6 +151,45 @@ RppStatus rppt_subtract_scalar_host(RppPtr_t srcPtr,
     return RPP_SUCCESS;
 }
 
+/******************** multiply_scalar ********************/
+
+RppStatus rppt_multiply_scalar_host(RppPtr_t srcPtr,
+                                    RpptGenericDescPtr srcGenericDescPtr,
+                                    RppPtr_t dstPtr,
+                                    RpptGenericDescPtr dstGenericDescPtr,
+                                    Rpp32f *mulTensor,
+                                    RpptROI3DPtr roiGenericPtrSrc,
+                                    RpptRoi3DType roiType,
+                                    rppHandle_t rppHandle)
+{
+    RppLayoutParams layoutParams;
+    if ((srcGenericDescPtr->layout == RpptLayout::NCDHW) && (dstGenericDescPtr->layout == RpptLayout::NCDHW))
+        layoutParams = get_layout_params(srcGenericDescPtr->layout, srcGenericDescPtr->dims[1]);
+    else if ((srcGenericDescPtr->layout == RpptLayout::NDHWC) && (dstGenericDescPtr->layout == RpptLayout::NDHWC))
+        layoutParams = get_layout_params(srcGenericDescPtr->layout, srcGenericDescPtr->dims[4]);
+
+    if (srcGenericDescPtr->dataType != RpptDataType::F32) return RPP_ERROR_INVALID_SRC_DATATYPE;
+    if (dstGenericDescPtr->dataType != RpptDataType::F32) return RPP_ERROR_INVALID_DST_DATATYPE;
+    if ((srcGenericDescPtr->layout != RpptLayout::NCDHW) && (srcGenericDescPtr->layout != RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
+    if ((dstGenericDescPtr->layout != RpptLayout::NCDHW) && (dstGenericDescPtr->layout != RpptLayout::NDHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
+    if (srcGenericDescPtr->layout != dstGenericDescPtr->layout) return RPP_ERROR_INVALID_ARGUMENTS;
+
+    if ((srcGenericDescPtr->dataType == RpptDataType::F32) && (dstGenericDescPtr->dataType == RpptDataType::F32))
+    {
+        multiply_scalar_f32_f32_host_tensor(reinterpret_cast<Rpp32f *>(static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes),
+                                            srcGenericDescPtr,
+                                            reinterpret_cast<Rpp32f *>(static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
+                                            dstGenericDescPtr,
+                                            mulTensor,
+                                            roiGenericPtrSrc,
+                                            roiType,
+                                            layoutParams,
+                                            rpp::deref(rppHandle));
+    }
+
+    return RPP_SUCCESS;
+}
+
 /******************** magnitude ********************/
 
 RppStatus rppt_magnitude_host(RppPtr_t srcPtr1,
@@ -312,6 +351,38 @@ RppStatus rppt_subtract_scalar_gpu(RppPtr_t srcPtr,
                                     dstGenericDescPtr,
                                     roiGenericPtrSrc,
                                     subtractTensor,
+                                    rpp::deref(rppHandle));
+
+    return RPP_SUCCESS;
+#elif defined(OCL_COMPILE)
+    return RPP_ERROR_NOT_IMPLEMENTED;
+#endif // backend
+}
+
+/******************** multiply_scalar ********************/
+
+RppStatus rppt_multiply_scalar_gpu(RppPtr_t srcPtr,
+                                   RpptGenericDescPtr srcGenericDescPtr,
+                                   RppPtr_t dstPtr,
+                                   RpptGenericDescPtr dstGenericDescPtr,
+                                   Rpp32f *mulTensor,
+                                   RpptROI3DPtr roiGenericPtrSrc,
+                                   RpptRoi3DType roiType,
+                                   rppHandle_t rppHandle)
+{
+#ifdef HIP_COMPILE
+    if (srcGenericDescPtr->dataType != RpptDataType::F32) return RPP_ERROR_INVALID_SRC_DATATYPE;
+    if (dstGenericDescPtr->dataType != RpptDataType::F32) return RPP_ERROR_INVALID_DST_DATATYPE;
+    if ((srcGenericDescPtr->layout != RpptLayout::NCDHW) && (srcGenericDescPtr->layout != RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
+    if ((dstGenericDescPtr->layout != RpptLayout::NCDHW) && (dstGenericDescPtr->layout != RpptLayout::NDHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
+    if (srcGenericDescPtr->layout != dstGenericDescPtr->layout) return RPP_ERROR_INVALID_ARGUMENTS;
+
+    hip_exec_multiply_scalar_tensor(reinterpret_cast<Rpp32f *>(static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes),
+                                    srcGenericDescPtr,
+                                    reinterpret_cast<Rpp32f *>(static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
+                                    dstGenericDescPtr,
+                                    roiGenericPtrSrc,
+                                    mulTensor,
                                     rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
