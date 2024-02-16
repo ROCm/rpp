@@ -39,6 +39,7 @@ std::map<int, string> audioAugmentationMap =
     {0, "non_silent_region_detection"},
     {1, "to_decibels"},
     {2, "pre_emphasis_filter"},
+    {3, "down_mixing"},
 };
 
 // Golden outputs for Non Silent Region Detection
@@ -137,7 +138,7 @@ void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dst
     // read data from golden outputs
     Rpp64u oBufferSize = dstDescPtr->n * dstDescPtr->strides.nStride;
     Rpp32f *refOutput = static_cast<Rpp32f *>(malloc(oBufferSize * sizeof(float)));
-    string outFile = scriptPath + testCase + "/" + testCase + ".bin";
+    string outFile = scriptPath + "/../REFERENCE_OUTPUTS_AUDIO/" + testCase + "/" + testCase + ".bin";
     std::fstream fin(outFile, std::ios::in | std::ios::binary);
     if(fin.is_open())
     {
