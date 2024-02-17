@@ -104,13 +104,6 @@ std::map<int, string> augmentationMap =
     {89, "tensor_max"},
 };
 
-// Golden outputs for Tensor sum Kernel
-std::map<int, std::vector<int>> TensorSumReferenceOutputs =
-{
-    {1, {334225, 813471, 2631125}},
-    {3, {348380, 340992, 262616, 951988, 1056552, 749506, 507441, 2313499, 2170646, 2732368, 3320699, 8223713}}
-};
-
 // Golden outputs for Tensor min Kernel
 std::map<int, std::vector<int>> TensorMinReferenceOutputs =
 {
