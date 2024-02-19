@@ -471,7 +471,7 @@ elif (testType == 1 and profilingOption == "YES"):
 
 # print the results of qa tests
 supportedCaseList = ['0', '1', '2', '3', '5']
-nonQACaseList = [] # Add cases present in supportedCaseList, but without QA support
+nonQACaseList = ['6'] # Add cases present in supportedCaseList, but without QA support
 
 if qaMode and testType == 0:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
@@ -506,6 +506,7 @@ elif (testType == 1 and profilingOption == "NO"): # Performance tests
     functionality_group_list = [
         "arithmetic_operations",
         "geometric_augmentations",
+        "effects_augmentations"
     ]
 
     for log_file in log_file_list:
