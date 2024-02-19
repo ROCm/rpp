@@ -418,43 +418,41 @@ RppStatus rppt_ricap_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstP
 RppStatus rppt_ricap_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u *permutedIndicesTensor, RpptROIPtr roiPtrInputCropRegion, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
-/*! \brief  Gaussian Noise augmentation HOST
+/*! \brief  Gaussian noise augmentation on HOST backend
  * \details This function adds gaussian noise to a batch of 4D tensors.
- *          Support added for u8 -> u8, i8 -> i8, f32 -> f32 datatypes.
- * \param [in] srcPtr source tensor memory
+ *          Support added for u8 -> u8, f32 -> f32 datatypes.
+ * \param [in] srcPtr source tensor in HOST memory
  * \param[in] srcGenericDescPtr source tensor descriptor
- * \param[out] dstPtr destination tensor memory
+ * \param[out] dstPtr destination tensor in HOST memory
  * \param[in] dstGenericDescPtr destination tensor descriptor
- * \param [in] meanTensor mean values for each image, which are used to compute the generalized Box-Mueller transforms in a gaussian distribution (1D tensor of size batchSize with meanTensor[i] >= 0 for each image in batch)
+ * \param [in] meanTensor mean values for each input, which are used to compute the generalized Box-Mueller transforms in a gaussian distribution (1D tensor of size batchSize with meanTensor[i] >= 0 for each image in batch)
  * \param [in] stdDevTensor stdDev values for each image, which are used to compute the generalized Box-Mueller transforms in a gaussian distribution (1D tensor of size batchSize with stdDevTensor[i] >= 0 for each image in batch)
  * \param [in] seed A user-defined seed value (single Rpp32u value)
  * \param[in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
  * \param[in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
- * \param [in] rppHandle Host-handle
- * \return <tt> RppStatus enum</tt>.
- * \returns RPP_SUCCESS <tt>\ref RppStatus</tt> on successful completion.
- * Else return RPP_ERROR
- * \ingroup group_tensor_arithmetic
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
  */
 RppStatus rppt_gaussian_noise_3d_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32f *meanTensor, Rpp32f *stdDevTensor, Rpp32u seed, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle);
 #ifdef GPU_SUPPORT
-/*! \brief  Gaussian Noise augmentation GPU
+/*! \brief  Gaussian noise augmentation on HIP backend
  * \details This function adds gaussian noise to a batch of 4D tensors.
  *          Support added for f32 -> f32 dataype.
- * \param [in] srcPtr source tensor memory
+ * \param [in] srcPtr source tensor in HIP memory
  * \param[in] srcGenericDescPtr source tensor descriptor
- * \param[out] dstPtr destination tensor memory
+ * \param[out] dstPtr destination tensor in HIP memory
  * \param[in] dstGenericDescPtr destination tensor descriptor
- * \param [in] meanTensor mean values for each image, which are used to compute the generalized Box-Mueller transforms in a gaussian distribution (1D tensor of size batchSize with meanTensor[i] >= 0 for each image in batch)
- * \param [in] stdDevTensor stdDev values for each image, which are used to compute the generalized Box-Mueller transforms in a gaussian distribution (1D tensor of size batchSize with stdDevTensor[i] >= 0 for each image in batch)
+ * \param [in] meanTensor mean values for each input, which are used to compute the generalized Box-Mueller transforms in a gaussian distribution (1D tensor of size batchSize with meanTensor[i] >= 0 for each image in batch)
+ * \param [in] stdDevTensor stdDev values for each input, which are used to compute the generalized Box-Mueller transforms in a gaussian distribution (1D tensor of size batchSize with stdDevTensor[i] >= 0 for each image in batch)
  * \param [in] seed A user-defined seed value (single Rpp32u value)
  * \param[in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
  * \param[in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
- * \param [in] rppHandle Hip-handle
- * \return <tt> RppStatus enum</tt>.
- * \returns RPP_SUCCESS <tt>\ref RppStatus</tt> on successful completion.
- * Else return RPP_ERROR
- * \ingroup group_tensor_arithmetic
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
  */
 RppStatus rppt_gaussian_noise_3d_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstDescPtr, Rpp32f *meanTensor, Rpp32f *stdDevTensor, Rpp32u seed, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
