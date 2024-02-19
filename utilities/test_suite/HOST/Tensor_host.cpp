@@ -46,7 +46,7 @@ typedef half Rpp16f;
 int main(int argc, char **argv)
 {
     // Handle inputs
-    const int MIN_ARG_COUNT = 18;
+    const int MIN_ARG_COUNT = 19;
 
     char *src = argv[1];
     char *srcSecond = argv[2];
@@ -63,7 +63,7 @@ int main(int argc, char **argv)
     int batchSize = atoi(argv[14]);
 
     bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23 || testCase == 24);
-    bool dualInputCase = (testCase == 2 || testCase == 30);
+    bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 63);
     bool randomOutputCase = (testCase == 84);
     bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24);
     bool noiseTypeCase = (testCase == 8);
@@ -72,6 +72,7 @@ int main(int argc, char **argv)
     unsigned int additionalParam = additionalParamCase ? atoi(argv[7]) : 1;
     bool reductionTypeCase = (testCase == 87);
     int roiList[4] = {atoi(argv[15]), atoi(argv[16]), atoi(argv[17]), atoi(argv[18])};
+    string scriptPath = argv[19];
 
     if (verbosity == 1)
     {
@@ -317,6 +318,18 @@ int main(int argc, char **argv)
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0;
     double cpuTime, wallTime;
     string testCaseName;
+
+    if(testCase == 82 && imagesMixed)
+    {
+        std::cerr<<"\n RICAP only works with same dimension images";
+        exit(0);
+    }
+
+    if(testCase == 82 && batchSize < 2)
+    {
+        std::cerr<<"\n RICAP only works with BatchSize > 1";
+        exit(0);
+    }
 
     // Initialize buffers for any reductionType functions
     void *reductionFuncResultArr;
@@ -816,6 +829,19 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 63:
+                {
+                    testCaseName = "phase";
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_phase_host(input, input_second, srcDescPtr, output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 case 70:
                 {
                     testCaseName = "copy";
@@ -1083,7 +1109,7 @@ int main(int argc, char **argv)
                     2.input bit depth 0 (U8)
                     3.source and destination layout are the same*/
                     if(qaFlag && inputBitDepth == 0 && (srcDescPtr->layout == dstDescPtr->layout) && !(randomOutputCase))
-                        compare_reduction_output(static_cast<Rpp64u *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst);
+                        compare_reduction_output(static_cast<Rpp64u *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
                 }
                 else
                 {
@@ -1106,7 +1132,7 @@ int main(int argc, char **argv)
                     3.source and destination layout are the same
                     4.augmentation case does not generate random output*/
                     if(qaFlag && inputBitDepth == 0 && ((srcDescPtr->layout == dstDescPtr->layout) || pln1OutTypeCase) && !(randomOutputCase))
-                        compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, batchSize, interpolationTypeName, noiseTypeName, testCase, dst);
+                        compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, batchSize, interpolationTypeName, noiseTypeName, testCase, dst, scriptPath);
 
                     // Calculate exact dstROI in XYWH format for OpenCV dump
                     if (roiTypeSrc == RpptRoiType::LTRB)
