@@ -60,6 +60,8 @@ RppStatus crop_and_patch_u8_u8_host_tensor(Rpp8u *srcPtr1,
         Rpp32u cropBufferLength = cropRoi->xywhROI.roiWidth * layoutParams.bufferMultiplier;
         Rpp32u patchBufferLength1 = patchRoi->xywhROI.xy.x * layoutParams.bufferMultiplier;
         Rpp32u patchBufferLength2 = (roi.xywhROI.roiWidth - (patchRoi->xywhROI.xy.x + cropRoi->xywhROI.roiWidth)) * layoutParams.bufferMultiplier;
+        Rpp32u vectorIncrement = 48;
+        Rpp32u vectorIncrementPerChannel = 16;
 
         Rpp8u *srcPtr1Channel, *srcPtr2Channel, *dstPtrChannel;
         srcPtr1Channel = srcPtr1Image + (cropRoi->xywhROI.xy.y * srcDescPtr->strides.hStride) + (cropRoi->xywhROI.xy.x * layoutParams.bufferMultiplier);
@@ -88,15 +90,15 @@ RppStatus crop_and_patch_u8_u8_host_tensor(Rpp8u *srcPtr1,
                 int vectorLoopCount = 0;
                 if(i >= patchRoi->xywhROI.xy.y && i < (patchRoi->xywhROI.xy.y + cropRoi->xywhROI.roiHeight))
                 {
-                    for(; vectorLoopCount < patchAlignedLength1; vectorLoopCount += 48)
+                    for(; vectorLoopCount < patchAlignedLength1; vectorLoopCount += vectorIncrement)
                     {
                         __m128i px[3];
                         rpp_simd_load(rpp_load48_u8pkd3_to_u8pln3, srcPtr2Temp, px);    // simd loads
                         rpp_simd_store(rpp_store48_u8pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, px);    // simd stores
-                        srcPtr2Temp += 48;
-                        dstPtrTempR += 16;
-                        dstPtrTempG += 16;
-                        dstPtrTempB += 16;
+                        srcPtr2Temp += vectorIncrement;
+                        dstPtrTempR += vectorIncrementPerChannel;
+                        dstPtrTempG += vectorIncrementPerChannel;
+                        dstPtrTempB += vectorIncrementPerChannel;
                     }
                     for (; vectorLoopCount < patchBufferLength1; vectorLoopCount += 3)
                     {
@@ -108,15 +110,15 @@ RppStatus crop_and_patch_u8_u8_host_tensor(Rpp8u *srcPtr1,
 
                     vectorLoopCount = 0;
                     srcPtr1Temp = srcPtr1Row;
-                    for (; vectorLoopCount < cropAlignedLength; vectorLoopCount += 48)
+                    for (; vectorLoopCount < cropAlignedLength; vectorLoopCount += vectorIncrement)
                     {
                         __m128i px[3];
                         rpp_simd_load(rpp_load48_u8pkd3_to_u8pln3, srcPtr1Temp, px);    // simd loads
                         rpp_simd_store(rpp_store48_u8pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, px);    // simd stores
-                        srcPtr1Temp += 48;
-                        dstPtrTempR += 16;
-                        dstPtrTempG += 16;
-                        dstPtrTempB += 16;
+                        srcPtr1Temp += vectorIncrement;
+                        dstPtrTempR += vectorIncrementPerChannel;
+                        dstPtrTempG += vectorIncrementPerChannel;
+                        dstPtrTempB += vectorIncrementPerChannel;
                     }
                     for (; vectorLoopCount < cropBufferLength; vectorLoopCount += 3)
                     {
@@ -128,15 +130,15 @@ RppStatus crop_and_patch_u8_u8_host_tensor(Rpp8u *srcPtr1,
 
                     vectorLoopCount = 0;
                     srcPtr2Temp += cropBufferLength;
-                    for(; vectorLoopCount < patchAlignedLength2; vectorLoopCount += 48)
+                    for(; vectorLoopCount < patchAlignedLength2; vectorLoopCount += vectorIncrement)
                     {
                         __m128i px[3];
                         rpp_simd_load(rpp_load48_u8pkd3_to_u8pln3, srcPtr2Temp, px);    // simd loads
                         rpp_simd_store(rpp_store48_u8pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, px);    // simd stores
-                        srcPtr2Temp += 48;
-                        dstPtrTempR += 16;
-                        dstPtrTempG += 16;
-                        dstPtrTempB += 16;
+                        srcPtr2Temp += vectorIncrement;
+                        dstPtrTempR += vectorIncrementPerChannel;
+                        dstPtrTempG += vectorIncrementPerChannel;
+                        dstPtrTempB += vectorIncrementPerChannel;
                     }
                     for (; vectorLoopCount < patchBufferLength2; vectorLoopCount += 3)
                     {
@@ -149,15 +151,15 @@ RppStatus crop_and_patch_u8_u8_host_tensor(Rpp8u *srcPtr1,
                 }
                 else
                 {
-                    for(; vectorLoopCount < alignedLength; vectorLoopCount += 48)
+                    for(; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
                         __m128i px[3];
                         rpp_simd_load(rpp_load48_u8pkd3_to_u8pln3, srcPtr2Temp, px);    // simd loads
                         rpp_simd_store(rpp_store48_u8pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, px);    // simd stores
-                        srcPtr2Temp += 48;
-                        dstPtrTempR += 16;
-                        dstPtrTempG += 16;
-                        dstPtrTempB += 16;
+                        srcPtr2Temp += vectorIncrement;
+                        dstPtrTempR += vectorIncrementPerChannel;
+                        dstPtrTempG += vectorIncrementPerChannel;
+                        dstPtrTempB += vectorIncrementPerChannel;
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                     {
@@ -199,15 +201,15 @@ RppStatus crop_and_patch_u8_u8_host_tensor(Rpp8u *srcPtr1,
                 int vectorLoopCount = 0;
                 if(i >= patchRoi->xywhROI.xy.y && i < (patchRoi->xywhROI.xy.y + cropRoi->xywhROI.roiHeight))
                 {
-                    for(; vectorLoopCount < patchAlignedLength1; vectorLoopCount+=16)
+                    for(; vectorLoopCount < patchAlignedLength1; vectorLoopCount += vectorIncrementPerChannel)
                     {
                         __m128i px[3];
                         rpp_simd_load(rpp_load48_u8pln3_to_u8pln3, srcPtr2TempR, srcPtr2TempG, srcPtr2TempB, px);    // simd loads
                         rpp_simd_store(rpp_store48_u8pln3_to_u8pkd3, dstPtrTemp, px);    // simd stores
-                        srcPtr2TempR += 16;
-                        srcPtr2TempG += 16;
-                        srcPtr2TempB += 16;
-                        dstPtrTemp += 48;
+                        srcPtr2TempR += vectorIncrementPerChannel;
+                        srcPtr2TempG += vectorIncrementPerChannel;
+                        srcPtr2TempB += vectorIncrementPerChannel;
+                        dstPtrTemp += vectorIncrement;
                     }
                     for (; vectorLoopCount < patchBufferLength1; vectorLoopCount++)
                     {
@@ -221,15 +223,15 @@ RppStatus crop_and_patch_u8_u8_host_tensor(Rpp8u *srcPtr1,
                     srcPtr1TempR = srcPtr1RowR;
                     srcPtr1TempG = srcPtr1RowG;
                     srcPtr1TempB = srcPtr1RowB;
-                    for (; vectorLoopCount < cropAlignedLength; vectorLoopCount+=16)
+                    for (; vectorLoopCount < cropAlignedLength; vectorLoopCount += vectorIncrementPerChannel)
                     {
                         __m128i px[3];
                         rpp_simd_load(rpp_load48_u8pln3_to_u8pln3, srcPtr1TempR, srcPtr1TempG, srcPtr1TempB, px);    // simd loads
                         rpp_simd_store(rpp_store48_u8pln3_to_u8pkd3, dstPtrTemp, px);    // simd stores
-                        srcPtr1TempR += 16;
-                        srcPtr1TempG += 16;
-                        srcPtr1TempB += 16;
-                        dstPtrTemp += 48;
+                        srcPtr1TempR += vectorIncrementPerChannel;
+                        srcPtr1TempG += vectorIncrementPerChannel;
+                        srcPtr1TempB += vectorIncrementPerChannel;
+                        dstPtrTemp += vectorIncrement;
                     }
                     for (; vectorLoopCount < cropBufferLength; vectorLoopCount++)
                     {
@@ -243,15 +245,15 @@ RppStatus crop_and_patch_u8_u8_host_tensor(Rpp8u *srcPtr1,
                     srcPtr2TempR += cropBufferLength;
                     srcPtr2TempG += cropBufferLength;
                     srcPtr2TempB += cropBufferLength;
-                    for(; vectorLoopCount < patchAlignedLength2; vectorLoopCount+=16)
+                    for(; vectorLoopCount < patchAlignedLength2; vectorLoopCount += vectorIncrementPerChannel)
                     {
                         __m128i px[3];
                         rpp_simd_load(rpp_load48_u8pln3_to_u8pln3, srcPtr2TempR, srcPtr2TempG, srcPtr2TempB, px);    // simd loads
                         rpp_simd_store(rpp_store48_u8pln3_to_u8pkd3, dstPtrTemp, px);    // simd stores
-                        srcPtr2TempR += 16;
-                        srcPtr2TempG += 16;
-                        srcPtr2TempB += 16;
-                        dstPtrTemp += 48;
+                        srcPtr2TempR += vectorIncrementPerChannel;
+                        srcPtr2TempG += vectorIncrementPerChannel;
+                        srcPtr2TempB += vectorIncrementPerChannel;
+                        dstPtrTemp += vectorIncrement;
                     }
                     for (; vectorLoopCount < patchBufferLength2; vectorLoopCount++)
                     {
@@ -266,15 +268,15 @@ RppStatus crop_and_patch_u8_u8_host_tensor(Rpp8u *srcPtr1,
                 }
                 else
                 {
-                    for(; vectorLoopCount < alignedLength; vectorLoopCount+=16)
+                    for(; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                     {
                         __m128i px[3];
                         rpp_simd_load(rpp_load48_u8pln3_to_u8pln3, srcPtr2TempR, srcPtr2TempG, srcPtr2TempB, px);    // simd loads
                         rpp_simd_store(rpp_store48_u8pln3_to_u8pkd3, dstPtrTemp, px);    // simd stores
-                        srcPtr2TempR += 16;
-                        srcPtr2TempG += 16;
-                        srcPtr2TempB += 16;
-                        dstPtrTemp += 48;
+                        srcPtr2TempR += vectorIncrementPerChannel;
+                        srcPtr2TempG += vectorIncrementPerChannel;
+                        srcPtr2TempB += vectorIncrementPerChannel;
+                        dstPtrTemp += vectorIncrement;
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
@@ -395,6 +397,8 @@ RppStatus crop_and_patch_f32_f32_host_tensor(Rpp32f *srcPtr1,
         Rpp32u cropBufferLength = cropRoi->xywhROI.roiWidth * layoutParams.bufferMultiplier;
         Rpp32u patchBufferLength1 = patchRoi->xywhROI.xy.x * layoutParams.bufferMultiplier;
         Rpp32u patchBufferLength2 = (roi.xywhROI.roiWidth - (patchRoi->xywhROI.xy.x + cropRoi->xywhROI.roiWidth)) * layoutParams.bufferMultiplier;
+        Rpp32u vectorIncrement = 12;
+        Rpp32u vectorIncrementPerChannel = 4;
 
         Rpp32f *srcPtr1Channel, *srcPtr2Channel, *dstPtrChannel;
         srcPtr1Channel = srcPtr1Image + (cropRoi->xywhROI.xy.y * srcDescPtr->strides.hStride) + (cropRoi->xywhROI.xy.x * layoutParams.bufferMultiplier);
@@ -423,15 +427,15 @@ RppStatus crop_and_patch_f32_f32_host_tensor(Rpp32f *srcPtr1,
                 int vectorLoopCount = 0;
                 if(i >= patchRoi->xywhROI.xy.y && i < (patchRoi->xywhROI.xy.y + cropRoi->xywhROI.roiHeight))
                 {
-                    for(; vectorLoopCount < patchAlignedLength1; vectorLoopCount += 12)
+                    for(; vectorLoopCount < patchAlignedLength1; vectorLoopCount += vectorIncrement)
                     {
                         __m128 p[4];
                         rpp_simd_load(rpp_load12_f32pkd3_to_f32pln3, srcPtr2Temp, p);    // simd loads
                         rpp_simd_store(rpp_store12_f32pln3_to_f32pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
-                        srcPtr2Temp += 12;
-                        dstPtrTempR += 4;
-                        dstPtrTempG += 4;
-                        dstPtrTempB += 4;
+                        srcPtr2Temp += vectorIncrement;
+                        dstPtrTempR += vectorIncrementPerChannel;
+                        dstPtrTempG += vectorIncrementPerChannel;
+                        dstPtrTempB += vectorIncrementPerChannel;
                     }
                     for (; vectorLoopCount < patchBufferLength1; vectorLoopCount += 3)
                     {
@@ -443,15 +447,15 @@ RppStatus crop_and_patch_f32_f32_host_tensor(Rpp32f *srcPtr1,
 
                     vectorLoopCount = 0;
                     srcPtr1Temp = srcPtr1Row;
-                    for (; vectorLoopCount < cropAlignedLength; vectorLoopCount += 12)
+                    for (; vectorLoopCount < cropAlignedLength; vectorLoopCount += vectorIncrement)
                     {
                         __m128 p[4];
                         rpp_simd_load(rpp_load12_f32pkd3_to_f32pln3, srcPtr1Temp, p);    // simd loads
                         rpp_simd_store(rpp_store12_f32pln3_to_f32pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
-                        srcPtr1Temp += 12;
-                        dstPtrTempR += 4;
-                        dstPtrTempG += 4;
-                        dstPtrTempB += 4;
+                        srcPtr1Temp += vectorIncrement;
+                        dstPtrTempR += vectorIncrementPerChannel;
+                        dstPtrTempG += vectorIncrementPerChannel;
+                        dstPtrTempB += vectorIncrementPerChannel;
                     }
                     for (; vectorLoopCount < cropBufferLength; vectorLoopCount += 3)
                     {
@@ -463,15 +467,15 @@ RppStatus crop_and_patch_f32_f32_host_tensor(Rpp32f *srcPtr1,
 
                     vectorLoopCount = 0;
                     srcPtr2Temp += cropBufferLength;
-                    for(; vectorLoopCount < patchAlignedLength2; vectorLoopCount += 12)
+                    for(; vectorLoopCount < patchAlignedLength2; vectorLoopCount += vectorIncrement)
                     {
                         __m128 p[4];
                         rpp_simd_load(rpp_load12_f32pkd3_to_f32pln3, srcPtr2Temp, p);    // simd loads
                         rpp_simd_store(rpp_store12_f32pln3_to_f32pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
-                        srcPtr2Temp += 12;
-                        dstPtrTempR += 4;
-                        dstPtrTempG += 4;
-                        dstPtrTempB += 4;
+                        srcPtr2Temp += vectorIncrement;
+                        dstPtrTempR += vectorIncrementPerChannel;
+                        dstPtrTempG += vectorIncrementPerChannel;
+                        dstPtrTempB += vectorIncrementPerChannel;
                     }
                     for (; vectorLoopCount < patchBufferLength2; vectorLoopCount += 3)
                     {
@@ -484,15 +488,15 @@ RppStatus crop_and_patch_f32_f32_host_tensor(Rpp32f *srcPtr1,
                 }
                 else
                 {
-                    for(; vectorLoopCount < alignedLength; vectorLoopCount += 12)
+                    for(; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
                         __m128 p[4];
                         rpp_simd_load(rpp_load12_f32pkd3_to_f32pln3, srcPtr2Temp, p);    // simd loads
                         rpp_simd_store(rpp_store12_f32pln3_to_f32pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
-                        srcPtr2Temp += 12;
-                        dstPtrTempR += 4;
-                        dstPtrTempG += 4;
-                        dstPtrTempB += 4;
+                        srcPtr2Temp += vectorIncrement;
+                        dstPtrTempR += vectorIncrementPerChannel;
+                        dstPtrTempG += vectorIncrementPerChannel;
+                        dstPtrTempB += vectorIncrementPerChannel;
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                     {
@@ -508,7 +512,6 @@ RppStatus crop_and_patch_f32_f32_host_tensor(Rpp32f *srcPtr1,
                 dstPtrRowB += dstDescPtr->strides.hStride;
             }
         }
-
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp32u alignedLength = (bufferLength / 12) * 12;
@@ -539,10 +542,10 @@ RppStatus crop_and_patch_f32_f32_host_tensor(Rpp32f *srcPtr1,
                         __m128 p[4];
                         rpp_simd_load(rpp_load12_f32pln3_to_f32pln3, srcPtr2TempR, srcPtr2TempG, srcPtr2TempB, p);    // simd loads
                         rpp_simd_store(rpp_store12_f32pln3_to_f32pkd3, dstPtrTemp, p);    // simd stores
-                        srcPtr2TempR += 4;
-                        srcPtr2TempG += 4;
-                        srcPtr2TempB += 4;
-                        dstPtrTemp += 12;
+                        srcPtr2TempR += vectorIncrementPerChannel;
+                        srcPtr2TempG += vectorIncrementPerChannel;
+                        srcPtr2TempB += vectorIncrementPerChannel;
+                        dstPtrTemp += vectorIncrement;
                     }
                     for (; vectorLoopCount < patchBufferLength1; vectorLoopCount++)
                     {
@@ -561,10 +564,10 @@ RppStatus crop_and_patch_f32_f32_host_tensor(Rpp32f *srcPtr1,
                         __m128 p[4];
                         rpp_simd_load(rpp_load12_f32pln3_to_f32pln3, srcPtr1TempR, srcPtr1TempG, srcPtr1TempB, p);    // simd loads
                         rpp_simd_store(rpp_store12_f32pln3_to_f32pkd3, dstPtrTemp, p);    // simd stores
-                        srcPtr1TempR += 4;
-                        srcPtr1TempG += 4;
-                        srcPtr1TempB += 4;
-                        dstPtrTemp += 12;
+                        srcPtr1TempR += vectorIncrementPerChannel;
+                        srcPtr1TempG += vectorIncrementPerChannel;
+                        srcPtr1TempB += vectorIncrementPerChannel;
+                        dstPtrTemp += vectorIncrement;
                     }
                     for (; vectorLoopCount < cropBufferLength; vectorLoopCount++)
                     {
@@ -583,10 +586,10 @@ RppStatus crop_and_patch_f32_f32_host_tensor(Rpp32f *srcPtr1,
                         __m128 p[4];
                         rpp_simd_load(rpp_load12_f32pln3_to_f32pln3, srcPtr2TempR, srcPtr2TempG, srcPtr2TempB, p);    // simd loads
                         rpp_simd_store(rpp_store12_f32pln3_to_f32pkd3, dstPtrTemp, p);    // simd stores
-                        srcPtr2TempR += 4;
-                        srcPtr2TempG += 4;
-                        srcPtr2TempB += 4;
-                        dstPtrTemp += 12;
+                        srcPtr2TempR += vectorIncrementPerChannel;
+                        srcPtr2TempG += vectorIncrementPerChannel;
+                        srcPtr2TempB += vectorIncrementPerChannel;
+                        dstPtrTemp += vectorIncrement;
                     }
                     for (; vectorLoopCount < patchBufferLength2; vectorLoopCount++)
                     {
@@ -606,10 +609,10 @@ RppStatus crop_and_patch_f32_f32_host_tensor(Rpp32f *srcPtr1,
                         __m128 p[4];
                         rpp_simd_load(rpp_load12_f32pln3_to_f32pln3, srcPtr2TempR, srcPtr2TempG, srcPtr2TempB, p);    // simd loads
                         rpp_simd_store(rpp_store12_f32pln3_to_f32pkd3, dstPtrTemp, p);    // simd stores
-                        srcPtr2TempR += 4;
-                        srcPtr2TempG += 4;
-                        srcPtr2TempB += 4;
-                        dstPtrTemp += 12;
+                        srcPtr2TempR += vectorIncrementPerChannel;
+                        srcPtr2TempG += vectorIncrementPerChannel;
+                        srcPtr2TempB += vectorIncrementPerChannel;
+                        dstPtrTemp += vectorIncrement;
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
@@ -625,7 +628,6 @@ RppStatus crop_and_patch_f32_f32_host_tensor(Rpp32f *srcPtr1,
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
         }
-
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp32u bufferLengthInBytes = bufferLength * sizeof(Rpp32f);
@@ -740,6 +742,8 @@ RppStatus crop_and_patch_f16_f16_host_tensor(Rpp16f *srcPtr1,
         Rpp32u cropBufferLength = cropRoi->xywhROI.roiWidth * layoutParams.bufferMultiplier;
         Rpp32u patchBufferLength1 = patchRoi->xywhROI.xy.x * layoutParams.bufferMultiplier;
         Rpp32u patchBufferLength2 = (roi.xywhROI.roiWidth - (patchRoi->xywhROI.xy.x + cropRoi->xywhROI.roiWidth)) * layoutParams.bufferMultiplier;
+        Rpp32u vectorIncrement = 12;
+        Rpp32u vectorIncrementPerChannel = 4;
 
         Rpp16f *srcPtr1Channel, *srcPtr2Channel, *dstPtrChannel;
         srcPtr1Channel = srcPtr1Image + (cropRoi->xywhROI.xy.y * srcDescPtr->strides.hStride) + (cropRoi->xywhROI.xy.x * layoutParams.bufferMultiplier);
@@ -768,27 +772,25 @@ RppStatus crop_and_patch_f16_f16_host_tensor(Rpp16f *srcPtr1,
                 int vectorLoopCount = 0;
                 if(i >= patchRoi->xywhROI.xy.y && i < (patchRoi->xywhROI.xy.y + cropRoi->xywhROI.roiHeight))
                 {
-                    for(; vectorLoopCount < patchAlignedLength1; vectorLoopCount += 12)
+                    for(; vectorLoopCount < patchAlignedLength1; vectorLoopCount += vectorIncrement)
                     {
                         Rpp32f srcPtrTemp_ps[12], dstPtrTemp_ps[12];
                         for(int cnt = 0; cnt < 12; cnt++)
-                        {
                             *(srcPtrTemp_ps + cnt) = (Rpp32f) *(srcPtr2Temp + cnt);
-                        }
+
                         __m128 p[4];
                         rpp_simd_load(rpp_load12_f32pkd3_to_f32pln3, srcPtrTemp_ps, p);    // simd loads
                         rpp_simd_store(rpp_store12_f32pln3_to_f32pln3, dstPtrTemp_ps, dstPtrTemp_ps + 4, dstPtrTemp_ps + 8, p);    // simd stores
-
                         for(int cnt = 0; cnt < 4; cnt++)
                         {
                             *(dstPtrTempR + cnt) = (Rpp16f) *(dstPtrTemp_ps + cnt);
                             *(dstPtrTempG + cnt) = (Rpp16f) *(dstPtrTemp_ps + 4 + cnt);
                             *(dstPtrTempB + cnt) = (Rpp16f) *(dstPtrTemp_ps + 8 + cnt);
                         }
-                        srcPtr2Temp += 12;
-                        dstPtrTempR += 4;
-                        dstPtrTempG += 4;
-                        dstPtrTempB += 4;
+                        srcPtr2Temp += vectorIncrement;
+                        dstPtrTempR += vectorIncrementPerChannel;
+                        dstPtrTempG += vectorIncrementPerChannel;
+                        dstPtrTempB += vectorIncrementPerChannel;
                     }
                     for (; vectorLoopCount < patchBufferLength1; vectorLoopCount += 3)
                     {
@@ -799,28 +801,25 @@ RppStatus crop_and_patch_f16_f16_host_tensor(Rpp16f *srcPtr1,
                     }
                     vectorLoopCount = 0;
                     srcPtr1Temp = srcPtr1Row;
-                    for (; vectorLoopCount < cropAlignedLength; vectorLoopCount += 12)
+                    for (; vectorLoopCount < cropAlignedLength; vectorLoopCount += vectorIncrement)
                     {
                         Rpp32f srcPtrTemp_ps[12], dstPtrTemp_ps[12];
-
                         for(int cnt = 0; cnt < 12; cnt++)
-                        {
                             *(srcPtrTemp_ps + cnt) = (Rpp32f) *(srcPtr1Temp + cnt);
-                        }
+
                         __m128 p[4];
                         rpp_simd_load(rpp_load12_f32pkd3_to_f32pln3, srcPtrTemp_ps, p);    // simd loads
                         rpp_simd_store(rpp_store12_f32pln3_to_f32pln3, dstPtrTemp_ps, dstPtrTemp_ps + 4, dstPtrTemp_ps + 8, p);    // simd stores
-
                         for(int cnt = 0; cnt < 4; cnt++)
                         {
                             *(dstPtrTempR + cnt) = (Rpp16f) *(dstPtrTemp_ps + cnt);
                             *(dstPtrTempG + cnt) = (Rpp16f) *(dstPtrTemp_ps + 4 + cnt);
                             *(dstPtrTempB + cnt) = (Rpp16f) *(dstPtrTemp_ps + 8 + cnt);
                         }
-                        srcPtr1Temp += 12;
-                        dstPtrTempR += 4;
-                        dstPtrTempG += 4;
-                        dstPtrTempB += 4;
+                        srcPtr1Temp += vectorIncrement;
+                        dstPtrTempR += vectorIncrementPerChannel;
+                        dstPtrTempG += vectorIncrementPerChannel;
+                        dstPtrTempB += vectorIncrementPerChannel;
                     }
                     for (; vectorLoopCount < cropBufferLength; vectorLoopCount += 3)
                     {
@@ -832,29 +831,25 @@ RppStatus crop_and_patch_f16_f16_host_tensor(Rpp16f *srcPtr1,
 
                     vectorLoopCount = 0;
                     srcPtr2Temp += cropBufferLength;
-
-                    for(; vectorLoopCount < patchAlignedLength2; vectorLoopCount += 12)
+                    for(; vectorLoopCount < patchAlignedLength2; vectorLoopCount += vectorIncrement)
                     {
                         Rpp32f srcPtrTemp_ps[12], dstPtrTemp_ps[12];
-
                         for(int cnt = 0; cnt < 12; cnt++)
-                        {
                             *(srcPtrTemp_ps + cnt) = (Rpp32f) *(srcPtr2Temp + cnt);
-                        }
+
                         __m128 p[4];
                         rpp_simd_load(rpp_load12_f32pkd3_to_f32pln3, srcPtrTemp_ps, p);    // simd loads
                         rpp_simd_store(rpp_store12_f32pln3_to_f32pln3, dstPtrTemp_ps, dstPtrTemp_ps + 4, dstPtrTemp_ps + 8, p);    // simd stores
-
                         for(int cnt = 0; cnt < 4; cnt++)
                         {
                             *(dstPtrTempR + cnt) = (Rpp16f) *(dstPtrTemp_ps + cnt);
                             *(dstPtrTempG + cnt) = (Rpp16f) *(dstPtrTemp_ps + 4 + cnt);
                             *(dstPtrTempB + cnt) = (Rpp16f) *(dstPtrTemp_ps + 8 + cnt);
                         }
-                        srcPtr2Temp += 12;
-                        dstPtrTempR += 4;
-                        dstPtrTempG += 4;
-                        dstPtrTempB += 4;
+                        srcPtr2Temp += vectorIncrement;
+                        dstPtrTempR += vectorIncrementPerChannel;
+                        dstPtrTempG += vectorIncrementPerChannel;
+                        dstPtrTempB += vectorIncrementPerChannel;
                     }
                     for (; vectorLoopCount < patchBufferLength2; vectorLoopCount += 3)
                     {
@@ -867,28 +862,25 @@ RppStatus crop_and_patch_f16_f16_host_tensor(Rpp16f *srcPtr1,
                 }
                 else
                 {
-                    for(; vectorLoopCount < alignedLength; vectorLoopCount += 12)
+                    for(; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
                         Rpp32f srcPtrTemp_ps[12], dstPtrTemp_ps[12];
-
                         for(int cnt = 0; cnt < 12; cnt++)
-                        {
                             *(srcPtrTemp_ps + cnt) = (Rpp32f) *(srcPtr2Temp + cnt);
-                        }
+
                         __m128 p[4];
                         rpp_simd_load(rpp_load12_f32pkd3_to_f32pln3, srcPtrTemp_ps, p);    // simd loads
                         rpp_simd_store(rpp_store12_f32pln3_to_f32pln3, dstPtrTemp_ps, dstPtrTemp_ps + 4, dstPtrTemp_ps + 8, p);    // simd stores
-
                         for(int cnt = 0; cnt < 4; cnt++)
                         {
                             *(dstPtrTempR + cnt) = (Rpp16f) *(dstPtrTemp_ps + cnt);
                             *(dstPtrTempG + cnt) = (Rpp16f) *(dstPtrTemp_ps + 4 + cnt);
                             *(dstPtrTempB + cnt) = (Rpp16f) *(dstPtrTemp_ps + 8 + cnt);
                         }
-                        srcPtr2Temp += 12;
-                        dstPtrTempR += 4;
-                        dstPtrTempG += 4;
-                        dstPtrTempB += 4;
+                        srcPtr2Temp += vectorIncrement;
+                        dstPtrTempR += vectorIncrementPerChannel;
+                        dstPtrTempG += vectorIncrementPerChannel;
+                        dstPtrTempB += vectorIncrementPerChannel;
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                     {
@@ -898,14 +890,12 @@ RppStatus crop_and_patch_f16_f16_host_tensor(Rpp16f *srcPtr1,
                         srcPtr2Temp += 3;
                     }
                 }
-
                 srcPtr2Row += srcDescPtr->strides.hStride;
                 dstPtrRowR += dstDescPtr->strides.hStride;
                 dstPtrRowG += dstDescPtr->strides.hStride;
                 dstPtrRowB += dstDescPtr->strides.hStride;
             }
         }
-
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp32u alignedLength = (bufferLength / 12) * 12;
@@ -936,7 +926,6 @@ RppStatus crop_and_patch_f16_f16_host_tensor(Rpp16f *srcPtr1,
                     for(; vectorLoopCount < patchAlignedLength1; vectorLoopCount+=4)
                     {
                         Rpp32f srcPtrTemp_ps[12], dstPtrTemp_ps[13];
-
                         for(int cnt = 0; cnt < 4; cnt++)
                         {
                             *(srcPtrTemp_ps + cnt) = (Rpp32f) *(srcPtr2TempR + cnt);
@@ -946,15 +935,13 @@ RppStatus crop_and_patch_f16_f16_host_tensor(Rpp16f *srcPtr1,
                         __m128 p[4];
                         rpp_simd_load(rpp_load12_f32pln3_to_f32pln3, srcPtrTemp_ps, srcPtrTemp_ps + 4, srcPtrTemp_ps + 4, p);    // simd loads
                         rpp_simd_store(rpp_store12_f32pln3_to_f32pkd3, dstPtrTemp_ps, p);    // simd stores
-
                         for(int cnt = 0; cnt < 12; cnt++)
-                        {
                             *(dstPtrTemp + cnt) = (Rpp16f) *(dstPtrTemp_ps + cnt);
-                        }
-                        srcPtr2TempR += 4;
-                        srcPtr2TempG += 4;
-                        srcPtr2TempB += 4;
-                        dstPtrTemp += 12;
+
+                        srcPtr2TempR += vectorIncrementPerChannel;
+                        srcPtr2TempG += vectorIncrementPerChannel;
+                        srcPtr2TempB += vectorIncrementPerChannel;
+                        dstPtrTemp += vectorIncrement;
                     }
                     for (; vectorLoopCount < patchBufferLength1; vectorLoopCount++)
                     {
@@ -970,7 +957,6 @@ RppStatus crop_and_patch_f16_f16_host_tensor(Rpp16f *srcPtr1,
                     for (; vectorLoopCount < cropAlignedLength; vectorLoopCount+=4)
                     {
                         Rpp32f srcPtrTemp_ps[12], dstPtrTemp_ps[13];
-
                         for(int cnt = 0; cnt < 4; cnt++)
                         {
                             *(srcPtrTemp_ps + cnt) = (Rpp32f) *(srcPtr1TempR + cnt);
@@ -980,15 +966,13 @@ RppStatus crop_and_patch_f16_f16_host_tensor(Rpp16f *srcPtr1,
                         __m128 p[4];
                         rpp_simd_load(rpp_load12_f32pln3_to_f32pln3, srcPtrTemp_ps, srcPtrTemp_ps + 4, srcPtrTemp_ps + 8, p);    // simd loads
                         rpp_simd_store(rpp_store12_f32pln3_to_f32pkd3, dstPtrTemp_ps, p);    // simd stores
-
                         for(int cnt = 0; cnt < 12; cnt++)
-                        {
                             *(dstPtrTemp + cnt) = (Rpp16f) *(dstPtrTemp_ps + cnt);
-                        }
-                        srcPtr1TempR += 4;
-                        srcPtr1TempG += 4;
-                        srcPtr1TempB += 4;
-                        dstPtrTemp += 12;
+
+                        srcPtr1TempR += vectorIncrementPerChannel;
+                        srcPtr1TempG += vectorIncrementPerChannel;
+                        srcPtr1TempB += vectorIncrementPerChannel;
+                        dstPtrTemp += vectorIncrement;
                     }
                     for (; vectorLoopCount < cropBufferLength; vectorLoopCount++)
                     {
@@ -1002,11 +986,9 @@ RppStatus crop_and_patch_f16_f16_host_tensor(Rpp16f *srcPtr1,
                     srcPtr2TempR += cropBufferLength;
                     srcPtr2TempG += cropBufferLength;
                     srcPtr2TempB += cropBufferLength;
-
                     for(; vectorLoopCount < patchAlignedLength2; vectorLoopCount+=4)
                     {
                         Rpp32f srcPtrTemp_ps[12], dstPtrTemp_ps[13];
-
                         for(int cnt = 0; cnt < 4; cnt++)
                         {
                             *(srcPtrTemp_ps + cnt) = (Rpp32f) *(srcPtr2TempR + cnt);
@@ -1016,15 +998,13 @@ RppStatus crop_and_patch_f16_f16_host_tensor(Rpp16f *srcPtr1,
                         __m128 p[4];
                         rpp_simd_load(rpp_load12_f32pln3_to_f32pln3, srcPtrTemp_ps, srcPtrTemp_ps + 4, srcPtrTemp_ps + 8, p);    // simd loads
                         rpp_simd_store(rpp_store12_f32pln3_to_f32pkd3, dstPtrTemp_ps, p);    // simd stores
-
                         for(int cnt = 0; cnt < 12; cnt++)
-                        {
                             *(dstPtrTemp + cnt) = (Rpp16f) *(dstPtrTemp_ps + cnt);
-                        }
-                        srcPtr2TempR += 4;
-                        srcPtr2TempG += 4;
-                        srcPtr2TempB += 4;
-                        dstPtrTemp += 12;
+
+                        srcPtr2TempR += vectorIncrementPerChannel;
+                        srcPtr2TempG += vectorIncrementPerChannel;
+                        srcPtr2TempB += vectorIncrementPerChannel;
+                        dstPtrTemp += vectorIncrement;
                     }
                     for (; vectorLoopCount < patchBufferLength2; vectorLoopCount++)
                     {
@@ -1042,7 +1022,6 @@ RppStatus crop_and_patch_f16_f16_host_tensor(Rpp16f *srcPtr1,
                     for(; vectorLoopCount < alignedLength; vectorLoopCount+=4)
                     {
                         Rpp32f srcPtrTemp_ps[12], dstPtrTemp_ps[13];
-
                         for(int cnt = 0; cnt < 4; cnt++)
                         {
                             *(srcPtrTemp_ps + cnt) = (Rpp32f) *(srcPtr2TempR + cnt);
@@ -1052,15 +1031,13 @@ RppStatus crop_and_patch_f16_f16_host_tensor(Rpp16f *srcPtr1,
                         __m128 p[4];
                         rpp_simd_load(rpp_load12_f32pln3_to_f32pln3, srcPtrTemp_ps, srcPtrTemp_ps + 4, srcPtrTemp_ps + 8, p);    // simd loads
                         rpp_simd_store(rpp_store12_f32pln3_to_f32pkd3, dstPtrTemp_ps, p);    // simd stores
-
                         for(int cnt = 0; cnt < 12; cnt++)
-                        {
                             *(dstPtrTemp + cnt) = (Rpp16f) *(dstPtrTemp_ps + cnt);
-                        }
-                        srcPtr2TempR += 4;
-                        srcPtr2TempG += 4;
-                        srcPtr2TempB += 4;
-                        dstPtrTemp += 12;
+
+                        srcPtr2TempR += vectorIncrementPerChannel;
+                        srcPtr2TempG += vectorIncrementPerChannel;
+                        srcPtr2TempB += vectorIncrementPerChannel;
+                        dstPtrTemp += vectorIncrement;
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
@@ -1077,7 +1054,6 @@ RppStatus crop_and_patch_f16_f16_host_tensor(Rpp16f *srcPtr1,
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
         }
-
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp32u bufferLengthInBytes = bufferLength * sizeof(Rpp16f);
@@ -1089,7 +1065,6 @@ RppStatus crop_and_patch_f16_f16_host_tensor(Rpp16f *srcPtr1,
             srcPtr1Row = srcPtr1Channel;
             srcPtr2Row = srcPtr2Channel;
             dstPtrRow = dstPtrChannel;
-
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp16f *dstPtrRowTemp = dstPtrRow;
@@ -1115,7 +1090,6 @@ RppStatus crop_and_patch_f16_f16_host_tensor(Rpp16f *srcPtr1,
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
         }
-
         else
         {
             Rpp32u bufferLengthInBytes = bufferLength * sizeof(Rpp16f);
@@ -1128,7 +1102,6 @@ RppStatus crop_and_patch_f16_f16_host_tensor(Rpp16f *srcPtr1,
                 srcPtr1Row = srcPtr1Channel;
                 srcPtr2Row = srcPtr2Channel;
                 dstPtrRow = dstPtrChannel;
-
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
                     Rpp16f *dstPtrRowTemp = dstPtrRow;
@@ -1149,7 +1122,6 @@ RppStatus crop_and_patch_f16_f16_host_tensor(Rpp16f *srcPtr1,
                     {
                         memcpy(dstPtrRow, srcPtr2RowTemp, bufferLengthInBytes);
                     }
-
                     srcPtr2Row += srcDescPtr->strides.hStride;
                     dstPtrRow += dstDescPtr->strides.hStride;
                 }
@@ -1197,6 +1169,8 @@ RppStatus crop_and_patch_i8_i8_host_tensor(Rpp8s *srcPtr1,
         Rpp32u cropBufferLength = cropRoi->xywhROI.roiWidth * layoutParams.bufferMultiplier;
         Rpp32u patchBufferLength1 = patchRoi->xywhROI.xy.x * layoutParams.bufferMultiplier;
         Rpp32u patchBufferLength2 = (roi.xywhROI.roiWidth - (patchRoi->xywhROI.xy.x + cropRoi->xywhROI.roiWidth)) * layoutParams.bufferMultiplier;
+        Rpp32u vectorIncrement = 48;
+        Rpp32u vectorIncrementPerChannel = 16;
 
         Rpp8s *srcPtr1Channel, *srcPtr2Channel, *dstPtrChannel;
         srcPtr1Channel = srcPtr1Image + (cropRoi->xywhROI.xy.y * srcDescPtr->strides.hStride) + (cropRoi->xywhROI.xy.x * layoutParams.bufferMultiplier);
@@ -1225,15 +1199,15 @@ RppStatus crop_and_patch_i8_i8_host_tensor(Rpp8s *srcPtr1,
                 int vectorLoopCount = 0;
                 if(i >= patchRoi->xywhROI.xy.y && i < (patchRoi->xywhROI.xy.y + cropRoi->xywhROI.roiHeight))
                 {
-                    for(; vectorLoopCount < patchAlignedLength1; vectorLoopCount += 48)
+                    for(; vectorLoopCount < patchAlignedLength1; vectorLoopCount += vectorIncrement)
                     {
                         __m128i px[3];
                         rpp_simd_load(rpp_load48_i8pkd3_to_i8pln3, srcPtr2Temp, px);    // simd loads
                         rpp_simd_store(rpp_store48_i8pln3_to_i8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, px);    // simd stores
-                        srcPtr2Temp += 48;
-                        dstPtrTempR += 16;
-                        dstPtrTempG += 16;
-                        dstPtrTempB += 16;
+                        srcPtr2Temp += vectorIncrement;
+                        dstPtrTempR += vectorIncrementPerChannel;
+                        dstPtrTempG += vectorIncrementPerChannel;
+                        dstPtrTempB += vectorIncrementPerChannel;
                     }
                     for (; vectorLoopCount < patchBufferLength1; vectorLoopCount += 3)
                     {
@@ -1246,15 +1220,15 @@ RppStatus crop_and_patch_i8_i8_host_tensor(Rpp8s *srcPtr1,
 
                     vectorLoopCount = 0;
                     srcPtr1Temp = srcPtr1Row;
-                    for (; vectorLoopCount < cropAlignedLength; vectorLoopCount += 48)
+                    for (; vectorLoopCount < cropAlignedLength; vectorLoopCount += vectorIncrement)
                     {
                         __m128i px[3];
                         rpp_simd_load(rpp_load48_i8pkd3_to_i8pln3, srcPtr1Temp, px);    // simd loads
                         rpp_simd_store(rpp_store48_i8pln3_to_i8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, px);    // simd stores
-                        srcPtr1Temp += 48;
-                        dstPtrTempR += 16;
-                        dstPtrTempG += 16;
-                        dstPtrTempB += 16;
+                        srcPtr1Temp += vectorIncrement;
+                        dstPtrTempR += vectorIncrementPerChannel;
+                        dstPtrTempG += vectorIncrementPerChannel;
+                        dstPtrTempB += vectorIncrementPerChannel;
                     }
                     for (; vectorLoopCount < cropBufferLength; vectorLoopCount += 3)
                     {
@@ -1266,15 +1240,15 @@ RppStatus crop_and_patch_i8_i8_host_tensor(Rpp8s *srcPtr1,
 
                     vectorLoopCount = 0;
                     srcPtr2Temp += cropBufferLength;
-                    for(; vectorLoopCount < patchAlignedLength2; vectorLoopCount += 48)
+                    for(; vectorLoopCount < patchAlignedLength2; vectorLoopCount += vectorIncrement)
                     {
                         __m128i px[3];
                         rpp_simd_load(rpp_load48_i8pkd3_to_i8pln3, srcPtr2Temp, px);    // simd loads
                         rpp_simd_store(rpp_store48_i8pln3_to_i8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, px);    // simd stores
-                        srcPtr2Temp += 48;
-                        dstPtrTempR += 16;
-                        dstPtrTempG += 16;
-                        dstPtrTempB += 16;
+                        srcPtr2Temp += vectorIncrement;
+                        dstPtrTempR += vectorIncrementPerChannel;
+                        dstPtrTempG += vectorIncrementPerChannel;
+                        dstPtrTempB += vectorIncrementPerChannel;
                     }
                     for (; vectorLoopCount < patchBufferLength2; vectorLoopCount += 3)
                     {
@@ -1287,15 +1261,15 @@ RppStatus crop_and_patch_i8_i8_host_tensor(Rpp8s *srcPtr1,
                 }
                 else
                 {
-                    for(; vectorLoopCount < alignedLength; vectorLoopCount += 48)
+                    for(; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                     {
                         __m128i px[3];
                         rpp_simd_load(rpp_load48_i8pkd3_to_i8pln3, srcPtr2Temp, px);    // simd loads
                         rpp_simd_store(rpp_store48_i8pln3_to_i8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, px);    // simd stores
-                        srcPtr2Temp += 48;
-                        dstPtrTempR += 16;
-                        dstPtrTempG += 16;
-                        dstPtrTempB += 16;
+                        srcPtr2Temp += vectorIncrement;
+                        dstPtrTempR += vectorIncrementPerChannel;
+                        dstPtrTempG += vectorIncrementPerChannel;
+                        dstPtrTempB += vectorIncrementPerChannel;
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                     {
@@ -1336,18 +1310,17 @@ RppStatus crop_and_patch_i8_i8_host_tensor(Rpp8s *srcPtr1,
                 srcPtr2TempB = srcPtr2RowB;
                 dstPtrTemp = dstPtrRow;
                 int vectorLoopCount = 0;
-
                 if(i >= patchRoi->xywhROI.xy.y && i < (patchRoi->xywhROI.xy.y + cropRoi->xywhROI.roiHeight))
                 {
-                    for(; vectorLoopCount < patchAlignedLength1; vectorLoopCount+=16)
+                    for(; vectorLoopCount < patchAlignedLength1; vectorLoopCount += vectorIncrementPerChannel)
                     {
                         __m128i px[3];
                         rpp_simd_load(rpp_load48_i8pln3_to_i8pln3, srcPtr2TempR, srcPtr2TempG, srcPtr2TempB, px);    // simd loads
                         rpp_simd_store(rpp_store48_i8pln3_to_i8pkd3, dstPtrTemp, px);    // simd stores
-                        srcPtr2TempR += 16;
-                        srcPtr2TempG += 16;
-                        srcPtr2TempB += 16;
-                        dstPtrTemp += 48;
+                        srcPtr2TempR += vectorIncrementPerChannel;
+                        srcPtr2TempG += vectorIncrementPerChannel;
+                        srcPtr2TempB += vectorIncrementPerChannel;
+                        dstPtrTemp += vectorIncrement;
                     }
                     for (; vectorLoopCount < patchBufferLength1; vectorLoopCount++)
                     {
@@ -1361,15 +1334,15 @@ RppStatus crop_and_patch_i8_i8_host_tensor(Rpp8s *srcPtr1,
                     srcPtr1TempR = srcPtr1RowR;
                     srcPtr1TempG = srcPtr1RowG;
                     srcPtr1TempB = srcPtr1RowB;
-                    for (; vectorLoopCount < cropAlignedLength; vectorLoopCount+=16)
+                    for (; vectorLoopCount < cropAlignedLength; vectorLoopCount += vectorIncrementPerChannel)
                     {
                         __m128i px[3];
                         rpp_simd_load(rpp_load48_i8pln3_to_i8pln3, srcPtr1TempR, srcPtr1TempG, srcPtr1TempB, px);    // simd loads
                         rpp_simd_store(rpp_store48_i8pln3_to_i8pkd3, dstPtrTemp, px);    // simd stores
-                        srcPtr1TempR += 16;
-                        srcPtr1TempG += 16;
-                        srcPtr1TempB += 16;
-                        dstPtrTemp += 48;
+                        srcPtr1TempR += vectorIncrementPerChannel;
+                        srcPtr1TempG += vectorIncrementPerChannel;
+                        srcPtr1TempB += vectorIncrementPerChannel;
+                        dstPtrTemp += vectorIncrement;
                     }
                     for (; vectorLoopCount < cropBufferLength; vectorLoopCount++)
                     {
@@ -1383,15 +1356,15 @@ RppStatus crop_and_patch_i8_i8_host_tensor(Rpp8s *srcPtr1,
                     srcPtr2TempR += cropBufferLength;
                     srcPtr2TempG += cropBufferLength;
                     srcPtr2TempB += cropBufferLength;
-                    for(; vectorLoopCount < patchAlignedLength2; vectorLoopCount+=16)
+                    for(; vectorLoopCount < patchAlignedLength2; vectorLoopCount += vectorIncrementPerChannel)
                     {
                         __m128i px[3];
                         rpp_simd_load(rpp_load48_i8pln3_to_i8pln3, srcPtr2TempR, srcPtr2TempG, srcPtr2TempB, px);    // simd loads
                         rpp_simd_store(rpp_store48_i8pln3_to_i8pkd3, dstPtrTemp, px);    // simd stores
-                        srcPtr2TempR += 16;
-                        srcPtr2TempG += 16;
-                        srcPtr2TempB += 16;
-                        dstPtrTemp += 48;
+                        srcPtr2TempR += vectorIncrementPerChannel;
+                        srcPtr2TempG += vectorIncrementPerChannel;
+                        srcPtr2TempB += vectorIncrementPerChannel;
+                        dstPtrTemp += vectorIncrement;
                     }
                     for (; vectorLoopCount < patchBufferLength2; vectorLoopCount++)
                     {
@@ -1406,15 +1379,15 @@ RppStatus crop_and_patch_i8_i8_host_tensor(Rpp8s *srcPtr1,
                 }
                 else
                 {
-                    for(; vectorLoopCount < alignedLength; vectorLoopCount+=16)
+                    for(; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                     {
                         __m128i px[3];
                         rpp_simd_load(rpp_load48_i8pln3_to_i8pln3, srcPtr2TempR, srcPtr2TempG, srcPtr2TempB, px);    // simd loads
                         rpp_simd_store(rpp_store48_i8pln3_to_i8pkd3, dstPtrTemp, px);    // simd stores
-                        srcPtr2TempR += 16;
-                        srcPtr2TempG += 16;
-                        srcPtr2TempB += 16;
-                        dstPtrTemp += 48;
+                        srcPtr2TempR += vectorIncrementPerChannel;
+                        srcPtr2TempG += vectorIncrementPerChannel;
+                        srcPtr2TempB += vectorIncrementPerChannel;
+                        dstPtrTemp += vectorIncrement;
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
@@ -1430,7 +1403,6 @@ RppStatus crop_and_patch_i8_i8_host_tensor(Rpp8s *srcPtr1,
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
         }
-
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp8s *srcPtr1Row, *srcPtr2Row, *dstPtrRow;
