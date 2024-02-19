@@ -316,6 +316,7 @@ int main(int argc, char * argv[])
                 }
                 case 6:
                 {
+                    testCaseName = "gaussian_noise_3d";
                     Rpp32f *meanTensor = reinterpret_cast<Rpp32f *>(pinnedMemArgs);
                     Rpp32f *stdDevTensor = meanTensor + batchSize;
 
@@ -327,7 +328,11 @@ int main(int argc, char * argv[])
                     }
 
                     startWallTime = omp_get_wtime();
-                    rppt_gaussian_noise_3d_gpu(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, meanTensor, stdDevTensor, seed, roiGenericSrcPtr, roiTypeSrc, handle);
+                    if (inputBitDepth == 2)
+                        rppt_gaussian_noise_3d_gpu(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, meanTensor, stdDevTensor, seed, roiGenericSrcPtr, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
                     break;
                 }
                 default:
