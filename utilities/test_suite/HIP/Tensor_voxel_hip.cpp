@@ -1,5 +1,7 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+MIT License
+
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -8,16 +10,16 @@ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 */
 
 #include "../rpp_test_suite_voxel.h"
@@ -53,12 +55,6 @@ int main(int argc, char * argv[])
         fprintf(stdout, "\nUsage: %s <header file> <data file> <layoutType = 0 - PKD3/ 1 - PLN3/ 2 - PLN1>\n", argv[0]);
         exit(1);
     }
-    if ((testCase < 0) || (testCase > 4))
-    {
-        fprintf(stdout, "\nUsage: %s <header file> <data file> <layoutType = 0 for NCDHW / 1 for NDHWC>\n", argv[0]);
-        exit(1);
-    }
-
     if(batchSize > MAX_BATCH_SIZE)
     {
         std::cout << "\n Batchsize should be less than or equal to "<< MAX_BATCH_SIZE << " Aborting!";
@@ -265,6 +261,54 @@ int main(int argc, char * argv[])
                         rppt_slice_gpu(d_inputU8, descriptorPtr3D, d_outputU8, descriptorPtr3D, roiGenericSrcPtr, roiTypeSrc, handle);
                     else if(inputBitDepth == 2)
                         rppt_slice_gpu(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, roiGenericSrcPtr, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 2:
+                {
+                    testCaseName = "add_scalar";
+                    Rpp32f addTensor[batchSize];
+
+                    for (int i = 0; i < batchSize; i++)
+                        addTensor[i] = 40;
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 2)
+                        rppt_add_scalar_gpu(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, addTensor, roiGenericSrcPtr, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 3:
+                {
+                    testCaseName = "subtract_scalar";
+                    Rpp32f subtractTensor[batchSize];
+
+                    for (int i = 0; i < batchSize; i++)
+                        subtractTensor[i] = 40;
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 2)
+                        rppt_subtract_scalar_gpu(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, subtractTensor, roiGenericSrcPtr, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 5:
+                {
+                    testCaseName = "multiply_scalar";
+                    Rpp32f mulTensor[batchSize];
+
+                    for (int i = 0; i < batchSize; i++)
+                        mulTensor[i] = 80;
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 2)
+                        rppt_multiply_scalar_gpu(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, mulTensor, roiGenericSrcPtr, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 

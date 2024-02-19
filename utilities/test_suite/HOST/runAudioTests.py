@@ -1,22 +1,26 @@
-# Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+"""
+MIT License
 
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
 
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+"""
 
 import os
 import subprocess  # nosec
@@ -33,7 +37,7 @@ inFilePath = scriptPath + "/../TEST_AUDIO_FILES/three_samples_single_channel_src
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
 caseMin = 0
-caseMax = 2
+caseMax = 3
 
 # Checks if the folder path is empty, or is it a root folder, or if it exists, and remove its contents
 def validate_and_remove_files(path):
@@ -231,13 +235,31 @@ if testType == 0:
         exit(0)
 
     for case in caseList:
+        if "--input_path" not in sys.argv:
+            if case == "3":
+                srcPath = scriptPath + "/../TEST_AUDIO_FILES/three_sample_multi_channel_src1"
+            else:
+                srcPath = inFilePath
+        if int(case) < 0 or int(case) > 3:
+            print(f"Invalid case number {case}. Case number must be 0-3 range!")
+            continue
+
         run_unit_test(srcPath, case, numRuns, testType, batchSize, outFilePath)
 else:
     for case in caseList:
+        if "--input_path" not in sys.argv:
+            if case == "3":
+                srcPath = scriptPath + "/../TEST_AUDIO_FILES/three_sample_multi_channel_src1"
+            else:
+                srcPath = inFilePath
+        if int(case) < 0 or int(case) > 3:
+            print(f"Invalid case number {case}. Case number must be 0-3 range!")
+            continue
+
         run_performance_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath)
 
 # print the results of qa tests
-supportedCaseList = ['0', '1', '2']
+supportedCaseList = ['0', '1', '2', '3']
 nonQACaseList = [] # Add cases present in supportedCaseList, but without QA support
 
 if testType == 0:

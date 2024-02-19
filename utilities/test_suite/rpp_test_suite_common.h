@@ -1,5 +1,7 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+MIT License
+
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -8,16 +10,16 @@ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 */
 
 #include <stdio.h>
@@ -85,8 +87,10 @@ std::map<int, string> augmentationMap =
     {37, "crop"},
     {38, "crop_mirror_normalize"},
     {39, "resize_crop_mirror"},
+    {45, "color_temperature"},
     {49, "box_filter"},
     {54, "gaussian_filter"},
+    {61, "magnitude"},
     {63, "phase"},
     {70, "copy"},
     {80, "resize_mirror_normalize"},
@@ -97,6 +101,13 @@ std::map<int, string> augmentationMap =
     {85, "swap_channels"},
     {86, "color_to_greyscale"},
     {87, "tensor_sum"}
+};
+
+// Golden outputs for Tensor sum Kernel
+std::map<int, std::vector<Rpp64u>> TensorSumReferenceOutputs =
+{
+    {1, {334225, 813471, 2631125}},
+    {3, {348380, 340992, 262616, 951988, 1056552, 749506, 507441, 2313499, 2170646, 2732368, 3320699, 8223713}}
 };
 
 template <typename T>
@@ -1049,8 +1060,6 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
         binFile += "_noiseType" + noiseTypeName;
     }
     refFile = scriptPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ binFile + ".bin";
-    string line,word;
-    int index = 0;
     int fileMatch = 0;
 
     Rpp8u *binaryContent = (Rpp8u *)malloc(binOutputSize * sizeof(Rpp8u));
@@ -1087,17 +1096,14 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     free(binaryContent);
 }
 
-inline void compare_reduction_output(Rpp64u* output, string funcName, RpptDescPtr srcDescPtr, int testCase, string dst, string scriptPath)
+// compares reduction type functions outputs
+template <typename T>
+inline void compare_reduction_output(T* output, string funcName, RpptDescPtr srcDescPtr, int testCase, string dst, string scriptPath)
 {
     string func = funcName;
-    string refFile = "";
-    int pln1RefStride = srcDescPtr->n * 4;
-    Rpp64u binaryOutputSize = srcDescPtr->n * 5;
-
     string dataType[4] = {"_u8_", "_f16_", "_f32_", "_i8_"};
 
     func += dataType[srcDescPtr->dataType];
-    std::string binFile = func + "Tensor";
 
     if(srcDescPtr->layout == RpptLayout::NHWC)
         func += "Tensor_PKD3";
@@ -1109,21 +1115,21 @@ inline void compare_reduction_output(Rpp64u* output, string funcName, RpptDescPt
             func += "Tensor_PLN1";
     }
 
-    refFile = scriptPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ binFile + ".bin";
-
-    string line,word;
-    int index = 0;
     int fileMatch = 0;
     int matched_values = 0;
-    Rpp64u *binaryContent = (Rpp64u *)malloc(binaryOutputSize * sizeof(Rpp64u));
-    read_bin_file(refFile, binaryContent);
+
+    T *refOutput;
+    int numChannels = (srcDescPtr->c == 1) ? 1 : 3;
+    int numOutputs = (srcDescPtr->c == 1) ? srcDescPtr->n : srcDescPtr->n * 4;
+    std::vector<T> ref;
+    if(testCase == 87)
+        refOutput = TensorSumReferenceOutputs[numChannels].data();
 
     if(srcDescPtr->c == 1)
     {
-        binaryContent += pln1RefStride;
         for(int i = 0; i < srcDescPtr->n; i++)
         {
-            int diff = output[i] - binaryContent[i];
+            int diff = abs(static_cast<int>(output[i] - refOutput[i]));
             if(diff <= CUTOFF)
                 fileMatch++;
         }
@@ -1135,7 +1141,7 @@ inline void compare_reduction_output(Rpp64u* output, string funcName, RpptDescPt
             matched_values = 0;
             for(int j = 0; j < 4; j++)
             {
-                int diff = output[(i * 4) + j] - binaryContent[(i * 4) + j];
+                int diff = abs(static_cast<int>(output[(i * 4) + j] - refOutput[(i * 4) + j]));
                 if(diff <= CUTOFF)
                     matched_values++;
             }
@@ -1165,7 +1171,6 @@ inline void compare_reduction_output(Rpp64u* output, string funcName, RpptDescPt
         qaResults << status << std::endl;
         qaResults.close();
     }
-    free(binaryContent);
 }
 
 // Used to randomly swap values present in array of size n

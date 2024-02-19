@@ -1,5 +1,7 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+MIT License
+
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -8,16 +10,16 @@ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 */
 
 #ifndef AMD_RPP_RPP_CPU_SIMD_HPP
@@ -2434,6 +2436,29 @@ static inline __m128 log_ps(__m128 x)
     x = _mm_or_ps(x, invalid_mask); // negative arg will be NAN
 
     return x;
+}
+
+inline Rpp32f rpp_hsum_ps(__m128 x)
+{
+    __m128 shuf = _mm_movehdup_ps(x);        // broadcast elements 3,1 to 2,0
+    __m128 sums = _mm_add_ps(x, shuf);
+    shuf = _mm_movehl_ps(shuf, sums);        // high half -> low half
+    sums = _mm_add_ss(sums, shuf);
+    return _mm_cvtss_f32(sums);
+}
+
+inline Rpp32f rpp_hsum_ps(__m256 x)
+{
+    __m128 p0 = _mm256_extractf128_ps(x, 1); // Contains x7, x6, x5, x4
+    __m128 p1 = _mm256_castps256_ps128(x);   // Contains x3, x2, x1, x0
+    __m128 sum = _mm_add_ps(p0, p1);         // Contains x3 + x7, x2 + x6, x1 + x5, x0 + x4
+    p0 = sum;                                // Contains -, -, x1 + x5, x0 + x4
+    p1 = _mm_movehl_ps(sum, sum);            // Contains -, -, x3 + x7, x2 + x6
+    sum = _mm_add_ps(p0, p1);                // Contains -, -, x1 + x3 + x5 + x7, x0 + x2 + x4 + x6
+    p0 = sum;                                // Contains -, -, -, x0 + x2 + x4 + x6
+    p1 = _mm_shuffle_ps(sum, sum, 0x1);      // Contains -, -, -, x1 + x3 + x5 + x7
+    sum = _mm_add_ss(p0, p1);                // Contains -, -, -, x0 + x1 + x2 + x3 + x4 + x5 + x6 + x7
+    return _mm_cvtss_f32(sum);
 }
 
 static inline void fast_matmul4x4_sse(float *A, float *B, float *C)
