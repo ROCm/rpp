@@ -1,34 +1,33 @@
-/*******************************************************************************
- *
- * MIT License
- *
- * Copyright (c) 2017 - 2022 Advanced Micro Devices, Inc.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
- *******************************************************************************/
+/*
+MIT License
+
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+#include <chrono>
 #include <cassert>
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
-#include <config.h>
 #include <rpp/env.hpp>
 #include <rpp/errors.hpp>
 #include <rpp/gcn_asm_utils.hpp>
@@ -285,7 +284,7 @@ static void AmdgcnAssembleQuiet(std::string& source, const std::string& params)
 
 static bool GcnAssemblerHasBug34765Impl()
 {
-    auto p = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+    auto p = fs::temp_directory_path() / std::to_string(std::chrono::system_clock::now().time_since_epoch().count());
     rpp::WriteFile(rpp::GetKernelSrc("bugzilla_34765_detect"), p);
     auto src = p.string();
     try
@@ -308,7 +307,7 @@ bool GcnAssemblerHasBug34765()
 
 static bool GcnAssemblerSupportsOption(const std::string& option)
 {
-    auto p = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+    auto p = fs::temp_directory_path() / std::to_string(std::chrono::system_clock::now().time_since_epoch().count());
     rpp::WriteFile(rpp::GetKernelSrc("dummy_kernel"), p);
     auto src = p.string();
     try

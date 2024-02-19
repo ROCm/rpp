@@ -1,3 +1,27 @@
+/*
+MIT License
+
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
 #include "rppdefs.h"
 #include "rpp_cpu_simd.hpp"
 #include "rpp_cpu_common.hpp"
@@ -10,12 +34,14 @@ RppStatus flip_u8_u8_host_tensor(Rpp8u *srcPtr,
                                  Rpp32u *verticalTensor,
                                  RpptROIPtr roiTensorPtrSrc,
                                  RpptRoiType roiType,
-                                 RppLayoutParams layoutParams)
+                                 RppLayoutParams layoutParams,
+                                 rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(dstDescPtr->n)
+#pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
@@ -64,7 +90,7 @@ RppStatus flip_u8_u8_host_tensor(Rpp8u *srcPtr,
 
         //Compute constant increment, Decrement factors used in source pointer updation
         Rpp32s srcPtrIncrement = (horizontalFlag)? -vectorIncrement : vectorIncrement;
-        Rpp32u hFlipFactor = (vectorIncrement - 1) * horizontalFlag;
+        Rpp32u hFlipFactor = (vectorIncrement - 3) * horizontalFlag;
         Rpp32s srcPtrIncrementPerChannel = (horizontalFlag)? -vectorIncrementPerChannel : vectorIncrementPerChannel;
         Rpp32u hFlipFactorPerChannel = (vectorIncrementPerChannel - 1) * horizontalFlag;
         Rpp32s srcPtrIncrementPerRGB = (horizontalFlag) ? -3 : 3;
@@ -257,6 +283,7 @@ RppStatus flip_u8_u8_host_tensor(Rpp8u *srcPtr,
                         srcPtrTemp += srcPtrIncrementPerChannel;
                         dstPtrTemp += vectorIncrementPerChannel;
                     }
+                    srcPtrTemp += hFlipFactorPerChannel;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         *dstPtrTemp = (Rpp8u) RPPPIXELCHECK((Rpp32f) (*srcPtrTemp));
@@ -286,12 +313,14 @@ RppStatus flip_f32_f32_host_tensor(Rpp32f *srcPtr,
                                    Rpp32u *verticalTensor,
                                    RpptROIPtr roiTensorPtrSrc,
                                    RpptRoiType roiType,
-                                   RppLayoutParams layoutParams)
+                                   RppLayoutParams layoutParams,
+                                   rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(dstDescPtr->n)
+#pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
@@ -563,12 +592,14 @@ RppStatus flip_f16_f16_host_tensor(Rpp16f *srcPtr,
                                    Rpp32u *verticalTensor,
                                    RpptROIPtr roiTensorPtrSrc,
                                    RpptRoiType roiType,
-                                   RppLayoutParams layoutParams)
+                                   RppLayoutParams layoutParams,
+                                   rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(dstDescPtr->n)
+#pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
@@ -880,12 +911,14 @@ RppStatus flip_i8_i8_host_tensor(Rpp8s *srcPtr,
                                  Rpp32u *verticalTensor,
                                  RpptROIPtr roiTensorPtrSrc,
                                  RpptRoiType roiType,
-                                 RppLayoutParams layoutParams)
+                                 RppLayoutParams layoutParams,
+                                 rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(dstDescPtr->n)
+#pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;

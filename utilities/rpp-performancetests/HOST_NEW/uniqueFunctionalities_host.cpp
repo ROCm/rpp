@@ -1,3 +1,27 @@
+/*
+MIT License
+
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
 #include <stdio.h>
 #include <dirent.h>
 #include <string.h>
@@ -21,6 +45,22 @@ using half_float::half;
 typedef half Rpp16f;
 
 #define RPPPIXELCHECK(pixel) (pixel < (Rpp32f)0) ? ((Rpp32f)0) : ((pixel < (Rpp32f)255) ? pixel : ((Rpp32f)255))
+
+std::map<int, std::vector<string>> augmentationBitDepthMap =
+{
+    {0, {"0", "1", "2", "5"}},
+    {1, {"0"}},
+    {2, {"0"}},
+    {3, {"0"}},
+    {4, {"0"}},
+    {5, {"0"}},
+    {6, {"0"}},
+    {7, {"0"}},
+    {8, {"0"}},
+    {9, {"0"}},
+    {10, {"0"}},
+    {11, {"0"}}
+};
 
 template <typename T>
 void displayTensor(T *pArr, Rpp32u size)
@@ -97,11 +137,31 @@ void displayPacked(T *pArr, RppiSize size, Rpp32u channel)
 int main(int argc, char **argv)
 {
     const int MIN_ARG_COUNT = 3;
-    printf("\nUsage: ./uniqueFunctionalities_host <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <case number = 0:12>\n");
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
+        printf("Usage\n");
+        for (auto elem : augmentationBitDepthMap)
+        {
+            for(unsigned j = 0; j < elem.second.size(); j++)
+                printf("./uniqueFunctionalities_host %s %d\n", elem.second[j].c_str(), elem.first);
+        }
         return -1;
+    }
+    if(test_case < 0 || test_case > 11)
+    {
+        printf("\nInvalid test_case! test_case should be in range 0 - 11\n");
+        return -1;
+    }
+    std::vector<string> supportedBitDepths = augmentationBitDepthMap[test_case];
+    if (supportedBitDepths.size() == 1)
+        printf("\ntest_case %d supports only %s ip_bitDepth", test_case, supportedBitDepths[0].c_str());
+    else
+    {
+        std::string bitDepthMessage = "";
+        for(int i = 0; i < supportedBitDepths.size(); i++)
+            bitDepthMessage = bitDepthMessage + supportedBitDepths[i] + " ";
+        printf("\ntest_case %d supports %sip_bitDepths\n", test_case, bitDepthMessage.c_str());
     }
 
     int ip_bitDepth = atoi(argv[1]);
@@ -185,9 +245,9 @@ int main(int argc, char **argv)
         Rpp32u perm[4] = {0, 3, 1, 2};
         Rpp32u shape[4] = {2, 4, 5, 3};
         Rpp8u srcPtr[120] = {
-            255, 254, 253, 252, 251, 250, 249, 248, 247, 246, 245, 244, 130, 129, 128, 127, 126, 125, 124, 123, 122, 121, 120, 119, 5, 4, 3, 2, 1, 0, 
-            27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45, 44, 115, 114, 113, 112, 111, 110, 
-            240, 239, 238, 237, 236, 235, 234, 233, 232, 231, 230, 229, 200, 199, 198, 197, 196, 195, 194, 193, 192, 191, 190, 189, 140, 139, 138, 137, 136, 135, 
+            255, 254, 253, 252, 251, 250, 249, 248, 247, 246, 245, 244, 130, 129, 128, 127, 126, 125, 124, 123, 122, 121, 120, 119, 5, 4, 3, 2, 1, 0,
+            27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45, 44, 115, 114, 113, 112, 111, 110,
+            240, 239, 238, 237, 236, 235, 234, 233, 232, 231, 230, 229, 200, 199, 198, 197, 196, 195, 194, 193, 192, 191, 190, 189, 140, 139, 138, 137, 136, 135,
             70, 69, 68, 67, 66, 65, 64, 63, 62, 61, 60, 59, 170, 169, 168, 167, 166, 165, 164, 163, 162, 161, 160, 159, 15, 14, 13, 12, 11, 10
         };
         Rpp8u dstPtr[120] = {0};
@@ -260,7 +320,7 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else
             missingFuncFlag = 1;
-        
+
         break;
     }
     case 2:
@@ -268,7 +328,7 @@ int main(int argc, char **argv)
         test_case_name = "tensor_add";
 
         rppHandle_t handle;
-        
+
         Rpp8u srcPtr1[36] = {255, 254, 253, 252, 251, 250, 249, 248, 247, 246, 245, 244, 130, 129, 128, 127, 126, 117, 113, 121, 127, 111, 100, 108, 65, 66, 67, 68, 69, 70, 71, 72, 13, 24, 15, 16};
         Rpp8u srcPtr2[36] = {16, 15, 24, 13, 72, 71, 70, 69, 68, 67, 66, 65, 108, 100, 111, 127, 121, 113, 117, 126, 127, 128, 129, 130, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255};
 
@@ -323,7 +383,7 @@ int main(int argc, char **argv)
         test_case_name = "tensor_subtract";
 
         rppHandle_t handle;
-        
+
         Rpp8u srcPtr1[36] = {255, 254, 253, 252, 251, 250, 249, 248, 247, 246, 245, 244, 130, 129, 128, 127, 126, 117, 113, 121, 127, 111, 100, 108, 65, 66, 67, 68, 69, 70, 71, 72, 13, 24, 15, 16};
         Rpp8u srcPtr2[36] = {16, 15, 24, 13, 72, 71, 70, 69, 68, 67, 66, 65, 108, 100, 111, 127, 121, 113, 117, 126, 127, 128, 129, 130, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255};
 
@@ -378,7 +438,7 @@ int main(int argc, char **argv)
         test_case_name = "tensor_multiply";
 
         rppHandle_t handle;
-        
+
         Rpp8u srcPtr1[36] = {255, 254, 253, 252, 251, 250, 249, 248, 247, 246, 245, 244, 130, 129, 128, 127, 126, 117, 113, 121, 127, 111, 100, 108, 65, 66, 67, 68, 69, 70, 71, 72, 13, 24, 15, 16};
         Rpp8u srcPtr2[36] = {16, 15, 24, 13, 72, 71, 70, 69, 68, 67, 66, 65, 108, 100, 111, 127, 121, 113, 117, 126, 127, 128, 129, 130, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255};
 
@@ -433,7 +493,7 @@ int main(int argc, char **argv)
         test_case_name = "tensor_matrix_multiply";
 
         rppHandle_t handle;
-        
+
         Rpp32u tensorDimensionValues1[2] = {3, 2};
         Rpp32u tensorDimensionValues2[2] = {2, 4};
 
@@ -489,7 +549,7 @@ int main(int argc, char **argv)
         test_case_name = "min_max_loc";
 
         rppHandle_t handle;
-        
+
         Rpp8u srcPtr[36] = {255, 130, 65, 254, 129, 66, 253, 128, 67, 252, 127, 68, 251, 126, 69, 250, 117, 70, 249, 113, 71, 248, 121, 72, 247, 127, 13, 246, 111, 24, 245, 100, 15, 244, 108, 16};
 
         RppiSize srcSize1Channel, srcSize3Channel;
@@ -549,7 +609,7 @@ int main(int argc, char **argv)
         test_case_name = "mean_stddev";
 
         rppHandle_t handle;
-        
+
         Rpp8u srcPtr[36] = {255, 130, 65, 254, 129, 66, 253, 128, 67, 252, 127, 68, 251, 126, 69, 250, 117, 70, 249, 113, 71, 248, 121, 72, 247, 127, 13, 246, 111, 24, 245, 100, 15, 244, 108, 16};
 
         RppiSize srcSize1Channel, srcSize3Channel;
@@ -608,12 +668,12 @@ int main(int argc, char **argv)
         test_case_name = "control_flow";
 
         rppHandle_t handle;
-        
+
         bool b1 = true, b2 = false;
         bool b3 =  true;
         Rpp8u u1 = 120, u2 = 100;
         Rpp8u u3 = 20;
-        
+
         start = clock();
         start_omp = omp_get_wtime();
         rpp_bool_control_flow(b1, b2, &b3, RPP_SCALAR_OP_AND, handle );
@@ -641,7 +701,7 @@ int main(int argc, char **argv)
     case 9:
     {
         test_case_name = "histogram";
-        
+
         rppHandle_t handle;
         int count = 0;
 
@@ -650,7 +710,7 @@ int main(int argc, char **argv)
         RppiSize srcSize;
         Rpp32u *outputHistogram = (Rpp32u *) calloc (bins, sizeof(Rpp32u));
         Rpp32u *outputHistogramTemp;
-        
+
         memset(outputHistogram, 0, bins * sizeof(Rpp32u));
         srcSize.height = 6;
         srcSize.width = 6;
@@ -739,7 +799,7 @@ int main(int argc, char **argv)
         test_case_name = "convert_bit_depth";
 
         rppHandle_t handle;
-        
+
         Rpp8u srcPtr[36] = {255, 130, 65, 254, 129, 66, 253, 128, 67, 252, 127, 68, 251, 126, 69, 250, 117, 70, 249, 113, 71, 248, 121, 72, 247, 127, 13, 246, 111, 24, 245, 100, 15, 244, 108, 16};
         Rpp8s dstPtr8s[36];
         Rpp16u dstPtr16u[36];
@@ -847,7 +907,7 @@ int main(int argc, char **argv)
         test_case_name = "tensor_convert_bit_depth";
 
         rppHandle_t handle;
-        
+
         Rpp8u srcPtr[36] = {255, 130, 65, 254, 129, 66, 253, 128, 67, 252, 127, 68, 251, 126, 69, 250, 117, 70, 249, 113, 71, 248, 121, 72, 247, 127, 13, 246, 111, 24, 245, 100, 15, 244, 108, 16};
         Rpp8s dstPtr8s[36];
         Rpp16u dstPtr16u[36];

@@ -1,5 +1,7 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+MIT License
+
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -8,16 +10,16 @@ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 */
 
 #ifndef RPPI_COLOR_MODEL_CONVERSIONS_H
@@ -28,6 +30,18 @@ THE SOFTWARE.
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/*!
+ * \file
+ * \brief RPPI Image Operations - Color Model Conversions - To be deprecated.
+ * \defgroup group_rppi_color_model_conversions RPPI Image Operations - Color Model Conversions
+ * \brief RPPI Image Operations - Color Model Conversions - To be deprecated.
+ * \deprecated
+ */
+
+/*! \addtogroup group_rppi_color_model_conversions
+ * @{
+ */
 
 /******************** hue ********************/
 
@@ -232,6 +246,9 @@ RppStatus rppi_look_up_table_u8_pkd3_batchPD_gpu(RppPtr_t srcPtr, RppiSize *srcS
 // *retval RPP_ERROR : Error
 
 RppStatus rppi_tensor_look_up_table_u8_host(RppPtr_t srcPtr, RppPtr_t dstPtr, RppPtr_t lutPtr, Rpp32u tensorDimension, RppPtr_t tensorDimensionValues);
+
+/*! @}
+ */
 
 #ifdef __cplusplus
 }

@@ -1,3 +1,27 @@
+/*
+MIT License
+
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
 #ifndef RPP_CPU_COMMON_H
 #define RPP_CPU_COMMON_H
 
@@ -14,7 +38,7 @@ typedef halfhpp Rpp16f;
 
 #define PI                              3.14159265
 #define PI_OVER_180                     0.0174532925
-#define ONE_OVER_255                    0.00392157f
+#define ONE_OVER_255                    0.00392156862745f
 #define ONE_OVER_256                    0.00390625f
 #define RPP_128_OVER_255                0.50196078431f
 #define RAD(deg)                        (deg * PI / 180)
@@ -47,6 +71,8 @@ typedef halfhpp Rpp16f;
 #define RPP_2POW32_INV_DIV_2            1.164153218e-10f    // RPP_2POW32_INV / 2
 #define RPP_2POW32_INV_MUL_2PI          1.46291812e-09f     // (1 / 2^32) * 2PI
 #define RPP_2POW32_INV_MUL_2PI_DIV_2    7.3145906e-10f      // RPP_2POW32_INV_MUL_2PI / 2
+#define RPP_255_OVER_1PT57              162.3380757272f     // (255 / 1.570796) - multiplier used in phase computation
+#define ONE_OVER_1PT57                  0.6366199048f       // (1 / 1.570796) i.e. 2/pi - multiplier used in phase computation
 
 const __m128 xmm_p2Pow32 = _mm_set1_ps(RPP_2POW32);
 const __m128 xmm_p2Pow32Inv = _mm_set1_ps(RPP_2POW32_INV);
@@ -198,6 +224,11 @@ inline Rpp32f rpp_host_math_exp_lim256approx(Rpp32f x)
   x *= x; x *= x; x *= x; x *= x;
 
   return x;
+}
+
+inline void rpp_host_math_fmadd8(__m256 *p, __m256 *pFmaddParams)
+{
+    p[0] = _mm256_fmadd_ps(p[0], pFmaddParams[0], pFmaddParams[1]);    // fmadd adjustment
 }
 
 template<Rpp32s STREAM_SIZE>
@@ -2400,6 +2431,24 @@ inline RppStatus custom_convolve_image_host(T* srcPtr, RppiSize srcSize, U* dstP
 
 // Compute Functions for RPP Tensor API
 
+inline void compute_multiply_16_host(__m256 *p, __m256 *pMulParam)
+{
+    p[0] = _mm256_mul_ps(p[0], pMulParam[0]);    // multiply adjustment
+    p[1] = _mm256_mul_ps(p[1], pMulParam[0]);    // multiply adjustment
+}
+
+inline void compute_subtract_16_host(__m256 *p, __m256 *pSubtractParam)
+{
+    p[0] = _mm256_sub_ps(p[0], pSubtractParam[0]);    // subtract adjustment
+    p[1] = _mm256_sub_ps(p[1], pSubtractParam[0]);    // subtract adjustment
+}
+
+inline void compute_add_16_host(__m256 *p, __m256 *pAddParam)
+{
+    p[0] = _mm256_add_ps(p[0], pAddParam[0]);    // add adjustment
+    p[1] = _mm256_add_ps(p[1], pAddParam[0]);    // add adjustment
+}
+
 inline void compute_rmn_24_host(__m256 *p, __m256 *pRMNParams)
 {
     p[0] = _mm256_mul_ps(_mm256_sub_ps(p[0], pRMNParams[0]), pRMNParams[1]);
@@ -3001,12 +3050,38 @@ inline void compute_color_cast_12_host(__m128 *p, __m128 pMul, __m128 *pAdd)
     p[2] = _mm_fmadd_ps(_mm_sub_ps(p[2], pAdd[2]), pMul, pAdd[2]);    // color_cast adjustment Rs
 }
 
+inline void compute_color_temperature_48_host(__m256 *p, __m256 pAdj)
+{
+    p[0] = _mm256_add_ps(p[0], pAdj);    // color_temperature adjustment Rs
+    p[1] = _mm256_add_ps(p[1], pAdj);    // color_temperature adjustment Rs
+    // no color_temperature adjustment Gs
+    p[4] = _mm256_sub_ps(p[4], pAdj);    // color_temperature adjustment Bs
+    p[5] = _mm256_sub_ps(p[5], pAdj);    // color_temperature adjustment Bs
+}
+
+inline void compute_color_temperature_24_host(__m256 *p, __m256 pAdj)
+{
+    p[0] = _mm256_add_ps(p[0], pAdj);    // color_temperature adjustment Rs
+    // no color_temperature adjustment Gs
+    p[2] = _mm256_sub_ps(p[2], pAdj);    // color_temperature adjustment Bs
+}
+
 inline void compute_xywh_from_ltrb_host(RpptROIPtr roiPtrInput, RpptROIPtr roiPtrImage)
 {
     roiPtrImage->xywhROI.xy.x = roiPtrInput->ltrbROI.lt.x;
     roiPtrImage->xywhROI.xy.y = roiPtrInput->ltrbROI.lt.y;
     roiPtrImage->xywhROI.roiWidth = roiPtrInput->ltrbROI.rb.x - roiPtrInput->ltrbROI.lt.x + 1;
     roiPtrImage->xywhROI.roiHeight = roiPtrInput->ltrbROI.rb.y - roiPtrInput->ltrbROI.lt.y + 1;
+}
+
+inline void compute_xyzwhd_from_ltfrbb_host(RpptROI3DPtr roiPtrInput, RpptROI3DPtr roiPtrImage)
+{
+    roiPtrImage->xyzwhdROI.xyz.x = roiPtrInput->ltfrbbROI.ltf.x;
+    roiPtrImage->xyzwhdROI.xyz.y = roiPtrInput->ltfrbbROI.ltf.y;
+    roiPtrImage->xyzwhdROI.xyz.z = roiPtrInput->ltfrbbROI.ltf.z;
+    roiPtrImage->xyzwhdROI.roiWidth = roiPtrInput->ltfrbbROI.rbb.x - roiPtrInput->ltfrbbROI.ltf.x + 1;
+    roiPtrImage->xyzwhdROI.roiHeight = roiPtrInput->ltfrbbROI.rbb.y - roiPtrInput->ltfrbbROI.ltf.y + 1;
+    roiPtrImage->xyzwhdROI.roiDepth = roiPtrInput->ltfrbbROI.rbb.z - roiPtrInput->ltfrbbROI.ltf.z + 1;
 }
 
 inline void compute_ltrb_from_xywh_host(RpptROIPtr roiPtrInput, RpptROIPtr roiPtrImage)
@@ -3025,6 +3100,16 @@ inline void compute_roi_boundary_check_host(RpptROIPtr roiPtrImage, RpptROIPtr r
     roiPtr->xywhROI.roiHeight = std::min(roiPtrDefault->xywhROI.roiHeight - roiPtrImage->xywhROI.xy.y, roiPtrImage->xywhROI.roiHeight);
 }
 
+inline void compute_roi3D_boundary_check_host(RpptROI3DPtr roiPtrImage, RpptROI3DPtr roiPtr, RpptROI3DPtr roiPtrDefault)
+{
+    roiPtr->xyzwhdROI.xyz.x = std::max(roiPtrDefault->xyzwhdROI.xyz.x, roiPtrImage->xyzwhdROI.xyz.x);
+    roiPtr->xyzwhdROI.xyz.y = std::max(roiPtrDefault->xyzwhdROI.xyz.y, roiPtrImage->xyzwhdROI.xyz.y);
+    roiPtr->xyzwhdROI.xyz.z = std::max(roiPtrDefault->xyzwhdROI.xyz.z, roiPtrImage->xyzwhdROI.xyz.z);
+    roiPtr->xyzwhdROI.roiWidth = std::min(roiPtrDefault->xyzwhdROI.roiWidth - roiPtrImage->xyzwhdROI.xyz.x, roiPtrImage->xyzwhdROI.roiWidth);
+    roiPtr->xyzwhdROI.roiHeight = std::min(roiPtrDefault->xyzwhdROI.roiHeight - roiPtrImage->xyzwhdROI.xyz.y, roiPtrImage->xyzwhdROI.roiHeight);
+    roiPtr->xyzwhdROI.roiDepth = std::min(roiPtrDefault->xyzwhdROI.roiDepth - roiPtrImage->xyzwhdROI.xyz.z, roiPtrImage->xyzwhdROI.roiDepth);
+}
+
 inline void compute_roi_validation_host(RpptROIPtr roiPtrInput, RpptROIPtr roiPtr, RpptROIPtr roiPtrDefault, RpptRoiType roiType)
 {
     if (roiPtrInput == NULL)
@@ -3040,6 +3125,24 @@ inline void compute_roi_validation_host(RpptROIPtr roiPtrInput, RpptROIPtr roiPt
         else if (roiType == RpptRoiType::XYWH)
             roiPtrImage = roiPtrInput;
         compute_roi_boundary_check_host(roiPtrImage, roiPtr, roiPtrDefault);
+    }
+}
+
+inline void compute_roi3D_validation_host(RpptROI3DPtr roiPtrInput, RpptROI3DPtr roiPtr, RpptROI3DPtr roiPtrDefault, RpptRoi3DType roiType)
+{
+    if (roiPtrInput == NULL)
+    {
+        roiPtr = roiPtrDefault;
+    }
+    else
+    {
+        RpptROI3D roiImage;
+        RpptROI3DPtr roiPtrImage = &roiImage;
+        if (roiType == RpptRoi3DType::LTFRBB)
+            compute_xyzwhd_from_ltfrbb_host(roiPtrInput, roiPtrImage);
+        else if (roiType == RpptRoi3DType::XYZWHD)
+            roiPtrImage = roiPtrInput;
+        compute_roi3D_boundary_check_host(roiPtrImage, roiPtr, roiPtrDefault);
     }
 }
 
@@ -4862,15 +4965,17 @@ inline void compute_packed_to_planar_host(T* srcPtr, RppiSize srcSize, T* dstPtr
 /* Generic interpolation helper functions */
 
 template <typename T>
-inline void compute_generic_bilinear_srclocs_and_interpolate(T *srcPtrChannel, RpptDescPtr srcDescPtr, Rpp32f &srcY, Rpp32f &srcX, T *dst)
+inline void compute_generic_bilinear_srclocs_and_interpolate(T *srcPtrChannel, RpptDescPtr srcDescPtr, Rpp32f &srcY, Rpp32f &srcX, RpptROI* roiLTRB, T *dst)
 {
     RppiPoint srcLT, srcRB;
     Rpp32f weightParams[4], bilinearCoeffs[4];
     Rpp32s srcLoc[4];
     srcLT.y = (Rpp32s) srcY;                                    // Bilinear LT point y value
-    srcRB.y = srcLT.y + 1;                                      // Bilinear RB point y value
+    srcLT.y = std::min(srcLT.y, roiLTRB->ltrbROI.rb.y - 1);
+    srcRB.y = std::min(srcLT.y + 1, roiLTRB->ltrbROI.rb.y - 1); // Bilinear RB point y value
     srcLT.x = (Rpp32s) srcX;                                    // Bilinear LT point x value
-    srcRB.x = srcLT.x + 1;                                      // Bilinear RB point x value
+    srcLT.x = std::min(srcLT.x, roiLTRB->ltrbROI.rb.x - 1);
+    srcRB.x = std::min(srcLT.x + 1, roiLTRB->ltrbROI.rb.x - 1); // Bilinear RB point x value
     weightParams[0] = srcY - srcLT.y;                           // weightedHeight
     weightParams[1] = 1 - weightParams[0];                      // 1 - weightedHeight
     weightParams[2] = srcX - srcLT.x;                           // weightedWidth
@@ -4890,17 +4995,17 @@ inline void compute_generic_bilinear_srclocs_and_interpolate(T *srcPtrChannel, R
 
     for (int c = 0; c < srcDescPtr->c; c++)
     {
-        dst[c] = (T)((*(srcPtrChannel + srcLoc[0]) * bilinearCoeffs[0]) +        // TopRow R01 Pixel * coeff0
-                     (*(srcPtrChannel + srcLoc[1]) * bilinearCoeffs[1]) +        // TopRow R02 Pixel * coeff1
-                     (*(srcPtrChannel + srcLoc[2]) * bilinearCoeffs[2]) +        // BottomRow R01 Pixel * coeff2
-                     (*(srcPtrChannel + srcLoc[3]) * bilinearCoeffs[3]));        // BottomRow R02 Pixel * coeff3
+        dst[c] = (T)std::nearbyintf(((*(srcPtrChannel + srcLoc[0]) * bilinearCoeffs[0]) +        // TopRow R01 Pixel * coeff0
+                    (*(srcPtrChannel + srcLoc[1]) * bilinearCoeffs[1]) +        // TopRow R02 Pixel * coeff1
+                    (*(srcPtrChannel + srcLoc[2]) * bilinearCoeffs[2]) +        // BottomRow R01 Pixel * coeff2
+                    (*(srcPtrChannel + srcLoc[3]) * bilinearCoeffs[3])));        // BottomRow R02 Pixel * coeff3
         srcPtrChannel += srcDescPtr->strides.cStride;
     }
 }
 
-inline void compute_generic_bilinear_srclocs_1c_avx(__m256 &pSrcY, __m256 &pSrcX, RpptBilinearNbhoodLocsVecLen8 &srcLocs, __m256 *pBilinearCoeffs, __m256 &pSrcStrideH, __m256i *pxSrcStridesCHW)
+inline void compute_generic_bilinear_srclocs_1c_avx(__m256 &pSrcY, __m256 &pSrcX, RpptBilinearNbhoodLocsVecLen8 &srcLocs, __m256 *pBilinearCoeffs, __m256 &pSrcStrideH, __m256i *pxSrcStridesCHW, __m256 *pRoiLTRB)
 {
-    __m256 pWeightParams[4], pSrcBilinearLTyx[2];
+    __m256 pWeightParams[4], pSrcBilinearLTyx[4];
     pSrcBilinearLTyx[0] = _mm256_floor_ps(pSrcY);                               // srcLT->y = (Rpp32s) srcY;
     pSrcBilinearLTyx[1] = _mm256_floor_ps(pSrcX);                               // srcLT->x = (Rpp32s) srcX;
     pWeightParams[0] = _mm256_sub_ps(pSrcY, pSrcBilinearLTyx[0]);               // weightParams[0] = srcY - srcLT->y;
@@ -4911,19 +5016,23 @@ inline void compute_generic_bilinear_srclocs_1c_avx(__m256 &pSrcY, __m256 &pSrcX
     pBilinearCoeffs[1] = _mm256_mul_ps(pWeightParams[1], pWeightParams[2]);     // (1 - weightedHeight) * weightedWidth
     pBilinearCoeffs[2] = _mm256_mul_ps(pWeightParams[0], pWeightParams[3]);     // weightedHeight * (1 - weightedWidth)
     pBilinearCoeffs[3] = _mm256_mul_ps(pWeightParams[0], pWeightParams[2]);     // weightedHeight * weightedWidth
-    __m256i pxSrcLocsTL = _mm256_cvtps_epi32(_mm256_fmadd_ps(pSrcBilinearLTyx[0], pSrcStrideH, pSrcBilinearLTyx[1]));   // 8 Top-Left memory locations = 8 Top-Left srcYs * hStride + 8 Top-Left srcXs
-    __m256i pxSrcLocsTR = _mm256_add_epi32(pxSrcLocsTL, pxSrcStridesCHW[2]);                                            // 8 Top-Right memory locations = 8 Top-Left memory locations + wStride
-    __m256i pxSrcLocsBL = _mm256_add_epi32(pxSrcLocsTL, pxSrcStridesCHW[1]);                                            // 8 Bottom-Left memory locations = 8 Top-Left memory locations + hStride
-    __m256i pxSrcLocsBR = _mm256_add_epi32(pxSrcLocsBL, pxSrcStridesCHW[2]);                                            // 8 Bottom-Right memory locations = 8 Bottom-Left memory locations + wStride
+    pSrcBilinearLTyx[0] = _mm256_min_ps(_mm256_max_ps(pSrcBilinearLTyx[0], pRoiLTRB[1]), _mm256_sub_ps(pRoiLTRB[3], avx_p1));
+    pSrcBilinearLTyx[1] = _mm256_min_ps(_mm256_max_ps(pSrcBilinearLTyx[1], pRoiLTRB[0]), _mm256_sub_ps(pRoiLTRB[2], avx_p1));
+    pSrcBilinearLTyx[2] = _mm256_min_ps(_mm256_max_ps(_mm256_add_ps(pSrcBilinearLTyx[0], avx_p1), pRoiLTRB[1]), _mm256_sub_ps(pRoiLTRB[3], avx_p1));
+    pSrcBilinearLTyx[3] = _mm256_min_ps(_mm256_max_ps(_mm256_add_ps(pSrcBilinearLTyx[1], avx_p1), pRoiLTRB[0]), _mm256_sub_ps(pRoiLTRB[2], avx_p1));
+    __m256i pxSrcLocsTL =  _mm256_cvtps_epi32(_mm256_fmadd_ps(pSrcBilinearLTyx[0], pSrcStrideH, pSrcBilinearLTyx[1]));     // 8 Top-Left memory locations = 8 Top-Left srcYs * hStride + 8 Top-Left srcXs
+    __m256i pxSrcLocsTR =  _mm256_cvtps_epi32(_mm256_fmadd_ps(pSrcBilinearLTyx[0], pSrcStrideH, pSrcBilinearLTyx[3]));     // 8 Top-Right memory locations = 8 Top-Left srcYs * hStride + 8 Bottom-right srcXs
+    __m256i pxSrcLocsBL = _mm256_cvtps_epi32(_mm256_fmadd_ps(pSrcBilinearLTyx[2], pSrcStrideH, pSrcBilinearLTyx[1]));      // 8 Bottom-Left memory locations = 8 Bottom-right srcYs * hStride + 8 Top-Left srcXs
+    __m256i pxSrcLocsBR = _mm256_cvtps_epi32(_mm256_fmadd_ps(pSrcBilinearLTyx[2], pSrcStrideH, pSrcBilinearLTyx[3]));      // 8 Bottom-Right memory locations = 8 Bottom-right srcYs * hStride + 8 Bottom-right srcXs
     _mm256_storeu_si256((__m256i*) &srcLocs.srcLocsTL.data[0], pxSrcLocsTL);    // Store precomputed bilinear Top-Left locations
     _mm256_storeu_si256((__m256i*) &srcLocs.srcLocsTR.data[0], pxSrcLocsTR);    // Store precomputed bilinear Top-Right locations
     _mm256_storeu_si256((__m256i*) &srcLocs.srcLocsBL.data[0], pxSrcLocsBL);    // Store precomputed bilinear Bottom-Left locations
     _mm256_storeu_si256((__m256i*) &srcLocs.srcLocsBR.data[0], pxSrcLocsBR);    // Store precomputed bilinear Bottom-Right locations
 }
 
-inline void compute_generic_bilinear_srclocs_3c_avx(__m256 &pSrcY, __m256 &pSrcX, RpptBilinearNbhoodLocsVecLen8 &srcLocs, __m256 *pBilinearCoeffs, __m256 &pSrcStrideH, __m256i *pxSrcStridesCHW, Rpp32s srcChannels, bool isSrcPKD3 = false)
+inline void compute_generic_bilinear_srclocs_3c_avx(__m256 &pSrcY, __m256 &pSrcX, RpptBilinearNbhoodLocsVecLen8 &srcLocs, __m256 *pBilinearCoeffs, __m256 &pSrcStrideH, __m256i *pxSrcStridesCHW, Rpp32s srcChannels, __m256 *pRoiLTRB, bool isSrcPKD3 = false)
 {
-    __m256 pWeightParams[4], pSrcBilinearLTyx[2];
+    __m256 pWeightParams[4], pSrcBilinearLTyx[4];
     pSrcBilinearLTyx[0] = _mm256_floor_ps(pSrcY);                               // srcLT->y = (Rpp32s) srcY;
     pSrcBilinearLTyx[1] = _mm256_floor_ps(pSrcX);                               // srcLT->x = (Rpp32s) srcX;
     pWeightParams[0] = _mm256_sub_ps(pSrcY, pSrcBilinearLTyx[0]);               // weightParams[0] = srcY - srcLT->y;
@@ -4934,12 +5043,19 @@ inline void compute_generic_bilinear_srclocs_3c_avx(__m256 &pSrcY, __m256 &pSrcX
     pBilinearCoeffs[1] = _mm256_mul_ps(pWeightParams[1], pWeightParams[2]);     // (1 - weightedHeight) * weightedWidth
     pBilinearCoeffs[2] = _mm256_mul_ps(pWeightParams[0], pWeightParams[3]);     // weightedHeight * (1 - weightedWidth)
     pBilinearCoeffs[3] = _mm256_mul_ps(pWeightParams[0], pWeightParams[2]);     // weightedHeight * weightedWidth
+    pSrcBilinearLTyx[0] = _mm256_min_ps(_mm256_max_ps(pSrcBilinearLTyx[0], pRoiLTRB[1]), _mm256_sub_ps(pRoiLTRB[3], avx_p1));
+    pSrcBilinearLTyx[1] = _mm256_min_ps(_mm256_max_ps(pSrcBilinearLTyx[1], pRoiLTRB[0]), _mm256_sub_ps(pRoiLTRB[2], avx_p1));
+    pSrcBilinearLTyx[2] = _mm256_min_ps(_mm256_max_ps(_mm256_add_ps(pSrcBilinearLTyx[0], avx_p1), pRoiLTRB[1]), _mm256_sub_ps(pRoiLTRB[3], avx_p1));
+    pSrcBilinearLTyx[3] = _mm256_min_ps(_mm256_max_ps(_mm256_add_ps(pSrcBilinearLTyx[1], avx_p1), pRoiLTRB[0]), _mm256_sub_ps(pRoiLTRB[2], avx_p1));
     if(isSrcPKD3)
+    {
         pSrcBilinearLTyx[1] = _mm256_mul_ps(pSrcBilinearLTyx[1], avx_p3);       // if pkd3, multiply Left-Top column location by 3
-    __m256i pxSrcLocsTL = _mm256_cvtps_epi32(_mm256_fmadd_ps(pSrcBilinearLTyx[0], pSrcStrideH, pSrcBilinearLTyx[1]));      // 8 Top-Left memory locations = 8 Top-Left srcYs * hStride + 8 Top-Left srcXs
-    __m256i pxSrcLocsTR = _mm256_add_epi32(pxSrcLocsTL, pxSrcStridesCHW[2]);                                               // 8 Top-Right memory locations = 8 Top-Left memory locations + wStride
-    __m256i pxSrcLocsBL = _mm256_add_epi32(pxSrcLocsTL, pxSrcStridesCHW[1]);                                               // 8 Bottom-Left memory locations = 8 Top-Left memory locations + hStride
-    __m256i pxSrcLocsBR = _mm256_add_epi32(pxSrcLocsBL, pxSrcStridesCHW[2]);                                               // 8 Bottom-Right memory locations = 8 Bottom-Left memory locations + wStride
+        pSrcBilinearLTyx[3] = _mm256_mul_ps(pSrcBilinearLTyx[3], avx_p3);       // if pkd3, multiply Right-Top column location by 3
+    }
+    __m256i pxSrcLocsTL =  _mm256_cvtps_epi32(_mm256_fmadd_ps(pSrcBilinearLTyx[0], pSrcStrideH, pSrcBilinearLTyx[1]));    // 8 Top-Left memory locations = 8 Top-Left srcYs * hStride + 8 Top-Left srcXs
+    __m256i pxSrcLocsTR =  _mm256_cvtps_epi32(_mm256_fmadd_ps(pSrcBilinearLTyx[0], pSrcStrideH, pSrcBilinearLTyx[3]));    // 8 Top-Right memory locations = 8 Top-Left srcYs * hStride + 8 Bottom-right srcXs
+    __m256i pxSrcLocsBL = _mm256_cvtps_epi32(_mm256_fmadd_ps(pSrcBilinearLTyx[2], pSrcStrideH, pSrcBilinearLTyx[1]));     // 8 Bottom-Left memory locations = 8 Bottom-right srcYs * hStride + 8 Top-Left srcXs
+    __m256i pxSrcLocsBR = _mm256_cvtps_epi32(_mm256_fmadd_ps(pSrcBilinearLTyx[2], pSrcStrideH, pSrcBilinearLTyx[3]));     // 8 Bottom-Right memory locations = 8 Bottom-right srcYs * hStride + 8 Bottom-right srcXs
     for (int c = 0; c < srcChannels * 8; c += 8)
     {
         _mm256_storeu_si256((__m256i*) &srcLocs.srcLocsTL.data[c], pxSrcLocsTL);    // Store precomputed bilinear Top-Left locations
@@ -4965,7 +5081,7 @@ inline void compute_generic_bilinear_interpolation_pkd3_to_pln3(Rpp32f srcY, Rpp
     else
     {
         T dst[3];
-        compute_generic_bilinear_srclocs_and_interpolate(srcPtrChannel, srcDescPtr, srcY, srcX, dst);
+        compute_generic_bilinear_srclocs_and_interpolate(srcPtrChannel, srcDescPtr, srcY, srcX, roiLTRB, dst);
         *dstPtrTempR = dst[0];
         *dstPtrTempG = dst[1];
         *dstPtrTempB = dst[2];
@@ -4975,20 +5091,24 @@ inline void compute_generic_bilinear_interpolation_pkd3_to_pln3(Rpp32f srcY, Rpp
 template <typename T>
 inline void compute_generic_bilinear_interpolation_pln3pkd3_to_pkd3(Rpp32f srcY, Rpp32f srcX, RpptROI *roiLTRB, T *dstPtrTemp, T *srcPtrChannel, RpptDescPtr srcDescPtr)
 {
-    if ((srcX < roiLTRB->ltrbROI.lt.x) || (srcY < roiLTRB->ltrbROI.lt.y) || (srcX > roiLTRB->ltrbROI.rb.x) || (srcY > roiLTRB->ltrbROI.rb.y))
+    Rpp32s srcXFloor = std::floor(srcX);
+    Rpp32s srcYFloor = std::floor(srcY);
+    if ((srcXFloor < roiLTRB->ltrbROI.lt.x) || (srcYFloor < roiLTRB->ltrbROI.lt.y) || (srcXFloor > roiLTRB->ltrbROI.rb.x) || (srcYFloor > roiLTRB->ltrbROI.rb.y))
     {
         memset(dstPtrTemp, 0, 3 * sizeof(T));
     }
     else
     {
-        compute_generic_bilinear_srclocs_and_interpolate(srcPtrChannel, srcDescPtr, srcY, srcX, dstPtrTemp);
+        compute_generic_bilinear_srclocs_and_interpolate(srcPtrChannel, srcDescPtr, srcY, srcX, roiLTRB, dstPtrTemp);
     }
 }
 
 template <typename T>
 inline void compute_generic_bilinear_interpolation_pln_to_pln(Rpp32f srcY, Rpp32f srcX, RpptROI *roiLTRB, T *dstPtrTemp, T *srcPtrChannel, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr)
 {
-    if ((srcX < roiLTRB->ltrbROI.lt.x) || (srcY < roiLTRB->ltrbROI.lt.y) || (srcX > roiLTRB->ltrbROI.rb.x) || (srcY > roiLTRB->ltrbROI.rb.y))
+    Rpp32s srcXFloor = std::floor(srcX);
+    Rpp32s srcYFloor = std::floor(srcY);
+    if ((srcXFloor < roiLTRB->ltrbROI.lt.x) || (srcYFloor < roiLTRB->ltrbROI.lt.y) || (srcXFloor > roiLTRB->ltrbROI.rb.x) || (srcYFloor > roiLTRB->ltrbROI.rb.y))
     {
         for(int c = 0; c < srcDescPtr->c; c++)
         {
@@ -4999,7 +5119,7 @@ inline void compute_generic_bilinear_interpolation_pln_to_pln(Rpp32f srcY, Rpp32
     else
     {
         T dst[3];
-        compute_generic_bilinear_srclocs_and_interpolate(srcPtrChannel, srcDescPtr, srcY, srcX, dst);
+        compute_generic_bilinear_srclocs_and_interpolate(srcPtrChannel, srcDescPtr, srcY, srcX, roiLTRB, dst);
         for(int c = 0; c < srcDescPtr->c; c++)
         {
             *dstPtrTemp = dst[c];
@@ -5020,6 +5140,20 @@ inline void compute_generic_nn_srclocs_and_validate_sse(__m128 pSrcY, __m128 pSr
         pSrcX = _mm_mul_ps(pSrcX, xmm_p3);
     __m128i pxSrcLoc = _mm_cvtps_epi32(_mm_fmadd_ps(pSrcY, pSrcStrideH, pSrcX));
     _mm_storeu_si128((__m128i*) srcLoc, pxSrcLoc);
+}
+
+inline void compute_generic_nn_srclocs_and_validate_avx(__m256 pSrcY, __m256 pSrcX, __m256 *pRoiLTRB, __m256 pSrcStrideH, Rpp32s *srcLoc, Rpp32s *invalidLoad, bool hasRGBChannels = false)
+{
+    pSrcY = _mm256_round_ps(pSrcY, (_MM_FROUND_TO_NEAREST_INT |_MM_FROUND_NO_EXC));              // Nearest Neighbor Y location vector
+    pSrcX = _mm256_round_ps(pSrcX, (_MM_FROUND_TO_NEAREST_INT |_MM_FROUND_NO_EXC));              // Nearest Neighbor X location vector
+    _mm256_storeu_si256((__m256i*) invalidLoad, _mm256_cvtps_epi32(_mm256_or_ps(                 // Vectorized ROI boundary check
+        _mm256_or_ps(_mm256_cmp_ps(pSrcX, pRoiLTRB[0], _CMP_LT_OQ), _mm256_cmp_ps(pSrcY, pRoiLTRB[1],_CMP_LT_OQ)),
+        _mm256_or_ps(_mm256_cmp_ps(pSrcX, pRoiLTRB[2], _CMP_GT_OQ), _mm256_cmp_ps(pSrcY, pRoiLTRB[3], _CMP_GT_OQ))
+    )));
+    if (hasRGBChannels)
+        pSrcX = _mm256_mul_ps(pSrcX, avx_p3);
+    __m256i pxSrcLoc = _mm256_cvtps_epi32(_mm256_fmadd_ps(pSrcY, pSrcStrideH, pSrcX));
+    _mm256_storeu_si256((__m256i*) srcLoc, pxSrcLoc);
 }
 
 template <typename T>
@@ -5231,7 +5365,7 @@ inline void compute_coefficient(RpptInterpolationType interpolationType, Rpp32f 
 }
 
 // Computes the row coefficients for separable resampling
-inline void compute_row_coefficients(RpptInterpolationType interpolationType, Filter &filter , Rpp32f weight, Rpp32f *coeffs, Rpp32u srcStride = 1)
+inline void compute_row_coefficients(RpptInterpolationType interpolationType, GenericFilter &filter , Rpp32f weight, Rpp32f *coeffs, Rpp32u srcStride = 1)
 {
     Rpp32f sum = 0;
     weight = weight - filter.radius;
@@ -5249,7 +5383,7 @@ inline void compute_row_coefficients(RpptInterpolationType interpolationType, Fi
 }
 
 // Computes the column coefficients for separable resampling
-inline void compute_col_coefficients(RpptInterpolationType interpolationType, Filter &filter, Rpp32f weight, Rpp32f *coeffs, Rpp32u srcStride = 1)
+inline void compute_col_coefficients(RpptInterpolationType interpolationType, GenericFilter &filter, Rpp32f weight, Rpp32f *coeffs, Rpp32u srcStride = 1)
 {
     Rpp32f sum = 0;
     weight = weight - filter.radius;
@@ -5301,10 +5435,10 @@ inline void compute_bilinear_interpolation_1c(T **srcRowPtrsForInterp, Rpp32s lo
 {
     Rpp32s loc1 = std::min(std::max(loc, 0), limit);
     Rpp32s loc2 = std::min(std::max(loc + 1, 0), limit);
-    *dstPtr = (U)(((*(srcRowPtrsForInterp[0] + loc1)) * bilinearCoeffs[0]) +     // TopRow 1st Pixel * coeff0
-                  ((*(srcRowPtrsForInterp[0] + loc2)) * bilinearCoeffs[1]) +     // TopRow 2nd Pixel * coeff1
-                  ((*(srcRowPtrsForInterp[1] + loc1)) * bilinearCoeffs[2]) +     // BottomRow 1st Pixel * coeff2
-                  ((*(srcRowPtrsForInterp[1] + loc2)) * bilinearCoeffs[3]));     // BottomRow 2nd Pixel * coeff3
+    *dstPtr = (U)std::nearbyintf((((*(srcRowPtrsForInterp[0] + loc1)) * bilinearCoeffs[0]) +     // TopRow 1st Pixel * coeff0
+                                  ((*(srcRowPtrsForInterp[0] + loc2)) * bilinearCoeffs[1]) +     // TopRow 2nd Pixel * coeff1
+                                  ((*(srcRowPtrsForInterp[1] + loc1)) * bilinearCoeffs[2]) +     // BottomRow 1st Pixel * coeff2
+                                  ((*(srcRowPtrsForInterp[1] + loc2)) * bilinearCoeffs[3])));    // BottomRow 2nd Pixel * coeff3
 }
 
 template <typename T, typename U>
@@ -5312,18 +5446,18 @@ inline void compute_bilinear_interpolation_3c_pkd(T **srcRowPtrsForInterp, Rpp32
 {
     Rpp32s loc1 = std::min(std::max(loc, 0), limit);
     Rpp32s loc2 = std::min(std::max(loc + 3, 0), limit);
-    *dstPtrR = (U)(((*(srcRowPtrsForInterp[0] + loc1)) * bilinearCoeffs[0]) +        // TopRow R01 Pixel * coeff0
-                   ((*(srcRowPtrsForInterp[0] + loc2)) * bilinearCoeffs[1]) +        // TopRow R02 Pixel * coeff1
-                   ((*(srcRowPtrsForInterp[1] + loc1)) * bilinearCoeffs[2]) +        // BottomRow R01 Pixel * coeff2
-                   ((*(srcRowPtrsForInterp[1] + loc2)) * bilinearCoeffs[3]));        // BottomRow R02 Pixel * coeff3
-    *dstPtrG = (U)(((*(srcRowPtrsForInterp[0] + loc1 + 1)) * bilinearCoeffs[0]) +    // TopRow G01 Pixel * coeff0
-                   ((*(srcRowPtrsForInterp[0] + loc2 + 1)) * bilinearCoeffs[1]) +    // TopRow G02 Pixel * coeff1
-                   ((*(srcRowPtrsForInterp[1] + loc1 + 1)) * bilinearCoeffs[2]) +    // BottomRow G01 Pixel * coeff2
-                   ((*(srcRowPtrsForInterp[1] + loc2 + 1)) * bilinearCoeffs[3]));    // BottomRow G02 Pixel * coeff3
-    *dstPtrB = (U)(((*(srcRowPtrsForInterp[0] + loc1 + 2)) * bilinearCoeffs[0]) +    // TopRow B01 Pixel * coeff0
-                   ((*(srcRowPtrsForInterp[0] + loc2 + 2)) * bilinearCoeffs[1]) +    // TopRow B02 Pixel * coeff1
-                   ((*(srcRowPtrsForInterp[1] + loc1 + 2)) * bilinearCoeffs[2]) +    // BottomRow B01 Pixel * coeff2
-                   ((*(srcRowPtrsForInterp[1] + loc2 + 2)) * bilinearCoeffs[3]));    // BottomRow B02 Pixel * coeff3
+    *dstPtrR = (U)std::nearbyintf((((*(srcRowPtrsForInterp[0] + loc1)) * bilinearCoeffs[0]) +        // TopRow R01 Pixel * coeff0
+                                   ((*(srcRowPtrsForInterp[0] + loc2)) * bilinearCoeffs[1]) +        // TopRow R02 Pixel * coeff1
+                                   ((*(srcRowPtrsForInterp[1] + loc1)) * bilinearCoeffs[2]) +        // BottomRow R01 Pixel * coeff2
+                                   ((*(srcRowPtrsForInterp[1] + loc2)) * bilinearCoeffs[3])));       // BottomRow R02 Pixel * coeff3
+    *dstPtrG = (U)std::nearbyintf((((*(srcRowPtrsForInterp[0] + loc1 + 1)) * bilinearCoeffs[0]) +    // TopRow G01 Pixel * coeff0
+                                   ((*(srcRowPtrsForInterp[0] + loc2 + 1)) * bilinearCoeffs[1]) +    // TopRow G02 Pixel * coeff1
+                                   ((*(srcRowPtrsForInterp[1] + loc1 + 1)) * bilinearCoeffs[2]) +    // BottomRow G01 Pixel * coeff2
+                                   ((*(srcRowPtrsForInterp[1] + loc2 + 1)) * bilinearCoeffs[3])));   // BottomRow G02 Pixel * coeff3
+    *dstPtrB = (U)std::nearbyintf((((*(srcRowPtrsForInterp[0] + loc1 + 2)) * bilinearCoeffs[0]) +    // TopRow B01 Pixel * coeff0
+                                   ((*(srcRowPtrsForInterp[0] + loc2 + 2)) * bilinearCoeffs[1]) +    // TopRow B02 Pixel * coeff1
+                                   ((*(srcRowPtrsForInterp[1] + loc1 + 2)) * bilinearCoeffs[2]) +    // BottomRow B01 Pixel * coeff2
+                                   ((*(srcRowPtrsForInterp[1] + loc2 + 2)) * bilinearCoeffs[3])));   // BottomRow B02 Pixel * coeff3
 }
 
 template <typename T, typename U>
@@ -5368,7 +5502,7 @@ inline void compute_src_row_ptrs_for_bilinear_interpolation_pln(T **rowPtrsForIn
 // Perform resampling along the rows
 template <typename T>
 inline void compute_separable_vertical_resample(T *inputPtr, Rpp32f *outputPtr, RpptDescPtr inputDescPtr, RpptDescPtr outputDescPtr,
-                                                RpptImagePatch inputImgSize, RpptImagePatch outputImgSize, Rpp32s *index, Rpp32f *coeffs, Filter &filter)
+                                                RpptImagePatch inputImgSize, RpptImagePatch outputImgSize, Rpp32s *index, Rpp32f *coeffs, GenericFilter &filter)
 {
 
     static constexpr Rpp32s maxNumLanes = 16;                                  // Maximum number of pixels that can be present in a vector for U8 type
@@ -5511,7 +5645,7 @@ inline void compute_separable_vertical_resample(T *inputPtr, Rpp32f *outputPtr, 
 // Perform resampling along the columns
 template <typename T>
 inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr, RpptDescPtr inputDescPtr, RpptDescPtr outputDescPtr,
-                        RpptImagePatch inputImgSize, RpptImagePatch outputImgSize, Rpp32s *index, Rpp32f *coeffs, Filter &filter)
+                        RpptImagePatch inputImgSize, RpptImagePatch outputImgSize, Rpp32s *index, Rpp32f *coeffs, GenericFilter &filter)
 {
     static constexpr Rpp32s maxNumLanes = 16;                                   // Maximum number of pixels that can be present in a vector
     static constexpr Rpp32s numLanes = maxNumLanes / sizeof(T);                 // No of pixels that can be present in a vector wrt data type
@@ -5859,4 +5993,28 @@ inline void compute_jitter_src_loc(RpptXorwowStateBoxMuller *xorwowState, Rpp32s
     loc = std::max(std::min(static_cast<int>(row + hInc - bound), heightLimit), 0) * stride;
     loc += std::max(std::min(static_cast<int>(col + wInc - bound), (widthLimit - 1)), 0) * channels;
 }
+inline void compute_sum_16_host(__m256i *p, __m256i *pSum)
+{
+    pSum[0] = _mm256_add_epi32(_mm256_add_epi32(p[0], p[1]), pSum[0]); //add 16 values to 8
+}
+
+inline void compute_sum_48_host(__m256i *p, __m256i *pSumR, __m256i *pSumG, __m256i *pSumB)
+{
+    pSumR[0] = _mm256_add_epi32(_mm256_add_epi32(p[0], p[1]), pSumR[0]); //add 16R values and bring it down to 8
+    pSumG[0] = _mm256_add_epi32(_mm256_add_epi32(p[2], p[3]), pSumG[0]); //add 16G values and bring it down to 8
+    pSumB[0] = _mm256_add_epi32(_mm256_add_epi32(p[4], p[5]), pSumB[0]); //add 16B values and bring it down to 8
+}
+
+inline void compute_sum_8_host(__m256d *p, __m256d *pSum)
+{
+    pSum[0] = _mm256_add_pd(_mm256_add_pd(p[0], p[1]), pSum[0]); //add 8 values and bring it down to 4
+}
+
+inline void compute_sum_24_host(__m256d *p, __m256d *pSumR, __m256d *pSumG, __m256d *pSumB)
+{
+    pSumR[0] = _mm256_add_pd(_mm256_add_pd(p[0], p[1]), pSumR[0]); //add 8R values and bring it down to 4
+    pSumG[0] = _mm256_add_pd(_mm256_add_pd(p[2], p[3]), pSumG[0]); //add 8G values and bring it down to 4
+    pSumB[0] = _mm256_add_pd(_mm256_add_pd(p[4], p[5]), pSumB[0]); //add 8B values and bring it down to 4
+}
+
 #endif //RPP_CPU_COMMON_H

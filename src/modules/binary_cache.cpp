@@ -1,33 +1,30 @@
-/*******************************************************************************
- *
- * MIT License
- *
- * Copyright (c) 2017 - 2022 Advanced Micro Devices, Inc.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
- *******************************************************************************/
+/*
+MIT License
+
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
 
 #include <fstream>
 #include <iostream>
-#include <boost/filesystem.hpp>
-
+#include "filesystem.h"
 #include "rpp.h"
 #include "rppversion.h"
 #include "rpp/binary_cache.hpp"
@@ -40,7 +37,7 @@ namespace rpp {
 
 RPP_DECLARE_ENV_VAR(RPP_DISABLE_CACHE)
 
-boost::filesystem::path ComputeCachePath()
+fs::path ComputeCachePath()
 {
 #ifdef RPP_CACHE_DIR
     std::string cache_dir = RPP_CACHE_DIR;
@@ -49,9 +46,9 @@ boost::filesystem::path ComputeCachePath()
                           std::to_string(RPP_VERSION_MINOR) + "." +
                           std::to_string(RPP_VERSION_PATCH);
 
-    auto p = boost::filesystem::path{cache_dir} / version;
-    if(!boost::filesystem::exists(p))
-        boost::filesystem::create_directories(p);
+    auto p = fs::path{cache_dir} / version;
+    if(!fs::exists(p))
+        fs::create_directories(p);
     // auto p = cache_dir;
     //std::cerr<<"\n cache_dir"<<cache_dir;
     return p;
@@ -60,9 +57,9 @@ boost::filesystem::path ComputeCachePath()
 #endif
 }
 
-boost::filesystem::path GetCachePath()
+fs::path GetCachePath()
 {
-    static const boost::filesystem::path path = ComputeCachePath();
+    static const fs::path path = ComputeCachePath();
     return path;
 }
 
@@ -77,7 +74,7 @@ bool IsCacheDisabled()
 #endif
 }
 
-boost::filesystem::path GetCacheFile(const std::string& device,
+fs::path GetCacheFile(const std::string& device,
                                      const std::string& name,
                                      const std::string& args,
                                      bool is_kernel_str)
@@ -96,7 +93,7 @@ std::string LoadBinary(const std::string& device,
     if(rpp::IsCacheDisabled())
         return {};
     auto f = GetCacheFile(device, name, args, is_kernel_str);
-    if(boost::filesystem::exists(f))
+    if(fs::exists(f))
     {
         return f.string();
     }
@@ -105,7 +102,7 @@ std::string LoadBinary(const std::string& device,
         return {};
     }
 }
-void SaveBinary(const boost::filesystem::path& binary_path,
+void SaveBinary(const fs::path& binary_path,
                 const std::string& device,
                 const std::string& name,
                 const std::string& args,
@@ -113,13 +110,13 @@ void SaveBinary(const boost::filesystem::path& binary_path,
 {
     if(rpp::IsCacheDisabled())
     {
-        boost::filesystem::remove(binary_path);
+        fs::remove(binary_path);
     }
     else
     {
         auto p = GetCacheFile(device, name, args, is_kernel_str);
-        boost::filesystem::create_directories(p.parent_path());
-        boost::filesystem::rename(binary_path, p);
+        fs::create_directories(p.parent_path());
+        fs::rename(binary_path, p);
     }
 }
 

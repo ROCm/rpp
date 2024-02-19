@@ -1,33 +1,31 @@
-/*******************************************************************************
- *
- * MIT License
- *
- * Copyright (c) 2017 - 2022 Advanced Micro Devices, Inc.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
- *******************************************************************************/
+/*
+MIT License
+
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
 
 #include <sstream>
+#include <optional>
 #include <unistd.h>
 #include <hip/hiprtc.h>
-#include <boost/optional.hpp>
 
 #include "rpp/errors.hpp"
 #include "rpp/gcn_asm_utils.hpp"
@@ -47,7 +45,7 @@ std::string remove_extension(const std::string& filename) {
     return filename.substr(0, lastdot);
 }
 
-hipModulePtr CreateModule(const boost::filesystem::path& hsaco_file)
+hipModulePtr CreateModule(const fs::path& hsaco_file)
 {
     hipModule_t raw_m;
     // std::cout<<"attempting to run hipModule Load of hsacofile:\n";// <<hsaco_file.string().c_str()<<std::endl;
@@ -69,7 +67,7 @@ hipModulePtr CreateModuleRTC(char** codeData)
 }
 struct HIPOCProgramImpl
 {
-    HIPOCProgramImpl(const std::string& program_name, const boost::filesystem::path& hsaco)
+    HIPOCProgramImpl(const std::string& program_name, const fs::path& hsaco)
         : name(program_name), hsaco_file(hsaco)
     {
         this->module = CreateModule(this->hsaco_file);
@@ -95,9 +93,9 @@ struct HIPOCProgramImpl
     }
     std::string name;
     std::string dev_name;
-    boost::filesystem::path hsaco_file;
+    fs::path hsaco_file;
     hipModulePtr module;
-    boost::optional<TmpDir> dir;
+    std::optional<TmpDir> dir;
     hipModulePtr BuildAndCreateModuleRTC(const std::string& program_name,
                      std::string params,
                      bool is_kernel_str,
@@ -116,8 +114,8 @@ struct HIPOCProgramImpl
     	hipDeviceProp_t props;
 	int device = 0;
 	hipGetDeviceProperties(&props, device);
-    	std::string gfxName = "gfx" + std::to_string(props.gcnArch);
-    	std::string sarg = "--gpu-architecture=" + gfxName;
+      	std::string archName(props.gcnArchName);
+    	std::string sarg = "--gpu-architecture=" + archName;
 	const char* options[] = {
         	sarg.c_str()
     	};
@@ -198,7 +196,7 @@ struct HIPOCProgramImpl
             dir->Execute("/usr/local/bin/clang-ocl", params + " " + filename + " -o " + hsaco_file.string());
         }
         // std::cout<<"Done Building Module to get hsaco_file "<<hsaco_file.string().c_str()<<std::flush;
-        //if(!boost::filesystem::exists(hsaco_file))
+        //if(!fs::exists(hsaco_file))
           //  RPP_THROW("Cant find file: " + hsaco_file.string());
 
     ;
@@ -217,13 +215,13 @@ HIPOCProgram::HIPOCProgram(const std::string& program_name,
 {
 }
 
-HIPOCProgram::HIPOCProgram(const std::string& program_name, const boost::filesystem::path& hsaco)
+HIPOCProgram::HIPOCProgram(const std::string& program_name, const fs::path& hsaco)
     : impl(std::make_shared<HIPOCProgramImpl>(program_name, hsaco))
 {
 }
 
 hipModule_t HIPOCProgram::GetModule() const { return this->impl->module.get(); }
 
-boost::filesystem::path HIPOCProgram::GetBinary() const { return this->impl->hsaco_file; }
+fs::path HIPOCProgram::GetBinary() const { return this->impl->hsaco_file; }
 
 } // namespace rpp

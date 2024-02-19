@@ -1,5 +1,7 @@
 /*
-Copyright (c) 2019 - 2022 Advanced Micro Devices, Inc. All rights reserved.
+MIT License
+
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -8,16 +10,16 @@ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 */
 
 #include "rppdefs.h"
@@ -62,7 +64,8 @@ rppi_thresholding_u8_pln1_batchPD_host(RppPtr_t srcPtr,
                                    rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                                    rpp::deref(rppHandle).GetBatchSize(),
                                    RPPI_CHN_PLANAR,
-                                   1);
+                                   1,
+                                   rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -94,7 +97,8 @@ rppi_thresholding_u8_pln3_batchPD_host(RppPtr_t srcPtr,
                                    rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                                    rpp::deref(rppHandle).GetBatchSize(),
                                    RPPI_CHN_PLANAR,
-                                   3);
+                                   3,
+                                   rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -126,7 +130,8 @@ rppi_thresholding_u8_pkd3_batchPD_host(RppPtr_t srcPtr,
                                    rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                                    rpp::deref(rppHandle).GetBatchSize(),
                                    RPPI_CHN_PACKED,
-                                   3);
+                                   3,
+                                   rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -158,7 +163,8 @@ rppi_min_u8_pln1_batchPD_host(RppPtr_t srcPtr1,
                           rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                           rpp::deref(rppHandle).GetBatchSize(),
                           RPPI_CHN_PLANAR,
-                          1);
+                          1,
+                          rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -188,7 +194,8 @@ rppi_min_u8_pln3_batchPD_host(RppPtr_t srcPtr1,
                           rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                           rpp::deref(rppHandle).GetBatchSize(),
                           RPPI_CHN_PLANAR,
-                          3);
+                          3,
+                          rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -218,7 +225,8 @@ rppi_min_u8_pkd3_batchPD_host(RppPtr_t srcPtr1,
                           rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                           rpp::deref(rppHandle).GetBatchSize(),
                           RPPI_CHN_PACKED,
-                          3);
+                          3,
+                          rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -250,7 +258,8 @@ rppi_max_u8_pln1_batchPD_host(RppPtr_t srcPtr1,
                           rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                           rpp::deref(rppHandle).GetBatchSize(),
                           RPPI_CHN_PLANAR,
-                          1);
+                          1,
+                          rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -280,7 +289,8 @@ rppi_max_u8_pln3_batchPD_host(RppPtr_t srcPtr1,
                           rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                           rpp::deref(rppHandle).GetBatchSize(),
                           RPPI_CHN_PLANAR,
-                          3);
+                          3,
+                          rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -310,7 +320,8 @@ rppi_max_u8_pkd3_batchPD_host(RppPtr_t srcPtr1,
                           rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.roiPoints,
                           rpp::deref(rppHandle).GetBatchSize(),
                           RPPI_CHN_PACKED,
-                          3);
+                          3,
+                          rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -398,7 +409,8 @@ rppi_integral_u8_pln1_batchPD_host(RppPtr_t srcPtr,
                                static_cast<Rpp32u*>(dstPtr),
                                rpp::deref(rppHandle).GetBatchSize(),
                                RPPI_CHN_PLANAR,
-                               1);
+                               1,
+                               rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -419,7 +431,8 @@ rppi_integral_u8_pln3_batchPD_host(RppPtr_t srcPtr,
                                static_cast<Rpp32u*>(dstPtr),
                                rpp::deref(rppHandle).GetBatchSize(),
                                RPPI_CHN_PLANAR,
-                               3);
+                               3,
+                               rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -440,7 +453,8 @@ rppi_integral_u8_pkd3_batchPD_host(RppPtr_t srcPtr,
                                static_cast<Rpp32u*>(dstPtr),
                                rpp::deref(rppHandle).GetBatchSize(),
                                RPPI_CHN_PACKED,
-                               3);
+                               3,
+                               rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -463,7 +477,8 @@ rppi_histogram_equalization_u8_pln1_batchPD_host(RppPtr_t srcPtr,
                                              static_cast<Rpp8u*>(dstPtr),
                                              rpp::deref(rppHandle).GetBatchSize(),
                                              RPPI_CHN_PLANAR,
-                                             1);
+                                             1,
+                                             rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -484,7 +499,8 @@ rppi_histogram_equalization_u8_pln3_batchPD_host(RppPtr_t srcPtr,
                                              static_cast<Rpp8u*>(dstPtr),
                                              rpp::deref(rppHandle).GetBatchSize(),
                                              RPPI_CHN_PLANAR,
-                                             3);
+                                             3,
+                                             rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }
@@ -505,7 +521,8 @@ rppi_histogram_equalization_u8_pkd3_batchPD_host(RppPtr_t srcPtr,
                                              static_cast<Rpp8u*>(dstPtr),
                                              rpp::deref(rppHandle).GetBatchSize(),
                                              RPPI_CHN_PACKED,
-                                             3);
+                                             3,
+                                             rpp::deref(rppHandle));
 
     return RPP_SUCCESS;
 }

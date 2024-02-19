@@ -1,42 +1,39 @@
-/*******************************************************************************
- *
- * MIT License
- *
- * Copyright (c) 2017 - 2022 Advanced Micro Devices, Inc.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
- *******************************************************************************/
+/*
+MIT License
 
-#include <boost/filesystem.hpp>
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+#include <chrono>
 #ifndef _WIN32
 #include <unistd.h>
 #endif
 
-#include "config.h"
+#include <thread>
 #include "rpp/device_name.hpp"
 #include "rpp/errors.hpp"
 #include "rpp/logger.hpp"
 #include "rpp/handle.hpp"
 #include "rpp/kernel_cache.hpp"
 #include "rpp/binary_cache.hpp"
-#include "rpp/handle_lock.hpp"
 #include "rpp/ocldeviceinfo.hpp"
 #include "rpp/load_file.hpp"
 
@@ -260,6 +257,7 @@ struct HandleImpl
     bool enable_profiling = false;
     float profiling_result = 0.0;
     size_t nBatchSize = 1;
+    Rpp32u numThreads = 0;
     InitHandle* initHandle = nullptr;
 
     ContextPtr create_context()
@@ -442,9 +440,13 @@ Handle::Handle(rppAcceleratorQueue_t stream) : impl(new HandleImpl())
     impl->PreInitializeBuffer();
 }
 
-Handle::Handle(size_t batchSize) : impl(new HandleImpl())
+Handle::Handle(size_t batchSize, Rpp32u numThreads) : impl(new HandleImpl())
 {
     impl->nBatchSize = batchSize;
+    numThreads = std::min(numThreads, std::thread::hardware_concurrency());
+    if(numThreads == 0)
+        numThreads = batchSize;
+    impl->numThreads = numThreads;
     this->SetAllocator(nullptr, nullptr, nullptr);
     impl->PreInitializeBufferCPU();
 }
@@ -517,6 +519,9 @@ Handle::Handle() : impl(new HandleImpl())
         RPP_THROW("Creating Command Queue. (clCreateCommandQueue)");
     }
     this->SetAllocator(nullptr, nullptr, nullptr);
+    impl->numThreads = std::min(impl->numThreads, std::thread::hardware_concurrency());
+    if(impl->numThreads == 0)
+        impl->numThreads = impl->nBatchSize;
     // RPP_LOG_I(*this);
 }
 
@@ -605,6 +610,11 @@ void Handle::rpp_destroy_object_host()
 size_t Handle::GetBatchSize() const
 {
     return this->impl->nBatchSize;
+}
+
+Rpp32u Handle::GetNumThreads() const
+{
+    return this->impl->numThreads;
 }
 
 void Handle::SetBatchSize(size_t bSize) const
@@ -699,7 +709,7 @@ const std::vector<Kernel>& Handle::GetKernelsImpl(const std::string& algorithm, 
 KernelInvoke Handle::Run(Kernel k)
 {
     auto q = this->GetStream();
-    if(this->impl->enable_profiling || RPP_GPU_SYNC)
+    if(this->impl->enable_profiling)
     {
         return k.Invoke(q,
                         std::bind(&HandleImpl::SetProfilingResult,
@@ -714,8 +724,16 @@ KernelInvoke Handle::Run(Kernel k)
 
 auto Handle::GetKernels(const std::string& algorithm, const std::string& network_config)
 {
-    return this->GetKernelsImpl(algorithm, network_config) |
-            boost::adaptors::transformed([this](Kernel k) { return this->Run(k); });
+    auto kernels = this->GetKernelsImpl(algorithm, network_config);
+
+    std::vector<KernelInvoke> transformedKernels;
+
+    transformedKernels.reserve(kernels.size());
+
+    std::transform(kernels.begin(), kernels.end(), std::back_inserter(transformedKernels),
+                   [this](Kernel k) { return this->Run(k); });
+
+    return transformedKernels;
 }
 
 KernelInvoke Handle::GetKernel(const std::string& algorithm, const std::string& network_config)
@@ -742,7 +760,7 @@ Program Handle::LoadProgram(const std::string& program_name, std::string params,
                                   kernel_src);
 
         // Save to cache
-        auto path = rpp::GetCachePath() / boost::filesystem::unique_path();
+        auto path = rpp::GetCachePath() / std::to_string(std::chrono::system_clock::now().time_since_epoch().count());
         rpp::SaveProgramBinary(p, path.string());
         rpp::SaveBinary(path.string(), this->GetDeviceName(), program_name, params, is_kernel_str);
 
@@ -807,14 +825,12 @@ std::size_t Handle::GetMaxComputeUnits()
 
 Allocator::ManageDataPtr Handle::Create(std::size_t sz)
 {
-    RPP_HANDLE_LOCK
     this->Finish();
     return this->impl->allocator(sz);
 }
 
 Allocator::ManageDataPtr& Handle::WriteTo(const void* data, Allocator::ManageDataPtr& ddata, std::size_t sz)
 {
-    RPP_HANDLE_LOCK
     this->Finish();
     cl_int status = clEnqueueWriteBuffer(this->GetStream(), ddata.get(), CL_TRUE, 0, sz, data, 0, nullptr, nullptr);
     if(status != CL_SUCCESS)
@@ -826,7 +842,6 @@ Allocator::ManageDataPtr& Handle::WriteTo(const void* data, Allocator::ManageDat
 
 void Handle::ReadTo(void* data, const Allocator::ManageDataPtr& ddata, std::size_t sz)
 {
-    RPP_HANDLE_LOCK
     this->Finish();
     auto status = clEnqueueReadBuffer(this->GetStream(), ddata.get(), CL_TRUE, 0, sz, data, 0, nullptr, nullptr);
     if(status != CL_SUCCESS)
@@ -837,7 +852,6 @@ void Handle::ReadTo(void* data, const Allocator::ManageDataPtr& ddata, std::size
 
 void Handle::Copy(ConstData_t src, Data_t dest, std::size_t size)
 {
-    RPP_HANDLE_LOCK
     this->Finish();
     auto status = clEnqueueCopyBuffer(this->GetStream(), src, dest, 0, 0, size, 0, nullptr, nullptr);
     if(status != CL_SUCCESS)
@@ -848,7 +862,6 @@ void Handle::Copy(ConstData_t src, Data_t dest, std::size_t size)
 
 shared<Data_t> Handle::CreateSubBuffer(Data_t data, std::size_t offset, std::size_t size)
 {
-    RPP_HANDLE_LOCK
     struct region
     {
         std::size_t origin;

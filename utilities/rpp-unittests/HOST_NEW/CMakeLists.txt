@@ -1,4 +1,30 @@
+#[[
+MIT License
+
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+]]
+
 cmake_minimum_required(VERSION 3.5)
+set(CMAKE_CXX_COMPILER clang++)
+set(CMAKE_CXX_STANDARD 17)
 project(rpp_unittests/HOST_NEW)
 
 set(ROCM_PATH /opt/rocm CACHE PATH "default ROCm installation path")
@@ -18,11 +44,6 @@ if(NOT WIN32)
 endif()
 
 find_package(OpenCV QUIET)
-# BOOST
-set(BOOST_COMPONENTS filesystem system)
-find_package(Boost COMPONENTS ${BOOST_COMPONENTS} REQUIRED)
-include_directories(${Boost_INCLUDE_DIRS})
-set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY})
 # OpenMP
 find_package(OpenMP REQUIRED)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
@@ -43,15 +64,15 @@ if (OpenCV_FOUND)
     add_executable(Tensor_host_pln1 Tensor_host_pln1.cpp)
     # add_executable(Single_host Single_host.cpp)
     add_executable(uniqueFunctionalities_host uniqueFunctionalities_host.cpp)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++14")
-    target_link_libraries(BatchPD_host_pkd3 ${OpenCV_LIBS} -lamd_rpp pthread ${LINK_LIBRARY_LIST})
-    target_link_libraries(BatchPD_host_pln1 ${OpenCV_LIBS} -lamd_rpp pthread ${LINK_LIBRARY_LIST})
-    target_link_libraries(BatchPD_host_pln3 ${OpenCV_LIBS} -lamd_rpp pthread ${LINK_LIBRARY_LIST})
-    target_link_libraries(Tensor_host_pkd3 ${OpenCV_LIBS} -lamd_rpp pthread ${LINK_LIBRARY_LIST})
-    target_link_libraries(Tensor_host_pln3 ${OpenCV_LIBS} -lamd_rpp pthread ${LINK_LIBRARY_LIST})
-    target_link_libraries(Tensor_host_pln1 ${OpenCV_LIBS} -lamd_rpp pthread ${LINK_LIBRARY_LIST})
-    # target_link_libraries(Single_host ${OpenCV_LIBS} -lamd_rpp pthread boost_filesystem boost_system )
-    target_link_libraries(uniqueFunctionalities_host ${OpenCV_LIBS} -lamd_rpp pthread ${LINK_LIBRARY_LIST})
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++17")
+    target_link_libraries(BatchPD_host_pkd3 ${OpenCV_LIBS} -lrpp pthread ${LINK_LIBRARY_LIST})
+    target_link_libraries(BatchPD_host_pln1 ${OpenCV_LIBS} -lrpp pthread ${LINK_LIBRARY_LIST})
+    target_link_libraries(BatchPD_host_pln3 ${OpenCV_LIBS} -lrpp pthread ${LINK_LIBRARY_LIST})
+    target_link_libraries(Tensor_host_pkd3 ${OpenCV_LIBS} -lrpp pthread ${LINK_LIBRARY_LIST})
+    target_link_libraries(Tensor_host_pln3 ${OpenCV_LIBS} -lrpp pthread ${LINK_LIBRARY_LIST})
+    target_link_libraries(Tensor_host_pln1 ${OpenCV_LIBS} -lrpp pthread ${LINK_LIBRARY_LIST})
+    # target_link_libraries(Single_host ${OpenCV_LIBS} -lrpp pthread )
+    target_link_libraries(uniqueFunctionalities_host ${OpenCV_LIBS} -lrpp pthread ${LINK_LIBRARY_LIST})
 else()
     message("-- ${Yellow}Error: OpenCV must be installed to install ${PROJECT_NAME} successfully!${ColourReset}")
 endif()
