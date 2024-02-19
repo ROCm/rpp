@@ -450,6 +450,9 @@ RppStatus rppt_gaussian_noise_3d_host(RppPtr_t srcPtr,
         layoutParams = get_layout_params(srcGenericDescPtr->layout, srcGenericDescPtr->dims[1]);
     else if ((srcGenericDescPtr->layout == RpptLayout::NDHWC) && (dstGenericDescPtr->layout == RpptLayout::NDHWC))
         layoutParams = get_layout_params(srcGenericDescPtr->layout, srcGenericDescPtr->dims[4]);
+    if ((srcGenericDescPtr->layout != RpptLayout::NCDHW) && (srcGenericDescPtr->layout != RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
+    if ((dstGenericDescPtr->layout != RpptLayout::NCDHW) && (dstGenericDescPtr->layout != RpptLayout::NDHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
+    if (srcGenericDescPtr->layout != dstGenericDescPtr->layout) return RPP_ERROR_INVALID_ARGUMENTS;
 
     RpptXorwowStateBoxMuller xorwowInitialState[SIMD_FLOAT_VECTOR_LENGTH];
     rpp_host_rng_xorwow_f32_initialize_multiseed_stream_boxmuller<SIMD_FLOAT_VECTOR_LENGTH>(xorwowInitialState, seed);
@@ -482,20 +485,11 @@ RppStatus rppt_gaussian_noise_3d_host(RppPtr_t srcPtr,
                                               layoutParams,
                                               rpp::deref(rppHandle));
     }
-    else if ((srcGenericDescPtr->dataType == RpptDataType::I8) && (dstGenericDescPtr->dataType == RpptDataType::I8))
+    else
     {
-        gaussian_noise_3d_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcGenericDescPtr->offsetInBytes,
-                                            srcGenericDescPtr,
-                                            static_cast<Rpp8s*>(dstPtr) + dstGenericDescPtr->offsetInBytes,
-                                            dstGenericDescPtr,
-                                            meanTensor,
-                                            stdDevTensor,
-                                            xorwowInitialState,
-                                            roiGenericPtrSrc,
-                                            roiType,
-                                            layoutParams,
-                                            rpp::deref(rppHandle));
+        return RPP_ERROR_NOT_IMPLEMENTED;
     }
+
 
     return RPP_SUCCESS;
 }
