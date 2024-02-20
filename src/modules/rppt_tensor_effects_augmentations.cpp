@@ -616,29 +616,32 @@ RppStatus rppt_vignette_host(RppPtr_t srcPtr,
                                    vignetteIntensityTensor,
                                    roiTensorPtrSrc,
                                    roiType,
-                                   layoutParams);
+                                   layoutParams,
+                                   rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
-        vignette_f16_f16_host_tensor((Rpp16f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+        vignette_f16_f16_host_tensor(reinterpret_cast<Rpp16f*> (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                      srcDescPtr,
-                                     (Rpp16f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                     reinterpret_cast<Rpp16f*> (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                      dstDescPtr,
                                      vignetteIntensityTensor,
                                      roiTensorPtrSrc,
                                      roiType,
-                                     layoutParams);
+                                     layoutParams,
+                                     rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
-        vignette_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+        vignette_f32_f32_host_tensor(reinterpret_cast<Rpp32f*> (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                      srcDescPtr,
-                                     (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                     reinterpret_cast<Rpp32f*> (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                      dstDescPtr,
                                      vignetteIntensityTensor,
                                      roiTensorPtrSrc,
                                      roiType,
-                                     layoutParams);
+                                     layoutParams,
+                                     rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
@@ -649,7 +652,8 @@ RppStatus rppt_vignette_host(RppPtr_t srcPtr,
                                    vignetteIntensityTensor,
                                    roiTensorPtrSrc,
                                    roiType,
-                                   layoutParams);
+                                   layoutParams,
+                                   rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;
@@ -1394,8 +1398,6 @@ RppStatus rppt_vignette_gpu(RppPtr_t srcPtr,
                             rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
-    Rpp32u paramIndex = 0;
-    copy_param_float(vignetteIntensityTensor, rpp::deref(rppHandle), paramIndex++);
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
@@ -1404,6 +1406,7 @@ RppStatus rppt_vignette_gpu(RppPtr_t srcPtr,
                                  static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                  dstDescPtr,
                                  roiTensorPtrSrc,
+                                 vignetteIntensityTensor,
                                  roiType,
                                  rpp::deref(rppHandle));
     }
@@ -1414,6 +1417,7 @@ RppStatus rppt_vignette_gpu(RppPtr_t srcPtr,
                                  (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                  dstDescPtr,
                                  roiTensorPtrSrc,
+                                 vignetteIntensityTensor,
                                  roiType,
                                  rpp::deref(rppHandle));
     }
@@ -1424,6 +1428,7 @@ RppStatus rppt_vignette_gpu(RppPtr_t srcPtr,
                                  (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                  dstDescPtr,
                                  roiTensorPtrSrc,
+                                 vignetteIntensityTensor,
                                  roiType,
                                  rpp::deref(rppHandle));
     }
@@ -1434,6 +1439,7 @@ RppStatus rppt_vignette_gpu(RppPtr_t srcPtr,
                                 static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                 dstDescPtr,
                                 roiTensorPtrSrc,
+                                vignetteIntensityTensor,
                                 roiType,
                                 rpp::deref(rppHandle));
     }

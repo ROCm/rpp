@@ -7,14 +7,14 @@ __device__ void vignette_gaussian_hip_compute(float &multiplier, int2 &halfDimsW
     rowLocComponent = idXY_i2.y - halfDimsWH_i2.y;
     rowLocComponent *= (rowLocComponent);
 
-    float4 rowLocComponent_f4 = (float4)rowLocComponent;
-    float4 multiplier_f4 = (float4)multiplier;
+    float4 rowLocComponent_f4 = static_cast<float4>(rowLocComponent);
+    float4 multiplier_f4 = static_cast<float4>(multiplier);
 
     d_float8 colLocComponent_f8;
     colLocComponent_f8.f4[0] = make_float4(idXY_i2.x, idXY_i2.x + 1, idXY_i2.x + 2, idXY_i2.x + 3);
-    colLocComponent_f8.f4[1] = colLocComponent_f8.f4[0] + (float4)4;
-    colLocComponent_f8.f4[0] -= (float4)halfDimsWH_i2.x;
-    colLocComponent_f8.f4[1] -= (float4)halfDimsWH_i2.x;
+    colLocComponent_f8.f4[1] = colLocComponent_f8.f4[0] + static_cast<float4>(4);
+    colLocComponent_f8.f4[0] -= static_cast<float4>(halfDimsWH_i2.x);
+    colLocComponent_f8.f4[1] -= static_cast<float4>(halfDimsWH_i2.x);
     colLocComponent_f8.f4[0] = (colLocComponent_f8.f4[0] * colLocComponent_f8.f4[0]) + rowLocComponent_f4;
     colLocComponent_f8.f4[1] = (colLocComponent_f8.f4[1] * colLocComponent_f8.f4[1]) + rowLocComponent_f4;
     colLocComponent_f8.f4[0] = colLocComponent_f8.f4[0] * multiplier_f4;
@@ -48,7 +48,7 @@ __device__ void vignette_8_hip_compute(float *srcPtr, d_float8 *src_f8, d_float8
 
 __device__ void vignette_8_hip_compute(signed char *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, d_float8 *gaussianValue_f8)
 {
-    float4 i8Offset_f4 = (float4) 128.0f;
+    float4 i8Offset_f4 = static_cast<float4>(128.0f);
     rpp_hip_math_add8_const(src_f8, src_f8, i8Offset_f4);
     dst_f8->f4[0] = src_f8->f4[0] * gaussianValue_f8->f4[0];
     dst_f8->f4[1] = src_f8->f4[1] * gaussianValue_f8->f4[1];
@@ -242,15 +242,13 @@ RppStatus hip_exec_vignette_tensor(T *srcPtr,
                                    T *dstPtr,
                                    RpptDescPtr dstDescPtr,
                                    RpptROIPtr roiTensorPtrSrc,
+                                   Rpp32f *vignetteIntensityTensor,
                                    RpptRoiType roiType,
                                    rpp::Handle& handle)
 {
     if (roiType == RpptRoiType::LTRB)
         hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
 
-    int localThreads_x = LOCAL_THREADS_X;
-    int localThreads_y = LOCAL_THREADS_Y;
-    int localThreads_z = LOCAL_THREADS_Z;
     int globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
     int globalThreads_y = dstDescPtr->h;
     int globalThreads_z = handle.GetBatchSize();
@@ -258,24 +256,23 @@ RppStatus hip_exec_vignette_tensor(T *srcPtr,
     if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
     {
         globalThreads_x = (dstDescPtr->strides.hStride / 3 + 7) >> 3;
-
         hipLaunchKernelGGL(vignette_pkd_tensor,
-                           dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                           dim3(localThreads_x, localThreads_y, localThreads_z),
+                           dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                            0,
                            handle.GetStream(),
                            srcPtr,
                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                            dstPtr,
                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                           handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                           vignetteIntensityTensor,
                            roiTensorPtrSrc);
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
     {
         hipLaunchKernelGGL(vignette_pln_tensor,
-                           dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                           dim3(localThreads_x, localThreads_y, localThreads_z),
+                           dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                            0,
                            handle.GetStream(),
                            srcPtr,
@@ -283,7 +280,7 @@ RppStatus hip_exec_vignette_tensor(T *srcPtr,
                            dstPtr,
                            make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                            dstDescPtr->c,
-                           handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                           vignetteIntensityTensor,
                            roiTensorPtrSrc);
     }
     else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
@@ -291,30 +288,30 @@ RppStatus hip_exec_vignette_tensor(T *srcPtr,
         if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             hipLaunchKernelGGL(vignette_pkd3_pln3_tensor,
-                               dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                               dim3(localThreads_x, localThreads_y, localThreads_z),
+                               dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
                                handle.GetStream(),
                                srcPtr,
                                make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                                dstPtr,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                               handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                               vignetteIntensityTensor,
                                roiTensorPtrSrc);
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             globalThreads_x = (srcDescPtr->strides.hStride + 7) >> 3;
             hipLaunchKernelGGL(vignette_pln3_pkd3_tensor,
-                               dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                               dim3(localThreads_x, localThreads_y, localThreads_z),
+                               dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
                                handle.GetStream(),
                                srcPtr,
                                make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                                dstPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                               handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                               vignetteIntensityTensor,
                                roiTensorPtrSrc);
         }
     }

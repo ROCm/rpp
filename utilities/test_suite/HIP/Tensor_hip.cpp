@@ -829,7 +829,8 @@ int main(int argc, char **argv)
             {
                 testCaseName = "vignette";
 
-                Rpp32f intensity[batchSize];
+                Rpp32f *intensity;
+                CHECK(hipMalloc(&intensity, batchSize * sizeof(Rpp32f)));
                 for (i = 0; i < batchSize; i++)
                     intensity[i] = 6;
 
