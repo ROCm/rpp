@@ -639,8 +639,7 @@ int main(int argc, char **argv)
 
                     Rpp32u boxesInEachImage = 3;
 
-                    //Max number of images in a batch and max boxes in image set to 2048 and 5 respectively.
-                    Rpp32f colorBuffer[30720] = {0};
+                    Rpp32f colorBuffer[batchSize * boxesInEachImage];
                     RpptRoiLtrb anchorBoxInfoTensor[batchSize * boxesInEachImage];
                     Rpp32u numOfBoxes[batchSize];
 
@@ -686,9 +685,9 @@ int main(int argc, char **argv)
                                 if (!inputBitDepth)
                                     colors8u[idx + j] = (Rpp8u)(colorBuffer[idx + j]);
                                 else if (inputBitDepth == 1)
-                                    colors16f[idx + j] = (Rpp16f)colorBuffer[idx + j] * ONE_OVER_255;
+                                    colors16f[idx + j] = (Rpp16f)(colorBuffer[idx + j] * ONE_OVER_255);
                                 else if (inputBitDepth == 2)
-                                    colors32f[idx + j] = (Rpp32f)colorBuffer[idx + j] * ONE_OVER_255;
+                                    colors32f[idx + j] = (Rpp32f)(colorBuffer[idx + j] * ONE_OVER_255);
                                 else if (inputBitDepth == 5)
                                     colors8s[idx + j] = (Rpp8s)(colorBuffer[idx + j] - 128);
                             }
@@ -705,9 +704,10 @@ int main(int argc, char **argv)
                                 if (!inputBitDepth)
                                     colors8u[idx + j] = (Rpp8u)(colorBuffer[idx + j]);
                                 else if (inputBitDepth == 1)
-                                    colors16f[idx + j] = (Rpp16f)colorBuffer[idx + j] * ONE_OVER_255;
+                                    colors16f[idx + j] = (Rpp16f)(
+                                        colorBuffer[idx + j] * ONE_OVER_255);
                                 else if (inputBitDepth == 2)
-                                    colors32f[idx + j] = (Rpp32f)colorBuffer[idx + j] * ONE_OVER_255;
+                                    colors32f[idx + j] = (Rpp32f)(colorBuffer[idx + j] * ONE_OVER_255);
                                 else if (inputBitDepth == 5)
                                     colors8s[idx + j] = (Rpp8s)(colorBuffer[idx + j] - 128);
                             }

@@ -644,6 +644,108 @@ int main(int argc, char **argv)
 
                 break;
             }
+            case 32:
+            {
+                testCaseName = "erase";
+
+                Rpp32u boxesInEachImage = 3;
+
+                Rpp32f *colorBuffer;
+                RpptRoiLtrb *anchorBoxInfoTensor;
+                Rpp32u *numOfBoxes;
+                CHECK(hipHostMalloc(&colorBuffer, batchSize * boxesInEachImage * sizeof(Rpp32f)));
+                CHECK(hipMemset(colorBuffer, 0, batchSize * boxesInEachImage * sizeof(Rpp32f)));
+                CHECK(hipHostMalloc(&anchorBoxInfoTensor, batchSize * boxesInEachImage * sizeof(RpptRoiLtrb)));
+                CHECK(hipHostMalloc(&numOfBoxes, batchSize * sizeof(Rpp32u)));
+
+                Rpp8u *colors8u = reinterpret_cast<Rpp8u *>(colorBuffer);
+                Rpp16f *colors16f = reinterpret_cast<Rpp16f *>(colorBuffer);
+                Rpp32f *colors32f = colorBuffer;
+                Rpp8s *colors8s = reinterpret_cast<Rpp8s *>(colorBuffer);
+
+                for(int i = 0; i < batchSize; i++)
+                {
+                    numOfBoxes[i] = boxesInEachImage;
+
+                    anchorBoxInfoTensor[boxesInEachImage * i].lt.x = 0.125 * roiTensorPtrSrc[i].xywhROI.roiWidth;
+                    anchorBoxInfoTensor[boxesInEachImage * i].lt.y = 0.125 * roiTensorPtrSrc[i].xywhROI.roiHeight;
+                    anchorBoxInfoTensor[boxesInEachImage * i].rb.x = 0.375 * roiTensorPtrSrc[i].xywhROI.roiWidth;
+                    anchorBoxInfoTensor[boxesInEachImage * i].rb.y = 0.375 * roiTensorPtrSrc[i].xywhROI.roiHeight;
+
+                    anchorBoxInfoTensor[(boxesInEachImage * i) + 1].lt.x = 0.125 * roiTensorPtrSrc[i].xywhROI.roiWidth;
+                    anchorBoxInfoTensor[(boxesInEachImage * i) + 1].lt.y = 0.625 * roiTensorPtrSrc[i].xywhROI.roiHeight;
+                    anchorBoxInfoTensor[(boxesInEachImage * i) + 1].rb.x = 0.875 * roiTensorPtrSrc[i].xywhROI.roiWidth;
+                    anchorBoxInfoTensor[(boxesInEachImage * i) + 1].rb.y = 0.875 * roiTensorPtrSrc[i].xywhROI.roiHeight;
+
+                    anchorBoxInfoTensor[(boxesInEachImage * i) + 2].lt.x = 0.75 * roiTensorPtrSrc[i].xywhROI.roiWidth;
+                    anchorBoxInfoTensor[(boxesInEachImage * i) + 2].lt.y = 0.125 * roiTensorPtrSrc[i].xywhROI.roiHeight;
+                    anchorBoxInfoTensor[(boxesInEachImage * i) + 2].rb.x = 0.875 * roiTensorPtrSrc[i].xywhROI.roiWidth;
+                    anchorBoxInfoTensor[(boxesInEachImage * i) + 2].rb.y = 0.5 * roiTensorPtrSrc[i].xywhROI.roiHeight;
+
+                    if(srcDescPtr->c == 3)
+                    {
+                        int idx = (boxesInEachImage * 3 * i);
+                        colorBuffer[idx] = 0;
+                        colorBuffer[idx + 1] = 0;
+                        colorBuffer[idx + 2] = 240;
+                        colorBuffer[idx + 3] = 0;
+                        colorBuffer[idx + 4] = 240;
+                        colorBuffer[idx + 5] = 0;
+                        colorBuffer[idx + 6] = 240;
+                        colorBuffer[idx + 7] = 0;
+                        colorBuffer[idx + 8] = 0;
+
+                        for (int j = 0; j < 9; j++)
+                        {
+                            if (!inputBitDepth)
+                                colors8u[idx + j] = (Rpp8u)(colorBuffer[idx + j]);
+                            else if (inputBitDepth == 1)
+                                colors16f[idx + j] = (Rpp16f)(colorBuffer[idx + j] * ONE_OVER_255);
+                            else if (inputBitDepth == 2)
+                                colors32f[idx + j] = (Rpp32f)(colorBuffer[idx + j] * ONE_OVER_255);
+                            else if (inputBitDepth == 5)
+                                colors8s[idx + j] = (Rpp8s)(colorBuffer[idx + j] - 128);
+                        }
+                    }
+                    else
+                    {
+                        int idx = (boxesInEachImage * i);
+                        colorBuffer[idx] = 240;
+                        colorBuffer[idx + 1] = 120;
+                        colorBuffer[idx + 2] = 60;
+
+                        for (int j = 0; j < 3; j++)
+                        {
+                            if (!inputBitDepth)
+                                colors8u[idx + j] = (Rpp8u)(colorBuffer[idx + j]);
+                            else if (inputBitDepth == 1)
+                                colors16f[idx + j] = (Rpp16f)(colorBuffer[idx + j] * ONE_OVER_255);
+                            else if (inputBitDepth == 2)
+                                colors32f[idx + j] = (Rpp32f)(colorBuffer[idx + j] * ONE_OVER_255);
+                            else if (inputBitDepth == 5)
+                                colors8s[idx + j] = (Rpp8s)(colorBuffer[idx + j] - 128);
+                        }
+                    }
+                }
+
+                startWallTime = omp_get_wtime();
+                if (!inputBitDepth)
+                    rppt_erase_gpu(d_input, srcDescPtr, d_output, dstDescPtr, anchorBoxInfoTensor, colors8u, numOfBoxes, roiTensorPtrSrc, roiTypeSrc, handle);
+                else if (inputBitDepth == 1)
+                    rppt_erase_gpu(d_input, srcDescPtr, d_output, dstDescPtr, anchorBoxInfoTensor, colors16f, numOfBoxes, roiTensorPtrSrc, roiTypeSrc, handle);
+                else if (inputBitDepth == 2)
+                    rppt_erase_gpu(d_input, srcDescPtr, d_output, dstDescPtr, anchorBoxInfoTensor, colors32f, numOfBoxes, roiTensorPtrSrc, roiTypeSrc, handle);
+                else if (inputBitDepth == 5)
+                    rppt_erase_gpu(d_input, srcDescPtr, d_output, dstDescPtr, anchorBoxInfoTensor, colors8s, numOfBoxes, roiTensorPtrSrc, roiTypeSrc, handle);
+                else
+                    missingFuncFlag = 1;
+
+                CHECK(hipHostFree(colorBuffer));
+                CHECK(hipHostFree(anchorBoxInfoTensor));
+                CHECK(hipHostFree(numOfBoxes));
+
+                break;
+            }
             case 34:
             {
                 testCaseName = "lut";
@@ -680,9 +782,9 @@ int main(int argc, char **argv)
                 else
                     missingFuncFlag = 1;
 
-                break;
-
                 CHECK(hipHostFree(lutBuffer));
+
+                break;
             }
             case 36:
             {
