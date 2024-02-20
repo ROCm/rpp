@@ -27,7 +27,6 @@ omp_set_dynamic(0);
         RpptROI roi;
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
-        //roi.xywhROI.roiWidth = 50;
 
         Rpp8u *srcPtrChannel, *dstPtrChannel, *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
@@ -808,7 +807,11 @@ RppStatus remap_bilinear_u8_u8_host_tensor(Rpp8u *srcPtr,
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 #if __AVX2__
     __m256 pSrcChannel = _mm256_set1_ps(srcDescPtr->c);
-    __m256 pSrcStride = _mm256_set1_ps(srcDescPtr->strides.hStride);
+    __m256 pSrcStrideH = _mm256_set1_ps(srcDescPtr->strides.hStride);
+    __m256i pxSrcStridesCHW[3];
+    pxSrcStridesCHW[0] = _mm256_set1_epi32(srcDescPtr->strides.cStride);
+    pxSrcStridesCHW[1] = _mm256_set1_epi32(srcDescPtr->strides.hStride);
+    pxSrcStridesCHW[2] = _mm256_set1_epi32(srcDescPtr->strides.wStride);
 #endif
 
 omp_set_dynamic(0);
@@ -836,16 +839,11 @@ omp_set_dynamic(0);
 
 #if __AVX2__
         __m256 pBilinearCoeffs[4];
-        __m256 pSrcStrideH = _mm256_set1_ps(srcDescPtr->strides.hStride);
         __m256 pRoiLTRB[4];
         pRoiLTRB[0] = _mm256_set1_ps(roiLTRB.ltrbROI.lt.x);
         pRoiLTRB[1] = _mm256_set1_ps(roiLTRB.ltrbROI.lt.y);
         pRoiLTRB[2] = _mm256_set1_ps(roiLTRB.ltrbROI.rb.x);
         pRoiLTRB[3] = _mm256_set1_ps(roiLTRB.ltrbROI.rb.y);
-        __m256i pxSrcStridesCHW[3];
-        pxSrcStridesCHW[0] = _mm256_set1_epi32(srcDescPtr->strides.cStride);
-        pxSrcStridesCHW[1] = _mm256_set1_epi32(srcDescPtr->strides.hStride);
-        pxSrcStridesCHW[2] = _mm256_set1_epi32(srcDescPtr->strides.wStride);
         RpptBilinearNbhoodLocsVecLen8 srcLocs;
 #endif
 
@@ -1089,7 +1087,11 @@ RppStatus remap_bilinear_f32_f32_host_tensor(Rpp32f *srcPtr,
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
 #if __AVX2__
     __m256 pSrcChannel = _mm256_set1_ps(srcDescPtr->c);
-    __m256 pSrcStride = _mm256_set1_ps(srcDescPtr->strides.hStride);
+    __m256 pSrcStrideH = _mm256_set1_ps(srcDescPtr->strides.hStride);
+    __m256i pxSrcStridesCHW[3];
+    pxSrcStridesCHW[0] = _mm256_set1_epi32(srcDescPtr->strides.cStride);
+    pxSrcStridesCHW[1] = _mm256_set1_epi32(srcDescPtr->strides.hStride);
+    pxSrcStridesCHW[2] = _mm256_set1_epi32(srcDescPtr->strides.wStride);
 #endif
 
 omp_set_dynamic(0);
@@ -1117,16 +1119,11 @@ omp_set_dynamic(0);
 
 #if __AVX2__
         __m256 pBilinearCoeffs[4];
-        __m256 pSrcStrideH = _mm256_set1_ps(srcDescPtr->strides.hStride);
         __m256 pRoiLTRB[4];
         pRoiLTRB[0] = _mm256_set1_ps(roiLTRB.ltrbROI.lt.x);
         pRoiLTRB[1] = _mm256_set1_ps(roiLTRB.ltrbROI.lt.y);
         pRoiLTRB[2] = _mm256_set1_ps(roiLTRB.ltrbROI.rb.x);
         pRoiLTRB[3] = _mm256_set1_ps(roiLTRB.ltrbROI.rb.y);
-        __m256i pxSrcStridesCHW[3];
-        pxSrcStridesCHW[0] = _mm256_set1_epi32(srcDescPtr->strides.cStride);
-        pxSrcStridesCHW[1] = _mm256_set1_epi32(srcDescPtr->strides.hStride);
-        pxSrcStridesCHW[2] = _mm256_set1_epi32(srcDescPtr->strides.wStride);
         RpptBilinearNbhoodLocsVecLen8 srcLocs;
 #endif
 
@@ -1372,7 +1369,11 @@ RppStatus remap_bilinear_i8_i8_host_tensor(Rpp8s *srcPtr,
 
 #if __AVX2__
     __m256 pSrcChannel = _mm256_set1_ps(srcDescPtr->c);
-    __m256 pSrcStride = _mm256_set1_ps(srcDescPtr->strides.hStride);
+    __m256 pSrcStrideH = _mm256_set1_ps(srcDescPtr->strides.hStride);
+    __m256i pxSrcStridesCHW[3];
+    pxSrcStridesCHW[0] = _mm256_set1_epi32(srcDescPtr->strides.cStride);
+    pxSrcStridesCHW[1] = _mm256_set1_epi32(srcDescPtr->strides.hStride);
+    pxSrcStridesCHW[2] = _mm256_set1_epi32(srcDescPtr->strides.wStride);
 #endif
 
 omp_set_dynamic(0);
@@ -1400,16 +1401,11 @@ omp_set_dynamic(0);
 
 #if __AVX2__
         __m256 pBilinearCoeffs[4];
-        __m256 pSrcStrideH = _mm256_set1_ps(srcDescPtr->strides.hStride);
         __m256 pRoiLTRB[4];
         pRoiLTRB[0] = _mm256_set1_ps(roiLTRB.ltrbROI.lt.x);
         pRoiLTRB[1] = _mm256_set1_ps(roiLTRB.ltrbROI.lt.y);
         pRoiLTRB[2] = _mm256_set1_ps(roiLTRB.ltrbROI.rb.x);
         pRoiLTRB[3] = _mm256_set1_ps(roiLTRB.ltrbROI.rb.y);
-        __m256i pxSrcStridesCHW[3];
-        pxSrcStridesCHW[0] = _mm256_set1_epi32(srcDescPtr->strides.cStride);
-        pxSrcStridesCHW[1] = _mm256_set1_epi32(srcDescPtr->strides.hStride);
-        pxSrcStridesCHW[2] = _mm256_set1_epi32(srcDescPtr->strides.wStride);
         RpptBilinearNbhoodLocsVecLen8 srcLocs;
 #endif
 
@@ -1659,7 +1655,11 @@ RppStatus remap_bilinear_f16_f16_host_tensor(Rpp16f *srcPtr,
 
 #if __AVX2__
     __m256 pSrcChannel = _mm256_set1_ps(srcDescPtr->c);
-    __m256 pSrcStride = _mm256_set1_ps(srcDescPtr->strides.hStride);
+    __m256 pSrcStrideH = _mm256_set1_ps(srcDescPtr->strides.hStride);
+    __m256i pxSrcStridesCHW[3];
+    pxSrcStridesCHW[0] = _mm256_set1_epi32(srcDescPtr->strides.cStride);
+    pxSrcStridesCHW[1] = _mm256_set1_epi32(srcDescPtr->strides.hStride);
+    pxSrcStridesCHW[2] = _mm256_set1_epi32(srcDescPtr->strides.wStride);
 #endif
 
 omp_set_dynamic(0);
@@ -1687,16 +1687,11 @@ omp_set_dynamic(0);
 
 #if __AVX2__
         __m256 pBilinearCoeffs[4];
-        __m256 pSrcStrideH = _mm256_set1_ps(srcDescPtr->strides.hStride);
         __m256 pRoiLTRB[4];
         pRoiLTRB[0] = _mm256_set1_ps(roiLTRB.ltrbROI.lt.x);
         pRoiLTRB[1] = _mm256_set1_ps(roiLTRB.ltrbROI.lt.y);
         pRoiLTRB[2] = _mm256_set1_ps(roiLTRB.ltrbROI.rb.x);
         pRoiLTRB[3] = _mm256_set1_ps(roiLTRB.ltrbROI.rb.y);
-        __m256i pxSrcStridesCHW[3];
-        pxSrcStridesCHW[0] = _mm256_set1_epi32(srcDescPtr->strides.cStride);
-        pxSrcStridesCHW[1] = _mm256_set1_epi32(srcDescPtr->strides.hStride);
-        pxSrcStridesCHW[2] = _mm256_set1_epi32(srcDescPtr->strides.wStride);
         RpptBilinearNbhoodLocsVecLen8 srcLocs;
 #endif
 
