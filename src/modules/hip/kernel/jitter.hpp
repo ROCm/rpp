@@ -28,7 +28,7 @@ __global__ void jitter_pkd_tensor(T *srcPtr,
                                   uint2 srcStridesNH,
                                   T *dstPtr,
                                   uint2 dstStridesNH,
-                                  uint *kernelSize,
+                                  uint *kernelsize,
                                   RpptXorwowStateBoxMuller *xorwowInitialStatePtr,
                                   uint *xorwowSeedStream,
                                   RpptROIPtr roiTensorPtrSrc)
@@ -45,7 +45,7 @@ __global__ void jitter_pkd_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNH.x);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + (id_x * 3);
     uint seedStreamIdx = (id_y * dstStridesNH.y) + (hipBlockIdx_x * hipBlockDim_x) + hipThreadIdx_x;
-    uint kernelSize = kernelSize[id_z];
+    uint kernelSize = kernelsize[id_z];
     uint bound = (uint)((kernelSize - 1) / 2);
 
     RpptXorwowStateBoxMuller xorwowState;
@@ -72,7 +72,7 @@ __global__ void jitter_pln_tensor(T *srcPtr,
                                   T *dstPtr,
                                   uint3 dstStridesNCH,
                                   int channelsDst,
-                                  uint *kernelSize,
+                                  uint *kernelsize,
                                   RpptXorwowStateBoxMuller *xorwowInitialStatePtr,
                                    uint *xorwowSeedStream,
                                   RpptROIPtr roiTensorPtrSrc)
@@ -89,7 +89,7 @@ __global__ void jitter_pln_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNCH.x);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
     uint seedStreamIdx = (id_y * dstStridesNCH.z) + (hipBlockIdx_x * hipBlockDim_x) + hipThreadIdx_x;
-    uint kernelSize = kernelSize[id_z];
+    uint kernelSize = kernelsize[id_z];
     uint bound = (uint)((kernelSize - 1) / 2);
 
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
@@ -135,7 +135,7 @@ __global__ void jitter_pkd3_pln3_tensor(T *srcPtr,
                                         uint2 srcStridesNH,
                                         T *dstPtr,
                                         uint3 dstStridesNCH,
-                                        uint *kernelSize,
+                                        uint *kernelsize,
                                         RpptXorwowStateBoxMuller *xorwowInitialStatePtr,
                                         uint *xorwowSeedStream,
                                         RpptROIPtr roiTensorPtrSrc)
@@ -152,7 +152,7 @@ __global__ void jitter_pkd3_pln3_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNH.x);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
     uint seedStreamIdx = (id_y * dstStridesNCH.z) + (hipBlockIdx_x * hipBlockDim_x) + hipThreadIdx_x;
-    uint kernelSize = kernelSize[id_z];
+    uint kernelSize = kernelsize[id_z];
     uint bound = (uint)((kernelSize - 1) / 2);
 
     RpptXorwowStateBoxMuller xorwowState;
@@ -178,7 +178,7 @@ __global__ void jitter_pln3_pkd3_tensor(T *srcPtr,
                                         uint3 srcStridesNCH,
                                         T *dstPtr,
                                         uint2 dstStridesNH,
-                                        uint *kernelSize,
+                                        uint *kernelsize,
                                         RpptXorwowStateBoxMuller *xorwowInitialStatePtr,
                                         uint *xorwowSeedStream,
                                         RpptROIPtr roiTensorPtrSrc)
@@ -195,7 +195,7 @@ __global__ void jitter_pln3_pkd3_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNCH.x);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + (id_x * 3);
     uint seedStreamIdx = (id_y * dstStridesNH.y) + (hipBlockIdx_x * hipBlockDim_x) + hipThreadIdx_x;
-    uint kernelSize = kernelSize[id_z];
+    uint kernelSize = kernelsize[id_z];
     uint bound = (uint)((kernelSize - 1) / 2);
 
 
