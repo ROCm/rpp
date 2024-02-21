@@ -28,14 +28,7 @@ __device__ void vignette_8_hip_compute(uchar *srcPtr, d_float8 *src_f8, d_float8
 {
     dst_f8->f4[0] = src_f8->f4[0] * gaussianValue_f8->f4[0];
     dst_f8->f4[1] = src_f8->f4[1] * gaussianValue_f8->f4[1];
-    dst_f8->f1[0] = nearbyintf(dst_f8->f1[0]);
-    dst_f8->f1[1] = nearbyintf(dst_f8->f1[1]);
-    dst_f8->f1[2] = nearbyintf(dst_f8->f1[2]);
-    dst_f8->f1[3] = nearbyintf(dst_f8->f1[3]);
-    dst_f8->f1[4] = nearbyintf(dst_f8->f1[4]);
-    dst_f8->f1[5] = nearbyintf(dst_f8->f1[5]);
-    dst_f8->f1[6] = nearbyintf(dst_f8->f1[6]);
-    dst_f8->f1[7] = nearbyintf(dst_f8->f1[7]);
+    rpp_hip_math_nearbyintf8(dst_f8, dst_f8);
     rpp_hip_pixel_check_0to255(dst_f8);
 }
 
@@ -52,14 +45,7 @@ __device__ void vignette_8_hip_compute(signed char *srcPtr, d_float8 *src_f8, d_
     rpp_hip_math_add8_const(src_f8, src_f8, i8Offset_f4);
     dst_f8->f4[0] = src_f8->f4[0] * gaussianValue_f8->f4[0];
     dst_f8->f4[1] = src_f8->f4[1] * gaussianValue_f8->f4[1];
-    dst_f8->f1[0] = nearbyintf(dst_f8->f1[0]);
-    dst_f8->f1[1] = nearbyintf(dst_f8->f1[1]);
-    dst_f8->f1[2] = nearbyintf(dst_f8->f1[2]);
-    dst_f8->f1[3] = nearbyintf(dst_f8->f1[3]);
-    dst_f8->f1[4] = nearbyintf(dst_f8->f1[4]);
-    dst_f8->f1[5] = nearbyintf(dst_f8->f1[5]);
-    dst_f8->f1[6] = nearbyintf(dst_f8->f1[6]);
-    dst_f8->f1[7] = nearbyintf(dst_f8->f1[7]);
+    rpp_hip_math_nearbyintf8(dst_f8, dst_f8);
     rpp_hip_pixel_check_0to255(dst_f8);
     rpp_hip_math_subtract8_const(dst_f8, dst_f8, i8Offset_f4);
 }
