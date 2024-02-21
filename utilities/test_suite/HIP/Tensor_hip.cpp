@@ -820,7 +820,7 @@ int main(int argc, char **argv)
                 testCaseName = "vignette";
 
                 Rpp32f *intensity;
-                CHECK(hipMalloc(&intensity, batchSize * sizeof(Rpp32f)));
+                CHECK(hipHostMalloc(&intensity, batchSize * sizeof(Rpp32f)));
                 for (i = 0; i < batchSize; i++)
                     intensity[i] = 6;
 
@@ -1193,6 +1193,8 @@ int main(int argc, char **argv)
     CHECK(hipHostFree(roiTensorPtrSrc));
     CHECK(hipHostFree(roiTensorPtrDst));
     CHECK(hipHostFree(dstImgSizes));
+    if(testCase == 46)
+        CHECK(hipHostFree(intensity));
     if(testCase == 82)
         CHECK(hipHostFree(roiPtrInputCropRegion));
     if (reductionTypeCase)
