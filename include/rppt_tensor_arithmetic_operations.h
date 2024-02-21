@@ -257,7 +257,7 @@ RppStatus rppt_magnitude_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDescPtr src
  * \image html img150x150.jpg Sample Input1
  * \image html img150x150_2.jpg Sample Input2
  * \image html bitwise_and_operation_img150x150.jpg Sample Output
-  * \param [in] srcPtr1 source1 tensor in HOST memory
+ * \param [in] srcPtr1 source1 tensor in HOST memory
  * \param [in] srcPtr2 source2 tensor in HOST memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HOST memory
