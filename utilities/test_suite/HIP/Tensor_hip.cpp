@@ -349,6 +349,18 @@ int main(int argc, char **argv)
     if(testCase == 82)
         CHECK(hipHostMalloc(&roiPtrInputCropRegion, 4 * sizeof(RpptROI)));
 
+    Rpp32u boxesInEachImage = 3;
+    Rpp32f *colorBuffer;
+    RpptRoiLtrb *anchorBoxInfoTensor;
+    Rpp32u *numOfBoxes;
+    if(testCase == 32)
+    {
+        CHECK(hipHostMalloc(&colorBuffer, batchSize * boxesInEachImage * sizeof(Rpp32f)));
+        CHECK(hipMemset(colorBuffer, 0, batchSize * boxesInEachImage * sizeof(Rpp32f)));
+        CHECK(hipHostMalloc(&anchorBoxInfoTensor, batchSize * boxesInEachImage * sizeof(RpptRoiLtrb)));
+        CHECK(hipHostMalloc(&numOfBoxes, batchSize * sizeof(Rpp32u)));
+    }
+
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
     for (int perfRunCount = 0; perfRunCount < numRuns; perfRunCount++)
@@ -647,16 +659,6 @@ int main(int argc, char **argv)
             case 32:
             {
                 testCaseName = "erase";
-
-                Rpp32u boxesInEachImage = 3;
-
-                Rpp32f *colorBuffer;
-                RpptRoiLtrb *anchorBoxInfoTensor;
-                Rpp32u *numOfBoxes;
-                CHECK(hipHostMalloc(&colorBuffer, batchSize * boxesInEachImage * sizeof(Rpp32f)));
-                CHECK(hipMemset(colorBuffer, 0, batchSize * boxesInEachImage * sizeof(Rpp32f)));
-                CHECK(hipHostMalloc(&anchorBoxInfoTensor, batchSize * boxesInEachImage * sizeof(RpptRoiLtrb)));
-                CHECK(hipHostMalloc(&numOfBoxes, batchSize * sizeof(Rpp32u)));
 
                 Rpp8u *colors8u = reinterpret_cast<Rpp8u *>(colorBuffer);
                 Rpp16f *colors16f = reinterpret_cast<Rpp16f *>(colorBuffer);
@@ -1282,6 +1284,12 @@ int main(int argc, char **argv)
         CHECK(hipHostFree(roiPtrInputCropRegion));
     if (reductionTypeCase)
         CHECK(hipHostFree(reductionFuncResultArr));
+    if(testCase == 32)
+    {
+        CHECK(hipHostFree(colorBuffer));
+        CHECK(hipHostFree(anchorBoxInfoTensor));
+        CHECK(hipHostFree(numOfBoxes));
+    }
     free(input);
     free(input_second);
     free(output);
