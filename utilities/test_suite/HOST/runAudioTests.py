@@ -235,13 +235,31 @@ if testType == 0:
         exit(0)
 
     for case in caseList:
+        if "--input_path" not in sys.argv:
+            if case == "3":
+                srcPath = scriptPath + "/../TEST_AUDIO_FILES/three_sample_multi_channel_src1"
+            else:
+                srcPath = inFilePath
+        if int(case) < caseMin or int(case) > caseMax:
+            print(f"Invalid case number {case}. Case number must be {caseMin}:{caseMax} range!")
+            continue
+
         run_unit_test(srcPath, case, numRuns, testType, batchSize, outFilePath)
 else:
     for case in caseList:
+        if "--input_path" not in sys.argv:
+            if case == "3":
+                srcPath = scriptPath + "/../TEST_AUDIO_FILES/three_sample_multi_channel_src1"
+            else:
+                srcPath = inFilePath
+        if int(case) < caseMin or int(case) > caseMax:
+            print(f"Invalid case number {case}. Case number must be {caseMin}:{caseMax} range!")
+            continue
+
         run_performance_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath)
 
 # print the results of qa tests
-supportedCaseList = ['0', '1', '2', '6']
+supportedCaseList = ['0', '1', '2', '3', '6']
 nonQACaseList = [] # Add cases present in supportedCaseList, but without QA support
 
 if testType == 0:
