@@ -1072,9 +1072,9 @@ RppStatus rppt_pixelate_host(RppPtr_t srcPtr,
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
         Rpp16f *interDstPtr = (Rpp16f *)calloc(interBufferSize, sizeof(Rpp16f));
-        resize_bilinear_f16_f16_host_tensor(static_cast<Rpp16f*>(srcPtr) + srcDescPtr->offsetInBytes,
+        resize_bilinear_f16_f16_host_tensor(reinterpret_cast<Rpp16f*>(srcPtr) + srcDescPtr->offsetInBytes,
                                             srcDescPtr,
-                                            static_cast<Rpp16f*>(interDstPtr),
+                                            reinterpret_cast<Rpp16f*>(interDstPtr),
                                             interDescPtr,
                                             internalDstImgSizes,
                                             roiTensorPtrSrc,
@@ -1088,9 +1088,9 @@ RppStatus rppt_pixelate_host(RppPtr_t srcPtr,
             internalDstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth;
             internalDstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight;
         }
-        resize_nn_f16_f16_host_tensor(static_cast<Rpp16f*>(interDstPtr),
+        resize_nn_f16_f16_host_tensor(reinterpret_cast<Rpp16f*>(interDstPtr),
                                       interDescPtr,
-                                      static_cast<Rpp16f*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                      reinterpret_cast<Rpp16f*>(dstPtr) + dstDescPtr->offsetInBytes,
                                       dstDescPtr,
                                       internalDstImgSizes,
                                       internalRoiTensorPtrSrc,
@@ -1102,9 +1102,9 @@ RppStatus rppt_pixelate_host(RppPtr_t srcPtr,
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
         Rpp32f *interDstPtr = (Rpp32f *)calloc(interBufferSize, sizeof(Rpp32f));
-        resize_bilinear_f32_f32_host_tensor(static_cast<Rpp32f*>(srcPtr) + srcDescPtr->offsetInBytes,
+        resize_bilinear_f32_f32_host_tensor(reinterpret_cast<Rpp32f*>(srcPtr) + srcDescPtr->offsetInBytes,
                                             srcDescPtr,
-                                            static_cast<Rpp32f*>(interDstPtr),
+                                            reinterpret_cast<Rpp32f*>(interDstPtr),
                                             interDescPtr,
                                             internalDstImgSizes,
                                             roiTensorPtrSrc,
@@ -1118,9 +1118,9 @@ RppStatus rppt_pixelate_host(RppPtr_t srcPtr,
             internalDstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth;
             internalDstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight;
         }
-        resize_nn_f32_f32_host_tensor(static_cast<Rpp32f*>(interDstPtr),
+        resize_nn_f32_f32_host_tensor(reinterpret_cast<Rpp32f*>(interDstPtr),
                                      interDescPtr,
-                                     static_cast<Rpp32f*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                     reinterpret_cast<Rpp32f*>(dstPtr) + dstDescPtr->offsetInBytes,
                                      dstDescPtr,
                                      internalDstImgSizes,
                                      internalRoiTensorPtrSrc,
