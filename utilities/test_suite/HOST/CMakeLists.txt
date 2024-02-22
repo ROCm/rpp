@@ -111,7 +111,7 @@ else()
 endif()
 
 if(NOT libsnd_LIBS)
-    message("-- ${Yellow}Warning: libsndfile must be installed to install ${PROJECT_NAME}/Tensor_voxel_host successfully!${ColourReset}")
+    message("-- ${Yellow}Warning: libsndfile must be installed to install ${PROJECT_NAME}/Tensor_audio_host successfully!${ColourReset}")
 else()
     message("-- ${Green}${PROJECT_NAME} set to build with rpp and libsndfile ${ColourReset}")
     include_directories(${ROCM_PATH}/include ${ROCM_PATH}/include/rpp /usr/local/include)
