@@ -27,11 +27,11 @@ SOFTWARE.
 int main(int argc, char **argv)
 {
     // Handle inputs
-    const int MIN_ARG_COUNT = 7;
+    const int MIN_ARG_COUNT = 8;
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
-        printf("\nUsage: ./Tensor_misc_hip <case number = 0:0> <test type 0/1> <toggle 0/1> <number of dimensions> <batch size> <num runs> <dst path>\n");
+        printf("\nUsage: ./Tensor_misc_hip <case number = 0:0> <test type 0/1> <toggle 0/1> <number of dimensions> <batch size> <num runs> <dst path> <script path>\n");
         return -1;
     }
     Rpp32u testCase, testType, nDim, batchSize, numRuns, toggle;
@@ -171,7 +171,7 @@ int main(int argc, char **argv)
                     maxSize = max(maxSize, size);
                 }
 
-                // allocate memory if not memory is allocated
+                // allocate memory if no memory is allocated
                 if(meanTensor == nullptr)
                     CHECK(hipMalloc(&meanTensor, maxSize * batchSize * sizeof(Rpp32f)));
 

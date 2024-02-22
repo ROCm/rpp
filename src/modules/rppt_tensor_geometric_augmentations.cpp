@@ -1746,7 +1746,7 @@ RppStatus rppt_slice_gpu(RppPtr_t srcPtr,
                               rpp::deref(rppHandle));
     }
 
- return RPP_SUCCESS;
+    return RPP_SUCCESS;
 #elif defined(OCL_COMPILE)
     return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend

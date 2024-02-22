@@ -27,11 +27,11 @@ SOFTWARE.
 int main(int argc, char **argv)
 {
     // Handle inputs
-    const int MIN_ARG_COUNT = 7;
+    const int MIN_ARG_COUNT = 8;
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
-        printf("\nUsage: ./Tensor_normalize_host <case number = 0:0> <test type 0/1> <toggle 0/1> <number of dimensions> <batch size> <num runs> <dst path>\n");
+        printf("\nUsage: ./Tensor_normalize_host <case number = 0:0> <test type 0/1> <toggle 0/1> <number of dimensions> <batch size> <num runs> <dst path> <script path>\n");
         return -1;
     }
     Rpp32u testCase, testType, nDim, batchSize, numRuns, toggle;
@@ -102,17 +102,18 @@ int main(int argc, char **argv)
     inputF32 = (Rpp32f *)calloc(bufferSize, sizeof(Rpp32f));
     outputF32 = (Rpp32f *)calloc(bufferSize, sizeof(Rpp32f));
 
-    // case-wise RPP API and measure time script for Unit and Performance test
-    printf("\nRunning normalize %d times (each time with a batch size of %d) and computing mean statistics...", numRuns, batchSize);
-
     // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
     // If numThreads value passed is 0, number of OpenMP threads used by RPP will be set to batch size
     Rpp32u numThreads = 0;
     rppHandle_t handle;
     rppCreateWithBatchSize(&handle, batchSize, numThreads);
 
+    Rpp32f *meanTensor = nullptr, *stdDevTensor = nullptr;
     double startWallTime, endWallTime;
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0, wallTime = 0;
+
+    // case-wise RPP API and measure time script for Unit and Performance test
+    printf("\nRunning normalize %d times (each time with a batch size of %d) and computing mean statistics...", numRuns, batchSize);
     for(int perfCount = 0; perfCount < numRuns; perfCount++)
     {
         switch(testCase)
@@ -163,16 +164,18 @@ int main(int argc, char **argv)
                     maxSize = max(maxSize, size);
                 }
 
-                Rpp32f *meanTensor = (Rpp32f *)calloc(maxSize * batchSize, sizeof(Rpp32f));
-                Rpp32f *stdDevTensor = (Rpp32f *)calloc(maxSize * batchSize, sizeof(Rpp32f));
+                // allocate memory if no memory is allocated
+                if(meanTensor == nullptr)
+                    meanTensor = (Rpp32f *)calloc(maxSize * batchSize, sizeof(Rpp32f));
+
+                if(stdDevTensor == nullptr)
+                    stdDevTensor = (Rpp32f *)calloc(maxSize * batchSize, sizeof(Rpp32f));
 
                 if(!(computeMean && computeStddev))
                     fill_mean_stddev_values(nDim, batchSize, size, meanTensor, stdDevTensor, qaMode);
 
                 startWallTime = omp_get_wtime();
                 rppt_normalize_host(inputF32, srcDescriptorPtrND, outputF32, dstDescriptorPtrND, axisMask, meanTensor, stdDevTensor, computeMean, computeStddev, scale, shift, roiTensor, handle);
-                free(meanTensor);
-                free(stdDevTensor);
 
                 // compare outputs if qaMode is true
                 if(qaMode)
@@ -205,5 +208,9 @@ int main(int argc, char **argv)
     free(inputF32);
     free(outputF32);
     free(roiTensor);
+    if(meanTensor != nullptr)
+        free(meanTensor);
+    if(stdDevTensor != nullptr)
+        free(stdDevTensor);
     return 0;
 }
