@@ -39,7 +39,7 @@ qaInputFile = scriptPath + "/../TEST_QA_IMAGES_VOXEL"
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
 caseMin = 0
-caseMax = 3
+caseMax = 5
 
 # Check if folder path is empty, if it is the root folder, or if it exists, and remove its contents
 def validate_and_remove_contents(path):
@@ -309,8 +309,8 @@ def rpp_test_suite_parser_and_validator():
     else:
         for case in args.case_list:
             if int(case) < caseMin or int(case) > caseMax:
-                 print("The case# must be in the 0:1 range!")
-                 exit(0)
+                print("The case# must be in [" + str(caseMin) + ":" + str(caseMax) + "]")
+                exit(0)
 
     # if QA mode is enabled overwrite the input folders with the folders used for generating golden outputs
     if args.qa_mode:
@@ -470,7 +470,7 @@ elif (testType == 1 and profilingOption == "YES"):
             print("Unable to open results in " + RESULTS_DIR + "/consolidated_results_" + TYPE + ".stats.csv")
 
 # print the results of qa tests
-supportedCaseList = ['0', '1', '2', '3']
+supportedCaseList = ['0', '1', '2', '3', '5']
 nonQACaseList = [] # Add cases present in supportedCaseList, but without QA support
 
 if qaMode and testType == 0:
