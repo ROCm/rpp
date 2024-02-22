@@ -126,88 +126,54 @@ void read_data(Rpp32f *data, Rpp32u nDim, Rpp32u readType, Rpp32u bufferLength, 
 // Fill the starting indices and length of ROI values
 void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMode)
 {
-    switch(nDim)
+    if(qaMode)
     {
-        case 2:
+        switch(nDim)
         {
-            if (!qaMode)
+            case 3:
             {
-                for(int i = 0; i < batchSize * 4; i += 4)
-                {
-                    roiTensor[i] = 0;
-                    roiTensor[i + 1] = 0;
-                    roiTensor[i + 2] = 1920;
-                    roiTensor[i + 3] = 1080;
-                }
+                std::array<Rpp32u, 6> roi = {0, 0, 0, 3, 4, 16};
+                for(int i = 0, j = 0; i < batchSize ; i++, j += 6)
+                    std::copy(roi.begin(), roi.end(), &roiTensor[j]);
+                break;
             }
-            break;
+            case 4:
+            {
+                std::array<Rpp32u, 8> roi = {0, 0, 0, 0, 2, 3, 4, 5};
+                for(int i = 0, j = 0; i < batchSize ; i++, j += 8)
+                    std::copy(roi.begin(), roi.end(), &roiTensor[j]);
+                break;
+            }
         }
-        case 3:
+    }
+    else
+    {
+        switch(nDim)
         {
-            if (qaMode)
+            case 2:
             {
-                for(int i = 0; i < batchSize * 6; i += 6)
-                {
-                    roiTensor[i] = 0;
-                    roiTensor[i + 1] = 0;
-                    roiTensor[i + 2] = 0;
-                    roiTensor[i + 3] = 3;
-                    roiTensor[i + 4] = 4;
-                    roiTensor[i + 5] = 16;
-                }
+                std::array<Rpp32u, 4> roi = {0, 0, 1920, 1080};
+                for(int i = 0, j = 0; i < batchSize ; i++, j += 4)
+                    std::copy(roi.begin(), roi.end(), &roiTensor[j]);
+                break;
             }
-            else
+            case 3:
             {
-                for(int i = 0; i < batchSize * 6; i += 6)
-                {
-                    roiTensor[i] = 0;
-                    roiTensor[i + 1] = 0;
-                    roiTensor[i + 2] = 0;
-                    roiTensor[i + 3] = 1920;
-                    roiTensor[i + 4] = 1080;
-                    roiTensor[i + 5] = 3;
-                }
+                std::array<Rpp32u, 6> roi = {0, 0, 0, 1920, 1080, 3};
+                for(int i = 0, j = 0; i < batchSize ; i++, j += 6)
+                    std::copy(roi.begin(), roi.end(), &roiTensor[j]);
+                break;
             }
-            break;
-        }
-        case 4:
-        {
-            if (qaMode)
+            case 4:
             {
-                for(int i = 0; i < batchSize * 8; i += 8)
-                {
-                    roiTensor[i] = 0;
-                    roiTensor[i + 1] = 0;
-                    roiTensor[i + 2] = 0;
-                    roiTensor[i + 3] = 0;
-                    roiTensor[i + 4] = 2;
-                    roiTensor[i + 5] = 3;
-                    roiTensor[i + 6] = 4;
-                    roiTensor[i + 7] = 5;
-                }
+                std::array<Rpp32u, 8> roi = {0, 0, 0, 0, 45, 20, 25, 10};
+                for(int i = 0, j = 0; i < batchSize ; i++, j += 8)
+                    std::copy(roi.begin(), roi.end(), &roiTensor[j]);
+                break;
             }
-            else
+            default:
             {
-                for(int i = 0; i < batchSize * 8; i += 8)
-                {
-                    roiTensor[i] = 0;
-                    roiTensor[i + 1] = 0;
-                    roiTensor[i + 2] = 0;
-                    roiTensor[i + 3] = 0;
-                    roiTensor[i + 4] = 45;
-                    roiTensor[i + 5] = 20;
-                    roiTensor[i + 6] = 25;
-                    roiTensor[i + 7] = 10;
-                }
-            }
-            break;
-        }
-
-        default:
-        {
-            // if nDim is not 3/4 and mode choosen is not QA
-            if(!qaMode)
-            {
+                // if nDim is not 2/3/4 and mode choosen is not QA
                 for(int i = 0; i < batchSize; i++)
                 {
                     int startIndex = i * nDim * 2;
@@ -218,8 +184,8 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
                         roiTensor[lengthIndex + j] = std::rand() % 10;  // limiting max value in a dimension to 10 for testing purposes
                     }
                 }
+                break;
             }
-            break;
         }
     }
 }
@@ -365,6 +331,7 @@ void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize, string dst
     }
     free(refOutput);
 
+    std::cout << dst << std::endl;
     // Append the QA results to file
     std::string qaResultsPath = dst + "/QA_results.txt";
     std:: ofstream qaResults(qaResultsPath, ios_base::app);

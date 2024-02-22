@@ -92,32 +92,30 @@ int main(int argc, char **argv)
     }
     set_generic_descriptor_layout(srcDescriptorPtrND, dstDescriptorPtrND, nDim, toggle, qaMode);
 
-    Rpp32u numValues = 1;
+    Rpp32u bufferSize = 1;
     for(int i = 0; i <= nDim; i++)
-        numValues *= srcDescriptorPtrND->dims[i];
+        bufferSize *= srcDescriptorPtrND->dims[i];
 
     // allocate memory for input / output
     Rpp32f *inputF32 = NULL, *outputF32 = NULL;
-    inputF32 = (Rpp32f *)calloc(numValues, sizeof(Rpp32f));
-    outputF32 = (Rpp32f *)calloc(numValues, sizeof(Rpp32f));
+    inputF32 = (Rpp32f *)calloc(bufferSize, sizeof(Rpp32f));
+    outputF32 = (Rpp32f *)calloc(bufferSize, sizeof(Rpp32f));
 
     void *d_inputF32, *d_outputF32;
-    CHECK(hipMalloc(&d_inputF32, numValues * sizeof(Rpp32f)));
-    CHECK(hipMalloc(&d_outputF32, numValues * sizeof(Rpp32f)));
+    CHECK(hipMalloc(&d_inputF32, bufferSize * sizeof(Rpp32f)));
+    CHECK(hipMalloc(&d_outputF32, bufferSize * sizeof(Rpp32f)));
 
-    // case-wise RPP API and measure time script for Unit and Performance test
-    printf("\nRunning normalize %d times (each time with a batch size of %d) and computing mean statistics...", numRuns, batchSize);
-
-    // Run case-wise RPP API and measure time
     rppHandle_t handle;
     hipStream_t stream;
     CHECK(hipStreamCreate(&stream));
     rppCreateWithStreamAndBatchSize(&handle, stream, batchSize);
 
+    Rpp32f *meanTensor = nullptr, *stdDevTensor = nullptr;
     double startWallTime, endWallTime;
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0, wallTime = 0;
 
-    Rpp32f *meanTensor = nullptr, *stdDevTensor = nullptr;
+    // case-wise RPP API and measure time script for Unit and Performance test
+    printf("\nRunning normalize %d times (each time with a batch size of %d) and computing mean statistics...", numRuns, batchSize);
     for(int perfCount = 0; perfCount < numRuns; perfCount++)
     {
         switch(testCase)
@@ -133,16 +131,16 @@ int main(int argc, char **argv)
 
                 // read input data
                 if(qaMode)
-                    read_data(inputF32, nDim, 0,  numValues, batchSize, axisMask, "HIP");
+                    read_data(inputF32, nDim, 0,  bufferSize, batchSize, axisMask, "HIP");
                 else
                 {
                     std::srand(0);
-                    for(int i = 0; i < numValues; i++)
+                    for(int i = 0; i < bufferSize; i++)
                         inputF32[i] = (float)(std::rand() % 255);
                 }
 
                 // copy data from HOST to HIP
-                CHECK(hipMemcpy(d_inputF32, (void *)inputF32, numValues * sizeof(Rpp32f), hipMemcpyHostToDevice));
+                CHECK(hipMemcpy(d_inputF32, (void *)inputF32, bufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
                 CHECK(hipDeviceSynchronize());
 
                 if (qaMode && nDim == 3 && axisMask == 3 && (computeMean || computeStddev))
@@ -198,7 +196,7 @@ int main(int argc, char **argv)
                 if(qaMode)
                 {
                     CHECK(hipDeviceSynchronize());
-                    CHECK(hipMemcpy(outputF32, d_outputF32, numValues * sizeof(Rpp32f), hipMemcpyDeviceToHost));
+                    CHECK(hipMemcpy(outputF32, d_outputF32, bufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
                     CHECK(hipDeviceSynchronize());
                     compare_output(outputF32, nDim, batchSize, dst, funcName, axisMask, "HIP");
                 }
