@@ -2897,6 +2897,7 @@ inline void rpp_store8_u8pln1_to_u8pln1_avx(Rpp8u* dstPtr, __m256i &p)
 inline void rpp_store8_f32pln1_to_u8pln1_avx(Rpp8u* dstPtr, __m256 &p)
 {
     __m256i px1 = _mm256_permute4x64_epi64(_mm256_packus_epi32(_mm256_cvtps_epi32(p), avx_px0), _MM_SHUFFLE(3,1,2,0));
+    _mm256_storeu_si256((__m256i *)(dstPtr), _mm256_packus_epi16(px1, avx_px0));
     px1 = _mm256_packus_epi16(px1, avx_px0);
     rpp_store8_u8pln1_to_u8pln1_avx(dstPtr, px1);
 }

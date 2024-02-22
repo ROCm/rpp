@@ -310,8 +310,12 @@ int main(int argc, char **argv)
     input_second = static_cast<Rpp8u *>(calloc(inputBufferSize, 1));
     output = static_cast<Rpp8u *>(calloc(outputBufferSize, 1));
 
-    Rpp32f *rowRemapTable = (Rpp32f*) calloc(ioBufferSize, sizeof(Rpp32f));
-    Rpp32f *colRemapTable = (Rpp32f*) calloc(ioBufferSize, sizeof(Rpp32f));
+    Rpp32f *rowRemapTable, *colRemapTable;
+    if(testCase == 79)
+    {
+        rowRemapTable = static_cast<Rpp32f *>(calloc(ioBufferSize, sizeof(Rpp32f)));
+        colRemapTable = static_cast<Rpp32f *>(calloc(ioBufferSize, sizeof(Rpp32f)));
+    }
 
     // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
     // If numThreads value passed is 0, number of OpenMP threads used by RPP will be set to batch size

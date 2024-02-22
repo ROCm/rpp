@@ -312,12 +312,12 @@ int main(int argc, char **argv)
     input_second = static_cast<Rpp8u *>(calloc(inputBufferSize, 1));
     output = static_cast<Rpp8u *>(calloc(outputBufferSize, 1));
 
-    Rpp32f *rowRemapTable = (Rpp32f*) calloc(ioBufferSize, sizeof(Rpp32f));
-    Rpp32f *colRemapTable = (Rpp32f*) calloc(ioBufferSize, sizeof(Rpp32f));
-
-    void *d_rowRemapTable, *d_colRemapTable;
-    CHECK(hipMalloc(&d_rowRemapTable, ioBufferSize * sizeof(Rpp32u)));
-    CHECK(hipMalloc(&d_colRemapTable, ioBufferSize * sizeof(Rpp32u)));
+    Rpp32f *rowRemapTable, *colRemapTable;
+    if(testCase == 79)
+    {
+        rowRemapTable = static_cast<Rpp32f *>(calloc(ioBufferSize, sizeof(Rpp32f)));
+        colRemapTable = static_cast<Rpp32f *>(calloc(ioBufferSize, sizeof(Rpp32f)));
+    }
 
     // Run case-wise RPP API and measure time
     rppHandle_t handle;
@@ -355,6 +355,14 @@ int main(int argc, char **argv)
     RpptROI *roiPtrInputCropRegion;
     if(testCase == 82)
         CHECK(hipHostMalloc(&roiPtrInputCropRegion, 4 * sizeof(RpptROI)));
+
+    void *d_rowRemapTable, *d_colRemapTable;
+    if(testCase == 79)
+    {
+        CHECK(hipMalloc(&d_rowRemapTable, ioBufferSize * sizeof(Rpp32u)));
+        CHECK(hipMalloc(&d_colRemapTable, ioBufferSize * sizeof(Rpp32u)));
+    }
+
 
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
