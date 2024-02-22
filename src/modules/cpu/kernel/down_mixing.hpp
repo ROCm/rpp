@@ -1,5 +1,7 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+MIT License
+
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -8,16 +10,16 @@ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 */
 
 #include "rppdefs.h"
@@ -27,8 +29,7 @@ RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
                                   RpptDescPtr srcDescPtr,
                                   Rpp32f *dstPtr,
                                   RpptDescPtr dstDescPtr,
-                                  Rpp32s *srcLengthTensor,
-                                  Rpp32s *channelsTensor,
+                                  Rpp32s *srcDimsTensor,
                                   bool normalizeWeights,
                                   rpp::Handle& handle)
 {
@@ -41,8 +42,8 @@ RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
         Rpp32f *srcPtrTemp = srcPtr + batchCount * srcDescPtr->strides.nStride;
         Rpp32f *dstPtrTemp = dstPtr + batchCount * dstDescPtr->strides.nStride;
 
-        Rpp32s channels = channelsTensor[batchCount];
-        Rpp32s samples = srcLengthTensor[batchCount];
+        Rpp32s samples = srcDimsTensor[batchCount * 2];
+        Rpp32s channels = srcDimsTensor[batchCount * 2 + 1];
         bool flagAVX = 0;
 
         if(channels == 1)
@@ -96,8 +97,6 @@ RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
                         srcPtrTemp += channelIncrement;
                     }
                     dstPtrTemp[dstIdx] = rpp_hsum_ps(pDst);
-                    for(; channelLoopCount < channels; channelLoopCount++)
-                        dstPtrTemp[dstIdx] += ((*srcPtrTemp++) * weights[channelLoopCount]);
                 }
                 else
                 {
@@ -111,11 +110,10 @@ RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
                         pDst = _mm_add_ps(pDst, pSrc);
                         srcPtrTemp += channelIncrement;
                     }
-
                     dstPtrTemp[dstIdx] = rpp_hsum_ps(pDst);
-                    for(; channelLoopCount < channels; channelLoopCount++)
-                        dstPtrTemp[dstIdx] += ((*srcPtrTemp++) * weights[channelLoopCount]);
                 }
+                for(; channelLoopCount < channels; channelLoopCount++)
+                    dstPtrTemp[dstIdx] += ((*srcPtrTemp++) * weights[channelLoopCount]);
             }
         }
     }

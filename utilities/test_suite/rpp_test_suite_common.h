@@ -1,5 +1,7 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+MIT License
+
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -8,16 +10,16 @@ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 */
 
 #include <stdio.h>
@@ -84,8 +86,10 @@ std::map<int, string> augmentationMap =
     {37, "crop"},
     {38, "crop_mirror_normalize"},
     {39, "resize_crop_mirror"},
+    {45, "color_temperature"},
     {49, "box_filter"},
     {54, "gaussian_filter"},
+    {61, "magnitude"},
     {63, "phase"},
     {70, "copy"},
     {80, "resize_mirror_normalize"},
@@ -96,6 +100,13 @@ std::map<int, string> augmentationMap =
     {85, "swap_channels"},
     {86, "color_to_greyscale"},
     {87, "tensor_sum"}
+};
+
+// Golden outputs for Tensor sum Kernel
+std::map<int, std::vector<Rpp64u>> TensorSumReferenceOutputs =
+{
+    {1, {334225, 813471, 2631125}},
+    {3, {348380, 340992, 262616, 951988, 1056552, 749506, 507441, 2313499, 2170646, 2732368, 3320699, 8223713}}
 };
 
 template <typename T>
@@ -858,6 +869,24 @@ inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, vector
     tjDestroy(m_jpegDecompressor);
 }
 
+template <typename T>
+inline void read_bin_file(string refFile, T *binaryContent)
+{
+    FILE *fp;
+    fp = fopen(refFile.c_str(), "rb");
+    if(!fp)
+        std::cerr << "\n unable to open file : "<<refFile;
+
+    fseek(fp, 0, SEEK_END);
+    long fsize = ftell(fp);
+    if (fsize == 0)
+        std::cerr << "File is empty";
+
+    fseek(fp, 0, SEEK_SET);
+    fread(binaryContent, fsize, 1, fp);
+    fclose(fp);
+}
+
 // Write a batch of images using the OpenCV library
 inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDescPtr dstDescPtr, vector<string>::const_iterator imagesNamesStart, RpptImagePatch *dstImgSizes, int maxImageDump)
 {
@@ -909,8 +938,8 @@ inline void write_image_batch_opencv(string outputFolder, Rpp8u *output, RpptDes
     }
 }
 
-// compares the output of PKD3-PKD3 variants
-void compare_outputs_pkd(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
+// compares the output of PKD3-PKD3 and PLN1-PLN1 variants
+void compare_outputs_pkd_and_pln1(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
 {
     Rpp8u *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef;
     for(int imageCnt = 0; imageCnt < dstDescPtr->n; imageCnt++)
@@ -919,7 +948,7 @@ void compare_outputs_pkd(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr
         outputTempRef = refOutput + imageCnt * refOutputSize;
         int height = dstImgSizes[imageCnt].height;
         int width = dstImgSizes[imageCnt].width * dstDescPtr->c;
-        int matched_idx = 0;
+        int matchedIdx = 0;
         int refOutputHstride = refOutputWidth * dstDescPtr->c;
 
         for(int i = 0; i < height; i++)
@@ -932,16 +961,16 @@ void compare_outputs_pkd(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr
                 outRefVal = rowTempRef + j;
                 int diff = abs(*outVal - *outRefVal);
                 if(diff <= CUTOFF)
-                    matched_idx++;
+                    matchedIdx++;
             }
         }
-        if(matched_idx == (height * width) && matched_idx !=0)
+        if(matchedIdx == (height * width) && matchedIdx !=0)
             fileMatch++;
     }
 }
 
-// compares the output of PLN3-PLN3 and PLN1-PLN1 variants
-void compare_outputs_pln(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
+// compares the output of PLN3-PLN3 variants.This function compares the output buffer of pln3 format with its reference output in pkd3 format.
+void compare_outputs_pln3(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr, RpptImagePatch *dstImgSizes, int refOutputHeight, int refOutputWidth, int refOutputSize, int &fileMatch)
 {
     Rpp8u *rowTemp, *rowTempRef, *outVal, *outRefVal, *outputTemp, *outputTempRef, *outputTempChn, *outputTempRefChn;
     for(int imageCnt = 0; imageCnt < dstDescPtr->n; imageCnt++)
@@ -950,14 +979,13 @@ void compare_outputs_pln(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr
         outputTempRef = refOutput + imageCnt * refOutputSize;
         int height = dstImgSizes[imageCnt].height;
         int width = dstImgSizes[imageCnt].width;
-        int matched_idx = 0;
-        int refOutputHstride = refOutputWidth;
-        int refOutputCstride = refOutputHeight * refOutputWidth;
+        int matchedIdx = 0;
+        int refOutputHstride = refOutputWidth * dstDescPtr->c;
 
         for(int c = 0; c < dstDescPtr->c; c++)
         {
             outputTempChn = outputTemp + c * dstDescPtr->strides.cStride;
-            outputTempRefChn = outputTempRef + c * refOutputCstride;
+            outputTempRefChn = outputTempRef + c;
             for(int i = 0; i < height; i++)
             {
                 rowTemp = outputTempChn + i * dstDescPtr->strides.hStride;
@@ -965,14 +993,14 @@ void compare_outputs_pln(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPtr
                 for(int j = 0; j < width; j++)
                 {
                     outVal = rowTemp + j;
-                    outRefVal = rowTempRef + j ;
+                    outRefVal = rowTempRef + j * 3;
                     int diff = abs(*outVal - *outRefVal);
                     if(diff <= CUTOFF)
-                        matched_idx++;
+                        matchedIdx++;
                 }
             }
         }
-        if(matched_idx == (height * width * dstDescPtr->c) && matched_idx !=0)
+        if(matchedIdx == (height * width * dstDescPtr->c) && matchedIdx !=0)
             fileMatch++;
     }
 }
@@ -985,6 +1013,8 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     int refOutputWidth = ((GOLDEN_OUTPUT_MAX_WIDTH / 8) * 8) + 8;    // obtain next multiple of 8 after GOLDEN_OUTPUT_MAX_WIDTH
     int refOutputHeight = GOLDEN_OUTPUT_MAX_HEIGHT;
     int refOutputSize = refOutputHeight * refOutputWidth * dstDescPtr->c;
+    Rpp64u binOutputSize = refOutputHeight * refOutputWidth * dstDescPtr->n * 4;
+    int pln1RefStride = dstDescPtr->strides.nStride * dstDescPtr->n * 3;
 
     string dataType[4] = {"_u8_", "_f16_", "_f32_", "_i8_"};
 
@@ -997,6 +1027,7 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
         func += dataType[dstDescPtr->dataType];
     }
 
+    std::string binFile = func + "Tensor";
     if(dstDescPtr->layout == RpptLayout::NHWC)
         func += "Tensor_PKD3";
     else
@@ -1011,47 +1042,34 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
                     func += "Tensor_PKD3";
                 else
                     func += "Tensor_PLN3";
+                pln1RefStride = 0;
             }
             else
                 func += "Tensor_PLN1";
         }
     }
     if(testCase == 21 ||testCase == 23 || testCase == 24)
+    {
         func += "_interpolationType" + interpolationTypeName;
+        binFile += "_interpolationType" + interpolationTypeName;
+    }
     else if(testCase == 8)
+    {
         func += "_noiseType" + noiseTypeName;
-    refFile = scriptPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ func + ".csv";
-
-    ifstream file(refFile);
-    Rpp8u *refOutput;
-    refOutput = (Rpp8u *)malloc(dstDescPtr->n * refOutputSize * sizeof(Rpp8u));
-    string line,word;
-    int index = 0;
-
-    // Load the refennce output values from files and store in vector
-    if(file.is_open())
-    {
-        while(getline(file, line))
-        {
-            stringstream str(line);
-            while(getline(str, word, ','))
-            {
-                refOutput[index] = stoi(word);
-                index++;
-            }
-        }
+        binFile += "_noiseType" + noiseTypeName;
     }
-    else
-    {
-        cout<<"Could not open the reference output. Please check the path specified\n";
-        return;
-    }
-
+    refFile = scriptPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ binFile + ".bin";
     int fileMatch = 0;
+
+    Rpp8u *binaryContent = (Rpp8u *)malloc(binOutputSize * sizeof(Rpp8u));
+    read_bin_file(refFile, binaryContent);
+
     if(dstDescPtr->layout == RpptLayout::NHWC)
-        compare_outputs_pkd(output, refOutput, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+        compare_outputs_pkd_and_pln1(output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+    else if(dstDescPtr->layout == RpptLayout::NCHW && dstDescPtr->c == 3)
+        compare_outputs_pln3(output, binaryContent, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
     else
-        compare_outputs_pln(output, refOutput, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
+        compare_outputs_pkd_and_pln1(output, binaryContent + pln1RefStride, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
 
     std::cout << std::endl << "Results for " << func << " :" << std::endl;
     std::string status = func + ": ";
@@ -1074,13 +1092,14 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
         qaResults << status << std::endl;
         qaResults.close();
     }
+    free(binaryContent);
 }
 
-inline void compare_reduction_output(Rpp64u* output, string funcName, RpptDescPtr srcDescPtr, int testCase, string dst, string scriptPath)
+// compares reduction type functions outputs
+template <typename T>
+inline void compare_reduction_output(T* output, string funcName, RpptDescPtr srcDescPtr, int testCase, string dst, string scriptPath)
 {
     string func = funcName;
-    string refFile = "";
-
     string dataType[4] = {"_u8_", "_f16_", "_f32_", "_i8_"};
 
     func += dataType[srcDescPtr->dataType];
@@ -1095,40 +1114,21 @@ inline void compare_reduction_output(Rpp64u* output, string funcName, RpptDescPt
             func += "Tensor_PLN1";
     }
 
-    refFile = scriptPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ func + ".csv";
-
-    ifstream file(refFile);
-    Rpp64u *refOutput;
-    refOutput = (Rpp64u *)calloc(srcDescPtr->n * 4, sizeof(Rpp64u));
-    string line,word;
-    int index = 0;
-
-    // Load the refennce output values from files and store in vector
-    if(file.is_open())
-    {
-        while(getline(file, line))
-        {
-            stringstream str(line);
-            while(getline(str, word, ','))
-            {
-                refOutput[index] = stoi(word);
-                index++;
-            }
-        }
-    }
-    else
-    {
-        cout<<"Could not open the reference output. Please check the path specified\n";
-        return;
-    }
-
     int fileMatch = 0;
     int matched_values = 0;
+
+    T *refOutput;
+    int numChannels = (srcDescPtr->c == 1) ? 1 : 3;
+    int numOutputs = (srcDescPtr->c == 1) ? srcDescPtr->n : srcDescPtr->n * 4;
+    std::vector<T> ref;
+    if(testCase == 87)
+        refOutput = TensorSumReferenceOutputs[numChannels].data();
+
     if(srcDescPtr->c == 1)
     {
         for(int i = 0; i < srcDescPtr->n; i++)
         {
-            int diff = output[i] - refOutput[i];
+            int diff = abs(static_cast<int>(output[i] - refOutput[i]));
             if(diff <= CUTOFF)
                 fileMatch++;
         }
@@ -1140,7 +1140,7 @@ inline void compare_reduction_output(Rpp64u* output, string funcName, RpptDescPt
             matched_values = 0;
             for(int j = 0; j < 4; j++)
             {
-                int diff = output[(i * 4) + j] - refOutput[(i * 4) + j];
+                int diff = abs(static_cast<int>(output[(i * 4) + j] - refOutput[(i * 4) + j]));
                 if(diff <= CUTOFF)
                     matched_values++;
             }
@@ -1149,16 +1149,16 @@ inline void compare_reduction_output(Rpp64u* output, string funcName, RpptDescPt
         }
     }
 
-    std::cerr << std::endl << "Results for " << func << " :" << std::endl;
+    std::cout << std::endl << "Results for " << func << " :" << std::endl;
     std::string status = func + ": ";
     if(fileMatch == srcDescPtr->n)
     {
-        std::cerr << "PASSED!" << std::endl;
+        std::cout << "PASSED!" << std::endl;
         status += "PASSED";
     }
     else
     {
-        std::cerr << "FAILED! " << fileMatch << "/" << srcDescPtr->n << " outputs are matching with reference outputs" << std::endl;
+        std::cout << "FAILED! " << fileMatch << "/" << srcDescPtr->n << " outputs are matching with reference outputs" << std::endl;
         status += "FAILED";
     }
 
