@@ -44,6 +44,7 @@ int main(int argc, char **argv)
     batchSize = atoi(argv[5]);
     numRuns = atoi(argv[6]);
     string dst = argv[7];
+    string scriptPath = argv[8];
     qaMode = (testType == 0);
 
     if (qaMode && batchSize != 3)
@@ -127,7 +128,7 @@ int main(int argc, char **argv)
 
                 // read input data
                 if(qaMode)
-                    read_data(inputF32, nDim, 0,  bufferSize, batchSize, axisMask, "HOST");
+                    read_data(inputF32, nDim, 0,  bufferSize, batchSize, axisMask, scriptPath);
                 else
                 {
                     std::srand(0);
@@ -175,7 +176,7 @@ int main(int argc, char **argv)
 
                 // compare outputs if qaMode is true
                 if(qaMode)
-                    compare_output(outputF32, nDim, batchSize, dst, funcName, axisMask, "HOST");
+                    compare_output(outputF32, nDim, batchSize, dst, funcName, axisMask, scriptPath);
                 break;
             }
             default:

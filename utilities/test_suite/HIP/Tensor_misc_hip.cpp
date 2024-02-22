@@ -44,6 +44,7 @@ int main(int argc, char **argv)
     batchSize = atoi(argv[5]);
     numRuns = atoi(argv[6]);
     string dst = argv[7];
+    string scriptPath = argv[8];
     qaMode = (testType == 0);
 
     if (qaMode && batchSize != 3)
@@ -131,7 +132,7 @@ int main(int argc, char **argv)
 
                 // read input data
                 if(qaMode)
-                    read_data(inputF32, nDim, 0,  bufferSize, batchSize, axisMask, "HIP");
+                    read_data(inputF32, nDim, 0,  bufferSize, batchSize, axisMask, scriptPath);
                 else
                 {
                     std::srand(0);
@@ -198,7 +199,7 @@ int main(int argc, char **argv)
                     CHECK(hipDeviceSynchronize());
                     CHECK(hipMemcpy(outputF32, d_outputF32, bufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
                     CHECK(hipDeviceSynchronize());
-                    compare_output(outputF32, nDim, batchSize, dst, funcName, axisMask, "HIP");
+                    compare_output(outputF32, nDim, batchSize, dst, funcName, axisMask, scriptPath);
                 }
                 break;
             }

@@ -31,7 +31,9 @@ import shutil
 
 # Set the timestamp
 timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-cwd = os.getcwd()
+scriptPath = os.path.dirname(os.path.realpath(__file__))
+outFolderPath = os.getcwd()
+buildFolderPath = os.getcwd()
 
 # Checks if the folder path is empty, or is it a root folder, or if it exists, and remove its contents
 def validate_and_remove_files(path):
@@ -80,7 +82,7 @@ def validate_and_remove_folders(path, folder):
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list():
     return [
-        "../../OUTPUT_PERFORMANCE_MISC_LOGS_HOST_" + timestamp + "/Tensor_misc_host_raw_performance_log.txt",
+        outFolderPath + "/OUTPUT_PERFORMANCE_MISC_LOGS_HOST_" + timestamp + "/Tensor_misc_host_raw_performance_log.txt",
     ]
 
 def run_unit_test(numDims, case, numRuns, testType, toggle, bitDepth, batchSize, outFilePath):
@@ -89,7 +91,7 @@ def run_unit_test(numDims, case, numRuns, testType, toggle, bitDepth, batchSize,
     print("Running a New Functionality...")
     print("--------------------------------")
     print(f"./Tensor_misc_host {case} {testType} {toggle} {numDims} {batchSize} {numRuns}")
-    result = subprocess.run(["./Tensor_misc_host", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), outFilePath], stdout=subprocess.PIPE)    # nosec
+    result = subprocess.run([buildFolderPath + "/build/Tensor_misc_host", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), outFilePath, scriptPath], stdout=subprocess.PIPE)    # nosec
     print(result.stdout.decode())
 
     print("------------------------------------------------------------------------------------------")
@@ -101,7 +103,7 @@ def run_performance_test(loggingFolder, numDims, case, numRuns, testType, toggle
     print("--------------------------------")
     with open("{}/Tensor_misc_host_raw_performance_log.txt".format(loggingFolder), "a") as log_file:
         print(f"./Tensor_misc_host {case} {testType} {toggle} {numDims} {batchSize} {numRuns}")
-        process = subprocess.Popen(["./Tensor_misc_host", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns) , outFilePath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
+        process = subprocess.Popen([buildFolderPath + "/build/Tensor_misc_host", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
         while True:
             output = process.stdout.readline()
             if not output and process.poll() is not None:
@@ -171,16 +173,16 @@ bitDepth = 2 # Current audio test suite only supports bit depth 2
 outFilePath = " "
 
 if preserveOutput == 0:
-    validate_and_remove_folders(cwd, "QA_RESULTS_MISC_HOST")
-    validate_and_remove_folders(cwd, "OUTPUT_PERFORMANCE_MISC_LOGS_HOST")
+    validate_and_remove_folders(outFolderPath, "QA_RESULTS_MISC_HOST")
+    validate_and_remove_folders(outFolderPath, "OUTPUT_PERFORMANCE_MISC_LOGS_HOST")
 
 if(testType == 0):
-    outFilePath = os.path.join(os.path.dirname(cwd), 'QA_RESULTS_MISC_HOST_' + timestamp)
+    outFilePath = outFolderPath + '/QA_RESULTS_MISC_HOST_' + timestamp
     numRuns = 1
 elif(testType == 1):
     if "--num_runs" not in sys.argv:
         numRuns = 100   #default numRuns for running performance tests
-    outFilePath = os.path.join(os.path.dirname(cwd), 'OUTPUT_PERFORMANCE_MISC_LOGS_HOST_' + timestamp)
+    outFilePath = outFolderPath + '/OUTPUT_PERFORMANCE_MISC_LOGS_HOST_' + timestamp
 else:
     print("Invalid TEST_TYPE specified. TEST_TYPE should be 0/1 (0 = QA tests / 1 = Performance tests)")
     exit(0)
@@ -190,13 +192,13 @@ loggingFolder = outFilePath
 dstPath = outFilePath
 
 # Enable extglob
-if os.path.exists("build"):
-    shutil.rmtree("build")
-os.makedirs("build")
-os.chdir("build")
+if os.path.exists(buildFolderPath + "/build"):
+    shutil.rmtree(buildFolderPath + "/build")
+os.makedirs(buildFolderPath + "/build")
+os.chdir(buildFolderPath + "/build")
 
 # Run cmake and make commands
-subprocess.run(["cmake", ".."], cwd=".")   # nosec
+subprocess.run(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.run(["make", "-j16"], cwd=".")    # nosec
 
 if testType == 0:
@@ -229,13 +231,15 @@ for num in caseList:
 caseInfo = "Tests are run for " + str(supportedCases) + " supported cases out of the " + str(len(caseList)) + " cases requested"
 if testType == 0:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
-    f = open(qaFilePath, 'r+')
-    print("---------------------------------- Results of QA Test ----------------------------------\n")
-    for line in f:
-        sys.stdout.write(line)
-        sys.stdout.flush()
-    f.write(caseInfo)
-print("\n-------------- " + caseInfo + " --------------")
+    checkFile = os.path.isfile(qaFilePath)
+    if checkFile:
+        f = open(qaFilePath, 'r+')
+        print("---------------------------------- Results of QA Test ----------------------------------\n")
+        for line in f:
+            sys.stdout.write(line)
+            sys.stdout.flush()
+        f.write(caseInfo)
+    print("\n-------------- " + caseInfo + " --------------")
 
 # Performance tests
 if (testType == 1):

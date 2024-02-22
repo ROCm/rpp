@@ -55,26 +55,23 @@ inline void remove_substring(string &str, string &pattern)
    }
 }
 
-string get_path(Rpp32u nDim, Rpp32u readType, string backend)
+string get_path(Rpp32u nDim, Rpp32u readType, string scriptPath)
 {
-    string refPath = get_current_dir_name();
-    string pattern = backend + "/build";
-    string finalPath = "";
-    remove_substring(refPath, pattern);
+    string refPath = scriptPath + "/..";
     string dim = std::to_string(nDim) + "d";
-
+    string finalPath = "";
     if (readType == 0 || readType == 2 || readType == 3)
-        finalPath = refPath + "NORMALIZE/input/" + dim;
+        finalPath = refPath + "/NORMALIZE/input/" + dim;
     else
-        finalPath = refPath + "NORMALIZE/output/" + dim;
+        finalPath = refPath + "/NORMALIZE/output/" + dim;
 
     return finalPath;
 }
 
-Rpp32u get_buffer_length(Rpp32u nDim, int axisMask, string backend)
+Rpp32u get_buffer_length(Rpp32u nDim, int axisMask, string scriptPath)
 {
     string dimSpecifier = std::to_string(nDim) + "d";
-    string refPath = get_path(nDim, 0, backend);
+    string refPath = get_path(nDim, 0, scriptPath);
     string refFile;
     if(axisMask != 6)
         refFile = refPath + "/" + dimSpecifier + "_" + "input" + "_3x4x16.txt";
@@ -85,7 +82,7 @@ Rpp32u get_buffer_length(Rpp32u nDim, int axisMask, string backend)
     return bufferLength;
 }
 
-void read_data(Rpp32f *data, Rpp32u nDim, Rpp32u readType, Rpp32u bufferLength, Rpp32u batchSize, Rpp32u axisMask, string backend)
+void read_data(Rpp32f *data, Rpp32u nDim, Rpp32u readType, Rpp32u bufferLength, Rpp32u batchSize, Rpp32u axisMask, string scriptPath)
 {
     Rpp32u sampleLength = bufferLength / batchSize;
     if(nDim != 3 && nDim != 4)
@@ -94,7 +91,7 @@ void read_data(Rpp32f *data, Rpp32u nDim, Rpp32u readType, Rpp32u bufferLength, 
         exit(0);
     }
 
-    string refPath = get_path(nDim, readType, backend);
+    string refPath = get_path(nDim, readType, scriptPath);
     string dimSpecifier = std::to_string(nDim) + "d";
     string type = "input";
     if (readType == 1)
@@ -113,7 +110,10 @@ void read_data(Rpp32f *data, Rpp32u nDim, Rpp32u readType, Rpp32u bufferLength, 
     fstream refFile;
     refFile.open(refFilePath, ios::in);
     if(!refFile.is_open())
+    {
         cout<<"Unable to open the file specified! Please check the path of the file given as input"<<endl;
+        exit(0);
+    }
 
     for(int i = 0; i < batchSize; i++)
     {
@@ -295,11 +295,11 @@ void fill_mean_stddev_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u size, Rpp32f 
     }
 }
 
-void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize, string dst, string funcName, int axisMask, string backend)
+void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize, string dst, string funcName, int axisMask, string scriptPath)
 {
-    Rpp32u bufferLength = get_buffer_length(nDim, axisMask, backend);
+    Rpp32u bufferLength = get_buffer_length(nDim, axisMask, scriptPath);
     Rpp32f *refOutput = (Rpp32f *)calloc(bufferLength, sizeof(Rpp32f));
-    read_data(refOutput, nDim, 1, bufferLength, batchSize, axisMask, backend);
+    read_data(refOutput, nDim, 1, bufferLength, batchSize, axisMask, scriptPath);
     int sampleLength = bufferLength / batchSize;
     int fileMatch = 0;
     for(int i = 0; i < batchSize; i++)
@@ -331,7 +331,6 @@ void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize, string dst
     }
     free(refOutput);
 
-    std::cout << dst << std::endl;
     // Append the QA results to file
     std::string qaResultsPath = dst + "/QA_results.txt";
     std:: ofstream qaResults(qaResultsPath, ios_base::app);
