@@ -23,11 +23,10 @@ SOFTWARE.
 """
 
 import os
-import subprocess  # nosec
-import argparse
 import sys
-import datetime
-import shutil
+sys.dont_write_bytecode = True
+sys.path.append(os.path.join(os.path.dirname( __file__ ), '..' ))
+from common import *
 
 # Set the timestamp
 timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -39,56 +38,6 @@ buildFolderPath = os.getcwd()
 caseMin = 0
 caseMax = 3
 
-# Checks if the folder path is empty, or is it a root folder, or if it exists, and remove its contents
-def validate_and_remove_files(path):
-    if not path:  # check if a string is empty
-        print("Folder path is empty.")
-        exit(0)
-
-    elif path == "/*":  # check if the root directory is passed to the function
-        print("Root folder cannot be deleted.")
-        exit(0)
-
-    elif os.path.exists(path):  # check if the folder exists
-        # Get a list of files and directories within the specified path
-        items = os.listdir(path)
-
-        if items:
-            # The directory is not empty, delete its contents
-            for item in items:
-                item_path = os.path.join(path, item)
-                if os.path.isfile(item_path):
-                    os.remove(item_path)
-                elif os.path.isdir(item_path):
-                    shutil.rmtree(item_path)     # Delete the directory if it exists
-
-    else:
-        print("Path is invalid or does not exist.")
-        exit(0)
-
-# Check if the folder is the root folder or exists, and remove the specified subfolders
-def validate_and_remove_folders(path, folder):
-    if path == "/*":  # check if the root directory is passed to the function
-        print("Root folder cannot be deleted.")
-        exit(0)
-    if path and os.path.isdir(path):  # checks if directory string is not empty and it exists
-        output_folders = [folder_name for folder_name in os.listdir(path) if folder_name.startswith(folder)]
-
-        # Loop through each directory and delete it only if it exists
-        for folder_name in output_folders:
-            folder_path = os.path.join(path, folder_name)
-            if os.path.isdir(folder_path):
-                shutil.rmtree(folder_path)  # Delete the directory if it exists
-                print("Deleted directory:", folder_path)
-            else:
-                print("Directory not found:", folder_path)
-
-# Validate if a path exists and is a directory
-def validate_path(input_path):
-    if not os.path.exists(input_path):
-        raise ValueError("path " + input_path +" does not exist.")
-    if not os.path.isdir(input_path):
-        raise ValueError("path " + input_path + " is not a directory.")
 
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list():

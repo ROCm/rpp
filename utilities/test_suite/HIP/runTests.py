@@ -21,13 +21,11 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-
 import os
-import subprocess  # nosec
-import argparse
 import sys
-import datetime
-import shutil
+sys.dont_write_bytecode = True
+sys.path.append(os.path.join(os.path.dirname( __file__ ), '..' ))
+from common import *
 
 # Set the timestamp
 timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -39,109 +37,6 @@ ricapInFilePath = scriptPath + "/../TEST_IMAGES/three_images_150x150_src1"
 qaInputFile = scriptPath + "/../TEST_IMAGES/three_images_mixed_src1"
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
-
-# Checks if the folder path is empty, or is it a root folder, or if it exists, and remove its contents
-def validate_and_remove_files(path):
-    if not path:  # check if a string is empty
-        print("Folder path is empty.")
-        exit()
-
-    elif path == "/*":  # check if the root directory is passed to the function
-        print("Root folder cannot be deleted.")
-        exit()
-
-    elif os.path.exists(path):  # check if the folder exists
-        # Get a list of files and directories within the specified path
-        items = os.listdir(path)
-
-        if items:
-            # The directory is not empty, delete its contents
-            for item in items:
-                item_path = os.path.join(path, item)
-                if os.path.isfile(item_path):
-                    os.remove(item_path)
-                elif os.path.isdir(item_path):
-                    shutil.rmtree(item_path)     # Delete the directory if it exists
-
-    else:
-        print("Path is invalid or does not exist.")
-        exit()
-
-# Check if the folder is the root folder or exists, and remove the specified subfolders
-def validate_and_remove_folders(path, folder):
-    if path == "/*":  # check if the root directory is passed to the function
-        print("Root folder cannot be deleted.")
-        exit()
-    if path and os.path.isdir(path):  # checks if directory string is not empty and it exists
-        output_folders = [folder_name for folder_name in os.listdir(path) if folder_name.startswith(folder)]
-
-        # Loop through each directory and delete it only if it exists
-        for folder_name in output_folders:
-            folder_path = os.path.join(path, folder_name)
-            if os.path.isdir(folder_path):
-                shutil.rmtree(folder_path)  # Delete the directory if it exists
-                print("Deleted directory:", folder_path)
-            else:
-                print("Directory not found:", folder_path)
-
-# Check if a case file exists and filter its contents based on certain conditions
-def case_file_check(CASE_FILE_PATH):
-    try:
-        case_file = open(CASE_FILE_PATH,'r')
-        for line in case_file:
-            print(line)
-            if not(line.startswith('"Name"')):
-                if TYPE in TENSOR_TYPE_LIST:
-                    new_file.write(line)
-                    d_counter[TYPE] = d_counter[TYPE] + 1
-        case_file.close()
-        return True
-    except IOError:
-        print("Unable to open case results")
-        return False
-
- # Generate a directory name based on certain parameters
-def directory_name_generator(qaMode, affinity, layoutType, case, path):
-    if qaMode == 0:
-        functionality_group = func_group_finder(int(case))
-        dst_folder_temp = f"{path}/rpp_{affinity}_{layoutType}_{functionality_group}"
-    else:
-        dst_folder_temp = path
-
-    return dst_folder_temp
-
-# Process the layout based on the given parameters and generate the directory name and log file layout.
-def process_layout(layout, qaMode, case, dstPath):
-    if layout == 0:
-        dstPathTemp = directory_name_generator(qaMode, "hip", "pkd3", case, dstPath)
-        log_file_layout = "pkd3"
-    elif layout == 1:
-        dstPathTemp = directory_name_generator(qaMode, "hip", "pln3", case, dstPath)
-        log_file_layout = "pln3"
-    elif layout == 2:
-        dstPathTemp = directory_name_generator(qaMode, "hip", "pln1", case, dstPath)
-        log_file_layout = "pln1"
-
-    return dstPathTemp, log_file_layout
-
-# Validate if a path exists and is a directory
-def validate_path(input_path):
-    if not os.path.exists(input_path):
-        raise ValueError("path " + input_path +" does not exist.")
-    if not os.path.isdir(input_path):
-        raise ValueError("path " + input_path + " is not a directory.")
-
-# Create layout directories within a destination path based on a layout dictionary
-def create_layout_directories(dst_path, layout_dict):
-    for layout in range(3):
-        current_layout = layout_dict[layout]
-        try:
-            os.makedirs(dst_path + '/' + current_layout)
-        except FileExistsError:
-            pass
-        folder_list = [f for f in os.listdir(dst_path) if current_layout.lower() in f]
-        for folder in folder_list:
-            os.rename(dst_path + '/' + folder, dst_path + '/' + current_layout +  '/' + folder)
 
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list(preserveOutput):
@@ -173,22 +68,6 @@ def func_group_finder(case_number):
         return "statistical_operations"
     else:
         return "miscellaneous"
-
-# Generate performance reports based on counters and a list of types
-def generate_performance_reports(d_counter, TYPE_LIST):
-    import pandas as pd
-    pd.options.display.max_rows = None
-    # Generate performance report
-    for TYPE in TYPE_LIST:
-        print("\n\n\nKernels tested - ", d_counter[TYPE], "\n\n")
-        df = pd.read_csv(RESULTS_DIR + "/consolidated_results_" + TYPE + ".stats.csv")
-        df["AverageMs"] = df["AverageNs"] / 1000000
-        dfPrint = df.drop(['Percentage'], axis = 1)
-        dfPrint["HIP Kernel Name"] = dfPrint.iloc[:,0].str.lstrip("Hip_")
-        dfPrint_noIndices = dfPrint.astype(str)
-        dfPrint_noIndices.replace(['0', '0.0'], '', inplace = True)
-        dfPrint_noIndices = dfPrint_noIndices.to_string(index = False)
-        print(dfPrint_noIndices)
 
 def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
     print("\n\n\n\n")
@@ -410,7 +289,7 @@ if(testType == 0):
     numRuns = 1
 elif(testType == 1):
     if "--num_runs" not in sys.argv:
-        numRuns = 1000 #default numRuns for running performance tests
+        numRuns = 100 #default numRuns for running performance tests
     outFilePath = outFolderPath + "/OUTPUT_PERFORMANCE_LOGS_HIP_" + timestamp
 else:
     print("Invalid TEST_TYPE specified. TEST_TYPE should be 0/1 (0 = Unittests / 1 = Performancetests)")
@@ -462,7 +341,7 @@ if(testType == 0):
             print(f"Invalid case number {case}. Case number must be in the range of 0 to 87!")
             continue
         for layout in range(3):
-            dstPathTemp, log_file_layout = process_layout(layout, qaMode, case, dstPath)
+            dstPathTemp, log_file_layout = process_layout(layout, qaMode, case, dstPath, "hip", func_group_finder)
 
             if qaMode == 0:
                 if not os.path.isdir(dstPathTemp):
@@ -483,7 +362,7 @@ else:
                 srcPath1 = ricapInFilePath
                 srcPath2 = ricapInFilePath
             for layout in range(3):
-                dstPathTemp, log_file_layout = process_layout(layout, qaMode, case, dstPath)
+                dstPathTemp, log_file_layout = process_layout(layout, qaMode, case, dstPath, "hip", func_group_finder)
 
                 run_performance_test(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
 
@@ -498,7 +377,7 @@ else:
                 srcPath1 = ricapInFilePath
                 srcPath2 = ricapInFilePath
             for layout in range(3):
-                dstPathTemp, log_file_layout = process_layout(layout, qaMode, case, dstPath)
+                dstPathTemp, log_file_layout = process_layout(layout, qaMode, case, dstPath, "hip", func_group_finder)
 
                 print("\n\n\n\n")
                 print("--------------------------------")

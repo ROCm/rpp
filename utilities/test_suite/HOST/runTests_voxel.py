@@ -23,11 +23,10 @@ SOFTWARE.
 """
 
 import os
-import subprocess  # nosec
-import argparse
 import sys
-import datetime
-import shutil
+sys.dont_write_bytecode = True
+sys.path.append(os.path.join(os.path.dirname( __file__ ), '..' ))
+from common import *
 
 # Set the timestamp
 timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -40,66 +39,6 @@ outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
 caseMin = 0
 caseMax = 5
-
-# Check if folder path is empty, if it is the root folder, or if it exists, and remove its contents
-def validate_and_remove_contents(path):
-    if not path:  # check if a string is empty
-        print("Folder path is empty.")
-        exit()
-    if path == "/*":  # check if the root directory is passed to the function
-        print("Root folder cannot be deleted.")
-        exit()
-    if os.path.exists(path):  # check if the folder exists
-        # Get a list of files and directories within the specified path
-        items = os.listdir(path)
-
-        if items:
-            # The directory is not empty, delete its contents
-            for item in items:
-                item_path = os.path.join(path, item)
-                if os.path.isfile(item_path):
-                    os.remove(item_path)
-                elif os.path.isdir(item_path):
-                    shutil.rmtree(item_path)     # Delete the directory if it exists
-    else:
-        print("Path is invalid or does not exist.")
-        exit()
-
-# Check if the folder is the root folder or exists, and remove the specified subfolders
-def validate_and_remove_folders(path, folder):
-    if path == "/*":  # check if the root directory is passed to the function
-        print("Root folder cannot be deleted.")
-        exit()
-    if path and os.path.isdir(path):  # checks if directory string is not empty and it exists
-        output_folders = [folder_name for folder_name in os.listdir(path) if folder_name.startswith(folder)]
-
-        # Loop through each directory and delete it only if it exists
-        for folder_name in output_folders:
-            folder_path = os.path.join(path, folder_name)
-            if os.path.isdir(folder_path):
-                shutil.rmtree(folder_path)  # Delete the directory if it exists
-                print("Deleted directory:", folder_path)
-            else:
-                print("Directory not found:", folder_path)
-
-# Create layout directories within a destination path based on a layout dictionary
-def create_layout_directories(dst_path, layout_dict):
-    for layout in range(3):
-        current_layout = layout_dict[layout]
-        try:
-            os.makedirs(dst_path + '/' + current_layout)
-        except FileExistsError:
-            pass
-        folder_list = [f for f in os.listdir(dst_path) if current_layout.lower() in f]
-        for folder in folder_list:
-            os.rename(dst_path + '/' + folder, dst_path + '/' + current_layout +  '/' + folder)
-
-# Validate if a path exists and is a directory
-def validate_path(input_path):
-    if not os.path.exists(input_path):
-        raise ValueError("path " + input_path +" does not exist.")
-    if not os.path.isdir(input_path):
-        raise ValueError("path " + input_path + " is not a directory.")
 
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list():
@@ -117,30 +56,6 @@ def func_group_finder(case_number):
         return "geometric_augmentations"
     else:
         return "miscellaneous"
-
-# Generate a directory name based on certain parameters
-def directory_name_generator(qaMode, affinity, layoutType, case, path):
-    if qaMode == 0:
-        functionality_group = func_group_finder(int(case))
-        dst_folder_temp = "{}/rpp_{}_{}_{}".format(path, affinity, layoutType, functionality_group)
-    else:
-        dst_folder_temp = path
-
-    return dst_folder_temp
-
-# Process the layout based on the given parameters and generate the directory name and log file layout.
-def process_layout(layout, qaMode, case, dstPath):
-    if layout == 0:
-        dstPathTemp = directory_name_generator(qaMode, "host", "pkd3", case, dstPath)
-        logFileLayout = "pkd3"
-    elif layout == 1:
-        dstPathTemp = directory_name_generator(qaMode, "host", "pln3", case, dstPath)
-        logFileLayout = "pln3"
-    elif layout == 2:
-        dstPathTemp = directory_name_generator(qaMode, "host", "pln1", case, dstPath)
-        logFileLayout = "pln1"
-
-    return dstPathTemp, logFileLayout
 
 def run_unit_test(headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
     print("\n\n\n\n")
@@ -287,7 +202,7 @@ loggingFolder = outFilePath
 dstPath = outFilePath
 
 # Validate DST_FOLDER
-validate_and_remove_contents(dstPath)
+validate_and_remove_files(dstPath)
 
 # Enable extglob
 if os.path.exists(buildFolderPath + "/build"):
@@ -308,7 +223,7 @@ bitDepths = [0, 2]
 if testType == 0:
     for case in caseList:
         for layout in range(3):
-            dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath)
+            dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "host", func_group_finder)
             if qaMode == 0:
                 if not os.path.isdir(dstPathTemp):
                     os.mkdir(dstPathTemp)
@@ -317,7 +232,7 @@ if testType == 0:
 else:
     for case in caseList:
         for layout in range(3):
-            dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath)
+            dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "host", func_group_finder)
             run_performance_test(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize)
 
 # print the results of qa tests
@@ -328,25 +243,7 @@ if qaMode and testType == 0:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
-        f = open(qaFilePath, 'r+')
-        print("---------------------------------- Results of QA Test - Tensor_voxel_host ----------------------------------\n")
-        numLines = 0
-        numPassed = 0
-        for line in f:
-            sys.stdout.write(line)
-            numLines += 1
-            if "PASSED" in line:
-                numPassed += 1
-            sys.stdout.flush()
-        resultsInfo = "\n\nFinal Results of Tests:"
-        resultsInfo += "\n    - Total test cases including all subvariants REQUESTED = " + str(numLines)
-        resultsInfo += "\n    - Total test cases including all subvariants PASSED = " + str(numPassed)
-        resultsInfo += "\n\nGeneral information on Tensor voxel test suite availability:"
-        resultsInfo += "\n    - Total augmentations supported in Tensor test suite = " + str(len(supportedCaseList))
-        resultsInfo += "\n    - Total augmentations with golden output QA test support = " + str(len(supportedCaseList) - len(nonQACaseList))
-        resultsInfo += "\n    - Total augmentations without golden ouput QA test support (due to randomization involved) = " + str(len(nonQACaseList))
-        f.write(resultsInfo)
-    print("\n-------------------------------------------------------------------" + resultsInfo + "\n\n-------------------------------------------------------------------")
+        print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList)
 
 layoutDict = {0:"PKD3", 1:"PLN3", 2:"PLN1"}
 if (testType == 0 and qaMode == 0):   # Unit tests
