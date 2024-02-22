@@ -5014,10 +5014,6 @@ inline void compute_generic_bilinear_srclocs_1c_avx(__m256 &pSrcY, __m256 &pSrcX
     pSrcBilinearLTyx[1] = _mm256_min_ps(_mm256_max_ps(pSrcBilinearLTyx[1], pRoiLTRB[0]), _mm256_sub_ps(pRoiLTRB[2], avx_p1));
     pSrcBilinearLTyx[2] = _mm256_min_ps(_mm256_max_ps(_mm256_add_ps(pSrcBilinearLTyx[0], avx_p1), pRoiLTRB[1]), _mm256_sub_ps(pRoiLTRB[3], avx_p1));
     pSrcBilinearLTyx[3] = _mm256_min_ps(_mm256_max_ps(_mm256_add_ps(pSrcBilinearLTyx[1], avx_p1), pRoiLTRB[0]), _mm256_sub_ps(pRoiLTRB[2], avx_p1));
-    /*pSrcBilinearLTyx[0] = _mm256_min_ps(_mm256_max_ps(pSrcBilinearLTyx[0], pRoiLTRB[1]), pRoiLTRB[3]);
-    pSrcBilinearLTyx[1] = _mm256_min_ps(_mm256_max_ps(pSrcBilinearLTyx[1], pRoiLTRB[0]), pRoiLTRB[2]);
-    pSrcBilinearLTyx[2] = _mm256_min_ps(_mm256_max_ps(_mm256_add_ps(pSrcBilinearLTyx[0], avx_p1), pRoiLTRB[1]), pRoiLTRB[3]);
-    pSrcBilinearLTyx[3] = _mm256_min_ps(_mm256_max_ps(_mm256_add_ps(pSrcBilinearLTyx[1], avx_p1), pRoiLTRB[0]), pRoiLTRB[2]);*/
     __m256i pxSrcLocsTL =  _mm256_cvtps_epi32(_mm256_fmadd_ps(pSrcBilinearLTyx[0], pSrcStrideH, pSrcBilinearLTyx[1]));     // 8 Top-Left memory locations = 8 Top-Left srcYs * hStride + 8 Top-Left srcXs
     __m256i pxSrcLocsTR =  _mm256_cvtps_epi32(_mm256_fmadd_ps(pSrcBilinearLTyx[0], pSrcStrideH, pSrcBilinearLTyx[3]));     // 8 Top-Right memory locations = 8 Top-Left srcYs * hStride + 8 Bottom-right srcXs
     __m256i pxSrcLocsBL = _mm256_cvtps_epi32(_mm256_fmadd_ps(pSrcBilinearLTyx[2], pSrcStrideH, pSrcBilinearLTyx[1]));      // 8 Bottom-Left memory locations = 8 Bottom-right srcYs * hStride + 8 Top-Left srcXs
@@ -5045,10 +5041,6 @@ inline void compute_generic_bilinear_srclocs_3c_avx(__m256 &pSrcY, __m256 &pSrcX
     pSrcBilinearLTyx[1] = _mm256_min_ps(_mm256_max_ps(pSrcBilinearLTyx[1], pRoiLTRB[0]), _mm256_sub_ps(pRoiLTRB[2], avx_p1));
     pSrcBilinearLTyx[2] = _mm256_min_ps(_mm256_max_ps(_mm256_add_ps(pSrcBilinearLTyx[0], avx_p1), pRoiLTRB[1]), _mm256_sub_ps(pRoiLTRB[3], avx_p1));
     pSrcBilinearLTyx[3] = _mm256_min_ps(_mm256_max_ps(_mm256_add_ps(pSrcBilinearLTyx[1], avx_p1), pRoiLTRB[0]), _mm256_sub_ps(pRoiLTRB[2], avx_p1));
-    /*pSrcBilinearLTyx[0] = _mm256_min_ps(_mm256_max_ps(pSrcBilinearLTyx[0], pRoiLTRB[1]), pRoiLTRB[3]);
-    pSrcBilinearLTyx[1] = _mm256_min_ps(_mm256_max_ps(pSrcBilinearLTyx[1], pRoiLTRB[0]), pRoiLTRB[2]);
-    pSrcBilinearLTyx[2] = _mm256_min_ps(_mm256_max_ps(_mm256_add_ps(pSrcBilinearLTyx[0], avx_p1), pRoiLTRB[1]), pRoiLTRB[3]);
-    pSrcBilinearLTyx[3] = _mm256_min_ps(_mm256_max_ps(_mm256_add_ps(pSrcBilinearLTyx[1], avx_p1), pRoiLTRB[0]), pRoiLTRB[2]);*/
     if(isSrcPKD3)
     {
         pSrcBilinearLTyx[1] = _mm256_mul_ps(pSrcBilinearLTyx[1], avx_p3);       // if pkd3, multiply Left-Top column location by 3
