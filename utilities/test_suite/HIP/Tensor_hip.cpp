@@ -349,6 +349,10 @@ int main(int argc, char **argv)
     if(testCase == 82)
         CHECK(hipHostMalloc(&roiPtrInputCropRegion, 4 * sizeof(RpptROI)));
 
+    Rpp32f *intensity;
+    if(testCase == 46)
+        CHECK(hipHostMalloc(&intensity, batchSize * sizeof(Rpp32f)));
+
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
     for (int perfRunCount = 0; perfRunCount < numRuns; perfRunCount++)
@@ -819,8 +823,6 @@ int main(int argc, char **argv)
             {
                 testCaseName = "vignette";
 
-                Rpp32f *intensity;
-                CHECK(hipHostMalloc(&intensity, batchSize * sizeof(Rpp32f)));
                 for (i = 0; i < batchSize; i++)
                     intensity[i] = 6;
 
