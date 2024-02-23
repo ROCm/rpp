@@ -585,22 +585,6 @@ if qaMode and testType == 0:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
-        f = open(qaFilePath, 'r+')
         print("---------------------------------- Results of QA Test - Tensor_hip ----------------------------------\n")
-        numLines = 0
-        numPassed = 0
-        for line in f:
-            sys.stdout.write(line)
-            numLines += 1
-            if "PASSED" in line:
-                numPassed += 1
-            sys.stdout.flush()
-        resultsInfo = "\n\nFinal Results of Tests:"
-        resultsInfo += "\n    - Total test cases including all subvariants REQUESTED = " + str(numLines)
-        resultsInfo += "\n    - Total test cases including all subvariants PASSED = " + str(numPassed)
-        resultsInfo += "\n\nGeneral information on Tensor test suite availability:"
-        resultsInfo += "\n    - Total augmentations supported in Tensor test suite = " + str(len(supportedCaseList))
-        resultsInfo += "\n    - Total augmentations with golden output QA test support = " + str(len(supportedCaseList) - len(nonQACaseList))
-        resultsInfo += "\n    - Total augmentations without golden ouput QA test support (due to randomization involved) = " + str(len(nonQACaseList))
-        f.write(resultsInfo)
+        print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList)
     print("\n-------------------------------------------------------------------" + resultsInfo + "\n\n-------------------------------------------------------------------")
