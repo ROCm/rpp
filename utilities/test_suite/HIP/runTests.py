@@ -74,8 +74,11 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
     print("--------------------------------")
     print("Running a New Functionality...")
     print("--------------------------------")
-
-    for bitDepth in range(7):
+    if qaMode:
+        maxBitdepth = 1
+    else:
+        maxBitdepth = 7
+    for bitDepth in range(maxBitdepth):
         print("\n\n\nRunning New Bit Depth...\n-------------------------\n\n")
 
         for outputFormatToggle in range(2):

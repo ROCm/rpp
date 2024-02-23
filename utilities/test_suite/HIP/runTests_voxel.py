@@ -62,6 +62,8 @@ def run_unit_test(headerPath, dataPath, dstPathTemp, layout, case, numRuns, test
     print("Running a New Functionality...")
     print("--------------------------------")
     bitDepths = [0, 2]
+    if qaMode:
+        bitDepths = [2]
     for bitDepth in bitDepths:
         print("\n\n\nRunning New Bit Depth...\n-------------------------\n\n")
         print(f"./Tensor_voxel_hip {headerPath} {dataPath} {dstPathTemp} {layout} {case} {numRuns} {testType} {qaMode} {batchSize} {bitDepth}")

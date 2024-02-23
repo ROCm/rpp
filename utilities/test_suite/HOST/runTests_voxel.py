@@ -63,6 +63,8 @@ def run_unit_test(headerPath, dataPath, dstPathTemp, layout, case, numRuns, test
     print("Running a New Functionality...")
     print("--------------------------------")
     bitDepths = [0, 2]
+    if qaMode:
+        bitDepths = [2]
     for bitDepth in bitDepths:
         print("\n\n\nRunning New Bit Depth...\n-------------------------\n\n")
         print("\n\n\n\n")
@@ -92,8 +94,7 @@ def run_performance_test(loggingFolder, logFileLayout, headerPath, dataPath, dst
                     log_file.write(cleaned_output + '\n')
                     if "max,min,avg wall times" in output:
                         log_file.write("\n")
-
-                print("------------------------------------------------------------------------------------------")
+        print("------------------------------------------------------------------------------------------")
 
 # Parse and validate command-line arguments for the RPP test suite
 def rpp_test_suite_parser_and_validator():
