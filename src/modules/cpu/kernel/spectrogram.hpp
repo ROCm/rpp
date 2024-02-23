@@ -25,6 +25,7 @@ SOFTWARE.
 #include "rppdefs.h"
 #include "third_party/ffts/ffts.h"
 #include "third_party/ffts/ffts_attributes.h"
+#include <complex>
 
 bool is_pow2(Rpp64s n) { return (n & (n-1)) == 0; }
 inline bool can_use_real_impl(Rpp64s n) { return is_pow2(n); }
