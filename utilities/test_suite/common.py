@@ -147,6 +147,7 @@ def generate_performance_reports(d_counter, TYPE_LIST):
         dfPrint_noIndices = dfPrint_noIndices.to_string(index = False)
         print(dfPrint_noIndices)
 
+# Read the data from QA logs, process the data and print the results as a summary
 def print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList):
     f = open(qaFilePath, 'r+')
     numLines = 0
@@ -166,3 +167,65 @@ def print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList):
     resultsInfo += "\n    - Total augmentations without golden ouput QA test support (due to randomization involved) = " + str(len(nonQACaseList))
     f.write(resultsInfo)
     print("\n-------------------------------------------------------------------" + resultsInfo + "\n\n-------------------------------------------------------------------")
+
+# Read the data from performance logs, process the data and print the results as a summary
+def print_performance_tests_summary(logFile, functionalityGroupList, numRuns):
+    try:
+        f = open(logFile, "r")
+        print("\n\n\nOpened log file -> "+ logFile)
+    except IOError:
+        print("Skipping file -> "+ logFile)
+        return
+
+    stats = []
+    maxVals = []
+    minVals = []
+    avgVals = []
+    functions = []
+    frames = []
+    prevLine = ""
+    funcCount = 0
+
+    # Loop over each line
+    for line in f:
+        for functionalityGroup in functionalityGroupList:
+            if functionalityGroup in line:
+                functions.extend([" ", functionalityGroup, " "])
+                frames.extend([" ", " ", " "])
+                maxVals.extend([" ", " ", " "])
+                minVals.extend([" ", " ", " "])
+                avgVals.extend([" ", " ", " "])
+
+        if "max,min,avg wall times in ms/batch" in line:
+            splitWordStart = "Running "
+            splitWordEnd = " " +str(numRuns)
+            prevLine = prevLine.partition(splitWordStart)[2].partition(splitWordEnd)[0]
+            if prevLine not in functions:
+                functions.append(prevLine)
+                frames.append(numRuns)
+                splitWordStart = "max,min,avg wall times in ms/batch = "
+                splitWordEnd = "\n"
+                stats = line.partition(splitWordStart)[2].partition(splitWordEnd)[0].split(",")
+                maxVals.append(stats[0])
+                minVals.append(stats[1])
+                avgVals.append(stats[2])
+                funcCount += 1
+
+        if line != "\n":
+            prevLine = line
+
+    # Print log lengths
+    print("Functionalities - "+ str(funcCount))
+
+    # Print summary of log
+    print("\n\nFunctionality\t\t\t\t\t\tFrames Count\tmax(ms/batch)\t\tmin(ms/batch)\t\tavg(ms/batch)\n")
+    if len(functions) != 0:
+        maxCharLength = len(max(functions, key = len))
+        functions = [x + (' ' * (maxCharLength - len(x))) for x in functions]
+        for i, func in enumerate(functions):
+            print(func + "\t" + str(frames[i]) + "\t\t" + str(maxVals[i]) + "\t" + str(minVals[i]) + "\t" + str(avgVals[i]))
+    else:
+        print("No variants under this category")
+
+    # Closing log file
+    f.close()

@@ -516,66 +516,7 @@ if (testType == 1 and profilingOption == "NO"):
     "statistical_operations"
     ]
     for log_file in log_file_list:
-        # Opening log file
-        try:
-            f = open(log_file,"r")
-            print("\n\n\nOpened log file -> " + log_file)
-        except IOError:
-            print("Skipping file -> " + log_file)
-            continue
-
-        stats = []
-        maxVals = []
-        minVals = []
-        avgVals = []
-        functions = []
-        frames = []
-        prevLine = ""
-        funcCount = 0
-
-        # Loop over each line
-        for line in f:
-            for functionality_group in functionality_group_list:
-                if functionality_group in line:
-                    functions.extend([" ", functionality_group, " "])
-                    frames.extend([" ", " ", " "])
-                    maxVals.extend([" ", " ", " "])
-                    minVals.extend([" ", " ", " "])
-                    avgVals.extend([" ", " ", " "])
-
-            if "max,min,avg wall times in ms/batch" in line:
-                split_word_start = "Running "
-                split_word_end = " "+ str(numRuns)
-                prevLine = prevLine.partition(split_word_start)[2].partition(split_word_end)[0]
-                if prevLine not in functions:
-                    functions.append(prevLine)
-                    frames.append(str(numRuns))
-                    split_word_start = "max,min,avg wall times in ms/batch = "
-                    split_word_end = "\n"
-                    stats = line.partition(split_word_start)[2].partition(split_word_end)[0].split(",")
-                    maxVals.append(stats[0])
-                    minVals.append(stats[1])
-                    avgVals.append(stats[2])
-                    funcCount += 1
-
-            if line != "\n":
-                prevLine = line
-
-        # Print log lengths
-        print("Functionalities - " + str(funcCount))
-
-        # Print summary of log
-        print("\n\nFunctionality\t\t\t\t\t\tFrames Count\tmax(ms/batch)\t\tmin(ms/batch)\t\tavg(ms/batch)\n")
-        if len(functions) != 0:
-            maxCharLength = len(max(functions, key = len))
-            functions = [x + (' ' * (maxCharLength - len(x))) for x in functions]
-            for i, func in enumerate(functions):
-                print(func + "\t" + str(frames[i]) + "\t\t" + str(maxVals[i]) + "\t" + str(minVals[i]) + "\t" + str(avgVals[i]))
-        else:
-            print("No variants under this category")
-
-        # Closing log file
-        f.close()
+        print_performance_tests_summary(log_file, functionality_group_list, numRuns)
 
 # print the results of qa tests
 supportedCaseList = ['0', '1', '2', '4', '8', '13', '20', '21', '23', '29', '30', '31', '34', '36', '37', '38', '39', '45', '54', '61', '63', '70', '80', '82', '83', '84', '85', '86', '87']

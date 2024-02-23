@@ -322,7 +322,7 @@ int main(int argc, char * argv[])
         wallTime *= 1000;
         if(testType == 0)
         {
-            cout << "\n\nCPU Backend Wall Time: " << wallTime <<" ms per nifti file"<< endl;
+            cout << "\n\nCPU Backend Wall Time: " << wallTime <<" ms per batch"<< endl;
             if(DEBUG_MODE)
             {
                 std::ofstream refFile;
