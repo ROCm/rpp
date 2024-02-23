@@ -1,57 +1,7 @@
 #include <hip/hip_runtime.h>
 #include "rpp_hip_common.hpp"
 
-
-// -------------------- Set 0 - kernels for layout toggle (PKD3->PLN3, PLN3->PKD3) --------------------
-template <typename T>
-__global__ void convert_pkd3_pln3_hip_tensor(T *srcPtr,
-                                            uint2 srcStridesNH,
-                                            T *dstPtr,
-                                            uint3 dstStridesNCH,
-                                            RpptROIPtr roiTensorPtrSrc)
-{
-    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
-    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
-
-    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
-    {
-        return;
-    }
-
-    uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3;
-    uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
-
-    d_float24 dst_f24;
-    rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &dst_f24);
-    rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &dst_f24);
-}
-
-template <typename T>
-__global__ void convert_pln3_pkd3_hip_tensor(T *srcPtr,
-                                             uint3 srcStridesNCH,
-                                             T *dstPtr,
-                                             uint2 dstStridesNH,
-                                             RpptROIPtr roiTensorPtrSrc)
-{
-    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
-    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
-
-    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
-    {
-        return;
-    }
-
-    uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
-    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
-
-    d_float24 dst_f24;
-    rpp_hip_load24_pln3_and_unpack_to_float24_pkd3(srcPtr + srcIdx, srcStridesNCH.y, &dst_f24);
-    rpp_hip_pack_float24_pkd3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
-}
-
-// -------------------- Set 0 - crop and patch device helper --------------------
+// -------------------- Set 0 - crop and patch device helpers --------------------
 
 __device__ void update_data(int startLoc, d_float24 *dst_f24, d_float24 *temp_f24)
 {
