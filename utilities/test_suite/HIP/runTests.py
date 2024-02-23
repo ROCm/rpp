@@ -36,6 +36,7 @@ scriptPath = os.path.dirname(os.path.realpath(__file__))
 inFilePath1 = scriptPath + "/../TEST_IMAGES/three_images_mixed_src1"
 inFilePath2 = scriptPath + "/../TEST_IMAGES/three_images_mixed_src2"
 ricapInFilePath = scriptPath + "/../TEST_IMAGES/three_images_150x150_src1"
+lensCorrectionInFilePath = scriptPath + "/../TEST_IMAGES/lens_distortion"
 qaInputFile = scriptPath + "/../TEST_IMAGES/three_images_mixed_src1"
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
@@ -163,8 +164,6 @@ def func_group_finder(case_number):
         return "morphological_operations"
     elif case_number == 49 or case_number == 54:
         return "filter_augmentations"
-    elif case_number < 40:
-        return "geometric_augmentations"
     elif case_number == 61:
         return "arithmetic_operations"
     elif case_number < 87:
@@ -454,8 +453,11 @@ if(testType == 0):
         if case == "82" and (("--input_path1" not in sys.argv and "--input_path2" not in sys.argv) or qaMode == 1):
             srcPath1 = ricapInFilePath
             srcPath2 = ricapInFilePath
+        if case == "26" and (("--input_path1" not in sys.argv and "--input_path2" not in sys.argv) or qaMode == 1):
+            srcPath1 = lensCorrectionInFilePath
+            srcPath2 = lensCorrectionInFilePath
         # if QA mode is enabled overwrite the input folders with the folders used for generating golden outputs
-        if qaMode == 1 and case != "82":
+        if qaMode == 1 and (case != "82" and case != "26"):
             srcPath1 = inFilePath1
             srcPath2 = inFilePath2
         if int(case) < 0 or int(case) > 87:
@@ -482,6 +484,9 @@ else:
             if case == "82" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
                 srcPath1 = ricapInFilePath
                 srcPath2 = ricapInFilePath
+            if case == "26" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
+                srcPath1 = lensCorrectionInFilePath
+                srcPath2 = lensCorrectionInFilePath
             for layout in range(3):
                 dstPathTemp, log_file_layout = process_layout(layout, qaMode, case, dstPath)
 
@@ -497,6 +502,9 @@ else:
             if case == "82" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
                 srcPath1 = ricapInFilePath
                 srcPath2 = ricapInFilePath
+            if case == "26" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
+                srcPath1 = lensCorrectionInFilePath
+                srcPath2 = lensCorrectionInFilePath
             for layout in range(3):
                 dstPathTemp, log_file_layout = process_layout(layout, qaMode, case, dstPath)
 
@@ -696,7 +704,7 @@ if (testType == 1 and profilingOption == "NO"):
         f.close()
 
 # print the results of qa tests
-supportedCaseList = ['0', '1', '2', '4', '8', '13', '20', '21', '23', '29', '30', '31', '34', '36', '37', '38', '39', '45', '54', '61', '63', '70', '79', '80', '82', '83', '84', '85', '86', '87']
+supportedCaseList = ['0', '1', '2', '4', '8', '13', '20', '21', '23', '26', '29', '30', '31', '34', '36', '37', '38', '39', '45', '54', '61', '63', '70', '79', '80', '82', '83', '84', '85', '86', '87']
 nonQACaseList = ['8', '24', '54', '84'] # Add cases present in supportedCaseList, but without QA support
 
 if qaMode and testType == 0:

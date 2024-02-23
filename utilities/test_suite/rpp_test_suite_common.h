@@ -78,6 +78,7 @@ std::map<int, string> augmentationMap =
     {20, "flip"},
     {21, "resize"},
     {23, "rotate"},
+    {26, "lens_correction"},
     {29, "water"},
     {30, "non_linear_blend"},
     {31, "color_cast"},

@@ -357,10 +357,16 @@ int main(int argc, char **argv)
         CHECK(hipHostMalloc(&roiPtrInputCropRegion, 4 * sizeof(RpptROI)));
 
     void *d_rowRemapTable, *d_colRemapTable;
-    if(testCase == 79)
+    if(testCase == 26 || testCase == 79)
     {
         CHECK(hipMalloc(&d_rowRemapTable, ioBufferSize * sizeof(Rpp32u)));
         CHECK(hipMalloc(&d_colRemapTable, ioBufferSize * sizeof(Rpp32u)));
+    }
+    float *d_cameraMatrix, *d_distortionCoeffs;
+    if(testCase == 26)
+    {
+        hipMalloc(&d_cameraMatrix, images * 9 * sizeof(Rpp32f));
+        hipMalloc(&d_distortionCoeffs, images * 8 * sizeof(Rpp32f));
     }
 
 
@@ -586,6 +592,57 @@ int main(int argc, char **argv)
                 startWallTime = omp_get_wtime();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                     rppt_rotate_gpu(d_input, srcDescPtr, d_output, dstDescPtr, angle, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
+                else
+                    missingFuncFlag = 1;
+
+                break;
+            }
+            case 26:
+            {
+                testCaseName = "lens_correction";
+
+                Rpp32f cameraMatrix[9 * batchSize];
+                Rpp32f newCameraMatrix[9 * batchSize];
+                Rpp32f distortionCoeffs[8 * batchSize];
+
+                for (i = 0; i < batchSize; i++)
+                {
+                    cameraMatrix[9 * i] = newCameraMatrix[9 * i] = 534.07088364;
+                    cameraMatrix[9 * i + 1] =  newCameraMatrix[9 * i + 1] = 0;
+                    cameraMatrix[9 * i + 2] =  newCameraMatrix[9 * i + 2] = 341.53407554;
+                    cameraMatrix[9 * i + 3] = newCameraMatrix[9 * i + 3] = 0;
+                    cameraMatrix[9 * i + 4] = newCameraMatrix[9 * i + 4] = 534.11914595;
+                    cameraMatrix[9 * i + 5] = newCameraMatrix[9 * i + 5] = 232.94565259;
+                    cameraMatrix[9 * i + 6] = newCameraMatrix[9 * i + 6] = 0;
+                    cameraMatrix[9 * i + 7] = newCameraMatrix[9 * i + 7] = 0;
+                    cameraMatrix[9 * i + 8] = newCameraMatrix[9 * i + 8] = 1;
+
+                    distortionCoeffs[8 * i] = -0.29297164;
+                    distortionCoeffs[8 * i + 1] = 0.10770696;
+                    distortionCoeffs[8 * i + 2] = 0.00131038;
+                    distortionCoeffs[8 * i + 3] = -0.0000311;
+                    distortionCoeffs[8 * i + 4] = 0.0434798;
+                    distortionCoeffs[8 * i + 5] = 0;
+                    distortionCoeffs[8 * i + 6] = 0;
+                    distortionCoeffs[8 * i + 7] = 0;
+                }
+
+                RpptDescPtr tableDescPtr;
+                RpptDesc tableDesc;
+
+                tableDescPtr = &tableDesc;
+                tableDesc = srcDesc;
+                tableDescPtr->c = 1;
+                tableDescPtr->strides.nStride = srcDescPtr->h * srcDescPtr->w;
+                tableDescPtr->strides.hStride = srcDescPtr->w;
+                tableDescPtr->strides.wStride = tableDescPtr->strides.cStride = 1;
+
+                hipMemcpy(d_cameraMatrix, cameraMatrix, batchSize * 9 * sizeof(Rpp32f), hipMemcpyHostToDevice);
+                hipMemcpy(d_distortionCoeffs, distortionCoeffs, batchSize * 8 * sizeof(Rpp32f), hipMemcpyHostToDevice);
+
+                startWallTime = omp_get_wtime();
+                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    rppt_lens_correction_gpu(d_input, srcDescPtr, d_output, dstDescPtr, (Rpp32f *)d_rowRemapTable, (Rpp32f *)d_colRemapTable, tableDescPtr, d_cameraMatrix, d_distortionCoeffs, d_cameraMatrix, roiTensorPtrSrc, roiTypeSrc, handle);
                 else
                     missingFuncFlag = 1;
 
@@ -1268,6 +1325,8 @@ int main(int argc, char **argv)
     CHECK(hipFree(d_input));
     CHECK(hipFree(d_rowRemapTable));
     CHECK(hipFree(d_colRemapTable));
+    CHECK(hipFree(d_cameraMatrix));
+    CHECK(hipFree(d_distortionCoeffs));
     if(dualInputCase)
         CHECK(hipFree(d_input_second));
     CHECK(hipFree(d_output));
