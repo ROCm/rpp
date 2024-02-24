@@ -26,5 +26,7 @@ SOFTWARE.
 #define HOST_TENSOR_STATISTICAL_OPERATIONS_HPP
 
 #include "kernel/tensor_sum.hpp"
+#include "kernel/tensor_min.hpp"
+#include "kernel/tensor_max.hpp"
 
 #endif // HOST_TENSOR_STATISTICAL_OPERATIONS_HPP
