@@ -241,11 +241,49 @@ int main(int argc, char * argv[])
                 case 1:
                 {
                     testCaseName = "slice";
+                    Rpp32s anchorTensor[batchSize * 4];
+                    Rpp32s shapeTensor[batchSize * 4];
+                    Rpp32u roiTensor[batchSize * 8];
+                    bool enablePadding = false;
+                    auto fillValue = 0;
+
+                    if (descriptorPtr3D->layout == RpptLayout::NCDHW)
+                    {
+                        for(int i = 0; i < batchSize; i++)
+                        {
+                            int idx1 = i * 4;
+                            int idx2 = i * 8;
+                            roiTensor[idx2] = anchorTensor[idx1] = 0;
+                            roiTensor[idx2 + 1] = anchorTensor[idx1 + 1] = 0;
+                            roiTensor[idx2 + 2] = anchorTensor[idx1 + 2] = 0;
+                            roiTensor[idx2 + 3] = anchorTensor[idx1 + 3] = 0;
+                            roiTensor[idx2 + 4] = shapeTensor[idx1] = descriptorPtr3D->dims[1];
+                            roiTensor[idx2 + 5] = shapeTensor[idx1 + 1] = roiGenericSrcPtr[i].xyzwhdROI.roiDepth;
+                            roiTensor[idx2 + 6] = shapeTensor[idx1 + 2] = roiGenericSrcPtr[i].xyzwhdROI.roiHeight;
+                            roiTensor[idx2 + 7] = shapeTensor[idx1 + 3] = roiGenericSrcPtr[i].xyzwhdROI.roiWidth;
+                        }
+                    }
+                    else if(descriptorPtr3D->layout == RpptLayout::NDHWC)
+                    {
+                        for(int i = 0; i < batchSize; i++)
+                        {
+                            int idx1 = i * 4;
+                            int idx2 = i * 8;
+                            roiTensor[idx2] = anchorTensor[idx1] = 0;
+                            roiTensor[idx2 + 1] = anchorTensor[idx1 + 1] = 0;
+                            roiTensor[idx2 + 2] = anchorTensor[idx1 + 2] = 0;
+                            roiTensor[idx2 + 3] = anchorTensor[idx1 + 3] = 0;
+                            roiTensor[idx2 + 4] = shapeTensor[idx1] = roiGenericSrcPtr[i].xyzwhdROI.roiDepth;
+                            roiTensor[idx2 + 5] = shapeTensor[idx1 + 1] = roiGenericSrcPtr[i].xyzwhdROI.roiHeight;
+                            roiTensor[idx2 + 6] = shapeTensor[idx1 + 2] = roiGenericSrcPtr[i].xyzwhdROI.roiWidth;
+                            roiTensor[idx2 + 7] = shapeTensor[idx1 + 3] = descriptorPtr3D->dims[4];
+                        }
+                    }
                     startWallTime = omp_get_wtime();
                     if(inputBitDepth == 0)
-                        rppt_slice_host(inputU8, descriptorPtr3D, outputU8, descriptorPtr3D, roiGenericSrcPtr, roiTypeSrc, handle);
+                        rppt_slice_host(inputU8, descriptorPtr3D, outputU8, descriptorPtr3D, anchorTensor, shapeTensor, &fillValue, enablePadding, roiTensor, handle);
                     else if(inputBitDepth == 2)
-                        rppt_slice_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, roiGenericSrcPtr, roiTypeSrc, handle);
+                        rppt_slice_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, anchorTensor, shapeTensor, &fillValue, enablePadding, roiTensor, handle);
                     else
                         missingFuncFlag = 1;
 

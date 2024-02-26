@@ -146,6 +146,10 @@ int main(int argc, char * argv[])
     void *pinnedMemArgs;
     CHECK(hipHostMalloc(&pinnedMemArgs, 2 * noOfFiles * sizeof(Rpp32f)));
 
+    // arguments required for slice
+    Rpp32s *anchorTensor = NULL, *shapeTensor = NULL;
+    Rpp32u *roiTensor = NULL;
+
     // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
     // If numThreads value passed is 0, number of OpenMP threads used by RPP will be set to batch size
     Rpp32u numThreads = 0;
@@ -255,12 +259,52 @@ int main(int argc, char * argv[])
                 case 1:
                 {
                     testCaseName = "slice";
+                    if(anchorTensor == NULL)
+                        CHECK(hipHostMalloc(&anchorTensor, batchSize * 4 * sizeof(Rpp32s)));
+                    if(shapeTensor == NULL)
+                        CHECK(hipHostMalloc(&shapeTensor, batchSize * 4 * sizeof(Rpp32s)));
+                    if(roiTensor == NULL)
+                        CHECK(hipHostMalloc(&roiTensor, batchSize * 8 * sizeof(Rpp32u)));
+                    bool enablePadding = false;
+                    auto fillValue = 0;
+                    if (descriptorPtr3D->layout == RpptLayout::NCDHW)
+                    {
+                        for(int i = 0; i < batchSize; i++)
+                        {
+                            int idx1 = i * 4;
+                            int idx2 = i * 8;
+                            roiTensor[idx2] = anchorTensor[idx1] = 0;
+                            roiTensor[idx2 + 1] = anchorTensor[idx1 + 1] = 0;
+                            roiTensor[idx2 + 2] = anchorTensor[idx1 + 2] = 0;
+                            roiTensor[idx2 + 3] = anchorTensor[idx1 + 3] = 0;
+                            roiTensor[idx2 + 4] = shapeTensor[idx1] = descriptorPtr3D->dims[1];
+                            roiTensor[idx2 + 5] = shapeTensor[idx1 + 1] = roiGenericSrcPtr[i].xyzwhdROI.roiDepth;
+                            roiTensor[idx2 + 6] = shapeTensor[idx1 + 2] = roiGenericSrcPtr[i].xyzwhdROI.roiHeight;
+                            roiTensor[idx2 + 7] = shapeTensor[idx1 + 3] = roiGenericSrcPtr[i].xyzwhdROI.roiWidth;
+                        }
+                    }
+                    else if(descriptorPtr3D->layout == RpptLayout::NDHWC)
+                    {
+                        for(int i = 0; i < batchSize; i++)
+                        {
+                            int idx1 = i * 4;
+                            int idx2 = i * 8;
+                            roiTensor[idx2] = anchorTensor[idx1] = 0;
+                            roiTensor[idx2 + 1] = anchorTensor[idx1 + 1] = 0;
+                            roiTensor[idx2 + 2] = anchorTensor[idx1 + 2] = 0;
+                            roiTensor[idx2 + 3] = anchorTensor[idx1 + 3] = 0;
+                            roiTensor[idx2 + 4] = shapeTensor[idx1] = roiGenericSrcPtr[i].xyzwhdROI.roiDepth;
+                            roiTensor[idx2 + 5] = shapeTensor[idx1 + 1] = roiGenericSrcPtr[i].xyzwhdROI.roiHeight;
+                            roiTensor[idx2 + 6] = shapeTensor[idx1 + 2] = roiGenericSrcPtr[i].xyzwhdROI.roiWidth;
+                            roiTensor[idx2 + 7] = shapeTensor[idx1 + 3] = descriptorPtr3D->dims[4];
+                        }
+                    }
 
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0)
-                        rppt_slice_gpu(d_inputU8, descriptorPtr3D, d_outputU8, descriptorPtr3D, roiGenericSrcPtr, roiTypeSrc, handle);
+                        rppt_slice_gpu(d_inputU8, descriptorPtr3D, d_outputU8, descriptorPtr3D, anchorTensor, shapeTensor, &fillValue, enablePadding, roiTensor, handle);
                     else if(inputBitDepth == 2)
-                        rppt_slice_gpu(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, roiGenericSrcPtr, roiTypeSrc, handle);
+                        rppt_slice_gpu(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, anchorTensor, shapeTensor, &fillValue, enablePadding, roiTensor, handle);
                     else
                         missingFuncFlag = 1;
 
@@ -455,6 +499,12 @@ int main(int argc, char * argv[])
     CHECK(hipHostFree(pinnedMemArgs));
     CHECK(hipFree(d_inputF32));
     CHECK(hipFree(d_outputF32));
+    if(anchorTensor != NULL)
+        CHECK(hipHostFree(anchorTensor));
+    if(shapeTensor != NULL)
+        CHECK(hipHostFree(shapeTensor));
+    if(roiTensor != NULL)
+        CHECK(hipHostFree(roiTensor));
     if(inputBitDepth == 0)
     {
         if(inputU8 != NULL)
