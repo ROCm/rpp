@@ -30,7 +30,5 @@ SOFTWARE.
 #include "kernel/subtract_scalar.hpp"
 #include "kernel/multiply_scalar.hpp"
 #include "kernel/magnitude.hpp"
-#include "kernel/bitwise_and.hpp"
-#include "kernel/bitwise_or.hpp"
 
 #endif // HOST_TENSOR_ARITHMETIC_OPERATIONS_HPP

@@ -119,10 +119,12 @@ def func_group_finder(case_number):
         return "color_augmentations"
     elif case_number == 8 or case_number == 30 or case_number == 82 or case_number == 83 or case_number == 84:
         return "effects_augmentations"
-    elif case_number < 40:
+    elif case_number < 40 or case_number == 63:
         return "geometric_augmentations"
-    elif case_number < 69:
+    elif case_number < 62:
         return "arithmetic_operations"
+    elif case_number < 69:
+        return "logical_operations"
     elif case_number < 87:
         return "data_exchange_operations"
     elif case_number < 88:
@@ -594,6 +596,7 @@ elif (testType == 1 and qaMode == 0):
         "geometric_augmentations",
         "morphological_operations",
         "arithmetic_operations",
+        "logical_operations",
         "statistical_operations"
     ]
 

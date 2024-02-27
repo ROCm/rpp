@@ -165,8 +165,10 @@ def func_group_finder(case_number):
         return "filter_augmentations"
     elif case_number < 40:
         return "geometric_augmentations"
-    elif case_number < 69:
+    elif case_number < 62:
         return "arithmetic_operations"
+    elif case_number < 69:
+        return "logical_operations"
     elif case_number < 87:
         return "data_exchange_operations"
     elif case_number < 88:
@@ -631,6 +633,7 @@ if (testType == 1 and profilingOption == "NO"):
     "geometric_augmentations",
     "morphological_operations",
     "arithmetic_operations",
+    "logical_operations",
     "statistical_operations"
     ]
     for log_file in log_file_list:
