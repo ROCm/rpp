@@ -263,6 +263,9 @@ os.chdir(buildFolderPath + "/build")
 subprocess.run(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.run(["make", "-j16"], cwd=".")  # nosec
 
+# List of cases supported
+supportedCaseList = ['0', '1', '2', '3', '5']
+
 # Create folders based on testType and profilingOption
 if testType == 1 and profilingOption == "YES":
     os.makedirs(f"{dstPath}/Tensor_PKD3")
@@ -276,6 +279,8 @@ print("#########################################################################
 
 if testType == 0:
     for case in caseList:
+        if case not in supportedCaseList:
+            continue
         for layout in range(3):
             dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", func_group_finder)
             if qaMode == 0:
@@ -285,12 +290,16 @@ if testType == 0:
             run_unit_test(headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize)
 elif (testType == 1 and profilingOption == "NO"):
     for case in caseList:
+        if case not in supportedCaseList:
+            continue
         for layout in range(3):
             dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", func_group_finder)
             run_performance_test(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize)
 elif (testType == 1 and profilingOption == "YES"):
     NEW_FUNC_GROUP_LIST = [0, 1]
     for case in caseList:
+        if case not in supportedCaseList:
+            continue
         for layout in range(3):
             dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", func_group_finder)
             run_performance_test_with_profiler(loggingFolder, logFileLayout, dstPath, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize)
@@ -337,14 +346,14 @@ elif (testType == 1 and profilingOption == "YES"):
                         # Write into csv file
                         CASE_FILE_PATH = CASE_RESULTS_DIR + "/output_case" + str(CASE_NUM) + ".stats.csv"
                         print("CASE_FILE_PATH = " + CASE_FILE_PATH)
-                        fileCheck = case_file_check(CASE_FILE_PATH, TYPE, TENSOR_TYPE_LIST, new_file)
+                        fileCheck = case_file_check(CASE_FILE_PATH, TYPE, TENSOR_TYPE_LIST, new_file, d_counter)
                         if fileCheck == False:
                             continue
 
             new_file.close()
             subprocess.call(['chown', '{}:{}'.format(os.getuid(), os.getgid()), RESULTS_DIR + "/consolidated_results_" + TYPE + ".stats.csv"])  # nosec
         try:
-            generate_performance_reports(d_counter, TYPE_LIST)
+            generate_performance_reports(d_counter, TYPE_LIST, RESULTS_DIR)
 
         except ImportError:
             print("\nPandas not available! Results of GPU profiling experiment are available in the following files:\n" + \
@@ -356,7 +365,6 @@ elif (testType == 1 and profilingOption == "YES"):
             print("Unable to open results in " + RESULTS_DIR + "/consolidated_results_" + TYPE + ".stats.csv")
 
 # print the results of qa tests
-supportedCaseList = ['0', '1', '2', '3', '5']
 nonQACaseList = [] # Add cases present in supportedCaseList, but without QA support
 
 if qaMode and testType == 0:
@@ -365,7 +373,6 @@ if qaMode and testType == 0:
     if checkFile:
         print("---------------------------------- Results of QA Test - Tensor_voxel_hip ----------------------------------\n")
         print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList)
-    print("\n-------------------------------------------------------------------" + resultsInfo + "\n\n-------------------------------------------------------------------")
 
 layoutDict = {0:"PKD3", 1:"PLN3", 2:"PLN1"}
 if (testType == 0 and qaMode == 0): # Unit tests

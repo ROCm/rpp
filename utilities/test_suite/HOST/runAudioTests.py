@@ -178,6 +178,9 @@ os.chdir(buildFolderPath + "/build")
 subprocess.run(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.run(["make", "-j16"], cwd=".")    # nosec
 
+# List of cases supported
+supportedCaseList = ['0', '1', '2', '3']
+
 if testType == 0:
     if batchSize != 3:
         print("QA tests can only run with a batch size of 3.")
@@ -189,8 +192,7 @@ if testType == 0:
                 srcPath = scriptPath + "/../TEST_AUDIO_FILES/three_sample_multi_channel_src1"
             else:
                 srcPath = inFilePath
-        if int(case) < 0 or int(case) > 3:
-            print(f"Invalid case number {case}. Case number must be 0-3 range!")
+        if case not in supportedCaseList:
             continue
 
         run_unit_test(srcPath, case, numRuns, testType, batchSize, outFilePath)
@@ -201,14 +203,12 @@ else:
                 srcPath = scriptPath + "/../TEST_AUDIO_FILES/three_sample_multi_channel_src1"
             else:
                 srcPath = inFilePath
-        if int(case) < 0 or int(case) > 3:
-            print(f"Invalid case number {case}. Case number must be 0-3 range!")
+        if case not in supportedCaseList:
             continue
 
         run_performance_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath)
 
 # print the results of qa tests
-supportedCaseList = ['0', '1', '2', '3']
 nonQACaseList = [] # Add cases present in supportedCaseList, but without QA support
 
 if testType == 0:
@@ -217,7 +217,6 @@ if testType == 0:
     if checkFile:
         print("---------------------------------- Results of QA Test - Tensor_host_audio -----------------------------------\n")
         print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList)
-    print("\n-------------------------------------------------------------------" + resultsInfo + "\n\n-------------------------------------------------------------------")
 
 # Performance tests
 if (testType == 1):

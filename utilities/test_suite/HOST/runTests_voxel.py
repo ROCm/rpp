@@ -215,6 +215,9 @@ os.chdir(buildFolderPath + "/build")
 subprocess.run(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.run(["make", "-j16"], cwd=".")  # nosec
 
+# List of cases supported
+supportedCaseList = ['0', '1', '2', '3', '5']
+
 print("\n\n\n\n\n")
 print("##########################################################################################")
 print("Running all layout Inputs...")
@@ -223,6 +226,8 @@ print("#########################################################################
 bitDepths = [0, 2]
 if testType == 0:
     for case in caseList:
+        if case not in supportedCaseList:
+            continue
         for layout in range(3):
             dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "host", func_group_finder)
             if qaMode == 0:
@@ -232,12 +237,13 @@ if testType == 0:
             run_unit_test(headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize)
 else:
     for case in caseList:
+        if case not in supportedCaseList:
+            continue
         for layout in range(3):
             dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "host", func_group_finder)
             run_performance_test(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize)
 
 # print the results of qa tests
-supportedCaseList = ['0', '1', '2', '3', '5']
 nonQACaseList = [] # Add cases present in supportedCaseList, but without QA support
 
 if qaMode and testType == 0:

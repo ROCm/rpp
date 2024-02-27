@@ -37,6 +37,8 @@ ricapInFilePath = scriptPath + "/../TEST_IMAGES/three_images_150x150_src1"
 qaInputFile = scriptPath + "/../TEST_IMAGES/three_images_mixed_src1"
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
+caseMin = 0
+caseMax = 87
 
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list(preserveOutput):
@@ -74,14 +76,15 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
     print("--------------------------------")
     print("Running a New Functionality...")
     print("--------------------------------")
+    bitDepths = range(7)
+    outputFormatToggles = [0, 1]
     if qaMode:
-        maxBitdepth = 1
-    else:
-        maxBitdepth = 7
-    for bitDepth in range(maxBitdepth):
+        bitDepths = [0]
+        outputFormatToggles = [0]
+    for bitDepth in bitDepths:
         print("\n\n\nRunning New Bit Depth...\n-------------------------\n\n")
 
-        for outputFormatToggle in range(2):
+        for outputFormatToggle in outputFormatToggles:
             # There is no layout toggle for PLN1 case, so skip this case
             if layout == 2 and outputFormatToggle == 1:
                 continue
@@ -197,8 +200,8 @@ def rpp_test_suite_parser_and_validator():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_path1", type = str, default = inFilePath1, help = "Path to the input folder 1")
     parser.add_argument("--input_path2", type = str, default = inFilePath2, help = "Path to the input folder 2")
-    parser.add_argument("--case_start", type = int, default = 0, help = "Testing range starting case # - (0:87)")
-    parser.add_argument("--case_end", type = int, default = 87, help = "Testing range ending case # - (0:87)")
+    parser.add_argument("--case_start", type = int, default = caseMin, help = "Testing start case # - Range must be in [" + str(caseMin) + ":" + str(caseMax) + "]")
+    parser.add_argument("--case_end", type = int, default = caseMax, help = "Testing end case # - Range must be in [" + str(caseMin) + ":" + str(caseMax) + "]")
     parser.add_argument('--test_type', type = int, default = 0, help = "Type of Test - (0 = Unit tests / 1 = Performance tests)")
     parser.add_argument('--case_list', nargs = "+", help = "List of case numbers to list", required = False)
     parser.add_argument('--profiling', type = str , default = 'NO', help = 'Run with profiler? - (YES/NO)', required = False)
@@ -216,8 +219,8 @@ def rpp_test_suite_parser_and_validator():
     validate_path(qaInputFile)
 
     # validate the parameters passed by user
-    if ((args.case_start < 0 or args.case_start > 87) or (args.case_end < 0 or args.case_end > 87)):
-        print("Starting case# and Ending case# must be in the 0:87 range. Aborting!")
+    if ((args.case_start < caseMin or args.case_start > caseMax) or (args.case_end < caseMin or args.case_end > caseMax)):
+        print(f"Starting case# and Ending case# must be in the {caseMin}:{caseMax} range. Aborting!")
         exit(0)
     elif args.case_end < args.case_start:
         print("Ending case# must be greater than starting case#. Aborting!")
@@ -231,7 +234,7 @@ def rpp_test_suite_parser_and_validator():
     elif args.decoder_type < 0 or args.decoder_type > 1:
         print("Decoder Type must be in the 0/1 (0 = OpenCV / 1 = TurboJPEG). Aborting")
         exit(0)
-    elif args.case_list is not None and args.case_start > 0 and args.case_end < 87:
+    elif args.case_list is not None and args.case_start > caseMin and args.case_end < caseMax:
         print("Invalid input! Please provide only 1 option between case_list, case_start and case_end")
         exit(0)
     elif args.num_runs <= 0:
@@ -258,9 +261,9 @@ def rpp_test_suite_parser_and_validator():
         args.case_list = [str(x) for x in args.case_list]
     else:
         for case in args.case_list:
-            if int(case) < 0 or int(case) > 87:
-                 print("The case# must be in the 0:87 range!")
-                 exit(0)
+            if int(case) < caseMin or int(case) > caseMax:
+                print(f"Invalid case number {case}! Case number must be in the {caseMin}:{caseMax} range. Aborting!")
+                exit(0)
 
     return args
 
@@ -320,6 +323,9 @@ os.chdir(buildFolderPath + "/build")
 subprocess.run(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.run(["make", "-j16"], cwd=".")    # nosec
 
+# List of cases supported
+supportedCaseList = ['0', '1', '2', '4', '8', '13', '20', '21', '23', '29', '30', '31', '34', '36', '37', '38', '39', '45', '54', '61', '63', '70', '80', '82', '83', '84', '85', '86', '87']
+
 # Create folders based on testType and profilingOption
 if testType == 1 and profilingOption == "YES":
     os.makedirs(f"{dstPath}/Tensor_PKD3")
@@ -333,6 +339,8 @@ print("#########################################################################
 
 if(testType == 0):
     for case in caseList:
+        if case not in supportedCaseList:
+            continue
         if case == "82" and (("--input_path1" not in sys.argv and "--input_path2" not in sys.argv) or qaMode == 1):
             srcPath1 = ricapInFilePath
             srcPath2 = ricapInFilePath
@@ -340,9 +348,6 @@ if(testType == 0):
         if qaMode == 1 and case != "82":
             srcPath1 = inFilePath1
             srcPath2 = inFilePath2
-        if int(case) < 0 or int(case) > 87:
-            print(f"Invalid case number {case}. Case number must be in the range of 0 to 87!")
-            continue
         for layout in range(3):
             dstPathTemp, log_file_layout = process_layout(layout, qaMode, case, dstPath, "hip", func_group_finder)
 
@@ -358,8 +363,7 @@ if(testType == 0):
 else:
     if (testType == 1 and profilingOption == "NO"):
         for case in caseList:
-            if int(case) < 0 or int(case) > 87:
-                print(f"Invalid case number {case}. Case number must be in the range of 0 to 87!")
+            if case not in supportedCaseList:
                 continue
             if case == "82" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
                 srcPath1 = ricapInFilePath
@@ -373,8 +377,7 @@ else:
         NEW_FUNC_GROUP_LIST = [0, 15, 20, 29, 36, 40, 42, 49, 56, 65, 69]
 
         for case in caseList:
-            if int(case) < 0 or int(case) > 87:
-                print(f"Invalid case number {case}. Case number must be in the range of 0 to 87!")
+            if case not in supportedCaseList:
                 continue
             if case == "82" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
                 srcPath1 = ricapInFilePath
@@ -457,7 +460,7 @@ else:
                                 # Write into csv file
                                 CASE_FILE_PATH = CASE_RESULTS_DIR + "/output_case" + str(CASE_NUM) + "_bitDepth" + str(BIT_DEPTH) + "_oft" + str(OFT) + "_kernelSize" + str(KSIZE) + ".stats.csv"
                                 print("CASE_FILE_PATH = " + CASE_FILE_PATH)
-                                fileCheck = case_file_check(CASE_FILE_PATH)
+                                fileCheck = case_file_check(CASE_FILE_PATH, TYPE, TENSOR_TYPE_LIST, new_file, d_counter)
                                 if fileCheck == False:
                                     continue
                         elif (CASE_NUM == "24" or CASE_NUM == "21" or CASE_NUM == "23") and TYPE.startswith("Tensor"):
@@ -467,7 +470,7 @@ else:
                                 # Write into csv file
                                 CASE_FILE_PATH = CASE_RESULTS_DIR + "/output_case" + str(CASE_NUM) + "_bitDepth" + str(BIT_DEPTH) + "_oft" + str(OFT) + "_interpolationType" + str(INTERPOLATIONTYPE) + ".stats.csv"
                                 print("CASE_FILE_PATH = " + CASE_FILE_PATH)
-                                fileCheck = case_file_check(CASE_FILE_PATH)
+                                fileCheck = case_file_check(CASE_FILE_PATH, TYPE, TENSOR_TYPE_LIST, new_file, d_counter)
                                 if fileCheck == False:
                                     continue
                         elif (CASE_NUM == "8") and TYPE.startswith("Tensor"):
@@ -477,21 +480,21 @@ else:
                                 # Write into csv file
                                 CASE_FILE_PATH = CASE_RESULTS_DIR + "/output_case" + str(CASE_NUM) + "_bitDepth" + str(BIT_DEPTH) + "_oft" + str(OFT) + "_noiseType" + str(NOISETYPE) + ".stats.csv"
                                 print("CASE_FILE_PATH = " + CASE_FILE_PATH)
-                                fileCheck = case_file_check(CASE_FILE_PATH)
+                                fileCheck = case_file_check(CASE_FILE_PATH, TYPE, TENSOR_TYPE_LIST, new_file, d_counter)
                                 if fileCheck == False:
                                     continue
                         else:
                             # Write into csv file
                             CASE_FILE_PATH = CASE_RESULTS_DIR + "/output_case" + str(CASE_NUM) + "_bitDepth" + str(BIT_DEPTH) + "_oft" + str(OFT) + ".stats.csv"
                             print("CASE_FILE_PATH = " + CASE_FILE_PATH)
-                            fileCheck = case_file_check(CASE_FILE_PATH)
+                            fileCheck = case_file_check(CASE_FILE_PATH, TYPE, TENSOR_TYPE_LIST, new_file, d_counter)
                             if fileCheck == False:
                                 continue
 
             new_file.close()
             subprocess.call(['chown', '{}:{}'.format(os.getuid(), os.getgid()), RESULTS_DIR + "/consolidated_results_" + TYPE + ".stats.csv"])  # nosec
         try:
-            generate_performance_reports(d_counter, TYPE_LIST)
+            generate_performance_reports(d_counter, TYPE_LIST, RESULTS_DIR)
 
         except ImportError:
             print("\nPandas not available! Results of GPU profiling experiment are available in the following files:\n" + \
@@ -519,7 +522,6 @@ if (testType == 1 and profilingOption == "NO"):
         print_performance_tests_summary(log_file, functionality_group_list, numRuns)
 
 # print the results of qa tests
-supportedCaseList = ['0', '1', '2', '4', '8', '13', '20', '21', '23', '29', '30', '31', '34', '36', '37', '38', '39', '45', '54', '61', '63', '70', '80', '82', '83', '84', '85', '86', '87']
 nonQACaseList = ['8', '24', '54', '84'] # Add cases present in supportedCaseList, but without QA support
 
 if qaMode and testType == 0:
@@ -528,4 +530,3 @@ if qaMode and testType == 0:
     if checkFile:
         print("---------------------------------- Results of QA Test - Tensor_hip ----------------------------------\n")
         print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList)
-    print("\n-------------------------------------------------------------------" + resultsInfo + "\n\n-------------------------------------------------------------------")

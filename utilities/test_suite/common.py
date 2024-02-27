@@ -73,7 +73,7 @@ def validate_and_remove_folders(path, folder):
                 print("Directory not found:", folder_path)
 
 # Check if a case file exists and filter its contents based on certain conditions
-def case_file_check(CASE_FILE_PATH):
+def case_file_check(CASE_FILE_PATH, TYPE, TENSOR_TYPE_LIST, new_file, d_counter):
     try:
         case_file = open(CASE_FILE_PATH,'r')
         for line in case_file:
@@ -131,8 +131,9 @@ def create_layout_directories(dst_path, layout_dict):
         for folder in folder_list:
             os.rename(dst_path + '/' + folder, dst_path + '/' + current_layout +  '/' + folder)
 
-# Generate performance reports based on counters and a list of types
-def generate_performance_reports(d_counter, TYPE_LIST):
+# Read data from the logs generated from rocprof, process the data
+# and generate performance reports based on counters and a list of types
+def generate_performance_reports(d_counter, TYPE_LIST, RESULTS_DIR):
     import pandas as pd
     pd.options.display.max_rows = None
     # Generate performance report
