@@ -365,8 +365,8 @@ int main(int argc, char **argv)
     float *d_cameraMatrix, *d_distortionCoeffs;
     if(testCase == 26)
     {
-        hipMalloc(&d_cameraMatrix, images * 9 * sizeof(Rpp32f));
-        hipMalloc(&d_distortionCoeffs, images * 8 * sizeof(Rpp32f));
+        CHECK(hipMalloc(&d_cameraMatrix, batchSize * 9 * sizeof(Rpp32f)));
+        CHECK(hipMalloc(&d_distortionCoeffs, batchSize * 8 * sizeof(Rpp32f)));
     }
 
 
@@ -637,8 +637,8 @@ int main(int argc, char **argv)
                 tableDescPtr->strides.hStride = srcDescPtr->w;
                 tableDescPtr->strides.wStride = tableDescPtr->strides.cStride = 1;
 
-                hipMemcpy(d_cameraMatrix, cameraMatrix, batchSize * 9 * sizeof(Rpp32f), hipMemcpyHostToDevice);
-                hipMemcpy(d_distortionCoeffs, distortionCoeffs, batchSize * 8 * sizeof(Rpp32f), hipMemcpyHostToDevice);
+                CHECK(hipMemcpy(d_cameraMatrix, cameraMatrix, batchSize * 9 * sizeof(Rpp32f), hipMemcpyHostToDevice));
+                CHECK(hipMemcpy(d_distortionCoeffs, distortionCoeffs, batchSize * 8 * sizeof(Rpp32f), hipMemcpyHostToDevice));
 
                 startWallTime = omp_get_wtime();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
@@ -1320,13 +1320,19 @@ int main(int argc, char **argv)
     free(inputu8);
     free(inputu8Second);
     free(outputu8);
-    free(rowRemapTable);
-    free(colRemapTable);
+    if(testCase == 79)
+    {
+        free(rowRemapTable);
+        free(colRemapTable);
+    }
     CHECK(hipFree(d_input));
     CHECK(hipFree(d_rowRemapTable));
     CHECK(hipFree(d_colRemapTable));
-    CHECK(hipFree(d_cameraMatrix));
-    CHECK(hipFree(d_distortionCoeffs));
+    if(testCase == 26)
+    {
+        CHECK(hipFree(d_cameraMatrix));
+        CHECK(hipFree(d_distortionCoeffs));
+    }
     if(dualInputCase)
         CHECK(hipFree(d_input_second));
     CHECK(hipFree(d_output));

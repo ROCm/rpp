@@ -65,9 +65,9 @@ __global__ void compute_remap_tables_hip_tensor(float *rowRemapTable,
     float r2 = x2 + y2, _2xy = 2 * x * y;
     float kr = (1 + ((rCoeff[2] * r2 + rCoeff[1]) * r2 + rCoeff[0]) * r2) / (1 + ((rCoeff[5] * r2 + rCoeff[4]) * r2 + rCoeff[3]) *r2);
     float u = fx * (x * kr + tCoeff[0] *_2xy + tCoeff[1] * (r2 + 2 * x2)) + u0;
-    float v = fy * (y * kr + tCoeff[0] * (r2 + 2 * y2 ) + tCoeff[1] *_2xy) + v0;
-    *colRemapTableTemp = u;
-    *rowRemapTableTemp = v;
+    float v = fy * (y * kr + tCoeff[0] * (r2 + 2 * y2) + tCoeff[1] * _2xy) + v0;
+    *colRemapTableTemp = fminf(fmaxf(0.0, u), float(width - 1));
+    *rowRemapTableTemp = fminf(fmaxf(0.0, v), float(height - 1));;
 }
 
 // -------------------- Set 3 - Kernel Executors --------------------
@@ -86,17 +86,14 @@ RppStatus hip_exec_lens_correction_tensor(RpptDescPtr dstDescPtr,
     if (roiType == RpptRoiType::LTRB)
         hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
 
-    int localThreads_x = LOCAL_THREADS_X;
-    int localThreads_y = LOCAL_THREADS_Y;
-    int localThreads_z = LOCAL_THREADS_Z;
     int globalThreads_x = dstDescPtr->w;
     int globalThreads_y = dstDescPtr->h;
     int globalThreads_z = handle.GetBatchSize();
 
     float *inverseMatrix = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
     hipLaunchKernelGGL(get_inverse_hip,
-                       dim3(1, 1, ceil((float)globalThreads_z/localThreads_z)),
-                       dim3(1, 1, localThreads_z),
+                       dim3(1, 1, ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                       dim3(1, 1, LOCAL_THREADS_Z),
                        0,
                        handle.GetStream(),
                        (d_float9 *)cameraMatrix,
@@ -104,8 +101,8 @@ RppStatus hip_exec_lens_correction_tensor(RpptDescPtr dstDescPtr,
     hipDeviceSynchronize();
 
     hipLaunchKernelGGL(compute_remap_tables_hip_tensor,
-                       dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                       dim3(localThreads_x, localThreads_y, localThreads_z),
+                       dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                       dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                        0,
                        handle.GetStream(),
                        rowRemapTable,
