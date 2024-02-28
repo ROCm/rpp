@@ -94,7 +94,7 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
             }
             case 3:
             {
-                std::array<Rpp32u, 6> roi = {0, 0, 0, 3, 4, 16};
+                std::array<Rpp32u, 6> roi = {0, 0, 0, 50, 50, 8};
                 for(int i = 0, j = 0; i < batchSize ; i++, j += 6)
                     std::copy(roi.begin(), roi.end(), &roiTensor[j]);
                 break;
@@ -206,6 +206,17 @@ std::map<Rpp32s, Rpp32u> paramStrideMap2D =
     {3, 200}
 };
 
+std::map<Rpp32s, Rpp32u> paramStrideMap3D =
+{
+    {1, 0},
+    {2, 400},
+    {3, 800},
+    {4, 808},
+    {5, 3308},
+    {6, 3358},
+    {7, 3408}
+};
+
 // fill the mean and stddev values used for normalize
 void fill_mean_stddev_values(Rpp32u nDim, Rpp32u size,
                              Rpp32f *meanTensor, Rpp32f *stdDevTensor, bool qaMode,
@@ -213,17 +224,19 @@ void fill_mean_stddev_values(Rpp32u nDim, Rpp32u size,
 {
     if(qaMode)
     {
+        Rpp32u numValues, paramStride;
         switch(nDim)
         {
             case 2:
             {
-                Rpp32u numValues = 100 + 100 + 1;
-                std::vector<Rpp32f> paramBuf(numValues * 2);
-                Rpp32f *data = paramBuf.data();
-                read_data(data, nDim, 0, scriptPath, true);
-                Rpp32u paramStride = paramStrideMap2D[axisMask];
-                memcpy(meanTensor, data + paramStride, size * sizeof(Rpp32f));
-                memcpy(stdDevTensor, data + numValues + paramStride, size * sizeof(Rpp32f));
+                numValues = 100 + 100 + 1;
+                paramStride = paramStrideMap2D[axisMask];
+                break;
+            }
+            case 3:
+            {
+                numValues = 400 + 400 + 8 + 2500 + 50 + 50 + 1;
+                paramStride = paramStrideMap3D[axisMask];
                 break;
             }
             default:
@@ -232,6 +245,11 @@ void fill_mean_stddev_values(Rpp32u nDim, Rpp32u size,
                 exit(0);
             }
         }
+        std::vector<Rpp32f> paramBuf(numValues * 2);
+        Rpp32f *data = paramBuf.data();
+        read_data(data, nDim, 0, scriptPath, true);
+        memcpy(meanTensor, data + paramStride, size * sizeof(Rpp32f));
+        memcpy(stdDevTensor, data + numValues + paramStride, size * sizeof(Rpp32f));
     }
     else
     {
@@ -274,6 +292,8 @@ void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize, Rpp32u buf
             bool invalid_comparision = ((out[j] == 0.0f) && (ref[j] != 0.0f));
             if(!invalid_comparision && abs(out[j] - ref[j]) < 1e-4)
                 cnt++;
+            else
+                std::cout << std::setprecision(20) << "index, refVal, outVal: " << j << ", " << ref[j] << ", " << out[j] << std::endl;
         }
         if (cnt == sampleLength)
             fileMatch++;

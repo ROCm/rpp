@@ -181,7 +181,7 @@ int main(int argc, char **argv)
                 if(qaMode)
                 {
                     bool isMeanStd = !(computeMean && computeStddev); // when mean and stddev is passed from user
-                    compare_output(outputF32, nDim, batchSize, bufferSize, dst, funcName, axisMask, scriptPath);
+                    compare_output(outputF32, nDim, batchSize, bufferSize, dst, funcName, axisMask, scriptPath, isMeanStd);
                 }
                 break;
             }
