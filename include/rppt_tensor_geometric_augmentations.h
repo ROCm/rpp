@@ -499,7 +499,7 @@ RppStatus rppt_slice_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, 
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
  */
-RppStatus rppt_pixelate_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+RppStatus rppt_pixelate_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s pixelationIntensity, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 
 #ifdef GPU_SUPPORT
 /*! \brief pixelate augmentation on HIP backend for a NCHW/NHWC layout tensor
