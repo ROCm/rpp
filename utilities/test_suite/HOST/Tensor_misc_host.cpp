@@ -172,14 +172,17 @@ int main(int argc, char **argv)
                     stdDevTensor = (Rpp32f *)calloc(maxSize * batchSize, sizeof(Rpp32f));
 
                 if(!(computeMean && computeStddev))
-                    fill_mean_stddev_values(nDim, batchSize, size, meanTensor, stdDevTensor, qaMode);
+                    fill_mean_stddev_values(nDim, maxSize, meanTensor, stdDevTensor, qaMode, axisMask, scriptPath);
 
                 startWallTime = omp_get_wtime();
                 rppt_normalize_host(inputF32, srcDescriptorPtrND, outputF32, dstDescriptorPtrND, axisMask, meanTensor, stdDevTensor, computeMean, computeStddev, scale, shift, roiTensor, handle);
 
                 // compare outputs if qaMode is true
                 if(qaMode)
+                {
+                    bool isMeanStd = !(computeMean && computeStddev); // when mean and stddev is passed from user
                     compare_output(outputF32, nDim, batchSize, bufferSize, dst, funcName, axisMask, scriptPath);
+                }
                 break;
             }
             default:

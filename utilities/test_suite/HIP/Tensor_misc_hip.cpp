@@ -180,11 +180,11 @@ int main(int argc, char **argv)
 
                 if(!(computeMean && computeStddev))
                 {
-                    Rpp32f *meanTensorCPU = (Rpp32f *)malloc(maxSize * batchSize * sizeof(Rpp32f));
-                    Rpp32f *stdDevTensorCPU = (Rpp32f *)malloc(maxSize * batchSize * sizeof(Rpp32f));
-                    fill_mean_stddev_values(nDim, batchSize, size, meanTensorCPU, stdDevTensorCPU, qaMode);
-                    CHECK(hipMemcpy(meanTensor, meanTensorCPU, maxSize * batchSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
-                    CHECK(hipMemcpy(stdDevTensor, stdDevTensorCPU, maxSize * batchSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
+                    Rpp32f *meanTensorCPU = (Rpp32f *)malloc(maxSize * sizeof(Rpp32f));
+                    Rpp32f *stdDevTensorCPU = (Rpp32f *)malloc(maxSize * sizeof(Rpp32f));
+                    fill_mean_stddev_values(nDim, maxSize, meanTensorCPU, stdDevTensorCPU, qaMode, axisMask, scriptPath);
+                    CHECK(hipMemcpy(meanTensor, meanTensorCPU, maxSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
+                    CHECK(hipMemcpy(stdDevTensor, stdDevTensorCPU, maxSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
                     CHECK(hipDeviceSynchronize());
                     free(meanTensorCPU);
                     free(stdDevTensorCPU);
@@ -199,7 +199,8 @@ int main(int argc, char **argv)
                     CHECK(hipDeviceSynchronize());
                     CHECK(hipMemcpy(outputF32, d_outputF32, bufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
                     CHECK(hipDeviceSynchronize());
-                    compare_output(outputF32, nDim, batchSize, bufferSize, dst, funcName, axisMask, scriptPath);
+                    bool isMeanStd = !(computeMean && computeStddev); // when mean and stddev is passed from user
+                    compare_output(outputF32, nDim, batchSize, bufferSize, dst, funcName, axisMask, scriptPath, isMeanStd);
                 }
                 break;
             }

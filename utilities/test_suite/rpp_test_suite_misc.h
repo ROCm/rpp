@@ -45,24 +45,36 @@ void compute_strides(RpptGenericDescPtr descriptorPtr)
     }
 }
 
-string get_path(Rpp32u nDim, Rpp32u readType, string scriptPath)
+string get_path(Rpp32u nDim, Rpp32u readType, string scriptPath, bool isMeanStd = false)
 {
-    string type = "input";
-    if(readType == 1)
-        type = "output";
-    string fileName = std::to_string(nDim) + "d_" + type + ".bin";
-    string finalPath = scriptPath + "/../NORMALIZE/" + type + "/" + fileName;
+    string folderName, suffix;
+    if(readType == 0)
+    {
+        folderName = "input";
+        if(isMeanStd)
+            suffix = "mean_std";
+        else
+            suffix = "input";
+    }
+    else if(readType == 1)
+    {
+        folderName = "output";
+        suffix = "output";
+    }
+
+    string fileName = std::to_string(nDim) + "d_" + suffix + ".bin";
+    string finalPath = scriptPath + "/../NORMALIZE/" + folderName + "/" + fileName;
     return finalPath;
 }
 
-void read_data(Rpp32f *data, Rpp32u nDim, Rpp32u readType, string scriptPath)
+void read_data(Rpp32f *data, Rpp32u nDim, Rpp32u readType, string scriptPath, bool isMeanStd = false)
 {
     if(nDim != 2 && nDim != 3 && nDim != 4)
     {
         std::cout<<"\nGolden Inputs / Outputs are generated only for 2D/3D/4D data"<<std::endl;
         exit(0);
     }
-    string refPath = get_path(nDim, readType, scriptPath);
+    string refPath = get_path(nDim, readType, scriptPath, isMeanStd);
     read_bin_file(refPath, data);
 }
 
@@ -187,51 +199,31 @@ void set_generic_descriptor_layout(RpptGenericDescPtr srcDescriptorPtrND, RpptGe
     }
 }
 
+std::map<Rpp32s, Rpp32u> paramStrideMap2D =
+{
+    {1, 0},
+    {2, 100},
+    {3, 200}
+};
+
 // fill the mean and stddev values used for normalize
-void fill_mean_stddev_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u size, Rpp32f *meanTensor, Rpp32f *stdDevTensor, bool qaMode)
+void fill_mean_stddev_values(Rpp32u nDim, Rpp32u size,
+                             Rpp32f *meanTensor, Rpp32f *stdDevTensor, bool qaMode,
+                             int axisMask, string scriptPath)
 {
     if(qaMode)
     {
         switch(nDim)
         {
-            case 3:
+            case 2:
             {
-                for(int i = 0; i < batchSize * 16; i += 16)
-                {
-                    meanTensor[i] = 0.10044092854408704;
-                    meanTensor[i + 1] = 0.9923954479926445;
-                    meanTensor[i + 2] = 0.1463966240511576;
-                    meanTensor[i + 3] = 0.8511748753528452;
-                    meanTensor[i + 4] = 0.241989919160714;
-                    meanTensor[i + 5] = 0.724488856565572;
-                    meanTensor[i + 6] = 0.42082916847069873;
-                    meanTensor[i + 7] = 0.46859982127051925;
-                    meanTensor[i + 8] = 0.3775650937841545;
-                    meanTensor[i + 9] = 0.4495086677760334;
-                    meanTensor[i + 10] = 0.8382375156517684;
-                    meanTensor[i + 11] = 0.4477761580072823;
-                    meanTensor[i + 12] = 0.32061482730987134;
-                    meanTensor[i + 13] = 0.3844935131563223;
-                    meanTensor[i + 14] = 0.7987222326619818;
-                    meanTensor[i + 15] = 0.10494099481214858;
-
-                    stdDevTensor[i] = 0.23043620850364177;
-                    stdDevTensor[i + 1] = 0.1455208174769702;
-                    stdDevTensor[i + 2] = 0.8719780160981172;
-                    stdDevTensor[i + 3] = 0.414600410599096;
-                    stdDevTensor[i + 4] = 0.6735379720722622;
-                    stdDevTensor[i + 5] = 0.6898490355115773;
-                    stdDevTensor[i + 6] = 0.928227311970384;
-                    stdDevTensor[i + 7] = 0.2256026577060809;
-                    stdDevTensor[i + 8] = 0.06284357739269342;
-                    stdDevTensor[i + 9] = 0.5563155411432268;
-                    stdDevTensor[i + 10] = 0.21911684022872935;
-                    stdDevTensor[i + 11] = 0.3947508370853534;
-                    stdDevTensor[i + 12] = 0.7577237777839925;
-                    stdDevTensor[i + 13] = 0.8079874528633991;
-                    stdDevTensor[i + 14] = 0.21589143239793473;
-                    stdDevTensor[i + 15] = 0.7972578943669427;
-                }
+                Rpp32u numValues = 100 + 100 + 1;
+                std::vector<Rpp32f> paramBuf(numValues * 2);
+                Rpp32f *data = paramBuf.data();
+                read_data(data, nDim, 0, scriptPath, true);
+                Rpp32u paramStride = paramStrideMap2D[axisMask];
+                memcpy(meanTensor, data + paramStride, size * sizeof(Rpp32f));
+                memcpy(stdDevTensor, data + numValues + paramStride, size * sizeof(Rpp32f));
                 break;
             }
             default:
@@ -260,17 +252,21 @@ Rpp32u get_bin_size(Rpp32u nDim, Rpp32u readType, string scriptPath)
     return filesize;
 }
 
-void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize, Rpp32u bufferLength, string dst, string funcName, int axisMask, string scriptPath)
+void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize, Rpp32u bufferLength,
+                    string dst, string funcName, int axisMask, string scriptPath, bool isMeanStd = false)
 {
     Rpp32u goldenOutputLength = get_bin_size(nDim, 1, scriptPath);
     Rpp32f *refOutput = static_cast<Rpp32f *>(calloc(goldenOutputLength, 1));
     read_data(refOutput, nDim, 1, scriptPath);
+    int meanStdDevOutputStride = 0;
+    if(isMeanStd)
+        meanStdDevOutputStride = goldenOutputLength / (2 * sizeof(Rpp32f));
     int axisMaskStride = (axisMask - 1) * bufferLength;
     int sampleLength = bufferLength / batchSize;
     int fileMatch = 0;
     for(int i = 0; i < batchSize; i++)
     {
-        Rpp32f *ref = refOutput + axisMaskStride + i * sampleLength;
+        Rpp32f *ref = refOutput + meanStdDevOutputStride + axisMaskStride + i * sampleLength;
         Rpp32f *out = outputF32 + i * sampleLength;
         int cnt = 0;
         for(int j = 0; j < sampleLength; j++)
