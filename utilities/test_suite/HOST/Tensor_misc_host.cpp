@@ -125,11 +125,11 @@ int main(int argc, char **argv)
                 float scale = 1.0;
                 float shift = 0.0;
                 bool computeMean, computeStddev;
-                computeMean = computeStddev = 0;
+                computeMean = computeStddev = 1;
 
                 // read input data
                 if(qaMode)
-                    read_data(inputF32, nDim, 0,  bufferSize, batchSize, axisMask, scriptPath);
+                    read_data(inputF32, nDim, 0, scriptPath);
                 else
                 {
                     std::srand(0);
@@ -137,22 +137,22 @@ int main(int argc, char **argv)
                         inputF32[i] = (float)(std::rand() % 255);
                 }
 
-                if (qaMode && nDim == 3 && axisMask == 3 && (computeMean || computeStddev))
-                {
-                    std::cout<<"QA mode can only run with mean and stddev input from user when nDim is 3"<<std::endl;
-                    return -1;
-                }
-                else if(qaMode && nDim == 3 && axisMask != 3 && (!computeMean || !computeStddev))
-                {
-                    std::cout<<"QA mode can only run with internal mean and stddev when nDim is 3"<<std::endl;
-                    return -1;
-                }
+                // if (qaMode && nDim == 3 && axisMask == 3 && (computeMean || computeStddev))
+                // {
+                //     std::cout<<"QA mode can only run with mean and stddev input from user when nDim is 3"<<std::endl;
+                //     return -1;
+                // }
+                // else if(qaMode && nDim == 3 && axisMask != 3 && (!computeMean || !computeStddev))
+                // {
+                //     std::cout<<"QA mode can only run with internal mean and stddev when nDim is 3"<<std::endl;
+                //     return -1;
+                // }
 
-                if (qaMode && nDim == 4 && (!computeMean && !computeStddev))
-                {
-                    std::cout<<"QA mode can only run with internal mean and stddev when nDim is 4"<<std::endl;
-                    return -1;
-                }
+                // if (qaMode && nDim == 4 && (!computeMean && !computeStddev))
+                // {
+                //     std::cout<<"QA mode can only run with internal mean and stddev when nDim is 4"<<std::endl;
+                //     return -1;
+                // }
 
                 Rpp32u size = 1; // length of input tensors differ based on axisMask and nDim
                 Rpp32u maxSize = 1;
@@ -179,7 +179,7 @@ int main(int argc, char **argv)
 
                 // compare outputs if qaMode is true
                 if(qaMode)
-                    compare_output(outputF32, nDim, batchSize, dst, funcName, axisMask, scriptPath);
+                    compare_output(outputF32, nDim, batchSize, bufferSize, dst, funcName, axisMask, scriptPath);
                 break;
             }
             default:

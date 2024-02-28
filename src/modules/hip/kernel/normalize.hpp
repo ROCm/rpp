@@ -364,8 +364,10 @@ __global__ void compute_mean_2d_hip_tensor(float *srcPtr,
         d_float8 src_f8;
         rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);           // load 8 pixels to local memory
         if (id_x + 8 > width)
+        {
             for(int i = xDiff; i < 8; i++)
                 src_f8.f1[i] = 0.0f;                                            // local memory reset of invalid values (from the vectorized global load) to 0.0f
+        }
         src_f8.f4[0] += src_f8.f4[1];                                           // perform small work of vectorized float4 addition
         partialRowSum_smem[hipThreadIdx_x] = (src_f8.f1[0] +
                                               src_f8.f1[1] +
@@ -402,8 +404,10 @@ __global__ void compute_mean_2d_hip_tensor(float *srcPtr,
         d_float8 src_f8;
         rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);           // load 8 pixels to local memory
         if (id_x + 8 > width)
+        {
             for(int i = xDiff; i < 8; i++)
                 src_f8.f1[i] = 0.0f;                                            // local memory reset of invalid values (from the vectorized global load) to 0.0f
+        }
         src_f8.f4[0] += src_f8.f4[1];                                           // perform small work of vectorized float4 addition
         partialSumRowPtr_smem[hipThreadIdx_x] = (src_f8.f1[0] +
                                                 src_f8.f1[1] +
@@ -820,7 +824,7 @@ __global__ void compute_stddev_2d_hip_tensor(float *srcPtr,
         int xDiff = width - xAlignedLength;    // difference between roiWidth and alignedLength
         uint srcIdx = (id_z * srcStridesNH.x) + (id_y * srcStridesNH.y) + id_x;
 
-        uint paramIndex = id_z * maxParamVolume + id_x;
+        uint paramIndex = id_z * maxParamVolume + id_y;
         float mean = meanTensor[paramIndex];
         float4 mean_f4 = static_cast<float4>(mean);
 
@@ -830,8 +834,10 @@ __global__ void compute_stddev_2d_hip_tensor(float *srcPtr,
         rpp_hip_math_multiply8(&src_f8, &src_f8, &src_f8);
 
         if (id_x + 8 > width)
+        {
             for(int i = xDiff; i < 8; i++)
                 src_f8.f1[i] = 0.0f;                                            // local memory reset of invalid values (from the vectorized global load) to 0.0f
+        }
         src_f8.f4[0] += src_f8.f4[1];                                           // perform small work of vectorized float4 addition
         partialRowSum_smem[hipThreadIdx_x] = (src_f8.f1[0] +
                                               src_f8.f1[1] +
@@ -865,8 +871,7 @@ __global__ void compute_stddev_2d_hip_tensor(float *srcPtr,
         int xDiff = width - xAlignedLength;    // difference between roiWidth and alignedLength
         uint srcIdx = (id_z * srcStridesNH.x) + (id_y * srcStridesNH.y) + id_x;
 
-        uint paramIndex = id_z * maxParamVolume + id_x;
-        float mean = meanTensor[paramIndex];
+        float mean = meanTensor[id_z];
         float4 mean_f4 = static_cast<float4>(mean);
 
         d_float8 src_f8;
@@ -874,8 +879,10 @@ __global__ void compute_stddev_2d_hip_tensor(float *srcPtr,
         rpp_hip_math_subtract8_const(&src_f8, &src_f8, mean_f4);
         rpp_hip_math_multiply8(&src_f8, &src_f8, &src_f8);
         if (id_x + 8 > width)
+        {
             for(int i = xDiff; i < 8; i++)
                 src_f8.f1[i] = 0.0f;                                            // local memory reset of invalid values (from the vectorized global load) to 0.0f
+        }
         src_f8.f4[0] += src_f8.f4[1];                                           // perform small work of vectorized float4 addition
         partialSumRowPtr_smem[hipThreadIdx_x] = (src_f8.f1[0] +
                                                 src_f8.f1[1] +

@@ -194,9 +194,6 @@ def rpp_test_suite_parser_and_validator():
     elif args.batch_size <= 0:
         print("Batch size must be greater than 0. Aborting!")
         exit(0)
-    elif args.test_type == 0 and args.num_dims != 3:
-        print("Invalid Input! QA mode is supported only for num_dims = 3!")
-        exit(0)
     elif args.profiling != 'YES' and args.profiling != 'NO':
         print("Profiling option value must be either 'YES' or 'NO'.")
         exit(0)

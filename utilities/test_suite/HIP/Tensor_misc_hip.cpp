@@ -124,15 +124,15 @@ int main(int argc, char **argv)
             case 1:
             {
                 // Modify ROI to 4x5x7 when checking QA for axisMask = 6 alone(calls direct c code internally)
-                int axisMask = 3; // 3D HWC Channel normalize axes(0,1)
+                int axisMask = 1; // 3D HWC Channel normalize axes(0,1)
                 float scale = 1.0;
                 float shift = 0.0;
                 bool computeMean, computeStddev;
-                computeMean = computeStddev = 0;
+                computeMean = computeStddev = 1;
 
                 // read input data
                 if(qaMode)
-                    read_data(inputF32, nDim, 0,  bufferSize, batchSize, axisMask, scriptPath);
+                    read_data(inputF32, nDim, 0, scriptPath);
                 else
                 {
                     std::srand(0);
@@ -144,22 +144,22 @@ int main(int argc, char **argv)
                 CHECK(hipMemcpy(d_inputF32, (void *)inputF32, bufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
                 CHECK(hipDeviceSynchronize());
 
-                if (qaMode && nDim == 3 && axisMask == 3 && (computeMean || computeStddev))
-                {
-                    std::cout<<"QA mode can only run with mean and stddev input from user when nDim is 3"<<std::endl;
-                    return -1;
-                }
-                else if(qaMode && nDim == 3 && axisMask != 3 && (!computeMean || !computeStddev))
-                {
-                    std::cout<<"QA mode can only run with internal mean and stddev when nDim is 3"<<std::endl;
-                    return -1;
-                }
+                // if (qaMode && nDim == 3 && axisMask == 3 && (computeMean || computeStddev))
+                // {
+                //     std::cout<<"QA mode can only run with mean and stddev input from user when nDim is 3"<<std::endl;
+                //     return -1;
+                // }
+                // else if(qaMode && nDim == 3 && axisMask != 3 && (!computeMean || !computeStddev))
+                // {
+                //     std::cout<<"QA mode can only run with internal mean and stddev when nDim is 3"<<std::endl;
+                //     return -1;
+                // }
 
-                if (qaMode && nDim == 4 && (!computeMean && !computeStddev))
-                {
-                    std::cout<<"QA mode can only run with internal mean and stddev when nDim is 4"<<std::endl;
-                    return -1;
-                }
+                // if (qaMode && nDim == 4 && (!computeMean && !computeStddev))
+                // {
+                //     std::cout<<"QA mode can only run with internal mean and stddev when nDim is 4"<<std::endl;
+                //     return -1;
+                // }
 
                 Rpp32u size = 1; // length of input tensors differ based on axisMask and nDim
                 Rpp32u maxSize = 1;
@@ -199,7 +199,7 @@ int main(int argc, char **argv)
                     CHECK(hipDeviceSynchronize());
                     CHECK(hipMemcpy(outputF32, d_outputF32, bufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
                     CHECK(hipDeviceSynchronize());
-                    compare_output(outputF32, nDim, batchSize, dst, funcName, axisMask, scriptPath);
+                    compare_output(outputF32, nDim, batchSize, bufferSize, dst, funcName, axisMask, scriptPath);
                 }
                 break;
             }

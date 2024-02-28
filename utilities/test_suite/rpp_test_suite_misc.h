@@ -45,82 +45,25 @@ void compute_strides(RpptGenericDescPtr descriptorPtr)
     }
 }
 
-inline void remove_substring(string &str, string &pattern)
-{
-    std::string::size_type i = str.find(pattern);
-    while (i != std::string::npos)
-    {
-        str.erase(i, pattern.length());
-        i = str.find(pattern, i);
-   }
-}
-
 string get_path(Rpp32u nDim, Rpp32u readType, string scriptPath)
 {
-    string refPath = scriptPath + "/..";
-    string dim = std::to_string(nDim) + "d";
-    string finalPath = "";
-    if (readType == 0 || readType == 2 || readType == 3)
-        finalPath = refPath + "/NORMALIZE/input/" + dim;
-    else
-        finalPath = refPath + "/NORMALIZE/output/" + dim;
-
+    string type = "input";
+    if(readType == 1)
+        type = "output";
+    string fileName = std::to_string(nDim) + "d_" + type + ".bin";
+    string finalPath = scriptPath + "/../NORMALIZE/" + type + "/" + fileName;
     return finalPath;
 }
 
-Rpp32u get_buffer_length(Rpp32u nDim, int axisMask, string scriptPath)
+void read_data(Rpp32f *data, Rpp32u nDim, Rpp32u readType, string scriptPath)
 {
-    string dimSpecifier = std::to_string(nDim) + "d";
-    string refPath = get_path(nDim, 0, scriptPath);
-    string refFile;
-    if(axisMask != 6)
-        refFile = refPath + "/" + dimSpecifier + "_" + "input" + "_3x4x16.txt";
-    else
-        refFile = refPath + "/" + dimSpecifier + "_" + "input" + "_4x5x7.txt";
-    ifstream file(refFile);
-    Rpp32u bufferLength = std::count(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>(), '\n');
-    return bufferLength;
-}
-
-void read_data(Rpp32f *data, Rpp32u nDim, Rpp32u readType, Rpp32u bufferLength, Rpp32u batchSize, Rpp32u axisMask, string scriptPath)
-{
-    Rpp32u sampleLength = bufferLength / batchSize;
-    if(nDim != 3 && nDim != 4)
+    if(nDim != 2 && nDim != 3 && nDim != 4)
     {
-        std::cout<<"\nGolden Inputs / Outputs are generated only for 3D/4D data"<<std::endl;
+        std::cout<<"\nGolden Inputs / Outputs are generated only for 2D/3D/4D data"<<std::endl;
         exit(0);
     }
-
     string refPath = get_path(nDim, readType, scriptPath);
-    string dimSpecifier = std::to_string(nDim) + "d";
-    string type = "input";
-    if (readType == 1)
-        type = "output";
-
-    string refFilePath;
-    if (readType == 1)
-        refFilePath = refPath + "/" + dimSpecifier + "_axisMask" + std::to_string(axisMask) + ".txt";
-    else
-    {
-        if(axisMask != 6)
-            refFilePath = refPath + "/" + dimSpecifier + "_" + type + "_3x4x16.txt";
-        else
-            refFilePath = refPath + "/" + dimSpecifier + "_" + type + "_4x5x7.txt";
-    }
-    fstream refFile;
-    refFile.open(refFilePath, ios::in);
-    if(!refFile.is_open())
-    {
-        cout<<"Unable to open the file specified! Please check the path of the file given as input"<<endl;
-        exit(0);
-    }
-
-    for(int i = 0; i < batchSize; i++)
-    {
-        Rpp32f *curData = data + i * sampleLength;
-        for(int j = 0; j < sampleLength; j++)
-            refFile >> curData[j];
-    }
+    read_bin_file(refPath, data);
 }
 
 // Fill the starting indices and length of ROI values
@@ -130,6 +73,13 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
     {
         switch(nDim)
         {
+            case 2:
+            {
+                std::array<Rpp32u, 4> roi = {0, 0, 100, 100};
+                for(int i = 0, j = 0; i < batchSize ; i++, j += 4)
+                    std::copy(roi.begin(), roi.end(), &roiTensor[j]);
+                break;
+            }
             case 3:
             {
                 std::array<Rpp32u, 6> roi = {0, 0, 0, 3, 4, 16};
@@ -197,6 +147,12 @@ void set_generic_descriptor_layout(RpptGenericDescPtr srcDescriptorPtrND, RpptGe
     {
         switch(nDim)
         {
+            case 2:
+            {
+                srcDescriptorPtrND->layout = RpptLayout::NHWC;
+                dstDescriptorPtrND->layout = RpptLayout::NHWC;
+                break;
+            }
             case 3:
             {
                 srcDescriptorPtrND->layout = RpptLayout::NHWC;
@@ -295,16 +251,26 @@ void fill_mean_stddev_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u size, Rpp32f 
     }
 }
 
-void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize, string dst, string funcName, int axisMask, string scriptPath)
+Rpp32u get_bin_size(Rpp32u nDim, Rpp32u readType, string scriptPath)
 {
-    Rpp32u bufferLength = get_buffer_length(nDim, axisMask, scriptPath);
-    Rpp32f *refOutput = (Rpp32f *)calloc(bufferLength, sizeof(Rpp32f));
-    read_data(refOutput, nDim, 1, bufferLength, batchSize, axisMask, scriptPath);
+    string refFile = get_path(nDim, readType, scriptPath);
+    std::ifstream filestream(refFile, ios_base::in | ios_base::binary);
+    filestream.seekg(0, ios_base::end);
+    Rpp32u filesize = filestream.tellg();
+    return filesize;
+}
+
+void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize, Rpp32u bufferLength, string dst, string funcName, int axisMask, string scriptPath)
+{
+    Rpp32u goldenOutputLength = get_bin_size(nDim, 1, scriptPath);
+    Rpp32f *refOutput = static_cast<Rpp32f *>(calloc(goldenOutputLength, 1));
+    read_data(refOutput, nDim, 1, scriptPath);
+    int axisMaskStride = (axisMask - 1) * bufferLength;
     int sampleLength = bufferLength / batchSize;
     int fileMatch = 0;
     for(int i = 0; i < batchSize; i++)
     {
-        Rpp32f *ref = refOutput + i * sampleLength;
+        Rpp32f *ref = refOutput + axisMaskStride + i * sampleLength;
         Rpp32f *out = outputF32 + i * sampleLength;
         int cnt = 0;
         for(int j = 0; j < sampleLength; j++)

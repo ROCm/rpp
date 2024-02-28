@@ -145,9 +145,6 @@ def rpp_test_suite_parser_and_validator():
     elif args.batch_size <= 0:
         print("Batch size must be greater than 0. Aborting!")
         exit(0)
-    elif args.test_type == 0 and args.num_dims != 3:
-        print("Invalid Input! QA mode is supported only for num_dims = 3!")
-        exit(0)
 
     if args.case_list is None:
         args.case_list = range(args.case_start, args.case_end + 1)
