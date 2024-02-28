@@ -361,6 +361,8 @@ int main(int argc, char **argv)
     {
         CHECK(hipMalloc(&d_rowRemapTable, ioBufferSize * sizeof(Rpp32u)));
         CHECK(hipMalloc(&d_colRemapTable, ioBufferSize * sizeof(Rpp32u)));
+        CHECK(hipMemset(d_rowRemapTable, 0, ioBufferSize * sizeof(Rpp32u)));
+        CHECK(hipMemset(d_colRemapTable, 0, ioBufferSize * sizeof(Rpp32u)));
     }
     float *d_cameraMatrix, *d_distortionCoeffs;
     if(testCase == 26)
@@ -1021,7 +1023,6 @@ int main(int argc, char **argv)
                         }
                     }
                 }
-
                 CHECK(hipMemcpy(d_rowRemapTable, (void *)rowRemapTable, ioBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
                 CHECK(hipMemcpy(d_colRemapTable, (void *)colRemapTable, ioBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
 

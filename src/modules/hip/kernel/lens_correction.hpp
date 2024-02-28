@@ -61,13 +61,13 @@ __global__ void compute_remap_tables_hip_tensor(float *rowRemapTable,
     float yCamera = id_y * inverseMatrix.f1[4] + inverseMatrix.f1[5] + id_x * inverseMatrix.f1[3];
     float zCamera = id_y * inverseMatrix.f1[7] + inverseMatrix.f1[8] + id_x * inverseMatrix.f1[6];
     float z = 1./zCamera, x = xCamera * z, y = yCamera * z;
-    float x2 = x * x, y2 = y * y;
-    float r2 = x2 + y2, _2xy = 2 * x * y;
+    float xSquare = x * x, ySquare = y * y;
+    float r2 = xSquare + ySquare, xyMul2 = 2 * x * y;
     float kr = (1 + ((rCoeff[2] * r2 + rCoeff[1]) * r2 + rCoeff[0]) * r2) / (1 + ((rCoeff[5] * r2 + rCoeff[4]) * r2 + rCoeff[3]) *r2);
-    float u = fx * (x * kr + tCoeff[0] *_2xy + tCoeff[1] * (r2 + 2 * x2)) + u0;
-    float v = fy * (y * kr + tCoeff[0] * (r2 + 2 * y2) + tCoeff[1] * _2xy) + v0;
-    *colRemapTableTemp = fminf(fmaxf(0.0, u), float(width - 1));
-    *rowRemapTableTemp = fminf(fmaxf(0.0, v), float(height - 1));;
+    float colLoc = fx * (x * kr + tCoeff[0] * xyMul2 + tCoeff[1] * (r2 + 2 * xSquare)) + u0;
+    float rowLoc = fy * (y * kr + tCoeff[0] * (r2 + 2 * ySquare) + tCoeff[1] * xyMul2) + v0;
+    *colRemapTableTemp = colLoc;
+    *rowRemapTableTemp = rowLoc;
 }
 
 // -------------------- Set 3 - Kernel Executors --------------------
