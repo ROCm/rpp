@@ -186,6 +186,13 @@ inline void generate_gaussian_kernel_gpu(Rpp32f stdDev, Rpp32f* kernel, Rpp32u k
     }
 }
 
+// Retrieve Min and Max given a datatype
+
+inline void getImageBitDepthMinMax(uchar *srcPtr, float2 *bitDepthMinMax_f2) { *bitDepthMinMax_f2 = make_float2(0, 255); }
+inline void getImageBitDepthMinMax(float *srcPtr, float2 *bitDepthMinMax_f2) { *bitDepthMinMax_f2 = make_float2(0, 255); }
+inline void getImageBitDepthMinMax(half *srcPtr, float2 *bitDepthMinMax_f2) { *bitDepthMinMax_f2 = make_float2(0, 255); }
+inline void getImageBitDepthMinMax(schar *srcPtr, float2 *bitDepthMinMax_f2) { *bitDepthMinMax_f2 = make_float2(-128, 127); }
+
 /******************** DEVICE FUNCTIONS ********************/
 
 // -------------------- Set 0 - Range checks and Range adjustment --------------------
@@ -1561,6 +1568,20 @@ __device__ __forceinline__ void rpp_hip_load24_pkd3_to_int24_pln3(schar *srcPtr,
 }
 
 // /******************** DEVICE MATH HELPER FUNCTIONS ********************/
+
+// float8 min
+
+__device__ __forceinline__ void rpp_hip_math_min8(d_float8 *srcPtr_f8, float *dstPtr)
+{
+    *dstPtr = fminf(fminf(fminf(fminf(fminf(fminf(fminf(srcPtr_f8->f1[0], srcPtr_f8->f1[1]), srcPtr_f8->f1[2]), srcPtr_f8->f1[3]), srcPtr_f8->f1[4]), srcPtr_f8->f1[5]), srcPtr_f8->f1[6]), srcPtr_f8->f1[7]);
+}
+
+// float8 max
+
+__device__ __forceinline__ void rpp_hip_math_max8(d_float8 *srcPtr_f8, float *dstPtr)
+{
+    *dstPtr = fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(srcPtr_f8->f1[0], srcPtr_f8->f1[1]), srcPtr_f8->f1[2]), srcPtr_f8->f1[3]), srcPtr_f8->f1[4]), srcPtr_f8->f1[5]), srcPtr_f8->f1[6]), srcPtr_f8->f1[7]);
+}
 
 // d_float16 floor
 
