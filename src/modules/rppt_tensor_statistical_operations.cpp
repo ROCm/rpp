@@ -299,11 +299,59 @@ RppStatus rppt_normalize_gpu(RppPtr_t srcPtr,
                              rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
-    if ((srcGenericDescPtr->dataType == RpptDataType::F32) && (dstGenericDescPtr->dataType == RpptDataType::F32))
+    if ((srcGenericDescPtr->dataType == RpptDataType::U8) && (dstGenericDescPtr->dataType == RpptDataType::U8))
     {
-        hip_exec_normalize_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes),
+        hip_exec_normalize_tensor(static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes,
                                   srcGenericDescPtr,
-                                  (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
+                                  static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes,
+                                  dstGenericDescPtr,
+                                  axisMask,
+                                  meanTensor,
+                                  stdDevTensor,
+                                  computeMean,
+                                  computeStddev,
+                                  scale,
+                                  shift,
+                                  roiTensor,
+                                  rpp::deref(rppHandle));
+    }
+    else if ((srcGenericDescPtr->dataType == RpptDataType::F16) && (dstGenericDescPtr->dataType == RpptDataType::F16))
+    {
+        hip_exec_normalize_tensor(reinterpret_cast<half*>(static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes),
+                                  srcGenericDescPtr,
+                                  reinterpret_cast<half*>(static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
+                                  dstGenericDescPtr,
+                                  axisMask,
+                                  meanTensor,
+                                  stdDevTensor,
+                                  computeMean,
+                                  computeStddev,
+                                  scale,
+                                  shift,
+                                  roiTensor,
+                                  rpp::deref(rppHandle));
+    }
+    else if ((srcGenericDescPtr->dataType == RpptDataType::F32) && (dstGenericDescPtr->dataType == RpptDataType::F32))
+    {
+        hip_exec_normalize_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes),
+                                  srcGenericDescPtr,
+                                  reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
+                                  dstGenericDescPtr,
+                                  axisMask,
+                                  meanTensor,
+                                  stdDevTensor,
+                                  computeMean,
+                                  computeStddev,
+                                  scale,
+                                  shift,
+                                  roiTensor,
+                                  rpp::deref(rppHandle));
+    }
+    else if ((srcGenericDescPtr->dataType == RpptDataType::I8) && (dstGenericDescPtr->dataType == RpptDataType::I8))
+    {
+        hip_exec_normalize_tensor(static_cast<Rpp8s*>(srcPtr) + srcGenericDescPtr->offsetInBytes,
+                                  srcGenericDescPtr,
+                                  static_cast<Rpp8s*>(dstPtr) + dstGenericDescPtr->offsetInBytes,
                                   dstGenericDescPtr,
                                   axisMask,
                                   meanTensor,

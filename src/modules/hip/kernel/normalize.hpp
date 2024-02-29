@@ -10,21 +10,26 @@ __device__ __forceinline__ uint rpp_hip_mod(uint a, uint b)
     return (a % b);
 }
 
-__device__ uint compute_2d_paramindex(uint y, uint x, uint *paramShape, uint *paramStrides)
+__device__ __forceinline__ void normalize_check_and_store(float outVal, uchar* dst)
 {
-    uint yFactor =  ((paramShape[0] > 1)) ? (rpp_hip_mod(y, paramShape[0])) * paramStrides[0] : 0;
-    uint xFactor =  ((paramShape[1] > 1)) ? (rpp_hip_mod(x, paramShape[1])) * paramStrides[1] : 0;
-    uint paramIndex = yFactor + xFactor;
-    return paramIndex;
+    outVal = fmax(fminf(outVal, 255), 0);
+    *dst = static_cast<uchar>(outVal);
 }
 
-__device__ uint compute_3d_paramindex(uint z, uint y, uint x, uint *paramShape, uint *paramStrides)
+__device__ __forceinline__ void normalize_check_and_store(float outVal, schar* dst)
 {
-    uint zFactor =  ((paramShape[0] > 1)) ? rpp_hip_mod(z, paramShape[0]) * paramStrides[0] : 0;
-    uint yFactor =  ((paramShape[1] > 1)) ? rpp_hip_mod(y, paramShape[1]) * paramStrides[1] : 0;
-    uint xFactor =  ((paramShape[2] > 1)) ? rpp_hip_mod(x, paramShape[2]) * paramStrides[2] : 0;
-    uint paramIndex = zFactor + yFactor + xFactor;
-    return paramIndex;
+    outVal = fmax(fminf(outVal, 127), -128);
+    *dst = static_cast<schar>(outVal);
+}
+
+__device__ __forceinline__ void normalize_check_and_store(float outVal, float* dst)
+{
+    *dst = outVal;
+}
+
+__device__ __forceinline__ void normalize_check_and_store(float outVal, half* dst)
+{
+    *dst = static_cast<half>(outVal);
 }
 
 // -------------------- Set 1 - normalization kernel host helpers --------------------
@@ -83,9 +88,10 @@ void normalize_setup_nd(Rpp32u *roiTensor, Rpp32u batchSize, Rpp32u numDims, Rpp
 
 // -------------------- Set 2 - normalization kernels --------------------
 
-__global__ void normalize_2d_hip_tensor(float *srcPtr,
+template <typename T>
+__global__ void normalize_2d_hip_tensor(T *srcPtr,
                                         uint2 srcStridesNH,
-                                        float *dstPtr,
+                                        T *dstPtr,
                                         uint2 dstStridesNH,
                                         float *meanTensor,
                                         float *stdDevTensor,
@@ -128,7 +134,8 @@ __global__ void normalize_2d_hip_tensor(float *srcPtr,
     {
         invStdDev = (stdDev == 0.0f) ? 1.0f : (1.0f / stdDev);
     }
-    dstPtr[dstIdx] = fmaf((srcPtr[srcIdx] - mean), invStdDev, shift);
+    float outVal = fmaf((static_cast<float>(srcPtr[srcIdx]) - mean), invStdDev, shift);
+    normalize_check_and_store(outVal, &dstPtr[dstIdx]);
 }
 
 // __device__ void normalize_hip_compute(d_float8 *data_f8, d_float8 *mean_f8, d_float8 *invStdDev_f8, d_float8 *shift_f8)
@@ -212,9 +219,10 @@ __global__ void normalize_2d_hip_tensor(float *srcPtr,
 //     rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &data_f8);
 // }
 
-__global__ void normalize_3d_hip_tensor(float *srcPtr,
+template <typename T>
+__global__ void normalize_3d_hip_tensor(T *srcPtr,
                                         uint2 srcStridesDH,
-                                        float *dstPtr,
+                                        T *dstPtr,
                                         uint2 dstStridesDH,
                                         float *meanTensor,
                                         float *stdDevTensor,
@@ -266,13 +274,15 @@ __global__ void normalize_3d_hip_tensor(float *srcPtr,
     {
         invStdDev = (stdDev == 0.0f) ? 1.0f : (1.0f / stdDev);
     }
-    dstPtr[dstIdx] = fmaf((srcPtr[srcIdx] - mean), invStdDev, shift);
+    float outVal = fmaf((static_cast<float>(srcPtr[srcIdx]) - mean), invStdDev, shift);
+    normalize_check_and_store(outVal, &dstPtr[dstIdx]);
 }
 
-__global__ void normalize_nd_hip_tensor(float *srcPtr,
+template <typename T>
+__global__ void normalize_nd_hip_tensor(T *srcPtr,
                                         uint *srcMaxDims,
                                         uint *srcStrides,
-                                        float *dstPtr,
+                                        T *dstPtr,
                                         float *meanTensor,
                                         float *stdDevTensor,
                                         float scale,
@@ -318,7 +328,8 @@ __global__ void normalize_nd_hip_tensor(float *srcPtr,
     }
     uint srcIdx, dstIdx;
     srcIdx = dstIdx = id_z * maxBufferLength + id_x;
-    dstPtr[dstIdx] = fmaf((srcPtr[srcIdx] - mean), invStdDev, shift);
+    float outVal = fmaf((static_cast<float>(srcPtr[srcIdx]) - mean), invStdDev, shift);
+    normalize_check_and_store(outVal, &dstPtr[dstIdx]);
 }
 
 // -------------------- Set 3 - mean and stddev compute kernels device helpers --------------------
@@ -335,7 +346,8 @@ __device__ __forceinline__ void reduction_sum_x_hip(float *partialSum_smem)
 
 // -------------------- Set 4 - mean compute kernels (reduction stage 1) --------------------
 
-__global__ void compute_mean_2d_hip_tensor(float *srcPtr,
+template <typename T>
+__global__ void compute_mean_2d_hip_tensor(T *srcPtr,
                                            uint2 srcStridesNH,
                                            float *meanTensor,
                                            float *partialSumTensor,
@@ -366,7 +378,7 @@ __global__ void compute_mean_2d_hip_tensor(float *srcPtr,
             float accum = 0.0f;
             for(int i = 0; i < height; i++)
             {
-                accum += srcPtr[srcIdx];
+                accum += static_cast<float>(srcPtr[srcIdx]);
                 srcIdx += srcStridesNH.y;
             }
             meanTensor[dstIdx] = accum / static_cast<float>(height);
@@ -462,7 +474,8 @@ __global__ void compute_mean_2d_hip_tensor(float *srcPtr,
     }
 }
 
-__global__ void compute_mean_3d_hip_tensor(float *srcPtr,
+template <typename T>
+__global__ void compute_mean_3d_hip_tensor(T *srcPtr,
                                            uint3 srcStridesNZY,
                                            float *meanTensor,
                                            uint *roiTensor,
@@ -490,7 +503,7 @@ __global__ void compute_mean_3d_hip_tensor(float *srcPtr,
         float accum = 0.0f;
         for(uint i = 0; i < lengthZ; i++)
         {
-            accum += srcPtr[srcIdx];
+            accum += static_cast<float>(srcPtr[srcIdx]);
             srcIdx += srcStridesNZY.y;
         }
         meanTensor[dstIdx] = accum / static_cast<float>(lengthZ);
@@ -506,7 +519,7 @@ __global__ void compute_mean_3d_hip_tensor(float *srcPtr,
         float accum = 0.0f;
         for(uint i = 0; i < lengthY; i++)
         {
-            accum += srcPtr[srcIdx];
+            accum += static_cast<float>(srcPtr[srcIdx]);
             srcIdx += srcStridesNZY.z;
         }
         meanTensor[dstIdx] = accum / static_cast<float>(lengthY);
@@ -560,7 +573,7 @@ __global__ void compute_mean_3d_hip_tensor(float *srcPtr,
             }
 
             uint srcIdx = (id_z * srcStridesNZY.x) + (id_y * srcStridesNZY.y) + (id_x * srcStridesNZY.z) + x_index;                                           // perform small work of vectorized float4 addition
-            partialSumRowPtr_smem[hipThreadIdx_x] = srcPtr[srcIdx];                               // perform small work of reducing float4s to float using 16 x 16 threads and store in Shared
+            partialSumRowPtr_smem[hipThreadIdx_x] = static_cast<float>(srcPtr[srcIdx]);                               // perform small work of reducing float4s to float using 16 x 16 threads and store in Shared
             __syncthreads();                                                                      // syncthreads after Shared load
 
             // Reduction of 16 floats on 16 threads per block in x dimension (for every y dimension)
@@ -651,7 +664,7 @@ __global__ void compute_mean_3d_hip_tensor(float *srcPtr,
             uint srcIdx = (id_z * srcStridesNZY.x) + (i * srcStridesNZY.y) + (hipBlockIdx_x * srcStridesNZY.z);
             while (tid_x < lengthX)
             {
-                accum += srcPtr[srcIdx + tid_x];
+                accum += static_cast<float>(srcPtr[srcIdx + tid_x]);
                 tid_x += hipBlockDim_x;
             }
         }
@@ -725,7 +738,8 @@ __global__ void compute_mean_3d_hip_tensor(float *srcPtr,
     }
 }
 
-__global__ void compute_mean_nd_hip_tensor(float *srcPtr,
+template <typename T>
+__global__ void compute_mean_nd_hip_tensor(T *srcPtr,
                                            uint *srcMaxDims,
                                            uint *srcStrides,
                                            float *meanTensor,
@@ -759,7 +773,7 @@ __global__ void compute_mean_nd_hip_tensor(float *srcPtr,
                 return;
             paramIndex += (maxParamVolume > 1) ? (rpp_hip_mod(coord, paramShape[i]) * paramStrides[i]) : 0;
         }
-        atomicAdd(&meanTensor[paramBase + paramIndex], srcPtr[srcIdx]);
+        atomicAdd(&meanTensor[paramBase + paramIndex], static_cast<float>(srcPtr[srcIdx]));
     }
     else
     {
@@ -786,7 +800,7 @@ __global__ void compute_mean_nd_hip_tensor(float *srcPtr,
         __syncthreads();
 
         if(isValid && id_x < maxBufferLength)
-            atomicAdd(&sh_mem[paramIndex], srcPtr[srcIdx]);
+            atomicAdd(&sh_mem[paramIndex], static_cast<float>(srcPtr[srcIdx]));
         __syncthreads();
 
         if (hipThreadIdx_x < maxParamVolume)
@@ -796,7 +810,8 @@ __global__ void compute_mean_nd_hip_tensor(float *srcPtr,
 
 // -------------------- Set 5 - stddev compute kernels (reduction stage 1) --------------------
 
-__global__ void compute_stddev_2d_hip_tensor(float *srcPtr,
+template <typename T>
+__global__ void compute_stddev_2d_hip_tensor(T *srcPtr,
                                              uint2 srcStridesNH,
                                              float *meanTensor,
                                              float *stdDevTensor,
@@ -829,7 +844,7 @@ __global__ void compute_stddev_2d_hip_tensor(float *srcPtr,
             float accum = 0.0f;
             for(int i = 0; i < height; i++)
             {
-                float val = (srcPtr[srcIdx] - mean);
+                float val = (static_cast<float>(srcPtr[srcIdx]) - mean);
                 accum += (val * val);
                 srcIdx += srcStridesNH.y;
             }
@@ -938,7 +953,8 @@ __global__ void compute_stddev_2d_hip_tensor(float *srcPtr,
     }
 }
 
-__global__ void compute_stddev_3d_hip_tensor(float *srcPtr,
+template <typename T>
+__global__ void compute_stddev_3d_hip_tensor(T *srcPtr,
                                              uint3 srcStridesNZY,
                                              float *meanTensor,
                                              float *stdDevTensor,
@@ -968,7 +984,7 @@ __global__ void compute_stddev_3d_hip_tensor(float *srcPtr,
         float accum = 0.0f;
         for(uint i = 0; i < lengthZ; i++)
         {
-            float val = (srcPtr[srcIdx] - mean);
+            float val = (static_cast<float>(srcPtr[srcIdx]) - mean);
             accum += (val * val);
             srcIdx += srcStridesNZY.y;
         }
@@ -986,7 +1002,7 @@ __global__ void compute_stddev_3d_hip_tensor(float *srcPtr,
         float accum = 0.0f;
         for(uint i = 0; i < lengthY; i++)
         {
-            float val = (srcPtr[srcIdx] - mean);
+            float val = (static_cast<float>(srcPtr[srcIdx]) - mean);
             accum += (val * val);
             srcIdx += srcStridesNZY.z;
         }
@@ -1048,7 +1064,7 @@ __global__ void compute_stddev_3d_hip_tensor(float *srcPtr,
             uint paramIndex = id_z * maxParamVolume + x_index;
             float mean = meanTensor[paramIndex];
             uint srcIdx = (id_z * srcStridesNZY.x) + (id_y * srcStridesNZY.y) + (id_x * srcStridesNZY.z) + x_index;
-            float val = srcPtr[srcIdx] - mean;
+            float val = static_cast<float>(srcPtr[srcIdx]) - mean;
             partialSumRowPtr_smem[hipThreadIdx_x] = (val * val);
             __syncthreads();                                                                      // syncthreads after Shared load
 
@@ -1148,7 +1164,7 @@ __global__ void compute_stddev_3d_hip_tensor(float *srcPtr,
             uint srcIdx = (id_z * srcStridesNZY.x) + (i * srcStridesNZY.y) + (hipBlockIdx_x * srcStridesNZY.z);
             while (tid_x < lengthX)
             {
-                float val = (srcPtr[srcIdx + tid_x] - mean);
+                float val = (static_cast<float>(srcPtr[srcIdx + tid_x]) - mean);
                 accum += (val * val);
                 tid_x += hipBlockDim_x;
             }
@@ -1230,7 +1246,8 @@ __global__ void compute_stddev_3d_hip_tensor(float *srcPtr,
     }
 }
 
-__global__ void compute_stddev_nd_hip_tensor(float *srcPtr,
+template <typename T>
+__global__ void compute_stddev_nd_hip_tensor(T *srcPtr,
                                              uint *srcMaxDims,
                                              uint *srcStrides,
                                              float *meanTensor,
@@ -1265,7 +1282,7 @@ __global__ void compute_stddev_nd_hip_tensor(float *srcPtr,
                 return;
             paramIndex += (maxParamVolume > 1) ? (rpp_hip_mod(coord, paramShape[i]) * paramStrides[i]) : 0;
         }
-        float val = srcPtr[srcIdx] - meanTensor[paramBase + paramIndex];
+        float val = static_cast<float>(srcPtr[srcIdx]) - meanTensor[paramBase + paramIndex];
         atomicAdd(&stdDevTensor[paramBase + paramIndex], (val * val));
     }
     else
@@ -1294,7 +1311,7 @@ __global__ void compute_stddev_nd_hip_tensor(float *srcPtr,
 
         if(isValid && id_x < maxBufferLength)
         {
-            float val = srcPtr[srcIdx] - meanTensor[paramBase + paramIndex];
+            float val = static_cast<float>(srcPtr[srcIdx]) - meanTensor[paramBase + paramIndex];
             atomicAdd(&sh_mem[paramIndex], (val * val));
         }
         __syncthreads();
@@ -1571,7 +1588,8 @@ void set_kernel_launch_config_3d(RpptGenericDescPtr srcGenericDescPtr,
 
 // -------------------- Set 8 - mean and stddev compute kernels executor --------------------
 
-RppStatus hip_exec_compute_mean_stddev_tensor(Rpp32f *srcPtr,
+template <typename T>
+RppStatus hip_exec_compute_mean_stddev_tensor(T *srcPtr,
                                               RpptGenericDescPtr srcGenericDescPtr,
                                               Rpp32f *meanTensor,
                                               Rpp32f *stdDevTensor,
@@ -1848,9 +1866,10 @@ RppStatus hip_exec_compute_mean_stddev_tensor(Rpp32f *srcPtr,
 
 // -------------------- Set 9 - normalization kernel executor --------------------
 
-RppStatus hip_exec_normalize_tensor(Rpp32f *srcPtr,
+template <typename T>
+RppStatus hip_exec_normalize_tensor(T *srcPtr,
                                     RpptGenericDescPtr srcGenericDescPtr,
-                                    Rpp32f *dstPtr,
+                                    T *dstPtr,
                                     RpptGenericDescPtr dstGenericDescPtr,
                                     Rpp32u axisMask,
                                     Rpp32f *meanTensor,
