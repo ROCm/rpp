@@ -557,10 +557,11 @@ __global__ void compute_mean_3d_hip_tensor(float *srcPtr,
                 // Final store to dst
                 if (hipThreadIdx_y == 0)
                 {
-                    uint dstIdx = (id_z * srcStridesNZY.z * hipGridDim_y * hipGridDim_x) + (hipBlockIdx_y * hipGridDim_x + hipBlockIdx_x) + x_index;
+                    uint dstIdx = (id_z * srcStridesNZY.z * hipGridDim_y * hipGridDim_x) + (hipBlockIdx_y * hipGridDim_x + hipBlockIdx_x) + (x_index * hipGridDim_y * hipGridDim_x);
                     partialSumTensor[dstIdx] = partialSumRowPtr_smem[0];
                 }
             }
+            __syncthreads();
         }
     }
     // compute mean along y-x direction
@@ -1045,10 +1046,11 @@ __global__ void compute_stddev_3d_hip_tensor(float *srcPtr,
                 // Final store to dst
                 if (hipThreadIdx_y == 0)
                 {
-                    uint dstIdx = (id_z * srcStridesNZY.z * hipGridDim_y * hipGridDim_x) + (hipBlockIdx_y * hipGridDim_x + hipBlockIdx_x) + x_index;
+                    uint dstIdx = (id_z * srcStridesNZY.z * hipGridDim_y * hipGridDim_x) + (hipBlockIdx_y * hipGridDim_x + hipBlockIdx_x) + (x_index * hipGridDim_y * hipGridDim_x);
                     partialSumTensor[dstIdx] = partialSumRowPtr_smem[0];
                 }
             }
+            __syncthreads();
         }
     }
     // compute stddev along y-x direction
