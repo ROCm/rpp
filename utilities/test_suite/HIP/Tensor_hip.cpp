@@ -924,46 +924,9 @@ int main(int argc, char **argv)
                     break;
                 }
 
-                RpptDescPtr tableDescPtr;
-                RpptDesc tableDesc;
-
-                tableDescPtr = &tableDesc;
-                tableDesc = srcDesc;
-                tableDescPtr->c = 1;
-                tableDescPtr->strides.nStride = srcDescPtr->h * srcDescPtr->w;
-                tableDescPtr->strides.hStride = srcDescPtr->w;
-                tableDescPtr->strides.wStride = tableDescPtr->strides.cStride = 1;
-
-                for (Rpp32u count = 0; count < batchSize; count++)
-                {
-                    Rpp32f *rowRemapTableTemp, *colRemapTableTemp;
-                    rowRemapTableTemp = rowRemapTable + count * tableDescPtr->strides.nStride;
-                    colRemapTableTemp = colRemapTable + count * tableDescPtr->strides.nStride;
-                    Rpp32u halfWidth = roiTensorPtrSrc[count].xywhROI.roiWidth / 2;
-                    for (Rpp32u i = 0; i < roiTensorPtrSrc[count].xywhROI.roiHeight; i++)
-                    {
-                        Rpp32f *rowRemapTableTempRow, *colRemapTableTempRow;
-                        rowRemapTableTempRow = rowRemapTableTemp + i * tableDescPtr->strides.hStride;
-                        colRemapTableTempRow = colRemapTableTemp + i * tableDescPtr->strides.hStride;
-                        Rpp32u j = 0;
-                        for (; j < halfWidth; j++)
-                        {
-                            *rowRemapTableTempRow = i;
-                            *colRemapTableTempRow = halfWidth - j;
-
-                            rowRemapTableTempRow++;
-                            colRemapTableTempRow++;
-                        }
-                        for (; j < roiTensorPtrSrc[count].xywhROI.roiWidth; j++)
-                        {
-                            *rowRemapTableTempRow = i;
-                            *colRemapTableTempRow = j;
-
-                            rowRemapTableTempRow++;
-                            colRemapTableTempRow++;
-                        }
-                    }
-                }
+                RpptDesc tableDesc = srcDesc;
+                RpptDescPtr tableDescPtr = &tableDesc;
+                init_remap(tableDescPtr, srcDescPtr, roiTensorPtrSrc, rowRemapTable, colRemapTable);
 
                 CHECK(hipMemcpy(d_rowRemapTable, (void *)rowRemapTable, ioBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
                 CHECK(hipMemcpy(d_colRemapTable, (void *)colRemapTable, ioBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
