@@ -158,6 +158,10 @@ RppStatus rppt_down_mixing_host(RppPtr_t srcPtr,
 /******************** spectrogram ********************/
 
 RppStatus rppt_spectrogram_host(RppPtr_t srcPtr,
+                                RpptDescPtr srcDescPtr,
+                                RppPtr_t dstPtr,
+                                RpptDescPtr dstDescPtr,
+                                Rpp32s *srcLengthTensor,
                                 bool centerWindows,
                                 bool reflectPadding,
                                 Rpp32f *windowFunction,
