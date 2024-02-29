@@ -1,5 +1,7 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+MIT License
+
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -8,16 +10,16 @@ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 */
 
 #include "../rpp_test_suite_audio.h"
@@ -25,7 +27,7 @@ THE SOFTWARE.
 int main(int argc, char **argv)
 {
     // handle inputs
-    const int MIN_ARG_COUNT = 6;
+    const int MIN_ARG_COUNT = 7;
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
@@ -39,6 +41,7 @@ int main(int argc, char **argv)
     int numRuns = atoi(argv[4]);
     int batchSize = atoi(argv[5]);
     char *dst = argv[6];
+    string scriptPath = argv[7];
 
     // validation checks
     if (testType == 0 && batchSize != 3)
@@ -198,15 +201,68 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "down_mixing";
                     bool normalizeWeights = false;
+                    Rpp32s srcDimsTensor[batchSize * 2];
 
-                    for (int i = 0; i < batchSize; i++)
+                    for (int i = 0, j = 0; i < batchSize; i++, j += 2)
                     {
-                        srcDims[i].height = dstDims[i].height = srcLengthTensor[i];
-                        srcDims[i].width = dstDims[i].width = 1;
+                        srcDimsTensor[j] = srcLengthTensor[i];
+                        srcDimsTensor[j + 1] = channelsTensor[i];
+                        dstDims[i].height = srcLengthTensor[i];
+                        dstDims[i].width = 1;
                     }
 
                     startWallTime = omp_get_wtime();
-                    rppt_down_mixing_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcLengthTensor, channelsTensor, normalizeWeights, handle);
+                    rppt_down_mixing_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcDimsTensor, normalizeWeights, handle);
+
+                    break;
+                }
+                case 4:
+                {
+                    testCaseName = "spectrogram";
+                    bool centerWindows = true;
+                    bool reflectPadding = true;
+                    Rpp32f *windowFn = NULL;
+                    Rpp32s power = 2;
+                    Rpp32s windowLength = 320;
+                    Rpp32s windowStep = 160;
+                    Rpp32s nfft = 512;
+                    RpptSpectrogramLayout layout = RpptSpectrogramLayout::FT;
+
+                    int windowOffset = 0;
+                    if(!centerWindows)
+                        windowOffset = windowLength;
+
+                    maxDstWidth = 0;
+                    maxDstHeight = 0;
+                    if(layout == RpptSpectrogramLayout::FT)
+                    {
+                        for(int i = 0; i < noOfAudioFiles; i++)
+                        {
+                            dstDims[i].height = nfft / 2 + 1;
+                            dstDims[i].width = ((srcLengthTensor[i] - windowOffset) / windowStep) + 1;
+                            maxDstHeight = std::max(maxDstHeight, (int)dstDims[i].height);
+                            maxDstWidth = std::max(maxDstWidth, (int)dstDims[i].width);
+                        }
+                    }
+                    else
+                    {
+                        for(int i = 0; i < noOfAudioFiles; i++)
+                        {
+                            dstDims[i].height = ((srcLengthTensor[i] - windowOffset) / windowStep) + 1;
+                            dstDims[i].width = nfft / 2 + 1;
+                            maxDstHeight = std::max(maxDstHeight, (int)dstDims[i].height);
+                            maxDstWidth = std::max(maxDstWidth, (int)dstDims[i].width);
+                        }
+                    }
+
+                    set_audio_descriptor_dims_and_strides_nostriding(dstDescPtr, batchSize, maxDstHeight, maxDstWidth, maxDstChannels, offsetInBytes);
+
+                    // Set buffer sizes for src/dst
+                    unsigned long long spectrogramBufferSize = (unsigned long long)dstDescPtr->h * (unsigned long long)dstDescPtr->w * (unsigned long long)dstDescPtr->c * (unsigned long long)dstDescPtr->n;
+                    outputf32 = (Rpp32f *)realloc(outputf32, spectrogramBufferSize * sizeof(Rpp32f));
+
+                    startWallTime = omp_get_wtime();
+                    rppt_spectrogram_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcLengthTensor, centerWindows, reflectPadding, windowFn, nfft, power, windowLength, windowStep, layout, handle);
 
                     break;
                 }
@@ -326,7 +382,7 @@ int main(int argc, char **argv)
                 /* Run only if testCase is not 0
                 For testCase 0 verify_non_silent_region_detection function is used for QA testing */
                 if (testCase != 0)
-                    verify_output(outputf32, dstDescPtr, dstDims, testCaseName, audioNames, dst);
+                    verify_output(outputf32, dstDescPtr, dstDims, testCaseName, dst, scriptPath);
 
                 /* Dump the outputs to csv files for debugging
                 Runs only if
