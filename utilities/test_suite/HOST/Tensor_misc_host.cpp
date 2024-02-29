@@ -61,7 +61,7 @@ int main(int argc, char **argv)
     }
 
     // fill roi based on mode and number of dimensions
-    Rpp32u *roiTensor = (Rpp32u *)calloc(nDim * 2 * batchSize, sizeof(Rpp32u));
+    Rpp32u *roiTensor = static_cast<Rpp32u *>(calloc(nDim * 2 * batchSize, sizeof(Rpp32u)));
     fill_roi_values(nDim, batchSize, roiTensor, qaMode);
 
     // set src/dst generic tensor descriptors
@@ -148,10 +148,10 @@ int main(int argc, char **argv)
 
                 // allocate memory if no memory is allocated
                 if(meanTensor == nullptr)
-                    meanTensor = (Rpp32f *)calloc(maxSize * batchSize, sizeof(Rpp32f));
+                    meanTensor = static_cast<Rpp32f *>(calloc(maxSize * batchSize, sizeof(Rpp32f)));
 
                 if(stdDevTensor == nullptr)
-                    stdDevTensor = (Rpp32f *)calloc(maxSize * batchSize, sizeof(Rpp32f));
+                    stdDevTensor = static_cast<Rpp32f *>(calloc(maxSize * batchSize, sizeof(Rpp32f)));
 
                 if(!(computeMean && computeStddev))
                     fill_mean_stddev_values(nDim, maxSize, meanTensor, stdDevTensor, qaMode, axisMask, scriptPath);
