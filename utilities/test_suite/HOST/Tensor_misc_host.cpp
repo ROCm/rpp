@@ -99,8 +99,18 @@ int main(int argc, char **argv)
 
     // allocate memory for input / output
     Rpp32f *inputF32 = NULL, *outputF32 = NULL;
-    inputF32 = (Rpp32f *)calloc(bufferSize, sizeof(Rpp32f));
-    outputF32 = (Rpp32f *)calloc(bufferSize, sizeof(Rpp32f));
+    inputF32 = static_cast<Rpp32f *>(calloc(bufferSize, sizeof(Rpp32f)));
+    outputF32 = static_cast<Rpp32f *>(calloc(bufferSize, sizeof(Rpp32f)));
+
+    // read input data
+    if(qaMode)
+        read_data(inputF32, nDim, 0, scriptPath);
+    else
+    {
+        std::srand(0);
+        for(int i = 0; i < bufferSize; i++)
+            inputF32[i] = static_cast<float>(std::rand() % 255);
+    }
 
     // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
     // If numThreads value passed is 0, number of OpenMP threads used by RPP will be set to batch size
@@ -120,41 +130,13 @@ int main(int argc, char **argv)
         {
             case 1:
             {
-                // Modify ROI to 4x5x7 when checking QA for axisMask = 6 alone(calls direct c code internally)
-                int axisMask = 3; // 3D HWC Channel normalize axes(0,1)
+                int axisMask = 1;
                 float scale = 1.0;
                 float shift = 0.0;
                 bool computeMean, computeStddev;
                 computeMean = computeStddev = 1;
 
-                // read input data
-                if(qaMode)
-                    read_data(inputF32, nDim, 0, scriptPath);
-                else
-                {
-                    std::srand(0);
-                    for(int i = 0; i < bufferSize; i++)
-                        inputF32[i] = (float)(std::rand() % 255);
-                }
-
-                // if (qaMode && nDim == 3 && axisMask == 3 && (computeMean || computeStddev))
-                // {
-                //     std::cout<<"QA mode can only run with mean and stddev input from user when nDim is 3"<<std::endl;
-                //     return -1;
-                // }
-                // else if(qaMode && nDim == 3 && axisMask != 3 && (!computeMean || !computeStddev))
-                // {
-                //     std::cout<<"QA mode can only run with internal mean and stddev when nDim is 3"<<std::endl;
-                //     return -1;
-                // }
-
-                // if (qaMode && nDim == 4 && (!computeMean && !computeStddev))
-                // {
-                //     std::cout<<"QA mode can only run with internal mean and stddev when nDim is 4"<<std::endl;
-                //     return -1;
-                // }
-
-                Rpp32u size = 1; // length of input tensors differ based on axisMask and nDim
+                Rpp32u size = 1; // length of mean and stddev tensors differ based on axisMask and nDim
                 Rpp32u maxSize = 1;
                 for(int batch = 0; batch < batchSize; batch++)
                 {
@@ -180,8 +162,8 @@ int main(int argc, char **argv)
                 // compare outputs if qaMode is true
                 if(qaMode)
                 {
-                    bool isMeanStd = !(computeMean && computeStddev); // when mean and stddev is passed from user
-                    compare_output(outputF32, nDim, batchSize, bufferSize, dst, funcName, axisMask, scriptPath, isMeanStd);
+                    bool externalMeanStd = !(computeMean && computeStddev); // when mean and stddev is passed from user
+                    compare_output(outputF32, nDim, batchSize, bufferSize, dst, funcName, axisMask, scriptPath, externalMeanStd);
                 }
                 break;
             }

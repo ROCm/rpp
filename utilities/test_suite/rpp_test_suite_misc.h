@@ -69,9 +69,9 @@ string get_path(Rpp32u nDim, Rpp32u readType, string scriptPath, bool isMeanStd 
 
 void read_data(Rpp32f *data, Rpp32u nDim, Rpp32u readType, string scriptPath, bool isMeanStd = false)
 {
-    if(nDim != 2 && nDim != 3 && nDim != 4)
+    if(nDim != 2 && nDim != 3)
     {
-        std::cout<<"\nGolden Inputs / Outputs are generated only for 2D/3D/4D data"<<std::endl;
+        std::cout<<"\nGolden Inputs / Outputs are generated only for 2D/3D data"<<std::endl;
         exit(0);
     }
     string refPath = get_path(nDim, readType, scriptPath, isMeanStd);
@@ -99,12 +99,10 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
                     std::copy(roi.begin(), roi.end(), &roiTensor[j]);
                 break;
             }
-            case 4:
+            default:
             {
-                std::array<Rpp32u, 8> roi = {0, 0, 0, 0, 2, 3, 4, 5};
-                for(int i = 0, j = 0; i < batchSize ; i++, j += 8)
-                    std::copy(roi.begin(), roi.end(), &roiTensor[j]);
-                break;
+                cout << "Error! QA mode is supported only for 2D/3D inputs" << endl;
+                exit(0);
             }
         }
     }
@@ -128,7 +126,7 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
             }
             case 4:
             {
-                std::array<Rpp32u, 8> roi = {0, 0, 0, 0, 45, 20, 25, 10};
+                std::array<Rpp32u, 8> roi = {0, 0, 0, 0, 1, 128, 128, 128};
                 for(int i = 0, j = 0; i < batchSize ; i++, j += 8)
                     std::copy(roi.begin(), roi.end(), &roiTensor[j]);
                 break;
@@ -179,7 +177,7 @@ void set_generic_descriptor_layout(RpptGenericDescPtr srcDescriptorPtrND, RpptGe
             }
             default:
             {
-                cout << "Error! QA mode is supported only for 3/4 Dimension inputs" << endl;
+                cout << "Error! QA mode is supported only for 2D/3D inputs" << endl;
                 exit(0);
             }
         }
@@ -199,6 +197,7 @@ void set_generic_descriptor_layout(RpptGenericDescPtr srcDescriptorPtrND, RpptGe
     }
 }
 
+// strides used for jumping to corresponding axisMask mean and stddev
 std::map<Rpp32s, Rpp32u> paramStrideMap2D =
 {
     {1, 0},
@@ -206,6 +205,7 @@ std::map<Rpp32s, Rpp32u> paramStrideMap2D =
     {3, 200}
 };
 
+// strides used for jumping to corresponding axisMask mean and stddev
 std::map<Rpp32s, Rpp32u> paramStrideMap3D =
 {
     {1, 0},
@@ -218,9 +218,8 @@ std::map<Rpp32s, Rpp32u> paramStrideMap3D =
 };
 
 // fill the mean and stddev values used for normalize
-void fill_mean_stddev_values(Rpp32u nDim, Rpp32u size,
-                             Rpp32f *meanTensor, Rpp32f *stdDevTensor, bool qaMode,
-                             int axisMask, string scriptPath)
+void fill_mean_stddev_values(Rpp32u nDim, Rpp32u size, Rpp32f *meanTensor,
+                             Rpp32f *stdDevTensor, bool qaMode, int axisMask, string scriptPath)
 {
     if(qaMode)
     {
@@ -241,7 +240,7 @@ void fill_mean_stddev_values(Rpp32u nDim, Rpp32u size,
             }
             default:
             {
-                cout << "Error! QA mode is supported only for 3 Dimension inputs with mean and stddev read from user" << endl;
+                cout << "Error! QA mode is supported only for 2D/3D inputs" << endl;
                 exit(0);
             }
         }
@@ -292,8 +291,6 @@ void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize, Rpp32u buf
             bool invalid_comparision = ((out[j] == 0.0f) && (ref[j] != 0.0f));
             if(!invalid_comparision && abs(out[j] - ref[j]) < 1e-4)
                 cnt++;
-            else
-                std::cout << std::setprecision(20) << "index, refVal, outVal: " << j << ", " << ref[j] << ", " << out[j] << std::endl;
         }
         if (cnt == sampleLength)
             fileMatch++;

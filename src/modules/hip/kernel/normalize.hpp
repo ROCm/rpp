@@ -93,7 +93,8 @@ __global__ void normalize_2d_hip_tensor(float *srcPtr,
                                         float shift,
                                         uint *roiTensor,
                                         uint maxParamVolume,
-                                        uint axisMask)
+                                        uint axisMask,
+                                        bool computeStdDev)
 {
     uint id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x; // width
     uint id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y; // height
@@ -117,8 +118,16 @@ __global__ void normalize_2d_hip_tensor(float *srcPtr,
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x;
     float mean = meanTensor[paramIndex];
     float stdDev = stdDevTensor[paramIndex];
-    float stdDevSquare = stdDev * stdDev;
-    float invStdDev = stdDevSquare ? rsqrtf(stdDevSquare) * scale : 0;
+    float invStdDev;
+    if(computeStdDev)
+    {
+        float stdDevSquare = stdDev * stdDev;
+        invStdDev = stdDevSquare ? rsqrtf(stdDevSquare) * scale : 0;
+    }
+    else
+    {
+        invStdDev = (stdDev == 0.0f) ? 1.0f : (1.0f / stdDev);
+    }
     dstPtr[dstIdx] = fmaf((srcPtr[srcIdx] - mean), invStdDev, shift);
 }
 
@@ -213,7 +222,8 @@ __global__ void normalize_3d_hip_tensor(float *srcPtr,
                                         float shift,
                                         uint *roiTensor,
                                         uint maxParamVolume,
-                                        uint axisMask)
+                                        uint axisMask,
+                                        bool computeStdDev)
 {
     uint id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x; // lengthX
     uint id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y; // lengthY
@@ -246,8 +256,16 @@ __global__ void normalize_3d_hip_tensor(float *srcPtr,
     uint dstIdx = (id_z * dstStridesDH.x) + (id_y * dstStridesDH.y) + id_x;
     float mean = meanTensor[paramIndex];
     float stdDev = stdDevTensor[paramIndex];
-    float stdDevSquare = stdDev * stdDev;
-    float invStdDev = stdDevSquare ? rsqrtf(stdDevSquare) * scale : 0;
+    float invStdDev;
+    if(computeStdDev)
+    {
+        float stdDevSquare = stdDev * stdDev;
+        invStdDev = stdDevSquare ? rsqrtf(stdDevSquare) * scale : 0;
+    }
+    else
+    {
+        invStdDev = (stdDev == 0.0f) ? 1.0f : (1.0f / stdDev);
+    }
     dstPtr[dstIdx] = fmaf((srcPtr[srcIdx] - mean), invStdDev, shift);
 }
 
@@ -264,7 +282,8 @@ __global__ void normalize_nd_hip_tensor(float *srcPtr,
                                         uint *paramStridesTensor,
                                         uint maxParamVolume,
                                         uint numDims,
-                                        uint maxBufferLength)
+                                        uint maxBufferLength,
+                                        bool computeStdDev)
 {
     uint id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     uint id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
@@ -287,8 +306,16 @@ __global__ void normalize_nd_hip_tensor(float *srcPtr,
 
     float mean = meanTensor[paramIndex];
     float stdDev = stdDevTensor[paramIndex];
-    float stdDevSquare = stdDev * stdDev;
-    float invStdDev = stdDevSquare ? rsqrtf(stdDevSquare) * scale : 0;
+    float invStdDev;
+    if(computeStdDev)
+    {
+        float stdDevSquare = stdDev * stdDev;
+        invStdDev = stdDevSquare ? rsqrtf(stdDevSquare) * scale : 0;
+    }
+    else
+    {
+        invStdDev = (stdDev == 0.0f) ? 1.0f : (1.0f / stdDev);
+    }
     uint srcIdx, dstIdx;
     srcIdx = dstIdx = id_z * maxBufferLength + id_x;
     dstPtr[dstIdx] = fmaf((srcPtr[srcIdx] - mean), invStdDev, shift);
@@ -1888,7 +1915,8 @@ RppStatus hip_exec_normalize_tensor(Rpp32f *srcPtr,
                            shift,
                            roiTensor,
                            maxParamVolume,
-                           axisMask);
+                           axisMask,
+                           computeStdDev);
     }
     else if (numDims == 3)
     {
@@ -1914,7 +1942,8 @@ RppStatus hip_exec_normalize_tensor(Rpp32f *srcPtr,
                                shift,
                                &roiTensor[batchCount * 6 + 3],
                                maxParamVolume,
-                               axisMask);
+                               axisMask,
+                               computeStdDev);
         }
     }
     else
@@ -1948,7 +1977,8 @@ RppStatus hip_exec_normalize_tensor(Rpp32f *srcPtr,
                            paramStrides,
                            maxParamVolume,
                            numDims,
-                           srcGenericDescPtr->strides[0]);
+                           srcGenericDescPtr->strides[0],
+                           computeStdDev);
     }
 
     return RPP_SUCCESS;

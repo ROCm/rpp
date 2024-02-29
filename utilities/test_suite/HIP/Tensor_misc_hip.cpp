@@ -99,12 +99,26 @@ int main(int argc, char **argv)
 
     // allocate memory for input / output
     Rpp32f *inputF32 = NULL, *outputF32 = NULL;
-    inputF32 = (Rpp32f *)calloc(bufferSize, sizeof(Rpp32f));
-    outputF32 = (Rpp32f *)calloc(bufferSize, sizeof(Rpp32f));
+    inputF32 = static_cast<Rpp32f *>(calloc(bufferSize, sizeof(Rpp32f)));
+    outputF32 = static_cast<Rpp32f *>(calloc(bufferSize, sizeof(Rpp32f)));
 
     void *d_inputF32, *d_outputF32;
     CHECK(hipMalloc(&d_inputF32, bufferSize * sizeof(Rpp32f)));
     CHECK(hipMalloc(&d_outputF32, bufferSize * sizeof(Rpp32f)));
+
+    // read input data
+    if(qaMode)
+        read_data(inputF32, nDim, 0, scriptPath);
+    else
+    {
+        std::srand(0);
+        for(int i = 0; i < bufferSize; i++)
+            inputF32[i] = static_cast<float>((std::rand() % 255));
+    }
+
+    // copy data from HOST to HIP
+    CHECK(hipMemcpy(d_inputF32, inputF32, bufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
+    CHECK(hipDeviceSynchronize());
 
     rppHandle_t handle;
     hipStream_t stream;
@@ -112,6 +126,7 @@ int main(int argc, char **argv)
     rppCreateWithStreamAndBatchSize(&handle, stream, batchSize);
 
     Rpp32f *meanTensor = nullptr, *stdDevTensor = nullptr;
+    Rpp32f *meanTensorCPU = nullptr, *stdDevTensorCPU = nullptr;
     double startWallTime, endWallTime;
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0, wallTime = 0;
 
@@ -123,45 +138,13 @@ int main(int argc, char **argv)
         {
             case 1:
             {
-                // Modify ROI to 4x5x7 when checking QA for axisMask = 6 alone(calls direct c code internally)
-                int axisMask = 1; // 3D HWC Channel normalize axes(0,1)
+                int axisMask = 1;
                 float scale = 1.0;
                 float shift = 0.0;
                 bool computeMean, computeStddev;
                 computeMean = computeStddev = 1;
 
-                // read input data
-                if(qaMode)
-                    read_data(inputF32, nDim, 0, scriptPath);
-                else
-                {
-                    std::srand(0);
-                    for(int i = 0; i < bufferSize; i++)
-                        inputF32[i] = (float)(std::rand() % 255);
-                }
-
-                // copy data from HOST to HIP
-                CHECK(hipMemcpy(d_inputF32, (void *)inputF32, bufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
-                CHECK(hipDeviceSynchronize());
-
-                // if (qaMode && nDim == 3 && axisMask == 3 && (computeMean || computeStddev))
-                // {
-                //     std::cout<<"QA mode can only run with mean and stddev input from user when nDim is 3"<<std::endl;
-                //     return -1;
-                // }
-                // else if(qaMode && nDim == 3 && axisMask != 3 && (!computeMean || !computeStddev))
-                // {
-                //     std::cout<<"QA mode can only run with internal mean and stddev when nDim is 3"<<std::endl;
-                //     return -1;
-                // }
-
-                // if (qaMode && nDim == 4 && (!computeMean && !computeStddev))
-                // {
-                //     std::cout<<"QA mode can only run with internal mean and stddev when nDim is 4"<<std::endl;
-                //     return -1;
-                // }
-
-                Rpp32u size = 1; // length of input tensors differ based on axisMask and nDim
+                Rpp32u size = 1; // length of mean and stddev tensors differ based on axisMask and nDim
                 Rpp32u maxSize = 1;
                 for(int batch = 0; batch < batchSize; batch++)
                 {
@@ -180,14 +163,14 @@ int main(int argc, char **argv)
 
                 if(!(computeMean && computeStddev))
                 {
-                    Rpp32f *meanTensorCPU = (Rpp32f *)malloc(maxSize * sizeof(Rpp32f));
-                    Rpp32f *stdDevTensorCPU = (Rpp32f *)malloc(maxSize * sizeof(Rpp32f));
+                    if(meanTensorCPU == nullptr)
+                        meanTensorCPU = static_cast<Rpp32f *>(malloc(maxSize * sizeof(Rpp32f)));
+                    if(stdDevTensorCPU == nullptr)
+                        stdDevTensorCPU = static_cast<Rpp32f *>(malloc(maxSize * sizeof(Rpp32f)));
                     fill_mean_stddev_values(nDim, maxSize, meanTensorCPU, stdDevTensorCPU, qaMode, axisMask, scriptPath);
                     CHECK(hipMemcpy(meanTensor, meanTensorCPU, maxSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
                     CHECK(hipMemcpy(stdDevTensor, stdDevTensorCPU, maxSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
                     CHECK(hipDeviceSynchronize());
-                    free(meanTensorCPU);
-                    free(stdDevTensorCPU);
                 }
 
                 startWallTime = omp_get_wtime();
@@ -199,8 +182,8 @@ int main(int argc, char **argv)
                     CHECK(hipDeviceSynchronize());
                     CHECK(hipMemcpy(outputF32, d_outputF32, bufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
                     CHECK(hipDeviceSynchronize());
-                    bool isMeanStd = !(computeMean && computeStddev); // when mean and stddev is passed from user
-                    compare_output(outputF32, nDim, batchSize, bufferSize, dst, funcName, axisMask, scriptPath, isMeanStd);
+                    bool externalMeanStd = !(computeMean && computeStddev); // when mean and stddev is passed from user
+                    compare_output(outputF32, nDim, batchSize, bufferSize, dst, funcName, axisMask, scriptPath, externalMeanStd);
                 }
                 break;
             }
@@ -242,6 +225,10 @@ int main(int argc, char **argv)
         CHECK(hipFree(meanTensor));
     if(stdDevTensor != nullptr)
         CHECK(hipFree(stdDevTensor));
+    if(meanTensorCPU != nullptr)
+        free(meanTensorCPU);
+    if(stdDevTensorCPU != nullptr)
+        free(stdDevTensorCPU);
 
     return 0;
 }
