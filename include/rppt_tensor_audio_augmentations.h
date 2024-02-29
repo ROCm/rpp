@@ -134,6 +134,29 @@ RppStatus rppt_down_mixing_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_
  */
 RppStatus rppt_spectrogram_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcLengthTensor, bool centerWindows, bool reflectPadding, Rpp32f *windowFunction, Rpp32s nfft, Rpp32s power, Rpp32s windowLength, Rpp32s windowStep, RpptSpectrogramLayout layout, rppHandle_t rppHandle);
 
+/******************** mel_filter_bank ********************/
+
+/*! \brief Mel_filter_bank augmentation HOST
+* \details Mel_filter_bank augmentation for audio data
+* \param[in] srcPtr source tensor memory
+* \param[in] srcDescPtr source tensor descriptor
+* \param[out] dstPtr destination tensor memory
+* \param[in] dstDescPtr destination tensor descriptor
+* \param[in] srcDims source dimensions
+* \param[in] maxFreq maximum frequency if not provided maxFreq = sampleRate / 2
+* \param[in] minFreq minimum frequency
+* \param[in] melFormula formula used to convert frequencies from hertz to mel and from mel to hertz (SLANEY / HTK)
+* \param[in] numFilter number of mel filters
+* \param[in] sampleRate sampling rate of the audio
+* \param[in] normalize boolean variable that determine whether to normalize weights / not
+* \param[in] rppHandle HIP-handle for "_gpu" variants and Host-handle for "_host" variants
+* \return A <tt> \ref RppStatus</tt> enumeration.
+* \retval RPP_SUCCESS Successful completion.
+* \retval RPP_ERROR* Unsuccessful completion.
+*/
+
+RppStatus rppt_mel_filter_bank_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr srcDims, Rpp32f maxFreq, Rpp32f minFreq, RpptMelScaleFormula melFormula, Rpp32s numFilter, Rpp32f sampleRate, bool normalize, rppHandle_t rppHandle);
+
 #ifdef __cplusplus
 }
 #endif

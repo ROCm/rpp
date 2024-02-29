@@ -266,6 +266,97 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 4:
+                {
+                    testCaseName = "slice_audio";
+
+                    Rpp32f fillValues[batchSize];
+                    Rpp32s srcDimsTensor[batchSize * 2];
+                    Rpp32f anchor[batchSize];
+                    Rpp32f shape[batchSize];
+                    Rpp32s axes[2]; // to be changed based on audio dimensions.
+
+                    // 1D slice arguments
+                    for (int i = 0, j = i * 2; i < batchSize; i++, j += 2)
+                    {
+                        srcDimsTensor[j] = srcLengthTensor[i];
+                        dstDims[i].height = 1;
+                        srcDimsTensor[j + 1] = 1;
+                        shape[i] =  dstDims[i].width = 200;
+                        anchor[i] = 100;
+                    }
+                    fillValues[0] = 0.0f;
+                    axes[0] = 0;
+                    axes[1] = 1;
+
+                    startWallTime = omp_get_wtime();
+                    rppt_slice_audio_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcDimsTensor, anchor, shape, axes, fillValues, handle);
+
+                    break;
+                }
+                case 5:
+                {
+                    testCaseName = "mel_filter_bank";
+
+                    Rpp32f sampleRate = 16000;
+                    Rpp32f minFreq = 0.0;
+                    Rpp32f maxFreq = sampleRate / 2;
+                    RpptMelScaleFormula melFormula = RpptMelScaleFormula::SLANEY;
+                    Rpp32s numFilter = 80;
+                    bool normalize = true;
+
+                    for (int i = 0; i < batchSize; i++)
+                    {
+                        srcDims[i].height = dstDims[i].height = srcLengthTensor[i];
+                        srcDims[i].width = dstDims[i].width = 1;
+                    }
+
+                    // Read source dimension
+                    read_from_text_files(inputf32, srcDescPtr, srcDims, "spectrogram", 1, audioNames);
+
+                    maxDstHeight = 0;
+                    maxDstWidth = 0;
+                    maxSrcHeight = 0;
+                    maxSrcWidth = 0;
+                    for(int i = 0; i < batchSize; i++)
+                    {
+                        maxSrcHeight = std::max(maxSrcHeight, (int)srcDims[i].height);
+                        maxSrcWidth = std::max(maxSrcWidth, (int)srcDims[i].width);
+                        dstDims[i].height = numFilter;
+                        dstDims[i].width = srcDims[i].width;
+                        maxDstHeight = std::max(maxDstHeight, (int)dstDims[i].height);
+                        maxDstWidth = std::max(maxDstWidth, (int)dstDims[i].width);
+                    }
+
+                    srcDescPtr->h = maxSrcHeight;
+                    srcDescPtr->w = maxSrcWidth;
+                    dstDescPtr->h = maxDstHeight;
+                    dstDescPtr->w = maxDstWidth;
+
+                    srcDescPtr->strides.nStride = srcDescPtr->c * srcDescPtr->w * srcDescPtr->h;
+                    srcDescPtr->strides.hStride = srcDescPtr->c * srcDescPtr->w;
+                    srcDescPtr->strides.wStride = srcDescPtr->c;
+                    srcDescPtr->strides.cStride = 1;
+
+                    dstDescPtr->strides.nStride = dstDescPtr->c * dstDescPtr->w * dstDescPtr->h;
+                    dstDescPtr->strides.hStride = dstDescPtr->c * dstDescPtr->w;
+                    dstDescPtr->strides.wStride = dstDescPtr->c;
+                    dstDescPtr->strides.cStride = 1;
+
+                    // Set buffer sizes for src/dst
+                    unsigned long long spectrogramBufferSize = (unsigned long long)srcDescPtr->h * (unsigned long long)srcDescPtr->w * (unsigned long long)srcDescPtr->c * (unsigned long long)srcDescPtr->n;
+                    unsigned long long melFilterBufferSize = (unsigned long long)dstDescPtr->h * (unsigned long long)dstDescPtr->w * (unsigned long long)dstDescPtr->c * (unsigned long long)dstDescPtr->n;
+                    inputf32 = (Rpp32f *)realloc(inputf32, spectrogramBufferSize * sizeof(Rpp32f));
+                    outputf32 = (Rpp32f *)realloc(outputf32, melFilterBufferSize * sizeof(Rpp32f));
+
+                    // Read source data
+                    read_from_text_files(inputf32, srcDescPtr, srcDims, "spectrogram", 0, audioNames);
+
+                    startWallTime = omp_get_wtime();
+                    rppt_mel_filter_bank_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcDims, maxFreq, minFreq, melFormula, numFilter, sampleRate, normalize, handle);
+
+                    break;
+                }
                 default:
                 {
                     missingFuncFlag = 1;
