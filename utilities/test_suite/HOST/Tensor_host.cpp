@@ -610,11 +610,8 @@ int main(int argc, char **argv)
                         distortionCoeffs[8 * i + 7] = 0;
                     }
 
-                    RpptDescPtr tableDescPtr;
-                    RpptDesc tableDesc;
-
-                    tableDescPtr = &tableDesc;
-                    tableDesc = srcDesc;
+                    RpptDesc tableDesc = srcDesc;
+                    RpptDescPtr tableDescPtr = &tableDesc;
                     tableDescPtr->c = 1;
                     tableDescPtr->strides.nStride = srcDescPtr->h * srcDescPtr->w;
                     tableDescPtr->strides.hStride = srcDescPtr->w;
