@@ -269,6 +269,8 @@ inline Rpp64f hann(Rpp64f x)
     return 0.5 * (1 + std::cos(x * M_PI));
 }
 
+// initialization function used for filling the values in Resampling window (RpptResamplingWindow)
+// using the coeffs and lobes value this function generates a LUT (look up table) which is further used in Resample audio augmentation
 inline void windowed_sinc(RpptResamplingWindow &window, Rpp32s coeffs, Rpp32s lobes)
 {
     Rpp32f scale = 2.0f * lobes / (coeffs - 1);
