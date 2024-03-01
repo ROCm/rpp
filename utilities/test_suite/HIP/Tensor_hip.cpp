@@ -65,12 +65,12 @@ int main(int argc, char **argv)
 
     bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23|| testCase == 24 || testCase == 40 || testCase == 41 || testCase == 49 || testCase == 54);
     bool kernelSizeCase = (testCase == 40 || testCase == 41 || testCase == 49 || testCase == 54);
-    bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 63);
+    bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 61 || testCase == 63);
     bool randomOutputCase = (testCase == 84 || testCase == 49 || testCase == 54);
     bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24);
+    bool reductionTypeCase = (testCase == 87 || testCase == 88 || testCase == 89);
     bool noiseTypeCase = (testCase == 8);
     bool pln1OutTypeCase = (testCase == 86);
-    bool reductionTypeCase = (testCase == 87);
 
     unsigned int verbosity = atoi(argv[11]);
     unsigned int additionalParam = additionalParamCase ? atoi(argv[7]) : 1;
@@ -104,7 +104,7 @@ int main(int argc, char **argv)
 
     if (layoutType == 2)
     {
-        if(testCase == 36 || testCase == 31 || testCase == 86)
+        if(testCase == 36 || testCase == 31 || testCase == 45 || testCase == 86)
         {
             printf("\ncase %d does not exist for PLN1 layout\n", testCase);
             return -1;
@@ -323,35 +323,20 @@ int main(int argc, char **argv)
     double wallTime;
     string testCaseName;
 
-    if(testCase == 82 && imagesMixed)
-    {
-        std::cerr<<"\n RICAP only works with same dimension images";
-        exit(0);
-    }
-
-    if(testCase == 82 && batchSize < 2)
-    {
-        std::cerr<<"\n RICAP only works with BatchSize > 1";
-        exit(0);
-    }
-
-    // Initialize buffers for any reductionType functions
+    // Initialize buffers for any reductionType functions (testCase 87 - tensor_sum alone cannot return final sum as 8u/8s due to overflow. 8u inputs return 64u sums, 8s inputs return 64s sums)
     void *reductionFuncResultArr;
     Rpp32u reductionFuncResultArrLength = srcDescPtr->n * 4;
-
-    if(reductionTypeCase)
+    if (reductionTypeCase)
     {
-        if(dstDescPtr->dataType == RpptDataType::U8)
-            CHECK(hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * sizeof(Rpp64u)));
-        else if(dstDescPtr->dataType == RpptDataType::F16)
-            CHECK(hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * sizeof(Rpp32f)));
-        else if(dstDescPtr->dataType == RpptDataType::F32)
-            CHECK(hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * sizeof(Rpp32f)));
-        else if(dstDescPtr->dataType == RpptDataType::I8)
-            CHECK(hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * sizeof(Rpp64s)));
+        int bitDepthByteSize = 0;
+        if ((dstDescPtr->dataType == RpptDataType::U8) || (dstDescPtr->dataType == RpptDataType::I8))
+            bitDepthByteSize = (testCase == 87) ? sizeof(Rpp64u) : sizeof(Rpp8u);
+        else if ((dstDescPtr->dataType == RpptDataType::F16) || (dstDescPtr->dataType == RpptDataType::F32))
+            bitDepthByteSize = sizeof(Rpp32f);  // using 32f outputs for 16f and 32f
+        CHECK(hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * bitDepthByteSize));
     }
 
-    //Allocate hip memory for src/dst
+    // Allocate hip memory for src/dst
     CHECK(hipMalloc(&d_input, inputBufferSize));
     CHECK(hipMalloc(&d_output, outputBufferSize));
     if(dualInputCase)
@@ -827,6 +812,22 @@ int main(int argc, char **argv)
 
                 break;
             }
+            case 45:
+            {
+                testCaseName = "color_temperature";
+
+                Rpp32s adjustment[batchSize];
+                for (i = 0; i < batchSize; i++)
+                    adjustment[i] = 70;
+
+                startWallTime = omp_get_wtime();
+                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    rppt_color_temperature_gpu(d_input, srcDescPtr, d_output, dstDescPtr, adjustment, roiTensorPtrSrc, roiTypeSrc, handle);
+                else
+                    missingFuncFlag = 1;
+
+                break;
+            }
             case 49:
             {
                 testCaseName = "box_filter";
@@ -854,6 +855,18 @@ int main(int argc, char **argv)
                 startWallTime = omp_get_wtime();
                 if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                     rppt_gaussian_filter_gpu(d_input, srcDescPtr, d_output, dstDescPtr, stdDevTensor, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
+                else
+                    missingFuncFlag = 1;
+
+                break;
+            }
+            case 61:
+            {
+                testCaseName = "magnitude";
+
+                startWallTime = omp_get_wtime();
+                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    rppt_magnitude_gpu(d_input, d_input_second, srcDescPtr, d_output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
                 else
                     missingFuncFlag = 1;
 
@@ -1028,6 +1041,30 @@ int main(int argc, char **argv)
 
                 break;
             }
+            case 88:
+            {
+                testCaseName = "tensor_min";
+
+                startWallTime = omp_get_wtime();
+                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    rppt_tensor_min_gpu(d_input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
+                else
+                    missingFuncFlag = 1;
+
+                break;
+            }
+            case 89:
+            {
+                testCaseName = "tensor_max";
+
+                startWallTime = omp_get_wtime();
+                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                    rppt_tensor_max_gpu(d_input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
+                else
+                    missingFuncFlag = 1;
+
+                break;
+            }
             default:
                 missingFuncFlag = 1;
                 break;
@@ -1055,33 +1092,41 @@ int main(int argc, char **argv)
                     if(srcDescPtr->c == 3)
                         printf("\nReduction result (Batch of 3 channel images produces 4 results per image in batch): ");
                     else if(srcDescPtr->c == 1)
+                    {
                         printf("\nReduction result (Batch of 1 channel images produces 1 result per image in batch): ");
-
-                    if(dstDescPtr->dataType == RpptDataType::U8)
-                    {
-                        Rpp64u *reductionOutPtr = static_cast<Rpp64u*>(reductionFuncResultArr);
-                        for (int i = 0; i < reductionFuncResultArrLength; i++)
-                            printf(" %llu ", reductionOutPtr[i]);
-                    }
-                    else if(dstDescPtr->dataType == RpptDataType::F16)
-                    {
-                        Rpp32f *reductionOutPtr = static_cast<Rpp32f *>(reductionFuncResultArr);
-                        for (int i = 0; i < reductionFuncResultArrLength; i++)
-                            printf(" %0.3f ", (float)reductionOutPtr[i]);
-                    }
-                    else if(dstDescPtr->dataType == RpptDataType::F32)
-                    {
-                        Rpp32f *reductionOutPtr = static_cast<Rpp32f *>(reductionFuncResultArr);
-                        for (int i = 0; i < reductionFuncResultArrLength; i++)
-                            printf(" %0.3f ", (float)reductionOutPtr[i]);
-                    }
-                    else if(dstDescPtr->dataType == RpptDataType::I8)
-                    {
-                        Rpp64s *reductionOutPtr = static_cast<Rpp64s *>(reductionFuncResultArr);
-                        for (int i = 0; i < reductionFuncResultArrLength; i++)
-                            printf(" %lld ", reductionOutPtr[i]);
+                        reductionFuncResultArrLength = srcDescPtr->n;
                     }
 
+                    // print reduction functions output array based on different bit depths, and precision desired
+                    int precision = ((dstDescPtr->dataType == RpptDataType::F32) || (dstDescPtr->dataType == RpptDataType::F16)) ? 3 : 0;
+                    if (dstDescPtr->dataType == RpptDataType::U8)
+                    {
+                        if (testCase == 87)
+                            print_array(static_cast<Rpp64u *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
+                        else
+                            print_array(static_cast<Rpp8u *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
+                    }
+                    else if (dstDescPtr->dataType == RpptDataType::F16)
+                    {
+                        if (testCase == 87)
+                            print_array(static_cast<Rpp32f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
+                        else
+                            print_array(static_cast<Rpp16f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
+                    }
+                    else if (dstDescPtr->dataType == RpptDataType::F32)
+                    {
+                        if (testCase == 87)
+                            print_array(static_cast<Rpp32f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
+                        else
+                            print_array(static_cast<Rpp32f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
+                    }
+                    else if (dstDescPtr->dataType == RpptDataType::I8)
+                    {
+                        if (testCase == 87)
+                            print_array(static_cast<Rpp64s *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
+                        else
+                            print_array(static_cast<Rpp8s *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
+                    }
                     printf("\n");
 
                     /*Compare the output of the function with golden outputs only if
@@ -1089,7 +1134,12 @@ int main(int argc, char **argv)
                     2.input bit depth 0 (U8)
                     3.source and destination layout are the same*/
                     if(qaFlag && inputBitDepth == 0 && (srcDescPtr->layout == dstDescPtr->layout) && !(randomOutputCase))
-                        compare_reduction_output(static_cast<Rpp64u *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
+                    {
+                        if (testCase == 87)
+                            compare_reduction_output(static_cast<uint64_t *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
+                        else
+                            compare_reduction_output(static_cast<Rpp8u *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
+                    }
                 }
                 else
                 {

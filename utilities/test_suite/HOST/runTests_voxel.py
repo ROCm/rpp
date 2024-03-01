@@ -39,7 +39,7 @@ qaInputFile = scriptPath + "/../TEST_QA_IMAGES_VOXEL"
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
 caseMin = 0
-caseMax = 4
+caseMax = 5
 
 # Check if folder path is empty, if it is the root folder, or if it exists, and remove its contents
 def validate_and_remove_contents(path):
@@ -185,8 +185,8 @@ def rpp_test_suite_parser_and_validator():
     parser = argparse.ArgumentParser()
     parser.add_argument("--header_path", type = str, default = headerFilePath, help = "Path to the nii header")
     parser.add_argument("--data_path", type = str, default = dataFilePath, help = "Path to the nii data file")
-    parser.add_argument("--case_start", type = int, default = caseMin, help = "Testing range starting case # - Range must be in [" + str(caseMin) + ":" + str(caseMax) + "]")
-    parser.add_argument("--case_end", type = int, default = caseMax, help = "Testing range ending case # - Range must be in [" + str(caseMin) + ":" + str(caseMax) + "]")
+    parser.add_argument("--case_start", type = int, default = caseMin, help = "Testing start case # - Range must be in [" + str(caseMin) + ":" + str(caseMax) + "]")
+    parser.add_argument("--case_end", type = int, default = caseMax, help = "Testing start case # - Range must be in [" + str(caseMin) + ":" + str(caseMax) + "]")
     parser.add_argument('--test_type', type = int, default = 0, help = "Type of Test - (0 = Unit tests / 1 = Performance tests)")
     parser.add_argument('--case_list', nargs = "+", help = "List of case numbers to list", required = False)
     parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Output images from tests will be compared with golden outputs - (0 / 1)", required = False)
@@ -232,8 +232,8 @@ def rpp_test_suite_parser_and_validator():
     else:
         for case in args.case_list:
             if int(case) < caseMin or int(case) > caseMax:
-                 print("The case# must be in the 0:1 range!")
-                 exit(0)
+                print("The case# must be in [" + str(caseMin) + ":" + str(caseMax) + "]")
+                exit(0)
 
     # if QA mode is enabled overwrite the input folders with the folders used for generating golden outputs
     if args.qa_mode:
@@ -321,7 +321,7 @@ else:
             run_performance_test(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize)
 
 # print the results of qa tests
-supportedCaseList = ['0', '1', '4']
+supportedCaseList = ['0', '1', '2', '3', '4', '5']
 nonQACaseList = [] # Add cases present in supportedCaseList, but without QA support
 
 if qaMode and testType == 0:
