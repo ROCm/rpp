@@ -276,26 +276,24 @@ int main(int argc, char **argv)
                     RpptMelScaleFormula melFormula = RpptMelScaleFormula::SLANEY;
                     Rpp32s numFilter = 80;
                     bool normalize = true;
+                    Rpp32s srcDimsTensor[] = {257, 225, 257, 211, 257, 214}; // (height, width) for each tensor in a batch for given QA inputs.
 
-                    for (int i = 0; i < batchSize; i++)
+                    for (int i = 0, j = 0; i < batchSize; i++, j += 2)
                     {
-                        srcDims[i].height = dstDims[i].height = srcLengthTensor[i];
-                        srcDims[i].width = dstDims[i].width = 1;
+                        dstDims[i].height = srcLengthTensor[i];
+                        dstDims[i].width = channelsTensor[i];
                     }
-
-                    // Read source dimension
-                    read_from_text_files(inputf32, srcDescPtr, srcDims, "spectrogram", 1, audioNames);
 
                     maxDstHeight = 0;
                     maxDstWidth = 0;
                     maxSrcHeight = 0;
                     maxSrcWidth = 0;
-                    for(int i = 0; i < batchSize; i++)
+                    for(int i = 0, j = 0; i < batchSize; i++, j += 2)
                     {
-                        maxSrcHeight = std::max(maxSrcHeight, (int)srcDims[i].height);
-                        maxSrcWidth = std::max(maxSrcWidth, (int)srcDims[i].width);
+                        maxSrcHeight = std::max(maxSrcHeight, (int)srcDimsTensor[j]);
+                        maxSrcWidth = std::max(maxSrcWidth, (int)srcDimsTensor[j + 1]);
                         dstDims[i].height = numFilter;
-                        dstDims[i].width = srcDims[i].width;
+                        dstDims[i].width = srcDimsTensor[j + 1];
                         maxDstHeight = std::max(maxDstHeight, (int)dstDims[i].height);
                         maxDstWidth = std::max(maxDstWidth, (int)dstDims[i].width);
                     }
@@ -305,15 +303,8 @@ int main(int argc, char **argv)
                     dstDescPtr->h = maxDstHeight;
                     dstDescPtr->w = maxDstWidth;
 
-                    srcDescPtr->strides.nStride = srcDescPtr->c * srcDescPtr->w * srcDescPtr->h;
-                    srcDescPtr->strides.hStride = srcDescPtr->c * srcDescPtr->w;
-                    srcDescPtr->strides.wStride = srcDescPtr->c;
-                    srcDescPtr->strides.cStride = 1;
-
-                    dstDescPtr->strides.nStride = dstDescPtr->c * dstDescPtr->w * dstDescPtr->h;
-                    dstDescPtr->strides.hStride = dstDescPtr->c * dstDescPtr->w;
-                    dstDescPtr->strides.wStride = dstDescPtr->c;
-                    dstDescPtr->strides.cStride = 1;
+                    set_audio_descriptor_dims_and_strides_nostriding(srcDescPtr, batchSize, maxSrcHeight, maxSrcWidth, maxSrcChannels, offsetInBytes);
+                    set_audio_descriptor_dims_and_strides_nostriding(dstDescPtr, batchSize, maxDstHeight, maxDstWidth, maxDstChannels, offsetInBytes);
 
                     // Set buffer sizes for src/dst
                     unsigned long long spectrogramBufferSize = (unsigned long long)srcDescPtr->h * (unsigned long long)srcDescPtr->w * (unsigned long long)srcDescPtr->c * (unsigned long long)srcDescPtr->n;
@@ -322,10 +313,10 @@ int main(int argc, char **argv)
                     outputf32 = (Rpp32f *)realloc(outputf32, melFilterBufferSize * sizeof(Rpp32f));
 
                     // Read source data
-                    read_from_text_files(inputf32, srcDescPtr, srcDims, "spectrogram", 0, audioNames);
+                    read_from_bin_file(inputf32, srcDescPtr, srcDimsTensor, "spectrogram", scriptPath);
 
                     startWallTime = omp_get_wtime();
-                    rppt_mel_filter_bank_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcDims, maxFreq, minFreq, melFormula, numFilter, sampleRate, normalize, handle);
+                    rppt_mel_filter_bank_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcDimsTensor, maxFreq, minFreq, melFormula, numFilter, sampleRate, normalize, handle);
 
                     break;
                 }

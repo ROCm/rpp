@@ -148,59 +148,48 @@ void read_audio_batch_and_fill_dims(RpptDescPtr descPtr, Rpp32f *inputf32, vecto
     }
 }
 
-void read_from_text_files(Rpp32f *srcPtr, RpptDescPtr srcDescPtr, RpptImagePatch *srcDims, string test_case, int read_type, vector<std::string> audioNames)
+void read_from_bin_file(Rpp32f *srcPtr, RpptDescPtr srcDescPtr, Rpp32s *srcDims, string testCase, string scriptPath)
 {
-    fstream ref_file;
-    string ref_path = get_current_dir_name();
-    string pattern = "HOST/build";
-    remove_substring(ref_path, pattern);
-    ref_path = ref_path + "REFERENCE_OUTPUTS_AUDIO/";
-
-    string read_type_str;
-    if(read_type == 0)
-        read_type_str = "_ref_";
-    else
-        read_type_str = "_info_";
-
-    for (int batchcount = 0; batchcount < srcDescPtr->n; batchcount++)
+    // read data from golden outputs
+    Rpp64u oBufferSize = srcDescPtr->n * srcDescPtr->strides.nStride;
+    Rpp32f *refInput = static_cast<Rpp32f *>(malloc(oBufferSize * sizeof(float)));
+    string outFile = scriptPath + "/../REFERENCE_OUTPUTS_AUDIO/" + testCase + "/" + testCase + ".bin";
+    std::fstream fin(outFile, std::ios::in | std::ios::binary);
+    if(fin.is_open())
     {
-        string current_file_name = audioNames[batchcount];
-        size_t last_index = current_file_name.find_last_of(".");
-        current_file_name = current_file_name.substr(0, last_index);  // Remove extension from file name
-        string out_file = ref_path + test_case + "/" + test_case + read_type_str + current_file_name + ".txt";
-        ref_file.open(out_file, ios::in);
-        if(!ref_file.is_open())
+        for(Rpp64u i = 0; i < oBufferSize; i++)
         {
-            cerr<<"Unable to open the file specified! Please check the path of the file given as input"<<endl;
-            break;
-        }
-
-        if(read_type == 0)
-        {
-            Rpp32f ref_val;
-            Rpp32f *srcPtrCurrent = srcPtr + batchcount * srcDescPtr->strides.nStride;
-            Rpp32f *srcPtrRow = srcPtrCurrent;
-            for(int i = 0; i < srcDims[batchcount].height; i++)
+            if(!fin.eof())
+                fin.read(reinterpret_cast<char*>(&refInput[i]), sizeof(float));
+            else
             {
-                Rpp32f *srcPtrTemp = srcPtrRow;
-                for(int j = 0; j < srcDims[batchcount].width; j++)
-                {
-                    ref_file>>ref_val;
-                    srcPtrTemp[j] = ref_val;
-                }
-                srcPtrRow += srcDescPtr->strides.hStride;
+                std::cout<<"\nUnable to read all data from golden outputs\n";
+                return;
             }
         }
-        else
-        {
-            Rpp32s ref_height, ref_width;
-            ref_file>>ref_height;
-            ref_file>>ref_width;
-            srcDims[batchcount].height = ref_height;
-            srcDims[batchcount].width = ref_width;
-        }
-        ref_file.close();
     }
+    else
+    {
+        std::cout<<"\nCould not open the reference output. Please check the path specified\n";
+        return;
+    }
+    for (int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
+    {
+        Rpp32f *srcPtrCurrent = srcPtr + batchCount * srcDescPtr->strides.nStride;
+        Rpp32f *refPtrCurrent = refInput + batchCount * srcDescPtr->strides.nStride;
+        Rpp32f *srcPtrRow = srcPtrCurrent;
+        Rpp32f *refPtrRow = refPtrCurrent;
+        for(int i = 0; i < srcDims[batchCount * 2]; i++)
+        {
+            Rpp32f *srcPtrTemp = srcPtrRow;
+            Rpp32f *refPtrTemp = refPtrRow;
+            for(int j = 0; j < srcDims[(batchCount * 2) + 1]; j++)
+                srcPtrTemp[j] = refPtrTemp[j];
+            srcPtrRow += srcDescPtr->strides.hStride;
+            refPtrRow += srcDescPtr->strides.hStride;
+        }
+    }
+    free(refInput);
 }
 
 void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dstDims, string testCase, string dst, string scriptPath)

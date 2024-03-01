@@ -1,5 +1,7 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+MIT License
+
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -8,16 +10,16 @@ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 */
 
 #include "rppdefs.h"
@@ -80,7 +82,7 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
                                       RpptDescPtr srcDescPtr,
                                       Rpp32f *dstPtr,
                                       RpptDescPtr dstDescPtr,
-                                      RpptImagePatchPtr srcDims,
+                                      Rpp32s *srcDimsTensor,
                                       Rpp32f maxFreqVal,
                                       Rpp32f minFreqVal,
                                       RpptMelScaleFormula melFormula,
@@ -108,17 +110,19 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
     {
         Rpp32f *srcPtrTemp = srcPtr + batchCount * srcDescPtr->strides.nStride;
         Rpp32f *dstPtrTemp = dstPtr + batchCount * dstDescPtr->strides.nStride;
+        Rpp32s samples = srcDimsTensor[batchCount * 2];
+        Rpp32s channels = srcDimsTensor[batchCount * 2 + 1];
 
         // Extract nfft, number of Frames, numBins
-        Rpp32s nfft = (srcDims[batchCount].height - 1) * 2;
+        Rpp32s nfft = (samples - 1) * 2;
         Rpp32s numBins = nfft / 2 + 1;
-        Rpp32s numFrames = srcDims[batchCount].width;
+        Rpp32s numFrames = channels;
 
         Rpp32f maxFreq = maxFreqVal;
         Rpp32f minFreq = minFreqVal;
         maxFreq = sampleRate / 2;
 
-        // Convert lower, higher freqeuncies to mel scale
+        // Convert lower, higher frequencies to mel scale
         Rpp64f melLow = melScalePtr->hz_to_mel(minFreq);
         Rpp64f melHigh = melScalePtr->hz_to_mel(maxFreq);
         Rpp64f melStep = (melHigh - melLow) / (numFilter + 1);
@@ -179,7 +183,8 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
         Rpp32u alignedLength = numFrames & ~7;
         __m256 pSrc, pDst;
         Rpp32f *srcRowPtr = srcPtrTemp + fftBinStart * srcDescPtr->strides.hStride;
-        for (int64_t fftBin = fftBinStart; fftBin < fftBinEnd; fftBin++) {
+        for (int64_t fftBin = fftBinStart; fftBin < fftBinEnd; fftBin++)
+        {
             auto filterUp = intervals[fftBin];
             auto weightUp = 1.0f - weightsDown[fftBin];
             auto filterDown = filterUp - 1;

@@ -136,13 +136,13 @@ RppStatus rppt_spectrogram_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_
 
 /******************** mel_filter_bank ********************/
 
-/*! \brief Mel_filter_bank augmentation HOST
+/*! \brief Mel_filter_bank augmentation HOST backend
 * \details Mel_filter_bank augmentation for audio data
-* \param[in] srcPtr source tensor memory
-* \param[in] srcDescPtr source tensor descriptor
-* \param[out] dstPtr destination tensor memory
-* \param[in] dstDescPtr destination tensor descriptor
-* \param[in] srcDims source dimensions
+* \param[in] srcPtr source tensor in HOST memory
+* \param[in] srcDescPtr source tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
+* \param[out] dstPtr destination tensor in HOST memory
+* \param[in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
+* \param[in] srcDimsTensor source audio buffer length and number of channels (1D tensor in HOST memory, of size batchSize * 2)
 * \param[in] maxFreq maximum frequency if not provided maxFreq = sampleRate / 2
 * \param[in] minFreq minimum frequency
 * \param[in] melFormula formula used to convert frequencies from hertz to mel and from mel to hertz (SLANEY / HTK)
@@ -155,7 +155,7 @@ RppStatus rppt_spectrogram_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_
 * \retval RPP_ERROR* Unsuccessful completion.
 */
 
-RppStatus rppt_mel_filter_bank_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr srcDims, Rpp32f maxFreq, Rpp32f minFreq, RpptMelScaleFormula melFormula, Rpp32s numFilter, Rpp32f sampleRate, bool normalize, rppHandle_t rppHandle);
+RppStatus rppt_mel_filter_bank_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcDims, Rpp32f maxFreq, Rpp32f minFreq, RpptMelScaleFormula melFormula, Rpp32s numFilter, Rpp32f sampleRate, bool normalize, rppHandle_t rppHandle);
 
 #ifdef __cplusplus
 }

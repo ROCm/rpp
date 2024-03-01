@@ -417,7 +417,7 @@ typedef enum
 {
     SLANEY = 0,
     HTK,
-}RpptMelScaleFormula;
+} RpptMelScaleFormula;
 
 /*! \brief RPPT Tensor 2D ROI LTRB struct
  * \ingroup group_rppdefs
