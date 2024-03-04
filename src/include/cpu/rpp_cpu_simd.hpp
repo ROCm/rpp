@@ -75,7 +75,7 @@ typedef union
 
 #define SIMD_GET_PS(name) (*(const __m128  *)_xmm_const_##name)
 
-const __m128 xmm_p0 = _mm_set1_ps(0.0f);
+const __m128 xmm_p0 = _mm_setzero_ps();
 const __m128 xmm_p1 = _mm_set1_ps(1.0f);
 const __m128 xmm_p2 = _mm_set1_ps(2.0f);
 const __m128 xmm_pm2 = _mm_set1_ps(-2.0f);
@@ -243,7 +243,7 @@ inline void rpp_mm256_print_epi8(__m256i vPrintArray)
     printf("\n");
     for (int ct = 0; ct < 32; ct++)
     {
-        printf("%d ", printArray[ct]);
+        printf("%d ", (unsigned char)printArray[ct]);
     }
 }
 
@@ -1318,6 +1318,20 @@ inline void rpp_load16_u8_to_u32_avx(Rpp8u *srcPtr, __m256i *p)
     p[1] = _mm256_setr_m128i(_mm_shuffle_epi8(px, xmm_pxMask08To11), _mm_shuffle_epi8(px, xmm_pxMask12To15));    /* Contains pixels 09-16 */
 }
 
+inline void rpp_load96_u8_avx(Rpp8u *srcPtrR, Rpp8u *srcPtrG, Rpp8u *srcPtrB, __m256i *p)
+{
+    p[0] = _mm256_loadu_si256((__m256i *)srcPtrR);
+    p[1] = _mm256_loadu_si256((__m256i *)srcPtrG);
+    p[2] = _mm256_loadu_si256((__m256i *)srcPtrB);
+}
+
+inline void rpp_load96_i8_avx(Rpp8s *srcPtrR, Rpp8s *srcPtrG, Rpp8s *srcPtrB, __m256i *p)
+{
+    p[0] = _mm256_load_si256((__m256i *)srcPtrR);
+    p[1] = _mm256_load_si256((__m256i *)srcPtrG);
+    p[2] = _mm256_load_si256((__m256i *)srcPtrB);
+}
+
 inline void rpp_load24_f32pkd3_to_f32pln3_avx(Rpp32f *srcPtr, __m256 *p)
 {
     __m128 p128[8];
@@ -1523,6 +1537,16 @@ inline void rpp_store8_i32_to_i32_avx(Rpp32s *dstPtr, __m256i *p)
 inline void rpp_store4_f64_to_f64_avx(Rpp64f *dstPtr, __m256d *p)
 {
     _mm256_storeu_pd(dstPtr, p[0]);
+}
+
+inline void rpp_store16_u8_to_u8(Rpp8u *dstPtr, __m128i *p)
+{
+    _mm_storeu_si128((__m128i *)dstPtr, p[0]);
+}
+
+inline void rpp_store16_i8(Rpp8s *dstPtr, __m128i *p)
+{
+    _mm_store_si128((__m128i *)dstPtr, p[0]);
 }
 
 inline void rpp_store8_f32_to_f16_avx(Rpp16f *dstPtr, __m256 *p)
@@ -2483,6 +2507,29 @@ static inline __m128 log_ps(__m128 x)
     x = _mm_or_ps(x, invalid_mask); // negative arg will be NAN
 
     return x;
+}
+
+inline Rpp32f rpp_hsum_ps(__m128 x)
+{
+    __m128 shuf = _mm_movehdup_ps(x);        // broadcast elements 3,1 to 2,0
+    __m128 sums = _mm_add_ps(x, shuf);
+    shuf = _mm_movehl_ps(shuf, sums);        // high half -> low half
+    sums = _mm_add_ss(sums, shuf);
+    return _mm_cvtss_f32(sums);
+}
+
+inline Rpp32f rpp_hsum_ps(__m256 x)
+{
+    __m128 p0 = _mm256_extractf128_ps(x, 1); // Contains x7, x6, x5, x4
+    __m128 p1 = _mm256_castps256_ps128(x);   // Contains x3, x2, x1, x0
+    __m128 sum = _mm_add_ps(p0, p1);         // Contains x3 + x7, x2 + x6, x1 + x5, x0 + x4
+    p0 = sum;                                // Contains -, -, x1 + x5, x0 + x4
+    p1 = _mm_movehl_ps(sum, sum);            // Contains -, -, x3 + x7, x2 + x6
+    sum = _mm_add_ps(p0, p1);                // Contains -, -, x1 + x3 + x5 + x7, x0 + x2 + x4 + x6
+    p0 = sum;                                // Contains -, -, -, x0 + x2 + x4 + x6
+    p1 = _mm_shuffle_ps(sum, sum, 0x1);      // Contains -, -, -, x1 + x3 + x5 + x7
+    sum = _mm_add_ss(p0, p1);                // Contains -, -, -, x0 + x1 + x2 + x3 + x4 + x5 + x6 + x7
+    return _mm_cvtss_f32(sum);
 }
 
 static inline void fast_matmul4x4_sse(float *A, float *B, float *C)
