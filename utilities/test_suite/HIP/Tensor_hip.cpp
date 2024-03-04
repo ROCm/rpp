@@ -718,6 +718,8 @@ int main(int argc, char **argv)
                 else
                     missingFuncFlag = 1;
 
+                CHECK(hipFree(lutBuffer));
+
                 break;
             }
             case 36:

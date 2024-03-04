@@ -587,19 +587,19 @@ RppStatus rppt_water_host(RppPtr_t srcPtr,
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
         water_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                    srcDescPtr,
-                                    static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                    dstDescPtr,
-                                    amplitudeXTensor,
-                                    amplitudeYTensor,
-                                    frequencyXTensor,
-                                    frequencyYTensor,
-                                    phaseXTensor,
-                                    phaseYTensor,
-                                    roiTensorPtrSrc,
-                                    roiType,
-                                    layoutParams,
-                                    rpp::deref(rppHandle));
+                                srcDescPtr,
+                                static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                dstDescPtr,
+                                amplitudeXTensor,
+                                amplitudeYTensor,
+                                frequencyXTensor,
+                                frequencyYTensor,
+                                phaseXTensor,
+                                phaseYTensor,
+                                roiTensorPtrSrc,
+                                roiType,
+                                layoutParams,
+                                rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
@@ -1170,14 +1170,14 @@ RppStatus rppt_gaussian_noise_gpu(RppPtr_t srcPtr,
 /******************** non_linear_blend ********************/
 
 RppStatus rppt_non_linear_blend_gpu(RppPtr_t srcPtr1,
-                                     RppPtr_t srcPtr2,
-                                     RpptDescPtr srcDescPtr,
-                                     RppPtr_t dstPtr,
-                                     RpptDescPtr dstDescPtr,
-                                     Rpp32f *stdDevTensor,
-                                     RpptROIPtr roiTensorPtrSrc,
-                                     RpptRoiType roiType,
-                                     rppHandle_t rppHandle)
+                                    RppPtr_t srcPtr2,
+                                    RpptDescPtr srcDescPtr,
+                                    RppPtr_t dstPtr,
+                                    RpptDescPtr dstDescPtr,
+                                    Rpp32f *stdDevTensor,
+                                    RpptROIPtr roiTensorPtrSrc,
+                                    RpptRoiType roiType,
+                                    rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
     for(int i = 0; i < srcDescPtr->n; i++)
