@@ -39,11 +39,10 @@ RppStatus jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
         Rpp32u vectorIncrement = 12;
         Rpp32u vectorIncrementPerChannel = 4;
         RpptXorwowStateBoxMuller xorwowState;
-        Rpp32s srcLocArray[4] = {0}; 
+        Rpp32s srcLocArray[4] = {0};
 
         __m128i pxXorwowStateX[5], pxXorwowStateCounter;
         rpp_host_rng_xorwow_state_offsetted_sse(xorwowInitialStatePtr, xorwowState, offset, pxXorwowStateX, &pxXorwowStateCounter);
-        __m128 pCol = xmm_pDstLocInit;
         __m128 pKernelSize = _mm_set1_ps(kernelSize);
         __m128 pChannel = _mm_set1_ps(layoutParams.bufferMultiplier);
         __m128 pHStride = _mm_set1_ps(srcDescPtr->strides.hStride);
@@ -67,10 +66,11 @@ RppStatus jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTempB = dstPtrRowB;
                 
                 __m128 pRow = _mm_set1_ps(dstLocRow);
+                __m128 pCol = xmm_pDstLocInit;
+
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
-                    pCol = _mm_add_ps(xmm_p4, pCol);
                     __m128i pxRow;
                     compute_jitter_src_loc_sse(pxXorwowStateX, &pxXorwowStateCounter, pRow, pCol, pKernelSize, pBound, pHeightLimit, pWidthLimit, pHStride, pChannel, srcLocArray);
                     rpp_simd_load(rpp_resize_nn_load_u8pkd3, srcPtrChannel, srcLocArray, pxRow);
@@ -78,6 +78,7 @@ RppStatus jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     dstPtrTempR += vectorIncrementPerChannel;
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
+                    pCol = _mm_add_ps(xmm_p4, pCol);
                 }
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
                 {
@@ -108,11 +109,12 @@ RppStatus jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
                 Rpp8u *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
 
-                __m128 pRow = _mm_set1_ps(dstLocRow); 
+                __m128 pRow = _mm_set1_ps(dstLocRow);
+                __m128 pCol = xmm_pDstLocInit;
+
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
-                    pCol = _mm_add_ps(xmm_p4, pCol);
                     __m128i pxRow[3];
                     compute_jitter_src_loc_sse(pxXorwowStateX, &pxXorwowStateCounter, pRow, pCol, pKernelSize, pBound, pHeightLimit, pWidthLimit, pHStride, pChannel, srcLocArray);
                     rpp_simd_load(rpp_resize_nn_load_u8pln1, srcPtrRowR, srcLocArray, pxRow[0]);
@@ -120,6 +122,7 @@ RppStatus jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     rpp_simd_load(rpp_resize_nn_load_u8pln1, srcPtrRowB, srcLocArray, pxRow[2]);
                     rpp_simd_store(rpp_store12_u8pln3_to_u8pkd3, dstPtrTemp, pxRow);
                     dstPtrTemp += vectorIncrement;
+                    pCol = _mm_add_ps(xmm_p4, pCol);
                 }
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
                 {
@@ -144,16 +147,17 @@ RppStatus jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
             {
                 Rpp8u *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
-                __m128 pRow = _mm_set1_ps(dstLocRow); 
+                __m128 pRow = _mm_set1_ps(dstLocRow);
+                __m128 pCol = xmm_pDstLocInit;
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
-                    pCol = _mm_add_ps(xmm_p4, pCol);
                     __m128i pxRow;
                     compute_jitter_src_loc_sse(pxXorwowStateX, &pxXorwowStateCounter, pRow, pCol, pKernelSize, pBound, pHeightLimit, pWidthLimit, pHStride, pChannel, srcLocArray);
                     rpp_simd_load(rpp_resize_nn_load_u8pkd3, srcPtrRow, srcLocArray, pxRow);
                     rpp_simd_store(rpp_store4_u8_to_u8, dstPtrTemp, pxRow);
                     dstPtrTemp += vectorIncrement;
+                    pCol = _mm_add_ps(xmm_p4, pCol);
                 }
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
                 {
@@ -177,14 +181,15 @@ RppStatus jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
                 Rpp8u *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
 
-                __m128 pRow = _mm_set1_ps(dstLocRow); 
+                __m128 pRow = _mm_set1_ps(dstLocRow);
+                __m128 pCol = xmm_pDstLocInit;
+
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     Rpp8u *dstPtrTempChn, *srcPtrTempChn;
                     srcPtrTempChn = srcPtrChannel;
                     dstPtrTempChn = dstPtrTemp;
-                    pCol = _mm_add_ps(xmm_p4, pCol);
                     compute_jitter_src_loc_sse(pxXorwowStateX, &pxXorwowStateCounter, pRow, pCol, pKernelSize, pBound, pHeightLimit, pWidthLimit, pHStride, pChannel, srcLocArray);
                     for(int c = 0; c < srcDescPtr->c; c++)
                     {
@@ -195,6 +200,7 @@ RppStatus jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
                         dstPtrTempChn += dstDescPtr->strides.cStride;
                     }
                     dstPtrTemp += vectorIncrementPerChannel;
+                    pCol = _mm_add_ps(xmm_p4, pCol);
                 }
                 for (;vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
                 {
@@ -259,7 +265,6 @@ RppStatus jitter_f32_f32_host_tensor(Rpp32f *srcPtr,
 
         __m128i pxXorwowStateX[5], pxXorwowStateCounter;
         rpp_host_rng_xorwow_state_offsetted_sse(xorwowInitialStatePtr, xorwowState, offset, pxXorwowStateX, &pxXorwowStateCounter);
-        __m128 pCol = xmm_pDstLocInit;
         __m128 pKernelSize = _mm_set1_ps(kernelSize);
         __m128 pChannel = _mm_set1_ps(layoutParams.bufferMultiplier);
         __m128 pHStride = _mm_set1_ps(srcDescPtr->strides.hStride);
@@ -283,11 +288,11 @@ RppStatus jitter_f32_f32_host_tensor(Rpp32f *srcPtr,
                 dstPtrTempG = dstPtrRowG;
                 dstPtrTempB = dstPtrRowB;
                 
-                __m128 pRow = _mm_set1_ps(dstLocRow); 
+                __m128 pRow = _mm_set1_ps(dstLocRow);
+                __m128 pCol = xmm_pDstLocInit;
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
-                    pCol = _mm_add_ps(xmm_p4, pCol);
                     __m128 pxRow[3];
                     compute_jitter_src_loc_sse(pxXorwowStateX, &pxXorwowStateCounter, pRow, pCol, pKernelSize, pBound, pHeightLimit, pWidthLimit, pHStride, pChannel, srcLocArray);
                     rpp_simd_load(rpp_resize_nn_load_f32pkd3_to_f32pln3, srcPtrChannel, srcLocArray, pxRow);
@@ -295,6 +300,7 @@ RppStatus jitter_f32_f32_host_tensor(Rpp32f *srcPtr,
                     dstPtrTempR += vectorIncrementPerChannel;
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
+                    pCol = _mm_add_ps(xmm_p4, pCol);
                 }
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
                 {
@@ -324,11 +330,11 @@ RppStatus jitter_f32_f32_host_tensor(Rpp32f *srcPtr,
             {
                 Rpp32f *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
-                __m128 pRow = _mm_set1_ps(dstLocRow); 
+                __m128 pRow = _mm_set1_ps(dstLocRow);
+                __m128 pCol = xmm_pDstLocInit;
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
-                    pCol = _mm_add_ps(xmm_p4, pCol);
                     __m128 pxRow[4];
                     compute_jitter_src_loc_sse(pxXorwowStateX, &pxXorwowStateCounter, pRow, pCol, pKernelSize, pBound, pHeightLimit, pWidthLimit, pHStride, pChannel, srcLocArray);
                     rpp_simd_load(rpp_resize_nn_load_f32pln1, srcPtrRowR, srcLocArray, pxRow[0]);
@@ -336,6 +342,7 @@ RppStatus jitter_f32_f32_host_tensor(Rpp32f *srcPtr,
                     rpp_simd_load(rpp_resize_nn_load_f32pln1, srcPtrRowB, srcLocArray, pxRow[2]);
                     rpp_simd_store(rpp_store12_f32pln3_to_f32pkd3, dstPtrTemp, pxRow);
                     dstPtrTemp += vectorIncrement;
+                    pCol = _mm_add_ps(xmm_p4, pCol);
                 }
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
                 {
@@ -382,7 +389,8 @@ RppStatus jitter_f32_f32_host_tensor(Rpp32f *srcPtr,
             {
                 Rpp32f *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
-                __m128 pRow = _mm_set1_ps(dstLocRow); 
+                __m128 pRow = _mm_set1_ps(dstLocRow);
+                __m128 pCol = xmm_pDstLocInit;
 
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
@@ -390,7 +398,6 @@ RppStatus jitter_f32_f32_host_tensor(Rpp32f *srcPtr,
                     Rpp32f *srcPtrTempChn, *dstPtrTempChn;
                     srcPtrTempChn = srcPtrChannel;
                     dstPtrTempChn = dstPtrTemp;
-                    pCol = _mm_add_ps(xmm_p4, pCol);
                     compute_jitter_src_loc_sse(pxXorwowStateX, &pxXorwowStateCounter, pRow, pCol, pKernelSize, pBound, pHeightLimit, pWidthLimit, pHStride, pChannel, srcLocArray);
 
                     for (int c = 0; c < dstDescPtr->c; c++)
@@ -402,6 +409,7 @@ RppStatus jitter_f32_f32_host_tensor(Rpp32f *srcPtr,
                         dstPtrTempChn += dstDescPtr->strides.cStride;
                     }
                     dstPtrTemp += vectorIncrementPerChannel;
+                    pCol = _mm_add_ps(xmm_p4, pCol);
                 }
                 for (;vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
                 {
@@ -566,11 +574,10 @@ RppStatus jitter_i8_i8_host_tensor(Rpp8s *srcPtr,
         Rpp32u vectorIncrement = 12;
         Rpp32u vectorIncrementPerChannel = 4;
         RpptXorwowStateBoxMuller xorwowState;
-        Rpp32s srcLocArray[4] = {0}; 
+        Rpp32s srcLocArray[4] = {0};
 
         __m128i pxXorwowStateX[5], pxXorwowStateCounter;
         rpp_host_rng_xorwow_state_offsetted_sse(xorwowInitialStatePtr, xorwowState, offset, pxXorwowStateX, &pxXorwowStateCounter);
-        __m128 pCol = xmm_pDstLocInit;
         __m128 pKernelSize = _mm_set1_ps(kernelSize);
         __m128 pChannel = _mm_set1_ps(layoutParams.bufferMultiplier);
         __m128 pHStride = _mm_set1_ps(srcDescPtr->strides.hStride);
@@ -593,11 +600,11 @@ RppStatus jitter_i8_i8_host_tensor(Rpp8s *srcPtr,
                 dstPtrTempG = dstPtrRowG;
                 dstPtrTempB = dstPtrRowB;
                 
-                __m128 pRow = _mm_set1_ps(dstLocRow); 
+                __m128 pRow = _mm_set1_ps(dstLocRow);
+                __m128 pCol = xmm_pDstLocInit;
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
-                    pCol = _mm_add_ps(xmm_p4, pCol);
                     __m128i pxRow;
                     compute_jitter_src_loc_sse(pxXorwowStateX, &pxXorwowStateCounter, pRow, pCol, pKernelSize, pBound, pHeightLimit, pWidthLimit, pHStride, pChannel, srcLocArray);
                     rpp_simd_load(rpp_resize_nn_load_i8pkd3, srcPtrChannel, srcLocArray, pxRow);
@@ -605,6 +612,7 @@ RppStatus jitter_i8_i8_host_tensor(Rpp8s *srcPtr,
                     dstPtrTempR += vectorIncrementPerChannel;
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
+                    pCol = _mm_add_ps(xmm_p4, pCol);
                 }
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
                 {
@@ -635,11 +643,11 @@ RppStatus jitter_i8_i8_host_tensor(Rpp8s *srcPtr,
                 Rpp8s *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
 
-                __m128 pRow = _mm_set1_ps(dstLocRow); 
+                __m128 pRow = _mm_set1_ps(dstLocRow);
+                __m128 pCol = xmm_pDstLocInit;
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
-                    pCol = _mm_add_ps(xmm_p4, pCol);
                     __m128i pxRow[3];
                     compute_jitter_src_loc_sse(pxXorwowStateX, &pxXorwowStateCounter, pRow, pCol, pKernelSize, pBound, pHeightLimit, pWidthLimit, pHStride, pChannel, srcLocArray);
                     rpp_simd_load(rpp_resize_nn_load_i8pln1, srcPtrRowR, srcLocArray, pxRow[0]);
@@ -647,6 +655,7 @@ RppStatus jitter_i8_i8_host_tensor(Rpp8s *srcPtr,
                     rpp_simd_load(rpp_resize_nn_load_i8pln1, srcPtrRowB, srcLocArray, pxRow[2]);
                     rpp_simd_store(rpp_store12_i8pln3_to_i8pkd3, dstPtrTemp, pxRow);
                     dstPtrTemp += vectorIncrement;
+                    pCol = _mm_add_ps(xmm_p4, pCol);
                 }
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
                 {
@@ -672,16 +681,17 @@ RppStatus jitter_i8_i8_host_tensor(Rpp8s *srcPtr,
                 Rpp8s *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
 
-                __m128 pRow = _mm_set1_ps(dstLocRow); 
+                __m128 pRow = _mm_set1_ps(dstLocRow);
+                __m128 pCol = xmm_pDstLocInit;
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
-                    pCol = _mm_add_ps(xmm_p4, pCol);
                     __m128i pxRow;
                     compute_jitter_src_loc_sse(pxXorwowStateX, &pxXorwowStateCounter, pRow, pCol, pKernelSize, pBound, pHeightLimit, pWidthLimit, pHStride, pChannel, srcLocArray);
                     rpp_simd_load(rpp_resize_nn_load_i8pkd3, srcPtrRow, srcLocArray, pxRow);
                     rpp_simd_store(rpp_store4_i8_to_i8, dstPtrTemp, pxRow);
                     dstPtrTemp += vectorIncrement;
+                    pCol = _mm_add_ps(xmm_p4, pCol);
                 }
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
                 {
@@ -704,14 +714,14 @@ RppStatus jitter_i8_i8_host_tensor(Rpp8s *srcPtr,
                 Rpp8s *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
 
-                __m128 pRow = _mm_set1_ps(dstLocRow); 
+                __m128 pRow = _mm_set1_ps(dstLocRow);
+                __m128 pCol = xmm_pDstLocInit;
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     Rpp8s *dstPtrTempChn, *srcPtrTempChn;
                     srcPtrTempChn = srcPtrChannel;
                     dstPtrTempChn = dstPtrTemp;
-                    pCol = _mm_add_ps(xmm_p4, pCol);
                     compute_jitter_src_loc_sse(pxXorwowStateX, &pxXorwowStateCounter, pRow, pCol, pKernelSize, pBound, pHeightLimit, pWidthLimit, pHStride, pChannel, srcLocArray);
                     for(int c = 0; c < srcDescPtr->c; c++)
                     {
@@ -722,6 +732,7 @@ RppStatus jitter_i8_i8_host_tensor(Rpp8s *srcPtr,
                         dstPtrTempChn += dstDescPtr->strides.cStride;
                     }
                     dstPtrTemp += vectorIncrementPerChannel;
+                    pCol = _mm_add_ps(xmm_p4, pCol);
                 }
                 for (;vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
                 {
