@@ -109,6 +109,19 @@ int main(int argc, char **argv)
         maxDstChannels = 1;
     set_audio_descriptor_dims_and_strides(dstDescPtr, batchSize, maxDstHeight, maxDstWidth, maxDstChannels, offsetInBytes);
 
+    // create generic descriptor in case of slice
+    RpptGenericDesc descriptor3D;
+    RpptGenericDescPtr descriptorPtr3D = &descriptor3D;
+    if(testCase == 4)
+    {
+        descriptorPtr3D->numDims = 2;
+        descriptorPtr3D->offsetInBytes = 0;
+        descriptorPtr3D->dataType = RpptDataType::F32;
+        descriptorPtr3D->dims[0] = batchSize;
+        descriptorPtr3D->dims[1] = maxSrcWidth;
+        descriptorPtr3D->strides[0] = descriptorPtr3D->dims[1];
+    }
+
     // set buffer sizes for src/dst
     iBufferSize = (Rpp64u)srcDescPtr->h * (Rpp64u)srcDescPtr->w * (Rpp64u)srcDescPtr->c * (Rpp64u)srcDescPtr->n;
     oBufferSize = (Rpp64u)dstDescPtr->h * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
@@ -216,6 +229,32 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 4:
+                {
+                    testCaseName = "slice";
+                    Rpp32u nDim = 1; // testing for 1D slice
+                    auto fillValue = 0;
+                    bool enablePadding = true;
+                    Rpp32u roiTensor[batchSize * nDim * 2];
+                    Rpp32s anchorTensor[batchSize * nDim];
+                    Rpp32s shapeTensor[batchSize * nDim];
+
+                    // 1D slice arguments
+                    for (int i = 0; i < batchSize; i++)
+                    {
+                        int idx = i * nDim * 2;
+                        roiTensor[idx] = 10;
+                        roiTensor[idx + 1] = srcLengthTensor[i];
+                        anchorTensor[i] = 10;
+                        shapeTensor[i] = dstDims[i].width = srcLengthTensor[i] / 2;
+                        dstDims[i].height = 1;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    rppt_slice_host(inputf32, descriptorPtr3D, outputf32, descriptorPtr3D, anchorTensor, shapeTensor, &fillValue, enablePadding, roiTensor, handle);
+
+                    break;
+                }
                 default:
                 {
                     missingFuncFlag = 1;
@@ -251,9 +290,9 @@ int main(int argc, char **argv)
                 if (DEBUG_MODE && iterCount == 0 && testCase != 0)
                 {
                     std::ofstream refFile;
-                    refFile.open(func + ".csv");
+                    refFile.open(func + ".bin", std::ios::out | std::ios::binary);
                     for (int i = 0; i < oBufferSize; i++)
-                        refFile << *(outputf32 + i) << "\n";
+                        refFile.write(reinterpret_cast<char*>(&outputf32[i]), sizeof(float));
                     refFile.close();
                 }
             }
