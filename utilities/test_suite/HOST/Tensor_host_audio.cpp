@@ -290,9 +290,9 @@ int main(int argc, char **argv)
                 if (DEBUG_MODE && iterCount == 0 && testCase != 0)
                 {
                     std::ofstream refFile;
-                    refFile.open(func + ".bin", std::ios::out | std::ios::binary);
+                    refFile.open(func + ".csv");
                     for (int i = 0; i < oBufferSize; i++)
-                        refFile.write(reinterpret_cast<char*>(&outputf32[i]), sizeof(float));
+                        refFile << *(outputf32 + i) << "\n";
                     refFile.close();
                 }
             }
