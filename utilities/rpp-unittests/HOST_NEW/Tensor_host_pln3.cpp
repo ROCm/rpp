@@ -157,9 +157,6 @@ int main(int argc, char **argv)
     case 4:
         strcpy(funcName, "contrast");
         break;
-    case 5:
-        strcpy(funcName, "pixelate");
-        break;
     case 8:
         strcpy(funcName, "noise");
         break;
@@ -909,50 +906,6 @@ int main(int argc, char **argv)
             missingFuncFlag = 1;
         else if (ip_bitDepth == 5)
             rppt_contrast_host(inputi8, srcDescPtr, outputi8, dstDescPtr, contrastFactor, contrastCenter, roiTensorPtrSrc, roiTypeSrc, handle);
-        else if (ip_bitDepth == 6)
-            missingFuncFlag = 1;
-        else
-            missingFuncFlag = 1;
-
-        break;
-    }
-    case 5:
-    {
-        test_case_name = "pixelate";
-
-        // Uncomment to run test case with an xywhROI override
-        /*for (i = 0; i < images; i++)
-        {
-            roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-            roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-            roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-            roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
-        }*/
-
-        // Uncomment to run test case with an ltrbROI override
-        /*for (i = 0; i < images; i++)
-            roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
-            roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
-            roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
-            roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
-        }
-        roiTypeSrc = RpptRoiType::LTRB;
-        roiTypeDst = RpptRoiType::LTRB;*/
-
-        start_omp = omp_get_wtime();
-        start = clock();
-        if (ip_bitDepth == 0)
-            rppt_pixelate_host(input, srcDescPtr, output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
-        else if (ip_bitDepth == 1)
-            rppt_pixelate_host(inputf16, srcDescPtr, outputf16, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
-        else if (ip_bitDepth == 2)
-            rppt_pixelate_host(inputf32, srcDescPtr, outputf32, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
-        else if (ip_bitDepth == 3)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 4)
-            missingFuncFlag = 1;
-        else if (ip_bitDepth == 5)
-            rppt_pixelate_host(inputi8, srcDescPtr, outputi8, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
         else if (ip_bitDepth == 6)
             missingFuncFlag = 1;
         else

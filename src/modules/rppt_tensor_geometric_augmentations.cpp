@@ -1038,7 +1038,7 @@ RppStatus rppt_pixelate_host(RppPtr_t srcPtr,
         internalDstImgSizes[i].width = internalRoiTensorPtrSrc[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / pixelationIntensity;
         internalDstImgSizes[i].height = internalRoiTensorPtrSrc[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiHeight / pixelationIntensity;
     }
-    unsigned long long interBufferSize = (unsigned long long)interDescPtr->h * (unsigned long long)interDescPtr->w * (unsigned long long)srcDescPtr->c * (unsigned long long)srcDescPtr->n;
+    Rpp64u interBufferSize = static_cast<Rpp64u>(interDescPtr->h) * static_cast<Rpp64u>(interDescPtr->w) * static_cast<Rpp64u>(srcDescPtr->c) * static_cast<Rpp64u>(srcDescPtr->n);
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
@@ -1757,8 +1757,7 @@ RppStatus rppt_pixelate_gpu(RppPtr_t srcPtr,
         interDescPtr->strides.hStride = interDescPtr->c * interDescPtr->w;
     }
     RppPtr_t interDstPtr;
-    unsigned long long interBufferSize = (unsigned long long)interDescPtr->h * (unsigned long long)interDescPtr->w * (unsigned long long)srcDescPtr->c * (unsigned long long)srcDescPtr->n;
-    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+    Rpp64u interBufferSize = static_cast<Rpp64u>(interDescPtr->h) * static_cast<Rpp64u>(interDescPtr->w) * static_cast<Rpp64u>(srcDescPtr->c) * static_cast<Rpp64u>(srcDescPtr->n);    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
         hipMalloc(&interDstPtr, interBufferSize);
         hip_exec_resize_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
