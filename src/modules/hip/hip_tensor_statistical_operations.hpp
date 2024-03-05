@@ -23,9 +23,10 @@ SOFTWARE.
 */
 
 #ifndef HIP_TENSOR_STATISTICAL_OPERATIONS_HPP
-#define HIP_TENSOR_STATISTICAL_OPERATIONS_HPP
 
 #include "kernel/tensor_sum.hpp"
+#include "kernel/tensor_min.hpp"
+#include "kernel/tensor_max.hpp"
 #include "kernel/normalize.hpp"
 
 #endif // HIP_TENSOR_STATISTICAL_OPERATIONS_HPP
