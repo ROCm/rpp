@@ -26,7 +26,7 @@ SOFTWARE.
 #include "rpp_cpu_simd.hpp"
 #include "rpp_cpu_common.hpp"
 
-/* Computes strides */
+// Computes strides
 void compute_strides(Rpp32u *strides, Rpp32u *shape, Rpp32u nDim)
 {
     if (nDim > 0)
@@ -41,7 +41,7 @@ void compute_strides(Rpp32u *strides, Rpp32u *shape, Rpp32u nDim)
     }
 }
 
-/* Computes difference of input with mean and squares them up */
+// Computes difference of input with mean and squares them up
 template<typename T>
 void compute_diff_square_sum(Rpp32f &output, T *input, Rpp32s inputStride, Rpp32s numElements, Rpp32f mean)
 {
@@ -75,7 +75,7 @@ void compute_diff_square_sum(Rpp32f &output, T *input, Rpp32s inputStride, Rpp32
     }
 }
 
-/* Sums input values */
+// Sums input values
 template<typename T>
 void compute_sum(Rpp32f &output, T *input, Rpp32s inputStride, Rpp32s numElements)
 {
@@ -105,7 +105,7 @@ void compute_sum(Rpp32f &output, T *input, Rpp32s inputStride, Rpp32s numElement
     }
 }
 
-/* Computes mean for 2D inputs */
+// Computes mean for 2D inputs
 void compute_2D_mean(Rpp32f *srcPtr, Rpp32f *meanPtr, Rpp32u *dims, Rpp32u *stride)
 {
     Rpp32f *srcPtrTemp = srcPtr;
@@ -119,7 +119,7 @@ void compute_2D_mean(Rpp32f *srcPtr, Rpp32f *meanPtr, Rpp32u *dims, Rpp32u *stri
     }
 }
 
-/* Computes inverse stddev for 2D inputs */
+// Computes inverse stddev for 2D inputs
 void compute_2D_inv_std_dev(Rpp32f *srcPtr, Rpp32f *meanPtr, Rpp32f *stdDevPtr, Rpp32u *dims, Rpp32u *stride, Rpp32f scale)
 {
 
@@ -134,7 +134,7 @@ void compute_2D_inv_std_dev(Rpp32f *srcPtr, Rpp32f *meanPtr, Rpp32f *stdDevPtr, 
     rpp_rsqrt_avx(stdDevPtr, (Rpp32s)dims[0], 0, normFactor, scale);
 }
 
-/* Computes mean for 3D inputs */
+// Computes mean for 3D inputs
 void compute_3D_mean(Rpp32f *srcPtr, Rpp32f *meanPtr, Rpp32u *dims, Rpp32u *stride, bool isConsecutive = true)
 {
     Rpp32f *srcPtrTemp = srcPtr;
@@ -174,7 +174,7 @@ void compute_3D_mean(Rpp32f *srcPtr, Rpp32f *meanPtr, Rpp32u *dims, Rpp32u *stri
     }
 }
 
-/* Computes inverse stddev for 3D inputs */
+// Computes inverse stddev for 3D inputs
 void compute_3D_inv_std_dev(Rpp32f *srcPtr, Rpp32f *meanPtr, Rpp32f *stdDevPtr, Rpp32u *dims, Rpp32u *stride, Rpp32f scale, bool isConsecutive = true)
 {
     Rpp32f *srcPtrTemp = srcPtr;
@@ -214,7 +214,7 @@ void compute_3D_inv_std_dev(Rpp32f *srcPtr, Rpp32f *meanPtr, Rpp32f *stdDevPtr, 
     }
 }
 
-/* Computes mean for ND inputs */
+// Computes mean for ND inputs
 template<typename T>
 void compute_ND_mean(T *srcPtr, Rpp32f *meanPtr, Rpp32u *dims, Rpp32u *stride, Rpp32u *axis, Rpp32u nDim, Rpp32u level, Rpp32u index, Rpp32u size, Rpp32u norm, Rpp32u lastNormAxis)
 {
@@ -236,7 +236,7 @@ void compute_ND_mean(T *srcPtr, Rpp32f *meanPtr, Rpp32u *dims, Rpp32u *stride, R
     }
 }
 
-/* Computes inverse stddev for ND inputs */
+// Computes inverse stddev for ND inputs
 template<typename T>
 void compute_ND_stddev(T *srcPtr, Rpp32f *meanPtr, Rpp32f *stdDevPtr, Rpp32u *dims, Rpp32u *stride, Rpp32u *axis, Rpp32u nDim, Rpp32u level, Rpp32u index, Rpp32u size, Rpp32u norm, Rpp32u lastNormAxis)
 {
@@ -258,7 +258,7 @@ void compute_ND_stddev(T *srcPtr, Rpp32f *meanPtr, Rpp32f *stdDevPtr, Rpp32u *di
     }
 }
 
-/* Computes normalize for 3D non toggle variants */
+// Computes normalize for 3D non toggle variants
 void normalize_3D_tensor_nontoggle(Rpp32f *srcPtr, RpptGenericDescPtr srcGenericDescPtr, Rpp32f *dstPtr, RpptGenericDescPtr dstGenericDescPtr,
                          Rpp32f *meanPtr, Rpp32f *multiplierPtr, Rpp32f shift, Rpp32u *paramStride, Rpp32u *length)
 {
@@ -296,7 +296,7 @@ void normalize_3D_tensor_nontoggle(Rpp32f *srcPtr, RpptGenericDescPtr srcGeneric
     }
 }
 
-/* Computes normalize for 3D toggle variants when axis mask is set to 3 */
+// Computes normalize for 3D toggle variants when axis mask is set to 3
 void normalize_3D_tensor_axis3_toggle(Rpp32f *srcPtr, RpptGenericDescPtr srcGenericDescPtr, Rpp32f *dstPtr, RpptGenericDescPtr dstGenericDescPtr,
                          Rpp32f *meanPtr, Rpp32f *multiplierPtr, Rpp32f shift, Rpp32u *paramStride, Rpp32u *length)
 {
@@ -336,7 +336,7 @@ void normalize_3D_tensor_axis3_toggle(Rpp32f *srcPtr, RpptGenericDescPtr srcGene
     }
 }
 
-/* Computes normalize for 3D non toggle variants its optimized with AVX when axis mask set to 3 and 16 channel normalize */
+// Computes normalize for 3D non toggle variants its optimized with AVX when axis mask set to 3 and 16 channel normalize
 void normalize_3D_tensor_avx_axis3(Rpp32f *srcPtr, RpptGenericDescPtr srcGenericDescPtr, Rpp32f *dstPtr, RpptGenericDescPtr dstGenericDescPtr,
                                    Rpp32f *meanPtr, Rpp32f *multiplierPtr, Rpp32f shift, Rpp32u *paramStride, Rpp32u bufferLength, Rpp32u *length)
 {
@@ -370,7 +370,7 @@ void normalize_3D_tensor_avx_axis3(Rpp32f *srcPtr, RpptGenericDescPtr srcGeneric
     }
 }
 
-/* Computes normalize for ND non toggle variants */
+// Computes normalize for ND non toggle variants
 template<typename T1, typename T2>
 void normalize_ND_tensor_nontoggle(T1 *srcPtr, Rpp32u *srcStride, T2 *dstPtr, Rpp32f *meanPtr, Rpp32f *multiplierPtr,
                                    Rpp32f shift, Rpp32u *paramStride, Rpp32u *length, Rpp32u nDim, Rpp32u level, Rpp32u& idx)
@@ -404,7 +404,7 @@ void normalize_ND_tensor_nontoggle(T1 *srcPtr, Rpp32u *srcStride, T2 *dstPtr, Rp
     }
 }
 
-/* Computes normalize for ND non toggle variants for i8 dataype */
+// Computes normalize for ND non toggle variants for i8 dataype
 void normalize_ND_tensor_nontoggle(Rpp32s *srcPtr, Rpp32u *srcStride, Rpp32f *dstPtr, Rpp32f *meanPtr, Rpp32f *multiplierPtr,
                                    Rpp32f shift, Rpp32u *paramStride, Rpp32u *length, Rpp32u nDim, Rpp32u level, Rpp32u& idx)
 {
@@ -436,7 +436,7 @@ void normalize_ND_tensor_nontoggle(Rpp32s *srcPtr, Rpp32u *srcStride, Rpp32f *ds
     }
 }
 
-/* Computes normalize for 2D */
+// Computes normalize for 2D
 void normalize_2D_tensor(Rpp32f *srcPtr, RpptGenericDescPtr srcDescPtr, Rpp32f *dstPtr, RpptGenericDescPtr dstDescPtr,
                          Rpp32f *meanPtr, Rpp32f *invStdDevPtr, Rpp32f shift, Rpp32u *dims, Rpp32u *paramStride)
 {
@@ -458,7 +458,7 @@ void normalize_2D_tensor(Rpp32f *srcPtr, RpptGenericDescPtr srcDescPtr, Rpp32f *
     }
 }
 
-/* Computes normalize for 2D, optimized with AVX when axis mask set to 2 */
+// Computes normalize for 2D, optimized with AVX when axis mask set to 2
 void normalize_2D_tensor_avx_axis2(Rpp32f *srcPtr, RpptGenericDescPtr srcDescPtr, Rpp32f *dstPtr, RpptGenericDescPtr dstDescPtr,
                                    Rpp32f *meanPtr, Rpp32f *invStdDevPtr, Rpp32f shift, Rpp32u *dims, Rpp32u *paramStride)
 {
@@ -497,7 +497,7 @@ void normalize_2D_tensor_avx_axis2(Rpp32f *srcPtr, RpptGenericDescPtr srcDescPtr
     }
 }
 
-/* Performs collapse axis operation wherein continuous axis that require normalization are combined together */
+// Performs collapse axis operation wherein continuous axis that require normalization are combined together
 void collapse_axis(Rpp32u *nDim, Rpp32u *axis, Rpp32u *length, Rpp32u *newAxis, Rpp32u *newDims, Rpp32u *lastNormAxis)
 {
     int skipped = 0, prev = -2, k = 0;

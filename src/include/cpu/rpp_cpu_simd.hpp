@@ -1273,9 +1273,20 @@ inline void rpp_load16_u8_to_u32_avx(Rpp8u *srcPtr, __m256i *p)
 
 inline void rpp_load24_f32pkd3_to_f32pln3_avx(Rpp32f *srcPtr, __m256 *p)
 {
-    p[0] = _mm256_setr_ps(srcPtr[0], srcPtr[3], srcPtr[6], srcPtr[9], srcPtr[12], srcPtr[15], srcPtr[18], srcPtr[21]);
-    p[1] = _mm256_setr_ps(srcPtr[1], srcPtr[4], srcPtr[7], srcPtr[10], srcPtr[13], srcPtr[16], srcPtr[19], srcPtr[22]);
-    p[2] = _mm256_setr_ps(srcPtr[2], srcPtr[5], srcPtr[8], srcPtr[11], srcPtr[14], srcPtr[17], srcPtr[20], srcPtr[23]);
+    __m128 p128[8];
+    p128[0] = _mm_loadu_ps(srcPtr);
+    p128[1] = _mm_loadu_ps(srcPtr + 3);
+    p128[2] = _mm_loadu_ps(srcPtr + 6);
+    p128[3] = _mm_loadu_ps(srcPtr + 9);
+    _MM_TRANSPOSE4_PS(p128[0], p128[1], p128[2], p128[3]);
+    p128[4] = _mm_loadu_ps(srcPtr + 12);
+    p128[5] = _mm_loadu_ps(srcPtr + 15);
+    p128[6] = _mm_loadu_ps(srcPtr + 18);
+    p128[7] = _mm_loadu_ps(srcPtr + 21);
+    _MM_TRANSPOSE4_PS(p128[4], p128[5], p128[6], p128[7]);
+    p[0] = _mm256_setr_m128(p128[0], p128[4]);
+    p[1] = _mm256_setr_m128(p128[1], p128[5]);
+    p[2] = _mm256_setr_m128(p128[2], p128[6]);
 }
 
 inline void rpp_load24_f32pkd3_to_f32pln3_mirror_avx(Rpp32f *srcPtr, __m256 *p)
