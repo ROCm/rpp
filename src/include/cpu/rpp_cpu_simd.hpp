@@ -985,6 +985,25 @@ inline void rpp_glitch_load24_u8pkd3_to_f32pln3_avx(Rpp8u *srcPtr, __m256 *p, in
     p[2] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[0], xmm_pxMaskB), _mm_shuffle_epi8(px[1], xmm_pxMaskB)));
 }
 
+inline void rpp_glitch_load24_f32pkd3_to_f32pln3_avx(Rpp32f *srcPtr, __m256 *p, int *srcLocs)
+{
+    __m128 p128[8];
+    for(int i = 0; i < 3; i++)
+    {
+        p128[0] = _mm_loadu_ps(srcPtr + srcLocs[i]);
+        p128[1] = _mm_loadu_ps(srcPtr + srcLocs[i] + 3);
+        p128[2] = _mm_loadu_ps(srcPtr + srcLocs[i] + 6);
+        p128[3] = _mm_loadu_ps(srcPtr + srcLocs[i] + 9);
+        _MM_TRANSPOSE4_PS(p128[0], p128[1], p128[2], p128[3]);
+        p128[4] = _mm_loadu_ps(srcPtr + srcLocs[i] + 12);
+        p128[5] = _mm_loadu_ps(srcPtr + srcLocs[i] + 15);
+        p128[6] = _mm_loadu_ps(srcPtr + srcLocs[i] + 18);
+        p128[7] = _mm_loadu_ps(srcPtr + srcLocs[i] + 21);
+        _MM_TRANSPOSE4_PS(p128[4], p128[5], p128[6], p128[7]);
+        p[i] = _mm256_setr_m128(p128[i], p128[ i + 4]);
+    }
+}
+
 inline void rpp_glitch_load24_i8pkd3_to_f32pln3_avx(Rpp8s *srcPtr, __m256 *p, int *srcLocs)
 {
     __m128i px[2];
