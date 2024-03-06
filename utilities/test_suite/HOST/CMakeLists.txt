@@ -85,7 +85,6 @@ if (OpenCV_FOUND)
     add_executable(BatchPD_host_pkd3 ${ROCM_PATH}/share/rpp/test/rpp-performancetests/HOST_NEW/BatchPD_host_pkd3.cpp)
     add_executable(BatchPD_host_pln1 ${ROCM_PATH}/share/rpp/test/rpp-performancetests/HOST_NEW/BatchPD_host_pln1.cpp)
     add_executable(BatchPD_host_pln3 ${ROCM_PATH}/share/rpp/test/rpp-performancetests/HOST_NEW/BatchPD_host_pln3.cpp)
-    add_executable(Tensor_voxel_host Tensor_voxel_host.cpp)
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++17")
     target_link_libraries(Tensor_host ${OpenCV_LIBS} -lturbojpeg -lrpp pthread ${LINK_LIBRARY_LIST})
