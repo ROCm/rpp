@@ -2,7 +2,7 @@
 
 ## Supported Functionalities List
 
-![supported list](data/supported_functionalities.png")
+![supported list](data/supported_functionalities.png)
 
 ## Supported Functionalities Samples
 
