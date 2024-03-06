@@ -264,7 +264,7 @@ subprocess.run(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.run(["make", "-j16"], cwd=".")  # nosec
 
 # List of cases supported
-supportedCaseList = ['0', '1', '2', '3', '5']
+supportedCaseList = ['0', '1', '2', '3', '4', '5']
 
 # Create folders based on testType and profilingOption
 if testType == 1 and profilingOption == "YES":
