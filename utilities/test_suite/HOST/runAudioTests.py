@@ -210,6 +210,10 @@ else:
 
 # print the results of qa tests
 nonQACaseList = [] # Add cases present in supportedCaseList, but without QA support
+
+if testType == 0:
+    qaFilePath = os.path.join(outFilePath, "QA_results.txt")
+    checkFile = os.path.isfile(qaFilePath)
     if checkFile:
         print("---------------------------------- Results of QA Test - Tensor_host_audio -----------------------------------\n")
         print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList)
