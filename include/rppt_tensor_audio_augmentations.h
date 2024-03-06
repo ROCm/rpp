@@ -110,8 +110,6 @@ RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr,
 */
 RppStatus rppt_down_mixing_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcDimsTensor, bool normalizeWeights, rppHandle_t rppHandle);
 
-/******************** spectrogram ********************/
-
 /*! \brief Produces a spectrogram from a 1D audio buffer on HOST backend
  * \details Spectrogram for 1D audio buffer
  * \param[in] srcPtr source tensor in HOST memory

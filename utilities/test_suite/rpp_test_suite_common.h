@@ -1134,6 +1134,7 @@ inline void compare_reduction_output(T* output, string funcName, RpptDescPtr src
     int matched_values = 0;
 
     T *refOutput;
+    refOutput = (T *)calloc(srcDescPtr->n * 4, sizeof(T));
     int numChannels = (srcDescPtr->c == 1) ? 1 : 3;
     int numOutputs = (srcDescPtr->c == 1) ? srcDescPtr->n : srcDescPtr->n * 4;
     std::vector<int> ref;
