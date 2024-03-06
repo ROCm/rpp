@@ -126,13 +126,6 @@ std::map<int, std::vector<int>> TensorSumReferenceOutputs =
     {3, {348380, 340992, 262616, 951988, 1056552, 749506, 507441, 2313499, 2170646, 2732368, 3320699, 8223713}}
 };
 
-// Golden outputs for Tensor sum Kernel
-std::map<int, std::vector<Rpp64u>> TensorSumReferenceOutputs =
-{
-    {1, {334225, 813471, 2631125}},
-    {3, {348380, 340992, 262616, 951988, 1056552, 749506, 507441, 2313499, 2170646, 2732368, 3320699, 8223713}}
-};
-
 template <typename T>
 inline T validate_pixel_range(T pixel)
 {
