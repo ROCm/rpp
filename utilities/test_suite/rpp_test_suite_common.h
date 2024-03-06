@@ -125,13 +125,6 @@ std::map<int, std::vector<int>> TensorSumReferenceOutputs =
     {3, {348380, 340992, 262616, 951988, 1056552, 749506, 507441, 2313499, 2170646, 2732368, 3320699, 8223713}}
 };
 
-// Golden outputs for Tensor sum Kernel
-std::map<int, std::vector<Rpp64u>> TensorSumReferenceOutputs =
-{
-    {1, {334225, 813471, 2631125}},
-    {3, {348380, 340992, 262616, 951988, 1056552, 749506, 507441, 2313499, 2170646, 2732368, 3320699, 8223713}}
-};
-
 template <typename T>
 inline T validate_pixel_range(T pixel)
 {
@@ -1143,13 +1136,16 @@ inline void compare_reduction_output(T* output, string funcName, RpptDescPtr src
     T *refOutput;
     int numChannels = (srcDescPtr->c == 1) ? 1 : 3;
     int numOutputs = (srcDescPtr->c == 1) ? srcDescPtr->n : srcDescPtr->n * 4;
-    std::vector<T> ref;
-    if(testCase == 87)
-        refOutput = TensorSumReferenceOutputs[numChannels].data();
-    else if(testCase == 88)
-        refOutput = TensorMinReferenceOutputs[numChannels].data();
+    std::vector<int> ref;
+    if(testCase == 88)
+        ref = TensorMinReferenceOutputs[numChannels];
     else if(testCase == 89)
-        refOutput = TensorMaxReferenceOutputs[numChannels].data();
+        ref = TensorMaxReferenceOutputs[numChannels];
+    else if(testCase == 87)
+        ref = TensorSumReferenceOutputs[numChannels];
+
+    for (int i = 0; i < numOutputs; i++)
+        refOutput[i] = (T)ref[i];
 
     if(srcDescPtr->c == 1)
     {
