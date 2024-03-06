@@ -652,7 +652,7 @@ typedef struct RpptResamplingWindow
 {
     inline void input_range(Rpp32f x, Rpp32s *loc0, Rpp32s *loc1)
     {
-        Rpp32s xc = ceilf(x);
+        Rpp32s xc = std::ceil(x);
         *loc0 = xc - lobes;
         *loc1 = xc + lobes;
     }
@@ -660,7 +660,7 @@ typedef struct RpptResamplingWindow
     inline Rpp32f operator()(Rpp32f x)
     {
         Rpp32f locRaw = x * scale + center;
-        Rpp32s locFloor = floorf(locRaw);
+        Rpp32s locFloor = std::floor(locRaw);
         Rpp32f weight = locRaw - locFloor;
         locFloor = std::max(std::min(locFloor, lookupSize - 2), 0);
         Rpp32f current = lookup[locFloor];

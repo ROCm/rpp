@@ -68,7 +68,7 @@ RppStatus resample_host_tensor(Rpp32f *srcPtr,
                 {
                     Rpp32s blockEnd = std::min(outBlock + block, outEnd);
                     Rpp64f inBlockRaw = outBlock * scale;
-                    Rpp32s inBlockRounded = std::floor(inBlockRaw);
+                    Rpp32s inBlockRounded = static_cast<int>(inBlockRaw);
                     Rpp32f inPos = inBlockRaw - inBlockRounded;
                     const Rpp32f *inBlockPtr = srcPtrTemp + inBlockRounded;
                     for (int outPos = outBlock; outPos < blockEnd; outPos++, inPos += fscale)
@@ -81,7 +81,7 @@ RppStatus resample_host_tensor(Rpp32f *srcPtr,
                             loc1 = srcLength - inBlockRounded;
                         Rpp32s locInWindow = loc0;
                         Rpp32f locBegin = locInWindow - inPos;
-                        __m128 pLocInWindow = _mm_setr_ps(locBegin, locBegin + 1, locBegin + 2, locBegin + 3);
+                        __m128 pLocInWindow = _mm_add_ps(_mm_set1_ps(locBegin), xmm_pDstLocInit);
 
                         Rpp32f accum = 0.0f;
                         __m128 pAccum = xmm_p0;
@@ -91,6 +91,7 @@ RppStatus resample_host_tensor(Rpp32f *srcPtr,
                             pAccum = _mm_add_ps(pAccum, _mm_mul_ps(_mm_loadu_ps(inBlockPtr + locInWindow), w4));
                             pLocInWindow = _mm_add_ps(pLocInWindow, xmm_p4);
                         }
+                        // sum all 4 values in the pAccum vector and store in accum
                         pAccum = _mm_add_ps(pAccum, _mm_shuffle_ps(pAccum, pAccum, _MM_SHUFFLE(1, 0, 3, 2)));
                         pAccum = _mm_add_ps(pAccum, _mm_shuffle_ps(pAccum, pAccum, _MM_SHUFFLE(0, 1, 0, 1)));
                         accum = _mm_cvtss_f32(pAccum);
@@ -112,7 +113,7 @@ RppStatus resample_host_tensor(Rpp32f *srcPtr,
                 {
                     Rpp32s blockEnd = std::min(outBlock + block, outEnd);
                     Rpp64f inBlockRaw = outBlock * scale;
-                    Rpp32s inBlockRounded = std::floor(inBlockRaw);
+                    Rpp32s inBlockRounded = static_cast<int>(inBlockRaw);
                     Rpp32f inPos = inBlockRaw - inBlockRounded;
                     const Rpp32f *inBlockPtr = srcPtrTemp + inBlockRounded * numChannels;
                     for (int outPos = outBlock; outPos < blockEnd; outPos++, inPos += fscale)
