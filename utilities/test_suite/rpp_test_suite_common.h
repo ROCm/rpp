@@ -99,7 +99,30 @@ std::map<int, string> augmentationMap =
     {84, "spatter"},
     {85, "swap_channels"},
     {86, "color_to_greyscale"},
-    {87, "tensor_sum"}
+    {87, "tensor_sum"},
+    {88, "tensor_min"},
+    {89, "tensor_max"},
+};
+
+// Golden outputs for Tensor min Kernel
+std::map<int, std::vector<int>> TensorMinReferenceOutputs =
+{
+    {1, {1, 1, 7}},
+    {3, {0, 0, 0, 0, 2, 0, 0, 0, 7, 9, 0, 0}}
+};
+
+// Golden outputs for Tensor max Kernel
+std::map<int, std::vector<int>> TensorMaxReferenceOutputs =
+{
+    {1, {239, 245, 255}},
+    {3, {255, 240, 236, 255, 255, 242, 241, 255, 253, 255, 255, 255}}
+};
+
+// Golden outputs for Tensor sum Kernel
+std::map<int, std::vector<int>> TensorSumReferenceOutputs =
+{
+    {1, {334225, 813471, 2631125}},
+    {3, {348380, 340992, 262616, 951988, 1056552, 749506, 507441, 2313499, 2170646, 2732368, 3320699, 8223713}}
 };
 
 // Golden outputs for Tensor sum Kernel
@@ -1118,11 +1141,19 @@ inline void compare_reduction_output(T* output, string funcName, RpptDescPtr src
     int matched_values = 0;
 
     T *refOutput;
+    refOutput = (T *)calloc(srcDescPtr->n * 4, sizeof(T));
     int numChannels = (srcDescPtr->c == 1) ? 1 : 3;
     int numOutputs = (srcDescPtr->c == 1) ? srcDescPtr->n : srcDescPtr->n * 4;
-    std::vector<T> ref;
-    if(testCase == 87)
-        refOutput = TensorSumReferenceOutputs[numChannels].data();
+    std::vector<int> ref;
+    if(testCase == 88)
+        ref = TensorMinReferenceOutputs[numChannels];
+    else if(testCase == 89)
+        ref = TensorMaxReferenceOutputs[numChannels];
+    else if(testCase == 87)
+        ref = TensorSumReferenceOutputs[numChannels];
+
+    for (int i = 0; i < numOutputs; i++)
+        refOutput[i] = (T)ref[i];
 
     if(srcDescPtr->c == 1)
     {
@@ -1148,6 +1179,7 @@ inline void compare_reduction_output(T* output, string funcName, RpptDescPtr src
                 fileMatch++;
         }
     }
+    free(refOutput);
 
     std::cout << std::endl << "Results for " << func << " :" << std::endl;
     std::string status = func + ": ";
@@ -1172,12 +1204,17 @@ inline void compare_reduction_output(T* output, string funcName, RpptDescPtr src
     }
 }
 
+// print array of any bit depth for specified length
+template <typename T>
+inline void print_array(T *src, Rpp32u length, Rpp32u precision)
+{
+}
+
 // Used to randomly swap values present in array of size n
 inline void randomize(unsigned int arr[], unsigned int n)
 {
     // Use a different seed value each time
     srand (time(NULL));
-    for (unsigned int i = n - 1; i > 0; i--)
     {
         // Pick a random index from 0 to i
         unsigned int j = rand() % (i + 1);
