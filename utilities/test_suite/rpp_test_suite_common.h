@@ -898,7 +898,6 @@ inline void read_bin_file(string refFile, T *binaryContent)
 
     fseek(fp, 0, SEEK_END);
     long fsize = ftell(fp);
-    std::cout << "fsize: " << fsize << std::endl;
     if (fsize == 0)
     {
         std::cout << "File is empty";

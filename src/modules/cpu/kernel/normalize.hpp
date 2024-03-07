@@ -560,6 +560,12 @@ RppStatus normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
             size *= ((axisMask & (int)(pow(2,i))) >= 1) ? 1 : roiTensor[(numDims * 2 * batch) + numDims + i];
         maxSize = std::max(maxSize, size);
     }
+    if(!computeMean && !computeStddev)
+    {
+        for(Rpp32u i = 0; i < maxSize; i++)
+            stdDevTensorPtr[i] = (!stdDevTensorPtr[i])? 1.0f : scale / stdDevTensorPtr[i];
+        maxSize = 0;
+    }
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
@@ -737,11 +743,6 @@ RppStatus normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
                 compute_3D_mean(srcPtrChannel, meanTensor, srcReductionDims, srcStride, isConsecutive);
             if(computeStddev)
                 compute_3D_inv_std_dev(srcPtrChannel, meanTensor, stdDevTensor, srcReductionDims, srcStride, scale, isConsecutive);
-            else
-            {
-                for(Rpp32u i = 0; i < reductionDims; i++)
-                    stdDevTensor[i] = scale / stdDevTensor[i];
-            }
 
             if((axisMask == 3) && (srcGenericDescPtr->layout == RpptLayout::NHWC) && (dstGenericDescPtr->layout == RpptLayout::NHWC) && (srcGenericDescPtr->dims[3] == 16))
                 normalize_3D_tensor_avx_axis3(srcPtrChannel, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTensor, stdDevTensor, shift, paramStride, length[1] * layoutParams.bufferMultiplier, length);
@@ -804,8 +805,8 @@ RppStatus normalize_generic_host_tensor(T1 *srcPtr,
                                         T2 *dstPtr,
                                         RpptGenericDescPtr dstGenericDescPtr,
                                         Rpp32u axisMask,
-                                        Rpp32f *meanTensor,
-                                        Rpp32f *stdDevTensor,
+                                        Rpp32f *meanTensorPtr,
+                                        Rpp32f *stdDevTensorPtr,
                                         Rpp32u computeMean,
                                         Rpp32u computeStddev,
                                         Rpp32f scale,
@@ -817,6 +818,21 @@ RppStatus normalize_generic_host_tensor(T1 *srcPtr,
     Rpp32u numThreads = handle.GetNumThreads();
     Rpp32u nDim = srcGenericDescPtr->numDims - 1;
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
+
+    Rpp32u maxSize = 1;
+    for(int batch = 0; batch < batchSize; batch++)
+    {
+        Rpp32u size = 1; // length of input tensors differ based on axisMask and nDim
+        for(int i = 0; i < nDim; i++)
+            size *= ((axisMask & (int)(pow(2,i))) >= 1) ? 1 : roiTensor[(nDim * 2 * batch) + nDim + i];
+        maxSize = std::max(maxSize, size);
+    }
+    if(!computeMean && !computeStddev)
+    {
+        for(Rpp32u i = 0; i < maxSize; i++)
+            stdDevTensorPtr[i] = (!stdDevTensorPtr[i])? 1.0f : scale / stdDevTensorPtr[i];
+        maxSize = 0;
+    }
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
@@ -832,8 +848,11 @@ RppStatus normalize_generic_host_tensor(T1 *srcPtr,
 
         T1 *srcPtrTemp;
         T2 *dstPtrTemp;
+        Rpp32f *meanTensor, *stdDevTensor;
         srcPtrTemp = srcPtr + batchCount * srcGenericDescPtr->strides[0];
         dstPtrTemp = dstPtr + batchCount * dstGenericDescPtr->strides[0];
+        meanTensor = meanTensorPtr + batchCount * maxSize;
+        stdDevTensor = stdDevTensorPtr + batchCount * maxSize;
 
         // Set all values in dst buffer to 0.0
         for(int cnt = 0; cnt < dstGenericDescPtr->strides[0]; cnt++)
@@ -870,11 +889,6 @@ RppStatus normalize_generic_host_tensor(T1 *srcPtr,
             compute_ND_stddev(srcPtrChannel, meanTensor, stdDevTensor, newDims, srcStride, newAxis, nDim, 0, 0, size, 0, lastNormAxis);
             Rpp32f normFactor = (Rpp32f)(1.0 / totalElements);
             rpp_rsqrt_avx(stdDevTensor, (Rpp32s)size, 0, normFactor, scale);
-        }
-        else
-        {
-            for(int i = 0; i < size; i++)
-                stdDevTensor[i] = scale / stdDevTensor[i];
         }
 
         for(int i = 0; i < nDim; i++)

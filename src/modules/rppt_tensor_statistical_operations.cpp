@@ -337,7 +337,7 @@ RppStatus rppt_normalize_host(RppPtr_t srcPtr,
                                       layoutParams,
                                       rpp::deref(rppHandle));
     }
-  
+
     return RPP_SUCCESS;
 }
 
@@ -348,7 +348,7 @@ RppStatus rppt_normalize_host(RppPtr_t srcPtr,
 #ifdef GPU_SUPPORT
 
 /******************** tensor_sum ********************/
-#ifdef HIP_COMPILE
+
 RppStatus rppt_tensor_sum_gpu(RppPtr_t srcPtr,
                               RpptDescPtr srcDescPtr,
                               RppPtr_t tensorSumArr,
@@ -357,6 +357,7 @@ RppStatus rppt_tensor_sum_gpu(RppPtr_t srcPtr,
                               RpptRoiType roiType,
                               rppHandle_t rppHandle)
 {
+#ifdef HIP_COMPILE
     if (srcDescPtr->c == 1)
     {
         if (tensorSumArrLength < srcDescPtr->n)      // sum of single channel
@@ -417,14 +418,13 @@ RppStatus rppt_tensor_sum_gpu(RppPtr_t srcPtr,
                             rpp::deref(rppHandle));
     }
 
- return RPP_SUCCESS;
+    return RPP_SUCCESS;
 #elif defined(OCL_COMPILE)
     return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
 
 /******************** tensor_min ********************/
-
 RppStatus rppt_tensor_min_gpu(RppPtr_t srcPtr,
                               RpptDescPtr srcDescPtr,
                               RppPtr_t imageMinArr,
@@ -433,6 +433,7 @@ RppStatus rppt_tensor_min_gpu(RppPtr_t srcPtr,
                               RpptRoiType roiType,
                               rppHandle_t rppHandle)
 {
+#ifdef HIP_COMPILE
     if (srcDescPtr->c == 1)
     {
         if (imageMinArrLength < srcDescPtr->n)   // min of single channel
@@ -481,7 +482,7 @@ RppStatus rppt_tensor_min_gpu(RppPtr_t srcPtr,
                             rpp::deref(rppHandle));
     }
 
- return RPP_SUCCESS;
+    return RPP_SUCCESS;
 #elif defined(OCL_COMPILE)
     return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
@@ -497,6 +498,7 @@ RppStatus rppt_tensor_max_gpu(RppPtr_t srcPtr,
                               RpptRoiType roiType,
                               rppHandle_t rppHandle)
 {
+#ifdef HIP_COMPILE
     if (srcDescPtr->c == 1)
     {
         if (imageMaxArrLength < srcDescPtr->n)   // max of single channel
@@ -545,7 +547,7 @@ RppStatus rppt_tensor_max_gpu(RppPtr_t srcPtr,
                             rpp::deref(rppHandle));
     }
 
- return RPP_SUCCESS;
+    return RPP_SUCCESS;
 #elif defined(OCL_COMPILE)
     return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
@@ -631,7 +633,7 @@ RppStatus rppt_normalize_gpu(RppPtr_t srcPtr,
                                   rpp::deref(rppHandle));
     }
 
- return RPP_SUCCESS;
+    return RPP_SUCCESS;
 #elif defined(OCL_COMPILE)
     return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
