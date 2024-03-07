@@ -911,6 +911,7 @@ int main(int argc, char **argv)
                         dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
                         dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
                     }
+
                     Rpp32f mean[batchSize * 3];
                     Rpp32f stdDev[batchSize * 3];
                     Rpp32u mirror[batchSize];
@@ -934,6 +935,7 @@ int main(int argc, char **argv)
                         missingFuncFlag = 1;
 
                     break;
+                }
                 case 82:
                 {
                     testCaseName = "ricap";

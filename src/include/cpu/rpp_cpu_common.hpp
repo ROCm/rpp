@@ -3593,7 +3593,7 @@ inline Rpp32f compute_gaussian_noise_1_host(Rpp32f pixVal, RpptXorwowStateBoxMul
     rngVal = rngVal * stdDev + mean;
     pixSqrt = sqrt(pixVal);
 
-    return pixSqrt * rngVal + pixVal;
+    return RPPPIXELCHECKF32(pixSqrt * rngVal + pixVal);
 }
 
 inline Rpp32f compute_gaussian_noise_3d_1_host(Rpp32f pixVal, RpptXorwowStateBoxMuller *xorwowStatePtr, Rpp32f mean, Rpp32f stdDev)
