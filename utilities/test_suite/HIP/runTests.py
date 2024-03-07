@@ -522,7 +522,6 @@ if (testType == 1 and profilingOption == "NO"):
         print_performance_tests_summary(log_file, functionality_group_list, numRuns)
 
 # print the results of qa tests
-supportedCaseList = ['0', '1', '2', '4', '8', '13', '20', '21', '23', '29', '30', '31', '34', '36', '37', '38', '39', '54', '63', '70', '80', '82', '83', '84', '85', '86', '87']
 nonQACaseList = ['8', '24', '54', '84'] # Add cases present in supportedCaseList, but without QA support
 
 if qaMode and testType == 0:
@@ -530,20 +529,4 @@ if qaMode and testType == 0:
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
         print("---------------------------------- Results of QA Test - Tensor_hip ----------------------------------\n")
-        numLines = 0
-        numPassed = 0
-        for line in f:
-            sys.stdout.write(line)
-            numLines += 1
-            if "PASSED" in line:
-                numPassed += 1
-            sys.stdout.flush()
-        resultsInfo = "\n\nFinal Results of Tests:"
-        resultsInfo += "\n    - Total test cases including all subvariants REQUESTED = " + str(numLines)
-        resultsInfo += "\n    - Total test cases including all subvariants PASSED = " + str(numPassed)
-        resultsInfo += "\n\nGeneral information on Tensor test suite availability:"
-        resultsInfo += "\n    - Total augmentations supported in Tensor test suite = " + str(len(supportedCaseList))
-        resultsInfo += "\n    - Total augmentations with golden output QA test support = " + str(len(supportedCaseList) - len(nonQACaseList))
-        resultsInfo += "\n    - Total augmentations without golden ouput QA test support (due to randomization involved) = " + str(len(nonQACaseList))
-        f.write(resultsInfo)
-    print("\n-------------------------------------------------------------------" + resultsInfo + "\n\n-------------------------------------------------------------------")
+        print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList)

@@ -490,7 +490,6 @@ RppStatus rppt_gaussian_noise_3d_host(RppPtr_t srcPtr,
         return RPP_ERROR_NOT_IMPLEMENTED;
     }
 
-
     return RPP_SUCCESS;
 }
 

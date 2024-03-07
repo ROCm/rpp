@@ -3564,7 +3564,6 @@ inline void compute_gaussian_noise_3d_24_host(__m256 *p, __m256i *pxXorwowStateX
     p[2] = _mm256_add_ps(p[2], pRngVals[0]);                                                        // return pixVal + rngVal;
 }
 
-
 inline void compute_gaussian_noise_12_host(__m128 *p, __m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter, __m128 *pGaussianNoiseParams)
 {
     compute_gaussian_noise_8_host(p, pxXorwowStateX, pxXorwowStateCounter, pGaussianNoiseParams);

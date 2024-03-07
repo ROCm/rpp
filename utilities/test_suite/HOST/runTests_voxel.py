@@ -223,7 +223,7 @@ print("#########################################################################
 print("Running all layout Inputs...")
 print("##########################################################################################")
 
-bitDepths = [2]
+bitDepths = [0, 2]
 if testType == 0:
     for case in caseList:
         if case not in supportedCaseList:
