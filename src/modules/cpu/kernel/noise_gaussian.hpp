@@ -1393,61 +1393,6 @@ RppStatus gaussian_noise_i8_i8_host_tensor(Rpp8s *srcPtr,
     return RPP_SUCCESS;
 }
 
-template<typename T>
-void copy_3d_host_tensor(T *srcPtr,
-                         RpptGenericDescPtr srcGenericDescPtr,
-                         T *dstPtr,
-                         RpptGenericDescPtr dstGenericDescPtr,
-                         RpptROI3D *roi,
-                         RppLayoutParams layoutParams)
-{
-    if((srcGenericDescPtr->layout == RpptLayout::NDHWC) && (dstGenericDescPtr->layout == RpptLayout::NDHWC))
-    {
-        T *srcPtrDepth = srcPtr + (roi->xyzwhdROI.xyz.z * srcGenericDescPtr->strides[2]) + (roi->xyzwhdROI.xyz.y * srcGenericDescPtr->strides[3]) + (roi->xyzwhdROI.xyz.x * layoutParams.bufferMultiplier);
-        T *dstPtrDepth = dstPtr;
-        Rpp32u width = roi->xyzwhdROI.roiWidth * srcGenericDescPtr->dims[4];
-        for(int i = 0; i < roi->xyzwhdROI.roiDepth; i++)
-        {
-            T *srcPtrRow = srcPtrDepth;
-            T *dstPtrRow = dstPtrDepth;
-            for(int j = 0; j < roi->xyzwhdROI.roiHeight; j++)
-            {
-                memcpy(dstPtrRow, srcPtrRow, width * sizeof(T));
-                srcPtrRow += srcGenericDescPtr->strides[2];
-                dstPtrRow += dstGenericDescPtr->strides[2];
-            }
-            srcPtrDepth += srcGenericDescPtr->strides[1];
-            dstPtrDepth += dstGenericDescPtr->strides[1];
-        }
-    }
-    else if ((srcGenericDescPtr->layout == RpptLayout::NCDHW) && (dstGenericDescPtr->layout == RpptLayout::NCDHW))
-    {
-        T *srcPtrChannel = srcPtr + (roi->xyzwhdROI.xyz.z * srcGenericDescPtr->strides[2]) + (roi->xyzwhdROI.xyz.y * srcGenericDescPtr->strides[3]) + (roi->xyzwhdROI.xyz.x * layoutParams.bufferMultiplier);
-        T *dstPtrChannel = dstPtr;
-        int channels = srcGenericDescPtr->dims[4];
-        for(int c = 0; c < channels; c++)
-        {
-            T *srcPtrDepth = srcPtrChannel;
-            T *dstPtrDepth = dstPtrChannel;
-            for(int i = 0; i < roi->xyzwhdROI.roiDepth; i++)
-            {
-                T *srcPtrRow = srcPtrDepth;
-                T *dstPtrRow = dstPtrDepth;
-                for(int j = 0; j < roi->xyzwhdROI.roiHeight; j++)
-                {
-                    memcpy(dstPtrRow, srcPtrRow, roi->xyzwhdROI.roiWidth * sizeof(T));
-                    srcPtrRow += srcGenericDescPtr->strides[3];
-                    dstPtrRow += dstGenericDescPtr->strides[3];
-                }
-                srcPtrDepth += srcGenericDescPtr->strides[2];
-                dstPtrDepth += dstGenericDescPtr->strides[2];
-            }
-            srcPtrChannel += srcGenericDescPtr->strides[1];
-            dstPtrChannel += dstGenericDescPtr->strides[1];
-        }
-    }
-}
-
 RppStatus gaussian_noise_3d_u8_u8_host_tensor(Rpp8u *srcPtr,
                                               RpptGenericDescPtr srcGenericDescPtr,
                                               Rpp8u *dstPtr,
