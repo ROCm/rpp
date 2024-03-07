@@ -316,6 +316,31 @@ int main(int argc, char * argv[])
                     else
                         missingFuncFlag = 1;
 
+                    if(qaFlag)
+                    {
+                        // update the roi for comparision with the shapeTensor values
+                        if (descriptorPtr3D->layout == RpptLayout::NCDHW)
+                        {
+                            for(int i = 0; i < batchSize; i++)
+                            {
+                                int idx1 = i * 4;
+                                roiGenericSrcPtr[i].xyzwhdROI.roiDepth = shapeTensor[idx1 + 1];
+                                roiGenericSrcPtr[i].xyzwhdROI.roiHeight =  shapeTensor[idx1 + 2];
+                                roiGenericSrcPtr[i].xyzwhdROI.roiWidth = shapeTensor[idx1 + 3];
+                            }
+                        }
+                        else if(descriptorPtr3D->layout == RpptLayout::NDHWC)
+                        {
+                            for(int i = 0; i < batchSize; i++)
+                            {
+                                int idx1 = i * 4;
+                                roiGenericSrcPtr[i].xyzwhdROI.roiDepth = shapeTensor[idx1];
+                                roiGenericSrcPtr[i].xyzwhdROI.roiHeight =  shapeTensor[idx1 + 1];
+                                roiGenericSrcPtr[i].xyzwhdROI.roiWidth = shapeTensor[idx1 + 2];
+                            }
+                        }
+                    }
+
                     break;
                 }
                 case 2:
@@ -417,30 +442,6 @@ int main(int argc, char * argv[])
                 // Copy U8 buffer to F32 buffer for display purposes
                 for(int i = 0; i < bufferLength; i++)
                     outputF32[i] = static_cast<float>(outputU8[i]);
-            }
-            if(qaFlag && testCase == 1)
-            {
-                // update the roi for comparision with the shapeTensor values
-                if (descriptorPtr3D->layout == RpptLayout::NCDHW)
-                {
-                    for(int i = 0; i < batchSize; i++)
-                    {
-                        int idx1 = i * 4;
-                        roiGenericSrcPtr[i].xyzwhdROI.roiDepth = shapeTensor[idx1 + 1];
-                        roiGenericSrcPtr[i].xyzwhdROI.roiHeight =  shapeTensor[idx1 + 2];
-                        roiGenericSrcPtr[i].xyzwhdROI.roiWidth = shapeTensor[idx1 + 3];
-                    }
-                }
-                else if(descriptorPtr3D->layout == RpptLayout::NDHWC)
-                {
-                    for(int i = 0; i < batchSize; i++)
-                    {
-                        int idx1 = i * 4;
-                        roiGenericSrcPtr[i].xyzwhdROI.roiDepth = shapeTensor[idx1];
-                        roiGenericSrcPtr[i].xyzwhdROI.roiHeight =  shapeTensor[idx1 + 1];
-                        roiGenericSrcPtr[i].xyzwhdROI.roiWidth = shapeTensor[idx1 + 2];
-                    }
-                }
             }
 
             /*Compare the output of the function with golden outputs only if
