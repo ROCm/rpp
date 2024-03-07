@@ -1208,12 +1208,6 @@ inline void print_array(T *src, Rpp32u length, Rpp32u precision)
 // Used to randomly swap values present in array of size n
 inline void randomize(unsigned int arr[], unsigned int n)
 {
-    // Use a different seed value each time
-    srand (time(NULL));
-    for (unsigned int i = n - 1; i > 0; i--)
-    {
-        // Pick a random index from 0 to i
-        unsigned int j = rand() % (i + 1);
         std::swap(arr[i], arr[j]);
     }
 }
