@@ -405,8 +405,16 @@ int main(int argc, char **argv)
         // Uncomment to run test case with an xywhROI override
         // roi.xywhROI = {0, 0, 25, 25};
         // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, batchSize);
+        // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, batchSize);
+
+        // Uncomment to run test case with an ltrbROI override
+        // roiTypeSrc = RpptRoiType::LTRB;
+        // convert_roi(roiTensorPtrSrc, roiTypeSrc, batchSize);
+        // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, batchSize);
+
         for (int perfRunCount = 0; perfRunCount < numRuns; perfRunCount++)
         {
+            clock_t startCpuTime, endCpuTime;
             double startWallTime, endWallTime;
             switch (testCase)
             {
@@ -703,8 +711,8 @@ int main(int argc, char **argv)
 
                     for (i = 0; i < batchSize; i++)
                     {
-                        cropRoi[i].xywhROI.xy.x = patchRoi[i].xywhROI.xy.x = roiListBatch[0];
-                        cropRoi[i].xywhROI.xy.y = patchRoi[i].xywhROI.xy.y = roiListBatch[1];
+                        cropRoi[i].xywhROI.xy.x = patchRoi[i].xywhROI.xy.x = roiList[0];
+                        cropRoi[i].xywhROI.xy.y = patchRoi[i].xywhROI.xy.y = roiList[1];
                         cropRoi[i].xywhROI.roiWidth = patchRoi[i].xywhROI.roiWidth = roiWidthList[i];
                         cropRoi[i].xywhROI.roiHeight = patchRoi[i].xywhROI.roiHeight = roiHeightList[i];
                     }
@@ -724,8 +732,8 @@ int main(int argc, char **argv)
 
                     for (i = 0; i < batchSize; i++)
                     {
-                        roiTensorPtrDst[i].xywhROI.xy.x = roiListBatch[0];
-                        roiTensorPtrDst[i].xywhROI.xy.y = roiListBatch[1];
+                        roiTensorPtrDst[i].xywhROI.xy.x = roiList[0];
+                        roiTensorPtrDst[i].xywhROI.xy.y = roiList[1];
                         dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiWidthList[i];
                         dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiHeightList[i];
                     }
@@ -780,8 +788,8 @@ int main(int argc, char **argv)
 
                     for (i = 0; i < batchSize; i++)
                     {
-                        roiTensorPtrDst[i].xywhROI.xy.x = roiListBatch[0];
-                        roiTensorPtrDst[i].xywhROI.xy.y = roiListBatch[1];
+                        roiTensorPtrDst[i].xywhROI.xy.x = roiList[0];
+                        roiTensorPtrDst[i].xywhROI.xy.y = roiList[1];
                         dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiWidthList[i];
                         dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiHeightList[i];
                     }
