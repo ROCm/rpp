@@ -334,6 +334,13 @@ int main(int argc, char **argv)
         }
     }
 
+    RpptROI *cropRoi, *patchRoi;
+    if(testCase == 33)
+    {
+        cropRoi = static_cast<RpptROI*>(calloc(batchSize, sizeof(RpptROI)));
+        patchRoi = static_cast<RpptROI*>(calloc(batchSize, sizeof(RpptROI)));
+    }
+
     // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
     // If numThreads value passed is 0, number of OpenMP threads used by RPP will be set to batch size
     Rpp32u numThreads = 0;
