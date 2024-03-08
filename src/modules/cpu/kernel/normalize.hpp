@@ -113,7 +113,7 @@ void compute_2D_mean(Rpp32f *srcPtr, Rpp32f *meanPtr, Rpp32u *dims, Rpp32u *stri
     for(Rpp32u i = 0; i < dims[0]; i++)
     {
         meanPtr[i] = 0;
-        compute_sum(meanPtr[i], srcPtrTemp, 1, dims[1]);
+        compute_sum(meanPtr[i], srcPtrTemp, stride[0], dims[1]);
         srcPtrTemp += stride[1];
         meanPtr[i] *= normFactor;
     }
@@ -128,7 +128,7 @@ void compute_2D_inv_std_dev(Rpp32f *srcPtr, Rpp32f *meanPtr, Rpp32f *stdDevPtr, 
     for(Rpp32u i = 0; i < dims[0]; i++)
     {
         stdDevPtr[i] = 0;
-        compute_diff_square_sum(stdDevPtr[i], srcPtrTemp, 1, dims[1], meanPtr[i]);
+        compute_diff_square_sum(stdDevPtr[i], srcPtrTemp, stride[0], dims[1], meanPtr[i]);
         srcPtrTemp += stride[1];
     }
     rpp_rsqrt_avx(stdDevPtr, (Rpp32s)dims[0], 0, normFactor, scale);
@@ -150,7 +150,7 @@ void compute_3D_mean(Rpp32f *srcPtr, Rpp32f *meanPtr, Rpp32u *dims, Rpp32u *stri
                 meanPtr[index] = 0;
                 compute_sum(meanPtr[index], srcPtrRow, stride[0], dims[2]);
                 srcPtrRow += stride[1];
-                meanPtr[index] = meanPtr[index] * normFactor;
+                meanPtr[index] *= normFactor;
             }
             srcPtrTemp += stride[2];
         }
@@ -160,15 +160,14 @@ void compute_3D_mean(Rpp32f *srcPtr, Rpp32f *meanPtr, Rpp32u *dims, Rpp32u *stri
         Rpp32f normFactor = 1.0 / (dims[1] * dims[2]);
         for(Rpp32u i = 0; i < dims[0]; i++)
         {
-            Rpp32u index = i;
-            meanPtr[index] = 0;
+            meanPtr[i] = 0;
             Rpp32f *srcPtrRow = srcPtrTemp;
             for(Rpp32u j = 0; j < dims[1]; j++)
             {
-                compute_sum(meanPtr[index], srcPtrRow, stride[0], dims[2]);
+                compute_sum(meanPtr[i], srcPtrRow, stride[0], dims[2]);
                 srcPtrRow += stride[1];
             }
-            meanPtr[index] = meanPtr[index] * normFactor;
+            meanPtr[i] *= normFactor;
             srcPtrTemp += stride[2];
         }
     }
@@ -200,12 +199,11 @@ void compute_3D_inv_std_dev(Rpp32f *srcPtr, Rpp32f *meanPtr, Rpp32f *stdDevPtr, 
         Rpp32f normFactor = (Rpp32f)(1.0 / (dims[1] * dims[2]));
         for(Rpp32u i = 0; i < dims[0]; i++)
         {
-            Rpp32u index = i;
-            stdDevPtr[index] = 0;
+            stdDevPtr[i] = 0;
             Rpp32f *srcPtrRow = srcPtrTemp;
             for(Rpp32u j = 0; j < dims[1]; j++)
             {
-                compute_diff_square_sum(stdDevPtr[index], srcPtrRow, stride[0], dims[2], meanPtr[index]);
+                compute_diff_square_sum(stdDevPtr[i], srcPtrRow, stride[0], dims[2], meanPtr[i]);
                 srcPtrRow += stride[1];
             }
             srcPtrTemp += stride[2];
@@ -560,6 +558,7 @@ RppStatus normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
             size *= ((axisMask & (int)(pow(2,i))) >= 1) ? 1 : roiTensor[(numDims * 2 * batch) + numDims + i];
         maxSize = std::max(maxSize, size);
     }
+
     if(!computeMean && !computeStddev)
     {
         for(Rpp32u i = 0; i < maxSize; i++)
@@ -571,14 +570,10 @@ RppStatus normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
 #pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < batchSize; batchCount++)
 	{
-        int size = 1;
         Rpp32u nDim = numDims;
         Rpp32u *roi = roiTensor + batchCount * nDim * 2;
         Rpp32u *begin = roi;
         Rpp32u *length = &roi[nDim];
-
-        for(int i = 0; i < nDim; i++)
-            size *= ((axisMask & (int)(pow(2,i))) >= 1) ? 1 : length[i];
 
         Rpp32f *srcPtrTemp, *dstPtrTemp, *meanTensor, *stdDevTensor;
         srcPtrTemp = srcPtr + batchCount * srcGenericDescPtr->strides[0];
@@ -752,6 +747,10 @@ RppStatus normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
         }
         else // Called when any other ND tensor is passed to kernel
         {
+            int size = 1; // length of input tensors differ based on axisMask and nDim
+            for(int i = 0; i < nDim; i++)
+                size *= ((axisMask & (int)(pow(2,i))) >= 1) ? 1 : length[i];
+
             Rpp32u totalElements = 1;
             Rpp32u lastNormAxis = 0;
             Rpp32u axis[nDim], newAxis[nDim], newDims[nDim];
