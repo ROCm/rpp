@@ -25,10 +25,14 @@ SOFTWARE.
 #include "rpp_test_suite_common.h"
 #include <iomanip>
 #include <vector>
-#include <half/half.hpp>
 
-using half_float::half;
-using namespace std;
+#ifdef GPU_SUPPORT
+    #include <hip/hip_fp16.h>
+#else
+    #include <half/half.hpp>
+    using half_float::half;
+#endif
+
 typedef half Rpp16f;
 
 // Include this header file to use functions from libsndfile
