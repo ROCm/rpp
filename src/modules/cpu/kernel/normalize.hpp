@@ -492,7 +492,7 @@ void normalize_2D_tensor_avx_axis2(Rpp32f *srcPtr, RpptGenericDescPtr srcDescPtr
             srcPtrTempRow += 8;
             dstPtrTempRow += 8;
         }
-        for(; vectorLoopCount < dims[1] ; vectorLoopCount += 8)
+        for(; vectorLoopCount < dims[1] ; vectorLoopCount ++)
              *dstPtrTempRow++ = (*srcPtrTempRow++ - mean) * invStdDev + shift;
     }
 }
@@ -627,7 +627,6 @@ RppStatus normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
             if(computeStddev)
                 compute_2D_inv_std_dev(srcPtrTemp, meanTensor, stdDevTensor, srcReductionDims, srcStride, scale);
 
-            // Inv std dev calculations missing
             if(axisMask == 2)
                 normalize_2D_tensor_avx_axis2(srcPtrTemp, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTensor, stdDevTensor, shift, length, paramStride);
             else
@@ -782,11 +781,6 @@ RppStatus normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
                 compute_ND_stddev(srcPtrChannel, meanTensor, stdDevTensor, newDims, srcStride, newAxis, nDim, 0, 0, size, 0, lastNormAxis);
                 Rpp32f normFactor = (Rpp32f)(1.0 / totalElements);
                 rpp_rsqrt_avx(stdDevTensor, (Rpp32s)size, 0, normFactor, scale);
-            }
-            else
-            {
-                for(int i = 0; i < size; i++)
-                    stdDevTensor[i] = scale / stdDevTensor[i];
             }
 
             for(Rpp32u i = 0; i < nDim; i++)

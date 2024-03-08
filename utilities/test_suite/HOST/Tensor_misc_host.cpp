@@ -135,11 +135,6 @@ int main(int argc, char **argv)
                 float shift = 0.0;
                 bool computeMean, computeStddev;
                 computeMean = computeStddev = 1;
-                if(axisMask > ((nDim * nDim) - 1))
-                {
-                    printf("\nUnsupported AxisMask for given %dD\n", nDim);
-                    break;
-                }
 
                 Rpp32u size = 1; // length of mean and stddev tensors differ based on axisMask and nDim
                 Rpp32u maxSize = 1;
