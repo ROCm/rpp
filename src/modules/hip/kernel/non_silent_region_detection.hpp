@@ -1,10 +1,7 @@
 #include <hip/hip_runtime.h>
 #include "rpp_hip_common.hpp"
 
-__device__ float square(float value)
-{
-    return (value * value);
-}
+// -------------------- Set 0 -  moving mean square kernel device helpers --------------------
 
 __host__ __device__ int shm_pos(int pos)
 {
@@ -50,27 +47,16 @@ __device__ void PrefixSum(float *buf, uint pow2)
   __syncthreads();
 }
 
-int prev_pow2(int n)
+__device__ float square(float value)
 {
-  int pow2 = 1;
-  while (n - pow2 > pow2)
-    pow2 += pow2;
-
-  return pow2;
+    return (value * value);
 }
 
-int next_pow2(int n)
-{
-  int pow2 = 1;
-  while (n > pow2)
-    pow2 += pow2;
-
-  return pow2;
-}
+// -------------------- Set 1 -  moving mean square compute kernel --------------------
 
 __global__ void moving_mean_square_hip_tensor(float *srcPtr,
                                               uint nStride,
-                                              float *mmsBuffer,
+                                              float *mmsArr,
                                               int *srcLengthTensor,
                                               int logicalBlock,
                                               int windowLength,
@@ -89,7 +75,7 @@ __global__ void moving_mean_square_hip_tensor(float *srcPtr,
     for(int blockStart = hipBlockIdx_x * logicalBlock; blockStart < srcLength; blockStart += gridStride)
     {
         float *inBlockPtr = srcPtr + batchStride + blockStart;
-        float *outBlockPtr = mmsBuffer + batchStride + blockStart;
+        float *outBlockPtr = mmsArr + batchStride + blockStart;
         int logicalBlockSize = min(logicalBlock, srcLength - blockStart);
         float *extendedBlockStart = inBlockPtr - windowLength;
         float *extendedBlockEnd = inBlockPtr + logicalBlockSize;
@@ -117,13 +103,161 @@ __global__ void moving_mean_square_hip_tensor(float *srcPtr,
     }
 }
 
-__global__ void final_reduction_hip_tensor(int *minBuffer,
-                                           int *maxBuffer,
-                                           float *beginTensor,
-                                           float *lengthTensor,
-                                           int *srcLengthTensor,
-                                           int maxLength,
-                                           int windowLength)
+// -------------------- Set 2 -  kernels for finding cutoffmag value  --------------------
+
+__global__ void max_reduction_hip_tensor(float *srcPtr,
+                                         uint nStride,
+                                         float *maxArr,
+                                         int *srcLengthTensor)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+    uint srcLength = srcLengthTensor[id_z];
+
+    uint srcIdx = id_z * nStride;
+    __shared__ float max_smem[256];
+    max_smem[hipThreadIdx_x] = srcPtr[srcIdx];
+
+    if (id_x >= srcLength)
+        return;
+
+    srcIdx += id_x;
+    d_float8 src_f8;
+    rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);
+    rpp_hip_math_max8(&src_f8, &max_smem[hipThreadIdx_x]);
+    __syncthreads();
+
+    // do reduction on min_smem and max_smem
+    for (int threadMax = 128; threadMax >= 1; threadMax /= 2)
+    {
+        if (hipThreadIdx_x < threadMax)
+            max_smem[hipThreadIdx_x] = fmaxf(max_smem[hipThreadIdx_x], max_smem[hipThreadIdx_x + threadMax]);
+        __syncthreads();
+    }
+
+    if (hipThreadIdx_x == 0)
+    {
+        int dstIdx = id_z * hipGridDim_x + hipBlockIdx_x;
+        maxArr[dstIdx] = max_smem[0];
+    }
+}
+
+__global__ void cutoffmag_hip_tensor(float *srcPtr,
+                                     int maxLength,
+                                     float *cutOffMagPtr,
+                                     float cutOff,
+                                     float referencePower,
+                                     bool referenceMax)
+{
+    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    // if referenceMax is set to true, perform final max reduction on srcPtr and compute cutOffMag
+    if(referenceMax)
+    {
+        uint srcIdx = id_z * maxLength;
+        __shared__ float max_smem[256];
+        max_smem[hipThreadIdx_x] = srcPtr[srcIdx];
+
+        if (id_x >= maxLength)
+            return;
+
+        srcIdx += id_x;
+        float maxVal = srcPtr[srcIdx];
+        while (id_x < maxLength)
+        {
+            maxVal = fmaxf(maxVal, srcPtr[srcIdx]);
+            id_x += hipBlockDim_x;
+            srcIdx += hipBlockDim_x;
+        }
+        max_smem[hipThreadIdx_x] = maxVal;
+        __syncthreads();
+
+        // do reduction on min_smem and max_smem
+        for (int threadMax = 128; threadMax >= 1; threadMax /= 2)
+        {
+            if (hipThreadIdx_x < threadMax)
+                max_smem[hipThreadIdx_x] = max(max_smem[hipThreadIdx_x], max_smem[hipThreadIdx_x + threadMax]);
+            __syncthreads();
+        }
+
+        // cutOffMag = max(srcPtr) * cutoff;
+        if (hipThreadIdx_x == 0)
+            cutOffMagPtr[id_z] = max_smem[0] * cutOff;
+    }
+    else
+    {
+        if (hipThreadIdx_x == 0)
+            cutOffMagPtr[id_z] = referencePower * cutOff;
+    }
+}
+
+// -------------------- Set 3 -  kernels for finding begin and length of NSR in inputs --------------------
+
+__global__ void find_region_hip_tensor(float *srcPtr,
+                                       uint nStride,
+                                       int *partialBeginArr,
+                                       int *partialEndArr,
+                                       float *cutOffMagPtr,
+                                       int *srcLengthTensor)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+    uint srcLength = srcLengthTensor[id_z];
+    float cutOffMag = cutOffMagPtr[id_z];
+
+    __shared__ int min_smem[256];
+    __shared__ int max_smem[256];
+    min_smem[hipThreadIdx_x] = srcLength;
+    max_smem[hipThreadIdx_x] = 0;
+
+    if (id_x >= srcLength)
+        return;
+
+    uint srcIdx = (id_z * nStride) + id_x;
+    d_float8 src_f8;
+    rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);
+    int minIndex = srcLength;
+    int maxIndex = 0;
+    for(int i = 0; i < 8; i++)
+    {
+        if (src_f8.f1[i] >= cutOffMag)
+        {
+            maxIndex = i;
+            if(minIndex == srcLength)
+                minIndex = i;
+        }
+    }
+    min_smem[hipThreadIdx_x] = id_x + minIndex;
+    max_smem[hipThreadIdx_x] = id_x + maxIndex;
+    __syncthreads();
+
+    // do reduction on min_smem and max_smem
+    for (int threadMax = 128; threadMax >= 1; threadMax /= 2)
+    {
+        if (hipThreadIdx_x < threadMax)
+        {
+            min_smem[hipThreadIdx_x] = fminf(min_smem[hipThreadIdx_x], min_smem[hipThreadIdx_x + threadMax]);
+            max_smem[hipThreadIdx_x] = fmaxf(max_smem[hipThreadIdx_x], max_smem[hipThreadIdx_x + threadMax]);
+        }
+        __syncthreads();
+    }
+
+    if (hipThreadIdx_x == 0)
+    {
+        int idx = id_z * hipGridDim_x + hipBlockIdx_x;
+        partialBeginArr[idx] = min_smem[0];
+        partialEndArr[idx] = max_smem[0];
+    }
+}
+
+__global__ void nsr_compute_and_postprocess_hip_tensor(int *partialBeginArr,
+                                                       int *partialEndArr,
+                                                       float *beginTensor,
+                                                       float *lengthTensor,
+                                                       int *srcLengthTensor,
+                                                       int maxLength,
+                                                       int windowLength)
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
@@ -143,8 +277,8 @@ __global__ void final_reduction_hip_tensor(int *minBuffer,
     while (id_x < maxLength)
     {
         srcIdx = id_z * maxLength + id_x;
-        minIndex = min(minIndex, minBuffer[srcIdx]);
-        maxIndex = max(maxIndex, maxBuffer[srcIdx]);
+        minIndex = min(minIndex, partialBeginArr[srcIdx]);
+        maxIndex = max(maxIndex, partialEndArr[srcIdx]);
         id_x += hipBlockDim_x;
     }
     min_smem[hipThreadIdx_x] = minIndex;
@@ -187,61 +321,27 @@ __global__ void final_reduction_hip_tensor(int *minBuffer,
     }
 }
 
-__global__ void find_region_hip_tensor(float *mmsBuffer,
-                                       uint nStride,
-                                       int *minBuffer,
-                                       int *maxBuffer,
-                                       float cutoffDB,
-                                       int *srcLengthTensor)
+// -------------------- Set 4 -  host helpers for kernel executor --------------------
+
+int prev_pow2(int n)
 {
-    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
-    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
-    uint srcLength = srcLengthTensor[id_z];
+  int pow2 = 1;
+  while (n - pow2 > pow2)
+    pow2 += pow2;
 
-    __shared__ int min_smem[256];
-    __shared__ int max_smem[256];
-    min_smem[hipThreadIdx_x] = srcLength;
-    max_smem[hipThreadIdx_x] = 0;
-
-    if (id_x >= srcLength)
-        return;
-
-    uint srcIdx = (id_z * nStride) + id_x;
-    d_float8 src_f8;
-    rpp_hip_load8_and_unpack_to_float8(mmsBuffer + srcIdx, &src_f8);
-    int minIndex = srcLength;
-    int maxIndex = 0;
-    for(int i = 0; i < 8; i++)
-    {
-        if (src_f8.f1[i] >= cutoffDB)
-        {
-            maxIndex = i;
-            if(minIndex == srcLength)
-                minIndex = i;
-        }
-    }
-    min_smem[hipThreadIdx_x] = id_x + minIndex;
-    max_smem[hipThreadIdx_x] = id_x + maxIndex;
-    __syncthreads();
-
-    // do reduction on min_smem and max_smem
-    for (int threadMax = 128; threadMax >= 1; threadMax /= 2)
-    {
-        if (hipThreadIdx_x < threadMax)
-        {
-            min_smem[hipThreadIdx_x] = fminf(min_smem[hipThreadIdx_x], min_smem[hipThreadIdx_x + threadMax]);
-            max_smem[hipThreadIdx_x] = fmaxf(max_smem[hipThreadIdx_x], max_smem[hipThreadIdx_x + threadMax]);
-        }
-        __syncthreads();
-    }
-
-    if (hipThreadIdx_x == 0)
-    {
-        int idx = id_z * hipGridDim_x + hipBlockIdx_x;
-        minBuffer[idx] = min_smem[0];
-        maxBuffer[idx] = max_smem[0];
-    }
+  return pow2;
 }
+
+int next_pow2(int n)
+{
+  int pow2 = 1;
+  while (n > pow2)
+    pow2 += pow2;
+
+  return pow2;
+}
+
+// -------------------- Set 5 - non silent region kernels executor --------------------
 
 RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
                                                       RpptDescPtr srcDescPtr,
@@ -254,9 +354,9 @@ RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
                                                       Rpp32s resetInterval,
                                                       rpp::Handle& handle)
 {
-    // allocate memory for MMS buffer
-    Rpp32f *mmsBuffer;
-    hipHostMalloc(&(mmsBuffer), srcDescPtr->n * srcDescPtr->strides.nStride * sizeof(Rpp32f));
+    // allocate temporary memory for MMS Array
+    Rpp32f *mmsArr;
+    hipHostMalloc(&(mmsArr), srcDescPtr->n * srcDescPtr->strides.nStride * sizeof(Rpp32f));
 
     int maxSharedMemoryInBytes = 32000; // 32 KB
     int maxSharedMemoryElements = maxSharedMemoryInBytes / sizeof(Rpp32f);
@@ -287,7 +387,7 @@ RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
         return RPP_ERROR;
     }
 
-    // launch kernel to compute the values needed for MMS buffer
+    // launch kernel to compute the values needed for MMS Array
     int globalThreads_x = std::min<int>(ceil(static_cast<float>(srcDescPtr->strides.nStride) / 32), 1024);
     int globalThreads_y = 1;
     int globalThreads_z = handle.GetBatchSize();
@@ -302,55 +402,79 @@ RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
                        handle.GetStream(),
                        srcPtr,
                        srcDescPtr->strides.nStride,
-                       mmsBuffer,
+                       mmsArr,
                        srcLengthTensor,
                        logicalBlock,
                        windowLength,
                        pow2);
     hipStreamSynchronize(handle.GetStream());
 
-    // std::cout << "printing GPU moving mean square values: " << std::endl;
-    // for(int i = 0; i < srcLengthTensor[0]; i++)
-    //     std::cout << mmsBuffer[i] << std::endl;
-
     const Rpp32f cutOff = std::pow(10.0f, cutOffDB * 0.1f);
     bool referenceMax = (referencePower == 0.0f);
+    Rpp32f *partialMaxArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
 
-    // TODO - needs to be changed for handling for multi batchsize and kernel for max compute
-    Rpp32s srcLength = srcLengthTensor[0];
-    Rpp32f base = (referenceMax) ? *std::max_element(mmsBuffer, mmsBuffer + srcLength) : referencePower;
-    Rpp32f cutOffMag = base * cutOff;
+    int numBlocksPerSample = ceil(static_cast<float>(srcDescPtr->strides.nStride) / (256 * 8));
+    int cutOffMagKernelGridSize = 1, cutOffMagKernelBlockSize = 1;
+    if (referenceMax)
+    {
+        // compute max value in MMS buffer
+        hipLaunchKernelGGL(max_reduction_hip_tensor,
+                           dim3(numBlocksPerSample, 1, globalThreads_z),
+                           dim3(256, 1, 1),
+                           0,
+                           handle.GetStream(),
+                           mmsArr,
+                           srcDescPtr->strides.nStride,
+                           partialMaxArr,
+                           srcLengthTensor);
+        hipStreamSynchronize(handle.GetStream());
 
-    // launch kernel to find partial min and max values
-    int *minBuffer = reinterpret_cast<Rpp32s*>(handle.GetInitHandle()->mem.mgpu.maskArr.floatmem);
-    int *maxBuffer = minBuffer + 45000; // ((700000 / (256 * 8)) * 128) where 700000 is the max audio length in librispeech
-    int numBlocks = ceil(static_cast<float>(srcDescPtr->strides.nStride) / (256 * 8));
+        cutOffMagKernelGridSize = numBlocksPerSample;
+        cutOffMagKernelBlockSize = 256;
+    }
+    // find the cutoff value in magnitude
+    hipLaunchKernelGGL(cutoffmag_hip_tensor,
+                       dim3(cutOffMagKernelGridSize, 1, globalThreads_z),
+                       dim3(cutOffMagKernelBlockSize, 1, 1),
+                       0,
+                       handle.GetStream(),
+                       partialMaxArr,
+                       numBlocksPerSample,
+                       handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                       cutOff,
+                       referencePower,
+                       referenceMax);
+    hipStreamSynchronize(handle.GetStream());
+
+    // find the begin and length values of NSR in inputs
+    int *partialBeginArr = reinterpret_cast<Rpp32s*>(handle.GetInitHandle()->mem.mgpu.maskArr.floatmem) + globalThreads_z * numBlocksPerSample;
+    int *partialEndArr = partialBeginArr + 45000; // ((700000 / (256 * 8)) * 128) where 700000 is the max audio length in librispeech
     hipLaunchKernelGGL(find_region_hip_tensor,
-                       dim3(numBlocks, 1, globalThreads_z),
+                       dim3(numBlocksPerSample, 1, globalThreads_z),
                        dim3(256, 1, 1),
                        0,
                        handle.GetStream(),
-                       mmsBuffer,
+                       mmsArr,
                        srcDescPtr->strides.nStride,
-                       minBuffer,
-                       maxBuffer,
-                       cutOffMag,
+                       partialBeginArr,
+                       partialEndArr,
+                       handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
                        srcLengthTensor);
     hipStreamSynchronize(handle.GetStream());
-    hipLaunchKernelGGL(final_reduction_hip_tensor,
+    hipLaunchKernelGGL(nsr_compute_and_postprocess_hip_tensor,
                        dim3(1, 1, globalThreads_z),
                        dim3(256, 1, 1),
                        0,
                        handle.GetStream(),
-                       minBuffer,
-                       maxBuffer,
+                       partialBeginArr,
+                       partialEndArr,
                        detectedIndexTensor,
                        detectionLengthTensor,
                        srcLengthTensor,
-                       numBlocks,
+                       numBlocksPerSample,
                        windowLength);
     hipStreamSynchronize(handle.GetStream());
 
-    hipHostFree(mmsBuffer);
+    hipHostFree(mmsArr);
     return RPP_SUCCESS;
 }
