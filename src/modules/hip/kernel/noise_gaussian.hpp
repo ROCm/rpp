@@ -30,7 +30,7 @@ __device__ void gaussian_noise_24_hip_compute(d_float24 *pix_f24, RpptXorwowStat
     rpp_hip_pixel_check_0to1(pix_f24);
 }
 
-__device__ void gaussian_noise_3d_8_hip_compute(d_float8 *pix_f8, RpptXorwowStateBoxMuller *xorwowState, float mean, float stdDev)
+__device__ void gaussian_noise_voxel_8_hip_compute(d_float8 *pix_f8, RpptXorwowStateBoxMuller *xorwowState, float mean, float stdDev)
 {
     d_float8 rngVals_f8, pixSqrt_f8;
     rpp_hip_rng_8_gaussian_f32(&rngVals_f8, xorwowState);
@@ -39,7 +39,7 @@ __device__ void gaussian_noise_3d_8_hip_compute(d_float8 *pix_f8, RpptXorwowStat
     rpp_hip_math_add8(pix_f8, &rngVals_f8, pix_f8);
 }
 
-__device__ void gaussian_noise_3d_24_hip_compute(d_float24 *pix_f24, RpptXorwowStateBoxMuller *xorwowState, float mean, float stdDev)
+__device__ void gaussian_noise_voxel_24_hip_compute(d_float24 *pix_f24, RpptXorwowStateBoxMuller *xorwowState, float mean, float stdDev)
 {
     d_float24 rngVals_f24, pixSqrt_f24;
     rpp_hip_rng_8_gaussian_f32(&rngVals_f24.f8[0], xorwowState);
@@ -273,15 +273,16 @@ __global__ void gaussian_noise_pln3_pkd3_hip_tensor(T *srcPtr,
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &pix_f24);
 }
 
-__global__ void gaussian_noise_3d_ncdhw_hip_tensor(float *srcPtr,
-                                                   uint3 srcStridesCDH,
-                                                   float *dstPtr,
-                                                   uint3 dstStridesCDH,
-                                                   int channels,
-                                                   float2 gaussianNoise3dParams_f2,
-                                                   RpptXorwowStateBoxMuller *xorwowInitialStatePtr,
-                                                   uint *xorwowSeedStream,
-                                                   RpptROI3DPtr roiGenericSrc)
+template<typename T>
+__global__ void gaussian_noise_voxel_ncdhw_hip_tensor(T *srcPtr,
+                                                      uint3 srcStridesCDH,
+                                                      T *dstPtr,
+                                                      uint3 dstStridesCDH,
+                                                      int channels,
+                                                      float2 gaussianNoise3dParams_f2,
+                                                      RpptXorwowStateBoxMuller *xorwowInitialStatePtr,
+                                                      uint *xorwowSeedStream,
+                                                      RpptROI3DPtr roiGenericSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;        // W - inner most dim vectorized
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;              // H - second to inner
@@ -312,7 +313,7 @@ __global__ void gaussian_noise_3d_ncdhw_hip_tensor(float *srcPtr,
         for(int c = 0; c < channels; c++)
         {
             rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &val_f8);
-            gaussian_noise_3d_8_hip_compute(&val_f8, &xorwowState, gaussianNoise3dParams_f2.x, gaussianNoise3dParams_f2.y);
+            gaussian_noise_voxel_8_hip_compute(&val_f8, &xorwowState, gaussianNoise3dParams_f2.x, gaussianNoise3dParams_f2.y);
             rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &val_f8);
             srcIdx += srcStridesCDH.x;
             dstIdx += dstStridesCDH.x;
@@ -330,14 +331,15 @@ __global__ void gaussian_noise_3d_ncdhw_hip_tensor(float *srcPtr,
     }
 }
 
-__global__ void gaussian_noise_3d_ndhwc_hip_tensor(float *srcPtr,
-                                                   uint2 srcStridesDH,
-                                                   float *dstPtr,
-                                                   uint2 dstStridesDH,
-                                                   float2 gaussianNoise3dParams_f2,
-                                                   RpptXorwowStateBoxMuller *xorwowInitialStatePtr,
-                                                   uint *xorwowSeedStream,
-                                                   RpptROI3DPtr roiGenericSrc)
+template<typename T>
+__global__ void gaussian_noise_voxel_ndhwc_hip_tensor(T *srcPtr,
+                                                      uint2 srcStridesDH,
+                                                      T *dstPtr,
+                                                      uint2 dstStridesDH,
+                                                      float2 gaussianNoise3dParams_f2,
+                                                      RpptXorwowStateBoxMuller *xorwowInitialStatePtr,
+                                                      uint *xorwowSeedStream,
+                                                      RpptROI3DPtr roiGenericSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;        // WC - inner most dim vectorized
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;              // H - second to inner
@@ -365,7 +367,7 @@ __global__ void gaussian_noise_3d_ndhwc_hip_tensor(float *srcPtr,
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &val_f24);
     bool copyInput = (!gaussianNoise3dParams_f2.x) && (!gaussianNoise3dParams_f2.y);
     if(!copyInput)
-        gaussian_noise_3d_24_hip_compute(&val_f24, &xorwowState, gaussianNoise3dParams_f2.x, gaussianNoise3dParams_f2.y);
+        gaussian_noise_voxel_24_hip_compute(&val_f24, &xorwowState, gaussianNoise3dParams_f2.x, gaussianNoise3dParams_f2.y);
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &val_f24);
 }
 
@@ -468,15 +470,16 @@ RppStatus hip_exec_gaussian_noise_tensor(T *srcPtr,
     return RPP_SUCCESS;
 }
 
-RppStatus hip_exec_gaussian_noise_3d_tensor(Rpp32f *srcPtr,
-                                            RpptGenericDescPtr srcGenericDescPtr,
-                                            Rpp32f *dstPtr,
-                                            RpptGenericDescPtr dstGenericDescPtr,
-                                            RpptXorwowStateBoxMuller *xorwowInitialStatePtr,
-                                            Rpp32f *meanTensor,
-                                            Rpp32f *stdDevTensor,
-                                            RpptROI3DPtr roiGenericPtrSrc,
-                                            rpp::Handle& handle)
+template <typename T>
+RppStatus hip_exec_gaussian_noise_voxel_tensor(T *srcPtr,
+                                               RpptGenericDescPtr srcGenericDescPtr,
+                                               T *dstPtr,
+                                               RpptGenericDescPtr dstGenericDescPtr,
+                                               RpptXorwowStateBoxMuller *xorwowInitialStatePtr,
+                                               Rpp32f *meanTensor,
+                                               Rpp32f *stdDevTensor,
+                                               RpptROI3DPtr roiGenericPtrSrc,
+                                               rpp::Handle& handle)
 {
     Rpp32u *xorwowSeedStream;
     xorwowSeedStream = (Rpp32u *)&xorwowInitialStatePtr[1];
@@ -490,7 +493,7 @@ RppStatus hip_exec_gaussian_noise_3d_tensor(Rpp32f *srcPtr,
 
         for(int batchCount = 0; batchCount < dstGenericDescPtr->dims[0]; batchCount++)
         {
-            hipLaunchKernelGGL(gaussian_noise_3d_ncdhw_hip_tensor,
+            hipLaunchKernelGGL(gaussian_noise_voxel_ncdhw_hip_tensor,
                                dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
@@ -514,7 +517,7 @@ RppStatus hip_exec_gaussian_noise_3d_tensor(Rpp32f *srcPtr,
 
         for(int batchCount = 0; batchCount < dstGenericDescPtr->dims[0]; batchCount++)
         {
-            hipLaunchKernelGGL(gaussian_noise_3d_ndhwc_hip_tensor,
+            hipLaunchKernelGGL(gaussian_noise_voxel_ndhwc_hip_tensor,
                                dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,

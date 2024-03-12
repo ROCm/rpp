@@ -434,16 +434,16 @@ RppStatus rppt_gaussian_noise_host(RppPtr_t srcPtr,
     return RPP_SUCCESS;
 }
 
-RppStatus rppt_gaussian_noise_3d_host(RppPtr_t srcPtr,
-                                      RpptGenericDescPtr srcGenericDescPtr,
-                                      RppPtr_t dstPtr,
-                                      RpptGenericDescPtr dstGenericDescPtr,
-                                      Rpp32f *meanTensor,
-                                      Rpp32f *stdDevTensor,
-                                      Rpp32u seed,
-                                      RpptROI3DPtr roiGenericPtrSrc,
-                                      RpptRoi3DType roiType,
-                                      rppHandle_t rppHandle)
+RppStatus rppt_gaussian_noise_voxel_host(RppPtr_t srcPtr,
+                                         RpptGenericDescPtr srcGenericDescPtr,
+                                         RppPtr_t dstPtr,
+                                         RpptGenericDescPtr dstGenericDescPtr,
+                                         Rpp32f *meanTensor,
+                                         Rpp32f *stdDevTensor,
+                                         Rpp32u seed,
+                                         RpptROI3DPtr roiGenericPtrSrc,
+                                         RpptRoi3DType roiType,
+                                         rppHandle_t rppHandle)
 {
     RppLayoutParams layoutParams;
     if ((srcGenericDescPtr->layout == RpptLayout::NCDHW) && (dstGenericDescPtr->layout == RpptLayout::NCDHW))
@@ -459,31 +459,31 @@ RppStatus rppt_gaussian_noise_3d_host(RppPtr_t srcPtr,
 
     if ((srcGenericDescPtr->dataType == RpptDataType::U8) && (dstGenericDescPtr->dataType == RpptDataType::U8))
     {
-        gaussian_noise_3d_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes,
-                                            srcGenericDescPtr,
-                                            static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes,
-                                            dstGenericDescPtr,
-                                            meanTensor,
-                                            stdDevTensor,
-                                            xorwowInitialState,
-                                            roiGenericPtrSrc,
-                                            roiType,
-                                            layoutParams,
-                                            rpp::deref(rppHandle));
+        gaussian_noise_voxel_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes,
+                                               srcGenericDescPtr,
+                                               static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes,
+                                               dstGenericDescPtr,
+                                               meanTensor,
+                                               stdDevTensor,
+                                               xorwowInitialState,
+                                               roiGenericPtrSrc,
+                                               roiType,
+                                               layoutParams,
+                                               rpp::deref(rppHandle));
     }
     else if ((srcGenericDescPtr->dataType == RpptDataType::F32) && (dstGenericDescPtr->dataType == RpptDataType::F32))
     {
-        gaussian_noise_3d_f32_f32_host_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes),
-                                              srcGenericDescPtr,
-                                              (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
-                                              dstGenericDescPtr,
-                                              meanTensor,
-                                              stdDevTensor,
-                                              xorwowInitialState,
-                                              roiGenericPtrSrc,
-                                              roiType,
-                                              layoutParams,
-                                              rpp::deref(rppHandle));
+        gaussian_noise_voxel_f32_f32_host_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes),
+                                                 srcGenericDescPtr,
+                                                 reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
+                                                 dstGenericDescPtr,
+                                                 meanTensor,
+                                                 stdDevTensor,
+                                                 xorwowInitialState,
+                                                 roiGenericPtrSrc,
+                                                 roiType,
+                                                 layoutParams,
+                                                 rpp::deref(rppHandle));
     }
     else
     {
@@ -1166,16 +1166,16 @@ RppStatus rppt_gaussian_noise_gpu(RppPtr_t srcPtr,
 #endif // backend
 }
 
-RppStatus rppt_gaussian_noise_3d_gpu(RppPtr_t srcPtr,
-                                     RpptGenericDescPtr srcGenericDescPtr,
-                                     RppPtr_t dstPtr,
-                                     RpptGenericDescPtr dstGenericDescPtr,
-                                     Rpp32f *meanTensor,
-                                     Rpp32f *stdDevTensor,
-                                     Rpp32u seed,
-                                     RpptROI3DPtr roiGenericPtrSrc,
-                                     RpptRoi3DType roiType,
-                                     rppHandle_t rppHandle)
+RppStatus rppt_gaussian_noise_voxel_gpu(RppPtr_t srcPtr,
+                                        RpptGenericDescPtr srcGenericDescPtr,
+                                        RppPtr_t dstPtr,
+                                        RpptGenericDescPtr dstGenericDescPtr,
+                                        Rpp32f *meanTensor,
+                                        Rpp32f *stdDevTensor,
+                                        Rpp32u seed,
+                                        RpptROI3DPtr roiGenericPtrSrc,
+                                        RpptRoi3DType roiType,
+                                        rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
     if ((srcGenericDescPtr->layout != RpptLayout::NCDHW) && (srcGenericDescPtr->layout != RpptLayout::NDHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
@@ -1196,17 +1196,29 @@ RppStatus rppt_gaussian_noise_3d_gpu(RppPtr_t srcPtr,
     d_xorwowInitialStatePtr = (RpptXorwowStateBoxMuller *) rpp::deref(rppHandle).GetInitHandle()->mem.mgpu.maskArr.floatmem;
     CHECK(hipMemcpy(d_xorwowInitialStatePtr, &xorwowInitialState, sizeof(RpptXorwowStateBoxMuller), hipMemcpyHostToDevice));
 
-    if ((srcGenericDescPtr->dataType == RpptDataType::F32) && (dstGenericDescPtr->dataType == RpptDataType::F32))
+    if ((srcGenericDescPtr->dataType == RpptDataType::U8) && (dstGenericDescPtr->dataType == RpptDataType::U8))
     {
-        hip_exec_gaussian_noise_3d_tensor((Rpp32f*) (static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes),
-                                          srcGenericDescPtr,
-                                          (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
-                                          dstGenericDescPtr,
-                                          d_xorwowInitialStatePtr,
-                                          meanTensor,
-                                          stdDevTensor,
-                                          roiGenericPtrSrc,
-                                          rpp::deref(rppHandle));
+        hip_exec_gaussian_noise_voxel_tensor(static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes,
+                                             srcGenericDescPtr,
+                                             static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes,
+                                             dstGenericDescPtr,
+                                             d_xorwowInitialStatePtr,
+                                             meanTensor,
+                                             stdDevTensor,
+                                             roiGenericPtrSrc,
+                                             rpp::deref(rppHandle));
+    }
+    else if ((srcGenericDescPtr->dataType == RpptDataType::F32) && (dstGenericDescPtr->dataType == RpptDataType::F32))
+    {
+        hip_exec_gaussian_noise_voxel_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes),
+                                             srcGenericDescPtr,
+                                             reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
+                                             dstGenericDescPtr,
+                                             d_xorwowInitialStatePtr,
+                                             meanTensor,
+                                             stdDevTensor,
+                                             roiGenericPtrSrc,
+                                             rpp::deref(rppHandle));
     }
     else
     {

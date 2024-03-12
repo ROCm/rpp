@@ -301,7 +301,7 @@ int main(int argc, char * argv[])
                 }
                 case 6:
                 {
-                    testCaseName = "gaussian_noise_3d";
+                    testCaseName = "gaussian_noise_voxel";
                     Rpp32f meanTensor[batchSize];
                     Rpp32f stdDevTensor[batchSize];
 
@@ -314,7 +314,7 @@ int main(int argc, char * argv[])
 
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 2)
-                        rppt_gaussian_noise_3d_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, meanTensor, stdDevTensor, seed, roiGenericSrcPtr, roiTypeSrc, handle);
+                        rppt_gaussian_noise_voxel_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, meanTensor, stdDevTensor, seed, roiGenericSrcPtr, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
