@@ -307,27 +307,13 @@ __global__ void gaussian_noise_voxel_ncdhw_hip_tensor(T *srcPtr,
     xorwowState.counter = xorwowInitialStatePtr->counter + xorwowSeed;
 
     d_float8 val_f8;
-    bool copyInput = (!gaussianNoise3dParams_f2.x) && (!gaussianNoise3dParams_f2.y);
-    if(!copyInput)
+    for(int c = 0; c < channels; c++)
     {
-        for(int c = 0; c < channels; c++)
-        {
-            rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &val_f8);
-            gaussian_noise_voxel_8_hip_compute(&val_f8, &xorwowState, gaussianNoise3dParams_f2.x, gaussianNoise3dParams_f2.y);
-            rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &val_f8);
-            srcIdx += srcStridesCDH.x;
-            dstIdx += dstStridesCDH.x;
-        }
-    }
-    else
-    {
-        for(int c = 0; c < channels; c++)
-        {
-            rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &val_f8);
-            rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &val_f8);
-            srcIdx += srcStridesCDH.x;
-            dstIdx += dstStridesCDH.x;
-        }
+        rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &val_f8);
+        gaussian_noise_voxel_8_hip_compute(&val_f8, &xorwowState, gaussianNoise3dParams_f2.x, gaussianNoise3dParams_f2.y);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &val_f8);
+        srcIdx += srcStridesCDH.x;
+        dstIdx += dstStridesCDH.x;
     }
 }
 
@@ -365,9 +351,7 @@ __global__ void gaussian_noise_voxel_ndhwc_hip_tensor(T *srcPtr,
 
     d_float24 val_f24;
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &val_f24);
-    bool copyInput = (!gaussianNoise3dParams_f2.x) && (!gaussianNoise3dParams_f2.y);
-    if(!copyInput)
-        gaussian_noise_voxel_24_hip_compute(&val_f24, &xorwowState, gaussianNoise3dParams_f2.x, gaussianNoise3dParams_f2.y);
+    gaussian_noise_voxel_24_hip_compute(&val_f24, &xorwowState, gaussianNoise3dParams_f2.x, gaussianNoise3dParams_f2.y);
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &val_f24);
 }
 
@@ -493,20 +477,39 @@ RppStatus hip_exec_gaussian_noise_voxel_tensor(T *srcPtr,
 
         for(int batchCount = 0; batchCount < dstGenericDescPtr->dims[0]; batchCount++)
         {
-            hipLaunchKernelGGL(gaussian_noise_voxel_ncdhw_hip_tensor,
-                               dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                               0,
-                               handle.GetStream(),
-                               srcPtr + (batchCount * srcGenericDescPtr->strides[0]),
-                               make_uint3(srcGenericDescPtr->strides[1], srcGenericDescPtr->strides[2], srcGenericDescPtr->strides[3]),
-                               dstPtr + (batchCount * dstGenericDescPtr->strides[0]),
-                               make_uint3(dstGenericDescPtr->strides[1], dstGenericDescPtr->strides[2], dstGenericDescPtr->strides[3]),
-                               dstGenericDescPtr->dims[1],
-                               make_float2(meanTensor[batchCount], stdDevTensor[batchCount]),
-                               xorwowInitialStatePtr,
-                               xorwowSeedStream,
-                               &roiGenericPtrSrc[batchCount]);
+            bool copyInput = (!meanTensor[batchCount]) && (!stdDevTensor[batchCount]);
+            // copy ROI from input to output when mean = 0 and stdDev = 0
+            if (copyInput)
+            {
+                hipLaunchKernelGGL(copy_ncdhw_hip_tensor,
+                                   dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                                   0,
+                                   handle.GetStream(),
+                                   srcPtr + (batchCount * srcGenericDescPtr->strides[0]),
+                                   make_uint3(srcGenericDescPtr->strides[1], srcGenericDescPtr->strides[2], srcGenericDescPtr->strides[3]),
+                                   dstPtr + (batchCount * dstGenericDescPtr->strides[0]),
+                                   make_uint3(dstGenericDescPtr->strides[1], dstGenericDescPtr->strides[2], dstGenericDescPtr->strides[3]),
+                                   dstGenericDescPtr->dims[1],
+                                   &roiGenericPtrSrc[batchCount]);
+            }
+            else
+            {
+                hipLaunchKernelGGL(gaussian_noise_voxel_ncdhw_hip_tensor,
+                                   dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                                   0,
+                                   handle.GetStream(),
+                                   srcPtr + (batchCount * srcGenericDescPtr->strides[0]),
+                                   make_uint3(srcGenericDescPtr->strides[1], srcGenericDescPtr->strides[2], srcGenericDescPtr->strides[3]),
+                                   dstPtr + (batchCount * dstGenericDescPtr->strides[0]),
+                                   make_uint3(dstGenericDescPtr->strides[1], dstGenericDescPtr->strides[2], dstGenericDescPtr->strides[3]),
+                                   dstGenericDescPtr->dims[1],
+                                   make_float2(meanTensor[batchCount], stdDevTensor[batchCount]),
+                                   xorwowInitialStatePtr,
+                                   xorwowSeedStream,
+                                   &roiGenericPtrSrc[batchCount]);
+            }
         }
     }
     else if (dstGenericDescPtr->layout == RpptLayout::NDHWC)
@@ -517,19 +520,37 @@ RppStatus hip_exec_gaussian_noise_voxel_tensor(T *srcPtr,
 
         for(int batchCount = 0; batchCount < dstGenericDescPtr->dims[0]; batchCount++)
         {
-            hipLaunchKernelGGL(gaussian_noise_voxel_ndhwc_hip_tensor,
-                               dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                               0,
-                               handle.GetStream(),
-                               srcPtr + (batchCount * srcGenericDescPtr->strides[0]),
-                               make_uint2(srcGenericDescPtr->strides[1], srcGenericDescPtr->strides[2]),
-                               dstPtr + (batchCount * dstGenericDescPtr->strides[0]),
-                               make_uint2(dstGenericDescPtr->strides[1], dstGenericDescPtr->strides[2]),
-                               make_float2(meanTensor[batchCount], stdDevTensor[batchCount]),
-                               xorwowInitialStatePtr,
-                               xorwowSeedStream,
-                               &roiGenericPtrSrc[batchCount]);
+            bool copyInput = (!meanTensor[batchCount]) && (!stdDevTensor[batchCount]);
+            // copy ROI from input to output when mean = 0 and stdDev = 0
+            if (copyInput)
+            {
+                hipLaunchKernelGGL(copy_ndhwc_hip_tensor,
+                                   dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                                   0,
+                                   handle.GetStream(),
+                                   srcPtr + (batchCount * srcGenericDescPtr->strides[0]),
+                                   make_uint2(srcGenericDescPtr->strides[1], srcGenericDescPtr->strides[2]),
+                                   dstPtr + (batchCount * dstGenericDescPtr->strides[0]),
+                                   make_uint2(dstGenericDescPtr->strides[1], dstGenericDescPtr->strides[2]),
+                                   &roiGenericPtrSrc[batchCount]);
+            }
+            else
+            {
+                hipLaunchKernelGGL(gaussian_noise_voxel_ndhwc_hip_tensor,
+                                   dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                                   0,
+                                   handle.GetStream(),
+                                   srcPtr + (batchCount * srcGenericDescPtr->strides[0]),
+                                   make_uint2(srcGenericDescPtr->strides[1], srcGenericDescPtr->strides[2]),
+                                   dstPtr + (batchCount * dstGenericDescPtr->strides[0]),
+                                   make_uint2(dstGenericDescPtr->strides[1], dstGenericDescPtr->strides[2]),
+                                   make_float2(meanTensor[batchCount], stdDevTensor[batchCount]),
+                                   xorwowInitialStatePtr,
+                                   xorwowSeedStream,
+                                   &roiGenericPtrSrc[batchCount]);
+            }
         }
     }
 
