@@ -298,7 +298,7 @@ int main(int argc, char * argv[])
                     }
 
                     startWallTime = omp_get_wtime();
-                    if(inputBitDepth == 0)
+                    if (inputBitDepth == 0)
                         rppt_flip_voxel_host(inputU8, descriptorPtr3D, outputU8, descriptorPtr3D, horizontalTensor, verticalTensor, depthTensor, roiGenericSrcPtr, roiTypeSrc, handle);
                     else if (inputBitDepth == 2)
                         rppt_flip_voxel_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, horizontalTensor, verticalTensor, depthTensor, roiGenericSrcPtr, roiTypeSrc, handle);
