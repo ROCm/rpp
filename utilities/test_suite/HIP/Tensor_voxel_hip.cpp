@@ -146,11 +146,10 @@ int main(int argc, char * argv[])
     void *pinnedMemArgs;
     CHECK(hipHostMalloc(&pinnedMemArgs, 2 * noOfFiles * sizeof(Rpp32f)));
 
-    // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
-    // If numThreads value passed is 0, number of OpenMP threads used by RPP will be set to batch size
-    Rpp32u numThreads = 0;
     rppHandle_t handle;
-    rppCreateWithBatchSize(&handle, noOfFiles, numThreads);
+    hipStream_t stream;
+    CHECK(hipStreamCreate(&stream));
+    rppCreateWithStreamAndBatchSize(&handle, stream, batchSize);
 
     // Run case-wise RPP API and measure time
     int missingFuncFlag = 0;
@@ -469,8 +468,7 @@ int main(int argc, char * argv[])
         avgWallTime /= (numRuns * noOfIterations);
         cout << fixed << "\nmax,min,avg wall times in ms/batch = " << maxWallTime << "," << minWallTime << "," << avgWallTime;
     }
-
-    rppDestroyHost(handle);
+    rppDestroyGPU(handle);
 
     // Free memory
     free(niftiDataArray);
