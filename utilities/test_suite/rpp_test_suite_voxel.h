@@ -240,6 +240,7 @@ inline string set_function_type(int layoutType, int pln1OutTypeCase, int outputF
     return funcType;
 }
 
+// initialize the roi, anchor and shape values required for slice
 void init_slice_voxel(RpptGenericDescPtr descriptorPtr3D, RpptROI3D *roiGenericSrcPtr, Rpp32u *roiTensor, Rpp32s *anchorTensor, Rpp32s *shapeTensor)
 {
     if (descriptorPtr3D->layout == RpptLayout::NCDHW)
