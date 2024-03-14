@@ -158,8 +158,8 @@ int main(int argc, char **argv)
                 case 0:
                 {
                     testCaseName = "non_silent_region_detection";
-                    Rpp32f detectedIndex[batchSize];
-                    Rpp32f detectionLength[batchSize];
+                    Rpp32s detectedIndex[batchSize];
+                    Rpp32s detectionLength[batchSize];
                     Rpp32f cutOffDB = -60.0;
                     Rpp32s windowLength = 2048;
                     Rpp32f referencePower = 0.0f;

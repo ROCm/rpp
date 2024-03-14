@@ -214,7 +214,7 @@ void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dst
     free(refOutput);
 }
 
-void verify_non_silent_region_detection(float *detectedIndex, float *detectionLength, string testCase, int bs, vector<string> audioNames, string dst)
+void verify_non_silent_region_detection(int *detectedIndex, int *detectionLength, string testCase, int bs, vector<string> audioNames, string dst)
 {
     int fileMatch = 0;
     for (int i = 0; i < bs; i++)
