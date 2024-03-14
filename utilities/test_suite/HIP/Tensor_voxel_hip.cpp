@@ -267,46 +267,7 @@ int main(int argc, char * argv[])
                         CHECK(hipHostMalloc(&roiTensor, batchSize * 8 * sizeof(Rpp32u)));
                     bool enablePadding = false;
                     auto fillValue = 0;
-                    if (descriptorPtr3D->layout == RpptLayout::NCDHW)
-                    {
-                        for(int i = 0; i < batchSize; i++)
-                        {
-                            int idx1 = i * 4;
-                            int idx2 = i * 8;
-                            roiTensor[idx2] = anchorTensor[idx1] = 0;
-                            roiTensor[idx2 + 1] = anchorTensor[idx1 + 1] = roiGenericSrcPtr[i].xyzwhdROI.xyz.z;
-                            roiTensor[idx2 + 2] = anchorTensor[idx1 + 2] = roiGenericSrcPtr[i].xyzwhdROI.xyz.y;
-                            roiTensor[idx2 + 3] = anchorTensor[idx1 + 3] = roiGenericSrcPtr[i].xyzwhdROI.xyz.x;
-                            roiTensor[idx2 + 4] = descriptorPtr3D->dims[1];
-                            roiTensor[idx2 + 5] = roiGenericSrcPtr[i].xyzwhdROI.roiDepth;
-                            roiTensor[idx2 + 6] = roiGenericSrcPtr[i].xyzwhdROI.roiHeight;
-                            roiTensor[idx2 + 7] = roiGenericSrcPtr[i].xyzwhdROI.roiWidth;
-                            shapeTensor[idx1] = roiTensor[idx2 + 4];
-                            shapeTensor[idx1 + 1] = roiTensor[idx2 + 5] / 2;
-                            shapeTensor[idx1 + 2] = roiTensor[idx2 + 6] / 2;
-                            shapeTensor[idx1 + 3] = roiTensor[idx2 + 7] / 2;
-                        }
-                    }
-                    else if(descriptorPtr3D->layout == RpptLayout::NDHWC)
-                    {
-                        for(int i = 0; i < batchSize; i++)
-                        {
-                            int idx1 = i * 4;
-                            int idx2 = i * 8;
-                            roiTensor[idx2] = anchorTensor[idx1] = roiGenericSrcPtr[i].xyzwhdROI.xyz.z;
-                            roiTensor[idx2 + 1] = anchorTensor[idx1 + 1] = roiGenericSrcPtr[i].xyzwhdROI.xyz.y;
-                            roiTensor[idx2 + 2] = anchorTensor[idx1 + 2] = roiGenericSrcPtr[i].xyzwhdROI.xyz.x;
-                            roiTensor[idx2 + 3] = anchorTensor[idx1 + 3] = 0;
-                            roiTensor[idx2 + 4] = roiGenericSrcPtr[i].xyzwhdROI.roiDepth;
-                            roiTensor[idx2 + 5] = roiGenericSrcPtr[i].xyzwhdROI.roiHeight;
-                            roiTensor[idx2 + 6] = roiGenericSrcPtr[i].xyzwhdROI.roiWidth;
-                            roiTensor[idx2 + 7] = descriptorPtr3D->dims[4];
-                            shapeTensor[idx1] = roiTensor[idx2 + 4] / 2;
-                            shapeTensor[idx1 + 1] = roiTensor[idx2 + 5] / 2;
-                            shapeTensor[idx1 + 2] = roiTensor[idx2 + 6] / 2;
-                            shapeTensor[idx1 + 3] = roiTensor[idx2 + 7];
-                        }
-                    }
+                    init_slice_voxel(descriptorPtr3D, roiGenericSrcPtr, roiTensor, anchorTensor, shapeTensor);
 
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0)
@@ -315,31 +276,6 @@ int main(int argc, char * argv[])
                         rppt_slice_gpu(d_inputF32, descriptorPtr3D, d_outputF32, descriptorPtr3D, anchorTensor, shapeTensor, &fillValue, enablePadding, roiTensor, handle);
                     else
                         missingFuncFlag = 1;
-
-                    if(qaFlag)
-                    {
-                        // update the roi for comparision with the shapeTensor values
-                        if (descriptorPtr3D->layout == RpptLayout::NCDHW)
-                        {
-                            for(int i = 0; i < batchSize; i++)
-                            {
-                                int idx1 = i * 4;
-                                roiGenericSrcPtr[i].xyzwhdROI.roiDepth = shapeTensor[idx1 + 1];
-                                roiGenericSrcPtr[i].xyzwhdROI.roiHeight =  shapeTensor[idx1 + 2];
-                                roiGenericSrcPtr[i].xyzwhdROI.roiWidth = shapeTensor[idx1 + 3];
-                            }
-                        }
-                        else if(descriptorPtr3D->layout == RpptLayout::NDHWC)
-                        {
-                            for(int i = 0; i < batchSize; i++)
-                            {
-                                int idx1 = i * 4;
-                                roiGenericSrcPtr[i].xyzwhdROI.roiDepth = shapeTensor[idx1];
-                                roiGenericSrcPtr[i].xyzwhdROI.roiHeight =  shapeTensor[idx1 + 1];
-                                roiGenericSrcPtr[i].xyzwhdROI.roiWidth = shapeTensor[idx1 + 2];
-                            }
-                        }
-                    }
 
                     break;
                 }
@@ -442,6 +378,39 @@ int main(int argc, char * argv[])
                 // Copy U8 buffer to F32 buffer for display purposes
                 for(int i = 0; i < bufferLength; i++)
                     outputF32[i] = static_cast<float>(outputU8[i]);
+            }
+
+            // if test case is slice and qaFlag is set, update the ROI with shapeTensor values
+            // for output comparision in qaMode
+            if(testCase == 1 && qaFlag)
+            {
+                // update the roi for comparision with the shapeTensor values
+                if (descriptorPtr3D->layout == RpptLayout::NCDHW)
+                {
+                    for(int i = 0; i < batchSize; i++)
+                    {
+                        int idx1 = i * 4;
+                        roiGenericSrcPtr[i].xyzwhdROI.xyz.x = 0;
+                        roiGenericSrcPtr[i].xyzwhdROI.xyz.y = 0;
+                        roiGenericSrcPtr[i].xyzwhdROI.xyz.z = 0;
+                        roiGenericSrcPtr[i].xyzwhdROI.roiDepth = shapeTensor[idx1 + 1];
+                        roiGenericSrcPtr[i].xyzwhdROI.roiHeight =  shapeTensor[idx1 + 2];
+                        roiGenericSrcPtr[i].xyzwhdROI.roiWidth = shapeTensor[idx1 + 3];
+                    }
+                }
+                else if(descriptorPtr3D->layout == RpptLayout::NDHWC)
+                {
+                    for(int i = 0; i < batchSize; i++)
+                    {
+                        int idx1 = i * 4;
+                        roiGenericSrcPtr[i].xyzwhdROI.xyz.x = 0;
+                        roiGenericSrcPtr[i].xyzwhdROI.xyz.y = 0;
+                        roiGenericSrcPtr[i].xyzwhdROI.xyz.z = 0;
+                        roiGenericSrcPtr[i].xyzwhdROI.roiDepth = shapeTensor[idx1];
+                        roiGenericSrcPtr[i].xyzwhdROI.roiHeight =  shapeTensor[idx1 + 1];
+                        roiGenericSrcPtr[i].xyzwhdROI.roiWidth = shapeTensor[idx1 + 2];
+                    }
+                }
             }
 
             /*Compare the output of the function with golden outputs only if

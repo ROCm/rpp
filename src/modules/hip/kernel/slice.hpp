@@ -341,7 +341,6 @@ RppStatus hip_exec_fill_value_tensor(T *dstPtr,
             }
         }
     }
-    hipStreamSynchronize(handle.GetStream());
 
     return RPP_SUCCESS;
 }
@@ -372,6 +371,7 @@ RppStatus hip_exec_slice_tensor(T *srcPtr,
                                    roiTensor,
                                    handle,
                                    numDims);
+        hipStreamSynchronize(handle.GetStream());
     }
 
     if(numDims == 4)
