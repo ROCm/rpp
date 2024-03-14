@@ -482,7 +482,7 @@ typedef struct
     RpptLayout layout;
 } RpptDesc, *RpptDescPtr;
 
-/*! \brief RPPT Tensor 8-bit uchar RGB type struct
+/*! \brief RPPT Generic Descriptors
  * \ingroup group_rppdefs
  */
 typedef struct
@@ -495,6 +495,9 @@ typedef struct
     RpptLayout layout;
 } RpptGenericDesc, *RpptGenericDescPtr;
 
+/*! \brief RPPT Tensor 8-bit uchar RGB type struct
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     Rpp8u R;
