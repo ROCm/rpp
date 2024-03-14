@@ -124,7 +124,6 @@ RppStatus hip_exec_fill_value_tensor(T *dstPtr,
 {
     if(numDims == 4)
     {
-        Rpp32u numDims = numDims;
         // create a kernel for filling padded region with fill value specified
         if (dstGenericDescPtr->layout == RpptLayout::NCDHW)
         {
@@ -202,7 +201,6 @@ RppStatus hip_exec_fill_value_tensor(T *dstPtr,
     }
     else if(numDims == 3)
     {
-        Rpp32u numDims = numDims;
         // create a kernel for filling padded region with fill value specified
         if (dstGenericDescPtr->layout == RpptLayout::NCHW)
         {
@@ -444,7 +442,6 @@ RppStatus hip_exec_slice_tensor(T *srcPtr,
     }
     else if(numDims == 3)
     {
-        Rpp32u numDims = numDims;
         if (dstGenericDescPtr->layout == RpptLayout::NCHW)
         {
             int globalThreads_x = (dstGenericDescPtr->strides[2] + 7) >> 3; // W - width (x direction) - vectorized for 8 element loads/stores per channel
