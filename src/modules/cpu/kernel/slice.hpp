@@ -40,7 +40,7 @@ RppStatus slice_host_tensor(T *srcPtr,
                             rpp::Handle& handle)
 {
     Rpp32u numThreads = handle.GetNumThreads();
-    Rpp32u numDims = srcGenericDescPtr->numDims - 1;
+    Rpp32u numDims = srcGenericDescPtr->numDims - 1; // exclude batchsize from input dims
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
