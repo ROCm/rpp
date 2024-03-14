@@ -62,23 +62,31 @@ RppStatus slice_host_tensor(T *srcPtr,
 
         if(numDims == 4)
         {
+            // order of dims
+            Rpp32s dimsOrder[3] = {0, 1, 2}; // for NDHWC layout
+            if((srcGenericDescPtr->layout == RpptLayout::NCDHW) && (dstGenericDescPtr->layout == RpptLayout::NCDHW))
+            {
+                dimsOrder[0] = 1;  // depth
+                dimsOrder[1] = 2;  // height
+                dimsOrder[2] = 3;  // width
+            }
+            Rpp32u maxDepth = std::min(shape[dimsOrder[0]], length[dimsOrder[0]] - anchor[dimsOrder[0]]);
+            Rpp32u maxHeight = std::min(shape[dimsOrder[1]], length[dimsOrder[1]] - anchor[dimsOrder[1]]);
+            Rpp32u maxWidth = std::min(shape[dimsOrder[2]], length[dimsOrder[2]] - anchor[dimsOrder[2]]);
+            Rpp32u bufferLength = maxWidth * layoutParams.bufferMultiplier;
+            Rpp32u copyLengthInBytes = bufferLength * sizeof(T);
+
+            // if padding is required, fill the buffer with fill value specified
+            bool needPadding = (((anchor[dimsOrder[0]] + shape[dimsOrder[0]]) > length[dimsOrder[0]]) ||
+                                ((anchor[dimsOrder[1]] + shape[dimsOrder[1]]) > length[dimsOrder[1]]) ||
+                                ((anchor[dimsOrder[2]] + shape[dimsOrder[2]]) > length[dimsOrder[2]]));
+            if(needPadding && enablePadding)
+                std::fill(dstPtrChannel, dstPtrChannel + dstGenericDescPtr->strides[0] - 1, *fillValue);
+
             // slice without fused output-layout toggle (NCDHW -> NCDHW)
             if((srcGenericDescPtr->layout == RpptLayout::NCDHW) && (dstGenericDescPtr->layout == RpptLayout::NCDHW))
             {
                 srcPtrChannel = srcPtrTemp + (anchor[1] * srcGenericDescPtr->strides[2]) + (anchor[2] * srcGenericDescPtr->strides[3]) + (anchor[3] * layoutParams.bufferMultiplier);
-                Rpp32u maxDepth = std::min(shape[1], length[1] - anchor[1]);
-                Rpp32u maxHeight = std::min(shape[2], length[2] - anchor[2]);
-                Rpp32u maxWidth = std::min(shape[3], length[3] - anchor[3]);
-                Rpp32u bufferLength = maxWidth * layoutParams.bufferMultiplier;
-                Rpp32u copyLengthInBytes = bufferLength * sizeof(T);
-
-                // if padding is required, fill the buffer with fill value specified
-                bool needPadding = (((anchor[1] + shape[1]) > length[1]) ||
-                                    ((anchor[2] + shape[2]) > length[2]) ||
-                                    ((anchor[3] + shape[3]) > length[3]));
-                if(needPadding && enablePadding)
-                    std::fill(dstPtrChannel, dstPtrChannel + dstGenericDescPtr->strides[0] - 1, *fillValue);
-
                 for(int c = 0; c < layoutParams.channelParam; c++)
                 {
                     T *srcPtrDepth, *dstPtrDepth;
@@ -107,19 +115,6 @@ RppStatus slice_host_tensor(T *srcPtr,
             else if((srcGenericDescPtr->layout == RpptLayout::NDHWC) && (dstGenericDescPtr->layout == RpptLayout::NDHWC))
             {
                 srcPtrChannel = srcPtrTemp + (anchor[0] * srcGenericDescPtr->strides[1]) + (anchor[1] * srcGenericDescPtr->strides[2]) + (anchor[2] * layoutParams.bufferMultiplier);
-                Rpp32u maxDepth = std::min(shape[0], length[0] - anchor[0]);
-                Rpp32u maxHeight = std::min(shape[1], length[1] - anchor[1]);
-                Rpp32u maxWidth = std::min(shape[2], length[2] - anchor[2]);
-                Rpp32u bufferLength = maxWidth * layoutParams.bufferMultiplier;
-                Rpp32u copyLengthInBytes = bufferLength * sizeof(T);
-
-                // if padding is required, fill the buffer with fill value specified
-                bool needPadding = (((anchor[0] + shape[0]) > length[0]) ||
-                                    ((anchor[1] + shape[1]) > length[1]) ||
-                                    ((anchor[2] + shape[2]) > length[2]));
-                if(needPadding && enablePadding)
-                    std::fill(dstPtrChannel, dstPtrChannel + dstGenericDescPtr->strides[0] - 1, *fillValue);
-
                 T *srcPtrDepth = srcPtrChannel;
                 T *dstPtrDepth = dstPtrChannel;
                 for(int i = 0; i < maxDepth; i++)
@@ -140,21 +135,29 @@ RppStatus slice_host_tensor(T *srcPtr,
         }
         else if(numDims == 3)
         {
+            // order of dims
+            Rpp32s dimsOrder[2] = {0, 1};  // for NHWC layout
+            if((srcGenericDescPtr->layout == RpptLayout::NCHW) && (dstGenericDescPtr->layout == RpptLayout::NCHW))
+            {
+                dimsOrder[0] = 1;  // height
+                dimsOrder[1] = 2;  // width
+            }
+
+            Rpp32u maxHeight = std::min(shape[dimsOrder[0]], length[dimsOrder[0]] - anchor[dimsOrder[0]]);
+            Rpp32u maxWidth = std::min(shape[dimsOrder[1]], length[dimsOrder[1]] - anchor[dimsOrder[1]]);
+            Rpp32u bufferLength = maxWidth * layoutParams.bufferMultiplier;
+            Rpp32u copyLengthInBytes = bufferLength * sizeof(T);
+
+            // if padding is required, fill the buffer with fill value specified
+            bool needPadding = ((anchor[dimsOrder[0]] + shape[dimsOrder[0]]) > length[dimsOrder[0]]) ||
+                               ((anchor[dimsOrder[1]] + shape[dimsOrder[1]]) > length[dimsOrder[1]]);
+            if(needPadding && enablePadding)
+                std::fill(dstPtrChannel, dstPtrChannel + dstGenericDescPtr->strides[0] - 1, *fillValue);
+
             // slice without fused output-layout toggle (NCHW -> NCHW)
             if((srcGenericDescPtr->layout == RpptLayout::NCHW) && (dstGenericDescPtr->layout == RpptLayout::NCHW))
             {
                 srcPtrChannel = srcPtrTemp + (anchor[1] * srcGenericDescPtr->strides[2]) + (anchor[2] * layoutParams.bufferMultiplier);
-                Rpp32u maxHeight = std::min(shape[1], length[1] - anchor[1]);
-                Rpp32u maxWidth = std::min(shape[2], length[2] - anchor[2]);
-                Rpp32u bufferLength = maxWidth * layoutParams.bufferMultiplier;
-                Rpp32u copyLengthInBytes = bufferLength * sizeof(T);
-
-                // if padding is required, fill the buffer with fill value specified
-                bool needPadding = (((anchor[1] + shape[1]) > length[1]) ||
-                                    ((anchor[2] + shape[2]) > length[2]));
-                if(needPadding && enablePadding)
-                    std::fill(dstPtrChannel, dstPtrChannel + dstGenericDescPtr->strides[0] - 1, *fillValue);
-
                 for(int c = 0; c < layoutParams.channelParam; c++)
                 {
                     T *srcPtrRow, *dstPtrRow;
@@ -175,17 +178,6 @@ RppStatus slice_host_tensor(T *srcPtr,
             else if((srcGenericDescPtr->layout == RpptLayout::NHWC) && (dstGenericDescPtr->layout == RpptLayout::NHWC))
             {
                 srcPtrChannel = srcPtrTemp + (anchor[0] * srcGenericDescPtr->strides[1]) + (anchor[1] * layoutParams.bufferMultiplier);
-                Rpp32u maxHeight = std::min(shape[0], length[0] - anchor[0]);
-                Rpp32u maxWidth = std::min(shape[1], length[1] - anchor[1]);
-                Rpp32u bufferLength = maxWidth * layoutParams.bufferMultiplier;
-                Rpp32u copyLengthInBytes = bufferLength * sizeof(T);
-
-                // if padding is required, fill the buffer with fill value specified
-                bool needPadding = ((anchor[0] + shape[0]) > length[0]) ||
-                                   ((anchor[1] + shape[1]) > length[1]);
-                if(needPadding && enablePadding)
-                    std::fill(dstPtrChannel, dstPtrChannel + dstGenericDescPtr->strides[0] - 1, *fillValue);
-
                 T *srcPtrRow = srcPtrChannel;
                 T *dstPtrRow = dstPtrChannel;
                 for(int j = 0; j < maxHeight; j++)
