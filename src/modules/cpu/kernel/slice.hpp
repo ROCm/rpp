@@ -142,7 +142,7 @@ RppStatus slice_host_tensor(T *srcPtr,
         else if (numDims == 3)
         {
             // order of dims
-            Rpp32s dimsOrder[2] = {0, 1};
+            Rpp32s dimsOrder[2];
             if (dstGenericDescPtr->layout == RpptLayout::NCHW)
             {
                 dimsOrder[0] = 1;  // height
