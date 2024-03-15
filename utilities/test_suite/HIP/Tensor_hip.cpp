@@ -342,40 +342,7 @@ int main(int argc, char **argv)
     Rpp32s *anchorTensor = NULL, *shapeTensor = NULL;
     Rpp32u *roiTensor = NULL;
     if(testCase == 90)
-    {
-        descriptorPtr3D->offsetInBytes = 0;
-        descriptorPtr3D->dataType = srcDescPtr->dataType;
-        descriptorPtr3D->layout = srcDescPtr->layout;
-        if(srcDescPtr->c == 3)
-        {
-            descriptorPtr3D->numDims = 4;
-            descriptorPtr3D->dims[0] = batchSize;
-            if (srcDescPtr->layout == RpptLayout::NHWC)
-            {
-                descriptorPtr3D->dims[1] = srcDescPtr->h;
-                descriptorPtr3D->dims[2] = srcDescPtr->w;
-                descriptorPtr3D->dims[3] = srcDescPtr->c;
-            }
-            else
-            {
-                descriptorPtr3D->dims[1] = srcDescPtr->c;
-                descriptorPtr3D->dims[2] = srcDescPtr->h;
-                descriptorPtr3D->dims[3] = srcDescPtr->w;
-            }
-            descriptorPtr3D->strides[0] = descriptorPtr3D->dims[1] * descriptorPtr3D->dims[2] * descriptorPtr3D->dims[3];
-            descriptorPtr3D->strides[1] = descriptorPtr3D->dims[2] * descriptorPtr3D->dims[3];
-            descriptorPtr3D->strides[2] = descriptorPtr3D->dims[3];
-        }
-        else
-        {
-            descriptorPtr3D->numDims = 3;
-            descriptorPtr3D->dims[0] = batchSize;
-            descriptorPtr3D->dims[1] = srcDescPtr->h;
-            descriptorPtr3D->dims[2] = srcDescPtr->w;
-            descriptorPtr3D->strides[0] = descriptorPtr3D->dims[1] * descriptorPtr3D->dims[2];
-            descriptorPtr3D->strides[1] = descriptorPtr3D->dims[2];
-        }
-    }
+        set_generic_descriptor_slice(srcDescPtr, descriptorPtr3D, batchSize);
 
     // Allocate hip memory for src/dst
     CHECK(hipMalloc(&d_input, inputBufferSize));
