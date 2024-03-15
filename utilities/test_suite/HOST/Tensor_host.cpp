@@ -1256,7 +1256,7 @@ int main(int argc, char **argv)
                 }
 
                 // if test case is slice and qaFlag is set, update the dstImgSizes with shapeTensor values
-                // for output comparision in qaMode
+                // for output display and comparision purposes
                 if (testCase == 90)
                 {
                     if (dstDescPtr->layout == RpptLayout::NCHW)
@@ -1347,6 +1347,12 @@ int main(int argc, char **argv)
     free(roiTensorPtrSrc);
     free(roiTensorPtrDst);
     free(dstImgSizes);
+    if(anchorTensor != NULL)
+        free(anchorTensor);
+    if(shapeTensor != NULL)
+        free(shapeTensor);
+    if(roiTensor != NULL)
+        free(roiTensor);
     free(input);
     free(inputu8);
     free(inputu8Second);

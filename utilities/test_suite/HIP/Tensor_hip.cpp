@@ -1224,7 +1224,7 @@ int main(int argc, char **argv)
                 }
 
                 // if test case is slice and qaFlag is set, update the dstImgSizes with shapeTensor values
-                // for output comparision in qaMode
+                // for output display and comparision purposes
                 if (testCase == 90)
                 {
                     if (dstDescPtr->layout == RpptLayout::NCHW)
@@ -1314,6 +1314,12 @@ int main(int argc, char **argv)
         CHECK(hipHostFree(roiPtrInputCropRegion));
     if (reductionTypeCase)
         CHECK(hipHostFree(reductionFuncResultArr));
+    if(anchorTensor != NULL)
+        CHECK(hipHostFree(anchorTensor));
+    if(shapeTensor != NULL)
+        CHECK(hipHostFree(shapeTensor));
+    if(roiTensor != NULL)
+        CHECK(hipHostFree(roiTensor));
     free(input);
     free(input_second);
     free(output);
