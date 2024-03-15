@@ -117,7 +117,9 @@ typedef enum
     /*! \brief Out of bound source ROI \ingroup group_rppdefs */
     RPP_ERROR_OUT_OF_BOUND_SRC_ROI      = -17,
     /*! \brief Number of channels is invalid. (Needs to adhere to function specification.) \ingroup group_rppdefs */
-    RPP_ERROR_INVALID_CHANNELS          = -18
+    RPP_ERROR_INVALID_CHANNELS          = -18,
+    /*! \brief src and dst layouts are not same. (Needs to adhere to function specification.) \ingroup group_rppdefs */
+    RPP_ERROR_LAYOUT_MISMATCH           = -19
 } RppStatus;
 
 /*! \brief RPP rppStatus_t type enums
