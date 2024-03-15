@@ -336,6 +336,47 @@ int main(int argc, char **argv)
         CHECK(hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * bitDepthByteSize));
     }
 
+    // create generic descriptor and params in case of slice
+    RpptGenericDesc descriptor3D;
+    RpptGenericDescPtr descriptorPtr3D = &descriptor3D;
+    Rpp32s *anchorTensor = NULL, *shapeTensor = NULL;
+    Rpp32u *roiTensor = NULL;
+    if(testCase == 90)
+    {
+        descriptorPtr3D->offsetInBytes = 0;
+        descriptorPtr3D->dataType = srcDescPtr->dataType;
+        descriptorPtr3D->layout = srcDescPtr->layout;
+        if(srcDescPtr->c == 3)
+        {
+            descriptorPtr3D->numDims = 4;
+            descriptorPtr3D->dims[0] = batchSize;
+            if (srcDescPtr->layout == RpptLayout::NHWC)
+            {
+                descriptorPtr3D->dims[1] = srcDescPtr->h;
+                descriptorPtr3D->dims[2] = srcDescPtr->w;
+                descriptorPtr3D->dims[3] = srcDescPtr->c;
+            }
+            else
+            {
+                descriptorPtr3D->dims[1] = srcDescPtr->c;
+                descriptorPtr3D->dims[2] = srcDescPtr->h;
+                descriptorPtr3D->dims[3] = srcDescPtr->w;
+            }
+            descriptorPtr3D->strides[0] = descriptorPtr3D->dims[1] * descriptorPtr3D->dims[2] * descriptorPtr3D->dims[3];
+            descriptorPtr3D->strides[1] = descriptorPtr3D->dims[2] * descriptorPtr3D->dims[3];
+            descriptorPtr3D->strides[2] = descriptorPtr3D->dims[3];
+        }
+        else
+        {
+            descriptorPtr3D->numDims = 3;
+            descriptorPtr3D->dims[0] = batchSize;
+            descriptorPtr3D->dims[1] = srcDescPtr->h;
+            descriptorPtr3D->dims[2] = srcDescPtr->w;
+            descriptorPtr3D->strides[0] = descriptorPtr3D->dims[1] * descriptorPtr3D->dims[2];
+            descriptorPtr3D->strides[1] = descriptorPtr3D->dims[2];
+        }
+    }
+
     // Allocate hip memory for src/dst
     CHECK(hipMalloc(&d_input, inputBufferSize));
     CHECK(hipMalloc(&d_output, outputBufferSize));
@@ -1065,6 +1106,28 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 90:
+                {
+                    testCaseName = "slice";
+                    Rpp32u numDims = descriptorPtr3D->numDims - 1; // exclude batchSize from input dims
+                    if(anchorTensor == NULL)
+                        CHECK(hipHostMalloc(&anchorTensor, batchSize * numDims * sizeof(Rpp32s)));
+                    if(shapeTensor == NULL)
+                        CHECK(hipHostMalloc(&shapeTensor, batchSize * numDims * sizeof(Rpp32s)));
+                    if(roiTensor == NULL)
+                        CHECK(hipHostMalloc(&roiTensor, batchSize * numDims * 2 * sizeof(Rpp32u)));
+                    bool enablePadding = false;
+                    auto fillValue = 0;
+                    init_slice(descriptorPtr3D, roiTensorPtrSrc, roiTensor, anchorTensor, shapeTensor);
+
+                    startWallTime = omp_get_wtime();
+                    if((inputBitDepth == 0 || inputBitDepth == 2) && srcDescPtr->layout == dstDescPtr->layout)
+                        rppt_slice_gpu(d_input, descriptorPtr3D, d_output, descriptorPtr3D, anchorTensor, shapeTensor, &fillValue, enablePadding, roiTensor, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 default:
                     missingFuncFlag = 1;
                     break;
@@ -1158,6 +1221,42 @@ int main(int argc, char **argv)
                     for (int i = 0; i < oBufferSize; i++)
                         refFile << static_cast<int>(*(outputu8 + i)) << ",";
                     refFile.close();
+                }
+
+                // if test case is slice and qaFlag is set, update the dstImgSizes with shapeTensor values
+                // for output comparision in qaMode
+                if (testCase == 90)
+                {
+                    if (dstDescPtr->layout == RpptLayout::NCHW)
+                    {
+                        if (dstDescPtr->c == 3)
+                        {
+                            for(int i = 0; i < batchSize; i++)
+                            {
+                                int idx1 = i * 3;
+                                dstImgSizes[i].height = shapeTensor[idx1 + 1];
+                                dstImgSizes[i].width = shapeTensor[idx1 + 2];
+                            }
+                        }
+                        else
+                        {
+                            for(int i = 0; i < batchSize; i++)
+                            {
+                                int idx1 = i * 2;
+                                dstImgSizes[i].height = shapeTensor[idx1];
+                                dstImgSizes[i].width = shapeTensor[idx1 + 1];
+                            }
+                        }
+                    }
+                    else if (dstDescPtr->layout == RpptLayout::NHWC)
+                    {
+                        for(int i = 0; i < batchSize; i++)
+                        {
+                            int idx1 = i * 3;
+                            dstImgSizes[i].height = shapeTensor[idx1];
+                            dstImgSizes[i].width = shapeTensor[idx1 + 1];
+                        }
+                    }
                 }
 
                 /*Compare the output of the function with golden outputs only if
