@@ -115,7 +115,6 @@ __global__ void slice_ndhwc_hip_tensor(T *srcPtr,
 template <typename T>
 RppStatus hip_exec_fill_value_tensor(T *dstPtr,
                                      RpptGenericDescPtr dstGenericDescPtr,
-                                     RpptGenericDescPtr srcGenericDescPtr,
                                      Rpp32s *anchorTensor,
                                      Rpp32s *shapeTensor,
                                      T *fillValue,
@@ -123,7 +122,7 @@ RppStatus hip_exec_fill_value_tensor(T *dstPtr,
                                      rpp::Handle& handle,
                                      Rpp32u numDims)
 {
-    if(numDims == 4)
+    if (numDims == 4)
     {
         // set the dimsOrder and globalthreads values required for NDHWC layout
         Rpp32s dimsOrder[3] = {0, 1, 2};
@@ -132,7 +131,7 @@ RppStatus hip_exec_fill_value_tensor(T *dstPtr,
         int globalThreads_z = dstGenericDescPtr->dims[1];                   // D - depth (z direction)
 
         // change the dimsOrder and globalthreads values if layout is NCDHW
-        if((srcGenericDescPtr->layout == RpptLayout::NCDHW) && (dstGenericDescPtr->layout == RpptLayout::NCDHW))
+        if (dstGenericDescPtr->layout == RpptLayout::NCDHW)
         {
             dimsOrder[0] = 1;  // depth
             dimsOrder[1] = 2;  // height
@@ -184,7 +183,7 @@ RppStatus hip_exec_fill_value_tensor(T *dstPtr,
             }
         }
     }
-    else if(numDims == 3)
+    else if (numDims == 3)
     {
         // set the dimsOrder and globalthreads values required for NHWC layout
         Rpp32s dimsOrder[2] = {0, 1};
@@ -193,13 +192,13 @@ RppStatus hip_exec_fill_value_tensor(T *dstPtr,
         int globalThreads_z = 1;
 
         // change the dimsOrder and globalthreads values if layout is NCHW
-        if((srcGenericDescPtr->layout == RpptLayout::NCHW) && (dstGenericDescPtr->layout == RpptLayout::NCHW))
+        if (dstGenericDescPtr->layout == RpptLayout::NCHW)
         {
             dimsOrder[0] = 1;  // height
             dimsOrder[1] = 2;  // width
-            int globalThreads_x = (dstGenericDescPtr->strides[2] + 7) >> 3; // W - width  (x direction) - vectorized for 8 element loads/stores per channel
-            int globalThreads_y = dstGenericDescPtr->dims[2];               // H - height (y direction)
-            int globalThreads_z = 1;
+            globalThreads_x = (dstGenericDescPtr->strides[2] + 7) >> 3; // W - width  (x direction) - vectorized for 8 element loads/stores per channel
+            globalThreads_y = dstGenericDescPtr->dims[2];               // H - height (y direction)
+            globalThreads_z = 1;
         }
 
         for(int batchCount = 0; batchCount < dstGenericDescPtr->dims[0]; batchCount++)
@@ -243,7 +242,7 @@ RppStatus hip_exec_fill_value_tensor(T *dstPtr,
             }
         }
     }
-    else if(numDims == 2)
+    else if (numDims == 2)
     {
         // NHW
         int globalThreads_x = (dstGenericDescPtr->strides[1] + 7) >> 3; // W - width (x direction) - vectorized for 8 element loads/stores per channel
@@ -264,7 +263,7 @@ RppStatus hip_exec_fill_value_tensor(T *dstPtr,
                                 ((anchor[1] + shape[1]) > length[1]));
 
             // launch kernel for filling the padded region with fill value specified
-            if(needPadding)
+            if (needPadding)
             {
                 hipLaunchKernelGGL(fill_value_ncdhw_hip_tensor,
                                     dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
@@ -279,7 +278,7 @@ RppStatus hip_exec_fill_value_tensor(T *dstPtr,
             }
         }
     }
-    else if(numDims == 1)
+    else if (numDims == 1)
     {
         int globalThreads_x = (dstGenericDescPtr->strides[0] + 7) >> 3; // W - width (x direction) - vectorized for 8 element loads/stores per channel
         int globalThreads_y = 1;
@@ -297,7 +296,7 @@ RppStatus hip_exec_fill_value_tensor(T *dstPtr,
             bool needPadding = ((anchor[0] + shape[0]) > length[0]);
 
             // launch kernel for filling the padded region with fill value specified
-            if(needPadding)
+            if (needPadding)
             {
                 hipLaunchKernelGGL(fill_value_ncdhw_hip_tensor,
                                    dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
@@ -332,11 +331,10 @@ RppStatus hip_exec_slice_tensor(T *srcPtr,
 
     /* if enabledPadding is set to true, launch kernel to fill the output buffers with fill value specified.
     This will be only done if shapeTensor[d] > roiTensor[d] where d is the dimension*/
-    if(enablePadding)
+    if (enablePadding)
     {
         hip_exec_fill_value_tensor(dstPtr,
                                    dstGenericDescPtr,
-                                   srcGenericDescPtr,
                                    anchorTensor,
                                    shapeTensor,
                                    fillValue,
@@ -355,7 +353,7 @@ RppStatus hip_exec_slice_tensor(T *srcPtr,
         int globalThreads_z = dstGenericDescPtr->dims[1];                   // D - depth (z direction)
 
         // change the dimsOrder and globalthreads values if layout is NCDHW
-        if((srcGenericDescPtr->layout == RpptLayout::NCDHW) && (dstGenericDescPtr->layout == RpptLayout::NCDHW))
+        if (dstGenericDescPtr->layout == RpptLayout::NCDHW)
         {
             dimsOrder[0] = 1;  // depth
             dimsOrder[1] = 2;  // height
@@ -407,7 +405,7 @@ RppStatus hip_exec_slice_tensor(T *srcPtr,
             }
         }
     }
-    else if(numDims == 3)
+    else if (numDims == 3)
     {
         // set the dimsOrder and globalthreads values required for NHWC layout
         Rpp32s dimsOrder[2] = {0, 1};
@@ -416,13 +414,13 @@ RppStatus hip_exec_slice_tensor(T *srcPtr,
         int globalThreads_z = 1;
 
         // change the dimsOrder and globalthreads values if layout is NCHW
-        if((srcGenericDescPtr->layout == RpptLayout::NCHW) && (dstGenericDescPtr->layout == RpptLayout::NCHW))
+        if (dstGenericDescPtr->layout == RpptLayout::NCHW)
         {
             dimsOrder[0] = 1;  // height
             dimsOrder[1] = 2;  // width
-            int globalThreads_x = (dstGenericDescPtr->strides[2] + 7) >> 3; // W - width  (x direction) - vectorized for 8 element loads/stores per channel
-            int globalThreads_y = dstGenericDescPtr->dims[2];               // H - height (y direction)
-            int globalThreads_z = 1;
+            globalThreads_x = (dstGenericDescPtr->strides[2] + 7) >> 3; // W - width  (x direction) - vectorized for 8 element loads/stores per channel
+            globalThreads_y = dstGenericDescPtr->dims[2];               // H - height (y direction)
+            globalThreads_z = 1;
         }
 
         for(int batchCount = 0; batchCount < dstGenericDescPtr->dims[0]; batchCount++)
@@ -466,7 +464,7 @@ RppStatus hip_exec_slice_tensor(T *srcPtr,
             }
         }
     }
-    else if(numDims == 2)
+    else if (numDims == 2)
     {
         // NHW
         int globalThreads_x = (dstGenericDescPtr->strides[1] + 7) >> 3; // W - width (x direction) - vectorized for 8 element loads/stores per channel
@@ -496,7 +494,7 @@ RppStatus hip_exec_slice_tensor(T *srcPtr,
                                make_uint3(1, maxHeight, maxWidth));
         }
     }
-    else if(numDims == 1)
+    else if (numDims == 1)
     {
         int globalThreads_x = (dstGenericDescPtr->strides[0] + 7) >> 3; // W - width (x direction) - vectorized for 8 element loads/stores per channel
         int globalThreads_y = 1;

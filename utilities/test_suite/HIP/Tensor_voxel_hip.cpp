@@ -394,7 +394,7 @@ int main(int argc, char * argv[])
                         roiGenericSrcPtr[i].xyzwhdROI.xyz.y = 0;
                         roiGenericSrcPtr[i].xyzwhdROI.xyz.z = 0;
                         roiGenericSrcPtr[i].xyzwhdROI.roiDepth = shapeTensor[idx1 + 1];
-                        roiGenericSrcPtr[i].xyzwhdROI.roiHeight =  shapeTensor[idx1 + 2];
+                        roiGenericSrcPtr[i].xyzwhdROI.roiHeight = shapeTensor[idx1 + 2];
                         roiGenericSrcPtr[i].xyzwhdROI.roiWidth = shapeTensor[idx1 + 3];
                     }
                 }
@@ -407,7 +407,7 @@ int main(int argc, char * argv[])
                         roiGenericSrcPtr[i].xyzwhdROI.xyz.y = 0;
                         roiGenericSrcPtr[i].xyzwhdROI.xyz.z = 0;
                         roiGenericSrcPtr[i].xyzwhdROI.roiDepth = shapeTensor[idx1];
-                        roiGenericSrcPtr[i].xyzwhdROI.roiHeight =  shapeTensor[idx1 + 1];
+                        roiGenericSrcPtr[i].xyzwhdROI.roiHeight = shapeTensor[idx1 + 1];
                         roiGenericSrcPtr[i].xyzwhdROI.roiWidth = shapeTensor[idx1 + 2];
                     }
                 }

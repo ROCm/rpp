@@ -982,15 +982,15 @@ RppStatus rppt_slice_host(RppPtr_t srcPtr,
                           Rpp32u *roiTensor,
                           rppHandle_t rppHandle)
 {
+    if ((srcGenericDescPtr->dataType != RpptDataType::F32) && (srcGenericDescPtr->dataType != RpptDataType::U8)) return RPP_ERROR_INVALID_SRC_DATATYPE;
+    if ((dstGenericDescPtr->dataType != RpptDataType::F32) && (dstGenericDescPtr->dataType != RpptDataType::U8)) return RPP_ERROR_INVALID_DST_DATATYPE;
+    if (srcGenericDescPtr->layout != dstGenericDescPtr->layout) return RPP_ERROR_LAYOUT_MISMATCH;
+
     RppLayoutParams layoutParams;
     if ((srcGenericDescPtr->layout == RpptLayout::NCDHW) && (dstGenericDescPtr->layout == RpptLayout::NCDHW))
         layoutParams = get_layout_params(srcGenericDescPtr->layout, srcGenericDescPtr->dims[1]);
     else if ((srcGenericDescPtr->layout == RpptLayout::NDHWC) && (dstGenericDescPtr->layout == RpptLayout::NDHWC))
         layoutParams = get_layout_params(srcGenericDescPtr->layout, srcGenericDescPtr->dims[4]);
-
-    if ((srcGenericDescPtr->dataType != RpptDataType::F32) && (srcGenericDescPtr->dataType != RpptDataType::U8)) return RPP_ERROR_INVALID_SRC_DATATYPE;
-    if ((dstGenericDescPtr->dataType != RpptDataType::F32) && (dstGenericDescPtr->dataType != RpptDataType::U8)) return RPP_ERROR_INVALID_DST_DATATYPE;
-    if (srcGenericDescPtr->layout != dstGenericDescPtr->layout) return RPP_ERROR_INVALID_ARGUMENTS;
 
     if ((srcGenericDescPtr->dataType == RpptDataType::F32) && (dstGenericDescPtr->dataType == RpptDataType::F32))
     {
@@ -1733,7 +1733,7 @@ RppStatus rppt_slice_gpu(RppPtr_t srcPtr,
 #ifdef HIP_COMPILE
     if ((srcGenericDescPtr->dataType != RpptDataType::F32) && (srcGenericDescPtr->dataType != RpptDataType::U8)) return RPP_ERROR_INVALID_SRC_DATATYPE;
     if ((dstGenericDescPtr->dataType != RpptDataType::F32) && (dstGenericDescPtr->dataType != RpptDataType::U8)) return RPP_ERROR_INVALID_DST_DATATYPE;
-    if (srcGenericDescPtr->layout != dstGenericDescPtr->layout) return RPP_ERROR_INVALID_ARGUMENTS;
+    if (srcGenericDescPtr->layout != dstGenericDescPtr->layout) return RPP_ERROR_LAYOUT_MISMATCH;
 
     if ((srcGenericDescPtr->dataType == RpptDataType::F32) && (dstGenericDescPtr->dataType == RpptDataType::F32))
     {
