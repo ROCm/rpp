@@ -431,7 +431,7 @@ RppStatus hip_exec_slice_tensor(T *srcPtr,
             Rpp32s *length = reinterpret_cast<Rpp32s *>(&roi[numDims]);
             Rpp32u maxHeight = std::min(shape[dimsOrder[0]], length[dimsOrder[0]] - anchor[dimsOrder[0]]);
             Rpp32u maxWidth = std::min(shape[dimsOrder[1]], length[dimsOrder[1]] - anchor[dimsOrder[1]]);
-            if (dstGenericDescPtr->layout == RpptLayout::NHWC)
+            if (dstGenericDescPtr->layout == RpptLayout::NCHW)
             {
                 T *srcPtrTemp = srcPtr + (batchCount * srcGenericDescPtr->strides[0]) + anchor[1] * srcGenericDescPtr->strides[2] + anchor[2];
                 T *dstPtrTemp = dstPtr + (batchCount * dstGenericDescPtr->strides[0]);
