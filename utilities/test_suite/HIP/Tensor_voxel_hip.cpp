@@ -381,8 +381,8 @@ int main(int argc, char * argv[])
             }
 
             // if test case is slice and qaFlag is set, update the ROI with shapeTensor values
-            // for output comparision in qaMode
-            if(testCase == 1 && qaFlag)
+            // for output display and comparison purposes
+            if(testCase == 1)
             {
                 // update the roi for comparision with the shapeTensor values
                 if (descriptorPtr3D->layout == RpptLayout::NCDHW)
