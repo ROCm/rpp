@@ -40,7 +40,6 @@ buildFolderPath = os.getcwd()
 caseMin = 0
 caseMax = 5
 
-
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list():
     return [
