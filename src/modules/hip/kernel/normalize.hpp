@@ -232,7 +232,7 @@ __global__ void normalize_nd_hip_tensor(T *srcPtr,
         uint coord = id_x / srcStrides[i] % srcMaxDims[i];
         if(coord >= roi[i])
             return;
-        paramIndex += (maxParamVolume > 1) ? (rpp_hip_mod(coord, paramShape[i]) * paramStrides[i]) : 0;
+        paramIndex += (maxParamVolume != 1) ? (rpp_hip_mod(coord, paramShape[i]) * paramStrides[i]) : 0;
     }
 
     float mean = meanTensor[paramIndex];
@@ -1700,7 +1700,7 @@ RppStatus hip_exec_compute_mean_stddev_tensor(T *srcPtr,
                                numDims);
         }
     }
-    else if(numDims > 3)
+    else
     {
         // interpret the input as 1D tensor
         globalThreads_x = srcGenericDescPtr->strides[0];
@@ -1709,10 +1709,8 @@ RppStatus hip_exec_compute_mean_stddev_tensor(T *srcPtr,
         Rpp32u batchSize = globalThreads_z;
 
         // allocate tensor for src strides
-        Rpp32u *srcMaxDims = handle.GetInitHandle()->mem.mgpu.scratchBuf.uintmem + (2 * batchSize * numDims);
-        Rpp32u *srcStrides = handle.GetInitHandle()->mem.mgpu.scratchBuf.uintmem + (3 * batchSize * numDims);
-        memcpy(srcMaxDims, &srcGenericDescPtr->dims[1], numDims * sizeof(Rpp32u));
-        memcpy(srcStrides, &srcGenericDescPtr->strides[1], numDims * sizeof(Rpp32u));
+        Rpp32u *srcMaxDims = &srcGenericDescPtr->dims[1];
+        Rpp32u *srcStrides = &srcGenericDescPtr->strides[1];
 
         Rpp32u shared_memory_size = 0;
         Rpp32u block_size = 1024;
