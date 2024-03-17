@@ -66,14 +66,13 @@ int main(int argc, char **argv)
     fill_roi_values(nDim, batchSize, roiTensor, qaMode);
 
     // set src/dst generic tensor descriptors
-    RpptGenericDesc srcDescriptor, dstDescriptor;
     RpptGenericDescPtr srcDescriptorPtrND, dstDescriptorPtrND;
-    srcDescriptorPtrND  = &srcDescriptor;
+    CHECK(hipHostMalloc(&srcDescriptorPtrND, sizeof(RpptGenericDesc)));
+    CHECK(hipHostMalloc(&dstDescriptorPtrND, sizeof(RpptGenericDesc)));
     srcDescriptorPtrND->numDims = nDim + 1;
     srcDescriptorPtrND->offsetInBytes = 0;
     srcDescriptorPtrND->dataType = RpptDataType::F32;
 
-    dstDescriptorPtrND  = &dstDescriptor;
     dstDescriptorPtrND->numDims = nDim + 1;
     dstDescriptorPtrND->offsetInBytes = 0;
     dstDescriptorPtrND->dataType = RpptDataType::F32;
@@ -218,6 +217,8 @@ int main(int argc, char **argv)
 
     free(inputF32);
     free(outputF32);
+    CHECK(hipHostFree(srcDescriptorPtrND));
+    CHECK(hipHostFree(dstDescriptorPtrND));
     CHECK(hipHostFree(roiTensor));
     CHECK(hipFree(d_inputF32));
     CHECK(hipFree(d_outputF32));
