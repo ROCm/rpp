@@ -104,9 +104,11 @@ __global__ void normalize_2d_hip_tensor(T *srcPtr,
     uint id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y; // height
     uint id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z; // batchsize
 
-    uint *roi = &roiTensor[id_z * 4 + 2];
-    uint height = roi[0];
-    uint width = roi[1];
+    uint *roi = &roiTensor[id_z * 4];
+    uint yBegin = roi[0];
+    uint xBegin = roi[1];
+    uint height = roi[2];
+    uint width = roi[3];
 
     if (id_x >= width || id_y >= height)
         return;
@@ -120,7 +122,7 @@ __global__ void normalize_2d_hip_tensor(T *srcPtr,
     else if(axisMask == 2)
         paramIndex += id_y;
 
-    uint srcIdx = (id_z * srcStridesNH.x) + (id_y * srcStridesNH.y) + id_x;
+    uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + yBegin) * srcStridesNH.y) + id_x + xBegin;
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x;
     float mean = meanTensor[paramIndex];
     float stdDev = stdDevTensor[paramIndex];
@@ -157,9 +159,12 @@ __global__ void normalize_3d_hip_tensor(T *srcPtr,
     uint id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z; // lengthZ
 
     uint *roi = roiTensor;
-    uint lengthZ = roi[0];
-    uint lengthY = roi[1];
-    uint lengthX = roi[2];
+    uint zBegin = roi[0];
+    uint yBegin = roi[1];
+    uint xBegin = roi[2];
+    uint lengthZ = roi[3];
+    uint lengthY = roi[4];
+    uint lengthX = roi[5];
 
     if (id_x >= lengthX || id_y >= lengthY || id_z >= lengthZ)
         return;
@@ -179,7 +184,7 @@ __global__ void normalize_3d_hip_tensor(T *srcPtr,
     else if(axisMask == 6)
         paramIndex += id_z;
 
-    uint srcIdx = (id_z * srcStridesDH.x) + (id_y * srcStridesDH.y) + id_x;
+    uint srcIdx = ((id_z + zBegin) * srcStridesDH.x) + ((id_y + yBegin) * srcStridesDH.y) + id_x + xBegin;
     uint dstIdx = (id_z * dstStridesDH.x) + (id_y * dstStridesDH.y) + id_x;
     float mean = meanTensor[paramIndex];
     float stdDev = stdDevTensor[paramIndex];
@@ -221,7 +226,8 @@ __global__ void normalize_nd_hip_tensor(T *srcPtr,
     if(id_x >= maxBufferLength)
         return;
 
-    uint *roi = &roiTensor[id_z * numDims * 2 + numDims];
+    uint *begin = &roiTensor[id_z * numDims * 2];
+    uint *length = &roiTensor[id_z * numDims * 2 + numDims];
     uint *paramShape = &paramShapeTensor[id_z * numDims];
     uint *paramStrides = &paramStridesTensor[id_z * numDims];
     uint maxParamVolume = maxParamVolumeAndBufferLength.x;
@@ -230,7 +236,7 @@ __global__ void normalize_nd_hip_tensor(T *srcPtr,
     for (int i = 0; i < numDims; i++)
     {
         uint coord = id_x / srcStrides[i] % srcMaxDims[i];
-        if(coord >= roi[i])
+        if(coord < begin[i] || coord >= length[i])
             return;
         paramIndex += (maxParamVolume != 1) ? (rpp_hip_mod(coord, paramShape[i]) * paramStrides[i]) : 0;
     }
@@ -1877,7 +1883,7 @@ RppStatus hip_exec_normalize_tensor(T *srcPtr,
                                &meanTensor[batchCount * maxParamVolume],
                                &stdDevTensor[batchCount * maxParamVolume],
                                make_float2(scale, shift),
-                               &roiTensor[batchCount * 6 + 3],
+                               &roiTensor[batchCount * 6],
                                axisMask,
                                computeStdDev);
         }

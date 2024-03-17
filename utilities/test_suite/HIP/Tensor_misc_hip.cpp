@@ -34,7 +34,7 @@ int main(int argc, char **argv)
         printf("\nUsage: ./Tensor_misc_hip <case number = 0:0> <test type 0/1> <toggle 0/1> <number of dimensions> <batch size> <num runs> <dst path> <script path>\n");
         return -1;
     }
-    Rpp32u testCase, testType, nDim, batchSize, numRuns, toggle, addi;
+    Rpp32u testCase, testType, nDim, batchSize, numRuns, toggle;
     bool qaMode;
 
     testCase = atoi(argv[1]);
