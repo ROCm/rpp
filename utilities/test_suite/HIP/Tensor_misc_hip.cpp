@@ -27,14 +27,14 @@ SOFTWARE.
 int main(int argc, char **argv)
 {
     // Handle inputs
-    const int MIN_ARG_COUNT = 8;
+    const int MIN_ARG_COUNT = 9;
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
         printf("\nUsage: ./Tensor_misc_hip <case number = 0:0> <test type 0/1> <toggle 0/1> <number of dimensions> <batch size> <num runs> <dst path> <script path>\n");
         return -1;
     }
-    Rpp32u testCase, testType, nDim, batchSize, numRuns, toggle;
+    Rpp32u testCase, testType, nDim, batchSize, numRuns, toggle, addi;
     bool qaMode;
 
     testCase = atoi(argv[1]);
@@ -43,9 +43,11 @@ int main(int argc, char **argv)
     nDim = atoi(argv[4]);
     batchSize = atoi(argv[5]);
     numRuns = atoi(argv[6]);
-    string dst = argv[7];
-    string scriptPath = argv[8];
+    string dst = argv[8];
+    string scriptPath = argv[9];
     qaMode = (testType == 0);
+    bool axisMaskCase = (testCase == 1);
+    int axisMask = (axisMaskCase) ? atoi(argv[7]) : 1;
 
     if (qaMode && batchSize != 3)
     {
@@ -58,6 +60,15 @@ int main(int argc, char **argv)
     {
         printf("\ncase %d is not supported\n", testCase);
         return -1;
+    }
+
+    string func = funcName;
+    if (axisMaskCase)
+    {
+        char additionalParam_char[2];
+        std::sprintf(additionalParam_char, "%d", axisMask);
+        func += "_" + std::to_string(nDim) + "d" + "_axisMask";
+        func += additionalParam_char;
     }
 
     // fill roi based on mode and number of dimensions
@@ -130,14 +141,13 @@ int main(int argc, char **argv)
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0, wallTime = 0;
 
     // case-wise RPP API and measure time script for Unit and Performance test
-    printf("\nRunning normalize %d times (each time with a batch size of %d) and computing mean statistics...", numRuns, batchSize);
+    printf("\nRunning %s %d times (each time with a batch size of %d) and computing mean statistics...", func.c_str(), numRuns, batchSize);
     for(int perfCount = 0; perfCount < numRuns; perfCount++)
     {
         switch(testCase)
         {
             case 1:
             {
-                int axisMask = 1;
                 float scale = 1.0;
                 float shift = 0.0;
                 bool computeMean, computeStddev;
@@ -182,7 +192,7 @@ int main(int argc, char **argv)
                     CHECK(hipMemcpy(outputF32, d_outputF32, bufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
                     CHECK(hipDeviceSynchronize());
                     bool externalMeanStd = !(computeMean && computeStddev); // when mean and stddev is passed from user
-                    compare_output(outputF32, nDim, batchSize, bufferSize, dst, funcName, axisMask, scriptPath, externalMeanStd);
+                    compare_output(outputF32, nDim, batchSize, bufferSize, dst, func, axisMask, scriptPath, externalMeanStd);
                 }
                 break;
             }
