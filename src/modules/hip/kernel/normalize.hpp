@@ -288,9 +288,11 @@ __global__ void compute_mean_2d_hip_tensor(T *srcPtr,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    uint *roi = &roiTensor[id_z * 4 + 2];
-    uint height = roi[0];
-    uint width = roi[1];
+    uint *roi = &roiTensor[id_z * 4];
+    uint yBegin = roi[0];
+    uint xBegin = roi[1];
+    uint height = roi[2];
+    uint width = roi[3];
 
     // perform column wise sum
     if(axisMask == 1)
@@ -300,7 +302,7 @@ __global__ void compute_mean_2d_hip_tensor(T *srcPtr,
             return;
         }
 
-        uint srcIdx = id_z * srcStridesNH.x + id_x;
+        uint srcIdx = (id_z * srcStridesNH.x) + (yBegin * srcStridesNH.y) + (id_x + xBegin);
         uint dstIdx = id_z * maxParamVolume + id_x;
         if(id_x < width)
         {
@@ -327,7 +329,7 @@ __global__ void compute_mean_2d_hip_tensor(T *srcPtr,
 
         int xAlignedLength =  width & ~7;      // alignedLength for vectorized global loads
         int xDiff = width - xAlignedLength;    // difference between roiWidth and alignedLength
-        uint srcIdx = (id_z * srcStridesNH.x) + (id_y * srcStridesNH.y) + id_x;
+        uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + yBegin) * srcStridesNH.y) + (id_x + xBegin);
 
         d_float8 src_f8;
         rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);           // load 8 pixels to local memory
@@ -367,7 +369,7 @@ __global__ void compute_mean_2d_hip_tensor(T *srcPtr,
 
         int xAlignedLength =  width & ~7;       // alignedLength for vectorized global loads
         int xDiff = width - xAlignedLength;    // difference between roiWidth and alignedLength
-        uint srcIdx = (id_z * srcStridesNH.x) + (id_y * srcStridesNH.y) + id_x;
+        uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + yBegin) * srcStridesNH.y) + (id_x + xBegin);
 
         d_float8 src_f8;
         rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);           // load 8 pixels to local memory
@@ -682,7 +684,8 @@ __global__ void compute_mean_nd_hip_tensor(T *srcPtr,
     uint id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     uint id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    uint *roi = &roiTensor[id_z * numDims * 2 + numDims];
+    uint *begin = &roiTensor[id_z * numDims * 2];
+    uint *length = &roiTensor[id_z * numDims * 2 + numDims];
     uint *paramShape = &paramShapeTensor[id_z * numDims];
     uint *paramStrides = &paramStridesTensor[id_z * numDims];
     uint srcIdx = id_z * maxBufferLength + id_x;
@@ -698,7 +701,7 @@ __global__ void compute_mean_nd_hip_tensor(T *srcPtr,
         for (int i = 0; i < numDims; i++)
         {
             uint coord = id_x / srcStrides[i] % srcMaxDims[i];
-            if(coord >= roi[i])
+            if(coord < begin[i] || coord >= length[i])
                 return;
             paramIndex += (maxParamVolume > 1) ? (rpp_hip_mod(coord, paramShape[i]) * paramStrides[i]) : 0;
         }
@@ -716,7 +719,7 @@ __global__ void compute_mean_nd_hip_tensor(T *srcPtr,
         for (int i = 0; i < numDims; i++)
         {
             uint coord = id_x / srcStrides[i] % srcMaxDims[i];
-            if(coord >= roi[i])
+            if(coord < begin[i] || coord >= length[i])
             {
                 isValid = false;
                 break;
@@ -753,9 +756,11 @@ __global__ void compute_stddev_2d_hip_tensor(T *srcPtr,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    uint *roi = &roiTensor[id_z * 4 + 2];
-    uint height = roi[0];
-    uint width = roi[1];
+    uint *roi = &roiTensor[id_z * 4];
+    uint yBegin = roi[0];
+    uint xBegin = roi[1];
+    uint height = roi[2];
+    uint width = roi[3];
 
     // perform column wise stddev
     if(axisMask == 1)
@@ -765,7 +770,7 @@ __global__ void compute_stddev_2d_hip_tensor(T *srcPtr,
             return;
         }
 
-        uint srcIdx = id_z * srcStridesNH.x + id_x;
+        uint srcIdx = (id_z * srcStridesNH.x) + (yBegin * srcStridesNH.y) + (id_x + xBegin);
         uint paramIndex = id_z * maxParamVolume + id_x;
         float mean = meanTensor[paramIndex];
         if(id_x < width)
@@ -794,7 +799,7 @@ __global__ void compute_stddev_2d_hip_tensor(T *srcPtr,
 
         int xAlignedLength =  width & ~7;      // alignedLength for vectorized global loads
         int xDiff = width - xAlignedLength;    // difference between roiWidth and alignedLength
-        uint srcIdx = (id_z * srcStridesNH.x) + (id_y * srcStridesNH.y) + id_x;
+        uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + yBegin) * srcStridesNH.y) + (id_x + xBegin);
 
         uint paramIndex = id_z * maxParamVolume + id_y;
         float mean = meanTensor[paramIndex];
@@ -841,7 +846,7 @@ __global__ void compute_stddev_2d_hip_tensor(T *srcPtr,
 
         int xAlignedLength =  width & ~7;       // alignedLength for vectorized global loads
         int xDiff = width - xAlignedLength;    // difference between roiWidth and alignedLength
-        uint srcIdx = (id_z * srcStridesNH.x) + (id_y * srcStridesNH.y) + id_x;
+        uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + yBegin) * srcStridesNH.y) + (id_x + xBegin);
 
         float mean = meanTensor[id_z];
         float4 mean_f4 = static_cast<float4>(mean);
@@ -1191,7 +1196,8 @@ __global__ void compute_stddev_nd_hip_tensor(T *srcPtr,
     uint id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     uint id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    uint *roi = &roiTensor[id_z * numDims * 2 + numDims];
+    uint *begin = &roiTensor[id_z * numDims * 2];
+    uint *length = &roiTensor[id_z * numDims * 2 + numDims];
     uint *paramShape = &paramShapeTensor[id_z * numDims];
     uint *paramStrides = &paramStridesTensor[id_z * numDims];
     uint srcIdx = id_z * maxBufferLength + id_x;
@@ -1207,7 +1213,7 @@ __global__ void compute_stddev_nd_hip_tensor(T *srcPtr,
         for (int i = 0; i < numDims; i++)
         {
             uint coord = id_x / srcStrides[i] % srcMaxDims[i];
-            if(coord >= roi[i])
+            if(coord < begin[i] || coord >= length[i])
                 return;
             paramIndex += (maxParamVolume > 1) ? (rpp_hip_mod(coord, paramShape[i]) * paramStrides[i]) : 0;
         }
@@ -1226,7 +1232,7 @@ __global__ void compute_stddev_nd_hip_tensor(T *srcPtr,
         for (int i = 0; i < numDims; i++)
         {
             uint coord = id_x / srcStrides[i] % srcMaxDims[i];
-            if(coord >= roi[i])
+            if(coord < begin[i] || coord >= length[i])
             {
                 isValid = false;
                 break;
