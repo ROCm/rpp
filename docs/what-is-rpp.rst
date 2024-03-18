@@ -1,36 +1,25 @@
 .. meta::
-  :description: ROCm Performance Primitives (RPP) documentation and API reference library
+  :description: What is RPP
   :keywords: RPP, ROCm, Performance Primitives, documentation
 
 .. _what-is:
 
 ********************************************************************
-What is RPP
+What is RPP?
 ********************************************************************
 
-.. image:: https://img.shields.io/badge/license-MIT-blue.svg 
-  :target: https://opensource.org/licenses/MIT 
-  :alt: MIT licensed
-
-.. image:: https://img.shields.io/badge/doc-readthedocs-blueviolet 
-  :target: https://github.com/ROCm/rpp/ 
-  :alt: doc
-
-.. image:: ../data/AMD_RPP_logo.png
-  :alt: AMD RPP Logo
-
 AMD ROCm Performance Primitives (RPP) library is a comprehensive, high-performance computer
-vision library for AMD processors that have `HIP`, `OpenCL`, or `CPU` backends.
+vision library for AMD processors that have HIP, OpenCL, or CPU backends.
 
-.. image:: ../data/rpp_structure_4.png
+.. image:: ./data/rpp_structure_4.png
   :alt: RPP Functions
-
 
 Supported functionalities and variants
 ==========================================
 
-.. 
-  image:: ../data/supported_functionalities.png
+The following tables should the CPU and GPU support for various functionalities and variants.
+
+.. image:: ./data/supported_functionalities.png
   :alt: Supported Functions
 
 .. csv-table::
@@ -71,25 +60,18 @@ Supported functionalities and variants
   scale, ✅, ✅,,gaussian_filter, ✅, ✅,,tensor_matrix_multiply, ✅, ✅
   warp_perspective, ✅, ✅,,nonlinear_filter, ✅, ✅,,tensor_transpose, ✅, ✅
 
-.. 
-  csv-table:: Supported Functions - File Version
-  :file: ../data/RPP-functions.csv
-  :widths: 10, 3, 3, 1, 10, 3, 3, 1, 10, 3, 3
-
-
 Samples
 ------------
 
-.. image:: ../data/supported_functionalities_samples.jpg
-  :alt: Supported Function Samples
-
+.. image:: ./data/supported_functionalities_samples.jpg
+  :alt: Supported function samples
 
 3D Samples
 -----------
 
-.. |logo1| image:: ../data/niftiInput.gif     
+.. |logo1| image:: ./data/niftiInput.gif
    :align: middle
-.. |logo2| image:: ../data/niftiOutputBrightened.gif
+.. |logo2| image:: ./data/niftiOutputBrightened.gif
    :align: middle
 
 +-----------------------------+------------------------------+
@@ -99,66 +81,8 @@ Samples
 |                             | | (brightened 3D image)      |
 +-----------------------------+------------------------------+
 
-
-
 MIVisionX support - OpenVX extension
-----------------------------------------
+------------------------------------------------------------------------------------------
 
 * `MIVisionX <https://github.com/ROCm/MIVisionX>`_ RPP extension
 * `vx_rpp <https://github.com/ROCm/MIVisionX/tree/master/amd_openvx_extensions/amd_rpp#amd-rpp-extension>`_ supports RPP functionality through the OpenVX Framework
-
-
-Latest release
-====================
-
-.. image:: https://img.shields.io/github/v/tag/GPUOpen-ProfessionalCompute-Libraries/rpp?style=for-the-badge 
-  :target: https://github.com/ROCm/rpp/releases
-  :alt: GitHub tag
-
-Release notes
---------------
-
-All notable changes for each release are added to the `Changelog <../CHANGELOG.md>`_.
-
-Tested configurations
-----------------------
-
-* Linux distribution
-  * Ubuntu - `20.04` / `22.04`
-  * CentOS - `7`
-  * RedHat - `8` / `9`
-  * SLES - `15-SP4`
-* ROCm: rocm-core - `5.7.0.50700-63`
-* OpenCV `4.6.0 <https://github.com/opencv/opencv/releases/tag/4.6.0>`_
-
-
-Technical support
-======================
-
-For RPP questions and feedback contact `mivisionx.support@amd.com`.
-
-To submit feature requests and bug reports, use the `RPP issues <https://github.com/ROCm/rpp/issues>`_ page.
-
-
-Documentation
-==================
-
-You can build the documentation locally using the following code:
-
-* Sphinx
-
-.. code-block:: shell
-
-    cd docs
-    pip3 install -r .sphinx/requirements.txt
-    python3 -m sphinx -T -E -b html -d _build/doctrees -D language=en . _build/html
-
-
-* Doxygen
-
-.. code-block:: shell
-
-      doxygen .Doxyfile
-
-
-

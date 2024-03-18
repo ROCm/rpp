@@ -9,9 +9,10 @@ ROCm Performance Primitives (RPP) documentation
 ********************************************************************
 
 AMD ROCm Performance Primitives (RPP) library is a comprehensive, high-performance computer
-vision library for AMD processors that have `HIP`, `OpenCL`, or `CPU` backends. For more information refer to :ref:`what-is`.
+vision library for AMD processors that have `HIP`, `OpenCL`, or `CPU` backends. For more information,
+refer to :doc:`./what-is-rpp`
 
-The code is open and hosted at: https://github.com/ROCm/rpp
+The code is open and hosted at `https://github.com/ROCm/rpp <https://github.com/ROCm/rpp>`_.
 
 The RPP documentation is structured as follows:
 
@@ -20,44 +21,39 @@ The RPP documentation is structured as follows:
 
   .. grid-item-card:: Installation
 
-    * :ref:`install`
-
-  .. grid-item-card:: Conceptual
-
-    * :ref:`what-is`
+    * :doc:`Install RPP <./install/install>`
 
   .. grid-item-card:: Reference
 
-    * `RPP File List <https://rocm.docs.amd.com/projects/rpp/en/latest/doxygen/html/files.html>`_
-    * `Top-level RPP header <https://rocm.docs.amd.com/projects/rpp/docs/_build/html/doxygen/html/rpp_8h.html>`_
-    * `Typedefs, Enums, and Structs <https://rocm.docs.amd.com/projects/rpp/docs/_build/html/doxygen/html/rppdefs_8h.html>`_
-    * `RPP Tensor Operations <https://rocm.docs.amd.com/projects/rpp/en/latest/doxygen/html/rppt_8h.html>`_
+    * :doc:`RPP file list <./doxygen/html/files>`
+    * :doc:`Top-level RPP header <./doxygen/html/rpp_8h>`
+    * :doc:`Typedefs, enums, and structs <./doxygen/html/rppdefs_8h>`
+    * :doc:`RPP tensor operations <./doxygen/html/rppt_8h>`
 
-      * `Color Augmentations <https://rocm.docs.amd.com/projects/rpp/en/latest/doxygen/html/rppt__tensor__color__augmentations_8h.html>`_
-      * `Data Exchange Operations <https://rocm.docs.amd.com/projects/rpp/en/latest/doxygen/html/rppt__tensor__data__exchange__operations_8h.html>`_
-      * `Effects Augmentations <https://rocm.docs.amd.com/projects/rpp/en/latest/doxygen/html/rppt__tensor__effects__augmentations_8h.html>`_
-      * `Filter Augmentations <https://rocm.docs.amd.com/projects/rpp/en/latest/doxygen/html/rppt__tensor__filter__augmentations_8h.html>`_
-      * `Geometric Augmentations <https://rocm.docs.amd.com/projects/rpp/en/latest/doxygen/html/rppt__tensor__geometric__augmentations_8h.html>`_
-      * `Morphological Operations <https://rocm.docs.amd.com/projects/rpp/en/latest/doxygen/html/rppt__tensor__morphological__operations_8h.html>`_
-      * `Statistical Operations <https://rocm.docs.amd.com/projects/rpp/en/latest/doxygen/html/rppt__tensor__statistical__operations_8h.html>`_
+      * :doc:`Color augmentations <./doxygen/html/rppt__tensor__color__augmentations_8h>`
+      * :doc:`Data exchange operations <./doxygen/html/rppt__tensor__data__exchange__operations_8h>`
+      * :doc:`Effects augmentations <./doxygen/html/rppt__tensor__effects__augmentations_8h>`
+      * :doc:`Filter augmentations <./doxygen/html/rppt__tensor__filter__augmentations_8h>`
+      * :doc:`Geometric augmentations <./doxygen/html/rppt__tensor__geometric__augmentations_8h>`
+      * :doc:`Morphological operations <./doxygen/html/rppt__tensor__morphological__operations_8h>`
+      * :doc:`Statistical operations <./doxygen/html/rppt__tensor__statistical__operations_8h>`
 
-    * `Deprecated Image Operations <https://rocm.docs.amd.com/projects/rpp/en/latest/doxygen/html/rppt_8h.html>`_
+    * :doc:`Deprecated functions <./doxygen/html/deprecated>`
+    * Deprecated image operations
 
-      * `Advanced Augmentations (Deprecated) <https://rocm.docs.amd.com/projects/rpp/en/latest/doxygen/html/rppi__advanced__augmentations_8h.html>`_
-      * `Arithmetic Operations (Deprecated) <https://rocm.docs.amd.com/projects/rpp/en/latest/doxygen/html/rppi__arithmetic__operations_8h.html>`_
-      * `Color Model Conversions (Deprecated) <https://rocm.docs.amd.com/projects/rpp/en/latest/doxygen/html/rppi__color__model__conversions_8h.html>`_
-      * `Computer Vision (Deprecated) <https://rocm.docs.amd.com/projects/rpp/en/latest/doxygen/html/rppi__computer__vision_8h.html>`_
-      * `Filter Operations (Deprecated) <https://rocm.docs.amd.com/projects/rpp/en/latest/doxygen/html/rppi__filter__operations_8h.html>`_
-      * `Fused Functions (Deprecated) <https://rocm.docs.amd.com/projects/rpp/en/latest/doxygen/html/rppi__fused__functions_8h.html>`_
-      * `Geometry Transforms (Deprecated) <https://rocm.docs.amd.com/projects/rpp/en/latest/doxygen/html/rppi__geometry__transforms_8h.html>`_
-      * `Image Augmentations (Deprecated) <https://rocm.docs.amd.com/projects/rpp/en/latest/doxygen/html/rppi__image__augmentations_8h.html>`_
-      * `Logical Operations (Deprecated) <https://rocm.docs.amd.com/projects/rpp/en/latest/doxygen/html/rppi__logical__operations_8h.html>`_
-      * `Morphological Transforms (Deprecated) <https://rocm.docs.amd.com/projects/rpp/en/latest/doxygen/html/rppi__morphological__transforms_8h.html>`_
-      * `Statistical Operations (Deprecated) <https://rocm.docs.amd.com/projects/rpp/en/latest/doxygen/html/rppi__statistical__operations_8h.html>`_
+      * :doc:`Advanced augmentations (deprecated) <./doxygen/html/rppi__advanced__augmentations_8h>`
+      * :doc:`Arithmetic operations (deprecated) <./doxygen/html/rppi__arithmetic__operations_8h>`
+      * :doc:`Color model conversions (deprecated) <./doxygen/html/rppi__color__model__conversions_8h>`
+      * :doc:`Computer vision (deprecated) <./doxygen/html/rppi__computer__vision_8h>`
+      * :doc:`Filter operations (deprecated) <./doxygen/html/rppi__filter__operations_8h>`
+      * :doc:`Fused functions (deprecated) <./doxygen/html/rppi__fused__functions_8h>`
+      * :doc:`Geometry transforms (deprecated) <./doxygen/html/rppi__geometry__transforms_8h>`
+      * :doc:`Image augmentations (deprecated) <./doxygen/html/rppi__image__augmentations_8h>`
+      * :doc:`Logical operations (deprecated) <./doxygen/html/rppi__logical__operations_8h>`
+      * :doc:`Morphological transforms (deprecated) <./doxygen/html/rppi__morphological__transforms_8h>`
+      * :doc:`Statistical operations (deprecated) <./doxygen/html/rppi__statistical__operations_8h>`
 
-    * `Deprecated List <https://rocm.docs.amd.com/projects/rpp/en/latest/doxygen/html/deprecated.html>`_
+To contribute to the documentation refer to
+:doc:`Contributing to ROCm  <rocm:contribute/contributing>`.
 
-To contribute to the documentation refer to `Contributing to ROCm  <https://rocm.docs.amd.com/en/latest/contribute/index.html>`_.
-
-You can find licensing information on the `Licensing <https://rocm.docs.amd.com/en/latest/about/license.html>`_ page.
-
+You can find licensing information on the :doc:`Licensing <rocm:about/license>` page.
