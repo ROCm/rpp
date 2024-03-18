@@ -25,15 +25,20 @@ SOFTWARE.
 import os
 import subprocess  # nosec
 import argparse
-import sys
 import datetime
 import shutil
+import sys
+sys.dont_write_bytecode = True
+sys.path.append(os.path.join(os.path.dirname( __file__ ), '..' ))
+from common import *
 
 # Set the timestamp
 timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 scriptPath = os.path.dirname(os.path.realpath(__file__))
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
+caseMin = 1
+caseMax = 1
 
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list():
@@ -46,45 +51,71 @@ def run_unit_test(numDims, case, numRuns, testType, toggle, bitDepth, batchSize,
     print("--------------------------------")
     print("Running a New Functionality...")
     print("--------------------------------")
-    print(f"./Tensor_misc_host {case} {testType} {toggle} {numDims} {batchSize} {numRuns}")
-    result = subprocess.run([buildFolderPath + "/build/Tensor_misc_host", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), outFilePath, scriptPath], stdout=subprocess.PIPE)    # nosec
-    print(result.stdout.decode())
-
-    print("------------------------------------------------------------------------------------------")
+    if case == "1":
+        for axisMask in range(1, pow(2, numDims)):
+            print("--------------------------------")
+            print("Running a New Axis Normalization...")
+            print("--------------------------------")
+            print(f"./Tensor_misc_host {case} {testType} {toggle} {numDims} {batchSize} {numRuns} {axisMask}")
+            result = subprocess.run([buildFolderPath + "/build/Tensor_misc_host", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(axisMask), outFilePath, scriptPath], stdout=subprocess.PIPE)    # nosec
+            print(result.stdout.decode())
+            print("------------------------------------------------------------------------------------------")
+    else:
+        print(f"./Tensor_misc_host {case} {testType} {toggle} {numDims} {batchSize} {numRuns} {axisMask}")
+        result = subprocess.run([buildFolderPath + "/build/Tensor_misc_host", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), outFilePath, scriptPath], stdout=subprocess.PIPE)    # nosec
+        print(result.stdout.decode())
+        print("------------------------------------------------------------------------------------------")
 
 def run_performance_test(loggingFolder, numDims, case, numRuns, testType, toggle, bitDepth, batchSize, outFilePath):
     print("\n\n\n\n")
     print("--------------------------------")
     print("Running a New Functionality...")
     print("--------------------------------")
-    with open("{}/Tensor_misc_host_raw_performance_log.txt".format(loggingFolder), "a") as log_file:
-        print(f"./Tensor_misc_host {case} {testType} {toggle} {numDims} {batchSize} {numRuns}")
-        process = subprocess.Popen([buildFolderPath + "/build/Tensor_misc_host", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
-        while True:
-            output = process.stdout.readline()
-            if not output and process.poll() is not None:
-                break
-            print(output.strip())
-            log_file.write(output)
+    if case == "1":
+        for axisMask in range(1, pow(2, numDims)):
+            print("--------------------------------")
+            print("Running a New Axis Normalization...")
+            print("--------------------------------")
+            with open("{}/Tensor_misc_host_raw_performance_log.txt".format(loggingFolder), "a") as log_file:
+                print(f"./Tensor_misc_host {case} {testType} {toggle} {numDims} {batchSize} {numRuns} {axisMask}")
+                process = subprocess.Popen([buildFolderPath + "/build/Tensor_misc_host", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(axisMask), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
+                while True:
+                    output = process.stdout.readline()
+                    if not output and process.poll() is not None:
+                        break
+                    print(output.strip())
+                    log_file.write(output)
+        print("------------------------------------------------------------------------------------------")
+    else:
+        with open("{}/Tensor_misc_host_raw_performance_log.txt".format(loggingFolder), "a") as log_file:
+            print(f"./Tensor_misc_host {case} {testType} {toggle} {numDims} {batchSize} {numRuns}")
+            process = subprocess.Popen([buildFolderPath + "/build/Tensor_misc_host", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
+            while True:
+                output = process.stdout.readline()
+                if not output and process.poll() is not None:
+                    break
+                print(output.strip())
+                log_file.write(output)
     print("------------------------------------------------------------------------------------------")
 
 # Parse and validate command-line arguments for the RPP test suite
 def rpp_test_suite_parser_and_validator():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--case_start", type = int, default = 1, help = "Testing range starting case # - (1:1)")
-    parser.add_argument("--case_end", type = int, default = 1, help = "Testing range ending case # - (1:1)")
+    parser.add_argument("--case_start", type = int, default = caseMin, help = "Testing start case # - Range must be in [" + str(caseMin) + ":" + str(caseMax) + "]")
+    parser.add_argument("--case_end", type = int, default = caseMax, help = "Testing start case # - Range must be in [" + str(caseMin) + ":" + str(caseMax) + "]")
     parser.add_argument('--test_type', type = int, default = 0, help = "Type of Test - (0 = QA tests / 1 = Performance tests)")
     parser.add_argument('--toggle', type = int, default = 0, help = "Toggle outputs")
     parser.add_argument('--case_list', nargs = "+", help = "List of case numbers to test", required = False)
     parser.add_argument("--num_dims", type = int, default = 2, help = "Number of dimensions for input")
     parser.add_argument('--num_runs', type = int, default = 1, help = "Specifies the number of runs for running the performance tests")
+    parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Outputs from tests will be compared with golden outputs - (0 / 1)", required = False)
     parser.add_argument('--batch_size', type = int, default = 1, help = "Specifies the batch size to use for running tests. Default is 1.")
     parser.add_argument('--preserve_output', type = int, default = 1, help = "preserves the output of the program - (0 = override output / 1 = preserve output )" )
     args = parser.parse_args()
 
     # validate the parameters passed by user
-    if ((args.case_start < 1 or args.case_start > 1) or (args.case_end < 1 or args.case_end > 1)):
-        print("Starting case# and Ending case# must be in the 1:1 range. Aborting!")
+    if ((args.case_start < caseMin or args.case_start > caseMax) or (args.case_end < caseMin or args.case_end > caseMax)):
+        print("Starting case# and Ending case# must be in the 0:1 range. Aborting!")
         exit(0)
     elif args.case_end < args.case_start:
         print("Ending case# must be greater than starting case#. Aborting!")
@@ -92,7 +123,10 @@ def rpp_test_suite_parser_and_validator():
     elif args.test_type < 0 or args.test_type > 1:
         print("Test Type# must be in the 0 / 1. Aborting!")
         exit(0)
-    elif args.case_list is not None and args.case_start > 1 and args.case_end < 1:
+    elif args.qa_mode < 0 or args.qa_mode > 1:
+        print("QA mode must be in the 0 / 1. Aborting!")
+        exit(0)
+    elif args.case_list is not None and args.case_start > caseMin and args.case_end < caseMax:
         print("Invalid input! Please provide only 1 option between case_list, case_start and case_end")
         exit(0)
     elif args.num_runs <= 0:
@@ -107,8 +141,8 @@ def rpp_test_suite_parser_and_validator():
         args.case_list = [str(x) for x in args.case_list]
     else:
         for case in args.case_list:
-            if int(case) != 1:
-                print("The case# must be 1!")
+            if int(case) < caseMin or int(case) > caseMax:
+                print("The case# must be in [" + str(caseMin) + ":" + str(caseMax) + "]")
                 exit(0)
     return args
 
@@ -121,10 +155,16 @@ caseList = args.case_list
 numDims = args.num_dims
 numRuns = args.num_runs
 batchSize = args.batch_size
+qaMode = args.qa_mode
+if qaMode:
+    testType = 0
 preserveOutput = args.preserve_output
 bitDepth = 2 # Current audio test suite only supports bit depth 2
 outFilePath = " "
 
+if testType == 0 and batchSize != 3:
+    print("QA mode can only run with a batch size of 3.")
+    exit(0)
 if preserveOutput == 0:
     validate_and_remove_folders(outFolderPath, "QA_RESULTS_MISC_HOST")
     validate_and_remove_folders(outFolderPath, "OUTPUT_PERFORMANCE_MISC_LOGS_HOST")
@@ -154,29 +194,25 @@ os.chdir(buildFolderPath + "/build")
 subprocess.run(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.run(["make", "-j16"], cwd=".")    # nosec
 
+supportedCaseList = ['1']
 if testType == 0:
     for case in caseList:
-        if batchSize != 3:
-            print("QA tests can only run with a batch size of 3")
-            exit(0)
+        if case not in supportedCaseList:
+            continue
         if toggle == 1:
             print("Only Toggle variant is QA tested for test Type 0. Aborting!")
             exit(0)
-        if int(case) != 1:
-            print(f"Invalid case number {case}. Case number must be 1!")
-            continue
 
         run_unit_test(numDims, case, numRuns, testType, toggle, bitDepth, batchSize, outFilePath)
 else:
     for case in caseList:
-        if int(case) != 1:
-            print(f"Invalid case number {case}. Case number must be 1!")
+        if case not in supportedCaseList:
             continue
 
         run_performance_test(loggingFolder, numDims, case, numRuns, testType, toggle, bitDepth, batchSize, outFilePath)
 
 # print the results of qa tests
-supportedCaseList = ['1']
+nonQACaseList = []
 supportedCases = 0
 for num in caseList:
     if num in supportedCaseList:
@@ -186,62 +222,16 @@ if testType == 0:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
-        f = open(qaFilePath, 'r+')
-        print("---------------------------------- Results of QA Test ----------------------------------\n")
-        for line in f:
-            sys.stdout.write(line)
-            sys.stdout.flush()
-        f.write(caseInfo)
-    print("\n-------------- " + caseInfo + " --------------")
+        print("---------------------------------- Results of QA Test - Tensor_misc_hip ----------------------------------\n")
+        print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList)
 
 # Performance tests
 if (testType == 1):
     log_file_list = get_log_file_list()
 
-    try:
-        f = open(log_file_list[0], "r")
-        print("\n\n\nOpened log file -> "+ log_file_list[0])
-    except IOError:
-        print("Skipping file -> "+ log_file_list[0])
-        exit(0)
+    functionality_group_list = [
+        "statiscal_operations",
+    ]
 
-    # Initialize data structures to store the parsed data
-    functions = []
-    max_wall_times = []
-    min_wall_times = []
-    avg_wall_times = []
-    prev_line = ""
-    funcCount = 0
-
-    for line in f:
-            if "max,min,avg wall times in ms/batch" in line:
-                split_word_start = "Running "
-                split_word_end = " " + str(numRuns)
-                prev_line = prev_line.partition(split_word_start)[2].partition(split_word_end)[0]
-                if prev_line not in functions:
-                    functions.append(prev_line)
-                    split_word_start = "max,min,avg wall times in ms/batch = "
-                    split_word_end = "\n"
-                    stats = line.partition(split_word_start)[2].partition(split_word_end)[0].split(",")
-                    max_wall_times.append(float(stats[0]))
-                    min_wall_times.append(float(stats[1]))
-                    avg_wall_times.append(float(stats[2]))
-                    funcCount += 1
-
-            if line != "\n":
-                prev_line = line
-
-    # Print log lengths
-    print("Functionalities - "+ str(funcCount))
-
-    # Print the summary in a well-formatted table
-    print("\n\nFunctionality\t\t\t\t\t\tnumRuns\t\tmax(ms/batch)\t\tmin(ms/batch)\t\tavg(ms/batch)\n")
-
-    if len(functions) > 0:
-        max_func_length = max(len(func) for func in functions)
-
-        for i, func in enumerate(functions):
-            print("{func}\t\t\t\t{numRuns}\t{:<15.6f}\t{:<15.6f}\t{:<15.6f}".format(
-                max_wall_times[i], min_wall_times[i], avg_wall_times[i], func=func, numRuns=numRuns))
-    else:
-        print("No functionality data found in the log file.")
+    for log_file in log_file_list:
+        print_performance_tests_summary(log_file, functionality_group_list, numRuns)
