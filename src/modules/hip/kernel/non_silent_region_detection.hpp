@@ -60,6 +60,7 @@ __global__ void moving_mean_square_hip_tensor(float *srcPtr,
                                               int *srcLengthTensor,
                                               int logicalBlock,
                                               int windowLength,
+                                              float windowFactor,
                                               int pow2)
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
@@ -67,7 +68,6 @@ __global__ void moving_mean_square_hip_tensor(float *srcPtr,
     uint srcLength = srcLengthTensor[id_z];
     uint batchStride = id_z * nStride;
     uint gridStride = hipGridDim_x * logicalBlock;
-    float windowFactor = 1.0f / windowLength;
     float *input = srcPtr + batchStride;
 
     extern __shared__ char smem[];
@@ -314,6 +314,7 @@ RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
 
     int sharedMemorySizeInBytes = shm_pos(pow2) * sizeof(Rpp32f);
     int logicalBlock = pow2 - windowLength;
+    float windowFactor = 1.0f / windowLength;
 
     if (logicalBlock <= 0)
     {
@@ -345,6 +346,7 @@ RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
                        srcLengthTensor,
                        logicalBlock,
                        windowLength,
+                       windowFactor,
                        pow2);
     hipStreamSynchronize(handle.GetStream());
 

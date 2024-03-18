@@ -45,6 +45,33 @@ def get_log_file_list():
         outFolderPath + "/OUTPUT_PERFORMANCE_AUDIO_LOGS_HIP_" + timestamp + "/Tensor_hip_audio_raw_performance_log.txt",
     ]
 
+def case_file_check(CASE_FILE_PATH, new_file):
+    try:
+        case_file = open(CASE_FILE_PATH,'r')
+        for line in case_file:
+            print(line)
+            if not(line.startswith('"Name"')):
+                new_file.write(line)
+        case_file.close()
+        return True
+    except IOError:
+        print("Unable to open case results")
+        return False
+
+# Generate performance reports based on counters and a list of types
+def generate_performance_reports(RESULTS_DIR):
+    import pandas as pd
+    pd.options.display.max_rows = None
+    # Generate performance report
+    df = pd.read_csv(RESULTS_DIR + "/consolidated_results.stats.csv")
+    df["AverageMs"] = df["AverageNs"] / 1000000
+    dfPrint = df.drop(['Percentage'], axis = 1)
+    dfPrint["HIP Kernel Name"] = dfPrint.iloc[:,0].str.lstrip("Hip_")
+    dfPrint_noIndices = dfPrint.astype(str)
+    dfPrint_noIndices.replace(['0', '0.0'], '', inplace = True)
+    dfPrint_noIndices = dfPrint_noIndices.to_string(index = False)
+    print(dfPrint_noIndices)
+
 def run_unit_test(srcPath, case, numRuns, testType, batchSize, outFilePath):
     print("\n\n\n\n")
     print("--------------------------------")
@@ -72,6 +99,26 @@ def run_performance_test(loggingFolder, srcPath, case, numRuns, testType, batchS
             log_file.write(output)
     print("------------------------------------------------------------------------------------------")
 
+def run_performance_test_with_profiler(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath):
+    print("\n\n\n\n")
+    print("--------------------------------")
+    print("Running a New Functionality...")
+    print("--------------------------------")
+    print(loggingFolder)
+    if not os.path.isdir(f"{outFilePath}/case_{case}"):
+        os.mkdir(f"{outFilePath}/case_{case}")
+    with open("{}/Tensor_hip_audio_raw_performance_log.txt".format(loggingFolder), "a") as log_file:
+        print(f"\nrocprof --basenames on --timestamp on --stats -o {outFilePath}/case_{case}/output_case{case}.csv ./Tensor_hip_audio {srcPath} {case} {numRuns} {testType} {numRuns} {batchSize}")
+        process = subprocess.Popen([ 'rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f"{outFilePath}/case_{case}/output_case{case}.csv", "./Tensor_hip_audio", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)  # nosec
+        while True:
+            output = process.stdout.readline()
+            if not output and process.poll() is not None:
+                break
+            print(output.strip())
+            output_str = output.decode('utf-8')
+            log_file.write(output_str)
+        print("------------------------------------------------------------------------------------------")
+
 # Parse and validate command-line arguments for the RPP test suite
 def rpp_test_suite_parser_and_validator():
     parser = argparse.ArgumentParser()
@@ -81,6 +128,7 @@ def rpp_test_suite_parser_and_validator():
     parser.add_argument('--test_type', type = int, default = 0, help = "Type of Test - (0 = QA tests / 1 = Performance tests)")
     parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Output audio data from tests will be compared with golden outputs - (0 / 1)", required = False)
     parser.add_argument('--case_list', nargs = "+", help = "List of case numbers to test", required = False)
+    parser.add_argument('--profiling', type = str , default = 'NO', help = 'Run with profiler? - (YES/NO)', required = False)
     parser.add_argument('--num_runs', type = int, default = 1, help = "Specifies the number of runs for running the performance tests")
     parser.add_argument('--preserve_output', type = int, default = 1, help = "preserves the output of the program - (0 = override output / 1 = preserve output )")
     parser.add_argument('--batch_size', type = int, default = 1, help = "Specifies the batch size to use for running tests. Default is 1.")
@@ -111,6 +159,9 @@ def rpp_test_suite_parser_and_validator():
     elif args.batch_size <= 0:
         print("Batch size must be greater than 0. Aborting!")
         exit(0)
+    elif args.profiling != 'YES' and args.profiling != 'NO':
+        print("Profiling option value must be either 'YES' or 'NO'.")
+        exit(0)
     elif args.preserve_output < 0 or args.preserve_output > 1:
         print("Preserve Output must be in the 0/1 (0 = override / 1 = preserve). Aborting")
         exit(0)
@@ -135,6 +186,7 @@ caseEnd = args.case_end
 testType = args.test_type
 caseList = args.case_list
 qaMode = args.qa_mode
+profilingOption = args.profiling
 numRuns = args.num_runs
 preserveOutput = args.preserve_output
 batchSize = args.batch_size
@@ -196,7 +248,7 @@ if testType == 0:
             continue
 
         run_unit_test(srcPath, case, numRuns, testType, batchSize, outFilePath)
-else:
+elif testType == 1 and profilingOption == "NO":
     for case in caseList:
         if "--input_path" not in sys.argv:
             if case == "3":
@@ -207,6 +259,56 @@ else:
             continue
 
         run_performance_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath)
+elif testType == 1 and profilingOption == "YES":
+    for case in caseList:
+        if "--input_path" not in sys.argv:
+            if case == "3":
+                srcPath = scriptPath + "/../TEST_AUDIO_FILES/three_sample_multi_channel_src1"
+            else:
+                srcPath = inFilePath
+        if case not in supportedCaseList:
+            continue
+
+        run_performance_test_with_profiler(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath)
+
+    RESULTS_DIR = outFolderPath + "/OUTPUT_PERFORMANCE_AUDIO_LOGS_HIP_" + timestamp
+    print("RESULTS_DIR = " + RESULTS_DIR)
+    CONSOLIDATED_FILE = RESULTS_DIR + "/consolidated_results.stats.csv"
+
+    CASE_NUM_LIST = caseList
+    BIT_DEPTH_LIST = [2]
+    OFT_LIST = [0]
+
+    # Open csv file
+    new_file = open(CONSOLIDATED_FILE, 'w')
+    new_file.write('"HIP Kernel Name","Calls","TotalDurationNs","AverageNs","Percentage"\n')
+
+    # Loop through cases
+    for CASE_NUM in CASE_NUM_LIST:
+        # Set results directory
+        CASE_RESULTS_DIR = RESULTS_DIR + "/case_" + str(CASE_NUM)
+        print("CASE_RESULTS_DIR = " + CASE_RESULTS_DIR)
+
+        # Loop through bit depths
+        for BIT_DEPTH in BIT_DEPTH_LIST:
+            # Loop through output format toggle cases
+            for OFT in OFT_LIST:
+                # Write into csv file
+                CASE_FILE_PATH = CASE_RESULTS_DIR + "/output_case" + str(CASE_NUM) + ".stats.csv"
+                print("CASE_FILE_PATH = " + CASE_FILE_PATH)
+                fileCheck = case_file_check(CASE_FILE_PATH, new_file)
+                if fileCheck == False:
+                    continue
+
+    new_file.close()
+    subprocess.call(['chown', '{}:{}'.format(os.getuid(), os.getgid()), CONSOLIDATED_FILE])  # nosec
+    try:
+        generate_performance_reports(RESULTS_DIR)
+    except ImportError:
+        print("\nPandas not available! Results of GPU profiling experiment are available in the following files:\n" + \
+                CONSOLIDATED_FILE + "\n")
+    except IOError:
+        print("Unable to open results in " + CONSOLIDATED_FILE)
 
 # print the results of qa tests
 nonQACaseList = [] # Add cases present in supportedCaseList, but without QA support
@@ -219,7 +321,7 @@ if testType == 0:
         print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList)
 
 # Performance tests
-if (testType == 1):
+if testType == 1 and profilingOption == "NO":
     log_file_list = get_log_file_list()
     for log_file in log_file_list:
         print_performance_tests_summary(log_file, "", numRuns)
