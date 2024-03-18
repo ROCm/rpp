@@ -63,15 +63,14 @@ __global__ void log_generic_hip_tensor(T1 *srcPtr,
     uint *roi = &roiTensor[id_y * srcNumDims * 2 + srcNumDims];
     uint dstIdx = (id_y * *dstStrides++);
     uint srcIdx = (id_y * *srcStrides++);
-
     uint coords[RPPT_MAX_DIMS];
-    uint maxInnerDim = roi[srcNumDims - 1];
-
-    if((id_x + 8) > maxInnerDim)
-        id_x -= (8 - maxInnerDim);
 
     for (int i = 0; i < srcNumDims; i++)
-        coords[i] = id_x / srcStrides[i] % srcDims[i];
+    {
+        coords[i] = (id_x / srcStrides[i]) % srcDims[i];
+        if(coords[i] > roi[i])
+            id_x -= (roi[i] - coords[i]);
+    }
 
     for (int i = 0; i < srcNumDims; i++)
     {
