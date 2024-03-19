@@ -130,7 +130,7 @@ int main(int argc, char **argv)
     RpptImagePatch *srcDims = (RpptImagePatch *) calloc(batchSize, sizeof(RpptImagePatch));
     RpptImagePatch *dstDims = (RpptImagePatch *) calloc(batchSize, sizeof(RpptImagePatch));
 
-    Rpp32f *detectedIndex = nullptr, *detectionLength = nullptr;
+    Rpp32s *detectedIndex = nullptr, *detectionLength = nullptr;
     if(testCase == 0)
     {
         CHECK(hipHostMalloc(&detectedIndex, batchSize * sizeof(Rpp32f)));
