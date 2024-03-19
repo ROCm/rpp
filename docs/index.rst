@@ -19,7 +19,7 @@ The RPP documentation is structured as follows:
 .. grid:: 2
   :gutter: 3
 
-  .. grid-item-card:: Installation
+  .. grid-item-card:: Install
 
     * :doc:`Install RPP <./install/install>`
 
