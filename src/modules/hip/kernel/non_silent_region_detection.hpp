@@ -3,7 +3,7 @@
 
 // -------------------- Set 0 -  moving mean square kernel device helpers --------------------
 
-__host__ __device__ int shm_pos(int pos)
+__host__ __device__ int smem_pos(int pos)
 {
     return pos + (pos >> 5);
 }
@@ -25,7 +25,7 @@ __device__ void PrefixSum(float *input, uint bufferLength)
         {
             int ai = offset * (2 * idx + 1) - 1;
             int bi = offset * (2 * idx + 2) - 1;
-            input[shm_pos(bi)] += input[shm_pos(ai)];
+            input[smem_pos(bi)] += input[smem_pos(ai)];
         }
         offset <<= 1;
     }
@@ -33,7 +33,7 @@ __device__ void PrefixSum(float *input, uint bufferLength)
     if (tid == 0)
     {
         int last = bufferLength - 1;
-        input[shm_pos(last)] = 0;
+        input[smem_pos(last)] = 0;
     }
 
     for (int d = 1; d < bufferLength; d <<= 1)
@@ -42,11 +42,11 @@ __device__ void PrefixSum(float *input, uint bufferLength)
         __syncthreads();
         for (int idx = tid; idx < d; idx += hipBlockDim_x)
         {
-            int shm_pos_ai = shm_pos(offset * (2 * idx + 1) - 1);
-            int shm_pos_bi = shm_pos(offset * (2 * idx + 2) - 1);
-            auto t = input[shm_pos_ai];
-            input[shm_pos_ai] = input[shm_pos_bi];
-            input[shm_pos_bi] += t;
+            int smem_pos_ai = smem_pos(offset * (2 * idx + 1) - 1);
+            int smem_pos_bi = smem_pos(offset * (2 * idx + 2) - 1);
+            auto t = input[smem_pos_ai];
+            input[smem_pos_ai] = input[smem_pos_bi];
+            input[smem_pos_bi] += t;
         }
     }
   __syncthreads();
@@ -89,7 +89,7 @@ __global__ void moving_mean_square_hip_tensor(float *srcPtr,
         auto extendedBlockPtr = extendedBlockStart + pos;
         if (extendedBlockPtr >= input && extendedBlockPtr < extendedBlockEnd)
             val = *extendedBlockPtr;
-        squaredPrefixSum_smem[shm_pos(pos)] = square(val);
+        squaredPrefixSum_smem[smem_pos(pos)] = square(val);
     }
 
     // compute prefix sum
@@ -99,7 +99,7 @@ __global__ void moving_mean_square_hip_tensor(float *srcPtr,
     for(int pos = hipThreadIdx_x; pos < validOutputTileLength; pos += hipBlockDim_x)
     {
         float x = inBlockPtr[pos];
-        float outVal = square(x) + squaredPrefixSum_smem[shm_pos(windowLength + pos)] - squaredPrefixSum_smem[shm_pos(pos + 1)];
+        float outVal = square(x) + squaredPrefixSum_smem[smem_pos(windowLength + pos)] - squaredPrefixSum_smem[smem_pos(pos + 1)];
         outBlockPtr[pos] = outVal * windowFactor;
     }
 }
@@ -313,7 +313,7 @@ RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
             inputTileLength = n;
     }
 
-    int sharedMemorySizeInBytes = shm_pos(inputTileLength) * sizeof(Rpp32f);
+    int sharedMemorySizeInBytes = smem_pos(inputTileLength) * sizeof(Rpp32f);
     int outputTileLength = inputTileLength - windowLength;
     float windowFactor = 1.0f / windowLength;
 
