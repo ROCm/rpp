@@ -116,7 +116,7 @@ __global__ void max_reduction_hip_tensor(float *srcPtr,
     uint srcLength = srcLengthTensor[id_z];
 
     uint srcIdx = id_z * nStride;
-    __shared__ float max_smem[256];
+    __shared__ float max_smem[512];
     max_smem[hipThreadIdx_x] = srcPtr[srcIdx];
 
     if (id_x >= srcLength)
@@ -129,7 +129,7 @@ __global__ void max_reduction_hip_tensor(float *srcPtr,
     __syncthreads();
 
     // do reduction on min_smem and max_smem
-    for (int threadMax = 128; threadMax >= 1; threadMax /= 2)
+    for (int threadMax = 256; threadMax >= 1; threadMax /= 2)
     {
         if (hipThreadIdx_x < threadMax)
             max_smem[hipThreadIdx_x] = fmaxf(max_smem[hipThreadIdx_x], max_smem[hipThreadIdx_x + threadMax]);
@@ -296,7 +296,7 @@ RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
 {
     // allocate temporary memory for MMS Array
     Rpp32f *mmsArr;
-    hipHostMalloc(&(mmsArr), srcDescPtr->n * srcDescPtr->strides.nStride * sizeof(Rpp32f));
+    hipMalloc(&(mmsArr), srcDescPtr->n * srcDescPtr->strides.nStride * sizeof(Rpp32f));
 
     int maxSharedMemoryInBytes = 32000; // 32 KB
     int maxSharedMemoryElements = maxSharedMemoryInBytes / sizeof(Rpp32f);
@@ -355,14 +355,14 @@ RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
     bool referenceMax = (referencePower == 0.0f);
     Rpp32f *partialMaxArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
 
-    int numBlocksPerSample = ceil(static_cast<float>(srcDescPtr->strides.nStride) / (256 * 8));
+    int numBlocksPerSample = ceil(static_cast<float>(srcDescPtr->strides.nStride) / (512 * 8));
     int cutOffMagKernelBlockSize = 1;
     if (referenceMax)
     {
         // compute max value in MMS buffer
         hipLaunchKernelGGL(max_reduction_hip_tensor,
                            dim3(numBlocksPerSample, 1, globalThreads_z),
-                           dim3(256, 1, 1),
+                           dim3(512, 1, 1),
                            0,
                            handle.GetStream(),
                            mmsArr,
@@ -402,6 +402,6 @@ RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
                        windowLength);
     hipStreamSynchronize(handle.GetStream());
 
-    hipHostFree(mmsArr);
+    hipFree(mmsArr);
     return RPP_SUCCESS;
 }
