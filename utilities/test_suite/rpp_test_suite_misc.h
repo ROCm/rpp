@@ -59,7 +59,6 @@ string get_path(Rpp32u nDim, Rpp32u readType, string scriptPath, bool isMeanStd 
 
     string fileName = std::to_string(nDim) + "d_" + suffix + ".bin";
     string finalPath = scriptPath + "/../LOG/" + folderName + "/" + fileName;
-    std::cerr<<"finalPath: "<<finalPath<<std::endl;
     return finalPath;
 }
 

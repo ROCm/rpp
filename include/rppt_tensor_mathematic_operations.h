@@ -50,6 +50,21 @@ extern "C" {
  * @{
  */
 
+/*! \brief Logarithmic Generic operation on HOST backend
+ * \details Computes Log of the input for a given ND Tensor.
+ *          Supports u8->f32, i8->f32, f16->f16 and f32->f32 datatypes.
+ * \param [in] srcPtr source tensor in HOST memory
+ * \param[in] srcGenericDescPtr source tensor descriptor
+ * \param[out] dstPtr destination tensor in HOST memory
+ * \param[in] dstGenericDescPtr destination tensor descriptor
+ * \param[in] roiTensor values to represent dimensions of input tensor
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_log_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *roiTensor, rppHandle_t rppHandle);
+
 #ifdef GPU_SUPPORT
 /*! \brief Logarithmic Generic operation on HIP backend
  * \details Computes Log of the input for a given ND Tensor.

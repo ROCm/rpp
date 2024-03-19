@@ -25,12 +25,61 @@ SOFTWARE.
 #include "rppdefs.h"
 #include "rppi_validate.hpp"
 #include "rppt_tensor_mathematic_operations.h"
-//#include "cpu/host_tensor_mathematic_operations.hpp"
+#include "cpu/host_tensor_mathematic_operations.hpp"
 
 #ifdef HIP_COMPILE
     #include <hip/hip_fp16.h>
     #include "hip/hip_tensor_mathematic_operations.hpp"
 #endif // HIP_COMPILE
+
+/******************** log ********************/
+
+RppStatus rppt_log_host(RppPtr_t srcPtr,
+                        RpptGenericDescPtr srcGenericDescPtr,
+                        RppPtr_t dstPtr,
+                        RpptGenericDescPtr dstGenericDescPtr,
+                        Rpp32u *roiTensor,
+                        rppHandle_t rppHandle)
+{
+    if ((srcGenericDescPtr->dataType == RpptDataType::U8) && (dstGenericDescPtr->dataType == RpptDataType::F32))
+    {
+        log_generic_host_tensor(static_cast<Rpp8u *>(srcPtr) + srcGenericDescPtr->offsetInBytes,
+                                srcGenericDescPtr,
+                                reinterpret_cast<Rpp32f *>(static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
+                                dstGenericDescPtr,
+                                roiTensor,
+                                rpp::deref(rppHandle));
+    }
+    else if ((srcGenericDescPtr->dataType == RpptDataType::F16) && (dstGenericDescPtr->dataType == RpptDataType::F16))
+    {
+        log_generic_host_tensor(reinterpret_cast<Rpp16f *>(static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes),
+                                srcGenericDescPtr,
+                                reinterpret_cast<Rpp16f *>(static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
+                                dstGenericDescPtr,
+                                roiTensor,
+                                rpp::deref(rppHandle));
+    }
+    else if ((srcGenericDescPtr->dataType == RpptDataType::F32) && (dstGenericDescPtr->dataType == RpptDataType::F32))
+    {
+        log_generic_host_tensor(reinterpret_cast<Rpp32f *>(static_cast<Rpp8u *>(srcPtr) + srcGenericDescPtr->offsetInBytes),
+                                srcGenericDescPtr,
+                                reinterpret_cast<Rpp32f *>(static_cast<Rpp8u *>(dstPtr) + dstGenericDescPtr->offsetInBytes),
+                                dstGenericDescPtr,
+                                roiTensor,
+                                rpp::deref(rppHandle));
+    }
+    else if ((srcGenericDescPtr->dataType == RpptDataType::I8) && (dstGenericDescPtr->dataType == RpptDataType::F32))
+    {
+        log_generic_host_tensor(static_cast<Rpp8s *>(srcPtr) + srcGenericDescPtr->offsetInBytes,
+                                srcGenericDescPtr,
+                                reinterpret_cast<Rpp32f *>(static_cast<Rpp8s*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
+                                dstGenericDescPtr,
+                                roiTensor,
+                                rpp::deref(rppHandle));
+    }
+
+    return RPP_SUCCESS;
+}
 
 /********************************************************************************************************************/
 /*********************************************** GPU_SUPPORT = ON ***********************************************/
