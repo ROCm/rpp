@@ -16,32 +16,14 @@ subtrees:
 
 - caption: Reference
   entries:
-  - file: doxygen/html/files
+  - file: doxygen/html/globals
     title: API library
     subtrees:
     - entries:
-      - file: doxygen/html/rpp_8h
-        title: Top-level RPP header
-      - file: doxygen/html/rppdefs_8h
-        title: Typedefs, enums, and structs
-      - file: doxygen/html/rppt_8h
-        title: RPP tensor operations
-        subtrees:
-        - entries:
-          - file: doxygen/html/rppt__tensor__color__augmentations_8h
-            title: Color augmentations
-          - file: doxygen/html/rppt__tensor__data__exchange__operations_8h
-            title: Data exchange operations
-          - file: doxygen/html/rppt__tensor__effects__augmentations_8h
-            title: Effects augmentations
-          - file: doxygen/html/rppt__tensor__filter__augmentations_8h
-            title: Filter augmentations
-          - file: doxygen/html/rppt__tensor__geometric__augmentations_8h
-            title: Geometric augmentations
-          - file: doxygen/html/rppt__tensor__morphological__operations_8h
-            title: Morphological operations
-          - file: doxygen/html/rppt__tensor__statistical__operations_8h
-            title: Statistical operations
+      - file: doxygen/html/files
+        title: Modules
+      - file: doxygen/html/annotated
+        title: Data structures
       - file: doxygen/html/deprecated
         title: Deprecated functions
 

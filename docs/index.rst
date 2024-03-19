@@ -25,11 +25,11 @@ The RPP documentation is structured as follows:
 
   .. grid-item-card:: Reference
 
-    * :doc:`RPP file list <./doxygen/html/files>`
-    * :doc:`Top-level RPP header <./doxygen/html/rpp_8h>`
-    * :doc:`Typedefs, enums, and structs <./doxygen/html/rppdefs_8h>`
-    * :doc:`RPP tensor operations <./doxygen/html/rppt_8h>`
-    * :doc:`Deprecated functions <./doxygen/html/deprecated>`
+    * :doc:`API library <./doxygen/html/globals>`
+
+      * :doc:`Modules <./doxygen/html/files>`
+      * :doc:`Data structures <./doxygen/html/annotated>`
+      * :doc:`Deprecated functions <./doxygen/html/deprecated>`
 
 To contribute to the documentation refer to
 :doc:`Contributing to ROCm  <rocm:contribute/contributing>`.
