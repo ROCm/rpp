@@ -29,29 +29,7 @@ The RPP documentation is structured as follows:
     * :doc:`Top-level RPP header <./doxygen/html/rpp_8h>`
     * :doc:`Typedefs, enums, and structs <./doxygen/html/rppdefs_8h>`
     * :doc:`RPP tensor operations <./doxygen/html/rppt_8h>`
-
-      * :doc:`Color augmentations <./doxygen/html/rppt__tensor__color__augmentations_8h>`
-      * :doc:`Data exchange operations <./doxygen/html/rppt__tensor__data__exchange__operations_8h>`
-      * :doc:`Effects augmentations <./doxygen/html/rppt__tensor__effects__augmentations_8h>`
-      * :doc:`Filter augmentations <./doxygen/html/rppt__tensor__filter__augmentations_8h>`
-      * :doc:`Geometric augmentations <./doxygen/html/rppt__tensor__geometric__augmentations_8h>`
-      * :doc:`Morphological operations <./doxygen/html/rppt__tensor__morphological__operations_8h>`
-      * :doc:`Statistical operations <./doxygen/html/rppt__tensor__statistical__operations_8h>`
-
     * :doc:`Deprecated functions <./doxygen/html/deprecated>`
-    * Deprecated image operations
-
-      * :doc:`Advanced augmentations (deprecated) <./doxygen/html/rppi__advanced__augmentations_8h>`
-      * :doc:`Arithmetic operations (deprecated) <./doxygen/html/rppi__arithmetic__operations_8h>`
-      * :doc:`Color model conversions (deprecated) <./doxygen/html/rppi__color__model__conversions_8h>`
-      * :doc:`Computer vision (deprecated) <./doxygen/html/rppi__computer__vision_8h>`
-      * :doc:`Filter operations (deprecated) <./doxygen/html/rppi__filter__operations_8h>`
-      * :doc:`Fused functions (deprecated) <./doxygen/html/rppi__fused__functions_8h>`
-      * :doc:`Geometry transforms (deprecated) <./doxygen/html/rppi__geometry__transforms_8h>`
-      * :doc:`Image augmentations (deprecated) <./doxygen/html/rppi__image__augmentations_8h>`
-      * :doc:`Logical operations (deprecated) <./doxygen/html/rppi__logical__operations_8h>`
-      * :doc:`Morphological transforms (deprecated) <./doxygen/html/rppi__morphological__transforms_8h>`
-      * :doc:`Statistical operations (deprecated) <./doxygen/html/rppi__statistical__operations_8h>`
 
 To contribute to the documentation refer to
 :doc:`Contributing to ROCm  <rocm:contribute/contributing>`.
