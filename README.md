@@ -92,7 +92,8 @@ Install RPP runtime, development, and test packages.
 * Development package - `rpp-dev`/`rpp-devel` provides the library, header files, and samples
 * Test package - `rpp-test` provides CTest to verify installation
 
-**NOTE:** Package install will auto install all dependencies.
+> [!NOTE]
+> Package install will auto install all dependencies.
 
 #### Ubuntu
 
@@ -120,7 +121,8 @@ sudo zypper install rpp rpp-devel rpp-test
   git clone https://github.com/ROCm/rpp.git
   ```
 
-  **Note:** RPP has support for two GPU backends: **OPENCL** and **HIP**:
+> [!NOTE]
+> RPP has support for two GPU backends: **OPENCL** and **HIP**:
 
 * Instructions for building RPP with the **HIP** GPU backend (default GPU backend):
 
