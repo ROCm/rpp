@@ -66,41 +66,41 @@ __global__ void moving_mean_square_hip_tensor(float *srcPtr,
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
     uint srcLength = srcLengthTensor[id_z];
+    uint gridStride = hipGridDim_x * outputTileLength;
     uint batchStride = id_z * nStride;
     float *input = srcPtr + batchStride;
 
     extern __shared__ char smem[];
     float *squaredPrefixSum_smem = reinterpret_cast<float *>(smem);
-    int blockStart = hipBlockIdx_x * outputTileLength;
 
-    if (blockStart >= srcLength)
-        return;
-
-    float *inBlockPtr = srcPtr + batchStride + blockStart;
-    float *outBlockPtr = mmsArr + batchStride + blockStart;
-    int validOutputTileLength = min(outputTileLength, srcLength - blockStart);
-    float *extendedBlockStart = inBlockPtr - windowLength;
-    float *extendedBlockEnd = inBlockPtr + validOutputTileLength;
-
-    // load input data to shared memory
-    for(int pos = hipThreadIdx_x; pos < inputTileLength; pos += hipBlockDim_x)
+    for(int blockStart = hipBlockIdx_x * outputTileLength; blockStart < srcLength; blockStart += gridStride)
     {
-        float val = 0.0f;
-        auto extendedBlockPtr = extendedBlockStart + pos;
-        if (extendedBlockPtr >= input && extendedBlockPtr < extendedBlockEnd)
-            val = *extendedBlockPtr;
-        squaredPrefixSum_smem[smem_pos(pos)] = square(val);
-    }
+        float *inBlockPtr = srcPtr + batchStride + blockStart;
+        float *outBlockPtr = mmsArr + batchStride + blockStart;
+        int validOutputTileLength = min(outputTileLength, srcLength - blockStart);
+        float *extendedBlockStart = inBlockPtr - windowLength;
+        float *extendedBlockEnd = inBlockPtr + validOutputTileLength;
 
-    // compute prefix sum
-    PrefixSum(squaredPrefixSum_smem, inputTileLength);
+        // load input data to shared memory
+        for(int pos = hipThreadIdx_x; pos < inputTileLength; pos += hipBlockDim_x)
+        {
+            float val = 0.0f;
+            auto extendedBlockPtr = extendedBlockStart + pos;
+            if (extendedBlockPtr >= input && extendedBlockPtr < extendedBlockEnd)
+                val = *extendedBlockPtr;
+            squaredPrefixSum_smem[smem_pos(pos)] = square(val);
+        }
 
-    // compute the mms value here
-    for(int pos = hipThreadIdx_x; pos < validOutputTileLength; pos += hipBlockDim_x)
-    {
-        float x = inBlockPtr[pos];
-        float outVal = square(x) + squaredPrefixSum_smem[smem_pos(windowLength + pos)] - squaredPrefixSum_smem[smem_pos(pos + 1)];
-        outBlockPtr[pos] = outVal * windowFactor;
+        // compute prefix sum
+        PrefixSum(squaredPrefixSum_smem, inputTileLength);
+
+        // compute the mms value here
+        for(int pos = hipThreadIdx_x; pos < validOutputTileLength; pos += hipBlockDim_x)
+        {
+            float x = inBlockPtr[pos];
+            float outVal = square(x) + squaredPrefixSum_smem[smem_pos(windowLength + pos)] - squaredPrefixSum_smem[smem_pos(pos + 1)];
+            outBlockPtr[pos] = outVal * windowFactor;
+        }
     }
 }
 
@@ -329,7 +329,7 @@ RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
     }
 
     // launch kernel to compute the values needed for MMS Array
-    int globalThreads_x = ceil(static_cast<float>(srcDescPtr->strides.nStride) / outputTileLength);
+    int globalThreads_x = std::min<int>(ceil(static_cast<float>(srcDescPtr->strides.nStride) / outputTileLength), 1024);
     int globalThreads_y = 1;
     int globalThreads_z = handle.GetBatchSize();
     int localThreads_x = 512;
