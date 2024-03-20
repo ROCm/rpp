@@ -277,12 +277,6 @@ int main(int argc, char **argv)
                     bool normalize = true;
                     Rpp32s srcDimsTensor[] = {257, 225, 257, 211, 257, 214}; // (height, width) for each tensor in a batch for given QA inputs.
 
-                    for (int i = 0, j = 0; i < batchSize; i++, j += 2)
-                    {
-                        dstDims[i].height = srcLengthTensor[i];
-                        dstDims[i].width = channelsTensor[i];
-                    }
-
                     maxDstHeight = 0;
                     maxDstWidth = 0;
                     maxSrcHeight = 0;
