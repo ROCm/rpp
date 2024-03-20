@@ -32,17 +32,17 @@ __device__ __forceinline__ void rpp_hip_pack_float8_and_store(T *dstPtr, d_float
     *(d_float8_s *)dstPtr = *(d_float8_s *)dst_f8;
 }
 
-template <typename T1, typename T2>
-__global__ void log_generic_hip_tensor(T1 *srcPtr,
+template <typename T, typename U>
+__global__ void log_generic_hip_tensor(T *srcPtr,
                                        uint *srcStrides,
                                        uint *srcDims,
                                        uint numDims,
-                                       T2 *dstPtr,
+                                       U *dstPtr,
                                        uint *dstStrides,
                                        Rpp32u *roiTensor)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
-    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y; // batchsize
 
     if(id_x >= srcStrides[0])
         return;
@@ -73,10 +73,10 @@ __global__ void log_generic_hip_tensor(T1 *srcPtr,
     rpp_hip_pack_float8_and_store(dstPtr + dstIdx, &dst_f8);
 }
 
-template <typename T1, typename T2>
-RppStatus hip_exec_log_generic_tensor(T1 *srcPtr,
+template <typename T, typename U>
+RppStatus hip_exec_log_generic_tensor(T *srcPtr,
                                       RpptGenericDescPtr srcGenericDescPtr,
-                                      T2 *dstPtr,
+                                      U *dstPtr,
                                       RpptGenericDescPtr dstGenericDescPtr,
                                       uint *roiTensor,
                                       rpp::Handle& handle)
