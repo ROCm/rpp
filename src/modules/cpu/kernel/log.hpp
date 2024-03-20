@@ -65,33 +65,25 @@ RppStatus log_generic_host_tensor(T1 *srcPtr,
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < batchSize; batchCount++)
-	{
-        int size = 1;
+    {
         Rpp32u *roi = roiTensor + batchCount * nDim * 2;
         Rpp32u *begin = roi;
         Rpp32u *length = &roi[nDim];
 
-        T1 *srcPtr1;
-        T2 *dstPtr1;
-        srcPtr1 = srcPtr + batchCount * srcGenericDescPtr->strides[0];
-        dstPtr1 = dstPtr + batchCount * dstGenericDescPtr->strides[0];
+        T1 *srcPtr1 = srcPtr + batchCount * srcGenericDescPtr->strides[0];
+        T2 *dstPtr1 = dstPtr + batchCount * dstGenericDescPtr->strides[0];
 
         for(int i = 0; i < nDim; i++)
             srcPtr1 += begin[i] * srcGenericDescPtr->strides[i + 1];
-
         if(nDim == 2)
         {
-            T1 *srcPtrRow;
-            T2 *dstPtrRow;
-            srcPtrRow = srcPtr1;
-            dstPtrRow = dstPtr1;
+            T1 *srcPtrRow = srcPtr1;
+            T2 *dstPtrRow = dstPtr1;
 
             for(int i = 0; i < length[0]; i++)
             {
-                T1 *srcPtrTemp;
-                T2 *dstPtrTemp;
-                srcPtrTemp = srcPtrRow;
-                dstPtrTemp = dstPtrRow;
+                T1 *srcPtrTemp = srcPtrRow;
+                T2 *dstPtrTemp = dstPtrRow;
 
                 for (int vectorLoopCount = 0; vectorLoopCount < length[1]; vectorLoopCount++)
                 {
@@ -103,27 +95,20 @@ RppStatus log_generic_host_tensor(T1 *srcPtr,
                 dstPtrRow += dstGenericDescPtr->strides[1];
             }
         }
-
-        if(nDim == 3)
+        else if(nDim == 3)
         {
-            T1 *srcPtrDepth;
-            T2 *dstPtrDepth;
-            srcPtrDepth = srcPtr1;
-            dstPtrDepth = dstPtr1;
+            T1 *srcPtrDepth = srcPtr1;
+            T2 *dstPtrDepth = dstPtr1;
 
             for(int i = 0; i < length[0]; i++)
             {
-                T1 *srcPtrRow;
-                T2 *dstPtrRow;
-                srcPtrRow = srcPtrDepth;
-                dstPtrRow = dstPtrDepth;
+                T1 *srcPtrRow = srcPtrDepth;
+                T2 *dstPtrRow = dstPtrDepth;
 
-                for(int i = 0; i < length[1]; i++)
+                for(int j = 0; j < length[1]; j++)
                 {
-                    T1 *srcPtrTemp;
-                    T2 *dstPtrTemp;
-                    srcPtrTemp = srcPtrRow;
-                    dstPtrTemp = dstPtrRow;
+                    T1 *srcPtrTemp = srcPtrRow;
+                    T2 *dstPtrTemp = dstPtrRow;
 
                     for (int vectorLoopCount = 0; vectorLoopCount < length[2]; vectorLoopCount++)
                     {
@@ -138,7 +123,6 @@ RppStatus log_generic_host_tensor(T1 *srcPtr,
                 dstPtrDepth += dstGenericDescPtr->strides[1];
             }
         }
-
         else
             log_recursive(srcPtr1, srcGenericDescPtr->strides, dstPtr1, dstGenericDescPtr->strides, length, nDim);
     }
