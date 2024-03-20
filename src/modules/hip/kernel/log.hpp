@@ -7,19 +7,12 @@ __device__ void log_hip_compute(T *srcPtr, d_float8 *src_f8, d_float8 *dst_f8)
     if constexpr (std::is_same<T, schar>::value)
         rpp_hip_math_add8_const(src_f8, src_f8, (float4)128);
 
-    dst_f8->f1[0] = __logf(fabsf(src_f8->f1[0]));
-    dst_f8->f1[1] = __logf(fabsf(src_f8->f1[1]));
-    dst_f8->f1[2] = __logf(fabsf(src_f8->f1[2]));
-    dst_f8->f1[3] = __logf(fabsf(src_f8->f1[3]));
-    dst_f8->f1[4] = __logf(fabsf(src_f8->f1[4]));
-    dst_f8->f1[5] = __logf(fabsf(src_f8->f1[5]));
-    dst_f8->f1[6] = __logf(fabsf(src_f8->f1[6]));
-    dst_f8->f1[7] = __logf(fabsf(src_f8->f1[7]));
+    rpp_hip_log(src_f8, dst_f8);
 }
 
 // F16 stores without layout toggle (8 F16 pixels)
 
-__device__ __forceinline__ void rpp_hip_pack_float8_and_store8(half *dstPtr, d_float8 *dst_f8)
+__device__ __forceinline__ void rpp_hip_pack_float8_and_store(half *dstPtr, d_float8 *dst_f8)
 {
     d_half8 dst_h8;
 
@@ -34,7 +27,7 @@ __device__ __forceinline__ void rpp_hip_pack_float8_and_store8(half *dstPtr, d_f
 // F32 stores without layout toggle (8 F32 pixels)
 
 template <typename T>
-__device__ __forceinline__ void rpp_hip_pack_float8_and_store8(T *dstPtr, d_float8 *dst_f8)
+__device__ __forceinline__ void rpp_hip_pack_float8_and_store(T *dstPtr, d_float8 *dst_f8)
 {
     *(d_float8_s *)dstPtr = *(d_float8_s *)dst_f8;
 }
@@ -77,7 +70,7 @@ __global__ void log_generic_hip_tensor(T1 *srcPtr,
     d_float8 src_f8, dst_f8;
     rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);
     log_hip_compute(srcPtr, &src_f8, &dst_f8);
-    rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
+    rpp_hip_pack_float8_and_store(dstPtr + dstIdx, &dst_f8);
 }
 
 template <typename T1, typename T2>

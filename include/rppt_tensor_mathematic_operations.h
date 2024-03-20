@@ -50,7 +50,7 @@ extern "C" {
  * @{
  */
 
-/*! \brief Logarithm operation on generic N-Dimensional HOST backend
+/*! \brief Logarithm operation on HOST backend
  * \details Computes Log to base e(natural log) of the input for a given ND Tensor.
  *          Supports u8->f32, i8->f32, f16->f16 and f32->f32 datatypes.
  * \param [in] srcPtr source tensor in HOST memory
@@ -66,7 +66,7 @@ extern "C" {
 RppStatus rppt_log_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *roiTensor, rppHandle_t rppHandle);
 
 #ifdef GPU_SUPPORT
-/*! \brief Logarithm operation on generic N-Dimensional HIP backend
+/*! \brief Logarithm operation on HIP backend
  * \details Computes Log to base e(natural log) of the input for a given ND Tensor.
  *          Supports u8->f32, i8->f32, f16->f16 and f32->f32 datatypes.
  * \param [in] srcPtr source tensor in HIP memory
