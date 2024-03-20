@@ -15,17 +15,11 @@ __device__ void log_hip_compute(T *srcPtr, d_float8 *src_f8, d_float8 *dst_f8)
     dst_f8->f1[5] = __logf(fabsf(src_f8->f1[5]));
     dst_f8->f1[6] = __logf(fabsf(src_f8->f1[6]));
     dst_f8->f1[7] = __logf(fabsf(src_f8->f1[7]));
-
-    if constexpr (std::is_same<T, schar>::value)
-    {
-        dst_f8->f4[0] = rpp_hip_pixel_check_0to255(dst_f8->f4[0]) - (float4)128;
-        dst_f8->f4[1] = rpp_hip_pixel_check_0to255(dst_f8->f4[1]) - (float4)128;
-    }
 }
 
 // F16 stores without layout toggle (8 F16 pixels)
 
-__device__ __forceinline__ void rpp_hip_pack_float8_and_store(half *dstPtr, d_float8 *dst_f8)
+__device__ __forceinline__ void rpp_hip_pack_float8_and_store8(half *dstPtr, d_float8 *dst_f8)
 {
     d_half8 dst_h8;
 
@@ -40,7 +34,7 @@ __device__ __forceinline__ void rpp_hip_pack_float8_and_store(half *dstPtr, d_fl
 // F32 stores without layout toggle (8 F32 pixels)
 
 template <typename T>
-__device__ __forceinline__ void rpp_hip_pack_float8_and_store(T *dstPtr, d_float8 *dst_f8)
+__device__ __forceinline__ void rpp_hip_pack_float8_and_store8(T *dstPtr, d_float8 *dst_f8)
 {
     *(d_float8_s *)dstPtr = *(d_float8_s *)dst_f8;
 }
@@ -49,7 +43,7 @@ template <typename T1, typename T2>
 __global__ void log_generic_hip_tensor(T1 *srcPtr,
                                        uint *srcStrides,
                                        uint *srcDims,
-                                       uint srcNumDims,
+                                       uint numDims,
                                        T2 *dstPtr,
                                        uint *dstStrides,
                                        Rpp32u *roiTensor)
@@ -60,28 +54,30 @@ __global__ void log_generic_hip_tensor(T1 *srcPtr,
     if(id_x >= srcStrides[0])
         return;
 
-    uint *roi = &roiTensor[id_y * srcNumDims * 2 + srcNumDims];
+    uint *roi = roiTensor + id_y * numDims * 2;
+    uint *begin = roi;
+    uint *length = &roi[numDims];
     uint dstIdx = (id_y * *dstStrides++);
     uint srcIdx = (id_y * *srcStrides++);
     uint coords[RPPT_MAX_DIMS];
 
-    for (int i = 0; i < srcNumDims; i++)
+    for (int i = 0; i < numDims; i++)
     {
         coords[i] = (id_x / srcStrides[i]) % srcDims[i];
-        if(coords[i] > roi[i])
-            id_x -= (roi[i] - coords[i]);
+        if(coords[i] > length[i])
+            id_x -= (length[i] - coords[i]);
     }
 
-    for (int i = 0; i < srcNumDims; i++)
+    for (int i = 0; i < numDims; i++)
     {
         dstIdx += (coords[i] * dstStrides[i]);
-        srcIdx += (coords[i] * srcStrides[i]);
+        srcIdx += (begin[i] + (coords[i] * srcStrides[i]));
     }
 
     d_float8 src_f8, dst_f8;
     rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);
     log_hip_compute(srcPtr, &src_f8, &dst_f8);
-    rpp_hip_pack_float8_and_store(dstPtr + dstIdx, &dst_f8);
+    rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
 }
 
 template <typename T1, typename T2>
