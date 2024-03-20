@@ -415,8 +415,8 @@ typedef enum
  */
 typedef enum
 {
-    SLANEY = 0,
-    HTK,
+    SLANEY = 0,  // Follows Slaney’s MATLAB Auditory Modelling Work behavior
+    HTK,         // Follows O’Shaughnessy’s book formula, consistent with Hidden Markov Toolkit(HTK), m = 2595 * log10(1 + (f/700))
 } RpptMelScaleFormula;
 
 /*! \brief RPPT Tensor 2D ROI LTRB struct

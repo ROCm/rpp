@@ -44,23 +44,23 @@ struct HtkMelScale : public BaseMelScale
 
 struct SlaneyMelScale : public BaseMelScale
 {
-    const Rpp32f freq_low = 0;
+    const Rpp32f freqLow = 0;
     const Rpp32f fsp = 200.0 / 3.0;
-    const Rpp32f min_log_hz = 1000.0;
-    const Rpp32f min_log_mel = (min_log_hz - freq_low) / fsp;
-    const Rpp32f step_log = 0.068751777;  // Equivalent to std::log(6.4) / 27.0;
+    const Rpp32f minLogHz = 1000.0;
+    const Rpp32f minLogMel = (minLogHz - freqLow) / fsp;
+    const Rpp32f stepLog = 0.068751777;  // Equivalent to std::log(6.4) / 27.0;
 
-    const Rpp32f inv_min_log_hz = 1.0f / 1000.0;
-    const Rpp32f inv_step_log = 1.0f / step_log;
-    const Rpp32f inv_fsp = 1.0f / fsp;
+    const Rpp32f invMinLogHz = 1.0f / 1000.0;
+    const Rpp32f invStepLog = 1.0f / stepLog;
+    const Rpp32f invFsp = 1.0f / fsp;
 
     Rpp32f hz_to_mel(Rpp32f hz)
     {
         Rpp32f mel = 0.0f;
-        if (hz >= min_log_hz)
-            mel = min_log_mel + std::log(hz * inv_min_log_hz) * inv_step_log;
+        if (hz >= minLogHz)
+            mel = minLogMel + std::log(hz * invMinLogHz) * invStepLog;
         else
-            mel = (hz - freq_low) * inv_fsp;
+            mel = (hz - freqLow) * invFsp;
 
         return mel;
     }
@@ -68,10 +68,10 @@ struct SlaneyMelScale : public BaseMelScale
     Rpp32f mel_to_hz(Rpp32f mel)
     {
         Rpp32f hz = 0.0f;
-        if (mel >= min_log_mel)
-            hz = min_log_hz * std::exp(step_log * (mel - min_log_mel));
+        if (mel >= minLogMel)
+            hz = minLogHz * std::exp(stepLog * (mel - minLogMel));
         else
-            hz = freq_low + mel * fsp;
+            hz = freqLow + mel * fsp;
         return hz;
     }
     public:
