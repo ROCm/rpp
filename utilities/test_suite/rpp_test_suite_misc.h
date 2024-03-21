@@ -197,6 +197,25 @@ void set_generic_descriptor_layout(RpptGenericDescPtr srcDescriptorPtrND, RpptGe
     }
 }
 
+// sets generic descriptor numDims, offsetInBytes,  bitdepth, dims and strides
+inline void set_generic_descriptor(RpptGenericDescPtr descriptorPtr3D, int nDim, int offsetInBytes, int bitDepth, int batchSize, Rpp32u *roiTensor)
+{
+    descriptorPtr3D->numDims = nDim + 1;
+    descriptorPtr3D->offsetInBytes = offsetInBytes;
+    if (bitDepth == 0)
+        descriptorPtr3D->dataType = RpptDataType::U8;
+    else if (bitDepth == 1)
+        descriptorPtr3D->dataType = RpptDataType::F16;
+    else if (bitDepth == 2)
+        descriptorPtr3D->dataType = RpptDataType::F32;
+    else if (bitDepth == 5)
+        descriptorPtr3D->dataType = RpptDataType::I8;
+    descriptorPtr3D->dims[0] = batchSize;
+    for(int i = 1; i <= nDim; i++)
+        descriptorPtr3D->dims[i] = roiTensor[nDim + i - 1];
+    compute_strides(descriptorPtr3D);
+}
+
 // strides used for jumping to corresponding axisMask mean and stddev
 std::map<Rpp32s, Rpp32u> paramStrideMap2D =
 {

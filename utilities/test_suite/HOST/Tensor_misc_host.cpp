@@ -78,30 +78,11 @@ int main(int argc, char **argv)
     // set src/dst generic tensor descriptors
     RpptGenericDesc srcDescriptor, dstDescriptor;
     RpptGenericDescPtr srcDescriptorPtrND, dstDescriptorPtrND;
-    srcDescriptorPtrND  = &srcDescriptor;
-    srcDescriptorPtrND->numDims = nDim + 1;
-    srcDescriptorPtrND->offsetInBytes = 0;
-    srcDescriptorPtrND->dataType = RpptDataType::F32;
-
-    dstDescriptorPtrND  = &dstDescriptor;
-    dstDescriptorPtrND->numDims = nDim + 1;
-    dstDescriptorPtrND->offsetInBytes = 0;
-    dstDescriptorPtrND->dataType = RpptDataType::F32;
-
-    // set dims and compute strides
-    srcDescriptorPtrND->dims[0] = batchSize;
-    dstDescriptorPtrND->dims[0] = batchSize;
-    for(int i = 1; i <= nDim; i++)
-        srcDescriptorPtrND->dims[i] = roiTensor[nDim + i - 1];
-    compute_strides(srcDescriptorPtrND);
-
-    // if testCase is not normalize, then copy dims and strides from src to dst
-    if(testCase != 0)
-    {
-        memcpy(dstDescriptorPtrND->dims, srcDescriptorPtrND->dims, nDim * sizeof(Rpp32u));
-        memcpy(dstDescriptorPtrND->strides, srcDescriptorPtrND->strides, nDim * sizeof(Rpp32u));
-    }
-
+    srcDescriptorPtrND = &srcDescriptor;
+    dstDescriptorPtrND = &dstDescriptor;
+    int bitDepth = 2, offSetInBytes = 0;
+    set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, bitDepth, batchSize, roiTensor);
+    set_generic_descriptor(dstDescriptorPtrND, nDim, offSetInBytes, bitDepth, batchSize, roiTensor);
     set_generic_descriptor_layout(srcDescriptorPtrND, dstDescriptorPtrND, nDim, toggle, qaMode);
 
     Rpp32u bufferSize = 1;
