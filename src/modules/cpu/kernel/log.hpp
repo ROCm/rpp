@@ -26,10 +26,10 @@ SOFTWARE.
 #include "rpp_cpu_common.hpp"
 
 // 1 pixel log helper functions
-inline void compute_log(Rpp8s *src, Rpp32f *dst) { *dst = log(abs((Rpp32f)(*src + 128))); }
-inline void compute_log(Rpp16f *src, Rpp16f *dst) { *dst = log(abs((Rpp16f)(*src))); }
-template<typename T>
-inline void compute_log(T *src, Rpp32f *dst) { *dst = log(abs((Rpp32f)(*src))); }
+inline void compute_log(Rpp8u *src, Rpp32f *dst) { *dst = (!*src) ? std::log(std::nextafter(0.0f, 1.0f)) : std::log(*src); }
+inline void compute_log(Rpp8s *src, Rpp32f *dst) { *dst = (!*src) ? std::log(std::nextafter(0.0f, 1.0f)) : std::log(abs(*src + 128)); }
+inline void compute_log(Rpp16f *src, Rpp16f *dst) { *dst = (!*src) ? log(std::nextafter(0.0f, 1.0f)) : log(abs(*src)); }
+inline void compute_log(Rpp32f *src, Rpp32f *dst) { *dst = (!*src) ? std::log(std::nextafter(0.0f, 1.0f)) : std::log(abs(*src)); }
 
 // Computes ND log recursively
 template<typename T1, typename T2>
