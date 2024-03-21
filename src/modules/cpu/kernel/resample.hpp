@@ -56,7 +56,6 @@ RppStatus resample_host_tensor(Rpp32f *srcPtr,
         }
         else
         {
-            Rpp32s outBegin = 0;
             Rpp32s outEnd = std::ceil(srcLength * outRate / inRate);
             Rpp32s inPos = 0;
             Rpp32s block = 1 << 8;
@@ -64,7 +63,7 @@ RppStatus resample_host_tensor(Rpp32f *srcPtr,
             Rpp32f fscale = scale;
             if(numChannels == 1)
             {
-                for (int outBlock = outBegin; outBlock < outEnd; outBlock += block)
+                for (int outBlock = 0; outBlock < outEnd; outBlock += block)
                 {
                     Rpp32s blockEnd = std::min(outBlock + block, outEnd);
                     Rpp64f inBlockRaw = outBlock * scale;
@@ -109,7 +108,7 @@ RppStatus resample_host_tensor(Rpp32f *srcPtr,
             {
                 std::vector<Rpp32f> tempBuf;
                 tempBuf.resize(numChannels);
-                for (int outBlock = outBegin; outBlock < outEnd; outBlock += block)
+                for (int outBlock = 0; outBlock < outEnd; outBlock += block)
                 {
                     Rpp32s blockEnd = std::min(outBlock + block, outEnd);
                     Rpp64f inBlockRaw = outBlock * scale;
