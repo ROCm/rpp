@@ -103,10 +103,11 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
             break;
     }
     Rpp32u numThreads = handle.GetNumThreads();
+    Rpp32u batchSize = srcDescPtr->n;
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
-    for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
+    for(int batchCount = 0; batchCount < batchSize; batchCount++)
     {
         Rpp32f *srcPtrTemp = srcPtr + batchCount * srcDescPtr->strides.nStride;
         Rpp32f *dstPtrTemp = dstPtr + batchCount * dstDescPtr->strides.nStride;
@@ -133,11 +134,13 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
         Rpp32s fftBinEnd = std::ceil(maxFreq * invHzStep);
         fftBinEnd = std::min(fftBinEnd, numBins);
 
-        Rpp32f *weightsDown = static_cast<Rpp32f *>(calloc(numBins, sizeof(Rpp32f)));
-        Rpp32f *normFactors = static_cast<Rpp32f *>(malloc(numFilter * sizeof(Rpp32f)));
+        Rpp32f *normFactors = handle.GetInitHandle()->mem.mcpu.tempFloatmem + batchCount * numFilter;
         std::fill(normFactors, normFactors + numFilter, 1.f);
+        Rpp32f *weightsDown = handle.GetInitHandle()->mem.mcpu.tempFloatmem + (batchSize * numFilter) + (batchCount * numBins);
+        memset(weightsDown, 0, sizeof(numBins * sizeof(Rpp32f)));
 
-        Rpp32s *intervals = static_cast<Rpp32s *>(malloc(numBins * sizeof(Rpp32s)));
+        int intervalJump = batchSize * (numFilter + numBins);
+        Rpp32s *intervals = reinterpret_cast<Rpp32s *>(handle.GetInitHandle()->mem.mcpu.tempFloatmem + intervalJump + (batchCount * numBins));
         memset(intervals, -1, sizeof(numBins * sizeof(Rpp32s)));
 
         Rpp32s fftBin = fftBinStart;
@@ -242,9 +245,6 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
 
             srcRowPtr += srcDescPtr->strides.hStride;
         }
-        free(intervals);
-        free(normFactors);
-        free(weightsDown);
     }
     delete melScalePtr;
 
