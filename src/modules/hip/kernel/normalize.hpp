@@ -231,12 +231,14 @@ __global__ void normalize_nd_hip_tensor(T *srcPtr,
     uint *paramShape = &paramShapeTensor[id_z * numDims];
     uint *paramStrides = &paramStridesTensor[id_z * numDims];
     uint maxParamVolume = maxParamVolumeAndBufferLength.x;
+    uint srcIdx = id_z * maxBufferLength;
 
     uint paramIndex = id_z * maxParamVolume;
     for (int i = 0; i < numDims; i++)
     {
         uint coord = id_x / srcStrides[i] % srcMaxDims[i];
-        if(coord < begin[i] || coord >= length[i])
+        srcIdx += ((begin[i] + coord) * srcStrides[i]);
+        if(coord >= length[i])
             return;
         paramIndex += (maxParamVolume != 1) ? (rpp_hip_mod(coord, paramShape[i]) * paramStrides[i]) : 0;
     }
@@ -255,8 +257,7 @@ __global__ void normalize_nd_hip_tensor(T *srcPtr,
     {
         invStdDev = (stdDev == 0.0f) ? 1.0f : (1.0f / stdDev);
     }
-    uint srcIdx, dstIdx;
-    srcIdx = dstIdx = id_z * maxBufferLength + id_x;
+    uint dstIdx = id_z * maxBufferLength + id_x;
     float outVal = fmaf((static_cast<float>(srcPtr[srcIdx]) - mean), invStdDev, shift);
     normalize_check_and_store(outVal, &dstPtr[dstIdx]);
 }
@@ -681,7 +682,7 @@ __global__ void compute_mean_nd_hip_tensor(T *srcPtr,
     uint *length = &roiTensor[id_z * numDims * 2 + numDims];
     uint *paramShape = &paramShapeTensor[id_z * numDims];
     uint *paramStrides = &paramStridesTensor[id_z * numDims];
-    uint srcIdx = id_z * maxBufferLength + id_x;
+    uint srcIdx = id_z * maxBufferLength;
     uint paramBase = id_z * maxParamVolume;
     uint paramIndex = 0;
 
@@ -694,7 +695,8 @@ __global__ void compute_mean_nd_hip_tensor(T *srcPtr,
         for (int i = 0; i < numDims; i++)
         {
             uint coord = id_x / srcStrides[i] % srcMaxDims[i];
-            if(coord < begin[i] || coord >= length[i])
+            srcIdx += ((begin[i] + coord) * srcStrides[i]);
+            if(coord >= length[i])
                 return;
             paramIndex += (maxParamVolume > 1) ? (rpp_hip_mod(coord, paramShape[i]) * paramStrides[i]) : 0;
         }
@@ -712,7 +714,8 @@ __global__ void compute_mean_nd_hip_tensor(T *srcPtr,
         for (int i = 0; i < numDims; i++)
         {
             uint coord = id_x / srcStrides[i] % srcMaxDims[i];
-            if(coord < begin[i] || coord >= length[i])
+            srcIdx += ((begin[i] + coord) * srcStrides[i]);
+            if(coord >= length[i])
             {
                 isValid = false;
                 break;
@@ -1186,7 +1189,7 @@ __global__ void compute_stddev_nd_hip_tensor(T *srcPtr,
     uint *length = &roiTensor[id_z * numDims * 2 + numDims];
     uint *paramShape = &paramShapeTensor[id_z * numDims];
     uint *paramStrides = &paramStridesTensor[id_z * numDims];
-    uint srcIdx = id_z * maxBufferLength + id_x;
+    uint srcIdx = id_z * maxBufferLength;
     uint paramBase = id_z * maxParamVolume;
     uint paramIndex = 0;
 
@@ -1199,7 +1202,8 @@ __global__ void compute_stddev_nd_hip_tensor(T *srcPtr,
         for (int i = 0; i < numDims; i++)
         {
             uint coord = id_x / srcStrides[i] % srcMaxDims[i];
-            if(coord < begin[i] || coord >= length[i])
+            srcIdx += ((begin[i] + coord) * srcStrides[i]);
+            if(coord >= length[i])
                 return;
             paramIndex += (maxParamVolume > 1) ? (rpp_hip_mod(coord, paramShape[i]) * paramStrides[i]) : 0;
         }
@@ -1218,7 +1222,8 @@ __global__ void compute_stddev_nd_hip_tensor(T *srcPtr,
         for (int i = 0; i < numDims; i++)
         {
             uint coord = id_x / srcStrides[i] % srcMaxDims[i];
-            if(coord < begin[i] || coord >= length[i])
+            srcIdx += ((begin[i] + coord) * srcStrides[i]);
+            if(coord >= length[i])
             {
                 isValid = false;
                 break;
