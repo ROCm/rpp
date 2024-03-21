@@ -85,10 +85,8 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
 {
     Rpp32s windowCenterOffset = 0;
     bool vertical = (layout == RpptSpectrogramLayout::FT);
-    if (centerWindows)
-        windowCenterOffset = windowLength / 2;
-    if (nfft == 0)
-        nfft = windowLength;
+    if (centerWindows) windowCenterOffset = windowLength / 2;
+    if (nfft == 0) nfft = windowLength;
     const Rpp32s numBins = nfft / 2 + 1;
     const Rpp32f mulFactor = (2.0 * M_PI) / nfft;
     const Rpp32u hStride = dstDescPtr->strides.hStride;
