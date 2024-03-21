@@ -1,27 +1,29 @@
 #include <hip/hip_runtime.h>
 #include "rpp_hip_common.hpp"
 
-__device__ void to_decibels_hip_compute(d_float8 *src_f8, d_float8 *dst_f8, float minRatio, float multiplier, float inverseMagnitude)
+// -------------------- Set 0 - device helpers for to_decibels kernel  --------------------
+
+__device__ void to_decibels_hip_compute(d_float8 *src_f8, d_float8 *dst_f8, double minRatio, float multiplier, float inverseMagnitude)
 {
-    dst_f8->f1[0] = multiplier * std::log2(std::max(minRatio, src_f8->f1[0] * inverseMagnitude));
-    dst_f8->f1[1] = multiplier * std::log2(std::max(minRatio, src_f8->f1[1] * inverseMagnitude));
-    dst_f8->f1[2] = multiplier * std::log2(std::max(minRatio, src_f8->f1[2] * inverseMagnitude));
-    dst_f8->f1[3] = multiplier * std::log2(std::max(minRatio, src_f8->f1[3] * inverseMagnitude));
-    dst_f8->f1[4] = multiplier * std::log2(std::max(minRatio, src_f8->f1[4] * inverseMagnitude));
-    dst_f8->f1[5] = multiplier * std::log2(std::max(minRatio, src_f8->f1[5] * inverseMagnitude));
-    dst_f8->f1[6] = multiplier * std::log2(std::max(minRatio, src_f8->f1[6] * inverseMagnitude));
-    dst_f8->f1[7] = multiplier * std::log2(std::max(minRatio, src_f8->f1[7] * inverseMagnitude));
+    dst_f8->f1[0] = multiplier * log2(max(minRatio, (static_cast<double>(src_f8->f1[0]) * inverseMagnitude)));
+    dst_f8->f1[1] = multiplier * log2(max(minRatio, (static_cast<double>(src_f8->f1[1]) * inverseMagnitude)));
+    dst_f8->f1[2] = multiplier * log2(max(minRatio, (static_cast<double>(src_f8->f1[2]) * inverseMagnitude)));
+    dst_f8->f1[3] = multiplier * log2(max(minRatio, (static_cast<double>(src_f8->f1[3]) * inverseMagnitude)));
+    dst_f8->f1[4] = multiplier * log2(max(minRatio, (static_cast<double>(src_f8->f1[4]) * inverseMagnitude)));
+    dst_f8->f1[5] = multiplier * log2(max(minRatio, (static_cast<double>(src_f8->f1[5]) * inverseMagnitude)));
+    dst_f8->f1[6] = multiplier * log2(max(minRatio, (static_cast<double>(src_f8->f1[6]) * inverseMagnitude)));
+    dst_f8->f1[7] = multiplier * log2(max(minRatio, (static_cast<double>(src_f8->f1[7]) * inverseMagnitude)));
 }
 
 
-// -------------------- Set 0 - to decibels kernel --------------------
+// -------------------- Set 1 - to decibels kernel --------------------
 
 __global__ void to_decibels_1d_hip_tensor(float *srcPtr,
                                           uint srcStride,
                                           float *dstPtr,
                                           uint dstStride,
                                           RpptImagePatchPtr srcDims,
-                                          float minRatio,
+                                          double minRatio,
                                           float multiplier,
                                           float *inverseMagnitudeTensor)
 {
@@ -47,7 +49,7 @@ __global__ void to_decibels_2d_hip_tensor(float *srcPtr,
                                           float *dstPtr,
                                           uint2 dstStridesNH,
                                           RpptImagePatchPtr srcDims,
-                                          float minRatio,
+                                          double minRatio,
                                           float multiplier,
                                           float *inverseMagnitudeTensor)
 {
@@ -69,7 +71,54 @@ __global__ void to_decibels_2d_hip_tensor(float *srcPtr,
     rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
 }
 
-// -------------------- Set 1 -  kernels for finding max value in input --------------------
+// -------------------- Set 2 -  kernels for finding inverse magnitude value --------------------
+
+__global__ void inverse_magnitude_hip_tensor(float *srcPtr,
+                                             int maxLength,
+                                             bool computeMax,
+                                             float *inverseMagnitudeTensor)
+
+{
+    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    // Do final reduction on block wise max
+    if (computeMax)
+    {
+        uint srcIdx = id_z * maxLength;
+        __shared__ float max_smem[256];
+        max_smem[hipThreadIdx_x] = srcPtr[srcIdx];
+
+        if (id_x >= maxLength)
+            return;
+
+        srcIdx += id_x;
+        float maxVal = srcPtr[srcIdx];
+        while (id_x < maxLength)
+        {
+            maxVal = fmaxf(maxVal, srcPtr[srcIdx]);
+            id_x += hipBlockDim_x;
+            srcIdx += hipBlockDim_x;
+        }
+        max_smem[hipThreadIdx_x] = maxVal;
+        __syncthreads();
+
+        // do reduction on min_smem and max_smem
+        for (int threadMax = 128; threadMax >= 1; threadMax /= 2)
+        {
+            if (hipThreadIdx_x < threadMax)
+                max_smem[hipThreadIdx_x] = max(max_smem[hipThreadIdx_x], max_smem[hipThreadIdx_x + threadMax]);
+            __syncthreads();
+        }
+
+        if (hipThreadIdx_x == 0)
+            inverseMagnitudeTensor[id_z] = 1.f / max_smem[0];
+    }
+    else
+    {
+        inverseMagnitudeTensor[id_z] = 1.0f;
+    }
+}
 
 __global__ void max_reduction_hip_tensor(float *srcPtr,
                                          uint2 srcStridesNH,
@@ -155,54 +204,7 @@ __global__ void max_reduction_hip_tensor(float *srcPtr,
     }
 }
 
-__global__ void inverse_magnitude_hip_tensor(float *srcPtr,
-                                             int maxLength,
-                                             bool computeMax,
-                                             float *inverseMagnitudeTensor)
-
-{
-    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
-    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
-
-    // Do final reduction on block wise max
-    if (computeMax)
-    {
-        uint srcIdx = id_z * maxLength;
-        __shared__ float max_smem[256];
-        max_smem[hipThreadIdx_x] = srcPtr[srcIdx];
-
-        if (id_x >= maxLength)
-            return;
-
-        srcIdx += id_x;
-        float maxVal = srcPtr[srcIdx];
-        while (id_x < maxLength)
-        {
-            maxVal = fmaxf(maxVal, srcPtr[srcIdx]);
-            id_x += hipBlockDim_x;
-            srcIdx += hipBlockDim_x;
-        }
-        max_smem[hipThreadIdx_x] = maxVal;
-        __syncthreads();
-
-        // do reduction on min_smem and max_smem
-        for (int threadMax = 128; threadMax >= 1; threadMax /= 2)
-        {
-            if (hipThreadIdx_x < threadMax)
-                max_smem[hipThreadIdx_x] = max(max_smem[hipThreadIdx_x], max_smem[hipThreadIdx_x + threadMax]);
-            __syncthreads();
-        }
-
-        if (hipThreadIdx_x == 0)
-            inverseMagnitudeTensor[id_z] = 1.f / max_smem[0];
-    }
-    else
-    {
-        inverseMagnitudeTensor[id_z] = 1.0f;
-    }
-}
-
-// -------------------- Set 2 - to decibels kernels executor --------------------
+// -------------------- Set 3 - to decibels kernels executor --------------------
 
 RppStatus hip_exec_to_decibels_tensor(Rpp32f *srcPtr,
                                       RpptDescPtr srcDescPtr,
@@ -259,7 +261,7 @@ RppStatus hip_exec_to_decibels_tensor(Rpp32f *srcPtr,
                            dstPtr,
                            dstDescPtr->strides.nStride,
                            srcDims,
-                           minRatio,
+                           static_cast<double>(minRatio),
                            multiplier,
                            handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem);
     }
@@ -277,7 +279,7 @@ RppStatus hip_exec_to_decibels_tensor(Rpp32f *srcPtr,
                            dstPtr,
                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                            srcDims,
-                           minRatio,
+                           static_cast<double>(minRatio),
                            multiplier,
                            handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem);
     }
