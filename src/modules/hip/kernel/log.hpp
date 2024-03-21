@@ -10,28 +10,6 @@ __device__ void log_hip_compute(T *srcPtr, d_float8 *src_f8, d_float8 *dst_f8)
     rpp_hip_log(src_f8, dst_f8);
 }
 
-// F16 stores without layout toggle (8 F16 pixels)
-
-__device__ __forceinline__ void rpp_hip_pack_float8_and_store(half *dstPtr, d_float8 *dst_f8)
-{
-    d_half8 dst_h8;
-
-    dst_h8.h2[0] = __float22half2_rn(make_float2(dst_f8->f1[0], dst_f8->f1[1]));
-    dst_h8.h2[1] = __float22half2_rn(make_float2(dst_f8->f1[2], dst_f8->f1[3]));
-    dst_h8.h2[2] = __float22half2_rn(make_float2(dst_f8->f1[4], dst_f8->f1[5]));
-    dst_h8.h2[3] = __float22half2_rn(make_float2(dst_f8->f1[6], dst_f8->f1[7]));
-
-    *(d_half8 *)dstPtr = dst_h8;
-}
-
-// F32 stores without layout toggle (8 F32 pixels)
-
-template <typename T>
-__device__ __forceinline__ void rpp_hip_pack_float8_and_store(T *dstPtr, d_float8 *dst_f8)
-{
-    *(d_float8_s *)dstPtr = *(d_float8_s *)dst_f8;
-}
-
 template <typename T, typename U>
 __global__ void log_generic_hip_tensor(T *srcPtr,
                                        uint *srcStrides,
@@ -58,7 +36,7 @@ __global__ void log_generic_hip_tensor(T *srcPtr,
     {
         coords[i] = (id_x / srcStrides[i]) % srcDims[i];
         if(coords[i] > length[i])
-            id_x -= (length[i] - coords[i]);
+            return;
     }
 
     for (int i = 0; i < numDims; i++)
@@ -70,7 +48,7 @@ __global__ void log_generic_hip_tensor(T *srcPtr,
     d_float8 src_f8, dst_f8;
     rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);
     log_hip_compute(srcPtr, &src_f8, &dst_f8);
-    rpp_hip_pack_float8_and_store(dstPtr + dstIdx, &dst_f8);
+    rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
 }
 
 template <typename T, typename U>
