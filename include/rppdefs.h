@@ -44,7 +44,7 @@ SOFTWARE.
 /*! \brief RPP maximum dimensions in tensor \ingroup group_rppdefs \page subpage_rppt */
 #define RPPT_MAX_DIMS   ( 5 )
 
-#define CHECK(x) do { \
+#define CHECK_RETURN_STATUS(x) do { \
   int retval = (x); \
   if (retval != 0) { \
     fprintf(stderr, "Runtime error: %s returned %d at %s:%d", #x, retval, __FILE__, __LINE__); \
