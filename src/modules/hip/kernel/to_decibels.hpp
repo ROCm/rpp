@@ -234,6 +234,41 @@ RppStatus hip_exec_to_decibels_tensor(Rpp32f *srcPtr,
 
     // find the invReferenceMagnitude value
     bool computeMax = (!referenceMagnitude);
+    if(computeMax)
+    {
+        if (numDims == 1)
+        {
+            numBlocksPerSample = ceil(static_cast<float>((srcDescPtr->strides.nStride + 7) >> 3) / 512);
+            hipLaunchKernelGGL(max_reduction_hip_tensor,
+                               dim3(numBlocksPerSample, 1, globalThreads_z),
+                               dim3(512, 1, 1),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint2(srcDescPtr->strides.nStride, 1),
+                               srcDims,
+                               numDims,
+                               partialMaxArr);
+        }
+        else if (numDims == 2)
+        {
+            int gridDim_x = ceil(static_cast<float>((srcDescPtr->strides.hStride + 7) >> 3)/LOCAL_THREADS_X);
+            int gridDim_y = ceil(static_cast<float>(srcDescPtr->h)/LOCAL_THREADS_Y);
+            int gridDim_z = ceil(static_cast<float>(globalThreads_z)/LOCAL_THREADS_Z);
+            numBlocksPerSample = gridDim_x * gridDim_y * gridDim_z;
+            hipLaunchKernelGGL(max_reduction_hip_tensor,
+                               dim3(gridDim_x, gridDim_y, gridDim_z),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                               srcDims,
+                               numDims,
+                               partialMaxArr);
+        }
+        hipStreamSynchronize(handle.GetStream());
+    }
     Rpp32u blockSize = (computeMax) ? 256: 1;
     hipLaunchKernelGGL(inverse_magnitude_hip_tensor,
                        dim3(1, 1,  globalThreads_z),
