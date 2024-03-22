@@ -27,7 +27,7 @@ SOFTWARE.
 
 // 1 pixel log helper functions
 inline void compute_log(Rpp8u *src, Rpp32f *dst) { *dst = (!*src) ? std::log(std::nextafter(0.0f, 1.0f)) : std::log(*src); }
-inline void compute_log(Rpp8s *src, Rpp32f *dst) { *dst = (!*src) ? std::log(std::nextafter(0.0f, 1.0f)) : std::log(abs(*src + 128)); }
+inline void compute_log(Rpp8s *src, Rpp32f *dst) { *dst = (!*src) ? std::log(std::nextafter(0.0f, 1.0f)) : std::log(*src + 128); }
 inline void compute_log(Rpp16f *src, Rpp16f *dst) { *dst = (!*src) ? log(std::nextafter(0.0f, 1.0f)) : log(abs(*src)); }
 inline void compute_log(Rpp32f *src, Rpp32f *dst) { *dst = (!*src) ? std::log(std::nextafter(0.0f, 1.0f)) : std::log(abs(*src)); }
 
@@ -36,9 +36,7 @@ template<typename T1, typename T2>
 void log_recursive(T1 *src, Rpp32u *srcStrides, T2 *dst, Rpp32u *dstStrides, Rpp32u *dstShape, Rpp32u nDim)
 {
     if (!nDim)
-    {
         compute_log(src, dst);
-    }
     else
     {
         for (int i = 0; i < *dstShape; i++)
@@ -75,15 +73,21 @@ RppStatus log_generic_host_tensor(T1 *srcPtr,
 
         for(int i = 0; i < nDim; i++)
             srcPtr1 += begin[i] * srcGenericDescPtr->strides[i + 1];
-        if(nDim == 2)
+        if(nDim == 1)
         {
-            T1 *srcPtrRow = srcPtr1;
-            T2 *dstPtrRow = dstPtr1;
-
+            for (int vectorLoopCount = 0; vectorLoopCount < length[0]; vectorLoopCount++)
+            {
+                compute_log(srcPtr1, dstPtr1);
+                srcPtr1++;
+                dstPtr1++;
+            }
+        }
+        else if(nDim == 2)
+        {
             for(int i = 0; i < length[0]; i++)
             {
-                T1 *srcPtrTemp = srcPtrRow;
-                T2 *dstPtrTemp = dstPtrRow;
+                T1 *srcPtrTemp = srcPtr1;
+                T2 *dstPtrTemp = dstPtr1;
 
                 for (int vectorLoopCount = 0; vectorLoopCount < length[1]; vectorLoopCount++)
                 {
@@ -91,19 +95,16 @@ RppStatus log_generic_host_tensor(T1 *srcPtr,
                     srcPtrTemp++;
                     dstPtrTemp++;
                 }
-                srcPtrRow += srcGenericDescPtr->strides[1];
-                dstPtrRow += dstGenericDescPtr->strides[1];
+                srcPtr1 += srcGenericDescPtr->strides[1];
+                dstPtr1 += dstGenericDescPtr->strides[1];
             }
         }
         else if(nDim == 3)
         {
-            T1 *srcPtrDepth = srcPtr1;
-            T2 *dstPtrDepth = dstPtr1;
-
             for(int i = 0; i < length[0]; i++)
             {
-                T1 *srcPtrRow = srcPtrDepth;
-                T2 *dstPtrRow = dstPtrDepth;
+                T1 *srcPtrRow = srcPtr1;
+                T2 *dstPtrRow = dstPtr1;
 
                 for(int j = 0; j < length[1]; j++)
                 {
@@ -119,8 +120,8 @@ RppStatus log_generic_host_tensor(T1 *srcPtr,
                     srcPtrRow += srcGenericDescPtr->strides[2];
                     dstPtrRow += dstGenericDescPtr->strides[2];
                 }
-                srcPtrDepth += srcGenericDescPtr->strides[1];
-                dstPtrDepth += dstGenericDescPtr->strides[1];
+                srcPtr1 += srcGenericDescPtr->strides[1];
+                dstPtr1 += dstGenericDescPtr->strides[1];
             }
         }
         else
