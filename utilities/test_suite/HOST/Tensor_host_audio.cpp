@@ -1,5 +1,7 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+MIT License
+
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -8,16 +10,16 @@ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 */
 
 #include "../rpp_test_suite_audio.h"
@@ -130,13 +132,12 @@ int main(int argc, char **argv)
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0;
     string testCaseName;
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
-    for (int perfRunCount = 0; perfRunCount < numRuns; perfRunCount++)
+    for (int iterCount = 0; iterCount < noOfIterations; iterCount++)
     {
-        for (int iterCount = 0; iterCount < noOfIterations; iterCount++)
+        // read and decode audio and fill the audio dim values
+        read_audio_batch_and_fill_dims(srcDescPtr, inputf32, audioFilesPath, iterCount, srcLengthTensor, channelsTensor);
+        for (int perfRunCount = 0; perfRunCount < numRuns; perfRunCount++)
         {
-            // read and decode audio and fill the audio dim values
-            read_audio_batch_and_fill_dims(srcDescPtr, inputf32, audioFilesPath, iterCount, srcLengthTensor, channelsTensor);
-
             double startWallTime, endWallTime;
             double wallTime;
             switch (testCase)
@@ -195,6 +196,25 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 3:
+                {
+                    testCaseName = "down_mixing";
+                    bool normalizeWeights = false;
+                    Rpp32s srcDimsTensor[batchSize * 2];
+
+                    for (int i = 0, j = 0; i < batchSize; i++, j += 2)
+                    {
+                        srcDimsTensor[j] = srcLengthTensor[i];
+                        srcDimsTensor[j + 1] = channelsTensor[i];
+                        dstDims[i].height = srcLengthTensor[i];
+                        dstDims[i].width = 1;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    rppt_down_mixing_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcDimsTensor, normalizeWeights, handle);
+
+                    break;
+                }
                 default:
                 {
                     missingFuncFlag = 1;
@@ -213,28 +233,28 @@ int main(int argc, char **argv)
             maxWallTime = std::max(maxWallTime, wallTime);
             minWallTime = std::min(minWallTime, wallTime);
             avgWallTime += wallTime;
+        }
 
-            // QA mode - verify outputs with golden outputs. Below code doesn’t run for performance tests
-            if (testType == 0)
+        // QA mode - verify outputs with golden outputs. Below code doesn’t run for performance tests
+        if (testType == 0)
+        {
+            /* Run only if testCase is not 0
+            For testCase 0 verify_non_silent_region_detection function is used for QA testing */
+            if (testCase != 0)
+                verify_output(outputf32, dstDescPtr, dstDims, testCaseName, dst, scriptPath);
+
+            /* Dump the outputs to csv files for debugging
+            Runs only if
+            1. DEBUG_MODE is enabled
+            2. Current iteration is 1st iteration
+            3. Test case is not 0 */
+            if (DEBUG_MODE && iterCount == 0 && testCase != 0)
             {
-                /* Run only if testCase is not 0
-                For testCase 0 verify_non_silent_region_detection function is used for QA testing */
-                if (testCase != 0)
-                    verify_output(outputf32, dstDescPtr, dstDims, testCaseName, dst, scriptPath);
-
-                /* Dump the outputs to csv files for debugging
-                Runs only if
-                1. DEBUG_MODE is enabled
-                2. Current iteration is 1st iteration
-                3. Test case is not 0 */
-                if (DEBUG_MODE && iterCount == 0 && testCase != 0)
-                {
-                    std::ofstream refFile;
-                    refFile.open(func + ".csv");
-                    for (int i = 0; i < oBufferSize; i++)
-                        refFile << *(outputf32 + i) << "\n";
-                    refFile.close();
-                }
+                std::ofstream refFile;
+                refFile.open(func + ".csv");
+                for (int i = 0; i < oBufferSize; i++)
+                    refFile << *(outputf32 + i) << "\n";
+                refFile.close();
             }
         }
     }
