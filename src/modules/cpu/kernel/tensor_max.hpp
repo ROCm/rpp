@@ -93,7 +93,7 @@ RppStatus tensor_max_u8_u8_host(Rpp8u *srcPtr,
 #if __AVX2__
                 __m128i result;
                 reduce_max_32_host(&pMax, &result);
-                rpp_simd_store(rpp_store16_u8_to_u8, resultAvx, &result);
+                _mm_storeu_si128((__m128i *)resultAvx, result);
 
                 max = std::max(resultAvx[0], max);
 #endif
@@ -150,7 +150,7 @@ RppStatus tensor_max_u8_u8_host(Rpp8u *srcPtr,
 #if __AVX2__
                 __m128i result;
                 reduce_max_96_host(&pMaxR, &pMaxG, &pMaxB, &result);
-                rpp_simd_store(rpp_store16_u8_to_u8, resultAvx, &result);
+                _mm_storeu_si128((__m128i *)resultAvx, result);
 
                 maxR = std::max(resultAvx[0], maxR);
                 maxG = std::max(resultAvx[1], maxG);
@@ -210,7 +210,7 @@ RppStatus tensor_max_u8_u8_host(Rpp8u *srcPtr,
 #if __AVX2__
                 __m128i result;
                 reduce_max_48_host(&pMaxR, &pMaxG, &pMaxB, &result);
-                rpp_simd_store(rpp_store16_u8_to_u8, resultAvx, &result);
+                _mm_storeu_si128((__m128i *)resultAvx, result);
 
                 maxR = std::max(resultAvx[0], maxR);
                 maxG = std::max(resultAvx[1], maxG);
@@ -712,7 +712,7 @@ RppStatus tensor_max_i8_i8_host(Rpp8s *srcPtr,
 #if __AVX2__
                 __m128i result;
                 reduce_max_i32_host(&pMax, &result);
-                rpp_simd_store(rpp_store16_i8, resultAvx, &result);
+                _mm_store_si128((__m128i *)resultAvx, result);
 
                 max = std::max(resultAvx[0], max);
 #endif
@@ -769,7 +769,7 @@ RppStatus tensor_max_i8_i8_host(Rpp8s *srcPtr,
 #if __AVX2__
                 __m128i result;
                 reduce_max_i96_host(&pMaxR, &pMaxG, &pMaxB, &result);
-                rpp_simd_store(rpp_store16_i8, resultAvx, &result);
+                _mm_store_si128((__m128i *)resultAvx, result);
 
                 maxR = std::max(resultAvx[0], maxR);
                 maxG = std::max(resultAvx[1], maxG);
@@ -829,7 +829,7 @@ RppStatus tensor_max_i8_i8_host(Rpp8s *srcPtr,
 #if __AVX2__
                 __m128i result;
                 reduce_max_i48_host(&pMaxR, &pMaxG, &pMaxB, &result);
-                rpp_simd_store(rpp_store16_i8, resultAvx, &result);
+                _mm_store_si128((__m128i *)resultAvx, result);
 
                 maxR = std::max(resultAvx[0], maxR);
                 maxG = std::max(resultAvx[1], maxG);

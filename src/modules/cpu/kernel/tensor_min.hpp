@@ -93,7 +93,7 @@ RppStatus tensor_min_u8_u8_host(Rpp8u *srcPtr,
 #if __AVX2__
             __m128i result;
             reduce_min_32_host(&pMin, &result);
-            rpp_simd_store(rpp_store16_u8_to_u8, resultAvx, &result);
+            _mm_storeu_si128((__m128i *)resultAvx, result);
 
             min = std::min(std::min(resultAvx[0], resultAvx[1]), min);
 #endif
@@ -149,7 +149,7 @@ RppStatus tensor_min_u8_u8_host(Rpp8u *srcPtr,
 #if __AVX2__
             __m128i result;
             reduce_min_96_host(&pMinR, &pMinG, &pMinB, &result);
-            rpp_simd_store(rpp_store16_u8_to_u8, resultAvx, &result);
+            _mm_storeu_si128((__m128i *)resultAvx, result);
 
             minR = std::min(resultAvx[0], minR);
             minG = std::min(resultAvx[1], minG);
@@ -207,7 +207,7 @@ RppStatus tensor_min_u8_u8_host(Rpp8u *srcPtr,
 
                 __m128i result;
                 reduce_min_48_host(&pMinR, &pMinG, &pMinB, &result);
-                rpp_simd_store(rpp_store16_u8_to_u8, resultAvx, &result);
+                _mm_storeu_si128((__m128i *)resultAvx, result);
 
                 minR = std::min(resultAvx[0], minR);
                 minG = std::min(resultAvx[1], minG);
@@ -712,7 +712,7 @@ RppStatus tensor_min_i8_i8_host(Rpp8s *srcPtr,
 #if __AVX2__
             __m128i result;
             reduce_min_i32_host(&pMin, &result);
-            rpp_simd_store(rpp_store16_i8, resultAvx, &result);
+            _mm_store_si128((__m128i *)resultAvx, result);
 
             min = std::min(std::min(resultAvx[0], resultAvx[1]), min);
 #endif
@@ -768,7 +768,7 @@ RppStatus tensor_min_i8_i8_host(Rpp8s *srcPtr,
 #if __AVX2__
             __m128i result;
             reduce_min_i96_host(&pMinR, &pMinG, &pMinB, &result);
-            rpp_simd_store(rpp_store16_i8, resultAvx, &result);
+            _mm_store_si128((__m128i *)resultAvx, result);
 
             minR = std::min(resultAvx[0], minR);
             minG = std::min(resultAvx[1], minG);
@@ -827,7 +827,7 @@ RppStatus tensor_min_i8_i8_host(Rpp8s *srcPtr,
 #if __AVX2__
                 __m128i result;
                 reduce_min_i48_host(&pMinR, &pMinG, &pMinB, &result);
-                rpp_simd_store(rpp_store16_i8, resultAvx, &result);
+                _mm_store_si128((__m128i *)resultAvx, result);
 
                 minR = std::min(resultAvx[0], minR);
                 minG = std::min(resultAvx[1], minG);
