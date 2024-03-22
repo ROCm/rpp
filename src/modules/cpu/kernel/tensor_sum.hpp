@@ -90,7 +90,7 @@ RppStatus tensor_sum_u8_u64_host(Rpp8u *srcPtr,
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store8_u32_to_u32_avx, sumAvx, &psum);
+            _mm256_store_si256((__m256i *)sumAvx, &pSum);
             sum += (sumAvx[0] + sumAvx[1] + sumAvx[2] + sumAvx[3] + sumAvx[4] + sumAvx[5] + sumAvx[6] + sumAvx[7]);
 #endif
             tensorSumArr[batchCount] = (Rpp64u)sum;
@@ -144,9 +144,9 @@ RppStatus tensor_sum_u8_u64_host(Rpp8u *srcPtr,
                 srcPtrRowB += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store8_u32_to_u32_avx, sumAvxR, &psumR);
-            rpp_simd_store(rpp_store8_u32_to_u32_avx, sumAvxG, &psumG);
-            rpp_simd_store(rpp_store8_u32_to_u32_avx, sumAvxB, &psumB);
+            _mm256_store_si256((__m256i *)sumAvxR, &pSumR);
+            _mm256_store_si256((__m256i *)sumAvxG, &pSumG);
+            _mm256_store_si256((__m256i *)sumAvxB, &pSumB);
             sumR += (sumAvxR[0] + sumAvxR[1] + sumAvxR[2] + sumAvxR[3] + sumAvxR[4] + sumAvxR[5] + sumAvxR[6] + sumAvxR[7]);
             sumG += (sumAvxG[0] + sumAvxG[1] + sumAvxG[2] + sumAvxG[3] + sumAvxG[4] + sumAvxG[5] + sumAvxG[6] + sumAvxG[7]);
             sumB += (sumAvxB[0] + sumAvxB[1] + sumAvxB[2] + sumAvxB[3] + sumAvxB[4] + sumAvxB[5] + sumAvxB[6] + sumAvxB[7]);
@@ -200,9 +200,9 @@ RppStatus tensor_sum_u8_u64_host(Rpp8u *srcPtr,
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store8_u32_to_u32_avx, sumAvxR, &psumR);
-            rpp_simd_store(rpp_store8_u32_to_u32_avx, sumAvxG, &psumG);
-            rpp_simd_store(rpp_store8_u32_to_u32_avx, sumAvxB, &psumB);
+            _mm256_store_si256((__m256i *)sumAvxR, &pSumR);
+            _mm256_store_si256((__m256i *)sumAvxG, &pSumG);
+            _mm256_store_si256((__m256i *)sumAvxB, &pSumB);
             sumR += (sumAvxR[0] + sumAvxR[1] + sumAvxR[2] + sumAvxR[3] + sumAvxR[4] + sumAvxR[5] + sumAvxR[6] + sumAvxR[7]);
             sumG += (sumAvxG[0] + sumAvxG[1] + sumAvxG[2] + sumAvxG[3] + sumAvxG[4] + sumAvxG[5] + sumAvxG[6] + sumAvxG[7]);
             sumB += (sumAvxB[0] + sumAvxB[1] + sumAvxB[2] + sumAvxB[3] + sumAvxB[4] + sumAvxB[5] + sumAvxB[6] + sumAvxB[7]);
@@ -284,7 +284,7 @@ RppStatus tensor_sum_f32_f32_host(Rpp32f *srcPtr,
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvx, &psum);
+            _mm256_storeu_pd(sumAvx, &pSum);
             sum += (sumAvx[0] + sumAvx[1] + sumAvx[2] + sumAvx[3]);
 #endif
 
@@ -338,9 +338,9 @@ RppStatus tensor_sum_f32_f32_host(Rpp32f *srcPtr,
                 srcPtrRowB += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxR, &psumR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxG, &psumG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxB, &psumB);
+            _mm256_storeu_pd(sumAvxR, &pSumR);
+            _mm256_storeu_pd(sumAvxG, &pSumG);
+            _mm256_storeu_pd(sumAvxB, &pSumB);
             sumR += (sumAvxR[0] + sumAvxR[1] + sumAvxR[2] + sumAvxR[3]);
             sumG += (sumAvxG[0] + sumAvxG[1] + sumAvxG[2] + sumAvxG[3]);
             sumB += (sumAvxB[0] + sumAvxB[1] + sumAvxB[2] + sumAvxB[3]);
@@ -393,9 +393,9 @@ RppStatus tensor_sum_f32_f32_host(Rpp32f *srcPtr,
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxR, &psumR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxG, &psumG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxB, &psumB);
+            _mm256_storeu_pd(sumAvxR, &pSumR);
+            _mm256_storeu_pd(sumAvxG, &pSumG);
+            _mm256_storeu_pd(sumAvxB, &pSumB);
             sumR += (sumAvxR[0] + sumAvxR[1] + sumAvxR[2] + sumAvxR[3]);
             sumG += (sumAvxG[0] + sumAvxG[1] + sumAvxG[2] + sumAvxG[3]);
             sumB += (sumAvxB[0] + sumAvxB[1] + sumAvxB[2] + sumAvxB[3]);
@@ -479,7 +479,7 @@ RppStatus tensor_sum_f16_f32_host(Rpp16f *srcPtr,
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvx, &psum);
+            _mm256_storeu_pd(sumAvx, &pSum);
             sum += (sumAvx[0] + sumAvx[1] + sumAvx[2] + sumAvx[3]);
 #endif
             tensorSumArr[batchCount] = (Rpp32f)sum;
@@ -539,9 +539,9 @@ RppStatus tensor_sum_f16_f32_host(Rpp16f *srcPtr,
                 srcPtrRowB += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxR, &psumR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxG, &psumG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxB, &psumB);
+            _mm256_storeu_pd(sumAvxR, &pSumR);
+            _mm256_storeu_pd(sumAvxG, &pSumG);
+            _mm256_storeu_pd(sumAvxB, &pSumB);
             sumR += (sumAvxR[0] + sumAvxR[1] + sumAvxR[2] + sumAvxR[3]);
             sumG += (sumAvxG[0] + sumAvxG[1] + sumAvxG[2] + sumAvxG[3]);
             sumB += (sumAvxB[0] + sumAvxB[1] + sumAvxB[2] + sumAvxB[3]);
@@ -597,9 +597,9 @@ RppStatus tensor_sum_f16_f32_host(Rpp16f *srcPtr,
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxR, &psumR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxG, &psumG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxB, &psumB);
+            _mm256_storeu_pd(sumAvxR, &pSumR);
+            _mm256_storeu_pd(sumAvxG, &pSumG);
+            _mm256_storeu_pd(sumAvxB, &pSumB);
             sumR += (sumAvxR[0] + sumAvxR[1] + sumAvxR[2] + sumAvxR[3]);
             sumG += (sumAvxG[0] + sumAvxG[1] + sumAvxG[2] + sumAvxG[3]);
             sumB += (sumAvxB[0] + sumAvxB[1] + sumAvxB[2] + sumAvxB[3]);
@@ -681,7 +681,7 @@ RppStatus tensor_sum_i8_i64_host(Rpp8s *srcPtr,
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store8_i32_to_i32_avx, sumAvx, &psum);
+            _mm256_store_si256((__m256i *)sumAvx, &pSum);
             sum += (sumAvx[0] + sumAvx[1] + sumAvx[2] + sumAvx[3] + sumAvx[4] + sumAvx[5] + sumAvx[6] + sumAvx[7]);
 #endif
             tensorSumArr[batchCount] = (Rpp64s)sum;
@@ -735,9 +735,9 @@ RppStatus tensor_sum_i8_i64_host(Rpp8s *srcPtr,
                 srcPtrRowB += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store8_i32_to_i32_avx, sumAvxR, &psumR);
-            rpp_simd_store(rpp_store8_i32_to_i32_avx, sumAvxG, &psumG);
-            rpp_simd_store(rpp_store8_i32_to_i32_avx, sumAvxB, &psumB);
+            _mm256_store_si256((__m256i *)sumAvxR, &pSumR);
+            _mm256_store_si256((__m256i *)sumAvxG, &pSumG);
+            _mm256_store_si256((__m256i *)sumAvxB, &pSumB);
             sumR += (sumAvxR[0] + sumAvxR[1] + sumAvxR[2] + sumAvxR[3] + sumAvxR[4] + sumAvxR[5] + sumAvxR[6] + sumAvxR[7]);
             sumG += (sumAvxG[0] + sumAvxG[1] + sumAvxG[2] + sumAvxG[3] + sumAvxG[4] + sumAvxG[5] + sumAvxG[6] + sumAvxG[7]);
             sumB += (sumAvxB[0] + sumAvxB[1] + sumAvxB[2] + sumAvxB[3] + sumAvxB[4] + sumAvxB[5] + sumAvxB[6] + sumAvxB[7]);
@@ -791,9 +791,9 @@ RppStatus tensor_sum_i8_i64_host(Rpp8s *srcPtr,
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store8_i32_to_i32_avx, sumAvxR, &psumR);
-            rpp_simd_store(rpp_store8_i32_to_i32_avx, sumAvxG, &psumG);
-            rpp_simd_store(rpp_store8_i32_to_i32_avx, sumAvxB, &psumB);
+            _mm256_store_si256((__m256i *)sumAvxR, &pSumR);
+            _mm256_store_si256((__m256i *)sumAvxG, &pSumG);
+            _mm256_store_si256((__m256i *)sumAvxB, &pSumB);
             sumR += (sumAvxR[0] + sumAvxR[1] + sumAvxR[2] + sumAvxR[3] + sumAvxR[4] + sumAvxR[5] + sumAvxR[6] + sumAvxR[7]);
             sumG += (sumAvxG[0] + sumAvxG[1] + sumAvxG[2] + sumAvxG[3] + sumAvxG[4] + sumAvxG[5] + sumAvxG[6] + sumAvxG[7]);
             sumB += (sumAvxB[0] + sumAvxB[1] + sumAvxB[2] + sumAvxB[3] + sumAvxB[4] + sumAvxB[5] + sumAvxB[6] + sumAvxB[7]);

@@ -561,21 +561,6 @@ inline void rpp_store4_f32_to_f32(Rpp32f *dstPtr, __m128 *p)
     _mm_storeu_ps(dstPtr, p[0]);
 }
 
-inline void rpp_store8_u32_to_u32_avx(Rpp32u *dstPtr, __m256i *p)
-{
-    _mm256_store_si256((__m256i *)dstPtr, p[0]);
-}
-
-inline void rpp_store8_i32_to_i32_avx(Rpp32s *dstPtr, __m256i *p)
-{
-    _mm256_store_si256((__m256i *)dstPtr, p[0]);
-}
-
-inline void rpp_store4_f64_to_f64_avx(Rpp64f *dstPtr, __m256d *p)
-{
-    _mm256_storeu_pd(dstPtr, p[0]);
-}
-
 inline void rpp_load48_i8pkd3_to_f32pln3(Rpp8s *srcPtr, __m128 *p)
 {
     __m128i px[4];

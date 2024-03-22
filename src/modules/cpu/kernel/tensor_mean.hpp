@@ -69,7 +69,7 @@ RppStatus tensor_mean_u8_f32_host(Rpp8u *srcPtr,
             Rpp8u *srcPtrRow;
             srcPtrRow = srcPtrChannel;
 #if __AVX2__
-            __m256i psum = _mm256_setzero_si256();
+            __m256i pSum = _mm256_setzero_si256();
 #endif
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
@@ -82,7 +82,7 @@ RppStatus tensor_mean_u8_f32_host(Rpp8u *srcPtr,
                 {
                     __m256i p1[2];
                     rpp_simd_load(rpp_load16_u8_to_u32_avx, srcPtrTemp, p1);
-                    compute_sum_16_host(p1, &psum);
+                    compute_sum_16_host(p1, &pSum);
 
                     srcPtrTemp += vectorIncrementPerChannel;
                 }
@@ -94,7 +94,7 @@ RppStatus tensor_mean_u8_f32_host(Rpp8u *srcPtr,
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store8_u32_to_u32_avx, sumAvx, &psum);
+            _mm256_store_si256((__m256i *)sumAvx, &pSum);
             sum += (sumAvx[0] + sumAvx[1] + sumAvx[2] + sumAvx[3] + sumAvx[4] + sumAvx[5] + sumAvx[6] + sumAvx[7]);
 #endif
             mean = (Rpp32f)sum / totalPixelsPerChannel;
@@ -116,9 +116,9 @@ RppStatus tensor_mean_u8_f32_host(Rpp8u *srcPtr,
             srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
             srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
 #if __AVX2__
-            __m256i psumR = _mm256_setzero_si256();
-            __m256i psumG = _mm256_setzero_si256();
-            __m256i psumB = _mm256_setzero_si256();
+            __m256i pSumR = _mm256_setzero_si256();
+            __m256i pSumG = _mm256_setzero_si256();
+            __m256i pSumB = _mm256_setzero_si256();
 #endif
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
@@ -133,7 +133,7 @@ RppStatus tensor_mean_u8_f32_host(Rpp8u *srcPtr,
                 {
                     __m256i p[6];
                     rpp_simd_load(rpp_load48_u8pln3_to_u32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);
-                    compute_sum_48_host(p, &psumR, &psumG, &psumB);
+                    compute_sum_48_host(p, &pSumR, &pSumG, &pSumB);
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
                     srcPtrTempB += vectorIncrementPerChannel;
@@ -150,9 +150,9 @@ RppStatus tensor_mean_u8_f32_host(Rpp8u *srcPtr,
                 srcPtrRowB += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store8_u32_to_u32_avx, sumAvxR, &psumR);
-            rpp_simd_store(rpp_store8_u32_to_u32_avx, sumAvxG, &psumG);
-            rpp_simd_store(rpp_store8_u32_to_u32_avx, sumAvxB, &psumB);
+            _mm256_store_si256((__m256i *)sumAvxR, &pSumR);
+            _mm256_store_si256((__m256i *)sumAvxG, &pSumG);
+            _mm256_store_si256((__m256i *)sumAvxB, &pSumB);
             sumR += (sumAvxR[0] + sumAvxR[1] + sumAvxR[2] + sumAvxR[3] + sumAvxR[4] + sumAvxR[5] + sumAvxR[6] + sumAvxR[7]);
             sumG += (sumAvxG[0] + sumAvxG[1] + sumAvxG[2] + sumAvxG[3] + sumAvxG[4] + sumAvxG[5] + sumAvxG[6] + sumAvxG[7]);
             sumB += (sumAvxB[0] + sumAvxB[1] + sumAvxB[2] + sumAvxB[3] + sumAvxB[4] + sumAvxB[5] + sumAvxB[6] + sumAvxB[7]);
@@ -181,9 +181,9 @@ RppStatus tensor_mean_u8_f32_host(Rpp8u *srcPtr,
             Rpp8u *srcPtrRow;
             srcPtrRow = srcPtrChannel;
 #if __AVX2__
-            __m256i psumR = _mm256_setzero_si256();
-            __m256i psumG = _mm256_setzero_si256();
-            __m256i psumB = _mm256_setzero_si256();
+            __m256i pSumR = _mm256_setzero_si256();
+            __m256i pSumG = _mm256_setzero_si256();
+            __m256i pSumB = _mm256_setzero_si256();
 #endif
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
@@ -196,7 +196,7 @@ RppStatus tensor_mean_u8_f32_host(Rpp8u *srcPtr,
                 {
                     __m256i p[6];
                     rpp_simd_load(rpp_load48_u8pkd3_to_u32pln3_avx, srcPtrTemp, p);
-                    compute_sum_48_host(p, &psumR, &psumG, &psumB);
+                    compute_sum_48_host(p, &pSumR, &pSumG, &pSumB);
                     srcPtrTemp += vectorIncrement;
                 }
 #endif
@@ -210,9 +210,9 @@ RppStatus tensor_mean_u8_f32_host(Rpp8u *srcPtr,
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store8_u32_to_u32_avx, sumAvxR, &psumR);
-            rpp_simd_store(rpp_store8_u32_to_u32_avx, sumAvxG, &psumG);
-            rpp_simd_store(rpp_store8_u32_to_u32_avx, sumAvxB, &psumB);
+            _mm256_store_si256((__m256i *)sumAvxR, &pSumR);
+            _mm256_store_si256((__m256i *)sumAvxG, &pSumG);
+            _mm256_store_si256((__m256i *)sumAvxB, &pSumB);
             sumR += (sumAvxR[0] + sumAvxR[1] + sumAvxR[2] + sumAvxR[3] + sumAvxR[4] + sumAvxR[5] + sumAvxR[6] + sumAvxR[7]);
             sumG += (sumAvxG[0] + sumAvxG[1] + sumAvxG[2] + sumAvxG[3] + sumAvxG[4] + sumAvxG[5] + sumAvxG[6] + sumAvxG[7]);
             sumB += (sumAvxB[0] + sumAvxB[1] + sumAvxB[2] + sumAvxB[3] + sumAvxB[4] + sumAvxB[5] + sumAvxB[6] + sumAvxB[7]);
@@ -275,7 +275,7 @@ RppStatus tensor_mean_f32_f32_host(Rpp32f *srcPtr,
             Rpp32f *srcPtrRow;
             srcPtrRow = srcPtrChannel;
 #if __AVX2__
-            __m256d psum = _mm256_setzero_pd();
+            __m256d pSum = _mm256_setzero_pd();
 #endif
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
@@ -288,7 +288,7 @@ RppStatus tensor_mean_f32_f32_host(Rpp32f *srcPtr,
                 {
                     __m256d p1[2];
                     rpp_simd_load(rpp_load8_f32_to_f64_avx, srcPtrTemp, p1);
-                    compute_sum_8_host(p1, &psum);
+                    compute_sum_8_host(p1, &pSum);
 
                     srcPtrTemp += vectorIncrement;
                 }
@@ -300,7 +300,7 @@ RppStatus tensor_mean_f32_f32_host(Rpp32f *srcPtr,
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvx, &psum);
+            _mm256_storeu_pd(sumAvx, &pSum);
             sum += (sumAvx[0] + sumAvx[1] + sumAvx[2] + sumAvx[3]);
 #endif
             mean = (Rpp32f)(sum / totalPixelsPerChannel);
@@ -321,9 +321,9 @@ RppStatus tensor_mean_f32_f32_host(Rpp32f *srcPtr,
             srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
             srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
 #if __AVX2__
-            __m256d psumR = _mm256_setzero_pd();
-            __m256d psumG = _mm256_setzero_pd();
-            __m256d psumB = _mm256_setzero_pd();
+            __m256d pSumR = _mm256_setzero_pd();
+            __m256d pSumG = _mm256_setzero_pd();
+            __m256d pSumB = _mm256_setzero_pd();
 #endif
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
@@ -338,7 +338,7 @@ RppStatus tensor_mean_f32_f32_host(Rpp32f *srcPtr,
                 {
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_f32pln3_to_f64pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);
-                    compute_sum_24_host(p, &psumR, &psumG, &psumB);
+                    compute_sum_24_host(p, &pSumR, &pSumG, &pSumB);
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
                     srcPtrTempB += vectorIncrementPerChannel;
@@ -355,9 +355,9 @@ RppStatus tensor_mean_f32_f32_host(Rpp32f *srcPtr,
                 srcPtrRowB += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxR, &psumR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxG, &psumG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxB, &psumB);
+            _mm256_storeu_pd(sumAvxR, &pSumR);
+            _mm256_storeu_pd(sumAvxG, &pSumG);
+            _mm256_storeu_pd(sumAvxB, &pSumB);
             sumR += (sumAvxR[0] + sumAvxR[1] + sumAvxR[2] + sumAvxR[3]);
             sumG += (sumAvxG[0] + sumAvxG[1] + sumAvxG[2] + sumAvxG[3]);
             sumB += (sumAvxB[0] + sumAvxB[1] + sumAvxB[2] + sumAvxB[3]);
@@ -386,9 +386,9 @@ RppStatus tensor_mean_f32_f32_host(Rpp32f *srcPtr,
             Rpp32f *srcPtrRow;
             srcPtrRow = srcPtrChannel;
 #if __AVX2__
-            __m256d psumR = _mm256_setzero_pd();
-            __m256d psumG = _mm256_setzero_pd();
-            __m256d psumB = _mm256_setzero_pd();
+            __m256d pSumR = _mm256_setzero_pd();
+            __m256d pSumG = _mm256_setzero_pd();
+            __m256d pSumB = _mm256_setzero_pd();
 #endif
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
@@ -401,7 +401,7 @@ RppStatus tensor_mean_f32_f32_host(Rpp32f *srcPtr,
                 {
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_f32pkd3_to_f64pln3_avx, srcPtrTemp, p);
-                    compute_sum_24_host(p, &psumR, &psumG, &psumB);
+                    compute_sum_24_host(p, &pSumR, &pSumG, &pSumB);
 
                     srcPtrTemp += vectorIncrement;
                 }
@@ -416,9 +416,9 @@ RppStatus tensor_mean_f32_f32_host(Rpp32f *srcPtr,
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxR, &psumR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxG, &psumG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxB, &psumB);
+            _mm256_storeu_pd(sumAvxR, &pSumR);
+            _mm256_storeu_pd(sumAvxG, &pSumG);
+            _mm256_storeu_pd(sumAvxB, &pSumB);
             sumR += (sumAvxR[0] + sumAvxR[1] + sumAvxR[2] + sumAvxR[3]);
             sumG += (sumAvxG[0] + sumAvxG[1] + sumAvxG[2] + sumAvxG[3]);
             sumB += (sumAvxB[0] + sumAvxB[1] + sumAvxB[2] + sumAvxB[3]);
@@ -481,7 +481,7 @@ RppStatus tensor_mean_f16_f32_host(Rpp16f *srcPtr,
             Rpp16f *srcPtrRow;
             srcPtrRow = srcPtrChannel;
 #if __AVX2__
-            __m256d psum = _mm256_setzero_pd();
+            __m256d pSum = _mm256_setzero_pd();
 #endif
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
@@ -497,7 +497,7 @@ RppStatus tensor_mean_f16_f32_host(Rpp16f *srcPtr,
                         srcPtrTemp_ps[cnt] = (Rpp32f) srcPtrTemp[cnt];
                     __m256d p1[2];
                     rpp_simd_load(rpp_load8_f32_to_f64_avx, srcPtrTemp_ps, p1);
-                    compute_sum_8_host(p1, &psum);
+                    compute_sum_8_host(p1, &pSum);
                     srcPtrTemp += vectorIncrement;
                 }
 #endif
@@ -508,7 +508,7 @@ RppStatus tensor_mean_f16_f32_host(Rpp16f *srcPtr,
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvx, &psum);
+            _mm256_storeu_pd(sumAvx, &pSum);
             sum += (sumAvx[0] + sumAvx[1] + sumAvx[2] + sumAvx[3]);
 #endif
 
@@ -530,9 +530,9 @@ RppStatus tensor_mean_f16_f32_host(Rpp16f *srcPtr,
             srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
             srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
 #if __AVX2__
-            __m256d psumR = _mm256_setzero_pd();
-            __m256d psumG = _mm256_setzero_pd();
-            __m256d psumB = _mm256_setzero_pd();
+            __m256d pSumR = _mm256_setzero_pd();
+            __m256d pSumG = _mm256_setzero_pd();
+            __m256d pSumB = _mm256_setzero_pd();
 #endif
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
@@ -554,7 +554,7 @@ RppStatus tensor_mean_f16_f32_host(Rpp16f *srcPtr,
                     }
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_f32pln3_to_f64pln3_avx, srcPtrTempR_ps, srcPtrTempG_ps, srcPtrTempB_ps, p);
-                    compute_sum_24_host(p, &psumR, &psumG, &psumB);
+                    compute_sum_24_host(p, &pSumR, &pSumG, &pSumB);
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
                     srcPtrTempB += vectorIncrementPerChannel;
@@ -571,9 +571,9 @@ RppStatus tensor_mean_f16_f32_host(Rpp16f *srcPtr,
                 srcPtrRowB += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxR, &psumR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxG, &psumG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxB, &psumB);
+            _mm256_storeu_pd(sumAvxR, &pSumR);
+            _mm256_storeu_pd(sumAvxG, &pSumG);
+            _mm256_storeu_pd(sumAvxB, &pSumB);
             sumR += (sumAvxR[0] + sumAvxR[1] + sumAvxR[2] + sumAvxR[3]);
             sumG += (sumAvxG[0] + sumAvxG[1] + sumAvxG[2] + sumAvxG[3]);
             sumB += (sumAvxB[0] + sumAvxB[1] + sumAvxB[2] + sumAvxB[3]);
@@ -601,9 +601,9 @@ RppStatus tensor_mean_f16_f32_host(Rpp16f *srcPtr,
             Rpp16f *srcPtrRow;
             srcPtrRow = srcPtrChannel;
 #if __AVX2__
-            __m256d psumR = _mm256_setzero_pd();
-            __m256d psumG = _mm256_setzero_pd();
-            __m256d psumB = _mm256_setzero_pd();
+            __m256d pSumR = _mm256_setzero_pd();
+            __m256d pSumG = _mm256_setzero_pd();
+            __m256d pSumB = _mm256_setzero_pd();
 #endif
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
@@ -619,7 +619,7 @@ RppStatus tensor_mean_f16_f32_host(Rpp16f *srcPtr,
                         srcPtrTemp_ps[cnt] = (Rpp32f) srcPtrTemp[cnt];
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_f32pkd3_to_f64pln3_avx, srcPtrTemp_ps, p);
-                    compute_sum_24_host(p, &psumR, &psumG, &psumB);
+                    compute_sum_24_host(p, &pSumR, &pSumG, &pSumB);
                     srcPtrTemp += vectorIncrement;
                 }
 #endif
@@ -633,9 +633,9 @@ RppStatus tensor_mean_f16_f32_host(Rpp16f *srcPtr,
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxR, &psumR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxG, &psumG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, sumAvxB, &psumB);
+            _mm256_storeu_pd(sumAvxR, &pSumR);
+            _mm256_storeu_pd(sumAvxG, &pSumG);
+            _mm256_storeu_pd(sumAvxB, &pSumB);
             sumR += (sumAvxR[0] + sumAvxR[1] + sumAvxR[2] + sumAvxR[3]);
             sumG += (sumAvxG[0] + sumAvxG[1] + sumAvxG[2] + sumAvxG[3]);
             sumB += (sumAvxB[0] + sumAvxB[1] + sumAvxB[2] + sumAvxB[3]);
@@ -698,7 +698,7 @@ RppStatus tensor_mean_i8_f32_host(Rpp8s *srcPtr,
             Rpp8s *srcPtrRow;
             srcPtrRow = srcPtrChannel;
 #if __AVX2__
-            __m256i psum = _mm256_setzero_si256();
+            __m256i pSum = _mm256_setzero_si256();
 #endif
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
@@ -711,7 +711,7 @@ RppStatus tensor_mean_i8_f32_host(Rpp8s *srcPtr,
                 {
                     __m256i p1[2];
                     rpp_simd_load(rpp_load16_i8_to_i32_avx, srcPtrTemp, p1);
-                    compute_sum_16_host(p1, &psum);
+                    compute_sum_16_host(p1, &pSum);
                     srcPtrTemp += vectorIncrement;
                 }
 #endif
@@ -722,7 +722,7 @@ RppStatus tensor_mean_i8_f32_host(Rpp8s *srcPtr,
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store8_i32_to_i32_avx, sumAvx, &psum);
+            _mm256_store_si256((__m256i *)sumAvx, &pSum);
             sum += (sumAvx[0] + sumAvx[1] + sumAvx[2] + sumAvx[3] + sumAvx[4] + sumAvx[5] + sumAvx[6] + sumAvx[7]);
 #endif
             mean = (Rpp32f)sum  / totalPixelsPerChannel;
@@ -744,9 +744,9 @@ RppStatus tensor_mean_i8_f32_host(Rpp8s *srcPtr,
             srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
             srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
 #if __AVX2__
-            __m256i psumR = _mm256_setzero_si256();
-            __m256i psumG = _mm256_setzero_si256();
-            __m256i psumB = _mm256_setzero_si256();
+            __m256i pSumR = _mm256_setzero_si256();
+            __m256i pSumG = _mm256_setzero_si256();
+            __m256i pSumB = _mm256_setzero_si256();
 #endif
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
@@ -761,7 +761,7 @@ RppStatus tensor_mean_i8_f32_host(Rpp8s *srcPtr,
                 {
                     __m256i p[6];
                     rpp_simd_load(rpp_load48_i8pln3_to_i32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);
-                    compute_sum_48_host(p, &psumR, &psumG, &psumB);
+                    compute_sum_48_host(p, &pSumR, &pSumG, &pSumB);
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
                     srcPtrTempB += vectorIncrementPerChannel;
@@ -778,9 +778,9 @@ RppStatus tensor_mean_i8_f32_host(Rpp8s *srcPtr,
                 srcPtrRowB += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store8_i32_to_i32_avx, sumAvxR, &psumR);
-            rpp_simd_store(rpp_store8_i32_to_i32_avx, sumAvxG, &psumG);
-            rpp_simd_store(rpp_store8_i32_to_i32_avx, sumAvxB, &psumB);
+            _mm256_store_si256((__m256i *)sumAvxR, &pSumR);
+            _mm256_store_si256((__m256i *)sumAvxG, &pSumG);
+            _mm256_store_si256((__m256i *)sumAvxB, &pSumB);
             sumR += (sumAvxR[0] + sumAvxR[1] + sumAvxR[2] + sumAvxR[3] + sumAvxR[4] + sumAvxR[5] + sumAvxR[6] + sumAvxR[7]);
             sumG += (sumAvxG[0] + sumAvxG[1] + sumAvxG[2] + sumAvxG[3] + sumAvxG[4] + sumAvxG[5] + sumAvxG[6] + sumAvxG[7]);
             sumB += (sumAvxB[0] + sumAvxB[1] + sumAvxB[2] + sumAvxB[3] + sumAvxB[4] + sumAvxB[5] + sumAvxB[6] + sumAvxB[7]);
@@ -810,9 +810,9 @@ RppStatus tensor_mean_i8_f32_host(Rpp8s *srcPtr,
             Rpp8s *srcPtrRow;
             srcPtrRow = srcPtrChannel;
 #if __AVX2__
-            __m256i psumR = _mm256_setzero_si256();
-            __m256i psumG = _mm256_setzero_si256();
-            __m256i psumB = _mm256_setzero_si256();
+            __m256i pSumR = _mm256_setzero_si256();
+            __m256i pSumG = _mm256_setzero_si256();
+            __m256i pSumB = _mm256_setzero_si256();
 #endif
             for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
@@ -825,7 +825,7 @@ RppStatus tensor_mean_i8_f32_host(Rpp8s *srcPtr,
                 {
                     __m256i p[6];
                     rpp_simd_load(rpp_load48_i8pkd3_to_i32pln3_avx, srcPtrTemp, p);
-                    compute_sum_48_host(p, &psumR, &psumG, &psumB);
+                    compute_sum_48_host(p, &pSumR, &pSumG, &pSumB);
                     srcPtrTemp += vectorIncrement;
                 }
 #endif
@@ -839,9 +839,9 @@ RppStatus tensor_mean_i8_f32_host(Rpp8s *srcPtr,
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store8_i32_to_i32_avx, sumAvxR, &psumR);
-            rpp_simd_store(rpp_store8_i32_to_i32_avx, sumAvxG, &psumG);
-            rpp_simd_store(rpp_store8_i32_to_i32_avx, sumAvxB, &psumB);
+            _mm256_store_si256((__m256i *)sumAvxR, &pSumR);
+            _mm256_store_si256((__m256i *)sumAvxG, &pSumG);
+            _mm256_store_si256((__m256i *)sumAvxB, &pSumB);
             sumR += (sumAvxR[0] + sumAvxR[1] + sumAvxR[2] + sumAvxR[3] + sumAvxR[4] + sumAvxR[5] + sumAvxR[6] + sumAvxR[7]);
             sumG += (sumAvxG[0] + sumAvxG[1] + sumAvxG[2] + sumAvxG[3] + sumAvxG[4] + sumAvxG[5] + sumAvxG[6] + sumAvxG[7]);
             sumB += (sumAvxB[0] + sumAvxB[1] + sumAvxB[2] + sumAvxB[3] + sumAvxB[4] + sumAvxB[5] + sumAvxB[6] + sumAvxB[7]);

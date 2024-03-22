@@ -98,7 +98,7 @@ RppStatus tensor_stddev_u8_f32_host(Rpp8u *srcPtr,
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvx, &pVar);
+            _mm256_storeu_pd(varAvx, &pVar);
             var += (varAvx[0] + varAvx[1] + varAvx[2] + varAvx[3]);
 #endif
             stddev = sqrt(var / totalPixelsPerChannel);
@@ -176,12 +176,12 @@ RppStatus tensor_stddev_u8_f32_host(Rpp8u *srcPtr,
                 srcPtrRowB += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxR, &pVarR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxG, &pVarG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxB, &pVarB);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageR, &pVarImageR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageG, &pVarImageG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageB, &pVarImageB);
+            _mm256_storeu_pd(varAvxR, &pVarR);
+            _mm256_storeu_pd(varAvxG, &pVarG);
+            _mm256_storeu_pd(varAvxB, &pVarB);
+            _mm256_storeu_pd(varAvxImageR, &pVarImageR);
+            _mm256_storeu_pd(varAvxImageG, &pVarImageG);
+            _mm256_storeu_pd(varAvxImageB, &pVarImageB);
 
             varR += (varAvxR[0] + varAvxR[1] + varAvxR[2] + varAvxR[3]);
             varG += (varAvxG[0] + varAvxG[1] + varAvxG[2] + varAvxG[3]);
@@ -262,12 +262,12 @@ RppStatus tensor_stddev_u8_f32_host(Rpp8u *srcPtr,
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxR, &pVarR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxG, &pVarG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxB, &pVarB);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageR, &pVarImageR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageG, &pVarImageG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageB, &pVarImageB);
+            _mm256_storeu_pd(varAvxR, &pVarR);
+            _mm256_storeu_pd(varAvxG, &pVarG);
+            _mm256_storeu_pd(varAvxB, &pVarB);
+            _mm256_storeu_pd(varAvxImageR, &pVarImageR);
+            _mm256_storeu_pd(varAvxImageG, &pVarImageG);
+            _mm256_storeu_pd(varAvxImageB, &pVarImageB);
 
             varR += (varAvxR[0] + varAvxR[1] + varAvxR[2] + varAvxR[3]);
             varG += (varAvxG[0] + varAvxG[1] + varAvxG[2] + varAvxG[3]);
@@ -361,7 +361,7 @@ RppStatus tensor_stddev_f32_f32_host(Rpp32f *srcPtr,
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvx, &pVar);
+            _mm256_storeu_pd(varAvx, &pVar);
             var += (varAvx[0] + varAvx[1] + varAvx[2] + varAvx[3]);
 #endif
             stddev = sqrt(var / totalPixelsPerChannel) * 255;
@@ -439,12 +439,12 @@ RppStatus tensor_stddev_f32_f32_host(Rpp32f *srcPtr,
                 srcPtrRowB += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxR, &pVarR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxG, &pVarG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxB, &pVarB);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageR, &pVarImageR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageG, &pVarImageG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageB, &pVarImageB);
+            _mm256_storeu_pd(varAvxR, &pVarR);
+            _mm256_storeu_pd(varAvxG, &pVarG);
+            _mm256_storeu_pd(varAvxB, &pVarB);
+            _mm256_storeu_pd(varAvxImageR, &pVarImageR);
+            _mm256_storeu_pd(varAvxImageG, &pVarImageG);
+            _mm256_storeu_pd(varAvxImageB, &pVarImageB);
 
             varR += (varAvxR[0] + varAvxR[1] + varAvxR[2] + varAvxR[3]);
             varG += (varAvxG[0] + varAvxG[1] + varAvxG[2] + varAvxG[3]);
@@ -525,12 +525,12 @@ RppStatus tensor_stddev_f32_f32_host(Rpp32f *srcPtr,
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxR, &pVarR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxG, &pVarG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxB, &pVarB);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageR, &pVarImageR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageG, &pVarImageG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageB, &pVarImageB);
+            _mm256_storeu_pd(varAvxR, &pVarR);
+            _mm256_storeu_pd(varAvxG, &pVarG);
+            _mm256_storeu_pd(varAvxB, &pVarB);
+            _mm256_storeu_pd(varAvxImageR, &pVarImageR);
+            _mm256_storeu_pd(varAvxImageG, &pVarImageG);
+            _mm256_storeu_pd(varAvxImageB, &pVarImageB);
 
             varR += (varAvxR[0] + varAvxR[1] + varAvxR[2] + varAvxR[3]);
             varG += (varAvxG[0] + varAvxG[1] + varAvxG[2] + varAvxG[3]);
@@ -629,7 +629,7 @@ RppStatus tensor_stddev_f16_f32_host(Rpp16f *srcPtr,
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvx, &pVar);
+            _mm256_storeu_pd(varAvx, &pVar);
             var += (varAvx[0] + varAvx[1] + varAvx[2] + varAvx[3]);
 #endif
             stddev = sqrt(var / totalPixelsPerChannel) * 255;
@@ -715,12 +715,12 @@ RppStatus tensor_stddev_f16_f32_host(Rpp16f *srcPtr,
                 srcPtrRowB += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxR, &pVarR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxG, &pVarG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxB, &pVarB);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageR, &pVarImageR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageG, &pVarImageG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageB, &pVarImageB);
+            _mm256_storeu_pd(varAvxR, &pVarR);
+            _mm256_storeu_pd(varAvxG, &pVarG);
+            _mm256_storeu_pd(varAvxB, &pVarB);
+            _mm256_storeu_pd(varAvxImageR, &pVarImageR);
+            _mm256_storeu_pd(varAvxImageG, &pVarImageG);
+            _mm256_storeu_pd(varAvxImageB, &pVarImageB);
 
             varR += (varAvxR[0] + varAvxR[1] + varAvxR[2] + varAvxR[3]);
             varG += (varAvxG[0] + varAvxG[1] + varAvxG[2] + varAvxG[3]);
@@ -806,12 +806,12 @@ RppStatus tensor_stddev_f16_f32_host(Rpp16f *srcPtr,
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxR, &pVarR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxG, &pVarG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxB, &pVarB);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageR, &pVarImageR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageG, &pVarImageG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageB, &pVarImageB);
+            _mm256_storeu_pd(varAvxR, &pVarR);
+            _mm256_storeu_pd(varAvxG, &pVarG);
+            _mm256_storeu_pd(varAvxB, &pVarB);
+            _mm256_storeu_pd(varAvxImageR, &pVarImageR);
+            _mm256_storeu_pd(varAvxImageG, &pVarImageG);
+            _mm256_storeu_pd(varAvxImageB, &pVarImageB);
 
             varR += (varAvxR[0] + varAvxR[1] + varAvxR[2] + varAvxR[3]);
             varG += (varAvxG[0] + varAvxG[1] + varAvxG[2] + varAvxG[3]);
@@ -906,7 +906,7 @@ RppStatus tensor_stddev_i8_f32_host(Rpp8s *srcPtr,
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvx, &pVar);
+            _mm256_storeu_pd(varAvx, &pVar);
             var += (varAvx[0] + varAvx[1] + varAvx[2] + varAvx[3]);
 #endif
             stddev = sqrt(var / totalPixelsPerChannel);
@@ -984,12 +984,12 @@ RppStatus tensor_stddev_i8_f32_host(Rpp8s *srcPtr,
                 srcPtrRowB += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxR, &pVarR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxG, &pVarG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxB, &pVarB);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageR, &pVarImageR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageG, &pVarImageG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageB, &pVarImageB);
+            _mm256_storeu_pd(varAvxR, &pVarR);
+            _mm256_storeu_pd(varAvxG, &pVarG);
+            _mm256_storeu_pd(varAvxB, &pVarB);
+            _mm256_storeu_pd(varAvxImageR, &pVarImageR);
+            _mm256_storeu_pd(varAvxImageG, &pVarImageG);
+            _mm256_storeu_pd(varAvxImageB, &pVarImageB);
 
             varR += (varAvxR[0] + varAvxR[1] + varAvxR[2] + varAvxR[3]);
             varG += (varAvxG[0] + varAvxG[1] + varAvxG[2] + varAvxG[3]);
@@ -1070,12 +1070,12 @@ RppStatus tensor_stddev_i8_f32_host(Rpp8s *srcPtr,
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxR, &pVarR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxG, &pVarG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxB, &pVarB);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageR, &pVarImageR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageG, &pVarImageG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageB, &pVarImageB);
+            _mm256_storeu_pd(varAvxR, &pVarR);
+            _mm256_storeu_pd(varAvxG, &pVarG);
+            _mm256_storeu_pd(varAvxB, &pVarB);
+            _mm256_storeu_pd(varAvxImageR, &pVarImageR);
+            _mm256_storeu_pd(varAvxImageG, &pVarImageG);
+            _mm256_storeu_pd(varAvxImageB, &pVarImageB);
 
             varR += (varAvxR[0] + varAvxR[1] + varAvxR[2] + varAvxR[3]);
             varG += (varAvxG[0] + varAvxG[1] + varAvxG[2] + varAvxG[3]);
@@ -1171,7 +1171,7 @@ RppStatus custom_stddev_u8_f32_host(Rpp8u *srcPtr,
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvx, &pVar);
+            _mm256_storeu_pd(varAvx, &pVar);
             var += (varAvx[0] + varAvx[1] + varAvx[2] + varAvx[3]);
 #endif
             stddev = sqrt(var / totalPixelsPerChannel);
@@ -1239,9 +1239,9 @@ RppStatus custom_stddev_u8_f32_host(Rpp8u *srcPtr,
                 srcPtrRowB += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxR, &pVarR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxG, &pVarG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxB, &pVarB);
+            _mm256_storeu_pd(varAvxR, &pVarR);
+            _mm256_storeu_pd(varAvxG, &pVarG);
+            _mm256_storeu_pd(varAvxB, &pVarB);
 
             varR += (varAvxR[0] + varAvxR[1] + varAvxR[2] + varAvxR[3]);
             varG += (varAvxG[0] + varAvxG[1] + varAvxG[2] + varAvxG[3]);
@@ -1314,9 +1314,9 @@ RppStatus custom_stddev_u8_f32_host(Rpp8u *srcPtr,
                 srcPtrRowB += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageR, &pVarImageR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageG, &pVarImageG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageB, &pVarImageB);
+            _mm256_storeu_pd(varAvxImageR, &pVarImageR);
+            _mm256_storeu_pd(varAvxImageG, &pVarImageG);
+            _mm256_storeu_pd(varAvxImageB, &pVarImageB);
 
             varImageR += (varAvxImageR[0] + varAvxImageR[1] + varAvxImageR[2] + varAvxImageR[3]);
             varImageG += (varAvxImageG[0] + varAvxImageG[1] + varAvxImageG[2] + varAvxImageG[3]);
@@ -1378,9 +1378,9 @@ RppStatus custom_stddev_u8_f32_host(Rpp8u *srcPtr,
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxR, &pVarR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxG, &pVarG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxB, &pVarB);
+            _mm256_storeu_pd(varAvxR, &pVarR);
+            _mm256_storeu_pd(varAvxG, &pVarG);
+            _mm256_storeu_pd(varAvxB, &pVarB);
 
             varR += (varAvxR[0] + varAvxR[1] + varAvxR[2] + varAvxR[3]);
             varG += (varAvxG[0] + varAvxG[1] + varAvxG[2] + varAvxG[3]);
@@ -1440,9 +1440,9 @@ RppStatus custom_stddev_u8_f32_host(Rpp8u *srcPtr,
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageR, &pVarImageR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageG, &pVarImageG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageB, &pVarImageB);
+            _mm256_storeu_pd(varAvxImageR, &pVarImageR);
+            _mm256_storeu_pd(varAvxImageG, &pVarImageG);
+            _mm256_storeu_pd(varAvxImageB, &pVarImageB);
 
             varImageR += (varAvxImageR[0] + varAvxImageR[1] + varAvxImageR[2] + varAvxImageR[3]);
             varImageG += (varAvxImageG[0] + varAvxImageG[1] + varAvxImageG[2] + varAvxImageG[3]);
@@ -1528,7 +1528,7 @@ RppStatus custom_stddev_f32_f32_host(Rpp32f *srcPtr,
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvx, &pVar);
+            _mm256_storeu_pd(varAvx, &pVar);
             var += (varAvx[0] + varAvx[1] + varAvx[2] + varAvx[3]);
 #endif
             stddev = sqrt(var / totalPixelsPerChannel) * 255;
@@ -1596,9 +1596,9 @@ RppStatus custom_stddev_f32_f32_host(Rpp32f *srcPtr,
                 srcPtrRowB += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxR, &pVarR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxG, &pVarG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxB, &pVarB);
+            _mm256_storeu_pd(varAvxR, &pVarR);
+            _mm256_storeu_pd(varAvxG, &pVarG);
+            _mm256_storeu_pd(varAvxB, &pVarB);
 
             varR += (varAvxR[0] + varAvxR[1] + varAvxR[2] + varAvxR[3]);
             varG += (varAvxG[0] + varAvxG[1] + varAvxG[2] + varAvxG[3]);
@@ -1669,9 +1669,9 @@ RppStatus custom_stddev_f32_f32_host(Rpp32f *srcPtr,
                 srcPtrRowB += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageR, &pVarImageR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageG, &pVarImageG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageB, &pVarImageB);
+            _mm256_storeu_pd(varAvxImageR, &pVarImageR);
+            _mm256_storeu_pd(varAvxImageG, &pVarImageG);
+            _mm256_storeu_pd(varAvxImageB, &pVarImageB);
 
             varImageR += (varAvxImageR[0] + varAvxImageR[1] + varAvxImageR[2] + varAvxImageR[3]);
             varImageG += (varAvxImageG[0] + varAvxImageG[1] + varAvxImageG[2] + varAvxImageG[3]);
@@ -1733,9 +1733,9 @@ RppStatus custom_stddev_f32_f32_host(Rpp32f *srcPtr,
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxR, &pVarR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxG, &pVarG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxB, &pVarB);
+            _mm256_storeu_pd(varAvxR, &pVarR);
+            _mm256_storeu_pd(varAvxG, &pVarG);
+            _mm256_storeu_pd(varAvxB, &pVarB);
 
             varR += (varAvxR[0] + varAvxR[1] + varAvxR[2] + varAvxR[3]);
             varG += (varAvxG[0] + varAvxG[1] + varAvxG[2] + varAvxG[3]);
@@ -1795,9 +1795,9 @@ RppStatus custom_stddev_f32_f32_host(Rpp32f *srcPtr,
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageR, &pVarImageR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageG, &pVarImageG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageB, &pVarImageB);
+            _mm256_storeu_pd(varAvxImageR, &pVarImageR);
+            _mm256_storeu_pd(varAvxImageG, &pVarImageG);
+            _mm256_storeu_pd(varAvxImageB, &pVarImageB);
 
             varImageR += (varAvxImageR[0] + varAvxImageR[1] + varAvxImageR[2] + varAvxImageR[3]);
             varImageG += (varAvxImageG[0] + varAvxImageG[1] + varAvxImageG[2] + varAvxImageG[3]);
@@ -1888,7 +1888,7 @@ RppStatus custom_stddev_f16_f32_host(Rpp16f *srcPtr,
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvx, &pVar);
+            _mm256_storeu_pd(varAvx, &pVar);
             var += (varAvx[0] + varAvx[1] + varAvx[2] + varAvx[3]);
 #endif
             stddev = sqrt(var / totalPixelsPerChannel) * 255;
@@ -1964,9 +1964,9 @@ RppStatus custom_stddev_f16_f32_host(Rpp16f *srcPtr,
                 srcPtrRowB += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxR, &pVarR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxG, &pVarG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxB, &pVarB);
+            _mm256_storeu_pd(varAvxR, &pVarR);
+            _mm256_storeu_pd(varAvxG, &pVarG);
+            _mm256_storeu_pd(varAvxB, &pVarB);
 
             varR += (varAvxR[0] + varAvxR[1] + varAvxR[2] + varAvxR[3]);
             varG += (varAvxG[0] + varAvxG[1] + varAvxG[2] + varAvxG[3]);
@@ -2045,9 +2045,9 @@ RppStatus custom_stddev_f16_f32_host(Rpp16f *srcPtr,
                 srcPtrRowB += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageR, &pVarImageR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageG, &pVarImageG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageB, &pVarImageB);
+            _mm256_storeu_pd(varAvxImageR, &pVarImageR);
+            _mm256_storeu_pd(varAvxImageG, &pVarImageG);
+            _mm256_storeu_pd(varAvxImageB, &pVarImageB);
 
             varImageR += (varAvxImageR[0] + varAvxImageR[1] + varAvxImageR[2] + varAvxImageR[3]);
             varImageG += (varAvxImageG[0] + varAvxImageG[1] + varAvxImageG[2] + varAvxImageG[3]);
@@ -2114,9 +2114,9 @@ RppStatus custom_stddev_f16_f32_host(Rpp16f *srcPtr,
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxR, &pVarR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxG, &pVarG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxB, &pVarB);
+            _mm256_storeu_pd(varAvxR, &pVarR);
+            _mm256_storeu_pd(varAvxG, &pVarG);
+            _mm256_storeu_pd(varAvxB, &pVarB);
 
             varR += (varAvxR[0] + varAvxR[1] + varAvxR[2] + varAvxR[3]);
             varG += (varAvxG[0] + varAvxG[1] + varAvxG[2] + varAvxG[3]);
@@ -2181,9 +2181,9 @@ RppStatus custom_stddev_f16_f32_host(Rpp16f *srcPtr,
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageR, &pVarImageR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageG, &pVarImageG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageB, &pVarImageB);
+            _mm256_storeu_pd(varAvxImageR, &pVarImageR);
+            _mm256_storeu_pd(varAvxImageG, &pVarImageG);
+            _mm256_storeu_pd(varAvxImageB, &pVarImageB);
 
             varImageR += (varAvxImageR[0] + varAvxImageR[1] + varAvxImageR[2] + varAvxImageR[3]);
             varImageG += (varAvxImageG[0] + varAvxImageG[1] + varAvxImageG[2] + varAvxImageG[3]);
@@ -2270,7 +2270,7 @@ RppStatus custom_stddev_i8_f32_host(Rpp8s *srcPtr,
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvx, &pVar);
+            _mm256_storeu_pd(varAvx, &pVar);
             var += (varAvx[0] + varAvx[1] + varAvx[2] + varAvx[3]);
 #endif
             stddev = sqrt(var / totalPixelsPerChannel);
@@ -2338,9 +2338,9 @@ RppStatus custom_stddev_i8_f32_host(Rpp8s *srcPtr,
                 srcPtrRowB += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxR, &pVarR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxG, &pVarG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxB, &pVarB);
+            _mm256_storeu_pd(varAvxR, &pVarR);
+            _mm256_storeu_pd(varAvxG, &pVarG);
+            _mm256_storeu_pd(varAvxB, &pVarB);
 
             varR += (varAvxR[0] + varAvxR[1] + varAvxR[2] + varAvxR[3]);
             varG += (varAvxG[0] + varAvxG[1] + varAvxG[2] + varAvxG[3]);
@@ -2411,9 +2411,9 @@ RppStatus custom_stddev_i8_f32_host(Rpp8s *srcPtr,
                 srcPtrRowB += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageR, &pVarImageR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageG, &pVarImageG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageB, &pVarImageB);
+            _mm256_storeu_pd(varAvxImageR, &pVarImageR);
+            _mm256_storeu_pd(varAvxImageG, &pVarImageG);
+            _mm256_storeu_pd(varAvxImageB, &pVarImageB);
 
             varImageR += (varAvxImageR[0] + varAvxImageR[1] + varAvxImageR[2] + varAvxImageR[3]);
             varImageG += (varAvxImageG[0] + varAvxImageG[1] + varAvxImageG[2] + varAvxImageG[3]);
@@ -2475,9 +2475,9 @@ RppStatus custom_stddev_i8_f32_host(Rpp8s *srcPtr,
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxR, &pVarR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxG, &pVarG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxB, &pVarB);
+            _mm256_storeu_pd(varAvxR, &pVarR);
+            _mm256_storeu_pd(varAvxG, &pVarG);
+            _mm256_storeu_pd(varAvxB, &pVarB);
 
             varR += (varAvxR[0] + varAvxR[1] + varAvxR[2] + varAvxR[3]);
             varG += (varAvxG[0] + varAvxG[1] + varAvxG[2] + varAvxG[3]);
@@ -2537,9 +2537,9 @@ RppStatus custom_stddev_i8_f32_host(Rpp8s *srcPtr,
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageR, &pVarImageR);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageG, &pVarImageG);
-            rpp_simd_store(rpp_store4_f64_to_f64_avx, varAvxImageB, &pVarImageB);
+            _mm256_storeu_pd(varAvxImageR, &pVarImageR);
+            _mm256_storeu_pd(varAvxImageG, &pVarImageG);
+            _mm256_storeu_pd(varAvxImageB, &pVarImageB);
 
             varImageR += (varAvxImageR[0] + varAvxImageR[1] + varAvxImageR[2] + varAvxImageR[3]);
             varImageG += (varAvxImageG[0] + varAvxImageG[1] + varAvxImageG[2] + varAvxImageG[3]);
