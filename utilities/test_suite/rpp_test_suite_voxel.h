@@ -63,6 +63,7 @@ std::map<int, string> augmentationMap =
     {1, "slice"},
     {2, "add_scalar"},
     {3, "subtract_scalar"},
+    {4, "flip_voxel"},
     {5, "multiply_scalar"}
 };
 
