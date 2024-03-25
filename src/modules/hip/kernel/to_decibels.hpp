@@ -15,7 +15,6 @@ __device__ void to_decibels_hip_compute(d_float8 *src_f8, d_float8 *dst_f8, doub
     dst_f8->f1[7] = multiplier * log2(max(minRatio, (static_cast<double>(src_f8->f1[7]) * inverseMagnitude)));
 }
 
-
 // -------------------- Set 1 - to decibels kernel --------------------
 
 __global__ void to_decibels_1d_hip_tensor(float *srcPtr,
