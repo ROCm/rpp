@@ -119,9 +119,7 @@ typedef enum
     /*! \brief src and dst layout mismatch \ingroup group_rppdefs */
     RPP_ERROR_SRC_DST_LAYOUT_MISMATCH   = -18,
     /*! \brief Number of channels is invalid. (Needs to adhere to function specification.) \ingroup group_rppdefs */
-    RPP_ERROR_INVALID_CHANNELS          = -18,
-    /*! \brief src and dst layouts are not same. (Needs to adhere to function specification.) \ingroup group_rppdefs */
-    RPP_ERROR_LAYOUT_MISMATCH           = -19
+    RPP_ERROR_INVALID_CHANNELS          = -19
 } RppStatus;
 
 /*! \brief RPP rppStatus_t type enums
