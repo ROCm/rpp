@@ -471,7 +471,7 @@ RppStatus hip_exec_gaussian_noise_voxel_tensor(T *srcPtr,
 {
     Rpp32u *xorwowSeedStream;
     xorwowSeedStream = (Rpp32u *)&xorwowInitialStatePtr[1];
-    CHECK(hipMemcpy(xorwowSeedStream, rngSeedStream4050, SEED_STREAM_MAX_SIZE * sizeof(Rpp32u), hipMemcpyHostToDevice));
+    CHECK_RETURN_STATUS(hipMemcpy(xorwowSeedStream, rngSeedStream4050, SEED_STREAM_MAX_SIZE * sizeof(Rpp32u), hipMemcpyHostToDevice));
 
     if (dstGenericDescPtr->layout == RpptLayout::NCDHW)
     {
