@@ -131,7 +131,7 @@ int main(int argc, char **argv)
     int noOfIterations = (int)audioNames.size() / batchSize;
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0;
     string testCaseName;
-    printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
+    printf("\nRunning %s %d times (each time with a batch size of %d audio files) and computing mean statistics...", func.c_str(), numRuns, batchSize);
     for (int iterCount = 0; iterCount < noOfIterations; iterCount++)
     {
         // read and decode audio and fill the audio dim values
@@ -267,6 +267,7 @@ int main(int argc, char **argv)
                 }
                 case 5:
                 {
+                    // Accepts outputs from FT layout of Spectrogram for QA
                     testCaseName = "mel_filter_bank";
 
                     Rpp32f sampleRate = 16000;

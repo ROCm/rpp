@@ -104,6 +104,7 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
     }
     Rpp32u numThreads = handle.GetNumThreads();
     Rpp32u batchSize = srcDescPtr->n;
+    Rpp32f *scratchMem = handle.GetInitHandle()->mem.mcpu.tempFloatmem;
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
@@ -111,13 +112,11 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
     {
         Rpp32f *srcPtrTemp = srcPtr + batchCount * srcDescPtr->strides.nStride;
         Rpp32f *dstPtrTemp = dstPtr + batchCount * dstDescPtr->strides.nStride;
-        Rpp32s samples = srcDimsTensor[batchCount * 2];
-        Rpp32s channels = srcDimsTensor[batchCount * 2 + 1];
 
         // Extract nfft, number of Frames, numBins
-        Rpp32s nfft = (samples - 1) * 2;
+        Rpp32s nfft = (srcDimsTensor[batchCount * 2] - 1) * 2;
         Rpp32s numBins = nfft / 2 + 1;
-        Rpp32s numFrames = channels;
+        Rpp32s numFrames = srcDimsTensor[batchCount * 2 + 1];
 
         Rpp32f maxFreq = maxFreqVal;
         Rpp32f minFreq = minFreqVal;
@@ -134,13 +133,16 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
         Rpp32s fftBinEnd = std::ceil(maxFreq * invHzStep);
         fftBinEnd = std::min(fftBinEnd, numBins);
 
-        Rpp32f *normFactors = handle.GetInitHandle()->mem.mcpu.tempFloatmem + batchCount * numFilter;
+        // normFactors contain numFilter values of type float
+        Rpp32f *normFactors = scratchMem + batchCount * numFilter;
         std::fill(normFactors, normFactors + numFilter, 1.f);
-        Rpp32f *weightsDown = handle.GetInitHandle()->mem.mcpu.tempFloatmem + (batchSize * numFilter) + (batchCount * numBins);
+        // weightsDown contain numBins values of type float
+        Rpp32f *weightsDown = scratchMem + (batchSize * numFilter) + (batchCount * numBins);
         memset(weightsDown, 0, sizeof(numBins * sizeof(Rpp32f)));
 
         int intervalJump = batchSize * (numFilter + numBins);
-        Rpp32s *intervals = reinterpret_cast<Rpp32s *>(handle.GetInitHandle()->mem.mcpu.tempFloatmem + intervalJump + (batchCount * numBins));
+        // intervals contain numBins values of type integer
+        Rpp32s *intervals = reinterpret_cast<Rpp32s *>(scratchMem + intervalJump + (batchCount * numBins));
         memset(intervals, -1, sizeof(numBins * sizeof(Rpp32s)));
 
         Rpp32s fftBin = fftBinStart;
@@ -165,7 +167,7 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
             }
         }
 
-        Rpp32u maxFrames = std::min((Rpp32u)numFrames + 8, dstDescPtr->strides.hStride);
+        Rpp32u maxFrames = std::min(static_cast<Rpp32u>(numFrames + 8), dstDescPtr->strides.hStride);
         Rpp32u maxAlignedLength = maxFrames & ~7;
         Rpp32u vectorIncrement = 8;
 
