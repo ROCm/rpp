@@ -47,11 +47,11 @@ extern "C" {
  * \details The box filter augmentation runs for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
- * \image html img150x150.jpg Sample Input
- * \image html filter_augmentations_box_filter_kSize3_img150x150.jpg Sample 3x3 Output
- * \image html filter_augmentations_box_filter_kSize5_img150x150.jpg Sample 5x5 Output
- * \image html filter_augmentations_box_filter_kSize7_img150x150.jpg Sample 7x7 Output
- * \image html filter_augmentations_box_filter_kSize9_img150x150.jpg Sample 9x9 Output
+ * \image html img150x150.png Sample Input
+ * \image html filter_augmentations_box_filter_kSize3_img150x150.png Sample 3x3 Output
+ * \image html filter_augmentations_box_filter_kSize5_img150x150.png Sample 5x5 Output
+ * \image html filter_augmentations_box_filter_kSize7_img150x150.png Sample 7x7 Output
+ * \image html filter_augmentations_box_filter_kSize9_img150x150.png Sample 9x9 Output
  * \param [in] srcPtr source tensor in HIP memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory
@@ -72,11 +72,11 @@ RppStatus rppt_box_filter_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t 
  * \details The gaussian filter augmentation runs for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
- * \image html img150x150.jpg Sample Input
- * \image html filter_augmentations_gaussian_filter_kSize3_img150x150.jpg Sample 3x3 Output
- * \image html filter_augmentations_gaussian_filter_kSize5_img150x150.jpg Sample 5x5 Output
- * \image html filter_augmentations_gaussian_filter_kSize7_img150x150.jpg Sample 7x7 Output
- * \image html filter_augmentations_gaussian_filter_kSize9_img150x150.jpg Sample 9x9 Output
+ * \image html img150x150.png Sample Input
+ * \image html filter_augmentations_gaussian_filter_kSize3_img150x150.png Sample 3x3 Output
+ * \image html filter_augmentations_gaussian_filter_kSize5_img150x150.png Sample 5x5 Output
+ * \image html filter_augmentations_gaussian_filter_kSize7_img150x150.png Sample 7x7 Output
+ * \image html filter_augmentations_gaussian_filter_kSize9_img150x150.png Sample 9x9 Output
  * \param [in] srcPtr source tensor in HIP memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory

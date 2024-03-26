@@ -6292,5 +6292,4 @@ inline void compute_remap_src_loc(Rpp32f rowLoc, Rpp32f colLoc, Rpp32s &srcLoc, 
     colLoc = std::max(0.0f, std::min(colLoc, widthLimit));
     srcLoc = (rowLoc * stride) + colLoc * channels;
 }
-
 #endif //RPP_CPU_COMMON_H

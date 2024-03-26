@@ -371,800 +371,800 @@ int main(int argc, char **argv)
 
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
-    for (int perfRunCount = 0; perfRunCount < numRuns; perfRunCount++)
+    for(int iterCount = 0; iterCount < noOfIterations; iterCount++)
     {
-        for(int iterCount = 0; iterCount < noOfIterations; iterCount++)
+        vector<string>::const_iterator imagesPathStart = imageNamesPath.begin() + (iterCount * batchSize);
+        vector<string>::const_iterator imagesPathEnd = imagesPathStart + batchSize;
+        vector<string>::const_iterator imageNamesStart = imageNames.begin() + (iterCount * batchSize);
+        vector<string>::const_iterator imageNamesEnd = imageNamesStart + batchSize;
+        vector<string>::const_iterator imagesPathSecondStart = imageNamesPathSecond.begin() + (iterCount * batchSize);
+        vector<string>::const_iterator imagesPathSecondEnd = imagesPathSecondStart + batchSize;
+
+        // Set ROIs for src/dst
+        set_src_and_dst_roi(imagesPathStart, imagesPathEnd, roiTensorPtrSrc, roiTensorPtrDst, dstImgSizes);
+
+        //Read images
+        if(decoderType == 0)
+            read_image_batch_turbojpeg(inputu8, srcDescPtr, imagesPathStart);
+        else
+            read_image_batch_opencv(inputu8, srcDescPtr, imagesPathStart);
+
+        // if the input layout requested is PLN3, convert PKD3 inputs to PLN3 for first and second input batch
+        if (layoutType == 1)
+            convert_pkd3_to_pln3(inputu8, srcDescPtr);
+
+        if(dualInputCase)
         {
-            vector<string>::const_iterator imagesPathStart = imageNamesPath.begin() + (iterCount * batchSize);
-            vector<string>::const_iterator imagesPathEnd = imagesPathStart + batchSize;
-            vector<string>::const_iterator imageNamesStart = imageNames.begin() + (iterCount * batchSize);
-            vector<string>::const_iterator imageNamesEnd = imageNamesStart + batchSize;
-            vector<string>::const_iterator imagesPathSecondStart = imageNamesPathSecond.begin() + (iterCount * batchSize);
-            vector<string>::const_iterator imagesPathSecondEnd = imagesPathSecondStart + batchSize;
-
-            // Set ROIs for src/dst
-            set_src_and_dst_roi(imagesPathStart, imagesPathEnd, roiTensorPtrSrc, roiTensorPtrDst, dstImgSizes);
-
-            //Read images
             if(decoderType == 0)
-                read_image_batch_turbojpeg(inputu8, srcDescPtr, imagesPathStart);
+                read_image_batch_turbojpeg(inputu8Second, srcDescPtr, imagesPathSecondStart);
             else
-                read_image_batch_opencv(inputu8, srcDescPtr, imagesPathStart);
-
-            // if the input layout requested is PLN3, convert PKD3 inputs to PLN3 for first and second input batch
+                read_image_batch_opencv(inputu8Second, srcDescPtr, imagesPathSecondStart);
             if (layoutType == 1)
-                convert_pkd3_to_pln3(inputu8, srcDescPtr);
+                convert_pkd3_to_pln3(inputu8Second, srcDescPtr);
+        }
 
-            if(dualInputCase)
+        // Convert inputs to correponding bit depth specified by user
+        convert_input_bitdepth(input, input_second, inputu8, inputu8Second, inputBitDepth, ioBufferSize, inputBufferSize, srcDescPtr, dualInputCase, conversionFactor);
+
+        //copy decoded inputs to hip buffers
+        CHECK(hipMemcpy(d_input, input, inputBufferSize, hipMemcpyHostToDevice));
+        CHECK(hipMemcpy(d_output, output, outputBufferSize, hipMemcpyHostToDevice));
+        if(dualInputCase)
+            CHECK(hipMemcpy(d_input_second, input_second, inputBufferSize, hipMemcpyHostToDevice));
+
+        int roiHeightList[batchSize], roiWidthList[batchSize];
+        if(roiList[0] == 0 && roiList[1] == 0 && roiList[2] == 0 && roiList[3] == 0)
+        {
+            for(int i = 0; i < batchSize ; i++)
             {
-                if(decoderType == 0)
-                    read_image_batch_turbojpeg(inputu8Second, srcDescPtr, imagesPathSecondStart);
-                else
-                    read_image_batch_opencv(inputu8Second, srcDescPtr, imagesPathSecondStart);
-                if (layoutType == 1)
-                    convert_pkd3_to_pln3(inputu8Second, srcDescPtr);
+                roiList[0] = 10;
+                roiList[1] = 10;
+                roiWidthList[i] = roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
+                roiHeightList[i] = roiTensorPtrSrc[i].xywhROI.roiHeight / 2;
             }
-
-            // Convert inputs to correponding bit depth specified by user
-            convert_input_bitdepth(input, input_second, inputu8, inputu8Second, inputBitDepth, ioBufferSize, inputBufferSize, srcDescPtr, dualInputCase, conversionFactor);
-
-            //copy decoded inputs to hip buffers
-            CHECK(hipMemcpy(d_input, input, inputBufferSize, hipMemcpyHostToDevice));
-            CHECK(hipMemcpy(d_output, output, outputBufferSize, hipMemcpyHostToDevice));
-            if(dualInputCase)
-                CHECK(hipMemcpy(d_input_second, input_second, inputBufferSize, hipMemcpyHostToDevice));
-
-            int roiHeightList[batchSize], roiWidthList[batchSize];
-            if(roiList[0] == 0 && roiList[1] == 0 && roiList[2] == 0 && roiList[3] == 0)
+        }
+        else
+        {
+            for(int i = 0; i < batchSize ; i++)
             {
-                for(int i = 0; i < batchSize ; i++)
-                {
-                    roiList[0] = 10;
-                    roiList[1] = 10;
-                    roiWidthList[i] = roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
-                    roiHeightList[i] = roiTensorPtrSrc[i].xywhROI.roiHeight / 2;
-                }
+                roiWidthList[i] = roiList[2];
+                roiHeightList[i] = roiList[3];
             }
-            else
-            {
-                for(int i = 0; i < batchSize ; i++)
-                {
-                    roiWidthList[i] = roiList[2];
-                    roiHeightList[i] = roiList[3];
-                }
-            }
+        }
 
-            // Uncomment to run test case with an xywhROI override
-            // roi.xywhROI = {0, 0, 25, 25};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, batchSize);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, batchSize);
+        // Uncomment to run test case with an xywhROI override
+        // roi.xywhROI = {0, 0, 25, 25};
+        // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, batchSize);
+        // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, batchSize);
 
-            // Uncomment to run test case with an ltrbROI override
-            // roiTypeSrc = RpptRoiType::LTRB;
-            // roi.ltrbROI = {10, 10, 40, 40};
-            // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, batchSize);
-            // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, batchSize);
+        // Uncomment to run test case with an ltrbROI override
+        // roiTypeSrc = RpptRoiType::LTRB;
+        // roi.ltrbROI = {10, 10, 40, 40};
+        // set_roi_values(&roi, roiTensorPtrSrc, roiTypeSrc, batchSize);
+        // update_dst_sizes_with_roi(roiTensorPtrSrc, dstImgSizes, roiTypeSrc, batchSize);
 
+        for (int perfRunCount = 0; perfRunCount < numRuns; perfRunCount++)
+        {
             double startWallTime, endWallTime;
             switch (testCase)
             {
-            case 0:
-            {
-                testCaseName = "brightness";
-
-                Rpp32f alpha[batchSize];
-                Rpp32f beta[batchSize];
-                for (i = 0; i < batchSize; i++)
+                case 0:
                 {
-                    alpha[i] = 1.75;
-                    beta[i] = 50;
-                }
+                    testCaseName = "brightness";
 
-                startWallTime = omp_get_wtime();
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_brightness_gpu(d_input, srcDescPtr, d_output, dstDescPtr, alpha, beta, roiTensorPtrSrc, roiTypeSrc, handle);
-                else
-                    missingFuncFlag = 1;
+                    Rpp32f alpha[batchSize];
+                    Rpp32f beta[batchSize];
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        alpha[i] = 1.75;
+                        beta[i] = 50;
+                    }
 
-                break;
-            }
-            case 1:
-            {
-                testCaseName = "gamma_correction";
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_brightness_gpu(d_input, srcDescPtr, d_output, dstDescPtr, alpha, beta, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
 
-                Rpp32f gammaVal[batchSize];
-                for (i = 0; i < batchSize; i++)
-                    gammaVal[i] = 1.9;
-
-                startWallTime = omp_get_wtime();
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_gamma_correction_gpu(d_input, srcDescPtr, d_output, dstDescPtr, gammaVal, roiTensorPtrSrc, roiTypeSrc, handle);
-                else
-                    missingFuncFlag = 1;
-
-                break;
-            }
-            case 2:
-            {
-                testCaseName = "blend";
-
-                Rpp32f alpha[batchSize];
-                for (i = 0; i < batchSize; i++)
-                    alpha[i] = 0.4;
-
-                startWallTime = omp_get_wtime();
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_blend_gpu(d_input, d_input_second, srcDescPtr, d_output, dstDescPtr, alpha, roiTensorPtrSrc, roiTypeSrc, handle);
-                else
-                    missingFuncFlag = 1;
-
-                break;
-            }
-            case 4:
-            {
-                testCaseName = "contrast";
-
-                Rpp32f contrastFactor[batchSize];
-                Rpp32f contrastCenter[batchSize];
-                for (i = 0; i < batchSize; i++)
-                {
-                    contrastFactor[i] = 2.96;
-                    contrastCenter[i] = 128;
-                }
-
-                startWallTime = omp_get_wtime();
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_contrast_gpu(d_input, srcDescPtr, d_output, dstDescPtr, contrastFactor, contrastCenter, roiTensorPtrSrc, roiTypeSrc, handle);
-                else
-                    missingFuncFlag = 1;
-
-                break;
-            }
-            case 13:
-            {
-                testCaseName = "exposure";
-
-                Rpp32f exposureFactor[batchSize];
-                for (i = 0; i < batchSize; i++)
-                    exposureFactor[i] = 1.4;
-
-                startWallTime = omp_get_wtime();
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_exposure_gpu(d_input, srcDescPtr, d_output, dstDescPtr, exposureFactor, roiTensorPtrSrc, roiTypeSrc, handle);
-                else
-                    missingFuncFlag = 1;
-
-                break;
-            }
-            case 20:
-            {
-                testCaseName = "flip";
-
-                Rpp32u horizontalFlag[batchSize];
-                Rpp32u verticalFlag[batchSize];
-                for (i = 0; i < batchSize; i++)
-                {
-                    horizontalFlag[i] = 1;
-                    verticalFlag[i] = 0;
-                }
-
-                startWallTime = omp_get_wtime();
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_flip_gpu(d_input, srcDescPtr, d_output, dstDescPtr, horizontalFlag, verticalFlag, roiTensorPtrSrc, roiTypeSrc, handle);
-                else
-                    missingFuncFlag = 1;
-
-                break;
-            }
-            case 21:
-            {
-                testCaseName = "resize";
-
-                for (i = 0; i < batchSize; i++)
-                {
-                    dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
-                    dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiHeight / 2;
-                }
-
-                startWallTime = omp_get_wtime();
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_resize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, dstImgSizes, interpolationType, roiTensorPtrDst, roiTypeSrc, handle);
-                else
-                    missingFuncFlag = 1;
-
-                break;
-            }
-            case 23:
-            {
-                testCaseName = "rotate";
-
-                if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR))
-                {
-                    missingFuncFlag = 1;
                     break;
                 }
-
-                Rpp32f angle[batchSize];
-                for (i = 0; i < batchSize; i++)
-                    angle[i] = 50;
-
-                startWallTime = omp_get_wtime();
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_rotate_gpu(d_input, srcDescPtr, d_output, dstDescPtr, angle, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
-                else
-                    missingFuncFlag = 1;
-
-                break;
-            }
-            case 26:
-            {
-                testCaseName = "lens_correction";
-
-                Rpp32f cameraMatrix[9 * batchSize];
-                Rpp32f newCameraMatrix[9 * batchSize];
-                Rpp32f distortionCoeffs[8 * batchSize];
-
-                for (i = 0; i < batchSize; i++)
+                case 1:
                 {
-                    cameraMatrix[9 * i] = newCameraMatrix[9 * i] = 534.07088364;
-                    cameraMatrix[9 * i + 1] =  newCameraMatrix[9 * i + 1] = 0;
-                    cameraMatrix[9 * i + 2] =  newCameraMatrix[9 * i + 2] = 341.53407554;
-                    cameraMatrix[9 * i + 3] = newCameraMatrix[9 * i + 3] = 0;
-                    cameraMatrix[9 * i + 4] = newCameraMatrix[9 * i + 4] = 534.11914595;
-                    cameraMatrix[9 * i + 5] = newCameraMatrix[9 * i + 5] = 232.94565259;
-                    cameraMatrix[9 * i + 6] = newCameraMatrix[9 * i + 6] = 0;
-                    cameraMatrix[9 * i + 7] = newCameraMatrix[9 * i + 7] = 0;
-                    cameraMatrix[9 * i + 8] = newCameraMatrix[9 * i + 8] = 1;
+                    testCaseName = "gamma_correction";
 
-                    distortionCoeffs[8 * i] = -0.29297164;
-                    distortionCoeffs[8 * i + 1] = 0.10770696;
-                    distortionCoeffs[8 * i + 2] = 0.00131038;
-                    distortionCoeffs[8 * i + 3] = -0.0000311;
-                    distortionCoeffs[8 * i + 4] = 0.0434798;
-                    distortionCoeffs[8 * i + 5] = 0;
-                    distortionCoeffs[8 * i + 6] = 0;
-                    distortionCoeffs[8 * i + 7] = 0;
+                    Rpp32f gammaVal[batchSize];
+                    for (i = 0; i < batchSize; i++)
+                        gammaVal[i] = 1.9;
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_gamma_correction_gpu(d_input, srcDescPtr, d_output, dstDescPtr, gammaVal, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
                 }
-
-                RpptDesc tableDesc = srcDesc;
-                RpptDescPtr tableDescPtr = &tableDesc;
-                tableDescPtr->c = 1;
-                tableDescPtr->strides.nStride = srcDescPtr->h * srcDescPtr->w;
-                tableDescPtr->strides.hStride = srcDescPtr->w;
-                tableDescPtr->strides.wStride = tableDescPtr->strides.cStride = 1;
-
-                CHECK(hipMemcpy(d_cameraMatrix, cameraMatrix, batchSize * 9 * sizeof(Rpp32f), hipMemcpyHostToDevice));
-                CHECK(hipMemcpy(d_distortionCoeffs, distortionCoeffs, batchSize * 8 * sizeof(Rpp32f), hipMemcpyHostToDevice));
-
-                startWallTime = omp_get_wtime();
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_lens_correction_gpu(d_input, srcDescPtr, d_output, dstDescPtr, (Rpp32f *)d_rowRemapTable, (Rpp32f *)d_colRemapTable, tableDescPtr, d_cameraMatrix, d_distortionCoeffs, d_cameraMatrix, roiTensorPtrSrc, roiTypeSrc, handle);
-                else
-                    missingFuncFlag = 1;
-
-                break;
-            }
-            case 29:
-            {
-                testCaseName = "water";
-
-                Rpp32f amplX[batchSize];
-                Rpp32f amplY[batchSize];
-                Rpp32f freqX[batchSize];
-                Rpp32f freqY[batchSize];
-                Rpp32f phaseX[batchSize];
-                Rpp32f phaseY[batchSize];
-
-                for (i = 0; i < batchSize; i++)
+                case 2:
                 {
-                    amplX[i] = 2.0f;
-                    amplY[i] = 5.0f;
-                    freqX[i] = 5.8f;
-                    freqY[i] = 1.2f;
-                    phaseX[i] = 10.0f;
-                    phaseY[i] = 15.0f;
+                    testCaseName = "blend";
+
+                    Rpp32f alpha[batchSize];
+                    for (i = 0; i < batchSize; i++)
+                        alpha[i] = 0.4;
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_blend_gpu(d_input, d_input_second, srcDescPtr, d_output, dstDescPtr, alpha, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
                 }
-
-                startWallTime = omp_get_wtime();
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_water_gpu(d_input, srcDescPtr, d_output, dstDescPtr, amplX, amplY, freqX, freqY, phaseX, phaseY, roiTensorPtrSrc, roiTypeSrc, handle);
-                else
-                    missingFuncFlag = 1;
-
-                break;
-            }
-            case 30:
-            {
-                testCaseName = "non_linear_blend";
-
-                Rpp32f stdDev[batchSize];
-                for (i = 0; i < batchSize; i++)
-                    stdDev[i] = 50.0;
-
-                startWallTime = omp_get_wtime();
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_non_linear_blend_gpu(d_input, d_input_second, srcDescPtr, d_output, dstDescPtr, stdDev, roiTensorPtrSrc, roiTypeSrc, handle);
-                else
-                    missingFuncFlag = 1;
-
-                break;
-            }
-            case 31:
-            {
-                testCaseName = "color_cast";
-
-                RpptRGB rgbTensor[batchSize];
-                Rpp32f alphaTensor[batchSize];
-
-                for (i = 0; i < batchSize; i++)
+                case 4:
                 {
-                    rgbTensor[i].R = 0;
-                    rgbTensor[i].G = 0;
-                    rgbTensor[i].B = 100;
-                    alphaTensor[i] = 0.5;
-                }
+                    testCaseName = "contrast";
 
-                startWallTime = omp_get_wtime();
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_color_cast_gpu(d_input, srcDescPtr, d_output, dstDescPtr, rgbTensor, alphaTensor, roiTensorPtrSrc, roiTypeSrc, handle);
-                else
-                    missingFuncFlag = 1;
-
-                break;
-            }
-            case 34:
-            {
-                testCaseName = "lut";
-
-                Rpp32f *lutBuffer;
-                CHECK(hipHostMalloc(&lutBuffer, 65536 * sizeof(Rpp32f)));
-                CHECK(hipMemset(lutBuffer, 0, 65536 * sizeof(Rpp32f)));
-                Rpp8u *lut8u = reinterpret_cast<Rpp8u *>(lutBuffer);
-                Rpp16f *lut16f = reinterpret_cast<Rpp16f *>(lutBuffer);
-                Rpp32f *lut32f = reinterpret_cast<Rpp32f *>(lutBuffer);
-                Rpp8s *lut8s = reinterpret_cast<Rpp8s *>(lutBuffer);
-                if (inputBitDepth == 0)
-                    for (j = 0; j < 256; j++)
-                        lut8u[j] = (Rpp8u)(255 - j);
-                else if (inputBitDepth == 3)
-                    for (j = 0; j < 256; j++)
-                        lut16f[j] = (Rpp16f)((255 - j) * ONE_OVER_255);
-                else if (inputBitDepth == 4)
-                    for (j = 0; j < 256; j++)
-                        lut32f[j] = (Rpp32f)((255 - j) * ONE_OVER_255);
-                else if (inputBitDepth == 5)
-                    for (j = 0; j < 256; j++)
-                        lut8s[j] = (Rpp8s)(255 - j - 128);
-
-                startWallTime = omp_get_wtime();
-                if (inputBitDepth == 0)
-                    rppt_lut_gpu(d_input, srcDescPtr, d_output, dstDescPtr, lut8u, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (inputBitDepth == 3)
-                    rppt_lut_gpu(d_input, srcDescPtr, d_output, dstDescPtr, lut16f, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (inputBitDepth == 4)
-                    rppt_lut_gpu(d_input, srcDescPtr, d_output, dstDescPtr, lut32f, roiTensorPtrSrc, roiTypeSrc, handle);
-                else if (inputBitDepth == 5)
-                    rppt_lut_gpu(d_input, srcDescPtr, d_output, dstDescPtr, lut8s, roiTensorPtrSrc, roiTypeSrc, handle);
-                else
-                    missingFuncFlag = 1;
-
-                break;
-
-                CHECK(hipHostFree(lutBuffer));
-            }
-            case 36:
-            {
-                testCaseName = "color_twist";
-
-                Rpp32f brightness[batchSize];
-                Rpp32f contrast[batchSize];
-                Rpp32f hue[batchSize];
-                Rpp32f saturation[batchSize];
-                for (i = 0; i < batchSize; i++)
-                {
-                    brightness[i] = 1.4;
-                    contrast[i] = 0.0;
-                    hue[i] = 60.0;
-                    saturation[i] = 1.9;
-                }
-
-                startWallTime = omp_get_wtime();
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_color_twist_gpu(d_input, srcDescPtr, d_output, dstDescPtr, brightness, contrast, hue, saturation, roiTensorPtrSrc, roiTypeSrc, handle);
-                else
-                    missingFuncFlag = 1;
-
-                break;
-            }
-            case 37:
-            {
-                testCaseName = "crop";
-
-                for (i = 0; i < batchSize; i++)
-                {
-                    roiTensorPtrDst[i].xywhROI.xy.x = roiList[0];
-                    roiTensorPtrDst[i].xywhROI.xy.y = roiList[1];
-                    dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiWidthList[i];
-                    dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiHeightList[i];
-                }
-
-                startWallTime = omp_get_wtime();
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_crop_gpu(d_input, srcDescPtr, d_output, dstDescPtr, roiTensorPtrDst, roiTypeSrc, handle);
-                else
-                    missingFuncFlag = 1;
-
-                break;
-            }
-            case 38:
-            {
-                testCaseName = "crop_mirror_normalize";
-                Rpp32f multiplier[batchSize * srcDescPtr->c];
-                Rpp32f offset[batchSize * srcDescPtr->c];
-                Rpp32u mirror[batchSize];
-                if (srcDescPtr->c == 3)
-                {
-                    Rpp32f meanParam[3] = { 60.0f, 80.0f, 100.0f };
-                    Rpp32f stdDevParam[3] = { 0.9f, 0.9f, 0.9f };
-                    Rpp32f offsetParam[3] = { - meanParam[0] / stdDevParam[0], - meanParam[1] / stdDevParam[1], - meanParam[2] / stdDevParam[2] };
-                    Rpp32f multiplierParam[3] = {  1.0f / stdDevParam[0], 1.0f / stdDevParam[1], 1.0f / stdDevParam[2] };
-
-                    for (i = 0, j = 0; i < batchSize; i++, j += 3)
+                    Rpp32f contrastFactor[batchSize];
+                    Rpp32f contrastCenter[batchSize];
+                    for (i = 0; i < batchSize; i++)
                     {
-                        multiplier[j] = multiplierParam[0];
-                        offset[j] = offsetParam[0];
-                        multiplier[j + 1] = multiplierParam[1];
-                        offset[j + 1] = offsetParam[1];
-                        multiplier[j + 2] = multiplierParam[2];
-                        offset[j + 2] = offsetParam[2];
-                        mirror[i] = 1;
+                        contrastFactor[i] = 2.96;
+                        contrastCenter[i] = 128;
                     }
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_contrast_gpu(d_input, srcDescPtr, d_output, dstDescPtr, contrastFactor, contrastCenter, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
                 }
-                else if(srcDescPtr->c == 1)
+                case 13:
                 {
-                    Rpp32f meanParam = 100.0f;
-                    Rpp32f stdDevParam = 0.9f;
-                    Rpp32f offsetParam = - meanParam / stdDevParam;
-                    Rpp32f multiplierParam = 1.0f / stdDevParam;
+                    testCaseName = "exposure";
+
+                    Rpp32f exposureFactor[batchSize];
+                    for (i = 0; i < batchSize; i++)
+                        exposureFactor[i] = 1.4;
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_exposure_gpu(d_input, srcDescPtr, d_output, dstDescPtr, exposureFactor, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 20:
+                {
+                    testCaseName = "flip";
+
+                    Rpp32u horizontalFlag[batchSize];
+                    Rpp32u verticalFlag[batchSize];
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        horizontalFlag[i] = 1;
+                        verticalFlag[i] = 0;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_flip_gpu(d_input, srcDescPtr, d_output, dstDescPtr, horizontalFlag, verticalFlag, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 21:
+                {
+                    testCaseName = "resize";
 
                     for (i = 0; i < batchSize; i++)
                     {
-                        multiplier[i] = multiplierParam;
-                        offset[i] = offsetParam;
+                        dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
+                        dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiHeight / 2;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_resize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, dstImgSizes, interpolationType, roiTensorPtrDst, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 23:
+                {
+                    testCaseName = "rotate";
+
+                    if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR))
+                    {
+                        missingFuncFlag = 1;
+                        break;
+                    }
+                  
+                    Rpp32f angle[batchSize];
+                    for (i = 0; i < batchSize; i++)
+                        angle[i] = 50;
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_rotate_gpu(d_input, srcDescPtr, d_output, dstDescPtr, angle, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 26:
+                {
+                    testCaseName = "lens_correction";
+
+                    Rpp32f cameraMatrix[9 * batchSize];
+                    Rpp32f newCameraMatrix[9 * batchSize];
+                    Rpp32f distortionCoeffs[8 * batchSize];
+
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        cameraMatrix[9 * i] = newCameraMatrix[9 * i] = 534.07088364;
+                        cameraMatrix[9 * i + 1] =  newCameraMatrix[9 * i + 1] = 0;
+                        cameraMatrix[9 * i + 2] =  newCameraMatrix[9 * i + 2] = 341.53407554;
+                        cameraMatrix[9 * i + 3] = newCameraMatrix[9 * i + 3] = 0;
+                        cameraMatrix[9 * i + 4] = newCameraMatrix[9 * i + 4] = 534.11914595;
+                        cameraMatrix[9 * i + 5] = newCameraMatrix[9 * i + 5] = 232.94565259;
+                        cameraMatrix[9 * i + 6] = newCameraMatrix[9 * i + 6] = 0;
+                        cameraMatrix[9 * i + 7] = newCameraMatrix[9 * i + 7] = 0;
+                        cameraMatrix[9 * i + 8] = newCameraMatrix[9 * i + 8] = 1;
+
+                        distortionCoeffs[8 * i] = -0.29297164;
+                        distortionCoeffs[8 * i + 1] = 0.10770696;
+                        distortionCoeffs[8 * i + 2] = 0.00131038;
+                        distortionCoeffs[8 * i + 3] = -0.0000311;
+                        distortionCoeffs[8 * i + 4] = 0.0434798;
+                        distortionCoeffs[8 * i + 5] = 0;
+                        distortionCoeffs[8 * i + 6] = 0;
+                        distortionCoeffs[8 * i + 7] = 0;
+                    }
+
+                    RpptDesc tableDesc = srcDesc;
+                    RpptDescPtr tableDescPtr = &tableDesc;
+                    tableDescPtr->c = 1;
+                    tableDescPtr->strides.nStride = srcDescPtr->h * srcDescPtr->w;
+                    tableDescPtr->strides.hStride = srcDescPtr->w;
+                    tableDescPtr->strides.wStride = tableDescPtr->strides.cStride = 1;
+
+                    CHECK(hipMemcpy(d_cameraMatrix, cameraMatrix, batchSize * 9 * sizeof(Rpp32f), hipMemcpyHostToDevice));
+                    CHECK(hipMemcpy(d_distortionCoeffs, distortionCoeffs, batchSize * 8 * sizeof(Rpp32f), hipMemcpyHostToDevice));
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_lens_correction_gpu(d_input, srcDescPtr, d_output, dstDescPtr, (Rpp32f *)d_rowRemapTable, (Rpp32f *)d_colRemapTable, tableDescPtr, d_cameraMatrix, d_distortionCoeffs, d_cameraMatrix, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 29:
+                {
+                    testCaseName = "water";
+
+                    Rpp32f amplX[batchSize];
+                    Rpp32f amplY[batchSize];
+                    Rpp32f freqX[batchSize];
+                    Rpp32f freqY[batchSize];
+                    Rpp32f phaseX[batchSize];
+                    Rpp32f phaseY[batchSize];
+
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        amplX[i] = 2.0f;
+                        amplY[i] = 5.0f;
+                        freqX[i] = 5.8f;
+                        freqY[i] = 1.2f;
+                        phaseX[i] = 10.0f;
+                        phaseY[i] = 15.0f;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_water_gpu(d_input, srcDescPtr, d_output, dstDescPtr, amplX, amplY, freqX, freqY, phaseX, phaseY, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 30:
+                {
+                    testCaseName = "non_linear_blend";
+
+                    Rpp32f stdDev[batchSize];
+                    for (i = 0; i < batchSize; i++)
+                        stdDev[i] = 50.0;
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_non_linear_blend_gpu(d_input, d_input_second, srcDescPtr, d_output, dstDescPtr, stdDev, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 31:
+                {
+                    testCaseName = "color_cast";
+
+                    RpptRGB rgbTensor[batchSize];
+                    Rpp32f alphaTensor[batchSize];
+
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        rgbTensor[i].R = 0;
+                        rgbTensor[i].G = 0;
+                        rgbTensor[i].B = 100;
+                        alphaTensor[i] = 0.5;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_color_cast_gpu(d_input, srcDescPtr, d_output, dstDescPtr, rgbTensor, alphaTensor, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 34:
+                {
+                    testCaseName = "lut";
+
+                    Rpp32f *lutBuffer;
+                    CHECK(hipHostMalloc(&lutBuffer, 65536 * sizeof(Rpp32f)));
+                    CHECK(hipMemset(lutBuffer, 0, 65536 * sizeof(Rpp32f)));
+                    Rpp8u *lut8u = reinterpret_cast<Rpp8u *>(lutBuffer);
+                    Rpp16f *lut16f = reinterpret_cast<Rpp16f *>(lutBuffer);
+                    Rpp32f *lut32f = reinterpret_cast<Rpp32f *>(lutBuffer);
+                    Rpp8s *lut8s = reinterpret_cast<Rpp8s *>(lutBuffer);
+                    if (inputBitDepth == 0)
+                        for (j = 0; j < 256; j++)
+                            lut8u[j] = (Rpp8u)(255 - j);
+                    else if (inputBitDepth == 3)
+                        for (j = 0; j < 256; j++)
+                            lut16f[j] = (Rpp16f)((255 - j) * ONE_OVER_255);
+                    else if (inputBitDepth == 4)
+                        for (j = 0; j < 256; j++)
+                            lut32f[j] = (Rpp32f)((255 - j) * ONE_OVER_255);
+                    else if (inputBitDepth == 5)
+                        for (j = 0; j < 256; j++)
+                            lut8s[j] = (Rpp8s)(255 - j - 128);
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0)
+                        rppt_lut_gpu(d_input, srcDescPtr, d_output, dstDescPtr, lut8u, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else if (inputBitDepth == 3)
+                        rppt_lut_gpu(d_input, srcDescPtr, d_output, dstDescPtr, lut16f, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else if (inputBitDepth == 4)
+                        rppt_lut_gpu(d_input, srcDescPtr, d_output, dstDescPtr, lut32f, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else if (inputBitDepth == 5)
+                        rppt_lut_gpu(d_input, srcDescPtr, d_output, dstDescPtr, lut8s, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+
+                    CHECK(hipHostFree(lutBuffer));
+                }
+                case 36:
+                {
+                    testCaseName = "color_twist";
+
+                    Rpp32f brightness[batchSize];
+                    Rpp32f contrast[batchSize];
+                    Rpp32f hue[batchSize];
+                    Rpp32f saturation[batchSize];
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        brightness[i] = 1.4;
+                        contrast[i] = 0.0;
+                        hue[i] = 60.0;
+                        saturation[i] = 1.9;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_color_twist_gpu(d_input, srcDescPtr, d_output, dstDescPtr, brightness, contrast, hue, saturation, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 37:
+                {
+                    testCaseName = "crop";
+
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        roiTensorPtrDst[i].xywhROI.xy.x = roiList[0];
+                        roiTensorPtrDst[i].xywhROI.xy.y = roiList[1];
+                        dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiWidthList[i];
+                        dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiHeightList[i];
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_crop_gpu(d_input, srcDescPtr, d_output, dstDescPtr, roiTensorPtrDst, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 38:
+                {
+                    testCaseName = "crop_mirror_normalize";
+                    Rpp32f multiplier[batchSize * srcDescPtr->c];
+                    Rpp32f offset[batchSize * srcDescPtr->c];
+                    Rpp32u mirror[batchSize];
+                    if (srcDescPtr->c == 3)
+                    {
+                        Rpp32f meanParam[3] = { 60.0f, 80.0f, 100.0f };
+                        Rpp32f stdDevParam[3] = { 0.9f, 0.9f, 0.9f };
+                        Rpp32f offsetParam[3] = { - meanParam[0] / stdDevParam[0], - meanParam[1] / stdDevParam[1], - meanParam[2] / stdDevParam[2] };
+                        Rpp32f multiplierParam[3] = {  1.0f / stdDevParam[0], 1.0f / stdDevParam[1], 1.0f / stdDevParam[2] };
+
+                        for (i = 0, j = 0; i < batchSize; i++, j += 3)
+                        {
+                            multiplier[j] = multiplierParam[0];
+                            offset[j] = offsetParam[0];
+                            multiplier[j + 1] = multiplierParam[1];
+                            offset[j + 1] = offsetParam[1];
+                            multiplier[j + 2] = multiplierParam[2];
+                            offset[j + 2] = offsetParam[2];
+                            mirror[i] = 1;
+                        }
+                    }
+                    else if(srcDescPtr->c == 1)
+                    {
+                        Rpp32f meanParam = 100.0f;
+                        Rpp32f stdDevParam = 0.9f;
+                        Rpp32f offsetParam = - meanParam / stdDevParam;
+                        Rpp32f multiplierParam = 1.0f / stdDevParam;
+
+                        for (i = 0; i < batchSize; i++)
+                        {
+                            multiplier[i] = multiplierParam;
+                            offset[i] = offsetParam;
+                            mirror[i] = 1;
+                        }
+                    }
+
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        roiTensorPtrDst[i].xywhROI.xy.x = roiList[0];
+                        roiTensorPtrDst[i].xywhROI.xy.y = roiList[1];
+                        dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiWidthList[i];
+                        dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiHeightList[i];
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 3 || inputBitDepth == 4 || inputBitDepth == 5)
+                        rppt_crop_mirror_normalize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, offset, multiplier, mirror, roiTensorPtrDst, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 39:
+                {
+                    testCaseName = "resize_crop_mirror";
+
+                    if (interpolationType != RpptInterpolationType::BILINEAR)
+                    {
+                        missingFuncFlag = 1;
+                        break;
+                    }
+
+                    Rpp32u mirror[batchSize];
+                    for (i = 0; i < batchSize; i++)
+                        mirror[i] = 1;
+
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        roiTensorPtrSrc[i].xywhROI.xy.x = 10;
+                        roiTensorPtrSrc[i].xywhROI.xy.y = 10;
+                        dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
+                        dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight / 2;
+                        roiTensorPtrDst[i].xywhROI.roiWidth = 50;
+                        roiTensorPtrDst[i].xywhROI.roiHeight = 50;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 3 || inputBitDepth == 4 || inputBitDepth == 5)
+                        rppt_resize_crop_mirror_gpu(d_input, srcDescPtr, d_output, dstDescPtr, dstImgSizes, interpolationType, mirror, roiTensorPtrDst, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 45:
+                {
+                    testCaseName = "color_temperature";
+
+                    Rpp32s adjustment[batchSize];
+                    for (i = 0; i < batchSize; i++)
+                        adjustment[i] = 70;
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_color_temperature_gpu(d_input, srcDescPtr, d_output, dstDescPtr, adjustment, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 49:
+                {
+                    testCaseName = "box_filter";
+                    Rpp32u kernelSize = additionalParam;
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_box_filter_gpu(d_input, srcDescPtr, d_output, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 54:
+                {
+                    testCaseName = "gaussian_filter";
+                    Rpp32u kernelSize = additionalParam;
+
+                    Rpp32f stdDevTensor[batchSize];
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        stdDevTensor[i] = 5.0f;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_gaussian_filter_gpu(d_input, srcDescPtr, d_output, dstDescPtr, stdDevTensor, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 61:
+                {
+                    testCaseName = "magnitude";
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_magnitude_gpu(d_input, d_input_second, srcDescPtr, d_output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 63:
+                {
+                    testCaseName = "phase";
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_phase_gpu(d_input, d_input_second, srcDescPtr, d_output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 70:
+                {
+                    testCaseName = "copy";
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_copy_gpu(d_input, srcDescPtr, d_output, dstDescPtr, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 79:
+                {
+                    testCaseName = "remap";
+
+                    if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR))
+                    {
+                        missingFuncFlag = 1;
+                        break;
+                    }
+
+                    RpptDesc tableDesc = srcDesc;
+                    RpptDescPtr tableDescPtr = &tableDesc;
+                    init_remap(tableDescPtr, srcDescPtr, roiTensorPtrSrc, rowRemapTable, colRemapTable);
+
+                    CHECK(hipMemcpy(d_rowRemapTable, (void *)rowRemapTable, ioBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
+                    CHECK(hipMemcpy(d_colRemapTable, (void *)colRemapTable, ioBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_remap_gpu(d_input, srcDescPtr, d_output, dstDescPtr, (Rpp32f *)d_rowRemapTable, (Rpp32f *)d_colRemapTable, tableDescPtr, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 80:
+                {
+                    testCaseName = "resize_mirror_normalize";
+
+                    if (interpolationType != RpptInterpolationType::BILINEAR)
+                    {
+                        missingFuncFlag = 1;
+                        break;
+                    }
+
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
+                        dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
+                    }
+
+                    Rpp32f mean[batchSize * 3];
+                    Rpp32f stdDev[batchSize * 3];
+                    Rpp32u mirror[batchSize];
+                    for (i = 0, j = 0; i < batchSize; i++, j += 3)
+                    {
+                        mean[j] = 60.0;
+                        stdDev[j] = 1.0;
+
+                        mean[j + 1] = 80.0;
+                        stdDev[j + 1] = 1.0;
+
+                        mean[j + 2] = 100.0;
+                        stdDev[j + 2] = 1.0;
                         mirror[i] = 1;
                     }
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_resize_mirror_normalize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, dstImgSizes, interpolationType, mean, stdDev, mirror, roiTensorPtrDst, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
                 }
-
-                for (i = 0; i < batchSize; i++)
+                case 82:
                 {
-                    roiTensorPtrDst[i].xywhROI.xy.x = roiList[0];
-                    roiTensorPtrDst[i].xywhROI.xy.y = roiList[1];
-                    dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiWidthList[i];
-                    dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiHeightList[i];
+                    testCaseName = "ricap";
+
+                    Rpp32u permutationTensor[batchSize * 4];
+                    if(qaFlag)
+                        init_ricap_qa(maxWidth, maxHeight, batchSize, permutationTensor, roiPtrInputCropRegion);
+                    else
+                        init_ricap(maxWidth, maxHeight, batchSize, permutationTensor, roiPtrInputCropRegion);
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_ricap_gpu(d_input, srcDescPtr, d_output, dstDescPtr, permutationTensor, roiPtrInputCropRegion, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+                    break;
                 }
-
-                startWallTime = omp_get_wtime();
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 3 || inputBitDepth == 4 || inputBitDepth == 5)
-                    rppt_crop_mirror_normalize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, offset, multiplier, mirror, roiTensorPtrDst, roiTypeSrc, handle);
-                else
-                    missingFuncFlag = 1;
-
-                break;
-            }
-            case 39:
-            {
-                testCaseName = "resize_crop_mirror";
-
-                if (interpolationType != RpptInterpolationType::BILINEAR)
+                case 83:
                 {
+                    testCaseName = "gridmask";
+
+                    Rpp32u tileWidth = 40;
+                    Rpp32f gridRatio = 0.6;
+                    Rpp32f gridAngle = 0.5;
+                    RpptUintVector2D translateVector;
+                    translateVector.x = 0.0;
+                    translateVector.y = 0.0;
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_gridmask_gpu(d_input, srcDescPtr, d_output, dstDescPtr, tileWidth, gridRatio, gridAngle, translateVector, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 84:
+                {
+                    testCaseName = "spatter";
+
+                    RpptRGB spatterColor;
+
+                    // Mud Spatter
+                    spatterColor.R = 65;
+                    spatterColor.G = 50;
+                    spatterColor.B = 23;
+
+                    // Blood Spatter
+                    // spatterColor.R = 98;
+
+                    // Ink Spatter
+                    // spatterColor.R = 5;
+                    // spatterColor.G = 20;
+                    // spatterColor.B = 64;
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_spatter_gpu(d_input, srcDescPtr, d_output, dstDescPtr, spatterColor, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 85:
+                {
+                    testCaseName = "swap_channels";
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_swap_channels_gpu(d_input, srcDescPtr, d_output, dstDescPtr, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 86:
+                {
+                    testCaseName = "color_to_greyscale";
+
+                    RpptSubpixelLayout srcSubpixelLayout = RpptSubpixelLayout::RGBtype;
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_color_to_greyscale_gpu(d_input, srcDescPtr, d_output, dstDescPtr, srcSubpixelLayout, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 87:
+                {
+                    testCaseName = "tensor_sum";
+
+                    if(srcDescPtr->c == 1)
+                        reductionFuncResultArrLength = srcDescPtr->n;
+
+                    startWallTime = omp_get_wtime();
+
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_tensor_sum_gpu(d_input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 88:
+                {
+                    testCaseName = "tensor_min";
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_tensor_min_gpu(d_input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 89:
+                {
+                    testCaseName = "tensor_max";
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_tensor_max_gpu(d_input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                default:
                     missingFuncFlag = 1;
                     break;
                 }
-
-                Rpp32u mirror[batchSize];
-                for (i = 0; i < batchSize; i++)
-                    mirror[i] = 1;
-
-                for (i = 0; i < batchSize; i++)
-                {
-                    roiTensorPtrSrc[i].xywhROI.xy.x = 10;
-                    roiTensorPtrSrc[i].xywhROI.xy.y = 10;
-                    dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
-                    dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight / 2;
-                    roiTensorPtrDst[i].xywhROI.roiWidth = 50;
-                    roiTensorPtrDst[i].xywhROI.roiHeight = 50;
-                }
-
-                startWallTime = omp_get_wtime();
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 3 || inputBitDepth == 4 || inputBitDepth == 5)
-                    rppt_resize_crop_mirror_gpu(d_input, srcDescPtr, d_output, dstDescPtr, dstImgSizes, interpolationType, mirror, roiTensorPtrDst, roiTypeSrc, handle);
-                else
-                    missingFuncFlag = 1;
-
-                break;
-            }
-            case 45:
-            {
-                testCaseName = "color_temperature";
-
-                Rpp32s adjustment[batchSize];
-                for (i = 0; i < batchSize; i++)
-                    adjustment[i] = 70;
-
-                startWallTime = omp_get_wtime();
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_color_temperature_gpu(d_input, srcDescPtr, d_output, dstDescPtr, adjustment, roiTensorPtrSrc, roiTypeSrc, handle);
-                else
-                    missingFuncFlag = 1;
-
-                break;
-            }
-            case 49:
-            {
-                testCaseName = "box_filter";
-                Rpp32u kernelSize = additionalParam;
-
-                startWallTime = omp_get_wtime();
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_box_filter_gpu(d_input, srcDescPtr, d_output, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
-                else
-                    missingFuncFlag = 1;
-
-                break;
-            }
-            case 54:
-            {
-                testCaseName = "gaussian_filter";
-                Rpp32u kernelSize = additionalParam;
-
-                Rpp32f stdDevTensor[batchSize];
-                for (i = 0; i < batchSize; i++)
-                {
-                    stdDevTensor[i] = 5.0f;
-                }
-
-                startWallTime = omp_get_wtime();
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_gaussian_filter_gpu(d_input, srcDescPtr, d_output, dstDescPtr, stdDevTensor, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
-                else
-                    missingFuncFlag = 1;
-
-                break;
-            }
-            case 61:
-            {
-                testCaseName = "magnitude";
-
-                startWallTime = omp_get_wtime();
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_magnitude_gpu(d_input, d_input_second, srcDescPtr, d_output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
-                else
-                    missingFuncFlag = 1;
-
-                break;
-            }
-            case 63:
-            {
-                testCaseName = "phase";
-
-                startWallTime = omp_get_wtime();
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_phase_gpu(d_input, d_input_second, srcDescPtr, d_output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
-                else
-                    missingFuncFlag = 1;
-
-                break;
-            }
-            case 70:
-            {
-                testCaseName = "copy";
-
-                startWallTime = omp_get_wtime();
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_copy_gpu(d_input, srcDescPtr, d_output, dstDescPtr, handle);
-                else
-                    missingFuncFlag = 1;
-
-                break;
-            }
-            case 79:
-            {
-                testCaseName = "remap";
-
-                if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR))
-                {
-                    missingFuncFlag = 1;
-                    break;
-                }
-
-                RpptDesc tableDesc = srcDesc;
-                RpptDescPtr tableDescPtr = &tableDesc;
-                init_remap(tableDescPtr, srcDescPtr, roiTensorPtrSrc, rowRemapTable, colRemapTable);
-
-                CHECK(hipMemcpy(d_rowRemapTable, (void *)rowRemapTable, ioBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
-                CHECK(hipMemcpy(d_colRemapTable, (void *)colRemapTable, ioBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
-
-                startWallTime = omp_get_wtime();
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_remap_gpu(d_input, srcDescPtr, d_output, dstDescPtr, (Rpp32f *)d_rowRemapTable, (Rpp32f *)d_colRemapTable, tableDescPtr, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
-                else
-                    missingFuncFlag = 1;
-
-                break;
-            }
-            case 80:
-            {
-                testCaseName = "resize_mirror_normalize";
-
-                if (interpolationType != RpptInterpolationType::BILINEAR)
-                {
-                    missingFuncFlag = 1;
-                    break;
-                }
-
-                for (i = 0; i < batchSize; i++)
-                {
-                    dstImgSizes[i].width = roiTensorPtrDst[i].xywhROI.roiWidth = roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
-                    dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
-                }
-
-                Rpp32f mean[batchSize * 3];
-                Rpp32f stdDev[batchSize * 3];
-                Rpp32u mirror[batchSize];
-                for (i = 0, j = 0; i < batchSize; i++, j += 3)
-                {
-                    mean[j] = 60.0;
-                    stdDev[j] = 1.0;
-
-                    mean[j + 1] = 80.0;
-                    stdDev[j + 1] = 1.0;
-
-                    mean[j + 2] = 100.0;
-                    stdDev[j + 2] = 1.0;
-                    mirror[i] = 1;
-                }
-
-                startWallTime = omp_get_wtime();
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_resize_mirror_normalize_gpu(d_input, srcDescPtr, d_output, dstDescPtr, dstImgSizes, interpolationType, mean, stdDev, mirror, roiTensorPtrDst, roiTypeSrc, handle);
-                else
-                    missingFuncFlag = 1;
-
-                break;
-            }
-            case 82:
-            {
-                testCaseName = "ricap";
-
-                Rpp32u permutationTensor[batchSize * 4];
-                if(qaFlag)
-                    init_ricap_qa(maxWidth, maxHeight, batchSize, permutationTensor, roiPtrInputCropRegion);
-                else
-                    init_ricap(maxWidth, maxHeight, batchSize, permutationTensor, roiPtrInputCropRegion);
-
-                startWallTime = omp_get_wtime();
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_ricap_gpu(d_input, srcDescPtr, d_output, dstDescPtr, permutationTensor, roiPtrInputCropRegion, roiTypeSrc, handle);
-                else
-                    missingFuncFlag = 1;
-                break;
-            }
-            case 83:
-            {
-                testCaseName = "gridmask";
-
-                Rpp32u tileWidth = 40;
-                Rpp32f gridRatio = 0.6;
-                Rpp32f gridAngle = 0.5;
-                RpptUintVector2D translateVector;
-                translateVector.x = 0.0;
-                translateVector.y = 0.0;
-
-                startWallTime = omp_get_wtime();
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_gridmask_gpu(d_input, srcDescPtr, d_output, dstDescPtr, tileWidth, gridRatio, gridAngle, translateVector, roiTensorPtrSrc, roiTypeSrc, handle);
-                else
-                    missingFuncFlag = 1;
-
-                break;
-            }
-            case 84:
-            {
-                testCaseName = "spatter";
-
-                RpptRGB spatterColor;
-
-                // Mud Spatter
-                spatterColor.R = 65;
-                spatterColor.G = 50;
-                spatterColor.B = 23;
-
-                // Blood Spatter
-                // spatterColor.R = 98;
-
-                // Ink Spatter
-                // spatterColor.R = 5;
-                // spatterColor.G = 20;
-                // spatterColor.B = 64;
-
-                startWallTime = omp_get_wtime();
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_spatter_gpu(d_input, srcDescPtr, d_output, dstDescPtr, spatterColor, roiTensorPtrSrc, roiTypeSrc, handle);
-                else
-                    missingFuncFlag = 1;
-
-                break;
-            }
-            case 85:
-            {
-                testCaseName = "swap_channels";
-
-                startWallTime = omp_get_wtime();
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_swap_channels_gpu(d_input, srcDescPtr, d_output, dstDescPtr, handle);
-                else
-                    missingFuncFlag = 1;
-
-                break;
-            }
-            case 86:
-            {
-                testCaseName = "color_to_greyscale";
-
-                RpptSubpixelLayout srcSubpixelLayout = RpptSubpixelLayout::RGBtype;
-
-                startWallTime = omp_get_wtime();
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_color_to_greyscale_gpu(d_input, srcDescPtr, d_output, dstDescPtr, srcSubpixelLayout, handle);
-                else
-                    missingFuncFlag = 1;
-
-                break;
-            }
-            case 87:
-            {
-                testCaseName = "tensor_sum";
-
-                if(srcDescPtr->c == 1)
-                    reductionFuncResultArrLength = srcDescPtr->n;
-
-                startWallTime = omp_get_wtime();
-
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_tensor_sum_gpu(d_input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
-                else
-                    missingFuncFlag = 1;
-
-                break;
-            }
-            case 88:
-            {
-                testCaseName = "tensor_min";
-
-                startWallTime = omp_get_wtime();
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_tensor_min_gpu(d_input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
-                else
-                    missingFuncFlag = 1;
-
-                break;
-            }
-            case 89:
-            {
-                testCaseName = "tensor_max";
-
-                startWallTime = omp_get_wtime();
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_tensor_max_gpu(d_input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
-                else
-                    missingFuncFlag = 1;
-
-                break;
-            }
-            default:
-                missingFuncFlag = 1;
-                break;
-            }
 
             CHECK(hipDeviceSynchronize());
             endWallTime = omp_get_wtime();
@@ -1177,117 +1177,118 @@ int main(int argc, char **argv)
 
             maxWallTime = max(maxWallTime, wallTime);
             minWallTime = min(minWallTime, wallTime);
-            avgWallTime += wallTime ;
-            wallTime *= 1000;
-            if (testType == 0)
+            avgWallTime += wallTime;
+        }
+        wallTime *= 1000;
+
+        if (testType == 0)
+        {
+            cout << "\n\nGPU Backend Wall Time: " << wallTime <<" ms/batch"<< endl;
+            // Display results for reduction functions
+            if (reductionTypeCase)
             {
-                cout << "\n\nGPU Backend Wall Time: " << wallTime <<" ms/batch"<< endl;
-                // Display results for reduction functions
-                if (reductionTypeCase)
+                if(srcDescPtr->c == 3)
+                    printf("\nReduction result (Batch of 3 channel images produces 4 results per image in batch): ");
+                else if(srcDescPtr->c == 1)
                 {
-                    if(srcDescPtr->c == 3)
-                        printf("\nReduction result (Batch of 3 channel images produces 4 results per image in batch): ");
-                    else if(srcDescPtr->c == 1)
-                    {
-                        printf("\nReduction result (Batch of 1 channel images produces 1 result per image in batch): ");
-                        reductionFuncResultArrLength = srcDescPtr->n;
-                    }
-
-                    // print reduction functions output array based on different bit depths, and precision desired
-                    int precision = ((dstDescPtr->dataType == RpptDataType::F32) || (dstDescPtr->dataType == RpptDataType::F16)) ? 3 : 0;
-                    if (dstDescPtr->dataType == RpptDataType::U8)
-                    {
-                        if (testCase == 87)
-                            print_array(static_cast<Rpp64u *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
-                        else
-                            print_array(static_cast<Rpp8u *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
-                    }
-                    else if (dstDescPtr->dataType == RpptDataType::F16)
-                    {
-                        if (testCase == 87)
-                            print_array(static_cast<Rpp32f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
-                        else
-                            print_array(static_cast<Rpp16f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
-                    }
-                    else if (dstDescPtr->dataType == RpptDataType::F32)
-                    {
-                        if (testCase == 87)
-                            print_array(static_cast<Rpp32f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
-                        else
-                            print_array(static_cast<Rpp32f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
-                    }
-                    else if (dstDescPtr->dataType == RpptDataType::I8)
-                    {
-                        if (testCase == 87)
-                            print_array(static_cast<Rpp64s *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
-                        else
-                            print_array(static_cast<Rpp8s *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
-                    }
-                    printf("\n");
-
-                    /*Compare the output of the function with golden outputs only if
-                    1.QA Flag is set
-                    2.input bit depth 0 (U8)
-                    3.source and destination layout are the same*/
-                    if(qaFlag && inputBitDepth == 0 && (srcDescPtr->layout == dstDescPtr->layout) && !(randomOutputCase))
-                    {
-                        if (testCase == 87)
-                            compare_reduction_output(static_cast<uint64_t *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
-                        else
-                            compare_reduction_output(static_cast<Rpp8u *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
-                    }
+                    printf("\nReduction result (Batch of 1 channel images produces 1 result per image in batch): ");
+                    reductionFuncResultArrLength = srcDescPtr->n;
                 }
-                else
+
+                // print reduction functions output array based on different bit depths, and precision desired
+                int precision = ((dstDescPtr->dataType == RpptDataType::F32) || (dstDescPtr->dataType == RpptDataType::F16)) ? 3 : 0;
+                if (dstDescPtr->dataType == RpptDataType::U8)
                 {
-                    CHECK(hipMemcpy(output, d_output, outputBufferSize, hipMemcpyDeviceToHost));
-
-                    // Reconvert other bit depths to 8u for output display purposes
-                    convert_output_bitdepth_to_u8(output, outputu8, inputBitDepth, oBufferSize, outputBufferSize, dstDescPtr, invConversionFactor);
-
-                    // if DEBUG_MODE is set to 1, the output of the first iteration will be dumped to csv files for debugging purposes.
-                    if(DEBUG_MODE && iterCount == 0)
-                    {
-                        std::ofstream refFile;
-                        refFile.open(func + ".csv");
-                        for (int i = 0; i < oBufferSize; i++)
-                            refFile << static_cast<int>(*(outputu8 + i)) << ",";
-                        refFile.close();
-                    }
-
-                    /*Compare the output of the function with golden outputs only if
-                    1.QA Flag is set
-                    2.input bit depth 0 (Input U8 && Output U8)
-                    3.source and destination layout are the same
-                    4.augmentation case does not generate random output*/
-                    if(qaFlag && inputBitDepth == 0 && ((srcDescPtr->layout == dstDescPtr->layout) || pln1OutTypeCase) && !(randomOutputCase))
-                        compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, batchSize, interpolationTypeName, noiseTypeName, testCase, dst, scriptPath);
-
-                    // Calculate exact dstROI in XYWH format for OpenCV dump
-                    if (roiTypeSrc == RpptRoiType::LTRB)
-                        convert_roi(roiTensorPtrDst, RpptRoiType::XYWH, dstDescPtr->n);
-
-                    // Check if the ROI values for each input is within the bounds of the max buffer allocated
-                    RpptROI roiDefault;
-                    RpptROIPtr roiPtrDefault = &roiDefault;
-                    roiPtrDefault->xywhROI =  {0, 0, static_cast<Rpp32s>(dstDescPtr->w), static_cast<Rpp32s>(dstDescPtr->h)};
-                    for (int i = 0; i < dstDescPtr->n; i++)
-                    {
-                        roiTensorPtrDst[i].xywhROI.roiWidth = std::min(roiPtrDefault->xywhROI.roiWidth - roiTensorPtrDst[i].xywhROI.xy.x, roiTensorPtrDst[i].xywhROI.roiWidth);
-                        roiTensorPtrDst[i].xywhROI.roiHeight = std::min(roiPtrDefault->xywhROI.roiHeight - roiTensorPtrDst[i].xywhROI.xy.y, roiTensorPtrDst[i].xywhROI.roiHeight);
-                        roiTensorPtrDst[i].xywhROI.xy.x = std::max(roiPtrDefault->xywhROI.xy.x, roiTensorPtrDst[i].xywhROI.xy.x);
-                        roiTensorPtrDst[i].xywhROI.xy.y = std::max(roiPtrDefault->xywhROI.xy.y, roiTensorPtrDst[i].xywhROI.xy.y);
-                    }
-
-                    // Convert any PLN3 outputs to the corresponding PKD3 version for OpenCV dump
-                    if (layoutType == 0 || layoutType == 1)
-                    {
-                        if ((dstDescPtr->c == 3) && (dstDescPtr->layout == RpptLayout::NCHW))
-                            convert_pln3_to_pkd3(outputu8, dstDescPtr);
-                    }
-                    // OpenCV dump (if testType is unit test and QA mode is not set)
-                    if(!qaFlag)
-                        write_image_batch_opencv(dst, outputu8, dstDescPtr, imageNamesStart, dstImgSizes, MAX_IMAGE_DUMP);
+                    if (testCase == 87)
+                        print_array(static_cast<Rpp64u *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
+                    else
+                        print_array(static_cast<Rpp8u *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
                 }
+                else if (dstDescPtr->dataType == RpptDataType::F16)
+                {
+                    if (testCase == 87)
+                        print_array(static_cast<Rpp32f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
+                    else
+                        print_array(static_cast<Rpp16f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
+                }
+                else if (dstDescPtr->dataType == RpptDataType::F32)
+                {
+                    if (testCase == 87)
+                        print_array(static_cast<Rpp32f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
+                    else
+                        print_array(static_cast<Rpp32f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
+                }
+                else if (dstDescPtr->dataType == RpptDataType::I8)
+                {
+                    if (testCase == 87)
+                        print_array(static_cast<Rpp64s *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
+                    else
+                        print_array(static_cast<Rpp8s *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
+                }
+                printf("\n");
+
+                /*Compare the output of the function with golden outputs only if
+                1.QA Flag is set
+                2.input bit depth 0 (U8)
+                3.source and destination layout are the same*/
+                if(qaFlag && inputBitDepth == 0 && (srcDescPtr->layout == dstDescPtr->layout) && !(randomOutputCase))
+                {
+                    if (testCase == 87)
+                        compare_reduction_output(static_cast<uint64_t *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
+                    else
+                        compare_reduction_output(static_cast<Rpp8u *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
+                }
+            }
+            else
+            {
+                CHECK(hipMemcpy(output, d_output, outputBufferSize, hipMemcpyDeviceToHost));
+
+                // Reconvert other bit depths to 8u for output display purposes
+                convert_output_bitdepth_to_u8(output, outputu8, inputBitDepth, oBufferSize, outputBufferSize, dstDescPtr, invConversionFactor);
+
+                // if DEBUG_MODE is set to 1, the output of the first iteration will be dumped to csv files for debugging purposes.
+                if(DEBUG_MODE && iterCount == 0)
+                {
+                    std::ofstream refFile;
+                    refFile.open(func + ".csv");
+                    for (int i = 0; i < oBufferSize; i++)
+                        refFile << static_cast<int>(*(outputu8 + i)) << ",";
+                    refFile.close();
+                }
+
+                /*Compare the output of the function with golden outputs only if
+                1.QA Flag is set
+                2.input bit depth 0 (Input U8 && Output U8)
+                3.source and destination layout are the same
+                4.augmentation case does not generate random output*/
+                if(qaFlag && inputBitDepth == 0 && ((srcDescPtr->layout == dstDescPtr->layout) || pln1OutTypeCase) && !(randomOutputCase))
+                    compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, batchSize, interpolationTypeName, noiseTypeName, testCase, dst, scriptPath);
+
+                // Calculate exact dstROI in XYWH format for OpenCV dump
+                if (roiTypeSrc == RpptRoiType::LTRB)
+                    convert_roi(roiTensorPtrDst, RpptRoiType::XYWH, dstDescPtr->n);
+
+                // Check if the ROI values for each input is within the bounds of the max buffer allocated
+                RpptROI roiDefault;
+                RpptROIPtr roiPtrDefault = &roiDefault;
+                roiPtrDefault->xywhROI =  {0, 0, static_cast<Rpp32s>(dstDescPtr->w), static_cast<Rpp32s>(dstDescPtr->h)};
+                for (int i = 0; i < dstDescPtr->n; i++)
+                {
+                    roiTensorPtrDst[i].xywhROI.roiWidth = std::min(roiPtrDefault->xywhROI.roiWidth - roiTensorPtrDst[i].xywhROI.xy.x, roiTensorPtrDst[i].xywhROI.roiWidth);
+                    roiTensorPtrDst[i].xywhROI.roiHeight = std::min(roiPtrDefault->xywhROI.roiHeight - roiTensorPtrDst[i].xywhROI.xy.y, roiTensorPtrDst[i].xywhROI.roiHeight);
+                    roiTensorPtrDst[i].xywhROI.xy.x = std::max(roiPtrDefault->xywhROI.xy.x, roiTensorPtrDst[i].xywhROI.xy.x);
+                    roiTensorPtrDst[i].xywhROI.xy.y = std::max(roiPtrDefault->xywhROI.xy.y, roiTensorPtrDst[i].xywhROI.xy.y);
+                }
+
+                // Convert any PLN3 outputs to the corresponding PKD3 version for OpenCV dump
+                if (layoutType == 0 || layoutType == 1)
+                {
+                    if ((dstDescPtr->c == 3) && (dstDescPtr->layout == RpptLayout::NCHW))
+                        convert_pln3_to_pkd3(outputu8, dstDescPtr);
+                }
+                // OpenCV dump (if testType is unit test and QA mode is not set)
+                if(!qaFlag)
+                    write_image_batch_opencv(dst, outputu8, dstDescPtr, imageNamesStart, dstImgSizes, MAX_IMAGE_DUMP);
             }
         }
     }
