@@ -1301,7 +1301,6 @@ void inline init_remap(RpptDescPtr tableDescPtr, RpptDescPtr srcDescPtr, RpptROI
     tableDescPtr->strides.hStride = srcDescPtr->w;
     tableDescPtr->strides.wStride = tableDescPtr->strides.cStride = 1;
     Rpp32u batchSize = srcDescPtr->n;
-    std::cerr<<"nstride: "<<tableDescPtr->strides.nStride<<std::endl;
 
     for (Rpp32u count = 0; count < batchSize; count++)
     {
