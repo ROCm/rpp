@@ -143,7 +143,7 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
         int intervalJump = batchSize * (numFilter + numBins);
         // intervals contain numBins values of type integer
         Rpp32s *intervals = reinterpret_cast<Rpp32s *>(scratchMem + intervalJump + (batchCount * numBins));
-        memset(intervals, -1, sizeof(numBins * sizeof(Rpp32s)));
+        std::fill(intervals, intervals + numBins, -1);
 
         Rpp32s fftBin = fftBinStart;
         Rpp64f mel0 = melLow, mel1 = melLow + melStep;
