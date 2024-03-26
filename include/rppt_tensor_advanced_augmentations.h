@@ -86,9 +86,7 @@ RppStatus rppt_erase_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstP
  * \retval RPP_ERROR* Unsuccessful completion.
  */
 RppStatus rppt_erase_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptRoiLtrb *anchorBoxInfoTensor, RppPtr_t colorsTensor, Rpp32u *numBoxesTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
-
 #endif // GPU_SUPPORT
-
 
 /*! @}
  */

@@ -655,33 +655,40 @@ int main(int argc, char **argv)
                 }
                 case 32:
                 {
-                    testCaseName = "erase";
+                    numOfBoxes[i] = boxesInEachImage;
+                    int idx = boxesInEachImage * i;
 
-                    Rpp8u *colors8u = reinterpret_cast<Rpp8u *>(colorBuffer);
-                    Rpp16f *colors16f = reinterpret_cast<Rpp16f *>(colorBuffer);
-                    Rpp32f *colors32f = colorBuffer;
-                    Rpp8s *colors8s = reinterpret_cast<Rpp8s *>(colorBuffer);
+                    anchorBoxInfoTensor[idx].lt.x = 0.125 * roiTensorPtrSrc[i].xywhROI.roiWidth;
+                    anchorBoxInfoTensor[idx].lt.y = 0.125 * roiTensorPtrSrc[i].xywhROI.roiHeight;
+                    anchorBoxInfoTensor[idx].rb.x = 0.375 * roiTensorPtrSrc[i].xywhROI.roiWidth;
+                    anchorBoxInfoTensor[idx].rb.y = 0.375 * roiTensorPtrSrc[i].xywhROI.roiHeight;
 
-                    for(int i = 0; i < batchSize; i++)
+                    idx++;
+                    anchorBoxInfoTensor[idx].lt.x = 0.125 * roiTensorPtrSrc[i].xywhROI.roiWidth;
+                    anchorBoxInfoTensor[idx].lt.y = 0.625 * roiTensorPtrSrc[i].xywhROI.roiHeight;
+                    anchorBoxInfoTensor[idx].rb.x = 0.875 * roiTensorPtrSrc[i].xywhROI.roiWidth;
+                    anchorBoxInfoTensor[idx].rb.y = 0.875 * roiTensorPtrSrc[i].xywhROI.roiHeight;
+
+                    idx++;
+                    anchorBoxInfoTensor[idx].lt.x = 0.75 * roiTensorPtrSrc[i].xywhROI.roiWidth;
+                    anchorBoxInfoTensor[idx].lt.y = 0.125 * roiTensorPtrSrc[i].xywhROI.roiHeight;
+                    anchorBoxInfoTensor[idx].rb.x = 0.875 * roiTensorPtrSrc[i].xywhROI.roiWidth;
+                    anchorBoxInfoTensor[idx].rb.y = 0.5 * roiTensorPtrSrc[i].xywhROI.roiHeight;
+
+                    if(srcDescPtr->c == 3)
                     {
-                        numOfBoxes[i] = boxesInEachImage;
+                        int idx = boxesInEachImage * 3 * i;
+                        colorBuffer[idx] = 0;
+                        colorBuffer[idx + 1] = 0;
+                        colorBuffer[idx + 2] = 240;
+                        colorBuffer[idx + 3] = 0;
+                        colorBuffer[idx + 4] = 240;
+                        colorBuffer[idx + 5] = 0;
+                        colorBuffer[idx + 6] = 240;
+                        colorBuffer[idx + 7] = 0;
+                        colorBuffer[idx + 8] = 0;
 
-                        anchorBoxInfoTensor[boxesInEachImage * i].lt.x = 0.125 * roiTensorPtrSrc[i].xywhROI.roiWidth;
-                        anchorBoxInfoTensor[boxesInEachImage * i].lt.y = 0.125 * roiTensorPtrSrc[i].xywhROI.roiHeight;
-                        anchorBoxInfoTensor[boxesInEachImage * i].rb.x = 0.375 * roiTensorPtrSrc[i].xywhROI.roiWidth;
-                        anchorBoxInfoTensor[boxesInEachImage * i].rb.y = 0.375 * roiTensorPtrSrc[i].xywhROI.roiHeight;
-
-                        anchorBoxInfoTensor[(boxesInEachImage * i) + 1].lt.x = 0.125 * roiTensorPtrSrc[i].xywhROI.roiWidth;
-                        anchorBoxInfoTensor[(boxesInEachImage * i) + 1].lt.y = 0.625 * roiTensorPtrSrc[i].xywhROI.roiHeight;
-                        anchorBoxInfoTensor[(boxesInEachImage * i) + 1].rb.x = 0.875 * roiTensorPtrSrc[i].xywhROI.roiWidth;
-                        anchorBoxInfoTensor[(boxesInEachImage * i) + 1].rb.y = 0.875 * roiTensorPtrSrc[i].xywhROI.roiHeight;
-
-                        anchorBoxInfoTensor[(boxesInEachImage * i) + 2].lt.x = 0.75 * roiTensorPtrSrc[i].xywhROI.roiWidth;
-                        anchorBoxInfoTensor[(boxesInEachImage * i) + 2].lt.y = 0.125 * roiTensorPtrSrc[i].xywhROI.roiHeight;
-                        anchorBoxInfoTensor[(boxesInEachImage * i) + 2].rb.x = 0.875 * roiTensorPtrSrc[i].xywhROI.roiWidth;
-                        anchorBoxInfoTensor[(boxesInEachImage * i) + 2].rb.y = 0.5 * roiTensorPtrSrc[i].xywhROI.roiHeight;
-
-                        if(srcDescPtr->c == 3)
+                        for (int j = 0; j < 9; j++)
                         {
                             int idx = (boxesInEachImage * 3 * i);
                             colorBuffer[idx] = 0;
@@ -739,47 +746,45 @@ int main(int argc, char **argv)
                     else
                         missingFuncFlag = 1;
 
-                    CHECK(hipHostFree(colorBuffer));
-                    CHECK(hipHostFree(anchorBoxInfoTensor));
-                    CHECK(hipHostFree(numOfBoxes));
+                break;
+            }
+            case 34:
+            {
+                testCaseName = "lut";
 
-                    break;
-                }
-                case 34:
-                {
-                    testCaseName = "lut";
+                Rpp32f *lutBuffer;
+                CHECK(hipHostMalloc(&lutBuffer, 65536 * sizeof(Rpp32f)));
+                CHECK(hipMemset(lutBuffer, 0, 65536 * sizeof(Rpp32f)));
+                Rpp8u *lut8u = reinterpret_cast<Rpp8u *>(lutBuffer);
+                Rpp16f *lut16f = reinterpret_cast<Rpp16f *>(lutBuffer);
+                Rpp32f *lut32f = reinterpret_cast<Rpp32f *>(lutBuffer);
+                Rpp8s *lut8s = reinterpret_cast<Rpp8s *>(lutBuffer);
+                if (inputBitDepth == 0)
+                    for (j = 0; j < 256; j++)
+                        lut8u[j] = (Rpp8u)(255 - j);
+                else if (inputBitDepth == 3)
+                    for (j = 0; j < 256; j++)
+                        lut16f[j] = (Rpp16f)((255 - j) * ONE_OVER_255);
+                else if (inputBitDepth == 4)
+                    for (j = 0; j < 256; j++)
+                        lut32f[j] = (Rpp32f)((255 - j) * ONE_OVER_255);
+                else if (inputBitDepth == 5)
+                    for (j = 0; j < 256; j++)
+                        lut8s[j] = (Rpp8s)(255 - j - 128);
 
-                    Rpp32f *lutBuffer;
-                    CHECK(hipHostMalloc(&lutBuffer, 65536 * sizeof(Rpp32f)));
-                    CHECK(hipMemset(lutBuffer, 0, 65536 * sizeof(Rpp32f)));
-                    Rpp8u *lut8u = reinterpret_cast<Rpp8u *>(lutBuffer);
-                    Rpp16f *lut16f = reinterpret_cast<Rpp16f *>(lutBuffer);
-                    Rpp32f *lut32f = reinterpret_cast<Rpp32f *>(lutBuffer);
-                    Rpp8s *lut8s = reinterpret_cast<Rpp8s *>(lutBuffer);
-                    if (inputBitDepth == 0)
-                        for (j = 0; j < 256; j++)
-                            lut8u[j] = (Rpp8u)(255 - j);
-                    else if (inputBitDepth == 3)
-                        for (j = 0; j < 256; j++)
-                            lut16f[j] = (Rpp16f)((255 - j) * ONE_OVER_255);
-                    else if (inputBitDepth == 4)
-                        for (j = 0; j < 256; j++)
-                            lut32f[j] = (Rpp32f)((255 - j) * ONE_OVER_255);
-                    else if (inputBitDepth == 5)
-                        for (j = 0; j < 256; j++)
-                            lut8s[j] = (Rpp8s)(255 - j - 128);
+                startWallTime = omp_get_wtime();
+                if (inputBitDepth == 0)
+                    rppt_lut_gpu(d_input, srcDescPtr, d_output, dstDescPtr, lut8u, roiTensorPtrSrc, roiTypeSrc, handle);
+                else if (inputBitDepth == 3)
+                    rppt_lut_gpu(d_input, srcDescPtr, d_output, dstDescPtr, lut16f, roiTensorPtrSrc, roiTypeSrc, handle);
+                else if (inputBitDepth == 4)
+                    rppt_lut_gpu(d_input, srcDescPtr, d_output, dstDescPtr, lut32f, roiTensorPtrSrc, roiTypeSrc, handle);
+                else if (inputBitDepth == 5)
+                    rppt_lut_gpu(d_input, srcDescPtr, d_output, dstDescPtr, lut8s, roiTensorPtrSrc, roiTypeSrc, handle);
+                else
+                    missingFuncFlag = 1;
 
-                    startWallTime = omp_get_wtime();
-                    if (inputBitDepth == 0)
-                        rppt_lut_gpu(d_input, srcDescPtr, d_output, dstDescPtr, lut8u, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else if (inputBitDepth == 3)
-                        rppt_lut_gpu(d_input, srcDescPtr, d_output, dstDescPtr, lut16f, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else if (inputBitDepth == 4)
-                        rppt_lut_gpu(d_input, srcDescPtr, d_output, dstDescPtr, lut32f, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else if (inputBitDepth == 5)
-                        rppt_lut_gpu(d_input, srcDescPtr, d_output, dstDescPtr, lut8s, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else
-                        missingFuncFlag = 1;
+                CHECK(hipHostFree(lutBuffer));
 
                     break;
 
