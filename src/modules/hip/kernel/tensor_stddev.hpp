@@ -663,10 +663,8 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
     if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
     {
         Rpp32u tensorPartialVarArrLength = gridDim_x * gridDim_y * gridDim_z;
-        float *tensorPartialVarArr;
-        tensorPartialVarArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
-        hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float));
-        hipStreamSynchronize(handle.GetStream());
+        float *tensorPartialVarArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
+        hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float), handle.GetStream());
         hipLaunchKernelGGL(tensor_var_pln1_hip,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
@@ -692,12 +690,11 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
     else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
     {
         Rpp32u tensorPartialVarArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
-        float *tensorPartialVarArr;
-        tensorPartialVarArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
+        float *tensorPartialVarArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
+        hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float), handle.GetStream());
         if(!flag)
         {
-            hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float));
-            hipStreamSynchronize(handle.GetStream());
+            //hipStreamSynchronize(handle.GetStream());
             hipLaunchKernelGGL(channel_var_pln3_hip,
                             dim3(gridDim_x, gridDim_y, gridDim_z),
                             dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
@@ -723,8 +720,7 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
         }
         if(flag == 1)
         {
-            hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float));
-            hipStreamSynchronize(handle.GetStream());
+            //hipStreamSynchronize(handle.GetStream());
             hipLaunchKernelGGL(tensor_var_pln3_hip,
                             dim3(gridDim_x, gridDim_y, gridDim_z),
                             dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
@@ -750,8 +746,7 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
         }
         if(flag == 2)
         {
-            hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float));
-            hipStreamSynchronize(handle.GetStream());
+            //hipStreamSynchronize(handle.GetStream());
             hipLaunchKernelGGL(channel_var_pln3_hip,
                             dim3(gridDim_x, gridDim_y, gridDim_z),
                             dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
@@ -774,8 +769,8 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
                             imageStddevArr,
                             0, //setting flag to 0 here to compute individual channel stddev
                             roiTensorPtrSrc);
-            hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float));
-            hipStreamSynchronize(handle.GetStream());
+            //hipStreamSynchronize(handle.GetStream());
+            hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float), handle.GetStream());
             hipLaunchKernelGGL(tensor_var_pln3_hip,
                             dim3(gridDim_x, gridDim_y, gridDim_z),
                             dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
@@ -806,10 +801,9 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
         Rpp32u tensorPartialVarArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
         float *tensorPartialVarArr;
         tensorPartialVarArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
+        hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float), handle.GetStream());
         if(!flag)
         {
-            hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float));
-            hipStreamSynchronize(handle.GetStream());
             hipLaunchKernelGGL(channel_var_pkd3_hip,
                             dim3(gridDim_x, gridDim_y, gridDim_z),
                             dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
@@ -835,8 +829,6 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
         }
         if(flag == 1)
         {
-            hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float));
-            hipStreamSynchronize(handle.GetStream());
             hipLaunchKernelGGL(tensor_var_pkd3_hip,
                             dim3(gridDim_x, gridDim_y, gridDim_z),
                             dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
@@ -862,8 +854,6 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
         }
         if(flag == 2)
         {
-            hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float));
-            hipStreamSynchronize(handle.GetStream());
             hipLaunchKernelGGL(channel_var_pkd3_hip,
                             dim3(gridDim_x, gridDim_y, gridDim_z),
                             dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
@@ -886,8 +876,7 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
                             imageStddevArr,
                             0, //setting flag to 0 here to compute individual channel stddev
                             roiTensorPtrSrc);
-            hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float));
-            hipStreamSynchronize(handle.GetStream());
+            hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float), handle.GetStream());
             hipLaunchKernelGGL(tensor_var_pkd3_hip,
                             dim3(gridDim_x, gridDim_y, gridDim_z),
                             dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),

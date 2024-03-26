@@ -753,12 +753,12 @@ RppStatus rppt_tensor_stddev_gpu(RppPtr_t srcPtr,
     Rpp32u paramIndex = 0;
     if (srcDescPtr->c == 1)
     {
-        if (tensorStddevArrLength < srcDescPtr->n)      // Mean of single channel
+        if (tensorStddevArrLength < srcDescPtr->n)      // Stddev of single channel
             return RPP_ERROR_NOT_ENOUGH_MEMORY;
     }
     else if (srcDescPtr->c == 3)
     {
-        if (tensorStddevArrLength < srcDescPtr->n * 4)  // Mean of each channel, and total Mean of all 3 channels
+        if (tensorStddevArrLength < srcDescPtr->n * 4)  // Stddev of each channel, and total Stddev of all 3 channels / image
             return RPP_ERROR_NOT_ENOUGH_MEMORY;
     }
     if (roiType == RpptRoiType::XYWH)

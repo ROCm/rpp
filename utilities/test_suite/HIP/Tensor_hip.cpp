@@ -323,15 +323,18 @@ int main(int argc, char **argv)
 
     // Initialize buffers for any reductionType functions (testCase 87 - tensor_sum alone cannot return final sum as 8u/8s due to overflow. 8u inputs return 64u sums, 8s inputs return 64s sums)
     void *reductionFuncResultArr;
+    Rpp32f *mean;
     Rpp32u reductionFuncResultArrLength = srcDescPtr->n * 4;
     if (reductionTypeCase)
     {
         int bitDepthByteSize = 0;
-        if ((dstDescPtr->dataType == RpptDataType::U8) || (dstDescPtr->dataType == RpptDataType::I8))
+        if ((dstDescPtr->dataType == RpptDataType::F16) || (dstDescPtr->dataType == RpptDataType::F32) || testCase == 90 || testCase == 91)
+            bitDepthByteSize = sizeof(Rpp32f);  // using 32f outputs for 16f and 32f, for testCase 90, 91
+        else if ((dstDescPtr->dataType == RpptDataType::U8) || (dstDescPtr->dataType == RpptDataType::I8))
             bitDepthByteSize = (testCase == 87) ? sizeof(Rpp64u) : sizeof(Rpp8u);
-        else if ((dstDescPtr->dataType == RpptDataType::F16) || (dstDescPtr->dataType == RpptDataType::F32))
-            bitDepthByteSize = sizeof(Rpp32f);  // using 32f outputs for 16f and 32f
         CHECK(hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * bitDepthByteSize));
+        if(testCase == 91)
+            CHECK(hipHostMalloc(&mean, reductionFuncResultArrLength * bitDepthByteSize));
     }
 
     // Allocate hip memory for src/dst
@@ -1084,36 +1087,8 @@ int main(int argc, char **argv)
 
                     if(srcDescPtr->c == 1)
                         reductionFuncResultArrLength = srcDescPtr->n;
-                    Rpp32f mean[reductionFuncResultArrLength];
+                    memcpy(mean, TensorMeanReferenceOutputs[inputChannels].data(), sizeof(Rpp32f) * reductionFuncResultArrLength);
                     int flag = 2; // compute both image and channel stddev by default
-
-                    if(srcDescPtr->c == 1)
-                    {
-                        for (i = 0; i < reductionFuncResultArrLength; i++) //Default mean values for 3 img dataset
-                        {
-                            mean[0] = 133.690;
-                            mean[1] = 81.347;
-                            mean[2] = 116.939;
-                        }
-                    }
-                    else
-                    {
-                        for (i = 0; i < reductionFuncResultArrLength; i++) //Default mean values for 3 img dataset
-                        {
-                            mean[0] = 139.352;
-                            mean[1] = 136.397;
-                            mean[2] = 105.046;
-                            mean[3] = 126.932;
-                            mean[4] = 105.655;
-                            mean[5] = 74.951;
-                            mean[6] = 50.744;
-                            mean[7] = 77.117;
-                            mean[8] = 96.473;
-                            mean[9] = 121.439;
-                            mean[10] = 147.587;
-                            mean[11] = 121.833;
-                        }
-                    }
 
                     startWallTime = omp_get_wtime();
 
@@ -1123,6 +1098,7 @@ int main(int argc, char **argv)
                         missingFuncFlag = 1;
 
                     break;
+                    std::cerr << "after stddev compute\n";
                 }
                 default:
                   missingFuncFlag = 1;
@@ -1159,8 +1135,10 @@ int main(int argc, char **argv)
                 }
 
                 // print reduction functions output array based on different bit depths, and precision desired
-                int precision = ((dstDescPtr->dataType == RpptDataType::F32) || (dstDescPtr->dataType == RpptDataType::F16)) ? 3 : 0;
-                if (dstDescPtr->dataType == RpptDataType::U8)
+                int precision = ((dstDescPtr->dataType == RpptDataType::F32) || (dstDescPtr->dataType == RpptDataType::F16) || testCase == 90 || testCase == 91) ? 3 : 0;
+                if (dstDescPtr->dataType == RpptDataType::F32 || testCase == 90 || testCase == 91)
+                    print_array(static_cast<Rpp32f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
+                else if (dstDescPtr->dataType == RpptDataType::U8)
                 {
                     if (testCase == 87)
                         print_array(static_cast<Rpp64u *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
@@ -1173,13 +1151,6 @@ int main(int argc, char **argv)
                         print_array(static_cast<Rpp32f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
                     else
                         print_array(static_cast<Rpp16f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
-                }
-                else if (dstDescPtr->dataType == RpptDataType::F32)
-                {
-                    if (testCase == 87)
-                        print_array(static_cast<Rpp32f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
-                    else
-                        print_array(static_cast<Rpp32f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
                 }
                 else if (dstDescPtr->dataType == RpptDataType::I8)
                 {
@@ -1198,6 +1169,8 @@ int main(int argc, char **argv)
                 {
                     if (testCase == 87)
                         compare_reduction_output(static_cast<uint64_t *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
+                    else if (testCase == 90 || testCase == 91)
+                        compare_reduction_output(static_cast<Rpp32f *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
                     else
                         compare_reduction_output(static_cast<Rpp8u *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
                 }
@@ -1273,7 +1246,11 @@ int main(int argc, char **argv)
     if(testCase == 82)
         CHECK(hipHostFree(roiPtrInputCropRegion));
     if (reductionTypeCase)
+    {
         CHECK(hipHostFree(reductionFuncResultArr));
+        if(testCase == 91)
+            CHECK(hipHostFree(mean));
+    }
     free(input);
     free(input_second);
     free(output);

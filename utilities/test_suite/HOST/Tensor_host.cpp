@@ -320,15 +320,15 @@ int main(int argc, char **argv)
     if (reductionTypeCase)
     {
         int bitDepthByteSize = 0;
-        if ((dstDescPtr->dataType == RpptDataType::U8) || (dstDescPtr->dataType == RpptDataType::I8))
+        if ((dstDescPtr->dataType == RpptDataType::F16) || (dstDescPtr->dataType == RpptDataType::F32) || testCase == 90 || testCase == 91)
+        {
+            bitDepthByteSize = sizeof(Rpp32f);  // using 32f outputs for 16f and 32f, for testCase 90, 91
+            reductionFuncResultArr = static_cast<Rpp32f *>(calloc(reductionFuncResultArrLength, bitDepthByteSize));
+        }
+        else if ((dstDescPtr->dataType == RpptDataType::U8) || (dstDescPtr->dataType == RpptDataType::I8))
         {
             bitDepthByteSize = (testCase == 87) ? sizeof(Rpp64u) : sizeof(Rpp8u);
             reductionFuncResultArr = static_cast<void *>(calloc(reductionFuncResultArrLength, bitDepthByteSize));
-        }
-        else if ((dstDescPtr->dataType == RpptDataType::F16) || (dstDescPtr->dataType == RpptDataType::F32))
-        {
-            bitDepthByteSize = sizeof(Rpp32f);  // using 32f outputs for 16f and 32f
-            reductionFuncResultArr = static_cast<Rpp32f *>(calloc(reductionFuncResultArrLength, bitDepthByteSize));
         }
     }
 
@@ -1091,7 +1091,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                      
+
                 case 90:
                 {
                     testCaseName = "tensor_mean";
@@ -1115,36 +1115,9 @@ int main(int argc, char **argv)
 
                     if(srcDescPtr->c == 1)
                         reductionFuncResultArrLength = srcDescPtr->n;
-                    Rpp32f mean[reductionFuncResultArrLength];
+                    Rpp32f *mean = TensorMeanReferenceOutputs[inputChannels].data();
                     int flag = 2; // compute both image and channel stddev by default
 
-                    if(srcDescPtr->c == 1)
-                    {
-                        for (i = 0; i < reductionFuncResultArrLength; i++) //Default mean values for 3 img dataset
-                        {
-                            mean[0] = 133.690;
-                            mean[1] = 81.347;
-                            mean[2] = 116.939;
-                        }
-                    }
-                    else
-                    {
-                        for (i = 0; i < reductionFuncResultArrLength; i++) //Default mean values for 3 img dataset
-                        {
-                            mean[0] = 139.352;
-                            mean[1] = 136.397;
-                            mean[2] = 105.046;
-                            mean[3] = 126.932;
-                            mean[4] = 105.655;
-                            mean[5] = 74.951;
-                            mean[6] = 50.744;
-                            mean[7] = 77.117;
-                            mean[8] = 96.473;
-                            mean[9] = 121.439;
-                            mean[10] = 147.587;
-                            mean[11] = 121.833;
-                        }
-                    }
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();
 
@@ -1194,8 +1167,10 @@ int main(int argc, char **argv)
                 }
 
                 // print reduction functions output array based on different bit depths, and precision desired
-                int precision = ((dstDescPtr->dataType == RpptDataType::F32) || (dstDescPtr->dataType == RpptDataType::F16)) ? 3 : 0;
-                if (dstDescPtr->dataType == RpptDataType::U8)
+                int precision = ((dstDescPtr->dataType == RpptDataType::F32) || (dstDescPtr->dataType == RpptDataType::F16) || testCase == 90 || testCase == 91) ? 3 : 0;
+                if (dstDescPtr->dataType == RpptDataType::F32 || testCase == 90 || testCase == 91)
+                    print_array(static_cast<Rpp32f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
+                else if (dstDescPtr->dataType == RpptDataType::U8)
                 {
                     if (testCase == 87)
                         print_array(static_cast<Rpp64u *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
@@ -1208,13 +1183,6 @@ int main(int argc, char **argv)
                         print_array(static_cast<Rpp32f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
                     else
                         print_array(static_cast<Rpp16f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
-                }
-                else if (dstDescPtr->dataType == RpptDataType::F32)
-                {
-                    if (testCase == 87)
-                        print_array(static_cast<Rpp32f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
-                    else
-                        print_array(static_cast<Rpp32f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
                 }
                 else if (dstDescPtr->dataType == RpptDataType::I8)
                 {
@@ -1233,6 +1201,8 @@ int main(int argc, char **argv)
                 {
                     if (testCase == 87)
                         compare_reduction_output(static_cast<uint64_t *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
+                    else if (testCase == 90 || testCase == 91)
+                        compare_reduction_output(static_cast<Rpp32f *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
                     else
                         compare_reduction_output(static_cast<Rpp8u *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
                 }
