@@ -38,10 +38,10 @@ with open('../CMakeLists.txt', encoding='utf-8') as f:
     if not match:
         raise ValueError("VERSION not found!")
     version_number = match[1]
-left_nav_title = f"RPP {version_number} Documentation"
+left_nav_title = f"RPP {version_number} documentation"
 
 # for PDF output on Read the Docs
-project = "RPP Documentation"
+project = "RPP documentation"
 author = "Advanced Micro Devices, Inc."
 copyright = "Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc."
 version = version_number

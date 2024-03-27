@@ -73,7 +73,9 @@ Input<br>(nifti1 .nii medical image) | fused_multiply_add_scalar<br>(brightened 
   ```shell
   sudo apt-get install half
   ```
-  **Note:** Use appropriate package manager depending on the OS 
+
+> [!NOTE]
+> You must use the appropriate package manager for your operating system.
 
 * Compiler with support for C++ Version `17` and above
 
@@ -85,25 +87,32 @@ Input<br>(nifti1 .nii medical image) | fused_multiply_add_scalar<br>(brightened 
 
 ### Package install
 
-Install RPP runtime, development, and test packages. 
+Install RPP runtime, development, and test packages.
 * Runtime package - `rpp` only provides the rpp library `librpp.so`
 * Development package - `rpp-dev`/`rpp-devel` provides the library, header files, and samples
-* Test package - `rpp-test` provides ctest to verify installation
+* Test package - `rpp-test` provides CTest to verify installation
 
-**NOTE:** Package install will auto install all dependencies.
+> [!NOTE]
+> Package install will auto install all dependencies.
 
 #### Ubuntu
+
 ```shell
 sudo apt install rpp rpp-dev rpp-test
 ```
+
 #### RHEL
+
 ```shell
 sudo yum install rpp rpp-devel rpp-test
 ```
+
 #### SLES
+
 ```shell
 sudo zypper install rpp rpp-devel rpp-test
 ```
+
 ### Source build and install
 
 * Clone RPP git repository
@@ -112,7 +121,8 @@ sudo zypper install rpp rpp-devel rpp-test
   git clone https://github.com/ROCm/rpp.git
   ```
 
-  **Note:** RPP has support for two GPU backends: **OPENCL** and **HIP**:
+> [!NOTE]
+> RPP has support for two GPU backends: **OPENCL** and **HIP**:
 
 * Instructions for building RPP with the **HIP** GPU backend (default GPU backend):
 
@@ -129,7 +139,9 @@ sudo zypper install rpp rpp-devel rpp-test
   ```shell
   make test
   ```
-  **NOTE:** make test requires [test suite prerequisites](utilities/test_suite/README.md) installed
+
+>[!NOTE]
+> `make test` requires [test suite prerequisites](utilities/test_suite/README.md) installed
 
 * Instructions for building RPP with **OPENCL** GPU backend
 
@@ -140,6 +152,7 @@ sudo zypper install rpp rpp-devel rpp-test
   make -j8
   sudo make install
   ```
+
 ## Verify installation
 
 The installer will copy
@@ -149,11 +162,12 @@ The installer will copy
 * Samples folder into `/opt/rocm/share/rpp`
 * Documents folder into `/opt/rocm/share/doc/rpp`
 
-**NOTE:** [Test suite prerequisites](utilities/test_suite/README.md) install required to run tests
+>[!NOTE]
+> [Test suite prerequisites](utilities/test_suite/README.md) install is required to run tests
 
 ### Verify with rpp-test package
 
-Test package will install ctest module to test rpp. Follow below steps to test packge install
+Test package will install CTest module to test rpp. Follow below steps to test package install
 
 ```shell
 mkdir rpp-test && cd rpp-test

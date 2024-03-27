@@ -127,6 +127,10 @@ python runTests.py --case_start 0 --case_end 89 --test_type 0 --qa_mode 1 --batc
 ``` python
 python runTests.py --case_list 21 36 63 --test_type 1 --qa_mode 1 --batch_size 8 --num_runs 100
 ```
+-   QA mode (Performance tests) - Tolerance based PASS/FAIL tests for RPP HIP/HOST functionalities checking achieved improvement in performance percentage over BatchPD versions after comparison to a threshold percentage of improvement
+``` python
+python runTests.py --case_list 21 36 63 --test_type 1 --qa_mode 1 --batch_size 8 --num_runs 100
+```
 -   Unit test mode - Unit tests allowing users to pass a path to a folder containing images, to execute the desired functionality and variant once, report RPP execution wall time, save and view output images
 Note: For testcase 82(RICAP) Please use images of same resolution and Batchsize > 1
       RICAP dataset path: rpp/utilities/test_suite/TEST_IMAGES/three_images_150x150_src1
