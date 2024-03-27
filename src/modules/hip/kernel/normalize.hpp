@@ -1528,7 +1528,7 @@ RppStatus hip_exec_compute_mean_stddev_tensor(T *srcPtr,
                                               Rpp32u *paramStrides,
                                               rpp::Handle& handle)
 {
-    Rpp32f *partialSumArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
+    Rpp32f *partialSumArr = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
     Rpp32u partialSumArrLength, partialSumBlocksPerSample;
 
     int globalThreads_x, globalThreads_y, globalThreads_z;
