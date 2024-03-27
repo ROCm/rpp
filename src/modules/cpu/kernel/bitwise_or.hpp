@@ -103,9 +103,9 @@ RppStatus bitwise_or_u8_u8_host_tensor(Rpp8u *srcPtr1,
 
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTempR++ = static_cast<Rpp8u>(RPPPIXELCHECK((srcPtr1Temp[0] | srcPtr2Temp[0])));
-                    *dstPtrTempG++ = static_cast<Rpp8u>(RPPPIXELCHECK((srcPtr1Temp[1] | srcPtr2Temp[1])));
-                    *dstPtrTempB++ = static_cast<Rpp8u>(RPPPIXELCHECK((srcPtr1Temp[2] | srcPtr2Temp[2])));
+                    *dstPtrTempR++ = srcPtr1Temp[0] | srcPtr2Temp[0];
+                    *dstPtrTempG++ = srcPtr1Temp[1] | srcPtr2Temp[1];
+                    *dstPtrTempB++ = srcPtr1Temp[2] | srcPtr2Temp[2];
 
                     srcPtr1Temp += 3;
                     srcPtr2Temp += 3;
@@ -165,9 +165,9 @@ RppStatus bitwise_or_u8_u8_host_tensor(Rpp8u *srcPtr1,
 
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = static_cast<Rpp8u>(RPPPIXELCHECK((*srcPtr1TempR | *srcPtr2TempR)));
-                    dstPtrTemp[1] = static_cast<Rpp8u>(RPPPIXELCHECK((*srcPtr1TempG | *srcPtr2TempG)));
-                    dstPtrTemp[2] = static_cast<Rpp8u>(RPPPIXELCHECK((*srcPtr1TempB | *srcPtr2TempB)));
+                    dstPtrTemp[0] = *srcPtr1TempR | *srcPtr2TempR;
+                    dstPtrTemp[1] = *srcPtr1TempG | *srcPtr2TempG;
+                    dstPtrTemp[2] = *srcPtr1TempB | *srcPtr2TempB;
 
                     srcPtr1TempR++;
                     srcPtr1TempG++;
@@ -224,7 +224,7 @@ RppStatus bitwise_or_u8_u8_host_tensor(Rpp8u *srcPtr1,
 
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        *dstPtrTemp++ = static_cast<Rpp8u>(RPPPIXELCHECK((*srcPtr1Temp | *srcPtr2Temp)));
+                        *dstPtrTemp++ = *srcPtr1Temp | *srcPtr2Temp;
 
                         srcPtr1Temp++;
                         srcPtr2Temp++;
