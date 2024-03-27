@@ -663,7 +663,7 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
     if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
     {
         Rpp32u tensorPartialVarArrLength = gridDim_x * gridDim_y * gridDim_z;
-        float *tensorPartialVarArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
+        float *tensorPartialVarArr = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
         hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float), handle.GetStream());
         hipLaunchKernelGGL(tensor_var_pln1_hip,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
@@ -690,7 +690,7 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
     else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
     {
         Rpp32u tensorPartialVarArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
-        float *tensorPartialVarArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
+        float *tensorPartialVarArr = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
         hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float), handle.GetStream());
         if(!flag)
         {
@@ -800,7 +800,7 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
     {
         Rpp32u tensorPartialVarArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
         float *tensorPartialVarArr;
-        tensorPartialVarArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
+        tensorPartialVarArr = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
         hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float), handle.GetStream());
         if(!flag)
         {
