@@ -1996,7 +1996,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
     tileSize.y = 16 - padLengthTwice;
 
     // Create a filter of size (kernel size x kernel size)
-    float *filterTensor = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
+    float *filterTensor = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
     hip_exec_create_gaussian_kernel(filterTensor,
                                     kernelSize,
                                     handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,

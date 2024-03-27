@@ -736,7 +736,7 @@ typedef struct {
     Rpp64u *dstBatchIndex;
     Rpp32u *inc;
     Rpp32u *dstInc;
-    Rpp32f *tempFloatmem;
+    Rpp32f *scratchBufferHost;
 } memCPU;
 
 #ifdef OCL_COMPILE
@@ -950,7 +950,7 @@ typedef struct
     hipMemRpp8u ucharArr[10];
     hipMemRpp8s charArr[10];
     hipMemRpptRGB rgbArr;
-    hipMemRpp32f maskArr;
+    hipMemRpp32f scratchBufferHip;
     Rpp64u* srcBatchIndex;
     Rpp64u* dstBatchIndex;
     Rpp32u* inc;

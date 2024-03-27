@@ -53,7 +53,7 @@ RppStatus down_mixing_host_tensor(Rpp32f *srcPtr,
         }
         else
         {
-            Rpp32f *weights = handle.GetInitHandle()->mem.mcpu.tempFloatmem + batchCount * channels;
+            Rpp32f *weights = handle.GetInitHandle()->mem.mcpu.scratchBufferHost + batchCount * channels;
             std::fill(weights, weights + channels, 1.f / channels);
 
             if(normalizeWeights)
