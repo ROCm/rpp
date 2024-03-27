@@ -302,7 +302,7 @@ typedef struct
     int y;
 } RppiPoint;
 
-/*! \brief RPPI Image 2D Rectangle (XYWH format) type struct
+/*! \brief RPPI Image 3D point type struct
  * \ingroup group_rppdefs
  */
 typedef struct
@@ -312,6 +312,9 @@ typedef struct
     int z;
 } RppiPoint3D;
 
+/*! \brief RPPI Image 2D Rectangle (XYWH format) type struct
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     int x;
@@ -364,7 +367,7 @@ typedef enum
     XYWH     // X-Y-Width-Height
 } RpptRoiType;
 
-/*! \brief RPPT Tensor subpixel layout type enum
+/*! \brief RPPT Tensor 3D ROI type enum
  * \ingroup group_rppdefs
  */
 typedef enum
@@ -373,6 +376,9 @@ typedef enum
     XYZWHD     // X-Y-Z-Width-Height-Depth
 } RpptRoi3DType;
 
+/*! \brief RPPT Tensor subpixel layout type enum
+ * \ingroup group_rppdefs
+ */
 typedef enum
 {
     RGBtype,
@@ -484,7 +490,7 @@ typedef struct
     RpptLayout layout;
 } RpptDesc, *RpptDescPtr;
 
-/*! \brief RPPT Tensor 8-bit uchar RGB type struct
+/*! \brief RPPT Tensor Generic descriptor type struct
  * \ingroup group_rppdefs
  */
 typedef struct
@@ -497,6 +503,9 @@ typedef struct
     RpptLayout layout;
 } RpptGenericDesc, *RpptGenericDescPtr;
 
+/*! \brief RPPT Tensor 8-bit uchar RGB type struct
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     Rpp8u R;
