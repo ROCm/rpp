@@ -190,7 +190,7 @@ struct HandleImpl
         }
 
         this->initHandle->mem.mcpu.rgbArr.rgbmem = (RpptRGB *)malloc(sizeof(RpptRGB) * this->nBatchSize);
-        this->initHandle->mem.mcpu.tempFloatmem = (Rpp32f *)malloc(sizeof(Rpp32f) * 99532800 * this->nBatchSize); // 7680 * 4320 * 3
+        this->initHandle->mem.mcpu.scratchBufferHost = (Rpp32f *)malloc(sizeof(Rpp32f) * 99532800 * this->nBatchSize); // 7680 * 4320 * 3
     }
 
     void PreInitializeBuffer()
@@ -239,8 +239,7 @@ struct HandleImpl
         }
 
         hipMalloc(&(this->initHandle->mem.mgpu.rgbArr.rgbmem), sizeof(RpptRGB) * this->nBatchSize);
-        hipMalloc(&(this->initHandle->mem.mgpu.maskArr.floatmem), sizeof(Rpp32f) * 8294400);    // 3840 x 2160
-        hipHostMalloc(&(this->initHandle->mem.mgpu.scratchBuf.uintmem), sizeof(Rpp32u) * 10000);
+        hipMalloc(&(this->initHandle->mem.mgpu.scratchBufferHip.floatmem), sizeof(Rpp32f) * 8294400);    // 3840 x 2160
     }
 };
 
@@ -357,8 +356,7 @@ void Handle::rpp_destroy_object_gpu()
     }
 
     hipFree(this->GetInitHandle()->mem.mgpu.rgbArr.rgbmem);
-    hipFree(this->GetInitHandle()->mem.mgpu.maskArr.floatmem);
-    hipHostFree(this->GetInitHandle()->mem.mgpu.scratchBuf.uintmem);
+    hipFree(this->GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
 }
 
 void Handle::rpp_destroy_object_host()
@@ -383,7 +381,7 @@ void Handle::rpp_destroy_object_host()
     }
 
     free(this->GetInitHandle()->mem.mcpu.rgbArr.rgbmem);
-    free(this->GetInitHandle()->mem.mcpu.tempFloatmem);
+    free(this->GetInitHandle()->mem.mcpu.scratchBufferHost);
 }
 
 size_t Handle::GetBatchSize() const
