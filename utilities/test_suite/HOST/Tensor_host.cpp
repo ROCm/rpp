@@ -322,7 +322,7 @@ int main(int argc, char **argv)
     if (reductionTypeCase)
     {
         int bitDepthByteSize = 0;
-        if ((dstDescPtr->dataType == RpptDataType::U8) || (dstDescPtr->dataType == RpptDataType::I8))
+        if (dstDescPtr->dataType == RpptDataType::U8 || dstDescPtr->dataType == RpptDataType::I8)
         {
             bitDepthByteSize = (testCase == 87) ? sizeof(Rpp64u) : sizeof(Rpp8u);
             reductionFuncResultArr = static_cast<void *>(calloc(reductionFuncResultArrLength, bitDepthByteSize));

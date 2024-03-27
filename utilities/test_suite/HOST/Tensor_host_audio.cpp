@@ -131,7 +131,7 @@ int main(int argc, char **argv)
     int noOfIterations = (int)audioNames.size() / batchSize;
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0;
     string testCaseName;
-    printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
+    printf("\nRunning %s %d times (each time with a batch size of %d audio files) and computing mean statistics...", func.c_str(), numRuns, batchSize);
     for (int iterCount = 0; iterCount < noOfIterations; iterCount++)
     {
         // read and decode audio and fill the audio dim values
@@ -212,6 +212,105 @@ int main(int argc, char **argv)
 
                     startWallTime = omp_get_wtime();
                     rppt_down_mixing_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcDimsTensor, normalizeWeights, handle);
+
+                    break;
+                }
+                case 4:
+                {
+                    testCaseName = "spectrogram";
+                    bool centerWindows = true;
+                    bool reflectPadding = true;
+                    Rpp32f *windowFn = NULL;
+                    Rpp32s power = 2;
+                    Rpp32s windowLength = 320;
+                    Rpp32s windowStep = 160;
+                    Rpp32s nfft = 512;
+                    RpptSpectrogramLayout layout = RpptSpectrogramLayout::FT;
+
+                    int windowOffset = 0;
+                    if(!centerWindows)
+                        windowOffset = windowLength;
+
+                    maxDstWidth = 0;
+                    maxDstHeight = 0;
+                    if(layout == RpptSpectrogramLayout::FT)
+                    {
+                        for(int i = 0; i < noOfAudioFiles; i++)
+                        {
+                            dstDims[i].height = nfft / 2 + 1;
+                            dstDims[i].width = ((srcLengthTensor[i] - windowOffset) / windowStep) + 1;
+                            maxDstHeight = std::max(maxDstHeight, (int)dstDims[i].height);
+                            maxDstWidth = std::max(maxDstWidth, (int)dstDims[i].width);
+                        }
+                    }
+                    else
+                    {
+                        for(int i = 0; i < noOfAudioFiles; i++)
+                        {
+                            dstDims[i].height = ((srcLengthTensor[i] - windowOffset) / windowStep) + 1;
+                            dstDims[i].width = nfft / 2 + 1;
+                            maxDstHeight = std::max(maxDstHeight, (int)dstDims[i].height);
+                            maxDstWidth = std::max(maxDstWidth, (int)dstDims[i].width);
+                        }
+                    }
+
+                    set_audio_descriptor_dims_and_strides_nostriding(dstDescPtr, batchSize, maxDstHeight, maxDstWidth, maxDstChannels, offsetInBytes);
+
+                    // Set buffer sizes for src/dst
+                    unsigned long long spectrogramBufferSize = (unsigned long long)dstDescPtr->h * (unsigned long long)dstDescPtr->w * (unsigned long long)dstDescPtr->c * (unsigned long long)dstDescPtr->n;
+                    outputf32 = (Rpp32f *)realloc(outputf32, spectrogramBufferSize * sizeof(Rpp32f));
+
+                    startWallTime = omp_get_wtime();
+                    rppt_spectrogram_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcLengthTensor, centerWindows, reflectPadding, windowFn, nfft, power, windowLength, windowStep, layout, handle);
+
+                    break;
+                }
+                case 5:
+                {
+                    // Accepts outputs from FT layout of Spectrogram for QA
+                    testCaseName = "mel_filter_bank";
+
+                    Rpp32f sampleRate = 16000;
+                    Rpp32f minFreq = 0.0;
+                    Rpp32f maxFreq = sampleRate / 2;
+                    RpptMelScaleFormula melFormula = RpptMelScaleFormula::SLANEY;
+                    Rpp32s numFilter = 80;
+                    bool normalize = true;
+                    Rpp32s srcDimsTensor[] = {257, 225, 257, 211, 257, 214}; // (height, width) for each tensor in a batch for given QA inputs.
+
+                    maxDstHeight = 0;
+                    maxDstWidth = 0;
+                    maxSrcHeight = 0;
+                    maxSrcWidth = 0;
+                    for(int i = 0, j = 0; i < batchSize; i++, j += 2)
+                    {
+                        maxSrcHeight = std::max(maxSrcHeight, (int)srcDimsTensor[j]);
+                        maxSrcWidth = std::max(maxSrcWidth, (int)srcDimsTensor[j + 1]);
+                        dstDims[i].height = numFilter;
+                        dstDims[i].width = srcDimsTensor[j + 1];
+                        maxDstHeight = std::max(maxDstHeight, (int)dstDims[i].height);
+                        maxDstWidth = std::max(maxDstWidth, (int)dstDims[i].width);
+                    }
+
+                    srcDescPtr->h = maxSrcHeight;
+                    srcDescPtr->w = maxSrcWidth;
+                    dstDescPtr->h = maxDstHeight;
+                    dstDescPtr->w = maxDstWidth;
+
+                    set_audio_descriptor_dims_and_strides_nostriding(srcDescPtr, batchSize, maxSrcHeight, maxSrcWidth, maxSrcChannels, offsetInBytes);
+                    set_audio_descriptor_dims_and_strides_nostriding(dstDescPtr, batchSize, maxDstHeight, maxDstWidth, maxDstChannels, offsetInBytes);
+
+                    // Set buffer sizes for src/dst
+                    unsigned long long spectrogramBufferSize = (unsigned long long)srcDescPtr->h * (unsigned long long)srcDescPtr->w * (unsigned long long)srcDescPtr->c * (unsigned long long)srcDescPtr->n;
+                    unsigned long long melFilterBufferSize = (unsigned long long)dstDescPtr->h * (unsigned long long)dstDescPtr->w * (unsigned long long)dstDescPtr->c * (unsigned long long)dstDescPtr->n;
+                    inputf32 = (Rpp32f *)realloc(inputf32, spectrogramBufferSize * sizeof(Rpp32f));
+                    outputf32 = (Rpp32f *)realloc(outputf32, melFilterBufferSize * sizeof(Rpp32f));
+
+                    // Read source data
+                    read_from_bin_file(inputf32, srcDescPtr, srcDimsTensor, "spectrogram", scriptPath);
+
+                    startWallTime = omp_get_wtime();
+                    rppt_mel_filter_bank_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcDimsTensor, maxFreq, minFreq, melFormula, numFilter, sampleRate, normalize, handle);
 
                     break;
                 }
