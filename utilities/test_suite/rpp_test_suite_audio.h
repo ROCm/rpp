@@ -40,6 +40,7 @@ std::map<int, string> audioAugmentationMap =
     {1, "to_decibels"},
     {2, "pre_emphasis_filter"},
     {3, "down_mixing"},
+    {6, "resample"}
 };
 
 // Golden outputs for Non Silent Region Detection
@@ -255,4 +256,39 @@ void verify_non_silent_region_detection(float *detectedIndex, float *detectionLe
         qaResults << status << std::endl;
         qaResults.close();
     }
+}
+
+inline Rpp32f sinc(Rpp32f x)
+{
+    x *= M_PI;
+    return (std::abs(x) < 1e-5f) ? (1.0f - x * x * (1.0f / 6)) : std::sin(x) / x;
+}
+
+inline Rpp64f hann(Rpp64f x)
+{
+    return 0.5 * (1 + std::cos(x * M_PI));
+}
+
+// initialization function used for filling the values in Resampling window (RpptResamplingWindow)
+// using the coeffs and lobes value this function generates a LUT (look up table) which is further used in Resample audio augmentation
+inline void windowed_sinc(RpptResamplingWindow &window, Rpp32s coeffs, Rpp32s lobes)
+{
+    Rpp32f scale = 2.0f * lobes / (coeffs - 1);
+    Rpp32f scale_envelope = 2.0f / coeffs;
+    window.coeffs = coeffs;
+    window.lobes = lobes;
+    window.lookup.clear();
+    window.lookup.resize(coeffs + 5);
+    window.lookupSize = window.lookup.size();
+    Rpp32s center = (coeffs - 1) * 0.5f;
+    for (int i = 0; i < coeffs; i++) {
+        Rpp32f x = (i - center) * scale;
+        Rpp32f y = (i - center) * scale_envelope;
+        Rpp32f w = sinc(x) * hann(y);
+        window.lookup[i + 1] = w;
+    }
+    window.center = center + 1;
+    window.scale = 1 / scale;
+    window.pCenter = _mm_set1_ps(window.center);
+    window.pScale = _mm_set1_ps(window.scale);
 }

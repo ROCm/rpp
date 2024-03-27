@@ -5315,7 +5315,7 @@ inline void compute_bicubic_coefficient(Rpp32f weight, Rpp32f &coeff)
 
 inline Rpp32f sinc(Rpp32f x)
 {
-    x *= PI;
+    x *= M_PI;
     return (std::abs(x) < 1e-5f) ? (1.0f - x * x * ONE_OVER_6) : std::sin(x) / x;
 }
 
