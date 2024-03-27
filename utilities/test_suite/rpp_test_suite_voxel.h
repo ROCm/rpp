@@ -241,6 +241,51 @@ inline string set_function_type(int layoutType, int pln1OutTypeCase, int outputF
     return funcType;
 }
 
+// initialize the roi, anchor and shape values required for slice
+void init_slice_voxel(RpptGenericDescPtr descriptorPtr3D, RpptROI3D *roiGenericSrcPtr, Rpp32u *roiTensor, Rpp32s *anchorTensor, Rpp32s *shapeTensor)
+{
+    if (descriptorPtr3D->layout == RpptLayout::NCDHW)
+    {
+        for(int i = 0; i < descriptorPtr3D->dims[0]; i++)
+        {
+            int idx1 = i * 4;
+            int idx2 = i * 8;
+            roiTensor[idx2] = anchorTensor[idx1] = 0;
+            roiTensor[idx2 + 1] = anchorTensor[idx1 + 1] = roiGenericSrcPtr[i].xyzwhdROI.xyz.z;
+            roiTensor[idx2 + 2] = anchorTensor[idx1 + 2] = roiGenericSrcPtr[i].xyzwhdROI.xyz.y;
+            roiTensor[idx2 + 3] = anchorTensor[idx1 + 3] = roiGenericSrcPtr[i].xyzwhdROI.xyz.x;
+            roiTensor[idx2 + 4] = descriptorPtr3D->dims[1];
+            roiTensor[idx2 + 5] = roiGenericSrcPtr[i].xyzwhdROI.roiDepth;
+            roiTensor[idx2 + 6] = roiGenericSrcPtr[i].xyzwhdROI.roiHeight;
+            roiTensor[idx2 + 7] = roiGenericSrcPtr[i].xyzwhdROI.roiWidth;
+            shapeTensor[idx1] = roiTensor[idx2 + 4];
+            shapeTensor[idx1 + 1] = roiTensor[idx2 + 5] / 2;
+            shapeTensor[idx1 + 2] = roiTensor[idx2 + 6] / 2;
+            shapeTensor[idx1 + 3] = roiTensor[idx2 + 7] / 2;
+        }
+    }
+    else if(descriptorPtr3D->layout == RpptLayout::NDHWC)
+    {
+        for(int i = 0; i < descriptorPtr3D->dims[0]; i++)
+        {
+            int idx1 = i * 4;
+            int idx2 = i * 8;
+            roiTensor[idx2] = anchorTensor[idx1] = roiGenericSrcPtr[i].xyzwhdROI.xyz.z;
+            roiTensor[idx2 + 1] = anchorTensor[idx1 + 1] = roiGenericSrcPtr[i].xyzwhdROI.xyz.y;
+            roiTensor[idx2 + 2] = anchorTensor[idx1 + 2] = roiGenericSrcPtr[i].xyzwhdROI.xyz.x;
+            roiTensor[idx2 + 3] = anchorTensor[idx1 + 3] = 0;
+            roiTensor[idx2 + 4] = roiGenericSrcPtr[i].xyzwhdROI.roiDepth;
+            roiTensor[idx2 + 5] = roiGenericSrcPtr[i].xyzwhdROI.roiHeight;
+            roiTensor[idx2 + 6] = roiGenericSrcPtr[i].xyzwhdROI.roiWidth;
+            roiTensor[idx2 + 7] = descriptorPtr3D->dims[4];
+            shapeTensor[idx1] = roiTensor[idx2 + 4] / 2;
+            shapeTensor[idx1 + 1] = roiTensor[idx2 + 5] / 2;
+            shapeTensor[idx1 + 2] = roiTensor[idx2 + 6] / 2;
+            shapeTensor[idx1 + 3] = roiTensor[idx2 + 7];
+        }
+    }
+}
+
 // reads nifti-1 header file
 static int read_nifti_header_file(char* const header_file, nifti_1_header &niftiHeader)
 {

@@ -40,6 +40,7 @@ std::map<int, string> audioAugmentationMap =
     {1, "to_decibels"},
     {2, "pre_emphasis_filter"},
     {3, "down_mixing"},
+    {4, "slice"}
 };
 
 // Golden outputs for Non Silent Region Detection
@@ -213,7 +214,7 @@ void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dst
     free(refOutput);
 }
 
-void verify_non_silent_region_detection(float *detectedIndex, float *detectionLength, string testCase, int bs, vector<string> audioNames, string dst)
+void verify_non_silent_region_detection(int *detectedIndex, int *detectionLength, string testCase, int bs, vector<string> audioNames, string dst)
 {
     int fileMatch = 0;
     for (int i = 0; i < bs; i++)
