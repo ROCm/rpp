@@ -65,7 +65,7 @@ int main(int argc, char **argv)
 
     bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23|| testCase == 24 || testCase == 40 || testCase == 41 || testCase == 49 || testCase == 54);
     bool kernelSizeCase = (testCase == 40 || testCase == 41 || testCase == 49 || testCase == 54);
-    bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 61 || testCase == 63);
+    bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 33 || testCase == 61 || testCase == 63);
     bool randomOutputCase = (testCase == 84 || testCase == 49 || testCase == 54);
     bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24);
     bool reductionTypeCase = (testCase == 87 || testCase == 88 || testCase == 89);
@@ -346,6 +346,12 @@ int main(int argc, char **argv)
     if(testCase == 82)
         CHECK(hipHostMalloc(&roiPtrInputCropRegion, 4 * sizeof(RpptROI)));
 
+    RpptROI *cropRoi, *patchRoi;
+    if(testCase == 33)
+    {
+        CHECK(hipHostMalloc(&cropRoi, batchSize * sizeof(RpptROI)));
+        CHECK(hipHostMalloc(&patchRoi, batchSize * sizeof(RpptROI)));
+    }
     Rpp32f *intensity;
     if(testCase == 46)
         CHECK(hipHostMalloc(&intensity, batchSize * sizeof(Rpp32f)));
@@ -640,6 +646,25 @@ int main(int argc, char **argv)
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_color_cast_gpu(d_input, srcDescPtr, d_output, dstDescPtr, rgbTensor, alphaTensor, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 33:
+                {
+                    testCaseName = "crop_and_patch";
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        cropRoi[i].xywhROI.xy.x = patchRoi[i].xywhROI.xy.x = roiList[0];
+                        cropRoi[i].xywhROI.xy.y = patchRoi[i].xywhROI.xy.y = roiList[1];
+                        cropRoi[i].xywhROI.roiWidth = patchRoi[i].xywhROI.roiWidth = roiWidthList[i];
+                        cropRoi[i].xywhROI.roiHeight = patchRoi[i].xywhROI.roiHeight = roiHeightList[i];
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_crop_and_patch_gpu(d_input, d_input_second, srcDescPtr, d_output, dstDescPtr, roiTensorPtrSrc, cropRoi, patchRoi, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
@@ -1234,6 +1259,11 @@ int main(int argc, char **argv)
         CHECK(hipHostFree(intensity));
     if(testCase == 82)
         CHECK(hipHostFree(roiPtrInputCropRegion));
+    if(testCase == 33)
+    {
+        CHECK(hipHostFree(cropRoi));
+        CHECK(hipHostFree(patchRoi));
+    }
     if (reductionTypeCase)
         CHECK(hipHostFree(reductionFuncResultArr));
     free(input);
