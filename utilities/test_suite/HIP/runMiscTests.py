@@ -73,58 +73,29 @@ def generate_performance_reports(RESULTS_DIR):
     dfPrint_noIndices = dfPrint_noIndices.to_string(index = False)
     print(dfPrint_noIndices)
 
-def run_unit_test(numDims, case, numRuns, testType, toggle, bitDepth, batchSize, outFilePath):
+def run_unit_test_cmd(numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg):
+    print(f"./Tensor_misc_hip {case} {testType} {toggle} {numDims} {batchSize} {numRuns} {additionalArg}")
+    result = subprocess.run([buildFolderPath + "/build/Tensor_misc_hip", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE)    # nosec
+    print(result.stdout.decode())
+    print("------------------------------------------------------------------------------------------")
+
+def run_performance_test_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg):
+    with open("{}/Tensor_misc_hip_raw_performance_log.txt".format(loggingFolder), "a") as logFile:
+        print(f"./Tensor_misc_hip {case} {testType} {toggle} {numDims} {batchSize} {numRuns} {additionalArg}")
+        process = subprocess.Popen([buildFolderPath + "/build/Tensor_misc_hip", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
+        read_from_subprocess_and_write_to_log(process, logFile)
+
+def run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg):
     print("\n\n\n\n")
     print("--------------------------------")
     print("Running a New Functionality...")
     print("--------------------------------")
-    if case == "1":
-        for axisMask in range(1, pow(2, numDims)):
-            print("--------------------------------")
-            print("Running a New Axis Normalization...")
-            print("--------------------------------")
-            print(f"./Tensor_misc_hip {case} {testType} {toggle} {numDims} {batchSize} {numRuns} {axisMask}")
-            result = subprocess.run([buildFolderPath + "/build/Tensor_misc_hip", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(axisMask), outFilePath, scriptPath], stdout=subprocess.PIPE)    # nosec
-            print(result.stdout.decode())
-            print("------------------------------------------------------------------------------------------")
-    else:
-        print(f"./Tensor_misc_hip {case} {testType} {toggle} {numDims} {batchSize} {numRuns} {axisMask}")
-        result = subprocess.run([buildFolderPath + "/build/Tensor_misc_hip", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), "", outFilePath, scriptPath], stdout=subprocess.PIPE)    # nosec
-        print(result.stdout.decode())
-        print("------------------------------------------------------------------------------------------")
+    if testType == 0:
+        run_unit_test_cmd(numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg)
+    elif testType == 1:
+        run_performance_test_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg)
 
-def run_performance_test(loggingFolder, numDims, case, numRuns, testType, toggle, bitDepth, batchSize, outFilePath):
-    print("\n\n\n\n")
-    print("--------------------------------")
-    print("Running a New Functionality...")
-    print("--------------------------------")
-    if case == "1":
-        for axisMask in range(1, pow(2, numDims)):
-            print("--------------------------------")
-            print("Running a New Axis Normalization...")
-            print("--------------------------------")
-            with open("{}/Tensor_misc_hip_raw_performance_log.txt".format(loggingFolder), "a") as log_file:
-                print(f"./Tensor_misc_hip {case} {testType} {toggle} {numDims} {batchSize} {numRuns} {axisMask}")
-                process = subprocess.Popen([buildFolderPath + "/build/Tensor_misc_hip", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(axisMask), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
-                while True:
-                    output = process.stdout.readline()
-                    if not output and process.poll() is not None:
-                        break
-                    print(output.strip())
-                    log_file.write(output)
-        print("------------------------------------------------------------------------------------------")
-    else:
-        with open("{}/Tensor_misc_hip_raw_performance_log.txt".format(loggingFolder), "a") as log_file:
-            print(f"./Tensor_misc_hip {case} {testType} {toggle} {numDims} {batchSize} {numRuns}")
-            process = subprocess.Popen([buildFolderPath + "/build/Tensor_misc_hip", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), "", outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
-            while True:
-                output = process.stdout.readline()
-                if not output and process.poll() is not None:
-                    break
-                print(output.strip())
-                log_file.write(output)
-
-def run_performance_test_with_profiler(loggingFolder, numDims, case, numRuns, testType, toggle, bitDepth, batchSize, outFilePath):
+def run_profiler_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath):
     print("\n\n\n\n")
     print("--------------------------------")
     print("Running a New Functionality...")
@@ -139,26 +110,16 @@ def run_performance_test_with_profiler(loggingFolder, numDims, case, numRuns, te
             print("--------------------------------")
             print("Running a New Axis Normalization...")
             print("--------------------------------")
-            with open("{}/Tensor_misc_hip_raw_performance_log.txt".format(loggingFolder), "a") as log_file:
+            with open("{}/Tensor_misc_hip_raw_performance_log.txt".format(loggingFolder), "a") as logFile:
                 print(f"\nrocprof --basenames on --timestamp on --stats -o {outFilePath}/case_{case}/output_case{case}.csv ./Tensor_misc_hip {case} {testType} {toggle} {numDims} {batchSize} {numRuns} {axisMask}")
                 process = subprocess.Popen([ 'rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f"{outFilePath}/case_{case}/output_case{case}.csv", "./Tensor_misc_hip", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(axisMask), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
-                while True:
-                    output = process.stdout.readline()
-                    if not output and process.poll() is not None:
-                        break
-                    print(output.strip())
-                    log_file.write(output)
+                read_from_subprocess_and_write_to_log(process, logFile)
             print("------------------------------------------------------------------------------------------")
         else:
-            with open("{}/Tensor_misc_hip_raw_performance_log.txt".format(loggingFolder), "a") as log_file:
+            with open("{}/Tensor_misc_hip_raw_performance_log.txt".format(loggingFolder), "a") as logFile:
                 print(f"\nrocprof --basenames on --timestamp on --stats -o {outFilePath}/case_{case}/output_case{case}.csv ./Tensor_misc_hip {case} {testType} {toggle} {numDims} {batchSize} {numRuns} {axisMask}")
                 process = subprocess.Popen([ 'rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f"{outFilePath}/case_{case}/output_case{case}.csv", "./Tensor_misc_hip", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(axisMask), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
-                while True:
-                    output = process.stdout.readline()
-                    if not output and process.poll() is not None:
-                        break
-                    print(output.strip())
-                    log_file.write(output)
+                read_from_subprocess_and_write_to_log(process, logFile)
             print("------------------------------------------------------------------------------------------")
 
 # Parse and validate command-line arguments for the RPP test suite
@@ -227,7 +188,6 @@ qaMode = args.qa_mode
 if qaMode:
     testType = 0
 preserveOutput = args.preserve_output
-bitDepth = 2 # Current audio test suite only supports bit depth 2
 outFilePath = " "
 
 if testType == 0 and batchSize != 3:
@@ -264,27 +224,20 @@ subprocess.run(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.run(["make", "-j16"], cwd=".")    # nosec
 
 supportedCaseList = ['1']
-if testType == 0:
+if (testType == 0 or (testType == 1 and profilingOption == "NO")):
     for case in caseList:
         if case not in supportedCaseList:
             continue
-        if toggle == 1:
-            print("Only Toggle variant is QA tested for test Type 0. Aborting!")
-            exit(0)
-
-        run_unit_test(numDims, case, numRuns, testType, toggle, bitDepth, batchSize, outFilePath)
-elif (testType == 1 and profilingOption == "NO"):
-    for case in caseList:
-        if case not in supportedCaseList:
-            continue
-
-        run_performance_test(loggingFolder, numDims, case, numRuns, testType, toggle, bitDepth, batchSize, outFilePath)
+        if case == "1":
+            for axisMask in range(1, pow(2, numDims)):
+                run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, axisMask)
+        else:
+            run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, axisMask)
 elif (testType == 1 and profilingOption == "YES"):
     for case in caseList:
         if case not in supportedCaseList:
             continue
-
-        run_performance_test_with_profiler(loggingFolder, numDims, case, numRuns, testType, toggle, bitDepth, batchSize, outFilePath)
+        run_profiler_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath)
 
     RESULTS_DIR = outFolderPath + "/OUTPUT_PERFORMANCE_MISC_LOGS_HIP_" + timestamp
     print("RESULTS_DIR = " + RESULTS_DIR)
@@ -325,7 +278,6 @@ elif (testType == 1 and profilingOption == "YES"):
     except IOError:
         print("Unable to open results in " + CONSOLIDATED_FILE)
 
-
 # print the results of qa tests
 nonQACaseList = []
 supportedCases = 0
@@ -342,11 +294,8 @@ if testType == 0:
 
 # Performance tests
 if (testType == 1 and profilingOption == "NO"):
-    log_file_list = get_log_file_list()
+    logFileList = get_log_file_list()
+    functionalityGroupList = ["statiscal_operations"]
 
-    functionality_group_list = [
-        "statiscal_operations",
-    ]
-
-    for log_file in log_file_list:
-        print_performance_tests_summary(log_file, functionality_group_list, numRuns)
+    for logFile in logFileList:
+        print_performance_tests_summary(logFile, functionalityGroupList, numRuns)
