@@ -56,45 +56,36 @@ def func_group_finder(case_number):
     else:
         return "miscellaneous"
 
-def run_unit_test(headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
-    print("\n\n\n\n")
-    print("--------------------------------")
-    print("Running a New Functionality...")
-    print("--------------------------------")
-    bitDepths = [0, 2]
-    if qaMode:
-        bitDepths = [2]
-    for bitDepth in bitDepths:
-        print("\n\n\nRunning New Bit Depth...\n-------------------------\n\n")
+def run_unit_test_cmd(headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
+    print(f"./Tensor_voxel_hip {headerPath} {dataPath} {dstPathTemp} {layout} {case} {numRuns} {testType} {qaMode} {batchSize} {bitDepth}")
+    result = subprocess.run([buildFolderPath + "/build/Tensor_voxel_hip", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE) # nosec
+    print(result.stdout.decode())
+    print("------------------------------------------------------------------------------------------")
+
+def run_performance_test_cmd(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
+    with open(f"{loggingFolder}/Tensor_voxel_hip_{logFileLayout}_raw_performance_log.txt", "a") as log_file:
         print(f"./Tensor_voxel_hip {headerPath} {dataPath} {dstPathTemp} {layout} {case} {numRuns} {testType} {qaMode} {batchSize} {bitDepth}")
-        result = subprocess.run([buildFolderPath + "/build/Tensor_voxel_hip", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE) # nosec
-        print(result.stdout.decode())
+        process = subprocess.Popen([buildFolderPath + "/build/Tensor_voxel_hip", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True) # nosec
+        while True:
+            output = process.stdout.readline()
+            if not output and process.poll() is not None:
+                break
+            print(output.strip())
+            if "Running" in output or "max,min,avg wall times" in output:
+                cleaned_output = ''.join(char for char in output if 32 <= ord(char) <= 126)  # Remove control characters
+                cleaned_output = cleaned_output.strip()  # Remove leading/trailing whitespace
+                log_file.write(cleaned_output + '\n')
+                if "max,min,avg wall times" in output:
+                    log_file.write("\n")
         print("------------------------------------------------------------------------------------------")
 
-def run_performance_test(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
-    print("\n\n\n\n")
-    print("--------------------------------")
-    print("Running a New Functionality...")
-    print("--------------------------------")
-    bitDepths = [0, 2]
-    for bitDepth in bitDepths:
-        with open(f"{loggingFolder}/Tensor_voxel_hip_{logFileLayout}_raw_performance_log.txt", "a") as log_file:
-            print(f"./Tensor_voxel_hip {headerPath} {dataPath} {dstPathTemp} {layout} {case}{numRuns} {testType} {qaMode} {batchSize} {bitDepth}")
-            process = subprocess.Popen([buildFolderPath + "/build/Tensor_voxel_hip", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True) # nosec
-            while True:
-                output = process.stdout.readline()
-                if not output and process.poll() is not None:
-                    break
-                print(output.strip())
-                if "Running" in output or "max,min,avg wall times" in output:
-                    cleaned_output = ''.join(char for char in output if 32 <= ord(char) <= 126)  # Remove control characters
-                    cleaned_output = cleaned_output.strip()  # Remove leading/trailing whitespace
-                    log_file.write(cleaned_output + '\n')
-                    if "max,min,avg wall times" in output:
-                        log_file.write("\n")
-        print("------------------------------------------------------------------------------------------")
+def run_test(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
+    if testType == 0:
+        run_unit_test_cmd(headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize)
+    elif testType == 1:
+        run_performance_test_cmd(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize)
 
-def run_performance_test_with_profiler(loggingFolder, logFileLayout, dstPath, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
+def run_profiler_test(loggingFolder, logFileLayout, dstPath, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
     print("\n\n\n\n")
     print("--------------------------------")
     print("Running a New Functionality...")
@@ -277,24 +268,28 @@ print("#########################################################################
 print("Running all layout Inputs...")
 print("##########################################################################################")
 
-if testType == 0:
+bitDepths = [0, 2]
+if (testType == 0 or (testType == 1 and profilingOption == "NO")):
     for case in caseList:
         if case not in supportedCaseList:
             continue
+        print("\n\n\n\n")
+        print("--------------------------------")
+        print("Running a New Functionality...")
+        print("--------------------------------")
         for layout in range(3):
-            dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", func_group_finder)
-            if qaMode == 0:
+            dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "host", func_group_finder)
+            if testType == 0 and qaMode == 0:
                 if not os.path.isdir(dstPathTemp):
                     os.mkdir(dstPathTemp)
 
-            run_unit_test(headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize)
-elif (testType == 1 and profilingOption == "NO"):
-    for case in caseList:
-        if case not in supportedCaseList:
-            continue
-        for layout in range(3):
-            dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", func_group_finder)
-            run_performance_test(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize)
+            bitDepths = [0, 2]
+            if testType == 0 and qaMode:
+                bitDepths = [2]
+            for bitDepth in bitDepths:
+                print("\n\n\nRunning New Bit Depth...\n-------------------------\n\n")
+                print("\n\n\n\n")
+                run_test(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize)
 elif (testType == 1 and profilingOption == "YES"):
     NEW_FUNC_GROUP_LIST = [0, 1]
     for case in caseList:
@@ -302,7 +297,7 @@ elif (testType == 1 and profilingOption == "YES"):
             continue
         for layout in range(3):
             dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", func_group_finder)
-            run_performance_test_with_profiler(loggingFolder, logFileLayout, dstPath, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize)
+            run_profiler_test(loggingFolder, logFileLayout, dstPath, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize)
 
         RESULTS_DIR = ""
         RESULTS_DIR = outFolderPath + "/OUTPUT_PERFORMANCE_LOGS_HIP_VOXEL_" + timestamp
