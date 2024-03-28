@@ -659,42 +659,38 @@ int main(int argc, char **argv)
                 }
                 case 32:
                 {
-                    numOfBoxes[i] = boxesInEachImage;
-                    int idx = boxesInEachImage * i;
+                    testCaseName = "erase";
 
-                    anchorBoxInfoTensor[idx].lt.x = 0.125 * roiTensorPtrSrc[i].xywhROI.roiWidth;
-                    anchorBoxInfoTensor[idx].lt.y = 0.125 * roiTensorPtrSrc[i].xywhROI.roiHeight;
-                    anchorBoxInfoTensor[idx].rb.x = 0.375 * roiTensorPtrSrc[i].xywhROI.roiWidth;
-                    anchorBoxInfoTensor[idx].rb.y = 0.375 * roiTensorPtrSrc[i].xywhROI.roiHeight;
+                    Rpp8u *colors8u = reinterpret_cast<Rpp8u *>(colorBuffer);
+                    Rpp16f *colors16f = reinterpret_cast<Rpp16f *>(colorBuffer);
+                    Rpp32f *colors32f = colorBuffer;
+                    Rpp8s *colors8s = reinterpret_cast<Rpp8s *>(colorBuffer);
 
-                    idx++;
-                    anchorBoxInfoTensor[idx].lt.x = 0.125 * roiTensorPtrSrc[i].xywhROI.roiWidth;
-                    anchorBoxInfoTensor[idx].lt.y = 0.625 * roiTensorPtrSrc[i].xywhROI.roiHeight;
-                    anchorBoxInfoTensor[idx].rb.x = 0.875 * roiTensorPtrSrc[i].xywhROI.roiWidth;
-                    anchorBoxInfoTensor[idx].rb.y = 0.875 * roiTensorPtrSrc[i].xywhROI.roiHeight;
-
-                    idx++;
-                    anchorBoxInfoTensor[idx].lt.x = 0.75 * roiTensorPtrSrc[i].xywhROI.roiWidth;
-                    anchorBoxInfoTensor[idx].lt.y = 0.125 * roiTensorPtrSrc[i].xywhROI.roiHeight;
-                    anchorBoxInfoTensor[idx].rb.x = 0.875 * roiTensorPtrSrc[i].xywhROI.roiWidth;
-                    anchorBoxInfoTensor[idx].rb.y = 0.5 * roiTensorPtrSrc[i].xywhROI.roiHeight;
-
-                    if(srcDescPtr->c == 3)
+                    for(int i = 0; i < batchSize; i++)
                     {
-                        int idx = boxesInEachImage * 3 * i;
-                        colorBuffer[idx] = 0;
-                        colorBuffer[idx + 1] = 0;
-                        colorBuffer[idx + 2] = 240;
-                        colorBuffer[idx + 3] = 0;
-                        colorBuffer[idx + 4] = 240;
-                        colorBuffer[idx + 5] = 0;
-                        colorBuffer[idx + 6] = 240;
-                        colorBuffer[idx + 7] = 0;
-                        colorBuffer[idx + 8] = 0;
+                        numOfBoxes[i] = boxesInEachImage;
+                        int idx = boxesInEachImage * i;
 
-                        for (int j = 0; j < 9; j++)
+                        anchorBoxInfoTensor[idx].lt.x = 0.125 * roiTensorPtrSrc[i].xywhROI.roiWidth;
+                        anchorBoxInfoTensor[idx].lt.y = 0.125 * roiTensorPtrSrc[i].xywhROI.roiHeight;
+                        anchorBoxInfoTensor[idx].rb.x = 0.375 * roiTensorPtrSrc[i].xywhROI.roiWidth;
+                        anchorBoxInfoTensor[idx].rb.y = 0.375 * roiTensorPtrSrc[i].xywhROI.roiHeight;
+
+                        idx++;
+                        anchorBoxInfoTensor[idx].lt.x = 0.125 * roiTensorPtrSrc[i].xywhROI.roiWidth;
+                        anchorBoxInfoTensor[idx].lt.y = 0.625 * roiTensorPtrSrc[i].xywhROI.roiHeight;
+                        anchorBoxInfoTensor[idx].rb.x = 0.875 * roiTensorPtrSrc[i].xywhROI.roiWidth;
+                        anchorBoxInfoTensor[idx].rb.y = 0.875 * roiTensorPtrSrc[i].xywhROI.roiHeight;
+
+                        idx++;
+                        anchorBoxInfoTensor[idx].lt.x = 0.75 * roiTensorPtrSrc[i].xywhROI.roiWidth;
+                        anchorBoxInfoTensor[idx].lt.y = 0.125 * roiTensorPtrSrc[i].xywhROI.roiHeight;
+                        anchorBoxInfoTensor[idx].rb.x = 0.875 * roiTensorPtrSrc[i].xywhROI.roiWidth;
+                        anchorBoxInfoTensor[idx].rb.y = 0.5 * roiTensorPtrSrc[i].xywhROI.roiHeight;
+
+                        if(srcDescPtr->c == 3)
                         {
-                            int idx = (boxesInEachImage * 3 * i);
+                            int idx = boxesInEachImage * 3 * i;
                             colorBuffer[idx] = 0;
                             colorBuffer[idx + 1] = 0;
                             colorBuffer[idx + 2] = 240;
@@ -719,7 +715,7 @@ int main(int argc, char **argv)
                         }
                         else
                         {
-                            int idx = (boxesInEachImage * i);
+                            int idx = boxesInEachImage * i;
                             colorBuffer[idx] = 240;
                             colorBuffer[idx + 1] = 120;
                             colorBuffer[idx + 2] = 60;
@@ -729,7 +725,8 @@ int main(int argc, char **argv)
                                 if (!inputBitDepth)
                                     colors8u[idx + j] = (Rpp8u)(colorBuffer[idx + j]);
                                 else if (inputBitDepth == 1)
-                                    colors16f[idx + j] = (Rpp16f)(colorBuffer[idx + j] * ONE_OVER_255);
+                                    colors16f[idx + j] = (Rpp16f)(
+                                        colorBuffer[idx + j] * ONE_OVER_255);
                                 else if (inputBitDepth == 2)
                                     colors32f[idx + j] = (Rpp32f)(colorBuffer[idx + j] * ONE_OVER_255);
                                 else if (inputBitDepth == 5)
