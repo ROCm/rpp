@@ -322,7 +322,7 @@ int main(int argc, char **argv)
         rowRemapTable = static_cast<Rpp32f *>(calloc(ioBufferSize, sizeof(Rpp32f)));
         colRemapTable = static_cast<Rpp32f *>(calloc(ioBufferSize, sizeof(Rpp32f)));
     }
- 
+
     // Initialize buffers for any reductionType functions (testCase 87 - tensor_sum alone cannot return final sum as 8u/8s due to overflow. 8u inputs return 64u sums, 8s inputs return 64s sums)
     void *reductionFuncResultArr;
     Rpp32u reductionFuncResultArrLength = srcDescPtr->n * 4;
@@ -1299,8 +1299,11 @@ int main(int argc, char **argv)
     free(outputu8);
     free(input_second);
     free(output);
-    free(rowRemapTable);
-    free(colRemapTable);
+    if(testCase == 79)
+    {
+        free(rowRemapTable);
+        free(colRemapTable);
+    }
     if(reductionTypeCase)
         free(reductionFuncResultArr);
     return 0;
