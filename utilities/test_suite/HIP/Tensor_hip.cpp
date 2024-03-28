@@ -358,6 +358,10 @@ int main(int argc, char **argv)
         CHECK(hipHostMalloc(&numOfBoxes, batchSize * sizeof(Rpp32u)));
     }
 
+    Rpp32f *intensity;
+    if(testCase == 46)
+        CHECK(hipHostMalloc(&intensity, batchSize * sizeof(Rpp32f)));
+
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
     for(int iterCount = 0; iterCount < noOfIterations; iterCount++)
@@ -937,6 +941,21 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 46:
+                {
+                    testCaseName = "vignette";
+
+                    for (i = 0; i < batchSize; i++)
+                        intensity[i] = 6;
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_vignette_gpu(d_input, srcDescPtr, d_output, dstDescPtr, intensity, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 case 49:
                 {
                     testCaseName = "box_filter";
@@ -1176,7 +1195,7 @@ int main(int argc, char **argv)
                 default:
                     missingFuncFlag = 1;
                     break;
-                }
+            }
 
             CHECK(hipDeviceSynchronize());
             endWallTime = omp_get_wtime();
@@ -1319,6 +1338,8 @@ int main(int argc, char **argv)
     CHECK(hipHostFree(roiTensorPtrSrc));
     CHECK(hipHostFree(roiTensorPtrDst));
     CHECK(hipHostFree(dstImgSizes));
+    if(testCase == 46)
+        CHECK(hipHostFree(intensity));
     if(testCase == 82)
         CHECK(hipHostFree(roiPtrInputCropRegion));
     if (reductionTypeCase)
