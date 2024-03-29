@@ -69,9 +69,7 @@ __global__ void moving_mean_square_hip_tensor(float *srcPtr,
     uint gridStride = hipGridDim_x * outputTileLength;
     uint batchStride = id_z * nStride;
     float *input = srcPtr + batchStride;
-
-    extern __shared__ float smem[];
-    float *squaredPrefixSum_smem = reinterpret_cast<float *>(smem);
+    extern __shared__ float squaredPrefixSum_smem[];
 
     for(int blockStart = hipBlockIdx_x * outputTileLength; blockStart < srcLength; blockStart += gridStride)
     {
