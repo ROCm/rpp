@@ -16,14 +16,23 @@ __global__ void down_mixing_hip_tensor(float *srcPtr,
     if (id_x >= srcLength)
         return;
 
-    float nomalizedWeight = 1.f / channels;
-    float outVal = 0.0f;
-    uint srcIdx = id_z * srcStride + id_x * channels;
-    for(int i = 0; i < channels; i++, srcIdx++)
-        outVal += srcPtr[srcIdx] * nomalizedWeight;
+    if(channels > 1)
+    {
+        float nomalizedWeight = 1.f / channels;
+        float outVal = 0.0f;
+        uint srcIdx = id_z * srcStride + id_x * channels;
+        for(int i = 0; i < channels; i++, srcIdx++)
+            outVal += srcPtr[srcIdx] * nomalizedWeight;
 
-    uint dstIdx = id_z * dstStride + id_x;
-    dstPtr[dstIdx] = outVal;
+        uint dstIdx = id_z * dstStride + id_x;
+        dstPtr[dstIdx] = outVal;
+    }
+    else
+    {
+        uint srcIdx = id_z * srcStride + id_x;
+        uint dstIdx = id_z * dstStride + id_x;
+        dstPtr[dstIdx] = srcPtr[srcIdx];
+    }
 }
 
 RppStatus hip_exec_down_mixing_tensor(Rpp32f *srcPtr,
