@@ -52,7 +52,7 @@ __global__ void to_decibels_2d_hip_tensor(float *srcPtr,
                                           float multiplier,
                                           float *inverseMagnitudeTensor)
 {
-    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
+    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
@@ -60,14 +60,9 @@ __global__ void to_decibels_2d_hip_tensor(float *srcPtr,
         return;
 
     uint srcIdx = (id_z * srcStridesNH.x) + (id_y * srcStridesNH.y) + id_x;
-    float inverseMagnitude = inverseMagnitudeTensor[id_z];
-
-    d_float8 src_f8, dst_f8;
-    rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);
-    to_decibels_hip_compute(&src_f8, &dst_f8, minRatio, multiplier, inverseMagnitude);
-
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x;
-    rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
+    float inverseMagnitude = inverseMagnitudeTensor[id_z];
+    dstPtr[dstIdx] = multiplier * log2(max(minRatio, (static_cast<double>(srcPtr[srcIdx]) * inverseMagnitude)));
 }
 
 // -------------------- Set 2 -  kernels for finding inverse magnitude value --------------------
@@ -125,13 +120,13 @@ __global__ void max_reduction_hip_tensor(float *srcPtr,
                                          uint numDims,
                                          float *maxArr)
 {
-    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
     // for 1D input
     if (numDims == 1)
     {
+        int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
         uint srcLength = srcDims[id_z].height;
         uint srcIdx = id_z * srcStridesNH.x;
         __shared__ float max_smem[512];
@@ -163,6 +158,7 @@ __global__ void max_reduction_hip_tensor(float *srcPtr,
     // for 2D input
     else if (numDims == 2)
     {
+        int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
         __shared__ float partialMax_smem[16][16];                                   // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
         uint srcIdx = (id_z * srcStridesNH.x);
         float *partialMaxRowPtr_smem = &partialMax_smem[hipThreadIdx_y][0];         // float pointer to beginning of each row in LDS
@@ -172,11 +168,8 @@ __global__ void max_reduction_hip_tensor(float *srcPtr,
             return;
 
         srcIdx += ((id_y * srcStridesNH.y) + id_x);
-
-        d_float8 src_f8;
-        rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);           // load 8 pixels to local memory
-        rpp_hip_math_max8(&src_f8, &partialMaxRowPtr_smem[hipThreadIdx_x]);
-        __syncthreads();                                                        // syncthreads after max compute
+        partialMaxRowPtr_smem[hipThreadIdx_x] = srcPtr[srcIdx];
+        __syncthreads();                                                            // syncthreads
 
         // Reduction of 16 floats on 16 threads per block in x dimension (for every y dimension)
         for (int threadMax = 8; threadMax >= 1; threadMax /= 2)
@@ -219,17 +212,15 @@ RppStatus hip_exec_to_decibels_tensor(Rpp32f *srcPtr,
 
     // Calculate the intermediate values needed for DB conversion
     Rpp32f minRatio = std::pow(10, cutOffDB / multiplier);
-    if(minRatio == 0.0f)
+    if(!minRatio)
         minRatio = std::nextafter(0.0f, 1.0f);
-
     const Rpp32f log10Factor = 0.3010299956639812;      //1 / std::log(10);
     multiplier *= log10Factor;
-
-    int globalThreads_z = handle.GetBatchSize();
 
     // calculate max in input if referenceMagnitude = 0
     Rpp32f *partialMaxArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
     int numBlocksPerSample;
+    int globalThreads_z = handle.GetBatchSize();
 
     // find the invReferenceMagnitude value
     bool computeMax = (!referenceMagnitude);
@@ -251,7 +242,7 @@ RppStatus hip_exec_to_decibels_tensor(Rpp32f *srcPtr,
         }
         else if (numDims == 2)
         {
-            int gridDim_x = ceil(static_cast<float>((srcDescPtr->strides.hStride + 7) >> 3)/LOCAL_THREADS_X);
+            int gridDim_x = ceil(static_cast<float>((srcDescPtr->strides.hStride)/LOCAL_THREADS_X));
             int gridDim_y = ceil(static_cast<float>(srcDescPtr->h)/LOCAL_THREADS_Y);
             int gridDim_z = ceil(static_cast<float>(globalThreads_z)/LOCAL_THREADS_Z);
             numBlocksPerSample = gridDim_x * gridDim_y * gridDim_z;
@@ -301,7 +292,7 @@ RppStatus hip_exec_to_decibels_tensor(Rpp32f *srcPtr,
     }
     else if (numDims == 2)
     {
-        int globalThreads_x = (srcDescPtr->strides.hStride + 7) >> 3;
+        int globalThreads_x = srcDescPtr->strides.hStride;
         int globalThreads_y = srcDescPtr->h;
         hipLaunchKernelGGL(to_decibels_2d_hip_tensor,
                            dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),

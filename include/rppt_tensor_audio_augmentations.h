@@ -78,6 +78,7 @@ RppStatus rppt_non_silent_region_detection_host(RppPtr_t srcPtr, RpptDescPtr src
  * \retval RPP_ERROR* Unsuccessful completion.
  */
 RppStatus rppt_to_decibels_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr srcDims, Rpp32f cutOffDB, Rpp32f multiplier, Rpp32f referenceMagnitude, rppHandle_t rppHandle);
+
 #ifdef GPU_SUPPORT
 /*! \brief To Decibels augmentation on HIP backend
  * \details To Decibels augmentation for 1D/2D audio buffer converts magnitude values to decibel values
