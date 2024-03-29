@@ -1,49 +1,32 @@
 # Anywhere {branch} is used, the branch name will be substituted.
 # These comments will also be removed.
-root: doxygen/html/index
-subtrees:
-  - caption: Support
-    entries:
-    - file: tech_support
-  - caption: About
-    entries:
-    - file: license
-
-
 defaults:
   numbered: False
-#root: doxygen/html/index
+  maxdepth: 6
 root: index
 subtrees:
 - entries:
+  - file: what-is-rpp.rst
+
+
+- caption: Install
+  entries:
   - file: install/install.rst
-    title: Installation
-  - file: conceptual/what-is-rpp.rst
-    title: What is RPP
-  - file: doxygen/html/files
-    title: RPP API Reference
+    title: Install RPP
+
+- caption: Reference
+  entries:
+  - file: doxygen/html/globals
+    title: API library
     subtrees:
     - entries:
-      - file: doxygen/html/rpp_8h
-        title: Top-Level RPP Header
-      - file: doxygen/html/rppdefs_8h
-        title: Typedefs, Enums, and Structs
-      - file: doxygen/html/rppt_8h
-        title: RPP Tensor Operations
-      - file: doxygen/html/rppt__tensor__color__augmentations_8h
-        title: Color Augmentations
-      - file: doxygen/html/rppt__tensor__data__exchange__operations_8h
-        title: Exchange Operations
-      - file: doxygen/html/rppt__tensor__effects__augmentations_8h
-        title: Effects Augmentations
-      - file: doxygen/html/rppt__tensor__filter__augmentations_8h
-        title: Filter Augemntations
-      - file: doxygen/html/rppt__tensor__geometric__augmentations_8h
-        title: Geometric Augmentations
-      - file: doxygen/html/rppt__tensor__morphological__operations_8h
-        title: Morphological Operations
-      - file: doxygen/html/rppt__tensor__statistical__operations_8h
-        title: Statistical Operations
+      - file: doxygen/html/files
+        title: Modules
+      - file: doxygen/html/annotated
+        title: Data structures
       - file: doxygen/html/deprecated
-        title: Deprecated Functions
+        title: Deprecated functions
+
+- caption: About
+  entries:
   - file: license.rst
