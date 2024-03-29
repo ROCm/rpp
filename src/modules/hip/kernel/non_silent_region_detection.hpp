@@ -70,7 +70,7 @@ __global__ void moving_mean_square_hip_tensor(float *srcPtr,
     uint batchStride = id_z * nStride;
     float *input = srcPtr + batchStride;
 
-    extern __shared__ char smem[];
+    extern __shared__ float smem[];
     float *squaredPrefixSum_smem = reinterpret_cast<float *>(smem);
 
     for(int blockStart = hipBlockIdx_x * outputTileLength; blockStart < srcLength; blockStart += gridStride)
@@ -374,6 +374,7 @@ RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
         cutOffMagKernelBlockSize = 256;
     }
     // find the cutoff value in magnitude
+    Rpp32f *cutOffMagPtr = handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem;
     hipLaunchKernelGGL(cutoffmag_hip_tensor,
                        dim3(1, 1, globalThreads_z),
                        dim3(cutOffMagKernelBlockSize, 1, 1),
@@ -381,7 +382,7 @@ RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
                        handle.GetStream(),
                        partialMaxArr,
                        numBlocksPerSample,
-                       handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                       cutOffMagPtr,
                        cutOff,
                        referencePower,
                        referenceMax);
@@ -397,7 +398,7 @@ RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
                        srcDescPtr->strides.nStride,
                        detectedIndexTensor,
                        detectionLengthTensor,
-                       handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                       cutOffMagPtr,
                        srcLengthTensor,
                        windowLength);
     hipStreamSynchronize(handle.GetStream());

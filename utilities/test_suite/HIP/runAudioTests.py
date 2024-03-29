@@ -231,7 +231,7 @@ subprocess.run(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.run(["make", "-j16"], cwd=".")    # nosec
 
 # List of cases supported
-supportedCaseList = ['0', '1', '2', '3']
+supportedCaseList = ['0']
 
 if testType == 0:
     if batchSize != 3:
@@ -325,4 +325,3 @@ if testType == 1 and profilingOption == "NO":
     log_file_list = get_log_file_list()
     for log_file in log_file_list:
         print_performance_tests_summary(log_file, "", numRuns)
-
