@@ -25,6 +25,6 @@ SOFTWARE.
 #ifndef HIP_TENSOR_AUDIO_AUGMENTATIONS_HPP
 #define HIP_TENSOR_AUDIO_AUGMENTATIONS_HPP
 
-#include "kernel/to_decibels.hpp"
+#include "kernel/down_mixing.hpp"
 
 #endif // HIP_TENSOR_AUDIO_AUGMENTATIONS_HPP

@@ -166,32 +166,25 @@ RppStatus rppt_down_mixing_host(RppPtr_t srcPtr,
 
 #ifdef GPU_SUPPORT
 
-/******************** to_decibels ********************/
+/******************** down_mixing ********************/
 
-RppStatus rppt_to_decibels_gpu(RppPtr_t srcPtr,
+RppStatus rppt_down_mixing_gpu(RppPtr_t srcPtr,
                                RpptDescPtr srcDescPtr,
                                RppPtr_t dstPtr,
                                RpptDescPtr dstDescPtr,
-                               RpptImagePatchPtr srcDims,
-                               Rpp32f cutOffDB,
-                               Rpp32f multiplier,
-                               Rpp32f referenceMagnitude,
+                               Rpp32s *srcDimsTensor,
+                               bool  normalizeWeights,
                                rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
-    if (multiplier == 0)
-        return RPP_ERROR_ZERO_DIVISION;
-
-    if (srcDescPtr->dataType == RpptDataType::F32)
+    if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
-        hip_exec_to_decibels_tensor(static_cast<Rpp32f*>(srcPtr),
+        hip_exec_down_mixing_tensor(static_cast<Rpp32f*>(srcPtr),
                                     srcDescPtr,
                                     static_cast<Rpp32f*>(dstPtr),
                                     dstDescPtr,
-                                    srcDims,
-                                    cutOffDB,
-                                    multiplier,
-                                    referenceMagnitude,
+                                    srcDimsTensor,
+                                    normalizeWeights,
                                     rpp::deref(rppHandle));
     }
     else

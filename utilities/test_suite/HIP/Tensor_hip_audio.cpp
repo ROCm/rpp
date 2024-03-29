@@ -130,6 +130,10 @@ int main(int argc, char **argv)
     RpptImagePatch *srcDims = (RpptImagePatch *) calloc(batchSize, sizeof(RpptImagePatch));
     RpptImagePatch *dstDims = (RpptImagePatch *) calloc(batchSize, sizeof(RpptImagePatch));
 
+    // allocate the buffer for srcDimsTensor
+    Rpp32s *srcDimsTensor;
+    CHECK(hipHostMalloc(&srcDimsTensor, batchSize * 2 * sizeof(Rpp32s)));
+
     Rpp32f *detectedIndex = nullptr, *detectionLength = nullptr;
     if(testCase == 0)
     {
@@ -158,20 +162,21 @@ int main(int argc, char **argv)
             double wallTime;
             switch (testCase)
             {
-                case 0:
+                case 3:
                 {
-                    testCaseName = "non_silent_region_detection";
-                    Rpp32f cutOffDB = -60.0;
-                    Rpp32s windowLength = 2048;
-                    Rpp32f referencePower = 0.0f;
-                    Rpp32s resetInterval = 8192;
+                    testCaseName = "down_mixing";
+                    bool normalizeWeights = false;
+
+                    for (int i = 0, j = 0; i < batchSize; i++, j += 2)
+                    {
+                        srcDimsTensor[j] = srcLengthTensor[i];
+                        srcDimsTensor[j + 1] = channelsTensor[i];
+                        dstDims[i].height = srcLengthTensor[i];
+                        dstDims[i].width = 1;
+                    }
 
                     startWallTime = omp_get_wtime();
-                    rppt_non_silent_region_detection_gpu(d_inputf32, srcDescPtr, srcLengthTensor, detectedIndex, detectionLength, cutOffDB, windowLength, referencePower, resetInterval, handle);
-
-                    // QA mode - verify outputs with golden outputs. Below code doesn’t run for performance tests
-                    if (testType == 0)
-                        verify_non_silent_region_detection(detectedIndex, detectionLength, testCaseName, batchSize, audioNames, dst);
+                    rppt_down_mixing_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcDimsTensor, normalizeWeights, handle);
 
                     break;
                 }
@@ -242,6 +247,7 @@ int main(int argc, char **argv)
     CHECK(hipFree(d_outputf32));
     CHECK(hipHostFree(srcLengthTensor));
     CHECK(hipHostFree(channelsTensor));
+    CHECK(hipHostFree(srcDimsTensor));
     if (detectedIndex != nullptr)
         CHECK(hipHostFree(detectedIndex));
     if (detectionLength != nullptr)
