@@ -203,6 +203,8 @@ int main(int argc, char **argv)
         // QA mode - verify outputs with golden outputs. Below code doesn’t run for performance tests
         if (testType == 0)
         {
+            CHECK(hipMemcpy(outputf32, d_outputf32, oBufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
+
             /* Run only if testCase is not 0
             For testCase 0 verify_non_silent_region_detection function is used for QA testing */
             if (testCase != 0)
