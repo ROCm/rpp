@@ -352,6 +352,8 @@ int main(int argc, char **argv)
         CHECK(hipHostMalloc(&cropRoi, batchSize * sizeof(RpptROI)));
         CHECK(hipHostMalloc(&patchRoi, batchSize * sizeof(RpptROI)));
     }
+    bool invalidROI = (roiList[0] == 0 && roiList[1] == 0 && roiList[2] == 0 && roiList[3] == 0);
+
     Rpp32f *intensity;
     if(testCase == 46)
         CHECK(hipHostMalloc(&intensity, batchSize * sizeof(Rpp32f)));
@@ -400,7 +402,7 @@ int main(int argc, char **argv)
             CHECK(hipMemcpy(d_input_second, input_second, inputBufferSize, hipMemcpyHostToDevice));
 
         int roiHeightList[batchSize], roiWidthList[batchSize];
-        if(roiList[0] == 0 && roiList[1] == 0 && roiList[2] == 0 && roiList[3] == 0)
+        if(invalidROI)
         {
             for(int i = 0; i < batchSize ; i++)
             {

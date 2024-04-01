@@ -340,6 +340,7 @@ int main(int argc, char **argv)
         cropRoi = static_cast<RpptROI*>(calloc(batchSize, sizeof(RpptROI)));
         patchRoi = static_cast<RpptROI*>(calloc(batchSize, sizeof(RpptROI)));
     }
+    bool invalidROI = (roiList[0] == 0 && roiList[1] == 0 && roiList[2] == 0 && roiList[3] == 0);
 
     // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
     // If numThreads value passed is 0, number of OpenMP threads used by RPP will be set to batch size
@@ -390,7 +391,7 @@ int main(int argc, char **argv)
         convert_input_bitdepth(input, input_second, inputu8, inputu8Second, inputBitDepth, ioBufferSize, inputBufferSize, srcDescPtr, dualInputCase, conversionFactor);
 
         int roiHeightList[batchSize], roiWidthList[batchSize];
-        if(roiList[0] == 0 && roiList[1] == 0 && roiList[2] == 0 && roiList[3] == 0)
+        if(invalidROI)
         {
             for(int i = 0; i < batchSize ; i++)
             {
