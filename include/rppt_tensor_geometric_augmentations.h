@@ -488,6 +488,9 @@ RppStatus rppt_slice_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, 
  * - srcPtr1 depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - srcPtr2 depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
+ * \image html img150x150.png Sample Input1
+ * \image html img150x150_2.png Sample Input2
+ * \image html geometric_augmentations_crop_and_patch_img150x150.png Sample Output
  * \param [in] srcPtr1 source tensor1 in HOST memory
  * \param [in] srcPtr2 source tensor2 in HOST memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
@@ -511,6 +514,9 @@ RppStatus rppt_crop_and_patch_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDescP
  * - srcPtr1 depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - srcPtr2 depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
+ * \image html img150x150.png Sample Input1
+ * \image html img150x150_2.png Sample Input2
+ * \image html geometric_augmentations_crop_and_patch_img150x150.png Sample Output
  * \param [in] srcPtr1 source tensor1 in HIP memory
  * \param [in] srcPtr2 source tensor2 in HIP memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
