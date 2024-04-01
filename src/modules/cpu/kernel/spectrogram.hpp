@@ -208,21 +208,30 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
 
             ffts_execute(p, fftInBuf, fftOutBuf);
             auto *complexFft = reinterpret_cast<std::complex<Rpp32f> *>(fftOutBuf);
-            for (int i = 0; i < numBins; i++)
+            Rpp32s outIdx = w;
+            if (vertical)
             {
-                if (vertical)
+                if (power == 1)
                 {
-                    Rpp32s outIdx = (i * hStride + w);
-                    if (power == 1)
+                    for (int i = 0; i < numBins; i++, outIdx += hStride)
                         dstPtrTemp[outIdx] = std::abs(complexFft[i]);
-                    else
-                        dstPtrTemp[outIdx] = std::norm(complexFft[i]);
                 }
                 else
                 {
-                    if (power == 1)
+                    for (int i = 0; i < numBins; i++, outIdx += hStride)
+                        dstPtrTemp[outIdx] = std::norm(complexFft[i]);
+                }
+            }
+            else
+            {
+                if (power == 1)
+                {
+                    for (int i = 0; i < numBins; i++)
                         *dstPtrBinTemp++ = std::abs(complexFft[i]);
-                    else
+                }
+                else
+                {
+                    for (int i = 0; i < numBins; i++)
                         *dstPtrBinTemp++ = std::norm(complexFft[i]);
                 }
             }
