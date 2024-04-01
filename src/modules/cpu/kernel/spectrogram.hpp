@@ -178,17 +178,13 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
         // Set temporary buffers to 0
         Rpp32f FFTS_ALIGN(32) *fftInBuf = (Rpp32f *)_mm_malloc(fftInSize * sizeof(Rpp32f), 32); // ffts requires 32-byte aligned memory
         Rpp32f FFTS_ALIGN(32) *fftOutBuf = (Rpp32f *)_mm_malloc(fftOutSize * sizeof(Rpp32f), 32); // ffts requires 32-byte aligned memory
+        memset(fftInBuf, 0, sizeof(fftInSize * sizeof(Rpp32f)));
+        memset(fftOutBuf, 0, sizeof(fftOutSize * sizeof(Rpp32f)));
 
         for (Rpp32s w = 0; w < numWindows; w++)
         {
             Rpp32f *dstPtrBinTemp = dstPtrTemp + (w * hStride);
             Rpp32f *windowOutputTemp = windowOutput + (w * nfft);
-            for(int k = 0; k < fftInSize; k++)
-                fftInBuf[k] = 0.0f;
-
-            for(int k = 0; k < fftOutSize; k++)
-                fftOutBuf[k] = 0.0f;
-
             Rpp32s inWindowStart = windowLength < nfft ? (nfft - windowLength) / 2 : 0;
             // Copy the window input to fftInBuf
             if (useRealImpl)
