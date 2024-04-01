@@ -3,15 +3,53 @@
 
 // -------------------- Set 0 - resample kernel --------------------
 
-__global__ void resample_hip_tensor(float *srcPtr,
-                                    uint srcStride,
-                                    float *dstPtr,
-                                    uint dstStride,
-                                    Rpp32f *inRateTensor,
-                                    Rpp32f *outRateTensor,
-                                    Rpp32s *srcDimsTensor,
-                                    RpptResamplingWindow &window,)
+__global__ void resample_1channel_hip_tensor(float *srcPtr,
+                                             uint srcStride,
+                                             float *dstPtr,
+                                             uint dstStride,
+                                             Rpp32f inRateTensor,
+                                             Rpp32f outRateTensor,
+                                             Rpp32s srcLength,
+                                             Rpp32s outEnd,
+                                             Rpp64f scale,
+                                             RpptResamplingWindow &window)
 {
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x); // * 8;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    if (id_x >= outEnd)
+        return;
+
+    Rpp32s block = 256;
+    Rpp32s blockEnd = std::min(id_x + block, outEnd);
+    Rpp64f inBlockRaw = id_x * scale;
+    Rpp32s inBlockRounded = static_cast<int>(inBlockRaw);
+    Rpp32f inPos = inBlockRaw - inBlockRounded;
+    uint srcIdx = id_z * srcStride;
+    const Rpp32f inBlock = srcIdx + inBlockRounded;
+    Rpp32f fscale = scale;
+
+    for (int outPos = id_z; outPos < blockEnd; outPos++, inPos += fscale)
+    {
+        Rpp32s loc0, loc1;
+        Rpp32s xc = std::ceil(inPos);
+        loc0 = loc1 = xc;
+        //window.input_range(inPos, &loc0, &loc1);
+        if (loc0 + inBlockRounded < 0)
+            loc0 = -inBlockRounded;
+        if (loc1 + inBlockRounded > srcLength)
+            loc1 = srcLength - inBlockRounded;
+        Rpp32s locInWindow = loc0;
+        Rpp32f locBegin = locInWindow - inPos;
+        Rpp32f accum = 0.0f;
+
+        for (; locInWindow < loc1; locInWindow++, locBegin++)
+        {
+            Rpp32f w = window(locBegin);
+            accum += *srcPtr[inBlock + locInWindow] * w;
+        }
+        dstPtr[outPos] = accum;
+    }
 }
 
 // -------------------- Set 1 - resample kernels executor --------------------
@@ -26,7 +64,66 @@ RppStatus hip_exec_resample_tensor(Rpp32f *srcPtr,
                                    RpptResamplingWindow &window,
                                    rpp::Handle& handle)
 {
-    Rpp32u numDims = srcDescPtr->numDims - 1;   // exclude batchSize from input dims
+    int batchSize = handle.GetBatchSize();
+
+    for(int i = 0; i < batchSize; i++)
+    {
+        int inRate = inRateTensor[i];
+        int outRate = outRateTensor[i];
+        int srcLength = srcDimsTensor[i * 2];
+        int numChannels = srcDimsTensor[i * 2 + 1];
+        if (inRate == outRate) // No need of Resampling, do a direct memcpy
+        {
+            hipMemcpy(dstPtr, srcPtr, srcLength * numChannels * sizeof(float), hipMemcpyDeviceToDevice);
+        }
+        else
+        {
+            int outEnd = std::ceil(srcLength * outRate / inRate);
+            Rpp64f scale = static_cast<Rpp64f>(inRate) / outRate;
+            Rpp32s block = 256; // 1 << 8
+            int length = outEnd / block;
+
+            if (numChannels == 1)
+            {
+                int globalThreads_x = length; //(length + 7) >> 3;
+                int globalThreads_y = 1;
+                int globalThreads_z = 1;
+
+                hipLaunchKernelGGL(resample_1channel_hip_tensor,
+                                   dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X_1DIM), ceil((float)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((float)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
+                                   dim3(LOCAL_THREADS_X_1DIM, LOCAL_THREADS_Y_1DIM, LOCAL_THREADS_Z_1DIM),
+                                   0,
+                                   handle.GetStream(),
+                                   srcPtr,
+                                   srcDescPtr->strides.nStride,
+                                   dstPtr,
+                                   dstDescPtr->strides.nStride,
+                                   inRate,
+                                   outRate,
+                                   srcLength,
+                                   outEnd,
+                                   scale,
+                                   window);
+            }
+        }
+
+    }
+
+
+
+    /*hipLaunchKernelGGL(resample_hip_tensor,
+                       dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X_1DIM), ceil((float)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((float)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
+                       dim3(LOCAL_THREADS_X_1DIM, LOCAL_THREADS_Y_1DIM, LOCAL_THREADS_Z_1DIM),
+                       0,
+                       handle.GetStream(),
+                       srcPtr,
+                       srcDescPtr->strides.nStride,
+                       dstPtr,
+                       dstDescPtr->strides.nStride,
+                       inRateTensor,
+                       outRateTensor,
+                       srcDimsTensor,
+                       window);*/
 
     return RPP_SUCCESS;
 }

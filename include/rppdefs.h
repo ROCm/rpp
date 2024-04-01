@@ -670,6 +670,17 @@ typedef struct RpptResamplingWindow
         return current + weight * (next - current);
     }
 
+    __device__ inline Rpp32f operator()(Rpp32f x)
+    {
+        Rpp32f locRaw = x * scale + center;
+        Rpp32s locFloor = std::floor(locRaw);
+        Rpp32f weight = locRaw - locFloor;
+        locFloor = std::max(std::min(locFloor, lookupSize - 2), 0);
+        Rpp32f current = lookup[locFloor];
+        Rpp32f next = lookup[locFloor + 1];
+        return current + weight * (next - current);
+    }
+
     inline __m128 operator()(__m128 x)
     {
         __m128 pLocRaw = _mm_add_ps(_mm_mul_ps(x, pScale), pCenter);
