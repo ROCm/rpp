@@ -63,7 +63,7 @@ def run_unit_test_cmd(headerPath, dataPath, dstPathTemp, layout, case, numRuns, 
     print("------------------------------------------------------------------------------------------")
 
 def run_performance_test_cmd(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
-    with open(f"{loggingFolder}/Tensor_voxel_hip_{logFileLayout}_raw_performance_log.txt", "a") as log_file:
+    with open(f"{loggingFolder}/Tensor_voxel_hip_{logFileLayout}_raw_performance_log.txt", "a") as logFile:
         print(f"./Tensor_voxel_hip {headerPath} {dataPath} {dstPathTemp} {layout} {case} {numRuns} {testType} {qaMode} {batchSize} {bitDepth}")
         process = subprocess.Popen([buildFolderPath + "/build/Tensor_voxel_hip", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True) # nosec
         while True:
@@ -72,52 +72,29 @@ def run_performance_test_cmd(loggingFolder, logFileLayout, headerPath, dataPath,
                 break
             print(output.strip())
             if "Running" in output or "max,min,avg wall times" in output:
-                cleaned_output = ''.join(char for char in output if 32 <= ord(char) <= 126)  # Remove control characters
-                cleaned_output = cleaned_output.strip()  # Remove leading/trailing whitespace
-                log_file.write(cleaned_output + '\n')
+                cleanedOutput = ''.join(char for char in output if 32 <= ord(char) <= 126)  # Remove control characters
+                cleanedOutput = cleanedOutput.strip()  # Remove leading/trailing whitespace
+                logFile.write(cleanedOutput + '\n')
                 if "max,min,avg wall times" in output:
-                    log_file.write("\n")
+                    logFile.write("\n")
         print("------------------------------------------------------------------------------------------")
 
 def run_performance_test_with_profiler_cmd(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
+    layoutName = get_layout_name(layout)
+    if not os.path.exists(f"{loggingFolder}/Tensor_{layoutName}/case_{case}"):
+        os.mkdir(f"{loggingFolder}/Tensor_{layoutName}/case_{case}")
+
     bitDepths = [0, 2]
     for bitDepth in bitDepths:
-        if layout == 0:
-            if not os.path.exists(f"{loggingFolder}/Tensor_PKD3/case_{case}"):
-                os.mkdir(f"{loggingFolder}/Tensor_PKD3/case_{case}")
-            with open(f"{loggingFolder}/Tensor_voxel_hip_{logFileLayout}_raw_performance_log.txt", "a") as log_file:
-                print(f"\nrocprof --basenames on --timestamp on --stats -o {dstPathTemp}/Tensor_PKD3/case_{case}/output_case{case}.csv ./Tensor_voxel_hip {headerPath} {dataPath} {dstPathTemp}  {layout} {case}{numRuns} {testType} {qaMode} {batchSize} {bitDepth}")
-                process = subprocess.Popen([ 'rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f"{dstPath}/Tensor_PKD3/case_{case}/output_case{case}.csv", buildFolderPath + "/build/Tensor_voxel_hip", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) # nosec
-                while True:
-                    output = process.stdout.readline()
-                    if not output and process.poll() is not None:
-                        break
-                    print(output.strip())
-                    log_file.write(output.decode('utf-8'))
-        elif layout == 1:
-            if not os.path.exists(f"{loggingFolder}/Tensor_PLN3/case_{case}"):
-                os.mkdir(f"{loggingFolder}/Tensor_PLN3/case_{case}")
-            with open(f"{loggingFolder}/Tensor_voxel_hip_{logFileLayout}_raw_performance_log.txt", "a") as log_file:
-                print(f"\nrocprof --basenames on --timestamp on --stats -o {dstPathTemp}/Tensor_PLN3/case_{case}/output_case{case}.csv ./Tensor_voxel_hip {headerPath} {dataPath} {dstPathTemp}  {layout} {case}{numRuns} {testType} {qaMode} {batchSize} {bitDepth}")
-                process = subprocess.Popen([ 'rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f"{loggingFolder}/Tensor_PLN3/case_{case}/output_case{case}.csv", buildFolderPath + "/build/Tensor_voxel_hip", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) # nosec
-                while True:
-                    output = process.stdout.readline()
-                    if not output and process.poll() is not None:
-                        break
-                    print(output.strip())
-                    log_file.write(output.decode('utf-8'))
-        elif layout == 2:
-            if not os.path.exists(f"{loggingFolder}/Tensor_PLN1/case_{case}"):
-                os.mkdir(f"{loggingFolder}/Tensor_PLN1/case_{case}")
-            with open(f"{loggingFolder}/Tensor_voxel_hip_{logFileLayout}_raw_performance_log.txt", "a") as log_file:
-                print(f"\nrocprof --basenames on --timestamp on --stats -o {dstPathTemp}/Tensor_PLN1/case_{case}/output_case{case}.csv ./Tensor_voxel_hip {headerPath} {dataPath} {dstPathTemp}  {layout} {case}{numRuns} {testType} {qaMode} {batchSize} {bitDepth}")
-                process = subprocess.Popen([ 'rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f"{loggingFolder}/Tensor_PLN1/case_{case}/output_case{case}.csv", buildFolderPath + "/build/Tensor_voxel_hip", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) # nosec
-                while True:
-                    output = process.stdout.readline()
-                    if not output and process.poll() is not None:
-                        break
-                    print(output.strip())
-                    log_file.write(output.decode('utf-8'))
+        with open(f"{loggingFolder}/Tensor_voxel_hip_{logFileLayout}_raw_performance_log.txt", "a") as logFile:
+            print(f"\nrocprof --basenames on --timestamp on --stats -o {dstPathTemp}/Tensor_{layoutName}/case_{case}/output_case{case}.csv ./Tensor_voxel_hip {headerPath} {dataPath} {dstPathTemp}  {layout} {case}{numRuns} {testType} {qaMode} {batchSize} {bitDepth}")
+            process = subprocess.Popen([ 'rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f"{dstPath}/Tensor_{layoutName}/case_{case}/output_case{case}.csv", buildFolderPath + "/build/Tensor_voxel_hip", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) # nosec
+            while True:
+                output = process.stdout.readline()
+                if not output and process.poll() is not None:
+                    break
+                print(output.strip())
+                logFile.write(output.decode('utf-8'))
     print("------------------------------------------------------------------------------------------")
 
 def run_test(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize, profilingOption = 'NO'):
@@ -371,12 +348,8 @@ layoutDict = {0:"PKD3", 1:"PLN3", 2:"PLN1"}
 if (testType == 0 and qaMode == 0): # Unit tests
     create_layout_directories(dstPath, layoutDict)
 elif (testType == 1 and profilingOption == "NO"): # Performance tests
-    log_file_list = get_log_file_list(preserveOutput)
+    logFileList = get_log_file_list(preserveOutput)
+    functionalityGroupList = ["arithmetic_operations", "geometric_augmentations",]
 
-    functionality_group_list = [
-        "arithmetic_operations",
-        "geometric_augmentations",
-    ]
-
-    for log_file in log_file_list:
-        print_performance_tests_summary(log_file, functionality_group_list, numRuns)
+    for logFile in logFileList:
+        print_performance_tests_summary(logFile, functionalityGroupList, numRuns)
