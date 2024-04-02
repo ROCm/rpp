@@ -240,6 +240,7 @@ def read_from_subprocess_and_write_to_log(process, logFile):
         print(output.strip())
         logFile.write(output)
 
+# Returns the layout name based on layout value
 def get_layout_name(layout):
     if layout == 0:
         return "PKD3"
