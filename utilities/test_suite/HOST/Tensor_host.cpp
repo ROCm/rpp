@@ -832,6 +832,23 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 46:
+                {
+                    testCaseName = "vignette";
+
+                    Rpp32f intensity[batchSize];
+                    for (i = 0; i < batchSize; i++)
+                        intensity[i] = 6;
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 3 || inputBitDepth == 4 || inputBitDepth == 5)
+                        rppt_vignette_host(input, srcDescPtr, output, dstDescPtr, intensity, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 case 61:
                 {
                     testCaseName = "magnitude";
