@@ -85,42 +85,27 @@ def run_performance_test_cmd(loggingFolder, numDims, case, numRuns, testType, to
         process = subprocess.Popen([buildFolderPath + "/build/Tensor_misc_hip", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
         read_from_subprocess_and_write_to_log(process, logFile)
 
-def run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg):
+def run_performance_test_with_profiler_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg):
+    if not os.path.exists(f"{outFilePath}/case_{case}"):
+        os.mkdir(f"{outFilePath}/case_{case}")
+
+    with open("{}/Tensor_misc_hip_raw_performance_log.txt".format(loggingFolder), "a") as logFile:
+        print(f"\nrocprof --basenames on --timestamp on --stats -o {outFilePath}/case_{case}/output_case{case}.csv ./Tensor_misc_hip {case} {testType} {toggle} {numDims} {batchSize} {numRuns} {additionalArg}")
+        process = subprocess.Popen([ 'rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f"{outFilePath}/case_{case}/output_case{case}.csv", "./Tensor_misc_hip", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
+        read_from_subprocess_and_write_to_log(process, logFile)
+    print("------------------------------------------------------------------------------------------")
+
+def run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg, profilingOption = 'NO'):
     print("\n\n\n\n")
     print("--------------------------------")
     print("Running a New Functionality...")
     print("--------------------------------")
     if testType == 0:
         run_unit_test_cmd(numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg)
-    elif testType == 1:
+    elif testType == 1 and profilingOption == "NO":
         run_performance_test_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg)
-
-def run_profiler_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath):
-    print("\n\n\n\n")
-    print("--------------------------------")
-    print("Running a New Functionality...")
-    print("--------------------------------")
-    print(loggingFolder)
-
-    if not os.path.exists(f"{outFilePath}/case_{case}"):
-        os.mkdir(f"{outFilePath}/case_{case}")
-
-    if case == "1":
-        for axisMask in range(1, pow(2, numDims)):
-            print("--------------------------------")
-            print("Running a New Axis Normalization...")
-            print("--------------------------------")
-            with open("{}/Tensor_misc_hip_raw_performance_log.txt".format(loggingFolder), "a") as logFile:
-                print(f"\nrocprof --basenames on --timestamp on --stats -o {outFilePath}/case_{case}/output_case{case}.csv ./Tensor_misc_hip {case} {testType} {toggle} {numDims} {batchSize} {numRuns} {axisMask}")
-                process = subprocess.Popen([ 'rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f"{outFilePath}/case_{case}/output_case{case}.csv", "./Tensor_misc_hip", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(axisMask), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
-                read_from_subprocess_and_write_to_log(process, logFile)
-            print("------------------------------------------------------------------------------------------")
-        else:
-            with open("{}/Tensor_misc_hip_raw_performance_log.txt".format(loggingFolder), "a") as logFile:
-                print(f"\nrocprof --basenames on --timestamp on --stats -o {outFilePath}/case_{case}/output_case{case}.csv ./Tensor_misc_hip {case} {testType} {toggle} {numDims} {batchSize} {numRuns} {axisMask}")
-                process = subprocess.Popen([ 'rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f"{outFilePath}/case_{case}/output_case{case}.csv", "./Tensor_misc_hip", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(axisMask), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
-                read_from_subprocess_and_write_to_log(process, logFile)
-            print("------------------------------------------------------------------------------------------")
+    elif testType == 1 and profilingOption == "YES":
+        run_performance_test_with_profiler_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg)
 
 # Parse and validate command-line arguments for the RPP test suite
 def rpp_test_suite_parser_and_validator():
@@ -224,21 +209,16 @@ subprocess.run(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.run(["make", "-j16"], cwd=".")    # nosec
 
 supportedCaseList = ['1']
-if (testType == 0 or (testType == 1 and profilingOption == "NO")):
-    for case in caseList:
-        if case not in supportedCaseList:
-            continue
-        if case == "1":
-            for axisMask in range(1, pow(2, numDims)):
-                run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, axisMask)
-        else:
-            run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, axisMask)
-elif (testType == 1 and profilingOption == "YES"):
-    for case in caseList:
-        if case not in supportedCaseList:
-            continue
-        run_profiler_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath)
+for case in caseList:
+    if case not in supportedCaseList:
+        continue
+    if case == "1":
+        for axisMask in range(1, pow(2, numDims)):
+            run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, axisMask, profilingOption)
+    else:
+        run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, "", profilingOption)
 
+if (testType == 1 and profilingOption == "YES"):
     RESULTS_DIR = outFolderPath + "/OUTPUT_PERFORMANCE_MISC_LOGS_HIP_" + timestamp
     print("RESULTS_DIR = " + RESULTS_DIR)
     CONSOLIDATED_FILE = RESULTS_DIR + "/consolidated_results.stats.csv"
