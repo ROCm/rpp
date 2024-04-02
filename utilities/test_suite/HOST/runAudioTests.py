@@ -42,19 +42,19 @@ caseMax = 3
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list():
     return [
-        outFolderPath + "/OUTPUT_PERFORMANCE_AUDIO_LOGS_HOST_" + timestamp + "/Tensor_host_audio_raw_performance_log.txt",
+        outFolderPath + "/OUTPUT_PERFORMANCE_AUDIO_LOGS_HOST_" + timestamp + "/Tensor_audio_host_raw_performance_log.txt",
     ]
 
 def run_unit_test_cmd(srcPath, case, numRuns, testType, batchSize, outFilePath):
-    print(f"./Tensor_host_audio {srcPath} {case} {numRuns} {testType} {numRuns} {batchSize}")
-    result = subprocess.run([buildFolderPath + "/build/Tensor_host_audio", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE)    # nosec
+    print(f"./Tensor_audio_host {srcPath} {case} {numRuns} {testType} {numRuns} {batchSize}")
+    result = subprocess.run([buildFolderPath + "/build/Tensor_audio_host", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE)    # nosec
     print(result.stdout.decode())
     print("------------------------------------------------------------------------------------------")
 
 def run_performance_test_cmd(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath):
-    with open("{}/Tensor_host_audio_raw_performance_log.txt".format(loggingFolder), "a") as logFile:
-        print(f"./Tensor_host_audio {srcPath} {case} {numRuns} {testType} {numRuns} {batchSize} ")
-        process = subprocess.Popen([buildFolderPath + "/build/Tensor_host_audio", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
+    with open("{}/Tensor_audio_host_raw_performance_log.txt".format(loggingFolder), "a") as logFile:
+        print(f"./Tensor_audio_host {srcPath} {case} {numRuns} {testType} {numRuns} {batchSize} ")
+        process = subprocess.Popen([buildFolderPath + "/build/Tensor_audio_host", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
         read_from_subprocess_and_write_to_log(process, logFile)
         print("------------------------------------------------------------------------------------------")
 
@@ -198,7 +198,7 @@ if testType == 0:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
-        print("---------------------------------- Results of QA Test - Tensor_host_audio -----------------------------------\n")
+        print("---------------------------------- Results of QA Test - Tensor_audio_host -----------------------------------\n")
         print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList)
 
 # Performance tests

@@ -187,43 +187,43 @@ The voxel test suite accepts the following command line arguments:
 ### Running the Tests for HOST Backend (RPP Voxel Test Suite)
 The test suite can be run with the following command:
 ``` python
-python runTests_voxel.py --header_path <header_path> --data_path <data_path> --case_start <case_start> --case_end <case_end> --test_type <test_type>
+python runVoxelTests.py --header_path <header_path> --data_path <data_path> --case_start <case_start> --case_end <case_end> --test_type <test_type>
 ```
 
 ### Running the Tests for HIP Backend (RPP Voxel Test Suite)
 The test suite can be run with the following command:
 ``` python
-python runTests_voxel.py --header_path <header_path> --data_path <data_path> --case_start <case_start> --case_end <case_end> --test_type <test_type> --profiling <profiling>
+python runVoxelTests.py --header_path <header_path> --data_path <data_path> --case_start <case_start> --case_end <case_end> --test_type <test_type> --profiling <profiling>
 ```
 
 ### Modes of operation (RPP Voxel Test Suite)
 -   QA mode - Tolerance based PASS/FAIL tests for RPP HIP/HOST functionalities checking pixelwise match between C/SSE/AVX/HIP versions after comparison to preset golden outputs.
 ``` python
-python runTests_voxel.py --case_start 0 --case_end 4 --test_type 0 --qa_mode 1 --batch_size 3
+python runVoxelTests.py --case_start 0 --case_end 4 --test_type 0 --qa_mode 1 --batch_size 3
 ```
 -   Unit test mode - Unit tests allowing users to pass a path to a folder containing nii fikes, to execute the desired functionality and variant once, report RPP execution wall time, save and view output images, gifs and nii files
 ``` python
-python runTests_voxel.py --case_start 0 --case_end 4 --test_type 0 --qa_mode 0
+python runVoxelTests.py --case_start 0 --case_end 4 --test_type 0 --qa_mode 0
 ```
 -   Performance test mode - Performance tests that execute the desired functionality and variant 100 times by default, and report max/min/avg RPP execution wall time, or optionally, AMD rocprof kernel profiler max/min/avg time for HIP backend variants.
 ``` python
-python runTests_voxel.py --case_start 0 --case_end 4 --test_type 1
+python runVoxelTests.py --case_start 0 --case_end 4 --test_type 1
 ```
 
 To run the unit tests / performance tests for specific case numbers. please case use case_list parameter. Example as below
 
 -   To run unittests for case numbers 0, 2, 4
 ``` python
-python runTests_voxel.py --case_list 0 2 4 --test_type 0
+python runVoxelTests.py --case_list 0 2 4 --test_type 0
 ```
 -   To run performance tests for case numbers 0, 2, 4
 ``` python
-python runTests_voxel.py --case_list 0 2 4 --test_type 1
+python runVoxelTests.py --case_list 0 2 4 --test_type 1
 ```
 
 To run performance tests with AMD rocprof kernel profiler for HIP backend variants. This will generate profiler times for HIP backend variants
 ``` python
-python runTests_voxel.py --test_type 1 --profiling YES
+python runVoxelTests.py --test_type 1 --profiling YES
 ```
 
 ### Summary of features (RPP Voxel Test Suite)
