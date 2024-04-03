@@ -526,7 +526,7 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
                                          srcDescPtr,
                                          static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                          dstDescPtr,
-                                         rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.tempFloatmem,
+                                         rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.scratchBufferHost,
                                          tempDescPtr,
                                          dstImgSizes,
                                          roiTensorPtrSrc,
@@ -541,7 +541,7 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
                                          srcDescPtr,
                                          static_cast<Rpp32f*>(dstPtr) + dstDescPtr->offsetInBytes,
                                          dstDescPtr,
-                                         rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.tempFloatmem,
+                                         rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.scratchBufferHost,
                                          tempDescPtr,
                                          dstImgSizes,
                                          roiTensorPtrSrc,
@@ -556,7 +556,7 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
                                          srcDescPtr,
                                          static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                          dstDescPtr,
-                                         rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.tempFloatmem,
+                                         rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.scratchBufferHost,
                                          tempDescPtr,
                                          dstImgSizes,
                                          roiTensorPtrSrc,
@@ -571,7 +571,7 @@ RppStatus rppt_resize_host(RppPtr_t srcPtr,
                                          srcDescPtr,
                                          static_cast<Rpp16f*>(dstPtr) + dstDescPtr->offsetInBytes,
                                          dstDescPtr,
-                                         rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.tempFloatmem,
+                                         rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.scratchBufferHost,
                                          tempDescPtr,
                                          dstImgSizes,
                                          roiTensorPtrSrc,
@@ -789,7 +789,7 @@ RppStatus rppt_rotate_host(RppPtr_t srcPtr,
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
 
     // Compute affine transformation matrix from rotate angle
-    Rpp32f *affineTensor = rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.tempFloatmem;
+    Rpp32f *affineTensor = rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.scratchBufferHost;
     for(int idx = 0; idx < srcDescPtr->n; idx++)
     {
         Rpp32f angleInRad = angle[idx] * PI_OVER_180;
@@ -1650,7 +1650,7 @@ RppStatus rppt_rotate_gpu(RppPtr_t srcPtr,
         return RPP_ERROR_NOT_IMPLEMENTED;
 
     // Compute affine transformation matrix from rotate angle
-    Rpp32f *affineTensor = rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.tempFloatmem;
+    Rpp32f *affineTensor = rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.scratchBufferHost;
     for(int idx = 0; idx < srcDescPtr->n; idx++)
     {
         Rpp32f angleInRad = angle[idx] * PI_OVER_180;
