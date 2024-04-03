@@ -368,7 +368,7 @@ struct HandleImpl
             this->initHandle->mem.mcpu.ucharArr[i].ucharmem = (Rpp8u *)malloc(sizeof(Rpp8u) * this->nBatchSize);
             this->initHandle->mem.mcpu.charArr[i].charmem = (Rpp8s *)malloc(sizeof(Rpp8s) * this->nBatchSize);
         }
-        this->initHandle->mem.mcpu.tempFloatmem = (Rpp32f *)malloc(sizeof(Rpp32f) * 99532800 * this->nBatchSize); // 7680 * 4320 * 3
+        this->initHandle->mem.mcpu.scratchBufferHost = (Rpp32f *)malloc(sizeof(Rpp32f) * 99532800 * this->nBatchSize); // 7680 * 4320 * 3
     }
 
     void PreInitializeBuffer()
@@ -604,7 +604,7 @@ void Handle::rpp_destroy_object_host()
         free(this->GetInitHandle()->mem.mcpu.charArr[i].charmem);
     }
 
-    free(this->GetInitHandle()->mem.mcpu.tempFloatmem);
+    free(this->GetInitHandle()->mem.mcpu.scratchBufferHost);
 }
 
 size_t Handle::GetBatchSize() const
