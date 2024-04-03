@@ -101,8 +101,8 @@ def rpp_test_suite_parser_and_validator():
     parser = argparse.ArgumentParser()
     parser.add_argument("--header_path", type = str, default = headerFilePath, help = "Path to the nii header")
     parser.add_argument("--data_path", type = str, default = dataFilePath, help = "Path to the nii data file")
-    parser.add_argument("--case_start", type = int, default = caseMin, help = "Testing start case # - Range must be in [" + str(caseMin) + ":" + str(caseMax) + "]")
-    parser.add_argument("--case_end", type = int, default = caseMax, help = "Testing start case # - Range must be in [" + str(caseMin) + ":" + str(caseMax) + "]")
+    parser.add_argument("--case_start", type = int, default = caseMin, help = "Testing range starting case # - Range must be in [" + str(caseMin) + ":" + str(caseMax) + "]")
+    parser.add_argument("--case_end", type = int, default = caseMax, help = "Testing range ending case # - Range must be in [" + str(caseMin) + ":" + str(caseMax) + "]")
     parser.add_argument('--test_type', type = int, default = 0, help = "Type of Test - (0 = Unit tests / 1 = Performance tests)")
     parser.add_argument('--case_list', nargs = "+", help = "List of case numbers to list", required = False)
     parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Output images from tests will be compared with golden outputs - (0 / 1)", required = False)
@@ -216,7 +216,7 @@ subprocess.run(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.run(["make", "-j16"], cwd=".")  # nosec
 
 # List of cases supported
-supportedCaseList = ['0', '1', '2', '3', '5']
+supportedCaseList = ['0', '1', '2', '3', '4', '5']
 
 print("\n\n\n\n\n")
 print("##########################################################################################")
