@@ -176,8 +176,8 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
         }
 
         // Set temporary buffers to 0
-        Rpp32f FFTS_ALIGN(32) *fftInBuf = (Rpp32f *)_mm_malloc(fftInSize * sizeof(Rpp32f), 32); // ffts requires 32-byte aligned memory
-        Rpp32f FFTS_ALIGN(32) *fftOutBuf = (Rpp32f *)_mm_malloc(fftOutSize * sizeof(Rpp32f), 32); // ffts requires 32-byte aligned memory
+        Rpp32f FFTS_ALIGN(32) *fftInBuf = static_cast<Rpp32f*>(_mm_malloc(fftInSize * sizeof(Rpp32f), 32)); // ffts requires 32-byte aligned memory
+        Rpp32f FFTS_ALIGN(32) *fftOutBuf = static_cast<Rpp32f*>(_mm_malloc(fftOutSize * sizeof(Rpp32f), 32)); // ffts requires 32-byte aligned memory
 
         for (Rpp32s w = 0; w < numWindows; w++)
         {
@@ -208,21 +208,30 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
 
             ffts_execute(p, fftInBuf, fftOutBuf);
             auto *complexFft = reinterpret_cast<std::complex<Rpp32f> *>(fftOutBuf);
-            for (int i = 0; i < numBins; i++)
+            Rpp32s outIdx = w;
+            if (vertical)
             {
-                if (vertical)
+                if (power == 1)
                 {
-                    Rpp32s outIdx = (i * hStride + w);
-                    if (power == 1)
+                    for (int i = 0; i < numBins; i++, outIdx += hStride)
                         dstPtrTemp[outIdx] = std::abs(complexFft[i]);
-                    else
-                        dstPtrTemp[outIdx] = std::norm(complexFft[i]);
                 }
                 else
                 {
-                    if (power == 1)
+                    for (int i = 0; i < numBins; i++, outIdx += hStride)
+                        dstPtrTemp[outIdx] = std::norm(complexFft[i]);
+                }
+            }
+            else
+            {
+                if (power == 1)
+                {
+                    for (int i = 0; i < numBins; i++)
                         *dstPtrBinTemp++ = std::abs(complexFft[i]);
-                    else
+                }
+                else
+                {
+                    for (int i = 0; i < numBins; i++)
                         *dstPtrBinTemp++ = std::norm(complexFft[i]);
                 }
             }
