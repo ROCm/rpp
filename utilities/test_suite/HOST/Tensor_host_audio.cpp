@@ -314,6 +314,50 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 6:
+                {
+                    testCaseName = "resample";
+                    Rpp32f inRateTensor[batchSize];
+                    Rpp32f outRateTensor[batchSize];
+                    Rpp32s srcDimsTensor[batchSize * 2];
+
+                    maxDstWidth = 0;
+                    for(int i = 0, j = 0; i < batchSize; i++, j += 2)
+                    {
+                        inRateTensor[i] = 16000;
+                        outRateTensor[i] = 16000 * 1.15f;
+                        Rpp32f scaleRatio = outRateTensor[i] / inRateTensor[i];
+                        srcDimsTensor[j] = srcLengthTensor[i];
+                        srcDimsTensor[j + 1] = channelsTensor[i];
+                        dstDims[i].width = static_cast<int>(std::ceil(scaleRatio * srcLengthTensor[i]));
+                        dstDims[i].height = 1;
+                        maxDstWidth = std::max(maxDstWidth, static_cast<int>(dstDims[i].width));
+                    }
+                    Rpp32f quality = 50.0f;
+                    Rpp32s lobes = std::round(0.007 * quality * quality - 0.09 * quality + 3);
+                    Rpp32s lookupSize = lobes * 64 + 1;
+                    RpptResamplingWindow window;
+                    windowed_sinc(window, lookupSize, lobes);
+
+                    dstDescPtr->w = maxDstWidth;
+                    dstDescPtr->strides.nStride = dstDescPtr->c * dstDescPtr->w * dstDescPtr->h;
+
+                    // Set buffer sizes for dst
+                    Rpp64u resampleBufferSize = (Rpp64u)dstDescPtr->h * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
+
+                    // Reinitialize host buffers for output
+                    outputf32 = (Rpp32f *)realloc(outputf32, sizeof(Rpp32f) * resampleBufferSize);
+                    if(!outputf32)
+                    {
+                        std::cout << "Unable to reallocate memory for output" << std::endl;
+                        break;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    rppt_resample_host(inputf32, srcDescPtr, outputf32, dstDescPtr, inRateTensor, outRateTensor, srcDimsTensor, window, handle);
+
+                    break;
+                }
                 default:
                 {
                     missingFuncFlag = 1;

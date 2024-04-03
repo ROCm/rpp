@@ -227,6 +227,30 @@ RppStatus rppt_mel_filter_bank_host(RppPtr_t srcPtr,
                                     normalize,
                                     rpp::deref(rppHandle));
 
+/******************** resample ********************/
+
+RppStatus rppt_resample_host(RppPtr_t srcPtr,
+                             RpptDescPtr srcDescPtr,
+                             RppPtr_t dstPtr,
+                             RpptDescPtr dstDescPtr,
+                             Rpp32f *inRateTensor,
+                             Rpp32f *outRateTensor,
+                             Rpp32s *srcDimsTensor,
+                             RpptResamplingWindow &window,
+                             rppHandle_t rppHandle)
+{
+    if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        resample_host_tensor(static_cast<Rpp32f*>(srcPtr),
+                             srcDescPtr,
+                             static_cast<Rpp32f*>(dstPtr),
+                             dstDescPtr,
+                             inRateTensor,
+                             outRateTensor,
+                             srcDimsTensor,
+                             window,
+                             rpp::deref(rppHandle));
+
         return RPP_SUCCESS;
     }
     else

@@ -36,8 +36,7 @@ inFilePath = scriptPath + "/../TEST_AUDIO_FILES/three_samples_single_channel_src
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
 caseMin = 0
-caseMax = 5
-
+caseMax = 6
 
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list():
@@ -179,7 +178,7 @@ subprocess.run(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.run(["make", "-j16"], cwd=".")    # nosec
 
 # List of cases supported
-supportedCaseList = ['0', '1', '2', '3', '4', '5']
+supportedCaseList = ['0', '1', '2', '3', '4', '5', '6']
 
 if testType == 0:
     if batchSize != 3:
