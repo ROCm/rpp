@@ -104,7 +104,7 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
     }
     Rpp32u numThreads = handle.GetNumThreads();
     Rpp32u batchSize = srcDescPtr->n;
-    Rpp32f *scratchMem = handle.GetInitHandle()->mem.mcpu.tempFloatmem;
+    Rpp32f *scratchMem = handle.GetInitHandle()->mem.mcpu.scratchBufferHost;
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
