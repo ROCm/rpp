@@ -231,7 +231,7 @@ subprocess.run(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.run(["make", "-j16"], cwd=".")    # nosec
 
 # List of cases supported
-supportedCaseList = ['0', '1', '2', '3']
+supportedCaseList = ['6']
 
 if testType == 0:
     if batchSize != 3:

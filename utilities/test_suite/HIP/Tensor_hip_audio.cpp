@@ -128,9 +128,12 @@ int main(int argc, char **argv)
     CHECK(hipHostMalloc(&channelsTensor, batchSize * sizeof(Rpp32s)));
 
     // allocate the buffers for src/dst dimensions for each element in batch
-    RpptImagePatch *srcDims, *dstDims;
-    CHECK(hipHostMalloc(&srcDims, batchSize * sizeof(RpptImagePatch)));
-    CHECK(hipHostMalloc(&dstDims, batchSize * sizeof(RpptImagePatch)));
+    RpptImagePatch *srcDims = (RpptImagePatch *) calloc(batchSize, sizeof(RpptImagePatch));
+    RpptImagePatch *dstDims = (RpptImagePatch *) calloc(batchSize, sizeof(RpptImagePatch));
+
+    // allocate the buffer for srcDimsTensor
+    Rpp32s *srcDimsTensor;
+    CHECK(hipHostMalloc(&srcDimsTensor, batchSize * 2 * sizeof(Rpp32s)));
 
     Rpp32f *detectedIndex = nullptr, *detectionLength = nullptr;
     if(testCase == 0)
@@ -162,6 +165,7 @@ int main(int argc, char **argv)
             {
                 case 6:
                 {
+                    std::cout << "inside resample hip\n";
                     testCaseName = "resample";
                     Rpp32f inRateTensor[batchSize];
                     Rpp32f outRateTensor[batchSize];
@@ -183,6 +187,7 @@ int main(int argc, char **argv)
                     Rpp32s lobes = std::round(0.007 * quality * quality - 0.09 * quality + 3);
                     Rpp32s lookupSize = lobes * 64 + 1;
                     RpptResamplingWindow window;
+                    CHECK(hipHostMalloc(&window.lookup, (lookupSize + 5) * sizeof(Rpp32f)));
                     windowed_sinc(window, lookupSize, lobes);
 
                     dstDescPtr->w = maxDstWidth;
@@ -202,6 +207,7 @@ int main(int argc, char **argv)
                     startWallTime = omp_get_wtime();
                     rppt_resample_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, inRateTensor, outRateTensor, srcDimsTensor, window, handle);
 
+                    CHECK(hipHostFree(window.lookup));
                     break;
                 }
                 default:
@@ -273,6 +279,7 @@ int main(int argc, char **argv)
     CHECK(hipFree(d_outputf32));
     CHECK(hipHostFree(srcLengthTensor));
     CHECK(hipHostFree(channelsTensor));
+    CHECK(hipHostFree(srcDimsTensor));
     if (detectedIndex != nullptr)
         CHECK(hipHostFree(detectedIndex));
     if (detectionLength != nullptr)

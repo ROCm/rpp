@@ -186,6 +186,8 @@ void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dst
                 bool invalidComparision = ((outVal == 0.0f) && (refVal != 0.0f));
                 if (!invalidComparision && abs(outVal - refVal) < 1e-20)
                     matchedIndices += 1;
+                else
+                    std::cout << "refVal: " << refVal << "outVal: " << outVal << std::endl;
             }
             dstPtrRow += hStride;
             refPtrRow += hStride;
@@ -279,9 +281,7 @@ inline void windowed_sinc(RpptResamplingWindow &window, Rpp32s coeffs, Rpp32s lo
     Rpp32f scale_envelope = 2.0f / coeffs;
     window.coeffs = coeffs;
     window.lobes = lobes;
-    window.lookup.clear();
-    window.lookup.resize(coeffs + 5);
-    window.lookupSize = window.lookup.size();
+    window.lookupSize = coeffs + 5;
     Rpp32s center = (coeffs - 1) * 0.5f;
     for (int i = 0; i < coeffs; i++) {
         Rpp32f x = (i - center) * scale;

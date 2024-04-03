@@ -659,6 +659,15 @@ typedef struct RpptResamplingWindow
         *loc1 = xc + lobes;
     }
 
+#ifdef HIP_COMPILE
+    __device__ void input_range(Rpp32f x, Rpp32s *loc0, Rpp32s *loc1)
+    {
+        Rpp32s xc = std::ceil(x);
+        *loc0 = xc - lobes;
+        *loc1 = xc + lobes;
+    }
+#endif
+
     inline Rpp32f operator()(Rpp32f x)
     {
         Rpp32f locRaw = x * scale + center;
@@ -670,7 +679,8 @@ typedef struct RpptResamplingWindow
         return current + weight * (next - current);
     }
 
-    __device__ inline Rpp32f operator()(Rpp32f x)
+#ifdef HIP_COMPILE
+    __device__ Rpp32f operator()(Rpp32f x)
     {
         Rpp32f locRaw = x * scale + center;
         Rpp32s locFloor = std::floor(locRaw);
@@ -680,6 +690,7 @@ typedef struct RpptResamplingWindow
         Rpp32f next = lookup[locFloor + 1];
         return current + weight * (next - current);
     }
+#endif
 
     inline __m128 operator()(__m128 x)
     {
@@ -697,7 +708,7 @@ typedef struct RpptResamplingWindow
     Rpp32f scale = 1, center = 1;
     Rpp32s lobes = 0, coeffs = 0;
     Rpp32s lookupSize = 0;
-    std::vector<Rpp32f> lookup;
+    Rpp32f *lookup;
     __m128 pCenter, pScale;
 } RpptResamplingWindow;
 
