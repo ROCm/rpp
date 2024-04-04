@@ -349,8 +349,8 @@ RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
                        inputTileLength);
 
     const Rpp32f cutOff = std::pow(10.0f, cutOffDB * 0.1f);
-    bool referenceMax = (referencePower == 0.0f);
-    Rpp32f *partialMaxArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
+    bool referenceMax = (!referencePower);
+    Rpp32f *partialMaxArr = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
 
     int numBlocksPerSample = ceil(static_cast<float>(srcDescPtr->strides.nStride) / (512 * 8));
     int cutOffMagKernelBlockSize = 1;
