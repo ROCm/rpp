@@ -61,12 +61,12 @@ __global__ void moving_mean_square_hip_tensor(float *srcPtr,
                                               int outputTileLength,
                                               int windowLength,
                                               float windowFactor,
-                                              int inputTileLength)
+                                              int inputTileLength,
+                                              uint gridStride)
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
     uint srcLength = srcLengthTensor[id_z];
-    uint gridStride = hipGridDim_x * outputTileLength;
     uint batchStride = id_z * nStride;
     float *input = srcPtr + batchStride;
     extern __shared__ float squaredPrefixSum_smem[];
@@ -330,13 +330,10 @@ RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
     int globalThreads_x = std::min<int>(ceil(static_cast<float>(srcDescPtr->strides.nStride) / outputTileLength), 1024);
     int globalThreads_y = 1;
     int globalThreads_z = handle.GetBatchSize();
-    int localThreads_x = 512;
-    int localThreads_y = 1;
-    int localThreads_z = 1;
 
     hipLaunchKernelGGL(moving_mean_square_hip_tensor,
                        dim3(globalThreads_x, globalThreads_y, globalThreads_z),
-                       dim3(localThreads_x, localThreads_y, localThreads_z),
+                       dim3(512, 1, 1),
                        sharedMemorySizeInBytes,
                        handle.GetStream(),
                        srcPtr,
@@ -346,7 +343,8 @@ RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
                        outputTileLength,
                        windowLength,
                        windowFactor,
-                       inputTileLength);
+                       inputTileLength,
+                       globalThreads_x * outputTileLength);
 
     const Rpp32f cutOff = std::pow(10.0f, cutOffDB * 0.1f);
     bool referenceMax = (!referencePower);
