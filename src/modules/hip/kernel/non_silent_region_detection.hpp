@@ -297,7 +297,7 @@ RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
     hipMalloc(&(mmsArr), srcDescPtr->n * srcDescPtr->strides.nStride * sizeof(Rpp32f));
 
     int maxSharedMemoryInBytes = 32000; // 32 KB
-    int maxSharedMemoryElements = maxSharedMemoryInBytes / sizeof(Rpp32f);
+    int maxSharedMemoryElements = 8000; // maxSharedMemoryInBytes / sizeof(Rpp32f)
     int kSharedMemBanks = 32;
     int inputTileLength = prev_pow2(maxSharedMemoryElements * kSharedMemBanks / (kSharedMemBanks + 1));
 
