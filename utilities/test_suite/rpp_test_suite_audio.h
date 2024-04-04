@@ -26,15 +26,6 @@ SOFTWARE.
 #include <iomanip>
 #include <vector>
 
-#ifdef GPU_SUPPORT
-    #include <hip/hip_fp16.h>
-#else
-    #include <half/half.hpp>
-    using half_float::half;
-#endif
-
-typedef half Rpp16f;
-
 // Include this header file to use functions from libsndfile
 #include <sndfile.h>
 

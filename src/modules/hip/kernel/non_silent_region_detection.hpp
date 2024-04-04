@@ -13,7 +13,7 @@ __device__ float square(float value)
     return (value * value);
 }
 
-__device__ void PrefixSum(float *input, uint bufferLength)
+__device__ void compute_prefix_sum(float *input, uint bufferLength)
 {
     int offset = 1;
     int tid = hipThreadIdx_x;
@@ -42,14 +42,14 @@ __device__ void PrefixSum(float *input, uint bufferLength)
         __syncthreads();
         for (int idx = tid; idx < d; idx += hipBlockDim_x)
         {
-            int smem_pos_ai = smem_pos(offset * (2 * idx + 1) - 1);
-            int smem_pos_bi = smem_pos(offset * (2 * idx + 2) - 1);
-            auto t = input[smem_pos_ai];
-            input[smem_pos_ai] = input[smem_pos_bi];
-            input[smem_pos_bi] += t;
+            int smem_posA = smem_pos(offset * (2 * idx + 1) - 1);
+            int smem_posB = smem_pos(offset * (2 * idx + 2) - 1);
+            auto t = input[smem_posA];
+            input[smem_posA] = input[smem_posB];
+            input[smem_posB] += t;
         }
     }
-  __syncthreads();
+    __syncthreads();
 }
 
 // -------------------- Set 1 -  moving mean square compute kernel --------------------
@@ -75,7 +75,7 @@ __global__ void moving_mean_square_hip_tensor(float *srcPtr,
     {
         float *inBlockPtr = srcPtr + batchStride + blockStart;
         float *outBlockPtr = mmsArr + batchStride + blockStart;
-        int validOutputTileLength = min(outputTileLength, srcLength - blockStart);
+        int validOutputTileLength = std::min<int>(outputTileLength, srcLength - blockStart);
         float *extendedBlockStart = inBlockPtr - windowLength;
         float *extendedBlockEnd = inBlockPtr + validOutputTileLength;
 
@@ -90,7 +90,7 @@ __global__ void moving_mean_square_hip_tensor(float *srcPtr,
         }
 
         // compute prefix sum
-        PrefixSum(squaredPrefixSum_smem, inputTileLength);
+        compute_prefix_sum(squaredPrefixSum_smem, inputTileLength);
 
         // compute the mms value here
         for(int pos = hipThreadIdx_x; pos < validOutputTileLength; pos += hipBlockDim_x)
@@ -263,20 +263,20 @@ __global__ void find_region_hip_tensor(float *srcPtr,
 
 int prev_pow2(int n)
 {
-  int pow2 = 1;
-  while (n - pow2 > pow2)
-    pow2 += pow2;
+    int pow2 = 1;
+    while (n - pow2 > pow2)
+        pow2 += pow2;
 
-  return pow2;
+    return pow2;
 }
 
 int next_pow2(int n)
 {
-  int pow2 = 1;
-  while (n > pow2)
-    pow2 += pow2;
+    int pow2 = 1;
+    while (n > pow2)
+        pow2 += pow2;
 
-  return pow2;
+    return pow2;
 }
 
 // -------------------- Set 5 - non silent region kernels executor --------------------
@@ -347,7 +347,6 @@ RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
                        windowLength,
                        windowFactor,
                        inputTileLength);
-    hipStreamSynchronize(handle.GetStream());
 
     const Rpp32f cutOff = std::pow(10.0f, cutOffDB * 0.1f);
     bool referenceMax = (referencePower == 0.0f);
@@ -367,8 +366,6 @@ RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
                            srcDescPtr->strides.nStride,
                            partialMaxArr,
                            srcLengthTensor);
-        hipStreamSynchronize(handle.GetStream());
-
         cutOffMagKernelBlockSize = 256;
     }
     // find the cutoff value in magnitude
@@ -384,7 +381,6 @@ RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
                        cutOff,
                        referencePower,
                        referenceMax);
-    hipStreamSynchronize(handle.GetStream());
 
     // find the begin and length values of NSR in inputs
     hipLaunchKernelGGL(find_region_hip_tensor,
