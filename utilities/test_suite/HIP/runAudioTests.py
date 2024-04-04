@@ -72,42 +72,23 @@ def generate_performance_reports(RESULTS_DIR):
     dfPrint_noIndices = dfPrint_noIndices.to_string(index = False)
     print(dfPrint_noIndices)
 
-def run_unit_test(srcPath, case, numRuns, testType, batchSize, outFilePath):
-    print("\n\n\n\n")
-    print("--------------------------------")
-    print("Running a New Functionality...")
-    print("--------------------------------")
+def run_unit_test_cmd(srcPath, case, numRuns, testType, batchSize, outFilePath):
     print(f"./Tensor_hip_audio {srcPath} {case} {numRuns} {testType} {numRuns} {batchSize}")
     result = subprocess.run([buildFolderPath + "/build/Tensor_hip_audio", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE)    # nosec
     print(result.stdout.decode())
-
     print("------------------------------------------------------------------------------------------")
 
-def run_performance_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath):
-    print("\n\n\n\n")
-    print("--------------------------------")
-    print("Running a New Functionality...")
-    print("--------------------------------")
-    with open("{}/Tensor_hip_audio_raw_performance_log.txt".format(loggingFolder), "a") as log_file:
+def run_performance_test_cmd(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath):
+    with open("{}/Tensor_hip_audio_raw_performance_log.txt".format(loggingFolder), "a") as logFile:
         print(f"./Tensor_hip_audio {srcPath} {case} {numRuns} {testType} {numRuns} {batchSize} ")
         process = subprocess.Popen([buildFolderPath + "/build/Tensor_hip_audio", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
-        while True:
-            output = process.stdout.readline()
-            if not output and process.poll() is not None:
-                break
-            print(output.strip())
-            log_file.write(output)
-    print("------------------------------------------------------------------------------------------")
+        read_from_subprocess_and_write_to_log(process, logFile)
+        print("------------------------------------------------------------------------------------------")
 
-def run_performance_test_with_profiler(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath):
-    print("\n\n\n\n")
-    print("--------------------------------")
-    print("Running a New Functionality...")
-    print("--------------------------------")
-    print(loggingFolder)
+def run_performance_test_with_profiler_cmd(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath):
     if not os.path.isdir(f"{outFilePath}/case_{case}"):
         os.mkdir(f"{outFilePath}/case_{case}")
-    with open("{}/Tensor_hip_audio_raw_performance_log.txt".format(loggingFolder), "a") as log_file:
+    with open("{}/Tensor_hip_audio_raw_performance_log.txt".format(loggingFolder), "a") as logFile:
         print(f"\nrocprof --basenames on --timestamp on --stats -o {outFilePath}/case_{case}/output_case{case}.csv ./Tensor_hip_audio {srcPath} {case} {numRuns} {testType} {numRuns} {batchSize}")
         process = subprocess.Popen([ 'rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f"{outFilePath}/case_{case}/output_case{case}.csv", "./Tensor_hip_audio", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)  # nosec
         while True:
@@ -116,8 +97,20 @@ def run_performance_test_with_profiler(loggingFolder, srcPath, case, numRuns, te
                 break
             print(output.strip())
             output_str = output.decode('utf-8')
-            log_file.write(output_str)
+            logFile.write(output_str)
         print("------------------------------------------------------------------------------------------")
+
+def run_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath, profilingOption = "NO"):
+    print("\n\n\n\n")
+    print("--------------------------------")
+    print("Running a New Functionality...")
+    print("--------------------------------")
+    if testType == 0:
+        run_unit_test_cmd(srcPath, case, numRuns, testType, batchSize, outFilePath)
+    elif testType == 1 and profilingOption == "NO":
+        run_performance_test_cmd(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath)
+    else:
+        run_performance_test_with_profiler_cmd(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath)
 
 # Parse and validate command-line arguments for the RPP test suite
 def rpp_test_suite_parser_and_validator():
@@ -232,45 +225,36 @@ subprocess.run(["make", "-j16"], cwd=".")    # nosec
 
 # List of cases supported
 supportedCaseList = ['1']
+if qaMode and batchSize != 3:
+    print("QA tests can only run with a batch size of 3.")
+    exit(0)
 
+for case in caseList:
+    if "--input_path" not in sys.argv:
+        if case == "3":
+            srcPath = scriptPath + "/../TEST_AUDIO_FILES/three_sample_multi_channel_src1"
+        else:
+            srcPath = inFilePath
+
+    if case not in supportedCaseList:
+        continue
+    run_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath, profilingOption)
+
+# print the results of qa tests
+nonQACaseList = [] # Add cases present in supportedCaseList, but without QA support
 if testType == 0:
-    if batchSize != 3:
-        print("QA tests can only run with a batch size of 3.")
-        exit(0)
+    qaFilePath = os.path.join(outFilePath, "QA_results.txt")
+    checkFile = os.path.isfile(qaFilePath)
+    if checkFile:
+        print("---------------------------------- Results of QA Test - Tensor_hip_audio -----------------------------------\n")
+        print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList)
 
-    for case in caseList:
-        if "--input_path" not in sys.argv:
-            if case == "3":
-                srcPath = scriptPath + "/../TEST_AUDIO_FILES/three_sample_multi_channel_src1"
-            else:
-                srcPath = inFilePath
-        if case not in supportedCaseList:
-            continue
-
-        run_unit_test(srcPath, case, numRuns, testType, batchSize, outFilePath)
-elif testType == 1 and profilingOption == "NO":
-    for case in caseList:
-        if "--input_path" not in sys.argv:
-            if case == "3":
-                srcPath = scriptPath + "/../TEST_AUDIO_FILES/three_sample_multi_channel_src1"
-            else:
-                srcPath = inFilePath
-        if case not in supportedCaseList:
-            continue
-
-        run_performance_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath)
+# Performance tests
+if testType == 1 and profilingOption == "NO":
+    logFileList = get_log_file_list()
+    for logFile in logFileList:
+        print_performance_tests_summary(logFile, "", numRuns)
 elif testType == 1 and profilingOption == "YES":
-    for case in caseList:
-        if "--input_path" not in sys.argv:
-            if case == "3":
-                srcPath = scriptPath + "/../TEST_AUDIO_FILES/three_sample_multi_channel_src1"
-            else:
-                srcPath = inFilePath
-        if case not in supportedCaseList:
-            continue
-
-        run_performance_test_with_profiler(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath)
-
     RESULTS_DIR = outFolderPath + "/OUTPUT_PERFORMANCE_AUDIO_LOGS_HIP_" + timestamp
     print("RESULTS_DIR = " + RESULTS_DIR)
     CONSOLIDATED_FILE = RESULTS_DIR + "/consolidated_results.stats.csv"
@@ -309,20 +293,3 @@ elif testType == 1 and profilingOption == "YES":
                 CONSOLIDATED_FILE + "\n")
     except IOError:
         print("Unable to open results in " + CONSOLIDATED_FILE)
-
-# print the results of qa tests
-nonQACaseList = [] # Add cases present in supportedCaseList, but without QA support
-
-if testType == 0:
-    qaFilePath = os.path.join(outFilePath, "QA_results.txt")
-    checkFile = os.path.isfile(qaFilePath)
-    if checkFile:
-        print("---------------------------------- Results of QA Test - Tensor_hip_audio -----------------------------------\n")
-        print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList)
-
-# Performance tests
-if testType == 1 and profilingOption == "NO":
-    log_file_list = get_log_file_list()
-    for log_file in log_file_list:
-        print_performance_tests_summary(log_file, "", numRuns)
-
