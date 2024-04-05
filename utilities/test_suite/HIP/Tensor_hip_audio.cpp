@@ -165,7 +165,6 @@ int main(int argc, char **argv)
             {
                 case 6:
                 {
-                    std::cout << "inside resample hip\n";
                     testCaseName = "resample";
                     Rpp32f inRateTensor[batchSize];
                     Rpp32f outRateTensor[batchSize];
@@ -186,9 +185,10 @@ int main(int argc, char **argv)
                     Rpp32f quality = 50.0f;
                     Rpp32s lobes = std::round(0.007 * quality * quality - 0.09 * quality + 3);
                     Rpp32s lookupSize = lobes * 64 + 1;
-                    RpptResamplingWindow window;
-                    CHECK(hipHostMalloc(&window.lookup, (lookupSize + 5) * sizeof(Rpp32f)));
-                    windowed_sinc(window, lookupSize, lobes);
+                    RpptResamplingWindow *window;
+                    CHECK(hipHostMalloc(&window, sizeof(RpptResamplingWindow)));
+                    CHECK(hipHostMalloc(&window->lookup, (lookupSize + 5) * sizeof(Rpp32f)));
+                    windowed_sinc(*window, lookupSize, lobes);
 
                     dstDescPtr->w = maxDstWidth;
                     dstDescPtr->strides.nStride = dstDescPtr->c * dstDescPtr->w * dstDescPtr->h;
@@ -205,9 +205,10 @@ int main(int argc, char **argv)
                     }
 
                     startWallTime = omp_get_wtime();
-                    rppt_resample_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, inRateTensor, outRateTensor, srcDimsTensor, window, handle);
+                    rppt_resample_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, inRateTensor, outRateTensor, srcDimsTensor, *window, handle);
 
-                    CHECK(hipHostFree(window.lookup));
+                    CHECK(hipHostFree(window->lookup));
+                    CHECK(hipHostFree(window));
                     break;
                 }
                 default:

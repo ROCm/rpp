@@ -4,9 +4,7 @@
 // -------------------- Set 0 - resample kernel --------------------
 
 __global__ void resample_1channel_hip_tensor(float *srcPtr,
-                                             uint srcStride,
                                              float *dstPtr,
-                                             uint dstStride,
                                              Rpp32f inRateTensor,
                                              Rpp32f outRateTensor,
                                              Rpp32s srcLength,
@@ -14,26 +12,25 @@ __global__ void resample_1channel_hip_tensor(float *srcPtr,
                                              Rpp64f scale,
                                              RpptResamplingWindow &window)
 {
-    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
+    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
     Rpp32s block = 256;
     int outBlock = id_x * block;
-    if (id_x >= outEnd)
+    if (outBlock >= outEnd)
         return;
 
     Rpp32s blockEnd = std::min(outBlock + block, outEnd);
     Rpp64f inBlockRaw = outBlock * scale;
     Rpp32s inBlockRounded = static_cast<int>(inBlockRaw);
     Rpp32f inPos = inBlockRaw - inBlockRounded;
-    uint srcIdx = id_z * srcStride;
-    const Rpp32s inBlock = srcIdx + inBlockRounded;
     Rpp32f fscale = scale;
 
     for (int outPos = outBlock; outPos < blockEnd; outPos++, inPos += fscale)
     {
         Rpp32s loc0, loc1;
         window.input_range(inPos, &loc0, &loc1);
+
         if (loc0 + inBlockRounded < 0)
             loc0 = -inBlockRounded;
         if (loc1 + inBlockRounded > srcLength)
@@ -45,7 +42,7 @@ __global__ void resample_1channel_hip_tensor(float *srcPtr,
         for (; locInWindow < loc1; locInWindow++, locBegin++)
         {
             Rpp32f w = window(locBegin);
-            accum += srcPtr[inBlock + locInWindow] * w;
+            accum += srcPtr[inBlockRounded + locInWindow] * w;
         }
         dstPtr[outPos] = accum;
     }
@@ -80,24 +77,21 @@ RppStatus hip_exec_resample_tensor(Rpp32f *srcPtr,
             Rpp32s outEnd = std::ceil(srcLength * outRate / inRate);
             Rpp64f scale = static_cast<Rpp64f>(inRate) / outRate;
             Rpp32s block = 256; // 1 << 8
-            int length = (outEnd - 1) / block;
-            std::cout << "outEnd: " << outEnd <<"length: "<<length<< std::endl;
+            int length = outEnd / block;
 
             if (numChannels == 1)
             {
                 int globalThreads_x = length;
                 int globalThreads_y = 1;
-                int globalThreads_z = i;
+                int globalThreads_z = 1;
 
                 hipLaunchKernelGGL(resample_1channel_hip_tensor,
-                                   dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X_1DIM), ceil((float)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((float)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
-                                   dim3(LOCAL_THREADS_X_1DIM, LOCAL_THREADS_Y_1DIM, LOCAL_THREADS_Z_1DIM),
+                                   dim3(ceil((float)globalThreads_x/512), ceil((float)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((float)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
+                                   dim3(512, LOCAL_THREADS_Y_1DIM, LOCAL_THREADS_Z_1DIM),
                                    0,
                                    handle.GetStream(),
-                                   srcPtr,
-                                   srcDescPtr->strides.nStride,
-                                   dstPtr,
-                                   dstDescPtr->strides.nStride,
+                                   srcPtr + i * srcDescPtr->strides.nStride,
+                                   dstPtr + i * dstDescPtr->strides.nStride,
                                    inRate,
                                    outRate,
                                    srcLength,
