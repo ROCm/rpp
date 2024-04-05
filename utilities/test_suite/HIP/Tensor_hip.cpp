@@ -517,11 +517,6 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "pixelate";
 
-                    // Note: The 'pixelationIntensity' variable controls how much pixelation is applied to images. 
-                    // For images smaller than 100x100 pixels, use 4. 
-                    // For images between 100x100 and 300x300 pixels, use 8. 
-                    // For images between 300x300 and 1920x1080 pixels, use 10. 
-                    // For 4k images, use 12 for better results.
                     Rpp32s pixelationIntensity = 8;
 
                     startWallTime = omp_get_wtime();
