@@ -5315,7 +5315,7 @@ inline void compute_bicubic_coefficient(Rpp32f weight, Rpp32f &coeff)
 
 inline Rpp32f sinc(Rpp32f x)
 {
-    x *= PI;
+    x *= M_PI;
     return (std::abs(x) < 1e-5f) ? (1.0f - x * x * ONE_OVER_6) : std::sin(x) / x;
 }
 
@@ -5994,6 +5994,330 @@ inline void compute_sum_24_host(__m256d *p, __m256d *pSumR, __m256d *pSumG, __m2
     pSumR[0] = _mm256_add_pd(_mm256_add_pd(p[0], p[1]), pSumR[0]); //add 8R values and bring it down to 4
     pSumG[0] = _mm256_add_pd(_mm256_add_pd(p[2], p[3]), pSumG[0]); //add 8G values and bring it down to 4
     pSumB[0] = _mm256_add_pd(_mm256_add_pd(p[4], p[5]), pSumB[0]); //add 8B values and bring it down to 4
+}
+
+inline void compute_vignette_48_host(__m256 *p, __m256 &pMultiplier, __m256 &pILocComponent, __m256 &pJLocComponent)
+{
+    __m256 pGaussianValue;
+    pGaussianValue = fast_exp_avx(_mm256_mul_ps(_mm256_fmadd_ps(pJLocComponent, pJLocComponent, pILocComponent), pMultiplier));
+    p[0] = _mm256_mul_ps(p[0], pGaussianValue);    // vignette adjustment
+    p[2] = _mm256_mul_ps(p[2], pGaussianValue);    // vignette adjustment
+    p[4] = _mm256_mul_ps(p[4], pGaussianValue);    // vignette adjustment
+    pJLocComponent = _mm256_add_ps(pJLocComponent, avx_p8);
+    pGaussianValue = fast_exp_avx(_mm256_mul_ps(_mm256_fmadd_ps(pJLocComponent, pJLocComponent, pILocComponent), pMultiplier));
+    p[1] = _mm256_mul_ps(p[1], pGaussianValue);    // vignette adjustment
+    p[3] = _mm256_mul_ps(p[3], pGaussianValue);    // vignette adjustment
+    p[5] = _mm256_mul_ps(p[5], pGaussianValue);    // vignette adjustment
+    pJLocComponent = _mm256_add_ps(pJLocComponent, avx_p8);
+}
+
+inline void compute_vignette_24_host(__m256 *p, __m256 &pMultiplier, __m256 &pILocComponent, __m256 &pJLocComponent)
+{
+    __m256 pGaussianValue;
+    pGaussianValue = fast_exp_avx(_mm256_mul_ps(_mm256_fmadd_ps(pJLocComponent, pJLocComponent, pILocComponent), pMultiplier));
+    p[0] = _mm256_mul_ps(p[0], pGaussianValue);    // vignette adjustment
+    p[1] = _mm256_mul_ps(p[1], pGaussianValue);    // vignette adjustment
+    p[2] = _mm256_mul_ps(p[2], pGaussianValue);    // vignette adjustment
+    pJLocComponent = _mm256_add_ps(pJLocComponent, avx_p8);
+}
+
+inline void compute_vignette_16_host(__m256 *p, __m256 &pMultiplier, __m256 &pILocComponent, __m256 &pJLocComponent)
+{
+    __m256 pGaussianValue;
+    pGaussianValue = fast_exp_avx(_mm256_mul_ps(_mm256_fmadd_ps(pJLocComponent, pJLocComponent, pILocComponent), pMultiplier));
+    p[0] = _mm256_mul_ps(p[0], pGaussianValue);    // vignette adjustment
+    pJLocComponent = _mm256_add_ps(pJLocComponent, avx_p8);
+    pGaussianValue = fast_exp_avx(_mm256_mul_ps(_mm256_fmadd_ps(pJLocComponent, pJLocComponent, pILocComponent), pMultiplier));
+    p[1] = _mm256_mul_ps(p[1], pGaussianValue);    // vignette adjustment
+    pJLocComponent = _mm256_add_ps(pJLocComponent, avx_p8);
+}
+
+inline void compute_vignette_8_host(__m256 *p, __m256 &pMultiplier, __m256 &pILocComponent, __m256 &pJLocComponent)
+{
+    __m256 pGaussianValue;
+    pGaussianValue = fast_exp_avx(_mm256_mul_ps(_mm256_fmadd_ps(pJLocComponent, pJLocComponent, pILocComponent), pMultiplier));
+    p[0] = _mm256_mul_ps(p[0], pGaussianValue);    // vignette adjustment
+    pJLocComponent = _mm256_add_ps(pJLocComponent, avx_p8);
+}
+
+inline void reduce_min_32_host(__m256i *pMin, __m128i *result)
+{
+    __m128i px[2];
+    __m128i zero = _mm_setzero_si128();
+    __m128i mask = _mm_set_epi8(0,1,2,3,4,5,6,8,9,10,11,12,13,14,15,7);
+    px[0] = _mm256_castsi256_si128(pMin[0]);
+    px[1] = _mm256_extracti128_si256(pMin[0], 1);
+    px[0] = _mm_min_epu8(px[0], px[1]);
+    px[1] = _mm_unpacklo_epi8(zero, px[0]);
+    px[0] = _mm_unpackhi_epi8(zero, px[0]);
+    px[0] = _mm_min_epu8(px[0], px[1]);
+    px[1] = _mm_unpacklo_epi16(zero, px[0]);
+    px[0] = _mm_unpackhi_epi16(zero, px[0]);
+    px[0] = _mm_min_epu16(px[0], px[1]);
+    px[1] = _mm_unpacklo_epi32(zero, px[0]);
+    px[0] = _mm_unpackhi_epi32(zero, px[0]);
+    px[0] = _mm_min_epu32(px[0], px[1]);
+    result[0] = _mm_shuffle_epi8(px[0], mask);
+}
+
+inline void compute_min_96_host(__m256i *p1, __m256i *pMinR, __m256i *pMinG, __m256i *pMinB)
+{
+    pMinR[0] = _mm256_min_epu8(p1[0], pMinR[0]); //compare and store min of 32 R values into global min
+    pMinG[0] = _mm256_min_epu8(p1[1], pMinG[0]); //compare and store min of 32 G values into global min
+    pMinB[0] = _mm256_min_epu8(p1[2], pMinB[0]); //compare and store min of 32 B values into global min
+}
+
+inline void reduce_min_96_host(__m256i *pMinR, __m256i *pMinG, __m256i *pMinB, __m128i *result)
+{
+    __m128i px[4];
+    __m128i zero = _mm_setzero_si128();
+    px[0] = _mm_min_epu8(_mm256_castsi256_si128(pMinR[0]), _mm256_extracti128_si256(pMinR[0], 1));
+    px[1] = _mm_min_epu8(_mm256_castsi256_si128(pMinG[0]), _mm256_extracti128_si256(pMinG[0], 1));
+    px[1] = _mm_min_epu8(_mm_unpacklo_epi8(px[0], px[1]), _mm_unpackhi_epi8(px[0], px[1]));
+    px[0] = _mm_min_epu8(_mm256_castsi256_si128(pMinB[0]), _mm256_extracti128_si256(pMinB[0], 1));
+    px[0] = _mm_min_epu8(_mm_unpacklo_epi8(px[0], zero), _mm_unpackhi_epi8(px[0], zero));
+    px[1] = _mm_min_epu8(_mm_unpacklo_epi16(px[1], px[0]), _mm_unpackhi_epi16(px[1], px[0]));
+    px[0] = _mm_min_epu8(_mm_unpacklo_epi32(px[1], zero), _mm_unpackhi_epi32(px[1], zero));
+    result[0] = _mm_min_epu8(_mm_unpacklo_epi64(px[0], zero), _mm_unpackhi_epi64(px[0], zero));
+}
+
+inline void compute_min_48_host(__m128i *p1, __m128i *pMinR, __m128i *pMinG, __m128i *pMinB)
+{
+    pMinR[0] = _mm_min_epu8(p1[0], pMinR[0]); //compare and store min of 16 R values into global min
+    pMinG[0] = _mm_min_epu8(p1[1], pMinG[0]); //compare and store min of 16 G values into global min
+    pMinB[0] = _mm_min_epu8(p1[2], pMinB[0]); //compare and store min of 16 B values into global min
+}
+
+inline void reduce_min_48_host(__m128i *pMinR, __m128i *pMinG, __m128i *pMinB, __m128i *result)
+{
+    __m128i px[2];
+    __m128i zero = _mm_setzero_si128();
+    px[1] = _mm_min_epu8(_mm_unpacklo_epi8(pMinR[0], pMinG[0]), _mm_unpackhi_epi8(pMinR[0], pMinG[0]));
+    px[0] = _mm_min_epu8(_mm_unpacklo_epi8(pMinB[0], zero), _mm_unpackhi_epi8(pMinB[0], zero));
+    px[1] = _mm_min_epu8(_mm_unpacklo_epi16(px[1], px[0]), _mm_unpackhi_epi16(px[1], px[0]));
+    px[0] = _mm_min_epu8(_mm_unpacklo_epi32(px[1], zero), _mm_unpackhi_epi32(px[1], zero));
+    result[0] = _mm_min_epu8(_mm_unpacklo_epi64(px[0], zero), _mm_unpackhi_epi64(px[0], zero));
+}
+
+inline void reduce_max_32_host(__m256i *pMax, __m128i *result)
+{
+    __m128i px;
+    __m128i zero = _mm_setzero_si128();
+    __m128i mask = _mm_set_epi8(0,1,2,3,4,5,6,8,9,10,11,12,13,14,15,7);
+    px = _mm_max_epu8(_mm256_castsi256_si128(pMax[0]), _mm256_extracti128_si256(pMax[0], 1));
+    px = _mm_max_epu8(_mm_unpacklo_epi8(zero, px), _mm_unpackhi_epi8(zero, px));
+    px = _mm_max_epu16(_mm_unpacklo_epi16(zero, px), _mm_unpackhi_epi16(zero, px));
+    px = _mm_max_epu32(_mm_unpacklo_epi32(zero, px), _mm_unpackhi_epi32(zero, px));
+    result[0] = _mm_shuffle_epi8(px, mask);
+}
+
+inline void compute_max_96_host(__m256i *p1, __m256i *pMaxR, __m256i *pMaxG, __m256i *pMaxB)
+{
+    pMaxR[0] = _mm256_max_epu8(p1[0], pMaxR[0]); //compare and store max of 32 R values into global max
+    pMaxG[0] = _mm256_max_epu8(p1[1], pMaxG[0]); //compare and store max of 32 G values into global max
+    pMaxB[0] = _mm256_max_epu8(p1[2], pMaxB[0]); //compare and store max of 32 B values into global max
+}
+
+inline void reduce_max_96_host(__m256i *pMaxR, __m256i *pMaxG, __m256i *pMaxB, __m128i *result)
+{
+    __m128i px[4];
+    __m128i zero = _mm_setzero_si128();
+    px[0] = _mm_max_epu8(_mm256_castsi256_si128(pMaxR[0]), _mm256_extracti128_si256(pMaxR[0], 1));
+    px[1] = _mm_max_epu8(_mm256_castsi256_si128(pMaxG[0]), _mm256_extracti128_si256(pMaxG[0], 1));
+    px[1] = _mm_max_epu8(_mm_unpacklo_epi8(px[0], px[1]), _mm_unpackhi_epi8(px[0], px[1]));
+    px[0] = _mm_max_epu8(_mm256_castsi256_si128(pMaxB[0]), _mm256_extracti128_si256(pMaxB[0], 1));
+    px[0] = _mm_max_epu8(_mm_unpacklo_epi8(px[0], zero), _mm_unpackhi_epi8(px[0], zero));
+    px[1] = _mm_max_epu8(_mm_unpacklo_epi16(px[1], px[0]), _mm_unpackhi_epi16(px[1], px[0]));
+    px[0] = _mm_max_epu8(_mm_unpacklo_epi32(px[1], zero), _mm_unpackhi_epi32(px[1], zero));
+    result[0] = _mm_max_epu8(_mm_unpacklo_epi64(px[0], zero), _mm_unpackhi_epi64(px[0], zero));
+}
+
+inline void compute_max_48_host(__m128i *p1, __m128i *pMaxR, __m128i *pMaxG, __m128i *pMaxB)
+{
+    pMaxR[0] = _mm_max_epu8(p1[0], pMaxR[0]); //compare and store max of 16 R values into global max
+    pMaxG[0] = _mm_max_epu8(p1[1], pMaxG[0]); //compare and store max of 16 G values into global max
+    pMaxB[0] = _mm_max_epu8(p1[2], pMaxB[0]); //compare and store max of 16 B values into global max
+}
+
+inline void reduce_max_48_host(__m128i *pMaxR, __m128i *pMaxG, __m128i *pMaxB, __m128i *result)
+{
+    __m128i px[2];
+    __m128i zero = _mm_setzero_si128();
+    px[1] = _mm_max_epi8(_mm_unpacklo_epi8(pMaxR[0], pMaxG[0]), _mm_unpackhi_epi8(pMaxR[0], pMaxG[0]));
+    px[0] = _mm_max_epi8(_mm_unpacklo_epi8(pMaxB[0], zero), _mm_unpackhi_epi8(pMaxB[0], zero));
+    px[1] = _mm_max_epi8(_mm_unpacklo_epi16(px[1], px[0]), _mm_unpackhi_epi16(px[1], px[0]));
+    px[0] = _mm_max_epi8(_mm_unpacklo_epi32(px[1], zero), _mm_unpackhi_epi32(px[1], zero));
+    result[0] = _mm_max_epi8(_mm_unpacklo_epi64(px[0], zero), _mm_unpackhi_epi64(px[0], zero));
+}
+
+inline void compute_min_float8_host(__m256 *p1, __m256 *pMin)
+{
+    pMin[0] = _mm256_min_ps(p1[0], pMin[0]); //compare and store min of 8 values into global min
+}
+
+inline void reduce_min_float8_host(__m256 *pMin, __m128 *result)
+{
+    __m128 px;
+    px = _mm_min_ps(_mm256_castps256_ps128(pMin[0]), _mm256_extractf128_ps(pMin[0], 1));
+    px = _mm_min_ps(_mm_unpacklo_ps(xmm_p0, px), _mm_unpackhi_ps(xmm_p0, px));
+    result[0] = _mm_shuffle_ps(px, px, 39);
+}
+
+inline void compute_min_float24_host(__m256 *p1, __m256 *pMinR, __m256 *pMinG, __m256 *pMinB)
+{
+    pMinR[0] = _mm256_min_ps(p1[0], pMinR[0]); //compare and store min of 8 R values into global min
+    pMinG[0] = _mm256_min_ps(p1[1], pMinG[0]); //compare and store min of 8 G values into global min
+    pMinB[0] = _mm256_min_ps(p1[2], pMinB[0]); //compare and store min of 8 B values into global min
+}
+
+inline void reduce_min_float24_host(__m256 *pMinR, __m256 *pMinG, __m256 *pMinB, __m256 *result)   // TO CHANGE
+{
+    __m128 px[2];
+    px[0] = _mm_min_ps(_mm256_castps256_ps128(pMinR[0]), _mm256_extractf128_ps(pMinR[0], 1));
+    px[1] = _mm_min_ps(_mm256_castps256_ps128(pMinG[0]), _mm256_extractf128_ps(pMinG[0], 1));
+    px[0] = _mm_min_ps(_mm_unpacklo_ps(px[0], px[1]), _mm_unpackhi_ps(px[0], px[1]));
+    px[0] = _mm_permute_ps(px[0], 0b11011000);
+    result[0] = _mm256_castps128_ps256(px[0]);
+    px[0] = _mm_min_ps(_mm256_castps256_ps128(pMinB[0]), _mm256_extractf128_ps(pMinB[0], 1));
+    px[1] = _mm_min_ps(_mm_unpacklo_ps(px[0], xmm_p0), _mm_unpackhi_ps(px[0], xmm_p0));
+    px[0] = _mm_shuffle_ps(px[1], px[1], 34);
+    result[0] = _mm256_insertf128_ps(result[0], px[0], 1);
+}
+
+inline void compute_max_float8_host(__m256 *p1, __m256 *pMax)
+{
+    pMax[0] = _mm256_max_ps(p1[0], pMax[0]); //compare and store max of 8 values into global min
+}
+
+inline void reduce_max_float8_host(__m256 *pMax, __m128 *result)
+{
+    __m128 px;
+    px = _mm_max_ps(_mm256_castps256_ps128(pMax[0]), _mm256_extractf128_ps(pMax[0], 1));
+    px = _mm_max_ps(_mm_unpacklo_ps(xmm_p0, px), _mm_unpackhi_ps(xmm_p0, px));
+    result[0] = _mm_shuffle_ps(px, px, 39);
+}
+
+inline void compute_max_float24_host(__m256 *p1, __m256 *pMaxR, __m256 *pMaxG, __m256 *pMaxB)
+{
+    pMaxR[0] = _mm256_max_ps(p1[0], pMaxR[0]); //compare and store max of 8 R values into global min
+    pMaxG[0] = _mm256_max_ps(p1[1], pMaxG[0]); //compare and store max of 8 G values into global min
+    pMaxB[0] = _mm256_max_ps(p1[2], pMaxB[0]); //compare and store max of 8 B values into global min
+}
+
+inline void reduce_max_float24_host(__m256 *pMaxR, __m256 *pMaxG, __m256 *pMaxB, __m256 *result)
+{
+    __m128 px[2];
+    px[0] = _mm_max_ps(_mm256_castps256_ps128(pMaxR[0]), _mm256_extractf128_ps(pMaxR[0], 1));
+    px[1] = _mm_max_ps(_mm256_castps256_ps128(pMaxG[0]), _mm256_extractf128_ps(pMaxG[0], 1));
+    px[0] = _mm_max_ps(_mm_unpacklo_ps(px[0], px[1]), _mm_unpackhi_ps(px[0], px[1]));
+    px[0] = _mm_permute_ps(px[0], 0b11011000);
+    result[0] = _mm256_castps128_ps256(px[0]);
+    px[0] = _mm_max_ps(_mm256_castps256_ps128(pMaxB[0]), _mm256_extractf128_ps(pMaxB[0], 1));
+    px[1] = _mm_max_ps(_mm_unpacklo_ps(px[0], xmm_p0), _mm_unpackhi_ps(px[0], xmm_p0));
+    px[0] = _mm_shuffle_ps(px[1], px[1], 34);
+    result[0] = _mm256_insertf128_ps(result[0], px[0], 1);
+}
+
+inline void reduce_min_i32_host(__m256i *pMin, __m128i *result)
+{
+    __m128i px;
+    __m128i zero = _mm_setzero_si128();
+    __m128i mask = _mm_set_epi8(0,1,2,3,4,5,6,8,9,10,11,12,13,14,15,7);
+    px = _mm_min_epi8(_mm256_castsi256_si128(pMin[0]), _mm256_extracti128_si256(pMin[0], 1));
+    px = _mm_min_epi8(_mm_unpacklo_epi8(zero, px), _mm_unpackhi_epi8(zero, px));
+    px = _mm_min_epi16(_mm_unpacklo_epi16(zero, px), _mm_unpackhi_epi16(zero, px));
+    px = _mm_min_epi32(_mm_unpacklo_epi32(zero, px), _mm_unpackhi_epi32(zero, px));
+    result[0] = _mm_shuffle_epi8(px, mask);
+}
+
+inline void compute_min_i96_host(__m256i *p1, __m256i *pMinR, __m256i *pMinG, __m256i *pMinB)
+{
+    pMinR[0] = _mm256_min_epi8(p1[0], pMinR[0]); //compare and store min of 32 R values into global min
+    pMinG[0] = _mm256_min_epi8(p1[1], pMinG[0]); //compare and store min of 32 G values into global min
+    pMinB[0] = _mm256_min_epi8(p1[2], pMinB[0]); //compare and store min of 32 B values into global min
+}
+
+inline void reduce_min_i96_host(__m256i *pMinR, __m256i *pMinG, __m256i *pMinB, __m128i *result)
+{
+    __m128i px[4];
+    __m128i zero = _mm_setzero_si128();
+    px[0] = _mm_min_epi8(_mm256_castsi256_si128(pMinR[0]), _mm256_extracti128_si256(pMinR[0], 1));
+    px[1] = _mm_min_epi8(_mm256_castsi256_si128(pMinG[0]), _mm256_extracti128_si256(pMinG[0], 1));
+    px[1] = _mm_min_epi8(_mm_unpacklo_epi8(px[0], px[1]), _mm_unpackhi_epi8(px[0], px[1]));
+    px[0] = _mm_min_epi8(_mm256_castsi256_si128(pMinB[0]), _mm256_extracti128_si256(pMinB[0], 1));
+    px[0] = _mm_min_epi8(_mm_unpacklo_epi8(px[0], zero), _mm_unpackhi_epi8(px[0], zero));
+    px[1] = _mm_min_epi8(_mm_unpacklo_epi16(px[1], px[0]), _mm_unpackhi_epi16(px[1], px[0]));
+    px[0] = _mm_min_epi8(_mm_unpacklo_epi32(px[1], zero), _mm_unpackhi_epi32(px[1], zero));
+    result[0] = _mm_min_epi8(_mm_unpacklo_epi64(px[0], zero), _mm_unpackhi_epi64(px[0], zero));
+}
+
+inline void compute_min_i48_host(__m128i *p1, __m128i *pMinR, __m128i *pMinG, __m128i *pMinB)
+{
+    pMinR[0] = _mm_min_epi8(p1[0], pMinR[0]); //compare and store min of 16 R values into global min
+    pMinG[0] = _mm_min_epi8(p1[1], pMinG[0]); //compare and store min of 16 G values into global min
+    pMinB[0] = _mm_min_epi8(p1[2], pMinB[0]); //compare and store min of 16 B values into global min
+}
+
+inline void reduce_min_i48_host(__m128i *pMinR, __m128i *pMinG, __m128i *pMinB, __m128i *result)
+{
+    __m128i px[2];
+    __m128i zero = _mm_setzero_si128();
+    px[1] = _mm_min_epi8(_mm_unpacklo_epi8(pMinR[0], pMinG[0]), _mm_unpackhi_epi8(pMinR[0], pMinG[0]));
+    px[0] = _mm_min_epi8(_mm_unpacklo_epi8(pMinB[0], zero), _mm_unpackhi_epi8(pMinB[0], zero));
+    px[1] = _mm_min_epi8(_mm_unpacklo_epi16(px[1], px[0]), _mm_unpackhi_epi16(px[1], px[0]));
+    px[0] = _mm_min_epi8(_mm_unpacklo_epi32(px[1], zero), _mm_unpackhi_epi32(px[1], zero));
+    result[0] = _mm_min_epi8(_mm_unpacklo_epi64(px[0], zero), _mm_unpackhi_epi64(px[0], zero));
+}
+
+inline void reduce_max_i32_host(__m256i *pMax, __m128i *result)
+{
+    __m128i px[2];
+    __m128i zero = _mm_setzero_si128();
+    __m128i mask = _mm_set_epi8(0,1,2,3,4,5,6,8,9,10,11,12,13,14,15,7);
+    px[0] = _mm_max_epi8(_mm256_castsi256_si128(pMax[0]), _mm256_extracti128_si256(pMax[0], 1));
+    px[0] = _mm_max_epi8(_mm_unpacklo_epi8(zero, px[0]), _mm_unpackhi_epi8(zero, px[0]));
+    px[0] = _mm_max_epi16(_mm_unpacklo_epi16(zero, px[0]), _mm_unpackhi_epi16(zero, px[0]));
+    px[0] = _mm_max_epi32(_mm_unpacklo_epi32(zero, px[0]), _mm_unpackhi_epi32(zero, px[0]));
+    result[0] = _mm_shuffle_epi8(px[0], mask);
+}
+
+inline void compute_max_i96_host(__m256i *p1, __m256i *pMaxR, __m256i *pMaxG, __m256i *pMaxB)
+{
+    pMaxR[0] = _mm256_max_epi8(p1[0], pMaxR[0]); //compare and store max of 32 R values into global max
+    pMaxG[0] = _mm256_max_epi8(p1[1], pMaxG[0]); //compare and store max of 32 G values into global max
+    pMaxB[0] = _mm256_max_epi8(p1[2], pMaxB[0]); //compare and store max of 32 B values into global max
+}
+
+inline void reduce_max_i96_host(__m256i *pMaxR, __m256i *pMaxG, __m256i *pMaxB, __m128i *result)
+{
+    __m128i px[4];
+    __m128i zero = _mm_setzero_si128();
+    px[0] = _mm_max_epi8(_mm256_castsi256_si128(pMaxR[0]), _mm256_extracti128_si256(pMaxR[0], 1));
+    px[1] = _mm_max_epi8(_mm256_castsi256_si128(pMaxG[0]), _mm256_extracti128_si256(pMaxG[0], 1));
+    px[1] = _mm_max_epi8(_mm_unpacklo_epi8(px[0], px[1]), _mm_unpackhi_epi8(px[0], px[1]));
+    px[0] = _mm_max_epi8(_mm256_castsi256_si128(pMaxB[0]), _mm256_extracti128_si256(pMaxB[0], 1));
+    px[0] = _mm_max_epi8(_mm_unpacklo_epi8(px[0], zero), _mm_unpackhi_epi8(px[0], zero));
+    px[1] = _mm_max_epi8(_mm_unpacklo_epi16(px[1], px[0]), _mm_unpackhi_epi16(px[1], px[0]));
+    px[0] = _mm_max_epi8(_mm_unpacklo_epi32(px[1], zero), _mm_unpackhi_epi32(px[1], zero));
+    result[0] = _mm_max_epi8(_mm_unpacklo_epi64(px[0], zero), _mm_unpackhi_epi64(px[0], zero));
+}
+
+inline void compute_max_i48_host(__m128i *p1, __m128i *pMaxR, __m128i *pMaxG, __m128i *pMaxB)
+{
+    pMaxR[0] = _mm_max_epi8(p1[0], pMaxR[0]); //compare and store max of 16 R values into global max
+    pMaxG[0] = _mm_max_epi8(p1[1], pMaxG[0]); //compare and store max of 16 G values into global max
+    pMaxB[0] = _mm_max_epi8(p1[2], pMaxB[0]); //compare and store max of 16 B values into global max
+}
+
+inline void reduce_max_i48_host(__m128i *pMaxR, __m128i *pMaxG, __m128i *pMaxB, __m128i *result)
+{
+    __m128i px[2];
+    __m128i zero = _mm_setzero_si128();
+    px[1] = _mm_max_epi8(_mm_unpacklo_epi8(pMaxR[0], pMaxG[0]), _mm_unpackhi_epi8(pMaxR[0], pMaxG[0]));
+    px[0] = _mm_max_epi8(_mm_unpacklo_epi8(pMaxB[0], zero), _mm_unpackhi_epi8(pMaxB[0], zero));
+    px[1] = _mm_max_epi8(_mm_unpacklo_epi16(px[1], px[0]), _mm_unpackhi_epi16(px[1], px[0]));
+    px[0] = _mm_max_epi8(_mm_unpacklo_epi32(px[1], zero), _mm_unpackhi_epi32(px[1], zero));
+    result[0] = _mm_max_epi8(_mm_unpacklo_epi64(px[0], zero), _mm_unpackhi_epi64(px[0], zero));
 }
 
 #endif //RPP_CPU_COMMON_H
