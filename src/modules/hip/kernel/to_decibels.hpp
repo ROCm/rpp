@@ -218,7 +218,7 @@ RppStatus hip_exec_to_decibels_tensor(Rpp32f *srcPtr,
     multiplier *= log10Factor;
 
     // calculate max in input if referenceMagnitude = 0
-    Rpp32f *partialMaxArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
+    Rpp32f *partialMaxArr = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
     int numBlocksPerSample;
     int globalThreads_z = handle.GetBatchSize();
 
