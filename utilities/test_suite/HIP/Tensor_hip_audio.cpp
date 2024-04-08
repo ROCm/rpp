@@ -184,6 +184,7 @@ int main(int argc, char **argv)
                     break;
                 }
             }
+            CHECK(hipDeviceSynchronize());
 
             endWallTime = omp_get_wtime();
             if (missingFuncFlag == 1)
