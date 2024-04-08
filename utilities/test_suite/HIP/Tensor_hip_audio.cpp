@@ -149,7 +149,7 @@ int main(int argc, char **argv)
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0;
     string testCaseName;
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
-    for (int iterCount = 0; iterCount < 1; iterCount++)
+    for (int iterCount = 0; iterCount < noOfIterations; iterCount++)
     {
         // read and decode audio and fill the audio dim values
         read_audio_batch_and_fill_dims(srcDescPtr, inputf32, audioFilesPath, iterCount, srcLengthTensor, channelsTensor);
