@@ -187,7 +187,7 @@ RppStatus rppt_normalize_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDesc
  * \param[in] scale value to be multiplied with data after subtracting from mean
  * \param[in] shift value to be added finally
  * \param[in] roiTensor values to represent dimensions of input tensor
-  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
