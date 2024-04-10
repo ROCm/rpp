@@ -46,7 +46,6 @@ extern "C" {
 #include "rppt_tensor_arithmetic_operations.h"
 #include "rppt_tensor_statistical_operations.h"
 #include "rppt_tensor_audio_augmentations.h"
-#include "rppt_tensor_advanced_augmentations.h"
 #include "rppt_tensor_logical_operations.h"
 
 #ifdef __cplusplus

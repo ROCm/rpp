@@ -96,7 +96,7 @@ RppStatus erase_host_tensor(T *srcPtr,
                 dstPtrTempR = dstPtrRowR;
                 dstPtrTempG = dstPtrRowG;
                 dstPtrTempB = dstPtrRowB;
-                bool is_erase = false;
+                bool isErase = false;
                 Rpp32u bufferLength = 0;
                 T userPixelR, userPixelG, userPixelB;
                 int j;
@@ -115,12 +115,12 @@ RppStatus erase_host_tensor(T *srcPtr,
                         userPixelB = colors[countMul3 + 2];
                         if(i >= y1 && i <= y2 && j >= x1 && j <= x2)
                         {
-                            is_erase = true;
+                            isErase = true;
                             bufferLength = x2 - x1 + 1;
                             break;
                         }
                     }
-                    if(is_erase && bufferLength)
+                    if(isErase && bufferLength)
                     {
                         memset(dstPtrTempR, userPixelR, bufferLength * sizeof(T));
                         memset(dstPtrTempG, userPixelG, bufferLength * sizeof(T));
@@ -130,7 +130,7 @@ RppStatus erase_host_tensor(T *srcPtr,
                         dstPtrTempR += bufferLength;
                         dstPtrTempG += bufferLength;
                         dstPtrTempB += bufferLength;
-                        is_erase = false;
+                        isErase = false;
                     }
                     else
                     {
@@ -165,7 +165,7 @@ RppStatus erase_host_tensor(T *srcPtr,
                 srcPtrTempG = srcPtrRowG;
                 srcPtrTempB = srcPtrRowB;
                 dstPtrTemp = dstPtrRow;
-                bool is_erase = false;
+                bool isErase = false;
                 Rpp32u bufferLengthPerChannel = 0;
                 int j;
 
@@ -184,12 +184,12 @@ RppStatus erase_host_tensor(T *srcPtr,
 
                         if(i >= y1 && i <= y2 && j >= x1 && j <= x2)
                         {
-                            is_erase = true;
+                            isErase = true;
                             bufferLengthPerChannel = x2 - x1 + 1;
                             break;
                         }
                     }
-                    if(is_erase && bufferLengthPerChannel)
+                    if(isErase && bufferLengthPerChannel)
                     {
                         for (int k = 0; k < bufferLengthPerChannel; k++)
                         {
@@ -200,7 +200,7 @@ RppStatus erase_host_tensor(T *srcPtr,
                         srcPtrTempR += bufferLengthPerChannel;
                         srcPtrTempG += bufferLengthPerChannel;
                         srcPtrTempB += bufferLengthPerChannel;
-                        is_erase = false;
+                        isErase = false;
                     }
                     else
                     {

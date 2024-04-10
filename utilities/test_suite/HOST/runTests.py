@@ -56,8 +56,6 @@ def func_group_finder(case_number):
         return "color_augmentations"
     elif case_number == 8 or case_number == 30 or case_number == 82 or case_number == 83 or case_number == 84:
         return "effects_augmentations"
-    elif case_number == 32:
-        return "advanced_augmentations"
     elif case_number < 40 or case_number == 63:
         return "geometric_augmentations"
     elif case_number < 62:
