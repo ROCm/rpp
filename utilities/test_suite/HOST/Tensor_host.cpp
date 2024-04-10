@@ -497,12 +497,12 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "pixelate";
 
-                    Rpp32s pixelationIntensity = 8;
+                    Rpp32f pixelationPercentage = 100;
 
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_pixelate_host(input, srcDescPtr, output, dstDescPtr, pixelationIntensity, roiTensorPtrSrc, roiTypeSrc, handle);
+                        rppt_pixelate_host(input, srcDescPtr, output, dstDescPtr, pixelationPercentage, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
