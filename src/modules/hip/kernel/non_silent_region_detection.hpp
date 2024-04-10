@@ -3,9 +3,10 @@
 
 // -------------------- Set 0 -  moving mean square kernel device helpers --------------------
 
+// calculate the position in shared memory to avoid bank conflicts
 __host__ __device__ int smem_pos(int pos)
 {
-    return pos + (pos >> 5);
+    return pos + (pos >> 5); // since shared memory banks considered is 32
 }
 
 __device__ float square(float value)
