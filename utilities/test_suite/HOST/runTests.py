@@ -58,10 +58,12 @@ def func_group_finder(case_number):
         return "effects_augmentations"
     elif case_number == 32:
         return "advanced_augmentations"
-    elif case_number < 40:
+    elif case_number < 40 or case_number == 63:
         return "geometric_augmentations"
-    elif case_number == 61:
+    elif case_number < 62:
         return "arithmetic_operations"
+    elif case_number < 69:
+        return "logical_operations"
     elif case_number < 87:
         return "data_exchange_operations"
     elif case_number < 88:
@@ -283,7 +285,7 @@ subprocess.run(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.run(["make", "-j16"], cwd=".")    # nosec
 
 # List of cases supported
-supportedCaseList = ['0', '1', '2', '4', '8', '13', '20', '21', '23', '29', '30', '31', '32', '34', '36', '37', '38', '39', '45', '46', '54', '61', '63', '70', '80', '81', '82', '83', '84', '85', '86', '87', '88', '89']
+supportedCaseList = ['0', '1', '2', '4', '8', '13', '20', '21', '23', '29', '30', '31', '32', '34', '36', '37', '38', '39', '45', '46', '54', '61', '63', '65', '68', '70', '80', '81', '82', '83', '84', '85', '86', '87', '88', '89']
 
 print("\n\n\n\n\n")
 print("##########################################################################################")
