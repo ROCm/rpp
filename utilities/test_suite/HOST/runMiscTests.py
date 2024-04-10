@@ -204,7 +204,7 @@ if (testType == 1):
     log_file_list = get_log_file_list()
 
     functionality_group_list = [
-        "mathematic_operations",
+        "arithmetic_operations",
     ]
 
     for log_file in log_file_list:
