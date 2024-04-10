@@ -2547,6 +2547,62 @@ inline Rpp32f rpp_rsqrt_ps(Rpp32f x)
 }
 
 /* Compute inverse square root */
+/* SSE matches to 6 decimal places with raw C version due to newton rhapson approximation*/
+inline void rpp_rsqrt_sse(Rpp32f *input, Rpp64s numElements, Rpp32f eps, Rpp32f rdiv, Rpp32f mul)
+{
+    Rpp64s i = 0;
+    __m128 rdivx4 = _mm_set1_ps(rdiv);
+    __m128 mulx4 = _mm_set1_ps(mul * 0.5f);
+    if (eps) // epsilon is present - no need for masking, but we need to add it
+    {
+        __m128 epsx4 = _mm_set1_ps(eps);
+        for (; i + 4 <= numElements; i += 4)
+        {
+            __m128 x = _mm_loadu_ps(&input[i]);
+            x = _mm_mul_ps(x, rdivx4);
+            x = _mm_add_ps(x, epsx4);
+            __m128 y = _mm_rsqrt_ps(x);
+            __m128 y2 = _mm_mul_ps(y, y);
+            __m128 xy2 = _mm_mul_ps(x, y2);
+            __m128 three_minus_xy2 = _mm_sub_ps(xmm_p3, xy2);
+            y = _mm_mul_ps(y, three_minus_xy2);
+            y = _mm_mul_ps(y, mulx4);
+            _mm_storeu_ps(&input[i], y);
+        }
+    }
+    else
+    {
+        for (; i + 4 <= numElements; i += 4)
+        {
+            __m128 x = _mm_loadu_ps(&input[i]);
+            x = _mm_mul_ps(x, rdivx4);
+            __m128 mask = _mm_cmpneq_ps(x, xmm_p0);
+            __m128 y = _mm_rsqrt_ps(x);
+            y = _mm_and_ps(y, mask);
+            __m128 y2 = _mm_mul_ps(y, y);
+            __m128 xy2 = _mm_mul_ps(x, y2);
+            __m128 three_minus_xy2 = _mm_sub_ps(xmm_p3, xy2);
+            y = _mm_mul_ps(y, three_minus_xy2);
+            y = _mm_mul_ps(y, mulx4);
+            _mm_storeu_ps(&input[i], y);
+        }
+    }
+    if (eps)
+    {
+        for (; i < numElements; i++)
+            input[i] = rpp_rsqrt_ps(input[i] * rdiv + eps) * mul;
+    }
+    else
+    {
+        for (; i < numElements; i++)
+        {
+            Rpp32f x = input[i] * rdiv;
+            input[i] = x ? rpp_rsqrt_ps(x) * mul : 0;
+        }
+    }
+}
+
+/* Compute inverse square root */
 /* AVX2 matches to 6 decimal places with raw C version due to newton rhapson approximation*/
 inline void rpp_rsqrt_avx(Rpp32f *input, Rpp32s numElements, Rpp32f eps, Rpp32f rdiv, Rpp32f scale)
 {

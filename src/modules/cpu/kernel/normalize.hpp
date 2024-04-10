@@ -115,7 +115,7 @@ void compute_2D_mean(Rpp32f *srcPtr, Rpp32f *meanPtr, Rpp32u *dims, Rpp32u *stri
         meanPtr[i] = 0;
         compute_sum(meanPtr[i], srcPtrTemp, stride[0], dims[1]);
         srcPtrTemp += stride[1];
-        meanPtr[i] *= normFactor;
+        meanPtr[i] = meanPtr[i] * normFactor;
     }
 }
 
@@ -131,7 +131,7 @@ void compute_2D_inv_std_dev(Rpp32f *srcPtr, Rpp32f *meanPtr, Rpp32f *stdDevPtr, 
         compute_diff_square_sum(stdDevPtr[i], srcPtrTemp, stride[0], dims[1], meanPtr[i]);
         srcPtrTemp += stride[1];
     }
-    rpp_rsqrt_avx(stdDevPtr, (Rpp32s)dims[0], 0, normFactor, scale);
+    rpp_rsqrt_sse(stdDevPtr, (Rpp32s)dims[0], 0, normFactor, scale);
 }
 
 // Computes mean for 3D inputs
@@ -358,8 +358,8 @@ void normalize_3D_tensor_avx_axis3(Rpp32f *srcPtr, RpptGenericDescPtr srcGeneric
         {
             __m256 pSrc1 = _mm256_loadu_ps(srcPtrTemp);
             __m256 pSrc2 = _mm256_loadu_ps(srcPtrTemp + 8);
-            __m256 pDst1 = _mm256_fmadd_ps(_mm256_sub_ps(pSrc1, pMean1), pMultiplier1, pShift);
-            __m256 pDst2 = _mm256_fmadd_ps(_mm256_sub_ps(pSrc2, pMean2), pMultiplier2, pShift);
+            __m256 pDst1 = _mm256_add_ps(_mm256_mul_ps(_mm256_sub_ps(pSrc1, pMean1), pMultiplier1), pShift);
+            __m256 pDst2 = _mm256_add_ps(_mm256_mul_ps(_mm256_sub_ps(pSrc2, pMean2), pMultiplier2), pShift);
             _mm256_storeu_ps(dstPtrTemp, pDst1);
             _mm256_storeu_ps(dstPtrTemp + 8, pDst2);
             srcPtrTemp += 16;
@@ -485,7 +485,7 @@ void normalize_2D_tensor_avx_axis2(Rpp32f *srcPtr, RpptGenericDescPtr srcDescPtr
         for(; vectorLoopCount < alignedLength ; vectorLoopCount += 8)
         {
             __m256 pSrc = _mm256_loadu_ps(srcPtrTempRow);
-            __m256 pDst = _mm256_fmadd_ps(_mm256_sub_ps(pSrc, pMean), pInvStdDev, pShift);
+            __m256 pDst = _mm256_add_ps(_mm256_mul_ps(_mm256_sub_ps(pSrc, pMean), pInvStdDev), pShift);
             _mm256_storeu_ps(dstPtrTempRow, pDst);
             srcPtrTempRow += 8;
             dstPtrTempRow += 8;
