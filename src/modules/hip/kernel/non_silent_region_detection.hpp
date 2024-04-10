@@ -297,8 +297,8 @@ RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
     Rpp32f *mmsArr;
     hipMalloc(&(mmsArr), srcDescPtr->n * srcDescPtr->strides.nStride * sizeof(Rpp32f));
 
-    int maxSharedMemoryInBytes = 32000; // 32 KB
-    int maxSharedMemoryElements = 8000; // maxSharedMemoryInBytes / sizeof(Rpp32f)
+    int maxSharedMemoryInBytes = handle.GetLocalMemorySize();
+    int maxSharedMemoryElements = maxSharedMemoryInBytes / sizeof(Rpp32f);
     int kSharedMemBanks = 32;
     int inputTileLength = prev_pow2(maxSharedMemoryElements * kSharedMemBanks / (kSharedMemBanks + 1));
 
@@ -344,7 +344,7 @@ RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
                        outputTileLength,
                        windowLength,
                        windowFactor,
-                       inputTileLength)
+                       inputTileLength);
 
     const Rpp32f cutOff = std::pow(10.0f, cutOffDB * 0.1f);
     bool referenceMax = (!referencePower);
