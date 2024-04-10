@@ -36,7 +36,7 @@ inFilePath = scriptPath + "/../TEST_AUDIO_FILES/three_samples_single_channel_src
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
 caseMin = 0
-caseMax = 3
+caseMax = 6
 
 
 # Get a list of log files based on a flag for preserving output

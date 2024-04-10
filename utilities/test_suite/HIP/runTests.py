@@ -21,6 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+
 import os
 import sys
 sys.dont_write_bytecode = True
@@ -62,8 +63,10 @@ def func_group_finder(case_number):
         return "filter_augmentations"
     elif case_number < 40:
         return "geometric_augmentations"
-    elif case_number == 61:
+    elif case_number < 62:
         return "arithmetic_operations"
+    elif case_number < 69:
+        return "logical_operations"
     elif case_number < 87:
         return "data_exchange_operations"
     elif case_number < 88:
@@ -293,7 +296,7 @@ subprocess.run(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.run(["make", "-j16"], cwd=".")    # nosec
 
 # List of cases supported
-supportedCaseList = ['0', '1', '2', '4', '8', '13', '20', '21', '23', '29', '30', '31', '34', '36', '37', '38', '39', '45', '54', '61', '63', '70', '80', '82', '83', '84', '85', '86', '87', '88', '89']
+supportedCaseList = ['0', '1', '2', '4', '8', '13', '20', '21', '23', '29', '30', '31', '34', '36', '37', '38', '39', '45', '46', '54', '61', '63', '65', '68', '70', '80', '82', '83', '84', '85', '86', '87', '88', '89']
 
 # Create folders based on testType and profilingOption
 if testType == 1 and profilingOption == "YES":
@@ -485,6 +488,7 @@ if (testType == 1 and profilingOption == "NO"):
     "geometric_augmentations",
     "morphological_operations",
     "arithmetic_operations",
+    "logical_operations",
     "statistical_operations"
     ]
     for logFile in logFileList:
