@@ -154,17 +154,17 @@ RppStatus rppt_tensor_max_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t 
  * \details Normalizes the input generic ND buffer by removing the mean and dividing by the standard deviation for a given ND Tensor.
  *          Supports u8->f32, i8->f32, f16->f16 and f32->f32 datatypes. Also has toggle variant(NHWC->NCHW) support for 3D.
  * \param [in] srcPtr source tensor memory in HOST memory
- * \param[in] srcGenericDescPtr source tensor descriptor
- * \param[out] dstPtr destination tensor memory in HOST memory
- * \param[in] dstGenericDescPtr destination tensor descriptor
- * \param[in] axisMask axis along which normalization needs to be done
- * \param[in] meanTensor values to be subtracted from input
- * \param[in] stdDevTensor standard deviation values to scale the input
- * \param[in] computeMean flag to represent internal computation of mean
- * \param[in] computeStddev flag to represent internal computation of stddev
- * \param[in] scale value to be multiplied with data after subtracting from mean
- * \param[in] shift value to be added finally
- * \param[in] roiTensor values to represent dimensions of input tensor
+ * \param [in] srcGenericDescPtr source tensor descriptor
+ * \param [out] dstPtr destination tensor memory in HOST memory
+ * \param [in] dstGenericDescPtr destination tensor descriptor
+ * \param [in] axisMask axis along which normalization needs to be done
+ * \param [in] meanTensor values to be subtracted from input
+ * \param [in] stdDevTensor standard deviation values to scale the input
+ * \param [in] computeMean flag to represent internal computation of mean
+ * \param [in] computeStddev flag to represent internal computation of stddev
+ * \param [in] scale value to be multiplied with data after subtracting from mean
+ * \param [in] shift value to be added finally
+ * \param [in] roiTensor values to represent dimensions of input tensor
  * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
@@ -176,17 +176,17 @@ RppStatus rppt_normalize_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDesc
 /*! \brief Normalize Generic augmentation on HIP backend
  * \details Normalizes the input generic ND buffer by removing the mean and dividing by the standard deviation for a given ND Tensor.
  * \param [in] srcPtr source tensor memory in HIP memory
- * \param[in] srcGenericDescPtr source tensor descriptor
- * \param[out] dstPtr destination tensor memory in HIP memory
- * \param[in] dstGenericDescPtr destination tensor descriptor
- * \param[in] axisMask axis along which normalization needs to be done
- * \param[in] meanTensor values to be subtracted from input
- * \param[in] stdDevTensor standard deviation values to scale the input
- * \param[in] computeMean flag to represent internal computation of mean
- * \param[in] computeStddev flag to represent internal computation of stddev
- * \param[in] scale value to be multiplied with data after subtracting from mean
- * \param[in] shift value to be added finally
- * \param[in] roiTensor values to represent dimensions of input tensor
+ * \param [in] srcGenericDescPtr source tensor descriptor
+ * \param [out] dstPtr destination tensor memory in HIP memory
+ * \param [in] dstGenericDescPtr destination tensor descriptor
+ * \param [in] axisMask axis along which normalization needs to be done
+ * \param [in] meanTensor values to be subtracted from input
+ * \param [in] stdDevTensor standard deviation values to scale the input
+ * \param [in] computeMean flag to represent internal computation of mean
+ * \param [in] computeStddev flag to represent internal computation of stddev
+ * \param [in] scale value to be multiplied with data after subtracting from mean
+ * \param [in] shift value to be added finally
+ * \param [in] roiTensor values to represent dimensions of input tensor
  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
