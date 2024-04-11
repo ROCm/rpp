@@ -34,5 +34,6 @@ SOFTWARE.
 #include "kernel/jitter.hpp"
 #include "kernel/water.hpp"
 #include "kernel/ricap.hpp"
+#include "kernel/vignette.hpp"
 
 #endif // HIP_TENSOR_EFFECTS_AUGMENTATIONS_HPP

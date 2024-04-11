@@ -1,10 +1,32 @@
 # Anywhere {branch} is used, the branch name will be substituted.
 # These comments will also be removed.
-root: doxygen/html/index
+defaults:
+  numbered: False
+  maxdepth: 6
+root: index
 subtrees:
-  - caption: Support
-    entries:
-    - file: tech_support
-  - caption: About
-    entries:
-    - file: license
+- entries:
+  - file: what-is-rpp.rst
+
+
+- caption: Install
+  entries:
+  - file: install/install.rst
+    title: Install RPP
+
+- caption: Reference
+  entries:
+  - file: doxygen/html/globals
+    title: API library
+    subtrees:
+    - entries:
+      - file: doxygen/html/files
+        title: Modules
+      - file: doxygen/html/annotated
+        title: Data structures
+      - file: doxygen/html/deprecated
+        title: Deprecated functions
+
+- caption: About
+  entries:
+  - file: license.rst

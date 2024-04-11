@@ -132,13 +132,12 @@ int main(int argc, char **argv)
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0;
     string testCaseName;
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
-    for (int perfRunCount = 0; perfRunCount < numRuns; perfRunCount++)
+    for (int iterCount = 0; iterCount < noOfIterations; iterCount++)
     {
-        for (int iterCount = 0; iterCount < noOfIterations; iterCount++)
+        // read and decode audio and fill the audio dim values
+        read_audio_batch_and_fill_dims(srcDescPtr, inputf32, audioFilesPath, iterCount, srcLengthTensor, channelsTensor);
+        for (int perfRunCount = 0; perfRunCount < numRuns; perfRunCount++)
         {
-            // read and decode audio and fill the audio dim values
-            read_audio_batch_and_fill_dims(srcDescPtr, inputf32, audioFilesPath, iterCount, srcLengthTensor, channelsTensor);
-
             double startWallTime, endWallTime;
             double wallTime;
             switch (testCase)
@@ -216,6 +215,50 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 6:
+                {
+                    testCaseName = "resample";
+                    Rpp32f inRateTensor[batchSize];
+                    Rpp32f outRateTensor[batchSize];
+                    Rpp32s srcDimsTensor[batchSize * 2];
+
+                    maxDstWidth = 0;
+                    for(int i = 0, j = 0; i < batchSize; i++, j += 2)
+                    {
+                        inRateTensor[i] = 16000;
+                        outRateTensor[i] = 16000 * 1.15f;
+                        Rpp32f scaleRatio = outRateTensor[i] / inRateTensor[i];
+                        srcDimsTensor[j] = srcLengthTensor[i];
+                        srcDimsTensor[j + 1] = channelsTensor[i];
+                        dstDims[i].width = static_cast<int>(std::ceil(scaleRatio * srcLengthTensor[i]));
+                        dstDims[i].height = 1;
+                        maxDstWidth = std::max(maxDstWidth, static_cast<int>(dstDims[i].width));
+                    }
+                    Rpp32f quality = 50.0f;
+                    Rpp32s lobes = std::round(0.007 * quality * quality - 0.09 * quality + 3);
+                    Rpp32s lookupSize = lobes * 64 + 1;
+                    RpptResamplingWindow window;
+                    windowed_sinc(window, lookupSize, lobes);
+
+                    dstDescPtr->w = maxDstWidth;
+                    dstDescPtr->strides.nStride = dstDescPtr->c * dstDescPtr->w * dstDescPtr->h;
+
+                    // Set buffer sizes for dst
+                    Rpp64u resampleBufferSize = (Rpp64u)dstDescPtr->h * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
+
+                    // Reinitialize host buffers for output
+                    outputf32 = (Rpp32f *)realloc(outputf32, sizeof(Rpp32f) * resampleBufferSize);
+                    if(!outputf32)
+                    {
+                        std::cout << "Unable to reallocate memory for output" << std::endl;
+                        break;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    rppt_resample_host(inputf32, srcDescPtr, outputf32, dstDescPtr, inRateTensor, outRateTensor, srcDimsTensor, window, handle);
+
+                    break;
+                }
                 default:
                 {
                     missingFuncFlag = 1;
@@ -234,28 +277,28 @@ int main(int argc, char **argv)
             maxWallTime = std::max(maxWallTime, wallTime);
             minWallTime = std::min(minWallTime, wallTime);
             avgWallTime += wallTime;
+        }
 
-            // QA mode - verify outputs with golden outputs. Below code doesn’t run for performance tests
-            if (testType == 0)
+        // QA mode - verify outputs with golden outputs. Below code doesn’t run for performance tests
+        if (testType == 0)
+        {
+            /* Run only if testCase is not 0
+            For testCase 0 verify_non_silent_region_detection function is used for QA testing */
+            if (testCase != 0)
+                verify_output(outputf32, dstDescPtr, dstDims, testCaseName, dst, scriptPath);
+
+            /* Dump the outputs to csv files for debugging
+            Runs only if
+            1. DEBUG_MODE is enabled
+            2. Current iteration is 1st iteration
+            3. Test case is not 0 */
+            if (DEBUG_MODE && iterCount == 0 && testCase != 0)
             {
-                /* Run only if testCase is not 0
-                For testCase 0 verify_non_silent_region_detection function is used for QA testing */
-                if (testCase != 0)
-                    verify_output(outputf32, dstDescPtr, dstDims, testCaseName, dst, scriptPath);
-
-                /* Dump the outputs to csv files for debugging
-                Runs only if
-                1. DEBUG_MODE is enabled
-                2. Current iteration is 1st iteration
-                3. Test case is not 0 */
-                if (DEBUG_MODE && iterCount == 0 && testCase != 0)
-                {
-                    std::ofstream refFile;
-                    refFile.open(func + ".csv");
-                    for (int i = 0; i < oBufferSize; i++)
-                        refFile << *(outputf32 + i) << "\n";
-                    refFile.close();
-                }
+                std::ofstream refFile;
+                refFile.open(func + ".csv");
+                for (int i = 0; i < oBufferSize; i++)
+                    refFile << *(outputf32 + i) << "\n";
+                refFile.close();
             }
         }
     }

@@ -184,6 +184,13 @@ inline void generate_gaussian_kernel_gpu(Rpp32f stdDev, Rpp32f* kernel, Rpp32u k
     }
 }
 
+// Retrieve Min and Max given a datatype
+
+inline void getImageBitDepthMinMax(uchar *srcPtr, float2 *bitDepthMinMax_f2) { *bitDepthMinMax_f2 = make_float2(0, 255); }
+inline void getImageBitDepthMinMax(float *srcPtr, float2 *bitDepthMinMax_f2) { *bitDepthMinMax_f2 = make_float2(0, 255); }
+inline void getImageBitDepthMinMax(half *srcPtr, float2 *bitDepthMinMax_f2) { *bitDepthMinMax_f2 = make_float2(0, 255); }
+inline void getImageBitDepthMinMax(schar *srcPtr, float2 *bitDepthMinMax_f2) { *bitDepthMinMax_f2 = make_float2(-128, 127); }
+
 /******************** DEVICE FUNCTIONS ********************/
 
 // -------------------- Set 0 - Range checks and Range adjustment --------------------
@@ -1560,6 +1567,20 @@ __device__ __forceinline__ void rpp_hip_load24_pkd3_to_int24_pln3(schar *srcPtr,
 
 // /******************** DEVICE MATH HELPER FUNCTIONS ********************/
 
+// float8 min
+
+__device__ __forceinline__ void rpp_hip_math_min8(d_float8 *srcPtr_f8, float *dstPtr)
+{
+    *dstPtr = fminf(fminf(fminf(fminf(fminf(fminf(fminf(srcPtr_f8->f1[0], srcPtr_f8->f1[1]), srcPtr_f8->f1[2]), srcPtr_f8->f1[3]), srcPtr_f8->f1[4]), srcPtr_f8->f1[5]), srcPtr_f8->f1[6]), srcPtr_f8->f1[7]);
+}
+
+// float8 max
+
+__device__ __forceinline__ void rpp_hip_math_max8(d_float8 *srcPtr_f8, float *dstPtr)
+{
+    *dstPtr = fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(fmaxf(srcPtr_f8->f1[0], srcPtr_f8->f1[1]), srcPtr_f8->f1[2]), srcPtr_f8->f1[3]), srcPtr_f8->f1[4]), srcPtr_f8->f1[5]), srcPtr_f8->f1[6]), srcPtr_f8->f1[7]);
+}
+
 // d_float16 floor
 
 __device__ __forceinline__ void rpp_hip_math_floor16(d_float16 *srcPtr_f16, d_float16 *dstPtr_f16)
@@ -1580,6 +1601,20 @@ __device__ __forceinline__ void rpp_hip_math_floor16(d_float16 *srcPtr_f16, d_fl
     dstPtr_f16->f1[13] = floorf(srcPtr_f16->f1[13]);
     dstPtr_f16->f1[14] = floorf(srcPtr_f16->f1[14]);
     dstPtr_f16->f1[15] = floorf(srcPtr_f16->f1[15]);
+}
+
+// d_float8 nearbyintf
+
+__device__ __forceinline__ void rpp_hip_math_nearbyintf8(d_float8 *srcPtr_f8, d_float8 *dstPtr_f8)
+{
+    dstPtr_f8->f1[0] = nearbyintf(srcPtr_f8->f1[0]);
+    dstPtr_f8->f1[1] = nearbyintf(srcPtr_f8->f1[1]);
+    dstPtr_f8->f1[2] = nearbyintf(srcPtr_f8->f1[2]);
+    dstPtr_f8->f1[3] = nearbyintf(srcPtr_f8->f1[3]);
+    dstPtr_f8->f1[4] = nearbyintf(srcPtr_f8->f1[4]);
+    dstPtr_f8->f1[5] = nearbyintf(srcPtr_f8->f1[5]);
+    dstPtr_f8->f1[6] = nearbyintf(srcPtr_f8->f1[6]);
+    dstPtr_f8->f1[7] = nearbyintf(srcPtr_f8->f1[7]);
 }
 
 // d_float8 add
@@ -1690,6 +1725,34 @@ __device__ __forceinline__ void rpp_hip_math_multiply24_const(d_float24 *src_f24
     dst_f24->f4[3] = src_f24->f4[3] * multiplier_f4;
     dst_f24->f4[4] = src_f24->f4[4] * multiplier_f4;
     dst_f24->f4[5] = src_f24->f4[5] * multiplier_f4;
+}
+
+// d_float8 bitwiseAND
+
+__device__ __forceinline__ void rpp_hip_math_bitwiseAnd8(d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8)
+{
+        dst_f8->f1[0] = (float)((uchar)(src1_f8->f1[0]) & (uchar)(src2_f8->f1[0]));
+        dst_f8->f1[1] = (float)((uchar)(src1_f8->f1[1]) & (uchar)(src2_f8->f1[1]));
+        dst_f8->f1[2] = (float)((uchar)(src1_f8->f1[2]) & (uchar)(src2_f8->f1[2]));
+        dst_f8->f1[3] = (float)((uchar)(src1_f8->f1[3]) & (uchar)(src2_f8->f1[3]));
+        dst_f8->f1[4] = (float)((uchar)(src1_f8->f1[4]) & (uchar)(src2_f8->f1[4]));
+        dst_f8->f1[5] = (float)((uchar)(src1_f8->f1[5]) & (uchar)(src2_f8->f1[5]));
+        dst_f8->f1[6] = (float)((uchar)(src1_f8->f1[6]) & (uchar)(src2_f8->f1[6]));
+        dst_f8->f1[7] = (float)((uchar)(src1_f8->f1[7]) & (uchar)(src2_f8->f1[7]));
+}
+
+// d_float8 bitwiseOR
+
+__device__ __forceinline__ void rpp_hip_math_bitwiseOr8(d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8)
+{
+        dst_f8->f1[0] = (float)((uchar)(src1_f8->f1[0]) | (uchar)(src2_f8->f1[0]));
+        dst_f8->f1[1] = (float)((uchar)(src1_f8->f1[1]) | (uchar)(src2_f8->f1[1]));
+        dst_f8->f1[2] = (float)((uchar)(src1_f8->f1[2]) | (uchar)(src2_f8->f1[2]));
+        dst_f8->f1[3] = (float)((uchar)(src1_f8->f1[3]) | (uchar)(src2_f8->f1[3]));
+        dst_f8->f1[4] = (float)((uchar)(src1_f8->f1[4]) | (uchar)(src2_f8->f1[4]));
+        dst_f8->f1[5] = (float)((uchar)(src1_f8->f1[5]) | (uchar)(src2_f8->f1[5]));
+        dst_f8->f1[6] = (float)((uchar)(src1_f8->f1[6]) | (uchar)(src2_f8->f1[6]));
+        dst_f8->f1[7] = (float)((uchar)(src1_f8->f1[7]) | (uchar)(src2_f8->f1[7]));
 }
 
 __device__ __forceinline__ float rpp_hip_math_inverse_sqrt1(float x)
