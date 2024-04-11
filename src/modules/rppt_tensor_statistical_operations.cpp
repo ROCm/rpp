@@ -252,16 +252,9 @@ RppStatus rppt_tensor_mean_host(RppPtr_t srcPtr,
                                 RpptRoiType roiType,
                                 rppHandle_t rppHandle)
 {
-    if (srcDescPtr->c == 1)
-    {
-        if (tensorMeanArrLength < srcDescPtr->n)      // mean of single channel
-            return RPP_ERROR_NOT_ENOUGH_MEMORY;
-    }
-    else if (srcDescPtr->c == 3)
-    {
-        if (tensorMeanArrLength < srcDescPtr->n * 4)  // mean of each channel, and total mean of all 3 channels
-            return RPP_ERROR_NOT_ENOUGH_MEMORY;
-    }
+    if ((srcDescPtr->c == 1 && tensorMeanArrLength < srcDescPtr->n) ||        // Stddev of single channel
+        (srcDescPtr->c == 3 && tensorMeanArrLength < srcDescPtr->n * 4))      // Stddev of each channel, and total Stddev of all 3 channels / image
+        return RPP_ERROR_NOT_ENOUGH_MEMORY;
     if (roiType == RpptRoiType::XYWH)
     {
         for(int i = 0; i < srcDescPtr->n; i++)
@@ -332,16 +325,9 @@ RppStatus rppt_tensor_stddev_host(RppPtr_t srcPtr,
                                   RpptRoiType roiType,
                                   rppHandle_t rppHandle)
 {
-    if (srcDescPtr->c == 1)
-    {
-        if (tensorStddevArrLength < srcDescPtr->n)      // mean of single channel
-            return RPP_ERROR_NOT_ENOUGH_MEMORY;
-    }
-    else if (srcDescPtr->c == 3)
-    {
-        if (tensorStddevArrLength < srcDescPtr->n * 4)  // mean of each channel, and total mean of all 3 channels
-            return RPP_ERROR_NOT_ENOUGH_MEMORY;
-    }
+    if ((srcDescPtr->c == 1 && tensorStddevArrLength < srcDescPtr->n) ||        // Stddev of single channel
+        (srcDescPtr->c == 3 && tensorStddevArrLength < srcDescPtr->n * 4))      // Stddev of each channel, and total Stddev of all 3 channels / image
+        return RPP_ERROR_NOT_ENOUGH_MEMORY;
     if (roiType == RpptRoiType::XYWH)
     {
         for(int i = 0; i < srcDescPtr->n; i++)
@@ -667,16 +653,9 @@ RppStatus rppt_tensor_mean_gpu(RppPtr_t srcPtr,
                                rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
-    if (srcDescPtr->c == 1)
-    {
-        if (tensorMeanArrLength < srcDescPtr->n)      // Mean of single channel
-            return RPP_ERROR_NOT_ENOUGH_MEMORY;
-    }
-    else if (srcDescPtr->c == 3)
-    {
-        if (tensorMeanArrLength < srcDescPtr->n * 4)  // Mean of each channel, and total Mean of all 3 channels
-            return RPP_ERROR_NOT_ENOUGH_MEMORY;
-    }
+    if ((srcDescPtr->c == 1 && tensorMeanArrLength < srcDescPtr->n) ||        // Stddev of single channel
+        (srcDescPtr->c == 3 && tensorMeanArrLength < srcDescPtr->n * 4))      // Stddev of each channel, and total Stddev of all 3 channels / image
+        return RPP_ERROR_NOT_ENOUGH_MEMORY;
     if (roiType == RpptRoiType::XYWH)
     {
         for(int i = 0; i < srcDescPtr->n; i++)
@@ -750,17 +729,9 @@ RppStatus rppt_tensor_stddev_gpu(RppPtr_t srcPtr,
                                  rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
-    Rpp32u paramIndex = 0;
-    if (srcDescPtr->c == 1)
-    {
-        if (tensorStddevArrLength < srcDescPtr->n)      // Stddev of single channel
-            return RPP_ERROR_NOT_ENOUGH_MEMORY;
-    }
-    else if (srcDescPtr->c == 3)
-    {
-        if (tensorStddevArrLength < srcDescPtr->n * 4)  // Stddev of each channel, and total Stddev of all 3 channels / image
-            return RPP_ERROR_NOT_ENOUGH_MEMORY;
-    }
+    if ((srcDescPtr->c == 1 && tensorStddevArrLength < srcDescPtr->n) ||        // Stddev of single channel
+        (srcDescPtr->c == 3 && tensorStddevArrLength < srcDescPtr->n * 4))      // Stddev of each channel, and total Stddev of all 3 channels / image
+        return RPP_ERROR_NOT_ENOUGH_MEMORY;
     if (roiType == RpptRoiType::XYWH)
     {
         for(int i = 0; i < srcDescPtr->n; i++)
@@ -783,7 +754,7 @@ RppStatus rppt_tensor_stddev_gpu(RppPtr_t srcPtr,
         hip_exec_tensor_stddev(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
                                srcDescPtr,
                                static_cast<Rpp32f*>(tensorStddevArr),
-							   meanTensor,
+                               meanTensor,
                                flag,
                                roiTensorPtrSrc,
                                roiType,
@@ -794,7 +765,7 @@ RppStatus rppt_tensor_stddev_gpu(RppPtr_t srcPtr,
         hip_exec_tensor_stddev(reinterpret_cast<half*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                srcDescPtr,
                                static_cast<Rpp32f*>(tensorStddevArr),
-							   meanTensor,
+                               meanTensor,
                                flag,
                                roiTensorPtrSrc,
                                roiType,
@@ -805,7 +776,7 @@ RppStatus rppt_tensor_stddev_gpu(RppPtr_t srcPtr,
         hip_exec_tensor_stddev(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                srcDescPtr,
                                static_cast<Rpp32f*>(tensorStddevArr),
-							   meanTensor,
+                               meanTensor,
                                flag,
                                roiTensorPtrSrc,
                                roiType,
@@ -816,7 +787,7 @@ RppStatus rppt_tensor_stddev_gpu(RppPtr_t srcPtr,
         hip_exec_tensor_stddev(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
                                srcDescPtr,
                                static_cast<Rpp32f*>(tensorStddevArr),
-							   meanTensor,
+                               meanTensor,
                                flag,
                                roiTensorPtrSrc,
                                roiType,

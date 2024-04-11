@@ -217,11 +217,11 @@ RppStatus tensor_max_u8_u8_host(Rpp8u *srcPtr,
                 maxB = std::max(resultAvx[2], maxB);
 #endif
             }
-			maxC = std::max(std::max(maxR, maxG), maxB);
+            maxC = std::max(std::max(maxR, maxG), maxB);
             maxArr[maxArrIndex] = maxR;
-			maxArr[maxArrIndex + 1] = maxG;
-			maxArr[maxArrIndex + 2] = maxB;
-			maxArr[maxArrIndex + 3] = maxC;
+            maxArr[maxArrIndex + 1] = maxG;
+            maxArr[maxArrIndex + 2] = maxB;
+            maxArr[maxArrIndex + 3] = maxC;
         }
     }
     return RPP_SUCCESS;
@@ -356,11 +356,11 @@ RppStatus tensor_max_f32_f32_host(Rpp32f *srcPtr,
             maxG = std::max(std::max(resultAvx[2], resultAvx[3]), maxG);
             maxB = std::max(std::max(resultAvx[4], resultAvx[5]), maxB);
 #endif
-			maxC = std::max(std::max(maxR, maxG), maxB);
+            maxC = std::max(std::max(maxR, maxG), maxB);
             maxArr[maxArrIndex] = maxR;
-			maxArr[maxArrIndex + 1] = maxG;
-			maxArr[maxArrIndex + 2] = maxB;
-			maxArr[maxArrIndex + 3] = maxC;
+            maxArr[maxArrIndex + 1] = maxG;
+            maxArr[maxArrIndex + 2] = maxB;
+            maxArr[maxArrIndex + 3] = maxC;
         }
 
         // Tensor max 3 channel (NHWC)
@@ -417,11 +417,11 @@ RppStatus tensor_max_f32_f32_host(Rpp32f *srcPtr,
                 maxB = std::max(std::max(resultAvx[4], resultAvx[5]), maxB);
 #endif
             }
-			maxC = std::max(std::max(maxR, maxG), maxB);
+            maxC = std::max(std::max(maxR, maxG), maxB);
             maxArr[maxArrIndex] = maxR;
-			maxArr[maxArrIndex + 1] = maxG;
-			maxArr[maxArrIndex + 2] = maxB;
-			maxArr[maxArrIndex + 3] = maxC;
+            maxArr[maxArrIndex + 1] = maxG;
+            maxArr[maxArrIndex + 2] = maxB;
+            maxArr[maxArrIndex + 3] = maxC;
         }
     }
     return RPP_SUCCESS;
@@ -569,11 +569,11 @@ RppStatus tensor_max_f16_f16_host(Rpp16f *srcPtr,
             maxB = std::max(std::max(resultAvx[4], resultAvx[5]), maxB);
 
 #endif
-			maxC = std::max(std::max(maxR, maxG), maxB);
+            maxC = std::max(std::max(maxR, maxG), maxB);
             maxArr[maxArrIndex] = (Rpp16f)maxR;
-			maxArr[maxArrIndex + 1] = (Rpp16f)maxG;
-			maxArr[maxArrIndex + 2] = (Rpp16f)maxB;
-			maxArr[maxArrIndex + 3] = (Rpp16f)maxC;
+            maxArr[maxArrIndex + 1] = (Rpp16f)maxG;
+            maxArr[maxArrIndex + 2] = (Rpp16f)maxB;
+            maxArr[maxArrIndex + 3] = (Rpp16f)maxC;
         }
 
         // Tensor max 3 channel (NHWC)
@@ -635,11 +635,11 @@ RppStatus tensor_max_f16_f16_host(Rpp16f *srcPtr,
                 maxB = std::max(std::max(resultAvx[4], resultAvx[5]), maxB);
 #endif
             }
-			maxC = std::max(std::max(maxR, maxG), maxB);
+            maxC = std::max(std::max(maxR, maxG), maxB);
             maxArr[maxArrIndex] = (Rpp16f)maxR;
-			maxArr[maxArrIndex + 1] = (Rpp16f)maxG;
-			maxArr[maxArrIndex + 2] = (Rpp16f)maxB;
-			maxArr[maxArrIndex + 3] = (Rpp16f)maxC;
+            maxArr[maxArrIndex + 1] = (Rpp16f)maxG;
+            maxArr[maxArrIndex + 2] = (Rpp16f)maxB;
+            maxArr[maxArrIndex + 3] = (Rpp16f)maxC;
         }
     }
     return RPP_SUCCESS;
@@ -836,11 +836,11 @@ RppStatus tensor_max_i8_i8_host(Rpp8s *srcPtr,
                 maxB = std::max(resultAvx[2], maxB);
 #endif
             }
-			maxC = std::max(std::max(maxR, maxG), maxB);
+            maxC = std::max(std::max(maxR, maxG), maxB);
             maxArr[maxArrIndex] = maxR;
-			maxArr[maxArrIndex + 1] = maxG;
-			maxArr[maxArrIndex + 2] = maxB;
-			maxArr[maxArrIndex + 3] = maxC;
+            maxArr[maxArrIndex + 1] = maxG;
+            maxArr[maxArrIndex + 2] = maxB;
+            maxArr[maxArrIndex + 3] = maxC;
         }
     }
     return RPP_SUCCESS;
