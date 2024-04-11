@@ -6320,4 +6320,10 @@ inline void reduce_max_i48_host(__m128i *pMaxR, __m128i *pMaxG, __m128i *pMaxB, 
     result[0] = _mm_max_epi8(_mm_unpacklo_epi64(px[0], zero), _mm_unpackhi_epi64(px[0], zero));
 }
 
+inline void compute_log_16_host(__m256 *p)
+{
+    p[0] = log_ps(p[0]);    // log compute
+    p[1] = log_ps(p[1]);    // log compute
+}
+
 #endif //RPP_CPU_COMMON_H

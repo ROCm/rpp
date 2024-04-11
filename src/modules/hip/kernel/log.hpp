@@ -13,6 +13,32 @@ __device__ void log_hip_compute(T *srcPtr, d_float8 *src_f8, d_float8 *dst_f8)
 
 // -------------------- Set 2 - log kernels --------------------
 template <typename T, typename U>
+__global__ void log_1d_hip_tensor(T *srcPtr,
+                                  uint srcStrides,
+                                  U *dstPtr,
+                                  uint dstStrides,
+                                  uint *roiTensor)
+{
+    uint id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8; // width
+    uint id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;       // batchsize
+
+    uint *roi = &roiTensor[id_z * 2];
+    uint xBegin = roi[0];
+    uint width = roi[1];
+
+    if (id_x >= width)
+        return;
+
+    uint srcIdx = (id_z * srcStrides) + id_x + xBegin;
+    uint dstIdx = (id_z * dstStrides) + id_x;
+
+    d_float8 src_f8, dst_f8;
+    rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);
+    log_hip_compute(srcPtr, &src_f8, &dst_f8);
+    rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
+}
+
+template <typename T, typename U>
 __global__ void log_2d_hip_tensor(T *srcPtr,
                                   uint2 srcStridesNH,
                                   U *dstPtr,
@@ -124,7 +150,25 @@ RppStatus hip_exec_log_generic_tensor(T *srcPtr,
 {
     Rpp32u numDims = srcGenericDescPtr->numDims - 1; // exclude batchsize from input dims
     // based on number of dimensions call the corresponding kernel
-    if (numDims == 2)
+    if (numDims == 1)
+    {
+        // NW
+        int globalThreads_x = dstGenericDescPtr->dims[1];
+        int globalThreads_y = 1;
+        int globalThreads_z = dstGenericDescPtr->dims[0];
+
+        hipLaunchKernelGGL(log_1d_hip_tensor,
+                           dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                           0,
+                           handle.GetStream(),
+                           srcPtr,
+                           srcGenericDescPtr->strides[0],
+                           dstPtr,
+                           dstGenericDescPtr->strides[0],
+                           roiTensor);
+    }
+    else if (numDims == 2)
     {
         // NHW
         int globalThreads_x = dstGenericDescPtr->dims[2];

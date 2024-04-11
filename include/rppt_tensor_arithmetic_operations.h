@@ -269,6 +269,7 @@ RppStatus rppt_magnitude_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDescPtr src
 /*! \brief Logarithm operation on HOST backend
  * \details Computes Log to base e(natural log) of the input for a given ND Tensor.
  *          Supports u8->f32, i8->f32, f16->f16 and f32->f32 datatypes.
+ *          Uses Absolute of input for log computation and uses nextafter() if input is 0 to avoid undefined result.
  * \param [in] srcPtr source tensor in HOST memory
  * \param [in] srcGenericDescPtr source tensor descriptor
  * \param [out] dstPtr destination tensor in HOST memory
@@ -285,6 +286,7 @@ RppStatus rppt_log_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, R
 /*! \brief Logarithm operation on HIP backend
  * \details Computes Log to base e(natural log) of the input for a given ND Tensor.
  *          Supports u8->f32, i8->f32, f16->f16 and f32->f32 datatypes.
+ *          Uses Absolute of input for log computation and uses nextafter() if input is 0 to avoid undefined result.
  * \param [in] srcPtr source tensor in HIP memory
  * \param [in] srcGenericDescPtr source tensor descriptor
  * \param [out] dstPtr destination tensor in HIP memory
