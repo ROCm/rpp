@@ -160,8 +160,7 @@ RppStatus rppt_tensor_max_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t 
  * \param [in] axisMask axis along which normalization needs to be done
  * \param [in] meanTensor values to be subtracted from input
  * \param [in] stdDevTensor standard deviation values to scale the input
- * \param [in] computeMean flag to represent internal computation of mean
- * \param [in] computeStddev flag to represent internal computation of stddev
+ * \param [in] computeMeanStddev flag to represent internal computation of mean, stddev (Wherein 0th bit used to represent computeMean and 1st bit for computeStddev, 0- Externally provided)
  * \param [in] scale value to be multiplied with data after subtracting from mean
  * \param [in] shift value to be added finally
  * \param [in] roiTensor values to represent dimensions of input tensor
@@ -170,7 +169,7 @@ RppStatus rppt_tensor_max_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t 
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
  */
-RppStatus rppt_normalize_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u axisMask, Rpp32f *meanTensor, Rpp32f *stdDevTensor, Rpp32u computeMean, Rpp32u computeStddev, Rpp32f scale, Rpp32f shift, Rpp32u *roiTensor, rppHandle_t rppHandle);
+RppStatus rppt_normalize_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u axisMask, Rpp32f *meanTensor, Rpp32f *stdDevTensor, Rpp8u computeMeanStddev, Rpp32f scale, Rpp32f shift, Rpp32u *roiTensor, rppHandle_t rppHandle);
 
 #ifdef GPU_SUPPORT
 /*! \brief Normalize Generic augmentation on HIP backend
@@ -182,8 +181,7 @@ RppStatus rppt_normalize_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDesc
  * \param [in] axisMask axis along which normalization needs to be done
  * \param [in] meanTensor values to be subtracted from input
  * \param [in] stdDevTensor standard deviation values to scale the input
- * \param [in] computeMean flag to represent internal computation of mean
- * \param [in] computeStddev flag to represent internal computation of stddev
+ * \param [in] computeMeanStddev flag to represent internal computation of mean, stddev (Wherein 0th bit used to represent computeMean and 1st bit for computeStddev, 0- Externally provided)
  * \param [in] scale value to be multiplied with data after subtracting from mean
  * \param [in] shift value to be added finally
  * \param [in] roiTensor values to represent dimensions of input tensor

@@ -250,22 +250,21 @@ RppStatus rppt_normalize_host(RppPtr_t srcPtr,
                               Rpp32u axisMask,
                               Rpp32f *meanTensor,
                               Rpp32f *stdDevTensor,
-                              Rpp32u computeMean,
-                              Rpp32u computeStddev,
+                              Rpp8u computeMeanStddev,
                               Rpp32f scale,
                               Rpp32f shift,
                               Rpp32u *roiTensor,
                               rppHandle_t rppHandle)
 {
     RppLayoutParams layoutParams;
-    Rpp32u nDim = srcGenericDescPtr->numDims - 1;
-    if (nDim == 3 && (srcGenericDescPtr->layout == RpptLayout::NHWC))
+    Rpp32u tensorDim = srcGenericDescPtr->numDims - 1;
+    if (tensorDim == 3 && (srcGenericDescPtr->layout == RpptLayout::NHWC))
         layoutParams = get_layout_params(srcGenericDescPtr->layout, srcGenericDescPtr->dims[3]);
     else if ((srcGenericDescPtr->layout == RpptLayout::NCDHW) && (dstGenericDescPtr->layout == RpptLayout::NCDHW))
         layoutParams = get_layout_params(srcGenericDescPtr->layout, srcGenericDescPtr->dims[1]);
     else if ((srcGenericDescPtr->layout == RpptLayout::NDHWC) && (dstGenericDescPtr->layout == RpptLayout::NDHWC))
         layoutParams = get_layout_params(srcGenericDescPtr->layout, srcGenericDescPtr->dims[4]);
-    else if(nDim == 2 && (srcGenericDescPtr->layout == RpptLayout::NHWC))
+    else if(tensorDim == 2 && (srcGenericDescPtr->layout == RpptLayout::NHWC))
         layoutParams = get_layout_params(srcGenericDescPtr->layout, srcGenericDescPtr->dims[2]);
 
     if ((srcGenericDescPtr->dataType == RpptDataType::U8) && (dstGenericDescPtr->dataType == RpptDataType::U8))
@@ -277,8 +276,7 @@ RppStatus rppt_normalize_host(RppPtr_t srcPtr,
                                       axisMask,
                                       meanTensor,
                                       stdDevTensor,
-                                      computeMean,
-                                      computeStddev,
+                                      computeMeanStddev,
                                       scale,
                                       shift,
                                       roiTensor,
@@ -294,8 +292,7 @@ RppStatus rppt_normalize_host(RppPtr_t srcPtr,
                                       axisMask,
                                       meanTensor,
                                       stdDevTensor,
-                                      computeMean,
-                                      computeStddev,
+                                      computeMeanStddev,
                                       scale,
                                       shift,
                                       roiTensor,
@@ -311,8 +308,7 @@ RppStatus rppt_normalize_host(RppPtr_t srcPtr,
                                       axisMask,
                                       meanTensor,
                                       stdDevTensor,
-                                      computeMean,
-                                      computeStddev,
+                                      computeMeanStddev,
                                       scale,
                                       shift,
                                       roiTensor,
@@ -329,8 +325,7 @@ RppStatus rppt_normalize_host(RppPtr_t srcPtr,
                                       axisMask,
                                       meanTensor,
                                       stdDevTensor,
-                                      computeMean,
-                                      computeStddev,
+                                      computeMeanStddev,
                                       scale,
                                       shift,
                                       roiTensor,

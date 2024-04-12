@@ -124,8 +124,9 @@ int main(int argc, char **argv)
             {
                 float scale = 1.0;
                 float shift = 0.0;
-                bool computeMean, computeStddev;
-                computeMean = computeStddev = 1;
+                // computeMeanStddev set to 3 if both mean and stddev should be computed internally.
+                // Wherein 0th bit used to represent computeMean and 1st bit for computeStddev.
+                Rpp8u computeMeanStddev = 3;
 
                 Rpp32u size = 1; // length of mean and stddev tensors differ based on axisMask and nDim
                 Rpp32u maxSize = 1;
@@ -144,16 +145,16 @@ int main(int argc, char **argv)
                 if(stdDevTensor == nullptr)
                     stdDevTensor = static_cast<Rpp32f *>(calloc(maxSize * batchSize, sizeof(Rpp32f)));
 
-                if(!(computeMean && computeStddev))
+                if(!computeMeanStddev)
                     fill_mean_stddev_values(nDim, maxSize, meanTensor, stdDevTensor, qaMode, axisMask, scriptPath);
 
                 startWallTime = omp_get_wtime();
-                rppt_normalize_host(inputF32, srcDescriptorPtrND, outputF32, dstDescriptorPtrND, axisMask, meanTensor, stdDevTensor, computeMean, computeStddev, scale, shift, roiTensor, handle);
+                rppt_normalize_host(inputF32, srcDescriptorPtrND, outputF32, dstDescriptorPtrND, axisMask, meanTensor, stdDevTensor, computeMeanStddev, scale, shift, roiTensor, handle);
 
                 // compare outputs if qaMode is true
                 if(qaMode)
                 {
-                    bool externalMeanStd = !(computeMean && computeStddev); // when mean and stddev is passed from user
+                    bool externalMeanStd = !computeMeanStddev; // when mean and stddev is passed from user
                     compare_output(outputF32, nDim, batchSize, bufferSize, dst, func, axisMask, scriptPath, externalMeanStd);
                 }
                 break;
