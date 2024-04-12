@@ -321,7 +321,7 @@ python runMiscTests.py --case_start <case_start> --case_end <case_end> --test_ty
 ```
 
 ### Modes of operation (RPP Miscellaneous Test Suite)
--   QA mode - Tolerance based PASS/FAIL tests for RPP MISC HOST functionalities checking match between output and preset golden outputs. Please note that QA mode is only supported with a batch size of 3.
+-   QA mode - Tolerance based PASS/FAIL tests for RPP MISC HOST functionalities checking match between output and preset golden outputs. Please note that QA mode is only supported with a batch size of 3 and num dims 2 or 3
 ``` python
 python runMiscTests.py --case_start 1 --case_end 1 --qa_mode 1 --batch_size 3
 ```
