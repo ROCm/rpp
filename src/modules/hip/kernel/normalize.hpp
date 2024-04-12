@@ -1797,8 +1797,7 @@ RppStatus hip_exec_normalize_tensor(T *srcPtr,
                                     Rpp32u axisMask,
                                     Rpp32f *meanTensor,
                                     Rpp32f *stdDevTensor,
-                                    Rpp32u computeMean,
-                                    Rpp32u computeStdDev,
+                                    Rpp8u computeMeanStddev,
                                     Rpp32f scale,
                                     Rpp32f shift,
                                     Rpp32u *roiTensor,
@@ -1821,6 +1820,8 @@ RppStatus hip_exec_normalize_tensor(T *srcPtr,
         normalize_setup_nd(roiTensor, batchSize, tensorDims, axisMask,
                            paramShape, paramStrides, maxParamVolume);
 
+    bool computeMean = computeMeanStddev & 1;   // if 0th bit in computeMeanStddev is set, computeMean is set to true. Otherwise it is set to false
+    bool computeStdDev = computeMeanStddev & 2; // if 1st bit in computeMeanStddev is set, computeStdDev is set to true. Otherwise it is set to false
     if((!computeMean) && (!computeStdDev))
         maxParamVolume = 0;
 

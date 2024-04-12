@@ -124,7 +124,7 @@ int main(int argc, char **argv)
             {
                 float scale = 1.0;
                 float shift = 0.0;
-                // computeMeanStddev set to 3 if both mean and stddev should be computed internally.
+                // computeMeanStddev set to 3 means both mean and stddev should be computed internally.
                 // Wherein 0th bit used to represent computeMean and 1st bit for computeStddev.
                 Rpp8u computeMeanStddev = 3;
 

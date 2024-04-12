@@ -134,8 +134,10 @@ int main(int argc, char **argv)
             {
                 float scale = 1.0;
                 float shift = 0.0;
-                bool computeMean, computeStddev;
-                computeMean = computeStddev = 1;
+
+                // computeMeanStddev set to 3 means both mean and stddev should be computed internally.
+                // Wherein 0th bit used to represent computeMean and 1st bit for computeStddev.
+                Rpp8u computeMeanStddev = 3;
 
                 Rpp32u size = 1; // length of mean and stddev tensors differ based on axisMask and nDim
                 Rpp32u maxSize = 1;
@@ -154,7 +156,7 @@ int main(int argc, char **argv)
                 if(stdDevTensor == nullptr)
                     CHECK(hipMalloc(&stdDevTensor, maxSize * batchSize * sizeof(Rpp32f)));
 
-                if(!(computeMean && computeStddev))
+                if(!computeMeanStddev)
                 {
                     if(meanTensorCPU == nullptr)
                         meanTensorCPU = static_cast<Rpp32f *>(malloc(maxSize * sizeof(Rpp32f)));
@@ -167,7 +169,7 @@ int main(int argc, char **argv)
                 }
 
                 startWallTime = omp_get_wtime();
-                rppt_normalize_gpu(d_inputF32, srcDescriptorPtrND, d_outputF32, dstDescriptorPtrND, axisMask, meanTensor, stdDevTensor, computeMean, computeStddev, scale, shift, roiTensor, handle);
+                rppt_normalize_gpu(d_inputF32, srcDescriptorPtrND, d_outputF32, dstDescriptorPtrND, axisMask, meanTensor, stdDevTensor, computeMeanStddev, scale, shift, roiTensor, handle);
 
                 // compare outputs if qaMode is true
                 if(qaMode)
@@ -175,7 +177,7 @@ int main(int argc, char **argv)
                     CHECK(hipDeviceSynchronize());
                     CHECK(hipMemcpy(outputF32, d_outputF32, bufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
                     CHECK(hipDeviceSynchronize());
-                    bool externalMeanStd = !(computeMean && computeStddev); // when mean and stddev is passed from user
+                    bool externalMeanStd = !computeMeanStddev; // when mean and stddev is passed from user
                     compare_output(outputF32, nDim, batchSize, bufferSize, dst, func, axisMask, scriptPath, externalMeanStd);
                 }
                 break;
