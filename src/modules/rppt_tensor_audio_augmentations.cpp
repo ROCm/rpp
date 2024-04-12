@@ -189,6 +189,14 @@ RppStatus rppt_spectrogram_host(RppPtr_t srcPtr,
                                 layout,
                                 rpp::deref(rppHandle));
 
+        return RPP_SUCCESS;
+    }
+    else
+    {
+        return RPP_ERROR_NOT_IMPLEMENTED;
+    }
+}
+
 /******************** resample ********************/
 
 RppStatus rppt_resample_host(RppPtr_t srcPtr,
