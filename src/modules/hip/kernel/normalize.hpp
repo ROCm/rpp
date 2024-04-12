@@ -136,7 +136,7 @@ __global__ void normalize_2d_hip_tensor(T *srcPtr,
     }
     else
     {
-        invStdDev = (stdDev) ? (scale * (1.0f / stdDev)) : 1.0f;;
+        invStdDev = (stdDev) ? (scale * (1.0f / stdDev)) : 1.0f;
     }
     float outVal = fmaf((static_cast<float>(srcPtr[srcIdx]) - mean), invStdDev, shift);
     normalize_check_and_store(outVal, &dstPtr[dstIdx]);
@@ -198,7 +198,7 @@ __global__ void normalize_3d_hip_tensor(T *srcPtr,
     }
     else
     {
-        invStdDev = (stdDev) ? (scale * (1.0f / stdDev)) : 1.0f;;
+        invStdDev = (stdDev) ? (scale * (1.0f / stdDev)) : 1.0f;
     }
     float outVal = fmaf((static_cast<float>(srcPtr[srcIdx]) - mean), invStdDev, shift);
     normalize_check_and_store(outVal, &dstPtr[dstIdx]);
@@ -255,7 +255,7 @@ __global__ void normalize_nd_hip_tensor(T *srcPtr,
     }
     else
     {
-        invStdDev = (stdDev) ? (scale * (1.0f / stdDev)) : 1.0f;;
+        invStdDev = (stdDev) ? (scale * (1.0f / stdDev)) : 1.0f;
     }
     uint dstIdx = id_z * maxBufferLength + id_x;
     float outVal = fmaf((static_cast<float>(srcPtr[srcIdx]) - mean), invStdDev, shift);
@@ -1825,13 +1825,13 @@ RppStatus hip_exec_normalize_tensor(T *srcPtr,
     if((!computeMean) && (!computeStdDev))
         maxParamVolume = 0;
 
-    // if computeMean is set compute mean values by processing over input based on axisMask values
+    // if computeMean is set, compute mean values by processing over input based on axisMask values
     if(computeMean)
         hip_exec_compute_mean_stddev_tensor(srcPtr, srcGenericDescPtr, meanTensor, stdDevTensor, true,
                                             roiTensor, axisMask, numDims, maxParamVolume,
                                             paramShape, paramStrides, handle);
 
-    // if computeStdDev is set compute stdDev values by processing over input based on axisMask values
+    // if computeStdDev is set, compute stdDev values by processing over input based on axisMask values
     if(computeStdDev)
         hip_exec_compute_mean_stddev_tensor(srcPtr, srcGenericDescPtr, meanTensor, stdDevTensor, false,
                                             roiTensor, axisMask, numDims, maxParamVolume,
