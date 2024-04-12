@@ -66,8 +66,8 @@ void compute_diff_square_sum(Rpp32f &output, T *input, Rpp32s inputStride, Rpp32
         for (Rpp32s i = 0; i < numElements; i++)
         {
             Rpp32f curr = (input[i * inputStride] - mean);
-            auto curnew = curr * curr;
-            tmp += curnew;
+            auto curSq = curr * curr;
+            tmp += curSq;
         }
 
         // accumulate in target value
@@ -220,14 +220,14 @@ void compute_ND_mean(T *srcPtr, Rpp32f *meanPtr, Rpp32u *dims, Rpp32u *stride, R
         compute_sum(meanPtr[index], srcPtr, stride[level], dims[level]);
     else if(level == tensorDim) // Calls computeSum when only 1st axis need to be normalized
         compute_sum(meanPtr[index], srcPtr, stride[norm], dims[norm]);
-    else if (!axis[level]) // By default split srcPtr and modify index to store mean
+    else if (!axis[level]) // When that axis at present level isn't normalized, split srcPtr and modify index to store mean
     {
         for(Rpp32u i = 0; i < dims[level]; i++)
             compute_ND_mean(srcPtr + (i * stride[level]), meanPtr, dims, stride, axis, tensorDim, level + 1, index + (i * (size / dims[level])), size / dims[level], norm, lastNormAxis);
     }
     else if(axis[level] && (level == lastNormAxis)) // Increment level alone if its last axis to be normalized
         compute_ND_mean(srcPtr, meanPtr, dims, stride, axis, tensorDim, level + 1, index, size, level, lastNormAxis);
-    else if(axis[level]) // Called when that particular axis need to be normalized
+    else if(axis[level]) // Called when axis at present level needs to be normalized
     {
         for(Rpp32u i = 0; i < dims[level]; i++)
             compute_ND_mean(srcPtr + (i * stride[level]), meanPtr, dims, stride, axis, tensorDim, level + 1, index, size, level, lastNormAxis);
@@ -242,14 +242,14 @@ void compute_ND_stddev(T *srcPtr, Rpp32f *meanPtr, Rpp32f *stdDevPtr, Rpp32u *di
         compute_diff_square_sum(stdDevPtr[index], srcPtr, stride[level], dims[level], meanPtr[index]);
     else if(level == tensorDim) // Calls computeDiffSumSquare when only 1st axis need to be normalized
         compute_diff_square_sum(stdDevPtr[index], srcPtr, stride[norm], dims[norm], meanPtr[index]);
-    else if (!axis[level]) // By default split srcPtr and modify index to store stddev
+    else if (!axis[level]) // When that axis at present level isn't normalized, split srcPtr and modify index to store stddev
     {
         for(Rpp32u i = 0; i < dims[level]; i++)
             compute_ND_stddev(srcPtr + (i * stride[level]), meanPtr, stdDevPtr, dims, stride, axis, tensorDim, level + 1, index + (i * (size / dims[level])), size / dims[level], norm, lastNormAxis);
     }
     else if(axis[level] && (level == lastNormAxis)) // Increment level alone if its last axis to be normalized
         compute_ND_stddev(srcPtr, meanPtr, stdDevPtr, dims, stride, axis, tensorDim, level + 1, index, size, level, lastNormAxis);
-    else if(axis[level]) // Called when that particular axis need to be normalized
+    else if(axis[level]) // Called when axis at present level needs to be normalized
     {
         for(Rpp32u i = 0; i < dims[level]; i++)
             compute_ND_stddev(srcPtr + (i * stride[level]), meanPtr, stdDevPtr, dims, stride, axis, tensorDim, level + 1, index, size, level, lastNormAxis);
@@ -301,7 +301,6 @@ void normalize_3D_tensor_axis3_toggle(Rpp32f *srcPtr, RpptGenericDescPtr srcGene
     dstPtrTemp[0] = dstPtr;
     for(Rpp32u i = 1; i < length[2]; i++)
         dstPtrTemp[i] = dstPtrTemp[i-1] + dstGenericDescPtr->strides[1];
-
     Rpp32s paramIdx = 0;
 
     for(Rpp32u i = 0; i < length[0]; i++)
@@ -332,7 +331,7 @@ void normalize_3D_tensor_axis3_toggle(Rpp32f *srcPtr, RpptGenericDescPtr srcGene
     }
 }
 
-// Computes normalize for 3D non toggle variants its optimized with AVX when axis mask set to 3 and 16 channel normalize
+// Computes normalize for 3D non toggle variants, optimized with AVX when axis mask set to 3 and 16 channel normalize
 void normalize_3D_tensor_avx_axis3(Rpp32f *srcPtr, RpptGenericDescPtr srcGenericDescPtr, Rpp32f *dstPtr, RpptGenericDescPtr dstGenericDescPtr,
                                    Rpp32f *meanPtr, Rpp32f *multiplierPtr, Rpp32f shift, Rpp32u *paramStride, Rpp32u bufferLength, Rpp32u *length)
 {
@@ -421,7 +420,7 @@ void normalize_ND_tensor_nontoggle(T1 *srcPtr, Rpp32u *srcStride, T2 *dstPtr, Rp
         idx1 = idx;
         for (Rpp32u i = 0; i < length[level]; i++)
         {
-            normalize_ND_tensor_nontoggle(srcPtr, srcStride, dstPtr, meanPtr, multiplierPtr, shift, paramStride, length, tensorDim - 1, level + 1, idx);
+            normalize_ND_tensor_nontoggle(srcPtr, srcStride, dstPtr, meanPtr, multiplierPtr, shift, paramStride, length + 1, tensorDim - 1, level + 1, idx);
             if(i < length[level] - 1)
                 idx = (!paramStride[level]) ? idx1 : idx + paramStride[level];
             dstPtr += srcStride[level];
@@ -540,9 +539,10 @@ RppStatus normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
 
     Rpp32u maxSize = 1;
+    // Compute maxSize as length of input tensors differ based on axisMask and tensorDims
     for(int batch = 0; batch < batchSize; batch++)
     {
-        Rpp32u size = 1; // length of input tensors differ based on axisMask and tensorDims
+        Rpp32u size = 1;
         for(int i = 0; i < tensorDims; i++)
             size *= ((axisMask & (int)(pow(2, i))) >= 1) ? 1 : roiTensor[(tensorDims * 2 * batch) + tensorDims + i];
         maxSize = std::max(maxSize, size);
@@ -646,7 +646,7 @@ RppStatus normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
                     srcStride[2] = srcGenericDescPtr->strides[1];
                     break;
                 }
-                case 3: // Normalize axes 0,1
+                case 3: // Normalize axes 0, 1
                 {
                     reductionDims = length[2];
                     paramStride[0] = paramStride[1] = 0;
@@ -672,7 +672,7 @@ RppStatus normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
                     srcStride[2] = srcGenericDescPtr->strides[1];
                     break;
                 }
-                case 5: // Normalize across 0,2
+                case 5: // Normalize across 0, 2
                 {
                     reductionDims = length[1];
                     paramStride[0] = paramStride[2] = 0;
@@ -686,7 +686,7 @@ RppStatus normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
                     isConsecutive = false;
                     break;
                 }
-                case 6: // Normalize across 1,2
+                case 6: // Normalize across 1, 2
                 {
                     reductionDims = length[0];
                     paramStride[1] = paramStride[2] = 0;
@@ -699,7 +699,7 @@ RppStatus normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
                     srcStride[2] = srcGenericDescPtr->strides[3];
                     break;
                 }
-                case 7: // Normalize across 0,1,2
+                case 7: // Normalize across 0, 1, 2
                 {
                     reductionDims = 1;
                     paramStride[0] = paramStride[1] = paramStride[2] = 0;
@@ -730,15 +730,17 @@ RppStatus normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
             else if((axisMask == 3) && (srcGenericDescPtr->layout == RpptLayout::NHWC) && (dstGenericDescPtr->layout == RpptLayout::NCHW))
                 normalize_3D_tensor_axis3_toggle(srcPtrChannel, srcGenericDescPtr, dstPtrTemp, dstGenericDescPtr, meanTensor, stdDevTensor, shift, paramStride, length);
         }
-        else // Called when any other ND tensor is passed to kernel
+        else // Handle any other ND tensor is passed to kernel
         {
-            int size = 1; // length of input tensors differ based on axisMask and tensorDims
+            // Compute length of input tensors as they differ based on axisMask and tensorDims
+            int size = 1;
             for(int i = 0; i < tensorDims; i++)
                 size *= ((axisMask & (int)(pow(2, i))) >= 1) ? 1 : length[i];
 
             Rpp32u totalElements = 1;
             Rpp32u lastNormAxis = 0;
             Rpp32u axis[tensorDims], newAxis[tensorDims], newDims[tensorDims];
+            // Initialize newAxis and newDims used to store final Axis and Dims after removing redundant axis
             memset(newAxis, 0, tensorDims * sizeof(Rpp32u));
             memset(newDims, 0, tensorDims * sizeof(Rpp32u));
 
@@ -840,6 +842,7 @@ RppStatus normalize_generic_host_tensor(T1 *srcPtr,
         int totalElements = 1;
         Rpp32u lastNormAxis = 0;
         Rpp32u axis[tensorDims], newAxis[tensorDims], newDims[tensorDims];
+        // Initialize newAxis and newDims used to store final Axis and Dims after removing redundant axis
         memset(newAxis, 0, sizeof(newAxis));
         memset(newDims, 0, sizeof(newDims));
 
