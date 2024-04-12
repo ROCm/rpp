@@ -471,14 +471,14 @@ RppStatus rppt_vignette_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t ds
  * \image html input150x150x4.gif Sample Input
  * \image html effects_augmentations_gaussian_noise_150x150x4.gif Sample Output
  * \param [in] srcPtr source tensor in HOST memory
- * \param[in] srcGenericDescPtr source tensor descriptor
- * \param[out] dstPtr destination tensor in HOST memory
- * \param[in] dstGenericDescPtr destination tensor descriptor
+ * \param [in] srcGenericDescPtr source tensor descriptor
+ * \param [out] dstPtr destination tensor in HOST memory
+ * \param [in] dstGenericDescPtr destination tensor descriptor
  * \param [in] meanTensor mean values for each input, which are used to compute the generalized Box-Mueller transforms in a gaussian distribution (1D tensor of size batchSize with meanTensor[i] >= 0 for each image in batch)
  * \param [in] stdDevTensor stdDev values for each image, which are used to compute the generalized Box-Mueller transforms in a gaussian distribution (1D tensor of size batchSize with stdDevTensor[i] >= 0 for each image in batch)
  * \param [in] seed A user-defined seed value (single Rpp32u value)
- * \param[in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
- * \param[in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
+ * \param [in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
+ * \param [in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
  * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
@@ -493,14 +493,14 @@ RppStatus rppt_gaussian_noise_voxel_host(RppPtr_t srcPtr, RpptGenericDescPtr src
  * \image html input150x150x4.gif Sample Input
  * \image html effects_augmentations_gaussian_noise_150x150x4.gif Sample Output
  * \param [in] srcPtr source tensor in HIP memory
- * \param[in] srcGenericDescPtr source tensor descriptor
- * \param[out] dstPtr destination tensor in HIP memory
- * \param[in] dstGenericDescPtr destination tensor descriptor
+ * \param [in] srcGenericDescPtr source tensor descriptor
+ * \param [out] dstPtr destination tensor in HIP memory
+ * \param [in] dstGenericDescPtr destination tensor descriptor
  * \param [in] meanTensor mean values for each input, which are used to compute the generalized Box-Mueller transforms in a gaussian distribution (1D tensor of size batchSize with meanTensor[i] >= 0 for each image in batch)
  * \param [in] stdDevTensor stdDev values for each input, which are used to compute the generalized Box-Mueller transforms in a gaussian distribution (1D tensor of size batchSize with stdDevTensor[i] >= 0 for each image in batch)
  * \param [in] seed A user-defined seed value (single Rpp32u value)
- * \param[in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
- * \param[in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
+ * \param [in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
+ * \param [in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
