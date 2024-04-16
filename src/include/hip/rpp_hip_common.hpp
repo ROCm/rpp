@@ -1605,6 +1605,20 @@ __device__ __forceinline__ void rpp_hip_math_floor16(d_float16 *srcPtr_f16, d_fl
     dstPtr_f16->f1[15] = floorf(srcPtr_f16->f1[15]);
 }
 
+// d_float8 nearbyintf
+
+__device__ __forceinline__ void rpp_hip_math_nearbyintf8(d_float8 *srcPtr_f8, d_float8 *dstPtr_f8)
+{
+    dstPtr_f8->f1[0] = nearbyintf(srcPtr_f8->f1[0]);
+    dstPtr_f8->f1[1] = nearbyintf(srcPtr_f8->f1[1]);
+    dstPtr_f8->f1[2] = nearbyintf(srcPtr_f8->f1[2]);
+    dstPtr_f8->f1[3] = nearbyintf(srcPtr_f8->f1[3]);
+    dstPtr_f8->f1[4] = nearbyintf(srcPtr_f8->f1[4]);
+    dstPtr_f8->f1[5] = nearbyintf(srcPtr_f8->f1[5]);
+    dstPtr_f8->f1[6] = nearbyintf(srcPtr_f8->f1[6]);
+    dstPtr_f8->f1[7] = nearbyintf(srcPtr_f8->f1[7]);
+}
+
 // d_float8 add
 
 __device__ __forceinline__ void rpp_hip_math_add8(d_float8 *src1Ptr_f8, d_float8 *src2Ptr_f8, d_float8 *dstPtr_f8)
@@ -1713,6 +1727,34 @@ __device__ __forceinline__ void rpp_hip_math_multiply24_const(d_float24 *src_f24
     dst_f24->f4[3] = src_f24->f4[3] * multiplier_f4;
     dst_f24->f4[4] = src_f24->f4[4] * multiplier_f4;
     dst_f24->f4[5] = src_f24->f4[5] * multiplier_f4;
+}
+
+// d_float8 bitwiseAND
+
+__device__ __forceinline__ void rpp_hip_math_bitwiseAnd8(d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8)
+{
+        dst_f8->f1[0] = (float)((uchar)(src1_f8->f1[0]) & (uchar)(src2_f8->f1[0]));
+        dst_f8->f1[1] = (float)((uchar)(src1_f8->f1[1]) & (uchar)(src2_f8->f1[1]));
+        dst_f8->f1[2] = (float)((uchar)(src1_f8->f1[2]) & (uchar)(src2_f8->f1[2]));
+        dst_f8->f1[3] = (float)((uchar)(src1_f8->f1[3]) & (uchar)(src2_f8->f1[3]));
+        dst_f8->f1[4] = (float)((uchar)(src1_f8->f1[4]) & (uchar)(src2_f8->f1[4]));
+        dst_f8->f1[5] = (float)((uchar)(src1_f8->f1[5]) & (uchar)(src2_f8->f1[5]));
+        dst_f8->f1[6] = (float)((uchar)(src1_f8->f1[6]) & (uchar)(src2_f8->f1[6]));
+        dst_f8->f1[7] = (float)((uchar)(src1_f8->f1[7]) & (uchar)(src2_f8->f1[7]));
+}
+
+// d_float8 bitwiseOR
+
+__device__ __forceinline__ void rpp_hip_math_bitwiseOr8(d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8)
+{
+        dst_f8->f1[0] = (float)((uchar)(src1_f8->f1[0]) | (uchar)(src2_f8->f1[0]));
+        dst_f8->f1[1] = (float)((uchar)(src1_f8->f1[1]) | (uchar)(src2_f8->f1[1]));
+        dst_f8->f1[2] = (float)((uchar)(src1_f8->f1[2]) | (uchar)(src2_f8->f1[2]));
+        dst_f8->f1[3] = (float)((uchar)(src1_f8->f1[3]) | (uchar)(src2_f8->f1[3]));
+        dst_f8->f1[4] = (float)((uchar)(src1_f8->f1[4]) | (uchar)(src2_f8->f1[4]));
+        dst_f8->f1[5] = (float)((uchar)(src1_f8->f1[5]) | (uchar)(src2_f8->f1[5]));
+        dst_f8->f1[6] = (float)((uchar)(src1_f8->f1[6]) | (uchar)(src2_f8->f1[6]));
+        dst_f8->f1[7] = (float)((uchar)(src1_f8->f1[7]) | (uchar)(src2_f8->f1[7]));
 }
 
 __device__ __forceinline__ float rpp_hip_math_inverse_sqrt1(float x)
@@ -2499,6 +2541,58 @@ __device__ __forceinline__ void rpp_hip_interpolate24_nearest_neighbor_pkd3(T *s
     rpp_hip_interpolate3_nearest_neighbor_pkd3(srcPtr, srcStrideH, locPtrSrc_f16->f1[5], locPtrSrc_f16->f1[13], roiPtrSrc_i4, &(dst_f24->f3[5]));
     rpp_hip_interpolate3_nearest_neighbor_pkd3(srcPtr, srcStrideH, locPtrSrc_f16->f1[6], locPtrSrc_f16->f1[14], roiPtrSrc_i4, &(dst_f24->f3[6]));
     rpp_hip_interpolate3_nearest_neighbor_pkd3(srcPtr, srcStrideH, locPtrSrc_f16->f1[7], locPtrSrc_f16->f1[15], roiPtrSrc_i4, &(dst_f24->f3[7]));
+}
+
+// PKD3->PLN3 layout toggle kernel
+
+template <typename T>
+__global__ void convert_pkd3_pln3_hip_tensor(T *srcPtr,
+                                            uint2 srcStridesNH,
+                                            T *dstPtr,
+                                            uint3 dstStridesNCH,
+                                            RpptROIPtr roiTensorPtrSrc)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
+    {
+        return;
+    }
+
+    uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3;
+    uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
+
+    d_float24 dst_f24;
+    rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &dst_f24);
+    rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &dst_f24);
+}
+
+// PLN3->PKD3 layout toggle kernel
+
+template <typename T>
+__global__ void convert_pln3_pkd3_hip_tensor(T *srcPtr,
+                                             uint3 srcStridesNCH,
+                                             T *dstPtr,
+                                             uint2 dstStridesNH,
+                                             RpptROIPtr roiTensorPtrSrc)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
+    {
+        return;
+    }
+
+    uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
+
+    d_float24 dst_f24;
+    rpp_hip_load24_pln3_and_unpack_to_float24_pkd3(srcPtr + srcIdx, srcStridesNCH.y, &dst_f24);
+    rpp_hip_pack_float24_pkd3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
 }
 
 #endif // RPP_HIP_COMMON_H

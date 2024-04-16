@@ -65,7 +65,7 @@ int main(int argc, char **argv)
 
     bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23|| testCase == 24 || testCase == 40 || testCase == 41 || testCase == 49 || testCase == 54 || testCase == 79);
     bool kernelSizeCase = (testCase == 40 || testCase == 41 || testCase == 49 || testCase == 54);
-    bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 61 || testCase == 63);
+    bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 33 || testCase == 61 || testCase == 63 || testCase == 65 || testCase == 68);
     bool randomOutputCase = (testCase == 84 || testCase == 49 || testCase == 54);
     bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24 || testCase == 79);
     bool reductionTypeCase = (testCase == 87 || testCase == 88 || testCase == 89);
@@ -368,6 +368,17 @@ int main(int argc, char **argv)
         CHECK(hipMalloc(&d_distortionCoeffs, batchSize * 8 * sizeof(Rpp32f)));
     }
 
+    RpptROI *cropRoi, *patchRoi;
+    if(testCase == 33)
+    {
+        CHECK(hipHostMalloc(&cropRoi, batchSize * sizeof(RpptROI)));
+        CHECK(hipHostMalloc(&patchRoi, batchSize * sizeof(RpptROI)));
+    }
+    bool invalidROI = (roiList[0] == 0 && roiList[1] == 0 && roiList[2] == 0 && roiList[3] == 0);
+
+    Rpp32f *intensity;
+    if(testCase == 46)
+        CHECK(hipHostMalloc(&intensity, batchSize * sizeof(Rpp32f)));
 
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
@@ -413,7 +424,7 @@ int main(int argc, char **argv)
             CHECK(hipMemcpy(d_input_second, input_second, inputBufferSize, hipMemcpyHostToDevice));
 
         int roiHeightList[batchSize], roiWidthList[batchSize];
-        if(roiList[0] == 0 && roiList[1] == 0 && roiList[2] == 0 && roiList[3] == 0)
+        if(invalidROI)
         {
             for(int i = 0; i < batchSize ; i++)
             {
@@ -712,6 +723,25 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 33:
+                {
+                    testCaseName = "crop_and_patch";
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        cropRoi[i].xywhROI.xy.x = patchRoi[i].xywhROI.xy.x = roiList[0];
+                        cropRoi[i].xywhROI.xy.y = patchRoi[i].xywhROI.xy.y = roiList[1];
+                        cropRoi[i].xywhROI.roiWidth = patchRoi[i].xywhROI.roiWidth = roiWidthList[i];
+                        cropRoi[i].xywhROI.roiHeight = patchRoi[i].xywhROI.roiHeight = roiHeightList[i];
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_crop_and_patch_gpu(d_input, d_input_second, srcDescPtr, d_output, dstDescPtr, roiTensorPtrSrc, cropRoi, patchRoi, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 case 34:
                 {
                     testCaseName = "lut";
@@ -899,6 +929,21 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 46:
+                {
+                    testCaseName = "vignette";
+
+                    for (i = 0; i < batchSize; i++)
+                        intensity[i] = 6;
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_vignette_gpu(d_input, srcDescPtr, d_output, dstDescPtr, intensity, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 case 49:
                 {
                     testCaseName = "box_filter";
@@ -950,6 +995,30 @@ int main(int argc, char **argv)
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_phase_gpu(d_input, d_input_second, srcDescPtr, d_output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 65:
+                {
+                    testCaseName = "bitwise_and";
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_bitwise_and_gpu(d_input, d_input_second, srcDescPtr, d_output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 68:
+                {
+                    testCaseName = "bitwise_or";
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_bitwise_or_gpu(d_input, d_input_second, srcDescPtr, d_output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
@@ -1164,7 +1233,7 @@ int main(int argc, char **argv)
                 default:
                     missingFuncFlag = 1;
                     break;
-                }
+            }
 
             CHECK(hipDeviceSynchronize());
             endWallTime = omp_get_wtime();
@@ -1307,8 +1376,15 @@ int main(int argc, char **argv)
     CHECK(hipHostFree(roiTensorPtrSrc));
     CHECK(hipHostFree(roiTensorPtrDst));
     CHECK(hipHostFree(dstImgSizes));
+    if(testCase == 46)
+        CHECK(hipHostFree(intensity));
     if(testCase == 82)
         CHECK(hipHostFree(roiPtrInputCropRegion));
+    if(testCase == 33)
+    {
+        CHECK(hipHostFree(cropRoi));
+        CHECK(hipHostFree(patchRoi));
+    }
     if (reductionTypeCase)
         CHECK(hipHostFree(reductionFuncResultArr));
     free(input);
