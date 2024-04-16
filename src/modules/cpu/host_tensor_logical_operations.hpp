@@ -22,13 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef HOST_TENSOR_AUDIO_AUGMENTATIONS_HPP
-#define HOST_TENSOR_AUDIO_AUGMENTATIONS_HPP
+#ifndef HOST_TENSOR_LOGICAL_OPERATIONS_HPP
+#define HOST_TENSOR_LOGICAL_OPERATIONS_HPP
 
-#include "kernel/non_silent_region_detection.hpp"
-#include "kernel/to_decibels.hpp"
-#include "kernel/pre_emphasis_filter.hpp"
-#include "kernel/down_mixing.hpp"
-#include "kernel/resample.hpp"
+#include "kernel/bitwise_and.hpp"
+#include "kernel/bitwise_or.hpp"
 
-#endif // HOST_TENSOR_AUDIO_AUGMENTATIONS_HPP
+#endif // HOST_TENSOR_LOGICAL_OPERATIONS_HPP
