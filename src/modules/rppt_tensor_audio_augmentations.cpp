@@ -226,6 +226,13 @@ RppStatus rppt_mel_filter_bank_host(RppPtr_t srcPtr,
                                     sampleRate,
                                     normalize,
                                     rpp::deref(rppHandle));
+        return RPP_SUCCESS;
+    }
+    else
+    {
+        return RPP_ERROR_NOT_IMPLEMENTED;
+    }
+}
 
 /******************** resample ********************/
 
