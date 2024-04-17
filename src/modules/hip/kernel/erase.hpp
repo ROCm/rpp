@@ -26,7 +26,7 @@ __global__ void erase_pkd_hip_tensor(T *dstPtr,
         int temp = (id_z * numBoxes) + i;
         if (id_x >= anchorBoxInfoTensor[temp].lt.x && id_x <= anchorBoxInfoTensor[temp].rb.x && id_y >= anchorBoxInfoTensor[temp].lt.y && id_y <= anchorBoxInfoTensor[temp].rb.y)
         {
-            *(U *)(dstPtr + dstIdx) = (U)colorsTensor[temp];
+            *reinterpret_cast<U *>(dstPtr + dstIdx) = static_cast<U>(colorsTensor[temp]);
             break;
         }
     }
@@ -56,7 +56,7 @@ __global__ void erase_pln_hip_tensor(T *dstPtr,
         int temp = (id_z * numBoxes) + i;
         if (id_x >= anchorBoxInfoTensor[temp].lt.x && id_x <= anchorBoxInfoTensor[temp].rb.x && id_y >= anchorBoxInfoTensor[temp].lt.y && id_y <= anchorBoxInfoTensor[temp].rb.y)
         {
-            *(T *)(dstPtr + dstIdx) = colorsTensor[temp];
+            *static_cast<T *>((dstPtr + dstIdx)) = colorsTensor[temp];
             break;
         }
     }
@@ -87,11 +87,11 @@ __global__ void erase_pln3_hip_tensor(T *dstPtr,
         if (id_x >= anchorBoxInfoTensor[temp].lt.x && id_x <= anchorBoxInfoTensor[temp].rb.x && id_y >= anchorBoxInfoTensor[temp].lt.y && id_y <= anchorBoxInfoTensor[temp].rb.y)
         {
             temp *= 3;
-            *(T *)(dstPtr + dstIdx) = colorsTensor[temp];
+            *static_cast<T *>(dstPtr + dstIdx) = colorsTensor[temp];
             dstIdx += dstStridesNCH.y;
-            *(T *)(dstPtr + dstIdx) = colorsTensor[temp + 1];
+            *static_cast<T *>(dstPtr + dstIdx) = colorsTensor[temp + 1];
             dstIdx += dstStridesNCH.y;
-            *(T *)(dstPtr + dstIdx) = colorsTensor[temp + 2];
+            *static_cast<T *>(dstPtr + dstIdx) = colorsTensor[temp + 2];
             break;
         }
     }
@@ -124,64 +124,64 @@ RppStatus hip_exec_erase_tensor(T *srcPtr,
             hipMemcpyAsync(dstPtr, srcPtr, static_cast<size_t>(srcDescPtr->n * srcDescPtr->strides.nStride * sizeof(Rpp8u)), hipMemcpyDeviceToDevice, handle.GetStream());
             hipStreamSynchronize(handle.GetStream());
             hipLaunchKernelGGL(erase_pkd_hip_tensor,
-                            dim3(ceil((float)globalThreads_x / LOCAL_THREADS_X), ceil((float)globalThreads_y / LOCAL_THREADS_Y), ceil((float)globalThreads_z / LOCAL_THREADS_Z)),
-                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                            0,
-                            handle.GetStream(),
-                            dstPtr,
-                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                            anchorBoxInfoTensor,
-                            reinterpret_cast<uchar3*>(colorsTensor),
-                            numBoxesTensor,
-                            roiTensorPtrSrc);
+                               dim3(ceil((float)globalThreads_x / LOCAL_THREADS_X), ceil((float)globalThreads_y / LOCAL_THREADS_Y), ceil((float)globalThreads_z / LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               dstPtr,
+                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                               anchorBoxInfoTensor,
+                               reinterpret_cast<uchar3*>(colorsTensor),
+                               numBoxesTensor,
+                               roiTensorPtrSrc);
         }
         else if (srcDescPtr->dataType == RpptDataType::F16)
         {
             hipMemcpyAsync(dstPtr, srcPtr, static_cast<size_t>(srcDescPtr->n * srcDescPtr->strides.nStride * sizeof(Rpp16f)), hipMemcpyDeviceToDevice, handle.GetStream());
             hipStreamSynchronize(handle.GetStream());
             hipLaunchKernelGGL(erase_pkd_hip_tensor,
-                            dim3(ceil((float)globalThreads_x / LOCAL_THREADS_X), ceil((float)globalThreads_y / LOCAL_THREADS_Y), ceil((float)globalThreads_z / LOCAL_THREADS_Z)),
-                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                            0,
-                            handle.GetStream(),
-                            dstPtr,
-                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                            anchorBoxInfoTensor,
-                            reinterpret_cast<d_half3_s*>(colorsTensor),
-                            numBoxesTensor,
-                            roiTensorPtrSrc);
+                               dim3(ceil((float)globalThreads_x / LOCAL_THREADS_X), ceil((float)globalThreads_y / LOCAL_THREADS_Y), ceil((float)globalThreads_z / LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               dstPtr,
+                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                               anchorBoxInfoTensor,
+                               reinterpret_cast<d_half3_s*>(colorsTensor),
+                               numBoxesTensor,
+                               roiTensorPtrSrc);
         }
         else if (srcDescPtr->dataType == RpptDataType::F32)
         {
             hipMemcpyAsync(dstPtr, srcPtr, static_cast<size_t>(srcDescPtr->n * srcDescPtr->strides.nStride * sizeof(Rpp32f)), hipMemcpyDeviceToDevice, handle.GetStream());
             hipStreamSynchronize(handle.GetStream());
             hipLaunchKernelGGL(erase_pkd_hip_tensor,
-                            dim3(ceil((float)globalThreads_x / LOCAL_THREADS_X), ceil((float)globalThreads_y / LOCAL_THREADS_Y), ceil((float)globalThreads_z / LOCAL_THREADS_Z)),
-                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                            0,
-                            handle.GetStream(),
-                            dstPtr,
-                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                            anchorBoxInfoTensor,
-                            reinterpret_cast<float3*>(colorsTensor),
-                            numBoxesTensor,
-                            roiTensorPtrSrc);
+                               dim3(ceil((float)globalThreads_x / LOCAL_THREADS_X), ceil((float)globalThreads_y / LOCAL_THREADS_Y), ceil((float)globalThreads_z / LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               dstPtr,
+                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                               anchorBoxInfoTensor,
+                               reinterpret_cast<float3*>(colorsTensor),
+                               numBoxesTensor,
+                               roiTensorPtrSrc);
         }
         else if (srcDescPtr->dataType == RpptDataType::I8)
         {
             hipMemcpyAsync(dstPtr, srcPtr, static_cast<size_t>(srcDescPtr->n * srcDescPtr->strides.nStride * sizeof(Rpp8s)), hipMemcpyDeviceToDevice, handle.GetStream());
             hipStreamSynchronize(handle.GetStream());
             hipLaunchKernelGGL(erase_pkd_hip_tensor,
-                            dim3(ceil((float)globalThreads_x / LOCAL_THREADS_X), ceil((float)globalThreads_y / LOCAL_THREADS_Y), ceil((float)globalThreads_z / LOCAL_THREADS_Z)),
-                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                            0,
-                            handle.GetStream(),
-                            dstPtr,
-                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                            anchorBoxInfoTensor,
-                            reinterpret_cast<d_schar3_s*>(colorsTensor),
-                            numBoxesTensor,
-                            roiTensorPtrSrc);
+                               dim3(ceil((float)globalThreads_x / LOCAL_THREADS_X), ceil((float)globalThreads_y / LOCAL_THREADS_Y), ceil((float)globalThreads_z / LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               dstPtr,
+                               make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                               anchorBoxInfoTensor,
+                               reinterpret_cast<d_schar3_s*>(colorsTensor),
+                               numBoxesTensor,
+                               roiTensorPtrSrc);
         }
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW) && dstDescPtr->c == 1)

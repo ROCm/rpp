@@ -477,7 +477,7 @@ RppStatus rppt_vignette_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t ds
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
  * \param [in] anchorBoxInfoTensor anchorBoxInfo values of type RpptRoiLtrb for each erase-region inside each image in the batch. (0 <= anchorBoxInfo[i] < respective image width/height)
  * \param [in] colorsTensor RGB values to use for each erase-region inside each image in the batch. (colors[i] will have range equivalent of srcPtr)
- * \param [in] numBoxesTensor number of erase-regions per image, for each image in the batch. (num_of_boxes[n] >= 0)
+ * \param [in] numBoxesTensor number of erase-regions per image, for each image in the batch. (numBoxesTensor[n] >= 0)
  * \param [in] roiTensorSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
@@ -500,7 +500,7 @@ RppStatus rppt_erase_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstP
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
  * \param [in] anchorBoxInfoTensor anchorBoxInfo values of type RpptRoiLtrb for each erase-region inside each image in the batch. (0 <= anchorBoxInfo[i] < respective image width/height)
  * \param [in] colorsTensor RGB values to use for each erase-region inside each image in the batch. (colors[i] will have range equivalent of srcPtr)
- * \param [in] numBoxesTensor number of erase-regions per image, for each image in the batch. (num_of_boxes[n] >= 0)
+ * \param [in] numBoxesTensor number of erase-regions per image, for each image in the batch. (numBoxesTensor[n] >= 0)
  * \param [in] roiTensorSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
