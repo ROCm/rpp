@@ -66,7 +66,6 @@ int main(int argc, char **argv)
     srcDescPtr = &srcDesc;
     dstDescPtr = &dstDesc;
 
-
     // set src/dst data types in tensor descriptors
     srcDescPtr->dataType = RpptDataType::F32;
     dstDescPtr->dataType = RpptDataType::F32;
