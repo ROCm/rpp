@@ -171,7 +171,7 @@ RppStatus rppt_spectrogram_host(RppPtr_t srcPtr,
                                 Rpp32s windowStep,
                                 rppHandle_t rppHandle)
 {
-    if (dstDescPtr->layout != RpptLayout::NFT) return RPP_ERROR_INVALID_DST_LAYOUT;
+    if ((dstDescPtr->layout != RpptLayout::NFT) && (dstDescPtr->layout != RpptLayout::NTF)) return RPP_ERROR_INVALID_DST_LAYOUT;
 
     if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {

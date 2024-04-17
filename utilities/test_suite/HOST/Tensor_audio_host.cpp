@@ -66,9 +66,6 @@ int main(int argc, char **argv)
     srcDescPtr = &srcDesc;
     dstDescPtr = &dstDesc;
 
-    // Set src/dst layout types in tensor descriptors
-    set_audio_descriptor_layout(srcDescPtr, dstDescPtr);
-
 
     // set src/dst data types in tensor descriptors
     srcDescPtr->dataType = RpptDataType::F32;
@@ -242,6 +239,7 @@ int main(int argc, char **argv)
                     Rpp32s windowLength = 320;
                     Rpp32s windowStep = 160;
                     Rpp32s nfft = 512;
+                    dstDescPtr->layout = RpptLayout::NFT;
 
                     int windowOffset = 0;
                     if(!centerWindows)

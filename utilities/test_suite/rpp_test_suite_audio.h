@@ -54,14 +54,6 @@ std::map<string, std::vector<int>> NonSilentRegionReferenceOutputs =
     {"sample3", {0, 34160}}
 };
 
-// sets descriptor layout of src/dst
-inline void set_audio_descriptor_layout( RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr)
-{
-    // TODO: Add NTF and NHW layouts once implemented
-
-    srcDescPtr->layout = dstDescPtr->layout = RpptLayout::NFT;
-}
-
 // sets descriptor dimensions and strides of src/dst
 inline void set_audio_descriptor_dims_and_strides(RpptDescPtr descPtr, int batchSize, int maxHeight, int maxWidth, int maxChannels, int offsetInBytes)
 {
