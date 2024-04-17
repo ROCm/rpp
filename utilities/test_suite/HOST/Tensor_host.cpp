@@ -658,47 +658,20 @@ int main(int argc, char **argv)
                     Rpp32f colorBuffer[batchSize * boxesInEachImage];
                     RpptRoiLtrb anchorBoxInfoTensor[batchSize * boxesInEachImage];
                     Rpp32u numOfBoxes[batchSize];
+                    int idx;
 
                     Rpp8u *colors8u = reinterpret_cast<Rpp8u *>(colorBuffer);
                     Rpp16f *colors16f = reinterpret_cast<Rpp16f *>(colorBuffer);
                     Rpp32f *colors32f = colorBuffer;
                     Rpp8s *colors8s = reinterpret_cast<Rpp8s *>(colorBuffer);
 
+                    init_erase(batchSize, boxesInEachImage, numOfBoxes, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, colorBuffer);
+
                     for(int i = 0; i < batchSize; i++)
                     {
-                        numOfBoxes[i] = boxesInEachImage;
-                        int idx = boxesInEachImage * i;
-
-                        anchorBoxInfoTensor[idx].lt.x = 0.125 * roiTensorPtrSrc[i].xywhROI.roiWidth;
-                        anchorBoxInfoTensor[idx].lt.y = 0.125 * roiTensorPtrSrc[i].xywhROI.roiHeight;
-                        anchorBoxInfoTensor[idx].rb.x = 0.375 * roiTensorPtrSrc[i].xywhROI.roiWidth;
-                        anchorBoxInfoTensor[idx].rb.y = 0.375 * roiTensorPtrSrc[i].xywhROI.roiHeight;
-
-                        idx++;
-                        anchorBoxInfoTensor[idx].lt.x = 0.125 * roiTensorPtrSrc[i].xywhROI.roiWidth;
-                        anchorBoxInfoTensor[idx].lt.y = 0.625 * roiTensorPtrSrc[i].xywhROI.roiHeight;
-                        anchorBoxInfoTensor[idx].rb.x = 0.875 * roiTensorPtrSrc[i].xywhROI.roiWidth;
-                        anchorBoxInfoTensor[idx].rb.y = 0.875 * roiTensorPtrSrc[i].xywhROI.roiHeight;
-
-                        idx++;
-                        anchorBoxInfoTensor[idx].lt.x = 0.75 * roiTensorPtrSrc[i].xywhROI.roiWidth;
-                        anchorBoxInfoTensor[idx].lt.y = 0.125 * roiTensorPtrSrc[i].xywhROI.roiHeight;
-                        anchorBoxInfoTensor[idx].rb.x = 0.875 * roiTensorPtrSrc[i].xywhROI.roiWidth;
-                        anchorBoxInfoTensor[idx].rb.y = 0.5 * roiTensorPtrSrc[i].xywhROI.roiHeight;
-
                         if(srcDescPtr->c == 3)
                         {
-                            int idx = boxesInEachImage * 3 * i;
-                            colorBuffer[idx] = 0;
-                            colorBuffer[idx + 1] = 0;
-                            colorBuffer[idx + 2] = 240;
-                            colorBuffer[idx + 3] = 0;
-                            colorBuffer[idx + 4] = 240;
-                            colorBuffer[idx + 5] = 0;
-                            colorBuffer[idx + 6] = 240;
-                            colorBuffer[idx + 7] = 0;
-                            colorBuffer[idx + 8] = 0;
-
+                            idx = boxesInEachImage * 3 * i;
                             for (int j = 0; j < 9; j++)
                             {
                                 if (!inputBitDepth)
@@ -713,11 +686,7 @@ int main(int argc, char **argv)
                         }
                         else
                         {
-                            int idx = boxesInEachImage * i;
-                            colorBuffer[idx] = 240;
-                            colorBuffer[idx + 1] = 120;
-                            colorBuffer[idx + 2] = 60;
-
+                            idx = boxesInEachImage * i;
                             for (int j = 0; j < 3; j++)
                             {
                                 if (!inputBitDepth)
