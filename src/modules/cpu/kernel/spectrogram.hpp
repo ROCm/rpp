@@ -80,15 +80,12 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
                                   Rpp32s power,
                                   Rpp32s windowLength,
                                   Rpp32s windowStep,
-                                  RpptSpectrogramLayout layout,
                                   rpp::Handle& handle)
 {
     Rpp32s windowCenterOffset = 0;
-    bool vertical = (layout == RpptSpectrogramLayout::FT);
-    if (centerWindows)
-        windowCenterOffset = windowLength / 2;
-    if (nfft == 0)
-        nfft = windowLength;
+    bool vertical = (dstDescPtr->layout == RpptLayout::NFT);
+    if (centerWindows) windowCenterOffset = windowLength / 2;
+    if (nfft == 0) nfft = windowLength;
     const Rpp32s numBins = nfft / 2 + 1;
     const Rpp32f mulFactor = (2.0 * M_PI) / nfft;
     const Rpp32u hStride = dstDescPtr->strides.hStride;
@@ -210,21 +207,30 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
 
             ffts_execute(p, fftInBuf, fftOutBuf);
             auto *complexFft = reinterpret_cast<std::complex<Rpp32f> *>(fftOutBuf);
-            for (int i = 0; i < numBins; i++)
+            Rpp32s outIdx = w;
+            if (vertical)
             {
-                if (vertical)
+                if (power == 1)
                 {
-                    Rpp32s outIdx = (i * hStride + w);
-                    if (power == 1)
+                    for (int i = 0; i < numBins; i++, outIdx += hStride)
                         dstPtrTemp[outIdx] = std::abs(complexFft[i]);
-                    else
-                        dstPtrTemp[outIdx] = std::norm(complexFft[i]);
                 }
                 else
                 {
-                    if (power == 1)
+                    for (int i = 0; i < numBins; i++, outIdx += hStride)
+                        dstPtrTemp[outIdx] = std::norm(complexFft[i]);
+                }
+            }
+            else
+            {
+                if (power == 1)
+                {
+                    for (int i = 0; i < numBins; i++)
                         *dstPtrBinTemp++ = std::abs(complexFft[i]);
-                    else
+                }
+                else
+                {
+                    for (int i = 0; i < numBins; i++)
                         *dstPtrBinTemp++ = std::norm(complexFft[i]);
                 }
             }

@@ -311,7 +311,7 @@ typedef struct
     int y;
 } RppiPoint;
 
-/*! \brief RPPI Image 2D Rectangle (XYWH format) type struct
+/*! \brief RPPI Image 3D point type struct
  * \ingroup group_rppdefs
  */
 typedef struct
@@ -321,6 +321,9 @@ typedef struct
     int z;
 } RppiPoint3D;
 
+/*! \brief RPPI Image 2D Rectangle (XYWH format) type struct
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     int x;
@@ -358,10 +361,13 @@ typedef enum
  */
 typedef enum
 {
-    NCHW,
-    NHWC,
-    NCDHW,
-    NDHWC
+    NCHW,   // BatchSize-Channels-Height-Width
+    NHWC,   // BatchSize-Height-Width-Channels
+    NCDHW,  // BatchSize-Channels-Depth-Height-Width
+    NDHWC,  // BatchSize-Depth-Height-Width-Channels
+    NHW,    // BatchSize-Height-Width
+    NFT,    // BatchSize-Frequency-Time -> Frequency Major used for Spectrogram / MelfilterBank
+    NTF     // BatchSize-Time-Frequency -> Time Major used for Spectrogram / MelfilterBank
 } RpptLayout;
 
 /*! \brief RPPT Tensor 2D ROI type enum
@@ -373,7 +379,7 @@ typedef enum
     XYWH     // X-Y-Width-Height
 } RpptRoiType;
 
-/*! \brief RPPT Tensor subpixel layout type enum
+/*! \brief RPPT Tensor 3D ROI type enum
  * \ingroup group_rppdefs
  */
 typedef enum
@@ -382,6 +388,9 @@ typedef enum
     XYZWHD     // X-Y-Z-Width-Height-Depth
 } RpptRoi3DType;
 
+/*! \brief RPPT Tensor subpixel layout type enum
+ * \ingroup group_rppdefs
+ */
 typedef enum
 {
     RGBtype,
@@ -410,16 +419,6 @@ typedef enum
     CLAMP,
     REFLECT
 } RpptAudioBorderType;
-
-
-/*! \brief RPPT Spectrogram Layout enum
- * \ingroup group_rppdefs
- */
-typedef enum
-{
-    FT = 0,  //Frequency Major
-    TF,      //Time Major
-} RpptSpectrogramLayout;
 
 /*! \brief RPPT Mel Scale Formula
  * \ingroup group_rppdefs
@@ -512,7 +511,7 @@ typedef struct
     RpptLayout layout;
 } RpptDesc, *RpptDescPtr;
 
-/*! \brief RPPT Tensor 8-bit uchar RGB type struct
+/*! \brief RPPT Tensor Generic descriptor type struct
  * \ingroup group_rppdefs
  */
 typedef struct
@@ -525,6 +524,9 @@ typedef struct
     RpptLayout layout;
 } RpptGenericDesc, *RpptGenericDescPtr;
 
+/*! \brief RPPT Tensor 8-bit uchar RGB type struct
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     Rpp8u R;
