@@ -333,7 +333,6 @@ int main(int argc, char **argv)
             reductionFuncResultArr = static_cast<Rpp32f *>(calloc(reductionFuncResultArrLength, bitDepthByteSize));
         }
     }
-    bool invalidROI = (roiList[0] == 0 && roiList[1] == 0 && roiList[2] == 0 && roiList[3] == 0);
 
     RpptROI *cropRoi, *patchRoi;
     if(testCase == 33)
@@ -828,27 +827,6 @@ int main(int argc, char **argv)
                     startCpuTime = clock();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_color_twist_host(input, srcDescPtr, output, dstDescPtr, brightness, contrast, hue, saturation, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else
-                        missingFuncFlag = 1;
-
-                    break;
-                }
-                case 33:
-                {
-                    testCaseName = "crop_and_patch";
-
-                    for (i = 0; i < batchSize; i++)
-                    {
-                        cropRoi[i].xywhROI.xy.x = patchRoi[i].xywhROI.xy.x = roiList[0];
-                        cropRoi[i].xywhROI.xy.y = patchRoi[i].xywhROI.xy.y = roiList[1];
-                        cropRoi[i].xywhROI.roiWidth = patchRoi[i].xywhROI.roiWidth = roiWidthList[i];
-                        cropRoi[i].xywhROI.roiHeight = patchRoi[i].xywhROI.roiHeight = roiHeightList[i];
-                    }
-
-                    startWallTime = omp_get_wtime();
-                    startCpuTime = clock();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_crop_and_patch_host(input, input_second, srcDescPtr, output, dstDescPtr, roiTensorPtrDst, cropRoi, patchRoi, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 

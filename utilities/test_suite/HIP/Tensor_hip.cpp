@@ -1001,6 +1001,7 @@ int main(int argc, char **argv)
                     {
                         stdDevTensor[i] = 5.0f;
                     }
+
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_gaussian_filter_gpu(d_input, srcDescPtr, d_output, dstDescPtr, stdDevTensor, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
