@@ -66,9 +66,6 @@ int main(int argc, char **argv)
     srcDescPtr = &srcDesc;
     dstDescPtr = &dstDesc;
 
-    // Set src/dst layout types in tensor descriptors
-    set_audio_descriptor_layout(srcDescPtr, dstDescPtr);
-
 
     // set src/dst data types in tensor descriptors
     srcDescPtr->dataType = RpptDataType::F32;
@@ -229,6 +226,7 @@ int main(int argc, char **argv)
                     Rpp32s windowLength = 320;
                     Rpp32s windowStep = 160;
                     Rpp32s nfft = 512;
+                    dstDescPtr->layout = RpptLayout::NFT;
 
                     int windowOffset = 0;
                     if(!centerWindows)
@@ -270,7 +268,6 @@ int main(int argc, char **argv)
                 }
                 case 5:
                 {
-                    // Accepts outputs from FT layout of Spectrogram for QA
                     testCaseName = "mel_filter_bank";
 
                     Rpp32f sampleRate = 16000;
@@ -280,6 +277,8 @@ int main(int argc, char **argv)
                     Rpp32s numFilter = 80;
                     bool normalize = true;
                     Rpp32s srcDimsTensor[] = {257, 225, 257, 211, 257, 214}; // (height, width) for each tensor in a batch for given QA inputs.
+                    // Accepts outputs from FT layout of Spectrogram for QA
+                    srcDescPtr->layout = dstDescPtr->layout = RpptLayout::NFT;
 
                     maxDstHeight = 0;
                     maxDstWidth = 0;

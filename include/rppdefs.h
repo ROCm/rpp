@@ -365,7 +365,7 @@ typedef enum
     NHWC,   // BatchSize-Height-Width-Channels
     NCDHW,  // BatchSize-Channels-Depth-Height-Width
     NDHWC,  // BatchSize-Depth-Height-Width-Channels
-    NHW,    // BatchSize-Height-Width -> Used for Audio Kernels except Spectrogram / MelfilterBank
+    NHW,    // BatchSize-Height-Width
     NFT,    // BatchSize-Frequency-Time -> Frequency Major used for Spectrogram / MelfilterBank
     NTF     // BatchSize-Time-Frequency -> Time Major used for Spectrogram / MelfilterBank
 } RpptLayout;
