@@ -81,6 +81,7 @@ std::map<int, string> augmentationMap =
     {29, "water"},
     {30, "non_linear_blend"},
     {31, "color_cast"},
+    {32, "erase"},
     {33, "crop_and_patch"},
     {34, "lut"},
     {36, "color_twist"},
@@ -1295,4 +1296,52 @@ void inline init_ricap(int width, int height, int batchSize, Rpp32u *permutation
     roiPtrInputCropRegion[1].xywhROI = {randrange(0, part0Width - 8), randrange(0, height - part0Height), width - part0Width, part0Height};
     roiPtrInputCropRegion[2].xywhROI = {randrange(0, width - part0Width - 8), randrange(0, part0Height), part0Width, height - part0Height};
     roiPtrInputCropRegion[3].xywhROI = {randrange(0, part0Width - 8), randrange(0, part0Height), width - part0Width, height - part0Height};
+}
+
+// Erase Region initializer for unit and performance testing
+void inline init_erase(int batchSize, int boxesInEachImage, Rpp32u* numOfBoxes, RpptRoiLtrb* anchorBoxInfoTensor, RpptROIPtr roiTensorPtrSrc, int channels, Rpp32f* colorBuffer)
+{
+    for(int i = 0; i < batchSize; i++)
+    {
+        numOfBoxes[i] = boxesInEachImage;
+        int idx = boxesInEachImage * i;
+
+        anchorBoxInfoTensor[idx].lt.x = 0.125 * roiTensorPtrSrc[i].xywhROI.roiWidth;
+        anchorBoxInfoTensor[idx].lt.y = 0.125 * roiTensorPtrSrc[i].xywhROI.roiHeight;
+        anchorBoxInfoTensor[idx].rb.x = 0.375 * roiTensorPtrSrc[i].xywhROI.roiWidth;
+        anchorBoxInfoTensor[idx].rb.y = 0.375 * roiTensorPtrSrc[i].xywhROI.roiHeight;
+
+        idx++;
+        anchorBoxInfoTensor[idx].lt.x = 0.125 * roiTensorPtrSrc[i].xywhROI.roiWidth;
+        anchorBoxInfoTensor[idx].lt.y = 0.625 * roiTensorPtrSrc[i].xywhROI.roiHeight;
+        anchorBoxInfoTensor[idx].rb.x = 0.875 * roiTensorPtrSrc[i].xywhROI.roiWidth;
+        anchorBoxInfoTensor[idx].rb.y = 0.875 * roiTensorPtrSrc[i].xywhROI.roiHeight;
+
+        idx++;
+        anchorBoxInfoTensor[idx].lt.x = 0.75 * roiTensorPtrSrc[i].xywhROI.roiWidth;
+        anchorBoxInfoTensor[idx].lt.y = 0.125 * roiTensorPtrSrc[i].xywhROI.roiHeight;
+        anchorBoxInfoTensor[idx].rb.x = 0.875 * roiTensorPtrSrc[i].xywhROI.roiWidth;
+        anchorBoxInfoTensor[idx].rb.y = 0.5 * roiTensorPtrSrc[i].xywhROI.roiHeight;
+
+        if(channels == 3)
+        {
+            int idx = boxesInEachImage * 3 * i;
+            colorBuffer[idx] = 0;
+            colorBuffer[idx + 1] = 0;
+            colorBuffer[idx + 2] = 240;
+            colorBuffer[idx + 3] = 0;
+            colorBuffer[idx + 4] = 240;
+            colorBuffer[idx + 5] = 0;
+            colorBuffer[idx + 6] = 240;
+            colorBuffer[idx + 7] = 0;
+            colorBuffer[idx + 8] = 0;
+        }
+        else
+        {
+            int idx = boxesInEachImage * i;
+            colorBuffer[idx] = 240;
+            colorBuffer[idx + 1] = 120;
+            colorBuffer[idx + 2] = 60;
+        }
+    }
 }

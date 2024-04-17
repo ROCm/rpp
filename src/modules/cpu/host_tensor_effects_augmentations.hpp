@@ -34,5 +34,6 @@ SOFTWARE.
 #include "kernel/water.hpp"
 #include "kernel/ricap.hpp"
 #include "kernel/vignette.hpp"
+#include "kernel/erase.hpp"
 
 #endif // HOST_TENSOR_EFFECTS_AUGMENTATIONS_HPP
