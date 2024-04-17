@@ -361,10 +361,13 @@ typedef enum
  */
 typedef enum
 {
-    NCHW,
-    NHWC,
-    NCDHW,
-    NDHWC
+    NCHW,   // BatchSize-Channels-Height-Width
+    NHWC,   // BatchSize-Height-Width-Channels
+    NCDHW,  // BatchSize-Channels-Depth-Height-Width
+    NDHWC,  // BatchSize-Depth-Height-Width-Channels
+    NHW,    // BatchSize-Height-Width -> Used for Audio Kernels except Spectrogram / MelfilterBank
+    NFT,    // BatchSize-Frequency-Time -> Frequency Major used for Spectrogram / MelfilterBank
+    NTF     // BatchSize-Time-Frequency -> Time Major used for Spectrogram / MelfilterBank
 } RpptLayout;
 
 /*! \brief RPPT Tensor 2D ROI type enum
@@ -416,16 +419,6 @@ typedef enum
     CLAMP,
     REFLECT
 } RpptAudioBorderType;
-
-
-/*! \brief RPPT Spectrogram Layout enum
- * \ingroup group_rppdefs
- */
-typedef enum
-{
-    FT = 0,  //Frequency Major
-    TF,      //Time Major
-} RpptSpectrogramLayout;
 
 /*! \brief RPPT Mel Scale Formula
  * \ingroup group_rppdefs
