@@ -66,6 +66,10 @@ int main(int argc, char **argv)
     srcDescPtr = &srcDesc;
     dstDescPtr = &dstDesc;
 
+    // Set src/dst layout types in tensor descriptors
+    set_audio_descriptor_layout(srcDescPtr, dstDescPtr);
+
+
     // set src/dst data types in tensor descriptors
     srcDescPtr->dataType = RpptDataType::F32;
     dstDescPtr->dataType = RpptDataType::F32;
@@ -238,7 +242,6 @@ int main(int argc, char **argv)
                     Rpp32s windowLength = 320;
                     Rpp32s windowStep = 160;
                     Rpp32s nfft = 512;
-                    RpptSpectrogramLayout layout = RpptSpectrogramLayout::FT;
 
                     int windowOffset = 0;
                     if(!centerWindows)
@@ -246,7 +249,7 @@ int main(int argc, char **argv)
 
                     maxDstWidth = 0;
                     maxDstHeight = 0;
-                    if(layout == RpptSpectrogramLayout::FT)
+                    if(dstDescPtr->layout == RpptLayout::NFT)
                     {
                         for(int i = 0; i < noOfAudioFiles; i++)
                         {
@@ -274,7 +277,7 @@ int main(int argc, char **argv)
                     outputf32 = (Rpp32f *)realloc(outputf32, spectrogramBufferSize * sizeof(Rpp32f));
 
                     startWallTime = omp_get_wtime();
-                    rppt_spectrogram_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcLengthTensor, centerWindows, reflectPadding, windowFn, nfft, power, windowLength, windowStep, layout, handle);
+                    rppt_spectrogram_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcLengthTensor, centerWindows, reflectPadding, windowFn, nfft, power, windowLength, windowStep, handle);
 
                     break;
                 }
