@@ -26,9 +26,7 @@ __global__ void tensor_stddev_grid_result_hip(T *inputSrcPtr,
     partialVar_smem[hipThreadIdx_x] = 0.0f;                         // initialization of _smem to 0 using all 1024 x 1 threads
 
     if (id_x >= xBufferLength)
-    {
         return;
-    }
 
     int xAlignedLength = xBufferLength & ~7;                        // alignedLength for vectorized global loads
     int xDiff = xBufferLength - xAlignedLength;                     // difference between bufferLength and alignedLength
@@ -82,9 +80,7 @@ __global__ void tensor_stddev_grid_3channel_result_hip(T *inputSrcPtr,
     partialBVar_smem[hipThreadIdx_x] = 0.0f;
 
     if (id_x >= xBufferLength)
-    {
         return;
-    }
 
     int xAlignedLength = xBufferLength & ~7;                                     // alignedLength for vectorized global loads
     int xDiff = xBufferLength - xAlignedLength;                                  // difference between bufferLength and alignedLength
@@ -169,9 +165,7 @@ __global__ void tensor_var_pln1_hip(T *srcPtr,
     partialVarRowPtr_smem[hipThreadIdx_x] = 0.0f;                          // initialization of _smem to 0 using all 16 x 16 threads
 
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
-    {
         return;
-    }
 
     int xAlignedLength = roiTensorPtrSrc[id_z].xywhROI.roiWidth & ~7;       // alignedLength for vectorized global loads
     int xDiff = roiTensorPtrSrc[id_z].xywhROI.roiWidth - xAlignedLength;    // difference between roiWidth and alignedLength
@@ -245,47 +239,45 @@ __global__ void channel_var_pln3_hip(T *srcPtr,
     float4 meanB_f4 = (float4)mean[index + 2];
 
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
-    {
         return;
-    }
 
     int xAlignedLength = roiTensorPtrSrc[id_z].xywhROI.roiWidth & ~7;                           // alignedLength for vectorized global loads
     int xDiff = roiTensorPtrSrc[id_z].xywhROI.roiWidth - xAlignedLength;                        // difference between roiWidth and alignedLength
     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
 
-    d_float24 src_f24, tempCh_f24, tempChSq_f24;
+    d_float24 src_f24, tempChannel_f24, tempChannelSquared_f24;
     rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &src_f24); // load 24 pixels to local memory
-    rpp_hip_math_subtract8_const(&src_f24.f8[0], &tempCh_f24.f8[0], meanR_f4);                  // subtract mean from each pixel
-    rpp_hip_math_multiply8(&tempCh_f24.f8[0], &tempCh_f24.f8[0], &tempChSq_f24.f8[0]);          // square the temporary value
-    rpp_hip_math_subtract8_const(&src_f24.f8[1], &tempCh_f24.f8[1], meanG_f4);
-    rpp_hip_math_multiply8(&tempCh_f24.f8[1], &tempCh_f24.f8[1], &tempChSq_f24.f8[1]);
-    rpp_hip_math_subtract8_const(&src_f24.f8[2], &tempCh_f24.f8[2], meanB_f4);
-    rpp_hip_math_multiply8(&tempCh_f24.f8[2], &tempCh_f24.f8[2], &tempChSq_f24.f8[2]);
+    rpp_hip_math_subtract8_const(&src_f24.f8[0], &tempChannel_f24.f8[0], meanR_f4);                  // subtract mean from each pixel
+    rpp_hip_math_multiply8(&tempChannel_f24.f8[0], &tempChannel_f24.f8[0], &tempChannelSquared_f24.f8[0]);          // square the temporary value
+    rpp_hip_math_subtract8_const(&src_f24.f8[1], &tempChannel_f24.f8[1], meanG_f4);
+    rpp_hip_math_multiply8(&tempChannel_f24.f8[1], &tempChannel_f24.f8[1], &tempChannelSquared_f24.f8[1]);
+    rpp_hip_math_subtract8_const(&src_f24.f8[2], &tempChannel_f24.f8[2], meanB_f4);
+    rpp_hip_math_multiply8(&tempChannel_f24.f8[2], &tempChannel_f24.f8[2], &tempChannelSquared_f24.f8[2]);
 
     if (id_x + 8 > roiTensorPtrSrc[id_z].xywhROI.roiWidth)                                      // local memory reset of invalid values (from the vectorized global load) to 0.0f
     {
         for(int i = xDiff; i < 8; i++)
         {
-            tempChSq_f24.f8[0].f1[i] = 0.0f;
-            tempChSq_f24.f8[1].f1[i] = 0.0f;
-            tempChSq_f24.f8[2].f1[i] = 0.0f;
+            tempChannelSquared_f24.f8[0].f1[i] = 0.0f;
+            tempChannelSquared_f24.f8[1].f1[i] = 0.0f;
+            tempChannelSquared_f24.f8[2].f1[i] = 0.0f;
         }
     }
-    tempChSq_f24.f8[0].f4[0] += tempChSq_f24.f8[0].f4[1];                                       // perform small work of vectorized float4 addition
-    tempChSq_f24.f8[1].f4[0] += tempChSq_f24.f8[1].f4[1];
-    tempChSq_f24.f8[2].f4[0] += tempChSq_f24.f8[2].f4[1];
-    partialRVarRowPtr_smem[hipThreadIdx_x] = (tempChSq_f24.f8[0].f1[0] +
-                                              tempChSq_f24.f8[0].f1[1] +
-                                              tempChSq_f24.f8[0].f1[2] +
-                                              tempChSq_f24.f8[0].f1[3]);                        // perform small work of reducing R float4s to float using 16 x 16 threads and store in _smem
-    partialGVarRowPtr_smem[hipThreadIdx_x] = (tempChSq_f24.f8[1].f1[0] +
-                                              tempChSq_f24.f8[1].f1[1] +
-                                              tempChSq_f24.f8[1].f1[2] +
-                                              tempChSq_f24.f8[1].f1[3]);                        // perform small work of reducing G float4s to float using 16 x 16 threads and store in _smem
-    partialBVarRowPtr_smem[hipThreadIdx_x] = (tempChSq_f24.f8[2].f1[0] +
-                                              tempChSq_f24.f8[2].f1[1] +
-                                              tempChSq_f24.f8[2].f1[2] +
-                                              tempChSq_f24.f8[2].f1[3]);                        // perform small work of reducing B float4s to float using 16 x 16 threads and store in _smem
+    tempChannelSquared_f24.f8[0].f4[0] += tempChannelSquared_f24.f8[0].f4[1];                                       // perform small work of vectorized float4 addition
+    tempChannelSquared_f24.f8[1].f4[0] += tempChannelSquared_f24.f8[1].f4[1];
+    tempChannelSquared_f24.f8[2].f4[0] += tempChannelSquared_f24.f8[2].f4[1];
+    partialRVarRowPtr_smem[hipThreadIdx_x] = (tempChannelSquared_f24.f8[0].f1[0] +
+                                              tempChannelSquared_f24.f8[0].f1[1] +
+                                              tempChannelSquared_f24.f8[0].f1[2] +
+                                              tempChannelSquared_f24.f8[0].f1[3]);                        // perform small work of reducing R float4s to float using 16 x 16 threads and store in _smem
+    partialGVarRowPtr_smem[hipThreadIdx_x] = (tempChannelSquared_f24.f8[1].f1[0] +
+                                              tempChannelSquared_f24.f8[1].f1[1] +
+                                              tempChannelSquared_f24.f8[1].f1[2] +
+                                              tempChannelSquared_f24.f8[1].f1[3]);                        // perform small work of reducing G float4s to float using 16 x 16 threads and store in _smem
+    partialBVarRowPtr_smem[hipThreadIdx_x] = (tempChannelSquared_f24.f8[2].f1[0] +
+                                              tempChannelSquared_f24.f8[2].f1[1] +
+                                              tempChannelSquared_f24.f8[2].f1[2] +
+                                              tempChannelSquared_f24.f8[2].f1[3]);                        // perform small work of reducing B float4s to float using 16 x 16 threads and store in _smem
 
     __syncthreads();                                                                            // syncthreads after _smem load
 
@@ -353,9 +345,7 @@ __global__ void tensor_var_pln3_hip(T *srcPtr,
     float4 meanImage_f4 = (float4)mean[index];
 
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
-    {
         return;
-    }
 
     int xAlignedLength = roiTensorPtrSrc[id_z].xywhROI.roiWidth & ~7;                           // alignedLength for vectorized global loads
     int xDiff = roiTensorPtrSrc[id_z].xywhROI.roiWidth - xAlignedLength;                        // difference between roiWidth and alignedLength
@@ -458,47 +448,45 @@ __global__ void channel_var_pkd3_hip(T *srcPtr,
     float4 meanB_f4 = (float4)mean[index + 2];
 
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
-    {
         return;
-    }
 
     int xAlignedLength = roiTensorPtrSrc[id_z].xywhROI.roiWidth & ~7;                  // alignedLength for vectorized global loads
     int xDiff = roiTensorPtrSrc[id_z].xywhROI.roiWidth - xAlignedLength;               // difference between roiWidth and alignedLength
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
 
-    d_float24 src_f24, tempCh_f24, tempChSq_f24;
+    d_float24 src_f24, tempChannel_f24, tempChannelSquared_f24;
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &src_f24);         // load 24 pixels to local memory
-    rpp_hip_math_subtract8_const(&src_f24.f8[0], &tempCh_f24.f8[0], meanR_f4);         // subtract mean from each pixel
-    rpp_hip_math_multiply8(&tempCh_f24.f8[0], &tempCh_f24.f8[0], &tempChSq_f24.f8[0]); // square the temporary value
-    rpp_hip_math_subtract8_const(&src_f24.f8[1], &tempCh_f24.f8[1], meanG_f4);
-    rpp_hip_math_multiply8(&tempCh_f24.f8[1], &tempCh_f24.f8[1], &tempChSq_f24.f8[1]);
-    rpp_hip_math_subtract8_const(&src_f24.f8[2], &tempCh_f24.f8[2], meanB_f4);
-    rpp_hip_math_multiply8(&tempCh_f24.f8[2], &tempCh_f24.f8[2], &tempChSq_f24.f8[2]);
+    rpp_hip_math_subtract8_const(&src_f24.f8[0], &tempChannel_f24.f8[0], meanR_f4);         // subtract mean from each pixel
+    rpp_hip_math_multiply8(&tempChannel_f24.f8[0], &tempChannel_f24.f8[0], &tempChannelSquared_f24.f8[0]); // square the temporary value
+    rpp_hip_math_subtract8_const(&src_f24.f8[1], &tempChannel_f24.f8[1], meanG_f4);
+    rpp_hip_math_multiply8(&tempChannel_f24.f8[1], &tempChannel_f24.f8[1], &tempChannelSquared_f24.f8[1]);
+    rpp_hip_math_subtract8_const(&src_f24.f8[2], &tempChannel_f24.f8[2], meanB_f4);
+    rpp_hip_math_multiply8(&tempChannel_f24.f8[2], &tempChannel_f24.f8[2], &tempChannelSquared_f24.f8[2]);
 
     if (id_x + 8 > roiTensorPtrSrc[id_z].xywhROI.roiWidth)                             // local memory reset of invalid values (from the vectorized global load) to 0.0f
     {
         for(int i = xDiff; i < 8; i++)
         {
-            tempChSq_f24.f8[0].f1[i] = 0.0f;
-            tempChSq_f24.f8[1].f1[i] = 0.0f;
-            tempChSq_f24.f8[2].f1[i] = 0.0f;
+            tempChannelSquared_f24.f8[0].f1[i] = 0.0f;
+            tempChannelSquared_f24.f8[1].f1[i] = 0.0f;
+            tempChannelSquared_f24.f8[2].f1[i] = 0.0f;
         }
     }
-    tempChSq_f24.f8[0].f4[0] += tempChSq_f24.f8[0].f4[1];                              // perform small work of vectorized float4 addition
-    tempChSq_f24.f8[1].f4[0] += tempChSq_f24.f8[1].f4[1];
-    tempChSq_f24.f8[2].f4[0] += tempChSq_f24.f8[2].f4[1];
-    partialRVarRowPtr_smem[hipThreadIdx_x] = (tempChSq_f24.f8[0].f1[0] +
-                                              tempChSq_f24.f8[0].f1[1] +
-                                              tempChSq_f24.f8[0].f1[2] +
-                                              tempChSq_f24.f8[0].f1[3]);               // perform small work of reducing R float4s to float using 16 x 16 threads and store in _smem
-    partialGVarRowPtr_smem[hipThreadIdx_x] = (tempChSq_f24.f8[1].f1[0] +
-                                              tempChSq_f24.f8[1].f1[1] +
-                                              tempChSq_f24.f8[1].f1[2] +
-                                              tempChSq_f24.f8[1].f1[3]);               // perform small work of reducing G float4s to float using 16 x 16 threads and store in _smem
-    partialBVarRowPtr_smem[hipThreadIdx_x] = (tempChSq_f24.f8[2].f1[0] +
-                                              tempChSq_f24.f8[2].f1[1] +
-                                              tempChSq_f24.f8[2].f1[2] +
-                                              tempChSq_f24.f8[2].f1[3]);               // perform small work of reducing B float4s to float using 16 x 16 threads and store in _smem
+    tempChannelSquared_f24.f8[0].f4[0] += tempChannelSquared_f24.f8[0].f4[1];                              // perform small work of vectorized float4 addition
+    tempChannelSquared_f24.f8[1].f4[0] += tempChannelSquared_f24.f8[1].f4[1];
+    tempChannelSquared_f24.f8[2].f4[0] += tempChannelSquared_f24.f8[2].f4[1];
+    partialRVarRowPtr_smem[hipThreadIdx_x] = (tempChannelSquared_f24.f8[0].f1[0] +
+                                              tempChannelSquared_f24.f8[0].f1[1] +
+                                              tempChannelSquared_f24.f8[0].f1[2] +
+                                              tempChannelSquared_f24.f8[0].f1[3]);               // perform small work of reducing R float4s to float using 16 x 16 threads and store in _smem
+    partialGVarRowPtr_smem[hipThreadIdx_x] = (tempChannelSquared_f24.f8[1].f1[0] +
+                                              tempChannelSquared_f24.f8[1].f1[1] +
+                                              tempChannelSquared_f24.f8[1].f1[2] +
+                                              tempChannelSquared_f24.f8[1].f1[3]);               // perform small work of reducing G float4s to float using 16 x 16 threads and store in _smem
+    partialBVarRowPtr_smem[hipThreadIdx_x] = (tempChannelSquared_f24.f8[2].f1[0] +
+                                              tempChannelSquared_f24.f8[2].f1[1] +
+                                              tempChannelSquared_f24.f8[2].f1[2] +
+                                              tempChannelSquared_f24.f8[2].f1[3]);               // perform small work of reducing B float4s to float using 16 x 16 threads and store in _smem
 
     __syncthreads();                                                                   // syncthreads after _smem load
 
@@ -566,9 +554,7 @@ __global__ void tensor_var_pkd3_hip(T *srcPtr,
     float4 meanImage_f4 = (float4)mean[index];
 
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
-    {
         return;
-    }
 
     int xAlignedLength = roiTensorPtrSrc[id_z].xywhROI.roiWidth & ~7;                           // alignedLength for vectorized global loads
     int xDiff = roiTensorPtrSrc[id_z].xywhROI.roiWidth - xAlignedLength;                        // difference between roiWidth and alignedLength

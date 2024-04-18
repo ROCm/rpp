@@ -33,26 +33,24 @@ RppStatus tensor_stddev_u8_f32_host(Rpp8u *srcPtr,
                                     Rpp32f *meanTensor,
                                     RpptROIPtr roiTensorPtrSrc,
                                     RpptRoiType roiType,
-                                    RppLayoutParams layoutParams)
+                                    RppLayoutParams layoutParams,
+                                    rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(srcDescPtr->n)
+#pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
     {
         RpptROI roi;
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
-        Rpp8u *srcPtrImage;
-        srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
+        Rpp8u *srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
+        Rpp8u *srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
 
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
-
-        Rpp8u *srcPtrChannel;
-        srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
-
         Rpp32u alignedLength = (bufferLength / 24) * 24;
         Rpp32u vectorIncrement = 24;
         Rpp32u vectorIncrementPerChannel = 8;
@@ -85,14 +83,14 @@ RppStatus tensor_stddev_u8_f32_host(Rpp8u *srcPtr,
                 {
                     __m256d p1[2];
                     rpp_simd_load(rpp_load8_u8_to_f64_avx, srcPtrTemp, p1);
-                    compute_var_8_host(p1, &pMean, &pVar);
+                    compute_variance_8_host(p1, &pMean, &pVar);
 
                     srcPtrTemp += vectorIncrementPerChannel;
                 }
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    var += (mean - (Rpp64f)(*srcPtrTemp)) * (mean - (Rpp64f)(*srcPtrTemp));
+                    var += (mean - static_cast<Rpp64f>(*srcPtrTemp)) * (mean - static_cast<Rpp64f>(*srcPtrTemp));
                     srcPtrTemp++;
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
@@ -102,7 +100,7 @@ RppStatus tensor_stddev_u8_f32_host(Rpp8u *srcPtr,
             var += (varAvx[0] + varAvx[1] + varAvx[2] + varAvx[3]);
 #endif
             stddev = sqrt(var / totalPixelsPerChannel);
-            tensorStddevArr[batchCount] = (Rpp32f)stddev;
+            tensorStddevArr[batchCount] = static_cast<Rpp32f>(stddev);
         }
 
         // Tensor Stddev without fused output-layout toggle 3 channel (NCHW)
@@ -150,7 +148,7 @@ RppStatus tensor_stddev_u8_f32_host(Rpp8u *srcPtr,
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_u8pln3_to_f64pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);
                     compute_varchannel_24_host(p, &pMeanR, &pMeanG, &pMeanB, &pVarR, &pVarG, &pVarB);
-                    compute_varRGB_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
+                    compute_varpln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
                     srcPtrTempB += vectorIncrementPerChannel;
@@ -158,9 +156,9 @@ RppStatus tensor_stddev_u8_f32_host(Rpp8u *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    Rpp64f srcPtrR = (Rpp64f)(*srcPtrTempR);
-                    Rpp64f srcPtrG = (Rpp64f)(*srcPtrTempG);
-                    Rpp64f srcPtrB = (Rpp64f)(*srcPtrTempB);
+                    Rpp64f srcPtrR = static_cast<Rpp64f>(*srcPtrTempR);
+                    Rpp64f srcPtrG = static_cast<Rpp64f>(*srcPtrTempG);
+                    Rpp64f srcPtrB = static_cast<Rpp64f>(*srcPtrTempB);
                     varR += (meanR - srcPtrR) * (meanR - srcPtrR);
                     varG += (meanG - srcPtrG) * (meanG - srcPtrG);
                     varB += (meanB - srcPtrB) * (meanB - srcPtrB);
@@ -191,10 +189,10 @@ RppStatus tensor_stddev_u8_f32_host(Rpp8u *srcPtr,
             varImageB += (varAvxImageB[0] + varAvxImageB[1] + varAvxImageB[2] + varAvxImageB[3]);
 #endif
             varImage = varImageR + varImageG + varImageB;
-            stddevImage = (Rpp32f)sqrt(varImage / (totalPixelsPerChannel * 3));
-            stddevR     = (Rpp32f)sqrt(varR / totalPixelsPerChannel);
-            stddevG     = (Rpp32f)sqrt(varG / totalPixelsPerChannel);
-            stddevB     = (Rpp32f)sqrt(varB / totalPixelsPerChannel);
+            stddevImage = static_cast<Rpp32f>(sqrt(varImage / (totalPixelsPerChannel * 3)));
+            stddevR     = static_cast<Rpp32f>(sqrt(varR / totalPixelsPerChannel));
+            stddevG     = static_cast<Rpp32f>(sqrt(varG / totalPixelsPerChannel));
+            stddevB     = static_cast<Rpp32f>(sqrt(varB / totalPixelsPerChannel));
             tensorStddevArr[idx] = stddevR;
             tensorStddevArr[idx + 1] = stddevG;
             tensorStddevArr[idx + 2] = stddevB;
@@ -242,15 +240,15 @@ RppStatus tensor_stddev_u8_f32_host(Rpp8u *srcPtr,
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_u8pkd3_to_f64pln3_avx, srcPtrTemp, p);
                     compute_varchannel_24_host(p, &pMeanR, &pMeanG, &pMeanB, &pVarR, &pVarG, &pVarB);
-                    compute_varRGB_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
+                    compute_varpln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
                     srcPtrTemp += vectorIncrement;
                 }
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    Rpp64f srcPtrR = (Rpp64f)(srcPtrTemp[0]);
-                    Rpp64f srcPtrG = (Rpp64f)(srcPtrTemp[1]);
-                    Rpp64f srcPtrB = (Rpp64f)(srcPtrTemp[2]);
+                    Rpp64f srcPtrR = static_cast<Rpp64f>(srcPtrTemp[0]);
+                    Rpp64f srcPtrG = static_cast<Rpp64f>(srcPtrTemp[1]);
+                    Rpp64f srcPtrB = static_cast<Rpp64f>(srcPtrTemp[2]);
                     varR += (meanR - srcPtrR) * (meanR - srcPtrR);
                     varG += (meanG - srcPtrG) * (meanG - srcPtrG);
                     varB += (meanB - srcPtrB) * (meanB - srcPtrB);
@@ -277,10 +275,10 @@ RppStatus tensor_stddev_u8_f32_host(Rpp8u *srcPtr,
             varImageB += (varAvxImageB[0] + varAvxImageB[1] + varAvxImageB[2] + varAvxImageB[3]);
 #endif
             varImage = varImageR + varImageG + varImageB;
-            stddevImage = (Rpp32f)sqrt(varImage / (totalPixelsPerChannel * 3));
-            stddevR     = (Rpp32f)sqrt(varR / totalPixelsPerChannel);
-            stddevG     = (Rpp32f)sqrt(varG / totalPixelsPerChannel);
-            stddevB     = (Rpp32f)sqrt(varB / totalPixelsPerChannel);
+            stddevImage = static_cast<Rpp32f>(sqrt(varImage / (totalPixelsPerChannel * 3)));
+            stddevR     = static_cast<Rpp32f>(sqrt(varR / totalPixelsPerChannel));
+            stddevG     = static_cast<Rpp32f>(sqrt(varG / totalPixelsPerChannel));
+            stddevB     = static_cast<Rpp32f>(sqrt(varB / totalPixelsPerChannel));
             tensorStddevArr[idx] = stddevR;
             tensorStddevArr[idx + 1] = stddevG;
             tensorStddevArr[idx + 2] = stddevB;
@@ -297,26 +295,24 @@ RppStatus tensor_stddev_f32_f32_host(Rpp32f *srcPtr,
                                      Rpp32f *meanTensor,
                                      RpptROIPtr roiTensorPtrSrc,
                                      RpptRoiType roiType,
-                                     RppLayoutParams layoutParams)
+                                     RppLayoutParams layoutParams,
+                                     rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(srcDescPtr->n)
+#pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
     {
         RpptROI roi;
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
-        Rpp32f *srcPtrImage;
-        srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
+        Rpp32f *srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
+        Rpp32f *srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
 
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
-
-        Rpp32f *srcPtrChannel;
-        srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
-
         Rpp32u alignedLength = (bufferLength / 24) * 24;
         Rpp32u vectorIncrement = 24;
         Rpp32u vectorIncrementPerChannel = 8;
@@ -349,13 +345,13 @@ RppStatus tensor_stddev_f32_f32_host(Rpp32f *srcPtr,
                 {
                     __m256d p1[2];
                     rpp_simd_load(rpp_load8_f32_to_f64_avx, srcPtrTemp, p1);
-                    compute_var_8_host(p1, &pMean, &pVar);
+                    compute_variance_8_host(p1, &pMean, &pVar);
                     srcPtrTemp += vectorIncrementPerChannel;
                 }
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    var += (mean - (Rpp64f)(*srcPtrTemp)) * (mean - (Rpp64f)(*srcPtrTemp));
+                    var += (mean - static_cast<Rpp64f>(*srcPtrTemp)) * (mean - static_cast<Rpp64f>(*srcPtrTemp));
                     srcPtrTemp++;
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
@@ -365,7 +361,7 @@ RppStatus tensor_stddev_f32_f32_host(Rpp32f *srcPtr,
             var += (varAvx[0] + varAvx[1] + varAvx[2] + varAvx[3]);
 #endif
             stddev = sqrt(var / totalPixelsPerChannel) * 255;
-            tensorStddevArr[batchCount] = (Rpp32f)stddev;
+            tensorStddevArr[batchCount] = static_cast<Rpp32f>(stddev);
         }
 
         // Tensor Stddev without fused output-layout toggle 3 channel (NCHW)
@@ -413,7 +409,7 @@ RppStatus tensor_stddev_f32_f32_host(Rpp32f *srcPtr,
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_f32pln3_to_f64pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);
                     compute_varchannel_24_host(p, &pMeanR, &pMeanG, &pMeanB, &pVarR, &pVarG, &pVarB);
-                    compute_varRGB_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
+                    compute_varpln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
                     srcPtrTempB += vectorIncrementPerChannel;
@@ -421,9 +417,9 @@ RppStatus tensor_stddev_f32_f32_host(Rpp32f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    Rpp64f srcPtrR = (Rpp64f)(*srcPtrTempR);
-                    Rpp64f srcPtrG = (Rpp64f)(*srcPtrTempG);
-                    Rpp64f srcPtrB = (Rpp64f)(*srcPtrTempB);
+                    Rpp64f srcPtrR = static_cast<Rpp64f>(*srcPtrTempR);
+                    Rpp64f srcPtrG = static_cast<Rpp64f>(*srcPtrTempG);
+                    Rpp64f srcPtrB = static_cast<Rpp64f>(*srcPtrTempB);
                     varR += (meanR - srcPtrR) * (meanR - srcPtrR);
                     varG += (meanG - srcPtrG) * (meanG - srcPtrG);
                     varB += (meanB - srcPtrB) * (meanB - srcPtrB);
@@ -454,10 +450,10 @@ RppStatus tensor_stddev_f32_f32_host(Rpp32f *srcPtr,
             varImageB += (varAvxImageB[0] + varAvxImageB[1] + varAvxImageB[2] + varAvxImageB[3]);
 #endif
             varImage = varImageR + varImageG + varImageB;
-            stddevImage = (Rpp32f)sqrt(varImage / (totalPixelsPerChannel * 3)) * 255; // multiply by 255 to normalize variation
-            stddevR     = (Rpp32f)sqrt(varR / totalPixelsPerChannel) * 255;
-            stddevG     = (Rpp32f)sqrt(varG / totalPixelsPerChannel) * 255;
-            stddevB     = (Rpp32f)sqrt(varB / totalPixelsPerChannel) * 255;
+            stddevImage = static_cast<Rpp32f>(sqrt(varImage / (totalPixelsPerChannel * 3)) * 255); // multiply by 255 to normalize variation
+            stddevR     = static_cast<Rpp32f>(sqrt(varR / totalPixelsPerChannel) * 255);
+            stddevG     = static_cast<Rpp32f>(sqrt(varG / totalPixelsPerChannel) * 255);
+            stddevB     = static_cast<Rpp32f>(sqrt(varB / totalPixelsPerChannel) * 255);
             tensorStddevArr[idx] = stddevR;
             tensorStddevArr[idx + 1] = stddevG;
             tensorStddevArr[idx + 2] = stddevB;
@@ -505,15 +501,15 @@ RppStatus tensor_stddev_f32_f32_host(Rpp32f *srcPtr,
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_f32pkd3_to_f64pln3_avx, srcPtrTemp, p);
                     compute_varchannel_24_host(p, &pMeanR, &pMeanG, &pMeanB, &pVarR, &pVarG, &pVarB);
-                    compute_varRGB_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
+                    compute_varpln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
                     srcPtrTemp += vectorIncrement;
                 }
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    Rpp64f srcPtrR = (Rpp64f)(srcPtrTemp[0]);
-                    Rpp64f srcPtrG = (Rpp64f)(srcPtrTemp[1]);
-                    Rpp64f srcPtrB = (Rpp64f)(srcPtrTemp[2]);
+                    Rpp64f srcPtrR = static_cast<Rpp64f>(srcPtrTemp[0]);
+                    Rpp64f srcPtrG = static_cast<Rpp64f>(srcPtrTemp[1]);
+                    Rpp64f srcPtrB = static_cast<Rpp64f>(srcPtrTemp[2]);
                     varR += (meanR - srcPtrR) * (meanR - srcPtrR);
                     varG += (meanG - srcPtrG) * (meanG - srcPtrG);
                     varB += (meanB - srcPtrB) * (meanB - srcPtrB);
@@ -540,10 +536,10 @@ RppStatus tensor_stddev_f32_f32_host(Rpp32f *srcPtr,
             varImageB += (varAvxImageB[0] + varAvxImageB[1] + varAvxImageB[2] + varAvxImageB[3]);
 #endif
             varImage = varImageR + varImageG + varImageB;
-            stddevImage = (Rpp32f)sqrt(varImage / (totalPixelsPerChannel * 3)) * 255;
-            stddevR     = (Rpp32f)sqrt(varR / totalPixelsPerChannel) * 255;
-            stddevG     = (Rpp32f)sqrt(varG / totalPixelsPerChannel) * 255;
-            stddevB     = (Rpp32f)sqrt(varB / totalPixelsPerChannel) * 255;
+            stddevImage = static_cast<Rpp32f>(sqrt(varImage / (totalPixelsPerChannel * 3)) * 255);
+            stddevR     = static_cast<Rpp32f>(sqrt(varR / totalPixelsPerChannel) * 255);
+            stddevG     = static_cast<Rpp32f>(sqrt(varG / totalPixelsPerChannel) * 255);
+            stddevB     = static_cast<Rpp32f>(sqrt(varB / totalPixelsPerChannel) * 255);
             tensorStddevArr[idx] = stddevR;
             tensorStddevArr[idx + 1] = stddevG;
             tensorStddevArr[idx + 2] = stddevB;
@@ -560,26 +556,24 @@ RppStatus tensor_stddev_f16_f32_host(Rpp16f *srcPtr,
                                      Rpp32f *meanTensor,
                                      RpptROIPtr roiTensorPtrSrc,
                                      RpptRoiType roiType,
-                                     RppLayoutParams layoutParams)
+                                     RppLayoutParams layoutParams,
+                                     rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(srcDescPtr->n)
+#pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
     {
         RpptROI roi;
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
-        Rpp16f *srcPtrImage;
-        srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
+        Rpp16f *srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
+        Rpp16f *srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
 
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
-
-        Rpp16f *srcPtrChannel;
-        srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
-
         Rpp32u alignedLength = (bufferLength / 24) * 24;
         Rpp32u vectorIncrement = 24;
         Rpp32u vectorIncrementPerChannel = 8;
@@ -612,18 +606,18 @@ RppStatus tensor_stddev_f16_f32_host(Rpp16f *srcPtr,
                 {
                     Rpp32f srcPtrTemp_ps[8];
                     for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
-                        srcPtrTemp_ps[cnt] = (Rpp32f) srcPtrTemp[cnt];
+                        srcPtrTemp_ps[cnt] = static_cast<Rpp32f>(srcPtrTemp[cnt]);
 
                     __m256d p1[2];
                     rpp_simd_load(rpp_load8_f32_to_f64_avx, srcPtrTemp_ps, p1);
-                    compute_var_8_host(p1, &pMean, &pVar);
+                    compute_variance_8_host(p1, &pMean, &pVar);
 
                     srcPtrTemp += vectorIncrementPerChannel;
                 }
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    var += (mean - (Rpp64f)(*srcPtrTemp)) * (mean - (Rpp64f)(*srcPtrTemp));
+                    var += (mean - static_cast<Rpp64f>(*srcPtrTemp)) * (mean - static_cast<Rpp64f>(*srcPtrTemp));
                     srcPtrTemp++;
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
@@ -633,7 +627,7 @@ RppStatus tensor_stddev_f16_f32_host(Rpp16f *srcPtr,
             var += (varAvx[0] + varAvx[1] + varAvx[2] + varAvx[3]);
 #endif
             stddev = sqrt(var / totalPixelsPerChannel) * 255;
-            tensorStddevArr[batchCount] = (Rpp32f)stddev;
+            tensorStddevArr[batchCount] = static_cast<Rpp32f>(stddev);
         }
 
         // Tensor Stddev without fused output-layout toggle 3 channel (NCHW)
@@ -681,15 +675,15 @@ RppStatus tensor_stddev_f16_f32_host(Rpp16f *srcPtr,
                     Rpp32f srcPtrTempR_ps[8], srcPtrTempG_ps[8], srcPtrTempB_ps[8];
                     for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
                     {
-                        srcPtrTempR_ps[cnt] = (Rpp32f) srcPtrTempR[cnt];
-                        srcPtrTempG_ps[cnt] = (Rpp32f) srcPtrTempG[cnt];
-                        srcPtrTempB_ps[cnt] = (Rpp32f) srcPtrTempB[cnt];
+                        srcPtrTempR_ps[cnt] = static_cast<Rpp32f>(srcPtrTempR[cnt]);
+                        srcPtrTempG_ps[cnt] = static_cast<Rpp32f>(srcPtrTempG[cnt]);
+                        srcPtrTempB_ps[cnt] = static_cast<Rpp32f>(srcPtrTempB[cnt]);
                     }
 
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_f32pln3_to_f64pln3_avx, srcPtrTempR_ps, srcPtrTempG_ps, srcPtrTempB_ps, p);
                     compute_varchannel_24_host(p, &pMeanR, &pMeanG, &pMeanB, &pVarR, &pVarG, &pVarB);
-                    compute_varRGB_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
+                    compute_varpln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
                     srcPtrTempB += vectorIncrementPerChannel;
@@ -697,9 +691,9 @@ RppStatus tensor_stddev_f16_f32_host(Rpp16f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    Rpp64f srcPtrR = (Rpp64f)(*srcPtrTempR);
-                    Rpp64f srcPtrG = (Rpp64f)(*srcPtrTempG);
-                    Rpp64f srcPtrB = (Rpp64f)(*srcPtrTempB);
+                    Rpp64f srcPtrR = static_cast<Rpp64f>(*srcPtrTempR);
+                    Rpp64f srcPtrG = static_cast<Rpp64f>(*srcPtrTempG);
+                    Rpp64f srcPtrB = static_cast<Rpp64f>(*srcPtrTempB);
                     varR += (meanR - srcPtrR) * (meanR - srcPtrR);
                     varG += (meanG - srcPtrG) * (meanG - srcPtrG);
                     varB += (meanB - srcPtrB) * (meanB - srcPtrB);
@@ -730,10 +724,10 @@ RppStatus tensor_stddev_f16_f32_host(Rpp16f *srcPtr,
             varImageB += (varAvxImageB[0] + varAvxImageB[1] + varAvxImageB[2] + varAvxImageB[3]);
 #endif
             varImage = varImageR + varImageG + varImageB;
-            stddevImage = (Rpp32f)sqrt(varImage / (totalPixelsPerChannel * 3)) * 255; // multiply by 255 to normalize variation
-            stddevR     = (Rpp32f)sqrt(varR / totalPixelsPerChannel) * 255;
-            stddevG     = (Rpp32f)sqrt(varG / totalPixelsPerChannel) * 255;
-            stddevB     = (Rpp32f)sqrt(varB / totalPixelsPerChannel) * 255;
+            stddevImage = static_cast<Rpp32f>(sqrt(varImage / (totalPixelsPerChannel * 3)) * 255); // multiply by 255 to normalize variation
+            stddevR     = static_cast<Rpp32f>(sqrt(varR / totalPixelsPerChannel) * 255);
+            stddevG     = static_cast<Rpp32f>(sqrt(varG / totalPixelsPerChannel) * 255);
+            stddevB     = static_cast<Rpp32f>(sqrt(varB / totalPixelsPerChannel) * 255);
             tensorStddevArr[idx] = stddevR;
             tensorStddevArr[idx + 1] = stddevG;
             tensorStddevArr[idx + 2] = stddevB;
@@ -780,21 +774,21 @@ RppStatus tensor_stddev_f16_f32_host(Rpp16f *srcPtr,
                 {
                     Rpp32f srcPtrTemp_ps[24];
                     for(int cnt = 0; cnt < vectorIncrement; cnt++)
-                        srcPtrTemp_ps[cnt] = (Rpp32f) srcPtrTemp[cnt];
+                        srcPtrTemp_ps[cnt] = static_cast<Rpp32f>(srcPtrTemp[cnt]);
 
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_f32pkd3_to_f64pln3_avx, srcPtrTemp_ps, p);
                     compute_varchannel_24_host(p, &pMeanR, &pMeanG, &pMeanB, &pVarR, &pVarG, &pVarB);
-                    compute_varRGB_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
+                    compute_varpln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
 
                     srcPtrTemp += vectorIncrement;
                 }
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    Rpp64f srcPtrR = (Rpp64f)(srcPtrTemp[0]);
-                    Rpp64f srcPtrG = (Rpp64f)(srcPtrTemp[1]);
-                    Rpp64f srcPtrB = (Rpp64f)(srcPtrTemp[2]);
+                    Rpp64f srcPtrR = static_cast<Rpp64f>(srcPtrTemp[0]);
+                    Rpp64f srcPtrG = static_cast<Rpp64f>(srcPtrTemp[1]);
+                    Rpp64f srcPtrB = static_cast<Rpp64f>(srcPtrTemp[2]);
                     varR += (meanR - srcPtrR) * (meanR - srcPtrR);
                     varG += (meanG - srcPtrG) * (meanG - srcPtrG);
                     varB += (meanB - srcPtrB) * (meanB - srcPtrB);
@@ -821,10 +815,10 @@ RppStatus tensor_stddev_f16_f32_host(Rpp16f *srcPtr,
             varImageB += (varAvxImageB[0] + varAvxImageB[1] + varAvxImageB[2] + varAvxImageB[3]);
 #endif
             varImage = varImageR + varImageG + varImageB;
-            stddevImage = (Rpp32f)sqrt(varImage / (totalPixelsPerChannel * 3)) * 255;
-            stddevR     = (Rpp32f)sqrt(varR / totalPixelsPerChannel) * 255;
-            stddevG     = (Rpp32f)sqrt(varG / totalPixelsPerChannel) * 255;
-            stddevB     = (Rpp32f)sqrt(varB / totalPixelsPerChannel) * 255;
+            stddevImage = static_cast<Rpp32f>(sqrt(varImage / (totalPixelsPerChannel * 3)) * 255);
+            stddevR     = static_cast<Rpp32f>(sqrt(varR / totalPixelsPerChannel) * 255);
+            stddevG     = static_cast<Rpp32f>(sqrt(varG / totalPixelsPerChannel) * 255);
+            stddevB     = static_cast<Rpp32f>(sqrt(varB / totalPixelsPerChannel) * 255);
             tensorStddevArr[idx] = stddevR;
             tensorStddevArr[idx + 1] = stddevG;
             tensorStddevArr[idx + 2] = stddevB;
@@ -841,26 +835,24 @@ RppStatus tensor_stddev_i8_f32_host(Rpp8s *srcPtr,
                                     Rpp32f *meanTensor,
                                     RpptROIPtr roiTensorPtrSrc,
                                     RpptRoiType roiType,
-                                    RppLayoutParams layoutParams)
+                                    RppLayoutParams layoutParams,
+                                    rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(srcDescPtr->n)
+#pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
     {
         RpptROI roi;
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
-        Rpp8s *srcPtrImage;
-        srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
+        Rpp8s *srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
+        Rpp8s *srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
 
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
-
-        Rpp8s *srcPtrChannel;
-        srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
-
         Rpp32u alignedLength = (bufferLength / 24) * 24;
         Rpp32u vectorIncrement = 24;
         Rpp32u vectorIncrementPerChannel = 8;
@@ -893,14 +885,14 @@ RppStatus tensor_stddev_i8_f32_host(Rpp8s *srcPtr,
                 {
                     __m256d p1[2];
                     rpp_simd_load(rpp_load8_i8_to_f64_avx, srcPtrTemp, p1);
-                    compute_var_8_host(p1, &pMean, &pVar);
+                    compute_variance_8_host(p1, &pMean, &pVar);
 
                     srcPtrTemp += vectorIncrementPerChannel;
                 }
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    var += (mean - (Rpp64f)(*srcPtrTemp + 128)) * (mean - (Rpp64f)(*srcPtrTemp + 128));
+                    var += (mean - static_cast<Rpp64f>(*srcPtrTemp + 128)) * (mean - static_cast<Rpp64f>(*srcPtrTemp + 128));
                     srcPtrTemp++;
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
@@ -910,7 +902,7 @@ RppStatus tensor_stddev_i8_f32_host(Rpp8s *srcPtr,
             var += (varAvx[0] + varAvx[1] + varAvx[2] + varAvx[3]);
 #endif
             stddev = sqrt(var / totalPixelsPerChannel);
-            tensorStddevArr[batchCount] = (Rpp32f)stddev;
+            tensorStddevArr[batchCount] = static_cast<Rpp32f>(stddev);
         }
 
         // Tensor Stddev without fused output-layout toggle 3 channel (NCHW)
@@ -958,7 +950,7 @@ RppStatus tensor_stddev_i8_f32_host(Rpp8s *srcPtr,
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_i8pln3_to_f64pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);
                     compute_varchannel_24_host(p, &pMeanR, &pMeanG, &pMeanB, &pVarR, &pVarG, &pVarB);
-                    compute_varRGB_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
+                    compute_varpln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
                     srcPtrTempB += vectorIncrementPerChannel;
@@ -966,9 +958,9 @@ RppStatus tensor_stddev_i8_f32_host(Rpp8s *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    Rpp64f srcPtrR = (Rpp64f)(*srcPtrTempR + 128);
-                    Rpp64f srcPtrG = (Rpp64f)(*srcPtrTempG + 128);
-                    Rpp64f srcPtrB = (Rpp64f)(*srcPtrTempB + 128);
+                    Rpp64f srcPtrR = static_cast<Rpp64f>(*srcPtrTempR + 128);
+                    Rpp64f srcPtrG = static_cast<Rpp64f>(*srcPtrTempG + 128);
+                    Rpp64f srcPtrB = static_cast<Rpp64f>(*srcPtrTempB + 128);
                     varR += (meanR - srcPtrR) * (meanR - srcPtrR);
                     varG += (meanG - srcPtrG) * (meanG - srcPtrG);
                     varB += (meanB - srcPtrB) * (meanB - srcPtrB);
@@ -999,10 +991,10 @@ RppStatus tensor_stddev_i8_f32_host(Rpp8s *srcPtr,
             varImageB += (varAvxImageB[0] + varAvxImageB[1] + varAvxImageB[2] + varAvxImageB[3]);
 #endif
             varImage = varImageR + varImageG + varImageB;
-            stddevImage = (Rpp32f)sqrt(varImage / (totalPixelsPerChannel * 3));
-            stddevR     = (Rpp32f)sqrt(varR / totalPixelsPerChannel);
-            stddevG     = (Rpp32f)sqrt(varG / totalPixelsPerChannel);
-            stddevB     = (Rpp32f)sqrt(varB / totalPixelsPerChannel);
+            stddevImage = static_cast<Rpp32f>(sqrt(varImage / (totalPixelsPerChannel * 3)));
+            stddevR     = static_cast<Rpp32f>(sqrt(varR / totalPixelsPerChannel));
+            stddevG     = static_cast<Rpp32f>(sqrt(varG / totalPixelsPerChannel));
+            stddevB     = static_cast<Rpp32f>(sqrt(varB / totalPixelsPerChannel));
             tensorStddevArr[idx] = stddevR;
             tensorStddevArr[idx + 1] = stddevG;
             tensorStddevArr[idx + 2] = stddevB;
@@ -1050,15 +1042,15 @@ RppStatus tensor_stddev_i8_f32_host(Rpp8s *srcPtr,
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_i8pkd3_to_f64pln3_avx, srcPtrTemp, p);
                     compute_varchannel_24_host(p, &pMeanR, &pMeanG, &pMeanB, &pVarR, &pVarG, &pVarB);
-                    compute_varRGB_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
+                    compute_varpln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
                     srcPtrTemp += vectorIncrement;
                 }
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    Rpp64f srcPtrR = (Rpp64f)(srcPtrTemp[0] + 128);
-                    Rpp64f srcPtrG = (Rpp64f)(srcPtrTemp[1] + 128);
-                    Rpp64f srcPtrB = (Rpp64f)(srcPtrTemp[2] + 128);
+                    Rpp64f srcPtrR = static_cast<Rpp64f>(srcPtrTemp[0] + 128);
+                    Rpp64f srcPtrG = static_cast<Rpp64f>(srcPtrTemp[1] + 128);
+                    Rpp64f srcPtrB = static_cast<Rpp64f>(srcPtrTemp[2] + 128);
                     varR += (meanR - srcPtrR) * (meanR - srcPtrR);
                     varG += (meanG - srcPtrG) * (meanG - srcPtrG);
                     varB += (meanB - srcPtrB) * (meanB - srcPtrB);
@@ -1085,10 +1077,10 @@ RppStatus tensor_stddev_i8_f32_host(Rpp8s *srcPtr,
             varImageB += (varAvxImageB[0] + varAvxImageB[1] + varAvxImageB[2] + varAvxImageB[3]);
 #endif
             varImage = varImageR + varImageG + varImageB;
-            stddevImage = (Rpp32f)sqrt(varImage / (totalPixelsPerChannel * 3));
-            stddevR     = (Rpp32f)sqrt(varR / totalPixelsPerChannel);
-            stddevG     = (Rpp32f)sqrt(varG / totalPixelsPerChannel);
-            stddevB     = (Rpp32f)sqrt(varB / totalPixelsPerChannel);
+            stddevImage = static_cast<Rpp32f>(sqrt(varImage / (totalPixelsPerChannel * 3)));
+            stddevR     = static_cast<Rpp32f>(sqrt(varR / totalPixelsPerChannel));
+            stddevG     = static_cast<Rpp32f>(sqrt(varG / totalPixelsPerChannel));
+            stddevB     = static_cast<Rpp32f>(sqrt(varB / totalPixelsPerChannel));
             tensorStddevArr[idx] = stddevR;
             tensorStddevArr[idx + 1] = stddevG;
             tensorStddevArr[idx + 2] = stddevB;
@@ -1106,26 +1098,24 @@ RppStatus custom_stddev_u8_f32_host(Rpp8u *srcPtr,
                                     int flag,
                                     RpptROIPtr roiTensorPtrSrc,
                                     RpptRoiType roiType,
-                                    RppLayoutParams layoutParams)
+                                    RppLayoutParams layoutParams,
+                                    rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(srcDescPtr->n)
+#pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
     {
         RpptROI roi;
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
-        Rpp8u *srcPtrImage;
-        srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
+        Rpp8u *srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
+        Rpp8u *srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
 
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
-
-        Rpp8u *srcPtrChannel;
-        srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
-
         Rpp32u alignedLength = (bufferLength / 24) * 24;
         Rpp32u vectorIncrement = 24;
         Rpp32u vectorIncrementPerChannel = 8;
@@ -1158,14 +1148,14 @@ RppStatus custom_stddev_u8_f32_host(Rpp8u *srcPtr,
                 {
                     __m256d p1[2];
                     rpp_simd_load(rpp_load8_u8_to_f64_avx, srcPtrTemp, p1);
-                    compute_var_8_host(p1, &pMean, &pVar);
+                    compute_variance_8_host(p1, &pMean, &pVar);
 
                     srcPtrTemp += vectorIncrementPerChannel;
                 }
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    var += (mean - (Rpp64f)(*srcPtrTemp)) * (mean - (Rpp64f)(*srcPtrTemp));
+                    var += (mean - static_cast<Rpp64f>(*srcPtrTemp)) * (mean - static_cast<Rpp64f>(*srcPtrTemp));
                     srcPtrTemp++;
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
@@ -1175,7 +1165,7 @@ RppStatus custom_stddev_u8_f32_host(Rpp8u *srcPtr,
             var += (varAvx[0] + varAvx[1] + varAvx[2] + varAvx[3]);
 #endif
             stddev = sqrt(var / totalPixelsPerChannel);
-            tensorStddevArr[batchCount] = (Rpp32f)stddev;
+            tensorStddevArr[batchCount] = static_cast<Rpp32f>(stddev);
         }
 
         // Tensor Channel Stddev without fused output-layout toggle 3 channel (NCHW)
@@ -1224,9 +1214,9 @@ RppStatus custom_stddev_u8_f32_host(Rpp8u *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    Rpp64f srcPtrR = (Rpp64f)(*srcPtrTempR);
-                    Rpp64f srcPtrG = (Rpp64f)(*srcPtrTempG);
-                    Rpp64f srcPtrB = (Rpp64f)(*srcPtrTempB);
+                    Rpp64f srcPtrR = static_cast<Rpp64f>(*srcPtrTempR);
+                    Rpp64f srcPtrG = static_cast<Rpp64f>(*srcPtrTempG);
+                    Rpp64f srcPtrB = static_cast<Rpp64f>(*srcPtrTempB);
                     varR += (meanR - srcPtrR) * (meanR - srcPtrR);
                     varG += (meanG - srcPtrG) * (meanG - srcPtrG);
                     varB += (meanB - srcPtrB) * (meanB - srcPtrB);
@@ -1249,9 +1239,9 @@ RppStatus custom_stddev_u8_f32_host(Rpp8u *srcPtr,
 
 #endif
 
-            stddevR     = (Rpp32f)sqrt(varR / totalPixelsPerChannel);
-            stddevG     = (Rpp32f)sqrt(varG / totalPixelsPerChannel);
-            stddevB     = (Rpp32f)sqrt(varB / totalPixelsPerChannel);
+            stddevR     = static_cast<Rpp32f>(sqrt(varR / totalPixelsPerChannel));
+            stddevG     = static_cast<Rpp32f>(sqrt(varG / totalPixelsPerChannel));
+            stddevB     = static_cast<Rpp32f>(sqrt(varB / totalPixelsPerChannel));
             tensorStddevArr[idx] = stddevR;
             tensorStddevArr[idx + 1] = stddevG;
             tensorStddevArr[idx + 2] = stddevB;
@@ -1291,7 +1281,7 @@ RppStatus custom_stddev_u8_f32_host(Rpp8u *srcPtr,
                 {
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_u8pln3_to_f64pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);
-                    compute_varRGB_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
+                    compute_varpln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
                     srcPtrTempB += vectorIncrementPerChannel;
@@ -1299,9 +1289,9 @@ RppStatus custom_stddev_u8_f32_host(Rpp8u *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    Rpp64f srcPtrR = (Rpp64f)(*srcPtrTempR);
-                    Rpp64f srcPtrG = (Rpp64f)(*srcPtrTempG);
-                    Rpp64f srcPtrB = (Rpp64f)(*srcPtrTempB);
+                    Rpp64f srcPtrR = static_cast<Rpp64f>(*srcPtrTempR);
+                    Rpp64f srcPtrG = static_cast<Rpp64f>(*srcPtrTempG);
+                    Rpp64f srcPtrB = static_cast<Rpp64f>(*srcPtrTempB);
                     varImageR += (meanImage - srcPtrR) * (meanImage - srcPtrR);
                     varImageG += (meanImage - srcPtrG) * (meanImage - srcPtrG);
                     varImageB += (meanImage - srcPtrB) * (meanImage - srcPtrB);
@@ -1323,7 +1313,7 @@ RppStatus custom_stddev_u8_f32_host(Rpp8u *srcPtr,
             varImageB += (varAvxImageB[0] + varAvxImageB[1] + varAvxImageB[2] + varAvxImageB[3]);
 #endif
             varImage = varImageR + varImageG + varImageB;
-            stddevImage = (Rpp32f)sqrt(varImage / (totalPixelsPerChannel * 3));
+            stddevImage = static_cast<Rpp32f>(sqrt(varImage / (totalPixelsPerChannel * 3)));
             tensorStddevArr[idx + 3] = stddevImage;
         }
 
@@ -1367,9 +1357,9 @@ RppStatus custom_stddev_u8_f32_host(Rpp8u *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    Rpp64f srcPtrR = (Rpp64f)(srcPtrTemp[0]);
-                    Rpp64f srcPtrG = (Rpp64f)(srcPtrTemp[1]);
-                    Rpp64f srcPtrB = (Rpp64f)(srcPtrTemp[2]);
+                    Rpp64f srcPtrR = static_cast<Rpp64f>(srcPtrTemp[0]);
+                    Rpp64f srcPtrG = static_cast<Rpp64f>(srcPtrTemp[1]);
+                    Rpp64f srcPtrB = static_cast<Rpp64f>(srcPtrTemp[2]);
                     varR += (meanR - srcPtrR) * (meanR - srcPtrR);
                     varG += (meanG - srcPtrG) * (meanG - srcPtrG);
                     varB += (meanB - srcPtrB) * (meanB - srcPtrB);
@@ -1386,9 +1376,9 @@ RppStatus custom_stddev_u8_f32_host(Rpp8u *srcPtr,
             varG += (varAvxG[0] + varAvxG[1] + varAvxG[2] + varAvxG[3]);
             varB += (varAvxB[0] + varAvxB[1] + varAvxB[2] + varAvxB[3]);
 #endif
-            stddevR     = (Rpp32f)sqrt(varR / totalPixelsPerChannel);
-            stddevG     = (Rpp32f)sqrt(varG / totalPixelsPerChannel);
-            stddevB     = (Rpp32f)sqrt(varB / totalPixelsPerChannel);
+            stddevR     = static_cast<Rpp32f>(sqrt(varR / totalPixelsPerChannel));
+            stddevG     = static_cast<Rpp32f>(sqrt(varG / totalPixelsPerChannel));
+            stddevB     = static_cast<Rpp32f>(sqrt(varB / totalPixelsPerChannel));
             tensorStddevArr[idx] = stddevR;
             tensorStddevArr[idx + 1] = stddevG;
             tensorStddevArr[idx + 2] = stddevB;
@@ -1423,15 +1413,15 @@ RppStatus custom_stddev_u8_f32_host(Rpp8u *srcPtr,
                 {
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_u8pkd3_to_f64pln3_avx, srcPtrTemp, p);
-                    compute_varRGB_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
+                    compute_varpln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
                     srcPtrTemp += vectorIncrement;
                 }
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    Rpp64f srcPtrR = (Rpp64f)(srcPtrTemp[0]);
-                    Rpp64f srcPtrG = (Rpp64f)(srcPtrTemp[1]);
-                    Rpp64f srcPtrB = (Rpp64f)(srcPtrTemp[2]);
+                    Rpp64f srcPtrR = static_cast<Rpp64f>(srcPtrTemp[0]);
+                    Rpp64f srcPtrG = static_cast<Rpp64f>(srcPtrTemp[1]);
+                    Rpp64f srcPtrB = static_cast<Rpp64f>(srcPtrTemp[2]);
                     varImageR += (meanImage - srcPtrR) * (meanImage - srcPtrR);
                     varImageG += (meanImage - srcPtrG) * (meanImage - srcPtrG);
                     varImageB += (meanImage - srcPtrB) * (meanImage - srcPtrB);
@@ -1449,7 +1439,7 @@ RppStatus custom_stddev_u8_f32_host(Rpp8u *srcPtr,
             varImageB += (varAvxImageB[0] + varAvxImageB[1] + varAvxImageB[2] + varAvxImageB[3]);
 #endif
             varImage = varImageR + varImageG + varImageB;
-            stddevImage = (Rpp32f)sqrt(varImage / (totalPixelsPerChannel * 3));
+            stddevImage = static_cast<Rpp32f>(sqrt(varImage / (totalPixelsPerChannel * 3)));
             tensorStddevArr[idx + 3] = stddevImage;
         }
     }
@@ -1464,26 +1454,24 @@ RppStatus custom_stddev_f32_f32_host(Rpp32f *srcPtr,
                                      int flag,
                                      RpptROIPtr roiTensorPtrSrc,
                                      RpptRoiType roiType,
-                                     RppLayoutParams layoutParams)
+                                     RppLayoutParams layoutParams,
+                                     rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(srcDescPtr->n)
+#pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
     {
         RpptROI roi;
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
-        Rpp32f *srcPtrImage;
-        srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
+        Rpp32f *srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
+        Rpp32f *srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
 
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
-
-        Rpp32f *srcPtrChannel;
-        srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
-
         Rpp32u alignedLength = (bufferLength / 24) * 24;
         Rpp32u vectorIncrement = 24;
         Rpp32u vectorIncrementPerChannel = 8;
@@ -1516,13 +1504,13 @@ RppStatus custom_stddev_f32_f32_host(Rpp32f *srcPtr,
                 {
                     __m256d p1[2];
                     rpp_simd_load(rpp_load8_f32_to_f64_avx, srcPtrTemp, p1);
-                    compute_var_8_host(p1, &pMean, &pVar);
+                    compute_variance_8_host(p1, &pMean, &pVar);
                     srcPtrTemp += vectorIncrementPerChannel;
                 }
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    var += (mean - (Rpp64f)(*srcPtrTemp)) * (mean - (Rpp64f)(*srcPtrTemp));
+                    var += (mean - static_cast<Rpp64f>(*srcPtrTemp)) * (mean - static_cast<Rpp64f>(*srcPtrTemp));
                     srcPtrTemp++;
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
@@ -1532,7 +1520,7 @@ RppStatus custom_stddev_f32_f32_host(Rpp32f *srcPtr,
             var += (varAvx[0] + varAvx[1] + varAvx[2] + varAvx[3]);
 #endif
             stddev = sqrt(var / totalPixelsPerChannel) * 255;
-            tensorStddevArr[batchCount] = (Rpp32f)stddev;
+            tensorStddevArr[batchCount] = static_cast<Rpp32f>(stddev);
         }
 
         // Tensor Channel Stddev without fused output-layout toggle 3 channel (NCHW)
@@ -1581,9 +1569,9 @@ RppStatus custom_stddev_f32_f32_host(Rpp32f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    Rpp64f srcPtrR = (Rpp64f)(*srcPtrTempR);
-                    Rpp64f srcPtrG = (Rpp64f)(*srcPtrTempG);
-                    Rpp64f srcPtrB = (Rpp64f)(*srcPtrTempB);
+                    Rpp64f srcPtrR = static_cast<Rpp64f>(*srcPtrTempR);
+                    Rpp64f srcPtrG = static_cast<Rpp64f>(*srcPtrTempG);
+                    Rpp64f srcPtrB = static_cast<Rpp64f>(*srcPtrTempB);
                     varR += (meanR - srcPtrR) * (meanR - srcPtrR);
                     varG += (meanG - srcPtrG) * (meanG - srcPtrG);
                     varB += (meanB - srcPtrB) * (meanB - srcPtrB);
@@ -1604,9 +1592,9 @@ RppStatus custom_stddev_f32_f32_host(Rpp32f *srcPtr,
             varG += (varAvxG[0] + varAvxG[1] + varAvxG[2] + varAvxG[3]);
             varB += (varAvxB[0] + varAvxB[1] + varAvxB[2] + varAvxB[3]);
 #endif
-            stddevR     = (Rpp32f)sqrt(varR / totalPixelsPerChannel) * 255;
-            stddevG     = (Rpp32f)sqrt(varG / totalPixelsPerChannel) * 255;
-            stddevB     = (Rpp32f)sqrt(varB / totalPixelsPerChannel) * 255;
+            stddevR     = static_cast<Rpp32f>(sqrt(varR / totalPixelsPerChannel) * 255);
+            stddevG     = static_cast<Rpp32f>(sqrt(varG / totalPixelsPerChannel) * 255);
+            stddevB     = static_cast<Rpp32f>(sqrt(varB / totalPixelsPerChannel) * 255);
             tensorStddevArr[idx] = stddevR;
             tensorStddevArr[idx + 1] = stddevG;
             tensorStddevArr[idx + 2] = stddevB;
@@ -1646,7 +1634,7 @@ RppStatus custom_stddev_f32_f32_host(Rpp32f *srcPtr,
                 {
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_f32pln3_to_f64pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);
-                    compute_varRGB_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
+                    compute_varpln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
                     srcPtrTempB += vectorIncrementPerChannel;
@@ -1654,9 +1642,9 @@ RppStatus custom_stddev_f32_f32_host(Rpp32f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    Rpp64f srcPtrR = (Rpp64f)(*srcPtrTempR);
-                    Rpp64f srcPtrG = (Rpp64f)(*srcPtrTempG);
-                    Rpp64f srcPtrB = (Rpp64f)(*srcPtrTempB);
+                    Rpp64f srcPtrR = static_cast<Rpp64f>(*srcPtrTempR);
+                    Rpp64f srcPtrG = static_cast<Rpp64f>(*srcPtrTempG);
+                    Rpp64f srcPtrB = static_cast<Rpp64f>(*srcPtrTempB);
                     varImageR += (meanImage - srcPtrR) * (meanImage - srcPtrR);
                     varImageG += (meanImage - srcPtrG) * (meanImage - srcPtrG);
                     varImageB += (meanImage - srcPtrB) * (meanImage - srcPtrB);
@@ -1678,7 +1666,7 @@ RppStatus custom_stddev_f32_f32_host(Rpp32f *srcPtr,
             varImageB += (varAvxImageB[0] + varAvxImageB[1] + varAvxImageB[2] + varAvxImageB[3]);
 #endif
             varImage = varImageR + varImageG + varImageB;
-            stddevImage = (Rpp32f)sqrt(varImage / (totalPixelsPerChannel * 3)) * 255; // multiply by 255 to normalize variation
+            stddevImage = static_cast<Rpp32f>(sqrt(varImage / (totalPixelsPerChannel * 3)) * 255); // multiply by 255 to normalize variation
             tensorStddevArr[idx + 3] = stddevImage;
         }
 
@@ -1722,9 +1710,9 @@ RppStatus custom_stddev_f32_f32_host(Rpp32f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    Rpp64f srcPtrR = (Rpp64f)(srcPtrTemp[0]);
-                    Rpp64f srcPtrG = (Rpp64f)(srcPtrTemp[1]);
-                    Rpp64f srcPtrB = (Rpp64f)(srcPtrTemp[2]);
+                    Rpp64f srcPtrR = static_cast<Rpp64f>(srcPtrTemp[0]);
+                    Rpp64f srcPtrG = static_cast<Rpp64f>(srcPtrTemp[1]);
+                    Rpp64f srcPtrB = static_cast<Rpp64f>(srcPtrTemp[2]);
                     varR += (meanR - srcPtrR) * (meanR - srcPtrR);
                     varG += (meanG - srcPtrG) * (meanG - srcPtrG);
                     varB += (meanB - srcPtrB) * (meanB - srcPtrB);
@@ -1741,9 +1729,9 @@ RppStatus custom_stddev_f32_f32_host(Rpp32f *srcPtr,
             varG += (varAvxG[0] + varAvxG[1] + varAvxG[2] + varAvxG[3]);
             varB += (varAvxB[0] + varAvxB[1] + varAvxB[2] + varAvxB[3]);
 #endif
-            stddevR     = (Rpp32f)sqrt(varR / totalPixelsPerChannel) * 255;
-            stddevG     = (Rpp32f)sqrt(varG / totalPixelsPerChannel) * 255;
-            stddevB     = (Rpp32f)sqrt(varB / totalPixelsPerChannel) * 255;
+            stddevR     = static_cast<Rpp32f>(sqrt(varR / totalPixelsPerChannel) * 255);
+            stddevG     = static_cast<Rpp32f>(sqrt(varG / totalPixelsPerChannel) * 255);
+            stddevB     = static_cast<Rpp32f>(sqrt(varB / totalPixelsPerChannel) * 255);
             tensorStddevArr[idx] = stddevR;
             tensorStddevArr[idx + 1] = stddevG;
             tensorStddevArr[idx + 2] = stddevB;
@@ -1778,15 +1766,15 @@ RppStatus custom_stddev_f32_f32_host(Rpp32f *srcPtr,
                 {
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_f32pkd3_to_f64pln3_avx, srcPtrTemp, p);
-                    compute_varRGB_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
+                    compute_varpln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
                     srcPtrTemp += vectorIncrement;
                 }
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    Rpp64f srcPtrR = (Rpp64f)(srcPtrTemp[0]);
-                    Rpp64f srcPtrG = (Rpp64f)(srcPtrTemp[1]);
-                    Rpp64f srcPtrB = (Rpp64f)(srcPtrTemp[2]);
+                    Rpp64f srcPtrR = static_cast<Rpp64f>(srcPtrTemp[0]);
+                    Rpp64f srcPtrG = static_cast<Rpp64f>(srcPtrTemp[1]);
+                    Rpp64f srcPtrB = static_cast<Rpp64f>(srcPtrTemp[2]);
                     varImageR += (meanImage - srcPtrR) * (meanImage - srcPtrR);
                     varImageG += (meanImage - srcPtrG) * (meanImage - srcPtrG);
                     varImageB += (meanImage - srcPtrB) * (meanImage - srcPtrB);
@@ -1804,7 +1792,7 @@ RppStatus custom_stddev_f32_f32_host(Rpp32f *srcPtr,
             varImageB += (varAvxImageB[0] + varAvxImageB[1] + varAvxImageB[2] + varAvxImageB[3]);
 #endif
             varImage = varImageR + varImageG + varImageB;
-            stddevImage = (Rpp32f)sqrt(varImage / (totalPixelsPerChannel * 3)) * 255;
+            stddevImage = static_cast<Rpp32f>(sqrt(varImage / (totalPixelsPerChannel * 3)) * 255);
             tensorStddevArr[idx + 3] = stddevImage;
         }
     }
@@ -1819,26 +1807,24 @@ RppStatus custom_stddev_f16_f32_host(Rpp16f *srcPtr,
                                      int flag,
                                      RpptROIPtr roiTensorPtrSrc,
                                      RpptRoiType roiType,
-                                     RppLayoutParams layoutParams)
+                                     RppLayoutParams layoutParams,
+                                     rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(srcDescPtr->n)
+#pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
     {
         RpptROI roi;
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
-        Rpp16f *srcPtrImage;
-        srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
+        Rpp16f *srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
+        Rpp16f *srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
 
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
-
-        Rpp16f *srcPtrChannel;
-        srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
-
         Rpp32u alignedLength = (bufferLength / 24) * 24;
         Rpp32u vectorIncrement = 24;
         Rpp32u vectorIncrementPerChannel = 8;
@@ -1871,18 +1857,18 @@ RppStatus custom_stddev_f16_f32_host(Rpp16f *srcPtr,
                 {
                     Rpp32f srcPtrTemp_ps[8];
                     for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
-                        srcPtrTemp_ps[cnt] = (Rpp32f) srcPtrTemp[cnt];
+                        srcPtrTemp_ps[cnt] = static_cast<Rpp32f>(srcPtrTemp[cnt]);
 
                     __m256d p1[2];
                     rpp_simd_load(rpp_load8_f32_to_f64_avx, srcPtrTemp_ps, p1);
-                    compute_var_8_host(p1, &pMean, &pVar);
+                    compute_variance_8_host(p1, &pMean, &pVar);
 
                     srcPtrTemp += vectorIncrementPerChannel;
                 }
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    var += (mean - (Rpp64f)(*srcPtrTemp)) * (mean - (Rpp64f)(*srcPtrTemp));
+                    var += (mean - static_cast<Rpp64f>(*srcPtrTemp)) * (mean - static_cast<Rpp64f>(*srcPtrTemp));
                     srcPtrTemp++;
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
@@ -1892,7 +1878,7 @@ RppStatus custom_stddev_f16_f32_host(Rpp16f *srcPtr,
             var += (varAvx[0] + varAvx[1] + varAvx[2] + varAvx[3]);
 #endif
             stddev = sqrt(var / totalPixelsPerChannel) * 255;
-            tensorStddevArr[batchCount] = (Rpp32f)stddev;
+            tensorStddevArr[batchCount] = static_cast<Rpp32f>(stddev);
         }
 
         // Tensor Channel Stddev without fused output-layout toggle 3 channel (NCHW)
@@ -1934,9 +1920,9 @@ RppStatus custom_stddev_f16_f32_host(Rpp16f *srcPtr,
                     Rpp32f srcPtrTempR_ps[8], srcPtrTempG_ps[8], srcPtrTempB_ps[8];
                     for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
                     {
-                        srcPtrTempR_ps[cnt] = (Rpp32f) srcPtrTempR[cnt];
-                        srcPtrTempG_ps[cnt] = (Rpp32f) srcPtrTempG[cnt];
-                        srcPtrTempB_ps[cnt] = (Rpp32f) srcPtrTempB[cnt];
+                        srcPtrTempR_ps[cnt] = static_cast<Rpp32f>(srcPtrTempR[cnt]);
+                        srcPtrTempG_ps[cnt] = static_cast<Rpp32f>(srcPtrTempG[cnt]);
+                        srcPtrTempB_ps[cnt] = static_cast<Rpp32f>(srcPtrTempB[cnt]);
                     }
 
                     __m256d p[6];
@@ -1949,9 +1935,9 @@ RppStatus custom_stddev_f16_f32_host(Rpp16f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    Rpp64f srcPtrR = (Rpp64f)(*srcPtrTempR);
-                    Rpp64f srcPtrG = (Rpp64f)(*srcPtrTempG);
-                    Rpp64f srcPtrB = (Rpp64f)(*srcPtrTempB);
+                    Rpp64f srcPtrR = static_cast<Rpp64f>(*srcPtrTempR);
+                    Rpp64f srcPtrG = static_cast<Rpp64f>(*srcPtrTempG);
+                    Rpp64f srcPtrB = static_cast<Rpp64f>(*srcPtrTempB);
                     varR += (meanR - srcPtrR) * (meanR - srcPtrR);
                     varG += (meanG - srcPtrG) * (meanG - srcPtrG);
                     varB += (meanB - srcPtrB) * (meanB - srcPtrB);
@@ -1972,9 +1958,9 @@ RppStatus custom_stddev_f16_f32_host(Rpp16f *srcPtr,
             varG += (varAvxG[0] + varAvxG[1] + varAvxG[2] + varAvxG[3]);
             varB += (varAvxB[0] + varAvxB[1] + varAvxB[2] + varAvxB[3]);
 #endif
-            stddevR     = (Rpp32f)sqrt(varR / totalPixelsPerChannel) * 255;
-            stddevG     = (Rpp32f)sqrt(varG / totalPixelsPerChannel) * 255;
-            stddevB     = (Rpp32f)sqrt(varB / totalPixelsPerChannel) * 255;
+            stddevR     = static_cast<Rpp32f>(sqrt(varR / totalPixelsPerChannel) * 255);
+            stddevG     = static_cast<Rpp32f>(sqrt(varG / totalPixelsPerChannel) * 255);
+            stddevB     = static_cast<Rpp32f>(sqrt(varB / totalPixelsPerChannel) * 255);
             tensorStddevArr[idx] = stddevR;
             tensorStddevArr[idx + 1] = stddevG;
             tensorStddevArr[idx + 2] = stddevB;
@@ -2015,14 +2001,14 @@ RppStatus custom_stddev_f16_f32_host(Rpp16f *srcPtr,
                     Rpp32f srcPtrTempR_ps[8], srcPtrTempG_ps[8], srcPtrTempB_ps[8];
                     for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
                     {
-                        srcPtrTempR_ps[cnt] = (Rpp32f) srcPtrTempR[cnt];
-                        srcPtrTempG_ps[cnt] = (Rpp32f) srcPtrTempG[cnt];
-                        srcPtrTempB_ps[cnt] = (Rpp32f) srcPtrTempB[cnt];
+                        srcPtrTempR_ps[cnt] = static_cast<Rpp32f>(srcPtrTempR[cnt]);
+                        srcPtrTempG_ps[cnt] = static_cast<Rpp32f>(srcPtrTempG[cnt]);
+                        srcPtrTempB_ps[cnt] = static_cast<Rpp32f>(srcPtrTempB[cnt]);
                     }
 
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_f32pln3_to_f64pln3_avx, srcPtrTempR_ps, srcPtrTempG_ps, srcPtrTempB_ps, p);
-                    compute_varRGB_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
+                    compute_varpln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
                     srcPtrTempB += vectorIncrementPerChannel;
@@ -2030,9 +2016,9 @@ RppStatus custom_stddev_f16_f32_host(Rpp16f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    Rpp64f srcPtrR = (Rpp64f)(*srcPtrTempR);
-                    Rpp64f srcPtrG = (Rpp64f)(*srcPtrTempG);
-                    Rpp64f srcPtrB = (Rpp64f)(*srcPtrTempB);
+                    Rpp64f srcPtrR = static_cast<Rpp64f>(*srcPtrTempR);
+                    Rpp64f srcPtrG = static_cast<Rpp64f>(*srcPtrTempG);
+                    Rpp64f srcPtrB = static_cast<Rpp64f>(*srcPtrTempB);
                     varImageR += (meanImage - srcPtrR) * (meanImage - srcPtrR);
                     varImageG += (meanImage - srcPtrG) * (meanImage - srcPtrG);
                     varImageB += (meanImage - srcPtrB) * (meanImage - srcPtrB);
@@ -2054,7 +2040,7 @@ RppStatus custom_stddev_f16_f32_host(Rpp16f *srcPtr,
             varImageB += (varAvxImageB[0] + varAvxImageB[1] + varAvxImageB[2] + varAvxImageB[3]);
 #endif
             varImage = varImageR + varImageG + varImageB;
-            stddevImage = (Rpp32f)sqrt(varImage / (totalPixelsPerChannel * 3)) * 255; // multiply by 255 to normalize variation
+            stddevImage = static_cast<Rpp32f>(sqrt(varImage / (totalPixelsPerChannel * 3)) * 255); // multiply by 255 to normalize variation
             tensorStddevArr[idx + 3] = stddevImage;
         }
 
@@ -2092,7 +2078,7 @@ RppStatus custom_stddev_f16_f32_host(Rpp16f *srcPtr,
                 {
                     Rpp32f srcPtrTemp_ps[24];
                     for(int cnt = 0; cnt < vectorIncrement; cnt++)
-                        srcPtrTemp_ps[cnt] = (Rpp32f) srcPtrTemp[cnt];
+                        srcPtrTemp_ps[cnt] = static_cast<Rpp32f>(srcPtrTemp[cnt]);
 
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_f32pkd3_to_f64pln3_avx, srcPtrTemp_ps, p);
@@ -2103,9 +2089,9 @@ RppStatus custom_stddev_f16_f32_host(Rpp16f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    Rpp64f srcPtrR = (Rpp64f)(srcPtrTemp[0]);
-                    Rpp64f srcPtrG = (Rpp64f)(srcPtrTemp[1]);
-                    Rpp64f srcPtrB = (Rpp64f)(srcPtrTemp[2]);
+                    Rpp64f srcPtrR = static_cast<Rpp64f>(srcPtrTemp[0]);
+                    Rpp64f srcPtrG = static_cast<Rpp64f>(srcPtrTemp[1]);
+                    Rpp64f srcPtrB = static_cast<Rpp64f>(srcPtrTemp[2]);
                     varR += (meanR - srcPtrR) * (meanR - srcPtrR);
                     varG += (meanG - srcPtrG) * (meanG - srcPtrG);
                     varB += (meanB - srcPtrB) * (meanB - srcPtrB);
@@ -2122,9 +2108,9 @@ RppStatus custom_stddev_f16_f32_host(Rpp16f *srcPtr,
             varG += (varAvxG[0] + varAvxG[1] + varAvxG[2] + varAvxG[3]);
             varB += (varAvxB[0] + varAvxB[1] + varAvxB[2] + varAvxB[3]);
 #endif
-            stddevR     = (Rpp32f)sqrt(varR / totalPixelsPerChannel) * 255;
-            stddevG     = (Rpp32f)sqrt(varG / totalPixelsPerChannel) * 255;
-            stddevB     = (Rpp32f)sqrt(varB / totalPixelsPerChannel) * 255;
+            stddevR     = static_cast<Rpp32f>(sqrt(varR / totalPixelsPerChannel) * 255);
+            stddevG     = static_cast<Rpp32f>(sqrt(varG / totalPixelsPerChannel) * 255);
+            stddevB     = static_cast<Rpp32f>(sqrt(varB / totalPixelsPerChannel) * 255);
             tensorStddevArr[idx] = stddevR;
             tensorStddevArr[idx + 1] = stddevG;
             tensorStddevArr[idx + 2] = stddevB;
@@ -2159,20 +2145,20 @@ RppStatus custom_stddev_f16_f32_host(Rpp16f *srcPtr,
                 {
                     Rpp32f srcPtrTemp_ps[24];
                     for(int cnt = 0; cnt < vectorIncrement; cnt++)
-                        srcPtrTemp_ps[cnt] = (Rpp32f) srcPtrTemp[cnt];
+                        srcPtrTemp_ps[cnt] = static_cast<Rpp32f>(srcPtrTemp[cnt]);
 
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_f32pkd3_to_f64pln3_avx, srcPtrTemp_ps, p);
-                    compute_varRGB_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
+                    compute_varpln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
 
                     srcPtrTemp += vectorIncrement;
                 }
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    Rpp64f srcPtrR = (Rpp64f)(srcPtrTemp[0]);
-                    Rpp64f srcPtrG = (Rpp64f)(srcPtrTemp[1]);
-                    Rpp64f srcPtrB = (Rpp64f)(srcPtrTemp[2]);
+                    Rpp64f srcPtrR = static_cast<Rpp64f>(srcPtrTemp[0]);
+                    Rpp64f srcPtrG = static_cast<Rpp64f>(srcPtrTemp[1]);
+                    Rpp64f srcPtrB = static_cast<Rpp64f>(srcPtrTemp[2]);
                     varImageR += (meanImage - srcPtrR) * (meanImage - srcPtrR);
                     varImageG += (meanImage - srcPtrG) * (meanImage - srcPtrG);
                     varImageB += (meanImage - srcPtrB) * (meanImage - srcPtrB);
@@ -2190,7 +2176,7 @@ RppStatus custom_stddev_f16_f32_host(Rpp16f *srcPtr,
             varImageB += (varAvxImageB[0] + varAvxImageB[1] + varAvxImageB[2] + varAvxImageB[3]);
 #endif
             varImage = varImageR + varImageG + varImageB;
-            stddevImage = (Rpp32f)sqrt(varImage / (totalPixelsPerChannel * 3)) * 255;
+            stddevImage = static_cast<Rpp32f>(sqrt(varImage / (totalPixelsPerChannel * 3)) * 255);
             tensorStddevArr[idx + 3] = stddevImage;
         }
     }
@@ -2205,26 +2191,24 @@ RppStatus custom_stddev_i8_f32_host(Rpp8s *srcPtr,
                                     int flag,
                                     RpptROIPtr roiTensorPtrSrc,
                                     RpptRoiType roiType,
-                                    RppLayoutParams layoutParams)
+                                    RppLayoutParams layoutParams,
+                                    rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(srcDescPtr->n)
+#pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
     {
         RpptROI roi;
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
-        Rpp8s *srcPtrImage;
-        srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
+        Rpp8s *srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
+        Rpp8s *srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
 
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
-
-        Rpp8s *srcPtrChannel;
-        srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
-
         Rpp32u alignedLength = (bufferLength / 24) * 24;
         Rpp32u vectorIncrement = 24;
         Rpp32u vectorIncrementPerChannel = 8;
@@ -2257,14 +2241,14 @@ RppStatus custom_stddev_i8_f32_host(Rpp8s *srcPtr,
                 {
                     __m256d p1[2];
                     rpp_simd_load(rpp_load8_i8_to_f64_avx, srcPtrTemp, p1);
-                    compute_var_8_host(p1, &pMean, &pVar);
+                    compute_variance_8_host(p1, &pMean, &pVar);
 
                     srcPtrTemp += vectorIncrementPerChannel;
                 }
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    var += (mean - (Rpp64f)(*srcPtrTemp + 128)) * (mean - (Rpp64f)(*srcPtrTemp + 128));
+                    var += (mean - static_cast<Rpp64f>(*srcPtrTemp + 128)) * (mean - static_cast<Rpp64f>(*srcPtrTemp + 128));
                     srcPtrTemp++;
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
@@ -2274,7 +2258,7 @@ RppStatus custom_stddev_i8_f32_host(Rpp8s *srcPtr,
             var += (varAvx[0] + varAvx[1] + varAvx[2] + varAvx[3]);
 #endif
             stddev = sqrt(var / totalPixelsPerChannel);
-            tensorStddevArr[batchCount] = (Rpp32f)stddev;
+            tensorStddevArr[batchCount] = static_cast<Rpp32f>(stddev);
         }
 
         // Tensor Channel Stddev without fused output-layout toggle 3 channel (NCHW)
@@ -2323,9 +2307,9 @@ RppStatus custom_stddev_i8_f32_host(Rpp8s *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    Rpp64f srcPtrR = (Rpp64f)(*srcPtrTempR + 128);
-                    Rpp64f srcPtrG = (Rpp64f)(*srcPtrTempG + 128);
-                    Rpp64f srcPtrB = (Rpp64f)(*srcPtrTempB + 128);
+                    Rpp64f srcPtrR = static_cast<Rpp64f>(*srcPtrTempR + 128);
+                    Rpp64f srcPtrG = static_cast<Rpp64f>(*srcPtrTempG + 128);
+                    Rpp64f srcPtrB = static_cast<Rpp64f>(*srcPtrTempB + 128);
                     varR += (meanR - srcPtrR) * (meanR - srcPtrR);
                     varG += (meanG - srcPtrG) * (meanG - srcPtrG);
                     varB += (meanB - srcPtrB) * (meanB - srcPtrB);
@@ -2346,9 +2330,9 @@ RppStatus custom_stddev_i8_f32_host(Rpp8s *srcPtr,
             varG += (varAvxG[0] + varAvxG[1] + varAvxG[2] + varAvxG[3]);
             varB += (varAvxB[0] + varAvxB[1] + varAvxB[2] + varAvxB[3]);
 #endif
-            stddevR     = (Rpp32f)sqrt(varR / totalPixelsPerChannel);
-            stddevG     = (Rpp32f)sqrt(varG / totalPixelsPerChannel);
-            stddevB     = (Rpp32f)sqrt(varB / totalPixelsPerChannel);
+            stddevR     = static_cast<Rpp32f>(sqrt(varR / totalPixelsPerChannel));
+            stddevG     = static_cast<Rpp32f>(sqrt(varG / totalPixelsPerChannel));
+            stddevB     = static_cast<Rpp32f>(sqrt(varB / totalPixelsPerChannel));
             tensorStddevArr[idx] = stddevR;
             tensorStddevArr[idx + 1] = stddevG;
             tensorStddevArr[idx + 2] = stddevB;
@@ -2388,7 +2372,7 @@ RppStatus custom_stddev_i8_f32_host(Rpp8s *srcPtr,
                 {
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_i8pln3_to_f64pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);
-                    compute_varRGB_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
+                    compute_varpln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
                     srcPtrTempB += vectorIncrementPerChannel;
@@ -2396,9 +2380,9 @@ RppStatus custom_stddev_i8_f32_host(Rpp8s *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    Rpp64f srcPtrR = (Rpp64f)(*srcPtrTempR + 128);
-                    Rpp64f srcPtrG = (Rpp64f)(*srcPtrTempG + 128);
-                    Rpp64f srcPtrB = (Rpp64f)(*srcPtrTempB + 128);
+                    Rpp64f srcPtrR = static_cast<Rpp64f>(*srcPtrTempR + 128);
+                    Rpp64f srcPtrG = static_cast<Rpp64f>(*srcPtrTempG + 128);
+                    Rpp64f srcPtrB = static_cast<Rpp64f>(*srcPtrTempB + 128);
                     varImageR += (meanImage - srcPtrR) * (meanImage - srcPtrR);
                     varImageG += (meanImage - srcPtrG) * (meanImage - srcPtrG);
                     varImageB += (meanImage - srcPtrB) * (meanImage - srcPtrB);
@@ -2420,7 +2404,7 @@ RppStatus custom_stddev_i8_f32_host(Rpp8s *srcPtr,
             varImageB += (varAvxImageB[0] + varAvxImageB[1] + varAvxImageB[2] + varAvxImageB[3]);
 #endif
             varImage = varImageR + varImageG + varImageB;
-            stddevImage = (Rpp32f)sqrt(varImage / (totalPixelsPerChannel * 3));
+            stddevImage = static_cast<Rpp32f>(sqrt(varImage / (totalPixelsPerChannel * 3)));
             tensorStddevArr[idx + 3] = stddevImage;
         }
 
@@ -2464,9 +2448,9 @@ RppStatus custom_stddev_i8_f32_host(Rpp8s *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    Rpp64f srcPtrR = (Rpp64f)(srcPtrTemp[0] + 128);
-                    Rpp64f srcPtrG = (Rpp64f)(srcPtrTemp[1] + 128);
-                    Rpp64f srcPtrB = (Rpp64f)(srcPtrTemp[2] + 128);
+                    Rpp64f srcPtrR = static_cast<Rpp64f>(srcPtrTemp[0] + 128);
+                    Rpp64f srcPtrG = static_cast<Rpp64f>(srcPtrTemp[1] + 128);
+                    Rpp64f srcPtrB = static_cast<Rpp64f>(srcPtrTemp[2] + 128);
                     varR += (meanR - srcPtrR) * (meanR - srcPtrR);
                     varG += (meanG - srcPtrG) * (meanG - srcPtrG);
                     varB += (meanB - srcPtrB) * (meanB - srcPtrB);
@@ -2483,9 +2467,9 @@ RppStatus custom_stddev_i8_f32_host(Rpp8s *srcPtr,
             varG += (varAvxG[0] + varAvxG[1] + varAvxG[2] + varAvxG[3]);
             varB += (varAvxB[0] + varAvxB[1] + varAvxB[2] + varAvxB[3]);
 #endif
-            stddevR     = (Rpp32f)sqrt(varR / totalPixelsPerChannel);
-            stddevG     = (Rpp32f)sqrt(varG / totalPixelsPerChannel);
-            stddevB     = (Rpp32f)sqrt(varB / totalPixelsPerChannel);
+            stddevR     = static_cast<Rpp32f>(sqrt(varR / totalPixelsPerChannel));
+            stddevG     = static_cast<Rpp32f>(sqrt(varG / totalPixelsPerChannel));
+            stddevB     = static_cast<Rpp32f>(sqrt(varB / totalPixelsPerChannel));
             tensorStddevArr[idx] = stddevR;
             tensorStddevArr[idx + 1] = stddevG;
             tensorStddevArr[idx + 2] = stddevB;
@@ -2520,15 +2504,15 @@ RppStatus custom_stddev_i8_f32_host(Rpp8s *srcPtr,
                 {
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_i8pkd3_to_f64pln3_avx, srcPtrTemp, p);
-                    compute_varRGB_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
+                    compute_varpln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
                     srcPtrTemp += vectorIncrement;
                 }
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    Rpp64f srcPtrR = (Rpp64f)(srcPtrTemp[0] + 128);
-                    Rpp64f srcPtrG = (Rpp64f)(srcPtrTemp[1] + 128);
-                    Rpp64f srcPtrB = (Rpp64f)(srcPtrTemp[2] + 128);
+                    Rpp64f srcPtrR = static_cast<Rpp64f>(srcPtrTemp[0] + 128);
+                    Rpp64f srcPtrG = static_cast<Rpp64f>(srcPtrTemp[1] + 128);
+                    Rpp64f srcPtrB = static_cast<Rpp64f>(srcPtrTemp[2] + 128);
                     varImageR += (meanImage - srcPtrR) * (meanImage - srcPtrR);
                     varImageG += (meanImage - srcPtrG) * (meanImage - srcPtrG);
                     varImageB += (meanImage - srcPtrB) * (meanImage - srcPtrB);
@@ -2546,7 +2530,7 @@ RppStatus custom_stddev_i8_f32_host(Rpp8s *srcPtr,
             varImageB += (varAvxImageB[0] + varAvxImageB[1] + varAvxImageB[2] + varAvxImageB[3]);
 #endif
             varImage = varImageR + varImageG + varImageB;
-            stddevImage = (Rpp32f)sqrt(varImage / (totalPixelsPerChannel * 3));
+            stddevImage = static_cast<Rpp32f>(sqrt(varImage / (totalPixelsPerChannel * 3)));
             tensorStddevArr[idx + 3] = stddevImage;
         }
     }

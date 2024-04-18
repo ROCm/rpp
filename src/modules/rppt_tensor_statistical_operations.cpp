@@ -280,7 +280,8 @@ RppStatus rppt_tensor_mean_host(RppPtr_t srcPtr,
                                 static_cast<Rpp32f*>(tensorMeanArr),
                                 roiTensorPtrSrc,
                                 roiType,
-                                layoutParams);
+                                layoutParams,
+                                rpp::deref(rppHandle));
     }
     else if (srcDescPtr->dataType == RpptDataType::F16)
     {
@@ -289,7 +290,8 @@ RppStatus rppt_tensor_mean_host(RppPtr_t srcPtr,
                                  static_cast<Rpp32f*>(tensorMeanArr),
                                  roiTensorPtrSrc,
                                  roiType,
-                                 layoutParams);
+                                 layoutParams,
+                                 rpp::deref(rppHandle));
     }
     else if (srcDescPtr->dataType == RpptDataType::F32)
     {
@@ -298,7 +300,8 @@ RppStatus rppt_tensor_mean_host(RppPtr_t srcPtr,
                                  static_cast<Rpp32f*>(tensorMeanArr),
                                  roiTensorPtrSrc,
                                  roiType,
-                                 layoutParams);
+                                 layoutParams,
+                                 rpp::deref(rppHandle));
     }
     else if (srcDescPtr->dataType == RpptDataType::I8)
     {
@@ -307,7 +310,8 @@ RppStatus rppt_tensor_mean_host(RppPtr_t srcPtr,
                                 static_cast<Rpp32f*>(tensorMeanArr),
                                 roiTensorPtrSrc,
                                 roiType,
-                                layoutParams);
+                                layoutParams,
+                                rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;
@@ -356,7 +360,8 @@ RppStatus rppt_tensor_stddev_host(RppPtr_t srcPtr,
                                       flag,
                                       roiTensorPtrSrc,
                                       roiType,
-                                      layoutParams);
+                                      layoutParams,
+                                      rpp::deref(rppHandle));
         if(flag == 2)
             tensor_stddev_u8_f32_host(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
                                       srcDescPtr,
@@ -364,7 +369,8 @@ RppStatus rppt_tensor_stddev_host(RppPtr_t srcPtr,
                                       meanTensor,
                                       roiTensorPtrSrc,
                                       roiType,
-                                      layoutParams);
+                                      layoutParams,
+                                      rpp::deref(rppHandle));
     }
     else if (srcDescPtr->dataType == RpptDataType::F16)
     {
@@ -376,7 +382,8 @@ RppStatus rppt_tensor_stddev_host(RppPtr_t srcPtr,
                                        flag,
                                        roiTensorPtrSrc,
                                        roiType,
-                                       layoutParams);
+                                       layoutParams,
+                                       rpp::deref(rppHandle));
         if(flag == 2)
             tensor_stddev_f16_f32_host(reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                        srcDescPtr,
@@ -384,7 +391,8 @@ RppStatus rppt_tensor_stddev_host(RppPtr_t srcPtr,
                                        meanTensor,
                                        roiTensorPtrSrc,
                                        roiType,
-                                       layoutParams);
+                                       layoutParams,
+                                       rpp::deref(rppHandle));
     }
     else if (srcDescPtr->dataType == RpptDataType::F32)
     {
@@ -396,7 +404,8 @@ RppStatus rppt_tensor_stddev_host(RppPtr_t srcPtr,
                                        flag,
                                        roiTensorPtrSrc,
                                        roiType,
-                                       layoutParams);
+                                       layoutParams,
+                                       rpp::deref(rppHandle));
         if(flag == 2)
             tensor_stddev_f32_f32_host(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                        srcDescPtr,
@@ -404,7 +413,8 @@ RppStatus rppt_tensor_stddev_host(RppPtr_t srcPtr,
                                        meanTensor,
                                        roiTensorPtrSrc,
                                        roiType,
-                                       layoutParams);
+                                       layoutParams,
+                                       rpp::deref(rppHandle));
     }
     else if (srcDescPtr->dataType == RpptDataType::I8)
     {
@@ -416,7 +426,8 @@ RppStatus rppt_tensor_stddev_host(RppPtr_t srcPtr,
                                       flag,
                                       roiTensorPtrSrc,
                                       roiType,
-                                      layoutParams);
+                                      layoutParams,
+                                      rpp::deref(rppHandle));
         if(flag == 2)
             tensor_stddev_i8_f32_host(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
                                       srcDescPtr,
@@ -424,7 +435,8 @@ RppStatus rppt_tensor_stddev_host(RppPtr_t srcPtr,
                                       meanTensor,
                                       roiTensorPtrSrc,
                                       roiType,
-                                      layoutParams);
+                                      layoutParams,
+                                      rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;

@@ -88,6 +88,9 @@ int main(int argc, char **argv)
         printf("\noutputFormatToggle (pkd->pkd = 0 / pkd->pln = 1) = %s", argv[5]);
         printf("\ncase number (0:91) = %s", argv[6]);
         printf("\nnumber of times to run = %s", argv[8]);
+        printf("\ntest type - (0 = unit tests / 1 = performance tests) = %s", argv[9]);
+        printf("\nlayout type - (0 = PKD3/ 1 = PLN3/ 2 = PLN1) = %s", argv[10]);
+        printf("\nqa mode - 0/1 = %s", argv[12]);
         printf("\ndecoder type - (0 = TurboJPEG / 1 = OpenCV) = %s", argv[13]);
         printf("\nbatch size = %s", argv[14]);
     }
@@ -123,7 +126,7 @@ int main(int argc, char **argv)
         printf("\nReduction Kernels don't have outputFormatToggle! Please input outputFormatToggle = 0\n");
         return -1;
     }
-    if(batchSize > MAX_BATCH_SIZE)
+    else if(batchSize > MAX_BATCH_SIZE)
     {
         std::cerr << "\n Batchsize should be less than or equal to "<< MAX_BATCH_SIZE << " Aborting!";
         exit(0);
@@ -184,7 +187,6 @@ int main(int argc, char **argv)
     RpptInterpolationType interpolationType = RpptInterpolationType::BILINEAR;
     std::string interpolationTypeName = "";
     std::string noiseTypeName = "";
-
     if (kernelSizeCase)
     {
         char additionalParam_char[2];
@@ -1127,6 +1129,7 @@ int main(int argc, char **argv)
                 case 89:
                 {
                     testCaseName = "tensor_max";
+
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_tensor_max_gpu(d_input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
@@ -1168,7 +1171,6 @@ int main(int argc, char **argv)
                         missingFuncFlag = 1;
 
                     break;
-                    std::cerr << "after stddev compute\n";
                 }
                 default:
                   missingFuncFlag = 1;

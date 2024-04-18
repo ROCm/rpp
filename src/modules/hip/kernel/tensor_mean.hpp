@@ -15,9 +15,7 @@ __global__ void tensor_mean_grid_result_hip(Rpp32u *srcPtr,
     partialSum_smem[hipThreadIdx_x] = 0;                            // initialization of Shared to 0 using all 1024 x 1 threads
 
     if (id_x >= xBufferLength)
-    {
         return;
-    }
 
     int xAlignedLength = xBufferLength & ~7;                        // alignedLength for vectorized global loads
     int xDiff = xBufferLength - xAlignedLength;                     // difference between bufferLength and alignedLength
@@ -49,7 +47,7 @@ __global__ void tensor_mean_grid_result_hip(Rpp32u *srcPtr,
     if (hipThreadIdx_x == 0)
     {
         int totalElements = roiTensorPtrSrc[hipBlockIdx_z].xywhROI.roiHeight * roiTensorPtrSrc[hipBlockIdx_z].xywhROI.roiWidth;
-        dstPtr[hipBlockIdx_z] = (float)partialSum_smem[0] / totalElements;
+        dstPtr[hipBlockIdx_z] = static_cast<float>(partialSum_smem[0]) / totalElements;
     }
 }
 
@@ -65,9 +63,7 @@ __global__ void tensor_mean_grid_result_hip(Rpp32s *srcPtr,
     partialSum_smem[hipThreadIdx_x] = 0;                            // initialization of Shared to 0 using all 1024 x 1 threads
 
     if (id_x >= xBufferLength)
-    {
         return;
-    }
 
     int xAlignedLength = xBufferLength & ~7;                        // alignedLength for vectorized global loads
     int xDiff = xBufferLength - xAlignedLength;                     // difference between bufferLength and alignedLength
@@ -99,7 +95,7 @@ __global__ void tensor_mean_grid_result_hip(Rpp32s *srcPtr,
     if (hipThreadIdx_x == 0)
     {
         int totalElements = roiTensorPtrSrc[hipBlockIdx_z].xywhROI.roiHeight * roiTensorPtrSrc[hipBlockIdx_z].xywhROI.roiWidth;
-        dstPtr[hipBlockIdx_z] = (float)partialSum_smem[0] / totalElements;
+        dstPtr[hipBlockIdx_z] = static_cast<float>(partialSum_smem[0]) / totalElements;
     }
 }
 
@@ -115,9 +111,7 @@ __global__ void tensor_mean_grid_result_hip(float *srcPtr,
     partialSum_smem[hipThreadIdx_x] = 0.0f;                         // initialization of Shared to 0 using all 1024 x 1 threads
 
     if (id_x >= xBufferLength)
-    {
         return;
-    }
 
     int xAlignedLength = xBufferLength & ~7;                        // alignedLength for vectorized global loads
     int xDiff = xBufferLength - xAlignedLength;                     // difference between bufferLength and alignedLength
@@ -169,9 +163,7 @@ __global__ void tensor_mean_grid_3channel_result_hip(Rpp32u *srcPtr,
     partialBSum_smem[hipThreadIdx_x] = 0;
 
     if (id_x >= xBufferLength)
-    {
         return;
-    }
 
     int xAlignedLength = xBufferLength & ~7;                                     // alignedLength for vectorized global loads
     int xDiff = xBufferLength - xAlignedLength;                                  // difference between bufferLength and alignedLength
@@ -224,11 +216,11 @@ __global__ void tensor_mean_grid_3channel_result_hip(Rpp32u *srcPtr,
     if (hipThreadIdx_x == 0)
     {
         int totalElements = roiTensorPtrSrc[hipBlockIdx_z].xywhROI.roiHeight * roiTensorPtrSrc[hipBlockIdx_z].xywhROI.roiWidth;
-        float sum = (float)partialRSum_smem[0] + partialGSum_smem[0] + partialBSum_smem[0];
+        float sum = static_cast<float>(partialRSum_smem[0] + partialGSum_smem[0] + partialBSum_smem[0]);
         int idx = hipBlockIdx_z * 4;
-        dstPtr[idx] = (float)partialRSum_smem[0] / totalElements;
-        dstPtr[idx + 1] = (float)partialGSum_smem[0] / totalElements;
-        dstPtr[idx + 2] = (float)partialBSum_smem[0] / totalElements;
+        dstPtr[idx] = static_cast<float>(partialRSum_smem[0]) / totalElements;
+        dstPtr[idx + 1] = static_cast<float>(partialGSum_smem[0]) / totalElements;
+        dstPtr[idx + 2] = static_cast<float>(partialBSum_smem[0]) / totalElements;
         dstPtr[idx + 3] = sum  / (totalElements * 3);
     }
 }
@@ -249,9 +241,7 @@ __global__ void tensor_mean_grid_3channel_result_hip(Rpp32s *srcPtr,
     partialBSum_smem[hipThreadIdx_x] = 0;
 
     if (id_x >= xBufferLength)
-    {
         return;
-    }
 
     int xAlignedLength = xBufferLength & ~7;                                     // alignedLength for vectorized global loads
     int xDiff = xBufferLength - xAlignedLength;                                  // difference between bufferLength and alignedLength
@@ -304,11 +294,11 @@ __global__ void tensor_mean_grid_3channel_result_hip(Rpp32s *srcPtr,
     if (hipThreadIdx_x == 0)
     {
         int totalElements = roiTensorPtrSrc[hipBlockIdx_z].xywhROI.roiHeight * roiTensorPtrSrc[hipBlockIdx_z].xywhROI.roiWidth;
-        float sum = (float)partialRSum_smem[0] + partialGSum_smem[0] + partialBSum_smem[0];
+        float sum = static_cast<float>(partialRSum_smem[0] + partialGSum_smem[0] + partialBSum_smem[0]);
         int idx = hipBlockIdx_z * 4;
-        dstPtr[idx] = (float)partialRSum_smem[0] / totalElements;
-        dstPtr[idx + 1] = (float)partialGSum_smem[0] / totalElements;
-        dstPtr[idx + 2] = (float)partialBSum_smem[0] / totalElements;
+        dstPtr[idx] = static_cast<float>(partialRSum_smem[0]) / totalElements;
+        dstPtr[idx + 1] = static_cast<float>(partialGSum_smem[0]) / totalElements;
+        dstPtr[idx + 2] = static_cast<float>(partialBSum_smem[0]) / totalElements;
         dstPtr[idx + 3] = sum  / (totalElements * 3);
     }
 }
@@ -329,9 +319,7 @@ __global__ void tensor_mean_grid_3channel_result_hip(float *srcPtr,
     partialBSum_smem[hipThreadIdx_x] = 0.0f;
 
     if (id_x >= xBufferLength)
-    {
         return;
-    }
 
     int xAlignedLength = xBufferLength & ~7;                                     // alignedLength for vectorized global loads
     int xDiff = xBufferLength - xAlignedLength;                                  // difference between bufferLength and alignedLength
