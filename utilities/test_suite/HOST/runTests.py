@@ -93,12 +93,20 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
                     print(f"./Tensor_host {srcPath1} {srcPath2} {dstPathTemp} {bitDepth} {outputFormatToggle} {case} {noiseType} 0 ")
                     result = subprocess.run([buildFolderPath + "/build/Tensor_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(noiseType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE)    # nosec
                     print(result.stdout.decode())
+            elif case == "21" or case == "23" or case == "24":
+                # Run all variants of interpolation functions with additional argument of interpolationType = bicubic / bilinear / gaussian / nearestneigbor / lanczos / triangular
+                for interpolationType in range(6):
+                    print(f"./Tensor_host {srcPath1} {srcPath2} {dstPathTemp} {bitDepth} {outputFormatToggle} {case} {interpolationType} 0")
+                    result = subprocess.run([buildFolderPath + "/build/Tensor_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(interpolationType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE)    # nosec
+                    print(result.stdout.decode())
+            else:
                 print(f"./Tensor_host {srcPath1} {srcPath2} {dstPathTemp} {bitDepth} {outputFormatToggle} {case} 0 {numRuns} {testType} {layout} 0")
                 result = subprocess.run([buildFolderPath + "/build/Tensor_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), "0", str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE)    # nosec
                 print(result.stdout.decode())
 
             print("------------------------------------------------------------------------------------------")
 
+def run_performance_test_cmd(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, additionalParam, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
     if qaMode == 1:
         with open("{}/BatchPD_host_{}_raw_performance_log.txt".format(loggingFolder, log_file_layout), "a") as log_file:
             process = subprocess.Popen([buildFolderPath + "/build/BatchPD_host_" + log_file_layout, srcPath1, srcPath2, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), "0"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
