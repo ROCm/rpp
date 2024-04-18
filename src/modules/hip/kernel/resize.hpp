@@ -714,7 +714,7 @@ __global__ void resize_generic_pln3_pkd3_hip_tensor(T *srcPtr,
 // -------------------- Set 3 - Kernel Executors --------------------
 
 template <typename T>
-RppStatus hip_exec_resize_tensor(T *srcPtr,
+inline RppStatus hip_exec_resize_tensor(T *srcPtr,
                                  RpptDescPtr srcDescPtr,
                                  T *dstPtr,
                                  RpptDescPtr dstDescPtr,

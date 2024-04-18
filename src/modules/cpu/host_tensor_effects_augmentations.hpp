@@ -33,6 +33,7 @@ SOFTWARE.
 #include "kernel/non_linear_blend.hpp"
 #include "kernel/water.hpp"
 #include "kernel/ricap.hpp"
+#include "kernel/resize.hpp"
 #include "kernel/vignette.hpp"
 
 #endif // HOST_TENSOR_EFFECTS_AUGMENTATIONS_HPP
