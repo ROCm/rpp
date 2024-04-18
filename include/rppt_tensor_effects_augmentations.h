@@ -46,8 +46,8 @@ extern "C" {
  * \details The gridmask augmentation runs as per https://arxiv.org/abs/2001.04086 for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
- * \image html img150x150.jpg Sample Input
- * \image html effects_augmentations_gridmask_img150x150.jpg Sample Output
+ * \image html img150x150.png Sample Input
+ * \image html effects_augmentations_gridmask_img150x150.png Sample Output
  * \param [in] srcPtr source tensor in HOST memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HOST memory
@@ -70,8 +70,8 @@ RppStatus rppt_gridmask_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t d
  * \details The gridmask augmentation runs as per https://arxiv.org/abs/2001.04086 for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
- * \image html img150x150.jpg Sample Input
- * \image html effects_augmentations_gridmask_img150x150.jpg Sample Output
+ * \image html img150x150.png Sample Input
+ * \image html effects_augmentations_gridmask_img150x150.png Sample Output
  * \param [in] srcPtr source tensor in HIP memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory
@@ -94,10 +94,10 @@ RppStatus rppt_gridmask_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t ds
  * \details The spatter augmentation adds random spatter of a user-defined color, for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
- * \image html img150x150.jpg Sample Input
- * \image html effects_augmentations_spatter_typeMud_img150x150.jpg Sample Output - Mud Spatter
- * \image html effects_augmentations_spatter_typeInk_img150x150.jpg Sample Output - Ink Spatter
- * \image html effects_augmentations_spatter_typeBlood_img150x150.jpg Sample Output - Blood Spatter
+ * \image html img150x150.png Sample Input
+ * \image html effects_augmentations_spatter_typeMud_img150x150.png Sample Output - Mud Spatter
+ * \image html effects_augmentations_spatter_typeInk_img150x150.png Sample Output - Ink Spatter
+ * \image html effects_augmentations_spatter_typeBlood_img150x150.png Sample Output - Blood Spatter
  * \param [in] srcPtr source tensor in HOST memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HOST memory
@@ -117,10 +117,10 @@ RppStatus rppt_spatter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t ds
  * \details The spatter augmentation adds random spatter of a user-defined color, for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
- * \image html img150x150.jpg Sample Input
- * \image html effects_augmentations_spatter_typeMud_img150x150.jpg Sample Output - Mud Spatter
- * \image html effects_augmentations_spatter_typeInk_img150x150.jpg Sample Output - Ink Spatter
- * \image html effects_augmentations_spatter_typeBlood_img150x150.jpg Sample Output - Blood Spatter
+ * \image html img150x150.png Sample Input
+ * \image html effects_augmentations_spatter_typeMud_img150x150.png Sample Output - Mud Spatter
+ * \image html effects_augmentations_spatter_typeInk_img150x150.png Sample Output - Ink Spatter
+ * \image html effects_augmentations_spatter_typeBlood_img150x150.png Sample Output - Blood Spatter
  * \param [in] srcPtr source tensor in HIP memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory
@@ -140,8 +140,8 @@ RppStatus rppt_spatter_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dst
  * \details The salt and pepper noise augmentation adds SnP noise based on user defined noise/salt probabilities, and user defined salt/pepper values for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
- * \image html img150x150.jpg Sample Input
- * \image html effects_augmentations_salt_and_pepper_noise_img150x150.jpg Sample Output
+ * \image html img150x150.png Sample Input
+ * \image html effects_augmentations_salt_and_pepper_noise_img150x150.png Sample Output
  * \param [in] srcPtr source tensor in HOST memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HOST memory
@@ -165,8 +165,8 @@ RppStatus rppt_salt_and_pepper_noise_host(RppPtr_t srcPtr, RpptDescPtr srcDescPt
  * \details The salt and pepper noise augmentation adds SnP noise based on user defined noise/salt probabilities, and user defined salt/pepper values for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
- * \image html img150x150.jpg Sample Input
- * \image html effects_augmentations_salt_and_pepper_noise_img150x150.jpg Sample Output
+ * \image html img150x150.png Sample Input
+ * \image html effects_augmentations_salt_and_pepper_noise_img150x150.png Sample Output
  * \param [in] srcPtr source tensor in HIP memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory
@@ -190,8 +190,8 @@ RppStatus rppt_salt_and_pepper_noise_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr
  * \details The shot noise augmentation adds Poisson/shot noise based on a user defined shotNoiseFactor, for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
- * \image html img150x150.jpg Sample Input
- * \image html effects_augmentations_shot_noise_img150x150.jpg Sample Output
+ * \image html img150x150.png Sample Input
+ * \image html effects_augmentations_shot_noise_img150x150.png Sample Output
  * \param [in] srcPtr source tensor in HOST memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HOST memory
@@ -212,8 +212,8 @@ RppStatus rppt_shot_noise_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t
  * \details The shot noise augmentation adds Poisson/shot noise based on a user defined shotNoiseFactor, for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
- * \image html img150x150.jpg Sample Input
- * \image html effects_augmentations_shot_noise_img150x150.jpg Sample Output
+ * \image html img150x150.png Sample Input
+ * \image html effects_augmentations_shot_noise_img150x150.png Sample Output
  * \param [in] srcPtr source tensor in HIP memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory
@@ -234,8 +234,8 @@ RppStatus rppt_shot_noise_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t 
  * \details The gaussian noise augmentation adds Gaussian noise based on user defined means and standard deviations, for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
- * \image html img150x150.jpg Sample Input
- * \image html effects_augmentations_gaussian_noise_img150x150.jpg Sample Output
+ * \image html img150x150.png Sample Input
+ * \image html effects_augmentations_gaussian_noise_img150x150.png Sample Output
  * \param [in] srcPtr source tensor in HOST memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HOST memory
@@ -257,8 +257,8 @@ RppStatus rppt_gaussian_noise_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppP
  * \details The gaussian noise augmentation adds Gaussian noise based on user defined means and standard deviations, for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
- * \image html img150x150.jpg Sample Input
- * \image html effects_augmentations_gaussian_noise_img150x150.jpg Sample Output
+ * \image html img150x150.png Sample Input
+ * \image html effects_augmentations_gaussian_noise_img150x150.png Sample Output
  * \param [in] srcPtr source tensor in HIP memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory
@@ -280,9 +280,9 @@ RppStatus rppt_gaussian_noise_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPt
  * \details The non linear blend augmentation adds standard deviation based non-linear alpha-blending, between two sets of batches of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
- * \image html img150x150.jpg Sample Input1
- * \image html img150x150_2.jpg Sample Input2
- * \image html effects_augmentations_non_linear_blend_img150x150.jpg Sample Output
+ * \image html img150x150.png Sample Input1
+ * \image html img150x150_2.png Sample Input2
+ * \image html effects_augmentations_non_linear_blend_img150x150.png Sample Output
  * \param [in] srcPtr1 source1 tensor in HOST memory
  * \param [in] srcPtr2 source2 tensor in HOST memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
@@ -303,9 +303,9 @@ RppStatus rppt_non_linear_blend_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDes
  * \details The non linear blend augmentation adds standard deviation based non-linear alpha-blending, between two sets of batches of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
- * \image html img150x150.jpg Sample Input1
- * \image html img150x150_2.jpg Sample Input2
- * \image html effects_augmentations_non_linear_blend_img150x150.jpg Sample Output
+ * \image html img150x150.png Sample Input1
+ * \image html img150x150_2.png Sample Input2
+ * \image html effects_augmentations_non_linear_blend_img150x150.png Sample Output
  * \param [in] srcPtr1 source1 tensor in HIP memory
  * \param [in] srcPtr2 source2 tensor in HIP memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
@@ -326,8 +326,8 @@ RppStatus rppt_non_linear_blend_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDesc
  * \details The water augmentation adds a water effect for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
- * \image html img150x150.jpg Sample Input
- * \image html effects_augmentations_water_img150x150.jpg Sample Output
+ * \image html img150x150.png Sample Input
+ * \image html effects_augmentations_water_img150x150.png Sample Output
  * \param [in] srcPtr source tensor in HOST memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HOST memory
@@ -352,8 +352,8 @@ RppStatus rppt_water_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstP
  * \details The water augmentation adds a water effect for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
- * \image html img150x150.jpg Sample Input
- * \image html effects_augmentations_water_img150x150.jpg Sample Output
+ * \image html img150x150.png Sample Input
+ * \image html effects_augmentations_water_img150x150.png Sample Output
  * \param [in] srcPtr source tensor in HIP memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory
@@ -379,8 +379,10 @@ RppStatus rppt_water_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPt
  * The RICAP augmentation requires dimensions of input images to be the same across entire batch.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
- * \image html img150x150.jpg Sample Input
- * \image html effects_augmentations_ricap_img150x150.jpg Sample Output
+ * \image html img150x150.png Sample Input1
+ * \image html img150x150_1.png Sample Input2
+ * \image html img150x150_2.png Sample Input3
+ * \image html effects_augmentations_ricap_img150x150.png Sample Output
  * \param [in] srcPtr source tensor in HOST memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HOST memory
@@ -401,8 +403,10 @@ RppStatus rppt_ricap_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstP
  * The RICAP augmentation requires dimensions of input images to be the same across entire batch.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
- * \image html img150x150.jpg Sample Input
- * \image html effects_augmentations_ricap_img150x150.jpg Sample Output
+ * \image html img150x150.png Sample Input1
+ * \image html img150x150_1.png Sample Input2
+ * \image html img150x150_2.png Sample Input3
+ * \image html effects_augmentations_ricap_img150x150.png Sample Output
  * \param [in] srcPtr source tensor in HIP memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory
@@ -417,6 +421,50 @@ RppStatus rppt_ricap_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstP
  */
 RppStatus rppt_ricap_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32u *permutedIndicesTensor, RpptROIPtr roiPtrInputCropRegion, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
+
+/*! \brief Vignette augmentation on HOST backend for a NCHW/NHWC layout tensor
+ * \details The Vignette augmentation adds a vignette effect for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+ * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
+ * - dstPtr depth ranges - Will be same depth as srcPtr.
+ * \image html img150x150.png Sample Input
+ * \image html effects_augmentations_vignette_img150x150.png Sample Output
+ * \param [in] srcPtr source tensor in HOST memory
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
+ * \param [out] dstPtr destination tensor in HOST memory
+ * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
+ * \param[in] vignetteIntensityTensor intensity values to quantify vignette effect (1D tensor of size batchSize with 0 < vignetteIntensityTensor[n] for each image in batch)
+ * \param [in] roiTensorSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+ * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+// NOTE: Pixel mismatch of 5% is expected between HIP and HOST Tensor variations due to usage of fastexpavx() instead of exp() in HOST Tensor.
+RppStatus rppt_vignette_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *vignetteIntensityTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+
+#ifdef GPU_SUPPORT
+/*! \brief Vignette augmentation on HIP backend for a NCHW/NHWC layout tensor
+ * \details The vignette augmentation adds a vignette effect for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+ * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
+ * - dstPtr depth ranges - Will be same depth as srcPtr.
+ * \image html img150x150.png Sample Input
+ * \image html effects_augmentations_vignette_img150x150.png Sample Output
+ * \param [in] srcPtr source tensor in HIP memory
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
+ * \param [out] dstPtr destination tensor in HIP memory
+ * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
+ * \param[in] vignetteIntensityTensor intensity values to quantify vignette effect (1D tensor of size batchSize with 0 < vignetteIntensityTensor[n] for each image in batch)
+ * \param [in] roiTensorSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+ * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_vignette_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *vignetteIntensityTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
+
 
 /*! @}
  */

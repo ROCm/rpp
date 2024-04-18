@@ -37,6 +37,15 @@ SOFTWARE.
 #include <CL/cl.h>
 #endif
 
+#if _WIN32
+#include <intrin.h>
+#else
+#include <x86intrin.h>
+#include <smmintrin.h>
+#include <immintrin.h>
+#endif
+#include<vector>
+
 /*! \brief 8 bit unsigned char minimum \ingroup group_rppdefs \page subpage_rpp */
 #define RPP_MIN_8U      ( 0 )
 /*! \brief 8 bit unsigned char maximum \ingroup group_rppdefs \page subpage_rppi */
@@ -116,8 +125,10 @@ typedef enum
     RPP_ERROR_NOT_ENOUGH_MEMORY         = -16,
     /*! \brief Out of bound source ROI \ingroup group_rppdefs */
     RPP_ERROR_OUT_OF_BOUND_SRC_ROI      = -17,
+    /*! \brief src and dst layout mismatch \ingroup group_rppdefs */
+    RPP_ERROR_SRC_DST_LAYOUT_MISMATCH   = -18,
     /*! \brief Number of channels is invalid. (Needs to adhere to function specification.) \ingroup group_rppdefs */
-    RPP_ERROR_INVALID_CHANNELS          = -18
+    RPP_ERROR_INVALID_CHANNELS          = -19
 } RppStatus;
 
 /*! \brief RPP rppStatus_t type enums
@@ -300,7 +311,7 @@ typedef struct
     int y;
 } RppiPoint;
 
-/*! \brief RPPI Image 2D Rectangle (XYWH format) type struct
+/*! \brief RPPI Image 3D point type struct
  * \ingroup group_rppdefs
  */
 typedef struct
@@ -310,6 +321,9 @@ typedef struct
     int z;
 } RppiPoint3D;
 
+/*! \brief RPPI Image 2D Rectangle (XYWH format) type struct
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     int x;
@@ -362,7 +376,7 @@ typedef enum
     XYWH     // X-Y-Width-Height
 } RpptRoiType;
 
-/*! \brief RPPT Tensor subpixel layout type enum
+/*! \brief RPPT Tensor 3D ROI type enum
  * \ingroup group_rppdefs
  */
 typedef enum
@@ -371,6 +385,9 @@ typedef enum
     XYZWHD     // X-Y-Z-Width-Height-Depth
 } RpptRoi3DType;
 
+/*! \brief RPPT Tensor subpixel layout type enum
+ * \ingroup group_rppdefs
+ */
 typedef enum
 {
     RGBtype,
@@ -482,7 +499,7 @@ typedef struct
     RpptLayout layout;
 } RpptDesc, *RpptDescPtr;
 
-/*! \brief RPPT Tensor 8-bit uchar RGB type struct
+/*! \brief RPPT Tensor Generic descriptor type struct
  * \ingroup group_rppdefs
  */
 typedef struct
@@ -495,6 +512,9 @@ typedef struct
     RpptLayout layout;
 } RpptGenericDesc, *RpptGenericDescPtr;
 
+/*! \brief RPPT Tensor 8-bit uchar RGB type struct
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     Rpp8u R;
@@ -636,6 +656,49 @@ typedef struct GenericFilter
     }
 }GenericFilter;
 
+/*! \brief RPPT Tensor RpptResamplingWindow type struct
+ * \ingroup group_rppdefs
+ */
+typedef struct RpptResamplingWindow
+{
+    inline void input_range(Rpp32f x, Rpp32s *loc0, Rpp32s *loc1)
+    {
+        Rpp32s xc = std::ceil(x);
+        *loc0 = xc - lobes;
+        *loc1 = xc + lobes;
+    }
+
+    inline Rpp32f operator()(Rpp32f x)
+    {
+        Rpp32f locRaw = x * scale + center;
+        Rpp32s locFloor = std::floor(locRaw);
+        Rpp32f weight = locRaw - locFloor;
+        locFloor = std::max(std::min(locFloor, lookupSize - 2), 0);
+        Rpp32f current = lookup[locFloor];
+        Rpp32f next = lookup[locFloor + 1];
+        return current + weight * (next - current);
+    }
+
+    inline __m128 operator()(__m128 x)
+    {
+        __m128 pLocRaw = _mm_add_ps(_mm_mul_ps(x, pScale), pCenter);
+        __m128i pxLocFloor = _mm_cvttps_epi32(pLocRaw);
+        __m128 pLocFloor = _mm_cvtepi32_ps(pxLocFloor);
+        __m128 pWeight = _mm_sub_ps(pLocRaw, pLocFloor);
+        Rpp32s idx[4];
+        _mm_storeu_si128(reinterpret_cast<__m128i*>(idx), pxLocFloor);
+        __m128 pCurrent = _mm_setr_ps(lookup[idx[0]], lookup[idx[1]], lookup[idx[2]], lookup[idx[3]]);
+        __m128 pNext = _mm_setr_ps(lookup[idx[0] + 1], lookup[idx[1] + 1], lookup[idx[2] + 1], lookup[idx[3] + 1]);
+        return _mm_add_ps(pCurrent, _mm_mul_ps(pWeight, _mm_sub_ps(pNext, pCurrent)));
+    }
+
+    Rpp32f scale = 1, center = 1;
+    Rpp32s lobes = 0, coeffs = 0;
+    Rpp32s lookupSize = 0;
+    std::vector<Rpp32f> lookup;
+    __m128 pCenter, pScale;
+} RpptResamplingWindow;
+
 /******************** HOST memory typedefs ********************/
 
 /*! \brief RPP HOST 32-bit float memory
@@ -734,7 +797,7 @@ typedef struct {
     Rpp64u *dstBatchIndex;
     Rpp32u *inc;
     Rpp32u *dstInc;
-    Rpp32f *tempFloatmem;
+    Rpp32f *scratchBufferHost;
 } memCPU;
 
 #ifdef OCL_COMPILE
@@ -948,7 +1011,7 @@ typedef struct
     hipMemRpp8u ucharArr[10];
     hipMemRpp8s charArr[10];
     hipMemRpptRGB rgbArr;
-    hipMemRpp32f maskArr;
+    hipMemRpp32f scratchBufferHip;
     Rpp64u* srcBatchIndex;
     Rpp64u* dstBatchIndex;
     Rpp32u* inc;

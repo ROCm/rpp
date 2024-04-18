@@ -23,11 +23,10 @@ SOFTWARE.
 """
 
 import os
-import subprocess  # nosec
-import argparse
 import sys
-import datetime
-import shutil
+sys.dont_write_bytecode = True
+sys.path.append(os.path.join(os.path.dirname( __file__ ), '..' ))
+from common import *
 
 # Set the timestamp
 timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -37,7 +36,7 @@ inFilePath = scriptPath + "/../TEST_AUDIO_FILES/three_samples_single_channel_src
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
 caseMin = 0
-caseMax = 3
+caseMax = 2
 
 # Checks if the folder path is empty, or is it a root folder, or if it exists, and remove its contents
 def validate_and_remove_files(path):
@@ -229,111 +228,34 @@ os.chdir(buildFolderPath + "/build")
 subprocess.run(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.run(["make", "-j16"], cwd=".")    # nosec
 
+# List of cases supported
+supportedCaseList = ['0', '1', '2', '3', '6']
+
 if testType == 0:
     if batchSize != 3:
         print("QA tests can only run with a batch size of 3.")
         exit(0)
 
     for case in caseList:
-        if "--input_path" not in sys.argv:
-            if case == "3":
-                srcPath = scriptPath + "/../TEST_AUDIO_FILES/three_sample_multi_channel_src1"
-            else:
-                srcPath = inFilePath
-        if int(case) < 0 or int(case) > 3:
-            print(f"Invalid case number {case}. Case number must be 0-3 range!")
-            continue
-
         run_unit_test(srcPath, case, numRuns, testType, batchSize, outFilePath)
 else:
     for case in caseList:
-        if "--input_path" not in sys.argv:
-            if case == "3":
-                srcPath = scriptPath + "/../TEST_AUDIO_FILES/three_sample_multi_channel_src1"
-            else:
-                srcPath = inFilePath
-        if int(case) < 0 or int(case) > 3:
-            print(f"Invalid case number {case}. Case number must be 0-3 range!")
-            continue
-
         run_performance_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath)
 
 # print the results of qa tests
-supportedCaseList = ['0', '1', '2', '3']
+supportedCaseList = ['0', '1', '2']
 nonQACaseList = [] # Add cases present in supportedCaseList, but without QA support
 
 if testType == 0:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
-        f = open(qaFilePath, 'r+')
         print("---------------------------------- Results of QA Test - Tensor_host_audio -----------------------------------\n")
-        numLines = 0
-        numPassed = 0
-        for line in f:
-            sys.stdout.write(line)
-            numLines += 1
-            if "PASSED" in line:
-                numPassed += 1
-            sys.stdout.flush()
-        resultsInfo = "\n\nFinal Results of Tests:"
-        resultsInfo += "\n    - Total test cases including all subvariants REQUESTED = " + str(numLines)
-        resultsInfo += "\n    - Total test cases including all subvariants PASSED = " + str(numPassed)
-        resultsInfo += "\n\nGeneral information on Tensor test suite availability:"
-        resultsInfo += "\n    - Total augmentations supported in Tensor audio test suite = " + str(len(supportedCaseList))
-        resultsInfo += "\n    - Total augmentations with golden output QA test support = " + str(len(supportedCaseList) - len(nonQACaseList))
-        resultsInfo += "\n    - Total augmentations without golden ouput QA test support (due to randomization involved) = " + str(len(nonQACaseList))
-        f.write(resultsInfo)
-        print("\n-------------------------------------------------------------------" + resultsInfo + "\n\n-------------------------------------------------------------------")
+        print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList)
 
 # Performance tests
 if (testType == 1):
     log_file_list = get_log_file_list()
+    for log_file in log_file_list:
+        print_performance_tests_summary(log_file, "", numRuns)
 
-    try:
-        f = open(log_file_list[0], "r")
-        print("\n\n\nOpened log file -> "+ log_file_list[0])
-    except IOError:
-        print("Skipping file -> "+ log_file_list[0])
-        exit(0)
-
-    # Initialize data structures to store the parsed data
-    functions = []
-    max_wall_times = []
-    min_wall_times = []
-    avg_wall_times = []
-    prev_line = ""
-    funcCount = 0
-
-    for line in f:
-            if "max,min,avg wall times in ms/batch" in line:
-                split_word_start = "Running "
-                split_word_end = " " + str(numRuns)
-                prev_line = prev_line.partition(split_word_start)[2].partition(split_word_end)[0]
-                if prev_line not in functions:
-                    functions.append(prev_line)
-                    split_word_start = "max,min,avg wall times in ms/batch = "
-                    split_word_end = "\n"
-                    stats = line.partition(split_word_start)[2].partition(split_word_end)[0].split(",")
-                    max_wall_times.append(float(stats[0]))
-                    min_wall_times.append(float(stats[1]))
-                    avg_wall_times.append(float(stats[2]))
-                    funcCount += 1
-
-            if line != "\n":
-                prev_line = line
-
-    # Print log lengths
-    print("Functionalities - "+ str(funcCount))
-
-    # Print the summary in a well-formatted table
-    print("\n\nFunctionality\t\t\t\t\t\tnumRuns\t\tmax(ms/batch)\t\tmin(ms/batch)\t\tavg(ms/batch)\n")
-
-    if len(functions) > 0:
-        max_func_length = max(len(func) for func in functions)
-
-        for i, func in enumerate(functions):
-            print("{func}\t\t\t\t{numRuns}\t{:<15.6f}\t{:<15.6f}\t{:<15.6f}".format(
-                max_wall_times[i], min_wall_times[i], avg_wall_times[i], func=func, numRuns=numRuns))
-    else:
-        print("No functionality data found in the log file.")
