@@ -2161,6 +2161,8 @@ RppStatus rppt_remap_gpu(RppPtr_t srcPtr,
                          rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
+    if (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR && interpolationType != RpptInterpolationType::BILINEAR)
+        return RPP_ERROR_NOT_IMPLEMENTED;
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {

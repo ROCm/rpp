@@ -984,12 +984,6 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "remap";
 
-                    if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR))
-                    {
-                        missingFuncFlag = 1;
-                        break;
-                    }
-
                     RpptDesc tableDesc = srcDesc;
                     RpptDescPtr tableDescPtr = &tableDesc;
                     init_remap(tableDescPtr, srcDescPtr, roiTensorPtrSrc, rowRemapTable, colRemapTable);

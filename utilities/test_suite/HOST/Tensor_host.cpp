@@ -64,7 +64,7 @@ int main(int argc, char **argv)
     int decoderType = atoi(argv[13]);
     int batchSize = atoi(argv[14]);
 
-    bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23 || testCase == 24);
+    bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23 || testCase == 24 || testCase == 79);
     bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 33 || testCase == 61 || testCase == 63 || testCase == 65 || testCase == 68);
     bool randomOutputCase = (testCase == 84);
     bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24 || testCase == 79);
@@ -954,12 +954,6 @@ int main(int argc, char **argv)
                 case 79:
                 {
                     testCaseName = "remap";
-
-                    if (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR && interpolationType != RpptInterpolationType::BILINEAR)
-                    {
-                        missingFuncFlag = 1;
-                        break;
-                    }
 
                     RpptDesc tableDesc = srcDesc;
                     RpptDescPtr tableDescPtr = &tableDesc;
