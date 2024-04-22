@@ -90,7 +90,7 @@ RppStatus hip_exec_lens_correction_tensor(RpptDescPtr dstDescPtr,
     int globalThreads_y = dstDescPtr->h;
     int globalThreads_z = handle.GetBatchSize();
 
-    float *inverseMatrix = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
+    float *inverseMatrix = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
     hipLaunchKernelGGL(get_inverse_hip,
                        dim3(1, 1, ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                        dim3(1, 1, LOCAL_THREADS_Z),
