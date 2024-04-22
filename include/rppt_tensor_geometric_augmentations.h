@@ -578,27 +578,29 @@ RppStatus rppt_flip_voxel_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDes
  * \ingroup group_tensor_geometric
  */
 RppStatus rppt_flip_voxel_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *horizontalTensor, Rpp32u *verticalTensor, Rpp32u *depthTensor, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle);
-  
+#endif // GPU_SUPPORT
+
 /*! \brief Remap augmentation on HOST backend for a NCHW/NHWC layout tensor
  * \details Performs a remap operation using user specified remap tables for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout. For each image, the output(x,y) = input(mapx(x, y), mapy(x, y)) for every (x,y) in the destination image.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
- * \image html img150x150.jpg Sample Input
- * \image html geometric_augmentations_remap_img150x150.jpg Sample Output
+ * \image html img150x150.png Sample Input
+ * \image html geometric_augmentations_remap_img150x150.png Sample Output
  * \param [in] srcPtr source tensor in HOST memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HOST memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param[in] rowRemapTable Rpp32u row numbers in HOST memory for every pixel in the input batch of images (1D tensor of size width * height * batchSize)
- * \param[in] colRemapTable Rpp32u column numbers in HOST memory for every pixel in the input batch of images (1D tensor of size width * height * batchSize)
+ * \param [in] rowRemapTable Rpp32u row numbers in HOST memory for every pixel in the input batch of images (1D tensor of size width * height * batchSize)
+ * \param [in] colRemapTable Rpp32u column numbers in HOST memory for every pixel in the input batch of images (1D tensor of size width * height * batchSize)
  * \param [in] tableDescPtr table tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = F32, layout = NHWC, c = 1)
- * \param [in] interpolationType Interpolation type used in <tt> \ref RpptInterpolationType </tt>
+ * \param [in] interpolationType Interpolation type used in <tt> \ref RpptInterpolationType </tt> (Restrictions - Supports only NEAREST_NEIGHBOR and BILINEAR)
  * \param [in] roiTensorSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
+ * \ingroup group_tensor_geometric
  */
 RppStatus rppt_remap_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *rowRemapTable, Rpp32f *colRemapTable, RpptDescPtr tableDescPtr, RpptInterpolationType interpolationType, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 
@@ -613,16 +615,17 @@ RppStatus rppt_remap_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstP
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param[in] rowRemapTable Rpp32u row numbers in HIP memory for every pixel in the input batch of images (1D tensor of size width * height * batchSize)
- * \param[in] colRemapTable Rpp32u column numbers in HIP memory for every pixel in the input batch of images (1D tensor of size width * height * batchSize)
+ * \param [in] rowRemapTable Rpp32u row numbers in HIP memory for every pixel in the input batch of images (1D tensor of size width * height * batchSize)
+ * \param [in] colRemapTable Rpp32u column numbers in HIP memory for every pixel in the input batch of images (1D tensor of size width * height * batchSize)
  * \param [in] tableDescPtr table tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = F32, layout = NHWC, c = 1)
- * \param [in] interpolationType Interpolation type used in <tt> \ref RpptInterpolationType </tt>
+ * \param [in] interpolationType Interpolation type used in <tt> \ref RpptInterpolationType </tt> (Restrictions - Supports only NEAREST_NEIGHBOR and BILINEAR)
  * \param [in] roiTensorSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
+ * \ingroup group_tensor_geometric
  */
 RppStatus rppt_remap_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *rowRemapTable, Rpp32f *colRemapTable, RpptDescPtr tableDescPtr, RpptInterpolationType interpolationType, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
@@ -637,8 +640,8 @@ RppStatus rppt_remap_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPt
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HOST memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param[in] rowRemapTable Rpp32u row numbers in HOST memory for every pixel in the input batch of images (1D tensor of size width * height * batchSize)
- * \param[in] colRemapTable Rpp32u column numbers in HOST memory for every pixel in the input batch of images (1D tensor of size width * height * batchSize)
+ * \param [in] rowRemapTable Rpp32u row numbers in HOST memory for every pixel in the input batch of images (1D tensor of size width * height * batchSize)
+ * \param [in] colRemapTable Rpp32u column numbers in HOST memory for every pixel in the input batch of images (1D tensor of size width * height * batchSize)
  * \param [in] tableDescPtr table tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = F32, layout = NHWC, c = 1)
  * \param [in] cameraMatrixTensor contains camera intrinsic parameters required to compute lens corrected image. (1D tensor of size 9 * batchSize)
  * \param [in] distortionCoeffsTensor contains distortion coefficients required to compute lens corrected image. (1D tensor of size 8 * batchSize)
@@ -649,6 +652,7 @@ RppStatus rppt_remap_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPt
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
+ * \ingroup group_tensor_geometric
  */
 RppStatus rppt_lens_correction_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *rowRemapTable, Rpp32f *colRemapTable, RpptDescPtr tableDescPtr, Rpp32f *cameraMatrixTensor, Rpp32f *distortionCoeffsTensor, Rpp32f *newCameraMatrixTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 
@@ -663,8 +667,8 @@ RppStatus rppt_lens_correction_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rpp
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param[in] rowRemapTable Rpp32u row numbers in HIP memory for every pixel in the input batch of images (1D tensor of size width * height * batchSize)
- * \param[in] colRemapTable Rpp32u column numbers in HIP memory for every pixel in the input batch of images (1D tensor of size width * height * batchSize)
+ * \param [in] rowRemapTable Rpp32u row numbers in HIP memory for every pixel in the input batch of images (1D tensor of size width * height * batchSize)
+ * \param [in] colRemapTable Rpp32u column numbers in HIP memory for every pixel in the input batch of images (1D tensor of size width * height * batchSize)
  * \param [in] tableDescPtr table tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = F32, layout = NHWC, c = 1)
  * \param [in] cameraMatrixTensor contains camera intrinsic parameters required to compute lens corrected image. (1D tensor of size 9 * batchSize)
  * \param [in] distortionCoeffsTensor contains distortion coefficients required to compute lens corrected image. (1D tensor of size 8 * batchSize)
@@ -675,6 +679,7 @@ RppStatus rppt_lens_correction_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rpp
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
+ * \ingroup group_tensor_geometric
  */
 RppStatus rppt_lens_correction_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *rowRemapTable, Rpp32f *colRemapTable, RpptDescPtr tableDescPtr, Rpp32f *cameraMatrixTensor, Rpp32f *distortionCoeffsTensor, Rpp32f *newCameraMatrixTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 

@@ -594,7 +594,7 @@ int main(int argc, char **argv)
                         missingFuncFlag = 1;
                         break;
                     }
-                  
+
                     Rpp32f angle[batchSize];
                     for (i = 0; i < batchSize; i++)
                         angle[i] = 50;
@@ -1039,12 +1039,6 @@ int main(int argc, char **argv)
                 case 79:
                 {
                     testCaseName = "remap";
-
-                    if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR))
-                    {
-                        missingFuncFlag = 1;
-                        break;
-                    }
 
                     RpptDesc tableDesc = srcDesc;
                     RpptDescPtr tableDescPtr = &tableDesc;

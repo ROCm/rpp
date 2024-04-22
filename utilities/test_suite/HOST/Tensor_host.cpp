@@ -64,6 +64,12 @@ int main(int argc, char **argv)
     int decoderType = atoi(argv[13]);
     int batchSize = atoi(argv[14]);
 
+<<<<<<<<< Temporary merge branch 1
+    bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23 || testCase == 24 || testCase == 79);
+    bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 61 || testCase == 63);
+    bool randomOutputCase = (testCase == 84);
+    bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24 || testCase == 79);
+=========
     bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23 || testCase == 24);
     bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 33 || testCase == 61 || testCase == 63 || testCase == 65 || testCase == 68);
     bool randomOutputCase = (testCase == 84);
@@ -322,6 +328,7 @@ int main(int argc, char **argv)
         rowRemapTable = static_cast<Rpp32f *>(calloc(ioBufferSize, sizeof(Rpp32f)));
         colRemapTable = static_cast<Rpp32f *>(calloc(ioBufferSize, sizeof(Rpp32f)));
     }
+
     // Initialize buffers for any reductionType functions (testCase 87 - tensor_sum alone cannot return final sum as 8u/8s due to overflow. 8u inputs return 64u sums, 8s inputs return 64s sums)
     void *reductionFuncResultArr;
     Rpp32u reductionFuncResultArrLength = srcDescPtr->n * 4;
@@ -1000,12 +1007,6 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "remap";
 
-                    if (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR && interpolationType != RpptInterpolationType::BILINEAR)
-                    {
-                        missingFuncFlag = 1;
-                        break;
-                    }
-
                     RpptDesc tableDesc = srcDesc;
                     RpptDescPtr tableDescPtr = &tableDesc;
                     init_remap(tableDescPtr, srcDescPtr, roiTensorPtrSrc, rowRemapTable, colRemapTable);
@@ -1271,14 +1272,6 @@ int main(int argc, char **argv)
 
             if (reductionTypeCase)
             {
-                if(srcDescPtr->c == 3)
-                    printf("\nReduction result (Batch of 3 channel images produces 4 results per image in batch): ");
-                else if(srcDescPtr->c == 1)
-                {
-                    printf("\nReduction result (Batch of 1 channel images produces 1 result per image in batch): ");
-                    reductionFuncResultArrLength = srcDescPtr->n;
-                }
-
                 // print reduction functions output array based on different bit depths, and precision desired
                 int precision = ((dstDescPtr->dataType == RpptDataType::F32) || (dstDescPtr->dataType == RpptDataType::F16)) ? 3 : 0;
                 if (dstDescPtr->dataType == RpptDataType::U8)
@@ -1400,8 +1393,11 @@ int main(int argc, char **argv)
     free(outputu8);
     free(input_second);
     free(output);
-    free(rowRemapTable);
-    free(colRemapTable);
+    if(testCase == 79)
+    {
+        free(rowRemapTable);
+        free(colRemapTable);
+    }
     if(reductionTypeCase)
         free(reductionFuncResultArr);
     if(testCase == 33)
