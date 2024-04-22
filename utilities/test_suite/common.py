@@ -230,3 +230,12 @@ def print_performance_tests_summary(logFile, functionalityGroupList, numRuns):
 
     # Closing log file
     f.close()
+
+# Read the standard output from subprocess and writes to log file
+def read_from_subprocess_and_write_to_log(process, logFile):
+    while True:
+        output = process.stdout.readline()
+        if not output and process.poll() is not None:
+            break
+        print(output.strip())
+        logFile.write(output)

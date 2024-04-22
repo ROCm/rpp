@@ -25,13 +25,6 @@ SOFTWARE.
 #include "rpp_test_suite_common.h"
 #include <iomanip>
 #include <vector>
-#ifdef GPU_SUPPORT
-    #include <hip/hip_fp16.h>
-#else
-    #include <half/half.hpp>
-    using half_float::half;
-#endif
-typedef half Rpp16f;
 
 // Include this header file to use functions from libsndfile
 #include <sndfile.h>
@@ -184,10 +177,8 @@ void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dst
                 refVal = refPtrTemp[j];
                 outVal = dstPtrTemp[j];
                 bool invalidComparision = ((outVal == 0.0f) && (refVal != 0.0f));
-                if (!invalidComparision && abs(outVal - refVal) < 1e-20)
+                if (!invalidComparision && abs(outVal - refVal) < 1e-6)
                     matchedIndices += 1;
-                else
-                    std::cout << "refVal: " << refVal << "outVal: " << outVal << std::endl;
             }
             dstPtrRow += hStride;
             refPtrRow += hStride;

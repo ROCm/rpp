@@ -152,7 +152,7 @@ int main(int argc, char **argv)
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0;
     string testCaseName;
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
-    for (int iterCount = 0; iterCount < 1; iterCount++)
+    for (int iterCount = 0; iterCount < noOfIterations; iterCount++)
     {
         // read and decode audio and fill the audio dim values
         read_audio_batch_and_fill_dims(srcDescPtr, inputf32, audioFilesPath, iterCount, srcLengthTensor, channelsTensor);
@@ -196,19 +196,28 @@ int main(int argc, char **argv)
                     // Set buffer sizes for dst
                     Rpp64u resampleBufferSize = (Rpp64u)dstDescPtr->h * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
 
-                    // Reinitialize host buffers for output
-                    outputf32 = (Rpp32f *)realloc(outputf32, sizeof(Rpp32f) * resampleBufferSize);
-                    if(!outputf32)
+                    // Initialize hip buffers for output based on resampleBufferSize
+                    void *d_resampleOutputf32;
+                    CHECK(hipMalloc(&d_resampleOutputf32, resampleBufferSize * sizeof(Rpp32f)));
+                    if(!d_resampleOutputf32)
                     {
                         std::cout << "Unable to reallocate memory for output" << std::endl;
                         break;
                     }
 
                     startWallTime = omp_get_wtime();
-                    rppt_resample_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, inRateTensor, outRateTensor, srcDimsTensor, *window, handle);
+                    rppt_resample_gpu(d_inputf32, srcDescPtr, d_resampleOutputf32, dstDescPtr, inRateTensor, outRateTensor, srcDimsTensor, *window, handle);
+
+                    // QA mode - verify outputs with golden outputs. Below code doesn’t run for performance tests
+                    if (testType == 0)
+                    {
+                        outputf32 = (Rpp32f *)realloc(outputf32, sizeof(Rpp32f) * resampleBufferSize);
+                        CHECK(hipMemcpy(outputf32, d_resampleOutputf32, resampleBufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
+                    }
 
                     CHECK(hipHostFree(window->lookup));
                     CHECK(hipHostFree(window));
+                    CHECK(hipFree(d_resampleOutputf32));
                     break;
                 }
                 default:
@@ -217,6 +226,7 @@ int main(int argc, char **argv)
                     break;
                 }
             }
+            CHECK(hipDeviceSynchronize());
 
             endWallTime = omp_get_wtime();
             if (missingFuncFlag == 1)
@@ -234,8 +244,8 @@ int main(int argc, char **argv)
         // QA mode - verify outputs with golden outputs. Below code doesn’t run for performance tests
         if (testType == 0)
         {
-            CHECK(hipMemcpy(outputf32, d_outputf32, oBufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
-
+            if(testCase != 6)
+                CHECK(hipMemcpy(outputf32, d_outputf32, oBufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
             /* Run only if testCase is not 0
             For testCase 0 verify_non_silent_region_detection function is used for QA testing */
             if (testCase != 0)

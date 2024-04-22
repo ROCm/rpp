@@ -660,9 +660,9 @@ typedef struct RpptResamplingWindow
     }
 
 #ifdef HIP_COMPILE
-    __device__ void input_range(Rpp32f x, Rpp32s *loc0, Rpp32s *loc1)
+    __device__ void input_range(float x, int *loc0, int *loc1)
     {
-        Rpp32s xc = std::ceil(x);
+        int xc = std::ceil(x);
         *loc0 = xc - lobes;
         *loc1 = xc + lobes;
     }
@@ -680,14 +680,14 @@ typedef struct RpptResamplingWindow
     }
 
 #ifdef HIP_COMPILE
-    __device__ Rpp32f operator()(Rpp32f x)
+    __device__ float operator()(float x)
     {
-        Rpp32f locRaw = x * scale + center;
-        Rpp32s locFloor = std::floor(locRaw);
-        Rpp32f weight = locRaw - locFloor;
+        float locRaw = x * scale + center;
+        int locFloor = std::floor(locRaw);
+        float weight = locRaw - locFloor;
         locFloor = std::max(std::min(locFloor, lookupSize - 2), 0);
-        Rpp32f current = lookup[locFloor];
-        Rpp32f next = lookup[locFloor + 1];
+        float current = lookup[locFloor];
+        float next = lookup[locFloor + 1];
         return current + weight * (next - current);
     }
 #endif
