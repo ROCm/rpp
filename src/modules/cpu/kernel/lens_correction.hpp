@@ -27,6 +27,7 @@ SOFTWARE.
 #include "rpp_cpu_common.hpp"
 #include <omp.h>
 
+// Compute Inverse Matrix
 inline void get_inverse(float *mat, float *invMat)
 {
     float det = mat[0] * (mat[4] * mat[8] - mat[7] * mat[5]) - mat[1] * (mat[3] * mat[8] - mat[5] * mat[6]) + mat[2] * (mat[3] * mat[7] - mat[4] * mat[6]);

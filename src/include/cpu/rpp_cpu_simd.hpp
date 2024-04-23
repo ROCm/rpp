@@ -2973,8 +2973,7 @@ inline void rpp_store8_u8pln1_to_u8pln1_avx(Rpp8u* dstPtr, __m256i &p)
 inline void rpp_store8_f32pln1_to_u8pln1_avx(Rpp8u* dstPtr, __m256 &p)
 {
     __m256i px1 = _mm256_permute4x64_epi64(_mm256_packus_epi32(_mm256_cvtps_epi32(p), avx_px0), _MM_SHUFFLE(3,1,2,0));
-    px1 = _mm256_packus_epi16(px1, avx_px0);
-    rpp_store8_u8pln1_to_u8pln1_avx(dstPtr, px1);
+    rpp_storeu_si64((__m128i *)(dstPtr), _mm256_packus_epi16(px1, avx_px0));
 }
 
 inline void rpp_store24_f32pln3_to_u8pln3_avx(Rpp8u* dstRPtr, Rpp8u* dstGPtr, Rpp8u* dstBPtr, __m256* p)
@@ -3135,17 +3134,11 @@ inline void rpp_store24_f32pln3_to_i8pkd3_avx(Rpp8s* dstPtr, __m256* p)
     _mm256_storeu_si256((__m256i *)(dstPtr), px1);          /* store the 12 U8 pixels in dst */
 }
 
-inline void rpp_store8_i8pln1_to_i8pln1_avx(Rpp8s* dstPtr, __m256i &p)
-{
-    __m128i pTemp = _mm256_castsi256_si128(p);
-    rpp_storeu_si64((__m128i *)(dstPtr), pTemp);
-}
-
 inline void rpp_store8_f32pln1_to_i8pln1_avx(Rpp8s* dstPtr, __m256 &p)
 {
     __m256i px1 = _mm256_permute4x64_epi64(_mm256_packus_epi32(_mm256_cvtps_epi32(p), avx_px0), _MM_SHUFFLE(3,1,2,0));
     px1 = _mm256_sub_epi8(_mm256_packus_epi16(px1, avx_px0), avx_pxConvertI8);  /* Pack and add I8 conversion param */
-    rpp_store8_i8pln1_to_i8pln1_avx(dstPtr, px1); /* store the 4 pixels in dst */
+    rpp_storeu_si64((__m128i *)(dstPtr), _mm256_castsi256_si128(px1));          /* store the 4 pixels in dst */
 }
 
 inline void rpp_store24_f32pln3_to_i8pln3_avx(Rpp8s* dstRPtr, Rpp8s* dstGPtr, Rpp8s* dstBPtr, __m256* p)

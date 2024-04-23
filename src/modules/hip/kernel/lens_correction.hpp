@@ -1,6 +1,7 @@
 #include <hip/hip_runtime.h>
 #include "rpp_hip_common.hpp"
 
+// Compute Inverse Matrix
 __global__ void get_inverse_hip(d_float9 *matTensor, d_float9 *invMatTensor)
 {
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
