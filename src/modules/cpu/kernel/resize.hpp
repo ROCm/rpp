@@ -182,7 +182,7 @@ RppStatus resize_nn_u8_u8_host_tensor(Rpp8u *srcPtr,
                     __m128i pRow;
                     compute_resize_nn_src_loc_sse(pDstLoc, pWRatio, pWidthLimit, srcLocationColumnArray, pWOffset, true);
                     rpp_simd_load(rpp_resize_nn_load_u8pkd3, srcPtrTemp, srcLocationColumnArray, pRow);
-                    rpp_simd_store(rpp_store4_u8_to_u8, dstPtrTemp, pRow);
+                    rpp_simd_store(rpp_store12_u8_to_u8, dstPtrTemp, pRow);
                     dstPtrTemp += vectorIncrementPkd;
                 }
                 for (; vectorLoopCount < dstImgSize[batchCount].width; vectorLoopCount++)
@@ -616,7 +616,7 @@ RppStatus resize_nn_i8_i8_host_tensor(Rpp8s *srcPtr,
                     __m128i pRow;
                     compute_resize_nn_src_loc_sse(pDstLoc, pWRatio, pWidthLimit, srcLocationColumnArray, pWOffset, true);
                     rpp_simd_load(rpp_resize_nn_load_i8pkd3, srcPtrTemp, srcLocationColumnArray, pRow);
-                    rpp_simd_store(rpp_store4_i8_to_i8, dstPtrTemp, pRow);
+                    rpp_simd_store(rpp_store12_i8_to_i8, dstPtrTemp, pRow);
                     dstPtrTemp += vectorIncrementPkd;
                 }
                 for (; vectorLoopCount < dstImgSize[batchCount].width; vectorLoopCount++)

@@ -4995,10 +4995,10 @@ inline void compute_generic_bilinear_srclocs_and_interpolate(T *srcPtrChannel, R
 
     for (int c = 0; c < srcDescPtr->c; c++)
     {
-        dst[c] = (T)std::nearbyintf(((*(srcPtrChannel + srcLoc[0]) * bilinearCoeffs[0]) +        // TopRow R01 Pixel * coeff0
+        dst[c] = (T)((*(srcPtrChannel + srcLoc[0]) * bilinearCoeffs[0]) +       // TopRow R01 Pixel * coeff0
                     (*(srcPtrChannel + srcLoc[1]) * bilinearCoeffs[1]) +        // TopRow R02 Pixel * coeff1
                     (*(srcPtrChannel + srcLoc[2]) * bilinearCoeffs[2]) +        // BottomRow R01 Pixel * coeff2
-                    (*(srcPtrChannel + srcLoc[3]) * bilinearCoeffs[3])));        // BottomRow R02 Pixel * coeff3
+                    (*(srcPtrChannel + srcLoc[3]) * bilinearCoeffs[3]));        // BottomRow R02 Pixel * coeff3
         srcPtrChannel += srcDescPtr->strides.cStride;
     }
 }
@@ -6318,6 +6318,23 @@ inline void reduce_max_i48_host(__m128i *pMaxR, __m128i *pMaxG, __m128i *pMaxB, 
     px[1] = _mm_max_epi8(_mm_unpacklo_epi16(px[1], px[0]), _mm_unpackhi_epi16(px[1], px[0]));
     px[0] = _mm_max_epi8(_mm_unpacklo_epi32(px[1], zero), _mm_unpackhi_epi32(px[1], zero));
     result[0] = _mm_max_epi8(_mm_unpacklo_epi64(px[0], zero), _mm_unpackhi_epi64(px[0], zero));
+}
+
+inline void compute_remap_src_loc_sse(Rpp32f *rowRemapTablePtr, Rpp32f *colRemapTablePtr, Rpp32s *locArray, __m128 &pStride, __m128 &pWidthLimit, __m128 &pHeightLimit, const __m128 &pChannel = xmm_p1)
+{
+    __m128 pRowRemapVal = _mm_loadu_ps(rowRemapTablePtr);
+    pRowRemapVal = _mm_max_ps(_mm_min_ps(pRowRemapVal, pHeightLimit), xmm_p0);
+    __m128 pColRemapVal = _mm_loadu_ps(colRemapTablePtr);
+    pColRemapVal = _mm_max_ps(_mm_min_ps(pColRemapVal, pWidthLimit), xmm_p0);
+    __m128i pxRemappedSrcLoc = _mm_cvtps_epi32(_mm_fmadd_ps(pRowRemapVal, pStride, _mm_mul_ps(pColRemapVal, pChannel)));
+    _mm_storeu_si128((__m128i*) locArray, pxRemappedSrcLoc);
+}
+
+inline void compute_remap_src_loc(Rpp32f rowLoc, Rpp32f colLoc, Rpp32s &srcLoc, Rpp32s stride, Rpp32f widthLimit, Rpp32f heightLimit, Rpp32s channels = 1)
+{
+    rowLoc = std::max(0.0f, std::min(rowLoc, heightLimit));
+    colLoc = std::max(0.0f, std::min(colLoc, widthLimit));
+    srcLoc = (rowLoc * stride) + colLoc * channels;
 }
 
 #endif //RPP_CPU_COMMON_H
