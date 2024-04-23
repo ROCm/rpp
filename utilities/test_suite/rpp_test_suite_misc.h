@@ -31,6 +31,7 @@ std::map<int, string> augmentationMiscMap =
     {2, "log"}
 };
 
+// Compute strides given Generic Tensor
 void compute_strides(RpptGenericDescPtr descriptorPtr)
 {
     if (descriptorPtr->numDims > 0)
@@ -45,6 +46,7 @@ void compute_strides(RpptGenericDescPtr descriptorPtr)
     }
 }
 
+// Retrieve path for bin file
 string get_path(Rpp32u nDim, Rpp32u readType, string scriptPath, bool isMeanStd = false)
 {
     string folderName, suffix;
@@ -62,6 +64,7 @@ string get_path(Rpp32u nDim, Rpp32u readType, string scriptPath, bool isMeanStd 
     return finalPath;
 }
 
+// Read data from Bin file
 void read_data(Rpp32f *data, Rpp32u nDim, Rpp32u readType, string scriptPath, bool isMeanStd = false)
 {
     if(nDim != 2 && nDim != 3)
@@ -184,6 +187,7 @@ void set_generic_descriptor_layout(RpptGenericDescPtr srcDescriptorPtrND, RpptGe
     }
 }
 
+// Get size of Bin file
 Rpp32u get_bin_size(Rpp32u nDim, Rpp32u readType, string scriptPath)
 {
     string refFile = get_path(nDim, readType, scriptPath);
@@ -193,6 +197,7 @@ Rpp32u get_bin_size(Rpp32u nDim, Rpp32u readType, string scriptPath)
     return filesize;
 }
 
+// Compares output with reference outputs and validates QA
 void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize, Rpp32u bufferLength,
                     string dst, string funcName, string scriptPath)
 {
