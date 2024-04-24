@@ -539,15 +539,15 @@ RppStatus rppt_crop_and_patch_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDescPt
             <br> Support added for f32 -> f32 and u8 -> u8 dataypes.
  * \image html input150x150x4.gif Sample Input
  * \image html geometric_augmentations_flip_150x150x4.gif Sample Output
- * \param[in] srcPtr source tensor in HOST memory
- * \param[in] srcGenericDescPtr source tensor descriptor (Restrictions - numDims = 5, offsetInBytes >= 0, dataType = U8/F32, layout = NCDHW/NDHWC, c = 1/3)
- * \param[out] dstPtr destination tensor in HOST memory
- * \param[in] dstGenericDescPtr destination tensor descriptor (Restrictions - numDims = 5, offsetInBytes >= 0, dataType = U8/F32, layout = NCDHW/NDHWC, c = 1/3)
+ * \param [in] srcPtr source tensor in HOST memory
+ * \param [in] srcGenericDescPtr source tensor descriptor (Restrictions - numDims = 5, offsetInBytes >= 0, dataType = U8/F32, layout = NCDHW/NDHWC, c = 1/3)
+ * \param [out] dstPtr destination tensor in HOST memory
+ * \param [in] dstGenericDescPtr destination tensor descriptor (Restrictions - numDims = 5, offsetInBytes >= 0, dataType = U8/F32, layout = NCDHW/NDHWC, c = 1/3)
  * \param [in] horizontalTensor horizontal flag values to set horizontal flip on/off (1D tensor in HOST memory, of size batchSize, with horizontalTensor[i] = 0/1)
  * \param [in] verticalTensor vertical flag values to set vertical flip on/off (1D tensor in HOST memory, of size batchSize, with verticalTensor[i] = 0/1)
  * \param [in] depthTensor depth flag values to set depth flip on/off (1D tensor in HOST memory, of size batchSize, with depthTensor[i] = 0/1)
- * \param[in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
- * \param[in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
+ * \param [in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
+ * \param [in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
  * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
@@ -562,15 +562,15 @@ RppStatus rppt_flip_voxel_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDes
             <br> Support added for f32 -> f32 and u8 -> u8 dataypes.
  * \image html input150x150x4.gif Sample Input
  * \image html geometric_augmentations_flip_150x150x4.gif Sample Output
- * \param[in] srcPtr source tensor in HIP memory
- * \param[in] srcGenericDescPtr source tensor descriptor (Restrictions - numDims = 5, offsetInBytes >= 0, dataType = U8/F32, layout = NCDHW/NDHWC, c = 1/3)
- * \param[out] dstPtr destination tensor in HIP memory
- * \param[in] dstGenericDescPtr destination tensor descriptor (Restrictions - numDims = 5, offsetInBytes >= 0, dataType = U8/F32, layout = NCDHW/NDHWC, c = 1/3)
+ * \param [in] srcPtr source tensor in HIP memory
+ * \param [in] srcGenericDescPtr source tensor descriptor (Restrictions - numDims = 5, offsetInBytes >= 0, dataType = U8/F32, layout = NCDHW/NDHWC, c = 1/3)
+ * \param [out] dstPtr destination tensor in HIP memory
+ * \param [in] dstGenericDescPtr destination tensor descriptor (Restrictions - numDims = 5, offsetInBytes >= 0, dataType = U8/F32, layout = NCDHW/NDHWC, c = 1/3)
  * \param [in] horizontalTensor horizontal flag values to set horizontal flip on/off (1D tensor in pinned/HOST memory, of size batchSize, with horizontalTensor[i] = 0/1)
  * \param [in] verticalTensor vertical flag values to set vertical flip on/off (1D tensor in pinned/HOST memory, of size batchSize, with verticalTensor[i] = 0/1)
  * \param [in] depthTensor depth flag values to set depth flip on/off (1D tensor in pinned/HOST memory, of size batchSize, with depthTensor[i] = 0/1)
- * \param[in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
- * \param[in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
+ * \param [in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
+ * \param [in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
@@ -580,16 +580,14 @@ RppStatus rppt_flip_voxel_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDes
 RppStatus rppt_flip_voxel_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *horizontalTensor, Rpp32u *verticalTensor, Rpp32u *depthTensor, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
-/******************** transpose_generic ********************/
-
-/*! \brief Transpose augmentation on HOST backend for a nD tensor
- * \details The transpose augmentation performs an input-permutation based transpose on a generic nD tensor.
- * \param[in] srcPtr source tensor in HOST memory
- * \param[in] srcGenericDescPtr source tensor descriptor
- * \param[out] dstPtr source tensor in HOST memory
- * \param[in] dstGenericDescPtr destination tensor descriptor
- * \param[in] permTensor permutation tensor for transpose operation
- * \param[in] roiTensor ROI data for each element in source tensor (tensor of batchSize * number of dimensions * 2 values)
+/*! \brief Transpose Generic augmentation on HOST backend
+ * \details The transpose augmentation performs an input-permutation based transpose on a generic ND Tensor.
+ * \param [in] srcPtr source tensor in HOST memory
+ * \param [in] srcGenericDescPtr source tensor descriptor
+ * \param [out] dstPtr source tensor in HOST memory
+ * \param [in] dstGenericDescPtr destination tensor descriptor
+ * \param [in] permTensor permutation tensor for transpose operation
+ * \param [in] roiTensor ROI data for each element in source tensor (tensor of batchSize * number of dimensions * 2 values)
  * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
@@ -599,21 +597,21 @@ RppStatus rppt_flip_voxel_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDesc
 RppStatus rppt_transpose_generic_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *permTensor, Rpp32u *roiTensor, rppHandle_t rppHandle);
 
 #ifdef GPU_SUPPORT
-/*! \brief Transpose augmentation on HIP backend for a nD tensor
- * \details The transpose augmentation performs an input-permutation based transpose on a generic nD tensor.
- * \param[in] srcPtr source tensor in HIP memory
- * \param[in] srcGenericDescPtr source tensor descriptor
- * \param[out] dstPtr source tensor in HIP memory
- * \param[in] dstGenericDescPtr destination tensor descriptor
- * \param[in] permTensor permutation tensor for transpose operation
- * \param[in] roiGenericPtrSrc ROI data for each element in source tensor (tensor of batchSize RpptRoiGeneric values)
+/*! \brief Transpose Generic augmentation on HIP backend
+ * \details The transpose augmentation performs an input-permutation based transpose on a generic ND Tensor.
+ * \param [in] srcPtr source tensor in HIP memory
+ * \param [in] srcGenericDescPtr source tensor descriptor
+ * \param [out] dstPtr source tensor in HIP memory
+ * \param [in] dstGenericDescPtr destination tensor descriptor
+ * \param [in] permTensor permutation tensor for transpose operation
+ * \param [in] roiGenericPtrSrc ROI data for each element in source tensor (tensor of batchSize RpptRoiGeneric values)
  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
  * \ingroup group_tensor_geometric
  */
-RppStatus rppt_transpose_generic_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *permTensor, Rpp32u *roiTensor, rppHandle_t rppHandle);
+RppStatus rppt_transpose_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *permTensor, Rpp32u *roiTensor, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
 /*! @}
