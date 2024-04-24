@@ -1093,13 +1093,13 @@ RppStatus rppt_slice_host(RppPtr_t srcPtr,
 
 /******************** transpose ********************/
 
-RppStatus rppt_transpose_generic_host(RppPtr_t srcPtr,
-                                      RpptGenericDescPtr srcGenericDescPtr,
-                                      RppPtr_t dstPtr,
-                                      RpptGenericDescPtr dstGenericDescPtr,
-                                      Rpp32u *permTensor,
-                                      Rpp32u *roiTensor,
-                                      rppHandle_t rppHandle)
+RppStatus rppt_transpose_host(RppPtr_t srcPtr,
+                              RpptGenericDescPtr srcGenericDescPtr,
+                              RppPtr_t dstPtr,
+                              RpptGenericDescPtr dstGenericDescPtr,
+                              Rpp32u *permTensor,
+                              Rpp32u *roiTensor,
+                              rppHandle_t rppHandle)
 {
     if ((srcGenericDescPtr->dataType == RpptDataType::U8) && (dstGenericDescPtr->dataType == RpptDataType::U8))
     {
@@ -1123,13 +1123,13 @@ RppStatus rppt_transpose_generic_host(RppPtr_t srcPtr,
     }
     else if ((srcGenericDescPtr->dataType == RpptDataType::F32) && (dstGenericDescPtr->dataType == RpptDataType::F32))
     {
-        transpose_generic_f32_f32_host_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes),
-                                              srcGenericDescPtr,
-                                              reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
-                                              dstGenericDescPtr,
-                                              permTensor,
-                                              roiTensor,
-                                              rpp::deref(rppHandle));
+        transpose_f32_f32_host_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes),
+                                      srcGenericDescPtr,
+                                      reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
+                                      dstGenericDescPtr,
+                                      permTensor,
+                                      roiTensor,
+                                      rpp::deref(rppHandle));
     }
     else if ((srcGenericDescPtr->dataType == RpptDataType::I8) && (dstGenericDescPtr->dataType == RpptDataType::I8))
     {

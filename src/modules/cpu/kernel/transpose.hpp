@@ -1,5 +1,7 @@
 /*
-Copyright (c) 2019 - 2023 Advanced Micro Devices, Inc. All rights reserved.
+MIT License
+
+Copyright (c) 2019 - 2024 Advanced Micro Devices, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -8,16 +10,16 @@ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 */
 
 #include "rppdefs.h"
@@ -174,13 +176,13 @@ void transpose_generic_setup_and_run(T *srcPtrTemp, T *dstPtrTemp, Rpp32u *lengt
     transpose_generic_nd_recursive(dstPtrTemp, dstStrides, srcPtrTemp, srcStrides, dstShape, nDim);
 }
 
-RppStatus transpose_generic_f32_f32_host_tensor(Rpp32f *srcPtr,
-                                                RpptGenericDescPtr srcGenericDescPtr,
-                                                Rpp32f *dstPtr,
-                                                RpptGenericDescPtr dstGenericDescPtr,
-                                                Rpp32u *permTensor,
-                                                Rpp32u *roiTensor,
-                                                rpp::Handle& handle)
+RppStatus transpose_f32_f32_host_tensor(Rpp32f *srcPtr,
+                                        RpptGenericDescPtr srcGenericDescPtr,
+                                        Rpp32f *dstPtr,
+                                        RpptGenericDescPtr dstGenericDescPtr,
+                                        Rpp32u *permTensor,
+                                        Rpp32u *roiTensor,
+                                        rpp::Handle& handle)
 {
     Rpp32u numThreads = handle.GetNumThreads();
     Rpp32u nDim = dstGenericDescPtr->numDims - 1;
