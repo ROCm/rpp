@@ -1,7 +1,7 @@
 #include <hip/hip_runtime.h>
 #include "rpp_hip_common.hpp"
 
-// Compute Inverse Matrix
+// Compute Inverse matrix (3x3)
 __global__ void get_inverse_hip(d_float9 *matTensor, d_float9 *invMatTensor)
 {
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
@@ -30,7 +30,7 @@ __global__ void compute_remap_tables_hip_tensor(float *rowRemapTable,
                                                 d_float8 *distortionCoeffsTensor,
                                                 d_float9 *newCameraMatrixTensor,
                                                 uint2 remapTableStridesNH,
-                                                 RpptROIPtr roiTensorPtrSrc)
+                                                RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -99,7 +99,6 @@ RppStatus hip_exec_lens_correction_tensor(RpptDescPtr dstDescPtr,
                        handle.GetStream(),
                        (d_float9 *)cameraMatrix,
                        (d_float9 *)inverseMatrix);
-    hipDeviceSynchronize();
 
     hipLaunchKernelGGL(compute_remap_tables_hip_tensor,
                        dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),

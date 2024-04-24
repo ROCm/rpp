@@ -27,7 +27,7 @@ SOFTWARE.
 #include "rpp_cpu_common.hpp"
 #include <omp.h>
 
-// Compute Inverse Matrix
+// Compute Inverse matrix (3x3)
 inline void get_inverse(float *mat, float *invMat)
 {
     float det = mat[0] * (mat[4] * mat[8] - mat[7] * mat[5]) - mat[1] * (mat[3] * mat[8] - mat[5] * mat[6]) + mat[2] * (mat[3] * mat[7] - mat[4] * mat[6]);
@@ -65,6 +65,7 @@ inline void compute_lens_correction_remap_tables_host_tensor(RpptDescPtr srcDesc
         rowRemapTableTemp = rowRemapTable + batchCount * tableDescPtr->strides.nStride;
         colRemapTableTemp = colRemapTable + batchCount * tableDescPtr->strides.nStride;
 
+        // cameraMatrix is a 3x3 matrix thus increment by 9 to iterate from one tensor in a batch to another
         Rpp32f *cameraMatrix = cameraMatrixTensor + batchCount * 9;
         Rpp32f *distortionCoeffs = distortionCoeffsTensor + batchCount * 8;
         Rpp32f *newCameraMatrix = newCameraMatrixTensor + batchCount * 9;

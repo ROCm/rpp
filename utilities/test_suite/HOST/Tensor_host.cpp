@@ -1266,6 +1266,14 @@ int main(int argc, char **argv)
 
             if (reductionTypeCase)
             {
+                if(srcDescPtr->c == 3)
+                    printf("\nReduction result (Batch of 3 channel images produces 4 results per image in batch): ");
+                else if(srcDescPtr->c == 1)
+                {
+                    printf("\nReduction result (Batch of 1 channel images produces 1 result per image in batch): ");
+                    reductionFuncResultArrLength = srcDescPtr->n;
+                }
+
                 // print reduction functions output array based on different bit depths, and precision desired
                 int precision = ((dstDescPtr->dataType == RpptDataType::F32) || (dstDescPtr->dataType == RpptDataType::F16)) ? 3 : 0;
                 if (dstDescPtr->dataType == RpptDataType::U8)

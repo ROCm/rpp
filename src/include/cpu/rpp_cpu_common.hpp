@@ -4995,10 +4995,10 @@ inline void compute_generic_bilinear_srclocs_and_interpolate(T *srcPtrChannel, R
 
     for (int c = 0; c < srcDescPtr->c; c++)
     {
-        dst[c] = (T)((*(srcPtrChannel + srcLoc[0]) * bilinearCoeffs[0]) +       // TopRow R01 Pixel * coeff0
+        dst[c] = (T)std::nearbyintf(((*(srcPtrChannel + srcLoc[0]) * bilinearCoeffs[0]) +        // TopRow R01 Pixel * coeff0
                     (*(srcPtrChannel + srcLoc[1]) * bilinearCoeffs[1]) +        // TopRow R02 Pixel * coeff1
                     (*(srcPtrChannel + srcLoc[2]) * bilinearCoeffs[2]) +        // BottomRow R01 Pixel * coeff2
-                    (*(srcPtrChannel + srcLoc[3]) * bilinearCoeffs[3]));        // BottomRow R02 Pixel * coeff3
+                    (*(srcPtrChannel + srcLoc[3]) * bilinearCoeffs[3])));        // BottomRow R02 Pixel * coeff3
         srcPtrChannel += srcDescPtr->strides.cStride;
     }
 }
@@ -5033,8 +5033,8 @@ inline void compute_generic_bilinear_srclocs_1c_avx(__m256 &pSrcY, __m256 &pSrcX
 inline void compute_generic_bilinear_srclocs_3c_avx(__m256 &pSrcY, __m256 &pSrcX, RpptBilinearNbhoodLocsVecLen8 &srcLocs, __m256 *pBilinearCoeffs, __m256 &pSrcStrideH, __m256i *pxSrcStridesCHW, Rpp32s srcChannels, __m256 *pRoiLTRB, bool isSrcPKD3 = false)
 {
     __m256 pWeightParams[4], pSrcBilinearLTyx[4];
-    pSrcBilinearLTyx[0] = _mm256_floor_ps(pSrcY);     // srcLT->y = (Rpp32s) srcY;
-    pSrcBilinearLTyx[1] = _mm256_floor_ps(pSrcX);     // srcLT->x = (Rpp32s) srcX;
+    pSrcBilinearLTyx[0] = _mm256_floor_ps(pSrcY);                               // srcLT->y = (Rpp32s) srcY;
+    pSrcBilinearLTyx[1] = _mm256_floor_ps(pSrcX);                               // srcLT->x = (Rpp32s) srcX;
     pWeightParams[0] = _mm256_sub_ps(pSrcY, pSrcBilinearLTyx[0]);               // weightParams[0] = srcY - srcLT->y;
     pWeightParams[1] = _mm256_sub_ps(avx_p1, pWeightParams[0]);                 // weightParams[1] = 1 - weightParams[0];
     pWeightParams[2] = _mm256_sub_ps(pSrcX, pSrcBilinearLTyx[1]);               // weightParams[2] = srcX - srcLT->x;
