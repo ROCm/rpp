@@ -311,7 +311,7 @@ typedef struct
     int y;
 } RppiPoint;
 
-/*! \brief RPPI Image 2D Rectangle (XYWH format) type struct
+/*! \brief RPPI Image 3D point type struct
  * \ingroup group_rppdefs
  */
 typedef struct
@@ -321,6 +321,9 @@ typedef struct
     int z;
 } RppiPoint3D;
 
+/*! \brief RPPI Image 2D Rectangle (XYWH format) type struct
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     int x;
@@ -373,7 +376,7 @@ typedef enum
     XYWH     // X-Y-Width-Height
 } RpptRoiType;
 
-/*! \brief RPPT Tensor subpixel layout type enum
+/*! \brief RPPT Tensor 3D ROI type enum
  * \ingroup group_rppdefs
  */
 typedef enum
@@ -382,6 +385,9 @@ typedef enum
     XYZWHD     // X-Y-Z-Width-Height-Depth
 } RpptRoi3DType;
 
+/*! \brief RPPT Tensor subpixel layout type enum
+ * \ingroup group_rppdefs
+ */
 typedef enum
 {
     RGBtype,
@@ -493,7 +499,7 @@ typedef struct
     RpptLayout layout;
 } RpptDesc, *RpptDescPtr;
 
-/*! \brief RPPT Tensor 8-bit uchar RGB type struct
+/*! \brief RPPT Tensor Generic descriptor type struct
  * \ingroup group_rppdefs
  */
 typedef struct
@@ -506,6 +512,9 @@ typedef struct
     RpptLayout layout;
 } RpptGenericDesc, *RpptGenericDescPtr;
 
+/*! \brief RPPT Tensor 8-bit uchar RGB type struct
+ * \ingroup group_rppdefs
+ */
 typedef struct
 {
     Rpp8u R;
@@ -708,7 +717,7 @@ typedef struct RpptResamplingWindow
     Rpp32f scale = 1, center = 1;
     Rpp32s lobes = 0, coeffs = 0;
     Rpp32s lookupSize = 0;
-    Rpp32f *lookup;
+    std::vector<Rpp32f> lookup;
     __m128 pCenter, pScale;
 } RpptResamplingWindow;
 
@@ -810,7 +819,7 @@ typedef struct {
     Rpp64u *dstBatchIndex;
     Rpp32u *inc;
     Rpp32u *dstInc;
-    Rpp32f *tempFloatmem;
+    Rpp32f *scratchBufferHost;
 } memCPU;
 
 #ifdef OCL_COMPILE
@@ -1024,7 +1033,7 @@ typedef struct
     hipMemRpp8u ucharArr[10];
     hipMemRpp8s charArr[10];
     hipMemRpptRGB rgbArr;
-    hipMemRpp32f maskArr;
+    hipMemRpp32f scratchBufferHip;
     Rpp64u* srcBatchIndex;
     Rpp64u* dstBatchIndex;
     Rpp32u* inc;

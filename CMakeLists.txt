@@ -27,7 +27,7 @@ set(CMAKE_CXX_COMPILER clang++)
 set(CMAKE_CXX_STANDARD 17)
 
 # RPP Version
-set(VERSION "1.5.0")
+set(VERSION "1.7.0")
 
 # Set Project Version and Language
 project(rpp VERSION ${VERSION} LANGUAGES CXX)

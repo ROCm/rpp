@@ -1152,7 +1152,7 @@ RppStatus hip_exec_tensor_sum(Rpp8u *srcPtr,
     {
         Rpp32u partialSumArrLength = gridDim_x * gridDim_y * gridDim_z;
         Rpp32u *partialSumArr;
-        partialSumArr = reinterpret_cast<Rpp32u*>(handle.GetInitHandle()->mem.mgpu.maskArr.floatmem);
+        partialSumArr = reinterpret_cast<Rpp32u*>(handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
         hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(uint), handle.GetStream());
         hipLaunchKernelGGL(tensor_sum_pln1_hip,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
@@ -1177,7 +1177,7 @@ RppStatus hip_exec_tensor_sum(Rpp8u *srcPtr,
     {
         Rpp32u partialSumArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
         Rpp32u *partialSumArr;
-        partialSumArr = reinterpret_cast<Rpp32u*>(handle.GetInitHandle()->mem.mgpu.maskArr.floatmem);
+        partialSumArr = reinterpret_cast<Rpp32u*>(handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
         hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(Rpp32u), handle.GetStream());
         hipLaunchKernelGGL(tensor_sum_pln3_hip,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
@@ -1202,7 +1202,7 @@ RppStatus hip_exec_tensor_sum(Rpp8u *srcPtr,
     {
         Rpp32u partialSumArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
         Rpp32u *partialSumArr;
-        partialSumArr = reinterpret_cast<Rpp32u*>(handle.GetInitHandle()->mem.mgpu.maskArr.floatmem);
+        partialSumArr = reinterpret_cast<Rpp32u*>(handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
         hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(Rpp32u), handle.GetStream());
         hipLaunchKernelGGL(tensor_sum_pkd3_hip,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
@@ -1249,7 +1249,7 @@ RppStatus hip_exec_tensor_sum(Rpp8s *srcPtr,
     {
         Rpp32u partialSumArrLength = gridDim_x * gridDim_y * gridDim_z;
         Rpp32s *partialSumArr;
-        partialSumArr = reinterpret_cast<Rpp32s*>(handle.GetInitHandle()->mem.mgpu.maskArr.floatmem);
+        partialSumArr = reinterpret_cast<Rpp32s*>(handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
         hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(Rpp32s), handle.GetStream());
         hipLaunchKernelGGL(tensor_sum_pln1_hip,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
@@ -1274,7 +1274,7 @@ RppStatus hip_exec_tensor_sum(Rpp8s *srcPtr,
     {
         Rpp32u partialSumArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
         Rpp32s *partialSumArr;
-        partialSumArr = reinterpret_cast<Rpp32s*>(handle.GetInitHandle()->mem.mgpu.maskArr.floatmem);
+        partialSumArr = reinterpret_cast<Rpp32s*>(handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
         hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(Rpp32s), handle.GetStream());
         hipLaunchKernelGGL(tensor_sum_pln3_hip,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
@@ -1299,7 +1299,7 @@ RppStatus hip_exec_tensor_sum(Rpp8s *srcPtr,
     {
         Rpp32u partialSumArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
         Rpp32s *partialSumArr;
-        partialSumArr = reinterpret_cast<Rpp32s*>(handle.GetInitHandle()->mem.mgpu.maskArr.floatmem);
+        partialSumArr = reinterpret_cast<Rpp32s*>(handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
         hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(Rpp32s), handle.GetStream());
         hipLaunchKernelGGL(tensor_sum_pkd3_hip,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
@@ -1346,7 +1346,7 @@ RppStatus hip_exec_tensor_sum(T *srcPtr,
     {
         Rpp32u partialSumArrLength = gridDim_x * gridDim_y * gridDim_z;
         float *partialSumArr;
-        partialSumArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
+        partialSumArr = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
         hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(float), handle.GetStream());
         hipLaunchKernelGGL(tensor_sum_pln1_hip,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
@@ -1371,7 +1371,7 @@ RppStatus hip_exec_tensor_sum(T *srcPtr,
     {
         Rpp32u partialSumArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
         float *partialSumArr;
-        partialSumArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
+        partialSumArr = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
         hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(float), handle.GetStream());
         hipLaunchKernelGGL(tensor_sum_pln3_hip,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
@@ -1396,7 +1396,7 @@ RppStatus hip_exec_tensor_sum(T *srcPtr,
     {
         Rpp32u partialSumArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
         float *partialSumArr;
-        partialSumArr = handle.GetInitHandle()->mem.mgpu.maskArr.floatmem;
+        partialSumArr = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
         hipMemsetAsync(partialSumArr, 0, partialSumArrLength * sizeof(float), handle.GetStream());
         hipLaunchKernelGGL(tensor_sum_pkd3_hip,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
