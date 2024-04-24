@@ -4995,10 +4995,10 @@ inline void compute_generic_bilinear_srclocs_and_interpolate(T *srcPtrChannel, R
 
     for (int c = 0; c < srcDescPtr->c; c++)
     {
-        dst[c] = (T)((*(srcPtrChannel + srcLoc[0]) * bilinearCoeffs[0]) +       // TopRow R01 Pixel * coeff0
+        dst[c] = (T)std::nearbyintf(((*(srcPtrChannel + srcLoc[0]) * bilinearCoeffs[0]) +        // TopRow R01 Pixel * coeff0
                     (*(srcPtrChannel + srcLoc[1]) * bilinearCoeffs[1]) +        // TopRow R02 Pixel * coeff1
                     (*(srcPtrChannel + srcLoc[2]) * bilinearCoeffs[2]) +        // BottomRow R01 Pixel * coeff2
-                    (*(srcPtrChannel + srcLoc[3]) * bilinearCoeffs[3]));        // BottomRow R02 Pixel * coeff3
+                    (*(srcPtrChannel + srcLoc[3]) * bilinearCoeffs[3])));        // BottomRow R02 Pixel * coeff3
         srcPtrChannel += srcDescPtr->strides.cStride;
     }
 }
