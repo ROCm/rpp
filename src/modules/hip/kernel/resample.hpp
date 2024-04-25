@@ -70,7 +70,7 @@ __global__ void resample_nchannel_hip_tensor(float *srcPtr,
     int inBlockRounded = static_cast<int>(inBlockRaw);
     float inPos = inBlockRaw - inBlockRounded;
     float fscale = scale;
-    float tempBuf[numChannels] = 0.0f;
+    float tempBuf[3] = {0.0f}; // Considering max channels as 3
 
     for (int outPos = outBlock; outPos < blockEnd; outPos++, inPos += fscale)
     {
@@ -86,7 +86,7 @@ __global__ void resample_nchannel_hip_tensor(float *srcPtr,
         int ofs0 = loc0 * numChannels;
         int ofs1 = loc1 * numChannels;
 
-        for (inOfs = ofs0; inOfs < ofs1; inOfs += numChannels, locBegin++)
+        for (int inOfs = ofs0; inOfs < ofs1; inOfs += numChannels, locBegin++)
         {
             float w = window(locBegin);
             for (int c = 0; c < numChannels; c++)
@@ -94,7 +94,7 @@ __global__ void resample_nchannel_hip_tensor(float *srcPtr,
         }
         int dstLoc = outPos * numChannels;
         for (int c = 0; c < numChannels; c++)
-            dstPtrTemp[dstLoc + c] = tempBuf[c];
+            dstPtr[dstLoc + c] = tempBuf[c];
     }
 }
 
