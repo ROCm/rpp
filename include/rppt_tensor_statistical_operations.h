@@ -194,10 +194,10 @@ RppStatus rppt_tensor_mean_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] tensorStddevArr destination array in HOST memory
  * \param [in] tensorStddevArrLength length of provided destination array (Restrictions - if srcDescPtr->c == 1 then tensorStddevArrLength = srcDescPtr->n, and if srcDescPtr->c == 3 then tensorStddevArrLength = srcDescPtr->n * 4)
- * \param[in] meanTensor mean values for stddev calculation (1D tensor of size batchSize * 4 in format (MeanR, MeanG, MeanB, MeanImage) for each image in batch)
- * \param[in] flag to select one among 0- for channel-wise stdDev with srcDescPtr->n * srcDescPtr->c valid outputs in tensorStddevArrLength with others being 0 i.e. (stdDevA, stdDevB, stdDevC, 0) for each image in batch
- *                                     1- for image-wise stdDev with srcDescPtr->n valid outputs in tensorStddevArrLength with others being 0 i.e. (0, 0, 0, stdDevImage) for each image in batch
- *                                     2- both channel-wise and image-wise stdDev with srcDescPtr->n * 4 valid outputs in tensorStddevArrLength with others being 0 i.e. (stdDevA, stdDevB, stdDevC, stdDevImage) for each image in batch
+ * \param [in] meanTensor mean values for stddev calculation (1D tensor of size batchSize * 4 in format (MeanR, MeanG, MeanB, MeanImage) for each image in batch)
+ * \param [in] flag to select one among 0 - for channel-wise stdDev with srcDescPtr->n * srcDescPtr->c valid outputs in tensorStddevArrLength, for each image in batch. Output for each image contains (stdDevR, stdDevG, stdDevB, 0)
+ *                                      1 - for image-wise stdDev with srcDescPtr->n valid outputs in tensorStddevArrLength, for each image in batch. Output for each image contains (0, 0, 0, stdDevImage)
+ *                                      2 - for both channel-wise and image-wise stdDev with (srcDescPtr->n * 4) valid outputs in tensorStddevArrLength, for each image in batch. Output for each image contains (stdDevR, stdDevG, stdDevB, stdDevImage)
  * \param [in] roiTensorSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y)) | (Restrictions - roiTensorSrc[i].xywhROI.roiWidth <= 3840 and roiTensorSrc[i].xywhROI.roiHeight <= 2160)
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
@@ -205,7 +205,7 @@ RppStatus rppt_tensor_mean_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
  */
-RppStatus rppt_tensor_stddev_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t tensorStddevArr, Rpp32u tensorStddevArrLength, Rpp32f *meanTensor, int flag, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+RppStatus rppt_tensor_stddev_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t tensorStddevArr, Rpp32u tensorStddevArrLength, Rpp32f *meanTensor, Rpp32u flag, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 
 #ifdef GPU_SUPPORT
 /*! \brief Tensor stddev operation on HIP backend for a NCHW/NHWC layout tensor
@@ -216,9 +216,10 @@ RppStatus rppt_tensor_stddev_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPt
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] tensorStddevArr destination array in HIP memory
  * \param [in] tensorStddevArrLength length of provided destination array (Restrictions - if srcDescPtr->c == 1 then tensorStddevArrLength = srcDescPtr->n, and if srcDescPtr->c == 3 then tensorStddevArrLength = srcDescPtr->n * 4)
- * \param[in] flag to select one among 0- for channel-wise stdDev with srcDescPtr->n * srcDescPtr->c valid outputs in tensorStddevArrLength with others being 0 i.e. (stdDevA, stdDevB, stdDevC, 0) for each image in batch
- *                                     1- for image-wise stdDev with srcDescPtr->n valid outputs in tensorStddevArrLength with others being 0 i.e. (0, 0, 0, stdDevImage) for each image in batch
- *                                     2- both channel-wise and image-wise stdDev with srcDescPtr->n * 4 valid outputs in tensorStddevArrLength with others being 0 i.e. (stdDevA, stdDevB, stdDevC, stdDevImage) for each image in batch
+ * \param [in] meanTensor mean values for stddev calculation (1D tensor of size batchSize * 4 in format (MeanR, MeanG, MeanB, MeanImage) for each image in batch)
+ * \param [in] flag to select one among 0 - for channel-wise stdDev with srcDescPtr->n * srcDescPtr->c valid outputs in tensorStddevArrLength, for each image in batch. Output for each image contains (stdDevR, stdDevG, stdDevB, 0)
+ *                                      1 - for image-wise stdDev with srcDescPtr->n valid outputs in tensorStddevArrLength, for each image in batch. Output for each image contains (0, 0, 0, stdDevImage)
+ *                                      2 - for both channel-wise and image-wise stdDev with (srcDescPtr->n * 4) valid outputs in tensorStddevArrLength, for each image in batch. Output for each image contains (stdDevR, stdDevG, stdDevB, stdDevImage)
  * \param [in] roiTensorSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y)) | (Restrictions - roiTensorSrc[i].xywhROI.roiWidth <= 3840 and roiTensorSrc[i].xywhROI.roiHeight <= 2160)
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
@@ -226,7 +227,7 @@ RppStatus rppt_tensor_stddev_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPt
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
  */
-RppStatus rppt_tensor_stddev_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t tensorStddevArr, Rpp32u tensorStddevArrLength, Rpp32f *meanTensor, int flag, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+RppStatus rppt_tensor_stddev_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t tensorStddevArr, Rpp32u tensorStddevArrLength, Rpp32f *meanTensor, Rpp32u flag, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 /*! @}
  */

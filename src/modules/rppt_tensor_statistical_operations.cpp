@@ -324,7 +324,7 @@ RppStatus rppt_tensor_stddev_host(RppPtr_t srcPtr,
                                   RppPtr_t tensorStddevArr,
                                   Rpp32u tensorStddevArrLength,
                                   Rpp32f *meanTensor,
-                                  int flag,
+                                  Rpp32u flag,
                                   RpptROIPtr roiTensorPtrSrc,
                                   RpptRoiType roiType,
                                   rppHandle_t rppHandle)
@@ -687,39 +687,39 @@ RppStatus rppt_tensor_mean_gpu(RppPtr_t srcPtr,
 
     if (srcDescPtr->dataType == RpptDataType::U8)
     {
-        hip_exec_tensor_mean(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
-                             srcDescPtr,
-                             static_cast<Rpp32f*>(tensorMeanArr),
-                             roiTensorPtrSrc,
-                             roiType,
-                             rpp::deref(rppHandle));
+        hip_exec_tensor_mean<Rpp8u, Rpp32u>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                            srcDescPtr,
+                                            static_cast<Rpp32f*>(tensorMeanArr),
+                                            roiTensorPtrSrc,
+                                            roiType,
+                                            rpp::deref(rppHandle));
     }
     else if (srcDescPtr->dataType == RpptDataType::F16)
     {
-        hip_exec_tensor_mean(reinterpret_cast<half*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                             srcDescPtr,
-                             static_cast<Rpp32f*>(tensorMeanArr),
-                             roiTensorPtrSrc,
-                             roiType,
-                             rpp::deref(rppHandle));
+        hip_exec_tensor_mean<half, float>(reinterpret_cast<half*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                            srcDescPtr,
+                                            static_cast<Rpp32f*>(tensorMeanArr),
+                                            roiTensorPtrSrc,
+                                            roiType,
+                                            rpp::deref(rppHandle));
     }
     else if (srcDescPtr->dataType == RpptDataType::F32)
     {
-        hip_exec_tensor_mean(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                             srcDescPtr,
-                             static_cast<Rpp32f*>(tensorMeanArr),
-                             roiTensorPtrSrc,
-                             roiType,
-                             rpp::deref(rppHandle));
+        hip_exec_tensor_mean<Rpp32f, float>(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                            srcDescPtr,
+                                            static_cast<Rpp32f*>(tensorMeanArr),
+                                            roiTensorPtrSrc,
+                                            roiType,
+                                            rpp::deref(rppHandle));
     }
     else if (srcDescPtr->dataType == RpptDataType::I8)
     {
-        hip_exec_tensor_mean(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
-                             srcDescPtr,
-                             static_cast<Rpp32f*>(tensorMeanArr),
-                             roiTensorPtrSrc,
-                             roiType,
-                             rpp::deref(rppHandle));
+        hip_exec_tensor_mean<Rpp8s, Rpp32s>(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                            srcDescPtr,
+                                            static_cast<Rpp32f*>(tensorMeanArr),
+                                            roiTensorPtrSrc,
+                                            roiType,
+                                            rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;
@@ -735,7 +735,7 @@ RppStatus rppt_tensor_stddev_gpu(RppPtr_t srcPtr,
                                  RppPtr_t tensorStddevArr,
                                  Rpp32u tensorStddevArrLength,
                                  Rpp32f *meanTensor,
-                                 int flag,
+                                 Rpp32u flag,
                                  RpptROIPtr roiTensorPtrSrc,
                                  RpptRoiType roiType,
                                  rppHandle_t rppHandle)

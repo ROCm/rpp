@@ -3,15 +3,14 @@
 #include "reduction.hpp"
 
 // ----------------------- Helper Functions --------------------------
+
 __device__ void stddev_hip_compute(uchar *srcPtr, float src, float *dst) { *dst = src; }
-
 __device__ void stddev_hip_compute(float *srcPtr, float src, float *dst) { *dst = src * 255; }
-
 __device__ void stddev_hip_compute(signed char *srcPtr, float src, float *dst) { *dst = src; }
-
 __device__ void stddev_hip_compute(half *srcPtr, float src, float *dst) { *dst = src * 255; }
 
 // -------------------- Set 0 - Reduction Stage 2 --------------------
+
 template <typename T>
 __global__ void tensor_stddev_grid_result_hip(T *inputSrcPtr,
                                               float *srcPtr,
@@ -686,100 +685,101 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
         if(!flag)
         {
             hipLaunchKernelGGL(channel_var_pln3_hip,
-                            dim3(gridDim_x, gridDim_y, gridDim_z),
-                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                            0,
-                            handle.GetStream(),
-                            srcPtr,
-                            make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                            tensorPartialVarArr,
-                            meanTensor,
-                            roiTensorPtrSrc);
+                               dim3(gridDim_x, gridDim_y, gridDim_z),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                               tensorPartialVarArr,
+                               meanTensor,
+                               roiTensorPtrSrc);
             hipStreamSynchronize(handle.GetStream());
             hipLaunchKernelGGL(tensor_stddev_grid_3channel_result_hip,
-                            dim3(1, 1, gridDim_z),
-                            dim3(1024, 1, 1),
-                            0,
-                            handle.GetStream(),
-                            srcPtr,
-                            tensorPartialVarArr,
-                            gridDim_x * gridDim_y,
-                            imageStddevArr,
-                            flag,
-                            roiTensorPtrSrc);
+                               dim3(1, 1, gridDim_z),
+                               dim3(1024, 1, 1),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               tensorPartialVarArr,
+                               gridDim_x * gridDim_y,
+                               imageStddevArr,
+                               flag,
+                               roiTensorPtrSrc);
         }
         if(flag == 1)
         {
             hipLaunchKernelGGL(tensor_var_pln3_hip,
-                            dim3(gridDim_x, gridDim_y, gridDim_z),
-                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                            0,
-                            handle.GetStream(),
-                            srcPtr,
-                            make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                            tensorPartialVarArr,
-                            meanTensor,
-                            roiTensorPtrSrc);
+                               dim3(gridDim_x, gridDim_y, gridDim_z),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                               tensorPartialVarArr,
+                               meanTensor,
+                               roiTensorPtrSrc);
             hipStreamSynchronize(handle.GetStream());
             hipLaunchKernelGGL(tensor_stddev_grid_3channel_result_hip,
-                            dim3(1, 1, gridDim_z),
-                            dim3(1024, 1, 1),
-                            0,
-                            handle.GetStream(),
-                            srcPtr,
-                            tensorPartialVarArr,
-                            gridDim_x * gridDim_y,
-                            imageStddevArr,
-                            flag,
-                            roiTensorPtrSrc);
+                               dim3(1, 1, gridDim_z),
+                               dim3(1024, 1, 1),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               tensorPartialVarArr,
+                               gridDim_x * gridDim_y,
+                               imageStddevArr,
+                               flag,
+                               roiTensorPtrSrc);
         }
         if(flag == 2)
         {
             hipLaunchKernelGGL(channel_var_pln3_hip,
-                            dim3(gridDim_x, gridDim_y, gridDim_z),
-                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                            0,
-                            handle.GetStream(),
-                            srcPtr,
-                            make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                            tensorPartialVarArr,
-                            meanTensor,
-                            roiTensorPtrSrc);
+                               dim3(gridDim_x, gridDim_y, gridDim_z),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                               tensorPartialVarArr,
+                               meanTensor,
+                               roiTensorPtrSrc);
             hipStreamSynchronize(handle.GetStream());
             hipLaunchKernelGGL(tensor_stddev_grid_3channel_result_hip,
-                            dim3(1, 1, gridDim_z),
-                            dim3(1024, 1, 1),
-                            0,
-                            handle.GetStream(),
-                            srcPtr,
-                            tensorPartialVarArr,
-                            gridDim_x * gridDim_y,
-                            imageStddevArr,
-                            0, //setting flag to 0 here to compute individual channel stddev
-                            roiTensorPtrSrc);
+                               dim3(1, 1, gridDim_z),
+                               dim3(1024, 1, 1),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               tensorPartialVarArr,
+                               gridDim_x * gridDim_y,
+                               imageStddevArr,
+                               0, //setting flag to 0 here to compute individual channel stddev
+                               roiTensorPtrSrc);
+            hipStreamSynchronize(handle.GetStream());
             hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float), handle.GetStream());
             hipLaunchKernelGGL(tensor_var_pln3_hip,
-                            dim3(gridDim_x, gridDim_y, gridDim_z),
-                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                            0,
-                            handle.GetStream(),
-                            srcPtr,
-                            make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                            tensorPartialVarArr,
-                            meanTensor,
-                            roiTensorPtrSrc);
+                               dim3(gridDim_x, gridDim_y, gridDim_z),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
+                               tensorPartialVarArr,
+                               meanTensor,
+                               roiTensorPtrSrc);
             hipStreamSynchronize(handle.GetStream());
             hipLaunchKernelGGL(tensor_stddev_grid_3channel_result_hip,
-                            dim3(1, 1, gridDim_z),
-                            dim3(1024, 1, 1),
-                            0,
-                            handle.GetStream(),
-                            srcPtr,
-                            tensorPartialVarArr,
-                            gridDim_x * gridDim_y,
-                            imageStddevArr,
-                            1, //setting flag to 1 here to compute image stddev
-                            roiTensorPtrSrc);
+                               dim3(1, 1, gridDim_z),
+                               dim3(1024, 1, 1),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               tensorPartialVarArr,
+                               gridDim_x * gridDim_y,
+                               imageStddevArr,
+                               1, //setting flag to 1 here to compute image stddev
+                               roiTensorPtrSrc);
         }
 
     }
@@ -792,100 +792,101 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
         if(!flag)
         {
             hipLaunchKernelGGL(channel_var_pkd3_hip,
-                            dim3(gridDim_x, gridDim_y, gridDim_z),
-                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                            0,
-                            handle.GetStream(),
-                            srcPtr,
-                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
-                            tensorPartialVarArr,
-                            meanTensor,
-                            roiTensorPtrSrc);
+                               dim3(gridDim_x, gridDim_y, gridDim_z),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                               tensorPartialVarArr,
+                               meanTensor,
+                               roiTensorPtrSrc);
             hipStreamSynchronize(handle.GetStream());
             hipLaunchKernelGGL(tensor_stddev_grid_3channel_result_hip,
-                            dim3(1, 1, gridDim_z),
-                            dim3(1024, 1, 1),
-                            0,
-                            handle.GetStream(),
-                            srcPtr,
-                            tensorPartialVarArr,
-                            gridDim_x * gridDim_y,
-                            imageStddevArr,
-                            flag,
-                            roiTensorPtrSrc);
+                               dim3(1, 1, gridDim_z),
+                               dim3(1024, 1, 1),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               tensorPartialVarArr,
+                               gridDim_x * gridDim_y,
+                               imageStddevArr,
+                               flag,
+                               roiTensorPtrSrc);
         }
         if(flag == 1)
         {
             hipLaunchKernelGGL(tensor_var_pkd3_hip,
-                            dim3(gridDim_x, gridDim_y, gridDim_z),
-                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                            0,
-                            handle.GetStream(),
-                            srcPtr,
-                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
-                            tensorPartialVarArr,
-                            meanTensor,
-                            roiTensorPtrSrc);
+                               dim3(gridDim_x, gridDim_y, gridDim_z),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                               tensorPartialVarArr,
+                               meanTensor,
+                               roiTensorPtrSrc);
             hipStreamSynchronize(handle.GetStream());
             hipLaunchKernelGGL(tensor_stddev_grid_3channel_result_hip,
-                            dim3(1, 1, gridDim_z),
-                            dim3(1024, 1, 1),
-                            0,
-                            handle.GetStream(),
-                            srcPtr,
-                            tensorPartialVarArr,
-                            gridDim_x * gridDim_y,
-                            imageStddevArr,
-                            flag,
-                            roiTensorPtrSrc);
+                               dim3(1, 1, gridDim_z),
+                               dim3(1024, 1, 1),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               tensorPartialVarArr,
+                               gridDim_x * gridDim_y,
+                               imageStddevArr,
+                               flag,
+                               roiTensorPtrSrc);
         }
         if(flag == 2)
         {
             hipLaunchKernelGGL(channel_var_pkd3_hip,
-                            dim3(gridDim_x, gridDim_y, gridDim_z),
-                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                            0,
-                            handle.GetStream(),
-                            srcPtr,
-                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
-                            tensorPartialVarArr,
-                            meanTensor,
-                            roiTensorPtrSrc);
+                               dim3(gridDim_x, gridDim_y, gridDim_z),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                               tensorPartialVarArr,
+                               meanTensor,
+                               roiTensorPtrSrc);
             hipStreamSynchronize(handle.GetStream());
             hipLaunchKernelGGL(tensor_stddev_grid_3channel_result_hip,
-                            dim3(1, 1, gridDim_z),
-                            dim3(1024, 1, 1),
-                            0,
-                            handle.GetStream(),
-                            srcPtr,
-                            tensorPartialVarArr,
-                            gridDim_x * gridDim_y,
-                            imageStddevArr,
-                            0, //setting flag to 0 here to compute individual channel stddev
-                            roiTensorPtrSrc);
+                               dim3(1, 1, gridDim_z),
+                               dim3(1024, 1, 1),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               tensorPartialVarArr,
+                               gridDim_x * gridDim_y,
+                               imageStddevArr,
+                               0, //setting flag to 0 here to compute individual channel stddev
+                               roiTensorPtrSrc);
+            hipStreamSynchronize(handle.GetStream());
             hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float), handle.GetStream());
             hipLaunchKernelGGL(tensor_var_pkd3_hip,
-                            dim3(gridDim_x, gridDim_y, gridDim_z),
-                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                            0,
-                            handle.GetStream(),
-                            srcPtr,
-                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
-                            tensorPartialVarArr,
-                            meanTensor,
-                            roiTensorPtrSrc);
+                               dim3(gridDim_x, gridDim_y, gridDim_z),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
+                               tensorPartialVarArr,
+                               meanTensor,
+                               roiTensorPtrSrc);
             hipStreamSynchronize(handle.GetStream());
             hipLaunchKernelGGL(tensor_stddev_grid_3channel_result_hip,
-                            dim3(1, 1, gridDim_z),
-                            dim3(1024, 1, 1),
-                            0,
-                            handle.GetStream(),
-                            srcPtr,
-                            tensorPartialVarArr,
-                            gridDim_x * gridDim_y,
-                            imageStddevArr,
-                            1, //setting flag to 1 here to compute image stddev
-                            roiTensorPtrSrc);
+                               dim3(1, 1, gridDim_z),
+                               dim3(1024, 1, 1),
+                               0,
+                               handle.GetStream(),
+                               srcPtr,
+                               tensorPartialVarArr,
+                               gridDim_x * gridDim_y,
+                               imageStddevArr,
+                               1, //setting flag to 1 here to compute image stddev
+                               roiTensorPtrSrc);
         }
     }
 

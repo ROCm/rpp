@@ -6004,7 +6004,7 @@ inline void compute_variance_8_host(__m256d *p1, __m256d *pMean, __m256d *pVar)
     pVar[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVar[0]);
 }
 
-inline void compute_varchannel_24_host(__m256d *p1, __m256d *pMeanR, __m256d *pMeanG, __m256d *pMeanB, __m256d *pVarR, __m256d *pVarG, __m256d *pVarB)
+inline void compute_varianceChannel_pln3_24_host(__m256d *p1, __m256d *pMeanR, __m256d *pMeanG, __m256d *pMeanB, __m256d *pVarR, __m256d *pVarG, __m256d *pVarB)
 {
     __m256d pSub = _mm256_sub_pd(pMeanR[0], p1[0]);
     pVarR[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVarR[0]);
@@ -6020,7 +6020,7 @@ inline void compute_varchannel_24_host(__m256d *p1, __m256d *pMeanR, __m256d *pM
     pVarB[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVarB[0]);
 }
 
-inline void compute_varpln3_24_host(__m256d *p1, __m256d *pMean, __m256d *pVarR, __m256d *pVarG, __m256d *pVarB)
+inline void compute_varianceImage_pln3_24_host(__m256d *p1, __m256d *pMean, __m256d *pVarR, __m256d *pVarG, __m256d *pVarB)
 {
     __m256d pSub = _mm256_sub_pd(pMean[0], p1[0]);
     pVarR[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVarR[0]);

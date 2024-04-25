@@ -380,211 +380,11 @@ __global__ void tensor_mean_grid_3channel_result_hip(float *srcPtr,
 }
 
 // -------------------- Set 2 - Kernel Executors --------------------
-// Handle U8 datatype
-RppStatus hip_exec_tensor_mean(Rpp8u *srcPtr,
-                               RpptDescPtr srcDescPtr,
-                               Rpp32f *tensorMeanArr,
-                               RpptROIPtr roiTensorPtrSrc,
-                               RpptRoiType roiType,
-                               rpp::Handle& handle)
-{
-    if (roiType == RpptRoiType::LTRB)
-        hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
 
-    int globalThreads_x = (srcDescPtr->w + 7) >> 3;
-    int globalThreads_y = srcDescPtr->h;
-    int globalThreads_z = handle.GetBatchSize();
-    int gridDim_x = (int) ceil((float)globalThreads_x/LOCAL_THREADS_X);
-    int gridDim_y = (int) ceil((float)globalThreads_y/LOCAL_THREADS_Y);
-    int gridDim_z = (int) ceil((float)globalThreads_z/LOCAL_THREADS_Z);
-
-    if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
-    {
-        Rpp32u tensorPartialSumArrLength = gridDim_x * gridDim_y * gridDim_z;
-        Rpp32u *tensorPartialSumArr;
-        tensorPartialSumArr = reinterpret_cast<Rpp32u*>(handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
-        hipMemsetAsync(tensorPartialSumArr, 0, tensorPartialSumArrLength * sizeof(uint), handle.GetStream());
-        hipLaunchKernelGGL(tensor_sum_pln1_hip,
-                           dim3(gridDim_x, gridDim_y, gridDim_z),
-                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                           0,
-                           handle.GetStream(),
-                           srcPtr,
-                           make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
-                           tensorPartialSumArr,
-                           roiTensorPtrSrc);
-        hipStreamSynchronize(handle.GetStream());
-        hipLaunchKernelGGL(tensor_mean_grid_result_hip,
-                           dim3(1, 1, gridDim_z),
-                           dim3(1024, 1, 1),
-                           0,
-                           handle.GetStream(),
-                           tensorPartialSumArr,
-                           gridDim_x * gridDim_y,
-                           tensorMeanArr,
-                           roiTensorPtrSrc);
-    }
-    else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
-    {
-        Rpp32u tensorPartialSumArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
-        Rpp32u *tensorPartialSumArr;
-        tensorPartialSumArr = reinterpret_cast<Rpp32u*>(handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
-        hipMemsetAsync(tensorPartialSumArr, 0, tensorPartialSumArrLength * sizeof(Rpp32u), handle.GetStream());
-        hipLaunchKernelGGL(tensor_sum_pln3_hip,
-                           dim3(gridDim_x, gridDim_y, gridDim_z),
-                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                           0,
-                           handle.GetStream(),
-                           srcPtr,
-                           make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                           tensorPartialSumArr,
-                           roiTensorPtrSrc);
-        hipStreamSynchronize(handle.GetStream());
-        hipLaunchKernelGGL(tensor_mean_grid_3channel_result_hip,
-                           dim3(1, 1, gridDim_z),
-                           dim3(1024, 1, 1),
-                           0,
-                           handle.GetStream(),
-                           tensorPartialSumArr,
-                           gridDim_x * gridDim_y,
-                           tensorMeanArr,
-                           roiTensorPtrSrc);
-    }
-    else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
-    {
-        Rpp32u tensorPartialSumArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
-        Rpp32u *tensorPartialSumArr;
-        tensorPartialSumArr = reinterpret_cast<Rpp32u*>(handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
-        hipMemsetAsync(tensorPartialSumArr, 0, tensorPartialSumArrLength * sizeof(Rpp32u), handle.GetStream());
-        hipLaunchKernelGGL(tensor_sum_pkd3_hip,
-                           dim3(gridDim_x, gridDim_y, gridDim_z),
-                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                           0,
-                           handle.GetStream(),
-                           srcPtr,
-                           make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
-                           tensorPartialSumArr,
-                           roiTensorPtrSrc);
-        hipStreamSynchronize(handle.GetStream());
-        hipLaunchKernelGGL(tensor_mean_grid_3channel_result_hip,
-                           dim3(1, 1, gridDim_z),
-                           dim3(1024, 1, 1),
-                           0,
-                           handle.GetStream(),
-                           tensorPartialSumArr,
-                           gridDim_x * gridDim_y,
-                           tensorMeanArr,
-                           roiTensorPtrSrc);
-    }
-
-    return RPP_SUCCESS;
-}
-
-// Handle I8 datatype
-RppStatus hip_exec_tensor_mean(Rpp8s *srcPtr,
-                               RpptDescPtr srcDescPtr,
-                               Rpp32f *tensorMeanArr,
-                               RpptROIPtr roiTensorPtrSrc,
-                               RpptRoiType roiType,
-                               rpp::Handle& handle)
-{
-    if (roiType == RpptRoiType::LTRB)
-        hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
-
-    int globalThreads_x = (srcDescPtr->w + 7) >> 3;
-    int globalThreads_y = srcDescPtr->h;
-    int globalThreads_z = handle.GetBatchSize();
-    int gridDim_x = (int) ceil((float)globalThreads_x/LOCAL_THREADS_X);
-    int gridDim_y = (int) ceil((float)globalThreads_y/LOCAL_THREADS_Y);
-    int gridDim_z = (int) ceil((float)globalThreads_z/LOCAL_THREADS_Z);
-
-    if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
-    {
-        Rpp32u tensorPartialSumArrLength = gridDim_x * gridDim_y * gridDim_z;
-        Rpp32s *tensorPartialSumArr;
-        tensorPartialSumArr = reinterpret_cast<Rpp32s*>(handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
-        hipMemsetAsync(tensorPartialSumArr, 0, tensorPartialSumArrLength * sizeof(Rpp32s), handle.GetStream());
-        hipLaunchKernelGGL(tensor_sum_pln1_hip,
-                           dim3(gridDim_x, gridDim_y, gridDim_z),
-                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                           0,
-                           handle.GetStream(),
-                           srcPtr,
-                           make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
-                           tensorPartialSumArr,
-                           roiTensorPtrSrc);
-        hipStreamSynchronize(handle.GetStream());
-        hipLaunchKernelGGL(tensor_mean_grid_result_hip,
-                           dim3(1, 1, gridDim_z),
-                           dim3(1024, 1, 1),
-                           0,
-                           handle.GetStream(),
-                           tensorPartialSumArr,
-                           gridDim_x * gridDim_y,
-                           tensorMeanArr,
-                           roiTensorPtrSrc);
-    }
-    else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
-    {
-        Rpp32u tensorPartialSumArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
-        Rpp32s *tensorPartialSumArr;
-        tensorPartialSumArr = reinterpret_cast<Rpp32s*>(handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
-        hipMemsetAsync(tensorPartialSumArr, 0, tensorPartialSumArrLength * sizeof(Rpp32s), handle.GetStream());
-        hipLaunchKernelGGL(tensor_sum_pln3_hip,
-                           dim3(gridDim_x, gridDim_y, gridDim_z),
-                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                           0,
-                           handle.GetStream(),
-                           srcPtr,
-                           make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                           tensorPartialSumArr,
-                           roiTensorPtrSrc);
-        hipStreamSynchronize(handle.GetStream());
-        hipLaunchKernelGGL(tensor_mean_grid_3channel_result_hip,
-                           dim3(1, 1, gridDim_z),
-                           dim3(1024, 1, 1),
-                           0,
-                           handle.GetStream(),
-                           tensorPartialSumArr,
-                           gridDim_x * gridDim_y,
-                           tensorMeanArr,
-                           roiTensorPtrSrc);
-    }
-    else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
-    {
-        Rpp32u tensorPartialSumArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
-        Rpp32s *tensorPartialSumArr;
-        tensorPartialSumArr = reinterpret_cast<Rpp32s*>(handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
-        hipMemsetAsync(tensorPartialSumArr, 0, tensorPartialSumArrLength * sizeof(Rpp32s), handle.GetStream());
-        hipLaunchKernelGGL(tensor_sum_pkd3_hip,
-                           dim3(gridDim_x, gridDim_y, gridDim_z),
-                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                           0,
-                           handle.GetStream(),
-                           srcPtr,
-                           make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
-                           tensorPartialSumArr,
-                           roiTensorPtrSrc);
-        hipStreamSynchronize(handle.GetStream());
-        hipLaunchKernelGGL(tensor_mean_grid_3channel_result_hip,
-                           dim3(1, 1, gridDim_z),
-                           dim3(1024, 1, 1),
-                           0,
-                           handle.GetStream(),
-                           tensorPartialSumArr,
-                           gridDim_x * gridDim_y,
-                           tensorMeanArr,
-                           roiTensorPtrSrc);
-    }
-
-    return RPP_SUCCESS;
-}
-
-// Handle f16/32 datatype
 template <typename T, typename U>
 RppStatus hip_exec_tensor_mean(T *srcPtr,
                                RpptDescPtr srcDescPtr,
-                               U *tensorMeanArr,
+                               Rpp32f *tensorMeanArr,
                                RpptROIPtr roiTensorPtrSrc,
                                RpptRoiType roiType,
                                rpp::Handle& handle)
@@ -602,9 +402,9 @@ RppStatus hip_exec_tensor_mean(T *srcPtr,
     if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
     {
         Rpp32u tensorPartialSumArrLength = gridDim_x * gridDim_y * gridDim_z;
-        float *tensorPartialSumArr;
-        tensorPartialSumArr = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
-        hipMemsetAsync(tensorPartialSumArr, 0, tensorPartialSumArrLength * sizeof(float), handle.GetStream());
+        U *tensorPartialSumArr;
+        tensorPartialSumArr = reinterpret_cast<U*>(handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
+        hipMemsetAsync(tensorPartialSumArr, 0, tensorPartialSumArrLength * sizeof(U), handle.GetStream());
         hipStreamSynchronize(handle.GetStream());
         hipLaunchKernelGGL(tensor_sum_pln1_hip,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
@@ -629,9 +429,9 @@ RppStatus hip_exec_tensor_mean(T *srcPtr,
     else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
     {
         Rpp32u tensorPartialSumArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
-        float *tensorPartialSumArr;
-        tensorPartialSumArr = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
-        hipMemsetAsync(tensorPartialSumArr, 0, tensorPartialSumArrLength * sizeof(float), handle.GetStream());
+        U *tensorPartialSumArr;
+        tensorPartialSumArr = reinterpret_cast<U*>(handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
+        hipMemsetAsync(tensorPartialSumArr, 0, tensorPartialSumArrLength * sizeof(U), handle.GetStream());
         hipLaunchKernelGGL(tensor_sum_pln3_hip,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
@@ -655,9 +455,9 @@ RppStatus hip_exec_tensor_mean(T *srcPtr,
     else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
     {
         Rpp32u tensorPartialSumArrLength = gridDim_x * gridDim_y * gridDim_z * 3;
-        float *tensorPartialSumArr;
-        tensorPartialSumArr = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
-        hipMemsetAsync(tensorPartialSumArr, 0, tensorPartialSumArrLength * sizeof(float), handle.GetStream());
+        U *tensorPartialSumArr;
+        tensorPartialSumArr = reinterpret_cast<U*>(handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
+        hipMemsetAsync(tensorPartialSumArr, 0, tensorPartialSumArrLength * sizeof(U), handle.GetStream());
         hipLaunchKernelGGL(tensor_sum_pkd3_hip,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),

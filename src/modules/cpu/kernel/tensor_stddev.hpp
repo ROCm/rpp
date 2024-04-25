@@ -147,8 +147,8 @@ RppStatus tensor_stddev_u8_f32_host(Rpp8u *srcPtr,
                 {
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_u8pln3_to_f64pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);
-                    compute_varchannel_24_host(p, &pMeanR, &pMeanG, &pMeanB, &pVarR, &pVarG, &pVarB);
-                    compute_varpln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
+                    compute_varianceChannel_pln3_24_host(p, &pMeanR, &pMeanG, &pMeanB, &pVarR, &pVarG, &pVarB);
+                    compute_varianceImage_pln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
                     srcPtrTempB += vectorIncrementPerChannel;
@@ -239,8 +239,8 @@ RppStatus tensor_stddev_u8_f32_host(Rpp8u *srcPtr,
                 {
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_u8pkd3_to_f64pln3_avx, srcPtrTemp, p);
-                    compute_varchannel_24_host(p, &pMeanR, &pMeanG, &pMeanB, &pVarR, &pVarG, &pVarB);
-                    compute_varpln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
+                    compute_varianceChannel_pln3_24_host(p, &pMeanR, &pMeanG, &pMeanB, &pVarR, &pVarG, &pVarB);
+                    compute_varianceImage_pln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
                     srcPtrTemp += vectorIncrement;
                 }
 #endif
@@ -408,8 +408,8 @@ RppStatus tensor_stddev_f32_f32_host(Rpp32f *srcPtr,
                 {
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_f32pln3_to_f64pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);
-                    compute_varchannel_24_host(p, &pMeanR, &pMeanG, &pMeanB, &pVarR, &pVarG, &pVarB);
-                    compute_varpln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
+                    compute_varianceChannel_pln3_24_host(p, &pMeanR, &pMeanG, &pMeanB, &pVarR, &pVarG, &pVarB);
+                    compute_varianceImage_pln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
                     srcPtrTempB += vectorIncrementPerChannel;
@@ -500,8 +500,8 @@ RppStatus tensor_stddev_f32_f32_host(Rpp32f *srcPtr,
                 {
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_f32pkd3_to_f64pln3_avx, srcPtrTemp, p);
-                    compute_varchannel_24_host(p, &pMeanR, &pMeanG, &pMeanB, &pVarR, &pVarG, &pVarB);
-                    compute_varpln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
+                    compute_varianceChannel_pln3_24_host(p, &pMeanR, &pMeanG, &pMeanB, &pVarR, &pVarG, &pVarB);
+                    compute_varianceImage_pln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
                     srcPtrTemp += vectorIncrement;
                 }
 #endif
@@ -682,8 +682,8 @@ RppStatus tensor_stddev_f16_f32_host(Rpp16f *srcPtr,
 
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_f32pln3_to_f64pln3_avx, srcPtrTempR_ps, srcPtrTempG_ps, srcPtrTempB_ps, p);
-                    compute_varchannel_24_host(p, &pMeanR, &pMeanG, &pMeanB, &pVarR, &pVarG, &pVarB);
-                    compute_varpln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
+                    compute_varianceChannel_pln3_24_host(p, &pMeanR, &pMeanG, &pMeanB, &pVarR, &pVarG, &pVarB);
+                    compute_varianceImage_pln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
                     srcPtrTempB += vectorIncrementPerChannel;
@@ -778,8 +778,8 @@ RppStatus tensor_stddev_f16_f32_host(Rpp16f *srcPtr,
 
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_f32pkd3_to_f64pln3_avx, srcPtrTemp_ps, p);
-                    compute_varchannel_24_host(p, &pMeanR, &pMeanG, &pMeanB, &pVarR, &pVarG, &pVarB);
-                    compute_varpln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
+                    compute_varianceChannel_pln3_24_host(p, &pMeanR, &pMeanG, &pMeanB, &pVarR, &pVarG, &pVarB);
+                    compute_varianceImage_pln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
 
                     srcPtrTemp += vectorIncrement;
                 }
@@ -949,8 +949,8 @@ RppStatus tensor_stddev_i8_f32_host(Rpp8s *srcPtr,
                 {
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_i8pln3_to_f64pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);
-                    compute_varchannel_24_host(p, &pMeanR, &pMeanG, &pMeanB, &pVarR, &pVarG, &pVarB);
-                    compute_varpln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
+                    compute_varianceChannel_pln3_24_host(p, &pMeanR, &pMeanG, &pMeanB, &pVarR, &pVarG, &pVarB);
+                    compute_varianceImage_pln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
                     srcPtrTempB += vectorIncrementPerChannel;
@@ -1041,8 +1041,8 @@ RppStatus tensor_stddev_i8_f32_host(Rpp8s *srcPtr,
                 {
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_i8pkd3_to_f64pln3_avx, srcPtrTemp, p);
-                    compute_varchannel_24_host(p, &pMeanR, &pMeanG, &pMeanB, &pVarR, &pVarG, &pVarB);
-                    compute_varpln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
+                    compute_varianceChannel_pln3_24_host(p, &pMeanR, &pMeanG, &pMeanB, &pVarR, &pVarG, &pVarB);
+                    compute_varianceImage_pln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
                     srcPtrTemp += vectorIncrement;
                 }
 #endif
@@ -1206,7 +1206,7 @@ RppStatus custom_stddev_u8_f32_host(Rpp8u *srcPtr,
                 {
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_u8pln3_to_f64pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);
-                    compute_varchannel_24_host(p, &pMeanR, &pMeanG, &pMeanB, &pVarR, &pVarG, &pVarB);
+                    compute_varianceChannel_pln3_24_host(p, &pMeanR, &pMeanG, &pMeanB, &pVarR, &pVarG, &pVarB);
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
                     srcPtrTempB += vectorIncrementPerChannel;
@@ -1281,7 +1281,7 @@ RppStatus custom_stddev_u8_f32_host(Rpp8u *srcPtr,
                 {
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_u8pln3_to_f64pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);
-                    compute_varpln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
+                    compute_varianceImage_pln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
                     srcPtrTempB += vectorIncrementPerChannel;
@@ -1351,7 +1351,7 @@ RppStatus custom_stddev_u8_f32_host(Rpp8u *srcPtr,
                 {
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_u8pkd3_to_f64pln3_avx, srcPtrTemp, p);
-                    compute_varchannel_24_host(p, &pMeanR, &pMeanG, &pMeanB, &pVarR, &pVarG, &pVarB);
+                    compute_varianceChannel_pln3_24_host(p, &pMeanR, &pMeanG, &pMeanB, &pVarR, &pVarG, &pVarB);
                     srcPtrTemp += vectorIncrement;
                 }
 #endif
@@ -1413,7 +1413,7 @@ RppStatus custom_stddev_u8_f32_host(Rpp8u *srcPtr,
                 {
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_u8pkd3_to_f64pln3_avx, srcPtrTemp, p);
-                    compute_varpln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
+                    compute_varianceImage_pln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
                     srcPtrTemp += vectorIncrement;
                 }
 #endif
@@ -1561,7 +1561,7 @@ RppStatus custom_stddev_f32_f32_host(Rpp32f *srcPtr,
                 {
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_f32pln3_to_f64pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);
-                    compute_varchannel_24_host(p, &pMeanR, &pMeanG, &pMeanB, &pVarR, &pVarG, &pVarB);
+                    compute_varianceChannel_pln3_24_host(p, &pMeanR, &pMeanG, &pMeanB, &pVarR, &pVarG, &pVarB);
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
                     srcPtrTempB += vectorIncrementPerChannel;
@@ -1634,7 +1634,7 @@ RppStatus custom_stddev_f32_f32_host(Rpp32f *srcPtr,
                 {
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_f32pln3_to_f64pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);
-                    compute_varpln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
+                    compute_varianceImage_pln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
                     srcPtrTempB += vectorIncrementPerChannel;
@@ -1704,7 +1704,7 @@ RppStatus custom_stddev_f32_f32_host(Rpp32f *srcPtr,
                 {
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_f32pkd3_to_f64pln3_avx, srcPtrTemp, p);
-                    compute_varchannel_24_host(p, &pMeanR, &pMeanG, &pMeanB, &pVarR, &pVarG, &pVarB);
+                    compute_varianceChannel_pln3_24_host(p, &pMeanR, &pMeanG, &pMeanB, &pVarR, &pVarG, &pVarB);
                     srcPtrTemp += vectorIncrement;
                 }
 #endif
@@ -1766,7 +1766,7 @@ RppStatus custom_stddev_f32_f32_host(Rpp32f *srcPtr,
                 {
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_f32pkd3_to_f64pln3_avx, srcPtrTemp, p);
-                    compute_varpln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
+                    compute_varianceImage_pln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
                     srcPtrTemp += vectorIncrement;
                 }
 #endif
@@ -1927,7 +1927,7 @@ RppStatus custom_stddev_f16_f32_host(Rpp16f *srcPtr,
 
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_f32pln3_to_f64pln3_avx, srcPtrTempR_ps, srcPtrTempG_ps, srcPtrTempB_ps, p);
-                    compute_varchannel_24_host(p, &pMeanR, &pMeanG, &pMeanB, &pVarR, &pVarG, &pVarB);
+                    compute_varianceChannel_pln3_24_host(p, &pMeanR, &pMeanG, &pMeanB, &pVarR, &pVarG, &pVarB);
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
                     srcPtrTempB += vectorIncrementPerChannel;
@@ -2008,7 +2008,7 @@ RppStatus custom_stddev_f16_f32_host(Rpp16f *srcPtr,
 
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_f32pln3_to_f64pln3_avx, srcPtrTempR_ps, srcPtrTempG_ps, srcPtrTempB_ps, p);
-                    compute_varpln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
+                    compute_varianceImage_pln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
                     srcPtrTempB += vectorIncrementPerChannel;
@@ -2082,7 +2082,7 @@ RppStatus custom_stddev_f16_f32_host(Rpp16f *srcPtr,
 
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_f32pkd3_to_f64pln3_avx, srcPtrTemp_ps, p);
-                    compute_varchannel_24_host(p, &pMeanR, &pMeanG, &pMeanB, &pVarR, &pVarG, &pVarB);
+                    compute_varianceChannel_pln3_24_host(p, &pMeanR, &pMeanG, &pMeanB, &pVarR, &pVarG, &pVarB);
 
                     srcPtrTemp += vectorIncrement;
                 }
@@ -2149,7 +2149,7 @@ RppStatus custom_stddev_f16_f32_host(Rpp16f *srcPtr,
 
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_f32pkd3_to_f64pln3_avx, srcPtrTemp_ps, p);
-                    compute_varpln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
+                    compute_varianceImage_pln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
 
                     srcPtrTemp += vectorIncrement;
                 }
@@ -2299,7 +2299,7 @@ RppStatus custom_stddev_i8_f32_host(Rpp8s *srcPtr,
                 {
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_i8pln3_to_f64pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);
-                    compute_varchannel_24_host(p, &pMeanR, &pMeanG, &pMeanB, &pVarR, &pVarG, &pVarB);
+                    compute_varianceChannel_pln3_24_host(p, &pMeanR, &pMeanG, &pMeanB, &pVarR, &pVarG, &pVarB);
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
                     srcPtrTempB += vectorIncrementPerChannel;
@@ -2372,7 +2372,7 @@ RppStatus custom_stddev_i8_f32_host(Rpp8s *srcPtr,
                 {
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_i8pln3_to_f64pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);
-                    compute_varpln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
+                    compute_varianceImage_pln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
                     srcPtrTempB += vectorIncrementPerChannel;
@@ -2442,7 +2442,7 @@ RppStatus custom_stddev_i8_f32_host(Rpp8s *srcPtr,
                 {
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_i8pkd3_to_f64pln3_avx, srcPtrTemp, p);
-                    compute_varchannel_24_host(p, &pMeanR, &pMeanG, &pMeanB, &pVarR, &pVarG, &pVarB);
+                    compute_varianceChannel_pln3_24_host(p, &pMeanR, &pMeanG, &pMeanB, &pVarR, &pVarG, &pVarB);
                     srcPtrTemp += vectorIncrement;
                 }
 #endif
@@ -2504,7 +2504,7 @@ RppStatus custom_stddev_i8_f32_host(Rpp8s *srcPtr,
                 {
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_i8pkd3_to_f64pln3_avx, srcPtrTemp, p);
-                    compute_varpln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
+                    compute_varianceImage_pln3_24_host(p, &pMeanImage, &pVarImageR, &pVarImageG, &pVarImageB);
                     srcPtrTemp += vectorIncrement;
                 }
 #endif
