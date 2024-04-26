@@ -26,6 +26,8 @@ SOFTWARE.
 #include "rpp_cpu_simd.hpp"
 #include "rpp_cpu_common.hpp"
 
+
+
 Rpp32f get_result(Rpp8u *srcPtrTemp1, Rpp8u *srcPtrTemp2, Rpp8u *srcPtrTemp3, Rpp32s padLength)
 {
     Rpp32f accum = 0.0f;
@@ -67,6 +69,10 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
         Rpp32s padLength = kernelSize / 2;
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
 
+        Rpp32f kernelSizeInverseSquare = 1.0 / (kernelSize * kernelSize);
+        Rpp16s convolutionFactor = (Rpp16s) std::ceil(65536 * kernelSizeInverseSquare);
+        __m128i pxConvolutionFactor = _mm_set1_epi16(convolutionFactor);
+
         Rpp8u *srcPtrChannel, *dstPtrChannel;
         srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
@@ -74,26 +80,23 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
         // Resize with fused output-layout toggle (NHWC -> NHWC)
         if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
+            Rpp8u *srcPtrRow1, *srcPtrRow2, *srcPtrRow3, *dstPtrRow;
+            srcPtrRow1 = srcPtrChannel;
+            srcPtrRow2 = srcPtrRow1 + padLength * srcDescPtr->strides.hStride;
+            srcPtrRow3 = srcPtrRow2 + padLength * srcDescPtr->strides.hStride;
+            dstPtrRow = dstPtrChannel + padLength;
+
+            Rpp32u alignedLength = ((bufferLength - 2 * padLength) / 12) * 12;
             const __m128i xmm_pxMask02To15 = _mm_setr_epi8(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0x80, 0x80);
             const __m128i xmm_pxMask04To15 = _mm_setr_epi8(4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0x80, 0x80, 0x80, 0x80);
             const __m128i xmm_pxMask00To01 = _mm_setr_epi8(0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0, 1);
             const __m128i xmm_pxMask00To03 = _mm_setr_epi8(0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0, 1, 2, 3);
 
-            Rpp32f kernelSizeInverseSquare = 1.0 / (kernelSize * kernelSize);
-            Rpp16s convolutionFactor = (Rpp16s) std::ceil(65536 * kernelSizeInverseSquare);
-            __m128i pxConvolutionFactor = _mm_set1_epi16(convolutionFactor);
-
-            Rpp8u *srcPtrRow1, *srcPtrRow2, *srcPtrRow3, *dstPtrRow;
-            srcPtrRow1 = srcPtrChannel;
-            srcPtrRow2 = srcPtrRow1 + padLength * srcDescPtr->strides.hStride;
-            srcPtrRow3 = srcPtrRow2 + padLength * srcDescPtr->strides.hStride;
-            dstPtrRow = dstPtrChannel + padLength * dstDescPtr->strides.hStride + padLength;
-            Rpp32u alignedLength = ((bufferLength - 2 * padLength) / 12) * 12;
-
-            // ignore borders and process the possible data
-            for(int i = padLength; i < roi.xywhROI.roiHeight - padLength; i++)
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 int vectorLoopCount = 0;
+                bool firstRow = (i == 0);
+                bool lastRow = (i == (roi.xywhROI.roiHeight - 1));
                 Rpp8u *srcPtrTemp1 = srcPtrRow1;
                 Rpp8u *srcPtrTemp2 = srcPtrRow2;
                 Rpp8u *srcPtrTemp3 = srcPtrRow3;
@@ -101,11 +104,19 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                 {
                     __m128i pxRow[3];
-                    pxRow[0] = _mm_loadu_si128((__m128i *)srcPtrTemp1);
-                    pxRow[1] = _mm_loadu_si128((__m128i *)srcPtrTemp2);
-                    pxRow[2] = _mm_loadu_si128((__m128i *)srcPtrTemp3);
+                    if (!firstRow && !lastRow)
+                    {
+                        pxRow[0] = _mm_loadu_si128((__m128i *)srcPtrTemp1);
+                        pxRow[1] = _mm_loadu_si128((__m128i *)srcPtrTemp2);
+                        pxRow[2] = _mm_loadu_si128((__m128i *)srcPtrTemp3);
+                    }
+                    else
+                    {
+                        pxRow[0] = xmm_px0;
+                        pxRow[1] = _mm_loadu_si128((__m128i *)srcPtrTemp1);
+                        pxRow[2] = _mm_loadu_si128((__m128i *)srcPtrTemp2);
+                    }
 
-                    // unpack as 16 bits and split into 2 registers and add the register
                     __m128i pxUpper, pxLower;
                     pxUpper = _mm_unpacklo_epi8(pxRow[0], xmm_px0);
                     pxUpper = _mm_add_epi16(pxUpper, _mm_unpacklo_epi8(pxRow[1], xmm_px0));
@@ -138,9 +149,9 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     srcPtrTemp3 += 12;
                     dstPtrTemp += 12;
                 }
-                srcPtrRow1 += srcDescPtr->strides.hStride;
-                srcPtrRow2 += srcDescPtr->strides.hStride;
-                srcPtrRow3 += srcDescPtr->strides.hStride;
+                srcPtrRow1 += (!firstRow) ? srcDescPtr->strides.hStride : 0;
+                srcPtrRow2 += (!firstRow) ? srcDescPtr->strides.hStride : 0;
+                srcPtrRow3 += (!firstRow) ? srcDescPtr->strides.hStride : 0;
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
         }
