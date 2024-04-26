@@ -83,14 +83,15 @@ __global__ void resample_nchannel_hip_tensor(float *srcPtr,
             loc1 = srcLength - inBlockRounded;
         int locInWindow = loc0;
         float locBegin = locInWindow - inPos;
-        int ofs0 = loc0 * numChannels;
-        int ofs1 = loc1 * numChannels;
+        int2 ofs_i2 = make_int2(loc0, loc1);
+        ofs_i2 *= (int2)numChannels;
+        int idx = inBlockRounded * numChannels;
 
-        for (int inOfs = ofs0; inOfs < ofs1; inOfs += numChannels, locBegin++)
+        for (int inOfs = ofs_i2.x; inOfs < ofs_i2.y; inOfs += numChannels, locBegin++)
         {
             float w = window(locBegin);
             for (int c = 0; c < numChannels; c++)
-                tempBuf[c] += srcPtr[(inBlockRounded * numChannels) + inOfs + c] * w;
+                tempBuf[c] += srcPtr[idx + inOfs + c] * w;
         }
         int dstLoc = outPos * numChannels;
         for (int c = 0; c < numChannels; c++)
@@ -128,16 +129,15 @@ RppStatus hip_exec_resample_tensor(Rpp32f *srcPtr,
             double scale = static_cast<double>(inRate) / outRate;
             int block = 256; // 1 << 8
             int length = (outEnd / block) + 1;
+            int globalThreads_x = length;
+            int globalThreads_y = 1;
+            int globalThreads_z = 1;
 
             if (numChannels == 1)
             {
-                int globalThreads_x = length;
-                int globalThreads_y = 1;
-                int globalThreads_z = 1;
-
                 hipLaunchKernelGGL(resample_1channel_hip_tensor,
-                                   dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X_1DIM), ceil((float)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((float)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
-                                   dim3(LOCAL_THREADS_X_1DIM, LOCAL_THREADS_Y_1DIM, LOCAL_THREADS_Z_1DIM),
+                                   dim3(ceil((float)globalThreads_x/256), ceil((float)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((float)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
+                                   dim3(256, LOCAL_THREADS_Y_1DIM, LOCAL_THREADS_Z_1DIM),
                                    0,
                                    handle.GetStream(),
                                    srcPtr + i * srcDescPtr->strides.nStride,
@@ -151,13 +151,9 @@ RppStatus hip_exec_resample_tensor(Rpp32f *srcPtr,
             }
             else
             {
-                int globalThreads_x = length;
-                int globalThreads_y = 1;
-                int globalThreads_z = 1;
-
                 hipLaunchKernelGGL(resample_nchannel_hip_tensor,
-                                   dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X_1DIM), ceil((float)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((float)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
-                                   dim3(LOCAL_THREADS_X_1DIM, LOCAL_THREADS_Y_1DIM, LOCAL_THREADS_Z_1DIM),
+                                   dim3(ceil((float)globalThreads_x/256), ceil((float)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((float)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
+                                   dim3(256, LOCAL_THREADS_Y_1DIM, LOCAL_THREADS_Z_1DIM),
                                    0,
                                    handle.GetStream(),
                                    srcPtr + i * srcDescPtr->strides.nStride,
