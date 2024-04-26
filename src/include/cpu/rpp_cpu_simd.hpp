@@ -225,6 +225,17 @@ inline void rpp_mm_print_epi32(__m128i vPrintArray)
     }
 }
 
+inline void rpp_mm_print_epi16(__m128i vPrintArray)
+{
+    unsigned short int printArray[8];
+    _mm_storeu_si128((__m128i *)printArray, vPrintArray);
+    printf("\n");
+    for (int ct = 0; ct < 8; ct++)
+    {
+        printf("%hu ", printArray[ct]);
+    }
+}
+
 inline void rpp_mm_print_ps(__m128 vPrintArray)
 {
     float printArray[4];

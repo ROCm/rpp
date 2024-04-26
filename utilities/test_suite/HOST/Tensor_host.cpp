@@ -879,6 +879,20 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 49:
+                {
+                    testCaseName = "box_filter";
+                    Rpp32u kernelSize = 3;
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0)
+                        rppt_box_filter_host(input, srcDescPtr, output, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 case 61:
                 {
                     testCaseName = "magnitude";
