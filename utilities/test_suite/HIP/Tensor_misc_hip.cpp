@@ -73,13 +73,13 @@ int main(int argc, char **argv)
 
     // fill roi based on mode and number of dimensions
     Rpp32u *roiTensor;
-    CHECK(hipHostMalloc(&roiTensor, nDim * 2 * batchSize, sizeof(Rpp32u)));
+    CHECK_RETURN_STATUS(hipHostMalloc(&roiTensor, nDim * 2 * batchSize, sizeof(Rpp32u)));
     fill_roi_values(nDim, batchSize, roiTensor, qaMode);
 
     // set src/dst generic tensor descriptors
     RpptGenericDescPtr srcDescriptorPtrND, dstDescriptorPtrND;
-    CHECK(hipHostMalloc(&srcDescriptorPtrND, sizeof(RpptGenericDesc)));
-    CHECK(hipHostMalloc(&dstDescriptorPtrND, sizeof(RpptGenericDesc)));
+    CHECK_RETURN_STATUS(hipHostMalloc(&srcDescriptorPtrND, sizeof(RpptGenericDesc)));
+    CHECK_RETURN_STATUS(hipHostMalloc(&dstDescriptorPtrND, sizeof(RpptGenericDesc)));
 
     // set dims and compute strides
     int bitDepth = 2, offSetInBytes = 0;
@@ -97,8 +97,8 @@ int main(int argc, char **argv)
     outputF32 = static_cast<Rpp32f *>(calloc(bufferSize, sizeof(Rpp32f)));
 
     void *d_inputF32, *d_outputF32;
-    CHECK(hipMalloc(&d_inputF32, bufferSize * sizeof(Rpp32f)));
-    CHECK(hipMalloc(&d_outputF32, bufferSize * sizeof(Rpp32f)));
+    CHECK_RETURN_STATUS(hipMalloc(&d_inputF32, bufferSize * sizeof(Rpp32f)));
+    CHECK_RETURN_STATUS(hipMalloc(&d_outputF32, bufferSize * sizeof(Rpp32f)));
 
     // read input data
     if(qaMode)
@@ -111,12 +111,12 @@ int main(int argc, char **argv)
     }
 
     // copy data from HOST to HIP
-    CHECK(hipMemcpy(d_inputF32, inputF32, bufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
-    CHECK(hipDeviceSynchronize());
+    CHECK_RETURN_STATUS(hipMemcpy(d_inputF32, inputF32, bufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
+    CHECK_RETURN_STATUS(hipDeviceSynchronize());
 
     rppHandle_t handle;
     hipStream_t stream;
-    CHECK(hipStreamCreate(&stream));
+    CHECK_RETURN_STATUS(hipStreamCreate(&stream));
     rppCreateWithStreamAndBatchSize(&handle, stream, batchSize);
 
     Rpp32f *meanTensor = nullptr, *stdDevTensor = nullptr;
@@ -151,10 +151,10 @@ int main(int argc, char **argv)
 
                 // allocate memory if no memory is allocated
                 if(meanTensor == nullptr)
-                    CHECK(hipMalloc(&meanTensor, maxSize * batchSize * sizeof(Rpp32f)));
+                    CHECK_RETURN_STATUS(hipMalloc(&meanTensor, maxSize * batchSize * sizeof(Rpp32f)));
 
                 if(stdDevTensor == nullptr)
-                    CHECK(hipMalloc(&stdDevTensor, maxSize * batchSize * sizeof(Rpp32f)));
+                    CHECK_RETURN_STATUS(hipMalloc(&stdDevTensor, maxSize * batchSize * sizeof(Rpp32f)));
 
                 if(!computeMeanStddev)
                 {
@@ -163,9 +163,9 @@ int main(int argc, char **argv)
                     if(stdDevTensorCPU == nullptr)
                         stdDevTensorCPU = static_cast<Rpp32f *>(malloc(maxSize * sizeof(Rpp32f)));
                     fill_mean_stddev_values(nDim, maxSize, meanTensorCPU, stdDevTensorCPU, qaMode, axisMask, scriptPath);
-                    CHECK(hipMemcpy(meanTensor, meanTensorCPU, maxSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
-                    CHECK(hipMemcpy(stdDevTensor, stdDevTensorCPU, maxSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
-                    CHECK(hipDeviceSynchronize());
+                    CHECK_RETURN_STATUS(hipMemcpy(meanTensor, meanTensorCPU, maxSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
+                    CHECK_RETURN_STATUS(hipMemcpy(stdDevTensor, stdDevTensorCPU, maxSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
+                    CHECK_RETURN_STATUS(hipDeviceSynchronize());
                 }
 
                 startWallTime = omp_get_wtime();
@@ -174,9 +174,9 @@ int main(int argc, char **argv)
                 // compare outputs if qaMode is true
                 if(qaMode)
                 {
-                    CHECK(hipDeviceSynchronize());
-                    CHECK(hipMemcpy(outputF32, d_outputF32, bufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
-                    CHECK(hipDeviceSynchronize());
+                    CHECK_RETURN_STATUS(hipDeviceSynchronize());
+                    CHECK_RETURN_STATUS(hipMemcpy(outputF32, d_outputF32, bufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
+                    CHECK_RETURN_STATUS(hipDeviceSynchronize());
                     bool externalMeanStd = !computeMeanStddev; // when mean and stddev is passed from user
                     compare_output(outputF32, nDim, batchSize, bufferSize, dst, func, axisMask, scriptPath, externalMeanStd);
                 }
@@ -190,7 +190,7 @@ int main(int argc, char **argv)
         }
         if(!qaMode)
         {
-            CHECK(hipDeviceSynchronize());
+            CHECK_RETURN_STATUS(hipDeviceSynchronize());
             endWallTime = omp_get_wtime();
 
             wallTime = endWallTime - startWallTime;
@@ -213,15 +213,15 @@ int main(int argc, char **argv)
 
     free(inputF32);
     free(outputF32);
-    CHECK(hipHostFree(srcDescriptorPtrND));
-    CHECK(hipHostFree(dstDescriptorPtrND));
-    CHECK(hipHostFree(roiTensor));
-    CHECK(hipFree(d_inputF32));
-    CHECK(hipFree(d_outputF32));
+    CHECK_RETURN_STATUS(hipHostFree(srcDescriptorPtrND));
+    CHECK_RETURN_STATUS(hipHostFree(dstDescriptorPtrND));
+    CHECK_RETURN_STATUS(hipHostFree(roiTensor));
+    CHECK_RETURN_STATUS(hipFree(d_inputF32));
+    CHECK_RETURN_STATUS(hipFree(d_outputF32));
     if(meanTensor != nullptr)
-        CHECK(hipFree(meanTensor));
+        CHECK_RETURN_STATUS(hipFree(meanTensor));
     if(stdDevTensor != nullptr)
-        CHECK(hipFree(stdDevTensor));
+        CHECK_RETURN_STATUS(hipFree(stdDevTensor));
     if(meanTensorCPU != nullptr)
         free(meanTensorCPU);
     if(stdDevTensorCPU != nullptr)
