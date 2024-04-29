@@ -38,7 +38,7 @@ qaInputFile = scriptPath + "/../TEST_QA_IMAGES_VOXEL"
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
 caseMin = 0
-caseMax = 5
+caseMax = 6
 
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list():
@@ -206,7 +206,7 @@ subprocess.run(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.run(["make", "-j16"], cwd=".")  # nosec
 
 # List of cases supported
-supportedCaseList = ['0', '1', '2', '3', '4', '5']
+supportedCaseList = ['0', '1', '2', '3', '4', '5', '6']
 
 print("\n\n\n\n\n")
 print("##########################################################################################")
@@ -236,7 +236,7 @@ for case in caseList:
             run_test(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize)
 
 # print the results of qa tests
-nonQACaseList = [] # Add cases present in supportedCaseList, but without QA support
+nonQACaseList = ['6'] # Add cases present in supportedCaseList, but without QA support
 
 if qaMode and testType == 0:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
@@ -249,7 +249,7 @@ if (testType == 0 and qaMode == 0):   # Unit tests
     create_layout_directories(dstPath, layoutDict)
 elif (testType == 1):   # Performance tests
     logFileList = get_log_file_list()
-    functionalityGroupList = ["arithmetic_operations", "geometric_augmentations"]
+    functionalityGroupList = ["arithmetic_operations", "geometric_augmentations", "effects_augmentations"]
 
     for logFile in logFileList:
         print_performance_tests_summary(logFile, functionalityGroupList, numRuns)
