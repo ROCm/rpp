@@ -5,16 +5,14 @@
 // Single channel resample support
 __global__ void resample_1channel_hip_tensor(float *srcPtr,
                                              float *dstPtr,
-                                             float inRateTensor,
-                                             float outRateTensor,
                                              int srcLength,
                                              int outEnd,
                                              double scale,
-                                             RpptResamplingWindow &window)
+                                             RpptResamplingWindow &window,
+                                             int block)
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
 
-    int block = 256;
     int outBlock = id_x * block;
     if (outBlock >= outEnd)
         return;
@@ -50,13 +48,11 @@ __global__ void resample_1channel_hip_tensor(float *srcPtr,
 // Generic n channel resample support
 __global__ void resample_nchannel_hip_tensor(float *srcPtr,
                                              float *dstPtr,
-                                             float inRateTensor,
-                                             float outRateTensor,
-                                             int srcLength,
+                                             int2 srcDims,
                                              int outEnd,
                                              double scale,
                                              RpptResamplingWindow &window,
-                                             int numChannels)
+                                             int block)
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
 
@@ -70,7 +66,7 @@ __global__ void resample_nchannel_hip_tensor(float *srcPtr,
     int inBlockRounded = static_cast<int>(inBlockRaw);
     float inPos = inBlockRaw - inBlockRounded;
     float fscale = scale;
-    float tempBuf[3] = {0.0f}; // Considering max channels as 3
+    float tempBuf[RPPT_MAX_CHANNELS] = {0.0f}; // Considering max channels as 3
 
     for (int outPos = outBlock; outPos < blockEnd; outPos++, inPos += fscale)
     {
@@ -79,22 +75,22 @@ __global__ void resample_nchannel_hip_tensor(float *srcPtr,
 
         if (loc0 + inBlockRounded < 0)
             loc0 = -inBlockRounded;
-        if (loc1 + inBlockRounded > srcLength)
-            loc1 = srcLength - inBlockRounded;
+        if (loc1 + inBlockRounded > srcDims.x)
+            loc1 = srcDims.x - inBlockRounded;
         int locInWindow = loc0;
         float locBegin = locInWindow - inPos;
         int2 ofs_i2 = make_int2(loc0, loc1);
-        ofs_i2 *= (int2)numChannels;
-        int idx = inBlockRounded * numChannels;
+        ofs_i2 *= (int2)srcDims.y;
+        int idx = inBlockRounded * srcDims.y;
 
-        for (int inOfs = ofs_i2.x; inOfs < ofs_i2.y; inOfs += numChannels, locBegin++)
+        for (int inOfs = ofs_i2.x; inOfs < ofs_i2.y; inOfs += srcDims.y, locBegin++)
         {
             float w = window(locBegin);
-            for (int c = 0; c < numChannels; c++)
+            for (int c = 0; c < srcDims.y; c++)
                 tempBuf[c] += srcPtr[idx + inOfs + c] * w;
         }
-        int dstLoc = outPos * numChannels;
-        for (int c = 0; c < numChannels; c++)
+        int dstLoc = outPos * srcDims.y;
+        for (int c = 0; c < srcDims.y; c++)
             dstPtr[dstLoc + c] = tempBuf[c];
     }
 }
@@ -115,8 +111,8 @@ RppStatus hip_exec_resample_tensor(Rpp32f *srcPtr,
 
     for(int i = 0; i < batchSize; i++)
     {
-        int inRate = inRateTensor[i];
-        int outRate = outRateTensor[i];
+        float inRate = inRateTensor[i];
+        float outRate = outRateTensor[i];
         int srcLength = srcDimsTensor[i * 2];
         int numChannels = srcDimsTensor[i * 2 + 1];
         if (inRate == outRate) // No need of Resampling, do a direct memcpy
@@ -142,12 +138,11 @@ RppStatus hip_exec_resample_tensor(Rpp32f *srcPtr,
                                    handle.GetStream(),
                                    srcPtr + i * srcDescPtr->strides.nStride,
                                    dstPtr + i * dstDescPtr->strides.nStride,
-                                   inRate,
-                                   outRate,
                                    srcLength,
                                    outEnd,
                                    scale,
-                                   window);
+                                   window,
+                                   block);
             }
             else
             {
@@ -158,13 +153,11 @@ RppStatus hip_exec_resample_tensor(Rpp32f *srcPtr,
                                    handle.GetStream(),
                                    srcPtr + i * srcDescPtr->strides.nStride,
                                    dstPtr + i * dstDescPtr->strides.nStride,
-                                   inRate,
-                                   outRate,
-                                   srcLength,
+                                   make_int2(srcLength, numChannels),
                                    outEnd,
                                    scale,
                                    window,
-                                   numChannels);
+                                   block);
             }
         }
 
