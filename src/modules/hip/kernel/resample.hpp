@@ -12,6 +12,12 @@ __global__ void resample_1channel_hip_tensor(float *srcPtr,
                                              int block)
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    extern __shared__ float windowCoeffs_smem[];
+    float *windowCoeffsSh = windowCoeffs_smem;
+    for (int k = hipThreadIdx_x; k < window.lookupSize; k += block)
+        windowCoeffsSh[k] = window.lookup[k];
+    __syncthreads();
+    window.lookup = windowCoeffsSh;
 
     int outBlock = id_x * block;
     if (outBlock >= outEnd)
@@ -56,7 +62,6 @@ __global__ void resample_nchannel_hip_tensor(float *srcPtr,
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
 
-    int block = 256;
     int outBlock = id_x * block;
     if (outBlock >= outEnd)
         return;
@@ -116,9 +121,7 @@ RppStatus hip_exec_resample_tensor(Rpp32f *srcPtr,
         int srcLength = srcDimsTensor[i * 2];
         int numChannels = srcDimsTensor[i * 2 + 1];
         if (inRate == outRate) // No need of Resampling, do a direct memcpy
-        {
             hipMemcpy(dstPtr, srcPtr, srcLength * numChannels * sizeof(float), hipMemcpyDeviceToDevice);
-        }
         else
         {
             int outEnd = std::ceil(srcLength * outRate / inRate);
@@ -128,13 +131,14 @@ RppStatus hip_exec_resample_tensor(Rpp32f *srcPtr,
             int globalThreads_x = length;
             int globalThreads_y = 1;
             int globalThreads_z = 1;
+            size_t sharedMemSize = (window.lookupSize + (RPPT_MAX_CHANNELS + 1) * block) * sizeof(float);
 
             if (numChannels == 1)
             {
                 hipLaunchKernelGGL(resample_1channel_hip_tensor,
                                    dim3(ceil((float)globalThreads_x/256), ceil((float)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((float)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
                                    dim3(256, LOCAL_THREADS_Y_1DIM, LOCAL_THREADS_Z_1DIM),
-                                   0,
+                                   sharedMemSize,
                                    handle.GetStream(),
                                    srcPtr + i * srcDescPtr->strides.nStride,
                                    dstPtr + i * dstDescPtr->strides.nStride,
