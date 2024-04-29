@@ -337,6 +337,27 @@ int main(int argc, char * argv[])
 
                     break;
                 }
+                case 6:
+                {
+                    testCaseName = "gaussian_noise_voxel";
+                    Rpp32f meanTensor[batchSize];
+                    Rpp32f stdDevTensor[batchSize];
+
+                    Rpp32u seed = 1255459;
+                    for (int i = 0; i < batchSize; i++)
+                    {
+                        meanTensor[i] = 1.4;
+                        stdDevTensor[i] = 0.6;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 2)
+                        rppt_gaussian_noise_voxel_host(inputF32, descriptorPtr3D, outputF32, descriptorPtr3D, meanTensor, stdDevTensor, seed, roiGenericSrcPtr, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 default:
                 {
                     missingFuncFlag = 1;
