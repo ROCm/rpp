@@ -1368,14 +1368,6 @@ inline void rpp_load16_u8_to_u32_avx(Rpp8u *srcPtr, __m256i *p)
     p[1] = _mm256_setr_m128i(_mm_shuffle_epi8(px, xmm_pxMask08To11), _mm_shuffle_epi8(px, xmm_pxMask12To15));    /* Contains pixels 09-16 */
 }
 
-inline void rpp_load16_i8_to_i32_avx(Rpp8s *srcPtr, __m256i *p)
-{
-    __m128i px;
-    px = _mm_loadu_si128((__m128i *)srcPtr);
-    p[0] = _mm256_cvtepi8_epi32(px);                                        /* Contains pixels 01-08 */
-    p[1] = _mm256_cvtepi8_epi32(_mm_shuffle_epi8(px, xmm_pxMask08To15));    /* Contains pixels 09-16 */
-}
-
 inline void rpp_load96_u8_avx(Rpp8u *srcPtrR, Rpp8u *srcPtrG, Rpp8u *srcPtrB, __m256i *p)
 {
     p[0] = _mm256_loadu_si256((__m256i *)srcPtrR);
@@ -1542,6 +1534,31 @@ inline void rpp_store16_f32_to_f32_avx(Rpp32f *dstPtr, __m256 *p)
 {
     _mm256_storeu_ps(dstPtr, p[0]);
     _mm256_storeu_ps(dstPtr + 8, p[1]);
+}
+
+inline void rpp_store8_u32_to_u32_avx(Rpp32u *dstPtr, __m256i *p)
+{
+    _mm256_store_si256((__m256i *)dstPtr, p[0]);
+}
+
+inline void rpp_store8_i32_to_i32_avx(Rpp32s *dstPtr, __m256i *p)
+{
+    _mm256_store_si256((__m256i *)dstPtr, p[0]);
+}
+
+inline void rpp_store4_f64_to_f64_avx(Rpp64f *dstPtr, __m256d *p)
+{
+    _mm256_storeu_pd(dstPtr, p[0]);
+}
+
+inline void rpp_store16_u8_to_u8(Rpp8u *dstPtr, __m128i *p)
+{
+    _mm_storeu_si128((__m128i *)dstPtr, p[0]);
+}
+
+inline void rpp_store16_i8(Rpp8s *dstPtr, __m128i *p)
+{
+    _mm_store_si128((__m128i *)dstPtr, p[0]);
 }
 
 inline void rpp_store16_f32_to_f16_avx(Rpp16f *dstPtr, __m256 *p)
@@ -1772,6 +1789,14 @@ inline void rpp_store16_f32_to_i8_avx(Rpp8s *dstPtr, __m256 *p)
     px[0] = _mm_packus_epi16(px[1], px[2]);    /* pack pixels 0-15 */
     px[0] = _mm_sub_epi8(px[0], xmm_pxConvertI8);    /* convert back to i8 for px0 store */
     _mm_storeu_si128((__m128i *)dstPtr, px[0]);
+}
+
+inline void rpp_load16_i8_to_i32_avx(Rpp8s *srcPtr, __m256i *p)
+{
+    __m128i px;
+    px = _mm_loadu_si128((__m128i *)srcPtr);
+    p[0] = _mm256_cvtepi8_epi32(px);    /* Contains pixels 01-08 */
+    p[1] = _mm256_cvtepi8_epi32(_mm_shuffle_epi8(px, xmm_pxMask08To15));    /* Contains pixels 09-16 */
 }
 
 inline void rpp_normalize48_avx(__m256 *p)
