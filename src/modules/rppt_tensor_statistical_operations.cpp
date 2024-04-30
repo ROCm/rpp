@@ -353,7 +353,7 @@ RppStatus rppt_tensor_stddev_host(RppPtr_t srcPtr,
     if (srcDescPtr->dataType == RpptDataType::U8)
     {
         if(!flag || flag == 1)
-            custom_stddev_u8_f32_host(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+            individual_stddev_u8_f32_host(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
                                       srcDescPtr,
                                       static_cast<Rpp32f*>(tensorStddevArr),
                                       meanTensor,
@@ -375,7 +375,7 @@ RppStatus rppt_tensor_stddev_host(RppPtr_t srcPtr,
     else if (srcDescPtr->dataType == RpptDataType::F16)
     {
         if(!flag || flag == 1)
-            custom_stddev_f16_f32_host(reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+            individual_stddev_f16_f32_host(reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                        srcDescPtr,
                                        static_cast<Rpp32f*>(tensorStddevArr),
                                        meanTensor,
@@ -397,7 +397,7 @@ RppStatus rppt_tensor_stddev_host(RppPtr_t srcPtr,
     else if (srcDescPtr->dataType == RpptDataType::F32)
     {
         if(!flag || flag == 1)
-            custom_stddev_f32_f32_host(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+            individual_stddev_f32_f32_host(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                        srcDescPtr,
                                        static_cast<Rpp32f*>(tensorStddevArr),
                                        meanTensor,
@@ -419,7 +419,7 @@ RppStatus rppt_tensor_stddev_host(RppPtr_t srcPtr,
     else if (srcDescPtr->dataType == RpptDataType::I8)
     {
         if(!flag || flag == 1)
-            custom_stddev_i8_f32_host(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+            individual_stddev_i8_f32_host(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
                                       srcDescPtr,
                                       static_cast<Rpp32f*>(tensorStddevArr),
                                       meanTensor,

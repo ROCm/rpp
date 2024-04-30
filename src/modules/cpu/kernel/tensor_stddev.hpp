@@ -1091,15 +1091,16 @@ RppStatus tensor_stddev_i8_f32_host(Rpp8s *srcPtr,
     return RPP_SUCCESS;
 }
 
-RppStatus custom_stddev_u8_f32_host(Rpp8u *srcPtr,
-                                    RpptDescPtr srcDescPtr,
-                                    Rpp32f *tensorStddevArr,
-                                    Rpp32f *meanTensor,
-                                    int flag,
-                                    RpptROIPtr roiTensorPtrSrc,
-                                    RpptRoiType roiType,
-                                    RppLayoutParams layoutParams,
-                                    rpp::Handle& handle)
+// Handle standard deviation compute when either channel stdDev or image stdDev is enabled for u8 inputs
+RppStatus individual_stddev_u8_f32_host(Rpp8u *srcPtr,
+                                        RpptDescPtr srcDescPtr,
+                                        Rpp32f *tensorStddevArr,
+                                        Rpp32f *meanTensor,
+                                        int flag,
+                                        RpptROIPtr roiTensorPtrSrc,
+                                        RpptRoiType roiType,
+                                        RppLayoutParams layoutParams,
+                                        rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
     Rpp32u numThreads = handle.GetNumThreads();
@@ -1447,15 +1448,16 @@ RppStatus custom_stddev_u8_f32_host(Rpp8u *srcPtr,
     return RPP_SUCCESS;
 }
 
-RppStatus custom_stddev_f32_f32_host(Rpp32f *srcPtr,
-                                     RpptDescPtr srcDescPtr,
-                                     Rpp32f *tensorStddevArr,
-                                     Rpp32f *meanTensor,
-                                     int flag,
-                                     RpptROIPtr roiTensorPtrSrc,
-                                     RpptRoiType roiType,
-                                     RppLayoutParams layoutParams,
-                                     rpp::Handle& handle)
+// Handle standard deviation compute when either channel stdDev or image stdDev is enabled for f32 inputs
+RppStatus individual_stddev_f32_f32_host(Rpp32f *srcPtr,
+                                         RpptDescPtr srcDescPtr,
+                                         Rpp32f *tensorStddevArr,
+                                         Rpp32f *meanTensor,
+                                         int flag,
+                                         RpptROIPtr roiTensorPtrSrc,
+                                         RpptRoiType roiType,
+                                         RppLayoutParams layoutParams,
+                                         rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
     Rpp32u numThreads = handle.GetNumThreads();
@@ -1800,15 +1802,16 @@ RppStatus custom_stddev_f32_f32_host(Rpp32f *srcPtr,
     return RPP_SUCCESS;
 }
 
-RppStatus custom_stddev_f16_f32_host(Rpp16f *srcPtr,
-                                     RpptDescPtr srcDescPtr,
-                                     Rpp32f *tensorStddevArr,
-                                     Rpp32f *meanTensor,
-                                     int flag,
-                                     RpptROIPtr roiTensorPtrSrc,
-                                     RpptRoiType roiType,
-                                     RppLayoutParams layoutParams,
-                                     rpp::Handle& handle)
+// Handle standard deviation compute when either channel stdDev or image stdDev is enabled for f16 inputs
+RppStatus individual_stddev_f16_f32_host(Rpp16f *srcPtr,
+                                         RpptDescPtr srcDescPtr,
+                                         Rpp32f *tensorStddevArr,
+                                         Rpp32f *meanTensor,
+                                         int flag,
+                                         RpptROIPtr roiTensorPtrSrc,
+                                         RpptRoiType roiType,
+                                         RppLayoutParams layoutParams,
+                                         rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
     Rpp32u numThreads = handle.GetNumThreads();
@@ -2184,15 +2187,16 @@ RppStatus custom_stddev_f16_f32_host(Rpp16f *srcPtr,
     return RPP_SUCCESS;
 }
 
-RppStatus custom_stddev_i8_f32_host(Rpp8s *srcPtr,
-                                    RpptDescPtr srcDescPtr,
-                                    Rpp32f *tensorStddevArr,
-                                    Rpp32f *meanTensor,
-                                    int flag,
-                                    RpptROIPtr roiTensorPtrSrc,
-                                    RpptRoiType roiType,
-                                    RppLayoutParams layoutParams,
-                                    rpp::Handle& handle)
+// Handle standard deviation compute when either channel stdDev or image stdDev is enabled for i8 inputs
+RppStatus individual_stddev_i8_f32_host(Rpp8s *srcPtr,
+                                        RpptDescPtr srcDescPtr,
+                                        Rpp32f *tensorStddevArr,
+                                        Rpp32f *meanTensor,
+                                        int flag,
+                                        RpptROIPtr roiTensorPtrSrc,
+                                        RpptRoiType roiType,
+                                        RppLayoutParams layoutParams,
+                                        rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
     Rpp32u numThreads = handle.GetNumThreads();

@@ -63,7 +63,7 @@ template <typename T>
 __global__ void tensor_stddev_grid_3channel_result_hip(T *inputSrcPtr,
                                                        float *srcPtr,
                                                        uint xBufferLength,
-                                                       float *dstPtr,
+                                                       float4 *dstPtr_f4,
                                                        bool flag,
                                                        RpptROIPtr roiTensorPtrSrc)
 {
@@ -134,12 +134,12 @@ __global__ void tensor_stddev_grid_3channel_result_hip(T *inputSrcPtr,
         int idx = id_z * 4;
         if (!flag)
         {
-            stddev_hip_compute(inputSrcPtr, sqrt(partialRVar_smem[0] / totalElements), &dstPtr[idx]);
-            stddev_hip_compute(inputSrcPtr, sqrt(partialGVar_smem[0] / totalElements), &dstPtr[idx + 1]);
-            stddev_hip_compute(inputSrcPtr, sqrt(partialBVar_smem[0] / totalElements), &dstPtr[idx + 2]);
+            stddev_hip_compute(inputSrcPtr, sqrt(partialRVar_smem[0] / totalElements), &dstPtr_f4.x);
+            stddev_hip_compute(inputSrcPtr, sqrt(partialGVar_smem[0] / totalElements), &dstPtr_f4.y);
+            stddev_hip_compute(inputSrcPtr, sqrt(partialBVar_smem[0] / totalElements), &dstPtr_f4.z);
         }
         else
-            stddev_hip_compute(inputSrcPtr, sqrt(var  / (totalElements * 3)), &dstPtr[idx + 3]);
+            stddev_hip_compute(inputSrcPtr, sqrt(var  / (totalElements * 3)), &dstPtr_f4.w);
     }
 }
 
@@ -622,10 +622,10 @@ __global__ void tensor_variance_pkd3_hip(T *srcPtr,
 
 // -------------------- Set 2 - Kernel Executors --------------------
 
-template <typename T, typename U>
+template <typename T>
 RppStatus hip_exec_tensor_stddev(T *srcPtr,
                                  RpptDescPtr srcDescPtr,
-                                 U *imageStddevArr,
+                                 Rpp32f *imageStddevArr,
                                  Rpp32f *meanTensor,
                                  int flag,
                                  RpptROIPtr roiTensorPtrSrc,
@@ -697,7 +697,7 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
                                srcPtr,
                                tensorPartialVarArr,
                                gridDim_x * gridDim_y,
-                               imageStddevArr,
+                               (float4*)imageStddevArr,
                                flag,
                                roiTensorPtrSrc);
         }
@@ -722,7 +722,7 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
                                srcPtr,
                                tensorPartialVarArr,
                                gridDim_x * gridDim_y,
-                               imageStddevArr,
+                               (float4*)imageStddevArr,
                                flag,
                                roiTensorPtrSrc);
         }
@@ -747,7 +747,7 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
                                srcPtr,
                                tensorPartialVarArr,
                                gridDim_x * gridDim_y,
-                               imageStddevArr,
+                               (float4*)imageStddevArr,
                                0, //setting flag to 0 here to compute individual channel stddev
                                roiTensorPtrSrc);
             hipStreamSynchronize(handle.GetStream());
@@ -771,7 +771,7 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
                                srcPtr,
                                tensorPartialVarArr,
                                gridDim_x * gridDim_y,
-                               imageStddevArr,
+                               (float4*)imageStddevArr,
                                1, //setting flag to 1 here to compute image stddev
                                roiTensorPtrSrc);
         }
@@ -805,7 +805,7 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
                                srcPtr,
                                tensorPartialVarArr,
                                gridDim_x * gridDim_y,
-                               imageStddevArr,
+                               (float4*)imageStddevArr,
                                flag,
                                roiTensorPtrSrc);
         }
@@ -830,7 +830,7 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
                                srcPtr,
                                tensorPartialVarArr,
                                gridDim_x * gridDim_y,
-                               imageStddevArr,
+                               (float4*)imageStddevArr,
                                flag,
                                roiTensorPtrSrc);
         }
@@ -855,7 +855,7 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
                                srcPtr,
                                tensorPartialVarArr,
                                gridDim_x * gridDim_y,
-                               imageStddevArr,
+                               (float4*)imageStddevArr,
                                0, //setting flag to 0 here to compute individual channel stddev
                                roiTensorPtrSrc);
             hipStreamSynchronize(handle.GetStream());
@@ -879,7 +879,7 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
                                srcPtr,
                                tensorPartialVarArr,
                                gridDim_x * gridDim_y,
-                               imageStddevArr,
+                               (float4*)imageStddevArr,
                                1, //setting flag to 1 here to compute image stddev
                                roiTensorPtrSrc);
         }
