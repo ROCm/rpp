@@ -27,7 +27,7 @@ set(CMAKE_CXX_COMPILER clang++)
 set(CMAKE_CXX_STANDARD 17)
 
 # RPP Version
-set(VERSION "1.7.0")
+set(VERSION "1.8.0")
 
 # Set Project Version and Language
 project(rpp VERSION ${VERSION} LANGUAGES CXX)
@@ -45,15 +45,15 @@ find_program(DPKG_EXE dpkg)
 
 # ROCm Path
 if(DEFINED ENV{ROCM_PATH})
-  set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
+    set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
 elseif(ROCM_PATH)
-  message("-- INFO:ROCM_PATH Set -- ${ROCM_PATH}")
+    message("-- INFO:ROCM_PATH Set -- ${ROCM_PATH}")
 else()
-  set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
+    set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
 endif()
 # Avoid setting the default path to /usr/local
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  set(CMAKE_INSTALL_PREFIX ${ROCM_PATH} CACHE PATH "RPP default ROCm installation path" FORCE)
+    set(CMAKE_INSTALL_PREFIX ${ROCM_PATH} CACHE PATH "RPP default ROCm installation path" FORCE)
 endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 
 # RPP Default Options
@@ -76,9 +76,9 @@ endif()
 
 # Set backend options
 if(APPLE)
-  set(CMAKE_MACOSX_RPATH 1)
-  set(BACKEND "CPU")
-  message("-- ${Magenta}Apple macOS Detected -- GPU Support turned OFF${ColourReset}")
+    set(CMAKE_MACOSX_RPATH 1)
+    set(BACKEND "CPU")
+    message("-- ${Magenta}Apple macOS Detected -- GPU Support turned OFF${ColourReset}")
 endif()
 
 if(NOT DEFINED BACKEND)
@@ -103,8 +103,8 @@ message("-- ${BoldBlue}AMD RPP Backend set to -- ${BACKEND}${ColourReset}")
 
 # RPP Build Type
 if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE "${DEFAULT_BUILD_TYPE}" CACHE STRING "RPP Default Build Type" FORCE)
-  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release")
+    set(CMAKE_BUILD_TYPE "${DEFAULT_BUILD_TYPE}" CACHE STRING "RPP Default Build Type" FORCE)
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release")
 endif()
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     # -O0  -- Don't Optimize output file
@@ -300,9 +300,7 @@ message("-- ${White}${PROJECT_NAME} -- Link Libraries: ${LINK_LIBRARY_LIST}${Col
 target_link_libraries(${PROJECT_NAME} ${LINK_LIBRARY_LIST})
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
-set_target_properties(${PROJECT_NAME} PROPERTIES
-                      VERSION ${PROJECT_VERSION}
-                      SOVERSION ${PROJECT_VERSION_MAJOR})
+set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION ${PROJECT_VERSION_MAJOR})
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC
@@ -337,11 +335,11 @@ install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMP
 
 # install RPP include files -- {ROCM_PATH}/include/rpp/
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp
-       COMPONENT dev
-       PATTERN "*.h.in" EXCLUDE)
+        COMPONENT dev
+        PATTERN "*.h.in" EXCLUDE)
 install(FILES ${PROJECT_BINARY_DIR}/include/rpp_backend.h
-       DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp
-       COMPONENT dev)
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp
+        COMPONENT dev)
 
 # install Test
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/cmake DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/test COMPONENT test)
@@ -352,8 +350,6 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/utilities/rpp-performancetests DES
 set(CPACK_RESOURCE_FILE_LICENSE  "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 install(FILES ${CPACK_RESOURCE_FILE_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR} COMPONENT runtime)
 install(FILES ${CPACK_RESOURCE_FILE_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR}-asan COMPONENT asan)
-install(FILES ${CPACK_RESOURCE_FILE_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR}-dev COMPONENT dev)
-install(FILES ${CPACK_RESOURCE_FILE_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR}-test COMPONENT test)
 
 # CTest - Needs RPP Installed
 enable_testing()
@@ -451,10 +447,10 @@ if(NOT ROCM_DEP_ROCMCORE)
 endif()
 
 if(ENABLE_ASAN_PACKAGING)
-  # ASAN Package requires asan component with only libraries and license file
-  set(CPACK_COMPONENTS_ALL asan)
+    # ASAN Package requires asan component with only libraries and license file
+    set(CPACK_COMPONENTS_ALL asan)
 else()
-  set(CPACK_COMPONENTS_ALL runtime dev test)
+    set(CPACK_COMPONENTS_ALL runtime dev test)
 endif()
 
 if(APPLE)
@@ -484,8 +480,8 @@ endif()
 include(CPack)
 
 cpack_add_component(runtime
-   DISPLAY_NAME "RPP Runtime Package"
-   DESCRIPTION "ROCm Performance Primitives library is a comprehensive high performance \
+    DISPLAY_NAME "RPP Runtime Package"
+    DESCRIPTION "ROCm Performance Primitives library is a comprehensive high performance \
 computer vision library for AMD CPUs and GPUs with HOST/HIP/OpenCL back-ends.
 RPP runtime package provides rpp library and license.txt")
 
