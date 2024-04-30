@@ -1203,8 +1203,10 @@ int main(int argc, char **argv)
                     break;
                 }
                 default:
+                {
                     missingFuncFlag = 1;
                     break;
+                }
             }
 
             endCpuTime = clock();

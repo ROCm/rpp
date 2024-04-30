@@ -1173,8 +1173,10 @@ int main(int argc, char **argv)
                     break;
                 }
                 default:
-                  missingFuncFlag = 1;
-                  break;
+                {
+                    missingFuncFlag = 1;
+                    break;
+                }
             }
 
             CHECK(hipDeviceSynchronize());
