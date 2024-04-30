@@ -1106,7 +1106,6 @@ int main(int argc, char **argv)
                         reductionFuncResultArrLength = srcDescPtr->n;
 
                     startWallTime = omp_get_wtime();
-
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_tensor_sum_gpu(d_input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
@@ -1146,7 +1145,6 @@ int main(int argc, char **argv)
                         reductionFuncResultArrLength = srcDescPtr->n;
 
                     startWallTime = omp_get_wtime();
-
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_tensor_mean_gpu(d_input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
@@ -1164,7 +1162,6 @@ int main(int argc, char **argv)
                     int flag = 2; // compute both image and channel stddev by default
 
                     startWallTime = omp_get_wtime();
-
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_tensor_stddev_gpu(d_input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, mean, flag, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
