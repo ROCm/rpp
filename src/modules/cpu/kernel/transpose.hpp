@@ -223,7 +223,7 @@ RppStatus transpose_f32_f32_host_tensor(Rpp32f *srcPtr,
             }
             else if (nDim == 3)
             {
-                // Optimized AVX version for 3D inputs of shape(x, y, 16) and permutation order (2, 0, 1)
+                // Optimized AVX version for 3D inputs of shape(x, y, 16) and permutation order (2, 0, 1) (usecases : Deepcam training)
                 if(perm[0] == 2 && perm[1] == 0 && perm[2] == 1 && length[2] == 16)
                 {
                     Rpp32u height = length[0];
