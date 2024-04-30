@@ -119,30 +119,30 @@ int main(int argc, char **argv)
     Rpp32f *outputf32 = (Rpp32f *)calloc(oBufferSize, sizeof(Rpp32f));
 
     void *d_inputf32, *d_outputf32;
-    CHECK(hipMalloc(&d_inputf32, iBufferSize * sizeof(Rpp32f)));
-    CHECK(hipMalloc(&d_outputf32, oBufferSize * sizeof(Rpp32f)));
+    CHECK_RETURN_STATUS(hipMalloc(&d_inputf32, iBufferSize * sizeof(Rpp32f)));
+    CHECK_RETURN_STATUS(hipMalloc(&d_outputf32, oBufferSize * sizeof(Rpp32f)));
 
     // allocate the buffers for audio length and channels
     Rpp32s *srcLengthTensor, *channelsTensor;
-    CHECK(hipHostMalloc(&srcLengthTensor, batchSize * sizeof(Rpp32s)));
-    CHECK(hipHostMalloc(&channelsTensor, batchSize * sizeof(Rpp32s)));
+    CHECK_RETURN_STATUS(hipHostMalloc(&srcLengthTensor, batchSize * sizeof(Rpp32s)));
+    CHECK_RETURN_STATUS(hipHostMalloc(&channelsTensor, batchSize * sizeof(Rpp32s)));
 
     // allocate the buffers for src/dst dimensions for each element in batch
     RpptImagePatch *srcDims, *dstDims;
-    CHECK(hipHostMalloc(&srcDims, batchSize * sizeof(RpptImagePatch)));
-    CHECK(hipHostMalloc(&dstDims, batchSize * sizeof(RpptImagePatch)));
+    CHECK_RETURN_STATUS(hipHostMalloc(&srcDims, batchSize * sizeof(RpptImagePatch)));
+    CHECK_RETURN_STATUS(hipHostMalloc(&dstDims, batchSize * sizeof(RpptImagePatch)));
 
     Rpp32f *detectedIndex = nullptr, *detectionLength = nullptr;
     if(testCase == 0)
     {
-        CHECK(hipHostMalloc(&detectedIndex, batchSize * sizeof(Rpp32f)));
-        CHECK(hipHostMalloc(&detectionLength, batchSize * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&detectedIndex, batchSize * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&detectionLength, batchSize * sizeof(Rpp32f)));
     }
 
     // run case-wise RPP API and measure time
     rppHandle_t handle;
     hipStream_t stream;
-    CHECK(hipStreamCreate(&stream));
+    CHECK_RETURN_STATUS(hipStreamCreate(&stream));
     rppCreateWithStreamAndBatchSize(&handle, stream, batchSize);
 
     int noOfIterations = (int)audioNames.size() / batchSize;
@@ -153,7 +153,7 @@ int main(int argc, char **argv)
     {
         // read and decode audio and fill the audio dim values
         read_audio_batch_and_fill_dims(srcDescPtr, inputf32, audioFilesPath, iterCount, srcLengthTensor, channelsTensor);
-        CHECK(hipMemcpy(d_inputf32, inputf32, iBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
+        CHECK_RETURN_STATUS(hipMemcpy(d_inputf32, inputf32, iBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
         for (int perfRunCount = 0; perfRunCount < numRuns; perfRunCount++)
         {
             double startWallTime, endWallTime;
@@ -184,7 +184,7 @@ int main(int argc, char **argv)
                     break;
                 }
             }
-            CHECK(hipDeviceSynchronize());
+            CHECK_RETURN_STATUS(hipDeviceSynchronize());
 
             endWallTime = omp_get_wtime();
             if (missingFuncFlag == 1)
@@ -202,7 +202,7 @@ int main(int argc, char **argv)
         // QA mode - verify outputs with golden outputs. Below code doesn’t run for performance tests
         if (testType == 0)
         {
-            CHECK(hipMemcpy(outputf32, d_outputf32, oBufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
+            CHECK_RETURN_STATUS(hipMemcpy(outputf32, d_outputf32, oBufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
 
             /* Run only if testCase is not 0
             For testCase 0 verify_non_silent_region_detection function is used for QA testing */
@@ -244,13 +244,13 @@ int main(int argc, char **argv)
     free(dstDims);
     free(inputf32);
     free(outputf32);
-    CHECK(hipFree(d_inputf32));
-    CHECK(hipFree(d_outputf32));
-    CHECK(hipHostFree(srcLengthTensor));
-    CHECK(hipHostFree(channelsTensor));
+    CHECK_RETURN_STATUS(hipFree(d_inputf32));
+    CHECK_RETURN_STATUS(hipFree(d_outputf32));
+    CHECK_RETURN_STATUS(hipHostFree(srcLengthTensor));
+    CHECK_RETURN_STATUS(hipHostFree(channelsTensor));
     if (detectedIndex != nullptr)
-        CHECK(hipHostFree(detectedIndex));
+        CHECK_RETURN_STATUS(hipHostFree(detectedIndex));
     if (detectionLength != nullptr)
-        CHECK(hipHostFree(detectionLength));
+        CHECK_RETURN_STATUS(hipHostFree(detectionLength));
     return 0;
 }
