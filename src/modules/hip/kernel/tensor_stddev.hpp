@@ -212,10 +212,10 @@ __global__ void tensor_variance_pln1_hip(T *srcPtr,
 // Compute individual channel variance
 template <typename T, typename U>
 __global__ void channelwise_variance_pln3_hip(T *srcPtr,
-                                          uint3 srcStridesNCH,
-                                          U *tensorVarArr,
-                                          float4 *mean_f4,
-                                          RpptROIPtr roiTensorPtrSrc)
+                                              uint3 srcStridesNCH,
+                                              U *tensorVarArr,
+                                              float4 *mean_f4,
+                                              RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -418,10 +418,10 @@ __global__ void tensor_variance_pln3_hip(T *srcPtr,
 // Compute individual channel variance
 template <typename T, typename U>
 __global__ void channelwise_variance_pkd3_hip(T *srcPtr,
-                                          uint2 srcStridesNH,
-                                          U *tensorVarArr,
-                                          float4 *mean_f4,
-                                          RpptROIPtr roiTensorPtrSrc)
+                                              uint2 srcStridesNH,
+                                              U *tensorVarArr,
+                                              float4 *mean_f4,
+                                              RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
