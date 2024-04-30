@@ -18,8 +18,7 @@ __global__ void transpose_generic_hip_tensor(T *srcPtr,
         return;
 
     int maxLength = dstStrides[0];
-    int xAlignedLength =  maxLength & ~7;      // alignedLength for vectorized global loads
-    int xDiff = maxLength - xAlignedLength;    // difference between roiWidth and alignedLength
+    int xDiff = maxLength - (maxLength & ~7);    // difference between roiWidth and (alignedLength = maxLength & ~7)
     // Move dstIdx and srcIdx to start of given input tensor
     uint dstIdx = (id_y * *dstStrides++);
     uint srcIdx = (id_y * *srcStrides++);
@@ -38,8 +37,9 @@ __global__ void transpose_generic_hip_tensor(T *srcPtr,
     // Compute corresponding 8 srcIdxs given id_x
     for (int i = 0; i < dstNumDims; i++)
     {
-        for (int j = 0; j < 8; j++)
-            srcIdxs.ui1[j] += (dstCoords[permTensor[i]].ui1[j] * srcStrides[permTensor[permTensor[i]]]);
+        uint4 srcStrides_ui4 = static_cast<uint4>(srcStrides[permTensor[permTensor[i]]]);
+        srcIdxs.ui4[0] += (dstCoords[permTensor[i]].ui4[0] * srcStrides_ui4);
+        srcIdxs.ui4[1] += (dstCoords[permTensor[i]].ui4[1] * srcStrides_ui4);
         dstIdx += (dstCoords[i].ui1[0] * dstStrides[i]);
     }
     // Move srcIdx to access next input tensor once id_x goes beyond present tensor

@@ -51,7 +51,7 @@ SOFTWARE.
 /*! \brief 8 bit unsigned char maximum \ingroup group_rppdefs \page subpage_rppi */
 #define RPP_MAX_8U      ( 255 )
 /*! \brief RPP maximum dimensions in tensor \ingroup group_rppdefs \page subpage_rppt */
-#define RPPT_MAX_DIMS   ( 8 )
+#define RPPT_MAX_DIMS   ( 5 )
 
 const float ONE_OVER_6 = 1.0f / 6;
 const float ONE_OVER_3 = 1.0f / 3;
