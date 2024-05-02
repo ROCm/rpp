@@ -65,7 +65,7 @@ int main(int argc, char **argv)
 
     bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23|| testCase == 24 || testCase == 40 || testCase == 41 || testCase == 49 || testCase == 54);
     bool kernelSizeCase = (testCase == 40 || testCase == 41 || testCase == 49 || testCase == 54);
-    bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 61 || testCase == 63);
+    bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 33 || testCase == 61 || testCase == 63 || testCase == 65 || testCase == 68);
     bool randomOutputCase = (testCase == 84 || testCase == 49 || testCase == 54);
     bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24);
     bool reductionTypeCase = (testCase == 87 || testCase == 88 || testCase == 89);
@@ -334,8 +334,8 @@ int main(int argc, char **argv)
         std::cerr<<"\n RICAP only works with BatchSize > 1";
         exit(0);
     }
-  
-    // Initialize buffers for any reductionType functions
+
+    // Initialize buffers for any reductionType functions (testCase 87 - tensor_sum alone cannot return final sum as 8u/8s due to overflow. 8u inputs return 64u sums, 8s inputs return 64s sums)
     void *reductionFuncResultArr;
     Rpp32u reductionFuncResultArrLength = srcDescPtr->n * 4;
     if (reductionTypeCase)
@@ -357,6 +357,18 @@ int main(int argc, char **argv)
     RpptROI *roiPtrInputCropRegion;
     if(testCase == 82)
         CHECK(hipHostMalloc(&roiPtrInputCropRegion, 4 * sizeof(RpptROI)));
+
+    RpptROI *cropRoi, *patchRoi;
+    if(testCase == 33)
+    {
+        CHECK(hipHostMalloc(&cropRoi, batchSize * sizeof(RpptROI)));
+        CHECK(hipHostMalloc(&patchRoi, batchSize * sizeof(RpptROI)));
+    }
+    bool invalidROI = (roiList[0] == 0 && roiList[1] == 0 && roiList[2] == 0 && roiList[3] == 0);
+
+    Rpp32f *intensity;
+    if(testCase == 46)
+        CHECK(hipHostMalloc(&intensity, batchSize * sizeof(Rpp32f)));
 
     void *d_interDstPtr;
     if(testCase == 5)
@@ -859,21 +871,36 @@ int main(int argc, char **argv)
                     else
                         missingFuncFlag = 1;
 
-                break;
-            }
-            case 45:
-            {
-                testCaseName = "color_temperature";
+                    break;
+                }
+                case 45:
+                {
+                    testCaseName = "color_temperature";
 
-                Rpp32s adjustment[batchSize];
-                for (i = 0; i < batchSize; i++)
-                    adjustment[i] = 70;
+                    Rpp32s adjustment[batchSize];
+                    for (i = 0; i < batchSize; i++)
+                        adjustment[i] = 70;
 
-                startWallTime = omp_get_wtime();
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_color_temperature_gpu(d_input, srcDescPtr, d_output, dstDescPtr, adjustment, roiTensorPtrSrc, roiTypeSrc, handle);
-                else
-                    missingFuncFlag = 1;
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_color_temperature_gpu(d_input, srcDescPtr, d_output, dstDescPtr, adjustment, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 46:
+                {
+                    testCaseName = "vignette";
+
+                    for (i = 0; i < batchSize; i++)
+                        intensity[i] = 6;
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_vignette_gpu(d_input, srcDescPtr, d_output, dstDescPtr, intensity, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
 
                     break;
                 }
@@ -907,23 +934,23 @@ int main(int argc, char **argv)
                     else
                         missingFuncFlag = 1;
 
-                break;
-            }
-            case 61:
-            {
-                testCaseName = "magnitude";
+                    break;
+                }
+                case 61:
+                {
+                    testCaseName = "magnitude";
 
-                startWallTime = omp_get_wtime();
-                if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                    rppt_magnitude_gpu(d_input, d_input_second, srcDescPtr, d_output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
-                else
-                    missingFuncFlag = 1;
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_magnitude_gpu(d_input, d_input_second, srcDescPtr, d_output, dstDescPtr, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
 
-                break;
-            }
-            case 63:
-            {
-                testCaseName = "phase";
+                    break;
+                }
+                case 63:
+                {
+                    testCaseName = "phase";
 
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
@@ -1294,7 +1321,7 @@ int main(int argc, char **argv)
         CHECK(hipHostFree(patchRoi));
     }
     if(testCase == 5)
-        CHECK(hipHostFree(interDst));
+        CHECK(hipFree(d_interDstPtr));
     if (reductionTypeCase)
         CHECK(hipHostFree(reductionFuncResultArr));
     free(input);
@@ -1309,4 +1336,3 @@ int main(int argc, char **argv)
     CHECK(hipFree(d_output));
     return 0;
 }
-
