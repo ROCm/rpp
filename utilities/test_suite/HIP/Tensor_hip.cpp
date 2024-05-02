@@ -323,18 +323,6 @@ int main(int argc, char **argv)
     double wallTime;
     string testCaseName;
 
-    if(testCase == 82 && imagesMixed)
-    {
-        std::cerr<<"\n RICAP only works with same dimension images";
-        exit(0);
-    }
-
-    if(testCase == 82 && batchSize < 2)
-    {
-        std::cerr<<"\n RICAP only works with BatchSize > 1";
-        exit(0);
-    }
-
     // Initialize buffers for any reductionType functions (testCase 87 - tensor_sum alone cannot return final sum as 8u/8s due to overflow. 8u inputs return 64u sums, 8s inputs return 64s sums)
     void *reductionFuncResultArr;
     Rpp32u reductionFuncResultArrLength = srcDescPtr->n * 4;
@@ -1042,9 +1030,9 @@ int main(int argc, char **argv)
 
                     Rpp32u permutationTensor[batchSize * 4];
                     if(qaFlag)
-                        init_ricap_qa(maxWidth, maxHeight, batchSize, permutationTensor, roiPtrInputCropRegion);
+                        init__qa(maxWidth, maxHeight, batchSize, permutationTensor, roiPtrInputCropRegion);
                     else
-                        init_ricap(maxWidth, maxHeight, batchSize, permutationTensor, roiPtrInputCropRegion);
+                        init_(maxWidth, maxHeight, batchSize, permutationTensor, roiPtrInputCropRegion);
 
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
