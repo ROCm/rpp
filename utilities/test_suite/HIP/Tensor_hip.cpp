@@ -1030,9 +1030,9 @@ int main(int argc, char **argv)
 
                     Rpp32u permutationTensor[batchSize * 4];
                     if(qaFlag)
-                        init__qa(maxWidth, maxHeight, batchSize, permutationTensor, roiPtrInputCropRegion);
+                        init_ricap_qa(maxWidth, maxHeight, batchSize, permutationTensor, roiPtrInputCropRegion);
                     else
-                        init_(maxWidth, maxHeight, batchSize, permutationTensor, roiPtrInputCropRegion);
+                        init_ricap(maxWidth, maxHeight, batchSize, permutationTensor, roiPtrInputCropRegion);
 
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
