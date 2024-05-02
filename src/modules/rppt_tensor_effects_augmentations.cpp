@@ -1451,8 +1451,7 @@ RppStatus rppt_ricap_gpu(RppPtr_t srcPtr,
 #ifdef HIP_COMPILE
     if(srcDescPtr->n == 1) // BatchSize should always be greater than 1
         return RPP_ERROR;
-    Rpp32u* permutationHipTensor;
-    hipMalloc(&permutationHipTensor, sizeof(Rpp32u)* 4 * dstDescPtr->n);
+    Rpp32u *permutationHipTensor = reinterpret_cast<Rpp32u*>(handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
     hipMemcpy(permutationHipTensor, permutationTensor, sizeof(Rpp32u)* 4 * dstDescPtr->n, hipMemcpyHostToDevice);
 
     if ((check_roi_out_of_bounds(&roiPtrInputCropRegion[0],srcDescPtr,roiType) == -1)
