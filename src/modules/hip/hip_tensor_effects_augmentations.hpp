@@ -32,8 +32,8 @@ SOFTWARE.
 #include "kernel/noise_gaussian.hpp"
 #include "kernel/non_linear_blend.hpp"
 #include "kernel/water.hpp"
-#include "kernel/resize.hpp"
 #include "kernel/ricap.hpp"
 #include "kernel/vignette.hpp"
+#include "kernel/resize.hpp"  //pixelate dependency
 
 #endif // HIP_TENSOR_EFFECTS_AUGMENTATIONS_HPP

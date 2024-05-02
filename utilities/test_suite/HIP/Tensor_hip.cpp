@@ -358,6 +358,10 @@ int main(int argc, char **argv)
     if(testCase == 82)
         CHECK(hipHostMalloc(&roiPtrInputCropRegion, 4 * sizeof(RpptROI)));
 
+    void *d_interDstPtr;
+    if(testCase == 5)
+        CHECK(hipHostMalloc(&d_interDstPtr, srcDescPtr->strides.nStride * srcDescPtr->n * sizeof(Rpp8u)));
+
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
     for(int iterCount = 0; iterCount < noOfIterations; iterCount++)
@@ -517,7 +521,7 @@ int main(int argc, char **argv)
 
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_pixelate_host(d_input, srcDescPtr, d_output, dstDescPtr, pixelationPercentage, roiTensorPtrSrc, roiTypeSrc, handle);
+                        rppt_pixelate_host(d_input, srcDescPtr, d_output, dstDescPtr, d_interDstPtr, pixelationPercentage, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
@@ -1289,6 +1293,8 @@ int main(int argc, char **argv)
         CHECK(hipHostFree(cropRoi));
         CHECK(hipHostFree(patchRoi));
     }
+    if(testCase == 5)
+        CHECK(hipHostFree(interDst));
     if (reductionTypeCase)
         CHECK(hipHostFree(reductionFuncResultArr));
     free(input);

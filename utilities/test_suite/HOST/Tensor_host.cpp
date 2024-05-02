@@ -342,6 +342,10 @@ int main(int argc, char **argv)
     }
     bool invalidROI = (roiList[0] == 0 && roiList[1] == 0 && roiList[2] == 0 && roiList[3] == 0);
 
+    void *interDstPtr;
+    if(testCase == 5)
+        interDstPtr = static_cast<Rpp8u *>(calloc(srcDescPtr->strides.nStride * srcDescPtr->n , sizeof(Rpp8u)));
+
     // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
     // If numThreads value passed is 0, number of OpenMP threads used by RPP will be set to batch size
     Rpp32u numThreads = 0;
@@ -510,7 +514,7 @@ int main(int argc, char **argv)
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_pixelate_host(input, srcDescPtr, output, dstDescPtr, pixelationPercentage, roiTensorPtrSrc, roiTypeSrc, handle);
+                        rppt_pixelate_host(input, srcDescPtr, output, dstDescPtr, interDstPtr, pixelationPercentage, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
@@ -1342,6 +1346,8 @@ int main(int argc, char **argv)
     free(output);
     if(reductionTypeCase)
         free(reductionFuncResultArr);
+    if(testCase == 5)
+        free(interDstPtr);
     if(testCase == 33)
     {
         free(cropRoi);
