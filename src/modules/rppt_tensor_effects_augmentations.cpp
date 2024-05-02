@@ -806,11 +806,10 @@ RppStatus rppt_pixelate_host(RppPtr_t srcPtr,
                              RpptRoiType roiType,
                              rppHandle_t rppHandle)
 {
+    if ((srcDescPtr->layout != RpptLayout::NCHW) && (srcDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
+    if ((dstDescPtr->layout != RpptLayout::NCHW) && (dstDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
     if (pixelationPercentage < 0 || pixelationPercentage > 100)
-    {
-        std::cout << "\nEnter a valid pixelation percentage value";
-        exit(1);
-    }
+        return RPP_ERROR_INVALID_ARGUMENTS;
 
     RppLayoutParams srcLayoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
     RpptImagePatchPtr internalDstImgSizes = reinterpret_cast<RpptImagePatch *>(rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.scratchBufferHost);
@@ -1728,11 +1727,10 @@ RppStatus rppt_pixelate_gpu(RppPtr_t srcPtr,
 {
 #ifdef HIP_COMPILE
 
+    if ((srcDescPtr->layout != RpptLayout::NCHW) && (srcDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
+    if ((dstDescPtr->layout != RpptLayout::NCHW) && (dstDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
     if (pixelationPercentage < 0 || pixelationPercentage > 100)
-    {
-        std::cout << "\nEnter a valid pixelation percentage value";
-        exit(1);
-    }
+        return RPP_ERROR_INVALID_ARGUMENTS;
 
     RpptInterpolationType interpolationType = RpptInterpolationType::BILINEAR;
     RpptDesc interDesc;
@@ -1750,21 +1748,11 @@ RppStatus rppt_pixelate_gpu(RppPtr_t srcPtr,
         internalDstImgSizes[i].height = (roiTensorPtrSrc[i].xywhROI.roiHeight * (100 - pixelationPercentage)) / 100;
     }
 
-    // Optionally set w stride as a multiple of 8 for src/dst
     interDescPtr->h = (interDescPtr->h * (100 - pixelationPercentage)) / 100;
     interDescPtr->w = (((interDescPtr->w * ((100 - pixelationPercentage) / 100) ) / 8 ) * 8) + 8;
     interDescPtr->strides.nStride = interDescPtr->w * interDescPtr->h * interDescPtr->c;
-    // The stride changes with the change in the height and width
-    if(srcDescPtr->layout == RpptLayout::NCHW)
-    {
-        interDescPtr->strides.cStride = interDescPtr->w * interDescPtr->h;
-        interDescPtr->strides.hStride = interDescPtr->w;
-    }
-    if (srcDescPtr->layout == RpptLayout::NHWC)
-    {
-        interDescPtr->strides.cStride = 1;
-        interDescPtr->strides.hStride = interDescPtr->c * interDescPtr->w;
-    }
+    interDescPtr->strides.cStride = (srcDescPtr->layout == RpptLayout::NCHW) ? (interDescPtr->w * interDescPtr->h) : 1;
+    interDescPtr->strides.hStride = (srcDescPtr->layout == RpptLayout::NCHW) ? interDescPtr->w : (interDescPtr->c * interDescPtr->w);
 
     Rpp64u interBufferSize = static_cast<Rpp64u>(interDescPtr->h) * static_cast<Rpp64u>(interDescPtr->w) * static_cast<Rpp64u>(srcDescPtr->c) * static_cast<Rpp64u>(srcDescPtr->n);
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
