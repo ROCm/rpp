@@ -749,7 +749,7 @@ RppStatus rppt_pixelate_host(RppPtr_t srcPtr,
 {
     if (pixelationPercentage < 0 || pixelationPercentage > 100)
     {
-        std::cout << "\nPlease enter a valid pixelation percentage value";
+        std::cout << "\nEnter a valid pixelation percentage value";
         exit(1);
     }
 
@@ -1606,7 +1606,7 @@ RppStatus rppt_pixelate_gpu(RppPtr_t srcPtr,
 
     if (pixelationPercentage < 0 || pixelationPercentage > 100)
     {
-        std::cout << "\nPlease enter a valid pixelation percentage value";
+        std::cout << "\nEnter a valid pixelation percentage value";
         exit(1);
     }
 
