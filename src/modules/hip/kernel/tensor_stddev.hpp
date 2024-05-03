@@ -9,6 +9,93 @@ __device__ void stddev_hip_compute(float *srcPtr, float src, float *dst) { *dst 
 __device__ void stddev_hip_compute(signed char *srcPtr, float src, float *dst) { *dst = src; }
 __device__ void stddev_hip_compute(half *srcPtr, float src, float *dst) { *dst = src * 255; }
 
+__device__ void mean_subtracted_square_3channel_hip_compute(d_float24 *src_f24, d_float24 *dst_f24,
+                                                            float4 &meanR_f4, float4 &meanG_f4, float4 &meanB_f4)
+{
+    rpp_hip_math_subtract8_const(&src_f24->f8[0], &dst_f24->f8[0], meanR_f4);
+    rpp_hip_math_subtract8_const(&src_f24->f8[1], &dst_f24->f8[1], meanG_f4);
+    rpp_hip_math_subtract8_const(&src_f24->f8[2], &dst_f24->f8[2], meanB_f4);
+    rpp_hip_math_multiply8(&dst_f24->f8[0], &dst_f24->f8[0], &dst_f24->f8[0]);
+    rpp_hip_math_multiply8(&dst_f24->f8[1], &dst_f24->f8[1], &dst_f24->f8[1]);
+    rpp_hip_math_multiply8(&dst_f24->f8[2], &dst_f24->f8[2], &dst_f24->f8[2]);
+}
+
+// perform reduction on shared memory and store the result in output
+__device__ void reduce_variance_3channel_hip(d_float24 *tempChannelSquared_f24, d_float24 *tempSquared_f24,
+                                             float *partialRVarianceRowPtr_smem, float *partialGVarianceRowPtr_smem, float *partialBVarianceRowPtr_smem,
+                                             float *partialTensorVarianceRowPtr_smem, float *dstPtr)
+{
+    // channel wise addition
+    tempChannelSquared_f24->f8[0].f4[0] += tempChannelSquared_f24->f8[0].f4[1];                                       // perform small work of vectorized float4 addition
+    tempChannelSquared_f24->f8[1].f4[0] += tempChannelSquared_f24->f8[1].f4[1];
+    tempChannelSquared_f24->f8[2].f4[0] += tempChannelSquared_f24->f8[2].f4[1];
+
+    partialRVarianceRowPtr_smem[hipThreadIdx_x] = (tempChannelSquared_f24->f8[0].f1[0] +
+                                                   tempChannelSquared_f24->f8[0].f1[1] +
+                                                   tempChannelSquared_f24->f8[0].f1[2] +
+                                                   tempChannelSquared_f24->f8[0].f1[3]);                        // perform small work of reducing R float4s to float using 16 x 16 threads and store in _smem
+    partialGVarianceRowPtr_smem[hipThreadIdx_x] = (tempChannelSquared_f24->f8[1].f1[0] +
+                                                   tempChannelSquared_f24->f8[1].f1[1] +
+                                                   tempChannelSquared_f24->f8[1].f1[2] +
+                                                   tempChannelSquared_f24->f8[1].f1[3]);                        // perform small work of reducing G float4s to float using 16 x 16 threads and store in _smem
+    partialBVarianceRowPtr_smem[hipThreadIdx_x] = (tempChannelSquared_f24->f8[2].f1[0] +
+                                                   tempChannelSquared_f24->f8[2].f1[1] +
+                                                   tempChannelSquared_f24->f8[2].f1[2] +
+                                                   tempChannelSquared_f24->f8[2].f1[3]);                        // perform small work of reducing B float4s to float using 16 x 16 threads and store in _smem
+
+    // tensor wise addition
+    tempSquared_f24->f8[0].f4[0] += tempSquared_f24->f8[0].f4[1];                                                // perform small work of vectorized float4 addition
+    tempSquared_f24->f8[1].f4[0] += tempSquared_f24->f8[1].f4[1];
+    tempSquared_f24->f8[2].f4[0] += tempSquared_f24->f8[2].f4[1];
+    tempSquared_f24->f8[0].f4[0] += tempSquared_f24->f8[1].f4[0];
+    tempSquared_f24->f8[0].f4[0] += tempSquared_f24->f8[2].f4[0];
+
+    partialTensorVarianceRowPtr_smem[hipThreadIdx_x] = (tempSquared_f24->f8[0].f1[0] +
+                                                        tempSquared_f24->f8[0].f1[1] +
+                                                        tempSquared_f24->f8[0].f1[2] +
+                                                        tempSquared_f24->f8[0].f1[3]);                          // perform small work of reducing B float4s to float using 16 x 16 threads and store in _smem
+    __syncthreads();                                                                                           // syncthreads after _smem load
+
+    // Reduction of 16 floats on 16 threads per block in x dimension (for every y dimension)
+    for (int threadMax = 8; threadMax >= 1; threadMax /= 2)
+    {
+        if (hipThreadIdx_x < threadMax)
+        {
+            partialRVarianceRowPtr_smem[hipThreadIdx_x] += partialRVarianceRowPtr_smem[hipThreadIdx_x + threadMax];
+            partialGVarianceRowPtr_smem[hipThreadIdx_x] += partialGVarianceRowPtr_smem[hipThreadIdx_x + threadMax];
+            partialBVarianceRowPtr_smem[hipThreadIdx_x] += partialBVarianceRowPtr_smem[hipThreadIdx_x + threadMax];
+            partialTensorVarianceRowPtr_smem[hipThreadIdx_x] += partialTensorVarianceRowPtr_smem[hipThreadIdx_x + threadMax];
+        }
+        __syncthreads();
+    }
+
+    if (hipThreadIdx_x == 0)
+    {
+        // Reduction of 16 floats on 16 threads per block in y dimension
+        for (int threadMax = 8, increment = 128; threadMax >= 1; threadMax /= 2, increment /= 2)
+        {
+            if (hipThreadIdx_y < threadMax)
+            {
+                partialRVarianceRowPtr_smem[0] += partialRVarianceRowPtr_smem[increment];
+                partialGVarianceRowPtr_smem[0] += partialGVarianceRowPtr_smem[increment];
+                partialBVarianceRowPtr_smem[0] += partialBVarianceRowPtr_smem[increment];
+                partialTensorVarianceRowPtr_smem[0] += partialTensorVarianceRowPtr_smem[increment];
+            }
+            __syncthreads();
+        }
+
+        // Final store to dst
+        if (hipThreadIdx_y == 0)
+        {
+            int idx = ((hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x) * 4;
+            dstPtr[idx] = partialRVarianceRowPtr_smem[0];
+            dstPtr[idx + 1] = partialGVarianceRowPtr_smem[0];
+            dstPtr[idx + 2] = partialBVarianceRowPtr_smem[0];
+            dstPtr[idx + 3] = partialTensorVarianceRowPtr_smem[0];
+        }
+    }
+}
+
 // -------------------- Set 0 - Reduction Stage 2 --------------------
 
 template <typename T>
@@ -125,7 +212,6 @@ __global__ void tensor_stddev_grid_3channel_result_hip(T *inputSrcPtr,
 
 // -------------------- Set 1 - Reduction Stage 1 --------------------
 
-// Compute complete tensor variance
 template <typename T, typename U>
 __global__ void tensor_variance_pln1_hip(T *srcPtr,
                                          uint2 srcStridesNH,
@@ -189,7 +275,6 @@ __global__ void tensor_variance_pln1_hip(T *srcPtr,
     }
 }
 
-// Compute individual channel variance
 template <typename T>
 __global__ void tensor_variance_pln3_hip(T *srcPtr,
                                          uint3 srcStridesNCH,
@@ -214,11 +299,10 @@ __global__ void tensor_variance_pln3_hip(T *srcPtr,
     partialGVarianceRowPtr_smem[hipThreadIdx_x] = 0.0f;
     partialBVarianceRowPtr_smem[hipThreadIdx_x] = 0.0f;
     partialTensorVarianceRowPtr_smem[hipThreadIdx_x] = 0.0f;
-    float4 meanValues = meanPtr_f4[id_z];
-    float4 meanR_f4 = static_cast<float4>(meanValues.x);
-    float4 meanG_f4 = static_cast<float4>(meanValues.y);
-    float4 meanB_f4 = static_cast<float4>(meanValues.z);
-    float4 mean_f4 = static_cast<float4>(meanValues.w);
+    float4 meanR_f4 = static_cast<float4>(meanPtr_f4[id_z].x);
+    float4 meanG_f4 = static_cast<float4>(meanPtr_f4[id_z].y);
+    float4 meanB_f4 = static_cast<float4>(meanPtr_f4[id_z].z);
+    float4 meanTensor_f4 = static_cast<float4>(meanPtr_f4[id_z].w);
 
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
         return;
@@ -229,20 +313,10 @@ __global__ void tensor_variance_pln3_hip(T *srcPtr,
 
     d_float24 src_f24, tempChannelSquared_f24;
     rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &src_f24); // load 24 pixels to local memory
-    rpp_hip_math_subtract8_const(&src_f24.f8[0], &tempChannelSquared_f24.f8[0], meanR_f4);      // subtract mean from each pixel
-    rpp_hip_math_subtract8_const(&src_f24.f8[1], &tempChannelSquared_f24.f8[1], meanG_f4);
-    rpp_hip_math_subtract8_const(&src_f24.f8[2], &tempChannelSquared_f24.f8[2], meanB_f4);
-    rpp_hip_math_multiply8(&tempChannelSquared_f24.f8[0], &tempChannelSquared_f24.f8[0], &tempChannelSquared_f24.f8[0]);
-    rpp_hip_math_multiply8(&tempChannelSquared_f24.f8[1], &tempChannelSquared_f24.f8[1], &tempChannelSquared_f24.f8[1]);
-    rpp_hip_math_multiply8(&tempChannelSquared_f24.f8[2], &tempChannelSquared_f24.f8[2], &tempChannelSquared_f24.f8[2]);
+    mean_subtracted_square_3channel_hip_compute(&src_f24, &tempChannelSquared_f24, meanR_f4, meanG_f4, meanB_f4);
 
     d_float24 tempSquared_f24;
-    rpp_hip_math_subtract8_const(&src_f24.f8[0], &tempSquared_f24.f8[0], mean_f4);              // subtract mean from each pixel
-    rpp_hip_math_subtract8_const(&src_f24.f8[1], &tempSquared_f24.f8[1], mean_f4);
-    rpp_hip_math_subtract8_const(&src_f24.f8[2], &tempSquared_f24.f8[2], mean_f4);
-    rpp_hip_math_multiply8(&tempSquared_f24.f8[0], &tempSquared_f24.f8[0], &tempSquared_f24.f8[0]);
-    rpp_hip_math_multiply8(&tempSquared_f24.f8[1], &tempSquared_f24.f8[1], &tempSquared_f24.f8[1]);
-    rpp_hip_math_multiply8(&tempSquared_f24.f8[2], &tempSquared_f24.f8[2], &tempSquared_f24.f8[2]);
+    mean_subtracted_square_3channel_hip_compute(&src_f24, &tempSquared_f24, meanTensor_f4, meanTensor_f4, meanTensor_f4);
 
     if (id_x + 8 > roiTensorPtrSrc[id_z].xywhROI.roiWidth)                                      // local memory reset of invalid values (from the vectorized global load) to 0.0f
     {
@@ -256,80 +330,12 @@ __global__ void tensor_variance_pln3_hip(T *srcPtr,
             tempSquared_f24.f8[2].f1[i] = 0.0f;
         }
     }
-    // channel wise addition
-    tempChannelSquared_f24.f8[0].f4[0] += tempChannelSquared_f24.f8[0].f4[1];                                       // perform small work of vectorized float4 addition
-    tempChannelSquared_f24.f8[1].f4[0] += tempChannelSquared_f24.f8[1].f4[1];
-    tempChannelSquared_f24.f8[2].f4[0] += tempChannelSquared_f24.f8[2].f4[1];
 
-    partialRVarianceRowPtr_smem[hipThreadIdx_x] = (tempChannelSquared_f24.f8[0].f1[0] +
-                                                   tempChannelSquared_f24.f8[0].f1[1] +
-                                                   tempChannelSquared_f24.f8[0].f1[2] +
-                                                   tempChannelSquared_f24.f8[0].f1[3]);                        // perform small work of reducing R float4s to float using 16 x 16 threads and store in _smem
-    partialGVarianceRowPtr_smem[hipThreadIdx_x] = (tempChannelSquared_f24.f8[1].f1[0] +
-                                                   tempChannelSquared_f24.f8[1].f1[1] +
-                                                   tempChannelSquared_f24.f8[1].f1[2] +
-                                                   tempChannelSquared_f24.f8[1].f1[3]);                        // perform small work of reducing G float4s to float using 16 x 16 threads and store in _smem
-    partialBVarianceRowPtr_smem[hipThreadIdx_x] = (tempChannelSquared_f24.f8[2].f1[0] +
-                                                   tempChannelSquared_f24.f8[2].f1[1] +
-                                                   tempChannelSquared_f24.f8[2].f1[2] +
-                                                   tempChannelSquared_f24.f8[2].f1[3]);                        // perform small work of reducing B float4s to float using 16 x 16 threads and store in _smem
-
-    // tensor wise addition
-    tempSquared_f24.f8[0].f4[0] += tempSquared_f24.f8[0].f4[1];                                                // perform small work of vectorized float4 addition
-    tempSquared_f24.f8[1].f4[0] += tempSquared_f24.f8[1].f4[1];
-    tempSquared_f24.f8[2].f4[0] += tempSquared_f24.f8[2].f4[1];
-    tempSquared_f24.f8[0].f4[0] += tempSquared_f24.f8[1].f4[0];
-    tempSquared_f24.f8[0].f4[0] += tempSquared_f24.f8[2].f4[0];
-
-    partialTensorVarianceRowPtr_smem[hipThreadIdx_x] = (tempSquared_f24.f8[0].f1[0] +
-                                                        tempSquared_f24.f8[0].f1[1] +
-                                                        tempSquared_f24.f8[0].f1[2] +
-                                                        tempSquared_f24.f8[0].f1[3]);                          // perform small work of reducing B float4s to float using 16 x 16 threads and store in _smem
-    __syncthreads();                                                                                           // syncthreads after _smem load
-
-
-
-    // Reduction of 16 floats on 16 threads per block in x dimension (for every y dimension)
-    for (int threadMax = 8; threadMax >= 1; threadMax /= 2)
-    {
-        if (hipThreadIdx_x < threadMax)
-        {
-            partialRVarianceRowPtr_smem[hipThreadIdx_x] += partialRVarianceRowPtr_smem[hipThreadIdx_x + threadMax];
-            partialGVarianceRowPtr_smem[hipThreadIdx_x] += partialGVarianceRowPtr_smem[hipThreadIdx_x + threadMax];
-            partialBVarianceRowPtr_smem[hipThreadIdx_x] += partialBVarianceRowPtr_smem[hipThreadIdx_x + threadMax];
-            partialTensorVarianceRowPtr_smem[hipThreadIdx_x] += partialTensorVarianceRowPtr_smem[hipThreadIdx_x + threadMax];
-        }
-        __syncthreads();
-    }
-
-    if (hipThreadIdx_x == 0)
-    {
-        // Reduction of 16 floats on 16 threads per block in y dimension
-        for (int threadMax = 8, increment = 128; threadMax >= 1; threadMax /= 2, increment /= 2)
-        {
-            if (hipThreadIdx_y < threadMax)
-            {
-                partialRVarianceRowPtr_smem[0] += partialRVarianceRowPtr_smem[increment];
-                partialGVarianceRowPtr_smem[0] += partialGVarianceRowPtr_smem[increment];
-                partialBVarianceRowPtr_smem[0] += partialBVarianceRowPtr_smem[increment];
-                partialTensorVarianceRowPtr_smem[0] += partialTensorVarianceRowPtr_smem[increment];
-            }
-            __syncthreads();
-        }
-
-        // Final store to dst
-        if (hipThreadIdx_y == 0)
-        {
-            int idx = ((hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x) * 4;
-            tensorVarArr[idx] = partialRVarianceRowPtr_smem[0];
-            tensorVarArr[idx + 1] = partialGVarianceRowPtr_smem[0];
-            tensorVarArr[idx + 2] = partialBVarianceRowPtr_smem[0];
-            tensorVarArr[idx + 3] = partialTensorVarianceRowPtr_smem[0];
-        }
-    }
+    reduce_variance_3channel_hip(&tempChannelSquared_f24, &tempSquared_f24,
+                                 partialRVarianceRowPtr_smem, partialGVarianceRowPtr_smem,
+                                 partialBVarianceRowPtr_smem, partialTensorVarianceRowPtr_smem, tensorVarArr);
 }
 
-// Compute individual channel variance
 template <typename T>
 __global__ void tensor_variance_pkd3_hip(T *srcPtr,
                                          uint2 srcStridesNH,
@@ -353,11 +359,10 @@ __global__ void tensor_variance_pkd3_hip(T *srcPtr,
     partialGVarianceRowPtr_smem[hipThreadIdx_x] = 0.0f;
     partialBVarianceRowPtr_smem[hipThreadIdx_x] = 0.0f;
     partialTensorVarianceRowPtr_smem[hipThreadIdx_x] = 0.0f;
-    float4 meanValues = meanPtr_f4[id_z];
-    float4 meanR_f4 = static_cast<float4>(meanValues.x);
-    float4 meanG_f4 = static_cast<float4>(meanValues.y);
-    float4 meanB_f4 = static_cast<float4>(meanValues.z);
-    float4 mean_f4 = static_cast<float4>(meanValues.w);
+    float4 meanR_f4 = static_cast<float4>(meanPtr_f4[id_z].x);
+    float4 meanG_f4 = static_cast<float4>(meanPtr_f4[id_z].y);
+    float4 meanB_f4 = static_cast<float4>(meanPtr_f4[id_z].z);
+    float4 meanTensor_f4 = static_cast<float4>(meanPtr_f4[id_z].w);
 
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
         return;
@@ -366,22 +371,12 @@ __global__ void tensor_variance_pkd3_hip(T *srcPtr,
     int xDiff = roiTensorPtrSrc[id_z].xywhROI.roiWidth - xAlignedLength;               // difference between roiWidth and alignedLength
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
 
-    d_float24 src_f24, tempChannel_f24, tempChannelSquared_f24;
+    d_float24 src_f24, tempChannelSquared_f24;
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &src_f24);         // load 24 pixels to local memory
-    rpp_hip_math_subtract8_const(&src_f24.f8[0], &tempChannel_f24.f8[0], meanR_f4);         // subtract mean from each pixel
-    rpp_hip_math_multiply8(&tempChannel_f24.f8[0], &tempChannel_f24.f8[0], &tempChannelSquared_f24.f8[0]); // square the temporary value
-    rpp_hip_math_subtract8_const(&src_f24.f8[1], &tempChannel_f24.f8[1], meanG_f4);
-    rpp_hip_math_multiply8(&tempChannel_f24.f8[1], &tempChannel_f24.f8[1], &tempChannelSquared_f24.f8[1]);
-    rpp_hip_math_subtract8_const(&src_f24.f8[2], &tempChannel_f24.f8[2], meanB_f4);
-    rpp_hip_math_multiply8(&tempChannel_f24.f8[2], &tempChannel_f24.f8[2], &tempChannelSquared_f24.f8[2]);
+    mean_subtracted_square_3channel_hip_compute(&src_f24, &tempChannelSquared_f24, meanR_f4, meanG_f4, meanB_f4);
 
     d_float24 tempSquared_f24;
-    rpp_hip_math_subtract8_const(&src_f24.f8[0], &tempSquared_f24.f8[0], mean_f4);              // subtract mean from each pixel
-    rpp_hip_math_subtract8_const(&src_f24.f8[1], &tempSquared_f24.f8[1], mean_f4);
-    rpp_hip_math_subtract8_const(&src_f24.f8[2], &tempSquared_f24.f8[2], mean_f4);
-    rpp_hip_math_multiply8(&tempSquared_f24.f8[0], &tempSquared_f24.f8[0], &tempSquared_f24.f8[0]);
-    rpp_hip_math_multiply8(&tempSquared_f24.f8[1], &tempSquared_f24.f8[1], &tempSquared_f24.f8[1]);
-    rpp_hip_math_multiply8(&tempSquared_f24.f8[2], &tempSquared_f24.f8[2], &tempSquared_f24.f8[2]);
+    mean_subtracted_square_3channel_hip_compute(&src_f24, &tempSquared_f24, meanTensor_f4, meanTensor_f4, meanTensor_f4);
 
     if (id_x + 8 > roiTensorPtrSrc[id_z].xywhROI.roiWidth)                                      // local memory reset of invalid values (from the vectorized global load) to 0.0f
     {
@@ -395,77 +390,10 @@ __global__ void tensor_variance_pkd3_hip(T *srcPtr,
             tempSquared_f24.f8[2].f1[i] = 0.0f;
         }
     }
-    // channel wise addition
-    tempChannelSquared_f24.f8[0].f4[0] += tempChannelSquared_f24.f8[0].f4[1];                                       // perform small work of vectorized float4 addition
-    tempChannelSquared_f24.f8[1].f4[0] += tempChannelSquared_f24.f8[1].f4[1];
-    tempChannelSquared_f24.f8[2].f4[0] += tempChannelSquared_f24.f8[2].f4[1];
 
-    partialRVarianceRowPtr_smem[hipThreadIdx_x] = (tempChannelSquared_f24.f8[0].f1[0] +
-                                                   tempChannelSquared_f24.f8[0].f1[1] +
-                                                   tempChannelSquared_f24.f8[0].f1[2] +
-                                                   tempChannelSquared_f24.f8[0].f1[3]);                        // perform small work of reducing R float4s to float using 16 x 16 threads and store in _smem
-    partialGVarianceRowPtr_smem[hipThreadIdx_x] = (tempChannelSquared_f24.f8[1].f1[0] +
-                                                   tempChannelSquared_f24.f8[1].f1[1] +
-                                                   tempChannelSquared_f24.f8[1].f1[2] +
-                                                   tempChannelSquared_f24.f8[1].f1[3]);                        // perform small work of reducing G float4s to float using 16 x 16 threads and store in _smem
-    partialBVarianceRowPtr_smem[hipThreadIdx_x] = (tempChannelSquared_f24.f8[2].f1[0] +
-                                                   tempChannelSquared_f24.f8[2].f1[1] +
-                                                   tempChannelSquared_f24.f8[2].f1[2] +
-                                                   tempChannelSquared_f24.f8[2].f1[3]);                        // perform small work of reducing B float4s to float using 16 x 16 threads and store in _smem
-
-    // tensor wise addition
-    tempSquared_f24.f8[0].f4[0] += tempSquared_f24.f8[0].f4[1];                                                // perform small work of vectorized float4 addition
-    tempSquared_f24.f8[1].f4[0] += tempSquared_f24.f8[1].f4[1];
-    tempSquared_f24.f8[2].f4[0] += tempSquared_f24.f8[2].f4[1];
-    tempSquared_f24.f8[0].f4[0] += tempSquared_f24.f8[1].f4[0];
-    tempSquared_f24.f8[0].f4[0] += tempSquared_f24.f8[2].f4[0];
-
-    partialTensorVarianceRowPtr_smem[hipThreadIdx_x] = (tempSquared_f24.f8[0].f1[0] +
-                                                        tempSquared_f24.f8[0].f1[1] +
-                                                        tempSquared_f24.f8[0].f1[2] +
-                                                        tempSquared_f24.f8[0].f1[3]);                          // perform small work of reducing B float4s to float using 16 x 16 threads and store in _smem
-    __syncthreads();                                                                                           // syncthreads after _smem load
-
-
-
-    // Reduction of 16 floats on 16 threads per block in x dimension (for every y dimension)
-    for (int threadMax = 8; threadMax >= 1; threadMax /= 2)
-    {
-        if (hipThreadIdx_x < threadMax)
-        {
-            partialRVarianceRowPtr_smem[hipThreadIdx_x] += partialRVarianceRowPtr_smem[hipThreadIdx_x + threadMax];
-            partialGVarianceRowPtr_smem[hipThreadIdx_x] += partialGVarianceRowPtr_smem[hipThreadIdx_x + threadMax];
-            partialBVarianceRowPtr_smem[hipThreadIdx_x] += partialBVarianceRowPtr_smem[hipThreadIdx_x + threadMax];
-            partialTensorVarianceRowPtr_smem[hipThreadIdx_x] += partialTensorVarianceRowPtr_smem[hipThreadIdx_x + threadMax];
-        }
-        __syncthreads();
-    }
-
-    if (hipThreadIdx_x == 0)
-    {
-        // Reduction of 16 floats on 16 threads per block in y dimension
-        for (int threadMax = 8, increment = 128; threadMax >= 1; threadMax /= 2, increment /= 2)
-        {
-            if (hipThreadIdx_y < threadMax)
-            {
-                partialRVarianceRowPtr_smem[0] += partialRVarianceRowPtr_smem[increment];
-                partialGVarianceRowPtr_smem[0] += partialGVarianceRowPtr_smem[increment];
-                partialBVarianceRowPtr_smem[0] += partialBVarianceRowPtr_smem[increment];
-                partialTensorVarianceRowPtr_smem[0] += partialTensorVarianceRowPtr_smem[increment];
-            }
-            __syncthreads();
-        }
-
-        // Final store to dst
-        if (hipThreadIdx_y == 0)
-        {
-            int idx = ((hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x) * 4;
-            tensorVarArr[idx] = partialRVarianceRowPtr_smem[0];
-            tensorVarArr[idx + 1] = partialGVarianceRowPtr_smem[0];
-            tensorVarArr[idx + 2] = partialBVarianceRowPtr_smem[0];
-            tensorVarArr[idx + 3] = partialTensorVarianceRowPtr_smem[0];
-        }
-    }
+    reduce_variance_3channel_hip(&tempChannelSquared_f24, &tempSquared_f24,
+                                 partialRVarianceRowPtr_smem, partialGVarianceRowPtr_smem,
+                                 partialBVarianceRowPtr_smem, partialTensorVarianceRowPtr_smem, tensorVarArr);
 }
 
 // -------------------- Set 2 - Kernel Executors --------------------
