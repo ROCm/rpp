@@ -344,7 +344,7 @@ int main(int argc, char **argv)
 
     void *interDstPtr;
     if(testCase == 5)
-        interDstPtr = static_cast<Rpp8u *>(calloc(srcDescPtr->strides.nStride * srcDescPtr->n , sizeof(Rpp8u)));
+        interDstPtr = static_cast<Rpp8u *>(calloc(srcDescPtr->strides.nStride * srcDescPtr->n , sizeof(Rpp32f)));
 
     // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
     // If numThreads value passed is 0, number of OpenMP threads used by RPP will be set to batch size
@@ -509,7 +509,7 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "pixelate";
 
-                    Rpp32f pixelationPercentage = 87.5;
+                    Rpp32f pixelationPercentage = 101;
 
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();

@@ -1766,7 +1766,7 @@ RppStatus rppt_pixelate_gpu(RppPtr_t srcPtr,
                                roiTensorPtrSrc,
                                roiType,
                                rpp::deref(rppHandle));
-        hipDeviceSynchronize();
+        hipStreamSynchronize(rpp::deref(rppHandle).GetStream());
         interpolationType = RpptInterpolationType::NEAREST_NEIGHBOR;
         for (int i = 0; i < srcDescPtr->n; i++)
         {
@@ -1786,7 +1786,7 @@ RppStatus rppt_pixelate_gpu(RppPtr_t srcPtr,
                                internalRoiTensorPtrSrc,
                                roiType,
                                rpp::deref(rppHandle));
-        hipDeviceSynchronize();
+        hipStreamSynchronize(rpp::deref(rppHandle).GetStream());
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
@@ -1799,7 +1799,7 @@ RppStatus rppt_pixelate_gpu(RppPtr_t srcPtr,
                                roiTensorPtrSrc,
                                roiType,
                                rpp::deref(rppHandle));
-        hipDeviceSynchronize();
+        hipStreamSynchronize(rpp::deref(rppHandle).GetStream());
         interpolationType = RpptInterpolationType::NEAREST_NEIGHBOR;
         for (int i = 0; i < srcDescPtr->n; i++)
         {
@@ -1819,7 +1819,7 @@ RppStatus rppt_pixelate_gpu(RppPtr_t srcPtr,
                                internalRoiTensorPtrSrc,
                                roiType,
                                rpp::deref(rppHandle));
-        hipDeviceSynchronize();
+        hipStreamSynchronize(rpp::deref(rppHandle).GetStream());
     }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
@@ -1832,7 +1832,7 @@ RppStatus rppt_pixelate_gpu(RppPtr_t srcPtr,
                                roiTensorPtrSrc,
                                roiType,
                                rpp::deref(rppHandle));
-        hipDeviceSynchronize();
+        hipStreamSynchronize(rpp::deref(rppHandle).GetStream());
         interpolationType = RpptInterpolationType::NEAREST_NEIGHBOR;
         for (int i = 0; i < srcDescPtr->n; i++)
         {
@@ -1852,7 +1852,7 @@ RppStatus rppt_pixelate_gpu(RppPtr_t srcPtr,
                                internalRoiTensorPtrSrc,
                                roiType,
                                rpp::deref(rppHandle));
-        hipDeviceSynchronize();
+        hipStreamSynchronize(rpp::deref(rppHandle).GetStream());
     }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
@@ -1865,7 +1865,7 @@ RppStatus rppt_pixelate_gpu(RppPtr_t srcPtr,
                                roiTensorPtrSrc,
                                roiType,
                                rpp::deref(rppHandle));
-        hipDeviceSynchronize();
+        hipStreamSynchronize(rpp::deref(rppHandle).GetStream());
         interpolationType = RpptInterpolationType::NEAREST_NEIGHBOR;
         for (int i = 0; i < srcDescPtr->n; i++)
         {
@@ -1885,7 +1885,7 @@ RppStatus rppt_pixelate_gpu(RppPtr_t srcPtr,
                                internalRoiTensorPtrSrc,
                                roiType,
                                rpp::deref(rppHandle));
-        hipDeviceSynchronize();
+        hipStreamSynchronize(rpp::deref(rppHandle).GetStream());
     }
     return RPP_SUCCESS;
 #elif defined(OCL_COMPILE)
