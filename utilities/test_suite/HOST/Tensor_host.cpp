@@ -509,7 +509,7 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "pixelate";
 
-                    Rpp32f pixelationPercentage = 101;
+                    Rpp32f pixelationPercentage = 87.5;
 
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();
