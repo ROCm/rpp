@@ -152,9 +152,7 @@ RppStatus glitch_u8_u8_host_tensor(Rpp8u *srcPtr,
                 {
                     compute_src_loc(dstLocRow, i, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 1);
                     for (int c = 0; c < 3; c++)
-                    {
                         *(dstPtrTemp + c) = *(srcPtrChannel + glitchSrcLocArray[c] + c *srcDescPtr->strides.cStride);
-                    }
                     dstPtrTemp += 3;
                 }
 
@@ -179,7 +177,6 @@ RppStatus glitch_u8_u8_host_tensor(Rpp8u *srcPtr,
                     {
                         __m256i p;
                         p = _mm256_loadu_epi8(srcPtrChannel + (glitchSrcLocArray[c] + c * srcDescPtr->strides.cStride)); 
-
                         _mm256_storeu_epi8((dstPtrTemp + c * srcDescPtr->strides.cStride), p);
                     }
                     dstPtrTemp += 32;
@@ -189,9 +186,7 @@ RppStatus glitch_u8_u8_host_tensor(Rpp8u *srcPtr,
                 {
                     compute_src_loc(dstLocRow, i, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 1);
                     for (int c = 0; c < 3; c++)
-                    {
                         *(dstPtrTemp + c * dstDescPtr->strides.cStride) = *(srcPtrChannel + glitchSrcLocArray[c] + c *srcDescPtr->strides.cStride);
-                    }
                     dstPtrTemp += 1;
                 }
 
@@ -231,9 +226,7 @@ RppStatus glitch_u8_u8_host_tensor(Rpp8u *srcPtr,
                 {
                     compute_src_loc(dstLocRow, i, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 3);
                     for (int c = 0; c < 3; c++)
-                    {
                         *dstPtrTemp++ = *(srcPtrChannel + glitchSrcLocArray[c] + c);
-                    }
                 }
 
                 dstPtrRow += dstDescPtr->strides.hStride;
@@ -337,9 +330,7 @@ RppStatus glitch_f32_f32_host_tensor(Rpp32f *srcPtr,
                 {
                     compute_src_loc(dstLocRow, i, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 1);
                     for (int c = 0; c < 3; c++)
-                    {
                         *(dstPtrTemp + c) = *(srcPtrChannel + glitchSrcLocArray[c] + c *srcDescPtr->strides.cStride);
-                    }
                     dstPtrTemp += 3;
                 }
 
@@ -364,7 +355,6 @@ RppStatus glitch_f32_f32_host_tensor(Rpp32f *srcPtr,
                     {
                         __m256 p;
                         p = _mm256_loadu_ps(srcPtrChannel + (glitchSrcLocArray[c] + c * srcDescPtr->strides.cStride)); 
-
                         _mm256_storeu_ps((dstPtrTemp + c * srcDescPtr->strides.cStride), p);
                     }
                     dstPtrTemp += 8;
@@ -374,9 +364,7 @@ RppStatus glitch_f32_f32_host_tensor(Rpp32f *srcPtr,
                 {
                     compute_src_loc(dstLocRow, i, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 1);
                     for (int c = 0; c < 3; c++)
-                    {
                         *(dstPtrTemp + c * dstDescPtr->strides.cStride) = *(srcPtrChannel + glitchSrcLocArray[c] + c *srcDescPtr->strides.cStride);
-                    }
                     dstPtrTemp += 1;
                 }
 
@@ -416,9 +404,7 @@ RppStatus glitch_f32_f32_host_tensor(Rpp32f *srcPtr,
                 {
                     compute_src_loc(dstLocRow, i, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 3);
                     for (int c = 0; c < 3; c++)
-                    {
                         *dstPtrTemp++ = *(srcPtrChannel + glitchSrcLocArray[c] + c);
-                    }
                 }
 
                 dstPtrRow += dstDescPtr->strides.hStride;
@@ -496,9 +482,7 @@ RppStatus glitch_f16_f16_host_tensor(Rpp16f *srcPtr,
                 {
                     compute_src_loc(dstLocRow, vectorLoopCount, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 1);
                     for (int c = 0; c < 3; c++)
-                    {
                         *(dstPtrTemp + c) = *(srcPtrChannel + glitchSrcLocArray[c] + c *srcDescPtr->strides.cStride);
-                    }
                     dstPtrTemp += 3;
                 }
 
@@ -518,9 +502,7 @@ RppStatus glitch_f16_f16_host_tensor(Rpp16f *srcPtr,
                 {
                     compute_src_loc(dstLocRow, i, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 1);
                     for (int c = 0; c < 3; c++)
-                    {
                         *(dstPtrTemp + c * dstDescPtr->strides.cStride) = *(srcPtrChannel + glitchSrcLocArray[c] + c *srcDescPtr->strides.cStride);
-                    }
                     dstPtrTemp += 1;
                 }
 
@@ -540,9 +522,7 @@ RppStatus glitch_f16_f16_host_tensor(Rpp16f *srcPtr,
                 {
                     compute_src_loc(dstLocRow, i, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 3);
                     for (int c = 0; c < 3; c++)
-                    {
                         *dstPtrTemp++ = *(srcPtrChannel + glitchSrcLocArray[c] + c);
-                    }
                 }
 
                 dstPtrRow += dstDescPtr->strides.hStride;
@@ -643,9 +623,7 @@ RppStatus glitch_i8_i8_host_tensor(Rpp8s *srcPtr,
                 {
                     compute_src_loc(dstLocRow, i, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 1);
                     for (int c = 0; c < 3; c++)
-                    {
                         *(dstPtrTemp + c) = *(srcPtrChannel + glitchSrcLocArray[c] + c *srcDescPtr->strides.cStride);
-                    }
                     dstPtrTemp += 3;
                 }
 
@@ -670,7 +648,6 @@ RppStatus glitch_i8_i8_host_tensor(Rpp8s *srcPtr,
                     {
                         __m256i p;
                         p = _mm256_loadu_epi8(srcPtrChannel + (glitchSrcLocArray[c] + c * srcDescPtr->strides.cStride)); 
-
                         _mm256_storeu_epi8((dstPtrTemp + c * srcDescPtr->strides.cStride), p);
                     }
                     dstPtrTemp += 32;
@@ -680,9 +657,7 @@ RppStatus glitch_i8_i8_host_tensor(Rpp8s *srcPtr,
                 {
                     compute_src_loc(dstLocRow, i, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 1);
                     for (int c = 0; c < 3; c++)
-                    {
                         *(dstPtrTemp + c * dstDescPtr->strides.cStride) = *(srcPtrChannel + glitchSrcLocArray[c] + c *srcDescPtr->strides.cStride);
-                    }
                     dstPtrTemp += 1;
                 }
 
@@ -722,9 +697,7 @@ RppStatus glitch_i8_i8_host_tensor(Rpp8s *srcPtr,
                 {
                     compute_src_loc(dstLocRow, i, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 3);
                     for (int c = 0; c < 3; c++)
-                    {
                         *dstPtrTemp++ = *(srcPtrChannel + glitchSrcLocArray[c] + c);
-                    }
                 }
 
                 dstPtrRow += dstDescPtr->strides.hStride;

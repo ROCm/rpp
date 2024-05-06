@@ -65,7 +65,7 @@ int main(int argc, char **argv)
 
     bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23|| testCase == 24 || testCase == 40 || testCase == 41 || testCase == 49 || testCase == 54);
     bool kernelSizeCase = (testCase == 40 || testCase == 41 || testCase == 49 || testCase == 54);
-    bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 61 || testCase == 63);
+    bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 33 || testCase == 61 || testCase == 63 || testCase == 65 || testCase == 68);
     bool randomOutputCase = (testCase == 84 || testCase == 49 || testCase == 54);
     bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24);
     bool reductionTypeCase = (testCase == 87 || testCase == 88 || testCase == 89);
@@ -345,6 +345,18 @@ int main(int argc, char **argv)
     RpptROI *roiPtrInputCropRegion;
     if(testCase == 82)
         CHECK(hipHostMalloc(&roiPtrInputCropRegion, 4 * sizeof(RpptROI)));
+
+    RpptROI *cropRoi, *patchRoi;
+    if(testCase == 33)
+    {
+        CHECK(hipHostMalloc(&cropRoi, batchSize * sizeof(RpptROI)));
+        CHECK(hipHostMalloc(&patchRoi, batchSize * sizeof(RpptROI)));
+    }
+    bool invalidROI = (roiList[0] == 0 && roiList[1] == 0 && roiList[2] == 0 && roiList[3] == 0);
+
+    Rpp32f *intensity;
+    if(testCase == 46)
+        CHECK(hipHostMalloc(&intensity, batchSize * sizeof(Rpp32f)));
 
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
