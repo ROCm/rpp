@@ -90,7 +90,7 @@ RppStatus tensor_stddev_u8_f32_host(Rpp8u *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    var += (mean - static_cast<Rpp64f>(*srcPtrTemp)) * (mean - static_cast<Rpp64f>(*srcPtrTemp));
+                    var += (static_cast<Rpp64f>(*srcPtrTemp) - mean) * (static_cast<Rpp64f>(*srcPtrTemp) - mean);
                     srcPtrTemp++;
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
@@ -159,12 +159,12 @@ RppStatus tensor_stddev_u8_f32_host(Rpp8u *srcPtr,
                     Rpp64f srcPtrR = static_cast<Rpp64f>(*srcPtrTempR);
                     Rpp64f srcPtrG = static_cast<Rpp64f>(*srcPtrTempG);
                     Rpp64f srcPtrB = static_cast<Rpp64f>(*srcPtrTempB);
-                    varR += (meanR - srcPtrR) * (meanR - srcPtrR);
-                    varG += (meanG - srcPtrG) * (meanG - srcPtrG);
-                    varB += (meanB - srcPtrB) * (meanB - srcPtrB);
-                    varImageR += (meanImage - srcPtrR) * (meanImage - srcPtrR);
-                    varImageG += (meanImage - srcPtrG) * (meanImage - srcPtrG);
-                    varImageB += (meanImage - srcPtrB) * (meanImage - srcPtrB);
+                    varR += (srcPtrR - meanR) * (srcPtrR - meanR);
+                    varG += (srcPtrG - meanG) * (srcPtrG - meanG);
+                    varB += (srcPtrB - meanB) * (srcPtrB - meanB);
+                    varImageR += (srcPtrR - meanImage) * (srcPtrR - meanImage);
+                    varImageG += (srcPtrG - meanImage) * (srcPtrG - meanImage);
+                    varImageB += (srcPtrB - meanImage) * (srcPtrB - meanImage);
                     srcPtrTempR++;
                     srcPtrTempG++;
                     srcPtrTempB++;
@@ -249,12 +249,12 @@ RppStatus tensor_stddev_u8_f32_host(Rpp8u *srcPtr,
                     Rpp64f srcPtrR = static_cast<Rpp64f>(srcPtrTemp[0]);
                     Rpp64f srcPtrG = static_cast<Rpp64f>(srcPtrTemp[1]);
                     Rpp64f srcPtrB = static_cast<Rpp64f>(srcPtrTemp[2]);
-                    varR += (meanR - srcPtrR) * (meanR - srcPtrR);
-                    varG += (meanG - srcPtrG) * (meanG - srcPtrG);
-                    varB += (meanB - srcPtrB) * (meanB - srcPtrB);
-                    varImageR += (meanImage - srcPtrR) * (meanImage - srcPtrR);
-                    varImageG += (meanImage - srcPtrG) * (meanImage - srcPtrG);
-                    varImageB += (meanImage - srcPtrB) * (meanImage - srcPtrB);
+                    varR += (srcPtrR - meanR) * (srcPtrR - meanR);
+                    varG += (srcPtrG - meanG) * (srcPtrG - meanG);
+                    varB += (srcPtrB - meanB) * (srcPtrB - meanB);
+                    varImageR += (srcPtrR - meanImage) * (srcPtrR - meanImage);
+                    varImageG += (srcPtrG - meanImage) * (srcPtrG - meanImage);
+                    varImageB += (srcPtrB - meanImage) * (srcPtrB - meanImage);
                     srcPtrTemp += 3;
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
@@ -351,7 +351,7 @@ RppStatus tensor_stddev_f32_f32_host(Rpp32f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    var += (mean - static_cast<Rpp64f>(*srcPtrTemp)) * (mean - static_cast<Rpp64f>(*srcPtrTemp));
+                    var += (static_cast<Rpp64f>(*srcPtrTemp) - mean) * (static_cast<Rpp64f>(*srcPtrTemp) - mean);
                     srcPtrTemp++;
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
@@ -420,12 +420,12 @@ RppStatus tensor_stddev_f32_f32_host(Rpp32f *srcPtr,
                     Rpp64f srcPtrR = static_cast<Rpp64f>(*srcPtrTempR);
                     Rpp64f srcPtrG = static_cast<Rpp64f>(*srcPtrTempG);
                     Rpp64f srcPtrB = static_cast<Rpp64f>(*srcPtrTempB);
-                    varR += (meanR - srcPtrR) * (meanR - srcPtrR);
-                    varG += (meanG - srcPtrG) * (meanG - srcPtrG);
-                    varB += (meanB - srcPtrB) * (meanB - srcPtrB);
-                    varImageR += (meanImage - srcPtrR) * (meanImage - srcPtrR);
-                    varImageG += (meanImage - srcPtrG) * (meanImage - srcPtrG);
-                    varImageB += (meanImage - srcPtrB) * (meanImage - srcPtrB);
+                    varR += (srcPtrR - meanR) * (srcPtrR - meanR);
+                    varG += (srcPtrG - meanG) * (srcPtrG - meanG);
+                    varB += (srcPtrB - meanB) * (srcPtrB - meanB);
+                    varImageR += (srcPtrR - meanImage) * (srcPtrR - meanImage);
+                    varImageG += (srcPtrG - meanImage) * (srcPtrG - meanImage);
+                    varImageB += (srcPtrB - meanImage) * (srcPtrB - meanImage);
                     srcPtrTempR++;
                     srcPtrTempG++;
                     srcPtrTempB++;
@@ -510,12 +510,12 @@ RppStatus tensor_stddev_f32_f32_host(Rpp32f *srcPtr,
                     Rpp64f srcPtrR = static_cast<Rpp64f>(srcPtrTemp[0]);
                     Rpp64f srcPtrG = static_cast<Rpp64f>(srcPtrTemp[1]);
                     Rpp64f srcPtrB = static_cast<Rpp64f>(srcPtrTemp[2]);
-                    varR += (meanR - srcPtrR) * (meanR - srcPtrR);
-                    varG += (meanG - srcPtrG) * (meanG - srcPtrG);
-                    varB += (meanB - srcPtrB) * (meanB - srcPtrB);
-                    varImageR += (meanImage - srcPtrR) * (meanImage - srcPtrR);
-                    varImageG += (meanImage - srcPtrG) * (meanImage - srcPtrG);
-                    varImageB += (meanImage - srcPtrB) * (meanImage - srcPtrB);
+                    varR += (srcPtrR - meanR) * (srcPtrR - meanR);
+                    varG += (srcPtrG - meanG) * (srcPtrG - meanG);
+                    varB += (srcPtrB - meanB) * (srcPtrB - meanB);
+                    varImageR += (srcPtrR - meanImage) * (srcPtrR - meanImage);
+                    varImageG += (srcPtrG - meanImage) * (srcPtrG - meanImage);
+                    varImageB += (srcPtrB - meanImage) * (srcPtrB - meanImage);
                     srcPtrTemp += 3;
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
@@ -617,7 +617,7 @@ RppStatus tensor_stddev_f16_f32_host(Rpp16f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    var += (mean - static_cast<Rpp64f>(*srcPtrTemp)) * (mean - static_cast<Rpp64f>(*srcPtrTemp));
+                    var += (static_cast<Rpp64f>(*srcPtrTemp) - mean) * (static_cast<Rpp64f>(*srcPtrTemp) - mean);
                     srcPtrTemp++;
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
@@ -694,12 +694,12 @@ RppStatus tensor_stddev_f16_f32_host(Rpp16f *srcPtr,
                     Rpp64f srcPtrR = static_cast<Rpp64f>(*srcPtrTempR);
                     Rpp64f srcPtrG = static_cast<Rpp64f>(*srcPtrTempG);
                     Rpp64f srcPtrB = static_cast<Rpp64f>(*srcPtrTempB);
-                    varR += (meanR - srcPtrR) * (meanR - srcPtrR);
-                    varG += (meanG - srcPtrG) * (meanG - srcPtrG);
-                    varB += (meanB - srcPtrB) * (meanB - srcPtrB);
-                    varImageR += (meanImage - srcPtrR) * (meanImage - srcPtrR);
-                    varImageG += (meanImage - srcPtrG) * (meanImage - srcPtrG);
-                    varImageB += (meanImage - srcPtrB) * (meanImage - srcPtrB);
+                    varR += (srcPtrR - meanR) * (srcPtrR - meanR);
+                    varG += (srcPtrG - meanG) * (srcPtrG - meanG);
+                    varB += (srcPtrB - meanB) * (srcPtrB - meanB);
+                    varImageR += (srcPtrR - meanImage) * (srcPtrR - meanImage);
+                    varImageG += (srcPtrG - meanImage) * (srcPtrG - meanImage);
+                    varImageB += (srcPtrB - meanImage) * (srcPtrB - meanImage);
                     srcPtrTempR++;
                     srcPtrTempG++;
                     srcPtrTempB++;
@@ -789,12 +789,12 @@ RppStatus tensor_stddev_f16_f32_host(Rpp16f *srcPtr,
                     Rpp64f srcPtrR = static_cast<Rpp64f>(srcPtrTemp[0]);
                     Rpp64f srcPtrG = static_cast<Rpp64f>(srcPtrTemp[1]);
                     Rpp64f srcPtrB = static_cast<Rpp64f>(srcPtrTemp[2]);
-                    varR += (meanR - srcPtrR) * (meanR - srcPtrR);
-                    varG += (meanG - srcPtrG) * (meanG - srcPtrG);
-                    varB += (meanB - srcPtrB) * (meanB - srcPtrB);
-                    varImageR += (meanImage - srcPtrR) * (meanImage - srcPtrR);
-                    varImageG += (meanImage - srcPtrG) * (meanImage - srcPtrG);
-                    varImageB += (meanImage - srcPtrB) * (meanImage - srcPtrB);
+                    varR += (srcPtrR - meanR) * (srcPtrR - meanR);
+                    varG += (srcPtrG - meanG) * (srcPtrG - meanG);
+                    varB += (srcPtrB - meanB) * (srcPtrB - meanB);
+                    varImageR += (srcPtrR - meanImage) * (srcPtrR - meanImage);
+                    varImageG += (srcPtrG - meanImage) * (srcPtrG - meanImage);
+                    varImageB += (srcPtrB - meanImage) * (srcPtrB - meanImage);
                     srcPtrTemp += 3;
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
@@ -892,7 +892,7 @@ RppStatus tensor_stddev_i8_f32_host(Rpp8s *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    var += (mean - static_cast<Rpp64f>(*srcPtrTemp + 128)) * (mean - static_cast<Rpp64f>(*srcPtrTemp + 128));
+                    var += (static_cast<Rpp64f>(*srcPtrTemp + 128) - mean) * (static_cast<Rpp64f>(*srcPtrTemp + 128) - mean);
                     srcPtrTemp++;
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
@@ -961,12 +961,12 @@ RppStatus tensor_stddev_i8_f32_host(Rpp8s *srcPtr,
                     Rpp64f srcPtrR = static_cast<Rpp64f>(*srcPtrTempR + 128);
                     Rpp64f srcPtrG = static_cast<Rpp64f>(*srcPtrTempG + 128);
                     Rpp64f srcPtrB = static_cast<Rpp64f>(*srcPtrTempB + 128);
-                    varR += (meanR - srcPtrR) * (meanR - srcPtrR);
-                    varG += (meanG - srcPtrG) * (meanG - srcPtrG);
-                    varB += (meanB - srcPtrB) * (meanB - srcPtrB);
-                    varImageR += (meanImage - srcPtrR) * (meanImage - srcPtrR);
-                    varImageG += (meanImage - srcPtrG) * (meanImage - srcPtrG);
-                    varImageB += (meanImage - srcPtrB) * (meanImage - srcPtrB);
+                    varR += (srcPtrR - meanR) * (srcPtrR - meanR);
+                    varG += (srcPtrG - meanG) * (srcPtrG - meanG);
+                    varB += (srcPtrB - meanB) * (srcPtrB - meanB);
+                    varImageR += (srcPtrR - meanImage) * (srcPtrR - meanImage);
+                    varImageG += (srcPtrG - meanImage) * (srcPtrG - meanImage);
+                    varImageB += (srcPtrB - meanImage) * (srcPtrB - meanImage);
                     srcPtrTempR++;
                     srcPtrTempG++;
                     srcPtrTempB++;
@@ -1051,12 +1051,12 @@ RppStatus tensor_stddev_i8_f32_host(Rpp8s *srcPtr,
                     Rpp64f srcPtrR = static_cast<Rpp64f>(srcPtrTemp[0] + 128);
                     Rpp64f srcPtrG = static_cast<Rpp64f>(srcPtrTemp[1] + 128);
                     Rpp64f srcPtrB = static_cast<Rpp64f>(srcPtrTemp[2] + 128);
-                    varR += (meanR - srcPtrR) * (meanR - srcPtrR);
-                    varG += (meanG - srcPtrG) * (meanG - srcPtrG);
-                    varB += (meanB - srcPtrB) * (meanB - srcPtrB);
-                    varImageR += (meanImage - srcPtrR) * (meanImage - srcPtrR);
-                    varImageG += (meanImage - srcPtrG) * (meanImage - srcPtrG);
-                    varImageB += (meanImage - srcPtrB) * (meanImage - srcPtrB);
+                    varR += (srcPtrR - meanR) * (srcPtrR - meanR);
+                    varG += (srcPtrG - meanG) * (srcPtrG - meanG);
+                    varB += (srcPtrB - meanB) * (srcPtrB - meanB);
+                    varImageR += (srcPtrR - meanImage) * (srcPtrR - meanImage);
+                    varImageG += (srcPtrG - meanImage) * (srcPtrG - meanImage);
+                    varImageB += (srcPtrB - meanImage) * (srcPtrB - meanImage);
                     srcPtrTemp += 3;
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;

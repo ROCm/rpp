@@ -6122,41 +6122,41 @@ inline void compute_sum_24_host(__m256d *p, __m256d *pSumR, __m256d *pSumG, __m2
 
 inline void compute_variance_8_host(__m256d *p1, __m256d *pMean, __m256d *pVar)
 {
-    __m256d pSub = _mm256_sub_pd(pMean[0], p1[0]);
+    __m256d pSub = _mm256_sub_pd(p1[0], pMean[0]);
     pVar[0] = _mm256_fmadd_pd(pSub, pSub, pVar[0]);
-    pSub = _mm256_sub_pd(pMean[0], p1[1]);
+    pSub = _mm256_sub_pd(p1[1], pMean[0]);
     pVar[0] = _mm256_fmadd_pd(pSub, pSub, pVar[0]);
 }
 
 inline void compute_varianceChannel_pln3_24_host(__m256d *p1, __m256d *pMeanR, __m256d *pMeanG, __m256d *pMeanB, __m256d *pVarR, __m256d *pVarG, __m256d *pVarB)
 {
-    __m256d pSub = _mm256_sub_pd(pMeanR[0], p1[0]);
+    __m256d pSub = _mm256_sub_pd(p1[0], pMeanR[0]);
     pVarR[0] = _mm256_fmadd_pd(pSub, pSub, pVarR[0]);
-    pSub = _mm256_sub_pd(pMeanR[0], p1[1]);
+    pSub = _mm256_sub_pd(p1[1], pMeanR[0]);
     pVarR[0] = _mm256_fmadd_pd(pSub, pSub, pVarR[0]);
-    pSub = _mm256_sub_pd(pMeanG[0], p1[2]);
+    pSub = _mm256_sub_pd(p1[2], pMeanG[0]);
     pVarG[0] = _mm256_fmadd_pd(pSub, pSub, pVarG[0]);
-    pSub = _mm256_sub_pd(pMeanG[0], p1[3]);
+    pSub = _mm256_sub_pd(p1[3], pMeanG[0]);
     pVarG[0] = _mm256_fmadd_pd(pSub, pSub, pVarG[0]);
-    pSub = _mm256_sub_pd(pMeanB[0], p1[4]);
+    pSub = _mm256_sub_pd(p1[4], pMeanB[0]);
     pVarB[0] = _mm256_fmadd_pd(pSub, pSub, pVarB[0]);
-    pSub = _mm256_sub_pd(pMeanB[0], p1[5]);
+    pSub = _mm256_sub_pd(p1[5], pMeanB[0]);
     pVarB[0] = _mm256_fmadd_pd(pSub, pSub, pVarB[0]);
 }
 
 inline void compute_varianceImage_pln3_24_host(__m256d *p1, __m256d *pMean, __m256d *pVarR, __m256d *pVarG, __m256d *pVarB)
 {
-    __m256d pSub = _mm256_sub_pd(pMean[0], p1[0]);
+    __m256d pSub = _mm256_sub_pd(p1[0], pMean[0]);
     pVarR[0] = _mm256_fmadd_pd(pSub, pSub, pVarR[0]);
-    pSub = _mm256_sub_pd(pMean[0], p1[1]);
+    pSub = _mm256_sub_pd(p1[1], pMean[0]);
     pVarR[0] = _mm256_fmadd_pd(pSub, pSub, pVarR[0]);
-    pSub = _mm256_sub_pd(pMean[0], p1[2]);
+    pSub = _mm256_sub_pd(p1[2], pMean[0]);
     pVarG[0] = _mm256_fmadd_pd(pSub, pSub, pVarG[0]);
     pSub = _mm256_sub_pd(pMean[0], p1[3]);
     pVarG[0] = _mm256_fmadd_pd(pSub, pSub, pVarG[0]);
-    pSub = _mm256_sub_pd(pMean[0], p1[4]);
+    pSub = _mm256_sub_pd(p1[4], pMean[0]);
     pVarB[0] = _mm256_fmadd_pd(pSub, pSub, pVarB[0]);
-    pSub = _mm256_sub_pd(pMean[0], p1[5]);
+    pSub = _mm256_sub_pd(p1[5], pMean[0]);
     pVarB[0] = _mm256_fmadd_pd(pSub, pSub, pVarB[0]);
 }
 
