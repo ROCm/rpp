@@ -417,6 +417,7 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
         Rpp32u tensorPartialVarArrLength = gridDim_x * gridDim_y * gridDim_z;
         float *tensorPartialVarArr = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
         hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float), handle.GetStream());
+        hipStreamSynchronize(handle.GetStream());
         hipLaunchKernelGGL(tensor_variance_pln1_hip,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
@@ -455,6 +456,7 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
                            tensorPartialVarArr,
                            reinterpret_cast<float4 *>(meanTensor),
                            roiTensorPtrSrc);
+        hipStreamSynchronize(handle.GetStream());
         hipLaunchKernelGGL(tensor_stddev_grid_3channel_result_hip,
                            dim3(1, 1, gridDim_z),
                            dim3(1024, 1, 1),
@@ -482,6 +484,7 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
                            tensorPartialVarArr,
                            reinterpret_cast<float4 *>(meanTensor),
                            roiTensorPtrSrc);
+        hipStreamSynchronize(handle.GetStream());
         hipLaunchKernelGGL(tensor_stddev_grid_3channel_result_hip,
                            dim3(1, 1, gridDim_z),
                            dim3(1024, 1, 1),
