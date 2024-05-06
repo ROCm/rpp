@@ -81,14 +81,11 @@ RppStatus tensor_mean_u8_f32_host(Rpp8u *srcPtr,
                     __m256i p1[2];
                     rpp_simd_load(rpp_load16_u8_to_u32_avx, srcPtrTemp, p1);
                     compute_sum_16_host(p1, &pSum);
-
                     srcPtrTemp += vectorIncrementPerChannel;
                 }
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
-                {
                     sum += static_cast<Rpp32u>(*srcPtrTemp++);
-                }
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
@@ -285,14 +282,11 @@ RppStatus tensor_mean_f32_f32_host(Rpp32f *srcPtr,
                     __m256d p1[2];
                     rpp_simd_load(rpp_load8_f32_to_f64_avx, srcPtrTemp, p1);
                     compute_sum_8_host(p1, &pSum);
-
                     srcPtrTemp += vectorIncrement;
                 }
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
-                {
                     sum += static_cast<Rpp64f>(*srcPtrTemp++);
-                }
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
@@ -398,7 +392,6 @@ RppStatus tensor_mean_f32_f32_host(Rpp32f *srcPtr,
                     __m256d p[6];
                     rpp_simd_load(rpp_load24_f32pkd3_to_f64pln3_avx, srcPtrTemp, p);
                     compute_sum_24_host(p, &pSumR, &pSumG, &pSumB);
-
                     srcPtrTemp += vectorIncrement;
                 }
 #endif
@@ -496,16 +489,13 @@ RppStatus tensor_mean_f16_f32_host(Rpp16f *srcPtr,
                 }
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
-                {
                     sum += static_cast<Rpp64f>(*srcPtrTemp++);
-                }
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
             _mm256_storeu_pd(sumAvx, pSum);
             sum += (sumAvx[0] + sumAvx[1] + sumAvx[2] + sumAvx[3]);
 #endif
-
             mean = static_cast<Rpp32f>(sum / totalPixelsPerChannel);
             tensorMeanArr[batchCount] = mean;
         }
@@ -708,9 +698,7 @@ RppStatus tensor_mean_i8_f32_host(Rpp8s *srcPtr,
                 }
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
-                {
                     sum += static_cast<Rpp32s>(*srcPtrTemp++);
-                }
                 srcPtrRow += srcDescPtr->strides.hStride;
             }
 #if __AVX2__
