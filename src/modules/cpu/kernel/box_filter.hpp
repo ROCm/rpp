@@ -26,37 +26,47 @@ SOFTWARE.
 #include "rpp_cpu_simd.hpp"
 #include "rpp_cpu_common.hpp"
 
-
-
-Rpp32f get_result(Rpp8u *srcPtrTemp1, Rpp8u *srcPtrTemp2, Rpp8u *srcPtrTemp3, Rpp32s padLength)
+Rpp32f compute_3x3_filter(Rpp8u *srcPtrTemp1, Rpp8u *srcPtrTemp2, Rpp8u *srcPtrTemp3, Rpp32s padLength, bool firstRow, bool lastRow)
 {
     Rpp32f accum = 0.0f;
-    for (int offset = -padLength; offset <= padLength; offset++)
-    {
-        accum += static_cast<float>(srcPtrTemp1[offset]) * 0.1111111f;
-        accum += static_cast<float>(srcPtrTemp2[offset]) * 0.1111111f;
-        accum += static_cast<float>(srcPtrTemp3[offset]) * 0.1111111f;
-    }
-    return accum;
-}
-
-void process_column(Rpp8u *srcPtrTemp1, Rpp8u *srcPtrTemp2, Rpp8u *srcPtrTemp3, Rpp8u *dstPtrTemp,
-                    bool firstRow, bool lastRow, Rpp16s convolutionFactor)
-{
-    Rpp32f sum = 0;
     if (firstRow || lastRow)
     {
-        sum += (static_cast<Rpp32f>(srcPtrTemp1[0]) + static_cast<Rpp32f>(srcPtrTemp1[1]));
-        sum += (static_cast<Rpp32f>(srcPtrTemp2[0]) + static_cast<Rpp32f>(srcPtrTemp2[1]));
+        for (int offset = -padLength; offset <= padLength; offset++)
+        {
+            accum += static_cast<float>(srcPtrTemp1[offset]);
+            accum += static_cast<float>(srcPtrTemp2[offset]);
+        }
     }
     else
     {
-        sum += (static_cast<Rpp32f>(srcPtrTemp1[0]) + static_cast<Rpp32f>(srcPtrTemp1[1]));
-        sum += (static_cast<Rpp32f>(srcPtrTemp2[0]) + static_cast<Rpp32f>(srcPtrTemp2[1]));
-        sum += (static_cast<Rpp32f>(srcPtrTemp3[0]) + static_cast<Rpp32f>(srcPtrTemp3[1]));
+        for (int offset = -padLength; offset <= padLength; offset++)
+        {
+            accum += static_cast<float>(srcPtrTemp1[offset]);
+            accum += static_cast<float>(srcPtrTemp2[offset]);
+            accum += static_cast<float>(srcPtrTemp3[offset]);
+        }
     }
-    sum *= 0.1111111f;
-    *dstPtrTemp = static_cast<Rpp8u>(RPPPIXELCHECK(sum));
+    accum *= 0.1111111f;
+    return accum;
+}
+
+void process_border_pixels_3x3_filter(Rpp8u *srcPtrTemp1, Rpp8u *srcPtrTemp2, Rpp8u *srcPtrTemp3, Rpp8u *dstPtrTemp,
+                                      bool firstRow, bool lastRow)
+{
+    Rpp32f accum = 0;
+    if (firstRow || lastRow)
+    {
+        accum += (static_cast<Rpp32f>(srcPtrTemp1[0]) + static_cast<Rpp32f>(srcPtrTemp1[1]));
+        accum += (static_cast<Rpp32f>(srcPtrTemp2[0]) + static_cast<Rpp32f>(srcPtrTemp2[1]));
+    }
+    else
+    {
+        accum += (static_cast<Rpp32f>(srcPtrTemp1[0]) + static_cast<Rpp32f>(srcPtrTemp1[1]));
+        accum += (static_cast<Rpp32f>(srcPtrTemp2[0]) + static_cast<Rpp32f>(srcPtrTemp2[1]));
+        accum += (static_cast<Rpp32f>(srcPtrTemp3[0]) + static_cast<Rpp32f>(srcPtrTemp3[1]));
+    }
+    accum *= 0.1111111f;
+    *dstPtrTemp = static_cast<Rpp8u>(RPPPIXELCHECK(accum));
 }
 
 RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
@@ -119,9 +129,11 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                 Rpp8u *srcPtrTemp2 = srcPtrRow2;
                 Rpp8u *srcPtrTemp3 = srcPtrRow3;
                 Rpp8u *dstPtrTemp = dstPtrRow;
-                process_column(srcPtrTemp1, srcPtrTemp2, srcPtrTemp3, dstPtrTemp,
-                               firstRow, lastRow, convolutionFactor);
+                // process first value in row
+                process_border_pixels_3x3_filter(srcPtrTemp1, srcPtrTemp2, srcPtrTemp3, dstPtrTemp, firstRow, lastRow);
                 dstPtrTemp++;
+                vectorLoopCount++;
+
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                 {
                     __m128i pxRow[3];
@@ -170,6 +182,17 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     srcPtrTemp3 += 12;
                     dstPtrTemp += 12;
                 }
+                for (; vectorLoopCount < bufferLength - 1; vectorLoopCount++)
+                {
+                    *dstPtrTemp = static_cast<Rpp8u>(RPPPIXELCHECK(compute_3x3_filter(srcPtrTemp1, srcPtrTemp2, srcPtrTemp3, padLength, firstRow, lastRow)));
+                    srcPtrTemp1++;
+                    srcPtrTemp2++;
+                    srcPtrTemp3++;
+                    dstPtrTemp++;
+                }
+                // process last value in row
+                process_border_pixels_3x3_filter(srcPtrTemp1, srcPtrTemp2, srcPtrTemp3, dstPtrTemp, firstRow, lastRow);
+
                 srcPtrRow1 += (!firstRow) ? srcDescPtr->strides.hStride : 0;
                 srcPtrRow2 += (!firstRow) ? srcDescPtr->strides.hStride : 0;
                 srcPtrRow3 += (!firstRow) ? srcDescPtr->strides.hStride : 0;
