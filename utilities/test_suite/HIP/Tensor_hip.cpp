@@ -1159,11 +1159,10 @@ int main(int argc, char **argv)
                     if(srcDescPtr->c == 1)
                         reductionFuncResultArrLength = srcDescPtr->n;
                     memcpy(mean, TensorMeanReferenceOutputs[inputChannels].data(), sizeof(Rpp32f) * reductionFuncResultArrLength);
-                    int flag = 2; // compute both image and channel stddev by default
 
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_tensor_stddev_gpu(d_input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, mean, flag, roiTensorPtrSrc, roiTypeSrc, handle);
+                        rppt_tensor_stddev_gpu(d_input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, mean, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 

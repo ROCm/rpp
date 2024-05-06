@@ -151,7 +151,6 @@ __global__ void tensor_stddev_grid_3channel_result_hip(T *inputSrcPtr,
                                                        float *srcPtr,
                                                        uint xBufferLength,
                                                        float *dstPtr,
-                                                       bool flag,
                                                        RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = hipThreadIdx_x;
@@ -212,10 +211,10 @@ __global__ void tensor_stddev_grid_3channel_result_hip(T *inputSrcPtr,
 
 // -------------------- Set 1 - Reduction Stage 1 --------------------
 
-template <typename T, typename U>
+template <typename T>
 __global__ void tensor_variance_pln1_hip(T *srcPtr,
                                          uint2 srcStridesNH,
-                                         U *tensorVarArr,
+                                         float *tensorVarArr,
                                          Rpp32f *mean,
                                          RpptROIPtr roiTensorPtrSrc)
 {
@@ -403,7 +402,6 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
                                  RpptDescPtr srcDescPtr,
                                  Rpp32f *imageStddevArr,
                                  Rpp32f *meanTensor,
-                                 int flag,
                                  RpptROIPtr roiTensorPtrSrc,
                                  RpptRoiType roiType,
                                  rpp::Handle& handle)
@@ -470,7 +468,6 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
                            tensorPartialVarArr,
                            gridDim_x * gridDim_y,
                            imageStddevArr,
-                           flag,
                            roiTensorPtrSrc);
     }
     else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC))
@@ -498,7 +495,6 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
                            tensorPartialVarArr,
                            gridDim_x * gridDim_y,
                            imageStddevArr,
-                           flag,
                            roiTensorPtrSrc);
     }
 
