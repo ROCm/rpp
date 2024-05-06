@@ -114,8 +114,7 @@ __global__ void tensor_stddev_grid_result_hip(T *inputSrcPtr,
     if (id_x >= xBufferLength)
         return;
 
-    int xAlignedLength = xBufferLength & ~7;                        // alignedLength for vectorized global loads
-    int xDiff = xBufferLength - xAlignedLength;                     // difference between bufferLength and alignedLength
+    int xDiff = xBufferLength - (xBufferLength & ~7);                    // difference between roiWidth and alignedLength, where alignedLength = roiWidth & ~7
     uint srcIdx = (id_z * xBufferLength) + id_x;
 
     d_float8 src_f8;
@@ -214,7 +213,7 @@ __global__ void tensor_stddev_grid_3channel_result_hip(T *inputSrcPtr,
 template <typename T>
 __global__ void tensor_variance_pln1_hip(T *srcPtr,
                                          uint2 srcStridesNH,
-                                         float *tensorVarArr,
+                                         float *tensorVarianceArr,
                                          Rpp32f *mean,
                                          RpptROIPtr roiTensorPtrSrc)
 {
@@ -231,8 +230,7 @@ __global__ void tensor_variance_pln1_hip(T *srcPtr,
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
         return;
 
-    int xAlignedLength = roiTensorPtrSrc[id_z].xywhROI.roiWidth & ~7;       // alignedLength for vectorized global loads
-    int xDiff = roiTensorPtrSrc[id_z].xywhROI.roiWidth - xAlignedLength;    // difference between roiWidth and alignedLength
+    int xDiff = roiTensorPtrSrc[id_z].xywhROI.roiWidth - (roiTensorPtrSrc[id_z].xywhROI.roiWidth & ~7);    // difference between roiWidth and alignedLength, where alignedLength = roiWidth & ~7
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
 
     d_float8 src_f8, temp_f8, tempSquared_f8;
@@ -270,14 +268,14 @@ __global__ void tensor_variance_pln1_hip(T *srcPtr,
 
         // Final store to dst
         if (hipThreadIdx_y == 0)
-            tensorVarArr[(hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x] = partialVarianceRowPtr_smem[0];
+            tensorVarianceArr[(hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x] = partialVarianceRowPtr_smem[0];
     }
 }
 
 template <typename T>
 __global__ void tensor_variance_pln3_hip(T *srcPtr,
                                          uint3 srcStridesNCH,
-                                         float *tensorVarArr,
+                                         float *tensorVarianceArr,
                                          float4 *meanPtr_f4,
                                          RpptROIPtr roiTensorPtrSrc)
 {
@@ -306,8 +304,7 @@ __global__ void tensor_variance_pln3_hip(T *srcPtr,
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
         return;
 
-    int xAlignedLength = roiTensorPtrSrc[id_z].xywhROI.roiWidth & ~7;                           // alignedLength for vectorized global loads
-    int xDiff = roiTensorPtrSrc[id_z].xywhROI.roiWidth - xAlignedLength;                        // difference between roiWidth and alignedLength
+    int xDiff = roiTensorPtrSrc[id_z].xywhROI.roiWidth - (roiTensorPtrSrc[id_z].xywhROI.roiWidth & ~7);    // difference between roiWidth and alignedLength, where alignedLength = roiWidth & ~7
     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
 
     d_float24 src_f24, tempChannelSquared_f24;
@@ -332,13 +329,13 @@ __global__ void tensor_variance_pln3_hip(T *srcPtr,
 
     reduce_variance_3channel_hip(&tempChannelSquared_f24, &tempSquared_f24,
                                  partialRVarianceRowPtr_smem, partialGVarianceRowPtr_smem,
-                                 partialBVarianceRowPtr_smem, partialTensorVarianceRowPtr_smem, tensorVarArr);
+                                 partialBVarianceRowPtr_smem, partialTensorVarianceRowPtr_smem, tensorVarianceArr);
 }
 
 template <typename T>
 __global__ void tensor_variance_pkd3_hip(T *srcPtr,
                                          uint2 srcStridesNH,
-                                         float *tensorVarArr,
+                                         float *tensorVarianceArr,
                                          float4 *meanPtr_f4,
                                          RpptROIPtr roiTensorPtrSrc)
 {
@@ -366,8 +363,7 @@ __global__ void tensor_variance_pkd3_hip(T *srcPtr,
     if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
         return;
 
-    int xAlignedLength = roiTensorPtrSrc[id_z].xywhROI.roiWidth & ~7;                  // alignedLength for vectorized global loads
-    int xDiff = roiTensorPtrSrc[id_z].xywhROI.roiWidth - xAlignedLength;               // difference between roiWidth and alignedLength
+    int xDiff = roiTensorPtrSrc[id_z].xywhROI.roiWidth - (roiTensorPtrSrc[id_z].xywhROI.roiWidth & ~7);    // difference between roiWidth and alignedLength, where alignedLength = roiWidth & ~7
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
 
     d_float24 src_f24, tempChannelSquared_f24;
@@ -392,7 +388,7 @@ __global__ void tensor_variance_pkd3_hip(T *srcPtr,
 
     reduce_variance_3channel_hip(&tempChannelSquared_f24, &tempSquared_f24,
                                  partialRVarianceRowPtr_smem, partialGVarianceRowPtr_smem,
-                                 partialBVarianceRowPtr_smem, partialTensorVarianceRowPtr_smem, tensorVarArr);
+                                 partialBVarianceRowPtr_smem, partialTensorVarianceRowPtr_smem, tensorVarianceArr);
 }
 
 // -------------------- Set 2 - Kernel Executors --------------------
