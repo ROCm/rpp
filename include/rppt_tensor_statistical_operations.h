@@ -187,7 +187,7 @@ RppStatus rppt_tensor_mean_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t
 #endif // GPU_SUPPORT
 
 /*! \brief Tensor stddev operation on HOST backend for a NCHW/NHWC layout tensor
- * \details The tensor stddev is a reduction operation that finds the channel-wise (R stddev / G stddev / B stddev) and total standard deviation for each image either with respect to channel mean or with respect to image mean in a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+ * \details The tensor stddev is a reduction operation that finds the channel-wise (R stddev / G stddev / B stddev) and total standard deviation for each image with respect to meanTensor passed.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
  * \param [in] srcPtr source tensor in HOST memory
@@ -206,7 +206,7 @@ RppStatus rppt_tensor_stddev_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPt
 
 #ifdef GPU_SUPPORT
 /*! \brief Tensor stddev operation on HIP backend for a NCHW/NHWC layout tensor
- * \details The tensor stddev is a reduction operation that finds the channel-wise (R stddev / G stddev / B stddev) and total standard deviation for each image either with respect to channel mean or with respect to image mean in a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+ * \details The tensor stddev is a reduction operation that finds the channel-wise (R stddev / G stddev / B stddev) and total standard deviation for each image with respect to meanTensor passed.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
  * \param [in] srcPtr source tensor in HIP memory
