@@ -2558,4 +2558,114 @@ __device__ __forceinline__ void rpp_hip_interpolate24_nearest_neighbor_pkd3(T *s
     rpp_hip_interpolate3_nearest_neighbor_pkd3(srcPtr, srcStrideH, locPtrSrc_f16->f1[7], locPtrSrc_f16->f1[15], roiPtrSrc_i4, &(dst_f24->f3[7]));
 }
 
+// copy ROI region from input to output for NCDHW layout tensors
+
+template<typename T>
+__global__ void copy_ncdhw_hip_tensor(T *srcPtr,
+                                      uint3 srcStridesCDH,
+                                      T *dstPtr,
+                                      uint3 dstStridesCDH,
+                                      int channels,
+                                      RpptROI3DPtr roiGenericSrc)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;        // W - inner most dim vectorized
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;              // H - second to inner
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;              // D - outer most dim
+
+    if ((id_z >= roiGenericSrc->xyzwhdROI.roiDepth) || (id_y >= roiGenericSrc->xyzwhdROI.roiHeight) || (id_x >= roiGenericSrc->xyzwhdROI.roiWidth))
+    {
+        return;
+    }
+
+    uint srcIdx = ((id_z + roiGenericSrc->xyzwhdROI.xyz.z) * srcStridesCDH.y) + ((id_y + roiGenericSrc->xyzwhdROI.xyz.y) * srcStridesCDH.z) + (id_x + roiGenericSrc->xyzwhdROI.xyz.x);
+    uint dstIdx = (id_z * dstStridesCDH.y) + (id_y * dstStridesCDH.z) + id_x;
+
+    d_float8 val_f8;
+    for(int c = 0; c < channels; c++)
+    {
+        rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &val_f8);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &val_f8);
+        srcIdx += srcStridesCDH.x;
+        dstIdx += dstStridesCDH.x;
+    }
+}
+
+// copy ROI region from input to output for NDHWC layout tensors
+
+template<typename T>
+__global__ void copy_ndhwc_hip_tensor(T *srcPtr,
+                                      uint2 srcStridesDH,
+                                      T *dstPtr,
+                                      uint2 dstStridesDH,
+                                      RpptROI3DPtr roiGenericSrc)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;        // WC - inner most dim vectorized
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;              // H - second to inner
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;              // D - outer most dim
+
+    if ((id_z >= roiGenericSrc->xyzwhdROI.roiDepth) || (id_y >= roiGenericSrc->xyzwhdROI.roiHeight) || (id_x >= roiGenericSrc->xyzwhdROI.roiWidth))
+    {
+        return;
+    }
+
+    uint srcIdx = ((id_z + roiGenericSrc->xyzwhdROI.xyz.z) * srcStridesDH.x) + ((id_y + roiGenericSrc->xyzwhdROI.xyz.y) * srcStridesDH.y) + (id_x + roiGenericSrc->xyzwhdROI.xyz.x) * 3;
+    uint dstIdx = (id_z * dstStridesDH.x) + (id_y * dstStridesDH.y) + id_x * 3;
+
+    d_float24 val_f24;
+    rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &val_f24);
+    rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &val_f24);
+}
+
+// PKD3->PLN3 layout toggle kernel
+
+template <typename T>
+__global__ void convert_pkd3_pln3_hip_tensor(T *srcPtr,
+                                            uint2 srcStridesNH,
+                                            T *dstPtr,
+                                            uint3 dstStridesNCH,
+                                            RpptROIPtr roiTensorPtrSrc)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
+    {
+        return;
+    }
+
+    uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3;
+    uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
+
+    d_float24 dst_f24;
+    rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &dst_f24);
+    rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &dst_f24);
+}
+
+// PLN3->PKD3 layout toggle kernel
+
+template <typename T>
+__global__ void convert_pln3_pkd3_hip_tensor(T *srcPtr,
+                                             uint3 srcStridesNCH,
+                                             T *dstPtr,
+                                             uint2 dstStridesNH,
+                                             RpptROIPtr roiTensorPtrSrc)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    if ((id_y >= roiTensorPtrSrc[id_z].xywhROI.roiHeight) || (id_x >= roiTensorPtrSrc[id_z].xywhROI.roiWidth))
+    {
+        return;
+    }
+
+    uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
+
+    d_float24 dst_f24;
+    rpp_hip_load24_pln3_and_unpack_to_float24_pkd3(srcPtr + srcIdx, srcStridesNCH.y, &dst_f24);
+    rpp_hip_pack_float24_pkd3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
+}
+
 #endif // RPP_HIP_COMMON_H
