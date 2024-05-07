@@ -122,7 +122,7 @@ int main(int argc, char * argv[])
 
     // set src/dst xyzwhd ROI tensors
     void *pinnedMemROI;
-    CHECK(hipHostMalloc(&pinnedMemROI, noOfFiles * sizeof(RpptROI3D)));
+    CHECK_RETURN_STATUS(hipHostMalloc(&pinnedMemROI, noOfFiles * sizeof(RpptROI3D)));
     RpptROI3D *roiGenericSrcPtr = reinterpret_cast<RpptROI3D *>(pinnedMemROI);
 
     // Set buffer sizes in pixels for src/dst
@@ -139,12 +139,12 @@ int main(int argc, char * argv[])
 
     // Allocate hip memory in float for RPP strided buffer
     void *d_inputF32, *d_outputF32;
-    CHECK(hipMalloc(&d_inputF32, iBufferSizeInBytes));
-    CHECK(hipMalloc(&d_outputF32, oBufferSizeInBytes));
+    CHECK_RETURN_STATUS(hipMalloc(&d_inputF32, iBufferSizeInBytes));
+    CHECK_RETURN_STATUS(hipMalloc(&d_outputF32, oBufferSizeInBytes));
 
     // set argument tensors
     void *pinnedMemArgs;
-    CHECK(hipHostMalloc(&pinnedMemArgs, 2 * noOfFiles * sizeof(Rpp32f)));
+    CHECK_RETURN_STATUS(hipHostMalloc(&pinnedMemArgs, 2 * noOfFiles * sizeof(Rpp32f)));
 
     // arguments required for slice
     Rpp32s *anchorTensor = NULL, *shapeTensor = NULL;
@@ -152,7 +152,7 @@ int main(int argc, char * argv[])
 
     rppHandle_t handle;
     hipStream_t stream;
-    CHECK(hipStreamCreate(&stream));
+    CHECK_RETURN_STATUS(hipStreamCreate(&stream));
     rppCreateWithStreamAndBatchSize(&handle, stream, batchSize);
 
     // Run case-wise RPP API and measure time
@@ -170,8 +170,8 @@ int main(int argc, char * argv[])
         inputU8 = static_cast<Rpp8u *>(calloc(iBufferSizeU8, 1));
         outputU8 = static_cast<Rpp8u *>(calloc(iBufferSizeU8, 1));
 
-        CHECK(hipMalloc(&d_inputU8, iBufferSizeU8));
-        CHECK(hipMalloc(&d_outputU8, iBufferSizeU8));
+        CHECK_RETURN_STATUS(hipMalloc(&d_inputU8, iBufferSizeU8));
+        CHECK_RETURN_STATUS(hipMalloc(&d_outputU8, iBufferSizeU8));
     }
 
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", funcName.c_str(), numRuns, batchSize);
@@ -224,11 +224,11 @@ int main(int argc, char * argv[])
         {
             for(int i = 0; i < iBufferSizeU8; i++)
                 inputU8[i] = std::min(std::max(static_cast<unsigned char>(inputF32[i]), static_cast<unsigned char>(0)), static_cast<unsigned char>(255));
-            CHECK(hipMemcpy(d_inputU8, inputU8, iBufferSizeU8, hipMemcpyHostToDevice));
+            CHECK_RETURN_STATUS(hipMemcpy(d_inputU8, inputU8, iBufferSizeU8, hipMemcpyHostToDevice));
         }
 
         //Copy input buffer to hip
-        CHECK(hipMemcpy(d_inputF32, inputF32, iBufferSizeInBytes, hipMemcpyHostToDevice));
+        CHECK_RETURN_STATUS(hipMemcpy(d_inputF32, inputF32, iBufferSizeInBytes, hipMemcpyHostToDevice));
 
         for (int perfRunCount = 0; perfRunCount < numRuns; perfRunCount++)
         {
@@ -259,11 +259,11 @@ int main(int argc, char * argv[])
                 {
                     testCaseName = "slice";
                     if(anchorTensor == NULL)
-                        CHECK(hipHostMalloc(&anchorTensor, batchSize * 4 * sizeof(Rpp32s)));
+                        CHECK_RETURN_STATUS(hipHostMalloc(&anchorTensor, batchSize * 4 * sizeof(Rpp32s)));
                     if(shapeTensor == NULL)
-                        CHECK(hipHostMalloc(&shapeTensor, batchSize * 4 * sizeof(Rpp32s)));
+                        CHECK_RETURN_STATUS(hipHostMalloc(&shapeTensor, batchSize * 4 * sizeof(Rpp32s)));
                     if(roiTensor == NULL)
-                        CHECK(hipHostMalloc(&roiTensor, batchSize * 8 * sizeof(Rpp32u)));
+                        CHECK_RETURN_STATUS(hipHostMalloc(&roiTensor, batchSize * 8 * sizeof(Rpp32u)));
                     bool enablePadding = false;
                     auto fillValue = 0;
                     init_slice_voxel(descriptorPtr3D, roiGenericSrcPtr, roiTensor, anchorTensor, shapeTensor);
@@ -380,7 +380,7 @@ int main(int argc, char * argv[])
                 }
             }
 
-            CHECK(hipDeviceSynchronize());
+            CHECK_RETURN_STATUS(hipDeviceSynchronize());
             endWallTime = omp_get_wtime();
             wallTime = endWallTime - startWallTime;
             maxWallTime = std::max(maxWallTime, wallTime);
@@ -396,7 +396,7 @@ int main(int argc, char * argv[])
         }
 
         // Copy output buffer to host
-        CHECK(hipMemcpy(outputF32, d_outputF32, oBufferSizeInBytes, hipMemcpyDeviceToHost));
+        CHECK_RETURN_STATUS(hipMemcpy(outputF32, d_outputF32, oBufferSizeInBytes, hipMemcpyDeviceToHost));
         if(testType == 0)
         {
             cout << "\n\nGPU Backend Wall Time: " << wallTime <<" ms per batch"<< endl;
@@ -419,7 +419,7 @@ int main(int argc, char * argv[])
             if(inputBitDepth == 0)
             {
                 Rpp64u bufferLength = iBufferSize * sizeof(Rpp8u) + descriptorPtr3D->offsetInBytes;
-                CHECK(hipMemcpy(outputU8, d_outputU8, bufferLength, hipMemcpyDeviceToHost));
+                CHECK_RETURN_STATUS(hipMemcpy(outputU8, d_outputU8, bufferLength, hipMemcpyDeviceToHost));
 
                 // Copy U8 buffer to F32 buffer for display purposes
                 for(int i = 0; i < bufferLength; i++)
@@ -544,16 +544,16 @@ int main(int argc, char * argv[])
     free(niftiDataArray);
     free(inputF32);
     free(outputF32);
-    CHECK(hipHostFree(pinnedMemROI));
-    CHECK(hipHostFree(pinnedMemArgs));
-    CHECK(hipFree(d_inputF32));
-    CHECK(hipFree(d_outputF32));
+    CHECK_RETURN_STATUS(hipHostFree(pinnedMemROI));
+    CHECK_RETURN_STATUS(hipHostFree(pinnedMemArgs));
+    CHECK_RETURN_STATUS(hipFree(d_inputF32));
+    CHECK_RETURN_STATUS(hipFree(d_outputF32));
     if(anchorTensor != NULL)
-        CHECK(hipHostFree(anchorTensor));
+        CHECK_RETURN_STATUS(hipHostFree(anchorTensor));
     if(shapeTensor != NULL)
-        CHECK(hipHostFree(shapeTensor));
+        CHECK_RETURN_STATUS(hipHostFree(shapeTensor));
     if(roiTensor != NULL)
-        CHECK(hipHostFree(roiTensor));
+        CHECK_RETURN_STATUS(hipHostFree(roiTensor));
     if(inputBitDepth == 0)
     {
         if(inputU8 != NULL)
@@ -561,9 +561,9 @@ int main(int argc, char * argv[])
         if(outputU8 != NULL)
             free(outputU8);
         if(d_inputU8 != NULL)
-            CHECK(hipFree(d_inputU8));
+            CHECK_RETURN_STATUS(hipFree(d_inputU8));
         if(d_outputU8 != NULL)
-            CHECK(hipFree(d_outputU8));
+            CHECK_RETURN_STATUS(hipFree(d_outputU8));
     }
 
     return(0);
