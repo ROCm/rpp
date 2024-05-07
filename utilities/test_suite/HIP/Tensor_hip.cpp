@@ -342,6 +342,7 @@ int main(int argc, char **argv)
     if(dualInputCase)
         CHECK_RETURN_STATUS(hipMalloc(&d_input_second, inputBufferSize));
 
+    // Allocate pinned memory for specific cases
     RpptROI *roiPtrInputCropRegion;
     if(testCase == 82)
         CHECK_RETURN_STATUS(hipHostMalloc(&roiPtrInputCropRegion, 4 * sizeof(RpptROI)));
@@ -357,6 +358,14 @@ int main(int argc, char **argv)
     Rpp32f *intensity;
     if(testCase == 46)
         CHECK_RETURN_STATUS(hipHostMalloc(&intensity, batchSize * sizeof(Rpp32f)));
+
+    Rpp32f *alpha;
+    if(testCase == 0)
+        CHECK_RETURN_STATUS(hipHostMalloc(&alpha, batchSize * sizeof(Rpp32f)));
+
+    Rpp32f *beta;
+    if(testCase == 0)
+        CHECK_RETURN_STATUS(hipHostMalloc(&beta, batchSize * sizeof(Rpp32f)));
 
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
@@ -392,7 +401,7 @@ int main(int argc, char **argv)
                 convert_pkd3_to_pln3(inputu8Second, srcDescPtr);
         }
 
-        // Convert inputs to correponding bit depth specified by user
+        // Convert inputs to corresponding bit depth specified by user
         convert_input_bitdepth(input, input_second, inputu8, inputu8Second, inputBitDepth, ioBufferSize, inputBufferSize, srcDescPtr, dualInputCase, conversionFactor);
 
         //copy decoded inputs to hip buffers
@@ -441,8 +450,6 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "brightness";
 
-                    Rpp32f alpha[batchSize];
-                    Rpp32f beta[batchSize];
                     for (i = 0; i < batchSize; i++)
                     {
                         alpha[i] = 1.75;
