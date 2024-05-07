@@ -356,8 +356,8 @@ int main(int argc, char **argv)
     void *d_rowRemapTable, *d_colRemapTable;
     if(testCase == 79)
     {
-        CHECK(hipMalloc(&d_rowRemapTable, ioBufferSize * sizeof(Rpp32u)));
-        CHECK(hipMalloc(&d_colRemapTable, ioBufferSize * sizeof(Rpp32u)));
+        CHECK_RETURN_STATUS(hipMalloc(&d_rowRemapTable, ioBufferSize * sizeof(Rpp32u)));
+        CHECK_RETURN_STATUS(hipMalloc(&d_colRemapTable, ioBufferSize * sizeof(Rpp32u)));
     }
 
     RpptROI *cropRoi, *patchRoi;
@@ -988,8 +988,8 @@ int main(int argc, char **argv)
                     RpptDescPtr tableDescPtr = &tableDesc;
                     init_remap(tableDescPtr, srcDescPtr, roiTensorPtrSrc, rowRemapTable, colRemapTable);
 
-                    CHECK(hipMemcpy(d_rowRemapTable, (void *)rowRemapTable, ioBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
-                    CHECK(hipMemcpy(d_colRemapTable, (void *)colRemapTable, ioBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
+                    CHECK_RETURN_STATUS(hipMemcpy(d_rowRemapTable, (void *)rowRemapTable, ioBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
+                    CHECK_RETURN_STATUS(hipMemcpy(d_colRemapTable, (void *)colRemapTable, ioBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
 
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
