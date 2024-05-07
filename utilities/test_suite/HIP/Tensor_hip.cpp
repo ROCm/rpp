@@ -517,7 +517,7 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "exposure";
 
-                    Rpp32f exposureFactor[batchSize];
+                    Rpp32f *exposureFactor = scratchBufferPinned;
                     for (i = 0; i < batchSize; i++)
                         exposureFactor[i] = 1.4;
 
