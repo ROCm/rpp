@@ -2025,6 +2025,8 @@ RppStatus rppt_slice_gpu(RppPtr_t srcPtr,
 #endif // backend
 }
 
+/******************** crop_and_patch ********************/
+
 RppStatus rppt_crop_and_patch_gpu(RppPtr_t srcPtr1,
                                   RppPtr_t srcPtr2,
                                   RpptDescPtr srcDescPtr,

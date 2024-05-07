@@ -59,12 +59,12 @@ using namespace std;
 #define GOLDEN_OUTPUT_MAX_HEIGHT 150    // Golden outputs are generated with MAX_HEIGHT set to 150. Changing this constant will result in QA test failures
 #define GOLDEN_OUTPUT_MAX_WIDTH 150     // Golden outputs are generated with MAX_WIDTH set to 150. Changing this constant will result in QA test failures
 
-#define CHECK(x) do { \
-  int retval = (x); \
-  if (retval != 0) { \
-    fprintf(stderr, "Runtime error: %s returned %d at %s:%d", #x, retval, __FILE__, __LINE__); \
-    exit(-1); \
-  } \
+#define CHECK_RETURN_STATUS(x) do { \
+    int retval = (x); \
+    if (retval != 0) { \
+        fprintf(stderr, "Runtime error: %s returned %d at %s:%d", #x, retval, __FILE__, __LINE__); \
+        exit(-1); \
+    } \
 } while (0)
 
 std::map<int, string> augmentationMap =
