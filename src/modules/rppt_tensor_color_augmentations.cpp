@@ -823,15 +823,13 @@ RppStatus rppt_gamma_correction_gpu(RppPtr_t srcPtr,
                                     rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
-    Rpp32u paramIndex = 0;
-    copy_param_float(gammaTensor, rpp::deref(rppHandle), paramIndex++);
-
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
         hip_exec_gamma_correction_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
                                          srcDescPtr,
                                          static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                          dstDescPtr,
+                                         gammaTensor,
                                          roiTensorPtrSrc,
                                          roiType,
                                          rpp::deref(rppHandle));
@@ -842,6 +840,7 @@ RppStatus rppt_gamma_correction_gpu(RppPtr_t srcPtr,
                                          srcDescPtr,
                                          (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                          dstDescPtr,
+                                         gammaTensor,
                                          roiTensorPtrSrc,
                                          roiType,
                                          rpp::deref(rppHandle));
@@ -852,6 +851,7 @@ RppStatus rppt_gamma_correction_gpu(RppPtr_t srcPtr,
                                          srcDescPtr,
                                          (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                          dstDescPtr,
+                                         gammaTensor,
                                          roiTensorPtrSrc,
                                          roiType,
                                          rpp::deref(rppHandle));
@@ -862,6 +862,7 @@ RppStatus rppt_gamma_correction_gpu(RppPtr_t srcPtr,
                                          srcDescPtr,
                                          static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                          dstDescPtr,
+                                         gammaTensor,
                                          roiTensorPtrSrc,
                                          roiType,
                                          rpp::deref(rppHandle));

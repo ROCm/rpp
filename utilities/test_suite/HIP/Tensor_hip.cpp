@@ -367,6 +367,10 @@ int main(int argc, char **argv)
     if(testCase == 0)
         CHECK_RETURN_STATUS(hipHostMalloc(&beta, batchSize * sizeof(Rpp32f)));
 
+    Rpp32f *gammaVal;
+    if(testCase == 0)
+        CHECK_RETURN_STATUS(hipHostMalloc(&gammaVal, batchSize * sizeof(Rpp32f)));
+
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
     for(int iterCount = 0; iterCount < noOfIterations; iterCount++)
@@ -468,7 +472,6 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "gamma_correction";
 
-                    Rpp32f gammaVal[batchSize];
                     for (i = 0; i < batchSize; i++)
                         gammaVal[i] = 1.9;
 
