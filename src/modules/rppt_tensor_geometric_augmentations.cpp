@@ -1391,16 +1391,14 @@ RppStatus rppt_flip_gpu(RppPtr_t srcPtr,
                         rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
-    Rpp32u paramIndex = 0;
-    copy_param_uint(horizontalTensor, rpp::deref(rppHandle), paramIndex++);
-    copy_param_uint(verticalTensor, rpp::deref(rppHandle), paramIndex++);
-
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
         hip_exec_flip_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
                              srcDescPtr,
                              static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                              dstDescPtr,
+                             horizontalTensor,
+                             verticalTensor,
                              roiTensorPtrSrc,
                              roiType,
                              rpp::deref(rppHandle));
@@ -1411,6 +1409,8 @@ RppStatus rppt_flip_gpu(RppPtr_t srcPtr,
                              srcDescPtr,
                              (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                              dstDescPtr,
+                             horizontalTensor,
+                             verticalTensor,
                              roiTensorPtrSrc,
                              roiType,
                              rpp::deref(rppHandle));
@@ -1421,6 +1421,8 @@ RppStatus rppt_flip_gpu(RppPtr_t srcPtr,
                              srcDescPtr,
                              (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                              dstDescPtr,
+                             horizontalTensor,
+                             verticalTensor,
                              roiTensorPtrSrc,
                              roiType,
                              rpp::deref(rppHandle));
@@ -1431,6 +1433,8 @@ RppStatus rppt_flip_gpu(RppPtr_t srcPtr,
                              srcDescPtr,
                              static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                              dstDescPtr,
+                             horizontalTensor,
+                             verticalTensor,
                              roiTensorPtrSrc,
                              roiType,
                              rpp::deref(rppHandle));

@@ -533,8 +533,8 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "flip";
 
-                    Rpp32u horizontalFlag[batchSize];
-                    Rpp32u verticalFlag[batchSize];
+                    Rpp32u *horizontalFlag = reinterpret_cast<Rpp32u *>(scratchBufferPinned);
+                    Rpp32u *verticalFlag = horizontalFlag + batchSize;
                     for (i = 0; i < batchSize; i++)
                     {
                         horizontalFlag[i] = 1;
