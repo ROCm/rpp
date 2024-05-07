@@ -577,7 +577,7 @@ int main(int argc, char **argv)
                         break;
                     }
 
-                    Rpp32f angle[batchSize];
+                    Rpp32f *angle = scratchBufferPinned;
                     for (i = 0; i < batchSize; i++)
                         angle[i] = 50;
 
