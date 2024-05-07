@@ -17,8 +17,7 @@ __global__ void tensor_mean_grid_result_hip(Rpp32u *srcPtr,
     if (id_x >= xBufferLength)
         return;
 
-    int xAlignedLength = xBufferLength & ~7;                        // alignedLength for vectorized global loads
-    int xDiff = xBufferLength - xAlignedLength;                     // difference between bufferLength and alignedLength
+    int xDiff = xBufferLength - (xBufferLength & ~7);               // difference between bufferLength and alignedLength, where alignedLength = bufferLength & ~7
     uint srcIdx = (id_z * xBufferLength) + id_x;
 
     d_uint8 src_ui8;
@@ -65,8 +64,7 @@ __global__ void tensor_mean_grid_result_hip(Rpp32s *srcPtr,
     if (id_x >= xBufferLength)
         return;
 
-    int xAlignedLength = xBufferLength & ~7;                        // alignedLength for vectorized global loads
-    int xDiff = xBufferLength - xAlignedLength;                     // difference between bufferLength and alignedLength
+    int xDiff = xBufferLength - (xBufferLength & ~7);               // difference between bufferLength and alignedLength, where alignedLength = bufferLength & ~7
     uint srcIdx = (id_z * xBufferLength) + id_x;
 
     d_int8 src_i8;
@@ -113,8 +111,7 @@ __global__ void tensor_mean_grid_result_hip(float *srcPtr,
     if (id_x >= xBufferLength)
         return;
 
-    int xAlignedLength = xBufferLength & ~7;                        // alignedLength for vectorized global loads
-    int xDiff = xBufferLength - xAlignedLength;                     // difference between bufferLength and alignedLength
+    int xDiff = xBufferLength - (xBufferLength & ~7);               // difference between bufferLength and alignedLength, where alignedLength = bufferLength & ~7
     uint srcIdx = (id_z * xBufferLength) + id_x;
 
     d_float8 src_f8;
@@ -165,8 +162,7 @@ __global__ void tensor_mean_grid_3channel_result_hip(Rpp32u *srcPtr,
     if (id_x >= xBufferLength)
         return;
 
-    int xAlignedLength = xBufferLength & ~7;                                     // alignedLength for vectorized global loads
-    int xDiff = xBufferLength - xAlignedLength;                                  // difference between bufferLength and alignedLength
+    int xDiff = xBufferLength - (xBufferLength & ~7);                           // difference between bufferLength and alignedLength, where alignedLength = bufferLength & ~7
     uint srcIdx = ((id_z * xBufferLength) + id_x) * 3;
 
     d_uint24 src_ui24;
@@ -243,8 +239,7 @@ __global__ void tensor_mean_grid_3channel_result_hip(Rpp32s *srcPtr,
     if (id_x >= xBufferLength)
         return;
 
-    int xAlignedLength = xBufferLength & ~7;                                     // alignedLength for vectorized global loads
-    int xDiff = xBufferLength - xAlignedLength;                                  // difference between bufferLength and alignedLength
+    int xDiff = xBufferLength - (xBufferLength & ~7);                            // difference between bufferLength and alignedLength, where alignedLength = bufferLength & ~7
     uint srcIdx = ((id_z * xBufferLength) + id_x) * 3;
 
     d_int24 src_i24;
@@ -321,8 +316,7 @@ __global__ void tensor_mean_grid_3channel_result_hip(float *srcPtr,
     if (id_x >= xBufferLength)
         return;
 
-    int xAlignedLength = xBufferLength & ~7;                                     // alignedLength for vectorized global loads
-    int xDiff = xBufferLength - xAlignedLength;                                  // difference between bufferLength and alignedLength
+    int xDiff = xBufferLength - (xBufferLength & ~7);                            // difference between bufferLength and alignedLength, where alignedLength = bufferLength & ~7
     uint srcIdx = ((id_z * xBufferLength) + id_x) * 3;
 
     d_float24 src_f24;
