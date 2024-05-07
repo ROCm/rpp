@@ -25,13 +25,13 @@ SOFTWARE.
 find_path(HALF_INCLUDE_DIRS
     NAMES half/half.hpp
     HINTS
-    $ENV{HALF_DIR}/include
+    $ENV{HALF_DIR}
     $ENV{ROCM_PATH}/include
     PATHS
-    ${HALF_DIR}/include
+    ${HALF_DIR}
+    ${ROCM_PATH}/include
     /usr/include
     /usr/local/include
-    ${ROCM_PATH}/include
 )
 mark_as_advanced(HALF_INCLUDE_DIRS)
 
