@@ -161,6 +161,7 @@ RppStatus hip_exec_blend_tensor(T *srcPtr1,
                                 RpptDescPtr srcDescPtr,
                                 T *dstPtr,
                                 RpptDescPtr dstDescPtr,
+                                Rpp32f alphaTensor,
                                 RpptROIPtr roiTensorPtrSrc,
                                 RpptRoiType roiType,
                                 rpp::Handle& handle)
@@ -184,7 +185,7 @@ RppStatus hip_exec_blend_tensor(T *srcPtr1,
                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                            dstPtr,
                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                           handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                           alphaTensor,
                            roiTensorPtrSrc);
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -200,7 +201,7 @@ RppStatus hip_exec_blend_tensor(T *srcPtr1,
                            dstPtr,
                            make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                            dstDescPtr->c,
-                           handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                           alphaTensor,
                            roiTensorPtrSrc);
     }
     else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
@@ -217,7 +218,7 @@ RppStatus hip_exec_blend_tensor(T *srcPtr1,
                                make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                                dstPtr,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                               handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                               alphaTensor,
                                roiTensorPtrSrc);
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
@@ -233,7 +234,7 @@ RppStatus hip_exec_blend_tensor(T *srcPtr1,
                                make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                                dstPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                               handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                               alphaTensor,
                                roiTensorPtrSrc);
         }
     }

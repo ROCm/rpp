@@ -360,7 +360,7 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostMalloc(&intensity, batchSize * sizeof(Rpp32f)));
 
     Rpp32f *alpha;
-    if(testCase == 0)
+    if((testCase == 0) || (testCase == 2))
         CHECK_RETURN_STATUS(hipHostMalloc(&alpha, batchSize * sizeof(Rpp32f)));
 
     Rpp32f *beta;
@@ -487,7 +487,6 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "blend";
 
-                    Rpp32f alpha[batchSize];
                     for (i = 0; i < batchSize; i++)
                         alpha[i] = 0.4;
 

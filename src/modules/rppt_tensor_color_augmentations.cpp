@@ -887,9 +887,6 @@ RppStatus rppt_blend_gpu(RppPtr_t srcPtr1,
                          rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
-    Rpp32u paramIndex = 0;
-    copy_param_float(alphaTensor, rpp::deref(rppHandle), paramIndex++);
-
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
         hip_exec_blend_tensor(static_cast<Rpp8u*>(srcPtr1) + srcDescPtr->offsetInBytes,
@@ -897,6 +894,7 @@ RppStatus rppt_blend_gpu(RppPtr_t srcPtr1,
                               srcDescPtr,
                               static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                               dstDescPtr,
+                              alphaTensor,
                               roiTensorPtrSrc,
                               roiType,
                               rpp::deref(rppHandle));
@@ -908,6 +906,7 @@ RppStatus rppt_blend_gpu(RppPtr_t srcPtr1,
                               srcDescPtr,
                               (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                               dstDescPtr,
+                              alphaTensor,
                               roiTensorPtrSrc,
                               roiType,
                               rpp::deref(rppHandle));
@@ -919,6 +918,7 @@ RppStatus rppt_blend_gpu(RppPtr_t srcPtr1,
                               srcDescPtr,
                               (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                               dstDescPtr,
+                              alphaTensor,
                               roiTensorPtrSrc,
                               roiType,
                               rpp::deref(rppHandle));
@@ -930,6 +930,7 @@ RppStatus rppt_blend_gpu(RppPtr_t srcPtr1,
                               srcDescPtr,
                               static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                               dstDescPtr,
+                              alphaTensor,
                               roiTensorPtrSrc,
                               roiType,
                               rpp::deref(rppHandle));
