@@ -4,10 +4,10 @@
 
 // ----------------------- Helper Functions --------------------------
 
-__device__ void stddev_hip_compute(uchar *srcPtr, float src, float *dst) { *dst = src; }
-__device__ void stddev_hip_compute(float *srcPtr, float src, float *dst) { *dst = src * 255; }
-__device__ void stddev_hip_compute(signed char *srcPtr, float src, float *dst) { *dst = src; }
-__device__ void stddev_hip_compute(half *srcPtr, float src, float *dst) { *dst = src * 255; }
+__device__ void stddev_hip_compute(uchar *srcPtr, float *src, float *dst, int numValues) { *dst =  sqrt(*src / numValues); }
+__device__ void stddev_hip_compute(float *srcPtr, float *src, float *dst, int numValues) { *dst =  sqrt(*src / numValues) * 255; }
+__device__ void stddev_hip_compute(signed char *srcPtr, float *src, float *dst, int numValues) { *dst = sqrt(*src / numValues); }
+__device__ void stddev_hip_compute(half *srcPtr, float *src, float *dst, int numValues) { *dst = sqrt(*src / numValues) * 255; }
 
 __device__ void mean_subtracted_square_3channel_hip_compute(d_float24 *src_f24, d_float24 *dst_f24,
                                                             float4 &meanR_f4, float4 &meanG_f4, float4 &meanB_f4)
@@ -141,7 +141,7 @@ __global__ void tensor_stddev_grid_result_hip(T *inputSrcPtr,
     if (hipThreadIdx_x == 0)
     {
         int totalElements = roiTensorPtrSrc[id_z].xywhROI.roiHeight * roiTensorPtrSrc[id_z].xywhROI.roiWidth;
-        stddev_hip_compute(inputSrcPtr, sqrt(partialVariance_smem[0] / totalElements), &dstPtr[id_z]);
+        stddev_hip_compute(inputSrcPtr, &partialVariance_smem[0] , &dstPtr[id_z], totalElements);
     }
 }
 
@@ -201,10 +201,10 @@ __global__ void tensor_stddev_grid_3channel_result_hip(T *inputSrcPtr,
     {
         int totalElements = roiTensorPtrSrc[id_z].xywhROI.roiHeight * roiTensorPtrSrc[id_z].xywhROI.roiWidth;
         uint dstIdx = id_z * 4;
-        stddev_hip_compute(inputSrcPtr, sqrt(partialRVariance_smem[0] / totalElements), &dstPtr[dstIdx]);
-        stddev_hip_compute(inputSrcPtr, sqrt(partialGVariance_smem[0] / totalElements), &dstPtr[dstIdx + 1]);
-        stddev_hip_compute(inputSrcPtr, sqrt(partialBVariance_smem[0] / totalElements), &dstPtr[dstIdx + 2]);
-        stddev_hip_compute(inputSrcPtr, sqrt(partialTensorVariance_smem[0]  / (totalElements * 3)), &dstPtr[dstIdx + 3]);
+        stddev_hip_compute(inputSrcPtr, &partialRVariance_smem[0], &dstPtr[dstIdx], totalElements);
+        stddev_hip_compute(inputSrcPtr, &partialGVariance_smem[0], &dstPtr[dstIdx + 1], totalElements);
+        stddev_hip_compute(inputSrcPtr, &partialBVariance_smem[0], &dstPtr[dstIdx + 2], totalElements);
+        stddev_hip_compute(inputSrcPtr, &partialTensorVariance_smem[0], &dstPtr[dstIdx + 3], totalElements * 3);
     }
 }
 
