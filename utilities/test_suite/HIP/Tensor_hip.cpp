@@ -716,7 +716,7 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "glitch";
                     RpptChannelOffsets *rgbOffsets;
-                    CHECK(hipMalloc(&rgbOffsets, batchSize * sizeof(RpptChannelOffsets)));
+                    CHECK(hipHostMalloc (&rgbOffsets, batchSize * sizeof(RpptChannelOffsets)));
 
                     for (i = 0; i < batchSize; i++)
                     {
@@ -734,7 +734,7 @@ int main(int argc, char **argv)
                     else
                         missingFuncFlag = 1;
 
-                    CHECK(hipFree(rgbOffsets));
+                    CHECK(hipHostFree(rgbOffsets));
 
                     break;
                 }

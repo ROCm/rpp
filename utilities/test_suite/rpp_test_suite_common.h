@@ -983,8 +983,6 @@ void compare_outputs_pkd_and_pln1(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr d
                 int diff = abs(*outVal - *outRefVal);
                 if(diff <= CUTOFF)
                     matchedIdx++;
-                else
-                    std::cout<<"\n row i "<<i<<" col j "<<j<<" ref val "<<(int)*outRefVal<<" outval "<<(int)*outVal;
             }
         }
         if(matchedIdx == (height * width) && matchedIdx !=0)
@@ -1020,8 +1018,6 @@ void compare_outputs_pln3(Rpp8u* output, Rpp8u* refOutput, RpptDescPtr dstDescPt
                     int diff = abs(*outVal - *outRefVal);
                     if(diff <= CUTOFF)
                         matchedIdx++;
-                    else
-                    std::cout<<"\n row i "<<i<<" col j "<<j<<" chn "<<c<<" ref val "<<(int)*outRefVal<<" outval "<<(int)*outVal;
                 }
             }
         }
