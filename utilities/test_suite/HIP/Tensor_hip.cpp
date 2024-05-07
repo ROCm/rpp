@@ -622,7 +622,7 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "non_linear_blend";
 
-                    Rpp32f stdDev[batchSize];
+                    Rpp32f *stdDev = scratchBufferPinned;
                     for (i = 0; i < batchSize; i++)
                         stdDev[i] = 50.0;
 
