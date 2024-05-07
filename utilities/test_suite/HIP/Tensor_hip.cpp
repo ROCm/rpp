@@ -343,6 +343,9 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipMalloc(&d_input_second, inputBufferSize));
 
     // Allocate pinned memory for specific cases
+    Rpp32f *scratchBufferPinned;
+    CHECK_RETURN_STATUS(hipHostMalloc(&scratchBufferPinned, 10 * batchSize * sizeof(Rpp32f)));
+
     RpptROI *roiPtrInputCropRegion;
     if(testCase == 82)
         CHECK_RETURN_STATUS(hipHostMalloc(&roiPtrInputCropRegion, 4 * sizeof(RpptROI)));
@@ -358,18 +361,6 @@ int main(int argc, char **argv)
     Rpp32f *intensity;
     if(testCase == 46)
         CHECK_RETURN_STATUS(hipHostMalloc(&intensity, batchSize * sizeof(Rpp32f)));
-
-    Rpp32f *alpha;
-    if((testCase == 0) || (testCase == 2))
-        CHECK_RETURN_STATUS(hipHostMalloc(&alpha, batchSize * sizeof(Rpp32f)));
-
-    Rpp32f *beta;
-    if(testCase == 0)
-        CHECK_RETURN_STATUS(hipHostMalloc(&beta, batchSize * sizeof(Rpp32f)));
-
-    Rpp32f *gammaVal;
-    if(testCase == 0)
-        CHECK_RETURN_STATUS(hipHostMalloc(&gammaVal, batchSize * sizeof(Rpp32f)));
 
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
@@ -454,6 +445,8 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "brightness";
 
+                    Rpp32f *alpha = scratchBufferPinned;
+                    Rpp32f *beta = alpha + batchSize;
                     for (i = 0; i < batchSize; i++)
                     {
                         alpha[i] = 1.75;
@@ -472,6 +465,7 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "gamma_correction";
 
+                    Rpp32f *gammaVal = scratchBufferPinned;
                     for (i = 0; i < batchSize; i++)
                         gammaVal[i] = 1.9;
 
@@ -487,6 +481,7 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "blend";
 
+                    Rpp32f *alpha = scratchBufferPinned;
                     for (i = 0; i < batchSize; i++)
                         alpha[i] = 0.4;
 
@@ -502,8 +497,8 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "contrast";
 
-                    Rpp32f contrastFactor[batchSize];
-                    Rpp32f contrastCenter[batchSize];
+                    Rpp32f *contrastFactor = scratchBufferPinned;
+                    Rpp32f *contrastCenter = contrastFactor + batchSize;
                     for (i = 0; i < batchSize; i++)
                     {
                         contrastFactor[i] = 2.96;
@@ -1290,6 +1285,7 @@ int main(int argc, char **argv)
     CHECK_RETURN_STATUS(hipHostFree(roiTensorPtrSrc));
     CHECK_RETURN_STATUS(hipHostFree(roiTensorPtrDst));
     CHECK_RETURN_STATUS(hipHostFree(dstImgSizes));
+    CHECK_RETURN_STATUS(hipHostFree(scratchBufferPinned));
     if(testCase == 46)
         CHECK_RETURN_STATUS(hipHostFree(intensity));
     if(testCase == 82)
