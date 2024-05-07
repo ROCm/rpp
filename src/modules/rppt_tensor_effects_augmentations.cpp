@@ -1382,20 +1382,18 @@ RppStatus rppt_water_gpu(RppPtr_t srcPtr,
                          rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
-    Rpp32u paramIndex = 0;
-    copy_param_float(amplitudeXTensor, rpp::deref(rppHandle), paramIndex++);
-    copy_param_float(amplitudeYTensor, rpp::deref(rppHandle), paramIndex++);
-    copy_param_float(frequencyXTensor, rpp::deref(rppHandle), paramIndex++);
-    copy_param_float(frequencyYTensor, rpp::deref(rppHandle), paramIndex++);
-    copy_param_float(phaseXTensor, rpp::deref(rppHandle), paramIndex++);
-    copy_param_float(phaseYTensor, rpp::deref(rppHandle), paramIndex);
-
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
         hip_exec_water_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
                               srcDescPtr,
                               static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                               dstDescPtr,
+                              amplitudeXTensor,
+                              amplitudeYTensor,
+                              frequencyXTensor,
+                              frequencyYTensor,
+                              phaseXTensor,
+                              phaseYTensor,
                               roiTensorPtrSrc,
                               roiType,
                               rpp::deref(rppHandle));
@@ -1406,6 +1404,12 @@ RppStatus rppt_water_gpu(RppPtr_t srcPtr,
                               srcDescPtr,
                               reinterpret_cast<half*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                               dstDescPtr,
+                              amplitudeXTensor,
+                              amplitudeYTensor,
+                              frequencyXTensor,
+                              frequencyYTensor,
+                              phaseXTensor,
+                              phaseYTensor,
                               roiTensorPtrSrc,
                               roiType,
                               rpp::deref(rppHandle));
@@ -1416,6 +1420,12 @@ RppStatus rppt_water_gpu(RppPtr_t srcPtr,
                               srcDescPtr,
                               reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                               dstDescPtr,
+                              amplitudeXTensor,
+                              amplitudeYTensor,
+                              frequencyXTensor,
+                              frequencyYTensor,
+                              phaseXTensor,
+                              phaseYTensor,
                               roiTensorPtrSrc,
                               roiType,
                               rpp::deref(rppHandle));
@@ -1426,6 +1436,12 @@ RppStatus rppt_water_gpu(RppPtr_t srcPtr,
                               srcDescPtr,
                               static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                               dstDescPtr,
+                              amplitudeXTensor,
+                              amplitudeYTensor,
+                              frequencyXTensor,
+                              frequencyYTensor,
+                              phaseXTensor,
+                              phaseYTensor,
                               roiTensorPtrSrc,
                               roiType,
                               rpp::deref(rppHandle));

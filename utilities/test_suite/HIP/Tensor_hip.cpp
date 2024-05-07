@@ -342,7 +342,7 @@ int main(int argc, char **argv)
     if(dualInputCase)
         CHECK_RETURN_STATUS(hipMalloc(&d_input_second, inputBufferSize));
 
-    // Allocate pinned memory for specific cases
+    // Allocate maximum pinned memory for specific cases
     Rpp32f *scratchBufferPinned;
     CHECK_RETURN_STATUS(hipHostMalloc(&scratchBufferPinned, 10 * batchSize * sizeof(Rpp32f)));
 
@@ -593,12 +593,12 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "water";
 
-                    Rpp32f amplX[batchSize];
-                    Rpp32f amplY[batchSize];
-                    Rpp32f freqX[batchSize];
-                    Rpp32f freqY[batchSize];
-                    Rpp32f phaseX[batchSize];
-                    Rpp32f phaseY[batchSize];
+                    Rpp32f *amplX = scratchBufferPinned;
+                    Rpp32f *amplY = amplX + batchSize;
+                    Rpp32f *freqX = amplY + batchSize;
+                    Rpp32f *freqY = freqX + batchSize;
+                    Rpp32f *phaseX = freqY + batchSize;
+                    Rpp32f *phaseY = phaseX + batchSize;
 
                     for (i = 0; i < batchSize; i++)
                     {
