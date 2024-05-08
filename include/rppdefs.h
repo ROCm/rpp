@@ -425,6 +425,15 @@ typedef enum
     REFLECT
 } RpptAudioBorderType;
 
+/*! \brief RPPT Spectrogram Layout enum
+ * \ingroup group_rppdefs
+ */
+typedef enum
+{
+    FT = 0,  //Frequency Major
+    TF,      //Time Major
+} RpptSpectrogramLayout;
+
 /*! \brief RPPT Tensor 2D ROI LTRB struct
  * \ingroup group_rppdefs
  */

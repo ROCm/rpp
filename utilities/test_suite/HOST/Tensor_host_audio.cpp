@@ -215,6 +215,56 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 4:
+                {
+                    testCaseName = "spectrogram";
+                    bool centerWindows = true;
+                    bool reflectPadding = true;
+                    Rpp32f *windowFn = NULL;
+                    Rpp32s power = 2;
+                    Rpp32s windowLength = 320;
+                    Rpp32s windowStep = 160;
+                    Rpp32s nfft = 512;
+                    RpptSpectrogramLayout layout = RpptSpectrogramLayout::FT;
+
+                    int windowOffset = 0;
+                    if(!centerWindows)
+                        windowOffset = windowLength;
+
+                    maxDstWidth = 0;
+                    maxDstHeight = 0;
+                    if(layout == RpptSpectrogramLayout::FT)
+                    {
+                        for(int i = 0; i < noOfAudioFiles; i++)
+                        {
+                            dstDims[i].height = nfft / 2 + 1;
+                            dstDims[i].width = ((srcLengthTensor[i] - windowOffset) / windowStep) + 1;
+                            maxDstHeight = std::max(maxDstHeight, (int)dstDims[i].height);
+                            maxDstWidth = std::max(maxDstWidth, (int)dstDims[i].width);
+                        }
+                    }
+                    else
+                    {
+                        for(int i = 0; i < noOfAudioFiles; i++)
+                        {
+                            dstDims[i].height = ((srcLengthTensor[i] - windowOffset) / windowStep) + 1;
+                            dstDims[i].width = nfft / 2 + 1;
+                            maxDstHeight = std::max(maxDstHeight, (int)dstDims[i].height);
+                            maxDstWidth = std::max(maxDstWidth, (int)dstDims[i].width);
+                        }
+                    }
+
+                    set_audio_descriptor_dims_and_strides_nostriding(dstDescPtr, batchSize, maxDstHeight, maxDstWidth, maxDstChannels, offsetInBytes);
+
+                    // Set buffer sizes for src/dst
+                    unsigned long long spectrogramBufferSize = (unsigned long long)dstDescPtr->h * (unsigned long long)dstDescPtr->w * (unsigned long long)dstDescPtr->c * (unsigned long long)dstDescPtr->n;
+                    outputf32 = (Rpp32f *)realloc(outputf32, spectrogramBufferSize * sizeof(Rpp32f));
+
+                    startWallTime = omp_get_wtime();
+                    rppt_spectrogram_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcLengthTensor, centerWindows, reflectPadding, windowFn, nfft, power, windowLength, windowStep, layout, handle);
+
+                    break;
+                }
                 case 6:
                 {
                     testCaseName = "resample";
