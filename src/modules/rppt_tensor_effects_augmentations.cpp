@@ -1548,8 +1548,8 @@ RppStatus rppt_vignette_gpu(RppPtr_t srcPtr,
                                  srcDescPtr,
                                  static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                  dstDescPtr,
-                                 roiTensorPtrSrc,
                                  vignetteIntensityTensor,
+                                 roiTensorPtrSrc,
                                  roiType,
                                  rpp::deref(rppHandle));
     }
@@ -1559,8 +1559,8 @@ RppStatus rppt_vignette_gpu(RppPtr_t srcPtr,
                                  srcDescPtr,
                                  (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                  dstDescPtr,
-                                 roiTensorPtrSrc,
                                  vignetteIntensityTensor,
+                                 roiTensorPtrSrc,
                                  roiType,
                                  rpp::deref(rppHandle));
     }
@@ -1570,21 +1570,21 @@ RppStatus rppt_vignette_gpu(RppPtr_t srcPtr,
                                  srcDescPtr,
                                  (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                  dstDescPtr,
-                                 roiTensorPtrSrc,
                                  vignetteIntensityTensor,
+                                 roiTensorPtrSrc,
                                  roiType,
                                  rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
         hip_exec_vignette_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                srcDescPtr,
-                                static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                dstDescPtr,
-                                roiTensorPtrSrc,
-                                vignetteIntensityTensor,
-                                roiType,
-                                rpp::deref(rppHandle));
+                                 srcDescPtr,
+                                 static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                 dstDescPtr,
+                                 vignetteIntensityTensor,
+                                 roiTensorPtrSrc,
+                                 roiType,
+                                 rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;

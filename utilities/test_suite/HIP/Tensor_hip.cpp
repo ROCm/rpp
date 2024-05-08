@@ -358,10 +358,6 @@ int main(int argc, char **argv)
     }
     bool invalidROI = (roiList[0] == 0 && roiList[1] == 0 && roiList[2] == 0 && roiList[3] == 0);
 
-    Rpp32f *intensity;
-    if(testCase == 46)
-        CHECK_RETURN_STATUS(hipHostMalloc(&intensity, batchSize * sizeof(Rpp32f)));
-
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
     for(int iterCount = 0; iterCount < noOfIterations; iterCount++)
@@ -864,6 +860,7 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "vignette";
 
+                    Rpp32f *intensity = scratchBufferPinned;
                     for (i = 0; i < batchSize; i++)
                         intensity[i] = 6;
 
@@ -1283,8 +1280,6 @@ int main(int argc, char **argv)
     CHECK_RETURN_STATUS(hipHostFree(roiTensorPtrDst));
     CHECK_RETURN_STATUS(hipHostFree(dstImgSizes));
     CHECK_RETURN_STATUS(hipHostFree(scratchBufferPinned));
-    if(testCase == 46)
-        CHECK_RETURN_STATUS(hipHostFree(intensity));
     if(testCase == 82)
         CHECK_RETURN_STATUS(hipHostFree(roiPtrInputCropRegion));
     if(testCase == 33)
