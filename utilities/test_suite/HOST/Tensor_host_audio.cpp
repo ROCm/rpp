@@ -109,6 +109,19 @@ int main(int argc, char **argv)
         maxDstChannels = 1;
     set_audio_descriptor_dims_and_strides(dstDescPtr, batchSize, maxDstHeight, maxDstWidth, maxDstChannels, offsetInBytes);
 
+    // create generic descriptor in case of slice
+    RpptGenericDesc descriptor3D;
+    RpptGenericDescPtr descriptorPtr3D = &descriptor3D;
+    if(testCase == 4)
+    {
+        descriptorPtr3D->numDims = 2;
+        descriptorPtr3D->offsetInBytes = 0;
+        descriptorPtr3D->dataType = RpptDataType::F32;
+        descriptorPtr3D->dims[0] = batchSize;
+        descriptorPtr3D->dims[1] = maxSrcWidth;
+        descriptorPtr3D->strides[0] = descriptorPtr3D->dims[1];
+    }
+
     // set buffer sizes for src/dst
     iBufferSize = (Rpp64u)srcDescPtr->h * (Rpp64u)srcDescPtr->w * (Rpp64u)srcDescPtr->c * (Rpp64u)srcDescPtr->n;
     oBufferSize = (Rpp64u)dstDescPtr->h * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
@@ -145,8 +158,8 @@ int main(int argc, char **argv)
                 case 0:
                 {
                     testCaseName = "non_silent_region_detection";
-                    Rpp32f detectedIndex[batchSize];
-                    Rpp32f detectionLength[batchSize];
+                    Rpp32s detectedIndex[batchSize];
+                    Rpp32s detectionLength[batchSize];
                     Rpp32f cutOffDB = -60.0;
                     Rpp32s windowLength = 2048;
                     Rpp32f referencePower = 0.0f;
@@ -262,6 +275,32 @@ int main(int argc, char **argv)
 
                     startWallTime = omp_get_wtime();
                     rppt_spectrogram_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcLengthTensor, centerWindows, reflectPadding, windowFn, nfft, power, windowLength, windowStep, layout, handle);
+
+                    break;
+                }
+                case 5:
+                {
+                    testCaseName = "slice";
+                    Rpp32u nDim = 1; // testing for 1D slice
+                    auto fillValue = 0;
+                    bool enablePadding = true;
+                    Rpp32u roiTensor[batchSize * nDim * 2];
+                    Rpp32s anchorTensor[batchSize * nDim];
+                    Rpp32s shapeTensor[batchSize * nDim];
+
+                    // 1D slice arguments
+                    for (int i = 0; i < batchSize; i++)
+                    {
+                        int idx = i * nDim * 2;
+                        roiTensor[idx] = 10;
+                        roiTensor[idx + 1] = srcLengthTensor[i];
+                        anchorTensor[i] = 10;
+                        shapeTensor[i] = dstDims[i].width = srcLengthTensor[i] / 2;
+                        dstDims[i].height = 1;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    rppt_slice_host(inputf32, descriptorPtr3D, outputf32, descriptorPtr3D, anchorTensor, shapeTensor, &fillValue, enablePadding, roiTensor, handle);
 
                     break;
                 }
