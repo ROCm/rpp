@@ -41,8 +41,8 @@ std::map<int, string> audioAugmentationMap =
     {2, "pre_emphasis_filter"},
     {3, "down_mixing"},
     {4, "spectrogram"},
-    {5, "mel_filter_bank"},
-    {6, "resample"}
+    {6, "resample"},
+    {7, "mel_filter_bank"},
 };
 
 // Golden outputs for Non Silent Region Detection
