@@ -161,7 +161,7 @@ RppStatus hip_exec_blend_tensor(T *srcPtr1,
                                 RpptDescPtr srcDescPtr,
                                 T *dstPtr,
                                 RpptDescPtr dstDescPtr,
-                                Rpp32f alphaTensor,
+                                Rpp32f *alphaTensor,
                                 RpptROIPtr roiTensorPtrSrc,
                                 RpptRoiType roiType,
                                 rpp::Handle& handle)

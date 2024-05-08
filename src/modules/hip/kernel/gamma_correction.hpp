@@ -216,7 +216,7 @@ RppStatus hip_exec_gamma_correction_tensor(T *srcPtr,
                                            RpptDescPtr srcDescPtr,
                                            T *dstPtr,
                                            RpptDescPtr dstDescPtr,
-                                           Rpp32f gammaTensor,
+                                           Rpp32f *gammaTensor,
                                            RpptROIPtr roiTensorPtrSrc,
                                            RpptRoiType roiType,
                                            rpp::Handle& handle)

@@ -767,7 +767,7 @@ RppStatus rppt_brightness_gpu(RppPtr_t srcPtr,
         hip_exec_brightness_tensor((half*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
                                    srcDescPtr,
                                    (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                   dstDescPtr,z
+                                   dstDescPtr,
                                    alphaTensor,
                                    betaTensor,
                                    roiTensorPtrSrc,
