@@ -36,7 +36,7 @@ struct BaseMelScale
 
 struct HtkMelScale : public BaseMelScale
 {
-    Rpp32f hz_to_mel(Rpp32f hz) { return 1127.0f * std::log(1.0f + hz / 700.0f); }
+    Rpp32f hz_to_mel(Rpp32f hz) { return 1127.0f * std::log(1.0f + (hz / 700.0f)); }
     Rpp32f mel_to_hz(Rpp32f mel) { return 700.0f * (std::exp(mel / 1127.0f) - 1.0f); }
     public:
         ~HtkMelScale() {};
