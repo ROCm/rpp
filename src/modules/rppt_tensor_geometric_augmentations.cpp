@@ -1648,8 +1648,6 @@ RppStatus rppt_resize_crop_mirror_gpu(RppPtr_t srcPtr,
     if (interpolationType != RpptInterpolationType::BILINEAR)
         return RPP_ERROR_NOT_IMPLEMENTED;
 
-    copy_param_uint(mirrorTensor, rpp::deref(rppHandle), 0);
-
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
         hip_exec_resize_crop_mirror_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
@@ -1658,6 +1656,7 @@ RppStatus rppt_resize_crop_mirror_gpu(RppPtr_t srcPtr,
                                            dstDescPtr,
                                            dstImgSizes,
                                            interpolationType,
+                                           mirrorTensor,
                                            roiTensorPtrSrc,
                                            roiType,
                                            rpp::deref(rppHandle));
@@ -1670,6 +1669,7 @@ RppStatus rppt_resize_crop_mirror_gpu(RppPtr_t srcPtr,
                                            dstDescPtr,
                                            dstImgSizes,
                                            interpolationType,
+                                           mirrorTensor,
                                            roiTensorPtrSrc,
                                            roiType,
                                            rpp::deref(rppHandle));
@@ -1683,6 +1683,7 @@ RppStatus rppt_resize_crop_mirror_gpu(RppPtr_t srcPtr,
                                            dstDescPtr,
                                            dstImgSizes,
                                            interpolationType,
+                                           mirrorTensor,
                                            roiTensorPtrSrc,
                                            roiType,
                                            rpp::deref(rppHandle));
@@ -1695,6 +1696,7 @@ RppStatus rppt_resize_crop_mirror_gpu(RppPtr_t srcPtr,
                                            dstDescPtr,
                                            dstImgSizes,
                                            interpolationType,
+                                           mirrorTensor,
                                            roiTensorPtrSrc,
                                            roiType,
                                            rpp::deref(rppHandle));

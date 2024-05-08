@@ -822,7 +822,7 @@ int main(int argc, char **argv)
                         break;
                     }
 
-                    Rpp32u mirror[batchSize];
+                    Rpp32u *mirror = reinterpret_cast<Rpp32u *>(scratchBufferPinned);
                     for (i = 0; i < batchSize; i++)
                         mirror[i] = 1;
 
