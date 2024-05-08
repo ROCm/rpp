@@ -999,12 +999,6 @@ RppStatus rppt_salt_and_pepper_noise_gpu(RppPtr_t srcPtr,
         if (!RPPINRANGE(noiseProbabilityTensor[i], 0, 1) || !RPPINRANGE(saltProbabilityTensor[i], 0, 1) || !RPPINRANGE(saltValueTensor[i], 0, 1) || !RPPINRANGE(pepperValueTensor[i], 0, 1))
             return RPP_ERROR_INVALID_ARGUMENTS;
 
-    Rpp32u paramIndex = 0;
-    copy_param_float(noiseProbabilityTensor, rpp::deref(rppHandle), paramIndex++);
-    copy_param_float(saltProbabilityTensor, rpp::deref(rppHandle), paramIndex++);
-    copy_param_float(saltValueTensor, rpp::deref(rppHandle), paramIndex++);
-    copy_param_float(pepperValueTensor, rpp::deref(rppHandle), paramIndex++);
-
     RpptXorwowState xorwowInitialState;
     xorwowInitialState.x[0] = 0x75BCD15 + seed;
     xorwowInitialState.x[1] = 0x159A55E5 + seed;
@@ -1023,6 +1017,10 @@ RppStatus rppt_salt_and_pepper_noise_gpu(RppPtr_t srcPtr,
                                               srcDescPtr,
                                               static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                               dstDescPtr,
+                                              noiseProbabilityTensor,
+                                              saltProbabilityTensor,
+                                              saltValueTensor,
+                                              pepperValueTensor,
                                               d_xorwowInitialStatePtr,
                                               roiTensorPtrSrc,
                                               roiType,
@@ -1034,6 +1032,10 @@ RppStatus rppt_salt_and_pepper_noise_gpu(RppPtr_t srcPtr,
                                               srcDescPtr,
                                               (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                               dstDescPtr,
+                                              noiseProbabilityTensor,
+                                              saltProbabilityTensor,
+                                              saltValueTensor,
+                                              pepperValueTensor,
                                               d_xorwowInitialStatePtr,
                                               roiTensorPtrSrc,
                                               roiType,
@@ -1045,6 +1047,10 @@ RppStatus rppt_salt_and_pepper_noise_gpu(RppPtr_t srcPtr,
                                               srcDescPtr,
                                               (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                               dstDescPtr,
+                                              noiseProbabilityTensor,
+                                              saltProbabilityTensor,
+                                              saltValueTensor,
+                                              pepperValueTensor,
                                               d_xorwowInitialStatePtr,
                                               roiTensorPtrSrc,
                                               roiType,
@@ -1056,6 +1062,10 @@ RppStatus rppt_salt_and_pepper_noise_gpu(RppPtr_t srcPtr,
                                               srcDescPtr,
                                               static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                               dstDescPtr,
+                                              noiseProbabilityTensor,
+                                              saltProbabilityTensor,
+                                              saltValueTensor,
+                                              pepperValueTensor,
                                               d_xorwowInitialStatePtr,
                                               roiTensorPtrSrc,
                                               roiType,
