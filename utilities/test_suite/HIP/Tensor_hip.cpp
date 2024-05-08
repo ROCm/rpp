@@ -1101,7 +1101,6 @@ int main(int argc, char **argv)
                         reductionFuncResultArrLength = srcDescPtr->n;
 
                     startWallTime = omp_get_wtime();
-
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_tensor_sum_gpu(d_input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
                     else

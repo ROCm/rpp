@@ -216,6 +216,8 @@ RppStatus hip_exec_spatter_tensor(T *srcPtr,
                                   T *dstPtr,
                                   RpptDescPtr dstDescPtr,
                                   RpptRGB spatterColor,
+                                  Rpp32u *maskLocArrHostX,
+                                  Rpp32u *maskLocArrHostY,
                                   RpptROIPtr roiTensorPtrSrc,
                                   RpptRoiType roiType,
                                   rpp::Handle& handle)
@@ -246,6 +248,11 @@ RppStatus hip_exec_spatter_tensor(T *srcPtr,
     CHECK_RETURN_STATUS(hipMemcpy(spatterMaskPtr, spatterMask, maskSizeFloat, hipMemcpyHostToDevice));
     CHECK_RETURN_STATUS(hipMemcpy(spatterMaskInvPtr, spatterMaskInv, maskSizeFloat, hipMemcpyHostToDevice));
 
+    Rpp32u *maskLocArrHipX = reinterpret_cast<Rpp32u *>(spatterMaskPtr + (3 * maskSize));
+    Rpp32u *maskLocArrHipY = maskLocArrHipX + dstDescPtr->n;
+    CHECK_RETURN_STATUS(hipMemcpy(maskLocArrHipX, maskLocArrHostX, dstDescPtr->n * sizeof(Rpp32u), hipMemcpyHostToDevice));
+    CHECK_RETURN_STATUS(hipMemcpy(maskLocArrHipY, maskLocArrHostY, dstDescPtr->n * sizeof(Rpp32u), hipMemcpyHostToDevice));
+
     if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
     {
         globalThreads_x = (dstDescPtr->strides.hStride / 3 + 7) >> 3;
@@ -260,8 +267,8 @@ RppStatus hip_exec_spatter_tensor(T *srcPtr,
                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                            spatterMaskPtr,
                            spatterMaskInvPtr,
-                           handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
-                           handle.GetInitHandle()->mem.mgpu.uintArr[1].uintmem,
+                           maskLocArrHipX,
+                           maskLocArrHipY,
                            spatterColor_f3,
                            roiTensorPtrSrc);
     }
@@ -279,8 +286,8 @@ RppStatus hip_exec_spatter_tensor(T *srcPtr,
                            dstDescPtr->c,
                            spatterMaskPtr,
                            spatterMaskInvPtr,
-                           handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
-                           handle.GetInitHandle()->mem.mgpu.uintArr[1].uintmem,
+                           maskLocArrHipX,
+                           maskLocArrHipY,
                            spatterColor_f3,
                            roiTensorPtrSrc);
     }
@@ -299,8 +306,8 @@ RppStatus hip_exec_spatter_tensor(T *srcPtr,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                                spatterMaskPtr,
                                spatterMaskInvPtr,
-                               handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
-                               handle.GetInitHandle()->mem.mgpu.uintArr[1].uintmem,
+                               maskLocArrHipX,
+                               maskLocArrHipY,
                                spatterColor_f3,
                                roiTensorPtrSrc);
         }
@@ -318,8 +325,8 @@ RppStatus hip_exec_spatter_tensor(T *srcPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                spatterMaskPtr,
                                spatterMaskInvPtr,
-                               handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
-                               handle.GetInitHandle()->mem.mgpu.uintArr[1].uintmem,
+                               maskLocArrHipX,
+                               maskLocArrHipY,
                                spatterColor_f3,
                                roiTensorPtrSrc);
         }

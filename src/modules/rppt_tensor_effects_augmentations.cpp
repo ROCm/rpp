@@ -920,10 +920,6 @@ RppStatus rppt_spatter_gpu(RppPtr_t srcPtr,
         maskLocArrHostY[i] = distribY(gen);
     }
 
-    Rpp32u paramIndex = 0;
-    copy_param_uint(maskLocArrHostX, rpp::deref(rppHandle), paramIndex++);
-    copy_param_uint(maskLocArrHostY, rpp::deref(rppHandle), paramIndex++);
-
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
         hip_exec_spatter_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
@@ -931,6 +927,8 @@ RppStatus rppt_spatter_gpu(RppPtr_t srcPtr,
                                 static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                 dstDescPtr,
                                 spatterColor,
+                                maskLocArrHostX,
+                                maskLocArrHostY,
                                 roiTensorPtrSrc,
                                 roiType,
                                 rpp::deref(rppHandle));
@@ -942,6 +940,8 @@ RppStatus rppt_spatter_gpu(RppPtr_t srcPtr,
                                 (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                 dstDescPtr,
                                 spatterColor,
+                                maskLocArrHostX,
+                                maskLocArrHostY,
                                 roiTensorPtrSrc,
                                 roiType,
                                 rpp::deref(rppHandle));
@@ -953,6 +953,8 @@ RppStatus rppt_spatter_gpu(RppPtr_t srcPtr,
                                 (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                 dstDescPtr,
                                 spatterColor,
+                                maskLocArrHostX,
+                                maskLocArrHostY,
                                 roiTensorPtrSrc,
                                 roiType,
                                 rpp::deref(rppHandle));
@@ -964,6 +966,8 @@ RppStatus rppt_spatter_gpu(RppPtr_t srcPtr,
                                 static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                 dstDescPtr,
                                 spatterColor,
+                                maskLocArrHostX,
+                                maskLocArrHostY,
                                 roiTensorPtrSrc,
                                 roiType,
                                 rpp::deref(rppHandle));
