@@ -83,7 +83,7 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
                                       Rpp32f *dstPtr,
                                       RpptDescPtr dstDescPtr,
                                       Rpp32s *srcDimsTensor,
-                                      Rpp32f maxFreqVal,
+                                      Rpp32f maxFreqVal,    // check unused
                                       Rpp32f minFreqVal,
                                       RpptMelScaleFormula melFormula,
                                       Rpp32s numFilter,
@@ -106,6 +106,14 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
     Rpp32u batchSize = srcDescPtr->n;
     Rpp32f *scratchMem = handle.GetInitHandle()->mem.mcpu.scratchBufferHost;
 
+    Rpp32f maxFreq = sampleRate / 2;
+    Rpp32f minFreq = minFreqVal;
+
+    // Convert lower, higher frequencies to mel scale and find melStep
+    Rpp64f melLow = melScalePtr->hz_to_mel(minFreq);
+    Rpp64f melHigh = melScalePtr->hz_to_mel(maxFreq);
+    Rpp64f melStep = (melHigh - melLow) / (numFilter + 1);
+
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < batchSize; batchCount++)
@@ -118,36 +126,26 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
         Rpp32s numBins = nfft / 2 + 1;
         Rpp32s numFrames = srcDimsTensor[batchCount * 2 + 1];
 
-        Rpp32f maxFreq = maxFreqVal;
-        Rpp32f minFreq = minFreqVal;
-        maxFreq = sampleRate / 2;
-
-        // Convert lower, higher frequencies to mel scale
-        Rpp64f melLow = melScalePtr->hz_to_mel(minFreq);
-        Rpp64f melHigh = melScalePtr->hz_to_mel(maxFreq);
-        Rpp64f melStep = (melHigh - melLow) / (numFilter + 1);
+        // Find hzStep
         Rpp64f hzStep = static_cast<Rpp64f>(sampleRate) / nfft;
         Rpp64f invHzStep = 1.0 / hzStep;
 
+        // Find fftBinStart and fftBinEnd
         Rpp32s fftBinStart = std::ceil(minFreq * invHzStep);
         Rpp32s fftBinEnd = std::ceil(maxFreq * invHzStep);
         fftBinEnd = std::min(fftBinEnd, numBins);
 
-        // normFactors contain numFilter values of type float
-        Rpp32f *normFactors = scratchMem + batchCount * numFilter;
-        std::fill(normFactors, normFactors + numFilter, 1.f);
-        // weightsDown contain numBins values of type float
+        // Set/Fill normFactors, weightsDown and intervals
+        Rpp32f *normFactors = scratchMem + (batchCount * numFilter);
+        std::fill(normFactors, normFactors + numFilter, 1.f);           // normFactors contain numFilter values of type float
         Rpp32f *weightsDown = scratchMem + (batchSize * numFilter) + (batchCount * numBins);
-        memset(weightsDown, 0, sizeof(numBins * sizeof(Rpp32f)));
-
-        int intervalJump = batchSize * (numFilter + numBins);
-        // intervals contain numBins values of type integer
-        Rpp32s *intervals = reinterpret_cast<Rpp32s *>(scratchMem + intervalJump + (batchCount * numBins));
-        std::fill(intervals, intervals + numBins, -1);
+        memset(weightsDown, 0, sizeof(numBins * sizeof(Rpp32f)));       // weightsDown contain numBins values of type float
+        Rpp32s *intervals = reinterpret_cast<Rpp32s *>(weightsDown + (batchSize * numBins));
+        std::fill(intervals, intervals + numBins, -1);                  // intervals contain numBins values of type integer
 
         Rpp32s fftBin = fftBinStart;
         Rpp64f mel0 = melLow, mel1 = melLow + melStep;
-        Rpp64f f = fftBin * hzStep;
+        Rpp64f fIter = fftBin * hzStep;
         for (int interval = 0; interval < numFilter + 1; interval++, mel0 = mel1, mel1 += melStep)
         {
             Rpp64f f0 = melScalePtr->mel_to_hz(mel0);
@@ -160,9 +158,9 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
                 normFactors[interval] = 2.0 / (f2 - f0);
             }
 
-            for (; fftBin < fftBinEnd && f < f1; fftBin++, f = fftBin * hzStep)
+            for (; fftBin < fftBinEnd && fIter < f1; fftBin++, fIter = fftBin * hzStep)
             {
-                weightsDown[fftBin] = (f1 - f) * slope;
+                weightsDown[fftBin] = (f1 - fIter) * slope;
                 intervals[fftBin] = interval;
             }
         }
