@@ -1008,7 +1008,7 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "ricap";
 
-                    Rpp32u permutationTensor[batchSize * 4];
+                    Rpp32u *permutationTensor = reinterpret_cast<Rpp32u *>(scratchBufferPinned);
                     if(qaFlag)
                         init_ricap_qa(maxWidth, maxHeight, batchSize, permutationTensor, roiPtrInputCropRegion);
                     else
