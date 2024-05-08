@@ -759,9 +759,10 @@ int main(int argc, char **argv)
                 case 38:
                 {
                     testCaseName = "crop_mirror_normalize";
-                    Rpp32f multiplier[batchSize * srcDescPtr->c];
-                    Rpp32f offset[batchSize * srcDescPtr->c];
-                    Rpp32u mirror[batchSize];
+
+                    Rpp32f *multiplier = scratchBufferPinned;
+                    Rpp32f *offset = multiplier + (batchSize * srcDescPtr->c);
+                    Rpp32u *mirror = reinterpret_cast<Rpp32u *>(offset + (batchSize * srcDescPtr->c));
                     if (srcDescPtr->c == 3)
                     {
                         Rpp32f meanParam[3] = { 60.0f, 80.0f, 100.0f };
