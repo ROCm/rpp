@@ -679,8 +679,7 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "lut";
 
-                    Rpp32f *lutBuffer;
-                    CHECK_RETURN_STATUS(hipHostMalloc(&lutBuffer, 65536 * sizeof(Rpp32f)));
+                    Rpp32f *lutBuffer = scratchBufferPinned;
                     CHECK_RETURN_STATUS(hipMemset(lutBuffer, 0, 65536 * sizeof(Rpp32f)));
                     Rpp8u *lut8u = reinterpret_cast<Rpp8u *>(lutBuffer);
                     Rpp16f *lut16f = reinterpret_cast<Rpp16f *>(lutBuffer);
@@ -712,8 +711,6 @@ int main(int argc, char **argv)
                         missingFuncFlag = 1;
 
                     break;
-
-                    CHECK_RETURN_STATUS(hipHostFree(lutBuffer));
                 }
                 case 36:
                 {
