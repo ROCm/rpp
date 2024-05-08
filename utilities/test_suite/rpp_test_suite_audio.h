@@ -42,7 +42,8 @@ std::map<int, string> audioAugmentationMap =
     {3, "down_mixing"},
     {4, "spectrogram"},
     {5, "slice"},
-    {6, "resample"}
+    {6, "resample"},
+    {7, "mel_filter_bank"}
 };
 
 // Golden outputs for Non Silent Region Detection
@@ -147,6 +148,50 @@ void read_audio_batch_and_fill_dims(RpptDescPtr descPtr, Rpp32f *inputf32, vecto
         // Close input
         sf_close (infile);
     }
+}
+
+void read_from_bin_file(Rpp32f *srcPtr, RpptDescPtr srcDescPtr, Rpp32s *srcDims, string testCase, string scriptPath)
+{
+    // read data from golden outputs
+    Rpp64u oBufferSize = srcDescPtr->n * srcDescPtr->strides.nStride;
+    Rpp32f *refInput = static_cast<Rpp32f *>(malloc(oBufferSize * sizeof(float)));
+    string outFile = scriptPath + "/../REFERENCE_OUTPUTS_AUDIO/" + testCase + "/" + testCase + ".bin";
+    std::fstream fin(outFile, std::ios::in | std::ios::binary);
+    if(fin.is_open())
+    {
+        for(Rpp64u i = 0; i < oBufferSize; i++)
+        {
+            if(!fin.eof())
+                fin.read(reinterpret_cast<char*>(&refInput[i]), sizeof(float));
+            else
+            {
+                std::cout<<"\nUnable to read all data from golden outputs\n";
+                return;
+            }
+        }
+    }
+    else
+    {
+        std::cout<<"\nCould not open the reference output. Please check the path specified\n";
+        return;
+    }
+    for (int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
+    {
+        Rpp32f *srcPtrCurrent = srcPtr + batchCount * srcDescPtr->strides.nStride;
+        Rpp32f *refPtrCurrent = refInput + batchCount * srcDescPtr->strides.nStride;
+        Rpp32f *srcPtrRow = srcPtrCurrent;
+        Rpp32f *refPtrRow = refPtrCurrent;
+        for(int i = 0; i < srcDims[batchCount * 2]; i++)
+        {
+            Rpp32f *srcPtrTemp = srcPtrRow;
+            Rpp32f *refPtrTemp = refPtrRow;
+            for(int j = 0; j < srcDims[(batchCount * 2) + 1]; j++)
+                srcPtrTemp[j] = refPtrTemp[j];
+            srcPtrRow += srcDescPtr->strides.hStride;
+            refPtrRow += srcDescPtr->strides.hStride;
+        }
+    }
+    free(refInput);
 }
 
 void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dstDims, string testCase, string dst, string scriptPath)
