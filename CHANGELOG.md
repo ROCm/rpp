@@ -7,6 +7,12 @@ Full documentation for RPP is available at (https://rocm.docs.amd.com/projects/r
 ### Changes
 
 * Prerequisites - ROCm install requires only --usecase=rocm
+* Use pre-allocated common scratchBufferHip everywhere in Tensor code for scratch HIP memory
+* Use CHECK_RETURN_STATUS everywhere to adhere to C++17 for hip
+* RPP Tensor Audio support on HOST for Spectrogram
+* RPP Tensor Audio support on HOST/HIP for Slice, by modifying voxel slice kernels to now accept anchor and shape params for a more generic version
+* RPP Tensor Audio support on HOST for Mel Filter Bank
+* RPP Tensor Normalize ND support on HOST and HIP
 
 ### Tested configurations
 
