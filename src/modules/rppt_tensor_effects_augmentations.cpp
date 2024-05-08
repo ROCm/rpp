@@ -1085,9 +1085,6 @@ RppStatus rppt_shot_noise_gpu(RppPtr_t srcPtr,
         if (RPPISLESSER(shotNoiseFactorTensor[i], 0))
             return RPP_ERROR_INVALID_ARGUMENTS;
 
-    Rpp32u paramIndex = 0;
-    copy_param_float(shotNoiseFactorTensor, rpp::deref(rppHandle), paramIndex++);
-
     RpptXorwowStateBoxMuller xorwowInitialState;
     xorwowInitialState.x[0] = 0x75BCD15 + seed;
     xorwowInitialState.x[1] = 0x159A55E5 + seed;
@@ -1108,6 +1105,7 @@ RppStatus rppt_shot_noise_gpu(RppPtr_t srcPtr,
                                    srcDescPtr,
                                    static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                    dstDescPtr,
+                                   shotNoiseFactorTensor,
                                    d_xorwowInitialStatePtr,
                                    roiTensorPtrSrc,
                                    roiType,
@@ -1119,6 +1117,7 @@ RppStatus rppt_shot_noise_gpu(RppPtr_t srcPtr,
                                    srcDescPtr,
                                    (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                    dstDescPtr,
+                                   shotNoiseFactorTensor,
                                    d_xorwowInitialStatePtr,
                                    roiTensorPtrSrc,
                                    roiType,
@@ -1130,6 +1129,7 @@ RppStatus rppt_shot_noise_gpu(RppPtr_t srcPtr,
                                    srcDescPtr,
                                    (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                    dstDescPtr,
+                                   shotNoiseFactorTensor,
                                    d_xorwowInitialStatePtr,
                                    roiTensorPtrSrc,
                                    roiType,
@@ -1141,6 +1141,7 @@ RppStatus rppt_shot_noise_gpu(RppPtr_t srcPtr,
                                    srcDescPtr,
                                    static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                    dstDescPtr,
+                                   shotNoiseFactorTensor,
                                    d_xorwowInitialStatePtr,
                                    roiTensorPtrSrc,
                                    roiType,
