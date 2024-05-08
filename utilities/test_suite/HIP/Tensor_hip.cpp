@@ -329,8 +329,10 @@ int main(int argc, char **argv)
     if (reductionTypeCase)
     {
         int bitDepthByteSize = 0;
-        if ((dstDescPtr->dataType == RpptDataType::U8) || (dstDescPtr->dataType == RpptDataType::I8))
+        if (dstDescPtr->dataType == RpptDataType::U8)
             bitDepthByteSize = (testCase == 87) ? sizeof(Rpp64u) : sizeof(Rpp8u);
+        else if (dstDescPtr->dataType == RpptDataType::I8)
+            bitDepthByteSize = (testCase == 87) ? sizeof(Rpp64s) : sizeof(Rpp8s);
         else if ((dstDescPtr->dataType == RpptDataType::F16) || (dstDescPtr->dataType == RpptDataType::F32))
             bitDepthByteSize = sizeof(Rpp32f);  // using 32f outputs for 16f and 32f
         CHECK_RETURN_STATUS(hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * bitDepthByteSize));

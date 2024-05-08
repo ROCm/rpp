@@ -110,6 +110,28 @@ RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr,
 */
 RppStatus rppt_down_mixing_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcDimsTensor, bool normalizeWeights, rppHandle_t rppHandle);
 
+/*! \brief Produces a spectrogram from a 1D audio buffer on HOST backend
+ * \details Spectrogram for 1D audio buffer
+ * \param [in] srcPtr source tensor in HOST memory
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
+ * \param [out] dstPtr destination tensor in HOST memory
+ * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
+ * \param [in] srcLengthTensor source audio buffer length (1D tensor in HOST memory, of size batchSize)
+ * \param [in] centerWindows indicates whether extracted windows should be padded so that the window function is centered at multiples of window_step
+ * \param [in] reflectPadding indicates the padding policy when sampling outside the bounds of the signal
+ * \param [in] windowFunction samples of the window function that will be multiplied to each extracted window when calculating the Short Time Fourier Transform (STFT)
+ * \param [in] nfft size of the FFT
+ * \param [in] power exponent of the magnitude of the spectrum
+ * \param [in] windowLength window size in number of samples
+ * \param [in] windowStep step between the STFT windows in number of samples
+ * \param [in] layout specifies output layout of spectrogram
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_spectrogram_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcLengthTensor, bool centerWindows, bool reflectPadding, Rpp32f *windowFunction, Rpp32s nfft, Rpp32s power, Rpp32s windowLength, Rpp32s windowStep, RpptSpectrogramLayout layout, rppHandle_t rppHandle);
+
 /*! \brief Resample augmentation on HOST backend
 * \details Resample augmentation for audio data
 * \param[in] srcPtr source tensor in HOST memory
