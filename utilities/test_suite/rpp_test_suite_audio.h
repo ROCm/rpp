@@ -40,6 +40,8 @@ std::map<int, string> audioAugmentationMap =
     {1, "to_decibels"},
     {2, "pre_emphasis_filter"},
     {3, "down_mixing"},
+    {4, "spectrogram"},
+    {5, "slice"},
     {6, "resample"}
 };
 
@@ -63,6 +65,22 @@ inline void set_audio_descriptor_dims_and_strides(RpptDescPtr descPtr, int batch
 
     // Optionally set w stride as a multiple of 8 for src/dst
     descPtr->w = ((descPtr->w / 8) * 8) + 8;
+    descPtr->strides.nStride = descPtr->c * descPtr->w * descPtr->h;
+    descPtr->strides.hStride = descPtr->c * descPtr->w;
+    descPtr->strides.wStride = descPtr->c;
+    descPtr->strides.cStride = 1;
+}
+
+// sets descriptor dimensions and strides of src/dst
+inline void set_audio_descriptor_dims_and_strides_nostriding(RpptDescPtr descPtr, int batchSize, int maxHeight, int maxWidth, int maxChannels, int offsetInBytes)
+{
+    descPtr->numDims = 4;
+    descPtr->offsetInBytes = offsetInBytes;
+    descPtr->n = batchSize;
+    descPtr->h = maxHeight;
+    descPtr->w = maxWidth;
+    descPtr->c = maxChannels;
+
     descPtr->strides.nStride = descPtr->c * descPtr->w * descPtr->h;
     descPtr->strides.hStride = descPtr->c * descPtr->w;
     descPtr->strides.wStride = descPtr->c;
@@ -214,7 +232,7 @@ void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dst
     free(refOutput);
 }
 
-void verify_non_silent_region_detection(float *detectedIndex, float *detectionLength, string testCase, int bs, vector<string> audioNames, string dst)
+void verify_non_silent_region_detection(int *detectedIndex, int *detectionLength, string testCase, int bs, vector<string> audioNames, string dst)
 {
     int fileMatch = 0;
     for (int i = 0; i < bs; i++)

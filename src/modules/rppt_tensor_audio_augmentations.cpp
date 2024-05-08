@@ -32,8 +32,8 @@ SOFTWARE.
 RppStatus rppt_non_silent_region_detection_host(RppPtr_t srcPtr,
                                                 RpptDescPtr srcDescPtr,
                                                 Rpp32s *srcLengthTensor,
-                                                Rpp32f *detectedIndexTensor,
-                                                Rpp32f *detectionLengthTensor,
+                                                Rpp32s *detectedIndexTensor,
+                                                Rpp32s *detectionLengthTensor,
                                                 Rpp32f cutOffDB,
                                                 Rpp32s windowLength,
                                                 Rpp32f referencePower,
@@ -145,6 +145,48 @@ RppStatus rppt_down_mixing_host(RppPtr_t srcPtr,
                                 dstDescPtr,
                                 srcDimsTensor,
                                 normalizeWeights,
+                                rpp::deref(rppHandle));
+
+        return RPP_SUCCESS;
+    }
+    else
+    {
+        return RPP_ERROR_NOT_IMPLEMENTED;
+    }
+}
+
+/******************** spectrogram ********************/
+
+RppStatus rppt_spectrogram_host(RppPtr_t srcPtr,
+                                RpptDescPtr srcDescPtr,
+                                RppPtr_t dstPtr,
+                                RpptDescPtr dstDescPtr,
+                                Rpp32s *srcLengthTensor,
+                                bool centerWindows,
+                                bool reflectPadding,
+                                Rpp32f *windowFunction,
+                                Rpp32s nfft,
+                                Rpp32s power,
+                                Rpp32s windowLength,
+                                Rpp32s windowStep,
+                                RpptSpectrogramLayout layout,
+                                rppHandle_t rppHandle)
+{
+    if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        spectrogram_host_tensor(static_cast<Rpp32f*>(srcPtr),
+                                srcDescPtr,
+                                static_cast<Rpp32f*>(dstPtr),
+                                dstDescPtr,
+                                srcLengthTensor,
+                                centerWindows,
+                                reflectPadding,
+                                windowFunction,
+                                nfft,
+                                power,
+                                windowLength,
+                                windowStep,
+                                layout,
                                 rpp::deref(rppHandle));
 
         return RPP_SUCCESS;
