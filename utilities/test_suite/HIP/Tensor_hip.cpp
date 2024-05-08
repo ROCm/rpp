@@ -716,10 +716,10 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "color_twist";
 
-                    Rpp32f brightness[batchSize];
-                    Rpp32f contrast[batchSize];
-                    Rpp32f hue[batchSize];
-                    Rpp32f saturation[batchSize];
+                    Rpp32f *brightness = scratchBufferPinned;
+                    Rpp32f *contrast = brightness + batchSize;
+                    Rpp32f *hue = contrast + batchSize;
+                    Rpp32f *saturation = hue + batchSize;
                     for (i = 0; i < batchSize; i++)
                     {
                         brightness[i] = 1.4;
