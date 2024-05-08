@@ -36,7 +36,7 @@ inFilePath = scriptPath + "/../TEST_AUDIO_FILES/three_samples_single_channel_src
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
 caseMin = 0
-caseMax = 6
+caseMax = 7
 
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list():
@@ -49,7 +49,7 @@ def run_unit_test(srcPath, case, numRuns, testType, batchSize, outFilePath):
     print("--------------------------------")
     print("Running a New Functionality...")
     print("--------------------------------")
-    print(f"./Tensor_host_audio {srcPath} {case} {numRuns} {testType} {numRuns} {batchSize}")
+    print(f"./Tensor_host_audio {srcPath} {case} {testType} {numRuns} {batchSize}")
     result = subprocess.run([buildFolderPath + "/build/Tensor_host_audio", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE)    # nosec
     print(result.stdout.decode())
 
@@ -61,7 +61,7 @@ def run_performance_test(loggingFolder, srcPath, case, numRuns, testType, batchS
     print("Running a New Functionality...")
     print("--------------------------------")
     with open("{}/Tensor_host_audio_raw_performance_log.txt".format(loggingFolder), "a") as log_file:
-        print(f"./Tensor_host_audio {srcPath} {case} {numRuns} {testType} {numRuns} {batchSize} ")
+        print(f"./Tensor_host_audio {srcPath} {case} {testType} {numRuns} {batchSize} ")
         process = subprocess.Popen([buildFolderPath + "/build/Tensor_host_audio", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
         while True:
             output = process.stdout.readline()
@@ -178,7 +178,7 @@ subprocess.run(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.run(["make", "-j16"], cwd=".")    # nosec
 
 # List of cases supported
-supportedCaseList = ['0', '1', '2', '3', '4', '6']
+supportedCaseList = ['0', '1', '2', '3', '4', '6', '7']
 
 if testType == 0:
     if batchSize != 3:

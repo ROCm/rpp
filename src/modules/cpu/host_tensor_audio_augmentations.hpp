@@ -30,6 +30,7 @@ SOFTWARE.
 #include "kernel/pre_emphasis_filter.hpp"
 #include "kernel/down_mixing.hpp"
 #include "kernel/spectrogram.hpp"
+#include "kernel/mel_filter_bank.hpp"
 #include "kernel/resample.hpp"
 
 #endif // HOST_TENSOR_AUDIO_AUGMENTATIONS_HPP
