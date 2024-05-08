@@ -848,7 +848,7 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "color_temperature";
 
-                    Rpp32s adjustment[batchSize];
+                    Rpp32s *adjustment = reinterpret_cast<Rpp32s *>(scratchBufferPinned);
                     for (i = 0; i < batchSize; i++)
                         adjustment[i] = 70;
 
