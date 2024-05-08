@@ -890,7 +890,7 @@ int main(int argc, char **argv)
                     testCaseName = "gaussian_filter";
                     Rpp32u kernelSize = additionalParam;
 
-                    Rpp32f stdDevTensor[batchSize];
+                    Rpp32f *stdDevTensor = scratchBufferPinned;
                     for (i = 0; i < batchSize; i++)
                     {
                         stdDevTensor[i] = 5.0f;

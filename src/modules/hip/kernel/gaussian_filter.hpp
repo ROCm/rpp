@@ -1971,6 +1971,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
                                           RpptDescPtr srcDescPtr,
                                           T *dstPtr,
                                           RpptDescPtr dstDescPtr,
+                                          Rpp32f *stdDevTensor,
                                           Rpp32u kernelSize,
                                           RpptROIPtr roiTensorPtrSrc,
                                           RpptRoiType roiType,
@@ -1993,7 +1994,7 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
     float *filterTensor = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
     hip_exec_create_gaussian_kernel(filterTensor,
                                     kernelSize,
-                                    handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                                    stdDevTensor,
                                     handle);
 
 
