@@ -1023,16 +1023,14 @@ RppStatus rppt_color_cast_gpu(RppPtr_t srcPtr,
     if (srcDescPtr->c != 3)
         return RPP_ERROR_INVALID_CHANNELS;
 
-    Rpp32u paramIndex = 0;
-    copy_param_float(alphaTensor, rpp::deref(rppHandle), paramIndex++);
-    copy_param_RpptRGB(rgbTensor, rpp::deref(rppHandle));
-
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
         hip_exec_color_cast_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
                                    srcDescPtr,
                                    static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                    dstDescPtr,
+                                   rgbTensor,
+                                   alphaTensor,
                                    roiTensorPtrSrc,
                                    roiType,
                                    rpp::deref(rppHandle));
@@ -1043,6 +1041,8 @@ RppStatus rppt_color_cast_gpu(RppPtr_t srcPtr,
                                    srcDescPtr,
                                    (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                    dstDescPtr,
+                                   rgbTensor,
+                                   alphaTensor,
                                    roiTensorPtrSrc,
                                    roiType,
                                    rpp::deref(rppHandle));
@@ -1053,6 +1053,8 @@ RppStatus rppt_color_cast_gpu(RppPtr_t srcPtr,
                                    srcDescPtr,
                                    (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                    dstDescPtr,
+                                   rgbTensor,
+                                   alphaTensor,
                                    roiTensorPtrSrc,
                                    roiType,
                                    rpp::deref(rppHandle));
@@ -1063,6 +1065,8 @@ RppStatus rppt_color_cast_gpu(RppPtr_t srcPtr,
                                    srcDescPtr,
                                    static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                    dstDescPtr,
+                                   rgbTensor,
+                                   alphaTensor,
                                    roiTensorPtrSrc,
                                    roiType,
                                    rpp::deref(rppHandle));

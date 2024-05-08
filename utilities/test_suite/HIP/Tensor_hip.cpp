@@ -638,9 +638,8 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "color_cast";
 
-                    RpptRGB rgbTensor[batchSize];
-                    Rpp32f alphaTensor[batchSize];
-
+                    Rpp32f *alphaTensor = scratchBufferPinned;
+                    RpptRGB *rgbTensor = reinterpret_cast<RpptRGB *>(alphaTensor + batchSize);
                     for (i = 0; i < batchSize; i++)
                     {
                         rgbTensor[i].R = 0;
