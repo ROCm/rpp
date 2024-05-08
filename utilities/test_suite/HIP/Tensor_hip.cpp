@@ -980,9 +980,9 @@ int main(int argc, char **argv)
                         dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
                     }
 
-                    Rpp32f mean[batchSize * 3];
-                    Rpp32f stdDev[batchSize * 3];
-                    Rpp32u mirror[batchSize];
+                    Rpp32f *mean = scratchBufferPinned;
+                    Rpp32f *stdDev = mean + (batchSize * 3);
+                    Rpp32u *mirror = reinterpret_cast<Rpp32u *>(stdDev + (batchSize * 3));
                     for (i = 0, j = 0; i < batchSize; i++, j += 3)
                     {
                         mean[j] = 60.0;

@@ -1470,19 +1470,6 @@ RppStatus rppt_resize_mirror_normalize_gpu(RppPtr_t srcPtr,
     if (interpolationType != RpptInterpolationType::BILINEAR)
         return RPP_ERROR_NOT_IMPLEMENTED;
 
-    Rpp32u paramIndex = 0;
-    if(srcDescPtr->c == 3)
-    {
-        copy_param_float3(meanTensor, rpp::deref(rppHandle), paramIndex++);
-        copy_param_float3(stdDevTensor, rpp::deref(rppHandle), paramIndex++);
-    }
-    else if(srcDescPtr->c == 1)
-    {
-        copy_param_float(meanTensor, rpp::deref(rppHandle), paramIndex++);
-        copy_param_float(stdDevTensor, rpp::deref(rppHandle), paramIndex++);
-    }
-    copy_param_uint(mirrorTensor, rpp::deref(rppHandle), paramIndex++);
-
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
         hip_exec_resize_mirror_normalize_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
@@ -1491,6 +1478,9 @@ RppStatus rppt_resize_mirror_normalize_gpu(RppPtr_t srcPtr,
                                                 dstDescPtr,
                                                 dstImgSizes,
                                                 interpolationType,
+                                                meanTensor,
+                                                stdDevTensor,
+                                                mirrorTensor,
                                                 roiTensorPtrSrc,
                                                 roiType,
                                                 rpp::deref(rppHandle));
@@ -1503,6 +1493,9 @@ RppStatus rppt_resize_mirror_normalize_gpu(RppPtr_t srcPtr,
                                                 dstDescPtr,
                                                 dstImgSizes,
                                                 interpolationType,
+                                                meanTensor,
+                                                stdDevTensor,
+                                                mirrorTensor,
                                                 roiTensorPtrSrc,
                                                 roiType,
                                                 rpp::deref(rppHandle));
@@ -1516,6 +1509,9 @@ RppStatus rppt_resize_mirror_normalize_gpu(RppPtr_t srcPtr,
                                                 dstDescPtr,
                                                 dstImgSizes,
                                                 interpolationType,
+                                                meanTensor,
+                                                stdDevTensor,
+                                                mirrorTensor,
                                                 roiTensorPtrSrc,
                                                 roiType,
                                                 rpp::deref(rppHandle));
@@ -1528,6 +1524,9 @@ RppStatus rppt_resize_mirror_normalize_gpu(RppPtr_t srcPtr,
                                                 dstDescPtr,
                                                 dstImgSizes,
                                                 interpolationType,
+                                                meanTensor,
+                                                stdDevTensor,
+                                                mirrorTensor,
                                                 roiTensorPtrSrc,
                                                 roiType,
                                                 rpp::deref(rppHandle));
@@ -1540,6 +1539,9 @@ RppStatus rppt_resize_mirror_normalize_gpu(RppPtr_t srcPtr,
                                                 dstDescPtr,
                                                 dstImgSizes,
                                                 interpolationType,
+                                                meanTensor,
+                                                stdDevTensor,
+                                                mirrorTensor,
                                                 roiTensorPtrSrc,
                                                 roiType,
                                                 rpp::deref(rppHandle));
@@ -1552,6 +1554,9 @@ RppStatus rppt_resize_mirror_normalize_gpu(RppPtr_t srcPtr,
                                                 dstDescPtr,
                                                 dstImgSizes,
                                                 interpolationType,
+                                                meanTensor,
+                                                stdDevTensor,
+                                                mirrorTensor,
                                                 roiTensorPtrSrc,
                                                 roiType,
                                                 rpp::deref(rppHandle));
