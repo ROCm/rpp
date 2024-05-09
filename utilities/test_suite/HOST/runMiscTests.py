@@ -23,6 +23,10 @@ SOFTWARE.
 """
 
 import os
+import subprocess  # nosec
+import argparse
+import datetime
+import shutil
 import sys
 sys.dont_write_bytecode = True
 sys.path.append(os.path.join(os.path.dirname( __file__ ), '..' ))
@@ -30,63 +34,58 @@ from common import *
 
 # Set the timestamp
 timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-
 scriptPath = os.path.dirname(os.path.realpath(__file__))
-inFilePath = scriptPath + "/../TEST_AUDIO_FILES/three_samples_single_channel_src1"
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
-caseMin = 0
-caseMax = 7
+caseMin = 1
+caseMax = 1
 
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list():
     return [
-        outFolderPath + "/OUTPUT_PERFORMANCE_AUDIO_LOGS_HOST_" + timestamp + "/Tensor_audio_host_raw_performance_log.txt",
+        outFolderPath + "/OUTPUT_PERFORMANCE_MISC_LOGS_HOST_" + timestamp + "/Tensor_misc_host_raw_performance_log.txt",
     ]
 
-def run_unit_test_cmd(srcPath, case, numRuns, testType, batchSize, outFilePath):
-    print(f"./Tensor_audio_host {srcPath} {case} {numRuns} {testType} {numRuns} {batchSize}")
-    result = subprocess.run([buildFolderPath + "/build/Tensor_audio_host", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE)    # nosec
+def run_unit_test_cmd(numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg):
+    print(f"./Tensor_misc_host {case} {testType} {toggle} {numDims} {batchSize} {numRuns} {additionalArg}")
+    result = subprocess.run([buildFolderPath + "/build/Tensor_misc_host", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE)    # nosec
     print(result.stdout.decode())
     print("------------------------------------------------------------------------------------------")
 
-def run_performance_test_cmd(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath):
-    with open("{}/Tensor_audio_host_raw_performance_log.txt".format(loggingFolder), "a") as logFile:
-        print(f"./Tensor_audio_host {srcPath} {case} {numRuns} {testType} {numRuns} {batchSize} ")
-        process = subprocess.Popen([buildFolderPath + "/build/Tensor_audio_host", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
+def run_performance_test_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg):
+    with open("{}/Tensor_misc_host_raw_performance_log.txt".format(loggingFolder), "a") as logFile:
+        print(f"./Tensor_misc_host {case} {testType} {toggle} {numDims} {batchSize} {numRuns} {additionalArg}")
+        process = subprocess.Popen([buildFolderPath + "/build/Tensor_misc_host", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
         read_from_subprocess_and_write_to_log(process, logFile)
-        print("------------------------------------------------------------------------------------------")
 
-def run_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath):
+def run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg):
     print("\n\n\n\n")
     print("--------------------------------")
     print("Running a New Functionality...")
     print("--------------------------------")
     if testType == 0:
-        run_unit_test_cmd(srcPath, case, numRuns, testType, batchSize, outFilePath)
+        run_unit_test_cmd(numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg)
     elif testType == 1:
-        run_performance_test_cmd(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath)
+        run_performance_test_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg)
 
 # Parse and validate command-line arguments for the RPP test suite
 def rpp_test_suite_parser_and_validator():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input_path", type = str, default = inFilePath, help = "Path to the input folder")
     parser.add_argument("--case_start", type = int, default = caseMin, help = "Testing start case # - Range must be in [" + str(caseMin) + ":" + str(caseMax) + "]")
-    parser.add_argument("--case_end", type = int, default = caseMax, help = "Testing end case # - Range must be in [" + str(caseMin) + ":" + str(caseMax) + "]")
+    parser.add_argument("--case_end", type = int, default = caseMax, help = "Testing start case # - Range must be in [" + str(caseMin) + ":" + str(caseMax) + "]")
     parser.add_argument('--test_type', type = int, default = 0, help = "Type of Test - (0 = QA tests / 1 = Performance tests)")
-    parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Output audio data from tests will be compared with golden outputs - (0 / 1)", required = False)
+    parser.add_argument('--toggle', type = int, default = 0, help = "Toggle outputs")
     parser.add_argument('--case_list', nargs = "+", help = "List of case numbers to test", required = False)
+    parser.add_argument("--num_dims", type = int, default = 2, help = "Number of dimensions for input")
     parser.add_argument('--num_runs', type = int, default = 1, help = "Specifies the number of runs for running the performance tests")
-    parser.add_argument('--preserve_output', type = int, default = 1, help = "preserves the output of the program - (0 = override output / 1 = preserve output )")
+    parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Outputs from tests will be compared with golden outputs - (0 / 1)", required = False)
     parser.add_argument('--batch_size', type = int, default = 1, help = "Specifies the batch size to use for running tests. Default is 1.")
+    parser.add_argument('--preserve_output', type = int, default = 1, help = "preserves the output of the program - (0 = override output / 1 = preserve output )" )
     args = parser.parse_args()
-
-    # check if the folder exists
-    validate_path(args.input_path)
 
     # validate the parameters passed by user
     if ((args.case_start < caseMin or args.case_start > caseMax) or (args.case_end < caseMin or args.case_end > caseMax)):
-        print(f"Starting case# and Ending case# must be in the {caseMin}:{caseMax} range. Aborting!")
+        print("Starting case# and Ending case# must be in the 0:1 range. Aborting!")
         exit(0)
     elif args.case_end < args.case_start:
         print("Ending case# must be greater than starting case#. Aborting!")
@@ -94,23 +93,17 @@ def rpp_test_suite_parser_and_validator():
     elif args.test_type < 0 or args.test_type > 1:
         print("Test Type# must be in the 0 / 1. Aborting!")
         exit(0)
-    elif args.case_list is not None and args.case_start != caseMin and args.case_end != caseMax:
-        print("Invalid input! Please provide only 1 option between case_list, case_start and case_end")
-        exit(0)
     elif args.qa_mode < 0 or args.qa_mode > 1:
         print("QA mode must be in the 0 / 1. Aborting!")
+        exit(0)
+    elif args.case_list is not None and args.case_start > caseMin and args.case_end < caseMax:
+        print("Invalid input! Please provide only 1 option between case_list, case_start and case_end")
         exit(0)
     elif args.num_runs <= 0:
         print("Number of Runs must be greater than 0. Aborting!")
         exit(0)
     elif args.batch_size <= 0:
         print("Batch size must be greater than 0. Aborting!")
-        exit(0)
-    elif args.preserve_output < 0 or args.preserve_output > 1:
-        print("Preserve Output must be in the 0/1 (0 = override / 1 = preserve). Aborting")
-        exit(0)
-    elif args.test_type == 0 and args.input_path != inFilePath:
-        print("Invalid input path! QA mode can run only with path:", inFilePath)
         exit(0)
 
     if args.case_list is None:
@@ -119,49 +112,47 @@ def rpp_test_suite_parser_and_validator():
     else:
         for case in args.case_list:
             if int(case) < caseMin or int(case) > caseMax:
-                print(f"Invalid case number {case}! Case number must be in the {caseMin}:{caseMax} range. Aborting!")
+                print("The case# must be in [" + str(caseMin) + ":" + str(caseMax) + "]")
                 exit(0)
     return args
 
 args = rpp_test_suite_parser_and_validator()
-srcPath = args.input_path
 caseStart = args.case_start
 caseEnd = args.case_end
 testType = args.test_type
+toggle = args.toggle
 caseList = args.case_list
-qaMode = args.qa_mode
+numDims = args.num_dims
 numRuns = args.num_runs
-preserveOutput = args.preserve_output
 batchSize = args.batch_size
+qaMode = args.qa_mode
+if qaMode:
+    testType = 0
+preserveOutput = args.preserve_output
+bitDepth = 2 # Current audio test suite only supports bit depth 2
 outFilePath = " "
 
-# Override testType to 0 if testType is 1 and qaMode is 1
-if testType == 1 and qaMode == 1:
-    print("WARNING: QA Mode cannot be run with testType = 1 (performance tests). Resetting testType to 0")
-    testType = 0
+if testType == 0 and batchSize != 3:
+    print("QA mode can only run with a batch size of 3.")
+    exit(0)
+if preserveOutput == 0:
+    validate_and_remove_folders(outFolderPath, "QA_RESULTS_MISC_HOST")
+    validate_and_remove_folders(outFolderPath, "OUTPUT_PERFORMANCE_MISC_LOGS_HOST")
 
-# set the output folders and number of runs based on type of test (unit test / performance test)
 if(testType == 0):
-    outFilePath = outFolderPath + "/QA_RESULTS_AUDIO_HOST_" + timestamp
+    outFilePath = outFolderPath + '/QA_RESULTS_MISC_HOST_' + timestamp
     numRuns = 1
 elif(testType == 1):
     if "--num_runs" not in sys.argv:
         numRuns = 100   #default numRuns for running performance tests
-    outFilePath = outFolderPath + "/OUTPUT_PERFORMANCE_AUDIO_LOGS_HOST_" + timestamp
+    outFilePath = outFolderPath + '/OUTPUT_PERFORMANCE_MISC_LOGS_HOST_' + timestamp
 else:
     print("Invalid TEST_TYPE specified. TEST_TYPE should be 0/1 (0 = QA tests / 1 = Performance tests)")
     exit(0)
 
-if preserveOutput == 0:
-    validate_and_remove_folders(outFolderPath, "QA_RESULTS_AUDIO_HOST")
-    validate_and_remove_folders(outFolderPath, "OUTPUT_PERFORMANCE_AUDIO_LOGS_HOST")
-
 os.mkdir(outFilePath)
 loggingFolder = outFilePath
 dstPath = outFilePath
-
-# Validate DST_FOLDER
-validate_and_remove_files(dstPath)
 
 # Enable extglob
 if os.path.exists(buildFolderPath + "/build"):
@@ -173,36 +164,34 @@ os.chdir(buildFolderPath + "/build")
 subprocess.run(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.run(["make", "-j16"], cwd=".")    # nosec
 
-# List of cases supported
-supportedCaseList = ['0', '1', '2', '3', '4', '5', '6', '7']
-if qaMode and batchSize != 3:
-    print("QA tests can only run with a batch size of 3.")
-    exit(0)
-
+supportedCaseList = ['1']
 for case in caseList:
-    if "--input_path" not in sys.argv:
-        if case == "3":
-            srcPath = scriptPath + "/../TEST_AUDIO_FILES/three_sample_multi_channel_src1"
-        else:
-            srcPath = inFilePath
-
     if case not in supportedCaseList:
         continue
-    run_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath)
+    if case == "1":
+        for axisMask in range(1, pow(2, numDims)):
+            run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, axisMask)
+    else:
+        run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, axisMask)
 
 # print the results of qa tests
-nonQACaseList = [] # Add cases present in supportedCaseList, but without QA support
-
+nonQACaseList = []
+supportedCases = 0
+for num in caseList:
+    if num in supportedCaseList:
+        supportedCases += 1
+caseInfo = "Tests are run for " + str(supportedCases) + " supported cases out of the " + str(len(caseList)) + " cases requested"
 if testType == 0:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
-        print("---------------------------------- Results of QA Test - Tensor_audio_host -----------------------------------\n")
+        print("---------------------------------- Results of QA Test - Tensor_misc_host ----------------------------------\n")
         print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList)
 
 # Performance tests
 if (testType == 1):
-    log_file_list = get_log_file_list()
-    for log_file in log_file_list:
-        print_performance_tests_summary(log_file, "", numRuns)
+    logFileList = get_log_file_list()
+    functionalityGroupList = ["statiscal_operations"]
 
+    for logFile in logFileList:
+        print_performance_tests_summary(logFile, functionalityGroupList, numRuns)
