@@ -26,14 +26,14 @@ Input<br>(nifti1 .nii medical image) | fused_multiply_add_scalar<br>(brightened 
 ## Prerequisites
 
 * Linux
-  * **Ubuntu** - `20.04` / `22.04`
-  * **CentOS** - `7`
-  * **RedHat** - `8` / `9`
-  * **SLES** - `15-SP4`
+  * Ubuntu - `20.04` / `22.04`
+  * CentOS - `7`
+  * RedHat - `8` / `9`
+  * SLES - `15-SP4`
 
 * [ROCm supported hardware](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html)
 
-* Install ROCm with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html) with `--usecase=graphics,rocm --no-32`
+* Install ROCm with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html) with `--usecase=rocm`
 
 * Clang Version `5.0.1` and above
 
@@ -74,14 +74,14 @@ Input<br>(nifti1 .nii medical image) | fused_multiply_add_scalar<br>(brightened 
   sudo apt-get install half
   ```
 
-> [!NOTE]
-> You must use the appropriate package manager for your operating system.
-
 * Compiler with support for C++ Version `17` and above
 
 * OpenMP
 
 * Threads
+
+> [!NOTE]
+> You must use the appropriate package manager for your operating system.
 
 ## Build and install instructions
 
