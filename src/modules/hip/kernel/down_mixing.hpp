@@ -16,6 +16,7 @@ __global__ void down_mixing_hip_tensor(float *srcPtr,
     if (id_x >= srcLength)
         return;
 
+    // multi channel
     if(channels > 1)
     {
         float nomalizedWeight = 1.f / channels;
@@ -27,6 +28,7 @@ __global__ void down_mixing_hip_tensor(float *srcPtr,
         uint dstIdx = id_z * dstStride + id_x;
         dstPtr[dstIdx] = outVal;
     }
+    // single channel - copy input to output
     else
     {
         uint srcIdx = id_z * srcStride + id_x;
@@ -45,7 +47,7 @@ RppStatus hip_exec_down_mixing_tensor(Rpp32f *srcPtr,
 {
     int globalThreads_x = dstDescPtr->strides.nStride;
     int globalThreads_y = 1;
-    int globalThreads_z = handle.GetBatchSize();
+    int globalThreads_z = dstDescPtr->n;
 
     hipLaunchKernelGGL(down_mixing_hip_tensor,
                        dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X_1DIM), ceil((float)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((float)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
