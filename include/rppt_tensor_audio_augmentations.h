@@ -134,9 +134,9 @@ RppStatus rppt_spectrogram_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_
 /*! \brief Mel filter bank augmentation HOST backend
  * \details Mel filter bank augmentation for audio data
  * \param[in] srcPtr source tensor in HOST memory
- * \param[in] srcDescPtr source tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32, layout - NFT / NTF)
+ * \param[in] srcDescPtr source tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32, layout - NFT)
  * \param[out] dstPtr destination tensor in HOST memory
- * \param[in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32, layout - NFT / NTF)
+ * \param[in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32, layout - NFT)
  * \param[in] srcDimsTensor source audio buffer length and number of channels (1D tensor in HOST memory, of size batchSize * 2)
  * \param[in] maxFreq maximum frequency if not provided maxFreq = sampleRate / 2
  * \param[in] minFreq minimum frequency
