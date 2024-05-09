@@ -112,7 +112,7 @@ int main(int argc, char **argv)
     // create generic descriptor in case of slice
     RpptGenericDesc descriptor3D;
     RpptGenericDescPtr descriptorPtr3D = &descriptor3D;
-    if(testCase == 4)
+    if(testCase == 5)
     {
         descriptorPtr3D->numDims = 2;
         descriptorPtr3D->offsetInBytes = 0;

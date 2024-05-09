@@ -191,43 +191,43 @@ The voxel test suite accepts the following command line arguments:
 ### Running the Tests for HOST Backend (RPP Voxel Test Suite)
 The test suite can be run with the following command:
 ``` python
-python runTests_voxel.py --header_path <header_path> --data_path <data_path> --case_start <case_start> --case_end <case_end> --test_type <test_type>
+python runVoxelTests.py --header_path <header_path> --data_path <data_path> --case_start <case_start> --case_end <case_end> --test_type <test_type>
 ```
 
 ### Running the Tests for HIP Backend (RPP Voxel Test Suite)
 The test suite can be run with the following command:
 ``` python
-python runTests_voxel.py --header_path <header_path> --data_path <data_path> --case_start <case_start> --case_end <case_end> --test_type <test_type> --profiling <profiling>
+python runVoxelTests.py --header_path <header_path> --data_path <data_path> --case_start <case_start> --case_end <case_end> --test_type <test_type> --profiling <profiling>
 ```
 
 ### Modes of operation (RPP Voxel Test Suite)
 -   QA mode - Tolerance based PASS/FAIL tests for RPP HIP/HOST functionalities checking pixelwise match between C/SSE/AVX/HIP versions after comparison to preset golden outputs.
 ``` python
-python runTests_voxel.py --case_start 0 --case_end 4 --test_type 0 --qa_mode 1 --batch_size 3
+python runVoxelTests.py --case_start 0 --case_end 4 --test_type 0 --qa_mode 1 --batch_size 3
 ```
 -   Unit test mode - Unit tests allowing users to pass a path to a folder containing nii fikes, to execute the desired functionality and variant once, report RPP execution wall time, save and view output images, gifs and nii files
 ``` python
-python runTests_voxel.py --case_start 0 --case_end 4 --test_type 0 --qa_mode 0
+python runVoxelTests.py --case_start 0 --case_end 4 --test_type 0 --qa_mode 0
 ```
 -   Performance test mode - Performance tests that execute the desired functionality and variant 100 times by default, and report max/min/avg RPP execution wall time, or optionally, AMD rocprof kernel profiler max/min/avg time for HIP backend variants.
 ``` python
-python runTests_voxel.py --case_start 0 --case_end 4 --test_type 1
+python runVoxelTests.py --case_start 0 --case_end 4 --test_type 1
 ```
 
 To run the unit tests / performance tests for specific case numbers. please case use case_list parameter. Example as below
 
 -   To run unittests for case numbers 0, 2, 4
 ``` python
-python runTests_voxel.py --case_list 0 2 4 --test_type 0
+python runVoxelTests.py --case_list 0 2 4 --test_type 0
 ```
 -   To run performance tests for case numbers 0, 2, 4
 ``` python
-python runTests_voxel.py --case_list 0 2 4 --test_type 1
+python runVoxelTests.py --case_list 0 2 4 --test_type 1
 ```
 
 To run performance tests with AMD rocprof kernel profiler for HIP backend variants. This will generate profiler times for HIP backend variants
 ``` python
-python runTests_voxel.py --test_type 1 --profiling YES
+python runVoxelTests.py --test_type 1 --profiling YES
 ```
 
 ### Summary of features (RPP Voxel Test Suite)
@@ -295,6 +295,48 @@ python runTests.py --case_list 0 1 2 --test_type 1
 
 ### Summary of features (RPP Audio Test Suite)
 The audio test suite includes:
+-   Performance tests that execute the desired functionality and variant 100 times by default, and report max/min/avg RPP execution wall time.
+-   QA and Performance tests are included for one input/output bitdepth F32.
+-   Support for output referencing against golden outputs, and functionality validation checking, by tolerance-based pass/fail criterions for each variant.
+
+## RPP Miscellaneous Test Suite
+The miscellaneous test suite can be executed to validate the functionality and performance of the AMD ROCm Performance Primitives (RPP) generic libraries that can process N-Dimensional inputs
+-   HOST backend - (On a CPU with HOST backend)
+-   HIP backend - (On a GPU with HIP backend)
+-   F32 Bit Depth
+
+### Command Line Arguments (RPP Miscellaneous Test Suite)
+The miscellaneous test suite accepts the following command line arguments:
+-   case_start: The starting case number for the test range (1-1). Default is 1
+-   case_end: The ending case number for the test range (1-1). Default is 1
+-   test_type: The type of test to run (0 = QA tests, 1 = Performance tests). Default is 0
+-   qa_mode: Output audio data from tests will be compared with golden outputs - (0 / 1). Default is 0
+-   case_list: A list of specific case numbers to run. Must be used in conjunction with --test_type
+-   num_dims: The number of dimensions of input. Default is 2
+-   num_runs: Specifies the number of runs for running the performance tests
+-   preserve_output: preserves the output or performance logs generated from the previous test suite run - (0 = remove output or performance logs / 1 = preserve output or performance logs). Default is 1
+-   batch_size: Specifies the batch size to use for running tests. Default is 1
+-   profiling: Run the tests with a profiler (YES/NO). Default is NO. This option is only available with HIP backend
+
+### Running the Tests for HOST Backend (RPP Miscellaneous Test Suite)
+The test suite can be run with the following command:
+``` python
+python runMiscTests.py --case_start <case_start> --case_end <case_end> --test_type <test_type>
+```
+
+### Modes of operation (RPP Miscellaneous Test Suite)
+-   QA mode - Tolerance based PASS/FAIL tests for RPP MISC HOST functionalities checking match between output and preset golden outputs. Please note that QA mode is only supported with a batch size of 3 and num dims 2 or 3
+``` python
+python runMiscTests.py --case_start 1 --case_end 1 --qa_mode 1 --batch_size 3
+```
+
+-   Performance test mode - Performance tests that execute the desired functionality and variant 100 times by default, and report max/min/avg RPP execution wall time.
+``` python
+python runMiscTests.py --case_start 1 --case_end 1 --test_type 1
+```
+
+### Summary of features (RPP Miscellaneous Test Suite)
+The miscellaneous test suite includes:
 -   Performance tests that execute the desired functionality and variant 100 times by default, and report max/min/avg RPP execution wall time.
 -   QA and Performance tests are included for one input/output bitdepth F32.
 -   Support for output referencing against golden outputs, and functionality validation checking, by tolerance-based pass/fail criterions for each variant.

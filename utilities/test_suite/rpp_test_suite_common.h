@@ -933,12 +933,18 @@ inline void read_bin_file(string refFile, T *binaryContent)
     FILE *fp;
     fp = fopen(refFile.c_str(), "rb");
     if(!fp)
-        std::cerr << "\n unable to open file : "<<refFile;
+    {
+        std::cout << "\n unable to open file : "<<refFile;
+        exit(0);
+    }
 
     fseek(fp, 0, SEEK_END);
     long fsize = ftell(fp);
     if (fsize == 0)
-        std::cerr << "File is empty";
+    {
+        std::cout << "File is empty";
+        exit(0);
+    }
 
     fseek(fp, 0, SEEK_SET);
     fread(binaryContent, fsize, 1, fp);
