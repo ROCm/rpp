@@ -331,7 +331,7 @@ RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
     // launch kernel to compute the values needed for MMS Array
     int globalThreads_x = ceil(static_cast<float>(srcDescPtr->strides.nStride) / outputTileLength);
     int globalThreads_y = 1;
-    int globalThreads_z = handle.GetBatchSize();
+    int globalThreads_z = srcDescPtr->n;
 
     hipLaunchKernelGGL(moving_mean_square_hip_tensor,
                        dim3(globalThreads_x, globalThreads_y, globalThreads_z),
