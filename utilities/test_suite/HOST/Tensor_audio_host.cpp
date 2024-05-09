@@ -138,9 +138,13 @@ int main(int argc, char **argv)
     RpptImagePatch *srcDims = (RpptImagePatch *) calloc(batchSize, sizeof(RpptImagePatch));
     RpptImagePatch *dstDims = (RpptImagePatch *) calloc(batchSize, sizeof(RpptImagePatch));
 
+    // buffers used for non silent region detection
+    Rpp32s detectedIndex[batchSize], detectionLength[batchSize];
+
     // run case-wise RPP API and measure time
     rppHandle_t handle;
     rppCreateWithBatchSize(&handle, srcDescPtr->n, 3);
+
     int noOfIterations = (int)audioNames.size() / batchSize;
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0;
     string testCaseName;
@@ -158,8 +162,6 @@ int main(int argc, char **argv)
                 case 0:
                 {
                     testCaseName = "non_silent_region_detection";
-                    Rpp32s detectedIndex[batchSize];
-                    Rpp32s detectionLength[batchSize];
                     Rpp32f cutOffDB = -60.0;
                     Rpp32s windowLength = 2048;
                     Rpp32f referencePower = 0.0f;
@@ -167,10 +169,6 @@ int main(int argc, char **argv)
 
                     startWallTime = omp_get_wtime();
                     rppt_non_silent_region_detection_host(inputf32, srcDescPtr, srcLengthTensor, detectedIndex, detectionLength, cutOffDB, windowLength, referencePower, resetInterval, handle);
-
-                    // QA mode - verify outputs with golden outputs. Below code doesn’t run for performance tests
-                    if (testType == 0)
-                        verify_non_silent_region_detection(detectedIndex, detectionLength, testCaseName, batchSize, audioNames, dst);
 
                     break;
                 }
@@ -238,7 +236,7 @@ int main(int argc, char **argv)
                     Rpp32s windowLength = 320;
                     Rpp32s windowStep = 160;
                     Rpp32s nfft = 512;
-                    RpptSpectrogramLayout layout = RpptSpectrogramLayout::FT;
+                    dstDescPtr->layout = RpptLayout::NFT;
 
                     int windowOffset = 0;
                     if(!centerWindows)
@@ -246,7 +244,7 @@ int main(int argc, char **argv)
 
                     maxDstWidth = 0;
                     maxDstHeight = 0;
-                    if(layout == RpptSpectrogramLayout::FT)
+                    if(dstDescPtr->layout == RpptLayout::NFT)
                     {
                         for(int i = 0; i < noOfAudioFiles; i++)
                         {
@@ -274,7 +272,7 @@ int main(int argc, char **argv)
                     outputf32 = (Rpp32f *)realloc(outputf32, spectrogramBufferSize * sizeof(Rpp32f));
 
                     startWallTime = omp_get_wtime();
-                    rppt_spectrogram_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcLengthTensor, centerWindows, reflectPadding, windowFn, nfft, power, windowLength, windowStep, layout, handle);
+                    rppt_spectrogram_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcLengthTensor, centerWindows, reflectPadding, windowFn, nfft, power, windowLength, windowStep, handle);
 
                     break;
                 }
@@ -421,9 +419,9 @@ int main(int argc, char **argv)
         // QA mode - verify outputs with golden outputs. Below code doesn’t run for performance tests
         if (testType == 0)
         {
-            /* Run only if testCase is not 0
-            For testCase 0 verify_non_silent_region_detection function is used for QA testing */
-            if (testCase != 0)
+            if (testCase == 0)
+                verify_non_silent_region_detection(detectedIndex, detectionLength, testCaseName, batchSize, audioNames, dst);
+            else
                 verify_output(outputf32, dstDescPtr, dstDims, testCaseName, dst, scriptPath);
 
             /* Dump the outputs to csv files for debugging
