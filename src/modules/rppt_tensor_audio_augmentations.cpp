@@ -159,6 +159,88 @@ RppStatus rppt_down_mixing_host(RppPtr_t srcPtr,
     }
 }
 
+/******************** spectrogram ********************/
+
+RppStatus rppt_spectrogram_host(RppPtr_t srcPtr,
+                                RpptDescPtr srcDescPtr,
+                                RppPtr_t dstPtr,
+                                RpptDescPtr dstDescPtr,
+                                Rpp32s *srcLengthTensor,
+                                bool centerWindows,
+                                bool reflectPadding,
+                                Rpp32f *windowFunction,
+                                Rpp32s nfft,
+                                Rpp32s power,
+                                Rpp32s windowLength,
+                                Rpp32s windowStep,
+                                RpptSpectrogramLayout layout,
+                                rppHandle_t rppHandle)
+{
+    if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        spectrogram_host_tensor(static_cast<Rpp32f*>(srcPtr),
+                                srcDescPtr,
+                                static_cast<Rpp32f*>(dstPtr),
+                                dstDescPtr,
+                                srcLengthTensor,
+                                centerWindows,
+                                reflectPadding,
+                                windowFunction,
+                                nfft,
+                                power,
+                                windowLength,
+                                windowStep,
+                                layout,
+                                rpp::deref(rppHandle));
+
+        return RPP_SUCCESS;
+    }
+    else
+    {
+        return RPP_ERROR_NOT_IMPLEMENTED;
+    }
+}
+
+/******************** mel_filter_bank ********************/
+
+RppStatus rppt_mel_filter_bank_host(RppPtr_t srcPtr,
+                                    RpptDescPtr srcDescPtr,
+                                    RppPtr_t dstPtr,
+                                    RpptDescPtr dstDescPtr,
+                                    Rpp32s* srcDimsTensor,
+                                    Rpp32f maxFreq,
+                                    Rpp32f minFreq,
+                                    RpptMelScaleFormula melFormula,
+                                    Rpp32s numFilter,
+                                    Rpp32f sampleRate,
+                                    bool normalize,
+                                    rppHandle_t rppHandle)
+{
+    if (srcDescPtr->layout != RpptLayout::NFT) return RPP_ERROR_INVALID_SRC_LAYOUT;
+    if (dstDescPtr->layout != RpptLayout::NFT) return RPP_ERROR_INVALID_DST_LAYOUT;
+
+    if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        mel_filter_bank_host_tensor(static_cast<Rpp32f*>(srcPtr),
+                                    srcDescPtr,
+                                    static_cast<Rpp32f*>(dstPtr),
+                                    dstDescPtr,
+                                    srcDimsTensor,
+                                    maxFreq,
+                                    minFreq,
+                                    melFormula,
+                                    numFilter,
+                                    sampleRate,
+                                    normalize,
+                                    rpp::deref(rppHandle));
+        return RPP_SUCCESS;
+    }
+    else
+    {
+        return RPP_ERROR_NOT_IMPLEMENTED;
+    }
+}
+
 /******************** resample ********************/
 
 RppStatus rppt_resample_host(RppPtr_t srcPtr,
