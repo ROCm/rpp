@@ -203,14 +203,14 @@ RppStatus rppt_pre_emphasis_filter_gpu(RppPtr_t srcPtr,
                                        RpptDescPtr srcDescPtr,
                                        RppPtr_t dstPtr,
                                        RpptDescPtr dstDescPtr,
-                                       RpptImagePatchPtr srcDims,
+                                       Rpp32s *srcLengthTensor,
                                        Rpp32f *coeffTensor,
                                        RpptAudioBorderType borderType,
                                        rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
     Rpp32u paramIndex = 0;
-    copy_param_float(coeffTensor, rpp::deref(rppHandle), paramIndex++);
+    copy_param_float((float *)coeffTensor, rpp::deref(rppHandle), paramIndex++);
 
     if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
@@ -218,10 +218,15 @@ RppStatus rppt_pre_emphasis_filter_gpu(RppPtr_t srcPtr,
                                             srcDescPtr,
                                             static_cast<Rpp32f*>(dstPtr),
                                             dstDescPtr,
-                                            srcDims,
+                                            srcLengthTensor,
                                             borderType,
                                             rpp::deref(rppHandle));
     }
+    else
+    {
+        return RPP_ERROR_NOT_IMPLEMENTED;
+    }
+
     return RPP_SUCCESS;
 #elif defined(OCL_COMPILE)
     return RPP_ERROR_NOT_IMPLEMENTED;
