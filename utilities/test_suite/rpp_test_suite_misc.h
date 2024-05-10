@@ -28,6 +28,7 @@ using namespace std;
 
 std::map<int, string> augmentationMiscMap =
 {
+    {0, "transpose"},
     {1, "normalize"}
 };
 
@@ -276,6 +277,48 @@ void fill_mean_stddev_values(Rpp32u nDim, Rpp32u size, Rpp32f *meanTensor,
             meanTensor[j] = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
             stdDevTensor[j] = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
         }
+    }
+}
+
+// fill the permuation values used for transpose
+void fill_perm_values(Rpp32u nDim, Rpp32u *permTensor, bool qaMode)
+{
+    if(qaMode)
+    {
+        switch(nDim)
+        {
+            case 2:
+            {
+                permTensor[0] = 1;
+                permTensor[1] = 0;
+                break;
+            }
+            case 3:
+            {
+                permTensor[0] = 2;
+                permTensor[1] = 0;
+                permTensor[2] = 1;
+                break;
+            }
+            case 4:
+            {
+                permTensor[0] = 1;
+                permTensor[1] = 2;
+                permTensor[2] = 3;
+                permTensor[3] = 0;
+                break;
+            }
+            default:
+            {
+                cout << "Error! QA mode is supported only for 2 / 3 / 4 Dimension inputs" << endl;
+                exit(0);
+            }
+        }
+    }
+    else
+    {
+        for(int i = 0; i < nDim; i++)
+            permTensor[i] = nDim - 1 - i;
     }
 }
 

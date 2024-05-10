@@ -31,7 +31,7 @@ int main(int argc, char **argv)
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
-        printf("\nUsage: ./Tensor_misc_hip <case number = 0:0> <test type 0/1> <toggle 0/1> <number of dimensions> <batch size> <num runs> <dst path> <script path>\n");
+        printf("\nUsage: ./Tensor_misc_hip <case number = 0:1> <test type 0/1> <toggle 0/1> <number of dimensions> <batch size> <num runs> <dst path> <script path>\n");
         return -1;
     }
     Rpp32u testCase, testType, nDim, batchSize, numRuns, toggle;
@@ -114,6 +114,10 @@ int main(int argc, char **argv)
     CHECK_RETURN_STATUS(hipMemcpy(d_inputF32, inputF32, bufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
     CHECK_RETURN_STATUS(hipDeviceSynchronize());
 
+    Rpp32u *permTensor = nullptr;
+    if (testCase == 0)
+        CHECK_RETURN_STATUS(hipHostMalloc(&permTensor, nDim * sizeof(Rpp32u)));
+
     rppHandle_t handle;
     hipStream_t stream;
     CHECK_RETURN_STATUS(hipStreamCreate(&stream));
@@ -130,6 +134,19 @@ int main(int argc, char **argv)
     {
         switch(testCase)
         {
+            case 0:
+            {
+                fill_perm_values(nDim, permTensor, qaMode);
+
+                for(int i = 1; i <= nDim; i++)
+                    dstDescriptorPtrND->dims[i] = roiTensor[nDim + permTensor[i - 1]];
+                compute_strides(dstDescriptorPtrND);
+
+                startWallTime = omp_get_wtime();
+                rppt_transpose_gpu(d_inputF32, srcDescriptorPtrND, d_outputF32, dstDescriptorPtrND, permTensor, roiTensor, handle);
+
+                break;
+            }
             case 1:
             {
                 float scale = 1.0;
@@ -222,6 +239,8 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipFree(meanTensor));
     if(stdDevTensor != nullptr)
         CHECK_RETURN_STATUS(hipFree(stdDevTensor));
+    if (permTensor != nullptr)
+        CHECK_RETURN_STATUS(hipHostFree(permTensor));
     if(meanTensorCPU != nullptr)
         free(meanTensorCPU);
     if(stdDevTensorCPU != nullptr)
