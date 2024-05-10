@@ -47,7 +47,9 @@ int main(int argc, char **argv)
     string scriptPath = argv[9];
     qaMode = (testType == 0);
     bool axisMaskCase = (testCase == 1);
-    int axisMask = (axisMaskCase) ? atoi(argv[7]) : 1;
+    bool permOrderCase = (testCase == 0);
+    int additionalParam = (axisMaskCase || permOrderCase) ? atoi(argv[7]) : 1;
+    int axisMask = additionalParam, permOrder = additionalParam;
 
     if (qaMode && batchSize != 3)
     {
@@ -68,6 +70,13 @@ int main(int argc, char **argv)
         char additionalParam_char[2];
         std::sprintf(additionalParam_char, "%d", axisMask);
         func += "_" + std::to_string(nDim) + "d" + "_axisMask";
+        func += additionalParam_char;
+    }
+    if (permOrderCase)
+    {
+        char additionalParam_char[2];
+        std::sprintf(additionalParam_char, "%d", permOrder);
+        func += "_" + std::to_string(nDim) + "d" + "_permOrder";
         func += additionalParam_char;
     }
 
@@ -111,7 +120,7 @@ int main(int argc, char **argv)
     rppCreateWithBatchSize(&handle, batchSize, numThreads);
 
     Rpp32f *meanTensor = nullptr, *stdDevTensor = nullptr;
-    bool externalMeanStd = false;
+    bool externalMeanStd = true;
 
     double startWallTime, endWallTime;
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0, wallTime = 0;
@@ -127,7 +136,7 @@ int main(int argc, char **argv)
             {
                 testCaseName  = "transpose";
                 Rpp32u permTensor[nDim];
-                fill_perm_values(nDim, permTensor, qaMode);
+                fill_perm_values(nDim, permTensor, qaMode, permOrder);
 
                 for(int i = 1; i <= nDim; i++)
                     dstDescriptorPtrND->dims[i] = roiTensor[nDim + permTensor[i - 1]];
@@ -189,7 +198,7 @@ int main(int argc, char **argv)
 
     if(qaMode)
     {
-        compare_output(outputF32, nDim, batchSize, bufferSize, dst, func, testCaseName, axisMask, scriptPath, externalMeanStd);
+        compare_output(outputF32, nDim, batchSize, bufferSize, dst, func, testCaseName, additionalParam, scriptPath, externalMeanStd);
     }
     else
     {

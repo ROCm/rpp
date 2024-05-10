@@ -278,7 +278,7 @@ void fill_mean_stddev_values(Rpp32u nDim, Rpp32u size, Rpp32f *meanTensor,
 }
 
 // fill the permuation values used for transpose
-void fill_perm_values(Rpp32u nDim, Rpp32u *permTensor, bool qaMode)
+void fill_perm_values(Rpp32u nDim, Rpp32u *permTensor, bool qaMode, int permOrder)
 {
     if(qaMode)
     {
@@ -292,22 +292,26 @@ void fill_perm_values(Rpp32u nDim, Rpp32u *permTensor, bool qaMode)
             }
             case 3:
             {
-                permTensor[0] = 2;
-                permTensor[1] = 0;
-                permTensor[2] = 1;
-                break;
-            }
-            case 4:
-            {
-                permTensor[0] = 1;
-                permTensor[1] = 2;
-                permTensor[2] = 3;
-                permTensor[3] = 0;
+                // HWC->WHC
+                if (permOrder == 1)
+                {
+                    permTensor[0] = 1;
+                    permTensor[1] = 0;
+                    permTensor[2] = 2;
+                }
+                // HWC->HCW
+                else if (permOrder == 2)
+                {
+                    permTensor[0] = 0;
+                    permTensor[1] = 2;
+                    permTensor[2] = 1;
+
+                }
                 break;
             }
             default:
             {
-                cout << "Error! QA mode is supported only for 2 / 3 / 4 Dimension inputs" << endl;
+                cout << "Error! QA mode is supported only for 2D / 3D inputs" << endl;
                 exit(0);
             }
         }
@@ -329,7 +333,7 @@ Rpp32u get_bin_size(Rpp32u nDim, Rpp32u readType, string scriptPath, string test
 }
 
 void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize, Rpp32u bufferLength, string dst,
-                    string funcName, string testCase, int axisMask, string scriptPath, bool isMeanStd = false)
+                    string funcName, string testCase, int additionalParam, string scriptPath, bool isMeanStd = false)
 {
     Rpp32u goldenOutputLength = get_bin_size(nDim, 1, scriptPath, testCase);
     Rpp32f *refOutput = static_cast<Rpp32f *>(calloc(goldenOutputLength, 1));
@@ -340,8 +344,12 @@ void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize, Rpp32u buf
         int meanStdDevOutputStride = 0, axisMaskStride = 0;
         if(isMeanStd)
             meanStdDevOutputStride = goldenOutputLength / (2 * sizeof(Rpp32f));
-        axisMaskStride = (axisMask - 1) * bufferLength;
+        axisMaskStride = (additionalParam - 1) * bufferLength;
         subVariantStride = meanStdDevOutputStride + axisMaskStride;
+    }
+    else if (testCase == "transpose")
+    {
+        subVariantStride = (additionalParam - 1) * bufferLength;
     }
 
     int sampleLength = bufferLength / batchSize;
