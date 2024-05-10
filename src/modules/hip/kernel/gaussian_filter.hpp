@@ -1912,9 +1912,6 @@ static RppStatus hip_exec_create_gaussian_kernel(Rpp32f *filterTensor,
                                                  Rpp32f *stdDevTensor,
                                                  rpp::Handle &handle)
 {
-    int localThreads_x = 256;
-    int localThreads_y = 1;
-    int localThreads_z = 1;
     int globalThreads_x = handle.GetBatchSize();
     int globalThreads_y = 1;
     int globalThreads_z = 1;
@@ -1922,8 +1919,8 @@ static RppStatus hip_exec_create_gaussian_kernel(Rpp32f *filterTensor,
     if (kernelSize == 3)
     {
         hipLaunchKernelGGL(create_gaussian_kernel_3x3,
-                           dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                           dim3(localThreads_x, localThreads_y, localThreads_z),
+                           dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X_1DIM), ceil((float)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((float)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
+                           dim3(LOCAL_THREADS_X_1DIM, LOCAL_THREADS_Y_1DIM, LOCAL_THREADS_Z_1DIM),
                            0,
                            handle.GetStream(),
                            filterTensor,
@@ -1933,8 +1930,8 @@ static RppStatus hip_exec_create_gaussian_kernel(Rpp32f *filterTensor,
     else if (kernelSize == 5)
     {
         hipLaunchKernelGGL(create_gaussian_kernel_5x5,
-                           dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                           dim3(localThreads_x, localThreads_y, localThreads_z),
+                           dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X_1DIM), ceil((float)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((float)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
+                           dim3(LOCAL_THREADS_X_1DIM, LOCAL_THREADS_Y_1DIM, LOCAL_THREADS_Z_1DIM),
                            0,
                            handle.GetStream(),
                            filterTensor,
@@ -1944,8 +1941,8 @@ static RppStatus hip_exec_create_gaussian_kernel(Rpp32f *filterTensor,
     else if (kernelSize == 7)
     {
         hipLaunchKernelGGL(create_gaussian_kernel_7x7,
-                           dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                           dim3(localThreads_x, localThreads_y, localThreads_z),
+                           dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X_1DIM), ceil((float)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((float)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
+                           dim3(LOCAL_THREADS_X_1DIM, LOCAL_THREADS_Y_1DIM, LOCAL_THREADS_Z_1DIM),
                            0,
                            handle.GetStream(),
                            filterTensor,
@@ -1955,8 +1952,8 @@ static RppStatus hip_exec_create_gaussian_kernel(Rpp32f *filterTensor,
     else if (kernelSize == 9)
     {
         hipLaunchKernelGGL(create_gaussian_kernel_9x9,
-                           dim3(ceil((float)globalThreads_x/localThreads_x), ceil((float)globalThreads_y/localThreads_y), ceil((float)globalThreads_z/localThreads_z)),
-                           dim3(localThreads_x, localThreads_y, localThreads_z),
+                           dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X_1DIM), ceil((float)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((float)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
+                           dim3(LOCAL_THREADS_X_1DIM, LOCAL_THREADS_Y_1DIM, LOCAL_THREADS_Z_1DIM),
                            0,
                            handle.GetStream(),
                            filterTensor,
@@ -1982,9 +1979,6 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
     if (roiType == RpptRoiType::LTRB)
         hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
 
-    int localThreads_x = LOCAL_THREADS_X;
-    int localThreads_y = LOCAL_THREADS_Y;
-    int localThreads_z = LOCAL_THREADS_Z;
     int globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
     int globalThreads_y = dstDescPtr->h;
     int globalThreads_z = handle.GetBatchSize();
@@ -2010,8 +2004,8 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
         if (kernelSize == 3)
         {
             hipLaunchKernelGGL(gaussian_filter_3x3_pkd_tensor,
-                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/localThreads_z)),
-                               dim3(localThreads_x, localThreads_y, localThreads_z),
+                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
                                handle.GetStream(),
                                srcPtr,
@@ -2026,8 +2020,8 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
         else if (kernelSize == 5)
         {
             hipLaunchKernelGGL(gaussian_filter_5x5_pkd_tensor,
-                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/localThreads_z)),
-                               dim3(localThreads_x, localThreads_y, localThreads_z),
+                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
                                handle.GetStream(),
                                srcPtr,
@@ -2042,8 +2036,8 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
         else if (kernelSize == 7)
         {
             hipLaunchKernelGGL(gaussian_filter_7x7_pkd_tensor,
-                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/localThreads_z)),
-                               dim3(localThreads_x, localThreads_y, localThreads_z),
+                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
                                handle.GetStream(),
                                srcPtr,
@@ -2058,8 +2052,8 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
         else if (kernelSize == 9)
         {
             hipLaunchKernelGGL(gaussian_filter_9x9_pkd_tensor,
-                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/localThreads_z)),
-                               dim3(localThreads_x, localThreads_y, localThreads_z),
+                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
                                handle.GetStream(),
                                srcPtr,
@@ -2077,8 +2071,8 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
         if (kernelSize == 3)
         {
             hipLaunchKernelGGL(gaussian_filter_3x3_pln_tensor,
-                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/localThreads_z)),
-                               dim3(localThreads_x, localThreads_y, localThreads_z),
+                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
                                handle.GetStream(),
                                srcPtr,
@@ -2094,8 +2088,8 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
         else if (kernelSize == 5)
         {
             hipLaunchKernelGGL(gaussian_filter_5x5_pln_tensor,
-                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/localThreads_z)),
-                               dim3(localThreads_x, localThreads_y, localThreads_z),
+                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
                                handle.GetStream(),
                                srcPtr,
@@ -2111,8 +2105,8 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
         else if (kernelSize == 7)
         {
             hipLaunchKernelGGL(gaussian_filter_7x7_pln_tensor,
-                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/localThreads_z)),
-                               dim3(localThreads_x, localThreads_y, localThreads_z),
+                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
                                handle.GetStream(),
                                srcPtr,
@@ -2128,8 +2122,8 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
         else if (kernelSize == 9)
         {
             hipLaunchKernelGGL(gaussian_filter_9x9_pln_tensor,
-                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/localThreads_z)),
-                               dim3(localThreads_x, localThreads_y, localThreads_z),
+                               dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                               dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
                                handle.GetStream(),
                                srcPtr,
@@ -2150,8 +2144,8 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
             if (kernelSize == 3)
             {
                 hipLaunchKernelGGL(gaussian_filter_3x3_pkd3_pln3_tensor,
-                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/localThreads_z)),
-                                   dim3(localThreads_x, localThreads_y, localThreads_z),
+                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                    0,
                                    handle.GetStream(),
                                    srcPtr,
@@ -2166,8 +2160,8 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
             else if (kernelSize == 5)
             {
                 hipLaunchKernelGGL(gaussian_filter_5x5_pkd3_pln3_tensor,
-                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/localThreads_z)),
-                                   dim3(localThreads_x, localThreads_y, localThreads_z),
+                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                    0,
                                    handle.GetStream(),
                                    srcPtr,
@@ -2182,8 +2176,8 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
             else if (kernelSize == 7)
             {
                 hipLaunchKernelGGL(gaussian_filter_7x7_pkd3_pln3_tensor,
-                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/localThreads_z)),
-                                   dim3(localThreads_x, localThreads_y, localThreads_z),
+                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                    0,
                                    handle.GetStream(),
                                    srcPtr,
@@ -2198,8 +2192,8 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
             else if (kernelSize == 9)
             {
                 hipLaunchKernelGGL(gaussian_filter_9x9_pkd3_pln3_tensor,
-                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/localThreads_z)),
-                                   dim3(localThreads_x, localThreads_y, localThreads_z),
+                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                    0,
                                    handle.GetStream(),
                                    srcPtr,
@@ -2219,8 +2213,8 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
             if (kernelSize == 3)
             {
                 hipLaunchKernelGGL(gaussian_filter_3x3_pln3_pkd3_tensor,
-                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/localThreads_z)),
-                                   dim3(localThreads_x, localThreads_y, localThreads_z),
+                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                    0,
                                    handle.GetStream(),
                                    srcPtr,
@@ -2235,8 +2229,8 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
             else if (kernelSize == 5)
             {
                 hipLaunchKernelGGL(gaussian_filter_5x5_pln3_pkd3_tensor,
-                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/localThreads_z)),
-                                   dim3(localThreads_x, localThreads_y, localThreads_z),
+                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                    0,
                                    handle.GetStream(),
                                    srcPtr,
@@ -2251,8 +2245,8 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
             else if (kernelSize == 7)
             {
                 hipLaunchKernelGGL(gaussian_filter_7x7_pln3_pkd3_tensor,
-                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/localThreads_z)),
-                                   dim3(localThreads_x, localThreads_y, localThreads_z),
+                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                    0,
                                    handle.GetStream(),
                                    srcPtr,
@@ -2267,8 +2261,8 @@ RppStatus hip_exec_gaussian_filter_tensor(T *srcPtr,
             else if (kernelSize == 9)
             {
                 hipLaunchKernelGGL(gaussian_filter_9x9_pln3_pkd3_tensor,
-                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/localThreads_z)),
-                                   dim3(localThreads_x, localThreads_y, localThreads_z),
+                                   dim3(ceil((float)globalThreads_x/tileSize.x), ceil((float)globalThreads_y/tileSize.y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                                   dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                    0,
                                    handle.GetStream(),
                                    srcPtr,

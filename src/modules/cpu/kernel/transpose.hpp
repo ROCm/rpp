@@ -27,20 +27,6 @@ SOFTWARE.
 #include "rpp_cpu_common.hpp"
 using namespace std;
 
-void compute_strides(Rpp32u *strides, Rpp32u *shape, Rpp32u nDim)
-{
-    if (nDim > 0)
-    {
-        uint64_t v = 1;
-        for (int i = nDim - 1; i > 0; i--)
-        {
-            strides[i] = v;
-            v *= shape[i];
-        }
-        strides[0] = v;
-    }
-}
-
 void increment_ndim_ptr(Rpp32f **dstPtr, Rpp32u nDim, Rpp32u increment)
 {
     for(int i = 0; i < nDim; i++)

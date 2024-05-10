@@ -177,6 +177,21 @@ struct RPPTensorFunctionMetaData
 };
 #endif // GPU_SUPPORT
 
+// Computes strides for ND Tensor
+inline void compute_strides(Rpp32u *strides, Rpp32u *shape, Rpp32u tensorDim)
+{
+    if (tensorDim > 0)
+    {
+        Rpp32u v = 1;
+        for (Rpp32u i = tensorDim - 1; i > 0; i--)
+        {
+            strides[i] = v;
+            v *= shape[i];
+        }
+        strides[0] = v;
+    }
+}
+
 // Uses fast inverse square root algorithm from Lomont, C., 2003. FAST INVERSE SQUARE ROOT. [online] lomont.org. Available at: <http://www.lomont.org/papers/2003/InvSqrt.pdf>
 inline float rpp_host_math_inverse_sqrt_1(float x)
 {

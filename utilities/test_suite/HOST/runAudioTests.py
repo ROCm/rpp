@@ -36,41 +36,36 @@ inFilePath = scriptPath + "/../TEST_AUDIO_FILES/three_samples_single_channel_src
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
 caseMin = 0
-caseMax = 6
-
+caseMax = 7
 
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list():
     return [
-        outFolderPath + "/OUTPUT_PERFORMANCE_AUDIO_LOGS_HOST_" + timestamp + "/Tensor_host_audio_raw_performance_log.txt",
+        outFolderPath + "/OUTPUT_PERFORMANCE_AUDIO_LOGS_HOST_" + timestamp + "/Tensor_audio_host_raw_performance_log.txt",
     ]
 
-def run_unit_test(srcPath, case, numRuns, testType, batchSize, outFilePath):
-    print("\n\n\n\n")
-    print("--------------------------------")
-    print("Running a New Functionality...")
-    print("--------------------------------")
-    print(f"./Tensor_host_audio {srcPath} {case} {numRuns} {testType} {numRuns} {batchSize}")
-    result = subprocess.run([buildFolderPath + "/build/Tensor_host_audio", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE)    # nosec
+def run_unit_test_cmd(srcPath, case, numRuns, testType, batchSize, outFilePath):
+    print(f"./Tensor_audio_host {srcPath} {case} {numRuns} {testType} {numRuns} {batchSize}")
+    result = subprocess.run([buildFolderPath + "/build/Tensor_audio_host", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE)    # nosec
     print(result.stdout.decode())
-
     print("------------------------------------------------------------------------------------------")
 
-def run_performance_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath):
+def run_performance_test_cmd(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath):
+    with open("{}/Tensor_audio_host_raw_performance_log.txt".format(loggingFolder), "a") as logFile:
+        print(f"./Tensor_audio_host {srcPath} {case} {numRuns} {testType} {numRuns} {batchSize} ")
+        process = subprocess.Popen([buildFolderPath + "/build/Tensor_audio_host", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
+        read_from_subprocess_and_write_to_log(process, logFile)
+        print("------------------------------------------------------------------------------------------")
+
+def run_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath):
     print("\n\n\n\n")
     print("--------------------------------")
     print("Running a New Functionality...")
     print("--------------------------------")
-    with open("{}/Tensor_host_audio_raw_performance_log.txt".format(loggingFolder), "a") as log_file:
-        print(f"./Tensor_host_audio {srcPath} {case} {numRuns} {testType} {numRuns} {batchSize} ")
-        process = subprocess.Popen([buildFolderPath + "/build/Tensor_host_audio", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
-        while True:
-            output = process.stdout.readline()
-            if not output and process.poll() is not None:
-                break
-            print(output.strip())
-            log_file.write(output)
-    print("------------------------------------------------------------------------------------------")
+    if testType == 0:
+        run_unit_test_cmd(srcPath, case, numRuns, testType, batchSize, outFilePath)
+    elif testType == 1:
+        run_performance_test_cmd(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath)
 
 # Parse and validate command-line arguments for the RPP test suite
 def rpp_test_suite_parser_and_validator():
@@ -179,34 +174,21 @@ subprocess.run(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.run(["make", "-j16"], cwd=".")    # nosec
 
 # List of cases supported
-supportedCaseList = ['0', '1', '2', '3', '6']
+supportedCaseList = ['0', '1', '2', '3', '4', '5', '6', '7']
+if qaMode and batchSize != 3:
+    print("QA tests can only run with a batch size of 3.")
+    exit(0)
 
-if testType == 0:
-    if batchSize != 3:
-        print("QA tests can only run with a batch size of 3.")
-        exit(0)
+for case in caseList:
+    if "--input_path" not in sys.argv:
+        if case == "3":
+            srcPath = scriptPath + "/../TEST_AUDIO_FILES/three_sample_multi_channel_src1"
+        else:
+            srcPath = inFilePath
 
-    for case in caseList:
-        if "--input_path" not in sys.argv:
-            if case == "3":
-                srcPath = scriptPath + "/../TEST_AUDIO_FILES/three_sample_multi_channel_src1"
-            else:
-                srcPath = inFilePath
-        if case not in supportedCaseList:
-            continue
-
-        run_unit_test(srcPath, case, numRuns, testType, batchSize, outFilePath)
-else:
-    for case in caseList:
-        if "--input_path" not in sys.argv:
-            if case == "3":
-                srcPath = scriptPath + "/../TEST_AUDIO_FILES/three_sample_multi_channel_src1"
-            else:
-                srcPath = inFilePath
-        if case not in supportedCaseList:
-            continue
-
-        run_performance_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath)
+    if case not in supportedCaseList:
+        continue
+    run_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath)
 
 # print the results of qa tests
 nonQACaseList = [] # Add cases present in supportedCaseList, but without QA support
@@ -215,7 +197,7 @@ if testType == 0:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
-        print("---------------------------------- Results of QA Test - Tensor_host_audio -----------------------------------\n")
+        print("---------------------------------- Results of QA Test - Tensor_audio_host -----------------------------------\n")
         print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList)
 
 # Performance tests
