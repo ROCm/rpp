@@ -358,6 +358,10 @@ int main(int argc, char **argv)
     if(testCase == 46)
         CHECK(hipHostMalloc(&intensity, batchSize * sizeof(Rpp32f)));
 
+    RpptChannelOffsets *rgbOffsets;
+    if(testCase == 35)
+        CHECK_RETURN_STATUS (hipHostMalloc (&rgbOffsets, batchSize * sizeof(RpptChannelOffsets)));
+
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
     for(int iterCount = 0; iterCount < noOfIterations; iterCount++)
@@ -715,8 +719,6 @@ int main(int argc, char **argv)
                 case 35:
                 {
                     testCaseName = "glitch";
-                    RpptChannelOffsets *rgbOffsets;
-                    CHECK(hipHostMalloc (&rgbOffsets, batchSize * sizeof(RpptChannelOffsets)));
 
                     for (i = 0; i < batchSize; i++)
                     {
@@ -733,8 +735,6 @@ int main(int argc, char **argv)
                         rppt_glitch_gpu(d_input, srcDescPtr, d_output, dstDescPtr, rgbOffsets, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
-
-                    CHECK(hipHostFree(rgbOffsets));
 
                     break;
                 }
@@ -1316,6 +1316,8 @@ int main(int argc, char **argv)
         CHECK(hipHostFree(cropRoi));
         CHECK(hipHostFree(patchRoi));
     }
+    if(testCase == 35)
+        CHECK_RETURN_STATUS(hipHostFree(rgbOffsets));
     if (reductionTypeCase)
         CHECK(hipHostFree(reductionFuncResultArr));
     free(input);

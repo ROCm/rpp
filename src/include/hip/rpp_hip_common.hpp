@@ -2514,26 +2514,6 @@ __device__ __forceinline__ void rpp_hip_interpolate8_nearest_neighbor_pln1(T *sr
     rpp_hip_interpolate1_nearest_neighbor_pln1(srcPtr, srcStrideH, locPtrSrc_f16->f1[7], locPtrSrc_f16->f1[15], roiPtrSrc_i4, &(dst_f8->f1[7]));
 }
 
-template <typename T>
-__device__ __forceinline__ void rpp_hip_load1_glitch(T *srcPtr, uint srcStrideH, float locSrcX, float locSrcY, int4 *roiPtrSrc_i4, float *dst, int channelStride, int chn)
-{
-    int srcIdx = locSrcY * srcStrideH + locSrcX * channelStride + chn;
-    rpp_hip_interpolate1_nearest_neighbor_load_pln1(srcPtr + srcIdx, dst);
-}
-
-template <typename T>
-__device__ __forceinline__ void rpp_hip_load8_glitch(T *srcPtr, uint srcStrideH, d_float16 *locPtrSrc_f16, int4 *roiPtrSrc_i4, d_float8 *dst_f8, int channelStride, int chn)
-{
-    rpp_hip_load1_glitch(srcPtr, srcStrideH, locPtrSrc_f16->f1[0], locPtrSrc_f16->f1[ 8], roiPtrSrc_i4, &(dst_f8->f1[0]), channelStride, chn);
-    rpp_hip_load1_glitch(srcPtr, srcStrideH, locPtrSrc_f16->f1[1], locPtrSrc_f16->f1[ 9], roiPtrSrc_i4, &(dst_f8->f1[1]), channelStride, chn);
-    rpp_hip_load1_glitch(srcPtr, srcStrideH, locPtrSrc_f16->f1[2], locPtrSrc_f16->f1[10], roiPtrSrc_i4, &(dst_f8->f1[2]), channelStride, chn);
-    rpp_hip_load1_glitch(srcPtr, srcStrideH, locPtrSrc_f16->f1[3], locPtrSrc_f16->f1[11], roiPtrSrc_i4, &(dst_f8->f1[3]), channelStride, chn);
-    rpp_hip_load1_glitch(srcPtr, srcStrideH, locPtrSrc_f16->f1[4], locPtrSrc_f16->f1[12], roiPtrSrc_i4, &(dst_f8->f1[4]), channelStride, chn);
-    rpp_hip_load1_glitch(srcPtr, srcStrideH, locPtrSrc_f16->f1[5], locPtrSrc_f16->f1[13], roiPtrSrc_i4, &(dst_f8->f1[5]), channelStride, chn);
-    rpp_hip_load1_glitch(srcPtr, srcStrideH, locPtrSrc_f16->f1[6], locPtrSrc_f16->f1[14], roiPtrSrc_i4, &(dst_f8->f1[6]), channelStride, chn);
-    rpp_hip_load1_glitch(srcPtr, srcStrideH, locPtrSrc_f16->f1[7], locPtrSrc_f16->f1[15], roiPtrSrc_i4, &(dst_f8->f1[7]), channelStride, chn);
-}
-
 // d_float24 nearest neighbor interpolation in pln3
 
 template <typename T>
