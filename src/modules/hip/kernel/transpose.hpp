@@ -8,7 +8,7 @@ __global__ void transpose_generic_hip_tensor(T *srcPtr,
                                              T *dstPtr,
                                              uint *dstStrides,
                                              uint *dstDims,
-                                             uint dstNumDims,
+                                             uint tensorDims,
                                              uint *permTensor)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -18,7 +18,8 @@ __global__ void transpose_generic_hip_tensor(T *srcPtr,
         return;
 
     int maxLength = dstStrides[0];
-    int xDiff = maxLength - (maxLength & ~7);    // difference between roiWidth and (alignedLength = maxLength & ~7)
+    int xDiff = maxLength - (maxLength & ~7);    // difference between maxLength and (alignedLength = maxLength & ~7)
+
     // Move dstIdx and srcIdx to start of given input tensor
     uint dstIdx = (id_y * *dstStrides++);
     uint srcIdx = (id_y * *srcStrides++);
@@ -29,34 +30,36 @@ __global__ void transpose_generic_hip_tensor(T *srcPtr,
     srcIdxs.ui4[0] = srcIdxs.ui4[1] = make_uint4(srcIdx, srcIdx, srcIdx, srcIdx);
 
     // Compute 8 dstCoords given id_x
-    for (int i = 0; i < dstNumDims; i++)
+    for (int i = 0; i < tensorDims; i++)
     {
         dstCoords[i].ui4[0] = (idx0123 / dstStrides[i]) % dstDims[i];
         dstCoords[i].ui4[1] = (idx4567 / dstStrides[i]) % dstDims[i];
     }
+
     // Compute corresponding 8 srcIdxs given id_x
-    for (int i = 0; i < dstNumDims; i++)
+    for (int i = 0; i < tensorDims; i++)
     {
         uint4 srcStrides_ui4 = static_cast<uint4>(srcStrides[permTensor[permTensor[i]]]);
         srcIdxs.ui4[0] += (dstCoords[permTensor[i]].ui4[0] * srcStrides_ui4);
         srcIdxs.ui4[1] += (dstCoords[permTensor[i]].ui4[1] * srcStrides_ui4);
         dstIdx += (dstCoords[i].ui1[0] * dstStrides[i]);
     }
+
     // Move srcIdx to access next input tensor once id_x goes beyond present tensor
     if((id_x + 8) > maxLength)
         for(int i = xDiff; i < 8; i++)
             srcIdxs.ui1[i] += maxLength;
 
+    // Load corresponding 8 src pixels from computed src idx values
     d_float8 dst_f8;
-    dst_f8.f1[0] = (float)srcPtr[srcIdxs.ui1[0]]; // load corresponding 8 src pixels
-    dst_f8.f1[1] = (float)srcPtr[srcIdxs.ui1[1]];
-    dst_f8.f1[2] = (float)srcPtr[srcIdxs.ui1[2]];
-    dst_f8.f1[3] = (float)srcPtr[srcIdxs.ui1[3]];
-    dst_f8.f1[4] = (float)srcPtr[srcIdxs.ui1[4]];
-    dst_f8.f1[5] = (float)srcPtr[srcIdxs.ui1[5]];
-    dst_f8.f1[6] = (float)srcPtr[srcIdxs.ui1[6]];
-    dst_f8.f1[7] = (float)srcPtr[srcIdxs.ui1[7]];
-
+    dst_f8.f1[0] = static_cast<float>(srcPtr[srcIdxs.ui1[0]]);
+    dst_f8.f1[1] = static_cast<float>(srcPtr[srcIdxs.ui1[1]]);
+    dst_f8.f1[2] = static_cast<float>(srcPtr[srcIdxs.ui1[2]]);
+    dst_f8.f1[3] = static_cast<float>(srcPtr[srcIdxs.ui1[3]]);
+    dst_f8.f1[4] = static_cast<float>(srcPtr[srcIdxs.ui1[4]]);
+    dst_f8.f1[5] = static_cast<float>(srcPtr[srcIdxs.ui1[5]]);
+    dst_f8.f1[6] = static_cast<float>(srcPtr[srcIdxs.ui1[6]]);
+    dst_f8.f1[7] = static_cast<float>(srcPtr[srcIdxs.ui1[7]]);
     rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
 }
 
@@ -76,11 +79,14 @@ RppStatus hip_exec_transpose_tensor(T *srcPtr,
         copyInput *= (permTensor[i] == i);
 
     if (copyInput)
-        hipMemcpy(dstPtr, srcPtr, handle.GetBatchSize() * dstGenericDescPtr->strides[0] * sizeof(T), hipMemcpyDeviceToDevice);
+    {
+        CHECK_RETURN_STATUS(hipMemcpyAsync(dstPtr, srcPtr, dstGenericDescPtr->dims[0] * dstGenericDescPtr->strides[0] * sizeof(T), hipMemcpyDeviceToDevice, handle.GetStream()));
+        hipStreamSynchronize(handle.GetStream());
+    }
     else
     {
         int globalThreads_x = (dstGenericDescPtr->strides[0] + 7) >> 3;
-        int globalThreads_y = handle.GetBatchSize();
+        int globalThreads_y = dstGenericDescPtr->dims[0];
         int globalThreads_z = 1;
 
         hipLaunchKernelGGL(transpose_generic_hip_tensor,
