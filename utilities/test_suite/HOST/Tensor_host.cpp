@@ -570,9 +570,7 @@ int main(int argc, char **argv)
                             Rpp32f shotNoiseFactorTensor[batchSize];
                             Rpp32u seed = 1255459;
                             for (i = 0; i < batchSize; i++)
-                            {
                                 shotNoiseFactorTensor[i] = 80.0f;
-                            }
 
                             startWallTime = omp_get_wtime();
                             startCpuTime = clock();
