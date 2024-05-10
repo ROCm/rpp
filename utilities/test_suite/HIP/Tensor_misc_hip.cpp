@@ -102,7 +102,7 @@ int main(int argc, char **argv)
 
     // read input data
     if(qaMode)
-        read_data(inputF32, nDim, 0, scriptPath);
+        read_data(inputF32, nDim, 0, scriptPath, funcName);
     else
     {
         std::srand(0);
@@ -127,6 +127,7 @@ int main(int argc, char **argv)
     Rpp32f *meanTensorCPU = nullptr, *stdDevTensorCPU = nullptr;
     double startWallTime, endWallTime;
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0, wallTime = 0;
+    string testCaseName;
 
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning %s %d times (each time with a batch size of %d) and computing mean statistics...", func.c_str(), numRuns, batchSize);
@@ -136,6 +137,7 @@ int main(int argc, char **argv)
         {
             case 0:
             {
+                testCaseName  = "transpose";
                 fill_perm_values(nDim, permTensor, qaMode);
 
                 for(int i = 1; i <= nDim; i++)
@@ -149,6 +151,7 @@ int main(int argc, char **argv)
             }
             case 1:
             {
+                testCaseName  = "normalize";
                 float scale = 1.0;
                 float shift = 0.0;
 
@@ -195,7 +198,7 @@ int main(int argc, char **argv)
                     CHECK_RETURN_STATUS(hipMemcpy(outputF32, d_outputF32, bufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
                     CHECK_RETURN_STATUS(hipDeviceSynchronize());
                     bool externalMeanStd = !computeMeanStddev; // when mean and stddev is passed from user
-                    compare_output(outputF32, nDim, batchSize, bufferSize, dst, func, axisMask, scriptPath, externalMeanStd);
+                    compare_output(outputF32, nDim, batchSize, bufferSize, dst, func, testCaseName, axisMask, scriptPath, externalMeanStd);
                 }
                 break;
             }

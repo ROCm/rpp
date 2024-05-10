@@ -46,37 +46,34 @@ void compute_strides(RpptGenericDescPtr descriptorPtr)
     }
 }
 
-string get_path(Rpp32u nDim, Rpp32u readType, string scriptPath, bool isMeanStd = false)
+string get_path(Rpp32u nDim, Rpp32u readType, string scriptPath, string testCase, bool isMeanStd = false)
 {
-    string folderName, suffix;
+    string folderPath, suffix;
     if(readType == 0)
     {
-        folderName = "input";
-        if(isMeanStd)
-            suffix = "mean_std";
-        else
-            suffix = "input";
+        suffix = (isMeanStd) ? "mean_std" : "input";
+        folderPath = "/../TEST_MISC_FILES/";
     }
     else if(readType == 1)
     {
-        folderName = "output";
-        suffix = "output";
+        suffix = (isMeanStd) ? "mean_std" : "output";
+        folderPath = "/../REFERENCE_OUTPUTS_MISC/" + testCase + "/";
     }
 
     string fileName = std::to_string(nDim) + "d_" + suffix + ".bin";
-    string finalPath = scriptPath + "/../NORMALIZE/" + folderName + "/" + fileName;
+    string finalPath = scriptPath + folderPath + fileName;
     return finalPath;
 }
 
-void read_data(Rpp32f *data, Rpp32u nDim, Rpp32u readType, string scriptPath, bool isMeanStd = false)
+void read_data(Rpp32f *data, Rpp32u nDim, Rpp32u readType, string scriptPath, string testCase, bool isMeanStd = false)
 {
     if(nDim != 2 && nDim != 3)
     {
         std::cout<<"\nGolden Inputs / Outputs are generated only for 2D/3D data"<<std::endl;
         exit(0);
     }
-    string refPath = get_path(nDim, readType, scriptPath, isMeanStd);
-    read_bin_file(refPath, data);
+    string dataPath = get_path(nDim, readType, scriptPath, testCase, isMeanStd);
+    read_bin_file(dataPath, data);
 }
 
 // Fill the starting indices and length of ROI values
@@ -266,7 +263,7 @@ void fill_mean_stddev_values(Rpp32u nDim, Rpp32u size, Rpp32f *meanTensor,
         }
         std::vector<Rpp32f> paramBuf(numValues * 2);
         Rpp32f *data = paramBuf.data();
-        read_data(data, nDim, 0, scriptPath, true);
+        read_data(data, nDim, 0, scriptPath, "normalize", true);
         memcpy(meanTensor, data + paramStride, size * sizeof(Rpp32f));
         memcpy(stdDevTensor, data + numValues + paramStride, size * sizeof(Rpp32f));
     }
@@ -322,21 +319,21 @@ void fill_perm_values(Rpp32u nDim, Rpp32u *permTensor, bool qaMode)
     }
 }
 
-Rpp32u get_bin_size(Rpp32u nDim, Rpp32u readType, string scriptPath)
+Rpp32u get_bin_size(Rpp32u nDim, Rpp32u readType, string scriptPath, string testCase)
 {
-    string refFile = get_path(nDim, readType, scriptPath);
+    string refFile = get_path(nDim, readType, scriptPath, testCase);
     std::ifstream filestream(refFile, ios_base::in | ios_base::binary);
     filestream.seekg(0, ios_base::end);
     Rpp32u filesize = filestream.tellg();
     return filesize;
 }
 
-void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize, Rpp32u bufferLength,
-                    string dst, string funcName, int axisMask, string scriptPath, bool isMeanStd = false)
+void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize, Rpp32u bufferLength, string dst,
+                    string funcName, string testCase, int axisMask, string scriptPath, bool isMeanStd = false)
 {
-    Rpp32u goldenOutputLength = get_bin_size(nDim, 1, scriptPath);
+    Rpp32u goldenOutputLength = get_bin_size(nDim, 1, scriptPath, testCase);
     Rpp32f *refOutput = static_cast<Rpp32f *>(calloc(goldenOutputLength, 1));
-    read_data(refOutput, nDim, 1, scriptPath);
+    read_data(refOutput, nDim, 1, scriptPath, testCase);
     int meanStdDevOutputStride = 0;
     if(isMeanStd)
         meanStdDevOutputStride = goldenOutputLength / (2 * sizeof(Rpp32f));
