@@ -325,6 +325,9 @@ RppStatus transpose_f32_f32_host_tensor(Rpp32f *srcPtr,
                     Rpp32u alignedLength = (bufferLength / vectorIncrement) * vectorIncrement;
                     Rpp32f *srcPtr0 = srcPtrTemp;
                     Rpp32f *dstPtr0 = dstPtrTemp;
+                    Rpp32u stridesIncrement[8] = {0, srcGenericDescPtr->strides[1], 2 * srcGenericDescPtr->strides[1], 3 * srcGenericDescPtr->strides[1],
+                                                  4 * srcGenericDescPtr->strides[1], 5 * srcGenericDescPtr->strides[1], 6 * srcGenericDescPtr->strides[1], 7 * srcGenericDescPtr->strides[1]};
+                    Rpp32u srcIncrement = vectorIncrement * srcGenericDescPtr->strides[1];
                     for(int i = 0; i < length[perm[0]]; i++)
                     {
                         Rpp32f *srcPtr1 = srcPtr0;
@@ -341,16 +344,10 @@ RppStatus transpose_f32_f32_host_tensor(Rpp32f *srcPtr,
                                 Rpp32u vectorLoopCount = 0;
                                 for( ; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                                 {
-                                    __m256 pSrc = _mm256_setr_ps(*srcPtr3,
-                                                                 *(srcPtr3 + srcGenericDescPtr->strides[1]),
-                                                                 *(srcPtr3 + 2 * srcGenericDescPtr->strides[1]),
-                                                                 *(srcPtr3 + 3 * srcGenericDescPtr->strides[1]),
-                                                                 *(srcPtr3 + 4 * srcGenericDescPtr->strides[1]),
-                                                                 *(srcPtr3 + 5 * srcGenericDescPtr->strides[1]),
-                                                                 *(srcPtr3 + 6 * srcGenericDescPtr->strides[1]),
-                                                                 *(srcPtr3 + 7 * srcGenericDescPtr->strides[1]));
+                                    __m256 pSrc = _mm256_setr_ps(srcPtr3[stridesIncrement[0]], srcPtr3[stridesIncrement[1]], srcPtr3[stridesIncrement[2]], srcPtr3[stridesIncrement[3]],
+                                                                 srcPtr3[stridesIncrement[4]], srcPtr3[stridesIncrement[5]], srcPtr3[stridesIncrement[6]], srcPtr3[stridesIncrement[7]]);
                                     rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtr3, &pSrc);
-                                    srcPtr3 += vectorIncrement * srcGenericDescPtr->strides[1];
+                                    srcPtr3 += srcIncrement;
                                     dstPtr3 += vectorIncrement;
                                 }
                                 for( ; vectorLoopCount < bufferLength; vectorLoopCount++)

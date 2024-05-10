@@ -286,6 +286,7 @@ void fill_perm_values(Rpp32u nDim, Rpp32u *permTensor, bool qaMode, int permOrde
         {
             case 2:
             {
+                // HW->WH
                 permTensor[0] = 1;
                 permTensor[1] = 0;
                 break;
