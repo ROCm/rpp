@@ -334,15 +334,21 @@ void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize, Rpp32u buf
     Rpp32u goldenOutputLength = get_bin_size(nDim, 1, scriptPath, testCase);
     Rpp32f *refOutput = static_cast<Rpp32f *>(calloc(goldenOutputLength, 1));
     read_data(refOutput, nDim, 1, scriptPath, testCase);
-    int meanStdDevOutputStride = 0;
-    if(isMeanStd)
-        meanStdDevOutputStride = goldenOutputLength / (2 * sizeof(Rpp32f));
-    int axisMaskStride = (axisMask - 1) * bufferLength;
+    int subVariantStride = 0;
+    if (testCase == "normalize")
+    {
+        int meanStdDevOutputStride = 0, axisMaskStride = 0;
+        if(isMeanStd)
+            meanStdDevOutputStride = goldenOutputLength / (2 * sizeof(Rpp32f));
+        axisMaskStride = (axisMask - 1) * bufferLength;
+        subVariantStride = meanStdDevOutputStride + axisMaskStride;
+    }
+
     int sampleLength = bufferLength / batchSize;
     int fileMatch = 0;
     for(int i = 0; i < batchSize; i++)
     {
-        Rpp32f *ref = refOutput + meanStdDevOutputStride + axisMaskStride + i * sampleLength;
+        Rpp32f *ref = refOutput + subVariantStride + i * sampleLength;
         Rpp32f *out = outputF32 + i * sampleLength;
         int cnt = 0;
         for(int j = 0; j < sampleLength; j++)

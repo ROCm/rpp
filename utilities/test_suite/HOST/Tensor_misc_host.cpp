@@ -111,6 +111,8 @@ int main(int argc, char **argv)
     rppCreateWithBatchSize(&handle, batchSize, numThreads);
 
     Rpp32f *meanTensor = nullptr, *stdDevTensor = nullptr;
+    bool externalMeanStd = false;
+
     double startWallTime, endWallTime;
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0, wallTime = 0;
     string testCaseName;
@@ -144,6 +146,7 @@ int main(int argc, char **argv)
                 // computeMeanStddev set to 3 means both mean and stddev should be computed internally.
                 // Wherein 0th bit used to represent computeMean and 1st bit for computeStddev.
                 Rpp8u computeMeanStddev = 3;
+                externalMeanStd = !computeMeanStddev; // when mean and stddev is passed from user
 
                 Rpp32u size = 1; // length of mean and stddev tensors differ based on axisMask and nDim
                 Rpp32u maxSize = 1;
@@ -168,12 +171,6 @@ int main(int argc, char **argv)
                 startWallTime = omp_get_wtime();
                 rppt_normalize_host(inputF32, srcDescriptorPtrND, outputF32, dstDescriptorPtrND, axisMask, meanTensor, stdDevTensor, computeMeanStddev, scale, shift, roiTensor, handle);
 
-                // compare outputs if qaMode is true
-                if(qaMode)
-                {
-                    bool externalMeanStd = !computeMeanStddev; // when mean and stddev is passed from user
-                    compare_output(outputF32, nDim, batchSize, bufferSize, dst, func, testCaseName, axisMask, scriptPath, externalMeanStd);
-                }
                 break;
             }
             default:
@@ -190,7 +187,11 @@ int main(int argc, char **argv)
         avgWallTime += wallTime;
     }
 
-    if(!qaMode)
+    if(qaMode)
+    {
+        compare_output(outputF32, nDim, batchSize, bufferSize, dst, func, testCaseName, axisMask, scriptPath, externalMeanStd);
+    }
+    else
     {
         maxWallTime *= 1000;
         minWallTime *= 1000;
