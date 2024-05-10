@@ -607,8 +607,8 @@ RppStatus rppt_transpose_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDesc
  * \param [in] srcGenericDescPtr source tensor descriptor
  * \param [out] dstPtr source tensor in HIP memory
  * \param [in] dstGenericDescPtr destination tensor descriptor
- * \param [in] permTensor permutation tensor for transpose operation
- * \param [in] roiGenericPtrSrc ROI data for each element in source tensor (tensor of batchSize RpptRoiGeneric values)
+ * \param [in] permTensor permutation tensor for transpose operation in pinned memory
+ * \param [in] roiTensor ROI data for each element in source tensor (tensor of batchSize * number of dimensions * 2 values)
  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
