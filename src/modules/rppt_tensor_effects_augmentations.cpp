@@ -955,7 +955,7 @@ RppStatus rppt_spatter_gpu(RppPtr_t srcPtr,
 {
 #ifdef HIP_COMPILE
     RpptROI roiTensorPtrSrcHost[dstDescPtr->n];
-    hipMemcpy(roiTensorPtrSrcHost, roiTensorPtrSrc, dstDescPtr->n * sizeof(RpptROI), hipMemcpyDeviceToHost);
+    CHECK_RETURN_STATUS(hipMemcpy(roiTensorPtrSrcHost, roiTensorPtrSrc, dstDescPtr->n * sizeof(RpptROI), hipMemcpyDeviceToHost));
     if (roiType == RpptRoiType::XYWH)
     {
         for(int i = 0; i < dstDescPtr->n; i++)
@@ -1071,7 +1071,7 @@ RppStatus rppt_salt_and_pepper_noise_gpu(RppPtr_t srcPtr,
 
     RpptXorwowState *d_xorwowInitialStatePtr;
     d_xorwowInitialStatePtr = (RpptXorwowState *) rpp::deref(rppHandle).GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
-    hipMemcpy(d_xorwowInitialStatePtr, &xorwowInitialState, sizeof(RpptXorwowState), hipMemcpyHostToDevice);
+    CHECK_RETURN_STATUS(hipMemcpy(d_xorwowInitialStatePtr, &xorwowInitialState, sizeof(RpptXorwowState), hipMemcpyHostToDevice));
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
@@ -1156,7 +1156,7 @@ RppStatus rppt_shot_noise_gpu(RppPtr_t srcPtr,
 
     RpptXorwowStateBoxMuller *d_xorwowInitialStatePtr;
     d_xorwowInitialStatePtr = (RpptXorwowStateBoxMuller *) rpp::deref(rppHandle).GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
-    hipMemcpy(d_xorwowInitialStatePtr, &xorwowInitialState, sizeof(RpptXorwowStateBoxMuller), hipMemcpyHostToDevice);
+    CHECK_RETURN_STATUS(hipMemcpy(d_xorwowInitialStatePtr, &xorwowInitialState, sizeof(RpptXorwowStateBoxMuller), hipMemcpyHostToDevice));
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
@@ -1513,9 +1513,8 @@ RppStatus rppt_ricap_gpu(RppPtr_t srcPtr,
 #ifdef HIP_COMPILE
     if(srcDescPtr->n == 1) // BatchSize should always be greater than 1
         return RPP_ERROR;
-    Rpp32u* permutationHipTensor;
-    hipMalloc(&permutationHipTensor, sizeof(Rpp32u)* 4 * dstDescPtr->n);
-    hipMemcpy(permutationHipTensor, permutationTensor, sizeof(Rpp32u)* 4 * dstDescPtr->n, hipMemcpyHostToDevice);
+    Rpp32u *permutationHipTensor = reinterpret_cast<Rpp32u*>(rpp::deref(rppHandle).GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
+    CHECK_RETURN_STATUS(hipMemcpy(permutationHipTensor, permutationTensor, sizeof(Rpp32u)* 4 * dstDescPtr->n, hipMemcpyHostToDevice));
 
     if ((check_roi_out_of_bounds(&roiPtrInputCropRegion[0],srcDescPtr,roiType) == -1)
     || (check_roi_out_of_bounds(&roiPtrInputCropRegion[1],srcDescPtr,roiType) == -1)
