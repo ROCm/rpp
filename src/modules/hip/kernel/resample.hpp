@@ -20,6 +20,7 @@ __global__ void resample_1channel_hip_tensor(float *srcPtr,
     int inBlockRounded = static_cast<int>(inBlockRaw);
     float inPos = inBlockRaw - inBlockRounded;
     float fscale = scale;
+    float *inBlockPtr = srcPtr + inBlockRounded;
 
     for (int outPos = outBlock; outPos < blockEnd; outPos++, inPos += fscale)
     {
@@ -37,7 +38,7 @@ __global__ void resample_1channel_hip_tensor(float *srcPtr,
         for (; locInWindow < loc1; locInWindow++, locBegin++)
         {
             float w = window(locBegin);
-            accum += srcPtr[inBlockRounded + locInWindow] * w;
+            accum += inBlockPtr[locInWindow] * w;
         }
         dstPtr[outPos] = accum;
     }
@@ -65,7 +66,7 @@ __global__ void resample_nchannel_hip_tensor(float *srcPtr,
     int inBlockRounded = static_cast<int>(inBlockRaw);
     float inPos = inBlockRaw - inBlockRounded;
     float fscale = scale;
-    float *inBlockPtr = srcPtr + (inBlockRounded * numChannels);
+    float *inBlockPtr = srcPtr + (inBlockRounded * channels);
     for (int outPos = outBlock; outPos < blockEnd; outPos++, inPos += fscale)
     {
         int loc0, loc1;
