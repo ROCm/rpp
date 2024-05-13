@@ -142,6 +142,10 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostMalloc(&detectionLength, batchSize * sizeof(Rpp32f)));
     }
 
+    // declare pointer of type RpptResamplingWindow used for resample augmentation
+    RpptResamplingWindow *window;
+    Rpp64u resampleBufferSize;
+
     // run case-wise RPP API and measure time
     rppHandle_t handle;
     hipStream_t stream;
@@ -185,7 +189,6 @@ int main(int argc, char **argv)
                     Rpp32f quality = 50.0f;
                     Rpp32s lobes = std::round(0.007 * quality * quality - 0.09 * quality + 3);
                     Rpp32s lookupSize = lobes * 64 + 1;
-                    RpptResamplingWindow *window;
                     CHECK_RETURN_STATUS(hipHostMalloc(&window, sizeof(RpptResamplingWindow)));
                     CHECK_RETURN_STATUS(hipHostMalloc(&window->lookup, (lookupSize + 5) * sizeof(Rpp32f)));
                     windowed_sinc(*window, lookupSize, lobes);
@@ -194,30 +197,15 @@ int main(int argc, char **argv)
                     dstDescPtr->strides.nStride = dstDescPtr->c * dstDescPtr->w * dstDescPtr->h;
 
                     // Set buffer sizes for dst
-                    Rpp64u resampleBufferSize = (Rpp64u)dstDescPtr->h * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
+                    resampleBufferSize = (Rpp64u)dstDescPtr->h * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
 
                     // Initialize hip buffers for output based on resampleBufferSize
-                    void *d_resampleOutputf32;
-                    CHECK_RETURN_STATUS(hipMalloc(&d_resampleOutputf32, resampleBufferSize * sizeof(Rpp32f)));
-                    if(!d_resampleOutputf32)
-                    {
-                        std::cout << "Unable to reallocate memory for output" << std::endl;
-                        break;
-                    }
+                    CHECK_RETURN_STATUS(hipFree(d_outputf32));
+                    CHECK_RETURN_STATUS(hipMalloc(&d_outputf32, resampleBufferSize * sizeof(Rpp32f)));
 
                     startWallTime = omp_get_wtime();
-                    rppt_resample_gpu(d_inputf32, srcDescPtr, d_resampleOutputf32, dstDescPtr, inRateTensor, outRateTensor, srcDimsTensor, *window, handle);
+                    rppt_resample_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, inRateTensor, outRateTensor, srcDimsTensor, *window, handle);
 
-                    // QA mode - verify outputs with golden outputs. Below code doesn’t run for performance tests
-                    if (testType == 0)
-                    {
-                        outputf32 = (Rpp32f *)realloc(outputf32, sizeof(Rpp32f) * resampleBufferSize);
-                        CHECK_RETURN_STATUS(hipMemcpy(outputf32, d_resampleOutputf32, resampleBufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
-                    }
-
-                    CHECK_RETURN_STATUS(hipHostFree(window->lookup));
-                    CHECK_RETURN_STATUS(hipHostFree(window));
-                    CHECK_RETURN_STATUS(hipFree(d_resampleOutputf32));
                     break;
                 }
                 default:
@@ -244,8 +232,17 @@ int main(int argc, char **argv)
         // QA mode - verify outputs with golden outputs. Below code doesn’t run for performance tests
         if (testType == 0)
         {
-            if(testCase != 6)
+            if (testCase == 6)
+            {
+                outputf32 = (Rpp32f *)realloc(outputf32, sizeof(Rpp32f) * resampleBufferSize);
+                CHECK_RETURN_STATUS(hipMemcpy(outputf32, d_outputf32, resampleBufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
+            }
+            else
+            {
                 CHECK_RETURN_STATUS(hipMemcpy(outputf32, d_outputf32, oBufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
+            }
+
+
             /* Run only if testCase is not 0
             For testCase 0 verify_non_silent_region_detection function is used for QA testing */
             if (testCase != 0)
@@ -295,5 +292,10 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostFree(detectedIndex));
     if (detectionLength != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(detectionLength));
+    if (testCase == 6)
+    {
+        CHECK_RETURN_STATUS(hipHostFree(window->lookup));
+        CHECK_RETURN_STATUS(hipHostFree(window));
+    }
     return 0;
 }
