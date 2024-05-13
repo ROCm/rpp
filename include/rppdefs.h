@@ -61,6 +61,12 @@ SOFTWARE.
   } \
 } while (0)
 
+#ifdef HIP_COMPILE
+#define RPP_HOST_DEVICE __host__ __device__
+#else
+#define RPP_HOST_DEVICE
+#endif
+
 const float ONE_OVER_6 = 1.0f / 6;
 const float ONE_OVER_3 = 1.0f / 3;
 const float ONE_OVER_255 = 1.0f / 255;
@@ -681,23 +687,14 @@ typedef struct GenericFilter
  */
 typedef struct RpptResamplingWindow
 {
-    inline void input_range(Rpp32f x, Rpp32s *loc0, Rpp32s *loc1)
+    inline RPP_HOST_DEVICE void input_range(Rpp32f x, Rpp32s *loc0, Rpp32s *loc1)
     {
         Rpp32s xc = std::ceil(x);
         *loc0 = xc - lobes;
         *loc1 = xc + lobes;
     }
 
-#ifdef HIP_COMPILE
-    __device__ void input_range(float x, int *loc0, int *loc1)
-    {
-        int xc = std::ceil(x);
-        *loc0 = xc - lobes;
-        *loc1 = xc + lobes;
-    }
-#endif
-
-    inline Rpp32f operator()(Rpp32f x)
+    inline RPP_HOST_DEVICE Rpp32f operator()(Rpp32f x)
     {
         Rpp32f locRaw = x * scale + center;
         Rpp32s locFloor = std::floor(locRaw);
@@ -707,19 +704,6 @@ typedef struct RpptResamplingWindow
         Rpp32f next = lookup[locFloor + 1];
         return current + weight * (next - current);
     }
-
-#ifdef HIP_COMPILE
-    __device__ float operator()(float x)
-    {
-        float locRaw = x * scale + center;
-        int locFloor = std::floor(locRaw);
-        float weight = locRaw - locFloor;
-        locFloor = std::max(std::min(locFloor, lookupSize - 2), 0);
-        float current = lookup[locFloor];
-        float next = lookup[locFloor + 1];
-        return current + weight * (next - current);
-    }
-#endif
 
     inline __m128 operator()(__m128 x)
     {
