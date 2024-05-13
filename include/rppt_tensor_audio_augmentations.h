@@ -36,9 +36,6 @@ SOFTWARE.
  * @{
  */
 
-/*! \brief RPP maximum channels in audio tensor \ingroup group_rppdefs \page subpage_rppt */
-#define RPPT_MAX_CHANNELS   ( 16 )
-
 #include "rpp.h"
 #include "rppdefs.h"
 #ifdef __cplusplus

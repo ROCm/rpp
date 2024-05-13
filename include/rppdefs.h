@@ -52,6 +52,8 @@ SOFTWARE.
 #define RPP_MAX_8U      ( 255 )
 /*! \brief RPP maximum dimensions in tensor \ingroup group_rppdefs \page subpage_rppt */
 #define RPPT_MAX_DIMS   ( 5 )
+/*! \brief RPP maximum channels in audio tensor \ingroup group_rppdefs \page subpage_rppt */
+#define RPPT_MAX_AUDIO_CHANNELS   ( 16 )
 
 #define CHECK_RETURN_STATUS(x) do { \
   int retval = (x); \

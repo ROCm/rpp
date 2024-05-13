@@ -57,36 +57,36 @@ __global__ void resample_nchannel_hip_tensor(float *srcPtr,
         return;
 
     int blockEnd = std::min(outBlock + static_cast<int>(hipBlockDim_x), outEnd);
+    float tempBuf[RPPT_MAX_AUDIO_CHANNELS] = {0.0f};
+    int length = srcDims.x;
+    int channels = srcDims.y;
+
     double inBlockRaw = outBlock * scale;
     int inBlockRounded = static_cast<int>(inBlockRaw);
     float inPos = inBlockRaw - inBlockRounded;
     float fscale = scale;
-    float tempBuf[RPPT_MAX_CHANNELS] = {0.0f}; // Considering max channels as 3
-
+    float *inBlockPtr = srcPtr + (inBlockRounded * numChannels);
     for (int outPos = outBlock; outPos < blockEnd; outPos++, inPos += fscale)
     {
         int loc0, loc1;
         window.input_range(inPos, &loc0, &loc1);
-
         if (loc0 + inBlockRounded < 0)
             loc0 = -inBlockRounded;
-        if (loc1 + inBlockRounded > srcDims.x)
-            loc1 = srcDims.x - inBlockRounded;
-        int locInWindow = loc0;
-        float locBegin = locInWindow - inPos;
-        int2 ofs_i2 = make_int2(loc0, loc1);
-        ofs_i2 *= (int2)srcDims.y;
-        int idx = inBlockRounded * srcDims.y;
+        if (loc1 + inBlockRounded > length)
+            loc1 = length - inBlockRounded;
 
-        for (int inOfs = ofs_i2.x; inOfs < ofs_i2.y; inOfs += srcDims.y, locBegin++)
+        float locInWindow = loc0 - inPos;
+        int2 offsetLocs_i2 = make_int2(loc0, loc1) * static_cast<int2>(channels);    // offsetted loc0, loc1 values for multi channel case
+        for (int offsetLoc = offsetLocs_i2.x; offsetLoc < offsetLocs_i2.y; offsetLoc += channels, locInWindow++)
         {
-            float w = window(locBegin);
-            for (int c = 0; c < srcDims.y; c++)
-                tempBuf[c] += srcPtr[idx + inOfs + c] * w;
+            float w = window(locInWindow);
+            for (int c = 0; c < channels; c++)
+                tempBuf[c] += inBlockPtr[offsetLoc + c] * w;
         }
-        int dstLoc = outPos * srcDims.y;
-        for (int c = 0; c < srcDims.y; c++)
-            dstPtr[dstLoc + c] = tempBuf[c];
+
+        int dstIdx = outPos * channels;
+        for (int c = 0; c < channels; c++)
+            dstPtr[dstIdx + c] = tempBuf[c];
     }
 }
 
@@ -122,7 +122,7 @@ RppStatus hip_exec_resample_tensor(Rpp32f *srcPtr,
             Rpp32s globalThreads_x = length;
             Rpp32s globalThreads_y = 1;
             Rpp32s globalThreads_z = 1;
-            size_t sharedMemSize = (window.lookupSize + (RPPT_MAX_CHANNELS + 1) * LOCAL_THREADS_X_1DIM) * sizeof(Rpp32f);
+            size_t sharedMemSize = (window.lookupSize + (RPPT_MAX_AUDIO_CHANNELS + 1) * LOCAL_THREADS_X_1DIM) * sizeof(Rpp32f);
             if (numChannels == 1)
             {
                 hipLaunchKernelGGL(resample_1channel_hip_tensor,
@@ -152,7 +152,6 @@ RppStatus hip_exec_resample_tensor(Rpp32f *srcPtr,
                                    window);
             }
         }
-
     }
 
     return RPP_SUCCESS;
