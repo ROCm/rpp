@@ -11,13 +11,6 @@ __global__ void resample_1channel_hip_tensor(float *srcPtr,
                                              RpptResamplingWindow &window)
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
-    extern __shared__ float windowCoeffs_smem[];
-    float *windowCoeffsSh = windowCoeffs_smem;
-    for (int k = hipThreadIdx_x; k < window.lookupSize; k += hipBlockDim_x)
-        windowCoeffsSh[k] = window.lookup[k];
-    __syncthreads();
-    window.lookup = windowCoeffsSh;
-
     int outBlock = id_x * hipBlockDim_x;
     if (outBlock >= outEnd)
         return;
@@ -110,12 +103,12 @@ RppStatus hip_exec_resample_tensor(Rpp32f *srcPtr,
                                    rpp::Handle& handle)
 {
     Rpp32s batchSize = dstDescPtr->n;
-    for(int i = 0; i < batchSize; i++)
+    for(int i = 0, j = 0; i < batchSize; i++, j += 2)
     {
         Rpp32f inRate = inRateTensor[i];
         Rpp32f outRate = outRateTensor[i];
-        Rpp32s srcLength = srcDimsTensor[i * 2];
-        Rpp32s numChannels = srcDimsTensor[i * 2 + 1];
+        Rpp32s srcLength = srcDimsTensor[j];
+        Rpp32s numChannels = srcDimsTensor[j + 1];
         if (inRate == outRate) // No need of Resampling, do a direct memcpy
         {
             CHECK_RETURN_STATUS(hipMemcpyAsync(dstPtr, srcPtr, srcLength * numChannels * sizeof(Rpp32f), hipMemcpyDeviceToDevice, handle.GetStream()));
@@ -125,18 +118,16 @@ RppStatus hip_exec_resample_tensor(Rpp32f *srcPtr,
         {
             Rpp32s outEnd = std::ceil(srcLength * outRate / inRate);
             Rpp64f scale = static_cast<Rpp64f>(inRate) / outRate;
-            Rpp32s block = 256; // 1 << 8
-            Rpp32s length = (outEnd / block) + 1;
+            Rpp32s length = (outEnd / LOCAL_THREADS_X_1DIM) + 1;
             Rpp32s globalThreads_x = length;
             Rpp32s globalThreads_y = 1;
             Rpp32s globalThreads_z = 1;
-            size_t sharedMemSize = (window.lookupSize + (RPPT_MAX_CHANNELS + 1) * block) * sizeof(Rpp32f);
-
+            size_t sharedMemSize = (window.lookupSize + (RPPT_MAX_CHANNELS + 1) * LOCAL_THREADS_X_1DIM) * sizeof(Rpp32f);
             if (numChannels == 1)
             {
                 hipLaunchKernelGGL(resample_1channel_hip_tensor,
-                                   dim3(ceil((float)globalThreads_x/256), ceil((float)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((float)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
-                                   dim3(256, LOCAL_THREADS_Y_1DIM, LOCAL_THREADS_Z_1DIM),
+                                   dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X_1DIM), ceil((float)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((float)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
+                                   dim3(LOCAL_THREADS_X_1DIM, LOCAL_THREADS_Y_1DIM, LOCAL_THREADS_Z_1DIM),
                                    sharedMemSize,
                                    handle.GetStream(),
                                    srcPtr + i * srcDescPtr->strides.nStride,
@@ -149,8 +140,8 @@ RppStatus hip_exec_resample_tensor(Rpp32f *srcPtr,
             else
             {
                 hipLaunchKernelGGL(resample_nchannel_hip_tensor,
-                                   dim3(ceil((float)globalThreads_x/256), ceil((float)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((float)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
-                                   dim3(256, LOCAL_THREADS_Y_1DIM, LOCAL_THREADS_Z_1DIM),
+                                   dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X_1DIM), ceil((float)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((float)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
+                                   dim3(LOCAL_THREADS_X_1DIM, LOCAL_THREADS_Y_1DIM, LOCAL_THREADS_Z_1DIM),
                                    0,
                                    handle.GetStream(),
                                    srcPtr + i * srcDescPtr->strides.nStride,
