@@ -1,17 +1,36 @@
 #include <hip/hip_runtime.h>
 #include "rpp_hip_common.hpp"
 
-// -------------------- Set 0 - resample kernel --------------------
-// Single channel resample support
-__global__ void resample_1channel_hip_tensor(float *srcPtr,
-                                             float *dstPtr,
-                                             int srcLength,
-                                             int outEnd,
-                                             double scale,
-                                             RpptResamplingWindow &window)
+// -------------------- Set 0 - resample kernel device helpers  --------------------
+
+__device__ __forceinline__ float resample_hip_compute(float x, float scale, float center, float *lookup, int lookupSize)
+{
+    float locRaw = x * scale + center;
+    int locFloor = std::floor(locRaw);
+    float weight = locRaw - locFloor;
+    locFloor = std::max(std::min(locFloor, lookupSize - 2), 0);
+    float current = lookup[locFloor];
+    float next = lookup[locFloor + 1];
+    return current + weight * (next - current);
+}
+
+// -------------------- Set 1 - resample kernels --------------------
+
+__global__ void resample_single_channel_hip_tensor(float *srcPtr,
+                                                   float *dstPtr,
+                                                   int srcLength,
+                                                   int outEnd,
+                                                   double scale,
+                                                   RpptResamplingWindow &window)
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int outBlock = id_x * hipBlockDim_x;
+
+    extern __shared__ float windowCoeffs_smem[];
+    for (int k = hipThreadIdx_x; k < window.lookupSize; k += hipBlockDim_x)
+        windowCoeffs_smem[k] = window.lookup[k];
+    __syncthreads();
+
     if (outBlock >= outEnd)
         return;
 
@@ -37,23 +56,28 @@ __global__ void resample_1channel_hip_tensor(float *srcPtr,
 
         for (; locInWindow < loc1; locInWindow++, locBegin++)
         {
-            float w = window(locBegin);
+            float w = resample_hip_compute(locBegin, window.scale, window.center, windowCoeffs_smem, window.lookupSize);
             accum += inBlockPtr[locInWindow] * w;
         }
         dstPtr[outPos] = accum;
     }
 }
 
-// Generic n channel resample support
-__global__ void resample_nchannel_hip_tensor(float *srcPtr,
-                                             float *dstPtr,
-                                             int2 srcDims,
-                                             int outEnd,
-                                             double scale,
-                                             RpptResamplingWindow &window)
+__global__ void resample_multi_channel_hip_tensor(float *srcPtr,
+                                                  float *dstPtr,
+                                                  int2 srcDims,
+                                                  int outEnd,
+                                                  double scale,
+                                                  RpptResamplingWindow &window)
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int outBlock = id_x * hipBlockDim_x;
+
+     extern __shared__ float windowCoeffs_smem[];
+    for (int k = hipThreadIdx_x; k < window.lookupSize; k += hipBlockDim_x)
+        windowCoeffs_smem[k] = window.lookup[k];
+    __syncthreads();
+
     if (outBlock >= outEnd)
         return;
 
@@ -80,7 +104,7 @@ __global__ void resample_nchannel_hip_tensor(float *srcPtr,
         int2 offsetLocs_i2 = make_int2(loc0, loc1) * static_cast<int2>(channels);    // offsetted loc0, loc1 values for multi channel case
         for (int offsetLoc = offsetLocs_i2.x; offsetLoc < offsetLocs_i2.y; offsetLoc += channels, locInWindow++)
         {
-            float w = window(locInWindow);
+            float w = resample_hip_compute(locInWindow, window.scale, window.center, windowCoeffs_smem, window.lookupSize);
             for (int c = 0; c < channels; c++)
                 tempBuf[c] += inBlockPtr[offsetLoc + c] * w;
         }
@@ -91,7 +115,7 @@ __global__ void resample_nchannel_hip_tensor(float *srcPtr,
     }
 }
 
-// -------------------- Set 1 - resample kernels executor --------------------
+// -------------------- Set 2 - resample kernels executor --------------------
 
 RppStatus hip_exec_resample_tensor(Rpp32f *srcPtr,
                                    RpptDescPtr srcDescPtr,
@@ -123,11 +147,12 @@ RppStatus hip_exec_resample_tensor(Rpp32f *srcPtr,
             Rpp32s globalThreads_x = length;
             Rpp32s globalThreads_y = 1;
             Rpp32s globalThreads_z = 1;
-            size_t sharedMemSize = (window.lookupSize + (RPPT_MAX_AUDIO_CHANNELS + 1) * LOCAL_THREADS_X_1DIM) * sizeof(Rpp32f);
+            size_t sharedMemSize = (window.lookupSize * sizeof(Rpp32f));
+
             if (numChannels == 1)
             {
-                hipLaunchKernelGGL(resample_1channel_hip_tensor,
-                                   dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X_1DIM), ceil((float)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((float)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
+                hipLaunchKernelGGL(resample_single_channel_hip_tensor,
+                                   dim3(ceil((float)globalThreads_x), ceil((float)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((float)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
                                    dim3(LOCAL_THREADS_X_1DIM, LOCAL_THREADS_Y_1DIM, LOCAL_THREADS_Z_1DIM),
                                    sharedMemSize,
                                    handle.GetStream(),
@@ -140,7 +165,7 @@ RppStatus hip_exec_resample_tensor(Rpp32f *srcPtr,
             }
             else
             {
-                hipLaunchKernelGGL(resample_nchannel_hip_tensor,
+                hipLaunchKernelGGL(resample_multi_channel_hip_tensor,
                                    dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X_1DIM), ceil((float)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((float)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
                                    dim3(LOCAL_THREADS_X_1DIM, LOCAL_THREADS_Y_1DIM, LOCAL_THREADS_Z_1DIM),
                                    0,

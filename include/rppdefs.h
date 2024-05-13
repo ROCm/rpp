@@ -696,7 +696,7 @@ typedef struct RpptResamplingWindow
         *loc1 = xc + lobes;
     }
 
-    inline RPP_HOST_DEVICE Rpp32f operator()(Rpp32f x)
+    inline Rpp32f operator()(Rpp32f x)
     {
         Rpp32f locRaw = x * scale + center;
         Rpp32s locFloor = std::floor(locRaw);
