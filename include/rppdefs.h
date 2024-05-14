@@ -1044,7 +1044,7 @@ typedef struct
     Rpp64u* dstBatchIndex;
     Rpp32u* inc;
     Rpp32u* dstInc;
-    hipMemRpp32u scratchBuf;
+    hipMemRpp32u scratchBufferPinned;
 } memGPU;
 
 /*! \brief RPP HIP-HOST memory management

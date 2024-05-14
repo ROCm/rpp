@@ -143,8 +143,12 @@ int main(int argc, char **argv)
     }
 
     // declare pointer of type RpptResamplingWindow used for resample augmentation
+    Rpp32f *inRateTensor, *outRateTensor;
     RpptResamplingWindow *window;
     Rpp64u resampleBufferSize;
+
+    CHECK_RETURN_STATUS(hipHostMalloc(&inRateTensor, batchSize * sizeof(Rpp32f)));
+    CHECK_RETURN_STATUS(hipHostMalloc(&outRateTensor, batchSize * sizeof(Rpp32f)));
 
     // run case-wise RPP API and measure time
     rppHandle_t handle;
@@ -170,9 +174,6 @@ int main(int argc, char **argv)
                 case 6:
                 {
                     testCaseName = "resample";
-                    Rpp32f inRateTensor[batchSize];
-                    Rpp32f outRateTensor[batchSize];
-                    Rpp32s srcDimsTensor[batchSize * 2];
 
                     maxDstWidth = 0;
                     for(int i = 0, j = 0; i < batchSize; i++, j += 2)
