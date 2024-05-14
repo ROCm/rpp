@@ -46,6 +46,7 @@ int main(int argc, char **argv)
     string dst = argv[7];
     string scriptPath = argv[8];
     qaMode = (testType == 0);
+    int additionalParam = 1;
 
     if (qaMode && batchSize != 3)
     {
@@ -104,7 +105,7 @@ int main(int argc, char **argv)
 
     // read input data
     if(qaMode)
-        read_data(inputF32, nDim, 0, scriptPath);
+        read_data(inputF32, nDim, 0, scriptPath, funcName);
     else
     {
         std::srand(0);
@@ -117,9 +118,11 @@ int main(int argc, char **argv)
     Rpp32u numThreads = 0;
     rppHandle_t handle;
     rppCreateWithBatchSize(&handle, batchSize, numThreads);
+    bool externalMeanStd = true;
 
     double startWallTime, endWallTime;
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0, wallTime = 0;
+    string testCaseName;
 
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning log %d times (each time with a batch size of %d) and computing mean statistics...", numRuns, batchSize);
@@ -129,12 +132,11 @@ int main(int argc, char **argv)
         {
             case 2:
             {
+                testCaseName  = "log";
+
                 startWallTime = omp_get_wtime();
                 rppt_log_host(inputF32, srcDescriptorPtrND, outputF32, dstDescriptorPtrND, roiTensor, handle);
 
-                // compare outputs if qaMode is true
-                if(qaMode)
-                    compare_output(outputF32, nDim, batchSize, bufferSize, dst, funcName, scriptPath);
                 break;
             }
             default:
@@ -151,7 +153,10 @@ int main(int argc, char **argv)
         avgWallTime += wallTime;
     }
 
-    if(!qaMode)
+    // compare outputs if qaMode is true
+    if(qaMode)
+        compare_output(outputF32, nDim, batchSize, bufferSize, dst, funcName, testCaseName, additionalParam, scriptPath, externalMeanStd);
+    else
     {
         maxWallTime *= 1000;
         minWallTime *= 1000;

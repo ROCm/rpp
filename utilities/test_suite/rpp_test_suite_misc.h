@@ -47,33 +47,35 @@ void compute_strides(RpptGenericDescPtr descriptorPtr)
 }
 
 // Retrieve path for bin file
-string get_path(Rpp32u nDim, Rpp32u readType, string scriptPath, bool isMeanStd = false)
+string get_path(Rpp32u nDim, Rpp32u readType, string scriptPath, string testCase, bool isMeanStd = false)
 {
-    string folderName, suffix;
+    string folderPath, suffix;
     if(readType == 0)
     {
-        folderName = suffix = "input";
+        suffix = (isMeanStd) ? "mean_std" : "input";
+        folderPath = "/../TEST_MISC_FILES/";
     }
     else if(readType == 1)
     {
-        folderName = suffix = "output";
+        suffix = (isMeanStd) ? "mean_std" : "output";
+        folderPath = "/../REFERENCE_OUTPUTS_MISC/" + testCase + "/";
     }
 
     string fileName = std::to_string(nDim) + "d_" + suffix + ".bin";
-    string finalPath = scriptPath + "/../LOG/" + folderName + "/" + fileName;
+    string finalPath = scriptPath + folderPath + fileName;
     return finalPath;
 }
 
 // Read data from Bin file
-void read_data(Rpp32f *data, Rpp32u nDim, Rpp32u readType, string scriptPath, bool isMeanStd = false)
+void read_data(Rpp32f *data, Rpp32u nDim, Rpp32u readType, string scriptPath, string testCase, bool isMeanStd = false)
 {
     if(nDim != 2 && nDim != 3)
     {
         std::cout<<"\nGolden Inputs / Outputs are generated only for 2D/3D data"<<std::endl;
         exit(0);
     }
-    string refPath = get_path(nDim, readType, scriptPath, isMeanStd);
-    read_bin_file(refPath, data);
+    string dataPath = get_path(nDim, readType, scriptPath, testCase, isMeanStd);
+    read_bin_file(dataPath, data);
 }
 
 // Fill the starting indices and length of ROI values
@@ -188,9 +190,9 @@ void set_generic_descriptor_layout(RpptGenericDescPtr srcDescriptorPtrND, RpptGe
 }
 
 // Get size of Bin file
-Rpp32u get_bin_size(Rpp32u nDim, Rpp32u readType, string scriptPath)
+Rpp32u get_bin_size(Rpp32u nDim, Rpp32u readType, string scriptPath, string testCase)
 {
-    string refFile = get_path(nDim, readType, scriptPath);
+    string refFile = get_path(nDim, readType, scriptPath, testCase);
     std::ifstream filestream(refFile, ios_base::in | ios_base::binary);
     filestream.seekg(0, ios_base::end);
     Rpp32u filesize = filestream.tellg();
@@ -198,17 +200,18 @@ Rpp32u get_bin_size(Rpp32u nDim, Rpp32u readType, string scriptPath)
 }
 
 // Compares output with reference outputs and validates QA
-void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize, Rpp32u bufferLength,
-                    string dst, string funcName, string scriptPath)
+void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize, Rpp32u bufferLength, string dst,
+                    string funcName, string testCase, int additionalParam, string scriptPath, bool isMeanStd = false)
 {
-    Rpp32u goldenOutputLength = get_bin_size(nDim, 1, scriptPath);
+    Rpp32u goldenOutputLength = get_bin_size(nDim, 1, scriptPath, testCase);
     Rpp32f *refOutput = static_cast<Rpp32f *>(calloc(goldenOutputLength, 1));
-    read_data(refOutput, nDim, 1, scriptPath);
+    read_data(refOutput, nDim, 1, scriptPath, testCase);
     int sampleLength = bufferLength / batchSize;
+    int subVariantStride = 0; 
     int fileMatch = 0;
     for(int i = 0; i < batchSize; i++)
     {
-        Rpp32f *ref = refOutput + i * sampleLength;
+        Rpp32f *ref = refOutput + subVariantStride + i * sampleLength;
         Rpp32f *out = outputF32 + i * sampleLength;
         int cnt = 0;
         for(int j = 0; j < sampleLength; j++)

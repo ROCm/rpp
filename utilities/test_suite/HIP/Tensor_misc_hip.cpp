@@ -31,7 +31,7 @@ int main(int argc, char **argv)
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
-        printf("\nUsage: ./Tensor_misc_hip <case number = 0:0> <test type 0/1> <toggle 0/1> <number of dimensions> <batch size> <num runs> <dst path> <script path>\n");
+        printf("\nUsage: ./Tensor_misc_hip <case number = 0:0> <test type 0/1> <toggle 0/1> <number of dimensions> <batch size> <num runs> <additional param> <dst path> <script path>\n");
         return -1;
     }
     Rpp32u testCase, testType, nDim, batchSize, numRuns, toggle;
@@ -46,6 +46,7 @@ int main(int argc, char **argv)
     string dst = argv[7];
     string scriptPath = argv[8];
     qaMode = (testType == 0);
+    int additionalParam = 1;
 
     if (qaMode && batchSize != 3)
     {
@@ -107,7 +108,7 @@ int main(int argc, char **argv)
 
     // read input data
     if(qaMode)
-        read_data(inputF32, nDim, 0, scriptPath);
+        read_data(inputF32, nDim, 0, scriptPath, funcName);
     else
     {
         std::srand(0);
@@ -123,9 +124,11 @@ int main(int argc, char **argv)
     hipStream_t stream;
     CHECK(hipStreamCreate(&stream));
     rppCreateWithStreamAndBatchSize(&handle, stream, batchSize);
+    bool externalMeanStd = true;
 
     double startWallTime, endWallTime;
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0, wallTime = 0;
+    string testCaseName;
 
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning log %d times (each time with a batch size of %d) and computing mean statistics...", numRuns, batchSize);
@@ -135,17 +138,11 @@ int main(int argc, char **argv)
         {
             case 2:
             {
+                testCaseName  = "log";
+
                 startWallTime = omp_get_wtime();
                 rppt_log_gpu(d_inputF32, srcDescriptorPtrND, d_outputF32, dstDescriptorPtrND, roiTensor, handle);
 
-                // compare outputs if qaMode is true
-                if(qaMode)
-                {
-                    CHECK(hipDeviceSynchronize());
-                    CHECK(hipMemcpy(outputF32, d_outputF32, bufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
-                    CHECK(hipDeviceSynchronize());
-                    compare_output(outputF32, nDim, batchSize, bufferSize, dst, funcName, scriptPath);
-                }
                 break;
             }
             default:
@@ -154,19 +151,24 @@ int main(int argc, char **argv)
                 exit(0);
             }
         }
-        if(!qaMode)
-        {
-            CHECK(hipDeviceSynchronize());
-            endWallTime = omp_get_wtime();
+        CHECK_RETURN_STATUS(hipDeviceSynchronize());
+        endWallTime = omp_get_wtime();
 
-            wallTime = endWallTime - startWallTime;
-            maxWallTime = std::max(maxWallTime, wallTime);
-            minWallTime = std::min(minWallTime, wallTime);
-            avgWallTime += wallTime;
-        }
+        wallTime = endWallTime - startWallTime;
+        maxWallTime = std::max(maxWallTime, wallTime);
+        minWallTime = std::min(minWallTime, wallTime);
+        avgWallTime += wallTime;
     }
     rppDestroyGPU(handle);
 
+    // compare outputs if qaMode is true
+    if(qaMode)
+    {
+        CHECK_RETURN_STATUS(hipDeviceSynchronize());
+        CHECK_RETURN_STATUS(hipMemcpy(outputF32, d_outputF32, bufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
+        CHECK_RETURN_STATUS(hipDeviceSynchronize());
+        compare_output(outputF32, nDim, batchSize, bufferSize, dst, funcName, testCaseName, additionalParam, scriptPath, externalMeanStd);
+    }
     if(!qaMode)
     {
         maxWallTime *= 1000;
