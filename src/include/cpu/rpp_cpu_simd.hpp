@@ -1044,27 +1044,30 @@ inline void rpp_glitch_load24_u8pkd3_to_f32pln3_avx(Rpp8u *srcPtr, __m256 *p, in
 inline void rpp_glitch_load24_f32pkd3_to_f32pln3_avx(Rpp32f *srcPtr, __m256 *p, int *srcLocs)
 {
     __m128 p128[8];
-    for(int i = 0; i < 3; i++)
-    {
-        Rpp32f *srcPtrTemp = srcPtr + srcLocs[i];
-        p[i] = _mm256_setr_ps(*srcPtrTemp, *(srcPtrTemp + 3), *(srcPtrTemp + 6), *(srcPtrTemp + 9), 
-                              *(srcPtrTemp + 12), *(srcPtrTemp + 15), *(srcPtrTemp + 18), *(srcPtrTemp + 21));
-    }
+    Rpp32f *srcPtrTemp = srcPtr + srcLocs[0];
+    p[0] = _mm256_setr_ps(*srcPtrTemp, *(srcPtrTemp + 3), *(srcPtrTemp + 6), *(srcPtrTemp + 9), 
+                         *(srcPtrTemp + 12), *(srcPtrTemp + 15), *(srcPtrTemp + 18), *(srcPtrTemp + 21));
+    srcPtrTemp = srcPtr + srcLocs[1];
+    p[1] = _mm256_setr_ps(*(srcPtrTemp + 1), *(srcPtrTemp + 4), *(srcPtrTemp + 7), *(srcPtrTemp + 10), 
+                         *(srcPtrTemp + 13), *(srcPtrTemp + 16), *(srcPtrTemp + 19), *(srcPtrTemp + 22));
+    srcPtrTemp = srcPtr + srcLocs[2];
+    p[2] = _mm256_setr_ps(*(srcPtrTemp + 2), *(srcPtrTemp + 5), *(srcPtrTemp + 8), *(srcPtrTemp + 11), 
+                         *(srcPtrTemp + 14), *(srcPtrTemp + 17), *(srcPtrTemp + 20), *(srcPtrTemp + 23));
 }
 
 inline void rpp_glitch_load24_i8pkd3_to_f32pln3_avx(Rpp8s *srcPtr, __m256 *p, int *srcLocs)
 {
     __m128i px[2];
-    px[0] = _mm_loadu_si128((__m128i *)(srcPtr + srcLocs[0]));      /* load [R01|G01|B01|R02|G02|B02|R03|G03|B03|R04|G04|B04|R05|G05|B05|R06] - Need R01-04 */
-    px[1] = _mm_loadu_si128((__m128i *)(srcPtr + srcLocs[0] + 12)); /* load [R05|G05|B05|R06|G06|B06|R07|G07|B07|R08|G08|B08|R09|G09|B09|R10] - Need R05-08 */
+    px[0] = _mm_add_epi8(xmm_pxConvertI8, _mm_loadu_si128((__m128i *)(srcPtr + srcLocs[0])));      /* load [R01|G01|B01|R02|G02|B02|R03|G03|B03|R04|G04|B04|R05|G05|B05|R06] - Need R01-04 */
+    px[1] = _mm_add_epi8(xmm_pxConvertI8, _mm_loadu_si128((__m128i *)(srcPtr + srcLocs[0] + 12))); /* load [R05|G05|B05|R06|G06|B06|R07|G07|B07|R08|G08|B08|R09|G09|B09|R10] - Need R05-08 */
     p[0] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[0], xmm_pxMaskR), _mm_shuffle_epi8(px[1], xmm_pxMaskR)));   /* Contains R01-08 */
 
-    px[0] = _mm_loadu_si128((__m128i *)(srcPtr + srcLocs[1]));      /* load [R01|G01|B01|R02|G02|B02|R03|G03|B03|R04|G04|B04|R05|G05|B05|R06] - Need G01-04 */
-    px[1] = _mm_loadu_si128((__m128i *)(srcPtr + srcLocs[1] + 12)); /* load [R05|G05|B05|R06|G06|B06|R07|G07|B07|R08|G08|B08|R09|G09|B09|R10] - Need G05-08 */
+    px[0] = _mm_add_epi8(xmm_pxConvertI8, _mm_loadu_si128((__m128i *)(srcPtr + srcLocs[1])));      /* load [R01|G01|B01|R02|G02|B02|R03|G03|B03|R04|G04|B04|R05|G05|B05|R06] - Need G01-04 */
+    px[1] = _mm_add_epi8(xmm_pxConvertI8, _mm_loadu_si128((__m128i *)(srcPtr + srcLocs[1] + 12))); /* load [R05|G05|B05|R06|G06|B06|R07|G07|B07|R08|G08|B08|R09|G09|B09|R10] - Need G05-08 */
     p[1] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[0], xmm_pxMaskG), _mm_shuffle_epi8(px[1], xmm_pxMaskG)));   /* Contains G01-08 */
 
-    px[0] = _mm_loadu_si128((__m128i *)(srcPtr + srcLocs[2]));      /* load [R01|G01|B01|R02|G02|B02|R03|G03|B03|R04|G04|B04|R05|G05|B05|R06] - Need B01-04 */
-    px[1] = _mm_loadu_si128((__m128i *)(srcPtr + srcLocs[2] + 12)); /* load [R05|G05|B05|R06|G06|B06|R07|G07|B07|R08|G08|B08|R09|G09|B09|R10] - Need B05-08 */
+    px[0] = _mm_add_epi8(xmm_pxConvertI8, _mm_loadu_si128((__m128i *)(srcPtr + srcLocs[2])));      /* load [R01|G01|B01|R02|G02|B02|R03|G03|B03|R04|G04|B04|R05|G05|B05|R06] - Need B01-04 */
+    px[1] = _mm_add_epi8(xmm_pxConvertI8, _mm_loadu_si128((__m128i *)(srcPtr + srcLocs[2] + 12))); /* load [R05|G05|B05|R06|G06|B06|R07|G07|B07|R08|G08|B08|R09|G09|B09|R10] - Need B05-08 */
     p[2] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px[0], xmm_pxMaskB), _mm_shuffle_epi8(px[1], xmm_pxMaskB)));   /* Contains B01-08 */
 }
 

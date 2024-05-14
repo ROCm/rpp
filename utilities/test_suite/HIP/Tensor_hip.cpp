@@ -371,7 +371,7 @@ int main(int argc, char **argv)
 
     RpptChannelOffsets *rgbOffsets;
     if(testCase == 35)
-        CHECK_RETURN_STATUS (hipHostMalloc (&rgbOffsets, batchSize * sizeof(RpptChannelOffsets)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&rgbOffsets, batchSize * sizeof(RpptChannelOffsets)));
 
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);

@@ -29,13 +29,10 @@ SOFTWARE.
 inline void compute_src_loc(int row , int col, Rpp32s *locArray, RpptDescPtr srcDescPtr, RpptChannelOffsets *rgbOffsets, RpptROI roi, int batchCount, int channelValue)
 {
     int xR, yR, xG, yG, xB, yB;
-
     xR = col + rgbOffsets[batchCount].r.x;
     yR = row + rgbOffsets[batchCount].r.y;
-
     xG = col + rgbOffsets[batchCount].g.x;
     yG = row + rgbOffsets[batchCount].g.y;
-
     xB = col + rgbOffsets[batchCount].b.x;
     yB = row + rgbOffsets[batchCount].b.y;
 
@@ -69,11 +66,14 @@ RppStatus glitch_u8_u8_host_tensor(Rpp8u *srcPtr,
                                    RpptChannelOffsets *rgbOffsets,
                                    RpptROIPtr roiTensorPtrSrc,
                                    RpptRoiType roiType,
-                                   RppLayoutParams layoutParams)
+                                   RppLayoutParams layoutParams,
+                                   rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    Rpp32u numThreads = handle.GetNumThreads();
+
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(dstDescPtr->n)
+#pragma omp parallel for num_threads(numThreads)
     for (int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
@@ -221,17 +221,20 @@ RppStatus glitch_u8_u8_host_tensor(Rpp8u *srcPtr,
 }
 
 RppStatus glitch_f32_f32_host_tensor(Rpp32f *srcPtr,
-                                   RpptDescPtr srcDescPtr,
-                                   Rpp32f *dstPtr,
-                                   RpptDescPtr dstDescPtr,
-                                   RpptChannelOffsets *rgbOffsets,
-                                   RpptROIPtr roiTensorPtrSrc,
-                                   RpptRoiType roiType,
-                                   RppLayoutParams layoutParams)
+                                     RpptDescPtr srcDescPtr,
+                                     Rpp32f *dstPtr,
+                                     RpptDescPtr dstDescPtr,
+                                     RpptChannelOffsets *rgbOffsets,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     RppLayoutParams layoutParams,
+                                     rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    Rpp32u numThreads = handle.GetNumThreads();
+
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(dstDescPtr->n)
+#pragma omp parallel for num_threads(numThreads)
     for (int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
@@ -379,17 +382,20 @@ RppStatus glitch_f32_f32_host_tensor(Rpp32f *srcPtr,
 }
 
 RppStatus glitch_f16_f16_host_tensor(Rpp16f *srcPtr,
-                                   RpptDescPtr srcDescPtr,
-                                   Rpp16f *dstPtr,
-                                   RpptDescPtr dstDescPtr,
-                                   RpptChannelOffsets *rgbOffsets,
-                                   RpptROIPtr roiTensorPtrSrc,
-                                   RpptRoiType roiType,
-                                   RppLayoutParams layoutParams)
+                                     RpptDescPtr srcDescPtr,
+                                     Rpp16f *dstPtr,
+                                     RpptDescPtr dstDescPtr,
+                                     RpptChannelOffsets *rgbOffsets,
+                                     RpptROIPtr roiTensorPtrSrc,
+                                     RpptRoiType roiType,
+                                     RppLayoutParams layoutParams,
+                                     rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    Rpp32u numThreads = handle.GetNumThreads();
+
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(dstDescPtr->n)
+#pragma omp parallel for num_threads(numThreads)
     for (int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
@@ -495,11 +501,14 @@ RppStatus glitch_i8_i8_host_tensor(Rpp8s *srcPtr,
                                    RpptChannelOffsets *rgbOffsets,
                                    RpptROIPtr roiTensorPtrSrc,
                                    RpptRoiType roiType,
-                                   RppLayoutParams layoutParams)
+                                   RppLayoutParams layoutParams,
+                                   rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    Rpp32u numThreads = handle.GetNumThreads();
+
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(dstDescPtr->n)
+#pragma omp parallel for num_threads(numThreads)
     for (int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;

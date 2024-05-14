@@ -815,7 +815,8 @@ RppStatus rppt_glitch_host(RppPtr_t srcPtr,
                                  rgbOffsets,
                                  roiTensorPtrSrc,
                                  roiType,
-                                 layoutParams);
+                                 layoutParams,
+                                 rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
@@ -826,7 +827,8 @@ RppStatus rppt_glitch_host(RppPtr_t srcPtr,
                                    rgbOffsets,
                                    roiTensorPtrSrc,
                                    roiType,
-                                   layoutParams);
+                                   layoutParams,
+                                   rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
@@ -837,7 +839,8 @@ RppStatus rppt_glitch_host(RppPtr_t srcPtr,
                                    rgbOffsets,
                                    roiTensorPtrSrc,
                                    roiType,
-                                   layoutParams);
+                                   layoutParams,
+                                   rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
@@ -848,7 +851,8 @@ RppStatus rppt_glitch_host(RppPtr_t srcPtr,
                                  rgbOffsets,
                                  roiTensorPtrSrc,
                                  roiType,
-                                 layoutParams);
+                                 layoutParams,
+                                 rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;
