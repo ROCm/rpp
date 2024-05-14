@@ -107,6 +107,7 @@ std::map<int, string> augmentationMap =
     {87, "tensor_sum"},
     {88, "tensor_min"},
     {89, "tensor_max"},
+    {90, "slice"}
 };
 
 // Golden outputs for Tensor min Kernel
@@ -455,6 +456,43 @@ inline void set_generic_descriptor(RpptGenericDescPtr descriptorPtr3D, int noOfI
     descriptorPtr3D->strides[2] = descriptorPtr3D->dims[3] * descriptorPtr3D->dims[4];
     descriptorPtr3D->strides[3] = descriptorPtr3D->dims[4];
     descriptorPtr3D->strides[4] = 1;
+}
+
+// sets generic descriptor dimensions and strides of src/dst for slice functionality
+inline void set_generic_descriptor_slice(RpptDescPtr srcDescPtr, RpptGenericDescPtr descriptorPtr3D, int batchSize)
+{
+    descriptorPtr3D->offsetInBytes = 0;
+    descriptorPtr3D->dataType = srcDescPtr->dataType;
+    descriptorPtr3D->layout = srcDescPtr->layout;
+    if(srcDescPtr->c == 3)
+    {
+        descriptorPtr3D->numDims = 4;
+        descriptorPtr3D->dims[0] = batchSize;
+        if (srcDescPtr->layout == RpptLayout::NHWC)
+        {
+            descriptorPtr3D->dims[1] = srcDescPtr->h;
+            descriptorPtr3D->dims[2] = srcDescPtr->w;
+            descriptorPtr3D->dims[3] = srcDescPtr->c;
+        }
+        else
+        {
+            descriptorPtr3D->dims[1] = srcDescPtr->c;
+            descriptorPtr3D->dims[2] = srcDescPtr->h;
+            descriptorPtr3D->dims[3] = srcDescPtr->w;
+        }
+        descriptorPtr3D->strides[0] = descriptorPtr3D->dims[1] * descriptorPtr3D->dims[2] * descriptorPtr3D->dims[3];
+        descriptorPtr3D->strides[1] = descriptorPtr3D->dims[2] * descriptorPtr3D->dims[3];
+        descriptorPtr3D->strides[2] = descriptorPtr3D->dims[3];
+    }
+    else
+    {
+        descriptorPtr3D->numDims = 3;
+        descriptorPtr3D->dims[0] = batchSize;
+        descriptorPtr3D->dims[1] = srcDescPtr->h;
+        descriptorPtr3D->dims[2] = srcDescPtr->w;
+        descriptorPtr3D->strides[0] = descriptorPtr3D->dims[1] * descriptorPtr3D->dims[2];
+        descriptorPtr3D->strides[1] = descriptorPtr3D->dims[2];
+    }
 }
 
 // sets descriptor dimensions and strides of src/dst
@@ -896,12 +934,18 @@ inline void read_bin_file(string refFile, T *binaryContent)
     FILE *fp;
     fp = fopen(refFile.c_str(), "rb");
     if(!fp)
-        std::cerr << "\n unable to open file : "<<refFile;
+    {
+        std::cout << "\n unable to open file : "<<refFile;
+        exit(0);
+    }
 
     fseek(fp, 0, SEEK_END);
     long fsize = ftell(fp);
     if (fsize == 0)
-        std::cerr << "File is empty";
+    {
+        std::cout << "File is empty";
+        exit(0);
+    }
 
     fseek(fp, 0, SEEK_SET);
     fread(binaryContent, fsize, 1, fp);
@@ -1334,6 +1378,62 @@ void inline init_remap(RpptDescPtr tableDescPtr, RpptDescPtr srcDescPtr, RpptROI
                 rowRemapTableTempRow++;
                 colRemapTableTempRow++;
             }
+        }
+    }
+}
+
+// initialize the roi, anchor and shape values required for slice
+void init_slice(RpptGenericDescPtr descriptorPtr3D, RpptROIPtr roiPtrSrc, Rpp32u *roiTensor, Rpp32s *anchorTensor, Rpp32s *shapeTensor)
+{
+    if(descriptorPtr3D->numDims == 4)
+    {
+        if (descriptorPtr3D->layout == RpptLayout::NCHW)
+        {
+            for(int i = 0; i < descriptorPtr3D->dims[0]; i++)
+            {
+                int idx1 = i * 3;
+                int idx2 = i * 6;
+                roiTensor[idx2] = anchorTensor[idx1] = 0;
+                roiTensor[idx2 + 1] = anchorTensor[idx1 + 1] = roiPtrSrc[i].xywhROI.xy.y;
+                roiTensor[idx2 + 2] = anchorTensor[idx1 + 2] = roiPtrSrc[i].xywhROI.xy.x;
+                roiTensor[idx2 + 3] = descriptorPtr3D->dims[1];
+                roiTensor[idx2 + 4] = roiPtrSrc[i].xywhROI.roiHeight;
+                roiTensor[idx2 + 5] = roiPtrSrc[i].xywhROI.roiWidth;
+                shapeTensor[idx1] = roiTensor[idx2 + 3];
+                shapeTensor[idx1 + 1] = roiTensor[idx2 + 4] / 2;
+                shapeTensor[idx1 + 2] = roiTensor[idx2 + 5] / 2;
+            }
+        }
+        else if(descriptorPtr3D->layout == RpptLayout::NHWC)
+        {
+            for(int i = 0; i < descriptorPtr3D->dims[0]; i++)
+            {
+                int idx1 = i * 3;
+                int idx2 = i * 6;
+                roiTensor[idx2] = anchorTensor[idx1] = roiPtrSrc[i].xywhROI.xy.y;
+                roiTensor[idx2 + 1] = anchorTensor[idx1 + 1] = roiPtrSrc[i].xywhROI.xy.x;
+                roiTensor[idx2 + 2] = anchorTensor[idx1 + 2] = 0;
+                roiTensor[idx2 + 3] = roiPtrSrc[i].xywhROI.roiHeight;
+                roiTensor[idx2 + 4] = roiPtrSrc[i].xywhROI.roiWidth;
+                roiTensor[idx2 + 5] = descriptorPtr3D->dims[3];
+                shapeTensor[idx1] = roiTensor[idx2 + 3] / 2;
+                shapeTensor[idx1 + 1] = roiTensor[idx2 + 4] / 2;
+                shapeTensor[idx1 + 2] = roiTensor[idx2 + 5];
+            }
+        }
+    }
+    if(descriptorPtr3D->numDims == 3)
+    {
+        for(int i = 0; i < descriptorPtr3D->dims[0]; i++)
+        {
+            int idx1 = i * 2;
+            int idx2 = i * 4;
+            roiTensor[idx2] = anchorTensor[idx1] = roiPtrSrc[i].xywhROI.xy.y;
+            roiTensor[idx2 + 1] = anchorTensor[idx1 + 1] = roiPtrSrc[i].xywhROI.xy.x;
+            roiTensor[idx2 + 2] = roiPtrSrc[i].xywhROI.roiHeight;
+            roiTensor[idx2 + 3] = roiPtrSrc[i].xywhROI.roiWidth;
+            shapeTensor[idx1] = roiTensor[idx2 + 2] / 2;
+            shapeTensor[idx1 + 1] = roiTensor[idx2 + 3] / 2;
         }
     }
 }

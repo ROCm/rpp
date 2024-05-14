@@ -50,7 +50,7 @@ RppStatus pre_emphasis_filter_host_tensor(Rpp32f *srcPtr,
         dstPtrTemp[0] = srcPtrTemp[0] - coeff * border;
 
         Rpp32s vectorIncrement = 8;
-        Rpp32s alignedLength = (bufferLength / 8) * 8;
+        Rpp32s alignedLength = (bufferLength / 8) * 8 - 8;
         __m256 pCoeff = _mm256_set1_ps(coeff);
 
         Rpp32s vectorLoopCount = 1;

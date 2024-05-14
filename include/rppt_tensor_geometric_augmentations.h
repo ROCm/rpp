@@ -448,38 +448,42 @@ RppStatus rppt_phase_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDescPtr srcDesc
  * \details This function performs slice augmentation on a generic 4D tensor.
  *          Slice augmentation involves selecting a region of interest (ROI) from the source tensor
  *          and copying it to the destination tensor. Support added for f32 -> f32 and u8 -> u8 dataypes.
- * \param [in] srcPtr source tensor in HOST memory
+ * \param [in] srcPtr source tensor memory in HOST memory
  * \param [in] srcGenericDescPtr source tensor descriptor
- * \param [out] dstPtr destination tensor in HOST memory
+ * \param [out] dstPtr destination tensor memory in HOST memory
  * \param [in] dstGenericDescPtr destination tensor descriptor
- * \param [in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
- * \param [in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
+ * \param [in] anchorTensor starting index of the slice for each dimension in input (1D tensor of size = batchSize * numberOfDimensions)
+ * \param [in] shapeTensor length of the slice for each dimension in input (1D tensor of size = batchSize * numberOfDimensions)
+ * \param [in] fillValue fill value that is used to fill output if enablePadding is set to true
+ * \param [in] enablePadding boolean flag to specify if padding is enabled or not
+ * \param [in] roiTensor roi data in HOST memory (1D tensor of size = batchSize * numberOfDimensions * 2)
  * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
- * \ingroup group_tensor_geometric
  */
-RppStatus rppt_slice_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle);
+RppStatus rppt_slice_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32s *anchorTensor, Rpp32s *shapeTensor, RppPtr_t fillValue, bool enablePadding, Rpp32u *roiTensor, rppHandle_t rppHandle);
 
 #ifdef GPU_SUPPORT
 /*! \brief Slice augmentation GPU
  * \details This function performs slice augmentation on a generic 4D tensor.
  *          Slice augmentation involves selecting a region of interest (ROI) from the source tensor
  *          and copying it to the destination tensor. Support added for f32 -> f32 and u8 -> u8 dataypes.
- * \param [in] srcPtr source tensor in HIP memory
+ * \param [in] srcPtr source tensor memory in HIP memory
  * \param [in] srcGenericDescPtr source tensor descriptor
- * \param [out] dstPtr destination tensor in HIP memory
+ * \param [out] dstPtr destination tensor memory in HIP memory
  * \param [in] dstGenericDescPtr destination tensor descriptor
- * \param [in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
- * \param [in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
+ * \param [in] anchorTensor starting index of the slice for each dimension in input (1D tensor in pinned/HOST memory of size = batchSize * numberOfDimensions)
+ * \param [in] shapeTensor length of the slice for each dimension in input (1D tensor in pinned/HOST memory of size = batchSize * numberOfDimensions)
+ * \param [in] fillValue fill value that is used to fill output if enablePadding is set to true
+ * \param [in] enablePadding boolean flag to specify if padding is enabled or not
+ * \param [in] roiTensor roi data in pinned/HOST memory (1D tensor of size = batchSize * numberOfDimensions * 2)
  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
- * \ingroup group_tensor_geometric
  */
-RppStatus rppt_slice_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle);
+RppStatus rppt_slice_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32s *anchorTensor, Rpp32s *shapeTensor, RppPtr_t fillValue, bool enablePadding, Rpp32u *roiTensor, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
 /*! \brief Crop and Patch augmentation on HOST backend for a NCHW/NHWC layout tensor
