@@ -21,7 +21,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-
 import os
 import sys
 sys.dont_write_bytecode = True
@@ -40,7 +39,7 @@ perfQaInputFile = scriptPath + "/../TEST_IMAGES/eight_images_mixed_src1"
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
 caseMin = 0
-caseMax = 89
+caseMax = 90
 
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list(preserveOutput):
@@ -106,28 +105,18 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
 
             print("------------------------------------------------------------------------------------------")
 
-def run_performance_test_cmd(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, additionalParam, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
+def run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, additionalParam, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
     if qaMode == 1:
-        with open("{}/BatchPD_host_{}_raw_performance_log.txt".format(loggingFolder, log_file_layout), "a") as log_file:
-            process = subprocess.Popen([buildFolderPath + "/build/BatchPD_host_" + log_file_layout, srcPath1, srcPath2, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), "0"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
-            while True:
-                output = process.stdout.readline()
-                if not output and process.poll() is not None:
-                    break
-                print(output.strip())
-                log_file.write(output)
+        with open("{}/BatchPD_host_{}_raw_performance_log.txt".format(loggingFolder, logFileLayout), "a") as logFile:
+            process = subprocess.Popen([buildFolderPath + "/build/BatchPD_host_" + logFileLayout, srcPath1, srcPath2, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), "0"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
+            read_from_subprocess_and_write_to_log(process, logFile)
 
-    with open("{}/Tensor_host_{}_raw_performance_log.txt".format(loggingFolder, log_file_layout), "a") as log_file:
+    with open("{}/Tensor_host_{}_raw_performance_log.txt".format(loggingFolder, logFileLayout), "a") as logFile:
         print(f"./Tensor_host {srcPath1} {srcPath2} {dstPath} {bitDepth} {outputFormatToggle} {case} {additionalParam} 0 ")
         process = subprocess.Popen([buildFolderPath + "/build/Tensor_host", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
-        while True:
-            output = process.stdout.readline()
-            if not output and process.poll() is not None:
-                break
-            print(output.strip())
-            log_file.write(output)
+        read_from_subprocess_and_write_to_log(process, logFile)
 
-def run_performance_test(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
+def run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
     print("\n\n\n\n")
     print("--------------------------------")
     print("Running a New Functionality...")
@@ -145,13 +134,13 @@ def run_performance_test(loggingFolder, log_file_layout, srcPath1, srcPath2, dst
             if case == "8":
                 # Run all variants of noise type functions with additional argument of noiseType = gausssianNoise / shotNoise / saltandpepperNoise
                 for noiseType in range(3):
-                    run_performance_test_cmd(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, noiseType, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
+                    run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, noiseType, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
             elif case == "21" or case == "23" or case == "24":
                 # Run all variants of interpolation functions with additional argument of interpolationType = bicubic / bilinear / gaussian / nearestneigbor / lanczos / triangular
                 for interpolationType in range(6):
-                    run_performance_test_cmd(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, interpolationType, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
+                    run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, interpolationType, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
             else:
-                run_performance_test_cmd(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, "0", numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
+                run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, "0", numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
             print("------------------------------------------------------------------------------------------")
 
 # Parse and validate command-line arguments for the RPP test suite
@@ -283,7 +272,7 @@ subprocess.run(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.run(["make", "-j16"], cwd=".")    # nosec
 
 # List of cases supported
-supportedCaseList = ['0', '1', '2', '4', '8', '13', '20', '21', '23', '29', '30', '31', '32', '33', '34', '36', '37', '38', '39', '45', '46', '54', '61', '63', '65', '68', '70', '80', '81', '82', '83', '84', '85', '86', '87', '88', '89']
+supportedCaseList = ['0', '1', '2', '4', '8', '13', '20', '21', '23', '29', '30', '31', '32', '33', '34', '36', '37', '38', '39', '45', '46', '54', '61', '63', '65', '68', '70', '80', '81', '82', '83', '84', '85', '86', '87', '88', '89', '90']
 
 print("\n\n\n\n\n")
 print("##########################################################################################")
@@ -302,7 +291,7 @@ if testType == 0:
             srcPath1 = inFilePath1
             srcPath2 = inFilePath2
         for layout in range(3):
-            dstPathTemp, log_file_layout = process_layout(layout, qaMode, case, dstPath, "host", func_group_finder)
+            dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "host", func_group_finder)
 
             if qaMode == 0:
                 if not os.path.isdir(dstPathTemp):
@@ -324,8 +313,8 @@ else:
             srcPath1 = ricapInFilePath
             srcPath2 = ricapInFilePath
         for layout in range(3):
-            dstPathTemp, log_file_layout = process_layout(layout, qaMode, case, dstPath, "host", func_group_finder)
-            run_performance_test(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
+            dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "host", func_group_finder)
+            run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
 
 # print the results of qa tests
 nonQACaseList = ['8', '24', '54', '84'] # Add cases present in supportedCaseList, but without QA support
@@ -462,7 +451,7 @@ elif (testType == 1 and qaMode == 1):
     passedCases = df['Test_Result'].eq('PASSED').sum()
     failedCases = df['Test_Result'].eq('FAILED').sum()
 
-    summary_row = {'BatchPD_Augmentation_Type': pd.NA,
+    summaryRow = {'BatchPD_Augmentation_Type': pd.NA,
                    'Tensor_Augmentation_Type': pd.NA,
                    'Performance Speedup (%)': pd.NA,
                    'Test_Result': f'Final Results of Tests: Passed: {passedCases}, Failed: {failedCases}'}
@@ -471,8 +460,8 @@ elif (testType == 1 and qaMode == 1):
 
     # Append the summary row to the DataFrame
     # Convert the dictionary to a DataFrame
-    summary_row = pd.DataFrame([summary_row])
-    df = pd.concat([df, summary_row], ignore_index=True)
+    summaryRow = pd.DataFrame([summaryRow])
+    df = pd.concat([df, summaryRow], ignore_index=True)
 
     df.to_excel(excelFilePath, index=False)
     print("\n-------------------------------------------------------------------" + resultsInfo + "\n\n-------------------------------------------------------------------")
@@ -482,9 +471,9 @@ elif (testType == 1 and qaMode == 1):
     print("- Random observations of negative speedups might always occur due to current test machine temperature/load variances or other CPU/GPU state-dependent conditions.")
     print("\n-------------------------------------------------------------------\n")
 elif (testType == 1 and qaMode == 0):
-    log_file_list = get_log_file_list(preserveOutput)
+    logFileList = get_log_file_list(preserveOutput)
 
-    functionality_group_list = [
+    functionalityGroupList = [
         "color_augmentations",
         "data_exchange_operations",
         "effects_augmentations",
@@ -493,5 +482,5 @@ elif (testType == 1 and qaMode == 0):
         "statistical_operations",
     ]
 
-    for log_file in log_file_list:
-        print_performance_tests_summary(log_file, functionality_group_list, numRuns)
+    for logFile in logFileList:
+        print_performance_tests_summary(logFile, functionalityGroupList, numRuns)
