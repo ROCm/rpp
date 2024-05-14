@@ -230,3 +230,21 @@ def print_performance_tests_summary(logFile, functionalityGroupList, numRuns):
 
     # Closing log file
     f.close()
+
+# Read the standard output from subprocess and writes to log file
+def read_from_subprocess_and_write_to_log(process, logFile):
+    while True:
+        output = process.stdout.readline()
+        if not output and process.poll() is not None:
+            break
+        print(output.strip())
+        logFile.write(output)
+
+# Returns the layout name based on layout value
+def get_layout_name(layout):
+    if layout == 0:
+        return "PKD3"
+    elif  layout == 1:
+        return "PLN3"
+    elif layout == 2:
+        return "PLN1"

@@ -27,11 +27,11 @@ SOFTWARE.
 int main(int argc, char **argv)
 {
     // Handle inputs
-    const int MIN_ARG_COUNT = 8;
+    const int MIN_ARG_COUNT = 9;
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
-        printf("\nUsage: ./Tensor_misc_hip <case number = 0:0> <test type 0/1> <toggle 0/1> <number of dimensions> <batch size> <num runs> <additional param> <dst path> <script path>\n");
+        printf("\nUsage: ./Tensor_misc_hip <case number = 0:0> <test type 0/1> <toggle 0/1> <number of dimensions> <batch size> <num runs> <dst path> <script path>\n");
         return -1;
     }
     Rpp32u testCase, testType, nDim, batchSize, numRuns, toggle;
@@ -43,10 +43,11 @@ int main(int argc, char **argv)
     nDim = atoi(argv[4]);
     batchSize = atoi(argv[5]);
     numRuns = atoi(argv[6]);
-    string dst = argv[7];
-    string scriptPath = argv[8];
+    string dst = argv[8];
+    string scriptPath = argv[9];
     qaMode = (testType == 0);
-    int additionalParam = 1;
+    bool axisMaskCase = (testCase == 1);
+    int axisMask = (axisMaskCase) ? atoi(argv[7]) : 1;
 
     if (qaMode && batchSize != 3)
     {
@@ -61,36 +62,29 @@ int main(int argc, char **argv)
         return -1;
     }
 
+    string func = funcName;
+    if (axisMaskCase)
+    {
+        char additionalParam_char[2];
+        std::sprintf(additionalParam_char, "%d", axisMask);
+        func += "_" + std::to_string(nDim) + "d" + "_axisMask";
+        func += additionalParam_char;
+    }
+
     // fill roi based on mode and number of dimensions
     Rpp32u *roiTensor;
-    CHECK(hipHostMalloc(&roiTensor, nDim * 2 * batchSize, sizeof(Rpp32u)));
+    CHECK_RETURN_STATUS(hipHostMalloc(&roiTensor, nDim * 2 * batchSize, sizeof(Rpp32u)));
     fill_roi_values(nDim, batchSize, roiTensor, qaMode);
 
     // set src/dst generic tensor descriptors
     RpptGenericDescPtr srcDescriptorPtrND, dstDescriptorPtrND;
-    CHECK(hipHostMalloc(&srcDescriptorPtrND, sizeof(RpptGenericDesc)));
-    CHECK(hipHostMalloc(&dstDescriptorPtrND, sizeof(RpptGenericDesc)));
-    srcDescriptorPtrND->numDims = nDim + 1;
-    srcDescriptorPtrND->offsetInBytes = 0;
-    srcDescriptorPtrND->dataType = RpptDataType::F32;
-
-    dstDescriptorPtrND->numDims = nDim + 1;
-    dstDescriptorPtrND->offsetInBytes = 0;
-    dstDescriptorPtrND->dataType = RpptDataType::F32;
+    CHECK_RETURN_STATUS(hipHostMalloc(&srcDescriptorPtrND, sizeof(RpptGenericDesc)));
+    CHECK_RETURN_STATUS(hipHostMalloc(&dstDescriptorPtrND, sizeof(RpptGenericDesc)));
 
     // set dims and compute strides
-    srcDescriptorPtrND->dims[0] = batchSize;
-    dstDescriptorPtrND->dims[0] = batchSize;
-    for(int i = 1; i <= nDim; i++)
-        srcDescriptorPtrND->dims[i] = roiTensor[nDim + i - 1];
-    compute_strides(srcDescriptorPtrND);
-
-    // if testCase is not normalize, then copy dims and strides from src to dst
-    if(testCase != 0)
-    {
-        memcpy(dstDescriptorPtrND->dims, srcDescriptorPtrND->dims, srcDescriptorPtrND->numDims * sizeof(Rpp32u));
-        memcpy(dstDescriptorPtrND->strides, srcDescriptorPtrND->strides, dstDescriptorPtrND->numDims * sizeof(Rpp32u));
-    }
+    int bitDepth = 2, offSetInBytes = 0;
+    set_generic_descriptor(srcDescriptorPtrND, nDim, offSetInBytes, bitDepth, batchSize, roiTensor);
+    set_generic_descriptor(dstDescriptorPtrND, nDim, offSetInBytes, bitDepth, batchSize, roiTensor);
     set_generic_descriptor_layout(srcDescriptorPtrND, dstDescriptorPtrND, nDim, toggle, qaMode);
 
     Rpp32u bufferSize = 1;
@@ -136,6 +130,59 @@ int main(int argc, char **argv)
     {
         switch(testCase)
         {
+            case 1:
+            {
+                testCaseName  = "normalize";
+                float scale = 1.0;
+                float shift = 0.0;
+
+                // computeMeanStddev set to 3 means both mean and stddev should be computed internally.
+                // Wherein 0th bit used to represent computeMean and 1st bit for computeStddev.
+                Rpp8u computeMeanStddev = 3;
+
+                Rpp32u size = 1; // length of mean and stddev tensors differ based on axisMask and nDim
+                Rpp32u maxSize = 1;
+                for(int batch = 0; batch < batchSize; batch++)
+                {
+                    size = 1;
+                    for(int i = 0; i < nDim; i++)
+                        size *= ((axisMask & (int)(pow(2,i))) >= 1) ? 1 : roiTensor[(nDim * 2 * batch) + nDim + i];
+                    maxSize = max(maxSize, size);
+                }
+
+                // allocate memory if no memory is allocated
+                if(meanTensor == nullptr)
+                    CHECK_RETURN_STATUS(hipMalloc(&meanTensor, maxSize * batchSize * sizeof(Rpp32f)));
+
+                if(stdDevTensor == nullptr)
+                    CHECK_RETURN_STATUS(hipMalloc(&stdDevTensor, maxSize * batchSize * sizeof(Rpp32f)));
+
+                if(!computeMeanStddev)
+                {
+                    if(meanTensorCPU == nullptr)
+                        meanTensorCPU = static_cast<Rpp32f *>(malloc(maxSize * sizeof(Rpp32f)));
+                    if(stdDevTensorCPU == nullptr)
+                        stdDevTensorCPU = static_cast<Rpp32f *>(malloc(maxSize * sizeof(Rpp32f)));
+                    fill_mean_stddev_values(nDim, maxSize, meanTensorCPU, stdDevTensorCPU, qaMode, axisMask, scriptPath);
+                    CHECK_RETURN_STATUS(hipMemcpy(meanTensor, meanTensorCPU, maxSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
+                    CHECK_RETURN_STATUS(hipMemcpy(stdDevTensor, stdDevTensorCPU, maxSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
+                    CHECK_RETURN_STATUS(hipDeviceSynchronize());
+                }
+
+                startWallTime = omp_get_wtime();
+                rppt_normalize_gpu(d_inputF32, srcDescriptorPtrND, d_outputF32, dstDescriptorPtrND, axisMask, meanTensor, stdDevTensor, computeMeanStddev, scale, shift, roiTensor, handle);
+
+                // compare outputs if qaMode is true
+                if(qaMode)
+                {
+                    CHECK_RETURN_STATUS(hipDeviceSynchronize());
+                    CHECK_RETURN_STATUS(hipMemcpy(outputF32, d_outputF32, bufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
+                    CHECK_RETURN_STATUS(hipDeviceSynchronize());
+                    bool externalMeanStd = !computeMeanStddev; // when mean and stddev is passed from user
+                    compare_output(outputF32, nDim, batchSize, bufferSize, dst, func, axisMask, scriptPath, externalMeanStd);
+                }
+                break;
+            }
             case 2:
             {
                 testCaseName  = "log";
@@ -169,7 +216,7 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipDeviceSynchronize());
         compare_output(outputF32, nDim, batchSize, bufferSize, dst, funcName, testCaseName, additionalParam, scriptPath, externalMeanStd);
     }
-    if(!qaMode)
+    else
     {
         maxWallTime *= 1000;
         minWallTime *= 1000;
@@ -181,11 +228,19 @@ int main(int argc, char **argv)
 
     free(inputF32);
     free(outputF32);
-    CHECK(hipHostFree(roiTensor));
-    CHECK(hipHostFree(srcDescriptorPtrND));
-    CHECK(hipHostFree(dstDescriptorPtrND));
-    CHECK(hipFree(d_inputF32));
-    CHECK(hipFree(d_outputF32));
+    CHECK_RETURN_STATUS(hipHostFree(srcDescriptorPtrND));
+    CHECK_RETURN_STATUS(hipHostFree(dstDescriptorPtrND));
+    CHECK_RETURN_STATUS(hipHostFree(roiTensor));
+    CHECK_RETURN_STATUS(hipFree(d_inputF32));
+    CHECK_RETURN_STATUS(hipFree(d_outputF32));
+    if(meanTensor != nullptr)
+        CHECK_RETURN_STATUS(hipFree(meanTensor));
+    if(stdDevTensor != nullptr)
+        CHECK_RETURN_STATUS(hipFree(stdDevTensor));
+    if(meanTensorCPU != nullptr)
+        free(meanTensorCPU);
+    if(stdDevTensorCPU != nullptr)
+        free(stdDevTensorCPU);
 
     return 0;
 }

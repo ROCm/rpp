@@ -28,6 +28,7 @@ using namespace std;
 
 std::map<int, string> augmentationMiscMap =
 {
+    {1, "normalize"},
     {2, "log"}
 };
 
@@ -182,6 +183,14 @@ void set_generic_descriptor_layout(RpptGenericDescPtr srcDescriptorPtrND, RpptGe
             }
         }
     }
+    else if(nDim == 3)
+    {
+        if(toggle)
+        {
+            srcDescriptorPtrND->layout = RpptLayout::NHWC;
+            dstDescriptorPtrND->layout = RpptLayout::NCHW;
+        }
+    }
     else
     {
         srcDescriptorPtrND->layout = RpptLayout::NDHWC;
@@ -189,7 +198,88 @@ void set_generic_descriptor_layout(RpptGenericDescPtr srcDescriptorPtrND, RpptGe
     }
 }
 
-// Get size of Bin file
+// sets generic descriptor numDims, offsetInBytes,  bitdepth, dims and strides
+inline void set_generic_descriptor(RpptGenericDescPtr descriptorPtr3D, int nDim, int offsetInBytes, int bitDepth, int batchSize, Rpp32u *roiTensor)
+{
+    descriptorPtr3D->numDims = nDim + 1;
+    descriptorPtr3D->offsetInBytes = offsetInBytes;
+    if (bitDepth == 0)
+        descriptorPtr3D->dataType = RpptDataType::U8;
+    else if (bitDepth == 1)
+        descriptorPtr3D->dataType = RpptDataType::F16;
+    else if (bitDepth == 2)
+        descriptorPtr3D->dataType = RpptDataType::F32;
+    else if (bitDepth == 5)
+        descriptorPtr3D->dataType = RpptDataType::I8;
+    descriptorPtr3D->dims[0] = batchSize;
+    for(int i = 1; i <= nDim; i++)
+        descriptorPtr3D->dims[i] = roiTensor[nDim + i - 1];
+    compute_strides(descriptorPtr3D);
+}
+
+// strides used for jumping to corresponding axisMask mean and stddev
+std::map<Rpp32s, Rpp32u> paramStrideMap2D =
+{
+    {1, 0},
+    {2, 100},
+    {3, 200}
+};
+
+// strides used for jumping to corresponding axisMask mean and stddev
+std::map<Rpp32s, Rpp32u> paramStrideMap3D =
+{
+    {1, 0},
+    {2, 400},
+    {3, 800},
+    {4, 808},
+    {5, 3308},
+    {6, 3358},
+    {7, 3408}
+};
+
+// fill the mean and stddev values used for normalize
+void fill_mean_stddev_values(Rpp32u nDim, Rpp32u size, Rpp32f *meanTensor,
+                             Rpp32f *stdDevTensor, bool qaMode, int axisMask, string scriptPath)
+{
+    if(qaMode)
+    {
+        Rpp32u numValues, paramStride;
+        switch(nDim)
+        {
+            case 2:
+            {
+                numValues = 100 + 100 + 1;
+                paramStride = paramStrideMap2D[axisMask];
+                break;
+            }
+            case 3:
+            {
+                numValues = 400 + 400 + 8 + 2500 + 50 + 50 + 1;
+                paramStride = paramStrideMap3D[axisMask];
+                break;
+            }
+            default:
+            {
+                cout << "Error! QA mode is supported only for 2D/3D inputs" << endl;
+                exit(0);
+            }
+        }
+        std::vector<Rpp32f> paramBuf(numValues * 2);
+        Rpp32f *data = paramBuf.data();
+        read_data(data, nDim, 0, scriptPath, true);
+        memcpy(meanTensor, data + paramStride, size * sizeof(Rpp32f));
+        memcpy(stdDevTensor, data + numValues + paramStride, size * sizeof(Rpp32f));
+    }
+    else
+    {
+        for(int j = 0; j < size; j++)
+        {
+            meanTensor[j] = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+            stdDevTensor[j] = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+        }
+    }
+}
+
 Rpp32u get_bin_size(Rpp32u nDim, Rpp32u readType, string scriptPath, string testCase)
 {
     string refFile = get_path(nDim, readType, scriptPath, testCase);
