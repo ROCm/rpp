@@ -179,6 +179,8 @@ __global__ void resample_multi_channel_hip_tensor(float *srcPtr,
         float fscale = scale;
         uint dstIdx = id_z * strides.y + outBlock * numChannels;
         float *inBlockPtr = srcPtr + id_z * strides.x + (inBlockRounded * numChannels);
+
+        // process block size * channels (256 * channels) elements in single thread
         for (int outPos = outBlock; outPos < blockEnd; outPos++, inPos += fscale, dstIdx += numChannels)
         {
             int loc0, loc1;
@@ -236,7 +238,7 @@ RppStatus hip_exec_resample_tensor(Rpp32f *srcPtr,
     int globalThreads_y = 1;
     int globalThreads_z = dstDescPtr->n;
     uint tensorDims = srcDescPtr->numDims - 1; // exclude batchsize from input dims
-    size_t sharedMemSizeInBytes = (window.lookupSize * sizeof(float)); // shared memory size needed for resample kernel
+    size_t sharedMemorySizeInBytes = (window.lookupSize * sizeof(float)); // shared memory size needed for resample kernel
 
     // using the input sampling rate, output sampling rate compute the output dims
     int *dstDimsTensor = reinterpret_cast<int *>(handle.GetInitHandle()->mem.mgpu.scratchBufferPinned.uintmem);
@@ -248,7 +250,7 @@ RppStatus hip_exec_resample_tensor(Rpp32f *srcPtr,
         hipLaunchKernelGGL(resample_single_channel_hip_tensor,
                            dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X_1DIM), ceil((float)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((float)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
                            dim3(LOCAL_THREADS_X_1DIM, LOCAL_THREADS_Y_1DIM, LOCAL_THREADS_Z_1DIM),
-                           sharedMemSizeInBytes,
+                           sharedMemorySizeInBytes,
                            handle.GetStream(),
                            srcPtr,
                            dstPtr,
@@ -265,7 +267,7 @@ RppStatus hip_exec_resample_tensor(Rpp32f *srcPtr,
         hipLaunchKernelGGL(resample_multi_channel_hip_tensor,
                            dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X_1DIM), ceil((float)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((float)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
                            dim3(LOCAL_THREADS_X_1DIM, LOCAL_THREADS_Y_1DIM, LOCAL_THREADS_Z_1DIM),
-                           sharedMemSizeInBytes,
+                           sharedMemorySizeInBytes,
                            handle.GetStream(),
                            srcPtr,
                            dstPtr,
