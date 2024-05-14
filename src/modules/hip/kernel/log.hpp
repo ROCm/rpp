@@ -23,13 +23,13 @@ __global__ void log_1d_hip_tensor(T *srcPtr,
     uint id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;       // batchsize
 
     uint *roi = &roiTensor[id_z * 2];
-    uint xBegin = roi[0];
+    uint beginX = roi[0];
     uint width = roi[1];
 
     if (id_x >= width)
         return;
 
-    uint srcIdx = (id_z * srcStrides) + id_x + xBegin;
+    uint srcIdx = (id_z * srcStrides) + id_x + beginX;
     uint dstIdx = (id_z * dstStrides) + id_x;
 
     d_float8 src_f8, dst_f8;
@@ -50,15 +50,15 @@ __global__ void log_2d_hip_tensor(T *srcPtr,
     uint id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;       // batchsize
 
     uint *roi = &roiTensor[id_z * 4];
-    uint yBegin = roi[0];
-    uint xBegin = roi[1];
+    uint beginY = roi[0];
+    uint beginX = roi[1];
     uint height = roi[2];
     uint width = roi[3];
 
     if (id_x >= width || id_y >= height)
         return;
 
-    uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + yBegin) * srcStridesNH.y) + id_x + xBegin;
+    uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + beginY) * srcStridesNH.y) + id_x + beginX;
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x;
 
     d_float8 src_f8, dst_f8;
@@ -79,9 +79,9 @@ __global__ void log_3d_hip_tensor(T *srcPtr,
     uint id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z; // lengthZ
 
     uint *roi = roiTensor;
-    uint zBegin = roi[0];
-    uint yBegin = roi[1];
-    uint xBegin = roi[2];
+    uint beginZ = roi[0];
+    uint beginY = roi[1];
+    uint beginX = roi[2];
     uint lengthZ = roi[3];
     uint lengthY = roi[4];
     uint lengthX = roi[5];
@@ -89,7 +89,7 @@ __global__ void log_3d_hip_tensor(T *srcPtr,
     if (id_x >= lengthX || id_y >= lengthY || id_z >= lengthZ)
         return;
 
-    uint srcIdx = ((id_z + zBegin) * srcStridesDH.x) + ((id_y + yBegin) * srcStridesDH.y) + id_x + xBegin;
+    uint srcIdx = ((id_z + beginZ) * srcStridesDH.x) + ((id_y + beginY) * srcStridesDH.y) + id_x + beginX;
     uint dstIdx = (id_z * dstStridesDH.x) + (id_y * dstStridesDH.y) + id_x;
 
     d_float8 src_f8, dst_f8;

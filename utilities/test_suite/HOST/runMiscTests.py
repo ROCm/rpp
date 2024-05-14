@@ -58,7 +58,7 @@ def run_performance_test_cmd(loggingFolder, numDims, case, numRuns, testType, to
         process = subprocess.Popen([buildFolderPath + "/build/Tensor_misc_host", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
         read_from_subprocess_and_write_to_log(process, logFile)
 
-def run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg):
+def run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg = ""):
     print("\n\n\n\n")
     print("--------------------------------")
     print("Running a New Functionality...")
@@ -172,7 +172,7 @@ for case in caseList:
         for axisMask in range(1, pow(2, numDims)):
             run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, axisMask)
     else:
-        run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, axisMask)
+        run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath)
 
 # print the results of qa tests
 nonQACaseList = []

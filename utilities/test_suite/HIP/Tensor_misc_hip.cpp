@@ -31,7 +31,7 @@ int main(int argc, char **argv)
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
-        printf("\nUsage: ./Tensor_misc_hip <case number = 0:0> <test type 0/1> <toggle 0/1> <number of dimensions> <batch size> <num runs> <dst path> <script path>\n");
+        printf("\nUsage: ./Tensor_misc_hip <case number = 0:2> <test type 0/1> <toggle 0/1> <number of dimensions> <batch size> <num runs> <dst path> <script path>\n");
         return -1;
     }
     Rpp32u testCase, testType, nDim, batchSize, numRuns, toggle;
@@ -47,7 +47,8 @@ int main(int argc, char **argv)
     string scriptPath = argv[9];
     qaMode = (testType == 0);
     bool axisMaskCase = (testCase == 1);
-    int axisMask = (axisMaskCase) ? atoi(argv[7]) : 1;
+    int additionalParam = (axisMaskCase) ? atoi(argv[7]) : 1;
+    int axisMask = additionalParam;
 
     if (qaMode && batchSize != 3)
     {
@@ -97,8 +98,8 @@ int main(int argc, char **argv)
     outputF32 = static_cast<Rpp32f *>(calloc(bufferSize, sizeof(Rpp32f)));
 
     void *d_inputF32, *d_outputF32;
-    CHECK(hipMalloc(&d_inputF32, bufferSize * sizeof(Rpp32f)));
-    CHECK(hipMalloc(&d_outputF32, bufferSize * sizeof(Rpp32f)));
+    CHECK_RETURN_STATUS(hipMalloc(&d_inputF32, bufferSize * sizeof(Rpp32f)));
+    CHECK_RETURN_STATUS(hipMalloc(&d_outputF32, bufferSize * sizeof(Rpp32f)));
 
     // read input data
     if(qaMode)
@@ -111,13 +112,16 @@ int main(int argc, char **argv)
     }
 
     // copy data from HOST to HIP
-    CHECK(hipMemcpy(d_inputF32, inputF32, bufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
-    CHECK(hipDeviceSynchronize());
+    CHECK_RETURN_STATUS(hipMemcpy(d_inputF32, inputF32, bufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
+    CHECK_RETURN_STATUS(hipDeviceSynchronize());
 
     rppHandle_t handle;
     hipStream_t stream;
-    CHECK(hipStreamCreate(&stream));
+    CHECK_RETURN_STATUS(hipStreamCreate(&stream));
     rppCreateWithStreamAndBatchSize(&handle, stream, batchSize);
+
+    Rpp32f *meanTensor = nullptr, *stdDevTensor = nullptr;
+    Rpp32f *meanTensorCPU = nullptr, *stdDevTensorCPU = nullptr;
     bool externalMeanStd = true;
 
     double startWallTime, endWallTime;
@@ -125,7 +129,7 @@ int main(int argc, char **argv)
     string testCaseName;
 
     // case-wise RPP API and measure time script for Unit and Performance test
-    printf("\nRunning log %d times (each time with a batch size of %d) and computing mean statistics...", numRuns, batchSize);
+    printf("\nRunning %s %d times (each time with a batch size of %d) and computing mean statistics...", func.c_str(), numRuns, batchSize);
     for(int perfCount = 0; perfCount < numRuns; perfCount++)
     {
         switch(testCase)
@@ -139,6 +143,7 @@ int main(int argc, char **argv)
                 // computeMeanStddev set to 3 means both mean and stddev should be computed internally.
                 // Wherein 0th bit used to represent computeMean and 1st bit for computeStddev.
                 Rpp8u computeMeanStddev = 3;
+                externalMeanStd = !computeMeanStddev; // when mean and stddev is passed from user
 
                 Rpp32u size = 1; // length of mean and stddev tensors differ based on axisMask and nDim
                 Rpp32u maxSize = 1;
@@ -172,21 +177,11 @@ int main(int argc, char **argv)
                 startWallTime = omp_get_wtime();
                 rppt_normalize_gpu(d_inputF32, srcDescriptorPtrND, d_outputF32, dstDescriptorPtrND, axisMask, meanTensor, stdDevTensor, computeMeanStddev, scale, shift, roiTensor, handle);
 
-                // compare outputs if qaMode is true
-                if(qaMode)
-                {
-                    CHECK_RETURN_STATUS(hipDeviceSynchronize());
-                    CHECK_RETURN_STATUS(hipMemcpy(outputF32, d_outputF32, bufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
-                    CHECK_RETURN_STATUS(hipDeviceSynchronize());
-                    bool externalMeanStd = !computeMeanStddev; // when mean and stddev is passed from user
-                    compare_output(outputF32, nDim, batchSize, bufferSize, dst, func, axisMask, scriptPath, externalMeanStd);
-                }
                 break;
             }
             case 2:
             {
                 testCaseName  = "log";
-
                 startWallTime = omp_get_wtime();
                 rppt_log_gpu(d_inputF32, srcDescriptorPtrND, d_outputF32, dstDescriptorPtrND, roiTensor, handle);
 
@@ -214,7 +209,7 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipDeviceSynchronize());
         CHECK_RETURN_STATUS(hipMemcpy(outputF32, d_outputF32, bufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
         CHECK_RETURN_STATUS(hipDeviceSynchronize());
-        compare_output(outputF32, nDim, batchSize, bufferSize, dst, funcName, testCaseName, additionalParam, scriptPath, externalMeanStd);
+        compare_output(outputF32, nDim, batchSize, bufferSize, dst, func, testCaseName, additionalParam, scriptPath, externalMeanStd);
     }
     else
     {

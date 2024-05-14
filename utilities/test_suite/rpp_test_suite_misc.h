@@ -266,7 +266,7 @@ void fill_mean_stddev_values(Rpp32u nDim, Rpp32u size, Rpp32f *meanTensor,
         }
         std::vector<Rpp32f> paramBuf(numValues * 2);
         Rpp32f *data = paramBuf.data();
-        read_data(data, nDim, 0, scriptPath, true);
+        read_data(data, nDim, 0, scriptPath, "normalize", true);
         memcpy(meanTensor, data + paramStride, size * sizeof(Rpp32f));
         memcpy(stdDevTensor, data + numValues + paramStride, size * sizeof(Rpp32f));
     }
@@ -296,8 +296,16 @@ void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize, Rpp32u buf
     Rpp32u goldenOutputLength = get_bin_size(nDim, 1, scriptPath, testCase);
     Rpp32f *refOutput = static_cast<Rpp32f *>(calloc(goldenOutputLength, 1));
     read_data(refOutput, nDim, 1, scriptPath, testCase);
+    int subVariantStride = 0;
+    if (testCase == "normalize")
+    {
+        int meanStdDevOutputStride = 0, axisMaskStride = 0;
+        if(isMeanStd)
+            meanStdDevOutputStride = goldenOutputLength / (2 * sizeof(Rpp32f));
+        axisMaskStride = (additionalParam - 1) * bufferLength;
+        subVariantStride = meanStdDevOutputStride + axisMaskStride;
+    }
     int sampleLength = bufferLength / batchSize;
-    int subVariantStride = 0; 
     int fileMatch = 0;
     for(int i = 0; i < batchSize; i++)
     {

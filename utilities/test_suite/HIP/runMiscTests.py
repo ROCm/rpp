@@ -178,7 +178,11 @@ outFilePath = " "
 if testType == 0 and batchSize != 3:
     print("QA mode can only run with a batch size of 3.")
     exit(0)
+
+if preserveOutput == 0:
+    validate_and_remove_folders(outFolderPath, "QA_RESULTS_MISC_HIP")
     validate_and_remove_folders(outFolderPath, "OUTPUT_PERFORMANCE_MISC_LOGS_HIP")
+
 if(testType == 0):
     outFilePath = outFolderPath + '/QA_RESULTS_MISC_HIP_' + timestamp
     numRuns = 1
