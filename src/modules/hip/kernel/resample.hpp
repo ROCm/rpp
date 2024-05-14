@@ -14,9 +14,9 @@ __device__ __forceinline__ float resample_hip_compute(float x, float scale, floa
     return current + weight * (next - current);
 }
 
-__device__ __forceinline__ float4 resample_hip_compute(float4 *x_f4, float4 *scale_f4, float4 *center_f4, float *lookup)
+__device__ __forceinline__ float4 resample_hip_compute(float4 &x_f4, const float4 &scale_f4, const float4 &center_f4, float *lookup)
 {
-    float4 locRaw_f4 = (*x_f4) * (*scale_f4) + (*center_f4);
+    float4 locRaw_f4 = x_f4 * scale_f4 + center_f4;
     int4 locFloor_i4 = make_int4(std::floor(locRaw_f4.x), std::floor(locRaw_f4.y), std::floor(locRaw_f4.z), std::floor(locRaw_f4.w));
     float4 weight_f4 = make_float4(locRaw_f4.x - locFloor_i4.x, locRaw_f4.y - locFloor_i4.y, locRaw_f4.z - locFloor_i4.z, locRaw_f4.w - locFloor_i4.w);
     float4 current_f4 = make_float4(lookup[locFloor_i4.x], lookup[locFloor_i4.y], lookup[locFloor_i4.z], lookup[locFloor_i4.w]);
@@ -53,8 +53,8 @@ __global__ void resample_single_channel_hip_tensor(float *srcPtr,
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    int dstLength = dstDimsTensor[id_z * 2];
     int srcLength = srcDimsTensor[id_z * 2];
+    int dstLength = dstDimsTensor[id_z * 2];
     int outBlock = id_x * hipBlockDim_x;
     int blockEnd = std::min(outBlock + static_cast<int>(hipBlockDim_x), dstLength);
 
@@ -72,9 +72,10 @@ __global__ void resample_single_channel_hip_tensor(float *srcPtr,
         // extract the params from window
         float windowScale = window->scale;
         float windowCenter = window->center;
-        uint lookupSize = window->lookupSize;
+        int lookupSize = window->lookupSize;
         float4 windowScale_f4 = static_cast<float4>(windowScale);
         float4 windowCenter_f4 = static_cast<float4>(windowCenter);
+        float4 increment_f4 = static_cast<float4>(4.0f);
 
         double inBlockRaw = outBlock * scale;
         int inBlockRounded = static_cast<int>(inBlockRaw);
@@ -97,10 +98,9 @@ __global__ void resample_single_channel_hip_tensor(float *srcPtr,
 
             float4 locInWindow_f4 = make_float4(locBegin, locBegin + 1, locBegin + 2, locBegin + 3);
             float4 accum_f4 = static_cast<float4>(0.0f);
-            float4 increment_f4 = static_cast<float4>(4.0f);
             for (; locInWindow + 3 < loc1; locInWindow += 4)
             {
-                float4 weights_f4 = resample_hip_compute(&locInWindow_f4, &windowScale_f4, &windowCenter_f4, lookup_smem);
+                float4 weights_f4 = resample_hip_compute(locInWindow_f4, windowScale_f4, windowCenter_f4, lookup_smem);
                 accum_f4 +=  (*(float4 *)(&inBlockPtr[locInWindow]) * weights_f4);
                 locInWindow_f4 += increment_f4;
             }
@@ -140,9 +140,9 @@ __global__ void resample_multi_channel_hip_tensor(float *srcPtr,
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    int dstLength = dstDimsTensor[id_z * 2];
     int srcLength = srcDimsTensor[id_z * 2];
     int numChannels = srcDimsTensor[id_z * 2 + 1];
+    int dstLength = dstDimsTensor[id_z * 2];
     int outBlock = id_x * hipBlockDim_x;
     int blockEnd = std::min(outBlock + static_cast<int>(hipBlockDim_x), dstLength);
 
@@ -157,13 +157,19 @@ __global__ void resample_multi_channel_hip_tensor(float *srcPtr,
         if (outBlock >= dstLength)
             return;
 
+        // extract the params from window
+        float windowScale = window->scale;
+        float windowCenter = window->center;
+        int lookupSize = window->lookupSize;
+
         float tempBuf[RPPT_MAX_AUDIO_CHANNELS] = {0.0f};
         double inBlockRaw = outBlock * scale;
         int inBlockRounded = static_cast<int>(inBlockRaw);
         float inPos = inBlockRaw - inBlockRounded;
         float fscale = scale;
-        float *inBlockPtr = srcPtr + (inBlockRounded * numChannels);
-        for (int outPos = outBlock; outPos < blockEnd; outPos++, inPos += fscale)
+        float *inBlockPtr = srcPtr + id_z * strides.x + (inBlockRounded * numChannels);
+        uint dstIdx = id_z * strides.y + outBlock * numChannels;
+        for (int outPos = outBlock; outPos < blockEnd; outPos++, inPos += fscale, dstIdx += numChannels)
         {
             int loc0, loc1;
             window->input_range(inPos, &loc0, &loc1);
@@ -176,12 +182,11 @@ __global__ void resample_multi_channel_hip_tensor(float *srcPtr,
             int2 offsetLocs_i2 = make_int2(loc0, loc1) * static_cast<int2>(numChannels);    // offsetted loc0, loc1 values for multi channel case
             for (int offsetLoc = offsetLocs_i2.x; offsetLoc < offsetLocs_i2.y; offsetLoc += numChannels, locInWindow++)
             {
-                float w = resample_hip_compute(locInWindow, window->scale, window->center, lookup_smem, window->lookupSize);
+                float w = resample_hip_compute(locInWindow, windowScale, windowCenter, lookup_smem, lookupSize);
                 for (int c = 0; c < numChannels; c++)
                     tempBuf[c] += inBlockPtr[offsetLoc + c] * w;
             }
 
-            int dstIdx = outPos * numChannels;
             for (int c = 0; c < numChannels; c++)
                 dstPtr[dstIdx + c] = tempBuf[c];
         }
@@ -191,8 +196,8 @@ __global__ void resample_multi_channel_hip_tensor(float *srcPtr,
         if (outBlock >= dstLength)
             return;
 
-        uint srcIdx = id_z * strides.x + outBlock;
-        uint dstIdx = id_z * strides.y + outBlock;
+        uint srcIdx = id_z * strides.x + outBlock * numChannels;
+        uint dstIdx = id_z * strides.y + outBlock * numChannels;
         for (int outPos = outBlock; outPos < blockEnd; outPos++, dstIdx += numChannels, srcIdx += numChannels)
         {
             for (int c = 0; c < numChannels; c++)
@@ -221,6 +226,8 @@ RppStatus hip_exec_resample_tensor(Rpp32f *srcPtr,
 
     int *dstDimsTensor = reinterpret_cast<int *>(handle.GetInitHandle()->mem.mgpu.scratchBufferPinned.uintmem);
     compute_output_length(inRateTensor, outRateTensor, srcDimsTensor, dstDimsTensor, dstDescPtr->n);
+
+    // For 1D audio tensors (channels = 1)
     if (tensorDims == 1)
     {
         hipLaunchKernelGGL(resample_single_channel_hip_tensor,
@@ -237,6 +244,7 @@ RppStatus hip_exec_resample_tensor(Rpp32f *srcPtr,
                            outRateTensor,
                            &window);
     }
+    // For 2D audio tensors ((channels > 1)
     else if (tensorDims == 2)
     {
         hipLaunchKernelGGL(resample_multi_channel_hip_tensor,
