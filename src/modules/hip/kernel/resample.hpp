@@ -14,6 +14,16 @@ __device__ __forceinline__ float resample_hip_compute(float x, float scale, floa
     return current + weight * (next - current);
 }
 
+__device__ __forceinline__ float4 resample_hip_compute(float4 *x_f4, float4 *scale_f4, float4 *center_f4, float *lookup)
+{
+    float4 locRaw_f4 = (*x_f4) * (*scale_f4) + (*center_f4);
+    int4 locFloor_i4 = make_int4(std::floor(locRaw_f4.x), std::floor(locRaw_f4.y), std::floor(locRaw_f4.z), std::floor(locRaw_f4.w));
+    float4 weight_f4 = make_float4(locRaw_f4.x - locFloor_i4.x, locRaw_f4.y - locFloor_i4.y, locRaw_f4.z - locFloor_i4.z, locRaw_f4.w - locFloor_i4.w);
+    float4 current_f4 = make_float4(lookup[locFloor_i4.x], lookup[locFloor_i4.y], lookup[locFloor_i4.z], lookup[locFloor_i4.w]);
+    float4 next_f4 = make_float4(lookup[locFloor_i4.x + 1], lookup[locFloor_i4.y + 1], lookup[locFloor_i4.z + 1], lookup[locFloor_i4.w + 1]);
+    return (current_f4 + weight_f4 * (next_f4 - current_f4));
+}
+
 // -------------------- Set 1 - resample kernel host helpers  --------------------
 
 void compute_output_length(Rpp32f *inRateTensor,
@@ -51,13 +61,20 @@ __global__ void resample_single_channel_hip_tensor(float *srcPtr,
     if (dstLength != srcLength)
     {
         double scale = static_cast<double>(inRateTensor[id_z]) / outRateTensor[id_z];
-        extern __shared__ float windowCoeffs_smem[];
+        extern __shared__ float lookup_smem[];
         for (int k = hipThreadIdx_x; k < window->lookupSize; k += hipBlockDim_x)
-            windowCoeffs_smem[k] = window->lookup[k];
+            lookup_smem[k] = window->lookup[k];
         __syncthreads();
 
         if (outBlock >= dstLength)
             return;
+
+        // extract the params from window
+        float windowScale = window->scale;
+        float windowCenter = window->center;
+        uint lookupSize = window->lookupSize;
+        float4 windowScale_f4 = static_cast<float4>(windowScale);
+        float4 windowCenter_f4 = static_cast<float4>(windowCenter);
 
         double inBlockRaw = outBlock * scale;
         int inBlockRounded = static_cast<int>(inBlockRaw);
@@ -78,9 +95,21 @@ __global__ void resample_single_channel_hip_tensor(float *srcPtr,
             float locBegin = locInWindow - inPos;
             float accum = 0.0f;
 
-            for (; locInWindow < loc1; locInWindow++, locBegin++)
+            float4 locInWindow_f4 = make_float4(locBegin, locBegin + 1, locBegin + 2, locBegin + 3);
+            float4 accum_f4 = static_cast<float4>(0.0f);
+            float4 increment_f4 = static_cast<float4>(4.0f);
+            for (; locInWindow + 3 < loc1; locInWindow += 4)
             {
-                float w = resample_hip_compute(locBegin, window->scale, window->center, windowCoeffs_smem, window->lookupSize);
+                float4 weights_f4 = resample_hip_compute(&locInWindow_f4, &windowScale_f4, &windowCenter_f4, lookup_smem);
+                accum_f4 +=  (*(float4 *)(&inBlockPtr[locInWindow]) * weights_f4);
+                locInWindow_f4 += increment_f4;
+            }
+            accum += (accum_f4.x + accum_f4.y + accum_f4.z + accum_f4.w);
+
+            float x = locInWindow - inPos;
+            for (; locInWindow < loc1; locInWindow++, x++)
+            {
+                float w = resample_hip_compute(x, windowScale, windowCenter, lookup_smem, lookupSize);
                 accum += inBlockPtr[locInWindow] * w;
             }
             dstPtr[dstIdx] = accum;
@@ -120,9 +149,9 @@ __global__ void resample_multi_channel_hip_tensor(float *srcPtr,
     if (dstLength != srcLength)
     {
         double scale = static_cast<double>(inRateTensor[id_z]) / outRateTensor[id_z];
-        extern __shared__ float windowCoeffs_smem[];
+        extern __shared__ float lookup_smem[];
         for (int k = hipThreadIdx_x; k < window->lookupSize; k += hipBlockDim_x)
-            windowCoeffs_smem[k] = window->lookup[k];
+            lookup_smem[k] = window->lookup[k];
         __syncthreads();
 
         if (outBlock >= dstLength)
@@ -147,7 +176,7 @@ __global__ void resample_multi_channel_hip_tensor(float *srcPtr,
             int2 offsetLocs_i2 = make_int2(loc0, loc1) * static_cast<int2>(numChannels);    // offsetted loc0, loc1 values for multi channel case
             for (int offsetLoc = offsetLocs_i2.x; offsetLoc < offsetLocs_i2.y; offsetLoc += numChannels, locInWindow++)
             {
-                float w = resample_hip_compute(locInWindow, window->scale, window->center, windowCoeffs_smem, window->lookupSize);
+                float w = resample_hip_compute(locInWindow, window->scale, window->center, lookup_smem, window->lookupSize);
                 for (int c = 0; c < numChannels; c++)
                     tempBuf[c] += inBlockPtr[offsetLoc + c] * w;
             }
