@@ -448,38 +448,42 @@ RppStatus rppt_phase_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDescPtr srcDesc
  * \details This function performs slice augmentation on a generic 4D tensor.
  *          Slice augmentation involves selecting a region of interest (ROI) from the source tensor
  *          and copying it to the destination tensor. Support added for f32 -> f32 and u8 -> u8 dataypes.
- * \param[in] srcPtr source tensor in HOST memory
- * \param[in] srcGenericDescPtr source tensor descriptor
- * \param[out] dstPtr destination tensor in HOST memory
- * \param[in] dstGenericDescPtr destination tensor descriptor
- * \param[in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
- * \param[in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
+ * \param [in] srcPtr source tensor memory in HOST memory
+ * \param [in] srcGenericDescPtr source tensor descriptor
+ * \param [out] dstPtr destination tensor memory in HOST memory
+ * \param [in] dstGenericDescPtr destination tensor descriptor
+ * \param [in] anchorTensor starting index of the slice for each dimension in input (1D tensor of size = batchSize * numberOfDimensions)
+ * \param [in] shapeTensor length of the slice for each dimension in input (1D tensor of size = batchSize * numberOfDimensions)
+ * \param [in] fillValue fill value that is used to fill output if enablePadding is set to true
+ * \param [in] enablePadding boolean flag to specify if padding is enabled or not
+ * \param [in] roiTensor roi data in HOST memory (1D tensor of size = batchSize * numberOfDimensions * 2)
  * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
- * \ingroup group_tensor_geometric
  */
-RppStatus rppt_slice_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle);
+RppStatus rppt_slice_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32s *anchorTensor, Rpp32s *shapeTensor, RppPtr_t fillValue, bool enablePadding, Rpp32u *roiTensor, rppHandle_t rppHandle);
 
 #ifdef GPU_SUPPORT
 /*! \brief Slice augmentation GPU
  * \details This function performs slice augmentation on a generic 4D tensor.
  *          Slice augmentation involves selecting a region of interest (ROI) from the source tensor
  *          and copying it to the destination tensor. Support added for f32 -> f32 and u8 -> u8 dataypes.
- * \param[in] srcPtr source tensor in HIP memory
- * \param[in] srcGenericDescPtr source tensor descriptor
- * \param[out] dstPtr destination tensor in HIP memory
- * \param[in] dstGenericDescPtr destination tensor descriptor
- * \param[in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
- * \param[in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
+ * \param [in] srcPtr source tensor memory in HIP memory
+ * \param [in] srcGenericDescPtr source tensor descriptor
+ * \param [out] dstPtr destination tensor memory in HIP memory
+ * \param [in] dstGenericDescPtr destination tensor descriptor
+ * \param [in] anchorTensor starting index of the slice for each dimension in input (1D tensor in pinned/HOST memory of size = batchSize * numberOfDimensions)
+ * \param [in] shapeTensor length of the slice for each dimension in input (1D tensor in pinned/HOST memory of size = batchSize * numberOfDimensions)
+ * \param [in] fillValue fill value that is used to fill output if enablePadding is set to true
+ * \param [in] enablePadding boolean flag to specify if padding is enabled or not
+ * \param [in] roiTensor roi data in pinned/HOST memory (1D tensor of size = batchSize * numberOfDimensions * 2)
  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
- * \ingroup group_tensor_geometric
  */
-RppStatus rppt_slice_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle);
+RppStatus rppt_slice_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32s *anchorTensor, Rpp32s *shapeTensor, RppPtr_t fillValue, bool enablePadding, Rpp32u *roiTensor, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
 /*! \brief Crop and Patch augmentation on HOST backend for a NCHW/NHWC layout tensor
@@ -539,15 +543,15 @@ RppStatus rppt_crop_and_patch_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDescPt
             <br> Support added for f32 -> f32 and u8 -> u8 dataypes.
  * \image html input150x150x4.gif Sample Input
  * \image html geometric_augmentations_flip_150x150x4.gif Sample Output
- * \param[in] srcPtr source tensor in HOST memory
- * \param[in] srcGenericDescPtr source tensor descriptor (Restrictions - numDims = 5, offsetInBytes >= 0, dataType = U8/F32, layout = NCDHW/NDHWC, c = 1/3)
- * \param[out] dstPtr destination tensor in HOST memory
- * \param[in] dstGenericDescPtr destination tensor descriptor (Restrictions - numDims = 5, offsetInBytes >= 0, dataType = U8/F32, layout = NCDHW/NDHWC, c = 1/3)
+ * \param [in] srcPtr source tensor in HOST memory
+ * \param [in] srcGenericDescPtr source tensor descriptor (Restrictions - numDims = 5, offsetInBytes >= 0, dataType = U8/F32, layout = NCDHW/NDHWC, c = 1/3)
+ * \param [out] dstPtr destination tensor in HOST memory
+ * \param [in] dstGenericDescPtr destination tensor descriptor (Restrictions - numDims = 5, offsetInBytes >= 0, dataType = U8/F32, layout = NCDHW/NDHWC, c = 1/3)
  * \param [in] horizontalTensor horizontal flag values to set horizontal flip on/off (1D tensor in HOST memory, of size batchSize, with horizontalTensor[i] = 0/1)
  * \param [in] verticalTensor vertical flag values to set vertical flip on/off (1D tensor in HOST memory, of size batchSize, with verticalTensor[i] = 0/1)
  * \param [in] depthTensor depth flag values to set depth flip on/off (1D tensor in HOST memory, of size batchSize, with depthTensor[i] = 0/1)
- * \param[in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
- * \param[in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
+ * \param [in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
+ * \param [in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
  * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.
@@ -562,15 +566,15 @@ RppStatus rppt_flip_voxel_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDes
             <br> Support added for f32 -> f32 and u8 -> u8 dataypes.
  * \image html input150x150x4.gif Sample Input
  * \image html geometric_augmentations_flip_150x150x4.gif Sample Output
- * \param[in] srcPtr source tensor in HIP memory
- * \param[in] srcGenericDescPtr source tensor descriptor (Restrictions - numDims = 5, offsetInBytes >= 0, dataType = U8/F32, layout = NCDHW/NDHWC, c = 1/3)
- * \param[out] dstPtr destination tensor in HIP memory
- * \param[in] dstGenericDescPtr destination tensor descriptor (Restrictions - numDims = 5, offsetInBytes >= 0, dataType = U8/F32, layout = NCDHW/NDHWC, c = 1/3)
+ * \param [in] srcPtr source tensor in HIP memory
+ * \param [in] srcGenericDescPtr source tensor descriptor (Restrictions - numDims = 5, offsetInBytes >= 0, dataType = U8/F32, layout = NCDHW/NDHWC, c = 1/3)
+ * \param [out] dstPtr destination tensor in HIP memory
+ * \param [in] dstGenericDescPtr destination tensor descriptor (Restrictions - numDims = 5, offsetInBytes >= 0, dataType = U8/F32, layout = NCDHW/NDHWC, c = 1/3)
  * \param [in] horizontalTensor horizontal flag values to set horizontal flip on/off (1D tensor in pinned/HOST memory, of size batchSize, with horizontalTensor[i] = 0/1)
  * \param [in] verticalTensor vertical flag values to set vertical flip on/off (1D tensor in pinned/HOST memory, of size batchSize, with verticalTensor[i] = 0/1)
  * \param [in] depthTensor depth flag values to set depth flip on/off (1D tensor in pinned/HOST memory, of size batchSize, with depthTensor[i] = 0/1)
- * \param[in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
- * \param[in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
+ * \param [in] roiGenericPtrSrc ROI data for each image in source tensor (tensor of batchSize RpptRoiGeneric values)
+ * \param [in] roiType ROI type used (RpptRoi3DType::XYZWHD or RpptRoi3DType::LTFRBB)
  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
  * \retval RPP_SUCCESS Successful completion.

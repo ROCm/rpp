@@ -56,11 +56,9 @@ inline RppLayoutParams get_layout_params(RpptLayout layout, Rpp32u channels)
     }
     else if(layout == RpptLayout::NHWC || layout == RpptLayout::NDHWC)
     {
-        if (channels == 3) // PKD3
-        {
-            layoutParams.channelParam = 1;
-            layoutParams.bufferMultiplier = 3;
-        }
+        //PKD
+        layoutParams.channelParam = 1;
+        layoutParams.bufferMultiplier = channels;
     }
     return layoutParams;
 }
