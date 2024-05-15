@@ -89,7 +89,7 @@ RppStatus hip_exec_lens_correction_tensor(RpptDescPtr dstDescPtr,
 
     int globalThreads_x = dstDescPtr->w;
     int globalThreads_y = dstDescPtr->h;
-    int globalThreads_z = handle.GetBatchSize();
+    int globalThreads_z = dstDescPtr->n;
 
     float *inverseMatrix = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
     hipLaunchKernelGGL(get_inverse_hip,
@@ -97,9 +97,9 @@ RppStatus hip_exec_lens_correction_tensor(RpptDescPtr dstDescPtr,
                        dim3(1, 1, LOCAL_THREADS_Z),
                        0,
                        handle.GetStream(),
-                       (d_float9 *)cameraMatrix,
-                       (d_float9 *)inverseMatrix);
-
+                       reinterpret_cast<d_float9 *>(cameraMatrix),
+                       reinterpret_cast<d_float9 *>(inverseMatrix));
+    hipStreamSynchronize(handle.GetStream());
     hipLaunchKernelGGL(compute_remap_tables_hip_tensor,
                        dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                        dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
@@ -107,13 +107,11 @@ RppStatus hip_exec_lens_correction_tensor(RpptDescPtr dstDescPtr,
                        handle.GetStream(),
                        rowRemapTable,
                        colRemapTable,
-                       (d_float9 *)cameraMatrix,
-                       (d_float9 *)inverseMatrix,
-                       (d_float8 *)distanceCoeffs,
-                       (d_float9 *)newCameraMatrix,
+                       reinterpret_cast<d_float9 *>(cameraMatrix),
+                       reinterpret_cast<d_float9 *>(inverseMatrix),
+                       reinterpret_cast<d_float8 *>(distanceCoeffs),
+                       reinterpret_cast<d_float9 *>(newCameraMatrix),
                        make_uint2(remapTableDescPtr->strides.nStride, remapTableDescPtr->strides.hStride),
                        roiTensorPtrSrc);
-    hipDeviceSynchronize();
-
     return RPP_SUCCESS;
 }
