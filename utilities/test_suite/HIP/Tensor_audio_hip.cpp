@@ -111,12 +111,12 @@ int main(int argc, char **argv)
     srcDescPtr->numDims = 2;
     dstDescPtr->numDims = 2;
     // set buffer sizes for src/dst
-    iBufferSize = (Rpp64u)srcDescPtr->h * (Rpp64u)srcDescPtr->w * (Rpp64u)srcDescPtr->c * (Rpp64u)srcDescPtr->n;
-    oBufferSize = (Rpp64u)dstDescPtr->h * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
+    iBufferSize = static_cast<Rpp64u>(srcDescPtr->h) * static_cast<Rpp64u>(srcDescPtr->w) * static_cast<Rpp64u>(srcDescPtr->c) * static_cast<Rpp64u>(srcDescPtr->n);
+    oBufferSize = static_cast<Rpp64u>(dstDescPtr->h) * static_cast<Rpp64u>(dstDescPtr->w) * static_cast<Rpp64u>(dstDescPtr->c) * static_cast<Rpp64u>(dstDescPtr->n);
 
     // allocate hip buffers for input & output
-    Rpp32f *inputf32 = (Rpp32f *)calloc(iBufferSize, sizeof(Rpp32f));
-    Rpp32f *outputf32 = (Rpp32f *)calloc(oBufferSize, sizeof(Rpp32f));
+    Rpp32f *inputf32 = static_cast<Rpp32f *>(calloc(iBufferSize, sizeof(Rpp32f)));
+    Rpp32f *outputf32 = static_cast<Rpp32f *>(calloc(oBufferSize, sizeof(Rpp32f)));
 
     void *d_inputf32, *d_outputf32;
     CHECK_RETURN_STATUS(hipMalloc(&d_inputf32, iBufferSize * sizeof(Rpp32f)));
@@ -128,8 +128,8 @@ int main(int argc, char **argv)
     CHECK_RETURN_STATUS(hipHostMalloc(&channelsTensor, batchSize * sizeof(Rpp32s)));
 
     // allocate the buffers for src/dst dimensions for each element in batch
-    RpptImagePatch *srcDims = (RpptImagePatch *) calloc(batchSize, sizeof(RpptImagePatch));
-    RpptImagePatch *dstDims = (RpptImagePatch *) calloc(batchSize, sizeof(RpptImagePatch));
+    RpptImagePatch *srcDims = static_cast<RpptImagePatch *>(calloc(batchSize, sizeof(RpptImagePatch)));
+    RpptImagePatch *dstDims = static_cast<RpptImagePatch *>(calloc(batchSize, sizeof(RpptImagePatch)));
 
     // allocate the buffer for srcDimsTensor
     Rpp32s *srcDimsTensor;
@@ -198,7 +198,7 @@ int main(int argc, char **argv)
                     dstDescPtr->strides.nStride = dstDescPtr->c * dstDescPtr->w * dstDescPtr->h;
 
                     // Set buffer sizes for dst
-                    resampleBufferSize = (Rpp64u)dstDescPtr->h * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
+                    resampleBufferSize = static_cast<Rpp64u>(dstDescPtr->h) * static_cast<Rpp64u>(dstDescPtr->w) * static_cast<Rpp64u>(dstDescPtr->c) * static_cast<Rpp64u>(dstDescPtr->n);
 
                     // Initialize hip buffers for output based on resampleBufferSize
                     CHECK_RETURN_STATUS(hipFree(d_outputf32));
@@ -235,7 +235,7 @@ int main(int argc, char **argv)
         {
             if (testCase == 6)
             {
-                outputf32 = (Rpp32f *)realloc(outputf32, sizeof(Rpp32f) * resampleBufferSize);
+                outputf32 = static_cast<Rpp32f *>(realloc(outputf32, sizeof(Rpp32f) * resampleBufferSize));
                 CHECK_RETURN_STATUS(hipMemcpy(outputf32, d_outputf32, resampleBufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
             }
             else
