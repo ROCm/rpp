@@ -14,14 +14,14 @@ __device__ __forceinline__ float resample_hip_compute(float x, float scale, floa
     return current + weight * (next - current);
 }
 
-__device__ __forceinline__ float4 resample_hip_compute(float4 &x_f4, const float4 &scale_f4, const float4 &center_f4, float *lookup)
+__device__ __forceinline__ void resample_hip_compute(float4 *src_f4, float4 *dst_f4, const float4 *scale_f4, const float4 *center_f4, float *lookup)
 {
-    float4 locRaw_f4 = x_f4 * scale_f4 + center_f4;
+    float4 locRaw_f4 = (*src_f4) * (*scale_f4) + (*center_f4);
     int4 locFloor_i4 = make_int4(std::floor(locRaw_f4.x), std::floor(locRaw_f4.y), std::floor(locRaw_f4.z), std::floor(locRaw_f4.w));
     float4 weight_f4 = make_float4(locRaw_f4.x - locFloor_i4.x, locRaw_f4.y - locFloor_i4.y, locRaw_f4.z - locFloor_i4.z, locRaw_f4.w - locFloor_i4.w);
     float4 current_f4 = make_float4(lookup[locFloor_i4.x], lookup[locFloor_i4.y], lookup[locFloor_i4.z], lookup[locFloor_i4.w]);
     float4 next_f4 = make_float4(lookup[locFloor_i4.x + 1], lookup[locFloor_i4.y + 1], lookup[locFloor_i4.z + 1], lookup[locFloor_i4.w + 1]);
-    return (current_f4 + weight_f4 * (next_f4 - current_f4));
+    *dst_f4 = current_f4 + weight_f4 * (next_f4 - current_f4);
 }
 
 // -------------------- Set 1 - resample kernel host helpers  --------------------
@@ -77,7 +77,10 @@ __global__ void resample_single_channel_hip_tensor(float *srcPtr,
         int lookupSize = window->lookupSize;
         float4 windowScale_f4 = static_cast<float4>(windowScale);
         float4 windowCenter_f4 = static_cast<float4>(windowCenter);
-        float4 increment_f4 = static_cast<float4>(4.0f);
+        float4 increment_f4 = static_cast<float4>(8.0f);
+        d_float8 locInit_f8;
+        locInit_f8.f4[0] = make_float4(0, 1, 2, 3);
+        locInit_f8.f4[1] = make_float4(4, 5, 6, 7);
 
         // compute block wise values required for processing
         double inBlockRaw = outBlock * scale;
@@ -102,15 +105,27 @@ __global__ void resample_single_channel_hip_tensor(float *srcPtr,
             float locBegin = locInWindow - inPos;
             float accum = 0.0f;
 
-            float4 locInWindow_f4 = make_float4(locBegin, locBegin + 1, locBegin + 2, locBegin + 3);
-            float4 accum_f4 = static_cast<float4>(0.0f);
-            for (; locInWindow + 3 < loc1; locInWindow += 4)
+            d_float8 locInWindow_f8, accum_f8;
+            locInWindow_f8.f4[0] = static_cast<float4>(locBegin) + locInit_f8.f4[0]; //, locBegin + 1, locBegin + 2, locBegin + 3);
+            locInWindow_f8.f4[1] = static_cast<float4>(locBegin) + locInit_f8.f4[1];//make_float4(locBegin + 4, locBegin + 5, locBegin + 6, locBegin + 7);
+            accum_f8.f4[0] = static_cast<float4>(0.0f);
+            accum_f8.f4[1] = static_cast<float4>(0.0f);
+            for (; locInWindow + 7 < loc1; locInWindow += 8)
             {
-                float4 weights_f4 = resample_hip_compute(locInWindow_f4, windowScale_f4, windowCenter_f4, lookup_smem);
-                accum_f4 +=  (*(float4 *)(&inBlockPtr[locInWindow]) * weights_f4);
-                locInWindow_f4 += increment_f4;
+                d_float8 weights_f8;
+                resample_hip_compute(&locInWindow_f8.f4[0], &weights_f8.f4[0], &windowScale_f4, &windowCenter_f4, lookup_smem);
+                resample_hip_compute(&locInWindow_f8.f4[1], &weights_f8.f4[1], &windowScale_f4, &windowCenter_f4, lookup_smem);
+
+                d_float8 src_f8;
+                rpp_hip_load8_and_unpack_to_float8(inBlockPtr + locInWindow, &src_f8);
+                accum_f8.f4[0] +=  src_f8.f4[0] * weights_f8.f4[0];
+                accum_f8.f4[1] +=  src_f8.f4[1] * weights_f8.f4[1];
+
+                locInWindow_f8.f4[0] += increment_f4;
+                locInWindow_f8.f4[1] += increment_f4;
             }
-            accum += (accum_f4.x + accum_f4.y + accum_f4.z + accum_f4.w);   // perform small work of reducing float4 to float
+            accum_f8.f4[0] += accum_f8.f4[1];
+            accum += (accum_f8.f1[0] + accum_f8.f1[1] + accum_f8.f1[2] + accum_f8.f1[3]);   // perform small work of reducing float4 to float
 
             float x = locInWindow - inPos;
             for (; locInWindow < loc1; locInWindow++, x++)
