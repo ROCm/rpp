@@ -209,7 +209,7 @@ int main(int argc, char **argv)
             /* Run only if testCase is not 0
             For testCase 0 verify_non_silent_region_detection function is used for QA testing */
             if (testCase != 0)
-                verify_output(outputf32, dstDescPtr, dstDims, testCaseName, dst, scriptPath);
+                verify_output(outputf32, dstDescPtr, dstDims, testCaseName, dst, scriptPath, "HIP");
 
             /* Dump the outputs to csv files for debugging
             Runs only if
