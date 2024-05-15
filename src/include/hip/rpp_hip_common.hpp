@@ -55,7 +55,7 @@ typedef union { float f1[5];                                                    
 typedef union { float f1[6];    float2 f2[3];                                                   }   d_float6;
 typedef union { float f1[7];                                                                    }   d_float7;
 typedef union { float f1[8];    float2 f2[4];   float4 f4[2];                                   }   d_float8;
-typedef union { float f1[9];    float3 f3[3];                                                   }   d_float9;
+typedef union { float f1[9];                                                                    }   d_float9;
 typedef union { float f1[12];   float4 f4[3];                                                   }   d_float12;
 typedef union { float f1[16];   float4 f4[4];   d_float8 f8[2];                                 }   d_float16;
 typedef union { float f1[24];   float2 f2[12];  float3 f3[8];   float4 f4[6];   d_float8 f8[3]; }   d_float24;
