@@ -3,7 +3,7 @@
 
 // -------------------- Set 0 - resample kernel device helpers  --------------------
 
-__device__ __forceinline__ float resample_hip_compute(float x, float scale, float center, float *lookup, int lookupSize)
+__device__ __forceinline__ float resample_hip_compute(float &x, float &scale, float &center, float *lookup, int &lookupSize)
 {
     float locRaw = x * scale + center;
     int locFloor = std::floor(locRaw);
@@ -44,8 +44,8 @@ void compute_output_dims(Rpp32f *inRateTensor,
 __global__ void resample_single_channel_hip_tensor(float *srcPtr,
                                                    float *dstPtr,
                                                    uint2 strides,
-                                                   int *srcDimsTensor,
-                                                   int *dstDimsTensor,
+                                                   int2 *srcDimsTensor,
+                                                   int2 *dstDimsTensor,
                                                    float *inRateTensor,
                                                    float *outRateTensor,
                                                    RpptResamplingWindow *window)
@@ -53,8 +53,8 @@ __global__ void resample_single_channel_hip_tensor(float *srcPtr,
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    int srcLength = srcDimsTensor[id_z * 2];
-    int dstLength = dstDimsTensor[id_z * 2];
+    int srcLength = srcDimsTensor[id_z].x;
+    int dstLength = dstDimsTensor[id_z].x;
     int outBlock = id_x * hipBlockDim_x;
     int blockEnd = std::min(outBlock + static_cast<int>(hipBlockDim_x), dstLength);
 
@@ -154,8 +154,8 @@ __global__ void resample_single_channel_hip_tensor(float *srcPtr,
 __global__ void resample_multi_channel_hip_tensor(float *srcPtr,
                                                   float *dstPtr,
                                                   uint2 strides,
-                                                  int *srcDimsTensor,
-                                                  int *dstDimsTensor,
+                                                  int2 *srcDimsTensor,
+                                                  int2 *dstDimsTensor,
                                                   float *inRateTensor,
                                                   float *outRateTensor,
                                                   RpptResamplingWindow *window)
@@ -163,9 +163,9 @@ __global__ void resample_multi_channel_hip_tensor(float *srcPtr,
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
-    int srcLength = srcDimsTensor[id_z * 2];
-    int numChannels = srcDimsTensor[id_z * 2 + 1];
-    int dstLength = dstDimsTensor[id_z * 2];
+    int srcLength = srcDimsTensor[id_z].x;
+    int numChannels = srcDimsTensor[id_z].y;
+    int dstLength = dstDimsTensor[id_z].x;
     int outBlock = id_x * hipBlockDim_x;
     int blockEnd = std::min(outBlock + static_cast<int>(hipBlockDim_x), dstLength);
 
@@ -270,8 +270,8 @@ RppStatus hip_exec_resample_tensor(Rpp32f *srcPtr,
                            srcPtr,
                            dstPtr,
                            make_uint2(srcDescPtr->strides.nStride, dstDescPtr->strides.nStride),
-                           srcDimsTensor,
-                           dstDimsTensor,
+                           reinterpret_cast<int2 *>(srcDimsTensor),
+                           reinterpret_cast<int2 *>(dstDimsTensor),
                            inRateTensor,
                            outRateTensor,
                            &window);
@@ -287,8 +287,8 @@ RppStatus hip_exec_resample_tensor(Rpp32f *srcPtr,
                            srcPtr,
                            dstPtr,
                            make_uint2(srcDescPtr->strides.nStride, dstDescPtr->strides.nStride),
-                           srcDimsTensor,
-                           dstDimsTensor,
+                           reinterpret_cast<int2 *>(srcDimsTensor),
+                           reinterpret_cast<int2 *>(dstDimsTensor),
                            inRateTensor,
                            outRateTensor,
                            &window);
