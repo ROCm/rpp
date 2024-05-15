@@ -141,6 +141,9 @@ int main(int argc, char **argv)
     // buffers used for non silent region detection
     Rpp32s detectedIndex[batchSize], detectionLength[batchSize];
 
+    // RpptResamplingWindow instance used for resample augmentation
+    RpptResamplingWindow window;
+
     // run case-wise RPP API and measure time
     rppHandle_t handle;
     rppCreateWithBatchSize(&handle, srcDescPtr->n, 3);
@@ -324,7 +327,6 @@ int main(int argc, char **argv)
                     Rpp32f quality = 50.0f;
                     Rpp32s lobes = std::round(0.007 * quality * quality - 0.09 * quality + 3);
                     Rpp32s lookupSize = lobes * 64 + 1;
-                    RpptResamplingWindow window;
                     window.lookup = (Rpp32f *)malloc((lookupSize + 5) * sizeof(Rpp32f));
                     windowed_sinc(window, lookupSize, lobes);
 
@@ -345,7 +347,6 @@ int main(int argc, char **argv)
                     startWallTime = omp_get_wtime();
                     rppt_resample_host(inputf32, srcDescPtr, outputf32, dstDescPtr, inRateTensor, outRateTensor, srcDimsTensor, window, handle);
 
-                    free(window.lookup);
                     break;
                 }
                 case 7:
@@ -463,5 +464,7 @@ int main(int argc, char **argv)
     free(dstDims);
     free(inputf32);
     free(outputf32);
+    if (testCase == 6)
+        free(window.lookup);
     return 0;
 }
