@@ -101,7 +101,9 @@ RppStatus glitch_u8_u8_host_tensor(Rpp8u *srcPtr,
                 Rpp8u* dstRowPtrTempR = dstPtrRow;
                 Rpp8u* dstRowPtrTempG = dstPtrRow + dstDescPtr->strides.cStride;
                 Rpp8u* dstRowPtrTempB = dstPtrRow + 2 * dstDescPtr->strides.cStride;
-                for (int vectorLoopCount = 0; vectorLoopCount < alignedLength; vectorLoopCount += 8)
+                int vectorLoopCount = 0;
+#if __AVX2__
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                 {
                     __m256 p[3];
                     compute_src_loc(dstLocRow, vectorLoopCount, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 3);
@@ -112,9 +114,10 @@ RppStatus glitch_u8_u8_host_tensor(Rpp8u *srcPtr,
                     dstRowPtrTempG += 8;
                     dstRowPtrTempB += 8;
                 }
-                for (int i = alignedLength; i < roi.xywhROI.roiWidth; i++)
+#endif
+                for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
                 {
-                    compute_src_loc(dstLocRow, i, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 3);
+                    compute_src_loc(dstLocRow, vectorLoopCount, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 3);
                     *dstRowPtrTempR++ = *(srcPtrChannel + glitchSrcLocArray[0] + 0);
                     *dstRowPtrTempG++ = *(srcPtrChannel + glitchSrcLocArray[1] + 1);
                     *dstRowPtrTempB++ = *(srcPtrChannel + glitchSrcLocArray[2] + 2);
@@ -132,7 +135,9 @@ RppStatus glitch_u8_u8_host_tensor(Rpp8u *srcPtr,
             for (int dstLocRow = 0; dstLocRow < roi.xywhROI.roiHeight; dstLocRow++)
             {
                 Rpp8u* dstPtrTemp = dstPtrRow;
-                for (int vectorLoopCount = 0; vectorLoopCount < alignedLength; vectorLoopCount += 16)
+                int vectorLoopCount = 0;
+#if __AVX2__
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                 {
                     __m256 p[6];
                     compute_src_loc(dstLocRow, vectorLoopCount, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 1);
@@ -143,9 +148,10 @@ RppStatus glitch_u8_u8_host_tensor(Rpp8u *srcPtr,
                     rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTemp, p);    // simd stores
                     dstPtrTemp += 48;
                 }
-                for (int i = alignedLength; i < roi.xywhROI.roiWidth; i++)
+#endif
+                for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
                 {
-                    compute_src_loc(dstLocRow, i, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 1);
+                    compute_src_loc(dstLocRow, vectorLoopCount, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 1);
                     for (int c = 0; c < 3; c++)
                         *(dstPtrTemp + c) = *(srcPtrChannel + glitchSrcLocArray[c] + c *srcDescPtr->strides.cStride);
                     dstPtrTemp += 3;
@@ -160,11 +166,12 @@ RppStatus glitch_u8_u8_host_tensor(Rpp8u *srcPtr,
             dstPtrRow = dstPtrChannel;
             Rpp32u vectorIncrement = 32;
             Rpp32u alignedLength = (static_cast<int>(roi.xywhROI.roiWidth * 0.75)) & ~31;  // Considering 75% of the ROI width to avoid loading out-of-bounds locations.
-
             for (int dstLocRow = 0; dstLocRow < roi.xywhROI.roiHeight; dstLocRow++)
             {
                 Rpp8u* dstPtrTemp = dstPtrRow;
-                for (int vectorLoopCount = 0; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
+                int vectorLoopCount = 0;
+#if __AVX2__
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     compute_src_loc(dstLocRow, vectorLoopCount, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 1);
                     for (int c = 0; c < 3; c++)
@@ -175,9 +182,10 @@ RppStatus glitch_u8_u8_host_tensor(Rpp8u *srcPtr,
                     }
                     dstPtrTemp += 32;
                 }
-                for (int i = alignedLength; i < roi.xywhROI.roiWidth; i++)
+#endif
+                for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
                 {
-                    compute_src_loc(dstLocRow, i, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 1);
+                    compute_src_loc(dstLocRow, vectorLoopCount, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 1);
                     for (int c = 0; c < 3; c++)
                         *(dstPtrTemp + c * dstDescPtr->strides.cStride) = *(srcPtrChannel + glitchSrcLocArray[c] + c *srcDescPtr->strides.cStride);
                     dstPtrTemp += 1;
@@ -197,7 +205,9 @@ RppStatus glitch_u8_u8_host_tensor(Rpp8u *srcPtr,
             for (int dstLocRow = 0; dstLocRow < roi.xywhROI.roiHeight; dstLocRow++)
             {
                 Rpp8u* dstPtrTemp = dstPtrRow;
-                for (int vectorLoopCount = 0; vectorLoopCount < alignedLength; vectorLoopCount += 10)
+                int vectorLoopCount = 0;
+#if __AVX2__
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 10)
                 {
                     __m256i p;
                     compute_src_loc(dstLocRow, vectorLoopCount, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 3);
@@ -205,9 +215,10 @@ RppStatus glitch_u8_u8_host_tensor(Rpp8u *srcPtr,
                     _mm256_storeu_epi8(dstPtrTemp, p);
                     dstPtrTemp += 30;
                 }
-                for (int i = alignedLength; i < roi.xywhROI.roiWidth; i++)
+#endif
+                for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
                 {
-                    compute_src_loc(dstLocRow, i, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 3);
+                    compute_src_loc(dstLocRow, vectorLoopCount, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 3);
                     for (int c = 0; c < 3; c++)
                         *dstPtrTemp++ = *(srcPtrChannel + glitchSrcLocArray[c] + c);
                 }
@@ -262,7 +273,9 @@ RppStatus glitch_f32_f32_host_tensor(Rpp32f *srcPtr,
                 Rpp32f* dstRowPtrTempR = dstPtrRow;
                 Rpp32f* dstRowPtrTempG = dstPtrRow + dstDescPtr->strides.cStride;
                 Rpp32f* dstRowPtrTempB = dstPtrRow + 2 * dstDescPtr->strides.cStride;
-                for (int vectorLoopCount = 0; vectorLoopCount < alignedLength; vectorLoopCount += 8)
+                int vectorLoopCount = 0;
+#if __AVX2__
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                 {
                     __m256 p[3];
                     compute_src_loc(dstLocRow, vectorLoopCount, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 3);
@@ -273,9 +286,10 @@ RppStatus glitch_f32_f32_host_tensor(Rpp32f *srcPtr,
                     dstRowPtrTempG += 8;
                     dstRowPtrTempB += 8;
                 }
-                for (int i = alignedLength; i < roi.xywhROI.roiWidth; i++)
+#endif
+                for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
                 {
-                    compute_src_loc(dstLocRow, i, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 3);
+                    compute_src_loc(dstLocRow, vectorLoopCount, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 3);
                     *dstRowPtrTempR++ = *(srcPtrChannel + glitchSrcLocArray[0] + 0);
                     *dstRowPtrTempG++ = *(srcPtrChannel + glitchSrcLocArray[1] + 1);
                     *dstRowPtrTempB++ = *(srcPtrChannel + glitchSrcLocArray[2] + 2);
@@ -294,7 +308,9 @@ RppStatus glitch_f32_f32_host_tensor(Rpp32f *srcPtr,
             for (int dstLocRow = 0; dstLocRow < roi.xywhROI.roiHeight; dstLocRow++)
             {
                 Rpp32f* dstPtrTemp = dstPtrRow;
-                for (int vectorLoopCount = 0; vectorLoopCount < alignedLength; vectorLoopCount += 8)
+                int vectorLoopCount = 0;
+#if __AVX2__
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                 {
                     __m256 p[3];
                     compute_src_loc(dstLocRow, vectorLoopCount, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 1);
@@ -304,9 +320,10 @@ RppStatus glitch_f32_f32_host_tensor(Rpp32f *srcPtr,
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, p);    // simd stores
                     dstPtrTemp += 24;
                 }
-                for (int i = alignedLength; i < roi.xywhROI.roiWidth; i++)
+#endif
+                for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
                 {
-                    compute_src_loc(dstLocRow, i, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 1);
+                    compute_src_loc(dstLocRow, vectorLoopCount, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 1);
                     for (int c = 0; c < 3; c++)
                         *(dstPtrTemp + c) = *(srcPtrChannel + glitchSrcLocArray[c] + c *srcDescPtr->strides.cStride);
                     dstPtrTemp += 3;
@@ -325,7 +342,9 @@ RppStatus glitch_f32_f32_host_tensor(Rpp32f *srcPtr,
             for (int dstLocRow = 0; dstLocRow < roi.xywhROI.roiHeight; dstLocRow++)
             {
                 Rpp32f* dstPtrTemp = dstPtrRow;
-                for (int vectorLoopCount = 0; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
+                int vectorLoopCount = 0;
+#if __AVX2__
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     compute_src_loc(dstLocRow, vectorLoopCount, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 1);
                     for (int c = 0; c < 3; c++)
@@ -336,9 +355,10 @@ RppStatus glitch_f32_f32_host_tensor(Rpp32f *srcPtr,
                     }
                     dstPtrTemp += 8;
                 }
-                for (int i = alignedLength; i < roi.xywhROI.roiWidth; i++)
+#endif
+                for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
                 {
-                    compute_src_loc(dstLocRow, i, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 1);
+                    compute_src_loc(dstLocRow, vectorLoopCount, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 1);
                     for (int c = 0; c < 3; c++)
                         *(dstPtrTemp + c * dstDescPtr->strides.cStride) = *(srcPtrChannel + glitchSrcLocArray[c] + c *srcDescPtr->strides.cStride);
                     dstPtrTemp += 1;
@@ -358,7 +378,9 @@ RppStatus glitch_f32_f32_host_tensor(Rpp32f *srcPtr,
             for (int dstLocRow = 0; dstLocRow < roi.xywhROI.roiHeight; dstLocRow++)
             {
                 Rpp32f* dstPtrTemp = dstPtrRow;
-                for (int vectorLoopCount = 0; vectorLoopCount < alignedLength; vectorLoopCount += 2)
+                int vectorLoopCount = 0;
+#if __AVX2__
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 2)
                 {
                     __m256 p;
                     compute_src_loc(dstLocRow, vectorLoopCount, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 3);
@@ -367,9 +389,10 @@ RppStatus glitch_f32_f32_host_tensor(Rpp32f *srcPtr,
                     _mm256_storeu_epi8(dstPtrTemp, p);
                     dstPtrTemp += 6;
                 }
-                for (int i = alignedLength; i < roi.xywhROI.roiWidth; i++)
+#endif
+                for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
                 {
-                    compute_src_loc(dstLocRow, i, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 3);
+                    compute_src_loc(dstLocRow, vectorLoopCount, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 3);
                     for (int c = 0; c < 3; c++)
                         *dstPtrTemp++ = *(srcPtrChannel + glitchSrcLocArray[c] + c);
                 }
@@ -536,7 +559,9 @@ RppStatus glitch_i8_i8_host_tensor(Rpp8s *srcPtr,
                 Rpp8s* dstRowPtrTempR = dstPtrRow;
                 Rpp8s* dstRowPtrTempG = dstPtrRow + dstDescPtr->strides.cStride;
                 Rpp8s* dstRowPtrTempB = dstPtrRow + 2 * dstDescPtr->strides.cStride;
-                for (int vectorLoopCount = 0; vectorLoopCount < alignedLength; vectorLoopCount += 8)
+                int vectorLoopCount = 0;
+#if __AVX2__
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                 {
                     __m256 p[3];
                     compute_src_loc(dstLocRow, vectorLoopCount, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 3);
@@ -547,9 +572,10 @@ RppStatus glitch_i8_i8_host_tensor(Rpp8s *srcPtr,
                     dstRowPtrTempG += 8;
                     dstRowPtrTempB += 8;
                 }
-                for (int i = alignedLength; i < roi.xywhROI.roiWidth; i++)
+#endif
+                for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
                 {
-                    compute_src_loc(dstLocRow, i, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 3);
+                    compute_src_loc(dstLocRow, vectorLoopCount, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 3);
                     *dstRowPtrTempR++ = *(srcPtrChannel + glitchSrcLocArray[0] + 0);
                     *dstRowPtrTempG++ = *(srcPtrChannel + glitchSrcLocArray[1] + 1);
                     *dstRowPtrTempB++ = *(srcPtrChannel + glitchSrcLocArray[2] + 2);
@@ -567,7 +593,9 @@ RppStatus glitch_i8_i8_host_tensor(Rpp8s *srcPtr,
             for (int dstLocRow = 0; dstLocRow < roi.xywhROI.roiHeight; dstLocRow++)
             {
                 Rpp8s* dstPtrTemp = dstPtrRow;
-                for (int vectorLoopCount = 0; vectorLoopCount < alignedLength; vectorLoopCount += 16)
+                int vectorLoopCount = 0;
+#if __AVX2__
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                 {
                     __m256 p[6];
                     compute_src_loc(dstLocRow, vectorLoopCount, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 1);
@@ -578,9 +606,10 @@ RppStatus glitch_i8_i8_host_tensor(Rpp8s *srcPtr,
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3_avx, dstPtrTemp, p);    // simd stores
                     dstPtrTemp += 48;
                 }
-                for (int i = alignedLength; i < roi.xywhROI.roiWidth; i++)
+#endif
+                for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
                 {
-                    compute_src_loc(dstLocRow, i, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 1);
+                    compute_src_loc(dstLocRow, vectorLoopCount, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 1);
                     for (int c = 0; c < 3; c++)
                         *(dstPtrTemp + c) = *(srcPtrChannel + glitchSrcLocArray[c] + c *srcDescPtr->strides.cStride);
                     dstPtrTemp += 3;
@@ -599,7 +628,9 @@ RppStatus glitch_i8_i8_host_tensor(Rpp8s *srcPtr,
             for (int dstLocRow = 0; dstLocRow < roi.xywhROI.roiHeight; dstLocRow++)
             {
                 Rpp8s* dstPtrTemp = dstPtrRow;
-                for (int vectorLoopCount = 0; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
+                int vectorLoopCount = 0;
+#if __AVX2__
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     compute_src_loc(dstLocRow, vectorLoopCount, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 1);
                     for (int c = 0; c < 3; c++)
@@ -610,9 +641,10 @@ RppStatus glitch_i8_i8_host_tensor(Rpp8s *srcPtr,
                     }
                     dstPtrTemp += 32;
                 }
-                for (int i = alignedLength; i < roi.xywhROI.roiWidth; i++)
+#endif
+                for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
                 {
-                    compute_src_loc(dstLocRow, i, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 1);
+                    compute_src_loc(dstLocRow, vectorLoopCount, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 1);
                     for (int c = 0; c < 3; c++)
                         *(dstPtrTemp + c * dstDescPtr->strides.cStride) = *(srcPtrChannel + glitchSrcLocArray[c] + c *srcDescPtr->strides.cStride);
                     dstPtrTemp += 1;
@@ -632,7 +664,9 @@ RppStatus glitch_i8_i8_host_tensor(Rpp8s *srcPtr,
             for (int dstLocRow = 0; dstLocRow < roi.xywhROI.roiHeight; dstLocRow++)
             {
                 Rpp8s* dstPtrTemp = dstPtrRow;
-                for (int vectorLoopCount = 0; vectorLoopCount < alignedLength; vectorLoopCount += 10)
+                int vectorLoopCount = 0;
+#if __AVX2__
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 10)
                 {
                     __m256i p;
                     compute_src_loc(dstLocRow, vectorLoopCount, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 3);
@@ -641,9 +675,10 @@ RppStatus glitch_i8_i8_host_tensor(Rpp8s *srcPtr,
                     _mm256_storeu_epi8(dstPtrTemp, p);
                     dstPtrTemp += 30;
                 }
-                for (int i = alignedLength; i < roi.xywhROI.roiWidth; i++)
+#endif
+                for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
                 {
-                    compute_src_loc(dstLocRow, i, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 3);
+                    compute_src_loc(dstLocRow, vectorLoopCount, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 3);
                     for (int c = 0; c < 3; c++)
                         *dstPtrTemp++ = *(srcPtrChannel + glitchSrcLocArray[c] + c);
                 }

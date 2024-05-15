@@ -2,7 +2,7 @@
 #include "rpp_hip_common.hpp"
 
 template <typename T>
-__device__ __forceinline__ void rpp_hip_load1_glitch(T *srcPtr, uint2 srcStrideCH, float locSrcX, float locSrcY, float *dst, int channels)
+__device__ __forceinline__ void rpp_hip_load1_glitch(T *srcPtr, uint2 srcStrideCH, float &locSrcX, float &locSrcY, float *dst, int channels)
 {
     int srcIdx = locSrcY * srcStrideCH.y + locSrcX * srcStrideCH.x + channels;
     rpp_hip_interpolate1_nearest_neighbor_load_pln1(srcPtr + srcIdx, dst);
@@ -35,20 +35,20 @@ __device__ void check_locs(d_float8 &xLocVals, d_float8 &yLocVals, RppiPoint off
 
 __device__ void compute_glitch_locs_hip(int id_x, int id_y, RpptChannelOffsets rgbOffsets, RpptROI roiTensorPtrSrc, d_float24 *srcLocsX_f24, d_float24 *srcLocsY_f24)
 {
-    d_float8 increment_f8;
-    increment_f8.f4[0] = make_float4(0.0f, 1.0f, 2.0f, 3.0f);
+    float4 increment_f4;
+    increment_f4 = make_float4(0.0f, 1.0f, 2.0f, 3.0f);
 
-    srcLocsX_f24->f4[0] = static_cast<float4>(id_x + rgbOffsets.r.x) + increment_f8.f4[0];
+    srcLocsX_f24->f4[0] = static_cast<float4>(id_x + rgbOffsets.r.x) + increment_f4;
     srcLocsX_f24->f4[1] = srcLocsX_f24->f4[0] + (float4) 4;
     srcLocsY_f24->f4[0] = srcLocsY_f24->f4[1] = static_cast<float4>(id_y + rgbOffsets.r.y);
     check_locs(srcLocsX_f24->f8[0], srcLocsY_f24->f8[0], rgbOffsets.r, roiTensorPtrSrc);
 
-    srcLocsX_f24->f4[2] = static_cast<float4>(id_x + rgbOffsets.g.x) + increment_f8.f4[0];
+    srcLocsX_f24->f4[2] = static_cast<float4>(id_x + rgbOffsets.g.x) + increment_f4;
     srcLocsX_f24->f4[3] = srcLocsX_f24->f4[2] +(float4) 4;
     srcLocsY_f24->f4[2] = srcLocsY_f24->f4[3]  = static_cast<float4>(id_y + rgbOffsets.g.y);
     check_locs(srcLocsX_f24->f8[1], srcLocsY_f24->f8[1], rgbOffsets.g, roiTensorPtrSrc);
 
-    srcLocsX_f24->f4[4] = static_cast<float4>(id_x + rgbOffsets.b.x) + increment_f8.f4[0];
+    srcLocsX_f24->f4[4] = static_cast<float4>(id_x + rgbOffsets.b.x) + increment_f4;
     srcLocsX_f24->f4[5] = srcLocsX_f24->f4[4] + (float4) 4;
     srcLocsY_f24->f4[4] = srcLocsY_f24->f4[5] = static_cast<float4>(id_y + rgbOffsets.b.y);
     check_locs(srcLocsX_f24->f8[2], srcLocsY_f24->f8[2], rgbOffsets.b, roiTensorPtrSrc);
