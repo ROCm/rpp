@@ -106,8 +106,8 @@ __global__ void resample_single_channel_hip_tensor(float *srcPtr,
             float accum = 0.0f;
 
             d_float8 locInWindow_f8, accum_f8;
-            locInWindow_f8.f4[0] = static_cast<float4>(locBegin) + locInit_f8.f4[0]; //, locBegin + 1, locBegin + 2, locBegin + 3);
-            locInWindow_f8.f4[1] = static_cast<float4>(locBegin) + locInit_f8.f4[1];//make_float4(locBegin + 4, locBegin + 5, locBegin + 6, locBegin + 7);
+            locInWindow_f8.f4[0] = static_cast<float4>(locBegin) + locInit_f8.f4[0];
+            locInWindow_f8.f4[1] = static_cast<float4>(locBegin) + locInit_f8.f4[1];
             accum_f8.f4[0] = static_cast<float4>(0.0f);
             accum_f8.f4[1] = static_cast<float4>(0.0f);
             for (; locInWindow + 7 < loc1; locInWindow += 8)
