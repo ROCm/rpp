@@ -366,16 +366,16 @@ int main(int argc, char **argv)
     void *d_rowRemapTable, *d_colRemapTable;
     if(testCase == 26 || testCase == 79)
     {
-        CHECK(hipMalloc(&d_rowRemapTable, ioBufferSize * sizeof(Rpp32u)));
-        CHECK(hipMalloc(&d_colRemapTable, ioBufferSize * sizeof(Rpp32u)));
-        CHECK(hipMemset(d_rowRemapTable, 0, ioBufferSize * sizeof(Rpp32u)));
-        CHECK(hipMemset(d_colRemapTable, 0, ioBufferSize * sizeof(Rpp32u)));
+        CHECK_RETURN_STATUS(hipMalloc(&d_rowRemapTable, ioBufferSize * sizeof(Rpp32u)));
+        CHECK_RETURN_STATUS(hipMalloc(&d_colRemapTable, ioBufferSize * sizeof(Rpp32u)));
+        CHECK_RETURN_STATUS(hipMemset(d_rowRemapTable, 0, ioBufferSize * sizeof(Rpp32u)));
+        CHECK_RETURN_STATUS(hipMemset(d_colRemapTable, 0, ioBufferSize * sizeof(Rpp32u)));
     }
     float *d_cameraMatrix, *d_distortionCoeffs;
     if(testCase == 26)
     {
-        CHECK(hipMalloc(&d_cameraMatrix, batchSize * 9 * sizeof(Rpp32f)));
-        CHECK(hipMalloc(&d_distortionCoeffs, batchSize * 8 * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipMalloc(&d_cameraMatrix, batchSize * 9 * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipMalloc(&d_distortionCoeffs, batchSize * 8 * sizeof(Rpp32f)));
     }
 
     // create cropRoi and patchRoi in case of crop_and_patch
@@ -655,8 +655,8 @@ int main(int argc, char **argv)
                     tableDescPtr->strides.hStride = srcDescPtr->w;
                     tableDescPtr->strides.wStride = tableDescPtr->strides.cStride = 1;
 
-                    CHECK(hipMemcpy(d_cameraMatrix, cameraMatrix, batchSize * 9 * sizeof(Rpp32f), hipMemcpyHostToDevice));
-                    CHECK(hipMemcpy(d_distortionCoeffs, distortionCoeffs, batchSize * 8 * sizeof(Rpp32f), hipMemcpyHostToDevice));
+                    CHECK_RETURN_STATUS(hipMemcpy(d_cameraMatrix, cameraMatrix, batchSize * 9 * sizeof(Rpp32f), hipMemcpyHostToDevice));
+                    CHECK_RETURN_STATUS(hipMemcpy(d_distortionCoeffs, distortionCoeffs, batchSize * 8 * sizeof(Rpp32f), hipMemcpyHostToDevice));
 
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
@@ -1055,8 +1055,8 @@ int main(int argc, char **argv)
                     RpptDescPtr tableDescPtr = &tableDesc;
                     init_remap(tableDescPtr, srcDescPtr, roiTensorPtrSrc, rowRemapTable, colRemapTable);
 
-                    CHECK(hipMemcpy(d_rowRemapTable, (void *)rowRemapTable, ioBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
-                    CHECK(hipMemcpy(d_colRemapTable, (void *)colRemapTable, ioBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
+                    CHECK_RETURN_STATUS(hipMemcpy(d_rowRemapTable, (void *)rowRemapTable, ioBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
+                    CHECK_RETURN_STATUS(hipMemcpy(d_colRemapTable, (void *)colRemapTable, ioBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
 
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
