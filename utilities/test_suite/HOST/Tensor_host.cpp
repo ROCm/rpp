@@ -322,9 +322,14 @@ int main(int argc, char **argv)
     if (reductionTypeCase)
     {
         int bitDepthByteSize = 0;
-        if ((dstDescPtr->dataType == RpptDataType::U8) || (dstDescPtr->dataType == RpptDataType::I8))
+        if (dstDescPtr->dataType == RpptDataType::U8)
         {
             bitDepthByteSize = (testCase == 87) ? sizeof(Rpp64u) : sizeof(Rpp8u);
+            reductionFuncResultArr = static_cast<void *>(calloc(reductionFuncResultArrLength, bitDepthByteSize));
+        }
+        else if (dstDescPtr->dataType == RpptDataType::I8)
+        {
+            bitDepthByteSize = (testCase == 87) ? sizeof(Rpp64s) : sizeof(Rpp8s);
             reductionFuncResultArr = static_cast<void *>(calloc(reductionFuncResultArrLength, bitDepthByteSize));
         }
         else if ((dstDescPtr->dataType == RpptDataType::F16) || (dstDescPtr->dataType == RpptDataType::F32))
@@ -334,6 +339,15 @@ int main(int argc, char **argv)
         }
     }
 
+    // create generic descriptor and params in case of slice
+    RpptGenericDesc descriptor3D;
+    RpptGenericDescPtr descriptorPtr3D = &descriptor3D;
+    Rpp32s *anchorTensor = NULL, *shapeTensor = NULL;
+    Rpp32u *roiTensor = NULL;
+    if(testCase == 90)
+        set_generic_descriptor_slice(srcDescPtr, descriptorPtr3D, batchSize);
+
+    // create cropRoi and patchRoi in case of crop_and_patch
     RpptROI *cropRoi, *patchRoi;
     if(testCase == 33)
     {
@@ -1184,6 +1198,30 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 90:
+                {
+                    testCaseName = "slice";
+                    Rpp32u numDims = descriptorPtr3D->numDims - 1; // exclude batchSize from input dims
+                    if(anchorTensor == NULL)
+                        anchorTensor = static_cast<Rpp32s*>(calloc(batchSize * numDims, sizeof(Rpp32s)));;
+                    if(shapeTensor == NULL)
+                       shapeTensor = static_cast<Rpp32s*>(calloc(batchSize * numDims, sizeof(Rpp32s)));;
+                    if(roiTensor == NULL)
+                        roiTensor = static_cast<Rpp32u*>(calloc(batchSize * numDims * 2, sizeof(Rpp32u)));;
+                    bool enablePadding = false;
+                    auto fillValue = 0;
+                    init_slice(descriptorPtr3D, roiTensorPtrSrc, roiTensor, anchorTensor, shapeTensor);
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+
+                    if((inputBitDepth == 0 || inputBitDepth == 2) && srcDescPtr->layout == dstDescPtr->layout)
+                        rppt_slice_host(input, descriptorPtr3D, output, descriptorPtr3D, anchorTensor, shapeTensor, &fillValue, enablePadding, roiTensor, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 default:
                     missingFuncFlag = 1;
                     break;
@@ -1281,6 +1319,42 @@ int main(int argc, char **argv)
                     refFile.close();
                 }
 
+                // if test case is slice and qaFlag is set, update the dstImgSizes with shapeTensor values
+                // for output display and comparision purposes
+                if (testCase == 90)
+                {
+                    if (dstDescPtr->layout == RpptLayout::NCHW)
+                    {
+                        if (dstDescPtr->c == 3)
+                        {
+                            for(int i = 0; i < batchSize; i++)
+                            {
+                                int idx1 = i * 3;
+                                dstImgSizes[i].height = shapeTensor[idx1 + 1];
+                                dstImgSizes[i].width = shapeTensor[idx1 + 2];
+                            }
+                        }
+                        else
+                        {
+                            for(int i = 0; i < batchSize; i++)
+                            {
+                                int idx1 = i * 2;
+                                dstImgSizes[i].height = shapeTensor[idx1];
+                                dstImgSizes[i].width = shapeTensor[idx1 + 1];
+                            }
+                        }
+                    }
+                    else if (dstDescPtr->layout == RpptLayout::NHWC)
+                    {
+                        for(int i = 0; i < batchSize; i++)
+                        {
+                            int idx1 = i * 3;
+                            dstImgSizes[i].height = shapeTensor[idx1];
+                            dstImgSizes[i].width = shapeTensor[idx1 + 1];
+                        }
+                    }
+                }
+
                 /*Compare the output of the function with golden outputs only if
                 1.QA Flag is set
                 2.input bit depth 0 (Input U8 && Output U8)
@@ -1337,6 +1411,12 @@ int main(int argc, char **argv)
     free(roiTensorPtrSrc);
     free(roiTensorPtrDst);
     free(dstImgSizes);
+    if(anchorTensor != NULL)
+        free(anchorTensor);
+    if(shapeTensor != NULL)
+        free(shapeTensor);
+    if(roiTensor != NULL)
+        free(roiTensor);
     free(input);
     free(inputu8);
     free(inputu8Second);

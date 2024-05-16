@@ -83,7 +83,7 @@ if(Python3_FOUND)
     if(NIFTI_FOUND)
         add_test(
             NAME rpp_qa_tests_tensor_voxel_host_all
-            COMMAND ${Python3_EXECUTABLE} ${ROCM_PATH}/share/rpp/test/HOST/runTests_voxel.py --qa_mode 1 --batch_size 3
+            COMMAND ${Python3_EXECUTABLE} ${ROCM_PATH}/share/rpp/test/HOST/runVoxelTests.py --qa_mode 1 --batch_size 3
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )
     endif(NIFTI_FOUND)
@@ -105,7 +105,7 @@ if(Python3_FOUND)
         if(NIFTI_FOUND)
             add_test(
                 NAME rpp_qa_tests_tensor_voxel_hip_all
-                COMMAND ${Python3_EXECUTABLE} ${ROCM_PATH}/share/rpp/test/HIP/runTests_voxel.py --qa_mode 1 --batch_size 3
+                COMMAND ${Python3_EXECUTABLE} ${ROCM_PATH}/share/rpp/test/HIP/runVoxelTests.py --qa_mode 1 --batch_size 3
                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
             )
         endif(NIFTI_FOUND)

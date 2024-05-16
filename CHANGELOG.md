@@ -2,7 +2,30 @@
 
 Full documentation for RPP is available at (https://rocm.docs.amd.com/projects/rpp/en/latest/).
 
-### RPP 1.5.0 (unreleased)
+### RPP 1.8.0 (unreleased)
+
+### Changes
+
+* Prerequisites - ROCm install requires only --usecase=rocm
+* Use pre-allocated common scratchBufferHip everywhere in Tensor code for scratch HIP memory
+* Use CHECK_RETURN_STATUS everywhere to adhere to C++17 for hip
+* RPP Tensor Audio support on HOST for Spectrogram
+* RPP Tensor Audio support on HOST/HIP for Slice, by modifying voxel slice kernels to now accept anchor and shape params for a more generic version
+* RPP Tensor Audio support on HOST for Mel Filter Bank
+* RPP Tensor Normalize ND support on HOST and HIP
+
+### Tested configurations
+
+* Linux distribution
+  * Ubuntu - `20.04` / `22.04`
+  * CentOS - `7`
+  * RHEL - `8`/`9`
+* ROCm: rocm-core - `6.1.0.60100`
+* Clang - Version `5.0.1`
+* CMake - Version `3.22.3`
+* IEEE 754-based half-precision floating-point library - Version `1.12.0`
+
+### RPP 1.5.0
 
 ### Changes
 

@@ -243,8 +243,8 @@ RppStatus hip_exec_spatter_tensor(T *srcPtr,
     float *spatterMaskPtr, *spatterMaskInvPtr;
     spatterMaskPtr = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
     spatterMaskInvPtr = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem + maskSize;
-    hipMemcpy(spatterMaskPtr, spatterMask, maskSizeFloat, hipMemcpyHostToDevice);
-    hipMemcpy(spatterMaskInvPtr, spatterMaskInv, maskSizeFloat, hipMemcpyHostToDevice);
+    CHECK_RETURN_STATUS(hipMemcpy(spatterMaskPtr, spatterMask, maskSizeFloat, hipMemcpyHostToDevice));
+    CHECK_RETURN_STATUS(hipMemcpy(spatterMaskInvPtr, spatterMaskInv, maskSizeFloat, hipMemcpyHostToDevice));
 
     if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
     {
