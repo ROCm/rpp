@@ -1,6 +1,6 @@
 FROM ubuntu:22.04
 
-ARG ROCM_INSTALLER_REPO=https://repo.radeon.com/amdgpu-install/6.1/ubuntu/jammy/amdgpu-install_6.1.60100-1_all.deb  
+ARG ROCM_INSTALLER_REPO=https://repo.radeon.com/amdgpu-install/6.1/ubuntu/jammy/amdgpu-install_6.1.60100-1_all.deb
 ARG ROCM_INSTALLER_PACKAGE=amdgpu-install_6.1.60100-1_all.deb
 
 ENV RPP_DEPS_ROOT=/rpp-deps
