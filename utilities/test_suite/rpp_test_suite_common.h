@@ -131,13 +131,6 @@ std::map<int, std::vector<int>> TensorSumReferenceOutputs =
     {3, {348380, 340992, 262616, 951988, 1056552, 749506, 507441, 2313499, 2170646, 2732368, 3320699, 8223713}}
 };
 
-// Golden outputs for Tensor sum Kernel
-std::map<int, std::vector<Rpp64u>> TensorSumReferenceOutputs =
-{
-    {1, {334225, 813471, 2631125}},
-    {3, {348380, 340992, 262616, 951988, 1056552, 749506, 507441, 2313499, 2170646, 2732368, 3320699, 8223713}}
-};
-
 template <typename T>
 inline T validate_pixel_range(T pixel)
 {
@@ -1188,8 +1181,21 @@ inline void compare_reduction_output(T* output, string funcName, RpptDescPtr src
 
     int fileMatch = 0;
     int matched_values = 0;
-    Rpp64u *binaryContent = (Rpp64u *)malloc(binaryOutputSize * sizeof(Rpp64u));
-    read_bin_file(refFile, binaryContent);
+
+    T *refOutput;
+    refOutput = (T *)calloc(srcDescPtr->n * 4, sizeof(T));
+    int numChannels = (srcDescPtr->c == 1) ? 1 : 3;
+    int numOutputs = (srcDescPtr->c == 1) ? srcDescPtr->n : srcDescPtr->n * 4;
+    std::vector<int> ref;
+    if(testCase == 88)
+        ref = TensorMinReferenceOutputs[numChannels];
+    else if(testCase == 89)
+        ref = TensorMaxReferenceOutputs[numChannels];
+    else if(testCase == 87)
+        ref = TensorSumReferenceOutputs[numChannels];
+
+    for (int i = 0; i < numOutputs; i++)
+        refOutput[i] = (T)ref[i];
 
     if(srcDescPtr->c == 1)
     {
@@ -1238,7 +1244,14 @@ inline void compare_reduction_output(T* output, string funcName, RpptDescPtr src
         qaResults << status << std::endl;
         qaResults.close();
     }
-    free(binaryContent);
+}
+
+// print array of any bit depth for specified length
+template <typename T>
+inline void print_array(T *src, Rpp32u length, Rpp32u precision)
+{
+    for (int i = 0; i < length; i++)
+        std::cout << " " << std::fixed << std::setprecision(precision) << static_cast<Rpp32f>(src[i]) << " ";
 }
 
 // Used to randomly swap values present in array of size n

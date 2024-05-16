@@ -161,10 +161,6 @@ int main(int argc, char **argv)
         strcpy(funcName, "contrast");
         outputFormatToggle = 0;
         break;
-    case 6:
-        strcpy(funcName, "jitter");
-        outputFormatToggle = 0;
-        break;
     case 8:
         strcpy(funcName, "noise");
         outputFormatToggle = 0;
@@ -928,62 +924,6 @@ int main(int argc, char **argv)
                 missingFuncFlag = 1;
             else if (ip_bitDepth == 5)
                 rppt_contrast_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, contrastFactor, contrastCenter, roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (ip_bitDepth == 6)
-                missingFuncFlag = 1;
-            else
-                missingFuncFlag = 1;
-
-            break;
-        }
-        case 6:
-        {
-            test_case_name = "jitter";
-
-            Rpp32u kernelSize[images];
-            Rpp32u seed = 1255459;
-            for (i = 0; i < images; i++)
-            {
-                kernelSize[i] = 5;
-            }
-
-            // Uncomment to run test case with an xywhROI override
-            /*for (i = 0; i < images; i++)
-            {
-                roiTensorPtrSrc[i].xywhROI.xy.x = 0;
-                roiTensorPtrSrc[i].xywhROI.xy.y = 0;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].xywhROI.roiWidth = 100;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].xywhROI.roiHeight = 180;
-            }*/
-
-            // Uncomment to run test case with an ltrbROI override
-            /*for (i = 0; i < images; i++)
-            {
-                roiTensorPtrSrc[i].ltrbROI.lt.x = 50;
-                roiTensorPtrSrc[i].ltrbROI.lt.y = 30;
-                roiTensorPtrSrc[i].ltrbROI.rb.x = 210;
-                roiTensorPtrSrc[i].ltrbROI.rb.y = 210;
-                dstImgSizes[i].width = roiTensorPtrSrc[i].ltrbROI.rb.x - roiTensorPtrSrc[i].ltrbROI.lt.x + 1;
-                dstImgSizes[i].height = roiTensorPtrSrc[i].ltrbROI.rb.y - roiTensorPtrSrc[i].ltrbROI.lt.y + 1;
-            }
-            roiTypeSrc = RpptRoiType::LTRB;
-            roiTypeDst = RpptRoiType::LTRB;*/
-
-            hipMemcpy(d_roiTensorPtrSrc, roiTensorPtrSrc, images * sizeof(RpptROI), hipMemcpyHostToDevice);
-
-            start = clock();
-
-            if (ip_bitDepth == 0)
-                rppt_jitter_gpu(d_input, srcDescPtr, d_output, dstDescPtr, kernelSize, seed, d_roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (ip_bitDepth == 1)
-                rppt_jitter_gpu(d_inputf16, srcDescPtr, d_outputf16, dstDescPtr, kernelSize, seed, d_roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (ip_bitDepth == 2)
-                rppt_jitter_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, kernelSize, seed, d_roiTensorPtrSrc, roiTypeSrc, handle);
-            else if (ip_bitDepth == 3)
-                missingFuncFlag = 1;
-            else if (ip_bitDepth == 4)
-                missingFuncFlag = 1;
-            else if (ip_bitDepth == 5)
-                rppt_jitter_gpu(d_inputi8, srcDescPtr, d_outputi8, dstDescPtr, kernelSize, seed, d_roiTensorPtrSrc, roiTypeSrc, handle);
             else if (ip_bitDepth == 6)
                 missingFuncFlag = 1;
             else
