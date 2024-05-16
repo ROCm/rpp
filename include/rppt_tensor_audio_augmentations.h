@@ -86,7 +86,7 @@ RppStatus rppt_to_decibels_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
  * \param [out] dstPtr destination tensor in HIP memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
- * \param [in] srcDims source tensor sizes for each element in batch (2D tensor in HOST memory, of size batchSize * 2)
+ * \param [in] srcDims source tensor sizes for each element in batch (2D tensor in Pinned/HIP memory, of size batchSize * 2)
  * \param [in] cutOffDB  minimum or cut-off ratio in dB
  * \param [in] multiplier factor by which the logarithm is multiplied
  * \param [in] referenceMagnitude Reference magnitude if not provided maximum value of input used as reference

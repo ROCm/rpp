@@ -97,7 +97,7 @@ __global__ void inverse_magnitude_hip_tensor(float *srcPtr,
         max_smem[hipThreadIdx_x] = maxVal;
         __syncthreads();
 
-        // do reduction on min_smem and max_smem
+        // do reduction on max_smem
         for (int threadMax = 128; threadMax >= 1; threadMax /= 2)
         {
             if (hipThreadIdx_x < threadMax)
@@ -141,7 +141,7 @@ __global__ void max_reduction_hip_tensor(float *srcPtr,
         rpp_hip_math_max8(&src_f8, &max_smem[hipThreadIdx_x]);
         __syncthreads();
 
-        // do reduction on min_smem and max_smem
+        // do reduction on max_smem
         for (int threadMax = 256; threadMax >= 1; threadMax /= 2)
         {
             if (hipThreadIdx_x < threadMax)
@@ -150,10 +150,7 @@ __global__ void max_reduction_hip_tensor(float *srcPtr,
         }
 
         if (hipThreadIdx_x == 0)
-        {
-            int dstIdx = id_z * hipGridDim_x + hipBlockIdx_x;
-            maxArr[dstIdx] = max_smem[0];
-        }
+            maxArr[id_z * hipGridDim_x + hipBlockIdx_x] = max_smem[0];
     }
     // for 2D input
     else if (numDims == 2)
@@ -219,8 +216,8 @@ RppStatus hip_exec_to_decibels_tensor(Rpp32f *srcPtr,
 
     // calculate max in input if referenceMagnitude = 0
     Rpp32f *partialMaxArr = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
-    int numBlocksPerSample;
-    int globalThreads_z = dstDescPtr->n;
+    Rpp32s numBlocksPerSample;
+    Rpp32s globalThreads_z = dstDescPtr->n;
 
     // find the invReferenceMagnitude value
     bool computeMax = (!referenceMagnitude);
@@ -228,7 +225,7 @@ RppStatus hip_exec_to_decibels_tensor(Rpp32f *srcPtr,
     {
         if (numDims == 1)
         {
-            numBlocksPerSample = ceil(static_cast<float>((srcDescPtr->strides.nStride + 7) >> 3) / 512);
+            numBlocksPerSample = ceil(static_cast<Rpp32f>((srcDescPtr->strides.nStride + 7) >> 3) / 512);
             hipLaunchKernelGGL(max_reduction_hip_tensor,
                                dim3(numBlocksPerSample, 1, globalThreads_z),
                                dim3(512, 1, 1),
@@ -242,9 +239,9 @@ RppStatus hip_exec_to_decibels_tensor(Rpp32f *srcPtr,
         }
         else if (numDims == 2)
         {
-            int gridDim_x = ceil(static_cast<float>((srcDescPtr->strides.hStride)/LOCAL_THREADS_X));
-            int gridDim_y = ceil(static_cast<float>(srcDescPtr->h)/LOCAL_THREADS_Y);
-            int gridDim_z = ceil(static_cast<float>(globalThreads_z)/LOCAL_THREADS_Z);
+            Rpp32s gridDim_x = ceil(static_cast<Rpp32f>((srcDescPtr->strides.hStride)/LOCAL_THREADS_X));
+            Rpp32s gridDim_y = ceil(static_cast<Rpp32f>(srcDescPtr->h)/LOCAL_THREADS_Y);
+            Rpp32s gridDim_z = ceil(static_cast<Rpp32f>(globalThreads_z)/LOCAL_THREADS_Z);
             numBlocksPerSample = gridDim_x * gridDim_y * gridDim_z;
             hipLaunchKernelGGL(max_reduction_hip_tensor,
                                dim3(gridDim_x, gridDim_y, gridDim_z),
@@ -274,10 +271,10 @@ RppStatus hip_exec_to_decibels_tensor(Rpp32f *srcPtr,
     // launch kernel for todecibels
     if (numDims == 1)
     {
-        int globalThreads_x = (srcDescPtr->strides.nStride + 7) >> 3;
-        int globalThreads_y = 1;
+        Rpp32s globalThreads_x = (srcDescPtr->strides.nStride + 7) >> 3;
+        Rpp32s globalThreads_y = 1;
         hipLaunchKernelGGL(to_decibels_1d_hip_tensor,
-                           dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X_1DIM), ceil((float)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((float)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
+                           dim3(ceil((Rpp32f)globalThreads_x/LOCAL_THREADS_X_1DIM), ceil((Rpp32f)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((Rpp32f)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
                            dim3(LOCAL_THREADS_X_1DIM, LOCAL_THREADS_Y_1DIM, LOCAL_THREADS_Z_1DIM),
                            0,
                            handle.GetStream(),
@@ -292,10 +289,10 @@ RppStatus hip_exec_to_decibels_tensor(Rpp32f *srcPtr,
     }
     else if (numDims == 2)
     {
-        int globalThreads_x = srcDescPtr->strides.hStride;
-        int globalThreads_y = srcDescPtr->h;
+        Rpp32s globalThreads_x = srcDescPtr->strides.hStride;
+        Rpp32s globalThreads_y = srcDescPtr->h;
         hipLaunchKernelGGL(to_decibels_2d_hip_tensor,
-                           dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                           dim3(ceil((Rpp32f)globalThreads_x/LOCAL_THREADS_X), ceil((Rpp32f)globalThreads_y/LOCAL_THREADS_Y), ceil((Rpp32f)globalThreads_z/LOCAL_THREADS_Z)),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                            0,
                            handle.GetStream(),
