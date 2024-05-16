@@ -623,20 +623,18 @@ int main(int argc, char **argv)
                     testCaseName = "lens_correction";
 
                     Rpp32f cameraMatrix[9 * batchSize];
-                    Rpp32f newCameraMatrix[9 * batchSize];
                     Rpp32f distortionCoeffs[8 * batchSize];
-
                     for (i = 0; i < batchSize; i++)
                     {
-                        cameraMatrix[9 * i] = newCameraMatrix[9 * i] = 534.07088364;
-                        cameraMatrix[9 * i + 1] =  newCameraMatrix[9 * i + 1] = 0;
-                        cameraMatrix[9 * i + 2] =  newCameraMatrix[9 * i + 2] = 341.53407554;
-                        cameraMatrix[9 * i + 3] = newCameraMatrix[9 * i + 3] = 0;
-                        cameraMatrix[9 * i + 4] = newCameraMatrix[9 * i + 4] = 534.11914595;
-                        cameraMatrix[9 * i + 5] = newCameraMatrix[9 * i + 5] = 232.94565259;
-                        cameraMatrix[9 * i + 6] = newCameraMatrix[9 * i + 6] = 0;
-                        cameraMatrix[9 * i + 7] = newCameraMatrix[9 * i + 7] = 0;
-                        cameraMatrix[9 * i + 8] = newCameraMatrix[9 * i + 8] = 1;
+                        cameraMatrix[9 * i] = 534.07088364;
+                        cameraMatrix[9 * i + 1] = 0;
+                        cameraMatrix[9 * i + 2] = 341.53407554;
+                        cameraMatrix[9 * i + 3] = 0;
+                        cameraMatrix[9 * i + 4] = 534.11914595;
+                        cameraMatrix[9 * i + 5] = 232.94565259;
+                        cameraMatrix[9 * i + 6] = 0;
+                        cameraMatrix[9 * i + 7] = 0;
+                        cameraMatrix[9 * i + 8] = 1;
 
                         distortionCoeffs[8 * i] = -0.29297164;
                         distortionCoeffs[8 * i + 1] = 0.10770696;
@@ -660,7 +658,7 @@ int main(int argc, char **argv)
 
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_lens_correction_gpu(d_input, srcDescPtr, d_output, dstDescPtr, (Rpp32f *)d_rowRemapTable, (Rpp32f *)d_colRemapTable, tableDescPtr, d_cameraMatrix, d_distortionCoeffs, d_cameraMatrix, roiTensorPtrSrc, roiTypeSrc, handle);
+                        rppt_lens_correction_gpu(d_input, srcDescPtr, d_output, dstDescPtr, static_cast<Rpp32f *>(d_rowRemapTable), static_cast<Rpp32f *>(d_colRemapTable), tableDescPtr, d_cameraMatrix, d_distortionCoeffs, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 

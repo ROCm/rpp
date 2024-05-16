@@ -52,7 +52,6 @@ inline void compute_lens_correction_remap_tables_host_tensor(RpptDescPtr srcDesc
                                                              RpptDescPtr tableDescPtr,
                                                              Rpp32f *cameraMatrixTensor,
                                                              Rpp32f *distortionCoeffsTensor,
-                                                             Rpp32f *newCameraMatrixTensor,
                                                              RpptROIPtr roiTensorPtrSrc,
                                                              rpp::Handle& handle)
 {
@@ -68,15 +67,14 @@ inline void compute_lens_correction_remap_tables_host_tensor(RpptDescPtr srcDesc
         // cameraMatrix is a 3x3 matrix thus increment by 9 to iterate from one tensor in a batch to another
         Rpp32f *cameraMatrix = cameraMatrixTensor + batchCount * 9;
         Rpp32f *distortionCoeffs = distortionCoeffsTensor + batchCount * 8;
-        Rpp32f *newCameraMatrix = newCameraMatrixTensor + batchCount * 9;
         Rpp32s height = roiTensorPtrSrc[batchCount].xywhROI.roiHeight;
         Rpp32s width = roiTensorPtrSrc[batchCount].xywhROI.roiWidth;
         Rpp32u alignedLength = width & ~7;
         Rpp32s vectorIncrement = 8;
 
-        Rpp32f invNewCameraMatrix[9];
-        get_inverse(newCameraMatrix, invNewCameraMatrix);
-        Rpp32f *invMat = &invNewCameraMatrix[0];
+        Rpp32f invCameraMatrix[9];
+        get_inverse(cameraMatrix, invCameraMatrix);
+        Rpp32f *invMat = &invCameraMatrix[0];
 
         // Get radial and tangential distortion coefficients
         Rpp32f rCoeff[6] = { distortionCoeffs[0], distortionCoeffs[1], distortionCoeffs[4], distortionCoeffs[5], distortionCoeffs[6], distortionCoeffs[7] };

@@ -1312,7 +1312,6 @@ RppStatus rppt_lens_correction_host(RppPtr_t srcPtr,
                                     RpptDescPtr tableDescPtr,
                                     Rpp32f *cameraMatrixTensor,
                                     Rpp32f *distortionCoeffsTensor,
-                                    Rpp32f *newCameraMatrixTensor,
                                     RpptROIPtr roiTensorPtrSrc,
                                     RpptRoiType roiType,
                                     rppHandle_t rppHandle)
@@ -1324,7 +1323,6 @@ RppStatus rppt_lens_correction_host(RppPtr_t srcPtr,
                                                      tableDescPtr,
                                                      cameraMatrixTensor,
                                                      distortionCoeffsTensor,
-                                                     newCameraMatrixTensor,
                                                      roiTensorPtrSrc,
                                                      rpp::deref(rppHandle));
 
@@ -2345,20 +2343,17 @@ RppStatus rppt_lens_correction_gpu(RppPtr_t srcPtr,
                                    RpptDescPtr tableDescPtr,
                                    Rpp32f *cameraMatrixTensor,
                                    Rpp32f *distortionCoeffsTensor,
-                                   Rpp32f *newCameraMatrixTensor,
                                    RpptROIPtr roiTensorPtrSrc,
                                    RpptRoiType roiType,
                                    rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
-
     hip_exec_lens_correction_tensor(dstDescPtr,
                                     rowRemapTable,
                                     colRemapTable,
                                     tableDescPtr,
                                     cameraMatrixTensor,
                                     distortionCoeffsTensor,
-                                    newCameraMatrixTensor,
                                     roiTensorPtrSrc,
                                     roiType,
                                     rpp::deref(rppHandle));

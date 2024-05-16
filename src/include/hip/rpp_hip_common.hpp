@@ -55,7 +55,7 @@ typedef union { float f1[5];                                                    
 typedef union { float f1[6];    float2 f2[3];                                                   }   d_float6;
 typedef union { float f1[7];                                                                    }   d_float7;
 typedef union { float f1[8];    float2 f2[4];   float4 f4[2];                                   }   d_float8;
-typedef union { float f1[9];                                                                    }   d_float9;
+typedef union { float f1[9];    float3 f3[3];                                                   }   d_float9;
 typedef union { float f1[12];   float4 f4[3];                                                   }   d_float12;
 typedef union { float f1[16];   float4 f4[4];   d_float8 f8[2];                                 }   d_float16;
 typedef union { float f1[24];   float2 f2[12];  float3 f3[8];   float4 f4[6];   d_float8 f8[3]; }   d_float24;
@@ -1725,6 +1725,22 @@ __device__ __forceinline__ void rpp_hip_math_multiply24_const(d_float24 *src_f24
     dst_f24->f4[3] = src_f24->f4[3] * multiplier_f4;
     dst_f24->f4[4] = src_f24->f4[4] * multiplier_f4;
     dst_f24->f4[5] = src_f24->f4[5] * multiplier_f4;
+}
+
+// d_float8 divide
+
+__device__ __forceinline__ void rpp_hip_math_divide8(d_float8 *src1Ptr_f8, d_float8 *src2Ptr_f8, d_float8 *dstPtr_f8)
+{
+    dstPtr_f8->f4[0] = src1Ptr_f8->f4[0] / src2Ptr_f8->f4[0];
+    dstPtr_f8->f4[1] = src1Ptr_f8->f4[1] / src2Ptr_f8->f4[1];
+}
+
+// d_float8 divide with constant
+
+__device__ __forceinline__ void rpp_hip_math_divide8_const(d_float8 *src_f8, d_float8 *dst_f8, float4 divisor_f4)
+{
+    dst_f8->f4[0] = divisor_f4 / src_f8->f4[0];
+    dst_f8->f4[1] = divisor_f4 / src_f8->f4[1];
 }
 
 // d_float8 bitwiseAND

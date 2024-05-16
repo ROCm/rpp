@@ -649,7 +649,6 @@ RppStatus rppt_remap_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPt
  * \param [in] tableDescPtr table tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = F32, layout = NHWC, c = 1)
  * \param [in] cameraMatrixTensor contains camera intrinsic parameters required to compute lens corrected image. (1D tensor of size 9 * batchSize)
  * \param [in] distortionCoeffsTensor contains distortion coefficients required to compute lens corrected image. (1D tensor of size 8 * batchSize)
- * \param [in] newCameraMatrixTensor Camera matrix of the distorted image. By default, it is the same as cameraMatrixTensor but you may additionally scale and shift the result by using a different matrix. (1D tensor of size 9 * batchSize)
  * \param [in] roiTensorSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
@@ -658,7 +657,7 @@ RppStatus rppt_remap_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPt
  * \retval RPP_ERROR* Unsuccessful completion.
  * \ingroup group_tensor_geometric
  */
-RppStatus rppt_lens_correction_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *rowRemapTable, Rpp32f *colRemapTable, RpptDescPtr tableDescPtr, Rpp32f *cameraMatrixTensor, Rpp32f *distortionCoeffsTensor, Rpp32f *newCameraMatrixTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+RppStatus rppt_lens_correction_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *rowRemapTable, Rpp32f *colRemapTable, RpptDescPtr tableDescPtr, Rpp32f *cameraMatrixTensor, Rpp32f *distortionCoeffsTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 
 #ifdef GPU_SUPPORT
 /*! \brief Lens correction transformation on HIP backend for a NCHW/NHWC layout tensor
@@ -676,7 +675,6 @@ RppStatus rppt_lens_correction_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rpp
  * \param [in] tableDescPtr table tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = F32, layout = NHWC, c = 1)
  * \param [in] cameraMatrixTensor contains camera intrinsic parameters required to compute lens corrected image. (1D tensor of size 9 * batchSize)
  * \param [in] distortionCoeffsTensor contains distortion coefficients required to compute lens corrected image. (1D tensor of size 8 * batchSize)
- * \param [in] newCameraMatrixTensor Camera matrix of the distorted image. By default, it is the same as cameraMatrixTensor but you may additionally scale and shift the result by using a different matrix. (1D tensor of size 9 * batchSize)
  * \param [in] roiTensorSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
@@ -685,7 +683,7 @@ RppStatus rppt_lens_correction_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rpp
  * \retval RPP_ERROR* Unsuccessful completion.
  * \ingroup group_tensor_geometric
  */
-RppStatus rppt_lens_correction_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *rowRemapTable, Rpp32f *colRemapTable, RpptDescPtr tableDescPtr, Rpp32f *cameraMatrixTensor, Rpp32f *distortionCoeffsTensor, Rpp32f *newCameraMatrixTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+RppStatus rppt_lens_correction_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *rowRemapTable, Rpp32f *colRemapTable, RpptDescPtr tableDescPtr, Rpp32f *cameraMatrixTensor, Rpp32f *distortionCoeffsTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 
 #endif // GPU_SUPPORT
 
