@@ -1,7 +1,7 @@
 #include <hip/hip_runtime.h>
 #include "rpp_hip_common.hpp"
 
-// -------------------- Set 0 - device helpers for to_decibels kernel  --------------------
+// -------------------- Set 0 - to_decibels device helpers --------------------
 
 __device__ void to_decibels_hip_compute(d_float8 *src_f8, d_float8 *dst_f8, double minRatio, float multiplier, float inverseMagnitude)
 {
@@ -15,57 +15,7 @@ __device__ void to_decibels_hip_compute(d_float8 *src_f8, d_float8 *dst_f8, doub
     dst_f8->f1[7] = multiplier * log2(max(minRatio, (static_cast<double>(src_f8->f1[7]) * inverseMagnitude)));
 }
 
-// -------------------- Set 1 - to decibels kernel --------------------
-
-__global__ void to_decibels_1d_hip_tensor(float *srcPtr,
-                                          uint srcStride,
-                                          float *dstPtr,
-                                          uint dstStride,
-                                          RpptImagePatchPtr srcDims,
-                                          double minRatio,
-                                          float multiplier,
-                                          float *inverseMagnitudeTensor)
-{
-    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
-    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
-
-    if (id_x >= srcDims[id_z].height)
-        return;
-
-    uint srcIdx = (id_z * srcStride) + id_x;
-    float inverseMagnitude = inverseMagnitudeTensor[id_z];
-
-    d_float8 src_f8, dst_f8;
-    rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);
-    to_decibels_hip_compute(&src_f8, &dst_f8, minRatio, multiplier, inverseMagnitude);
-
-    uint dstIdx = (id_z * dstStride) + id_x;
-    rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
-}
-
-__global__ void to_decibels_2d_hip_tensor(float *srcPtr,
-                                          uint2 srcStridesNH,
-                                          float *dstPtr,
-                                          uint2 dstStridesNH,
-                                          RpptImagePatchPtr srcDims,
-                                          double minRatio,
-                                          float multiplier,
-                                          float *inverseMagnitudeTensor)
-{
-    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
-    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
-
-    if (id_x >= srcDims[id_z].width || id_y >= srcDims[id_z].height)
-        return;
-
-    uint srcIdx = (id_z * srcStridesNH.x) + (id_y * srcStridesNH.y) + id_x;
-    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x;
-    float inverseMagnitude = inverseMagnitudeTensor[id_z];
-    dstPtr[dstIdx] = multiplier * log2(max(minRatio, (static_cast<double>(srcPtr[srcIdx]) * inverseMagnitude)));
-}
-
-// -------------------- Set 2 -  kernels for finding inverse magnitude value --------------------
+// -------------------- Set 1 -  kernels for finding inverse magnitude value --------------------
 
 __global__ void inverse_magnitude_hip_tensor(float *srcPtr,
                                              int maxLength,
@@ -192,6 +142,56 @@ __global__ void max_reduction_2d_hip_tensor(float *srcPtr,
         if (hipThreadIdx_y == 0)
             maxArr[(hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x] = partialMaxRowPtr_smem[0];
     }
+}
+
+// -------------------- Set 2 - to decibels kernels --------------------
+
+__global__ void to_decibels_1d_hip_tensor(float *srcPtr,
+                                          uint srcStride,
+                                          float *dstPtr,
+                                          uint dstStride,
+                                          RpptImagePatchPtr srcDims,
+                                          double minRatio,
+                                          float multiplier,
+                                          float *inverseMagnitudeTensor)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    if (id_x >= srcDims[id_z].height)
+        return;
+
+    uint srcIdx = (id_z * srcStride) + id_x;
+    float inverseMagnitude = inverseMagnitudeTensor[id_z];
+
+    d_float8 src_f8, dst_f8;
+    rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);
+    to_decibels_hip_compute(&src_f8, &dst_f8, minRatio, multiplier, inverseMagnitude);
+
+    uint dstIdx = (id_z * dstStride) + id_x;
+    rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
+}
+
+__global__ void to_decibels_2d_hip_tensor(float *srcPtr,
+                                          uint2 srcStridesNH,
+                                          float *dstPtr,
+                                          uint2 dstStridesNH,
+                                          RpptImagePatchPtr srcDims,
+                                          double minRatio,
+                                          float multiplier,
+                                          float *inverseMagnitudeTensor)
+{
+    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+
+    if (id_x >= srcDims[id_z].width || id_y >= srcDims[id_z].height)
+        return;
+
+    uint srcIdx = (id_z * srcStridesNH.x) + (id_y * srcStridesNH.y) + id_x;
+    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x;
+    float inverseMagnitude = inverseMagnitudeTensor[id_z];
+    dstPtr[dstIdx] = multiplier * log2(max(minRatio, (static_cast<double>(srcPtr[srcIdx]) * inverseMagnitude)));
 }
 
 // -------------------- Set 3 - to decibels kernels executor --------------------
