@@ -114,82 +114,83 @@ __global__ void inverse_magnitude_hip_tensor(float *srcPtr,
     }
 }
 
-__global__ void max_reduction_hip_tensor(float *srcPtr,
-                                         uint2 srcStridesNH,
-                                         RpptImagePatchPtr srcDims,
-                                         uint numDims,
-                                         float *maxArr)
+__global__ void max_reduction_1d_hip_tensor(float *srcPtr,
+                                            uint2 srcStridesNH,
+                                            RpptImagePatchPtr srcDims,
+                                            float *maxArr)
 {
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
 
-    // for 1D input
-    if (numDims == 1)
+    uint srcLength = srcDims[id_z].height;
+    uint srcIdx = id_z * srcStridesNH.x;
+    __shared__ float max_smem[256];
+    max_smem[hipThreadIdx_x] = srcPtr[srcIdx];
+
+    if (id_x >= srcLength)
+        return;
+
+    srcIdx += id_x;
+    d_float8 src_f8;
+    rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);
+    rpp_hip_math_max8(&src_f8, &max_smem[hipThreadIdx_x]);
+    __syncthreads();
+
+    // do reduction on max_smem
+    for (int threadMax = 128; threadMax >= 1; threadMax /= 2)
     {
-        int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
-        uint srcLength = srcDims[id_z].height;
-        uint srcIdx = id_z * srcStridesNH.x;
-        __shared__ float max_smem[512];
-        max_smem[hipThreadIdx_x] = srcPtr[srcIdx];
-
-        if (id_x >= srcLength)
-            return;
-
-        srcIdx += id_x;
-        d_float8 src_f8;
-        rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);
-        rpp_hip_math_max8(&src_f8, &max_smem[hipThreadIdx_x]);
+        if (hipThreadIdx_x < threadMax)
+            max_smem[hipThreadIdx_x] = fmaxf(max_smem[hipThreadIdx_x], max_smem[hipThreadIdx_x + threadMax]);
         __syncthreads();
-
-        // do reduction on max_smem
-        for (int threadMax = 256; threadMax >= 1; threadMax /= 2)
-        {
-            if (hipThreadIdx_x < threadMax)
-                max_smem[hipThreadIdx_x] = fmaxf(max_smem[hipThreadIdx_x], max_smem[hipThreadIdx_x + threadMax]);
-            __syncthreads();
-        }
-
-        if (hipThreadIdx_x == 0)
-            maxArr[id_z * hipGridDim_x + hipBlockIdx_x] = max_smem[0];
     }
-    // for 2D input
-    else if (numDims == 2)
+
+    if (hipThreadIdx_x == 0)
+        maxArr[id_z * hipGridDim_x + hipBlockIdx_x] = max_smem[0];
+}
+
+__global__ void max_reduction_2d_hip_tensor(float *srcPtr,
+                                            uint2 srcStridesNH,
+                                            RpptImagePatchPtr srcDims,
+                                            float *maxArr)
+{
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+
+    __shared__ float partialMax_smem[16][16];                                   // 16 rows of src, 16 reduced cols of src in a 16 x 16 thread block
+    uint srcIdx = (id_z * srcStridesNH.x);
+    float *partialMaxRowPtr_smem = &partialMax_smem[hipThreadIdx_y][0];         // float pointer to beginning of each row in LDS
+    partialMaxRowPtr_smem[hipThreadIdx_x] = srcPtr[srcIdx];                     // initialization of LDS to start value using all 16 x 16 threads
+
+    if ((id_y >= srcDims[id_z].height) || (id_x >= srcDims[id_z].width))
+        return;
+
+    srcIdx += ((id_y * srcStridesNH.y) + id_x);
+    partialMaxRowPtr_smem[hipThreadIdx_x] = srcPtr[srcIdx];
+    __syncthreads();                                                            // syncthreads
+
+    // Reduction of 16 floats on 16 threads per block in x dimension (for every y dimension)
+    for (int threadMax = 8; threadMax >= 1; threadMax /= 2)
     {
-        int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
-        __shared__ float partialMax_smem[16][16];                                   // 16 rows of src, 128 reduced cols of src in a 16 x 16 thread block
-        uint srcIdx = (id_z * srcStridesNH.x);
-        float *partialMaxRowPtr_smem = &partialMax_smem[hipThreadIdx_y][0];         // float pointer to beginning of each row in LDS
-        partialMaxRowPtr_smem[hipThreadIdx_x] = srcPtr[srcIdx];                     // initialization of LDS to start value using all 16 x 16 threads
+        if (hipThreadIdx_x < threadMax)
+            partialMaxRowPtr_smem[hipThreadIdx_x] = fmaxf(partialMaxRowPtr_smem[hipThreadIdx_x], partialMaxRowPtr_smem[hipThreadIdx_x + threadMax]);
+        __syncthreads();
+    }
 
-        if ((id_y >= srcDims[id_z].height) || (id_x >= srcDims[id_z].width))
-            return;
-
-        srcIdx += ((id_y * srcStridesNH.y) + id_x);
-        partialMaxRowPtr_smem[hipThreadIdx_x] = srcPtr[srcIdx];
-        __syncthreads();                                                            // syncthreads
-
-        // Reduction of 16 floats on 16 threads per block in x dimension (for every y dimension)
-        for (int threadMax = 8; threadMax >= 1; threadMax /= 2)
+    if (hipThreadIdx_x == 0)
+    {
+        // Reduction of 16 floats on 16 threads per block in y dimension
+        for (int threadMax = 8, increment = 128; threadMax >= 1; threadMax /= 2, increment /= 2)
         {
-            if (hipThreadIdx_x < threadMax)
-                partialMaxRowPtr_smem[hipThreadIdx_x] = fmaxf(partialMaxRowPtr_smem[hipThreadIdx_x], partialMaxRowPtr_smem[hipThreadIdx_x + threadMax]);
+            if (hipThreadIdx_y < threadMax)
+                partialMaxRowPtr_smem[0] = fmaxf(partialMaxRowPtr_smem[0], partialMaxRowPtr_smem[increment]);
             __syncthreads();
         }
 
-        if (hipThreadIdx_x == 0)
-        {
-            // Reduction of 16 floats on 16 threads per block in y dimension
-            for (int threadMax = 8, increment = 128; threadMax >= 1; threadMax /= 2, increment /= 2)
-            {
-                if (hipThreadIdx_y < threadMax)
-                    partialMaxRowPtr_smem[0] = fmaxf(partialMaxRowPtr_smem[0], partialMaxRowPtr_smem[increment]);
-                __syncthreads();
-            }
-
-            // Final store to dst
-            if (hipThreadIdx_y == 0)
-                maxArr[(hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x] = partialMaxRowPtr_smem[0];
-        }
+        // Final store to dst
+        if (hipThreadIdx_y == 0)
+            maxArr[(hipBlockIdx_z * hipGridDim_y + hipBlockIdx_y) * hipGridDim_x + hipBlockIdx_x] = partialMaxRowPtr_smem[0];
     }
 }
 
@@ -225,16 +226,15 @@ RppStatus hip_exec_to_decibels_tensor(Rpp32f *srcPtr,
     {
         if (numDims == 1)
         {
-            numBlocksPerSample = ceil(static_cast<Rpp32f>((srcDescPtr->strides.nStride + 7) >> 3) / 512);
-            hipLaunchKernelGGL(max_reduction_hip_tensor,
+            numBlocksPerSample = ceil(static_cast<Rpp32f>((srcDescPtr->strides.nStride + 7) >> 3) / LOCAL_THREADS_X_1DIM);
+            hipLaunchKernelGGL(max_reduction_1d_hip_tensor,
                                dim3(numBlocksPerSample, 1, globalThreads_z),
-                               dim3(512, 1, 1),
+                               dim3(LOCAL_THREADS_X_1DIM, LOCAL_THREADS_Y_1DIM, LOCAL_THREADS_Z_1DIM),
                                0,
                                handle.GetStream(),
                                srcPtr,
                                make_uint2(srcDescPtr->strides.nStride, 1),
                                srcDims,
-                               numDims,
                                partialMaxArr);
         }
         else if (numDims == 2)
@@ -243,7 +243,7 @@ RppStatus hip_exec_to_decibels_tensor(Rpp32f *srcPtr,
             Rpp32s gridDim_y = ceil(static_cast<Rpp32f>(srcDescPtr->h)/LOCAL_THREADS_Y);
             Rpp32s gridDim_z = ceil(static_cast<Rpp32f>(globalThreads_z)/LOCAL_THREADS_Z);
             numBlocksPerSample = gridDim_x * gridDim_y * gridDim_z;
-            hipLaunchKernelGGL(max_reduction_hip_tensor,
+            hipLaunchKernelGGL(max_reduction_2d_hip_tensor,
                                dim3(gridDim_x, gridDim_y, gridDim_z),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
@@ -251,7 +251,6 @@ RppStatus hip_exec_to_decibels_tensor(Rpp32f *srcPtr,
                                srcPtr,
                                make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                                srcDims,
-                               numDims,
                                partialMaxArr);
         }
         hipStreamSynchronize(handle.GetStream());
