@@ -75,19 +75,19 @@ __global__ void max_reduction_1d_hip_tensor(float *srcPtr,
 
     uint srcLength = srcDims[id_z].height;
     uint srcIdx = id_z * srcStridesNH.x;
-    __shared__ float max_smem[256];
-    max_smem[hipThreadIdx_x] = srcPtr[srcIdx];
+    __shared__ float max_smem[256];                                     // 256 values of src in a 256 x 1 thread block
+    max_smem[hipThreadIdx_x] = srcPtr[srcIdx];                          // initialization of LDS to start value using all 256 threads
 
     if (id_x >= srcLength)
         return;
 
     srcIdx += id_x;
     d_float8 src_f8;
-    rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);
+    rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);       // load 8 pixels to local memory
     rpp_hip_math_max8(&src_f8, &max_smem[hipThreadIdx_x]);
-    __syncthreads();
+    __syncthreads();                                                    // syncthreads after max compute
 
-    // do reduction on max_smem
+    // Reduction of 256 floats on 256 threads per block in x dimension
     for (int threadMax = 128; threadMax >= 1; threadMax /= 2)
     {
         if (hipThreadIdx_x < threadMax)
@@ -95,6 +95,7 @@ __global__ void max_reduction_1d_hip_tensor(float *srcPtr,
         __syncthreads();
     }
 
+    // Final store to dst
     if (hipThreadIdx_x == 0)
         maxArr[id_z * hipGridDim_x + hipBlockIdx_x] = max_smem[0];
 }
