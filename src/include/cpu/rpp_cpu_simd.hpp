@@ -2611,6 +2611,127 @@ inline Rpp32f rpp_hsum_ps(__m256 x)
     return _mm_cvtss_f32(sum);
 }
 
+/* Computes inverse square root */
+inline Rpp32f rpp_rsqrt_ps(Rpp32f x)
+{
+    __m128 X = _mm_set_ss(x);
+    __m128 tmp = _mm_rsqrt_ss(X);
+    Rpp32f y = _mm_cvtss_f32(tmp);
+    return y * (1.5f - x * 0.5f * y * y);
+}
+
+/* Compute inverse square root */
+/* SSE matches to 6 decimal places with raw C version due to newton rhapson approximation*/
+inline void rpp_rsqrt_sse(Rpp32f *input, Rpp64s numElements, Rpp32f eps, Rpp32f rdiv, Rpp32f mul)
+{
+    Rpp64s i = 0;
+    __m128 rdivx4 = _mm_set1_ps(rdiv);
+    __m128 mulx4 = _mm_set1_ps(mul * 0.5f);
+    if (eps) // epsilon is present - no need for masking, but we need to add it
+    {
+        __m128 epsx4 = _mm_set1_ps(eps);
+        for (; i + 4 <= numElements; i += 4)
+        {
+            __m128 x = _mm_loadu_ps(&input[i]);
+            x = _mm_mul_ps(x, rdivx4);
+            x = _mm_add_ps(x, epsx4);
+            __m128 y = _mm_rsqrt_ps(x);
+            __m128 y2 = _mm_mul_ps(y, y);
+            __m128 xy2 = _mm_mul_ps(x, y2);
+            __m128 three_minus_xy2 = _mm_sub_ps(xmm_p3, xy2);
+            y = _mm_mul_ps(y, three_minus_xy2);
+            y = _mm_mul_ps(y, mulx4);
+            _mm_storeu_ps(&input[i], y);
+        }
+    }
+    else
+    {
+        for (; i + 4 <= numElements; i += 4)
+        {
+            __m128 x = _mm_loadu_ps(&input[i]);
+            x = _mm_mul_ps(x, rdivx4);
+            __m128 mask = _mm_cmpneq_ps(x, xmm_p0);
+            __m128 y = _mm_rsqrt_ps(x);
+            y = _mm_and_ps(y, mask);
+            __m128 y2 = _mm_mul_ps(y, y);
+            __m128 xy2 = _mm_mul_ps(x, y2);
+            __m128 three_minus_xy2 = _mm_sub_ps(xmm_p3, xy2);
+            y = _mm_mul_ps(y, three_minus_xy2);
+            y = _mm_mul_ps(y, mulx4);
+            _mm_storeu_ps(&input[i], y);
+        }
+    }
+    if (eps)
+    {
+        for (; i < numElements; i++)
+            input[i] = rpp_rsqrt_ps(input[i] * rdiv + eps) * mul;
+    }
+    else
+    {
+        for (; i < numElements; i++)
+        {
+            Rpp32f x = input[i] * rdiv;
+            input[i] = x ? rpp_rsqrt_ps(x) * mul : 0;
+        }
+    }
+}
+
+/* Compute inverse square root */
+/* AVX2 matches to 6 decimal places with raw C version due to newton rhapson approximation*/
+inline void rpp_rsqrt_avx(Rpp32f *input, Rpp32s numElements, Rpp32f eps, Rpp32f rdiv, Rpp32f scale)
+{
+    Rpp32s i = 0;
+    __m256 rdivx8 = _mm256_set1_ps(rdiv);
+    __m256 mulx8 = _mm256_set1_ps(scale * 0.5f);
+    if (eps) // epsilon is present - no need for masking, but we need to add it
+    {
+        __m256 epsx8 = _mm256_set1_ps(eps);
+        for (; i + 8 <= numElements; i += 8)
+        {
+            __m256 x = _mm256_loadu_ps(&input[i]);
+            x = _mm256_mul_ps(x, rdivx8);
+            x = _mm256_add_ps(x, epsx8);
+            __m256 y = _mm256_rsqrt_ps(x);
+            __m256 y2 = _mm256_mul_ps(y, y);
+            __m256 xy2 = _mm256_mul_ps(x, y2);
+            __m256 three_minus_xy2 = _mm256_sub_ps(avx_p3, xy2);
+            y = _mm256_mul_ps(y, three_minus_xy2);
+            y = _mm256_mul_ps(y, mulx8);
+            _mm256_storeu_ps(&input[i], y);
+        }
+    }
+    else
+    {
+        for (; i + 8 <= numElements; i += 8)
+        {
+            __m256 x = _mm256_loadu_ps(&input[i]);
+            x = _mm256_mul_ps(x, rdivx8);
+            __m256 mask = _mm256_cmp_ps(x, avx_p0, _CMP_NEQ_OQ);
+            __m256 y = _mm256_rsqrt_ps(x);
+            y = _mm256_and_ps(y, mask);
+            __m256 y2 = _mm256_mul_ps(y, y);
+            __m256 xy2 = _mm256_mul_ps(x, y2);
+            __m256 three_minus_xy2 = _mm256_sub_ps(avx_p3, xy2);
+            y = _mm256_mul_ps(y, three_minus_xy2);
+            y = _mm256_mul_ps(y, mulx8);
+            _mm256_storeu_ps(&input[i], y);
+        }
+    }
+    if (eps)
+    {
+        for (; i < numElements; i++)
+            input[i] = rpp_rsqrt_ps(input[i] * rdiv + eps) * scale;
+    }
+    else
+    {
+        for (; i < numElements; i++)
+        {
+            Rpp32f x = input[i] * rdiv;
+            input[i] = x ? rpp_rsqrt_ps(x) * scale : 0;
+        }
+    }
+}
+
 static inline void fast_matmul4x4_sse(float *A, float *B, float *C)
 {
     __m128 row1 = _mm_load_ps(&B[0]);                   // Row 0 of B

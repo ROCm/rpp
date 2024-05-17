@@ -134,7 +134,7 @@ typedef enum
     /*! \brief Out of bound source ROI \ingroup group_rppdefs */
     RPP_ERROR_OUT_OF_BOUND_SRC_ROI      = -17,
     /*! \brief src and dst layout mismatch \ingroup group_rppdefs */
-    RPP_ERROR_SRC_DST_LAYOUT_MISMATCH   = -18,
+    RPP_ERROR_LAYOUT_MISMATCH           = -18,
     /*! \brief Number of channels is invalid. (Needs to adhere to function specification.) \ingroup group_rppdefs */
     RPP_ERROR_INVALID_CHANNELS          = -19
 } RppStatus;
@@ -369,10 +369,13 @@ typedef enum
  */
 typedef enum
 {
-    NCHW,
-    NHWC,
-    NCDHW,
-    NDHWC
+    NCHW,   // BatchSize-Channels-Height-Width
+    NHWC,   // BatchSize-Height-Width-Channels
+    NCDHW,  // BatchSize-Channels-Depth-Height-Width
+    NDHWC,  // BatchSize-Depth-Height-Width-Channels
+    NHW,    // BatchSize-Height-Width
+    NFT,    // BatchSize-Frequency-Time -> Frequency Major used for Spectrogram / MelfilterBank
+    NTF     // BatchSize-Time-Frequency -> Time Major used for Spectrogram / MelfilterBank
 } RpptLayout;
 
 /*! \brief RPPT Tensor 2D ROI type enum
@@ -424,6 +427,15 @@ typedef enum
     CLAMP,
     REFLECT
 } RpptAudioBorderType;
+
+/*! \brief RPPT Mel Scale Formula
+ * \ingroup group_rppdefs
+ */
+typedef enum
+{
+    SLANEY = 0,  // Follows Slaney’s MATLAB Auditory Modelling Work behavior
+    HTK,         // Follows O’Shaughnessy’s book formula, consistent with Hidden Markov Toolkit(HTK), m = 2595 * log10(1 + (f/700))
+} RpptMelScaleFormula;
 
 /*! \brief RPPT Tensor 2D ROI LTRB struct
  * \ingroup group_rppdefs
@@ -1024,6 +1036,7 @@ typedef struct
     Rpp64u* dstBatchIndex;
     Rpp32u* inc;
     Rpp32u* dstInc;
+    hipMemRpp32u scratchBuf;
 } memGPU;
 
 /*! \brief RPP HIP-HOST memory management
