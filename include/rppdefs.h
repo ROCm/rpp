@@ -136,7 +136,11 @@ typedef enum
     /*! \brief src and dst layout mismatch \ingroup group_rppdefs */
     RPP_ERROR_LAYOUT_MISMATCH           = -18,
     /*! \brief Number of channels is invalid. (Needs to adhere to function specification.) \ingroup group_rppdefs */
-    RPP_ERROR_INVALID_CHANNELS          = -19
+    RPP_ERROR_INVALID_CHANNELS          = -19,
+    /*! \brief Invalid output tile length (Needs to adhere to function specification.) \ingroup group_rppdefs */
+    RPP_ERROR_INVALID_OUTPUT_TILE_LENGTH    = -20,
+    /*! \brief Shared memory size needed is beyond the bounds (Needs to adhere to function specification.) \ingroup group_rppdefs */
+    RPP_ERROR_OUT_OF_BOUND_SHARED_MEMORY_SIZE    = -21,
 } RppStatus;
 
 /*! \brief RPP rppStatus_t type enums

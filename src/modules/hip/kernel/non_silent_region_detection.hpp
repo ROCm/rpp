@@ -323,12 +323,12 @@ RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
     if (outputTileLength <= 0)
     {
         std::cout << "Invalid output tile length! " << std::endl;
-        return RPP_ERROR;
+        return RPP_ERROR_INVALID_OUTPUT_TILE_LENGTH;
     }
     if (sharedMemorySizeInBytes > maxSharedMemoryInBytes)
     {
         std::cout << "Cannot compute the requested moving mean square, due to shared memory restrictions" << std::endl;
-        return RPP_ERROR;
+        return RPP_ERROR_OUT_OF_BOUND_SHARED_MEMORY_SIZE;
     }
 
     // launch kernel to compute the values needed for MMS Array
