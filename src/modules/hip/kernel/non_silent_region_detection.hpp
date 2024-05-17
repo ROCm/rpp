@@ -265,9 +265,9 @@ __global__ void find_region_hip_tensor(float *srcPtr,
 // -------------------- Set 4 -  host helpers for kernel executor --------------------
 
 // return the nearest previous power of 2 for the given number
-inline int prev_pow2(int n)
+inline Rpp32s prev_pow2(Rpp32s n)
 {
-    int pow2 = 1;
+    Rpp32s pow2 = 1;
     while (n - pow2 > pow2)
         pow2 += pow2;
 
@@ -275,9 +275,9 @@ inline int prev_pow2(int n)
 }
 
 // return the nearest next power of 2 for the given number
-inline int next_pow2(int n)
+inline Rpp32s next_pow2(Rpp32s n)
 {
-    int pow2 = 1;
+    Rpp32s pow2 = 1;
     while (n > pow2)
         pow2 += pow2;
 
@@ -301,24 +301,24 @@ RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
     Rpp32f *mmsArr;
     hipMalloc(&(mmsArr), srcDescPtr->n * srcDescPtr->strides.nStride * sizeof(Rpp32f));
 
-    int maxSharedMemoryInBytes = handle.GetLocalMemorySize();
-    int maxSharedMemoryElements = maxSharedMemoryInBytes / sizeof(Rpp32f);
-    int kSharedMemBanks = 32;
-    int inputTileLength = prev_pow2(maxSharedMemoryElements * kSharedMemBanks / (kSharedMemBanks + 1));
+    Rpp32s maxSharedMemoryInBytes = handle.GetLocalMemorySize();
+    Rpp32s maxSharedMemoryElements = maxSharedMemoryInBytes / sizeof(Rpp32f);
+    Rpp32s kSharedMemBanks = 32;
+    Rpp32s inputTileLength = prev_pow2(maxSharedMemoryElements * kSharedMemBanks / (kSharedMemBanks + 1));
 
     if (resetInterval > 0 && resetInterval < inputTileLength)
     {
-        int p = prev_pow2(resetInterval);
-        int n = next_pow2(resetInterval);
+        Rpp32s p = prev_pow2(resetInterval);
+        Rpp32s n = next_pow2(resetInterval);
         if (p > windowLength)
             inputTileLength = p;
         else if (n < inputTileLength)
             inputTileLength = n;
     }
 
-    int sharedMemorySizeInBytes = smem_pos(inputTileLength) * sizeof(Rpp32f);
-    int outputTileLength = inputTileLength - windowLength;
-    float windowFactor = 1.0f / windowLength;
+    Rpp32s sharedMemorySizeInBytes = smem_pos(inputTileLength) * sizeof(Rpp32f);
+    Rpp32s outputTileLength = inputTileLength - windowLength;
+    Rpp32f windowFactor = 1.0f / windowLength;
 
     if (outputTileLength <= 0)
     {
@@ -332,9 +332,9 @@ RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
     }
 
     // launch kernel to compute the values needed for MMS Array
-    int globalThreads_x = ceil(static_cast<float>(srcDescPtr->strides.nStride) / outputTileLength);
-    int globalThreads_y = 1;
-    int globalThreads_z = srcDescPtr->n;
+    Rpp32s globalThreads_x = ceil(static_cast<Rpp32f>(srcDescPtr->strides.nStride) / outputTileLength);
+    Rpp32s globalThreads_y = 1;
+    Rpp32s globalThreads_z = srcDescPtr->n;
 
     hipLaunchKernelGGL(moving_mean_square_hip_tensor,
                        dim3(globalThreads_x, globalThreads_y, globalThreads_z),
@@ -354,8 +354,8 @@ RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
     bool referenceMax = (!referencePower);
     Rpp32f *partialMaxArr = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
 
-    int numBlocksPerSample = ceil(static_cast<float>(srcDescPtr->strides.nStride) / (LOCAL_THREADS_X_1DIM * 8));
-    int cutOffMagKernelBlockSize = 1;
+    Rpp32s numBlocksPerSample = ceil(static_cast<Rpp32f>(srcDescPtr->strides.nStride) / (LOCAL_THREADS_X_1DIM * 8));
+    Rpp32s cutOffMagKernelBlockSize = 1;
     if (referenceMax)
     {
         // compute max value in MMS buffer
