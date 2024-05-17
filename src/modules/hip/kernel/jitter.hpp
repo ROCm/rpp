@@ -4,11 +4,11 @@
 
 __device__ void jitter_roi_and_srclocs_hip_compute(int4 *srcRoiPtr_i4, RpptXorwowStateBoxMuller *xorwowState, uint kernelSize, uint bound, int id_x, int id_y, d_float16 *locSrc_f16)
 {
-    d_float8 nhx_f8, nhy_f8;
-    rpp_hip_rng_8_jitter_f32(&nhx_f8, xorwowState);
-    rpp_hip_math_multiply8_const(&nhx_f8, &nhx_f8, static_cast<float4>(kernelSize));
-    rpp_hip_rng_8_jitter_f32(&nhy_f8, xorwowState);
-    rpp_hip_math_multiply8_const(&nhy_f8, &nhy_f8, static_cast<float4>(kernelSize));
+    d_float8 widthIncrement_f8, heightIncrement_f8;
+    rpp_hip_rng_8_jitter_f32(&widthIncrement_f8, xorwowState);
+    rpp_hip_math_multiply8_const(&widthIncrement_f8, &widthIncrement_f8, static_cast<float4>(kernelSize));
+    rpp_hip_rng_8_jitter_f32(&heightIncrement_f8, xorwowState);
+    rpp_hip_math_multiply8_const(&heightIncrement_f8, &heightIncrement_f8, static_cast<float4>(kernelSize));
 
     d_float8 increment_f8, locDst_f8x, locDst_f8y;
     increment_f8.f4[0] = make_float4(0.0f, 1.0f, 2.0f, 3.0f);
@@ -17,10 +17,10 @@ __device__ void jitter_roi_and_srclocs_hip_compute(int4 *srcRoiPtr_i4, RpptXorwo
     locDst_f8x.f4[1] = static_cast<float4>(id_x) + increment_f8.f4[1];
     locDst_f8y.f4[0] = locDst_f8y.f4[1] = (float4)id_y;
 
-    locSrc_f16->f8[0].f4[0] = static_cast<float4>(srcRoiPtr_i4->x) + locDst_f8x.f4[0] + nhx_f8.f4[0] - static_cast<float4>(bound);
-    locSrc_f16->f8[0].f4[1] = static_cast<float4>(srcRoiPtr_i4->x) + locDst_f8x.f4[1] + nhx_f8.f4[1] - static_cast<float4>(bound);
-    locSrc_f16->f8[1].f4[0] = static_cast<float4>(srcRoiPtr_i4->y) + locDst_f8y.f4[0] + nhy_f8.f4[0] - static_cast<float4>(bound);
-    locSrc_f16->f8[1].f4[1] = static_cast<float4>(srcRoiPtr_i4->y) + locDst_f8y.f4[1] + nhy_f8.f4[1] - static_cast<float4>(bound);
+    locSrc_f16->f8[0].f4[0] = static_cast<float4>(srcRoiPtr_i4->x) + locDst_f8x.f4[0] + widthIncrement_f8.f4[0] - static_cast<float4>(bound);
+    locSrc_f16->f8[0].f4[1] = static_cast<float4>(srcRoiPtr_i4->x) + locDst_f8x.f4[1] + widthIncrement_f8.f4[1] - static_cast<float4>(bound);
+    locSrc_f16->f8[1].f4[0] = static_cast<float4>(srcRoiPtr_i4->y) + locDst_f8y.f4[0] + heightIncrement_f8.f4[0] - static_cast<float4>(bound);
+    locSrc_f16->f8[1].f4[1] = static_cast<float4>(srcRoiPtr_i4->y) + locDst_f8y.f4[1] + heightIncrement_f8.f4[1] - static_cast<float4>(bound);
 }
 
 template <typename T>
@@ -216,6 +216,7 @@ RppStatus hip_exec_jitter_tensor(T *srcPtr,
                                  RpptDescPtr srcDescPtr,
                                  T *dstPtr,
                                  RpptDescPtr dstDescPtr,
+                                 uint *kernelSizeTensor,
                                  RpptXorwowStateBoxMuller *xorwowInitialStatePtr,
                                  RpptROIPtr roiTensorPtrSrc,
                                  RpptRoiType roiType,
@@ -244,7 +245,7 @@ RppStatus hip_exec_jitter_tensor(T *srcPtr,
                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                            dstPtr,
                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                           handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
+                           kernelSizeTensor,
                            xorwowInitialStatePtr,
                            xorwowSeedStream,
                            roiTensorPtrSrc);
@@ -261,7 +262,7 @@ RppStatus hip_exec_jitter_tensor(T *srcPtr,
                            dstPtr,
                            make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                            dstDescPtr->c,
-                           handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
+                           kernelSizeTensor,
                            xorwowInitialStatePtr,
                            xorwowSeedStream,
                            roiTensorPtrSrc);
@@ -279,7 +280,7 @@ RppStatus hip_exec_jitter_tensor(T *srcPtr,
                                make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                                dstPtr,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                               handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
+                               kernelSizeTensor,
                                xorwowInitialStatePtr,
                                xorwowSeedStream,
                                roiTensorPtrSrc);
@@ -296,7 +297,7 @@ RppStatus hip_exec_jitter_tensor(T *srcPtr,
                                make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                                dstPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                               handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
+                               kernelSizeTensor,
                                xorwowInitialStatePtr,
                                xorwowSeedStream,
                                roiTensorPtrSrc);

@@ -6110,12 +6110,10 @@ inline void compute_jitter_src_loc_sse(__m128i *pxXorwowStateX, __m128i *pxXorwo
 
 inline void compute_jitter_src_loc(RpptXorwowStateBoxMuller *xorwowState, Rpp32s row, Rpp32s col, Rpp32s kSize, Rpp32s heightLimit, Rpp32s widthLimit, Rpp32s stride, Rpp32s bound, Rpp32s channels, Rpp32s &loc)
 {
-    Rpp32f randomNumberFloat = rpp_host_rng_xorwow_f32(xorwowState);
-    Rpp32u hInc = randomNumberFloat * kSize;
-    randomNumberFloat = rpp_host_rng_xorwow_f32(xorwowState);
-    Rpp32u wInc = randomNumberFloat * kSize;
-    loc = std::max(std::min(static_cast<int>(row + hInc - bound), heightLimit), 0) * stride;
-    loc += std::max(std::min(static_cast<int>(col + wInc - bound), (widthLimit - 1)), 0) * channels;
+    Rpp32u heightIncrement = rpp_host_rng_xorwow_f32(xorwowState) * kSize;
+    Rpp32u widthIncrement = rpp_host_rng_xorwow_f32(xorwowState) * kSize;
+    loc = std::max(std::min(static_cast<int>(row + heightIncrement - bound), heightLimit), 0) * stride;
+    loc += std::max(std::min(static_cast<int>(col + widthIncrement  - bound), (widthLimit - 1)), 0) * channels;
 }
 inline void compute_sum_16_host(__m256i *p, __m256i *pSum)
 {

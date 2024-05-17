@@ -1452,8 +1452,6 @@ RppStatus rppt_jitter_gpu(RppPtr_t srcPtr,
                           rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
-    Rpp32u paramIndex = 0;
-    copy_param_uint(kernelSizeTensor, rpp::deref(rppHandle), paramIndex++);
 
     RpptXorwowStateBoxMuller xorwowInitialState;
     xorwowInitialState.x[0] = 0x75BCD15 + seed;
@@ -1467,7 +1465,7 @@ RppStatus rppt_jitter_gpu(RppPtr_t srcPtr,
 
     RpptXorwowStateBoxMuller *d_xorwowInitialStatePtr;
     d_xorwowInitialStatePtr = reinterpret_cast<RpptXorwowStateBoxMuller *>(rpp::deref(rppHandle).GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
-    hipMemcpy(d_xorwowInitialStatePtr, &xorwowInitialState, sizeof(RpptXorwowStateBoxMuller), hipMemcpyHostToDevice);
+    CHECK_RETURN_STATUS(hipMemcpy(d_xorwowInitialStatePtr, &xorwowInitialState, sizeof(RpptXorwowStateBoxMuller), hipMemcpyHostToDevice));
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
@@ -1475,6 +1473,7 @@ RppStatus rppt_jitter_gpu(RppPtr_t srcPtr,
                                srcDescPtr,
                                static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                                dstDescPtr,
+                               kernelSizeTensor,
                                d_xorwowInitialStatePtr,
                                roiTensorPtrSrc,
                                roiType,
@@ -1486,6 +1485,7 @@ RppStatus rppt_jitter_gpu(RppPtr_t srcPtr,
                                 srcDescPtr,
                                 (half*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                 dstDescPtr,
+                                kernelSizeTensor,
                                 d_xorwowInitialStatePtr,
                                 roiTensorPtrSrc,
                                 roiType,
@@ -1497,6 +1497,7 @@ RppStatus rppt_jitter_gpu(RppPtr_t srcPtr,
                                 srcDescPtr,
                                 (Rpp32f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                 dstDescPtr,
+                                kernelSizeTensor,
                                 d_xorwowInitialStatePtr,
                                 roiTensorPtrSrc,
                                 roiType,
@@ -1508,6 +1509,7 @@ RppStatus rppt_jitter_gpu(RppPtr_t srcPtr,
                                srcDescPtr,
                                static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                                dstDescPtr,
+                               kernelSizeTensor,
                                d_xorwowInitialStatePtr,
                                roiTensorPtrSrc,
                                roiType,

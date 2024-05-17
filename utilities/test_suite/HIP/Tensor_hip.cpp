@@ -369,6 +369,10 @@ int main(int argc, char **argv)
     if(testCase == 46)
         CHECK_RETURN_STATUS(hipHostMalloc(&intensity, batchSize * sizeof(Rpp32f)));
 
+    Rpp32u *kernelSizeTensor;
+    if(testCase == 6)
+        CHECK_RETURN_STATUS(hipHostMalloc(&kernelSizeTensor, batchSize * sizeof(Rpp32u)));
+
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
     for(int iterCount = 0; iterCount < noOfIterations; iterCount++)
@@ -524,7 +528,6 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "jitter";
 
-                    Rpp32u kernelSizeTensor[batchSize];
                     Rpp32u seed = 1255459;
                     for (i = 0; i < batchSize; i++)
                         kernelSizeTensor[i] = 5;
@@ -1384,6 +1387,8 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostFree(shapeTensor));
     if(roiTensor != NULL)
         CHECK_RETURN_STATUS(hipHostFree(roiTensor));
+    if(testCase == 6)
+        CHECK_RETURN_STATUS(hipHostFree(kernelSizeTensor));
     free(input);
     free(input_second);
     free(output);
