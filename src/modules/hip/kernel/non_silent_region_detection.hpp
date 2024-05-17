@@ -97,11 +97,7 @@ __global__ void moving_mean_square_hip_tensor(float *srcPtr,
 
     // compute the mms value here
     for(int pos = hipThreadIdx_x; pos < validOutputTileLength; pos += hipBlockDim_x)
-    {
-        float x = inBlockPtr[pos];
-        float outVal = square(x) + squaredPrefixSum_smem[smem_pos(windowLength + pos)] - squaredPrefixSum_smem[smem_pos(pos + 1)];
-        outBlockPtr[pos] = outVal * windowFactor;
-    }
+        outBlockPtr[pos] = windowFactor * (square(inBlockPtr[pos]) + squaredPrefixSum_smem[smem_pos(windowLength + pos)] - squaredPrefixSum_smem[smem_pos(pos + 1)]);
 }
 
 // -------------------- Set 2 -  kernels for finding cutoffmag value  --------------------
