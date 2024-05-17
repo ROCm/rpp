@@ -218,7 +218,7 @@ RppStatus hip_exec_to_decibels_tensor(Rpp32f *srcPtr,
 
     // calculate max in input if referenceMagnitude = 0
     Rpp32f *partialMaxArr = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
-    Rpp32s numBlocksPerSample;
+    Rpp32s numBlocksPerSample = 0;
     Rpp32s globalThreads_z = dstDescPtr->n;
 
     // find the invReferenceMagnitude value
@@ -257,6 +257,7 @@ RppStatus hip_exec_to_decibels_tensor(Rpp32f *srcPtr,
         hipStreamSynchronize(handle.GetStream());
     }
     Rpp32u blockSize = (computeMax) ? 256: 1;
+    Rpp32f *inverseMagnitudeTensor = partialMaxArr + globalThreads_z * numBlocksPerSample;
     hipLaunchKernelGGL(inverse_magnitude_hip_tensor,
                        dim3(1, 1,  globalThreads_z),
                        dim3(blockSize, 1, 1),
@@ -265,7 +266,7 @@ RppStatus hip_exec_to_decibels_tensor(Rpp32f *srcPtr,
                        partialMaxArr,
                        numBlocksPerSample,
                        computeMax,
-                       handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem);
+                       inverseMagnitudeTensor);
     hipStreamSynchronize(handle.GetStream());
 
     // launch kernel for todecibels
@@ -285,7 +286,7 @@ RppStatus hip_exec_to_decibels_tensor(Rpp32f *srcPtr,
                            srcDims,
                            static_cast<double>(minRatio),
                            multiplier,
-                           handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem);
+                           inverseMagnitudeTensor);
     }
     else if (numDims == 2)
     {
@@ -303,7 +304,7 @@ RppStatus hip_exec_to_decibels_tensor(Rpp32f *srcPtr,
                            srcDims,
                            static_cast<double>(minRatio),
                            multiplier,
-                           handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem);
+                           inverseMagnitudeTensor);
     }
 
     return RPP_SUCCESS;
