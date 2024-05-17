@@ -216,9 +216,10 @@ __global__ void find_region_hip_tensor(float *srcPtr,
 
     int beginIdx = srcLength;
     int endIdx = 0;
+    uint stridePerSample = id_z * nStride;
     for (int i = id_x; i < srcLength; i += hipBlockDim_x)
     {
-        uint srcIdx = id_z * nStride + i;
+        uint srcIdx = stridePerSample + i;
         if (srcPtr[srcIdx] >= cutOffMag)
         {
             beginIdx = i;
@@ -229,7 +230,7 @@ __global__ void find_region_hip_tensor(float *srcPtr,
     }
     for (int i = id_x; i < srcLength; i += hipBlockDim_x)
     {
-        uint srcIdx = id_z * nStride + srcLength - 1 - i;
+        uint srcIdx = stridePerSample + srcLength - 1 - i;
         if (srcPtr[srcIdx] >= cutOffMag)
         {
             endIdx = srcLength - 1 - i;
@@ -263,6 +264,7 @@ __global__ void find_region_hip_tensor(float *srcPtr,
 
 // -------------------- Set 4 -  host helpers for kernel executor --------------------
 
+// return the nearest previous power of 2 for the given number
 inline int prev_pow2(int n)
 {
     int pow2 = 1;
@@ -272,6 +274,7 @@ inline int prev_pow2(int n)
     return pow2;
 }
 
+// return the nearest next power of 2 for the given number
 inline int next_pow2(int n)
 {
     int pow2 = 1;
@@ -305,8 +308,8 @@ RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
 
     if (resetInterval > 0 && resetInterval < inputTileLength)
     {
-        auto p = prev_pow2(resetInterval);
-        auto n = next_pow2(resetInterval);
+        int p = prev_pow2(resetInterval);
+        int n = next_pow2(resetInterval);
         if (p > windowLength)
             inputTileLength = p;
         else if (n < inputTileLength)
