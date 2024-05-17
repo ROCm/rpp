@@ -116,7 +116,7 @@ __global__ void max_reduction_hip_tensor(float *srcPtr,
     uint srcLength = srcLengthTensor[id_z];
 
     uint srcIdx = id_z * nStride;
-    __shared__ float max_smem[512];
+    __shared__ float max_smem[256];
     max_smem[hipThreadIdx_x] = srcPtr[srcIdx];
 
     if (id_x >= srcLength)
@@ -129,7 +129,7 @@ __global__ void max_reduction_hip_tensor(float *srcPtr,
     __syncthreads();
 
     // do reduction on min_smem and max_smem
-    for (int threadMax = 256; threadMax >= 1; threadMax /= 2)
+    for (int threadMax = 128; threadMax >= 1; threadMax /= 2)
     {
         if (hipThreadIdx_x < threadMax)
             max_smem[hipThreadIdx_x] = fmaxf(max_smem[hipThreadIdx_x], max_smem[hipThreadIdx_x + threadMax]);
@@ -338,7 +338,7 @@ RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
 
     hipLaunchKernelGGL(moving_mean_square_hip_tensor,
                        dim3(globalThreads_x, globalThreads_y, globalThreads_z),
-                       dim3(512, 1, 1),
+                       dim3(LOCAL_THREADS_X_1DIM, LOCAL_THREADS_Y_1DIM, LOCAL_THREADS_Z_1DIM),
                        sharedMemorySizeInBytes,
                        handle.GetStream(),
                        srcPtr,
@@ -354,14 +354,14 @@ RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
     bool referenceMax = (!referencePower);
     Rpp32f *partialMaxArr = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
 
-    int numBlocksPerSample = ceil(static_cast<float>(srcDescPtr->strides.nStride) / (512 * 8));
+    int numBlocksPerSample = ceil(static_cast<float>(srcDescPtr->strides.nStride) / (LOCAL_THREADS_X_1DIM * 8));
     int cutOffMagKernelBlockSize = 1;
     if (referenceMax)
     {
         // compute max value in MMS buffer
         hipLaunchKernelGGL(max_reduction_hip_tensor,
                            dim3(numBlocksPerSample, 1, globalThreads_z),
-                           dim3(512, 1, 1),
+                           dim3(LOCAL_THREADS_X_1DIM, LOCAL_THREADS_Y_1DIM, LOCAL_THREADS_Z_1DIM),
                            0,
                            handle.GetStream(),
                            mmsArr,
@@ -371,10 +371,10 @@ RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
         cutOffMagKernelBlockSize = 256;
     }
     // find the cutoff value in magnitude
-    Rpp32f *cutOffMagPtr = handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem;
+    Rpp32f *cutOffMagPtr = partialMaxArr + globalThreads_z * numBlocksPerSample;
     hipLaunchKernelGGL(cutoffmag_hip_tensor,
                        dim3(1, 1, globalThreads_z),
-                       dim3(cutOffMagKernelBlockSize, 1, 1),
+                       dim3(cutOffMagKernelBlockSize, LOCAL_THREADS_Y_1DIM, LOCAL_THREADS_Z_1DIM),
                        0,
                        handle.GetStream(),
                        partialMaxArr,
@@ -387,7 +387,7 @@ RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
     // find the begin and length values of NSR in inputs
     hipLaunchKernelGGL(find_region_hip_tensor,
                        dim3(1, 1, globalThreads_z),
-                       dim3(1024, 1, 1),
+                       dim3(1024, LOCAL_THREADS_Y_1DIM, LOCAL_THREADS_Z_1DIM),
                        0,
                        handle.GetStream(),
                        mmsArr,
