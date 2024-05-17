@@ -42,7 +42,7 @@ caseMax = 2
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list():
     return [
-        outFolderPath + "/OUTPUT_PERFORMANCE_AUDIO_LOGS_HIP_" + timestamp + "/Tensor_hip_audio_raw_performance_log.txt",
+        outFolderPath + "/OUTPUT_PERFORMANCE_AUDIO_LOGS_HIP_" + timestamp + "/Tensor_audio_hip_raw_performance_log.txt",
     ]
 
 def case_file_check(CASE_FILE_PATH, new_file):
@@ -73,24 +73,24 @@ def generate_performance_reports(RESULTS_DIR):
     print(dfPrint_noIndices)
 
 def run_unit_test_cmd(srcPath, case, numRuns, testType, batchSize, outFilePath):
-    print(f"./Tensor_hip_audio {srcPath} {case} {numRuns} {testType} {numRuns} {batchSize}")
-    result = subprocess.run([buildFolderPath + "/build/Tensor_hip_audio", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE)    # nosec
+    print(f"./Tensor_audio_hip {srcPath} {case} {numRuns} {testType} {numRuns} {batchSize}")
+    result = subprocess.run([buildFolderPath + "/build/Tensor_audio_hip", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE)    # nosec
     print(result.stdout.decode())
     print("------------------------------------------------------------------------------------------")
 
 def run_performance_test_cmd(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath):
-    with open("{}/Tensor_hip_audio_raw_performance_log.txt".format(loggingFolder), "a") as logFile:
-        print(f"./Tensor_hip_audio {srcPath} {case} {numRuns} {testType} {numRuns} {batchSize} ")
-        process = subprocess.Popen([buildFolderPath + "/build/Tensor_hip_audio", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
+    with open("{}/Tensor_audio_hip_raw_performance_log.txt".format(loggingFolder), "a") as logFile:
+        print(f"./Tensor_audio_hip {srcPath} {case} {numRuns} {testType} {numRuns} {batchSize} ")
+        process = subprocess.Popen([buildFolderPath + "/build/Tensor_audio_hip", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
         read_from_subprocess_and_write_to_log(process, logFile)
         print("------------------------------------------------------------------------------------------")
 
 def run_performance_test_with_profiler_cmd(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath):
     if not os.path.isdir(f"{outFilePath}/case_{case}"):
         os.mkdir(f"{outFilePath}/case_{case}")
-    with open("{}/Tensor_hip_audio_raw_performance_log.txt".format(loggingFolder), "a") as logFile:
-        print(f"\nrocprof --basenames on --timestamp on --stats -o {outFilePath}/case_{case}/output_case{case}.csv ./Tensor_hip_audio {srcPath} {case} {numRuns} {testType} {numRuns} {batchSize}")
-        process = subprocess.Popen([ 'rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f"{outFilePath}/case_{case}/output_case{case}.csv", "./Tensor_hip_audio", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)  # nosec
+    with open("{}/Tensor_audio_hip_raw_performance_log.txt".format(loggingFolder), "a") as logFile:
+        print(f"\nrocprof --basenames on --timestamp on --stats -o {outFilePath}/case_{case}/output_case{case}.csv ./Tensor_audio_hip {srcPath} {case} {numRuns} {testType} {numRuns} {batchSize}")
+        process = subprocess.Popen([ 'rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f"{outFilePath}/case_{case}/output_case{case}.csv", "./Tensor_audio_hip", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)  # nosec
         while True:
             output = process.stdout.readline()
             if not output and process.poll() is not None:

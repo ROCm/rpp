@@ -11,7 +11,7 @@ __global__ void pre_emphasis_filter_tensor(float *srcPtr,
                                            uint srcStride,
                                            float *dstPtr,
                                            uint dstStride,
-                                           Rpp32s *srcLengthTensor,
+                                           int *srcLengthTensor,
                                            float *coeffTensor,
                                            RpptAudioBorderType borderType)
 {
@@ -19,12 +19,11 @@ __global__ void pre_emphasis_filter_tensor(float *srcPtr,
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
     if (id_x >= srcLengthTensor[id_z])
-    {
         return;
-    }
 
     uint srcIdx = (id_z * srcStride) + id_x;
     uint dstIdx = (id_z * dstStride) + id_x;
+    float coeff = coeffTensor[id_z];
 
     if(id_x == 0)
     {
@@ -33,11 +32,11 @@ __global__ void pre_emphasis_filter_tensor(float *srcPtr,
         else
         {
             float border = (borderType == RpptAudioBorderType::CLAMP) ? srcPtr[srcIdx] : srcPtr[srcIdx + 1];
-            dstPtr[dstIdx] = srcPtr[srcIdx] - coeffTensor[id_z] * border;
+            dstPtr[dstIdx] = srcPtr[srcIdx] - coeff * border;
         }
     }
 
-    float4 coeff_f4 = (float4)coeffTensor[id_z];
+    float4 coeff_f4 =  static_cast<float4>(coeff);
     d_float8 src1_f8, src2_f8, dst_f8;
     rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx + 1, &src1_f8);
     rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src2_f8);
@@ -49,13 +48,14 @@ RppStatus hip_exec_pre_emphasis_filter_tensor(Rpp32f *srcPtr,
                                               RpptDescPtr srcDescPtr,
                                               Rpp32f *dstPtr,
                                               RpptDescPtr dstDescPtr,
-                                              Rpp32s *srcLengthTensor,
+                                              float *coeffTensor,
+                                              int *srcLengthTensor,
                                               RpptAudioBorderType borderType,
                                               rpp::Handle& handle)
 {
     int globalThreads_x = (dstDescPtr->strides.nStride + 7) >> 3;
     int globalThreads_y = 1;
-    int globalThreads_z = handle.GetBatchSize();
+    int globalThreads_z = dstDescPtr->n;
 
     hipLaunchKernelGGL(pre_emphasis_filter_tensor,
                        dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X_1DIM), ceil((float)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((float)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
@@ -67,7 +67,7 @@ RppStatus hip_exec_pre_emphasis_filter_tensor(Rpp32f *srcPtr,
                        dstPtr,
                        dstDescPtr->strides.nStride,
                        srcLengthTensor,
-                       handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                       coeffTensor,
                        borderType);
 
     return RPP_SUCCESS;
