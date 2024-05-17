@@ -31,7 +31,7 @@ int main(int argc, char **argv)
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
-        printf("\nUsage: ./Tensor_hip_audio <src folder> <case number = 0:0> <test type 0/1> <numRuns> <batchSize> <dst folder>\n");
+        printf("\nUsage: ./Tensor_audio_hip <src folder> <case number = 0:0> <test type 0/1> <numRuns> <batchSize> <dst folder>\n");
         return -1;
     }
 
