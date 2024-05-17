@@ -4,17 +4,17 @@
 // -------------------- Set 0 -  moving mean square kernel device helpers --------------------
 
 // calculate the position in shared memory to avoid bank conflicts
-__host__ __device__ int smem_pos(int pos)
+__host__ __device__ __forceinline__ int smem_pos(int pos)
 {
     return pos + (pos >> 5); // since shared memory banks considered is 32
 }
 
-__device__ float square(float value)
+__device__ __forceinline__ float square(float value)
 {
     return (value * value);
 }
 
-__device__ void compute_prefix_sum(float *input, uint bufferLength)
+__device__ __forceinline__ void compute_prefix_sum(float *input, uint bufferLength)
 {
     int offset = 1;
     int tid = hipThreadIdx_x;
@@ -263,7 +263,7 @@ __global__ void find_region_hip_tensor(float *srcPtr,
 
 // -------------------- Set 4 -  host helpers for kernel executor --------------------
 
-int prev_pow2(int n)
+inline int prev_pow2(int n)
 {
     int pow2 = 1;
     while (n - pow2 > pow2)
@@ -272,7 +272,7 @@ int prev_pow2(int n)
     return pow2;
 }
 
-int next_pow2(int n)
+inline int next_pow2(int n)
 {
     int pow2 = 1;
     while (n > pow2)
