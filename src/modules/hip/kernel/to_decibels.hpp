@@ -30,8 +30,8 @@ __global__ void inverse_magnitude_hip_tensor(float *srcPtr,
     if (computeMax)
     {
         uint srcIdx = id_z * maxLength;
-        __shared__ float max_smem[256];
-        max_smem[hipThreadIdx_x] = srcPtr[srcIdx];
+        __shared__ float max_smem[256];                                     // 256 values of src in a 256 x 1 thread block
+        max_smem[hipThreadIdx_x] = srcPtr[srcIdx];                          // initialization of LDS to start value using all 256 threads
 
         if (id_x >= maxLength)
             return;
@@ -45,9 +45,9 @@ __global__ void inverse_magnitude_hip_tensor(float *srcPtr,
             srcIdx += hipBlockDim_x;
         }
         max_smem[hipThreadIdx_x] = maxVal;
-        __syncthreads();
+        __syncthreads();                                                    // syncthreads after max compute
 
-        // do reduction on max_smem
+        // Reduction of 256 floats on 256 threads per block in x dimension
         for (int threadMax = 128; threadMax >= 1; threadMax /= 2)
         {
             if (hipThreadIdx_x < threadMax)
@@ -55,6 +55,7 @@ __global__ void inverse_magnitude_hip_tensor(float *srcPtr,
             __syncthreads();
         }
 
+        // Final store to dst
         if (hipThreadIdx_x == 0)
             inverseMagnitudeTensor[id_z] = 1.f / max_smem[0];
     }
