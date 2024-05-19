@@ -19,7 +19,27 @@ __global__ void down_mixing_hip_tensor(float *srcPtr,
     float nomalizedWeight = 1.f / channels;
     float outVal = 0.0f;
     uint srcIdx = id_z * srcStride + id_x * channels;
-    for(int i = 0; i < channels; i++, srcIdx++)
+    int i = 0;
+    int alignedChannels = (channels / 8) * 8;
+    // if number of channels is a multiple of 8, do 8 pixel load till alignedChannels value
+    if (alignedChannels)
+    {
+        d_float8 outVal_f8;
+        outVal_f8.f4[0] = static_cast<float4>(0.0f);
+        outVal_f8.f4[1] = outVal_f8.f4[0];
+        float4 normalizedWeight_f4 = static_cast<float4>(nomalizedWeight);
+        for(; i < alignedChannels; i += 8, srcIdx += 8)
+        {
+            d_float8 src_f8;
+            rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);
+            rpp_hip_math_multiply8_const(&src_f8, &src_f8, normalizedWeight_f4);
+            rpp_hip_math_add8(&outVal_f8, &src_f8, &outVal_f8);
+        }
+        outVal_f8.f4[0] += outVal_f8.f4[1];
+        outVal += (outVal_f8.f1[0] + outVal_f8.f1[1] + outVal_f8.f1[2] + outVal_f8.f1[3]);
+    }
+    // process remaining channels
+    for(; i < channels; i++, srcIdx++)
         outVal += srcPtr[srcIdx] * nomalizedWeight;
 
     uint dstIdx = id_z * dstStride + id_x;
@@ -34,12 +54,12 @@ RppStatus hip_exec_down_mixing_tensor(Rpp32f *srcPtr,
                                       bool normalizeWeights,
                                       rpp::Handle& handle)
 {
-    int globalThreads_x = dstDescPtr->strides.nStride;
-    int globalThreads_y = 1;
-    int globalThreads_z = dstDescPtr->n;
+    Rpp32s globalThreads_x = dstDescPtr->strides.nStride;
+    Rpp32s globalThreads_y = 1;
+    Rpp32s globalThreads_z = dstDescPtr->n;
 
     hipLaunchKernelGGL(down_mixing_hip_tensor,
-                       dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X_1DIM), ceil((float)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((float)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
+                       dim3(ceil((Rpp32f)globalThreads_x/LOCAL_THREADS_X_1DIM), ceil((Rpp32f)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((Rpp32f)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
                        dim3(LOCAL_THREADS_X_1DIM, LOCAL_THREADS_Y_1DIM, LOCAL_THREADS_Z_1DIM),
                        0,
                        handle.GetStream(),
