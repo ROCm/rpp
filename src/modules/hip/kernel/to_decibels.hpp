@@ -3,7 +3,7 @@
 
 // -------------------- Set 0 - to_decibels device helpers --------------------
 
-__device__ void to_decibels_hip_compute(d_float8 *src_f8, d_float8 *dst_f8, double minRatio, float multiplier, float inverseMagnitude)
+__device__ __forceinline__ void to_decibels_hip_compute(d_float8 *src_f8, d_float8 *dst_f8, double minRatio, float multiplier, float inverseMagnitude)
 {
     dst_f8->f1[0] = multiplier * log2(max(minRatio, (static_cast<double>(src_f8->f1[0]) * inverseMagnitude)));
     dst_f8->f1[1] = multiplier * log2(max(minRatio, (static_cast<double>(src_f8->f1[1]) * inverseMagnitude)));
