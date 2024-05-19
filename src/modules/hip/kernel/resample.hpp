@@ -26,13 +26,13 @@ __device__ __forceinline__ void resample_hip_compute(float4 *src_f4, float4 *dst
 
 // -------------------- Set 1 - resample kernel host helpers  --------------------
 
-void compute_output_dims(Rpp32f *inRateTensor,
-                         Rpp32f *outRateTensor,
-                         Rpp32s *srcLengthTensor,
-                         Rpp32s *dstLengthTensor,
-                         uint batchSize)
+inline void compute_output_dims(Rpp32f *inRateTensor,
+                                Rpp32f *outRateTensor,
+                                Rpp32s *srcLengthTensor,
+                                Rpp32s *dstLengthTensor,
+                                Rpp32u batchSize)
 {
-    for (int i = 0, j = 0; i < batchSize; i++, j += 2)
+    for (Rpp32s i = 0, j = 0; i < batchSize; i++, j += 2)
     {
         dstLengthTensor[j] = std::ceil(srcLengthTensor[j] * outRateTensor[i] / inRateTensor[i]);
         dstLengthTensor[j + 1] = srcLengthTensor[j + 1];
@@ -249,21 +249,21 @@ RppStatus hip_exec_resample_tensor(Rpp32f *srcPtr,
                                    RpptResamplingWindow &window,
                                    rpp::Handle& handle)
 {
-    int globalThreads_x = dstDescPtr->strides.hStride;
-    int globalThreads_y = 1;
-    int globalThreads_z = dstDescPtr->n;
-    uint tensorDims = srcDescPtr->numDims - 1; // exclude batchsize from input dims
-    size_t sharedMemorySizeInBytes = (window.lookupSize * sizeof(float)); // shared memory size needed for resample kernel
+    Rpp32s globalThreads_x = dstDescPtr->strides.hStride;
+    Rpp32s globalThreads_y = 1;
+    Rpp32s globalThreads_z = dstDescPtr->n;
+    Rpp32u tensorDims = srcDescPtr->numDims - 1; // exclude batchsize from input dims
+    RppSize_t sharedMemorySizeInBytes = (window.lookupSize * sizeof(Rpp32f)); // shared memory size needed for resample kernel
 
     // using the input sampling rate, output sampling rate compute the output dims
-    int *dstDimsTensor = reinterpret_cast<int *>(handle.GetInitHandle()->mem.mgpu.scratchBufferPinned.uintmem);
+    Rpp32s *dstDimsTensor = reinterpret_cast<Rpp32s *>(handle.GetInitHandle()->mem.mgpu.scratchBufferPinned.uintmem);
     compute_output_dims(inRateTensor, outRateTensor, srcDimsTensor, dstDimsTensor, dstDescPtr->n);
 
     // For 1D audio tensors (channels = 1)
     if (tensorDims == 1)
     {
         hipLaunchKernelGGL(resample_single_channel_hip_tensor,
-                           dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X_1DIM), ceil((float)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((float)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
+                           dim3(ceil((Rpp32f)globalThreads_x/LOCAL_THREADS_X_1DIM), ceil((Rpp32f)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((Rpp32f)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
                            dim3(LOCAL_THREADS_X_1DIM, LOCAL_THREADS_Y_1DIM, LOCAL_THREADS_Z_1DIM),
                            sharedMemorySizeInBytes,
                            handle.GetStream(),
@@ -280,7 +280,7 @@ RppStatus hip_exec_resample_tensor(Rpp32f *srcPtr,
     else if (tensorDims == 2)
     {
         hipLaunchKernelGGL(resample_multi_channel_hip_tensor,
-                           dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X_1DIM), ceil((float)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((float)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
+                           dim3(ceil((Rpp32f)globalThreads_x/LOCAL_THREADS_X_1DIM), ceil((Rpp32f)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((Rpp32f)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
                            dim3(LOCAL_THREADS_X_1DIM, LOCAL_THREADS_Y_1DIM, LOCAL_THREADS_Z_1DIM),
                            sharedMemorySizeInBytes,
                            handle.GetStream(),
