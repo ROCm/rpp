@@ -12,18 +12,21 @@ __host__ __device__ __forceinline__ int smem_pos(int pos)
 __device__ __forceinline__ void compute_prefix_sum(float *input, uint bufferLength)
 {
     int offset = 1;
+    int offsetA = offset - 1;
+    int offsetB = 2 * offset - 1;
     int tid = hipThreadIdx_x;
+    int blockDimMul2 = 2 * hipBlockDim_x;
 
     for (int d = bufferLength >> 1; d > 0; d >>= 1)
     {
         __syncthreads();
-        for (int idx = tid; idx < d; idx += hipBlockDim_x)
-        {
-            int ai = offset * (2 * idx + 1) - 1;
-            int bi = offset * (2 * idx + 2) - 1;
-            input[smem_pos(bi)] += input[smem_pos(ai)];
-        }
+        int dMul2 = 2 * d;
+        for (int idxMul2 = 2 * tid; idxMul2 < dMul2; idxMul2 += blockDimMul2)
+            input[smem_pos(offset * idxMul2 + offsetB)] += input[smem_pos(offset * idxMul2 + offsetA)];
+
         offset <<= 1;
+        offsetA = offset - 1;
+        offsetB = 2 * offset - 1;
     }
 
     if (tid == 0)
@@ -35,11 +38,15 @@ __device__ __forceinline__ void compute_prefix_sum(float *input, uint bufferLeng
     for (int d = 1; d < bufferLength; d <<= 1)
     {
         offset >>= 1;
+        offsetA = offset - 1;
+        offsetB = 2 * offset - 1;
         __syncthreads();
-        for (int idx = tid; idx < d; idx += hipBlockDim_x)
+
+        int dMul2 = 2 * d;
+        for (int idxMul2 = 2 * tid; idxMul2 < dMul2; idxMul2 += blockDimMul2)
         {
-            int smem_posA = smem_pos(offset * (2 * idx + 1) - 1);
-            int smem_posB = smem_pos(offset * (2 * idx + 2) - 1);
+            int smem_posA = smem_pos(offset * idxMul2 + offsetA);
+            int smem_posB = smem_pos(offset * idxMul2 + offsetB);
             auto t = input[smem_posA];
             input[smem_posA] = input[smem_posB];
             input[smem_posB] += t;
