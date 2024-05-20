@@ -9,11 +9,6 @@ __host__ __device__ __forceinline__ int smem_pos(int pos)
     return pos + (pos >> 5); // since shared memory banks considered is 32
 }
 
-__device__ __forceinline__ float square(float value)
-{
-    return (value * value);
-}
-
 __device__ __forceinline__ void compute_prefix_sum(float *input, uint bufferLength)
 {
     int offset = 1;
@@ -89,7 +84,7 @@ __global__ void moving_mean_square_hip_tensor(float *srcPtr,
         auto extendedBlockPtr = extendedBlockStart + pos;
         if (extendedBlockPtr >= input && extendedBlockPtr < extendedBlockEnd)
             val = *extendedBlockPtr;
-        squaredPrefixSum_smem[smem_pos(pos)] = square(val);
+        squaredPrefixSum_smem[smem_pos(pos)] = val * val;
     }
 
     // compute prefix sum
@@ -97,7 +92,7 @@ __global__ void moving_mean_square_hip_tensor(float *srcPtr,
 
     // compute the mms value here
     for(int pos = hipThreadIdx_x; pos < validOutputTileLength; pos += hipBlockDim_x)
-        outBlockPtr[pos] = windowFactor * (square(inBlockPtr[pos]) + squaredPrefixSum_smem[smem_pos(windowLength + pos)] - squaredPrefixSum_smem[smem_pos(pos + 1)]);
+        outBlockPtr[pos] = windowFactor * ((inBlockPtr[pos] * inBlockPtr[pos]) + squaredPrefixSum_smem[smem_pos(windowLength + pos)] - squaredPrefixSum_smem[smem_pos(pos + 1)]);
 }
 
 // -------------------- Set 2 -  kernels for finding cutoffmag value  --------------------
