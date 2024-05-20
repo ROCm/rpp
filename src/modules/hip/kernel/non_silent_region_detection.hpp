@@ -114,19 +114,19 @@ __global__ void max_reduction_hip_tensor(float *srcPtr,
     uint srcLength = srcLengthTensor[id_z];
 
     uint srcIdx = id_z * nStride;
-    __shared__ float max_smem[256];
-    max_smem[hipThreadIdx_x] = srcPtr[srcIdx];
+    __shared__ float max_smem[256];                                     // 256 values of src in a 256 x 1 thread block
+    max_smem[hipThreadIdx_x] = srcPtr[srcIdx];                          // initialization of LDS to start value using all 256 threads
 
     if (id_x >= srcLength)
         return;
 
     srcIdx += id_x;
     d_float8 src_f8;
-    rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);
+    rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);       // load 8 pixels to local memory
     rpp_hip_math_max8(&src_f8, &max_smem[hipThreadIdx_x]);
-    __syncthreads();
+    __syncthreads();                                                    // syncthreads after max compute
 
-    // do reduction on min_smem and max_smem
+    // Reduction of 256 floats on 256 threads per block in x dimension
     for (int threadMax = 128; threadMax >= 1; threadMax /= 2)
     {
         if (hipThreadIdx_x < threadMax)
@@ -134,6 +134,7 @@ __global__ void max_reduction_hip_tensor(float *srcPtr,
         __syncthreads();
     }
 
+    // Final store to dst
     if (hipThreadIdx_x == 0)
     {
         int dstIdx = id_z * hipGridDim_x + hipBlockIdx_x;
@@ -155,8 +156,8 @@ __global__ void cutoffmag_hip_tensor(float *srcPtr,
     if(referenceMax)
     {
         uint srcIdx = id_z * maxLength;
-        __shared__ float max_smem[256];
-        max_smem[hipThreadIdx_x] = srcPtr[srcIdx];
+        __shared__ float max_smem[256];                                     // 256 values of src in a 256 x 1 thread block
+        max_smem[hipThreadIdx_x] = srcPtr[srcIdx];                          // initialization of LDS to start value using all 256 threads
 
         if (id_x >= maxLength)
             return;
@@ -170,9 +171,9 @@ __global__ void cutoffmag_hip_tensor(float *srcPtr,
             srcIdx += hipBlockDim_x;
         }
         max_smem[hipThreadIdx_x] = maxVal;
-        __syncthreads();
+        __syncthreads();                                                    // syncthreads after max compute
 
-        // do reduction on min_smem and max_smem
+        // Reduction of 256 floats on 256 threads per block in x dimension
         for (int threadMax = 128; threadMax >= 1; threadMax /= 2)
         {
             if (hipThreadIdx_x < threadMax)
@@ -180,7 +181,7 @@ __global__ void cutoffmag_hip_tensor(float *srcPtr,
             __syncthreads();
         }
 
-        // cutOffMag = max(srcPtr) * cutoff;
+        // Final store to dst
         if (hipThreadIdx_x == 0)
             cutOffMagPtr[id_z] = max_smem[0] * cutOff;
     }
@@ -215,6 +216,8 @@ __global__ void find_region_hip_tensor(float *srcPtr,
     int beginIdx = srcLength;
     int endIdx = 0;
     uint stridePerSample = id_z * nStride;
+
+    // Find the begin index in src whose value is >= cutOffMag
     for (int i = id_x; i < srcLength; i += hipBlockDim_x)
     {
         uint srcIdx = stridePerSample + i;
@@ -226,6 +229,8 @@ __global__ void find_region_hip_tensor(float *srcPtr,
                 break;
         }
     }
+
+    // Find the end index in src whose value is >= cutOffMag
     for (int i = id_x; i < srcLength; i += hipBlockDim_x)
     {
         uint srcIdx = stridePerSample + srcLength - 1 - i;
@@ -237,6 +242,8 @@ __global__ void find_region_hip_tensor(float *srcPtr,
                 break;
         }
     }
+
+    // Final store to dst
     if(hipThreadIdx_x == 0)
     {
         if(beginResult == srcLength || endResult == 0)
@@ -248,6 +255,9 @@ __global__ void find_region_hip_tensor(float *srcPtr,
         {
             int detectBegin = beginResult;
             int detectEnd = endResult - beginResult + 1;
+
+            // if both starting index and length of nonsilent region is not 0
+            // adjust the values as per the windowLength
             if(detectBegin != 0 && detectEnd != 0)
             {
                 int newBegin = max(detectBegin - (windowLength - 1), 0);
