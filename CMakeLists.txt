@@ -134,9 +134,6 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 find_package(HALF REQUIRED)
 include_directories(${HALF_INCLUDE_DIRS})
 
-# Find HIP
-find_package(HIP QUIET)
-
 message("-- ${Cyan}RPP Developer Options${ColourReset}")
 message("-- ${Cyan}     -D BACKEND=${BACKEND} [Select RPP Backend [options:CPU/OPENCL/HIP](default:HIP)]${ColourReset}")
 message("-- ${Cyan}     -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} [Select RPP build type [options:Debug/Release](default:Release)]${ColourReset}")
