@@ -27,13 +27,13 @@ SOFTWARE.
 #include "rpp_cpu_common.hpp"
 using namespace std;
 
-void increment_ndim_ptr(Rpp32f **dstPtr, Rpp32u nDim, Rpp32u increment)
+inline void increment_ndim_ptr(Rpp32f **dstPtr, Rpp32u nDim, Rpp32u increment)
 {
     for(int i = 0; i < nDim; i++)
         dstPtr[i] += increment;
 }
 
-void rpp_store16_f32_f32_channelwise(Rpp32f **dstPtr, __m128 *p)
+inline void rpp_store16_f32_f32_channelwise(Rpp32f **dstPtr, __m128 *p)
 {
     _mm_storeu_ps(dstPtr[0], p[0]);
     _mm_storeu_ps(dstPtr[1], p[1]);
@@ -41,7 +41,7 @@ void rpp_store16_f32_f32_channelwise(Rpp32f **dstPtr, __m128 *p)
     _mm_storeu_ps(dstPtr[3], p[3]);
 }
 
-void compute_2d_transpose(Rpp32f *srcPtrTemp, Rpp32f *dstPtrTemp, Rpp32u height, Rpp32u width, Rpp32u srcRowStride, Rpp32u dstRowStride)
+inline void compute_2d_transpose(Rpp32f *srcPtrTemp, Rpp32f *dstPtrTemp, Rpp32u height, Rpp32u width, Rpp32u srcRowStride, Rpp32u dstRowStride)
 {
     Rpp32u alignedRows = (height / 4) * 4;
     Rpp32u alignedCols = (width / 8) * 8;
@@ -60,6 +60,7 @@ void compute_2d_transpose(Rpp32f *srcPtrTemp, Rpp32f *dstPtrTemp, Rpp32u height,
             dstPtrRow[j] = dstPtrTemp + j * dstRowStride + i;
 
         Rpp32u vectorLoopCount = 0;
+#if __AVX2__
         for(; vectorLoopCount < alignedCols; vectorLoopCount += vectorIncrement)
         {
             __m256 pSrc[4];
@@ -92,6 +93,7 @@ void compute_2d_transpose(Rpp32f *srcPtrTemp, Rpp32f *dstPtrTemp, Rpp32u height,
             dstPtrRow[6] += dstRowVectorStride;
             dstPtrRow[7] += dstRowVectorStride;
         }
+#endif
     }
 
     // handle remaining columns
@@ -236,6 +238,7 @@ RppStatus transpose_f32_f32_host_tensor(Rpp32f *srcPtr,
                             dstPtrTempChannel[k] = dstPtrChannel[k];
 
                         Rpp32u vectorLoopCount = 0;
+#if __AVX2__
                         for( ; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                         {
                             __m256 pSrc[8];
@@ -262,6 +265,7 @@ RppStatus transpose_f32_f32_host_tensor(Rpp32f *srcPtr,
                             srcPtrRow += vectorIncrement;
                             increment_ndim_ptr(dstPtrTempChannel, 16, vectorIncrementPerChannel);
                         }
+#endif
                         for( ; vectorLoopCount < bufferLength; vectorLoopCount += 16)
                         {
                             for(int k = 0; k < 16; k++)
@@ -342,6 +346,7 @@ RppStatus transpose_f32_f32_host_tensor(Rpp32f *srcPtr,
                                 Rpp32f *dstPtr3 = dstPtr2;
 
                                 Rpp32u vectorLoopCount = 0;
+#if __AVX2__
                                 for( ; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                                 {
                                     __m256 pSrc = _mm256_setr_ps(srcPtr3[stridesIncrement[0]], srcPtr3[stridesIncrement[1]], srcPtr3[stridesIncrement[2]], srcPtr3[stridesIncrement[3]],
@@ -350,6 +355,7 @@ RppStatus transpose_f32_f32_host_tensor(Rpp32f *srcPtr,
                                     srcPtr3 += srcIncrement;
                                     dstPtr3 += vectorIncrement;
                                 }
+#endif
                                 for( ; vectorLoopCount < bufferLength; vectorLoopCount++)
                                 {
                                     *dstPtr3++ = *srcPtr3;
