@@ -37,7 +37,7 @@ timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 scriptPath = os.path.dirname(os.path.realpath(__file__))
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
-caseMin = 1
+caseMin = 0
 caseMax = 1
 
 # Get a list of log files based on a flag for preserving output
@@ -208,11 +208,14 @@ os.chdir(buildFolderPath + "/build")
 subprocess.run(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.run(["make", "-j16"], cwd=".")    # nosec
 
-supportedCaseList = ['1']
+supportedCaseList = ['0', '1']
 for case in caseList:
     if case not in supportedCaseList:
         continue
-    if case == "1":
+    if case == "0":
+        for transposeOrder in range(1, numDims):
+            run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, transposeOrder, profilingOption)
+    elif case == "1":
         for axisMask in range(1, pow(2, numDims)):
             run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, axisMask, profilingOption)
     else:

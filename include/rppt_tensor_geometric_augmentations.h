@@ -584,6 +584,40 @@ RppStatus rppt_flip_voxel_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDes
 RppStatus rppt_flip_voxel_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *horizontalTensor, Rpp32u *verticalTensor, Rpp32u *depthTensor, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
+/*! \brief Transpose Generic augmentation on HOST backend
+ * \details The transpose augmentation performs an input-permutation based transpose on a generic ND Tensor.
+ * \param [in] srcPtr source tensor in HOST memory
+ * \param [in] srcGenericDescPtr source tensor descriptor
+ * \param [out] dstPtr source tensor in HOST memory
+ * \param [in] dstGenericDescPtr destination tensor descriptor
+ * \param [in] permTensor permutation tensor for transpose operation
+ * \param [in] roiTensor ROI data for each element in source tensor (tensor of batchSize * number of dimensions * 2 values)
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ * \ingroup group_tensor_geometric
+ */
+RppStatus rppt_transpose_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *permTensor, Rpp32u *roiTensor, rppHandle_t rppHandle);
+
+#ifdef GPU_SUPPORT
+/*! \brief Transpose Generic augmentation on HIP backend
+ * \details The transpose augmentation performs an input-permutation based transpose on a generic ND Tensor.
+ * \param [in] srcPtr source tensor in HIP memory
+ * \param [in] srcGenericDescPtr source tensor descriptor
+ * \param [out] dstPtr source tensor in HIP memory
+ * \param [in] dstGenericDescPtr destination tensor descriptor
+ * \param [in] permTensor permutation tensor for transpose operation in pinned memory
+ * \param [in] roiTensor ROI data for each element in source tensor (tensor of batchSize * number of dimensions * 2 values)
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ * \ingroup group_tensor_geometric
+ */
+RppStatus rppt_transpose_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *permTensor, Rpp32u *roiTensor, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
+
 /*! @}
  */
 
