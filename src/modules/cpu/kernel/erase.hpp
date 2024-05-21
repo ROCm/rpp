@@ -62,7 +62,7 @@ RppStatus erase_host_tensor(T *srcPtr,
         srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
         T userPixel3[3];
-        Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
+        Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier * sizeof(T);
 
         // Erase with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
