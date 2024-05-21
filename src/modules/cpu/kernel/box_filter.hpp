@@ -26,44 +26,31 @@ SOFTWARE.
 #include "rpp_cpu_simd.hpp"
 #include "rpp_cpu_common.hpp"
 
-Rpp32f compute_3x3_filter(Rpp8u *srcPtrTemp1, Rpp8u *srcPtrTemp2, Rpp8u *srcPtrTemp3, Rpp32s padLength, bool firstRow, bool lastRow)
+inline void get_kernel_loop_limit(Rpp32s index, Rpp32s &loopLimit, Rpp32u kernelSize, Rpp32u padLength, Rpp32u length)
 {
-    Rpp32f accum = 0.0f;
-    if (firstRow || lastRow)
-    {
-        for (int offset = -padLength; offset <= padLength; offset++)
-        {
-            accum += static_cast<float>(srcPtrTemp1[offset]);
-            accum += static_cast<float>(srcPtrTemp2[offset]);
-        }
-    }
+    if ((index >= padLength) && (index < length - padLength))
+        loopLimit = kernelSize;
     else
     {
-        for (int offset = -padLength; offset <= padLength; offset++)
-        {
-            accum += static_cast<float>(srcPtrTemp1[offset]);
-            accum += static_cast<float>(srcPtrTemp2[offset]);
-            accum += static_cast<float>(srcPtrTemp3[offset]);
-        }
+        Rpp32u rowFactor = (index < padLength) ? index : (length - 1 - index);
+        loopLimit = kernelSize - padLength + rowFactor;
     }
-    accum *= 0.1111111f;
-    return accum;
 }
 
-void process_border_pixels_3x3_filter(Rpp8u *srcPtrTemp1, Rpp8u *srcPtrTemp2, Rpp8u *srcPtrTemp3, Rpp8u *dstPtrTemp,
-                                      bool firstRow, bool lastRow)
+inline void box_filter_generic_u8_u8_host_tensor(Rpp8u **srcPtrTemp, Rpp8u *dstPtrTemp, Rpp32u rowIndex, Rpp32u columnIndex,
+                                                 Rpp32u kernelSize, Rpp32u padLength, Rpp32u height, Rpp32u width)
 {
-    Rpp32f accum = 0;
-    if (firstRow || lastRow)
+    Rpp32f accum = 0.0f;
+    Rpp32s rowKernelLoopLimit, columnKernelLoopLimit;
+
+    // find the rowKernelLoopLimit, colKernelLoopLimit based on rowIndex, columnIndex
+    get_kernel_loop_limit(rowIndex, rowKernelLoopLimit, kernelSize, padLength, height);
+    get_kernel_loop_limit(columnIndex, columnKernelLoopLimit, kernelSize, padLength, width);
+
+    for (int i = 0; i < rowKernelLoopLimit; i++)
     {
-        accum += (static_cast<Rpp32f>(srcPtrTemp1[0]) + static_cast<Rpp32f>(srcPtrTemp1[1]));
-        accum += (static_cast<Rpp32f>(srcPtrTemp2[0]) + static_cast<Rpp32f>(srcPtrTemp2[1]));
-    }
-    else
-    {
-        accum += (static_cast<Rpp32f>(srcPtrTemp1[0]) + static_cast<Rpp32f>(srcPtrTemp1[1]));
-        accum += (static_cast<Rpp32f>(srcPtrTemp2[0]) + static_cast<Rpp32f>(srcPtrTemp2[1]));
-        accum += (static_cast<Rpp32f>(srcPtrTemp3[0]) + static_cast<Rpp32f>(srcPtrTemp3[1]));
+        for (int j = 0; j < columnKernelLoopLimit; j++)
+            accum += static_cast<Rpp32f>(srcPtrTemp[i][j]);
     }
     accum *= 0.1111111f;
     *dstPtrTemp = static_cast<Rpp8u>(RPPPIXELCHECK(accum));
@@ -108,13 +95,12 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
         // box filter without fused output-layout toggle (NCHW -> NCHW)
         if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp8u *srcPtrRow1, *srcPtrRow2, *srcPtrRow3, *dstPtrRow;
-            srcPtrRow1 = srcPtrChannel;
-            srcPtrRow2 = srcPtrRow1 + padLength * srcDescPtr->strides.hStride;
-            srcPtrRow3 = srcPtrRow2 + padLength * srcDescPtr->strides.hStride;
+            Rpp8u *srcPtrRow[3], *dstPtrRow;
+            for (int i = 0; i < 3; i++)
+                srcPtrRow[i] = srcPtrChannel + i * padLength * srcDescPtr->strides.hStride;
             dstPtrRow = dstPtrChannel;
-
             Rpp32u alignedLength = ((bufferLength - 2 * padLength) / 12) * 12;
+
             const __m128i xmm_pxMask02To15 = _mm_setr_epi8(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0x80, 0x80);
             const __m128i xmm_pxMask04To15 = _mm_setr_epi8(4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0x80, 0x80, 0x80, 0x80);
             const __m128i xmm_pxMask00To01 = _mm_setr_epi8(0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0, 1);
@@ -125,29 +111,31 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                 int vectorLoopCount = 0;
                 bool firstRow = (i == 0);
                 bool lastRow = (i == (roi.xywhROI.roiHeight - 1));
-                Rpp8u *srcPtrTemp1 = srcPtrRow1;
-                Rpp8u *srcPtrTemp2 = srcPtrRow2;
-                Rpp8u *srcPtrTemp3 = srcPtrRow3;
+                Rpp8u *srcPtrTemp[3] = {srcPtrRow[0], srcPtrRow[1], srcPtrRow[2]};
                 Rpp8u *dstPtrTemp = dstPtrRow;
-                // process first value in row
-                process_border_pixels_3x3_filter(srcPtrTemp1, srcPtrTemp2, srcPtrTemp3, dstPtrTemp, firstRow, lastRow);
-                dstPtrTemp++;
-                vectorLoopCount++;
 
+                // process padLength number of columns in each row
+                for (int k = 0; k < padLength; k++)
+                {
+                    box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTemp, i, k, kernelSize, padLength, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth);
+                    dstPtrTemp++;
+                }
+
+                // process remaining columns
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                 {
                     __m128i pxRow[3];
                     if (!firstRow && !lastRow)
                     {
-                        pxRow[0] = _mm_loadu_si128((__m128i *)srcPtrTemp1);    // load ROW[0][0] .. ROW[0][15]
-                        pxRow[1] = _mm_loadu_si128((__m128i *)srcPtrTemp2);    // load ROW[1][0] .. ROW[1][15]
-                        pxRow[2] = _mm_loadu_si128((__m128i *)srcPtrTemp3);    // load ROW[2][0] .. ROW[2][15]
+                        pxRow[0] = _mm_loadu_si128((__m128i *)srcPtrTemp[0]);    // load ROW[0][0] .. ROW[0][15]
+                        pxRow[1] = _mm_loadu_si128((__m128i *)srcPtrTemp[1]);    // load ROW[1][0] .. ROW[1][15]
+                        pxRow[2] = _mm_loadu_si128((__m128i *)srcPtrTemp[2]);    // load ROW[2][0] .. ROW[2][15]
                     }
                     else
                     {
                         pxRow[0] = xmm_px0;
-                        pxRow[1] = _mm_loadu_si128((__m128i *)srcPtrTemp1);
-                        pxRow[2] = _mm_loadu_si128((__m128i *)srcPtrTemp2);
+                        pxRow[1] = _mm_loadu_si128((__m128i *)srcPtrTemp[0]);
+                        pxRow[2] = _mm_loadu_si128((__m128i *)srcPtrTemp[1]);
                     }
 
                     __m128i pxUpper, pxLower;
@@ -177,25 +165,22 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     pxResult[0] = _mm_packus_epi16(pxResult[0], pxResult[1]);
                     _mm_storeu_si128((__m128i *)dstPtrTemp, pxResult[0]);
 
-                    srcPtrTemp1 += 12;
-                    srcPtrTemp2 += 12;
-                    srcPtrTemp3 += 12;
+                    srcPtrTemp[0] += 12;
+                    srcPtrTemp[1] += 12;
+                    srcPtrTemp[2] += 12;
                     dstPtrTemp += 12;
                 }
-                for (; vectorLoopCount < bufferLength - 1; vectorLoopCount++)
+                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    *dstPtrTemp = static_cast<Rpp8u>(RPPPIXELCHECK(compute_3x3_filter(srcPtrTemp1, srcPtrTemp2, srcPtrTemp3, padLength, firstRow, lastRow)));
-                    srcPtrTemp1++;
-                    srcPtrTemp2++;
-                    srcPtrTemp3++;
+                    box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTemp, i, vectorLoopCount + padLength, kernelSize, padLength, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth);
+                    srcPtrTemp[0]++;
+                    srcPtrTemp[1]++;
+                    srcPtrTemp[2]++;
                     dstPtrTemp++;
                 }
-                // process last value in row
-                process_border_pixels_3x3_filter(srcPtrTemp1, srcPtrTemp2, srcPtrTemp3, dstPtrTemp, firstRow, lastRow);
-
-                srcPtrRow1 += (!firstRow) ? srcDescPtr->strides.hStride : 0;
-                srcPtrRow2 += (!firstRow) ? srcDescPtr->strides.hStride : 0;
-                srcPtrRow3 += (!firstRow) ? srcDescPtr->strides.hStride : 0;
+                srcPtrRow[0] += (!firstRow) ? srcDescPtr->strides.hStride : 0;
+                srcPtrRow[1] += (!firstRow) ? srcDescPtr->strides.hStride : 0;
+                srcPtrRow[2] += (!firstRow) ? srcDescPtr->strides.hStride : 0;
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
         }
