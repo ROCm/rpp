@@ -680,58 +680,10 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "erase";
 
-                    Rpp8u *colors8u = reinterpret_cast<Rpp8u *>(colorBuffer);
-                    Rpp16f *colors16f = reinterpret_cast<Rpp16f *>(colorBuffer);
-                    Rpp32f *colors32f = colorBuffer;
-                    Rpp8s *colors8s = reinterpret_cast<Rpp8s *>(colorBuffer);
-                    int idx;
-
-                    init_erase(batchSize, boxesInEachImage, numOfBoxes, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, colorBuffer);
-
-                    for(int i = 0; i < batchSize; i++)
-                    {
-                        if(srcDescPtr->c == 3)
-                        {
-                            idx = boxesInEachImage * 3 * i;
-                            for (int j = 0; j < 9; j++)
-                            {
-                                if (!inputBitDepth)
-                                    colors8u[idx + j] = (Rpp8u)(colorBuffer[idx + j]);
-                                else if (inputBitDepth == 1)
-                                    colors16f[idx + j] = (Rpp16f)(colorBuffer[idx + j] * ONE_OVER_255);
-                                else if (inputBitDepth == 2)
-                                    colors32f[idx + j] = (Rpp32f)(colorBuffer[idx + j] * ONE_OVER_255);
-                                else if (inputBitDepth == 5)
-                                    colors8s[idx + j] = (Rpp8s)(colorBuffer[idx + j] - 128);
-                            }
-                        }
-                        else
-                        {
-                            idx = boxesInEachImage * i;
-                            for (int j = 0; j < 3; j++)
-                            {
-                                if (!inputBitDepth)
-                                    colors8u[idx + j] = (Rpp8u)(colorBuffer[idx + j]);
-                                else if (inputBitDepth == 1)
-                                    colors16f[idx + j] = (Rpp16f)(
-                                        colorBuffer[idx + j] * ONE_OVER_255);
-                                else if (inputBitDepth == 2)
-                                    colors32f[idx + j] = (Rpp32f)(colorBuffer[idx + j] * ONE_OVER_255);
-                                else if (inputBitDepth == 5)
-                                    colors8s[idx + j] = (Rpp8s)(colorBuffer[idx + j] - 128);
-                            }
-                        }
-                    }
-
+                    init_erase(batchSize, boxesInEachImage, numOfBoxes, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, colorBuffer, inputBitDepth);
                     startWallTime = omp_get_wtime();
-                    if (!inputBitDepth)
-                        rppt_erase_gpu(d_input, srcDescPtr, d_output, dstDescPtr, anchorBoxInfoTensor, colors8u, numOfBoxes, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else if (inputBitDepth == 1)
-                        rppt_erase_gpu(d_input, srcDescPtr, d_output, dstDescPtr, anchorBoxInfoTensor, colors16f, numOfBoxes, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else if (inputBitDepth == 2)
-                        rppt_erase_gpu(d_input, srcDescPtr, d_output, dstDescPtr, anchorBoxInfoTensor, colors32f, numOfBoxes, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else if (inputBitDepth == 5)
-                        rppt_erase_gpu(d_input, srcDescPtr, d_output, dstDescPtr, anchorBoxInfoTensor, colors8s, numOfBoxes, roiTensorPtrSrc, roiTypeSrc, handle);
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_erase_gpu(d_input, srcDescPtr, d_output, dstDescPtr, anchorBoxInfoTensor, colorBuffer, numOfBoxes, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 

@@ -1399,8 +1399,12 @@ void init_slice(RpptGenericDescPtr descriptorPtr3D, RpptROIPtr roiPtrSrc, Rpp32u
 }
 
 // Erase Region initializer for unit and performance testing
-void inline init_erase(int batchSize, int boxesInEachImage, Rpp32u* numOfBoxes, RpptRoiLtrb* anchorBoxInfoTensor, RpptROIPtr roiTensorPtrSrc, int channels, Rpp32f* colorBuffer)
+void inline init_erase(int batchSize, int boxesInEachImage, Rpp32u* numOfBoxes, RpptRoiLtrb* anchorBoxInfoTensor, RpptROIPtr roiTensorPtrSrc, int channels, Rpp32f *colorBuffer, int inputBitDepth)
 {
+    Rpp8u *colors8u = reinterpret_cast<Rpp8u *>(colorBuffer);
+    Rpp16f *colors16f = reinterpret_cast<Rpp16f *>(colorBuffer);
+    Rpp32f *colors32f = colorBuffer;
+    Rpp8s *colors8s = reinterpret_cast<Rpp8s *>(colorBuffer);
     for(int i = 0; i < batchSize; i++)
     {
         numOfBoxes[i] = boxesInEachImage;
@@ -1435,6 +1439,17 @@ void inline init_erase(int batchSize, int boxesInEachImage, Rpp32u* numOfBoxes, 
             colorBuffer[idx + 6] = 240;
             colorBuffer[idx + 7] = 0;
             colorBuffer[idx + 8] = 0;
+            for (int j = 0; j < 9; j++)
+            {
+                if (!inputBitDepth)
+                    colors8u[idx + j] = (Rpp8u)(colorBuffer[idx + j]);
+                else if (inputBitDepth == 1)
+                    colors16f[idx + j] = (Rpp16f)(colorBuffer[idx + j] * ONE_OVER_255);
+                else if (inputBitDepth == 2)
+                    colors32f[idx + j] = (Rpp32f)(colorBuffer[idx + j] * ONE_OVER_255);
+                else if (inputBitDepth == 5)
+                    colors8s[idx + j] = (Rpp8s)(colorBuffer[idx + j] - 128);
+            }
         }
         else
         {
@@ -1442,6 +1457,18 @@ void inline init_erase(int batchSize, int boxesInEachImage, Rpp32u* numOfBoxes, 
             colorBuffer[idx] = 240;
             colorBuffer[idx + 1] = 120;
             colorBuffer[idx + 2] = 60;
+            for (int j = 0; j < 3; j++)
+            {
+                if (!inputBitDepth)
+                    colors8u[idx + j] = (Rpp8u)(colorBuffer[idx + j]);
+                else if (inputBitDepth == 1)
+                    colors16f[idx + j] = (Rpp16f)(
+                        colorBuffer[idx + j] * ONE_OVER_255);
+                else if (inputBitDepth == 2)
+                    colors32f[idx + j] = (Rpp32f)(colorBuffer[idx + j] * ONE_OVER_255);
+                else if (inputBitDepth == 5)
+                    colors8s[idx + j] = (Rpp8s)(colorBuffer[idx + j] - 128);
+            }
         }
     }
 }
