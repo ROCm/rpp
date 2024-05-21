@@ -1462,8 +1462,7 @@ void inline init_erase(int batchSize, int boxesInEachImage, Rpp32u* numOfBoxes, 
                 if (!inputBitDepth)
                     colors8u[idx + j] = (Rpp8u)(colorBuffer[idx + j]);
                 else if (inputBitDepth == 1)
-                    colors16f[idx + j] = (Rpp16f)(
-                        colorBuffer[idx + j] * ONE_OVER_255);
+                    colors16f[idx + j] = (Rpp16f)(colorBuffer[idx + j] * ONE_OVER_255);
                 else if (inputBitDepth == 2)
                     colors32f[idx + j] = (Rpp32f)(colorBuffer[idx + j] * ONE_OVER_255);
                 else if (inputBitDepth == 5)
