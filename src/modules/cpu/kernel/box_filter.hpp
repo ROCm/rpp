@@ -26,6 +26,12 @@ SOFTWARE.
 #include "rpp_cpu_simd.hpp"
 #include "rpp_cpu_common.hpp"
 
+inline void increment_row_ptrs(Rpp8u **srcPtrTemp, Rpp32u kernelSize, Rpp32u increment)
+{
+    for (int i = 0; i < kernelSize; i++)
+        srcPtrTemp[i] += increment;
+}
+
 inline void get_kernel_loop_limit(Rpp32s index, Rpp32s &loopLimit, Rpp32u kernelSize, Rpp32u padLength, Rpp32u length)
 {
     if ((index >= padLength) && (index < length - padLength))
@@ -52,7 +58,8 @@ inline void box_filter_generic_u8_u8_host_tensor(Rpp8u **srcPtrTemp, Rpp8u *dstP
         for (int j = 0; j < columnKernelLoopLimit; j++)
             accum += static_cast<Rpp32f>(srcPtrTemp[i][j]);
     }
-    accum *= 0.1111111f;
+    Rpp32f divFactor = 1.0f / (kernelSize * kernelSize);
+    accum *= divFactor;
     *dstPtrTemp = static_cast<Rpp8u>(RPPPIXELCHECK(accum));
 }
 
@@ -95,93 +102,125 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
         // box filter without fused output-layout toggle (NCHW -> NCHW)
         if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp8u *srcPtrRow[3], *dstPtrRow;
-            for (int i = 0; i < 3; i++)
-                srcPtrRow[i] = srcPtrChannel + i * padLength * srcDescPtr->strides.hStride;
-            dstPtrRow = dstPtrChannel;
-            Rpp32u alignedLength = ((bufferLength - 2 * padLength) / 12) * 12;
-
-            const __m128i xmm_pxMask02To15 = _mm_setr_epi8(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0x80, 0x80);
-            const __m128i xmm_pxMask04To15 = _mm_setr_epi8(4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0x80, 0x80, 0x80, 0x80);
-            const __m128i xmm_pxMask00To01 = _mm_setr_epi8(0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0, 1);
-            const __m128i xmm_pxMask00To03 = _mm_setr_epi8(0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0, 1, 2, 3);
-
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            if (kernelSize == 3)
             {
-                int vectorLoopCount = 0;
-                bool firstRow = (i == 0);
-                bool lastRow = (i == (roi.xywhROI.roiHeight - 1));
-                Rpp8u *srcPtrTemp[3] = {srcPtrRow[0], srcPtrRow[1], srcPtrRow[2]};
-                Rpp8u *dstPtrTemp = dstPtrRow;
+                Rpp8u *srcPtrRow[3], *dstPtrRow;
+                for (int i = 0; i < 3; i++)
+                    srcPtrRow[i] = srcPtrChannel + i * padLength * srcDescPtr->strides.hStride;
+                dstPtrRow = dstPtrChannel;
+                Rpp32u alignedLength = ((bufferLength - 2 * padLength) / 12) * 12;
 
-                // process padLength number of columns in each row
-                for (int k = 0; k < padLength; k++)
-                {
-                    box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTemp, i, k, kernelSize, padLength, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth);
-                    dstPtrTemp++;
-                }
+                const __m128i xmm_pxMask02To15 = _mm_setr_epi8(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0x80, 0x80);
+                const __m128i xmm_pxMask04To15 = _mm_setr_epi8(4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0x80, 0x80, 0x80, 0x80);
+                const __m128i xmm_pxMask00To01 = _mm_setr_epi8(0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0, 1);
+                const __m128i xmm_pxMask00To03 = _mm_setr_epi8(0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0, 1, 2, 3);
 
-                // process remaining columns
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
+                for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
-                    __m128i pxRow[3];
-                    if (!firstRow && !lastRow)
+                    int vectorLoopCount = 0;
+                    bool firstRow = (i == 0);
+                    bool lastRow = (i == (roi.xywhROI.roiHeight - 1));
+                    Rpp8u *srcPtrTemp[3] = {srcPtrRow[0], srcPtrRow[1], srcPtrRow[2]};
+                    Rpp8u *dstPtrTemp = dstPtrRow;
+
+                    // process padLength number of columns in each row
+                    for (int k = 0; k < padLength; k++)
                     {
-                        pxRow[0] = _mm_loadu_si128((__m128i *)srcPtrTemp[0]);    // load ROW[0][0] .. ROW[0][15]
-                        pxRow[1] = _mm_loadu_si128((__m128i *)srcPtrTemp[1]);    // load ROW[1][0] .. ROW[1][15]
-                        pxRow[2] = _mm_loadu_si128((__m128i *)srcPtrTemp[2]);    // load ROW[2][0] .. ROW[2][15]
-                    }
-                    else
-                    {
-                        pxRow[0] = xmm_px0;
-                        pxRow[1] = _mm_loadu_si128((__m128i *)srcPtrTemp[0]);
-                        pxRow[2] = _mm_loadu_si128((__m128i *)srcPtrTemp[1]);
+                        box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTemp, i, k, kernelSize, padLength, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth);
+                        dstPtrTemp++;
                     }
 
-                    __m128i pxUpper, pxLower;
-                    pxUpper = _mm_unpacklo_epi8(pxRow[0], xmm_px0);                            // ROW0 0-7
-                    pxUpper = _mm_add_epi16(pxUpper, _mm_unpacklo_epi8(pxRow[1], xmm_px0));    // ROW0 0-7 + ROW1 0-7
-                    pxUpper = _mm_add_epi16(pxUpper, _mm_unpacklo_epi8(pxRow[2], xmm_px0));    // upper accum - ROW0 0-7 + ROW1 0-7 + ROW2 0-7
+                    // process remaining columns in eacn row
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
+                    {
+                        __m128i pxRow[3];
+                        if (!firstRow && !lastRow)
+                        {
+                            pxRow[0] = _mm_loadu_si128((__m128i *)srcPtrTemp[0]);    // load ROW[0][0] .. ROW[0][15]
+                            pxRow[1] = _mm_loadu_si128((__m128i *)srcPtrTemp[1]);    // load ROW[1][0] .. ROW[1][15]
+                            pxRow[2] = _mm_loadu_si128((__m128i *)srcPtrTemp[2]);    // load ROW[2][0] .. ROW[2][15]
+                        }
+                        else
+                        {
+                            pxRow[0] = xmm_px0;
+                            pxRow[1] = _mm_loadu_si128((__m128i *)srcPtrTemp[0]);
+                            pxRow[2] = _mm_loadu_si128((__m128i *)srcPtrTemp[1]);
+                        }
 
-                    pxLower = _mm_unpackhi_epi8(pxRow[0], xmm_px0);                            // ROW0 8-15
-                    pxLower = _mm_add_epi16(pxLower, _mm_unpackhi_epi8(pxRow[1], xmm_px0));    // ROW0 8-15 + ROW1 8-15
-                    pxLower = _mm_add_epi16(pxLower, _mm_unpackhi_epi8(pxRow[2], xmm_px0));    // lower accum - ROW0 8-15 + ROW1 8-15 + ROW2 8-15
+                        __m128i pxUpper, pxLower;
+                        pxUpper = _mm_unpacklo_epi8(pxRow[0], xmm_px0);                            // ROW0 0-7
+                        pxUpper = _mm_add_epi16(pxUpper, _mm_unpacklo_epi8(pxRow[1], xmm_px0));    // ROW0 0-7 + ROW1 0-7
+                        pxUpper = _mm_add_epi16(pxUpper, _mm_unpacklo_epi8(pxRow[2], xmm_px0));    // upper accum - ROW0 0-7 + ROW1 0-7 + ROW2 0-7
 
-                    // shuffle to get the correct order
-                    __m128i pxShift[4];
-                    pxShift[0] = _mm_shuffle_epi8(pxUpper, xmm_pxMask02To15); // upper accum 1-7
-                    pxShift[0] = _mm_add_epi16(pxShift[0], _mm_shuffle_epi8(pxLower, xmm_pxMask00To01)); // upper accum 1-7 + lower accum 0
-                    pxShift[1] = _mm_shuffle_epi8(pxUpper, xmm_pxMask04To15); // upper accum 2-7
-                    pxShift[1] = _mm_add_epi16(pxShift[1], _mm_shuffle_epi8(pxLower, xmm_pxMask00To03)); // upper accum 2-7 + lower accum 0-2
+                        pxLower = _mm_unpackhi_epi8(pxRow[0], xmm_px0);                            // ROW0 8-15
+                        pxLower = _mm_add_epi16(pxLower, _mm_unpackhi_epi8(pxRow[1], xmm_px0));    // ROW0 8-15 + ROW1 8-15
+                        pxLower = _mm_add_epi16(pxLower, _mm_unpackhi_epi8(pxRow[2], xmm_px0));    // lower accum - ROW0 8-15 + ROW1 8-15 + ROW2 8-15
 
-                    pxShift[2] = _mm_shuffle_epi8(pxLower, xmm_pxMask02To15); // lower accum 1-7
-                    pxShift[3] = _mm_shuffle_epi8(pxLower, xmm_pxMask04To15); // lower accum 2-7
+                        // shuffle to get the correct order
+                        __m128i pxShift[4];
+                        pxShift[0] = _mm_shuffle_epi8(pxUpper, xmm_pxMask02To15); // upper accum 1-7
+                        pxShift[0] = _mm_add_epi16(pxShift[0], _mm_shuffle_epi8(pxLower, xmm_pxMask00To01)); // upper accum 1-7 + lower accum 0
+                        pxShift[1] = _mm_shuffle_epi8(pxUpper, xmm_pxMask04To15); // upper accum 2-7
+                        pxShift[1] = _mm_add_epi16(pxShift[1], _mm_shuffle_epi8(pxLower, xmm_pxMask00To03)); // upper accum 2-7 + lower accum 0-2
 
-                    __m128i pxResult[2];
-                    pxResult[0] = _mm_add_epi16(_mm_add_epi16(pxUpper, pxShift[0]), pxShift[1]); // upper accum 0-7 + upper accum 1-7 + upper accum 2-7 + lower accum 0-2
-                    pxResult[0] = _mm_mulhi_epi16(pxResult[0], pxConvolutionFactor);
-                    pxResult[1] = _mm_add_epi16(_mm_add_epi16(pxLower, pxShift[2]), pxShift[3]); // lower accum 0-7 + lower accum 1-7 + lower accum 2-7
-                    pxResult[1] = _mm_mulhi_epi16(pxResult[1], pxConvolutionFactor);
-                    pxResult[0] = _mm_packus_epi16(pxResult[0], pxResult[1]);
-                    _mm_storeu_si128((__m128i *)dstPtrTemp, pxResult[0]);
+                        pxShift[2] = _mm_shuffle_epi8(pxLower, xmm_pxMask02To15); // lower accum 1-7
+                        pxShift[3] = _mm_shuffle_epi8(pxLower, xmm_pxMask04To15); // lower accum 2-7
 
-                    srcPtrTemp[0] += 12;
-                    srcPtrTemp[1] += 12;
-                    srcPtrTemp[2] += 12;
-                    dstPtrTemp += 12;
+                        __m128i pxResult[2];
+                        pxResult[0] = _mm_add_epi16(_mm_add_epi16(pxUpper, pxShift[0]), pxShift[1]); // upper accum 0-7 + upper accum 1-7 + upper accum 2-7 + lower accum 0-2
+                        pxResult[0] = _mm_mulhi_epi16(pxResult[0], pxConvolutionFactor);
+                        pxResult[1] = _mm_add_epi16(_mm_add_epi16(pxLower, pxShift[2]), pxShift[3]); // lower accum 0-7 + lower accum 1-7 + lower accum 2-7
+                        pxResult[1] = _mm_mulhi_epi16(pxResult[1], pxConvolutionFactor);
+                        pxResult[0] = _mm_packus_epi16(pxResult[0], pxResult[1]);
+                        _mm_storeu_si128((__m128i *)dstPtrTemp, pxResult[0]);
+
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 12);
+                        dstPtrTemp += 12;
+                    }
+                    for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                    {
+                        box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTemp, i, vectorLoopCount + padLength, kernelSize, padLength, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth);
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 1);
+                        dstPtrTemp++;
+                    }
+                    increment_row_ptrs(srcPtrRow, kernelSize, (!firstRow) ? srcDescPtr->strides.hStride : 0);
+                    dstPtrRow += dstDescPtr->strides.hStride;
                 }
-                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+            }
+            else if (kernelSize == 9)
+            {
+                Rpp32u alignedLength = ((bufferLength - 2 * padLength) / 12) * 12;
+                Rpp8u *srcPtrRow[9], *dstPtrRow;
+                for (int i = 0; i < 9; i++)
+                    srcPtrRow[i] = srcPtrChannel + i * padLength * srcDescPtr->strides.hStride;
+                dstPtrRow = dstPtrChannel;
+
+                for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
-                    box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTemp, i, vectorLoopCount + padLength, kernelSize, padLength, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth);
-                    srcPtrTemp[0]++;
-                    srcPtrTemp[1]++;
-                    srcPtrTemp[2]++;
-                    dstPtrTemp++;
+                    int vectorLoopCount = 0;
+                    bool padLengthRows = (i < padLength) ? 1: 0;
+                    Rpp8u *srcPtrTemp[9] = {srcPtrRow[0], srcPtrRow[1], srcPtrRow[2],
+                                            srcPtrRow[3], srcPtrRow[4], srcPtrRow[5],
+                                            srcPtrRow[6], srcPtrRow[7], srcPtrRow[8]};
+                    Rpp8u *dstPtrTemp = dstPtrRow;
+
+                    // process padLength number of columns in each row
+                    // for (int k = 0; k < padLength; k++)
+                    // {
+                    //     box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTemp, i, k, kernelSize, padLength, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth);
+                    //     dstPtrTemp++;
+                    //     vectorLoopCount++;
+                    // }
+                    // process remaining rows
+                    for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                    {
+                        box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTemp, i, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth);
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 1);
+                        dstPtrTemp++;
+                    }
+                    increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
+                    dstPtrRow += dstDescPtr->strides.hStride;
                 }
-                srcPtrRow[0] += (!firstRow) ? srcDescPtr->strides.hStride : 0;
-                srcPtrRow[1] += (!firstRow) ? srcDescPtr->strides.hStride : 0;
-                srcPtrRow[2] += (!firstRow) ? srcDescPtr->strides.hStride : 0;
-                dstPtrRow += dstDescPtr->strides.hStride;
             }
         }
     }
