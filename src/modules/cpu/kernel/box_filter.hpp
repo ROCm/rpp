@@ -58,7 +58,7 @@ inline void box_filter_generic_u8_u8_host_tensor(Rpp8u **srcPtrTemp, Rpp8u *dstP
         for (int j = 0; j < columnKernelLoopLimit; j++)
             accum += static_cast<Rpp32f>(srcPtrTemp[i][j]);
     }
-    Rpp32f divFactor = 1.0f / (kernelSize * kernelSize);
+    static Rpp32f divFactor = 1.0f / (kernelSize * kernelSize);
     accum *= divFactor;
     *dstPtrTemp = static_cast<Rpp8u>(RPPPIXELCHECK(accum));
 }
@@ -108,12 +108,7 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                 for (int i = 0; i < 3; i++)
                     srcPtrRow[i] = srcPtrChannel + i * srcDescPtr->strides.hStride;
                 dstPtrRow = dstPtrChannel;
-                Rpp32u alignedLength = ((bufferLength - 2 * padLength) / 12) * 12;
-
-                const __m128i xmm_pxMask02To15 = _mm_setr_epi8(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0x80, 0x80);
-                const __m128i xmm_pxMask04To15 = _mm_setr_epi8(4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0x80, 0x80, 0x80, 0x80);
-                const __m128i xmm_pxMask00To01 = _mm_setr_epi8(0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0, 1);
-                const __m128i xmm_pxMask00To03 = _mm_setr_epi8(0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0, 1, 2, 3);
+                Rpp32u alignedLength = ((bufferLength - 2 * padLength) / 14) * 14;
 
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
@@ -131,7 +126,7 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     }
 
                     // process remaining columns in eacn row
-                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 14)
                     {
                         __m128i pxRow[3];
                         if (!firstRow && !lastRow)
@@ -147,35 +142,34 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                             pxRow[2] = _mm_loadu_si128((__m128i *)srcPtrTemp[1]);
                         }
 
-                        __m128i pxUpper, pxLower;
-                        pxUpper = _mm_unpacklo_epi8(pxRow[0], xmm_px0);                            // ROW0 0-7
-                        pxUpper = _mm_add_epi16(pxUpper, _mm_unpacklo_epi8(pxRow[1], xmm_px0));    // ROW0 0-7 + ROW1 0-7
-                        pxUpper = _mm_add_epi16(pxUpper, _mm_unpacklo_epi8(pxRow[2], xmm_px0));    // upper accum - ROW0 0-7 + ROW1 0-7 + ROW2 0-7
+                        __m128i pxLower, pxUpper;
+                        pxLower = _mm_unpacklo_epi8(pxRow[0], xmm_px0);                            // ROW0 0-7
+                        pxLower = _mm_add_epi16(pxLower, _mm_unpacklo_epi8(pxRow[1], xmm_px0));    // ROW0 0-7 + ROW1 0-7
+                        pxLower = _mm_add_epi16(pxLower, _mm_unpacklo_epi8(pxRow[2], xmm_px0));    // upper accum - ROW0 0-7 + ROW1 0-7 + ROW2 0-7
 
-                        pxLower = _mm_unpackhi_epi8(pxRow[0], xmm_px0);                            // ROW0 8-15
-                        pxLower = _mm_add_epi16(pxLower, _mm_unpackhi_epi8(pxRow[1], xmm_px0));    // ROW0 8-15 + ROW1 8-15
-                        pxLower = _mm_add_epi16(pxLower, _mm_unpackhi_epi8(pxRow[2], xmm_px0));    // lower accum - ROW0 8-15 + ROW1 8-15 + ROW2 8-15
+                        pxUpper = _mm_unpackhi_epi8(pxRow[0], xmm_px0);                            // ROW0 8-15
+                        pxUpper = _mm_add_epi16(pxUpper, _mm_unpackhi_epi8(pxRow[1], xmm_px0));    // ROW0 8-15 + ROW1 8-15
+                        pxUpper = _mm_add_epi16(pxUpper, _mm_unpackhi_epi8(pxRow[2], xmm_px0));    // lower accum - ROW0 8-15 + ROW1 8-15 + ROW2 8-15
 
-                        // shuffle to get the correct order
-                        __m128i pxShift[4];
-                        pxShift[0] = _mm_shuffle_epi8(pxUpper, xmm_pxMask02To15); // upper accum 1-7
-                        pxShift[0] = _mm_add_epi16(pxShift[0], _mm_shuffle_epi8(pxLower, xmm_pxMask00To01)); // upper accum 1-7 + lower accum 0
-                        pxShift[1] = _mm_shuffle_epi8(pxUpper, xmm_pxMask04To15); // upper accum 2-7
-                        pxShift[1] = _mm_add_epi16(pxShift[1], _mm_shuffle_epi8(pxLower, xmm_pxMask00To03)); // upper accum 2-7 + lower accum 0-2
+                        // shift row wise and add
+                        for (int k = 0; k < 3; k++)
+                        {
+                            __m128i pxTemp[2];
+                            pxTemp[0] = _mm_shuffle_epi8(pxRow[k], xmm_pxMask01To15);
+                            pxTemp[1] = _mm_shuffle_epi8(pxRow[k], xmm_pxMask02To15);
+                            pxLower = _mm_add_epi16(pxLower, _mm_unpacklo_epi8(pxTemp[0], xmm_px0));
+                            pxLower = _mm_add_epi16(pxLower, _mm_unpacklo_epi8(pxTemp[1], xmm_px0));
+                            pxUpper = _mm_add_epi16(pxUpper, _mm_unpackhi_epi8(pxTemp[0], xmm_px0));
+                            pxUpper = _mm_add_epi16(pxUpper, _mm_unpackhi_epi8(pxTemp[1], xmm_px0));
+                        }
 
-                        pxShift[2] = _mm_shuffle_epi8(pxLower, xmm_pxMask02To15); // lower accum 1-7
-                        pxShift[3] = _mm_shuffle_epi8(pxLower, xmm_pxMask04To15); // lower accum 2-7
+                        pxLower = _mm_mulhi_epi16(pxLower, pxConvolutionFactor);
+                        pxUpper = _mm_mulhi_epi16(pxUpper, pxConvolutionFactor);
+                        pxLower = _mm_packus_epi16(pxLower, pxUpper);
+                        _mm_storeu_si128((__m128i *)dstPtrTemp, pxLower);
 
-                        __m128i pxResult[2];
-                        pxResult[0] = _mm_add_epi16(_mm_add_epi16(pxUpper, pxShift[0]), pxShift[1]); // upper accum 0-7 + upper accum 1-7 + upper accum 2-7 + lower accum 0-2
-                        pxResult[0] = _mm_mulhi_epi16(pxResult[0], pxConvolutionFactor);
-                        pxResult[1] = _mm_add_epi16(_mm_add_epi16(pxLower, pxShift[2]), pxShift[3]); // lower accum 0-7 + lower accum 1-7 + lower accum 2-7
-                        pxResult[1] = _mm_mulhi_epi16(pxResult[1], pxConvolutionFactor);
-                        pxResult[0] = _mm_packus_epi16(pxResult[0], pxResult[1]);
-                        _mm_storeu_si128((__m128i *)dstPtrTemp, pxResult[0]);
-
-                        increment_row_ptrs(srcPtrTemp, kernelSize, 12);
-                        dstPtrTemp += 12;
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 14);
+                        dstPtrTemp += 14;
                     }
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {

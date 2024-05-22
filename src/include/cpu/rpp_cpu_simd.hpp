@@ -185,6 +185,9 @@ const __m256i avx_pxShufflePkd = _mm256_setr_m128(xmm_pxStore4Pkd, xmm_pxStore4P
 const __m128i xmm_pxMask00 = _mm_setr_epi8(0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0, 1, 2, 3);
 const __m128i xmm_pxMask04To11 = _mm_setr_epi8(4, 5, 6, 7, 8, 9, 10, 11, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80);
 
+const __m128i xmm_pxMask01To15 = _mm_setr_epi8(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0x80);
+const __m128i xmm_pxMask02To15 = _mm_setr_epi8(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0x80, 0x80);
+
 // Print helpers
 
 inline void rpp_mm_print_epi8(__m128i vPrintArray)
