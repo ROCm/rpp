@@ -52,14 +52,14 @@ inline void get_kernel_loop_limit(Rpp32s index, Rpp32s &loopLimit, Rpp32u kernel
     }
 }
 
-inline void box_filter_generic_u8_u8_host_tensor(Rpp8u **srcPtrTemp, Rpp8u *dstPtrTemp, Rpp32u rowIndex, Rpp32u columnIndex,
-                                                 Rpp32u kernelSize, Rpp32u padLength, Rpp32u height, Rpp32u width)
+inline void box_filter_generic_u8_u8_host_tensor(Rpp8u **srcPtrTemp, Rpp8u *dstPtrTemp, Rpp32u columnIndex,
+                                                 Rpp32u kernelSize, Rpp32u padLength, Rpp32u width, Rpp32s rowKernelLoopLimit,
+                                                 Rpp32f kernelSizeInverseSquare)
 {
     Rpp32f accum = 0.0f;
-    Rpp32s rowKernelLoopLimit, columnKernelLoopLimit;
+    Rpp32s columnKernelLoopLimit;
 
-    // find the rowKernelLoopLimit, colKernelLoopLimit based on rowIndex, columnIndex
-    get_kernel_loop_limit(rowIndex, rowKernelLoopLimit, kernelSize, padLength, height);
+    // find the colKernelLoopLimit based on rowIndex, columnIndex
     get_kernel_loop_limit(columnIndex, columnKernelLoopLimit, kernelSize, padLength, width);
 
     for (int i = 0; i < rowKernelLoopLimit; i++)
@@ -67,8 +67,7 @@ inline void box_filter_generic_u8_u8_host_tensor(Rpp8u **srcPtrTemp, Rpp8u *dstP
         for (int j = 0; j < columnKernelLoopLimit; j++)
             accum += static_cast<Rpp32f>(srcPtrTemp[i][j]);
     }
-    static Rpp32f divFactor = 1.0f / (kernelSize * kernelSize);
-    accum *= divFactor;
+    accum *= kernelSizeInverseSquare;
     *dstPtrTemp = static_cast<Rpp8u>(RPPPIXELCHECK(accum));
 }
 
@@ -122,15 +121,17 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
                     int vectorLoopCount = 0;
-                    bool firstRow = (i == 0);
-                    bool lastRow = (i == (roi.xywhROI.roiHeight - 1));
+                    bool padLengthRows = (i < padLength) ? 1: 0;
                     Rpp8u *srcPtrTemp[3] = {srcPtrRow[0], srcPtrRow[1], srcPtrRow[2]};
                     Rpp8u *dstPtrTemp = dstPtrRow;
+
+                    Rpp32s rowKernelLoopLimit;
+                    get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
 
                     // process padLength number of columns in each row
                     for (int k = 0; k < padLength; k++)
                     {
-                        box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTemp, i, k, kernelSize, padLength, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth);
+                        box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTemp, k, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                         dstPtrTemp++;
                     }
 
@@ -138,18 +139,12 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 14)
                     {
                         __m128i pxRow[3];
-                        if (!firstRow && !lastRow)
-                        {
-                            pxRow[0] = _mm_loadu_si128((__m128i *)srcPtrTemp[0]);    // load ROW[0][0] .. ROW[0][15]
-                            pxRow[1] = _mm_loadu_si128((__m128i *)srcPtrTemp[1]);    // load ROW[1][0] .. ROW[1][15]
-                            pxRow[2] = _mm_loadu_si128((__m128i *)srcPtrTemp[2]);    // load ROW[2][0] .. ROW[2][15]
-                        }
+                        pxRow[0] = _mm_loadu_si128((__m128i *)srcPtrTemp[0]);
+                        pxRow[1] = _mm_loadu_si128((__m128i *)srcPtrTemp[1]);
+                        if (rowKernelLoopLimit == 3)
+                            pxRow[2] = _mm_loadu_si128((__m128i *)srcPtrTemp[2]);
                         else
-                        {
-                            pxRow[0] = xmm_px0;
-                            pxRow[1] = _mm_loadu_si128((__m128i *)srcPtrTemp[0]);
-                            pxRow[2] = _mm_loadu_si128((__m128i *)srcPtrTemp[1]);
-                        }
+                            pxRow[2] = xmm_px0;
 
                         __m128i pxLower, pxUpper;
                         pxLower = _mm_unpacklo_epi8(pxRow[0], xmm_px0);                            // ROW0 0-7
@@ -183,11 +178,11 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     vectorLoopCount += padLength;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTemp, i, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth);
+                        box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
-                    increment_row_ptrs(srcPtrRow, kernelSize, (!firstRow) ? srcDescPtr->strides.hStride : 0);
+                    increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
                     dstPtrRow += dstDescPtr->strides.hStride;
                 }
             }
@@ -214,7 +209,7 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     // process padLength number of columns in each row
                     for (int k = 0; k < padLength; k++)
                     {
-                        box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTemp, i, k, kernelSize, padLength, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth);
+                        box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTemp, k, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                         dstPtrTemp++;
                     }
                     // process remaining columns in eacn row
@@ -273,7 +268,7 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     // process remaining columns in row
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTemp, i, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth);
+                        box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
