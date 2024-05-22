@@ -106,7 +106,7 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
             {
                 Rpp8u *srcPtrRow[3], *dstPtrRow;
                 for (int i = 0; i < 3; i++)
-                    srcPtrRow[i] = srcPtrChannel + i * padLength * srcDescPtr->strides.hStride;
+                    srcPtrRow[i] = srcPtrChannel + i * srcDescPtr->strides.hStride;
                 dstPtrRow = dstPtrChannel;
                 Rpp32u alignedLength = ((bufferLength - 2 * padLength) / 12) * 12;
 
@@ -192,7 +192,7 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                 Rpp32u alignedLength = ((bufferLength - 2 * padLength) / 12) * 12;
                 Rpp8u *srcPtrRow[9], *dstPtrRow;
                 for (int i = 0; i < 9; i++)
-                    srcPtrRow[i] = srcPtrChannel + i * padLength * srcDescPtr->strides.hStride;
+                    srcPtrRow[i] = srcPtrChannel + i * srcDescPtr->strides.hStride;
                 dstPtrRow = dstPtrChannel;
 
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
@@ -205,13 +205,13 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     Rpp8u *dstPtrTemp = dstPtrRow;
 
                     // process padLength number of columns in each row
-                    // for (int k = 0; k < padLength; k++)
-                    // {
-                    //     box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTemp, i, k, kernelSize, padLength, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth);
-                    //     dstPtrTemp++;
-                    //     vectorLoopCount++;
-                    // }
-                    // process remaining rows
+                    for (int k = 0; k < padLength; k++)
+                    {
+                        box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTemp, i, k, kernelSize, padLength, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth);
+                        dstPtrTemp++;
+                        vectorLoopCount++;
+                    }
+                    // process remaining columns in row
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTemp, i, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiHeight, roi.xywhROI.roiWidth);
