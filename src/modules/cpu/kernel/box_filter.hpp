@@ -28,12 +28,13 @@ SOFTWARE.
 
 const __m128i xmm_pxMask01To15 = _mm_setr_epi8(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0x80);
 const __m128i xmm_pxMask02To15 = _mm_setr_epi8(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0x80, 0x80);
-const __m128i xmm_pxMask03To15 = _mm_setr_epi8(3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0x80, 0x80, 0x80);
-const __m128i xmm_pxMask04To15 = _mm_setr_epi8(4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0x80, 0x80, 0x80, 0x80);
-const __m128i xmm_pxMask05To15 = _mm_setr_epi8(5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0x80, 0x80, 0x80, 0x80, 0x80);
-const __m128i xmm_pxMask06To15 = _mm_setr_epi8(6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80);
-const __m128i xmm_pxMask07To15 = _mm_setr_epi8(7, 8, 9, 10, 11, 12, 13, 14, 15, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80);
-
+const __m128i xmm_pxMaskReverse1 = _mm_setr_epi8(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1);
+const __m128i xmm_pxMaskReverse2 = _mm_setr_epi8(4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3);
+const __m128i xmm_pxMaskReverse3 = _mm_setr_epi8(6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5);
+const __m128i xmm_pxMaskReverse4 = _mm_setr_epi8(8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7);
+const __m128i xmm_pxMaskReverse5 = _mm_setr_epi8(10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
+const __m128i xmm_pxMaskReverse6 = _mm_setr_epi8(12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11);
+const __m128i xmm_pxMaskReverse7 = _mm_setr_epi8(14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13);
 
 inline void increment_row_ptrs(Rpp8u **srcPtrTemp, Rpp32u kernelSize, Rpp32u increment)
 {
@@ -216,9 +217,13 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                     {
                         __m128i pxRow[9];
-                        for (int k = 0; k < rowKernelLoopLimit; k++)
+                        pxRow[0] = _mm_loadu_si128((__m128i *)srcPtrTemp[0]);
+                        pxRow[1] = _mm_loadu_si128((__m128i *)srcPtrTemp[1]);
+                        pxRow[2] = _mm_loadu_si128((__m128i *)srcPtrTemp[2]);
+                        pxRow[3] = _mm_loadu_si128((__m128i *)srcPtrTemp[3]);
+                        pxRow[4] = _mm_loadu_si128((__m128i *)srcPtrTemp[4]);
+                        for (int k = 5; k < rowKernelLoopLimit; k++)
                             pxRow[k] = _mm_loadu_si128((__m128i *)srcPtrTemp[k]);
-
                         for (int k = rowKernelLoopLimit; k < 9; k++)
                             pxRow[k] = xmm_px0;
 
@@ -233,28 +238,33 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                         pxLower = _mm_add_epi16(pxLower, _mm_unpacklo_epi8(pxRow[7], xmm_px0));
                         pxLower = _mm_add_epi16(pxLower, _mm_unpacklo_epi8(pxRow[8], xmm_px0));
 
-                        // shift row wise and add
-                        for (int k = 0; k < 9; k++)
-                        {
-                            __m128i pxTemp[8];
-                            pxTemp[0] = _mm_shuffle_epi8(pxRow[k], xmm_pxMask01To15);
-                            pxTemp[1] = _mm_shuffle_epi8(pxRow[k], xmm_pxMask02To15);
-                            pxTemp[2] = _mm_shuffle_epi8(pxRow[k], xmm_pxMask03To15);
-                            pxTemp[3] = _mm_shuffle_epi8(pxRow[k], xmm_pxMask04To15);
-                            pxTemp[4] = _mm_shuffle_epi8(pxRow[k], xmm_pxMask05To15);
-                            pxTemp[5] = _mm_shuffle_epi8(pxRow[k], xmm_pxMask06To15);
-                            pxTemp[6] = _mm_shuffle_epi8(pxRow[k], xmm_pxMask07To15);
-                            pxTemp[7] = _mm_shuffle_epi8(pxRow[k], xmm_pxMask08To15);
+                        pxUpper = _mm_unpackhi_epi8(pxRow[0], xmm_px0);
+                        pxUpper = _mm_add_epi16(pxUpper, _mm_unpackhi_epi8(pxRow[1], xmm_px0));
+                        pxUpper = _mm_add_epi16(pxUpper, _mm_unpackhi_epi8(pxRow[2], xmm_px0));
+                        pxUpper = _mm_add_epi16(pxUpper, _mm_unpackhi_epi8(pxRow[3], xmm_px0));
+                        pxUpper = _mm_add_epi16(pxUpper, _mm_unpackhi_epi8(pxRow[4], xmm_px0));
+                        pxUpper = _mm_add_epi16(pxUpper, _mm_unpackhi_epi8(pxRow[5], xmm_px0));
+                        pxUpper = _mm_add_epi16(pxUpper, _mm_unpackhi_epi8(pxRow[6], xmm_px0));
+                        pxUpper = _mm_add_epi16(pxUpper, _mm_unpackhi_epi8(pxRow[7], xmm_px0));
+                        pxUpper = _mm_add_epi16(pxUpper, _mm_unpackhi_epi8(pxRow[8], xmm_px0));
 
-                            pxLower = _mm_add_epi16(pxLower, _mm_unpacklo_epi8(pxTemp[0], xmm_px0));
-                            pxLower = _mm_add_epi16(pxLower, _mm_unpacklo_epi8(pxTemp[1], xmm_px0));
-                            pxLower = _mm_add_epi16(pxLower, _mm_unpacklo_epi8(pxTemp[2], xmm_px0));
-                            pxLower = _mm_add_epi16(pxLower, _mm_unpacklo_epi8(pxTemp[3], xmm_px0));
-                            pxLower = _mm_add_epi16(pxLower, _mm_unpacklo_epi8(pxTemp[4], xmm_px0));
-                            pxLower = _mm_add_epi16(pxLower, _mm_unpacklo_epi8(pxTemp[5], xmm_px0));
-                            pxLower = _mm_add_epi16(pxLower, _mm_unpacklo_epi8(pxTemp[6], xmm_px0));
-                            pxLower = _mm_add_epi16(pxLower, _mm_unpacklo_epi8(pxTemp[7], xmm_px0));
-                        }
+                        __m128i pxTemp[7];
+                        pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower, pxUpper, 1), xmm_pxMaskReverse1);
+                        pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower, pxUpper, 3), xmm_pxMaskReverse2);
+                        pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower, pxUpper, 7), xmm_pxMaskReverse3);
+                        pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower, pxUpper, 15), xmm_pxMaskReverse4);
+                        pxTemp[4] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower, pxUpper, 31), xmm_pxMaskReverse5);
+                        pxTemp[5] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower, pxUpper, 63), xmm_pxMaskReverse6);
+                        pxTemp[6] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower, pxUpper, 127), xmm_pxMaskReverse7);
+
+                        pxLower = _mm_add_epi16(pxLower, pxTemp[0]);
+                        pxLower = _mm_add_epi16(pxLower, pxTemp[1]);
+                        pxLower = _mm_add_epi16(pxLower, pxTemp[2]);
+                        pxLower = _mm_add_epi16(pxLower, pxTemp[3]);
+                        pxLower = _mm_add_epi16(pxLower, pxTemp[4]);
+                        pxLower = _mm_add_epi16(pxLower, pxTemp[5]);
+                        pxLower = _mm_add_epi16(pxLower, pxTemp[6]);
+                        pxLower = _mm_add_epi16(pxLower, pxUpper);
 
                         pxLower = _mm_mulhi_epi16(pxLower, pxConvolutionFactor);
                         pxLower = _mm_packus_epi16(pxLower, xmm_px0);
