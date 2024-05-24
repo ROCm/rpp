@@ -26,15 +26,13 @@ SOFTWARE.
 #include "rpp_cpu_simd.hpp"
 #include "rpp_cpu_common.hpp"
 
-const __m128i xmm_pxMask01To15 = _mm_setr_epi8(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0x80);
-const __m128i xmm_pxMask02To15 = _mm_setr_epi8(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0x80, 0x80);
-const __m128i xmm_pxMaskReverse1 = _mm_setr_epi8(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1);
-const __m128i xmm_pxMaskReverse2 = _mm_setr_epi8(4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3);
-const __m128i xmm_pxMaskReverse3 = _mm_setr_epi8(6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5);
-const __m128i xmm_pxMaskReverse4 = _mm_setr_epi8(8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7);
-const __m128i xmm_pxMaskReverse5 = _mm_setr_epi8(10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
-const __m128i xmm_pxMaskReverse6 = _mm_setr_epi8(12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11);
-const __m128i xmm_pxMaskReverse7 = _mm_setr_epi8(14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13);
+const __m128i xmm_pxMaskRotate0To1 = _mm_setr_epi8(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1);
+const __m128i xmm_pxMaskRotate0To3 = _mm_setr_epi8(4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3);
+const __m128i xmm_pxMaskRotate0To5 = _mm_setr_epi8(6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5);
+const __m128i xmm_pxMaskRotate0To7 = _mm_setr_epi8(8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7);
+const __m128i xmm_pxMaskRotate0To9 = _mm_setr_epi8(10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
+const __m128i xmm_pxMaskRotate0To11 = _mm_setr_epi8(12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11);
+const __m128i xmm_pxMaskRotate0To13 = _mm_setr_epi8(14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13);
 
 inline void increment_row_ptrs(Rpp8u **srcPtrTemp, Rpp32u kernelSize, Rpp32u increment)
 {
@@ -126,58 +124,70 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     Rpp8u *srcPtrTemp[3] = {srcPtrRow[0], srcPtrRow[1], srcPtrRow[2]};
                     Rpp8u *dstPtrTemp = dstPtrRow;
 
+                    // get the number of rows needs to be loaded for the corresponding row
                     Rpp32s rowKernelLoopLimit;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
 
                     // process padLength number of columns in each row
+                    // left border pixels in image which does not have required pixels in 3x3 box, process them separately
                     for (int k = 0; k < padLength; k++)
                     {
                         box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTemp, k, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                         dstPtrTemp++;
                     }
 
-                    // process remaining columns in eacn row
+                    // process alignedLength number of columns in eacn row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                     {
                         __m256i pxRow[3];
+                        // irrespective of row location, we need to load 2 rows for 3x3 kernel
                         pxRow[0] = _mm256_loadu_si256((__m256i *)srcPtrTemp[0]);
                         pxRow[1] = _mm256_loadu_si256((__m256i *)srcPtrTemp[1]);
+
+                        // if rowKernelLoopLimit is 3 load values from 3rd row pointer else set it 0
                         if (rowKernelLoopLimit == 3)
                             pxRow[2] = _mm256_loadu_si256((__m256i *)srcPtrTemp[2]);
                         else
                             pxRow[2] = avx_px0;
 
+                        // pack lower half of each of 3 loaded row values from 8 bit to 16 bit and add
                         __m256i pxLower, pxUpper;
                         pxLower = _mm256_unpacklo_epi8(pxRow[0], avx_px0);
                         pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[1], avx_px0));
                         pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[2], avx_px0));
 
+                        // pack higher half of each of 3 loaded row values from 8 bit to 16 bit and add
                         pxUpper = _mm256_unpackhi_epi8(pxRow[0], avx_px0);
                         pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[1], avx_px0));
                         pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[2], avx_px0));
 
+                        // get 4 SSE registers from above 2 AVX registers to arrange as per required order
                         __m128i pxLower1, pxLower2, pxUpper1, pxUpper2;
                         pxLower1 =  _mm256_castsi256_si128(pxLower);
                         pxLower2 =  _mm256_castsi256_si128(pxUpper);
                         pxUpper1 =  _mm256_extracti128_si256(pxLower, 1);
                         pxUpper2 =  _mm256_extracti128_si256(pxUpper, 1);
 
+                        // perform blend and shuffle operations for the first 8 output values to get required order and add them
                         __m128i pxTemp[2];
-                        pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 1), xmm_pxMaskReverse1);
-                        pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 3), xmm_pxMaskReverse2);
+                        pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 1), xmm_pxMaskRotate0To1);
+                        pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 3), xmm_pxMaskRotate0To3);
                         pxLower1 = _mm_add_epi16(pxLower1, pxTemp[0]);
                         pxLower1 = _mm_add_epi16(pxLower1, pxTemp[1]);
 
-                        pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 1), xmm_pxMaskReverse1);
-                        pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 3), xmm_pxMaskReverse2);
+                        // perform blend and shuffle operations for the next 8 output values to get required order and add them
+                        pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 1), xmm_pxMaskRotate0To1);
+                        pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 3), xmm_pxMaskRotate0To3);
                         pxLower2 = _mm_add_epi16(pxLower2, pxTemp[0]);
                         pxLower2 = _mm_add_epi16(pxLower2, pxTemp[1]);
 
-                        pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 1), xmm_pxMaskReverse1);
-                        pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 3), xmm_pxMaskReverse2);
+                        // perform blend and shuffle operations for the next 8 output values to get required order and add them
+                        pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 1), xmm_pxMaskRotate0To1);
+                        pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 3), xmm_pxMaskRotate0To3);
                         pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[0]);
                         pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[1]);
 
+                        // multiply with convolution factor and store 24 values in output
                         pxLower1 = _mm_mulhi_epi16(pxLower1, pxConvolutionFactor);
                         pxLower2 = _mm_mulhi_epi16(pxLower2, pxConvolutionFactor);
                         pxUpper1 = _mm_mulhi_epi16(pxUpper1, pxConvolutionFactor);
@@ -190,6 +200,8 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                         dstPtrTemp += 24;
                     }
                     vectorLoopCount += padLength;
+
+                    // process remaining columns in each row
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
@@ -269,13 +281,13 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
 
                         // get the final accumalated result for first 8 elements
                         __m128i pxTemp[7];
-                        pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 1), xmm_pxMaskReverse1);
-                        pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 3), xmm_pxMaskReverse2);
-                        pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 7), xmm_pxMaskReverse3);
-                        pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 15), xmm_pxMaskReverse4);
-                        pxTemp[4] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 31), xmm_pxMaskReverse5);
-                        pxTemp[5] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 63), xmm_pxMaskReverse6);
-                        pxTemp[6] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 127), xmm_pxMaskReverse7);
+                        pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 1), xmm_pxMaskRotate0To1);
+                        pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 3), xmm_pxMaskRotate0To3);
+                        pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 7), xmm_pxMaskRotate0To5);
+                        pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 15), xmm_pxMaskRotate0To7);
+                        pxTemp[4] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 31), xmm_pxMaskRotate0To9);
+                        pxTemp[5] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 63), xmm_pxMaskRotate0To11);
+                        pxTemp[6] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 127), xmm_pxMaskRotate0To13);
                         pxLower1 = _mm_add_epi16(pxLower1, pxTemp[0]);
                         pxLower1 = _mm_add_epi16(pxLower1, pxTemp[1]);
                         pxLower1 = _mm_add_epi16(pxLower1, pxTemp[2]);
@@ -286,13 +298,13 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                         pxLower1 = _mm_add_epi16(pxLower1, pxLower2);
 
                         // get the final accumalated result for next 8 elements
-                        pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 1), xmm_pxMaskReverse1);
-                        pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 3), xmm_pxMaskReverse2);
-                        pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 7), xmm_pxMaskReverse3);
-                        pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 15), xmm_pxMaskReverse4);
-                        pxTemp[4] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 31), xmm_pxMaskReverse5);
-                        pxTemp[5] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 63), xmm_pxMaskReverse6);
-                        pxTemp[6] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 127), xmm_pxMaskReverse7);
+                        pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 1), xmm_pxMaskRotate0To1);
+                        pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 3), xmm_pxMaskRotate0To3);
+                        pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 7), xmm_pxMaskRotate0To5);
+                        pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 15), xmm_pxMaskRotate0To7);
+                        pxTemp[4] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 31), xmm_pxMaskRotate0To9);
+                        pxTemp[5] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 63), xmm_pxMaskRotate0To11);
+                        pxTemp[6] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 127), xmm_pxMaskRotate0To13);
                         pxLower2 = _mm_add_epi16(pxLower2, pxTemp[0]);
                         pxLower2 = _mm_add_epi16(pxLower2, pxTemp[1]);
                         pxLower2 = _mm_add_epi16(pxLower2, pxTemp[2]);
@@ -312,7 +324,7 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     }
                     vectorLoopCount += padLength;
 
-                    // process remaining columns in row
+                    // process remaining columns in each row
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
