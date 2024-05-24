@@ -216,6 +216,7 @@ RppStatus hip_exec_gamma_correction_tensor(T *srcPtr,
                                            RpptDescPtr srcDescPtr,
                                            T *dstPtr,
                                            RpptDescPtr dstDescPtr,
+                                           Rpp32f *gammaTensor,
                                            RpptROIPtr roiTensorPtrSrc,
                                            RpptRoiType roiType,
                                            rpp::Handle& handle)
@@ -227,20 +228,15 @@ RppStatus hip_exec_gamma_correction_tensor(T *srcPtr,
     int globalThreads_y = handle.GetBatchSize();
     int globalThreads_z = 1;
 
-    float *gammaLUT;
-    hipMalloc(&gammaLUT, 256 * handle.GetBatchSize() * sizeof(Rpp32f));
-
+    Rpp32f *gammaLUT = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
     hipLaunchKernelGGL(gamma_correction_lut_compute,
                        dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X_1DIM), ceil((float)globalThreads_y/LOCAL_THREADS_Y_1DIM), ceil((float)globalThreads_z/LOCAL_THREADS_Z_1DIM)),
                        dim3(LOCAL_THREADS_X_1DIM, LOCAL_THREADS_Y_1DIM, LOCAL_THREADS_Z_1DIM),
                        0,
                        handle.GetStream(),
                        gammaLUT,
-                       handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem);
+                       gammaTensor);
 
-    
-    
-    
     globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
     globalThreads_y = dstDescPtr->h;
     globalThreads_z = handle.GetBatchSize();
@@ -306,8 +302,6 @@ RppStatus hip_exec_gamma_correction_tensor(T *srcPtr,
                                roiTensorPtrSrc);
         }
     }
-
-    hipFree(&gammaLUT);
 
     return RPP_SUCCESS;
 }

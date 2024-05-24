@@ -189,7 +189,6 @@ struct HandleImpl
             this->initHandle->mem.mcpu.charArr[i].charmem = (Rpp8s *)malloc(sizeof(Rpp8s) * this->nBatchSize);
         }
 
-        this->initHandle->mem.mcpu.rgbArr.rgbmem = (RpptRGB *)malloc(sizeof(RpptRGB) * this->nBatchSize);
         this->initHandle->mem.mcpu.scratchBufferHost = (Rpp32f *)malloc(sizeof(Rpp32f) * 99532800 * this->nBatchSize); // 7680 * 4320 * 3
     }
 
@@ -238,7 +237,6 @@ struct HandleImpl
             hipMalloc(&(this->initHandle->mem.mgpu.float3Arr[i].floatmem), sizeof(Rpp32f) * this->nBatchSize * 3);
         }
 
-        hipMalloc(&(this->initHandle->mem.mgpu.rgbArr.rgbmem), sizeof(RpptRGB) * this->nBatchSize);
         hipMalloc(&(this->initHandle->mem.mgpu.scratchBufferHip.floatmem), sizeof(Rpp32f) * 8294400);    // 3840 x 2160
     }
 };
@@ -355,7 +353,6 @@ void Handle::rpp_destroy_object_gpu()
         hipFree(this->GetInitHandle()->mem.mgpu.float3Arr[i].floatmem);
     }
 
-    hipFree(this->GetInitHandle()->mem.mgpu.rgbArr.rgbmem);
     hipFree(this->GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
 }
 
@@ -380,7 +377,6 @@ void Handle::rpp_destroy_object_host()
         free(this->GetInitHandle()->mem.mcpu.charArr[i].charmem);
     }
 
-    free(this->GetInitHandle()->mem.mcpu.rgbArr.rgbmem);
     free(this->GetInitHandle()->mem.mcpu.scratchBufferHost);
 }
 

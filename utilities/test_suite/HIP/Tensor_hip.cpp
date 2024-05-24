@@ -250,12 +250,12 @@ int main(int argc, char **argv)
 
     // Initialize ROI tensors for src/dst
     RpptROI *roiTensorPtrSrc, *roiTensorPtrDst;
-    CHECK(hipHostMalloc(&roiTensorPtrSrc, batchSize * sizeof(RpptROI)));
-    CHECK(hipHostMalloc(&roiTensorPtrDst, batchSize * sizeof(RpptROI)));
+    CHECK_RETURN_STATUS(hipHostMalloc(&roiTensorPtrSrc, batchSize * sizeof(RpptROI)));
+    CHECK_RETURN_STATUS(hipHostMalloc(&roiTensorPtrDst, batchSize * sizeof(RpptROI)));
 
     // Initialize the ImagePatch for dst
     RpptImagePatch *dstImgSizes;
-    CHECK(hipHostMalloc(&dstImgSizes, batchSize * sizeof(RpptImagePatch)));
+    CHECK_RETURN_STATUS(hipHostMalloc(&dstImgSizes, batchSize * sizeof(RpptImagePatch)));
 
     // Set ROI tensors types for src/dst
     RpptRoiType roiTypeSrc, roiTypeDst;
@@ -315,7 +315,7 @@ int main(int argc, char **argv)
     // Run case-wise RPP API and measure time
     rppHandle_t handle;
     hipStream_t stream;
-    CHECK(hipStreamCreate(&stream));
+    CHECK_RETURN_STATUS(hipStreamCreate(&stream));
     rppCreateWithStreamAndBatchSize(&handle, stream, batchSize);
 
     int noOfIterations = (int)imageNames.size() / batchSize;
@@ -333,30 +333,30 @@ int main(int argc, char **argv)
             bitDepthByteSize = (testCase == 87) ? sizeof(Rpp64u) : sizeof(Rpp8u);
         else if ((dstDescPtr->dataType == RpptDataType::F16) || (dstDescPtr->dataType == RpptDataType::F32))
             bitDepthByteSize = sizeof(Rpp32f);  // using 32f outputs for 16f and 32f
-        CHECK(hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * bitDepthByteSize));
+        CHECK_RETURN_STATUS(hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * bitDepthByteSize));
     }
 
     // Allocate hip memory for src/dst
-    CHECK(hipMalloc(&d_input, inputBufferSize));
-    CHECK(hipMalloc(&d_output, outputBufferSize));
+    CHECK_RETURN_STATUS(hipMalloc(&d_input, inputBufferSize));
+    CHECK_RETURN_STATUS(hipMalloc(&d_output, outputBufferSize));
     if(dualInputCase)
-        CHECK(hipMalloc(&d_input_second, inputBufferSize));
+        CHECK_RETURN_STATUS(hipMalloc(&d_input_second, inputBufferSize));
+
+    // Allocate maximum pinned memory for specific cases
+    Rpp32f *scratchBufferPinned;
+    CHECK_RETURN_STATUS(hipHostMalloc(&scratchBufferPinned, 10 * batchSize * sizeof(Rpp32f)));
 
     RpptROI *roiPtrInputCropRegion;
     if(testCase == 82)
-        CHECK(hipHostMalloc(&roiPtrInputCropRegion, 4 * sizeof(RpptROI)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&roiPtrInputCropRegion, 4 * sizeof(RpptROI)));
 
     RpptROI *cropRoi, *patchRoi;
     if(testCase == 33)
     {
-        CHECK(hipHostMalloc(&cropRoi, batchSize * sizeof(RpptROI)));
-        CHECK(hipHostMalloc(&patchRoi, batchSize * sizeof(RpptROI)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&cropRoi, batchSize * sizeof(RpptROI)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&patchRoi, batchSize * sizeof(RpptROI)));
     }
     bool invalidROI = (roiList[0] == 0 && roiList[1] == 0 && roiList[2] == 0 && roiList[3] == 0);
-
-    Rpp32f *intensity;
-    if(testCase == 46)
-        CHECK(hipHostMalloc(&intensity, batchSize * sizeof(Rpp32f)));
 
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
@@ -392,14 +392,14 @@ int main(int argc, char **argv)
                 convert_pkd3_to_pln3(inputu8Second, srcDescPtr);
         }
 
-        // Convert inputs to correponding bit depth specified by user
+        // Convert inputs to corresponding bit depth specified by user
         convert_input_bitdepth(input, input_second, inputu8, inputu8Second, inputBitDepth, ioBufferSize, inputBufferSize, srcDescPtr, dualInputCase, conversionFactor);
 
         //copy decoded inputs to hip buffers
-        CHECK(hipMemcpy(d_input, input, inputBufferSize, hipMemcpyHostToDevice));
-        CHECK(hipMemcpy(d_output, output, outputBufferSize, hipMemcpyHostToDevice));
+        CHECK_RETURN_STATUS(hipMemcpy(d_input, input, inputBufferSize, hipMemcpyHostToDevice));
+        CHECK_RETURN_STATUS(hipMemcpy(d_output, output, outputBufferSize, hipMemcpyHostToDevice));
         if(dualInputCase)
-            CHECK(hipMemcpy(d_input_second, input_second, inputBufferSize, hipMemcpyHostToDevice));
+            CHECK_RETURN_STATUS(hipMemcpy(d_input_second, input_second, inputBufferSize, hipMemcpyHostToDevice));
 
         int roiHeightList[batchSize], roiWidthList[batchSize];
         if(invalidROI)
@@ -441,8 +441,8 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "brightness";
 
-                    Rpp32f alpha[batchSize];
-                    Rpp32f beta[batchSize];
+                    Rpp32f *alpha = scratchBufferPinned;
+                    Rpp32f *beta = alpha + batchSize;
                     for (i = 0; i < batchSize; i++)
                     {
                         alpha[i] = 1.75;
@@ -461,7 +461,7 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "gamma_correction";
 
-                    Rpp32f gammaVal[batchSize];
+                    Rpp32f *gammaVal = scratchBufferPinned;
                     for (i = 0; i < batchSize; i++)
                         gammaVal[i] = 1.9;
 
@@ -477,7 +477,7 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "blend";
 
-                    Rpp32f alpha[batchSize];
+                    Rpp32f *alpha = scratchBufferPinned;
                     for (i = 0; i < batchSize; i++)
                         alpha[i] = 0.4;
 
@@ -493,8 +493,8 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "contrast";
 
-                    Rpp32f contrastFactor[batchSize];
-                    Rpp32f contrastCenter[batchSize];
+                    Rpp32f *contrastFactor = scratchBufferPinned;
+                    Rpp32f *contrastCenter = contrastFactor + batchSize;
                     for (i = 0; i < batchSize; i++)
                     {
                         contrastFactor[i] = 2.96;
@@ -513,7 +513,7 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "exposure";
 
-                    Rpp32f exposureFactor[batchSize];
+                    Rpp32f *exposureFactor = scratchBufferPinned;
                     for (i = 0; i < batchSize; i++)
                         exposureFactor[i] = 1.4;
 
@@ -529,8 +529,8 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "flip";
 
-                    Rpp32u horizontalFlag[batchSize];
-                    Rpp32u verticalFlag[batchSize];
+                    Rpp32u *horizontalFlag = reinterpret_cast<Rpp32u *>(scratchBufferPinned);
+                    Rpp32u *verticalFlag = horizontalFlag + batchSize;
                     for (i = 0; i < batchSize; i++)
                     {
                         horizontalFlag[i] = 1;
@@ -573,7 +573,7 @@ int main(int argc, char **argv)
                         break;
                     }
 
-                    Rpp32f angle[batchSize];
+                    Rpp32f *angle = scratchBufferPinned;
                     for (i = 0; i < batchSize; i++)
                         angle[i] = 50;
 
@@ -589,12 +589,12 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "water";
 
-                    Rpp32f amplX[batchSize];
-                    Rpp32f amplY[batchSize];
-                    Rpp32f freqX[batchSize];
-                    Rpp32f freqY[batchSize];
-                    Rpp32f phaseX[batchSize];
-                    Rpp32f phaseY[batchSize];
+                    Rpp32f *amplX = scratchBufferPinned;
+                    Rpp32f *amplY = amplX + batchSize;
+                    Rpp32f *freqX = amplY + batchSize;
+                    Rpp32f *freqY = freqX + batchSize;
+                    Rpp32f *phaseX = freqY + batchSize;
+                    Rpp32f *phaseY = phaseX + batchSize;
 
                     for (i = 0; i < batchSize; i++)
                     {
@@ -618,7 +618,7 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "non_linear_blend";
 
-                    Rpp32f stdDev[batchSize];
+                    Rpp32f *stdDev = scratchBufferPinned;
                     for (i = 0; i < batchSize; i++)
                         stdDev[i] = 50.0;
 
@@ -634,9 +634,8 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "color_cast";
 
-                    RpptRGB rgbTensor[batchSize];
-                    Rpp32f alphaTensor[batchSize];
-
+                    Rpp32f *alphaTensor = scratchBufferPinned;
+                    RpptRGB *rgbTensor = reinterpret_cast<RpptRGB *>(alphaTensor + batchSize);
                     for (i = 0; i < batchSize; i++)
                     {
                         rgbTensor[i].R = 0;
@@ -676,9 +675,8 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "lut";
 
-                    Rpp32f *lutBuffer;
-                    CHECK(hipHostMalloc(&lutBuffer, 65536 * sizeof(Rpp32f)));
-                    CHECK(hipMemset(lutBuffer, 0, 65536 * sizeof(Rpp32f)));
+                    Rpp32f *lutBuffer = scratchBufferPinned;
+                    CHECK_RETURN_STATUS(hipMemset(lutBuffer, 0, 65536 * sizeof(Rpp32f)));
                     Rpp8u *lut8u = reinterpret_cast<Rpp8u *>(lutBuffer);
                     Rpp16f *lut16f = reinterpret_cast<Rpp16f *>(lutBuffer);
                     Rpp32f *lut32f = reinterpret_cast<Rpp32f *>(lutBuffer);
@@ -709,17 +707,15 @@ int main(int argc, char **argv)
                         missingFuncFlag = 1;
 
                     break;
-
-                    CHECK(hipHostFree(lutBuffer));
                 }
                 case 36:
                 {
                     testCaseName = "color_twist";
 
-                    Rpp32f brightness[batchSize];
-                    Rpp32f contrast[batchSize];
-                    Rpp32f hue[batchSize];
-                    Rpp32f saturation[batchSize];
+                    Rpp32f *brightness = scratchBufferPinned;
+                    Rpp32f *contrast = brightness + batchSize;
+                    Rpp32f *hue = contrast + batchSize;
+                    Rpp32f *saturation = hue + batchSize;
                     for (i = 0; i < batchSize; i++)
                     {
                         brightness[i] = 1.4;
@@ -759,9 +755,10 @@ int main(int argc, char **argv)
                 case 38:
                 {
                     testCaseName = "crop_mirror_normalize";
-                    Rpp32f multiplier[batchSize * srcDescPtr->c];
-                    Rpp32f offset[batchSize * srcDescPtr->c];
-                    Rpp32u mirror[batchSize];
+
+                    Rpp32f *multiplier = scratchBufferPinned;
+                    Rpp32f *offset = multiplier + (batchSize * srcDescPtr->c);
+                    Rpp32u *mirror = reinterpret_cast<Rpp32u *>(offset + (batchSize * srcDescPtr->c));
                     if (srcDescPtr->c == 3)
                     {
                         Rpp32f meanParam[3] = { 60.0f, 80.0f, 100.0f };
@@ -821,7 +818,7 @@ int main(int argc, char **argv)
                         break;
                     }
 
-                    Rpp32u mirror[batchSize];
+                    Rpp32u *mirror = reinterpret_cast<Rpp32u *>(scratchBufferPinned);
                     for (i = 0; i < batchSize; i++)
                         mirror[i] = 1;
 
@@ -847,7 +844,7 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "color_temperature";
 
-                    Rpp32s adjustment[batchSize];
+                    Rpp32s *adjustment = reinterpret_cast<Rpp32s *>(scratchBufferPinned);
                     for (i = 0; i < batchSize; i++)
                         adjustment[i] = 70;
 
@@ -863,6 +860,7 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "vignette";
 
+                    Rpp32f *intensity = scratchBufferPinned;
                     for (i = 0; i < batchSize; i++)
                         intensity[i] = 6;
 
@@ -892,7 +890,7 @@ int main(int argc, char **argv)
                     testCaseName = "gaussian_filter";
                     Rpp32u kernelSize = additionalParam;
 
-                    Rpp32f stdDevTensor[batchSize];
+                    Rpp32f *stdDevTensor = scratchBufferPinned;
                     for (i = 0; i < batchSize; i++)
                     {
                         stdDevTensor[i] = 5.0f;
@@ -982,9 +980,9 @@ int main(int argc, char **argv)
                         dstImgSizes[i].height = roiTensorPtrDst[i].xywhROI.roiHeight = roiTensorPtrSrc[i].xywhROI.roiWidth / 2;
                     }
 
-                    Rpp32f mean[batchSize * 3];
-                    Rpp32f stdDev[batchSize * 3];
-                    Rpp32u mirror[batchSize];
+                    Rpp32f *mean = scratchBufferPinned;
+                    Rpp32f *stdDev = mean + (batchSize * 3);
+                    Rpp32u *mirror = reinterpret_cast<Rpp32u *>(stdDev + (batchSize * 3));
                     for (i = 0, j = 0; i < batchSize; i++, j += 3)
                     {
                         mean[j] = 60.0;
@@ -1010,7 +1008,7 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "ricap";
 
-                    Rpp32u permutationTensor[batchSize * 4];
+                    Rpp32u *permutationTensor = reinterpret_cast<Rpp32u *>(scratchBufferPinned);
                     if(qaFlag)
                         init_ricap_qa(maxWidth, maxHeight, batchSize, permutationTensor, roiPtrInputCropRegion);
                     else
@@ -1103,7 +1101,6 @@ int main(int argc, char **argv)
                         reductionFuncResultArrLength = srcDescPtr->n;
 
                     startWallTime = omp_get_wtime();
-
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_tensor_sum_gpu(d_input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
@@ -1140,7 +1137,7 @@ int main(int argc, char **argv)
                     break;
             }
 
-            CHECK(hipDeviceSynchronize());
+            CHECK_RETURN_STATUS(hipDeviceSynchronize());
             endWallTime = omp_get_wtime();
             wallTime = endWallTime - startWallTime;
             if (missingFuncFlag == 1)
@@ -1215,7 +1212,7 @@ int main(int argc, char **argv)
             }
             else
             {
-                CHECK(hipMemcpy(output, d_output, outputBufferSize, hipMemcpyDeviceToHost));
+                CHECK_RETURN_STATUS(hipMemcpy(output, d_output, outputBufferSize, hipMemcpyDeviceToHost));
 
                 // Reconvert other bit depths to 8u for output display purposes
                 convert_output_bitdepth_to_u8(output, outputu8, inputBitDepth, oBufferSize, outputBufferSize, dstDescPtr, invConversionFactor);
@@ -1278,29 +1275,28 @@ int main(int argc, char **argv)
     }
 
     // Free memory
-    CHECK(hipHostFree(roiTensorPtrSrc));
-    CHECK(hipHostFree(roiTensorPtrDst));
-    CHECK(hipHostFree(dstImgSizes));
-    if(testCase == 46)
-        CHECK(hipHostFree(intensity));
+    CHECK_RETURN_STATUS(hipHostFree(roiTensorPtrSrc));
+    CHECK_RETURN_STATUS(hipHostFree(roiTensorPtrDst));
+    CHECK_RETURN_STATUS(hipHostFree(dstImgSizes));
+    CHECK_RETURN_STATUS(hipHostFree(scratchBufferPinned));
     if(testCase == 82)
-        CHECK(hipHostFree(roiPtrInputCropRegion));
+        CHECK_RETURN_STATUS(hipHostFree(roiPtrInputCropRegion));
     if(testCase == 33)
     {
-        CHECK(hipHostFree(cropRoi));
-        CHECK(hipHostFree(patchRoi));
+        CHECK_RETURN_STATUS(hipHostFree(cropRoi));
+        CHECK_RETURN_STATUS(hipHostFree(patchRoi));
     }
     if (reductionTypeCase)
-        CHECK(hipHostFree(reductionFuncResultArr));
+        CHECK_RETURN_STATUS(hipHostFree(reductionFuncResultArr));
     free(input);
     free(input_second);
     free(output);
     free(inputu8);
     free(inputu8Second);
     free(outputu8);
-    CHECK(hipFree(d_input));
+    CHECK_RETURN_STATUS(hipFree(d_input));
     if(dualInputCase)
-        CHECK(hipFree(d_input_second));
-    CHECK(hipFree(d_output));
+        CHECK_RETURN_STATUS(hipFree(d_input_second));
+    CHECK_RETURN_STATUS(hipFree(d_output));
     return 0;
 }

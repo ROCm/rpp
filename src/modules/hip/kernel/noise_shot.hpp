@@ -306,6 +306,7 @@ RppStatus hip_exec_shot_noise_tensor(T *srcPtr,
                                      RpptDescPtr srcDescPtr,
                                      T *dstPtr,
                                      RpptDescPtr dstDescPtr,
+                                     Rpp32f *shotNoiseFactorTensor,
                                      RpptXorwowStateBoxMuller *xorwowInitialStatePtr,
                                      RpptROIPtr roiTensorPtrSrc,
                                      RpptRoiType roiType,
@@ -320,7 +321,7 @@ RppStatus hip_exec_shot_noise_tensor(T *srcPtr,
 
     Rpp32u *xorwowSeedStream;
     xorwowSeedStream = (Rpp32u *)&xorwowInitialStatePtr[1];
-    hipMemcpy(xorwowSeedStream, rngSeedStream4050, SEED_STREAM_MAX_SIZE * sizeof(Rpp32u), hipMemcpyHostToDevice);
+    CHECK_RETURN_STATUS(hipMemcpy(xorwowSeedStream, rngSeedStream4050, SEED_STREAM_MAX_SIZE * sizeof(Rpp32u), hipMemcpyHostToDevice));
 
     if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
     {
@@ -334,7 +335,7 @@ RppStatus hip_exec_shot_noise_tensor(T *srcPtr,
                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                            dstPtr,
                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                           handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                           shotNoiseFactorTensor,
                            xorwowInitialStatePtr,
                            xorwowSeedStream,
                            roiTensorPtrSrc);
@@ -351,7 +352,7 @@ RppStatus hip_exec_shot_noise_tensor(T *srcPtr,
                            dstPtr,
                            make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                            dstDescPtr->c,
-                           handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                           shotNoiseFactorTensor,
                            xorwowInitialStatePtr,
                            xorwowSeedStream,
                            roiTensorPtrSrc);
@@ -369,7 +370,7 @@ RppStatus hip_exec_shot_noise_tensor(T *srcPtr,
                                make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                                dstPtr,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                               handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                               shotNoiseFactorTensor,
                                xorwowInitialStatePtr,
                                xorwowSeedStream,
                                roiTensorPtrSrc);
@@ -386,7 +387,7 @@ RppStatus hip_exec_shot_noise_tensor(T *srcPtr,
                                make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                                dstPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                               handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
+                               shotNoiseFactorTensor,
                                xorwowInitialStatePtr,
                                xorwowSeedStream,
                                roiTensorPtrSrc);

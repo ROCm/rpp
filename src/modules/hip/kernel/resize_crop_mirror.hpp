@@ -213,6 +213,7 @@ RppStatus hip_exec_resize_crop_mirror_tensor(T *srcPtr,
                                              RpptDescPtr dstDescPtr,
                                              RpptImagePatchPtr dstImgSizes,
                                              RpptInterpolationType interpolationType,
+                                             Rpp32u *mirrorTensor,
                                              RpptROIPtr roiTensorPtrSrc,
                                              RpptRoiType roiType,
                                              rpp::Handle& handle)
@@ -238,7 +239,7 @@ RppStatus hip_exec_resize_crop_mirror_tensor(T *srcPtr,
                             dstPtr,
                             make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                             dstImgSizes,
-                            handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
+                            mirrorTensor,
                             roiTensorPtrSrc);
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -254,7 +255,7 @@ RppStatus hip_exec_resize_crop_mirror_tensor(T *srcPtr,
                             make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                             dstImgSizes,
                             dstDescPtr->c,
-                            handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
+                            mirrorTensor,
                             roiTensorPtrSrc);
         }
         else if ((srcDescPtr->c == 3) && (dstDescPtr->c == 3))
@@ -271,7 +272,7 @@ RppStatus hip_exec_resize_crop_mirror_tensor(T *srcPtr,
                                 dstPtr,
                                 make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                                 dstImgSizes,
-                                handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
+                                mirrorTensor,
                                 roiTensorPtrSrc);
             }
             else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
@@ -287,7 +288,7 @@ RppStatus hip_exec_resize_crop_mirror_tensor(T *srcPtr,
                                 dstPtr,
                                 make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                 dstImgSizes,
-                                handle.GetInitHandle()->mem.mgpu.uintArr[0].uintmem,
+                                mirrorTensor,
                                 roiTensorPtrSrc);
             }
         }

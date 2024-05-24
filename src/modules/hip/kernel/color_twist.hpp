@@ -248,12 +248,16 @@ __global__ void color_twist_pln3_pkd3_hip_tensor(T *srcPtr,
 
 template <typename T>
 RppStatus hip_exec_color_twist_tensor(T *srcPtr,
-                                     RpptDescPtr srcDescPtr,
-                                     T *dstPtr,
-                                     RpptDescPtr dstDescPtr,
-                                     RpptROIPtr roiTensorPtrSrc,
-                                     RpptRoiType roiType,
-                                     rpp::Handle& handle)
+                                      RpptDescPtr srcDescPtr,
+                                      T *dstPtr,
+                                      RpptDescPtr dstDescPtr,
+                                      Rpp32f *brightnessTensor,
+                                      Rpp32f *contrastTensor,
+                                      Rpp32f *hueTensor,
+                                      Rpp32f *saturationTensor,
+                                      RpptROIPtr roiTensorPtrSrc,
+                                      RpptRoiType roiType,
+                                      rpp::Handle& handle)
 {
     if (roiType == RpptRoiType::LTRB)
         hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
@@ -276,10 +280,10 @@ RppStatus hip_exec_color_twist_tensor(T *srcPtr,
                                make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                                dstPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                               handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
-                               handle.GetInitHandle()->mem.mgpu.floatArr[1].floatmem,
-                               handle.GetInitHandle()->mem.mgpu.floatArr[2].floatmem,
-                               handle.GetInitHandle()->mem.mgpu.floatArr[3].floatmem,
+                               brightnessTensor,
+                               contrastTensor,
+                               hueTensor,
+                               saturationTensor,
                                roiTensorPtrSrc);
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -293,10 +297,10 @@ RppStatus hip_exec_color_twist_tensor(T *srcPtr,
                                make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                                dstPtr,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                               handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
-                               handle.GetInitHandle()->mem.mgpu.floatArr[1].floatmem,
-                               handle.GetInitHandle()->mem.mgpu.floatArr[2].floatmem,
-                               handle.GetInitHandle()->mem.mgpu.floatArr[3].floatmem,
+                               brightnessTensor,
+                               contrastTensor,
+                               hueTensor,
+                               saturationTensor,
                                roiTensorPtrSrc);
         }
         else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -310,10 +314,10 @@ RppStatus hip_exec_color_twist_tensor(T *srcPtr,
                                make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                                dstPtr,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
-                               handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
-                               handle.GetInitHandle()->mem.mgpu.floatArr[1].floatmem,
-                               handle.GetInitHandle()->mem.mgpu.floatArr[2].floatmem,
-                               handle.GetInitHandle()->mem.mgpu.floatArr[3].floatmem,
+                               brightnessTensor,
+                               contrastTensor,
+                               hueTensor,
+                               saturationTensor,
                                roiTensorPtrSrc);
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
@@ -328,10 +332,10 @@ RppStatus hip_exec_color_twist_tensor(T *srcPtr,
                                make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                                dstPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
-                               handle.GetInitHandle()->mem.mgpu.floatArr[0].floatmem,
-                               handle.GetInitHandle()->mem.mgpu.floatArr[1].floatmem,
-                               handle.GetInitHandle()->mem.mgpu.floatArr[2].floatmem,
-                               handle.GetInitHandle()->mem.mgpu.floatArr[3].floatmem,
+                               brightnessTensor,
+                               contrastTensor,
+                               hueTensor,
+                               saturationTensor,
                                roiTensorPtrSrc);
         }
     }

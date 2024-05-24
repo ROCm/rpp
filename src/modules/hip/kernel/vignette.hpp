@@ -227,8 +227,8 @@ RppStatus hip_exec_vignette_tensor(T *srcPtr,
                                    RpptDescPtr srcDescPtr,
                                    T *dstPtr,
                                    RpptDescPtr dstDescPtr,
-                                   RpptROIPtr roiTensorPtrSrc,
                                    Rpp32f *vignetteIntensityTensor,
+                                   RpptROIPtr roiTensorPtrSrc,
                                    RpptRoiType roiType,
                                    rpp::Handle& handle)
 {
