@@ -117,7 +117,7 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                 for (int i = 0; i < 3; i++)
                     srcPtrRow[i] = srcPtrChannel + i * srcDescPtr->strides.hStride;
                 dstPtrRow = dstPtrChannel;
-                Rpp32u alignedLength = ((bufferLength - 2 * padLength) / 14) * 14;
+                Rpp32u alignedLength = ((bufferLength - 2 * padLength) / 24) * 24;
 
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
@@ -137,44 +137,57 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     }
 
                     // process remaining columns in eacn row
-                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 14)
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                     {
-                        __m128i pxRow[3];
-                        pxRow[0] = _mm_loadu_si128((__m128i *)srcPtrTemp[0]);
-                        pxRow[1] = _mm_loadu_si128((__m128i *)srcPtrTemp[1]);
+                        __m256i pxRow[3];
+                        pxRow[0] = _mm256_loadu_si256((__m256i *)srcPtrTemp[0]);
+                        pxRow[1] = _mm256_loadu_si256((__m256i *)srcPtrTemp[1]);
                         if (rowKernelLoopLimit == 3)
-                            pxRow[2] = _mm_loadu_si128((__m128i *)srcPtrTemp[2]);
+                            pxRow[2] = _mm256_loadu_si256((__m256i *)srcPtrTemp[2]);
                         else
-                            pxRow[2] = xmm_px0;
+                            pxRow[2] = avx_px0;
 
-                        __m128i pxLower, pxUpper;
-                        pxLower = _mm_unpacklo_epi8(pxRow[0], xmm_px0);                            // ROW0 0-7
-                        pxLower = _mm_add_epi16(pxLower, _mm_unpacklo_epi8(pxRow[1], xmm_px0));    // ROW0 0-7 + ROW1 0-7
-                        pxLower = _mm_add_epi16(pxLower, _mm_unpacklo_epi8(pxRow[2], xmm_px0));    // upper accum - ROW0 0-7 + ROW1 0-7 + ROW2 0-7
+                        __m256i pxLower, pxUpper;
+                        pxLower = _mm256_unpacklo_epi8(pxRow[0], avx_px0);
+                        pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[1], avx_px0));
+                        pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[2], avx_px0));
 
-                        pxUpper = _mm_unpackhi_epi8(pxRow[0], xmm_px0);                            // ROW0 8-15
-                        pxUpper = _mm_add_epi16(pxUpper, _mm_unpackhi_epi8(pxRow[1], xmm_px0));    // ROW0 8-15 + ROW1 8-15
-                        pxUpper = _mm_add_epi16(pxUpper, _mm_unpackhi_epi8(pxRow[2], xmm_px0));    // lower accum - ROW0 8-15 + ROW1 8-15 + ROW2 8-15
+                        pxUpper = _mm256_unpackhi_epi8(pxRow[0], avx_px0);
+                        pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[1], avx_px0));
+                        pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[2], avx_px0));
 
-                        // shift row wise and add
-                        for (int k = 0; k < 3; k++)
-                        {
-                            __m128i pxTemp[2];
-                            pxTemp[0] = _mm_shuffle_epi8(pxRow[k], xmm_pxMask01To15);
-                            pxTemp[1] = _mm_shuffle_epi8(pxRow[k], xmm_pxMask02To15);
-                            pxLower = _mm_add_epi16(pxLower, _mm_unpacklo_epi8(pxTemp[0], xmm_px0));
-                            pxLower = _mm_add_epi16(pxLower, _mm_unpacklo_epi8(pxTemp[1], xmm_px0));
-                            pxUpper = _mm_add_epi16(pxUpper, _mm_unpackhi_epi8(pxTemp[0], xmm_px0));
-                            pxUpper = _mm_add_epi16(pxUpper, _mm_unpackhi_epi8(pxTemp[1], xmm_px0));
-                        }
+                        __m128i pxLower1, pxLower2, pxUpper1, pxUpper2;
+                        pxLower1 =  _mm256_castsi256_si128(pxLower);
+                        pxLower2 =  _mm256_castsi256_si128(pxUpper);
+                        pxUpper1 =  _mm256_extracti128_si256(pxLower, 1);
+                        pxUpper2 =  _mm256_extracti128_si256(pxUpper, 1);
 
-                        pxLower = _mm_mulhi_epi16(pxLower, pxConvolutionFactor);
-                        pxUpper = _mm_mulhi_epi16(pxUpper, pxConvolutionFactor);
-                        pxLower = _mm_packus_epi16(pxLower, pxUpper);
-                        _mm_storeu_si128((__m128i *)dstPtrTemp, pxLower);
+                        __m128i pxTemp[2];
+                        pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 1), xmm_pxMaskReverse1);
+                        pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 3), xmm_pxMaskReverse2);
+                        pxLower1 = _mm_add_epi16(pxLower1, pxTemp[0]);
+                        pxLower1 = _mm_add_epi16(pxLower1, pxTemp[1]);
 
-                        increment_row_ptrs(srcPtrTemp, kernelSize, 14);
-                        dstPtrTemp += 14;
+                        pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 1), xmm_pxMaskReverse1);
+                        pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 3), xmm_pxMaskReverse2);
+                        pxLower2 = _mm_add_epi16(pxLower2, pxTemp[0]);
+                        pxLower2 = _mm_add_epi16(pxLower2, pxTemp[1]);
+
+                        pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 1), xmm_pxMaskReverse1);
+                        pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 3), xmm_pxMaskReverse2);
+                        pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[0]);
+                        pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[1]);
+
+                        pxLower1 = _mm_mulhi_epi16(pxLower1, pxConvolutionFactor);
+                        pxLower2 = _mm_mulhi_epi16(pxLower2, pxConvolutionFactor);
+                        pxUpper1 = _mm_mulhi_epi16(pxUpper1, pxConvolutionFactor);
+                        pxLower1 = _mm_packus_epi16(pxLower1, pxLower2);
+                        pxUpper1 = _mm_packus_epi16(pxUpper1, xmm_px0);
+                        __m256i pxResult = _mm256_setr_m128i(pxLower1, pxUpper1);
+
+                        _mm256_storeu_si256((__m256i *)dstPtrTemp, pxResult);
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 24);
+                        dstPtrTemp += 24;
                     }
                     vectorLoopCount += padLength;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
