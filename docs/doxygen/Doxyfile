@@ -947,7 +947,7 @@ INPUT                  = ../../README.md \
                         ../../include/rpp.h \
                         ../../include/rppi.h \
                         ../../include/rppt.h \
-                        ../../include/rppversion.h \
+                        ../../include/rpp_version.h \
                         ../../include/rppdefs.h \
                         ../../include/rppi_advanced_augmentations.h \
                         ../../include/rppi_arithmetic_operations.h \

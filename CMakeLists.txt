@@ -58,7 +58,6 @@ endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 
 # RPP Default Options
 set(DEFAULT_BUILD_TYPE "Release")
-option(BUILD_WITH_AMD_ADVANCE "Build RPP for advanced AMD GPU Architecture"    OFF)
 
 # Set message options
 if(NOT WIN32)
@@ -135,17 +134,10 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 find_package(HALF REQUIRED)
 include_directories(${HALF_INCLUDE_DIRS})
 
-# HIP Version
+# Find HIP
 find_package(HIP QUIET)
-if(HIP_FOUND)
-    message("-- ${BoldBlue}ROCm Version -- ${HIP_VERSION}${ColourReset}")
-    if(HIP_VERSION  VERSION_GREATER 5.7.50701)
-        set(BUILD_WITH_AMD_ADVANCE ON)
-    endif()
-endif()
 
 message("-- ${Cyan}RPP Developer Options${ColourReset}")
-message("-- ${Cyan}     -D BUILD_WITH_AMD_ADVANCE=${BUILD_WITH_AMD_ADVANCE} [Turn ON/OFF Build for AMD advanced GPUs(default:OFF)]${ColourReset}")
 message("-- ${Cyan}     -D BACKEND=${BACKEND} [Select RPP Backend [options:CPU/OPENCL/HIP](default:HIP)]${ColourReset}")
 message("-- ${Cyan}     -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} [Select RPP build type [options:Debug/Release](default:Release)]${ColourReset}")
 
@@ -218,10 +210,7 @@ if("${BACKEND}" STREQUAL "HIP")
     endif()
 
     list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH} ${ROCM_PATH}/hip)
-    set(DEFAULT_AMDGPU_TARGETS "gfx803;gfx900;gfx906;gfx908;gfx90a;gfx940;gfx1030;gfx1100")
-    if (BUILD_WITH_AMD_ADVANCE)
-        set(DEFAULT_AMDGPU_TARGETS ${DEFAULT_AMDGPU_TARGETS} "gfx941;gfx942")
-    endif()
+    set(DEFAULT_AMDGPU_TARGETS "gfx908;gfx90a;gfx940;gfx941;gfx942;gfx1030;gfx1031;gfx1032;gfx1100;gfx1101;gfx1102")
     set(AMDGPU_TARGETS "${DEFAULT_AMDGPU_TARGETS}" CACHE STRING "List of specific machine types for library to target")
     find_package(HIP QUIET)
     if(HIP_FOUND)
