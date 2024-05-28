@@ -3778,4 +3778,29 @@ inline void rpp_store24_f32pkd3_to_f32pkd3_avx(Rpp32f* dstPtr, __m256 *p)
     _mm256_storeu_ps(dstPtr + 16, p[2]); /* Store RGB set 3 */
 }
 
+inline void rpp_convert24_u8pkd3_to_u8pln3(__m128i &pxLower, __m128i &pxUpper, __m128i &pxR, __m128i &pxG, __m128i &pxB)
+{
+    // pxLower = R1 G1 B1 R2 G2 B2 R3 G3 B3 R4 G4 B4 R5 G5 B5 R6
+    // pxUpper = G6 B6 R7 G7 B7 R8 G8 B8 0  0  0  0  0  0  0  0
+    // shuffle1 - R1 R2 R3 R4 0 0 0 0 0 0 0 0 0 0 0 0
+    // shuffle2 - G1 G2 G3 G4 0 0 0 0 0 0 0 0 0 0 0 0
+    // shuffle3 - B1 B2 B3 B4 0 0 0 0 0 0 0 0 0 0 0 0
+    // blend    - G6 B6 R7 G7 B7 R8 G8 B8 0 0 0 0 R5 G5 B5 R6
+    // R5 R6 R7 R8 G5 G6 G7 G8 B5 B6 B7 B8 0 0 0 0
+    // R1 R2 R3 R4 R5 R6 R7 R8 0  0  0  0  0  0  0  0
+    // G1 G2 G3 G4 G5 G6 G7 G8 0  0  0  0  0  0  0  0
+    // B1 B2 B3 B4 0  0  0  0  B5 B6 B7 B8 0  0  0  0
+    // B1 B2 B3 B4 B5 B6 B7 B8 0  0  0  0  0  0  0  0
+
+    __m128i pxTempUpper = _mm_blend_epi16(pxUpper, pxLower, 192);
+    __m128i xmm_shuffle_mask = _mm_setr_epi8(12, 15, 2, 5, 13, 0, 3, 6, 14, 1, 4, 7, 0x80, 0x80, 0x80, 0x80);
+    pxTempUpper = _mm_shuffle_epi8(pxTempUpper, xmm_shuffle_mask);
+
+    pxR = _mm_unpacklo_epi32(_mm_shuffle_epi8(pxLower, xmm_char_maskR), pxTempUpper);
+    pxG = _mm_blend_epi16(_mm_shuffle_epi8(pxLower, xmm_char_maskG), pxTempUpper, 12);
+
+    xmm_shuffle_mask = _mm_setr_epi8(0, 1, 2, 3, 8, 9, 10, 11, 0x80, 0x80, 0x80, 0x80,0x80, 0x80, 0x80, 0x80);
+    pxB = _mm_shuffle_epi8(_mm_blend_epi16(_mm_shuffle_epi8(pxLower, xmm_char_maskB), pxTempUpper, 48), xmm_shuffle_mask);
+}
+
 #endif //AMD_RPP_RPP_CPU_SIMD_HPP
