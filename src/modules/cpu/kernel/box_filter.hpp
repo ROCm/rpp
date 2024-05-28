@@ -290,12 +290,12 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                         dstPtrTemp += 24;
                     }
                     vectorLoopCount += padLength * 3;
-                    // for (; vectorLoopCount < bufferLength; vectorLoopCount++)
-                    // {
-                    //     box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
-                    //     increment_row_ptrs(srcPtrTemp, kernelSize, 1);
-                    //     dstPtrTemp++;
-                    // }
+                    for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                    {
+                        box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 1);
+                        dstPtrTemp++;
+                    }
                     increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
                     dstPtrRow += dstDescPtr->strides.hStride;
                 }
