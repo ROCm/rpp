@@ -26,6 +26,21 @@ SOFTWARE.
 #include "rpp_cpu_simd.hpp"
 #include "rpp_cpu_common.hpp"
 
+// Computes strides
+void compute_strides(Rpp32u *strides, Rpp32u *shape, Rpp32u tensorDim)
+{
+    if (tensorDim > 0)
+    {
+        Rpp32u v = 1;
+        for (Rpp32u i = tensorDim - 1; i > 0; i--)
+        {
+            strides[i] = v;
+            v *= shape[i];
+        }
+        strides[0] = v;
+    }
+}
+
 // Recursive reduction helper function to compute difference of input with mean and squares them up
 template<typename T>
 void compute_diff_square_sum(Rpp32f &output, T *input, Rpp32s inputStride, Rpp32s numElements, Rpp32f mean)

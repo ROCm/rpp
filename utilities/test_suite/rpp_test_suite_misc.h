@@ -277,7 +277,7 @@ void fill_mean_stddev_values(Rpp32u nDim, Rpp32u size, Rpp32f *meanTensor,
     }
 }
 
-// fill the permuation values used for transpose
+// fill the permutation values used for transpose
 void fill_perm_values(Rpp32u nDim, Rpp32u *permTensor, bool qaMode, int permOrder)
 {
     if(qaMode)
