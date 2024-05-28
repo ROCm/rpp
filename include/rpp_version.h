@@ -22,8 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef RPPVERSION_H
-#define RPPVERSION_H
+#ifndef RPP_VERSION_H
+#define RPP_VERSION_H
 
 /*!
  * \file
@@ -32,14 +32,15 @@ SOFTWARE.
  * \brief ROCm Performance Primitives (RPP) version
  */
 
+// TODO: change the patch version with every new feature
 #include "rpp.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
 #define RPP_VERSION_MAJOR 1
-#define RPP_VERSION_MINOR 3
+#define RPP_VERSION_MINOR 8
 #define RPP_VERSION_PATCH 0
 #ifdef __cplusplus
 }
 #endif
-#endif    // RPPVERSION_H
+#endif    // RPP_VERSION_H

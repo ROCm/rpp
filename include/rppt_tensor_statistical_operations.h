@@ -266,6 +266,7 @@ RppStatus rppt_tensor_stddev_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPt
  */
 RppStatus rppt_tensor_stddev_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t tensorStddevArr, Rpp32u tensorStddevArrLength, Rpp32f *meanTensor, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
+
 /*! @}
  */
 
