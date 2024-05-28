@@ -3803,4 +3803,47 @@ inline void rpp_convert24_u8pkd3_to_u8pln3(__m128i &pxLower, __m128i &pxUpper, _
     pxB = _mm_shuffle_epi8(_mm_blend_epi16(_mm_shuffle_epi8(pxLower, xmm_char_maskB), pxTempUpper, 48), xmm_shuffle_mask);
 }
 
+inline void rpp_convert72_u8pln3_to_u8pkd3(__m256i *pxSrc, __m128i *pxDst)
+{
+    const __m128i pxMask = _mm_setr_epi8(0, 1, 12, 2, 3, 13, 4, 5, 14, 6, 7, 15, 0x80, 0x80, 0x80, 0x80);
+
+    __m256i px[2];
+    px[0] = _mm256_unpacklo_epi8(pxSrc[0], pxSrc[1]);
+    px[1] = _mm256_unpackhi_epi8(pxSrc[0], pxSrc[1]);
+
+    __m128i pxTemp[4];
+    // RGB 1-8
+    pxTemp[0] = _mm256_castsi256_si128(px[0]);
+    pxTemp[1] = _mm256_castsi256_si128(pxSrc[2]);
+
+    // RGB 1-4, shuffle to get correct order
+    // RGB 5-8, shuffle to get correct order
+    pxTemp[2] = _mm_unpacklo_epi64(pxTemp[0], pxTemp[1]);
+    pxTemp[3] = _mm_unpacklo_epi64(_mm_srli_si128(pxTemp[0], 8), pxTemp[1]);
+    pxDst[0] = _mm_shuffle_epi8(pxTemp[2], xmm_store4_pkd_pixels);
+    pxDst[1] = _mm_shuffle_epi8(pxTemp[3], pxMask);
+
+    // RGB 9-16
+    pxTemp[0] = _mm256_castsi256_si128(px[1]),
+    pxTemp[1] = _mm256_castsi256_si128(pxSrc[2]);
+
+    // RGB 9-12, shuffle to get correct order
+    // RGB 13-15, shuffle to get correct order
+    pxTemp[2] =  _mm_unpacklo_epi64(pxTemp[0], _mm_srli_si128(pxTemp[1], 8));
+    pxTemp[3] = _mm_unpackhi_epi64(pxTemp[0], pxTemp[1]);
+    pxDst[2] = _mm_shuffle_epi8(pxTemp[2], xmm_store4_pkd_pixels);
+    pxDst[3] = _mm_shuffle_epi8(pxTemp[3], pxMask);
+
+    // RGB 17-24
+    pxTemp[0] = _mm256_extracti128_si256(px[0], 1),
+    pxTemp[1] = _mm256_extracti128_si256(pxSrc[2], 1);
+
+    // RGB 17-20, shuffle to get correct order
+    // RGB 21-24, shuffle to get correct order
+    pxTemp[2] = _mm_unpacklo_epi64(pxTemp[0], pxTemp[1]);
+    pxTemp[3] = _mm_unpacklo_epi64(_mm_srli_si128(pxTemp[0], 8), pxTemp[1]);
+    pxDst[4] = _mm_shuffle_epi8(pxTemp[2], xmm_store4_pkd_pixels);
+    pxDst[5] = _mm_shuffle_epi8(pxTemp[3], pxMask);
+}
+
 #endif //AMD_RPP_RPP_CPU_SIMD_HPP
