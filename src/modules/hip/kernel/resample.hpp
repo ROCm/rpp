@@ -256,7 +256,7 @@ RppStatus hip_exec_resample_tensor(Rpp32f *srcPtr,
     RppSize_t sharedMemorySizeInBytes = (window.lookupSize * sizeof(Rpp32f)); // shared memory size needed for resample kernel
 
     // using the input sampling rate, output sampling rate compute the output dims
-    Rpp32s *dstDimsTensor = reinterpret_cast<Rpp32s *>(handle.GetInitHandle()->mem.mgpu.scratchBufferPinned.uintmem);
+    Rpp32s *dstDimsTensor = reinterpret_cast<Rpp32s *>(handle.GetInitHandle()->mem.mgpu.scratchBuf.uintmem);
     compute_output_dims(inRateTensor, outRateTensor, srcDimsTensor, dstDimsTensor, dstDescPtr->n);
 
     // For 1D audio tensors (channels = 1)
