@@ -70,7 +70,7 @@ inline void box_filter_generic_u8_u8_host_tensor(Rpp8u **srcPtrTemp, Rpp8u *dstP
     *dstPtrTemp = static_cast<Rpp8u>(RPPPIXELCHECK(accum));
 }
 
-inline void compute_box_filter_24_host_pln(__m256i *pxRow, __m128i *pxDst, const __m128i &pxConvolutionFactor)
+inline void compute_box_filter_3x3_24_host_pln(__m256i *pxRow, __m128i *pxDst, const __m128i &pxConvolutionFactor)
 {
     // pack lower half of each of 3 loaded row values from 8 bit to 16 bit and add
     __m256i pxLower, pxUpper;
@@ -119,7 +119,7 @@ inline void compute_box_filter_24_host_pln(__m256i *pxRow, __m128i *pxDst, const
     pxDst[1] = _mm_packus_epi16(pxUpper1, xmm_px0);
 }
 
-inline void compute_box_filter_24_host_pkd(__m256i *pxRow, __m128i *pxDst, const __m128i &pxConvolutionFactor)
+inline void compute_box_filter_3x3_24_host_pkd(__m256i *pxRow, __m128i *pxDst, const __m128i &pxConvolutionFactor)
 {
     // pack lower half of each of 3 loaded row values from 8 bit to 16 bit and add
     __m256i pxLower, pxUpper;
@@ -166,6 +166,19 @@ inline void compute_box_filter_24_host_pkd(__m256i *pxRow, __m128i *pxDst, const
     // saturate 16 bit values to 8 bit values and store in resultant registers
     pxDst[0] = _mm_packus_epi16(pxLower1, pxLower2);
     pxDst[1] = _mm_packus_epi16(pxUpper1, xmm_px0);
+}
+
+inline void rpp_load_box_filter_3x3_host(__m256i *pxRow, Rpp8u **srcPtrTemp, Rpp32s rowKernelLoopLimit)
+{
+    // irrespective of row location, we need to load 2 rows for 3x3 kernel
+    pxRow[0] = _mm256_loadu_si256((__m256i *)srcPtrTemp[0]);
+    pxRow[1] = _mm256_loadu_si256((__m256i *)srcPtrTemp[1]);
+
+    // if rowKernelLoopLimit is 3 load values from 3rd row pointer else set it 0
+    if (rowKernelLoopLimit == 3)
+        pxRow[2] = _mm256_loadu_si256((__m256i *)srcPtrTemp[2]);
+    else
+        pxRow[2] = avx_px0;
 }
 
 RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
@@ -243,18 +256,10 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                         {
                             __m256i pxRow[3];
-                            // irrespective of row location, we need to load 2 rows for 3x3 kernel
-                            pxRow[0] = _mm256_loadu_si256((__m256i *)srcPtrTemp[0]);
-                            pxRow[1] = _mm256_loadu_si256((__m256i *)srcPtrTemp[1]);
-
-                            // if rowKernelLoopLimit is 3 load values from 3rd row pointer else set it 0
-                            if (rowKernelLoopLimit == 3)
-                                pxRow[2] = _mm256_loadu_si256((__m256i *)srcPtrTemp[2]);
-                            else
-                                pxRow[2] = avx_px0;
+                            rpp_load_box_filter_3x3_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
                             __m128i pxDst[2];
-                            compute_box_filter_24_host_pln(pxRow, pxDst, pxConvolutionFactor);
+                            compute_box_filter_3x3_24_host_pln(pxRow, pxDst, pxConvolutionFactor);
                             _mm256_storeu_si256((__m256i *)dstPtrTemp, _mm256_setr_m128i(pxDst[0], pxDst[1]));
 
                             increment_row_ptrs(srcPtrTemp, kernelSize, 24);
@@ -305,15 +310,10 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                     {
                         __m256i pxRow[3];
-                        pxRow[0] = _mm256_loadu_si256((__m256i *)srcPtrTemp[0]);
-                        pxRow[1] = _mm256_loadu_si256((__m256i *)srcPtrTemp[1]);
-                        if (rowKernelLoopLimit == 3)
-                            pxRow[2] = _mm256_loadu_si256((__m256i *)srcPtrTemp[2]);
-                        else
-                            pxRow[2] = avx_px0;
+                        rpp_load_box_filter_3x3_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
                         __m128i pxDst[2];
-                        compute_box_filter_24_host_pkd(pxRow, pxDst, pxConvolutionFactor);
+                        compute_box_filter_3x3_24_host_pkd(pxRow, pxDst, pxConvolutionFactor);
                         _mm256_storeu_si256((__m256i *)dstPtrTemp, _mm256_setr_m128i(pxDst[0], pxDst[1]));
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 24);
@@ -364,15 +364,10 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                     {
                         __m256i pxRow[3];
-                        pxRow[0] = _mm256_loadu_si256((__m256i *)srcPtrTemp[0]);
-                        pxRow[1] = _mm256_loadu_si256((__m256i *)srcPtrTemp[1]);
-                        if (rowKernelLoopLimit == 3)
-                            pxRow[2] = _mm256_loadu_si256((__m256i *)srcPtrTemp[2]);
-                        else
-                            pxRow[2] = avx_px0;
+                        rpp_load_box_filter_3x3_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
                         __m128i pxDst[2];
-                        compute_box_filter_24_host_pkd(pxRow, pxDst, pxConvolutionFactor);
+                        compute_box_filter_3x3_24_host_pkd(pxRow, pxDst, pxConvolutionFactor);
 
                         // convert from PKD3 to PLN3 and store channelwise
                         __m128i pxR, pxG, pxB;
@@ -432,18 +427,10 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                         for (int c = 0; c < 3; c++)
                         {
                             __m256i pxRow[3];
-                            // irrespective of row location, we need to load 2 rows for 3x3 kernel
-                            pxRow[0] = _mm256_loadu_si256((__m256i *)srcPtrTemp[c][0]);
-                            pxRow[1] = _mm256_loadu_si256((__m256i *)srcPtrTemp[c][1]);
+                            rpp_load_box_filter_3x3_host(pxRow, srcPtrTemp[c], rowKernelLoopLimit);
 
-                            // if rowKernelLoopLimit is 3 load values from 3rd row pointer else set it 0
-                            if (rowKernelLoopLimit == 3)
-                                pxRow[2] = _mm256_loadu_si256((__m256i *)srcPtrTemp[c][2]);
-                            else
-                                pxRow[2] = avx_px0;
-
-                             __m128i pxDst[2];
-                            compute_box_filter_24_host_pln(pxRow, pxDst, pxConvolutionFactor);
+                            __m128i pxDst[2];
+                            compute_box_filter_3x3_24_host_pln(pxRow, pxDst, pxConvolutionFactor);
                             pxResultPln[c] = _mm256_setr_m128i(pxDst[0], pxDst[1]);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 24);
                         }
