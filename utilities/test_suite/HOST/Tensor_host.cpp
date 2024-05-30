@@ -66,7 +66,7 @@ int main(int argc, char **argv)
 
     bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23 || testCase == 24);
     bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 33 || testCase == 61 || testCase == 63 || testCase == 65 || testCase == 68);
-    bool randomOutputCase = (testCase == 84);
+    bool randomOutputCase = (testCase == 8 || testCase == 84);
     bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24);
     bool reductionTypeCase = (testCase == 87 || testCase == 88 || testCase == 89);
     bool noiseTypeCase = (testCase == 8);
@@ -530,6 +530,81 @@ int main(int argc, char **argv)
                         rppt_jitter_host(input, srcDescPtr, output, dstDescPtr, kernelSizeTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
+
+                    break;
+                }
+                case 8:
+                {
+                    testCaseName = "noise";
+
+                    switch(additionalParam)
+                    {
+                        case 0:
+                        {
+                            Rpp32f noiseProbabilityTensor[batchSize];
+                            Rpp32f saltProbabilityTensor[batchSize];
+                            Rpp32f saltValueTensor[batchSize];
+                            Rpp32f pepperValueTensor[batchSize];
+                            Rpp32u seed = 1255459;
+                            for (i = 0; i < batchSize; i++)
+                            {
+                                noiseProbabilityTensor[i] = 0.1f;
+                                saltProbabilityTensor[i] = 0.5f;
+                                saltValueTensor[i] = 1.0f;
+                                pepperValueTensor[i] = 0.0f;
+                            }
+
+                            startWallTime = omp_get_wtime();
+                            startCpuTime = clock();
+                            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                                rppt_salt_and_pepper_noise_host(input, srcDescPtr, output, dstDescPtr, noiseProbabilityTensor, saltProbabilityTensor, saltValueTensor, pepperValueTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
+                            else
+                                missingFuncFlag = 1;
+
+                            break;
+                        }
+                        case 1:
+                        {
+                            Rpp32f meanTensor[batchSize];
+                            Rpp32f stdDevTensor[batchSize];
+                            Rpp32u seed = 1255459;
+                            for (i = 0; i < batchSize; i++)
+                            {
+                                meanTensor[i] = 0.0f;
+                                stdDevTensor[i] = 0.2f;
+                            }
+
+                            startWallTime = omp_get_wtime();
+                            startCpuTime = clock();
+                            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                                rppt_gaussian_noise_host(input, srcDescPtr, output, dstDescPtr, meanTensor, stdDevTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
+                            else
+                                missingFuncFlag = 1;
+
+                            break;
+                        }
+                        case 2:
+                        {
+                            Rpp32f shotNoiseFactorTensor[batchSize];
+                            Rpp32u seed = 1255459;
+                            for (i = 0; i < batchSize; i++)
+                                shotNoiseFactorTensor[i] = 80.0f;
+
+                            startWallTime = omp_get_wtime();
+                            startCpuTime = clock();
+                            if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                                rppt_shot_noise_host(input, srcDescPtr, output, dstDescPtr, shotNoiseFactorTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
+                            else
+                                missingFuncFlag = 1;
+
+                            break;
+                        }
+                        default:
+                        {
+                            missingFuncFlag = 1;
+                            break;
+                        }
+                    }
 
                     break;
                 }
