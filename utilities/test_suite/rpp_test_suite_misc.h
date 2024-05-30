@@ -96,13 +96,8 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
             case 3:
             {
                 std::array<Rpp32u, 6> roi = {0, 0, 0, 50, 50, 8};
-                for(int i = 0, j = 0; i < batchSize ; i++, j += 6)
                     std::copy(roi.begin(), roi.end(), &roiTensor[j]);
                 break;
-            }
-            default:
-            {
-                cout << "Error! QA mode is supported only for 2D/3D inputs" << endl;
                 exit(0);
             }
         }
@@ -294,7 +289,6 @@ void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize, Rpp32u buf
                     string funcName, string testCase, int additionalParam, string scriptPath, bool isMeanStd = false)
 {
     Rpp32u goldenOutputLength = get_bin_size(nDim, 1, scriptPath, testCase);
-    Rpp32f *refOutput = static_cast<Rpp32f *>(calloc(goldenOutputLength, 1));
     read_data(refOutput, nDim, 1, scriptPath, testCase);
     int subVariantStride = 0;
     if (testCase == "normalize")
@@ -305,11 +299,6 @@ void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize, Rpp32u buf
         axisMaskStride = (additionalParam - 1) * bufferLength;
         subVariantStride = meanStdDevOutputStride + axisMaskStride;
     }
-    int sampleLength = bufferLength / batchSize;
-    int fileMatch = 0;
-    for(int i = 0; i < batchSize; i++)
-    {
-        Rpp32f *ref = refOutput + subVariantStride + i * sampleLength;
         Rpp32f *out = outputF32 + i * sampleLength;
         int cnt = 0;
         for(int j = 0; j < sampleLength; j++)
