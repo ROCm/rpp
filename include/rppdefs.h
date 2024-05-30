@@ -428,15 +428,6 @@ typedef enum
     REFLECT
 } RpptAudioBorderType;
 
-/*! \brief RPPT Spectrogram Layout enum
- * \ingroup group_rppdefs
- */
-typedef enum
-{
-    FT = 0,  //Frequency Major
-    TF,      //Time Major
-} RpptSpectrogramLayout;
-
 /*! \brief RPPT Mel Scale Formula
  * \ingroup group_rppdefs
  */

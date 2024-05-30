@@ -133,7 +133,7 @@ RppStatus rppt_down_mixing_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_
  * \param [in] srcPtr source tensor in HOST memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
  * \param [out] dstPtr destination tensor in HOST memory
- * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
+ * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32, layout - NFT / NTF)
  * \param [in] srcLengthTensor source audio buffer length (1D tensor in HOST memory, of size batchSize)
  * \param [in] centerWindows indicates whether extracted windows should be padded so that the window function is centered at multiples of window_step
  * \param [in] reflectPadding indicates the padding policy when sampling outside the bounds of the signal
@@ -142,20 +142,17 @@ RppStatus rppt_down_mixing_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_
  * \param [in] power exponent of the magnitude of the spectrum
  * \param [in] windowLength window size in number of samples
  * \param [in] windowStep step between the STFT windows in number of samples
- * \param [in] layout specifies output layout of spectrogram
- * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
- * \return A <tt> \ref RppStatus</tt> enumeration.
- * \retval RPP_SUCCESS Successful completion.
- * \retval RPP_ERROR* Unsuccessful completion.
  */
-RppStatus rppt_spectrogram_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcLengthTensor, bool centerWindows, bool reflectPadding, Rpp32f *windowFunction, Rpp32s nfft, Rpp32s power, Rpp32s windowLength, Rpp32s windowStep, RpptSpectrogramLayout layout, rppHandle_t rppHandle);
+RppStatus rppt_spectrogram_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcLengthTensor, bool centerWindows, bool reflectPadding, Rpp32f *windowFunction, Rpp32s nfft, Rpp32s power, Rpp32s windowLength, Rpp32s windowStep, rppHandle_t rppHandle);
 
 /*! \brief Mel filter bank augmentation HOST backend
  * \details Mel filter bank augmentation for audio data
- * \param[in] srcPtr source tensor in HOST memory
- * \param[in] srcDescPtr source tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32, layout - NFT / NTF)
  * \param[out] dstPtr destination tensor in HOST memory
- * \param[in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32, layout - NFT / NTF)
+=======
+ * \param[in] srcDescPtr source tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32, layout - NFT)
+ * \param[out] dstPtr destination tensor in HOST memory
+ * \param[in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32, layout - NFT)
+>>>>>>> abishek/develop
  * \param[in] srcDimsTensor source audio buffer length and number of channels (1D tensor in HOST memory, of size batchSize * 2)
  * \param[in] maxFreq maximum frequency if not provided maxFreq = sampleRate / 2
  * \param[in] minFreq minimum frequency
