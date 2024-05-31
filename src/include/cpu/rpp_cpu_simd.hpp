@@ -3095,7 +3095,7 @@ inline void rpp_store8_f32pln1_to_u8pln1_avx(Rpp8u* dstPtr, __m256 &p)
 {
     __m256i px1 = _mm256_permute4x64_epi64(_mm256_packus_epi32(_mm256_cvtps_epi32(p), avx_px0), _MM_SHUFFLE(3,1,2,0));
     px1 = _mm256_packus_epi16(px1, avx_px0);
-    rpp_store8_u8pln1_to_u8pln1_avx(dstPtr, px1);
+    rpp_storeu_si64((__m128i *)(dstPtr), _mm256_castsi256_si128(px1));
 }
 
 inline void rpp_store24_f32pln3_to_u8pln3_avx(Rpp8u* dstRPtr, Rpp8u* dstGPtr, Rpp8u* dstBPtr, __m256* p)
@@ -3799,11 +3799,6 @@ inline void rpp_store24_i8pkd3_to_i8pln3_avx(Rpp8s* dstPtrR, Rpp8s* dstPtrG, Rpp
     rpp_storeu_si32((__m128i *)(dstPtrB + 4), _mm_shuffle_epi8(p128[1], xmm_char_maskB)); /* shuffle to get B05-B08*/
 }
 
-inline void rpp_store4_u8_to_u8(Rpp8u* dstPtr, __m128i &p)
-{
-    rpp_storeu_si32((__m128i *)(dstPtr), p);
-}
-
 inline void rpp_store12_u8_to_u8(Rpp8u* dstPtr, __m128i &p)
 {
     _mm_storeu_si128((__m128i *)(dstPtr), p);
@@ -3850,10 +3845,7 @@ inline void rpp_store12_i8pkd3_to_i8pln3(Rpp8s* dstPtrR, Rpp8s* dstPtrG, Rpp8s* 
     rpp_storeu_si32((__m128i *)(dstPtrB), _mm_shuffle_epi8(p, xmm_char_maskB)); /* Shuffle and extract the B pixels*/
 }
 
-inline void rpp_store4_i8_to_i8(Rpp8s* dstPtr, __m128i &p)
-{
-    rpp_storeu_si32((__m128i *)(dstPtr), p);
-}
+
 
 inline void rpp_store12_i8_to_i8(Rpp8s* dstPtr, __m128i &p)
 {
