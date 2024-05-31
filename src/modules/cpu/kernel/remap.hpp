@@ -227,7 +227,7 @@ omp_set_dynamic(0);
                     {
                         __m128i pxRow;
                         rpp_simd_load(rpp_resize_nn_load_u8pln1, srcPtrTempChn, remapSrcLocArray, pxRow);
-                        rpp_simd_store(rpp_store4_u8_to_u8, dstPtrTempChn, pxRow);
+                        rpp_simd_store(rpp_storeu_si32, dstPtrTempChn, pxRow);
                         srcPtrTempChn += srcDescPtr->strides.cStride;
                         dstPtrTempChn += dstDescPtr->strides.cStride;
                     }
@@ -680,7 +680,7 @@ omp_set_dynamic(0);
                     {
                         __m128i pxRow;
                         rpp_simd_load(rpp_resize_nn_load_i8pln1, srcPtrTempChn, remapSrcLocArray, pxRow);
-                        rpp_simd_store(rpp_store4_i8_to_i8, dstPtrTempChn, pxRow);
+                        rpp_simd_store(rpp_storeu_si32, dstPtrTempChn, pxRow);
                         srcPtrTempChn += srcDescPtr->strides.cStride;
                         dstPtrTempChn += dstDescPtr->strides.cStride;
                     }
