@@ -636,6 +636,112 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     dstPtrChannel += dstDescPtr->strides.cStride;
                 }
             }
+            else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
+            {
+                Rpp32u alignedLength = ((bufferLength - 2 * padLength * 3) / 8) * 8;
+                for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+                {
+                    int vectorLoopCount = 0;
+                    bool padLengthRows = (i < padLength) ? 1: 0;
+                    Rpp8u *srcPtrTemp[9];
+                    for (int k = 0; k < 9; k++)
+                        srcPtrTemp[k] = srcPtrRow[k];
+                    Rpp8u *dstPtrTemp = dstPtrRow;
+
+                    Rpp32s rowKernelLoopLimit;
+                    get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
+
+                    // process padLength number of columns in each row
+                    for (int k = 0; k < padLength * 3; k++)
+                    {
+                        box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTemp, k / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 1);
+                        dstPtrTemp++;
+                    }
+
+                    // reset source to initial position
+                    for (int k = 0; k < 9; k++)
+                        srcPtrTemp[k] = srcPtrRow[k];
+
+                    // process alignedLength number of columns in eacn row
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
+                    {
+                        __m256i pxRow[9];
+                        pxRow[0] = _mm256_loadu_si256((__m256i *)srcPtrTemp[0]);
+                        pxRow[1] = _mm256_loadu_si256((__m256i *)srcPtrTemp[1]);
+                        pxRow[2] = _mm256_loadu_si256((__m256i *)srcPtrTemp[2]);
+                        pxRow[3] = _mm256_loadu_si256((__m256i *)srcPtrTemp[3]);
+                        pxRow[4] = _mm256_loadu_si256((__m256i *)srcPtrTemp[4]);
+                        for (int k = 5; k < rowKernelLoopLimit; k++)
+                            pxRow[k] = _mm256_loadu_si256((__m256i *)srcPtrTemp[k]);
+                        for (int k = rowKernelLoopLimit; k < 9; k++)
+                            pxRow[k] = avx_px0;
+
+                        __m256i pxLower, pxUpper;
+                        pxLower = _mm256_unpacklo_epi8(pxRow[0], avx_px0);
+                        pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[1], avx_px0));
+                        pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[2], avx_px0));
+                        pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[3], avx_px0));
+                        pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[4], avx_px0));
+                        pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[5], avx_px0));
+                        pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[6], avx_px0));
+                        pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[7], avx_px0));
+                        pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[8], avx_px0));
+
+                        pxUpper = _mm256_unpackhi_epi8(pxRow[0], avx_px0);
+                        pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[1], avx_px0));
+                        pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[2], avx_px0));
+                        pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[3], avx_px0));
+                        pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[4], avx_px0));
+                        pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[5], avx_px0));
+                        pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[6], avx_px0));
+                        pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[7], avx_px0));
+                        pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[8], avx_px0));
+
+                        __m128i pxLower1, pxLower2, pxUpper1, pxUpper2;
+                        pxLower1 =  _mm256_castsi256_si128(pxLower);
+                        pxLower2 =  _mm256_castsi256_si128(pxUpper);
+                        pxUpper1 =  _mm256_extracti128_si256(pxLower, 1);
+                        pxUpper2 =  _mm256_extracti128_si256(pxUpper, 1);
+
+                        // get the final accumalated result for first 8 elements
+                        __m128i pxTemp[7];
+                        pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 7), xmm_pxMaskRotate0To5);
+                        pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 63), xmm_pxMaskRotate0To11);
+                        pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 1), xmm_pxMaskRotate0To1);
+                        pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 15), xmm_pxMaskRotate0To7);
+                        pxTemp[4] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 127), xmm_pxMaskRotate0To13);
+                        pxTemp[5] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 3), xmm_pxMaskRotate0To3);
+                        pxTemp[6] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 31), xmm_pxMaskRotate0To9);
+                        pxLower1 = _mm_add_epi16(pxLower1, pxTemp[0]);
+                        pxLower1 = _mm_add_epi16(pxLower1, pxTemp[1]);
+                        pxLower1 = _mm_add_epi16(pxLower1, pxTemp[2]);
+                        pxLower1 = _mm_add_epi16(pxLower1, pxTemp[3]);
+                        pxLower1 = _mm_add_epi16(pxLower1, pxTemp[4]);
+                        pxLower1 = _mm_add_epi16(pxLower1, pxTemp[5]);
+                        pxLower1 = _mm_add_epi16(pxLower1, pxTemp[6]);
+                        pxLower1 = _mm_add_epi16(pxLower1, pxUpper2);
+
+                        pxLower1 = _mm_mulhi_epi16(pxLower1, pxConvolutionFactor);
+                        pxLower1 = _mm_packus_epi16(pxLower1, xmm_px0);
+                        _mm_storeu_si128((__m128i *)dstPtrTemp, pxLower1);
+
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 8);
+                        dstPtrTemp += 8;
+                    }
+                    vectorLoopCount += padLength * 3;
+
+                    // process remaining columns in each row
+                    for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                    {
+                        box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 1);
+                        dstPtrTemp++;
+                    }
+                    increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
+                    dstPtrRow += dstDescPtr->strides.hStride;
+                }
+            }
         }
     }
 
