@@ -519,7 +519,9 @@ RppStatus rppt_gaussian_noise_voxel_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcD
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HOST memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] anchorBoxInfoTensor anchorBoxInfo values of type RpptRoiLtrb for each erase-region inside each image in the batch. (0 <= anchorBoxInfo[i] < respective image width/height)
+ * \param [in] anchorBoxInfoTensor anchorBoxInfo values of type RpptRoiLtrb for each erase-region inside each image in the batch. Restrictions -
+            - 0 <= anchorBoxInfo[i] < respective image width/height
+            - If erase-region anchor boxes given by the user overlap for any image in the batch, then the color corresponding to the first erase-region for that image, will be used on the overlapping area
  * \param [in] colorsTensor RGB values to use for each erase-region inside each image in the batch. (colors[i] will have range equivalent of srcPtr)
  * \param [in] numBoxesTensor number of erase-regions per image, for each image in the batch. (numBoxesTensor[n] >= 0)
  * \param [in] roiTensorSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
@@ -542,7 +544,9 @@ RppStatus rppt_erase_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstP
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] anchorBoxInfoTensor anchorBoxInfo values of type RpptRoiLtrb for each erase-region inside each image in the batch. (0 <= anchorBoxInfo[i] < respective image width/height)
+ * \param [in] anchorBoxInfoTensor anchorBoxInfo values of type RpptRoiLtrb for each erase-region inside each image in the batch. Restrictions -
+            - 0 <= anchorBoxInfo[i] < respective image width/height
+            - If erase-region anchor boxes given by the user overlap for any image in the batch, then the color corresponding to the first erase-region for that image, will be used on the overlapping area
  * \param [in] colorsTensor RGB values to use for each erase-region inside each image in the batch. (colors[i] will have range equivalent of srcPtr)
  * \param [in] numBoxesTensor number of erase-regions per image, for each image in the batch. (numBoxesTensor[n] >= 0)
  * \param [in] roiTensorSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
