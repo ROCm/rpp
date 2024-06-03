@@ -3846,4 +3846,18 @@ inline void rpp_convert72_u8pln3_to_u8pkd3(__m256i *pxSrc, __m128i *pxDst)
     pxDst[5] = _mm_shuffle_epi8(pxTemp[3], pxMask);
 }
 
+inline void rpp_convert9_f32pkd3_to_f32pln3(__m128 &pSrc1, __m128 &pSrc2, __m128 &pSrc3, __m128 *pDst)
+{
+    __m128 pTemp;
+    pTemp = _mm_blend_ps(pSrc1, pSrc2, 4);
+    pDst[0] = _mm_shuffle_ps(pTemp, pTemp, 108);
+
+    pTemp = _mm_blend_ps(pSrc1, pSrc2, 9);
+    pDst[1] = _mm_shuffle_ps(pTemp, pTemp, 177);
+
+    pTemp = _mm_blend_ps(pSrc1, pSrc2, 2);
+    pTemp = _mm_blend_ps(pTemp, pSrc3, 1);
+    pDst[2] = _mm_shuffle_ps(pTemp, pTemp, 198);
+}
+
 #endif //AMD_RPP_RPP_CPU_SIMD_HPP

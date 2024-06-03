@@ -848,7 +848,7 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
                         pUpper = _mm256_add_ps(_mm256_add_ps(pRow[3], pRow[4]), pRow[5]);
 
                         // get 4 SSE registers from above 2 AVX registers to arrange as per required order
-                        __m128i pLower1, pLower2, pUpper1, pUpper2;
+                        __m128 pLower1, pLower2, pUpper1, pUpper2;
                         pLower1 =  _mm256_castps256_ps128(pLower);
                         pUpper1 =  _mm256_extractf128_ps(pLower, 1);
                         pLower2 =  _mm256_castps256_ps128(pUpper);
@@ -898,6 +898,120 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
                     }
                     increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
                     dstPtrRow += dstDescPtr->strides.hStride;
+                }
+            }
+            else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
+            {
+                Rpp32u alignedLength = ((bufferLength - 2 * padLength * 3) / 9) * 9;
+                Rpp32f *dstPtrChannels[3];
+                for (int i = 0; i < 3; i++)
+                    dstPtrChannels[i] = dstPtrChannel + i * dstDescPtr->strides.cStride;
+                for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+                {
+                    int vectorLoopCount = 0;
+                    bool padLengthRows = (i < padLength) ? 1: 0;
+                    Rpp32f *srcPtrTemp[3] = {srcPtrRow[0], srcPtrRow[1], srcPtrRow[2]};
+                    Rpp32f *dstPtrTempChannels[3] = {dstPtrChannels[0], dstPtrChannels[1], dstPtrChannels[2]};
+
+                    Rpp32s rowKernelLoopLimit;
+                    get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
+
+                    // process padLength number of columns in each row
+                    for (int k = 0; k < padLength * 3; k++)
+                    {
+                        box_filter_generic_f32_f32_host_tensor(srcPtrTemp, dstPtrTempChannels[k], k / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 1);
+                    }
+                    increment_row_ptrs(dstPtrTempChannels, kernelSize, 1);
+
+                    // reset source to initial position
+                    srcPtrTemp[0] = srcPtrRow[0];
+                    srcPtrTemp[1] = srcPtrRow[1];
+                    srcPtrTemp[2] = srcPtrRow[2];
+
+                    // process remaining columns in each row
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 9)
+                    {
+                        __m256 pRow[6];
+                        // irrespective of row location, we need to load 2 rows for 3x3 kernel
+                        pRow[0] = _mm256_loadu_ps(srcPtrTemp[0]);
+                        pRow[1] = _mm256_loadu_ps(srcPtrTemp[1]);
+                        pRow[3] = _mm256_loadu_ps(srcPtrTemp[0] + 8);
+                        pRow[4] = _mm256_loadu_ps(srcPtrTemp[1] + 8);
+
+                        // if rowKernelLoopLimit is 3 load values from 3rd row pointer else set it 0
+                        if (rowKernelLoopLimit == 3)
+                        {
+                            pRow[2] = _mm256_loadu_ps(srcPtrTemp[2]);
+                            pRow[5] = _mm256_loadu_ps(srcPtrTemp[2] + 8);
+                        }
+                        else
+                        {
+                            pRow[2] = avx_p0;
+                            pRow[5] = avx_p0;
+                        }
+
+                        // add loaded values from 3 rows
+                        __m256 pLower, pUpper;
+                        pLower = _mm256_add_ps(_mm256_add_ps(pRow[0], pRow[1]), pRow[2]);
+                        pUpper = _mm256_add_ps(_mm256_add_ps(pRow[3], pRow[4]), pRow[5]);
+
+                        // get 4 SSE registers from above 2 AVX registers to arrange as per required order
+                        __m128 pLower1, pLower2, pUpper1, pUpper2;
+                        pLower1 =  _mm256_castps256_ps128(pLower);
+                        pUpper1 =  _mm256_extractf128_ps(pLower, 1);
+                        pLower2 =  _mm256_castps256_ps128(pUpper);
+                        pUpper2 =  _mm256_extractf128_ps(pUpper, 1);
+
+                        // perform blend and shuffle operations for the first 4 output values to get required order and add them
+                        __m128 pTemp[2];
+                        pTemp[0] = _mm_blend_ps(pLower1, pUpper1, 7);
+                        pTemp[0] = _mm_shuffle_ps(pTemp[0], pTemp[0], 147);
+                        pTemp[1] = _mm_blend_ps(pUpper1, pLower2, 3);
+                        pTemp[1] = _mm_shuffle_ps(pTemp[1], pTemp[1], 78);
+                        pLower1 = _mm_add_ps(pLower1, pTemp[0]);
+                        pLower1 = _mm_add_ps(pLower1, pTemp[1]);
+
+                        // perform blend and shuffle operations for the next 4 output values to get required order and add them
+                        pTemp[0] = _mm_blend_ps(pUpper1, pLower2, 7);
+                        pTemp[0] = _mm_shuffle_ps(pTemp[0], pTemp[0], 147);
+                        pTemp[1] = _mm_blend_ps(pLower2, pUpper2, 3);
+                        pTemp[1] = _mm_shuffle_ps(pTemp[1], pTemp[1], 78);
+                        pUpper1 = _mm_add_ps(pUpper1, pTemp[0]);
+                        pUpper1 = _mm_add_ps(pUpper1, pTemp[1]);
+
+                        // perform blend and shuffle operations for the next 4 output values to get required order and add them
+                        pTemp[0] = _mm_blend_ps(pLower2, pUpper2, 7);
+                        pTemp[0] = _mm_shuffle_ps(pTemp[0], pTemp[0], 147);
+                        pTemp[1] = _mm_blend_ps(pUpper2, xmm_p0, 3);
+                        pTemp[1] = _mm_shuffle_ps(pTemp[1], pTemp[1], 78);
+                        pLower2 = _mm_add_ps(pLower2, pTemp[0]);
+                        pLower2 = _mm_add_ps(pLower2, pTemp[1]);
+
+                        // multiply with convolution factor
+                        pLower1 = _mm_mul_ps(pLower1, pConvolutionFactor);
+                        pLower2 = _mm_mul_ps(pLower2, pConvolutionFactor);
+                        pUpper1 = _mm_mul_ps(pUpper1, pConvolutionFactor);
+
+                        __m128 pDst[3];
+                        rpp_convert9_f32pkd3_to_f32pln3(pLower1, pUpper1, pLower2, pDst);
+                        _mm_storeu_ps(dstPtrTempChannels[0], pDst[0]); 
+                        _mm_storeu_ps(dstPtrTempChannels[1], pDst[1]); 
+                        _mm_storeu_ps(dstPtrTempChannels[2], pDst[2]); 
+
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 9);
+                        increment_row_ptrs(dstPtrTempChannels, kernelSize, 3);
+                    }
+                    vectorLoopCount += padLength * 3;
+                    for (int c = 0; vectorLoopCount < bufferLength; vectorLoopCount++, c++)
+                    {
+                        int channel = c % 3;
+                        box_filter_generic_f32_f32_host_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 1);
+                        dstPtrTempChannels[channel]++;
+                    }
+                    increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
+                    increment_row_ptrs(dstPtrChannels, kernelSize, dstDescPtr->strides.hStride);
                 }
             }
         }
