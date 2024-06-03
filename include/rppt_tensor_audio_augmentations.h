@@ -154,9 +154,9 @@ RppStatus rppt_mel_filter_bank_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rpp
 /*! \brief Resample augmentation on HOST backend
 * \details Resample augmentation for audio data
 * \param [in] srcPtr source tensor in HOST memory
-* \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 2/3 (single channel audio tensor/multi channel audio tensor), offsetInBytes >= 0, dataType = F32)
+* \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 2 or 3 (for single-channel or multi-channel audio tensor), offsetInBytes >= 0, dataType = F32)
 * \param [out] dstPtr destination tensor in HOST memory
-* \param [in] dstDescPtr destination tensor descriptor (Restrictions - 2/3 (single channel audio tensor/multi channel audio tensor),, offsetInBytes >= 0, dataType = F32)
+* \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 2 or 3 (for single-channel or multi-channel audio tensor), offsetInBytes >= 0, dataType = F32)
 * \param [in] inRate Input sampling rate (1D tensor in HOST memory, of size batchSize)
 * \param [in] outRate Output sampling rate (1D tensor in HOST memory, of size batchSize)
 * \param [in] srcDimsTensor source audio buffer length and number of channels (1D tensor in HOST memory, of size batchSize * 2)
@@ -172,9 +172,9 @@ RppStatus rppt_resample_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t d
 /*! \brief Resample augmentation on HIP backend
 * \details Resample augmentation for audio data
 * \param [in] srcPtr source tensor in HIP memory
-* \param [in] srcDescPtr source tensor descriptor (Restrictions - 2/3 (single channel audio tensor/multi channel audio tensor), offsetInBytes >= 0, dataType = F32)
+* \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 2 or 3 (for single-channel or multi-channel audio tensor), offsetInBytes >= 0, dataType = F32)
 * \param [out] dstPtr destination tensor in HIP memory
-* \param [in] dstDescPtr destination tensor descriptor (Restrictions - 2/3 (single channel audio tensor/multi channel audio tensor), offsetInBytes >= 0, dataType = F32)
+* \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 2 or 3 (for single-channel or multi-channel audio tensor), offsetInBytes >= 0, dataType = F32)
 * \param [in] inRate Input sampling rate (1D tensor in Pinned memory, of size batchSize)
 * \param [in] outRate Output sampling rate (1D tensor in Pinned memory, of size batchSize)
 * \param [in] srcDimsTensor source audio buffer length and number of channels (1D tensor in Pinned memory, of size batchSize * 2)

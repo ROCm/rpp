@@ -253,6 +253,10 @@ RppStatus rppt_resample_host(RppPtr_t srcPtr,
                              RpptResamplingWindow &window,
                              rppHandle_t rppHandle)
 {
+    Rpp32u tensorDims = srcDescPtr->numDims - 1; // exclude batchsize from input dims
+    if (tensorDims != 1 && tensorDims != 2)
+        return RPP_ERROR_INVALID_SRC_DIMS;
+
     if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
         resample_host_tensor(static_cast<Rpp32f*>(srcPtr),
@@ -291,6 +295,10 @@ RppStatus rppt_resample_gpu(RppPtr_t srcPtr,
                             rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
+    Rpp32u tensorDims = srcDescPtr->numDims - 1; // exclude batchsize from input dims
+    if (tensorDims != 1 && tensorDims != 2)
+        return RPP_ERROR_INVALID_SRC_DIMS;
+
     if (srcDescPtr->dataType == RpptDataType::F32)
     {
         hip_exec_resample_tensor(static_cast<Rpp32f*>(srcPtr),
@@ -302,13 +310,13 @@ RppStatus rppt_resample_gpu(RppPtr_t srcPtr,
                                  srcDimsTensor,
                                  window,
                                  rpp::deref(rppHandle));
+        return RPP_SUCCESS;
     }
     else
     {
         return RPP_ERROR_NOT_IMPLEMENTED;
     }
-
-    return RPP_SUCCESS;
+    
 #elif defined(OCL_COMPILE)
     return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
