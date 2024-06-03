@@ -3860,4 +3860,12 @@ inline void rpp_convert9_f32pkd3_to_f32pln3(__m128 &pSrc1, __m128 &pSrc2, __m128
     pDst[2] = _mm_shuffle_ps(pTemp, pTemp, 198);
 }
 
+inline void rpp_convert42_f32pln3_to_f32pkd3(__m128 *pSrc)
+{
+    _MM_TRANSPOSE4_PS(pSrc[0], pSrc[4], pSrc[8], pSrc[12]);
+    _MM_TRANSPOSE4_PS(pSrc[1], pSrc[5], pSrc[9], pSrc[13]);
+    _MM_TRANSPOSE4_PS(pSrc[2], pSrc[6], pSrc[10], pSrc[14]);
+    _MM_TRANSPOSE4_PS(pSrc[3], pSrc[7], pSrc[11], pSrc[15]);
+}
+
 #endif //AMD_RPP_RPP_CPU_SIMD_HPP
