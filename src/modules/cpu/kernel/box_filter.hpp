@@ -797,7 +797,7 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
             }
             else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
-                Rpp32u alignedLength = ((bufferLength - 2 * padLength * 3) / 12) * 12;
+                Rpp32u alignedLength = ((bufferLength - 2 * padLength * 3) / 9) * 9;
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
                     int vectorLoopCount = 0;
@@ -821,7 +821,7 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
                     srcPtrTemp[2] = srcPtrRow[2];
 
                     // process remaining columns in eacn row
-                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 9)
                     {
                         __m256 pRow[6];
                         // irrespective of row location, we need to load 2 rows for 3x3 kernel
@@ -858,7 +858,7 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
                         __m128 pTemp[2];
                         pTemp[0] = _mm_blend_ps(pLower1, pUpper1, 7);
                         pTemp[0] = _mm_shuffle_ps(pTemp[0], pTemp[0], 147);
-                        pTemp[1] = _mm_blend_ps(pLower1, pUpper1, 3);
+                        pTemp[1] = _mm_blend_ps(pUpper1, pLower2, 3);
                         pTemp[1] = _mm_shuffle_ps(pTemp[1], pTemp[1], 78);
                         pLower1 = _mm_add_ps(pLower1, pTemp[0]);
                         pLower1 = _mm_add_ps(pLower1, pTemp[1]);
@@ -866,7 +866,7 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
                         // perform blend and shuffle operations for the next 4 output values to get required order and add them
                         pTemp[0] = _mm_blend_ps(pUpper1, pLower2, 7);
                         pTemp[0] = _mm_shuffle_ps(pTemp[0], pTemp[0], 147);
-                        pTemp[1] = _mm_blend_ps(pUpper1, pLower2, 3);
+                        pTemp[1] = _mm_blend_ps(pLower2, pUpper2, 3);
                         pTemp[1] = _mm_shuffle_ps(pTemp[1], pTemp[1], 78);
                         pUpper1 = _mm_add_ps(pUpper1, pTemp[0]);
                         pUpper1 = _mm_add_ps(pUpper1, pTemp[1]);
@@ -874,7 +874,7 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
                         // perform blend and shuffle operations for the next 4 output values to get required order and add them
                         pTemp[0] = _mm_blend_ps(pLower2, pUpper2, 7);
                         pTemp[0] = _mm_shuffle_ps(pTemp[0], pTemp[0], 147);
-                        pTemp[1] = _mm_blend_ps(pLower2, pUpper2, 3);
+                        pTemp[1] = _mm_blend_ps(pUpper2, xmm_p0, 3);
                         pTemp[1] = _mm_shuffle_ps(pTemp[1], pTemp[1], 78);
                         pLower2 = _mm_add_ps(pLower2, pTemp[0]);
                         pLower2 = _mm_add_ps(pLower2, pTemp[1]);
@@ -886,8 +886,8 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
 
                         _mm256_storeu_ps(dstPtrTemp,  _mm256_setr_m128i(pLower1, pUpper1));
                         _mm256_storeu_ps(dstPtrTemp + 8,  _mm256_setr_m128i(pLower2, xmm_p0));
-                        increment_row_ptrs(srcPtrTemp, kernelSize, 12);
-                        dstPtrTemp += 12;
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 9);
+                        dstPtrTemp += 9;
                     }
                     vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
