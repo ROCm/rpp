@@ -636,7 +636,7 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     dstPtrChannel += dstDescPtr->strides.cStride;
                 }
             }
-            else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
+            else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
                 Rpp32u alignedLength = ((bufferLength - 2 * padLength * 3) / 8) * 8;
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
@@ -652,12 +652,17 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
 
                     // process padLength number of columns in each row
-                    for (int k = 0; k < padLength * 3; k++)
+                    for (int c = 0; c < 3; c++)
                     {
-                        box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTemp, k / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        Rpp8u *dstPtrTempChannel = dstPtrTemp + c;
+                        for (int k = 0; k < padLength; k++)
+                        {
+                            box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTempChannel, k, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                            dstPtrTempChannel += 3;
+                        }
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
-                        dstPtrTemp++;
                     }
+                    dstPtrTemp += padLength * 3;
 
                     // reset source to initial position
                     for (int k = 0; k < 9; k++)
