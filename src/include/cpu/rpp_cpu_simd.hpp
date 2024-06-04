@@ -3846,6 +3846,30 @@ inline void rpp_convert72_u8pln3_to_u8pkd3(__m256i *pxSrc, __m128i *pxDst)
     pxDst[5] = _mm_shuffle_epi8(pxTemp[3], pxMask);
 }
 
+inline void rpp_convert48_u8pln3_to_u8pkd3(__m128i *pxSrc, __m128i *pxDst)
+{
+    const __m128i pxMask = _mm_setr_epi8(0, 1, 12, 2, 3, 13, 4, 5, 14, 6, 7, 15, 0x80, 0x80, 0x80, 0x80);
+    
+    __m128i pxTemp[3];
+    pxTemp[0] = _mm_unpacklo_epi8(pxSrc[0], pxSrc[1]);
+    
+    // RGB 1-4, shuffle to get correct order
+    // RGB 5-8, shuffle to get correct order
+    pxTemp[1] = _mm_unpacklo_epi64(pxTemp[0], pxSrc[2]);
+    pxTemp[2] = _mm_unpacklo_epi64(_mm_srli_si128(pxTemp[0], 8), pxSrc[2]);
+    pxDst[0] = _mm_shuffle_epi8(pxTemp[1], xmm_store4_pkd_pixels);
+    pxDst[1] = _mm_shuffle_epi8(pxTemp[2], pxMask);
+
+    pxTemp[0] = _mm_unpackhi_epi8(pxSrc[0], pxSrc[1]);
+
+    // RGB 9-12, shuffle to get correct order
+    // RGB 13-16, shuffle to get correct order
+    pxTemp[1] = _mm_unpackhi_epi64(_mm_slli_si128(pxTemp[0], 8), pxSrc[2]);
+    pxTemp[2] = _mm_unpackhi_epi64(pxTemp[0], pxSrc[2]);
+    pxDst[2] = _mm_shuffle_epi8(pxTemp[1], xmm_store4_pkd_pixels);
+    pxDst[3] = _mm_shuffle_epi8(pxTemp[2], pxMask);
+}
+
 inline void rpp_convert9_f32pkd3_to_f32pln3(__m128 &pSrc1, __m128 &pSrc2, __m128 &pSrc3, __m128 *pDst)
 {
     __m128 pTemp;
