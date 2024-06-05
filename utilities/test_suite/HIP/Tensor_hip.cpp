@@ -358,6 +358,18 @@ int main(int argc, char **argv)
     if(testCase == 82)
         CHECK_RETURN_STATUS(hipHostMalloc(&roiPtrInputCropRegion, 4 * sizeof(RpptROI)));
 
+    Rpp32u boxesInEachImage = 3;
+    Rpp32f *colorBuffer;
+    RpptRoiLtrb *anchorBoxInfoTensor;
+    Rpp32u *numOfBoxes;
+    if(testCase == 32)
+    {
+        CHECK_RETURN_STATUS(hipHostMalloc(&colorBuffer, batchSize * boxesInEachImage * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipMemset(colorBuffer, 0, batchSize * boxesInEachImage * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&anchorBoxInfoTensor, batchSize * boxesInEachImage * sizeof(RpptRoiLtrb)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&numOfBoxes, batchSize * sizeof(Rpp32u)));
+    }
+
     // create cropRoi and patchRoi in case of crop_and_patch
     RpptROI *cropRoi, *patchRoi;
     if(testCase == 33)
@@ -733,6 +745,19 @@ int main(int argc, char **argv)
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_color_cast_gpu(d_input, srcDescPtr, d_output, dstDescPtr, rgbTensor, alphaTensor, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 32:
+                {
+                    testCaseName = "erase";
+
+                    init_erase(batchSize, boxesInEachImage, numOfBoxes, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, colorBuffer, inputBitDepth);
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_erase_gpu(d_input, srcDescPtr, d_output, dstDescPtr, anchorBoxInfoTensor, colorBuffer, numOfBoxes, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
@@ -1467,6 +1492,12 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostFree(reductionFuncResultArr));
         if(testCase == 91)
             CHECK_RETURN_STATUS(hipHostFree(mean));
+    }
+    if(testCase == 32)
+    {
+        CHECK_RETURN_STATUS(hipHostFree(colorBuffer));
+        CHECK_RETURN_STATUS(hipHostFree(anchorBoxInfoTensor));
+        CHECK_RETURN_STATUS(hipHostFree(numOfBoxes));
     }
     if(anchorTensor != NULL)
         CHECK_RETURN_STATUS(hipHostFree(anchorTensor));
