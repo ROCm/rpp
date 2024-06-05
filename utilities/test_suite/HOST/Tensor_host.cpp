@@ -886,7 +886,7 @@ int main(int argc, char **argv)
 
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();
-                    if (inputBitDepth == 0)
+                    if (inputBitDepth == 0 || inputBitDepth == 2)
                         rppt_box_filter_host(input, srcDescPtr, output, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
