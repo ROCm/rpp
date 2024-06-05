@@ -10,16 +10,16 @@ __device__ void remap_srclocs_hip_compute(int4 *srcRoiPtr_i4, float *rowRemapTab
 {
     d_uint8 increment_ui8, locSrc_ui8;
 
-    increment_ui8.ui4[0] = make_uint4(0, 1, 2, 3);
-    increment_ui8.ui4[1] = make_uint4(4, 5, 6, 7);
-    uint4 locSrc_ui4 = (uint4)(id_x);
-    locSrc_ui8.ui4[0] = locSrc_ui4 + increment_ui8.ui4[0];
-    locSrc_ui8.ui4[1] = locSrc_ui4 + increment_ui8.ui4[1];
+    increment_ui8.ui4[0] = make_uint4(0, 1, 2, 3);                                // 8 element vectorized kernel needs 8 increments - creating uint4 for increments 0, 1, 2, 3
+    increment_ui8.ui4[1] = make_uint4(4, 5, 6, 7);                                // 8 element vectorized kernel needs 8 increments - creating uint4 for increments 4, 5, 6, 7
+    uint4 locSrc_ui4 = (uint4)(id_x);                                             // getting current id_x into a uint4
+    locSrc_ui8.ui4[0] = locSrc_ui4 + increment_ui8.ui4[0];                        // computing vectorized locs (id_x + 0, id_x + 1, id_x + 2, id_x + 3)
+    locSrc_ui8.ui4[1] = locSrc_ui4 + increment_ui8.ui4[1];                        // computing vectorized locs (id_x + 4, id_x + 5, id_x + 6, id_x + 7)
 
-    locSrc_f16->f8[0].f4[0] = rpp_hip_load4(colRemapTable, locSrc_ui8.ui4[0]);
-    locSrc_f16->f8[0].f4[1] = rpp_hip_load4(colRemapTable, locSrc_ui8.ui4[1]);
-    locSrc_f16->f8[1].f4[0] = rpp_hip_load4(rowRemapTable, locSrc_ui8.ui4[0]);
-    locSrc_f16->f8[1].f4[1] = rpp_hip_load4(rowRemapTable, locSrc_ui8.ui4[1]);
+    locSrc_f16->f8[0].f4[0] = rpp_hip_load4(colRemapTable, locSrc_ui8.ui4[0]);    // writes 4 src location col values
+    locSrc_f16->f8[0].f4[1] = rpp_hip_load4(colRemapTable, locSrc_ui8.ui4[1]);    // writes 4 src location col values
+    locSrc_f16->f8[1].f4[0] = rpp_hip_load4(rowRemapTable, locSrc_ui8.ui4[0]);    // writes 4 src location row values
+    locSrc_f16->f8[1].f4[1] = rpp_hip_load4(rowRemapTable, locSrc_ui8.ui4[1]);    // writes 4 src location row values
 }
 
 // -------------------- Set 2 - Nearest Neighbor Interpolation --------------------

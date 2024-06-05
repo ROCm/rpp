@@ -1354,6 +1354,46 @@ void inline init_ricap(int width, int height, int batchSize, Rpp32u *permutation
     roiPtrInputCropRegion[3].xywhROI = {randrange(0, part0Width - 8), randrange(0, part0Height), width - part0Width, height - part0Height};
 }
 
+void inline init_remap(RpptDescPtr tableDescPtr, RpptDescPtr srcDescPtr, RpptROIPtr roiTensorPtrSrc, Rpp32f *rowRemapTable, Rpp32f *colRemapTable)
+{
+    tableDescPtr->c = 1;
+    tableDescPtr->strides.nStride = srcDescPtr->h * srcDescPtr->w;
+    tableDescPtr->strides.hStride = srcDescPtr->w;
+    tableDescPtr->strides.wStride = tableDescPtr->strides.cStride = 1;
+    Rpp32u batchSize = srcDescPtr->n;
+
+    for (Rpp32u count = 0; count < batchSize; count++)
+    {
+        Rpp32f *rowRemapTableTemp, *colRemapTableTemp;
+        rowRemapTableTemp = rowRemapTable + count * tableDescPtr->strides.nStride;
+        colRemapTableTemp = colRemapTable + count * tableDescPtr->strides.nStride;
+        Rpp32u halfWidth = roiTensorPtrSrc[count].xywhROI.roiWidth / 2;
+        for (Rpp32u i = 0; i < roiTensorPtrSrc[count].xywhROI.roiHeight; i++)
+        {
+            Rpp32f *rowRemapTableTempRow, *colRemapTableTempRow;
+            rowRemapTableTempRow = rowRemapTableTemp + i * tableDescPtr->strides.hStride;
+            colRemapTableTempRow = colRemapTableTemp + i * tableDescPtr->strides.hStride;
+            Rpp32u j = 0;
+            for (; j < halfWidth; j++)
+            {
+                *rowRemapTableTempRow = i;
+                *colRemapTableTempRow = halfWidth - j;
+
+                rowRemapTableTempRow++;
+                colRemapTableTempRow++;
+            }
+            for (; j < roiTensorPtrSrc[count].xywhROI.roiWidth; j++)
+            {
+                *rowRemapTableTempRow = i;
+                *colRemapTableTempRow = j;
+
+                rowRemapTableTempRow++;
+                colRemapTableTempRow++;
+            }
+        }
+    }
+}
+
 // initialize the roi, anchor and shape values required for slice
 void init_slice(RpptGenericDescPtr descriptorPtr3D, RpptROIPtr roiPtrSrc, Rpp32u *roiTensor, Rpp32s *anchorTensor, Rpp32s *shapeTensor)
 {
@@ -1406,46 +1446,6 @@ void init_slice(RpptGenericDescPtr descriptorPtr3D, RpptROIPtr roiPtrSrc, Rpp32u
             roiTensor[idx2 + 3] = roiPtrSrc[i].xywhROI.roiWidth;
             shapeTensor[idx1] = roiTensor[idx2 + 2] / 2;
             shapeTensor[idx1 + 1] = roiTensor[idx2 + 3] / 2;
-        }
-    }
-}
-
-void inline init_remap(RpptDescPtr tableDescPtr, RpptDescPtr srcDescPtr, RpptROIPtr roiTensorPtrSrc, Rpp32f *rowRemapTable, Rpp32f *colRemapTable)
-{
-    tableDescPtr->c = 1;
-    tableDescPtr->strides.nStride = srcDescPtr->h * srcDescPtr->w;
-    tableDescPtr->strides.hStride = srcDescPtr->w;
-    tableDescPtr->strides.wStride = tableDescPtr->strides.cStride = 1;
-    Rpp32u batchSize = srcDescPtr->n;
-
-    for (Rpp32u count = 0; count < batchSize; count++)
-    {
-        Rpp32f *rowRemapTableTemp, *colRemapTableTemp;
-        rowRemapTableTemp = rowRemapTable + count * tableDescPtr->strides.nStride;
-        colRemapTableTemp = colRemapTable + count * tableDescPtr->strides.nStride;
-        Rpp32u halfWidth = roiTensorPtrSrc[count].xywhROI.roiWidth / 2;
-        for (Rpp32u i = 0; i < roiTensorPtrSrc[count].xywhROI.roiHeight; i++)
-        {
-            Rpp32f *rowRemapTableTempRow, *colRemapTableTempRow;
-            rowRemapTableTempRow = rowRemapTableTemp + i * tableDescPtr->strides.hStride;
-            colRemapTableTempRow = colRemapTableTemp + i * tableDescPtr->strides.hStride;
-            Rpp32u j = 0;
-            for (; j < halfWidth; j++)
-            {
-                *rowRemapTableTempRow = i;
-                *colRemapTableTempRow = halfWidth - j;
-
-                rowRemapTableTempRow++;
-                colRemapTableTempRow++;
-            }
-            for (; j < roiTensorPtrSrc[count].xywhROI.roiWidth; j++)
-            {
-                *rowRemapTableTempRow = i;
-                *colRemapTableTempRow = j;
-
-                rowRemapTableTempRow++;
-                colRemapTableTempRow++;
-            }
         }
     }
 }
