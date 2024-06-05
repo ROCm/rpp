@@ -20,9 +20,9 @@ Prerequisites
   - RedHat 8 or 9
   - SLES 15-SP4
 
-* `ROCm supported hardware <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html>`_
+* :doc:`ROCm supported hardware <rocm-install-on-linux:reference/system-requirements>`
 
-* Install ROCm with `amdgpu-install <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html>`_ with ``--usecase=graphics,rocm --no-32``
+* Install ROCm with :doc:`amdgpu-install <rocm-install-on-linux:how-to/amdgpu-install>` with ``--usecase=graphics,rocm --no-32``
 
 * Clang Version `5.0.1` and above
 
@@ -152,7 +152,8 @@ The process for installing is as follows:
         make test
 
     .. note::
-        `make test` requires installation of `test suite prerequisites <../utilities/test_suite/README.md>`_
+    
+        `make test` requires installation of `test suite prerequisites <https://github.com/ROCm/rpp/tree/docs/6.1.1/utilities/test_suite/README.md>`_.
 
 * Instructions for building RPP with **OPENCL** GPU backend
 
@@ -175,7 +176,8 @@ The installer will copy
 * Documents folder into `/opt/rocm/share/doc/rpp`
 
 .. note::
-  Installation of `test suite prerequisites <../utilities/test_suite/README.md>`_ is required to run tests
+
+  Installation of `test suite prerequisites <https://github.com/ROCm/rpp/tree/docs/6.1.1/utilities/test_suite/README.md>`_ is required to run tests
 
 Verify with `rpp-test` package
 --------------------------------------------
