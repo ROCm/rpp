@@ -152,6 +152,7 @@ The process for installing is as follows:
         make test
 
     .. note::
+    
         `make test` requires installation of `test suite prerequisites <https://github.com/ROCm/rpp/tree/docs/6.1.1/utilities/test_suite/README.md>`_.
 
 * Instructions for building RPP with **OPENCL** GPU backend
@@ -175,6 +176,7 @@ The installer will copy
 * Documents folder into `/opt/rocm/share/doc/rpp`
 
 .. note::
+
   Installation of `test suite prerequisites <https://github.com/ROCm/rpp/tree/docs/6.1.1/utilities/test_suite/README.md>`_ is required to run tests
 
 Verify with `rpp-test` package
