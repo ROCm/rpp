@@ -17,21 +17,23 @@ __device__ __forceinline__ void camera_coordinates_hip_compute(d_float8 *cameraC
 __global__ void compute_inverse_matrix_hip_tensor(d_float9 *matTensor, d_float9 *invMatTensor)
 {
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
-    d_float9 *mat = &matTensor[id_z];
-    d_float9 *invMat = &invMatTensor[id_z];
-    float det = mat->f1[0] * (mat->f1[4] * mat->f1[8] - mat->f1[7] * mat->f1[5]) - mat->f1[1] * (mat->f1[3] * mat->f1[8] - mat->f1[5] * mat->f1[6]) + mat->f1[2] * (mat->f1[3] * mat->f1[7] - mat->f1[4] * mat->f1[6]);
+    d_float9 *mat_f9 = &matTensor[id_z];
+    d_float9 *invMat_f9 = &invMatTensor[id_z];
+    float det =  (mat_f9->f1[0] * ((mat_f9->f1[4] * mat_f9->f1[8]) - (mat_f9->f1[7] * mat_f9->f1[5]))) 
+               - (mat_f9->f1[1] * ((mat_f9->f1[3] * mat_f9->f1[8]) - (mat_f9->f1[5] * mat_f9->f1[6]))) 
+               + (mat_f9->f1[2] * ((mat_f9->f1[3] * mat_f9->f1[7]) - (mat_f9->f1[4] * mat_f9->f1[6])));
     if(det != 0)
     {
         float invDet = 1 / det;
-        invMat->f1[0] = (mat->f1[4] * mat->f1[8] - mat->f1[7] * mat->f1[5]) * invDet;
-        invMat->f1[1] = (mat->f1[2] * mat->f1[7] - mat->f1[1] * mat->f1[8]) * invDet;
-        invMat->f1[2] = (mat->f1[1] * mat->f1[5] - mat->f1[2] * mat->f1[4]) * invDet;
-        invMat->f1[3] = (mat->f1[5] * mat->f1[6] - mat->f1[3] * mat->f1[8]) * invDet;
-        invMat->f1[4] = (mat->f1[0] * mat->f1[8] - mat->f1[2] * mat->f1[6]) * invDet;
-        invMat->f1[5] = (mat->f1[3] * mat->f1[2] - mat->f1[0] * mat->f1[5]) * invDet;
-        invMat->f1[6] = (mat->f1[3] * mat->f1[7] - mat->f1[6] * mat->f1[4]) * invDet;
-        invMat->f1[7] = (mat->f1[6] * mat->f1[1] - mat->f1[0] * mat->f1[7]) * invDet;
-        invMat->f1[8] = (mat->f1[0] * mat->f1[4] - mat->f1[3] * mat->f1[1]) * invDet;
+        invMat_f9->f1[0] = (mat_f9->f1[4] * mat_f9->f1[8] - mat_f9->f1[7] * mat_f9->f1[5]) * invDet;
+        invMat_f9->f1[1] = (mat_f9->f1[2] * mat_f9->f1[7] - mat_f9->f1[1] * mat_f9->f1[8]) * invDet;
+        invMat_f9->f1[2] = (mat_f9->f1[1] * mat_f9->f1[5] - mat_f9->f1[2] * mat_f9->f1[4]) * invDet;
+        invMat_f9->f1[3] = (mat_f9->f1[5] * mat_f9->f1[6] - mat_f9->f1[3] * mat_f9->f1[8]) * invDet;
+        invMat_f9->f1[4] = (mat_f9->f1[0] * mat_f9->f1[8] - mat_f9->f1[2] * mat_f9->f1[6]) * invDet;
+        invMat_f9->f1[5] = (mat_f9->f1[3] * mat_f9->f1[2] - mat_f9->f1[0] * mat_f9->f1[5]) * invDet;
+        invMat_f9->f1[6] = (mat_f9->f1[3] * mat_f9->f1[7] - mat_f9->f1[6] * mat_f9->f1[4]) * invDet;
+        invMat_f9->f1[7] = (mat_f9->f1[6] * mat_f9->f1[1] - mat_f9->f1[0] * mat_f9->f1[7]) * invDet;
+        invMat_f9->f1[8] = (mat_f9->f1[0] * mat_f9->f1[4] - mat_f9->f1[3] * mat_f9->f1[1]) * invDet;
     }
 }
 
@@ -81,10 +83,11 @@ __global__ void compute_remap_tables_hip_tensor(float *rowRemapTable,
     d_float8 r2_f8, kr_f8, kr1_f8, kr2_f8;
     rpp_hip_math_add8(&xSquare_f8, &ySquare_f8, &r2_f8);                                        // float r2 = xSquare + ySquare
 
-    // float kr = (1 + ((radialCoeff[2] * r2 + radialCoeff[1]) * r2 + radialCoeff[0]) * r2) / (1 + ((radialCoeff[5] * r2 + radialCoeff[4]) * r2 + radialCoeff[3]) *r2);
     d_float8 r2Cube_f8, r2Square_f8;
-    rpp_hip_math_multiply8(&r2_f8, &r2_f8, &r2Square_f8);
-    rpp_hip_math_multiply8(&r2Square_f8, &r2_f8, &r2Cube_f8);
+    rpp_hip_math_multiply8(&r2_f8, &r2_f8, &r2Square_f8);                                       // float r2Square = r2 * r2;
+    rpp_hip_math_multiply8(&r2Square_f8, &r2_f8, &r2Cube_f8);                                   // float r2Cube = r2Square * r2;
+
+    // float kr = (1 + (radialCoeff[2] * r2Cube) + (radialCoeff[1] * r2Square) + (radialCoeff[0]) * r2)) / (1 + (radialCoeff[5] * r2Cube) + (radialCoeff[4] * r2Square) + (radialCoeff[3]) *r2))
     kr1_f8.f4[0] = (one_f4 + static_cast<float4>(radialCoeff[2]) * r2Cube_f8.f4[0] + static_cast<float4>(radialCoeff[1]) *  r2Square_f8.f4[0] + static_cast<float4>(radialCoeff[0]) *  r2_f8.f4[0]);
     kr1_f8.f4[1] = (one_f4 + static_cast<float4>(radialCoeff[2]) * r2Cube_f8.f4[1] + static_cast<float4>(radialCoeff[1]) *  r2Square_f8.f4[1] + static_cast<float4>(radialCoeff[0]) *  r2_f8.f4[1]);
     kr2_f8.f4[0] = (one_f4 + static_cast<float4>(radialCoeff[5]) * r2Cube_f8.f4[0] + static_cast<float4>(radialCoeff[4]) *  r2Square_f8.f4[0] + static_cast<float4>(radialCoeff[3]) *  r2_f8.f4[0]);
