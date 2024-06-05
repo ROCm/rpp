@@ -97,6 +97,7 @@ std::map<int, string> augmentationMap =
     {65, "bitwise_and"},
     {68, "bitwise_or"},
     {70, "copy"},
+    {79, "remap"},
     {80, "resize_mirror_normalize"},
     {81, "color_jitter"},
     {82, "ricap"},
@@ -1113,7 +1114,7 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
                 func += "Tensor_PLN1";
         }
     }
-    if(testCase == 21 ||testCase == 23 || testCase == 24)
+    if(testCase == 21 ||testCase == 23 || testCase == 24 || testCase == 79)
     {
         func += "_interpolationType" + interpolationTypeName;
         binFile += "_interpolationType" + interpolationTypeName;
@@ -1340,6 +1341,46 @@ void inline init_ricap(int width, int height, int batchSize, Rpp32u *permutation
     roiPtrInputCropRegion[1].xywhROI = {randrange(0, part0Width - 8), randrange(0, height - part0Height), width - part0Width, part0Height};
     roiPtrInputCropRegion[2].xywhROI = {randrange(0, width - part0Width - 8), randrange(0, part0Height), part0Width, height - part0Height};
     roiPtrInputCropRegion[3].xywhROI = {randrange(0, part0Width - 8), randrange(0, part0Height), width - part0Width, height - part0Height};
+}
+
+void inline init_remap(RpptDescPtr tableDescPtr, RpptDescPtr srcDescPtr, RpptROIPtr roiTensorPtrSrc, Rpp32f *rowRemapTable, Rpp32f *colRemapTable)
+{
+    tableDescPtr->c = 1;
+    tableDescPtr->strides.nStride = srcDescPtr->h * srcDescPtr->w;
+    tableDescPtr->strides.hStride = srcDescPtr->w;
+    tableDescPtr->strides.wStride = tableDescPtr->strides.cStride = 1;
+    Rpp32u batchSize = srcDescPtr->n;
+
+    for (Rpp32u count = 0; count < batchSize; count++)
+    {
+        Rpp32f *rowRemapTableTemp, *colRemapTableTemp;
+        rowRemapTableTemp = rowRemapTable + count * tableDescPtr->strides.nStride;
+        colRemapTableTemp = colRemapTable + count * tableDescPtr->strides.nStride;
+        Rpp32u halfWidth = roiTensorPtrSrc[count].xywhROI.roiWidth / 2;
+        for (Rpp32u i = 0; i < roiTensorPtrSrc[count].xywhROI.roiHeight; i++)
+        {
+            Rpp32f *rowRemapTableTempRow, *colRemapTableTempRow;
+            rowRemapTableTempRow = rowRemapTableTemp + i * tableDescPtr->strides.hStride;
+            colRemapTableTempRow = colRemapTableTemp + i * tableDescPtr->strides.hStride;
+            Rpp32u j = 0;
+            for (; j < halfWidth; j++)
+            {
+                *rowRemapTableTempRow = i;
+                *colRemapTableTempRow = halfWidth - j;
+
+                rowRemapTableTempRow++;
+                colRemapTableTempRow++;
+            }
+            for (; j < roiTensorPtrSrc[count].xywhROI.roiWidth; j++)
+            {
+                *rowRemapTableTempRow = i;
+                *colRemapTableTempRow = j;
+
+                rowRemapTableTempRow++;
+                colRemapTableTempRow++;
+            }
+        }
+    }
 }
 
 // initialize the roi, anchor and shape values required for slice
