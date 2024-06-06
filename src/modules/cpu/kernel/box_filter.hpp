@@ -41,6 +41,13 @@ inline void increment_row_ptrs(T **srcPtrTemp, Rpp32u kernelSize, Rpp32u increme
         srcPtrTemp[i] += increment;
 }
 
+template<typename T>
+inline void decrement_row_ptrs(T **srcPtrTemp, Rpp32u kernelSize, Rpp32s decrement)
+{
+    for (int i = 0; i < kernelSize; i++)
+        srcPtrTemp[i] -= decrement;
+}
+
 inline void get_kernel_loop_limit(Rpp32s index, Rpp32s &loopLimit, Rpp32u kernelSize, Rpp32u padLength, Rpp32u length)
 {
     if ((index >= padLength) && (index < length - padLength))
@@ -579,11 +586,11 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                         compute_box_filter_u8_u8_3x3_24_host_pkd(pxRow, pxDst, pxConvolutionFactor);
 
                         // convert from PKD3 to PLN3 and store channelwise
-                        __m128i pxR, pxG, pxB;
-                        rpp_convert24_u8pkd3_to_u8pln3(pxDst[0], pxDst[1], pxR, pxG, pxB);
-                        rpp_storeu_si64((__m128i *)(dstPtrTempChannels[0]), pxR);
-                        rpp_storeu_si64((__m128i *)(dstPtrTempChannels[1]), pxG);
-                        rpp_storeu_si64((__m128i *)(dstPtrTempChannels[2]), pxB);
+                        __m128i pxDstChn[3];
+                        rpp_convert24_u8pkd3_to_u8pln3(pxDst[0], pxDst[1], pxDstChn);
+                        rpp_storeu_si64((__m128i *)(dstPtrTempChannels[0]), pxDstChn[0]);
+                        rpp_storeu_si64((__m128i *)(dstPtrTempChannels[1]), pxDstChn[1]);
+                        rpp_storeu_si64((__m128i *)(dstPtrTempChannels[2]), pxDstChn[2]);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 24);
                         increment_row_ptrs(dstPtrTempChannels, kernelSize, 8);
                     }
@@ -766,7 +773,8 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
 
                     // load first 32 elements elements
                     __m256i pxRow[9];
-                    rpp_load_box_filter_u8_u8_9x9_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
+                    if (alignedLength)
+                        rpp_load_box_filter_u8_u8_9x9_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
                     // process alignedLength number of columns in eacn row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 32)
@@ -884,6 +892,105 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     }
                     increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
                     dstPtrRow += dstDescPtr->strides.hStride;
+                }
+            }
+            else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
+            {
+                Rpp32u alignedLength = ((bufferLength - 2 * padLength * 3) / 64) * 64;
+                Rpp8u *dstPtrChannels[3];
+                for (int c = 0; c < 3; c++)
+                    dstPtrChannels[c] = dstPtrChannel + c * dstDescPtr->strides.cStride;
+                for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+                {
+                    int vectorLoopCount = 0;
+                    bool padLengthRows = (i < padLength) ? 1: 0;
+                    Rpp8u *srcPtrTemp[9];
+                    for (int k = 0; k < 9; k++)
+                        srcPtrTemp[k] = srcPtrRow[k];
+                    Rpp8u *dstPtrTempChannels[3] = {dstPtrChannels[0], dstPtrChannels[1], dstPtrChannels[2]};
+
+                    Rpp32s rowKernelLoopLimit;
+                    get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
+
+                    // process padLength number of columns in each row
+                    for (int c = 0; c < 3; c++)
+                    {
+                        for (int k = 0; k < padLength; k++)
+                        {
+                            box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTempChannels[c], k, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                            dstPtrTempChannels[c] += 1;
+                        }
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 1);
+                    }
+
+                    // reset source to initial position
+                    for (int k = 0; k < 9; k++)
+                        srcPtrTemp[k] = srcPtrRow[k];
+
+                    // process alignedLength number of columns in eacn row
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
+                    {
+                        // load first 32 elements elements
+                        __m256i pxRow[9];
+                        rpp_load_box_filter_u8_u8_9x9_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
+
+                        __m256i pxLower, pxUpper;
+                        unpacklo_and_add_9x9_host(pxRow, &pxLower);
+                        unpackhi_and_add_9x9_host(pxRow, &pxUpper);
+
+                        __m128i px128[8];
+                        px128[0] =  _mm256_castsi256_si128(pxLower);
+                        px128[1] =  _mm256_castsi256_si128(pxUpper);
+                        px128[2] =  _mm256_extracti128_si256(pxLower, 1);
+                        px128[3] =  _mm256_extracti128_si256(pxUpper, 1);
+
+                        // get the final accumalated result for first 8 elements
+                        __m128i pxTemp[7], pxDst[4];
+                        blend_shuffle_add_9x9_pkd_host(&px128[0]);
+                        pxDst[0] = _mm_mulhi_epi16(px128[0], pxConvolutionFactor);
+
+                        // compute for next 8 elements
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 32);
+                        rpp_load_box_filter_u8_u8_9x9_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
+                        unpacklo_and_add_9x9_host(pxRow, &pxLower);
+                        unpackhi_and_add_9x9_host(pxRow, &pxUpper);
+                        
+                        px128[4] =  _mm256_castsi256_si128(pxLower);
+                        px128[5] =  _mm256_castsi256_si128(pxUpper);
+                        px128[6] =  _mm256_extracti128_si256(pxLower, 1);
+                        px128[7] =  _mm256_extracti128_si256(pxUpper, 1);
+
+                        // get the final accumalated result for next 24 elements
+                        blend_shuffle_add_9x9_pkd_host(&px128[1]);
+                        blend_shuffle_add_9x9_pkd_host(&px128[2]);
+                        blend_shuffle_add_9x9_pkd_host(&px128[3]);
+                        pxDst[1] = _mm_mulhi_epi16(px128[1], pxConvolutionFactor);
+                        pxDst[2] = _mm_mulhi_epi16(px128[2], pxConvolutionFactor);
+                        pxDst[3] = _mm_mulhi_epi16(px128[3], pxConvolutionFactor);
+                        pxDst[0] = _mm_packus_epi16(pxDst[0], pxDst[1]);
+                        pxDst[1] = _mm_packus_epi16(pxDst[2], pxDst[3]);
+
+                        // convert from PKD3 to PLN3 and store
+                        __m128i pxDstChn[3];
+                        rpp_convert24_u8pkd3_to_u8pln3(pxDst[0], pxDst[1], pxDstChn);
+                        rpp_storeu_si64((__m128i *)(dstPtrTempChannels[0]), pxDstChn[0]);
+                        rpp_storeu_si64((__m128i *)(dstPtrTempChannels[1]), pxDstChn[1]);
+                        rpp_storeu_si64((__m128i *)(dstPtrTempChannels[2]), pxDstChn[2]);
+                        decrement_row_ptrs(srcPtrTemp, kernelSize, 8);
+                        increment_row_ptrs(dstPtrTempChannels, 3, 8);
+                    }
+                    vectorLoopCount += padLength * 3;
+
+                    // process remaining columns in each row
+                    for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                    {
+                        int channel = vectorLoopCount % 3;
+                        box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 1);
+                        dstPtrTempChannels[channel]++;
+                    }
+                    increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
+                    increment_row_ptrs(dstPtrChannels, 3, dstDescPtr->strides.hStride);
                 }
             }
         }
