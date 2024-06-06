@@ -64,10 +64,10 @@ int main(int argc, char **argv)
     int decoderType = atoi(argv[13]);
     int batchSize = atoi(argv[14]);
 
-    bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23 || testCase == 24);
+    bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23 || testCase == 24 || testCase == 79);
     bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 33 || testCase == 61 || testCase == 63 || testCase == 65 || testCase == 68);
     bool randomOutputCase = (testCase == 8 || testCase == 84);
-    bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24);
+    bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24 || testCase == 79);
     bool reductionTypeCase = (testCase == 87 || testCase == 88 || testCase == 89);
     bool noiseTypeCase = (testCase == 8);
     bool pln1OutTypeCase = (testCase == 86);
@@ -315,6 +315,13 @@ int main(int argc, char **argv)
     input = static_cast<Rpp8u *>(calloc(inputBufferSize, 1));
     input_second = static_cast<Rpp8u *>(calloc(inputBufferSize, 1));
     output = static_cast<Rpp8u *>(calloc(outputBufferSize, 1));
+
+    Rpp32f *rowRemapTable, *colRemapTable;
+    if(testCase == 79)
+    {
+        rowRemapTable = static_cast<Rpp32f *>(calloc(ioBufferSize, sizeof(Rpp32f)));
+        colRemapTable = static_cast<Rpp32f *>(calloc(ioBufferSize, sizeof(Rpp32f)));
+    }
 
     // Initialize buffers for any reductionType functions (testCase 87 - tensor_sum alone cannot return final sum as 8u/8s due to overflow. 8u inputs return 64u sums, 8s inputs return 64s sums)
     void *reductionFuncResultArr;
@@ -740,6 +747,47 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 32:
+                {
+                    testCaseName = "erase";
+                    Rpp32u boxesInEachImage = 3;
+                    Rpp32f colorBuffer[batchSize * boxesInEachImage];
+                    RpptRoiLtrb anchorBoxInfoTensor[batchSize * boxesInEachImage];
+                    Rpp32u numOfBoxes[batchSize];
+                    int idx;
+
+                    init_erase(batchSize, boxesInEachImage, numOfBoxes, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, colorBuffer, inputBitDepth);
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_erase_host(input, srcDescPtr, output, dstDescPtr, anchorBoxInfoTensor, colorBuffer, numOfBoxes, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 33:
+                {
+                    testCaseName = "crop_and_patch";
+
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        cropRoi[i].xywhROI.xy.x = patchRoi[i].xywhROI.xy.x = roiList[0];
+                        cropRoi[i].xywhROI.xy.y = patchRoi[i].xywhROI.xy.y = roiList[1];
+                        cropRoi[i].xywhROI.roiWidth = patchRoi[i].xywhROI.roiWidth = roiWidthList[i];
+                        cropRoi[i].xywhROI.roiHeight = patchRoi[i].xywhROI.roiHeight = roiHeightList[i];
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_crop_and_patch_host(input, input_second, srcDescPtr, output, dstDescPtr, roiTensorPtrDst, cropRoi, patchRoi, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 case 34:
                 {
                     testCaseName = "lut";
@@ -798,27 +846,6 @@ int main(int argc, char **argv)
                     startCpuTime = clock();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_color_twist_host(input, srcDescPtr, output, dstDescPtr, brightness, contrast, hue, saturation, roiTensorPtrSrc, roiTypeSrc, handle);
-                    else
-                        missingFuncFlag = 1;
-
-                    break;
-                }
-                case 33:
-                {
-                    testCaseName = "crop_and_patch";
-
-                    for (i = 0; i < batchSize; i++)
-                    {
-                        cropRoi[i].xywhROI.xy.x = patchRoi[i].xywhROI.xy.x = roiList[0];
-                        cropRoi[i].xywhROI.xy.y = patchRoi[i].xywhROI.xy.y = roiList[1];
-                        cropRoi[i].xywhROI.roiWidth = patchRoi[i].xywhROI.roiWidth = roiWidthList[i];
-                        cropRoi[i].xywhROI.roiHeight = patchRoi[i].xywhROI.roiHeight = roiHeightList[i];
-                    }
-
-                    startWallTime = omp_get_wtime();
-                    startCpuTime = clock();
-                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_crop_and_patch_host(input, input_second, srcDescPtr, output, dstDescPtr, roiTensorPtrDst, cropRoi, patchRoi, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
@@ -1028,6 +1055,23 @@ int main(int argc, char **argv)
                     startCpuTime = clock();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_copy_host(input, srcDescPtr, output, dstDescPtr, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 79:
+                {
+                    testCaseName = "remap";
+
+                    RpptDesc tableDesc = srcDesc;
+                    RpptDescPtr tableDescPtr = &tableDesc;
+                    init_remap(tableDescPtr, srcDescPtr, roiTensorPtrSrc, rowRemapTable, colRemapTable);
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_remap_host(input, srcDescPtr, output, dstDescPtr, rowRemapTable, colRemapTable, tableDescPtr, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
@@ -1480,6 +1524,11 @@ int main(int argc, char **argv)
     free(outputu8);
     free(input_second);
     free(output);
+    if(testCase == 79)
+    {
+        free(rowRemapTable);
+        free(colRemapTable);
+    }
     if(reductionTypeCase)
         free(reductionFuncResultArr);
     if(testCase == 33)
