@@ -194,28 +194,37 @@ inline void compute_box_filter_u8_u8_3x3_24_host_pkd(__m256i *pxRow, __m128i *px
 
 // -------------------- 9x9 kernel size - U8 bitdepth compute functions --------------------
 
+inline void unpacklo_and_add_9x9_host(__m256i *pxRow, __m256i *pxDst)
+{
+    pxDst[0] = _mm256_unpacklo_epi8(pxRow[0], avx_px0);
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[1], avx_px0));
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[2], avx_px0));
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[3], avx_px0));
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[4], avx_px0));
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[5], avx_px0));
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[6], avx_px0));
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[7], avx_px0));
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[8], avx_px0));
+}
+
+inline void unpackhi_and_add_9x9_host(__m256i *pxRow, __m256i *pxDst)
+{
+    pxDst[0] = _mm256_unpackhi_epi8(pxRow[0], avx_px0);
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[1], avx_px0));
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[2], avx_px0));
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[3], avx_px0));
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[4], avx_px0));
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[5], avx_px0));
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[6], avx_px0));
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[7], avx_px0));
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[8], avx_px0));
+}
+
 inline void compute_box_filter_9x9_16_host_pln(__m256i *pxRow, __m128i *pxDst, const __m128i &pxConvolutionFactor)
 {
     __m256i pxLower, pxUpper;
-    pxLower = _mm256_unpacklo_epi8(pxRow[0], avx_px0);
-    pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[1], avx_px0));
-    pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[2], avx_px0));
-    pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[3], avx_px0));
-    pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[4], avx_px0));
-    pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[5], avx_px0));
-    pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[6], avx_px0));
-    pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[7], avx_px0));
-    pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[8], avx_px0));
-
-    pxUpper = _mm256_unpackhi_epi8(pxRow[0], avx_px0);
-    pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[1], avx_px0));
-    pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[2], avx_px0));
-    pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[3], avx_px0));
-    pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[4], avx_px0));
-    pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[5], avx_px0));
-    pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[6], avx_px0));
-    pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[7], avx_px0));
-    pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[8], avx_px0));
+    unpacklo_and_add_9x9_host(pxRow, &pxLower);
+    unpackhi_and_add_9x9_host(pxRow, &pxUpper);
 
     __m128i pxLower1, pxLower2, pxUpper1;
     pxLower1 =  _mm256_castsi256_si128(pxLower);
@@ -705,7 +714,7 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
             }
             else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
-                Rpp32u alignedLength = ((bufferLength - 2 * padLength * 3) / 8) * 8;
+                Rpp32u alignedLength = ((bufferLength - 2 * padLength * 3) / 32) * 32;
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
                     int vectorLoopCount = 0;
@@ -736,31 +745,14 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                         srcPtrTemp[k] = srcPtrRow[k];
 
                     // process alignedLength number of columns in eacn row
-                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 32)
                     {
                         __m256i pxRow[9];
                         rpp_load_box_filter_u8_u8_9x9_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
                         __m256i pxLower, pxUpper;
-                        pxLower = _mm256_unpacklo_epi8(pxRow[0], avx_px0);
-                        pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[1], avx_px0));
-                        pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[2], avx_px0));
-                        pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[3], avx_px0));
-                        pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[4], avx_px0));
-                        pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[5], avx_px0));
-                        pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[6], avx_px0));
-                        pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[7], avx_px0));
-                        pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[8], avx_px0));
-
-                        pxUpper = _mm256_unpackhi_epi8(pxRow[0], avx_px0);
-                        pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[1], avx_px0));
-                        pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[2], avx_px0));
-                        pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[3], avx_px0));
-                        pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[4], avx_px0));
-                        pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[5], avx_px0));
-                        pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[6], avx_px0));
-                        pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[7], avx_px0));
-                        pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[8], avx_px0));
+                        unpacklo_and_add_9x9_host(pxRow, &pxLower);
+                        unpackhi_and_add_9x9_host(pxRow, &pxUpper);
 
                         __m128i pxLower1, pxLower2, pxUpper1, pxUpper2;
                         pxLower1 =  _mm256_castsi256_si128(pxLower);
@@ -769,7 +761,7 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                         pxUpper2 =  _mm256_extracti128_si256(pxUpper, 1);
 
                         // get the final accumalated result for first 8 elements
-                        __m128i pxTemp[7];
+                        __m128i pxTemp[7], pxDst[4];
                         pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 7), xmm_pxMaskRotate0To5);
                         pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 63), xmm_pxMaskRotate0To11);
                         pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 1), xmm_pxMaskRotate0To1);
@@ -785,13 +777,79 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                         pxLower1 = _mm_add_epi16(pxLower1, pxTemp[5]);
                         pxLower1 = _mm_add_epi16(pxLower1, pxTemp[6]);
                         pxLower1 = _mm_add_epi16(pxLower1, pxUpper2);
+                        pxDst[0] = _mm_mulhi_epi16(pxLower1, pxConvolutionFactor);
 
-                        pxLower1 = _mm_mulhi_epi16(pxLower1, pxConvolutionFactor);
-                        pxLower1 = _mm_packus_epi16(pxLower1, xmm_px0);
-                        _mm_storeu_si128((__m128i *)dstPtrTemp, pxLower1);
+                        // compute for next 8 elements
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 32);
+                        rpp_load_box_filter_u8_u8_9x9_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
+                        unpacklo_and_add_9x9_host(pxRow, &pxLower);
+                        unpackhi_and_add_9x9_host(pxRow, &pxUpper);
+                        
+                        __m128i pxLower3, pxLower4, pxUpper3, pxUpper4;
+                        pxLower3 =  _mm256_castsi256_si128(pxLower);
+                        pxLower4 =  _mm256_castsi256_si128(pxUpper);
+                        pxUpper3 =  _mm256_extracti128_si256(pxLower, 1);
+                        pxUpper4 =  _mm256_extracti128_si256(pxUpper, 1);
 
-                        increment_row_ptrs(srcPtrTemp, kernelSize, 8);
-                        dstPtrTemp += 8;
+                        // get the final accumalated result for first 8 elements
+                        pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 7), xmm_pxMaskRotate0To5);
+                        pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 63), xmm_pxMaskRotate0To11);
+                        pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 1), xmm_pxMaskRotate0To1);
+                        pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 15), xmm_pxMaskRotate0To7);
+                        pxTemp[4] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 127), xmm_pxMaskRotate0To13);
+                        pxTemp[5] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper2, pxLower3, 3), xmm_pxMaskRotate0To3);
+                        pxTemp[6] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper2, pxLower3, 31), xmm_pxMaskRotate0To9);
+                        pxLower2 = _mm_add_epi16(pxLower2, pxTemp[0]);
+                        pxLower2 = _mm_add_epi16(pxLower2, pxTemp[1]);
+                        pxLower2 = _mm_add_epi16(pxLower2, pxTemp[2]);
+                        pxLower2 = _mm_add_epi16(pxLower2, pxTemp[3]);
+                        pxLower2 = _mm_add_epi16(pxLower2, pxTemp[4]);
+                        pxLower2 = _mm_add_epi16(pxLower2, pxTemp[5]);
+                        pxLower2 = _mm_add_epi16(pxLower2, pxTemp[6]);
+                        pxLower2 = _mm_add_epi16(pxLower2, pxLower3);
+                        pxDst[1] = _mm_mulhi_epi16(pxLower2, pxConvolutionFactor);
+
+                        // get the final accumalated result for first 8 elements
+                        pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 7), xmm_pxMaskRotate0To5);
+                        pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 63), xmm_pxMaskRotate0To11);
+                        pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper2, pxLower3, 1), xmm_pxMaskRotate0To1);
+                        pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper2, pxLower3, 15), xmm_pxMaskRotate0To7);
+                        pxTemp[4] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper2, pxLower3, 127), xmm_pxMaskRotate0To13);
+                        pxTemp[5] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower3, pxLower4, 3), xmm_pxMaskRotate0To3);
+                        pxTemp[6] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower3, pxLower4, 31), xmm_pxMaskRotate0To9);
+                        pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[0]);
+                        pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[1]);
+                        pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[2]);
+                        pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[3]);
+                        pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[4]);
+                        pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[5]);
+                        pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[6]);
+                        pxUpper1 = _mm_add_epi16(pxUpper1, pxLower4);
+                        pxDst[2] = _mm_mulhi_epi16(pxUpper1, pxConvolutionFactor);
+
+                        // get the final accumalated result for first 8 elements
+                        pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper2, pxLower3, 7), xmm_pxMaskRotate0To5);
+                        pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper2, pxLower3, 63), xmm_pxMaskRotate0To11);
+                        pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower3, pxLower4, 1), xmm_pxMaskRotate0To1);
+                        pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower3, pxLower4, 15), xmm_pxMaskRotate0To7);
+                        pxTemp[4] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower3, pxLower4, 127), xmm_pxMaskRotate0To13);
+                        pxTemp[5] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower4, pxUpper3, 3), xmm_pxMaskRotate0To3);
+                        pxTemp[6] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower4, pxUpper3, 31), xmm_pxMaskRotate0To9);
+                        pxUpper2 = _mm_add_epi16(pxUpper2, pxTemp[0]);
+                        pxUpper2 = _mm_add_epi16(pxUpper2, pxTemp[1]);
+                        pxUpper2 = _mm_add_epi16(pxUpper2, pxTemp[2]);
+                        pxUpper2 = _mm_add_epi16(pxUpper2, pxTemp[3]);
+                        pxUpper2 = _mm_add_epi16(pxUpper2, pxTemp[4]);
+                        pxUpper2 = _mm_add_epi16(pxUpper2, pxTemp[5]);
+                        pxUpper2 = _mm_add_epi16(pxUpper2, pxTemp[6]);
+                        pxUpper2 = _mm_add_epi16(pxUpper2, pxUpper3);
+                        pxDst[3] = _mm_mulhi_epi16(pxUpper2, pxConvolutionFactor);
+
+                        pxDst[0] = _mm_packus_epi16(pxDst[0], pxDst[1]);
+                        pxDst[1] = _mm_packus_epi16(pxDst[2], pxDst[3]);
+                        _mm_storeu_si128((__m128i *)(dstPtrTemp), pxDst[0]);
+                        _mm_storeu_si128((__m128i *)(dstPtrTemp + 16), pxDst[1]);
+                        dstPtrTemp += 32;
                     }
                     vectorLoopCount += padLength * 3;
 
