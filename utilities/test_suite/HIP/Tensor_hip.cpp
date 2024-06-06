@@ -63,11 +63,11 @@ int main(int argc, char **argv)
     int decoderType = atoi(argv[13]);
     int batchSize = atoi(argv[14]);
 
-    bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23|| testCase == 24 || testCase == 40 || testCase == 41 || testCase == 49 || testCase == 54);
+    bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23|| testCase == 24 || testCase == 40 || testCase == 41 || testCase == 49 || testCase == 54 || testCase == 79);
     bool kernelSizeCase = (testCase == 40 || testCase == 41 || testCase == 49 || testCase == 54);
     bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 33 || testCase == 61 || testCase == 63 || testCase == 65 || testCase == 68);
     bool randomOutputCase = (testCase == 8 || testCase == 84 || testCase == 49 || testCase == 54);
-    bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24);
+    bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24 || testCase == 79);
     bool reductionTypeCase = (testCase == 87 || testCase == 88 || testCase == 89);
     bool noiseTypeCase = (testCase == 8);
     bool pln1OutTypeCase = (testCase == 86);
@@ -312,6 +312,13 @@ int main(int argc, char **argv)
     input_second = static_cast<Rpp8u *>(calloc(inputBufferSize, 1));
     output = static_cast<Rpp8u *>(calloc(outputBufferSize, 1));
 
+    Rpp32f *rowRemapTable, *colRemapTable;
+    if(testCase == 79)
+    {
+        rowRemapTable = static_cast<Rpp32f *>(calloc(ioBufferSize, sizeof(Rpp32f)));
+        colRemapTable = static_cast<Rpp32f *>(calloc(ioBufferSize, sizeof(Rpp32f)));
+    }
+
     // Run case-wise RPP API and measure time
     rppHandle_t handle;
     hipStream_t stream;
@@ -355,6 +362,25 @@ int main(int argc, char **argv)
     RpptROI *roiPtrInputCropRegion;
     if(testCase == 82)
         CHECK_RETURN_STATUS(hipHostMalloc(&roiPtrInputCropRegion, 4 * sizeof(RpptROI)));
+
+    void *d_rowRemapTable, *d_colRemapTable;
+    if(testCase == 79)
+    {
+        CHECK_RETURN_STATUS(hipMalloc(&d_rowRemapTable, ioBufferSize * sizeof(Rpp32u)));
+        CHECK_RETURN_STATUS(hipMalloc(&d_colRemapTable, ioBufferSize * sizeof(Rpp32u)));
+    }
+
+    Rpp32u boxesInEachImage = 3;
+    Rpp32f *colorBuffer;
+    RpptRoiLtrb *anchorBoxInfoTensor;
+    Rpp32u *numOfBoxes;
+    if(testCase == 32)
+    {
+        CHECK_RETURN_STATUS(hipHostMalloc(&colorBuffer, batchSize * boxesInEachImage * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipMemset(colorBuffer, 0, batchSize * boxesInEachImage * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&anchorBoxInfoTensor, batchSize * boxesInEachImage * sizeof(RpptRoiLtrb)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&numOfBoxes, batchSize * sizeof(Rpp32u)));
+    }
 
     // create cropRoi and patchRoi in case of crop_and_patch
     RpptROI *cropRoi, *patchRoi;
@@ -740,6 +766,19 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 32:
+                {
+                    testCaseName = "erase";
+
+                    init_erase(batchSize, boxesInEachImage, numOfBoxes, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, colorBuffer, inputBitDepth);
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_erase_gpu(d_input, srcDescPtr, d_output, dstDescPtr, anchorBoxInfoTensor, colorBuffer, numOfBoxes, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 case 33:
                 {
                     testCaseName = "crop_and_patch";
@@ -1070,6 +1109,25 @@ int main(int argc, char **argv)
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_copy_gpu(d_input, srcDescPtr, d_output, dstDescPtr, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 79:
+                {
+                    testCaseName = "remap";
+
+                    RpptDesc tableDesc = srcDesc;
+                    RpptDescPtr tableDescPtr = &tableDesc;
+                    init_remap(tableDescPtr, srcDescPtr, roiTensorPtrSrc, rowRemapTable, colRemapTable);
+
+                    CHECK_RETURN_STATUS(hipMemcpy(d_rowRemapTable, (void *)rowRemapTable, ioBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
+                    CHECK_RETURN_STATUS(hipMemcpy(d_colRemapTable, (void *)colRemapTable, ioBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_remap_gpu(d_input, srcDescPtr, d_output, dstDescPtr, (Rpp32f *)d_rowRemapTable, (Rpp32f *)d_colRemapTable, tableDescPtr, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
@@ -1461,6 +1519,12 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostFree(rgbOffsets));
     if (reductionTypeCase)
         CHECK_RETURN_STATUS(hipHostFree(reductionFuncResultArr));
+    if(testCase == 32)
+    {
+        CHECK_RETURN_STATUS(hipHostFree(colorBuffer));
+        CHECK_RETURN_STATUS(hipHostFree(anchorBoxInfoTensor));
+        CHECK_RETURN_STATUS(hipHostFree(numOfBoxes));
+    }
     if(anchorTensor != NULL)
         CHECK_RETURN_STATUS(hipHostFree(anchorTensor));
     if(shapeTensor != NULL)
@@ -1473,6 +1537,13 @@ int main(int argc, char **argv)
     free(inputu8);
     free(inputu8Second);
     free(outputu8);
+    if(testCase == 79)
+    {
+        free(rowRemapTable);
+        free(colRemapTable);
+        CHECK_RETURN_STATUS(hipFree(d_rowRemapTable));
+        CHECK_RETURN_STATUS(hipFree(d_colRemapTable));
+    }
     CHECK_RETURN_STATUS(hipFree(d_input));
     if(dualInputCase)
         CHECK_RETURN_STATUS(hipFree(d_input_second));
