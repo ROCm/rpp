@@ -371,11 +371,24 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipMemset(d_rowRemapTable, 0, ioBufferSize * sizeof(Rpp32u)));
         CHECK_RETURN_STATUS(hipMemset(d_colRemapTable, 0, ioBufferSize * sizeof(Rpp32u)));
     }
+
     float *d_cameraMatrix, *d_distortionCoeffs;
     if(testCase == 26)
     {
         CHECK_RETURN_STATUS(hipMalloc(&d_cameraMatrix, batchSize * 9 * sizeof(Rpp32f)));
         CHECK_RETURN_STATUS(hipMalloc(&d_distortionCoeffs, batchSize * 8 * sizeof(Rpp32f)));
+    }
+
+    Rpp32u boxesInEachImage = 3;
+    Rpp32f *colorBuffer;
+    RpptRoiLtrb *anchorBoxInfoTensor;
+    Rpp32u *numOfBoxes;
+    if(testCase == 32)
+    {
+        CHECK_RETURN_STATUS(hipHostMalloc(&colorBuffer, batchSize * boxesInEachImage * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipMemset(colorBuffer, 0, batchSize * boxesInEachImage * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&anchorBoxInfoTensor, batchSize * boxesInEachImage * sizeof(RpptRoiLtrb)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&numOfBoxes, batchSize * sizeof(Rpp32u)));
     }
 
     // create cropRoi and patchRoi in case of crop_and_patch
@@ -799,6 +812,19 @@ int main(int argc, char **argv)
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_color_cast_gpu(d_input, srcDescPtr, d_output, dstDescPtr, rgbTensor, alphaTensor, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 32:
+                {
+                    testCaseName = "erase";
+
+                    init_erase(batchSize, boxesInEachImage, numOfBoxes, anchorBoxInfoTensor, roiTensorPtrSrc, srcDescPtr->c, colorBuffer, inputBitDepth);
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_erase_gpu(d_input, srcDescPtr, d_output, dstDescPtr, anchorBoxInfoTensor, colorBuffer, numOfBoxes, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
@@ -1532,6 +1558,12 @@ int main(int argc, char **argv)
     }
     if (reductionTypeCase)
         CHECK_RETURN_STATUS(hipHostFree(reductionFuncResultArr));
+    if(testCase == 32)
+    {
+        CHECK_RETURN_STATUS(hipHostFree(colorBuffer));
+        CHECK_RETURN_STATUS(hipHostFree(anchorBoxInfoTensor));
+        CHECK_RETURN_STATUS(hipHostFree(numOfBoxes));
+    }
     if(anchorTensor != NULL)
         CHECK_RETURN_STATUS(hipHostFree(anchorTensor));
     if(shapeTensor != NULL)

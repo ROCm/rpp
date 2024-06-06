@@ -2255,6 +2255,7 @@ RppStatus rppt_flip_voxel_gpu(RppPtr_t srcPtr,
 }
 
 /******************** remap ********************/
+
 RppStatus rppt_remap_gpu(RppPtr_t srcPtr,
                          RpptDescPtr srcDescPtr,
                          RppPtr_t dstPtr,
@@ -2334,6 +2335,7 @@ RppStatus rppt_remap_gpu(RppPtr_t srcPtr,
 }
 
 /******************** lens_correction ********************/
+
 RppStatus rppt_lens_correction_gpu(RppPtr_t srcPtr,
                                    RpptDescPtr srcDescPtr,
                                    RppPtr_t dstPtr,
