@@ -4,13 +4,13 @@
 
 // ----------------------- Helper Functions --------------------------
 
-__device__ void stddev_hip_compute(uchar *srcPtr, float *src, float *dst, int numValues) { *dst =  sqrt(*src / numValues); }
-__device__ void stddev_hip_compute(float *srcPtr, float *src, float *dst, int numValues) { *dst =  sqrt(*src / numValues) * 255; }
-__device__ void stddev_hip_compute(signed char *srcPtr, float *src, float *dst, int numValues) { *dst = sqrt(*src / numValues); }
-__device__ void stddev_hip_compute(half *srcPtr, float *src, float *dst, int numValues) { *dst = sqrt(*src / numValues) * 255; }
+__device__ __forceinline__ void stddev_hip_compute(uchar *srcPtr, float *src, float *dst, int numValues) { *dst =  sqrt(*src / numValues); }
+__device__ __forceinline__ void stddev_hip_compute(float *srcPtr, float *src, float *dst, int numValues) { *dst =  sqrt(*src / numValues) * 255; }
+__device__ __forceinline__ void stddev_hip_compute(signed char *srcPtr, float *src, float *dst, int numValues) { *dst = sqrt(*src / numValues); }
+__device__ __forceinline__ void stddev_hip_compute(half *srcPtr, float *src, float *dst, int numValues) { *dst = sqrt(*src / numValues) * 255; }
 
-__device__ void mean_subtracted_square_3channel_hip_compute(d_float24 *src_f24, d_float24 *dst_f24,
-                                                            float4 &meanR_f4, float4 &meanG_f4, float4 &meanB_f4)
+__device__ __forceinline__ void mean_subtracted_square_3channel_hip_compute(d_float24 *src_f24, d_float24 *dst_f24,
+                                                                            float4 &meanR_f4, float4 &meanG_f4, float4 &meanB_f4)
 {
     rpp_hip_math_subtract8_const(&src_f24->f8[0], &dst_f24->f8[0], meanR_f4);
     rpp_hip_math_subtract8_const(&src_f24->f8[1], &dst_f24->f8[1], meanG_f4);
@@ -21,9 +21,9 @@ __device__ void mean_subtracted_square_3channel_hip_compute(d_float24 *src_f24, 
 }
 
 // perform reduction on shared memory and store the result in output
-__device__ void reduce_variance_3channel_hip(d_float24 *tempChannelSquared_f24, d_float24 *tempSquared_f24,
-                                             float *partialRVarianceRowPtr_smem, float *partialGVarianceRowPtr_smem, float *partialBVarianceRowPtr_smem,
-                                             float *partialTensorVarianceRowPtr_smem, float *dstPtr)
+__device__ __forceinline__ void reduce_variance_3channel_hip(d_float24 *tempChannelSquared_f24, d_float24 *tempSquared_f24,
+                                                             float *partialRVarianceRowPtr_smem, float *partialGVarianceRowPtr_smem, float *partialBVarianceRowPtr_smem,
+                                                             float *partialTensorVarianceRowPtr_smem, float *dstPtr)
 {
     // channel wise addition
     tempChannelSquared_f24->f8[0].f4[0] += tempChannelSquared_f24->f8[0].f4[1];                 // perform small work of vectorized float4 addition
@@ -417,7 +417,6 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
         Rpp32u tensorPartialVarArrLength = gridDim_x * gridDim_y * gridDim_z;
         float *tensorPartialVarArr = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
         hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float), handle.GetStream());
-        hipStreamSynchronize(handle.GetStream());
         hipLaunchKernelGGL(tensor_variance_pln1_hip,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
@@ -428,7 +427,6 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
                            tensorPartialVarArr,
                            meanTensor,
                            roiTensorPtrSrc);
-        hipStreamSynchronize(handle.GetStream());
         hipLaunchKernelGGL(tensor_stddev_grid_result_hip,
                            dim3(1, 1, gridDim_z),
                            dim3(1024, 1, 1),
@@ -445,7 +443,6 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
         Rpp32u tensorPartialVarArrLength = gridDim_x * gridDim_y * gridDim_z * 4;
         float *tensorPartialVarArr = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
         hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float), handle.GetStream());
-        hipStreamSynchronize(handle.GetStream());
         hipLaunchKernelGGL(tensor_variance_pln3_hip,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
@@ -456,7 +453,6 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
                            tensorPartialVarArr,
                            reinterpret_cast<float4 *>(meanTensor),
                            roiTensorPtrSrc);
-        hipStreamSynchronize(handle.GetStream());
         hipLaunchKernelGGL(tensor_stddev_grid_3channel_result_hip,
                            dim3(1, 1, gridDim_z),
                            dim3(1024, 1, 1),
@@ -473,7 +469,6 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
         Rpp32u tensorPartialVarArrLength = gridDim_x * gridDim_y * gridDim_z * 4;
         float *tensorPartialVarArr = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
         hipMemsetAsync(tensorPartialVarArr, 0, tensorPartialVarArrLength * sizeof(float), handle.GetStream());
-        hipStreamSynchronize(handle.GetStream());
         hipLaunchKernelGGL(tensor_variance_pkd3_hip,
                            dim3(gridDim_x, gridDim_y, gridDim_z),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
@@ -484,7 +479,6 @@ RppStatus hip_exec_tensor_stddev(T *srcPtr,
                            tensorPartialVarArr,
                            reinterpret_cast<float4 *>(meanTensor),
                            roiTensorPtrSrc);
-        hipStreamSynchronize(handle.GetStream());
         hipLaunchKernelGGL(tensor_stddev_grid_3channel_result_hip,
                            dim3(1, 1, gridDim_z),
                            dim3(1024, 1, 1),
