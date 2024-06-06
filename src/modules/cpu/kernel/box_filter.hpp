@@ -734,7 +734,7 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
             }
             else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
-                Rpp32u alignedLength = ((bufferLength - 2 * padLength * 3) / 32) * 32;
+                Rpp32u alignedLength = ((bufferLength - 2 * padLength * 3) / 64) * 64;
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
                     int vectorLoopCount = 0;
@@ -764,12 +764,13 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     for (int k = 0; k < 9; k++)
                         srcPtrTemp[k] = srcPtrRow[k];
 
+                    // load first 32 elements elements
+                    __m256i pxRow[9];
+                    rpp_load_box_filter_u8_u8_9x9_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
+
                     // process alignedLength number of columns in eacn row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 32)
                     {
-                        __m256i pxRow[9];
-                        rpp_load_box_filter_u8_u8_9x9_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
-
                         __m256i pxLower, pxUpper;
                         unpacklo_and_add_9x9_host(pxRow, &pxLower);
                         unpackhi_and_add_9x9_host(pxRow, &pxUpper);
