@@ -220,6 +220,26 @@ inline void unpackhi_and_add_9x9_host(__m256i *pxRow, __m256i *pxDst)
     pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[8], avx_px0));
 }
 
+inline void blend_shuffle_add_9x9_pkd_host(__m128i *px128)
+{
+    __m128i pxTemp[7];
+    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 7), xmm_pxMaskRotate0To5);
+    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 63), xmm_pxMaskRotate0To11);
+    pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(px128[1], px128[2], 1), xmm_pxMaskRotate0To1);
+    pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(px128[1], px128[2], 15), xmm_pxMaskRotate0To7);
+    pxTemp[4] = _mm_shuffle_epi8(_mm_blend_epi16(px128[1], px128[2], 127), xmm_pxMaskRotate0To13);
+    pxTemp[5] = _mm_shuffle_epi8(_mm_blend_epi16(px128[2], px128[3], 3), xmm_pxMaskRotate0To3);
+    pxTemp[6] = _mm_shuffle_epi8(_mm_blend_epi16(px128[2], px128[3], 31), xmm_pxMaskRotate0To9);
+    px128[0] = _mm_add_epi16(px128[0], pxTemp[0]);
+    px128[0] = _mm_add_epi16(px128[0], pxTemp[1]);
+    px128[0] = _mm_add_epi16(px128[0], pxTemp[2]);
+    px128[0] = _mm_add_epi16(px128[0], pxTemp[3]);
+    px128[0] = _mm_add_epi16(px128[0], pxTemp[4]);
+    px128[0] = _mm_add_epi16(px128[0], pxTemp[5]);
+    px128[0] = _mm_add_epi16(px128[0], pxTemp[6]);
+    px128[0] = _mm_add_epi16(px128[0], px128[3]);
+}
+
 inline void compute_box_filter_9x9_16_host_pln(__m256i *pxRow, __m128i *pxDst, const __m128i &pxConvolutionFactor)
 {
     __m256i pxLower, pxUpper;
@@ -754,30 +774,16 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                         unpacklo_and_add_9x9_host(pxRow, &pxLower);
                         unpackhi_and_add_9x9_host(pxRow, &pxUpper);
 
-                        __m128i pxLower1, pxLower2, pxUpper1, pxUpper2;
-                        pxLower1 =  _mm256_castsi256_si128(pxLower);
-                        pxLower2 =  _mm256_castsi256_si128(pxUpper);
-                        pxUpper1 =  _mm256_extracti128_si256(pxLower, 1);
-                        pxUpper2 =  _mm256_extracti128_si256(pxUpper, 1);
+                        __m128i px128[8];
+                        px128[0] =  _mm256_castsi256_si128(pxLower);
+                        px128[1] =  _mm256_castsi256_si128(pxUpper);
+                        px128[2] =  _mm256_extracti128_si256(pxLower, 1);
+                        px128[3] =  _mm256_extracti128_si256(pxUpper, 1);
 
                         // get the final accumalated result for first 8 elements
                         __m128i pxTemp[7], pxDst[4];
-                        pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 7), xmm_pxMaskRotate0To5);
-                        pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 63), xmm_pxMaskRotate0To11);
-                        pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 1), xmm_pxMaskRotate0To1);
-                        pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 15), xmm_pxMaskRotate0To7);
-                        pxTemp[4] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 127), xmm_pxMaskRotate0To13);
-                        pxTemp[5] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 3), xmm_pxMaskRotate0To3);
-                        pxTemp[6] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 31), xmm_pxMaskRotate0To9);
-                        pxLower1 = _mm_add_epi16(pxLower1, pxTemp[0]);
-                        pxLower1 = _mm_add_epi16(pxLower1, pxTemp[1]);
-                        pxLower1 = _mm_add_epi16(pxLower1, pxTemp[2]);
-                        pxLower1 = _mm_add_epi16(pxLower1, pxTemp[3]);
-                        pxLower1 = _mm_add_epi16(pxLower1, pxTemp[4]);
-                        pxLower1 = _mm_add_epi16(pxLower1, pxTemp[5]);
-                        pxLower1 = _mm_add_epi16(pxLower1, pxTemp[6]);
-                        pxLower1 = _mm_add_epi16(pxLower1, pxUpper2);
-                        pxDst[0] = _mm_mulhi_epi16(pxLower1, pxConvolutionFactor);
+                        blend_shuffle_add_9x9_pkd_host(&px128[0]);
+                        pxDst[0] = _mm_mulhi_epi16(px128[0], pxConvolutionFactor);
 
                         // compute for next 8 elements
                         increment_row_ptrs(srcPtrTemp, kernelSize, 32);
@@ -785,70 +791,21 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                         unpacklo_and_add_9x9_host(pxRow, &pxLower);
                         unpackhi_and_add_9x9_host(pxRow, &pxUpper);
                         
-                        __m128i pxLower3, pxLower4, pxUpper3, pxUpper4;
-                        pxLower3 =  _mm256_castsi256_si128(pxLower);
-                        pxLower4 =  _mm256_castsi256_si128(pxUpper);
-                        pxUpper3 =  _mm256_extracti128_si256(pxLower, 1);
-                        pxUpper4 =  _mm256_extracti128_si256(pxUpper, 1);
+                        px128[4] =  _mm256_castsi256_si128(pxLower);
+                        px128[5] =  _mm256_castsi256_si128(pxUpper);
+                        px128[6] =  _mm256_extracti128_si256(pxLower, 1);
+                        px128[7] =  _mm256_extracti128_si256(pxUpper, 1);
 
-                        // get the final accumalated result for first 8 elements
-                        pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 7), xmm_pxMaskRotate0To5);
-                        pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 63), xmm_pxMaskRotate0To11);
-                        pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 1), xmm_pxMaskRotate0To1);
-                        pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 15), xmm_pxMaskRotate0To7);
-                        pxTemp[4] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 127), xmm_pxMaskRotate0To13);
-                        pxTemp[5] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper2, pxLower3, 3), xmm_pxMaskRotate0To3);
-                        pxTemp[6] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper2, pxLower3, 31), xmm_pxMaskRotate0To9);
-                        pxLower2 = _mm_add_epi16(pxLower2, pxTemp[0]);
-                        pxLower2 = _mm_add_epi16(pxLower2, pxTemp[1]);
-                        pxLower2 = _mm_add_epi16(pxLower2, pxTemp[2]);
-                        pxLower2 = _mm_add_epi16(pxLower2, pxTemp[3]);
-                        pxLower2 = _mm_add_epi16(pxLower2, pxTemp[4]);
-                        pxLower2 = _mm_add_epi16(pxLower2, pxTemp[5]);
-                        pxLower2 = _mm_add_epi16(pxLower2, pxTemp[6]);
-                        pxLower2 = _mm_add_epi16(pxLower2, pxLower3);
-                        pxDst[1] = _mm_mulhi_epi16(pxLower2, pxConvolutionFactor);
-
-                        // get the final accumalated result for first 8 elements
-                        pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 7), xmm_pxMaskRotate0To5);
-                        pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 63), xmm_pxMaskRotate0To11);
-                        pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper2, pxLower3, 1), xmm_pxMaskRotate0To1);
-                        pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper2, pxLower3, 15), xmm_pxMaskRotate0To7);
-                        pxTemp[4] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper2, pxLower3, 127), xmm_pxMaskRotate0To13);
-                        pxTemp[5] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower3, pxLower4, 3), xmm_pxMaskRotate0To3);
-                        pxTemp[6] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower3, pxLower4, 31), xmm_pxMaskRotate0To9);
-                        pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[0]);
-                        pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[1]);
-                        pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[2]);
-                        pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[3]);
-                        pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[4]);
-                        pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[5]);
-                        pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[6]);
-                        pxUpper1 = _mm_add_epi16(pxUpper1, pxLower4);
-                        pxDst[2] = _mm_mulhi_epi16(pxUpper1, pxConvolutionFactor);
-
-                        // get the final accumalated result for first 8 elements
-                        pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper2, pxLower3, 7), xmm_pxMaskRotate0To5);
-                        pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper2, pxLower3, 63), xmm_pxMaskRotate0To11);
-                        pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower3, pxLower4, 1), xmm_pxMaskRotate0To1);
-                        pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower3, pxLower4, 15), xmm_pxMaskRotate0To7);
-                        pxTemp[4] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower3, pxLower4, 127), xmm_pxMaskRotate0To13);
-                        pxTemp[5] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower4, pxUpper3, 3), xmm_pxMaskRotate0To3);
-                        pxTemp[6] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower4, pxUpper3, 31), xmm_pxMaskRotate0To9);
-                        pxUpper2 = _mm_add_epi16(pxUpper2, pxTemp[0]);
-                        pxUpper2 = _mm_add_epi16(pxUpper2, pxTemp[1]);
-                        pxUpper2 = _mm_add_epi16(pxUpper2, pxTemp[2]);
-                        pxUpper2 = _mm_add_epi16(pxUpper2, pxTemp[3]);
-                        pxUpper2 = _mm_add_epi16(pxUpper2, pxTemp[4]);
-                        pxUpper2 = _mm_add_epi16(pxUpper2, pxTemp[5]);
-                        pxUpper2 = _mm_add_epi16(pxUpper2, pxTemp[6]);
-                        pxUpper2 = _mm_add_epi16(pxUpper2, pxUpper3);
-                        pxDst[3] = _mm_mulhi_epi16(pxUpper2, pxConvolutionFactor);
-
+                        // get the final accumalated result for next 24 elements
+                        blend_shuffle_add_9x9_pkd_host(&px128[1]);
+                        blend_shuffle_add_9x9_pkd_host(&px128[2]);
+                        blend_shuffle_add_9x9_pkd_host(&px128[3]);
+                        pxDst[1] = _mm_mulhi_epi16(px128[1], pxConvolutionFactor);
+                        pxDst[2] = _mm_mulhi_epi16(px128[2], pxConvolutionFactor);
+                        pxDst[3] = _mm_mulhi_epi16(px128[3], pxConvolutionFactor);
                         pxDst[0] = _mm_packus_epi16(pxDst[0], pxDst[1]);
                         pxDst[1] = _mm_packus_epi16(pxDst[2], pxDst[3]);
-                        _mm_storeu_si128((__m128i *)(dstPtrTemp), pxDst[0]);
-                        _mm_storeu_si128((__m128i *)(dstPtrTemp + 16), pxDst[1]);
+                        _mm256_storeu_si256((__m256i *)dstPtrTemp, _mm256_setr_m128i(pxDst[0], pxDst[1])); 
                         dstPtrTemp += 32;
                     }
                     vectorLoopCount += padLength * 3;
