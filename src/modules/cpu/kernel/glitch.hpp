@@ -95,7 +95,7 @@ RppStatus glitch_u8_u8_host_tensor(Rpp8u *srcPtr,
         {
             Rpp8u *dstPtrRow;
             dstPtrRow = dstPtrChannel;
-            Rpp32u alignedLength = (((roi.xywhROI.roiWidth)/ 8) * 8) - 10;
+            Rpp32u alignedLength = (((roi.xywhROI.roiWidth)/ 8) * 8) - 8;
             for (int dstLocRow = 0; dstLocRow < roi.xywhROI.roiHeight; dstLocRow++)
             {
                 Rpp8u* dstRowPtrTempR = dstPtrRow;
@@ -177,7 +177,7 @@ RppStatus glitch_u8_u8_host_tensor(Rpp8u *srcPtr,
                     for (int c = 0; c < 3; c++)
                     {
                         __m256i p;
-                        p = _mm256_loadu_epi8(srcPtrChannel + (glitchSrcLocArray[c] + c * srcDescPtr->strides.cStride)); 
+                        p = _mm256_loadu_epi8(srcPtrChannel + (glitchSrcLocArray[c] + c * srcDescPtr->strides.cStride));
                         _mm256_storeu_epi8((dstPtrTemp + c * srcDescPtr->strides.cStride), p);
                     }
                     dstPtrTemp += 32;
@@ -350,7 +350,7 @@ RppStatus glitch_f32_f32_host_tensor(Rpp32f *srcPtr,
                     for (int c = 0; c < 3; c++)
                     {
                         __m256 p;
-                        p = _mm256_loadu_ps(srcPtrChannel + (glitchSrcLocArray[c] + c * srcDescPtr->strides.cStride)); 
+                        p = _mm256_loadu_ps(srcPtrChannel + (glitchSrcLocArray[c] + c * srcDescPtr->strides.cStride));
                         _mm256_storeu_ps((dstPtrTemp + c * srcDescPtr->strides.cStride), p);
                     }
                     dstPtrTemp += 8;
@@ -636,7 +636,7 @@ RppStatus glitch_i8_i8_host_tensor(Rpp8s *srcPtr,
                     for (int c = 0; c < 3; c++)
                     {
                         __m256i p;
-                        p = _mm256_loadu_epi8(srcPtrChannel + (glitchSrcLocArray[c] + c * srcDescPtr->strides.cStride)); 
+                        p = _mm256_loadu_epi8(srcPtrChannel + (glitchSrcLocArray[c] + c * srcDescPtr->strides.cStride));
                         _mm256_storeu_epi8((dstPtrTemp + c * srcDescPtr->strides.cStride), p);
                     }
                     dstPtrTemp += 32;
