@@ -6461,4 +6461,32 @@ inline void compute_remap_src_loc(Rpp32f rowLoc, Rpp32f colLoc, Rpp32s &srcLoc, 
     srcLoc = (rowLoc * stride) + colLoc * channels;
 }
 
+inline void rpp_pixel_check_and_store(float pixel, Rpp8u* dst)
+{
+    pixel = fmax(fminf(pixel, 255), 0);
+    *dst = (Rpp8u)pixel;
+}
+
+// float pixel check for -128-127 range
+
+inline void rpp_pixel_check_and_store(float pixel, Rpp8s* dst)
+{
+    pixel = fmax(fminf(pixel, 127), -128);
+    *dst = (Rpp8s)pixel;
+}
+
+// float pixel check for 0-1 range
+
+inline void rpp_pixel_check_and_store(float pixel, Rpp32f* dst)
+{
+    pixel = fmax(fminf(pixel, 1), 0);
+    *dst = pixel;
+}
+
+inline void rpp_pixel_check_and_store(float pixel, Rpp16f* dst)
+{
+    pixel = fmax(fminf(pixel, 1), 0);
+    *dst = (Rpp16f)pixel;
+}
+
 #endif //RPP_CPU_COMMON_H
