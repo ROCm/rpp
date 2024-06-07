@@ -207,6 +207,219 @@ inline void compute_box_filter_u8_u8_3x3_24_host_pkd(__m256i *pxRow, __m128i *px
     pxDst[1] = _mm_packus_epi16(pxUpper1, xmm_px0);
 }
 
+// -------------------- 5x5 kernel size - U8 bitdepth compute functions --------------------
+
+inline void compute_box_filter_u8_u8_5x5_24_host_pln(__m256i *pxRow, __m128i *pxDst, const __m128i &pxConvolutionFactor)
+{
+    // pack lower half of each of 3 loaded row values from 8 bit to 16 bit and add
+    __m256i pxLower, pxUpper;
+    pxLower = _mm256_unpacklo_epi8(pxRow[0], avx_px0);
+    pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[1], avx_px0));
+    pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[2], avx_px0));
+    pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[3], avx_px0));
+    pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[4], avx_px0));
+
+    // pack higher half of each of 3 loaded row values from 8 bit to 16 bit and add
+    pxUpper = _mm256_unpackhi_epi8(pxRow[0], avx_px0);
+    pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[1], avx_px0));
+    pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[2], avx_px0));
+    pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[3], avx_px0));
+    pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[4], avx_px0));
+
+    // get 4 SSE registers from above 2 AVX registers to arrange as per required order
+    __m128i pxLower1, pxLower2, pxUpper1, pxUpper2;
+    pxLower1 = _mm256_castsi256_si128(pxLower);
+    pxLower2 = _mm256_castsi256_si128(pxUpper);
+    pxUpper1 = _mm256_extracti128_si256(pxLower, 1);
+    pxUpper2 = _mm256_extracti128_si256(pxUpper, 1);
+
+    // get the final accumalated result for first 8 elements
+    __m128i pxTemp[4];
+    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 1), xmm_pxMaskRotate0To1);
+    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 3), xmm_pxMaskRotate0To3);
+    pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 7), xmm_pxMaskRotate0To5);
+    pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 15), xmm_pxMaskRotate0To7);
+    pxLower1 = _mm_add_epi16(pxLower1, pxTemp[0]);
+    pxLower1 = _mm_add_epi16(pxLower1, pxTemp[1]);
+    pxLower1 = _mm_add_epi16(pxLower1, pxTemp[2]);
+    pxLower1 = _mm_add_epi16(pxLower1, pxTemp[3]);
+
+    // get the final accumalated result for next 8 elements
+    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 1), xmm_pxMaskRotate0To1);
+    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 3), xmm_pxMaskRotate0To3);
+    pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 7), xmm_pxMaskRotate0To5);
+    pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 15), xmm_pxMaskRotate0To7);
+    pxLower2 = _mm_add_epi16(pxLower2, pxTemp[0]);
+    pxLower2 = _mm_add_epi16(pxLower2, pxTemp[1]);
+    pxLower2 = _mm_add_epi16(pxLower2, pxTemp[2]);
+    pxLower2 = _mm_add_epi16(pxLower2, pxTemp[3]);
+
+    // get the final accumalated result for last 8 elements
+    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 1), xmm_pxMaskRotate0To1);
+    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 3), xmm_pxMaskRotate0To3);
+    pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 7), xmm_pxMaskRotate0To5);
+    pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 15), xmm_pxMaskRotate0To7);
+    pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[0]);
+    pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[1]);
+    pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[2]);
+    pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[3]);
+
+    // multiply with convolution factor
+    pxLower1 = _mm_mulhi_epi16(pxLower1, pxConvolutionFactor);
+    pxLower2 = _mm_mulhi_epi16(pxLower2, pxConvolutionFactor);
+    pxUpper1 = _mm_mulhi_epi16(pxUpper1, pxConvolutionFactor);
+
+    // saturate 16 bit values to 8 bit values and store in resultant registers
+    pxDst[0] = _mm_packus_epi16(pxLower1, pxLower2);
+    pxDst[1] = _mm_packus_epi16(pxUpper1, xmm_px0);
+}
+
+inline void compute_box_filter_u8_u8_5x5_18_host_pkd(__m256i *pxRow, __m128i *pxDst, const __m128i &pxConvolutionFactor)
+{
+    // pack lower half of each of 3 loaded row values from 8 bit to 16 bit and add
+    __m256i pxLower, pxUpper;
+    pxLower = _mm256_unpacklo_epi8(pxRow[0], avx_px0);
+    pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[1], avx_px0));
+    pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[2], avx_px0));
+    pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[3], avx_px0));
+    pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[4], avx_px0));
+
+    // pack higher half of each of 3 loaded row values from 8 bit to 16 bit and add
+    pxUpper = _mm256_unpackhi_epi8(pxRow[0], avx_px0);
+    pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[1], avx_px0));
+    pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[2], avx_px0));
+    pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[3], avx_px0));
+    pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[4], avx_px0));
+
+    // get 4 SSE registers from above 2 AVX registers to arrange as per required order
+    __m128i pxLower1, pxLower2, pxUpper1, pxUpper2;
+    pxLower1 =  _mm256_castsi256_si128(pxLower);
+    pxLower2 =  _mm256_castsi256_si128(pxUpper);
+    pxUpper1 =  _mm256_extracti128_si256(pxLower, 1);
+    pxUpper2 =  _mm256_extracti128_si256(pxUpper, 1);
+
+    // perform blend and shuffle operations for the first 8 output values to get required order and add them
+    __m128i pxTemp[4];
+    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 7), xmm_pxMaskRotate0To5);
+    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 63), xmm_pxMaskRotate0To11);
+    pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 1), xmm_pxMaskRotate0To1);
+    pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 15), xmm_pxMaskRotate0To7);
+    pxLower1 = _mm_add_epi16(pxLower1, pxTemp[0]);
+    pxLower1 = _mm_add_epi16(pxLower1, pxTemp[1]);
+    pxLower1 = _mm_add_epi16(pxLower1, pxTemp[2]);
+    pxLower1 = _mm_add_epi16(pxLower1, pxTemp[3]);
+
+    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 7), xmm_pxMaskRotate0To5);
+    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 63), xmm_pxMaskRotate0To11);
+    pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 1), xmm_pxMaskRotate0To1);
+    pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 15), xmm_pxMaskRotate0To7);
+    pxLower2 = _mm_add_epi16(pxLower2, pxTemp[0]);
+    pxLower2 = _mm_add_epi16(pxLower2, pxTemp[1]);
+    pxLower2 = _mm_add_epi16(pxLower2, pxTemp[2]);
+    pxLower2 = _mm_add_epi16(pxLower2, pxTemp[3]);
+
+    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 7), xmm_pxMaskRotate0To5);
+    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 63), xmm_pxMaskRotate0To11);
+    pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 63), xmm_pxMaskRotate0To1);
+    pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 127), xmm_pxMaskRotate0To7);
+    pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[0]);
+    pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[1]);
+    pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[2]);
+    pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[3]);
+
+    // multiply with convolution factor
+    pxLower1 = _mm_mulhi_epi16(pxLower1, pxConvolutionFactor);
+    pxLower2 = _mm_mulhi_epi16(pxLower2, pxConvolutionFactor);
+    pxUpper1 = _mm_mulhi_epi16(pxUpper1, pxConvolutionFactor);
+
+    // saturate 16 bit values to 8 bit values and store in resultant registers
+    pxDst[0] = _mm_packus_epi16(pxLower1, pxLower2);
+    pxDst[1] = _mm_packus_epi16(pxUpper1, xmm_px0);
+}
+
+// -------------------- 7x7 kernel size - U8 bitdepth compute functions --------------------
+
+inline void compute_box_filter_u8_u8_7x7_24_host_pln(__m256i *pxRow, __m128i *pxDst, const __m128i &pxConvolutionFactor)
+{
+    // pack lower half of each of 3 loaded row values from 8 bit to 16 bit and add
+    __m256i pxLower, pxUpper;
+    pxLower = _mm256_unpacklo_epi8(pxRow[0], avx_px0);
+    pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[1], avx_px0));
+    pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[2], avx_px0));
+    pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[3], avx_px0));
+    pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[4], avx_px0));
+    pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[5], avx_px0));
+    pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[6], avx_px0));
+
+    // pack higher half of each of 3 loaded row values from 8 bit to 16 bit and add
+    pxUpper = _mm256_unpackhi_epi8(pxRow[0], avx_px0);
+    pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[1], avx_px0));
+    pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[2], avx_px0));
+    pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[3], avx_px0));
+    pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[4], avx_px0));
+    pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[5], avx_px0));
+    pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[6], avx_px0));
+
+    // get 4 SSE registers from above 2 AVX registers to arrange as per required order
+    __m128i pxLower1, pxLower2, pxUpper1, pxUpper2;
+    pxLower1 = _mm256_castsi256_si128(pxLower);
+    pxLower2 = _mm256_castsi256_si128(pxUpper);
+    pxUpper1 = _mm256_extracti128_si256(pxLower, 1);
+    pxUpper2 = _mm256_extracti128_si256(pxUpper, 1);
+
+    // get the final accumalated result for first 8 elements
+    __m128i pxTemp[6];
+    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 1), xmm_pxMaskRotate0To1);
+    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 3), xmm_pxMaskRotate0To3);
+    pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 7), xmm_pxMaskRotate0To5);
+    pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 15), xmm_pxMaskRotate0To7);
+    pxTemp[4] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 31), xmm_pxMaskRotate0To9);
+    pxTemp[5] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 63), xmm_pxMaskRotate0To11);
+    pxLower1 = _mm_add_epi16(pxLower1, pxTemp[0]);
+    pxLower1 = _mm_add_epi16(pxLower1, pxTemp[1]);
+    pxLower1 = _mm_add_epi16(pxLower1, pxTemp[2]);
+    pxLower1 = _mm_add_epi16(pxLower1, pxTemp[3]);
+    pxLower1 = _mm_add_epi16(pxLower1, pxTemp[4]);
+    pxLower1 = _mm_add_epi16(pxLower1, pxTemp[5]);
+
+    // get the final accumalated result for next 8 elements
+    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 1), xmm_pxMaskRotate0To1);
+    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 3), xmm_pxMaskRotate0To3);
+    pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 7), xmm_pxMaskRotate0To5);
+    pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 15), xmm_pxMaskRotate0To7);
+    pxTemp[4] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 31), xmm_pxMaskRotate0To9);
+    pxTemp[5] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 63), xmm_pxMaskRotate0To11);
+    pxLower2 = _mm_add_epi16(pxLower2, pxTemp[0]);
+    pxLower2 = _mm_add_epi16(pxLower2, pxTemp[1]);
+    pxLower2 = _mm_add_epi16(pxLower2, pxTemp[2]);
+    pxLower2 = _mm_add_epi16(pxLower2, pxTemp[3]);
+    pxLower2 = _mm_add_epi16(pxLower2, pxTemp[4]);
+    pxLower2 = _mm_add_epi16(pxLower2, pxTemp[5]);
+
+    // get the final accumalated result for last 8 elements
+    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 1), xmm_pxMaskRotate0To1);
+    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 3), xmm_pxMaskRotate0To3);
+    pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 7), xmm_pxMaskRotate0To5);
+    pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 15), xmm_pxMaskRotate0To7);
+    pxTemp[4] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 31), xmm_pxMaskRotate0To9);
+    pxTemp[5] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 63), xmm_pxMaskRotate0To11);
+    pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[0]);
+    pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[1]);
+    pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[2]);
+    pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[3]);
+    pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[4]);
+    pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[5]);
+
+    // multiply with convolution factor
+    pxLower1 = _mm_mulhi_epi16(pxLower1, pxConvolutionFactor);
+    pxLower2 = _mm_mulhi_epi16(pxLower2, pxConvolutionFactor);
+    pxUpper1 = _mm_mulhi_epi16(pxUpper1, pxConvolutionFactor);
+
+    // saturate 16 bit values to 8 bit values and store in resultant registers
+    pxDst[0] = _mm_packus_epi16(pxLower1, pxLower2);
+    pxDst[1] = _mm_packus_epi16(pxUpper1, xmm_px0);
+}
+
 // -------------------- 9x9 kernel size - U8 bitdepth compute functions --------------------
 
 inline void unpacklo_and_add_9x9_host(__m256i *pxRow, __m256i *pxDst)
@@ -368,6 +581,33 @@ inline void rpp_load_box_filter_u8_u8_3x3_host(__m256i *pxRow, Rpp8u **srcPtrTem
         pxRow[2] = _mm256_loadu_si256((__m256i *)srcPtrTemp[2]);
     else
         pxRow[2] = avx_px0;
+}
+
+// 5x5 kernel loads for U8 bitdepth
+inline void rpp_load_box_filter_u8_u8_5x5_host(__m256i *pxRow, Rpp8u **srcPtrTemp, Rpp32s rowKernelLoopLimit)
+{
+    // irrespective of row location, we need to load 3 rows for 5x5 kernel
+    pxRow[0] = _mm256_loadu_si256((__m256i *)srcPtrTemp[0]);
+    pxRow[1] = _mm256_loadu_si256((__m256i *)srcPtrTemp[1]);
+    pxRow[2] = _mm256_loadu_si256((__m256i *)srcPtrTemp[2]);
+    for (int k = 3; k < rowKernelLoopLimit; k++)
+        pxRow[k] = _mm256_loadu_si256((__m256i *)srcPtrTemp[k]);
+    for (int k = rowKernelLoopLimit; k < 5; k++)
+        pxRow[k] = avx_px0;
+}
+
+// 7x7 kernel loads for U8 bitdepth
+inline void rpp_load_box_filter_u8_u8_7x7_host(__m256i *pxRow, Rpp8u **srcPtrTemp, Rpp32s rowKernelLoopLimit)
+{
+    // irrespective of row location, we need to load 3 rows for 5x5 kernel
+    pxRow[0] = _mm256_loadu_si256((__m256i *)srcPtrTemp[0]);
+    pxRow[1] = _mm256_loadu_si256((__m256i *)srcPtrTemp[1]);
+    pxRow[2] = _mm256_loadu_si256((__m256i *)srcPtrTemp[2]);
+    pxRow[3] = _mm256_loadu_si256((__m256i *)srcPtrTemp[3]);
+    for (int k = 4; k < rowKernelLoopLimit; k++)
+        pxRow[k] = _mm256_loadu_si256((__m256i *)srcPtrTemp[k]);
+    for (int k = rowKernelLoopLimit; k < 7; k++)
+        pxRow[k] = avx_px0;
 }
 
 // 9x9 kernel loads for U8 bitdepth
@@ -668,6 +908,393 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
 
                             __m128i pxDst[2];
                             compute_box_filter_u8_u8_3x3_24_host_pln(pxRow, pxDst, pxConvolutionFactor);
+                            pxResultPln[c] = _mm256_setr_m128i(pxDst[0], pxDst[1]);
+                            increment_row_ptrs(srcPtrTemp[c], kernelSize, 24);
+                        }
+                        __m128i pxResultPkd[6];
+                        // convert result from pln to pkd format and store in output buffer
+                        rpp_convert72_u8pln3_to_u8pkd3(pxResultPln, pxResultPkd);
+                        _mm_storeu_si128((__m128i *)dstPtrTemp, pxResultPkd[0]);
+                        _mm_storeu_si128((__m128i *)(dstPtrTemp + 12), pxResultPkd[1]);
+                        _mm_storeu_si128((__m128i *)(dstPtrTemp + 24), pxResultPkd[2]);
+                        _mm_storeu_si128((__m128i *)(dstPtrTemp + 36), pxResultPkd[3]);
+                        _mm_storeu_si128((__m128i *)(dstPtrTemp + 48), pxResultPkd[4]);
+                        _mm_storeu_si128((__m128i *)(dstPtrTemp + 60), pxResultPkd[5]);
+                        dstPtrTemp += 72;
+                    }
+                    vectorLoopCount += padLength;
+
+                    // process remaining columns in each row
+                    for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                    {
+                        for (int c = 0; c < 3; c++)
+                        {
+                            box_filter_generic_u8_u8_host_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
+                            dstPtrTemp++;
+                        }
+                    }
+                    increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
+                    dstPtrRow += dstDescPtr->strides.hStride;
+                }
+            }
+        }
+        else if (kernelSize == 5)
+        {
+            Rpp8u *srcPtrRow[5], *dstPtrRow;
+            for (int i = 0; i < 5; i++)
+                srcPtrRow[i] = srcPtrChannel + i * srcDescPtr->strides.hStride;
+            dstPtrRow = dstPtrChannel;
+
+            // box filter without fused output-layout toggle (NCHW -> NCHW)
+            if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+            {
+                Rpp32u alignedLength = ((bufferLength - 2 * padLength) / 24) * 24;
+                for (int c = 0; c < srcDescPtr->c; c++)
+                {
+                    srcPtrRow[0] = srcPtrChannel;
+                    srcPtrRow[1] = srcPtrRow[0] + srcDescPtr->strides.hStride;
+                    srcPtrRow[2] = srcPtrRow[1] + srcDescPtr->strides.hStride;
+                    srcPtrRow[3] = srcPtrRow[2] + srcDescPtr->strides.hStride;
+                    srcPtrRow[4] = srcPtrRow[3] + srcDescPtr->strides.hStride;
+                    dstPtrRow = dstPtrChannel;
+                    for (int i = 0; i < roi.xywhROI.roiHeight; i++)
+                    {
+                        int vectorLoopCount = 0;
+                        bool padLengthRows = (i < padLength) ? 1 : 0;
+                        Rpp8u *srcPtrTemp[5] = {srcPtrRow[0], srcPtrRow[1], srcPtrRow[2], srcPtrRow[3], srcPtrRow[4]};
+                        Rpp8u *dstPtrTemp = dstPtrRow;
+
+                        // get the number of rows needs to be loaded for the corresponding row
+                        Rpp32s rowKernelLoopLimit;
+                        get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
+
+                        // process padLength number of columns in each row
+                        // left border pixels in image which does not have required pixels in 5x5 box, process them separately
+                        for (int k = 0; k < padLength; k++)
+                        {
+                            box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTemp, k, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            dstPtrTemp++;
+                        }
+
+                        // process alignedLength number of columns in each row
+                        for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
+                        {
+                            __m256i pxRow[5];
+                            rpp_load_box_filter_u8_u8_5x5_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
+
+                            __m128i pxDst[2];
+                            compute_box_filter_u8_u8_5x5_24_host_pln(pxRow, pxDst, pxConvolutionFactor);
+                            _mm256_storeu_si256((__m256i *)dstPtrTemp, _mm256_setr_m128i(pxDst[0], pxDst[1]));
+                            increment_row_ptrs(srcPtrTemp, kernelSize, 24);
+                            dstPtrTemp += 24;
+                        }
+                        vectorLoopCount += padLength;
+                        // process remaining columns in each row
+                        for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                        {
+                            box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            increment_row_ptrs(srcPtrTemp, kernelSize, 1);
+                            dstPtrTemp++;
+                        }
+                        increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
+                        dstPtrRow += dstDescPtr->strides.hStride;
+                    }
+                    srcPtrChannel += srcDescPtr->strides.cStride;
+                    dstPtrChannel += dstDescPtr->strides.cStride;
+                }
+            }
+            else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
+            {
+                Rpp32u alignedLength = ((bufferLength - 2 * padLength * 3) / 18) * 18;
+                for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+                {
+                    int vectorLoopCount = 0;
+                    bool padLengthRows = (i < padLength) ? 1: 0;
+                    Rpp8u *srcPtrTemp[5] = {srcPtrRow[0], srcPtrRow[1], srcPtrRow[2], srcPtrRow[3], srcPtrRow[4]};
+                    Rpp8u *dstPtrTemp = dstPtrRow;
+
+                    Rpp32s rowKernelLoopLimit;
+                    get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
+
+                    // process padLength number of columns in each row
+                    for (int k = 0; k < padLength * 3; k++)
+                    {
+                        box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTemp, k / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 1);
+                        dstPtrTemp++;
+                    }
+                    // reset source to initial position
+                    srcPtrTemp[0] = srcPtrRow[0];
+                    srcPtrTemp[1] = srcPtrRow[1];
+                    srcPtrTemp[2] = srcPtrRow[2];
+                    srcPtrTemp[3] = srcPtrRow[3];
+                    srcPtrTemp[4] = srcPtrRow[4];
+
+                    // process remaining columns in each row
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 18)
+                    {
+                        __m256i pxRow[3];
+                        rpp_load_box_filter_u8_u8_5x5_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
+
+                        __m128i pxDst[2];
+                        compute_box_filter_u8_u8_5x5_18_host_pkd(pxRow, pxDst, pxConvolutionFactor);
+                        _mm256_storeu_si256((__m256i *)dstPtrTemp, _mm256_setr_m128i(pxDst[0], pxDst[1]));
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 18);
+                        dstPtrTemp += 18;
+                    }
+                    vectorLoopCount += padLength * 3;
+                    for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                    {
+                        box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 1);
+                        dstPtrTemp++;
+                    }
+                    increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
+                    dstPtrRow += dstDescPtr->strides.hStride;
+                }
+            }
+            else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
+            {
+                Rpp32u alignedLength = ((bufferLength - 2 * padLength * 3) / 18) * 18;
+                Rpp8u *dstPtrChannels[3];
+                for (int i = 0; i < 3; i++)
+                    dstPtrChannels[i] = dstPtrChannel + i * dstDescPtr->strides.cStride;
+
+                for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+                {
+                    int vectorLoopCount = 0;
+                    bool padLengthRows = (i < padLength) ? 1: 0;
+                    Rpp8u *srcPtrTemp[5] = {srcPtrRow[0], srcPtrRow[1], srcPtrRow[2], srcPtrRow[3], srcPtrRow[4]};
+                    Rpp8u *dstPtrTempChannels[3] = {dstPtrChannels[0], dstPtrChannels[1], dstPtrChannels[2]};
+
+                    Rpp32s rowKernelLoopLimit;
+                    get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
+
+                    // process padLength number of columns in each row
+                    for (int k = 0, c = 0; k < padLength * 3; k++, c++)
+                    {
+                        int channel = c % 3;
+                        box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 1);
+                        dstPtrTempChannels[channel]++;
+                    }
+
+                    // reset source to initial position
+                    srcPtrTemp[0] = srcPtrRow[0];
+                    srcPtrTemp[1] = srcPtrRow[1];
+                    srcPtrTemp[2] = srcPtrRow[2];
+                    srcPtrTemp[3] = srcPtrRow[3];
+                    srcPtrTemp[4] = srcPtrRow[4];
+
+                    // process remaining columns in each row
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 18)
+                    {
+                        __m256i pxRow[5];
+                        rpp_load_box_filter_u8_u8_5x5_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
+
+                        __m128i pxDst[2];
+                        compute_box_filter_u8_u8_5x5_18_host_pkd(pxRow, pxDst, pxConvolutionFactor);
+
+                        // convert from PKD3 to PLN3 and store channelwise
+                        __m128i pxR, pxG, pxB;
+                        rpp_convert24_u8pkd3_to_u8pln3(pxDst[0], pxDst[1], pxR, pxG, pxB);
+                        rpp_storeu_si64((__m128i *)(dstPtrTempChannels[0]), pxR);
+                        rpp_storeu_si64((__m128i *)(dstPtrTempChannels[1]), pxG);
+                        rpp_storeu_si64((__m128i *)(dstPtrTempChannels[2]), pxB);
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 18);
+                        increment_row_ptrs(dstPtrTempChannels, kernelSize, 6);
+                    }
+                    vectorLoopCount += padLength * 3;
+                    for (int c = 0; vectorLoopCount < bufferLength; vectorLoopCount++, c++)
+                    {
+                        int channel = c % 3;
+                        box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 1);
+                        dstPtrTempChannels[channel]++;
+                    }
+                    increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
+                    increment_row_ptrs(dstPtrChannels, kernelSize, dstDescPtr->strides.hStride);
+                }
+            }
+            else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
+            {
+                Rpp32u alignedLength = ((bufferLength - 2 * padLength) / 24) * 24;
+                for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+                {
+                    int vectorLoopCount = 0;
+                    bool padLengthRows = (i < padLength) ? 1: 0;
+                    Rpp8u *srcPtrTemp[3][5];
+                    for (int c = 0; c < 3; c++)
+                    {
+                        Rpp32u channelStride = c * srcDescPtr->strides.cStride;
+                        for (int k = 0; k < 5; k++)
+                            srcPtrTemp[c][k] = srcPtrRow[k] + channelStride;
+                    }
+                    Rpp8u *dstPtrTemp = dstPtrRow;
+                    // get the number of rows needs to be loaded for the corresponding row
+                    Rpp32s rowKernelLoopLimit;
+                    get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
+
+                    // process padLength number of columns in each row
+                    // left border pixels in image which does not have required pixels in 5x5 box, process them separately
+                    for (int k = 0; k < padLength; k++)
+                    {
+                        for (int c = 0; c < 3; c++)
+                        {
+                            box_filter_generic_u8_u8_host_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            dstPtrTemp++;
+                        }
+                    }
+
+                    // process alignedLength number of columns in eacn row
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
+                    {
+                        __m256i pxResultPln[3];
+                        for (int c = 0; c < 3; c++)
+                        {
+                            __m256i pxRow[5];
+                            rpp_load_box_filter_u8_u8_5x5_host(pxRow, srcPtrTemp[c], rowKernelLoopLimit);
+
+                            __m128i pxDst[2];
+                            compute_box_filter_u8_u8_5x5_24_host_pln(pxRow, pxDst, pxConvolutionFactor);
+                            pxResultPln[c] = _mm256_setr_m128i(pxDst[0], pxDst[1]);
+                            increment_row_ptrs(srcPtrTemp[c], kernelSize, 24);
+                        }
+                        __m128i pxResultPkd[6];
+                        // convert result from pln to pkd format and store in output buffer
+                        rpp_convert72_u8pln3_to_u8pkd3(pxResultPln, pxResultPkd);
+                        _mm_storeu_si128((__m128i *)dstPtrTemp, pxResultPkd[0]);
+                        _mm_storeu_si128((__m128i *)(dstPtrTemp + 12), pxResultPkd[1]);
+                        _mm_storeu_si128((__m128i *)(dstPtrTemp + 24), pxResultPkd[2]);
+                        _mm_storeu_si128((__m128i *)(dstPtrTemp + 36), pxResultPkd[3]);
+                        _mm_storeu_si128((__m128i *)(dstPtrTemp + 48), pxResultPkd[4]);
+                        _mm_storeu_si128((__m128i *)(dstPtrTemp + 60), pxResultPkd[5]);
+                        dstPtrTemp += 72;
+                    }
+                    vectorLoopCount += padLength;
+
+                    // process remaining columns in each row
+                    for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                    {
+                        for (int c = 0; c < 3; c++)
+                        {
+                            box_filter_generic_u8_u8_host_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
+                            dstPtrTemp++;
+                        }
+                    }
+                    increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
+                    dstPtrRow += dstDescPtr->strides.hStride;
+                }
+            }
+        }
+        else if (kernelSize == 7)
+        {
+            Rpp8u *srcPtrRow[7], *dstPtrRow;
+            for (int i = 0; i < 7; i++)
+                srcPtrRow[i] = srcPtrChannel + i * srcDescPtr->strides.hStride;
+            dstPtrRow = dstPtrChannel;
+
+            // box filter without fused output-layout toggle (NCHW -> NCHW)
+            if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+            {
+                Rpp32u alignedLength = ((bufferLength - 2 * padLength) / 24) * 24;
+                for (int c = 0; c < srcDescPtr->c; c++)
+                {
+                    srcPtrRow[0] = srcPtrChannel;
+                    for (int k = 1; k < 7; k++)
+                        srcPtrRow[k] = srcPtrRow[k - 1] + srcDescPtr->strides.hStride;
+                    dstPtrRow = dstPtrChannel;
+                    for (int i = 0; i < roi.xywhROI.roiHeight; i++)
+                    {
+                        int vectorLoopCount = 0;
+                        bool padLengthRows = (i < padLength) ? 1 : 0;
+                        Rpp8u *srcPtrTemp[7];
+                        for (int k = 0; k < 7; k++)
+                            srcPtrTemp[k] = srcPtrRow[k];
+                        Rpp8u *dstPtrTemp = dstPtrRow;
+
+                        // get the number of rows needs to be loaded for the corresponding row
+                        Rpp32s rowKernelLoopLimit;
+                        get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
+
+                        // process padLength number of columns in each row
+                        // left border pixels in image which does not have required pixels in 7x7 box, process them separately
+                        for (int k = 0; k < padLength; k++)
+                        {
+                            box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTemp, k, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            dstPtrTemp++;
+                        }
+
+                        // process alignedLength number of columns in each row
+                        for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
+                        {
+                            __m256i pxRow[7];
+                            rpp_load_box_filter_u8_u8_7x7_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
+
+                            __m128i pxDst[2];
+                            compute_box_filter_u8_u8_7x7_24_host_pln(pxRow, pxDst, pxConvolutionFactor);
+                            _mm256_storeu_si256((__m256i *)dstPtrTemp, _mm256_setr_m128i(pxDst[0], pxDst[1]));
+                            increment_row_ptrs(srcPtrTemp, kernelSize, 24);
+                            dstPtrTemp += 24;
+                        }
+                        vectorLoopCount += padLength;
+                        // process remaining columns in each row
+                        for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                        {
+                            box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            increment_row_ptrs(srcPtrTemp, kernelSize, 1);
+                            dstPtrTemp++;
+                        }
+                        increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
+                        dstPtrRow += dstDescPtr->strides.hStride;
+                    }
+                    srcPtrChannel += srcDescPtr->strides.cStride;
+                    dstPtrChannel += dstDescPtr->strides.cStride;
+                }
+            }
+            else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
+            {
+                Rpp32u alignedLength = ((bufferLength - 2 * padLength) / 24) * 24;
+                for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+                {
+                    int vectorLoopCount = 0;
+                    bool padLengthRows = (i < padLength) ? 1: 0;
+                    Rpp8u *srcPtrTemp[3][7];
+                    for (int c = 0; c < 3; c++)
+                    {
+                        Rpp32u channelStride = c * srcDescPtr->strides.cStride;
+                        for (int k = 0; k < 7; k++)
+                            srcPtrTemp[c][k] = srcPtrRow[k] + channelStride;
+                    }
+                    Rpp8u *dstPtrTemp = dstPtrRow;
+                    // get the number of rows needs to be loaded for the corresponding row
+                    Rpp32s rowKernelLoopLimit;
+                    get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
+
+                    // process padLength number of columns in each row
+                    // left border pixels in image which does not have required pixels in 7x7 box, process them separately
+                    for (int k = 0; k < padLength; k++)
+                    {
+                        for (int c = 0; c < 3; c++)
+                        {
+                            box_filter_generic_u8_u8_host_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            dstPtrTemp++;
+                        }
+                    }
+
+                    // process alignedLength number of columns in each row
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
+                    {
+                        __m256i pxResultPln[3];
+                        for (int c = 0; c < 3; c++)
+                        {
+                            __m256i pxRow[7];
+                            rpp_load_box_filter_u8_u8_7x7_host(pxRow, srcPtrTemp[c], rowKernelLoopLimit);
+
+                            __m128i pxDst[2];
+                            compute_box_filter_u8_u8_7x7_24_host_pln(pxRow, pxDst, pxConvolutionFactor);
                             pxResultPln[c] = _mm256_setr_m128i(pxDst[0], pxDst[1]);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 24);
                         }
