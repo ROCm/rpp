@@ -39,7 +39,7 @@ qaInputFile = scriptPath + "/../TEST_IMAGES/three_images_mixed_src1"
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
 caseMin = 0
-caseMax = 89
+caseMax = 90
 
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list(preserveOutput):
@@ -103,9 +103,12 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
                     print(f"./Tensor_hip {srcPath1} {srcPath2} {dstPathTemp} {bitDepth} {outputFormatToggle} {case} {noiseType} ")
                     result = subprocess.run([buildFolderPath + "/build/Tensor_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(noiseType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE)    # nosec
                     print(result.stdout.decode())
-            elif case == "21" or case == "23" or case == "24":
+            elif case == "21" or case == "23" or case == "24" or case == "79":
                 # Run all variants of interpolation functions with additional argument of interpolationType = bicubic / bilinear / gaussian / nearestneigbor / lanczos / triangular
-                for interpolationType in range(6):
+                interpolationRange = 6
+                if case =='79':
+                    interpolationRange = 2
+                for interpolationType in range(interpolationRange):
                     print(f"./Tensor_hip {srcPath1} {srcPath2} {dstPathTemp} {bitDepth} {outputFormatToggle} {case} {interpolationType}")
                     result = subprocess.run([buildFolderPath + "/build/Tensor_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(interpolationType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE)    # nosec
                     print(result.stdout.decode())
@@ -116,18 +119,13 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
 
             print("------------------------------------------------------------------------------------------")
 
-def run_performance_test_cmd(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, additionalParam, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
-    with open("{}/Tensor_hip_{}_raw_performance_log.txt".format(loggingFolder, log_file_layout), "a") as log_file:
+def run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, additionalParam, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
+    with open("{}/Tensor_hip_{}_raw_performance_log.txt".format(loggingFolder, logFileLayout), "a") as logFile:
         print(f"./Tensor_hip {srcPath1} {srcPath2} {dstPath} {bitDepth} {outputFormatToggle} {case} {additionalParam} 0 ")
         process = subprocess.Popen([buildFolderPath + "/build/Tensor_hip", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)   # nosec
-        while True:
-            output = process.stdout.readline()
-            if not output and process.poll() is not None:
-                break
-            print(output.strip())
-            log_file.write(output)
+        read_from_subprocess_and_write_to_log(process, logFile)
 
-def run_performance_test(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
+def run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
     print("\n\n\n\n")
     print("--------------------------------")
     print("Running a New Functionality...")
@@ -143,60 +141,34 @@ def run_performance_test(loggingFolder, log_file_layout, srcPath1, srcPath2, dst
 
             if case == "40" or case == "41" or case == "49" or case == "54":
                 for kernelSize in range(3, 10, 2):
-                    run_performance_test_cmd(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, kernelSize, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
+                    run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, kernelSize, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
             elif case == "8":
                 # Run all variants of noise type functions with additional argument of noiseType = gausssianNoise / shotNoise / saltandpepperNoise
                 for noiseType in range(3):
-                    run_performance_test_cmd(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, noiseType, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
-            elif case == "21" or case == "23" or case == "24":
+                    run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, noiseType, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
+            elif case == "21" or case == "23" or case == "24" or case == "79":
                 # Run all variants of interpolation functions with additional argument of interpolationType = bicubic / bilinear / gaussian / nearestneigbor / lanczos / triangular
                 for interpolationType in range(6):
-                    run_performance_test_cmd(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, interpolationType, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
+                    run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, interpolationType, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
             else:
-                run_performance_test_cmd(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, "0", numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
+                run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, "0", numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
                 print("------------------------------------------------------------------------------------------")
 
-def run_performance_test_with_profiler(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, additionalParam, additionalParamType, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
+def run_performance_test_with_profiler(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, additionalParam, additionalParamType, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
     addtionalParamString = additionalParamType + str(additionalParam)
-    if layout == 0:
-        if not os.path.isdir(f"{dstPath}/Tensor_PKD3/case_{case}"):
-            os.mkdir(f"{dstPath}/Tensor_PKD3/case_{case}")
-        with open(f"{loggingFolder}/Tensor_hip_{log_file_layout}_raw_performance_log.txt", "a") as log_file:
-            print(f'rocprof --basenames on --timestamp on --stats -o {dstPath}/Tensor_PKD3/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}{addtionalParamString}.csv ./Tensor_hip {srcPath1} {srcPath2} {bitDepth} {outputFormatToggle} {case} {additionalParam} 0')
-            process = subprocess.Popen(['rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f'{dstPath}/Tensor_PKD3/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}{addtionalParamString}.csv', buildFolderPath + "/build/Tensor_hip", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), str(numRuns), str(testType), str(layout), '0', str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)   # nosec
-            while True:
-                output = process.stdout.readline()
-                if not output and process.poll() is not None:
-                    break
-                print(output.strip())
-                output_str = output.decode('utf-8')
-                log_file.write(output_str)
-    elif layout == 1:
-        if not os.path.isdir(f"{dstPath}/Tensor_PLN3/case_{case}"):
-            os.mkdir(f"{dstPath}/Tensor_PLN3/case_{case}")
-        with open(f"{loggingFolder}/Tensor_hip_{log_file_layout}_raw_performance_log.txt", "a") as log_file:
-            print(f'rocprof --basenames on --timestamp on --stats -o {dstPath}/Tensor_PLN3/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}{addtionalParamString}.csv ./Tensor_hip {srcPath1} {srcPath2} {bitDepth} {outputFormatToggle} {case} {additionalParam} 0')
-            process = subprocess.Popen(['rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f'{dstPath}/Tensor_PLN3/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}{addtionalParamString}.csv', buildFolderPath + "/build/Tensor_hip", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), str(numRuns), str(testType), str(layout), '0', str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)    # nosec
-            while True:
-                output = process.stdout.readline()
-                if not output and process.poll() is not None:
-                    break
-                print(output.strip())
-                output_str = output.decode('utf-8')
-                log_file.write(output_str)
-    elif layout == 2:
-        if not os.path.isdir(f"{dstPath}/Tensor_PLN1/case_{case}"):
-            os.mkdir(f"{dstPath}/Tensor_PLN1/case_{case}")
-        with open(f"{loggingFolder}/Tensor_hip_{log_file_layout}_raw_performance_log.txt", "a") as log_file:
-            print(f'rocprof --basenames on --timestamp on --stats -o "{dstPath}/Tensor_PLN1/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}{addtionalParamString}.csv" "./Tensor_hip {srcPath1} {srcPath2} {bitDepth} {outputFormatToggle} {case} {additionalParam} 0"')
-            process = subprocess.Popen(['rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f'{dstPath}/Tensor_PLN1/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}{addtionalParamString}.csv', buildFolderPath + "/build/Tensor_hip", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), str(numRuns), str(testType), str(layout), '0', str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)   # nosec
-            while True:
-                output = process.stdout.readline()
-                if not output and process.poll() is not None:
-                    break
-                print(output.strip())
-                output_str = output.decode('utf-8')
-                log_file.write(output_str)
+    layoutName = get_layout_name(layout)
+    if not os.path.isdir(f"{dstPath}/Tensor_{layoutName}/case_{case}"):
+        os.mkdir(f"{dstPath}/Tensor_{layoutName}/case_{case}")
+    with open(f"{loggingFolder}/Tensor_hip_{logFileLayout}_raw_performance_log.txt", "a") as logFile:
+        print(f'rocprof --basenames on --timestamp on --stats -o {dstPath}/Tensor_{layoutName}/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}{addtionalParamString}.csv ./Tensor_hip {srcPath1} {srcPath2} {bitDepth} {outputFormatToggle} {case} {additionalParam} 0')
+        process = subprocess.Popen(['rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f'{dstPath}/Tensor_{layoutName}/case_{case}/output_case{case}_bitDepth{bitDepth}_oft{outputFormatToggle}{addtionalParamString}.csv', buildFolderPath + "/build/Tensor_hip", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), str(numRuns), str(testType), str(layout), '0', str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)   # nosec
+        while True:
+            output = process.stdout.readline()
+            if not output and process.poll() is not None:
+                break
+            print(output.strip())
+            output_str = output.decode('utf-8')
+            logFile.write(output_str)
 
 # Parse and validate command-line arguments for the RPP test suite
 def rpp_test_suite_parser_and_validator():
@@ -327,7 +299,7 @@ subprocess.run(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.run(["make", "-j16"], cwd=".")    # nosec
 
 # List of cases supported
-supportedCaseList = ['0', '1', '2', '4', '8', '13', '20', '21', '23', '29', '30', '31', '33', '34', '36', '37', '38', '39', '45', '46', '49', '54', '61', '63', '65', '68', '70', '80', '82', '83', '84', '85', '86', '87', '88', '89']
+supportedCaseList = ['0', '1', '2', '4', '8', '13', '20', '21', '23', '29', '30', '31', '32', '33', '34', '36', '37', '38', '39', '45', '46', '49', '54', '61', '63', '65', '68', '70', '79', '80', '82', '83', '84', '85', '86', '87', '88', '89', '90']
 
 # Create folders based on testType and profilingOption
 if testType == 1 and profilingOption == "YES":
@@ -352,7 +324,7 @@ if(testType == 0):
             srcPath1 = inFilePath1
             srcPath2 = inFilePath2
         for layout in range(3):
-            dstPathTemp, log_file_layout = process_layout(layout, qaMode, case, dstPath, "hip", func_group_finder)
+            dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", func_group_finder)
 
             if qaMode == 0:
                 if not os.path.isdir(dstPathTemp):
@@ -372,9 +344,9 @@ else:
                 srcPath1 = ricapInFilePath
                 srcPath2 = ricapInFilePath
             for layout in range(3):
-                dstPathTemp, log_file_layout = process_layout(layout, qaMode, case, dstPath, "hip", func_group_finder)
+                dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", func_group_finder)
 
-                run_performance_test(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
+                run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
 
     elif (testType == 1 and profilingOption == "YES"):
         NEW_FUNC_GROUP_LIST = [0, 15, 20, 29, 36, 40, 42, 49, 56, 65, 69]
@@ -386,7 +358,7 @@ else:
                 srcPath1 = ricapInFilePath
                 srcPath2 = ricapInFilePath
             for layout in range(3):
-                dstPathTemp, log_file_layout = process_layout(layout, qaMode, case, dstPath, "hip", func_group_finder)
+                dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", func_group_finder)
 
                 print("\n\n\n\n")
                 print("--------------------------------")
@@ -403,17 +375,17 @@ else:
 
                         if case == "40" or case == "41" or case == "49" or case == "54":
                             for kernelSize in range(3, 10, 2):
-                                run_performance_test_with_profiler(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, kernelSize, "_kernelSize", numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
+                                run_performance_test_with_profiler(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, kernelSize, "_kernelSize", numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
                         elif case == "8":
                             # Run all variants of noise type functions with additional argument of noiseType = gausssianNoise / shotNoise / saltandpepperNoise
                             for noiseType in range(3):
-                                run_performance_test_with_profiler(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, noiseType, "_noiseType", numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
-                        elif case == "21" or case == "23" or case == "24":
+                                run_performance_test_with_profiler(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, noiseType, "_noiseType", numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
+                        elif case == "21" or case == "23" or case == "24" or case == "79":
                             # Run all variants of interpolation functions with additional argument of interpolationType = bicubic / bilinear / gaussian / nearestneigbor / lanczos / triangular
                             for interpolationType in range(6):
-                                run_performance_test_with_profiler(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, interpolationType, "_interpolationType", numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
+                                run_performance_test_with_profiler(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, interpolationType, "_interpolationType", numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
                         else:
-                            run_performance_test_with_profiler(loggingFolder, log_file_layout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, "", "", numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
+                            run_performance_test_with_profiler(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, "", "", numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
 
                         print("------------------------------------------------------------------------------------------")
 
@@ -466,7 +438,7 @@ else:
                                 fileCheck = case_file_check(CASE_FILE_PATH, TYPE, TENSOR_TYPE_LIST, new_file, d_counter)
                                 if fileCheck == False:
                                     continue
-                        elif (CASE_NUM == "24" or CASE_NUM == "21" or CASE_NUM == "23") and TYPE.startswith("Tensor"):
+                        elif (CASE_NUM == "24" or CASE_NUM == "21" or CASE_NUM == "23" or CASE_NUM == "79") and TYPE.startswith("Tensor"):
                             INTERPOLATIONTYPE_LIST = [0, 1, 2, 3, 4, 5]
                             # Loop through extra param interpolationType
                             for INTERPOLATIONTYPE in INTERPOLATIONTYPE_LIST:
@@ -509,9 +481,9 @@ else:
             print("Unable to open results in " + RESULTS_DIR + "/consolidated_results_" + TYPE + ".stats.csv")
 
 if (testType == 1 and profilingOption == "NO"):
-    log_file_list = get_log_file_list(preserveOutput)
+    logFileList = get_log_file_list(preserveOutput)
 
-    functionality_group_list = [
+    functionalityGroupList = [
     "color_augmentations",
     "data_exchange_operations",
     "effects_augmentations",
@@ -522,8 +494,8 @@ if (testType == 1 and profilingOption == "NO"):
     "logical_operations",
     "statistical_operations"
     ]
-    for log_file in log_file_list:
-        print_performance_tests_summary(log_file, functionality_group_list, numRuns)
+    for logFile in logFileList:
+        print_performance_tests_summary(logFile, functionalityGroupList, numRuns)
 
 # print the results of qa tests
 nonQACaseList = ['8', '24', '54', '84'] # Add cases present in supportedCaseList, but without QA support

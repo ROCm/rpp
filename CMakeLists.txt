@@ -27,7 +27,7 @@ set(CMAKE_CXX_COMPILER clang++)
 set(CMAKE_CXX_STANDARD 17)
 
 # RPP Version
-set(VERSION "1.7.0")
+set(VERSION "1.8.0")
 
 # Set Project Version and Language
 project(rpp VERSION ${VERSION} LANGUAGES CXX)
@@ -45,20 +45,19 @@ find_program(DPKG_EXE dpkg)
 
 # ROCm Path
 if(DEFINED ENV{ROCM_PATH})
-  set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
+    set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
 elseif(ROCM_PATH)
-  message("-- INFO:ROCM_PATH Set -- ${ROCM_PATH}")
+    message("-- INFO:ROCM_PATH Set -- ${ROCM_PATH}")
 else()
-  set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
+    set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
 endif()
 # Avoid setting the default path to /usr/local
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  set(CMAKE_INSTALL_PREFIX ${ROCM_PATH} CACHE PATH "RPP default ROCm installation path" FORCE)
+    set(CMAKE_INSTALL_PREFIX ${ROCM_PATH} CACHE PATH "RPP default ROCm installation path" FORCE)
 endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 
 # RPP Default Options
 set(DEFAULT_BUILD_TYPE "Release")
-option(BUILD_WITH_AMD_ADVANCE "Build RPP for advanced AMD GPU Architecture"    ON)
 
 # Set message options
 if(NOT WIN32)
@@ -76,9 +75,9 @@ endif()
 
 # Set backend options
 if(APPLE)
-  set(CMAKE_MACOSX_RPATH 1)
-  set(BACKEND "CPU")
-  message("-- ${Magenta}Apple macOS Detected -- GPU Support turned OFF${ColourReset}")
+    set(CMAKE_MACOSX_RPATH 1)
+    set(BACKEND "CPU")
+    message("-- ${Magenta}Apple macOS Detected -- GPU Support turned OFF${ColourReset}")
 endif()
 
 if(NOT DEFINED BACKEND)
@@ -103,8 +102,8 @@ message("-- ${BoldBlue}AMD RPP Backend set to -- ${BACKEND}${ColourReset}")
 
 # RPP Build Type
 if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE "${DEFAULT_BUILD_TYPE}" CACHE STRING "RPP Default Build Type" FORCE)
-  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release")
+    set(CMAKE_BUILD_TYPE "${DEFAULT_BUILD_TYPE}" CACHE STRING "RPP Default Build Type" FORCE)
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release")
 endif()
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     # -O0  -- Don't Optimize output file
@@ -125,12 +124,6 @@ else()
     set(WINE_CMD)
 endif()
 
-message("-- ${Cyan}RPP Developer Options${ColourReset}")
-message("-- ${Cyan}     -D BUILD_WITH_AMD_ADVANCE=${BUILD_WITH_AMD_ADVANCE} [Turn ON/OFF Build for AMD advanced GPUs(default:ON)]${ColourReset}")
-message("-- ${Yellow}     NOTE: For ROCm Version less than 6.0.0+ Use -D BUILD_WITH_AMD_ADVANCE=OFF${ColourReset}")
-message("-- ${Cyan}     -D BACKEND=${BACKEND} [Select RPP Backend [options:CPU/OPENCL/HIP](default:HIP)]${ColourReset}")
-message("-- ${Cyan}     -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} [Select RPP build type [options:Debug/Release](default:Release)]${ColourReset}")
-
 # CMake checks and setups
 if("${CMAKE_CURRENT_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
     message(FATAL_ERROR "${Red}${PROJECT_NAME} -- In-source builds are not allowed. Invoke cmake from build directory${ColourReset}")
@@ -140,6 +133,10 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 # Half
 find_package(HALF REQUIRED)
 include_directories(${HALF_INCLUDE_DIRS})
+
+message("-- ${Cyan}RPP Developer Options${ColourReset}")
+message("-- ${Cyan}     -D BACKEND=${BACKEND} [Select RPP Backend [options:CPU/OPENCL/HIP](default:HIP)]${ColourReset}")
+message("-- ${Cyan}     -D CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} [Select RPP build type [options:Debug/Release](default:Release)]${ColourReset}")
 
 # OpenMP
 find_package(OpenMP REQUIRED)
@@ -210,10 +207,7 @@ if("${BACKEND}" STREQUAL "HIP")
     endif()
 
     list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH} ${ROCM_PATH}/hip)
-    set(DEFAULT_AMDGPU_TARGETS "gfx803;gfx900;gfx906;gfx908;gfx90a;gfx940;gfx1030;gfx1100")
-    if (BUILD_WITH_AMD_ADVANCE)
-        set(DEFAULT_AMDGPU_TARGETS ${DEFAULT_AMDGPU_TARGETS} "gfx941;gfx942")
-    endif()
+    set(DEFAULT_AMDGPU_TARGETS "gfx908;gfx90a;gfx940;gfx941;gfx942;gfx1030;gfx1031;gfx1032;gfx1100;gfx1101;gfx1102")
     set(AMDGPU_TARGETS "${DEFAULT_AMDGPU_TARGETS}" CACHE STRING "List of specific machine types for library to target")
     find_package(HIP QUIET)
     if(HIP_FOUND)
@@ -300,9 +294,8 @@ message("-- ${White}${PROJECT_NAME} -- Link Libraries: ${LINK_LIBRARY_LIST}${Col
 target_link_libraries(${PROJECT_NAME} ${LINK_LIBRARY_LIST})
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
-set_target_properties(${PROJECT_NAME} PROPERTIES
-                      VERSION ${PROJECT_VERSION}
-                      SOVERSION ${PROJECT_VERSION_MAJOR})
+target_link_libraries(${PROJECT_NAME} ${PROJECT_SOURCE_DIR}/libs/third_party/ffts/libffts.a)
+set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION ${PROJECT_VERSION_MAJOR})
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC
@@ -337,11 +330,11 @@ install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMP
 
 # install RPP include files -- {ROCM_PATH}/include/rpp/
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp
-       COMPONENT dev
-       PATTERN "*.h.in" EXCLUDE)
+        COMPONENT dev
+        PATTERN "*.h.in" EXCLUDE)
 install(FILES ${PROJECT_BINARY_DIR}/include/rpp_backend.h
-       DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp
-       COMPONENT dev)
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rpp
+        COMPONENT dev)
 
 # install Test
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/cmake DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/test COMPONENT test)
@@ -352,8 +345,6 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/utilities/rpp-performancetests DES
 set(CPACK_RESOURCE_FILE_LICENSE  "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 install(FILES ${CPACK_RESOURCE_FILE_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR} COMPONENT runtime)
 install(FILES ${CPACK_RESOURCE_FILE_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR}-asan COMPONENT asan)
-install(FILES ${CPACK_RESOURCE_FILE_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR}-dev COMPONENT dev)
-install(FILES ${CPACK_RESOURCE_FILE_LICENSE} DESTINATION ${CMAKE_INSTALL_DOCDIR}-test COMPONENT test)
 
 # CTest - Needs RPP Installed
 enable_testing()
@@ -425,15 +416,12 @@ set(CPACK_RPM_COMPONENT_INSTALL ON)
 set(CPACK_RPM_RUNTIME_PACKAGE_NAME "${PROJECT_NAME}")
 set(CPACK_RPM_RUNTIME_PACKAGE_REQUIRES "rocm-core, ${RPP_RPM_PACKAGE_LIST}")
 set(CPACK_RPM_RUNTIME_PACKAGE_PROVIDES "${PROJECT_NAME}")
-set(CPACK_RPM_RUNTIME_PACKAGE_OBSOLETES "${PROJECT_NAME}")
 set(CPACK_RPM_DEV_PACKAGE_NAME "${PROJECT_NAME}-devel")
 set(CPACK_RPM_DEV_PACKAGE_REQUIRES "rocm-core, ${PROJECT_NAME}, ${RPP_RPM_DEV_PACKAGE_LIST}")
 set(CPACK_RPM_DEV_PACKAGE_PROVIDES "${PROJECT_NAME}-devel")
-set(CPACK_RPM_DEV_PACKAGE_OBSOLETES "${PROJECT_NAME}-devel")
 set(CPACK_RPM_TEST_PACKAGE_NAME "${PROJECT_NAME}-test")
 set(CPACK_RPM_TEST_PACKAGE_REQUIRES "rocm-core, ${PROJECT_NAME}-devel")
 set(CPACK_RPM_TEST_PACKAGE_PROVIDES "${PROJECT_NAME}-test")
-set(CPACK_RPM_TEST_PACKAGE_OBSOLETES "${PROJECT_NAME}-test")
 set(CPACK_RPM_PACKAGE_LICENSE "MIT" )
 # RPM package specific variable for ASAN
 set(CPACK_RPM_ASAN_PACKAGE_NAME "${PROJECT_NAME}-asan" )
@@ -451,10 +439,10 @@ if(NOT ROCM_DEP_ROCMCORE)
 endif()
 
 if(ENABLE_ASAN_PACKAGING)
-  # ASAN Package requires asan component with only libraries and license file
-  set(CPACK_COMPONENTS_ALL asan)
+    # ASAN Package requires asan component with only libraries and license file
+    set(CPACK_COMPONENTS_ALL asan)
 else()
-  set(CPACK_COMPONENTS_ALL runtime dev test)
+    set(CPACK_COMPONENTS_ALL runtime dev test)
 endif()
 
 if(APPLE)
@@ -484,8 +472,8 @@ endif()
 include(CPack)
 
 cpack_add_component(runtime
-   DISPLAY_NAME "RPP Runtime Package"
-   DESCRIPTION "ROCm Performance Primitives library is a comprehensive high performance \
+    DISPLAY_NAME "RPP Runtime Package"
+    DESCRIPTION "ROCm Performance Primitives library is a comprehensive high performance \
 computer vision library for AMD CPUs and GPUs with HOST/HIP/OpenCL back-ends.
 RPP runtime package provides rpp library and license.txt")
 

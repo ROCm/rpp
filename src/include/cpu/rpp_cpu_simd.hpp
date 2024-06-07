@@ -2548,6 +2548,127 @@ inline Rpp32f rpp_hsum_ps(__m256 x)
     return _mm_cvtss_f32(sum);
 }
 
+/* Computes inverse square root */
+inline Rpp32f rpp_rsqrt_ps(Rpp32f x)
+{
+    __m128 X = _mm_set_ss(x);
+    __m128 tmp = _mm_rsqrt_ss(X);
+    Rpp32f y = _mm_cvtss_f32(tmp);
+    return y * (1.5f - x * 0.5f * y * y);
+}
+
+/* Compute inverse square root */
+/* SSE matches to 6 decimal places with raw C version due to newton rhapson approximation*/
+inline void rpp_rsqrt_sse(Rpp32f *input, Rpp64s numElements, Rpp32f eps, Rpp32f rdiv, Rpp32f mul)
+{
+    Rpp64s i = 0;
+    __m128 rdivx4 = _mm_set1_ps(rdiv);
+    __m128 mulx4 = _mm_set1_ps(mul * 0.5f);
+    if (eps) // epsilon is present - no need for masking, but we need to add it
+    {
+        __m128 epsx4 = _mm_set1_ps(eps);
+        for (; i + 4 <= numElements; i += 4)
+        {
+            __m128 x = _mm_loadu_ps(&input[i]);
+            x = _mm_mul_ps(x, rdivx4);
+            x = _mm_add_ps(x, epsx4);
+            __m128 y = _mm_rsqrt_ps(x);
+            __m128 y2 = _mm_mul_ps(y, y);
+            __m128 xy2 = _mm_mul_ps(x, y2);
+            __m128 three_minus_xy2 = _mm_sub_ps(xmm_p3, xy2);
+            y = _mm_mul_ps(y, three_minus_xy2);
+            y = _mm_mul_ps(y, mulx4);
+            _mm_storeu_ps(&input[i], y);
+        }
+    }
+    else
+    {
+        for (; i + 4 <= numElements; i += 4)
+        {
+            __m128 x = _mm_loadu_ps(&input[i]);
+            x = _mm_mul_ps(x, rdivx4);
+            __m128 mask = _mm_cmpneq_ps(x, xmm_p0);
+            __m128 y = _mm_rsqrt_ps(x);
+            y = _mm_and_ps(y, mask);
+            __m128 y2 = _mm_mul_ps(y, y);
+            __m128 xy2 = _mm_mul_ps(x, y2);
+            __m128 three_minus_xy2 = _mm_sub_ps(xmm_p3, xy2);
+            y = _mm_mul_ps(y, three_minus_xy2);
+            y = _mm_mul_ps(y, mulx4);
+            _mm_storeu_ps(&input[i], y);
+        }
+    }
+    if (eps)
+    {
+        for (; i < numElements; i++)
+            input[i] = rpp_rsqrt_ps(input[i] * rdiv + eps) * mul;
+    }
+    else
+    {
+        for (; i < numElements; i++)
+        {
+            Rpp32f x = input[i] * rdiv;
+            input[i] = x ? rpp_rsqrt_ps(x) * mul : 0;
+        }
+    }
+}
+
+/* Compute inverse square root */
+/* AVX2 matches to 6 decimal places with raw C version due to newton rhapson approximation*/
+inline void rpp_rsqrt_avx(Rpp32f *input, Rpp32s numElements, Rpp32f eps, Rpp32f rdiv, Rpp32f scale)
+{
+    Rpp32s i = 0;
+    __m256 rdivx8 = _mm256_set1_ps(rdiv);
+    __m256 mulx8 = _mm256_set1_ps(scale * 0.5f);
+    if (eps) // epsilon is present - no need for masking, but we need to add it
+    {
+        __m256 epsx8 = _mm256_set1_ps(eps);
+        for (; i + 8 <= numElements; i += 8)
+        {
+            __m256 x = _mm256_loadu_ps(&input[i]);
+            x = _mm256_mul_ps(x, rdivx8);
+            x = _mm256_add_ps(x, epsx8);
+            __m256 y = _mm256_rsqrt_ps(x);
+            __m256 y2 = _mm256_mul_ps(y, y);
+            __m256 xy2 = _mm256_mul_ps(x, y2);
+            __m256 three_minus_xy2 = _mm256_sub_ps(avx_p3, xy2);
+            y = _mm256_mul_ps(y, three_minus_xy2);
+            y = _mm256_mul_ps(y, mulx8);
+            _mm256_storeu_ps(&input[i], y);
+        }
+    }
+    else
+    {
+        for (; i + 8 <= numElements; i += 8)
+        {
+            __m256 x = _mm256_loadu_ps(&input[i]);
+            x = _mm256_mul_ps(x, rdivx8);
+            __m256 mask = _mm256_cmp_ps(x, avx_p0, _CMP_NEQ_OQ);
+            __m256 y = _mm256_rsqrt_ps(x);
+            y = _mm256_and_ps(y, mask);
+            __m256 y2 = _mm256_mul_ps(y, y);
+            __m256 xy2 = _mm256_mul_ps(x, y2);
+            __m256 three_minus_xy2 = _mm256_sub_ps(avx_p3, xy2);
+            y = _mm256_mul_ps(y, three_minus_xy2);
+            y = _mm256_mul_ps(y, mulx8);
+            _mm256_storeu_ps(&input[i], y);
+        }
+    }
+    if (eps)
+    {
+        for (; i < numElements; i++)
+            input[i] = rpp_rsqrt_ps(input[i] * rdiv + eps) * scale;
+    }
+    else
+    {
+        for (; i < numElements; i++)
+        {
+            Rpp32f x = input[i] * rdiv;
+            input[i] = x ? rpp_rsqrt_ps(x) * scale : 0;
+        }
+    }
+}
+
 static inline void fast_matmul4x4_sse(float *A, float *B, float *C)
 {
     __m128 row1 = _mm_load_ps(&B[0]);                   // Row 0 of B
@@ -2978,7 +3099,8 @@ inline void rpp_store24_f32pln3_to_u8pkd3_avx(Rpp8u* dstPtr, __m256* p)
 inline void rpp_store8_f32pln1_to_u8pln1_avx(Rpp8u* dstPtr, __m256 &p)
 {
     __m256i px1 = _mm256_permute4x64_epi64(_mm256_packus_epi32(_mm256_cvtps_epi32(p), avx_px0), _MM_SHUFFLE(3,1,2,0));
-    _mm256_storeu_si256((__m256i *)(dstPtr), _mm256_packus_epi16(px1, avx_px0));
+    px1 = _mm256_packus_epi16(px1, avx_px0);
+    rpp_storeu_si64((__m128i *)(dstPtr), _mm256_castsi256_si128(px1));
 }
 
 inline void rpp_store24_f32pln3_to_u8pln3_avx(Rpp8u* dstRPtr, Rpp8u* dstGPtr, Rpp8u* dstBPtr, __m256* p)
@@ -3143,7 +3265,7 @@ inline void rpp_store8_f32pln1_to_i8pln1_avx(Rpp8s* dstPtr, __m256 &p)
 {
     __m256i px1 = _mm256_permute4x64_epi64(_mm256_packus_epi32(_mm256_cvtps_epi32(p), avx_px0), _MM_SHUFFLE(3,1,2,0));
     px1 = _mm256_sub_epi8(_mm256_packus_epi16(px1, avx_px0), avx_pxConvertI8);  /* Pack and add I8 conversion param */
-    _mm256_storeu_si256((__m256i *)(dstPtr), px1);                              /* store the 4 pixels in dst */
+    rpp_storeu_si64((__m128i *)(dstPtr), _mm256_castsi256_si128(px1));          /* store the 4 pixels in dst */
 }
 
 inline void rpp_store24_f32pln3_to_i8pln3_avx(Rpp8s* dstRPtr, Rpp8s* dstGPtr, Rpp8s* dstBPtr, __m256* p)
@@ -3676,7 +3798,7 @@ inline void rpp_store24_i8pkd3_to_i8pln3_avx(Rpp8s* dstPtrR, Rpp8s* dstPtrG, Rpp
     rpp_storeu_si32((__m128i *)(dstPtrB + 4), _mm_shuffle_epi8(p128[1], xmm_char_maskB)); /* shuffle to get B05-B08*/
 }
 
-inline void rpp_store4_u8_to_u8(Rpp8u* dstPtr, __m128i &p)
+inline void rpp_store12_u8_to_u8(Rpp8u* dstPtr, __m128i &p)
 {
     _mm_storeu_si128((__m128i *)(dstPtr), p);
 }
@@ -3689,18 +3811,6 @@ inline void rpp_store24_u8_to_u8_avx(Rpp8u* dstPtr, __m256i &p)
 inline void rpp_store24_i8_to_i8_avx(Rpp8s* dstPtr, __m256i &p)
 {
     _mm256_storeu_si256((__m256i *)(dstPtr), p);
-}
-
-inline void rpp_store8_u8pln1_to_u8pln1_avx(Rpp8u* dstPtr, __m256i &p)
-{
-    __m128i pTemp = _mm256_castsi256_si128(p);
-    rpp_storeu_si64((__m128i *)(dstPtr), pTemp);
-}
-
-inline void rpp_store8_i8pln1_to_i8pln1(Rpp8s* dstPtr, __m256i &p)
-{
-    __m128i pTemp = _mm256_castsi256_si128(p);
-    rpp_storeu_si64((__m128i *)(dstPtr), pTemp);
 }
 
 inline void rpp_store12_u8pln3_to_u8pkd3(Rpp8u* dstPtr, __m128i *p)
@@ -3734,7 +3844,9 @@ inline void rpp_store12_i8pkd3_to_i8pln3(Rpp8s* dstPtrR, Rpp8s* dstPtrG, Rpp8s* 
     rpp_storeu_si32((__m128i *)(dstPtrB), _mm_shuffle_epi8(p, xmm_char_maskB)); /* Shuffle and extract the B pixels*/
 }
 
-inline void rpp_store4_i8_to_i8(Rpp8s* dstPtr, __m128i &p)
+
+
+inline void rpp_store12_i8_to_i8(Rpp8s* dstPtr, __m128i &p)
 {
     _mm_storeu_si128((__m128i *)(dstPtr), p);
 }

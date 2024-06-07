@@ -80,7 +80,7 @@ typedef rppHandle_t RppHandle_t;    // Create typedef for RppHandle_t
 #include "rppdefs.h"
 #include "rppi.h"
 #include "rppt.h"
-#include "rppversion.h"
+#include "rpp_version.h"
 
 /*! \brief Handles RPP context allocations.
  * \details Custom allocator function to allow for user-defined custom allocation.

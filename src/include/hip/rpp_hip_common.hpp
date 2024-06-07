@@ -82,6 +82,7 @@ typedef union { uchar uc1[8];   uchar4 uc4[2];                                  
 typedef union { uchar uc1[24];  uchar4 uc4[6];  uchar3 uc3[8];    d_uchar8 uc8[3];              }   d_uchar24;
 
 // schar
+typedef struct { schar sc1[3];                                                                  }   d_schar3_s;
 typedef struct { schar sc1[8];                                                                  }   d_schar8_s;
 typedef struct { d_schar8_s sc8[3];                                                             }   d_schar24_s;
 
@@ -2539,6 +2540,64 @@ __device__ __forceinline__ void rpp_hip_interpolate24_nearest_neighbor_pkd3(T *s
     rpp_hip_interpolate3_nearest_neighbor_pkd3(srcPtr, srcStrideH, locPtrSrc_f16->f1[5], locPtrSrc_f16->f1[13], roiPtrSrc_i4, &(dst_f24->f3[5]));
     rpp_hip_interpolate3_nearest_neighbor_pkd3(srcPtr, srcStrideH, locPtrSrc_f16->f1[6], locPtrSrc_f16->f1[14], roiPtrSrc_i4, &(dst_f24->f3[6]));
     rpp_hip_interpolate3_nearest_neighbor_pkd3(srcPtr, srcStrideH, locPtrSrc_f16->f1[7], locPtrSrc_f16->f1[15], roiPtrSrc_i4, &(dst_f24->f3[7]));
+}
+
+// copy ROI region from input to output for NCDHW layout tensors
+
+template<typename T>
+__global__ void copy_ncdhw_hip_tensor(T *srcPtr,
+                                      uint3 srcStridesCDH,
+                                      T *dstPtr,
+                                      uint3 dstStridesCDH,
+                                      int channels,
+                                      RpptROI3DPtr roiGenericSrc)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;        // W - inner most dim vectorized
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;              // H - second to inner
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;              // D - outer most dim
+
+    if ((id_z >= roiGenericSrc->xyzwhdROI.roiDepth) || (id_y >= roiGenericSrc->xyzwhdROI.roiHeight) || (id_x >= roiGenericSrc->xyzwhdROI.roiWidth))
+    {
+        return;
+    }
+
+    uint srcIdx = ((id_z + roiGenericSrc->xyzwhdROI.xyz.z) * srcStridesCDH.y) + ((id_y + roiGenericSrc->xyzwhdROI.xyz.y) * srcStridesCDH.z) + (id_x + roiGenericSrc->xyzwhdROI.xyz.x);
+    uint dstIdx = (id_z * dstStridesCDH.y) + (id_y * dstStridesCDH.z) + id_x;
+
+    d_float8 val_f8;
+    for(int c = 0; c < channels; c++)
+    {
+        rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &val_f8);
+        rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &val_f8);
+        srcIdx += srcStridesCDH.x;
+        dstIdx += dstStridesCDH.x;
+    }
+}
+
+// copy ROI region from input to output for NDHWC layout tensors
+
+template<typename T>
+__global__ void copy_ndhwc_hip_tensor(T *srcPtr,
+                                      uint2 srcStridesDH,
+                                      T *dstPtr,
+                                      uint2 dstStridesDH,
+                                      RpptROI3DPtr roiGenericSrc)
+{
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;        // WC - inner most dim vectorized
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;              // H - second to inner
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;              // D - outer most dim
+
+    if ((id_z >= roiGenericSrc->xyzwhdROI.roiDepth) || (id_y >= roiGenericSrc->xyzwhdROI.roiHeight) || (id_x >= roiGenericSrc->xyzwhdROI.roiWidth))
+    {
+        return;
+    }
+
+    uint srcIdx = ((id_z + roiGenericSrc->xyzwhdROI.xyz.z) * srcStridesDH.x) + ((id_y + roiGenericSrc->xyzwhdROI.xyz.y) * srcStridesDH.y) + (id_x + roiGenericSrc->xyzwhdROI.xyz.x) * 3;
+    uint dstIdx = (id_z * dstStridesDH.x) + (id_y * dstStridesDH.y) + id_x * 3;
+
+    d_float24 val_f24;
+    rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &val_f24);
+    rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &val_f24);
 }
 
 // PKD3->PLN3 layout toggle kernel
