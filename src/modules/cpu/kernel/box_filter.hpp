@@ -211,7 +211,7 @@ inline void compute_box_filter_u8_u8_3x3_24_host_pkd(__m256i *pxRow, __m128i *px
 
 inline void compute_box_filter_u8_u8_5x5_24_host_pln(__m256i *pxRow, __m128i *pxDst, const __m128i &pxConvolutionFactor)
 {
-    // pack lower half of each of 3 loaded row values from 8 bit to 16 bit and add
+    // pack lower half of each of 7 loaded row values from 8 bit to 16 bit and add
     __m256i pxLower, pxUpper;
     pxLower = _mm256_unpacklo_epi8(pxRow[0], avx_px0);
     pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[1], avx_px0));
@@ -219,7 +219,7 @@ inline void compute_box_filter_u8_u8_5x5_24_host_pln(__m256i *pxRow, __m128i *px
     pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[3], avx_px0));
     pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[4], avx_px0));
 
-    // pack higher half of each of 3 loaded row values from 8 bit to 16 bit and add
+    // pack higher half of each of 7 loaded row values from 8 bit to 16 bit and add
     pxUpper = _mm256_unpackhi_epi8(pxRow[0], avx_px0);
     pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[1], avx_px0));
     pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[2], avx_px0));
@@ -276,7 +276,7 @@ inline void compute_box_filter_u8_u8_5x5_24_host_pln(__m256i *pxRow, __m128i *px
 
 inline void compute_box_filter_u8_u8_5x5_18_host_pkd(__m256i *pxRow, __m128i *pxDst, const __m128i &pxConvolutionFactor)
 {
-    // pack lower half of each of 3 loaded row values from 8 bit to 16 bit and add
+    // pack lower half of each of 7 loaded row values from 8 bit to 16 bit and add
     __m256i pxLower, pxUpper;
     pxLower = _mm256_unpacklo_epi8(pxRow[0], avx_px0);
     pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[1], avx_px0));
@@ -284,7 +284,7 @@ inline void compute_box_filter_u8_u8_5x5_18_host_pkd(__m256i *pxRow, __m128i *px
     pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[3], avx_px0));
     pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[4], avx_px0));
 
-    // pack higher half of each of 3 loaded row values from 8 bit to 16 bit and add
+    // pack higher half of each of 7 loaded row values from 8 bit to 16 bit and add
     pxUpper = _mm256_unpackhi_epi8(pxRow[0], avx_px0);
     pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[1], avx_px0));
     pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[2], avx_px0));
@@ -341,7 +341,7 @@ inline void compute_box_filter_u8_u8_5x5_18_host_pkd(__m256i *pxRow, __m128i *px
 
 inline void compute_box_filter_u8_u8_7x7_24_host_pln(__m256i *pxRow, __m128i *pxDst, const __m128i &pxConvolutionFactor)
 {
-    // pack lower half of each of 3 loaded row values from 8 bit to 16 bit and add
+    // pack lower half of each of 7 loaded row values from 8 bit to 16 bit and add
     __m256i pxLower, pxUpper;
     pxLower = _mm256_unpacklo_epi8(pxRow[0], avx_px0);
     pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[1], avx_px0));
@@ -351,7 +351,7 @@ inline void compute_box_filter_u8_u8_7x7_24_host_pln(__m256i *pxRow, __m128i *px
     pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[5], avx_px0));
     pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[6], avx_px0));
 
-    // pack higher half of each of 3 loaded row values from 8 bit to 16 bit and add
+    // pack higher half of each of 7 loaded row values from 8 bit to 16 bit and add
     pxUpper = _mm256_unpackhi_epi8(pxRow[0], avx_px0);
     pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[1], avx_px0));
     pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[2], avx_px0));
@@ -1097,11 +1097,11 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                         compute_box_filter_u8_u8_5x5_18_host_pkd(pxRow, pxDst, pxConvolutionFactor);
 
                         // convert from PKD3 to PLN3 and store channelwise
-                        __m128i pxR, pxG, pxB;
-                        rpp_convert24_u8pkd3_to_u8pln3(pxDst[0], pxDst[1], pxR, pxG, pxB);
-                        rpp_storeu_si64((__m128i *)(dstPtrTempChannels[0]), pxR);
-                        rpp_storeu_si64((__m128i *)(dstPtrTempChannels[1]), pxG);
-                        rpp_storeu_si64((__m128i *)(dstPtrTempChannels[2]), pxB);
+                        __m128i pxDstChn[3];
+                        rpp_convert24_u8pkd3_to_u8pln3(pxDst[0], pxDst[1], pxDstChn);
+                        rpp_storeu_si64((__m128i *)(dstPtrTempChannels[0]), pxDstChn[0]);
+                        rpp_storeu_si64((__m128i *)(dstPtrTempChannels[1]), pxDstChn[1]);
+                        rpp_storeu_si64((__m128i *)(dstPtrTempChannels[2]), pxDstChn[2]);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 18);
                         increment_row_ptrs(dstPtrTempChannels, kernelSize, 6);
                     }
