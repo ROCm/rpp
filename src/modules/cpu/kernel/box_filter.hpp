@@ -574,7 +574,7 @@ inline void rpp_load_box_filter_u8_u8_5x5_host(__m256i *pxRow, Rpp8u **srcPtrTem
 // 7x7 kernel loads for U8 bitdepth
 inline void rpp_load_box_filter_u8_u8_7x7_host(__m256i *pxRow, Rpp8u **srcPtrTemp, Rpp32s rowKernelLoopLimit)
 {
-    // irrespective of row location, we need to load 3 rows for 5x5 kernel
+    // irrespective of row location, we need to load 4 rows for 7x7 kernel
     pxRow[0] = _mm256_loadu_si256((__m256i *)srcPtrTemp[0]);
     pxRow[1] = _mm256_loadu_si256((__m256i *)srcPtrTemp[1]);
     pxRow[2] = _mm256_loadu_si256((__m256i *)srcPtrTemp[2]);
