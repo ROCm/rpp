@@ -3778,7 +3778,7 @@ inline void rpp_store24_f32pkd3_to_f32pkd3_avx(Rpp32f* dstPtr, __m256 *p)
     _mm256_storeu_ps(dstPtr + 16, p[2]); /* Store RGB set 3 */
 }
 
-inline void rpp_convert24_u8pkd3_to_u8pln3(__m128i &pxLower, __m128i &pxUpper, __m128i &pxR, __m128i &pxG, __m128i &pxB)
+inline void rpp_convert24_u8pkd3_to_u8pln3(__m128i &pxLower, __m128i &pxUpper, __m128i *pxDstChn)
 {
     // pxLower = R1 G1 B1 R2 G2 B2 R3 G3 B3 R4 G4 B4 R5 G5 B5 R6
     // pxUpper = G6 B6 R7 G7 B7 R8 G8 B8 0  0  0  0  0  0  0  0
@@ -3796,11 +3796,11 @@ inline void rpp_convert24_u8pkd3_to_u8pln3(__m128i &pxLower, __m128i &pxUpper, _
     __m128i xmm_shuffle_mask = _mm_setr_epi8(12, 15, 2, 5, 13, 0, 3, 6, 14, 1, 4, 7, 0x80, 0x80, 0x80, 0x80);
     pxTempUpper = _mm_shuffle_epi8(pxTempUpper, xmm_shuffle_mask);
 
-    pxR = _mm_unpacklo_epi32(_mm_shuffle_epi8(pxLower, xmm_char_maskR), pxTempUpper);
-    pxG = _mm_blend_epi16(_mm_shuffle_epi8(pxLower, xmm_char_maskG), pxTempUpper, 12);
+    pxDstChn[0] = _mm_unpacklo_epi32(_mm_shuffle_epi8(pxLower, xmm_char_maskR), pxTempUpper);
+    pxDstChn[1] = _mm_blend_epi16(_mm_shuffle_epi8(pxLower, xmm_char_maskG), pxTempUpper, 12);
 
     xmm_shuffle_mask = _mm_setr_epi8(0, 1, 2, 3, 8, 9, 10, 11, 0x80, 0x80, 0x80, 0x80,0x80, 0x80, 0x80, 0x80);
-    pxB = _mm_shuffle_epi8(_mm_blend_epi16(_mm_shuffle_epi8(pxLower, xmm_char_maskB), pxTempUpper, 48), xmm_shuffle_mask);
+    pxDstChn[2] = _mm_shuffle_epi8(_mm_blend_epi16(_mm_shuffle_epi8(pxLower, xmm_char_maskB), pxTempUpper, 48), xmm_shuffle_mask);
 }
 
 inline void rpp_convert72_u8pln3_to_u8pkd3(__m256i *pxSrc, __m128i *pxDst)
