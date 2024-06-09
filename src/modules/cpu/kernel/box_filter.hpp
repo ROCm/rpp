@@ -34,13 +34,13 @@ const __m128i xmm_pxMaskRotate0To9 = _mm_setr_epi8(10, 11, 12, 13, 14, 15, 0, 1,
 const __m128i xmm_pxMaskRotate0To11 = _mm_setr_epi8(12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11);
 const __m128i xmm_pxMaskRotate0To13 = _mm_setr_epi8(14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13);
 
-const __m256i avx_pMaskRotate0To1 = _mm256_setr_epi32(1, 2, 3, 4, 5, 6, 7, 0);
-const __m256i avx_pMaskRotate0To2 = _mm256_setr_epi32(2, 3, 4, 5, 6, 7, 0, 1);
-const __m256i avx_pMaskRotate0To3 = _mm256_setr_epi32(3, 4, 5, 6, 7, 0, 1, 2);
-const __m256i avx_pMaskRotate0To4 = _mm256_setr_epi32(4, 5, 6, 7, 0, 1, 2, 3);
-const __m256i avx_pMaskRotate0To5 = _mm256_setr_epi32(5, 6, 7, 0, 1, 2, 3, 4);
-const __m256i avx_pMaskRotate0To6 = _mm256_setr_epi32(6, 7, 0, 1, 2, 3, 4, 5);
-const __m256i avx_pMaskRotate0To7 = _mm256_setr_epi32(7, 0, 1, 2, 3, 4, 5, 6);
+const __m256i avx_pxMaskRotate0To1 = _mm256_setr_epi32(1, 2, 3, 4, 5, 6, 7, 0);
+const __m256i avx_pxMaskRotate0To2 = _mm256_setr_epi32(2, 3, 4, 5, 6, 7, 0, 1);
+const __m256i avx_pxMaskRotate0To3 = _mm256_setr_epi32(3, 4, 5, 6, 7, 0, 1, 2);
+const __m256i avx_pxMaskRotate0To4 = _mm256_setr_epi32(4, 5, 6, 7, 0, 1, 2, 3);
+const __m256i avx_pxMaskRotate0To5 = _mm256_setr_epi32(5, 6, 7, 0, 1, 2, 3, 4);
+const __m256i avx_pxMaskRotate0To6 = _mm256_setr_epi32(6, 7, 0, 1, 2, 3, 4, 5);
+const __m256i avx_pxMaskRotate0To7 = _mm256_setr_epi32(7, 0, 1, 2, 3, 4, 5, 6);
 
 template<typename T>
 inline void increment_row_ptrs(T **srcPtrTemp, Rpp32u kernelSize, Rpp32s increment)
@@ -70,12 +70,10 @@ inline void box_filter_generic_host_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp32u
 
     // find the colKernelLoopLimit based on rowIndex, columnIndex
     get_kernel_loop_limit(columnIndex, columnKernelLoopLimit, kernelSize, padLength, width);
-
     for (int i = 0; i < rowKernelLoopLimit; i++)
-    {
         for (int j = 0, k = 0 ; j < columnKernelLoopLimit; j++, k += channels)
             accum += static_cast<Rpp32f>(srcPtrTemp[i][k]);
-    }
+
     accum *= kernelSizeInverseSquare;
     rpp_pixel_check_and_store(accum, dstPtrTemp);
 }
@@ -86,13 +84,13 @@ inline void box_filter_generic_host_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp32u
 
 inline void compute_box_filter_u8_u8_3x3_24_host_pln(__m256i *pxRow, __m128i *pxDst, const __m128i &pxConvolutionFactor)
 {
-    // pack lower half of each of 3 loaded row values from 8 bit to 16 bit and add
+    // unpack lower half of each of 3 loaded row values from 8 bit to 16 bit and add
     __m256i pxLower, pxUpper;
     pxLower = _mm256_unpacklo_epi8(pxRow[0], avx_px0);
     pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[1], avx_px0));
     pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[2], avx_px0));
 
-    // pack higher half of each of 3 loaded row values from 8 bit to 16 bit and add
+    // unpack higher half of each of 3 loaded row values from 8 bit to 16 bit and add
     pxUpper = _mm256_unpackhi_epi8(pxRow[0], avx_px0);
     pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[1], avx_px0));
     pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[2], avx_px0));
@@ -128,20 +126,20 @@ inline void compute_box_filter_u8_u8_3x3_24_host_pln(__m256i *pxRow, __m128i *px
     pxLower2 = _mm_mulhi_epi16(pxLower2, pxConvolutionFactor);
     pxUpper1 = _mm_mulhi_epi16(pxUpper1, pxConvolutionFactor);
 
-    // saturate 16 bit values to 8 bit values and store in resultant registers
+    // pack 16 bit values to 8 bit values using unsigned saturation and store in resultant registers
     pxDst[0] = _mm_packus_epi16(pxLower1, pxLower2);
     pxDst[1] = _mm_packus_epi16(pxUpper1, xmm_px0);
 }
 
 inline void compute_box_filter_u8_u8_3x3_24_host_pkd(__m256i *pxRow, __m128i *pxDst, const __m128i &pxConvolutionFactor)
 {
-    // pack lower half of each of 3 loaded row values from 8 bit to 16 bit and add
+    // unpack lower half of each of 3 loaded row values from 8 bit to 16 bit and add
     __m256i pxLower, pxUpper;
     pxLower = _mm256_unpacklo_epi8(pxRow[0], avx_px0);
     pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[1], avx_px0));
     pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[2], avx_px0));
 
-    // pack higher half of each of 3 loaded row values from 8 bit to 16 bit and add
+    // unpack higher half of each of 3 loaded row values from 8 bit to 16 bit and add
     pxUpper = _mm256_unpackhi_epi8(pxRow[0], avx_px0);
     pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[1], avx_px0));
     pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[2], avx_px0));
@@ -177,7 +175,7 @@ inline void compute_box_filter_u8_u8_3x3_24_host_pkd(__m256i *pxRow, __m128i *px
     pxLower2 = _mm_mulhi_epi16(pxLower2, pxConvolutionFactor);
     pxUpper1 = _mm_mulhi_epi16(pxUpper1, pxConvolutionFactor);
 
-    // saturate 16 bit values to 8 bit values and store in resultant registers
+    // pack 16 bit values to 8 bit values using unsigned saturation and store in resultant registers
     pxDst[0] = _mm_packus_epi16(pxLower1, pxLower2);
     pxDst[1] = _mm_packus_epi16(pxUpper1, xmm_px0);
 }
@@ -186,7 +184,7 @@ inline void compute_box_filter_u8_u8_3x3_24_host_pkd(__m256i *pxRow, __m128i *px
 
 inline void compute_box_filter_u8_u8_5x5_24_host_pln(__m256i *pxRow, __m128i *pxDst, const __m128i &pxConvolutionFactor)
 {
-    // pack lower half of each of 7 loaded row values from 8 bit to 16 bit and add
+    // unpack lower half of each of 7 loaded row values from 8 bit to 16 bit and add
     __m256i pxLower, pxUpper;
     pxLower = _mm256_unpacklo_epi8(pxRow[0], avx_px0);
     pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[1], avx_px0));
@@ -194,7 +192,7 @@ inline void compute_box_filter_u8_u8_5x5_24_host_pln(__m256i *pxRow, __m128i *px
     pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[3], avx_px0));
     pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[4], avx_px0));
 
-    // pack higher half of each of 7 loaded row values from 8 bit to 16 bit and add
+    // unpack higher half of each of 7 loaded row values from 8 bit to 16 bit and add
     pxUpper = _mm256_unpackhi_epi8(pxRow[0], avx_px0);
     pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[1], avx_px0));
     pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[2], avx_px0));
@@ -244,14 +242,14 @@ inline void compute_box_filter_u8_u8_5x5_24_host_pln(__m256i *pxRow, __m128i *px
     pxLower2 = _mm_mulhi_epi16(pxLower2, pxConvolutionFactor);
     pxUpper1 = _mm_mulhi_epi16(pxUpper1, pxConvolutionFactor);
 
-    // saturate 16 bit values to 8 bit values and store in resultant registers
+    // pack 16 bit values to 8 bit values using unsigned saturation and store in resultant registers
     pxDst[0] = _mm_packus_epi16(pxLower1, pxLower2);
     pxDst[1] = _mm_packus_epi16(pxUpper1, xmm_px0);
 }
 
 inline void compute_box_filter_u8_u8_5x5_18_host_pkd(__m256i *pxRow, __m128i *pxDst, const __m128i &pxConvolutionFactor)
 {
-    // pack lower half of each of 7 loaded row values from 8 bit to 16 bit and add
+    // unpack lower half of each of 7 loaded row values from 8 bit to 16 bit and add
     __m256i pxLower, pxUpper;
     pxLower = _mm256_unpacklo_epi8(pxRow[0], avx_px0);
     pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[1], avx_px0));
@@ -259,7 +257,7 @@ inline void compute_box_filter_u8_u8_5x5_18_host_pkd(__m256i *pxRow, __m128i *px
     pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[3], avx_px0));
     pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[4], avx_px0));
 
-    // pack higher half of each of 7 loaded row values from 8 bit to 16 bit and add
+    // unpack higher half of each of 7 loaded row values from 8 bit to 16 bit and add
     pxUpper = _mm256_unpackhi_epi8(pxRow[0], avx_px0);
     pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[1], avx_px0));
     pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[2], avx_px0));
@@ -307,7 +305,7 @@ inline void compute_box_filter_u8_u8_5x5_18_host_pkd(__m256i *pxRow, __m128i *px
     pxLower2 = _mm_mulhi_epi16(pxLower2, pxConvolutionFactor);
     pxUpper1 = _mm_mulhi_epi16(pxUpper1, pxConvolutionFactor);
 
-    // saturate 16 bit values to 8 bit values and store in resultant registers
+    // pack 16 bit values to 8 bit values using unsigned saturation and store in resultant registers
     pxDst[0] = _mm_packus_epi16(pxLower1, pxLower2);
     pxDst[1] = _mm_packus_epi16(pxUpper1, xmm_px0);
 }
@@ -316,7 +314,7 @@ inline void compute_box_filter_u8_u8_5x5_18_host_pkd(__m256i *pxRow, __m128i *px
 
 inline void compute_box_filter_u8_u8_7x7_24_host_pln(__m256i *pxRow, __m128i *pxDst, const __m128i &pxConvolutionFactor)
 {
-    // pack lower half of each of 7 loaded row values from 8 bit to 16 bit and add
+    // unpack lower half of each of 7 loaded row values from 8 bit to 16 bit and add
     __m256i pxLower, pxUpper;
     pxLower = _mm256_unpacklo_epi8(pxRow[0], avx_px0);
     pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[1], avx_px0));
@@ -326,7 +324,7 @@ inline void compute_box_filter_u8_u8_7x7_24_host_pln(__m256i *pxRow, __m128i *px
     pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[5], avx_px0));
     pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[6], avx_px0));
 
-    // pack higher half of each of 7 loaded row values from 8 bit to 16 bit and add
+    // unpack higher half of each of 7 loaded row values from 8 bit to 16 bit and add
     pxUpper = _mm256_unpackhi_epi8(pxRow[0], avx_px0);
     pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[1], avx_px0));
     pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[2], avx_px0));
@@ -390,7 +388,7 @@ inline void compute_box_filter_u8_u8_7x7_24_host_pln(__m256i *pxRow, __m128i *px
     pxLower2 = _mm_mulhi_epi16(pxLower2, pxConvolutionFactor);
     pxUpper1 = _mm_mulhi_epi16(pxUpper1, pxConvolutionFactor);
 
-    // saturate 16 bit values to 8 bit values and store in resultant registers
+    // pack 16 bit values to 8 bit values using unsigned saturation and store in resultant registers
     pxDst[0] = _mm_packus_epi16(pxLower1, pxLower2);
     pxDst[1] = _mm_packus_epi16(pxUpper1, xmm_px0);
 }
@@ -681,7 +679,7 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
             // box filter without fused output-layout toggle (NCHW -> NCHW)
             if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
             {
-                Rpp32u alignedLength = ((bufferLength - 2 * padLength) / 24) * 24;
+                Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 24) * 24;
                 for (int c = 0; c < srcDescPtr->c; c++)
                 {
                     srcPtrRow[0] = srcPtrChannel;
@@ -737,7 +735,7 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
             }
             else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
-                Rpp32u alignedLength = ((bufferLength - 2 * padLength * 3) / 24) * 24;
+                Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 24) * 24;
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
                     int vectorLoopCount = 0;
@@ -785,7 +783,7 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
             }
             else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
             {
-                Rpp32u alignedLength = ((bufferLength - 2 * padLength * 3) / 24) * 24;
+                Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 24) * 24;
                 Rpp8u *dstPtrChannels[3];
                 for (int i = 0; i < 3; i++)
                     dstPtrChannels[i] = dstPtrChannel + i * dstDescPtr->strides.cStride;
@@ -845,7 +843,7 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
             }
             else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
-                Rpp32u alignedLength = ((bufferLength - 2 * padLength) / 24) * 24;
+                Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 24) * 24;
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
                     int vectorLoopCount = 0;
@@ -924,7 +922,7 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
             // box filter without fused output-layout toggle (NCHW -> NCHW)
             if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
             {
-                Rpp32u alignedLength = ((bufferLength - 2 * padLength) / 24) * 24;
+                Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 24) * 24;
                 for (int c = 0; c < srcDescPtr->c; c++)
                 {
                     srcPtrRow[0] = srcPtrChannel;
@@ -981,7 +979,7 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
             }
             else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
-                Rpp32u alignedLength = ((bufferLength - 2 * padLength * 3) / 18) * 18;
+                Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 18) * 18;
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
                     int vectorLoopCount = 0;
@@ -1031,7 +1029,7 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
             }
             else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
             {
-                Rpp32u alignedLength = ((bufferLength - 2 * padLength * 3) / 18) * 18;
+                Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 18) * 18;
                 Rpp8u *dstPtrChannels[3];
                 for (int i = 0; i < 3; i++)
                     dstPtrChannels[i] = dstPtrChannel + i * dstDescPtr->strides.cStride;
@@ -1094,7 +1092,7 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
             }
             else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
-                Rpp32u alignedLength = ((bufferLength - 2 * padLength) / 24) * 24;
+                Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 24) * 24;
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
                     int vectorLoopCount = 0;
@@ -1174,7 +1172,7 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
             // box filter without fused output-layout toggle (NCHW -> NCHW)
             if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
             {
-                Rpp32u alignedLength = ((bufferLength - 2 * padLength) / 24) * 24;
+                Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 24) * 24;
                 for (int c = 0; c < srcDescPtr->c; c++)
                 {
                     srcPtrRow[0] = srcPtrChannel;
@@ -1231,7 +1229,7 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
             }
             else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
-                Rpp32u alignedLength = ((bufferLength - 2 * padLength) / 24) * 24;
+                Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 24) * 24;
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
                     int vectorLoopCount = 0;
@@ -1309,7 +1307,7 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
             dstPtrRow = dstPtrChannel;
             if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
             {
-                Rpp32u alignedLength = ((bufferLength - 2 * padLength) / 16) * 16;
+                Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 16) * 16;
                 for (int c = 0; c < srcDescPtr->c; c++)
                 {
                     srcPtrRow[0] = srcPtrChannel;
@@ -1365,7 +1363,7 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
             }
             else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
-                Rpp32u alignedLength = ((bufferLength - 2 * padLength * 3) / 64) * 64;
+                Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 64) * 64;
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
                     int vectorLoopCount = 0;
@@ -1456,7 +1454,7 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
             }
             else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
-                Rpp32u alignedLength = ((bufferLength - 2 * padLength) / 16) * 16;
+                Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 16) * 16;
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
                     int vectorLoopCount = 0;
@@ -1520,7 +1518,7 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
             }
             else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
             {
-                Rpp32u alignedLength = ((bufferLength - 2 * padLength * 3) / 64) * 64;
+                Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 64) * 64;
                 Rpp8u *dstPtrChannels[3];
                 for (int c = 0; c < 3; c++)
                     dstPtrChannels[c] = dstPtrChannel + c * dstDescPtr->strides.cStride;
@@ -1668,7 +1666,7 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
             // box filter without fused output-layout toggle (NCHW -> NCHW)
             if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
             {
-                Rpp32u alignedLength = ((bufferLength - 2 * padLength) / 14) * 14;
+                Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 14) * 14;
                 for (int c = 0; c < srcDescPtr->c; c++)
                 {
                     srcPtrRow[0] = srcPtrChannel;
@@ -1727,7 +1725,7 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
             }
             else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
-                Rpp32u alignedLength = ((bufferLength - 2 * padLength * 3) / 9) * 9;
+                Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 9) * 9;
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
                     int vectorLoopCount = 0;
@@ -1816,7 +1814,7 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
             }
             else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
             {
-                Rpp32u alignedLength = ((bufferLength - 2 * padLength * 3) / 9) * 9;
+                Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 9) * 9;
                 Rpp32f *dstPtrChannels[3];
                 for (int i = 0; i < 3; i++)
                     dstPtrChannels[i] = dstPtrChannel + i * dstDescPtr->strides.cStride;
@@ -1914,7 +1912,7 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
             }
             else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
-                Rpp32u alignedLength = ((bufferLength - 2 * padLength) / 14) * 14;
+                Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 14) * 14;
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
                     int vectorLoopCount = 0;
@@ -2010,7 +2008,7 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
             // box filter without fused output-layout toggle (NCHW -> NCHW)
             if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
             {
-                Rpp32u alignedLength = ((bufferLength - 2 * padLength) / 16) * 16;
+                Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 16) * 16;
                 for (int c = 0; c < srcDescPtr->c; c++)
                 {
                     srcPtrRow[0] = srcPtrChannel;
@@ -2057,13 +2055,13 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
                             pUpper = _mm256_add_ps(pUpper, _mm256_add_ps(_mm256_add_ps(pRow[6], pRow[7]), pRow[8]));
 
                             __m256 pDst = avx_p0;
-                            pDst = _mm256_add_ps(pLower, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 1), avx_pMaskRotate0To1));  
-                            pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 3), avx_pMaskRotate0To2)); 
-                            pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 7), avx_pMaskRotate0To3)); 
-                            pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 15), avx_pMaskRotate0To4)); 
-                            pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 31), avx_pMaskRotate0To5)); 
-                            pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 63), avx_pMaskRotate0To6)); 
-                            pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 127), avx_pMaskRotate0To7));
+                            pDst = _mm256_add_ps(pLower, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 1), avx_pxMaskRotate0To1));  
+                            pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 3), avx_pxMaskRotate0To2)); 
+                            pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 7), avx_pxMaskRotate0To3)); 
+                            pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 15), avx_pxMaskRotate0To4)); 
+                            pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 31), avx_pxMaskRotate0To5)); 
+                            pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 63), avx_pxMaskRotate0To6)); 
+                            pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 127), avx_pxMaskRotate0To7));
                             pDst = _mm256_add_ps(pDst, pUpper);
                             pDst = _mm256_mul_ps(pDst, pConvolutionFactorAVX);
 
@@ -2088,7 +2086,7 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
             }
             else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
-                Rpp32u alignedLength = ((bufferLength - 2 * padLength * 3) / 32) * 32;
+                Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 32) * 32;
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
                     int vectorLoopCount = 0;
@@ -2148,13 +2146,13 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
                         pTemp[3] = _mm256_add_ps(pTemp[3], _mm256_add_ps(_mm256_add_ps(pRow2[6], pRow2[7]), pRow2[8]));
 
                         __m256 pDst = avx_p0;
-                        pDst = _mm256_add_ps(pTemp[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pTemp[0], pTemp[1], 7), avx_pMaskRotate0To3));  
-                        pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pTemp[0], pTemp[1], 63), avx_pMaskRotate0To6)); 
-                        pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pTemp[1], pTemp[2], 1), avx_pMaskRotate0To1)); 
-                        pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pTemp[1], pTemp[2], 15), avx_pMaskRotate0To4)); 
-                        pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pTemp[1], pTemp[2], 127), avx_pMaskRotate0To7)); 
-                        pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pTemp[2], pTemp[3], 3), avx_pMaskRotate0To2)); 
-                        pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pTemp[2], pTemp[3], 31), avx_pMaskRotate0To5));
+                        pDst = _mm256_add_ps(pTemp[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pTemp[0], pTemp[1], 7), avx_pxMaskRotate0To3));  
+                        pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pTemp[0], pTemp[1], 63), avx_pxMaskRotate0To6)); 
+                        pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pTemp[1], pTemp[2], 1), avx_pxMaskRotate0To1)); 
+                        pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pTemp[1], pTemp[2], 15), avx_pxMaskRotate0To4)); 
+                        pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pTemp[1], pTemp[2], 127), avx_pxMaskRotate0To7)); 
+                        pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pTemp[2], pTemp[3], 3), avx_pxMaskRotate0To2)); 
+                        pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pTemp[2], pTemp[3], 31), avx_pxMaskRotate0To5));
                         pDst = _mm256_add_ps(pDst, pTemp[3]);
                         pDst = _mm256_mul_ps(pDst, pConvolutionFactorAVX);
 
@@ -2182,7 +2180,7 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
             // box filter with fused output-layout toggle (NCHW -> NHWC)
             else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
-                Rpp32u alignedLength = ((bufferLength - 2 * padLength) / 16) * 16;
+                Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 16) * 16;
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
                     int vectorLoopCount = 0;
@@ -2232,13 +2230,13 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
                             pUpper = _mm256_add_ps(pUpper, _mm256_add_ps(_mm256_add_ps(pRow[6], pRow[7]), pRow[8]));
 
                             __m256 pDst = avx_p0;
-                            pDst = _mm256_add_ps(pLower, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 1), avx_pMaskRotate0To1));  
-                            pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 3), avx_pMaskRotate0To2)); 
-                            pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 7), avx_pMaskRotate0To3)); 
-                            pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 15), avx_pMaskRotate0To4)); 
-                            pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 31), avx_pMaskRotate0To5)); 
-                            pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 63), avx_pMaskRotate0To6)); 
-                            pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 127), avx_pMaskRotate0To7));
+                            pDst = _mm256_add_ps(pLower, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 1), avx_pxMaskRotate0To1));  
+                            pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 3), avx_pxMaskRotate0To2)); 
+                            pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 7), avx_pxMaskRotate0To3)); 
+                            pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 15), avx_pxMaskRotate0To4)); 
+                            pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 31), avx_pxMaskRotate0To5)); 
+                            pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 63), avx_pxMaskRotate0To6)); 
+                            pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 127), avx_pxMaskRotate0To7));
                             pDst = _mm256_add_ps(pDst, pUpper);
                             pResultPln[c] = _mm256_mul_ps(pDst, pConvolutionFactorAVX);
                         }
@@ -2263,7 +2261,7 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
             }
             else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
             {
-                Rpp32u alignedLength = ((bufferLength - 2 * padLength * 3) / 32) * 32;
+                Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 32) * 32;
                 Rpp32f *dstPtrChannels[3];
                 for (int i = 0; i < 3; i++)
                     dstPtrChannels[i] = dstPtrChannel + i * dstDescPtr->strides.cStride;
