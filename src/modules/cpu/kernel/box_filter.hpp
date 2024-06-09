@@ -51,12 +51,10 @@ inline void increment_row_ptrs(T **srcPtrTemp, Rpp32u kernelSize, Rpp32s increme
 
 inline void get_kernel_loop_limit(Rpp32s index, Rpp32s &loopLimit, Rpp32u kernelSize, Rpp32u padLength, Rpp32u length)
 {
-    if ((index >= padLength) && (index < length - padLength))
-        loopLimit = kernelSize;
-    else
-    {
-        Rpp32u rowFactor = (index < padLength) ? index : (length - 1 - index);
-        loopLimit = kernelSize - padLength + rowFactor;
+    if ((index < padLength) || (index >= (length - padLength)))
+    {  
+        Rpp32u factor = (index < padLength) ? index : (length - 1 - index);
+        loopLimit = kernelSize - padLength + factor;
     }
 }
 
@@ -66,7 +64,7 @@ inline void box_filter_generic_host_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp32u
                                            Rpp32f kernelSizeInverseSquare, Rpp32u channels = 1)
 {
     Rpp32f accum = 0.0f;
-    Rpp32s columnKernelLoopLimit;
+    Rpp32s columnKernelLoopLimit = kernelSize;
 
     // find the colKernelLoopLimit based on rowIndex, columnIndex
     get_kernel_loop_limit(columnIndex, columnKernelLoopLimit, kernelSize, padLength, width);
@@ -694,7 +692,7 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                         Rpp8u *dstPtrTemp = dstPtrRow;
 
                         // get the number of rows needs to be loaded for the corresponding row
-                        Rpp32s rowKernelLoopLimit;
+                        Rpp32s rowKernelLoopLimit = kernelSize;
                         get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
 
                         // process padLength number of columns in each row
@@ -743,7 +741,7 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     Rpp8u *srcPtrTemp[3] = {srcPtrRow[0], srcPtrRow[1], srcPtrRow[2]};
                     Rpp8u *dstPtrTemp = dstPtrRow;
 
-                    Rpp32s rowKernelLoopLimit;
+                    Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
 
                     // process padLength number of columns in each row
@@ -795,7 +793,7 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     Rpp8u *srcPtrTemp[3] = {srcPtrRow[0], srcPtrRow[1], srcPtrRow[2]};
                     Rpp8u *dstPtrTempChannels[3] = {dstPtrChannels[0], dstPtrChannels[1], dstPtrChannels[2]};
 
-                    Rpp32s rowKernelLoopLimit;
+                    Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
 
                     // process padLength number of columns in each row
@@ -856,7 +854,7 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
 
                     Rpp8u *dstPtrTemp = dstPtrRow;
                     // get the number of rows needs to be loaded for the corresponding row
-                    Rpp32s rowKernelLoopLimit;
+                    Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
 
                     // process padLength number of columns in each row
@@ -939,7 +937,7 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                         Rpp8u *dstPtrTemp = dstPtrRow;
 
                         // get the number of rows needs to be loaded for the corresponding row
-                        Rpp32s rowKernelLoopLimit;
+                        Rpp32s rowKernelLoopLimit = kernelSize;
                         get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
 
                         // process padLength number of columns in each row
@@ -987,7 +985,7 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     Rpp8u *srcPtrTemp[5] = {srcPtrRow[0], srcPtrRow[1], srcPtrRow[2], srcPtrRow[3], srcPtrRow[4]};
                     Rpp8u *dstPtrTemp = dstPtrRow;
 
-                    Rpp32s rowKernelLoopLimit;
+                    Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
 
                     // process padLength number of columns in each row
@@ -1041,7 +1039,7 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     Rpp8u *srcPtrTemp[5] = {srcPtrRow[0], srcPtrRow[1], srcPtrRow[2], srcPtrRow[3], srcPtrRow[4]};
                     Rpp8u *dstPtrTempChannels[3] = {dstPtrChannels[0], dstPtrChannels[1], dstPtrChannels[2]};
 
-                    Rpp32s rowKernelLoopLimit;
+                    Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
 
                     // process padLength number of columns in each row
@@ -1106,7 +1104,7 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     }
                     Rpp8u *dstPtrTemp = dstPtrRow;
                     // get the number of rows needs to be loaded for the corresponding row
-                    Rpp32s rowKernelLoopLimit;
+                    Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
 
                     // process padLength number of columns in each row
@@ -1189,7 +1187,7 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                         Rpp8u *dstPtrTemp = dstPtrRow;
 
                         // get the number of rows needs to be loaded for the corresponding row
-                        Rpp32s rowKernelLoopLimit;
+                        Rpp32s rowKernelLoopLimit = kernelSize;
                         get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
 
                         // process padLength number of columns in each row
@@ -1243,7 +1241,7 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     }
                     Rpp8u *dstPtrTemp = dstPtrRow;
                     // get the number of rows needs to be loaded for the corresponding row
-                    Rpp32s rowKernelLoopLimit;
+                    Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
 
                     // process padLength number of columns in each row
@@ -1323,7 +1321,7 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                             srcPtrTemp[k] = srcPtrRow[k];
                         Rpp8u *dstPtrTemp = dstPtrRow;
 
-                        Rpp32s rowKernelLoopLimit;
+                        Rpp32s rowKernelLoopLimit = kernelSize;
                         get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
 
                         // process padLength number of columns in each row
@@ -1373,7 +1371,7 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                         srcPtrTemp[k] = srcPtrRow[k];
                     Rpp8u *dstPtrTemp = dstPtrRow;
 
-                    Rpp32s rowKernelLoopLimit;
+                    Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
 
                     // process padLength number of columns in each row
@@ -1468,7 +1466,7 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     }
                     Rpp8u *dstPtrTemp = dstPtrRow;
 
-                    Rpp32s rowKernelLoopLimit;
+                    Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
 
                     // process padLength number of columns in each row
@@ -1531,7 +1529,7 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                         srcPtrTemp[k] = srcPtrRow[k];
                     Rpp8u *dstPtrTempChannels[3] = {dstPtrChannels[0], dstPtrChannels[1], dstPtrChannels[2]};
 
-                    Rpp32s rowKernelLoopLimit;
+                    Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
 
                     // process padLength number of columns in each row
@@ -1681,7 +1679,7 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
                         Rpp32f *dstPtrTemp = dstPtrRow;
 
                         // get the number of rows needs to be loaded for the corresponding row
-                        Rpp32s rowKernelLoopLimit;
+                        Rpp32s rowKernelLoopLimit = kernelSize;
                         get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
 
                         // process padLength number of columns in each row
@@ -1733,7 +1731,7 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
                     Rpp32f *srcPtrTemp[3] = {srcPtrRow[0], srcPtrRow[1], srcPtrRow[2]};
                     Rpp32f *dstPtrTemp = dstPtrRow;
 
-                    Rpp32s rowKernelLoopLimit;
+                    Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
 
                     // process padLength number of columns in each row
@@ -1825,7 +1823,7 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
                     Rpp32f *srcPtrTemp[3] = {srcPtrRow[0], srcPtrRow[1], srcPtrRow[2]};
                     Rpp32f *dstPtrTempChannels[3] = {dstPtrChannels[0], dstPtrChannels[1], dstPtrChannels[2]};
 
-                    Rpp32s rowKernelLoopLimit;
+                    Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
 
                     // process padLength number of columns in each row
@@ -1925,7 +1923,7 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
 
                     Rpp32f *dstPtrTemp = dstPtrRow;
                     // get the number of rows needs to be loaded for the corresponding row
-                    Rpp32s rowKernelLoopLimit;
+                    Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
 
                     // process padLength number of columns in each row
@@ -2025,7 +2023,7 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
                         Rpp32f *dstPtrTemp = dstPtrRow;
 
                         // get the number of rows needs to be loaded for the corresponding row
-                        Rpp32s rowKernelLoopLimit;
+                        Rpp32s rowKernelLoopLimit = kernelSize;
                         get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
 
                         // process padLength number of columns in each row
@@ -2096,7 +2094,7 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
                         srcPtrTemp[k] = srcPtrRow[k];
                     Rpp32f *dstPtrTemp = dstPtrRow;
 
-                    Rpp32s rowKernelLoopLimit;
+                    Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
 
                     // process padLength number of columns in each row
@@ -2195,7 +2193,7 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
                     Rpp32f *dstPtrTemp = dstPtrRow;
 
                     // get the number of rows needs to be loaded for the corresponding row
-                    Rpp32s rowKernelLoopLimit;
+                    Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
 
                     // process padLength number of columns in each row
@@ -2274,7 +2272,7 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
                         srcPtrTemp[k] = srcPtrRow[k];
                     Rpp32f *dstPtrTempChannels[3] = {dstPtrChannels[0], dstPtrChannels[1], dstPtrChannels[2]};
 
-                    Rpp32s rowKernelLoopLimit;
+                    Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
 
                     // process padLength number of columns in each row
