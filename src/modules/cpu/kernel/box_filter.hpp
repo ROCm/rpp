@@ -109,18 +109,46 @@ inline void box_filter_generic_f32_f32_host_tensor(Rpp32f **srcPtrTemp, Rpp32f *
 
 // -------------------- kernel size 3x3 - U8 bitdepth compute functions --------------------
 
+inline void unpacklo_and_add_3x3_host(__m256i *pxRow, __m256i *pxDst)
+{
+    pxDst[0] = _mm256_unpacklo_epi8(pxRow[0], avx_px0);
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[1], avx_px0));
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[2], avx_px0));
+}
+
+inline void unpackhi_and_add_3x3_host(__m256i *pxRow, __m256i *pxDst)
+{
+    pxDst[0] = _mm256_unpackhi_epi8(pxRow[0], avx_px0);
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[1], avx_px0));
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[2], avx_px0));
+}
+
+inline void blend_shuffle_add_3x3_pln_host(__m128i &pxLower1, __m128i &pxLower2)
+{
+    __m128i pxTemp[2];
+    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 1), xmm_pxMaskRotate0To1);
+    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 3), xmm_pxMaskRotate0To3);
+    pxLower1 = _mm_add_epi16(pxLower1, pxTemp[0]);
+    pxLower1 = _mm_add_epi16(pxLower1, pxTemp[1]);
+}
+
+inline void blend_shuffle_add_3x3_pkd_host(__m128i &pxLower1, __m128i &pxLower2)
+{
+    __m128i pxTemp[2];
+    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 7), xmm_pxMaskRotate0To5);
+    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 63), xmm_pxMaskRotate0To11);
+    pxLower1 = _mm_add_epi16(pxLower1, pxTemp[0]);
+    pxLower1 = _mm_add_epi16(pxLower1, pxTemp[1]);
+}
+
 inline void compute_box_filter_u8_u8_3x3_24_host_pln(__m256i *pxRow, __m128i *pxDst, const __m128i &pxConvolutionFactor)
 {
     // pack lower half of each of 3 loaded row values from 8 bit to 16 bit and add
     __m256i pxLower, pxUpper;
-    pxLower = _mm256_unpacklo_epi8(pxRow[0], avx_px0);
-    pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[1], avx_px0));
-    pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[2], avx_px0));
+    unpacklo_and_add_3x3_host(pxRow, &pxLower);
 
     // pack higher half of each of 3 loaded row values from 8 bit to 16 bit and add
-    pxUpper = _mm256_unpackhi_epi8(pxRow[0], avx_px0);
-    pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[1], avx_px0));
-    pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[2], avx_px0));
+    unpackhi_and_add_3x3_host(pxRow, &pxUpper);
 
     // get 4 SSE registers from above 2 AVX registers to arrange as per required order
     __m128i pxLower1, pxLower2, pxUpper1, pxUpper2;
@@ -130,23 +158,13 @@ inline void compute_box_filter_u8_u8_3x3_24_host_pln(__m256i *pxRow, __m128i *px
     pxUpper2 =  _mm256_extracti128_si256(pxUpper, 1);
 
     // perform blend and shuffle operations for the first 8 output values to get required order and add them
-    __m128i pxTemp[2];
-    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 1), xmm_pxMaskRotate0To1);
-    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 3), xmm_pxMaskRotate0To3);
-    pxLower1 = _mm_add_epi16(pxLower1, pxTemp[0]);
-    pxLower1 = _mm_add_epi16(pxLower1, pxTemp[1]);
+    blend_shuffle_add_3x3_pln_host(pxLower1, pxLower2);
 
     // perform blend and shuffle operations for the next 8 output values to get required order and add them
-    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 1), xmm_pxMaskRotate0To1);
-    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 3), xmm_pxMaskRotate0To3);
-    pxLower2 = _mm_add_epi16(pxLower2, pxTemp[0]);
-    pxLower2 = _mm_add_epi16(pxLower2, pxTemp[1]);
+    blend_shuffle_add_3x3_pln_host(pxLower2, pxUpper1);
 
     // perform blend and shuffle operations for the next 8 output values to get required order and add them
-    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 1), xmm_pxMaskRotate0To1);
-    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 3), xmm_pxMaskRotate0To3);
-    pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[0]);
-    pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[1]);
+    blend_shuffle_add_3x3_pln_host(pxUpper1, pxUpper2);
 
     // multiply with convolution factor
     pxLower1 = _mm_mulhi_epi16(pxLower1, pxConvolutionFactor);
@@ -160,16 +178,12 @@ inline void compute_box_filter_u8_u8_3x3_24_host_pln(__m256i *pxRow, __m128i *px
 
 inline void compute_box_filter_u8_u8_3x3_24_host_pkd(__m256i *pxRow, __m128i *pxDst, const __m128i &pxConvolutionFactor)
 {
-    // pack lower half of each of 3 loaded row values from 8 bit to 16 bit and add
+   // pack lower half of each of 3 loaded row values from 8 bit to 16 bit and add
     __m256i pxLower, pxUpper;
-    pxLower = _mm256_unpacklo_epi8(pxRow[0], avx_px0);
-    pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[1], avx_px0));
-    pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[2], avx_px0));
+    unpacklo_and_add_3x3_host(pxRow, &pxLower);
 
     // pack higher half of each of 3 loaded row values from 8 bit to 16 bit and add
-    pxUpper = _mm256_unpackhi_epi8(pxRow[0], avx_px0);
-    pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[1], avx_px0));
-    pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[2], avx_px0));
+    unpackhi_and_add_3x3_host(pxRow, &pxUpper);
 
     // get 4 SSE registers from above 2 AVX registers to arrange as per required order
     __m128i pxLower1, pxLower2, pxUpper1, pxUpper2;
@@ -179,23 +193,13 @@ inline void compute_box_filter_u8_u8_3x3_24_host_pkd(__m256i *pxRow, __m128i *px
     pxUpper2 =  _mm256_extracti128_si256(pxUpper, 1);
 
     // perform blend and shuffle operations for the first 8 output values to get required order and add them
-    __m128i pxTemp[2];
-    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 7), xmm_pxMaskRotate0To5);
-    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 63), xmm_pxMaskRotate0To11);
-    pxLower1 = _mm_add_epi16(pxLower1, pxTemp[0]);
-    pxLower1 = _mm_add_epi16(pxLower1, pxTemp[1]);
+    blend_shuffle_add_3x3_pkd_host(pxLower1, pxLower2);
 
     // perform blend and shuffle operations for the next 8 output values to get required order and add them
-    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 7), xmm_pxMaskRotate0To5);
-    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 63), xmm_pxMaskRotate0To11);
-    pxLower2 = _mm_add_epi16(pxLower2, pxTemp[0]);
-    pxLower2 = _mm_add_epi16(pxLower2, pxTemp[1]);
+    blend_shuffle_add_3x3_pkd_host(pxLower2, pxUpper1);
 
     // perform blend and shuffle operations for the next 8 output values to get required order and add them
-    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 7), xmm_pxMaskRotate0To5);
-    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 63), xmm_pxMaskRotate0To11);
-    pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[0]);
-    pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[1]);
+    blend_shuffle_add_3x3_pkd_host(pxUpper1, pxUpper2);
 
     // multiply with convolution factor
     pxLower1 = _mm_mulhi_epi16(pxLower1, pxConvolutionFactor);
@@ -209,31 +213,26 @@ inline void compute_box_filter_u8_u8_3x3_24_host_pkd(__m256i *pxRow, __m128i *px
 
 // -------------------- 5x5 kernel size - U8 bitdepth compute functions --------------------
 
-inline void compute_box_filter_u8_u8_5x5_24_host_pln(__m256i *pxRow, __m128i *pxDst, const __m128i &pxConvolutionFactor)
+inline void unpacklo_and_add_5x5_host(__m256i *pxRow, __m256i *pxDst)
 {
-    // pack lower half of each of 7 loaded row values from 8 bit to 16 bit and add
-    __m256i pxLower, pxUpper;
-    pxLower = _mm256_unpacklo_epi8(pxRow[0], avx_px0);
-    pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[1], avx_px0));
-    pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[2], avx_px0));
-    pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[3], avx_px0));
-    pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[4], avx_px0));
+    pxDst[0] = _mm256_unpacklo_epi8(pxRow[0], avx_px0);
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[1], avx_px0));
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[2], avx_px0));
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[3], avx_px0));
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[4], avx_px0));
+}
 
-    // pack higher half of each of 7 loaded row values from 8 bit to 16 bit and add
-    pxUpper = _mm256_unpackhi_epi8(pxRow[0], avx_px0);
-    pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[1], avx_px0));
-    pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[2], avx_px0));
-    pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[3], avx_px0));
-    pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[4], avx_px0));
+inline void unpackhi_and_add_5x5_host(__m256i *pxRow, __m256i *pxDst)
+{
+    pxDst[0] = _mm256_unpackhi_epi8(pxRow[0], avx_px0);
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[1], avx_px0));
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[2], avx_px0));
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[3], avx_px0));
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[4], avx_px0));
+}
 
-    // get 4 SSE registers from above 2 AVX registers to arrange as per required order
-    __m128i pxLower1, pxLower2, pxUpper1, pxUpper2;
-    pxLower1 = _mm256_castsi256_si128(pxLower);
-    pxLower2 = _mm256_castsi256_si128(pxUpper);
-    pxUpper1 = _mm256_extracti128_si256(pxLower, 1);
-    pxUpper2 = _mm256_extracti128_si256(pxUpper, 1);
-
-    // get the final accumalated result for first 8 elements
+inline void blend_shuffle_add_5x5_pln_host(__m128i &pxLower1, __m128i &pxLower2)
+{
     __m128i pxTemp[4];
     pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 1), xmm_pxMaskRotate0To1);
     pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 3), xmm_pxMaskRotate0To3);
@@ -243,26 +242,32 @@ inline void compute_box_filter_u8_u8_5x5_24_host_pln(__m256i *pxRow, __m128i *px
     pxLower1 = _mm_add_epi16(pxLower1, pxTemp[1]);
     pxLower1 = _mm_add_epi16(pxLower1, pxTemp[2]);
     pxLower1 = _mm_add_epi16(pxLower1, pxTemp[3]);
+}
 
-    // get the final accumalated result for next 8 elements
-    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 1), xmm_pxMaskRotate0To1);
-    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 3), xmm_pxMaskRotate0To3);
-    pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 7), xmm_pxMaskRotate0To5);
-    pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 15), xmm_pxMaskRotate0To7);
-    pxLower2 = _mm_add_epi16(pxLower2, pxTemp[0]);
-    pxLower2 = _mm_add_epi16(pxLower2, pxTemp[1]);
-    pxLower2 = _mm_add_epi16(pxLower2, pxTemp[2]);
-    pxLower2 = _mm_add_epi16(pxLower2, pxTemp[3]);
+inline void compute_box_filter_u8_u8_5x5_24_host_pln(__m256i *pxRow, __m128i *pxDst, const __m128i &pxConvolutionFactor)
+{
+    // pack lower half of each of 5 loaded row values from 8 bit to 16 bit and add
+    __m256i pxLower, pxUpper;
+    unpacklo_and_add_5x5_host(pxRow, &pxLower);
 
-    // get the final accumalated result for last 8 elements
-    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 1), xmm_pxMaskRotate0To1);
-    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 3), xmm_pxMaskRotate0To3);
-    pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 7), xmm_pxMaskRotate0To5);
-    pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 15), xmm_pxMaskRotate0To7);
-    pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[0]);
-    pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[1]);
-    pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[2]);
-    pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[3]);
+    // pack higher half of each of 3 loaded row values from 8 bit to 16 bit and add
+    unpackhi_and_add_5x5_host(pxRow, &pxUpper);
+
+    // get 4 SSE registers from above 2 AVX registers to arrange as per required order
+    __m128i pxLower1, pxLower2, pxUpper1, pxUpper2;
+    pxLower1 = _mm256_castsi256_si128(pxLower);
+    pxLower2 = _mm256_castsi256_si128(pxUpper);
+    pxUpper1 = _mm256_extracti128_si256(pxLower, 1);
+    pxUpper2 = _mm256_extracti128_si256(pxUpper, 1);
+
+    // perform blend and shuffle operations for the first 8 output values to get required order and add them
+    blend_shuffle_add_5x5_pln_host(pxLower1, pxLower2);
+
+    // perform blend and shuffle operations for the next 8 output values to get required order and add them
+    blend_shuffle_add_5x5_pln_host(pxLower2, pxUpper1);
+
+    // perform blend and shuffle operations for the next 8 output values to get required order and add them
+    blend_shuffle_add_5x5_pln_host(pxUpper1, pxUpper2);
 
     // multiply with convolution factor
     pxLower1 = _mm_mulhi_epi16(pxLower1, pxConvolutionFactor);
@@ -276,20 +281,12 @@ inline void compute_box_filter_u8_u8_5x5_24_host_pln(__m256i *pxRow, __m128i *px
 
 inline void compute_box_filter_u8_u8_5x5_18_host_pkd(__m256i *pxRow, __m128i *pxDst, const __m128i &pxConvolutionFactor)
 {
-    // pack lower half of each of 7 loaded row values from 8 bit to 16 bit and add
+    // pack lower half of each of 5 loaded row values from 8 bit to 16 bit and add
     __m256i pxLower, pxUpper;
-    pxLower = _mm256_unpacklo_epi8(pxRow[0], avx_px0);
-    pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[1], avx_px0));
-    pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[2], avx_px0));
-    pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[3], avx_px0));
-    pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[4], avx_px0));
+    unpacklo_and_add_5x5_host(pxRow, &pxLower);
 
-    // pack higher half of each of 7 loaded row values from 8 bit to 16 bit and add
-    pxUpper = _mm256_unpackhi_epi8(pxRow[0], avx_px0);
-    pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[1], avx_px0));
-    pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[2], avx_px0));
-    pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[3], avx_px0));
-    pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[4], avx_px0));
+    // pack higher half of each of 5 loaded row values from 8 bit to 16 bit and add
+    unpackhi_and_add_5x5_host(pxRow, &pxUpper);
 
     // get 4 SSE registers from above 2 AVX registers to arrange as per required order
     __m128i pxLower1, pxLower2, pxUpper1, pxUpper2;
@@ -339,35 +336,30 @@ inline void compute_box_filter_u8_u8_5x5_18_host_pkd(__m256i *pxRow, __m128i *px
 
 // -------------------- 7x7 kernel size - U8 bitdepth compute functions --------------------
 
-inline void compute_box_filter_u8_u8_7x7_24_host_pln(__m256i *pxRow, __m128i *pxDst, const __m128i &pxConvolutionFactor)
+inline void unpacklo_and_add_7x7_host(__m256i *pxRow, __m256i *pxDst)
 {
-    // pack lower half of each of 7 loaded row values from 8 bit to 16 bit and add
-    __m256i pxLower, pxUpper;
-    pxLower = _mm256_unpacklo_epi8(pxRow[0], avx_px0);
-    pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[1], avx_px0));
-    pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[2], avx_px0));
-    pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[3], avx_px0));
-    pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[4], avx_px0));
-    pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[5], avx_px0));
-    pxLower = _mm256_add_epi16(pxLower, _mm256_unpacklo_epi8(pxRow[6], avx_px0));
+    pxDst[0] = _mm256_unpacklo_epi8(pxRow[0], avx_px0);
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[1], avx_px0));
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[2], avx_px0));
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[3], avx_px0));
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[4], avx_px0));
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[5], avx_px0));
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[6], avx_px0));
+}
 
-    // pack higher half of each of 7 loaded row values from 8 bit to 16 bit and add
-    pxUpper = _mm256_unpackhi_epi8(pxRow[0], avx_px0);
-    pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[1], avx_px0));
-    pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[2], avx_px0));
-    pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[3], avx_px0));
-    pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[4], avx_px0));
-    pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[5], avx_px0));
-    pxUpper = _mm256_add_epi16(pxUpper, _mm256_unpackhi_epi8(pxRow[6], avx_px0));
+inline void unpackhi_and_add_7x7_host(__m256i *pxRow, __m256i *pxDst)
+{
+    pxDst[0] = _mm256_unpackhi_epi8(pxRow[0], avx_px0);
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[1], avx_px0));
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[2], avx_px0));
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[3], avx_px0));
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[4], avx_px0));
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[5], avx_px0));
+    pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[6], avx_px0));
+}
 
-    // get 4 SSE registers from above 2 AVX registers to arrange as per required order
-    __m128i pxLower1, pxLower2, pxUpper1, pxUpper2;
-    pxLower1 = _mm256_castsi256_si128(pxLower);
-    pxLower2 = _mm256_castsi256_si128(pxUpper);
-    pxUpper1 = _mm256_extracti128_si256(pxLower, 1);
-    pxUpper2 = _mm256_extracti128_si256(pxUpper, 1);
-
-    // get the final accumalated result for first 8 elements
+inline void blend_shuffle_add_7x7_pln_host(__m128i &pxLower1, __m128i &pxLower2)
+{
     __m128i pxTemp[6];
     pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 1), xmm_pxMaskRotate0To1);
     pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 3), xmm_pxMaskRotate0To3);
@@ -381,34 +373,32 @@ inline void compute_box_filter_u8_u8_7x7_24_host_pln(__m256i *pxRow, __m128i *px
     pxLower1 = _mm_add_epi16(pxLower1, pxTemp[3]);
     pxLower1 = _mm_add_epi16(pxLower1, pxTemp[4]);
     pxLower1 = _mm_add_epi16(pxLower1, pxTemp[5]);
+}
 
-    // get the final accumalated result for next 8 elements
-    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 1), xmm_pxMaskRotate0To1);
-    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 3), xmm_pxMaskRotate0To3);
-    pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 7), xmm_pxMaskRotate0To5);
-    pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 15), xmm_pxMaskRotate0To7);
-    pxTemp[4] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 31), xmm_pxMaskRotate0To9);
-    pxTemp[5] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 63), xmm_pxMaskRotate0To11);
-    pxLower2 = _mm_add_epi16(pxLower2, pxTemp[0]);
-    pxLower2 = _mm_add_epi16(pxLower2, pxTemp[1]);
-    pxLower2 = _mm_add_epi16(pxLower2, pxTemp[2]);
-    pxLower2 = _mm_add_epi16(pxLower2, pxTemp[3]);
-    pxLower2 = _mm_add_epi16(pxLower2, pxTemp[4]);
-    pxLower2 = _mm_add_epi16(pxLower2, pxTemp[5]);
+inline void compute_box_filter_u8_u8_7x7_24_host_pln(__m256i *pxRow, __m128i *pxDst, const __m128i &pxConvolutionFactor)
+{
+    // pack lower half of each of 7 loaded row values from 8 bit to 16 bit and add
+    __m256i pxLower, pxUpper;
+    unpacklo_and_add_7x7_host(pxRow, &pxLower);
 
-    // get the final accumalated result for last 8 elements
-    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 1), xmm_pxMaskRotate0To1);
-    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 3), xmm_pxMaskRotate0To3);
-    pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 7), xmm_pxMaskRotate0To5);
-    pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 15), xmm_pxMaskRotate0To7);
-    pxTemp[4] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 31), xmm_pxMaskRotate0To9);
-    pxTemp[5] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 63), xmm_pxMaskRotate0To11);
-    pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[0]);
-    pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[1]);
-    pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[2]);
-    pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[3]);
-    pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[4]);
-    pxUpper1 = _mm_add_epi16(pxUpper1, pxTemp[5]);
+    // pack higher half of each of 7 loaded row values from 8 bit to 16 bit and add
+    unpackhi_and_add_7x7_host(pxRow, &pxUpper);
+
+    // get 4 SSE registers from above 2 AVX registers to arrange as per required order
+    __m128i pxLower1, pxLower2, pxUpper1, pxUpper2;
+    pxLower1 = _mm256_castsi256_si128(pxLower);
+    pxLower2 = _mm256_castsi256_si128(pxUpper);
+    pxUpper1 = _mm256_extracti128_si256(pxLower, 1);
+    pxUpper2 = _mm256_extracti128_si256(pxUpper, 1);
+
+    // perform blend and shuffle operations for the first 8 output values to get required order and add them
+    blend_shuffle_add_7x7_pln_host(pxLower1, pxLower2);
+
+    // perform blend and shuffle operations for the next 8 output values to get required order and add them
+    blend_shuffle_add_7x7_pln_host(pxLower2, pxUpper1);
+
+    // perform blend and shuffle operations for the next 8 output values to get required order and add them
+    blend_shuffle_add_7x7_pln_host(pxUpper1, pxUpper2);
 
     // multiply with convolution factor
     pxLower1 = _mm_mulhi_epi16(pxLower1, pxConvolutionFactor);
@@ -418,6 +408,56 @@ inline void compute_box_filter_u8_u8_7x7_24_host_pln(__m256i *pxRow, __m128i *px
     // saturate 16 bit values to 8 bit values and store in resultant registers
     pxDst[0] = _mm_packus_epi16(pxLower1, pxLower2);
     pxDst[1] = _mm_packus_epi16(pxUpper1, xmm_px0);
+}
+
+inline void compute_box_filter_u8_u8_7x7_15_host_pkd(__m256i *pxRow, __m128i *pxDst, const __m128i &pxConvolutionFactor)
+{
+    // pack lower half of each of 7 loaded row values from 8 bit to 16 bit and add
+    __m256i pxLower, pxUpper;
+    unpacklo_and_add_7x7_host(pxRow, &pxLower);
+
+    // pack higher half of each of 7 loaded row values from 8 bit to 16 bit and add
+    unpackhi_and_add_7x7_host(pxRow, &pxUpper);
+
+    // get 4 SSE registers from above 2 AVX registers to arrange as per required order
+    __m128i pxLower1, pxLower2, pxUpper1, pxUpper2;
+    pxLower1 = _mm256_castsi256_si128(pxLower);
+    pxLower2 = _mm256_castsi256_si128(pxUpper);
+    pxUpper1 = _mm256_extracti128_si256(pxLower, 1);
+    pxUpper2 = _mm256_extracti128_si256(pxUpper, 1);
+
+    __m128i pxTemp[6];
+    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 7), xmm_pxMaskRotate0To5);
+    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 63), xmm_pxMaskRotate0To11);
+    pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 1), xmm_pxMaskRotate0To1);
+    pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 15), xmm_pxMaskRotate0To7);
+    pxTemp[4] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 127), xmm_pxMaskRotate0To13);
+    pxTemp[5] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 3), xmm_pxMaskRotate0To3);
+    pxLower1 = _mm_add_epi16(pxLower1, pxTemp[0]);
+    pxLower1 = _mm_add_epi16(pxLower1, pxTemp[1]);
+    pxLower1 = _mm_add_epi16(pxLower1, pxTemp[2]);
+    pxLower1 = _mm_add_epi16(pxLower1, pxTemp[3]);
+    pxLower1 = _mm_add_epi16(pxLower1, pxTemp[4]);
+    pxLower1 = _mm_add_epi16(pxLower1, pxTemp[5]);
+
+    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 7), xmm_pxMaskRotate0To5);
+    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower2, pxUpper1, 63), xmm_pxMaskRotate0To11);
+    pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 1), xmm_pxMaskRotate0To1);
+    pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 15), xmm_pxMaskRotate0To7);
+    pxTemp[4] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 127), xmm_pxMaskRotate0To13);
+    pxTemp[5] = _mm_shuffle_epi8(_mm_blend_epi16(pxUpper1, pxUpper2, 127), xmm_pxMaskRotate0To13);
+    pxLower2 = _mm_add_epi16(pxLower2, pxTemp[0]);
+    pxLower2 = _mm_add_epi16(pxLower2, pxTemp[1]);
+    pxLower2 = _mm_add_epi16(pxLower2, pxTemp[2]);
+    pxLower2 = _mm_add_epi16(pxLower2, pxTemp[3]);
+    pxLower2 = _mm_add_epi16(pxLower2, pxTemp[4]);
+    pxLower2 = _mm_add_epi16(pxLower2, pxTemp[5]);
+    pxLower2 = _mm_add_epi16(pxLower2, _mm_set1_epi16(7));
+
+    pxLower1 = _mm_mulhi_epi16(pxLower1, pxConvolutionFactor);
+    pxLower2 = _mm_mulhi_epi16(pxLower2, pxConvolutionFactor);
+    pxDst[0] = _mm_packus_epi16(pxLower1, pxLower2);
+    pxDst[1] = _mm_packus_epi16(xmm_px0, xmm_px0);
 }
 
 // -------------------- 9x9 kernel size - U8 bitdepth compute functions --------------------
@@ -1034,7 +1074,7 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 18)
                     {
-                        __m256i pxRow[3];
+                        __m256i pxRow[5];
                         rpp_load_box_filter_u8_u8_5x5_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
                         __m128i pxDst[2];
@@ -1323,6 +1363,125 @@ RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     }
                     increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
                     dstPtrRow += dstDescPtr->strides.hStride;
+                }
+            }
+            else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
+            {
+                Rpp32u alignedLength = ((bufferLength - 2 * padLength * 3) / 15) * 15;
+                for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+                {
+                    int vectorLoopCount = 0;
+                    bool padLengthRows = (i < padLength) ? 1: 0;
+                    Rpp8u *srcPtrTemp[7];
+                    for (int k = 0; k < 7; k++)
+                        srcPtrTemp[k] = srcPtrRow[k];
+                    Rpp8u *dstPtrTemp = dstPtrRow;
+
+                    Rpp32s rowKernelLoopLimit;
+                    get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
+
+                    // process padLength number of columns in each row
+                    for (int k = 0; k < padLength * 3; k++)
+                    {
+                        box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTemp, k / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 1);
+                        dstPtrTemp++;
+                    }
+                    // reset source to initial position
+                    srcPtrTemp[0] = srcPtrRow[0];
+                    srcPtrTemp[1] = srcPtrRow[1];
+                    srcPtrTemp[2] = srcPtrRow[2];
+                    srcPtrTemp[3] = srcPtrRow[3];
+                    srcPtrTemp[4] = srcPtrRow[4];
+                    srcPtrTemp[5] = srcPtrRow[5];
+                    srcPtrTemp[6] = srcPtrRow[6];
+
+                    // process remaining columns in each row
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 15)
+                    {
+                        __m256i pxRow[7];
+                        rpp_load_box_filter_u8_u8_7x7_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
+
+                        __m128i pxDst[2];
+                        compute_box_filter_u8_u8_7x7_15_host_pkd(pxRow, pxDst, pxConvolutionFactor);
+                        _mm_storeu_si128((__m128i *)dstPtrTemp, pxDst[0]);
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 15);
+                        dstPtrTemp += 15;
+                    }
+                    vectorLoopCount += padLength * 3;
+                    for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                    {
+                        box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 1);
+                        dstPtrTemp++;
+                    }
+                    increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
+                    dstPtrRow += dstDescPtr->strides.hStride;
+                }
+            }
+            else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
+            {
+                Rpp32u alignedLength = ((bufferLength - 2 * padLength * 3) / 15) * 15;
+                Rpp8u *dstPtrChannels[3];
+                for (int i = 0; i < 3; i++)
+                    dstPtrChannels[i] = dstPtrChannel + i * dstDescPtr->strides.cStride;
+
+                for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+                {
+                    int vectorLoopCount = 0;
+                    bool padLengthRows = (i < padLength) ? 1: 0;
+                    Rpp8u *srcPtrTemp[7] = {srcPtrRow[0], srcPtrRow[1], srcPtrRow[2], srcPtrRow[3], srcPtrRow[4], srcPtrRow[5], srcPtrRow[6]};
+                    Rpp8u *dstPtrTempChannels[3] = {dstPtrChannels[0], dstPtrChannels[1], dstPtrChannels[2]};
+
+                    Rpp32s rowKernelLoopLimit;
+                    get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
+
+                    // process padLength number of columns in each row
+                    for (int k = 0, c = 0; k < padLength * 3; k++, c++)
+                    {
+                        int channel = c % 3;
+                        box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 1);
+                        dstPtrTempChannels[channel]++;
+                    }
+
+                    // reset source to initial position
+                    srcPtrTemp[0] = srcPtrRow[0];
+                    srcPtrTemp[1] = srcPtrRow[1];
+                    srcPtrTemp[2] = srcPtrRow[2];
+                    srcPtrTemp[3] = srcPtrRow[3];
+                    srcPtrTemp[4] = srcPtrRow[4];
+                    srcPtrTemp[5] = srcPtrRow[5];
+                    srcPtrTemp[6] = srcPtrRow[6];
+
+                    // process remaining columns in each row
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 15)
+                    {
+                        __m256i pxRow[7];
+                        rpp_load_box_filter_u8_u8_7x7_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
+
+                        __m128i pxDst[2];
+                        compute_box_filter_u8_u8_7x7_15_host_pkd(pxRow, pxDst, pxConvolutionFactor);
+
+                        // convert from PKD3 to PLN3 and store channelwise
+                        __m128i pxDstChn[3];
+                        rpp_convert24_u8pkd3_to_u8pln3(pxDst[0], pxDst[1], pxDstChn);
+                        rpp_storeu_si64((__m128i *)(dstPtrTempChannels[0]), pxDstChn[0]);
+                        rpp_storeu_si64((__m128i *)(dstPtrTempChannels[1]), pxDstChn[1]);
+                        rpp_storeu_si64((__m128i *)(dstPtrTempChannels[2]), pxDstChn[2]);
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 15);
+                        increment_row_ptrs(dstPtrTempChannels, kernelSize, 5);
+                    }
+                    vectorLoopCount += padLength * 3;
+                    for (int c = 0; vectorLoopCount < bufferLength; vectorLoopCount++, c++)
+                    {
+                        int channel = c % 3;
+                        box_filter_generic_u8_u8_host_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 1);
+                        dstPtrTempChannels[channel]++;
+                    }
+                    increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
+                    increment_row_ptrs(dstPtrChannels, kernelSize, dstDescPtr->strides.hStride);
                 }
             }
         }
