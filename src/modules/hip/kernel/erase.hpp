@@ -119,13 +119,13 @@ RppStatus hip_exec_erase_tensor(T *srcPtr,
 
     if (dstDescPtr->layout == RpptLayout::NHWC)
     {
-        // if src layout is NHWC, copy src to dst 
+        // if src layout is NHWC, copy src to dst
         if (srcDescPtr->layout == RpptLayout::NHWC)
         {
             hipMemcpyAsync(dstPtr, srcPtr, static_cast<size_t>(srcDescPtr->n * srcDescPtr->strides.nStride * sizeof(T)), hipMemcpyDeviceToDevice, handle.GetStream());
             hipStreamSynchronize(handle.GetStream());
         }
-        // if src layout is NCHW, convert src from NCHW to NHWC 
+        // if src layout is NCHW, convert src from NCHW to NHWC
         else if (srcDescPtr->layout == RpptLayout::NCHW)
         {
             globalThreads_x = (dstDescPtr->w + 7) >> 3;
