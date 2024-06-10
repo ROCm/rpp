@@ -564,6 +564,43 @@ inline void blend_permute_add_5x5_pkd(__m256 *pSrc, __m256 *pDst, __m256 pConvol
     pDst[0] = _mm256_mul_ps(pDst[0], pConvolutionFactor);
 }
 
+// -------------------- 9x9 kernel size - F32 bitdepth compute functions --------------------
+
+inline void add_rows_9x9(__m256 *pRow, __m256 *pDst)
+{
+    pDst[0] = _mm256_add_ps(_mm256_add_ps(pRow[0], pRow[1]), pRow[2]);
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_add_ps(_mm256_add_ps(pRow[3], pRow[4]), pRow[5]));
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_add_ps(_mm256_add_ps(pRow[6], pRow[7]), pRow[8]));
+}
+
+inline void blend_permute_add_9x9_pln(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor)
+{
+    __m256 pTemp;
+    pTemp = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 1), avx_pxMaskRotate0To1));  
+    pTemp = _mm256_add_ps(pTemp, _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 3), avx_pxMaskRotate0To2)); 
+    pTemp = _mm256_add_ps(pTemp, _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 7), avx_pxMaskRotate0To3)); 
+    pTemp = _mm256_add_ps(pTemp, _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 15), avx_pxMaskRotate0To4)); 
+    pTemp = _mm256_add_ps(pTemp, _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 31), avx_pxMaskRotate0To5)); 
+    pTemp = _mm256_add_ps(pTemp, _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 63), avx_pxMaskRotate0To6)); 
+    pTemp = _mm256_add_ps(pTemp, _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 127), avx_pxMaskRotate0To7));
+    pTemp = _mm256_add_ps(pTemp, pSrc[1]);
+    pDst[0] = _mm256_mul_ps(pTemp, pConvolutionFactor);
+}
+
+inline void blend_permute_add_9x9_pkd(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor)
+{
+    __m256 pTemp;
+    pTemp = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 7), avx_pxMaskRotate0To3));  
+    pTemp = _mm256_add_ps(pTemp, _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 63), avx_pxMaskRotate0To6)); 
+    pTemp = _mm256_add_ps(pTemp, _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[1], pSrc[2], 1), avx_pxMaskRotate0To1)); 
+    pTemp = _mm256_add_ps(pTemp, _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[1], pSrc[2], 15), avx_pxMaskRotate0To4)); 
+    pTemp = _mm256_add_ps(pTemp, _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[1], pSrc[2], 127), avx_pxMaskRotate0To7)); 
+    pTemp = _mm256_add_ps(pTemp, _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[2], pSrc[3], 3), avx_pxMaskRotate0To2)); 
+    pTemp = _mm256_add_ps(pTemp, _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[2], pSrc[3], 31), avx_pxMaskRotate0To5));
+    pTemp = _mm256_add_ps(pTemp, pSrc[3]);
+    pDst[0] = _mm256_mul_ps(pTemp, pConvolutionFactor);
+}
+
 // -------------------- Set 1 box_filter load functions --------------------
 
 // 3x3 kernel loads for U8 bitdepth
@@ -2367,28 +2404,14 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                         {
                             // add loaded values from 9 rows
-                            __m256 pLower, pUpper;
-                            pLower = _mm256_add_ps(_mm256_add_ps(pRow[0], pRow[1]), pRow[2]);
-                            pLower = _mm256_add_ps(pLower, _mm256_add_ps(_mm256_add_ps(pRow[3], pRow[4]), pRow[5]));
-                            pLower = _mm256_add_ps(pLower, _mm256_add_ps(_mm256_add_ps(pRow[6], pRow[7]), pRow[8]));
-
+                            __m256 pTemp[2], pDst;
+                            add_rows_9x9(pRow, &pTemp[0]);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 8);
+                            
                             rpp_load_box_filter_f32_f32_9x9_host(pRow, srcPtrTemp, rowKernelLoopLimit);
-                            pUpper = _mm256_add_ps(_mm256_add_ps(pRow[0], pRow[1]), pRow[2]);
-                            pUpper = _mm256_add_ps(pUpper, _mm256_add_ps(_mm256_add_ps(pRow[3], pRow[4]), pRow[5]));
-                            pUpper = _mm256_add_ps(pUpper, _mm256_add_ps(_mm256_add_ps(pRow[6], pRow[7]), pRow[8]));
-
-                            __m256 pDst = avx_p0;
-                            pDst = _mm256_add_ps(pLower, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 1), avx_pxMaskRotate0To1));  
-                            pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 3), avx_pxMaskRotate0To2)); 
-                            pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 7), avx_pxMaskRotate0To3)); 
-                            pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 15), avx_pxMaskRotate0To4)); 
-                            pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 31), avx_pxMaskRotate0To5)); 
-                            pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 63), avx_pxMaskRotate0To6)); 
-                            pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 127), avx_pxMaskRotate0To7));
-                            pDst = _mm256_add_ps(pDst, pUpper);
-                            pDst = _mm256_mul_ps(pDst, pConvolutionFactorAVX);
-
+                            add_rows_9x9(pRow, &pTemp[1]);
+                            blend_permute_add_9x9_pln(pTemp, &pDst, pConvolutionFactorAVX);
+                            
                             _mm256_storeu_ps(dstPtrTemp, pDst);
                             dstPtrTemp += 8;
                         }
@@ -2447,17 +2470,10 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
                     increment_row_ptrs(srcPtrTemp, kernelSize, 8);
                     
                     __m256 pTemp[4];
-                    pTemp[0] = _mm256_add_ps(_mm256_add_ps(pRow1[0], pRow1[1]), pRow1[2]);
-                    pTemp[0] = _mm256_add_ps(pTemp[0], _mm256_add_ps(_mm256_add_ps(pRow1[3], pRow1[4]), pRow1[5]));
-                    pTemp[0] = _mm256_add_ps(pTemp[0], _mm256_add_ps(_mm256_add_ps(pRow1[6], pRow1[7]), pRow1[8]));                    
-                    pTemp[1] = _mm256_add_ps(_mm256_add_ps(pRow2[0], pRow2[1]), pRow2[2]);
-                    pTemp[1] = _mm256_add_ps(pTemp[1], _mm256_add_ps(_mm256_add_ps(pRow2[3], pRow2[4]), pRow2[5]));
-                    pTemp[1] = _mm256_add_ps(pTemp[1], _mm256_add_ps(_mm256_add_ps(pRow2[6], pRow2[7]), pRow2[8]));
-
+                    add_rows_9x9(pRow1, &pTemp[0]);
+                    add_rows_9x9(pRow2, &pTemp[1]);
                     rpp_load_box_filter_f32_f32_9x9_host(pRow1, srcPtrTemp, rowKernelLoopLimit);
-                    pTemp[2] = _mm256_add_ps(_mm256_add_ps(pRow1[0], pRow1[1]), pRow1[2]);
-                    pTemp[2] = _mm256_add_ps(pTemp[2], _mm256_add_ps(_mm256_add_ps(pRow1[3], pRow1[4]), pRow1[5]));
-                    pTemp[2] = _mm256_add_ps(pTemp[2], _mm256_add_ps(_mm256_add_ps(pRow1[6], pRow1[7]), pRow1[8]));
+                    add_rows_9x9(pRow1, &pTemp[2]);
                     
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
@@ -2465,21 +2481,10 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
                         // add loaded values from 9 rows
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
                         rpp_load_box_filter_f32_f32_9x9_host(pRow2, srcPtrTemp, rowKernelLoopLimit);
-                        pTemp[3] = _mm256_add_ps(_mm256_add_ps(pRow2[0], pRow2[1]), pRow2[2]);
-                        pTemp[3] = _mm256_add_ps(pTemp[3], _mm256_add_ps(_mm256_add_ps(pRow2[3], pRow2[4]), pRow2[5]));
-                        pTemp[3] = _mm256_add_ps(pTemp[3], _mm256_add_ps(_mm256_add_ps(pRow2[6], pRow2[7]), pRow2[8]));
+                        add_rows_9x9(pRow2, &pTemp[3]);
 
-                        __m256 pDst = avx_p0;
-                        pDst = _mm256_add_ps(pTemp[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pTemp[0], pTemp[1], 7), avx_pxMaskRotate0To3));  
-                        pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pTemp[0], pTemp[1], 63), avx_pxMaskRotate0To6)); 
-                        pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pTemp[1], pTemp[2], 1), avx_pxMaskRotate0To1)); 
-                        pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pTemp[1], pTemp[2], 15), avx_pxMaskRotate0To4)); 
-                        pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pTemp[1], pTemp[2], 127), avx_pxMaskRotate0To7)); 
-                        pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pTemp[2], pTemp[3], 3), avx_pxMaskRotate0To2)); 
-                        pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pTemp[2], pTemp[3], 31), avx_pxMaskRotate0To5));
-                        pDst = _mm256_add_ps(pDst, pTemp[3]);
-                        pDst = _mm256_mul_ps(pDst, pConvolutionFactorAVX);
-
+                        __m256 pDst;
+                        blend_permute_add_9x9_pkd(pTemp, &pDst, pConvolutionFactorAVX);
                         _mm256_storeu_ps(dstPtrTemp, pDst);
                         dstPtrTemp += 8;
 
@@ -2539,30 +2544,15 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
                         for (int c = 0; c < 3; c++)
                         {
                             // add loaded values from 9 rows
-                            __m256 pRow[9];
+                            __m256 pRow[9], pTemp[2];
                             rpp_load_box_filter_f32_f32_9x9_host(pRow, srcPtrTemp[c], rowKernelLoopLimit);
-
-                            __m256 pLower, pUpper;
-                            pLower = _mm256_add_ps(_mm256_add_ps(pRow[0], pRow[1]), pRow[2]);
-                            pLower = _mm256_add_ps(pLower, _mm256_add_ps(_mm256_add_ps(pRow[3], pRow[4]), pRow[5]));
-                            pLower = _mm256_add_ps(pLower, _mm256_add_ps(_mm256_add_ps(pRow[6], pRow[7]), pRow[8]));
+                            add_rows_9x9(pRow, &pTemp[0]);
 
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 8);
                             rpp_load_box_filter_f32_f32_9x9_host(pRow, srcPtrTemp[c], rowKernelLoopLimit);
-                            pUpper = _mm256_add_ps(_mm256_add_ps(pRow[0], pRow[1]), pRow[2]);
-                            pUpper = _mm256_add_ps(pUpper, _mm256_add_ps(_mm256_add_ps(pRow[3], pRow[4]), pRow[5]));
-                            pUpper = _mm256_add_ps(pUpper, _mm256_add_ps(_mm256_add_ps(pRow[6], pRow[7]), pRow[8]));
+                            add_rows_9x9(pRow, &pTemp[1]);
 
-                            __m256 pDst = avx_p0;
-                            pDst = _mm256_add_ps(pLower, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 1), avx_pxMaskRotate0To1));  
-                            pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 3), avx_pxMaskRotate0To2)); 
-                            pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 7), avx_pxMaskRotate0To3)); 
-                            pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 15), avx_pxMaskRotate0To4)); 
-                            pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 31), avx_pxMaskRotate0To5)); 
-                            pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 63), avx_pxMaskRotate0To6)); 
-                            pDst = _mm256_add_ps(pDst, _mm256_permutevar8x32_ps(_mm256_blend_ps(pLower, pUpper, 127), avx_pxMaskRotate0To7));
-                            pDst = _mm256_add_ps(pDst, pUpper);
-                            pResultPln[c] = _mm256_mul_ps(pDst, pConvolutionFactorAVX);
+                            blend_permute_add_9x9_pln(pTemp, &pResultPln[c], pConvolutionFactorAVX);
                         }
                         rpp_store24_f32pln3_to_f32pkd3_avx(dstPtrTemp, pResultPln);
                         dstPtrTemp += 24;
