@@ -76,6 +76,59 @@ inline void box_filter_generic_host_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp32u
     rpp_pixel_check_and_store(accum, dstPtrTemp);
 }
 
+// process padLength number of columns in each row
+// left border pixels in image which does not have required pixels in 3x3 box, process them separately
+template<typename T>
+inline void process_left_border_columns_pln_pln(T **srcPtrTemp, T *dstPtrTemp, Rpp32u kernelSize, Rpp32u padLength, 
+                                                           Rpp32u width, Rpp32s rowKernelLoopLimit, Rpp32f kernelSizeInverseSquare)
+{
+    for (int k = 0; k < padLength; k++)
+    {
+        box_filter_generic_host_tensor(srcPtrTemp, dstPtrTemp, k, kernelSize, padLength, width, rowKernelLoopLimit, kernelSizeInverseSquare);
+        dstPtrTemp++;
+    }
+}
+
+template<typename T>
+inline void process_left_border_columns_pkd_pkd(T **srcPtrTemp, T **srcPtrRow, T *dstPtrTemp, Rpp32u kernelSize, Rpp32u padLength, 
+                                                           Rpp32u width, Rpp32s rowKernelLoopLimit, Rpp32f kernelSizeInverseSquare)
+{
+    for (int c = 0; c < 3; c++)
+    {
+        Rpp32f *dstPtrTempChannel = dstPtrTemp + c;
+        for (int k = 0; k < padLength; k++)
+        {
+            box_filter_generic_host_tensor(srcPtrTemp, dstPtrTempChannel, k, kernelSize, padLength, width, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+            dstPtrTempChannel += 3;
+        }
+        increment_row_ptrs(srcPtrTemp, kernelSize, 1);
+    }
+    
+    // reset source to initial position
+    for (int k = 0; k < kernelSize; k++)
+        srcPtrTemp[k] = srcPtrRow[k];
+}
+
+template<typename T>
+inline void process_left_border_columns_pkd_pln(T **srcPtrTemp, T **srcPtrRow, T **dstPtrTempChannels, Rpp32u kernelSize, Rpp32u padLength, 
+                                                           Rpp32u width, Rpp32s rowKernelLoopLimit, Rpp32f kernelSizeInverseSquare)
+{
+    for (int c = 0; c < 3; c++)
+    {
+        for (int k = 0; k < padLength; k++)
+        {
+            box_filter_generic_host_tensor(srcPtrTemp, dstPtrTempChannels[c], k, kernelSize, padLength, width, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+            dstPtrTempChannels[c] += 1;
+        }
+        increment_row_ptrs(srcPtrTemp, kernelSize, 1);
+    }
+
+    // reset source to initial position
+    for (int k = 0; k < 9; k++)
+        srcPtrTemp[k] = srcPtrRow[k];
+}
+
+
 // -------------------- Set 0 box_filter compute functions --------------------
 
 // -------------------- kernel size 3x3 - U8 bitdepth compute functions --------------------
@@ -1756,14 +1809,8 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
                         // get the number of rows needs to be loaded for the corresponding row
                         Rpp32s rowKernelLoopLimit = kernelSize;
                         get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
-
-                        // process padLength number of columns in each row
-                        // left border pixels in image which does not have required pixels in 3x3 box, process them separately
-                        for (int k = 0; k < padLength; k++)
-                        {
-                            box_filter_generic_host_tensor(srcPtrTemp, dstPtrTemp, k, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
-                            dstPtrTemp++;
-                        }
+                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                        dstPtrTemp += padLength;
 
                         // process alignedLength number of columns in eacn row
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 14)
@@ -1808,18 +1855,8 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
-
-                    // process padLength number of columns in each row
-                    for (int k = 0; k < padLength * 3; k++)
-                    {
-                        box_filter_generic_host_tensor(srcPtrTemp, dstPtrTemp, k / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
-                        increment_row_ptrs(srcPtrTemp, kernelSize, 1);
-                        dstPtrTemp++;
-                    }
-                    // reset source to initial position
-                    srcPtrTemp[0] = srcPtrRow[0];
-                    srcPtrTemp[1] = srcPtrRow[1];
-                    srcPtrTemp[2] = srcPtrRow[2];
+                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                    dstPtrTemp += padLength * 3;
 
                     // process remaining columns in eacn row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 9)
@@ -1900,19 +1937,7 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
-
-                    // process padLength number of columns in each row
-                    for (int k = 0; k < padLength * 3; k++)
-                    {
-                        box_filter_generic_host_tensor(srcPtrTemp, dstPtrTempChannels[k], k / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
-                        increment_row_ptrs(srcPtrTemp, kernelSize, 1);
-                    }
-                    increment_row_ptrs(dstPtrTempChannels, kernelSize, 1);
-
-                    // reset source to initial position
-                    srcPtrTemp[0] = srcPtrRow[0];
-                    srcPtrTemp[1] = srcPtrRow[1];
-                    srcPtrTemp[2] = srcPtrRow[2];
+                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
 
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 9)
@@ -2099,14 +2124,8 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
                         // get the number of rows needs to be loaded for the corresponding row
                         Rpp32s rowKernelLoopLimit = kernelSize;
                         get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
-
-                        // process padLength number of columns in each row
-                        // left border pixels in image which does not have required pixels in 3x3 box, process them separately
-                        for (int k = 0; k < padLength; k++)
-                        {
-                            box_filter_generic_host_tensor(srcPtrTemp, dstPtrTemp, k, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
-                            dstPtrTemp++;
-                        }
+                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                        dstPtrTemp += padLength;
 
                         // process alignedLength number of columns in eacn row
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
@@ -2158,24 +2177,9 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
-
-                    // process padLength number of columns in each row
-                    for (int c = 0; c < 3; c++)
-                    {
-                        Rpp32f *dstPtrTempChannel = dstPtrTemp + c;
-                        for (int k = 0; k < padLength; k++)
-                        {
-                            box_filter_generic_host_tensor(srcPtrTemp, dstPtrTempChannel, k, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
-                            dstPtrTempChannel += 3;
-                        }
-                        increment_row_ptrs(srcPtrTemp, kernelSize, 1);
-                    }
+                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                     dstPtrTemp += padLength * 3;
 
-                    // reset source to initial position
-                    for (int k = 0; k < 5; k++)
-                        srcPtrTemp[k] = srcPtrRow[k];
-                    
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                     {
@@ -2295,22 +2299,8 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
-
-                    // process padLength number of columns in each row
-                    for (int c = 0; c < 3; c++)
-                    {
-                        for (int k = 0; k < padLength; k++)
-                        {
-                            box_filter_generic_host_tensor(srcPtrTemp, dstPtrTempChannels[c], k, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
-                            dstPtrTempChannels[c] += 1;
-                        }
-                        increment_row_ptrs(srcPtrTemp, kernelSize, 1);
-                    }
-
-                    // reset source to initial position
-                    for (int k = 0; k < 5; k++)
-                        srcPtrTemp[k] = srcPtrRow[k];
-
+                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                    
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                     {
@@ -2388,15 +2378,9 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
                         // get the number of rows needs to be loaded for the corresponding row
                         Rpp32s rowKernelLoopLimit = kernelSize;
                         get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
-
-                        // process padLength number of columns in each row
-                        // left border pixels in image which does not have required pixels in 3x3 box, process them separately
-                        for (int k = 0; k < padLength; k++)
-                        {
-                            box_filter_generic_host_tensor(srcPtrTemp, dstPtrTemp, k, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
-                            dstPtrTemp++;
-                        }
-
+                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                        dstPtrTemp += padLength;
+                        
                         __m256 pRow[9];
                         rpp_load_box_filter_f32_f32_9x9_host(pRow, srcPtrTemp, rowKernelLoopLimit);
 
@@ -2445,23 +2429,8 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
-
-                    // process padLength number of columns in each row
-                    for (int c = 0; c < 3; c++)
-                    {
-                        Rpp32f *dstPtrTempChannel = dstPtrTemp + c;
-                        for (int k = 0; k < padLength; k++)
-                        {
-                            box_filter_generic_host_tensor(srcPtrTemp, dstPtrTempChannel, k, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
-                            dstPtrTempChannel += 3;
-                        }
-                        increment_row_ptrs(srcPtrTemp, kernelSize, 1);
-                    }
+                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                     dstPtrTemp += padLength * 3;
-
-                    // reset source to initial position
-                    for (int k = 0; k < 9; k++)
-                        srcPtrTemp[k] = srcPtrRow[k];
 
                     __m256 pRow1[9], pRow2[9];
                     rpp_load_box_filter_f32_f32_9x9_host(pRow1, srcPtrTemp, rowKernelLoopLimit);
@@ -2526,8 +2495,6 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
                     // get the number of rows needs to be loaded for the corresponding row
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
-
-                    // process padLength number of columns in each row
                     for (int k = 0; k < padLength; k++)
                     {
                         for (int c = 0; c < 3; c++)
@@ -2590,23 +2557,9 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
-
-                    // process padLength number of columns in each row
-                    for (int c = 0; c < 3; c++)
-                    {
-                        for (int k = 0; k < padLength; k++)
-                        {
-                            box_filter_generic_host_tensor(srcPtrTemp, dstPtrTempChannels[c], k, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
-                            dstPtrTempChannels[c] += 1;
-                        }
-                        increment_row_ptrs(srcPtrTemp, kernelSize, 1);
-                    }
-
-                    // reset source to initial position
-                    for (int k = 0; k < 9; k++)
-                        srcPtrTemp[k] = srcPtrRow[k];
-
+                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                     vectorLoopCount += padLength * 3;
+
                     // process remaining columns in each row
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
