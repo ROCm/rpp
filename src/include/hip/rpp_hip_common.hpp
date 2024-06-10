@@ -1821,6 +1821,21 @@ __device__ __forceinline__ float rpp_hip_math_sinc(float x)
     return (fabsf(x) < 1e-5f) ? (1.0f - x * x * ONE_OVER_6) : sinf(x) / x;
 }
 
+__device__ __forceinline__ void rpp_hip_math_log(d_float8 *src_f8, d_float8 *dst_f8)
+{
+    for(int i = 0; i < 8; i++)
+        src_f8->f1[i] = (!src_f8->f1[i]) ? std::nextafter(0.0f, 1.0f) : fabsf(src_f8->f1[i]);
+
+    dst_f8->f1[0] = __logf(src_f8->f1[0]);
+    dst_f8->f1[1] = __logf(src_f8->f1[1]);
+    dst_f8->f1[2] = __logf(src_f8->f1[2]);
+    dst_f8->f1[3] = __logf(src_f8->f1[3]);
+    dst_f8->f1[4] = __logf(src_f8->f1[4]);
+    dst_f8->f1[5] = __logf(src_f8->f1[5]);
+    dst_f8->f1[6] = __logf(src_f8->f1[6]);
+    dst_f8->f1[7] = __logf(src_f8->f1[7]);
+}
+
 // /******************** DEVICE RANDOMIZATION HELPER FUNCTIONS ********************/
 
 template<typename T>

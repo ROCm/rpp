@@ -6461,4 +6461,10 @@ inline void compute_remap_src_loc(Rpp32f rowLoc, Rpp32f colLoc, Rpp32s &srcLoc, 
     srcLoc = (rowLoc * stride) + colLoc * channels;
 }
 
+inline void compute_log_16_host(__m256 *p)
+{
+    p[0] = log_ps(p[0]);    // log compute
+    p[1] = log_ps(p[1]);    // log compute
+}
+
 #endif //RPP_CPU_COMMON_H
