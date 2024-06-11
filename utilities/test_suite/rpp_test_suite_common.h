@@ -109,28 +109,44 @@ std::map<int, string> augmentationMap =
     {87, "tensor_sum"},
     {88, "tensor_min"},
     {89, "tensor_max"},
-    {90, "slice"}
+    {90, "tensor_mean"},
+    {91, "tensor_stddev"},
+    {92, "slice"}
 };
 
 // Golden outputs for Tensor min Kernel
-std::map<int, std::vector<int>> TensorMinReferenceOutputs =
+std::map<int, std::vector<Rpp8u>> TensorMinReferenceOutputs =
 {
     {1, {1, 1, 7}},
     {3, {0, 0, 0, 0, 2, 0, 0, 0, 7, 9, 0, 0}}
 };
 
 // Golden outputs for Tensor max Kernel
-std::map<int, std::vector<int>> TensorMaxReferenceOutputs =
+std::map<int, std::vector<Rpp8u>> TensorMaxReferenceOutputs =
 {
     {1, {239, 245, 255}},
     {3, {255, 240, 236, 255, 255, 242, 241, 255, 253, 255, 255, 255}}
 };
 
 // Golden outputs for Tensor sum Kernel
-std::map<int, std::vector<int>> TensorSumReferenceOutputs =
+std::map<int, std::vector<uint64_t>> TensorSumReferenceOutputs =
 {
     {1, {334225, 813471, 2631125}},
     {3, {348380, 340992, 262616, 951988, 1056552, 749506, 507441, 2313499, 2170646, 2732368, 3320699, 8223713}}
+};
+
+// Golden outputs for Tensor mean Kernel
+std::map<int, std::vector<float>> TensorMeanReferenceOutputs =
+{
+    {1, {133.690, 81.347, 116.939}},
+    {3, {139.352, 136.397, 105.046, 126.932, 105.655, 74.951, 50.744, 77.117, 96.473, 121.439, 147.587, 121.833}}
+};
+
+// Golden outputs for Tensor stddev Kernel
+std::map<int, std::vector<float>> TensorStddevReferenceOutputs =
+{
+    {1, {49.583, 54.623, 47.649}},
+    {3, {57.416, 47.901, 53.235, 55.220, 68.471, 55.735, 46.668, 61.880, 47.462, 49.039, 67.269, 59.130}}
 };
 
 template <typename T>
@@ -1185,19 +1201,18 @@ inline void compare_reduction_output(T* output, string funcName, RpptDescPtr src
     int matched_values = 0;
 
     T *refOutput;
-    refOutput = (T *)calloc(srcDescPtr->n * 4, sizeof(T));
     int numChannels = (srcDescPtr->c == 1) ? 1 : 3;
     int numOutputs = (srcDescPtr->c == 1) ? srcDescPtr->n : srcDescPtr->n * 4;
-    std::vector<int> ref;
     if(testCase == 88)
-        ref = TensorMinReferenceOutputs[numChannels];
+        refOutput = reinterpret_cast<T*>(TensorMinReferenceOutputs[numChannels].data());
     else if(testCase == 89)
-        ref = TensorMaxReferenceOutputs[numChannels];
+        refOutput = reinterpret_cast<T*>(TensorMaxReferenceOutputs[numChannels].data());
     else if(testCase == 87)
-        ref = TensorSumReferenceOutputs[numChannels];
-
-    for (int i = 0; i < numOutputs; i++)
-        refOutput[i] = (T)ref[i];
+        refOutput = reinterpret_cast<T*>(TensorSumReferenceOutputs[numChannels].data());
+    else if(testCase == 90)
+        refOutput = reinterpret_cast<T*>(TensorMeanReferenceOutputs[numChannels].data());
+    else if(testCase == 91)
+        refOutput = reinterpret_cast<T*>(TensorStddevReferenceOutputs[numChannels].data());
 
     if(srcDescPtr->c == 1)
     {
@@ -1223,7 +1238,6 @@ inline void compare_reduction_output(T* output, string funcName, RpptDescPtr src
                 fileMatch++;
         }
     }
-    free(refOutput);
 
     std::cout << std::endl << "Results for " << func << " :" << std::endl;
     std::string status = func + ": ";
