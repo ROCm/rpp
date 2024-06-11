@@ -150,9 +150,8 @@ inline void compute_lens_correction_remap_tables_host_tensor(RpptDescPtr srcDesc
 
                 // float rowLoc = fy * (y * kr + tCoeff[0] * (r2 + 2 * ySquare) + tCoeff[1] * xyMul2) + v0;
                 pFac1 = _mm256_mul_ps(pY, pKR);
-                pFac2 = _mm256_mul_ps(pTCoeff[1], p2xy);
-                pFac3 = _mm256_mul_ps(pTCoeff[0], _mm256_fmadd_ps(avx_p2, pY2, pR2));
-                __m256 pSrcRow = _mm256_fmadd_ps(pFy, _mm256_add_ps(pFac1, _mm256_add_ps(pFac2, pFac3)), pV0);
+                pFac2 = _mm256_fmadd_ps(pTCoeff[1], p2xy, _mm256_mul_ps(pTCoeff[0], _mm256_fmadd_ps(avx_p2, pY2, pR2)));
+                __m256 pSrcRow = _mm256_fmadd_ps(pFy, _mm256_add_ps(pFac1, pFac2), pV0);
 
                 _mm256_storeu_ps(rowRemapTableRow, pSrcRow);
                 _mm256_storeu_ps(colRemapTableRow, pSrcCol);
@@ -169,10 +168,9 @@ inline void compute_lens_correction_remap_tables_host_tensor(RpptDescPtr srcDesc
                 Rpp32f z = 1./zCamera, x = xCamera * z, y = yCamera * z;
                 Rpp32f xSquare = x * x, ySquare = y * y, r2 = xSquare + ySquare;
                 Rpp32f xyMul2 = 2 * x * y;
-                Rpp32f r4 = r2 * r2;
-                Rpp32f kr = (1 + ((rCoeff[2] * r2 + rCoeff[1]) * r2 + rCoeff[0]) * r2) / (1 + ((rCoeff[5] * r2 + rCoeff[4]) * r2 + rCoeff[3]) *r2);
-                Rpp32f colLoc = fx * (x * kr + tCoeff[0] *xyMul2 + tCoeff[1] * (r2 + 2 * xSquare)) + u0;
-                Rpp32f rowLoc = fy * (y * kr + tCoeff[0] * (r2 + 2 * ySquare ) + tCoeff[1] *xyMul2) + v0;
+                Rpp32f kr = (1 + ((((rCoeff[2] * r2) + rCoeff[1]) * r2) + rCoeff[0]) * r2) / (1 + ((((rCoeff[5] * r2) + rCoeff[4]) * r2) + rCoeff[3]) * r2);
+                Rpp32f colLoc = std::fmaf(fx, (std::fmaf(tCoeff[1], (std::fmaf(2, xSquare, r2)), std::fmaf(x, kr, (tCoeff[0] * xyMul2)))), u0);
+                Rpp32f rowLoc = std::fmaf(fy, (std::fmaf(tCoeff[0], (std::fmaf(2, ySquare, r2)), std::fmaf(y, kr, (tCoeff[1] * xyMul2)))), v0);
                 *rowRemapTableRow++ = rowLoc;
                 *colRemapTableRow++ = colLoc;
                 xCamera += invMat[0];

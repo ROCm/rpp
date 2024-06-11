@@ -153,7 +153,6 @@ RppStatus hip_exec_lens_correction_tensor(RpptDescPtr dstDescPtr,
                        reinterpret_cast<d_float8 *>(distanceCoeffs),
                        make_uint2(remapTableDescPtr->strides.nStride, remapTableDescPtr->strides.hStride),
                        roiTensorPtrSrc);
-    hipStreamSynchronize(handle.GetStream());
-
+                       
     return RPP_SUCCESS;
 }
