@@ -1119,9 +1119,9 @@ inline void rpp_store48_f32pln3_to_f16pln3_avx(Rpp16f *dstPtrR, Rpp16f *dstPtrG,
 inline void rpp_store48_f32pln3_to_f32pkd3_avx(Rpp32f *dstPtr, __m256 *p)
 {
     __m128 p128[4];
-    p128[0] = _mm256_extractf128_ps(p[0], 0);
-    p128[1] = _mm256_extractf128_ps(p[2], 0);
-    p128[2] = _mm256_extractf128_ps(p[4], 0);
+    p128[0] = _mm256_castps256_ps128(p[0]);
+    p128[1] = _mm256_castps256_ps128(p[2]);
+    p128[2] = _mm256_castps256_ps128(p[4]);
     _MM_TRANSPOSE4_PS(p128[0], p128[1], p128[2], p128[3]);
     _mm_storeu_ps(dstPtr, p128[0]);
     _mm_storeu_ps(dstPtr + 3, p128[1]);
@@ -1136,9 +1136,9 @@ inline void rpp_store48_f32pln3_to_f32pkd3_avx(Rpp32f *dstPtr, __m256 *p)
     _mm_storeu_ps(dstPtr + 18, p128[2]);
     _mm_storeu_ps(dstPtr + 21, p128[3]);
 
-    p128[0] = _mm256_extractf128_ps(p[1], 0);
-    p128[1] = _mm256_extractf128_ps(p[3], 0);
-    p128[2] = _mm256_extractf128_ps(p[5], 0);
+    p128[0] = _mm256_castps256_ps128(p[1]);
+    p128[1] = _mm256_castps256_ps128(p[3]);
+    p128[2] = _mm256_castps256_ps128(p[5]);
     _MM_TRANSPOSE4_PS(p128[0], p128[1], p128[2], p128[3]);
     _mm_storeu_ps(dstPtr + 24, p128[0]);
     _mm_storeu_ps(dstPtr + 27, p128[1]);
@@ -4010,14 +4010,6 @@ inline void rpp_convert12_f32pkd3_to_f32pln3(__m128 &pSrc1, __m128 &pSrc2, __m12
     pTemp = _mm_blend_ps(pSrc1, pSrc2, 2);
     pTemp = _mm_blend_ps(pTemp, pSrc3, 9);
     pDst[2] = _mm_shuffle_ps(pTemp, pTemp, 198);
-}
-
-inline void rpp_convert42_f32pln3_to_f32pkd3(__m128 *pSrc)
-{
-    _MM_TRANSPOSE4_PS(pSrc[0], pSrc[4], pSrc[8], pSrc[12]);
-    _MM_TRANSPOSE4_PS(pSrc[1], pSrc[5], pSrc[9], pSrc[13]);
-    _MM_TRANSPOSE4_PS(pSrc[2], pSrc[6], pSrc[10], pSrc[14]);
-    _MM_TRANSPOSE4_PS(pSrc[3], pSrc[7], pSrc[11], pSrc[15]);
 }
 
 #endif //AMD_RPP_RPP_CPU_SIMD_HPP
