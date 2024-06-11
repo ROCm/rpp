@@ -3982,33 +3982,23 @@ inline void rpp_convert48_u8pln3_to_u8pkd3(__m128i *pxSrc, __m128i *pxDst)
     pxDst[3] = _mm_shuffle_epi8(pxTemp[2], pxMask);
 }
 
-inline void rpp_convert9_f32pkd3_to_f32pln3(__m128 &pSrc1, __m128 &pSrc2, __m128 &pSrc3, __m128 *pDst)
+inline void rpp_convert12_f32pkd3_to_f32pln3(__m256 *pSrc, __m128 *pDst)
 {
-    __m128 pTemp;
-    pTemp = _mm_blend_ps(pSrc1, pSrc2, 4);
+    __m128 pSrcPkd[3], pTemp;
+    pSrcPkd[0] = _mm256_castps256_ps128(pSrc[0]);
+    pSrcPkd[1] = _mm256_extractf128_ps(pSrc[0], 1);
+    pSrcPkd[2] = _mm256_castps256_ps128(pSrc[1]);
+
+    pTemp = _mm_blend_ps(pSrcPkd[0], pSrcPkd[1], 4);
+    pTemp = _mm_blend_ps(pTemp, pSrcPkd[2], 2);
     pDst[0] = _mm_shuffle_ps(pTemp, pTemp, 108);
 
-    pTemp = _mm_blend_ps(pSrc1, pSrc2, 9);
+    pTemp = _mm_blend_ps(pSrcPkd[0], pSrcPkd[1], 9);
+    pTemp = _mm_blend_ps(pTemp, pSrcPkd[2], 4);
     pDst[1] = _mm_shuffle_ps(pTemp, pTemp, 177);
 
-    pTemp = _mm_blend_ps(pSrc1, pSrc2, 2);
-    pTemp = _mm_blend_ps(pTemp, pSrc3, 1);
-    pDst[2] = _mm_shuffle_ps(pTemp, pTemp, 198);
-}
-
-inline void rpp_convert12_f32pkd3_to_f32pln3(__m128 &pSrc1, __m128 &pSrc2, __m128 &pSrc3, __m128 *pDst)
-{
-    __m128 pTemp;
-    pTemp = _mm_blend_ps(pSrc1, pSrc2, 4);
-    pTemp = _mm_blend_ps(pTemp, pSrc3, 2);
-    pDst[0] = _mm_shuffle_ps(pTemp, pTemp, 108);
-
-    pTemp = _mm_blend_ps(pSrc1, pSrc2, 9);
-    pTemp = _mm_blend_ps(pTemp, pSrc3, 4);
-    pDst[1] = _mm_shuffle_ps(pTemp, pTemp, 177);
-
-    pTemp = _mm_blend_ps(pSrc1, pSrc2, 2);
-    pTemp = _mm_blend_ps(pTemp, pSrc3, 9);
+    pTemp = _mm_blend_ps(pSrcPkd[0], pSrcPkd[1], 2);
+    pTemp = _mm_blend_ps(pTemp, pSrcPkd[2], 9);
     pDst[2] = _mm_shuffle_ps(pTemp, pTemp, 198);
 }
 
