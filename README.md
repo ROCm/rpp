@@ -164,28 +164,7 @@ ctest -VV
 
 ## Test Functionalities
 
-To test the functionalities of RPP, run the code shown for your backend:
-
-* HIP
-
-  ```bash
-    cd rpp/utilities/rpp-unittests/HIP_NEW
-    ./testAllScript.sh
-  ```
-
-* OpenCL
-
-  ```bash
-    cd rpp/utilities/rpp-unittests/OCL_NEW
-    ./testAllScript.sh
-  ```
-
-  * CPU
-
-  ```bash
-    cd rpp/utilities/rpp-unittests/HOST_NEW
-    ./testAllScript.sh
-  ```
+To test latest Image/Voxel/Audio/Miscellaneous functionalities of RPP using a python script please view [AMD ROCm Performance Primitives (RPP) Test Suite](utilities/test_suite/README.md)
 
 ## MIVisionX support - OpenVX extension
 
