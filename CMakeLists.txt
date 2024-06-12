@@ -59,6 +59,16 @@ endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 # RPP Default Options
 set(DEFAULT_BUILD_TYPE "Release")
 
+# RPP Audio support - (default = ON, support currently on Ubuntu - user to set to OFF otherwise)
+if(NOT DEFINED RPP_AUDIO_SUPPORT)
+    set(RPP_AUDIO_SUPPORT "ON")
+    add_definitions(-DAUDIO_SUPPORT)
+else()
+    if("${RPP_AUDIO_SUPPORT}" STREQUAL "ON")
+        add_definitions(-DAUDIO_SUPPORT)
+    endif()
+endif()
+
 # Set message options
 if(NOT WIN32)
     string(ASCII 27 Esc)
@@ -294,7 +304,9 @@ message("-- ${White}${PROJECT_NAME} -- Link Libraries: ${LINK_LIBRARY_LIST}${Col
 target_link_libraries(${PROJECT_NAME} ${LINK_LIBRARY_LIST})
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
-target_link_libraries(${PROJECT_NAME} ${PROJECT_SOURCE_DIR}/libs/third_party/ffts/libffts.a)
+if("${RPP_AUDIO_SUPPORT}" STREQUAL "ON")
+    target_link_libraries(${PROJECT_NAME} ${PROJECT_SOURCE_DIR}/libs/third_party/ffts/libffts.a)
+endif()
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION ${PROJECT_VERSION_MAJOR})
 
 target_include_directories(${PROJECT_NAME}
