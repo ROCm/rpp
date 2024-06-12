@@ -64,7 +64,8 @@ int main(int argc, char **argv)
     int decoderType = atoi(argv[13]);
     int batchSize = atoi(argv[14]);
 
-    bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23 || testCase == 24 || testCase == 79);
+    bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23 || testCase == 24 || testCase == 49 || testCase == 79);
+    bool kernelSizeCase = (testCase == 49);
     bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 33 || testCase == 61 || testCase == 63 || testCase == 65 || testCase == 68);
     bool randomOutputCase = (testCase == 8 || testCase == 84);
     bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24 || testCase == 79);
@@ -210,6 +211,13 @@ int main(int argc, char **argv)
         func += "_noiseType";
         func += noiseTypeName.c_str();
     }
+    else if (kernelSizeCase)
+    {
+        char additionalParam_char[2];
+        std::sprintf(additionalParam_char, "%u", additionalParam);
+        func += "_kSize";
+        func += additionalParam_char;
+    }
 
     if(!qaFlag)
     {
@@ -270,7 +278,8 @@ int main(int argc, char **argv)
     Rpp32u outputChannels = inputChannels;
     if(pln1OutTypeCase)
         outputChannels = 1;
-    Rpp32u offsetInBytes = 0;
+    Rpp32u srcOffsetInBytes = (kernelSizeCase) ? (12 * (additionalParam / 2)) : 0;
+    Rpp32u dstOffsetInBytes = 0;
     int imagesMixed = 0; // Flag used to check if all images in dataset is of same dimensions
 
     set_max_dimensions(imageNamesPath, maxHeight, maxWidth, imagesMixed);
@@ -281,8 +290,8 @@ int main(int argc, char **argv)
     }
 
     // Set numDims, offset, n/c/h/w values, strides for src/dst
-    set_descriptor_dims_and_strides(srcDescPtr, batchSize, maxHeight, maxWidth, inputChannels, offsetInBytes);
-    set_descriptor_dims_and_strides(dstDescPtr, batchSize, maxHeight, maxWidth, outputChannels, offsetInBytes);
+    set_descriptor_dims_and_strides(srcDescPtr, batchSize, maxHeight, maxWidth, inputChannels, srcOffsetInBytes);
+    set_descriptor_dims_and_strides(dstDescPtr, batchSize, maxHeight, maxWidth, outputChannels, dstOffsetInBytes);
 
     // Factors to convert U8 data to F32, F16 data to 0-1 range and reconvert them back to 0 -255 range
     Rpp32f conversionFactor = 1.0f / 255.0;
@@ -998,11 +1007,11 @@ int main(int argc, char **argv)
                 case 49:
                 {
                     testCaseName = "box_filter";
-                    Rpp32u kernelSize = 9;
+                    Rpp32u kernelSize = additionalParam;
 
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();
-                    if (inputBitDepth == 0 || inputBitDepth == 2)
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_box_filter_host(input, srcDescPtr, output, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
