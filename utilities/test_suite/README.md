@@ -1,6 +1,6 @@
 # AMD ROCm Performance Primitives (RPP) Test Suite
 
-This repository contains three test suites for the AMD ROCm Performance Primitives (RPP) library: for image/voxel/audio/miscellaneous augmentations processing. These test suites can be used to validate the functionality and performance of the AMD ROCm Performance Primitives (RPP) image/voxel/audio/miscellaneous functionalities.
+This repository contains four test suites for the AMD ROCm Performance Primitives (RPP) library: for image/voxel/audio/miscellaneous augmentations processing. These test suites can be used to validate the functionality and performance of the AMD ROCm Performance Primitives (RPP) image/voxel/audio/miscellaneous functionalities.
 
 ## Test suite prerequisites
 
