@@ -59,15 +59,15 @@ RppStatus rppt_box_filter_host(RppPtr_t srcPtr,
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
-        // box_filter_f16_f16_host_tensor(reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-        //                                srcDescPtr,
-        //                                reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-        //                                dstDescPtr,
-        //                                kernelSize,
-        //                                roiTensorPtrSrc,
-        //                                roiType,
-        //                                layoutParams,
-        //                                rpp::deref(rppHandle));
+        box_filter_f16_f16_host_tensor(reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                       srcDescPtr,
+                                       reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                       dstDescPtr,
+                                       kernelSize,
+                                       roiTensorPtrSrc,
+                                       roiType,
+                                       layoutParams,
+                                       rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {

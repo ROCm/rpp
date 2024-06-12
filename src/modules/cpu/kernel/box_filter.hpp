@@ -95,7 +95,7 @@ inline void process_left_border_columns_pkd_pkd(T **srcPtrTemp, T **srcPtrRow, T
 {
     for (int c = 0; c < 3; c++)
     {
-        Rpp32f *dstPtrTempChannel = dstPtrTemp + c;
+        T *dstPtrTempChannel = dstPtrTemp + c;
         for (int k = 0; k < padLength; k++)
         {
             box_filter_generic_host_tensor(srcPtrTemp, dstPtrTempChannel, k, kernelSize, padLength, width, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
@@ -809,6 +809,21 @@ inline void rpp_load_box_filter_f32_f32_9x9_host(__m256 *pRow, Rpp32f **srcPtrTe
         pRow[k] = _mm256_loadu_ps(srcPtrTemp[k]);
     for (int k = rowKernelLoopLimit; k < 9; k++)
         pRow[k] = avx_p0;
+}
+
+// 3x3 kernel loads for F32 bitdepth
+inline void rpp_load_box_filter_f16_f16_3x3_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit)
+{
+    // irrespective of row location, we need to load 2 rows for 3x3 kernel
+    pRow[0] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrTemp[0]))));
+    pRow[1] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrTemp[1]))));
+
+    // if rowKernelLoopLimit is 3 load values from 3rd row pointer else set it 0
+    if (rowKernelLoopLimit == 3)
+        pRow[2] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrTemp[2]))));
+    else
+        pRow[2] = avx_px0;
+        
 }
 
 RppStatus box_filter_u8_u8_host_tensor(Rpp8u *srcPtr,
@@ -2885,5 +2900,297 @@ RppStatus box_filter_f32_f32_host_tensor(Rpp32f *srcPtr,
         }
     }
 
+    return RPP_SUCCESS;
+}
+
+RppStatus box_filter_f16_f16_host_tensor(Rpp16f *srcPtr,
+                                         RpptDescPtr srcDescPtr,
+                                         Rpp16f *dstPtr,
+                                         RpptDescPtr dstDescPtr,
+                                         Rpp32u kernelSize,
+                                         RpptROIPtr roiTensorPtrSrc,
+                                         RpptRoiType roiType,
+                                         RppLayoutParams layoutParams,
+                                         rpp::Handle& handle)
+{
+    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    Rpp32u numThreads = handle.GetNumThreads();
+
+    omp_set_dynamic(0);
+#pragma omp parallel for num_threads(numThreads)
+    for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
+    {
+        RpptROI roi;
+        RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
+        compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
+
+        Rpp16f *srcPtrImage, *dstPtrImage;
+        srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
+        dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
+
+        Rpp32s padLength = kernelSize / 2;
+        Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
+
+        Rpp32f kernelSizeInverseSquare = 1.0 / (kernelSize * kernelSize);
+        const __m256 pConvolutionFactor = _mm256_set1_ps(kernelSizeInverseSquare);
+
+        Rpp16f *srcPtrChannel, *dstPtrChannel;
+        srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
+        dstPtrChannel = dstPtrImage;
+        if (kernelSize == 3)
+        {
+            Rpp16f *srcPtrRow[3], *dstPtrRow;
+            for (int i = 0; i < 3; i++)
+                srcPtrRow[i] = srcPtrChannel + i * srcDescPtr->strides.hStride;
+            dstPtrRow = dstPtrChannel;
+
+            // box filter without fused output-layout toggle (NCHW -> NCHW)
+            if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+            {
+                Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 16) * 16;
+                for (int c = 0; c < srcDescPtr->c; c++)
+                {
+                    srcPtrRow[0] = srcPtrChannel;
+                    srcPtrRow[1] = srcPtrRow[0] + srcDescPtr->strides.hStride;
+                    srcPtrRow[2] = srcPtrRow[1] + srcDescPtr->strides.hStride;
+                    dstPtrRow = dstPtrChannel;
+                    for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+                    {
+                        int vectorLoopCount = 0;
+                        bool padLengthRows = (i < padLength) ? 1: 0;
+                        Rpp16f *srcPtrTemp[3] = {srcPtrRow[0], srcPtrRow[1], srcPtrRow[2]};
+                        Rpp16f *dstPtrTemp = dstPtrRow;
+
+                        // get the number of rows needs to be loaded for the corresponding row
+                        Rpp32s rowKernelLoopLimit = kernelSize;
+                        get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
+                        process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                        dstPtrTemp += padLength;
+
+                        // process alignedLength number of columns in eacn row
+                        for (; vectorLoopCount < alignedLength; vectorLoopCount += 14)
+                        {
+                            __m256 pRow[3], pTemp[3], pDst[2];
+                            rpp_load_box_filter_f16_f16_3x3_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                            add_rows_3x3(pRow, &pTemp[0]);
+
+                            increment_row_ptrs(srcPtrTemp, kernelSize, 8);
+                            rpp_load_box_filter_f16_f16_3x3_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                            add_rows_3x3(pRow, &pTemp[1]);
+                            pTemp[2] = avx_p0;
+
+                            blend_permute_add_3x3_pln(&pTemp[0], &pDst[0], pConvolutionFactor);
+                            blend_permute_add_3x3_pln(&pTemp[1], &pDst[1], pConvolutionFactor);
+
+                            __m128i pxDst[2];
+                            pxDst[0] = _mm256_cvtps_ph(pDst[0], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+                            pxDst[1] = _mm256_cvtps_ph(pDst[1], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+                            _mm_storeu_si128((__m128i *)dstPtrTemp, pxDst[0]);
+                            _mm_storeu_si128((__m128i *)(dstPtrTemp + 8), pxDst[1]);
+
+                            increment_row_ptrs(srcPtrTemp, kernelSize, 6);
+                            dstPtrTemp += 14;
+                        }
+                        vectorLoopCount += padLength;
+
+                        // process remaining columns in each row
+                        for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                        {
+                            box_filter_generic_host_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            increment_row_ptrs(srcPtrTemp, kernelSize, 1);
+                            dstPtrTemp++;
+                        }
+                        increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
+                        dstPtrRow += dstDescPtr->strides.hStride;
+                    }
+                    srcPtrChannel += srcDescPtr->strides.cStride;
+                    dstPtrChannel += dstDescPtr->strides.cStride;
+                }
+            }
+            else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
+            {
+                Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 24) * 24;
+                for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+                {
+                    int vectorLoopCount = 0;
+                    bool padLengthRows = (i < padLength) ? 1: 0;
+                    Rpp16f *srcPtrTemp[3] = {srcPtrRow[0], srcPtrRow[1], srcPtrRow[2]};
+                    Rpp16f *dstPtrTemp = dstPtrRow;
+
+                    Rpp32s rowKernelLoopLimit = kernelSize;
+                    get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
+                    process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                    dstPtrTemp += padLength * 3;
+
+                    // process remaining columns in eacn row
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
+                    {
+                        __m256 pRow[3], pTemp[3], pDst[2];
+                        rpp_load_box_filter_f16_f16_3x3_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        add_rows_3x3(pRow, &pTemp[0]);
+                        
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 8);
+                        rpp_load_box_filter_f16_f16_3x3_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        add_rows_3x3(pRow, &pTemp[1]);
+
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 8);
+                        rpp_load_box_filter_f16_f16_3x3_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        add_rows_3x3(pRow, &pTemp[2]);
+
+                        blend_permute_add_3x3_pkd(&pTemp[0], &pDst[0], pConvolutionFactor);
+                        blend_permute_add_3x3_pkd(&pTemp[1], &pDst[1], pConvolutionFactor);
+
+                        __m128i pxDst[2];
+                        pxDst[0] = _mm256_cvtps_ph(pDst[0], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+                        pxDst[1] = _mm256_cvtps_ph(pDst[1], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+                        _mm_storeu_si128((__m128i *)dstPtrTemp, pxDst[0]);
+                        _mm_storeu_si128((__m128i *)(dstPtrTemp + 8), pxDst[1]);
+                        dstPtrTemp += 16;
+                    }
+                    vectorLoopCount += padLength * 3;
+                    for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                    {
+                        box_filter_generic_host_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 1);
+                        dstPtrTemp++;
+                    }
+                    increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
+                    dstPtrRow += dstDescPtr->strides.hStride;
+                }
+            }
+            else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
+            {
+                Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 24) * 24;
+                Rpp16f *dstPtrChannels[3];
+                for (int i = 0; i < 3; i++)
+                    dstPtrChannels[i] = dstPtrChannel + i * dstDescPtr->strides.cStride;
+                for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+                {
+                    int vectorLoopCount = 0;
+                    bool padLengthRows = (i < padLength) ? 1: 0;
+                    Rpp16f *srcPtrTemp[3] = {srcPtrRow[0], srcPtrRow[1], srcPtrRow[2]};
+                    Rpp16f *dstPtrTempChannels[3] = {dstPtrChannels[0], dstPtrChannels[1], dstPtrChannels[2]};
+
+                    Rpp32s rowKernelLoopLimit = kernelSize;
+                    get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
+                    process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+
+                    // process remaining columns in each row
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
+                    {
+                        __m256 pRow[3], pTemp[3], pDst[2];
+                        rpp_load_box_filter_f16_f16_3x3_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        add_rows_3x3(pRow, &pTemp[0]);
+                        
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 8);
+                        rpp_load_box_filter_f16_f16_3x3_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        add_rows_3x3(pRow, &pTemp[1]);
+
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 8);
+                        rpp_load_box_filter_f16_f16_3x3_host(pRow, srcPtrTemp, rowKernelLoopLimit);
+                        add_rows_3x3(pRow, &pTemp[2]);
+
+                        blend_permute_add_3x3_pkd(&pTemp[0], &pDst[0], pConvolutionFactor);
+                        blend_permute_add_3x3_pkd(&pTemp[1], &pDst[1], pConvolutionFactor);
+
+                        __m128 pDstPln[3];
+                        rpp_convert12_f32pkd3_to_f32pln3(pDst, pDstPln);
+
+                        __m128i pxDst[3];
+                        // pxDst[0] = _mm_cvtps_ph(pDstPln[0], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+                        // pxDst[1] = _mm_cvtps_ph(pDstPln[1], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+                        // pxDst[2] = _mm_cvtps_ph(pDstPln[2], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+                        // rpp_storeu_si64((__m128i *)(dstPtrTempChannels[0]), pxDst[0]);
+                        // rpp_storeu_si64((__m128i *)(dstPtrTempChannels[1]), pxDst[1]);
+                        // rpp_storeu_si64((__m128i *)(dstPtrTempChannels[2]), pxDst[2]);
+                        
+                        increment_row_ptrs(srcPtrTemp, kernelSize, -4);
+                        increment_row_ptrs(dstPtrTempChannels, kernelSize, 4);
+                    }
+                    vectorLoopCount += padLength * 3;
+                    for (int c = 0; vectorLoopCount < bufferLength; vectorLoopCount++, c++)
+                    {
+                        int channel = c % 3;
+                        box_filter_generic_host_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 1);
+                        dstPtrTempChannels[channel]++;
+                    }
+                    increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
+                    increment_row_ptrs(dstPtrChannels, kernelSize, dstDescPtr->strides.hStride);
+                }
+            }
+            else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
+            {
+                Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 16) * 16;
+                for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+                {
+                    int vectorLoopCount = 0;
+                    bool padLengthRows = (i < padLength) ? 1: 0;
+                    Rpp16f *srcPtrTemp[3][3] = {
+                                                {srcPtrRow[0], srcPtrRow[1], srcPtrRow[2]},
+                                                {srcPtrRow[0] + srcDescPtr->strides.cStride, srcPtrRow[1] + srcDescPtr->strides.cStride, srcPtrRow[2] + srcDescPtr->strides.cStride},
+                                                {srcPtrRow[0] + 2 * srcDescPtr->strides.cStride, srcPtrRow[1] + 2 * srcDescPtr->strides.cStride, srcPtrRow[2] + 2 * srcDescPtr->strides.cStride}
+                                              };
+
+                    Rpp16f *dstPtrTemp = dstPtrRow;
+                    // get the number of rows needs to be loaded for the corresponding row
+                    Rpp32s rowKernelLoopLimit = kernelSize;
+                    get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
+
+                    // process padLength number of columns in each row
+                    // left border pixels in image which does not have required pixels in 3x3 box, process them separately
+                    for (int k = 0; k < padLength; k++)
+                    {
+                        for (int c = 0; c < 3; c++)
+                        {
+                            box_filter_generic_host_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            dstPtrTemp++;
+                        }
+                    }
+
+                    // process alignedLength number of columns in eacn row
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 14)
+                    {
+                        __m256 pResult[6];
+                        for (int c = 0; c < 3; c++)
+                        {
+                            int channelStride = c * 2;
+                            __m256 pRow[3], pTemp[3];
+                            rpp_load_box_filter_f16_f16_3x3_host(pRow, srcPtrTemp[c], rowKernelLoopLimit);
+                            add_rows_3x3(pRow, &pTemp[0]);
+
+                            increment_row_ptrs(srcPtrTemp[c], kernelSize, 8);
+                            rpp_load_box_filter_f16_f16_3x3_host(pRow, srcPtrTemp[c], rowKernelLoopLimit);
+                            add_rows_3x3(pRow, &pTemp[1]);
+                            pTemp[2] = avx_p0;
+
+                            blend_permute_add_3x3_pln(&pTemp[0], &pResult[channelStride], pConvolutionFactor);
+                            blend_permute_add_3x3_pln(&pTemp[1], &pResult[channelStride + 1], pConvolutionFactor);
+                            increment_row_ptrs(srcPtrTemp[c], kernelSize, 6);
+                        }
+
+                        // convert result from pln to pkd format and store in output buffer
+                        rpp_simd_store(rpp_store48_f32pln3_to_f16pkd3_avx, dstPtrTemp, pResult);                       
+                        dstPtrTemp += 42;
+                    }
+                    vectorLoopCount += padLength;
+
+                    // process remaining columns in each row
+                    for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                    {
+                        for (int c = 0; c < 3; c++)
+                        {
+                            box_filter_generic_host_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
+                            dstPtrTemp++;
+                        }
+                    }
+                    increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
+                    dstPtrRow += dstDescPtr->strides.hStride;
+                }
+            }
+        }
+    }
+    
     return RPP_SUCCESS;
 }
