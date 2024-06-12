@@ -40,6 +40,10 @@ buildFolderPath = os.getcwd()
 caseMin = 1
 caseMax = 1
 
+augmentation_map = {
+    1: "normalize"
+}
+
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list():
     return [
@@ -81,6 +85,10 @@ def rpp_test_suite_parser_and_validator():
     parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Outputs from tests will be compared with golden outputs - (0 / 1)", required = False)
     parser.add_argument('--batch_size', type = int, default = 1, help = "Specifies the batch size to use for running tests. Default is 1.")
     parser.add_argument('--preserve_output', type = int, default = 1, help = "preserves the output of the program - (0 = override output / 1 = preserve output )" )
+    if '--help' or '-h' in sys.argv:
+        parser.print_help()
+        print_case_list(augmentation_map)
+        sys.exit(0)
     args = parser.parse_args()
 
     # validate the parameters passed by user

@@ -248,3 +248,8 @@ def get_layout_name(layout):
         return "PLN3"
     elif layout == 2:
         return "PLN1"
+
+def print_case_list(augmentation_map):
+    print("case_number\t\t\tfunctionality")
+    for case_number, functionality in augmentation_map.items():
+        print(f"{case_number}\t\t\t\t{functionality}")

@@ -38,6 +38,17 @@ buildFolderPath = os.getcwd()
 caseMin = 0
 caseMax = 7
 
+augmentation_map = {
+    0: "non_silent_region_detection",
+    1: "to_decibels",
+    2: "pre_emphasis_filter",
+    3: "down_mixing",
+    4: "spectrogram",
+    5: "slice",
+    6: "resample",
+    7: "mel_filter_bank"
+}
+
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list():
     return [
@@ -79,6 +90,10 @@ def rpp_test_suite_parser_and_validator():
     parser.add_argument('--num_runs', type = int, default = 1, help = "Specifies the number of runs for running the performance tests")
     parser.add_argument('--preserve_output', type = int, default = 1, help = "preserves the output of the program - (0 = override output / 1 = preserve output )")
     parser.add_argument('--batch_size', type = int, default = 1, help = "Specifies the batch size to use for running tests. Default is 1.")
+    if '--help' or '-h' in sys.argv:
+        parser.print_help()
+        print_case_list(augmentation_map)
+        sys.exit(0)
     args = parser.parse_args()
 
     # check if the folder exists
