@@ -252,4 +252,4 @@ def get_layout_name(layout):
 def print_case_list(augmentation_map):
     print("case_number\t\t\tfunctionality")
     for case_number, functionality in augmentation_map.items():
-        print(f"{case_number}\t\t\t\t{functionality}")
+        print(f"{case_number}\t\t\t\t\t\t\t\t{functionality}")
