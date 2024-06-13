@@ -41,51 +41,6 @@ buildFolderPath = os.getcwd()
 caseMin = 0
 caseMax = 92
 
-augmentation_map = {
-    0: "brightness",
-    1: "gamma_correction",
-    2: "blend",
-    4: "contrast",
-    8: "noise",
-    13: "exposure",
-    20: "flip",
-    21: "resize",
-    23: "rotate",
-    29: "water",
-    30: "non_linear_blend",
-    31: "color_cast",
-    32: "erase",
-    33: "crop_and_patch",
-    34: "lut",
-    36: "color_twist",
-    37: "crop",
-    38: "crop_mirror_normalize",
-    39: "resize_crop_mirror",
-    45: "color_temperature",
-    46: "vignette",
-    49: "box_filter",
-    54: "gaussian_filter",
-    61: "magnitude",
-    63: "phase",
-    65: "bitwise_and",
-    68: "bitwise_or",
-    70: "copy",
-    79: "remap",
-    80: "resize_mirror_normalize",
-    81: "color_jitter",
-    82: "ricap",
-    83: "gridmask",
-    84: "spatter",
-    85: "swap_channels",
-    86: "color_to_greyscale",
-    87: "tensor_sum",
-    88: "tensor_min",
-    89: "tensor_max",
-    90: "tensor_mean",
-    91: "tensor_stddev",
-    92: "slice"
-}
-
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list(preserveOutput):
     return [
@@ -208,7 +163,7 @@ def rpp_test_suite_parser_and_validator():
     parser.add_argument('--roi', nargs = 4, help = "specifies the roi values", required = False)
     if '--help' or '-h' in sys.argv:
         parser.print_help()
-        print_case_list(augmentation_map)
+        print_case_list(imageAugmentationMap, "HOST")
         sys.exit(0)
     args = parser.parse_args()
 

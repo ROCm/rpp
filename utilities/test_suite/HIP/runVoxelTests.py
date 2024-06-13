@@ -40,16 +40,6 @@ buildFolderPath = os.getcwd()
 caseMin = 0
 caseMax = 6
 
-augmentation_map = {
-    0: "fused_multiply_add_scalar",
-    1: "slice",
-    2: "add_scalar",
-    3: "subtract_scalar",
-    4: "flip_voxel",
-    5: "multiply_scalar",
-    6: "gaussian_noise_voxel"
-}
-
 def get_log_file_list(preserveOutput):
     return [
         outFolderPath + "/OUTPUT_PERFORMANCE_LOGS_HIP_VOXEL_" + timestamp + "/Tensor_voxel_hip_pkd3_raw_performance_log.txt",
@@ -131,7 +121,7 @@ def rpp_test_suite_parser_and_validator():
     parser.add_argument('--batch_size', type = int, default = 1, help = "Specifies the batch size to use for running tests. Default is 1.")
     if '--help' or '-h' in sys.argv:
         parser.print_help()
-        print_case_list(augmentation_map)
+        print_case_list(voxelAugmentationMap, "HIP")
         sys.exit(0)
     args = parser.parse_args()
 
