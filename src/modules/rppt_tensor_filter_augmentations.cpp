@@ -83,15 +83,15 @@ RppStatus rppt_box_filter_host(RppPtr_t srcPtr,
     }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
-        // box_filter_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
-        //                              srcDescPtr,
-        //                              static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
-        //                              dstDescPtr,
-        //                              kernelSize,
-        //                              roiTensorPtrSrc,
-        //                              roiType,
-        //                              layoutParams,
-        //                              rpp::deref(rppHandle));
+        box_filter_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                     srcDescPtr,
+                                     static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                     dstDescPtr,
+                                     kernelSize,
+                                     roiTensorPtrSrc,
+                                     roiType,
+                                     layoutParams,
+                                     rpp::deref(rppHandle));
     }
     return RPP_SUCCESS;
 }

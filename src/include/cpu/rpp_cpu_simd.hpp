@@ -3890,7 +3890,7 @@ inline void rpp_store24_f32pkd3_to_f32pkd3_avx(Rpp32f* dstPtr, __m256 *p)
     _mm256_storeu_ps(dstPtr + 16, p[2]); /* Store RGB set 3 */
 }
 
-inline void rpp_convert24_u8pkd3_to_u8pln3(__m128i &pxLower, __m128i &pxUpper, __m128i *pxDstChn)
+inline void rpp_convert24_pkd3_to_pln3(__m128i &pxLower, __m128i &pxUpper, __m128i *pxDstChn)
 {
     // pxLower = R1 G1 B1 R2 G2 B2 R3 G3 B3 R4 G4 B4 R5 G5 B5 R6
     // pxUpper = G6 B6 R7 G7 B7 R8 G8 B8 0  0  0  0  0  0  0  0
@@ -3915,7 +3915,7 @@ inline void rpp_convert24_u8pkd3_to_u8pln3(__m128i &pxLower, __m128i &pxUpper, _
     pxDstChn[2] = _mm_shuffle_epi8(_mm_blend_epi16(_mm_shuffle_epi8(pxLower, xmm_char_maskB), pxTempUpper, 48), xmm_shuffle_mask);
 }
 
-inline void rpp_convert72_u8pln3_to_u8pkd3(__m256i *pxSrc, __m128i *pxDst)
+inline void rpp_convert72_pln3_to_pkd3(__m256i *pxSrc, __m128i *pxDst)
 {
     const __m128i pxMask = _mm_setr_epi8(0, 1, 12, 2, 3, 13, 4, 5, 14, 6, 7, 15, 0x80, 0x80, 0x80, 0x80);
 
@@ -3958,7 +3958,7 @@ inline void rpp_convert72_u8pln3_to_u8pkd3(__m256i *pxSrc, __m128i *pxDst)
     pxDst[5] = _mm_shuffle_epi8(pxTemp[3], pxMask);
 }
 
-inline void rpp_convert48_u8pln3_to_u8pkd3(__m128i *pxSrc, __m128i *pxDst)
+inline void rpp_convert48_pln3_to_pkd3(__m128i *pxSrc, __m128i *pxDst)
 {
     const __m128i pxMask = _mm_setr_epi8(0, 1, 12, 2, 3, 13, 4, 5, 14, 6, 7, 15, 0x80, 0x80, 0x80, 0x80);
     
