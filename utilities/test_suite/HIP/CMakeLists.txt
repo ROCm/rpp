@@ -65,12 +65,12 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 
 # Audio Support
-if("${RPP_AUDIO_SUPPORT}" STREQUAL "ON")
+option(RPP_AUDIO_SUPPORT      "Build RPP test suite with audio support"         ON)
+if(RPP_AUDIO_SUPPORT)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DAUDIO_SUPPORT=1")
     message("-- ${Green}RPP_AUDIO_SUPPORT set to ON ${ColourReset}")
 else()
-    message("-- ${Yellow}RPP_AUDIO_SUPPORT needs to be set to ON for audio tests${ColourReset}")
-    return()
+    message("-- ${Yellow}RPP_AUDIO_SUPPORT (default=ON) was overrided. Skipping audio tests.${ColourReset}")
 endif()
 
 if(TurboJpeg_FOUND)
