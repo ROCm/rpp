@@ -51,26 +51,22 @@ def get_log_file_list(preserveOutput):
 
 # Functionality group finder
 def func_group_finder(case_number):
-    if case_number < 5 or case_number == 13 or case_number == 36 or case_number == 45:
+    if case_number in ImageAugmentationGroupMap["color_augmentations"]:
         return "color_augmentations"
-    elif case_number == 8 or case_number == 30 or case_number == 82 or case_number == 83 or case_number == 84:
+    elif case_number in ImageAugmentationGroupMap["effects_augmentations"]:
         return "effects_augmentations"
-    elif case_number < 40 or case_number == 63:
+    elif case_number in ImageAugmentationGroupMap["geometric_augmentations"]:
         return "geometric_augmentations"
-    elif case_number < 42:
-        return "morphological_operations"
-    elif case_number == 49 or case_number == 54:
-        return "filter_augmentations"
-    elif case_number < 40:
-        return "geometric_augmentations"
-    elif case_number < 62:
+    elif case_number in ImageAugmentationGroupMap["arithmetic_operations"]:
         return "arithmetic_operations"
-    elif case_number < 69:
+    elif case_number in ImageAugmentationGroupMap["logical_operations"]:
         return "logical_operations"
-    elif case_number < 87:
+    elif case_number in ImageAugmentationGroupMap["data_exchange_operations"]:
         return "data_exchange_operations"
-    elif case_number < 92:
+    elif case_number in ImageAugmentationGroupMap["statistical_operations"]:
         return "statistical_operations"
+    elif case_number in ImageAugmentationGroupMap["filter_augmentations"]:
+        return "filter_augmentations"
     else:
         return "miscellaneous"
 
