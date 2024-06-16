@@ -144,7 +144,7 @@ inline void extract_3sse_registers(__m256i &pxLower, __m256i &pxUpper, __m128i *
 
 // -------------------- Set 0 box_filter compute functions --------------------
 
-// -------------------- kernel size 3x3 - U8 bitdepth compute functions --------------------
+// -------------------- kernel size 3x3 - U8/I8 bitdepth compute functions --------------------
 
 inline void unpacklo_and_add_3x3_host(__m256i *pxRow, __m256i *pxDst)
 {
@@ -178,7 +178,7 @@ inline void blend_shuffle_add_3x3_pkd_host(__m128i &pxLower1, __m128i &pxLower2)
     pxLower1 = _mm_add_epi16(pxLower1, pxTemp[1]);
 }
 
-// -------------------- 5x5 kernel size - U8 bitdepth compute functions --------------------
+// -------------------- 5x5 kernel size - U8/I8 bitdepth compute functions --------------------
 
 inline void unpacklo_and_add_5x5_host(__m256i *pxRow, __m256i *pxDst)
 {
@@ -224,7 +224,7 @@ inline void blend_shuffle_add_5x5_pkd_host(__m128i *px128)
     px128[0] = _mm_add_epi16(px128[0], pxTemp[3]);
 }
 
-// -------------------- 7x7 kernel size - U8 bitdepth compute functions --------------------
+// -------------------- 7x7 kernel size - U8/I8 bitdepth compute functions --------------------
 
 inline void unpacklo_and_add_7x7_host(__m256i *pxRow, __m256i *pxDst)
 {
@@ -282,7 +282,7 @@ inline void blend_shuffle_add_7x7_pkd_host(__m128i *px128)
     px128[0] = _mm_add_epi16(px128[0], pxTemp[5]);
 }
 
-// -------------------- 9x9 kernel size - U8 bitdepth compute functions --------------------
+// -------------------- 9x9 kernel size - U8/I8 bitdepth compute functions --------------------
 
 inline void unpacklo_and_add_9x9_host(__m256i *pxRow, __m256i *pxDst)
 {
@@ -349,7 +349,7 @@ inline void blend_shuffle_add_9x9_pkd_host(__m128i *px128)
     px128[0] = _mm_add_epi16(px128[0], px128[3]);
 }
 
-// -------------------- 3x3 kernel size - F32 bitdepth compute functions --------------------
+// -------------------- 3x3 kernel size - F32/F16 bitdepth compute functions --------------------
 
 inline void add_rows_3x3(__m256 *pRow, __m256 *pDst)
 {
@@ -371,40 +371,7 @@ inline void blend_permute_add_3x3_pkd(__m256 *pSrc, __m256 *pDst, __m256 pConvol
     pDst[0] = _mm256_mul_ps(pDst[0], pConvolutionFactor);
 }
 
-inline void rpp_store16_float(Rpp32f *dstPtrTemp, __m256 *pDst)
-{
-    _mm256_storeu_ps(dstPtrTemp, pDst[0]);
-    _mm256_storeu_ps(dstPtrTemp + 8, pDst[1]);
-}
-
-inline void rpp_store16_float(Rpp16f *dstPtrTemp, __m256 *pDst)
-{
-    __m128i pxDst[2];
-    pxDst[0] = _mm256_cvtps_ph(pDst[0], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
-    pxDst[1] = _mm256_cvtps_ph(pDst[1], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
-    _mm_storeu_si128((__m128i *)dstPtrTemp, pxDst[0]);
-    _mm_storeu_si128((__m128i *)(dstPtrTemp + 8), pxDst[1]);
-}
-
-inline void rpp_store12_float_pkd_pln(Rpp32f **dstPtrTempChannels, __m128 *pDst)
-{
-    _mm_storeu_ps(dstPtrTempChannels[0], pDst[0]);
-    _mm_storeu_ps(dstPtrTempChannels[1], pDst[1]);
-    _mm_storeu_ps(dstPtrTempChannels[2], pDst[2]);
-}
-
-inline void rpp_store12_float_pkd_pln(Rpp16f **dstPtrTempChannels, __m128 *pDst)
-{
-    __m128i pxDst[3];
-    pxDst[0] = _mm_cvtps_ph(pDst[0], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
-    pxDst[1] = _mm_cvtps_ph(pDst[1], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
-    pxDst[2] = _mm_cvtps_ph(pDst[2], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
-    _mm_storeu_si128((__m128i *)(dstPtrTempChannels[0]), pxDst[0]);
-    _mm_storeu_si128((__m128i *)(dstPtrTempChannels[1]), pxDst[1]);
-    _mm_storeu_si128((__m128i *)(dstPtrTempChannels[2]), pxDst[2]);
-}
-
-// -------------------- 5x5 kernel size - F32 bitdepth compute functions --------------------
+// -------------------- 5x5 kernel size - F32/F16 bitdepth compute functions --------------------
 
 inline void add_rows_5x5(__m256 *pRow, __m256 *pDst)
 {
@@ -430,7 +397,7 @@ inline void blend_permute_add_5x5_pkd(__m256 *pSrc, __m256 *pDst, __m256 pConvol
     pDst[0] = _mm256_mul_ps(pDst[0], pConvolutionFactor);
 }
 
-// -------------------- 7x7 kernel size - F32 bitdepth compute functions --------------------
+// -------------------- 7x7 kernel size - F32/F16 bitdepth compute functions --------------------
 
 inline void add_rows_7x7(__m256 *pRow, __m256 *pDst)
 {
@@ -461,7 +428,7 @@ inline void blend_permute_add_7x7_pkd(__m256 *pSrc, __m256 *pDst, __m256 pConvol
     pDst[0] = _mm256_mul_ps(pDst[0], pConvolutionFactor);
 }
 
-// -------------------- 9x9 kernel size - F32 bitdepth compute functions --------------------
+// -------------------- 9x9 kernel size - F32/F16 bitdepth compute functions --------------------
 
 inline void add_rows_9x9(__m256 *pRow, __m256 *pDst)
 {
@@ -626,6 +593,7 @@ inline void rpp_load_box_filter_float_3x3_host(__m256 *pRow, Rpp32f **srcPtrTemp
         pRow[2] = avx_px0;
 }
 
+// 5x5 kernel loads for F32 bitdepth
 inline void rpp_load_box_filter_float_5x5_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit)
 {
     // irrespective of row location, we need to load 3 rows for 5x5 kernel
@@ -638,6 +606,7 @@ inline void rpp_load_box_filter_float_5x5_host(__m256 *pRow, Rpp32f **srcPtrTemp
         pRow[k] = avx_p0;
 }
 
+// 7x7 kernel loads for F32 bitdepth
 inline void rpp_load_box_filter_float_7x7_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit)
 {
     // irrespective of row location, we need to load 4 rows for 7x7 kernel
@@ -651,6 +620,7 @@ inline void rpp_load_box_filter_float_7x7_host(__m256 *pRow, Rpp32f **srcPtrTemp
         pRow[k] = avx_p0;
 }
 
+// 9x9 kernel loads for F32 bitdepth
 inline void rpp_load_box_filter_float_9x9_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit)
 {
     // irrespective of row location, we need to load 5 rows for 9x9 kernel
@@ -665,7 +635,7 @@ inline void rpp_load_box_filter_float_9x9_host(__m256 *pRow, Rpp32f **srcPtrTemp
         pRow[k] = avx_p0;
 }
 
-// 3x3 kernel loads for F32 bitdepth
+// 3x3 kernel loads for F16 bitdepth
 inline void rpp_load_box_filter_float_3x3_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit)
 {
     // irrespective of row location, we need to load 2 rows for 3x3 kernel
@@ -679,6 +649,7 @@ inline void rpp_load_box_filter_float_3x3_host(__m256 *pRow, Rpp16f **srcPtrTemp
         pRow[2] = avx_px0;
 }
 
+// 5x5 kernel loads for F16 bitdepth
 inline void rpp_load_box_filter_float_5x5_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit)
 {
     // irrespective of row location, we need to load 3 rows for 5x5 kernel
@@ -691,6 +662,7 @@ inline void rpp_load_box_filter_float_5x5_host(__m256 *pRow, Rpp16f **srcPtrTemp
         pRow[k] = avx_p0;
 }
 
+// 7x7 kernel loads for F16 bitdepth
 inline void rpp_load_box_filter_float_7x7_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit)
 {
     // irrespective of row location, we need to load 4 rows for 7x7 kernel
@@ -704,6 +676,7 @@ inline void rpp_load_box_filter_float_7x7_host(__m256 *pRow, Rpp16f **srcPtrTemp
         pRow[k] = avx_p0;
 }
 
+// 9x9 kernel loads for F16 bitdepth
 inline void rpp_load_box_filter_float_9x9_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit)
 {
     // irrespective of row location, we need to load 5 rows for 9x9 kernel
@@ -716,6 +689,41 @@ inline void rpp_load_box_filter_float_9x9_host(__m256 *pRow, Rpp16f **srcPtrTemp
         pRow[k] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrTemp[k]))));
     for (int k = rowKernelLoopLimit; k < 9; k++)
         pRow[k] = avx_p0;
+}
+
+// -------------------- Set 1 box_filter store functions --------------------
+
+inline void rpp_store16_float(Rpp32f *dstPtrTemp, __m256 *pDst)
+{
+    _mm256_storeu_ps(dstPtrTemp, pDst[0]);
+    _mm256_storeu_ps(dstPtrTemp + 8, pDst[1]);
+}
+
+inline void rpp_store16_float(Rpp16f *dstPtrTemp, __m256 *pDst)
+{
+    __m128i pxDst[2];
+    pxDst[0] = _mm256_cvtps_ph(pDst[0], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    pxDst[1] = _mm256_cvtps_ph(pDst[1], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    _mm_storeu_si128((__m128i *)dstPtrTemp, pxDst[0]);
+    _mm_storeu_si128((__m128i *)(dstPtrTemp + 8), pxDst[1]);
+}
+
+inline void rpp_store12_float_pkd_pln(Rpp32f **dstPtrTempChannels, __m128 *pDst)
+{
+    _mm_storeu_ps(dstPtrTempChannels[0], pDst[0]);
+    _mm_storeu_ps(dstPtrTempChannels[1], pDst[1]);
+    _mm_storeu_ps(dstPtrTempChannels[2], pDst[2]);
+}
+
+inline void rpp_store12_float_pkd_pln(Rpp16f **dstPtrTempChannels, __m128 *pDst)
+{
+    __m128i pxDst[3];
+    pxDst[0] = _mm_cvtps_ph(pDst[0], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    pxDst[1] = _mm_cvtps_ph(pDst[1], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    pxDst[2] = _mm_cvtps_ph(pDst[2], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    _mm_storeu_si128((__m128i *)(dstPtrTempChannels[0]), pxDst[0]);
+    _mm_storeu_si128((__m128i *)(dstPtrTempChannels[1]), pxDst[1]);
+    _mm_storeu_si128((__m128i *)(dstPtrTempChannels[2]), pxDst[2]);
 }
 
 template<typename T>
