@@ -70,9 +70,11 @@ inline void box_filter_generic_host_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp32u
     get_kernel_loop_limit(columnIndex, columnKernelLoopLimit, kernelSize, padLength, width);
     for (int i = 0; i < rowKernelLoopLimit; i++)
         for (int j = 0, k = 0 ; j < columnKernelLoopLimit; j++, k += channels)
-            accum += static_cast<Rpp32f>(srcPtrTemp[i][k]);
+            accum += (std::is_same_v<T, Rpp8s> ? static_cast<Rpp32f>(srcPtrTemp[i][k] + 128) : static_cast<Rpp32f>(srcPtrTemp[i][k]));
 
     accum *= kernelSizeInverseSquare;
+    if constexpr (std::is_same<T, Rpp8s>::value)
+        accum -= 128;
     rpp_pixel_check_and_store(accum, dstPtrTemp);
 }
 
@@ -534,7 +536,7 @@ inline void rpp_load_box_filter_char_3x3_host(__m256i *pxRow, Rpp8s **srcPtrTemp
     if (rowKernelLoopLimit == 3)
         pxRow[2] =  _mm256_add_epi8(avx_pxConvertI8, _mm256_loadu_si256((__m256i *)srcPtrTemp[2]));
     else
-        pxRow[2] = avx_pxConvertI8;
+        pxRow[2] = avx_p0;
 }
 
 // 5x5 kernel loads for I8 bitdepth
@@ -547,7 +549,7 @@ inline void rpp_load_box_filter_char_5x5_host(__m256i *pxRow, Rpp8s **srcPtrTemp
     for (int k = 3; k < rowKernelLoopLimit; k++)
         pxRow[k] = _mm256_add_epi8(avx_pxConvertI8, _mm256_loadu_si256((__m256i *)srcPtrTemp[k]));
     for (int k = rowKernelLoopLimit; k < 5; k++)
-        pxRow[k] = avx_pxConvertI8;
+        pxRow[k] = avx_p0;
 }
 
 // 7x7 kernel loads for I8 bitdepth
@@ -561,7 +563,7 @@ inline void rpp_load_box_filter_char_7x7_host(__m256i *pxRow, Rpp8s **srcPtrTemp
     for (int k = 4; k < rowKernelLoopLimit; k++)
         pxRow[k] = _mm256_add_epi8(avx_pxConvertI8, _mm256_loadu_si256((__m256i *)srcPtrTemp[k]));
     for (int k = rowKernelLoopLimit; k < 7; k++)
-        pxRow[k] = avx_pxConvertI8;
+        pxRow[k] = avx_p0;
 }
 
 // 9x9 kernel loads for I8 bitdepth
@@ -576,7 +578,7 @@ inline void rpp_load_box_filter_char_9x9_host(__m256i *pxRow, Rpp8s **srcPtrTemp
     for (int k = 5; k < rowKernelLoopLimit; k++)
         pxRow[k] = _mm256_add_epi8(avx_pxConvertI8, _mm256_loadu_si256((__m256i *)srcPtrTemp[k]));
     for (int k = rowKernelLoopLimit; k < 9; k++)
-        pxRow[k] = avx_pxConvertI8;
+        pxRow[k] = avx_p0;
 }
 
 // 3x3 kernel loads for F32 bitdepth
@@ -1611,6 +1613,8 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         pxTemp[1] = _mm_mulhi_epi16(pxTemp[1], pxConvolutionFactor);
                         pxResult[0] = _mm_packus_epi16(pxTemp[0], pxTemp[1]);
                         pxResult[1] = xmm_px0;
+                        if constexpr (std::is_same<T, Rpp8s>::value)
+                            pxResult[0] = _mm_sub_epi8(pxResult[0], xmm_pxConvertI8);
 
                         // convert from PKD3 to PLN3 and store channelwise
                         __m128i pxDstChn[3];
