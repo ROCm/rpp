@@ -40,7 +40,7 @@ perfQaInputFile = scriptPath + "/../TEST_IMAGES/eight_images_mixed_src1"
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
 caseMin = 0
-caseMax = 90
+caseMax = 92
 
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list(preserveOutput):
@@ -276,7 +276,7 @@ subprocess.run(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.run(["make", "-j16"], cwd=".")    # nosec
 
 # List of cases supported
-supportedCaseList = ['0', '1', '2', '4', '8', '13', '20', '21', '23', '26', '29', '30', '31', '32', '33', '34', '36', '37', '38', '39', '45', '46', '54', '61', '63', '65', '68', '70', '79', '80', '81', '82', '83', '84', '85', '86', '87', '88', '89', '90']
+supportedCaseList = ['0', '1', '2', '4', '8', '13', '20', '21', '23', '26', '29', '30', '31', '32', '33', '34', '36', '37', '38', '39', '45', '46', '54', '61', '63', '65', '68', '70', '79', '80', '81', '82', '83', '84', '85', '86', '87', '88', '89', '90', '91', '92']
 
 print("\n\n\n\n\n")
 print("##########################################################################################")

@@ -68,7 +68,7 @@ int main(int argc, char **argv)
     bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 33 || testCase == 61 || testCase == 63 || testCase == 65 || testCase == 68);
     bool randomOutputCase = (testCase == 8 || testCase == 84 || testCase == 49 || testCase == 54);
     bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24 || testCase == 79);
-    bool reductionTypeCase = (testCase == 87 || testCase == 88 || testCase == 89);
+    bool reductionTypeCase = (testCase == 87 || testCase == 88 || testCase == 89 || testCase == 90 || testCase == 91);
     bool noiseTypeCase = (testCase == 8);
     bool pln1OutTypeCase = (testCase == 86);
 
@@ -86,7 +86,7 @@ int main(int argc, char **argv)
             printf("\ndst = %s", argv[3]);
         printf("\nu8 / f16 / f32 / u8->f16 / u8->f32 / i8 / u8->i8 (0/1/2/3/4/5/6) = %s", argv[4]);
         printf("\noutputFormatToggle (pkd->pkd = 0 / pkd->pln = 1) = %s", argv[5]);
-        printf("\ncase number (0:87) = %s", argv[6]);
+        printf("\ncase number (0:91) = %s", argv[6]);
         printf("\nnumber of times to run = %s", argv[8]);
         printf("\ntest type - (0 = unit tests / 1 = performance tests) = %s", argv[9]);
         printf("\nlayout type - (0 = PKD3/ 1 = PLN3/ 2 = PLN1) = %s", argv[10]);
@@ -332,17 +332,19 @@ int main(int argc, char **argv)
 
     // Initialize buffers for any reductionType functions (testCase 87 - tensor_sum alone cannot return final sum as 8u/8s due to overflow. 8u inputs return 64u sums, 8s inputs return 64s sums)
     void *reductionFuncResultArr;
+    Rpp32f *mean;
     Rpp32u reductionFuncResultArrLength = srcDescPtr->n * 4;
     if (reductionTypeCase)
     {
         int bitDepthByteSize = 0;
-        if (dstDescPtr->dataType == RpptDataType::U8)
+        if ((dstDescPtr->dataType == RpptDataType::F16) || (dstDescPtr->dataType == RpptDataType::F32) || testCase == 90 || testCase == 91)
+            bitDepthByteSize = sizeof(Rpp32f);  // using 32f outputs for 16f and 32f, for testCase 90, 91
+        else if ((dstDescPtr->dataType == RpptDataType::U8) || (dstDescPtr->dataType == RpptDataType::I8))
             bitDepthByteSize = (testCase == 87) ? sizeof(Rpp64u) : sizeof(Rpp8u);
-        else if (dstDescPtr->dataType == RpptDataType::I8)
-            bitDepthByteSize = (testCase == 87) ? sizeof(Rpp64s) : sizeof(Rpp8s);
-        else if ((dstDescPtr->dataType == RpptDataType::F16) || (dstDescPtr->dataType == RpptDataType::F32))
-            bitDepthByteSize = sizeof(Rpp32f);  // using 32f outputs for 16f and 32f
+
         CHECK_RETURN_STATUS(hipHostMalloc(&reductionFuncResultArr, reductionFuncResultArrLength * bitDepthByteSize));
+        if(testCase == 91)
+            CHECK_RETURN_STATUS(hipHostMalloc(&mean, reductionFuncResultArrLength * bitDepthByteSize));
     }
 
     // create generic descriptor and params in case of slice
@@ -350,7 +352,7 @@ int main(int argc, char **argv)
     RpptGenericDescPtr descriptorPtr3D = &descriptor3D;
     Rpp32s *anchorTensor = NULL, *shapeTensor = NULL;
     Rpp32u *roiTensor = NULL;
-    if(testCase == 90)
+    if(testCase == 92)
         set_generic_descriptor_slice(srcDescPtr, descriptorPtr3D, batchSize);
 
     // Allocate hip memory for src/dst
@@ -1299,7 +1301,6 @@ int main(int argc, char **argv)
                         reductionFuncResultArrLength = srcDescPtr->n;
 
                     startWallTime = omp_get_wtime();
-
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_tensor_sum_gpu(d_input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
@@ -1333,6 +1334,37 @@ int main(int argc, char **argv)
                 }
                 case 90:
                 {
+                    testCaseName = "tensor_mean";
+
+                    if(srcDescPtr->c == 1)
+                        reductionFuncResultArrLength = srcDescPtr->n;
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_tensor_mean_gpu(d_input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 91:
+                {
+                    testCaseName = "tensor_stddev";
+
+                    if(srcDescPtr->c == 1)
+                        reductionFuncResultArrLength = srcDescPtr->n;
+                    memcpy(mean, TensorMeanReferenceOutputs[inputChannels].data(), sizeof(Rpp32f) * reductionFuncResultArrLength);
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_tensor_stddev_gpu(d_input, srcDescPtr, reductionFuncResultArr, reductionFuncResultArrLength, mean, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 92:
+                {
                     testCaseName = "slice";
                     Rpp32u numDims = descriptorPtr3D->numDims - 1; // exclude batchSize from input dims
                     if(anchorTensor == NULL)
@@ -1354,8 +1386,10 @@ int main(int argc, char **argv)
                     break;
                 }
                 default:
+                {
                     missingFuncFlag = 1;
                     break;
+                }
             }
 
             CHECK_RETURN_STATUS(hipDeviceSynchronize());
@@ -1388,8 +1422,10 @@ int main(int argc, char **argv)
                 }
 
                 // print reduction functions output array based on different bit depths, and precision desired
-                int precision = ((dstDescPtr->dataType == RpptDataType::F32) || (dstDescPtr->dataType == RpptDataType::F16)) ? 3 : 0;
-                if (dstDescPtr->dataType == RpptDataType::U8)
+                int precision = ((dstDescPtr->dataType == RpptDataType::F32) || (dstDescPtr->dataType == RpptDataType::F16) || testCase == 90 || testCase == 91) ? 3 : 0;
+                if (dstDescPtr->dataType == RpptDataType::F32 || testCase == 90 || testCase == 91)
+                    print_array(static_cast<Rpp32f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
+                else if (dstDescPtr->dataType == RpptDataType::U8)
                 {
                     if (testCase == 87)
                         print_array(static_cast<Rpp64u *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
@@ -1402,13 +1438,6 @@ int main(int argc, char **argv)
                         print_array(static_cast<Rpp32f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
                     else
                         print_array(static_cast<Rpp16f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
-                }
-                else if (dstDescPtr->dataType == RpptDataType::F32)
-                {
-                    if (testCase == 87)
-                        print_array(static_cast<Rpp32f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
-                    else
-                        print_array(static_cast<Rpp32f *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
                 }
                 else if (dstDescPtr->dataType == RpptDataType::I8)
                 {
@@ -1427,6 +1456,8 @@ int main(int argc, char **argv)
                 {
                     if (testCase == 87)
                         compare_reduction_output(static_cast<uint64_t *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
+                    else if (testCase == 90 || testCase == 91)
+                        compare_reduction_output(static_cast<Rpp32f *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
                     else
                         compare_reduction_output(static_cast<Rpp8u *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
                 }
@@ -1450,7 +1481,7 @@ int main(int argc, char **argv)
 
                 // if test case is slice and qaFlag is set, update the dstImgSizes with shapeTensor values
                 // for output display and comparision purposes
-                if (testCase == 90)
+                if (testCase == 92)
                 {
                     if (dstDescPtr->layout == RpptLayout::NCHW)
                     {
@@ -1557,7 +1588,11 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipFree(d_distortionCoeffs));
     }
     if (reductionTypeCase)
+    {
         CHECK_RETURN_STATUS(hipHostFree(reductionFuncResultArr));
+        if(testCase == 91)
+            CHECK_RETURN_STATUS(hipHostFree(mean));
+    }
     if(testCase == 32)
     {
         CHECK_RETURN_STATUS(hipHostFree(colorBuffer));
