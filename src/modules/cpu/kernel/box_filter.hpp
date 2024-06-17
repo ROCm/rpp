@@ -68,13 +68,22 @@ inline void box_filter_generic_host_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp32u
 
     // find the colKernelLoopLimit based on rowIndex, columnIndex
     get_kernel_loop_limit(columnIndex, columnKernelLoopLimit, kernelSize, padLength, width);
-    for (int i = 0; i < rowKernelLoopLimit; i++)
-        for (int j = 0, k = 0 ; j < columnKernelLoopLimit; j++, k += channels)
-            accum += (std::is_same_v<T, Rpp8s> ? static_cast<Rpp32f>(srcPtrTemp[i][k] + 128) : static_cast<Rpp32f>(srcPtrTemp[i][k]));
-
-    accum *= kernelSizeInverseSquare;
     if constexpr (std::is_same<T, Rpp8s>::value)
+    {
+        for (int i = 0; i < rowKernelLoopLimit; i++)
+            for (int j = 0, k = 0 ; j < columnKernelLoopLimit; j++, k += channels)
+                accum += static_cast<Rpp32f>(srcPtrTemp[i][k] + 128);
+        accum *= kernelSizeInverseSquare;
         accum -= 128;
+    }
+    else
+    {
+        for (int i = 0; i < rowKernelLoopLimit; i++)
+            for (int j = 0, k = 0 ; j < columnKernelLoopLimit; j++, k += channels)
+                accum += static_cast<Rpp32f>(srcPtrTemp[i][k]);
+        accum *= kernelSizeInverseSquare;
+    }
+
     rpp_pixel_check_and_store(accum, dstPtrTemp);
 }
 
