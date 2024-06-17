@@ -111,7 +111,7 @@ inline void compute_lens_correction_remap_tables_host_tensor(RpptDescPtr srcDesc
         pXCameraIncrement = _mm256_mul_ps(pInvMat0, avx_p8);
         pYCameraIncrement = _mm256_mul_ps(pInvMat3, avx_p8);
         pZCameraIncrement = _mm256_mul_ps(pInvMat6, avx_p8);
-        for(int i = 0; i < height; i++ )
+        for(int i = 0; i < height; i++)
         {
             Rpp32f *rowRemapTableRow = rowRemapTableTemp + i * tableDescPtr->strides.hStride;
             Rpp32f *colRemapTableRow = colRemapTableTemp + i * tableDescPtr->strides.hStride;
@@ -130,31 +130,26 @@ inline void compute_lens_correction_remap_tables_host_tensor(RpptDescPtr srcDesc
                 __m256 pY = _mm256_mul_ps(pYCamera, pZ);
 
                 // float xSquare = x*x, ySquare = y*y, r2 = xSquare + ySquare;
-                __m256 pX2 = _mm256_mul_ps(pX, pX);
-                __m256 pY2 = _mm256_mul_ps(pY, pY);
-                __m256 pR2 = _mm256_add_ps(pX2, pY2);
+                __m256 pXSquare = _mm256_mul_ps(pX, pX);
+                __m256 pYSquare = _mm256_mul_ps(pY, pY);
+                __m256 pR2 = _mm256_add_ps(pXSquare, pYSquare);
 
                 // float xyMul2 = 2*x*y;
                 __m256 p2xy = _mm256_mul_ps(avx_p2, _mm256_mul_ps(pX, pY));
 
-                // float kr = (1 + ((rCoeff[2]*r2 + rCoeff[1])*r2 + rCoeff[0])*r2)/(1 + ((rCoeff[5]*r2 + rCoeff[4])*r2 + rCoeff[3])*r2);
+                // float kr = std::fmaf(std::fmaf(std::fmaf(rCoeff[2], r2, rCoeff[1]), r2, rCoeff[0]), r2, 1) / std::fmaf(std::fmaf(std::fmaf(rCoeff[5], r2, rCoeff[4]), r2, rCoeff[3]), r2, 1);
                 __m256 pNum = _mm256_fmadd_ps(_mm256_fmadd_ps(_mm256_fmadd_ps(pRCoeff[2], pR2, pRCoeff[1]), pR2, pRCoeff[0]), pR2, avx_p1);
                 __m256 pDen = _mm256_fmadd_ps(_mm256_fmadd_ps(_mm256_fmadd_ps(pRCoeff[5], pR2, pRCoeff[4]), pR2, pRCoeff[3]), pR2, avx_p1);
                 __m256 pKR = _mm256_div_ps(pNum, pDen);
 
-                // float colLoc = fx * (x * kr + tCoeff[0] * xyMul2 + tCoeff[1] * ( r2 + 2 * xSquare)) + u0;
-                __m256 pFac1 = _mm256_mul_ps(pX, pKR);
-                __m256 pFac2 = _mm256_mul_ps(pTCoeff[0], p2xy);
-                __m256 pFac3 = _mm256_mul_ps(pTCoeff[1], _mm256_fmadd_ps(avx_p2, pX2, pR2));
-                __m256 pSrcCol = _mm256_fmadd_ps(pFx, _mm256_add_ps(pFac1, _mm256_add_ps(pFac2, pFac3)), pU0);
+                // float colLoc = std::fmaf(fx, (std::fmaf(tCoeff[1], (std::fmaf(2, xSquare, r2)), std::fmaf(x, kr, (tCoeff[0] * xyMul2)))), u0);
+                __m256 pColLoc = _mm256_fmadd_ps(pFx, _mm256_fmadd_ps(pTCoeff[1], _mm256_fmadd_ps(avx_p2, pXSquare, pR2), _mm256_fmadd_ps(pX, pKR,  _mm256_mul_ps(pTCoeff[0], p2xy))), pU0);
 
-                // float rowLoc = fy * (y * kr + tCoeff[0] * (r2 + 2 * ySquare) + tCoeff[1] * xyMul2) + v0;
-                pFac1 = _mm256_mul_ps(pY, pKR);
-                pFac2 = _mm256_fmadd_ps(pTCoeff[1], p2xy, _mm256_mul_ps(pTCoeff[0], _mm256_fmadd_ps(avx_p2, pY2, pR2)));
-                __m256 pSrcRow = _mm256_fmadd_ps(pFy, _mm256_add_ps(pFac1, pFac2), pV0);
+                // float rowLoc = std::fmaf(fy, (std::fmaf(tCoeff[0], (std::fmaf(2, ySquare, r2)), std::fmaf(y, kr, (tCoeff[1] * xyMul2)))), v0);
+                __m256 pRowLoc = _mm256_fmadd_ps(pFy, _mm256_fmadd_ps(pTCoeff[0], _mm256_fmadd_ps(avx_p2, pYSquare, pR2), _mm256_fmadd_ps(pY, pKR,  _mm256_mul_ps(pTCoeff[1], p2xy))), pV0);
 
-                _mm256_storeu_ps(rowRemapTableRow, pSrcRow);
-                _mm256_storeu_ps(colRemapTableRow, pSrcCol);
+                _mm256_storeu_ps(rowRemapTableRow, pRowLoc);
+                _mm256_storeu_ps(colRemapTableRow, pColLoc);
                 rowRemapTableRow += vectorIncrement;
                 colRemapTableRow += vectorIncrement;
 
@@ -168,7 +163,7 @@ inline void compute_lens_correction_remap_tables_host_tensor(RpptDescPtr srcDesc
                 Rpp32f z = 1./zCamera, x = xCamera * z, y = yCamera * z;
                 Rpp32f xSquare = x * x, ySquare = y * y, r2 = xSquare + ySquare;
                 Rpp32f xyMul2 = 2 * x * y;
-                Rpp32f kr = (1 + ((((rCoeff[2] * r2) + rCoeff[1]) * r2) + rCoeff[0]) * r2) / (1 + ((((rCoeff[5] * r2) + rCoeff[4]) * r2) + rCoeff[3]) * r2);
+                Rpp32f kr = std::fmaf(std::fmaf(std::fmaf(rCoeff[2], r2, rCoeff[1]), r2, rCoeff[0]), r2, 1) / std::fmaf(std::fmaf(std::fmaf(rCoeff[5], r2, rCoeff[4]), r2, rCoeff[3]), r2, 1);
                 Rpp32f colLoc = std::fmaf(fx, (std::fmaf(tCoeff[1], (std::fmaf(2, xSquare, r2)), std::fmaf(x, kr, (tCoeff[0] * xyMul2)))), u0);
                 Rpp32f rowLoc = std::fmaf(fy, (std::fmaf(tCoeff[0], (std::fmaf(2, ySquare, r2)), std::fmaf(y, kr, (tCoeff[1] * xyMul2)))), v0);
                 *rowRemapTableRow++ = rowLoc;
