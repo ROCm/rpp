@@ -58,6 +58,8 @@ using namespace std;
 #define MAX_BATCH_SIZE 512
 #define GOLDEN_OUTPUT_MAX_HEIGHT 150    // Golden outputs are generated with MAX_HEIGHT set to 150. Changing this constant will result in QA test failures
 #define GOLDEN_OUTPUT_MAX_WIDTH 150     // Golden outputs are generated with MAX_WIDTH set to 150. Changing this constant will result in QA test failures
+#define LENS_CORRECTION_GOLDEN_OUTPUT_MAX_HEIGHT 480    // Lens correction golden outputs are generated with MAX_HEIGHT set to 480. Changing this constant will result in QA test failures
+#define LENS_CORRECTION_GOLDEN_OUTPUT_MAX_WIDTH 640     // Lens correction golden outputs are generated with MAX_WIDTH set to 640. Changing this constant will result in QA test failures
 
 #define CHECK_RETURN_STATUS(x) do { \
     int retval = (x); \
@@ -78,6 +80,7 @@ std::map<int, string> augmentationMap =
     {20, "flip"},
     {21, "resize"},
     {23, "rotate"},
+    {26, "lens_correction"},
     {29, "water"},
     {30, "non_linear_blend"},
     {31, "color_cast"},
@@ -1092,8 +1095,17 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
 {
     string func = funcName;
     string refFile = "";
-    int refOutputWidth = ((GOLDEN_OUTPUT_MAX_WIDTH / 8) * 8) + 8;    // obtain next multiple of 8 after GOLDEN_OUTPUT_MAX_WIDTH
-    int refOutputHeight = GOLDEN_OUTPUT_MAX_HEIGHT;
+    int refOutputWidth, refOutputHeight;
+    if(testCase == 26)
+    {
+        refOutputWidth = ((LENS_CORRECTION_GOLDEN_OUTPUT_MAX_WIDTH / 8) * 8) + 8;    // obtain next multiple of 8 after GOLDEN_OUTPUT_MAX_WIDTH
+        refOutputHeight = LENS_CORRECTION_GOLDEN_OUTPUT_MAX_HEIGHT;
+    }
+    else
+    {
+        refOutputWidth = ((GOLDEN_OUTPUT_MAX_WIDTH / 8) * 8) + 8;    // obtain next multiple of 8 after GOLDEN_OUTPUT_MAX_WIDTH
+        refOutputHeight = GOLDEN_OUTPUT_MAX_HEIGHT;
+    }
     int refOutputSize = refOutputHeight * refOutputWidth * dstDescPtr->c;
     Rpp64u binOutputSize = refOutputHeight * refOutputWidth * dstDescPtr->n * 4;
     int pln1RefStride = dstDescPtr->strides.nStride * dstDescPtr->n * 3;

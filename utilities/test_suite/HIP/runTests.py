@@ -35,6 +35,7 @@ scriptPath = os.path.dirname(os.path.realpath(__file__))
 inFilePath1 = scriptPath + "/../TEST_IMAGES/three_images_mixed_src1"
 inFilePath2 = scriptPath + "/../TEST_IMAGES/three_images_mixed_src2"
 ricapInFilePath = scriptPath + "/../TEST_IMAGES/three_images_150x150_src1"
+lensCorrectionInFilePath = scriptPath + "/../TEST_IMAGES/lens_distortion"
 qaInputFile = scriptPath + "/../TEST_IMAGES/three_images_mixed_src1"
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
@@ -299,7 +300,7 @@ subprocess.run(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.run(["make", "-j16"], cwd=".")    # nosec
 
 # List of cases supported
-supportedCaseList = ['0', '1', '2', '4', '8', '13', '20', '21', '23', '29', '30', '31', '32', '33', '34', '36', '37', '38', '39', '45', '46', '54', '61', '63', '65', '68', '70', '79', '80', '82', '83', '84', '85', '86', '87', '88', '89', '90', '91', '92']
+supportedCaseList = ['0', '1', '2', '4', '8', '13', '20', '21', '23', '26', '29', '30', '31', '32', '33', '34', '36', '37', '38', '39', '45', '46', '54', '61', '63', '65', '68', '70', '79', '80', '82', '83', '84', '85', '86', '87', '88', '89', '90', '91', '92']
 
 # Create folders based on testType and profilingOption
 if testType == 1 and profilingOption == "YES":
@@ -319,8 +320,11 @@ if(testType == 0):
         if case == "82" and (("--input_path1" not in sys.argv and "--input_path2" not in sys.argv) or qaMode == 1):
             srcPath1 = ricapInFilePath
             srcPath2 = ricapInFilePath
+        if case == "26" and (("--input_path1" not in sys.argv and "--input_path2" not in sys.argv) or qaMode == 1):
+            srcPath1 = lensCorrectionInFilePath
+            srcPath2 = lensCorrectionInFilePath
         # if QA mode is enabled overwrite the input folders with the folders used for generating golden outputs
-        if qaMode == 1 and case != "82":
+        if qaMode == 1 and (case != "82" and case != "26"):
             srcPath1 = inFilePath1
             srcPath2 = inFilePath2
         for layout in range(3):
@@ -343,6 +347,9 @@ else:
             if case == "82" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
                 srcPath1 = ricapInFilePath
                 srcPath2 = ricapInFilePath
+            if case == "26" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
+                srcPath1 = lensCorrectionInFilePath
+                srcPath2 = lensCorrectionInFilePath
             for layout in range(3):
                 dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", func_group_finder)
 
@@ -357,6 +364,9 @@ else:
             if case == "82" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
                 srcPath1 = ricapInFilePath
                 srcPath2 = ricapInFilePath
+            if case == "26" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
+                srcPath1 = lensCorrectionInFilePath
+                srcPath2 = lensCorrectionInFilePath
             for layout in range(3):
                 dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", func_group_finder)
 
