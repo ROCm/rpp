@@ -1538,3 +1538,24 @@ void inline init_erase(int batchSize, int boxesInEachImage, Rpp32u* numOfBoxes, 
         }
     }
 }
+
+// Lens correction initializer for unit and performance testing
+void inline init_lens_correction(int batchSize, RpptDescPtr srcDescPtr, Rpp32f *cameraMatrix, Rpp32f *distortionCoeffs, RpptDescPtr tableDescPtr)
+{
+    typedef struct { Rpp32f data[9]; } Rpp32f9;
+    typedef struct { Rpp32f data[8]; } Rpp32f8;
+    Rpp32f9 *cameraMatrix_f9 = reinterpret_cast<Rpp32f9 *>(cameraMatrix);
+    Rpp32f8 *distortionCoeffs_f8 = reinterpret_cast<Rpp32f8 *>(distortionCoeffs);
+    Rpp32f9 sampleCameraMatrix = {534.07088364, 0, 341.53407554, 0, 534.11914595, 232.94565259, 0, 0, 1};
+    Rpp32f8 sampleDistortionCoeffs = {-0.29297164, 0.10770696, 0.00131038, -0.0000311, 0.0434798, 0, 0, 0};
+    for (int i = 0; i < batchSize; i++)
+    {
+        cameraMatrix_f9[i] = sampleCameraMatrix;
+        distortionCoeffs_f8[i] = sampleDistortionCoeffs;
+    }
+
+    tableDescPtr->c = 1;
+    tableDescPtr->strides.nStride = srcDescPtr->h * srcDescPtr->w;
+    tableDescPtr->strides.hStride = srcDescPtr->w;
+    tableDescPtr->strides.wStride = tableDescPtr->strides.cStride = 1;
+}
