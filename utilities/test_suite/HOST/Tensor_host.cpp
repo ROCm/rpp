@@ -678,34 +678,9 @@ int main(int argc, char **argv)
 
                     Rpp32f cameraMatrix[9 * batchSize];
                     Rpp32f distortionCoeffs[8 * batchSize];
-                    for (i = 0; i < batchSize; i++)
-                    {
-                        cameraMatrix[9 * i] = 534.07088364;
-                        cameraMatrix[9 * i + 1] = 0;
-                        cameraMatrix[9 * i + 2] = 341.53407554;
-                        cameraMatrix[9 * i + 3] = 0;
-                        cameraMatrix[9 * i + 4] = 534.11914595;
-                        cameraMatrix[9 * i + 5] = 232.94565259;
-                        cameraMatrix[9 * i + 6] = 0;
-                        cameraMatrix[9 * i + 7] = 0;
-                        cameraMatrix[9 * i + 8] = 1;
-
-                        distortionCoeffs[8 * i] = -0.29297164;
-                        distortionCoeffs[8 * i + 1] = 0.10770696;
-                        distortionCoeffs[8 * i + 2] = 0.00131038;
-                        distortionCoeffs[8 * i + 3] = -0.0000311;
-                        distortionCoeffs[8 * i + 4] = 0.0434798;
-                        distortionCoeffs[8 * i + 5] = 0;
-                        distortionCoeffs[8 * i + 6] = 0;
-                        distortionCoeffs[8 * i + 7] = 0;
-                    }
-
                     RpptDesc tableDesc = srcDesc;
                     RpptDescPtr tableDescPtr = &tableDesc;
-                    tableDescPtr->c = 1;
-                    tableDescPtr->strides.nStride = srcDescPtr->h * srcDescPtr->w;
-                    tableDescPtr->strides.hStride = srcDescPtr->w;
-                    tableDescPtr->strides.wStride = tableDescPtr->strides.cStride = 1;
+                    init_lens_correction(batchSize, srcDescPtr, cameraMatrix, distortionCoeffs, tableDescPtr);
 
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();
