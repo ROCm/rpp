@@ -19,8 +19,8 @@ __global__ void compute_inverse_matrix_hip_tensor(d_float9 *matTensor, d_float9 
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
     d_float9 *mat_f9 = &matTensor[id_z];
     d_float9 *invMat_f9 = &invMatTensor[id_z];
-    float det =  (mat_f9->f1[0] * ((mat_f9->f1[4] * mat_f9->f1[8]) - (mat_f9->f1[7] * mat_f9->f1[5]))) 
-               - (mat_f9->f1[1] * ((mat_f9->f1[3] * mat_f9->f1[8]) - (mat_f9->f1[5] * mat_f9->f1[6]))) 
+    float det =  (mat_f9->f1[0] * ((mat_f9->f1[4] * mat_f9->f1[8]) - (mat_f9->f1[7] * mat_f9->f1[5])))
+               - (mat_f9->f1[1] * ((mat_f9->f1[3] * mat_f9->f1[8]) - (mat_f9->f1[5] * mat_f9->f1[6])))
                + (mat_f9->f1[2] * ((mat_f9->f1[3] * mat_f9->f1[7]) - (mat_f9->f1[4] * mat_f9->f1[6])));
     if(det != 0)
     {
@@ -87,11 +87,19 @@ __global__ void compute_remap_tables_hip_tensor(float *rowRemapTable,
     rpp_hip_math_multiply8(&r2_f8, &r2_f8, &r2Square_f8);                                       // float r2Square = r2 * r2;
     rpp_hip_math_multiply8(&r2Square_f8, &r2_f8, &r2Cube_f8);                                   // float r2Cube = r2Square * r2;
 
+    d_float24 radialCoeff_f24;
+    radialCoeff_f24.f4[0] = static_cast<float4>(radialCoeff[0]);
+    radialCoeff_f24.f4[1] = static_cast<float4>(radialCoeff[1]);
+    radialCoeff_f24.f4[2] = static_cast<float4>(radialCoeff[2]);
+    radialCoeff_f24.f4[3] = static_cast<float4>(radialCoeff[3]);
+    radialCoeff_f24.f4[4] = static_cast<float4>(radialCoeff[4]);
+    radialCoeff_f24.f4[5] = static_cast<float4>(radialCoeff[5]);
+
     // float kr = (1 + (radialCoeff[2] * r2Cube) + (radialCoeff[1] * r2Square) + (radialCoeff[0]) * r2)) / (1 + (radialCoeff[5] * r2Cube) + (radialCoeff[4] * r2Square) + (radialCoeff[3]) *r2))
-    kr1_f8.f4[0] = (one_f4 + static_cast<float4>(radialCoeff[2]) * r2Cube_f8.f4[0] + static_cast<float4>(radialCoeff[1]) *  r2Square_f8.f4[0] + static_cast<float4>(radialCoeff[0]) *  r2_f8.f4[0]);
-    kr1_f8.f4[1] = (one_f4 + static_cast<float4>(radialCoeff[2]) * r2Cube_f8.f4[1] + static_cast<float4>(radialCoeff[1]) *  r2Square_f8.f4[1] + static_cast<float4>(radialCoeff[0]) *  r2_f8.f4[1]);
-    kr2_f8.f4[0] = (one_f4 + static_cast<float4>(radialCoeff[5]) * r2Cube_f8.f4[0] + static_cast<float4>(radialCoeff[4]) *  r2Square_f8.f4[0] + static_cast<float4>(radialCoeff[3]) *  r2_f8.f4[0]);
-    kr2_f8.f4[1] = (one_f4 + static_cast<float4>(radialCoeff[5]) * r2Cube_f8.f4[1] + static_cast<float4>(radialCoeff[4]) *  r2Square_f8.f4[1] + static_cast<float4>(radialCoeff[3]) *  r2_f8.f4[1]);
+    kr1_f8.f4[0] = (one_f4 + (radialCoeff_f24.f4[2] * r2Cube_f8.f4[0]) + (radialCoeff_f24.f4[1] *  r2Square_f8.f4[0]) + (radialCoeff_f24.f4[0] *  r2_f8.f4[0]));
+    kr1_f8.f4[1] = (one_f4 + (radialCoeff_f24.f4[2] * r2Cube_f8.f4[1]) + (radialCoeff_f24.f4[1] *  r2Square_f8.f4[1]) + (radialCoeff_f24.f4[0] *  r2_f8.f4[1]));
+    kr2_f8.f4[0] = (one_f4 + (radialCoeff_f24.f4[5] * r2Cube_f8.f4[0]) + (radialCoeff_f24.f4[4] *  r2Square_f8.f4[0]) + (radialCoeff_f24.f4[3] *  r2_f8.f4[0]));
+    kr2_f8.f4[1] = (one_f4 + (radialCoeff_f24.f4[5] * r2Cube_f8.f4[1]) + (radialCoeff_f24.f4[4] *  r2Square_f8.f4[1]) + (radialCoeff_f24.f4[3] *  r2_f8.f4[1]));
     rpp_hip_math_divide8(&kr1_f8, &kr2_f8, &kr_f8);
 
     d_float8 xyMul2_f8;
@@ -102,13 +110,23 @@ __global__ void compute_remap_tables_hip_tensor(float *rowRemapTable,
     rpp_hip_math_multiply8_const(&xSquare_f8, &xSquare_f8, two_f4);                             // xSquare = xSquare * 2;
     rpp_hip_math_multiply8_const(&ySquare_f8, &ySquare_f8, two_f4);                             // ySquare = ySquare * 2;
 
+    d_float16 cameraMatrix_f16;
+    cameraMatrix_f16.f4[0] = static_cast<float4>(cameraMatrix_f9.f1[0]);
+    cameraMatrix_f16.f4[1] = static_cast<float4>(cameraMatrix_f9.f1[2]);
+    cameraMatrix_f16.f4[2] = static_cast<float4>(cameraMatrix_f9.f1[4]);
+    cameraMatrix_f16.f4[3] = static_cast<float4>(cameraMatrix_f9.f1[5]);
+
+    d_float8 tangentialCoeff_f8;
+    tangentialCoeff_f8.f4[0] = static_cast<float4>(tangentialCoeff[0]);
+    tangentialCoeff_f8.f4[1] = static_cast<float4>(tangentialCoeff[1]);
+
     // float colLoc = cameraMatrix[0] * (x * kr + tangentialCoeff[0] * xyMul2 + tangentialCoeff[1] * (r2 + 2 * xSquare)) + cameraMatrix[2];
-    colLoc_f8.f4[0] = static_cast<float4>(cameraMatrix_f9.f1[0]) * ((x_f8.f4[0] * kr_f8.f4[0]) + (static_cast<float4>(tangentialCoeff[0]) * xyMul2_f8.f4[0]) + (static_cast<float4>(tangentialCoeff[1]) * (r2_f8.f4[0] + xSquare_f8.f4[0]))) + static_cast<float4>(cameraMatrix_f9.f1[2]);
-    colLoc_f8.f4[1] = static_cast<float4>(cameraMatrix_f9.f1[0]) * ((x_f8.f4[1] * kr_f8.f4[1]) + (static_cast<float4>(tangentialCoeff[0]) * xyMul2_f8.f4[1]) + (static_cast<float4>(tangentialCoeff[1]) * (r2_f8.f4[1] + xSquare_f8.f4[1]))) + static_cast<float4>(cameraMatrix_f9.f1[2]);
+    colLoc_f8.f4[0] = cameraMatrix_f16.f4[0] * ((x_f8.f4[0] * kr_f8.f4[0]) + (tangentialCoeff_f8.f4[0] * xyMul2_f8.f4[0]) + (tangentialCoeff_f8.f4[1] * (r2_f8.f4[0] + xSquare_f8.f4[0]))) + cameraMatrix_f16.f4[1];
+    colLoc_f8.f4[1] = cameraMatrix_f16.f4[0] * ((x_f8.f4[1] * kr_f8.f4[1]) + (tangentialCoeff_f8.f4[0] * xyMul2_f8.f4[1]) + (tangentialCoeff_f8.f4[1] * (r2_f8.f4[1] + xSquare_f8.f4[1]))) + cameraMatrix_f16.f4[1];
 
     // float rowLoc = cameraMatrix[4] * (y * kr + tangentialCoeff[1] * xyMul2 + tangentialCoeff[0] * (r2 + 2 * ySquare)) + cameraMatrix[4];
-    rowLoc_f8.f4[0] = static_cast<float4>(cameraMatrix_f9.f1[4]) * ((y_f8.f4[0] * kr_f8.f4[0]) + (static_cast<float4>(tangentialCoeff[1]) * xyMul2_f8.f4[0]) + (static_cast<float4>(tangentialCoeff[0]) * (r2_f8.f4[0] + ySquare_f8.f4[0]))) + static_cast<float4>(cameraMatrix_f9.f1[5]);
-    rowLoc_f8.f4[1] = static_cast<float4>(cameraMatrix_f9.f1[4]) * ((y_f8.f4[1] * kr_f8.f4[1]) + (static_cast<float4>(tangentialCoeff[1]) * xyMul2_f8.f4[1]) + (static_cast<float4>(tangentialCoeff[0]) * (r2_f8.f4[1] + ySquare_f8.f4[1]))) + static_cast<float4>(cameraMatrix_f9.f1[5]);
+    rowLoc_f8.f4[0] = cameraMatrix_f16.f4[2] * ((y_f8.f4[0] * kr_f8.f4[0]) + (tangentialCoeff_f8.f4[1] * xyMul2_f8.f4[0]) + (tangentialCoeff_f8.f4[0] * (r2_f8.f4[0] + ySquare_f8.f4[0]))) + cameraMatrix_f16.f4[3];
+    rowLoc_f8.f4[1] = cameraMatrix_f16.f4[2] * ((y_f8.f4[1] * kr_f8.f4[1]) + (tangentialCoeff_f8.f4[1] * xyMul2_f8.f4[1]) + (tangentialCoeff_f8.f4[0] * (r2_f8.f4[1] + ySquare_f8.f4[1]))) + cameraMatrix_f16.f4[3];
 
     rpp_hip_pack_float8_and_store8(colRemapTable + dstIdx, &colLoc_f8);
     rpp_hip_pack_float8_and_store8(rowRemapTable + dstIdx, &rowLoc_f8);
@@ -153,6 +171,6 @@ RppStatus hip_exec_lens_correction_tensor(RpptDescPtr dstDescPtr,
                        reinterpret_cast<d_float8 *>(distanceCoeffs),
                        make_uint2(remapTableDescPtr->strides.nStride, remapTableDescPtr->strides.hStride),
                        roiTensorPtrSrc);
-                       
+
     return RPP_SUCCESS;
 }
