@@ -66,7 +66,7 @@ RppStatus jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTempR = dstPtrRowR;
                 dstPtrTempG = dstPtrRowG;
                 dstPtrTempB = dstPtrRowB;
-                
+
                 __m256 pRow = _mm256_set1_ps(dstLocRow);
                 __m256 pCol = avx_pDstLocInit;
 
@@ -204,7 +204,7 @@ RppStatus jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     {
                         __m256i pxRow;
                         rpp_simd_load(rpp_resize_nn_load_u8pln1_avx, srcPtrTempChn, srcLocArray, pxRow);
-                        rpp_simd_store(rpp_store8_u8pln1_to_u8pln1_avx, dstPtrTempChn, pxRow);
+                        rpp_storeu_si64((__m128i *)(dstPtrTempChn), _mm256_castsi256_si128(pxRow));
                         srcPtrTempChn += srcDescPtr->strides.cStride;
                         dstPtrTempChn += dstDescPtr->strides.cStride;
                     }
@@ -488,20 +488,25 @@ RppStatus jitter_f16_f16_host_tensor(Rpp16f *srcPtr,
         srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
-        Rpp32u alignedLength = roi.xywhROI.roiWidth & ~7;   // Align dst width to process 8 dst pixels per iteration
+        Rpp32u alignedLength = roi.xywhROI.roiWidth & ~7;   // Align dst width to process 4 dst pixels per iteration
+        Rpp32u vectorIncrement = 24;
+        Rpp32u vectorIncrementPerChannel = 8;
         RpptXorwowStateBoxMuller xorwowState;
         Rpp32s srcLocArray[8] = {0}; 
 
         __m256i pxXorwowStateX[5], pxXorwowStateCounter;
         rpp_host_rng_xorwow_state_offsetted_avx(xorwowInitialStatePtr, xorwowState, offset, pxXorwowStateX, &pxXorwowStateCounter);
+        __m256 pKernelSize = _mm256_set1_ps(kernelSize);
+        __m256 pChannel = _mm256_set1_ps(layoutParams.bufferMultiplier);
+        __m256 pHStride = _mm256_set1_ps(srcDescPtr->strides.hStride);
+        __m256 pHeightLimit = _mm256_set1_ps(heightLimit);
+        __m256 pWidthLimit = _mm256_set1_ps(roi.xywhROI.roiWidth-1);
+        __m256 pBound = _mm256_set1_ps(bound);
 
-        // Jitter with 3 channel inputs and outputs with Packed conversions
-        if (srcDescPtr->c == 3 && dstDescPtr->c == 3)
+
+        // Jitter with fused output-layout toggle (NHWC -> NCHW)
+        if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp16f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB;
-            srcPtrRowR = srcPtrChannel;
-            srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
-            srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
             Rpp16f *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             dstPtrRowR = dstPtrChannel;
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
@@ -514,17 +519,36 @@ RppStatus jitter_f16_f16_host_tensor(Rpp16f *srcPtr,
                 dstPtrTempG = dstPtrRowG;
                 dstPtrTempB = dstPtrRowB;
 
+                __m256 pRow = _mm256_set1_ps(dstLocRow);
+                __m256 pCol = avx_pDstLocInit;
                 int vectorLoopCount = 0;
+#if __AVX2__
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    Rpp32f dstPtrTempR_ps[8], dstPtrTempG_ps[8], dstPtrTempB_ps[8];
+                    __m256 pxRow[3];
+                    compute_jitter_src_loc_avx(pxXorwowStateX, &pxXorwowStateCounter, pRow, pCol, pKernelSize, pBound, pHeightLimit, pWidthLimit, pHStride, pChannel, srcLocArray);
+                    rpp_simd_load(rpp_resize_nn_load_f16pkd3_to_f32pln3_avx, srcPtrChannel, srcLocArray, pxRow);
+                    rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR_ps, dstPtrTempG_ps, dstPtrTempB_ps, pxRow);
+                    for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
+                    {
+                        dstPtrTempR[cnt] = (Rpp16f) dstPtrTempR_ps[cnt];
+                        dstPtrTempG[cnt] = (Rpp16f) dstPtrTempG_ps[cnt];
+                        dstPtrTempB[cnt] = (Rpp16f) dstPtrTempB_ps[cnt];
+                    }
+                    dstPtrTempR += vectorIncrementPerChannel;
+                    dstPtrTempG += vectorIncrementPerChannel;
+                    dstPtrTempB += vectorIncrementPerChannel;
+                    pCol = _mm256_add_ps(avx_p8, pCol);
+                }
+#endif
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
                 {
                     Rpp32s loc;
                     compute_jitter_src_loc(&xorwowState, dstLocRow, vectorLoopCount, kernelSize, heightLimit, roi.xywhROI.roiWidth, srcDescPtr->strides.hStride, bound, layoutParams.bufferMultiplier, loc);
-                    *dstPtrTempR = (Rpp16f)*(srcPtrRowR + loc);
-                    *dstPtrTempG = (Rpp16f)*(srcPtrRowG + loc);
-                    *dstPtrTempB = (Rpp16f)*(srcPtrRowB + loc);
-                    dstPtrTempR = dstPtrTempR + dstDescPtr->strides.wStride;
-                    dstPtrTempG = dstPtrTempG + dstDescPtr->strides.wStride;
-                    dstPtrTempB = dstPtrTempB + dstDescPtr->strides.wStride;
+                    *dstPtrTempR++ = *(srcPtrChannel + loc);
+                    *dstPtrTempG++ = *(srcPtrChannel + 1 + loc);
+                    *dstPtrTempB++ = *(srcPtrChannel + 2 + loc);
                 }
                 dstPtrRowR += dstDescPtr->strides.hStride;
                 dstPtrRowG += dstDescPtr->strides.hStride;
@@ -532,23 +556,140 @@ RppStatus jitter_f16_f16_host_tensor(Rpp16f *srcPtr,
             }
         }
 
-        // Jitter with single channel inputs and outputs
-        else
+        // Jitter with fused output-layout toggle (NCHW -> NHWC)
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp16f *dstPtrRow;
+            dstPtrRow = dstPtrChannel;
+            Rpp16f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB;
+            srcPtrRowR = srcPtrChannel;
+            srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
+            srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
+
+            for(int dstLocRow = 0; dstLocRow < roi.xywhROI.roiHeight; dstLocRow++)
+            {
+                Rpp16f *dstPtrTemp;
+                dstPtrTemp = dstPtrRow;
+                __m256 pRow = _mm256_set1_ps(dstLocRow);
+                __m256 pCol = avx_pDstLocInit;
+                int vectorLoopCount = 0;
+#if __AVX2__
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    Rpp32f dstPtrTemp_ps[25];
+                    __m256 pxRow[4];
+                    compute_jitter_src_loc_avx(pxXorwowStateX, &pxXorwowStateCounter, pRow, pCol, pKernelSize, pBound, pHeightLimit, pWidthLimit, pHStride, pChannel, srcLocArray);
+                    rpp_simd_load(rpp_resize_nn_load_f16pln1_avx, srcPtrRowR, srcLocArray, pxRow[0]);
+                    rpp_simd_load(rpp_resize_nn_load_f16pln1_avx, srcPtrRowG, srcLocArray, pxRow[1]);
+                    rpp_simd_load(rpp_resize_nn_load_f16pln1_avx, srcPtrRowB, srcLocArray, pxRow[2]);
+                    rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp_ps, pxRow);
+                    for(int cnt = 0; cnt < vectorIncrement; cnt++)
+                        dstPtrTemp[cnt] = (Rpp16f) dstPtrTemp_ps[cnt];
+                    dstPtrTemp += vectorIncrement;
+                    pCol = _mm256_add_ps(avx_p8, pCol);
+                }
+#endif
+                for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
+                {
+                    Rpp32s loc;
+                    compute_jitter_src_loc(&xorwowState, dstLocRow, vectorLoopCount, kernelSize, heightLimit, roi.xywhROI.roiWidth, srcDescPtr->strides.hStride, bound, layoutParams.bufferMultiplier, loc);
+                    *dstPtrTemp++ = *(srcPtrRowR + loc);
+                    *dstPtrTemp++ = *(srcPtrRowG + loc);
+                    *dstPtrTemp++ = *(srcPtrRowB + loc);
+                }
+                dstPtrRow += dstDescPtr->strides.hStride;
+            }
+        }
+
+        // Jitter without fused output-layout toggle (NHWC -> NHWC)
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            Rpp16f *srcPtrRow, *dstPtrRow;
+            srcPtrRow = srcPtrChannel;
             dstPtrRow = dstPtrChannel;
 
             for(int dstLocRow = 0; dstLocRow < roi.xywhROI.roiHeight; dstLocRow++)
             {
                 Rpp16f *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
-
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
                 {
+                    Rpp32f srcPtrTemp_ps[8], dstPtrTemp_ps[8];
+                    Rpp32s loc;
+                    __m256 pRow;
+
+                    for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
+                    {
+                        srcPtrTemp_ps[cnt] = (Rpp16f)srcPtrChannel[loc + cnt];
+                    }
+
+                    compute_jitter_src_loc(&xorwowState, dstLocRow, vectorLoopCount, kernelSize, heightLimit, roi.xywhROI.roiWidth, srcDescPtr->strides.hStride, bound, layoutParams.bufferMultiplier, loc);
+                    rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrTemp_ps, &pRow);
+                    rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp_ps, &pRow);
+
+                    for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
+                    {
+                        dstPtrTemp[cnt] = (Rpp16f) dstPtrTemp_ps[cnt];
+                    }
+                    dstPtrTemp += 3;
+                }
+#endif
+                dstPtrRow += dstDescPtr->strides.hStride;
+            }
+        }
+        // Jitter with fused output-layout toggle (NCHW -> NCHW)
+        else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            Rpp16f *dstPtrRow;
+            dstPtrRow = dstPtrChannel;
+            for(int dstLocRow = 0; dstLocRow < roi.xywhROI.roiHeight; dstLocRow++)
+            {
+                Rpp16f *dstPtrTemp;
+                dstPtrTemp = dstPtrRow;
+                __m256 pRow = _mm256_set1_ps(dstLocRow);
+                __m256 pCol = avx_pDstLocInit;
+
+                int vectorLoopCount = 0;
+#if __AVX2__
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    Rpp16f *srcPtrTempChn, *dstPtrTempChn;
+                    srcPtrTempChn = srcPtrChannel;
+                    dstPtrTempChn = dstPtrTemp;
+                    compute_jitter_src_loc_avx(pxXorwowStateX, &pxXorwowStateCounter, pRow, pCol, pKernelSize, pBound, pHeightLimit, pWidthLimit, pHStride, pChannel, srcLocArray);
+
+                    for (int c = 0; c < dstDescPtr->c; c++)
+                    {
+                        Rpp32f dstPtrTemp_ps[8];
+                        __m256 pxRow;
+                        rpp_simd_load(rpp_resize_nn_load_f16pln1_avx, srcPtrTempChn, srcLocArray, pxRow);
+                        rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp_ps, &pxRow);
+                        for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
+                        {
+                            dstPtrTempChn[cnt] = (Rpp16f) dstPtrTemp_ps[cnt];
+                        }
+                        srcPtrTempChn += srcDescPtr->strides.cStride;
+                        dstPtrTempChn += dstDescPtr->strides.cStride;
+                    }
+                    dstPtrTemp += vectorIncrementPerChannel;
+                    pCol = _mm256_add_ps(avx_p8, pCol);
+                }
+#endif
+                for (;vectorLoopCount < roi.xywhROI.roiWidth; vectorLoopCount++)
+                {
+                    Rpp16f *dstPtrTempChn = dstPtrTemp;
+                    Rpp16f *srcPtrTempChn = srcPtrChannel;
                     Rpp32s loc;
                     compute_jitter_src_loc(&xorwowState, dstLocRow, vectorLoopCount, kernelSize, heightLimit, roi.xywhROI.roiWidth, srcDescPtr->strides.hStride, bound, layoutParams.bufferMultiplier, loc);
-                    *dstPtrTemp++ = (Rpp16f)*(srcPtrChannel + loc);
+                    for(int c = 0; c < srcDescPtr->c; c++)
+                    {
+                        *dstPtrTempChn = (Rpp16f)*(srcPtrTempChn + loc);
+                        srcPtrTempChn += srcDescPtr->strides.cStride;
+                        dstPtrTempChn += dstDescPtr->strides.cStride;
+                    }
+                    dstPtrTemp++;
                 }
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
@@ -757,7 +898,7 @@ RppStatus jitter_i8_i8_host_tensor(Rpp8s *srcPtr,
                     {
                         __m256i pxRow;
                         rpp_simd_load(rpp_resize_nn_load_i8pln1_avx, srcPtrTempChn, srcLocArray, pxRow);
-                        rpp_simd_store(rpp_store8_i8pln1_to_i8pln1, dstPtrTempChn, pxRow);
+                        rpp_storeu_si64((__m128i *)(dstPtrTempChn), _mm256_castsi256_si128(pxRow));
                         srcPtrTempChn += srcDescPtr->strides.cStride;
                         dstPtrTempChn += dstDescPtr->strides.cStride;
                     }
