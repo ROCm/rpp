@@ -12,24 +12,26 @@ __host__ __device__ __forceinline__ int compute_pos_in_smem(int pos)
 __device__ __forceinline__ void compute_prefix_sum(float *input, uint bufferLength)
 {
     int offset = 1;
-    int offsetA = offset - 1;
-    int offsetB = 2 * offset - 1;
-    int tid = hipThreadIdx_x;
+    int2 offset_i2 = static_cast<int2>(offset);
+    int2 offsetAB_i2 = make_int2(offset - 1, 2 * offset - 1);
+    int threadIdxMul2 = 2 * hipThreadIdx_x;
     int blockDimMul2 = 2 * hipBlockDim_x;
 
     for (int d = bufferLength >> 1; d > 0; d >>= 1)
     {
         __syncthreads();
         int dMul2 = 2 * d;
-        for (int idxMul2 = 2 * tid; idxMul2 < dMul2; idxMul2 += blockDimMul2)
-            input[compute_pos_in_smem(offset * idxMul2 + offsetB)] += input[compute_pos_in_smem(offset * idxMul2 + offsetA)];
-
+        for (int idxMul2 = threadIdxMul2; idxMul2 < dMul2; idxMul2 += blockDimMul2)
+        {
+            int2 pos_i2 = (offset_i2 * static_cast<int2>(idxMul2)) + offsetAB_i2;
+            input[compute_pos_in_smem(pos_i2.y)] += input[compute_pos_in_smem(pos_i2.x)];
+        }
         offset <<= 1;
-        offsetA = offset - 1;
-        offsetB = 2 * offset - 1;
+        offset_i2 =  static_cast<int2>(offset);
+        offsetAB_i2 = make_int2(offset - 1, 2 * offset - 1);
     }
 
-    if (tid == 0)
+    if (hipThreadIdx_x == 0)
     {
         int last = bufferLength - 1;
         input[compute_pos_in_smem(last)] = 0;
@@ -38,18 +40,19 @@ __device__ __forceinline__ void compute_prefix_sum(float *input, uint bufferLeng
     for (int d = 1; d < bufferLength; d <<= 1)
     {
         offset >>= 1;
-        offsetA = offset - 1;
-        offsetB = 2 * offset - 1;
+        offset_i2 = static_cast<int2>(offset);
+        offsetAB_i2 = make_int2(offset - 1, 2 * offset - 1);
         __syncthreads();
 
         int dMul2 = 2 * d;
-        for (int idxMul2 = 2 * tid; idxMul2 < dMul2; idxMul2 += blockDimMul2)
+        for (int idxMul2 = threadIdxMul2; idxMul2 < dMul2; idxMul2 += blockDimMul2)
         {
-            int smem_posA = compute_pos_in_smem(offset * idxMul2 + offsetA);
-            int smem_posB = compute_pos_in_smem(offset * idxMul2 + offsetB);
-            auto t = input[smem_posA];
-            input[smem_posA] = input[smem_posB];
-            input[smem_posB] += t;
+            int2 pos_i2 = offset_i2 * static_cast<int2>(idxMul2) + offsetAB_i2;
+            int posA = compute_pos_in_smem(pos_i2.x);
+            int posB = compute_pos_in_smem(pos_i2.y);
+            float t = input[posA];
+            input[posA] = input[posB];
+            input[posB] += t;
         }
     }
     __syncthreads();
