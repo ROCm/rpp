@@ -4,7 +4,7 @@
 // -------------------- Set 0 -  moving mean square kernel device helpers --------------------
 
 // calculate the position in shared memory to avoid bank conflicts
-__host__ __device__ __forceinline__ int smem_pos(int pos)
+__host__ __device__ __forceinline__ int compute_pos_in_smem(int pos)
 {
     return pos + (pos >> 5); // since shared memory banks considered is 32
 }
@@ -22,7 +22,7 @@ __device__ __forceinline__ void compute_prefix_sum(float *input, uint bufferLeng
         __syncthreads();
         int dMul2 = 2 * d;
         for (int idxMul2 = 2 * tid; idxMul2 < dMul2; idxMul2 += blockDimMul2)
-            input[smem_pos(offset * idxMul2 + offsetB)] += input[smem_pos(offset * idxMul2 + offsetA)];
+            input[compute_pos_in_smem(offset * idxMul2 + offsetB)] += input[compute_pos_in_smem(offset * idxMul2 + offsetA)];
 
         offset <<= 1;
         offsetA = offset - 1;
@@ -32,7 +32,7 @@ __device__ __forceinline__ void compute_prefix_sum(float *input, uint bufferLeng
     if (tid == 0)
     {
         int last = bufferLength - 1;
-        input[smem_pos(last)] = 0;
+        input[compute_pos_in_smem(last)] = 0;
     }
 
     for (int d = 1; d < bufferLength; d <<= 1)
@@ -45,8 +45,8 @@ __device__ __forceinline__ void compute_prefix_sum(float *input, uint bufferLeng
         int dMul2 = 2 * d;
         for (int idxMul2 = 2 * tid; idxMul2 < dMul2; idxMul2 += blockDimMul2)
         {
-            int smem_posA = smem_pos(offset * idxMul2 + offsetA);
-            int smem_posB = smem_pos(offset * idxMul2 + offsetB);
+            int smem_posA = compute_pos_in_smem(offset * idxMul2 + offsetA);
+            int smem_posB = compute_pos_in_smem(offset * idxMul2 + offsetB);
             auto t = input[smem_posA];
             input[smem_posA] = input[smem_posB];
             input[smem_posB] += t;
@@ -91,7 +91,7 @@ __global__ void moving_mean_square_hip_tensor(float *srcPtr,
         auto extendedBlockPtr = extendedBlockStart + pos;
         if (extendedBlockPtr >= input && extendedBlockPtr < extendedBlockEnd)
             val = *extendedBlockPtr;
-        squaredPrefixSum_smem[smem_pos(pos)] = val * val;
+        squaredPrefixSum_smem[compute_pos_in_smem(pos)] = val * val;
     }
 
     // compute prefix sum
@@ -99,7 +99,7 @@ __global__ void moving_mean_square_hip_tensor(float *srcPtr,
 
     // compute the mms value here
     for(int pos = hipThreadIdx_x; pos < validOutputTileLength; pos += hipBlockDim_x)
-        outBlockPtr[pos] = windowFactor * ((inBlockPtr[pos] * inBlockPtr[pos]) + squaredPrefixSum_smem[smem_pos(windowLength + pos)] - squaredPrefixSum_smem[smem_pos(pos + 1)]);
+        outBlockPtr[pos] = windowFactor * ((inBlockPtr[pos] * inBlockPtr[pos]) + squaredPrefixSum_smem[compute_pos_in_smem(windowLength + pos)] - squaredPrefixSum_smem[compute_pos_in_smem(pos + 1)]);
 }
 
 // -------------------- Set 2 -  kernels for finding cutoffmag value  --------------------
@@ -324,20 +324,15 @@ RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
             inputTileLength = n;
     }
 
-    Rpp32s sharedMemorySizeInBytes = smem_pos(inputTileLength) * sizeof(Rpp32f);
+    Rpp32s sharedMemorySizeInBytes = compute_pos_in_smem(inputTileLength) * sizeof(Rpp32f);
     Rpp32s outputTileLength = inputTileLength - windowLength;
     Rpp32f windowFactor = 1.0f / windowLength;
 
     if (outputTileLength <= 0)
-    {
-        std::cout << "Invalid output tile length! " << std::endl;
         return RPP_ERROR_INVALID_OUTPUT_TILE_LENGTH;
-    }
+
     if (sharedMemorySizeInBytes > maxSharedMemoryInBytes)
-    {
-        std::cout << "Cannot compute the requested moving mean square, due to shared memory restrictions" << std::endl;
         return RPP_ERROR_OUT_OF_BOUND_SHARED_MEMORY_SIZE;
-    }
 
     // launch kernel to compute the values needed for MMS Array
     Rpp32s globalThreads_x = ceil(static_cast<Rpp32f>(srcDescPtr->strides.nStride) / outputTileLength);

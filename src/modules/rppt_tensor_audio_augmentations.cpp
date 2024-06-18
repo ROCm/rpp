@@ -295,18 +295,17 @@ RppStatus rppt_non_silent_region_detection_gpu(RppPtr_t srcPtr,
 #ifdef HIP_COMPILE
     if (srcDescPtr->dataType == RpptDataType::F32)
     {
-        RppStatus status;
-        status = hip_exec_non_silent_region_detection_tensor(static_cast<Rpp32f*>(srcPtr),
-                                                             srcDescPtr,
-                                                             srcLengthTensor,
-                                                             detectedIndexTensor,
-                                                             detectionLengthTensor,
-                                                             cutOffDB,
-                                                             windowLength,
-                                                             referencePower,
-                                                             resetInterval,
-                                                             rpp::deref(rppHandle));
-        return status;
+
+        return hip_exec_non_silent_region_detection_tensor(static_cast<Rpp32f*>(srcPtr),
+                                                           srcDescPtr,
+                                                           srcLengthTensor,
+                                                           detectedIndexTensor,
+                                                           detectionLengthTensor,
+                                                           cutOffDB,
+                                                           windowLength,
+                                                           referencePower,
+                                                           resetInterval,
+                                                           rpp::deref(rppHandle));
     }
     else
     {
