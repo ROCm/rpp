@@ -59,9 +59,9 @@ inline void get_kernel_loop_limit(Rpp32s index, Rpp32s &loopLimit, Rpp32u kernel
 }
 
 template<typename T>
-inline void box_filter_generic_host_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp32u columnIndex,
-                                           Rpp32u kernelSize, Rpp32u padLength, Rpp32u width, Rpp32s rowKernelLoopLimit,
-                                           Rpp32f kernelSizeInverseSquare, Rpp32u channels = 1)
+inline void box_filter_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp32u columnIndex,
+                                      Rpp32u kernelSize, Rpp32u padLength, Rpp32u width, Rpp32s rowKernelLoopLimit,
+                                      Rpp32f kernelSizeInverseSquare, Rpp32u channels = 1)
 {
     Rpp32f accum = 0.0f;
     Rpp32s columnKernelLoopLimit = kernelSize;
@@ -95,7 +95,7 @@ inline void process_left_border_columns_pln_pln(T **srcPtrTemp, T *dstPtrTemp, R
 {
     for (int k = 0; k < padLength; k++)
     {
-        box_filter_generic_host_tensor(srcPtrTemp, dstPtrTemp, k, kernelSize, padLength, width, rowKernelLoopLimit, kernelSizeInverseSquare);
+        box_filter_generic_tensor(srcPtrTemp, dstPtrTemp, k, kernelSize, padLength, width, rowKernelLoopLimit, kernelSizeInverseSquare);
         dstPtrTemp++;
     }
 }
@@ -109,7 +109,7 @@ inline void process_left_border_columns_pkd_pkd(T **srcPtrTemp, T **srcPtrRow, T
         T *dstPtrTempChannel = dstPtrTemp + c;
         for (int k = 0; k < padLength; k++)
         {
-            box_filter_generic_host_tensor(srcPtrTemp, dstPtrTempChannel, k, kernelSize, padLength, width, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+            box_filter_generic_tensor(srcPtrTemp, dstPtrTempChannel, k, kernelSize, padLength, width, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
             dstPtrTempChannel += 3;
         }
         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
@@ -127,7 +127,7 @@ inline void process_left_border_columns_pkd_pln(T **srcPtrTemp, T **srcPtrRow, T
     {
         for (int k = 0; k < padLength; k++)
         {
-            box_filter_generic_host_tensor(srcPtrTemp, dstPtrTempChannels[c], k, kernelSize, padLength, width, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+            box_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[c], k, kernelSize, padLength, width, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
             dstPtrTempChannels[c] += 1;
         }
         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
@@ -842,7 +842,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         // process remaining columns in each row
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            box_filter_generic_host_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            box_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -904,7 +904,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                     vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        box_filter_generic_host_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        box_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -973,7 +973,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                     for (int c = 0; vectorLoopCount < bufferLength; vectorLoopCount++, c++)
                     {
                         int channel = c % 3;
-                        box_filter_generic_host_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        box_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTempChannels[channel]++;
                     }
@@ -1005,7 +1005,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            box_filter_generic_host_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            box_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                             dstPtrTemp++;
                         }
                     }
@@ -1066,7 +1066,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            box_filter_generic_host_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            box_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -1141,7 +1141,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         // process remaining columns in each row
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            box_filter_generic_host_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            box_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -1200,7 +1200,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                     vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        box_filter_generic_host_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        box_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -1267,7 +1267,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                     for (int c = 0; vectorLoopCount < bufferLength; vectorLoopCount++, c++)
                     {
                         int channel = c % 3;
-                        box_filter_generic_host_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        box_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTempChannels[channel]++;
                     }
@@ -1300,7 +1300,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            box_filter_generic_host_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            box_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                             dstPtrTemp++;
                         }
                     }
@@ -1357,7 +1357,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            box_filter_generic_host_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            box_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -1432,7 +1432,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         // process remaining columns in each row
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            box_filter_generic_host_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            box_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -1468,7 +1468,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            box_filter_generic_host_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            box_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                             dstPtrTemp++;
                         }
                     }
@@ -1525,7 +1525,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            box_filter_generic_host_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            box_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -1578,7 +1578,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                     vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        box_filter_generic_host_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        box_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -1638,7 +1638,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                     for (int c = 0; vectorLoopCount < bufferLength; vectorLoopCount++, c++)
                     {
                         int channel = c % 3;
-                        box_filter_generic_host_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        box_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTempChannels[channel]++;
                     }
@@ -1705,7 +1705,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         // process remaining columns in each row
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            box_filter_generic_host_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            box_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -1781,7 +1781,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                     // process remaining columns in each row
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        box_filter_generic_host_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        box_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -1813,7 +1813,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            box_filter_generic_host_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            box_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                             dstPtrTemp++;
                         }
                     }
@@ -1862,7 +1862,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < srcDescPtr->c; c++)
                         {
-                            box_filter_generic_host_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            box_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -1944,7 +1944,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         int channel = vectorLoopCount % 3;
-                        box_filter_generic_host_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        box_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTempChannels[channel]++;
                     }
@@ -2049,7 +2049,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         // process remaining columns in each row
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            box_filter_generic_host_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            box_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -2099,7 +2099,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                     vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        box_filter_generic_host_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        box_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -2153,7 +2153,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                     for (int c = 0; vectorLoopCount < bufferLength; vectorLoopCount++, c++)
                     {
                         int channel = c % 3;
-                        box_filter_generic_host_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        box_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTempChannels[channel]++;
                     }
@@ -2185,7 +2185,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            box_filter_generic_host_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            box_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                             dstPtrTemp++;
                         }
                     }
@@ -2226,7 +2226,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            box_filter_generic_host_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            box_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -2291,7 +2291,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         // process remaining columns in each row
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            box_filter_generic_host_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            box_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -2348,7 +2348,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                     // process remaining columns in each row
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        box_filter_generic_host_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        box_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -2381,7 +2381,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            box_filter_generic_host_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            box_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                             dstPtrTemp++;
                         }
                     }
@@ -2417,7 +2417,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < srcDescPtr->c; c++)
                         {
-                            box_filter_generic_host_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            box_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -2478,7 +2478,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         int channel = vectorLoopCount % 3;
-                        box_filter_generic_host_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        box_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTempChannels[channel]++;
                     }
@@ -2545,7 +2545,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         // process remaining columns in each row
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            box_filter_generic_host_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            box_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -2613,7 +2613,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                     // process remaining columns in each row
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        box_filter_generic_host_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        box_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -2646,7 +2646,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            box_filter_generic_host_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            box_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                             dstPtrTemp++;
                         }
                     }
@@ -2681,7 +2681,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < srcDescPtr->c; c++)
                         {
-                            box_filter_generic_host_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            box_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -2714,7 +2714,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         int channel = vectorLoopCount % 3;
-                        box_filter_generic_host_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        box_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTempChannels[channel]++;
                     }
@@ -2782,7 +2782,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         // process remaining columns in each row
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            box_filter_generic_host_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            box_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -2848,7 +2848,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                     // process remaining columns in each row
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        box_filter_generic_host_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        box_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -2880,7 +2880,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            box_filter_generic_host_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            box_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                             dstPtrTemp++;
                         }
                     }
@@ -2916,7 +2916,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < srcDescPtr->c; c++)
                         {
-                            box_filter_generic_host_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                            box_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -2949,7 +2949,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         int channel = vectorLoopCount % 3;
-                        box_filter_generic_host_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                        box_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTempChannels[channel]++;
                     }
@@ -2960,5 +2960,186 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
         }
     }
 
+    return RPP_SUCCESS;
+}
+
+template<typename T>
+RppStatus box_filter_generic_host_tensor(T *srcPtr,
+                                         RpptDescPtr srcDescPtr,
+                                         T *dstPtr,
+                                         RpptDescPtr dstDescPtr,
+                                         Rpp32u kernelSize,
+                                         RpptROIPtr roiTensorPtrSrc,
+                                         RpptRoiType roiType,
+                                         RppLayoutParams layoutParams,
+                                         rpp::Handle& handle)
+{
+    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    Rpp32u numThreads = handle.GetNumThreads();
+
+    omp_set_dynamic(0);
+#pragma omp parallel for num_threads(numThreads)
+    for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
+    {
+        RpptROI roi;
+        RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
+        compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
+
+        T *srcPtrImage, *dstPtrImage;
+        srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
+        dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
+
+        Rpp32s padLength = kernelSize / 2;
+        Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
+        Rpp32f kernelSizeInverseSquare = 1.0 / (kernelSize * kernelSize);
+
+        T *srcPtrChannel, *dstPtrChannel;
+        srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
+        dstPtrChannel = dstPtrImage;
+
+        T *srcPtrRow[kernelSize], *dstPtrRow;
+        for (int k = 0; k < kernelSize; k++)
+            srcPtrRow[k] = srcPtrChannel + k * srcDescPtr->strides.hStride;
+        dstPtrRow = dstPtrChannel;
+        if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            for (int c = 0; c < srcDescPtr->c; c++)
+            {
+                srcPtrRow[0] = srcPtrChannel;
+                for (int k = 1; k < kernelSize; k++)
+                    srcPtrRow[k] = srcPtrRow[k - 1] + srcDescPtr->strides.hStride;
+                dstPtrRow = dstPtrChannel;
+                for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+                {
+                    int vectorLoopCount = 0;
+                    bool padLengthRows = (i < padLength) ? 1: 0;
+                    T *srcPtrTemp[kernelSize];
+                    for (int k = 0; k < kernelSize; k++)
+                        srcPtrTemp[k] = srcPtrRow[k];
+                    T *dstPtrTemp = dstPtrRow;
+
+                    Rpp32s rowKernelLoopLimit = kernelSize;
+                    get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
+                    process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                    dstPtrTemp += padLength;
+                    vectorLoopCount += padLength;
+
+                    // process remaining columns in each row
+                    for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                    {
+                        box_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                        increment_row_ptrs(srcPtrTemp, kernelSize, 1);
+                        dstPtrTemp++;
+                    }
+                    increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
+                    dstPtrRow += dstDescPtr->strides.hStride;
+                }
+                srcPtrChannel += srcDescPtr->strides.cStride;
+                dstPtrChannel += dstDescPtr->strides.cStride;
+            }
+        }
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            {
+                int vectorLoopCount = 0;
+                bool padLengthRows = (i < padLength) ? 1: 0;
+                T *srcPtrTemp[kernelSize];
+                for (int k = 0; k < kernelSize; k++)
+                    srcPtrTemp[k] = srcPtrRow[k];
+                T *dstPtrTemp = dstPtrRow;
+
+                Rpp32s rowKernelLoopLimit = kernelSize;
+                get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
+                process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                dstPtrTemp += padLength * 3;
+                vectorLoopCount += padLength * 3;
+
+                // process remaining columns in each row
+                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                {
+                    box_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                    increment_row_ptrs(srcPtrTemp, kernelSize, 1);
+                    dstPtrTemp++;
+                }
+                increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
+                dstPtrRow += dstDescPtr->strides.hStride;
+            }
+        }
+        else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            {
+                int vectorLoopCount = 0;
+                bool padLengthRows = (i < padLength) ? 1: 0;
+                T *srcPtrTemp[3][kernelSize];
+                for (int c = 0; c < 3; c++)
+                {
+                    Rpp32u channelStride = c * srcDescPtr->strides.cStride;
+                    for (int k = 0; k < kernelSize; k++)
+                        srcPtrTemp[c][k] = srcPtrRow[k] + channelStride;
+                }
+                T *dstPtrTemp = dstPtrRow;
+
+                Rpp32s rowKernelLoopLimit = kernelSize;
+                get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
+
+                // process padLength number of columns in each row
+                for (int k = 0; k < padLength; k++)
+                {
+                    for (int c = 0; c < 3; c++)
+                    {
+                        box_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                        dstPtrTemp++;
+                    }
+                }
+                vectorLoopCount += padLength;
+
+                // process remaining columns in each row
+                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                {
+                    for (int c = 0; c < srcDescPtr->c; c++)
+                    {
+                        box_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                        increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
+                        dstPtrTemp++;
+                    }
+                }
+                increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
+                dstPtrRow += dstDescPtr->strides.hStride;
+            }
+        }
+        else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            T *dstPtrChannels[3];
+            for (int c = 0; c < 3; c++)
+                dstPtrChannels[c] = dstPtrChannel + c * dstDescPtr->strides.cStride;
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            {
+                int vectorLoopCount = 0;
+                bool padLengthRows = (i < padLength) ? 1: 0;
+                T *srcPtrTemp[kernelSize];
+                for (int k = 0; k < kernelSize; k++)
+                    srcPtrTemp[k] = srcPtrRow[k];
+                T *dstPtrTempChannels[3] = {dstPtrChannels[0], dstPtrChannels[1], dstPtrChannels[2]};
+
+                Rpp32s rowKernelLoopLimit = kernelSize;
+                get_kernel_loop_limit(i, rowKernelLoopLimit, kernelSize, padLength, roi.xywhROI.roiHeight);
+                process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                vectorLoopCount += padLength * 3;
+
+                // process remaining columns in each row
+                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                {
+                    int channel = vectorLoopCount % 3;
+                    box_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                    increment_row_ptrs(srcPtrTemp, kernelSize, 1);
+                    dstPtrTempChannels[channel]++;
+                }
+                increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
+                increment_row_ptrs(dstPtrChannels, 3, dstDescPtr->strides.hStride);
+            }
+        }
+    }
     return RPP_SUCCESS;
 }
