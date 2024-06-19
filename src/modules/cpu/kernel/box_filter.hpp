@@ -284,6 +284,8 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
             // box filter without fused output-layout toggle (NCHW -> NCHW)
             if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
             {
+                /* exclude 2 * padLength number of columns from alignedLength calculation
+                   since padLength number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 24) * 24;
                 for (int c = 0; c < srcDescPtr->c; c++)
                 {
@@ -354,6 +356,8 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
             }
             else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
+                /* exclude ((2 * padLength) * 3) number of columns from alignedLength calculation
+                   since (padLength * 3) number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 24) * 24;
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
@@ -414,6 +418,8 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
             }
             else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
             {
+                /* exclude ((2 * padLength) * 3) number of columns from alignedLength calculation
+                   since (padLength * 3) number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 24) * 24;
                 T *dstPtrChannels[3];
                 for (int i = 0; i < 3; i++)
@@ -484,6 +490,8 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
             }
             else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
+                /* exclude (2 * padLength) number of columns from alignedLength calculation
+                   since padLength number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 24) * 24;
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
@@ -586,6 +594,8 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
             // box filter without fused output-layout toggle (NCHW -> NCHW)
             if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
             {
+                /* exclude (2 * padLength) number of columns from alignedLength calculation
+                   since padLength number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 24) * 24;
                 for (int c = 0; c < srcDescPtr->c; c++)
                 {
@@ -654,6 +664,8 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
             }
             else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
+                /* exclude ((2 * padLength) * 3) number of columns from alignedLength calculation
+                   since (padLength * 3) number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 18) * 18;
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
@@ -711,6 +723,8 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
             }
             else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
             {
+                /* exclude ((2 * padLength) * 3) number of columns from alignedLength calculation
+                   since (padLength * 3) number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 18) * 18;
                 T *dstPtrChannels[3];
                 for (int i = 0; i < 3; i++)
@@ -779,6 +793,8 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
             }
             else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
+                /* exclude (2 * padLength) number of columns from alignedLength calculation
+                   since padLength * 3 number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 24) * 24;
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
@@ -878,6 +894,8 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
             // box filter without fused output-layout toggle (NCHW -> NCHW)
             if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
             {
+                /* exclude (2 * padLength) number of columns from alignedLength calculation
+                   since padLength number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 24) * 24;
                 for (int c = 0; c < srcDescPtr->c; c++)
                 {
@@ -946,6 +964,8 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
             }
             else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
+                /* exclude (2 * padLength) number of columns from alignedLength calculation
+                   since padLength number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 24) * 24;
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
@@ -1036,6 +1056,8 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
             }
             else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
+                /* exclude ((2 * padLength) * 3) number of columns from alignedLength calculation
+                   since (padLength * 3) number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - 2 * padLength * 3) / 12) * 12;
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
@@ -1089,6 +1111,8 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
             }
             else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
             {
+                /* exclude ((2 * padLength) * 3) number of columns from alignedLength calculation
+                   since (padLength * 3) number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - 2 * padLength * 3) / 12) * 12;
                 T *dstPtrChannels[3];
                 for (int i = 0; i < 3; i++)
@@ -1157,6 +1181,8 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
             dstPtrRow = dstPtrChannel;
             if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
             {
+                /* exclude (2 * padLength) number of columns from alignedLength calculation
+                   since padLength number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 16) * 16;
                 for (int c = 0; c < srcDescPtr->c; c++)
                 {
@@ -1219,6 +1245,8 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
             }
             else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
+                /* exclude ((2 * padLength) * 3) number of columns from alignedLength calculation
+                   since (padLength * 3) number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 64) * 64;
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
@@ -1291,6 +1319,8 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
             }
             else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
+                /* exclude (2 * padLength) number of columns from alignedLength calculation
+                   since padLength number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 16) * 16;
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
@@ -1372,6 +1402,8 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
             }
             else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
             {
+                /* exclude ((2 * padLength) * 3) number of columns from alignedLength calculation
+                   since (padLength * 3) number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 64) * 64;
                 T *dstPtrChannels[3];
                 for (int c = 0; c < 3; c++)
@@ -1509,6 +1541,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
             // box filter without fused output-layout toggle (NCHW -> NCHW)
             if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
             {
+                /* exclude (2 * padLength) number of columns from alignedLength calculation
+                   since padLength number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 16) * 16;
                 for (int c = 0; c < srcDescPtr->c; c++)
                 {
@@ -1565,6 +1599,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
             }
             else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
+                /* exclude ((2 * padLength) * 3) number of columns from alignedLength calculation
+                   since (padLength * 3) number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 24) * 24;
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
@@ -1613,6 +1649,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
             }
             else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
             {
+                /* exclude ((2 * padLength) * 3) number of columns from alignedLength calculation
+                   since (padLength * 3) number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 24) * 24;
                 T *dstPtrChannels[3];
                 for (int i = 0; i < 3; i++)
@@ -1668,6 +1706,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
             }
             else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
+                /* exclude (2 * padLength) number of columns from alignedLength calculation
+                   since padLength number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 16) * 16;
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
@@ -1750,6 +1790,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
             // box filter without fused output-layout toggle (NCHW -> NCHW)
             if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
             {
+                /* exclude (2 * padLength) number of columns from alignedLength calculation
+                   since padLength number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 16) * 16;
                 for (int c = 0; c < srcDescPtr->c; c++)
                 {
@@ -1807,6 +1849,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
             }
             else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
+                /* exclude ((2 * padLength) * 3) number of columns from alignedLength calculation
+                   since (padLength * 3) number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength * 3)) / 24) * 24;
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
@@ -1860,6 +1904,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
             }
             else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
+                /* exclude (2 * padLength) number of columns from alignedLength calculation
+                   since padLength number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 16) * 16;
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
@@ -1929,6 +1975,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
             }
             else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
             {
+                /* exclude ((2 * padLength) * 3) number of columns from alignedLength calculation
+                   since (padLength * 3) number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 24) * 24;
                 T *dstPtrChannels[3];
                 for (int i = 0; i < 3; i++)
@@ -1997,6 +2045,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
             // box filter without fused output-layout toggle (NCHW -> NCHW)
             if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
             {
+                /* exclude (2 * padLength) number of columns from alignedLength calculation
+                   since padLength number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 16) * 16;
                 for (int c = 0; c < srcDescPtr->c; c++)
                 {
@@ -2057,6 +2107,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
             }
             else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
+                /* exclude ((2 * padLength) * 3) number of columns from alignedLength calculation
+                   since (padLength * 3) number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 32) * 32;
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
@@ -2121,6 +2173,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
             }
             else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
+                /* exclude (2 * padLength) number of columns from alignedLength calculation
+                   since padLength number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 16) * 16;
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
@@ -2189,6 +2243,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
             }
             else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
             {
+                /* exclude ((2 * padLength) * 3) number of columns from alignedLength calculation
+                   since (padLength * 3) number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 32) * 32;
                 T *dstPtrChannels[3];
                 for (int i = 0; i < 3; i++)
@@ -2230,6 +2286,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
             // box filter without fused output-layout toggle (NCHW -> NCHW)
             if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
             {
+                /* exclude (2 * padLength) number of columns from alignedLength calculation
+                   since padLength number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 16) * 16;
                 for (int c = 0; c < srcDescPtr->c; c++)
                 {
@@ -2291,6 +2349,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
             }
             else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
+                /* exclude ((2 * padLength) * 3) number of columns from alignedLength calculation
+                   since (padLength * 3) number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 32) * 32;
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
@@ -2354,6 +2414,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
             // box filter with fused output-layout toggle (NCHW -> NHWC)
             else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
             {
+                /* exclude (2 * padLength) number of columns from alignedLength calculation
+                   since padLength number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 16) * 16;
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
@@ -2421,6 +2483,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
             }
             else if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
             {
+                /* exclude ((2 * padLength) * 3) number of columns from alignedLength calculation
+                   since (padLength * 3) number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 32) * 32;
                 T *dstPtrChannels[3];
                 for (int i = 0; i < 3; i++)
