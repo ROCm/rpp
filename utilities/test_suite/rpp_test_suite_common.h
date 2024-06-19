@@ -513,7 +513,7 @@ inline void set_generic_descriptor_slice(RpptDescPtr srcDescPtr, RpptGenericDesc
 }
 
 // sets descriptor dimensions and strides of src/dst
-inline void set_descriptor_dims_and_strides(RpptDescPtr descPtr, int noOfImages, int maxHeight, int maxWidth, int numChannels, int offsetInBytes)
+inline void set_descriptor_dims_and_strides(RpptDescPtr descPtr, int noOfImages, int maxHeight, int maxWidth, int numChannels, int offsetInBytes, int additionalStride = 0)
 {
     descPtr->numDims = 4;
     descPtr->offsetInBytes = offsetInBytes;
@@ -523,7 +523,7 @@ inline void set_descriptor_dims_and_strides(RpptDescPtr descPtr, int noOfImages,
     descPtr->c = numChannels;
 
     // Optionally set w stride as a multiple of 8 for src/dst
-    descPtr->w = ((descPtr->w / 8) * 8) + 8;
+    descPtr->w = (descPtr->w / 8) * 8 + 8 + additionalStride;
     // set strides
     if (descPtr->layout == RpptLayout::NHWC)
     {
@@ -1096,7 +1096,7 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     int refOutputHeight = GOLDEN_OUTPUT_MAX_HEIGHT;
     int refOutputSize = refOutputHeight * refOutputWidth * dstDescPtr->c;
     Rpp64u binOutputSize = refOutputHeight * refOutputWidth * dstDescPtr->n * 4;
-    int pln1RefStride = dstDescPtr->strides.nStride * dstDescPtr->n * 3;
+    int pln1RefStride = refOutputHeight * refOutputWidth * dstDescPtr->n * 3;
 
     string dataType[4] = {"_u8_", "_f16_", "_f32_", "_i8_"};
 
