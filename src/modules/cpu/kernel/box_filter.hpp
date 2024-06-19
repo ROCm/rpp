@@ -42,18 +42,16 @@ inline void box_filter_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp32s colu
         for (int i = 0; i < rowKernelLoopLimit; i++)
             for (int j = 0, k = 0 ; j < columnKernelLoopLimit; j++, k += channels)
                 accum += static_cast<Rpp32f>(srcPtrTemp[i][k] + 128);
-        accum *= kernelSizeInverseSquare;
-        accum -= 128;
     }
     else
     {
         for (int i = 0; i < rowKernelLoopLimit; i++)
             for (int j = 0, k = 0 ; j < columnKernelLoopLimit; j++, k += channels)
                 accum += static_cast<Rpp32f>(srcPtrTemp[i][k]);
-        accum *= kernelSizeInverseSquare;
-    }
 
-    rpp_pixel_check_and_store(accum, dstPtrTemp);
+    }
+    accum *= kernelSizeInverseSquare;
+    saturate_pixel(accum, dstPtrTemp);
 }
 
 // process padLength number of columns in each row

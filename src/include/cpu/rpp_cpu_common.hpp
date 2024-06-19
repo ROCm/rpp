@@ -495,24 +495,24 @@ inline int power_function(int a, int b)
     return product;
 }
 
-inline void saturate_pixel(Rpp32f pixel, Rpp8u* dst)
+inline void saturate_pixel(Rpp32f &pixel, Rpp8u* dst)
 {
-    *dst = RPPPIXELCHECK(pixel);
+    *dst = static_cast<Rpp8u>(RPPPIXELCHECK(pixel));
 }
 
-inline void saturate_pixel(Rpp32f pixel, Rpp8s* dst)
+inline void saturate_pixel(Rpp32f &pixel, Rpp8s* dst)
 {
-    *dst = (Rpp8s)RPPPIXELCHECKI8(pixel - 128);
+    *dst = static_cast<Rpp8s>(RPPPIXELCHECKI8(pixel - 128));
 }
 
-inline void saturate_pixel(Rpp32f pixel, Rpp32f* dst)
+inline void saturate_pixel(Rpp32f &pixel, Rpp32f* dst)
 {
-    *dst = (Rpp32f)pixel;
+    *dst = RPPPIXELCHECKF32(pixel);
 }
 
-inline void saturate_pixel(Rpp32f pixel, Rpp16f* dst)
+inline void saturate_pixel(Rpp32f &pixel, Rpp16f* dst)
 {
-    *dst = (Rpp16f)pixel;
+    *dst = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel));
 }
 
 template <typename T>
@@ -6499,26 +6499,6 @@ inline void compute_remap_src_loc(Rpp32f rowLoc, Rpp32f colLoc, Rpp32s &srcLoc, 
     rowLoc = std::max(0.0f, std::min(rowLoc, heightLimit));
     colLoc = std::max(0.0f, std::min(colLoc, widthLimit));
     srcLoc = (rowLoc * stride) + colLoc * channels;
-}
-
-inline void rpp_pixel_check_and_store(Rpp32f &pixel, Rpp8u* dst)
-{
-    *dst = static_cast<Rpp8u>(fmaxf(fminf(pixel, 255), 0));  // float pixel check for 0 to 255 range for Rpp8u dst store
-}
-
-inline void rpp_pixel_check_and_store(Rpp32f &pixel, Rpp8s* dst)
-{
-    *dst = static_cast<Rpp8s>(fmaxf(fminf(pixel, 127), -128));  // float pixel check for -128 to 127 range for Rpp8s dst store
-}
-
-inline void rpp_pixel_check_and_store(Rpp32f &pixel, Rpp32f* dst)
-{
-    *dst = fmax(fminf(pixel, 1), 0);  // float pixel check for 0 to 1 range for Rpp32f dst store
-}
-
-inline void rpp_pixel_check_and_store(Rpp32f &pixel, Rpp16f* dst)
-{
-    *dst = static_cast<Rpp16f>(fmaxf(fminf(pixel, 1), 0));  // float pixel check for 0 to 1 range for Rpp16f dst store
 }
 
 #endif //RPP_CPU_COMMON_H
