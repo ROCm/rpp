@@ -1968,23 +1968,6 @@ __device__ void rpp_hip_rng_8_gaussian_f32(d_float8 *rngVals_f8, RpptXorwowState
     rngVals_f8->f2[3] = rpp_hip_rng_2_gaussian_f32(xorwowState);
 }
 
-__device__ __forceinline__ float2 rpp_hip_rng_2_jitter_f32(RpptXorwowStateBoxMuller *xorwowState)
-{
-    float2 rngVals_f2;
-    rngVals_f2.x = rpp_hip_rng_xorwow_f32(xorwowState);
-    rngVals_f2.y = rpp_hip_rng_xorwow_f32(xorwowState);
-
-    return rngVals_f2;
-}
-
-__device__ void rpp_hip_rng_8_jitter_f32(d_float8 *rngVals_f8, RpptXorwowStateBoxMuller *xorwowState)
-{
-    rngVals_f8->f2[0] = rpp_hip_rng_2_jitter_f32(xorwowState);
-    rngVals_f8->f2[1] = rpp_hip_rng_2_jitter_f32(xorwowState);
-    rngVals_f8->f2[2] = rpp_hip_rng_2_jitter_f32(xorwowState);
-    rngVals_f8->f2[3] = rpp_hip_rng_2_jitter_f32(xorwowState);
-}
-
 __device__ __forceinline__ float rpp_hip_rng_1_inverse_transform_sampling_f32(float lambdaValue, RpptXorwowStateBoxMuller *xorwowState)
 {
     float shotNoiseValue = 0;

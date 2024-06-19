@@ -76,7 +76,7 @@ RppStatus jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
                 {
                     __m256i pxRow;
                     compute_jitter_src_loc_avx(pxXorwowStateX, &pxXorwowStateCounter, pRow, pCol, pKernelSize, pBound, pHeightLimit, pWidthLimit, pHStride, pChannel, srcLocArray);
-                    rpp_simd_load(rpp_resize_nn_load_u8pkd3_avx, srcPtrChannel, srcLocArray, pxRow);
+                    rpp_resize_nn_extract_pkd3_avx(srcPtrChannel, srcLocArray, pxRow);
                     rpp_simd_store(rpp_store24_u8pkd3_to_u8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, pxRow);
                     dstPtrTempR += vectorIncrementPerChannel;
                     dstPtrTempG += vectorIncrementPerChannel;
@@ -122,9 +122,9 @@ RppStatus jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
                 {
                     __m256i pxRow[3];
                     compute_jitter_src_loc_avx(pxXorwowStateX, &pxXorwowStateCounter, pRow, pCol, pKernelSize, pBound, pHeightLimit, pWidthLimit, pHStride, pChannel, srcLocArray);
-                    rpp_simd_load(rpp_resize_nn_load_u8pln1_avx, srcPtrRowR, srcLocArray, pxRow[0]);
-                    rpp_simd_load(rpp_resize_nn_load_u8pln1_avx, srcPtrRowG, srcLocArray, pxRow[1]);
-                    rpp_simd_load(rpp_resize_nn_load_u8pln1_avx, srcPtrRowB, srcLocArray, pxRow[2]);
+                    rpp_resize_nn_extract_pln1_avx(srcPtrRowR, srcLocArray, pxRow[0]);
+                    rpp_resize_nn_extract_pln1_avx(srcPtrRowG, srcLocArray, pxRow[1]);
+                    rpp_resize_nn_extract_pln1_avx(srcPtrRowB, srcLocArray, pxRow[2]);
                     rpp_simd_store(rpp_store24_u8pln3_to_u8pkd3_avx, dstPtrTemp, pxRow);
                     dstPtrTemp += vectorIncrement;
                     pCol = _mm256_add_ps(avx_p8, pCol);
@@ -161,7 +161,7 @@ RppStatus jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
                 {
                     __m256i pxRow;
                     compute_jitter_src_loc_avx(pxXorwowStateX, &pxXorwowStateCounter, pRow, pCol, pKernelSize, pBound, pHeightLimit, pWidthLimit, pHStride, pChannel, srcLocArray);
-                    rpp_simd_load(rpp_resize_nn_load_u8pkd3_avx, srcPtrRow, srcLocArray, pxRow);
+                    rpp_resize_nn_extract_pkd3_avx(srcPtrRow, srcLocArray, pxRow);
                     rpp_simd_store(rpp_store24_u8_to_u8_avx, dstPtrTemp, pxRow);
                     dstPtrTemp += vectorIncrement;
                     pCol = _mm256_add_ps(avx_p8, pCol);
@@ -203,7 +203,7 @@ RppStatus jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
                     for(int c = 0; c < srcDescPtr->c; c++)
                     {
                         __m256i pxRow;
-                        rpp_simd_load(rpp_resize_nn_load_u8pln1_avx, srcPtrTempChn, srcLocArray, pxRow);
+                        rpp_resize_nn_extract_pln1_avx(srcPtrTempChn, srcLocArray, pxRow);
                         rpp_storeu_si64((__m128i *)(dstPtrTempChn), _mm256_castsi256_si128(pxRow));
                         srcPtrTempChn += srcDescPtr->strides.cStride;
                         dstPtrTempChn += dstDescPtr->strides.cStride;
@@ -772,7 +772,7 @@ RppStatus jitter_i8_i8_host_tensor(Rpp8s *srcPtr,
                 {
                     __m256i pxRow;
                     compute_jitter_src_loc_avx(pxXorwowStateX, &pxXorwowStateCounter, pRow, pCol, pKernelSize, pBound, pHeightLimit, pWidthLimit, pHStride, pChannel, srcLocArray);
-                    rpp_simd_load(rpp_resize_nn_load_i8pkd3_avx, srcPtrChannel, srcLocArray, pxRow);
+                    rpp_resize_nn_extract_pkd3_avx(srcPtrChannel, srcLocArray, pxRow);
                     rpp_simd_store(rpp_store24_i8pkd3_to_i8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, pxRow);
                     dstPtrTempR += vectorIncrementPerChannel;
                     dstPtrTempG += vectorIncrementPerChannel;
@@ -817,9 +817,9 @@ RppStatus jitter_i8_i8_host_tensor(Rpp8s *srcPtr,
                 {
                     __m256i pxRow[3];
                     compute_jitter_src_loc_avx(pxXorwowStateX, &pxXorwowStateCounter, pRow, pCol, pKernelSize, pBound, pHeightLimit, pWidthLimit, pHStride, pChannel, srcLocArray);
-                    rpp_simd_load(rpp_resize_nn_load_i8pln1_avx, srcPtrRowR, srcLocArray, pxRow[0]);
-                    rpp_simd_load(rpp_resize_nn_load_i8pln1_avx, srcPtrRowG, srcLocArray, pxRow[1]);
-                    rpp_simd_load(rpp_resize_nn_load_i8pln1_avx, srcPtrRowB, srcLocArray, pxRow[2]);
+                    rpp_resize_nn_extract_pln1_avx(srcPtrRowR, srcLocArray, pxRow[0]);
+                    rpp_resize_nn_extract_pln1_avx(srcPtrRowG, srcLocArray, pxRow[1]);
+                    rpp_resize_nn_extract_pln1_avx(srcPtrRowB, srcLocArray, pxRow[2]);
                     rpp_simd_store(rpp_store24_i8pln3_to_i8pkd3_avx, dstPtrTemp, pxRow);
                     dstPtrTemp += vectorIncrement;
                     pCol = _mm256_add_ps(avx_p8, pCol);
@@ -857,7 +857,7 @@ RppStatus jitter_i8_i8_host_tensor(Rpp8s *srcPtr,
                 {
                     __m256i pxRow;
                     compute_jitter_src_loc_avx(pxXorwowStateX, &pxXorwowStateCounter, pRow, pCol, pKernelSize, pBound, pHeightLimit, pWidthLimit, pHStride, pChannel, srcLocArray);
-                    rpp_simd_load(rpp_resize_nn_load_i8pkd3_avx, srcPtrRow, srcLocArray, pxRow);
+                    rpp_resize_nn_extract_pkd3_avx(srcPtrRow, srcLocArray, pxRow);
                     rpp_simd_store(rpp_store24_i8_to_i8_avx, dstPtrTemp, pxRow);
                     dstPtrTemp += vectorIncrement;
                     pCol = _mm256_add_ps(avx_p8, pCol);
@@ -897,7 +897,7 @@ RppStatus jitter_i8_i8_host_tensor(Rpp8s *srcPtr,
                     for(int c = 0; c < srcDescPtr->c; c++)
                     {
                         __m256i pxRow;
-                        rpp_simd_load(rpp_resize_nn_load_i8pln1_avx, srcPtrTempChn, srcLocArray, pxRow);
+                        rpp_resize_nn_extract_pln1_avx(srcPtrTempChn, srcLocArray, pxRow);
                         rpp_storeu_si64((__m128i *)(dstPtrTempChn), _mm256_castsi256_si128(pxRow));
                         srcPtrTempChn += srcDescPtr->strides.cStride;
                         dstPtrTempChn += dstDescPtr->strides.cStride;
