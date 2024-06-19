@@ -259,3 +259,10 @@ def get_layout_name(layout):
         return "PLN3"
     elif layout == 2:
         return "PLN1"
+
+# Functionality group finder
+def func_group_finder(case_number):
+    for key, value in ImageAugmentationGroupMap.items():
+        if case_number in value:
+            return key
+    return "miscellaneous"

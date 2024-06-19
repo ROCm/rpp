@@ -49,27 +49,6 @@ def get_log_file_list(preserveOutput):
         outFolderPath + "/OUTPUT_PERFORMANCE_LOGS_HIP_" + timestamp + "/Tensor_hip_pln1_raw_performance_log.txt"
     ]
 
-# Functionality group finder
-def func_group_finder(case_number):
-    if case_number in ImageAugmentationGroupMap["color_augmentations"]:
-        return "color_augmentations"
-    elif case_number in ImageAugmentationGroupMap["effects_augmentations"]:
-        return "effects_augmentations"
-    elif case_number in ImageAugmentationGroupMap["geometric_augmentations"]:
-        return "geometric_augmentations"
-    elif case_number in ImageAugmentationGroupMap["arithmetic_operations"]:
-        return "arithmetic_operations"
-    elif case_number in ImageAugmentationGroupMap["logical_operations"]:
-        return "logical_operations"
-    elif case_number in ImageAugmentationGroupMap["data_exchange_operations"]:
-        return "data_exchange_operations"
-    elif case_number in ImageAugmentationGroupMap["statistical_operations"]:
-        return "statistical_operations"
-    elif case_number in ImageAugmentationGroupMap["filter_augmentations"]:
-        return "filter_augmentations"
-    else:
-        return "miscellaneous"
-
 def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
     print("\n\n\n\n")
     print("--------------------------------")
