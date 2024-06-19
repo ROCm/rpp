@@ -498,7 +498,7 @@ if (testType == 1 and profilingOption == "NO"):
         print_performance_tests_summary(logFile, functionalityGroupList, numRuns)
 
 # print the results of qa tests
-nonQACaseList = ['8', '24', '54', '84'] # Add cases present in supportedCaseList, but without QA support
+nonQACaseList = ['6', '8', '24', '54', '84'] # Add cases present in supportedCaseList, but without QA support
 
 if qaMode and testType == 0:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")

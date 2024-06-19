@@ -3828,17 +3828,17 @@ inline void rpp_resize_nn_load_f32pkd3_to_f32pln3_avx(Rpp32f *srcRowPtrsForInter
 inline void rpp_resize_nn_load_f16pkd3_to_f32pln3_avx(Rpp16f *srcRowPtrsForInterp, Rpp32s *loc, __m256 *p)
 {
     p[0] = _mm256_setr_ps((Rpp32f)*(srcRowPtrsForInterp + loc[0]), (Rpp32f)*(srcRowPtrsForInterp + loc[1]),
-                          (Rpp32f)*(srcRowPtrsForInterp + loc[2]), (Rpp32f)*(srcRowPtrsForInterp + loc[2]),
+                          (Rpp32f)*(srcRowPtrsForInterp + loc[2]), (Rpp32f)*(srcRowPtrsForInterp + loc[3]),
                           (Rpp32f)*(srcRowPtrsForInterp + loc[4]), (Rpp32f)*(srcRowPtrsForInterp + loc[5]),
                           (Rpp32f)*(srcRowPtrsForInterp + loc[6]), (Rpp32f)*(srcRowPtrsForInterp + loc[7]));
 
     p[1] = _mm256_setr_ps((Rpp32f)*(srcRowPtrsForInterp + loc[0] + 1), (Rpp32f)*(srcRowPtrsForInterp + loc[1] + 1),
-                          (Rpp32f)*(srcRowPtrsForInterp + loc[2] + 1), (Rpp32f)*(srcRowPtrsForInterp + loc[2] + 1),
+                          (Rpp32f)*(srcRowPtrsForInterp + loc[2] + 1), (Rpp32f)*(srcRowPtrsForInterp + loc[3] + 1),
                           (Rpp32f)*(srcRowPtrsForInterp + loc[4] + 1), (Rpp32f)*(srcRowPtrsForInterp + loc[5] + 1),
                           (Rpp32f)*(srcRowPtrsForInterp + loc[6] + 1), (Rpp32f)*(srcRowPtrsForInterp + loc[7] + 1));
 
     p[2] = _mm256_setr_ps((Rpp32f)*(srcRowPtrsForInterp + loc[0] + 2), (Rpp32f)*(srcRowPtrsForInterp + loc[1] + 2),
-                          (Rpp32f)*(srcRowPtrsForInterp + loc[2] + 2), (Rpp32f)*(srcRowPtrsForInterp + loc[2] + 2),
+                          (Rpp32f)*(srcRowPtrsForInterp + loc[2] + 2), (Rpp32f)*(srcRowPtrsForInterp + loc[3] + 2),
                           (Rpp32f)*(srcRowPtrsForInterp + loc[4] + 2), (Rpp32f)*(srcRowPtrsForInterp + loc[5] + 2),
                           (Rpp32f)*(srcRowPtrsForInterp + loc[6] + 2), (Rpp32f)*(srcRowPtrsForInterp + loc[7] + 2));
 }
@@ -3858,7 +3858,7 @@ inline void rpp_resize_nn_load_f32pln1(Rpp32f *srcRowPtrsForInterp, Rpp32s *loc,
 inline void rpp_resize_nn_load_f32pln1_avx(Rpp32f *srcRowPtrsForInterp, Rpp32s *loc, __m256 &p)
 {
     p = _mm256_setr_ps(*(srcRowPtrsForInterp + loc[0]), *(srcRowPtrsForInterp + loc[1]),
-                       *(srcRowPtrsForInterp + loc[2]), *(srcRowPtrsForInterp + loc[2]),
+                       *(srcRowPtrsForInterp + loc[2]), *(srcRowPtrsForInterp + loc[3]),
                        *(srcRowPtrsForInterp + loc[4]), *(srcRowPtrsForInterp + loc[5]),
                        *(srcRowPtrsForInterp + loc[6]), *(srcRowPtrsForInterp + loc[7]));
 }
@@ -3866,7 +3866,7 @@ inline void rpp_resize_nn_load_f32pln1_avx(Rpp32f *srcRowPtrsForInterp, Rpp32s *
 inline void rpp_resize_nn_load_f16pln1_avx(Rpp16f *srcRowPtrsForInterp, Rpp32s *loc, __m256 &p)
 {
     p = _mm256_setr_ps((Rpp32f)*(srcRowPtrsForInterp + loc[0]), (Rpp32f)*(srcRowPtrsForInterp + loc[1]),
-                       (Rpp32f)*(srcRowPtrsForInterp + loc[2]), (Rpp32f)*(srcRowPtrsForInterp + loc[2]),
+                       (Rpp32f)*(srcRowPtrsForInterp + loc[2]), (Rpp32f)*(srcRowPtrsForInterp + loc[3]),
                        (Rpp32f)*(srcRowPtrsForInterp + loc[4]), (Rpp32f)*(srcRowPtrsForInterp + loc[5]),
                        (Rpp32f)*(srcRowPtrsForInterp + loc[6]), (Rpp32f)*(srcRowPtrsForInterp + loc[7]));
 }
