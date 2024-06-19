@@ -6501,32 +6501,24 @@ inline void compute_remap_src_loc(Rpp32f rowLoc, Rpp32f colLoc, Rpp32s &srcLoc, 
     srcLoc = (rowLoc * stride) + colLoc * channels;
 }
 
-inline void rpp_pixel_check_and_store(float pixel, Rpp8u* dst)
+inline void rpp_pixel_check_and_store(Rpp32f &pixel, Rpp8u* dst)
 {
-    pixel = fmax(fminf(pixel, 255), 0);
-    *dst = (Rpp8u)pixel;
+    *dst = static_cast<Rpp8u>(fmaxf(fminf(pixel, 255), 0));  // float pixel check for 0 to 255 range for Rpp8u dst store
 }
 
-// float pixel check for -128-127 range
-
-inline void rpp_pixel_check_and_store(float pixel, Rpp8s* dst)
+inline void rpp_pixel_check_and_store(Rpp32f &pixel, Rpp8s* dst)
 {
-    pixel = fmax(fminf(pixel, 127), -128);
-    *dst = (Rpp8s)pixel;
+    *dst = static_cast<Rpp8s>(fmaxf(fminf(pixel, 127), -128));  // float pixel check for -128 to 127 range for Rpp8s dst store
 }
 
-// float pixel check for 0-1 range
-
-inline void rpp_pixel_check_and_store(float pixel, Rpp32f* dst)
+inline void rpp_pixel_check_and_store(Rpp32f &pixel, Rpp32f* dst)
 {
-    pixel = fmax(fminf(pixel, 1), 0);
-    *dst = pixel;
+    *dst = fmax(fminf(pixel, 1), 0);  // float pixel check for 0 to 1 range for Rpp32f dst store
 }
 
-inline void rpp_pixel_check_and_store(float pixel, Rpp16f* dst)
+inline void rpp_pixel_check_and_store(Rpp32f &pixel, Rpp16f* dst)
 {
-    pixel = fmax(fminf(pixel, 1), 0);
-    *dst = (Rpp16f)pixel;
+    *dst = static_cast<Rpp16f>(fmaxf(fminf(pixel, 1), 0));  // float pixel check for 0 to 1 range for Rpp16f dst store
 }
 
 #endif //RPP_CPU_COMMON_H
