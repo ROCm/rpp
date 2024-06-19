@@ -64,7 +64,7 @@ inline void increment_row_ptrs(T **srcPtrTemp, Rpp32u kernelSize, Rpp32s increme
 }
 
 // get the kernel loop limit based on index
-inline void get_kernel_loop_limit(Rpp32s &index, Rpp32s &loopLimit, Rpp32u &padLength, Rpp32u unpaddedLength)
+inline void get_kernel_loop_limit(Rpp32s &index, Rpp32s &loopLimit, Rpp32u &padLength, Rpp32u &unpaddedLength)
 {
     if ((index < padLength) || (index >= unpaddedLength))
     {
