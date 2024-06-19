@@ -35,7 +35,7 @@ inline void box_filter_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp32s colu
     Rpp32f accum = 0.0f;
     Rpp32s columnKernelLoopLimit = kernelSize;
 
-    // find the colKernelLoopLimit based on rowIndex, columnIndex
+    // find the colKernelLoopLimit based on columnIndex
     get_kernel_loop_limit(columnIndex, columnKernelLoopLimit, padLength, unpaddedWidth);
     if constexpr (std::is_same<T, Rpp8s>::value)
     {
@@ -306,7 +306,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                         dstPtrTemp += padLength;
 #if __AVX2__
-                        // process alignedLength number of columns in eacn row
+                        // process alignedLength number of columns in each row
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                         {
                             __m256i pxRow[3], pxResult;
@@ -317,7 +317,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                             unpacklo_and_add_3x3_host(pxRow, &pxLower);
                             unpackhi_and_add_3x3_host(pxRow, &pxUpper);
 
-                            // perform blend and shuffle operations for the first 8 output values to get required order and add them
+                            // perform blend and shuffle operations to get required order and add them
                             __m128i pxTemp[4];
                             extract_4sse_registers(pxLower, pxUpper, pxTemp);
                             blend_shuffle_add_3x3_pln_host(pxTemp[0], pxTemp[1]);
@@ -347,6 +347,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
                         }
+                        // for the first padLength rows, we need not increment the src row pointers to next rows
                         increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
                         dstPtrRow += dstDescPtr->strides.hStride;
                     }
@@ -371,7 +372,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                     process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                     dstPtrTemp += padLength * 3;
 #if __AVX2__
-                    // process remaining columns in eacn row
+                    // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                     {
                         __m256i pxRow[3], pxResult;
@@ -412,6 +413,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
+                    // for the first padLength rows, we need not increment the src row pointers to next rows
                     increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
                     dstPtrRow += dstDescPtr->strides.hStride;
                 }
@@ -436,7 +438,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
                     process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
 #if __AVX2__
-                    // process remaining columns in eacn row
+                    // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                     {
                         __m256i pxRow[3];
@@ -484,6 +486,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTempChannels[channel]++;
                     }
+                    // for the first padLength rows, we need not increment the src row pointers to next rows
                     increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
                     increment_row_ptrs(dstPtrChannels, kernelSize, dstDescPtr->strides.hStride);
                 }
@@ -519,7 +522,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         }
                     }
 #if __AVX2__
-                    // process alignedLength number of columns in eacn row
+                    // process alignedLength number of columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                     {
                         __m256i pxResultPln[3];
@@ -579,6 +582,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                             dstPtrTemp++;
                         }
                     }
+                    // for the first padLength rows, we need not increment the src row pointers to next rows
                     increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
                     dstPtrRow += dstDescPtr->strides.hStride;
                 }
@@ -655,6 +659,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
                         }
+                        // for the first padLength rows, we need not increment the src row pointers to next rows
                         increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
                         dstPtrRow += dstDescPtr->strides.hStride;
                     }
@@ -717,6 +722,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
+                    // for the first padLength rows, we need not increment the src row pointers to next rows
                     increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
                     dstPtrRow += dstDescPtr->strides.hStride;
                 }
@@ -787,6 +793,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTempChannels[channel]++;
                     }
+                    // for the first padLength rows, we need not increment the src row pointers to next rows
                     increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
                     increment_row_ptrs(dstPtrChannels, kernelSize, dstDescPtr->strides.hStride);
                 }
@@ -879,6 +886,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                             dstPtrTemp++;
                         }
                     }
+                    // for the first padLength rows, we need not increment the src row pointers to next rows
                     increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
                     dstPtrRow += dstDescPtr->strides.hStride;
                 }
@@ -955,6 +963,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
                         }
+                        // for the first padLength rows, we need not increment the src row pointers to next rows
                         increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
                         dstPtrRow += dstDescPtr->strides.hStride;
                     }
@@ -1050,6 +1059,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                             dstPtrTemp++;
                         }
                     }
+                    // for the first padLength rows, we need not increment the src row pointers to next rows
                     increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
                     dstPtrRow += dstDescPtr->strides.hStride;
                 }
@@ -1105,6 +1115,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
+                    // for the first padLength rows, we need not increment the src row pointers to next rows
                     increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
                     dstPtrRow += dstDescPtr->strides.hStride;
                 }
@@ -1168,6 +1179,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTempChannels[channel]++;
                     }
+                    // for the first padLength rows, we need not increment the src row pointers to next rows
                     increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
                     increment_row_ptrs(dstPtrChannels, kernelSize, dstDescPtr->strides.hStride);
                 }
@@ -1204,7 +1216,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                         dstPtrTemp += padLength;
 #if __AVX2__
-                        // process alignedLength number of columns in eacn row
+                        // process alignedLength number of columns in each row
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                         {
                             __m256i pxRow[9], pxLower, pxUpper;
@@ -1236,6 +1248,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
                         }
+                        // for the first padLength rows, we need not increment the src row pointers to next rows
                         increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
                         dstPtrRow += dstDescPtr->strides.hStride;
                     }
@@ -1267,7 +1280,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                     if (alignedLength)
                         rpp_load_box_filter_char_9x9_host(pxRow, srcPtrTemp, rowKernelLoopLimit);
 
-                    // process alignedLength number of columns in eacn row
+                    // process alignedLength number of columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 32)
                     {
                         __m256i pxLower, pxUpper, pxResult;
@@ -1313,6 +1326,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
+                    // for the first padLength rows, we need not increment the src row pointers to next rows
                     increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
                     dstPtrRow += dstDescPtr->strides.hStride;
                 }
@@ -1348,7 +1362,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         }
                     }
 #if __AVX2__
-                    // process alignedLength number of columns in eacn row
+                    // process alignedLength number of columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                     {
                         __m128i pxResultPln[3];
@@ -1396,6 +1410,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                             dstPtrTemp++;
                         }
                     }
+                    // for the first padLength rows, we need not increment the src row pointers to next rows
                     increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
                     dstPtrRow += dstDescPtr->strides.hStride;
                 }
@@ -1421,7 +1436,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
                     process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
 #if __AVX2__
-                    // process alignedLength number of columns in eacn row
+                    // process alignedLength number of columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                     {
                         // load first 32 elements elements
@@ -1478,6 +1493,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTempChannels[channel]++;
                     }
+                    // for the first padLength rows, we need not increment the src row pointers to next rows
                     increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
                     increment_row_ptrs(dstPtrChannels, 3, dstDescPtr->strides.hStride);
                 }
@@ -1563,7 +1579,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                         dstPtrTemp += padLength;
 #if __AVX2__
-                        // process alignedLength number of columns in eacn row
+                        // process alignedLength number of columns in each row
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 14)
                         {
                             __m256 pRow[3], pTemp[3], pDst[2];
@@ -1590,6 +1606,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
                         }
+                        // for the first padLength rows, we need not increment the src row pointers to next rows
                         increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
                         dstPtrRow += dstDescPtr->strides.hStride;
                     }
@@ -1614,7 +1631,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                     process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                     dstPtrTemp += padLength * 3;
 #if __AVX2__
-                    // process remaining columns in eacn row
+                    // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                     {
                         __m256 pRow[3], pTemp[3], pDst[2];
@@ -1643,6 +1660,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
+                    // for the first padLength rows, we need not increment the src row pointers to next rows
                     increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
                     dstPtrRow += dstDescPtr->strides.hStride;
                 }
@@ -1700,6 +1718,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTempChannels[channel]++;
                     }
+                    // for the first padLength rows, we need not increment the src row pointers to next rows
                     increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
                     increment_row_ptrs(dstPtrChannels, kernelSize, dstDescPtr->strides.hStride);
                 }
@@ -1735,7 +1754,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         }
                     }
 #if __AVX2__
-                    // process alignedLength number of columns in eacn row
+                    // process alignedLength number of columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 14)
                     {
                         __m256 pResult[6];
@@ -1775,6 +1794,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                             dstPtrTemp++;
                         }
                     }
+                    // for the first padLength rows, we need not increment the src row pointers to next rows
                     increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
                     dstPtrRow += dstDescPtr->strides.hStride;
                 }
@@ -1813,7 +1833,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                         dstPtrTemp += padLength;
 #if __AVX2__
-                        // process alignedLength number of columns in eacn row
+                        // process alignedLength number of columns in each row
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                         {
                             __m256 pRow[5], pDst[2], pTemp[3];
@@ -1840,6 +1860,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
                         }
+                        // for the first padLength rows, we need not increment the src row pointers to next rows
                         increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
                         dstPtrRow += dstDescPtr->strides.hStride;
                     }
@@ -1898,6 +1919,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
+                    // for the first padLength rows, we need not increment the src row pointers to next rows
                     increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
                     dstPtrRow += dstDescPtr->strides.hStride;
                 }
@@ -1934,7 +1956,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         }
                     }
 #if __AVX2__
-                    // process alignedLength number of columns in eacn row
+                    // process alignedLength number of columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                     {
                         __m256 pResultPln[3];
@@ -1969,6 +1991,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                             dstPtrTemp++;
                         }
                     }
+                    // for the first padLength rows, we need not increment the src row pointers to next rows
                     increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
                     dstPtrRow += dstDescPtr->strides.hStride;
                 }
@@ -2030,6 +2053,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTempChannels[channel]++;
                     }
+                    // for the first padLength rows, we need not increment the src row pointers to next rows
                     increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
                     increment_row_ptrs(dstPtrChannels, 3, dstDescPtr->strides.hStride);
                 }
@@ -2070,7 +2094,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                         dstPtrTemp += padLength;
 #if __AVX2__
-                        // process alignedLength number of columns in eacn row
+                        // process alignedLength number of columns in each row
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                         {
                             __m256 pRow[7], pTemp[2], pDst;
@@ -2098,6 +2122,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
                         }
+                        // for the first padLength rows, we need not increment the src row pointers to next rows
                         increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
                         dstPtrRow += dstDescPtr->strides.hStride;
                     }
@@ -2167,6 +2192,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
+                    // for the first padLength rows, we need not increment the src row pointers to next rows
                     increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
                     dstPtrRow += dstDescPtr->strides.hStride;
                 }
@@ -2203,7 +2229,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         }
                     }
 #if __AVX2__
-                    // process alignedLength number of columns in eacn row
+                    // process alignedLength number of columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                     {
                         __m256 pResultPln[3];
@@ -2237,6 +2263,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                             dstPtrTemp++;
                         }
                     }
+                    // for the first padLength rows, we need not increment the src row pointers to next rows
                     increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
                     dstPtrRow += dstDescPtr->strides.hStride;
                 }
@@ -2271,6 +2298,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTempChannels[channel]++;
                     }
+                    // for the first padLength rows, we need not increment the src row pointers to next rows
                     increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
                     increment_row_ptrs(dstPtrChannels, 3, dstDescPtr->strides.hStride);
                 }
@@ -2313,7 +2341,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         __m256 pRow[9];
                         rpp_load_box_filter_float_9x9_host(pRow, srcPtrTemp, rowKernelLoopLimit);
 
-                        // process alignedLength number of columns in eacn row
+                        // process alignedLength number of columns in each row
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                         {
                             // add loaded values from 9 rows
@@ -2340,6 +2368,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
                         }
+                        // for the first padLength rows, we need not increment the src row pointers to next rows
                         increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
                         dstPtrRow += dstDescPtr->strides.hStride;
                     }
@@ -2407,6 +2436,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
+                    // for the first padLength rows, we need not increment the src row pointers to next rows
                     increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
                     dstPtrRow += dstDescPtr->strides.hStride;
                 }
@@ -2442,7 +2472,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         }
                     }
 #if __AVX2__
-                    // process alignedLength number of columns in eacn row
+                    // process alignedLength number of columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                     {
                         __m256 pResultPln[3];
@@ -2477,6 +2507,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                             dstPtrTemp++;
                         }
                     }
+                    // for the first padLength rows, we need not increment the src row pointers to next rows
                     increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
                     dstPtrRow += dstDescPtr->strides.hStride;
                 }
@@ -2511,6 +2542,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTempChannels[channel]++;
                     }
+                    // for the first padLength rows, we need not increment the src row pointers to next rows
                     increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
                     increment_row_ptrs(dstPtrChannels, 3, dstDescPtr->strides.hStride);
                 }
@@ -2591,6 +2623,7 @@ RppStatus box_filter_generic_host_tensor(T *srcPtr,
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
+                    // for the first padLength rows, we need not increment the src row pointers to next rows
                     increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
                     dstPtrRow += dstDescPtr->strides.hStride;
                 }
@@ -2622,6 +2655,7 @@ RppStatus box_filter_generic_host_tensor(T *srcPtr,
                     increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                     dstPtrTemp++;
                 }
+                // for the first padLength rows, we need not increment the src row pointers to next rows
                 increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
@@ -2665,6 +2699,7 @@ RppStatus box_filter_generic_host_tensor(T *srcPtr,
                         dstPtrTemp++;
                     }
                 }
+                // for the first padLength rows, we need not increment the src row pointers to next rows
                 increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
@@ -2696,6 +2731,7 @@ RppStatus box_filter_generic_host_tensor(T *srcPtr,
                     increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                     dstPtrTempChannels[channel]++;
                 }
+                // for the first padLength rows, we need not increment the src row pointers to next rows
                 increment_row_ptrs(srcPtrRow, kernelSize, (!padLengthRows) ? srcDescPtr->strides.hStride : 0);
                 increment_row_ptrs(dstPtrChannels, 3, dstDescPtr->strides.hStride);
             }
