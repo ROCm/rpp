@@ -4035,10 +4035,10 @@ inline void rpp_convert72_pln3_to_pkd3(__m256i *pxSrc, __m128i *pxDst)
 inline void rpp_convert48_pln3_to_pkd3(__m128i *pxSrc, __m128i *pxDst)
 {
     const __m128i pxMask = _mm_setr_epi8(0, 1, 12, 2, 3, 13, 4, 5, 14, 6, 7, 15, 0x80, 0x80, 0x80, 0x80);
-    
+
     __m128i pxTemp[3];
     pxTemp[0] = _mm_unpacklo_epi8(pxSrc[0], pxSrc[1]);
-    
+
     // RGB 1-4, shuffle to get correct order
     // RGB 5-8, shuffle to get correct order
     pxTemp[1] = _mm_unpacklo_epi64(pxTemp[0], pxSrc[2]);
@@ -4074,6 +4074,39 @@ inline void rpp_convert12_f32pkd3_to_f32pln3(__m256 *pSrc, __m128 *pDst)
     pTemp = _mm_blend_ps(pSrcPkd[0], pSrcPkd[1], 2);
     pTemp = _mm_blend_ps(pTemp, pSrcPkd[2], 9);
     pDst[2] = _mm_shuffle_ps(pTemp, pTemp, 198);
+}
+
+inline void rpp_store16_float(Rpp32f *dstPtrTemp, __m256 *pDst)
+{
+    _mm256_storeu_ps(dstPtrTemp, pDst[0]);
+    _mm256_storeu_ps(dstPtrTemp + 8, pDst[1]);
+}
+
+inline void rpp_store16_float(Rpp16f *dstPtrTemp, __m256 *pDst)
+{
+    __m128i pxDst[2];
+    pxDst[0] = _mm256_cvtps_ph(pDst[0], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    pxDst[1] = _mm256_cvtps_ph(pDst[1], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    _mm_storeu_si128((__m128i *)dstPtrTemp, pxDst[0]);
+    _mm_storeu_si128((__m128i *)(dstPtrTemp + 8), pxDst[1]);
+}
+
+inline void rpp_store12_float_pkd_pln(Rpp32f **dstPtrTempChannels, __m128 *pDst)
+{
+    _mm_storeu_ps(dstPtrTempChannels[0], pDst[0]);
+    _mm_storeu_ps(dstPtrTempChannels[1], pDst[1]);
+    _mm_storeu_ps(dstPtrTempChannels[2], pDst[2]);
+}
+
+inline void rpp_store12_float_pkd_pln(Rpp16f **dstPtrTempChannels, __m128 *pDst)
+{
+    __m128i pxDst[3];
+    pxDst[0] = _mm_cvtps_ph(pDst[0], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    pxDst[1] = _mm_cvtps_ph(pDst[1], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    pxDst[2] = _mm_cvtps_ph(pDst[2], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    _mm_storeu_si128((__m128i *)(dstPtrTempChannels[0]), pxDst[0]);
+    _mm_storeu_si128((__m128i *)(dstPtrTempChannels[1]), pxDst[1]);
+    _mm_storeu_si128((__m128i *)(dstPtrTempChannels[2]), pxDst[2]);
 }
 
 #endif //AMD_RPP_RPP_CPU_SIMD_HPP
