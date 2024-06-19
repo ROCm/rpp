@@ -266,8 +266,9 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
 
         Rpp32f kernelSizeInverseSquare = 1.0 / (kernelSize * kernelSize);
         Rpp16s convolutionFactor = (Rpp16s) std::ceil(65536 * kernelSizeInverseSquare);
+#if __AVX2__
         const __m128i pxConvolutionFactor = _mm_set1_epi16(convolutionFactor);
-
+#endif
         T *srcPtrChannel, *dstPtrChannel;
         srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
@@ -300,7 +301,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, roi.xywhROI.roiHeight - padLength);
                         process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                         dstPtrTemp += padLength;
-
+#if __AVX2__
                         // process alignedLength number of columns in eacn row
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                         {
@@ -334,9 +335,8 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                             increment_row_ptrs(srcPtrTemp, kernelSize, 24);
                             dstPtrTemp += 24;
                         }
+#endif
                         vectorLoopCount += padLength;
-
-                        // process remaining columns in each row
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
                             box_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
@@ -364,7 +364,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, roi.xywhROI.roiHeight - padLength);
                     process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                     dstPtrTemp += padLength * 3;
-
+#if __AVX2__
                     // process remaining columns in eacn row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                     {
@@ -398,6 +398,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         increment_row_ptrs(srcPtrTemp, kernelSize, 24);
                         dstPtrTemp += 24;
                     }
+#endif
                     vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
@@ -426,7 +427,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, roi.xywhROI.roiHeight - padLength);
                     process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
-
+#if __AVX2__
                     // process remaining columns in eacn row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                     {
@@ -466,6 +467,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         increment_row_ptrs(srcPtrTemp, kernelSize, 24);
                         increment_row_ptrs(dstPtrTempChannels, kernelSize, 8);
                     }
+#endif
                     vectorLoopCount += padLength * 3;
                     for (int c = 0; vectorLoopCount < bufferLength; vectorLoopCount++, c++)
                     {
@@ -506,7 +508,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                             dstPtrTemp++;
                         }
                     }
-
+#if __AVX2__
                     // process alignedLength number of columns in eacn row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                     {
@@ -556,9 +558,8 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         _mm_storeu_si128((__m128i *)(dstPtrTemp + 60), pxResultPkd[5]);
                         dstPtrTemp += 72;
                     }
+#endif
                     vectorLoopCount += padLength;
-
-                    // process remaining columns in each row
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         for (int c = 0; c < 3; c++)
@@ -604,7 +605,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, roi.xywhROI.roiHeight - padLength);
                         process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                         dstPtrTemp += padLength;
-
+#if __AVX2__
                         // process alignedLength number of columns in each row
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                         {
@@ -634,8 +635,8 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                             increment_row_ptrs(srcPtrTemp, kernelSize, 24);
                             dstPtrTemp += 24;
                         }
+#endif
                         vectorLoopCount += padLength;
-                        // process remaining columns in each row
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
                             box_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
@@ -663,7 +664,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, roi.xywhROI.roiHeight - padLength);
                     process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                     dstPtrTemp += padLength * 3;
-
+#if __AVX2__
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 18)
                     {
@@ -694,6 +695,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         increment_row_ptrs(srcPtrTemp, kernelSize, 18);
                         dstPtrTemp += 18;
                     }
+#endif
                     vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
@@ -722,7 +724,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, roi.xywhROI.roiHeight - padLength);
                     process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
-
+#if __AVX2__
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 18)
                     {
@@ -760,6 +762,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         increment_row_ptrs(srcPtrTemp, kernelSize, 18);
                         increment_row_ptrs(dstPtrTempChannels, kernelSize, 6);
                     }
+#endif
                     vectorLoopCount += padLength * 3;
                     for (int c = 0; vectorLoopCount < bufferLength; vectorLoopCount++, c++)
                     {
@@ -801,7 +804,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                             dstPtrTemp++;
                         }
                     }
-
+#if __AVX2__
                     // process alignedLength number of columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                     {
@@ -847,9 +850,8 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         _mm_storeu_si128((__m128i *)(dstPtrTemp + 60), pxResultPkd[5]);
                         dstPtrTemp += 72;
                     }
+#endif
                     vectorLoopCount += padLength;
-
-                    // process remaining columns in each row
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         for (int c = 0; c < 3; c++)
@@ -895,7 +897,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, roi.xywhROI.roiHeight - padLength);
                         process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                         dstPtrTemp += padLength;
-
+#if __AVX2__
                         // process alignedLength number of columns in each row
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                         {
@@ -925,8 +927,8 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                             increment_row_ptrs(srcPtrTemp, kernelSize, 24);
                             dstPtrTemp += 24;
                         }
+#endif
                         vectorLoopCount += padLength;
-                        // process remaining columns in each row
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
                             box_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
@@ -969,7 +971,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                             dstPtrTemp++;
                         }
                     }
-
+#if __AVX2__
                     // process alignedLength number of columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                     {
@@ -1015,9 +1017,8 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         _mm_storeu_si128((__m128i *)(dstPtrTemp + 60), pxResultPkd[5]);
                         dstPtrTemp += 72;
                     }
+#endif
                     vectorLoopCount += padLength;
-
-                    // process remaining columns in each row
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         for (int c = 0; c < 3; c++)
@@ -1047,7 +1048,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, roi.xywhROI.roiHeight - padLength);
                     process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                     dstPtrTemp += padLength * 3;
-
+#if __AVX2__
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                     {
@@ -1072,6 +1073,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         increment_row_ptrs(srcPtrTemp, kernelSize, 12);
                         dstPtrTemp += 12;
                     }
+#endif
                     vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
@@ -1100,7 +1102,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, roi.xywhROI.roiHeight - padLength);
                     process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
-
+#if __AVX2__
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                     {
@@ -1131,6 +1133,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         increment_row_ptrs(srcPtrTemp, kernelSize, 12);
                         increment_row_ptrs(dstPtrTempChannels, kernelSize, 4);
                     }
+#endif
                     vectorLoopCount += padLength * 3;
                     for (int c = 0; vectorLoopCount < bufferLength; vectorLoopCount++, c++)
                     {
@@ -1172,7 +1175,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, roi.xywhROI.roiHeight - padLength);
                         process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                         dstPtrTemp += padLength;
-
+#if __AVX2__
                         // process alignedLength number of columns in eacn row
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                         {
@@ -1197,9 +1200,8 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                             increment_row_ptrs(srcPtrTemp, kernelSize, 16);
                             dstPtrTemp += 16;
                         }
+#endif
                         vectorLoopCount += padLength;
-
-                        // process remaining columns in each row
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
                             box_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
@@ -1229,7 +1231,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, roi.xywhROI.roiHeight - padLength);
                     process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                     dstPtrTemp += padLength * 3;
-
+#if __AVX2__
                     // load first 32 elements elements
                     __m256i pxRow[9];
                     if (alignedLength)
@@ -1273,9 +1275,8 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         _mm256_storeu_si256((__m256i *)dstPtrTemp, pxResult);
                         dstPtrTemp += 32;
                     }
+#endif
                     vectorLoopCount += padLength * 3;
-
-                    // process remaining columns in each row
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         box_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
@@ -1314,7 +1315,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                             dstPtrTemp++;
                         }
                     }
-
+#if __AVX2__
                     // process alignedLength number of columns in eacn row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                     {
@@ -1352,9 +1353,8 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         _mm_storeu_si128((__m128i *)(dstPtrTemp + 36), pxResultPkd[3]);
                         dstPtrTemp += 48;
                     }
+#endif
                     vectorLoopCount += padLength;
-
-                    // process remaining columns in each row
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         for (int c = 0; c < srcDescPtr->c; c++)
@@ -1386,7 +1386,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, roi.xywhROI.roiHeight - padLength);
                     process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
-
+#if __AVX2__
                     // process alignedLength number of columns in eacn row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                     {
@@ -1435,9 +1435,8 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         increment_row_ptrs(srcPtrTemp, kernelSize, -8);
                         increment_row_ptrs(dstPtrTempChannels, 3, 8);
                     }
+#endif
                     vectorLoopCount += padLength * 3;
-
-                    // process remaining columns in each row
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         int channel = vectorLoopCount % 3;
@@ -1488,9 +1487,10 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
 
         Rpp32u padLength = kernelSize / 2;
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
-
         Rpp32f kernelSizeInverseSquare = 1.0 / (kernelSize * kernelSize);
+#if __AVX2__
         const __m256 pConvolutionFactor = _mm256_set1_ps(kernelSizeInverseSquare);
+#endif
 
         T *srcPtrChannel, *dstPtrChannel;
         srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
@@ -1524,7 +1524,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, roi.xywhROI.roiHeight - padLength);
                         process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                         dstPtrTemp += padLength;
-
+#if __AVX2__
                         // process alignedLength number of columns in eacn row
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 14)
                         {
@@ -1544,9 +1544,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                             increment_row_ptrs(srcPtrTemp, kernelSize, 6);
                             dstPtrTemp += 14;
                         }
+#endif
                         vectorLoopCount += padLength;
-
-                        // process remaining columns in each row
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
                             box_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
@@ -1574,7 +1573,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, roi.xywhROI.roiHeight - padLength);
                     process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                     dstPtrTemp += padLength * 3;
-
+#if __AVX2__
                     // process remaining columns in eacn row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                     {
@@ -1596,6 +1595,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         rpp_store16_float(dstPtrTemp, pDst);
                         dstPtrTemp += 16;
                     }
+#endif
                     vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
@@ -1623,7 +1623,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, roi.xywhROI.roiHeight - padLength);
                     process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
-
+#if __AVX2__
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                     {
@@ -1649,6 +1649,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         increment_row_ptrs(srcPtrTemp, kernelSize, -4);
                         increment_row_ptrs(dstPtrTempChannels, kernelSize, 4);
                     }
+#endif
                     vectorLoopCount += padLength * 3;
                     for (int c = 0; vectorLoopCount < bufferLength; vectorLoopCount++, c++)
                     {
@@ -1689,7 +1690,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                             dstPtrTemp++;
                         }
                     }
-
+#if __AVX2__
                     // process alignedLength number of columns in eacn row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 14)
                     {
@@ -1719,9 +1720,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
 
                         dstPtrTemp += 42;
                     }
+#endif
                     vectorLoopCount += padLength;
-
-                    // process remaining columns in each row
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         for (int c = 0; c < 3; c++)
@@ -1766,7 +1766,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, roi.xywhROI.roiHeight - padLength);
                         process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                         dstPtrTemp += padLength;
-
+#if __AVX2__
                         // process alignedLength number of columns in eacn row
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                         {
@@ -1786,9 +1786,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                             increment_row_ptrs(srcPtrTemp, kernelSize, 4);
                             dstPtrTemp += 12;
                         }
+#endif
                         vectorLoopCount += padLength;
-
-                        // process remaining columns in each row
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
                             box_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
@@ -1818,7 +1817,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, roi.xywhROI.roiHeight - padLength);
                     process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                     dstPtrTemp += padLength * 3;
-
+#if __AVX2__
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                     {
@@ -1843,9 +1842,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         increment_row_ptrs(srcPtrTemp, kernelSize, -4);
                         dstPtrTemp += 12;
                     }
+#endif
                     vectorLoopCount += padLength * 3;
-
-                    // process remaining columns in each row
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         box_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
@@ -1885,7 +1883,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                             dstPtrTemp++;
                         }
                     }
-
+#if __AVX2__
                     // process alignedLength number of columns in eacn row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                     {
@@ -1910,9 +1908,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
 
                         dstPtrTemp += 24;
                     }
+#endif
                     vectorLoopCount += padLength;
-
-                    // process remaining columns in each row
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         for (int c = 0; c < srcDescPtr->c; c++)
@@ -1944,7 +1941,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, roi.xywhROI.roiHeight - padLength);
                     process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
-
+#if __AVX2__
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                     {
@@ -1972,9 +1969,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         increment_row_ptrs(srcPtrTemp, kernelSize, -4);
                         increment_row_ptrs(dstPtrTempChannels, 3, 4);
                     }
-
+#endif
                     vectorLoopCount += padLength * 3;
-                    // process remaining columns in each row
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         int channel = vectorLoopCount % 3;
@@ -2019,7 +2015,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, roi.xywhROI.roiHeight - padLength);
                         process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                         dstPtrTemp += padLength;
-
+#if __AVX2__
                         // process alignedLength number of columns in eacn row
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                         {
@@ -2040,9 +2036,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
 
                             dstPtrTemp += 8;
                         }
+#endif
                         vectorLoopCount += padLength;
-
-                        // process remaining columns in each row
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
                             box_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
@@ -2072,7 +2067,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, roi.xywhROI.roiHeight - padLength);
                     process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                     dstPtrTemp += padLength * 3;
-
+#if __AVX2__
                     __m256 pRow1[7], pRow2[7];
                     rpp_load_box_filter_float_7x7_host(pRow1, srcPtrTemp, rowKernelLoopLimit);
                     increment_row_ptrs(srcPtrTemp, kernelSize, 8);
@@ -2107,10 +2102,9 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         pTemp[1] = pTemp[2];
                         pTemp[2] = pTemp[3];
                     }
-                    vectorLoopCount += padLength * 3;
                     increment_row_ptrs(srcPtrTemp, kernelSize, -16);
-
-                    // process remaining columns in each row
+#endif
+                    vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         box_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
@@ -2150,7 +2144,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                             dstPtrTemp++;
                         }
                     }
-
+#if __AVX2__
                     // process alignedLength number of columns in eacn row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                     {
@@ -2174,9 +2168,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
 
                         dstPtrTemp += 24;
                     }
+#endif
                     vectorLoopCount += padLength;
-
-                    // process remaining columns in each row
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         for (int c = 0; c < srcDescPtr->c; c++)
@@ -2254,7 +2247,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, roi.xywhROI.roiHeight - padLength);
                         process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                         dstPtrTemp += padLength;
-
+#if __AVX2__
                         __m256 pRow[9];
                         rpp_load_box_filter_float_9x9_host(pRow, srcPtrTemp, rowKernelLoopLimit);
 
@@ -2277,9 +2270,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
 
                             dstPtrTemp += 8;
                         }
+#endif
                         vectorLoopCount += padLength;
-
-                        // process remaining columns in each row
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
                             box_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
@@ -2309,7 +2301,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, roi.xywhROI.roiHeight - padLength);
                     process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
                     dstPtrTemp += padLength * 3;
-
+#if __AVX2__
                     __m256 pRow1[9], pRow2[9];
                     rpp_load_box_filter_float_9x9_host(pRow1, srcPtrTemp, rowKernelLoopLimit);
                     increment_row_ptrs(srcPtrTemp, kernelSize, 8);
@@ -2342,10 +2334,9 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         pTemp[1] = pTemp[2];
                         pTemp[2] = pTemp[3];
                     }
-                    vectorLoopCount += padLength * 3;
                     increment_row_ptrs(srcPtrTemp, kernelSize, -16);
-
-                    // process remaining columns in each row
+#endif
+                    vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         box_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, roi.xywhROI.roiWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
@@ -2384,7 +2375,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                             dstPtrTemp++;
                         }
                     }
-
+#if __AVX2__
                     // process alignedLength number of columns in eacn row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                     {
@@ -2409,9 +2400,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                            rpp_store24_f32pln3_to_f16pkd3_avx(dstPtrTemp, pResultPln);
                         dstPtrTemp += 24;
                     }
+#endif
                     vectorLoopCount += padLength;
-
-                    // process remaining columns in each row
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         for (int c = 0; c < srcDescPtr->c; c++)
