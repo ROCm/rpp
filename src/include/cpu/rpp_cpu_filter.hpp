@@ -63,6 +63,7 @@ inline void increment_row_ptrs(T **srcPtrTemp, Rpp32u kernelSize, Rpp32s increme
         srcPtrTemp[i] += increment;
 }
 
+// get the kernel loop limit based on index
 inline void get_kernel_loop_limit(Rpp32s &index, Rpp32s &loopLimit, Rpp32u &padLength, Rpp32u unpaddedLength)
 {
     if ((index < padLength) || (index >= unpaddedLength))
@@ -72,6 +73,7 @@ inline void get_kernel_loop_limit(Rpp32s &index, Rpp32s &loopLimit, Rpp32u &padL
     }
 }
 
+// extract 4 SSE registers from 2 AVX registers
 inline void extract_4sse_registers(__m256i &pxLower, __m256i &pxUpper, __m128i *px128)
 {
     px128[0] =  _mm256_castsi256_si128(pxLower);
@@ -80,6 +82,7 @@ inline void extract_4sse_registers(__m256i &pxLower, __m256i &pxUpper, __m128i *
     px128[3] =  _mm256_extracti128_si256(pxUpper, 1);
 }
 
+// extract 3 SSE registers from 2 AVX registers
 inline void extract_3sse_registers(__m256i &pxLower, __m256i &pxUpper, __m128i *px128)
 {
     px128[0] =  _mm256_castsi256_si128(pxLower);
@@ -87,11 +90,13 @@ inline void extract_3sse_registers(__m256i &pxLower, __m256i &pxUpper, __m128i *
     px128[2] =  _mm256_extracti128_si256(pxLower, 1);
 }
 
+// -------------------- U8/I8 bitdepth compute functions for kernel size (3/5/7/9) --------------------
+
 inline void blend_shuffle_add_3x3_pln_host(__m128i &pxLower1, __m128i &pxLower2)
 {
     __m128i pxTemp[2];
-    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 1), xmm_pxMaskRotate0To1); // using mask [0000 0001] to blend
-    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 3), xmm_pxMaskRotate0To3); // using mask [0000 0011] to blend
+    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 1), xmm_pxMaskRotate0To1);    // using mask [0000 0001] to blend
+    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 3), xmm_pxMaskRotate0To3);    // using mask [0000 0011] to blend
     pxLower1 = _mm_add_epi16(pxLower1, pxTemp[0]);
     pxLower1 = _mm_add_epi16(pxLower1, pxTemp[1]);
 }
@@ -99,8 +104,8 @@ inline void blend_shuffle_add_3x3_pln_host(__m128i &pxLower1, __m128i &pxLower2)
 inline void blend_shuffle_add_3x3_pkd_host(__m128i &pxLower1, __m128i &pxLower2)
 {
     __m128i pxTemp[2];
-    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 7), xmm_pxMaskRotate0To5);     // using mask [0000 0111] to blend
-    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 63), xmm_pxMaskRotate0To11);   // using mask [0011 1111] to blend
+    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 7), xmm_pxMaskRotate0To5);    // using mask [0000 0111] to blend
+    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 63), xmm_pxMaskRotate0To11);  // using mask [0011 1111] to blend
     pxLower1 = _mm_add_epi16(pxLower1, pxTemp[0]);
     pxLower1 = _mm_add_epi16(pxLower1, pxTemp[1]);
 }
@@ -108,10 +113,10 @@ inline void blend_shuffle_add_3x3_pkd_host(__m128i &pxLower1, __m128i &pxLower2)
 inline void blend_shuffle_add_5x5_pln_host(__m128i *px128)
 {
     __m128i pxTemp[4];
-    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 1), xmm_pxMaskRotate0To1); // using mask [0000 0001] to blend
-    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 3), xmm_pxMaskRotate0To3); // using mask [0000 0011] to blend
-    pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 7), xmm_pxMaskRotate0To5); // using mask [0000 0111] to blend
-    pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 15), xmm_pxMaskRotate0To7);// using mask [0000 1111] to blend
+    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 1), xmm_pxMaskRotate0To1);    // using mask [0000 0001] to blend
+    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 3), xmm_pxMaskRotate0To3);    // using mask [0000 0011] to blend
+    pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 7), xmm_pxMaskRotate0To5);    // using mask [0000 0111] to blend
+    pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 15), xmm_pxMaskRotate0To7);   // using mask [0000 1111] to blend
     px128[0] = _mm_add_epi16(px128[0], pxTemp[0]);
     px128[0] = _mm_add_epi16(px128[0], pxTemp[1]);
     px128[0] = _mm_add_epi16(px128[0], pxTemp[2]);
@@ -121,10 +126,10 @@ inline void blend_shuffle_add_5x5_pln_host(__m128i *px128)
 inline void blend_shuffle_add_5x5_pkd_host(__m128i *px128)
 {
     __m128i pxTemp[4];
-    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 7), xmm_pxMaskRotate0To5); // using mask [0000 0111] to blend
-    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 63), xmm_pxMaskRotate0To11);// using mask [0011 1111] to blend
-    pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(px128[1], px128[2], 1), xmm_pxMaskRotate0To1);  // using mask [0000 0001] to blend
-    pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(px128[1], px128[2], 15), xmm_pxMaskRotate0To7); // using mask [0000 1111] to blend
+    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 7), xmm_pxMaskRotate0To5);    // using mask [0000 0111] to blend
+    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 63), xmm_pxMaskRotate0To11);  // using mask [0011 1111] to blend
+    pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(px128[1], px128[2], 1), xmm_pxMaskRotate0To1);    // using mask [0000 0001] to blend
+    pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(px128[1], px128[2], 15), xmm_pxMaskRotate0To7);   // using mask [0000 1111] to blend
     px128[0] = _mm_add_epi16(px128[0], pxTemp[0]);
     px128[0] = _mm_add_epi16(px128[0], pxTemp[1]);
     px128[0] = _mm_add_epi16(px128[0], pxTemp[2]);
@@ -134,12 +139,12 @@ inline void blend_shuffle_add_5x5_pkd_host(__m128i *px128)
 inline void blend_shuffle_add_7x7_pln_host(__m128i *px128)
 {
     __m128i pxTemp[6];
-    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 1), xmm_pxMaskRotate0To1); // using mask [0000 0001] to blend
-    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 3), xmm_pxMaskRotate0To3); // using mask [0000 0011] to blend
-    pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 7), xmm_pxMaskRotate0To5); // using mask [0000 0111] to blend
-    pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 15), xmm_pxMaskRotate0To7);// using mask [0000 1111] to blend
-    pxTemp[4] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 31), xmm_pxMaskRotate0To9);// using mask [0001 1111] to blend
-    pxTemp[5] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 63), xmm_pxMaskRotate0To11);// using mask [0011 0111] to blend
+    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 1), xmm_pxMaskRotate0To1);   // using mask [0000 0001] to blend
+    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 3), xmm_pxMaskRotate0To3);   // using mask [0000 0011] to blend
+    pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 7), xmm_pxMaskRotate0To5);   // using mask [0000 0111] to blend
+    pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 15), xmm_pxMaskRotate0To7);  // using mask [0000 1111] to blend
+    pxTemp[4] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 31), xmm_pxMaskRotate0To9);  // using mask [0001 1111] to blend
+    pxTemp[5] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 63), xmm_pxMaskRotate0To11); // using mask [0011 0111] to blend
     px128[0] = _mm_add_epi16(px128[0], pxTemp[0]);
     px128[0] = _mm_add_epi16(px128[0], pxTemp[1]);
     px128[0] = _mm_add_epi16(px128[0], pxTemp[2]);
@@ -151,12 +156,12 @@ inline void blend_shuffle_add_7x7_pln_host(__m128i *px128)
 inline void blend_shuffle_add_7x7_pkd_host(__m128i *px128)
 {
     __m128i pxTemp[6];
-    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 7), xmm_pxMaskRotate0To5); // using mask [0000 0111] to blend
-    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 63), xmm_pxMaskRotate0To11);// using mask [0011 1111] to blend
-    pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(px128[1], px128[2], 1), xmm_pxMaskRotate0To1);// using mask [0000 0001] to blend
-    pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(px128[1], px128[2], 15), xmm_pxMaskRotate0To7);// using mask [0000 1111] to blend
-    pxTemp[4] = _mm_shuffle_epi8(_mm_blend_epi16(px128[1], px128[2], 127), xmm_pxMaskRotate0To13);// using mask [0111 1111] to blend
-    pxTemp[5] = _mm_shuffle_epi8(_mm_blend_epi16(px128[2], px128[3], 3), xmm_pxMaskRotate0To3);// using mask [0000 0011] to blend
+    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 7), xmm_pxMaskRotate0To5);    // using mask [0000 0111] to blend
+    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 63), xmm_pxMaskRotate0To11);  // using mask [0011 1111] to blend
+    pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(px128[1], px128[2], 1), xmm_pxMaskRotate0To1);    // using mask [0000 0001] to blend
+    pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(px128[1], px128[2], 15), xmm_pxMaskRotate0To7);   // using mask [0000 1111] to blend
+    pxTemp[4] = _mm_shuffle_epi8(_mm_blend_epi16(px128[1], px128[2], 127), xmm_pxMaskRotate0To13); // using mask [0111 1111] to blend
+    pxTemp[5] = _mm_shuffle_epi8(_mm_blend_epi16(px128[2], px128[3], 3), xmm_pxMaskRotate0To3);    // using mask [0000 0011] to blend
     px128[0] = _mm_add_epi16(px128[0], pxTemp[0]);
     px128[0] = _mm_add_epi16(px128[0], pxTemp[1]);
     px128[0] = _mm_add_epi16(px128[0], pxTemp[2]);
@@ -168,13 +173,13 @@ inline void blend_shuffle_add_7x7_pkd_host(__m128i *px128)
 inline void blend_shuffle_add_9x9_pln_host(__m128i *px128)
 {
     __m128i pxTemp[7];
-    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 1), xmm_pxMaskRotate0To1);// using mask [0000 0001] to blend
-    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 3), xmm_pxMaskRotate0To3);// using mask [0000 0011] to blend
-    pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 7), xmm_pxMaskRotate0To5);// using mask [0000 0111] to blend
-    pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 15), xmm_pxMaskRotate0To7);// using mask [0000 1111] to blend
-    pxTemp[4] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 31), xmm_pxMaskRotate0To9);// using mask [0001 1111] to blend
-    pxTemp[5] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 63), xmm_pxMaskRotate0To11);// using mask [0011 1111] to blend
-    pxTemp[6] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 127), xmm_pxMaskRotate0To13);// using mask [0111 1111] to blend
+    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 1), xmm_pxMaskRotate0To1);    // using mask [0000 0001] to blend
+    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 3), xmm_pxMaskRotate0To3);    // using mask [0000 0011] to blend
+    pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 7), xmm_pxMaskRotate0To5);    // using mask [0000 0111] to blend
+    pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 15), xmm_pxMaskRotate0To7);   // using mask [0000 1111] to blend
+    pxTemp[4] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 31), xmm_pxMaskRotate0To9);   // using mask [0001 1111] to blend
+    pxTemp[5] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 63), xmm_pxMaskRotate0To11);  // using mask [0011 1111] to blend
+    pxTemp[6] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 127), xmm_pxMaskRotate0To13); // using mask [0111 1111] to blend
     px128[0] = _mm_add_epi16(px128[0], pxTemp[0]);
     px128[0] = _mm_add_epi16(px128[0], pxTemp[1]);
     px128[0] = _mm_add_epi16(px128[0], pxTemp[2]);
@@ -187,13 +192,13 @@ inline void blend_shuffle_add_9x9_pln_host(__m128i *px128)
 inline void blend_shuffle_add_9x9_pkd_host(__m128i *px128)
 {
     __m128i pxTemp[7];
-    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 7), xmm_pxMaskRotate0To5); // using mask [0000 1111] to blend
-    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 63), xmm_pxMaskRotate0To11);// using mask [0011 1111] to blend
-    pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(px128[1], px128[2], 1), xmm_pxMaskRotate0To1);// using mask [0000 0001] to blend
-    pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(px128[1], px128[2], 15), xmm_pxMaskRotate0To7);// using mask [0000 1111] to blend
-    pxTemp[4] = _mm_shuffle_epi8(_mm_blend_epi16(px128[1], px128[2], 127), xmm_pxMaskRotate0To13);// using mask [0111 1111] to blend
-    pxTemp[5] = _mm_shuffle_epi8(_mm_blend_epi16(px128[2], px128[3], 3), xmm_pxMaskRotate0To3);// using mask [0000 0011] to blend
-    pxTemp[6] = _mm_shuffle_epi8(_mm_blend_epi16(px128[2], px128[3], 31), xmm_pxMaskRotate0To9);// using mask [0001 1111] to blend
+    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 7), xmm_pxMaskRotate0To5);    // using mask [0000 1111] to blend
+    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(px128[0], px128[1], 63), xmm_pxMaskRotate0To11);  // using mask [0011 1111] to blend
+    pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(px128[1], px128[2], 1), xmm_pxMaskRotate0To1);    // using mask [0000 0001] to blend
+    pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(px128[1], px128[2], 15), xmm_pxMaskRotate0To7);   // using mask [0000 1111] to blend
+    pxTemp[4] = _mm_shuffle_epi8(_mm_blend_epi16(px128[1], px128[2], 127), xmm_pxMaskRotate0To13); // using mask [0111 1111] to blend
+    pxTemp[5] = _mm_shuffle_epi8(_mm_blend_epi16(px128[2], px128[3], 3), xmm_pxMaskRotate0To3);    // using mask [0000 0011] to blend
+    pxTemp[6] = _mm_shuffle_epi8(_mm_blend_epi16(px128[2], px128[3], 31), xmm_pxMaskRotate0To9);   // using mask [0001 1111] to blend
     px128[0] = _mm_add_epi16(px128[0], pxTemp[0]);
     px128[0] = _mm_add_epi16(px128[0], pxTemp[1]);
     px128[0] = _mm_add_epi16(px128[0], pxTemp[2]);
@@ -204,70 +209,72 @@ inline void blend_shuffle_add_9x9_pkd_host(__m128i *px128)
     px128[0] = _mm_add_epi16(px128[0], px128[3]);
 }
 
+// -------------------- F32/F16 bitdepth compute functions for kernel size (3/5/7/9) --------------------
+
 inline void blend_permute_add_3x3_pln(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor)
 {
-    pDst[0] = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 1), avx_pxMaskRotate0To1)); // using mask [0000 0001] to blend
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 3), avx_pxMaskRotate0To2)); // using mask [0000 0011] to blend
+    pDst[0] = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 1), avx_pxMaskRotate0To1));   // using mask [0000 0001] to blend
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 3), avx_pxMaskRotate0To2));   // using mask [0000 0011] to blend
     pDst[0] = _mm256_mul_ps(pDst[0], pConvolutionFactor);
 }
 
 inline void blend_permute_add_3x3_pkd(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor)
 {
-    pDst[0] = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 7), avx_pxMaskRotate0To3)); // using mask [0000 0111] to blend
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 63), avx_pxMaskRotate0To6));// using mask [0011 1111] to blend
+    pDst[0] = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 7), avx_pxMaskRotate0To3));   // using mask [0000 0111] to blend
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 63), avx_pxMaskRotate0To6));  // using mask [0011 1111] to blend
     pDst[0] = _mm256_mul_ps(pDst[0], pConvolutionFactor);
 }
 
 inline void blend_permute_add_5x5_pln(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor)
 {
-    pDst[0] = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 1), avx_pxMaskRotate0To1)); // using mask [0000 0001] to blend
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 3), avx_pxMaskRotate0To2)); // using mask [0000 0011] to blend
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 7), avx_pxMaskRotate0To3)); // using mask [0000 0111] to blend
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 15), avx_pxMaskRotate0To4)); // using mask [0000 1111] to blend
+    pDst[0] = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 1), avx_pxMaskRotate0To1));   // using mask [0000 0001] to blend
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 3), avx_pxMaskRotate0To2));   // using mask [0000 0011] to blend
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 7), avx_pxMaskRotate0To3));   // using mask [0000 0111] to blend
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 15), avx_pxMaskRotate0To4));  // using mask [0000 1111] to blend
     pDst[0] = _mm256_mul_ps(pDst[0], pConvolutionFactor);
 }
 
 inline void blend_permute_add_5x5_pkd(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor)
 {
-    pDst[0] = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 7), avx_pxMaskRotate0To3)); // using mask [0000 0111] to blend
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 63), avx_pxMaskRotate0To6));// using mask [0011 1111] to blend
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[1], pSrc[2], 1), avx_pxMaskRotate0To1));// using mask [0000 0001] to blend
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[1], pSrc[2], 15), avx_pxMaskRotate0To4));// using mask [0000 1111] to blend
+    pDst[0] = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 7), avx_pxMaskRotate0To3));   // using mask [0000 0111] to blend
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 63), avx_pxMaskRotate0To6));  // using mask [0011 1111] to blend
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[1], pSrc[2], 1), avx_pxMaskRotate0To1));   // using mask [0000 0001] to blend
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[1], pSrc[2], 15), avx_pxMaskRotate0To4));  // using mask [0000 1111] to blend
     pDst[0] = _mm256_mul_ps(pDst[0], pConvolutionFactor);
 }
 
 inline void blend_permute_add_7x7_pln(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor)
 {
-    pDst[0] = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 1), avx_pxMaskRotate0To1)); // using mask [0000 0001] to blend
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 3), avx_pxMaskRotate0To2)); // using mask [0000 0011] to blend
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 7), avx_pxMaskRotate0To3)); // using mask [0000 0111] to blend
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 15), avx_pxMaskRotate0To4)); // using mask [0000 1111] to blend
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 31), avx_pxMaskRotate0To5)); // using mask [0001 1111] to blend
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 63), avx_pxMaskRotate0To6)); // using mask [0011 1111] to blend
+    pDst[0] = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 1), avx_pxMaskRotate0To1));   // using mask [0000 0001] to blend
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 3), avx_pxMaskRotate0To2));   // using mask [0000 0011] to blend
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 7), avx_pxMaskRotate0To3));   // using mask [0000 0111] to blend
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 15), avx_pxMaskRotate0To4));  // using mask [0000 1111] to blend
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 31), avx_pxMaskRotate0To5));  // using mask [0001 1111] to blend
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 63), avx_pxMaskRotate0To6));  // using mask [0011 1111] to blend
     pDst[0] = _mm256_mul_ps(pDst[0], pConvolutionFactor);
 }
 
 inline void blend_permute_add_7x7_pkd(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor)
 {
-    pDst[0] = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 7), avx_pxMaskRotate0To3)); // using mask [0000 0111] to blend
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 63), avx_pxMaskRotate0To6)); // using mask [0011 1111] to blend
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[1], pSrc[2], 1), avx_pxMaskRotate0To1));// using mask [0000 0001] to blend
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[1], pSrc[2], 15), avx_pxMaskRotate0To4)); // using mask [0000 1111] to blend
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[1], pSrc[2], 127), avx_pxMaskRotate0To7));// using mask [0111 1111] to blend
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[2], pSrc[3], 3), avx_pxMaskRotate0To2)); // using mask [0000 0011] to blend
+    pDst[0] = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 7), avx_pxMaskRotate0To3));   // using mask [0000 0111] to blend
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 63), avx_pxMaskRotate0To6));  // using mask [0011 1111] to blend
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[1], pSrc[2], 1), avx_pxMaskRotate0To1));   // using mask [0000 0001] to blend
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[1], pSrc[2], 15), avx_pxMaskRotate0To4));  // using mask [0000 1111] to blend
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[1], pSrc[2], 127), avx_pxMaskRotate0To7)); // using mask [0111 1111] to blend
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[2], pSrc[3], 3), avx_pxMaskRotate0To2));   // using mask [0000 0011] to blend
     pDst[0] = _mm256_mul_ps(pDst[0], pConvolutionFactor);
 }
 
 inline void blend_permute_add_9x9_pln(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor)
 {
     __m256 pTemp;
-    pTemp = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 1), avx_pxMaskRotate0To1)); // using mask [0000 0001] to blend
-    pTemp = _mm256_add_ps(pTemp, _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 3), avx_pxMaskRotate0To2)); // using mask [0000 0011] to blend
-    pTemp = _mm256_add_ps(pTemp, _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 7), avx_pxMaskRotate0To3)); // using mask [0000 0111] to blend
-    pTemp = _mm256_add_ps(pTemp, _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 15), avx_pxMaskRotate0To4));// using mask [0000 1111] to blend
-    pTemp = _mm256_add_ps(pTemp, _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 31), avx_pxMaskRotate0To5));// using mask [0001 1111] to blend
-    pTemp = _mm256_add_ps(pTemp, _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 63), avx_pxMaskRotate0To6));// using mask [0011 1111] to blend
-    pTemp = _mm256_add_ps(pTemp, _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 127), avx_pxMaskRotate0To7));// using mask [0111 1111] to blend
+    pTemp = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 1), avx_pxMaskRotate0To1));   // using mask [0000 0001] to blend
+    pTemp = _mm256_add_ps(pTemp, _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 3), avx_pxMaskRotate0To2));     // using mask [0000 0011] to blend
+    pTemp = _mm256_add_ps(pTemp, _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 7), avx_pxMaskRotate0To3));     // using mask [0000 0111] to blend
+    pTemp = _mm256_add_ps(pTemp, _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 15), avx_pxMaskRotate0To4));    // using mask [0000 1111] to blend
+    pTemp = _mm256_add_ps(pTemp, _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 31), avx_pxMaskRotate0To5));    // using mask [0001 1111] to blend
+    pTemp = _mm256_add_ps(pTemp, _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 63), avx_pxMaskRotate0To6));    // using mask [0011 1111] to blend
+    pTemp = _mm256_add_ps(pTemp, _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 127), avx_pxMaskRotate0To7));   // using mask [0111 1111] to blend
     pTemp = _mm256_add_ps(pTemp, pSrc[1]);
     pDst[0] = _mm256_mul_ps(pTemp, pConvolutionFactor);
 }
@@ -275,20 +282,20 @@ inline void blend_permute_add_9x9_pln(__m256 *pSrc, __m256 *pDst, __m256 pConvol
 inline void blend_permute_add_9x9_pkd(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor)
 {
     __m256 pTemp;
-    pTemp = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 7), avx_pxMaskRotate0To3)); // using mask [0000 0111] to blend
-    pTemp = _mm256_add_ps(pTemp, _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 63), avx_pxMaskRotate0To6)); // using mask [0011 1111] to blend
-    pTemp = _mm256_add_ps(pTemp, _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[1], pSrc[2], 1), avx_pxMaskRotate0To1));  // using mask [0000 0001] to blend
-    pTemp = _mm256_add_ps(pTemp, _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[1], pSrc[2], 15), avx_pxMaskRotate0To4)); // using mask [0000 1111] to blend
-    pTemp = _mm256_add_ps(pTemp, _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[1], pSrc[2], 127), avx_pxMaskRotate0To7)); // using mask [0111 1111] to blend
-    pTemp = _mm256_add_ps(pTemp, _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[2], pSrc[3], 3), avx_pxMaskRotate0To2));  // using mask [0000 0011] to blend
-    pTemp = _mm256_add_ps(pTemp, _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[2], pSrc[3], 31), avx_pxMaskRotate0To5)); // using mask [0001 1111] to blend
+    pTemp = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 7), avx_pxMaskRotate0To3));  // using mask [0000 0111] to blend
+    pTemp = _mm256_add_ps(pTemp, _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 63), avx_pxMaskRotate0To6));   // using mask [0011 1111] to blend
+    pTemp = _mm256_add_ps(pTemp, _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[1], pSrc[2], 1), avx_pxMaskRotate0To1));    // using mask [0000 0001] to blend
+    pTemp = _mm256_add_ps(pTemp, _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[1], pSrc[2], 15), avx_pxMaskRotate0To4));   // using mask [0000 1111] to blend
+    pTemp = _mm256_add_ps(pTemp, _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[1], pSrc[2], 127), avx_pxMaskRotate0To7));  // using mask [0111 1111] to blend
+    pTemp = _mm256_add_ps(pTemp, _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[2], pSrc[3], 3), avx_pxMaskRotate0To2));    // using mask [0000 0011] to blend
+    pTemp = _mm256_add_ps(pTemp, _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[2], pSrc[3], 31), avx_pxMaskRotate0To5));   // using mask [0001 1111] to blend
     pTemp = _mm256_add_ps(pTemp, pSrc[3]);
     pDst[0] = _mm256_mul_ps(pTemp, pConvolutionFactor);
 }
 
-// -------------------- Set 1 box_filter load functions --------------------
+// -------------------- Filter load functions for U8 bitdepth --------------------
 
-// 3x3 kernel loads for U8 bitdepth
+// load function for 3x3 kernel size
 inline void rpp_load_box_filter_char_3x3_host(__m256i *pxRow, Rpp8u **srcPtrTemp, Rpp32s rowKernelLoopLimit)
 {
     // irrespective of row location, we need to load 2 rows for 3x3 kernel
@@ -302,7 +309,7 @@ inline void rpp_load_box_filter_char_3x3_host(__m256i *pxRow, Rpp8u **srcPtrTemp
         pxRow[2] = avx_px0;
 }
 
-// 5x5 kernel loads for U8 bitdepth
+// load function for 5x5 kernel size
 inline void rpp_load_box_filter_char_5x5_host(__m256i *pxRow, Rpp8u **srcPtrTemp, Rpp32s rowKernelLoopLimit)
 {
     // irrespective of row location, we need to load 3 rows for 5x5 kernel
@@ -315,7 +322,7 @@ inline void rpp_load_box_filter_char_5x5_host(__m256i *pxRow, Rpp8u **srcPtrTemp
         pxRow[k] = avx_px0;
 }
 
-// 7x7 kernel loads for U8 bitdepth
+// load function for 7x7 kernel size
 inline void rpp_load_box_filter_char_7x7_host(__m256i *pxRow, Rpp8u **srcPtrTemp, Rpp32s rowKernelLoopLimit)
 {
     // irrespective of row location, we need to load 4 rows for 7x7 kernel
@@ -329,7 +336,7 @@ inline void rpp_load_box_filter_char_7x7_host(__m256i *pxRow, Rpp8u **srcPtrTemp
         pxRow[k] = avx_px0;
 }
 
-// 9x9 kernel loads for U8 bitdepth
+// load function for 9x9 kernel size
 inline void rpp_load_box_filter_char_9x9_host(__m256i *pxRow, Rpp8u **srcPtrTemp, Rpp32s rowKernelLoopLimit)
 {
     // irrespective of row location, we need to load 5 rows for 9x9 kernel
@@ -344,7 +351,9 @@ inline void rpp_load_box_filter_char_9x9_host(__m256i *pxRow, Rpp8u **srcPtrTemp
         pxRow[k] = avx_px0;
 }
 
-// 3x3 kernel loads for I8 bitdepth
+// -------------------- Filter load functions for I8 bitdepth --------------------
+
+// load function for 3x3 kernel size
 inline void rpp_load_box_filter_char_3x3_host(__m256i *pxRow, Rpp8s **srcPtrTemp, Rpp32s rowKernelLoopLimit)
 {
     // irrespective of row location, we need to load 2 rows for 3x3 kernel
@@ -358,7 +367,7 @@ inline void rpp_load_box_filter_char_3x3_host(__m256i *pxRow, Rpp8s **srcPtrTemp
         pxRow[2] = avx_p0;
 }
 
-// 5x5 kernel loads for I8 bitdepth
+// load function for 5x5 kernel size
 inline void rpp_load_box_filter_char_5x5_host(__m256i *pxRow, Rpp8s **srcPtrTemp, Rpp32s rowKernelLoopLimit)
 {
     // irrespective of row location, we need to load 3 rows for 5x5 kernel
@@ -371,7 +380,7 @@ inline void rpp_load_box_filter_char_5x5_host(__m256i *pxRow, Rpp8s **srcPtrTemp
         pxRow[k] = avx_p0;
 }
 
-// 7x7 kernel loads for I8 bitdepth
+// load function for 7x7 kernel size
 inline void rpp_load_box_filter_char_7x7_host(__m256i *pxRow, Rpp8s **srcPtrTemp, Rpp32s rowKernelLoopLimit)
 {
     // irrespective of row location, we need to load 4 rows for 7x7 kernel
@@ -385,7 +394,7 @@ inline void rpp_load_box_filter_char_7x7_host(__m256i *pxRow, Rpp8s **srcPtrTemp
         pxRow[k] = avx_p0;
 }
 
-// 9x9 kernel loads for I8 bitdepth
+// load function for 9x9 kernel size
 inline void rpp_load_box_filter_char_9x9_host(__m256i *pxRow, Rpp8s **srcPtrTemp, Rpp32s rowKernelLoopLimit)
 {
     // irrespective of row location, we need to load 5 rows for 9x9 kernel
@@ -400,7 +409,9 @@ inline void rpp_load_box_filter_char_9x9_host(__m256i *pxRow, Rpp8s **srcPtrTemp
         pxRow[k] = avx_p0;
 }
 
-// 3x3 kernel loads for F32 bitdepth
+// -------------------- Filter load functions for F32 bitdepth --------------------
+
+// load function for 3x3 kernel size
 inline void rpp_load_box_filter_float_3x3_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit)
 {
     // irrespective of row location, we need to load 2 rows for 3x3 kernel
@@ -414,7 +425,7 @@ inline void rpp_load_box_filter_float_3x3_host(__m256 *pRow, Rpp32f **srcPtrTemp
         pRow[2] = avx_px0;
 }
 
-// 5x5 kernel loads for F32 bitdepth
+// load function for 5x5 kernel size
 inline void rpp_load_box_filter_float_5x5_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit)
 {
     // irrespective of row location, we need to load 3 rows for 5x5 kernel
@@ -427,7 +438,7 @@ inline void rpp_load_box_filter_float_5x5_host(__m256 *pRow, Rpp32f **srcPtrTemp
         pRow[k] = avx_p0;
 }
 
-// 7x7 kernel loads for F32 bitdepth
+// load function for 7x7 kernel size
 inline void rpp_load_box_filter_float_7x7_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit)
 {
     // irrespective of row location, we need to load 4 rows for 7x7 kernel
@@ -441,7 +452,7 @@ inline void rpp_load_box_filter_float_7x7_host(__m256 *pRow, Rpp32f **srcPtrTemp
         pRow[k] = avx_p0;
 }
 
-// 9x9 kernel loads for F32 bitdepth
+// load function for 9x9 kernel size
 inline void rpp_load_box_filter_float_9x9_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit)
 {
     // irrespective of row location, we need to load 5 rows for 9x9 kernel
@@ -456,7 +467,9 @@ inline void rpp_load_box_filter_float_9x9_host(__m256 *pRow, Rpp32f **srcPtrTemp
         pRow[k] = avx_p0;
 }
 
-// 3x3 kernel loads for F16 bitdepth
+// -------------------- Filter load functions for F16 bitdepth --------------------
+
+// load function for 3x3 kernel size
 inline void rpp_load_box_filter_float_3x3_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit)
 {
     // irrespective of row location, we need to load 2 rows for 3x3 kernel
@@ -470,7 +483,7 @@ inline void rpp_load_box_filter_float_3x3_host(__m256 *pRow, Rpp16f **srcPtrTemp
         pRow[2] = avx_px0;
 }
 
-// 5x5 kernel loads for F16 bitdepth
+// load function for 5x5 kernel size
 inline void rpp_load_box_filter_float_5x5_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit)
 {
     // irrespective of row location, we need to load 3 rows for 5x5 kernel
@@ -483,7 +496,7 @@ inline void rpp_load_box_filter_float_5x5_host(__m256 *pRow, Rpp16f **srcPtrTemp
         pRow[k] = avx_p0;
 }
 
-// 7x7 kernel loads for F16 bitdepth
+// load function for 7x7 kernel size
 inline void rpp_load_box_filter_float_7x7_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit)
 {
     // irrespective of row location, we need to load 4 rows for 7x7 kernel
@@ -497,7 +510,7 @@ inline void rpp_load_box_filter_float_7x7_host(__m256 *pRow, Rpp16f **srcPtrTemp
         pRow[k] = avx_p0;
 }
 
-// 9x9 kernel loads for F16 bitdepth
+// load function for 9x9 kernel size
 inline void rpp_load_box_filter_float_9x9_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit)
 {
     // irrespective of row location, we need to load 5 rows for 9x9 kernel
