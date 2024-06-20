@@ -169,10 +169,6 @@ int main(int argc, char **argv)
                     startWallTime = omp_get_wtime();
                     rppt_non_silent_region_detection_gpu(d_inputf32, srcDescPtr, srcLengthTensor, detectedIndex, detectionLength, cutOffDB, windowLength, referencePower, resetInterval, handle);
 
-                    // QA mode - verify outputs with golden outputs. Below code doesn’t run for performance tests
-                    if (testType == 0)
-                        verify_non_silent_region_detection(detectedIndex, detectionLength, testCaseName, batchSize, audioNames, dst);
-
                     break;
                 }
                 default:
@@ -199,10 +195,9 @@ int main(int argc, char **argv)
         // QA mode - verify outputs with golden outputs. Below code doesn’t run for performance tests
         if (testType == 0)
         {
-            /* Run only if testCase is not 0
-            For testCase 0 verify_non_silent_region_detection function is used for QA testing */
-            if (testCase != 0)
-                verify_output(outputf32, dstDescPtr, dstDims, testCaseName, dst, scriptPath);
+            // For testCase 0 verify_non_silent_region_detection function is used for QA testing */
+             if (testCase == 0)
+                verify_non_silent_region_detection(detectedIndex, detectionLength, testCaseName, batchSize, audioNames, dst);
 
             /* Dump the outputs to csv files for debugging
             Runs only if

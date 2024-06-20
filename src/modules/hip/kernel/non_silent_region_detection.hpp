@@ -123,6 +123,9 @@ __global__ void max_reduction_hip_tensor(float *srcPtr,
     if (id_x >= srcLength)
         return;
 
+    if (id_x + 8 > srcLength)
+        id_x -= (id_x + 8 - srcLength);
+
     srcIdx += id_x;
     d_float8 src_f8;
     rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);       // load 8 pixels to local memory
@@ -308,10 +311,11 @@ RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
                                                       Rpp32s resetInterval,
                                                       rpp::Handle& handle)
 {
-    // allocate temporary memory for MMS Array
-    Rpp32f *mmsArr;
-    hipMalloc(&(mmsArr), srcDescPtr->n * srcDescPtr->strides.nStride * sizeof(Rpp32f));
+    // check if scratch memory size required for moving mean square is within the limits
+    if ((srcDescPtr->n * srcDescPtr->strides.nStride) > 76800000) // 76800000 is the maximum scratch memory size needed for MMS buffer in RNNT training
+        return RPP_ERROR_OUT_OF_BOUND_SCRATCH_MEMORY_SIZE;
 
+    Rpp32f *mmsArr = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
     Rpp32s maxSharedMemoryInBytes = handle.GetLocalMemorySize();
     Rpp32s maxSharedMemoryElements = maxSharedMemoryInBytes / sizeof(Rpp32f);
     Rpp32s kSharedMemBanks = 32;
@@ -358,7 +362,7 @@ RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
 
     const Rpp32f cutOff = std::pow(10.0f, cutOffDB * 0.1f);
     bool referenceMax = (!referencePower);
-    Rpp32f *partialMaxArr = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
+    Rpp32f *partialMaxArr = mmsArr + srcDescPtr->n * srcDescPtr->strides.nStride;
 
     Rpp32s numBlocksPerSample = ceil(static_cast<Rpp32f>(srcDescPtr->strides.nStride) / (LOCAL_THREADS_X_1DIM * 8));
     Rpp32s cutOffMagKernelBlockSize = 1;
@@ -403,8 +407,5 @@ RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
                        cutOffMagPtr,
                        srcLengthTensor,
                        windowLength);
-    hipStreamSynchronize(handle.GetStream());
-
-    hipFree(mmsArr);
     return RPP_SUCCESS;
 }

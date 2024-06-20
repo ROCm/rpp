@@ -239,7 +239,7 @@ struct HandleImpl
         }
 
         hipMalloc(&(this->initHandle->mem.mgpu.rgbArr.rgbmem), sizeof(RpptRGB) * this->nBatchSize);
-        hipMalloc(&(this->initHandle->mem.mgpu.scratchBufferHip.floatmem), sizeof(Rpp32f) * 8294400);    // 3840 x 2160
+        hipMalloc(&(this->initHandle->mem.mgpu.scratchBufferHip.floatmem), sizeof(Rpp32f) * 76853888);    // (600000 + 293 + 128) * 128 - Maximum scratch memory required for RNNT training usecase
     }
 };
 
