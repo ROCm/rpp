@@ -8,7 +8,7 @@ __global__ void down_mixing_hip_tensor(float *srcPtr,
                                        int2 *srcDimsTensor)
 
 {
-    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
+    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
     int srcLength = srcDimsTensor[id_z].x;
     int channels = srcDimsTensor[id_z].y;
@@ -16,39 +16,33 @@ __global__ void down_mixing_hip_tensor(float *srcPtr,
     if (id_x >= srcLength)
         return;
 
+    float outVal = 0.0f;
     uint srcIdx = id_z * srcStride + id_x * channels;
+    int i = 0;
     int alignedChannels = (channels / 8) * 8;
-    float inverseChannels = (1.f / channels);
 
-    d_float8 dst_f8;
-    dst_f8.f4[0] = static_cast<float4>(0.0f);
-    dst_f8.f4[1] = dst_f8.f4[0];
-    for (int j = 0; j < 8; j++)
+    // do 8 pixel load till alignedChannels value
+    if (alignedChannels)
     {
-        int i = 0;
-        // do 8 pixel load till alignedChannels value
-        if (alignedChannels)
+        d_float8 outVal_f8;
+        outVal_f8.f4[0] = static_cast<float4>(0.0f);
+        outVal_f8.f4[1] = outVal_f8.f4[0];
+        for(; i < alignedChannels; i += 8, srcIdx += 8)
         {
-            d_float8 val_f8;
-            val_f8.f4[0] = static_cast<float4>(0.0f);
-            val_f8.f4[1] = val_f8.f4[0];
-            for(; i < alignedChannels; i += 8, srcIdx += 8)
-            {
-                d_float8 src_f8;
-                rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);
-                rpp_hip_math_add8(&val_f8, &src_f8, &val_f8);
-            }
-            val_f8.f4[0] += val_f8.f4[1];
-            dst_f8.f1[j] += (val_f8.f1[0] + val_f8.f1[1] + val_f8.f1[2] + val_f8.f1[3]);
+            d_float8 src_f8;
+            rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src_f8);
+            rpp_hip_math_add8(&outVal_f8, &src_f8, &outVal_f8);
         }
-        // process remaining channels
-        for(; i < channels; i++, srcIdx++)
-            dst_f8.f1[j] += srcPtr[srcIdx];
-        dst_f8.f1[j] *= inverseChannels;
+        outVal_f8.f4[0] += outVal_f8.f4[1];
+        outVal += (outVal_f8.f1[0] + outVal_f8.f1[1] + outVal_f8.f1[2] + outVal_f8.f1[3]);
     }
+    // process remaining channels
+    for(; i < channels; i++, srcIdx++)
+        outVal += srcPtr[srcIdx];
+    outVal *= (1.f / channels);
 
     uint dstIdx = id_z * dstStride + id_x;
-    rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
+    dstPtr[dstIdx] = outVal;
 }
 
 RppStatus hip_exec_down_mixing_tensor(Rpp32f *srcPtr,
@@ -59,7 +53,7 @@ RppStatus hip_exec_down_mixing_tensor(Rpp32f *srcPtr,
                                       bool normalizeWeights,
                                       rpp::Handle& handle)
 {
-    Rpp32s globalThreads_x = (dstDescPtr->strides.nStride + 7) >> 3;
+    Rpp32s globalThreads_x = dstDescPtr->strides.nStride;
     Rpp32s globalThreads_y = 1;
     Rpp32s globalThreads_z = dstDescPtr->n;
 
