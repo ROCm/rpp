@@ -119,10 +119,7 @@ def rpp_test_suite_parser_and_validator():
     parser.add_argument('--num_runs', type = int, default = 1, help = "Specifies the number of runs for running the performance tests")
     parser.add_argument('--preserve_output', type = int, default = 1, help = "preserves the output of the program - (0 = override output / 1 = preserve output )" )
     parser.add_argument('--batch_size', type = int, default = 1, help = "Specifies the batch size to use for running tests. Default is 1.")
-    if '--help' or '-h' in sys.argv:
-        parser.print_help()
-        print_case_list(voxelAugmentationMap, "HIP")
-        sys.exit(0)
+    print_case_list(voxelAugmentationMap, "HIP", parser)
     args = parser.parse_args()
 
     # check if the folder exists
