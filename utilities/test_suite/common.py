@@ -319,15 +319,18 @@ def get_layout_name(layout):
     elif layout == 2:
         return "PLN1"
 
-def print_case_list(imageAugmentationMap, backendType):
-    print("\n" + "="*30)
-    print("Functionality Reference List")
-    print("="*30 + "\n")
-    header_format = "{:<12} {:<15}"
-    print(header_format.format("CaseNumber", "Functionality"))
-    print("-" * 27)
+def print_case_list(imageAugmentationMap, backendType, parser):
+    if '--help' or '-h' in sys.argv:
+        parser.print_help()
+        print("\n" + "="*30)
+        print("Functionality Reference List")
+        print("="*30 + "\n")
+        header_format = "{:<12} {:<15}"
+        print(header_format.format("CaseNumber", "Functionality"))
+        print("-" * 27)
+        row_format = "{:<12} {:<15}"
+        for key, value_list in imageAugmentationMap.items():
+            if backendType in value_list:
+                print(row_format.format(key, value_list[0]))
 
-    row_format = "{:<12} {:<15}"
-    for key, value_list in imageAugmentationMap.items():
-        if backendType in value_list:
-            print(row_format.format(key, value_list[0]))
+        sys.exit(0)
