@@ -396,7 +396,7 @@ RppStatus transpose_generic_host_tensor(T *srcPtr,
                                         rpp::Handle& handle)
 {
     Rpp32u numThreads = handle.GetNumThreads();
-    Rpp32u tensorDims = dstGenericDescPtr->numDims - 1;
+    Rpp32u tensorDims = dstGenericDescPtr->numDims - 1;  // exclude batchsize from input dims
     Rpp32u batchSize = dstGenericDescPtr->dims[0];
 
     omp_set_dynamic(0);
