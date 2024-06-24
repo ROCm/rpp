@@ -74,20 +74,20 @@ inline void get_kernel_loop_limit(Rpp32s &index, Rpp32s &loopLimit, Rpp32u &padL
 }
 
 // extract 4 SSE registers from 2 AVX registers
-inline void extract_4sse_registers(__m256i &pxLower, __m256i &pxUpper, __m128i *px128)
+inline void extract_4sse_registers(__m256i *pxRowHalf, __m128i *px128)
 {
-    px128[0] =  _mm256_castsi256_si128(pxLower);
-    px128[1] =  _mm256_castsi256_si128(pxUpper);
-    px128[2] =  _mm256_extracti128_si256(pxLower, 1);
-    px128[3] =  _mm256_extracti128_si256(pxUpper, 1);
+    px128[0] =  _mm256_castsi256_si128(pxRowHalf[0]);
+    px128[1] =  _mm256_castsi256_si128(pxRowHalf[1]);
+    px128[2] =  _mm256_extracti128_si256(pxRowHalf[0], 1);
+    px128[3] =  _mm256_extracti128_si256(pxRowHalf[1], 1);
 }
 
 // extract 3 SSE registers from 2 AVX registers
-inline void extract_3sse_registers(__m256i &pxLower, __m256i &pxUpper, __m128i *px128)
+inline void extract_3sse_registers(__m256i *pxRowHalf, __m128i *px128)
 {
-    px128[0] =  _mm256_castsi256_si128(pxLower);
-    px128[1] =  _mm256_castsi256_si128(pxUpper);
-    px128[2] =  _mm256_extracti128_si256(pxLower, 1);
+    px128[0] =  _mm256_castsi256_si128(pxRowHalf[0]);
+    px128[1] =  _mm256_castsi256_si128(pxRowHalf[1]);
+    px128[2] =  _mm256_extracti128_si256(pxRowHalf[0], 1);
 }
 
 // -------------------- U8/I8 bitdepth compute functions for kernel size (3/5/7/9) --------------------
