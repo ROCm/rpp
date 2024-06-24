@@ -94,18 +94,24 @@ inline void extract_3sse_registers(__m256i &pxLower, __m256i &pxUpper, __m128i *
 
 inline void blend_shuffle_add_3x3_pln_host(__m128i &pxLower1, __m128i &pxLower2)
 {
+    /* pxLower1 - X01 X02 X03 X04 X05 X06 X07 X08
+       pxLower2 - X09 X10 X11 X12 X13 X14 X15 X16*/
+
     __m128i pxTemp[2];
-    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 1), xmm_pxMaskRotate0To1);    // using mask [0000 0001] to blend
-    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 3), xmm_pxMaskRotate0To3);    // using mask [0000 0011] to blend
+    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 1), xmm_pxMaskRotate0To1);    // blend with mask [0000 0001] and shuffle - X02 X03 X04 X05 X06 X07 X08 X09
+    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 3), xmm_pxMaskRotate0To3);    // blend with mask [0000 0011] and shuffle - X03 X04 X05 X06 X07 X08 X09 X10
     pxLower1 = _mm_add_epi16(pxLower1, pxTemp[0]);
     pxLower1 = _mm_add_epi16(pxLower1, pxTemp[1]);
 }
 
 inline void blend_shuffle_add_3x3_pkd_host(__m128i &pxLower1, __m128i &pxLower2)
 {
+    /* pxLower1 - R01 G01 B01 R02 G02 B02 R03 G03
+       pxLower2 - B03 R04 G04 B04 R05 G05 B05 R06*/
+
     __m128i pxTemp[2];
-    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 7), xmm_pxMaskRotate0To5);    // using mask [0000 0111] to blend
-    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 63), xmm_pxMaskRotate0To11);  // using mask [0011 1111] to blend
+    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 7), xmm_pxMaskRotate0To5);    // blend with mask [0000 0111] and shuffle - R02 G02 B02 R03 G03 B03 R04 G04
+    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(pxLower1, pxLower2, 63), xmm_pxMaskRotate0To11);  // blend with mask [0011 1111] and shuffle - R03 G03 B03 R04 G04 R05 G05 B05
     pxLower1 = _mm_add_epi16(pxLower1, pxTemp[0]);
     pxLower1 = _mm_add_epi16(pxLower1, pxTemp[1]);
 }
