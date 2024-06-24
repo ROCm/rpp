@@ -25,14 +25,6 @@ SOFTWARE.
 #ifndef RPPT_TENSOR_ARITHMETIC_OPERATIONS_H
 #define RPPT_TENSOR_ARITHMETIC_OPERATIONS_H
 
-/*!
- * \file
- * \brief RPPT Tensor Arithmetic operation Functions.
- *
- * \defgroup group_tensor_arithmetic Operations: AMD RPP Tensor Arithmetic Operations
- * \brief Tensor Arithmetic Operations.
- */
-
 #include "rpp.h"
 #include "rppdefs.h"
 #ifdef __cplusplus
@@ -42,7 +34,7 @@ extern "C" {
 /*!
  * \file
  * \brief RPPT Tensor Operations - Arithmetic Operations.
- * \defgroup group_tensor_arithmetic_operations RPPT Tensor Operations - Arithmetic Operations.
+ * \defgroup group_rppt_tensor_arithmetic_operations RPPT Tensor Operations - Arithmetic Operations.
  * \brief RPPT Tensor Operations - Arithmetic Operations.
  */
 
