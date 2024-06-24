@@ -25,6 +25,12 @@ SOFTWARE.
 #ifndef RPPT_TENSOR_AUDIO_AUGMENTATIONS_H
 #define RPPT_TENSOR_AUDIO_AUGMENTATIONS_H
 
+#include "rpp.h"
+#include "rppdefs.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*!
  * \file
  * \brief RPPT Tensor Operations - Audio Augmentations.
@@ -35,12 +41,6 @@ SOFTWARE.
 /*! \addtogroup group_rppt_tensor_audio_augmentations
  * @{
  */
-
-#include "rpp.h"
-#include "rppdefs.h"
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /*! \brief Non Silent Region Detection augmentation on HOST backend
  * \details Non Silent Region Detection augmentation for 1D audio buffer
@@ -167,6 +167,9 @@ RppStatus rppt_mel_filter_bank_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rpp
 * \retval RPP_ERROR* Unsuccessful completion.
 */
 RppStatus rppt_resample_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *inRateTensor, Rpp32f *outRateTensor, Rpp32s *srcDimsTensor, RpptResamplingWindow &window, rppHandle_t rppHandle);
+
+/*! @}
+ */
 
 #ifdef __cplusplus
 }

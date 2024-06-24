@@ -6135,6 +6135,46 @@ inline void compute_sum_24_host(__m256d *p, __m256d *pSumR, __m256d *pSumG, __m2
     pSumB[0] = _mm256_add_pd(_mm256_add_pd(p[4], p[5]), pSumB[0]); //add 8B values and bring it down to 4
 }
 
+inline void compute_variance_8_host(__m256d *p1, __m256d *pMean, __m256d *pVar)
+{
+    __m256d pSub = _mm256_sub_pd(p1[0], pMean[0]);
+    pVar[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVar[0]);
+    pSub = _mm256_sub_pd(p1[1], pMean[0]);
+    pVar[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVar[0]);
+}
+
+inline void compute_variance_channel_pln3_24_host(__m256d *p1, __m256d *pMeanR, __m256d *pMeanG, __m256d *pMeanB, __m256d *pVarR, __m256d *pVarG, __m256d *pVarB)
+{
+    __m256d pSub = _mm256_sub_pd(p1[0], pMeanR[0]);
+    pVarR[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVarR[0]);
+    pSub = _mm256_sub_pd(p1[1], pMeanR[0]);
+    pVarR[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVarR[0]);
+    pSub = _mm256_sub_pd(p1[2], pMeanG[0]);
+    pVarG[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVarG[0]);
+    pSub = _mm256_sub_pd(p1[3], pMeanG[0]);
+    pVarG[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVarG[0]);
+    pSub = _mm256_sub_pd(p1[4], pMeanB[0]);
+    pVarB[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVarB[0]);
+    pSub = _mm256_sub_pd(p1[5], pMeanB[0]);
+    pVarB[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVarB[0]);
+}
+
+inline void compute_variance_image_pln3_24_host(__m256d *p1, __m256d *pMean, __m256d *pVarR, __m256d *pVarG, __m256d *pVarB)
+{
+    __m256d pSub = _mm256_sub_pd(p1[0], pMean[0]);
+    pVarR[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVarR[0]);
+    pSub = _mm256_sub_pd(p1[1], pMean[0]);
+    pVarR[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVarR[0]);
+    pSub = _mm256_sub_pd(p1[2], pMean[0]);
+    pVarG[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVarG[0]);
+    pSub = _mm256_sub_pd(pMean[0], p1[3]);
+    pVarG[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVarG[0]);
+    pSub = _mm256_sub_pd(p1[4], pMean[0]);
+    pVarB[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVarB[0]);
+    pSub = _mm256_sub_pd(p1[5], pMean[0]);
+    pVarB[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVarB[0]);
+}
+
 inline void compute_vignette_48_host(__m256 *p, __m256 &pMultiplier, __m256 &pILocComponent, __m256 &pJLocComponent)
 {
     __m256 pGaussianValue;
@@ -6457,6 +6497,23 @@ inline void reduce_max_i48_host(__m128i *pMaxR, __m128i *pMaxG, __m128i *pMaxB, 
     px[1] = _mm_max_epi8(_mm_unpacklo_epi16(px[1], px[0]), _mm_unpackhi_epi16(px[1], px[0]));
     px[0] = _mm_max_epi8(_mm_unpacklo_epi32(px[1], zero), _mm_unpackhi_epi32(px[1], zero));
     result[0] = _mm_max_epi8(_mm_unpacklo_epi64(px[0], zero), _mm_unpackhi_epi64(px[0], zero));
+}
+
+inline void compute_remap_src_loc_sse(Rpp32f *rowRemapTablePtr, Rpp32f *colRemapTablePtr, Rpp32s *locArray, __m128 &pStride, __m128 &pWidthLimit, __m128 &pHeightLimit, const __m128 &pChannel = xmm_p1)
+{
+    __m128 pRowRemapVal = _mm_loadu_ps(rowRemapTablePtr);
+    pRowRemapVal = _mm_max_ps(_mm_min_ps(pRowRemapVal, pHeightLimit), xmm_p0);
+    __m128 pColRemapVal = _mm_loadu_ps(colRemapTablePtr);
+    pColRemapVal = _mm_max_ps(_mm_min_ps(pColRemapVal, pWidthLimit), xmm_p0);
+    __m128i pxRemappedSrcLoc = _mm_cvtps_epi32(_mm_fmadd_ps(pRowRemapVal, pStride, _mm_mul_ps(pColRemapVal, pChannel)));
+    _mm_storeu_si128((__m128i*) locArray, pxRemappedSrcLoc);
+}
+
+inline void compute_remap_src_loc(Rpp32f rowLoc, Rpp32f colLoc, Rpp32s &srcLoc, Rpp32s stride, Rpp32f widthLimit, Rpp32f heightLimit, Rpp32s channels = 1)
+{
+    rowLoc = std::max(0.0f, std::min(rowLoc, heightLimit));
+    colLoc = std::max(0.0f, std::min(colLoc, widthLimit));
+    srcLoc = (rowLoc * stride) + colLoc * channels;
 }
 
 inline void compute_transpose4x8_avx(__m256 *pSrc, __m128 *pDst)

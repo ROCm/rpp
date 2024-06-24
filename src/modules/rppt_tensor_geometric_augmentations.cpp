@@ -1102,60 +1102,6 @@ RppStatus rppt_slice_host(RppPtr_t srcPtr,
     return RPP_SUCCESS;
 }
 
-/******************** transpose ********************/
-
-RppStatus rppt_transpose_host(RppPtr_t srcPtr,
-                              RpptGenericDescPtr srcGenericDescPtr,
-                              RppPtr_t dstPtr,
-                              RpptGenericDescPtr dstGenericDescPtr,
-                              Rpp32u *permTensor,
-                              Rpp32u *roiTensor,
-                              rppHandle_t rppHandle)
-{
-    if ((srcGenericDescPtr->dataType == RpptDataType::U8) && (dstGenericDescPtr->dataType == RpptDataType::U8))
-    {
-        transpose_generic_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes,
-                                      srcGenericDescPtr,
-                                      static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes,
-                                      dstGenericDescPtr,
-                                      permTensor,
-                                      roiTensor,
-                                      rpp::deref(rppHandle));
-    }
-    else if ((srcGenericDescPtr->dataType == RpptDataType::F16) && (dstGenericDescPtr->dataType == RpptDataType::F16))
-    {
-        transpose_generic_host_tensor(reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes),
-                                      srcGenericDescPtr,
-                                      reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
-                                      dstGenericDescPtr,
-                                      permTensor,
-                                      roiTensor,
-                                      rpp::deref(rppHandle));
-    }
-    else if ((srcGenericDescPtr->dataType == RpptDataType::F32) && (dstGenericDescPtr->dataType == RpptDataType::F32))
-    {
-        transpose_f32_f32_host_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes),
-                                      srcGenericDescPtr,
-                                      reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
-                                      dstGenericDescPtr,
-                                      permTensor,
-                                      roiTensor,
-                                      rpp::deref(rppHandle));
-    }
-    else if ((srcGenericDescPtr->dataType == RpptDataType::I8) && (dstGenericDescPtr->dataType == RpptDataType::I8))
-    {
-        transpose_generic_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcGenericDescPtr->offsetInBytes,
-                                      srcGenericDescPtr,
-                                      static_cast<Rpp8s*>(dstPtr) + dstGenericDescPtr->offsetInBytes,
-                                      dstGenericDescPtr,
-                                      permTensor,
-                                      roiTensor,
-                                      rpp::deref(rppHandle));
-    }
-
-    return RPP_SUCCESS;
-}
-
 /******************** flip_voxel ********************/
 
 RppStatus rppt_flip_voxel_host(RppPtr_t srcPtr,
@@ -1208,6 +1154,201 @@ RppStatus rppt_flip_voxel_host(RppPtr_t srcPtr,
                                      roiType,
                                      layoutParams,
                                      rpp::deref(rppHandle));
+    }
+
+    return RPP_SUCCESS;
+}
+
+/******************** remap ********************/
+
+RppStatus rppt_remap_host(RppPtr_t srcPtr,
+                          RpptDescPtr srcDescPtr,
+                          RppPtr_t dstPtr,
+                          RpptDescPtr dstDescPtr,
+                          Rpp32f *rowRemapTable,
+                          Rpp32f *colRemapTable,
+                          RpptDescPtr tableDescPtr,
+                          RpptInterpolationType interpolationType,
+                          RpptROIPtr roiTensorPtrSrc,
+                          RpptRoiType roiType,
+                          rppHandle_t rppHandle)
+{
+    RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+
+    if (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR && interpolationType != RpptInterpolationType::BILINEAR)
+        return RPP_ERROR_NOT_IMPLEMENTED;
+
+    if(interpolationType == RpptInterpolationType::NEAREST_NEIGHBOR)
+    {
+        if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+        {
+            remap_nn_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                       srcDescPtr,
+                                       static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                       dstDescPtr,
+                                       rowRemapTable,
+                                       colRemapTable,
+                                       tableDescPtr,
+                                       roiTensorPtrSrc,
+                                       roiType,
+                                       layoutParams,
+                                       rpp::deref(rppHandle));
+        }
+        else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+        {
+            remap_nn_f16_f16_host_tensor(reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                         srcDescPtr,
+                                         reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                         dstDescPtr,
+                                         rowRemapTable,
+                                         colRemapTable,
+                                         tableDescPtr,
+                                         roiTensorPtrSrc,
+                                         roiType,
+                                         layoutParams,
+                                         rpp::deref(rppHandle));
+        }
+        else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+        {
+            remap_nn_f32_f32_host_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                         srcDescPtr,
+                                         reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                         dstDescPtr,
+                                         rowRemapTable,
+                                         colRemapTable,
+                                         tableDescPtr,
+                                         roiTensorPtrSrc,
+                                         roiType,
+                                         layoutParams,
+                                         rpp::deref(rppHandle));
+        }
+        else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+        {
+            remap_nn_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                       srcDescPtr,
+                                       static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                       dstDescPtr,
+                                       rowRemapTable,
+                                       colRemapTable,
+                                       tableDescPtr,
+                                       roiTensorPtrSrc,
+                                       roiType,
+                                       layoutParams,
+                                       rpp::deref(rppHandle));
+        }
+    }
+    else if(interpolationType == RpptInterpolationType::BILINEAR)
+    {
+        if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+        {
+            remap_bilinear_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                             srcDescPtr,
+                                             static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                             dstDescPtr,
+                                             rowRemapTable,
+                                             colRemapTable,
+                                             tableDescPtr,
+                                             roiTensorPtrSrc,
+                                             roiType,
+                                             layoutParams,
+                                             rpp::deref(rppHandle));
+        }
+        else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+        {
+            remap_bilinear_f16_f16_host_tensor(reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                               srcDescPtr,
+                                               reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                               dstDescPtr,
+                                               rowRemapTable,
+                                               colRemapTable,
+                                               tableDescPtr,
+                                               roiTensorPtrSrc,
+                                               roiType,
+                                               layoutParams,
+                                               rpp::deref(rppHandle));
+        }
+        else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+        {
+            remap_bilinear_f32_f32_host_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                               srcDescPtr,
+                                               reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                               dstDescPtr,
+                                               rowRemapTable,
+                                               colRemapTable,
+                                               tableDescPtr,
+                                               roiTensorPtrSrc,
+                                               roiType,
+                                               layoutParams,
+                                               rpp::deref(rppHandle));
+        }
+        else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+        {
+            remap_bilinear_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                             srcDescPtr,
+                                             static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                             dstDescPtr,
+                                             rowRemapTable,
+                                             colRemapTable,
+                                             tableDescPtr,
+                                             roiTensorPtrSrc,
+                                             roiType,
+                                             layoutParams,
+                                             rpp::deref(rppHandle));
+        }
+    }
+
+    return RPP_SUCCESS;
+}
+
+/******************** transpose ********************/
+
+RppStatus rppt_transpose_host(RppPtr_t srcPtr,
+                              RpptGenericDescPtr srcGenericDescPtr,
+                              RppPtr_t dstPtr,
+                              RpptGenericDescPtr dstGenericDescPtr,
+                              Rpp32u *permTensor,
+                              Rpp32u *roiTensor,
+                              rppHandle_t rppHandle)
+{
+    if ((srcGenericDescPtr->dataType == RpptDataType::U8) && (dstGenericDescPtr->dataType == RpptDataType::U8))
+    {
+        transpose_generic_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes,
+                                      srcGenericDescPtr,
+                                      static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes,
+                                      dstGenericDescPtr,
+                                      permTensor,
+                                      roiTensor,
+                                      rpp::deref(rppHandle));
+    }
+    else if ((srcGenericDescPtr->dataType == RpptDataType::F16) && (dstGenericDescPtr->dataType == RpptDataType::F16))
+    {
+        transpose_generic_host_tensor(reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes),
+                                      srcGenericDescPtr,
+                                      reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
+                                      dstGenericDescPtr,
+                                      permTensor,
+                                      roiTensor,
+                                      rpp::deref(rppHandle));
+    }
+    else if ((srcGenericDescPtr->dataType == RpptDataType::F32) && (dstGenericDescPtr->dataType == RpptDataType::F32))
+    {
+        transpose_f32_f32_host_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcGenericDescPtr->offsetInBytes),
+                                      srcGenericDescPtr,
+                                      reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstGenericDescPtr->offsetInBytes),
+                                      dstGenericDescPtr,
+                                      permTensor,
+                                      roiTensor,
+                                      rpp::deref(rppHandle));
+    }
+    else if ((srcGenericDescPtr->dataType == RpptDataType::I8) && (dstGenericDescPtr->dataType == RpptDataType::I8))
+    {
+        transpose_generic_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcGenericDescPtr->offsetInBytes,
+                                      srcGenericDescPtr,
+                                      static_cast<Rpp8s*>(dstPtr) + dstGenericDescPtr->offsetInBytes,
+                                      dstGenericDescPtr,
+                                      permTensor,
+                                      roiTensor,
+                                      rpp::deref(rppHandle));
     }
 
     return RPP_SUCCESS;
@@ -2081,6 +2222,87 @@ RppStatus rppt_flip_voxel_gpu(RppPtr_t srcPtr,
 #endif // backend
 }
 
+/******************** remap ********************/
+
+RppStatus rppt_remap_gpu(RppPtr_t srcPtr,
+                         RpptDescPtr srcDescPtr,
+                         RppPtr_t dstPtr,
+                         RpptDescPtr dstDescPtr,
+                         Rpp32f *rowRemapTable,
+                         Rpp32f *colRemapTable,
+                         RpptDescPtr tableDescPtr,
+                         RpptInterpolationType interpolationType,
+                         RpptROIPtr roiTensorPtrSrc,
+                         RpptRoiType roiType,
+                         rppHandle_t rppHandle)
+{
+#ifdef HIP_COMPILE
+    if (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR && interpolationType != RpptInterpolationType::BILINEAR)
+        return RPP_ERROR_NOT_IMPLEMENTED;
+
+    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+    {
+        hip_exec_remap_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                              srcDescPtr,
+                              static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                              dstDescPtr,
+                              rowRemapTable,
+                              colRemapTable,
+                              tableDescPtr,
+                              interpolationType,
+                              roiTensorPtrSrc,
+                              roiType,
+                              rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+    {
+        hip_exec_remap_tensor(reinterpret_cast<half*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                              srcDescPtr,
+                              reinterpret_cast<half*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                              dstDescPtr,
+                              rowRemapTable,
+                              colRemapTable,
+                              tableDescPtr,
+                              interpolationType,
+                              roiTensorPtrSrc,
+                              roiType,
+                              rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        hip_exec_remap_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                              srcDescPtr,
+                              reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                              dstDescPtr,
+                              rowRemapTable,
+                              colRemapTable,
+                              tableDescPtr,
+                              interpolationType,
+                              roiTensorPtrSrc,
+                              roiType,
+                              rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+    {
+        hip_exec_remap_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                              srcDescPtr,
+                              static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                              dstDescPtr,
+                              rowRemapTable,
+                              colRemapTable,
+                              tableDescPtr,
+                              interpolationType,
+                              roiTensorPtrSrc,
+                              roiType,
+                              rpp::deref(rppHandle));
+    }
+
+    return RPP_SUCCESS;
+#elif defined(OCL_COMPILE)
+    return RPP_ERROR_NOT_IMPLEMENTED;
+#endif // backend
+}
+
 /******************** transpose ********************/
 
 RppStatus rppt_transpose_gpu(RppPtr_t srcPtr,
@@ -2132,6 +2354,7 @@ RppStatus rppt_transpose_gpu(RppPtr_t srcPtr,
                                   roiTensor,
                                   rpp::deref(rppHandle));
     }
+
     return RPP_SUCCESS;
 #elif defined(OCL_COMPILE)
     return RPP_ERROR_NOT_IMPLEMENTED;
