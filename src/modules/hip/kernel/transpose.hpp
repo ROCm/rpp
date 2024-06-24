@@ -18,30 +18,30 @@ __global__ void transpose_generic_hip_tensor(T *srcPtr,
         return;
 
     int maxLength = dstStrides[0];
-    int xDiff = maxLength - (maxLength & ~7);    // difference between maxLength and (alignedLength = maxLength & ~7)
+    int xDiff = maxLength - (maxLength & ~7);    // difference between maxLength and alignedLength. (alignedLength = maxLength & ~7)
 
-    // Move dstIdx and srcIdx to start of given input tensor
-    uint dstIdx = (id_y * *dstStrides++);
-    uint srcIdx = (id_y * *srcStrides++);
+    // Point dstIdx and srcIdx to be at the start of given input tensor in batch
+    uint dstIdx = (id_y * *dstStrides++);        // post-increment dstStrides pointer by 1 to exclude outermost batch-dimension stride (for example exclude nStride in an NCDHW tensor)
+    uint srcIdx = (id_y * *srcStrides++);        // post-increment srcStrides pointer by 1 to exclude outermost batch-dimension stride (for example exclude nStride in an NCDHW tensor)
 
     d_uint8 dstCoords[RPPT_MAX_DIMS], srcIdxs;
-    uint4 idx0123 = make_uint4(id_x, id_x + 1, id_x + 2, id_x + 3);
-    uint4 idx4567 = make_uint4(id_x + 4, id_x + 5, id_x + 6, id_x + 7);
-    srcIdxs.ui4[0] = srcIdxs.ui4[1] = make_uint4(srcIdx, srcIdx, srcIdx, srcIdx);
+    uint4 idx0123 = make_uint4(id_x, id_x + 1, id_x + 2, id_x + 3);                  // get idx for elements 0, 1, 2, 3 in the 8-element vectorized kernel
+    uint4 idx4567 = make_uint4(id_x + 4, id_x + 5, id_x + 6, id_x + 7);              // get idx for elements 4, 5, 6, 7 in the 8-element vectorized kernel
+    srcIdxs.ui4[0] = srcIdxs.ui4[1] = make_uint4(srcIdx, srcIdx, srcIdx, srcIdx);    // create 8-element vectorized srcIdxs
 
-    // Compute 8 dstCoords given id_x
+    // Compute 8 dstCoords given idx0123 and idx4567, corresponding to the 8 srcCoords processed in a thread
     for (int i = 0; i < tensorDims; i++)
     {
-        dstCoords[i].ui4[0] = (idx0123 / dstStrides[i]) % dstDims[i];
-        dstCoords[i].ui4[1] = (idx4567 / dstStrides[i]) % dstDims[i];
+        dstCoords[i].ui4[0] = (idx0123 / dstStrides[i]) % dstDims[i];                // transpose 4 srcCoords using idx0123 to 4 dstCoords in dstCoords[i].ui4[0] for the ith tensor dimension
+        dstCoords[i].ui4[1] = (idx4567 / dstStrides[i]) % dstDims[i];                // transpose 4 srcCoords using idx4567 to 4 dstCoords in dstCoords[i].ui4[1] for the ith tensor dimension
     }
 
     // Compute corresponding 8 srcIdxs given id_x
     for (int i = 0; i < tensorDims; i++)
     {
         uint4 srcStrides_ui4 = static_cast<uint4>(srcStrides[permTensor[permTensor[i]]]);
-        srcIdxs.ui4[0] += (dstCoords[permTensor[i]].ui4[0] * srcStrides_ui4);
-        srcIdxs.ui4[1] += (dstCoords[permTensor[i]].ui4[1] * srcStrides_ui4);
+        srcIdxs.ui4[0] += (dstCoords[permTensor[i]].ui4[0] * srcStrides_ui4);        // incrementally adding respective (coordinate value * stride) to get srcIdxs for 0, 1, 2, 3 elements
+        srcIdxs.ui4[1] += (dstCoords[permTensor[i]].ui4[1] * srcStrides_ui4);        // incrementally adding respective (coordinate value * stride) to get srcIdxs for 4, 5, 6, 7 elements
         dstIdx += (dstCoords[i].ui1[0] * dstStrides[i]);
     }
 
