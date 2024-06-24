@@ -1589,8 +1589,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                             add_rows_3x3(pRow, &pTemp[1]);
                             pTemp[2] = avx_p0;
 
-                            blend_permute_add_3x3_pln(&pTemp[0], &pDst[0], pConvolutionFactor);
-                            blend_permute_add_3x3_pln(&pTemp[1], &pDst[1], pConvolutionFactor);
+                            blend_permute_add_mul_3x3_pln(&pTemp[0], &pDst[0], pConvolutionFactor);
+                            blend_permute_add_mul_3x3_pln(&pTemp[1], &pDst[1], pConvolutionFactor);
                             rpp_store16_float(dstPtrTemp, pDst);
 
                             increment_row_ptrs(srcPtrTemp, kernelSize, 6);
@@ -1644,8 +1644,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         rpp_load_box_filter_float_3x3_host(pRow, srcPtrTemp, rowKernelLoopLimit);
                         add_rows_3x3(pRow, &pTemp[2]);
 
-                        blend_permute_add_3x3_pkd(&pTemp[0], &pDst[0], pConvolutionFactor);
-                        blend_permute_add_3x3_pkd(&pTemp[1], &pDst[1], pConvolutionFactor);
+                        blend_permute_add_mul_3x3_pkd(&pTemp[0], &pDst[0], pConvolutionFactor);
+                        blend_permute_add_mul_3x3_pkd(&pTemp[1], &pDst[1], pConvolutionFactor);
 
                         rpp_store16_float(dstPtrTemp, pDst);
                         dstPtrTemp += 16;
@@ -1697,8 +1697,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         rpp_load_box_filter_float_3x3_host(pRow, srcPtrTemp, rowKernelLoopLimit);
                         add_rows_3x3(pRow, &pTemp[2]);
 
-                        blend_permute_add_3x3_pkd(&pTemp[0], &pDst[0], pConvolutionFactor);
-                        blend_permute_add_3x3_pkd(&pTemp[1], &pDst[1], pConvolutionFactor);
+                        blend_permute_add_mul_3x3_pkd(&pTemp[0], &pDst[0], pConvolutionFactor);
+                        blend_permute_add_mul_3x3_pkd(&pTemp[1], &pDst[1], pConvolutionFactor);
 
                         __m128 pDstPln[3];
                         rpp_convert12_f32pkd3_to_f32pln3(pDst, pDstPln);
@@ -1768,8 +1768,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                             add_rows_3x3(pRow, &pTemp[1]);
                             pTemp[2] = avx_p0;
 
-                            blend_permute_add_3x3_pln(&pTemp[0], &pResult[channelStride], pConvolutionFactor);
-                            blend_permute_add_3x3_pln(&pTemp[1], &pResult[channelStride + 1], pConvolutionFactor);
+                            blend_permute_add_mul_3x3_pln(&pTemp[0], &pResult[channelStride], pConvolutionFactor);
+                            blend_permute_add_mul_3x3_pln(&pTemp[1], &pResult[channelStride + 1], pConvolutionFactor);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 6);
                         }
 
@@ -1843,8 +1843,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                             add_rows_5x5(pRow, &pTemp[1]);
                             pTemp[2] = avx_p0;
 
-                            blend_permute_add_5x5_pln(&pTemp[0], &pDst[0], pConvolutionFactor);
-                            blend_permute_add_5x5_pln(&pTemp[1], &pDst[1], pConvolutionFactor);
+                            blend_permute_add_mul_5x5_pln(&pTemp[0], &pDst[0], pConvolutionFactor);
+                            blend_permute_add_mul_5x5_pln(&pTemp[1], &pDst[1], pConvolutionFactor);
 
                             rpp_store16_float(dstPtrTemp, pDst);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 4);
@@ -1902,8 +1902,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         add_rows_5x5(pRow, &pTemp[2]);
                         pTemp[3] = avx_p0;
 
-                        blend_permute_add_5x5_pkd(&pTemp[0], &pDst[0], pConvolutionFactor);
-                        blend_permute_add_5x5_pkd(&pTemp[1], &pDst[1], pConvolutionFactor);
+                        blend_permute_add_mul_5x5_pkd(&pTemp[0], &pDst[0], pConvolutionFactor);
+                        blend_permute_add_mul_5x5_pkd(&pTemp[1], &pDst[1], pConvolutionFactor);
 
                         rpp_store16_float(dstPtrTemp, pDst);
                         increment_row_ptrs(srcPtrTemp, kernelSize, -4);
@@ -1967,7 +1967,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 8);
                             rpp_load_box_filter_float_5x5_host(pRow, srcPtrTemp[c], rowKernelLoopLimit);
                             add_rows_5x5(pRow, &pTemp[1]);
-                            blend_permute_add_5x5_pln(pTemp, &pResultPln[c], pConvolutionFactor);
+                            blend_permute_add_mul_5x5_pln(pTemp, &pResultPln[c], pConvolutionFactor);
                         }
 
                         // convert result from pln to pkd format and store in output buffer
@@ -2032,8 +2032,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         add_rows_5x5(pRow, &pTemp[2]);
                         pTemp[3] = avx_p0;
 
-                        blend_permute_add_5x5_pkd(&pTemp[0], &pDst[0], pConvolutionFactor);
-                        blend_permute_add_5x5_pkd(&pTemp[1], &pDst[1], pConvolutionFactor);
+                        blend_permute_add_mul_5x5_pkd(&pTemp[0], &pDst[0], pConvolutionFactor);
+                        blend_permute_add_mul_5x5_pkd(&pTemp[1], &pDst[1], pConvolutionFactor);
 
                         __m128 pDstPln[3];
                         rpp_convert12_f32pkd3_to_f32pln3(pDst, pDstPln);
@@ -2102,7 +2102,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                             increment_row_ptrs(srcPtrTemp, kernelSize, 8);
                             rpp_load_box_filter_float_7x7_host(pRow, srcPtrTemp, rowKernelLoopLimit);
                             add_rows_7x7(pRow, &pTemp[1]);
-                            blend_permute_add_7x7_pln(&pTemp[0], &pDst, pConvolutionFactor);
+                            blend_permute_add_mul_7x7_pln(&pTemp[0], &pDst, pConvolutionFactor);
 
                             // convert result from pln to pkd format and store in output buffer
                             if constexpr (std::is_same<T, Rpp32f>::value)
@@ -2171,7 +2171,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         add_rows_7x7(pRow, &pTemp[3]);
 
                         __m256 pDst;
-                        blend_permute_add_7x7_pkd(pTemp, &pDst, pConvolutionFactor);
+                        blend_permute_add_mul_7x7_pkd(pTemp, &pDst, pConvolutionFactor);
 
                         // convert result from pln to pkd format and store in output buffer
                         if constexpr (std::is_same<T, Rpp32f>::value)
@@ -2243,7 +2243,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 8);
                             rpp_load_box_filter_float_7x7_host(pRow, srcPtrTemp[c], rowKernelLoopLimit);
                             add_rows_7x7(pRow, &pTemp[1]);
-                            blend_permute_add_7x7_pln(pTemp, &pResultPln[c], pConvolutionFactor);
+                            blend_permute_add_mul_7x7_pln(pTemp, &pResultPln[c], pConvolutionFactor);
                         }
                         // convert result from pln to pkd format and store in output buffer
                         if constexpr (std::is_same<T, Rpp32f>::value)
@@ -2311,8 +2311,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         pTemp[4] = avx_p0;
 
                         __m256 pDst[2];
-                        blend_permute_add_7x7_pkd(&pTemp[0], &pDst[0], pConvolutionFactor);
-                        blend_permute_add_7x7_pkd(&pTemp[1], &pDst[1], pConvolutionFactor);
+                        blend_permute_add_mul_7x7_pkd(&pTemp[0], &pDst[0], pConvolutionFactor);
+                        blend_permute_add_mul_7x7_pkd(&pTemp[1], &pDst[1], pConvolutionFactor);
 
                         __m128 pDstPln[3];
                         rpp_convert12_f32pkd3_to_f32pln3(pDst, pDstPln);
@@ -2386,7 +2386,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
 
                             rpp_load_box_filter_float_9x9_host(pRow, srcPtrTemp, rowKernelLoopLimit);
                             add_rows_9x9(pRow, &pTemp[1]);
-                            blend_permute_add_9x9_pln(pTemp, &pDst, pConvolutionFactor);
+                            blend_permute_add_mul_9x9_pln(pTemp, &pDst, pConvolutionFactor);
 
                             if constexpr (std::is_same<T, Rpp32f>::value)
                                 _mm256_storeu_ps(dstPtrTemp, pDst);
@@ -2454,7 +2454,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         add_rows_9x9(pRow, &pTemp[3]);
 
                         __m256 pDst;
-                        blend_permute_add_9x9_pkd(pTemp, &pDst, pConvolutionFactor);
+                        blend_permute_add_mul_9x9_pkd(pTemp, &pDst, pConvolutionFactor);
                         if constexpr (std::is_same<T, Rpp32f>::value)
                             _mm256_storeu_ps(dstPtrTemp, pDst);
                         else if constexpr (std::is_same<T, Rpp16f>::value)
@@ -2525,7 +2525,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                             rpp_load_box_filter_float_9x9_host(pRow, srcPtrTemp[c], rowKernelLoopLimit);
                             add_rows_9x9(pRow, &pTemp[1]);
 
-                            blend_permute_add_9x9_pln(pTemp, &pResultPln[c], pConvolutionFactor);
+                            blend_permute_add_mul_9x9_pln(pTemp, &pResultPln[c], pConvolutionFactor);
                         }
 
                         if constexpr (std::is_same<T, Rpp32f>::value)
@@ -2595,8 +2595,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         add_rows_9x9(pRow, &pTemp[4]);
 
                         __m256 pDst[2];
-                        blend_permute_add_9x9_pkd(&pTemp[0], &pDst[0], pConvolutionFactor);
-                        blend_permute_add_9x9_pkd(&pTemp[1], &pDst[1], pConvolutionFactor);
+                        blend_permute_add_mul_9x9_pkd(&pTemp[0], &pDst[0], pConvolutionFactor);
+                        blend_permute_add_mul_9x9_pkd(&pTemp[1], &pDst[1], pConvolutionFactor);
 
                         __m128 pDstPln[3];
                         rpp_convert12_f32pkd3_to_f32pln3(pDst, pDstPln);

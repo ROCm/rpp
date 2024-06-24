@@ -211,21 +211,21 @@ inline void blend_shuffle_add_9x9_pkd_host(__m128i *px128)
 
 // -------------------- F32/F16 bitdepth compute functions for kernel size (3/5/7/9) --------------------
 
-inline void blend_permute_add_3x3_pln(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor)
+inline void blend_permute_add_mul_3x3_pln(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor)
 {
     pDst[0] = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 1), avx_pxMaskRotate0To1));   // using mask [0000 0001] to blend
     pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 3), avx_pxMaskRotate0To2));   // using mask [0000 0011] to blend
     pDst[0] = _mm256_mul_ps(pDst[0], pConvolutionFactor);
 }
 
-inline void blend_permute_add_3x3_pkd(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor)
+inline void blend_permute_add_mul_3x3_pkd(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor)
 {
     pDst[0] = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 7), avx_pxMaskRotate0To3));   // using mask [0000 0111] to blend
     pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 63), avx_pxMaskRotate0To6));  // using mask [0011 1111] to blend
     pDst[0] = _mm256_mul_ps(pDst[0], pConvolutionFactor);
 }
 
-inline void blend_permute_add_5x5_pln(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor)
+inline void blend_permute_add_mul_5x5_pln(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor)
 {
     pDst[0] = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 1), avx_pxMaskRotate0To1));   // using mask [0000 0001] to blend
     pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 3), avx_pxMaskRotate0To2));   // using mask [0000 0011] to blend
@@ -234,7 +234,7 @@ inline void blend_permute_add_5x5_pln(__m256 *pSrc, __m256 *pDst, __m256 pConvol
     pDst[0] = _mm256_mul_ps(pDst[0], pConvolutionFactor);
 }
 
-inline void blend_permute_add_5x5_pkd(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor)
+inline void blend_permute_add_mul_5x5_pkd(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor)
 {
     pDst[0] = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 7), avx_pxMaskRotate0To3));   // using mask [0000 0111] to blend
     pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 63), avx_pxMaskRotate0To6));  // using mask [0011 1111] to blend
@@ -243,7 +243,7 @@ inline void blend_permute_add_5x5_pkd(__m256 *pSrc, __m256 *pDst, __m256 pConvol
     pDst[0] = _mm256_mul_ps(pDst[0], pConvolutionFactor);
 }
 
-inline void blend_permute_add_7x7_pln(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor)
+inline void blend_permute_add_mul_7x7_pln(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor)
 {
     pDst[0] = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 1), avx_pxMaskRotate0To1));   // using mask [0000 0001] to blend
     pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 3), avx_pxMaskRotate0To2));   // using mask [0000 0011] to blend
@@ -254,7 +254,7 @@ inline void blend_permute_add_7x7_pln(__m256 *pSrc, __m256 *pDst, __m256 pConvol
     pDst[0] = _mm256_mul_ps(pDst[0], pConvolutionFactor);
 }
 
-inline void blend_permute_add_7x7_pkd(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor)
+inline void blend_permute_add_mul_7x7_pkd(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor)
 {
     pDst[0] = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 7), avx_pxMaskRotate0To3));   // using mask [0000 0111] to blend
     pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 63), avx_pxMaskRotate0To6));  // using mask [0011 1111] to blend
@@ -265,7 +265,7 @@ inline void blend_permute_add_7x7_pkd(__m256 *pSrc, __m256 *pDst, __m256 pConvol
     pDst[0] = _mm256_mul_ps(pDst[0], pConvolutionFactor);
 }
 
-inline void blend_permute_add_9x9_pln(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor)
+inline void blend_permute_add_mul_9x9_pln(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor)
 {
     __m256 pTemp;
     pTemp = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 1), avx_pxMaskRotate0To1));   // using mask [0000 0001] to blend
@@ -279,7 +279,7 @@ inline void blend_permute_add_9x9_pln(__m256 *pSrc, __m256 *pDst, __m256 pConvol
     pDst[0] = _mm256_mul_ps(pTemp, pConvolutionFactor);
 }
 
-inline void blend_permute_add_9x9_pkd(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor)
+inline void blend_permute_add_mul_9x9_pkd(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor)
 {
     __m256 pTemp;
     pTemp = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 7), avx_pxMaskRotate0To3));  // using mask [0000 0111] to blend
