@@ -2574,7 +2574,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                     {
-                        __m256 pRow[9], pTemp[6];
+                        __m256 pRow[9], pTemp[5];
                         rpp_load_box_filter_float_9x9_host(pRow, srcPtrTemp, rowKernelLoopLimit);
                         add_rows_9x9(pRow, &pTemp[0]);
 
@@ -2593,7 +2593,6 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         increment_row_ptrs(srcPtrTemp, kernelSize, 8);
                         rpp_load_box_filter_float_9x9_host(pRow, srcPtrTemp, rowKernelLoopLimit);
                         add_rows_9x9(pRow, &pTemp[4]);
-                        pTemp[5] = avx_p0;
 
                         __m256 pDst[2];
                         blend_permute_add_9x9_pkd(&pTemp[0], &pDst[0], pConvolutionFactor);
