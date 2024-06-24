@@ -25,6 +25,8 @@ SOFTWARE.
 #ifndef RPPT_TENSOR_AUDIO_AUGMENTATIONS_H
 #define RPPT_TENSOR_AUDIO_AUGMENTATIONS_H
 
+#ifdef AUDIO_SUPPORT
+
 #include "rpp.h"
 #include "rppdefs.h"
 #ifdef __cplusplus
@@ -174,4 +176,7 @@ RppStatus rppt_resample_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t d
 #ifdef __cplusplus
 }
 #endif
+
+#endif // AUDIO_SUPPORT
+
 #endif // RPPT_TENSOR_AUDIO_AUGMENTATIONS_H
