@@ -34,7 +34,7 @@ extern "C" {
 /*!
  * \file
  * \brief RPPT Tensor Operations - Logical Operations.
- * \defgroup group_tensor_logical_operations RPPT Tensor Operations - Logical Operations.
+ * \defgroup group_rppt_tensor_logical_operations RPPT Tensor Operations - Logical Operations.
  * \brief RPPT Tensor Operations - Logical Operations.
  */
 
