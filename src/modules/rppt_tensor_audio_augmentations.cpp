@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#ifdef AUDIO_SUPPORT
+
 #include "rppdefs.h"
 #include "rppi_validate.hpp"
 #include "rppt_tensor_audio_augmentations.h"
@@ -268,3 +270,5 @@ RppStatus rppt_resample_host(RppPtr_t srcPtr,
         return RPP_ERROR_NOT_IMPLEMENTED;
     }
 }
+
+#endif // AUDIO_SUPPORT
