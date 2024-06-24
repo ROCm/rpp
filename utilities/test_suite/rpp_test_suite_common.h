@@ -87,6 +87,7 @@ std::map<int, string> augmentationMap =
     {32, "erase"},
     {33, "crop_and_patch"},
     {34, "lut"},
+    {35, "glitch"},
     {36, "color_twist"},
     {37, "crop"},
     {38, "crop_mirror_normalize"},
@@ -908,7 +909,7 @@ inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, vector
         fseek(fp, 0, SEEK_END);
         long jpegSize = ftell(fp);
         rewind(fp);
-        unsigned char* jpegBuf = (unsigned char*)malloc(jpegSize);
+        unsigned char* jpegBuf = (unsigned char*)calloc(jpegSize, sizeof(Rpp8u));
         fread(jpegBuf, 1, jpegSize, fp);
         fclose(fp);
 
@@ -921,14 +922,14 @@ inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, vector
         if(descPtr->c == 3)
         {
             elementsInRow = width * descPtr->c;
-            rgbBuf= (Rpp8u*)malloc(width * height * 3);
+            rgbBuf= (Rpp8u*)calloc(width * height * 3, sizeof(Rpp8u));
             if(tjDecompress2(m_jpegDecompressor, jpegBuf, jpegSize, rgbBuf, width, width * 3, height, TJPF_RGB, TJFLAG_ACCURATEDCT) != 0)
                 std::cerr << "\n Jpeg image decode failed ";
         }
         else
         {
             elementsInRow = width;
-            rgbBuf= (Rpp8u*)malloc(width * height);
+            rgbBuf= (Rpp8u*)calloc(width * height, sizeof(Rpp8u));
             if(tjDecompress2(m_jpegDecompressor, jpegBuf, jpegSize, rgbBuf, width, width, height, TJPF_GRAY, 0) != 0)
                 std::cerr << "\n Jpeg image decode failed ";
         }
