@@ -72,16 +72,14 @@ RppStatus hip_exec_transpose_tensor(T *srcPtr,
                                     Rpp32u *roiTensor,
                                     rpp::Handle& handle)
 {
-
+    // Check for feasibility of direct copy from input to output if no permutation detected
     bool copyInput = true;
-    // Check for feasibility of direct copy from input to output
     for(int i = 0; i < dstGenericDescPtr->numDims - 1; i++)
         copyInput *= (permTensor[i] == i);
 
     if (copyInput)
     {
         CHECK_RETURN_STATUS(hipMemcpyAsync(dstPtr, srcPtr, dstGenericDescPtr->dims[0] * dstGenericDescPtr->strides[0] * sizeof(T), hipMemcpyDeviceToDevice, handle.GetStream()));
-        hipStreamSynchronize(handle.GetStream());
     }
     else
     {
