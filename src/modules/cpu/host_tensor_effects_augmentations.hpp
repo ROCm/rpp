@@ -31,6 +31,7 @@ SOFTWARE.
 #include "kernel/noise_shot.hpp"
 #include "kernel/noise_gaussian.hpp"
 #include "kernel/non_linear_blend.hpp"
+#include "kernel/glitch.hpp"
 #include "kernel/water.hpp"
 #include "kernel/ricap.hpp"
 #include "kernel/vignette.hpp"
