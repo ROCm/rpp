@@ -51,6 +51,7 @@ endif()
 if(NOT RPP_FOUND)
     message("-- ${Yellow}${PROJECT_NAME} requires RPP. Install RPP before running CTests")
 else()
+    # RPP installation - Backend check
     set(RPP_BACKEND_HIP_FOUND 0)
     if(EXISTS ${RPP_INCLUDE_DIR}/rpp_backend.h)
         file(READ ${RPP_INCLUDE_DIR}/rpp_backend.h RPP_BACKEND_FILE)
@@ -61,6 +62,14 @@ else()
         set(BACKEND "HIP")
     elseif(NOT DEFINED BACKEND)
         set(BACKEND "CPU")
+    endif()
+
+    # RPP installation - Audio support check
+    set(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND 0)
+    if(EXISTS ${RPP_INCLUDE_DIR}/rpp_audio_augmentations_support.h)
+        file(READ ${RPP_INCLUDE_DIR}/rpp_audio_augmentations_support.h RPP_AUDIO_AUGMENTATIONS_SUPPORT_FILE)
+        string(REGEX MATCH "RPP_AUDIO_AUGMENTATIONS_SUPPORT ([0-9]*)" _ ${RPP_AUDIO_AUGMENTATIONS_SUPPORT_FILE})
+        set(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND ${CMAKE_MATCH_1})
     endif()
 endif(NOT RPP_FOUND)
 
@@ -87,13 +96,15 @@ if(Python3_FOUND)
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )
     endif(NIFTI_FOUND)
-    if(libsnd_LIBS)
-        add_test(
-            NAME rpp_qa_tests_tensor_audio_host_all
-            COMMAND ${Python3_EXECUTABLE} ${ROCM_PATH}/share/rpp/test/HOST/runAudioTests.py --qa_mode 1 --batch_size 3
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        )
-    endif(libsnd_LIBS)
+    if(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND)
+        if(libsnd_LIBS)
+            add_test(
+                NAME rpp_qa_tests_tensor_audio_host_all
+                COMMAND ${Python3_EXECUTABLE} ${ROCM_PATH}/share/rpp/test/HOST/runAudioTests.py --qa_mode 1 --batch_size 3
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            )
+        endif(libsnd_LIBS)
+    endif(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND)
 
     if( "${BACKEND}" STREQUAL "HIP")
         # Running all HIP tests
