@@ -104,7 +104,7 @@ int main(int argc, char **argv)
 
     if (layoutType == 2)
     {
-        if(testCase == 36 || testCase == 31 || testCase == 45 || testCase == 86)
+        if(testCase == 36 || testCase == 31 || testCase == 35 || testCase == 45 || testCase == 86)
         {
             printf("\ncase %d does not exist for PLN1 layout\n", testCase);
             return -1;
@@ -396,6 +396,10 @@ int main(int argc, char **argv)
     Rpp32f *intensity;
     if(testCase == 46)
         CHECK_RETURN_STATUS(hipHostMalloc(&intensity, batchSize * sizeof(Rpp32f)));
+
+    RpptChannelOffsets *rgbOffsets;
+    if(testCase == 35)
+        CHECK_RETURN_STATUS(hipHostMalloc(&rgbOffsets, batchSize * sizeof(RpptChannelOffsets)));
 
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
@@ -835,6 +839,28 @@ int main(int argc, char **argv)
                     break;
 
                     CHECK_RETURN_STATUS(hipHostFree(lutBuffer));
+                }
+                case 35:
+                {
+                    testCaseName = "glitch";
+
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        rgbOffsets[i].r.x = 10;
+                        rgbOffsets[i].r.y = 10;
+                        rgbOffsets[i].g.x = 0;
+                        rgbOffsets[i].g.y = 0;
+                        rgbOffsets[i].b.x = 5;
+                        rgbOffsets[i].b.y = 5;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_glitch_gpu(d_input, srcDescPtr, d_output, dstDescPtr, rgbOffsets, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
                 }
                 case 36:
                 {
@@ -1520,6 +1546,8 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostFree(cropRoi));
         CHECK_RETURN_STATUS(hipHostFree(patchRoi));
     }
+    if(testCase == 35)
+        CHECK_RETURN_STATUS(hipHostFree(rgbOffsets));
     if (reductionTypeCase)
     {
         CHECK_RETURN_STATUS(hipHostFree(reductionFuncResultArr));

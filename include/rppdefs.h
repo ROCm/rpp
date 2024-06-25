@@ -452,6 +452,16 @@ typedef struct
 
 } RpptRoiLtrb;
 
+/*! \brief RPPT Tensor Channel Offsets struct
+ * \ingroup group_rppdefs
+ */
+typedef struct
+{
+    RppiPoint r;
+    RppiPoint g;
+    RppiPoint b;
+} RpptChannelOffsets;
+
 /*! \brief RPPT Tensor 3D ROI LTFRBB struct
  * \ingroup group_rppdefs
  */
