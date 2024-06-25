@@ -9,6 +9,8 @@ __host__ __device__ __forceinline__ int compute_pos_in_smem(int pos)
     return pos + (pos >> 5); // since shared memory banks considered is 32
 }
 
+/* compute prefix sum on the input buffer passed
+   prefix sum of an array is an array where each element is the sum of all previous elements in the input array, inclusive of the current element */
 __device__ __forceinline__ void compute_prefix_sum(float *input, uint bufferLength)
 {
     int offset = 1;
@@ -17,8 +19,11 @@ __device__ __forceinline__ void compute_prefix_sum(float *input, uint bufferLeng
     int threadIdxMul2 = 2 * hipThreadIdx_x;
     int blockDimMul2 = 2 * hipBlockDim_x;
 
+    /* compute intermediate prefix sums in a up sweep manner
+       (each level in the hierarchy doubles the distance between the pairs of elements being added) */
     for (int d = bufferLength >> 1; d > 0; d >>= 1)
     {
+        // syncthreads before proceeding to next iteration
         __syncthreads();
         int dMul2 = 2 * d;
         for (int idxMul2 = threadIdxMul2; idxMul2 < dMul2; idxMul2 += blockDimMul2)
@@ -37,12 +42,15 @@ __device__ __forceinline__ void compute_prefix_sum(float *input, uint bufferLeng
         input[compute_pos_in_smem(last)] = 0;
     }
 
+    /* compute final prefix sums in a down sweep manner
+       (each level in the hierarchy halves the distance between the pairs of elements being added) */
     for (int d = 1; d < bufferLength; d <<= 1)
     {
         offset >>= 1;
         offset_i2 = static_cast<int2>(offset);
         offsetAB_i2 = make_int2(offset - 1, 2 * offset - 1);
         __syncthreads();
+        // syncthreads before proceeding to next iteration
 
         int dMul2 = 2 * d;
         for (int idxMul2 = threadIdxMul2; idxMul2 < dMul2; idxMul2 += blockDimMul2)
