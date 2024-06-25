@@ -239,7 +239,12 @@ struct HandleImpl
         }
 
         hipMalloc(&(this->initHandle->mem.mgpu.rgbArr.rgbmem), sizeof(RpptRGB) * this->nBatchSize);
-        hipMalloc(&(this->initHandle->mem.mgpu.scratchBufferHip.floatmem), sizeof(Rpp32f) * 76853888);    // (600000 + 293 + 128) * 128 - Maximum scratch memory required for RNNT training usecase
+
+        /* (600000 + 293 + 128) * 128 - Maximum scratch memory required for Non Silent Region Detection HIP kernel used in RNNT training (uses a batchsize 128)
+           - 600000 is the maximum size that will be required for MMS buffer based on Librispeech dataset
+           - 293 is the size required for storing reduction outputs for 600000 size sample
+           - 128 is the size required for storing cutOffDB values for batch size 128 */
+        hipMalloc(&(this->initHandle->mem.mgpu.scratchBufferHip.floatmem), sizeof(Rpp32f) * 76853888);
     }
 };
 
