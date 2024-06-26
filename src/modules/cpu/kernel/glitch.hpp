@@ -177,8 +177,8 @@ RppStatus glitch_u8_u8_host_tensor(Rpp8u *srcPtr,
                     for (int c = 0; c < 3; c++)
                     {
                         __m256i p;
-                        p = _mm256_loadu_epi8(srcPtrChannel + (glitchSrcLocArray[c] + c * srcDescPtr->strides.cStride));
-                        _mm256_storeu_epi8((dstPtrTemp + c * srcDescPtr->strides.cStride), p);
+                        p = _mm256_loadu_si256((__m256i *)(srcPtrChannel + (glitchSrcLocArray[c] + (c * srcDescPtr->strides.cStride))));
+                        _mm256_storeu_si256((__m256i *)(dstPtrTemp + (c * srcDescPtr->strides.cStride)), p);
                     }
                     dstPtrTemp += 32;
                 }
@@ -212,7 +212,7 @@ RppStatus glitch_u8_u8_host_tensor(Rpp8u *srcPtr,
                     __m256i p;
                     compute_src_loc(dstLocRow, vectorLoopCount, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 3);
                     rpp_simd_load(rpp_glitch_load30_u8pkd3_to_u8pkd3_avx, srcPtrChannel, glitchSrcLocArray, p);
-                    _mm256_storeu_epi8(dstPtrTemp, p);
+                    _mm256_storeu_si256((__m256i *)(dstPtrTemp), p);
                     dstPtrTemp += 30;
                 }
 #endif
@@ -385,8 +385,7 @@ RppStatus glitch_f32_f32_host_tensor(Rpp32f *srcPtr,
                     __m256 p;
                     compute_src_loc(dstLocRow, vectorLoopCount, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 3);
                     rpp_simd_load(rpp_glitch_load6_f32pkd3_to_f32pkd3_avx, srcPtrChannel, glitchSrcLocArray, p);
-
-                    _mm256_storeu_epi8(dstPtrTemp, p);
+                    _mm256_storeu_si256((__m256i *)(dstPtrTemp), p);
                     dstPtrTemp += 6;
                 }
 #endif
@@ -636,8 +635,8 @@ RppStatus glitch_i8_i8_host_tensor(Rpp8s *srcPtr,
                     for (int c = 0; c < 3; c++)
                     {
                         __m256i p;
-                        p = _mm256_loadu_epi8(srcPtrChannel + (glitchSrcLocArray[c] + c * srcDescPtr->strides.cStride));
-                        _mm256_storeu_epi8((dstPtrTemp + c * srcDescPtr->strides.cStride), p);
+                        p = _mm256_loadu_si256((__m256i *)(srcPtrChannel + (glitchSrcLocArray[c] + (c * srcDescPtr->strides.cStride))));
+                        _mm256_storeu_si256((__m256i *)(dstPtrTemp + (c * srcDescPtr->strides.cStride)), p);
                     }
                     dstPtrTemp += 32;
                 }
@@ -671,8 +670,7 @@ RppStatus glitch_i8_i8_host_tensor(Rpp8s *srcPtr,
                     __m256i p;
                     compute_src_loc(dstLocRow, vectorLoopCount, glitchSrcLocArray, srcDescPtr, rgbOffsets, roi, batchCount, 3);
                     rpp_simd_load(rpp_glitch_load30_i8pkd3_to_i8pkd3_avx, srcPtrChannel, glitchSrcLocArray, p);
-
-                    _mm256_storeu_epi8(dstPtrTemp, p);
+                    _mm256_storeu_si256((__m256i *)(dstPtrTemp), p);
                     dstPtrTemp += 30;
                 }
 #endif
