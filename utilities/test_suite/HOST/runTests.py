@@ -49,25 +49,6 @@ def get_log_file_list(preserveOutput):
         outFolderPath + "/OUTPUT_PERFORMANCE_LOGS_HOST_" + timestamp + "/Tensor_host_pln1_raw_performance_log.txt"
     ]
 
-# Functionality group finder
-def func_group_finder(case_number):
-    if case_number < 5 or case_number == 13 or case_number == 36 or case_number == 31 or case_number == 45:
-        return "color_augmentations"
-    elif case_number == 8 or case_number == 30 or case_number == 82 or case_number == 83 or case_number == 84:
-        return "effects_augmentations"
-    elif case_number < 40 or case_number == 63:
-        return "geometric_augmentations"
-    elif case_number < 62:
-        return "arithmetic_operations"
-    elif case_number < 69:
-        return "logical_operations"
-    elif case_number < 87:
-        return "data_exchange_operations"
-    elif case_number < 88:
-        return "statistical_operations"
-    else:
-        return "miscellaneous"
-
 def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
     print("\n\n\n\n")
     print("--------------------------------")

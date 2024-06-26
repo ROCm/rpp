@@ -98,6 +98,17 @@ miscAugmentationMap  = {
     1: ["normalize", "HOST", "HIP"]
 }
 
+ImageAugmentationGroupMap = {
+    "color_augmentations" : [0, 1, 2, 3, 4, 13, 31, 34, 36, 45, 81],
+    "effects_augmentations" : [8, 29, 30, 32, 35, 46, 82, 83, 84],
+    "geometric_augmentations" : [20, 21, 23, 33, 37, 38, 39, 63, 79, 80, 92],
+    "filter_augmentations" : [49, 54],
+    "arithmetic_operations" : [61],
+    "logical_operations" : [65, 68],
+    "data_exchange_operations" : [70, 85, 86],
+    "statistical_operations" : [87, 88, 89, 90, 91]
+}
+
 # Checks if the folder path is empty, or is it a root folder, or if it exists, and remove its contents
 def validate_and_remove_files(path):
     if not path:  # check if a string is empty
@@ -319,6 +330,7 @@ def get_layout_name(layout):
     elif layout == 2:
         return "PLN1"
 
+# Prints entire case list if user asks for help
 def print_case_list(imageAugmentationMap, backendType, parser):
     if '--help' or '-h' in sys.argv:
         parser.print_help()
@@ -334,3 +346,10 @@ def print_case_list(imageAugmentationMap, backendType, parser):
                 print(row_format.format(key, value_list[0]))
 
         sys.exit(0)
+
+# Functionality group finder
+def func_group_finder(case_number):
+    for key, value in ImageAugmentationGroupMap.items():
+        if case_number in value:
+            return key
+    return "miscellaneous"
