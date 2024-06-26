@@ -137,4 +137,3 @@ if(RPP_AUDIO_SUPPORT)
         target_link_libraries(Tensor_audio_hip ${libsnd_LIBS} -lsndfile -lrpp pthread ${LINK_LIBRARY_LIST})
     endif()
 endif()
-
