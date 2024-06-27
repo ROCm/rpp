@@ -73,10 +73,14 @@ if(NOT WIN32)
     set(White       "${Esc}[37m")
 endif()
 
+# RPP Audio support - (default = ON, support currently on Ubuntu - user to set to OFF otherwise)
+option(RPP_AUDIO_SUPPORT      "Build RPP with Audio Support"         ON)
+
 # Set backend options
 if(APPLE)
     set(CMAKE_MACOSX_RPATH 1)
     set(BACKEND "CPU")
+    set(RPP_AUDIO_SUPPORT OFF)
     message("-- ${Magenta}Apple macOS Detected -- GPU Support turned OFF${ColourReset}")
 endif()
 
@@ -134,8 +138,6 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 find_package(HALF REQUIRED)
 include_directories(${HALF_INCLUDE_DIRS})
 
-# RPP Audio support - (default = ON, support currently on Ubuntu - user to set to OFF otherwise)
-option(RPP_AUDIO_SUPPORT      "Build RPP with Audio Support"         ON)
 if (RPP_AUDIO_SUPPORT)
     add_definitions(-DAUDIO_SUPPORT)        # For compile flags in RPP
     set(RPP_AUDIO_AUGMENTATIONS_SUPPORT 1)  # For cmakedefine01 in rpp_audio_augmentations_support.h.in
