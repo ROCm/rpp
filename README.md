@@ -27,63 +27,50 @@ Input<br>(nifti1 .nii medical image) | fused_multiply_add_scalar<br>(brightened 
 
 * Linux
   * Ubuntu - `20.04` / `22.04`
-  * CentOS - `7`
   * RedHat - `8` / `9`
-  * SLES - `15-SP4`
+  * SLES - `15-SP5`
 
-* [ROCm supported hardware](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html)
+* [ROCm-supported hardware](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html)
+> [!IMPORTANT] 
+> `gfx908` or higher GPU required
 
-* Install ROCm with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html) with `--usecase=rocm`
-
-* Clang Version `5.0.1` and above
-
-  * Ubuntu `20`/`22`
-
-  ```shell
-  sudo apt-get install clang
-  ```
-
-  * CentOS `7`
-
-  ```shell
-  sudo yum install llvm-toolset-7-clang llvm-toolset-7-clang-analyzer llvm-toolset-7-clang-tools-extra
-  scl enable llvm-toolset-7 bash
-  ```
-
-  * RHEL `8`/`9`
-
-  ```shell
-  sudo yum install clang
-  ```
-
-  * SLES `15-SP4` (use `ROCm LLVM Clang`)
-
-  ```shell
-  zypper -n --no-gpg-checks install clang
-  update-alternatives --install /usr/bin/clang clang /opt/rocm-*/llvm/bin/clang 100
-  update-alternatives --install /usr/bin/clang++ clang++ /opt/rocm-*/llvm/bin/clang++ 100
-  ```
+* Install ROCm `6.1.0` or later with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html): Required usecase - rocm
+> [!IMPORTANT]
+> `sudo amdgpu-install --usecase=rocm`
 
 * CMake Version `3.5` and above
-
-* IEEE 754-based half-precision floating-point library (half.hpp)
-
-  * `half` package install
-
   ```shell
-  sudo apt-get install half
+  sudo apt install cmake
   ```
 
-* Compiler with support for C++ Version `17` and above
+* Clang Version `5.0.1` and above
+  ```shell
+  sudo apt install clang
+  ```
 
-* OpenMP
+* [Half-precision floating-point](https://half.sourceforge.net) library - Version `1.12.0` or higher
+  ```shell
+  sudo apt install half
+  ```
 
-* Threads
+> [!IMPORTANT] 
+> * Compiler features required
+>   * C++17
+>   * OpenMP
+>   * Threads
 
-> [!NOTE]
-> You must use the appropriate package manager for your operating system.
+>[!NOTE]
+> * All package installs are shown with the `apt` package manager. Use the appropriate package manager for your operating system.
 
-## Build and install instructions
+## Installation instructions
+
+The installation process uses the following steps:
+
+* [ROCm-supported hardware](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html) install verification
+
+* Install ROCm `6.1.0` or later with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html) with `--usecase=rocm`
+
+* Use **either** [package install](#package-install) **or** [source install](#source-install) as described below.
 
 ### Package install
 
@@ -124,7 +111,7 @@ sudo zypper install rpp rpp-devel rpp-test
 > [!NOTE]
 > RPP has support for two GPU backends: **OPENCL** and **HIP**:
 
-* Instructions for building RPP with the **HIP** GPU backend (default GPU backend):
+#### HIP Backend
 
   ```shell
   mkdir build-hip
@@ -143,7 +130,7 @@ sudo zypper install rpp rpp-devel rpp-test
 >[!NOTE]
 > `make test` requires [test suite prerequisites](utilities/test_suite/README.md) installed
 
-* Instructions for building RPP with **OPENCL** GPU backend
+#### OCL Backend
 
   ```shell
   mkdir build-ocl
@@ -177,28 +164,7 @@ ctest -VV
 
 ## Test Functionalities
 
-To test the functionalities of RPP, run the code shown for your backend:
-
-* HIP
-
-  ```bash
-    cd rpp/utilities/rpp-unittests/HIP_NEW
-    ./testAllScript.sh
-  ```
-
-* OpenCL
-
-  ```bash
-    cd rpp/utilities/rpp-unittests/OCL_NEW
-    ./testAllScript.sh
-  ```
-
-  * CPU
-
-  ```bash
-    cd rpp/utilities/rpp-unittests/HOST_NEW
-    ./testAllScript.sh
-  ```
+To test latest Image/Voxel/Audio/Miscellaneous functionalities of RPP using a python script please view [AMD ROCm Performance Primitives (RPP) Test Suite](utilities/test_suite/README.md)
 
 ## MIVisionX support - OpenVX extension
 
@@ -238,8 +204,7 @@ All notable changes for each release are added to our [changelog](CHANGELOG.md).
 
 * Linux distribution
   * Ubuntu - `20.04` / `22.04`
-  * CentOS - `7`
   * RedHat - `8` / `9`
-  * SLES - `15-SP4`
-* ROCm: rocm-core - `5.7.0.50700-63`
+  * SLES - `15-SP5`
+* ROCm: rocm-core - `6.1.0.60100-64`
 * OpenCV - [4.6.0](https://github.com/opencv/opencv/releases/tag/4.6.0)

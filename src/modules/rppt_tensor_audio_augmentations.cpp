@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#ifdef AUDIO_SUPPORT
+
 #include "rppdefs.h"
 #include "rppi_validate.hpp"
 #include "rppt_tensor_audio_augmentations.h"
@@ -314,4 +316,4 @@ RppStatus rppt_pre_emphasis_filter_gpu(RppPtr_t srcPtr,
 #endif // backend
 }
 
-#endif // GPU_SUPPORT
+#endif // AUDIO_SUPPORT

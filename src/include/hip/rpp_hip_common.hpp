@@ -63,12 +63,12 @@ typedef union { float f1[24];   float2 f2[12];  float3 f3[8];   float4 f4[6];   
 // uint
 typedef union { uint ui1[6];    uint2 ui2[3];                                                   }   d_uint6;
 typedef union { uint ui1[8];    uint4 ui4[2];                                                   }   d_uint8;
-typedef union { uint4 ui4[6];   d_uint8 ui8[3];                                                 }   d_uint24;
+typedef union { uint ui1[24];   uint4 ui4[6];   d_uint8 ui8[3];                                 }   d_uint24;
 
 // int
 typedef union { int i1[6];      int2 i2[3];                                                     }   d_int6;
 typedef union { int i1[8];      int4 i4[2];                                                     }   d_int8;
-typedef union { int4 i4[6];     d_int8 i8[3];                                                   }   d_int24;
+typedef union { int i1[24];     int4 i4[6];     d_int8 i8[3];                                   }   d_int24;
 
 // half
 typedef struct { half h1[3];                                                                    }   d_half3_s;
@@ -82,6 +82,7 @@ typedef union { uchar uc1[8];   uchar4 uc4[2];                                  
 typedef union { uchar uc1[24];  uchar4 uc4[6];  uchar3 uc3[8];    d_uchar8 uc8[3];              }   d_uchar24;
 
 // schar
+typedef struct { schar sc1[3];                                                                  }   d_schar3_s;
 typedef struct { schar sc1[8];                                                                  }   d_schar8_s;
 typedef struct { d_schar8_s sc8[3];                                                             }   d_schar24_s;
 
@@ -598,6 +599,24 @@ __device__ __forceinline__ void rpp_hip_load8_and_unpack_to_float8_mirror(half *
     srcPtr_f8->f4[1] = make_float4(src1_f2.y, src1_f2.x, src2_f2.y, src2_f2.x);    // write 03-00
 }
 
+// UINT loads without layout toggle (8 UINT pixels)
+
+__device__ __forceinline__ void rpp_hip_load8_and_unpack_to_float8(uint *srcPtr, d_float8 *srcPtr_f8)
+{
+    d_uint8 src_ui8 = *(d_uint8 *)srcPtr;
+    srcPtr_f8->f4[0] = make_float4((float)src_ui8.ui4[0].x, (float)src_ui8.ui4[0].y, (float)src_ui8.ui4[0].z, (float)src_ui8.ui4[0].w);
+    srcPtr_f8->f4[1] = make_float4((float)src_ui8.ui4[1].x, (float)src_ui8.ui4[1].y, (float)src_ui8.ui4[1].z, (float)src_ui8.ui4[1].w);
+}
+
+// INT loads without layout toggle (8 INT pixels)
+
+__device__ __forceinline__ void rpp_hip_load8_and_unpack_to_float8(int *srcPtr, d_float8 *srcPtr_f8)
+{
+    d_int8 src_i8 = *(d_int8 *)srcPtr;
+    srcPtr_f8->f4[0] = make_float4((float)src_i8.i4[0].x, (float)src_i8.i4[0].y, (float)src_i8.i4[0].z, (float)src_i8.i4[0].w);
+    srcPtr_f8->f4[1] = make_float4((float)src_i8.i4[1].x, (float)src_i8.i4[1].y, (float)src_i8.i4[1].z, (float)src_i8.i4[1].w);
+}
+
 // U8 loads without layout toggle PLN3 to PLN3 (24 U8 pixels)
 
 __device__ __forceinline__ void rpp_hip_load24_pln3_and_unpack_to_float24_pln3(uchar *srcPtr, uint increment, d_float24 *srcPtr_f24)
@@ -861,6 +880,36 @@ __device__ __forceinline__ void rpp_hip_load24_pkd3_and_unpack_to_float24_pln3_m
     srcPtr_f24->f4[3] = make_float4(__half2float(src_h24.h1[10]), __half2float(src_h24.h1[ 7]), __half2float(src_h24.h1[ 4]), __half2float(src_h24.h1[ 1]));    // write G03-G00 (mirrored load)
     srcPtr_f24->f4[4] = make_float4(__half2float(src_h24.h1[23]), __half2float(src_h24.h1[20]), __half2float(src_h24.h1[17]), __half2float(src_h24.h1[14]));    // write B07-B04 (mirrored load)
     srcPtr_f24->f4[5] = make_float4(__half2float(src_h24.h1[11]), __half2float(src_h24.h1[ 8]), __half2float(src_h24.h1[ 5]), __half2float(src_h24.h1[ 2]));    // write B03-B00 (mirrored load)
+}
+
+// UINT loads with layout toggle PLN3 to PKD3 (24 UINT pixels)
+
+__device__ __forceinline__ void rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(uint *srcPtr, d_float24 *srcPtr_f24)
+{
+    d_uint24 src_ui24;
+    *(d_uint24_s *)&src_ui24 = *(d_uint24_s *)srcPtr;
+
+    srcPtr_f24->f4[0] = make_float4((float)src_ui24.ui1[ 0], (float)src_ui24.ui1[ 3], (float)src_ui24.ui1[ 6], (float)src_ui24.ui1[ 9]);    // write R00-R03
+    srcPtr_f24->f4[1] = make_float4((float)src_ui24.ui1[12], (float)src_ui24.ui1[15], (float)src_ui24.ui1[18], (float)src_ui24.ui1[21]);    // write R04-R07
+    srcPtr_f24->f4[2] = make_float4((float)src_ui24.ui1[ 1], (float)src_ui24.ui1[ 4], (float)src_ui24.ui1[ 7], (float)src_ui24.ui1[10]);    // write G00-G03
+    srcPtr_f24->f4[3] = make_float4((float)src_ui24.ui1[13], (float)src_ui24.ui1[16], (float)src_ui24.ui1[19], (float)src_ui24.ui1[22]);    // write G04-G07
+    srcPtr_f24->f4[4] = make_float4((float)src_ui24.ui1[ 2], (float)src_ui24.ui1[ 5], (float)src_ui24.ui1[ 8], (float)src_ui24.ui1[11]);    // write B00-B03
+    srcPtr_f24->f4[5] = make_float4((float)src_ui24.ui1[14], (float)src_ui24.ui1[17], (float)src_ui24.ui1[20], (float)src_ui24.ui1[23]);    // write B04-B07
+}
+
+// INT loads with layout toggle PLN3 to PKD3 (24 INT pixels)
+
+__device__ __forceinline__ void rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(int *srcPtr, d_float24 *srcPtr_f24)
+{
+    d_int24 src_i24;
+    *(d_int24_s *)&src_i24 = *(d_int24_s *)srcPtr;
+
+    srcPtr_f24->f4[0] = make_float4((float)src_i24.i1[ 0], (float)src_i24.i1[ 3], (float)src_i24.i1[ 6], (float)src_i24.i1[ 9]);    // write R00-R03
+    srcPtr_f24->f4[1] = make_float4((float)src_i24.i1[12], (float)src_i24.i1[15], (float)src_i24.i1[18], (float)src_i24.i1[21]);    // write R04-R07
+    srcPtr_f24->f4[2] = make_float4((float)src_i24.i1[ 1], (float)src_i24.i1[ 4], (float)src_i24.i1[ 7], (float)src_i24.i1[10]);    // write G00-G03
+    srcPtr_f24->f4[3] = make_float4((float)src_i24.i1[13], (float)src_i24.i1[16], (float)src_i24.i1[19], (float)src_i24.i1[22]);    // write G04-G07
+    srcPtr_f24->f4[4] = make_float4((float)src_i24.i1[ 2], (float)src_i24.i1[ 5], (float)src_i24.i1[ 8], (float)src_i24.i1[11]);    // write B00-B03
+    srcPtr_f24->f4[5] = make_float4((float)src_i24.i1[14], (float)src_i24.i1[17], (float)src_i24.i1[20], (float)src_i24.i1[23]);    // write B04-B07
 }
 
 // U8 loads with layout toggle PLN3 to PKD3 (24 U8 pixels)
