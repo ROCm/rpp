@@ -27,10 +27,6 @@ SOFTWARE.
 #include <vector>
 #include <half/half.hpp>
 
-using half_float::half;
-using namespace std;
-typedef half Rpp16f;
-
 // Include this header file to use functions from libsndfile
 #include <sndfile.h>
 

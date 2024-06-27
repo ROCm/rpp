@@ -136,7 +136,7 @@ int main(int argc, char **argv)
 
     Rpp32f *coeff;
     if(testCase == 2)
-        CHECK_RETURN_STATUS_RETURN_STATUS(hipHostMalloc(&coeff, batchSize * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&coeff, batchSize * sizeof(Rpp32f)));
 
     // run case-wise RPP API and measure time
     rppHandle_t handle;

@@ -103,7 +103,7 @@ RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr,
 * \param [out] dstPtr destination tensor in HIP memory
 * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 2, offsetInBytes >= 0, dataType = F32)
 * \param [in] srcLengthTensor source audio buffer length (1D tensor in HIP memory, of size batchSize)
-* \param [in] coeffTensor preemphasis coefficient (1D tensor in Pinned HIP memory, of size batchSize)
+* \param [in] coeffTensor preemphasis coefficient (1D tensor in Pinned / HIP memory, of size batchSize)
 * \param [in] borderType border value policy
 * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
 * \return A <tt> \ref RppStatus</tt> enumeration.
@@ -147,12 +147,10 @@ RppStatus rppt_spectrogram_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_
 
 /*! \brief Mel filter bank augmentation HOST backend
  * \details Mel filter bank augmentation for audio data
- * \param[out] dstPtr destination tensor in HOST memory
-=======
+ * \param[out] dstPtr srcPtr source tensor in HOST memory
  * \param[in] srcDescPtr source tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32, layout - NFT)
  * \param[out] dstPtr destination tensor in HOST memory
  * \param[in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32, layout - NFT)
->>>>>>> abishek/develop
  * \param[in] srcDimsTensor source audio buffer length and number of channels (1D tensor in HOST memory, of size batchSize * 2)
  * \param[in] maxFreq maximum frequency if not provided maxFreq = sampleRate / 2
  * \param[in] minFreq minimum frequency
