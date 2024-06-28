@@ -29,6 +29,10 @@ SOFTWARE.
 #include "rppt_tensor_audio_augmentations.h"
 #include "cpu/host_tensor_audio_augmentations.hpp"
 
+#ifdef HIP_COMPILE
+    #include "hip/hip_tensor_audio_augmentations.hpp"
+#endif // HIP_COMPILE
+
 /******************** non_silent_region_detection ********************/
 
 RppStatus rppt_non_silent_region_detection_host(RppPtr_t srcPtr,
@@ -270,5 +274,60 @@ RppStatus rppt_resample_host(RppPtr_t srcPtr,
         return RPP_ERROR_NOT_IMPLEMENTED;
     }
 }
+
+/********************************************************************************************************************/
+/*********************************************** RPP_GPU_SUPPORT = ON ***********************************************/
+/********************************************************************************************************************/
+
+#ifdef GPU_SUPPORT
+
+/******************** non_silent_region_detection ********************/
+
+RppStatus rppt_spectrogram_gpu(RppPtr_t srcPtr,
+                               RpptDescPtr srcDescPtr,
+                               RppPtr_t dstPtr,
+                               RpptDescPtr dstDescPtr,
+                               Rpp32s *srcLengthTensor,
+                               bool centerWindows,
+                               bool reflectPadding,
+                               Rpp32f *windowFunction,
+                               Rpp32s nfft,
+                               Rpp32s power,
+                               Rpp32s windowLength,
+                               Rpp32s windowStep,
+                               rppHandle_t rppHandle)
+{
+#ifdef HIP_COMPILE
+    if ((dstDescPtr->layout != RpptLayout::NFT) && (dstDescPtr->layout != RpptLayout::NTF)) return RPP_ERROR_INVALID_DST_LAYOUT;
+
+    if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        hip_exec_spectrogram_tensor(static_cast<Rpp32f*>(srcPtr),
+                                    srcDescPtr,
+                                    static_cast<Rpp32f*>(dstPtr),
+                                    dstDescPtr,
+                                    srcLengthTensor,
+                                    centerWindows,
+                                    reflectPadding,
+                                    windowFunction,
+                                    nfft,
+                                    power,
+                                    windowLength,
+                                    windowStep,
+                                    rpp::deref(rppHandle));
+
+        return RPP_SUCCESS;
+    }
+    else
+    {
+        return RPP_ERROR_NOT_IMPLEMENTED;
+    }
+
+#elif defined(OCL_COMPILE)
+    return RPP_ERROR_NOT_IMPLEMENTED;
+#endif // backend
+}
+
+#endif // GPU_SUPPORT
 
 #endif // AUDIO_SUPPORT
