@@ -140,7 +140,7 @@ RppStatus rppt_spectrogram_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
  * \param [out] dstPtr destination tensor in HIP memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32, layout - NFT / NTF)
- * \param [in] srcLengthTensor source audio buffer length (1D tensor in HIP/Pinned memory, of size batchSize)
+ * \param [in] srcLengthTensor source audio buffer length (1D tensor in Pinned memory, of size batchSize)
  * \param [in] centerWindows indicates whether extracted windows should be padded so that the window function is centered at multiples of window_step
  * \param [in] reflectPadding indicates the padding policy when sampling outside the bounds of the signal
  * \param [in] windowFunction samples of the window function that will be multiplied to each extracted window when calculating the Short Time Fourier Transform (STFT)

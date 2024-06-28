@@ -61,6 +61,12 @@ SOFTWARE.
   } \
 } while (0)
 
+#ifdef HIP_COMPILE
+#define RPP_HOST_DEVICE __host__ __device__
+#else
+#define RPP_HOST_DEVICE
+#endif
+
 const float ONE_OVER_6 = 1.0f / 6;
 const float ONE_OVER_3 = 1.0f / 3;
 const float ONE_OVER_255 = 1.0f / 255;
