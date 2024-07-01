@@ -29,6 +29,10 @@ SOFTWARE.
 #include "rppt_tensor_audio_augmentations.h"
 #include "cpu/host_tensor_audio_augmentations.hpp"
 
+#ifdef HIP_COMPILE
+    #include "hip/hip_tensor_audio_augmentations.hpp"
+#endif // HIP_COMPILE
+
 /******************** non_silent_region_detection ********************/
 
 RppStatus rppt_non_silent_region_detection_host(RppPtr_t srcPtr,
@@ -271,4 +275,49 @@ RppStatus rppt_resample_host(RppPtr_t srcPtr,
     }
 }
 
+/********************************************************************************************************************/
+/*********************************************** RPP_GPU_SUPPORT = ON ***********************************************/
+/********************************************************************************************************************/
+
+#ifdef GPU_SUPPORT
+
+/******************** non_silent_region_detection ********************/
+
+RppStatus rppt_non_silent_region_detection_gpu(RppPtr_t srcPtr,
+                                               RpptDescPtr srcDescPtr,
+                                               Rpp32s *srcLengthTensor,
+                                               Rpp32s *detectedIndexTensor,
+                                               Rpp32s *detectionLengthTensor,
+                                               Rpp32f cutOffDB,
+                                               Rpp32s windowLength,
+                                               Rpp32f referencePower,
+                                               Rpp32s resetInterval,
+                                               rppHandle_t rppHandle)
+{
+#ifdef HIP_COMPILE
+    if (srcDescPtr->dataType == RpptDataType::F32)
+    {
+
+        return hip_exec_non_silent_region_detection_tensor(static_cast<Rpp32f*>(srcPtr),
+                                                           srcDescPtr,
+                                                           srcLengthTensor,
+                                                           detectedIndexTensor,
+                                                           detectionLengthTensor,
+                                                           cutOffDB,
+                                                           windowLength,
+                                                           referencePower,
+                                                           resetInterval,
+                                                           rpp::deref(rppHandle));
+    }
+    else
+    {
+        return RPP_ERROR_NOT_IMPLEMENTED;
+    }
+
+#elif defined(OCL_COMPILE)
+    return RPP_ERROR_NOT_IMPLEMENTED;
+#endif // backend
+}
+
+#endif // GPU_SUPPORT
 #endif // AUDIO_SUPPORT
