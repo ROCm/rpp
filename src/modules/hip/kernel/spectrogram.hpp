@@ -8,18 +8,19 @@ __global__ void window_output_hip_tensor(float *srcPtr,
                                          uint dstStride,
                                          float *windowFn,
                                          int *srcLengthTensor,
-                                         int nfft,
-                                         int windowLength,
-                                         int windowStep,
-                                         int windowCenterOffset,
-                                         bool centerWindows,
+                                         int *numWindowsTensor,
+                                         int4 params_i4,
                                          bool reflectPadding)
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
     int srcLength = srcLengthTensor[id_z];
-    int numWindows = get_num_windows(srcLength, windowLength, windowStep, centerWindows);
+    int numWindows = numWindowsTensor[id_z];
+    int nfft = params_i4.x;
+    int windowLength = params_i4.y;
+    int windowStep = params_i4.z;
+    int windowCenterOffset = params_i4.w;
 
     if (id_x >= windowLength || id_y >= numWindows)
         return;
@@ -63,22 +64,32 @@ RppStatus hip_exec_spectrogram_tensor(Rpp32f* srcPtr,
                                       Rpp32s windowStep,
                                       rpp::Handle& handle)
 {
-    Rpp32f *windowFn = handle.GetInitHandle()->mem.mcpu.scratchBufferHost;
-
+    Rpp32f *windowFn;
     // generate hanning window
     if (windowFunction == NULL)
+    {
+        windowFn = handle.GetInitHandle()->mem.mcpu.scratchBufferHost;
         hann_window(windowFn, windowLength);
+    }
+    else
+    {
+        windowFn = windowFunction;
+    }
     Rpp32f *d_windowFn = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
     hipMemcpyAsync(d_windowFn, windowFn, windowLength * sizeof(Rpp32f), hipMemcpyHostToDevice, handle.GetStream());
     hipStreamSynchronize(handle.GetStream());
 
-    Rpp32s maxSrcLength = *std::max_element(srcLengthTensor, srcLengthTensor + dstDescPtr->n);
-    Rpp32s maxNumWindows = get_num_windows(maxSrcLength, windowLength, windowStep, centerWindows);
-    Rpp32s windowCenterOffset = 0;
-    if (centerWindows) windowCenterOffset = windowLength / 2;
+    Rpp32s *numWindowsTensor = reinterpret_cast<Rpp32s*>(handle.GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem);
+    for (Rpp32u i = 0; i < dstDescPtr->n; i++)
+        numWindowsTensor[i] = get_num_windows(srcLengthTensor[i], windowLength, windowStep, centerWindows);
+
+    // find the maximum windows required across all inputs in batch
+    Rpp32s maxNumWindows = *std::max_element(numWindowsTensor, numWindowsTensor + dstDescPtr->n);
+    Rpp32s windowCenterOffset = (centerWindows) ? (windowLength / 2) : 0;
 
     Rpp32f *windowOutput = d_windowFn + windowLength;
-
+    hipMemsetAsync(windowOutput, 0, maxNumWindows * nfft * dstDescPtr->n * sizeof(Rpp32f), handle.GetStream());
+    hipStreamSynchronize(handle.GetStream());
     Rpp32s globalThreads_x = windowLength;
     Rpp32s globalThreads_y = maxNumWindows;
     Rpp32s globalThreads_z = dstDescPtr->n;
@@ -93,12 +104,8 @@ RppStatus hip_exec_spectrogram_tensor(Rpp32f* srcPtr,
                        maxNumWindows * nfft,
                        d_windowFn,
                        srcLengthTensor,
-                       nfft,
-                       windowLength,
-                       windowStep,
-                       windowCenterOffset,
-                       centerWindows,
+                       numWindowsTensor,
+                       make_int4(nfft, windowLength, windowStep, windowCenterOffset),
                        reflectPadding);
-
     return RPP_SUCCESS;
 }
