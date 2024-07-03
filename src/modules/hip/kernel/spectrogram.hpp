@@ -36,13 +36,8 @@ __global__ void window_output_hip_tensor(float *srcPtr,
             inIdx = get_idx_reflect(inIdx, 0, srcLength);
             dstPtr[dstIdx] = windowFn[id_x] * srcPtr[srcIdx + inIdx];
         }
-        else
-        {
-            if (inIdx >= 0 && inIdx < srcLength)
-                dstPtr[dstIdx] = windowFn[id_x] * srcPtr[srcIdx + inIdx];
-            else
-                dstPtr[dstIdx] = 0;
-        }
+        else if (inIdx >= 0 && inIdx < srcLength)
+            dstPtr[dstIdx] = windowFn[id_x] * srcPtr[srcIdx + inIdx];
     }
     else
     {
