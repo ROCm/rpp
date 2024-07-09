@@ -1,5 +1,14 @@
 #include <hip/hip_runtime.h>
 #include "rpp_hip_common.hpp"
+#include "hipfft/hipfft.h"
+
+#define CHECK_HIPFFT_STATUS(x) do { \
+  int retval = (x); \
+  if (retval != HIPFFT_SUCCESS) { \
+    fprintf(stderr, "Runtime error: %s returned %d at %s:%d", #x, retval, __FILE__, __LINE__); \
+    exit(-1); \
+  } \
+} while (0)
 
 // compute window output
 __global__ void window_output_hip_tensor(float *srcPtr,
@@ -102,5 +111,42 @@ RppStatus hip_exec_spectrogram_tensor(Rpp32f* srcPtr,
                        numWindowsTensor,
                        make_int4(nfft, windowLength, windowStep, windowCenterOffset),
                        reflectPadding);
+    hipStreamSynchronize(handle.GetStream());
+
+    // Declare the fft_in and fft_out buffers
+    int numWindowsTemp = get_num_windows(srcLengthTensor[0], windowLength, windowStep, centerWindows);
+    hipfftReal *fft_in = reinterpret_cast<hipfftReal *>(windowOutput);
+    hipfftComplex *fft_out;
+    hipMalloc((void**)&fft_out, sizeof(hipfftComplex)* nfft * numWindowsTemp);
+
+    // create the fft plan required
+    size_t workSize = 0;
+    hipfftHandle fftHandle;
+    CHECK_HIPFFT_STATUS(hipfftCreate(&fftHandle));
+    CHECK_HIPFFT_STATUS(hipfftPlan1d(&fftHandle, nfft, HIPFFT_R2C, numWindowsTemp));
+
+    // execute fft function
+    CHECK_HIPFFT_STATUS(hipfftSetStream(fftHandle, handle.GetStream()));
+    CHECK_HIPFFT_STATUS(hipfftExecR2C(fftHandle, fft_in, fft_out));
+
+    // synchronize and destroy the temp resources allocated
+    hipDeviceSynchronize();
+    auto complexFft = malloc(numWindowsTemp * nfft * sizeof(float) * 2);
+    hipMemcpyAsync(complexFft, fft_out, numWindowsTemp * nfft * sizeof(float) * 2, hipMemcpyDeviceToHost, handle.GetStream());
+    hipStreamSynchronize(handle.GetStream());
+    auto *complexFftTemp = reinterpret_cast<std::complex<Rpp32f> *>(complexFft);
+
+    float *realFft = (float *)malloc(numWindowsTemp * ((nfft / 2) + 1) * sizeof(float));
+    std::cout << "printing output fft values" << std::endl;
+    for (int i = 0; i < ((nfft / 2) + 1); i++)
+    {
+        realFft[i] = std::norm(complexFftTemp[i]);
+        std::cout <<  realFft[i] << " " << std::endl;
+    }
+
+    hipFree(fft_out);
+    hipfftDestroy(fftHandle);
+    // free(complexFft);
+    free(realFft);
     return RPP_SUCCESS;
 }
