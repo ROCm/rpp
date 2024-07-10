@@ -47,8 +47,9 @@ int main(int argc, char **argv)
     string scriptPath = argv[9];
     qaMode = (testType == 0);
     bool axisMaskCase = (testCase == 1);
-    int additionalParam = (axisMaskCase) ? atoi(argv[7]) : 1;
-    int axisMask = additionalParam;
+    bool permOrderCase = (testCase == 0);
+    int additionalParam = (axisMaskCase || permOrderCase) ? atoi(argv[7]) : 1;
+    int axisMask = additionalParam, permOrder = additionalParam;
 
     if (qaMode && batchSize != 3)
     {
@@ -69,6 +70,13 @@ int main(int argc, char **argv)
         char additionalParam_char[2];
         std::sprintf(additionalParam_char, "%d", axisMask);
         func += "_" + std::to_string(nDim) + "d" + "_axisMask";
+        func += additionalParam_char;
+    }
+    if (permOrderCase)
+    {
+        char additionalParam_char[2];
+        std::sprintf(additionalParam_char, "%d", permOrder);
+        func += "_" + std::to_string(nDim) + "d" + "_permOrder";
         func += additionalParam_char;
     }
 
@@ -124,6 +132,21 @@ int main(int argc, char **argv)
     {
         switch(testCase)
         {
+            case 0:
+            {
+                testCaseName  = "transpose";
+                Rpp32u permTensor[nDim];
+                fill_perm_values(nDim, permTensor, qaMode, permOrder);
+
+                for(int i = 1; i <= nDim; i++)
+                    dstDescriptorPtrND->dims[i] = roiTensor[nDim + permTensor[i - 1]];
+                compute_strides(dstDescriptorPtrND);
+
+                startWallTime = omp_get_wtime();
+                rppt_transpose_host(inputF32, srcDescriptorPtrND, outputF32, dstDescriptorPtrND, permTensor, roiTensor, handle);
+
+                break;
+            }
             case 1:
             {
                 testCaseName  = "normalize";

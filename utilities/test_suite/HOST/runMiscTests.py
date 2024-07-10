@@ -37,7 +37,7 @@ timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 scriptPath = os.path.dirname(os.path.realpath(__file__))
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
-caseMin = 1
+caseMin = 0
 caseMax = 2
 
 # Get a list of log files based on a flag for preserving output
@@ -58,7 +58,7 @@ def run_performance_test_cmd(loggingFolder, numDims, case, numRuns, testType, to
         process = subprocess.Popen([buildFolderPath + "/build/Tensor_misc_host", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
         read_from_subprocess_and_write_to_log(process, logFile)
 
-def run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg):
+def run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg = ""):
     print("\n\n\n\n")
     print("--------------------------------")
     print("Running a New Functionality...")
@@ -164,15 +164,18 @@ os.chdir(buildFolderPath + "/build")
 subprocess.run(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.run(["make", "-j16"], cwd=".")    # nosec
 
-supportedCaseList = ['1', '2']
+supportedCaseList = ['0', '1', '2']
 for case in caseList:
     if case not in supportedCaseList:
         continue
-    if case == "1":
+    if case == "0":
+        for transposeOrder in range(1, numDims):
+            run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, transposeOrder)
+    elif case == "1":
         for axisMask in range(1, pow(2, numDims)):
             run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, axisMask)
     else:
-        run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, axisMask)
+        run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath)
 
 # print the results of qa tests
 nonQACaseList = []
