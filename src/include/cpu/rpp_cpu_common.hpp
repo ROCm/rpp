@@ -6516,6 +6516,12 @@ inline void compute_remap_src_loc(Rpp32f rowLoc, Rpp32f colLoc, Rpp32s &srcLoc, 
     srcLoc = (rowLoc * stride) + colLoc * channels;
 }
 
+inline void compute_log_16_host(__m256 *p)
+{
+    p[0] = log_ps(p[0]);    // log compute
+    p[1] = log_ps(p[1]);    // log compute
+}
+
 inline void compute_transpose4x8_avx(__m256 *pSrc, __m128 *pDst)
 {
     __m256 tmp0, tmp1, tmp2, tmp3;
