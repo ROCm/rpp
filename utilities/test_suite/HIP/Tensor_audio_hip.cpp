@@ -175,6 +175,68 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 7:
+                {
+                    testCaseName = "mel_filter_bank";
+
+                    Rpp32f sampleRate = 16000;
+                    Rpp32f minFreq = 0.0;
+                    Rpp32f maxFreq = sampleRate / 2;
+                    RpptMelScaleFormula melFormula = RpptMelScaleFormula::SLANEY;
+                    Rpp32s numFilter = 80;
+                    bool normalize = true;
+                    srcDimsTensor[0] = 257;
+                    srcDimsTensor[1] = 225;
+                    srcDimsTensor[2] = 257;
+                    srcDimsTensor[3] = 211;
+                    srcDimsTensor[4] = 257;
+                    srcDimsTensor[5] = 214;
+
+                    // Accepts outputs from FT layout of Spectrogram for QA
+                    srcDescPtr->layout = dstDescPtr->layout = RpptLayout::NFT;
+
+                    maxDstHeight = 0;
+                    maxDstWidth = 0;
+                    maxSrcHeight = 0;
+                    maxSrcWidth = 0;
+                    for(int i = 0, j = 0; i < batchSize; i++, j += 2)
+                    {
+                        maxSrcHeight = std::max(maxSrcHeight, (int)srcDimsTensor[j]);
+                        maxSrcWidth = std::max(maxSrcWidth, (int)srcDimsTensor[j + 1]);
+                        dstDims[i].height = numFilter;
+                        dstDims[i].width = srcDimsTensor[j + 1];
+                        maxDstHeight = std::max(maxDstHeight, (int)dstDims[i].height);
+                        maxDstWidth = std::max(maxDstWidth, (int)dstDims[i].width);
+                    }
+                    srcDescPtr->h = maxSrcHeight;
+                    srcDescPtr->w = maxSrcWidth;
+                    dstDescPtr->h = maxDstHeight;
+                    dstDescPtr->w = maxDstWidth;
+
+                    set_audio_descriptor_dims_and_strides_nostriding(srcDescPtr, batchSize, maxSrcHeight, maxSrcWidth, 1, offsetInBytes);
+                    set_audio_descriptor_dims_and_strides_nostriding(dstDescPtr, batchSize, maxDstHeight, maxDstWidth, 1, offsetInBytes);
+
+                    // Set buffer sizes for src/dst
+                    unsigned long long spectrogramBufferSize = (unsigned long long)srcDescPtr->h * (unsigned long long)srcDescPtr->w * (unsigned long long)srcDescPtr->c * (unsigned long long)srcDescPtr->n;
+                    oBufferSize = (unsigned long long)dstDescPtr->h * (unsigned long long)dstDescPtr->w * (unsigned long long)dstDescPtr->c * (unsigned long long)dstDescPtr->n;
+                    inputf32 = (Rpp32f *)realloc(inputf32, spectrogramBufferSize * sizeof(Rpp32f));
+                    outputf32 = (Rpp32f *)realloc(outputf32, oBufferSize * sizeof(Rpp32f));
+
+                    CHECK_RETURN_STATUS(hipFree(d_inputf32));
+                    CHECK_RETURN_STATUS(hipFree(d_outputf32));
+                    CHECK_RETURN_STATUS(hipMalloc(&d_inputf32, spectrogramBufferSize * sizeof(Rpp32f)));
+                    CHECK_RETURN_STATUS(hipMalloc(&d_outputf32, oBufferSize * sizeof(Rpp32f)));
+
+                    // Read source data
+                    read_from_bin_file(inputf32, srcDescPtr, srcDimsTensor, "spectrogram", scriptPath);
+
+                    CHECK_RETURN_STATUS(hipMemcpy(d_inputf32, inputf32, spectrogramBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
+
+                    startWallTime = omp_get_wtime();
+                    rppt_mel_filter_bank_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcDimsTensor, maxFreq, minFreq, melFormula, numFilter, sampleRate, normalize, handle);
+
+                    break;
+                }
                 default:
                 {
                     missingFuncFlag = 1;

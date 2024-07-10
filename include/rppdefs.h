@@ -61,6 +61,12 @@ SOFTWARE.
   } \
 } while (0)
 
+#ifdef HIP_COMPILE
+#define RPP_HOST_DEVICE __host__ __device__
+#else
+#define RPP_HOST_DEVICE
+#endif
+
 const float ONE_OVER_6 = 1.0f / 6;
 const float ONE_OVER_3 = 1.0f / 3;
 const float ONE_OVER_255 = 1.0f / 255;
@@ -729,6 +735,58 @@ typedef struct RpptResamplingWindow
     __m128 pCenter, pScale;
 } RpptResamplingWindow;
 
+struct BaseMelScale
+{
+    public:
+        inline RPP_HOST_DEVICE virtual Rpp32f hz_to_mel(Rpp32f hz) = 0;
+        inline RPP_HOST_DEVICE virtual Rpp32f mel_to_hz(Rpp32f mel) = 0;
+        virtual ~BaseMelScale() = default;
+};
+
+struct HtkMelScale : public BaseMelScale
+{
+    inline RPP_HOST_DEVICE Rpp32f hz_to_mel(Rpp32f hz) { return 1127.0f * std::log(1.0f + (hz / 700.0f)); }
+    inline RPP_HOST_DEVICE Rpp32f mel_to_hz(Rpp32f mel) { return 700.0f * (std::exp(mel / 1127.0f) - 1.0f); }
+    public:
+        ~HtkMelScale() {};
+};
+
+struct SlaneyMelScale : public BaseMelScale
+{
+    const Rpp32f freqLow = 0;
+    const Rpp32f fsp = 200.0 / 3.0;
+    const Rpp32f minLogHz = 1000.0;
+    const Rpp32f minLogMel = (minLogHz - freqLow) / fsp;
+    const Rpp32f stepLog = 0.068751777;  // Equivalent to std::log(6.4) / 27.0;
+
+    const Rpp32f invMinLogHz = 1.0f / 1000.0;
+    const Rpp32f invStepLog = 1.0f / stepLog;
+    const Rpp32f invFsp = 1.0f / fsp;
+
+    inline RPP_HOST_DEVICE Rpp32f hz_to_mel(Rpp32f hz)
+    {
+        Rpp32f mel = 0.0f;
+        if (hz >= minLogHz)
+            mel = minLogMel + std::log(hz * invMinLogHz) * invStepLog;
+        else
+            mel = (hz - freqLow) * invFsp;
+
+        return mel;
+    }
+
+    inline RPP_HOST_DEVICE Rpp32f mel_to_hz(Rpp32f mel)
+    {
+        Rpp32f hz = 0.0f;
+        if (mel >= minLogMel)
+            hz = minLogHz * std::exp(stepLog * (mel - minLogMel));
+        else
+            hz = freqLow + mel * fsp;
+        return hz;
+    }
+    public:
+        ~SlaneyMelScale() {};
+};
+
 /******************** HOST memory typedefs ********************/
 
 /*! \brief RPP HOST 32-bit float memory
@@ -1046,7 +1104,7 @@ typedef struct
     Rpp64u* dstBatchIndex;
     Rpp32u* inc;
     Rpp32u* dstInc;
-    hipMemRpp32u scratchBuf;
+    hipMemRpp32f scratchBufferPinned;
 } memGPU;
 
 /*! \brief RPP HIP-HOST memory management
