@@ -984,7 +984,7 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "color_temperature";
 
-                    Rpp8s adjustment[batchSize];
+                    Rpp32s adjustment[batchSize];
                     for (i = 0; i < batchSize; i++)
                         adjustment[i] = 70;
 
