@@ -31,7 +31,7 @@ int main(int argc, char **argv)
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
-        printf("\nUsage: ./Tensor_misc_hip <case number = 0:0> <test type 0/1> <toggle 0/1> <number of dimensions> <batch size> <num runs> <dst path> <script path>\n");
+        printf("\nUsage: ./Tensor_misc_hip <case number = 0:1> <test type 0/1> <toggle 0/1> <number of dimensions> <batch size> <num runs> <additional param> <dst path> <script path>\n");
         return -1;
     }
     Rpp32u testCase, testType, nDim, batchSize, numRuns, toggle;
@@ -47,7 +47,9 @@ int main(int argc, char **argv)
     string scriptPath = argv[9];
     qaMode = (testType == 0);
     bool axisMaskCase = (testCase == 1);
-    int axisMask = (axisMaskCase) ? atoi(argv[7]) : 1;
+    bool permOrderCase = (testCase == 0);
+    int additionalParam = (axisMaskCase || permOrderCase) ? atoi(argv[7]) : 1;
+    int axisMask = additionalParam, permOrder = additionalParam;
 
     if (qaMode && batchSize != 3)
     {
@@ -68,6 +70,13 @@ int main(int argc, char **argv)
         char additionalParam_char[2];
         std::sprintf(additionalParam_char, "%d", axisMask);
         func += "_" + std::to_string(nDim) + "d" + "_axisMask";
+        func += additionalParam_char;
+    }
+    if (permOrderCase)
+    {
+        char additionalParam_char[2];
+        std::sprintf(additionalParam_char, "%d", permOrder);
+        func += "_" + std::to_string(nDim) + "d" + "_permOrder";
         func += additionalParam_char;
     }
 
@@ -102,7 +111,7 @@ int main(int argc, char **argv)
 
     // read input data
     if(qaMode)
-        read_data(inputF32, nDim, 0, scriptPath);
+        read_data(inputF32, nDim, 0, scriptPath, funcName);
     else
     {
         std::srand(0);
@@ -114,6 +123,10 @@ int main(int argc, char **argv)
     CHECK_RETURN_STATUS(hipMemcpy(d_inputF32, inputF32, bufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
     CHECK_RETURN_STATUS(hipDeviceSynchronize());
 
+    Rpp32u *permTensor = nullptr;
+    if (testCase == 0)
+        CHECK_RETURN_STATUS(hipHostMalloc(&permTensor, nDim * sizeof(Rpp32u)));
+
     rppHandle_t handle;
     hipStream_t stream;
     CHECK_RETURN_STATUS(hipStreamCreate(&stream));
@@ -121,8 +134,11 @@ int main(int argc, char **argv)
 
     Rpp32f *meanTensor = nullptr, *stdDevTensor = nullptr;
     Rpp32f *meanTensorCPU = nullptr, *stdDevTensorCPU = nullptr;
+    bool externalMeanStd = true;
+
     double startWallTime, endWallTime;
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0, wallTime = 0;
+    string testCaseName;
 
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning %s %d times (each time with a batch size of %d) and computing mean statistics...", func.c_str(), numRuns, batchSize);
@@ -130,14 +146,30 @@ int main(int argc, char **argv)
     {
         switch(testCase)
         {
+            case 0:
+            {
+                testCaseName  = "transpose";
+                fill_perm_values(nDim, permTensor, qaMode, permOrder);
+
+                for(int i = 1; i <= nDim; i++)
+                    dstDescriptorPtrND->dims[i] = roiTensor[nDim + permTensor[i - 1]];
+                compute_strides(dstDescriptorPtrND);
+
+                startWallTime = omp_get_wtime();
+                rppt_transpose_gpu(d_inputF32, srcDescriptorPtrND, d_outputF32, dstDescriptorPtrND, permTensor, roiTensor, handle);
+
+                break;
+            }
             case 1:
             {
+                testCaseName  = "normalize";
                 float scale = 1.0;
                 float shift = 0.0;
 
                 // computeMeanStddev set to 3 means both mean and stddev should be computed internally.
                 // Wherein 0th bit used to represent computeMean and 1st bit for computeStddev.
                 Rpp8u computeMeanStddev = 3;
+                externalMeanStd = !computeMeanStddev; // when mean and stddev is passed from user
 
                 Rpp32u size = 1; // length of mean and stddev tensors differ based on axisMask and nDim
                 Rpp32u maxSize = 1;
@@ -171,15 +203,6 @@ int main(int argc, char **argv)
                 startWallTime = omp_get_wtime();
                 rppt_normalize_gpu(d_inputF32, srcDescriptorPtrND, d_outputF32, dstDescriptorPtrND, axisMask, meanTensor, stdDevTensor, computeMeanStddev, scale, shift, roiTensor, handle);
 
-                // compare outputs if qaMode is true
-                if(qaMode)
-                {
-                    CHECK_RETURN_STATUS(hipDeviceSynchronize());
-                    CHECK_RETURN_STATUS(hipMemcpy(outputF32, d_outputF32, bufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
-                    CHECK_RETURN_STATUS(hipDeviceSynchronize());
-                    bool externalMeanStd = !computeMeanStddev; // when mean and stddev is passed from user
-                    compare_output(outputF32, nDim, batchSize, bufferSize, dst, func, axisMask, scriptPath, externalMeanStd);
-                }
                 break;
             }
             default:
@@ -188,20 +211,25 @@ int main(int argc, char **argv)
                 exit(0);
             }
         }
-        if(!qaMode)
-        {
-            CHECK_RETURN_STATUS(hipDeviceSynchronize());
-            endWallTime = omp_get_wtime();
+        CHECK_RETURN_STATUS(hipDeviceSynchronize());
+        endWallTime = omp_get_wtime();
 
-            wallTime = endWallTime - startWallTime;
-            maxWallTime = std::max(maxWallTime, wallTime);
-            minWallTime = std::min(minWallTime, wallTime);
-            avgWallTime += wallTime;
-        }
+        wallTime = endWallTime - startWallTime;
+        maxWallTime = std::max(maxWallTime, wallTime);
+        minWallTime = std::min(minWallTime, wallTime);
+        avgWallTime += wallTime;
     }
     rppDestroyGPU(handle);
 
-    if(!qaMode)
+    // compare outputs if qaMode is true
+    if(qaMode)
+    {
+        CHECK_RETURN_STATUS(hipDeviceSynchronize());
+        CHECK_RETURN_STATUS(hipMemcpy(outputF32, d_outputF32, bufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
+        CHECK_RETURN_STATUS(hipDeviceSynchronize());
+        compare_output(outputF32, nDim, batchSize, bufferSize, dst, func, testCaseName, additionalParam, scriptPath, externalMeanStd);
+    }
+    else
     {
         maxWallTime *= 1000;
         minWallTime *= 1000;
@@ -222,6 +250,8 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipFree(meanTensor));
     if(stdDevTensor != nullptr)
         CHECK_RETURN_STATUS(hipFree(stdDevTensor));
+    if (permTensor != nullptr)
+        CHECK_RETURN_STATUS(hipHostFree(permTensor));
     if(meanTensorCPU != nullptr)
         free(meanTensorCPU);
     if(stdDevTensorCPU != nullptr)

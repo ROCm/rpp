@@ -1,6 +1,6 @@
 # AMD ROCm Performance Primitives (RPP) Test Suite
 
-This repository contains three test suites for the AMD ROCm Performance Primitives (RPP) library: for image/voxel/audio processing. These test suites can be used to validate the functionality and performance of the AMD ROCm Performance Primitives (RPP) image/voxel/audio libraries.
+This repository contains four test suites for the AMD ROCm Performance Primitives (RPP) library: for image/voxel/audio/miscellaneous augmentations processing. These test suites can be used to validate the functionality and performance of the AMD ROCm Performance Primitives (RPP) image/voxel/audio/miscellaneous functionalities.
 
 ## Test suite prerequisites
 
@@ -94,8 +94,8 @@ The image test suite can be executed under 2 backend scenarios - (HOST/HIP):
 The image test suite accepts the following command line arguments:
 -   input_path1: The path to the input folder 1. Default is $cwd/../TEST_IMAGES/three_images_mixed_src1
 -   input_path2: The path to the input folder 2. Default is $cwd/../TEST_IMAGES/three_images_mixed_src2
--   case_start: The starting case number for the test range (0-89). Default is 0
--   case_end: The ending case number for the test range (0-89). Default is 89
+-   case_start: The starting case number for the test range (0-91). Default is 0
+-   case_end: The ending case number for the test range (0-91). Default is 91
 -   test_type: The type of test to run (0 = Unit tests, 1 = Performance tests). Default is 0
 -   case_list: A list of specific case numbers to run. Must be used in conjunction with --test_type
 -   profiling: Run the tests with a profiler (YES/NO). Default is NO. This option is only available with HIP backend
@@ -117,15 +117,11 @@ The test suite can be run with the following command:
 python runTests.py --input_path1 <input_path1> --input_path2 <input_path2> --case_start <case_start> --case_end <case_end> --test_type <test_type> --profiling <profiling>
 ```
 
-## Modes of operation (Rpp Image Test Suite)
+### Modes of operation (Rpp Image Test Suite)
 -   QA mode (Unit tests) - Tolerance based PASS/FAIL tests for RPP HIP/HOST functionalities checking pixelwise match between C/SSE/AVX/HIP versions after comparison to preset golden outputs. Please note that QA mode is only supported with a batch size of 3.
 Note: QA mode is not supported for case 84 due to run-to-run variation of outputs.
 ``` python
-python runTests.py --case_start 0 --case_end 89 --test_type 0 --qa_mode 1 --batch_size 3
-```
--   QA mode (Performance tests) - Tolerance based PASS/FAIL tests for RPP HIP/HOST functionalities checking achieved improvement in performance percentage over BatchPD versions after comparison to a threshold percentage of improvement
-``` python
-python runTests.py --case_list 21 36 63 --test_type 1 --qa_mode 1 --batch_size 8 --num_runs 100
+python runTests.py --case_start 0 --case_end 91 --test_type 0 --qa_mode 1 --batch_size 3
 ```
 -   QA mode (Performance tests) - Tolerance based PASS/FAIL tests for RPP HIP/HOST functionalities checking achieved improvement in performance percentage over BatchPD versions after comparison to a threshold percentage of improvement
 ``` python
@@ -135,13 +131,13 @@ python runTests.py --case_list 21 36 63 --test_type 1 --qa_mode 1 --batch_size 8
 Note: For testcase 82(RICAP) Please use images of same resolution and Batchsize > 1
       RICAP dataset path: rpp/utilities/test_suite/TEST_IMAGES/three_images_150x150_src1
 ``` python
-python runTests.py --case_start 0 --case_end 89 --test_type 0 --qa_mode 0
+python runTests.py --case_start 0 --case_end 91 --test_type 0 --qa_mode 0
 ```
 -   Performance test mode - Performance tests that execute the desired functionality and variant 100 times by default, and report max/min/avg RPP execution wall time, or optionally, AMD rocprof kernel profiler max/min/avg time for HIP backend variants.
 Note: For testcase 82(RICAP) Please use images of same resolution and Batchsize > 1
       RICAP dataset path: rpp/utilities/test_suite/TEST_IMAGES/three_images_150x150_src1
 ``` python
-python runTests.py --case_start 0 --case_end 89 --test_type 1
+python runTests.py --case_start 0 --case_end 91 --test_type 1
 ```
 
 To run the unit tests / performance tests for specific case numbers. please case use case_list parameter. Example as below
@@ -286,11 +282,11 @@ To run the QA tests / performance tests for specific case numbers. please case u
 
 -   To run QA tests for case numbers 0, 1, 2
 ``` python
-python runTests.py --case_list 0 1 2 --qa_mode 1 --batch_size 3
+python runAudioTests.py --case_list 0 1 2 --qa_mode 1 --batch_size 3
 ```
 -   To run performance tests for case numbers 0, 1, 2
 ``` python
-python runTests.py --case_list 0 1 2 --test_type 1
+python runAudioTests.py --case_list 0 1 2 --test_type 1
 ```
 
 ### Summary of features (RPP Audio Test Suite)

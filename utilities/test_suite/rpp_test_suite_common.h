@@ -81,8 +81,10 @@ std::map<int, string> augmentationMap =
     {29, "water"},
     {30, "non_linear_blend"},
     {31, "color_cast"},
+    {32, "erase"},
     {33, "crop_and_patch"},
     {34, "lut"},
+    {35, "glitch"},
     {36, "color_twist"},
     {37, "crop"},
     {38, "crop_mirror_normalize"},
@@ -96,6 +98,7 @@ std::map<int, string> augmentationMap =
     {65, "bitwise_and"},
     {68, "bitwise_or"},
     {70, "copy"},
+    {79, "remap"},
     {80, "resize_mirror_normalize"},
     {81, "color_jitter"},
     {82, "ricap"},
@@ -106,28 +109,44 @@ std::map<int, string> augmentationMap =
     {87, "tensor_sum"},
     {88, "tensor_min"},
     {89, "tensor_max"},
-    {90, "slice"}
+    {90, "tensor_mean"},
+    {91, "tensor_stddev"},
+    {92, "slice"}
 };
 
 // Golden outputs for Tensor min Kernel
-std::map<int, std::vector<int>> TensorMinReferenceOutputs =
+std::map<int, std::vector<Rpp8u>> TensorMinReferenceOutputs =
 {
     {1, {1, 1, 7}},
     {3, {0, 0, 0, 0, 2, 0, 0, 0, 7, 9, 0, 0}}
 };
 
 // Golden outputs for Tensor max Kernel
-std::map<int, std::vector<int>> TensorMaxReferenceOutputs =
+std::map<int, std::vector<Rpp8u>> TensorMaxReferenceOutputs =
 {
     {1, {239, 245, 255}},
     {3, {255, 240, 236, 255, 255, 242, 241, 255, 253, 255, 255, 255}}
 };
 
 // Golden outputs for Tensor sum Kernel
-std::map<int, std::vector<int>> TensorSumReferenceOutputs =
+std::map<int, std::vector<uint64_t>> TensorSumReferenceOutputs =
 {
     {1, {334225, 813471, 2631125}},
     {3, {348380, 340992, 262616, 951988, 1056552, 749506, 507441, 2313499, 2170646, 2732368, 3320699, 8223713}}
+};
+
+// Golden outputs for Tensor mean Kernel
+std::map<int, std::vector<float>> TensorMeanReferenceOutputs =
+{
+    {1, {133.690, 81.347, 116.939}},
+    {3, {139.352, 136.397, 105.046, 126.932, 105.655, 74.951, 50.744, 77.117, 96.473, 121.439, 147.587, 121.833}}
+};
+
+// Golden outputs for Tensor stddev Kernel
+std::map<int, std::vector<float>> TensorStddevReferenceOutputs =
+{
+    {1, {49.583, 54.623, 47.649}},
+    {3, {57.416, 47.901, 53.235, 55.220, 68.471, 55.735, 46.668, 61.880, 47.462, 49.039, 67.269, 59.130}}
 };
 
 template <typename T>
@@ -887,7 +906,7 @@ inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, vector
         fseek(fp, 0, SEEK_END);
         long jpegSize = ftell(fp);
         rewind(fp);
-        unsigned char* jpegBuf = (unsigned char*)malloc(jpegSize);
+        unsigned char* jpegBuf = (unsigned char*)calloc(jpegSize, sizeof(Rpp8u));
         fread(jpegBuf, 1, jpegSize, fp);
         fclose(fp);
 
@@ -900,14 +919,14 @@ inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, vector
         if(descPtr->c == 3)
         {
             elementsInRow = width * descPtr->c;
-            rgbBuf= (Rpp8u*)malloc(width * height * 3);
+            rgbBuf= (Rpp8u*)calloc(width * height * 3, sizeof(Rpp8u));
             if(tjDecompress2(m_jpegDecompressor, jpegBuf, jpegSize, rgbBuf, width, width * 3, height, TJPF_RGB, TJFLAG_ACCURATEDCT) != 0)
                 std::cerr << "\n Jpeg image decode failed ";
         }
         else
         {
             elementsInRow = width;
-            rgbBuf= (Rpp8u*)malloc(width * height);
+            rgbBuf= (Rpp8u*)calloc(width * height, sizeof(Rpp8u));
             if(tjDecompress2(m_jpegDecompressor, jpegBuf, jpegSize, rgbBuf, width, width, height, TJPF_GRAY, 0) != 0)
                 std::cerr << "\n Jpeg image decode failed ";
         }
@@ -1112,7 +1131,7 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
                 func += "Tensor_PLN1";
         }
     }
-    if(testCase == 21 ||testCase == 23 || testCase == 24)
+    if(testCase == 21 ||testCase == 23 || testCase == 24 || testCase == 79)
     {
         func += "_interpolationType" + interpolationTypeName;
         binFile += "_interpolationType" + interpolationTypeName;
@@ -1182,19 +1201,18 @@ inline void compare_reduction_output(T* output, string funcName, RpptDescPtr src
     int matched_values = 0;
 
     T *refOutput;
-    refOutput = (T *)calloc(srcDescPtr->n * 4, sizeof(T));
     int numChannels = (srcDescPtr->c == 1) ? 1 : 3;
     int numOutputs = (srcDescPtr->c == 1) ? srcDescPtr->n : srcDescPtr->n * 4;
-    std::vector<int> ref;
     if(testCase == 88)
-        ref = TensorMinReferenceOutputs[numChannels];
+        refOutput = reinterpret_cast<T*>(TensorMinReferenceOutputs[numChannels].data());
     else if(testCase == 89)
-        ref = TensorMaxReferenceOutputs[numChannels];
+        refOutput = reinterpret_cast<T*>(TensorMaxReferenceOutputs[numChannels].data());
     else if(testCase == 87)
-        ref = TensorSumReferenceOutputs[numChannels];
-
-    for (int i = 0; i < numOutputs; i++)
-        refOutput[i] = (T)ref[i];
+        refOutput = reinterpret_cast<T*>(TensorSumReferenceOutputs[numChannels].data());
+    else if(testCase == 90)
+        refOutput = reinterpret_cast<T*>(TensorMeanReferenceOutputs[numChannels].data());
+    else if(testCase == 91)
+        refOutput = reinterpret_cast<T*>(TensorStddevReferenceOutputs[numChannels].data());
 
     if(srcDescPtr->c == 1)
     {
@@ -1220,7 +1238,6 @@ inline void compare_reduction_output(T* output, string funcName, RpptDescPtr src
                 fileMatch++;
         }
     }
-    free(refOutput);
 
     std::cout << std::endl << "Results for " << func << " :" << std::endl;
     std::string status = func + ": ";
@@ -1341,6 +1358,46 @@ void inline init_ricap(int width, int height, int batchSize, Rpp32u *permutation
     roiPtrInputCropRegion[3].xywhROI = {randrange(0, part0Width - 8), randrange(0, part0Height), width - part0Width, height - part0Height};
 }
 
+void inline init_remap(RpptDescPtr tableDescPtr, RpptDescPtr srcDescPtr, RpptROIPtr roiTensorPtrSrc, Rpp32f *rowRemapTable, Rpp32f *colRemapTable)
+{
+    tableDescPtr->c = 1;
+    tableDescPtr->strides.nStride = srcDescPtr->h * srcDescPtr->w;
+    tableDescPtr->strides.hStride = srcDescPtr->w;
+    tableDescPtr->strides.wStride = tableDescPtr->strides.cStride = 1;
+    Rpp32u batchSize = srcDescPtr->n;
+
+    for (Rpp32u count = 0; count < batchSize; count++)
+    {
+        Rpp32f *rowRemapTableTemp, *colRemapTableTemp;
+        rowRemapTableTemp = rowRemapTable + count * tableDescPtr->strides.nStride;
+        colRemapTableTemp = colRemapTable + count * tableDescPtr->strides.nStride;
+        Rpp32u halfWidth = roiTensorPtrSrc[count].xywhROI.roiWidth / 2;
+        for (Rpp32u i = 0; i < roiTensorPtrSrc[count].xywhROI.roiHeight; i++)
+        {
+            Rpp32f *rowRemapTableTempRow, *colRemapTableTempRow;
+            rowRemapTableTempRow = rowRemapTableTemp + i * tableDescPtr->strides.hStride;
+            colRemapTableTempRow = colRemapTableTemp + i * tableDescPtr->strides.hStride;
+            Rpp32u j = 0;
+            for (; j < halfWidth; j++)
+            {
+                *rowRemapTableTempRow = i;
+                *colRemapTableTempRow = halfWidth - j;
+
+                rowRemapTableTempRow++;
+                colRemapTableTempRow++;
+            }
+            for (; j < roiTensorPtrSrc[count].xywhROI.roiWidth; j++)
+            {
+                *rowRemapTableTempRow = i;
+                *colRemapTableTempRow = j;
+
+                rowRemapTableTempRow++;
+                colRemapTableTempRow++;
+            }
+        }
+    }
+}
+
 // initialize the roi, anchor and shape values required for slice
 void init_slice(RpptGenericDescPtr descriptorPtr3D, RpptROIPtr roiPtrSrc, Rpp32u *roiTensor, Rpp32s *anchorTensor, Rpp32s *shapeTensor)
 {
@@ -1393,6 +1450,80 @@ void init_slice(RpptGenericDescPtr descriptorPtr3D, RpptROIPtr roiPtrSrc, Rpp32u
             roiTensor[idx2 + 3] = roiPtrSrc[i].xywhROI.roiWidth;
             shapeTensor[idx1] = roiTensor[idx2 + 2] / 2;
             shapeTensor[idx1 + 1] = roiTensor[idx2 + 3] / 2;
+        }
+    }
+}
+
+// Erase Region initializer for unit and performance testing
+void inline init_erase(int batchSize, int boxesInEachImage, Rpp32u* numOfBoxes, RpptRoiLtrb* anchorBoxInfoTensor, RpptROIPtr roiTensorPtrSrc, int channels, Rpp32f *colorBuffer, int inputBitDepth)
+{
+    Rpp8u *colors8u = reinterpret_cast<Rpp8u *>(colorBuffer);
+    Rpp16f *colors16f = reinterpret_cast<Rpp16f *>(colorBuffer);
+    Rpp32f *colors32f = colorBuffer;
+    Rpp8s *colors8s = reinterpret_cast<Rpp8s *>(colorBuffer);
+    for(int i = 0; i < batchSize; i++)
+    {
+        numOfBoxes[i] = boxesInEachImage;
+        int idx = boxesInEachImage * i;
+
+        anchorBoxInfoTensor[idx].lt.x = 0.125 * roiTensorPtrSrc[i].xywhROI.roiWidth;
+        anchorBoxInfoTensor[idx].lt.y = 0.125 * roiTensorPtrSrc[i].xywhROI.roiHeight;
+        anchorBoxInfoTensor[idx].rb.x = 0.375 * roiTensorPtrSrc[i].xywhROI.roiWidth;
+        anchorBoxInfoTensor[idx].rb.y = 0.375 * roiTensorPtrSrc[i].xywhROI.roiHeight;
+
+        idx++;
+        anchorBoxInfoTensor[idx].lt.x = 0.125 * roiTensorPtrSrc[i].xywhROI.roiWidth;
+        anchorBoxInfoTensor[idx].lt.y = 0.625 * roiTensorPtrSrc[i].xywhROI.roiHeight;
+        anchorBoxInfoTensor[idx].rb.x = 0.875 * roiTensorPtrSrc[i].xywhROI.roiWidth;
+        anchorBoxInfoTensor[idx].rb.y = 0.875 * roiTensorPtrSrc[i].xywhROI.roiHeight;
+
+        idx++;
+        anchorBoxInfoTensor[idx].lt.x = 0.75 * roiTensorPtrSrc[i].xywhROI.roiWidth;
+        anchorBoxInfoTensor[idx].lt.y = 0.125 * roiTensorPtrSrc[i].xywhROI.roiHeight;
+        anchorBoxInfoTensor[idx].rb.x = 0.875 * roiTensorPtrSrc[i].xywhROI.roiWidth;
+        anchorBoxInfoTensor[idx].rb.y = 0.5 * roiTensorPtrSrc[i].xywhROI.roiHeight;
+
+        if(channels == 3)
+        {
+            int idx = boxesInEachImage * 3 * i;
+            colorBuffer[idx] = 0;
+            colorBuffer[idx + 1] = 0;
+            colorBuffer[idx + 2] = 240;
+            colorBuffer[idx + 3] = 0;
+            colorBuffer[idx + 4] = 240;
+            colorBuffer[idx + 5] = 0;
+            colorBuffer[idx + 6] = 240;
+            colorBuffer[idx + 7] = 0;
+            colorBuffer[idx + 8] = 0;
+            for (int j = 0; j < 9; j++)
+            {
+                if (!inputBitDepth)
+                    colors8u[idx + j] = (Rpp8u)(colorBuffer[idx + j]);
+                else if (inputBitDepth == 1)
+                    colors16f[idx + j] = (Rpp16f)(colorBuffer[idx + j] * ONE_OVER_255);
+                else if (inputBitDepth == 2)
+                    colors32f[idx + j] = (Rpp32f)(colorBuffer[idx + j] * ONE_OVER_255);
+                else if (inputBitDepth == 5)
+                    colors8s[idx + j] = (Rpp8s)(colorBuffer[idx + j] - 128);
+            }
+        }
+        else
+        {
+            int idx = boxesInEachImage * i;
+            colorBuffer[idx] = 240;
+            colorBuffer[idx + 1] = 120;
+            colorBuffer[idx + 2] = 60;
+            for (int j = 0; j < 3; j++)
+            {
+                if (!inputBitDepth)
+                    colors8u[idx + j] = (Rpp8u)(colorBuffer[idx + j]);
+                else if (inputBitDepth == 1)
+                    colors16f[idx + j] = (Rpp16f)(colorBuffer[idx + j] * ONE_OVER_255);
+                else if (inputBitDepth == 2)
+                    colors32f[idx + j] = (Rpp32f)(colorBuffer[idx + j] * ONE_OVER_255);
+                else if (inputBitDepth == 5)
+                    colors8s[idx + j] = (Rpp8s)(colorBuffer[idx + j] - 128);
+            }
         }
     }
 }

@@ -129,7 +129,7 @@ typedef enum
     RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH    = -14,
     /*! \brief Invalid datatype \ingroup group_rppdefs */
     RPP_ERROR_INVALID_PARAMETER_DATATYPE        = -15,
-    /*! \brief Not enough memory \ingroup group_rppdefs */
+    /*! \brief Not enough memory to write outputs, as per dim-lengths and strides set in descriptor \ingroup group_rppdefs */
     RPP_ERROR_NOT_ENOUGH_MEMORY         = -16,
     /*! \brief Out of bound source ROI \ingroup group_rppdefs */
     RPP_ERROR_OUT_OF_BOUND_SRC_ROI      = -17,
@@ -445,6 +445,16 @@ typedef struct
     RppiPoint lt, rb;    // Left-Top point and Right-Bottom point
 
 } RpptRoiLtrb;
+
+/*! \brief RPPT Tensor Channel Offsets struct
+ * \ingroup group_rppdefs
+ */
+typedef struct
+{
+    RppiPoint r;
+    RppiPoint g;
+    RppiPoint b;
+} RpptChannelOffsets;
 
 /*! \brief RPPT Tensor 3D ROI LTFRBB struct
  * \ingroup group_rppdefs
