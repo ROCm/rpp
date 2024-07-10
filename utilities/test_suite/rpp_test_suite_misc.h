@@ -29,9 +29,11 @@ using namespace std;
 std::map<int, string> augmentationMiscMap =
 {
     {0, "transpose"},
-    {1, "normalize"}
+    {1, "normalize"},
+    {2, "log"}
 };
 
+// Compute strides given Generic Tensor
 void compute_strides(RpptGenericDescPtr descriptorPtr)
 {
     if (descriptorPtr->numDims > 0)
@@ -46,6 +48,8 @@ void compute_strides(RpptGenericDescPtr descriptorPtr)
     }
 }
 
+
+// Retrieve path for bin file
 string get_path(Rpp32u nDim, Rpp32u readType, string scriptPath, string testCase, bool isMeanStd = false)
 {
     string folderPath, suffix;
@@ -65,6 +69,7 @@ string get_path(Rpp32u nDim, Rpp32u readType, string scriptPath, string testCase
     return finalPath;
 }
 
+// Read data from Bin file
 void read_data(Rpp32f *data, Rpp32u nDim, Rpp32u readType, string scriptPath, string testCase, bool isMeanStd = false)
 {
     if(nDim != 2 && nDim != 3)
@@ -93,13 +98,8 @@ void fill_roi_values(Rpp32u nDim, Rpp32u batchSize, Rpp32u *roiTensor, bool qaMo
             case 3:
             {
                 std::array<Rpp32u, 6> roi = {0, 0, 0, 50, 50, 8};
-                for(int i = 0, j = 0; i < batchSize ; i++, j += 6)
                     std::copy(roi.begin(), roi.end(), &roiTensor[j]);
                 break;
-            }
-            default:
-            {
-                cout << "Error! QA mode is supported only for 2D/3D inputs" << endl;
                 exit(0);
             }
         }
@@ -333,6 +333,7 @@ Rpp32u get_bin_size(Rpp32u nDim, Rpp32u readType, string scriptPath, string test
     return filesize;
 }
 
+// Compares output with reference outputs and validates QA
 void compare_output(Rpp32f *outputF32, Rpp32u nDim, Rpp32u batchSize, Rpp32u bufferLength, string dst,
                     string funcName, string testCase, int additionalParam, string scriptPath, bool isMeanStd = false)
 {
