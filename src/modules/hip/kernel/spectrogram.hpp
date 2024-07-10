@@ -1,6 +1,8 @@
 #include <hip/hip_runtime.h>
 #include "rpp_hip_common.hpp"
 #include "hipfft/hipfft.h"
+#include <iostream>
+#include <fstream>
 
 #define CHECK_HIPFFT_STATUS(x) do { \
   int retval = (x); \
@@ -113,40 +115,57 @@ RppStatus hip_exec_spectrogram_tensor(Rpp32f* srcPtr,
                        reflectPadding);
     hipStreamSynchronize(handle.GetStream());
 
-    // Declare the fft_in and fft_out buffers
-    int numWindowsTemp = get_num_windows(srcLengthTensor[0], windowLength, windowStep, centerWindows);
-    hipfftReal *fft_in = reinterpret_cast<hipfftReal *>(windowOutput);
-    hipfftComplex *fft_out;
-    hipMalloc((void**)&fft_out, sizeof(hipfftComplex)* nfft * numWindowsTemp);
+    // Declare the fftIn and fftOut buffers
+    hipfftReal *fftIn = reinterpret_cast<hipfftReal *>(windowOutput);
+    hipfftComplex *fftOut;
+    hipMalloc((void**)&fftOut, sizeof(hipfftComplex) * maxNumWindows * nfft * globalThreads_z);
 
     // create the fft plan required
-    size_t workSize = 0;
+    RppSize_t workSize = 0;
     hipfftHandle fftHandle;
     CHECK_HIPFFT_STATUS(hipfftCreate(&fftHandle));
-    CHECK_HIPFFT_STATUS(hipfftPlan1d(&fftHandle, nfft, HIPFFT_R2C, numWindowsTemp));
-
-    // execute fft function
     CHECK_HIPFFT_STATUS(hipfftSetStream(fftHandle, handle.GetStream()));
-    CHECK_HIPFFT_STATUS(hipfftExecR2C(fftHandle, fft_in, fft_out));
 
-    // synchronize and destroy the temp resources allocated
-    hipDeviceSynchronize();
-    auto complexFft = malloc(numWindowsTemp * nfft * sizeof(float) * 2);
-    hipMemcpyAsync(complexFft, fft_out, numWindowsTemp * nfft * sizeof(float) * 2, hipMemcpyDeviceToHost, handle.GetStream());
-    hipStreamSynchronize(handle.GetStream());
-    auto *complexFftTemp = reinterpret_cast<std::complex<Rpp32f> *>(complexFft);
-
-    float *realFft = (float *)malloc(numWindowsTemp * ((nfft / 2) + 1) * sizeof(float));
-    std::cout << "printing output fft values" << std::endl;
-    for (int i = 0; i < ((nfft / 2) + 1); i++)
+    Rpp32s n[1] = {nfft};
+    // execute fft for all inputs in batch
+    for (int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
-        realFft[i] = std::norm(complexFftTemp[i]);
-        std::cout <<  realFft[i] << " " << std::endl;
+        hipfftReal *fftInTemp = fftIn + batchCount * maxNumWindows * nfft;
+        hipfftComplex *fftOutTemp = fftOut + batchCount * maxNumWindows * (nfft / 2 + 1);
+        Rpp32s nWindows = get_num_windows(srcLengthTensor[0], windowLength, windowStep, centerWindows);
+        CHECK_HIPFFT_STATUS(hipfftPlanMany(&fftHandle, 1, n, NULL, 0, 0, NULL, 0, 0, HIPFFT_R2C, nWindows));
+        CHECK_HIPFFT_STATUS(hipfftExecR2C(fftHandle, fftInTemp, fftOutTemp));
+        hipStreamSynchronize(handle.GetStream());
     }
 
-    hipFree(fft_out);
+    // synchronize and destroy the temp resources allocated
+    auto complexFft = malloc(maxNumWindows * nfft * globalThreads_z * sizeof(hipfftComplex));
+    hipMemcpyAsync(complexFft, fftOut, maxNumWindows * nfft * globalThreads_z * sizeof(hipfftComplex), hipMemcpyDeviceToHost, handle.GetStream());
+    hipStreamSynchronize(handle.GetStream());
+
+    auto *complexFftTemp = reinterpret_cast<std::complex<Rpp32f> *>(complexFft);
+    float *realFft = (float *)malloc(maxNumWindows * ((nfft / 2) + 1) * globalThreads_z * sizeof(float));
+    for (int k = 0; k < globalThreads_z; k++)
+    {
+        int inputBatchIndex = k * maxNumWindows * ((nfft / 2) + 1);
+        int outputBatchIndex = k * maxNumWindows * ((nfft / 2) + 1);
+        Rpp32s nWindows = get_num_windows(srcLengthTensor[0], windowLength, windowStep, centerWindows);
+        for(int j = 0; j < nWindows; j++)
+        {
+            for (int i = 0; i < ((nfft / 2) + 1); i++)
+                realFft[outputBatchIndex + j * ((nfft / 2) + 1) + i] = std::norm(complexFftTemp[inputBatchIndex + j * ((nfft / 2) + 1) + i]);
+        }
+    }
+
+    std::ofstream refFile;
+    refFile.open("spectrogram_hip.csv");
+    for (int i = 0; i < dstDescPtr->n * dstDescPtr->strides.nStride; i++)
+        refFile << *(realFft + i) << "\n";
+    refFile.close();
+
+    hipFree(fftOut);
     hipfftDestroy(fftHandle);
-    // free(complexFft);
+    // // free(complexFft);
     free(realFft);
     return RPP_SUCCESS;
 }
