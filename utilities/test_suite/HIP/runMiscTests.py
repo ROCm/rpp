@@ -74,25 +74,25 @@ def generate_performance_reports(RESULTS_DIR):
     print(dfPrint_noIndices)
 
 def run_unit_test_cmd(numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg):
-    print(f"./Tensor_misc_hip {case} {testType} {toggle} {numDims} {batchSize} {numRuns} {additionalArg}")
-    result = subprocess.run([buildFolderPath + "/build/Tensor_misc_hip", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE)    # nosec
-    print(result.stdout.decode())
+    print("./Tensor_misc_hip {} {} {} {} {} {} {}".format(case, testType, toggle, numDims, batchSize, numRuns, additionalArg))
+    result = subprocess.Popen([buildFolderPath + "/build/Tensor_misc_hip", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE)    # nosec
+    stdout_data, stderr_data = result.communicate()
+    print(stdout_data.decode())
     print("------------------------------------------------------------------------------------------")
 
 def run_performance_test_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg):
     with open("{}/Tensor_misc_hip_raw_performance_log.txt".format(loggingFolder), "a") as logFile:
-        print(f"./Tensor_misc_hip {case} {testType} {toggle} {numDims} {batchSize} {numRuns} {additionalArg}")
-        process = subprocess.Popen([buildFolderPath + "/build/Tensor_misc_hip", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
+        print("./Tensor_misc_hip {} {} {} {} {} {} {}".format(case, testType, toggle, numDims, batchSize, numRuns, additionalArg))
+        process = subprocess.Popen([buildFolderPath + "/build/Tensor_misc_hip", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)    # nosec
         read_from_subprocess_and_write_to_log(process, logFile)
 
 def run_performance_test_with_profiler_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg):
-    if not os.path.exists(f"{outFilePath}/case_{case}"):
-        os.mkdir(f"{outFilePath}/case_{case}")
+    if not os.path.exists("{}/case_{}".format(outFilePath, case)):
+        os.mkdir("{}/case_{}".format(outFilePath, case))
 
     with open("{}/Tensor_misc_hip_raw_performance_log.txt".format(loggingFolder), "a") as logFile:
-        print(f"\nrocprof --basenames on --timestamp on --stats -o {outFilePath}/case_{case}/output_case{case}.csv ./Tensor_misc_hip {case} {testType} {toggle} {numDims} {batchSize} {numRuns} {additionalArg}")
-        process = subprocess.Popen([ 'rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f"{outFilePath}/case_{case}/output_case{case}.csv", "./Tensor_misc_hip", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
-        read_from_subprocess_and_write_to_log(process, logFile)
+        print("\nrocprof --basenames on --timestamp on --stats -o {}/case_{}/output_case{}.csv ./Tensor_misc_hip {} {} {} {} {} {} {}".format(outFilePath, case, case, case, testType, toggle, numDims, batchSize, numRuns, additionalArg))
+        process = subprocess.Popen(['rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', '{}/case_{}/output_case{}.csv'.format(outFilePath, case, case), "./Tensor_misc_hip", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)  # nosec        read_from_subprocess_and_write_to_log(process, logFile)
     print("------------------------------------------------------------------------------------------")
 
 def run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg, profilingOption = 'NO'):
@@ -206,8 +206,8 @@ os.makedirs(buildFolderPath + "/build")
 os.chdir(buildFolderPath + "/build")
 
 # Run cmake and make commands
-subprocess.run(["cmake", scriptPath], cwd=".")   # nosec
-subprocess.run(["make", "-j16"], cwd=".")    # nosec
+subprocess.call(["cmake", scriptPath], cwd=".")   # nosec
+subprocess.call(["make", "-j16"], cwd=".")    # nosec
 
 supportedCaseList = ['0', '1', '2']
 for case in caseList:

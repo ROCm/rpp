@@ -57,20 +57,23 @@ def func_group_finder(case_number):
         return "miscellaneous"
 
 def run_unit_test_cmd(headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
-    print(f"./Tensor_voxel_hip {headerPath} {dataPath} {dstPathTemp} {layout} {case} {numRuns} {testType} {qaMode} {batchSize} {bitDepth}")
-    result = subprocess.run([buildFolderPath + "/build/Tensor_voxel_hip", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE) # nosec
-    print(result.stdout.decode())
+    print("./Tensor_voxel_hip {} {} {} {} {} {} {} {} {} {}".format(headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize, bitDepth))
+    result = subprocess.Popen([buildFolderPath + "/build/Tensor_voxel_hip", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE) # nosec
+    stdout_data, stderr_data = result.communicate()
+    print(stdout_data.decode())
     print("------------------------------------------------------------------------------------------")
 
 def run_performance_test_cmd(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
-    with open(f"{loggingFolder}/Tensor_voxel_hip_{logFileLayout}_raw_performance_log.txt", "a") as logFile:
-        print(f"./Tensor_voxel_hip {headerPath} {dataPath} {dstPathTemp} {layout} {case} {numRuns} {testType} {qaMode} {batchSize} {bitDepth}")
-        process = subprocess.Popen([buildFolderPath + "/build/Tensor_voxel_hip", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True) # nosec
+    with open("{}/Tensor_voxel_hip_{}_raw_performance_log.txt".format(loggingFolder, logFileLayout), "a") as logFile:
+        print("./Tensor_voxel_hip {} {} {} {} {} {} {} {} {} {}".format(headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize, bitDepth))
+        process = subprocess.Popen([buildFolderPath + "/build/Tensor_voxel_hip", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) # nosec
         while True:
             output = process.stdout.readline()
             if not output and process.poll() is not None:
                 break
-            print(output.strip())
+            output = output.decode().strip()  # Decode bytes to string and strip extra whitespace
+            print(output)
+            logFile.write(output)
             if "Running" in output or "max,min,avg wall times" in output:
                 cleanedOutput = ''.join(char for char in output if 32 <= ord(char) <= 126)  # Remove control characters
                 cleanedOutput = cleanedOutput.strip()  # Remove leading/trailing whitespace
@@ -81,14 +84,15 @@ def run_performance_test_cmd(loggingFolder, logFileLayout, headerPath, dataPath,
 
 def run_performance_test_with_profiler_cmd(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
     layoutName = get_layout_name(layout)
-    if not os.path.exists(f"{loggingFolder}/Tensor_{layoutName}/case_{case}"):
-        os.mkdir(f"{loggingFolder}/Tensor_{layoutName}/case_{case}")
+    directory_path = os.path.join(loggingFolder, "Tensor_" + layoutName, "case_" + str(case))
+    if not os.path.exists(directory_path):
+        os.mkdir(directory_path)
 
     bitDepths = [0, 2]
     for bitDepth in bitDepths:
-        with open(f"{loggingFolder}/Tensor_voxel_hip_{logFileLayout}_raw_performance_log.txt", "a") as logFile:
-            print(f"\nrocprof --basenames on --timestamp on --stats -o {dstPathTemp}/Tensor_{layoutName}/case_{case}/output_case{case}.csv ./Tensor_voxel_hip {headerPath} {dataPath} {dstPathTemp}  {layout} {case}{numRuns} {testType} {qaMode} {batchSize} {bitDepth}")
-            process = subprocess.Popen([ 'rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f"{dstPath}/Tensor_{layoutName}/case_{case}/output_case{case}.csv", buildFolderPath + "/build/Tensor_voxel_hip", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) # nosec
+        with open("{}/Tensor_voxel_hip_{}_raw_performance_log.txt".format(loggingFolder, logFileLayout), "a") as logFile:
+            print("\nrocprof --basenames on --timestamp on --stats -o {}/Tensor_{}/case_{}/output_case{}.csv ./Tensor_voxel_hip {} {} {} {} {}{} {} {} {}".format(dstPathTemp, layoutName, case, case, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize, bitDepth))
+            process = subprocess.Popen(['rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', '{}/Tensor_{}/case_{}/output_case{}.csv'.format(dstPath, layoutName, case, case), buildFolderPath + "/build/Tensor_voxel_hip", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)  # nosec
             while True:
                 output = process.stdout.readline()
                 if not output and process.poll() is not None:
@@ -227,17 +231,17 @@ os.makedirs(buildFolderPath + "/build")
 os.chdir(buildFolderPath + "/build")
 
 # Run cmake and make commands
-subprocess.run(["cmake", scriptPath], cwd=".")   # nosec
-subprocess.run(["make", "-j16"], cwd=".")  # nosec
+subprocess.call(["cmake", scriptPath], cwd=".")   # nosec
+subprocess.call(["make", "-j16"], cwd=".")  # nosec
 
 # List of cases supported
 supportedCaseList = ['0', '1', '2', '3', '4', '5', '6']
 
 # Create folders based on testType and profilingOption
 if testType == 1 and profilingOption == "YES":
-    os.makedirs(f"{dstPath}/Tensor_PKD3")
-    os.makedirs(f"{dstPath}/Tensor_PLN1")
-    os.makedirs(f"{dstPath}/Tensor_PLN3")
+    os.makedirs("{}/Tensor_PKD3".format(dstPath))
+    os.makedirs("{}/Tensor_PLN1".format(dstPath))
+    os.makedirs("{}/Tensor_PLN3".format(dstPath))
 
 print("\n\n\n\n\n")
 print("##########################################################################################")
