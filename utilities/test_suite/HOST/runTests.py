@@ -49,25 +49,6 @@ def get_log_file_list(preserveOutput):
         outFolderPath + "/OUTPUT_PERFORMANCE_LOGS_HOST_" + timestamp + "/Tensor_host_pln1_raw_performance_log.txt"
     ]
 
-# Functionality group finder
-def func_group_finder(case_number):
-    if case_number < 5 or case_number == 13 or case_number == 36 or case_number == 31 or case_number == 45:
-        return "color_augmentations"
-    elif case_number == 8 or case_number == 30 or case_number == 82 or case_number == 83 or case_number == 84:
-        return "effects_augmentations"
-    elif case_number < 40 or case_number == 63:
-        return "geometric_augmentations"
-    elif case_number < 62:
-        return "arithmetic_operations"
-    elif case_number < 69:
-        return "logical_operations"
-    elif case_number < 87:
-        return "data_exchange_operations"
-    elif case_number < 88:
-        return "statistical_operations"
-    else:
-        return "miscellaneous"
-
 def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
     print("\n\n\n\n")
     print("--------------------------------")
@@ -169,6 +150,7 @@ def rpp_test_suite_parser_and_validator():
     parser.add_argument('--preserve_output', type = int, default = 1, help = "preserves the output of the program - (0 = override output / 1 = preserve output )" )
     parser.add_argument('--batch_size', type = int, default = 1, help = "Specifies the batch size to use for running tests. Default is 1.")
     parser.add_argument('--roi', nargs = 4, help = "specifies the roi values", required = False)
+    print_case_list(imageAugmentationMap, "HOST", parser)
     args = parser.parse_args()
 
     # check if the folder exists
@@ -283,7 +265,7 @@ subprocess.run(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.run(["make", "-j16"], cwd=".")    # nosec
 
 # List of cases supported
-supportedCaseList = ['0', '1', '2', '4', '8', '13', '20', '21', '23', '29', '30', '31', '32', '33', '34', '36', '37', '38', '39', '45', '46', '49', '54', '61', '63', '65', '68', '70', '79', '80', '81', '82', '83', '84', '85', '86', '87', '88', '89', '90', '91', '92']
+supportedCaseList = ['0', '1', '2', '4', '8', '13', '20', '21', '23', '29', '30', '31', '32', '33', '34', '35', '36', '37', '38', '39', '45', '46', '49', '54', '61', '63', '65', '68', '70', '79', '80', '81', '82', '83', '84', '85', '86', '87', '88', '89', '90', '91', '92']
 
 print("\n\n\n\n\n")
 print("##########################################################################################")

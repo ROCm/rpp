@@ -677,7 +677,7 @@ RppStatus rppt_color_temperature_host(RppPtr_t srcPtr,
                                       RpptDescPtr srcDescPtr,
                                       RppPtr_t dstPtr,
                                       RpptDescPtr dstDescPtr,
-                                      Rpp8s *adjustmentValueTensor,
+                                      Rpp32s *adjustmentValueTensor,
                                       RpptROIPtr roiTensorPtrSrc,
                                       RpptRoiType roiType,
                                       rppHandle_t rppHandle)
