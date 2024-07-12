@@ -64,6 +64,7 @@ SOFTWARE.
 const float ONE_OVER_6 = 1.0f / 6;
 const float ONE_OVER_3 = 1.0f / 3;
 const float ONE_OVER_255 = 1.0f / 255;
+const uint MMS_MAX_SCRATCH_MEMORY = 76800000; // maximum scratch memory size needed for MMS buffer in RNNT training
 
 /******************** RPP typedefs ********************/
 

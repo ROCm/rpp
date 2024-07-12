@@ -320,7 +320,7 @@ RppStatus hip_exec_non_silent_region_detection_tensor(Rpp32f *srcPtr,
                                                       rpp::Handle& handle)
 {
     // check if scratch memory size required for moving mean square is within the limits
-    if ((srcDescPtr->n * srcDescPtr->strides.nStride) > 76800000) // 76800000 is the maximum scratch memory size needed for MMS buffer in RNNT training
+    if ((srcDescPtr->n * srcDescPtr->strides.nStride) > MMS_MAX_SCRATCH_MEMORY)
         return RPP_ERROR_OUT_OF_BOUND_SCRATCH_MEMORY_SIZE;
 
     Rpp32f *mmsArr = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
