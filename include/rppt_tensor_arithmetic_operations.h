@@ -25,14 +25,6 @@ SOFTWARE.
 #ifndef RPPT_TENSOR_ARITHMETIC_OPERATIONS_H
 #define RPPT_TENSOR_ARITHMETIC_OPERATIONS_H
 
-/*!
- * \file
- * \brief RPPT Tensor Arithmetic operation Functions.
- *
- * \defgroup group_tensor_arithmetic Operations: AMD RPP Tensor Arithmetic Operations
- * \brief Tensor Arithmetic Operations.
- */
-
 #include "rpp.h"
 #include "rppdefs.h"
 #ifdef __cplusplus
@@ -42,7 +34,7 @@ extern "C" {
 /*!
  * \file
  * \brief RPPT Tensor Operations - Arithmetic Operations.
- * \defgroup group_tensor_arithmetic_operations RPPT Tensor Operations - Arithmetic Operations.
+ * \defgroup group_rppt_tensor_arithmetic_operations RPPT Tensor Operations - Arithmetic Operations.
  * \brief RPPT Tensor Operations - Arithmetic Operations.
  */
 
@@ -264,6 +256,40 @@ RppStatus rppt_magnitude_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDescPtr sr
  * \retval RPP_ERROR* Unsuccessful completion.
  */
 RppStatus rppt_magnitude_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
+
+/*! \brief Logarithm operation on HOST backend
+ * \details Computes Log to base e(natural log) of the input for a given ND Tensor.
+ *          Supports u8->f32, i8->f32, f16->f16 and f32->f32 datatypes.
+ *          Uses Absolute of input for log computation and uses nextafter() if input is 0 to avoid undefined result.
+ * \param [in] srcPtr source tensor in HOST memory
+ * \param [in] srcGenericDescPtr source tensor descriptor
+ * \param [out] dstPtr destination tensor in HOST memory
+ * \param [in] dstGenericDescPtr destination tensor descriptor
+ * \param [in] roiTensor values to represent dimensions of input tensor
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_log_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *roiTensor, rppHandle_t rppHandle);
+
+#ifdef GPU_SUPPORT
+/*! \brief Logarithm operation on HIP backend
+ * \details Computes Log to base e(natural log) of the input for a given ND Tensor.
+ *          Supports u8->f32, i8->f32, f16->f16 and f32->f32 datatypes.
+ *          Uses Absolute of input for log computation and uses nextafter() if input is 0 to avoid undefined result.
+ * \param [in] srcPtr source tensor in HIP memory
+ * \param [in] srcGenericDescPtr source tensor descriptor
+ * \param [out] dstPtr destination tensor in HIP memory
+ * \param [in] dstGenericDescPtr destination tensor descriptor
+ * \param [in] roiTensor values to represent dimensions of input tensor
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_log_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *roiTensor, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
 /*! @}
