@@ -69,14 +69,14 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
 
             if case == "40" or case == "41" or case == "49" or case == "54":
                 for kernelSize in range(3, 10, 2):
-                    print("./Tensor_hip {} {} {} {} {} {} {}".format(srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, kernelSize))
+                    print("./Tensor_hip " + srcPath1 + " " + srcPath2 + " " + dstPath + " " + str(bitDepth) + " " + str(outputFormatToggle) + " " + str(case) + " " + str(kernelSize))
                     result = subprocess.Popen([buildFolderPath + "/build/Tensor_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(kernelSize), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE)    # nosec
                     stdout_data, stderr_data = result.communicate()
                     print(stdout_data.decode())
             elif case == "8":
                 # Run all variants of noise type functions with additional argument of noiseType = gausssianNoise / shotNoise / saltandpepperNoise
                 for noiseType in range(3):
-                    print("./Tensor_hip {} {} {} {} {} {} {}".format(srcPath1, srcPath2, dstPathTemp, bitDepth, outputFormatToggle, case, noiseType))
+                    print("./Tensor_hip " + srcPath1 + " " + srcPath2 + " " + dstPathTemp + " " + str(bitDepth) + " " + str(outputFormatToggle) + " " + str(case) + " " + str(noiseType))
                     result = subprocess.Popen([buildFolderPath + "/build/Tensor_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(noiseType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE)    # nosec
                     stdout_data, stderr_data = result.communicate()
                     print(stdout_data.decode())
@@ -86,12 +86,12 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
                 if case =='79':
                     interpolationRange = 2
                 for interpolationType in range(interpolationRange):
-                    print("./Tensor_hip {} {} {} {} {} {} {}".format(srcPath1, srcPath2, dstPathTemp, bitDepth, outputFormatToggle, case, interpolationType))
+                    print("./Tensor_hip " + srcPath1 + " " + srcPath2 + " " + dstPathTemp + " " + str(bitDepth) + " " + str(outputFormatToggle) + " " + str(case) + " " + str(interpolationType))
                     result = subprocess.Popen([buildFolderPath + "/build/Tensor_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(interpolationType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE)    # nosec
                     stdout_data, stderr_data = result.communicate()
                     print(stdout_data.decode())
             else:
-                print("./Tensor_hip {} {} {} {} {} {} 0 {} {} {}".format(srcPath1, srcPath2, dstPathTemp, bitDepth, outputFormatToggle, case, numRuns, testType, layout))
+                print("./Tensor_hip " + srcPath1 + " " + srcPath2 + " " + dstPathTemp + " " + str(bitDepth) + " " + str(outputFormatToggle) + " " + str(case) + " 0 " + str(numRuns) + " " + str(testType) + " " + str(layout))
                 result = subprocess.Popen([buildFolderPath + "/build/Tensor_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), "0", str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE)    # nosec
                 stdout_data, stderr_data = result.communicate()
                 print(stdout_data.decode())
@@ -99,8 +99,8 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
             print("------------------------------------------------------------------------------------------")
 
 def run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, additionalParam, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
-    with open("{}/Tensor_hip_{}_raw_performance_log.txt".format(loggingFolder, logFileLayout), "a") as logFile:
-        print("./Tensor_hip {} {} {} {} {} {} {} 0".format(srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, additionalParam))
+    with open(loggingFolder + "/Tensor_hip_" + logFileLayout + "_raw_performance_log.txt", "a") as logFile:
+        print("./Tensor_hip " + srcPath1 + " " + srcPath2 + " " + dstPath + " " + str(bitDepth) + " " + str(outputFormatToggle) + " " + str(case) + " " + str(additionalParam))
         process = subprocess.Popen([buildFolderPath + "/build/Tensor_hip", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)  # nosec
         read_from_subprocess_and_write_to_log(process, logFile)
 
@@ -136,11 +136,11 @@ def run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPa
 def run_performance_test_with_profiler(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, additionalParam, additionalParamType, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
     addtionalParamString = additionalParamType + str(additionalParam)
     layoutName = get_layout_name(layout)
-    if not os.path.isdir("{}/Tensor_{}/case_{}".format(dstPath, layoutName, case)):
-        os.makedirs("{}/Tensor_{}/case_{}".format(dstPath, layoutName, case))
-    with open("{}/Tensor_hip_{}_raw_performance_log.txt".format(loggingFolder, logFileLayout), "a") as logFile:
-        print("rocprof --basenames on --timestamp on --stats -o {}/Tensor_{}/case_{}/output_case{}_bitDepth{}_oft{}{}.csv ./Tensor_hip {} {} {} {} {} {} 0".format(dstPath, layoutName, case, case, bitDepth, outputFormatToggle, addtionalParamString, srcPath1, srcPath2, bitDepth, outputFormatToggle, case, additionalParam))
-        process = subprocess.Popen(['rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', '{}/Tensor_{}/case_{}/output_case{}_bitDepth{}_oft{}{}.csv'.format(dstPath, layoutName, case, case, bitDepth, outputFormatToggle, addtionalParamString), buildFolderPath + "/build/Tensor_hip", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), str(numRuns), str(testType), str(layout), '0', str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)  # nosec
+    if not os.path.isdir(dstPath + "/Tensor_" + layoutName + "/case_" + str(case)):
+        os.makedirs(dstPath + "/Tensor_" + layoutName + "/case_" + str(case))
+    with open(loggingFolder + "/Tensor_hip_" + logFileLayout + "_raw_performance_log.txt", "a") as logFile: 
+        logFile.write("rocprof --basenames on --timestamp on --stats -o " + dstPath + "/Tensor_" + layoutName + "/case_" + str(case) + "/output_case" + str(case) + "_bitDepth" + str(bitDepth) + "_oft" + addtionalParamString + ".csv ./Tensor_hip " + srcPath1 + " " + srcPath2 + " " + str(bitDepth) + " " + str(outputFormatToggle) + " " + str(case) + " " + str(additionalParam) + " 0\n")
+        process = subprocess.Popen(['rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', dstPath + "/Tensor_" + layoutName + "/case_" + str(case) + "/output_case" + str(case) + "_bitDepth" + str(bitDepth) + "_oft" + addtionalParamString + ".csv", buildFolderPath + "/build/Tensor_hip", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), str(numRuns), str(testType), str(layout), '0', str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)  # nosec
         while True:
             output = process.stdout.readline()
             if not output and process.poll() is not None:
@@ -175,7 +175,7 @@ def rpp_test_suite_parser_and_validator():
 
     # validate the parameters passed by user
     if ((args.case_start < caseMin or args.case_start > caseMax) or (args.case_end < caseMin or args.case_end > caseMax)):
-        print("Starting case# and Ending case# must be in the {}:{} range. Aborting!".format(caseMin, caseMax))
+        print("Starting case# and Ending case# must be in the " + str(caseMin) + ":" + str(caseMax) + " range. Aborting!")
         exit(0)
     elif args.case_end < args.case_start:
         print("Ending case# must be greater than starting case#. Aborting!")
@@ -217,7 +217,7 @@ def rpp_test_suite_parser_and_validator():
     else:
         for case in args.case_list:
             if int(case) < caseMin or int(case) > caseMax:
-                print("Invalid case number {}! Case number must be in the {}:{} range. Aborting!".format(case, caseMin, caseMax))
+                print("Invalid case number " + str(case) + "! Case number must be in the " + str(caseMin) + ":" + str(caseMax) + " range. Aborting!")
                 exit(0)
 
     return args
@@ -283,9 +283,9 @@ supportedCaseList = ['0', '1', '2', '4', '8', '13', '20', '21', '23', '29', '30'
 
 # Create folders based on testType and profilingOption
 if testType == 1 and profilingOption == "YES":
-    os.makedirs("{}/Tensor_PKD3".format(dstPath))
-    os.makedirs("{}/Tensor_PLN1".format(dstPath))
-    os.makedirs("{}/Tensor_PLN3".format(dstPath))
+    os.makedirs(dstPath + "/Tensor_PKD3")
+    os.makedirs(dstPath + "/Tensor_PLN1")
+    os.makedirs(dstPath + "/Tensor_PLN3")
 
 print("\n\n\n\n\n")
 print("##########################################################################################")
@@ -447,7 +447,7 @@ else:
                                 continue
 
             new_file.close()
-            subprocess.call(['chown', '{}:{}'.format(os.getuid(), os.getgid()), RESULTS_DIR + "/consolidated_results_" + TYPE + ".stats.csv"])  # nosec
+            subprocess.call(['chown', str(os.getuid()) + ':' + str(os.getgid()), RESULTS_DIR + "/consolidated_results_" + TYPE + ".stats.csv"])  # nosec
         try:
             generate_performance_reports(d_counter, TYPE_LIST, RESULTS_DIR)
 

@@ -179,7 +179,7 @@ def case_file_check(CASE_FILE_PATH, TYPE, TENSOR_TYPE_LIST, new_file, d_counter)
 def directory_name_generator(qaMode, affinity, layoutType, case, path, func_group_finder):
     if qaMode == 0:
         functionality_group = func_group_finder(int(case))
-        dst_folder_temp = "{}/rpp_{}_{}_{}".format(path, affinity, layoutType, functionality_group)
+        dst_folder_temp = path + "/rpp_" + affinity + "_" + layoutType + "_" + functionality_group
     else:
         dst_folder_temp = path
 

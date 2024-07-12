@@ -70,7 +70,7 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
             if case == "8":
                 # Run all variants of noise type functions with additional argument of noiseType = gausssianNoise / shotNoise / saltandpepperNoise
                 for noiseType in range(3):
-                    print("./Tensor_host {} {} {} {} {} {} {} 0".format(srcPath1, srcPath2, dstPathTemp, bitDepth, outputFormatToggle, case, noiseType))
+                    print("./Tensor_host " + srcPath1 + " " + srcPath2 + " " + dstPathTemp + " " + str(bitDepth) + " " + str(outputFormatToggle) + " " + str(case) + " " + str(noiseType) + " 0")
                     result = subprocess.Popen([buildFolderPath + "/build/Tensor_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(noiseType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)    # nosec
                     stdout_data, stderr_data = result.communicate()
                     print(stdout_data.decode())
@@ -80,12 +80,12 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
                 if case =='79':
                     interpolationRange = 2
                 for interpolationType in range(interpolationRange):
-                    print("./Tensor_host {} {} {} {} {} {} {} 0".format(srcPath1, srcPath2, dstPathTemp, bitDepth, outputFormatToggle, case, interpolationType))
+                    print("./Tensor_host " + srcPath1 + " " + srcPath2 + " " + dstPathTemp + " " + str(bitDepth) + " " + str(outputFormatToggle) + " " + str(case) + " " + str(interpolationType) + " 0")
                     result = subprocess.Popen([buildFolderPath + "/build/Tensor_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(interpolationType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)    # nosec
                     stdout_data, stderr_data = result.communicate()
                     print(stdout_data.decode())
             else:
-                print("./Tensor_host {} {} {} {} {} {} 0 {} {} {} 0".format(srcPath1, srcPath2, dstPathTemp, bitDepth, outputFormatToggle, case, numRuns, testType, layout))
+                print("./Tensor_host " + srcPath1 + " " + srcPath2 + " " + dstPathTemp + " " + str(bitDepth) + " " + str(outputFormatToggle) + " " + str(case) + " 0 " + str(numRuns) + " " + str(testType) + " " + str(layout) + " 0")
                 result = subprocess.Popen([buildFolderPath + "/build/Tensor_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), "0", str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE)    # nosec
                 stdout_data, stderr_data = result.communicate()
                 print(stdout_data.decode())
@@ -94,12 +94,12 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
 
 def run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, additionalParam, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
     if qaMode == 1:
-        with open("{}/BatchPD_host_{}_raw_performance_log.txt".format(loggingFolder, logFileLayout), "a") as logFile:
+            with open(loggingFolder + "/BatchPD_host_" + logFileLayout + "_raw_performance_log.txt", "a") as logFile:
             process = subprocess.Popen([buildFolderPath + "/build/BatchPD_host_" + logFileLayout, srcPath1, srcPath2, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), "0"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)    # nosec
             read_from_subprocess_and_write_to_log(process, logFile)
 
-    with open("{}/Tensor_host_{}_raw_performance_log.txt".format(loggingFolder, logFileLayout), "a") as logFile:
-        print("./Tensor_host {} {} {} {} {} {} {} 0".format(srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, additionalParam))
+    with open(loggingFolder + "/Tensor_host_" + logFileLayout + "_raw_performance_log.txt", "a") as logFile:
+        logFile.write("./Tensor_host " + srcPath1 + " " + srcPath2 + " " + dstPath + " " + str(bitDepth) + " " + str(outputFormatToggle) + " " + str(case) + " " + str(additionalParam) + " 0\n")
         process = subprocess.Popen([buildFolderPath + "/build/Tensor_host", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)    # nosec
         read_from_subprocess_and_write_to_log(process, logFile)
 
@@ -156,7 +156,7 @@ def rpp_test_suite_parser_and_validator():
 
     # validate the parameters passed by user
     if ((args.case_start < caseMin or args.case_start > caseMax) or (args.case_end < caseMin or args.case_end > caseMax)):
-        print("Starting case# and Ending case# must be in the {}:{} range. Aborting!".format(caseMin, caseMax))
+        print("Starting case# and Ending case# must be in the " + str(caseMin) + ":" + str(caseMax) + " range. Aborting!")
         exit(0)
     elif args.case_end < args.case_start:
         print("Ending case# must be greater than starting case#. Aborting!")
@@ -195,7 +195,7 @@ def rpp_test_suite_parser_and_validator():
     else:
         for case in args.case_list:
             if int(case) < caseMin or int(case) > caseMax:
-                print("Invalid case number {}! Case number must be in the {}:{} range. Aborting!".format(case, caseMin, caseMax))
+                print("Invalid case number " + str(case) + "! Case number must be in the " + str(caseMin) + ":" + str(caseMax) + " range. Aborting!")
                 exit(0)
 
     return args
@@ -442,7 +442,7 @@ elif (testType == 1 and qaMode == 1):
     summaryRow = {'BatchPD_Augmentation_Type': pd.NA,
                    'Tensor_Augmentation_Type': pd.NA,
                    'Performance Speedup (%)': pd.NA,
-                   'Test_Result': 'Final Results of Tests: Passed: {}, Failed: {}'.format(passedCases, failedCases)}
+                   'Test_Result': 'Final Results of Tests: Passed: ' + str(passedCases) + ', Failed: ' + str(failedCases)}
 
     print("\n", df.to_markdown())
 
@@ -455,7 +455,7 @@ elif (testType == 1 and qaMode == 1):
     print("\n-------------------------------------------------------------------" + resultsInfo + "\n\n-------------------------------------------------------------------")
     print("\nIMPORTANT NOTE:")
     print("- The following performance comparison shows Performance Speedup percentages between times measured on previous generation RPP-BatchPD APIs against current generation RPP-Tensor APIs.")
-    print("- All APIs have been improved for performance ranging from {}% (almost same) to {}% faster.".format(0, 100))
+    print("- All APIs have been improved for performance ranging from " + str(0) + "% (almost same) to " + str(100) + "% faster.")
     print("- Random observations of negative speedups might always occur due to current test machine temperature/load variances or other CPU/GPU state-dependent conditions.")
     print("\n-------------------------------------------------------------------\n")
 elif (testType == 1 and qaMode == 0):

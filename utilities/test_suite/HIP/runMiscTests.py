@@ -74,25 +74,26 @@ def generate_performance_reports(RESULTS_DIR):
     print(dfPrint_noIndices)
 
 def run_unit_test_cmd(numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg):
-    print("./Tensor_misc_hip {} {} {} {} {} {} {}".format(case, testType, toggle, numDims, batchSize, numRuns, additionalArg))
+    print("./Tensor_misc_hip " + str(case) + " " + str(testType) + " " + str(toggle) + " " + str(numDims) + " " + str(batchSize) + " " + str(numRuns) + " " + str(additionalArg))
     result = subprocess.Popen([buildFolderPath + "/build/Tensor_misc_hip", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE)    # nosec
     stdout_data, stderr_data = result.communicate()
     print(stdout_data.decode())
     print("------------------------------------------------------------------------------------------")
 
 def run_performance_test_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg):
-    with open("{}/Tensor_misc_hip_raw_performance_log.txt".format(loggingFolder), "a") as logFile:
-        print("./Tensor_misc_hip {} {} {} {} {} {} {}".format(case, testType, toggle, numDims, batchSize, numRuns, additionalArg))
+    with open(loggingFolder + "/Tensor_misc_hip_raw_performance_log.txt", "a") as logFile:
+        logFile.write("./Tensor_misc_hip " + str(case) + " " + str(testType) + " " + str(toggle) + " " + str(numDims) + " " + str(batchSize) + " " + str(numRuns) + " " + str(additionalArg) + "\n")
         process = subprocess.Popen([buildFolderPath + "/build/Tensor_misc_hip", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)    # nosec
         read_from_subprocess_and_write_to_log(process, logFile)
 
 def run_performance_test_with_profiler_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg):
-    if not os.path.exists("{}/case_{}".format(outFilePath, case)):
-        os.mkdir("{}/case_{}".format(outFilePath, case))
+    if not os.path.exists(outFilePath + "/case_" + str(case)):
+        os.mkdir(outFilePath + "/case_" + str(case))
 
-    with open("{}/Tensor_misc_hip_raw_performance_log.txt".format(loggingFolder), "a") as logFile:
-        print("\nrocprof --basenames on --timestamp on --stats -o {}/case_{}/output_case{}.csv ./Tensor_misc_hip {} {} {} {} {} {} {}".format(outFilePath, case, case, case, testType, toggle, numDims, batchSize, numRuns, additionalArg))
-        process = subprocess.Popen(['rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', '{}/case_{}/output_case{}.csv'.format(outFilePath, case, case), "./Tensor_misc_hip", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)  # nosec        read_from_subprocess_and_write_to_log(process, logFile)
+    with open(loggingFolder + "/Tensor_misc_hip_raw_performance_log.txt", "a") as logFile:
+        logFile.write("\nrocprof --basenames on --timestamp on --stats -o " + outFilePath + "/case_" + str(case) + "/output_case" + str(case) + ".csv ./Tensor_misc_hip " + str(case) + " " + str(testType) + " " + str(toggle) + " " + str(numDims) + " " + str(batchSize) + " " + str(numRuns) + " " + str(additionalArg) + "\n")
+        process = subprocess.Popen(['rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', outFilePath + "/case_" + str(case) + "/output_case" + str(case) + ".csv", "./Tensor_misc_hip", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)  # nosec
+        read_from_subprocess_and_write_to_log(process, logFile)
     print("------------------------------------------------------------------------------------------")
 
 def run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg, profilingOption = 'NO'):
@@ -253,7 +254,7 @@ if (testType == 1 and profilingOption == "YES"):
                     continue
 
     new_file.close()
-    subprocess.call(['chown', '{}:{}'.format(os.getuid(), os.getgid()), CONSOLIDATED_FILE])  # nosec
+    subprocess.call(['chown', str(os.getuid()) + ':' + str(os.getgid()), CONSOLIDATED_FILE])  # nosec
     try:
         generate_performance_reports(RESULTS_DIR)
     except ImportError:

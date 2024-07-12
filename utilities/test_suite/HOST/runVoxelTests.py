@@ -58,15 +58,15 @@ def func_group_finder(case_number):
         return "miscellaneous"
 
 def run_unit_test_cmd(headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
-    print("./Tensor_voxel_host {} {} {} {} {} {} {} {} {} {}".format(headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize, bitDepth))
+    print("./Tensor_voxel_host " + headerPath + " " + dataPath + " " + dstPathTemp + " " + str(layout) + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(qaMode) + " " + str(batchSize) + " " + str(bitDepth))
     result = subprocess.Popen([buildFolderPath + "/build/Tensor_voxel_host", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE) # nosec
     stdout_data, stderr_data = result.communicate()
     print(stdout_data.decode())
     print("------------------------------------------------------------------------------------------")
 
 def run_performance_test_cmd(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
-    with open("{}/Tensor_voxel_host_{}_raw_performance_log.txt".format(loggingFolder, logFileLayout), "a") as logFile:
-        print("./Tensor_voxel_host {} {} {} {} {} {} {} {} {} {}".format(headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize, bitDepth))
+    with open(loggingFolder + "/Tensor_voxel_host_" + logFileLayout + "_raw_performance_log.txt", "a") as logFile:
+        logFile.write("./Tensor_voxel_host " + headerPath + " " + dataPath + " " + dstPathTemp + " " + str(layout) + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(qaMode) + " " + str(batchSize) + " " + str(bitDepth) + "\n")
         process = subprocess.Popen([buildFolderPath + "/build/Tensor_voxel_host", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) # nosec
         while True:
             output = process.stdout.readline()
