@@ -103,7 +103,7 @@ int main(int argc, char **argv)
 
     if (layoutType == 2)
     {
-        if(testCase == 31 || testCase == 36 || testCase == 45 || testCase == 86)
+        if(testCase == 31 || testCase == 35 || testCase == 36 || testCase == 45 || testCase == 86)
         {
             printf("\ncase %d does not exist for PLN1 layout\n", testCase);
             return -1;
@@ -821,6 +821,30 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 35:
+                {
+                    testCaseName = "glitch";
+                    RpptChannelOffsets rgbOffsets[batchSize];
+
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        rgbOffsets[i].r.x = 10;
+                        rgbOffsets[i].r.y = 10;
+                        rgbOffsets[i].g.x = 0;
+                        rgbOffsets[i].g.y = 0;
+                        rgbOffsets[i].b.x = 5;
+                        rgbOffsets[i].b.y = 5;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_glitch_host(input, srcDescPtr, output, dstDescPtr, rgbOffsets, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 case 36:
                 {
                     testCaseName = "color_twist";
@@ -960,7 +984,7 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "color_temperature";
 
-                    Rpp8s adjustment[batchSize];
+                    Rpp32s adjustment[batchSize];
                     for (i = 0; i < batchSize; i++)
                         adjustment[i] = 70;
 

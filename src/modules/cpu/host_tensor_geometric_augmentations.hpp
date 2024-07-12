@@ -35,6 +35,7 @@ SOFTWARE.
 #include "kernel/warp_affine.hpp"
 #include "kernel/phase.hpp"
 #include "kernel/slice.hpp"
+#include "kernel/transpose.hpp"
 #include "kernel/crop_and_patch.hpp"
 #include "kernel/flip_voxel.hpp"
 
