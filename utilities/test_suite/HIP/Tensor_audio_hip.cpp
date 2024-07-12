@@ -202,8 +202,8 @@ int main(int argc, char **argv)
                     }
 
                     srcDescPtr->numDims = 2;
-                    dstDescPtr->numDims = 3;
                     set_audio_descriptor_dims_and_strides_nostriding(dstDescPtr, batchSize, maxDstHeight, maxDstWidth, maxDstChannels, offsetInBytes);
+                    dstDescPtr->numDims = 3;
 
                     // Set buffer sizes for src/dst
                     unsigned long long spectrogramBufferSize = (unsigned long long)dstDescPtr->h * (unsigned long long)dstDescPtr->w * (unsigned long long)dstDescPtr->c * (unsigned long long)dstDescPtr->n;
@@ -240,7 +240,8 @@ int main(int argc, char **argv)
         // QA mode - verify outputs with golden outputs. Below code doesn’t run for performance tests
         if (testType == 0)
         {
-            CHECK_RETURN_STATUS(hipMemcpy(outputf32, d_outputf32, oBufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
+            CHECK_RETURN_STATUS(hipMemcpy(outputf32, d_outputf32, dstDescPtr->n * dstDescPtr->strides.nStride * sizeof(Rpp32f), hipMemcpyDeviceToHost));
+            CHECK_RETURN_STATUS(hipDeviceSynchronize());
 
             /* Run only if testCase is not 0
             For testCase 0 verify_non_silent_region_detection function is used for QA testing */
