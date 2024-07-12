@@ -91,7 +91,11 @@ __global__ void moving_mean_square_hip_tensor(float *srcPtr,
 
     float *inBlockPtr = srcPtr + batchStride + blockStart;
     float *outBlockPtr = mmsArr + batchStride + blockStart;
+
+    // find the valid output tile length values needed for given block
     int validOutputTileLength = std::min<int>(outputTileLength, srcLength - blockStart);
+
+    // assign pointers that points to block begin and block end locations
     float *extendedBlockStart = inBlockPtr - windowLength;
     float *extendedBlockEnd = inBlockPtr + validOutputTileLength;
 
@@ -100,6 +104,9 @@ __global__ void moving_mean_square_hip_tensor(float *srcPtr,
     {
         float val = 0.0f;
         auto extendedBlockPtr = extendedBlockStart + pos;
+
+        /* check if extendedBlockPtr is within the valid region of input
+           and load the value from extendedBlockPtr if it is within valid region */
         if (extendedBlockPtr >= input && extendedBlockPtr < extendedBlockEnd)
             val = *extendedBlockPtr;
         squaredPrefixSum_smem[compute_pos_in_smem(pos)] = val * val;
