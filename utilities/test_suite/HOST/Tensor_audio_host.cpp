@@ -141,9 +141,11 @@ int main(int argc, char **argv)
     // buffers used for non silent region detection
     Rpp32s detectedIndex[batchSize], detectionLength[batchSize];
 
-    // run case-wise RPP API and measure time
+    // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
+    // If numThreads value passed is 0, number of OpenMP threads used by RPP will be set to batch size
+    Rpp32u numThreads = 0;
     rppHandle_t handle;
-    rppCreateWithBatchSize(&handle, srcDescPtr->n, 3);
+    rppCreateWithBatchSize(&handle, batchSize, numThreads);
 
     int noOfIterations = (int)audioNames.size() / batchSize;
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0;
