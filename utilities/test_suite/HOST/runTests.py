@@ -54,7 +54,7 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
     print("--------------------------------")
     print("Running a New Functionality...")
     print("--------------------------------")
-    bitDepths = [2]
+    bitDepths = range(7)
     outputFormatToggles = [0, 1]
     if qaMode:
         bitDepths = [0]
@@ -110,7 +110,7 @@ def run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPa
     print("--------------------------------")
     print("Running a New Functionality...")
     print("--------------------------------")
-    bitDepths = [2]
+    bitDepths = range(7)
     if qaMode:
         bitDepths = [0]
     for bitDepth in bitDepths:
