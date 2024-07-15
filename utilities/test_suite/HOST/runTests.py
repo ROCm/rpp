@@ -439,17 +439,17 @@ elif (testType == 1 and qaMode == 1):
     passedCases = df['Test_Result'].eq('PASSED').sum()
     failedCases = df['Test_Result'].eq('FAILED').sum()
 
-    summaryRow = {'BatchPD_Augmentation_Type': pd.NA,
-                   'Tensor_Augmentation_Type': pd.NA,
-                   'Performance Speedup (%)': pd.NA,
+    summaryRow = {'BatchPD_Augmentation_Type': None,
+                   'Tensor_Augmentation_Type': None,
+                   'Performance Speedup (%)': None,
                    'Test_Result': 'Final Results of Tests: Passed: ' + str(passedCases) + ', Failed: ' + str(failedCases)}
 
-    print("\n", df.to_markdown())
+    print("\n" + dataframe_to_markdown(df))
 
     # Append the summary row to the DataFrame
     # Convert the dictionary to a DataFrame
     summaryRow = pd.DataFrame([summaryRow])
-    df = pd.concat([df, summaryRow], ignore_index=True)
+    df = pd.concat([df, summaryRow], ignore_index=True, sort = True)
 
     df.to_excel(excelFilePath, index=False)
     print("\n-------------------------------------------------------------------" + resultsInfo + "\n\n-------------------------------------------------------------------")

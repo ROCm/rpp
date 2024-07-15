@@ -27,6 +27,7 @@ import argparse
 import sys
 import datetime
 import shutil
+import pandas as pd
 
 try:
     from errno import FileExistsError
@@ -360,3 +361,22 @@ def func_group_finder(case_number):
         if case_number in value:
             return key
     return "miscellaneous"
+
+def dataframe_to_markdown(df):
+    # Calculate the maximum width of each column
+    column_widths = {}
+    for col in df.columns:
+        max_length = len(col)
+        for value in df[col]:
+            max_length = max(max_length, len(str(value)))
+        column_widths[col] = max_length
+
+    # Create the header row
+    md = '| ' + ' | '.join([col.ljust(column_widths[col]) for col in df.columns]) + ' |\n'
+    md += '| ' + ' | '.join(['-' * column_widths[col] for col in df.columns]) + ' |\n'
+    
+    # Create the data rows
+    for i, row in df.iterrows():
+        md += '| ' + ' | '.join([str(value).ljust(column_widths[df.columns[j]]) for j, value in enumerate(row.values)]) + ' |\n'
+    
+    return md
