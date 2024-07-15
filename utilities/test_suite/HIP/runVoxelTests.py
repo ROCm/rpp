@@ -326,7 +326,8 @@ elif (testType == 1 and profilingOption == "YES"):
                             continue
 
             new_file.close()
-            subprocess.call(['chown', str(os.getuid()) + ':' + str(os.getgid()), RESULTS_DIR + "/consolidated_results_" + TYPE + ".stats.csv"])  # nosec        try:
+            subprocess.call(['chown', str(os.getuid()) + ':' + str(os.getgid()), RESULTS_DIR + "/consolidated_results_" + TYPE + ".stats.csv"])  # nosec
+        try:
             generate_performance_reports(d_counter, TYPE_LIST, RESULTS_DIR)
 
         except ImportError:
