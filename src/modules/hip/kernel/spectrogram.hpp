@@ -170,12 +170,11 @@ RppStatus hip_exec_spectrogram_tensor(Rpp32f* srcPtr,
 
     Rpp32s n[1] = {nfft};
     // execute fft for all inputs in batch
+    CHECK_HIPFFT_STATUS(hipfftPlanMany(&fftHandle, 1, n, NULL, 0, 0, NULL, 0, 0, HIPFFT_R2C, maxNumWindows));
     for (int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         hipfftReal *fftInTemp = fftIn + batchCount * maxNumWindows * nfft;
         hipfftComplex *fftOutTemp = fftOut + batchCount * maxNumWindows * numBins;
-        Rpp32s nWindows = get_num_windows(srcLengthTensor[0], windowLength, windowStep, centerWindows);
-        CHECK_HIPFFT_STATUS(hipfftPlanMany(&fftHandle, 1, n, NULL, 0, 0, NULL, 0, 0, HIPFFT_R2C, nWindows));
         CHECK_HIPFFT_STATUS(hipfftExecR2C(fftHandle, fftInTemp, fftOutTemp));
         hipStreamSynchronize(handle.GetStream());
     }
