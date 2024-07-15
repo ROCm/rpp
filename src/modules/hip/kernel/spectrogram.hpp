@@ -176,7 +176,6 @@ RppStatus hip_exec_spectrogram_tensor(Rpp32f* srcPtr,
         hipfftReal *fftInTemp = fftIn + batchCount * maxNumWindows * nfft;
         hipfftComplex *fftOutTemp = fftOut + batchCount * maxNumWindows * numBins;
         CHECK_HIPFFT_STATUS(hipfftExecR2C(fftHandle, fftInTemp, fftOutTemp));
-        hipStreamSynchronize(handle.GetStream());
     }
 
     globalThreads_x = numBins;
