@@ -182,6 +182,15 @@ int main(int argc, char **argv)
 
                 break;
             }
+            case 2:
+            {
+                testCaseName  = "log";
+
+                startWallTime = omp_get_wtime();
+                rppt_log_host(inputF32, srcDescriptorPtrND, outputF32, dstDescriptorPtrND, roiTensor, handle);
+
+                break;
+            }
             default:
             {
                 cout << "functionality is not supported" <<std::endl;
