@@ -117,19 +117,11 @@ The test suite can be run with the following command:
 python runTests.py --input_path1 <input_path1> --input_path2 <input_path2> --case_start <case_start> --case_end <case_end> --test_type <test_type> --profiling <profiling>
 ```
 
-## Modes of operation (Rpp Image Test Suite)
+### Modes of operation (Rpp Image Test Suite)
 -   QA mode (Unit tests) - Tolerance based PASS/FAIL tests for RPP HIP/HOST functionalities checking pixelwise match between C/SSE/AVX/HIP versions after comparison to preset golden outputs. Please note that QA mode is only supported with a batch size of 3.
 Note: QA mode is not supported for case 84 due to run-to-run variation of outputs.
 ``` python
 python runTests.py --case_start 0 --case_end 91 --test_type 0 --qa_mode 1 --batch_size 3
-```
--   QA mode (Performance tests) - Tolerance based PASS/FAIL tests for RPP HIP/HOST functionalities checking achieved improvement in performance percentage over BatchPD versions after comparison to a threshold percentage of improvement
-``` python
-python runTests.py --case_list 21 36 63 --test_type 1 --qa_mode 1 --batch_size 8 --num_runs 100
-```
--   QA mode (Performance tests) - Tolerance based PASS/FAIL tests for RPP HIP/HOST functionalities checking achieved improvement in performance percentage over BatchPD versions after comparison to a threshold percentage of improvement
-``` python
-python runTests.py --case_list 21 36 63 --test_type 1 --qa_mode 1 --batch_size 8 --num_runs 100
 ```
 -   QA mode (Performance tests) - Tolerance based PASS/FAIL tests for RPP HIP/HOST functionalities checking achieved improvement in performance percentage over BatchPD versions after comparison to a threshold percentage of improvement
 ``` python
@@ -290,11 +282,11 @@ To run the QA tests / performance tests for specific case numbers. please case u
 
 -   To run QA tests for case numbers 0, 1, 2
 ``` python
-python runTests.py --case_list 0 1 2 --qa_mode 1 --batch_size 3
+python runAudioTests.py --case_list 0 1 2 --qa_mode 1 --batch_size 3
 ```
 -   To run performance tests for case numbers 0, 1, 2
 ``` python
-python runTests.py --case_list 0 1 2 --test_type 1
+python runAudioTests.py --case_list 0 1 2 --test_type 1
 ```
 
 ### Summary of features (RPP Audio Test Suite)
