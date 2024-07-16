@@ -73,6 +73,7 @@ inline void compute_lens_correction_remap_tables_host_tensor(RpptDescPtr srcDesc
         Rpp32s vectorIncrement = 8;
 
         Rpp32f invCameraMatrix[9];
+        std::fill(invCameraMatrix, invCameraMatrix + 9, 0.0f);  // initialize all values in invCameraMatrix to zero
         get_inverse(cameraMatrix, invCameraMatrix);
         Rpp32f *invMat = &invCameraMatrix[0];
 

@@ -19,6 +19,13 @@ __global__ void compute_inverse_matrix_hip_tensor(d_float9 *matTensor, d_float9 
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
     d_float9 *mat_f9 = &matTensor[id_z];
     d_float9 *invMat_f9 = &invMatTensor[id_z];
+
+    // initialize all values in invMat_f9 to zero
+    invMat_f9->f3[0] = static_cast<float3>(0.0f);
+    invMat_f9->f3[1] = invMat_f9->f3[0];
+    invMat_f9->f3[2] = invMat_f9->f3[0];
+
+    // compute determinant mat_f9
     float det =  (mat_f9->f1[0] * ((mat_f9->f1[4] * mat_f9->f1[8]) - (mat_f9->f1[7] * mat_f9->f1[5])))
                - (mat_f9->f1[1] * ((mat_f9->f1[3] * mat_f9->f1[8]) - (mat_f9->f1[5] * mat_f9->f1[6])))
                + (mat_f9->f1[2] * ((mat_f9->f1[3] * mat_f9->f1[7]) - (mat_f9->f1[4] * mat_f9->f1[6])));

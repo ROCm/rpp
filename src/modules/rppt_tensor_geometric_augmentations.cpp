@@ -2381,6 +2381,7 @@ RppStatus rppt_remap_gpu(RppPtr_t srcPtr,
                               roiType,
                               rpp::deref(rppHandle));
     }
+
     return RPP_SUCCESS;
 #elif defined(OCL_COMPILE)
     return RPP_ERROR_NOT_IMPLEMENTED;
