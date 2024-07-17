@@ -84,7 +84,7 @@ RppStatus rppt_to_decibels_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_
 /*! \brief Pre Emphasis Filter augmentation on HOST backend
  * \details Pre Emphasis Filter augmentation for audio data
  * \param[in] srcPtr source tensor in HOST memory
- * \param[in] srcDescPtr source tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
+ * \param[in] srcDescPtr source tensor descriptor (Restrictions - numDims = 2, offsetInBytes >= 0, dataType = F32)
  * \param[out] dstPtr destination tensor in HOST memory
  * \param[in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
  * \param[in] srcLengthTensor source audio buffer length (1D tensor in HOST memory, of size batchSize)
@@ -101,7 +101,7 @@ RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr,
 /*! \brief Pre Emphasis Filter augmentation on HIP backend
 * \details Pre Emphasis Filter augmentation for audio data
 * \param [in] srcPtr source tensor in HIP memory
-* \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
+* \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 2, offsetInBytes >= 0, dataType = F32)
 * \param [out] dstPtr destination tensor in HIP memory
 * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 2, offsetInBytes >= 0, dataType = F32)
 * \param [in] srcLengthTensor source audio buffer length (1D tensor in HIP memory, of size batchSize)

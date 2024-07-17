@@ -114,6 +114,9 @@ RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr,
                                         RpptAudioBorderType borderType,
                                         rppHandle_t rppHandle)
 {
+    if (srcDescPtr->numDims != 2)
+        return RPP_ERROR_INVALID_SRC_DIMS;
+
     if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
         pre_emphasis_filter_host_tensor(static_cast<Rpp32f*>(srcPtr),
@@ -293,6 +296,9 @@ RppStatus rppt_pre_emphasis_filter_gpu(RppPtr_t srcPtr,
                                        rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
+
+    if (srcDescPtr->numDims != 2)
+        return RPP_ERROR_INVALID_SRC_DIMS;
 
     if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {

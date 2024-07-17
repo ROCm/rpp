@@ -27,9 +27,7 @@ __global__ void pre_emphasis_filter_tensor(float *srcPtr,
 
     d_float8 src1_f8, src2_f8, dst_f8;
     float4 coeff_f4 =  static_cast<float4>(coeff);
-
     rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &src1_f8);
-
     if(id_x == 0)
     {
         src2_f8.f1[0] = (borderType == RpptAudioBorderType::CLAMP) ? src1_f8.f1[0] :

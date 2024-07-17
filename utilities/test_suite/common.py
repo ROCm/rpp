@@ -28,6 +28,12 @@ import sys
 import datetime
 import shutil
 
+try:
+    from errno import FileExistsError
+except ImportError:
+    # Python 2 compatibility
+    FileExistsError = OSError
+
 # Checks if the folder path is empty, or is it a root folder, or if it exists, and remove its contents
 def validate_and_remove_files(path):
     if not path:  # check if a string is empty
@@ -237,8 +243,9 @@ def read_from_subprocess_and_write_to_log(process, logFile):
         output = process.stdout.readline()
         if not output and process.poll() is not None:
             break
-        print(output.strip())
-        logFile.write(output)
+        output = output.decode().strip()  # Decode bytes to string and strip extra whitespace
+        print(output)
+        logFile.write(output + '\n')
 
 # Returns the layout name based on layout value
 def get_layout_name(layout):
