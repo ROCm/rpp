@@ -1,6 +1,6 @@
 # Changelog for RPP
 
-Full documentation for RPP is available at (https://rocm.docs.amd.com/projects/rpp/en/latest/).
+Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/rpp/en/latest](https://rocm.docs.amd.com/projects/rpp/en/latest)
 
 ## RPP 1.8.0 (Unreleased)
 
