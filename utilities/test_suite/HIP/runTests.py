@@ -49,31 +49,6 @@ def get_log_file_list(preserveOutput):
         outFolderPath + "/OUTPUT_PERFORMANCE_LOGS_HIP_" + timestamp + "/Tensor_hip_pln1_raw_performance_log.txt"
     ]
 
-# Functionality group finder
-def func_group_finder(case_number):
-    if case_number < 5 or case_number == 13 or case_number == 36 or case_number == 45:
-        return "color_augmentations"
-    elif case_number == 8 or case_number == 30 or case_number == 82 or case_number == 83 or case_number == 84:
-        return "effects_augmentations"
-    elif case_number < 40 or case_number == 63:
-        return "geometric_augmentations"
-    elif case_number < 42:
-        return "morphological_operations"
-    elif case_number == 49 or case_number == 54:
-        return "filter_augmentations"
-    elif case_number < 40:
-        return "geometric_augmentations"
-    elif case_number < 62:
-        return "arithmetic_operations"
-    elif case_number < 69:
-        return "logical_operations"
-    elif case_number < 87:
-        return "data_exchange_operations"
-    elif case_number < 92:
-        return "statistical_operations"
-    else:
-        return "miscellaneous"
-
 def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
     print("\n\n\n\n")
     print("--------------------------------")
@@ -186,6 +161,7 @@ def rpp_test_suite_parser_and_validator():
     parser.add_argument('--preserve_output', type = int, default = 1, help = "preserves the output of the program - (0 = override output / 1 = preserve output )" )
     parser.add_argument('--batch_size', type = int, default = 1, help = "Specifies the batch size to use for running tests. Default is 1.")
     parser.add_argument('--roi', nargs = 4, help = "specifies the roi values", required = False)
+    print_case_list(imageAugmentationMap, "HIP", parser)
     args = parser.parse_args()
 
     # check if the folder exists

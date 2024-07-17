@@ -34,6 +34,87 @@ except ImportError:
     # Python 2 compatibility
     FileExistsError = OSError
 
+imageAugmentationMap = {
+    0: ["brightness", "HOST", "HIP"],
+    1: ["gamma_correction", "HOST", "HIP"],
+    2: ["blend", "HOST", "HIP"],
+    4: ["contrast", "HOST", "HIP"],
+    8: ["noise", "HOST", "HIP"],
+    13: ["exposure", "HOST", "HIP"],
+    20: ["flip", "HOST", "HIP"],
+    21: ["resize", "HOST", "HIP"],
+    23: ["rotate", "HOST", "HIP"],
+    29: ["water", "HOST", "HIP"],
+    30: ["non_linear_blend", "HOST", "HIP"],
+    31: ["color_cast", "HOST", "HIP"],
+    32: ["erase", "HOST", "HIP"],
+    33: ["crop_and_patch", "HOST", "HIP"],
+    34: ["lut", "HOST", "HIP"],
+    36: ["color_twist", "HOST", "HIP"],
+    37: ["crop", "HOST", "HIP"],
+    38: ["crop_mirror_normalize", "HOST", "HIP"],
+    39: ["resize_crop_mirror", "HOST", "HIP"],
+    45: ["color_temperature", "HOST", "HIP"],
+    46: ["vignette", "HOST", "HIP"],
+    49: ["box_filter", "HIP"],
+    54: ["gaussian_filter", "HIP"],
+    61: ["magnitude", "HOST", "HIP"],
+    63: ["phase", "HOST", "HIP"],
+    65: ["bitwise_and", "HOST", "HIP"],
+    68: ["bitwise_or", "HOST", "HIP"],
+    70: ["copy", "HOST", "HIP"],
+    79: ["remap", "HOST", "HIP"],
+    80: ["resize_mirror_normalize", "HOST", "HIP"],
+    81: ["color_jitter", "HOST"],
+    82: ["ricap", "HOST", "HIP"],
+    83: ["gridmask", "HOST", "HIP"],
+    84: ["spatter", "HOST", "HIP"],
+    85: ["swap_channels", "HOST", "HIP"],
+    86: ["color_to_greyscale", "HOST", "HIP"],
+    87: ["tensor_sum", "HOST", "HIP"],
+    88: ["tensor_min", "HOST", "HIP"],
+    89: ["tensor_max", "HOST", "HIP"],
+    90: ["tensor_mean", "HOST", "HIP"],
+    91: ["tensor_stddev", "HOST", "HIP"],
+    92: ["slice", "HOST", "HIP"]
+}
+
+audioAugmentationMap = {
+    0: ["non_silent_region_detection", "HOST"],
+    1: ["to_decibels", "HOST"],
+    2: ["pre_emphasis_filter", "HOST"],
+    3: ["down_mixing", "HOST"],
+    4: ["spectrogram", "HOST"],
+    5: ["slice", "HOST"],
+    6: ["resample", "HOST"],
+    7: ["mel_filter_bank", "HOST"]
+}
+
+voxelAugmentationMap = {
+    0: ["fused_multiply_add_scalar", "HOST", "HIP"],
+    1: ["slice", "HOST", "HIP"],
+    2: ["add_scalar", "HOST", "HIP"],
+    3: ["subtract_scalar", "HOST", "HIP"],
+    4: ["flip_voxel", "HOST", "HIP"],
+    5: ["multiply_scalar", "HOST", "HIP"],
+    6: ["gaussian_noise_voxel", "HOST", "HIP"]
+}
+
+miscAugmentationMap  = {
+    1: ["normalize", "HOST", "HIP"]
+}
+
+ImageAugmentationGroupMap = {
+    "color_augmentations" : [0, 1, 2, 3, 4, 13, 31, 34, 36, 45, 81],
+    "effects_augmentations" : [8, 29, 30, 32, 35, 46, 82, 83, 84],
+    "geometric_augmentations" : [20, 21, 23, 33, 37, 38, 39, 63, 79, 80, 92],
+    "filter_augmentations" : [49, 54],
+    "arithmetic_operations" : [61],
+    "logical_operations" : [65, 68],
+    "data_exchange_operations" : [70, 85, 86],
+    "statistical_operations" : [87, 88, 89, 90, 91]
+}
+
 # Checks if the folder path is empty, or is it a root folder, or if it exists, and remove its contents
 def validate_and_remove_files(path):
     if not path:  # check if a string is empty
@@ -255,3 +336,27 @@ def get_layout_name(layout):
         return "PLN3"
     elif layout == 2:
         return "PLN1"
+
+# Prints entire case list if user asks for help
+def print_case_list(imageAugmentationMap, backendType, parser):
+    if '--help' or '-h' in sys.argv:
+        parser.print_help()
+        print("\n" + "="*30)
+        print("Functionality Reference List")
+        print("="*30 + "\n")
+        header_format = "{:<12} {:<15}"
+        print(header_format.format("CaseNumber", "Functionality"))
+        print("-" * 27)
+        row_format = "{:<12} {:<15}"
+        for key, value_list in imageAugmentationMap.items():
+            if backendType in value_list:
+                print(row_format.format(key, value_list[0]))
+
+        sys.exit(0)
+
+# Functionality group finder
+def func_group_finder(case_number):
+    for key, value in ImageAugmentationGroupMap.items():
+        if case_number in value:
+            return key
+    return "miscellaneous"
