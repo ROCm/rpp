@@ -294,7 +294,11 @@ RppStatus rppt_to_decibels_gpu(RppPtr_t srcPtr,
                                rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
-    if (multiplier == 0)
+    Rpp32u tensorDims = srcDescPtr->numDims - 1; // exclude batchsize from input dims
+    if (tensorDims != 1 && tensorDims != 2)
+        return RPP_ERROR_INVALID_SRC_DIMS;
+
+    if (!multiplier)
         return RPP_ERROR_ZERO_DIVISION;
 
     if (srcDescPtr->dataType == RpptDataType::F32)
