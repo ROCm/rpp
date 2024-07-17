@@ -27,10 +27,6 @@ SOFTWARE.
 #include <vector>
 #include <half/half.hpp>
 
-using half_float::half;
-using namespace std;
-typedef half Rpp16f;
-
 // Include this header file to use functions from libsndfile
 #include <sndfile.h>
 
@@ -57,7 +53,7 @@ std::map<string, std::vector<int>> NonSilentRegionReferenceOutputs =
 // sets descriptor dimensions and strides of src/dst
 inline void set_audio_descriptor_dims_and_strides(RpptDescPtr descPtr, int batchSize, int maxHeight, int maxWidth, int maxChannels, int offsetInBytes)
 {
-    descPtr->numDims = 4;
+    descPtr->numDims = 2;
     descPtr->offsetInBytes = offsetInBytes;
     descPtr->n = batchSize;
     descPtr->h = maxHeight;
@@ -75,7 +71,7 @@ inline void set_audio_descriptor_dims_and_strides(RpptDescPtr descPtr, int batch
 // sets descriptor dimensions and strides of src/dst
 inline void set_audio_descriptor_dims_and_strides_nostriding(RpptDescPtr descPtr, int batchSize, int maxHeight, int maxWidth, int maxChannels, int offsetInBytes)
 {
-    descPtr->numDims = 4;
+    descPtr->numDims = 2;
     descPtr->offsetInBytes = offsetInBytes;
     descPtr->n = batchSize;
     descPtr->h = maxHeight;
@@ -194,7 +190,7 @@ void read_from_bin_file(Rpp32f *srcPtr, RpptDescPtr srcDescPtr, Rpp32s *srcDims,
     free(refInput);
 }
 
-void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dstDims, string testCase, string dst, string scriptPath)
+void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dstDims, string testCase, string dst, string scriptPath, string backend)
 {
     fstream refFile;
     int fileMatch = 0;
@@ -222,6 +218,7 @@ void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dst
         std::cout<<"\nCould not open the reference output. Please check the path specified\n";
         return;
     }
+    double cutoff = (backend == "HOST") ? 1e-20 : 1e-6;
 
     // iterate over all samples in a batch and compare with reference outputs
     for (int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
@@ -245,7 +242,7 @@ void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dst
                 refVal = refPtrTemp[j];
                 outVal = dstPtrTemp[j];
                 bool invalidComparision = ((outVal == 0.0f) && (refVal != 0.0f));
-                if (!invalidComparision && abs(outVal - refVal) < 1e-20)
+                if (!invalidComparision && abs(outVal - refVal) < cutoff)
                     matchedIndices += 1;
             }
             dstPtrRow += hStride;

@@ -58,6 +58,10 @@ find_package(hip QUIET)
 find_package(OpenCV QUIET)
 find_package(TurboJpeg QUIET)
 find_package(NIFTI QUIET)
+find_library(libsnd_LIBS
+    NAMES sndfile libsndfile
+    PATHS ${CMAKE_SYSTEM_PREFIX_PATH} ${LIBSND_ROOT_DIR} "/usr/local"
+    PATH_SUFFIXES lib lib64)
 
 # OpenMP
 find_package(OpenMP REQUIRED)
@@ -111,4 +115,23 @@ if(NIFTI_FOUND AND OpenCV_FOUND)
     target_link_libraries(Tensor_voxel_hip ${OpenCV_LIBS} -lturbojpeg -lrpp ${hip_LIBRARIES} pthread ${LINK_LIBRARY_LIST} hip::device ${NIFTI_PACKAGE_PREFIX}NIFTI::${NIFTI_PACKAGE_PREFIX}niftiio)
 else()
     message("-- ${Yellow}Warning: libniftiio must be installed to install ${PROJECT_NAME}/Tensor_voxel_hip successfully!${ColourReset}")
+endif()
+
+if(NOT libsnd_LIBS)
+    message("-- ${Yellow}Warning: libsndfile must be installed to install ${PROJECT_NAME}/Tensor_audio_host successfully!${ColourReset}")
+else()
+    message("-- ${Green}${PROJECT_NAME} set to build with rpp and libsndfile ${ColourReset}")
+    set(COMPILER_FOR_HIP ${ROCM_PATH}/bin/hipcc)
+    set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
+    include_directories(${ROCM_PATH}/include ${ROCM_PATH}/include/rpp /usr/local/include)
+    link_directories(${ROCM_PATH}/lib /usr/local/lib)
+    include_directories(${SndFile_INCLUDE_DIRS})
+    link_directories(${SndFile_LIBRARIES_DIR} /usr/local/lib/)
+
+    add_executable(Tensor_audio_hip Tensor_audio_hip.cpp)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++17")
+    if(NOT APPLE)
+        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} stdc++fs)
+    endif()
+    target_link_libraries(Tensor_audio_hip ${libsnd_LIBS} -lsndfile -lrpp pthread ${LINK_LIBRARY_LIST})
 endif()
