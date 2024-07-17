@@ -315,5 +315,6 @@ RppStatus rppt_pre_emphasis_filter_gpu(RppPtr_t srcPtr,
     return RPP_ERROR_NOT_IMPLEMENTED;
 #endif // backend
 }
+#endif // GPU_SUPPORT
 
 #endif // AUDIO_SUPPORT
