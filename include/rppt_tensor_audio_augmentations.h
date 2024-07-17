@@ -100,7 +100,7 @@ RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr,
 /*! \brief Down Mixing augmentation on HOST backend
 * \details Down Mixing augmentation for audio data
 * \param [in] srcPtr source tensor in HOST memory
-* \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
+* \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 2 or 3 (for single-channel or multi-channel audio tensor), offsetInBytes >= 0, dataType = F32)
 * \param [out] dstPtr destination tensor in HOST memory
 * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
 * \param [in] srcDimsTensor source audio buffer length and number of channels (1D tensor in HOST memory, of size batchSize * 2)
@@ -116,7 +116,7 @@ RppStatus rppt_down_mixing_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_
 /*! \brief Down Mixing augmentation on HIP backend
 * \details Down Mixing augmentation for audio data
 * \param [in] srcPtr source tensor in HIP memory
-* \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
+* \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 2 or 3 (for single-channel or multi-channel audio tensor), offsetInBytes >= 0, dataType = F32)
 * \param [out] dstPtr destination tensor in HIP memory
 * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 2, offsetInBytes >= 0, dataType = F32)
 * \param [in] srcDimsTensor source audio buffer length and number of channels (1D tensor in HIP/Pinned memory, of size batchSize * 2)
