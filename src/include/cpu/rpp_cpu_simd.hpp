@@ -262,6 +262,17 @@ inline void rpp_mm256_print_epi32(__m256i vPrintArray)
     }
 }
 
+inline void rpp_mm256_print_epi16(__m256i vPrintArray)
+{
+    unsigned short int printArray[8];
+    _mm256_storeu_si256((__m256i *)printArray, vPrintArray);
+    printf("\n");
+    for (int ct = 0; ct < 16; ct++)
+    {
+        printf("%hu ", printArray[ct]);
+    }
+}
+
 inline void rpp_mm256_print_ps(__m256 vPrintArray)
 {
     float printArray[8];
@@ -1455,6 +1466,13 @@ inline void rpp_load8_i8_to_f64_avx(Rpp8s *srcPtr, __m256d *p)
     px = _mm_add_epi8(xmm_pxConvertI8, _mm_loadu_si128((__m128i *)srcPtr));
     p[0] = _mm256_cvtepi32_pd(_mm_shuffle_epi8(px, xmm_pxMask00To03));    /* Contains pixels 01-04 */
     p[1] = _mm256_cvtepi32_pd(_mm_shuffle_epi8(px, xmm_pxMask04To07));    /* Contains pixels 05-08 */
+}
+
+inline void rpp_load8_i8_to_f32_avx(Rpp8s *srcPtr, __m256 *p)
+{
+    __m128i px;
+    px = _mm_add_epi8(xmm_pxConvertI8, _mm_loadu_si128((__m128i *)srcPtr));
+    p[0] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px, xmm_pxMask00To03), _mm_shuffle_epi8(px, xmm_pxMask04To07)));    /* Contains pixels 01-08 */
 }
 
 inline void rpp_load16_u8_to_u32_avx(Rpp8u *srcPtr, __m256i *p)
