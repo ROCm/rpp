@@ -133,7 +133,7 @@ def rpp_test_suite_parser_and_validator():
 
     # validate the parameters passed by user
     if ((args.case_start < caseMin or args.case_start > caseMax) or (args.case_end < caseMin or args.case_end > caseMax)):
-        print(f"Starting case# and Ending case# must be in the {caseMin}:{caseMax} range. Aborting!")
+        print("Starting case# and Ending case# must be in the " + str(caseMin) + ":" + str(caseMax) + " range. Aborting!")
         exit(0)
     elif args.case_end < args.case_start:
         print("Ending case# must be greater than starting case#. Aborting!")
@@ -169,7 +169,7 @@ def rpp_test_suite_parser_and_validator():
     else:
         for case in args.case_list:
             if int(case) < caseMin or int(case) > caseMax:
-                print(f"Invalid case number {case}! Case number must be in the {caseMin}:{caseMax} range. Aborting!")
+                print("Invalid case number " + str(case) + "! Case number must be in the " + str(caseMin) + ":" + str(caseMax) + " range. Aborting!")
                 exit(0)
     return args
 
