@@ -281,41 +281,6 @@ RppStatus rppt_resample_host(RppPtr_t srcPtr,
 
 #ifdef GPU_SUPPORT
 
-/******************** pre_emphasis_filter ********************/
-
-RppStatus rppt_pre_emphasis_filter_gpu(RppPtr_t srcPtr,
-                                       RpptDescPtr srcDescPtr,
-                                       RppPtr_t dstPtr,
-                                       RpptDescPtr dstDescPtr,
-                                       Rpp32s *srcLengthTensor,
-                                       Rpp32f *coeffTensor,
-                                       RpptAudioBorderType borderType,
-                                       rppHandle_t rppHandle)
-{
-#ifdef HIP_COMPILE
-
-    if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
-    {
-        hip_exec_pre_emphasis_filter_tensor(static_cast<Rpp32f*>(srcPtr),
-                                            srcDescPtr,
-                                            static_cast<Rpp32f*>(dstPtr),
-                                            dstDescPtr,
-                                            coeffTensor,
-                                            srcLengthTensor,
-                                            borderType,
-                                            rpp::deref(rppHandle));
-    }
-    else
-    {
-        return RPP_ERROR_NOT_IMPLEMENTED;
-    }
-
-    return RPP_SUCCESS;
-#elif defined(OCL_COMPILE)
-    return RPP_ERROR_NOT_IMPLEMENTED;
-#endif // backend
-}
-
 /******************** mel_filter_bank ********************/
 
 RppStatus rppt_mel_filter_bank_gpu(RppPtr_t srcPtr,

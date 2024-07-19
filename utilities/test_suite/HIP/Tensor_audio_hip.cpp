@@ -159,22 +159,6 @@ int main(int argc, char **argv)
             double wallTime;
             switch (testCase)
             {
-                case 2:
-                {
-                    testCaseName = "pre_emphasis_filter";
-                    for (int i = 0; i < batchSize; i++)
-                    {
-                        coeff[i] = 0.97;
-                        dstDims[i].height = srcLengthTensor[i];
-                        dstDims[i].width = 1;
-                    }
-                    RpptAudioBorderType borderType = RpptAudioBorderType::CLAMP;
-
-                    startWallTime = omp_get_wtime();
-                    rppt_pre_emphasis_filter_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcLengthTensor, coeff, borderType, handle);
-
-                    break;
-                }
                 case 7:
                 {
                     testCaseName = "mel_filter_bank";

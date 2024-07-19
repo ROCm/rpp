@@ -422,7 +422,7 @@ int main(int argc, char **argv)
             if (testCase == 0)
                 verify_non_silent_region_detection(detectedIndex, detectionLength, testCaseName, batchSize, audioNames, dst);
             else
-                verify_output(outputf32, dstDescPtr, dstDims, testCaseName, dst, scriptPath, );
+                verify_output(outputf32, dstDescPtr, dstDims, testCaseName, dst, scriptPath, "HOST");
 
             /* Dump the outputs to csv files for debugging
             Runs only if
