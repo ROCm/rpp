@@ -299,6 +299,12 @@ RppStatus rppt_spectrogram_gpu(RppPtr_t srcPtr,
 {
 #ifdef HIP_COMPILE
     if ((dstDescPtr->layout != RpptLayout::NFT) && (dstDescPtr->layout != RpptLayout::NTF)) return RPP_ERROR_INVALID_DST_LAYOUT;
+    Rpp32u srcTensorDims = srcDescPtr->numDims - 1; // exclude batchsize from input dims
+    Rpp32u dstTensorDims = dstDescPtr->numDims - 1; // exclude batchsize from output dims
+    if (srcTensorDims != 1)
+        return RPP_ERROR_INVALID_SRC_DIMS;
+    if (dstTensorDims != 2)
+        return RPP_ERROR_INVALID_DST_DIMS;
 
     if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
