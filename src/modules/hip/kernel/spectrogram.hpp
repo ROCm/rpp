@@ -78,9 +78,9 @@ __global__ void compute_fft_tf_hip_tensor(float *srcPtr,
                                           int *numWindowsTensor,
                                           int nfft,
                                           int numBins,
+                                          int power,
                                           float *cosFactor,
                                           float *sinFactor)
-
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -100,7 +100,8 @@ __global__ void compute_fft_tf_hip_tensor(float *srcPtr,
         real += x * cosFactor[paramIndex + i * numBins];
         imag += -x * sinFactor[paramIndex + i * numBins];
     }
-    dstPtr[dstIdx] = (real * real) + (imag * imag);
+    float magnitudeSquare = ((real * real) + (imag * imag));
+    dstPtr[dstIdx] = (power == 2) ? magnitudeSquare : sqrtf(magnitudeSquare);
 }
 
 __global__ void compute_fft_ft_hip_tensor(float *srcPtr,
@@ -110,6 +111,7 @@ __global__ void compute_fft_ft_hip_tensor(float *srcPtr,
                                           int *numWindowsTensor,
                                           int nfft,
                                           int numBins,
+                                          int power,
                                           float *cosFactor,
                                           float *sinFactor)
 
@@ -132,7 +134,8 @@ __global__ void compute_fft_ft_hip_tensor(float *srcPtr,
         real += x * cosFactor[paramIndex + i * numBins];
         imag += -x * sinFactor[paramIndex + i * numBins];
     }
-    dstPtr[dstIdx] = (real * real) + (imag * imag);
+    float magnitudeSquare = ((real * real) + (imag * imag));
+    dstPtr[dstIdx] = (power == 2) ? magnitudeSquare : sqrtf(magnitudeSquare);
 }
 
 RppStatus hip_exec_spectrogram_tensor(Rpp32f* srcPtr,
@@ -224,6 +227,7 @@ RppStatus hip_exec_spectrogram_tensor(Rpp32f* srcPtr,
                            numWindowsTensor,
                            nfft,
                            numBins,
+                           power,
                            cosfTensor,
                            sinfTensor);
     }
@@ -241,6 +245,7 @@ RppStatus hip_exec_spectrogram_tensor(Rpp32f* srcPtr,
                            numWindowsTensor,
                            nfft,
                            numBins,
+                           power,
                            cosfTensor,
                            sinfTensor);
     }
