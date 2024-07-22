@@ -12,7 +12,9 @@
   } \
 } while (0)
 
-// compute window output
+// -------------------- Set 0 -  spectrogram hip kernels --------------------
+
+// compute window output by applying hanning window
 __global__ void window_output_hip_tensor(float *srcPtr,
                                          uint srcStride,
                                          float *dstPtr,
@@ -40,6 +42,8 @@ __global__ void window_output_hip_tensor(float *srcPtr,
     int srcIdx = id_z * srcStride;
     int windowStart = id_y * windowStep - windowCenterOffset;
     int inIdx = windowStart + id_x;
+
+    // check if windowStart is beyond the bounds of input
     if (windowStart < 0 || (windowStart + windowLength) > srcLength)
     {
         if (reflectPadding)
@@ -56,10 +60,11 @@ __global__ void window_output_hip_tensor(float *srcPtr,
     }
 }
 
-__global__ void compute_fft_coefficients_hip_tensor(float *cosFactor,
-                                                    float *sinFactor,
-                                                    int numBins,
-                                                    int nfft)
+// compute factors required for fourier transform
+__global__ void compute_coefficients_hip_tensor(float *cosFactor,
+                                                float *sinFactor,
+                                                int numBins,
+                                                int nfft)
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -71,15 +76,16 @@ __global__ void compute_fft_coefficients_hip_tensor(float *cosFactor,
     sinFactor[id_x * numBins + id_y] = sinf(factor * id_x);
 }
 
-__global__ void compute_fft_hip_tensor(float *srcPtr,
-                                       uint2 srcStrideNH,
-                                       float *dstPtr,
-                                       uint2 dstStrideNH,
-                                       int *numWindowsTensor,
-                                       float *cosFactor,
-                                       float *sinFactor,
-                                       int3 params_i3,
-                                       bool vertical)
+// compute fourier transform on windowed output
+__global__ void fourier_transform_hip_tensor(float *srcPtr,
+                                             uint2 srcStrideNH,
+                                             float *dstPtr,
+                                             uint2 dstStrideNH,
+                                             int *numWindowsTensor,
+                                             float *cosFactor,
+                                             float *sinFactor,
+                                             int3 params_i3,
+                                             bool vertical)
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -89,12 +95,12 @@ __global__ void compute_fft_hip_tensor(float *srcPtr,
     int numBins = params_i3.y;
     int power = params_i3.z;
 
-    __shared__ float input_smem[16][16];
-    __shared__ float cosFactor_smem[16][16];
-    __shared__ float sinFactor_smem[16][16];
-    input_smem[hipThreadIdx_y][hipThreadIdx_x] = 0.0f;
-    cosFactor_smem[hipThreadIdx_y][hipThreadIdx_x] = 0.0f;
-    sinFactor_smem[hipThreadIdx_y][hipThreadIdx_x] = 0.0f;
+    __shared__ float input_smem[16][16];        // 16 rows of src, 16 cols of src in a 16 x 16 thread block
+    __shared__ float cosFactor_smem[16][16];    // 16 rows of cosFactor, 16 cols of cosFactor in a 16 x 16 thread block
+    __shared__ float sinFactor_smem[16][16];    // 16 rows of sinFactor, 16 cols of sinFactor in a 16 x 16 thread block
+    input_smem[hipThreadIdx_y][hipThreadIdx_x] = 0.0f;      // initialization of shared memory to 0 using all 16 x 16 threads
+    cosFactor_smem[hipThreadIdx_y][hipThreadIdx_x] = 0.0f;  // initialization of shared memory to 0 using all 16 x 16 threads
+    sinFactor_smem[hipThreadIdx_y][hipThreadIdx_x] = 0.0f;  // initialization of shared memory to 0 using all 16 x 16 threads
     __syncthreads();
 
     int srcIdx = id_z * srcStrideNH.x + id_y * srcStrideNH.y;
@@ -102,13 +108,13 @@ __global__ void compute_fft_hip_tensor(float *srcPtr,
     int numTiles = static_cast<int>(ceil((static_cast<float>(nfft) / hipBlockDim_x)));
     for(int t = 0; t < numTiles; t++)
     {
-        // load input values to shared memory
+        // load input values to shared memory if within valid range
         int srcCol = (t * hipBlockDim_x + hipThreadIdx_x);
         int factorRow = (t * hipBlockDim_x  + hipThreadIdx_y);
         if ((id_y < numWindows) && (srcCol < nfft))
             input_smem[hipThreadIdx_y][hipThreadIdx_x] = srcPtr[srcIdx + srcCol];
 
-        // load cosfactor and sinfactor values to shared memory
+        // load cosfactor and sinfactor values to shared memory if within valid range
         if ((factorRow < nfft) && (id_x < numBins))
         {
             factorRow *= numBins;
@@ -138,6 +144,8 @@ __global__ void compute_fft_hip_tensor(float *srcPtr,
     }
 }
 
+// -------------------- Set 1 - kernel executor --------------------
+
 RppStatus hip_exec_spectrogram_tensor(Rpp32f* srcPtr,
                                       RpptDescPtr srcDescPtr,
                                       Rpp32f* dstPtr,
@@ -152,8 +160,8 @@ RppStatus hip_exec_spectrogram_tensor(Rpp32f* srcPtr,
                                       Rpp32s windowStep,
                                       rpp::Handle& handle)
 {
-    Rpp32f *windowFn;
     // generate hanning window
+    Rpp32f *windowFn;
     if (windowFunction == NULL)
     {
         windowFn = handle.GetInitHandle()->mem.mcpu.scratchBufferHost;
@@ -163,20 +171,26 @@ RppStatus hip_exec_spectrogram_tensor(Rpp32f* srcPtr,
     {
         windowFn = windowFunction;
     }
+
+    // copy the hanning window values to hip memory
     Rpp32f *d_windowFn = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
     CHECK_RETURN_STATUS(hipMemcpyAsync(d_windowFn, windowFn, windowLength * sizeof(Rpp32f), hipMemcpyHostToDevice, handle.GetStream()));
     CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
 
+    // compute the number of windows required for each input in the batch
     Rpp32s *numWindowsTensor = reinterpret_cast<Rpp32s*>(handle.GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem);
     for (Rpp32u i = 0; i < dstDescPtr->n; i++)
         numWindowsTensor[i] = get_num_windows(srcLengthTensor[i], windowLength, windowStep, centerWindows);
 
-    // find the maximum windows required across all inputs in batch
-    Rpp32s maxNumWindows = *std::max_element(numWindowsTensor, numWindowsTensor + dstDescPtr->n);
+    // find the maximum windows required across all inputs in batch and stride required for window output
+    bool vertical = (dstDescPtr->layout == RpptLayout::NFT);
+    Rpp32s maxNumWindows = (vertical) ? dstDescPtr->w : dstDescPtr->h;
     Rpp32s windowCenterOffset = (centerWindows) ? (windowLength / 2) : 0;
+    if (!nfft) nfft = windowLength;
+    Rpp32u windowOutputStride = maxNumWindows * nfft;
 
     Rpp32f *windowOutput = d_windowFn + windowLength;
-    CHECK_RETURN_STATUS(hipMemsetAsync(windowOutput, 0, maxNumWindows * nfft * dstDescPtr->n * sizeof(Rpp32f), handle.GetStream()));
+    CHECK_RETURN_STATUS(hipMemsetAsync(windowOutput, 0, windowOutputStride * dstDescPtr->n * sizeof(Rpp32f), handle.GetStream()));
     CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
     Rpp32s globalThreads_x = windowLength;
     Rpp32s globalThreads_y = maxNumWindows;
@@ -189,7 +203,7 @@ RppStatus hip_exec_spectrogram_tensor(Rpp32f* srcPtr,
                        srcPtr,
                        srcDescPtr->strides.nStride,
                        windowOutput,
-                       maxNumWindows * nfft,
+                       windowOutputStride,
                        d_windowFn,
                        srcLengthTensor,
                        numWindowsTensor,
@@ -201,7 +215,7 @@ RppStatus hip_exec_spectrogram_tensor(Rpp32f* srcPtr,
     Rpp32f *cosfTensor, *sinfTensor;
     CHECK_RETURN_STATUS(hipMalloc(&cosfTensor, nfft * numBins * sizeof(Rpp32f)));
     CHECK_RETURN_STATUS(hipMalloc(&sinfTensor, nfft * numBins * sizeof(Rpp32f)));
-    hipLaunchKernelGGL(compute_fft_coefficients_hip_tensor,
+    hipLaunchKernelGGL(compute_coefficients_hip_tensor,
                        dim3(ceil((float)nfft/LOCAL_THREADS_X), ceil((float)numBins/LOCAL_THREADS_Y), ceil((float)1/LOCAL_THREADS_Z)),
                        dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                        0,
@@ -213,16 +227,15 @@ RppStatus hip_exec_spectrogram_tensor(Rpp32f* srcPtr,
 
     // compute the final output
     globalThreads_x = numBins;
-    bool vertical = (dstDescPtr->layout == RpptLayout::NFT);
-    hipLaunchKernelGGL(compute_fft_hip_tensor,
+    hipLaunchKernelGGL(fourier_transform_hip_tensor,
                        dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                        dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                        0,
                        handle.GetStream(),
                        windowOutput,
-                       make_uint2(maxNumWindows * nfft, nfft),
+                       make_uint2(windowOutputStride, nfft),
                        dstPtr,
-                       make_uint2(maxNumWindows * numBins, maxNumWindows),
+                       make_uint2(dstDescPtr->strides.nStride, maxNumWindows),
                        numWindowsTensor,
                        cosfTensor,
                        sinfTensor,
