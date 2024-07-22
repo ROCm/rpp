@@ -15,6 +15,7 @@ trigger:
     include:
     - develop
     - mainline
+    - master
   paths:
     exclude:
     - .github
@@ -30,6 +31,7 @@ pr:
     include:
     - develop
     - mainline
+    - master
   paths:
     exclude:
     - .github
