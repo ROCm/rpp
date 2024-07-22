@@ -56,33 +56,31 @@ __global__ void window_output_hip_tensor(float *srcPtr,
     }
 }
 
-// do post processing
-__global__ void post_process_tf_hip_tensor(std::complex<float> *srcPtr,
-                                           uint2 srcStrideNH,
-                                           float *dstPtr,
-                                           uint2 dstStrideNH,
-                                           int *numWindowsTensor,
-                                           int numBins)
+__global__ void compute_fft_coefficients_hip_tensor(float *cosFactor,
+                                                    float *sinFactor,
+                                                    int numBins,
+                                                    int nfft)
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
-    int numWindows = numWindowsTensor[id_z];
-
-    if (id_y >= numWindows || id_x >= numBins)
+    if (id_y >= numBins || id_x >= nfft)
         return;
 
-    int srcIdx = id_z * srcStrideNH.x + id_y * srcStrideNH.y + id_x;
-    int dstIdx = id_z * dstStrideNH.x + id_y * dstStrideNH.y + id_x;
-    dstPtr[dstIdx] = norm(srcPtr[srcIdx]);
+    float factor = (2.0f * id_y * M_PI) / nfft;
+    cosFactor[id_x * numBins + id_y] = cosf(factor * id_x);
+    sinFactor[id_x * numBins + id_y] = sinf(factor * id_x);
 }
 
-__global__ void post_process_ft_hip_tensor(std::complex<float> *srcPtr,
-                                           uint2 srcStrideNH,
-                                           float *dstPtr,
-                                           uint2 dstStrideNH,
-                                           int *numWindowsTensor,
-                                           int numBins)
+__global__ void compute_fft_tf_hip_tensor(float *srcPtr,
+                                          uint2 srcStrideNH,
+                                          float *dstPtr,
+                                          uint2 dstStrideNH,
+                                          int *numWindowsTensor,
+                                          int nfft,
+                                          int numBins,
+                                          float *cosFactor,
+                                          float *sinFactor)
+
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -92,9 +90,49 @@ __global__ void post_process_ft_hip_tensor(std::complex<float> *srcPtr,
     if (id_y >= numWindows || id_x >= numBins)
         return;
 
-    int srcIdx = id_z * srcStrideNH.x + id_y * srcStrideNH.y + id_x;
+    int srcIdx = id_z * srcStrideNH.x + id_y * srcStrideNH.y;
+    int dstIdx = id_z * dstStrideNH.x + id_y * dstStrideNH.y + id_x;
+    float real = 0.0f, imag = 0.0f;
+    int paramIndex = id_x;
+    for(int i = 0 ; i < nfft; i++)
+    {
+        float x = srcPtr[srcIdx + i];
+        real += x * cosFactor[paramIndex + i * numBins];
+        imag += -x * sinFactor[paramIndex + i * numBins];
+    }
+    dstPtr[dstIdx] = (real * real) + (imag * imag);
+}
+
+__global__ void compute_fft_ft_hip_tensor(float *srcPtr,
+                                          uint2 srcStrideNH,
+                                          float *dstPtr,
+                                          uint2 dstStrideNH,
+                                          int *numWindowsTensor,
+                                          int nfft,
+                                          int numBins,
+                                          float *cosFactor,
+                                          float *sinFactor)
+
+{
+    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
+    int numWindows = numWindowsTensor[id_z];
+
+    if (id_y >= numWindows || id_x >= numBins)
+        return;
+
+    int srcIdx = id_z * srcStrideNH.x + id_y * srcStrideNH.y;
     int dstIdx = id_z * dstStrideNH.x + id_x * dstStrideNH.y + id_y;
-    dstPtr[dstIdx] = norm(srcPtr[srcIdx]);
+    float real = 0.0f, imag = 0.0f;
+    int paramIndex = id_x;
+    for(int i = 0 ; i < nfft; i++)
+    {
+        float x = srcPtr[srcIdx + i];
+        real += x * cosFactor[paramIndex + i * numBins];
+        imag += -x * sinFactor[paramIndex + i * numBins];
+    }
+    dstPtr[dstIdx] = (real * real) + (imag * imag);
 }
 
 RppStatus hip_exec_spectrogram_tensor(Rpp32f* srcPtr,
@@ -123,8 +161,8 @@ RppStatus hip_exec_spectrogram_tensor(Rpp32f* srcPtr,
         windowFn = windowFunction;
     }
     Rpp32f *d_windowFn = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
-    hipMemcpyAsync(d_windowFn, windowFn, windowLength * sizeof(Rpp32f), hipMemcpyHostToDevice, handle.GetStream());
-    hipStreamSynchronize(handle.GetStream());
+    CHECK_RETURN_STATUS(hipMemcpyAsync(d_windowFn, windowFn, windowLength * sizeof(Rpp32f), hipMemcpyHostToDevice, handle.GetStream()));
+    CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
 
     Rpp32s *numWindowsTensor = reinterpret_cast<Rpp32s*>(handle.GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem);
     for (Rpp32u i = 0; i < dstDescPtr->n; i++)
@@ -135,8 +173,8 @@ RppStatus hip_exec_spectrogram_tensor(Rpp32f* srcPtr,
     Rpp32s windowCenterOffset = (centerWindows) ? (windowLength / 2) : 0;
 
     Rpp32f *windowOutput = d_windowFn + windowLength;
-    hipMemsetAsync(windowOutput, 0, maxNumWindows * nfft * dstDescPtr->n * sizeof(Rpp32f), handle.GetStream());
-    hipStreamSynchronize(handle.GetStream());
+    CHECK_RETURN_STATUS(hipMemsetAsync(windowOutput, 0, maxNumWindows * nfft * dstDescPtr->n * sizeof(Rpp32f), handle.GetStream()));
+    CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
     Rpp32s globalThreads_x = windowLength;
     Rpp32s globalThreads_y = maxNumWindows;
     Rpp32s globalThreads_z = dstDescPtr->n;
@@ -154,63 +192,61 @@ RppStatus hip_exec_spectrogram_tensor(Rpp32f* srcPtr,
                        numWindowsTensor,
                        make_int4(nfft, windowLength, windowStep, windowCenterOffset),
                        reflectPadding);
-    hipStreamSynchronize(handle.GetStream());
 
-    // Declare the fftIn and fftOut buffers
+    // compute the sin and cos factors required for FFT
     Rpp32s numBins = (nfft / 2 + 1);
-    hipfftReal *fftIn = reinterpret_cast<hipfftReal *>(windowOutput);
-    hipfftComplex *fftOut;
-    hipMalloc((void**)&fftOut, sizeof(hipfftComplex) * maxNumWindows * nfft * globalThreads_z);
+    Rpp32f *cosfTensor, *sinfTensor;
+    CHECK_RETURN_STATUS(hipMalloc(&cosfTensor, nfft * numBins * sizeof(Rpp32f)));
+    CHECK_RETURN_STATUS(hipMalloc(&sinfTensor, nfft * numBins * sizeof(Rpp32f)));
+    hipLaunchKernelGGL(compute_fft_coefficients_hip_tensor,
+                       dim3(ceil((float)nfft/LOCAL_THREADS_X), ceil((float)numBins/LOCAL_THREADS_Y), ceil((float)1/LOCAL_THREADS_Z)),
+                       dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                       0,
+                       handle.GetStream(),
+                       cosfTensor,
+                       sinfTensor,
+                       numBins,
+                       nfft);
 
-    // create the fft plan required
-    RppSize_t workSize = 0;
-    hipfftHandle fftHandle;
-    CHECK_HIPFFT_STATUS(hipfftCreate(&fftHandle));
-    CHECK_HIPFFT_STATUS(hipfftSetStream(fftHandle, handle.GetStream()));
-
-    Rpp32s n[1] = {nfft};
-    // execute fft for all inputs in batch
-    CHECK_HIPFFT_STATUS(hipfftPlanMany(&fftHandle, 1, n, NULL, 0, 0, NULL, 0, 0, HIPFFT_R2C, maxNumWindows));
-    for (int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
-    {
-        hipfftReal *fftInTemp = fftIn + batchCount * maxNumWindows * nfft;
-        hipfftComplex *fftOutTemp = fftOut + batchCount * maxNumWindows * numBins;
-        CHECK_HIPFFT_STATUS(hipfftExecR2C(fftHandle, fftInTemp, fftOutTemp));
-    }
-
+    // compute the final output
     globalThreads_x = numBins;
     if (dstDescPtr->layout == RpptLayout::NTF)
     {
-        hipLaunchKernelGGL(post_process_tf_hip_tensor,
+        hipLaunchKernelGGL(compute_fft_tf_hip_tensor,
                            dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                            0,
                            handle.GetStream(),
-                           reinterpret_cast<std::complex<Rpp32f> *>(fftOut),
-                           make_uint2(maxNumWindows * numBins, numBins),
+                           windowOutput,
+                           make_uint2(maxNumWindows * nfft, nfft),
                            dstPtr,
                            make_uint2(maxNumWindows * numBins, numBins),
                            numWindowsTensor,
-                           numBins);
+                           nfft,
+                           numBins,
+                           cosfTensor,
+                           sinfTensor);
     }
     else if (dstDescPtr->layout == RpptLayout::NFT)
     {
-        hipLaunchKernelGGL(post_process_ft_hip_tensor,
+        hipLaunchKernelGGL(compute_fft_ft_hip_tensor,
                            dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                            0,
                            handle.GetStream(),
-                           reinterpret_cast<std::complex<Rpp32f> *>(fftOut),
-                           make_uint2(maxNumWindows * numBins, numBins),
+                           windowOutput,
+                           make_uint2(maxNumWindows * nfft, nfft),
                            dstPtr,
                            make_uint2(maxNumWindows * numBins, maxNumWindows),
                            numWindowsTensor,
-                           numBins);
+                           nfft,
+                           numBins,
+                           cosfTensor,
+                           sinfTensor);
     }
-
-    hipStreamSynchronize(handle.GetStream());
-    hipFree(fftOut);
-    hipfftDestroy(fftHandle);
+    CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
+    CHECK_RETURN_STATUS(hipFree(cosfTensor));
+    CHECK_RETURN_STATUS(hipFree(sinfTensor));
 
     return RPP_SUCCESS;
 }
