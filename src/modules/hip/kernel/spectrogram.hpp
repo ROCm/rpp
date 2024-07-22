@@ -71,14 +71,15 @@ __global__ void compute_fft_coefficients_hip_tensor(float *cosFactor,
     sinFactor[id_x * numBins + id_y] = sinf(factor * id_x);
 }
 
-__global__ void compute_fft_tf_hip_tensor(float *srcPtr,
-                                          uint2 srcStrideNH,
-                                          float *dstPtr,
-                                          uint2 dstStrideNH,
-                                          int *numWindowsTensor,
-                                          int3 params_i3,
-                                          float *cosFactor,
-                                          float *sinFactor)
+__global__ void compute_fft_hip_tensor(float *srcPtr,
+                                       uint2 srcStrideNH,
+                                       float *dstPtr,
+                                       uint2 dstStrideNH,
+                                       int *numWindowsTensor,
+                                       float *cosFactor,
+                                       float *sinFactor,
+                                       int3 params_i3,
+                                       bool vertical)
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -88,56 +89,53 @@ __global__ void compute_fft_tf_hip_tensor(float *srcPtr,
     int numBins = params_i3.y;
     int power = params_i3.z;
 
-    if (id_y >= numWindows || id_x >= numBins)
-        return;
+    __shared__ float input_smem[16][16];
+    __shared__ float cosFactor_smem[16][16];
+    __shared__ float sinFactor_smem[16][16];
+    input_smem[hipThreadIdx_y][hipThreadIdx_x] = 0.0f;
+    cosFactor_smem[hipThreadIdx_y][hipThreadIdx_x] = 0.0f;
+    sinFactor_smem[hipThreadIdx_y][hipThreadIdx_x] = 0.0f;
+    __syncthreads();
 
     int srcIdx = id_z * srcStrideNH.x + id_y * srcStrideNH.y;
-    int dstIdx = id_z * dstStrideNH.x + id_y * dstStrideNH.y + id_x;
-    float real = 0.0f, imag = 0.0f;
-    int paramIndex = id_x;
-    for(int i = 0 ; i < nfft; i++)
+    float realVal = 0.0f, imaginaryVal = 0.0f;
+    int numTiles = static_cast<int>(ceil((static_cast<float>(nfft) / hipBlockDim_x)));
+    for(int t = 0; t < numTiles; t++)
     {
-        float x = srcPtr[srcIdx + i];
-        real += x * cosFactor[paramIndex + i * numBins];
-        imag += -x * sinFactor[paramIndex + i * numBins];
+        // load input values to shared memory
+        int srcCol = (t * hipBlockDim_x + hipThreadIdx_x);
+        int factorRow = (t * hipBlockDim_x  + hipThreadIdx_y);
+        if ((id_y < numWindows) && (srcCol < nfft))
+            input_smem[hipThreadIdx_y][hipThreadIdx_x] = srcPtr[srcIdx + srcCol];
+
+        // load cosfactor and sinfactor values to shared memory
+        if ((factorRow < nfft) && (id_x < numBins))
+        {
+            factorRow *= numBins;
+            cosFactor_smem[hipThreadIdx_y][hipThreadIdx_x] = cosFactor[factorRow + id_x];
+            sinFactor_smem[hipThreadIdx_y][hipThreadIdx_x] = sinFactor[factorRow + id_x];
+        }
+
+        // wait for all threads to load input, cosFactor and sinFactor values to shared memory
+        __syncthreads();
+
+        // do matrix multiplication on the small matrix
+        for (int j = 0; j < hipBlockDim_x; j++)
+        {
+            realVal += (input_smem[hipThreadIdx_y][j] * cosFactor_smem[j][hipThreadIdx_x]);
+            imaginaryVal += (-input_smem[hipThreadIdx_y][j] * sinFactor_smem[j][hipThreadIdx_x]);
+        }
+        __syncthreads();
     }
-    float magnitudeSquare = ((real * real) + (imag * imag));
-    dstPtr[dstIdx] = (power == 2) ? magnitudeSquare : sqrtf(magnitudeSquare);
-}
 
-__global__ void compute_fft_ft_hip_tensor(float *srcPtr,
-                                          uint2 srcStrideNH,
-                                          float *dstPtr,
-                                          uint2 dstStrideNH,
-                                          int *numWindowsTensor,
-                                          int3 params_i3,
-                                          float *cosFactor,
-                                          float *sinFactor)
-
-{
-    int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
-    int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-    int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
-    int numWindows = numWindowsTensor[id_z];
-    int nfft = params_i3.x;
-    int numBins = params_i3.y;
-    int power = params_i3.z;
-
-    if (id_y >= numWindows || id_x >= numBins)
-        return;
-
-    int srcIdx = id_z * srcStrideNH.x + id_y * srcStrideNH.y;
-    int dstIdx = id_z * dstStrideNH.x + id_x * dstStrideNH.y + id_y;
-    float real = 0.0f, imag = 0.0f;
-    int paramIndex = id_x;
-    for(int i = 0 ; i < nfft; i++)
+    // final store to dst
+    if (id_y < numWindows && id_x < numBins)
     {
-        float x = srcPtr[srcIdx + i];
-        real += x * cosFactor[paramIndex + i * numBins];
-        imag += -x * sinFactor[paramIndex + i * numBins];
+        float magnitudeSquare = ((realVal * realVal) + (imaginaryVal * imaginaryVal));
+        int dstIdx = (vertical) ? (id_z * dstStrideNH.x + id_x * dstStrideNH.y + id_y) :
+                                  (id_z * dstStrideNH.x + id_y * dstStrideNH.y + id_x);
+        dstPtr[dstIdx] = (power == 2) ? magnitudeSquare : sqrtf(magnitudeSquare);
     }
-    float magnitudeSquare = ((real * real) + (imag * imag));
-    dstPtr[dstIdx] = (power == 2) ? magnitudeSquare : sqrtf(magnitudeSquare);
 }
 
 RppStatus hip_exec_spectrogram_tensor(Rpp32f* srcPtr,
@@ -215,38 +213,21 @@ RppStatus hip_exec_spectrogram_tensor(Rpp32f* srcPtr,
 
     // compute the final output
     globalThreads_x = numBins;
-    if (dstDescPtr->layout == RpptLayout::NTF)
-    {
-        hipLaunchKernelGGL(compute_fft_tf_hip_tensor,
-                           dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                           0,
-                           handle.GetStream(),
-                           windowOutput,
-                           make_uint2(maxNumWindows * nfft, nfft),
-                           dstPtr,
-                           make_uint2(maxNumWindows * numBins, numBins),
-                           numWindowsTensor,
-                           make_int3(nfft, numBins, power),
-                           cosfTensor,
-                           sinfTensor);
-    }
-    else if (dstDescPtr->layout == RpptLayout::NFT)
-    {
-        hipLaunchKernelGGL(compute_fft_ft_hip_tensor,
-                           dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
-                           dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
-                           0,
-                           handle.GetStream(),
-                           windowOutput,
-                           make_uint2(maxNumWindows * nfft, nfft),
-                           dstPtr,
-                           make_uint2(maxNumWindows * numBins, maxNumWindows),
-                           numWindowsTensor,
-                           make_int3(nfft, numBins, power),
-                           cosfTensor,
-                           sinfTensor);
-    }
+    bool vertical = (dstDescPtr->layout == RpptLayout::NFT);
+    hipLaunchKernelGGL(compute_fft_hip_tensor,
+                       dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
+                       dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                       0,
+                       handle.GetStream(),
+                       windowOutput,
+                       make_uint2(maxNumWindows * nfft, nfft),
+                       dstPtr,
+                       make_uint2(maxNumWindows * numBins, maxNumWindows),
+                       numWindowsTensor,
+                       cosfTensor,
+                       sinfTensor,
+                       make_int3(nfft, numBins, power),
+                       vertical);
     CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
     CHECK_RETURN_STATUS(hipFree(cosfTensor));
     CHECK_RETURN_STATUS(hipFree(sinfTensor));
