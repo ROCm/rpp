@@ -76,9 +76,7 @@ __global__ void compute_fft_tf_hip_tensor(float *srcPtr,
                                           float *dstPtr,
                                           uint2 dstStrideNH,
                                           int *numWindowsTensor,
-                                          int nfft,
-                                          int numBins,
-                                          int power,
+                                          int3 params_i3,
                                           float *cosFactor,
                                           float *sinFactor)
 {
@@ -86,6 +84,9 @@ __global__ void compute_fft_tf_hip_tensor(float *srcPtr,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
     int numWindows = numWindowsTensor[id_z];
+    int nfft = params_i3.x;
+    int numBins = params_i3.y;
+    int power = params_i3.z;
 
     if (id_y >= numWindows || id_x >= numBins)
         return;
@@ -109,9 +110,7 @@ __global__ void compute_fft_ft_hip_tensor(float *srcPtr,
                                           float *dstPtr,
                                           uint2 dstStrideNH,
                                           int *numWindowsTensor,
-                                          int nfft,
-                                          int numBins,
-                                          int power,
+                                          int3 params_i3,
                                           float *cosFactor,
                                           float *sinFactor)
 
@@ -120,6 +119,9 @@ __global__ void compute_fft_ft_hip_tensor(float *srcPtr,
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
     int numWindows = numWindowsTensor[id_z];
+    int nfft = params_i3.x;
+    int numBins = params_i3.y;
+    int power = params_i3.z;
 
     if (id_y >= numWindows || id_x >= numBins)
         return;
@@ -225,9 +227,7 @@ RppStatus hip_exec_spectrogram_tensor(Rpp32f* srcPtr,
                            dstPtr,
                            make_uint2(maxNumWindows * numBins, numBins),
                            numWindowsTensor,
-                           nfft,
-                           numBins,
-                           power,
+                           make_int3(nfft, numBins, power),
                            cosfTensor,
                            sinfTensor);
     }
@@ -243,9 +243,7 @@ RppStatus hip_exec_spectrogram_tensor(Rpp32f* srcPtr,
                            dstPtr,
                            make_uint2(maxNumWindows * numBins, maxNumWindows),
                            numWindowsTensor,
-                           nfft,
-                           numBins,
-                           power,
+                           make_int3(nfft, numBins, power),
                            cosfTensor,
                            sinfTensor);
     }
