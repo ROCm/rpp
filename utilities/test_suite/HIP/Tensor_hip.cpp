@@ -367,10 +367,19 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostMalloc(&roiPtrInputCropRegion, 4 * sizeof(RpptROI)));
 
     void *d_rowRemapTable, *d_colRemapTable;
-    if(testCase == 79)
+    if(testCase == 26 || testCase == 79)
     {
         CHECK_RETURN_STATUS(hipMalloc(&d_rowRemapTable, ioBufferSize * sizeof(Rpp32u)));
         CHECK_RETURN_STATUS(hipMalloc(&d_colRemapTable, ioBufferSize * sizeof(Rpp32u)));
+        CHECK_RETURN_STATUS(hipMemset(d_rowRemapTable, 0, ioBufferSize * sizeof(Rpp32u)));
+        CHECK_RETURN_STATUS(hipMemset(d_colRemapTable, 0, ioBufferSize * sizeof(Rpp32u)));
+    }
+
+    Rpp32f *cameraMatrix, *distortionCoeffs;
+    if(testCase == 26)
+    {
+        CHECK_RETURN_STATUS(hipHostMalloc(&cameraMatrix, batchSize * 9 * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&distortionCoeffs, batchSize * 8 * sizeof(Rpp32f)));
     }
 
     Rpp32u boxesInEachImage = 3;
@@ -746,6 +755,22 @@ int main(int argc, char **argv)
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_warp_affine_gpu(d_input, srcDescPtr, d_output, dstDescPtr, affineTensor, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 26:
+                {
+                    testCaseName = "lens_correction";
+
+                    RpptDesc tableDesc = srcDesc;
+                    RpptDescPtr tableDescPtr = &tableDesc;
+                    init_lens_correction(batchSize, srcDescPtr, cameraMatrix, distortionCoeffs, tableDescPtr);
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_lens_correction_gpu(d_input, srcDescPtr, d_output, dstDescPtr, static_cast<Rpp32f *>(d_rowRemapTable), static_cast<Rpp32f *>(d_colRemapTable), tableDescPtr, cameraMatrix, distortionCoeffs, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
@@ -1597,6 +1622,18 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostFree(cropRoi));
         CHECK_RETURN_STATUS(hipHostFree(patchRoi));
     }
+    if(testCase == 26)
+    {
+        CHECK_RETURN_STATUS(hipHostFree(cameraMatrix));
+        CHECK_RETURN_STATUS(hipHostFree(distortionCoeffs));
+    }
+    if(testCase == 79)
+    {
+        free(rowRemapTable);
+        free(colRemapTable);
+        CHECK_RETURN_STATUS(hipFree(d_rowRemapTable));
+        CHECK_RETURN_STATUS(hipFree(d_colRemapTable));
+    }
     if(testCase == 35)
         CHECK_RETURN_STATUS(hipHostFree(rgbOffsets));
     if (reductionTypeCase)
@@ -1625,13 +1662,6 @@ int main(int argc, char **argv)
     free(inputu8);
     free(inputu8Second);
     free(outputu8);
-    if(testCase == 79)
-    {
-        free(rowRemapTable);
-        free(colRemapTable);
-        CHECK_RETURN_STATUS(hipFree(d_rowRemapTable));
-        CHECK_RETURN_STATUS(hipFree(d_colRemapTable));
-    }
     CHECK_RETURN_STATUS(hipFree(d_input));
     if(dualInputCase)
         CHECK_RETURN_STATUS(hipFree(d_input_second));
