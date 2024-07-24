@@ -22,20 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef HIP_TENSOR_EFFECTS_AUGMENTATIONS_HPP
-#define HIP_TENSOR_EFFECTS_AUGMENTATIONS_HPP
+#ifndef HIP_TENSOR_AUDIO_AUGMENTATIONS_HPP
+#define HIP_TENSOR_AUDIO_AUGMENTATIONS_HPP
 
-#include "kernel/gridmask.hpp"
-#include "kernel/spatter.hpp"
-#include "kernel/noise_salt_and_pepper.hpp"
-#include "kernel/noise_shot.hpp"
-#include "kernel/noise_gaussian.hpp"
-#include "kernel/non_linear_blend.hpp"
-#include "kernel/jitter.hpp"
-#include "kernel/glitch.hpp"
-#include "kernel/water.hpp"
-#include "kernel/ricap.hpp"
-#include "kernel/vignette.hpp"
-#include "kernel/erase.hpp"
+#include "kernel/non_silent_region_detection.hpp"
 
-#endif // HIP_TENSOR_EFFECTS_AUGMENTATIONS_HPP
+#endif // HIP_TENSOR_AUDIO_AUGMENTATIONS_HPP
