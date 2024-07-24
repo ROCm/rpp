@@ -256,6 +256,7 @@ if("${BACKEND}" STREQUAL "HIP")
         include_directories(${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR})
         link_directories(${HIP_PATH}/${CMAKE_INSTALL_LIBDIR})
         # link To HIP Host library -- [hip::host] to use host API
+        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} hip::host)
         set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} hipfft)
         set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} rocfft)
 
