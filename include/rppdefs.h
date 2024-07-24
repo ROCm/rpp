@@ -52,6 +52,8 @@ SOFTWARE.
 #define RPP_MAX_8U      ( 255 )
 /*! \brief RPP maximum dimensions in tensor \ingroup group_rppdefs \page subpage_rppt */
 #define RPPT_MAX_DIMS   ( 5 )
+/*! \brief RPP maximum channels in audio tensor \ingroup group_rppdefs \page subpage_rppt */
+#define RPPT_MAX_AUDIO_CHANNELS   ( 16 )
 
 #define CHECK_RETURN_STATUS(x) do { \
   int retval = (x); \
@@ -60,6 +62,12 @@ SOFTWARE.
     exit(-1); \
   } \
 } while (0)
+
+#ifdef HIP_COMPILE
+#define RPP_HOST_DEVICE __host__ __device__
+#else
+#define RPP_HOST_DEVICE
+#endif
 
 const float ONE_OVER_6 = 1.0f / 6;
 const float ONE_OVER_3 = 1.0f / 3;
@@ -136,7 +144,9 @@ typedef enum
     /*! \brief src and dst layout mismatch \ingroup group_rppdefs */
     RPP_ERROR_LAYOUT_MISMATCH           = -18,
     /*! \brief Number of channels is invalid. (Needs to adhere to function specification.) \ingroup group_rppdefs */
-    RPP_ERROR_INVALID_CHANNELS          = -19
+    RPP_ERROR_INVALID_CHANNELS          = -19,
+    /*! \brief Number of src dims is invalid. (Needs to adhere to function specification.) \ingroup group_rppdefs */
+    RPP_ERROR_INVALID_SRC_DIMS          = -20
 } RppStatus;
 
 /*! \brief RPP rppStatus_t type enums
@@ -691,7 +701,7 @@ typedef struct GenericFilter
  */
 typedef struct RpptResamplingWindow
 {
-    inline void input_range(Rpp32f x, Rpp32s *loc0, Rpp32s *loc1)
+    inline RPP_HOST_DEVICE void input_range(Rpp32f x, Rpp32s *loc0, Rpp32s *loc1)
     {
         Rpp32s xc = std::ceil(x);
         *loc0 = xc - lobes;
@@ -725,7 +735,7 @@ typedef struct RpptResamplingWindow
     Rpp32f scale = 1, center = 1;
     Rpp32s lobes = 0, coeffs = 0;
     Rpp32s lookupSize = 0;
-    std::vector<Rpp32f> lookup;
+    Rpp32f *lookup;
     __m128 pCenter, pScale;
 } RpptResamplingWindow;
 
@@ -1046,7 +1056,7 @@ typedef struct
     Rpp64u* dstBatchIndex;
     Rpp32u* inc;
     Rpp32u* dstInc;
-    hipMemRpp32u scratchBuf;
+    hipMemRpp32f scratchBufferPinned;
 } memGPU;
 
 /*! \brief RPP HIP-HOST memory management
