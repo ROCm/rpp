@@ -332,7 +332,7 @@ def get_layout_name(layout):
 
 # Prints entire case list if user asks for help
 def print_case_list(imageAugmentationMap, backendType, parser):
-    if '--help' or '-h' in sys.argv:
+    if '--help' in sys.argv or '-h' in sys.argv:
         parser.print_help()
         print("\n" + "="*30)
         print("Functionality Reference List")

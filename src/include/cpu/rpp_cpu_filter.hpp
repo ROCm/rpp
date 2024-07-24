@@ -277,6 +277,83 @@ inline void blend_permute_add_mul_5x5_pln(__m256 *pSrc, __m256 *pDst, __m256 pCo
     pDst[0] = _mm256_mul_ps(pDst[0], pConvolutionFactor);
 }
 
+inline void gaussian_filter_blend_permute_add_5x5_pln(__m256 *pSrc, __m256 *pDst)
+{
+    /* pSrc[0] - [X01|X02|X03|X04|X05|X06|X07|X08]
+       pSrc[1] - [X09|X10|X11|X12|X13|X14|X15|X16] */
+    pDst[0] = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 1), avx_pxMaskRotate0To1));   // blend with mask [0000 0001] and permute - [X02|X03|X04|X05|X06|X07|X08|X09]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 3), avx_pxMaskRotate0To2));   // blend with mask [0000 0011] and permute - [X03|X04|X05|X06|X07|X08|X09|X10]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 7), avx_pxMaskRotate0To3));   // blend with mask [0000 0111] and permute - [X04|X05|X06|X07|X08|X09|X10|X11]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 15), avx_pxMaskRotate0To4));  // blend with mask [0000 1111] and permute - [X05|X06|X07|X08|X09|X10|X11|X12]
+}
+
+inline void gaussian_filter_blend_permute_add_5x5_pkd(__m256 *pSrc, __m256 *pDst)
+{
+    /* pSrc[0] - [R01|G01|B01|R02|G02|B02|R03|G03]
+       pSrc[1] - [B03|R04|G04|B04|R05|G05|B05|R06]
+       pSrc[2] - [G06|B06|R07|G07|B07|R08|G08|B08] */
+    pDst[0] = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 7), avx_pxMaskRotate0To3));   // blend with mask [0000 0111] and permute - [R02|G02|B02|R03|G03|B03|R04|G04]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 63), avx_pxMaskRotate0To6));  // blend with mask [0011 1111] and permute - [R03|G03|B03|R04|G04|B04|R05|G05]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[1], pSrc[2], 1), avx_pxMaskRotate0To1));   // blend with mask [0000 0001] and permute - [R04|G04|B04|R05|G05|B05|R06|G06]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[1], pSrc[2], 15), avx_pxMaskRotate0To4));  // blend with mask [0000 1111] and permute - [R05|G05|B05|R06|G06|B06|R07|G07]
+}
+
+inline void gaussian_filter_blend_permute_add_7x7_pln(__m256 *pSrc, __m256 *pDst)
+{
+    /* pSrc[0] - [X01|X02|X03|X04|X05|X06|X07|X08]
+       pSrc[1] - [X09|X10|X11|X12|X13|X14|X15|X16] */
+    pDst[0] = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 1), avx_pxMaskRotate0To1));   // blend with mask [0000 0001] and permute - [X02|X03|X04|X05|X06|X07|X08|X09]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 3), avx_pxMaskRotate0To2));   // blend with mask [0000 0011] and permute - [X03|X04|X05|X06|X07|X08|X09|X10]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 7), avx_pxMaskRotate0To3));   // blend with mask [0000 0111] and permute - [X04|X05|X06|X07|X08|X09|X10|X11]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 15), avx_pxMaskRotate0To4));  // blend with mask [0000 1111] and permute - [X05|X06|X07|X08|X09|X10|X11|X12]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 31), avx_pxMaskRotate0To5));  // blend with mask [0001 1111] and permute - [X06|X07|X08|X09|X10|X11|X12|X13]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 63), avx_pxMaskRotate0To6));  // blend with mask [0011 1111] and permute - [X07|X08|X09|X10|X11|X12|X13|X14]
+}
+
+inline void gaussian_filter_blend_permute_add_7x7_pkd(__m256 *pSrc, __m256 *pDst)
+{
+    /* pSrc[0] - [R01|G01|B01|R02|G02|B02|R03|G03]
+       pSrc[1] - [B03|R04|G04|B04|R05|G05|B05|R06]
+       pSrc[2] - [G06|B06|R07|G07|B07|R08|G08|B08]
+       pSrc[3] - [R09|G09|B09|R10|G10|B10|R11|G11] */
+    pDst[0] = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 7), avx_pxMaskRotate0To3));   // blend with mask [0000 0111] and permute - [R02|G02|B02|R03|G03|B03|R04|G04]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 63), avx_pxMaskRotate0To6));  // blend with mask [0011 1111] and permute - [R03|G03|B03|R04|G04|B04|R05|G05]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[1], pSrc[2], 1), avx_pxMaskRotate0To1));   // blend with mask [0000 0001] and permute - [R04|G04|B04|R05|G05|B05|R06|G06]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[1], pSrc[2], 15), avx_pxMaskRotate0To4));  // blend with mask [0000 1111] and permute - [R05|G05|B05|R06|G06|B06|R07|G07]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[1], pSrc[2], 127), avx_pxMaskRotate0To7)); // blend with mask [0111 1111] and permute - [R06|G06|B06|R07|G07|B07|R08|G08]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[2], pSrc[3], 3), avx_pxMaskRotate0To2));   // blend with mask [0000 0011] and permute - [R07|G07|B07|R08|G08|B08|R09|G09]
+}
+
+inline void gaussian_filter_blend_permute_add_9x9_pln(__m256 *pSrc, __m256 *pDst)
+{
+    /* pSrc[0] - [X01|X02|X03|X04|X05|X06|X07|X08]
+       pSrc[1] - [X09|X10|X11|X12|X13|X14|X15|X16] */
+    pDst[0] = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 1), avx_pxMaskRotate0To1));   // blend with mask [0000 0001] and permute - [X02|X03|X04|X05|X06|X07|X08|X09]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 3), avx_pxMaskRotate0To2));     // blend with mask [0000 0011] and permute - [X03|X04|X05|X06|X07|X08|X09|X10]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 7), avx_pxMaskRotate0To3));     // blend with mask [0000 0111] and permute - [X04|X05|X06|X07|X08|X09|X10|X11]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 15), avx_pxMaskRotate0To4));    // blend with mask [0000 1111] and permute - [X05|X06|X07|X08|X09|X10|X11|X12]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 31), avx_pxMaskRotate0To5));    // blend with mask [0001 1111] and permute - [X06|X07|X08|X09|X10|X11|X12|X13]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 63), avx_pxMaskRotate0To6));    // blend with mask [0011 1111] and permute - [X07|X08|X09|X10|X11|X12|X13|X14]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 127), avx_pxMaskRotate0To7));   // blend with mask [0111 1111] and permute - [X08|X09|X10|X11|X12|X13|X14|X15]
+    pDst[0] = _mm256_add_ps(pDst[0], pSrc[1]);
+}
+
+inline void gaussian_filter_blend_permute_add_9x9_pkd(__m256 *pSrc, __m256 *pDst)
+{
+    /* pSrc[0] - [R01|G01|B01|R02|G02|B02|R03|G03]
+       pSrc[1] - [B03|R04|G04|B04|R05|G05|B05|R06]
+       pSrc[2] - [G06|B06|R07|G07|B07|R08|G08|B08]
+       pSrc[3] - [R09|G09|B09|R10|G10|B10|R11|G11] */
+    pDst[0] = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 7), avx_pxMaskRotate0To3));  // blend with mask [0000 0111] and permute - [R02|G02|B02|R03|G03|B03|R04|G04]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 63), avx_pxMaskRotate0To6));   // blend with mask [0011 1111] and permute - [R03|G03|B03|R04|G04|B04|R05|G05]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[1], pSrc[2], 1), avx_pxMaskRotate0To1));    // blend with mask [0000 0001] and permute - [R04|G04|B04|R05|G05|B05|R06|G06]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[1], pSrc[2], 15), avx_pxMaskRotate0To4));   // blend with mask [0000 1111] and permute - [R05|G05|B05|R06|G06|B06|R07|G07]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[1], pSrc[2], 127), avx_pxMaskRotate0To7));  // blend with mask [0111 1111] and permute - [R06|G06|B06|R07|G07|B07|R08|G08]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[2], pSrc[3], 3), avx_pxMaskRotate0To2));    // blend with mask [0000 0011] and permute - [R07|G07|B07|R08|G08|B08|R09|G09]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[2], pSrc[3], 31), avx_pxMaskRotate0To5));   // blend with mask [0001 1111] and permute - [R08|G08|B08|R09|G09|B09|R10|G10]
+    pDst[0] = _mm256_add_ps(pDst[0], pSrc[3]);
+}
+
 inline void blend_permute_add_mul_5x5_pkd(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor)
 {
     /* pSrc[0] - [R01|G01|B01|R02|G02|B02|R03|G03]
@@ -394,6 +471,55 @@ inline void rpp_load_box_filter_char_5x5_host(__m256i *pxRow, Rpp8u **srcPtrTemp
         pxRow[k] = avx_px0;
 }
 
+// load function for 5x5 kernel size
+inline void rpp_load_gaussian_filter_5x5_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32s rowKernelLoopLimit, __m256 *pFilterRow)
+{
+    // irrespective of row location, we need to load 3 rows for 5x5 kernel
+    rpp_load8_u8_to_f32_avx(srcPtrTemp[0], &pRow[0]);
+    rpp_load8_u8_to_f32_avx(srcPtrTemp[1], &pRow[1]);
+    rpp_load8_u8_to_f32_avx(srcPtrTemp[2], &pRow[2]);
+    for (int k = 3; k < rowKernelLoopLimit; k++)
+        rpp_load8_u8_to_f32_avx(srcPtrTemp[k], &pRow[k]);
+    for (int k = rowKernelLoopLimit; k < 5; k++)
+        pRow[k] = avx_p0;
+
+    for(int i = 0; i < 5; i++)
+        pRow[i] = _mm256_mul_ps(pRow[i], pFilterRow[i]);
+}
+
+inline void rpp_load_gaussian_filter_7x7_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32s rowKernelLoopLimit, __m256 *pFilterRow)
+{
+    // irrespective of row location, we need to load 4 rows for 7x7 kernel
+    rpp_load8_u8_to_f32_avx(srcPtrTemp[0], &pRow[0]);
+    rpp_load8_u8_to_f32_avx(srcPtrTemp[1], &pRow[1]);
+    rpp_load8_u8_to_f32_avx(srcPtrTemp[2], &pRow[2]);
+    rpp_load8_u8_to_f32_avx(srcPtrTemp[3], &pRow[3]);
+    for (int k = 4; k < rowKernelLoopLimit; k++)
+        rpp_load8_u8_to_f32_avx(srcPtrTemp[k], &pRow[k]);
+    for (int k = rowKernelLoopLimit; k < 7; k++)
+        pRow[k] = avx_p0;
+
+    for(int i = 0; i < 7; i++)
+        pRow[i] = _mm256_mul_ps(pRow[i], pFilterRow[i]);
+}
+
+inline void rpp_load_gaussian_filter_9x9_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32s rowKernelLoopLimit, __m256 *pFilterRow)
+{
+    // irrespective of row location, we need to load 4 rows for 7x7 kernel
+    rpp_load8_u8_to_f32_avx(srcPtrTemp[0], &pRow[0]);
+    rpp_load8_u8_to_f32_avx(srcPtrTemp[1], &pRow[1]);
+    rpp_load8_u8_to_f32_avx(srcPtrTemp[2], &pRow[2]);
+    rpp_load8_u8_to_f32_avx(srcPtrTemp[3], &pRow[3]);
+    rpp_load8_u8_to_f32_avx(srcPtrTemp[4], &pRow[4]);
+    for (int k = 5; k < rowKernelLoopLimit; k++)
+        rpp_load8_u8_to_f32_avx(srcPtrTemp[k], &pRow[k]);
+    for (int k = rowKernelLoopLimit; k < 9; k++)
+        pRow[k] = avx_p0;
+
+    for(int i = 0; i < 9; i++)
+        pRow[i] = _mm256_mul_ps(pRow[i], pFilterRow[i]);
+}
+
 // load function for 7x7 kernel size
 inline void rpp_load_box_filter_char_7x7_host(__m256i *pxRow, Rpp8u **srcPtrTemp, Rpp32s rowKernelLoopLimit)
 {
@@ -468,6 +594,55 @@ inline void rpp_load_box_filter_char_5x5_host(__m256i *pxRow, Rpp8s **srcPtrTemp
         pxRow[k] = avx_p0;
 }
 
+// load function for 5x5 kernel size
+inline void rpp_load_gaussian_filter_5x5_host(__m256 *pRow, Rpp8s **srcPtrTemp, Rpp32s rowKernelLoopLimit, __m256 *pFilterRow)
+{
+    // irrespective of row location, we need to load 3 rows for 5x5 kernel
+    rpp_load8_i8_to_f32_avx(srcPtrTemp[0], &pRow[0]);
+    rpp_load8_i8_to_f32_avx(srcPtrTemp[1], &pRow[1]);
+    rpp_load8_i8_to_f32_avx(srcPtrTemp[2], &pRow[2]);
+    for (int k = 3; k < rowKernelLoopLimit; k++)
+        rpp_load8_i8_to_f32_avx(srcPtrTemp[k], &pRow[k]);
+    for (int k = rowKernelLoopLimit; k < 5; k++)
+        pRow[k] = avx_p0;
+
+    for(int i = 0; i < 5; i++)
+        pRow[i] = _mm256_mul_ps(pRow[i], pFilterRow[i]);
+}
+
+inline void rpp_load_gaussian_filter_7x7_host(__m256 *pRow, Rpp8s **srcPtrTemp, Rpp32s rowKernelLoopLimit, __m256 *pFilterRow)
+{
+    // irrespective of row location, we need to load 4 rows for 7x7 kernel
+    rpp_load8_i8_to_f32_avx(srcPtrTemp[0], &pRow[0]);
+    rpp_load8_i8_to_f32_avx(srcPtrTemp[1], &pRow[1]);
+    rpp_load8_i8_to_f32_avx(srcPtrTemp[2], &pRow[2]);
+    rpp_load8_i8_to_f32_avx(srcPtrTemp[3], &pRow[3]);
+    for (int k = 4; k < rowKernelLoopLimit; k++)
+        rpp_load8_i8_to_f32_avx(srcPtrTemp[k], &pRow[k]);
+    for (int k = rowKernelLoopLimit; k < 7; k++)
+        pRow[k] = avx_p0;
+
+    for(int i = 0; i < 7; i++)
+        pRow[i] = _mm256_mul_ps(pRow[i], pFilterRow[i]);
+}
+
+inline void rpp_load_gaussian_filter_9x9_host(__m256 *pRow, Rpp8s **srcPtrTemp, Rpp32s rowKernelLoopLimit, __m256 *pFilterRow)
+{
+    // irrespective of row location, we need to load 4 rows for 7x7 kernel
+    rpp_load8_i8_to_f32_avx(srcPtrTemp[0], &pRow[0]);
+    rpp_load8_i8_to_f32_avx(srcPtrTemp[1], &pRow[1]);
+    rpp_load8_i8_to_f32_avx(srcPtrTemp[2], &pRow[2]);
+    rpp_load8_i8_to_f32_avx(srcPtrTemp[3], &pRow[3]);
+    rpp_load8_i8_to_f32_avx(srcPtrTemp[4], &pRow[4]);
+    for (int k = 5; k < rowKernelLoopLimit; k++)
+        rpp_load8_i8_to_f32_avx(srcPtrTemp[k], &pRow[k]);
+    for (int k = rowKernelLoopLimit; k < 9; k++)
+        pRow[k] = avx_p0;
+
+    for(int i = 0; i < 9; i++)
+        pRow[i] = _mm256_mul_ps(pRow[i], pFilterRow[i]);
+}
+
 // load function for 7x7 kernel size
 inline void rpp_load_box_filter_char_7x7_host(__m256i *pxRow, Rpp8s **srcPtrTemp, Rpp32s rowKernelLoopLimit)
 {
@@ -530,6 +705,22 @@ inline void rpp_load_gaussian_filter_3x3_host(__m256 *pRow, Rpp32f **srcPtrTemp,
 }
 
 // load function for 5x5 kernel size
+inline void rpp_load_gaussian_filter_5x5_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit, __m256 *pFilterRow)
+{
+    // irrespective of row location, we need to load 3 rows for 5x5 kernel
+    pRow[0] = _mm256_loadu_ps(srcPtrTemp[0]);
+    pRow[1] = _mm256_loadu_ps(srcPtrTemp[1]);
+    pRow[2] = _mm256_loadu_ps(srcPtrTemp[2]);
+    for (int k = 3; k < rowKernelLoopLimit; k++)
+        pRow[k] = _mm256_loadu_ps(srcPtrTemp[k]);
+    for (int k = rowKernelLoopLimit; k < 5; k++)
+        pRow[k] = avx_p0;
+
+    for(int i = 0; i < 5; i++)
+        pRow[i] = _mm256_mul_ps(pRow[i], pFilterRow[i]);
+}
+
+// load function for 5x5 kernel size
 inline void rpp_load_box_filter_float_5x5_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit)
 {
     // irrespective of row location, we need to load 3 rows for 5x5 kernel
@@ -539,6 +730,35 @@ inline void rpp_load_box_filter_float_5x5_host(__m256 *pRow, Rpp32f **srcPtrTemp
     for (int k = 3; k < rowKernelLoopLimit; k++)
         pRow[k] = _mm256_loadu_ps(srcPtrTemp[k]);
     for (int k = rowKernelLoopLimit; k < 5; k++)
+        pRow[k] = avx_p0;
+}
+
+// load function for 7x7 kernel size
+inline void rpp_load_gaussian_filter_7x7_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit, __m256 *pFilterRow)
+{
+    // irrespective of row location, we need to load 4 rows for 7x7 kernel
+    pRow[0] = _mm256_mul_ps(_mm256_loadu_ps(srcPtrTemp[0]), pFilterRow[0]);
+    pRow[1] = _mm256_mul_ps(_mm256_loadu_ps(srcPtrTemp[1]), pFilterRow[1]);
+    pRow[2] = _mm256_mul_ps(_mm256_loadu_ps(srcPtrTemp[2]), pFilterRow[2]);
+    pRow[3] = _mm256_mul_ps(_mm256_loadu_ps(srcPtrTemp[3]), pFilterRow[3]);
+    for (int k = 4; k < rowKernelLoopLimit; k++)
+        pRow[k] = _mm256_mul_ps(_mm256_loadu_ps(srcPtrTemp[k]), pFilterRow[k]);
+    for (int k = rowKernelLoopLimit; k < 7; k++)
+        pRow[k] = avx_p0;
+}
+
+// load function for 9x9 kernel size
+inline void rpp_load_gaussian_filter_9x9_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit, __m256 *pFilterRow)
+{
+    // irrespective of row location, we need to load 4 rows for 7x7 kernel
+    pRow[0] = _mm256_mul_ps(_mm256_loadu_ps(srcPtrTemp[0]), pFilterRow[0]);
+    pRow[1] = _mm256_mul_ps(_mm256_loadu_ps(srcPtrTemp[1]), pFilterRow[1]);
+    pRow[2] = _mm256_mul_ps(_mm256_loadu_ps(srcPtrTemp[2]), pFilterRow[2]);
+    pRow[3] = _mm256_mul_ps(_mm256_loadu_ps(srcPtrTemp[3]), pFilterRow[3]);
+    pRow[4] = _mm256_mul_ps(_mm256_loadu_ps(srcPtrTemp[4]), pFilterRow[4]);
+    for (int k = 5; k < rowKernelLoopLimit; k++)
+        pRow[k] = _mm256_mul_ps(_mm256_loadu_ps(srcPtrTemp[k]), pFilterRow[k]);
+    for (int k = rowKernelLoopLimit; k < 9; k++)
         pRow[k] = avx_p0;
 }
 
@@ -601,6 +821,51 @@ inline void rpp_load_gaussian_filter_3x3_host(__m256 *pRow, Rpp16f **srcPtrTemp,
 
     for(int i = 0; i < 3; i++)
         pRow[i] = _mm256_mul_ps(pRow[i], pFilterRow[i]);
+}
+
+// load function for 5x5 kernel size
+inline void rpp_load_gaussian_filter_5x5_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit, __m256 *pFilterRow)
+{
+    // irrespective of row location, we need to load 3 rows for 5x5 kernel
+    pRow[0] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrTemp[0]))));
+    pRow[1] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrTemp[1]))));
+    pRow[2] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrTemp[2]))));
+    for (int k = 3; k < rowKernelLoopLimit; k++)
+        pRow[k] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrTemp[k]))));
+    for (int k = rowKernelLoopLimit; k < 5; k++)
+        pRow[k] = avx_p0;
+
+    for(int i = 0; i < 5; i++)
+        pRow[i] = _mm256_mul_ps(pRow[i], pFilterRow[i]);
+}
+
+// load function for 7x7 kernel size
+inline void rpp_load_gaussian_filter_7x7_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit, __m256 *pFilterRow)
+{
+    // irrespective of row location, we need to load 4 rows for 7x7 kernel
+    pRow[0] = _mm256_mul_ps(_mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrTemp[0])))), pFilterRow[0]);
+    pRow[1] = _mm256_mul_ps(_mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrTemp[1])))), pFilterRow[1]);
+    pRow[2] = _mm256_mul_ps(_mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrTemp[2])))), pFilterRow[2]);
+    pRow[3] = _mm256_mul_ps(_mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrTemp[3])))), pFilterRow[3]);
+    for (int k = 4; k < rowKernelLoopLimit; k++)
+        pRow[k] = _mm256_mul_ps(_mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrTemp[k])))), pFilterRow[k]);
+    for (int k = rowKernelLoopLimit; k < 7; k++)
+        pRow[k] = avx_p0;
+}
+
+// load function for 7x7 kernel size
+inline void rpp_load_gaussian_filter_9x9_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit, __m256 *pFilterRow)
+{
+    // irrespective of row location, we need to load 4 rows for 7x7 kernel
+    pRow[0] = _mm256_mul_ps(_mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrTemp[0])))), pFilterRow[0]);
+    pRow[1] = _mm256_mul_ps(_mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrTemp[1])))), pFilterRow[1]);
+    pRow[2] = _mm256_mul_ps(_mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrTemp[2])))), pFilterRow[2]);
+    pRow[3] = _mm256_mul_ps(_mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrTemp[3])))), pFilterRow[3]);
+    pRow[4] = _mm256_mul_ps(_mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrTemp[4])))), pFilterRow[4]);
+    for (int k = 5; k < rowKernelLoopLimit; k++)
+        pRow[k] = _mm256_mul_ps(_mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrTemp[k])))), pFilterRow[k]);
+    for (int k = rowKernelLoopLimit; k < 9; k++)
+        pRow[k] = avx_p0;
 }
 
 // load function for 5x5 kernel size
