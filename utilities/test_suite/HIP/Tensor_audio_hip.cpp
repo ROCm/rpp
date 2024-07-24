@@ -31,7 +31,7 @@ int main(int argc, char **argv)
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
-        printf("\nUsage: ./Tensor_audio_hip <src folder> <case number = 4:4> <test type 0/1> <numRuns> <batchSize> <dst folder>\n");
+        printf("\nUsage: ./Tensor_audio_hip <src folder> <case number = 0:4> <test type 0/1> <numRuns> <batchSize> <dst folder>\n");
         return -1;
     }
 
@@ -134,11 +134,11 @@ int main(int argc, char **argv)
     Rpp32s *srcDimsTensor;
     CHECK_RETURN_STATUS(hipHostMalloc(&srcDimsTensor, batchSize * 2 * sizeof(Rpp32s)));
 
-    Rpp32f *detectedIndex = nullptr, *detectionLength = nullptr;
+    Rpp32s *detectedIndex = nullptr, *detectionLength = nullptr;
     if(testCase == 0)
     {
-        CHECK_RETURN_STATUS(hipHostMalloc(&detectedIndex, batchSize * sizeof(Rpp32f)));
-        CHECK_RETURN_STATUS(hipHostMalloc(&detectionLength, batchSize * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&detectedIndex, batchSize * sizeof(Rpp32s)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&detectionLength, batchSize * sizeof(Rpp32s)));
     }
 
     // run case-wise RPP API and measure time
@@ -162,6 +162,19 @@ int main(int argc, char **argv)
             double wallTime;
             switch (testCase)
             {
+                case 0:
+                {
+                    testCaseName = "non_silent_region_detection";
+                    Rpp32f cutOffDB = -60.0;
+                    Rpp32s windowLength = 2048;
+                    Rpp32f referencePower = 0.0f;
+                    Rpp32s resetInterval = 8192;
+
+                    startWallTime = omp_get_wtime();
+                    rppt_non_silent_region_detection_gpu(d_inputf32, srcDescPtr, srcLengthTensor, detectedIndex, detectionLength, cutOffDB, windowLength, referencePower, resetInterval, handle);
+
+                    break;
+                }
                 case 4:
                 {
                     testCaseName = "spectrogram";
@@ -247,6 +260,8 @@ int main(int argc, char **argv)
             For testCase 0 verify_non_silent_region_detection function is used for QA testing */
             if (testCase != 0)
                 verify_output(outputf32, dstDescPtr, dstDims, testCaseName, dst, scriptPath, "HIP");
+            else
+                verify_non_silent_region_detection(detectedIndex, detectionLength, testCaseName, batchSize, audioNames, dst);
 
             /* Dump the outputs to csv files for debugging
             Runs only if
