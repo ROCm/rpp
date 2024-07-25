@@ -761,12 +761,12 @@ struct HtkMelScale : public BaseMelScale
 struct SlaneyMelScale : public BaseMelScale
 {
     const Rpp32f freqLow = 0;
-    const Rpp32f fsp = 200.0 / 3.0;
+    const Rpp32f fsp = 66.666667f;
     const Rpp32f minLogHz = 1000.0;
     const Rpp32f minLogMel = (minLogHz - freqLow) / fsp;
     const Rpp32f stepLog = 0.068751777;  // Equivalent to std::log(6.4) / 27.0;
 
-    const Rpp32f invMinLogHz = 1.0f / 1000.0;
+    const Rpp32f invMinLogHz = 0.001f;
     const Rpp32f invStepLog = 1.0f / stepLog;
     const Rpp32f invFsp = 1.0f / fsp;
 
