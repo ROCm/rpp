@@ -108,8 +108,6 @@ int main(int argc, char **argv)
     if(testCase == 3)
         maxDstChannels = 1;
     set_audio_descriptor_dims_and_strides(dstDescPtr, batchSize, maxDstHeight, maxDstWidth, maxDstChannels, offsetInBytes);
-    srcDescPtr->numDims = 2;
-    dstDescPtr->numDims = 2;
     // set buffer sizes for src/dst
     iBufferSize = static_cast<Rpp64u>(srcDescPtr->h) * static_cast<Rpp64u>(srcDescPtr->w) * static_cast<Rpp64u>(srcDescPtr->c) * static_cast<Rpp64u>(srcDescPtr->n);
     oBufferSize = static_cast<Rpp64u>(dstDescPtr->h) * static_cast<Rpp64u>(dstDescPtr->w) * static_cast<Rpp64u>(dstDescPtr->c) * static_cast<Rpp64u>(dstDescPtr->n);
@@ -128,14 +126,15 @@ int main(int argc, char **argv)
     CHECK_RETURN_STATUS(hipHostMalloc(&channelsTensor, batchSize * sizeof(Rpp32s)));
 
     // allocate the buffers for src/dst dimensions for each element in batch
-    RpptImagePatch *srcDims = static_cast<RpptImagePatch *>(calloc(batchSize, sizeof(RpptImagePatch)));
-    RpptImagePatch *dstDims = static_cast<RpptImagePatch *>(calloc(batchSize, sizeof(RpptImagePatch)));
+    RpptImagePatch *srcDims, *dstDims;
+    CHECK_RETURN_STATUS(hipHostMalloc(&srcDims, batchSize * sizeof(RpptImagePatch)));
+    CHECK_RETURN_STATUS(hipHostMalloc(&dstDims, batchSize * sizeof(RpptImagePatch)));
 
     // allocate the buffer for srcDimsTensor
     Rpp32s *srcDimsTensor;
     CHECK_RETURN_STATUS(hipHostMalloc(&srcDimsTensor, batchSize * 2 * sizeof(Rpp32s)));
 
-    Rpp32f *detectedIndex = nullptr, *detectionLength = nullptr;
+    Rpp32s *detectedIndex = nullptr, *detectionLength = nullptr;
     if(testCase == 0)
     {
         CHECK_RETURN_STATUS(hipHostMalloc(&detectedIndex, batchSize * sizeof(Rpp32f)));
@@ -146,7 +145,6 @@ int main(int argc, char **argv)
     Rpp32f *inRateTensor, *outRateTensor;
     RpptResamplingWindow *window;
     Rpp64u resampleBufferSize;
-
     CHECK_RETURN_STATUS(hipHostMalloc(&inRateTensor, batchSize * sizeof(Rpp32f)));
     CHECK_RETURN_STATUS(hipHostMalloc(&outRateTensor, batchSize * sizeof(Rpp32f)));
 
@@ -171,6 +169,19 @@ int main(int argc, char **argv)
             double wallTime;
             switch (testCase)
             {
+                case 0:
+                {
+                    testCaseName = "non_silent_region_detection";
+                    Rpp32f cutOffDB = -60.0;
+                    Rpp32s windowLength = 2048;
+                    Rpp32f referencePower = 0.0f;
+                    Rpp32s resetInterval = 8192;
+
+                    startWallTime = omp_get_wtime();
+                    rppt_non_silent_region_detection_gpu(d_inputf32, srcDescPtr, srcLengthTensor, detectedIndex, detectionLength, cutOffDB, windowLength, referencePower, resetInterval, handle);
+
+                    break;
+                }
                 case 6:
                 {
                     testCaseName = "resample";
@@ -236,18 +247,17 @@ int main(int argc, char **argv)
             if (testCase == 6)
             {
                 outputf32 = static_cast<Rpp32f *>(realloc(outputf32, sizeof(Rpp32f) * resampleBufferSize));
-                CHECK_RETURN_STATUS(hipMemcpy(outputf32, d_outputf32, resampleBufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
+                oBufferSize = resampleBufferSize;
             }
-            else
-            {
-                CHECK_RETURN_STATUS(hipMemcpy(outputf32, d_outputf32, oBufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
-            }
-
+            CHECK_RETURN_STATUS(hipMemcpy(outputf32, d_outputf32, oBufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
+            CHECK_RETURN_STATUS(hipDeviceSynchronize());
 
             /* Run only if testCase is not 0
             For testCase 0 verify_non_silent_region_detection function is used for QA testing */
             if (testCase != 0)
                 verify_output(outputf32, dstDescPtr, dstDims, testCaseName, dst, scriptPath, "HIP");
+            else
+                verify_non_silent_region_detection(detectedIndex, detectionLength, testCaseName, batchSize, audioNames, dst);
 
             /* Dump the outputs to csv files for debugging
             Runs only if
@@ -280,14 +290,14 @@ int main(int argc, char **argv)
     cout << endl;
 
     // free memory
-    free(srcDims);
-    free(dstDims);
     free(inputf32);
     free(outputf32);
     CHECK_RETURN_STATUS(hipFree(d_inputf32));
     CHECK_RETURN_STATUS(hipFree(d_outputf32));
     CHECK_RETURN_STATUS(hipHostFree(srcLengthTensor));
     CHECK_RETURN_STATUS(hipHostFree(channelsTensor));
+    CHECK_RETURN_STATUS(hipHostFree(srcDims));
+    CHECK_RETURN_STATUS(hipHostFree(dstDims));
     CHECK_RETURN_STATUS(hipHostFree(srcDimsTensor));
     if (detectedIndex != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(detectedIndex));
@@ -298,5 +308,6 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostFree(window->lookup));
         CHECK_RETURN_STATUS(hipHostFree(window));
     }
+
     return 0;
 }

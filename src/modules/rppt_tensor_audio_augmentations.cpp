@@ -255,10 +255,6 @@ RppStatus rppt_resample_host(RppPtr_t srcPtr,
                              RpptResamplingWindow &window,
                              rppHandle_t rppHandle)
 {
-    Rpp32u tensorDims = srcDescPtr->numDims - 1; // exclude batchsize from input dims
-    if (tensorDims != 1 && tensorDims != 2)
-        return RPP_ERROR_INVALID_SRC_DIMS;
-
     if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
         resample_host_tensor(static_cast<Rpp32f*>(srcPtr),
@@ -285,7 +281,46 @@ RppStatus rppt_resample_host(RppPtr_t srcPtr,
 
 #ifdef GPU_SUPPORT
 
+/******************** non_silent_region_detection ********************/
+
+RppStatus rppt_non_silent_region_detection_gpu(RppPtr_t srcPtr,
+                                               RpptDescPtr srcDescPtr,
+                                               Rpp32s *srcLengthTensor,
+                                               Rpp32s *detectedIndexTensor,
+                                               Rpp32s *detectionLengthTensor,
+                                               Rpp32f cutOffDB,
+                                               Rpp32s windowLength,
+                                               Rpp32f referencePower,
+                                               Rpp32s resetInterval,
+                                               rppHandle_t rppHandle)
+{
+#ifdef HIP_COMPILE
+    if (srcDescPtr->dataType == RpptDataType::F32)
+    {
+
+        return hip_exec_non_silent_region_detection_tensor(static_cast<Rpp32f*>(srcPtr),
+                                                           srcDescPtr,
+                                                           srcLengthTensor,
+                                                           detectedIndexTensor,
+                                                           detectionLengthTensor,
+                                                           cutOffDB,
+                                                           windowLength,
+                                                           referencePower,
+                                                           resetInterval,
+                                                           rpp::deref(rppHandle));
+    }
+    else
+    {
+        return RPP_ERROR_NOT_IMPLEMENTED;
+    }
+
+#elif defined(OCL_COMPILE)
+    return RPP_ERROR_NOT_IMPLEMENTED;
+#endif // backend
+}
+
 /******************** resample ********************/
+
 RppStatus rppt_resample_gpu(RppPtr_t srcPtr,
                             RpptDescPtr srcDescPtr,
                             RppPtr_t dstPtr,
