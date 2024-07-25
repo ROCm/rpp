@@ -55,7 +55,7 @@ typedef union { float f1[5];                                                    
 typedef union { float f1[6];    float2 f2[3];                                                   }   d_float6;
 typedef union { float f1[7];                                                                    }   d_float7;
 typedef union { float f1[8];    float2 f2[4];   float4 f4[2];                                   }   d_float8;
-typedef union { float f1[9];                                                                    }   d_float9;
+typedef union { float f1[9];    float3 f3[3];                                                   }   d_float9;
 typedef union { float f1[12];   float4 f4[3];                                                   }   d_float12;
 typedef union { float f1[16];   float4 f4[4];   d_float8 f8[2];                                 }   d_float16;
 typedef union { float f1[24];   float2 f2[12];  float3 f3[8];   float4 f4[6];   d_float8 f8[3]; }   d_float24;
@@ -1776,6 +1776,22 @@ __device__ __forceinline__ void rpp_hip_math_multiply24_const(d_float24 *src_f24
     dst_f24->f4[5] = src_f24->f4[5] * multiplier_f4;
 }
 
+// d_float8 divide
+
+__device__ __forceinline__ void rpp_hip_math_divide8(d_float8 *src1Ptr_f8, d_float8 *src2Ptr_f8, d_float8 *dstPtr_f8)
+{
+    dstPtr_f8->f4[0] = src1Ptr_f8->f4[0] / src2Ptr_f8->f4[0];
+    dstPtr_f8->f4[1] = src1Ptr_f8->f4[1] / src2Ptr_f8->f4[1];
+}
+
+// d_float8 divide with constant
+
+__device__ __forceinline__ void rpp_hip_math_divide8_const(d_float8 *src_f8, d_float8 *dst_f8, float4 divisor_f4)
+{
+    dst_f8->f4[0] = divisor_f4 / src_f8->f4[0];
+    dst_f8->f4[1] = divisor_f4 / src_f8->f4[1];
+}
+
 // d_float8 bitwiseAND
 
 __device__ __forceinline__ void rpp_hip_math_bitwiseAnd8(d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8)
@@ -1869,6 +1885,21 @@ __device__ __forceinline__ float rpp_hip_math_sinc(float x)
     return (fabsf(x) < 1e-5f) ? (1.0f - x * x * ONE_OVER_6) : sinf(x) / x;
 }
 
+__device__ __forceinline__ void rpp_hip_math_log(d_float8 *src_f8, d_float8 *dst_f8)
+{
+    for(int i = 0; i < 8; i++)
+        src_f8->f1[i] = (!src_f8->f1[i]) ? std::nextafter(0.0f, 1.0f) : fabsf(src_f8->f1[i]);
+
+    dst_f8->f1[0] = __logf(src_f8->f1[0]);
+    dst_f8->f1[1] = __logf(src_f8->f1[1]);
+    dst_f8->f1[2] = __logf(src_f8->f1[2]);
+    dst_f8->f1[3] = __logf(src_f8->f1[3]);
+    dst_f8->f1[4] = __logf(src_f8->f1[4]);
+    dst_f8->f1[5] = __logf(src_f8->f1[5]);
+    dst_f8->f1[6] = __logf(src_f8->f1[6]);
+    dst_f8->f1[7] = __logf(src_f8->f1[7]);
+}
+
 // /******************** DEVICE RANDOMIZATION HELPER FUNCTIONS ********************/
 
 template<typename T>
@@ -1913,7 +1944,8 @@ __device__ __forceinline__ float rpp_hip_rng_xorwow_f32(T *xorwowState)
     return  outFloat - 1;                                                                           // return 0 <= outFloat < 1
 }
 
-__device__ __forceinline__ void rpp_hip_rng_8_xorwow_f32(RpptXorwowState *xorwowState, d_float8 *randomNumbersPtr_f8)
+template<typename T>
+__device__ __forceinline__ void rpp_hip_rng_8_xorwow_f32(T *xorwowState, d_float8 *randomNumbersPtr_f8)
 {
     randomNumbersPtr_f8->f1[0] = rpp_hip_rng_xorwow_f32(xorwowState);
     randomNumbersPtr_f8->f1[1] = rpp_hip_rng_xorwow_f32(xorwowState);

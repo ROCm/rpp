@@ -35,9 +35,8 @@ scriptPath = os.path.dirname(os.path.realpath(__file__))
 inFilePath = scriptPath + "/../TEST_AUDIO_FILES/three_samples_single_channel_src1"
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
-caseMin = 7
+caseMin = 0
 caseMax = 7
-
 
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list():
@@ -73,24 +72,24 @@ def generate_performance_reports(RESULTS_DIR):
     print(dfPrint_noIndices)
 
 def run_unit_test_cmd(srcPath, case, numRuns, testType, batchSize, outFilePath):
-    print(f"./Tensor_audio_hip {srcPath} {case} {numRuns} {testType} {numRuns} {batchSize}")
-    result = subprocess.run([buildFolderPath + "/build/Tensor_audio_hip", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE)    # nosec
-    print(result.stdout.decode())
-    print("------------------------------------------------------------------------------------------")
+    print("./Tensor_audio_hip " + srcPath + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(numRuns) + " " + str(batchSize))
+    result = subprocess.Popen([buildFolderPath + "/build/Tensor_audio_hip", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE)    # nosec
+    stdout_data, stderr_data = result.communicate()
+    print(stdout_data.decode())
 
 def run_performance_test_cmd(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath):
-    with open("{}/Tensor_audio_hip_raw_performance_log.txt".format(loggingFolder), "a") as logFile:
-        print(f"./Tensor_audio_hip {srcPath} {case} {numRuns} {testType} {numRuns} {batchSize} ")
-        process = subprocess.Popen([buildFolderPath + "/build/Tensor_audio_hip", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
+    with open(loggingFolder + "/Tensor_audio_hip_raw_performance_log.txt", "a") as logFile:
+        print("./Tensor_audio_hip " + srcPath + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(numRuns) + " " + str(batchSize))
+        process = subprocess.Popen([buildFolderPath + "/build/Tensor_audio_hip", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)    # nosec
         read_from_subprocess_and_write_to_log(process, logFile)
         print("------------------------------------------------------------------------------------------")
 
 def run_performance_test_with_profiler_cmd(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath):
-    if not os.path.isdir(f"{outFilePath}/case_{case}"):
-        os.mkdir(f"{outFilePath}/case_{case}")
-    with open("{}/Tensor_audio_hip_raw_performance_log.txt".format(loggingFolder), "a") as logFile:
-        print(f"\nrocprof --basenames on --timestamp on --stats -o {outFilePath}/case_{case}/output_case{case}.csv ./Tensor_audio_hip {srcPath} {case} {numRuns} {testType} {numRuns} {batchSize}")
-        process = subprocess.Popen([ 'rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', f"{outFilePath}/case_{case}/output_case{case}.csv", "./Tensor_audio_hip", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)  # nosec
+    if not os.path.isdir(outFilePath + "/case_" + case):
+        os.mkdir(outFilePath + "/case_" + case)
+    with open(loggingFolder + "/Tensor_audio_hip_raw_performance_log.txt", "a") as logFile:
+        print("\nrocprof --basenames on --timestamp on --stats -o " + outFilePath + "/case_" + str(case) + "/output_case" + str(case) + ".csv ./Tensor_audio_hip " + srcPath + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(numRuns) + " " + str(batchSize))
+        process = subprocess.Popen([ 'rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', outFilePath + "/case_" + case + "/output_case" + case + ".csv", "./Tensor_audio_hip", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)  # nosec
         while True:
             output = process.stdout.readline()
             if not output and process.poll() is not None:
@@ -132,7 +131,7 @@ def rpp_test_suite_parser_and_validator():
 
     # validate the parameters passed by user
     if ((args.case_start < caseMin or args.case_start > caseMax) or (args.case_end < caseMin or args.case_end > caseMax)):
-        print(f"Starting case# and Ending case# must be in the {caseMin}:{caseMax} range. Aborting!")
+        print("Starting case# and Ending case# must be in the " + str(caseMin) + ":" + str(caseMax) + " range. Aborting!")
         exit(0)
     elif args.case_end < args.case_start:
         print("Ending case# must be greater than starting case#. Aborting!")
@@ -168,7 +167,7 @@ def rpp_test_suite_parser_and_validator():
     else:
         for case in args.case_list:
             if int(case) < caseMin or int(case) > caseMax:
-                print(f"Invalid case number {case}! Case number must be in the {caseMin}:{caseMax} range. Aborting!")
+                print("Invalid case number " + str(case) + "! Case number must be in the " + str(caseMin) + ":" + str(caseMax) + " range. Aborting!")
                 exit(0)
     return args
 
@@ -220,11 +219,11 @@ os.makedirs(buildFolderPath + "/build")
 os.chdir(buildFolderPath + "/build")
 
 # Run cmake and make commands
-subprocess.run(["cmake", scriptPath], cwd=".")   # nosec
-subprocess.run(["make", "-j16"], cwd=".")    # nosec
+subprocess.call(["cmake", scriptPath], cwd=".")   # nosec
+subprocess.call(["make", "-j16"], cwd=".")    # nosec
 
 # List of cases supported
-supportedCaseList = ['7']
+supportedCaseList = ['0', '7']
 if qaMode and batchSize != 3:
     print("QA tests can only run with a batch size of 3.")
     exit(0)
@@ -246,7 +245,7 @@ if testType == 0:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
-        print("---------------------------------- Results of QA Test - Tensor_hip_audio -----------------------------------\n")
+        print("---------------------------------- Results of QA Test - Tensor_audio_hip -----------------------------------\n")
         print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList)
 
 # Performance tests
@@ -285,7 +284,7 @@ elif testType == 1 and profilingOption == "YES":
                     continue
 
     new_file.close()
-    subprocess.call(['chown', '{}:{}'.format(os.getuid(), os.getgid()), CONSOLIDATED_FILE])  # nosec
+    subprocess.call(['chown', str(os.getuid()) + ':' + str(os.getgid()), CONSOLIDATED_FILE])  # nosec
     try:
         generate_performance_reports(RESULTS_DIR)
     except ImportError:

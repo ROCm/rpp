@@ -266,6 +266,7 @@ int main(int argc, char **argv)
                     }
 
                     set_audio_descriptor_dims_and_strides_nostriding(dstDescPtr, batchSize, maxDstHeight, maxDstWidth, maxDstChannels, offsetInBytes);
+                    dstDescPtr->numDims = 3;
 
                     // Set buffer sizes for src/dst
                     unsigned long long spectrogramBufferSize = (unsigned long long)dstDescPtr->h * (unsigned long long)dstDescPtr->w * (unsigned long long)dstDescPtr->c * (unsigned long long)dstDescPtr->n;
@@ -381,6 +382,8 @@ int main(int argc, char **argv)
 
                     set_audio_descriptor_dims_and_strides_nostriding(srcDescPtr, batchSize, maxSrcHeight, maxSrcWidth, maxSrcChannels, offsetInBytes);
                     set_audio_descriptor_dims_and_strides_nostriding(dstDescPtr, batchSize, maxDstHeight, maxDstWidth, maxDstChannels, offsetInBytes);
+                    srcDescPtr->numDims = 3;
+                    dstDescPtr->numDims = 3;
 
                     // Set buffer sizes for src/dst
                     unsigned long long spectrogramBufferSize = (unsigned long long)srcDescPtr->h * (unsigned long long)srcDescPtr->w * (unsigned long long)srcDescPtr->c * (unsigned long long)srcDescPtr->n;

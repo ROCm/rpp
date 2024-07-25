@@ -31,7 +31,7 @@ int main(int argc, char **argv)
     if (argc < MIN_ARG_COUNT)
     {
         printf("\nImproper Usage! Needs all arguments!\n");
-        printf("\nUsage: ./Tensor_hip_audio <src folder> <case number = 0:0> <test type 0/1> <numRuns> <batchSize> <dst folder>\n");
+        printf("\nUsage: ./Tensor_audio_hip <src folder> <case number = 0:0> <test type 0/1> <numRuns> <batchSize> <dst folder>\n");
         return -1;
     }
 
@@ -43,7 +43,7 @@ int main(int argc, char **argv)
     char *dst = argv[6];
     string scriptPath = argv[7];
 
-    // validation CHECK_RETURN_STATUSs
+    // validation checks
     if (testType == 0 && batchSize != 3)
     {
         cout << "Error! QA Mode only runs with batchsize 3" << endl;
@@ -130,13 +130,16 @@ int main(int argc, char **argv)
     RpptImagePatch *srcDims = (RpptImagePatch *) calloc(batchSize, sizeof(RpptImagePatch));
     RpptImagePatch *dstDims = (RpptImagePatch *) calloc(batchSize, sizeof(RpptImagePatch));
 
+    Rpp32s *detectedIndex = nullptr, *detectionLength = nullptr;
+    if(testCase == 0)
+    {
+        CHECK_RETURN_STATUS(hipHostMalloc(&detectedIndex, batchSize * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&detectionLength, batchSize * sizeof(Rpp32f)));
+    }
+
     // allocate the buffer for srcDimsTensor
     Rpp32s *srcDimsTensor;
     CHECK_RETURN_STATUS(hipHostMalloc(&srcDimsTensor, batchSize * 2 * sizeof(Rpp32s)));
-
-    Rpp32f *coeff;
-    if(testCase == 2)
-        CHECK_RETURN_STATUS(hipHostMalloc(&coeff, batchSize * sizeof(Rpp32f)));
 
     // run case-wise RPP API and measure time
     rppHandle_t handle;
@@ -159,6 +162,19 @@ int main(int argc, char **argv)
             double wallTime;
             switch (testCase)
             {
+                case 0:
+                {
+                    testCaseName = "non_silent_region_detection";
+                    Rpp32f cutOffDB = -60.0;
+                    Rpp32s windowLength = 2048;
+                    Rpp32f referencePower = 0.0f;
+                    Rpp32s resetInterval = 8192;
+
+                    startWallTime = omp_get_wtime();
+                    rppt_non_silent_region_detection_gpu(d_inputf32, srcDescPtr, srcLengthTensor, detectedIndex, detectionLength, cutOffDB, windowLength, referencePower, resetInterval, handle);
+
+                    break;
+                }
                 case 7:
                 {
                     testCaseName = "mel_filter_bank";
@@ -247,9 +263,10 @@ int main(int argc, char **argv)
         {
             CHECK_RETURN_STATUS(hipMemcpy(outputf32, d_outputf32, oBufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
 
-            /* Run only if testCase is not 0
-            For testCase 0 verify_non_silent_region_detection function is used for QA testing */
-            if (testCase != 0)
+            // For testCase 0 verify_non_silent_region_detection function is used for QA testing */
+            if (testCase == 0)
+                verify_non_silent_region_detection(detectedIndex, detectionLength, testCaseName, batchSize, audioNames, dst);
+            else
                 verify_output(outputf32, dstDescPtr, dstDims, testCaseName, dst, scriptPath, "HIP");
 
             /* Dump the outputs to csv files for debugging
@@ -292,7 +309,9 @@ int main(int argc, char **argv)
     CHECK_RETURN_STATUS(hipHostFree(srcLengthTensor));
     CHECK_RETURN_STATUS(hipHostFree(channelsTensor));
     CHECK_RETURN_STATUS(hipHostFree(srcDimsTensor));
-    if(testCase == 2)
-        CHECK_RETURN_STATUS(hipHostFree(coeff));
+    if (detectedIndex != nullptr)
+        CHECK_RETURN_STATUS(hipHostFree(detectedIndex));
+    if (detectionLength != nullptr)
+        CHECK_RETURN_STATUS(hipHostFree(detectionLength));
     return 0;
 }

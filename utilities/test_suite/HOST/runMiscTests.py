@@ -38,7 +38,7 @@ scriptPath = os.path.dirname(os.path.realpath(__file__))
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
 caseMin = 0
-caseMax = 1
+caseMax = 2
 
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list():
@@ -47,15 +47,16 @@ def get_log_file_list():
     ]
 
 def run_unit_test_cmd(numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg):
-    print(f"./Tensor_misc_host {case} {testType} {toggle} {numDims} {batchSize} {numRuns} {additionalArg}")
-    result = subprocess.run([buildFolderPath + "/build/Tensor_misc_host", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE)    # nosec
-    print(result.stdout.decode())
+    print("./Tensor_misc_host " + str(case) + " " + str(testType) + " " + str(toggle) + " " + str(numDims) + " " + str(batchSize) + " " + str(numRuns) + " " + str(additionalArg))
+    result = subprocess.Popen([buildFolderPath + "/build/Tensor_misc_host", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE)    # nosec
+    stdout_data, stderr_data = result.communicate()
+    print(stdout_data.decode())
     print("------------------------------------------------------------------------------------------")
 
 def run_performance_test_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg):
-    with open("{}/Tensor_misc_host_raw_performance_log.txt".format(loggingFolder), "a") as logFile:
-        print(f"./Tensor_misc_host {case} {testType} {toggle} {numDims} {batchSize} {numRuns} {additionalArg}")
-        process = subprocess.Popen([buildFolderPath + "/build/Tensor_misc_host", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)    # nosec
+    with open(loggingFolder + "/Tensor_misc_host_raw_performance_log.txt", "a") as logFile:
+        logFile.write("./Tensor_misc_host " + str(case) + " " + str(testType) + " " + str(toggle) + " " + str(numDims) + " " + str(batchSize) + " " + str(numRuns) + " " + str(additionalArg) + "\n")
+        process = subprocess.Popen([buildFolderPath + "/build/Tensor_misc_host", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)    # nosec
         read_from_subprocess_and_write_to_log(process, logFile)
 
 def run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg = ""):
@@ -81,6 +82,7 @@ def rpp_test_suite_parser_and_validator():
     parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Outputs from tests will be compared with golden outputs - (0 / 1)", required = False)
     parser.add_argument('--batch_size', type = int, default = 1, help = "Specifies the batch size to use for running tests. Default is 1.")
     parser.add_argument('--preserve_output', type = int, default = 1, help = "preserves the output of the program - (0 = override output / 1 = preserve output )" )
+    print_case_list(miscAugmentationMap, "HOST", parser)
     args = parser.parse_args()
 
     # validate the parameters passed by user
@@ -161,10 +163,10 @@ os.makedirs(buildFolderPath + "/build")
 os.chdir(buildFolderPath + "/build")
 
 # Run cmake and make commands
-subprocess.run(["cmake", scriptPath], cwd=".")   # nosec
-subprocess.run(["make", "-j16"], cwd=".")    # nosec
+subprocess.call(["cmake", scriptPath], cwd=".")   # nosec
+subprocess.call(["make", "-j16"], cwd=".")    # nosec
 
-supportedCaseList = ['0', '1']
+supportedCaseList = ['0', '1', '2']
 for case in caseList:
     if case not in supportedCaseList:
         continue
