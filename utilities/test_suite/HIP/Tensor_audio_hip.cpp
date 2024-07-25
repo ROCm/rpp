@@ -194,6 +194,7 @@ int main(int argc, char **argv)
                         Rpp32f scaleRatio = outRateTensor[i] / inRateTensor[i];
                         srcDimsTensor[j] = srcLengthTensor[i];
                         srcDimsTensor[j + 1] = channelsTensor[i];
+                        dstDims[i].width = static_cast<int>(std::ceil(scaleRatio * srcLengthTensor[i]));
                         dstDims[i].height = 1;
                         maxDstWidth = std::max(maxDstWidth, static_cast<int>(dstDims[i].width));
                     }
@@ -221,11 +222,18 @@ int main(int argc, char **argv)
                 }
                 default:
                 {
-                    printf("\nThe functionality %s doesn't yet exist in RPP\n", func.c_str());
-                    return -1;
+                    missingFuncFlag = 1;
+                    break;
                 }
             }
             CHECK_RETURN_STATUS(hipDeviceSynchronize());
+
+            endWallTime = omp_get_wtime();
+            if (missingFuncFlag == 1)
+            {
+                printf("\nThe functionality %s doesn't yet exist in RPP\n", func.c_str());
+                return -1;
+            }
 
             wallTime = endWallTime - startWallTime;
             maxWallTime = std::max(maxWallTime, wallTime);
