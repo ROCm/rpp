@@ -120,6 +120,15 @@ if(Python3_FOUND)
                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
             )
         endif(NIFTI_FOUND)
+        if(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND)
+            if(libsnd_LIBS)
+                add_test(
+                    NAME rpp_qa_tests_tensor_audio_hip_all
+                    COMMAND ${Python3_EXECUTABLE} ${ROCM_PATH}/share/rpp/test/HIP/runAudioTests.py --qa_mode 1 --batch_size 3
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                )
+            endif(libsnd_LIBS)
+        endif(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND)
 
     elseif( "${BACKEND}" STREQUAL "OCL")
         # TBD: Add OCL Tests
