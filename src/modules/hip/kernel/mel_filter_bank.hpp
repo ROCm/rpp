@@ -1,34 +1,29 @@
 #include <hip/hip_runtime.h>
 #include "rpp_hip_common.hpp"
 
-__device__ __forceinline__ float calcMel(float *input, int melBin,
-                                         float *weightsDown, int *intervals,
-                                         int fftStride, int fftShift,
-                                         float normFactor)
+__device__ __forceinline__ void compute_mel(float *srcPtr, int melBin, float *weightsDown, int *intervals, int fftStride, int fftShift, float normFactor, float &dstVal)
 {
-    float out = 0;
+    dstVal = 0;
     int fftbin = intervals[melBin];
     int fftBinEnd = intervals[melBin + 1];
 
-    float *in =  input + fftbin * fftStride + fftShift;
-    for (; fftbin < fftBinEnd; fftbin++, in += fftStride) 
+    float *srcPtrTemp =  srcPtr + fftbin * fftStride + fftShift;
+    for (; fftbin < fftBinEnd; fftbin++, srcPtrTemp += fftStride) 
     {
         auto weightUp = float(1) - weightsDown[fftbin];
         weightUp *= normFactor;
-        out += *in * weightUp;
+        dstVal += *in * weightUp;
     }
 
     fftBinEnd = intervals[melBin + 2];
-    in =  input + fftbin * fftStride + fftShift;
+    srcPtrTemp =  srcPtr + fftbin * fftStride + fftShift;
 
-    for (; fftbin < fftBinEnd; ++fftbin, in += fftStride) 
+    for (; fftbin < fftBinEnd; fftbin++, srcPtrTemp += fftStride) 
     {
         auto weightDown = weightsDown[fftbin];
         weightDown *= normFactor;
-        out += *in * weightDown;
+        dstVal += *srcPtrTemp * weightDown;
     }
-
-    return out;
 }
 
 __global__ void mel_filter_bank_tensor(float *srcPtr,
@@ -36,8 +31,6 @@ __global__ void mel_filter_bank_tensor(float *srcPtr,
                                        float *dstPtr,
                                        uint2 dstStridesNH,
                                        int *srcDimsTensor,
-                                       float maxFreq,
-                                       float minFreq,
                                        int numFilter,
                                        float sampleRate,
                                        bool normalize,
@@ -56,8 +49,7 @@ __global__ void mel_filter_bank_tensor(float *srcPtr,
     uint srcIdx = id_z * srcStridesNH.x;
 
     float normFactor = (normalize) ? normFactors[id_y] : 1;
-
-    dstPtr[dstIdx] = calcMel(srcPtr + srcIdx, id_y, weightsDown, intervals, srcStridesNH.y, id_x, normFactor);
+    compute_mel(srcPtr + srcIdx, id_y, weightsDown, intervals, srcStridesNH.y, id_x, normFactor, dstPtr[dstIdx]);
 }
 
 RppStatus hip_exec_mel_filter_bank_tensor(Rpp32f *srcPtr,
@@ -71,7 +63,7 @@ RppStatus hip_exec_mel_filter_bank_tensor(Rpp32f *srcPtr,
                                           Rpp32s numFilter,
                                           Rpp32f sampleRate,
                                           bool normalize,
-                                          rpp::Handle& rppHandle)
+                                          rpp::Handle& handle)
 {
     BaseMelScale *melScalePtr;
     switch (melFormula)
@@ -92,7 +84,7 @@ RppStatus hip_exec_mel_filter_bank_tensor(Rpp32f *srcPtr,
     Rpp64f melHigh = melScalePtr->hz_to_mel(maxFreq);
     Rpp64f melStep = (melHigh - melLow) / (numFilter + 1);
 
-    Rpp32f *scratchMem = rppHandle.GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem;
+    Rpp32f *scratchMem = handle.GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem;
     Rpp32f *normFactors = scratchMem;
     Rpp32f *weightsDown = scratchMem + numFilter;
     Rpp32s *intervals = reinterpret_cast<Rpp32s *>(weightsDown + srcDescPtr->h);
@@ -117,18 +109,17 @@ RppStatus hip_exec_mel_filter_bank_tensor(Rpp32f *srcPtr,
     intervals[0] = fftBinStart;
     intervals[numFilter + 1] = fftBinEnd;
 
-    for (int interval = 1, idX = 0; idX < numFilter + 1; interval++, idX++, mel0 = mel1, mel1 += melStep)
+    for (int interval = 1, index = 0; index < numFilter + 1; interval++, index++, mel0 = mel1, mel1 += melStep)
     {
         Rpp64f f0 = melScalePtr->mel_to_hz(mel0);
-        Rpp64f f1 = melScalePtr->mel_to_hz(idX == numFilter ? melHigh : mel1);
+        Rpp64f f1 = melScalePtr->mel_to_hz(index == numFilter ? melHigh : mel1);
         Rpp64f slope = 1.0 / (f1 - f0);
-
         intervals[interval] = std::ceil(f1 / hzStep);
 
-        if (normalize && idX < numFilter)
+        if (normalize && index < numFilter)
         {
             Rpp64f f2 = melScalePtr->mel_to_hz(mel1 + melStep);
-            normFactors[idX] = 2.0 / (f2 - f0);
+            normFactors[index] = 2.0 / (f2 - f0);
         }
 
         for (; fftBin < fftBinEnd && fIter < f1; fftBin++, fIter = fftBin * hzStep) {
@@ -139,19 +130,16 @@ RppStatus hip_exec_mel_filter_bank_tensor(Rpp32f *srcPtr,
     Rpp32s globalThreads_x = dstDescPtr->w;
     Rpp32s globalThreads_y = dstDescPtr->h;
     Rpp32s globalThreads_z = dstDescPtr->n;
-
     hipLaunchKernelGGL(mel_filter_bank_tensor,
-                       dim3(ceil((float)(globalThreads_x + 15) / LOCAL_THREADS_X), ceil((float)(globalThreads_y + 15) / LOCAL_THREADS_Y), ceil((float)globalThreads_z / LOCAL_THREADS_Z)),
-                       dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
+                       dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), LOCAL_THREADS_Z),
+                       dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, globalThreads_z),
                        0,
-                       rppHandle.GetStream(),
+                       handle.GetStream(),
                        srcPtr,
                        make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                        dstPtr,
                        make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                        srcDimsTensor,
-                       maxFreqVal,
-                       minFreqVal,
                        numFilter,
                        sampleRate,
                        normalize,
