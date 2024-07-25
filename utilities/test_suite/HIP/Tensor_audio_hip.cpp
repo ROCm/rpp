@@ -108,8 +108,7 @@ int main(int argc, char **argv)
     if(testCase == 3)
         maxDstChannels = 1;
     set_audio_descriptor_dims_and_strides(dstDescPtr, batchSize, maxDstHeight, maxDstWidth, maxDstChannels, offsetInBytes);
-    srcDescPtr->numDims = 2;
-    dstDescPtr->numDims = 2;
+
     // set buffer sizes for src/dst
     iBufferSize = (Rpp64u)srcDescPtr->h * (Rpp64u)srcDescPtr->w * (Rpp64u)srcDescPtr->c * (Rpp64u)srcDescPtr->n;
     oBufferSize = (Rpp64u)dstDescPtr->h * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
@@ -132,7 +131,7 @@ int main(int argc, char **argv)
     CHECK_RETURN_STATUS(hipHostMalloc(&srcDims, batchSize * sizeof(RpptImagePatch)));
     CHECK_RETURN_STATUS(hipHostMalloc(&dstDims, batchSize * sizeof(RpptImagePatch)));
 
-    Rpp32f *detectedIndex = nullptr, *detectionLength = nullptr;
+    Rpp32s *detectedIndex = nullptr, *detectionLength = nullptr;
     if(testCase == 0)
     {
         CHECK_RETURN_STATUS(hipHostMalloc(&detectedIndex, batchSize * sizeof(Rpp32f)));
@@ -160,6 +159,19 @@ int main(int argc, char **argv)
             double wallTime;
             switch (testCase)
             {
+                case 0:
+                {
+                    testCaseName = "non_silent_region_detection";
+                    Rpp32f cutOffDB = -60.0;
+                    Rpp32s windowLength = 2048;
+                    Rpp32f referencePower = 0.0f;
+                    Rpp32s resetInterval = 8192;
+
+                    startWallTime = omp_get_wtime();
+                    rppt_non_silent_region_detection_gpu(d_inputf32, srcDescPtr, srcLengthTensor, detectedIndex, detectionLength, cutOffDB, windowLength, referencePower, resetInterval, handle);
+
+                    break;
+                }
                 case 1:
                 {
                     testCaseName = "to_decibels";
@@ -203,11 +215,14 @@ int main(int argc, char **argv)
         if (testType == 0)
         {
             CHECK_RETURN_STATUS(hipMemcpy(outputf32, d_outputf32, oBufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
+            CHECK_RETURN_STATUS(hipDeviceSynchronize());
 
             /* Run only if testCase is not 0
             For testCase 0 verify_non_silent_region_detection function is used for QA testing */
             if (testCase != 0)
                 verify_output(outputf32, dstDescPtr, dstDims, testCaseName, dst, scriptPath, "HIP");
+            else
+                verify_non_silent_region_detection(detectedIndex, detectionLength, testCaseName, batchSize, audioNames, dst);
 
             /* Dump the outputs to csv files for debugging
             Runs only if
@@ -240,14 +255,14 @@ int main(int argc, char **argv)
     cout << endl;
 
     // free memory
-    free(srcDims);
-    free(dstDims);
     free(inputf32);
     free(outputf32);
     CHECK_RETURN_STATUS(hipFree(d_inputf32));
     CHECK_RETURN_STATUS(hipFree(d_outputf32));
     CHECK_RETURN_STATUS(hipHostFree(srcLengthTensor));
     CHECK_RETURN_STATUS(hipHostFree(channelsTensor));
+    CHECK_RETURN_STATUS(hipHostFree(srcDims));
+    CHECK_RETURN_STATUS(hipHostFree(dstDims));
     if (detectedIndex != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(detectedIndex));
     if (detectionLength != nullptr)

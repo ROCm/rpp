@@ -64,6 +64,28 @@ extern "C" {
  */
 RppStatus rppt_non_silent_region_detection_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rpp32s *srcLengthTensor, Rpp32s *detectedIndexTensor, Rpp32s *detectionLengthTensor, Rpp32f cutOffDB, Rpp32s windowLength, Rpp32f referencePower, Rpp32s resetInterval, rppHandle_t rppHandle);
 
+#ifdef GPU_SUPPORT
+/*! \brief Non Silent Region Detection augmentation on HIP backend
+ * \details Non Silent Region Detection augmentation for 1D audio buffer
+            \n Finds the starting index and length of non silent region in the audio buffer by comparing the
+            calculated short-term power with cutoff value passed
+ * \param [in] srcPtr source tensor in HIP memory
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
+ * \param [in] srcLengthTensor source audio buffer length (1D tensor in Pinned/HIP memory, of size batchSize)
+ * \param [out] detectedIndexTensor beginning index of non silent region (1D tensor in Pinned/HIP memory, of size batchSize)
+ * \param [out] detectionLengthTensor length of non silent region  (1D tensor in Pinned/HIP memory, of size batchSize)
+ * \param [in] cutOffDB cutOff in dB below which the signal is considered silent
+ * \param [in] windowLength window length used for computing short-term power of the signal
+ * \param [in] referencePower reference power that is used to convert the signal to dB
+ * \param [in] resetInterval number of samples after which the moving mean average is recalculated to avoid precision loss
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_non_silent_region_detection_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rpp32s *srcLengthTensor, Rpp32s *detectedIndexTensor, Rpp32s *detectionLengthTensor, Rpp32f cutOffDB, Rpp32s windowLength, Rpp32f referencePower, Rpp32s resetInterval, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
+
 /*! \brief To Decibels augmentation on HOST backend
  * \details To Decibels augmentation for 1D/2D audio buffer converts magnitude values to decibel values
  * \param [in] srcPtr source tensor in HOST memory
@@ -174,15 +196,15 @@ RppStatus rppt_mel_filter_bank_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rpp
 
 /*! \brief Resample augmentation on HOST backend
 * \details Resample augmentation for audio data
-* \param[in] srcPtr source tensor in HOST memory
-* \param[in] srcDescPtr source tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
-* \param[out] dstPtr destination tensor in HOST memory
-* \param[in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
-* \param[in] inRate Input sampling rate (1D tensor in HOST memory, of size batchSize)
-* \param[in] outRate Output sampling rate (1D tensor in HOST memory, of size batchSize)
-* \param[in] srcDimsTensor source audio buffer length and number of channels (1D tensor in HOST memory, of size batchSize * 2)
-* \param[in] window Resampling window (struct of type RpptRpptResamplingWindow)
-* \param[in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+* \param [in] srcPtr source tensor in HOST memory
+* \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
+* \param [out] dstPtr destination tensor in HOST memory
+* \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
+* \param [in] inRate Input sampling rate (1D tensor in HOST memory, of size batchSize)
+* \param [in] outRate Output sampling rate (1D tensor in HOST memory, of size batchSize)
+* \param [in] srcDimsTensor source audio buffer length and number of channels (1D tensor in HOST memory, of size batchSize * 2)
+* \param [in] window Resampling window (struct of type RpptRpptResamplingWindow)
+* \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
 * \return A <tt> \ref RppStatus</tt> enumeration.
 * \retval RPP_SUCCESS Successful completion.
 * \retval RPP_ERROR* Unsuccessful completion.
