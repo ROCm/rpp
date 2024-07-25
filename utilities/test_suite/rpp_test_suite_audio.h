@@ -25,7 +25,6 @@ SOFTWARE.
 #include "rpp_test_suite_common.h"
 #include <iomanip>
 #include <vector>
-#include <half/half.hpp>
 
 // Include this header file to use functions from libsndfile
 #include <sndfile.h>

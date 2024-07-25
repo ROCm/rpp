@@ -35,9 +35,8 @@ scriptPath = os.path.dirname(os.path.realpath(__file__))
 inFilePath = scriptPath + "/../TEST_AUDIO_FILES/three_samples_single_channel_src1"
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
-caseMin = 2
+caseMin = 0
 caseMax = 2
-
 
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list():
@@ -225,7 +224,7 @@ subprocess.call(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.call(["make", "-j16"], cwd=".")    # nosec
 
 # List of cases supported
-supportedCaseList = ['2']
+supportedCaseList = ['0', '2']
 if qaMode and batchSize != 3:
     print("QA tests can only run with a batch size of 3.")
     exit(0)
@@ -247,7 +246,7 @@ if testType == 0:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
-        print("---------------------------------- Results of QA Test - Tensor_hip_audio -----------------------------------\n")
+        print("---------------------------------- Results of QA Test - Tensor_audio_hip -----------------------------------\n")
         print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList)
 
 # Performance tests
