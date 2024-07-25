@@ -58,20 +58,23 @@ def func_group_finder(case_number):
         return "miscellaneous"
 
 def run_unit_test_cmd(headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
-    print(f"./Tensor_voxel_host {headerPath} {dataPath} {dstPathTemp} {layout} {case} {numRuns} {testType} {qaMode} {batchSize} {bitDepth}")
-    result = subprocess.run([buildFolderPath + "/build/Tensor_voxel_host", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE) # nosec
-    print(result.stdout.decode())
+    print("./Tensor_voxel_host " + headerPath + " " + dataPath + " " + dstPathTemp + " " + str(layout) + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(qaMode) + " " + str(batchSize) + " " + str(bitDepth))
+    result = subprocess.Popen([buildFolderPath + "/build/Tensor_voxel_host", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE) # nosec
+    stdout_data, stderr_data = result.communicate()
+    print(stdout_data.decode())
     print("------------------------------------------------------------------------------------------")
 
 def run_performance_test_cmd(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
-    with open(f"{loggingFolder}/Tensor_voxel_host_{logFileLayout}_raw_performance_log.txt", "a") as logFile:
-        print(f"./Tensor_voxel_host {headerPath} {dataPath} {dstPathTemp} {layout} {case} {numRuns} {testType} {qaMode} {batchSize} {bitDepth}")
-        process = subprocess.Popen([buildFolderPath + "/build/Tensor_voxel_host", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True) # nosec
+    with open(loggingFolder + "/Tensor_voxel_host_" + logFileLayout + "_raw_performance_log.txt", "a") as logFile:
+        logFile.write("./Tensor_voxel_host " + headerPath + " " + dataPath + " " + dstPathTemp + " " + str(layout) + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(qaMode) + " " + str(batchSize) + " " + str(bitDepth) + "\n")
+        process = subprocess.Popen([buildFolderPath + "/build/Tensor_voxel_host", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT) # nosec
         while True:
             output = process.stdout.readline()
             if not output and process.poll() is not None:
                 break
-            print(output.strip())
+            output = output.decode().strip()  # Decode bytes to string and strip extra whitespace
+            print(output)
+            logFile.write(output)
             if "Running" in output or "max,min,avg wall times" in output:
                 cleanedOutput = ''.join(char for char in output if 32 <= ord(char) <= 126)  # Remove control characters
                 cleanedOutput = cleanedOutput.strip()  # Remove leading/trailing whitespace
@@ -203,8 +206,8 @@ os.makedirs(buildFolderPath + "/build")
 os.chdir(buildFolderPath + "/build")
 
 # Run cmake and make commands
-subprocess.run(["cmake", scriptPath], cwd=".")   # nosec
-subprocess.run(["make", "-j16"], cwd=".")  # nosec
+subprocess.call(["cmake", scriptPath], cwd=".")   # nosec
+subprocess.call(["make", "-j16"], cwd=".")  # nosec
 
 # List of cases supported
 supportedCaseList = ['0', '1', '2', '3', '4', '5', '6']

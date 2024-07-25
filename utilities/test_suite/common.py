@@ -27,6 +27,19 @@ import argparse
 import sys
 import datetime
 import shutil
+import pandas as pd
+
+try:
+    from errno import FileExistsError
+except ImportError:
+    # Python 2 compatibility
+    FileExistsError = OSError
+
+try:
+    from errno import FileExistsError
+except ImportError:
+    # Python 2 compatibility
+    FileExistsError = OSError
 
 imageAugmentationMap = {
     0: ["brightness", "HOST", "HIP"],
@@ -173,7 +186,7 @@ def case_file_check(CASE_FILE_PATH, TYPE, TENSOR_TYPE_LIST, new_file, d_counter)
 def directory_name_generator(qaMode, affinity, layoutType, case, path, func_group_finder):
     if qaMode == 0:
         functionality_group = func_group_finder(int(case))
-        dst_folder_temp = f"{path}/rpp_{affinity}_{layoutType}_{functionality_group}"
+        dst_folder_temp = path + "/rpp_" + affinity + "_" + layoutType + "_" + functionality_group
     else:
         dst_folder_temp = path
 
@@ -318,8 +331,9 @@ def read_from_subprocess_and_write_to_log(process, logFile):
         output = process.stdout.readline()
         if not output and process.poll() is not None:
             break
-        print(output.strip())
-        logFile.write(output)
+        output = output.decode().strip()  # Decode bytes to string and strip extra whitespace
+        print(output)
+        logFile.write(output + '\n')
 
 # Returns the layout name based on layout value
 def get_layout_name(layout):
@@ -332,7 +346,7 @@ def get_layout_name(layout):
 
 # Prints entire case list if user asks for help
 def print_case_list(imageAugmentationMap, backendType, parser):
-    if '--help' or '-h' in sys.argv:
+    if '--help' in sys.argv or '-h' in sys.argv:
         parser.print_help()
         print("\n" + "="*30)
         print("Functionality Reference List")
@@ -353,3 +367,22 @@ def func_group_finder(case_number):
         if case_number in value:
             return key
     return "miscellaneous"
+
+def dataframe_to_markdown(df):
+    # Calculate the maximum width of each column
+    column_widths = {}
+    for col in df.columns:
+        max_length = len(col)
+        for value in df[col]:
+            max_length = max(max_length, len(str(value)))
+        column_widths[col] = max_length
+
+    # Create the header row
+    md = '| ' + ' | '.join([col.ljust(column_widths[col]) for col in df.columns]) + ' |\n'
+    md += '| ' + ' | '.join(['-' * column_widths[col] for col in df.columns]) + ' |\n'
+    
+    # Create the data rows
+    for i, row in df.iterrows():
+        md += '| ' + ' | '.join([str(value).ljust(column_widths[df.columns[j]]) for j, value in enumerate(row.values)]) + ' |\n'
+    
+    return md
