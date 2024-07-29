@@ -4,20 +4,23 @@
 __device__ __forceinline__ void compute_mel(float *srcPtr, int melBin, float *weightsDown, int *intervals, int fftStride, int fftShift, float normFactor, float &dstVal)
 {
     dstVal = 0;
+    //start and end FFT bin indices for the current mel bin
     int fftbin = intervals[melBin];
     int fftBinEnd = intervals[melBin + 1];
 
-    float *srcPtrTemp =  srcPtr + fftbin * fftStride + fftShift;
+    float *srcPtrTemp = srcPtr + fftbin * fftStride + fftShift;
+    // Process the first interval of FFT bins, applying the weights up
     for (; fftbin < fftBinEnd; fftbin++, srcPtrTemp += fftStride) 
     {
         auto weightUp = float(1) - weightsDown[fftbin];
         weightUp *= normFactor;
-        dstVal += *in * weightUp;
+        dstVal += *srcPtrTemp * weightUp;
     }
 
-    fftBinEnd = intervals[melBin + 2];
-    srcPtrTemp =  srcPtr + fftbin * fftStride + fftShift;
+    fftBinEnd = intervals[melBin + 2];    // Update the end FFT bin index for the next interval
+    srcPtrTemp = srcPtr + fftbin * fftStride + fftShift;
 
+    // Process the second interval of FFT bins, applying the weights down
     for (; fftbin < fftBinEnd; fftbin++, srcPtrTemp += fftStride) 
     {
         auto weightDown = weightsDown[fftbin];

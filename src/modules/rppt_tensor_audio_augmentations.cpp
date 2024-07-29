@@ -340,7 +340,7 @@ RppStatus rppt_mel_filter_bank_gpu(RppPtr_t srcPtr,
 
     if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
-        hip_exec_mel_filter_bank_tensor(static_cast<Rpp32f*>(srcPtr),
+        return hip_exec_mel_filter_bank_tensor(static_cast<Rpp32f*>(srcPtr),
                                         srcDescPtr,
                                         static_cast<Rpp32f*>(dstPtr),
                                         dstDescPtr,
