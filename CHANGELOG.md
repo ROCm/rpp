@@ -2,7 +2,7 @@
 
 Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/rpp/en/latest](https://rocm.docs.amd.com/projects/rpp/en/latest)
 
-## RPP 1.8.0 (Unreleased)
+## (Unreleased) RPP 1.8.0
 
 ### Changes
 
