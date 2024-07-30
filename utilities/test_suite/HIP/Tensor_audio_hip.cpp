@@ -220,11 +220,11 @@ int main(int argc, char **argv)
                     dstDescPtr->numDims = 3;
 
                     // Set buffer sizes for src/dst
-                    unsigned long sampleSize = (unsigned long long)srcDescPtr->h * (unsigned long long)srcDescPtr->w * (unsigned long long)srcDescPtr->c;
-                    unsigned long long spectrogramBufferSize = sampleSize * (unsigned long long)srcDescPtr->n;
-                    oBufferSize = (unsigned long long)dstDescPtr->h * (unsigned long long)dstDescPtr->w * (unsigned long long)dstDescPtr->c * (unsigned long long)dstDescPtr->n;
-                    inputf32 = (Rpp32f *)realloc(inputf32, spectrogramBufferSize * sizeof(Rpp32f));
-                    outputf32 = (Rpp32f *)realloc(outputf32, oBufferSize * sizeof(Rpp32f));
+                    unsigned long sampleSize = static_cast<unsigned long>(srcDescPtr->h) * static_cast<unsigned long>(srcDescPtr->w) * static_cast<unsigned long>(srcDescPtr->c);
+                    unsigned long long spectrogramBufferSize = sampleSize * static_cast<unsigned long long>(srcDescPtr->n);
+                    oBufferSize = static_cast<unsigned long long>(dstDescPtr->h) * static_cast<unsigned long long>(dstDescPtr->w) * static_cast<unsigned long long>(dstDescPtr->c) * static_cast<unsigned long long>(dstDescPtr->n);
+                    inputf32 = static_cast<Rpp32f *>(realloc(inputf32, spectrogramBufferSize * sizeof(Rpp32f)));
+                    outputf32 = static_cast<Rpp32f *>(realloc(outputf32, oBufferSize * sizeof(Rpp32f)));
 
                     CHECK_RETURN_STATUS(hipFree(d_inputf32));
                     CHECK_RETURN_STATUS(hipFree(d_outputf32));
@@ -271,6 +271,7 @@ int main(int argc, char **argv)
         if (testType == 0)
         {
             CHECK_RETURN_STATUS(hipMemcpy(outputf32, d_outputf32, oBufferSize * sizeof(Rpp32f), hipMemcpyDeviceToHost));
+            CHECK_RETURN_STATUS(hipDeviceSynchronize());
 
             // For testCase 0 verify_non_silent_region_detection function is used for QA testing */
             if (testCase == 0)

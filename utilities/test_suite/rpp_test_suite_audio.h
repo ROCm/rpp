@@ -208,13 +208,14 @@ void replicate_last_sample_mel_filter_bank(Rpp32f *srcPtr, int numSamples, unsig
         return;
 
     Rpp32f *lastSample = srcPtr + (numSamples - 1) * sampleSize;
-    for (int i = numSamples + 1; i < batchSize; i++)
+    for (int i = numSamples; i < batchSize; i++)
     {
         Rpp32f *sample = srcPtr + i * sampleSize;
         std::memcpy(sample, lastSample, sampleSize * sizeof(Rpp32f));
     }
 }
 
+// Replicate the dimensions of the last sample to fill the remaining batch samples.
 void replicate_src_dims_to_fill_batch(Rpp32s *srcDimsTensor, int numSamples, int batchSize)
 {
     if (batchSize <= numSamples)

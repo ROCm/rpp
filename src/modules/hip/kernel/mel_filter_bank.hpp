@@ -12,7 +12,7 @@ __device__ __forceinline__ void compute_mel(float *srcPtr, int melBin, float *we
     // Process the first interval of FFT bins, applying the weights up
     for (; fftbin < fftBinEnd; fftbin++, srcPtrTemp += fftStrides.x) 
     {
-        auto weightUp = float(1) - weightsDown[fftbin];
+        float weightUp = 1.0f - weightsDown[fftbin];
         weightUp *= normFactor;
         dstVal += *srcPtrTemp * weightUp;
     }
@@ -23,7 +23,7 @@ __device__ __forceinline__ void compute_mel(float *srcPtr, int melBin, float *we
     // Process the second interval of FFT bins, applying the weights down
     for (; fftbin < fftBinEnd; fftbin++, srcPtrTemp += fftStrides.x) 
     {
-        auto weightDown = weightsDown[fftbin];
+        float weightDown = weightsDown[fftbin];
         weightDown *= normFactor;
         dstVal += *srcPtrTemp * weightDown;
     }
@@ -35,7 +35,6 @@ __global__ void mel_filter_bank_tensor(float *srcPtr,
                                        uint2 dstStridesNH,
                                        int *srcDimsTensor,
                                        int numFilter,
-                                       float sampleRate,
                                        bool normalize,
                                        float *normFactors,
                                        float *weightsDown,
@@ -144,7 +143,6 @@ RppStatus hip_exec_mel_filter_bank_tensor(Rpp32f *srcPtr,
                        make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                        srcDimsTensor,
                        numFilter,
-                       sampleRate,
                        normalize,
                        normFactors,
                        weightsDown,

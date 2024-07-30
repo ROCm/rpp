@@ -394,11 +394,11 @@ int main(int argc, char **argv)
                     dstDescPtr->numDims = 3;
 
                     // Set buffer sizes for src/dst
-                    unsigned long sampleSize = (unsigned long long)srcDescPtr->h * (unsigned long long)srcDescPtr->w * (unsigned long long)srcDescPtr->c;
-                    unsigned long long spectrogramBufferSize = sampleSize * (unsigned long long)srcDescPtr->n;
-                    unsigned long long melFilterBufferSize = (unsigned long long)dstDescPtr->h * (unsigned long long)dstDescPtr->w * (unsigned long long)dstDescPtr->c * (unsigned long long)dstDescPtr->n;
-                    inputf32 = (Rpp32f *)realloc(inputf32, spectrogramBufferSize * sizeof(Rpp32f));
-                    outputf32 = (Rpp32f *)realloc(outputf32, melFilterBufferSize * sizeof(Rpp32f));
+                    unsigned long sampleSize = static_cast<unsigned long>(srcDescPtr->h) * static_cast<unsigned long>(srcDescPtr->w) * static_cast<unsigned long>(srcDescPtr->c);
+                    unsigned long long spectrogramBufferSize = sampleSize * static_cast<unsigned long long>(srcDescPtr->n);
+                    unsigned long long melFilterBufferSize = static_cast<unsigned long long>(dstDescPtr->h) * static_cast<unsigned long long>(dstDescPtr->w) * static_cast<unsigned long long>(dstDescPtr->c) * static_cast<unsigned long long>(dstDescPtr->n);
+                    inputf32 = static_cast<Rpp32f *>(realloc(inputf32, spectrogramBufferSize * sizeof(Rpp32f)));
+                    outputf32 = static_cast<Rpp32f *>(realloc(outputf32, melFilterBufferSize * sizeof(Rpp32f)));
 
                     // Read source data
                     read_from_bin_file(inputf32, srcDescPtr, srcDimsTensor, "spectrogram", scriptPath, numSamples);
