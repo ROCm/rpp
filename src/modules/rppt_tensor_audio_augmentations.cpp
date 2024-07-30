@@ -340,14 +340,14 @@ RppStatus rppt_pre_emphasis_filter_gpu(RppPtr_t srcPtr,
 
     if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
-        hip_exec_pre_emphasis_filter_tensor(static_cast<Rpp32f*>(srcPtr),
-                                            srcDescPtr,
-                                            static_cast<Rpp32f*>(dstPtr),
-                                            dstDescPtr,
-                                            coeffTensor,
-                                            srcLengthTensor,
-                                            borderType,
-                                            rpp::deref(rppHandle));
+        return hip_exec_pre_emphasis_filter_tensor(static_cast<Rpp32f*>(srcPtr),
+                                                   srcDescPtr,
+                                                   static_cast<Rpp32f*>(dstPtr),
+                                                   dstDescPtr,
+                                                   coeffTensor,
+                                                   srcLengthTensor,
+                                                   borderType,
+                                                   rpp::deref(rppHandle));
     }
     else
     {
