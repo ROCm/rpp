@@ -505,7 +505,7 @@ inline void rpp_load_gaussian_filter_7x7_host(__m256 *pRow, Rpp8u **srcPtrTemp, 
 
 inline void rpp_load_gaussian_filter_9x9_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32s rowKernelLoopLimit, __m256 *pFilterRow)
 {
-    // irrespective of row location, we need to load 4 rows for 7x7 kernel
+    // irrespective of row location, we need to load 5 rows for 9x9 kernel
     rpp_load8_u8_to_f32_avx(srcPtrTemp[0], &pRow[0]);
     rpp_load8_u8_to_f32_avx(srcPtrTemp[1], &pRow[1]);
     rpp_load8_u8_to_f32_avx(srcPtrTemp[2], &pRow[2]);
@@ -853,10 +853,10 @@ inline void rpp_load_gaussian_filter_7x7_host(__m256 *pRow, Rpp16f **srcPtrTemp,
         pRow[k] = avx_p0;
 }
 
-// load function for 7x7 kernel size
+// load function for 9x9 kernel size
 inline void rpp_load_gaussian_filter_9x9_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit, __m256 *pFilterRow)
 {
-    // irrespective of row location, we need to load 4 rows for 7x7 kernel
+    // irrespective of row location, we need to load 5 rows for 9x9 kernel
     pRow[0] = _mm256_mul_ps(_mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrTemp[0])))), pFilterRow[0]);
     pRow[1] = _mm256_mul_ps(_mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrTemp[1])))), pFilterRow[1]);
     pRow[2] = _mm256_mul_ps(_mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrTemp[2])))), pFilterRow[2]);
