@@ -199,7 +199,8 @@ int main(int argc, char **argv)
                     maxDstWidth = 0;
                     maxSrcHeight = 0;
                     maxSrcWidth = 0;
-                    for(int i = 0, j = 0; i < batchSize; i++, j += 2)
+                    int numSamples = 3;
+                    for(int i = 0, j = 0; i < numSamples; i++, j += 2)
                     {
                         maxSrcHeight = std::max(maxSrcHeight, (int)srcDimsTensor[j]);
                         maxSrcWidth = std::max(maxSrcWidth, (int)srcDimsTensor[j + 1]);
@@ -215,9 +216,12 @@ int main(int argc, char **argv)
 
                     set_audio_descriptor_dims_and_strides_nostriding(srcDescPtr, batchSize, maxSrcHeight, maxSrcWidth, 1, offsetInBytes);
                     set_audio_descriptor_dims_and_strides_nostriding(dstDescPtr, batchSize, maxDstHeight, maxDstWidth, 1, offsetInBytes);
+                    srcDescPtr->numDims = 3;
+                    dstDescPtr->numDims = 3;
 
                     // Set buffer sizes for src/dst
-                    unsigned long long spectrogramBufferSize = (unsigned long long)srcDescPtr->h * (unsigned long long)srcDescPtr->w * (unsigned long long)srcDescPtr->c * (unsigned long long)srcDescPtr->n;
+                    unsigned long sampleSize = (unsigned long long)srcDescPtr->h * (unsigned long long)srcDescPtr->w * (unsigned long long)srcDescPtr->c;
+                    unsigned long long spectrogramBufferSize = sampleSize * (unsigned long long)srcDescPtr->n;
                     oBufferSize = (unsigned long long)dstDescPtr->h * (unsigned long long)dstDescPtr->w * (unsigned long long)dstDescPtr->c * (unsigned long long)dstDescPtr->n;
                     inputf32 = (Rpp32f *)realloc(inputf32, spectrogramBufferSize * sizeof(Rpp32f));
                     outputf32 = (Rpp32f *)realloc(outputf32, oBufferSize * sizeof(Rpp32f));
@@ -228,7 +232,12 @@ int main(int argc, char **argv)
                     CHECK_RETURN_STATUS(hipMalloc(&d_outputf32, oBufferSize * sizeof(Rpp32f)));
 
                     // Read source data
-                    read_from_bin_file(inputf32, srcDescPtr, srcDimsTensor, "spectrogram", scriptPath);
+                    read_from_bin_file(inputf32, srcDescPtr, srcDimsTensor, "spectrogram", scriptPath, numSamples);
+                    if(testType)
+                    {
+                        replicate_last_sample_mel_filter_bank(inputf32, numSamples, sampleSize, batchSize);
+                        replicate_src_dims_to_fill_batch(srcDimsTensor, numSamples, batchSize);
+                    }
 
                     CHECK_RETURN_STATUS(hipMemcpy(d_inputf32, inputf32, spectrogramBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
 

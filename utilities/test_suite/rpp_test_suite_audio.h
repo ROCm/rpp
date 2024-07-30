@@ -49,6 +49,18 @@ std::map<string, std::vector<int>> NonSilentRegionReferenceOutputs =
     {"sample3", {0, 34160}}
 };
 
+// Cutoff values for audio HIP kernels
+std::map<string, double> audioHIPCutOff =
+{
+    {"to_decibels", 1e-6},
+    {"pre_emphasis_filter", 1e-6},
+    {"down_mixing", 1e-6},
+    {"spectrogram", 1e-3},
+    {"slice", 1e-20},
+    {"resample", 1e-6},
+    {"mel_filter_bank", 1e-5}
+};
+
 // sets descriptor dimensions and strides of src/dst
 inline void set_audio_descriptor_dims_and_strides(RpptDescPtr descPtr, int batchSize, int maxHeight, int maxWidth, int maxChannels, int offsetInBytes)
 {
@@ -145,10 +157,10 @@ void read_audio_batch_and_fill_dims(RpptDescPtr descPtr, Rpp32f *inputf32, vecto
     }
 }
 
-void read_from_bin_file(Rpp32f *srcPtr, RpptDescPtr srcDescPtr, Rpp32s *srcDims, string testCase, string scriptPath)
+void read_from_bin_file(Rpp32f *srcPtr, RpptDescPtr srcDescPtr, Rpp32s *srcDims, string testCase, string scriptPath, int numSamples)
 {
     // read data from golden outputs
-    Rpp64u oBufferSize = srcDescPtr->n * srcDescPtr->strides.nStride;
+    Rpp64u oBufferSize = numSamples * srcDescPtr->strides.nStride;
     Rpp32f *refInput = static_cast<Rpp32f *>(malloc(oBufferSize * sizeof(float)));
     string outFile = scriptPath + "/../REFERENCE_OUTPUTS_AUDIO/" + testCase + "/" + testCase + ".bin";
     std::fstream fin(outFile, std::ios::in | std::ios::binary);
@@ -170,7 +182,7 @@ void read_from_bin_file(Rpp32f *srcPtr, RpptDescPtr srcDescPtr, Rpp32s *srcDims,
         std::cout<<"\nCould not open the reference output. Please check the path specified\n";
         return;
     }
-    for (int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
+    for (int batchCount = 0; batchCount < numSamples; batchCount++)
     {
         Rpp32f *srcPtrCurrent = srcPtr + batchCount * srcDescPtr->strides.nStride;
         Rpp32f *refPtrCurrent = refInput + batchCount * srcDescPtr->strides.nStride;
@@ -187,6 +199,32 @@ void read_from_bin_file(Rpp32f *srcPtr, RpptDescPtr srcDescPtr, Rpp32s *srcDims,
         }
     }
     free(refInput);
+}
+
+//replicate the last sample buffer for the remaining samples
+void replicate_last_sample_mel_filter_bank(Rpp32f *srcPtr, int numSamples, unsigned long sampleSize, int batchSize)
+{
+    if (batchSize <= numSamples)
+        return;
+
+    Rpp32f *lastSample = srcPtr + (numSamples - 1) * sampleSize;
+    for (int i = numSamples + 1; i < batchSize; i++)
+    {
+        Rpp32f *sample = srcPtr + i * sampleSize;
+        std::memcpy(sample, lastSample, sampleSize * sizeof(Rpp32f));
+    }
+}
+
+void replicate_src_dims_to_fill_batch(Rpp32s *srcDimsTensor, int numSamples, int batchSize)
+{
+    if (batchSize <= numSamples)
+        return;
+
+    for (int i = numSamples; i < batchSize; i++)
+    {
+        srcDimsTensor[i * 2] = srcDimsTensor[(numSamples - 1) * 2];
+        srcDimsTensor[i * 2 + 1] = srcDimsTensor[(numSamples - 1) * 2 + 1];
+    }
 }
 
 void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dstDims, string testCase, string dst, string scriptPath, string backend)
@@ -217,7 +255,7 @@ void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dst
         std::cout<<"\nCould not open the reference output. Please check the path specified\n";
         return;
     }
-   double cutoff = (backend == "HOST") ? 1e-20 : (testCase == "mel_filter_bank" ? 1e-5 : 1e-6);
+   double cutoff = (backend == "HOST") ? 1e-20 : audioHIPCutOff[testCase];
 
     // iterate over all samples in a batch and compare with reference outputs
     for (int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)

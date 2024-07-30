@@ -357,7 +357,14 @@ int main(int argc, char **argv)
                     RpptMelScaleFormula melFormula = RpptMelScaleFormula::SLANEY;
                     Rpp32s numFilter = 80;
                     bool normalize = true;
-                    Rpp32s srcDimsTensor[] = {257, 225, 257, 211, 257, 214}; // (height, width) for each tensor in a batch for given QA inputs.
+                    Rpp32s srcDimsTensor[batchSize * 2];
+                    // (height, width) for each tensor in a batch for given QA inputs.
+                    srcDimsTensor[0] = 257;
+                    srcDimsTensor[1] = 225;
+                    srcDimsTensor[2] = 257;
+                    srcDimsTensor[3] = 211;
+                    srcDimsTensor[4] = 257;
+                    srcDimsTensor[5] = 214;
                     // Accepts outputs from FT layout of Spectrogram for QA
                     srcDescPtr->layout = dstDescPtr->layout = RpptLayout::NFT;
 
@@ -365,7 +372,8 @@ int main(int argc, char **argv)
                     maxDstWidth = 0;
                     maxSrcHeight = 0;
                     maxSrcWidth = 0;
-                    for(int i = 0, j = 0; i < batchSize; i++, j += 2)
+                    int numSamples = 3;
+                    for(int i = 0, j = 0; i < numSamples; i++, j += 2)
                     {
                         maxSrcHeight = std::max(maxSrcHeight, (int)srcDimsTensor[j]);
                         maxSrcWidth = std::max(maxSrcWidth, (int)srcDimsTensor[j + 1]);
@@ -386,13 +394,19 @@ int main(int argc, char **argv)
                     dstDescPtr->numDims = 3;
 
                     // Set buffer sizes for src/dst
-                    unsigned long long spectrogramBufferSize = (unsigned long long)srcDescPtr->h * (unsigned long long)srcDescPtr->w * (unsigned long long)srcDescPtr->c * (unsigned long long)srcDescPtr->n;
+                    unsigned long sampleSize = (unsigned long long)srcDescPtr->h * (unsigned long long)srcDescPtr->w * (unsigned long long)srcDescPtr->c;
+                    unsigned long long spectrogramBufferSize = sampleSize * (unsigned long long)srcDescPtr->n;
                     unsigned long long melFilterBufferSize = (unsigned long long)dstDescPtr->h * (unsigned long long)dstDescPtr->w * (unsigned long long)dstDescPtr->c * (unsigned long long)dstDescPtr->n;
                     inputf32 = (Rpp32f *)realloc(inputf32, spectrogramBufferSize * sizeof(Rpp32f));
                     outputf32 = (Rpp32f *)realloc(outputf32, melFilterBufferSize * sizeof(Rpp32f));
 
                     // Read source data
-                    read_from_bin_file(inputf32, srcDescPtr, srcDimsTensor, "spectrogram", scriptPath);
+                    read_from_bin_file(inputf32, srcDescPtr, srcDimsTensor, "spectrogram", scriptPath, numSamples);
+                    if(testType)
+                    {
+                        replicate_last_sample_mel_filter_bank(inputf32, numSamples, sampleSize, batchSize);
+                        replicate_src_dims_to_fill_batch(srcDimsTensor, numSamples, batchSize);
+                    }
 
                     startWallTime = omp_get_wtime();
                     rppt_mel_filter_bank_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcDimsTensor, maxFreq, minFreq, melFormula, numFilter, sampleRate, normalize, handle);

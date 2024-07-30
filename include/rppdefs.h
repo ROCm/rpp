@@ -742,6 +742,9 @@ typedef struct RpptResamplingWindow
     __m128 pCenter, pScale;
 } RpptResamplingWindow;
 
+/*! \brief Base class for Mel scale conversions.
+ * \ingroup group_rppdefs
+ */
 struct BaseMelScale
 {
     public:
@@ -750,6 +753,9 @@ struct BaseMelScale
         virtual ~BaseMelScale() = default;
 };
 
+/*! \brief Derived class for HTK Mel scale conversions.
+ * \ingroup group_rppdefs
+ */
 struct HtkMelScale : public BaseMelScale
 {
     inline RPP_HOST_DEVICE Rpp32f hz_to_mel(Rpp32f hz) { return 1127.0f * std::log(1.0f + (hz / 700.0f)); }
@@ -758,6 +764,9 @@ struct HtkMelScale : public BaseMelScale
         ~HtkMelScale() {};
 };
 
+/*! \brief Derived class for Slaney Mel scale conversions.
+ * \ingroup group_rppdefs
+ */
 struct SlaneyMelScale : public BaseMelScale
 {
     const Rpp32f freqLow = 0;

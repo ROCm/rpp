@@ -1,16 +1,16 @@
 #include <hip/hip_runtime.h>
 #include "rpp_hip_common.hpp"
 
-__device__ __forceinline__ void compute_mel(float *srcPtr, int melBin, float *weightsDown, int *intervals, int fftStride, int fftShift, float normFactor, float &dstVal)
+__device__ __forceinline__ void compute_mel(float *srcPtr, int melBin, float *weightsDown, int *intervals, int2 fftStrides, float normFactor, float &dstVal)
 {
     dstVal = 0;
     //start and end FFT bin indices for the current mel bin
     int fftbin = intervals[melBin];
     int fftBinEnd = intervals[melBin + 1];
 
-    float *srcPtrTemp = srcPtr + fftbin * fftStride + fftShift;
+    float *srcPtrTemp = srcPtr + fftbin * fftStrides.x + fftStrides.y;
     // Process the first interval of FFT bins, applying the weights up
-    for (; fftbin < fftBinEnd; fftbin++, srcPtrTemp += fftStride) 
+    for (; fftbin < fftBinEnd; fftbin++, srcPtrTemp += fftStrides.x) 
     {
         auto weightUp = float(1) - weightsDown[fftbin];
         weightUp *= normFactor;
@@ -18,10 +18,10 @@ __device__ __forceinline__ void compute_mel(float *srcPtr, int melBin, float *we
     }
 
     fftBinEnd = intervals[melBin + 2];    // Update the end FFT bin index for the next interval
-    srcPtrTemp = srcPtr + fftbin * fftStride + fftShift;
+    srcPtrTemp = srcPtr + fftbin * fftStrides.x + fftStrides.y;
 
     // Process the second interval of FFT bins, applying the weights down
-    for (; fftbin < fftBinEnd; fftbin++, srcPtrTemp += fftStride) 
+    for (; fftbin < fftBinEnd; fftbin++, srcPtrTemp += fftStrides.x) 
     {
         auto weightDown = weightsDown[fftbin];
         weightDown *= normFactor;
@@ -52,7 +52,7 @@ __global__ void mel_filter_bank_tensor(float *srcPtr,
     uint srcIdx = id_z * srcStridesNH.x;
 
     float normFactor = (normalize) ? normFactors[id_y] : 1;
-    compute_mel(srcPtr + srcIdx, id_y, weightsDown, intervals, srcStridesNH.y, id_x, normFactor, dstPtr[dstIdx]);
+    compute_mel(srcPtr + srcIdx, id_y, weightsDown, intervals, make_int2(srcStridesNH.y, id_x), normFactor, dstPtr[dstIdx]);
 }
 
 RppStatus hip_exec_mel_filter_bank_tensor(Rpp32f *srcPtr,
