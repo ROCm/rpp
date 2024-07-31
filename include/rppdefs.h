@@ -64,6 +64,7 @@ SOFTWARE.
 const float ONE_OVER_6 = 1.0f / 6;
 const float ONE_OVER_3 = 1.0f / 3;
 const float ONE_OVER_255 = 1.0f / 255;
+const uint MMS_MAX_SCRATCH_MEMORY = 76800000; // maximum scratch memory size (number of floats) needed for MMS buffer in RNNT training
 
 /******************** RPP typedefs ********************/
 
@@ -129,14 +130,20 @@ typedef enum
     RPP_ERROR_INSUFFICIENT_DST_BUFFER_LENGTH    = -14,
     /*! \brief Invalid datatype \ingroup group_rppdefs */
     RPP_ERROR_INVALID_PARAMETER_DATATYPE        = -15,
-    /*! \brief Not enough memory \ingroup group_rppdefs */
+    /*! \brief Not enough memory to write outputs, as per dim-lengths and strides set in descriptor \ingroup group_rppdefs */
     RPP_ERROR_NOT_ENOUGH_MEMORY         = -16,
     /*! \brief Out of bound source ROI \ingroup group_rppdefs */
     RPP_ERROR_OUT_OF_BOUND_SRC_ROI      = -17,
     /*! \brief src and dst layout mismatch \ingroup group_rppdefs */
-    RPP_ERROR_SRC_DST_LAYOUT_MISMATCH   = -18,
+    RPP_ERROR_LAYOUT_MISMATCH           = -18,
     /*! \brief Number of channels is invalid. (Needs to adhere to function specification.) \ingroup group_rppdefs */
-    RPP_ERROR_INVALID_CHANNELS          = -19
+    RPP_ERROR_INVALID_CHANNELS          = -19,
+    /*! \brief Invalid output tile length (Needs to adhere to function specification.) \ingroup group_rppdefs */
+    RPP_ERROR_INVALID_OUTPUT_TILE_LENGTH    = -20,
+    /*! \brief Shared memory size needed is beyond the bounds (Needs to adhere to function specification.) \ingroup group_rppdefs */
+    RPP_ERROR_OUT_OF_BOUND_SHARED_MEMORY_SIZE    = -21,
+    /*! \brief Scratch memory size needed is beyond the bounds (Needs to adhere to function specification.) \ingroup group_rppdefs */
+    RPP_ERROR_OUT_OF_BOUND_SCRATCH_MEMORY_SIZE    = -22,
 } RppStatus;
 
 /*! \brief RPP rppStatus_t type enums
@@ -369,10 +376,13 @@ typedef enum
  */
 typedef enum
 {
-    NCHW,
-    NHWC,
-    NCDHW,
-    NDHWC
+    NCHW,   // BatchSize-Channels-Height-Width
+    NHWC,   // BatchSize-Height-Width-Channels
+    NCDHW,  // BatchSize-Channels-Depth-Height-Width
+    NDHWC,  // BatchSize-Depth-Height-Width-Channels
+    NHW,    // BatchSize-Height-Width
+    NFT,    // BatchSize-Frequency-Time -> Frequency Major used for Spectrogram / MelfilterBank
+    NTF     // BatchSize-Time-Frequency -> Time Major used for Spectrogram / MelfilterBank
 } RpptLayout;
 
 /*! \brief RPPT Tensor 2D ROI type enum
@@ -425,6 +435,15 @@ typedef enum
     REFLECT
 } RpptAudioBorderType;
 
+/*! \brief RPPT Mel Scale Formula
+ * \ingroup group_rppdefs
+ */
+typedef enum
+{
+    SLANEY = 0,  // Follows Slaney’s MATLAB Auditory Modelling Work behavior
+    HTK,         // Follows O’Shaughnessy’s book formula, consistent with Hidden Markov Toolkit(HTK), m = 2595 * log10(1 + (f/700))
+} RpptMelScaleFormula;
+
 /*! \brief RPPT Tensor 2D ROI LTRB struct
  * \ingroup group_rppdefs
  */
@@ -433,6 +452,16 @@ typedef struct
     RppiPoint lt, rb;    // Left-Top point and Right-Bottom point
 
 } RpptRoiLtrb;
+
+/*! \brief RPPT Tensor Channel Offsets struct
+ * \ingroup group_rppdefs
+ */
+typedef struct
+{
+    RppiPoint r;
+    RppiPoint g;
+    RppiPoint b;
+} RpptChannelOffsets;
 
 /*! \brief RPPT Tensor 3D ROI LTFRBB struct
  * \ingroup group_rppdefs
@@ -1024,6 +1053,7 @@ typedef struct
     Rpp64u* dstBatchIndex;
     Rpp32u* inc;
     Rpp32u* dstInc;
+    hipMemRpp32u scratchBuf;
 } memGPU;
 
 /*! \brief RPP HIP-HOST memory management

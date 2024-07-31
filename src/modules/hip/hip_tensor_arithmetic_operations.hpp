@@ -22,13 +22,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef HIP_TENSOR_ARITHMEETIC_OPERATIONS_HPP
-#define HIP_TENSOR_ARITHMEETIC_OPERATIONS_HPP
+#ifndef HIP_TENSOR_ARITHMETIC_OPERATIONS_HPP
+#define HIP_TENSOR_ARITHMETIC_OPERATIONS_HPP
 
 #include "kernel/fused_multiply_add_scalar.hpp"
 #include "kernel/add_scalar.hpp"
 #include "kernel/subtract_scalar.hpp"
 #include "kernel/multiply_scalar.hpp"
 #include "kernel/magnitude.hpp"
+#include "kernel/log.hpp"
 
-#endif // HIP_TENSOR_ARITHMEETIC_OPERATIONS_HPP
+#endif // HIP_TENSOR_ARITHMETIC_OPERATIONS_HPP

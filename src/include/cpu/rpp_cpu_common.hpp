@@ -177,6 +177,21 @@ struct RPPTensorFunctionMetaData
 };
 #endif // GPU_SUPPORT
 
+// Computes strides for ND Tensor
+inline void compute_strides(Rpp32u *strides, Rpp32u *shape, Rpp32u tensorDim)
+{
+    if (tensorDim > 0)
+    {
+        Rpp32u v = 1;
+        for (Rpp32u i = tensorDim - 1; i > 0; i--)
+        {
+            strides[i] = v;
+            v *= shape[i];
+        }
+        strides[0] = v;
+    }
+}
+
 // Uses fast inverse square root algorithm from Lomont, C., 2003. FAST INVERSE SQUARE ROOT. [online] lomont.org. Available at: <http://www.lomont.org/papers/2003/InvSqrt.pdf>
 inline float rpp_host_math_inverse_sqrt_1(float x)
 {
@@ -6096,6 +6111,25 @@ inline void compute_separable_horizontal_resample(Rpp32f *inputPtr, T *outputPtr
     }
 }
 
+inline void compute_jitter_src_loc_avx(__m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter, __m256 &pRow, __m256 &pCol, __m256 &pKernelSize, __m256 &pBound, __m256 &pHeightLimit, __m256 &pWidthLimit, __m256 &pStride, __m256 &pChannel, Rpp32s *srcLoc)
+{
+    __m256 pRngX = rpp_host_rng_xorwow_8_f32_avx(pxXorwowStateX, pxXorwowStateCounter);
+    __m256 pRngY = rpp_host_rng_xorwow_8_f32_avx(pxXorwowStateX, pxXorwowStateCounter);
+    __m256 pX = _mm256_mul_ps(pRngX, pKernelSize);
+    __m256 pY = _mm256_mul_ps(pRngY, pKernelSize);
+    pX = _mm256_max_ps(_mm256_min_ps(_mm256_floor_ps(_mm256_add_ps(pRow, _mm256_sub_ps(pX, pBound))), pHeightLimit), avx_p0);
+    pY = _mm256_max_ps(_mm256_min_ps(_mm256_floor_ps(_mm256_add_ps(pCol, _mm256_sub_ps(pY, pBound))), pWidthLimit), avx_p0);
+    __m256i pxSrcLoc = _mm256_cvtps_epi32(_mm256_fmadd_ps(pX, pStride, _mm256_mul_ps(pY, pChannel)));
+    _mm256_storeu_si256((__m256i*) srcLoc, pxSrcLoc);
+}
+
+inline void compute_jitter_src_loc(RpptXorwowStateBoxMuller *xorwowState, Rpp32s row, Rpp32s col, Rpp32s kSize, Rpp32s heightLimit, Rpp32s widthLimit, Rpp32s stride, Rpp32s bound, Rpp32s channels, Rpp32s &loc)
+{
+    Rpp32u heightIncrement = rpp_host_rng_xorwow_f32(xorwowState) * kSize;
+    Rpp32u widthIncrement = rpp_host_rng_xorwow_f32(xorwowState) * kSize;
+    loc = std::max(std::min(static_cast<int>(row + heightIncrement - bound), heightLimit), 0) * stride;
+    loc += std::max(std::min(static_cast<int>(col + widthIncrement  - bound), (widthLimit - 1)), 0) * channels;
+}
 inline void compute_sum_16_host(__m256i *p, __m256i *pSum)
 {
     pSum[0] = _mm256_add_epi32(_mm256_add_epi32(p[0], p[1]), pSum[0]); //add 16 values to 8
@@ -6118,6 +6152,46 @@ inline void compute_sum_24_host(__m256d *p, __m256d *pSumR, __m256d *pSumG, __m2
     pSumR[0] = _mm256_add_pd(_mm256_add_pd(p[0], p[1]), pSumR[0]); //add 8R values and bring it down to 4
     pSumG[0] = _mm256_add_pd(_mm256_add_pd(p[2], p[3]), pSumG[0]); //add 8G values and bring it down to 4
     pSumB[0] = _mm256_add_pd(_mm256_add_pd(p[4], p[5]), pSumB[0]); //add 8B values and bring it down to 4
+}
+
+inline void compute_variance_8_host(__m256d *p1, __m256d *pMean, __m256d *pVar)
+{
+    __m256d pSub = _mm256_sub_pd(p1[0], pMean[0]);
+    pVar[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVar[0]);
+    pSub = _mm256_sub_pd(p1[1], pMean[0]);
+    pVar[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVar[0]);
+}
+
+inline void compute_variance_channel_pln3_24_host(__m256d *p1, __m256d *pMeanR, __m256d *pMeanG, __m256d *pMeanB, __m256d *pVarR, __m256d *pVarG, __m256d *pVarB)
+{
+    __m256d pSub = _mm256_sub_pd(p1[0], pMeanR[0]);
+    pVarR[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVarR[0]);
+    pSub = _mm256_sub_pd(p1[1], pMeanR[0]);
+    pVarR[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVarR[0]);
+    pSub = _mm256_sub_pd(p1[2], pMeanG[0]);
+    pVarG[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVarG[0]);
+    pSub = _mm256_sub_pd(p1[3], pMeanG[0]);
+    pVarG[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVarG[0]);
+    pSub = _mm256_sub_pd(p1[4], pMeanB[0]);
+    pVarB[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVarB[0]);
+    pSub = _mm256_sub_pd(p1[5], pMeanB[0]);
+    pVarB[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVarB[0]);
+}
+
+inline void compute_variance_image_pln3_24_host(__m256d *p1, __m256d *pMean, __m256d *pVarR, __m256d *pVarG, __m256d *pVarB)
+{
+    __m256d pSub = _mm256_sub_pd(p1[0], pMean[0]);
+    pVarR[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVarR[0]);
+    pSub = _mm256_sub_pd(p1[1], pMean[0]);
+    pVarR[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVarR[0]);
+    pSub = _mm256_sub_pd(p1[2], pMean[0]);
+    pVarG[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVarG[0]);
+    pSub = _mm256_sub_pd(pMean[0], p1[3]);
+    pVarG[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVarG[0]);
+    pSub = _mm256_sub_pd(p1[4], pMean[0]);
+    pVarB[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVarB[0]);
+    pSub = _mm256_sub_pd(p1[5], pMean[0]);
+    pVarB[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVarB[0]);
 }
 
 inline void compute_vignette_48_host(__m256 *p, __m256 &pMultiplier, __m256 &pILocComponent, __m256 &pJLocComponent)
@@ -6442,6 +6516,51 @@ inline void reduce_max_i48_host(__m128i *pMaxR, __m128i *pMaxG, __m128i *pMaxB, 
     px[1] = _mm_max_epi8(_mm_unpacklo_epi16(px[1], px[0]), _mm_unpackhi_epi16(px[1], px[0]));
     px[0] = _mm_max_epi8(_mm_unpacklo_epi32(px[1], zero), _mm_unpackhi_epi32(px[1], zero));
     result[0] = _mm_max_epi8(_mm_unpacklo_epi64(px[0], zero), _mm_unpackhi_epi64(px[0], zero));
+}
+
+inline void compute_remap_src_loc_sse(Rpp32f *rowRemapTablePtr, Rpp32f *colRemapTablePtr, Rpp32s *locArray, __m128 &pStride, __m128 &pWidthLimit, __m128 &pHeightLimit, const __m128 &pChannel = xmm_p1)
+{
+    __m128 pRowRemapVal = _mm_loadu_ps(rowRemapTablePtr);
+    pRowRemapVal = _mm_max_ps(_mm_min_ps(pRowRemapVal, pHeightLimit), xmm_p0);
+    __m128 pColRemapVal = _mm_loadu_ps(colRemapTablePtr);
+    pColRemapVal = _mm_max_ps(_mm_min_ps(pColRemapVal, pWidthLimit), xmm_p0);
+    __m128i pxRemappedSrcLoc = _mm_cvtps_epi32(_mm_fmadd_ps(pRowRemapVal, pStride, _mm_mul_ps(pColRemapVal, pChannel)));
+    _mm_storeu_si128((__m128i*) locArray, pxRemappedSrcLoc);
+}
+
+inline void compute_remap_src_loc(Rpp32f rowLoc, Rpp32f colLoc, Rpp32s &srcLoc, Rpp32s stride, Rpp32f widthLimit, Rpp32f heightLimit, Rpp32s channels = 1)
+{
+    rowLoc = std::max(0.0f, std::min(rowLoc, heightLimit));
+    colLoc = std::max(0.0f, std::min(colLoc, widthLimit));
+    srcLoc = (rowLoc * stride) + colLoc * channels;
+}
+
+inline void compute_log_16_host(__m256 *p)
+{
+    p[0] = log_ps(p[0]);    // log compute
+    p[1] = log_ps(p[1]);    // log compute
+}
+
+inline void compute_transpose4x8_avx(__m256 *pSrc, __m128 *pDst)
+{
+    __m256 tmp0, tmp1, tmp2, tmp3;
+    tmp0 = _mm256_shuffle_ps(pSrc[0], pSrc[1], 0x44);   /* shuffle to get [P01|P02|P09|P10|P05|P06|P13|P14] */
+    tmp2 = _mm256_shuffle_ps(pSrc[0], pSrc[1], 0xEE);   /* shuffle to get [P03|P04|P11|P12|P07|P08|P15|P16] */
+    tmp1 = _mm256_shuffle_ps(pSrc[2], pSrc[3], 0x44);   /* shuffle to get [P17|P18|P25|P26|P21|P22|P29|P30] */
+    tmp3 = _mm256_shuffle_ps(pSrc[2], pSrc[3], 0xEE);   /* shuffle to get [P19|P20|P27|P28|P23|P24|P31|P32] */
+    pSrc[0] = _mm256_shuffle_ps(tmp0, tmp1, 0x88);  /* shuffle to get [P01|P09|P17|P25|P05|P13|P21|P29] */
+    pSrc[1] = _mm256_shuffle_ps(tmp0, tmp1, 0xDD);  /* shuffle to get [P02|P10|P18|P26|P06|P14|P22|P30] */
+    pSrc[2] = _mm256_shuffle_ps(tmp2, tmp3, 0x88);  /* shuffle to get [P03|P11|P19|P27|P07|P15|P23|P31] */
+    pSrc[3] = _mm256_shuffle_ps(tmp2, tmp3, 0xDD);  /* shuffle to get [P04|P12|P20|P28|P08|P16|P24|P32] */
+
+    pDst[0] = _mm256_castps256_ps128(pSrc[0]);  /* extract [P01|P09|P17|P25] */
+    pDst[1] = _mm256_castps256_ps128(pSrc[1]);  /* extract [P02|P10|P18|P26] */
+    pDst[2] = _mm256_castps256_ps128(pSrc[2]);  /* extract [P03|P11|P19|P27] */
+    pDst[3] = _mm256_castps256_ps128(pSrc[3]);  /* extract [P04|P12|P20|P28] */
+    pDst[4] = _mm256_extractf128_ps(pSrc[0], 1);    /* extract [P05|P13|P21|P29] */
+    pDst[5] = _mm256_extractf128_ps(pSrc[1], 1);    /* extract [P06|P14|P22|P30] */
+    pDst[6] = _mm256_extractf128_ps(pSrc[2], 1);    /* extract [P07|P15|P23|P31] */
+    pDst[7] = _mm256_extractf128_ps(pSrc[3], 1);    /* extract [P08|P16|P24|P32] */
 }
 
 #endif //RPP_CPU_COMMON_H

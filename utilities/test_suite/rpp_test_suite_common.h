@@ -58,13 +58,15 @@ using namespace std;
 #define MAX_BATCH_SIZE 512
 #define GOLDEN_OUTPUT_MAX_HEIGHT 150    // Golden outputs are generated with MAX_HEIGHT set to 150. Changing this constant will result in QA test failures
 #define GOLDEN_OUTPUT_MAX_WIDTH 150     // Golden outputs are generated with MAX_WIDTH set to 150. Changing this constant will result in QA test failures
+#define LENS_CORRECTION_GOLDEN_OUTPUT_MAX_HEIGHT 480    // Lens correction golden outputs are generated with MAX_HEIGHT set to 480. Changing this constant will result in QA test failures
+#define LENS_CORRECTION_GOLDEN_OUTPUT_MAX_WIDTH 640     // Lens correction golden outputs are generated with MAX_WIDTH set to 640. Changing this constant will result in QA test failures
 
-#define CHECK(x) do { \
-  int retval = (x); \
-  if (retval != 0) { \
-    fprintf(stderr, "Runtime error: %s returned %d at %s:%d", #x, retval, __FILE__, __LINE__); \
-    exit(-1); \
-  } \
+#define CHECK_RETURN_STATUS(x) do { \
+    int retval = (x); \
+    if (retval != 0) { \
+        fprintf(stderr, "Runtime error: %s returned %d at %s:%d", #x, retval, __FILE__, __LINE__); \
+        exit(-1); \
+    } \
 } while (0)
 
 std::map<int, string> augmentationMap =
@@ -74,16 +76,21 @@ std::map<int, string> augmentationMap =
     {2, "blend"},
     {4, "contrast"},
     {5, "pixelate"},
+    {6, "jitter"},
     {8, "noise"},
     {13, "exposure"},
     {20, "flip"},
     {21, "resize"},
     {23, "rotate"},
+    {24, "warp_afffine"},
+    {26, "lens_correction"},
     {29, "water"},
     {30, "non_linear_blend"},
     {31, "color_cast"},
+    {32, "erase"},
     {33, "crop_and_patch"},
     {34, "lut"},
+    {35, "glitch"},
     {36, "color_twist"},
     {37, "crop"},
     {38, "crop_mirror_normalize"},
@@ -97,6 +104,7 @@ std::map<int, string> augmentationMap =
     {65, "bitwise_and"},
     {68, "bitwise_or"},
     {70, "copy"},
+    {79, "remap"},
     {80, "resize_mirror_normalize"},
     {81, "color_jitter"},
     {82, "ricap"},
@@ -107,27 +115,44 @@ std::map<int, string> augmentationMap =
     {87, "tensor_sum"},
     {88, "tensor_min"},
     {89, "tensor_max"},
+    {90, "tensor_mean"},
+    {91, "tensor_stddev"},
+    {92, "slice"}
 };
 
 // Golden outputs for Tensor min Kernel
-std::map<int, std::vector<int>> TensorMinReferenceOutputs =
+std::map<int, std::vector<Rpp8u>> TensorMinReferenceOutputs =
 {
     {1, {1, 1, 7}},
     {3, {0, 0, 0, 0, 2, 0, 0, 0, 7, 9, 0, 0}}
 };
 
 // Golden outputs for Tensor max Kernel
-std::map<int, std::vector<int>> TensorMaxReferenceOutputs =
+std::map<int, std::vector<Rpp8u>> TensorMaxReferenceOutputs =
 {
     {1, {239, 245, 255}},
     {3, {255, 240, 236, 255, 255, 242, 241, 255, 253, 255, 255, 255}}
 };
 
 // Golden outputs for Tensor sum Kernel
-std::map<int, std::vector<int>> TensorSumReferenceOutputs =
+std::map<int, std::vector<uint64_t>> TensorSumReferenceOutputs =
 {
     {1, {334225, 813471, 2631125}},
     {3, {348380, 340992, 262616, 951988, 1056552, 749506, 507441, 2313499, 2170646, 2732368, 3320699, 8223713}}
+};
+
+// Golden outputs for Tensor mean Kernel
+std::map<int, std::vector<float>> TensorMeanReferenceOutputs =
+{
+    {1, {133.690, 81.347, 116.939}},
+    {3, {139.352, 136.397, 105.046, 126.932, 105.655, 74.951, 50.744, 77.117, 96.473, 121.439, 147.587, 121.833}}
+};
+
+// Golden outputs for Tensor stddev Kernel
+std::map<int, std::vector<float>> TensorStddevReferenceOutputs =
+{
+    {1, {49.583, 54.623, 47.649}},
+    {3, {57.416, 47.901, 53.235, 55.220, 68.471, 55.735, 46.668, 61.880, 47.462, 49.039, 67.269, 59.130}}
 };
 
 template <typename T>
@@ -455,6 +480,43 @@ inline void set_generic_descriptor(RpptGenericDescPtr descriptorPtr3D, int noOfI
     descriptorPtr3D->strides[2] = descriptorPtr3D->dims[3] * descriptorPtr3D->dims[4];
     descriptorPtr3D->strides[3] = descriptorPtr3D->dims[4];
     descriptorPtr3D->strides[4] = 1;
+}
+
+// sets generic descriptor dimensions and strides of src/dst for slice functionality
+inline void set_generic_descriptor_slice(RpptDescPtr srcDescPtr, RpptGenericDescPtr descriptorPtr3D, int batchSize)
+{
+    descriptorPtr3D->offsetInBytes = 0;
+    descriptorPtr3D->dataType = srcDescPtr->dataType;
+    descriptorPtr3D->layout = srcDescPtr->layout;
+    if(srcDescPtr->c == 3)
+    {
+        descriptorPtr3D->numDims = 4;
+        descriptorPtr3D->dims[0] = batchSize;
+        if (srcDescPtr->layout == RpptLayout::NHWC)
+        {
+            descriptorPtr3D->dims[1] = srcDescPtr->h;
+            descriptorPtr3D->dims[2] = srcDescPtr->w;
+            descriptorPtr3D->dims[3] = srcDescPtr->c;
+        }
+        else
+        {
+            descriptorPtr3D->dims[1] = srcDescPtr->c;
+            descriptorPtr3D->dims[2] = srcDescPtr->h;
+            descriptorPtr3D->dims[3] = srcDescPtr->w;
+        }
+        descriptorPtr3D->strides[0] = descriptorPtr3D->dims[1] * descriptorPtr3D->dims[2] * descriptorPtr3D->dims[3];
+        descriptorPtr3D->strides[1] = descriptorPtr3D->dims[2] * descriptorPtr3D->dims[3];
+        descriptorPtr3D->strides[2] = descriptorPtr3D->dims[3];
+    }
+    else
+    {
+        descriptorPtr3D->numDims = 3;
+        descriptorPtr3D->dims[0] = batchSize;
+        descriptorPtr3D->dims[1] = srcDescPtr->h;
+        descriptorPtr3D->dims[2] = srcDescPtr->w;
+        descriptorPtr3D->strides[0] = descriptorPtr3D->dims[1] * descriptorPtr3D->dims[2];
+        descriptorPtr3D->strides[1] = descriptorPtr3D->dims[2];
+    }
 }
 
 // sets descriptor dimensions and strides of src/dst
@@ -850,7 +912,7 @@ inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, vector
         fseek(fp, 0, SEEK_END);
         long jpegSize = ftell(fp);
         rewind(fp);
-        unsigned char* jpegBuf = (unsigned char*)malloc(jpegSize);
+        unsigned char* jpegBuf = (unsigned char*)calloc(jpegSize, sizeof(Rpp8u));
         fread(jpegBuf, 1, jpegSize, fp);
         fclose(fp);
 
@@ -863,14 +925,14 @@ inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, vector
         if(descPtr->c == 3)
         {
             elementsInRow = width * descPtr->c;
-            rgbBuf= (Rpp8u*)malloc(width * height * 3);
+            rgbBuf= (Rpp8u*)calloc(width * height * 3, sizeof(Rpp8u));
             if(tjDecompress2(m_jpegDecompressor, jpegBuf, jpegSize, rgbBuf, width, width * 3, height, TJPF_RGB, TJFLAG_ACCURATEDCT) != 0)
                 std::cerr << "\n Jpeg image decode failed ";
         }
         else
         {
             elementsInRow = width;
-            rgbBuf= (Rpp8u*)malloc(width * height);
+            rgbBuf= (Rpp8u*)calloc(width * height, sizeof(Rpp8u));
             if(tjDecompress2(m_jpegDecompressor, jpegBuf, jpegSize, rgbBuf, width, width, height, TJPF_GRAY, 0) != 0)
                 std::cerr << "\n Jpeg image decode failed ";
         }
@@ -896,12 +958,18 @@ inline void read_bin_file(string refFile, T *binaryContent)
     FILE *fp;
     fp = fopen(refFile.c_str(), "rb");
     if(!fp)
-        std::cerr << "\n unable to open file : "<<refFile;
+    {
+        std::cout << "\n unable to open file : "<<refFile;
+        exit(0);
+    }
 
     fseek(fp, 0, SEEK_END);
     long fsize = ftell(fp);
     if (fsize == 0)
-        std::cerr << "File is empty";
+    {
+        std::cout << "File is empty";
+        exit(0);
+    }
 
     fseek(fp, 0, SEEK_SET);
     fread(binaryContent, fsize, 1, fp);
@@ -1031,8 +1099,17 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
 {
     string func = funcName;
     string refFile = "";
-    int refOutputWidth = ((GOLDEN_OUTPUT_MAX_WIDTH / 8) * 8) + 8;    // obtain next multiple of 8 after GOLDEN_OUTPUT_MAX_WIDTH
-    int refOutputHeight = GOLDEN_OUTPUT_MAX_HEIGHT;
+    int refOutputWidth, refOutputHeight;
+    if(testCase == 26)
+    {
+        refOutputWidth = ((LENS_CORRECTION_GOLDEN_OUTPUT_MAX_WIDTH / 8) * 8) + 8;    // obtain next multiple of 8 after GOLDEN_OUTPUT_MAX_WIDTH
+        refOutputHeight = LENS_CORRECTION_GOLDEN_OUTPUT_MAX_HEIGHT;
+    }
+    else
+    {
+        refOutputWidth = ((GOLDEN_OUTPUT_MAX_WIDTH / 8) * 8) + 8;    // obtain next multiple of 8 after GOLDEN_OUTPUT_MAX_WIDTH
+        refOutputHeight = GOLDEN_OUTPUT_MAX_HEIGHT;
+    }
     int refOutputSize = refOutputHeight * refOutputWidth * dstDescPtr->c;
     Rpp64u binOutputSize = refOutputHeight * refOutputWidth * dstDescPtr->n * 4;
     int pln1RefStride = dstDescPtr->strides.nStride * dstDescPtr->n * 3;
@@ -1069,7 +1146,7 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
                 func += "Tensor_PLN1";
         }
     }
-    if(testCase == 21 ||testCase == 23 || testCase == 24)
+    if(testCase == 21 ||testCase == 23 || testCase == 24 || testCase == 79)
     {
         func += "_interpolationType" + interpolationTypeName;
         binFile += "_interpolationType" + interpolationTypeName;
@@ -1139,19 +1216,18 @@ inline void compare_reduction_output(T* output, string funcName, RpptDescPtr src
     int matched_values = 0;
 
     T *refOutput;
-    refOutput = (T *)calloc(srcDescPtr->n * 4, sizeof(T));
     int numChannels = (srcDescPtr->c == 1) ? 1 : 3;
     int numOutputs = (srcDescPtr->c == 1) ? srcDescPtr->n : srcDescPtr->n * 4;
-    std::vector<int> ref;
     if(testCase == 88)
-        ref = TensorMinReferenceOutputs[numChannels];
+        refOutput = reinterpret_cast<T*>(TensorMinReferenceOutputs[numChannels].data());
     else if(testCase == 89)
-        ref = TensorMaxReferenceOutputs[numChannels];
+        refOutput = reinterpret_cast<T*>(TensorMaxReferenceOutputs[numChannels].data());
     else if(testCase == 87)
-        ref = TensorSumReferenceOutputs[numChannels];
-
-    for (int i = 0; i < numOutputs; i++)
-        refOutput[i] = (T)ref[i];
+        refOutput = reinterpret_cast<T*>(TensorSumReferenceOutputs[numChannels].data());
+    else if(testCase == 90)
+        refOutput = reinterpret_cast<T*>(TensorMeanReferenceOutputs[numChannels].data());
+    else if(testCase == 91)
+        refOutput = reinterpret_cast<T*>(TensorStddevReferenceOutputs[numChannels].data());
 
     if(srcDescPtr->c == 1)
     {
@@ -1177,7 +1253,6 @@ inline void compare_reduction_output(T* output, string funcName, RpptDescPtr src
                 fileMatch++;
         }
     }
-    free(refOutput);
 
     std::cout << std::endl << "Results for " << func << " :" << std::endl;
     std::string status = func + ": ";
@@ -1296,4 +1371,195 @@ void inline init_ricap(int width, int height, int batchSize, Rpp32u *permutation
     roiPtrInputCropRegion[1].xywhROI = {randrange(0, part0Width - 8), randrange(0, height - part0Height), width - part0Width, part0Height};
     roiPtrInputCropRegion[2].xywhROI = {randrange(0, width - part0Width - 8), randrange(0, part0Height), part0Width, height - part0Height};
     roiPtrInputCropRegion[3].xywhROI = {randrange(0, part0Width - 8), randrange(0, part0Height), width - part0Width, height - part0Height};
+}
+
+void inline init_remap(RpptDescPtr tableDescPtr, RpptDescPtr srcDescPtr, RpptROIPtr roiTensorPtrSrc, Rpp32f *rowRemapTable, Rpp32f *colRemapTable)
+{
+    tableDescPtr->c = 1;
+    tableDescPtr->strides.nStride = srcDescPtr->h * srcDescPtr->w;
+    tableDescPtr->strides.hStride = srcDescPtr->w;
+    tableDescPtr->strides.wStride = tableDescPtr->strides.cStride = 1;
+    Rpp32u batchSize = srcDescPtr->n;
+
+    for (Rpp32u count = 0; count < batchSize; count++)
+    {
+        Rpp32f *rowRemapTableTemp, *colRemapTableTemp;
+        rowRemapTableTemp = rowRemapTable + count * tableDescPtr->strides.nStride;
+        colRemapTableTemp = colRemapTable + count * tableDescPtr->strides.nStride;
+        Rpp32u halfWidth = roiTensorPtrSrc[count].xywhROI.roiWidth / 2;
+        for (Rpp32u i = 0; i < roiTensorPtrSrc[count].xywhROI.roiHeight; i++)
+        {
+            Rpp32f *rowRemapTableTempRow, *colRemapTableTempRow;
+            rowRemapTableTempRow = rowRemapTableTemp + i * tableDescPtr->strides.hStride;
+            colRemapTableTempRow = colRemapTableTemp + i * tableDescPtr->strides.hStride;
+            Rpp32u j = 0;
+            for (; j < halfWidth; j++)
+            {
+                *rowRemapTableTempRow = i;
+                *colRemapTableTempRow = halfWidth - j;
+
+                rowRemapTableTempRow++;
+                colRemapTableTempRow++;
+            }
+            for (; j < roiTensorPtrSrc[count].xywhROI.roiWidth; j++)
+            {
+                *rowRemapTableTempRow = i;
+                *colRemapTableTempRow = j;
+
+                rowRemapTableTempRow++;
+                colRemapTableTempRow++;
+            }
+        }
+    }
+}
+
+// initialize the roi, anchor and shape values required for slice
+void init_slice(RpptGenericDescPtr descriptorPtr3D, RpptROIPtr roiPtrSrc, Rpp32u *roiTensor, Rpp32s *anchorTensor, Rpp32s *shapeTensor)
+{
+    if(descriptorPtr3D->numDims == 4)
+    {
+        if (descriptorPtr3D->layout == RpptLayout::NCHW)
+        {
+            for(int i = 0; i < descriptorPtr3D->dims[0]; i++)
+            {
+                int idx1 = i * 3;
+                int idx2 = i * 6;
+                roiTensor[idx2] = anchorTensor[idx1] = 0;
+                roiTensor[idx2 + 1] = anchorTensor[idx1 + 1] = roiPtrSrc[i].xywhROI.xy.y;
+                roiTensor[idx2 + 2] = anchorTensor[idx1 + 2] = roiPtrSrc[i].xywhROI.xy.x;
+                roiTensor[idx2 + 3] = descriptorPtr3D->dims[1];
+                roiTensor[idx2 + 4] = roiPtrSrc[i].xywhROI.roiHeight;
+                roiTensor[idx2 + 5] = roiPtrSrc[i].xywhROI.roiWidth;
+                shapeTensor[idx1] = roiTensor[idx2 + 3];
+                shapeTensor[idx1 + 1] = roiTensor[idx2 + 4] / 2;
+                shapeTensor[idx1 + 2] = roiTensor[idx2 + 5] / 2;
+            }
+        }
+        else if(descriptorPtr3D->layout == RpptLayout::NHWC)
+        {
+            for(int i = 0; i < descriptorPtr3D->dims[0]; i++)
+            {
+                int idx1 = i * 3;
+                int idx2 = i * 6;
+                roiTensor[idx2] = anchorTensor[idx1] = roiPtrSrc[i].xywhROI.xy.y;
+                roiTensor[idx2 + 1] = anchorTensor[idx1 + 1] = roiPtrSrc[i].xywhROI.xy.x;
+                roiTensor[idx2 + 2] = anchorTensor[idx1 + 2] = 0;
+                roiTensor[idx2 + 3] = roiPtrSrc[i].xywhROI.roiHeight;
+                roiTensor[idx2 + 4] = roiPtrSrc[i].xywhROI.roiWidth;
+                roiTensor[idx2 + 5] = descriptorPtr3D->dims[3];
+                shapeTensor[idx1] = roiTensor[idx2 + 3] / 2;
+                shapeTensor[idx1 + 1] = roiTensor[idx2 + 4] / 2;
+                shapeTensor[idx1 + 2] = roiTensor[idx2 + 5];
+            }
+        }
+    }
+    if(descriptorPtr3D->numDims == 3)
+    {
+        for(int i = 0; i < descriptorPtr3D->dims[0]; i++)
+        {
+            int idx1 = i * 2;
+            int idx2 = i * 4;
+            roiTensor[idx2] = anchorTensor[idx1] = roiPtrSrc[i].xywhROI.xy.y;
+            roiTensor[idx2 + 1] = anchorTensor[idx1 + 1] = roiPtrSrc[i].xywhROI.xy.x;
+            roiTensor[idx2 + 2] = roiPtrSrc[i].xywhROI.roiHeight;
+            roiTensor[idx2 + 3] = roiPtrSrc[i].xywhROI.roiWidth;
+            shapeTensor[idx1] = roiTensor[idx2 + 2] / 2;
+            shapeTensor[idx1 + 1] = roiTensor[idx2 + 3] / 2;
+        }
+    }
+}
+
+// Erase Region initializer for unit and performance testing
+void inline init_erase(int batchSize, int boxesInEachImage, Rpp32u* numOfBoxes, RpptRoiLtrb* anchorBoxInfoTensor, RpptROIPtr roiTensorPtrSrc, int channels, Rpp32f *colorBuffer, int inputBitDepth)
+{
+    Rpp8u *colors8u = reinterpret_cast<Rpp8u *>(colorBuffer);
+    Rpp16f *colors16f = reinterpret_cast<Rpp16f *>(colorBuffer);
+    Rpp32f *colors32f = colorBuffer;
+    Rpp8s *colors8s = reinterpret_cast<Rpp8s *>(colorBuffer);
+    for(int i = 0; i < batchSize; i++)
+    {
+        numOfBoxes[i] = boxesInEachImage;
+        int idx = boxesInEachImage * i;
+
+        anchorBoxInfoTensor[idx].lt.x = 0.125 * roiTensorPtrSrc[i].xywhROI.roiWidth;
+        anchorBoxInfoTensor[idx].lt.y = 0.125 * roiTensorPtrSrc[i].xywhROI.roiHeight;
+        anchorBoxInfoTensor[idx].rb.x = 0.375 * roiTensorPtrSrc[i].xywhROI.roiWidth;
+        anchorBoxInfoTensor[idx].rb.y = 0.375 * roiTensorPtrSrc[i].xywhROI.roiHeight;
+
+        idx++;
+        anchorBoxInfoTensor[idx].lt.x = 0.125 * roiTensorPtrSrc[i].xywhROI.roiWidth;
+        anchorBoxInfoTensor[idx].lt.y = 0.625 * roiTensorPtrSrc[i].xywhROI.roiHeight;
+        anchorBoxInfoTensor[idx].rb.x = 0.875 * roiTensorPtrSrc[i].xywhROI.roiWidth;
+        anchorBoxInfoTensor[idx].rb.y = 0.875 * roiTensorPtrSrc[i].xywhROI.roiHeight;
+
+        idx++;
+        anchorBoxInfoTensor[idx].lt.x = 0.75 * roiTensorPtrSrc[i].xywhROI.roiWidth;
+        anchorBoxInfoTensor[idx].lt.y = 0.125 * roiTensorPtrSrc[i].xywhROI.roiHeight;
+        anchorBoxInfoTensor[idx].rb.x = 0.875 * roiTensorPtrSrc[i].xywhROI.roiWidth;
+        anchorBoxInfoTensor[idx].rb.y = 0.5 * roiTensorPtrSrc[i].xywhROI.roiHeight;
+
+        if(channels == 3)
+        {
+            int idx = boxesInEachImage * 3 * i;
+            colorBuffer[idx] = 0;
+            colorBuffer[idx + 1] = 0;
+            colorBuffer[idx + 2] = 240;
+            colorBuffer[idx + 3] = 0;
+            colorBuffer[idx + 4] = 240;
+            colorBuffer[idx + 5] = 0;
+            colorBuffer[idx + 6] = 240;
+            colorBuffer[idx + 7] = 0;
+            colorBuffer[idx + 8] = 0;
+            for (int j = 0; j < 9; j++)
+            {
+                if (!inputBitDepth)
+                    colors8u[idx + j] = (Rpp8u)(colorBuffer[idx + j]);
+                else if (inputBitDepth == 1)
+                    colors16f[idx + j] = (Rpp16f)(colorBuffer[idx + j] * ONE_OVER_255);
+                else if (inputBitDepth == 2)
+                    colors32f[idx + j] = (Rpp32f)(colorBuffer[idx + j] * ONE_OVER_255);
+                else if (inputBitDepth == 5)
+                    colors8s[idx + j] = (Rpp8s)(colorBuffer[idx + j] - 128);
+            }
+        }
+        else
+        {
+            int idx = boxesInEachImage * i;
+            colorBuffer[idx] = 240;
+            colorBuffer[idx + 1] = 120;
+            colorBuffer[idx + 2] = 60;
+            for (int j = 0; j < 3; j++)
+            {
+                if (!inputBitDepth)
+                    colors8u[idx + j] = (Rpp8u)(colorBuffer[idx + j]);
+                else if (inputBitDepth == 1)
+                    colors16f[idx + j] = (Rpp16f)(colorBuffer[idx + j] * ONE_OVER_255);
+                else if (inputBitDepth == 2)
+                    colors32f[idx + j] = (Rpp32f)(colorBuffer[idx + j] * ONE_OVER_255);
+                else if (inputBitDepth == 5)
+                    colors8s[idx + j] = (Rpp8s)(colorBuffer[idx + j] - 128);
+            }
+        }
+    }
+}
+
+// Lens correction initializer for unit and performance testing
+void inline init_lens_correction(int batchSize, RpptDescPtr srcDescPtr, Rpp32f *cameraMatrix, Rpp32f *distortionCoeffs, RpptDescPtr tableDescPtr)
+{
+    typedef struct { Rpp32f data[9]; } Rpp32f9;
+    typedef struct { Rpp32f data[8]; } Rpp32f8;
+    Rpp32f9 *cameraMatrix_f9 = reinterpret_cast<Rpp32f9 *>(cameraMatrix);
+    Rpp32f8 *distortionCoeffs_f8 = reinterpret_cast<Rpp32f8 *>(distortionCoeffs);
+    Rpp32f9 sampleCameraMatrix = {534.07088364, 0, 341.53407554, 0, 534.11914595, 232.94565259, 0, 0, 1};
+    Rpp32f8 sampleDistortionCoeffs = {-0.29297164, 0.10770696, 0.00131038, -0.0000311, 0.0434798, 0, 0, 0};
+    for (int i = 0; i < batchSize; i++)
+    {
+        cameraMatrix_f9[i] = sampleCameraMatrix;
+        distortionCoeffs_f8[i] = sampleDistortionCoeffs;
+    }
+
+    tableDescPtr->c = 1;
+    tableDescPtr->strides.nStride = srcDescPtr->h * srcDescPtr->w;
+    tableDescPtr->strides.hStride = srcDescPtr->w;
+    tableDescPtr->strides.wStride = tableDescPtr->strides.cStride = 1;
 }
