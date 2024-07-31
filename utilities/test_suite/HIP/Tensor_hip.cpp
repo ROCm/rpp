@@ -417,7 +417,7 @@ int main(int argc, char **argv)
 
     void *d_interDstPtr;
     if(testCase == 5)
-        CHECK(hipHostMalloc(&d_interDstPtr, srcDescPtr->strides.nStride * srcDescPtr->n * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&d_interDstPtr, srcDescPtr->strides.nStride * srcDescPtr->n * sizeof(Rpp32f)));
 
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
@@ -578,7 +578,7 @@ int main(int argc, char **argv)
 
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_pixelate_host(d_input, srcDescPtr, d_output, dstDescPtr, d_interDstPtr, pixelationPercentage, roiTensorPtrSrc, roiTypeSrc, handle);
+                        rppt_pixelate_gpu(d_input, srcDescPtr, d_output, dstDescPtr, d_interDstPtr, pixelationPercentage, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
