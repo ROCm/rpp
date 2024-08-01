@@ -25,11 +25,6 @@ SOFTWARE.
 #include "rpp_test_suite_common.h"
 #include <iomanip>
 #include <vector>
-#include <half/half.hpp>
-
-using half_float::half;
-using namespace std;
-typedef half Rpp16f;
 
 // Include this header file to use functions from libsndfile
 #include <sndfile.h>
@@ -57,7 +52,7 @@ std::map<string, std::vector<int>> NonSilentRegionReferenceOutputs =
 // sets descriptor dimensions and strides of src/dst
 inline void set_audio_descriptor_dims_and_strides(RpptDescPtr descPtr, int batchSize, int maxHeight, int maxWidth, int maxChannels, int offsetInBytes)
 {
-    descPtr->numDims = 4;
+    descPtr->numDims = 2;
     descPtr->offsetInBytes = offsetInBytes;
     descPtr->n = batchSize;
     descPtr->h = maxHeight;
@@ -75,7 +70,7 @@ inline void set_audio_descriptor_dims_and_strides(RpptDescPtr descPtr, int batch
 // sets descriptor dimensions and strides of src/dst
 inline void set_audio_descriptor_dims_and_strides_nostriding(RpptDescPtr descPtr, int batchSize, int maxHeight, int maxWidth, int maxChannels, int offsetInBytes)
 {
-    descPtr->numDims = 4;
+    descPtr->numDims = 2;
     descPtr->offsetInBytes = offsetInBytes;
     descPtr->n = batchSize;
     descPtr->h = maxHeight;

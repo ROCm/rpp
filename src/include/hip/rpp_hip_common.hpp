@@ -1944,7 +1944,8 @@ __device__ __forceinline__ float rpp_hip_rng_xorwow_f32(T *xorwowState)
     return  outFloat - 1;                                                                           // return 0 <= outFloat < 1
 }
 
-__device__ __forceinline__ void rpp_hip_rng_8_xorwow_f32(RpptXorwowState *xorwowState, d_float8 *randomNumbersPtr_f8)
+template<typename T>
+__device__ __forceinline__ void rpp_hip_rng_8_xorwow_f32(T *xorwowState, d_float8 *randomNumbersPtr_f8)
 {
     randomNumbersPtr_f8->f1[0] = rpp_hip_rng_xorwow_f32(xorwowState);
     randomNumbersPtr_f8->f1[1] = rpp_hip_rng_xorwow_f32(xorwowState);
