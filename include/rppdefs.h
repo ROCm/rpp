@@ -64,6 +64,7 @@ SOFTWARE.
 const float ONE_OVER_6 = 1.0f / 6;
 const float ONE_OVER_3 = 1.0f / 3;
 const float ONE_OVER_255 = 1.0f / 255;
+const uint MMS_MAX_SCRATCH_MEMORY = 76800000; // maximum scratch memory size (number of floats) needed for MMS buffer in RNNT training
 
 /******************** RPP typedefs ********************/
 
@@ -136,7 +137,13 @@ typedef enum
     /*! \brief src and dst layout mismatch \ingroup group_rppdefs */
     RPP_ERROR_LAYOUT_MISMATCH           = -18,
     /*! \brief Number of channels is invalid. (Needs to adhere to function specification.) \ingroup group_rppdefs */
-    RPP_ERROR_INVALID_CHANNELS          = -19
+    RPP_ERROR_INVALID_CHANNELS          = -19,
+    /*! \brief Invalid output tile length (Needs to adhere to function specification.) \ingroup group_rppdefs */
+    RPP_ERROR_INVALID_OUTPUT_TILE_LENGTH    = -20,
+    /*! \brief Shared memory size needed is beyond the bounds (Needs to adhere to function specification.) \ingroup group_rppdefs */
+    RPP_ERROR_OUT_OF_BOUND_SHARED_MEMORY_SIZE    = -21,
+    /*! \brief Scratch memory size needed is beyond the bounds (Needs to adhere to function specification.) \ingroup group_rppdefs */
+    RPP_ERROR_OUT_OF_BOUND_SCRATCH_MEMORY_SIZE    = -22,
 } RppStatus;
 
 /*! \brief RPP rppStatus_t type enums
