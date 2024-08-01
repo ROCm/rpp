@@ -468,8 +468,8 @@ RppStatus rppt_vignette_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t ds
 /*! \brief  Gaussian noise augmentation on HOST backend
  * \details This function adds gaussian noise to a batch of 4D tensors.
  *          Support added for u8 -> u8, f32 -> f32 datatypes.
- * \image html input150x150x4.gif Sample Input
- * \image html effects_augmentations_gaussian_noise_150x150x4.gif Sample Output
+ * \image html https://raw.githubusercontent.com/ROCm/rpp/develop/docs/data/doxygenInputs/input150x150x4.gif Sample Input
+ * \image html https://raw.githubusercontent.com/ROCm/rpp/develop/docs/data/doxygenOutputs/effects_augmentations_gaussian_noise_150x150x4.gif Sample Output
  * \param [in] srcPtr source tensor in HOST memory
  * \param [in] srcGenericDescPtr source tensor descriptor
  * \param [out] dstPtr destination tensor in HOST memory
@@ -490,8 +490,8 @@ RppStatus rppt_gaussian_noise_voxel_host(RppPtr_t srcPtr, RpptGenericDescPtr src
 /*! \brief  Gaussian noise augmentation on HIP backend
  * \details This function adds gaussian noise to a batch of 4D tensors.
  *          Support added for u8 -> u8, f32 -> f32 datatypes.
- * \image html input150x150x4.gif Sample Input
- * \image html effects_augmentations_gaussian_noise_150x150x4.gif Sample Output
+ * \image html https://raw.githubusercontent.com/ROCm/rpp/develop/docs/data/doxygenInputs/input150x150x4.gif Sample Input
+ * \image html https://raw.githubusercontent.com/ROCm/rpp/develop/docs/data/doxygenOutputs/effects_augmentations_gaussian_noise_150x150x4.gif Sample Output
  * \param [in] srcPtr source tensor in HIP memory
  * \param [in] srcGenericDescPtr source tensor descriptor
  * \param [out] dstPtr destination tensor in HIP memory
