@@ -136,7 +136,8 @@ int main(int argc, char **argv)
 
     // allocate the buffer for srcDimsTensor
     Rpp32s *srcDimsTensor;
-    CHECK_RETURN_STATUS(hipHostMalloc(&srcDimsTensor, batchSize * 2 * sizeof(Rpp32s)));
+    if(testCase == 3)
+        CHECK_RETURN_STATUS(hipHostMalloc(&srcDimsTensor, batchSize * 2 * sizeof(Rpp32s)));
 
     Rpp32s *detectedIndex = nullptr, *detectionLength = nullptr;
     if(testCase == 0)
@@ -176,6 +177,24 @@ int main(int argc, char **argv)
 
                     startWallTime = omp_get_wtime();
                     rppt_non_silent_region_detection_gpu(d_inputf32, srcDescPtr, srcLengthTensor, detectedIndex, detectionLength, cutOffDB, windowLength, referencePower, resetInterval, handle);
+
+                    break;
+                }
+                case 1:
+                {
+                    testCaseName = "to_decibels";
+                    Rpp32f cutOffDB = std::log(1e-20);
+                    Rpp32f multiplier = std::log(10);
+                    Rpp32f referenceMagnitude = 1.0f;
+
+                    for (int i = 0; i < batchSize; i++)
+                    {
+                        srcDims[i].height = dstDims[i].height = srcLengthTensor[i];
+                        srcDims[i].width = dstDims[i].width = 1;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    rppt_to_decibels_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcDims, cutOffDB, multiplier, referenceMagnitude, handle);
 
                     break;
                 }
@@ -270,8 +289,8 @@ int main(int argc, char **argv)
     CHECK_RETURN_STATUS(hipHostFree(channelsTensor));
     CHECK_RETURN_STATUS(hipHostFree(srcDims));
     CHECK_RETURN_STATUS(hipHostFree(dstDims));
-    CHECK_RETURN_STATUS(hipHostFree(srcDimsTensor));
-
+    if(testCase == 3)
+        CHECK_RETURN_STATUS(hipHostFree(srcDimsTensor));
     if (detectedIndex != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(detectedIndex));
     if (detectionLength != nullptr)
