@@ -106,7 +106,10 @@ int main(int argc, char **argv)
     set_audio_descriptor_dims_and_strides(srcDescPtr, batchSize, maxSrcHeight, maxSrcWidth, maxSrcChannels, offsetInBytes);
     int maxDstChannels = maxSrcChannels;
     if(testCase == 3)
+    {
+        srcDescPtr->numDims = 3;
         maxDstChannels = 1;
+    }
     set_audio_descriptor_dims_and_strides(dstDescPtr, batchSize, maxDstHeight, maxDstWidth, maxDstChannels, offsetInBytes);
 
     // set buffer sizes for src/dst
@@ -130,6 +133,11 @@ int main(int argc, char **argv)
     RpptImagePatch *srcDims, *dstDims;
     CHECK_RETURN_STATUS(hipHostMalloc(&srcDims, batchSize * sizeof(RpptImagePatch)));
     CHECK_RETURN_STATUS(hipHostMalloc(&dstDims, batchSize * sizeof(RpptImagePatch)));
+
+    // allocate the buffer for srcDimsTensor
+    Rpp32s *srcDimsTensor;
+    if(testCase == 3)
+        CHECK_RETURN_STATUS(hipHostMalloc(&srcDimsTensor, batchSize * 2 * sizeof(Rpp32s)));
 
     Rpp32s *detectedIndex = nullptr, *detectionLength = nullptr;
     if(testCase == 0)
@@ -187,6 +195,24 @@ int main(int argc, char **argv)
 
                     startWallTime = omp_get_wtime();
                     rppt_to_decibels_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcDims, cutOffDB, multiplier, referenceMagnitude, handle);
+
+                    break;
+                }
+                case 3:
+                {
+                    testCaseName = "down_mixing";
+                    bool normalizeWeights = false;
+
+                    for (int i = 0, j = 0; i < batchSize; i++, j += 2)
+                    {
+                        srcDimsTensor[j] = srcLengthTensor[i];
+                        srcDimsTensor[j + 1] = channelsTensor[i];
+                        dstDims[i].height = srcLengthTensor[i];
+                        dstDims[i].width = 1;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    rppt_down_mixing_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcDimsTensor, normalizeWeights, handle);
 
                     break;
                 }
@@ -263,6 +289,8 @@ int main(int argc, char **argv)
     CHECK_RETURN_STATUS(hipHostFree(channelsTensor));
     CHECK_RETURN_STATUS(hipHostFree(srcDims));
     CHECK_RETURN_STATUS(hipHostFree(dstDims));
+    if(testCase == 3)
+        CHECK_RETURN_STATUS(hipHostFree(srcDimsTensor));
     if (detectedIndex != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(detectedIndex));
     if (detectionLength != nullptr)
