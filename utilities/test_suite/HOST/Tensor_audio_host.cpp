@@ -106,7 +106,10 @@ int main(int argc, char **argv)
     set_audio_descriptor_dims_and_strides(srcDescPtr, batchSize, maxSrcHeight, maxSrcWidth, maxSrcChannels, offsetInBytes);
     int maxDstChannels = maxSrcChannels;
     if(testCase == 3)
+    {
+        srcDescPtr->numDims = 3;
         maxDstChannels = 1;
+    }
     set_audio_descriptor_dims_and_strides(dstDescPtr, batchSize, maxDstHeight, maxDstWidth, maxDstChannels, offsetInBytes);
 
     // create generic descriptor in case of slice

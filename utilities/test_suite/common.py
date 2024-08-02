@@ -35,12 +35,6 @@ except ImportError:
     # Python 2 compatibility
     FileExistsError = OSError
 
-try:
-    from errno import FileExistsError
-except ImportError:
-    # Python 2 compatibility
-    FileExistsError = OSError
-
 imageAugmentationMap = {
     0: ["brightness", "HOST", "HIP"],
     1: ["gamma_correction", "HOST", "HIP"],
