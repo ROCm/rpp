@@ -26,6 +26,8 @@ SOFTWARE.
 #define HIP_TENSOR_AUDIO_AUGMENTATIONS_HPP
 
 #include "kernel/non_silent_region_detection.hpp"
+#include "kernel/down_mixing.hpp"
+#include "kernel/to_decibels.hpp"
 #include "kernel/resample.hpp"
 
 #endif // HIP_TENSOR_AUDIO_AUGMENTATIONS_HPP

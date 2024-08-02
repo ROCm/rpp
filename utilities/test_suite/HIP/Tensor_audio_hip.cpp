@@ -106,7 +106,10 @@ int main(int argc, char **argv)
     set_audio_descriptor_dims_and_strides(srcDescPtr, batchSize, maxSrcHeight, maxSrcWidth, maxSrcChannels, offsetInBytes);
     int maxDstChannels = maxSrcChannels;
     if(testCase == 3)
+    {
+        srcDescPtr->numDims = 3;
         maxDstChannels = 1;
+    }
     set_audio_descriptor_dims_and_strides(dstDescPtr, batchSize, maxDstHeight, maxDstWidth, maxDstChannels, offsetInBytes);
     // set buffer sizes for src/dst
     iBufferSize = static_cast<Rpp64u>(srcDescPtr->h) * static_cast<Rpp64u>(srcDescPtr->w) * static_cast<Rpp64u>(srcDescPtr->c) * static_cast<Rpp64u>(srcDescPtr->n);
@@ -179,6 +182,42 @@ int main(int argc, char **argv)
 
                     startWallTime = omp_get_wtime();
                     rppt_non_silent_region_detection_gpu(d_inputf32, srcDescPtr, srcLengthTensor, detectedIndex, detectionLength, cutOffDB, windowLength, referencePower, resetInterval, handle);
+
+                    break;
+                }
+                case 1:
+                {
+                    testCaseName = "to_decibels";
+                    Rpp32f cutOffDB = std::log(1e-20);
+                    Rpp32f multiplier = std::log(10);
+                    Rpp32f referenceMagnitude = 1.0f;
+
+                    for (int i = 0; i < batchSize; i++)
+                    {
+                        srcDims[i].height = dstDims[i].height = srcLengthTensor[i];
+                        srcDims[i].width = dstDims[i].width = 1;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    rppt_to_decibels_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcDims, cutOffDB, multiplier, referenceMagnitude, handle);
+
+                    break;
+                }
+                case 3:
+                {
+                    testCaseName = "down_mixing";
+                    bool normalizeWeights = false;
+
+                    for (int i = 0, j = 0; i < batchSize; i++, j += 2)
+                    {
+                        srcDimsTensor[j] = srcLengthTensor[i];
+                        srcDimsTensor[j + 1] = channelsTensor[i];
+                        dstDims[i].height = srcLengthTensor[i];
+                        dstDims[i].width = 1;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    rppt_down_mixing_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcDimsTensor, normalizeWeights, handle);
 
                     break;
                 }
