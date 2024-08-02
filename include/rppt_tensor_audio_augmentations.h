@@ -141,9 +141,9 @@ RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr,
 /*! \brief Down Mixing augmentation on HOST backend
 * \details Down Mixing augmentation for audio data
 * \param [in] srcPtr source tensor in HOST memory
-* \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
+* \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 2 or 3 (for single-channel or multi-channel audio tensor), offsetInBytes >= 0, dataType = F32)
 * \param [out] dstPtr destination tensor in HOST memory
-* \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
+* \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 2, offsetInBytes >= 0, dataType = F32)
 * \param [in] srcDimsTensor source audio buffer length and number of channels (1D tensor in HOST memory, of size batchSize * 2)
 * \param [in] normalizeWeights bool flag to specify if normalization of weights is needed
 * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
@@ -152,6 +152,23 @@ RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr,
 * \retval RPP_ERROR* Unsuccessful completion.
 */
 RppStatus rppt_down_mixing_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcDimsTensor, bool normalizeWeights, rppHandle_t rppHandle);
+
+#ifdef GPU_SUPPORT
+/*! \brief Down Mixing augmentation on HIP backend
+* \details Down Mixing augmentation for audio data
+* \param [in] srcPtr source tensor in HIP memory
+* \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 2 or 3 (for single-channel or multi-channel audio tensor), offsetInBytes >= 0, dataType = F32)
+* \param [out] dstPtr destination tensor in HIP memory
+* \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 2, offsetInBytes >= 0, dataType = F32)
+* \param [in] srcDimsTensor source audio buffer length and number of channels (1D tensor in HIP/Pinned memory, of size batchSize * 2)
+* \param [in] normalizeWeights bool flag to specify if normalization of weights is needed
+* \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+* \return A <tt> \ref RppStatus</tt> enumeration.
+* \retval RPP_SUCCESS Successful completion.
+* \retval RPP_ERROR* Unsuccessful completion.
+*/
+RppStatus rppt_down_mixing_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcDimsTensor, bool normalizeWeights, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
 
 /*! \brief Produces a spectrogram from a 1D audio buffer on HOST backend
  * \details Spectrogram for 1D audio buffer
