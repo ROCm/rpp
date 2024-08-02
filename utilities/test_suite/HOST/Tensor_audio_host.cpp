@@ -331,7 +331,6 @@ int main(int argc, char **argv)
                     Rpp32f quality = 50.0f;
                     Rpp32s lobes = std::round(0.007 * quality * quality - 0.09 * quality + 3);
                     Rpp32s lookupSize = lobes * 64 + 1;
-                    window.lookup = (Rpp32f *)malloc((lookupSize + 5) * sizeof(Rpp32f));
                     windowed_sinc(window, lookupSize, lobes);
 
                     dstDescPtr->w = maxDstWidth;
