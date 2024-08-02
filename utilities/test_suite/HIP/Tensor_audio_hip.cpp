@@ -146,7 +146,7 @@ int main(int argc, char **argv)
 
     // declare pointer of type RpptResamplingWindow used for resample augmentation
     Rpp32f *inRateTensor, *outRateTensor;
-    RpptResamplingWindow *window;
+    RpptResamplingWindow *window = nullptr;
     Rpp64u resampleBufferSize;
     CHECK_RETURN_STATUS(hipHostMalloc(&inRateTensor, batchSize * sizeof(Rpp32f)));
     CHECK_RETURN_STATUS(hipHostMalloc(&outRateTensor, batchSize * sizeof(Rpp32f)));
@@ -240,8 +240,11 @@ int main(int argc, char **argv)
                     Rpp32f quality = 50.0f;
                     Rpp32s lobes = std::round(0.007 * quality * quality - 0.09 * quality + 3);
                     Rpp32s lookupSize = lobes * 64 + 1;
-                    CHECK_RETURN_STATUS(hipHostMalloc(&window, sizeof(RpptResamplingWindow)));
-                    windowed_sinc(*window, lookupSize, lobes);
+                    if (window == nullptr)
+                    {
+                        CHECK_RETURN_STATUS(hipHostMalloc(&window, sizeof(RpptResamplingWindow)));
+                        windowed_sinc(*window, lookupSize, lobes);
+                    }
 
                     dstDescPtr->w = maxDstWidth;
                     dstDescPtr->strides.nStride = dstDescPtr->c * dstDescPtr->w * dstDescPtr->h;
@@ -341,9 +344,10 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostFree(detectedIndex));
     if (detectionLength != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(detectionLength));
-    if (testCase == 6)
+    if (window != nullptr)
     {
-        CHECK_RETURN_STATUS(hipHostFree(window->lookup));
+        if (window->lookup != nullptr)
+            CHECK_RETURN_STATUS(hipHostFree(window->lookup));
         CHECK_RETURN_STATUS(hipHostFree(window));
     }
 

@@ -767,7 +767,7 @@ inline void windowed_sinc(RpptResamplingWindow &window, Rpp32s coeffs, Rpp32s lo
     window.coeffs = coeffs;
     window.lobes = lobes;
     window.lookupSize = coeffs + 5;
-#ifdef HIP_COMPILE
+#ifdef GPU_SUPPORT
     CHECK_RETURN_STATUS(hipHostMalloc(&(window.lookup), window.lookupSize * sizeof(Rpp32f)));
 #else
     window.lookup = static_cast<Rpp32f *>(malloc(window.lookupSize * sizeof(Rpp32f)));
