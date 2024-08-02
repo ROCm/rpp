@@ -145,9 +145,6 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostMalloc(&detectedIndex, batchSize * sizeof(Rpp32f)));
         CHECK_RETURN_STATUS(hipHostMalloc(&detectionLength, batchSize * sizeof(Rpp32f)));
     }
-    // allocate the buffer for srcDimsTensor
-    Rpp32s *srcDimsTensor;
-    CHECK_RETURN_STATUS(hipHostMalloc(&srcDimsTensor, batchSize * 2 * sizeof(Rpp32s)));
 
     Rpp32f *coeff;
     if(testCase == 2)
@@ -272,8 +269,6 @@ int main(int argc, char **argv)
                 verify_output(outputf32, dstDescPtr, dstDims, testCaseName, dst, scriptPath, "HIP");
             else
                 verify_non_silent_region_detection(detectedIndex, detectionLength, testCaseName, batchSize, audioNames, dst);
-            else
-                verify_output(outputf32, dstDescPtr, dstDims, testCaseName, dst, scriptPath, "HIP");
 
             /* Dump the outputs to csv files for debugging
             Runs only if
@@ -312,7 +307,6 @@ int main(int argc, char **argv)
     CHECK_RETURN_STATUS(hipFree(d_outputf32));
     CHECK_RETURN_STATUS(hipHostFree(srcLengthTensor));
     CHECK_RETURN_STATUS(hipHostFree(channelsTensor));
-    CHECK_RETURN_STATUS(hipHostFree(srcDimsTensor));
     if(testCase == 2)
         CHECK_RETURN_STATUS(hipHostFree(coeff));
     CHECK_RETURN_STATUS(hipHostFree(srcDims));
