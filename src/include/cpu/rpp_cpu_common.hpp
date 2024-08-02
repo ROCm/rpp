@@ -31,7 +31,7 @@ SOFTWARE.
 #include <cstring>
 #include <rppdefs.h>
 #include <omp.h>
-#include <half/half.hpp>
+#include <half.hpp>
 using halfhpp = half_float::half;
 typedef halfhpp Rpp16f;
 #include "rpp_cpu_simd.hpp"

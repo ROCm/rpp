@@ -33,7 +33,7 @@ SOFTWARE.
 #include <math.h>
 #include <algorithm>
 #include <rppdefs.h>
-#include <half/half.hpp>
+#include <half.hpp>
 using half_float::half;
 typedef half Rpp16f;
 

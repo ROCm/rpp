@@ -27,7 +27,7 @@ SOFTWARE.
 
 #include "stdio.h"
 #include "rppdefs.h"
-#include <half/half.hpp>
+#include <half.hpp>
 using halfhpp = half_float::half;
 typedef halfhpp Rpp16f;
 

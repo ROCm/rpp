@@ -135,8 +135,9 @@ endif()
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 # Half
-find_package(HALF REQUIRED)
-include_directories(${HALF_INCLUDE_DIRS})
+find_path(HALF_INCLUDE_DIR half.hpp HINTS ${CMAKE_INSTALL_PREFIX}/include ${CMAKE_INSTALL_PREFIX}/include/half )
+message(STATUS "HALF_INCLUDE_DIR: ${HALF_INCLUDE_DIR}")
+include_directories(${HALF_INCLUDE_DIR})
 
 if (RPP_AUDIO_SUPPORT)
     add_definitions(-DAUDIO_SUPPORT)        # For compile flags in RPP
