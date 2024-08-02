@@ -136,11 +136,6 @@ int main(int argc, char **argv)
 
     // allocate the buffer for srcDimsTensor
     Rpp32s *srcDimsTensor;
-    if(testCase == 3)
-        CHECK_RETURN_STATUS(hipHostMalloc(&srcDimsTensor, batchSize * 2 * sizeof(Rpp32s)));
-
-    // allocate the buffer for srcDimsTensor
-    Rpp32s *srcDimsTensor;
     CHECK_RETURN_STATUS(hipHostMalloc(&srcDimsTensor, batchSize * 2 * sizeof(Rpp32s)));
 
     Rpp32s *detectedIndex = nullptr, *detectionLength = nullptr;
@@ -265,6 +260,7 @@ int main(int argc, char **argv)
 
                     // Set buffer sizes for src/dst
                     unsigned long long spectrogramBufferSize = (unsigned long long)dstDescPtr->h * (unsigned long long)dstDescPtr->w * (unsigned long long)dstDescPtr->c * (unsigned long long)dstDescPtr->n;
+                    oBufferSize = spectrogramBufferSize;
                     outputf32 = (Rpp32f *)realloc(outputf32, spectrogramBufferSize * sizeof(Rpp32f));
                     CHECK_RETURN_STATUS(hipFree(d_outputf32));
                     CHECK_RETURN_STATUS(hipMalloc(&d_outputf32, spectrogramBufferSize * sizeof(Rpp32f)));
