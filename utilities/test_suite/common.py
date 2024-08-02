@@ -386,9 +386,9 @@ def dataframe_to_markdown(df):
     # Create the header row
     md = '| ' + ' | '.join([col.ljust(column_widths[col]) for col in df.columns]) + ' |\n'
     md += '| ' + ' | '.join(['-' * column_widths[col] for col in df.columns]) + ' |\n'
-    
+
     # Create the data rows
     for i, row in df.iterrows():
         md += '| ' + ' | '.join([str(value).ljust(column_widths[df.columns[j]]) for j, value in enumerate(row.values)]) + ' |\n'
-    
+
     return md
