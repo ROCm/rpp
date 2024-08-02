@@ -1,16 +1,5 @@
 #include <hip/hip_runtime.h>
 #include "rpp_hip_common.hpp"
-#include "hipfft/hipfft.h"
-#include <iostream>
-#include <fstream>
-
-#define CHECK_HIPFFT_STATUS(x) do { \
-  int retval = (x); \
-  if (retval != HIPFFT_SUCCESS) { \
-    fprintf(stderr, "Runtime error: %s returned %d at %s:%d", #x, retval, __FILE__, __LINE__); \
-    exit(-1); \
-  } \
-} while (0)
 
 // -------------------- Set 0 -  spectrogram hip kernels --------------------
 

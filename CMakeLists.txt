@@ -236,13 +236,6 @@ if("${BACKEND}" STREQUAL "HIP")
     message("-- ${White}${PROJECT_NAME} -- AMDGPU_TARGETS: ${AMDGPU_TARGETS}${ColourReset}")
 
     find_package(HIP QUIET)
-    find_package(HIPFFT REQUIRED)
-    if (HIPFFT_FOUND)
-        message("-- ${Green}HIPFFT Found! Including directories")
-        include_directories(${HIPFFT_INCLUDE_DIRS})
-    else()
-        message("-- ${Red}HIPFFT not found! ${PROJECT_NAME}")
-    endif()
 
     if(HIP_FOUND)
         message("-- ${White}${PROJECT_NAME} -- Using HIP - Path:" ${HIP_PATH} "\tVersion:" ${HIP_VERSION} "\tCompiler:" ${HIP_COMPILER}${ColourReset})
@@ -257,8 +250,6 @@ if("${BACKEND}" STREQUAL "HIP")
         link_directories(${HIP_PATH}/${CMAKE_INSTALL_LIBDIR})
         # link To HIP Host library -- [hip::host] to use host API
         set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} hip::host)
-        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} hipfft)
-        set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} rocfft)
 
         # Add modules
         set(MODULES_LIST modules)
