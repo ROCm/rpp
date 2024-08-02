@@ -73,7 +73,7 @@ def generate_performance_reports(RESULTS_DIR):
     print(dfPrint_noIndices)
 
 def run_unit_test_cmd(srcPath, case, numRuns, testType, batchSize, outFilePath):
-    print("./Tensor_audio_hip " + srcPath + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(numRuns) + " " + str(batchSize))
+    print("\n./Tensor_audio_hip " + srcPath + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(numRuns) + " " + str(batchSize))
     result = subprocess.Popen([buildFolderPath + "/build/Tensor_audio_hip", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE)    # nosec
     stdout_data, stderr_data = result.communicate()
     print(stdout_data.decode())
@@ -101,13 +101,10 @@ def run_performance_test_with_profiler_cmd(loggingFolder, srcPath, case, numRuns
         print("------------------------------------------------------------------------------------------")
 
 def run_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath, profilingOption = "NO"):
-    print("\n\n\n\n")
-    print("--------------------------------")
-    print("Running a New Functionality...")
-    print("--------------------------------")
     if testType == 0:
         run_unit_test_cmd(srcPath, case, numRuns, testType, batchSize, outFilePath)
     elif testType == 1 and profilingOption == "NO":
+        print("\n")
         run_performance_test_cmd(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath)
     else:
         run_performance_test_with_profiler_cmd(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath)
@@ -237,6 +234,7 @@ for case in caseList:
             srcPath = inFilePath
 
     if case not in supportedCaseList:
+        print("\nCase " + case + " is not supported.")
         continue
     run_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath, profilingOption)
 

@@ -57,11 +57,11 @@ def func_group_finder(case_number):
         return "miscellaneous"
 
 def run_unit_test_cmd(headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
-    print("./Tensor_voxel_hip " + headerPath + " " + dataPath + " " + dstPathTemp + " " + str(layout) + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(qaMode) + " " + str(batchSize) + " " + str(bitDepth))
+    print("\n./Tensor_voxel_hip " + headerPath + " " + dataPath + " " + dstPathTemp + " " + str(layout) + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(qaMode) + " " + str(batchSize) + " " + str(bitDepth))
     result = subprocess.Popen([buildFolderPath + "/build/Tensor_voxel_hip", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE) # nosec
     stdout_data, stderr_data = result.communicate()
     print(stdout_data.decode())
-    print("------------------------------------------------------------------------------------------")
+    print("\n------------------------------------------------------------------------------------------")
 
 def run_performance_test_cmd(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
    with open(loggingFolder + "/Tensor_voxel_hip_" + logFileLayout + "_raw_performance_log.txt", "a") as logFile:
@@ -71,16 +71,17 @@ def run_performance_test_cmd(loggingFolder, logFileLayout, headerPath, dataPath,
             output = process.stdout.readline()
             if not output and process.poll() is not None:
                 break
-            output = output.decode().strip()  # Decode bytes to string and strip extra whitespace
-            print(output)
-            logFile.write(output)
+            output = output.decode('utf-8')
+            if output:
+                print(output, end='')
+                logFile.write(output)
             if "Running" in output or "max,min,avg wall times" in output:
                 cleanedOutput = ''.join(char for char in output if 32 <= ord(char) <= 126)  # Remove control characters
                 cleanedOutput = cleanedOutput.strip()  # Remove leading/trailing whitespace
                 logFile.write(cleanedOutput + '\n')
                 if "max,min,avg wall times" in output:
                     logFile.write("\n")
-        print("------------------------------------------------------------------------------------------")
+        print("\n------------------------------------------------------------------------------------------")
 
 def run_performance_test_with_profiler_cmd(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
     layoutName = get_layout_name(layout)
@@ -243,20 +244,12 @@ if testType == 1 and profilingOption == "YES":
     os.makedirs(dstPath + "/Tensor_PLN1")
     os.makedirs(dstPath + "/Tensor_PLN3")
 
-print("\n\n\n\n\n")
-print("##########################################################################################")
-print("Running all layout Inputs...")
-print("##########################################################################################")
-
 bitDepths = [0, 2]
 if (testType == 0 or (testType == 1 and profilingOption == "NO")):
     for case in caseList:
         if case not in supportedCaseList:
+            print("\nCase " + case + " is not supported.")
             continue
-        print("\n\n\n\n")
-        print("--------------------------------")
-        print("Running a New Functionality...")
-        print("--------------------------------")
         for layout in range(3):
             dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", func_group_finder)
             if testType == 0 and qaMode == 0:
@@ -267,13 +260,12 @@ if (testType == 0 or (testType == 1 and profilingOption == "NO")):
             if testType == 0 and qaMode:
                 bitDepths = [2]
             for bitDepth in bitDepths:
-                print("\n\n\nRunning New Bit Depth...\n-------------------------\n\n")
-                print("\n\n\n\n")
                 run_test(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize)
 elif (testType == 1 and profilingOption == "YES"):
     NEW_FUNC_GROUP_LIST = [0, 1]
     for case in caseList:
         if case not in supportedCaseList:
+            print("\nCase " + case + " is not supported.")
             continue
         for layout in range(3):
             dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", func_group_finder)

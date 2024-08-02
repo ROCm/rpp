@@ -267,9 +267,9 @@ def print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList):
 def print_performance_tests_summary(logFile, functionalityGroupList, numRuns):
     try:
         f = open(logFile, "r")
-        print("\n\n\nOpened log file -> "+ logFile)
+        print("\nOpened log file -> " + logFile)
     except IOError:
-        print("Skipping file -> "+ logFile)
+        print("Skipping file -> " + logFile)
         return
 
     stats = []
@@ -293,7 +293,7 @@ def print_performance_tests_summary(logFile, functionalityGroupList, numRuns):
 
         if "max,min,avg wall times in ms/batch" in line:
             splitWordStart = "Running "
-            splitWordEnd = " " +str(numRuns)
+            splitWordEnd = " " + str(numRuns)
             prevLine = prevLine.partition(splitWordStart)[2].partition(splitWordEnd)[0]
             if prevLine not in functions:
                 functions.append(prevLine)
@@ -310,15 +310,15 @@ def print_performance_tests_summary(logFile, functionalityGroupList, numRuns):
             prevLine = line
 
     # Print log lengths
-    print("Functionalities - "+ str(funcCount))
+    print("Functionalities - " + str(funcCount))
 
     # Print summary of log
-    print("\n\nFunctionality\t\t\t\t\t\tFrames Count\tmax(ms/batch)\t\tmin(ms/batch)\t\tavg(ms/batch)\n")
+    header_format = "{:<70} {:<15} {:<15} {:<15} {:<15}"
+    row_format = "{:<70} {:<15} {:<15} {:<15} {:<15}"
+    print("\n" + header_format.format("Functionality", "Frames Count", "max(ms/batch)", "min(ms/batch)", "avg(ms/batch)") + "\n")
     if len(functions) != 0:
-        maxCharLength = len(max(functions, key = len))
-        functions = [x + (' ' * (maxCharLength - len(x))) for x in functions]
         for i, func in enumerate(functions):
-            print(func + "\t" + str(frames[i]) + "\t\t" + str(maxVals[i]) + "\t" + str(minVals[i]) + "\t" + str(avgVals[i]))
+            print(row_format.format(func, str(frames[i]), str(maxVals[i]), str(minVals[i]), str(avgVals[i])))
     else:
         print("No variants under this category")
 
@@ -332,8 +332,9 @@ def read_from_subprocess_and_write_to_log(process, logFile):
         if not output and process.poll() is not None:
             break
         output = output.decode().strip()  # Decode bytes to string and strip extra whitespace
-        print(output)
-        logFile.write(output + '\n')
+        if output:
+            print(output)
+            logFile.write(output + '\n')
 
 # Returns the layout name based on layout value
 def get_layout_name(layout):

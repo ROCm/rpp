@@ -399,7 +399,12 @@ int main(int argc, char * argv[])
         CHECK_RETURN_STATUS(hipMemcpy(outputF32, d_outputF32, oBufferSizeInBytes, hipMemcpyDeviceToHost));
         if(testType == 0)
         {
-            cout << "\n\nGPU Backend Wall Time: " << wallTime <<" ms per batch"<< endl;
+            if(!qaFlag)
+            {
+                if(noOfIterations > 1)
+                    cout <<"\n\nExecution Timings for Iteration "<< iterCount+1 <<":"<<endl;
+                cout << "GPU Backend Wall Time: " << wallTime <<" ms per batch";
+            }
             if(DEBUG_MODE)
             {
                 std::ofstream refFile;

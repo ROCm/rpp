@@ -45,7 +45,7 @@ def get_log_file_list():
     ]
 
 def run_unit_test_cmd(srcPath, case, numRuns, testType, batchSize, outFilePath):
-    print("./Tensor_audio_host " + srcPath + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(numRuns) + " " + str(batchSize))
+    print("\n./Tensor_audio_host " + srcPath + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(numRuns) + " " + str(batchSize))
     result = subprocess.Popen([buildFolderPath + "/build/Tensor_audio_host", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE)    # nosec
     stdout_data, stderr_data = result.communicate()
     print(stdout_data.decode())
@@ -59,13 +59,10 @@ def run_performance_test_cmd(loggingFolder, srcPath, case, numRuns, testType, ba
         print("------------------------------------------------------------------------------------------")
 
 def run_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath):
-    print("\n\n\n\n")
-    print("--------------------------------")
-    print("Running a New Functionality...")
-    print("--------------------------------")
     if testType == 0:
         run_unit_test_cmd(srcPath, case, numRuns, testType, batchSize, outFilePath)
     elif testType == 1:
+        print("\n")
         run_performance_test_cmd(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath)
 
 # Parse and validate command-line arguments for the RPP test suite
@@ -189,6 +186,7 @@ for case in caseList:
             srcPath = inFilePath
 
     if case not in supportedCaseList:
+        print("\nCase " + case + " is not supported.")
         continue
     run_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath)
 
