@@ -202,8 +202,8 @@ RppStatus hip_exec_spectrogram_tensor(Rpp32f* srcPtr,
     // compute the sin and cos factors required for FFT
     Rpp32s numBins = (nfft / 2 + 1);
     Rpp32f *cosfTensor, *sinfTensor;
-    CHECK_RETURN_STATUS(hipMalloc(&cosfTensor, nfft * numBins * sizeof(Rpp32f)));
-    CHECK_RETURN_STATUS(hipMalloc(&sinfTensor, nfft * numBins * sizeof(Rpp32f)));
+    cosfTensor = windowOutput + dstDescPtr->n * windowOutputStride;
+    sinfTensor = cosfTensor + (nfft * numBins);
     hipLaunchKernelGGL(compute_coefficients_hip_tensor,
                        dim3(ceil((float)nfft/LOCAL_THREADS_X), ceil((float)numBins/LOCAL_THREADS_Y), ceil((float)1/LOCAL_THREADS_Z)),
                        dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
@@ -230,9 +230,6 @@ RppStatus hip_exec_spectrogram_tensor(Rpp32f* srcPtr,
                        sinfTensor,
                        make_int3(nfft, numBins, power),
                        vertical);
-    CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
-    CHECK_RETURN_STATUS(hipFree(cosfTensor));
-    CHECK_RETURN_STATUS(hipFree(sinfTensor));
 
     return RPP_SUCCESS;
 }
