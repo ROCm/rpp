@@ -1456,13 +1456,10 @@ int main(int argc, char **argv)
 
         if (testType == 0)
         {
-            if(!qaFlag)
-            {
-                cout <<"\n\n";
-                if(noOfIterations > 1)
-                    cout <<"Execution Timings for Iteration "<< iterCount+1 <<":"<<endl;
-                cout << "GPU Backend Wall Time: " << wallTime <<" ms/batch";
-            }
+            cout <<"\n\n";
+            if(noOfIterations > 1)
+                cout <<"Execution Timings for Iteration "<< iterCount+1 <<":"<<endl;
+            cout << "GPU Backend Wall Time: " << wallTime <<" ms/batch";
             // Display results for reduction functions
             if (reductionTypeCase)
             {

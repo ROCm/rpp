@@ -281,9 +281,11 @@ if testType == 1 and profilingOption == "YES":
     os.makedirs(dstPath + "/Tensor_PLN3")
 
 if(testType == 0):
+    noCaseSupported = all(case not in supportedCaseList for case in caseList)
+    if noCaseSupported:
+        print("case numbers %s are not supported" % caseList)
     for case in caseList:
         if case not in supportedCaseList:
-            print("\nCase " + case + " is not supported.")
             continue
         if case == "82" and (("--input_path1" not in sys.argv and "--input_path2" not in sys.argv) or qaMode == 1):
             srcPath1 = ricapInFilePath
@@ -309,9 +311,11 @@ if(testType == 0):
         create_layout_directories(dstPath, layoutDict)
 else:
     if (testType == 1 and profilingOption == "NO"):
+        noCaseSupported = all(case not in supportedCaseList for case in caseList)
+        if noCaseSupported:
+            print("case numbers %s are not supported" % caseList)
         for case in caseList:
             if case not in supportedCaseList:
-                print("\nCase " + case + " is not supported.")
                 continue
             if case == "82" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
                 srcPath1 = ricapInFilePath
@@ -327,9 +331,11 @@ else:
     elif (testType == 1 and profilingOption == "YES"):
         NEW_FUNC_GROUP_LIST = [0, 15, 20, 29, 36, 40, 42, 49, 56, 65, 69]
 
+        noCaseSupported = all(case not in supportedCaseList for case in caseList)
+        if noCaseSupported:
+            print("case numbers %s are not supported" % caseList)
         for case in caseList:
             if case not in supportedCaseList:
-                print("\nCase " + case + " is not supported.")
                 continue
             if case == "82" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
                 srcPath1 = ricapInFilePath

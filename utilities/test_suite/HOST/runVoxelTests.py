@@ -214,9 +214,12 @@ subprocess.call(["make", "-j16"], cwd=".")  # nosec
 supportedCaseList = ['0', '1', '2', '3', '4', '5', '6']
 
 bitDepths = [0, 2]
+noCaseSupported = all(case not in supportedCaseList for case in caseList)
+if noCaseSupported:
+    print("\ncase numbers %s are not supported" % caseList)
+    exit(0)
 for case in caseList:
     if case not in supportedCaseList:
-        print("\nCase " + case + " is not supported.")
         continue
     for layout in range(3):
         dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "host", func_group_finder)

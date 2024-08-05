@@ -381,12 +381,10 @@ int main(int argc, char * argv[])
         wallTime *= 1000;
         if(testType == 0)
         {
-            if(!qaFlag)
-            {
-                if(noOfIterations > 1)
-                    cout <<"\n\nExecution Timings for Iteration "<< iterCount+1 <<":"<<endl;
-                cout << "CPU Backend Wall Time: " << wallTime <<" ms per batch";
-            }
+            cout <<"\n\n";
+            if(noOfIterations > 1)
+                cout <<"Execution Timings for Iteration "<< iterCount+1 <<":"<<endl;
+            cout << "CPU Backend Wall Time: " << wallTime <<" ms per batch";
             if(DEBUG_MODE)
             {
                 std::ofstream refFile;

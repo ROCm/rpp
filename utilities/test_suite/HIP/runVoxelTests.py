@@ -246,9 +246,12 @@ if testType == 1 and profilingOption == "YES":
 
 bitDepths = [0, 2]
 if (testType == 0 or (testType == 1 and profilingOption == "NO")):
+    noCaseSupported = all(case not in supportedCaseList for case in caseList)
+    if noCaseSupported:
+        print("\ncase numbers %s are not supported" % caseList)
+        exit(0)
     for case in caseList:
         if case not in supportedCaseList:
-            print("\nCase " + case + " is not supported.")
             continue
         for layout in range(3):
             dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", func_group_finder)
@@ -263,9 +266,12 @@ if (testType == 0 or (testType == 1 and profilingOption == "NO")):
                 run_test(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize)
 elif (testType == 1 and profilingOption == "YES"):
     NEW_FUNC_GROUP_LIST = [0, 1]
+    noCaseSupported = all(case not in supportedCaseList for case in caseList)
+    if noCaseSupported:
+        print("\ncase numbers %s are not supported" % caseList)
+        exit(0)
     for case in caseList:
         if case not in supportedCaseList:
-            print("\nCase " + case + " is not supported.")
             continue
         for layout in range(3):
             dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", func_group_finder)

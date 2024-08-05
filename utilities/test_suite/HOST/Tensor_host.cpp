@@ -1467,14 +1467,11 @@ int main(int argc, char **argv)
 
         if (testType == 0)
         {
-            if(!qaFlag)
-            {
-                cout <<"\n\n";
-                if(noOfIterations > 1)
-                    cout <<"Execution Timings for Iteration "<< iterCount+1 <<":"<<endl;
-                cout <<"CPU Backend Clock Time: "<< cpuTime <<" ms/batch"<< endl;
-                cout <<"CPU Backend Wall Time: "<< wallTime <<" ms/batch";
-            }
+            cout <<"\n\n";
+            if(noOfIterations > 1)
+                cout <<"Execution Timings for Iteration "<< iterCount+1 <<":"<<endl;
+            cout <<"CPU Backend Clock Time: "<< cpuTime <<" ms/batch"<< endl;
+            cout <<"CPU Backend Wall Time: "<< wallTime <<" ms/batch";
 
             if (reductionTypeCase)
             {

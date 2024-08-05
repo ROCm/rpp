@@ -209,9 +209,12 @@ subprocess.call(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.call(["make", "-j16"], cwd=".")    # nosec
 
 supportedCaseList = ['0', '1', '2']
+noCaseSupported = all(case not in supportedCaseList for case in caseList)
+if noCaseSupported:
+    print("\ncase numbers %s are not supported" % caseList)
+    exit(0)
 for case in caseList:
     if case not in supportedCaseList:
-        print("\nCase " + case + " is not supported.")
         continue
     if case == "0":
         for transposeOrder in range(1, numDims):

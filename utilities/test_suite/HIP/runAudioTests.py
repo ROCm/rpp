@@ -226,6 +226,11 @@ if qaMode and batchSize != 3:
     print("QA tests can only run with a batch size of 3.")
     exit(0)
 
+noCaseSupported = all(case not in supportedCaseList for case in caseList)
+if noCaseSupported:
+    print("\ncase numbers %s are not supported" % caseList)
+    exit(0)
+
 for case in caseList:
     if "--input_path" not in sys.argv:
         if case == "3":
@@ -234,7 +239,6 @@ for case in caseList:
             srcPath = inFilePath
 
     if case not in supportedCaseList:
-        print("\nCase " + case + " is not supported.")
         continue
     run_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath, profilingOption)
 
