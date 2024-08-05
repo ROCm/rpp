@@ -313,12 +313,12 @@ def print_performance_tests_summary(logFile, functionalityGroupList, numRuns):
     print("Functionalities - " + str(funcCount))
 
     # Print summary of log
-    header_format = "{:<70} {:<15} {:<15} {:<15} {:<15}"
-    row_format = "{:<70} {:<15} {:<15} {:<15} {:<15}"
-    print("\n" + header_format.format("Functionality", "Frames Count", "max(ms/batch)", "min(ms/batch)", "avg(ms/batch)") + "\n")
+    headerFormat = "{:<70} {:<15} {:<15} {:<15} {:<15}"
+    rowFormat = "{:<70} {:<15} {:<15} {:<15} {:<15}"
+    print("\n" + headerFormat.format("Functionality", "Frames Count", "max(ms/batch)", "min(ms/batch)", "avg(ms/batch)") + "\n")
     if len(functions) != 0:
         for i, func in enumerate(functions):
-            print(row_format.format(func, str(frames[i]), str(maxVals[i]), str(minVals[i]), str(avgVals[i])))
+            print(rowFormat.format(func, str(frames[i]), str(maxVals[i]), str(minVals[i]), str(avgVals[i])))
     else:
         print("No variants under this category")
 
@@ -352,13 +352,13 @@ def print_case_list(imageAugmentationMap, backendType, parser):
         print("\n" + "="*30)
         print("Functionality Reference List")
         print("="*30 + "\n")
-        header_format = "{:<12} {:<15}"
-        print(header_format.format("CaseNumber", "Functionality"))
+        headerFormat = "{:<12} {:<15}"
+        print(headerFormat.format("CaseNumber", "Functionality"))
         print("-" * 27)
-        row_format = "{:<12} {:<15}"
+        rowFormat = "{:<12} {:<15}"
         for key, value_list in imageAugmentationMap.items():
             if backendType in value_list:
-                print(row_format.format(key, value_list[0]))
+                print(rowFormat.format(key, value_list[0]))
 
         sys.exit(0)
 
