@@ -50,11 +50,9 @@ inline Rpp32f gaussian(int iSquare, int j, Rpp32f mulFactor)
     return expFactor;
 }
 
-inline void create_gaussian_kernel_3x3_host(Rpp32f* filterTensor,
-                                            Rpp32f stdDev,
-                                            int batchSize)
+inline void create_gaussian_kernel_3x3_host(Rpp32f* filter,
+                                            Rpp32f stdDev)
 {
-    Rpp32f* filter = &filterTensor[9];
     Rpp32f mulFactor = 1 / (2 * stdDev * stdDev);
     int rowIdx = 0;
 
@@ -78,11 +76,9 @@ inline void create_gaussian_kernel_3x3_host(Rpp32f* filterTensor,
         filter[i] *= kernelSum;
 }
 
-inline void create_gaussian_kernel_5x5_host(Rpp32f* filterTensor,
-                                            Rpp32f stdDev,
-                                            int batchSize)
+inline void create_gaussian_kernel_5x5_host(Rpp32f* filter,
+                                            Rpp32f stdDev)
 {
-    Rpp32f* filter = &filterTensor[25];
     Rpp32f mulFactor = 1 / (2 * stdDev * stdDev);
     int rowIdx = 0;
 
@@ -107,11 +103,9 @@ inline void create_gaussian_kernel_5x5_host(Rpp32f* filterTensor,
         filter[i] *= kernelSum;
 }
 
-inline void create_gaussian_kernel_7x7_host(Rpp32f* filterTensor,
-                                            Rpp32f stdDev,
-                                            int batchSize)
+inline void create_gaussian_kernel_7x7_host(Rpp32f* filter,
+                                            Rpp32f stdDev)
 {
-    Rpp32f* filter = &filterTensor[49];
     Rpp32f mulFactor = 1 / (2 * stdDev * stdDev);
     int rowIdx = 0;
 
@@ -135,13 +129,11 @@ inline void create_gaussian_kernel_7x7_host(Rpp32f* filterTensor,
 
     for (int i = 0; i < 49; i++)
         filter[i] *= kernelSum;
-}
+    }
 
-inline void create_gaussian_kernel_9x9_host(Rpp32f* filterTensor,
-                                            Rpp32f stdDev,
-                                            int batchSize)
-{       
-    Rpp32f* filter = &filterTensor[ 81];
+inline void create_gaussian_kernel_9x9_host(Rpp32f* filter,
+                                            Rpp32f stdDev)
+{
     Rpp32f mulFactor = 1 / (2 * stdDev * stdDev);
     int rowIdx = 0;
 
@@ -169,10 +161,9 @@ inline void create_gaussian_kernel_9x9_host(Rpp32f* filterTensor,
 }
 
 // Generic function to create a Gaussian kernel of any size
-inline void create_gaussian_kernel_host(Rpp32f* filterTensor, Rpp32f stdDev, int kernelSize, int batchSize)
+inline void create_gaussian_kernel_host(Rpp32f* filter, Rpp32f stdDev, int kernelSize)
 {
     int kernelHalfSize  = kernelSize / 2;
-    Rpp32f* filter = filterTensor; // Directly using the provided filterTensor
     Rpp32f mulFactor = 1.0f / (2.0f * stdDev * stdDev);
     int rowIdx = 0;
 
@@ -192,16 +183,13 @@ inline void create_gaussian_kernel_host(Rpp32f* filterTensor, Rpp32f stdDev, int
         }
     }
 
-    // Normalize the kernel
     Rpp32f kernelSum = 0.0f;
-    for (int i = 0; i < kernelSize * kernelSize; i++) {
+    for (int i = 0; i < kernelSize * kernelSize; i++)
         kernelSum += filter[i];
-    }
     kernelSum = 1.0f / kernelSum;
 
-    for (int i = 0; i < kernelSize * kernelSize; i++) {
+    for (int i = 0; i < kernelSize * kernelSize; i++)
         filter[i] *= kernelSum;
-    }
 }
 
 template<typename T>
@@ -314,19 +302,18 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
 
-        Rpp32f *filterTensor = handle.GetInitHandle()->mem.mcpu.scratchBufferHost;
-
         Rpp32u padLength = kernelSize / 2;
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
         Rpp32u unpaddedHeight = roi.xywhROI.roiHeight - padLength;
         Rpp32u unpaddedWidth = roi.xywhROI.roiWidth - padLength;
 
+        Rpp32f *filterTensor = handle.GetInitHandle()->mem.mcpu.scratchBufferHost + batchCount * kernelSize * kernelSize;
         T *srcPtrChannel, *dstPtrChannel;
         srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
         if (kernelSize == 3)
         {
-            create_gaussian_kernel_3x3_host(filterTensor, stdDevTensor[batchCount], dstDescPtr->n);
+            create_gaussian_kernel_3x3_host(filterTensor, stdDevTensor[batchCount]);
             T *srcPtrRow[3], *dstPtrRow;
             for (int i = 0; i < 3; i++)
                 srcPtrRow[i] = srcPtrChannel + i * srcDescPtr->strides.hStride;
@@ -567,7 +554,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
 
                     // process padLength number of columns in each row
-                    // left border pixels in image which does not have required pixels in 3x3 gaussian, process them separately
+                    // left border pixels in image which does not have required pixels in 3x3 box, process them separately
                     for (int k = 0; k < padLength; k++)
                     {
                         for (int c = 0; c < 3; c++)
@@ -638,7 +625,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
         }
         else if (kernelSize == 5)
         {
-            create_gaussian_kernel_5x5_host(filterTensor, stdDevTensor[batchCount], dstDescPtr->n);
+            create_gaussian_kernel_5x5_host(filterTensor, stdDevTensor[batchCount]);
             T *srcPtrRow[5], *dstPtrRow;
             for (int i = 0; i < 5; i++)
                 srcPtrRow[i] = srcPtrChannel + i * srcDescPtr->strides.hStride;
@@ -959,7 +946,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
         }
         else if (kernelSize == 7)
         {
-            create_gaussian_kernel_7x7_host(filterTensor, stdDevTensor[batchCount], dstDescPtr->n);
+            create_gaussian_kernel_7x7_host(filterTensor, stdDevTensor[batchCount]);
             T *srcPtrRow[7], *dstPtrRow;
             for (int i = 0; i < 7; i++)
                 srcPtrRow[i] = srcPtrChannel + i * srcDescPtr->strides.hStride;
@@ -1293,13 +1280,13 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
         }
         else if (kernelSize == 9)
         {
-            create_gaussian_kernel_9x9_host(filterTensor, stdDevTensor[batchCount], dstDescPtr->n);
+            create_gaussian_kernel_9x9_host(filterTensor, stdDevTensor[batchCount]);
             T *srcPtrRow[9], *dstPtrRow;
             for (int i = 0; i < 9; i++)
                 srcPtrRow[i] = srcPtrChannel + i * srcDescPtr->strides.hStride;
             dstPtrRow = dstPtrChannel;
 
-            // gaussian filter without fused output-layout toggle (NCHW -> NCHW)
+            // box filter without fused output-layout toggle (NCHW -> NCHW)
             if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
             {
                 /* exclude (2 * padLength) number of columns from alignedLength calculation
@@ -1663,11 +1650,10 @@ RppStatus gaussian_filter_generic_host_tensor(T *srcPtr,
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
 
-        Rpp32f *filterTensor = handle.GetInitHandle()->mem.mcpu.scratchBufferHost;
+        Rpp32f *filterTensor = handle.GetInitHandle()->mem.mcpu.scratchBufferHost + batchCount * kernelSize * kernelSize;
 
         Rpp32u padLength = kernelSize / 2;
         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
-        Rpp32f kernelSizeInverseSquare = 1.0 / (kernelSize * kernelSize);
         Rpp32u unpaddedHeight = roi.xywhROI.roiHeight - padLength;
         Rpp32u unpaddedWidth = roi.xywhROI.roiWidth - padLength;
 
@@ -1679,7 +1665,7 @@ RppStatus gaussian_filter_generic_host_tensor(T *srcPtr,
         for (int k = 0; k < kernelSize; k++)
             srcPtrRow[k] = srcPtrChannel + k * srcDescPtr->strides.hStride;
         dstPtrRow = dstPtrChannel;
-        create_gaussian_kernel_host(filterTensor, stdDevTensor[batchCount], kernelSize, dstDescPtr->n);
+        create_gaussian_kernel_host(filterTensor, stdDevTensor[batchCount], kernelSize);
         if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             for (int c = 0; c < srcDescPtr->c; c++)
@@ -1699,14 +1685,14 @@ RppStatus gaussian_filter_generic_host_tensor(T *srcPtr,
 
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                    process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                    process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
                     dstPtrTemp += padLength;
                     vectorLoopCount += padLength;
 
                     // process remaining columns in each row
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        gaussian_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                        gaussian_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -1731,14 +1717,14 @@ RppStatus gaussian_filter_generic_host_tensor(T *srcPtr,
 
                 Rpp32s rowKernelLoopLimit = kernelSize;
                 get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
                 dstPtrTemp += padLength * 3;
                 vectorLoopCount += padLength * 3;
 
                 // process remaining columns in each row
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    gaussian_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                    gaussian_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3);
                     increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                     dstPtrTemp++;
                 }
@@ -1770,7 +1756,7 @@ RppStatus gaussian_filter_generic_host_tensor(T *srcPtr,
                 {
                     for (int c = 0; c < 3; c++)
                     {
-                        gaussian_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                        gaussian_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
                         dstPtrTemp++;
                     }
                 }
@@ -1781,7 +1767,7 @@ RppStatus gaussian_filter_generic_host_tensor(T *srcPtr,
                 {
                     for (int c = 0; c < srcDescPtr->c; c++)
                     {
-                        gaussian_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                        gaussian_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
                         increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -1807,14 +1793,14 @@ RppStatus gaussian_filter_generic_host_tensor(T *srcPtr,
 
                 Rpp32s rowKernelLoopLimit = kernelSize;
                 get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
-                process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare);
+                process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
                 vectorLoopCount += padLength * 3;
 
                 // process remaining columns in each row
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     int channel = vectorLoopCount % 3;
-                    gaussian_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, kernelSizeInverseSquare, 3);
+                    gaussian_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3);
                     increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                     dstPtrTempChannels[channel]++;
                 }
