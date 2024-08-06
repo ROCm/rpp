@@ -279,6 +279,9 @@ inline void add_rows_9x9(__m256 *pRow, __m256 *pDst)
     pDst[0] = _mm256_add_ps(pDst[0], _mm256_add_ps(_mm256_add_ps(pRow[6], pRow[7]), pRow[8]));
 }
 
+__m128i pxMaskPln[7] = {xmm_pxMaskRotate0To1, xmm_pxMaskRotate0To3, xmm_pxMaskRotate0To5, xmm_pxMaskRotate0To7, xmm_pxMaskRotate0To9, xmm_pxMaskRotate0To11, xmm_pxMaskRotate0To13};
+__m128i pxMaskPkd[7] = {xmm_pxMaskRotate0To5, xmm_pxMaskRotate0To11, xmm_pxMaskRotate0To1, xmm_pxMaskRotate0To7, xmm_pxMaskRotate0To13, xmm_pxMaskRotate0To3, xmm_pxMaskRotate0To9};
+
 template<typename T>
 RppStatus box_filter_char_host_tensor(T *srcPtr,
                                       RpptDescPtr srcDescPtr,
@@ -318,6 +321,9 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
         Rpp16s convolutionFactor = (Rpp16s) std::ceil(65536 * kernelSizeInverseSquare);
 #if __AVX2__
         const __m128i pxConvolutionFactor = _mm_set1_epi16(convolutionFactor);
+        Rpp32u blendRegisterOrder[7] = {0, 0, 1, 1, 1, 2, 2};
+        if (srcDescPtr->layout == RpptLayout::NCHW)
+            std::fill_n(blendRegisterOrder, 7, 0);
 #endif
         T *srcPtrChannel, *dstPtrChannel;
         srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
@@ -367,9 +373,9 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                             // perform blend and shuffle operations to get required order and add them
                             __m128i pxTemp[4];
                             extract_4sse_registers(pxRowHalf, pxTemp);
-                            blend_shuffle_add_3x3_pln_host(&pxTemp[0]);
-                            blend_shuffle_add_3x3_pln_host(&pxTemp[1]);
-                            blend_shuffle_add_3x3_pln_host(&pxTemp[2]);
+                            blend_shuffle_add_3x3_host<1, 3>(&pxTemp[0], pxMaskPln, blendRegisterOrder);
+                            blend_shuffle_add_3x3_host<1, 3>(&pxTemp[1], pxMaskPln, blendRegisterOrder);
+                            blend_shuffle_add_3x3_host<1, 3>(&pxTemp[2], pxMaskPln, blendRegisterOrder);
 
                             __m128i pxDst[2];
                             pxTemp[0] = _mm_mulhi_epi16(pxTemp[0], pxConvolutionFactor);
@@ -432,9 +438,9 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         // perform blend and shuffle operations for the first 8 output values to get required order and add them
                         __m128i pxTemp[4];
                         extract_4sse_registers(pxRowHalf, pxTemp);
-                        blend_shuffle_add_3x3_pkd_host(&pxTemp[0]);
-                        blend_shuffle_add_3x3_pkd_host(&pxTemp[1]);
-                        blend_shuffle_add_3x3_pkd_host(&pxTemp[2]);
+                        blend_shuffle_add_3x3_host<7, 63>(&pxTemp[0], pxMaskPkd, blendRegisterOrder);
+                        blend_shuffle_add_3x3_host<7, 63>(&pxTemp[1], pxMaskPkd, blendRegisterOrder);
+                        blend_shuffle_add_3x3_host<7, 63>(&pxTemp[2], pxMaskPkd, blendRegisterOrder);
 
                         __m128i pxDst[2];
                         pxTemp[0] = _mm_mulhi_epi16(pxTemp[0], pxConvolutionFactor);
@@ -497,9 +503,9 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         // perform blend and shuffle operations for the first 8 output values to get required order and add them
                         __m128i pxTemp[4];
                         extract_4sse_registers(pxRowHalf, pxTemp);
-                        blend_shuffle_add_3x3_pkd_host(&pxTemp[0]);
-                        blend_shuffle_add_3x3_pkd_host(&pxTemp[1]);
-                        blend_shuffle_add_3x3_pkd_host(&pxTemp[2]);
+                        blend_shuffle_add_3x3_host<7, 63>(&pxTemp[0], pxMaskPkd, blendRegisterOrder);
+                        blend_shuffle_add_3x3_host<7, 63>(&pxTemp[1], pxMaskPkd, blendRegisterOrder);
+                        blend_shuffle_add_3x3_host<7, 63>(&pxTemp[2], pxMaskPkd, blendRegisterOrder);
 
                         __m128i pxDst[2];
                         pxTemp[0] = _mm_mulhi_epi16(pxTemp[0], pxConvolutionFactor);
@@ -583,9 +589,9 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                             // perform blend and shuffle operations for the first 8 output values to get required order and add them
                             __m128i pxTemp[4];
                             extract_4sse_registers(pxRowHalf, pxTemp);
-                            blend_shuffle_add_3x3_pln_host(&pxTemp[0]);
-                            blend_shuffle_add_3x3_pln_host(&pxTemp[1]);
-                            blend_shuffle_add_3x3_pln_host(&pxTemp[2]);
+                            blend_shuffle_add_3x3_host<1, 3>(&pxTemp[0], pxMaskPln, blendRegisterOrder);
+                            blend_shuffle_add_3x3_host<1, 3>(&pxTemp[1], pxMaskPln, blendRegisterOrder);
+                            blend_shuffle_add_3x3_host<1, 3>(&pxTemp[2], pxMaskPln, blendRegisterOrder);
 
                             __m128i pxDst[2];
                             pxTemp[0] = _mm_mulhi_epi16(pxTemp[0], pxConvolutionFactor);
@@ -678,9 +684,9 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
 
                             __m128i pxTemp[4], pxDst[2];
                             extract_4sse_registers(pxRowHalf, pxTemp);
-                            blend_shuffle_add_5x5_pln_host(&pxTemp[0]);
-                            blend_shuffle_add_5x5_pln_host(&pxTemp[1]);
-                            blend_shuffle_add_5x5_pln_host(&pxTemp[2]);
+                            blend_shuffle_add_5x5_host<1, 3, 7, 15>(&pxTemp[0], pxMaskPln, blendRegisterOrder);
+                            blend_shuffle_add_5x5_host<1, 3, 7, 15>(&pxTemp[1], pxMaskPln, blendRegisterOrder);
+                            blend_shuffle_add_5x5_host<1, 3, 7, 15>(&pxTemp[2], pxMaskPln, blendRegisterOrder);
 
                             pxTemp[0] = _mm_mulhi_epi16(pxTemp[0], pxConvolutionFactor);
                             pxTemp[1] = _mm_mulhi_epi16(pxTemp[1], pxConvolutionFactor);
@@ -741,9 +747,9 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         __m128i pxTemp[5], pxDst[2];
                         extract_4sse_registers(pxRowHalf, pxTemp);
                         pxTemp[4] = xmm_px0;
-                        blend_shuffle_add_5x5_pkd_host(&pxTemp[0]);
-                        blend_shuffle_add_5x5_pkd_host(&pxTemp[1]);
-                        blend_shuffle_add_5x5_pkd_host(&pxTemp[2]);
+                        blend_shuffle_add_5x5_host<7, 63, 1, 15>(&pxTemp[0], pxMaskPkd, blendRegisterOrder);
+                        blend_shuffle_add_5x5_host<7, 63, 1, 15>(&pxTemp[1], pxMaskPkd, blendRegisterOrder);
+                        blend_shuffle_add_5x5_host<7, 63, 1, 15>(&pxTemp[2], pxMaskPkd, blendRegisterOrder);
 
                         pxTemp[0] = _mm_mulhi_epi16(pxTemp[0], pxConvolutionFactor);
                         pxTemp[1] = _mm_mulhi_epi16(pxTemp[1], pxConvolutionFactor);
@@ -804,9 +810,9 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         __m128i pxTemp[5], pxDst[2];
                         extract_4sse_registers(pxRowHalf, pxTemp);
                         pxTemp[4] = xmm_px0;
-                        blend_shuffle_add_5x5_pkd_host(&pxTemp[0]);
-                        blend_shuffle_add_5x5_pkd_host(&pxTemp[1]);
-                        blend_shuffle_add_5x5_pkd_host(&pxTemp[2]);
+                        blend_shuffle_add_5x5_host<7, 63, 1, 15>(&pxTemp[0], pxMaskPkd, blendRegisterOrder);
+                        blend_shuffle_add_5x5_host<7, 63, 1, 15>(&pxTemp[1], pxMaskPkd, blendRegisterOrder);
+                        blend_shuffle_add_5x5_host<7, 63, 1, 15>(&pxTemp[2], pxMaskPkd, blendRegisterOrder);
 
                         pxTemp[0] = _mm_mulhi_epi16(pxTemp[0], pxConvolutionFactor);
                         pxTemp[1] = _mm_mulhi_epi16(pxTemp[1], pxConvolutionFactor);
@@ -889,9 +895,9 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
 
                             __m128i pxTemp[4], pxDst[2];
                             extract_4sse_registers(pxRowHalf, pxTemp);
-                            blend_shuffle_add_5x5_pln_host(&pxTemp[0]);
-                            blend_shuffle_add_5x5_pln_host(&pxTemp[1]);
-                            blend_shuffle_add_5x5_pln_host(&pxTemp[2]);
+                            blend_shuffle_add_5x5_host<1, 3, 7, 15>(&pxTemp[0], pxMaskPln, blendRegisterOrder);
+                            blend_shuffle_add_5x5_host<1, 3, 7, 15>(&pxTemp[1], pxMaskPln, blendRegisterOrder);
+                            blend_shuffle_add_5x5_host<1, 3, 7, 15>(&pxTemp[2], pxMaskPln, blendRegisterOrder);
 
                             pxTemp[0] = _mm_mulhi_epi16(pxTemp[0], pxConvolutionFactor);
                             pxTemp[1] = _mm_mulhi_epi16(pxTemp[1], pxConvolutionFactor);
@@ -982,9 +988,9 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
 
                             __m128i pxTemp[4], pxDst[2];
                             extract_4sse_registers(pxRowHalf, pxTemp);
-                            blend_shuffle_add_7x7_pln_host(&pxTemp[0]);
-                            blend_shuffle_add_7x7_pln_host(&pxTemp[1]);
-                            blend_shuffle_add_7x7_pln_host(&pxTemp[2]);
+                            blend_shuffle_add_7x7_host<1, 3, 7, 15, 31, 63>(&pxTemp[0], pxMaskPln, blendRegisterOrder);
+                            blend_shuffle_add_7x7_host<1, 3, 7, 15, 31, 63>(&pxTemp[1], pxMaskPln, blendRegisterOrder);
+                            blend_shuffle_add_7x7_host<1, 3, 7, 15, 31, 63>(&pxTemp[2], pxMaskPln, blendRegisterOrder);
 
                             pxTemp[0] = _mm_mulhi_epi16(pxTemp[0], pxConvolutionFactor);
                             pxTemp[1] = _mm_mulhi_epi16(pxTemp[1], pxConvolutionFactor);
@@ -1062,9 +1068,9 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
 
                             __m128i pxTemp[4], pxDst[2];
                             extract_4sse_registers(pxRowHalf, pxTemp);
-                            blend_shuffle_add_7x7_pln_host(&pxTemp[0]);
-                            blend_shuffle_add_7x7_pln_host(&pxTemp[1]);
-                            blend_shuffle_add_7x7_pln_host(&pxTemp[2]);
+                            blend_shuffle_add_7x7_host<1, 3, 7, 15, 31, 63>(&pxTemp[0], pxMaskPln, blendRegisterOrder);
+                            blend_shuffle_add_7x7_host<1, 3, 7, 15, 31, 63>(&pxTemp[1], pxMaskPln, blendRegisterOrder);
+                            blend_shuffle_add_7x7_host<1, 3, 7, 15, 31, 63>(&pxTemp[2], pxMaskPln, blendRegisterOrder);
 
                             pxTemp[0] = _mm_mulhi_epi16(pxTemp[0], pxConvolutionFactor);
                             pxTemp[1] = _mm_mulhi_epi16(pxTemp[1], pxConvolutionFactor);
@@ -1139,8 +1145,8 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
 
                         __m128i pxTemp[4], pxResult;
                         extract_4sse_registers(pxRowHalf, pxTemp);
-                        blend_shuffle_add_7x7_pkd_host(&pxTemp[0]);
-                        blend_shuffle_add_7x7_pkd_host(&pxTemp[1]);
+                        blend_shuffle_add_7x7_host<7, 63, 1, 15, 127, 3>(&pxTemp[0], pxMaskPkd, blendRegisterOrder);
+                        blend_shuffle_add_7x7_host<7, 63, 1, 15, 127, 3>(&pxTemp[1], pxMaskPkd, blendRegisterOrder);
                         pxTemp[0] = _mm_mulhi_epi16(pxTemp[0], pxConvolutionFactor);
                         pxTemp[1] = _mm_mulhi_epi16(pxTemp[1], pxConvolutionFactor);
                         pxResult = _mm_packus_epi16(pxTemp[0], pxTemp[1]);
@@ -1196,8 +1202,8 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
 
                         __m128i pxTemp[4], pxResult[2];
                         extract_4sse_registers(pxRowHalf, pxTemp);
-                        blend_shuffle_add_7x7_pkd_host(&pxTemp[0]);
-                        blend_shuffle_add_7x7_pkd_host(&pxTemp[1]);
+                        blend_shuffle_add_7x7_host<7, 63, 1, 15, 127, 3>(&pxTemp[0], pxMaskPkd, blendRegisterOrder);
+                        blend_shuffle_add_7x7_host<7, 63, 1, 15, 127, 3>(&pxTemp[1], pxMaskPkd, blendRegisterOrder);
                         pxTemp[0] = _mm_mulhi_epi16(pxTemp[0], pxConvolutionFactor);
                         pxTemp[1] = _mm_mulhi_epi16(pxTemp[1], pxConvolutionFactor);
                         pxResult[0] = _mm_packus_epi16(pxTemp[0], pxTemp[1]);
@@ -1272,8 +1278,8 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
 
                             __m128i pxTemp[3], pxDst;
                             extract_3sse_registers(pxRowHalf, pxTemp);
-                            blend_shuffle_add_9x9_pln_host(&pxTemp[0]);
-                            blend_shuffle_add_9x9_pln_host(&pxTemp[1]);
+                            blend_shuffle_add_9x9_host<1, 3, 7, 15, 31, 63, 127>(&pxTemp[0], pxMaskPln, blendRegisterOrder);
+                            blend_shuffle_add_9x9_host<1, 3, 7, 15, 31, 63, 127>(&pxTemp[1], pxMaskPln, blendRegisterOrder);
                             pxTemp[0] = _mm_mulhi_epi16(pxTemp[0], pxConvolutionFactor);
                             pxTemp[1] = _mm_mulhi_epi16(pxTemp[1], pxConvolutionFactor);
                             pxDst = _mm_packus_epi16(pxTemp[0], pxTemp[1]);
@@ -1334,7 +1340,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         // get the accumalated result for first 8 elements
                         __m128i px128[8], pxTemp[7], pxDst[4];
                         extract_4sse_registers(pxRowHalf, &px128[0]);
-                        blend_shuffle_add_9x9_pkd_host(&px128[0]);
+                        blend_shuffle_add_9x9_host<7, 63, 1, 15, 127, 3, 31>(&px128[0], pxMaskPkd, blendRegisterOrder);
 
                         // compute for next 8 elements
                         increment_row_ptrs(srcPtrTemp, kernelSize, 32);
@@ -1344,9 +1350,9 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
 
                         // get the accumalated result for next 24 elements
                         extract_4sse_registers(pxRowHalf, &px128[4]);
-                        blend_shuffle_add_9x9_pkd_host(&px128[1]);
-                        blend_shuffle_add_9x9_pkd_host(&px128[2]);
-                        blend_shuffle_add_9x9_pkd_host(&px128[3]);
+                        blend_shuffle_add_9x9_host<7, 63, 1, 15, 127, 3, 31>(&px128[1], pxMaskPkd, blendRegisterOrder);
+                        blend_shuffle_add_9x9_host<7, 63, 1, 15, 127, 3, 31>(&px128[2], pxMaskPkd, blendRegisterOrder);
+                        blend_shuffle_add_9x9_host<7, 63, 1, 15, 127, 3, 31>(&px128[3], pxMaskPkd, blendRegisterOrder);
 
                         // compute final result
                         pxDst[0] = _mm_mulhi_epi16(px128[0], pxConvolutionFactor);
@@ -1421,8 +1427,8 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
 
                             __m128i pxTemp[3], pxDst;
                             extract_3sse_registers(pxRowHalf, pxTemp);
-                            blend_shuffle_add_9x9_pln_host(&pxTemp[0]);
-                            blend_shuffle_add_9x9_pln_host(&pxTemp[1]);
+                            blend_shuffle_add_9x9_host<1, 3, 7, 15, 31, 63, 127>(&pxTemp[0], pxMaskPln, blendRegisterOrder);
+                            blend_shuffle_add_9x9_host<1, 3, 7, 15, 31, 63, 127>(&pxTemp[1], pxMaskPln, blendRegisterOrder);
                             pxTemp[0] = _mm_mulhi_epi16(pxTemp[0], pxConvolutionFactor);
                             pxTemp[1] = _mm_mulhi_epi16(pxTemp[1], pxConvolutionFactor);
                             pxResultPln[c] = _mm_packus_epi16(pxTemp[0], pxTemp[1]);
@@ -1494,7 +1500,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
                         // get the accumalated result for first 8 elements
                         __m128i px128[8], pxTemp[7], pxDst[4];
                         extract_4sse_registers(pxRowHalf, &px128[0]);
-                        blend_shuffle_add_9x9_pkd_host(&px128[0]);
+                        blend_shuffle_add_9x9_host<7, 63, 1, 15, 127, 3, 31>(&px128[0], pxMaskPkd, blendRegisterOrder);
 
                         // compute for next 8 elements
                         increment_row_ptrs(srcPtrTemp, kernelSize, 32);
@@ -1504,9 +1510,9 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
 
                         // get the accumalated result for next 24 elements
                         extract_4sse_registers(pxRowHalf, &px128[4]);
-                        blend_shuffle_add_9x9_pkd_host(&px128[1]);
-                        blend_shuffle_add_9x9_pkd_host(&px128[2]);
-                        blend_shuffle_add_9x9_pkd_host(&px128[3]);
+                        blend_shuffle_add_9x9_host<7, 63, 1, 15, 127, 3, 31>(&px128[1], pxMaskPkd, blendRegisterOrder);
+                        blend_shuffle_add_9x9_host<7, 63, 1, 15, 127, 3, 31>(&px128[2], pxMaskPkd, blendRegisterOrder);
+                        blend_shuffle_add_9x9_host<7, 63, 1, 15, 127, 3, 31>(&px128[3], pxMaskPkd, blendRegisterOrder);
                         pxDst[0] = _mm_mulhi_epi16(px128[0], pxConvolutionFactor);
                         pxDst[1] = _mm_mulhi_epi16(px128[1], pxConvolutionFactor);
                         pxDst[2] = _mm_mulhi_epi16(px128[2], pxConvolutionFactor);
