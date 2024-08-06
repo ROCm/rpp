@@ -144,6 +144,8 @@ typedef enum
     RPP_ERROR_OUT_OF_BOUND_SHARED_MEMORY_SIZE    = -21,
     /*! \brief Scratch memory size needed is beyond the bounds (Needs to adhere to function specification.) \ingroup group_rppdefs */
     RPP_ERROR_OUT_OF_BOUND_SCRATCH_MEMORY_SIZE    = -22,
+    /*! \brief Number of src dims is invalid. (Needs to adhere to function specification.) \ingroup group_rppdefs */
+    RPP_ERROR_INVALID_SRC_DIMS          = -23
 } RppStatus;
 
 /*! \brief RPP rppStatus_t type enums
