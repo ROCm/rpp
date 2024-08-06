@@ -165,104 +165,55 @@ inline void blend_shuffle_add_9x9_host(__m128i *px128, __m128i *pxMask, Rpp32u *
 
 // -------------------- F32/F16 bitdepth compute functions for kernel size (3/5/7/9) --------------------
 
-inline void blend_permute_add_mul_3x3_pln(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor)
+template <int blendMask1, int blendMask2> 
+inline void blend_permute_add_mul_3x3_host(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor, __m256i *pxMask, Rpp32u *index)
 {
     /* pSrc[0] - [X01|X02|X03|X04|X05|X06|X07|X08]
        pSrc[1] - [X09|X10|X11|X12|X13|X14|X15|X16] */
-    pDst[0] = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 1), avx_pxMaskRotate0To1));   // blend with mask [0000 0001] and permute - [X02|X03|X04|X05|X06|X07|X08|X09]
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 3), avx_pxMaskRotate0To2));   // blend with mask [0000 0011] and permute - [X03|X04|X05|X06|X07|X08|X09|X10]
+    pDst[0] = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[index[0]], pSrc[index[0] + 1], blendMask1), pxMask[0]));   // blend with mask [0000 0001] and permute - [X02|X03|X04|X05|X06|X07|X08|X09]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[index[1]], pSrc[index[1] + 1], blendMask2), pxMask[1]));   // blend with mask [0000 0011] and permute - [X03|X04|X05|X06|X07|X08|X09|X10]
     pDst[0] = _mm256_mul_ps(pDst[0], pConvolutionFactor);
 }
 
-inline void blend_permute_add_mul_3x3_pkd(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor)
-{
-    /* pSrc[0] - [R01|G01|B01|R02|G02|B02|R03|G03]
-       pSrc[1] - [B03|R04|G04|B04|R05|G05|B05|R06] */
-    pDst[0] = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 7), avx_pxMaskRotate0To3));   // blend with mask [0000 0111] and permute - [R02|G02|B02|R03|G03|B03|R04|G04]
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 63), avx_pxMaskRotate0To6));  // blend with mask [0011 1111] and permute - [R03|G03|B03|R04|G04|B04|R05|G05]
-    pDst[0] = _mm256_mul_ps(pDst[0], pConvolutionFactor);
-}
-
-inline void blend_permute_add_mul_5x5_pln(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor)
+template <int blendMask1, int blendMask2, int blendMask3, int blendMask4> 
+inline void blend_permute_add_mul_5x5_host(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor, __m256i *pxMask, Rpp32u *index)
 {
     /* pSrc[0] - [X01|X02|X03|X04|X05|X06|X07|X08]
        pSrc[1] - [X09|X10|X11|X12|X13|X14|X15|X16] */
-    pDst[0] = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 1), avx_pxMaskRotate0To1));   // blend with mask [0000 0001] and permute - [X02|X03|X04|X05|X06|X07|X08|X09]
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 3), avx_pxMaskRotate0To2));   // blend with mask [0000 0011] and permute - [X03|X04|X05|X06|X07|X08|X09|X10]
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 7), avx_pxMaskRotate0To3));   // blend with mask [0000 0111] and permute - [X04|X05|X06|X07|X08|X09|X10|X11]
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 15), avx_pxMaskRotate0To4));  // blend with mask [0000 1111] and permute - [X05|X06|X07|X08|X09|X10|X11|X12]
+    pDst[0] = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[index[0]], pSrc[index[0] + 1], blendMask1), pxMask[0]));   // blend with mask [0000 0001] and permute - [X02|X03|X04|X05|X06|X07|X08|X09]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[index[1]], pSrc[index[1] + 1], blendMask2), pxMask[1]));   // blend with mask [0000 0011] and permute - [X03|X04|X05|X06|X07|X08|X09|X10]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[index[2]], pSrc[index[2] + 1], blendMask3), pxMask[2]));   // blend with mask [0000 0111] and permute - [X04|X05|X06|X07|X08|X09|X10|X11]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[index[3]], pSrc[index[3] + 1], blendMask4), pxMask[3]));  // blend with mask [0000 1111] and permute - [X05|X06|X07|X08|X09|X10|X11|X12]
     pDst[0] = _mm256_mul_ps(pDst[0], pConvolutionFactor);
 }
 
-inline void blend_permute_add_mul_5x5_pkd(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor)
-{
-    /* pSrc[0] - [R01|G01|B01|R02|G02|B02|R03|G03]
-       pSrc[1] - [B03|R04|G04|B04|R05|G05|B05|R06]
-       pSrc[2] - [G06|B06|R07|G07|B07|R08|G08|B08] */
-    pDst[0] = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 7), avx_pxMaskRotate0To3));   // blend with mask [0000 0111] and permute - [R02|G02|B02|R03|G03|B03|R04|G04]
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 63), avx_pxMaskRotate0To6));  // blend with mask [0011 1111] and permute - [R03|G03|B03|R04|G04|B04|R05|G05]
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[1], pSrc[2], 1), avx_pxMaskRotate0To1));   // blend with mask [0000 0001] and permute - [R04|G04|B04|R05|G05|B05|R06|G06]
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[1], pSrc[2], 15), avx_pxMaskRotate0To4));  // blend with mask [0000 1111] and permute - [R05|G05|B05|R06|G06|B06|R07|G07]
-    pDst[0] = _mm256_mul_ps(pDst[0], pConvolutionFactor);
-}
-
-inline void blend_permute_add_mul_7x7_pln(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor)
+template <int blendMask1, int blendMask2, int blendMask3, int blendMask4, int blendMask5, int blendMask6>  
+inline void blend_permute_add_mul_7x7_host(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor, __m256i *pxMask, Rpp32u *index)
 {
     /* pSrc[0] - [X01|X02|X03|X04|X05|X06|X07|X08]
        pSrc[1] - [X09|X10|X11|X12|X13|X14|X15|X16] */
-    pDst[0] = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 1), avx_pxMaskRotate0To1));   // blend with mask [0000 0001] and permute - [X02|X03|X04|X05|X06|X07|X08|X09]
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 3), avx_pxMaskRotate0To2));   // blend with mask [0000 0011] and permute - [X03|X04|X05|X06|X07|X08|X09|X10]
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 7), avx_pxMaskRotate0To3));   // blend with mask [0000 0111] and permute - [X04|X05|X06|X07|X08|X09|X10|X11]
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 15), avx_pxMaskRotate0To4));  // blend with mask [0000 1111] and permute - [X05|X06|X07|X08|X09|X10|X11|X12]
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 31), avx_pxMaskRotate0To5));  // blend with mask [0001 1111] and permute - [X06|X07|X08|X09|X10|X11|X12|X13]
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 63), avx_pxMaskRotate0To6));  // blend with mask [0011 1111] and permute - [X07|X08|X09|X10|X11|X12|X13|X14]
+    pDst[0] = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[index[0]], pSrc[index[0] + 1], blendMask1), pxMask[0]));   // blend with mask [0000 0001] and permute - [X02|X03|X04|X05|X06|X07|X08|X09]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[index[1]], pSrc[index[1] + 1], blendMask2), pxMask[1]));   // blend with mask [0000 0011] and permute - [X03|X04|X05|X06|X07|X08|X09|X10]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[index[2]], pSrc[index[2] + 1], blendMask3), pxMask[2]));   // blend with mask [0000 0111] and permute - [X04|X05|X06|X07|X08|X09|X10|X11]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[index[3]], pSrc[index[3] + 1], blendMask4), pxMask[3]));  // blend with mask [0000 1111] and permute - [X05|X06|X07|X08|X09|X10|X11|X12]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[index[4]], pSrc[index[4] + 1], blendMask5), pxMask[4]));  // blend with mask [0001 1111] and permute - [X06|X07|X08|X09|X10|X11|X12|X13]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[index[5]], pSrc[index[5] + 1], blendMask6), pxMask[5]));  // blend with mask [0011 1111] and permute - [X07|X08|X09|X10|X11|X12|X13|X14]
     pDst[0] = _mm256_mul_ps(pDst[0], pConvolutionFactor);
 }
 
-inline void blend_permute_add_mul_7x7_pkd(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor)
-{
-    /* pSrc[0] - [R01|G01|B01|R02|G02|B02|R03|G03]
-       pSrc[1] - [B03|R04|G04|B04|R05|G05|B05|R06]
-       pSrc[2] - [G06|B06|R07|G07|B07|R08|G08|B08]
-       pSrc[3] - [R09|G09|B09|R10|G10|B10|R11|G11] */
-    pDst[0] = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 7), avx_pxMaskRotate0To3));   // blend with mask [0000 0111] and permute - [R02|G02|B02|R03|G03|B03|R04|G04]
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 63), avx_pxMaskRotate0To6));  // blend with mask [0011 1111] and permute - [R03|G03|B03|R04|G04|B04|R05|G05]
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[1], pSrc[2], 1), avx_pxMaskRotate0To1));   // blend with mask [0000 0001] and permute - [R04|G04|B04|R05|G05|B05|R06|G06]
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[1], pSrc[2], 15), avx_pxMaskRotate0To4));  // blend with mask [0000 1111] and permute - [R05|G05|B05|R06|G06|B06|R07|G07]
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[1], pSrc[2], 127), avx_pxMaskRotate0To7)); // blend with mask [0111 1111] and permute - [R06|G06|B06|R07|G07|B07|R08|G08]
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[2], pSrc[3], 3), avx_pxMaskRotate0To2));   // blend with mask [0000 0011] and permute - [R07|G07|B07|R08|G08|B08|R09|G09]
-    pDst[0] = _mm256_mul_ps(pDst[0], pConvolutionFactor);
-}
-
-inline void blend_permute_add_mul_9x9_pln(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor)
+template <int blendMask1, int blendMask2, int blendMask3, int blendMask4, int blendMask5, int blendMask6, int blendMask7>  
+inline void blend_permute_add_mul_9x9_host(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor, __m256i *pxMask, Rpp32u *index)
 {
     /* pSrc[0] - [X01|X02|X03|X04|X05|X06|X07|X08]
        pSrc[1] - [X09|X10|X11|X12|X13|X14|X15|X16] */
-    pDst[0] = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 1), avx_pxMaskRotate0To1));   // blend with mask [0000 0001] and permute - [X02|X03|X04|X05|X06|X07|X08|X09]
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 3), avx_pxMaskRotate0To2));     // blend with mask [0000 0011] and permute - [X03|X04|X05|X06|X07|X08|X09|X10]
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 7), avx_pxMaskRotate0To3));     // blend with mask [0000 0111] and permute - [X04|X05|X06|X07|X08|X09|X10|X11]
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 15), avx_pxMaskRotate0To4));    // blend with mask [0000 1111] and permute - [X05|X06|X07|X08|X09|X10|X11|X12]
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 31), avx_pxMaskRotate0To5));    // blend with mask [0001 1111] and permute - [X06|X07|X08|X09|X10|X11|X12|X13]
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 63), avx_pxMaskRotate0To6));    // blend with mask [0011 1111] and permute - [X07|X08|X09|X10|X11|X12|X13|X14]
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 127), avx_pxMaskRotate0To7));   // blend with mask [0111 1111] and permute - [X08|X09|X10|X11|X12|X13|X14|X15]
-    pDst[0] = _mm256_add_ps(pDst[0], pSrc[1]);
-    pDst[0] = _mm256_mul_ps(pDst[0], pConvolutionFactor);
-}
-
-inline void blend_permute_add_mul_9x9_pkd(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor)
-{
-    /* pSrc[0] - [R01|G01|B01|R02|G02|B02|R03|G03]
-       pSrc[1] - [B03|R04|G04|B04|R05|G05|B05|R06]
-       pSrc[2] - [G06|B06|R07|G07|B07|R08|G08|B08]
-       pSrc[3] - [R09|G09|B09|R10|G10|B10|R11|G11] */
-    pDst[0] = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 7), avx_pxMaskRotate0To3));  // blend with mask [0000 0111] and permute - [R02|G02|B02|R03|G03|B03|R04|G04]
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[0], pSrc[1], 63), avx_pxMaskRotate0To6));   // blend with mask [0011 1111] and permute - [R03|G03|B03|R04|G04|B04|R05|G05]
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[1], pSrc[2], 1), avx_pxMaskRotate0To1));    // blend with mask [0000 0001] and permute - [R04|G04|B04|R05|G05|B05|R06|G06]
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[1], pSrc[2], 15), avx_pxMaskRotate0To4));   // blend with mask [0000 1111] and permute - [R05|G05|B05|R06|G06|B06|R07|G07]
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[1], pSrc[2], 127), avx_pxMaskRotate0To7));  // blend with mask [0111 1111] and permute - [R06|G06|B06|R07|G07|B07|R08|G08]
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[2], pSrc[3], 3), avx_pxMaskRotate0To2));    // blend with mask [0000 0011] and permute - [R07|G07|B07|R08|G08|B08|R09|G09]
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[2], pSrc[3], 31), avx_pxMaskRotate0To5));   // blend with mask [0001 1111] and permute - [R08|G08|B08|R09|G09|B09|R10|G10]
-    pDst[0] = _mm256_add_ps(pDst[0], pSrc[3]);
+    pDst[0] = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[index[0]], pSrc[index[0] + 1], blendMask1), pxMask[0]));   // blend with mask [0000 0001] and permute - [X02|X03|X04|X05|X06|X07|X08|X09]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[index[1]], pSrc[index[1] + 1], blendMask2), pxMask[1]));   // blend with mask [0000 0011] and permute - [X03|X04|X05|X06|X07|X08|X09|X10]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[index[2]], pSrc[index[2] + 1], blendMask3), pxMask[2]));   // blend with mask [0000 0111] and permute - [X04|X05|X06|X07|X08|X09|X10|X11]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[index[3]], pSrc[index[3] + 1], blendMask4), pxMask[3]));   // blend with mask [0000 1111] and permute - [X05|X06|X07|X08|X09|X10|X11|X12]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[index[4]], pSrc[index[4] + 1], blendMask5), pxMask[4]));   // blend with mask [0001 1111] and permute - [X06|X07|X08|X09|X10|X11|X12|X13]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[index[5]], pSrc[index[5] + 1], blendMask6), pxMask[5]));   // blend with mask [0011 1111] and permute - [X07|X08|X09|X10|X11|X12|X13|X14]
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[index[6]], pSrc[index[6] + 1], blendMask7), pxMask[6]));   // blend with mask [0111 1111] and permute - [X08|X09|X10|X11|X12|X13|X14|X15]
+    pDst[0] = _mm256_add_ps(pDst[0], pSrc[index[6] + 1]);
     pDst[0] = _mm256_mul_ps(pDst[0], pConvolutionFactor);
 }
 

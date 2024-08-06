@@ -279,9 +279,6 @@ inline void add_rows_9x9(__m256 *pRow, __m256 *pDst)
     pDst[0] = _mm256_add_ps(pDst[0], _mm256_add_ps(_mm256_add_ps(pRow[6], pRow[7]), pRow[8]));
 }
 
-__m128i pxMaskPln[7] = {xmm_pxMaskRotate0To1, xmm_pxMaskRotate0To3, xmm_pxMaskRotate0To5, xmm_pxMaskRotate0To7, xmm_pxMaskRotate0To9, xmm_pxMaskRotate0To11, xmm_pxMaskRotate0To13};
-__m128i pxMaskPkd[7] = {xmm_pxMaskRotate0To5, xmm_pxMaskRotate0To11, xmm_pxMaskRotate0To1, xmm_pxMaskRotate0To7, xmm_pxMaskRotate0To13, xmm_pxMaskRotate0To3, xmm_pxMaskRotate0To9};
-
 template<typename T>
 RppStatus box_filter_char_host_tensor(T *srcPtr,
                                       RpptDescPtr srcDescPtr,
@@ -299,6 +296,11 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
 
     if ((kernelSize != 3) && (kernelSize != 5) && (kernelSize != 7) && (kernelSize != 9))
         return box_filter_generic_host_tensor(srcPtr, srcDescPtr, dstPtr, dstDescPtr, kernelSize, roiTensorPtrSrc, roiType, layoutParams, handle);
+
+#if __AVX2__
+    __m128i pxMaskPln[7] = {xmm_pxMaskRotate0To1, xmm_pxMaskRotate0To3, xmm_pxMaskRotate0To5, xmm_pxMaskRotate0To7, xmm_pxMaskRotate0To9, xmm_pxMaskRotate0To11, xmm_pxMaskRotate0To13};
+    __m128i pxMaskPkd[7] = {xmm_pxMaskRotate0To5, xmm_pxMaskRotate0To11, xmm_pxMaskRotate0To1, xmm_pxMaskRotate0To7, xmm_pxMaskRotate0To13, xmm_pxMaskRotate0To3, xmm_pxMaskRotate0To9};
+#endif
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
@@ -1573,6 +1575,11 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
     if ((kernelSize != 3) && (kernelSize != 5) && (kernelSize != 7) && (kernelSize != 9))
         return box_filter_generic_host_tensor(srcPtr, srcDescPtr, dstPtr, dstDescPtr, kernelSize, roiTensorPtrSrc, roiType, layoutParams, handle);
 
+#if __AVX2__
+    __m256i pxMaskPln[7] = {avx_pxMaskRotate0To1, avx_pxMaskRotate0To2, avx_pxMaskRotate0To3, avx_pxMaskRotate0To4, avx_pxMaskRotate0To5, avx_pxMaskRotate0To6, avx_pxMaskRotate0To7};
+    __m256i pxMaskPkd[7] = {avx_pxMaskRotate0To3, avx_pxMaskRotate0To6, avx_pxMaskRotate0To1, avx_pxMaskRotate0To4, avx_pxMaskRotate0To7, avx_pxMaskRotate0To2, avx_pxMaskRotate0To5};
+#endif
+
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
@@ -1592,6 +1599,9 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
         Rpp32f kernelSizeInverseSquare = 1.0 / (kernelSize * kernelSize);
 #if __AVX2__
         const __m256 pConvolutionFactor = _mm256_set1_ps(kernelSizeInverseSquare);
+        Rpp32u blendRegisterOrder[7] = {0, 0, 1, 1, 1, 2, 2};
+        if (srcDescPtr->layout == RpptLayout::NCHW)
+            std::fill_n(blendRegisterOrder, 7, 0);
 #endif
 
         T *srcPtrChannel, *dstPtrChannel;
@@ -1641,8 +1651,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                             add_rows_3x3(pRow, &pTemp[1]);
                             pTemp[2] = avx_p0;
 
-                            blend_permute_add_mul_3x3_pln(&pTemp[0], &pDst[0], pConvolutionFactor);
-                            blend_permute_add_mul_3x3_pln(&pTemp[1], &pDst[1], pConvolutionFactor);
+                            blend_permute_add_mul_3x3_host<1, 3>(&pTemp[0], &pDst[0], pConvolutionFactor, pxMaskPln, blendRegisterOrder);
+                            blend_permute_add_mul_3x3_host<1, 3>(&pTemp[1], &pDst[1], pConvolutionFactor, pxMaskPln, blendRegisterOrder);
                             rpp_store16_float(dstPtrTemp, pDst);
 
                             increment_row_ptrs(srcPtrTemp, kernelSize, 6);
@@ -1696,8 +1706,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         rpp_load_box_filter_float_3x3_host(pRow, srcPtrTemp, rowKernelLoopLimit);
                         add_rows_3x3(pRow, &pTemp[2]);
 
-                        blend_permute_add_mul_3x3_pkd(&pTemp[0], &pDst[0], pConvolutionFactor);
-                        blend_permute_add_mul_3x3_pkd(&pTemp[1], &pDst[1], pConvolutionFactor);
+                        blend_permute_add_mul_3x3_host<7, 63>(&pTemp[0], &pDst[0], pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
+                        blend_permute_add_mul_3x3_host<7, 63>(&pTemp[1], &pDst[1], pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
 
                         rpp_store16_float(dstPtrTemp, pDst);
                         dstPtrTemp += 16;
@@ -1749,8 +1759,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         rpp_load_box_filter_float_3x3_host(pRow, srcPtrTemp, rowKernelLoopLimit);
                         add_rows_3x3(pRow, &pTemp[2]);
 
-                        blend_permute_add_mul_3x3_pkd(&pTemp[0], &pDst[0], pConvolutionFactor);
-                        blend_permute_add_mul_3x3_pkd(&pTemp[1], &pDst[1], pConvolutionFactor);
+                        blend_permute_add_mul_3x3_host<7, 63>(&pTemp[0], &pDst[0], pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
+                        blend_permute_add_mul_3x3_host<7, 63>(&pTemp[1], &pDst[1], pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
 
                         __m128 pDstPln[3];
                         rpp_convert12_f32pkd3_to_f32pln3(pDst, pDstPln);
@@ -1820,8 +1830,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                             add_rows_3x3(pRow, &pTemp[1]);
                             pTemp[2] = avx_p0;
 
-                            blend_permute_add_mul_3x3_pln(&pTemp[0], &pResult[channelStride], pConvolutionFactor);
-                            blend_permute_add_mul_3x3_pln(&pTemp[1], &pResult[channelStride + 1], pConvolutionFactor);
+                            blend_permute_add_mul_3x3_host<1, 3>(&pTemp[0], &pResult[channelStride], pConvolutionFactor, pxMaskPln, blendRegisterOrder);
+                            blend_permute_add_mul_3x3_host<1, 3>(&pTemp[1], &pResult[channelStride + 1], pConvolutionFactor, pxMaskPln, blendRegisterOrder);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 6);
                         }
 
@@ -1895,8 +1905,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                             add_rows_5x5(pRow, &pTemp[1]);
                             pTemp[2] = avx_p0;
 
-                            blend_permute_add_mul_5x5_pln(&pTemp[0], &pDst[0], pConvolutionFactor);
-                            blend_permute_add_mul_5x5_pln(&pTemp[1], &pDst[1], pConvolutionFactor);
+                            blend_permute_add_mul_5x5_host<1, 3, 7, 15>(&pTemp[0], &pDst[0], pConvolutionFactor, pxMaskPln, blendRegisterOrder);
+                            blend_permute_add_mul_5x5_host<1, 3, 7, 15>(&pTemp[1], &pDst[1], pConvolutionFactor, pxMaskPln, blendRegisterOrder);
 
                             rpp_store16_float(dstPtrTemp, pDst);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 4);
@@ -1954,8 +1964,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         add_rows_5x5(pRow, &pTemp[2]);
                         pTemp[3] = avx_p0;
 
-                        blend_permute_add_mul_5x5_pkd(&pTemp[0], &pDst[0], pConvolutionFactor);
-                        blend_permute_add_mul_5x5_pkd(&pTemp[1], &pDst[1], pConvolutionFactor);
+                        blend_permute_add_mul_5x5_host<7, 63, 1, 15>(&pTemp[0], &pDst[0], pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
+                        blend_permute_add_mul_5x5_host<7, 63, 1, 15>(&pTemp[1], &pDst[1], pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
 
                         rpp_store16_float(dstPtrTemp, pDst);
                         increment_row_ptrs(srcPtrTemp, kernelSize, -4);
@@ -2019,7 +2029,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 8);
                             rpp_load_box_filter_float_5x5_host(pRow, srcPtrTemp[c], rowKernelLoopLimit);
                             add_rows_5x5(pRow, &pTemp[1]);
-                            blend_permute_add_mul_5x5_pln(pTemp, &pResultPln[c], pConvolutionFactor);
+                            blend_permute_add_mul_5x5_host<1, 3, 7, 15>(pTemp, &pResultPln[c], pConvolutionFactor, pxMaskPln, blendRegisterOrder);
                         }
 
                         // convert result from pln to pkd format and store in output buffer
@@ -2084,8 +2094,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         add_rows_5x5(pRow, &pTemp[2]);
                         pTemp[3] = avx_p0;
 
-                        blend_permute_add_mul_5x5_pkd(&pTemp[0], &pDst[0], pConvolutionFactor);
-                        blend_permute_add_mul_5x5_pkd(&pTemp[1], &pDst[1], pConvolutionFactor);
+                        blend_permute_add_mul_5x5_host<7, 63, 1, 15>(&pTemp[0], &pDst[0], pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
+                        blend_permute_add_mul_5x5_host<7, 63, 1, 15>(&pTemp[1], &pDst[1], pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
 
                         __m128 pDstPln[3];
                         rpp_convert12_f32pkd3_to_f32pln3(pDst, pDstPln);
@@ -2154,7 +2164,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                             increment_row_ptrs(srcPtrTemp, kernelSize, 8);
                             rpp_load_box_filter_float_7x7_host(pRow, srcPtrTemp, rowKernelLoopLimit);
                             add_rows_7x7(pRow, &pTemp[1]);
-                            blend_permute_add_mul_7x7_pln(&pTemp[0], &pDst, pConvolutionFactor);
+                            blend_permute_add_mul_7x7_host<1, 3, 7, 15, 31, 63>(&pTemp[0], &pDst, pConvolutionFactor, pxMaskPln, blendRegisterOrder);
 
                             // convert result from pln to pkd format and store in output buffer
                             if constexpr (std::is_same<T, Rpp32f>::value)
@@ -2223,7 +2233,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         add_rows_7x7(pRow, &pTemp[3]);
 
                         __m256 pDst;
-                        blend_permute_add_mul_7x7_pkd(pTemp, &pDst, pConvolutionFactor);
+                        blend_permute_add_mul_7x7_host<7, 63, 1, 15, 127, 3>(pTemp, &pDst, pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
 
                         // convert result from pln to pkd format and store in output buffer
                         if constexpr (std::is_same<T, Rpp32f>::value)
@@ -2295,7 +2305,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 8);
                             rpp_load_box_filter_float_7x7_host(pRow, srcPtrTemp[c], rowKernelLoopLimit);
                             add_rows_7x7(pRow, &pTemp[1]);
-                            blend_permute_add_mul_7x7_pln(pTemp, &pResultPln[c], pConvolutionFactor);
+                            blend_permute_add_mul_7x7_host<1, 3, 7, 15, 31, 63>(pTemp, &pResultPln[c], pConvolutionFactor, pxMaskPln, blendRegisterOrder);
                         }
                         // convert result from pln to pkd format and store in output buffer
                         if constexpr (std::is_same<T, Rpp32f>::value)
@@ -2363,8 +2373,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         pTemp[4] = avx_p0;
 
                         __m256 pDst[2];
-                        blend_permute_add_mul_7x7_pkd(&pTemp[0], &pDst[0], pConvolutionFactor);
-                        blend_permute_add_mul_7x7_pkd(&pTemp[1], &pDst[1], pConvolutionFactor);
+                        blend_permute_add_mul_7x7_host<7, 63, 1, 15, 127, 3>(&pTemp[0], &pDst[0], pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
+                        blend_permute_add_mul_7x7_host<7, 63, 1, 15, 127, 3>(&pTemp[1], &pDst[1], pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
 
                         __m128 pDstPln[3];
                         rpp_convert12_f32pkd3_to_f32pln3(pDst, pDstPln);
@@ -2438,7 +2448,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
 
                             rpp_load_box_filter_float_9x9_host(pRow, srcPtrTemp, rowKernelLoopLimit);
                             add_rows_9x9(pRow, &pTemp[1]);
-                            blend_permute_add_mul_9x9_pln(pTemp, &pDst, pConvolutionFactor);
+                            blend_permute_add_mul_9x9_host<1, 3, 7, 15, 31, 63, 127>(pTemp, &pDst, pConvolutionFactor, pxMaskPln, blendRegisterOrder);
 
                             if constexpr (std::is_same<T, Rpp32f>::value)
                                 _mm256_storeu_ps(dstPtrTemp, pDst);
@@ -2506,7 +2516,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         add_rows_9x9(pRow, &pTemp[3]);
 
                         __m256 pDst;
-                        blend_permute_add_mul_9x9_pkd(pTemp, &pDst, pConvolutionFactor);
+                        blend_permute_add_mul_9x9_host<7, 63, 1, 15, 127, 3, 31>(pTemp, &pDst, pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
                         if constexpr (std::is_same<T, Rpp32f>::value)
                             _mm256_storeu_ps(dstPtrTemp, pDst);
                         else if constexpr (std::is_same<T, Rpp16f>::value)
@@ -2577,7 +2587,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                             rpp_load_box_filter_float_9x9_host(pRow, srcPtrTemp[c], rowKernelLoopLimit);
                             add_rows_9x9(pRow, &pTemp[1]);
 
-                            blend_permute_add_mul_9x9_pln(pTemp, &pResultPln[c], pConvolutionFactor);
+                            blend_permute_add_mul_9x9_host<1, 3, 7, 15, 31, 63, 127>(pTemp, &pResultPln[c], pConvolutionFactor, pxMaskPln, blendRegisterOrder);
                         }
 
                         if constexpr (std::is_same<T, Rpp32f>::value)
@@ -2647,8 +2657,8 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
                         add_rows_9x9(pRow, &pTemp[4]);
 
                         __m256 pDst[2];
-                        blend_permute_add_mul_9x9_pkd(&pTemp[0], &pDst[0], pConvolutionFactor);
-                        blend_permute_add_mul_9x9_pkd(&pTemp[1], &pDst[1], pConvolutionFactor);
+                        blend_permute_add_mul_9x9_host<7, 63, 1, 15, 127, 3, 31>(&pTemp[0], &pDst[0], pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
+                        blend_permute_add_mul_9x9_host<7, 63, 1, 15, 127, 3, 31>(&pTemp[1], &pDst[1], pConvolutionFactor, pxMaskPkd, blendRegisterOrder);
 
                         __m128 pDstPln[3];
                         rpp_convert12_f32pkd3_to_f32pln3(pDst, pDstPln);
