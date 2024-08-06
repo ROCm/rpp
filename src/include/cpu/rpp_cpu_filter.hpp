@@ -100,8 +100,7 @@ inline void blend_shuffle_add_3x3_host(__m128i *px128, __m128i *pxMask, Rpp32u *
     __m128i pxTemp[2];
     pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[0]], px128[index[0] + 1], blendMask1), pxMask[0]);    // blend with mask [0000 0001] and shuffle - [X02|X03|X04|X05|X06|X07|X08|X09]
     pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[1]], px128[index[1] + 1], blendMask2), pxMask[1]);    // blend with mask [0000 0011] and shuffle - [X03|X04|X05|X06|X07|X08|X09|X10]
-    px128[0] = _mm_add_epi16(px128[0], pxTemp[0]);
-    px128[0] = _mm_add_epi16(px128[0], pxTemp[1]);
+    px128[0] = _mm_add_epi16(_mm_add_epi16(px128[0], pxTemp[0]), pxTemp[1]);
 }
 
 template<int blendMask1, int blendMask2, int blendMask3, int blendMask4> 
@@ -114,10 +113,7 @@ inline void blend_shuffle_add_5x5_host(__m128i *px128, __m128i *pxMask, Rpp32u *
     pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[1]], px128[index[1] + 1], blendMask2), pxMask[1]);    // blend with mask [0000 0011] and shuffle - [X03|X04|X05|X06|X07|X08|X09|X10]
     pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[2]], px128[index[2] + 1], blendMask3), pxMask[2]);    // blend with mask [0000 0111] and shuffle - [X04|X05|X06|X07|X08|X09|X10|X11]
     pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[3]], px128[index[3] + 1], blendMask4), pxMask[3]);    // blend with mask [0000 1111] and shuffle - [X05|X06|X07|X08|X09|X10|X11|X12]
-    px128[0] = _mm_add_epi16(px128[0], pxTemp[0]);
-    px128[0] = _mm_add_epi16(px128[0], pxTemp[1]);
-    px128[0] = _mm_add_epi16(px128[0], pxTemp[2]);
-    px128[0] = _mm_add_epi16(px128[0], pxTemp[3]);
+    px128[0] = _mm_add_epi16(_mm_add_epi16(_mm_add_epi16(_mm_add_epi16(px128[0], pxTemp[0]), pxTemp[1]), pxTemp[2]),  pxTemp[3]);
 }
 
 template<int blendMask1, int blendMask2, int blendMask3, int blendMask4, int blendMask5, int blendMask6>
@@ -132,12 +128,8 @@ inline void blend_shuffle_add_7x7_host(__m128i *px128, __m128i *pxMask, Rpp32u *
     pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[3]], px128[index[3] + 1], blendMask4), pxMask[3]);   // blend with mask [0000 1111] and shuffle - [X05|X06|X07|X08|X09|X10|X11|X12]
     pxTemp[4] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[4]], px128[index[4] + 1], blendMask5), pxMask[4]);   // blend with mask [0001 1111] and shuffle - [X06|X07|X08|X09|X10|X11|X12|X13]
     pxTemp[5] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[5]], px128[index[5] + 1], blendMask6), pxMask[5]);   // blend with mask [0011 1111] and shuffle - [X07|X08|X09|X10|X11|X12|X13|X14]
-    px128[0] = _mm_add_epi16(px128[0], pxTemp[0]);
-    px128[0] = _mm_add_epi16(px128[0], pxTemp[1]);
-    px128[0] = _mm_add_epi16(px128[0], pxTemp[2]);
-    px128[0] = _mm_add_epi16(px128[0], pxTemp[3]);
-    px128[0] = _mm_add_epi16(px128[0], pxTemp[4]);
-    px128[0] = _mm_add_epi16(px128[0], pxTemp[5]);
+    px128[0] = _mm_add_epi16(_mm_add_epi16(_mm_add_epi16(px128[0], pxTemp[0]), pxTemp[1]), pxTemp[2]);
+    px128[0] = _mm_add_epi16(_mm_add_epi16(_mm_add_epi16(px128[0], pxTemp[3]), pxTemp[4]), pxTemp[5]);
 }
 
 template<int blendMask1, int blendMask2, int blendMask3, int blendMask4, int blendMask5, int blendMask6, int blendMask7>
@@ -153,14 +145,8 @@ inline void blend_shuffle_add_9x9_host(__m128i *px128, __m128i *pxMask, Rpp32u *
     pxTemp[4] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[4]], px128[index[4] + 1], blendMask5), pxMask[4]);   // blend with mask [0001 1111] and shuffle - [X06|X07|X08|X09|X10|X11|X12|X13]
     pxTemp[5] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[5]], px128[index[5] + 1], blendMask6), pxMask[5]);  // blend with mask [0011 1111] and shuffle - [X07|X08|X09|X10|X11|X12|X13|X14]
     pxTemp[6] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[6]], px128[index[6] + 1], blendMask7), pxMask[6]); // blend with mask [0111 1111] and shuffle - [X08|X09|X10|X11|X12|X13|X14|X15]
-    px128[0] = _mm_add_epi16(px128[0], pxTemp[0]);
-    px128[0] = _mm_add_epi16(px128[0], pxTemp[1]);
-    px128[0] = _mm_add_epi16(px128[0], pxTemp[2]);
-    px128[0] = _mm_add_epi16(px128[0], pxTemp[3]);
-    px128[0] = _mm_add_epi16(px128[0], pxTemp[4]);
-    px128[0] = _mm_add_epi16(px128[0], pxTemp[5]);
-    px128[0] = _mm_add_epi16(px128[0], pxTemp[6]);
-    px128[0] = _mm_add_epi16(px128[0], px128[index[6] + 1]);
+    px128[0] = _mm_add_epi16(_mm_add_epi16(_mm_add_epi16(_mm_add_epi16(px128[0], pxTemp[0]), pxTemp[1]), pxTemp[2]),  pxTemp[3]);
+    px128[0] = _mm_add_epi16(_mm_add_epi16(_mm_add_epi16(_mm_add_epi16(px128[0], pxTemp[4]), pxTemp[5]), pxTemp[6]),  px128[index[6] + 1]);
 }
 
 // -------------------- F32/F16 bitdepth compute functions for kernel size (3/5/7/9) --------------------
