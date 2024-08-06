@@ -512,12 +512,12 @@ inline int power_function(int a, int b)
 
 inline void saturate_pixel(Rpp32f &pixel, Rpp8u* dst)
 {
-    *dst = static_cast<Rpp8u>(RPPPIXELCHECK(pixel));
+    *dst = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(pixel)));
 }
 
 inline void saturate_pixel(Rpp32f &pixel, Rpp8s* dst)
 {
-    *dst = static_cast<Rpp8s>(RPPPIXELCHECKI8(pixel - 128));
+    *dst = static_cast<Rpp8s>(RPPPIXELCHECKI8(std::nearbyintf(pixel) - 128));
 }
 
 inline void saturate_pixel(Rpp32f &pixel, Rpp32f* dst)
