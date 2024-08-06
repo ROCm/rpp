@@ -243,7 +243,7 @@ def generate_performance_reports(d_counter, TYPE_LIST, RESULTS_DIR):
         print(dfPrint_noIndices)
 
 # Read the data from QA logs, process the data and print the results as a summary
-def print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList):
+def print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, fileName):
     f = open(qaFilePath, 'r+')
     numLines = 0
     numPassed = 0
@@ -261,7 +261,7 @@ def print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList):
     resultsInfo += "\n    - Total augmentations with golden output QA test support = " + str(len(supportedCaseList) - len(nonQACaseList))
     resultsInfo += "\n    - Total augmentations without golden ouput QA test support (due to randomization involved) = " + str(len(nonQACaseList))
     f.write(resultsInfo)
-    print("\n-------------------------------------------------------------------" + resultsInfo + "\n\n-------------------------------------------------------------------")
+    print("\n---------------------------------- Summary of QA Test - " + fileName + " ----------------------------------" + resultsInfo + "\n\n-------------------------------------------------------------------")
 
 # Read the data from performance logs, process the data and print the results as a summary
 def print_performance_tests_summary(logFile, functionalityGroupList, numRuns):

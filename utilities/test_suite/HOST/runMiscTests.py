@@ -192,7 +192,7 @@ if testType == 0:
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
         print("---------------------------------- Results of QA Test - Tensor_misc_host ----------------------------------\n")
-        print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList)
+        print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, "Tensor_misc_host")
 
 # Performance tests
 if (testType == 1):
