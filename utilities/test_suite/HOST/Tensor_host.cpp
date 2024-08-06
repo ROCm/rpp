@@ -216,7 +216,7 @@ int main(int argc, char **argv)
     {
         char additionalParam_char[2];
         std::sprintf(additionalParam_char, "%u", additionalParam);
-        func += "_kSize";
+        func += "_kernelSize";
         func += additionalParam_char;
     }
 
