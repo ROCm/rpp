@@ -1168,16 +1168,16 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     else
         compare_outputs_pkd_and_pln1(output, binaryContent + pln1RefStride, dstDescPtr, dstImgSizes, refOutputHeight, refOutputWidth, refOutputSize, fileMatch);
 
-    std::cout << std::endl << "Results for " << func << " :" << std::endl;
+    std::cout << std::endl << "\nResults for " << func << " :" << std::endl;
     std::string status = func + ": ";
     if(fileMatch == dstDescPtr->n)
     {
-        std::cout << "PASSED!" << std::endl;
+        std::cout << "PASSED!";
         status += "PASSED";
     }
     else
     {
-        std::cout << "FAILED! " << fileMatch << "/" << dstDescPtr->n << " outputs are matching with reference outputs" << std::endl;
+        std::cout << "FAILED! " << fileMatch << "/" << dstDescPtr->n << " outputs are matching with reference outputs";
         status += "FAILED";
     }
 
