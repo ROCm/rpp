@@ -335,6 +335,9 @@ RppStatus rppt_mel_filter_bank_gpu(RppPtr_t srcPtr,
                                    rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
+    Rpp32u tensorDims = srcDescPtr->numDims - 1; // exclude batchsize from input dims
+    if (tensorDims != 1 && tensorDims != 2)
+        return RPP_ERROR_INVALID_SRC_DIMS;
     if (srcDescPtr->layout != RpptLayout::NFT) return RPP_ERROR_INVALID_SRC_LAYOUT;
     if (dstDescPtr->layout != RpptLayout::NFT) return RPP_ERROR_INVALID_DST_LAYOUT;
 

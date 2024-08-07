@@ -67,6 +67,7 @@ RppStatus hip_exec_mel_filter_bank_tensor(Rpp32f *srcPtr,
                                           bool normalize,
                                           rpp::Handle& handle)
 {
+    // Create an instance of the MelScale class based on the chosen formula
     BaseMelScale *melScalePtr;
     switch (melFormula)
     {
@@ -82,6 +83,7 @@ RppStatus hip_exec_mel_filter_bank_tensor(Rpp32f *srcPtr,
     Rpp32f maxFreq = sampleRate / 2;
     Rpp32f minFreq = minFreqVal;
 
+    // Convert the frequency range to Mel scale and compute Mel step size
     Rpp64f melLow = melScalePtr->hz_to_mel(minFreq);
     Rpp64f melHigh = melScalePtr->hz_to_mel(maxFreq);
     Rpp64f melStep = (melHigh - melLow) / (numFilter + 1);
@@ -91,19 +93,23 @@ RppStatus hip_exec_mel_filter_bank_tensor(Rpp32f *srcPtr,
     Rpp32f *weightsDown = scratchMem + numFilter;
     Rpp32s *intervals = reinterpret_cast<Rpp32s *>(weightsDown + srcDescPtr->h);
 
+    // parameters for FFT and frequency bins
     Rpp32s nfft = (srcDescPtr->h - 1) * 2;
     Rpp32s numBins = nfft / 2 + 1;
     Rpp64f hzStep = static_cast<Rpp64f>(sampleRate) / nfft;
     Rpp64f invHzStep = 1.0 / hzStep;
 
+    // start and end bins for the Mel filter bank
     Rpp32s fftBinStart = std::ceil(minFreq * invHzStep);
     Rpp32s fftBinEnd = std::ceil(maxFreq * invHzStep);
     fftBinEnd = std::min(fftBinEnd, numBins);
 
+    // Initialize arrays used for Mel filter bank computation
     std::fill(normFactors, normFactors + numFilter, 1.0f);
     memset(weightsDown, 0, sizeof(srcDescPtr->h * sizeof(Rpp32f)));
     std::fill(intervals, intervals + numFilter + 2, -1);
 
+    // Compute Mel filter weights and intervals
     Rpp32s fftBin = fftBinStart;
     Rpp64f mel0 = melLow, mel1 = melLow + melStep;
     Rpp64f fIter = fftBin * hzStep;
@@ -124,6 +130,7 @@ RppStatus hip_exec_mel_filter_bank_tensor(Rpp32f *srcPtr,
             normFactors[index] = 2.0 / (f2 - f0);
         }
 
+         // Compute weights for each filter bank
         for (; fftBin < fftBinEnd && fIter < f1; fftBin++, fIter = fftBin * hzStep) {
             weightsDown[fftBin] = (f1 - fIter) * slope;
         }

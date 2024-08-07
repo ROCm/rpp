@@ -120,6 +120,7 @@ inline void set_audio_max_dimensions(vector<string> audioFilesPath, int& maxWidt
     }
 }
 
+// Read a batch of audio samples and fill dims
 void read_audio_batch_and_fill_dims(RpptDescPtr descPtr, Rpp32f *inputf32, vector<string> audioFilesPath, int iterCount, Rpp32s *srcLengthTensor, Rpp32s *channelsTensor)
 {
     auto fileIndex = iterCount * descPtr->n;
@@ -228,6 +229,7 @@ void replicate_src_dims_to_fill_batch(Rpp32s *srcDimsTensor, int numSamples, int
     }
 }
 
+// Compares output with reference outputs and validates QA
 void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dstDims, string testCase, string dst, string scriptPath, string backend)
 {
     fstream refFile;
@@ -282,6 +284,8 @@ void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dst
                 bool invalidComparision = ((outVal == 0.0f) && (refVal != 0.0f));
                 if (!invalidComparision && abs(outVal - refVal) < cutoff)
                     matchedIndices += 1;
+                else
+                    std::cout<<"\n mismatch "<<" row "<<i<<" col "<<j<<" outVal "<<outVal<<" refVal "<<refVal;
             }
             dstPtrRow += hStride;
             refPtrRow += hStride;
@@ -312,6 +316,7 @@ void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dst
     free(refOutput);
 }
 
+// Compares output with reference outputs and validates QA for non silent region
 void verify_non_silent_region_detection(int *detectedIndex, int *detectionLength, string testCase, int bs, vector<string> audioNames, string dst)
 {
     int fileMatch = 0;
@@ -389,4 +394,45 @@ inline void windowed_sinc(RpptResamplingWindow &window, Rpp32s coeffs, Rpp32s lo
     window.scale = 1 / scale;
     window.pCenter = _mm_set1_ps(window.center);
     window.pScale = _mm_set1_ps(window.scale);
+}
+
+// Mel filter bank initializer for unit and performance testing
+void inline init_mel_filter_bank(Rpp32f **inputf32, Rpp32f **outputf32, RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, RpptImagePatch *dstDims, Rpp32u offsetInBytes, Rpp32s numFilter, int batchSize,  Rpp32s *srcDimsTensor, string scriptPath, int testType)
+{
+    // Accepts outputs from FT layout of Spectrogram for QA
+    srcDescPtr->layout = dstDescPtr->layout = RpptLayout::NFT;
+
+    int maxDstHeight = 0;
+    int maxDstWidth = 0;
+    int maxSrcHeight = 0;
+    int maxSrcWidth = 0;
+    int numSamples = 3;
+    for(int i = 0, j = 0; i < numSamples; i++, j += 2)
+    {
+        maxSrcHeight = std::max(maxSrcHeight, (int)srcDimsTensor[j]);
+        maxSrcWidth = std::max(maxSrcWidth, (int)srcDimsTensor[j + 1]);
+        dstDims[i].height = numFilter;
+        dstDims[i].width = srcDimsTensor[j + 1];
+        maxDstHeight = std::max(maxDstHeight, (int)dstDims[i].height);
+        maxDstWidth = std::max(maxDstWidth, (int)dstDims[i].width);
+    }
+    srcDescPtr->h = maxSrcHeight;
+    srcDescPtr->w = maxSrcWidth;
+    dstDescPtr->h = maxDstHeight;
+    dstDescPtr->w = maxDstWidth;
+
+    set_audio_descriptor_dims_and_strides_nostriding(srcDescPtr, batchSize, maxSrcHeight, maxSrcWidth, 1, offsetInBytes);
+    set_audio_descriptor_dims_and_strides_nostriding(dstDescPtr, batchSize, maxDstHeight, maxDstWidth, 1, offsetInBytes);
+    srcDescPtr->numDims = 3;
+    dstDescPtr->numDims = 3;
+
+    unsigned long sampleSize = static_cast<unsigned long>(srcDescPtr->h) * static_cast<unsigned long>(srcDescPtr->w) * static_cast<unsigned long>(srcDescPtr->c);
+
+    // Read source data
+    read_from_bin_file(*inputf32, srcDescPtr, srcDimsTensor, "spectrogram", scriptPath, numSamples);
+    if(testType)
+    {
+        replicate_last_sample_mel_filter_bank(*inputf32, numSamples, sampleSize, batchSize);
+        replicate_src_dims_to_fill_batch(srcDimsTensor, numSamples, batchSize);
+    }
 }
