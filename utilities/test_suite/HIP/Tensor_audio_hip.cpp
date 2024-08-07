@@ -115,10 +115,8 @@ int main(int argc, char **argv)
     // set buffer sizes for src/dst
     if(testCase == 7)
     {
-        // For Melfilter Bank, using a fixed size of 257 for the height
-        // buffer size: height (257) * width * channels * batches
-        iBufferSize = (Rpp64u)257 * (Rpp64u)srcDescPtr->w * (Rpp64u)srcDescPtr->c * (Rpp64u)srcDescPtr->n;
-        oBufferSize = (Rpp64u)257 * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
+        iBufferSize = (Rpp64u)MEL_FILTER_BANK_MAX_HEIGHT * (Rpp64u)srcDescPtr->w * (Rpp64u)srcDescPtr->c * (Rpp64u)srcDescPtr->n;
+        oBufferSize = (Rpp64u)MEL_FILTER_BANK_MAX_HEIGHT * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
     }
     else
     {

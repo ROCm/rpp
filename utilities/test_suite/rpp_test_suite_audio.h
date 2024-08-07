@@ -29,6 +29,8 @@ SOFTWARE.
 // Include this header file to use functions from libsndfile
 #include <sndfile.h>
 
+#define MEL_FILTER_BANK_MAX_HEIGHT 257 // Maximum height for mel filter bank set to 257 to ensure compatibility with test configuration
+
 std::map<int, string> audioAugmentationMap =
 {
     {0, "non_silent_region_detection"},
