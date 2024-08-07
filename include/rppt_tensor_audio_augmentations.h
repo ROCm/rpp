@@ -49,7 +49,7 @@ extern "C" {
             \n Finds the starting index and length of non silent region in the audio buffer by comparing the
             calculated short-term power with cutoff value passed
  * \param [in] srcPtr source tensor in HOST memory
- * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 2, offsetInBytes >= 0, dataType = F32)
  * \param [in] srcLengthTensor source audio buffer length (1D tensor in HOST memory, of size batchSize)
  * \param [out] detectedIndexTensor beginning index of non silent region (1D tensor in HOST memory, of size batchSize)
  * \param [out] detectionLengthTensor length of non silent region  (1D tensor in HOST memory, of size batchSize)
@@ -70,7 +70,7 @@ RppStatus rppt_non_silent_region_detection_host(RppPtr_t srcPtr, RpptDescPtr src
             \n Finds the starting index and length of non silent region in the audio buffer by comparing the
             calculated short-term power with cutoff value passed
  * \param [in] srcPtr source tensor in HIP memory
- * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 2, offsetInBytes >= 0, dataType = F32)
  * \param [in] srcLengthTensor source audio buffer length (1D tensor in Pinned/HIP memory, of size batchSize)
  * \param [out] detectedIndexTensor beginning index of non silent region (1D tensor in Pinned/HIP memory, of size batchSize)
  * \param [out] detectionLengthTensor length of non silent region  (1D tensor in Pinned/HIP memory, of size batchSize)
