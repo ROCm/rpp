@@ -1016,6 +1016,13 @@ RppStatus rppt_pixelate_host(RppPtr_t srcPtr,
                              RpptRoiType roiType,
                              rppHandle_t rppHandle)
 {
+
+    // This function performs pixelation through a two-step resizing process:
+    // 1. The image is first resized to a smaller intermediate size using bilinear interpolation.
+    // 2. The intermediate image is then resized back to the original size using nearest neighbor interpolation.
+    // The bilinear step reduces the image dimensions smoothly, and the nearest neighbor step enlarges it back, 
+    // resulting in a pixelated effect as the intermediate pixels are repeated in the final image.
+
     if ((srcDescPtr->layout != RpptLayout::NCHW) && (srcDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
     if ((dstDescPtr->layout != RpptLayout::NCHW) && (dstDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
     if (pixelationPercentage < 0 || pixelationPercentage > 100)
@@ -2157,6 +2164,12 @@ RppStatus rppt_pixelate_gpu(RppPtr_t srcPtr,
                             rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
+
+    // This function performs pixelation through a two-step resizing process:
+    // 1. The image is first resized to a smaller intermediate size using bilinear interpolation.
+    // 2. The intermediate image is then resized back to the original size using nearest neighbor interpolation.
+    // The bilinear step reduces the image dimensions smoothly, and the nearest neighbor step enlarges it back, 
+    // resulting in a pixelated effect as the intermediate pixels are repeated in the final image.
 
     if ((srcDescPtr->layout != RpptLayout::NCHW) && (srcDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_SRC_LAYOUT;
     if ((dstDescPtr->layout != RpptLayout::NCHW) && (dstDescPtr->layout != RpptLayout::NHWC)) return RPP_ERROR_INVALID_DST_LAYOUT;
