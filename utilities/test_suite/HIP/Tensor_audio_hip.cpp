@@ -113,8 +113,16 @@ int main(int argc, char **argv)
     set_audio_descriptor_dims_and_strides(dstDescPtr, batchSize, maxDstHeight, maxDstWidth, maxDstChannels, offsetInBytes);
 
     // set buffer sizes for src/dst
-    iBufferSize = (Rpp64u)srcDescPtr->h * (Rpp64u)srcDescPtr->w * (Rpp64u)srcDescPtr->c * (Rpp64u)srcDescPtr->n;
-    oBufferSize = (Rpp64u)dstDescPtr->h * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
+    if(testCase == 7)
+    {
+        iBufferSize = (Rpp64u)MEL_FILTER_BANK_MAX_HEIGHT * (Rpp64u)srcDescPtr->w * (Rpp64u)srcDescPtr->c * (Rpp64u)srcDescPtr->n;
+        oBufferSize = (Rpp64u)MEL_FILTER_BANK_MAX_HEIGHT * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
+    }
+    else
+    {
+        iBufferSize = (Rpp64u)srcDescPtr->h * (Rpp64u)srcDescPtr->w * (Rpp64u)srcDescPtr->c * (Rpp64u)srcDescPtr->n;
+        oBufferSize = (Rpp64u)dstDescPtr->h * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
+    }
 
     // allocate hip buffers for input & output
     Rpp32f *inputf32 = (Rpp32f *)calloc(iBufferSize, sizeof(Rpp32f));
@@ -134,11 +142,6 @@ int main(int argc, char **argv)
     CHECK_RETURN_STATUS(hipHostMalloc(&srcDims, batchSize * sizeof(RpptImagePatch)));
     CHECK_RETURN_STATUS(hipHostMalloc(&dstDims, batchSize * sizeof(RpptImagePatch)));
 
-    // allocate the buffer for srcDimsTensor
-    Rpp32s *srcDimsTensor;
-    if(testCase == 3)
-        CHECK_RETURN_STATUS(hipHostMalloc(&srcDimsTensor, batchSize * 2 * sizeof(Rpp32s)));
-
     Rpp32s *detectedIndex = nullptr, *detectionLength = nullptr;
     if(testCase == 0)
     {
@@ -146,13 +149,17 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostMalloc(&detectionLength, batchSize * sizeof(Rpp32f)));
     }
 
+    // allocate the buffer for srcDimsTensor
+    Rpp32s *srcDimsTensor;
+    CHECK_RETURN_STATUS(hipHostMalloc(&srcDimsTensor, batchSize * 2 * sizeof(Rpp32s)));
+
     // run case-wise RPP API and measure time
     rppHandle_t handle;
     hipStream_t stream;
     CHECK_RETURN_STATUS(hipStreamCreate(&stream));
     rppCreateWithStreamAndBatchSize(&handle, stream, batchSize);
 
-    int noOfIterations = (int)audioNames.size() / batchSize;
+    int noOfIterations = static_cast<int>(audioNames.size()) / batchSize;
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0;
     string testCaseName;
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
@@ -213,6 +220,32 @@ int main(int argc, char **argv)
 
                     startWallTime = omp_get_wtime();
                     rppt_down_mixing_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcDimsTensor, normalizeWeights, handle);
+
+                    break;
+                }
+                case 7:
+                {
+                    testCaseName = "mel_filter_bank";
+
+                    Rpp32f sampleRate = 16000;
+                    Rpp32f minFreq = 0.0;
+                    Rpp32f maxFreq = sampleRate / 2;
+                    RpptMelScaleFormula melFormula = RpptMelScaleFormula::SLANEY;
+                    Rpp32s numFilter = 80;
+                    bool normalize = true;
+                    srcDimsTensor[0] = 257;
+                    srcDimsTensor[1] = 225;
+                    srcDimsTensor[2] = 257;
+                    srcDimsTensor[3] = 211;
+                    srcDimsTensor[4] = 257;
+                    srcDimsTensor[5] = 214;
+
+                    init_mel_filter_bank(&inputf32, &outputf32, srcDescPtr, dstDescPtr, dstDims, offsetInBytes, numFilter, batchSize, srcDimsTensor, scriptPath, testType);
+
+                    CHECK_RETURN_STATUS(hipMemcpy(d_inputf32, inputf32, iBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
+
+                    startWallTime = omp_get_wtime();
+                    rppt_mel_filter_bank_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcDimsTensor, maxFreq, minFreq, melFormula, numFilter, sampleRate, normalize, handle);
 
                     break;
                 }
@@ -289,8 +322,7 @@ int main(int argc, char **argv)
     CHECK_RETURN_STATUS(hipHostFree(channelsTensor));
     CHECK_RETURN_STATUS(hipHostFree(srcDims));
     CHECK_RETURN_STATUS(hipHostFree(dstDims));
-    if(testCase == 3)
-        CHECK_RETURN_STATUS(hipHostFree(srcDimsTensor));
+    CHECK_RETURN_STATUS(hipHostFree(srcDimsTensor));
     if (detectedIndex != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(detectedIndex));
     if (detectionLength != nullptr)
