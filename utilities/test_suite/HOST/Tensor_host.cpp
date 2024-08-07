@@ -66,7 +66,8 @@ int main(int argc, char **argv)
 
     bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23 || testCase == 24 || testCase == 79);
     bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 33 || testCase == 61 || testCase == 63 || testCase == 65 || testCase == 68);
-    bool randomOutputCase = (testCase == 8 || testCase == 84);
+    bool randomOutputCase = (testCase == 6 || testCase == 8 || testCase == 84);
+    bool nonQACase = (testCase == 24);
     bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24 || testCase == 79);
     bool reductionTypeCase = (testCase == 87 || testCase == 88 || testCase == 89 || testCase == 90 || testCase == 91);
     bool noiseTypeCase = (testCase == 8);
@@ -103,7 +104,7 @@ int main(int argc, char **argv)
 
     if (layoutType == 2)
     {
-        if(testCase == 31 || testCase == 36 || testCase == 45 || testCase == 86)
+        if(testCase == 31 || testCase == 35 || testCase == 36 || testCase == 45 || testCase == 86)
         {
             printf("\ncase %d does not exist for PLN1 layout\n", testCase);
             return -1;
@@ -317,7 +318,7 @@ int main(int argc, char **argv)
     output = static_cast<Rpp8u *>(calloc(outputBufferSize, 1));
 
     Rpp32f *rowRemapTable, *colRemapTable;
-    if(testCase == 79)
+    if(testCase == 79 || testCase == 26)
     {
         rowRemapTable = static_cast<Rpp32f *>(calloc(ioBufferSize, sizeof(Rpp32f)));
         colRemapTable = static_cast<Rpp32f *>(calloc(ioBufferSize, sizeof(Rpp32f)));
@@ -517,6 +518,24 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 6:
+                {
+                    testCaseName = "jitter";
+
+                    Rpp32u kernelSizeTensor[batchSize];
+                    Rpp32u seed = 1255459;
+                    for (i = 0; i < batchSize; i++)
+                        kernelSizeTensor[i] = 5;
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_jitter_host(input, srcDescPtr, output, dstDescPtr, kernelSizeTensor, seed, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 case 8:
                 {
                     testCaseName = "noise";
@@ -672,6 +691,56 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 24:
+                {
+                    testCaseName = "warp_affine";
+
+                    if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR))
+                    {
+                        missingFuncFlag = 1;
+                        break;
+                    }
+
+                    Rpp32f6 affineTensor_f6[batchSize];
+                    Rpp32f *affineTensor = (Rpp32f *)affineTensor_f6;
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        affineTensor_f6[i].data[0] = 1.23;
+                        affineTensor_f6[i].data[1] = 0.5;
+                        affineTensor_f6[i].data[2] = 0;
+                        affineTensor_f6[i].data[3] = -0.8;
+                        affineTensor_f6[i].data[4] = 0.83;
+                        affineTensor_f6[i].data[5] = 0;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_warp_affine_host(input, srcDescPtr, output, dstDescPtr, affineTensor, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 26:
+                {
+                    testCaseName = "lens_correction";
+
+                    Rpp32f cameraMatrix[9 * batchSize];
+                    Rpp32f distortionCoeffs[8 * batchSize];
+                    RpptDesc tableDesc = srcDesc;
+                    RpptDescPtr tableDescPtr = &tableDesc;
+                    init_lens_correction(batchSize, srcDescPtr, cameraMatrix, distortionCoeffs, tableDescPtr);
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_lens_correction_host(input, srcDescPtr, output, dstDescPtr, rowRemapTable, colRemapTable, tableDescPtr, cameraMatrix, distortionCoeffs, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 case 29:
                 {
                     testCaseName = "water";
@@ -821,6 +890,30 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 35:
+                {
+                    testCaseName = "glitch";
+                    RpptChannelOffsets rgbOffsets[batchSize];
+
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        rgbOffsets[i].r.x = 10;
+                        rgbOffsets[i].r.y = 10;
+                        rgbOffsets[i].g.x = 0;
+                        rgbOffsets[i].g.y = 0;
+                        rgbOffsets[i].b.x = 5;
+                        rgbOffsets[i].b.y = 5;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_glitch_host(input, srcDescPtr, output, dstDescPtr, rgbOffsets, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 case 36:
                 {
                     testCaseName = "color_twist";
@@ -960,7 +1053,7 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "color_temperature";
 
-                    Rpp8s adjustment[batchSize];
+                    Rpp32s adjustment[batchSize];
                     for (i = 0; i < batchSize; i++)
                         adjustment[i] = 70;
 
@@ -1419,7 +1512,7 @@ int main(int argc, char **argv)
                 1.QA Flag is set
                 2.input bit depth 0 (U8)
                 3.source and destination layout are the same*/
-                if(qaFlag && inputBitDepth == 0 && (srcDescPtr->layout == dstDescPtr->layout) && !(randomOutputCase))
+                if(qaFlag && inputBitDepth == 0 && (srcDescPtr->layout == dstDescPtr->layout) && !(randomOutputCase) && !(nonQACase))
                 {
                     if (testCase == 87)
                         compare_reduction_output(static_cast<uint64_t *>(reductionFuncResultArr), testCaseName, srcDescPtr, testCase, dst, scriptPath);
@@ -1485,7 +1578,7 @@ int main(int argc, char **argv)
                 2.input bit depth 0 (Input U8 && Output U8)
                 3.source and destination layout are the same
                 4.augmentation case does not generate random output*/
-                if(qaFlag && inputBitDepth == 0 && ((srcDescPtr->layout == dstDescPtr->layout) || pln1OutTypeCase) && !(randomOutputCase))
+                if(qaFlag && inputBitDepth == 0 && ((srcDescPtr->layout == dstDescPtr->layout) || pln1OutTypeCase) && !(randomOutputCase) && !(nonQACase))
                     compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, batchSize, interpolationTypeName, noiseTypeName, testCase, dst, scriptPath);
 
                 // Calculate exact dstROI in XYWH format for OpenCV dump

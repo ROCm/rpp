@@ -962,14 +962,16 @@ INPUT                  = ../../README.md \
                         ../../include/rppi_logical_operations.h \
                         ../../include/rppi_morphological_transforms.h \
                         ../../include/rppi_statistical_operations.h \
+                        ../../include/rppt_tensor_arithmetic_operations.h \
+                        ../../include/rppt_tensor_audio_augmentations.h \
                         ../../include/rppt_tensor_color_augmentations.h \
                         ../../include/rppt_tensor_data_exchange_operations.h \
                         ../../include/rppt_tensor_effects_augmentations.h \
                         ../../include/rppt_tensor_filter_augmentations.h \
                         ../../include/rppt_tensor_geometric_augmentations.h \
+                        ../../include/rppt_tensor_logical_operations.h \
                         ../../include/rppt_tensor_morphological_operations.h \
-                        ../../include/rppt_tensor_statistical_operations.h \
-                        ../../include/rppt_tensor_logical_operations.h
+                        ../../include/rppt_tensor_statistical_operations.h
 
 
 # This tag can be used to specify the character encoding of the source files
@@ -2381,7 +2383,7 @@ INCLUDE_FILE_PATTERNS  =
 # recursively expanded use the := operator instead of the = operator.
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
-PREDEFINED             = GPU_SUPPORT RPP_BACKEND_HIP HIP_COMPILE
+PREDEFINED             = GPU_SUPPORT RPP_BACKEND_HIP HIP_COMPILE AUDIO_SUPPORT
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The

@@ -58,6 +58,8 @@ using namespace std;
 #define MAX_BATCH_SIZE 512
 #define GOLDEN_OUTPUT_MAX_HEIGHT 150    // Golden outputs are generated with MAX_HEIGHT set to 150. Changing this constant will result in QA test failures
 #define GOLDEN_OUTPUT_MAX_WIDTH 150     // Golden outputs are generated with MAX_WIDTH set to 150. Changing this constant will result in QA test failures
+#define LENS_CORRECTION_GOLDEN_OUTPUT_MAX_HEIGHT 480    // Lens correction golden outputs are generated with MAX_HEIGHT set to 480. Changing this constant will result in QA test failures
+#define LENS_CORRECTION_GOLDEN_OUTPUT_MAX_WIDTH 640     // Lens correction golden outputs are generated with MAX_WIDTH set to 640. Changing this constant will result in QA test failures
 
 #define CHECK_RETURN_STATUS(x) do { \
     int retval = (x); \
@@ -73,17 +75,21 @@ std::map<int, string> augmentationMap =
     {1, "gamma_correction"},
     {2, "blend"},
     {4, "contrast"},
+    {6, "jitter"},
     {8, "noise"},
     {13, "exposure"},
     {20, "flip"},
     {21, "resize"},
     {23, "rotate"},
+    {24, "warp_afffine"},
+    {26, "lens_correction"},
     {29, "water"},
     {30, "non_linear_blend"},
     {31, "color_cast"},
     {32, "erase"},
     {33, "crop_and_patch"},
     {34, "lut"},
+    {35, "glitch"},
     {36, "color_twist"},
     {37, "crop"},
     {38, "crop_mirror_normalize"},
@@ -905,7 +911,7 @@ inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, vector
         fseek(fp, 0, SEEK_END);
         long jpegSize = ftell(fp);
         rewind(fp);
-        unsigned char* jpegBuf = (unsigned char*)malloc(jpegSize);
+        unsigned char* jpegBuf = (unsigned char*)calloc(jpegSize, sizeof(Rpp8u));
         fread(jpegBuf, 1, jpegSize, fp);
         fclose(fp);
 
@@ -918,14 +924,14 @@ inline void read_image_batch_turbojpeg(Rpp8u *input, RpptDescPtr descPtr, vector
         if(descPtr->c == 3)
         {
             elementsInRow = width * descPtr->c;
-            rgbBuf= (Rpp8u*)malloc(width * height * 3);
+            rgbBuf= (Rpp8u*)calloc(width * height * 3, sizeof(Rpp8u));
             if(tjDecompress2(m_jpegDecompressor, jpegBuf, jpegSize, rgbBuf, width, width * 3, height, TJPF_RGB, TJFLAG_ACCURATEDCT) != 0)
                 std::cerr << "\n Jpeg image decode failed ";
         }
         else
         {
             elementsInRow = width;
-            rgbBuf= (Rpp8u*)malloc(width * height);
+            rgbBuf= (Rpp8u*)calloc(width * height, sizeof(Rpp8u));
             if(tjDecompress2(m_jpegDecompressor, jpegBuf, jpegSize, rgbBuf, width, width, height, TJPF_GRAY, 0) != 0)
                 std::cerr << "\n Jpeg image decode failed ";
         }
@@ -1092,8 +1098,17 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
 {
     string func = funcName;
     string refFile = "";
-    int refOutputWidth = ((GOLDEN_OUTPUT_MAX_WIDTH / 8) * 8) + 8;    // obtain next multiple of 8 after GOLDEN_OUTPUT_MAX_WIDTH
-    int refOutputHeight = GOLDEN_OUTPUT_MAX_HEIGHT;
+    int refOutputWidth, refOutputHeight;
+    if(testCase == 26)
+    {
+        refOutputWidth = ((LENS_CORRECTION_GOLDEN_OUTPUT_MAX_WIDTH / 8) * 8) + 8;    // obtain next multiple of 8 after GOLDEN_OUTPUT_MAX_WIDTH
+        refOutputHeight = LENS_CORRECTION_GOLDEN_OUTPUT_MAX_HEIGHT;
+    }
+    else
+    {
+        refOutputWidth = ((GOLDEN_OUTPUT_MAX_WIDTH / 8) * 8) + 8;    // obtain next multiple of 8 after GOLDEN_OUTPUT_MAX_WIDTH
+        refOutputHeight = GOLDEN_OUTPUT_MAX_HEIGHT;
+    }
     int refOutputSize = refOutputHeight * refOutputWidth * dstDescPtr->c;
     Rpp64u binOutputSize = refOutputHeight * refOutputWidth * dstDescPtr->n * 4;
     int pln1RefStride = dstDescPtr->strides.nStride * dstDescPtr->n * 3;
@@ -1525,4 +1540,25 @@ void inline init_erase(int batchSize, int boxesInEachImage, Rpp32u* numOfBoxes, 
             }
         }
     }
+}
+
+// Lens correction initializer for unit and performance testing
+void inline init_lens_correction(int batchSize, RpptDescPtr srcDescPtr, Rpp32f *cameraMatrix, Rpp32f *distortionCoeffs, RpptDescPtr tableDescPtr)
+{
+    typedef struct { Rpp32f data[9]; } Rpp32f9;
+    typedef struct { Rpp32f data[8]; } Rpp32f8;
+    Rpp32f9 *cameraMatrix_f9 = reinterpret_cast<Rpp32f9 *>(cameraMatrix);
+    Rpp32f8 *distortionCoeffs_f8 = reinterpret_cast<Rpp32f8 *>(distortionCoeffs);
+    Rpp32f9 sampleCameraMatrix = {534.07088364, 0, 341.53407554, 0, 534.11914595, 232.94565259, 0, 0, 1};
+    Rpp32f8 sampleDistortionCoeffs = {-0.29297164, 0.10770696, 0.00131038, -0.0000311, 0.0434798, 0, 0, 0};
+    for (int i = 0; i < batchSize; i++)
+    {
+        cameraMatrix_f9[i] = sampleCameraMatrix;
+        distortionCoeffs_f8[i] = sampleDistortionCoeffs;
+    }
+
+    tableDescPtr->c = 1;
+    tableDescPtr->strides.nStride = srcDescPtr->h * srcDescPtr->w;
+    tableDescPtr->strides.hStride = srcDescPtr->w;
+    tableDescPtr->strides.wStride = tableDescPtr->strides.cStride = 1;
 }
