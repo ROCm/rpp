@@ -47,8 +47,8 @@ extern "C" {
  *          It multiplies each element of the source tensor by a corresponding element in the 'mulTensor',
  *          adds a corresponding element from the 'addTensor', and stores the result in the destination tensor.
  *          Support added for f32 -> f32 dataype.
- * \image html input150x150x4.gif Sample Input
- * \image html arithmetic_operations_fused_multiply_add_scalar_150x150x4.gif Sample Output
+ * \image html https://raw.githubusercontent.com/ROCm/rpp/develop/docs/data/doxygenInputs/input150x150x4.gif Sample Input
+ * \image html https://raw.githubusercontent.com/ROCm/rpp/develop/docs/data/doxygenOutputs/arithmetic_operations_fused_multiply_add_scalar_150x150x4.gif Sample Output
  * \param [in] srcPtr source tensor in HOST memory
  * \param[in] srcGenericDescPtr source tensor descriptor
  * \param[out] dstPtr destination tensor in HOST memory
@@ -70,8 +70,8 @@ RppStatus rppt_fused_multiply_add_scalar_host(RppPtr_t srcPtr, RpptGenericDescPt
  *          It multiplies each element of the source tensor by a corresponding element in the 'mulTensor',
  *          adds a corresponding element from the 'addTensor', and stores the result in the destination tensor.
  *          Support added for f32 -> f32 dataype.
- * \image html input150x150x4.gif Sample Input
- * \image html arithmetic_operations_fused_multiply_add_scalar_150x150x4.gif Sample Output
+ * \image html https://raw.githubusercontent.com/ROCm/rpp/develop/docs/data/doxygenInputs/input150x150x4.gif Sample Input
+ * \image html https://raw.githubusercontent.com/ROCm/rpp/develop/docs/data/doxygenOutputs/arithmetic_operations_fused_multiply_add_scalar_150x150x4.gif Sample Output
  * \param [in] srcPtr source tensor in HIP memory
  * \param[in] srcGenericDescPtr source tensor descriptor
  * \param[out] dstPtr destination tensor in HIP memory
@@ -92,8 +92,8 @@ RppStatus rppt_fused_multiply_add_scalar_gpu(RppPtr_t srcPtr, RpptGenericDescPtr
  * \details This function performs the addition operation on a batch of 4D tensors.
  *          It adds a corresponding element from the 'addTensor' to source tensor, and stores the result in the destination tensor.
  *          Support added for f32 -> f32 dataype.
- * \image html input150x150x4.gif Sample Input
- * \image html arithmetic_operations_add_scalar_150x150x4.gif Sample Output
+ * \image html https://raw.githubusercontent.com/ROCm/rpp/develop/docs/data/doxygenInputs/input150x150x4.gif Sample Input
+ * \image html https://raw.githubusercontent.com/ROCm/rpp/develop/docs/data/doxygenOutputs/arithmetic_operations_add_scalar_150x150x4.gif Sample Output
  * \param [in] srcPtr source tensor in HOST memory
  * \param[in] srcGenericDescPtr source tensor descriptor
  * \param[out] dstPtr destination tensor in HOST memory
@@ -113,8 +113,8 @@ RppStatus rppt_add_scalar_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDes
  * \details This function performs the addition operation on a batch of 4D tensors.
  *          It adds a corresponding element from the 'addTensor' to source tensor, and stores the result in the destination tensor.
  *          Support added for f32 -> f32 dataype.
- * \image html input150x150x4.gif Sample Input
- * \image html arithmetic_operations_add_scalar_150x150x4.gif Sample Output
+ * \image html https://raw.githubusercontent.com/ROCm/rpp/develop/docs/data/doxygenInputs/input150x150x4.gif Sample Input
+ * \image html https://raw.githubusercontent.com/ROCm/rpp/develop/docs/data/doxygenOutputs/arithmetic_operations_add_scalar_150x150x4.gif Sample Output
  * \param [in] srcPtr source tensor in HIP memory
  * \param[in] srcGenericDescPtr source tensor descriptor
  * \param[out] dstPtr destination tensor in HIP memory
@@ -134,8 +134,8 @@ RppStatus rppt_add_scalar_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDesc
  * \details This function performs the subtraction operation on a batch of 4D tensors.
  *          It takes a corresponding element from 'subtractTensor' and subtracts it from source tensor. Result is stored in the destination tensor.
  *          Support added for f32 -> f32 dataype.
- * \image html input150x150x4.gif Sample Input
- * \image html arithmetic_operations_subtract_scalar_150x150x4.gif Sample Output
+ * \image html https://raw.githubusercontent.com/ROCm/rpp/develop/docs/data/doxygenInputs/input150x150x4.gif Sample Input
+ * \image html https://raw.githubusercontent.com/ROCm/rpp/develop/docs/data/doxygenOutputs/arithmetic_operations_subtract_scalar_150x150x4.gif Sample Output
  * \param [in] srcPtr source tensor in HOST memory
  * \param[in] srcGenericDescPtr source tensor descriptor
  * \param[out] dstPtr destination tensor in HOST memory
@@ -155,8 +155,8 @@ RppStatus rppt_subtract_scalar_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGener
  * \details This function performs the subtraction operation on a batch of 4D tensors.
  *          It takes a corresponding element from 'subtractTensor' and subtracts it from source tensor. Result is stored in the destination tensor.
  *          Support added for f32 -> f32 dataype.
- * \image html input150x150x4.gif Sample Input
- * \image html arithmetic_operations_subtract_scalar_150x150x4.gif Sample Output
+ * \image html https://raw.githubusercontent.com/ROCm/rpp/develop/docs/data/doxygenInputs/input150x150x4.gif Sample Input
+ * \image html https://raw.githubusercontent.com/ROCm/rpp/develop/docs/data/doxygenOutputs/arithmetic_operations_subtract_scalar_150x150x4.gif Sample Output
  * \param [in] srcPtr source tensor in HIP memory
  * \param[in] srcGenericDescPtr source tensor descriptor
  * \param[out] dstPtr destination tensor in HIP memory
@@ -176,8 +176,8 @@ RppStatus rppt_subtract_scalar_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGeneri
  * \details This function performs the multiplication operation on a batch of 4D tensors.
  *          It takes a corresponding element from 'multiplyTensor' and multiplies it with source tensor. Result is stored in the destination tensor.
  *          Support added for f32 -> f32 dataype.
- * \image html input150x150x4.gif Sample Input
- * \image html arithmetic_operations_multiply_scalar_150x150x4.gif Sample Output
+ * \image html https://raw.githubusercontent.com/ROCm/rpp/develop/docs/data/doxygenInputs/input150x150x4.gif Sample Input
+ * \image html https://raw.githubusercontent.com/ROCm/rpp/develop/docs/data/doxygenOutputs/arithmetic_operations_multiply_scalar_150x150x4.gif Sample Output
  * \param [in] srcPtr source tensor in HOST memory
  * \param[in] srcGenericDescPtr source tensor descriptor
  * \param[out] dstPtr destination tensor in HOST memory
@@ -190,15 +190,15 @@ RppStatus rppt_subtract_scalar_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGeneri
  * \retval RPP_SUCCESS Successful completion.
  * \retval RPP_ERROR* Unsuccessful completion.
  */
-RppStatus rppt_multiply_scalar_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32f *subtractTensor, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle);
+RppStatus rppt_multiply_scalar_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32f *mulTensor, RpptROI3DPtr roiGenericPtrSrc, RpptRoi3DType roiType, rppHandle_t rppHandle);
 
 #ifdef GPU_SUPPORT
 /*! \brief Multiply scalar augmentation on HIP backend
  * \details This function performs the multiplication operation on a batch of 4D tensors.
  *          It takes a corresponding element from 'multiplyTensor' and multiplies it with source tensor. Result is stored in the destination tensor.
  *          Support added for f32 -> f32 dataype.
- * \image html input150x150x4.gif Sample Input
- * \image html arithmetic_operations_multiply_scalar_150x150x4.gif Sample Output
+ * \image html https://raw.githubusercontent.com/ROCm/rpp/develop/docs/data/doxygenInputs/input150x150x4.gif Sample Input
+ * \image html https://raw.githubusercontent.com/ROCm/rpp/develop/docs/data/doxygenOutputs/arithmetic_operations_multiply_scalar_150x150x4.gif Sample Output
  * \param [in] srcPtr source tensor in HIP memory
  * \param[in] srcGenericDescPtr source tensor descriptor
  * \param[out] dstPtr destination tensor in HIP memory
@@ -226,7 +226,7 @@ RppStatus rppt_multiply_scalar_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGeneri
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HOST memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] roiTensorSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+ * \param [in] roiTensorPtrSrc ROI data in HOST memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
@@ -248,7 +248,7 @@ RppStatus rppt_magnitude_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDescPtr sr
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory
  * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = same as that of srcDescPtr)
- * \param [in] roiTensorSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
+ * \param [in] roiTensorPtrSrc ROI data in HIP memory, for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
  * \return A <tt> \ref RppStatus</tt> enumeration.
@@ -256,6 +256,40 @@ RppStatus rppt_magnitude_host(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDescPtr sr
  * \retval RPP_ERROR* Unsuccessful completion.
  */
 RppStatus rppt_magnitude_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
+
+/*! \brief Logarithm operation on HOST backend
+ * \details Computes Log to base e(natural log) of the input for a given ND Tensor.
+ *          Supports u8->f32, i8->f32, f16->f16 and f32->f32 datatypes.
+ *          Uses Absolute of input for log computation and uses nextafter() if input is 0 to avoid undefined result.
+ * \param [in] srcPtr source tensor in HOST memory
+ * \param [in] srcGenericDescPtr source tensor descriptor
+ * \param [out] dstPtr destination tensor in HOST memory
+ * \param [in] dstGenericDescPtr destination tensor descriptor
+ * \param [in] roiTensor values to represent dimensions of input tensor
+ * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_log_host(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *roiTensor, rppHandle_t rppHandle);
+
+#ifdef GPU_SUPPORT
+/*! \brief Logarithm operation on HIP backend
+ * \details Computes Log to base e(natural log) of the input for a given ND Tensor.
+ *          Supports u8->f32, i8->f32, f16->f16 and f32->f32 datatypes.
+ *          Uses Absolute of input for log computation and uses nextafter() if input is 0 to avoid undefined result.
+ * \param [in] srcPtr source tensor in HIP memory
+ * \param [in] srcGenericDescPtr source tensor descriptor
+ * \param [out] dstPtr destination tensor in HIP memory
+ * \param [in] dstGenericDescPtr destination tensor descriptor
+ * \param [in] roiTensor values to represent dimensions of input tensor
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_log_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescPtr, RppPtr_t dstPtr, RpptGenericDescPtr dstGenericDescPtr, Rpp32u *roiTensor, rppHandle_t rppHandle);
 #endif // GPU_SUPPORT
 
 /*! @}
