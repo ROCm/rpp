@@ -223,6 +223,14 @@ typedef struct
     Rpp32f data[6];
 } Rpp32f6;
 
+/*! \brief RPP 9 float vector
+ * \ingroup group_rppdefs
+ */
+typedef struct
+{
+    Rpp32f data[9];
+} Rpp32f9;
+
 /*! \brief RPP 24 signed int vector
  * \ingroup group_rppdefs
  */

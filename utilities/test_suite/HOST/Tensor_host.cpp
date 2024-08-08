@@ -741,6 +741,40 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 28:
+                {
+                    testCaseName = "warp_perspective";
+
+                    if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR))
+                    {
+                        missingFuncFlag = 1;
+                        break;
+                    }
+
+                    Rpp32f9 perspectiveTensor_f9[batchSize];
+                    Rpp32f *perspectiveTensor = (Rpp32f *)perspectiveTensor_f9;
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        perspectiveTensor_f9[i].data[0] = 0.93;
+                        perspectiveTensor_f9[i].data[1] = 0.5;
+                        perspectiveTensor_f9[i].data[2] = 0.0;
+                        perspectiveTensor_f9[i].data[3] = -0.5;
+                        perspectiveTensor_f9[i].data[4] = 0.93;
+                        perspectiveTensor_f9[i].data[5] = 0.0;
+                        perspectiveTensor_f9[i].data[6] = 0.005;
+                        perspectiveTensor_f9[i].data[7] = 0.005;
+                        perspectiveTensor_f9[i].data[8] = 1;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_warp_perspective_host(input, srcDescPtr, output, dstDescPtr, perspectiveTensor, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 case 29:
                 {
                     testCaseName = "water";
