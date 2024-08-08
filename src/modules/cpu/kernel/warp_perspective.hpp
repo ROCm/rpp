@@ -186,7 +186,7 @@ RppStatus warp_perspective_nn_u8_u8_host_tensor(Rpp8u *srcPtr,
 
                 int vectorLoopCount = 0;
                 Rpp32f parX, parY, parCommon, srcX, srcY;
-                compute_warp_perspective_src_loc(i, vectorLoopCount, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                compute_warp_perspective_src_loc(i, vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     compute_generic_nn_interpolation_pln_to_pln(srcY, srcX, &roiLTRB, dstPtrTemp++, srcPtrChannel, srcDescPtr, dstDescPtr);
