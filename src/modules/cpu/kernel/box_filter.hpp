@@ -23,12 +23,11 @@ SOFTWARE.
 */
 
 #include "rppdefs.h"
-#include "rpp_cpu_simd.hpp"
 #include "rpp_cpu_common.hpp"
 #include "rpp_cpu_filter.hpp"
 
 /* box filter algorithm explanation for U8 PLN1 3x3 kernel size variant
-3x32 image
+Lets take an example input of 3x32 image
 x x x x x x x x x x  .. x x
 x 1 2 3 4 5 6 7 8 9 .. 32 x
 x 1 2 3 4 5 6 7 8 9 .. 32 x
@@ -36,7 +35,7 @@ x 1 2 3 4 5 6 7 8 9 .. 32 x
 x x x x x x x x x x  .. x x
 padLength = 1 (kernelSize / 2)
 
-Steps followed getting outputs for the first 0-16 locations in 0th row
+Below steps are followed for getting outputs for the first 0-16 locations in 1st row
 1. Process padLength number of columns in each row using raw c code (outputs for 0th location)
 2. Process remaining alignedLength number of columns in each row using SSE/AVX code (outputs for 1-16 locations)
     - load kernel size number of rows
@@ -77,6 +76,7 @@ Steps followed getting outputs for the first 0-16 locations in 0th row
     Repeat the same process for remaining alignedLength columns and store in output
 3. Process remaining non aligned columns in each row again using raw c code*/
 
+// generic raw c code for box filter 
 template<typename T>
 inline void box_filter_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp32s columnIndex,
                                       Rpp32u kernelSize, Rpp32u padLength, Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit,
@@ -104,8 +104,8 @@ inline void box_filter_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp32s colu
     saturate_pixel(accum, dstPtrTemp);
 }
 
-// process padLength number of columns in each row
-// left border pixels in image which does not have required pixels in 3x3 box, process them separately
+// process padLength number of columns in each row for PLN-PLN case
+// left border pixels in image which does not have required pixels in 3x3/5x5/7x7/9x9 box, process them separately
 template<typename T>
 inline void process_left_border_columns_pln_pln(T **srcPtrTemp, T *dstPtrTemp, Rpp32u kernelSize, Rpp32u padLength,
                                                 Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit, Rpp32f kernelSizeInverseSquare)
@@ -117,6 +117,8 @@ inline void process_left_border_columns_pln_pln(T **srcPtrTemp, T *dstPtrTemp, R
     }
 }
 
+// process padLength * 3 number of columns in each row for PKD-PKD case
+// left border pixels in image which does not have required pixels in 3x3/5x5/7x7/9x9 box, process them separately
 template<typename T>
 inline void process_left_border_columns_pkd_pkd(T **srcPtrTemp, T **srcPtrRow, T *dstPtrTemp, Rpp32u kernelSize, Rpp32u padLength,
                                                 Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit, Rpp32f kernelSizeInverseSquare)
@@ -136,6 +138,8 @@ inline void process_left_border_columns_pkd_pkd(T **srcPtrTemp, T **srcPtrRow, T
         srcPtrTemp[k] = srcPtrRow[k];
 }
 
+// process padLength * 3 number of columns in each row for PKD-PLN case
+// left border pixels in image which does not have required pixels in 3x3/5x5/7x7/9x9 box, process them separately
 template<typename T>
 inline void process_left_border_columns_pkd_pln(T **srcPtrTemp, T **srcPtrRow, T **dstPtrTempChannels, Rpp32u kernelSize, Rpp32u padLength,
                                                 Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit, Rpp32f kernelSizeInverseSquare)
@@ -157,8 +161,7 @@ inline void process_left_border_columns_pkd_pln(T **srcPtrTemp, T **srcPtrRow, T
 
 // -------------------- Set 0 box_filter compute functions --------------------
 
-// -------------------- kernel size 3x3 - U8/I8 bitdepth compute functions --------------------
-
+// unpack lower half of 3 256 bit registers and add (used for 3x3 kernel size U8/I8 variants)
 inline void unpacklo_and_add_3x3_host(__m256i *pxRow, __m256i *pxDst)
 {
     pxDst[0] = _mm256_unpacklo_epi8(pxRow[0], avx_px0);
@@ -166,6 +169,7 @@ inline void unpacklo_and_add_3x3_host(__m256i *pxRow, __m256i *pxDst)
     pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[2], avx_px0));
 }
 
+// unpack higher half of 3 256 bit registers and add (used for 3x3 kernel size U8/I8 variants)
 inline void unpackhi_and_add_3x3_host(__m256i *pxRow, __m256i *pxDst)
 {
     pxDst[0] = _mm256_unpackhi_epi8(pxRow[0], avx_px0);
@@ -173,8 +177,7 @@ inline void unpackhi_and_add_3x3_host(__m256i *pxRow, __m256i *pxDst)
     pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[2], avx_px0));
 }
 
-// -------------------- 5x5 kernel size - U8/I8 bitdepth compute functions --------------------
-
+// unpack lower half of 5 256 bit registers and add (used for 5x5 kernel size U8/I8 variants)
 inline void unpacklo_and_add_5x5_host(__m256i *pxRow, __m256i *pxDst)
 {
     pxDst[0] = _mm256_unpacklo_epi8(pxRow[0], avx_px0);
@@ -184,6 +187,7 @@ inline void unpacklo_and_add_5x5_host(__m256i *pxRow, __m256i *pxDst)
     pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[4], avx_px0));
 }
 
+// unpack higher half of 5 256 bit registers and add (used for 5x5 kernel size U8/I8 variants)
 inline void unpackhi_and_add_5x5_host(__m256i *pxRow, __m256i *pxDst)
 {
     pxDst[0] = _mm256_unpackhi_epi8(pxRow[0], avx_px0);
@@ -193,8 +197,7 @@ inline void unpackhi_and_add_5x5_host(__m256i *pxRow, __m256i *pxDst)
     pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[4], avx_px0));
 }
 
-// -------------------- 7x7 kernel size - U8/I8 bitdepth compute functions --------------------
-
+// unpack lower half of 7 256 bit registers and add (used for 7x7 kernel size U8/I8 variants)
 inline void unpacklo_and_add_7x7_host(__m256i *pxRow, __m256i *pxDst)
 {
     pxDst[0] = _mm256_unpacklo_epi8(pxRow[0], avx_px0);
@@ -206,6 +209,7 @@ inline void unpacklo_and_add_7x7_host(__m256i *pxRow, __m256i *pxDst)
     pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[6], avx_px0));
 }
 
+// unpack higher half of 7 256 bit registers and add (used for 7x7 kernel size U8/I8 variants)
 inline void unpackhi_and_add_7x7_host(__m256i *pxRow, __m256i *pxDst)
 {
     pxDst[0] = _mm256_unpackhi_epi8(pxRow[0], avx_px0);
@@ -217,8 +221,7 @@ inline void unpackhi_and_add_7x7_host(__m256i *pxRow, __m256i *pxDst)
     pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[6], avx_px0));
 }
 
-// -------------------- 9x9 kernel size - U8/I8 bitdepth compute functions --------------------
-
+// unpack lower half of 9 256 bit registers and add (used for 9x9 kernel size U8/I8 variants)
 inline void unpacklo_and_add_9x9_host(__m256i *pxRow, __m256i *pxDst)
 {
     pxDst[0] = _mm256_unpacklo_epi8(pxRow[0], avx_px0);
@@ -232,6 +235,7 @@ inline void unpacklo_and_add_9x9_host(__m256i *pxRow, __m256i *pxDst)
     pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpacklo_epi8(pxRow[8], avx_px0));
 }
 
+// unpack higher half of 9 256 bit registers and add (used for 9x9 kernel size U8/I8 variants)
 inline void unpackhi_and_add_9x9_host(__m256i *pxRow, __m256i *pxDst)
 {
     pxDst[0] = _mm256_unpackhi_epi8(pxRow[0], avx_px0);
@@ -245,24 +249,21 @@ inline void unpackhi_and_add_9x9_host(__m256i *pxRow, __m256i *pxDst)
     pxDst[0] = _mm256_add_epi16(pxDst[0], _mm256_unpackhi_epi8(pxRow[8], avx_px0));
 }
 
-// -------------------- 3x3 kernel size - F32/F16 bitdepth compute functions --------------------
-
+// add 3 256 bit registers (used for 3x3 kernel size F32/F16 variants)
 inline void add_rows_3x3(__m256 *pRow, __m256 *pDst)
 {
     pDst[0] = _mm256_add_ps(pRow[0], pRow[1]);
     pDst[0] = _mm256_add_ps(pDst[0], pRow[2]);
 }
 
-// -------------------- 5x5 kernel size - F32/F16 bitdepth compute functions --------------------
-
+// add 5 256 bit registers (used for 5x5 kernel size F32/F16 variants)
 inline void add_rows_5x5(__m256 *pRow, __m256 *pDst)
 {
     pDst[0] = _mm256_add_ps(_mm256_add_ps(pRow[0], pRow[1]), pRow[2]);
     pDst[0] = _mm256_add_ps(pDst[0], _mm256_add_ps(pRow[3], pRow[4]));
 }
 
-// -------------------- 7x7 kernel size - F32/F16 bitdepth compute functions --------------------
-
+// add 7 256 bit registers (used for 7x7 kernel size F32/F16 variants)
 inline void add_rows_7x7(__m256 *pRow, __m256 *pDst)
 {
     pDst[0] = _mm256_add_ps(_mm256_add_ps(pRow[0], pRow[1]), pRow[2]);
@@ -270,8 +271,7 @@ inline void add_rows_7x7(__m256 *pRow, __m256 *pDst)
     pDst[0] = _mm256_add_ps(pDst[0], pRow[6]);
 }
 
-// -------------------- 9x9 kernel size - F32/F16 bitdepth compute functions --------------------
-
+// add 9 256 bit registers (used for 9x9 kernel size F32/F16 variants)
 inline void add_rows_9x9(__m256 *pRow, __m256 *pDst)
 {
     pDst[0] = _mm256_add_ps(_mm256_add_ps(pRow[0], pRow[1]), pRow[2]);
@@ -297,6 +297,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
     if ((kernelSize != 3) && (kernelSize != 5) && (kernelSize != 7) && (kernelSize != 9))
         return box_filter_generic_host_tensor(srcPtr, srcDescPtr, dstPtr, dstDescPtr, kernelSize, roiTensorPtrSrc, roiType, layoutParams, handle);
 
+    // set the required masks array needed for shuffle operations 
 #if __AVX2__
     __m128i pxMaskPln[7] = {xmm_pxMaskRotate0To1, xmm_pxMaskRotate0To3, xmm_pxMaskRotate0To5, xmm_pxMaskRotate0To7, xmm_pxMaskRotate0To9, xmm_pxMaskRotate0To11, xmm_pxMaskRotate0To13};
     __m128i pxMaskPkd[7] = {xmm_pxMaskRotate0To5, xmm_pxMaskRotate0To11, xmm_pxMaskRotate0To1, xmm_pxMaskRotate0To7, xmm_pxMaskRotate0To13, xmm_pxMaskRotate0To3, xmm_pxMaskRotate0To9};
@@ -323,6 +324,7 @@ RppStatus box_filter_char_host_tensor(T *srcPtr,
         Rpp16s convolutionFactor = (Rpp16s) std::ceil(65536 * kernelSizeInverseSquare);
 #if __AVX2__
         const __m128i pxConvolutionFactor = _mm_set1_epi16(convolutionFactor);
+        // set the register order needed for blend operations 
         Rpp32u blendRegisterOrder[7] = {0, 0, 1, 1, 1, 2, 2};
         if (srcDescPtr->layout == RpptLayout::NCHW)
             std::fill_n(blendRegisterOrder, 7, 0);
@@ -1575,6 +1577,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
     if ((kernelSize != 3) && (kernelSize != 5) && (kernelSize != 7) && (kernelSize != 9))
         return box_filter_generic_host_tensor(srcPtr, srcDescPtr, dstPtr, dstDescPtr, kernelSize, roiTensorPtrSrc, roiType, layoutParams, handle);
 
+    // set the required masks array needed for permute operations 
 #if __AVX2__
     __m256i pxMaskPln[7] = {avx_pxMaskRotate0To1, avx_pxMaskRotate0To2, avx_pxMaskRotate0To3, avx_pxMaskRotate0To4, avx_pxMaskRotate0To5, avx_pxMaskRotate0To6, avx_pxMaskRotate0To7};
     __m256i pxMaskPkd[7] = {avx_pxMaskRotate0To3, avx_pxMaskRotate0To6, avx_pxMaskRotate0To1, avx_pxMaskRotate0To4, avx_pxMaskRotate0To7, avx_pxMaskRotate0To2, avx_pxMaskRotate0To5};
@@ -1599,6 +1602,7 @@ RppStatus box_filter_float_host_tensor(T *srcPtr,
         Rpp32f kernelSizeInverseSquare = 1.0 / (kernelSize * kernelSize);
 #if __AVX2__
         const __m256 pConvolutionFactor = _mm256_set1_ps(kernelSizeInverseSquare);
+        // set the register order needed for blend operations 
         Rpp32u blendRegisterOrder[7] = {0, 0, 1, 1, 1, 2, 2};
         if (srcDescPtr->layout == RpptLayout::NCHW)
             std::fill_n(blendRegisterOrder, 7, 0);

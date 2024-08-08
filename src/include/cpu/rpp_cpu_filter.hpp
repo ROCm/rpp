@@ -25,21 +25,9 @@ SOFTWARE.
 #ifndef AMD_RPP_RPP_CPU_FILTER_HPP
 #define AMD_RPP_RPP_CPU_FILTER_HPP
 
-#include "stdio.h"
-#include "rppdefs.h"
-#include <half/half.hpp>
-using halfhpp = half_float::half;
-typedef halfhpp Rpp16f;
 #include "rpp_cpu_simd.hpp"
 
-#if _WIN32
-#include <intrin.h>
-#else
-#include <x86intrin.h>
-#include <smmintrin.h>
-#include <immintrin.h>
-#endif
-
+// declare masks used for shuffle and permute operations used in filter functions
 const __m128i xmm_pxMaskRotate0To1 = _mm_setr_epi8(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1);
 const __m128i xmm_pxMaskRotate0To3 = _mm_setr_epi8(4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3);
 const __m128i xmm_pxMaskRotate0To5 = _mm_setr_epi8(6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5);
@@ -47,7 +35,6 @@ const __m128i xmm_pxMaskRotate0To7 = _mm_setr_epi8(8, 9, 10, 11, 12, 13, 14, 15,
 const __m128i xmm_pxMaskRotate0To9 = _mm_setr_epi8(10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
 const __m128i xmm_pxMaskRotate0To11 = _mm_setr_epi8(12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11);
 const __m128i xmm_pxMaskRotate0To13 = _mm_setr_epi8(14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13);
-
 const __m256i avx_pxMaskRotate0To1 = _mm256_setr_epi32(1, 2, 3, 4, 5, 6, 7, 0);
 const __m256i avx_pxMaskRotate0To2 = _mm256_setr_epi32(2, 3, 4, 5, 6, 7, 0, 1);
 const __m256i avx_pxMaskRotate0To3 = _mm256_setr_epi32(3, 4, 5, 6, 7, 0, 1, 2);
@@ -56,6 +43,7 @@ const __m256i avx_pxMaskRotate0To5 = _mm256_setr_epi32(5, 6, 7, 0, 1, 2, 3, 4);
 const __m256i avx_pxMaskRotate0To6 = _mm256_setr_epi32(6, 7, 0, 1, 2, 3, 4, 5);
 const __m256i avx_pxMaskRotate0To7 = _mm256_setr_epi32(7, 0, 1, 2, 3, 4, 5, 6);
 
+// increment the kernel size number of row pointers with increment value
 template<typename T>
 inline void increment_row_ptrs(T **srcPtrTemp, Rpp32u kernelSize, Rpp32s increment)
 {
@@ -92,80 +80,115 @@ inline void extract_3sse_registers(__m256i *pxRowHalf, __m128i *px128)
 
 // -------------------- U8/I8 bitdepth compute functions for kernel size (3/5/7/9) --------------------
 
+// perform required blend shuffle add operations for 3x3 kernel size
 template <int blendMask1, int blendMask2> 
 inline void blend_shuffle_add_3x3_host(__m128i *px128, __m128i *pxMask, Rpp32u *index)
 {
-    /* px128[0] - [X01|X02|X03|X04|X05|X06|X07|X08]
-       px128[1] - [X09|X10|X11|X12|X13|X14|X15|X16] */
+    /*  For PLN inputs                                                                             | For PKD inputs
+        px128[0] -  [X01|X02|X03|X04|X05|X06|X07|X08], px128[1] - [X09|X10|X11|X12|X13|X14|X15|X16]| px128[0]  - [R01|G01|B01|R02|G02|B02|R03|G03], px128[1] - [B03|R04|G04|B04|R05|G05|B05|R06]
+        pxTemp[0] - [X02|X03|X04|X05|X06|X07|X08|X09] (blend with mask [0000 0001] and shuffle)    | pxTemp[0] - [R02|G02|B02|R03|G03|B03|R04|G04] (blend with mask [0000 0111] and shuffle)
+        pxTemp[1] - [X03|X04|X05|X06|X07|X08|X09|X10] (blend with mask [0000 0011] and shuffle)    | pxTemp[1] - [R03|G03|B03|R04|G04|B04|R05|G05] (blend with mask [0011 1111] and shuffle) */ 
     __m128i pxTemp[2];
-    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[0]], px128[index[0] + 1], blendMask1), pxMask[0]);    // blend with mask [0000 0001] and shuffle - [X02|X03|X04|X05|X06|X07|X08|X09]
-    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[1]], px128[index[1] + 1], blendMask2), pxMask[1]);    // blend with mask [0000 0011] and shuffle - [X03|X04|X05|X06|X07|X08|X09|X10]
+    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[0]], px128[index[0] + 1], blendMask1), pxMask[0]);    
+    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[1]], px128[index[1] + 1], blendMask2), pxMask[1]);
     px128[0] = _mm_add_epi16(_mm_add_epi16(px128[0], pxTemp[0]), pxTemp[1]);
 }
 
+// perform required blend shuffle add operations for 5x5 kernel size
 template<int blendMask1, int blendMask2, int blendMask3, int blendMask4> 
 inline void blend_shuffle_add_5x5_host(__m128i *px128, __m128i *pxMask, Rpp32u *index)
 {
-    /* px128[0] - [X01|X02|X03|X04|X05|X06|X07|X08]
-       px128[1] - [X09|X10|X11|X12|X13|X14|X15|X16] */
+    /*  For PLN inputs                                                                             | For PKD inputs
+        px128[0] -  [X01|X02|X03|X04|X05|X06|X07|X08], px128[1] - [X09|X10|X11|X12|X13|X14|X15|X16]| px128[0]  - [R01|G01|B01|R02|G02|B02|R03|G03], px128[1] - [B03|R04|G04|B04|R05|G05|B05|R06]
+        pxTemp[0] - [X02|X03|X04|X05|X06|X07|X08|X09] (blend with mask [0000 0001] and shuffle)    | px128[2] -  [G06|B06|R07|G07|B07|R08|G08|B08]
+        pxTemp[1] - [X03|X04|X05|X06|X07|X08|X09|X10] (blend with mask [0000 0011] and shuffle)    | pxTemp[0] - [R02|G02|B02|R03|G03|B03|R04|G04] (blend with mask [0000 0111] and shuffle)
+        pxTemp[2] - [X04|X05|X06|X07|X08|X09|X10|X11] (blend with mask [0000 0111] and shuffle)    | pxTemp[1] - [R03|G03|B03|R04|G04|B04|R05|G05] (blend with mask [0011 1111] and shuffle) 
+        pxTemp[3] - [X05|X06|X07|X08|X09|X10|X11|X12] (blend with mask [0000 1111] and shuffle)    | pxTemp[2] - [R04|G04|B04|R05|G05|B05|R06|G06] (blend with mask [0000 0001] and shuffle)
+                                                                                                   | pxTemp[3] - [R05|G05|B05|R06|G06|B06|R07|G07] (blend with mask [0000 1111] and shuffle) */ 
     __m128i pxTemp[4];
-    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[0]], px128[index[0] + 1], blendMask1), pxMask[0]);    // blend with mask [0000 0001] and shuffle - [X02|X03|X04|X05|X06|X07|X08|X09]
-    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[1]], px128[index[1] + 1], blendMask2), pxMask[1]);    // blend with mask [0000 0011] and shuffle - [X03|X04|X05|X06|X07|X08|X09|X10]
-    pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[2]], px128[index[2] + 1], blendMask3), pxMask[2]);    // blend with mask [0000 0111] and shuffle - [X04|X05|X06|X07|X08|X09|X10|X11]
-    pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[3]], px128[index[3] + 1], blendMask4), pxMask[3]);    // blend with mask [0000 1111] and shuffle - [X05|X06|X07|X08|X09|X10|X11|X12]
+    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[0]], px128[index[0] + 1], blendMask1), pxMask[0]);
+    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[1]], px128[index[1] + 1], blendMask2), pxMask[1]);
+    pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[2]], px128[index[2] + 1], blendMask3), pxMask[2]);
+    pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[3]], px128[index[3] + 1], blendMask4), pxMask[3]);
     px128[0] = _mm_add_epi16(_mm_add_epi16(_mm_add_epi16(_mm_add_epi16(px128[0], pxTemp[0]), pxTemp[1]), pxTemp[2]),  pxTemp[3]);
 }
 
+// perform required blend shuffle add operations for 7x7 kernel size
 template<int blendMask1, int blendMask2, int blendMask3, int blendMask4, int blendMask5, int blendMask6>
 inline void blend_shuffle_add_7x7_host(__m128i *px128, __m128i *pxMask, Rpp32u *index)
 {
-    /* px128[0] - [X01|X02|X03|X04|X05|X06|X07|X08]
-       px128[1] - [X09|X10|X11|X12|X13|X14|X15|X16] */
+    /*  For PLN inputs                                                                             | For PKD inputs
+        px128[0] -  [X01|X02|X03|X04|X05|X06|X07|X08], px128[1] - [X09|X10|X11|X12|X13|X14|X15|X16]| px128[0]  - [R01|G01|B01|R02|G02|B02|R03|G03], px128[1] - [B03|R04|G04|B04|R05|G05|B05|R06],
+        pxTemp[0] - [X02|X03|X04|X05|X06|X07|X08|X09] (blend with mask [0000 0001] and shuffle)    | px128[2] -  [G06|B06|R07|G07|B07|R08|G08|B08], px128[3] - [R09|G09|B09|R10|G10|B10|R11|G11]
+        pxTemp[1] - [X03|X04|X05|X06|X07|X08|X09|X10] (blend with mask [0000 0011] and shuffle)    | pxTemp[0] - [R02|G02|B02|R03|G03|B03|R04|G04] (blend with mask [0000 0111] and shuffle)
+        pxTemp[2] - [X04|X05|X06|X07|X08|X09|X10|X11] (blend with mask [0000 0111] and shuffle)    | pxTemp[1] - [R03|G03|B03|R04|G04|B04|R05|G05] (blend with mask [0011 1111] and shuffle) 
+        pxTemp[3] - [X05|X06|X07|X08|X09|X10|X11|X12] (blend with mask [0000 1111] and shuffle)    | pxTemp[2] - [R04|G04|B04|R05|G05|B05|R06|G06] (blend with mask [0000 0001] and shuffle)
+        pxTemp[4] - [X06|X07|X08|X09|X10|X11|X12|X13] (blend with mask [0001 1111] and shuffle)    | pxTemp[3] - [R05|G05|B05|R06|G06|B06|R07|G07] (blend with mask [0000 1111] and shuffle)
+        pxTemp[5] - [X07|X08|X09|X10|X11|X12|X13|X14] (blend with mask [0011 1111] and shuffle)    | pxTemp[4] - [R06|G06|B06|R07|G07|B07|R08|G08] (blend with mask [0111 1111] and shuffle)
+                                                                                                   | pxTemp[5] - [R07|G07|B07|R08|G08|B08|R09|G09] (blend with mask [0000 0011] and shuffle) */ 
     __m128i pxTemp[6];
-    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[0]], px128[index[0] + 1], blendMask1), pxMask[0]);   // blend with mask [0000 0001] and shuffle - [X02|X03|X04|X05|X06|X07|X08|X09]
-    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[1]], px128[index[1] + 1], blendMask2), pxMask[1]);   // blend with mask [0000 0011] and shuffle - [X03|X04|X05|X06|X07|X08|X09|X10]
-    pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[2]], px128[index[2] + 1], blendMask3), pxMask[2]);   // blend with mask [0000 0111] and shuffle - [X04|X05|X06|X07|X08|X09|X10|X11]
-    pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[3]], px128[index[3] + 1], blendMask4), pxMask[3]);   // blend with mask [0000 1111] and shuffle - [X05|X06|X07|X08|X09|X10|X11|X12]
-    pxTemp[4] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[4]], px128[index[4] + 1], blendMask5), pxMask[4]);   // blend with mask [0001 1111] and shuffle - [X06|X07|X08|X09|X10|X11|X12|X13]
-    pxTemp[5] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[5]], px128[index[5] + 1], blendMask6), pxMask[5]);   // blend with mask [0011 1111] and shuffle - [X07|X08|X09|X10|X11|X12|X13|X14]
+    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[0]], px128[index[0] + 1], blendMask1), pxMask[0]);
+    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[1]], px128[index[1] + 1], blendMask2), pxMask[1]);
+    pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[2]], px128[index[2] + 1], blendMask3), pxMask[2]);
+    pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[3]], px128[index[3] + 1], blendMask4), pxMask[3]);
+    pxTemp[4] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[4]], px128[index[4] + 1], blendMask5), pxMask[4]);
+    pxTemp[5] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[5]], px128[index[5] + 1], blendMask6), pxMask[5]);
     px128[0] = _mm_add_epi16(_mm_add_epi16(_mm_add_epi16(px128[0], pxTemp[0]), pxTemp[1]), pxTemp[2]);
     px128[0] = _mm_add_epi16(_mm_add_epi16(_mm_add_epi16(px128[0], pxTemp[3]), pxTemp[4]), pxTemp[5]);
 }
 
+// perform required blend shuffle add operations for 9x9 kernel size
 template<int blendMask1, int blendMask2, int blendMask3, int blendMask4, int blendMask5, int blendMask6, int blendMask7>
 inline void blend_shuffle_add_9x9_host(__m128i *px128, __m128i *pxMask, Rpp32u *index)
 {
-    /* px128[0] - [X01|X02|X03|X04|X05|X06|X07|X08]
-       px128[1] - [X09|X10|X11|X12|X13|X14|X15|X16] */
+    /*  For PLN inputs                                                                             | For PKD inputs
+        px128[0] -  [X01|X02|X03|X04|X05|X06|X07|X08], px128[1] - [X09|X10|X11|X12|X13|X14|X15|X16]| px128[0]  - [R01|G01|B01|R02|G02|B02|R03|G03], px128[1] - [B03|R04|G04|B04|R05|G05|B05|R06],
+        pxTemp[0] - [X02|X03|X04|X05|X06|X07|X08|X09] (blend with mask [0000 0001] and shuffle)    | px128[2] -  [G06|B06|R07|G07|B07|R08|G08|B08], px128[3] - [R09|G09|B09|R10|G10|B10|R11|G11]
+        pxTemp[1] - [X03|X04|X05|X06|X07|X08|X09|X10] (blend with mask [0000 0011] and shuffle)    | pxTemp[0] - [R02|G02|B02|R03|G03|B03|R04|G04] (blend with mask [0000 0111] and shuffle)
+        pxTemp[2] - [X04|X05|X06|X07|X08|X09|X10|X11] (blend with mask [0000 0111] and shuffle)    | pxTemp[1] - [R03|G03|B03|R04|G04|B04|R05|G05] (blend with mask [0011 1111] and shuffle) 
+        pxTemp[3] - [X05|X06|X07|X08|X09|X10|X11|X12] (blend with mask [0000 1111] and shuffle)    | pxTemp[2] - [R04|G04|B04|R05|G05|B05|R06|G06] (blend with mask [0000 0001] and shuffle)
+        pxTemp[4] - [X06|X07|X08|X09|X10|X11|X12|X13] (blend with mask [0001 1111] and shuffle)    | pxTemp[3] - [R05|G05|B05|R06|G06|B06|R07|G07] (blend with mask [0000 1111] and shuffle)
+        pxTemp[5] - [X07|X08|X09|X10|X11|X12|X13|X14] (blend with mask [0011 1111] and shuffle)    | pxTemp[4] - [R06|G06|B06|R07|G07|B07|R08|G08] (blend with mask [0111 1111] and shuffle)
+        pxTemp[6] - [X08|X09|X10|X11|X12|X13|X14|X15] (blend with mask [0111 1111] and shuffle)    | pxTemp[5] - [R07|G07|B07|R08|G08|B08|R09|G09] (blend with mask [0000 0011] and shuffle)
+                                                                                                   | pxTemp[6] - [R08|G08|B08|R09|G09|B09|R10|G10] (blend with mask [0001 1111] and shuffle) */ 
     __m128i pxTemp[7];
-    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[0]], px128[index[0] + 1], blendMask1), pxMask[0]);    // blend with mask [0000 0001] and shuffle - [X02|X03|X04|X05|X06|X07|X08|X09]
-    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[1]], px128[index[1] + 1], blendMask2), pxMask[1]);    // blend with mask [0000 0011] and shuffle - [X03|X04|X05|X06|X07|X08|X09|X10]
-    pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[2]], px128[index[2] + 1], blendMask3), pxMask[2]);    // blend with mask [0000 0111] and shuffle - [X04|X05|X06|X07|X08|X09|X10|X11]
-    pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[3]], px128[index[3] + 1], blendMask4), pxMask[3]);   // blend with mask [0000 1111] and shuffle - [X05|X06|X07|X08|X09|X10|X11|X12]
-    pxTemp[4] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[4]], px128[index[4] + 1], blendMask5), pxMask[4]);   // blend with mask [0001 1111] and shuffle - [X06|X07|X08|X09|X10|X11|X12|X13]
-    pxTemp[5] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[5]], px128[index[5] + 1], blendMask6), pxMask[5]);  // blend with mask [0011 1111] and shuffle - [X07|X08|X09|X10|X11|X12|X13|X14]
-    pxTemp[6] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[6]], px128[index[6] + 1], blendMask7), pxMask[6]); // blend with mask [0111 1111] and shuffle - [X08|X09|X10|X11|X12|X13|X14|X15]
+    pxTemp[0] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[0]], px128[index[0] + 1], blendMask1), pxMask[0]);    
+    pxTemp[1] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[1]], px128[index[1] + 1], blendMask2), pxMask[1]);    
+    pxTemp[2] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[2]], px128[index[2] + 1], blendMask3), pxMask[2]);    
+    pxTemp[3] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[3]], px128[index[3] + 1], blendMask4), pxMask[3]);
+    pxTemp[4] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[4]], px128[index[4] + 1], blendMask5), pxMask[4]);
+    pxTemp[5] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[5]], px128[index[5] + 1], blendMask6), pxMask[5]);
+    pxTemp[6] = _mm_shuffle_epi8(_mm_blend_epi16(px128[index[6]], px128[index[6] + 1], blendMask7), pxMask[6]);
     px128[0] = _mm_add_epi16(_mm_add_epi16(_mm_add_epi16(_mm_add_epi16(px128[0], pxTemp[0]), pxTemp[1]), pxTemp[2]),  pxTemp[3]);
     px128[0] = _mm_add_epi16(_mm_add_epi16(_mm_add_epi16(_mm_add_epi16(px128[0], pxTemp[4]), pxTemp[5]), pxTemp[6]),  px128[index[6] + 1]);
 }
 
 // -------------------- F32/F16 bitdepth compute functions for kernel size (3/5/7/9) --------------------
 
+// perform required blend permute add multiplication operations for 3x3 kernel size
 template <int blendMask1, int blendMask2> 
 inline void blend_permute_add_mul_3x3_host(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor, __m256i *pxMask, Rpp32u *index)
 {
-    /* pSrc[0] - [X01|X02|X03|X04|X05|X06|X07|X08]
-       pSrc[1] - [X09|X10|X11|X12|X13|X14|X15|X16] */
-    pDst[0] = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[index[0]], pSrc[index[0] + 1], blendMask1), pxMask[0]));   // blend with mask [0000 0001] and permute - [X02|X03|X04|X05|X06|X07|X08|X09]
-    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[index[1]], pSrc[index[1] + 1], blendMask2), pxMask[1]));   // blend with mask [0000 0011] and permute - [X03|X04|X05|X06|X07|X08|X09|X10]
+    /*  For PLN inputs                                                                          | For PKD inputs
+        pSrc[0] - [X01|X02|X03|X04|X05|X06|X07|X08], pSrc[1] - [X09|X10|X11|X12|X13|X14|X15|X16]| pSrc[0] - [R01|G01|B01|R02|G02|B02|R03|G03], pSrc[1] - [B03|R04|G04|B04|R05|G05|B05|R06]
+                  [X02|X03|X04|X05|X06|X07|X08|X09] (blend with mask [0000 0001] and permute)   |           [R02|G02|B02|R03|G03|B03|R04|G04] (blend with mask [0000 0111] and permute)
+                  [X03|X04|X05|X06|X07|X08|X09|X10] (blend with mask [0000 0011] and permute)   |           [R03|G03|B03|R04|G04|B04|R05|G05] (blend with mask [0011 1111] and permute) */ 
+    pDst[0] = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[index[0]], pSrc[index[0] + 1], blendMask1), pxMask[0]));   
+    pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[index[1]], pSrc[index[1] + 1], blendMask2), pxMask[1]));
     pDst[0] = _mm256_mul_ps(pDst[0], pConvolutionFactor);
 }
 
+// perform required blend permute add multiplication operations for 5x5 kernel size
 template <int blendMask1, int blendMask2, int blendMask3, int blendMask4> 
 inline void blend_permute_add_mul_5x5_host(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor, __m256i *pxMask, Rpp32u *index)
 {
-    /* pSrc[0] - [X01|X02|X03|X04|X05|X06|X07|X08]
-       pSrc[1] - [X09|X10|X11|X12|X13|X14|X15|X16] */
+   /*   For PLN inputs                                                                          | For PKD inputs
+        pSrc[0] - [X01|X02|X03|X04|X05|X06|X07|X08], pSrc[1] - [X09|X10|X11|X12|X13|X14|X15|X16]| pSrc[0] - [R01|G01|B01|R02|G02|B02|R03|G03], pSrc[1] - [B03|R04|G04|B04|R05|G05|B05|R06]
+                  [X02|X03|X04|X05|X06|X07|X08|X09] (blend with mask [0000 0001] and permute)   | pSrc[2] - [G06|B06|R07|G07|B07|R08|G08|B08]
+                  [X03|X04|X05|X06|X07|X08|X09|X10] (blend with mask [0000 0011] and permute)   |           [R02|G02|B02|R03|G03|B03|R04|G04] (blend with mask [0000 0111] and permute)
+                  [X04|X05|X06|X07|X08|X09|X10|X11] (blend with mask [0000 0111] and permute)   |           [R03|G03|B03|R04|G04|B04|R05|G05] (blend with mask [0011 1111] and permute) 
+                  [X05|X06|X07|X08|X09|X10|X11|X12] (blend with mask [0000 1111] and permute)   |           [R04|G04|B04|R05|G05|B05|R06|G06] (blend with mask [0000 0001] and permute)
+                                                                                                |           [R05|G05|B05|R06|G06|B06|R07|G07] (blend with mask [0000 1111] and permute) */ 
     pDst[0] = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[index[0]], pSrc[index[0] + 1], blendMask1), pxMask[0]));   // blend with mask [0000 0001] and permute - [X02|X03|X04|X05|X06|X07|X08|X09]
     pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[index[1]], pSrc[index[1] + 1], blendMask2), pxMask[1]));   // blend with mask [0000 0011] and permute - [X03|X04|X05|X06|X07|X08|X09|X10]
     pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[index[2]], pSrc[index[2] + 1], blendMask3), pxMask[2]));   // blend with mask [0000 0111] and permute - [X04|X05|X06|X07|X08|X09|X10|X11]
@@ -173,11 +196,19 @@ inline void blend_permute_add_mul_5x5_host(__m256 *pSrc, __m256 *pDst, __m256 pC
     pDst[0] = _mm256_mul_ps(pDst[0], pConvolutionFactor);
 }
 
+// perform required blend permute add multiplication operations for 7x7 kernel size
 template <int blendMask1, int blendMask2, int blendMask3, int blendMask4, int blendMask5, int blendMask6>  
 inline void blend_permute_add_mul_7x7_host(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor, __m256i *pxMask, Rpp32u *index)
 {
-    /* pSrc[0] - [X01|X02|X03|X04|X05|X06|X07|X08]
-       pSrc[1] - [X09|X10|X11|X12|X13|X14|X15|X16] */
+    /*  For PLN inputs                                                                          | For PKD inputs
+        pSrc[0] - [X01|X02|X03|X04|X05|X06|X07|X08], pSrc[1] - [X09|X10|X11|X12|X13|X14|X15|X16]| pSrc[0] - [R01|G01|B01|R02|G02|B02|R03|G03], pSrc[1] - [B03|R04|G04|B04|R05|G05|B05|R06],
+                  [X02|X03|X04|X05|X06|X07|X08|X09] (blend with mask [0000 0001] and permute)   | pSrc[2] - [G06|B06|R07|G07|B07|R08|G08|B08], pSrc[3] - [R09|G09|B09|R10|G10|B10|R11|G11]
+                  [X03|X04|X05|X06|X07|X08|X09|X10] (blend with mask [0000 0011] and permute)   |           [R02|G02|B02|R03|G03|B03|R04|G04] (blend with mask [0000 0111] and permute)
+                  [X04|X05|X06|X07|X08|X09|X10|X11] (blend with mask [0000 0111] and permute)   |           [R03|G03|B03|R04|G04|B04|R05|G05] (blend with mask [0011 1111] and permute) 
+                  [X05|X06|X07|X08|X09|X10|X11|X12] (blend with mask [0000 1111] and permute)   |           [R04|G04|B04|R05|G05|B05|R06|G06] (blend with mask [0000 0001] and permute)
+                  [X06|X07|X08|X09|X10|X11|X12|X13] (blend with mask [0001 1111] and permute)   |           [R05|G05|B05|R06|G06|B06|R07|G07] (blend with mask [0000 1111] and permute)
+                  [X07|X08|X09|X10|X11|X12|X13|X14] (blend with mask [0011 1111] and permute)   |           [R06|G06|B06|R07|G07|B07|R08|G08] (blend with mask [0111 1111] and permute)
+                                                                                                |           [R07|G07|B07|R08|G08|B08|R09|G09] (blend with mask [0000 0011] and permute) */ 
     pDst[0] = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[index[0]], pSrc[index[0] + 1], blendMask1), pxMask[0]));   // blend with mask [0000 0001] and permute - [X02|X03|X04|X05|X06|X07|X08|X09]
     pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[index[1]], pSrc[index[1] + 1], blendMask2), pxMask[1]));   // blend with mask [0000 0011] and permute - [X03|X04|X05|X06|X07|X08|X09|X10]
     pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[index[2]], pSrc[index[2] + 1], blendMask3), pxMask[2]));   // blend with mask [0000 0111] and permute - [X04|X05|X06|X07|X08|X09|X10|X11]
@@ -187,11 +218,21 @@ inline void blend_permute_add_mul_7x7_host(__m256 *pSrc, __m256 *pDst, __m256 pC
     pDst[0] = _mm256_mul_ps(pDst[0], pConvolutionFactor);
 }
 
+// perform required blend permute add multiplication operations for 9x9 kernel size
 template <int blendMask1, int blendMask2, int blendMask3, int blendMask4, int blendMask5, int blendMask6, int blendMask7>  
 inline void blend_permute_add_mul_9x9_host(__m256 *pSrc, __m256 *pDst, __m256 pConvolutionFactor, __m256i *pxMask, Rpp32u *index)
 {
-    /* pSrc[0] - [X01|X02|X03|X04|X05|X06|X07|X08]
-       pSrc[1] - [X09|X10|X11|X12|X13|X14|X15|X16] */
+    /*  For PLN inputs                                                                          | For PKD inputs
+        pSrc[0] - [X01|X02|X03|X04|X05|X06|X07|X08], pSrc[1] - [X09|X10|X11|X12|X13|X14|X15|X16]| pSrc[0] - [R01|G01|B01|R02|G02|B02|R03|G03], pSrc[1] - [B03|R04|G04|B04|R05|G05|B05|R06],
+                  [X02|X03|X04|X05|X06|X07|X08|X09] (blend with mask [0000 0001] and permute)     pSrc[2] - [G06|B06|R07|G07|B07|R08|G08|B08], pSrc[3] - [R09|G09|B09|R10|G10|B10|R11|G11]
+                  [X03|X04|X05|X06|X07|X08|X09|X10] (blend with mask [0000 0011] and permute)   |           [R02|G02|B02|R03|G03|B03|R04|G04] (blend with mask [0000 0111] and permute)
+                  [X04|X05|X06|X07|X08|X09|X10|X11] (blend with mask [0000 0111] and permute)   |           [R03|G03|B03|R04|G04|B04|R05|G05] (blend with mask [0011 1111] and permute) 
+                  [X05|X06|X07|X08|X09|X10|X11|X12] (blend with mask [0000 1111] and permute)   |           [R04|G04|B04|R05|G05|B05|R06|G06] (blend with mask [0000 0001] and permute)
+                  [X06|X07|X08|X09|X10|X11|X12|X13] (blend with mask [0001 1111] and permute)   |           [R05|G05|B05|R06|G06|B06|R07|G07] (blend with mask [0000 1111] and permute)
+                  [X07|X08|X09|X10|X11|X12|X13|X14] (blend with mask [0011 1111] and permute)   |           [R06|G06|B06|R07|G07|B07|R08|G08] (blend with mask [0111 1111] and permute)
+                  [X08|X09|X10|X11|X12|X13|X14|X15] (blend with mask [0111 1111] and permute)   |           [R07|G07|B07|R08|G08|B08|R09|G09] (blend with mask [0000 0011] and permute)
+                                                                                                |           [R08|G08|B08|R09|G09|B09|R10|G10] (blend with mask [0001 1111] and permute)
+    */
     pDst[0] = _mm256_add_ps(pSrc[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[index[0]], pSrc[index[0] + 1], blendMask1), pxMask[0]));   // blend with mask [0000 0001] and permute - [X02|X03|X04|X05|X06|X07|X08|X09]
     pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[index[1]], pSrc[index[1] + 1], blendMask2), pxMask[1]));   // blend with mask [0000 0011] and permute - [X03|X04|X05|X06|X07|X08|X09|X10]
     pDst[0] = _mm256_add_ps(pDst[0], _mm256_permutevar8x32_ps(_mm256_blend_ps(pSrc[index[2]], pSrc[index[2] + 1], blendMask3), pxMask[2]));   // blend with mask [0000 0111] and permute - [X04|X05|X06|X07|X08|X09|X10|X11]
@@ -211,8 +252,6 @@ inline void rpp_load_box_filter_char_3x3_host(__m256i *pxRow, Rpp8u **srcPtrTemp
     // irrespective of row location, we need to load 2 rows for 3x3 kernel
     pxRow[0] = _mm256_loadu_si256((__m256i *)srcPtrTemp[0]);
     pxRow[1] = _mm256_loadu_si256((__m256i *)srcPtrTemp[1]);
-
-    // if rowKernelLoopLimit is 3 load values from 3rd row pointer else set it 0
     if (rowKernelLoopLimit == 3)
         pxRow[2] = _mm256_loadu_si256((__m256i *)srcPtrTemp[2]);
     else
@@ -269,8 +308,6 @@ inline void rpp_load_box_filter_char_3x3_host(__m256i *pxRow, Rpp8s **srcPtrTemp
     // irrespective of row location, we need to load 2 rows for 3x3 kernel
     pxRow[0] = _mm256_add_epi8(avx_pxConvertI8, _mm256_loadu_si256((__m256i *)srcPtrTemp[0]));
     pxRow[1] = _mm256_add_epi8(avx_pxConvertI8, _mm256_loadu_si256((__m256i *)srcPtrTemp[1]));
-
-    // if rowKernelLoopLimit is 3 load values from 3rd row pointer else set it 0
     if (rowKernelLoopLimit == 3)
         pxRow[2] =  _mm256_add_epi8(avx_pxConvertI8, _mm256_loadu_si256((__m256i *)srcPtrTemp[2]));
     else
@@ -327,8 +364,6 @@ inline void rpp_load_box_filter_float_3x3_host(__m256 *pRow, Rpp32f **srcPtrTemp
     // irrespective of row location, we need to load 2 rows for 3x3 kernel
     pRow[0] = _mm256_loadu_ps(srcPtrTemp[0]);
     pRow[1] = _mm256_loadu_ps(srcPtrTemp[1]);
-
-    // if rowKernelLoopLimit is 3 load values from 3rd row pointer else set it 0
     if (rowKernelLoopLimit == 3)
         pRow[2] = _mm256_loadu_ps(srcPtrTemp[2]);
     else
@@ -385,8 +420,6 @@ inline void rpp_load_box_filter_float_3x3_host(__m256 *pRow, Rpp16f **srcPtrTemp
     // irrespective of row location, we need to load 2 rows for 3x3 kernel
     pRow[0] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrTemp[0]))));
     pRow[1] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrTemp[1]))));
-
-    // if rowKernelLoopLimit is 3 load values from 3rd row pointer else set it 0
     if (rowKernelLoopLimit == 3)
         pRow[2] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrTemp[2]))));
     else
