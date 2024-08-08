@@ -46,15 +46,15 @@ This repository contains four test suites for the AMD ROCm Performance Primitive
   ```bash
   sudo apt-get install nasm
   sudo apt-get install wget
-  git clone -b 2.0.6.1 https://github.com/rrawther/libjpeg-turbo.git
+  git clone -b 3.0.2 https://github.com/libjpeg-turbo/libjpeg-turbo.git 
   cd libjpeg-turbo
   mkdir build
   cd build
   cmake -DCMAKE_INSTALL_PREFIX=/usr \
         -DCMAKE_BUILD_TYPE=RELEASE  \
         -DENABLE_STATIC=FALSE       \
-        -DCMAKE_INSTALL_DOCDIR=/usr/share/doc/libjpeg-turbo-2.0.3 \
         -DCMAKE_INSTALL_DEFAULT_LIBDIR=lib  \
+        -DWITH_JPEG8=TRUE           \
         ..
   make -j$nproc
   sudo make install
