@@ -1574,6 +1574,10 @@ int main(int argc, char **argv)
                 if(qaFlag && inputBitDepth == 0 && ((srcDescPtr->layout == dstDescPtr->layout) || pln1OutTypeCase) && !(randomOutputCase) && !(nonQACase))
                     compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, batchSize, interpolationTypeName, noiseTypeName, additionalParam, testCase, dst, scriptPath);
 
+                // Calculate exact dstROI in XYWH format for OpenCV dump
+                if (roiTypeSrc == RpptRoiType::LTRB)
+                    convert_roi(roiTensorPtrDst, RpptRoiType::XYWH, dstDescPtr->n);
+                    
                 // Check if the ROI values for each input is within the bounds of the max buffer allocated
                 RpptROI roiDefault;
                 RpptROIPtr roiPtrDefault = &roiDefault;
