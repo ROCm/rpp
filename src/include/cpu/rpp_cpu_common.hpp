@@ -1076,7 +1076,7 @@ void copy_3d_host_tensor(T *srcPtr,
 {
     if((srcGenericDescPtr->layout == RpptLayout::NDHWC) && (dstGenericDescPtr->layout == RpptLayout::NDHWC))
     {
-        T *srcPtrDepth = srcPtr + (roi->xyzwhdROI.xyz.z * srcGenericDescPtr->strides[2]) + (roi->xyzwhdROI.xyz.y * srcGenericDescPtr->strides[3]) + (roi->xyzwhdROI.xyz.x * layoutParams.bufferMultiplier);
+        T *srcPtrDepth = srcPtr + (roi->xyzwhdROI.xyz.z * srcGenericDescPtr->strides[1]) + (roi->xyzwhdROI.xyz.y * srcGenericDescPtr->strides[2]) + (roi->xyzwhdROI.xyz.x * layoutParams.bufferMultiplier);
         T *dstPtrDepth = dstPtr;
         Rpp32u width = roi->xyzwhdROI.roiWidth * srcGenericDescPtr->dims[4];
         for(int i = 0; i < roi->xyzwhdROI.roiDepth; i++)
@@ -1097,7 +1097,7 @@ void copy_3d_host_tensor(T *srcPtr,
     {
         T *srcPtrChannel = srcPtr + (roi->xyzwhdROI.xyz.z * srcGenericDescPtr->strides[2]) + (roi->xyzwhdROI.xyz.y * srcGenericDescPtr->strides[3]) + (roi->xyzwhdROI.xyz.x * layoutParams.bufferMultiplier);
         T *dstPtrChannel = dstPtr;
-        int channels = srcGenericDescPtr->dims[4];
+        int channels = srcGenericDescPtr->dims[1];
         for(int c = 0; c < channels; c++)
         {
             T *srcPtrDepth = srcPtrChannel;
