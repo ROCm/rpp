@@ -138,6 +138,24 @@ RppStatus rppt_to_decibels_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t
  */
 RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcLengthTensor, Rpp32f *coeffTensor, RpptAudioBorderType borderType, rppHandle_t rppHandle);
 
+#ifdef GPU_SUPPORT
+/*! \brief Pre Emphasis Filter augmentation on HIP backend
+* \details Pre Emphasis Filter augmentation for audio data
+* \param [in] srcPtr source tensor in HIP memory
+* \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 2, offsetInBytes >= 0, dataType = F32)
+* \param [out] dstPtr destination tensor in HIP memory
+* \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 2, offsetInBytes >= 0, dataType = F32)
+* \param [in] srcLengthTensor source audio buffer length (1D tensor in HIP memory, of size batchSize)
+* \param [in] coeffTensor preemphasis coefficient (1D tensor in Pinned / HIP memory, of size batchSize)
+* \param [in] borderType border value policy
+* \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+* \return A <tt> \ref RppStatus</tt> enumeration.
+* \retval RPP_SUCCESS Successful completion.
+* \retval RPP_ERROR* Unsuccessful completion.
+*/
+RppStatus rppt_pre_emphasis_filter_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcLengthTensor, Rpp32f *coeffTensor, RpptAudioBorderType borderType, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
+
 /*! \brief Down Mixing augmentation on HOST backend
 * \details Down Mixing augmentation for audio data
 * \param [in] srcPtr source tensor in HOST memory
