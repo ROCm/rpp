@@ -1713,7 +1713,7 @@ RppStatus gaussian_noise_voxel_f32_f32_host_tensor(Rpp32f *srcPtr,
             // Gaussian Noise without fused output-layout toggle (NDHWC -> NDHWC)
             if((srcGenericDescPtr->dims[4] == 3) && (srcGenericDescPtr->layout == RpptLayout::NDHWC) && (dstGenericDescPtr->layout == RpptLayout::NDHWC))
             {
-                srcPtrChannel = srcPtrImage + (roi.xyzwhdROI.xyz.z * srcGenericDescPtr->strides[2]) + (roi.xyzwhdROI.xyz.y * srcGenericDescPtr->strides[3]) + (roi.xyzwhdROI.xyz.x * layoutParams.bufferMultiplier);
+                srcPtrChannel = srcPtrImage + (roi.xyzwhdROI.xyz.z * srcGenericDescPtr->strides[1]) + (roi.xyzwhdROI.xyz.y * srcGenericDescPtr->strides[2]) + (roi.xyzwhdROI.xyz.x * layoutParams.bufferMultiplier);
                 Rpp32f *srcPtrDepth, *dstPtrDepth;
                 srcPtrDepth = srcPtrChannel;
                 dstPtrDepth = dstPtrChannel;
