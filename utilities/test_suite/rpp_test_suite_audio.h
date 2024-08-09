@@ -28,6 +28,7 @@ SOFTWARE.
 
 // Include this header file to use functions from libsndfile
 #include <sndfile.h>
+using namespace std;
 
 std::map<int, string> audioAugmentationMap =
 {
