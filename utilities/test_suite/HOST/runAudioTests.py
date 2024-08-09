@@ -45,7 +45,7 @@ def get_log_file_list():
     ]
 
 def run_unit_test_cmd(srcPath, case, numRuns, testType, batchSize, outFilePath):
-    print("./Tensor_audio_host " + srcPath + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(numRuns) + " " + str(batchSize))
+    print("\n./Tensor_audio_host " + srcPath + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(numRuns) + " " + str(batchSize))
     result = subprocess.Popen([buildFolderPath + "/build/Tensor_audio_host", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE)    # nosec
     stdout_data, stderr_data = result.communicate()
     print(stdout_data.decode())
@@ -59,13 +59,10 @@ def run_performance_test_cmd(loggingFolder, srcPath, case, numRuns, testType, ba
         print("------------------------------------------------------------------------------------------")
 
 def run_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath):
-    print("\n\n\n\n")
-    print("--------------------------------")
-    print("Running a New Functionality...")
-    print("--------------------------------")
     if testType == 0:
         run_unit_test_cmd(srcPath, case, numRuns, testType, batchSize, outFilePath)
     elif testType == 1:
+        print("\n")
         run_performance_test_cmd(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath)
 
 # Parse and validate command-line arguments for the RPP test suite
@@ -181,6 +178,11 @@ if qaMode and batchSize != 3:
     print("QA tests can only run with a batch size of 3.")
     exit(0)
 
+noCaseSupported = all(case not in supportedCaseList for case in caseList)
+if noCaseSupported:
+    print("\ncase numbers %s are not supported" % caseList)
+    exit(0)
+
 for case in caseList:
     if "--input_path" not in sys.argv:
         if case == "3":
@@ -200,7 +202,7 @@ if testType == 0:
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
         print("---------------------------------- Results of QA Test - Tensor_audio_host -----------------------------------\n")
-        print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList)
+        print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, "Tensor_audio_host")
 
 # Performance tests
 if (testType == 1):
