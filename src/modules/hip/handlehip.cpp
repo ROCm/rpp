@@ -245,6 +245,7 @@ struct HandleImpl
            - 293 is the size required for storing reduction outputs for 600000 size sample
            - 128 is the size required for storing cutOffDB values for batch size 128 */
         hipMalloc(&(this->initHandle->mem.mgpu.scratchBufferHip.floatmem), sizeof(Rpp32f) * 76853888);
+        hipHostMalloc(&(this->initHandle->mem.mgpu.scratchBufferPinned.floatmem), sizeof(Rpp32f) * 8294400);    // 3840 x 2160
     }
 };
 
@@ -362,6 +363,7 @@ void Handle::rpp_destroy_object_gpu()
 
     hipFree(this->GetInitHandle()->mem.mgpu.rgbArr.rgbmem);
     hipFree(this->GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
+    hipHostFree(this->GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem);
 }
 
 void Handle::rpp_destroy_object_host()
