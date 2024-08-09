@@ -85,6 +85,11 @@ This repository contains four test suites for the AMD ROCm Performance Primitive
   pip install openpyxl
   ```
 
+* Pandas
+  ```
+  pip install pandas
+  ```
+
 ## Rpp Image Test Suite
 The image test suite can be executed under 2 backend scenarios - (HOST/HIP):
 -   HOST backend - (On a CPU with HOST backend)
