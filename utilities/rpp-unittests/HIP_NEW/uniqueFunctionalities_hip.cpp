@@ -34,7 +34,7 @@ SOFTWARE.
 #include <sys/stat.h>
 #include <unistd.h>
 #include <time.h>
-#include <half/half.hpp>
+#include <half.hpp>
 #include <fstream>
 
 using namespace cv;

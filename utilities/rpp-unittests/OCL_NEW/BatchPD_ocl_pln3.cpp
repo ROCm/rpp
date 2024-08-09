@@ -34,7 +34,7 @@ SOFTWARE.
 #include <unistd.h>
 #include <time.h>
 #include <omp.h>
-#include <half/half.hpp>
+#include <half.hpp>
 #include <fstream>
 #include <algorithm>
 #include <iterator>

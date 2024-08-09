@@ -27,7 +27,7 @@ SOFTWARE.
 
 #include <hip/hip_runtime.h>
 #include <hip/hip_fp16.h>
-#include <half/half.hpp>
+#include <half.hpp>
 
 #include "rppdefs.h"
 #include "rpp/handle.hpp"

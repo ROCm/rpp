@@ -26,7 +26,7 @@ SOFTWARE.
 
 #include <type_traits>
 #include <cstdint>
-#include <half/half.hpp>
+#include <half.hpp>
 
 struct OpKernelArg
 {
