@@ -6563,4 +6563,10 @@ inline void compute_transpose4x8_avx(__m256 *pSrc, __m128 *pDst)
     pDst[7] = _mm256_extractf128_ps(pSrc[3], 1);    /* extract [P08|P16|P24|P32] */
 }
 
+inline void compute_threshold_16_host(__m256 *p, __m256 *pThresholdParams)
+{
+    p[0] = _mm256_blendv_ps(avx_p0, avx_p255, _mm256_and_ps(_mm256_cmp_ps(p[0], pThresholdParams[0], _CMP_GE_OQ), _mm256_cmp_ps(p[0], pThresholdParams[1],_CMP_LE_OQ)));
+    p[1] = _mm256_blendv_ps(avx_p0, avx_p255, _mm256_and_ps(_mm256_cmp_ps(p[1], pThresholdParams[0], _CMP_GE_OQ), _mm256_cmp_ps(p[1], pThresholdParams[1],_CMP_LE_OQ)));
+}
+
 #endif //RPP_CPU_COMMON_H

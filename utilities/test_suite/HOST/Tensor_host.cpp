@@ -647,6 +647,27 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 15:
+                {
+                    testCaseName = "threshold";
+                    
+                    Rpp32f minTensor[batchSize * srcDescPtr->c];
+                    Rpp32f maxTensor[batchSize * srcDescPtr->c];
+                    for (int i = 0; i < batchSize; i++)
+                    {
+                        minTensor[i] = 30;
+                        maxTensor[i] = 100;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_threshold_host(input, srcDescPtr, output, dstDescPtr, minTensor, maxTensor, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 case 20:
                 {
                     testCaseName = "flip";
