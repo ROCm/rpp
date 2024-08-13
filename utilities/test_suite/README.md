@@ -41,7 +41,7 @@ This repository contains four test suites for the RPP library: `image`/`voxel`/`
 
 * Nifti-Imaging nifti_clib
   ```shell
-  git clone git@github.com:NIFTI-Imaging/nifti_clib.git
+  git clone https://github.com/NIFTI-Imaging/nifti_clib.git
   cd nifti_clib
   mkdir build
   cd build
