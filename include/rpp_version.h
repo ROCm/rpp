@@ -38,7 +38,7 @@ SOFTWARE.
 extern "C" {
 #endif
 #define RPP_VERSION_MAJOR 1
-#define RPP_VERSION_MINOR 8
+#define RPP_VERSION_MINOR 9
 #define RPP_VERSION_PATCH 0
 #ifdef __cplusplus
 }
