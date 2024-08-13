@@ -66,6 +66,7 @@ This repository contains four test suites for the RPP library: `image`/`voxel`/`
 
 >[!NOTE]
 > * All package installs are shown with the `apt` package manager. Use the appropriate package manager for your operating system.
+> * Run `sudo ldconfig` to configure dynamic run-time bindings
 
 ## Rpp Image Test Suite
 The image test suite can be executed under 2 backend scenarios - (HOST/HIP):
