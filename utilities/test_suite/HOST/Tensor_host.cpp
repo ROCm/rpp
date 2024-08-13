@@ -71,7 +71,7 @@ int main(int argc, char **argv)
     bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24 || testCase == 79);
     bool reductionTypeCase = (testCase == 87 || testCase == 88 || testCase == 89 || testCase == 90 || testCase == 91);
     bool noiseTypeCase = (testCase == 8);
-    bool pln1OutTypeCase = (testCase == 86);
+    bool pln1OutTypeCase = (testCase == 86 || testCase == 15);
 
     unsigned int verbosity = atoi(argv[11]);
     unsigned int additionalParam = additionalParamCase ? atoi(argv[7]) : 1;
@@ -655,8 +655,11 @@ int main(int argc, char **argv)
                     Rpp32f maxTensor[batchSize * srcDescPtr->c];
                     for (int i = 0; i < batchSize; i++)
                     {
-                        minTensor[i] = 30;
-                        maxTensor[i] = 100;
+                        for (int j = 0, k = i * srcDescPtr->c; j < srcDescPtr->c; j++, k++)
+                        {
+                            minTensor[k] = 30;
+                            maxTensor[k] = 100;
+                        }
                     }
 
                     startWallTime = omp_get_wtime();
