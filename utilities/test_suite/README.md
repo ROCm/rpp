@@ -39,7 +39,7 @@ This repository contains four test suites for the RPP library: `image`/`voxel`/`
   sudo apt-get install imagemagick
   ```
 
-* Nifti-Imaging nifti_clib
+* Nifti-Imaging - [nifti_clib](https://github.com/NIFTI-Imaging/nifti_clib)
   ```shell
   git clone https://github.com/NIFTI-Imaging/nifti_clib.git
   cd nifti_clib
