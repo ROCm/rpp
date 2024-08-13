@@ -145,8 +145,8 @@ RppStatus warp_perspective_nn_u8_u8_host_tensor(Rpp8u *srcPtr,
                 pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
                 pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
                 pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
-                pSrcY = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfHeightVec);
-                pSrcX = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfWidthVec);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256i pRow;
