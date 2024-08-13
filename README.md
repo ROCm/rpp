@@ -150,7 +150,7 @@ The installer will copy
 * Documents folder into `/opt/rocm/share/doc/rpp`
 
 >[!NOTE]
-> [Test suite prerequisites](utilities/test_suite/README.md) install is required to run tests
+> [Test suite prerequisites](utilities/test_suite#prerequisites) install is required to run tests
 
 ### Verify with rpp-test package
 
