@@ -6583,4 +6583,22 @@ inline void compute_color_48_to_threshold_16_host(__m256 *p, __m256 *pThresholdP
     p[1] = _mm256_blendv_ps(avx_p0, avx_p255, _mm256_and_ps(_mm256_and_ps(pChannelCheck[0], pChannelCheck[1]), pChannelCheck[2]));
 }
 
+inline void compute_color_48_to_threshold_48_host(__m256 *p, __m256 *pThresholdParams)
+{
+    __m256 pChannelCheck[3];
+    pChannelCheck[0] = _mm256_and_ps(_mm256_cmp_ps(p[0], pThresholdParams[0], _CMP_GE_OQ), _mm256_cmp_ps(p[0], pThresholdParams[1],_CMP_LE_OQ));
+    pChannelCheck[1] = _mm256_and_ps(_mm256_cmp_ps(p[2], pThresholdParams[2], _CMP_GE_OQ), _mm256_cmp_ps(p[2], pThresholdParams[3],_CMP_LE_OQ));
+    pChannelCheck[2] = _mm256_and_ps(_mm256_cmp_ps(p[4], pThresholdParams[4], _CMP_GE_OQ), _mm256_cmp_ps(p[4], pThresholdParams[5],_CMP_LE_OQ));
+    p[0] = _mm256_blendv_ps(avx_p0, avx_p255, _mm256_and_ps(_mm256_and_ps(pChannelCheck[0], pChannelCheck[1]), pChannelCheck[2]));
+    p[2] = p[0];
+    p[4] = p[0];
+
+    pChannelCheck[0] = _mm256_and_ps(_mm256_cmp_ps(p[1], pThresholdParams[0], _CMP_GE_OQ), _mm256_cmp_ps(p[1], pThresholdParams[1],_CMP_LE_OQ));
+    pChannelCheck[1] = _mm256_and_ps(_mm256_cmp_ps(p[3], pThresholdParams[2], _CMP_GE_OQ), _mm256_cmp_ps(p[3], pThresholdParams[3],_CMP_LE_OQ));
+    pChannelCheck[2] = _mm256_and_ps(_mm256_cmp_ps(p[5], pThresholdParams[4], _CMP_GE_OQ), _mm256_cmp_ps(p[5], pThresholdParams[5],_CMP_LE_OQ));
+    p[1] = _mm256_blendv_ps(avx_p0, avx_p255, _mm256_and_ps(_mm256_and_ps(pChannelCheck[0], pChannelCheck[1]), pChannelCheck[2]));
+    p[3] = p[1];
+    p[5] = p[1];
+}
+
 #endif //RPP_CPU_COMMON_H
