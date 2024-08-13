@@ -62,20 +62,25 @@ RppStatus threshold_u8_u8_host_tensor(Rpp8u *srcPtr,
         Rpp32u vectorIncrement = 48;
         Rpp32u vectorIncrementPerChannel = 16;
 
-        if (srcDescPtr->layout == RpptLayout::NHWC && dstDescPtr->layout == RpptLayout::NHWC)
+        Rpp32u batchIndex = batchCount * srcDescPtr->c;
+        Rpp32f minThreshold[3];
+        Rpp32f maxThreshold[3];
+        for (int c = 0; c < srcDescPtr->c; c++)
         {
-            Rpp32u batchIndex = batchCount * 3;
-            Rpp32f channelMinThreshold[3] = { minTensor[batchIndex], minTensor[batchIndex + 1], minTensor[batchIndex + 2] };
-            Rpp32f channelMaxThreshold[3] = { maxTensor[batchIndex], maxTensor[batchIndex + 1], maxTensor[batchIndex + 2] };
+            minThreshold[c] = minTensor[batchIndex + c];
+            maxThreshold[c] = maxTensor[batchIndex + c];
+        }
 #if __AVX2__
             __m256 pThresholdParams[6];
-            pThresholdParams[0] = _mm256_set1_ps(channelMinThreshold[0]);
-            pThresholdParams[1] = _mm256_set1_ps(channelMaxThreshold[0]);
-            pThresholdParams[2] = _mm256_set1_ps(channelMinThreshold[1]);
-            pThresholdParams[3] = _mm256_set1_ps(channelMaxThreshold[1]);
-            pThresholdParams[4] = _mm256_set1_ps(channelMinThreshold[2]);
-            pThresholdParams[5] = _mm256_set1_ps(channelMaxThreshold[2]);
+            for (int c = 0, i = 0; c < 3; c++, i += 2)
+            {
+                pThresholdParams[i] = _mm256_set1_ps(minThreshold[c]);
+                pThresholdParams[i + 1] = _mm256_set1_ps(maxThreshold[c]);
+            }
 #endif
+
+        if (srcDescPtr->layout == RpptLayout::NHWC && dstDescPtr->layout == RpptLayout::NHWC)
+        {
             Rpp8u *srcPtrRow, *dstPtrRow;
             srcPtrRow = srcPtrImage;
             dstPtrRow = dstPtrImage;
@@ -89,8 +94,8 @@ RppStatus threshold_u8_u8_host_tensor(Rpp8u *srcPtr,
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 p[6];
-                    rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtrTemp, p); // simd loads
-                    compute_color_48_to_threshold_48_host(p, pThresholdParams); 	// threshold adjustment
+                    rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtrTemp, p);         // simd loads
+                    compute_threshold_48_host(p, pThresholdParams); 	                    // threshold adjustment
                     rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTemp, p);       // simd stores
                     srcPtrTemp += vectorIncrement;
                     dstPtrTemp += vectorIncrement;
@@ -103,9 +108,9 @@ RppStatus threshold_u8_u8_host_tensor(Rpp8u *srcPtr,
                     pixelR = static_cast<Rpp32f>(srcPtrTemp[0]);
                     pixelG = static_cast<Rpp32f>(srcPtrTemp[1]);
                     pixelB = static_cast<Rpp32f>(srcPtrTemp[2]);
-                    channelCheck[0] = ((pixelR >= channelMinThreshold[0]) &&  (pixelR <= channelMaxThreshold[0]));
-                    channelCheck[1] = ((pixelG >= channelMinThreshold[1]) &&  (pixelG <= channelMaxThreshold[1]));
-                    channelCheck[2] = ((pixelB >= channelMinThreshold[2]) &&  (pixelB <= channelMaxThreshold[2]));
+                    channelCheck[0] = ((pixelR >= minThreshold[0]) &&  (pixelR <= maxThreshold[0]));
+                    channelCheck[1] = ((pixelG >= minThreshold[1]) &&  (pixelG <= maxThreshold[1]));
+                    channelCheck[2] = ((pixelB >= minThreshold[2]) &&  (pixelB <= maxThreshold[2]));
                     dstPtrTemp[0] = (channelCheck[0] && channelCheck[1] && channelCheck[2]) ? 255 : 0;
                     dstPtrTemp[1] = dstPtrTemp[0];
                     dstPtrTemp[2] = dstPtrTemp[0];
@@ -116,20 +121,8 @@ RppStatus threshold_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
         }
-        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW))
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u batchIndex = batchCount * 3;
-            Rpp32f channelMinThreshold[3] = { minTensor[batchIndex], minTensor[batchIndex + 1], minTensor[batchIndex + 2] };
-            Rpp32f channelMaxThreshold[3] = { maxTensor[batchIndex], maxTensor[batchIndex + 1], maxTensor[batchIndex + 2] };
-#if __AVX2__
-            __m256 pThresholdParams[6];
-            pThresholdParams[0] = _mm256_set1_ps(channelMinThreshold[0]);
-            pThresholdParams[1] = _mm256_set1_ps(channelMaxThreshold[0]);
-            pThresholdParams[2] = _mm256_set1_ps(channelMinThreshold[1]);
-            pThresholdParams[3] = _mm256_set1_ps(channelMaxThreshold[1]);
-            pThresholdParams[4] = _mm256_set1_ps(channelMinThreshold[2]);
-            pThresholdParams[5] = _mm256_set1_ps(channelMaxThreshold[2]);
-#endif
             Rpp8u *srcPtrRowR, *srcPtrRowG, *srcPtrRowB;
             Rpp8u *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtrRowR = srcPtrImage;
@@ -153,9 +146,9 @@ RppStatus threshold_u8_u8_host_tensor(Rpp8u *srcPtr,
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 p[6];
-                    rpp_simd_load(rpp_load48_u8pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);  // simd loads
-                    compute_color_48_to_threshold_48_host(p, pThresholdParams);                                 // threshold adjustment
-                    rpp_simd_store(rpp_store48_f32pln3_to_u8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);                                   // simd stores
+                    rpp_simd_load(rpp_load48_u8pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);   // simd loads
+                    compute_threshold_48_host(p, pThresholdParams);                                              // threshold adjustment
+                    rpp_simd_store(rpp_store48_f32pln3_to_u8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p); // simd stores                                  // simd stores
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
                     srcPtrTempB += vectorIncrementPerChannel;
@@ -171,9 +164,9 @@ RppStatus threshold_u8_u8_host_tensor(Rpp8u *srcPtr,
                     pixelR = static_cast<Rpp32f>(*srcPtrTempR);
                     pixelG = static_cast<Rpp32f>(*srcPtrTempG);
                     pixelB = static_cast<Rpp32f>(*srcPtrTempB);
-                    channelCheck[0] = ((pixelR >= channelMinThreshold[0]) &&  (pixelR <= channelMaxThreshold[0]));
-                    channelCheck[1] = ((pixelG >= channelMinThreshold[1]) &&  (pixelG <= channelMaxThreshold[1]));
-                    channelCheck[2] = ((pixelB >= channelMinThreshold[2]) &&  (pixelB <= channelMaxThreshold[2]));
+                    channelCheck[0] = ((pixelR >= minThreshold[0]) &&  (pixelR <= maxThreshold[0]));
+                    channelCheck[1] = ((pixelG >= minThreshold[1]) &&  (pixelG <= maxThreshold[1]));
+                    channelCheck[2] = ((pixelB >= minThreshold[2]) &&  (pixelB <= maxThreshold[2]));
                     *dstPtrTempR = (channelCheck[0] && channelCheck[1] && channelCheck[2]) ? 255 : 0;
                     *dstPtrTempG = *dstPtrTempR;
                     *dstPtrTempB = *dstPtrTempR; 
@@ -192,17 +185,8 @@ RppStatus threshold_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrRowB += dstDescPtr->strides.hStride;
             }
         }
-        else if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW))
+        else if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32f minThreshold, maxThreshold;
-            minThreshold = minTensor[batchCount];
-            maxThreshold = maxTensor[batchCount];
-#if __AVX2__
-            __m256 pThresholdParams[2];
-            pThresholdParams[0] = _mm256_set1_ps(minThreshold);
-            pThresholdParams[1] = _mm256_set1_ps(maxThreshold);
-#endif
-
             Rpp8u *srcPtrRow, *dstPtrRow;
             srcPtrRow = srcPtrChannel;
             dstPtrRow = dstPtrChannel;
@@ -226,7 +210,7 @@ RppStatus threshold_u8_u8_host_tensor(Rpp8u *srcPtr,
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     Rpp32f pixel = static_cast<Rpp32f>(*srcPtrTemp);
-                    *dstPtrTemp = (pixel < minThreshold) ? 0 : ((pixel > maxThreshold) ? 0 : 255);
+                    *dstPtrTemp = (pixel < minThreshold[0]) ? 0 : ((pixel > maxThreshold[0]) ? 0 : 255);
                     srcPtrTemp++;
                     dstPtrTemp++;
                 }
