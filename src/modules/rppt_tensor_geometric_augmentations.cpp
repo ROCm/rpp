@@ -1468,6 +1468,16 @@ RppStatus rppt_warp_perspective_host(RppPtr_t srcPtr,
                                              layoutParams,
                                              rpp::deref(rppHandle));
         }
+    } else if(interpolationType == RpptInterpolationType::BILINEAR) {
+            warp_perspective_bilinear_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                             srcDescPtr,
+                                             static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                             dstDescPtr,
+                                             perspectiveTensor,
+                                             roiTensorPtrSrc,
+                                             roiType,
+                                             layoutParams,
+                                             rpp::deref(rppHandle));
     }
     return RPP_SUCCESS;
 }
