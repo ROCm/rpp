@@ -1004,6 +1004,41 @@ RppStatus rppt_jitter_host(RppPtr_t srcPtr,
     return RPP_SUCCESS;
 }
 
+/******************** rain ********************/
+
+RppStatus rppt_rain_host(RppPtr_t srcPtr,
+                             RpptDescPtr srcDescPtr,
+                             RppPtr_t dstPtr,
+                             RpptDescPtr dstDescPtr,
+                             Rpp32f rainPercentage,
+                             Rpp32u rainWidth,
+                             Rpp32u rainHeight,
+                             Rpp32f transparency,
+                             RpptROIPtr roiTensorPtrSrc,
+                             RpptRoiType roiType,
+                             rppHandle_t rppHandle)
+{
+    RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+
+    if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+    {
+        rain_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                   srcDescPtr,
+                                   static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                   dstDescPtr,
+                                   rainPercentage,
+                                   rainWidth,
+                                   rainHeight,
+                                   transparency,
+                                   roiTensorPtrSrc,
+                                   roiType,
+                                   layoutParams,
+                                   rpp::deref(rppHandle));
+    }
+
+    return RPP_SUCCESS;
+}
+
 /********************************************************************************************************************/
 /*********************************************** RPP_GPU_SUPPORT = ON ***********************************************/
 /********************************************************************************************************************/
