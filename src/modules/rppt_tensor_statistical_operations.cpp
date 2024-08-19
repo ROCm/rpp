@@ -518,6 +518,45 @@ RppStatus rppt_threshold_host(RppPtr_t srcPtr,
                                     layoutParams,
                                     rpp::deref(rppHandle));
     }
+    else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+    {
+    //    threshold_f16_f16_host_tensor(reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+    //                                  srcDescPtr,
+    //                                  reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+    //                                  dstDescPtr,
+    //                                  minTensor,
+    //                                  maxTensor,
+    //                                  roiTensorPtrSrc,
+    //                                  roiType,
+    //                                  layoutParams,
+    //                                  rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        threshold_f32_f32_host_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                      srcDescPtr,
+                                      reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                      dstDescPtr,
+                                      minTensor,
+                                      maxTensor,
+                                      roiTensorPtrSrc,
+                                      roiType,
+                                      layoutParams,
+                                      rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+    {
+        // threshold_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+        //                             srcDescPtr,
+        //                             static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+        //                             dstDescPtr,
+        //                             minTensor,
+        //                             maxTensor,
+        //                             roiTensorPtrSrc,
+        //                             roiType,
+        //                             layoutParams,
+        //                             rpp::deref(rppHandle));
+    }
     else
     {
         return RPP_ERROR_NOT_IMPLEMENTED;

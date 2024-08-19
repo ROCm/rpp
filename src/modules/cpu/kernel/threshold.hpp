@@ -77,6 +77,7 @@ RppStatus threshold_u8_u8_host_tensor(Rpp8u *srcPtr,
                 pThresholdParams[i + 1] = _mm256_set1_ps(maxThreshold[c]);
             }
 #endif
+        // Threshold with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp8u *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -128,6 +129,8 @@ RppStatus threshold_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrRowB += dstDescPtr->strides.hStride;
             }
         }
+
+        // Threshold with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp8u *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
@@ -178,6 +181,8 @@ RppStatus threshold_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
         }
+
+        // Threshold without fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp8u *srcPtrRow, *dstPtrRow;
@@ -221,6 +226,8 @@ RppStatus threshold_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
         }
+
+        // Threshold without fused output-layout toggle (NCHW -> NCHW) for 3 channel input
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp8u *srcPtrRowR, *srcPtrRowG, *srcPtrRowB;
@@ -280,6 +287,8 @@ RppStatus threshold_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrRowB += dstDescPtr->strides.hStride;
             }
         }
+
+        // Threshold without fused output-layout toggle (NCHW -> NCHW) for 1 channel input
         else if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp8u *srcPtrRow, *dstPtrRow;
@@ -305,7 +314,306 @@ RppStatus threshold_u8_u8_host_tensor(Rpp8u *srcPtr,
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     Rpp32f pixel = static_cast<Rpp32f>(*srcPtrTemp++);
-                    *dstPtrTemp++ = (pixel < minThreshold[0]) ? 0 : ((pixel > maxThreshold[0]) ? 0 : 255);
+                    *dstPtrTemp++ = ((pixel >= minThreshold[0]) && (pixel <= maxThreshold[0])) ? 255 : 0;
+                }
+                srcPtrRow += srcDescPtr->strides.hStride;
+                dstPtrRow += dstDescPtr->strides.hStride;
+            }
+        }
+    }
+
+    return RPP_SUCCESS;
+}
+
+RppStatus threshold_f32_f32_host_tensor(Rpp32f *srcPtr,
+                                        RpptDescPtr srcDescPtr,
+                                        Rpp32f *dstPtr,
+                                        RpptDescPtr dstDescPtr,
+                                        Rpp32f *minTensor,
+                                        Rpp32f *maxTensor,
+                                        RpptROIPtr roiTensorPtrSrc,
+                                        RpptRoiType roiType,
+                                        RppLayoutParams layoutParams,
+                                        rpp::Handle& handle)
+{
+    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    Rpp32u numThreads = handle.GetNumThreads();
+
+    omp_set_dynamic(0);
+#pragma omp parallel for num_threads(numThreads)
+    for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
+    {
+        RpptROI roi;
+        RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
+        compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
+
+        Rpp32f *srcPtrImage, *dstPtrImage;
+        srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
+        dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
+
+        Rpp32f *srcPtrChannel, *dstPtrChannel;
+        srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
+        dstPtrChannel = dstPtrImage;
+
+        Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
+        Rpp32u alignedLength = (bufferLength / 24) * 24;
+        Rpp32u vectorIncrement = 24;
+        Rpp32u vectorIncrementPerChannel = 8;
+
+        Rpp32u batchIndex = batchCount * srcDescPtr->c;
+        Rpp32f minThreshold[3];
+        Rpp32f maxThreshold[3];
+        for (int c = 0; c < srcDescPtr->c; c++)
+        {
+            minThreshold[c] = minTensor[batchIndex + c];
+            maxThreshold[c] = maxTensor[batchIndex + c];
+        }
+#if __AVX2__
+            __m256 pThresholdParams[6];
+            for (int c = 0, i = 0; c < 3; c++, i += 2)
+            {
+                pThresholdParams[i] = _mm256_set1_ps(minThreshold[c]);
+                pThresholdParams[i + 1] = _mm256_set1_ps(maxThreshold[c]);
+            }
+#endif
+        // Threshold with fused output-layout toggle (NHWC -> NCHW)
+        if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            Rpp32f *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
+            srcPtrRow = srcPtrChannel;
+            dstPtrRowR = dstPtrChannel;
+            dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
+            dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            {
+                Rpp32f *srcPtrTemp, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
+                srcPtrTemp = srcPtrRow;
+                dstPtrTempR = dstPtrRowR;
+                dstPtrTempG = dstPtrRowG;
+                dstPtrTempB = dstPtrRowB;
+                int vectorLoopCount = 0;
+#if __AVX2__
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
+                {
+                    __m256 p[3];
+                    rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp, p);                               // simd loads
+                    compute_threshold_24_host(p, pThresholdParams); 	                                           // threshold adjustment
+                    rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);  // simd stores
+                    srcPtrTemp += 24;
+                    dstPtrTempR += 8;
+                    dstPtrTempG += 8;
+                    dstPtrTempB += 8;
+                }
+#endif
+                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                {
+                    Rpp32f pixelR, pixelG, pixelB;
+                    bool channelCheck[3];
+                    pixelR = srcPtrTemp[0];
+                    pixelG = srcPtrTemp[1];
+                    pixelB = srcPtrTemp[2];
+                    channelCheck[0] = ((pixelR >= minThreshold[0]) &&  (pixelR <= maxThreshold[0]));
+                    channelCheck[1] = ((pixelG >= minThreshold[1]) &&  (pixelG <= maxThreshold[1]));
+                    channelCheck[2] = ((pixelB >= minThreshold[2]) &&  (pixelB <= maxThreshold[2]));
+                    Rpp32f outVal = (channelCheck[0] && channelCheck[1] && channelCheck[2]) ? 1.0f : 0.0f;
+                    *dstPtrTempR++ = outVal;
+                    *dstPtrTempG++ = outVal;
+                    *dstPtrTempB++ = outVal;
+                    srcPtrTemp += 3;
+                }
+
+                srcPtrRow += srcDescPtr->strides.hStride;
+                dstPtrRowR += dstDescPtr->strides.hStride;
+                dstPtrRowG += dstDescPtr->strides.hStride;
+                dstPtrRowB += dstDescPtr->strides.hStride;
+            }
+        }
+
+        // Threshold with fused output-layout toggle (NCHW -> NHWC)
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            Rpp32f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
+            srcPtrRowR = srcPtrChannel;
+            srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
+            srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
+            dstPtrRow = dstPtrChannel;
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            {
+                Rpp32f *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *dstPtrTemp;
+                srcPtrTempR = srcPtrRowR;
+                srcPtrTempG = srcPtrRowG;
+                srcPtrTempB = srcPtrRowB;
+                dstPtrTemp = dstPtrRow;
+                int vectorLoopCount = 0;
+#if __AVX2__
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
+                {
+                    __m256 p[3];
+                    rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);  // simd loads
+                    compute_threshold_24_host(p, pThresholdParams); 	                                         // threshold adjustment
+                    rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, p);                           // simd stores
+                    srcPtrTempR += 8;
+                    srcPtrTempG += 8;
+                    srcPtrTempB += 8;
+                    dstPtrTemp += 24;
+                }
+#endif
+                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                {
+                    Rpp32f pixelR, pixelG, pixelB;
+                    bool channelCheck[3];
+                    pixelR = *srcPtrTempR++;
+                    pixelG = *srcPtrTempG++;
+                    pixelB = *srcPtrTempB++;
+                    channelCheck[0] = ((pixelR >= minThreshold[0]) &&  (pixelR <= maxThreshold[0]));
+                    channelCheck[1] = ((pixelG >= minThreshold[1]) &&  (pixelG <= maxThreshold[1]));
+                    channelCheck[2] = ((pixelB >= minThreshold[2]) &&  (pixelB <= maxThreshold[2]));
+                    Rpp32f outVal = (channelCheck[0] && channelCheck[1] && channelCheck[2]) ? 1.0f : 0.0f;
+                    dstPtrTemp[0] = outVal;
+                    dstPtrTemp[1] = outVal;
+                    dstPtrTemp[2] = outVal;
+                    dstPtrTemp += 3;
+                }
+                srcPtrRowR += srcDescPtr->strides.hStride;
+                srcPtrRowG += srcDescPtr->strides.hStride;
+                srcPtrRowB += srcDescPtr->strides.hStride;
+                dstPtrRow += dstDescPtr->strides.hStride;
+            }
+        }
+
+        // Threshold without fused output-layout toggle (NHWC -> NHWC)
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            Rpp32f *srcPtrRow, *dstPtrRow;
+            srcPtrRow = srcPtrImage;
+            dstPtrRow = dstPtrImage;
+            for(int i = 0; i < srcDescPtr->h; i++)
+            {
+                Rpp32f *srcPtrTemp, *dstPtrTemp;
+                srcPtrTemp = srcPtrRow;
+                dstPtrTemp = dstPtrRow;
+                int vectorLoopCount = 0;
+#if __AVX2__
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
+                {
+                    __m256 p[3];
+                    rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp, p);         // simd loads
+                    compute_threshold_24_host(p, pThresholdParams); 	                     // threshold adjustment
+                    rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, p);       // simd stores
+                    srcPtrTemp += vectorIncrement;
+                    dstPtrTemp += vectorIncrement;
+                }
+#endif
+                for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
+                {
+                    Rpp32f pixelR, pixelG, pixelB;
+                    bool channelCheck[3];
+                    pixelR = srcPtrTemp[0];
+                    pixelG = srcPtrTemp[1];
+                    pixelB = srcPtrTemp[2];
+                    channelCheck[0] = ((pixelR >= minThreshold[0]) &&  (pixelR <= maxThreshold[0]));
+                    channelCheck[1] = ((pixelG >= minThreshold[1]) &&  (pixelG <= maxThreshold[1]));
+                    channelCheck[2] = ((pixelB >= minThreshold[2]) &&  (pixelB <= maxThreshold[2]));
+                    Rpp32f outVal = (channelCheck[0] && channelCheck[1] && channelCheck[2]) ? 1.0f : 0.0f;
+                    dstPtrTemp[0] = outVal;
+                    dstPtrTemp[1] = outVal;
+                    dstPtrTemp[2] = outVal;
+                    srcPtrTemp += 3;
+                    dstPtrTemp += 3;
+                }
+                srcPtrRow += srcDescPtr->strides.hStride;
+                dstPtrRow += dstDescPtr->strides.hStride;
+            }
+        }
+
+        // Threshold without fused output-layout toggle (NCHW -> NCHW) for 3 channel input
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            Rpp32f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB;
+            Rpp32f *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
+            srcPtrRowR = srcPtrImage;
+            srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
+            srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
+            dstPtrRowR = dstPtrImage;
+            dstPtrRowG = dstPtrRowR + srcDescPtr->strides.cStride;
+            dstPtrRowB = dstPtrRowG + srcDescPtr->strides.cStride;
+            for(int i = 0; i < srcDescPtr->h; i++)
+            {
+                Rpp32f *srcPtrTempR, *srcPtrTempG, *srcPtrTempB;
+                Rpp32f *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
+                srcPtrTempR = srcPtrRowR;
+                srcPtrTempG = srcPtrRowG;
+                srcPtrTempB = srcPtrRowB;
+                dstPtrTempR = dstPtrRowR;
+                dstPtrTempG = dstPtrRowG;
+                dstPtrTempB = dstPtrRowB;
+                int vectorLoopCount = 0;
+#if __AVX2__
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    __m256 p[3];
+                    rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);   // simd loads
+                    compute_threshold_24_host(p, pThresholdParams);                                               // threshold adjustment
+                    rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p); // simd stores                                  // simd stores
+                    srcPtrTempR += vectorIncrementPerChannel;
+                    srcPtrTempG += vectorIncrementPerChannel;
+                    srcPtrTempB += vectorIncrementPerChannel;
+                    dstPtrTempR += vectorIncrementPerChannel;
+                    dstPtrTempG += vectorIncrementPerChannel;
+                    dstPtrTempB += vectorIncrementPerChannel;
+                }
+#endif 
+                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                {
+                    Rpp32f pixelR, pixelG, pixelB;
+                    bool channelCheck[3];
+                    pixelR = *srcPtrTempR++;
+                    pixelG = *srcPtrTempG++;
+                    pixelB = *srcPtrTempB++;
+                    channelCheck[0] = ((pixelR >= minThreshold[0]) &&  (pixelR <= maxThreshold[0]));
+                    channelCheck[1] = ((pixelG >= minThreshold[1]) &&  (pixelG <= maxThreshold[1]));
+                    channelCheck[2] = ((pixelB >= minThreshold[2]) &&  (pixelB <= maxThreshold[2]));
+                    Rpp32f outVal = (channelCheck[0] && channelCheck[1] && channelCheck[2]) ? 1.0f : 0.0f;
+                    *dstPtrTempR++ = outVal;
+                    *dstPtrTempG++ = outVal;
+                    *dstPtrTempB++ = outVal; 
+                }
+                srcPtrRowR += srcDescPtr->strides.hStride;
+                srcPtrRowG += srcDescPtr->strides.hStride;
+                srcPtrRowB += srcDescPtr->strides.hStride;
+                dstPtrRowR += dstDescPtr->strides.hStride;
+                dstPtrRowG += dstDescPtr->strides.hStride;
+                dstPtrRowB += dstDescPtr->strides.hStride;
+            }
+        }
+
+        // Threshold without fused output-layout toggle (NCHW -> NCHW) for 1 channel input
+        else if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            Rpp32f *srcPtrRow, *dstPtrRow;
+            srcPtrRow = srcPtrChannel;
+            dstPtrRow = dstPtrChannel;
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            {
+                Rpp32f *srcPtrTemp, *dstPtrTemp;
+                srcPtrTemp = srcPtrRow;
+                dstPtrTemp = dstPtrRow;
+                int vectorLoopCount = 0;
+#if __AVX2__
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    __m256 p[1];
+                    rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrTemp, p);      // simd loads
+                    compute_threshold_8_host(p, pThresholdParams);              // threshold adjustment
+                    rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp, p);    // simd stores
+                    srcPtrTemp += vectorIncrementPerChannel;
+                    dstPtrTemp += vectorIncrementPerChannel;
+                }
+#endif
+                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                {
+                    Rpp32f pixel = *srcPtrTemp++;
+                    *dstPtrTemp++ = ((pixel >= minThreshold[0]) && (pixel <= maxThreshold[0])) ? 1.0f : 0.0f;
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
                 dstPtrRow += dstDescPtr->strides.hStride;

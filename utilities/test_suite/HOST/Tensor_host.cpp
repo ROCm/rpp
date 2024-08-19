@@ -653,12 +653,16 @@ int main(int argc, char **argv)
                     
                     Rpp32f minTensor[batchSize * srcDescPtr->c];
                     Rpp32f maxTensor[batchSize * srcDescPtr->c];
+                    Rpp32f normFactor = 1;
+
+                    if (inputBitDepth == 1 || inputBitDepth == 2)
+                        normFactor = 255;
                     for (int i = 0; i < batchSize; i++)
                     {
                         for (int j = 0, k = i * srcDescPtr->c; j < srcDescPtr->c; j++, k++)
                         {
-                            minTensor[k] = 30;
-                            maxTensor[k] = 100;
+                            minTensor[k] = 30 / normFactor;
+                            maxTensor[k] = 100 / normFactor;
                         }
                     }
 
