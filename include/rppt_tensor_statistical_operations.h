@@ -272,7 +272,7 @@ RppStatus rppt_tensor_stddev_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
  * \image html img150x150.png Sample Input
- * \image html effects_augmentations_threshold_img150x150.png Sample Output
+ * \image html statistical_operations_threshold_img150x150.png Sample Output
  * \param [in] srcPtr source tensor in HOST memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HOST memory
