@@ -615,34 +615,18 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "rain";
 
-                    // Rpp32f rainPercentage[batchSize];
-                    // Rpp32u rainHeight[batchSize];
-                    // Rpp32u rainWidth[batchSize];
-                    // Rpp32f transparency[batchSize];
-                    // for(int i = 0; i < batchSize; i++)
-                    // {
-                    //     rainPercentage[i] = 1;
-                    //     rainHeight[i] = 30;
-                    //     rainWidth[i] = 1;
-                    //     transparency[i] = 0.5;
-                    // }
                     Rpp32f rainPercentage = 7;
                     Rpp32u rainHeight = 6;
                     Rpp32u rainWidth = 1;
-                    Rpp32f transparency = 0.4;
-                    // rainPercentage[0] = 7;
-                    // rainPercentage[1] = 6;
-                    // rainPercentage[2] = 5;
-                    // rainPercentage[3] = 1;
-                    // rainHeight[0] = 6;
-                    // rainHeight[1] = 8;
-                    // rainHeight[2] = 8;
-                    // rainHeight[3] = 40;
+                    Rpp32s slant = 4;
+                    Rpp32f alpha[batchSize];
+                    for(int i = 0; i < batchSize; i++)
+                        alpha[i] = 0.4;
 
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_rain_host(input, srcDescPtr, output, dstDescPtr, rainPercentage, rainWidth, rainHeight, transparency, roiTensorPtrSrc, roiTypeSrc, handle);
+                        rppt_rain_host(input, srcDescPtr, output, dstDescPtr, rainPercentage, rainWidth, rainHeight, slant, alpha, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
