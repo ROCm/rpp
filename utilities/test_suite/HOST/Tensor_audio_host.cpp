@@ -111,6 +111,7 @@ int main(int argc, char **argv)
         maxDstChannels = 1;
     }
     set_audio_descriptor_dims_and_strides(dstDescPtr, batchSize, maxDstHeight, maxDstWidth, maxDstChannels, offsetInBytes);
+    dstDescPtr->numDims = 3;
 
     // create generic descriptor in case of slice
     RpptGenericDesc descriptor3D;

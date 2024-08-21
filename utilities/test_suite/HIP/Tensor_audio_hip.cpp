@@ -152,6 +152,9 @@ int main(int argc, char **argv)
     // allocate the buffer for srcDimsTensor
     Rpp32s *srcDimsTensor;
     CHECK_RETURN_STATUS(hipHostMalloc(&srcDimsTensor, batchSize * 2 * sizeof(Rpp32s)));
+    Rpp32f *coeff;
+    if(testCase == 2)
+        CHECK_RETURN_STATUS(hipHostMalloc(&coeff, batchSize * sizeof(Rpp32f)));
 
     // run case-wise RPP API and measure time
     rppHandle_t handle;
@@ -202,6 +205,22 @@ int main(int argc, char **argv)
 
                     startWallTime = omp_get_wtime();
                     rppt_to_decibels_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcDims, cutOffDB, multiplier, referenceMagnitude, handle);
+
+                    break;
+                }
+                case 2:
+                {
+                    testCaseName = "pre_emphasis_filter";
+                    for (int i = 0; i < batchSize; i++)
+                    {
+                        coeff[i] = 0.97;
+                        dstDims[i].height = srcLengthTensor[i];
+                        dstDims[i].width = 1;
+                    }
+                    RpptAudioBorderType borderType = RpptAudioBorderType::CLAMP;
+
+                    startWallTime = omp_get_wtime();
+                    rppt_pre_emphasis_filter_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcLengthTensor, coeff, borderType, handle);
 
                     break;
                 }
@@ -320,6 +339,8 @@ int main(int argc, char **argv)
     CHECK_RETURN_STATUS(hipFree(d_outputf32));
     CHECK_RETURN_STATUS(hipHostFree(srcLengthTensor));
     CHECK_RETURN_STATUS(hipHostFree(channelsTensor));
+    if(testCase == 2)
+        CHECK_RETURN_STATUS(hipHostFree(coeff));
     CHECK_RETURN_STATUS(hipHostFree(srcDims));
     CHECK_RETURN_STATUS(hipHostFree(dstDims));
     CHECK_RETURN_STATUS(hipHostFree(srcDimsTensor));
