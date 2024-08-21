@@ -379,14 +379,11 @@ int main(int argc, char **argv)
                         maxDstHeight = std::max(maxDstHeight, (int)dstDims[i].height);
                         maxDstWidth = std::max(maxDstWidth, (int)dstDims[i].width);
                     }
-
                     srcDescPtr->h = maxSrcHeight;
                     srcDescPtr->w = maxSrcWidth;
                     dstDescPtr->h = maxDstHeight;
                     dstDescPtr->w = maxDstWidth;
-                    srcDescPtr->numDims = 3;
-                    dstDescPtr->numDims = 3;
-
+                    
                     set_audio_descriptor_dims_and_strides_nostriding(srcDescPtr, batchSize, maxSrcHeight, maxSrcWidth, maxSrcChannels, offsetInBytes);
                     set_audio_descriptor_dims_and_strides_nostriding(dstDescPtr, batchSize, maxDstHeight, maxDstWidth, maxDstChannels, offsetInBytes);
                     srcDescPtr->numDims = 3;

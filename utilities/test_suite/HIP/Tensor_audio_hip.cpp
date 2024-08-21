@@ -145,11 +145,18 @@ int main(int argc, char **argv)
     }
 
     // declare pointer of type RpptResamplingWindow used for resample augmentation
-    Rpp32f *inRateTensor, *outRateTensor;
+    Rpp32f *inRateTensor = nullptr, *outRateTensor = nullptr;
     RpptResamplingWindow *window = nullptr;
     Rpp64u resampleBufferSize;
-    CHECK_RETURN_STATUS(hipHostMalloc(&inRateTensor, batchSize * sizeof(Rpp32f)));
-    CHECK_RETURN_STATUS(hipHostMalloc(&outRateTensor, batchSize * sizeof(Rpp32f)));
+    if (testCase == 6)
+    {
+        CHECK_RETURN_STATUS(hipHostMalloc(&inRateTensor, batchSize * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&outRateTensor, batchSize * sizeof(Rpp32f)));
+    }
+
+    Rpp32f *coeff = nullptr;
+    if(testCase == 2)
+        CHECK_RETURN_STATUS(hipHostMalloc(&coeff, batchSize * sizeof(Rpp32f)));
 
     // run case-wise RPP API and measure time
     rppHandle_t handle;
@@ -157,7 +164,7 @@ int main(int argc, char **argv)
     CHECK_RETURN_STATUS(hipStreamCreate(&stream));
     rppCreateWithStreamAndBatchSize(&handle, stream, batchSize);
 
-    int noOfIterations = (int)audioNames.size() / batchSize;
+    int noOfIterations = static_cast<int>(audioNames.size()) / batchSize;
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0;
     string testCaseName;
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
@@ -200,6 +207,22 @@ int main(int argc, char **argv)
 
                     startWallTime = omp_get_wtime();
                     rppt_to_decibels_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcDims, cutOffDB, multiplier, referenceMagnitude, handle);
+
+                    break;
+                }
+                case 2:
+                {
+                    testCaseName = "pre_emphasis_filter";
+                    for (int i = 0; i < batchSize; i++)
+                    {
+                        coeff[i] = 0.97;
+                        dstDims[i].height = srcLengthTensor[i];
+                        dstDims[i].width = 1;
+                    }
+                    RpptAudioBorderType borderType = RpptAudioBorderType::CLAMP;
+
+                    startWallTime = omp_get_wtime();
+                    rppt_pre_emphasis_filter_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcLengthTensor, coeff, borderType, handle);
 
                     break;
                 }
@@ -337,6 +360,8 @@ int main(int argc, char **argv)
     CHECK_RETURN_STATUS(hipFree(d_outputf32));
     CHECK_RETURN_STATUS(hipHostFree(srcLengthTensor));
     CHECK_RETURN_STATUS(hipHostFree(channelsTensor));
+    if(coeff != nullptr)
+        CHECK_RETURN_STATUS(hipHostFree(coeff));
     CHECK_RETURN_STATUS(hipHostFree(srcDims));
     CHECK_RETURN_STATUS(hipHostFree(dstDims));
     CHECK_RETURN_STATUS(hipHostFree(srcDimsTensor));
@@ -350,6 +375,10 @@ int main(int argc, char **argv)
             CHECK_RETURN_STATUS(hipHostFree(window->lookup));
         CHECK_RETURN_STATUS(hipHostFree(window));
     }
-
+    if (inRateTensor != nullptr)
+        CHECK_RETURN_STATUS(hipHostFree(inRateTensor));
+    if (outRateTensor != nullptr)
+        CHECK_RETURN_STATUS(hipHostFree(outRateTensor));
+        
     return 0;
 }
