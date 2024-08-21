@@ -129,6 +129,11 @@ int main(int argc, char **argv)
     iBufferSize = (Rpp64u)srcDescPtr->h * (Rpp64u)srcDescPtr->w * (Rpp64u)srcDescPtr->c * (Rpp64u)srcDescPtr->n;
     oBufferSize = (Rpp64u)dstDescPtr->h * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
 
+    // compute maximum possible buffer size of resample
+    unsigned long long resampleMaxBufferSize = dstDescPtr->n * dstDescPtr->strides.nStride * 1.15;
+    if (testCase == 6)
+        oBufferSize = resampleMaxBufferSize;
+
     // allocate host buffers for input & output
     Rpp32f *inputf32 = (Rpp32f *)calloc(iBufferSize, sizeof(Rpp32f));
     Rpp32f *outputf32 = (Rpp32f *)calloc(oBufferSize, sizeof(Rpp32f));
@@ -336,15 +341,12 @@ int main(int argc, char **argv)
                     dstDescPtr->w = maxDstWidth;
                     dstDescPtr->strides.nStride = dstDescPtr->c * dstDescPtr->w * dstDescPtr->h;
 
-                    // Set buffer sizes for dst
-                    Rpp64u resampleBufferSize = (Rpp64u)dstDescPtr->h * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
-
-                    // Reinitialize host buffers for output
-                    outputf32 = (Rpp32f *)realloc(outputf32, sizeof(Rpp32f) * resampleBufferSize);
-                    if(!outputf32)
+                    // check if the required output buffer size is greater than predefined resampleMaxBufferSize
+                    if (dstDescPtr->n * dstDescPtr->strides.nStride > resampleMaxBufferSize)
                     {
-                        std::cout << "Unable to reallocate memory for output" << std::endl;
-                        break;
+                        std::cout << "\nError! Requested resample output size is greater than predefined max size for resample in test suite."
+                                     "\nPlease modify resampleMaxBufferSize value in test suite as per your requirements for running resample kernel" << std::endl;
+                        exit(0);
                     }
 
                     startWallTime = omp_get_wtime();
