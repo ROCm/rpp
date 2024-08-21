@@ -156,6 +156,17 @@ RppStatus hip_exec_spectrogram_tensor(Rpp32f* srcPtr,
                                       Rpp32s windowStep,
                                       rpp::Handle& handle)
 {
+    bool vertical = (dstDescPtr->layout == RpptLayout::NFT);
+    Rpp32s numBins = (nfft / 2 + 1);
+    
+    // find the maximum windows required across all inputs in batch and stride required for window output
+    Rpp32s maxNumWindows = (vertical) ? dstDescPtr->w : dstDescPtr->h;
+    uint scratchMemorySize = nfft * ((maxNumWindows * dstDescPtr->n) + (numBins * 2));
+    
+    // check if scratch memory size required for spectrogram is within the limits
+    if (scratchMemorySize > SPECTROGRAM_MAX_SCRATCH_MEMORY)
+        return RPP_ERROR_OUT_OF_BOUND_SCRATCH_MEMORY_SIZE;
+
     // generate hanning window
     Rpp32f *windowFn;
     if (windowFunction == NULL)
@@ -178,9 +189,6 @@ RppStatus hip_exec_spectrogram_tensor(Rpp32f* srcPtr,
     for (Rpp32u i = 0; i < dstDescPtr->n; i++)
         numWindowsTensor[i] = get_num_windows(srcLengthTensor[i], windowLength, windowStep, centerWindows);
 
-    // find the maximum windows required across all inputs in batch and stride required for window output
-    bool vertical = (dstDescPtr->layout == RpptLayout::NFT);
-    Rpp32s maxNumWindows = (vertical) ? dstDescPtr->w : dstDescPtr->h;
     Rpp32s windowCenterOffset = (centerWindows) ? (windowLength / 2) : 0;
     if (!nfft) nfft = windowLength;
     Rpp32u windowOutputStride = maxNumWindows * nfft;
@@ -207,7 +215,6 @@ RppStatus hip_exec_spectrogram_tensor(Rpp32f* srcPtr,
                        reflectPadding);
 
     // compute the sin and cos factors required for FFT
-    Rpp32s numBins = (nfft / 2 + 1);
     Rpp32f *cosTensor, *sinTensor;
     cosTensor = windowOutput + dstDescPtr->n * windowOutputStride;
     sinTensor = cosTensor + (nfft * numBins);
