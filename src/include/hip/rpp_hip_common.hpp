@@ -159,10 +159,7 @@ struct RPPTensorFunctionMetaData
 // float4 floor
 
 #define FLOOR4(src, dst) \
-dst.x = static_cast<int>(floorf(src.x)); \
-dst.y = static_cast<int>(floorf(src.y)); \
-dst.z = static_cast<int>(floorf(src.z)); \
-dst.w = static_cast<int>(floorf(src.w)); \
+dst = make_int4(floorf(src.x), floorf(src.y), floorf(src.z), floorf(src.w)); //would be enough here
 
 /******************** HOST FUNCTIONS ********************/
 
