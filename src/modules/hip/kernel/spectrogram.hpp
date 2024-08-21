@@ -60,12 +60,16 @@ __global__ void compute_coefficients_hip_tensor(float *cosFactor,
     if (id_y >= numBins || id_x >= nfft)
         return;
 
-    float factor = (2.0f * id_y * M_PI) / nfft;
-    cosFactor[id_x * numBins + id_y] = cosf(factor * id_x);
-    sinFactor[id_x * numBins + id_y] = sinf(factor * id_x);
+    float factor = id_x * ((2.0f * id_y * M_PI) / nfft);
+    int dstIdx = id_x * numBins + id_y; 
+    cosFactor[dstIdx] = cosf(factor);
+    sinFactor[dstIdx] = sinf(factor);
 }
 
-// compute fourier transform on windowed output
+/* compute fourier transform on windowed output
+   it internally computes a matrix multiplication of 
+   - windowOutput of size (numWindows, nfft) with cosFactor of size (nfft, nfft/2 + 1) for real part of output
+   - windowOutput of size (numWindows, nfft) with sinFactor of size (nfft, nfft/2 + 1) for imaginary part of output */
 __global__ void fourier_transform_hip_tensor(float *srcPtr,
                                              uint2 srcStrideNH,
                                              float *dstPtr,
@@ -73,16 +77,17 @@ __global__ void fourier_transform_hip_tensor(float *srcPtr,
                                              int *numWindowsTensor,
                                              float *cosFactor,
                                              float *sinFactor,
-                                             int3 params_i3,
+                                             int4 params_i4,
                                              bool vertical)
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
     int numWindows = numWindowsTensor[id_z];
-    int nfft = params_i3.x;
-    int numBins = params_i3.y;
-    int power = params_i3.z;
+    int nfft = params_i4.x;
+    int numBins = params_i4.y;
+    int power = params_i4.z;
+    int numTiles = params_i4.w;
 
     __shared__ float input_smem[16][16];        // 16 rows of src, 16 cols of src in a 16 x 16 thread block
     __shared__ float cosFactor_smem[16][16];    // 16 rows of cosFactor, 16 cols of cosFactor in a 16 x 16 thread block
@@ -94,16 +99,15 @@ __global__ void fourier_transform_hip_tensor(float *srcPtr,
 
     int srcIdx = id_z * srcStrideNH.x + id_y * srcStrideNH.y;
     float realVal = 0.0f, imaginaryVal = 0.0f;
-    int numTiles = static_cast<int>(ceil((static_cast<float>(nfft) / hipBlockDim_x)));
-    for(int t = 0; t < numTiles; t++)
+    for(int t = 0, offset = 0; t < numTiles; t++, offset += hipBlockDim_x)
     {
-        // load input values to shared memory if within valid range
-        int srcCol = (t * hipBlockDim_x + hipThreadIdx_x);
-        int factorRow = (t * hipBlockDim_x  + hipThreadIdx_y);
+        // load input values to shared memory if (id_y, srcCol) < (numWindows, nfft) - range of input
+        int srcCol = (offset + hipThreadIdx_x);
+        int factorRow = (offset  + hipThreadIdx_y);
         if ((id_y < numWindows) && (srcCol < nfft))
             input_smem[hipThreadIdx_y][hipThreadIdx_x] = srcPtr[srcIdx + srcCol];
 
-        // load cosfactor and sinfactor values to shared memory if within valid range
+        // load cosfactor and sinfactor values to shared memory if (factorRow, id_x) < (nfft, numBins) - range of sinFactor and cosFactor
         if ((factorRow < nfft) && (id_x < numBins))
         {
             factorRow *= numBins;
@@ -127,6 +131,9 @@ __global__ void fourier_transform_hip_tensor(float *srcPtr,
     if (id_y < numWindows && id_x < numBins)
     {
         float magnitudeSquare = ((realVal * realVal) + (imaginaryVal * imaginaryVal));
+        
+        /* if vertical is set to true, then get the transposed output index (id_x * dstStrideNH.y + id_y)
+           else get the normal output index (id_y * dstStrideNH.y + id_x) */
         int dstIdx = (vertical) ? (id_z * dstStrideNH.x + id_x * dstStrideNH.y + id_y) :
                                   (id_z * dstStrideNH.x + id_y * dstStrideNH.y + id_x);
         dstPtr[dstIdx] = (power == 2) ? magnitudeSquare : sqrtf(magnitudeSquare);
@@ -201,21 +208,22 @@ RppStatus hip_exec_spectrogram_tensor(Rpp32f* srcPtr,
 
     // compute the sin and cos factors required for FFT
     Rpp32s numBins = (nfft / 2 + 1);
-    Rpp32f *cosfTensor, *sinfTensor;
-    cosfTensor = windowOutput + dstDescPtr->n * windowOutputStride;
-    sinfTensor = cosfTensor + (nfft * numBins);
+    Rpp32f *cosTensor, *sinTensor;
+    cosTensor = windowOutput + dstDescPtr->n * windowOutputStride;
+    sinTensor = cosTensor + (nfft * numBins);
     hipLaunchKernelGGL(compute_coefficients_hip_tensor,
                        dim3(ceil((float)nfft/LOCAL_THREADS_X), ceil((float)numBins/LOCAL_THREADS_Y), ceil((float)1/LOCAL_THREADS_Z)),
                        dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                        0,
                        handle.GetStream(),
-                       cosfTensor,
-                       sinfTensor,
+                       cosTensor,
+                       sinTensor,
                        numBins,
                        nfft);
 
     // compute the final output
     globalThreads_x = numBins;
+    Rpp32s numTiles = static_cast<int>(ceil((static_cast<float>(nfft) / LOCAL_THREADS_X)));
     hipLaunchKernelGGL(fourier_transform_hip_tensor,
                        dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                        dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
@@ -226,9 +234,9 @@ RppStatus hip_exec_spectrogram_tensor(Rpp32f* srcPtr,
                        dstPtr,
                        make_uint2(dstDescPtr->strides.nStride, maxNumWindows),
                        numWindowsTensor,
-                       cosfTensor,
-                       sinfTensor,
-                       make_int3(nfft, numBins, power),
+                       cosTensor,
+                       sinTensor,
+                       make_int4(nfft, numBins, power, numTiles),
                        vertical);
 
     return RPP_SUCCESS;

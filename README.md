@@ -23,6 +23,16 @@ Input<br>(nifti1 .nii medical image) | fused_multiply_add_scalar<br>(brightened 
 :-------------------------:|:-------------------------:
 ![](docs/data/niftiInput.gif)  |  ![](docs/data/niftiOutputBrightened.gif)
 
+## Supported audio functionalities and variants
+* Below are the list of audio functions supported
+  * Non Silent Region Detection (HOST and HIP)
+  * To Decibels (HOST and HIP)
+  * Downmixing (HOST and HIP)
+  * Preemphasis Filter (HOST and HIP)
+  * Resample (HOST and HIP)
+  * Mel Filter Bank (HOST and HIP)
+  * Spectrogram (HOST and HIP)
+  
 ## Prerequisites
 
 * Linux
