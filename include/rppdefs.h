@@ -750,7 +750,7 @@ typedef struct RpptResamplingWindow
 inline Rpp32f sinc(Rpp32f x)
 {
     x *= M_PI;
-    return (std::abs(x) < 1e-5f) ? (1.0f - x * x * (1.0f / 6)) : std::sin(x) / x;
+    return (std::abs(x) < 1e-5f) ? (1.f - (x * x * 0.16666667)) : std::sin(x) / x;
 }
 
 inline Rpp64f hann(Rpp64f x)
