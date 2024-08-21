@@ -116,6 +116,11 @@ int main(int argc, char **argv)
     iBufferSize = (Rpp64u)srcDescPtr->h * (Rpp64u)srcDescPtr->w * (Rpp64u)srcDescPtr->c * (Rpp64u)srcDescPtr->n;
     oBufferSize = (Rpp64u)dstDescPtr->h * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
 
+    // compute maximum possible buffer size of spectrogram
+    unsigned long long spectrogramMaxBufferSize = 257 * 3754 * dstDescPtr->n;
+    if (testCase == 4)
+        oBufferSize = spectrogramMaxBufferSize;
+
     // allocate hip buffers for input & output
     Rpp32f *inputf32 = (Rpp32f *)calloc(iBufferSize, sizeof(Rpp32f));
     Rpp32f *outputf32 = (Rpp32f *)calloc(oBufferSize, sizeof(Rpp32f));
@@ -278,12 +283,13 @@ int main(int argc, char **argv)
                     set_audio_descriptor_dims_and_strides_nostriding(dstDescPtr, batchSize, maxDstHeight, maxDstWidth, maxDstChannels, offsetInBytes);
                     dstDescPtr->numDims = 3;
 
-                    // Set buffer sizes for src/dst
-                    unsigned long long spectrogramBufferSize = (unsigned long long)dstDescPtr->h * (unsigned long long)dstDescPtr->w * (unsigned long long)dstDescPtr->c * (unsigned long long)dstDescPtr->n;
-                    oBufferSize = spectrogramBufferSize;
-                    outputf32 = (Rpp32f *)realloc(outputf32, spectrogramBufferSize * sizeof(Rpp32f));
-                    CHECK_RETURN_STATUS(hipFree(d_outputf32));
-                    CHECK_RETURN_STATUS(hipMalloc(&d_outputf32, spectrogramBufferSize * sizeof(Rpp32f)));
+                    // check if the output buffer size is greater than predefined spectrogramMaxBufferSize
+                    if (dstDescPtr->n * dstDescPtr->strides.nStride > spectrogramMaxBufferSize)
+                    {
+                        std::cout << "\nError! Requested spectrogram output size is greater than predefined max size for spectrogram in test suite."
+                                     "\nPlease modify spectrogramMaxBufferSize value in test suite for running spectrogram kernel" << std::endl;
+                        exit(0);
+                    }
 
                     startWallTime = omp_get_wtime();
                     rppt_spectrogram_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcLengthTensor, centerWindows, reflectPadding, windowFn, nfft, power, windowLength, windowStep, handle);
