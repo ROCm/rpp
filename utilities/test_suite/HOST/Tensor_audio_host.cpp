@@ -379,7 +379,6 @@ int main(int argc, char **argv)
                         maxDstHeight = std::max(maxDstHeight, (int)dstDims[i].height);
                         maxDstWidth = std::max(maxDstWidth, (int)dstDims[i].width);
                     }
-
                     srcDescPtr->h = maxSrcHeight;
                     srcDescPtr->w = maxSrcWidth;
                     dstDescPtr->h = maxDstHeight;
