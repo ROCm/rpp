@@ -2912,7 +2912,7 @@ inline void rpp_generic_nn_load_u8pln1_avx(Rpp8u *srcPtrChannel, Rpp32s *srcLoc,
             buffer[i] = *(srcPtrChannel + srcLoc[i]);
     }
     __m128i px = _mm_loadu_si128((__m128i *)buffer);
-    p = _mm256_setr_m128i(px, xmm_px0);
+    p = _mm256_castsi128_si256(px);
 }
 
 inline void rpp_generic_nn_load_f32pkd3_to_f32pln3(Rpp32f *srcPtrChannel, Rpp32s *srcLoc, Rpp32s *invalidLoad, __m128 *p)
