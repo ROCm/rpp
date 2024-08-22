@@ -24,7 +24,7 @@ __global__ void window_output_hip_tensor(float *srcPtr,
     int windowStep = params_i4.z;
     int windowCenterOffset = params_i4.w;
 
-    if (id_x >= windowLength || id_y >= numWindows)
+    if ((id_x >= windowLength) || (id_y >= numWindows))
         return;
 
     int dstIdx = id_z * dstStride + id_y * nfft + id_x;
@@ -33,14 +33,14 @@ __global__ void window_output_hip_tensor(float *srcPtr,
     int inIdx = windowStart + id_x;
 
     // check if windowStart is beyond the bounds of input
-    if (windowStart < 0 || (windowStart + windowLength) > srcLength)
+    if ((windowStart < 0) || ((windowStart + windowLength) > srcLength))
     {
         if (reflectPadding)
         {
             inIdx = get_idx_reflect(inIdx, 0, srcLength);
             dstPtr[dstIdx] = windowFn[id_x] * srcPtr[srcIdx + inIdx];
         }
-        else if (inIdx >= 0 && inIdx < srcLength)
+        else if ((inIdx >= 0) && (inIdx < srcLength))
             dstPtr[dstIdx] = windowFn[id_x] * srcPtr[srcIdx + inIdx];
     }
     else
@@ -57,10 +57,10 @@ __global__ void compute_coefficients_hip_tensor(float *cosFactor,
 {
     int id_x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-    if (id_y >= numBins || id_x >= nfft)
+    if ((id_y >= numBins) || (id_x >= nfft))
         return;
 
-    float factor = id_x * ((2.0f * id_y * M_PI) / nfft);
+    float factor = id_x * ((TWO_PI * id_y) / nfft);
     int dstIdx = id_x * numBins + id_y; 
     cosFactor[dstIdx] = cosf(factor);
     sinFactor[dstIdx] = sinf(factor);
@@ -103,7 +103,7 @@ __global__ void fourier_transform_hip_tensor(float *srcPtr,
     {
         // load input values to shared memory if (id_y, srcCol) < (numWindows, nfft) - range of input
         int srcCol = (offset + hipThreadIdx_x);
-        int factorRow = (offset  + hipThreadIdx_y);
+        int factorRow = (offset + hipThreadIdx_y);
         if ((id_y < numWindows) && (srcCol < nfft))
             input_smem[hipThreadIdx_y][hipThreadIdx_x] = srcPtr[srcIdx + srcCol];
 
@@ -128,7 +128,7 @@ __global__ void fourier_transform_hip_tensor(float *srcPtr,
     }
 
     // final store to dst
-    if (id_y < numWindows && id_x < numBins)
+    if ((id_y < numWindows) && (id_x < numBins))
     {
         float magnitudeSquare = ((realVal * realVal) + (imaginaryVal * imaginaryVal));
         

@@ -130,7 +130,7 @@ int main(int argc, char **argv)
     oBufferSize = (Rpp64u)dstDescPtr->h * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
 
     // compute maximum possible buffer size of spectrogram
-    unsigned long long spectrogramMaxBufferSize = 257 * 3754 * dstDescPtr->n;
+    Rpp64u spectrogramMaxBufferSize = 257 * 3754 * dstDescPtr->n;
     if (testCase == 4)
         oBufferSize = spectrogramMaxBufferSize;
         
