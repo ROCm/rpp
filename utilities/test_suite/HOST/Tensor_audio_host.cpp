@@ -128,11 +128,16 @@ int main(int argc, char **argv)
     // set buffer sizes for src/dst
     iBufferSize = (Rpp64u)srcDescPtr->h * (Rpp64u)srcDescPtr->w * (Rpp64u)srcDescPtr->c * (Rpp64u)srcDescPtr->n;
     oBufferSize = (Rpp64u)dstDescPtr->h * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
-
+    
     // compute maximum possible buffer size of resample
-    unsigned long long resampleMaxBufferSize = dstDescPtr->n * dstDescPtr->strides.nStride * 1.15;
+    Rpp64u resampleMaxBufferSize = dstDescPtr->n * dstDescPtr->strides.nStride * 1.15;
     if (testCase == 6)
         oBufferSize = resampleMaxBufferSize;
+    
+    // compute maximum possible buffer size of spectrogram
+    Rpp64u spectrogramMaxBufferSize = 257 * 3754 * dstDescPtr->n;
+    if (testCase == 4)
+        oBufferSize = spectrogramMaxBufferSize;
 
     // allocate host buffers for input & output
     Rpp32f *inputf32 = (Rpp32f *)calloc(iBufferSize, sizeof(Rpp32f));
@@ -152,11 +157,13 @@ int main(int argc, char **argv)
     // RpptResamplingWindow instance used for resample augmentation
     RpptResamplingWindow window;
 
-    // run case-wise RPP API and measure time
+    // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
+    // If numThreads value passed is 0, number of OpenMP threads used by RPP will be set to batch size
+    Rpp32u numThreads = 0;
     rppHandle_t handle;
-    rppCreateWithBatchSize(&handle, srcDescPtr->n, 3);
+    rppCreateWithBatchSize(&handle, batchSize, numThreads);
 
-    int noOfIterations = (int)audioNames.size() / batchSize;
+    int noOfIterations = static_cast<int>(audioNames.size()) / batchSize;
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0;
     string testCaseName;
     printf("\nRunning %s %d times (each time with a batch size of %d audio files) and computing mean statistics...", func.c_str(), numRuns, batchSize);
@@ -255,33 +262,16 @@ int main(int argc, char **argv)
 
                     maxDstWidth = 0;
                     maxDstHeight = 0;
-                    if(dstDescPtr->layout == RpptLayout::NFT)
-                    {
-                        for(int i = 0; i < noOfAudioFiles; i++)
-                        {
-                            dstDims[i].height = nfft / 2 + 1;
-                            dstDims[i].width = ((srcLengthTensor[i] - windowOffset) / windowStep) + 1;
-                            maxDstHeight = std::max(maxDstHeight, (int)dstDims[i].height);
-                            maxDstWidth = std::max(maxDstWidth, (int)dstDims[i].width);
-                        }
-                    }
-                    else
-                    {
-                        for(int i = 0; i < noOfAudioFiles; i++)
-                        {
-                            dstDims[i].height = ((srcLengthTensor[i] - windowOffset) / windowStep) + 1;
-                            dstDims[i].width = nfft / 2 + 1;
-                            maxDstHeight = std::max(maxDstHeight, (int)dstDims[i].height);
-                            maxDstWidth = std::max(maxDstWidth, (int)dstDims[i].width);
-                        }
-                    }
+                    init_spectrogram(srcDescPtr, dstDescPtr, dstDims, srcLengthTensor, windowLength, 
+                                     windowStep, windowOffset, nfft, maxDstHeight, maxDstWidth);
 
-                    set_audio_descriptor_dims_and_strides_nostriding(dstDescPtr, batchSize, maxDstHeight, maxDstWidth, maxDstChannels, offsetInBytes);
-                    dstDescPtr->numDims = 3;
-
-                    // Set buffer sizes for src/dst
-                    unsigned long long spectrogramBufferSize = (unsigned long long)dstDescPtr->h * (unsigned long long)dstDescPtr->w * (unsigned long long)dstDescPtr->c * (unsigned long long)dstDescPtr->n;
-                    outputf32 = (Rpp32f *)realloc(outputf32, spectrogramBufferSize * sizeof(Rpp32f));
+                    // check if the output buffer size is greater than predefined spectrogramMaxBufferSize
+                    if (dstDescPtr->n * dstDescPtr->strides.nStride > spectrogramMaxBufferSize)
+                    {
+                        std::cout << "\nError! Requested spectrogram output size is greater than predefined max size for spectrogram in test suite."
+                                     "\nPlease modify spectrogramMaxBufferSize value in test suite for running spectrogram kernel" << std::endl;
+                        exit(0);
+                    }
 
                     startWallTime = omp_get_wtime();
                     rppt_spectrogram_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcLengthTensor, centerWindows, reflectPadding, windowFn, nfft, power, windowLength, windowStep, handle);

@@ -6557,4 +6557,40 @@ inline void compute_transpose4x8_avx(__m256 *pSrc, __m128 *pDst)
     pDst[7] = _mm256_extractf128_ps(pSrc[3], 1);    /* extract [P08|P16|P24|P32] */
 }
 
+// Compute hanning window
+inline RPP_HOST_DEVICE void hann_window(Rpp32f *output, Rpp32s windowSize)
+{
+    Rpp64f a = (2.0 * M_PI) / windowSize;
+    for (Rpp32s t = 0; t < windowSize; t++)
+    {
+        Rpp64f phase = a * (t + 0.5);
+        output[t] = (0.5 * (1.0 - std::cos(phase)));
+    }
+}
+
+// Compute number of spectrogram windows
+inline RPP_HOST_DEVICE Rpp32s get_num_windows(Rpp32s length, Rpp32s windowLength, Rpp32s windowStep, bool centerWindows)
+{
+    if (!centerWindows)
+        length -= windowLength;
+    return ((length / windowStep) + 1);
+}
+
+// Compute reflect start idx to pad
+inline RPP_HOST_DEVICE Rpp32s get_idx_reflect(Rpp32s loc, Rpp32s minLoc, Rpp32s maxLoc)
+{
+    if (maxLoc - minLoc < 2)
+        return maxLoc - 1;
+    for (;;)
+    {
+        if (loc < minLoc)
+            loc = 2 * minLoc - loc;
+        else if (loc >= maxLoc)
+            loc = 2 * maxLoc - 2 - loc;
+        else
+            break;
+    }
+    return loc;
+}
+
 #endif //RPP_CPU_COMMON_H
