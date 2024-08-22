@@ -239,11 +239,14 @@ struct HandleImpl
         }
 
         hipMalloc(&(this->initHandle->mem.mgpu.rgbArr.rgbmem), sizeof(RpptRGB) * this->nBatchSize);
-
+#ifdef AUDIO_SUPPORT
         /* (512 * 3754 * 128) + (512 * 3754 * 2)  - Maximum scratch memory required for Spectrogram HIP kernel used in RNNT training (uses a batchsize 128)
            - (512 * 3754 * 128) is the maximum size that will be required for window output based on Librispeech dataset in RNNT training
            - (512 * 3754 * 2) is the size required for storing sin and cos coefficients required for FFT computation in Spectrogram HIP kernel in RNNT training */
         hipMalloc(&(this->initHandle->mem.mgpu.scratchBufferHip.floatmem), sizeof(Rpp32f) * 249866240);
+#else
+        hipMalloc(&(this->initHandle->mem.mgpu.scratchBufferHip.floatmem), sizeof(Rpp32f) * 8294400);   // 3840 x 2160
+#endif
         hipHostMalloc(&(this->initHandle->mem.mgpu.scratchBufferPinned.floatmem), sizeof(Rpp32f) * 8294400);    // 3840 x 2160
     }
 };
