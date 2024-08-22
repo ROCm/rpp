@@ -35,6 +35,7 @@ SOFTWARE.
 #include <fstream>
 #include <unistd.h>
 #include <dirent.h>
+#include <map>
 #include "rpp.h"
 #include "nifti1.h"
 
