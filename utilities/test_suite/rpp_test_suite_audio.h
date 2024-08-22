@@ -201,6 +201,36 @@ void read_from_bin_file(Rpp32f *srcPtr, RpptDescPtr srcDescPtr, Rpp32s *srcDims,
     free(refInput);
 }
 
+// Spectrogram initializer for QA and performance testing
+void init_spectrogram(RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dstDims, Rpp32s *srcLengthTensor, 
+                      Rpp32s &windowLength, Rpp32s &windowStep, Rpp32s &windowOffset, Rpp32s &nfft,
+                      Rpp32s &maxDstHeight, Rpp32s &maxDstWidth)
+{
+    if(dstDescPtr->layout == RpptLayout::NFT)
+    {
+        for(int i = 0; i < dstDescPtr->n; i++)
+        {
+            dstDims[i].height = nfft / 2 + 1;
+            dstDims[i].width = ((srcLengthTensor[i] - windowOffset) / windowStep) + 1;
+            maxDstHeight = std::max(maxDstHeight, static_cast<int>(dstDims[i].height));
+            maxDstWidth = std::max(maxDstWidth, static_cast<int>(dstDims[i].width));
+        }
+    }
+    else
+    {
+        for(int i = 0; i < dstDescPtr->n; i++)
+        {
+            dstDims[i].height = ((srcLengthTensor[i] - windowOffset) / windowStep) + 1;
+            dstDims[i].width = nfft / 2 + 1;
+            maxDstHeight = std::max(maxDstHeight, static_cast<int>(dstDims[i].height));
+            maxDstWidth = std::max(maxDstWidth, static_cast<int>(dstDims[i].width));
+        }
+    }
+
+    set_audio_descriptor_dims_and_strides_nostriding(dstDescPtr, dstDescPtr->n, maxDstHeight, maxDstWidth, 1, 0);
+    dstDescPtr->numDims = 3;
+}
+
 void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dstDims, string testCase, string dst, string scriptPath, string backend)
 {
     fstream refFile;

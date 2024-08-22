@@ -32,6 +32,9 @@ Input<br>(nifti1 .nii medical image) | fused_multiply_add_scalar<br>(brightened 
   * Resample (HOST and HIP)
   * Mel Filter Bank (HOST and HIP)
   * Spectrogram (HOST and HIP)
+
+Spectrogram kernel output represented as a image <br><br>
+![](docs/data/spectrogramOutput.png)
   
 ## Prerequisites
 

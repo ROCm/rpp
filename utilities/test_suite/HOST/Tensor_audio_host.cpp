@@ -254,29 +254,8 @@ int main(int argc, char **argv)
 
                     maxDstWidth = 0;
                     maxDstHeight = 0;
-                    if(dstDescPtr->layout == RpptLayout::NFT)
-                    {
-                        for(int i = 0; i < noOfAudioFiles; i++)
-                        {
-                            dstDims[i].height = nfft / 2 + 1;
-                            dstDims[i].width = ((srcLengthTensor[i] - windowOffset) / windowStep) + 1;
-                            maxDstHeight = std::max(maxDstHeight, (int)dstDims[i].height);
-                            maxDstWidth = std::max(maxDstWidth, (int)dstDims[i].width);
-                        }
-                    }
-                    else
-                    {
-                        for(int i = 0; i < noOfAudioFiles; i++)
-                        {
-                            dstDims[i].height = ((srcLengthTensor[i] - windowOffset) / windowStep) + 1;
-                            dstDims[i].width = nfft / 2 + 1;
-                            maxDstHeight = std::max(maxDstHeight, (int)dstDims[i].height);
-                            maxDstWidth = std::max(maxDstWidth, (int)dstDims[i].width);
-                        }
-                    }
-
-                    set_audio_descriptor_dims_and_strides_nostriding(dstDescPtr, batchSize, maxDstHeight, maxDstWidth, maxDstChannels, offsetInBytes);
-                    dstDescPtr->numDims = 3;
+                    init_spectrogram(srcDescPtr, dstDescPtr, dstDims, srcLengthTensor, windowLength, 
+                                     windowStep, windowOffset, nfft, maxDstHeight, maxDstWidth);
 
                     // check if the output buffer size is greater than predefined spectrogramMaxBufferSize
                     if (dstDescPtr->n * dstDescPtr->strides.nStride > spectrogramMaxBufferSize)
