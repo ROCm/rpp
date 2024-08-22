@@ -298,9 +298,12 @@ RppStatus rppt_non_silent_region_detection_gpu(RppPtr_t srcPtr,
                                                rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
+    Rpp32u tensorDims = srcDescPtr->numDims - 1; // exclude batchsize from input dims
+    if (tensorDims != 1)
+        return RPP_ERROR_INVALID_SRC_DIMS;
+
     if (srcDescPtr->dataType == RpptDataType::F32)
     {
-
         return hip_exec_non_silent_region_detection_tensor(static_cast<Rpp32f*>(srcPtr),
                                                            srcDescPtr,
                                                            srcLengthTensor,
@@ -427,6 +430,46 @@ RppStatus rppt_pre_emphasis_filter_gpu(RppPtr_t srcPtr,
                                                    srcLengthTensor,
                                                    borderType,
                                                    rpp::deref(rppHandle));
+    }
+    else
+    {
+        return RPP_ERROR_NOT_IMPLEMENTED;
+    }
+
+#elif defined(OCL_COMPILE)
+    return RPP_ERROR_NOT_IMPLEMENTED;
+#endif // backend
+}
+
+/******************** resample ********************/
+
+RppStatus rppt_resample_gpu(RppPtr_t srcPtr,
+                            RpptDescPtr srcDescPtr,
+                            RppPtr_t dstPtr,
+                            RpptDescPtr dstDescPtr,
+                            Rpp32f *inRateTensor,
+                            Rpp32f *outRateTensor,
+                            Rpp32s *srcDimsTensor,
+                            RpptResamplingWindow &window,
+                            rppHandle_t rppHandle)
+{
+#ifdef HIP_COMPILE
+    Rpp32u tensorDims = srcDescPtr->numDims - 1; // exclude batchsize from input dims
+    if (tensorDims != 1 && tensorDims != 2)
+        return RPP_ERROR_INVALID_SRC_DIMS;
+
+    if (srcDescPtr->dataType == RpptDataType::F32)
+    {
+        hip_exec_resample_tensor(static_cast<Rpp32f*>(srcPtr),
+                                 srcDescPtr,
+                                 static_cast<Rpp32f*>(dstPtr),
+                                 dstDescPtr,
+                                 inRateTensor,
+                                 outRateTensor,
+                                 srcDimsTensor,
+                                 window,
+                                 rpp::deref(rppHandle));
+        return RPP_SUCCESS;
     }
     else
     {

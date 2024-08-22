@@ -111,10 +111,14 @@ int main(int argc, char **argv)
         maxDstChannels = 1;
     }
     set_audio_descriptor_dims_and_strides(dstDescPtr, batchSize, maxDstHeight, maxDstWidth, maxDstChannels, offsetInBytes);
-
     // set buffer sizes for src/dst
-    iBufferSize = (Rpp64u)srcDescPtr->h * (Rpp64u)srcDescPtr->w * (Rpp64u)srcDescPtr->c * (Rpp64u)srcDescPtr->n;
-    oBufferSize = (Rpp64u)dstDescPtr->h * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
+    iBufferSize = static_cast<Rpp64u>(srcDescPtr->h) * static_cast<Rpp64u>(srcDescPtr->w) * static_cast<Rpp64u>(srcDescPtr->c) * static_cast<Rpp64u>(srcDescPtr->n);
+    oBufferSize = static_cast<Rpp64u>(dstDescPtr->h) * static_cast<Rpp64u>(dstDescPtr->w) * static_cast<Rpp64u>(dstDescPtr->c) * static_cast<Rpp64u>(dstDescPtr->n);
+
+    // compute maximum possible buffer size of resample
+    Rpp64u resampleMaxBufferSize = dstDescPtr->n * dstDescPtr->strides.nStride * 1.15;
+    if (testCase == 6)
+        oBufferSize = resampleMaxBufferSize;
 
     // compute maximum possible buffer size of spectrogram
     Rpp64u spectrogramMaxBufferSize = 257 * 3754 * dstDescPtr->n;
@@ -122,8 +126,8 @@ int main(int argc, char **argv)
         oBufferSize = spectrogramMaxBufferSize;
 
     // allocate hip buffers for input & output
-    Rpp32f *inputf32 = (Rpp32f *)calloc(iBufferSize, sizeof(Rpp32f));
-    Rpp32f *outputf32 = (Rpp32f *)calloc(oBufferSize, sizeof(Rpp32f));
+    Rpp32f *inputf32 = static_cast<Rpp32f *>(calloc(iBufferSize, sizeof(Rpp32f)));
+    Rpp32f *outputf32 = static_cast<Rpp32f *>(calloc(oBufferSize, sizeof(Rpp32f)));
 
     void *d_inputf32, *d_outputf32;
     CHECK_RETURN_STATUS(hipMalloc(&d_inputf32, iBufferSize * sizeof(Rpp32f)));
@@ -148,6 +152,15 @@ int main(int argc, char **argv)
     {
         CHECK_RETURN_STATUS(hipHostMalloc(&detectedIndex, batchSize * sizeof(Rpp32s)));
         CHECK_RETURN_STATUS(hipHostMalloc(&detectionLength, batchSize * sizeof(Rpp32s)));
+    }
+
+    // declare pointer of type RpptResamplingWindow used for resample augmentation
+    Rpp32f *inRateTensor = nullptr, *outRateTensor = nullptr;
+    RpptResamplingWindow *window = nullptr;
+    if (testCase == 6)
+    {
+        CHECK_RETURN_STATUS(hipHostMalloc(&inRateTensor, batchSize * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&outRateTensor, batchSize * sizeof(Rpp32f)));
     }
 
     Rpp32f *coeff = nullptr;
@@ -274,6 +287,47 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 6:
+                {
+                    testCaseName = "resample";
+
+                    maxDstWidth = 0;
+                    for(int i = 0, j = 0; i < batchSize; i++, j += 2)
+                    {
+                        inRateTensor[i] = 16000;
+                        outRateTensor[i] = 16000 * 1.15f;
+                        Rpp32f scaleRatio = outRateTensor[i] / inRateTensor[i];
+                        srcDimsTensor[j] = srcLengthTensor[i];
+                        srcDimsTensor[j + 1] = channelsTensor[i];
+                        dstDims[i].width = static_cast<int>(std::ceil(scaleRatio * srcLengthTensor[i]));
+                        dstDims[i].height = 1;
+                        maxDstWidth = std::max(maxDstWidth, static_cast<int>(dstDims[i].width));
+                    }
+                    Rpp32f quality = 50.0f;
+                    Rpp32s lobes = std::round(0.007 * quality * quality - 0.09 * quality + 3);
+                    Rpp32s lookupSize = lobes * 64 + 1;
+                    if (window == nullptr)
+                    {
+                        CHECK_RETURN_STATUS(hipHostMalloc(&window, sizeof(RpptResamplingWindow)));
+                        windowed_sinc(*window, lookupSize, lobes);
+                    }
+
+                    dstDescPtr->w = maxDstWidth;
+                    dstDescPtr->strides.nStride = dstDescPtr->c * dstDescPtr->w * dstDescPtr->h;
+
+                    // check if the required output buffer size is greater than predefined resampleMaxBufferSize
+                    if (dstDescPtr->n * dstDescPtr->strides.nStride > resampleMaxBufferSize)
+                    {
+                        std::cout << "\nError! Requested resample output size is greater than predefined max size for resample in test suite."
+                                     "\nPlease modify resampleMaxBufferSize value in test suite as per your requirements for running resample kernel" << std::endl;
+                        exit(0);
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    rppt_resample_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, inRateTensor, outRateTensor, srcDimsTensor, *window, handle);
+
+                    break;
+                }
                 default:
                 {
                     missingFuncFlag = 1;
@@ -354,5 +408,16 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostFree(detectedIndex));
     if (detectionLength != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(detectionLength));
+    if (window != nullptr)
+    {
+        if (window->lookup != nullptr)
+            CHECK_RETURN_STATUS(hipHostFree(window->lookup));
+        CHECK_RETURN_STATUS(hipHostFree(window));
+    }
+    if (inRateTensor != nullptr)
+        CHECK_RETURN_STATUS(hipHostFree(inRateTensor));
+    if (outRateTensor != nullptr)
+        CHECK_RETURN_STATUS(hipHostFree(outRateTensor));
+        
     return 0;
 }
