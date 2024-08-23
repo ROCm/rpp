@@ -2181,7 +2181,7 @@ RppStatus rppt_pixelate_gpu(RppPtr_t srcPtr,
     interDesc = *srcDescPtr;
     RpptDescPtr interDescPtr = &interDesc;
 
-    RpptImagePatchPtr internalDstImgSizes = reinterpret_cast<RpptImagePatch *>(rpp::deref(rppHandle).GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
+    RpptImagePatchPtr internalDstImgSizes = reinterpret_cast<RpptImagePatch *>(rpp::deref(rppHandle).GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem);
     RpptROI *internalRoiTensorPtrSrc = reinterpret_cast<RpptROI *>(internalDstImgSizes + dstDescPtr->n);
 
     for (int i = 0; i < srcDescPtr->n; i++)
