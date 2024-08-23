@@ -36,7 +36,7 @@ inFilePath = scriptPath + "/../TEST_AUDIO_FILES/three_samples_single_channel_src
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
 caseMin = 0
-caseMax = 3
+caseMax = 6
 
 
 # Get a list of log files based on a flag for preserving output
@@ -77,6 +77,7 @@ def run_unit_test_cmd(srcPath, case, numRuns, testType, batchSize, outFilePath):
     result = subprocess.Popen([buildFolderPath + "/build/Tensor_audio_hip", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE)    # nosec
     stdout_data, stderr_data = result.communicate()
     print(stdout_data.decode())
+    print("------------------------------------------------------------------------------------------")
 
 def run_performance_test_cmd(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath):
     with open(loggingFolder + "/Tensor_audio_hip_raw_performance_log.txt", "a") as logFile:
@@ -224,7 +225,7 @@ subprocess.call(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.call(["make", "-j16"], cwd=".")    # nosec
 
 # List of cases supported
-supportedCaseList = ['0', '1', '3']
+supportedCaseList = ['0', '1', '2', '3', '6']
 if qaMode and batchSize != 3:
     print("QA tests can only run with a batch size of 3.")
     exit(0)
