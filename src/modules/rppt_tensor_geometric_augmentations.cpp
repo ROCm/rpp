@@ -1480,6 +1480,18 @@ RppStatus rppt_warp_perspective_host(RppPtr_t srcPtr,
                                                layoutParams,
                                                rpp::deref(rppHandle));
         }
+        else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+        {
+            warp_perspective_nn_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                             srcDescPtr,
+                                             static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                             dstDescPtr,
+                                             perspectiveTensor,
+                                             roiTensorPtrSrc,
+                                             roiType,
+                                             layoutParams,
+                                             rpp::deref(rppHandle));
+        }
     } else if(interpolationType == RpptInterpolationType::BILINEAR) {
         if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
         {
@@ -1505,9 +1517,34 @@ RppStatus rppt_warp_perspective_host(RppPtr_t srcPtr,
                                                layoutParams,
                                                rpp::deref(rppHandle));
         }
+        else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
+        {
+            warp_perspective_bilinear_i8_i8_host_tensor(static_cast<Rpp8s*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                             srcDescPtr,
+                                             static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                             dstDescPtr,
+                                             perspectiveTensor,
+                                             roiTensorPtrSrc,
+                                             roiType,
+                                             layoutParams,
+                                             rpp::deref(rppHandle));
+        }
+        else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+        {
+            warp_perspective_bilinear_f16_f16_host_tensor((Rpp16f*) (static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                               srcDescPtr,
+                                               (Rpp16f*) (static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                               dstDescPtr,
+                                               perspectiveTensor,
+                                               roiTensorPtrSrc,
+                                               roiType,
+                                               layoutParams,
+                                               rpp::deref(rppHandle));
+        }
     }
     return RPP_SUCCESS;
 }
+
 /********************************************************************************************************************/
 /*********************************************** RPP_GPU_SUPPORT = ON ***********************************************/
 /********************************************************************************************************************/
