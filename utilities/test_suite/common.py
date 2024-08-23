@@ -41,6 +41,7 @@ imageAugmentationMap = {
     2: ["blend", "HOST", "HIP"],
     4: ["contrast", "HOST", "HIP"],
     8: ["noise", "HOST", "HIP"],
+    11: ["Rain", "HOST", "HIP"],
     13: ["exposure", "HOST", "HIP"],
     20: ["flip", "HOST", "HIP"],
     21: ["resize", "HOST", "HIP"],
@@ -107,7 +108,7 @@ miscAugmentationMap  = {
 
 ImageAugmentationGroupMap = {
     "color_augmentations" : [0, 1, 2, 3, 4, 13, 31, 34, 36, 45, 81],
-    "effects_augmentations" : [8, 29, 30, 32, 35, 46, 82, 83, 84],
+    "effects_augmentations" : [8, 11, 29, 30, 32, 35, 46, 82, 83, 84],
     "geometric_augmentations" : [20, 21, 23, 33, 37, 38, 39, 63, 79, 80, 92],
     "filter_augmentations" : [49, 54],
     "arithmetic_operations" : [61],

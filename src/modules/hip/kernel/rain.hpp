@@ -177,7 +177,7 @@ RppStatus hip_exec_rain_tensor(T *srcPtr1,
     std::srand(std::time(0));
     T *rainLayer = reinterpret_cast<T *>(handle.GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem);
     T initValue;
-    if constexpr (std::is_same<T, Rpp8s>::value || std::is_same<T, I8>::value)
+    if constexpr (std::is_same<T, Rpp8s>::value)
     {
         initValue = static_cast<T>(0x81);
     }
@@ -185,7 +185,7 @@ RppStatus hip_exec_rain_tensor(T *srcPtr1,
     {
         initValue = static_cast<T>(0);
     }
-    hipmemset(rainLayer, initValue, srcDescPtr->strides.nStride * sizeof(T));
+    hipMemset(rainLayer, initValue, srcDescPtr->strides.nStride * sizeof(T));
     for (Rpp32u i = 0; i < numDrops; i++)
     {
         Rpp32u xStart = rand() % (srcDescPtr->w - slant);
@@ -197,7 +197,7 @@ RppStatus hip_exec_rain_tensor(T *srcPtr1,
 
             if (x >= 0 && x < srcDescPtr->w && y < srcDescPtr->h)
             {
-                Rpp32s loc = y * srcDescPtr->strides.hStride + x * bufferMultiplier;
+                Rpp32s loc = y * srcDescPtr->strides.hStride + x * srcDescPtr->strides.wStride;
                 T *rainLayerTemp = rainLayer + loc;
 
                 // Conditionally assign rain value based on type T
@@ -286,12 +286,12 @@ RppStatus hip_exec_rain_tensor(T *srcPtr1,
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
                                handle.GetStream(),
-                               srcPtr1
+                               srcPtr1,
                                rainLayer,
                                make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
-                               alpha,
                                dstPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
+                               alpha,
                                roiTensorPtrSrc);
         }
     }
