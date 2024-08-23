@@ -1732,3 +1732,303 @@ RppStatus warp_perspective_bilinear_i8_i8_host_tensor(Rpp8s *srcPtr,
 
     return RPP_SUCCESS;
 }
+
+RppStatus warp_perspective_bilinear_f16_f16_host_tensor(Rpp16f *srcPtr,
+                                           RpptDescPtr srcDescPtr,
+                                           Rpp16f *dstPtr,
+                                           RpptDescPtr dstDescPtr,
+                                           Rpp32f *perspectiveTensor,
+                                           RpptROIPtr roiTensorPtrSrc,
+                                           RpptRoiType roiType,
+                                           RppLayoutParams srcLayoutParams,
+                                           rpp::Handle& handle)
+{
+    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    Rpp32u numThreads = handle.GetNumThreads();
+
+    omp_set_dynamic(0);
+#pragma omp parallel for num_threads(numThreads)
+    for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
+    {
+        RpptROI roi, roiLTRB;
+        RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
+        compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
+        compute_ltrb_from_xywh_host(&roi, &roiLTRB);
+        Rpp32s roiHalfWidth = roi.xywhROI.roiWidth >> 1;
+        Rpp32s roiHalfHeight = roi.xywhROI.roiHeight >> 1;
+
+        Rpp32f9 *perspectiveMatrix_f9;
+        perspectiveMatrix_f9 = (Rpp32f9 *)perspectiveTensor + batchCount;
+
+        Rpp16f *srcPtrChannel, *dstPtrChannel, *srcPtrImage, *dstPtrImage;
+        srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
+        dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
+        srcPtrChannel = srcPtrImage;
+        dstPtrChannel = dstPtrImage;
+
+        Rpp32s vectorIncrementPerChannel = 8;
+        Rpp32s vectorIncrementPkd = 24;
+        Rpp32u bufferLength = roi.xywhROI.roiWidth;
+        Rpp32u alignedLength = bufferLength & ~7;   // Align dst width to process 16 dst pixels per iteration
+
+        __m256 pBilinearCoeffs[4];
+        __m256 pSrcStrideH = _mm256_set1_ps(srcDescPtr->strides.hStride);
+        __m256 pPerspectiveMatrixTerm0 = _mm256_setr_ps(0, perspectiveMatrix_f9->data[0], perspectiveMatrix_f9->data[0] * 2, perspectiveMatrix_f9->data[0] * 3, perspectiveMatrix_f9->data[0] * 4, perspectiveMatrix_f9->data[0] * 5, perspectiveMatrix_f9->data[0] * 6, perspectiveMatrix_f9->data[0] * 7);
+        __m256 pPerspectiveMatrixTerm3 = _mm256_setr_ps(0, perspectiveMatrix_f9->data[3], perspectiveMatrix_f9->data[3] * 2, perspectiveMatrix_f9->data[3] * 3, perspectiveMatrix_f9->data[3] * 4, perspectiveMatrix_f9->data[3] * 5, perspectiveMatrix_f9->data[3] * 6, perspectiveMatrix_f9->data[3] * 7);
+        __m256 pPerspectiveMatrixTerm6 = _mm256_setr_ps(0, perspectiveMatrix_f9->data[6], perspectiveMatrix_f9->data[6] * 2, perspectiveMatrix_f9->data[6] * 3, perspectiveMatrix_f9->data[6] * 4, perspectiveMatrix_f9->data[6] * 5, perspectiveMatrix_f9->data[6] * 6, perspectiveMatrix_f9->data[6] * 7);
+        __m256 pPerspectiveMatrixTerm0Incr = _mm256_set1_ps(perspectiveMatrix_f9->data[0] * 8);
+        __m256 pPerspectiveMatrixTerm3Incr = _mm256_set1_ps(perspectiveMatrix_f9->data[3] * 8);
+        __m256 pPerspectiveMatrixTerm6Incr = _mm256_set1_ps(perspectiveMatrix_f9->data[6] * 8);
+        __m256 roiHalfHeightVec = _mm256_set1_ps(roiHalfHeight);
+        __m256 roiHalfWidthVec = _mm256_set1_ps(roiHalfWidth);
+        __m256 pRoiLTRB[4];
+        pRoiLTRB[0] = _mm256_set1_ps(roiLTRB.ltrbROI.lt.x);
+        pRoiLTRB[1] = _mm256_set1_ps(roiLTRB.ltrbROI.lt.y);
+        pRoiLTRB[2] = _mm256_set1_ps(roiLTRB.ltrbROI.rb.x);
+        pRoiLTRB[3] = _mm256_set1_ps(roiLTRB.ltrbROI.rb.y);
+
+        __m256i pxSrcStridesCHW[3];
+        pxSrcStridesCHW[0] = _mm256_set1_epi32(srcDescPtr->strides.cStride);
+        pxSrcStridesCHW[1] = _mm256_set1_epi32(srcDescPtr->strides.hStride);
+        pxSrcStridesCHW[2] = _mm256_set1_epi32(srcDescPtr->strides.wStride);
+        RpptBilinearNbhoodLocsVecLen8 srcLocs;
+
+        // Warp perspective with fused output-layout toggle (NHWC -> NCHW)
+        if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            Rpp16f *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
+            dstPtrRowR = dstPtrChannel;
+            dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
+            dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
+
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            {
+                Rpp16f *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
+                dstPtrTempR = dstPtrRowR;
+                dstPtrTempG = dstPtrRowG;
+                dstPtrTempB = dstPtrRowB;
+
+                int vectorLoopCount = 0;
+                Rpp32f parX, parY, parCommon, srcX, srcY;
+                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
+                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
+                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    __m256 pSrc[12], pDst[3];
+                    compute_generic_bilinear_srclocs_3c_avx(pSrcY, pSrcX, srcLocs, pBilinearCoeffs, pSrcStrideH, pxSrcStridesCHW, srcDescPtr->c, pRoiLTRB, true);
+                    rpp_simd_load(rpp_generic_bilinear_load_3c_avx<Rpp16f>, srcPtrChannel, srcDescPtr, srcLocs, pSrcY, pSrcX, pRoiLTRB, pSrc);  // Load input pixels required for bilinear interpolation
+                    compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
+                    rpp_simd_store(rpp_store24_f32pln3_to_f16pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, pDst); // Store dst pixels
+                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    dstPtrTempR += vectorIncrementPerChannel;
+                    dstPtrTempG += vectorIncrementPerChannel;
+                    dstPtrTempB += vectorIncrementPerChannel;
+                }
+                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (parX/parCommon) + roiHalfWidth;
+                srcY = (parY/parCommon) + roiHalfHeight;
+                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                {
+                    compute_generic_bilinear_interpolation_pkd3_to_pln3(srcY, srcX, &roiLTRB, dstPtrTempR++, dstPtrTempG++, dstPtrTempB++, srcPtrChannel, srcDescPtr);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                }
+                dstPtrRowR += dstDescPtr->strides.hStride;
+                dstPtrRowG += dstDescPtr->strides.hStride;
+                dstPtrRowB += dstDescPtr->strides.hStride;
+            }
+        }
+        // Warp Perspective with fused output-layout toggle (NCHW -> NHWC)
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            Rpp16f *dstPtrRow;
+            dstPtrRow = dstPtrChannel;
+
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            {
+                Rpp16f *dstPtrTemp;
+                dstPtrTemp = dstPtrRow;
+
+                int vectorLoopCount = 0;
+                Rpp32f parX, parY, parCommon, srcX, srcY;
+                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
+                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
+                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    __m256 pSrc[12], pDst[3];
+                    compute_generic_bilinear_srclocs_3c_avx(pSrcY, pSrcX, srcLocs, pBilinearCoeffs, pSrcStrideH, pxSrcStridesCHW, srcDescPtr->c, pRoiLTRB, false);
+                    rpp_simd_load(rpp_generic_bilinear_load_3c_avx<Rpp16f>, srcPtrChannel, srcDescPtr, srcLocs, pSrcY, pSrcX, pRoiLTRB, pSrc);  // Load input pixels required for bilinear interpolation
+                    compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
+                    rpp_simd_store(rpp_store24_f32pln3_to_f16pkd3_avx, dstPtrTemp, pDst); // Store dst pixels
+                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    dstPtrTemp += vectorIncrementPkd;
+                }
+                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (parX/parCommon) + roiHalfWidth;
+                srcY = (parY/parCommon) + roiHalfHeight;
+                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                {
+                    compute_generic_bilinear_interpolation_pln3pkd3_to_pkd3(srcY, srcX, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                    dstPtrTemp += 3;
+                }
+                dstPtrRow += dstDescPtr->strides.hStride;
+            }
+        }
+        // Warp perspective with fused output-layout toggle (NHWC -> NHWC)
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            Rpp16f *dstPtrRow;
+            dstPtrRow = dstPtrChannel;
+
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            {
+                Rpp16f *dstPtrTemp;
+                dstPtrTemp = dstPtrRow;
+
+                int vectorLoopCount = 0;
+                Rpp32f parX, parY, parCommon, srcX, srcY;
+                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
+                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
+                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    __m256 pSrc[12], pDst[3];
+                    compute_generic_bilinear_srclocs_3c_avx(pSrcY, pSrcX, srcLocs, pBilinearCoeffs, pSrcStrideH, pxSrcStridesCHW, srcDescPtr->c, pRoiLTRB, true);
+                    rpp_simd_load(rpp_generic_bilinear_load_3c_avx<Rpp16f>, srcPtrChannel, srcDescPtr, srcLocs, pSrcY, pSrcX, pRoiLTRB, pSrc);  // Load input pixels required for bilinear interpolation
+                    compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
+                    rpp_simd_store(rpp_store24_f32pln3_to_f16pkd3_avx, dstPtrTemp, pDst); // Store dst pixels
+                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    dstPtrTemp += vectorIncrementPkd;
+                }
+                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (parX/parCommon) + roiHalfWidth;
+                srcY = (parY/parCommon) + roiHalfHeight;
+                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                {
+                    compute_generic_bilinear_interpolation_pln3pkd3_to_pkd3(srcY, srcX, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                    dstPtrTemp += 3;
+                }
+                dstPtrRow += dstDescPtr->strides.hStride;
+            }
+        }
+
+        // Warp perspective with fused output-layout toggle (NCHW -> NCHW)
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            Rpp16f *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
+            dstPtrRowR = dstPtrChannel;
+            dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
+            dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
+
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            {
+                Rpp16f *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
+                dstPtrTempR = dstPtrRowR;
+                dstPtrTempG = dstPtrRowG;
+                dstPtrTempB = dstPtrRowB;
+
+                int vectorLoopCount = 0;
+                Rpp32f parX, parY, parCommon, srcX, srcY;
+                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
+                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
+                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    __m256 pSrc[12], pDst[3];
+                    compute_generic_bilinear_srclocs_3c_avx(pSrcY, pSrcX, srcLocs, pBilinearCoeffs, pSrcStrideH, pxSrcStridesCHW, srcDescPtr->c, pRoiLTRB, false);
+                    rpp_simd_load(rpp_generic_bilinear_load_3c_avx<Rpp16f>, srcPtrChannel, srcDescPtr, srcLocs, pSrcY, pSrcX, pRoiLTRB, pSrc);  // Load input pixels required for bilinear interpolation
+                    compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
+                    rpp_simd_store(rpp_store24_f32pln3_to_f16pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, pDst); // Store dst pixels
+                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    dstPtrTempR += vectorIncrementPerChannel;
+                    dstPtrTempG += vectorIncrementPerChannel;
+                    dstPtrTempB += vectorIncrementPerChannel;
+                }
+                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (parX/parCommon) + roiHalfWidth;
+                srcY = (parY/parCommon) + roiHalfHeight;
+                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                {
+                    compute_generic_bilinear_interpolation_pln_to_pln(srcY, srcX, &roiLTRB, dstPtrTempR++, srcPtrChannel, srcDescPtr, dstDescPtr);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                }
+                dstPtrRowR += dstDescPtr->strides.hStride;
+                dstPtrRowG += dstDescPtr->strides.hStride;
+                dstPtrRowB += dstDescPtr->strides.hStride;
+            }
+        }
+
+        // Warp Affine without fused output-layout toggle single channel (NCHW -> NCHW)
+        else if ((srcDescPtr->c == 1) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            Rpp16f *dstPtrRow;
+            dstPtrRow = dstPtrChannel;
+
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            {
+                Rpp16f *dstPtrTemp;
+                dstPtrTemp = dstPtrRow;
+
+                int vectorLoopCount = 0;
+                Rpp32f parX, parY, parCommon, srcX, srcY;
+                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
+                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
+                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    __m256 pSrc[4], pDst;
+                    compute_generic_bilinear_srclocs_1c_avx(pSrcY, pSrcX, srcLocs, pBilinearCoeffs, pSrcStrideH, pxSrcStridesCHW, pRoiLTRB);
+                    rpp_simd_load(rpp_generic_bilinear_load_1c_avx<Rpp16f>, srcPtrChannel, srcDescPtr, srcLocs, pSrcY, pSrcX, pRoiLTRB, pSrc);  // Load input pixels required for bilinear interpolation
+                    compute_bilinear_interpolation_1c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
+                    rpp_simd_store(rpp_store8_f32pln1_to_f16pln1_avx, dstPtrTemp, pDst); // Store dst pixels
+                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    dstPtrTemp += vectorIncrementPerChannel;
+                }
+                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (parX/parCommon) + roiHalfWidth;
+                srcY = (parY/parCommon) + roiHalfHeight;
+                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                {
+                    compute_generic_bilinear_interpolation_pln_to_pln(srcY, srcX, &roiLTRB, dstPtrTemp++, srcPtrChannel, srcDescPtr, dstDescPtr);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                }
+                dstPtrRow += dstDescPtr->strides.hStride;
+            }
+        }
+    }
+
+    return RPP_SUCCESS;
+}
