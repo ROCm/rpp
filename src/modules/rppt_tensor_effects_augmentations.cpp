@@ -2441,17 +2441,17 @@ RppStatus rppt_rain_gpu(RppPtr_t srcPtr,
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
         hip_exec_rain_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
-                               srcDescPtr,
-                               static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
-                               dstDescPtr,
-                               rainPercentage,
-                               rainWidth,
-                               rainHeight,
-                               slant,
-                               alpha,
-                               roiTensorPtrSrc,
-                               roiType,
-                               rpp::deref(rppHandle));
+                             srcDescPtr,
+                             static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                             dstDescPtr,
+                             rainPercentage,
+                             rainWidth,
+                             rainHeight,
+                             slant,
+                             alpha,
+                             roiTensorPtrSrc,
+                             roiType,
+                             rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {
@@ -2471,17 +2471,17 @@ RppStatus rppt_rain_gpu(RppPtr_t srcPtr,
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
         hip_exec_rain_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
-                                 srcDescPtr,
-                                 reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-                                 dstDescPtr,
-                                 rainPercentage,
-                                 rainWidth,
-                                 rainHeight,
-                                 slant,
-                                 alpha,
-                                 roiTensorPtrSrc,
-                                 roiType,
-                                 rpp::deref(rppHandle));
+                             srcDescPtr,
+                             reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                             dstDescPtr,
+                             rainPercentage,
+                             rainWidth,
+                             rainHeight,
+                             slant,
+                             alpha,
+                             roiTensorPtrSrc,
+                             roiType,
+                             rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::I8) && (dstDescPtr->dataType == RpptDataType::I8))
     {
