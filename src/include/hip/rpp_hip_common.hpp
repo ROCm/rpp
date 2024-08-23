@@ -156,6 +156,11 @@ struct RPPTensorFunctionMetaData
   (byte & 0x02 ? '1' : '0'), \
   (byte & 0x01 ? '1' : '0')
 
+// float4 floor
+
+#define FLOOR4(src, dst) \
+dst = make_int4(floorf(src.x), floorf(src.y), floorf(src.z), floorf(src.w));
+
 /******************** HOST FUNCTIONS ********************/
 
 inline int getplnpkdind(RppiChnFormat &format)

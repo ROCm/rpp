@@ -30,8 +30,8 @@ int main(int argc, char **argv)
     const int MIN_ARG_COUNT = 7;
     if (argc < MIN_ARG_COUNT)
     {
-        printf("\nImproper Usage! Needs all arguments!\n");
-        printf("\nUsage: ./Tensor_audio_hip <src folder> <case number = 0:0> <test type 0/1> <numRuns> <batchSize> <dst folder>\n");
+        cout << "\nImproper Usage! Needs all arguments!\n";
+        cout << "\nUsage: ./Tensor_audio_hip <src folder> <case number = 0:0> <test type 0/1> <numRuns> <batchSize> <dst folder>\n";
         return -1;
     }
 
@@ -55,7 +55,7 @@ int main(int argc, char **argv)
     if (funcName.empty())
     {
         if (testType == 0)
-            printf("\ncase %d is not supported\n", testCase);
+            cout << "\ncase " << testCase << " is not supported\n";
 
         return -1;
     }
@@ -111,14 +111,18 @@ int main(int argc, char **argv)
         maxDstChannels = 1;
     }
     set_audio_descriptor_dims_and_strides(dstDescPtr, batchSize, maxDstHeight, maxDstWidth, maxDstChannels, offsetInBytes);
-
     // set buffer sizes for src/dst
-    iBufferSize = (Rpp64u)srcDescPtr->h * (Rpp64u)srcDescPtr->w * (Rpp64u)srcDescPtr->c * (Rpp64u)srcDescPtr->n;
-    oBufferSize = (Rpp64u)dstDescPtr->h * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
+    iBufferSize = static_cast<Rpp64u>(srcDescPtr->h) * static_cast<Rpp64u>(srcDescPtr->w) * static_cast<Rpp64u>(srcDescPtr->c) * static_cast<Rpp64u>(srcDescPtr->n);
+    oBufferSize = static_cast<Rpp64u>(dstDescPtr->h) * static_cast<Rpp64u>(dstDescPtr->w) * static_cast<Rpp64u>(dstDescPtr->c) * static_cast<Rpp64u>(dstDescPtr->n);
+
+    // compute maximum possible buffer size of resample
+    unsigned long long resampleMaxBufferSize = dstDescPtr->n * dstDescPtr->strides.nStride * 1.15;
+    if (testCase == 6)
+        oBufferSize = resampleMaxBufferSize;
 
     // allocate hip buffers for input & output
-    Rpp32f *inputf32 = (Rpp32f *)calloc(iBufferSize, sizeof(Rpp32f));
-    Rpp32f *outputf32 = (Rpp32f *)calloc(oBufferSize, sizeof(Rpp32f));
+    Rpp32f *inputf32 = static_cast<Rpp32f *>(calloc(iBufferSize, sizeof(Rpp32f)));
+    Rpp32f *outputf32 = static_cast<Rpp32f *>(calloc(oBufferSize, sizeof(Rpp32f)));
 
     void *d_inputf32, *d_outputf32;
     CHECK_RETURN_STATUS(hipMalloc(&d_inputf32, iBufferSize * sizeof(Rpp32f)));
@@ -136,8 +140,7 @@ int main(int argc, char **argv)
 
     // allocate the buffer for srcDimsTensor
     Rpp32s *srcDimsTensor;
-    if(testCase == 3)
-        CHECK_RETURN_STATUS(hipHostMalloc(&srcDimsTensor, batchSize * 2 * sizeof(Rpp32s)));
+    CHECK_RETURN_STATUS(hipHostMalloc(&srcDimsTensor, batchSize * 2 * sizeof(Rpp32s)));
 
     Rpp32s *detectedIndex = nullptr, *detectionLength = nullptr;
     if(testCase == 0)
@@ -146,7 +149,16 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostMalloc(&detectionLength, batchSize * sizeof(Rpp32f)));
     }
 
-    Rpp32f *coeff;
+    // declare pointer of type RpptResamplingWindow used for resample augmentation
+    Rpp32f *inRateTensor = nullptr, *outRateTensor = nullptr;
+    RpptResamplingWindow *window = nullptr;
+    if (testCase == 6)
+    {
+        CHECK_RETURN_STATUS(hipHostMalloc(&inRateTensor, batchSize * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&outRateTensor, batchSize * sizeof(Rpp32f)));
+    }
+
+    Rpp32f *coeff = nullptr;
     if(testCase == 2)
         CHECK_RETURN_STATUS(hipHostMalloc(&coeff, batchSize * sizeof(Rpp32f)));
 
@@ -159,7 +171,7 @@ int main(int argc, char **argv)
     int noOfIterations = static_cast<int>(audioNames.size()) / batchSize;
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0;
     string testCaseName;
-    printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
+    cout << "\nRunning " << func << " " << numRuns << " times (each time with a batch size of " << batchSize << " images) and computing mean statistics...";
     for (int iterCount = 0; iterCount < noOfIterations; iterCount++)
     {
         // read and decode audio and fill the audio dim values
@@ -236,6 +248,47 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 6:
+                {
+                    testCaseName = "resample";
+
+                    maxDstWidth = 0;
+                    for(int i = 0, j = 0; i < batchSize; i++, j += 2)
+                    {
+                        inRateTensor[i] = 16000;
+                        outRateTensor[i] = 16000 * 1.15f;
+                        Rpp32f scaleRatio = outRateTensor[i] / inRateTensor[i];
+                        srcDimsTensor[j] = srcLengthTensor[i];
+                        srcDimsTensor[j + 1] = channelsTensor[i];
+                        dstDims[i].width = static_cast<int>(std::ceil(scaleRatio * srcLengthTensor[i]));
+                        dstDims[i].height = 1;
+                        maxDstWidth = std::max(maxDstWidth, static_cast<int>(dstDims[i].width));
+                    }
+                    Rpp32f quality = 50.0f;
+                    Rpp32s lobes = std::round(0.007 * quality * quality - 0.09 * quality + 3);
+                    Rpp32s lookupSize = lobes * 64 + 1;
+                    if (window == nullptr)
+                    {
+                        CHECK_RETURN_STATUS(hipHostMalloc(&window, sizeof(RpptResamplingWindow)));
+                        windowed_sinc(*window, lookupSize, lobes);
+                    }
+
+                    dstDescPtr->w = maxDstWidth;
+                    dstDescPtr->strides.nStride = dstDescPtr->c * dstDescPtr->w * dstDescPtr->h;
+
+                    // check if the required output buffer size is greater than predefined resampleMaxBufferSize
+                    if (dstDescPtr->n * dstDescPtr->strides.nStride > resampleMaxBufferSize)
+                    {
+                        std::cout << "\nError! Requested resample output size is greater than predefined max size for resample in test suite."
+                                     "\nPlease modify resampleMaxBufferSize value in test suite as per your requirements for running resample kernel" << std::endl;
+                        exit(0);
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    rppt_resample_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, inRateTensor, outRateTensor, srcDimsTensor, *window, handle);
+
+                    break;
+                }
                 default:
                 {
                     missingFuncFlag = 1;
@@ -247,7 +300,7 @@ int main(int argc, char **argv)
             endWallTime = omp_get_wtime();
             if (missingFuncFlag == 1)
             {
-                printf("\nThe functionality %s doesn't yet exist in RPP\n", func.c_str());
+                cout << "\nThe functionality " << func << " doesn't yet exist in RPP\n";
                 return -1;
             }
 
@@ -307,15 +360,25 @@ int main(int argc, char **argv)
     CHECK_RETURN_STATUS(hipFree(d_outputf32));
     CHECK_RETURN_STATUS(hipHostFree(srcLengthTensor));
     CHECK_RETURN_STATUS(hipHostFree(channelsTensor));
-    if(testCase == 2)
+    if(coeff != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(coeff));
     CHECK_RETURN_STATUS(hipHostFree(srcDims));
     CHECK_RETURN_STATUS(hipHostFree(dstDims));
-    if(testCase == 3)
-        CHECK_RETURN_STATUS(hipHostFree(srcDimsTensor));
+    CHECK_RETURN_STATUS(hipHostFree(srcDimsTensor));
     if (detectedIndex != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(detectedIndex));
     if (detectionLength != nullptr)
         CHECK_RETURN_STATUS(hipHostFree(detectionLength));
+    if (window != nullptr)
+    {
+        if (window->lookup != nullptr)
+            CHECK_RETURN_STATUS(hipHostFree(window->lookup));
+        CHECK_RETURN_STATUS(hipHostFree(window));
+    }
+    if (inRateTensor != nullptr)
+        CHECK_RETURN_STATUS(hipHostFree(inRateTensor));
+    if (outRateTensor != nullptr)
+        CHECK_RETURN_STATUS(hipHostFree(outRateTensor));
+        
     return 0;
 }

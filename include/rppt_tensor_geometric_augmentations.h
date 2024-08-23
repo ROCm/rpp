@@ -613,8 +613,8 @@ RppStatus rppt_remap_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstP
  * \details Performs a remap operation using user specified remap tables for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout. For each image, the output(x,y) = input(mapx(x, y), mapy(x, y)) for every (x,y) in the destination image.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
- * \image html img150x150.jpg Sample Input
- * \image html geometric_augmentations_remap_img150x150.jpg Sample Output
+ * \image html img150x150.png Sample Input
+ * \image html geometric_augmentations_remap_img150x150.png Sample Output
  * \param [in] srcPtr source tensor in HIP memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory
