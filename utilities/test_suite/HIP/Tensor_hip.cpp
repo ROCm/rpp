@@ -419,6 +419,13 @@ int main(int argc, char **argv)
     if(testCase == 5)
         CHECK_RETURN_STATUS(hipHostMalloc(&d_interDstPtr, srcDescPtr->strides.nStride * srcDescPtr->n * sizeof(Rpp32f)));
 
+    Rpp32f *minTensor = nullptr, *maxTensor = nullptr;
+    if(testCase == 15)
+    {
+        CHECK_RETURN_STATUS(hipHostMalloc(&minTensor, batchSize * srcDescPtr->c * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&maxTensor, batchSize * srcDescPtr->c * sizeof(Rpp32f)));
+    }
+
     // case-wise RPP API and measure time script for Unit and Performance test
     printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
     for(int iterCount = 0; iterCount < noOfIterations; iterCount++)
@@ -683,6 +690,30 @@ int main(int argc, char **argv)
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_exposure_gpu(d_input, srcDescPtr, d_output, dstDescPtr, exposureFactor, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 15:
+                {
+                    testCaseName = "threshold";
+                    Rpp32f normFactor = 1;
+                    if (inputBitDepth == 1 || inputBitDepth == 2)
+                        normFactor = 255;
+
+                    for (int i = 0; i < batchSize; i++)
+                    {
+                        for (int j = 0, k = i * srcDescPtr->c; j < srcDescPtr->c; j++, k++)
+                        {
+                            minTensor[k] = 30 / normFactor;
+                            maxTensor[k] = 100 / normFactor;
+                        }
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_threshold_gpu(d_input, srcDescPtr, d_output, dstDescPtr, minTensor, maxTensor, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
@@ -1686,5 +1717,9 @@ int main(int argc, char **argv)
     CHECK_RETURN_STATUS(hipFree(d_output));
     if(testCase == 5)
         CHECK_RETURN_STATUS(hipFree(d_interDstPtr));
+    if (minTensor != nullptr)
+        CHECK_RETURN_STATUS(hipHostFree(minTensor));
+    if (maxTensor != nullptr)
+        CHECK_RETURN_STATUS(hipHostFree(maxTensor));
     return 0;
 }
