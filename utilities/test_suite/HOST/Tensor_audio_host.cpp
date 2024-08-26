@@ -367,14 +367,8 @@ int main(int argc, char **argv)
                     RpptMelScaleFormula melFormula = RpptMelScaleFormula::SLANEY;
                     Rpp32s numFilter = 80;
                     bool normalize = true;
-                    Rpp32s srcDimsTensor[batchSize * 2];
                     // (height, width) for each tensor in a batch for given QA inputs.
-                    srcDimsTensor[0] = 257;
-                    srcDimsTensor[1] = 225;
-                    srcDimsTensor[2] = 257;
-                    srcDimsTensor[3] = 211;
-                    srcDimsTensor[4] = 257;
-                    srcDimsTensor[5] = 214;
+                    Rpp32s srcDimsTensor[] = {257, 225, 257, 211, 257, 214};
 
                     init_mel_filter_bank(&inputf32, &outputf32, srcDescPtr, dstDescPtr, dstDims, offsetInBytes, numFilter, batchSize, srcDimsTensor, scriptPath, testType);
 
