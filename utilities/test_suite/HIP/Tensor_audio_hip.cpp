@@ -170,6 +170,10 @@ int main(int argc, char **argv)
     if(testCase == 2)
         CHECK_RETURN_STATUS(hipHostMalloc(&coeff, batchSize * sizeof(Rpp32f)));
 
+    // allocate the buffer for srcDimsTensor
+    Rpp32s *srcDimsTensor;
+    CHECK_RETURN_STATUS(hipHostMalloc(&srcDimsTensor, batchSize * 2 * sizeof(Rpp32s)));
+
     // run case-wise RPP API and measure time
     rppHandle_t handle;
     hipStream_t stream;
