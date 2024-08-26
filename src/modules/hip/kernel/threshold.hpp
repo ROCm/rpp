@@ -203,7 +203,7 @@ RppStatus hip_exec_threshold_tensor(T *srcPtr,
     if (roiType == RpptRoiType::LTRB)
         hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
 
-    Rpp32s globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
+    Rpp32s globalThreads_x = (dstDescPtr->w + 7) >> 3;
     Rpp32s globalThreads_y = dstDescPtr->h;
     Rpp32s globalThreads_z = dstDescPtr->n;
 
@@ -296,7 +296,6 @@ RppStatus hip_exec_threshold_tensor(T *srcPtr,
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            globalThreads_x = (srcDescPtr->strides.hStride + 7) >> 3;
             hipLaunchKernelGGL(threshold_pln3_pkd3_tensor,
                                dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
