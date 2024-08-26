@@ -1,7 +1,7 @@
 #include <hip/hip_runtime.h>
 #include "rpp_hip_common.hpp"
 
-__device__ void threshold_hip_rgb_compute(uchar *srcPtr, d_float24 *pix_f24, float3 *minRGB_f3, float3 *maxRGB_f3)
+__device__ void threshold_hip_rgb_compute(d_float24 *pix_f24, float3 *minRGB_f3, float3 *maxRGB_f3, float2 *rangeMinMax)
 {
     bool channelCheck[3];
     for (int i = 0; i < 8; i++)
@@ -13,19 +13,19 @@ __device__ void threshold_hip_rgb_compute(uchar *srcPtr, d_float24 *pix_f24, flo
         channelCheck[0] = ((pixelR >= minRGB_f3->x) &&  (pixelR <= maxRGB_f3->x));
         channelCheck[1] = ((pixelG >= minRGB_f3->y) &&  (pixelG <= maxRGB_f3->y));
         channelCheck[2] = ((pixelB >= minRGB_f3->z) &&  (pixelB <= maxRGB_f3->z));
-        float outVal = (channelCheck[0] && channelCheck[1] && channelCheck[2]) ? 255 : 0;
+        float outVal = (channelCheck[0] && channelCheck[1] && channelCheck[2]) ? rangeMinMax->y : rangeMinMax->x;
         pix_f24->f8[0].f1[i] = outVal;
         pix_f24->f8[1].f1[i] = outVal;
         pix_f24->f8[2].f1[i] = outVal; 
     }
 }
 
-__device__ void threshold_hip_greyscale_compute(uchar *srcPtr, d_float8 *pix_f8, float &minValue, float &maxValue)
+__device__ void threshold_hip_greyscale_compute(d_float8 *pix_f8, float &minValue, float &maxValue, float2 *rangeMinMax)
 {
     for (int i = 0; i < 8; i++)
     {
         float pixel = pix_f8->f1[i];
-        pix_f8->f1[i] = (pixel >= minValue) &&  (pixel <= maxValue) ? 255 : 0;
+        pix_f8->f1[i] = (pixel >= minValue) &&  (pixel <= maxValue) ? rangeMinMax->y : rangeMinMax->x;
     }
 }
 
@@ -36,6 +36,7 @@ __global__ void threshold_pkd_tensor(T *srcPtr,
                                      uint2 dstStridesNH,
                                      float3 *minTensor,
                                      float3 *maxTensor,
+                                     float2 rangeMinMax,
                                      RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -54,7 +55,7 @@ __global__ void threshold_pkd_tensor(T *srcPtr,
 
     d_float24 pix_f24;
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &pix_f24);
-    threshold_hip_rgb_compute(srcPtr, &pix_f24, &minRGB_f3, &maxRGB_f3);
+    threshold_hip_rgb_compute(&pix_f24, &minRGB_f3, &maxRGB_f3, &rangeMinMax);
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &pix_f24);    
 }
 
@@ -65,6 +66,7 @@ __global__ void threshold_pln3_tensor(T *srcPtr,
                                       uint3 dstStridesNCH,
                                       float3 *minTensor,
                                       float3 *maxTensor,
+                                      float2 rangeMinMax,
                                       RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -83,7 +85,7 @@ __global__ void threshold_pln3_tensor(T *srcPtr,
 
     d_float24 pix_f24;
     rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &pix_f24);
-    threshold_hip_rgb_compute(srcPtr, &pix_f24, &minRGB_f3, &maxRGB_f3);
+    threshold_hip_rgb_compute(&pix_f24, &minRGB_f3, &maxRGB_f3, &rangeMinMax);
     rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &pix_f24);
 }
 
@@ -94,6 +96,7 @@ __global__ void threshold_pln1_tensor(T *srcPtr,
                                       uint2 dstStridesNH,
                                       float *minTensor,
                                       float *maxTensor,
+                                      float2 rangeMinMax,
                                       RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -112,7 +115,7 @@ __global__ void threshold_pln1_tensor(T *srcPtr,
 
     d_float8 pix_f8;
     rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &pix_f8);
-    threshold_hip_greyscale_compute(srcPtr, &pix_f8, minRGB, maxRGB);
+    threshold_hip_greyscale_compute(&pix_f8, minRGB, maxRGB, &rangeMinMax);
     rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
 }
 
@@ -123,6 +126,7 @@ __global__ void threshold_pkd3_pln3_tensor(T *srcPtr,
                                            uint3 dstStridesNCH,
                                            float3 *minTensor,
                                            float3 *maxTensor,
+                                           float2 rangeMinMax,
                                            RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -141,7 +145,7 @@ __global__ void threshold_pkd3_pln3_tensor(T *srcPtr,
 
     d_float24 pix_f24;
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &pix_f24);
-    threshold_hip_rgb_compute(srcPtr, &pix_f24, &minRGB_f3, &maxRGB_f3);
+    threshold_hip_rgb_compute(&pix_f24, &minRGB_f3, &maxRGB_f3, &rangeMinMax);
     rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &pix_f24);
 }
 
@@ -152,6 +156,7 @@ __global__ void threshold_pln3_pkd3_tensor(T *srcPtr,
                                            uint2 dstStridesNH,
                                            float3 *minTensor,
                                            float3 *maxTensor,
+                                           float2 rangeMinMax,
                                            RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -170,7 +175,7 @@ __global__ void threshold_pln3_pkd3_tensor(T *srcPtr,
 
     d_float24 pix_f24;
     rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &pix_f24);
-    threshold_hip_rgb_compute(srcPtr, &pix_f24, &minRGB_f3, &maxRGB_f3);
+    threshold_hip_rgb_compute(&pix_f24, &minRGB_f3, &maxRGB_f3, &rangeMinMax);
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &pix_f24);
 }
 
@@ -192,6 +197,24 @@ RppStatus hip_exec_threshold_tensor(T *srcPtr,
     Rpp32s globalThreads_y = dstDescPtr->h;
     Rpp32s globalThreads_z = dstDescPtr->n;
 
+    // set the rangeMin, rangeMax values based on the datatype
+    Rpp32f rangeMin, rangeMax;
+    if constexpr (std::is_same<T, Rpp8u>::value)
+    {
+        rangeMin = 0;
+        rangeMax = 255;
+    }
+    else if (std::is_same<T, Rpp8s>::value)
+    {
+        rangeMin = -128;
+        rangeMax = 127;
+    }
+    else if constexpr ((std::is_same<T, Rpp32f>::value) || (std::is_same<T, half>::value))
+    {
+        rangeMin = 0;
+        rangeMax = 1;
+    }
+
     if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
     {
         hipLaunchKernelGGL(threshold_pkd_tensor,
@@ -205,6 +228,7 @@ RppStatus hip_exec_threshold_tensor(T *srcPtr,
                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                            reinterpret_cast<float3 *>(minTensor),
                            reinterpret_cast<float3 *>(maxTensor),
+                           make_float2(rangeMin, rangeMax),
                            roiTensorPtrSrc);
     }
     else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -222,6 +246,7 @@ RppStatus hip_exec_threshold_tensor(T *srcPtr,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                                reinterpret_cast<float3 *>(minTensor),
                                reinterpret_cast<float3 *>(maxTensor),
+                               make_float2(rangeMin, rangeMax),
                                roiTensorPtrSrc);
         }
         else
@@ -237,6 +262,7 @@ RppStatus hip_exec_threshold_tensor(T *srcPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                minTensor,
                                maxTensor,
+                               make_float2(rangeMin, rangeMax),
                                roiTensorPtrSrc);
         }
     }
@@ -255,6 +281,7 @@ RppStatus hip_exec_threshold_tensor(T *srcPtr,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
                                reinterpret_cast<float3 *>(minTensor),
                                reinterpret_cast<float3 *>(maxTensor),
+                               make_float2(rangeMin, rangeMax),
                                roiTensorPtrSrc);
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
@@ -271,6 +298,7 @@ RppStatus hip_exec_threshold_tensor(T *srcPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
                                reinterpret_cast<float3 *>(minTensor),
                                reinterpret_cast<float3 *>(maxTensor),
+                               make_float2(rangeMin, rangeMax),
                                roiTensorPtrSrc);
         }
     }
