@@ -1409,7 +1409,7 @@ inline void rpp_load24_u8pkd3_to_f64pln3_avx(Rpp8u *srcPtr, __m256d *p)
 inline void rpp_load32_u8_to_f32_avx(Rpp8u *srcPtr, __m256 *p)
 {
     __m256i px = _mm256_loadu_si256((__m256i *)srcPtr);
-    __m128i px1 = _mm256_extractf128_si256(px, 0);
+    __m128i px1 = _mm256_castps256_ps128(px);
     __m128i px2 = _mm256_extractf128_si256(px, 1);
 
     p[0] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px1, xmm_pxMask00To03), _mm_shuffle_epi8(px1, xmm_pxMask04To07))); // Contains pixels 01-08
@@ -1527,7 +1527,7 @@ inline void rpp_load24_f32pkd3_to_f32pln3_avx(Rpp32f *srcPtr, __m256 *p)
     p[2] = _mm256_setr_m128(p128[2], p128[6]);
 }
 
-inline void rpp_load24_f16pkd3_to_f16pln3_avx(Rpp16f *srcPtr, __m256 *p)
+inline void rpp_load24_f32pkd3_to_f16pln3_avx(Rpp16f *srcPtr, __m256 *p)
 {
     __m128 p128[8];
     p128[0] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr))));
@@ -1603,7 +1603,7 @@ inline void rpp_load24_f32pln3_to_f32pln3_avx(Rpp32f *srcPtrR, Rpp32f *srcPtrG, 
     p[2] = _mm256_loadu_ps(srcPtrB);
 }
 
-inline void rpp_load24_f16pln3_to_f16pln3_avx(Rpp16f *srcPtrR, Rpp16f *srcPtrG, Rpp16f *srcPtrB, __m256 *p)
+inline void rpp_load24_f16pln3_to_f32pln3_avx(Rpp16f *srcPtrR, Rpp16f *srcPtrG, Rpp16f *srcPtrB, __m256 *p)
 {
     p[0] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrR))));
     p[1] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrG))));
@@ -1702,7 +1702,7 @@ inline void rpp_load8_f32_to_f32_avx(Rpp32f *srcPtr, __m256 *p)
     p[0] = _mm256_loadu_ps(srcPtr);
 }
 
-inline void rpp_load8_f16_to_f16_avx(Rpp16f *srcPtr, __m256 *p)
+inline void rpp_load8_f16_to_f32_avx(Rpp16f *srcPtr, __m256 *p)
 {
     p[0] =  _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr))));
 }
@@ -1718,12 +1718,6 @@ inline void rpp_load8_f32_to_f32_mirror_avx(Rpp32f *srcPtr, __m256 *p)
 inline void rpp_store8_f32_to_f32_avx(Rpp32f *dstPtr, __m256 *p)
 {
     _mm256_storeu_ps(dstPtr, p[0]);
-}
-
-inline void rpp_store8_f16_to_f16_avx(Rpp16f *dstPtr, __m256 *p)
-{
-    __m128i px128 = _mm256_cvtps_ph(p[0], _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
-    _mm_storeu_si128((__m128i *)dstPtr, px128);
 }
 
 inline void rpp_load8_f32_to_f64_avx(Rpp32f *srcPtr, __m256d *p)
