@@ -30,8 +30,8 @@ int main(int argc, char **argv)
     const int MIN_ARG_COUNT = 9;
     if (argc < MIN_ARG_COUNT)
     {
-        printf("\nImproper Usage! Needs all arguments!\n");
-        printf("\nUsage: ./Tensor_misc_hip <case number = 0:2> <test type 0/1> <toggle 0/1> <number of dimensions> <batch size> <num runs> <additional param> <dst path> <script path>\n");
+        cout << "\nImproper Usage! Needs all arguments!\n";
+        cout << "\nUsage: ./Tensor_misc_hip <case number = 0:2> <test type 0/1> <toggle 0/1> <number of dimensions> <batch size> <num runs> <additional param> <dst path> <script path>\n";
         return -1;
     }
     Rpp32u testCase, testType, nDim, batchSize, numRuns, toggle;
@@ -53,14 +53,14 @@ int main(int argc, char **argv)
 
     if (qaMode && batchSize != 3)
     {
-        std::cout<<"QA mode can only run with batchsize 3"<<std::endl;
+        cout<<"QA mode can only run with batchsize 3"<<std::endl;
         return -1;
     }
 
     string funcName = augmentationMiscMap[testCase];
     if (funcName.empty())
     {
-        printf("\ncase %d is not supported\n", testCase);
+        cout << "\ncase " << testCase << " is not supported\n";
         return -1;
     }
 
@@ -141,7 +141,7 @@ int main(int argc, char **argv)
     string testCaseName;
 
     // case-wise RPP API and measure time script for Unit and Performance test
-    printf("\nRunning %s %d times (each time with a batch size of %d) and computing mean statistics...", func.c_str(), numRuns, batchSize);
+    cout << "\nRunning " << func << " " << numRuns << " times (each time with a batch size of " << batchSize << ") and computing mean statistics...";
     for(int perfCount = 0; perfCount < numRuns; perfCount++)
     {
         switch(testCase)
