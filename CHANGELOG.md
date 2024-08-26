@@ -7,6 +7,7 @@ Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/r
 ### Changes
 
 * Test - Prerequisites Updates
+* RPP Tensor Threshold support on HOST and HIP
 
 ### Tested configurations
 
