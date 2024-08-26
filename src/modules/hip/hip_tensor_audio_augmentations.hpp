@@ -30,5 +30,6 @@ SOFTWARE.
 #include "kernel/mel_filter_bank.hpp"
 #include "kernel/pre_emphasis_filter.hpp"
 #include "kernel/to_decibels.hpp"
+#include "kernel/resample.hpp"
 
 #endif // HIP_TENSOR_AUDIO_AUGMENTATIONS_HPP
