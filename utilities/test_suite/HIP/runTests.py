@@ -81,7 +81,7 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
                     result = subprocess.Popen([buildFolderPath + "/build/Tensor_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(noiseType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE)    # nosec
                     stdout_data, stderr_data = result.communicate()
                     print(stdout_data.decode())
-            elif case == "21" or case == "23" or case == "24" or case == "79":
+            elif case == "21" or case == "23" or case == "24" or case == "28" or case == "79":
                 # Run all variants of interpolation functions with additional argument of interpolationType = bicubic / bilinear / gaussian / nearestneigbor / lanczos / triangular
                 interpolationRange = 6
                 if case =='79':
@@ -280,7 +280,7 @@ subprocess.call(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.call(["make", "-j16"], cwd=".")    # nosec
 
 # List of cases supported
-supportedCaseList = ['0', '1', '2', '4', '6', '8', '13', '20', '21', '23', '26', '29', '30', '31', '32', '33', '34', '35', '36', '37', '38', '39', '45', '46', '54', '61', '63', '65', '68', '70', '79', '80', '82', '83', '84', '85', '86', '87', '88', '89', '90', '91', '92']
+supportedCaseList = ['0', '1', '2', '4', '6', '8', '13', '20', '21', '23', '24', '26', '28', '29', '30', '31', '32', '33', '34', '35', '36', '37', '38', '39', '45', '46', '54', '61', '63', '65', '68', '70', '79', '80', '82', '83', '84', '85', '86', '87', '88', '89', '90', '91', '92']
 
 # Create folders based on testType and profilingOption
 if testType == 1 and profilingOption == "YES":
