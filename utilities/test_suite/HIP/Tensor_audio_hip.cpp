@@ -146,6 +146,10 @@ int main(int argc, char **argv)
     CHECK_RETURN_STATUS(hipHostMalloc(&srcDims, batchSize * sizeof(RpptImagePatch)));
     CHECK_RETURN_STATUS(hipHostMalloc(&dstDims, batchSize * sizeof(RpptImagePatch)));
 
+    // allocate the buffer for srcDimsTensor
+    Rpp32s *srcDimsTensor;
+    CHECK_RETURN_STATUS(hipHostMalloc(&srcDimsTensor, batchSize * 2 * sizeof(Rpp32s)));
+
     Rpp32s *detectedIndex = nullptr, *detectionLength = nullptr;
     if(testCase == 0)
     {
