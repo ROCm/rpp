@@ -25,20 +25,7 @@ SOFTWARE.
 #ifndef AMD_RPP_RPP_CPU_FILTER_HPP
 #define AMD_RPP_RPP_CPU_FILTER_HPP
 
-#include "stdio.h"
-#include "rppdefs.h"
-#include <half/half.hpp>
-using halfhpp = half_float::half;
-typedef halfhpp Rpp16f;
 #include "rpp_cpu_simd.hpp"
-
-#if _WIN32
-#include <intrin.h>
-#else
-#include <x86intrin.h>
-#include <smmintrin.h>
-#include <immintrin.h>
-#endif
 
 const __m128i xmm_pxMaskRotate0To1 = _mm_setr_epi8(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1);
 const __m128i xmm_pxMaskRotate0To3 = _mm_setr_epi8(4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3);
@@ -182,10 +169,11 @@ inline void rpp_load_filter_5x5_pkd_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32
     }
     for (int k = rowKernelLoopLimit; k < 5; k++)
     {
-        pRow[k * 4] = avx_p0;
-        pRow[k * 4 + 1] = avx_p0;
-        pRow[k * 4 + 2] = avx_p0;
-        pRow[k * 4 + 3] = avx_p0;
+        int idx = k * 4;
+        pRow[idx] = avx_p0;
+        pRow[idx + 1] = avx_p0;
+        pRow[idx + 2] = avx_p0;
+        pRow[idx + 3] = avx_p0;
     }
 }
 
@@ -309,7 +297,6 @@ inline void rpp_load_filter_7x7_pln_host(__m256 *pRow, Rpp8s **srcPtrTemp, Rpp32
     }
 }
 
-
 inline void rpp_load_filter_9x9_pln_host(__m256 *pRow, Rpp8s **srcPtrTemp, Rpp32s rowKernelLoopLimit)
 {
     // irrespective of row location, we need to load 5 rows for 9x9 kernel
@@ -372,10 +359,11 @@ inline void rpp_load_filter_5x5_pkd_host(__m256 *pRow, Rpp8s **srcPtrTemp, Rpp32
     }
     for (int k = rowKernelLoopLimit; k < 5; k++)
     {
-        pRow[k * 4] = avx_p0;
-        pRow[k * 4 + 1] = avx_p0;
-        pRow[k * 4 + 2] = avx_p0;
-        pRow[k * 4 + 3] = avx_p0;
+        int idx = k * 4;
+        pRow[idx] = avx_p0;
+        pRow[idx + 1] = avx_p0;
+        pRow[idx + 2] = avx_p0;
+        pRow[idx + 3] = avx_p0;
     }
 }
 

@@ -35,12 +35,12 @@ inline void rpp_store_gaussian_filter_3x3_host(Rpp8s *dstPtrTemp, __m256 *pDst)
 
 inline void rpp_store_gaussian_filter_3x3_host(Rpp32f *dstPtrTemp, __m256 *pDst)
 {
-    rpp_store16_float(dstPtrTemp, pDst);
+    rpp_store16_f32_to_f32_avx(dstPtrTemp, pDst);
 }
 
 inline void rpp_store_gaussian_filter_3x3_host(Rpp16f *dstPtrTemp, __m256 *pDst)
 {
-    rpp_store16_float(dstPtrTemp, pDst);
+    rpp_store16_f32_to_f16_avx(dstPtrTemp, pDst);
 }
 
 inline Rpp32f gaussian(int iSquare, int j, Rpp32f mulFactor)
@@ -50,8 +50,7 @@ inline Rpp32f gaussian(int iSquare, int j, Rpp32f mulFactor)
     return expFactor;
 }
 
-inline void create_gaussian_kernel_3x3_host(Rpp32f* filter,
-                                            Rpp32f stdDev)
+inline void create_gaussian_kernel_3x3_host(Rpp32f* filter, Rpp32f stdDev)
 {
     Rpp32f mulFactor = 1 / (2 * stdDev * stdDev);
     int rowIdx = 0;
@@ -76,8 +75,7 @@ inline void create_gaussian_kernel_3x3_host(Rpp32f* filter,
         filter[i] *= kernelSum;
 }
 
-inline void create_gaussian_kernel_5x5_host(Rpp32f* filter,
-                                            Rpp32f stdDev)
+inline void create_gaussian_kernel_5x5_host(Rpp32f* filter, Rpp32f stdDev)
 {
     Rpp32f mulFactor = 1 / (2 * stdDev * stdDev);
     int rowIdx = 0;
@@ -103,8 +101,7 @@ inline void create_gaussian_kernel_5x5_host(Rpp32f* filter,
         filter[i] *= kernelSum;
 }
 
-inline void create_gaussian_kernel_7x7_host(Rpp32f* filter,
-                                            Rpp32f stdDev)
+inline void create_gaussian_kernel_7x7_host(Rpp32f* filter, Rpp32f stdDev)
 {
     Rpp32f mulFactor = 1 / (2 * stdDev * stdDev);
     int rowIdx = 0;
@@ -194,8 +191,8 @@ inline void create_gaussian_kernel_host(Rpp32f* filter, Rpp32f stdDev, int kerne
 
 template<typename T>
 inline void gaussian_filter_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp32s columnIndex,
-                                      Rpp32u kernelSize, Rpp32u padLength, Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit,
-                                      Rpp32f *filterTensor, Rpp32u channels = 1)
+                                           Rpp32u kernelSize, Rpp32u padLength, Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit,
+                                           Rpp32f *filterTensor, Rpp32u channels = 1)
 {
     Rpp32f accum = 0.0f;
     Rpp32s columnKernelLoopLimit = kernelSize;
@@ -510,7 +507,6 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         __m128 pDstPln[3];
                         rpp_convert12_f32pkd3_to_f32pln3(pDst, pDstPln);
                         rpp_store12_float_pkd_pln(dstPtrTempChannels, pDstPln);
-
                         increment_row_ptrs(srcPtrTemp, kernelSize, 12);
                         increment_row_ptrs(dstPtrTempChannels, kernelSize, 4);
                     }

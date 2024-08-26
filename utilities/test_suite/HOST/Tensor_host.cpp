@@ -216,7 +216,7 @@ int main(int argc, char **argv)
     {
         char additionalParam_char[2];
         std::sprintf(additionalParam_char, "%u", additionalParam);
-        func += "_kSize";
+        func += "_kernelSize";
         func += additionalParam_char;
     }
 
@@ -1098,9 +1098,7 @@ int main(int argc, char **argv)
 
                     Rpp32f stdDevTensor[batchSize];
                     for (i = 0; i < batchSize; i++)
-                    {
                         stdDevTensor[i] = 5.0f;
-                    }
 
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();

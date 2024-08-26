@@ -35,14 +35,14 @@ SOFTWARE.
 /******************** gaussian_filter ********************/
 
 RppStatus rppt_gaussian_filter_host(RppPtr_t srcPtr,
-                               RpptDescPtr srcDescPtr,
-                               RppPtr_t dstPtr,
-                               RpptDescPtr dstDescPtr,
-                               Rpp32f *stdDevTensor,
-                               Rpp32u kernelSize,
-                               RpptROIPtr roiTensorPtrSrc,
-                               RpptRoiType roiType,
-                               rppHandle_t rppHandle)
+                                    RpptDescPtr srcDescPtr,
+                                    RppPtr_t dstPtr,
+                                    RpptDescPtr dstDescPtr,
+                                    Rpp32f *stdDevTensor,
+                                    Rpp32u kernelSize,
+                                    RpptROIPtr roiTensorPtrSrc,
+                                    RpptRoiType roiType,
+                                    rppHandle_t rppHandle)
 {
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
 
