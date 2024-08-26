@@ -55,6 +55,8 @@ __global__ void threshold_pkd_tensor(T *srcPtr,
 
     d_float24 pix_f24;
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &pix_f24);
+    if constexpr (std::is_same<T, Rpp8s>::value)
+        rpp_hip_math_add24_const(&pix_f24, &pix_f24, static_cast<float4>(128));
     threshold_hip_rgb_compute(&pix_f24, &minRGB_f3, &maxRGB_f3, &rangeMinMax);
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &pix_f24);    
 }
@@ -85,6 +87,8 @@ __global__ void threshold_pln3_tensor(T *srcPtr,
 
     d_float24 pix_f24;
     rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &pix_f24);
+    if constexpr (std::is_same<T, Rpp8s>::value)
+        rpp_hip_math_add24_const(&pix_f24, &pix_f24, static_cast<float4>(128));
     threshold_hip_rgb_compute(&pix_f24, &minRGB_f3, &maxRGB_f3, &rangeMinMax);
     rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &pix_f24);
 }
@@ -115,6 +119,8 @@ __global__ void threshold_pln1_tensor(T *srcPtr,
 
     d_float8 pix_f8;
     rpp_hip_load8_and_unpack_to_float8(srcPtr + srcIdx, &pix_f8);
+    if constexpr (std::is_same<T, Rpp8s>::value)
+        rpp_hip_math_add8_const(&pix_f8, &pix_f8, static_cast<float4>(128));
     threshold_hip_greyscale_compute(&pix_f8, minRGB, maxRGB, &rangeMinMax);
     rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &pix_f8);
 }
@@ -145,6 +151,8 @@ __global__ void threshold_pkd3_pln3_tensor(T *srcPtr,
 
     d_float24 pix_f24;
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr + srcIdx, &pix_f24);
+    if constexpr (std::is_same<T, Rpp8s>::value)
+        rpp_hip_math_add24_const(&pix_f24, &pix_f24, static_cast<float4>(128));
     threshold_hip_rgb_compute(&pix_f24, &minRGB_f3, &maxRGB_f3, &rangeMinMax);
     rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &pix_f24);
 }
@@ -175,6 +183,8 @@ __global__ void threshold_pln3_pkd3_tensor(T *srcPtr,
 
     d_float24 pix_f24;
     rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr + srcIdx, srcStridesNCH.y, &pix_f24);
+    if constexpr (std::is_same<T, Rpp8s>::value)
+        rpp_hip_math_add24_const(&pix_f24, &pix_f24, static_cast<float4>(128));
     threshold_hip_rgb_compute(&pix_f24, &minRGB_f3, &maxRGB_f3, &rangeMinMax);
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &pix_f24);
 }
@@ -204,7 +214,7 @@ RppStatus hip_exec_threshold_tensor(T *srcPtr,
         rangeMin = 0;
         rangeMax = 255;
     }
-    else if (std::is_same<T, Rpp8s>::value)
+    else if constexpr (std::is_same<T, Rpp8s>::value)
     {
         rangeMin = -128;
         rangeMax = 127;
