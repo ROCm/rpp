@@ -47,7 +47,7 @@ imageAugmentationMap = {
     20: ["flip", "HOST", "HIP"],
     21: ["resize", "HOST", "HIP"],
     23: ["rotate", "HOST", "HIP"],
-    24: ["warp_affine", "HOST", "HIP"]
+    24: ["warp_affine", "HOST", "HIP"],
     26: ["lens_correction", "HOST", "HIP"],
     29: ["water", "HOST", "HIP"],
     30: ["non_linear_blend", "HOST", "HIP"],
@@ -109,7 +109,7 @@ voxelAugmentationMap = {
 miscAugmentationMap  = {
     0: ["transpose","HOST", "HIP"],
     1: ["normalize", "HOST", "HIP"],
-    2: ["log", "HOST", "HIP"],
+    2: ["log", "HOST", "HIP"]
 }
 
 ImageAugmentationGroupMap = {
