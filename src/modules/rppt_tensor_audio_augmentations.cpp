@@ -46,9 +46,11 @@ RppStatus rppt_non_silent_region_detection_host(RppPtr_t srcPtr,
                                                 Rpp32s resetInterval,
                                                 rppHandle_t rppHandle)
 {
-    Rpp32u tensorDims = srcDescPtr->numDims - 1; // exclude batchsize from input dims
-    if (tensorDims != 1)
-        return RPP_ERROR_INVALID_SRC_DIMS;
+    // Disabled this check for now. 
+    // This check will be re-enabled when the numDims based changes are added in MIVisionX */
+    // Rpp32u tensorDims = srcDescPtr->numDims - 1; // exclude batchsize from input dims
+    // if (tensorDims != 1)
+    //     return RPP_ERROR_INVALID_SRC_DIMS;
 
     if (srcDescPtr->dataType == RpptDataType::F32)
     {
@@ -85,9 +87,11 @@ RppStatus rppt_to_decibels_host(RppPtr_t srcPtr,
                                 Rpp32f referenceMagnitude,
                                 rppHandle_t rppHandle)
 {
-    Rpp32u tensorDims = srcDescPtr->numDims - 1; // exclude batchsize from input dims
-    if (tensorDims != 1 && tensorDims != 2)
-        return RPP_ERROR_INVALID_SRC_DIMS;
+    // Disabled this check for now. 
+    // This check will be re-enabled when the numDims based changes are added in MIVisionX */
+    // Rpp32u tensorDims = srcDescPtr->numDims - 1; // exclude batchsize from input dims
+    // if (tensorDims != 1 && tensorDims != 2)
+    //     return RPP_ERROR_INVALID_SRC_DIMS;
 
     if (!multiplier)
         return RPP_ERROR_ZERO_DIVISION;
@@ -123,8 +127,10 @@ RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr,
                                         RpptAudioBorderType borderType,
                                         rppHandle_t rppHandle)
 {
-    if (srcDescPtr->numDims != 2)
-        return RPP_ERROR_INVALID_SRC_DIMS;
+    // Disabled this check for now. 
+    // This check will be re-enabled when the numDims based changes are added in MIVisionX */
+    // if (srcDescPtr->numDims != 2)
+    //     return RPP_ERROR_INVALID_SRC_DIMS;
 
     if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
@@ -155,9 +161,11 @@ RppStatus rppt_down_mixing_host(RppPtr_t srcPtr,
                                 bool  normalizeWeights,
                                 rppHandle_t rppHandle)
 {
-    Rpp32u tensorDims = srcDescPtr->numDims - 1; // exclude batchsize from input dims
-    if (tensorDims != 1 && tensorDims != 2)
-        return RPP_ERROR_INVALID_SRC_DIMS;
+    // Disabled this check for now. 
+    // This check will be re-enabled when the numDims based changes are added in MIVisionX */
+    // Rpp32u tensorDims = srcDescPtr->numDims - 1; // exclude batchsize from input dims
+    // if (tensorDims != 1 && tensorDims != 2)
+    //     return RPP_ERROR_INVALID_SRC_DIMS;
 
     if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
@@ -195,12 +203,15 @@ RppStatus rppt_spectrogram_host(RppPtr_t srcPtr,
 {
     if ((dstDescPtr->layout != RpptLayout::NFT) && (dstDescPtr->layout != RpptLayout::NTF)) 
         return RPP_ERROR_INVALID_DST_LAYOUT;
-    Rpp32u srcTensorDims = srcDescPtr->numDims - 1; // exclude batchsize from input dims
-    Rpp32u dstTensorDims = dstDescPtr->numDims - 1; // exclude batchsize from output dims
-    if (srcTensorDims != 1)
-        return RPP_ERROR_INVALID_SRC_DIMS;
-    if (dstTensorDims != 2)
-        return RPP_ERROR_INVALID_DST_DIMS;
+    
+    // Disabled this checks for now. 
+    // This check will be re-enabled when the numDims based changes are added in MIVisionX */
+    // Rpp32u srcTensorDims = srcDescPtr->numDims - 1; // exclude batchsize from input dims
+    // Rpp32u dstTensorDims = dstDescPtr->numDims - 1; // exclude batchsize from output dims
+    // if (srcTensorDims != 1)
+    //     return RPP_ERROR_INVALID_SRC_DIMS;
+    // if (dstTensorDims != 2)
+    //     return RPP_ERROR_INVALID_DST_DIMS;
 
     if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
@@ -278,9 +289,11 @@ RppStatus rppt_resample_host(RppPtr_t srcPtr,
                              RpptResamplingWindow &window,
                              rppHandle_t rppHandle)
 {
-    Rpp32u tensorDims = srcDescPtr->numDims - 1; // exclude batchsize from input dims
-    if (tensorDims != 1 && tensorDims != 2)
-        return RPP_ERROR_INVALID_SRC_DIMS;
+    // Disabled this check for now. 
+    // This check will be re-enabled when the numDims based changes are added in MIVisionX */
+    // Rpp32u tensorDims = srcDescPtr->numDims - 1; // exclude batchsize from input dims
+    // if (tensorDims != 1 && tensorDims != 2)
+    //     return RPP_ERROR_INVALID_SRC_DIMS;
 
     if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {

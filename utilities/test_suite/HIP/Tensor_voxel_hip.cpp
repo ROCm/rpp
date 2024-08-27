@@ -34,7 +34,7 @@ int main(int argc, char * argv[])
 
     if (argc < MIN_ARG_COUNT)
     {
-        printf("\nImproper Usage! Needs all arguments!\n");
+        cout << "\nImproper Usage! Needs all arguments!\n";
         exit(1);
     }
 
@@ -57,7 +57,7 @@ int main(int argc, char * argv[])
     }
     if(batchSize > MAX_BATCH_SIZE)
     {
-        std::cout << "\n Batchsize should be less than or equal to "<< MAX_BATCH_SIZE << " Aborting!";
+        cout << "\n Batchsize should be less than or equal to "<< MAX_BATCH_SIZE << " Aborting!";
         exit(0);
     }
 
@@ -65,7 +65,7 @@ int main(int argc, char * argv[])
     if (funcName.empty())
     {
         if (testType == 0)
-            printf("\ncase %d is not supported\n", testCase);
+            cout << "\ncase " << testCase << " is not supported\n";
 
         return -1;
     }
@@ -174,7 +174,7 @@ int main(int argc, char * argv[])
         CHECK_RETURN_STATUS(hipMalloc(&d_outputU8, iBufferSizeU8));
     }
 
-    printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", funcName.c_str(), numRuns, batchSize);
+    cout << "\nRunning " << funcName << " " << numRuns << " times (each time with a batch size of " << batchSize << " images) and computing mean statistics...";
     for(int iterCount = 0; iterCount < noOfIterations; iterCount++)
     {
         vector<string>::const_iterator dataFilePathStart = dataFilePath.begin() + (iterCount * batchSize);
@@ -391,7 +391,7 @@ int main(int argc, char * argv[])
         wallTime *= 1000;
         if (missingFuncFlag == 1)
         {
-            printf("\nThe functionality doesn't yet exist in RPP\n");
+            cout << "\nThe functionality doesn't yet exist in RPP\n";
             return -1;
         }
 
@@ -399,7 +399,10 @@ int main(int argc, char * argv[])
         CHECK_RETURN_STATUS(hipMemcpy(outputF32, d_outputF32, oBufferSizeInBytes, hipMemcpyDeviceToHost));
         if(testType == 0)
         {
-            cout << "\n\nGPU Backend Wall Time: " << wallTime <<" ms per batch"<< endl;
+            cout <<"\n\n";
+            if(noOfIterations > 1)
+                cout <<"Execution Timings for Iteration "<< iterCount+1 <<":"<<endl;
+            cout << "GPU Backend Wall Time: " << wallTime <<" ms per batch";
             if(DEBUG_MODE)
             {
                 std::ofstream refFile;
