@@ -371,8 +371,8 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostFree(detectionLength));
     if (window != nullptr)
     {
-        if (window->lookup != nullptr)
-            CHECK_RETURN_STATUS(hipHostFree(window->lookup));
+        if (window->lookupSize)
+            CHECK_RETURN_STATUS(hipHostFree(window->lookupPinned));
         CHECK_RETURN_STATUS(hipHostFree(window));
     }
     if (inRateTensor != nullptr)
