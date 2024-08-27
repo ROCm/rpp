@@ -7,6 +7,7 @@ Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/r
 ### Changes
 
 * Test - Prerequisites Updates
+* RPP Tensor Box Filter support on HOST
 
 ### Tested configurations
 
