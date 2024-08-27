@@ -81,13 +81,13 @@ imageAugmentationMap = {
 }
 
 audioAugmentationMap = {
-    0: ["non_silent_region_detection", "HOST"],
-    1: ["to_decibels", "HOST"],
-    2: ["pre_emphasis_filter", "HOST"],
-    3: ["down_mixing", "HOST"],
-    4: ["spectrogram", "HOST"],
-    5: ["slice", "HOST"],
-    6: ["resample", "HOST"],
+    0: ["non_silent_region_detection", "HOST", "HIP"],
+    1: ["to_decibels", "HOST", "HIP"],
+    2: ["pre_emphasis_filter", "HOST", "HIP"],
+    3: ["down_mixing", "HOST", "HIP"],
+    4: ["spectrogram", "HOST", "HIP"],
+    5: ["slice", "HOST", "HIP"],
+    6: ["resample", "HOST", "HIP"],
     7: ["mel_filter_bank", "HOST"]
 }
 
