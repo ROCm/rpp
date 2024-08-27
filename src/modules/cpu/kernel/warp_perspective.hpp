@@ -983,6 +983,49 @@ RppStatus warp_perspective_nn_f16_f16_host_tensor(Rpp16f *srcPtr,
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
         }
+        // Warp perspective with fused output-layout toggle (NHWC -> NHWC)
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            Rpp16f *dstPtrRow;
+            dstPtrRow = dstPtrChannel;
+
+            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            {
+                Rpp16f *dstPtrTemp;
+                dstPtrTemp = dstPtrRow;
+
+                int vectorLoopCount = 0;
+                Rpp32f parX, parY, parCommon, srcX, srcY;
+                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
+                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
+                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    __m256 pRow[3];
+                    compute_generic_nn_srclocs_and_validate_avx(pSrcY, pSrcX, pRoiLTRB, pSrcStrideH, srcLoc, invalidLoad, true);
+                    rpp_simd_load(rpp_generic_resize_nn_load_f16pkd3_to_f32pkd3_avx, srcPtrChannel, srcLoc, invalidLoad, pRow);
+                    rpp_simd_store(rpp_store24_f32pkd3_to_f16pkd3_avx, dstPtrTemp, pRow);
+                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    dstPtrTemp += vectorIncrementPkd;
+                }
+                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (parX/parCommon) + roiHalfWidth;
+                srcY = (parY/parCommon) + roiHalfHeight;
+                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                {
+                    compute_generic_nn_interpolation_pkd3_to_pkd3(srcY, srcX, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                    dstPtrTemp += 3;
+                }
+                dstPtrRow += dstDescPtr->strides.hStride;
+            }
+        }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp16f *dstPtrRow;
