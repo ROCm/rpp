@@ -743,47 +743,10 @@ typedef struct RpptResamplingWindow
     Rpp32f scale = 1, center = 1;
     Rpp32s lobes = 0, coeffs = 0;
     Rpp32s lookupSize = 0;
-    Rpp32f *lookup = nullptr;
+    Rpp32f *lookupPinned = nullptr;
+    std::vector<Rpp32f> lookup;
     __m128 pCenter, pScale;
 } RpptResamplingWindow;
-
-inline Rpp32f sinc(Rpp32f x)
-{
-    x *= M_PI;
-    return (std::abs(x) < 1e-5f) ? (1.f - (x * x * 0.16666667)) : std::sin(x) / x;
-}
-
-inline Rpp64f hann(Rpp64f x)
-{
-    return 0.5 * (1 + std::cos(x * M_PI));
-}
-
-// initialization function used for filling the values in Resampling window (RpptResamplingWindow)
-// using the coeffs and lobes value this function generates a LUT (look up table) which is further used in Resample audio augmentation
-inline void windowed_sinc(RpptResamplingWindow &window, Rpp32s coeffs, Rpp32s lobes)
-{
-    Rpp32f scale = 2.0f * lobes / (coeffs - 1);
-    Rpp32f scale_envelope = 2.0f / coeffs;
-    window.coeffs = coeffs;
-    window.lobes = lobes;
-    window.lookupSize = coeffs + 5;
-#ifdef GPU_SUPPORT
-    CHECK_RETURN_STATUS(hipHostMalloc(&(window.lookup), window.lookupSize * sizeof(Rpp32f)));
-#else
-    window.lookup = static_cast<Rpp32f *>(malloc(window.lookupSize * sizeof(Rpp32f)));
-#endif
-    Rpp32s center = (coeffs - 1) * 0.5f;
-    for (int i = 0; i < coeffs; i++) {
-        Rpp32f x = (i - center) * scale;
-        Rpp32f y = (i - center) * scale_envelope;
-        Rpp32f w = sinc(x) * hann(y);
-        window.lookup[i + 1] = w;
-    }
-    window.center = center + 1;
-    window.scale = 1 / scale;
-    window.pCenter = _mm_set1_ps(window.center);
-    window.pScale = _mm_set1_ps(window.scale);
-}
 
 /******************** HOST memory typedefs ********************/
 
