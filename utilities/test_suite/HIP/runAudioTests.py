@@ -36,7 +36,7 @@ inFilePath = scriptPath + "/../TEST_AUDIO_FILES/three_samples_single_channel_src
 outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
 caseMin = 0
-caseMax = 0
+caseMax = 6
 
 
 # Get a list of log files based on a flag for preserving output
@@ -73,10 +73,11 @@ def generate_performance_reports(RESULTS_DIR):
     print(dfPrint_noIndices)
 
 def run_unit_test_cmd(srcPath, case, numRuns, testType, batchSize, outFilePath):
-    print("./Tensor_audio_hip " + srcPath + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(numRuns) + " " + str(batchSize))
+    print("\n./Tensor_audio_hip " + srcPath + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(numRuns) + " " + str(batchSize))
     result = subprocess.Popen([buildFolderPath + "/build/Tensor_audio_hip", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE)    # nosec
     stdout_data, stderr_data = result.communicate()
     print(stdout_data.decode())
+    print("------------------------------------------------------------------------------------------")
 
 def run_performance_test_cmd(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath):
     with open(loggingFolder + "/Tensor_audio_hip_raw_performance_log.txt", "a") as logFile:
@@ -101,13 +102,10 @@ def run_performance_test_with_profiler_cmd(loggingFolder, srcPath, case, numRuns
         print("------------------------------------------------------------------------------------------")
 
 def run_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath, profilingOption = "NO"):
-    print("\n\n\n\n")
-    print("--------------------------------")
-    print("Running a New Functionality...")
-    print("--------------------------------")
     if testType == 0:
         run_unit_test_cmd(srcPath, case, numRuns, testType, batchSize, outFilePath)
     elif testType == 1 and profilingOption == "NO":
+        print("\n")
         run_performance_test_cmd(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath)
     else:
         run_performance_test_with_profiler_cmd(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath)
@@ -224,9 +222,14 @@ subprocess.call(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.call(["make", "-j16"], cwd=".")    # nosec
 
 # List of cases supported
-supportedCaseList = ['0']
+supportedCaseList = ['0', '1', '2', '3', '6']
 if qaMode and batchSize != 3:
     print("QA tests can only run with a batch size of 3.")
+    exit(0)
+
+noCaseSupported = all(case not in supportedCaseList for case in caseList)
+if noCaseSupported:
+    print("\ncase numbers %s are not supported" % caseList)
     exit(0)
 
 for case in caseList:
@@ -247,7 +250,7 @@ if testType == 0:
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
         print("---------------------------------- Results of QA Test - Tensor_audio_hip -----------------------------------\n")
-        print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList)
+        print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, "Tensor_audio_hip")
 
 # Performance tests
 if testType == 1 and profilingOption == "NO":

@@ -35,12 +35,6 @@ except ImportError:
     # Python 2 compatibility
     FileExistsError = OSError
 
-try:
-    from errno import FileExistsError
-except ImportError:
-    # Python 2 compatibility
-    FileExistsError = OSError
-
 imageAugmentationMap = {
     0: ["brightness", "HOST", "HIP"],
     1: ["gamma_correction", "HOST", "HIP"],
@@ -243,7 +237,7 @@ def generate_performance_reports(d_counter, TYPE_LIST, RESULTS_DIR):
         print(dfPrint_noIndices)
 
 # Read the data from QA logs, process the data and print the results as a summary
-def print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList):
+def print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, fileName):
     f = open(qaFilePath, 'r+')
     numLines = 0
     numPassed = 0
@@ -261,15 +255,15 @@ def print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList):
     resultsInfo += "\n    - Total augmentations with golden output QA test support = " + str(len(supportedCaseList) - len(nonQACaseList))
     resultsInfo += "\n    - Total augmentations without golden ouput QA test support (due to randomization involved) = " + str(len(nonQACaseList))
     f.write(resultsInfo)
-    print("\n-------------------------------------------------------------------" + resultsInfo + "\n\n-------------------------------------------------------------------")
+    print("\n---------------------------------- Summary of QA Test - " + fileName + " ----------------------------------" + resultsInfo + "\n\n-------------------------------------------------------------------")
 
 # Read the data from performance logs, process the data and print the results as a summary
 def print_performance_tests_summary(logFile, functionalityGroupList, numRuns):
     try:
         f = open(logFile, "r")
-        print("\n\n\nOpened log file -> "+ logFile)
+        print("\nOpened log file -> " + logFile)
     except IOError:
-        print("Skipping file -> "+ logFile)
+        print("Skipping file -> " + logFile)
         return
 
     stats = []
@@ -293,7 +287,7 @@ def print_performance_tests_summary(logFile, functionalityGroupList, numRuns):
 
         if "max,min,avg wall times in ms/batch" in line:
             splitWordStart = "Running "
-            splitWordEnd = " " +str(numRuns)
+            splitWordEnd = " " + str(numRuns)
             prevLine = prevLine.partition(splitWordStart)[2].partition(splitWordEnd)[0]
             if prevLine not in functions:
                 functions.append(prevLine)
@@ -310,15 +304,15 @@ def print_performance_tests_summary(logFile, functionalityGroupList, numRuns):
             prevLine = line
 
     # Print log lengths
-    print("Functionalities - "+ str(funcCount))
+    print("Functionalities - " + str(funcCount))
 
     # Print summary of log
-    print("\n\nFunctionality\t\t\t\t\t\tFrames Count\tmax(ms/batch)\t\tmin(ms/batch)\t\tavg(ms/batch)\n")
+    headerFormat = "{:<70} {:<15} {:<15} {:<15} {:<15}"
+    rowFormat = "{:<70} {:<15} {:<15} {:<15} {:<15}"
+    print("\n" + headerFormat.format("Functionality", "Frames Count", "max(ms/batch)", "min(ms/batch)", "avg(ms/batch)") + "\n")
     if len(functions) != 0:
-        maxCharLength = len(max(functions, key = len))
-        functions = [x + (' ' * (maxCharLength - len(x))) for x in functions]
         for i, func in enumerate(functions):
-            print(func + "\t" + str(frames[i]) + "\t\t" + str(maxVals[i]) + "\t" + str(minVals[i]) + "\t" + str(avgVals[i]))
+            print(rowFormat.format(func, str(frames[i]), str(maxVals[i]), str(minVals[i]), str(avgVals[i])))
     else:
         print("No variants under this category")
 
@@ -332,8 +326,9 @@ def read_from_subprocess_and_write_to_log(process, logFile):
         if not output and process.poll() is not None:
             break
         output = output.decode().strip()  # Decode bytes to string and strip extra whitespace
-        print(output)
-        logFile.write(output + '\n')
+        if output:
+            print(output)
+            logFile.write(output + '\n')
 
 # Returns the layout name based on layout value
 def get_layout_name(layout):
@@ -351,13 +346,13 @@ def print_case_list(imageAugmentationMap, backendType, parser):
         print("\n" + "="*30)
         print("Functionality Reference List")
         print("="*30 + "\n")
-        header_format = "{:<12} {:<15}"
-        print(header_format.format("CaseNumber", "Functionality"))
+        headerFormat = "{:<12} {:<15}"
+        print(headerFormat.format("CaseNumber", "Functionality"))
         print("-" * 27)
-        row_format = "{:<12} {:<15}"
+        rowFormat = "{:<12} {:<15}"
         for key, value_list in imageAugmentationMap.items():
             if backendType in value_list:
-                print(row_format.format(key, value_list[0]))
+                print(rowFormat.format(key, value_list[0]))
 
         sys.exit(0)
 
@@ -380,9 +375,9 @@ def dataframe_to_markdown(df):
     # Create the header row
     md = '| ' + ' | '.join([col.ljust(column_widths[col]) for col in df.columns]) + ' |\n'
     md += '| ' + ' | '.join(['-' * column_widths[col] for col in df.columns]) + ' |\n'
-    
+
     # Create the data rows
     for i, row in df.iterrows():
         md += '| ' + ' | '.join([str(value).ljust(column_widths[df.columns[j]]) for j, value in enumerate(row.values)]) + ' |\n'
-    
+
     return md

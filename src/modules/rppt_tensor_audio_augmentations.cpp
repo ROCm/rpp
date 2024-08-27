@@ -114,6 +114,9 @@ RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr,
                                         RpptAudioBorderType borderType,
                                         rppHandle_t rppHandle)
 {
+    if (srcDescPtr->numDims != 2)
+        return RPP_ERROR_INVALID_SRC_DIMS;
+
     if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
         pre_emphasis_filter_host_tensor(static_cast<Rpp32f*>(srcPtr),
@@ -295,9 +298,12 @@ RppStatus rppt_non_silent_region_detection_gpu(RppPtr_t srcPtr,
                                                rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
+    Rpp32u tensorDims = srcDescPtr->numDims - 1; // exclude batchsize from input dims
+    if (tensorDims != 1)
+        return RPP_ERROR_INVALID_SRC_DIMS;
+
     if (srcDescPtr->dataType == RpptDataType::F32)
     {
-
         return hip_exec_non_silent_region_detection_tensor(static_cast<Rpp32f*>(srcPtr),
                                                            srcDescPtr,
                                                            srcLengthTensor,
@@ -308,6 +314,162 @@ RppStatus rppt_non_silent_region_detection_gpu(RppPtr_t srcPtr,
                                                            referencePower,
                                                            resetInterval,
                                                            rpp::deref(rppHandle));
+    }
+    else
+    {
+        return RPP_ERROR_NOT_IMPLEMENTED;
+    }
+
+#elif defined(OCL_COMPILE)
+    return RPP_ERROR_NOT_IMPLEMENTED;
+#endif // backend
+}
+
+/******************** to_decibels ********************/
+
+RppStatus rppt_to_decibels_gpu(RppPtr_t srcPtr,
+                               RpptDescPtr srcDescPtr,
+                               RppPtr_t dstPtr,
+                               RpptDescPtr dstDescPtr,
+                               RpptImagePatchPtr srcDims,
+                               Rpp32f cutOffDB,
+                               Rpp32f multiplier,
+                               Rpp32f referenceMagnitude,
+                               rppHandle_t rppHandle)
+{
+#ifdef HIP_COMPILE
+    Rpp32u tensorDims = srcDescPtr->numDims - 1; // exclude batchsize from input dims
+    if (tensorDims != 1 && tensorDims != 2)
+        return RPP_ERROR_INVALID_SRC_DIMS;
+
+    if (!multiplier)
+        return RPP_ERROR_ZERO_DIVISION;
+
+    if (srcDescPtr->dataType == RpptDataType::F32)
+    {
+        hip_exec_to_decibels_tensor(static_cast<Rpp32f*>(srcPtr),
+                                    srcDescPtr,
+                                    static_cast<Rpp32f*>(dstPtr),
+                                    dstDescPtr,
+                                    srcDims,
+                                    cutOffDB,
+                                    multiplier,
+                                    referenceMagnitude,
+                                    rpp::deref(rppHandle));
+    }
+    else
+    {
+        return RPP_ERROR_NOT_IMPLEMENTED;
+    }
+
+    return RPP_SUCCESS;
+#elif defined(OCL_COMPILE)
+    return RPP_ERROR_NOT_IMPLEMENTED;
+#endif // backend
+}
+
+/******************** down_mixing ********************/
+
+RppStatus rppt_down_mixing_gpu(RppPtr_t srcPtr,
+                               RpptDescPtr srcDescPtr,
+                               RppPtr_t dstPtr,
+                               RpptDescPtr dstDescPtr,
+                               Rpp32s *srcDimsTensor,
+                               bool  normalizeWeights,
+                               rppHandle_t rppHandle)
+{
+#ifdef HIP_COMPILE
+    Rpp32u tensorDims = srcDescPtr->numDims - 1; // exclude batchsize from input dims
+    if (tensorDims != 1 && tensorDims != 2)
+        return RPP_ERROR_INVALID_SRC_DIMS;
+
+    if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        hip_exec_down_mixing_tensor(static_cast<Rpp32f*>(srcPtr),
+                                    srcDescPtr,
+                                    static_cast<Rpp32f*>(dstPtr),
+                                    dstDescPtr,
+                                    srcDimsTensor,
+                                    normalizeWeights,
+                                    rpp::deref(rppHandle));
+    }
+    else
+    {
+        return RPP_ERROR_NOT_IMPLEMENTED;
+    }
+
+    return RPP_SUCCESS;
+#elif defined(OCL_COMPILE)
+    return RPP_ERROR_NOT_IMPLEMENTED;
+#endif // backend
+}
+
+/******************** pre_emphasis_filter ********************/
+
+RppStatus rppt_pre_emphasis_filter_gpu(RppPtr_t srcPtr,
+                                       RpptDescPtr srcDescPtr,
+                                       RppPtr_t dstPtr,
+                                       RpptDescPtr dstDescPtr,
+                                       Rpp32s *srcLengthTensor,
+                                       Rpp32f *coeffTensor,
+                                       RpptAudioBorderType borderType,
+                                       rppHandle_t rppHandle)
+{
+#ifdef HIP_COMPILE
+
+    if (srcDescPtr->numDims != 2)
+        return RPP_ERROR_INVALID_SRC_DIMS;
+
+    if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        return hip_exec_pre_emphasis_filter_tensor(static_cast<Rpp32f*>(srcPtr),
+                                                   srcDescPtr,
+                                                   static_cast<Rpp32f*>(dstPtr),
+                                                   dstDescPtr,
+                                                   coeffTensor,
+                                                   srcLengthTensor,
+                                                   borderType,
+                                                   rpp::deref(rppHandle));
+    }
+    else
+    {
+        return RPP_ERROR_NOT_IMPLEMENTED;
+    }
+
+#elif defined(OCL_COMPILE)
+    return RPP_ERROR_NOT_IMPLEMENTED;
+#endif // backend
+}
+
+/******************** resample ********************/
+
+RppStatus rppt_resample_gpu(RppPtr_t srcPtr,
+                            RpptDescPtr srcDescPtr,
+                            RppPtr_t dstPtr,
+                            RpptDescPtr dstDescPtr,
+                            Rpp32f *inRateTensor,
+                            Rpp32f *outRateTensor,
+                            Rpp32s *srcDimsTensor,
+                            RpptResamplingWindow &window,
+                            rppHandle_t rppHandle)
+{
+#ifdef HIP_COMPILE
+    Rpp32u tensorDims = srcDescPtr->numDims - 1; // exclude batchsize from input dims
+    if (tensorDims != 1 && tensorDims != 2)
+        return RPP_ERROR_INVALID_SRC_DIMS;
+
+    if (srcDescPtr->dataType == RpptDataType::F32)
+    {
+        hip_exec_resample_tensor(static_cast<Rpp32f*>(srcPtr),
+                                 srcDescPtr,
+                                 static_cast<Rpp32f*>(dstPtr),
+                                 dstDescPtr,
+                                 inRateTensor,
+                                 outRateTensor,
+                                 srcDimsTensor,
+                                 window,
+                                 rpp::deref(rppHandle));
+        return RPP_SUCCESS;
     }
     else
     {

@@ -49,7 +49,7 @@ extern "C" {
             \n Finds the starting index and length of non silent region in the audio buffer by comparing the
             calculated short-term power with cutoff value passed
  * \param [in] srcPtr source tensor in HOST memory
- * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 2, offsetInBytes >= 0, dataType = F32)
  * \param [in] srcLengthTensor source audio buffer length (1D tensor in HOST memory, of size batchSize)
  * \param [out] detectedIndexTensor beginning index of non silent region (1D tensor in HOST memory, of size batchSize)
  * \param [out] detectionLengthTensor length of non silent region  (1D tensor in HOST memory, of size batchSize)
@@ -70,7 +70,7 @@ RppStatus rppt_non_silent_region_detection_host(RppPtr_t srcPtr, RpptDescPtr src
             \n Finds the starting index and length of non silent region in the audio buffer by comparing the
             calculated short-term power with cutoff value passed
  * \param [in] srcPtr source tensor in HIP memory
- * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 2, offsetInBytes >= 0, dataType = F32)
  * \param [in] srcLengthTensor source audio buffer length (1D tensor in Pinned/HIP memory, of size batchSize)
  * \param [out] detectedIndexTensor beginning index of non silent region (1D tensor in Pinned/HIP memory, of size batchSize)
  * \param [out] detectionLengthTensor length of non silent region  (1D tensor in Pinned/HIP memory, of size batchSize)
@@ -87,11 +87,11 @@ RppStatus rppt_non_silent_region_detection_gpu(RppPtr_t srcPtr, RpptDescPtr srcD
 #endif // GPU_SUPPORT
 
 /*! \brief To Decibels augmentation on HOST backend
- * \details To Decibels augmentation for 1D audio buffer converts magnitude values to decibel values
+ * \details To Decibels augmentation for 1D/2D audio buffer converts magnitude values to decibel values
  * \param [in] srcPtr source tensor in HOST memory
- * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 2 or 3 (for single-channel or multi-channel/2D audio tensor with 1 channel), offsetInBytes >= 0, dataType = F32)
  * \param [out] dstPtr destination tensor in HOST memory
- * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
+ * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 2 or 3 (for single-channel or multi-channel/2D audio tensor with 1 channel), offsetInBytes >= 0, dataType = F32)
  * \param [in] srcDims source tensor sizes for each element in batch (2D tensor in HOST memory, of size batchSize * 2)
  * \param [in] cutOffDB  minimum or cut-off ratio in dB
  * \param [in] multiplier factor by which the logarithm is multiplied
@@ -102,6 +102,25 @@ RppStatus rppt_non_silent_region_detection_gpu(RppPtr_t srcPtr, RpptDescPtr srcD
  * \retval RPP_ERROR* Unsuccessful completion.
  */
 RppStatus rppt_to_decibels_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr srcDims, Rpp32f cutOffDB, Rpp32f multiplier, Rpp32f referenceMagnitude, rppHandle_t rppHandle);
+
+#ifdef GPU_SUPPORT
+/*! \brief To Decibels augmentation on HIP backend
+ * \details To Decibels augmentation for 1D/2D audio buffer converts magnitude values to decibel values
+ * \param [in] srcPtr source tensor in HIP memory
+ * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 2 or 3 (for single-channel or multi-channel/2D audio tensor with 1 channel), offsetInBytes >= 0, dataType = F32)
+ * \param [out] dstPtr destination tensor in HIP memory
+ * \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 2 or 3 (for single-channel or multi-channel/2D audio tensor with 1 channel), offsetInBytes >= 0, dataType = F32)
+ * \param [in] srcDims source tensor sizes for each element in batch (2D tensor in Pinned/HIP memory, of size batchSize * 2)
+ * \param [in] cutOffDB  minimum or cut-off ratio in dB
+ * \param [in] multiplier factor by which the logarithm is multiplied
+ * \param [in] referenceMagnitude Reference magnitude if not provided maximum value of input used as reference
+ * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_to_decibels_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr srcDims, Rpp32f cutOffDB, Rpp32f multiplier, Rpp32f referenceMagnitude, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
 
 /*! \brief Pre Emphasis Filter augmentation on HOST backend
  * \details Pre Emphasis Filter augmentation for audio data
@@ -119,12 +138,30 @@ RppStatus rppt_to_decibels_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_
  */
 RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcLengthTensor, Rpp32f *coeffTensor, RpptAudioBorderType borderType, rppHandle_t rppHandle);
 
+#ifdef GPU_SUPPORT
+/*! \brief Pre Emphasis Filter augmentation on HIP backend
+* \details Pre Emphasis Filter augmentation for audio data
+* \param [in] srcPtr source tensor in HIP memory
+* \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 2, offsetInBytes >= 0, dataType = F32)
+* \param [out] dstPtr destination tensor in HIP memory
+* \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 2, offsetInBytes >= 0, dataType = F32)
+* \param [in] srcLengthTensor source audio buffer length (1D tensor in HIP memory, of size batchSize)
+* \param [in] coeffTensor preemphasis coefficient (1D tensor in Pinned / HIP memory, of size batchSize)
+* \param [in] borderType border value policy
+* \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+* \return A <tt> \ref RppStatus</tt> enumeration.
+* \retval RPP_SUCCESS Successful completion.
+* \retval RPP_ERROR* Unsuccessful completion.
+*/
+RppStatus rppt_pre_emphasis_filter_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcLengthTensor, Rpp32f *coeffTensor, RpptAudioBorderType borderType, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
+
 /*! \brief Down Mixing augmentation on HOST backend
 * \details Down Mixing augmentation for audio data
 * \param [in] srcPtr source tensor in HOST memory
-* \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
+* \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 2 or 3 (for single-channel or multi-channel audio tensor), offsetInBytes >= 0, dataType = F32)
 * \param [out] dstPtr destination tensor in HOST memory
-* \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
+* \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 2, offsetInBytes >= 0, dataType = F32)
 * \param [in] srcDimsTensor source audio buffer length and number of channels (1D tensor in HOST memory, of size batchSize * 2)
 * \param [in] normalizeWeights bool flag to specify if normalization of weights is needed
 * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
@@ -133,6 +170,23 @@ RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr,
 * \retval RPP_ERROR* Unsuccessful completion.
 */
 RppStatus rppt_down_mixing_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcDimsTensor, bool normalizeWeights, rppHandle_t rppHandle);
+
+#ifdef GPU_SUPPORT
+/*! \brief Down Mixing augmentation on HIP backend
+* \details Down Mixing augmentation for audio data
+* \param [in] srcPtr source tensor in HIP memory
+* \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 2 or 3 (for single-channel or multi-channel audio tensor), offsetInBytes >= 0, dataType = F32)
+* \param [out] dstPtr destination tensor in HIP memory
+* \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 2, offsetInBytes >= 0, dataType = F32)
+* \param [in] srcDimsTensor source audio buffer length and number of channels (1D tensor in HIP/Pinned memory, of size batchSize * 2)
+* \param [in] normalizeWeights bool flag to specify if normalization of weights is needed
+* \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+* \return A <tt> \ref RppStatus</tt> enumeration.
+* \retval RPP_SUCCESS Successful completion.
+* \retval RPP_ERROR* Unsuccessful completion.
+*/
+RppStatus rppt_down_mixing_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcDimsTensor, bool normalizeWeights, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
 
 /*! \brief Produces a spectrogram from a 1D audio buffer on HOST backend
  * \details Spectrogram for 1D audio buffer
@@ -178,9 +232,9 @@ RppStatus rppt_mel_filter_bank_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rpp
 /*! \brief Resample augmentation on HOST backend
 * \details Resample augmentation for audio data
 * \param [in] srcPtr source tensor in HOST memory
-* \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
+* \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 2 or 3 (for single-channel or multi-channel audio tensor), offsetInBytes >= 0, dataType = F32)
 * \param [out] dstPtr destination tensor in HOST memory
-* \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32)
+* \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 2 or 3 (for single-channel or multi-channel audio tensor), offsetInBytes >= 0, dataType = F32)
 * \param [in] inRate Input sampling rate (1D tensor in HOST memory, of size batchSize)
 * \param [in] outRate Output sampling rate (1D tensor in HOST memory, of size batchSize)
 * \param [in] srcDimsTensor source audio buffer length and number of channels (1D tensor in HOST memory, of size batchSize * 2)
@@ -191,6 +245,25 @@ RppStatus rppt_mel_filter_bank_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rpp
 * \retval RPP_ERROR* Unsuccessful completion.
 */
 RppStatus rppt_resample_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *inRateTensor, Rpp32f *outRateTensor, Rpp32s *srcDimsTensor, RpptResamplingWindow &window, rppHandle_t rppHandle);
+
+#ifdef GPU_SUPPORT
+/*! \brief Resample augmentation on HIP backend
+* \details Resample augmentation for audio data
+* \param [in] srcPtr source tensor in HIP memory
+* \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 2 or 3 (for single-channel or multi-channel audio tensor), offsetInBytes >= 0, dataType = F32)
+* \param [out] dstPtr destination tensor in HIP memory
+* \param [in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 2 or 3 (for single-channel or multi-channel audio tensor), offsetInBytes >= 0, dataType = F32)
+* \param [in] inRate Input sampling rate (1D tensor in Pinned memory, of size batchSize)
+* \param [in] outRate Output sampling rate (1D tensor in Pinned memory, of size batchSize)
+* \param [in] srcDimsTensor source audio buffer length and number of channels (1D tensor in Pinned memory, of size batchSize * 2)
+* \param [in] window Resampling window (struct of type RpptRpptResamplingWindow in HIP/Pinned memory)
+* \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+* \return A <tt> \ref RppStatus</tt> enumeration.
+* \retval RPP_SUCCESS Successful completion.
+* \retval RPP_ERROR* Unsuccessful completion.
+*/
+RppStatus rppt_resample_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32f *inRateTensor, Rpp32f *outRateTensor, Rpp32s *srcDimsTensor, RpptResamplingWindow &window, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
 
 /*! @}
  */
