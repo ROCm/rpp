@@ -114,8 +114,10 @@ RppStatus rppt_pre_emphasis_filter_host(RppPtr_t srcPtr,
                                         RpptAudioBorderType borderType,
                                         rppHandle_t rppHandle)
 {
-    if (srcDescPtr->numDims != 2)
-        return RPP_ERROR_INVALID_SRC_DIMS;
+    // Disabled this check for now. 
+    // This check will be re-enabled when the numDims based changes are added in MIVisionX */
+    // if (srcDescPtr->numDims != 2)
+    //     return RPP_ERROR_INVALID_SRC_DIMS;
 
     if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {

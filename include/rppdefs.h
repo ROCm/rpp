@@ -745,7 +745,8 @@ typedef struct RpptResamplingWindow
     Rpp32f scale = 1, center = 1;
     Rpp32s lobes = 0, coeffs = 0;
     Rpp32s lookupSize = 0;
-    Rpp32f *lookup = nullptr;
+    Rpp32f *lookupPinned = nullptr;
+    std::vector<Rpp32f> lookup;
     __m128 pCenter, pScale;
 } RpptResamplingWindow;
 

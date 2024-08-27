@@ -66,7 +66,7 @@ __global__ void resample_single_channel_hip_tensor(float *srcPtr,
 
         // copy all values from window lookup table to shared memory lookup table
         for (int k = hipThreadIdx_x; k < window->lookupSize; k += hipBlockDim_x)
-            lookup_smem[k] = window->lookup[k];
+            lookup_smem[k] = window->lookupPinned[k];
         __syncthreads();
 
         if (outBlock >= dstLength)
@@ -177,7 +177,7 @@ __global__ void resample_multi_channel_hip_tensor(float *srcPtr,
 
         // copy all values from window lookup table to shared memory lookup table
         for (int k = hipThreadIdx_x; k < window->lookupSize; k += hipBlockDim_x)
-            lookup_smem[k] = window->lookup[k];
+            lookup_smem[k] = window->lookupPinned[k];
         __syncthreads();
 
         if (outBlock >= dstLength)
