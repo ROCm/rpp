@@ -39,6 +39,7 @@ SOFTWARE.
 #include <fstream>
 #include <turbojpeg.h>
 #include <random>
+#include <map>
 
 #ifdef GPU_SUPPORT
     #include <hip/hip_fp16.h>
