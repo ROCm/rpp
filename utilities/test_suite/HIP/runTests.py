@@ -51,18 +51,13 @@ def get_log_file_list(preserveOutput):
     ]
 
 def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
-    print("\n\n\n\n")
-    print("--------------------------------")
-    print("Running a New Functionality...")
-    print("--------------------------------")
+    print("\n")
     bitDepths = range(7)
     outputFormatToggles = [0, 1]
     if qaMode:
         bitDepths = [0]
         outputFormatToggles = [0]
     for bitDepth in bitDepths:
-        print("\n\n\nRunning New Bit Depth...\n-------------------------\n\n")
-
         for outputFormatToggle in outputFormatToggles:
             # There is no layout toggle for PLN1 case, so skip this case
             if layout == 2 and outputFormatToggle == 1:
@@ -106,14 +101,8 @@ def run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, d
         read_from_subprocess_and_write_to_log(process, logFile)
 
 def run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
-    print("\n\n\n\n")
-    print("--------------------------------")
-    print("Running a New Functionality...")
-    print("--------------------------------")
-
+    print("\n")
     for bitDepth in range(7):
-        print("\n\n\nRunning New Bit Depth...\n-------------------------\n\n")
-
         for outputFormatToggle in range(2):
             # There is no layout toggle for PLN1 case, so skip this case
             if layout == 2 and outputFormatToggle == 1:
@@ -122,17 +111,20 @@ def run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPa
             if case == "40" or case == "41" or case == "49" or case == "54":
                 for kernelSize in range(3, 10, 2):
                     run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, kernelSize, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
+                    print("")
             elif case == "8":
                 # Run all variants of noise type functions with additional argument of noiseType = gausssianNoise / shotNoise / saltandpepperNoise
                 for noiseType in range(3):
                     run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, noiseType, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
+                    print("")
             elif case == "21" or case == "23" or case == "24" or case == "79":
                 # Run all variants of interpolation functions with additional argument of interpolationType = bicubic / bilinear / gaussian / nearestneigbor / lanczos / triangular
                 for interpolationType in range(6):
                     run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, interpolationType, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
+                    print("")
             else:
                 run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, "0", numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
-                print("------------------------------------------------------------------------------------------")
+                print("------------------------------------------------------------------------------------------\n")
 
 def run_performance_test_with_profiler(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, additionalParam, additionalParamType, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
     addtionalParamString = additionalParamType + str(additionalParam)
@@ -288,12 +280,10 @@ if testType == 1 and profilingOption == "YES":
     os.makedirs(dstPath + "/Tensor_PLN1")
     os.makedirs(dstPath + "/Tensor_PLN3")
 
-print("\n\n\n\n\n")
-print("##########################################################################################")
-print("Running all layout Inputs...")
-print("##########################################################################################")
-
 if(testType == 0):
+    noCaseSupported = all(case not in supportedCaseList for case in caseList)
+    if noCaseSupported:
+        print("case numbers %s are not supported" % caseList)
     for case in caseList:
         if case not in supportedCaseList:
             continue
@@ -321,6 +311,9 @@ if(testType == 0):
         create_layout_directories(dstPath, layoutDict)
 else:
     if (testType == 1 and profilingOption == "NO"):
+        noCaseSupported = all(case not in supportedCaseList for case in caseList)
+        if noCaseSupported:
+            print("case numbers %s are not supported" % caseList)
         for case in caseList:
             if case not in supportedCaseList:
                 continue
@@ -338,6 +331,9 @@ else:
     elif (testType == 1 and profilingOption == "YES"):
         NEW_FUNC_GROUP_LIST = [0, 15, 20, 29, 36, 40, 42, 49, 56, 65, 69]
 
+        noCaseSupported = all(case not in supportedCaseList for case in caseList)
+        if noCaseSupported:
+            print("case numbers %s are not supported" % caseList)
         for case in caseList:
             if case not in supportedCaseList:
                 continue
@@ -350,14 +346,8 @@ else:
             for layout in range(3):
                 dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "hip", func_group_finder)
 
-                print("\n\n\n\n")
-                print("--------------------------------")
-                print("Running a New Functionality...")
-                print("--------------------------------")
-
+                print("\n")
                 for bitDepth in range(7):
-                    print("\n\n\nRunning New Bit Depth...\n-------------------------\n\n")
-
                     for outputFormatToggle in range(2):
                         # There is no layout toggle for PLN1 case, so skip this case
                         if layout == 2 and outputFormatToggle == 1:
@@ -495,4 +485,4 @@ if qaMode and testType == 0:
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
         print("---------------------------------- Results of QA Test - Tensor_hip ----------------------------------\n")
-        print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList)
+        print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, "Tensor_hip")
