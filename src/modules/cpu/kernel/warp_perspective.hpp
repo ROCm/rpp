@@ -28,42 +28,42 @@ SOFTWARE.
 
 /************* warp_perspective helpers *************/
 
-inline void compute_warp_perspective_src_loc_next_term_avx(__m256 &pParCommon, __m256 &pParY, __m256 &pParX, __m256 &pSrcY, __m256 &pSrcX, __m256 &pPerspectiveMatrixTerm6Incr, __m256 &pPerspectiveMatrixTerm3Incr, __m256 &pPerspectiveMatrixTerm0Incr, __m256 roiHalfHeightVec, __m256 roiHalfWidthVec)
+inline void compute_warp_perspective_src_loc_next_term_avx(__m256 &plocW, __m256 &plocY, __m256 &plocX, __m256 &pSrcY, __m256 &pSrcX, __m256 &pPerspectiveMatrixTerm6Incr, __m256 &pPerspectiveMatrixTerm3Incr, __m256 &pPerspectiveMatrixTerm0Incr, __m256 roiHalfHeightVec, __m256 roiHalfWidthVec)
 {
-    pParCommon = _mm256_add_ps(pParCommon, pPerspectiveMatrixTerm6Incr);
-    pParY = _mm256_add_ps(pParY, pPerspectiveMatrixTerm3Incr);
-    pParX = _mm256_add_ps(pParX, pPerspectiveMatrixTerm0Incr);
-    pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
-    pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+    plocW = _mm256_add_ps(plocW, pPerspectiveMatrixTerm6Incr);
+    plocY = _mm256_add_ps(plocY, pPerspectiveMatrixTerm3Incr);
+    plocX = _mm256_add_ps(plocX, pPerspectiveMatrixTerm0Incr);
+    pSrcY = _mm256_add_ps(_mm256_div_ps(plocY, plocW), roiHalfHeightVec);
+    pSrcX = _mm256_add_ps(_mm256_div_ps(plocX, plocW), roiHalfWidthVec);
 }
 
-inline void compute_warp_perspective_src_loc_params(Rpp32s dstY, Rpp32s dstX, Rpp32f &parCommon, Rpp32f &parY, Rpp32f &parX, Rpp32f9 *perspectiveMatrix_f9, Rpp32s roiHalfHeight, Rpp32s roiHalfWidth)
+inline void compute_warp_perspective_src_loc_params(Rpp32s dstY, Rpp32s dstX, Rpp32f &locW, Rpp32f &locY, Rpp32f &locX, Rpp32f9 *perspectiveMatrix_f9, Rpp32s roiHalfHeight, Rpp32s roiHalfWidth)
 {
     dstX -= roiHalfWidth;
     dstY -= roiHalfHeight;
-    parX = std::fma(dstX, perspectiveMatrix_f9->data[0], std::fma(dstY, perspectiveMatrix_f9->data[1], perspectiveMatrix_f9->data[2]));
-    parY = std::fma(dstX, perspectiveMatrix_f9->data[3], std::fma(dstY, perspectiveMatrix_f9->data[4], perspectiveMatrix_f9->data[5]));
-    parCommon = std::fma(dstX, perspectiveMatrix_f9->data[6], std::fma(dstY, perspectiveMatrix_f9->data[7], perspectiveMatrix_f9->data[8]));
+    locX = std::fma(dstX, perspectiveMatrix_f9->data[0], std::fma(dstY, perspectiveMatrix_f9->data[1], perspectiveMatrix_f9->data[2]));
+    locY = std::fma(dstX, perspectiveMatrix_f9->data[3], std::fma(dstY, perspectiveMatrix_f9->data[4], perspectiveMatrix_f9->data[5]));
+    locW = std::fma(dstX, perspectiveMatrix_f9->data[6], std::fma(dstY, perspectiveMatrix_f9->data[7], perspectiveMatrix_f9->data[8]));
 }
 
-inline void compute_warp_perspective_src_loc(Rpp32s dstY, Rpp32s dstX, Rpp32f &parCommon, Rpp32f &parY, Rpp32f &parX, Rpp32f &srcY, Rpp32f &srcX, Rpp32f9 *perspectiveMatrix_f9, Rpp32s roiHalfHeight, Rpp32s roiHalfWidth)
+inline void compute_warp_perspective_src_loc(Rpp32s dstY, Rpp32s dstX, Rpp32f &locW, Rpp32f &locY, Rpp32f &locX, Rpp32f &srcY, Rpp32f &srcX, Rpp32f9 *perspectiveMatrix_f9, Rpp32s roiHalfHeight, Rpp32s roiHalfWidth)
 {
     dstX -= roiHalfWidth;
     dstY -= roiHalfHeight;
-    parX = std::fma(dstX, perspectiveMatrix_f9->data[0], std::fma(dstY, perspectiveMatrix_f9->data[1], perspectiveMatrix_f9->data[2]));
-    parY = std::fma(dstX, perspectiveMatrix_f9->data[3], std::fma(dstY, perspectiveMatrix_f9->data[4], perspectiveMatrix_f9->data[5]));
-    parCommon = std::fma(dstX, perspectiveMatrix_f9->data[6], std::fma(dstY, perspectiveMatrix_f9->data[7], perspectiveMatrix_f9->data[8]));
-    srcX = (parX/parCommon) + roiHalfWidth;
-    srcY = (parY/parCommon) + roiHalfHeight;
+    locX = std::fma(dstX, perspectiveMatrix_f9->data[0], std::fma(dstY, perspectiveMatrix_f9->data[1], perspectiveMatrix_f9->data[2]));
+    locY = std::fma(dstX, perspectiveMatrix_f9->data[3], std::fma(dstY, perspectiveMatrix_f9->data[4], perspectiveMatrix_f9->data[5]));
+    locW = std::fma(dstX, perspectiveMatrix_f9->data[6], std::fma(dstY, perspectiveMatrix_f9->data[7], perspectiveMatrix_f9->data[8]));
+    srcX = (locX/locW) + roiHalfWidth;
+    srcY = (locY/locW) + roiHalfHeight;
 }
 
-inline void compute_warp_perspective_src_loc_next_term(Rpp32s dstX, Rpp32f &parCommon, Rpp32f &parY, Rpp32f &parX, Rpp32f &srcY, Rpp32f &srcX, Rpp32f9 *perspectiveMatrix_f9, Rpp32s roiHalfHeight, Rpp32s roiHalfWidth)
+inline void compute_warp_perspective_src_loc_next_term(Rpp32s dstX, Rpp32f &locW, Rpp32f &locY, Rpp32f &locX, Rpp32f &srcY, Rpp32f &srcX, Rpp32f9 *perspectiveMatrix_f9, Rpp32s roiHalfHeight, Rpp32s roiHalfWidth)
 {
-    parCommon += perspectiveMatrix_f9->data[6];
-    parY += perspectiveMatrix_f9->data[3];   // Used in computation of next srcY locations by adding the delta from previous location
-    parX += perspectiveMatrix_f9->data[0];   // Used in computation of next srcX locations by adding the delta from previous location
-    srcX = (parX/parCommon) + roiHalfWidth;
-    srcY = (parY/parCommon) + roiHalfHeight;
+    locW += perspectiveMatrix_f9->data[6];
+    locY += perspectiveMatrix_f9->data[3];   // Used in computation of next srcY locations by adding the delta from previous location
+    locX += perspectiveMatrix_f9->data[0];   // Used in computation of next srcX locations by adding the delta from previous location
+    srcX = (locX/locW) + roiHalfWidth;
+    srcY = (locY/locW) + roiHalfHeight;
 }
 
 /************* NEAREST NEIGHBOR INTERPOLATION *************/
@@ -139,34 +139,34 @@ RppStatus warp_perspective_nn_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                Rpp32f parX, parY, parCommon, srcX, srcY;
-                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
-                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
-                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
-                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
-                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
-                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
-                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                Rpp32f locX, locY, locW, srcX, srcY;
+                __m256 plocX, plocY, plocW, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, locW, locY, locX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                plocX = _mm256_add_ps(_mm256_set1_ps(locX), pPerspectiveMatrixTerm0);
+                plocY = _mm256_add_ps(_mm256_set1_ps(locY), pPerspectiveMatrixTerm3);
+                plocW = _mm256_add_ps(_mm256_set1_ps(locW), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(plocY, plocW), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(plocX, plocW), roiHalfWidthVec);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256i pRow;
                     compute_generic_nn_srclocs_and_validate_avx(pSrcY, pSrcX, pRoiLTRB, pSrcStrideH, srcLoc, invalidLoad, true);
                     rpp_simd_load(rpp_generic_nn_load_u8pkd3_avx, srcPtrChannel, srcLoc, invalidLoad, pRow);
                     rpp_simd_store(rpp_store24_u8pkd3_to_u8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, pRow);
-                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    compute_warp_perspective_src_loc_next_term_avx(plocW, plocY, plocX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
                     dstPtrTempR += vectorIncrementPerChannel;
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
                 }
-                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
-                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
-                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
-                srcX = (parX/parCommon) + roiHalfWidth;
-                srcY = (parY/parCommon) + roiHalfHeight;
+                locW += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                locY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                locX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (locX/locW) + roiHalfWidth;
+                srcY = (locY/locW) + roiHalfHeight;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     compute_generic_nn_interpolation_pkd3_to_pln3(srcY, srcX, &roiLTRB, dstPtrTempR++, dstPtrTempG++, dstPtrTempB++, srcPtrChannel, srcDescPtr);
-                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, locW, locY, locX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
                 }
                 dstPtrRowR += dstDescPtr->strides.hStride;
                 dstPtrRowG += dstDescPtr->strides.hStride;
@@ -190,14 +190,14 @@ RppStatus warp_perspective_nn_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                Rpp32f parX, parY, parCommon, srcX, srcY;
-                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
-                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
-                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
-                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
-                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
-                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
-                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                Rpp32f locX, locY, locW, srcX, srcY;
+                __m256 plocX, plocY, plocW, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, locW, locY, locX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                plocX = _mm256_add_ps(_mm256_set1_ps(locX), pPerspectiveMatrixTerm0);
+                plocY = _mm256_add_ps(_mm256_set1_ps(locY), pPerspectiveMatrixTerm3);
+                plocW = _mm256_add_ps(_mm256_set1_ps(locW), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(plocY, plocW), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(plocX, plocW), roiHalfWidthVec);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256i pRow[3];
@@ -206,18 +206,18 @@ RppStatus warp_perspective_nn_u8_u8_host_tensor(Rpp8u *srcPtr,
                     rpp_simd_load(rpp_generic_nn_load_u8pln1_avx, srcPtrChannelG, srcLoc, invalidLoad, pRow[1]);
                     rpp_simd_load(rpp_generic_nn_load_u8pln1_avx, srcPtrChannelB, srcLoc, invalidLoad, pRow[2]);
                     rpp_simd_store(rpp_store24_u8pln3_to_u8pkd3_avx, dstPtrTemp, pRow);
-                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    compute_warp_perspective_src_loc_next_term_avx(plocW, plocY, plocX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
                     dstPtrTemp += vectorIncrementPkd;
                 }
-                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
-                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
-                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
-                srcX = (parX/parCommon) + roiHalfWidth;
-                srcY = (parY/parCommon) + roiHalfHeight;
+                locW += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                locY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                locX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (locX/locW) + roiHalfWidth;
+                srcY = (locY/locW) + roiHalfHeight;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     compute_generic_nn_interpolation_pln3_to_pkd3(srcY, srcX, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
-                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, locW, locY, locX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
                     dstPtrTemp += 3;
                 }
                 dstPtrRow += dstDescPtr->strides.hStride;
@@ -236,32 +236,32 @@ RppStatus warp_perspective_nn_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                Rpp32f parX, parY, parCommon, srcX, srcY;
-                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
-                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
-                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
-                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
-                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
-                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
-                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                Rpp32f locX, locY, locW, srcX, srcY;
+                __m256 plocX, plocY, plocW, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, locW, locY, locX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                plocX = _mm256_add_ps(_mm256_set1_ps(locX), pPerspectiveMatrixTerm0);
+                plocY = _mm256_add_ps(_mm256_set1_ps(locY), pPerspectiveMatrixTerm3);
+                plocW = _mm256_add_ps(_mm256_set1_ps(locW), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(plocY, plocW), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(plocX, plocW), roiHalfWidthVec);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256i pRow;
                     compute_generic_nn_srclocs_and_validate_avx(pSrcY, pSrcX, pRoiLTRB, pSrcStrideH, srcLoc, invalidLoad, true);
                     rpp_simd_load(rpp_generic_nn_load_u8pkd3_avx, srcPtrChannel, srcLoc, invalidLoad, pRow);
                     rpp_simd_store(rpp_store24_u8_to_u8_avx, dstPtrTemp, pRow);
-                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    compute_warp_perspective_src_loc_next_term_avx(plocW, plocY, plocX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
                     dstPtrTemp += vectorIncrementPkd;
                 }
-                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
-                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
-                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
-                srcX = (parX/parCommon) + roiHalfWidth;
-                srcY = (parY/parCommon) + roiHalfHeight;
+                locW += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                locY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                locX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (locX/locW) + roiHalfWidth;
+                srcY = (locY/locW) + roiHalfHeight;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     compute_generic_nn_interpolation_pkd3_to_pkd3(srcY, srcX, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
-                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, locW, locY, locX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
                     dstPtrTemp += 3;
                 }
                 dstPtrRow += dstDescPtr->strides.hStride;
@@ -278,14 +278,14 @@ RppStatus warp_perspective_nn_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                Rpp32f parX, parY, parCommon, srcX, srcY;
-                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
-                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
-                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
-                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
-                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
-                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
-                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                Rpp32f locX, locY, locW, srcX, srcY;
+                __m256 plocX, plocY, plocW, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, locW, locY, locX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                plocX = _mm256_add_ps(_mm256_set1_ps(locX), pPerspectiveMatrixTerm0);
+                plocY = _mm256_add_ps(_mm256_set1_ps(locY), pPerspectiveMatrixTerm3);
+                plocW = _mm256_add_ps(_mm256_set1_ps(locW), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(plocY, plocW), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(plocX, plocW), roiHalfWidthVec);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     Rpp8u *dstPtrTempChn, *srcPtrTempChn;
@@ -300,18 +300,18 @@ RppStatus warp_perspective_nn_u8_u8_host_tensor(Rpp8u *srcPtr,
                         srcPtrTempChn += srcDescPtr->strides.cStride;
                         dstPtrTempChn += dstDescPtr->strides.cStride;
                     }
-                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    compute_warp_perspective_src_loc_next_term_avx(plocW, plocY, plocX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
                     dstPtrTemp += vectorIncrementPerChannel;
                 }
-                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
-                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
-                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
-                srcX = (parX/parCommon) + roiHalfWidth;
-                srcY = (parY/parCommon) + roiHalfHeight;
+                locW += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                locY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                locX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (locX/locW) + roiHalfWidth;
+                srcY = (locY/locW) + roiHalfHeight;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     compute_generic_nn_interpolation_pln_to_pln(srcY, srcX, &roiLTRB, dstPtrTemp++, srcPtrChannel, srcDescPtr, dstDescPtr);
-                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, locW, locY, locX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
                 }
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
@@ -393,34 +393,34 @@ RppStatus warp_perspective_nn_f32_f32_host_tensor(Rpp32f *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                Rpp32f parX, parY, parCommon, srcX, srcY;
-                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
-                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
-                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
-                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
-                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
-                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
-                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                Rpp32f locX, locY, locW, srcX, srcY;
+                __m256 plocX, plocY, plocW, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, locW, locY, locX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                plocX = _mm256_add_ps(_mm256_set1_ps(locX), pPerspectiveMatrixTerm0);
+                plocY = _mm256_add_ps(_mm256_set1_ps(locY), pPerspectiveMatrixTerm3);
+                plocW = _mm256_add_ps(_mm256_set1_ps(locW), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(plocY, plocW), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(plocX, plocW), roiHalfWidthVec);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 pRow[3];
                     compute_generic_nn_srclocs_and_validate_avx(pSrcY, pSrcX, pRoiLTRB, pSrcStrideH, srcLoc, invalidLoad, true);
                     rpp_simd_load(rpp_generic_nn_load_f32pkd3_to_f32pln3_avx, srcPtrChannel, srcLoc, invalidLoad, pRow);
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, pRow);
-                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    compute_warp_perspective_src_loc_next_term_avx(plocW, plocY, plocX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
                     dstPtrTempR += vectorIncrementPerChannel;
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
                 }
-                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
-                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
-                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
-                srcX = (parX/parCommon) + roiHalfWidth;
-                srcY = (parY/parCommon) + roiHalfHeight;
+                locW += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                locY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                locX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (locX/locW) + roiHalfWidth;
+                srcY = (locY/locW) + roiHalfHeight;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     compute_generic_nn_interpolation_pkd3_to_pln3(srcY, srcX, &roiLTRB, dstPtrTempR++, dstPtrTempG++, dstPtrTempB++, srcPtrChannel, srcDescPtr);
-                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, locW, locY, locX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
                 }
                 dstPtrRowR += dstDescPtr->strides.hStride;
                 dstPtrRowG += dstDescPtr->strides.hStride;
@@ -444,14 +444,14 @@ RppStatus warp_perspective_nn_f32_f32_host_tensor(Rpp32f *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                Rpp32f parX, parY, parCommon, srcX, srcY;
-                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
-                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
-                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
-                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
-                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
-                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
-                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                Rpp32f locX, locY, locW, srcX, srcY;
+                __m256 plocX, plocY, plocW, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, locW, locY, locX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                plocX = _mm256_add_ps(_mm256_set1_ps(locX), pPerspectiveMatrixTerm0);
+                plocY = _mm256_add_ps(_mm256_set1_ps(locY), pPerspectiveMatrixTerm3);
+                plocW = _mm256_add_ps(_mm256_set1_ps(locW), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(plocY, plocW), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(plocX, plocW), roiHalfWidthVec);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 pRow[3];
@@ -460,18 +460,18 @@ RppStatus warp_perspective_nn_f32_f32_host_tensor(Rpp32f *srcPtr,
                     rpp_simd_load(rpp_generic_nn_load_f32pln1_avx, srcPtrChannelG, srcLoc, invalidLoad, pRow[1]);
                     rpp_simd_load(rpp_generic_nn_load_f32pln1_avx, srcPtrChannelB, srcLoc, invalidLoad, pRow[2]);
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, pRow);
-                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    compute_warp_perspective_src_loc_next_term_avx(plocW, plocY, plocX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
                     dstPtrTemp += vectorIncrementPkd;
                 }
-                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
-                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
-                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
-                srcX = (parX/parCommon) + roiHalfWidth;
-                srcY = (parY/parCommon) + roiHalfHeight;
+                locW += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                locY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                locX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (locX/locW) + roiHalfWidth;
+                srcY = (locY/locW) + roiHalfHeight;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     compute_generic_nn_interpolation_pln3_to_pkd3(srcY, srcX, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
-                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, locW, locY, locX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
                     dstPtrTemp += 3;
                 }
                 dstPtrRow += dstDescPtr->strides.hStride;
@@ -490,32 +490,32 @@ RppStatus warp_perspective_nn_f32_f32_host_tensor(Rpp32f *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                Rpp32f parX, parY, parCommon, srcX, srcY;
-                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
-                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
-                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
-                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
-                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
-                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
-                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                Rpp32f locX, locY, locW, srcX, srcY;
+                __m256 plocX, plocY, plocW, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, locW, locY, locX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                plocX = _mm256_add_ps(_mm256_set1_ps(locX), pPerspectiveMatrixTerm0);
+                plocY = _mm256_add_ps(_mm256_set1_ps(locY), pPerspectiveMatrixTerm3);
+                plocW = _mm256_add_ps(_mm256_set1_ps(locW), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(plocY, plocW), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(plocX, plocW), roiHalfWidthVec);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 pRow[3];
                     compute_generic_nn_srclocs_and_validate_avx(pSrcY, pSrcX, pRoiLTRB, pSrcStrideH, srcLoc, invalidLoad, true);
                     rpp_simd_load(rpp_generic_nn_load_f32pkd3_to_f32pkd3_avx, srcPtrChannel, srcLoc, invalidLoad, pRow);
                     rpp_simd_store(rpp_store24_f32pkd3_to_f32pkd3_avx, dstPtrTemp, pRow);
-                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    compute_warp_perspective_src_loc_next_term_avx(plocW, plocY, plocX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
                     dstPtrTemp += vectorIncrementPkd;
                 }
-                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
-                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
-                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
-                srcX = (parX/parCommon) + roiHalfWidth;
-                srcY = (parY/parCommon) + roiHalfHeight;
+                locW += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                locY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                locX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (locX/locW) + roiHalfWidth;
+                srcY = (locY/locW) + roiHalfHeight;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     compute_generic_nn_interpolation_pkd3_to_pkd3(srcY, srcX, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
-                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, locW, locY, locX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
                     dstPtrTemp += 3;
                 }
                 dstPtrRow += dstDescPtr->strides.hStride;
@@ -532,14 +532,14 @@ RppStatus warp_perspective_nn_f32_f32_host_tensor(Rpp32f *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                Rpp32f parX, parY, parCommon, srcX, srcY;
-                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
-                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
-                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
-                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
-                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
-                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
-                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                Rpp32f locX, locY, locW, srcX, srcY;
+                __m256 plocX, plocY, plocW, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, locW, locY, locX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                plocX = _mm256_add_ps(_mm256_set1_ps(locX), pPerspectiveMatrixTerm0);
+                plocY = _mm256_add_ps(_mm256_set1_ps(locY), pPerspectiveMatrixTerm3);
+                plocW = _mm256_add_ps(_mm256_set1_ps(locW), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(plocY, plocW), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(plocX, plocW), roiHalfWidthVec);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     Rpp32f *dstPtrTempChn, *srcPtrTempChn;
@@ -554,18 +554,18 @@ RppStatus warp_perspective_nn_f32_f32_host_tensor(Rpp32f *srcPtr,
                         srcPtrTempChn += srcDescPtr->strides.cStride;
                         dstPtrTempChn += dstDescPtr->strides.cStride;
                     }
-                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    compute_warp_perspective_src_loc_next_term_avx(plocW, plocY, plocX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
                     dstPtrTemp += vectorIncrementPerChannel;
                 }
-                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
-                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
-                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
-                srcX = (parX/parCommon) + roiHalfWidth;
-                srcY = (parY/parCommon) + roiHalfHeight;
+                locW += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                locY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                locX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (locX/locW) + roiHalfWidth;
+                srcY = (locY/locW) + roiHalfHeight;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     compute_generic_nn_interpolation_pln_to_pln(srcY, srcX, &roiLTRB, dstPtrTemp++, srcPtrChannel, srcDescPtr, dstDescPtr);
-                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, locW, locY, locX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
                 }
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
@@ -646,34 +646,34 @@ RppStatus warp_perspective_nn_i8_i8_host_tensor(Rpp8s *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                Rpp32f parX, parY, parCommon, srcX, srcY;
-                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
-                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
-                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
-                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
-                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
-                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
-                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                Rpp32f locX, locY, locW, srcX, srcY;
+                __m256 plocX, plocY, plocW, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, locW, locY, locX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                plocX = _mm256_add_ps(_mm256_set1_ps(locX), pPerspectiveMatrixTerm0);
+                plocY = _mm256_add_ps(_mm256_set1_ps(locY), pPerspectiveMatrixTerm3);
+                plocW = _mm256_add_ps(_mm256_set1_ps(locW), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(plocY, plocW), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(plocX, plocW), roiHalfWidthVec);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256i pRow;
                     compute_generic_nn_srclocs_and_validate_avx(pSrcY, pSrcX, pRoiLTRB, pSrcStrideH, srcLoc, invalidLoad, true);
                     rpp_simd_load(rpp_generic_nn_load_i8pkd3_avx, srcPtrChannel, srcLoc, invalidLoad, pRow);
                     rpp_simd_store(rpp_store24_i8pkd3_to_i8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, pRow);
-                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    compute_warp_perspective_src_loc_next_term_avx(plocW, plocY, plocX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
                     dstPtrTempR += vectorIncrementPerChannel;
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
                 }
-                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
-                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
-                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
-                srcX = (parX/parCommon) + roiHalfWidth;
-                srcY = (parY/parCommon) + roiHalfHeight;
+                locW += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                locY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                locX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (locX/locW) + roiHalfWidth;
+                srcY = (locY/locW) + roiHalfHeight;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     compute_generic_nn_interpolation_pkd3_to_pln3(srcY, srcX, &roiLTRB, dstPtrTempR++, dstPtrTempG++, dstPtrTempB++, srcPtrChannel, srcDescPtr);
-                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, locW, locY, locX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
                 }
                 dstPtrRowR += dstDescPtr->strides.hStride;
                 dstPtrRowG += dstDescPtr->strides.hStride;
@@ -697,14 +697,14 @@ RppStatus warp_perspective_nn_i8_i8_host_tensor(Rpp8s *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                Rpp32f parX, parY, parCommon, srcX, srcY;
-                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
-                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
-                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
-                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
-                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
-                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
-                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                Rpp32f locX, locY, locW, srcX, srcY;
+                __m256 plocX, plocY, plocW, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, locW, locY, locX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                plocX = _mm256_add_ps(_mm256_set1_ps(locX), pPerspectiveMatrixTerm0);
+                plocY = _mm256_add_ps(_mm256_set1_ps(locY), pPerspectiveMatrixTerm3);
+                plocW = _mm256_add_ps(_mm256_set1_ps(locW), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(plocY, plocW), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(plocX, plocW), roiHalfWidthVec);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256i pRow[3];
@@ -713,18 +713,18 @@ RppStatus warp_perspective_nn_i8_i8_host_tensor(Rpp8s *srcPtr,
                     rpp_simd_load(rpp_generic_nn_load_i8pln1_avx, srcPtrChannelG, srcLoc, invalidLoad, pRow[1]);
                     rpp_simd_load(rpp_generic_nn_load_i8pln1_avx, srcPtrChannelB, srcLoc, invalidLoad, pRow[2]);
                     rpp_simd_store(rpp_store24_i8pln3_to_i8pkd3_avx, dstPtrTemp, pRow);
-                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    compute_warp_perspective_src_loc_next_term_avx(plocW, plocY, plocX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
                     dstPtrTemp += vectorIncrementPkd;
                 }
-                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
-                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
-                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
-                srcX = (parX/parCommon) + roiHalfWidth;
-                srcY = (parY/parCommon) + roiHalfHeight;
+                locW += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                locY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                locX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (locX/locW) + roiHalfWidth;
+                srcY = (locY/locW) + roiHalfHeight;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     compute_generic_nn_interpolation_pln3_to_pkd3(srcY, srcX, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
-                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, locW, locY, locX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
                     dstPtrTemp += 3;
                 }
                 dstPtrRow += dstDescPtr->strides.hStride;
@@ -743,32 +743,32 @@ RppStatus warp_perspective_nn_i8_i8_host_tensor(Rpp8s *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                Rpp32f parX, parY, parCommon, srcX, srcY;
-                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
-                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
-                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
-                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
-                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
-                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
-                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                Rpp32f locX, locY, locW, srcX, srcY;
+                __m256 plocX, plocY, plocW, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, locW, locY, locX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                plocX = _mm256_add_ps(_mm256_set1_ps(locX), pPerspectiveMatrixTerm0);
+                plocY = _mm256_add_ps(_mm256_set1_ps(locY), pPerspectiveMatrixTerm3);
+                plocW = _mm256_add_ps(_mm256_set1_ps(locW), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(plocY, plocW), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(plocX, plocW), roiHalfWidthVec);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256i pRow;
                     compute_generic_nn_srclocs_and_validate_avx(pSrcY, pSrcX, pRoiLTRB, pSrcStrideH, srcLoc, invalidLoad, true);
                     rpp_simd_load(rpp_generic_nn_load_i8pkd3_avx, srcPtrChannel, srcLoc, invalidLoad, pRow);
                     rpp_simd_store(rpp_store24_i8_to_i8_avx, dstPtrTemp, pRow);
-                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    compute_warp_perspective_src_loc_next_term_avx(plocW, plocY, plocX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
                     dstPtrTemp += vectorIncrementPkd;
                 }
-                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
-                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
-                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
-                srcX = (parX/parCommon) + roiHalfWidth;
-                srcY = (parY/parCommon) + roiHalfHeight;
+                locW += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                locY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                locX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (locX/locW) + roiHalfWidth;
+                srcY = (locY/locW) + roiHalfHeight;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     compute_generic_nn_interpolation_pkd3_to_pkd3(srcY, srcX, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
-                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, locW, locY, locX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
                     dstPtrTemp += 3;
                 }
                 dstPtrRow += dstDescPtr->strides.hStride;
@@ -785,14 +785,14 @@ RppStatus warp_perspective_nn_i8_i8_host_tensor(Rpp8s *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                Rpp32f parX, parY, parCommon, srcX, srcY;
-                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
-                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
-                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
-                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
-                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
-                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
-                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                Rpp32f locX, locY, locW, srcX, srcY;
+                __m256 plocX, plocY, plocW, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, locW, locY, locX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                plocX = _mm256_add_ps(_mm256_set1_ps(locX), pPerspectiveMatrixTerm0);
+                plocY = _mm256_add_ps(_mm256_set1_ps(locY), pPerspectiveMatrixTerm3);
+                plocW = _mm256_add_ps(_mm256_set1_ps(locW), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(plocY, plocW), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(plocX, plocW), roiHalfWidthVec);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     Rpp8s *dstPtrTempChn, *srcPtrTempChn;
@@ -807,18 +807,18 @@ RppStatus warp_perspective_nn_i8_i8_host_tensor(Rpp8s *srcPtr,
                         srcPtrTempChn += srcDescPtr->strides.cStride;
                         dstPtrTempChn += dstDescPtr->strides.cStride;
                     }
-                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    compute_warp_perspective_src_loc_next_term_avx(plocW, plocY, plocX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
                     dstPtrTemp += vectorIncrementPerChannel;
                 }
-                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
-                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
-                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
-                srcX = (parX/parCommon) + roiHalfWidth;
-                srcY = (parY/parCommon) + roiHalfHeight;
+                locW += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                locY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                locX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (locX/locW) + roiHalfWidth;
+                srcY = (locY/locW) + roiHalfHeight;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     compute_generic_nn_interpolation_pln_to_pln(srcY, srcX, &roiLTRB, dstPtrTemp++, srcPtrChannel, srcDescPtr, dstDescPtr);
-                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, locW, locY, locX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
                 }
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
@@ -899,34 +899,34 @@ RppStatus warp_perspective_nn_f16_f16_host_tensor(Rpp16f *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                Rpp32f parX, parY, parCommon, srcX, srcY;
-                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
-                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
-                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
-                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
-                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
-                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
-                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                Rpp32f locX, locY, locW, srcX, srcY;
+                __m256 plocX, plocY, plocW, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, locW, locY, locX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                plocX = _mm256_add_ps(_mm256_set1_ps(locX), pPerspectiveMatrixTerm0);
+                plocY = _mm256_add_ps(_mm256_set1_ps(locY), pPerspectiveMatrixTerm3);
+                plocW = _mm256_add_ps(_mm256_set1_ps(locW), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(plocY, plocW), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(plocX, plocW), roiHalfWidthVec);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 pRow[3];
                     compute_generic_nn_srclocs_and_validate_avx(pSrcY, pSrcX, pRoiLTRB, pSrcStrideH, srcLoc, invalidLoad, true);
                     rpp_simd_load(rpp_generic_resize_nn_load_f16pkd3_to_f32pln3_avx, srcPtrChannel, srcLoc, invalidLoad, pRow);
                     rpp_simd_store(rpp_store24_f32pln3_to_f16pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, pRow);
-                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    compute_warp_perspective_src_loc_next_term_avx(plocW, plocY, plocX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
                     dstPtrTempR += vectorIncrementPerChannel;
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
                 }
-                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
-                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
-                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
-                srcX = (parX/parCommon) + roiHalfWidth;
-                srcY = (parY/parCommon) + roiHalfHeight;
+                locW += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                locY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                locX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (locX/locW) + roiHalfWidth;
+                srcY = (locY/locW) + roiHalfHeight;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     compute_generic_nn_interpolation_pkd3_to_pln3(srcY, srcX, &roiLTRB, dstPtrTempR++, dstPtrTempG++, dstPtrTempB++, srcPtrChannel, srcDescPtr);
-                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, locW, locY, locX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
                 }
                 dstPtrRowR += dstDescPtr->strides.hStride;
                 dstPtrRowG += dstDescPtr->strides.hStride;
@@ -950,14 +950,14 @@ RppStatus warp_perspective_nn_f16_f16_host_tensor(Rpp16f *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                Rpp32f parX, parY, parCommon, srcX, srcY;
-                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
-                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
-                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
-                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
-                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
-                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
-                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                Rpp32f locX, locY, locW, srcX, srcY;
+                __m256 plocX, plocY, plocW, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, locW, locY, locX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                plocX = _mm256_add_ps(_mm256_set1_ps(locX), pPerspectiveMatrixTerm0);
+                plocY = _mm256_add_ps(_mm256_set1_ps(locY), pPerspectiveMatrixTerm3);
+                plocW = _mm256_add_ps(_mm256_set1_ps(locW), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(plocY, plocW), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(plocX, plocW), roiHalfWidthVec);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 pRow[3];
@@ -966,18 +966,18 @@ RppStatus warp_perspective_nn_f16_f16_host_tensor(Rpp16f *srcPtr,
                     rpp_simd_load(rpp_generic_resize_nn_load_f16pln1_avx, srcPtrChannelG, srcLoc, invalidLoad, pRow[1]);
                     rpp_simd_load(rpp_generic_resize_nn_load_f16pln1_avx, srcPtrChannelB, srcLoc, invalidLoad, pRow[2]);
                     rpp_simd_store(rpp_store24_f32pln3_to_f16pkd3_avx, dstPtrTemp, pRow);
-                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    compute_warp_perspective_src_loc_next_term_avx(plocW, plocY, plocX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
                     dstPtrTemp += vectorIncrementPkd;
                 }
-                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
-                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
-                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
-                srcX = (parX/parCommon) + roiHalfWidth;
-                srcY = (parY/parCommon) + roiHalfHeight;
+                locW += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                locY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                locX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (locX/locW) + roiHalfWidth;
+                srcY = (locY/locW) + roiHalfHeight;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     compute_generic_nn_interpolation_pln3_to_pkd3(srcY, srcX, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
-                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, locW, locY, locX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
                     dstPtrTemp += 3;
                 }
                 dstPtrRow += dstDescPtr->strides.hStride;
@@ -995,32 +995,32 @@ RppStatus warp_perspective_nn_f16_f16_host_tensor(Rpp16f *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                Rpp32f parX, parY, parCommon, srcX, srcY;
-                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
-                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
-                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
-                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
-                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
-                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
-                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                Rpp32f locX, locY, locW, srcX, srcY;
+                __m256 plocX, plocY, plocW, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, locW, locY, locX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                plocX = _mm256_add_ps(_mm256_set1_ps(locX), pPerspectiveMatrixTerm0);
+                plocY = _mm256_add_ps(_mm256_set1_ps(locY), pPerspectiveMatrixTerm3);
+                plocW = _mm256_add_ps(_mm256_set1_ps(locW), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(plocY, plocW), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(plocX, plocW), roiHalfWidthVec);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 pRow[3];
                     compute_generic_nn_srclocs_and_validate_avx(pSrcY, pSrcX, pRoiLTRB, pSrcStrideH, srcLoc, invalidLoad, true);
                     rpp_simd_load(rpp_generic_resize_nn_load_f16pkd3_to_f32pkd3_avx, srcPtrChannel, srcLoc, invalidLoad, pRow);
                     rpp_simd_store(rpp_store24_f32pkd3_to_f16pkd3_avx, dstPtrTemp, pRow);
-                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    compute_warp_perspective_src_loc_next_term_avx(plocW, plocY, plocX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
                     dstPtrTemp += vectorIncrementPkd;
                 }
-                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
-                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
-                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
-                srcX = (parX/parCommon) + roiHalfWidth;
-                srcY = (parY/parCommon) + roiHalfHeight;
+                locW += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                locY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                locX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (locX/locW) + roiHalfWidth;
+                srcY = (locY/locW) + roiHalfHeight;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     compute_generic_nn_interpolation_pkd3_to_pkd3(srcY, srcX, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
-                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, locW, locY, locX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
                     dstPtrTemp += 3;
                 }
                 dstPtrRow += dstDescPtr->strides.hStride;
@@ -1037,14 +1037,14 @@ RppStatus warp_perspective_nn_f16_f16_host_tensor(Rpp16f *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                Rpp32f parX, parY, parCommon, srcX, srcY;
-                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
-                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
-                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
-                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
-                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
-                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
-                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                Rpp32f locX, locY, locW, srcX, srcY;
+                __m256 plocX, plocY, plocW, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, locW, locY, locX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                plocX = _mm256_add_ps(_mm256_set1_ps(locX), pPerspectiveMatrixTerm0);
+                plocY = _mm256_add_ps(_mm256_set1_ps(locY), pPerspectiveMatrixTerm3);
+                plocW = _mm256_add_ps(_mm256_set1_ps(locW), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(plocY, plocW), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(plocX, plocW), roiHalfWidthVec);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     Rpp16f *dstPtrTempChn, *srcPtrTempChn;
@@ -1059,18 +1059,18 @@ RppStatus warp_perspective_nn_f16_f16_host_tensor(Rpp16f *srcPtr,
                         srcPtrTempChn += srcDescPtr->strides.cStride;
                         dstPtrTempChn += dstDescPtr->strides.cStride;
                     }
-                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    compute_warp_perspective_src_loc_next_term_avx(plocW, plocY, plocX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
                     dstPtrTemp += vectorIncrementPerChannel;
                 }
-                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
-                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
-                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
-                srcX = (parX/parCommon) + roiHalfWidth;
-                srcY = (parY/parCommon) + roiHalfHeight;
+                locW += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                locY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                locX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (locX/locW) + roiHalfWidth;
+                srcY = (locY/locW) + roiHalfHeight;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     compute_generic_nn_interpolation_pln_to_pln(srcY, srcX, &roiLTRB, dstPtrTemp++, srcPtrChannel, srcDescPtr, dstDescPtr);
-                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, locW, locY, locX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
                 }
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
@@ -1156,14 +1156,14 @@ RppStatus warp_perspective_bilinear_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                Rpp32f parX, parY, parCommon, srcX, srcY;
-                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
-                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
-                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
-                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
-                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
-                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
-                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                Rpp32f locX, locY, locW, srcX, srcY;
+                __m256 plocX, plocY, plocW, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, locW, locY, locX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                plocX = _mm256_add_ps(_mm256_set1_ps(locX), pPerspectiveMatrixTerm0);
+                plocY = _mm256_add_ps(_mm256_set1_ps(locY), pPerspectiveMatrixTerm3);
+                plocW = _mm256_add_ps(_mm256_set1_ps(locW), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(plocY, plocW), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(plocX, plocW), roiHalfWidthVec);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 pSrc[12], pDst[3];
@@ -1171,20 +1171,20 @@ RppStatus warp_perspective_bilinear_u8_u8_host_tensor(Rpp8u *srcPtr,
                     rpp_simd_load(rpp_generic_bilinear_load_3c_avx<Rpp8u>, srcPtrChannel, srcDescPtr, srcLocs, pSrcY, pSrcX, pRoiLTRB, pSrc);  // Load input pixels required for bilinear interpolation
                     compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
                     rpp_simd_store(rpp_store24_f32pln3_to_u8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, pDst); // Store dst pixels
-                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    compute_warp_perspective_src_loc_next_term_avx(plocW, plocY, plocX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
                     dstPtrTempR += vectorIncrementPerChannel;
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
                 }
-                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
-                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
-                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
-                srcX = (parX/parCommon) + roiHalfWidth;
-                srcY = (parY/parCommon) + roiHalfHeight;
+                locW += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                locY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                locX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (locX/locW) + roiHalfWidth;
+                srcY = (locY/locW) + roiHalfHeight;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     compute_generic_bilinear_interpolation_pkd3_to_pln3(srcY, srcX, &roiLTRB, dstPtrTempR++, dstPtrTempG++, dstPtrTempB++, srcPtrChannel, srcDescPtr);
-                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, locW, locY, locX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
                 }
                 dstPtrRowR += dstDescPtr->strides.hStride;
                 dstPtrRowG += dstDescPtr->strides.hStride;
@@ -1203,14 +1203,14 @@ RppStatus warp_perspective_bilinear_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                Rpp32f parX, parY, parCommon, srcX, srcY;
-                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
-                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
-                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
-                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
-                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
-                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
-                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                Rpp32f locX, locY, locW, srcX, srcY;
+                __m256 plocX, plocY, plocW, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, locW, locY, locX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                plocX = _mm256_add_ps(_mm256_set1_ps(locX), pPerspectiveMatrixTerm0);
+                plocY = _mm256_add_ps(_mm256_set1_ps(locY), pPerspectiveMatrixTerm3);
+                plocW = _mm256_add_ps(_mm256_set1_ps(locW), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(plocY, plocW), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(plocX, plocW), roiHalfWidthVec);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 pSrc[12], pDst[3];
@@ -1218,18 +1218,18 @@ RppStatus warp_perspective_bilinear_u8_u8_host_tensor(Rpp8u *srcPtr,
                     rpp_simd_load(rpp_generic_bilinear_load_3c_avx<Rpp8u>, srcPtrChannel, srcDescPtr, srcLocs, pSrcY, pSrcX, pRoiLTRB, pSrc);  // Load input pixels required for bilinear interpolation
                     compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
                     rpp_simd_store(rpp_store24_f32pln3_to_u8pkd3_avx, dstPtrTemp, pDst); // Store dst pixels
-                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    compute_warp_perspective_src_loc_next_term_avx(plocW, plocY, plocX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
                     dstPtrTemp += vectorIncrementPkd;
                 }
-                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
-                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
-                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
-                srcX = (parX/parCommon) + roiHalfWidth;
-                srcY = (parY/parCommon) + roiHalfHeight;
+                locW += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                locY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                locX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (locX/locW) + roiHalfWidth;
+                srcY = (locY/locW) + roiHalfHeight;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     compute_generic_bilinear_interpolation_pln3pkd3_to_pkd3(srcY, srcX, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
-                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, locW, locY, locX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
                     dstPtrTemp += 3;
                 }
                 dstPtrRow += dstDescPtr->strides.hStride;
@@ -1247,14 +1247,14 @@ RppStatus warp_perspective_bilinear_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                Rpp32f parX, parY, parCommon, srcX, srcY;
-                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
-                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
-                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
-                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
-                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
-                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
-                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                Rpp32f locX, locY, locW, srcX, srcY;
+                __m256 plocX, plocY, plocW, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, locW, locY, locX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                plocX = _mm256_add_ps(_mm256_set1_ps(locX), pPerspectiveMatrixTerm0);
+                plocY = _mm256_add_ps(_mm256_set1_ps(locY), pPerspectiveMatrixTerm3);
+                plocW = _mm256_add_ps(_mm256_set1_ps(locW), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(plocY, plocW), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(plocX, plocW), roiHalfWidthVec);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 pSrc[12], pDst[3];
@@ -1262,18 +1262,18 @@ RppStatus warp_perspective_bilinear_u8_u8_host_tensor(Rpp8u *srcPtr,
                     rpp_simd_load(rpp_generic_bilinear_load_3c_avx<Rpp8u>, srcPtrChannel, srcDescPtr, srcLocs, pSrcY, pSrcX, pRoiLTRB, pSrc);  // Load input pixels required for bilinear interpolation
                     compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
                     rpp_simd_store(rpp_store24_f32pln3_to_u8pkd3_avx, dstPtrTemp, pDst); // Store dst pixels
-                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    compute_warp_perspective_src_loc_next_term_avx(plocW, plocY, plocX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
                     dstPtrTemp += vectorIncrementPkd;
                 }
-                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
-                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
-                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
-                srcX = (parX/parCommon) + roiHalfWidth;
-                srcY = (parY/parCommon) + roiHalfHeight;
+                locW += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                locY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                locX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (locX/locW) + roiHalfWidth;
+                srcY = (locY/locW) + roiHalfHeight;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     compute_generic_bilinear_interpolation_pln3pkd3_to_pkd3(srcY, srcX, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
-                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, locW, locY, locX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
                     dstPtrTemp += 3;
                 }
                 dstPtrRow += dstDescPtr->strides.hStride;
@@ -1296,14 +1296,14 @@ RppStatus warp_perspective_bilinear_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                Rpp32f parX, parY, parCommon, srcX, srcY;
-                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
-                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
-                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
-                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
-                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
-                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
-                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                Rpp32f locX, locY, locW, srcX, srcY;
+                __m256 plocX, plocY, plocW, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, locW, locY, locX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                plocX = _mm256_add_ps(_mm256_set1_ps(locX), pPerspectiveMatrixTerm0);
+                plocY = _mm256_add_ps(_mm256_set1_ps(locY), pPerspectiveMatrixTerm3);
+                plocW = _mm256_add_ps(_mm256_set1_ps(locW), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(plocY, plocW), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(plocX, plocW), roiHalfWidthVec);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 pSrc[12], pDst[3];
@@ -1311,20 +1311,20 @@ RppStatus warp_perspective_bilinear_u8_u8_host_tensor(Rpp8u *srcPtr,
                     rpp_simd_load(rpp_generic_bilinear_load_3c_avx<Rpp8u>, srcPtrChannel, srcDescPtr, srcLocs, pSrcY, pSrcX, pRoiLTRB, pSrc);  // Load input pixels required for bilinear interpolation
                     compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
                     rpp_simd_store(rpp_store24_f32pln3_to_u8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, pDst); // Store dst pixels
-                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    compute_warp_perspective_src_loc_next_term_avx(plocW, plocY, plocX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
                     dstPtrTempR += vectorIncrementPerChannel;
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
                 }
-                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
-                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
-                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
-                srcX = (parX/parCommon) + roiHalfWidth;
-                srcY = (parY/parCommon) + roiHalfHeight;
+                locW += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                locY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                locX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (locX/locW) + roiHalfWidth;
+                srcY = (locY/locW) + roiHalfHeight;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     compute_generic_bilinear_interpolation_pln_to_pln(srcY, srcX, &roiLTRB, dstPtrTempR++, srcPtrChannel, srcDescPtr, dstDescPtr);
-                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, locW, locY, locX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
                 }
                 dstPtrRowR += dstDescPtr->strides.hStride;
                 dstPtrRowG += dstDescPtr->strides.hStride;
@@ -1344,14 +1344,14 @@ RppStatus warp_perspective_bilinear_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                Rpp32f parX, parY, parCommon, srcX, srcY;
-                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
-                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
-                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
-                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
-                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
-                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
-                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                Rpp32f locX, locY, locW, srcX, srcY;
+                __m256 plocX, plocY, plocW, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, locW, locY, locX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                plocX = _mm256_add_ps(_mm256_set1_ps(locX), pPerspectiveMatrixTerm0);
+                plocY = _mm256_add_ps(_mm256_set1_ps(locY), pPerspectiveMatrixTerm3);
+                plocW = _mm256_add_ps(_mm256_set1_ps(locW), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(plocY, plocW), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(plocX, plocW), roiHalfWidthVec);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 pSrc[4], pDst;
@@ -1359,18 +1359,18 @@ RppStatus warp_perspective_bilinear_u8_u8_host_tensor(Rpp8u *srcPtr,
                     rpp_simd_load(rpp_generic_bilinear_load_1c_avx<Rpp8u>, srcPtrChannel, srcDescPtr, srcLocs, pSrcY, pSrcX, pRoiLTRB, pSrc);  // Load input pixels required for bilinear interpolation
                     compute_bilinear_interpolation_1c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
                     rpp_simd_store(rpp_store8_f32pln1_to_u8pln1_avx, dstPtrTemp, pDst); // Store dst pixels
-                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    compute_warp_perspective_src_loc_next_term_avx(plocW, plocY, plocX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
                     dstPtrTemp += vectorIncrementPerChannel;
                 }
-                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
-                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
-                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
-                srcX = (parX/parCommon) + roiHalfWidth;
-                srcY = (parY/parCommon) + roiHalfHeight;
+                locW += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                locY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                locX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (locX/locW) + roiHalfWidth;
+                srcY = (locY/locW) + roiHalfHeight;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     compute_generic_bilinear_interpolation_pln_to_pln(srcY, srcX, &roiLTRB, dstPtrTemp++, srcPtrChannel, srcDescPtr, dstDescPtr);
-                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, locW, locY, locX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
                 }
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
@@ -1456,14 +1456,14 @@ RppStatus warp_perspective_bilinear_f32_f32_host_tensor(Rpp32f *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                Rpp32f parX, parY, parCommon, srcX, srcY;
-                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
-                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
-                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
-                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
-                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
-                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
-                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                Rpp32f locX, locY, locW, srcX, srcY;
+                __m256 plocX, plocY, plocW, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, locW, locY, locX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                plocX = _mm256_add_ps(_mm256_set1_ps(locX), pPerspectiveMatrixTerm0);
+                plocY = _mm256_add_ps(_mm256_set1_ps(locY), pPerspectiveMatrixTerm3);
+                plocW = _mm256_add_ps(_mm256_set1_ps(locW), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(plocY, plocW), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(plocX, plocW), roiHalfWidthVec);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 pSrc[12], pDst[3];
@@ -1471,20 +1471,20 @@ RppStatus warp_perspective_bilinear_f32_f32_host_tensor(Rpp32f *srcPtr,
                     rpp_simd_load(rpp_generic_bilinear_load_3c_avx<Rpp32f>, srcPtrChannel, srcDescPtr, srcLocs, pSrcY, pSrcX, pRoiLTRB, pSrc);  // Load input pixels required for bilinear interpolation
                     compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, pDst); // Store dst pixels
-                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    compute_warp_perspective_src_loc_next_term_avx(plocW, plocY, plocX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
                     dstPtrTempR += vectorIncrementPerChannel;
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
                 }
-                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
-                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
-                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
-                srcX = (parX/parCommon) + roiHalfWidth;
-                srcY = (parY/parCommon) + roiHalfHeight;
+                locW += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                locY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                locX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (locX/locW) + roiHalfWidth;
+                srcY = (locY/locW) + roiHalfHeight;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     compute_generic_bilinear_interpolation_pkd3_to_pln3(srcY, srcX, &roiLTRB, dstPtrTempR++, dstPtrTempG++, dstPtrTempB++, srcPtrChannel, srcDescPtr);
-                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, locW, locY, locX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
                 }
                 dstPtrRowR += dstDescPtr->strides.hStride;
                 dstPtrRowG += dstDescPtr->strides.hStride;
@@ -1503,14 +1503,14 @@ RppStatus warp_perspective_bilinear_f32_f32_host_tensor(Rpp32f *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                Rpp32f parX, parY, parCommon, srcX, srcY;
-                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
-                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
-                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
-                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
-                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
-                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
-                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                Rpp32f locX, locY, locW, srcX, srcY;
+                __m256 plocX, plocY, plocW, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, locW, locY, locX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                plocX = _mm256_add_ps(_mm256_set1_ps(locX), pPerspectiveMatrixTerm0);
+                plocY = _mm256_add_ps(_mm256_set1_ps(locY), pPerspectiveMatrixTerm3);
+                plocW = _mm256_add_ps(_mm256_set1_ps(locW), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(plocY, plocW), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(plocX, plocW), roiHalfWidthVec);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 pSrc[12], pDst[3];
@@ -1518,18 +1518,18 @@ RppStatus warp_perspective_bilinear_f32_f32_host_tensor(Rpp32f *srcPtr,
                     rpp_simd_load(rpp_generic_bilinear_load_3c_avx<Rpp32f>, srcPtrChannel, srcDescPtr, srcLocs, pSrcY, pSrcX, pRoiLTRB, pSrc);  // Load input pixels required for bilinear interpolation
                     compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, pDst); // Store dst pixels
-                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    compute_warp_perspective_src_loc_next_term_avx(plocW, plocY, plocX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
                     dstPtrTemp += vectorIncrementPkd;
                 }
-                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
-                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
-                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
-                srcX = (parX/parCommon) + roiHalfWidth;
-                srcY = (parY/parCommon) + roiHalfHeight;
+                locW += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                locY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                locX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (locX/locW) + roiHalfWidth;
+                srcY = (locY/locW) + roiHalfHeight;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     compute_generic_bilinear_interpolation_pln3pkd3_to_pkd3(srcY, srcX, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
-                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, locW, locY, locX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
                     dstPtrTemp += 3;
                 }
                 dstPtrRow += dstDescPtr->strides.hStride;
@@ -1547,14 +1547,14 @@ RppStatus warp_perspective_bilinear_f32_f32_host_tensor(Rpp32f *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                Rpp32f parX, parY, parCommon, srcX, srcY;
-                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
-                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
-                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
-                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
-                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
-                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
-                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                Rpp32f locX, locY, locW, srcX, srcY;
+                __m256 plocX, plocY, plocW, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, locW, locY, locX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                plocX = _mm256_add_ps(_mm256_set1_ps(locX), pPerspectiveMatrixTerm0);
+                plocY = _mm256_add_ps(_mm256_set1_ps(locY), pPerspectiveMatrixTerm3);
+                plocW = _mm256_add_ps(_mm256_set1_ps(locW), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(plocY, plocW), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(plocX, plocW), roiHalfWidthVec);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 pSrc[12], pDst[3];
@@ -1562,18 +1562,18 @@ RppStatus warp_perspective_bilinear_f32_f32_host_tensor(Rpp32f *srcPtr,
                     rpp_simd_load(rpp_generic_bilinear_load_3c_avx<Rpp32f>, srcPtrChannel, srcDescPtr, srcLocs, pSrcY, pSrcX, pRoiLTRB, pSrc);  // Load input pixels required for bilinear interpolation
                     compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, pDst); // Store dst pixels
-                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    compute_warp_perspective_src_loc_next_term_avx(plocW, plocY, plocX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
                     dstPtrTemp += vectorIncrementPkd;
                 }
-                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
-                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
-                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
-                srcX = (parX/parCommon) + roiHalfWidth;
-                srcY = (parY/parCommon) + roiHalfHeight;
+                locW += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                locY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                locX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (locX/locW) + roiHalfWidth;
+                srcY = (locY/locW) + roiHalfHeight;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     compute_generic_bilinear_interpolation_pln3pkd3_to_pkd3(srcY, srcX, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
-                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, locW, locY, locX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
                     dstPtrTemp += 3;
                 }
                 dstPtrRow += dstDescPtr->strides.hStride;
@@ -1596,14 +1596,14 @@ RppStatus warp_perspective_bilinear_f32_f32_host_tensor(Rpp32f *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                Rpp32f parX, parY, parCommon, srcX, srcY;
-                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
-                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
-                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
-                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
-                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
-                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
-                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                Rpp32f locX, locY, locW, srcX, srcY;
+                __m256 plocX, plocY, plocW, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, locW, locY, locX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                plocX = _mm256_add_ps(_mm256_set1_ps(locX), pPerspectiveMatrixTerm0);
+                plocY = _mm256_add_ps(_mm256_set1_ps(locY), pPerspectiveMatrixTerm3);
+                plocW = _mm256_add_ps(_mm256_set1_ps(locW), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(plocY, plocW), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(plocX, plocW), roiHalfWidthVec);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 pSrc[12], pDst[3];
@@ -1611,20 +1611,20 @@ RppStatus warp_perspective_bilinear_f32_f32_host_tensor(Rpp32f *srcPtr,
                     rpp_simd_load(rpp_generic_bilinear_load_3c_avx<Rpp32f>, srcPtrChannel, srcDescPtr, srcLocs, pSrcY, pSrcX, pRoiLTRB, pSrc);  // Load input pixels required for bilinear interpolation
                     compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, pDst); // Store dst pixels
-                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    compute_warp_perspective_src_loc_next_term_avx(plocW, plocY, plocX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
                     dstPtrTempR += vectorIncrementPerChannel;
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
                 }
-                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
-                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
-                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
-                srcX = (parX/parCommon) + roiHalfWidth;
-                srcY = (parY/parCommon) + roiHalfHeight;
+                locW += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                locY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                locX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (locX/locW) + roiHalfWidth;
+                srcY = (locY/locW) + roiHalfHeight;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     compute_generic_bilinear_interpolation_pln_to_pln(srcY, srcX, &roiLTRB, dstPtrTempR++, srcPtrChannel, srcDescPtr, dstDescPtr);
-                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, locW, locY, locX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
                 }
                 dstPtrRowR += dstDescPtr->strides.hStride;
                 dstPtrRowG += dstDescPtr->strides.hStride;
@@ -1644,14 +1644,14 @@ RppStatus warp_perspective_bilinear_f32_f32_host_tensor(Rpp32f *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                Rpp32f parX, parY, parCommon, srcX, srcY;
-                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
-                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
-                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
-                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
-                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
-                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
-                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                Rpp32f locX, locY, locW, srcX, srcY;
+                __m256 plocX, plocY, plocW, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, locW, locY, locX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                plocX = _mm256_add_ps(_mm256_set1_ps(locX), pPerspectiveMatrixTerm0);
+                plocY = _mm256_add_ps(_mm256_set1_ps(locY), pPerspectiveMatrixTerm3);
+                plocW = _mm256_add_ps(_mm256_set1_ps(locW), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(plocY, plocW), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(plocX, plocW), roiHalfWidthVec);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 pSrc[4], pDst;
@@ -1659,18 +1659,18 @@ RppStatus warp_perspective_bilinear_f32_f32_host_tensor(Rpp32f *srcPtr,
                     rpp_simd_load(rpp_generic_bilinear_load_1c_avx<Rpp32f>, srcPtrChannel, srcDescPtr, srcLocs, pSrcY, pSrcX, pRoiLTRB, pSrc);  // Load input pixels required for bilinear interpolation
                     compute_bilinear_interpolation_1c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
                     rpp_simd_store(rpp_store8_f32pln1_to_f32pln1_avx, dstPtrTemp, pDst); // Store dst pixels
-                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    compute_warp_perspective_src_loc_next_term_avx(plocW, plocY, plocX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
                     dstPtrTemp += vectorIncrementPerChannel;
                 }
-                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
-                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
-                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
-                srcX = (parX/parCommon) + roiHalfWidth;
-                srcY = (parY/parCommon) + roiHalfHeight;
+                locW += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                locY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                locX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (locX/locW) + roiHalfWidth;
+                srcY = (locY/locW) + roiHalfHeight;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     compute_generic_bilinear_interpolation_pln_to_pln(srcY, srcX, &roiLTRB, dstPtrTemp++, srcPtrChannel, srcDescPtr, dstDescPtr);
-                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, locW, locY, locX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
                 }
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
@@ -1756,14 +1756,14 @@ RppStatus warp_perspective_bilinear_i8_i8_host_tensor(Rpp8s *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                Rpp32f parX, parY, parCommon, srcX, srcY;
-                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
-                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
-                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
-                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
-                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
-                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
-                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                Rpp32f locX, locY, locW, srcX, srcY;
+                __m256 plocX, plocY, plocW, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, locW, locY, locX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                plocX = _mm256_add_ps(_mm256_set1_ps(locX), pPerspectiveMatrixTerm0);
+                plocY = _mm256_add_ps(_mm256_set1_ps(locY), pPerspectiveMatrixTerm3);
+                plocW = _mm256_add_ps(_mm256_set1_ps(locW), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(plocY, plocW), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(plocX, plocW), roiHalfWidthVec);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 pSrc[12], pDst[3];
@@ -1772,20 +1772,20 @@ RppStatus warp_perspective_bilinear_i8_i8_host_tensor(Rpp8s *srcPtr,
                     compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
                     compute_offset_i8_3c_avx(pDst);
                     rpp_simd_store(rpp_store24_f32pln3_to_i8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, pDst); // Store dst pixels
-                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    compute_warp_perspective_src_loc_next_term_avx(plocW, plocY, plocX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
                     dstPtrTempR += vectorIncrementPerChannel;
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
                 }
-                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
-                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
-                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
-                srcX = (parX/parCommon) + roiHalfWidth;
-                srcY = (parY/parCommon) + roiHalfHeight;
+                locW += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                locY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                locX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (locX/locW) + roiHalfWidth;
+                srcY = (locY/locW) + roiHalfHeight;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     compute_generic_bilinear_interpolation_pkd3_to_pln3(srcY, srcX, &roiLTRB, dstPtrTempR++, dstPtrTempG++, dstPtrTempB++, srcPtrChannel, srcDescPtr);
-                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, locW, locY, locX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
                 }
                 dstPtrRowR += dstDescPtr->strides.hStride;
                 dstPtrRowG += dstDescPtr->strides.hStride;
@@ -1804,14 +1804,14 @@ RppStatus warp_perspective_bilinear_i8_i8_host_tensor(Rpp8s *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                Rpp32f parX, parY, parCommon, srcX, srcY;
-                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
-                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
-                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
-                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
-                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
-                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
-                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                Rpp32f locX, locY, locW, srcX, srcY;
+                __m256 plocX, plocY, plocW, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, locW, locY, locX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                plocX = _mm256_add_ps(_mm256_set1_ps(locX), pPerspectiveMatrixTerm0);
+                plocY = _mm256_add_ps(_mm256_set1_ps(locY), pPerspectiveMatrixTerm3);
+                plocW = _mm256_add_ps(_mm256_set1_ps(locW), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(plocY, plocW), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(plocX, plocW), roiHalfWidthVec);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 pSrc[12], pDst[3];
@@ -1820,18 +1820,18 @@ RppStatus warp_perspective_bilinear_i8_i8_host_tensor(Rpp8s *srcPtr,
                     compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
                     compute_offset_i8_3c_avx(pDst);
                     rpp_simd_store(rpp_store24_f32pln3_to_i8pkd3_avx, dstPtrTemp, pDst); // Store dst pixels
-                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    compute_warp_perspective_src_loc_next_term_avx(plocW, plocY, plocX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
                     dstPtrTemp += vectorIncrementPkd;
                 }
-                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
-                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
-                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
-                srcX = (parX/parCommon) + roiHalfWidth;
-                srcY = (parY/parCommon) + roiHalfHeight;
+                locW += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                locY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                locX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (locX/locW) + roiHalfWidth;
+                srcY = (locY/locW) + roiHalfHeight;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     compute_generic_bilinear_interpolation_pln3pkd3_to_pkd3(srcY, srcX, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
-                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, locW, locY, locX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
                     dstPtrTemp += 3;
                 }
                 dstPtrRow += dstDescPtr->strides.hStride;
@@ -1849,14 +1849,14 @@ RppStatus warp_perspective_bilinear_i8_i8_host_tensor(Rpp8s *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                Rpp32f parX, parY, parCommon, srcX, srcY;
-                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
-                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
-                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
-                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
-                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
-                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
-                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                Rpp32f locX, locY, locW, srcX, srcY;
+                __m256 plocX, plocY, plocW, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, locW, locY, locX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                plocX = _mm256_add_ps(_mm256_set1_ps(locX), pPerspectiveMatrixTerm0);
+                plocY = _mm256_add_ps(_mm256_set1_ps(locY), pPerspectiveMatrixTerm3);
+                plocW = _mm256_add_ps(_mm256_set1_ps(locW), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(plocY, plocW), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(plocX, plocW), roiHalfWidthVec);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 pSrc[12], pDst[3];
@@ -1865,18 +1865,18 @@ RppStatus warp_perspective_bilinear_i8_i8_host_tensor(Rpp8s *srcPtr,
                     compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
                     compute_offset_i8_3c_avx(pDst);
                     rpp_simd_store(rpp_store24_f32pln3_to_i8pkd3_avx, dstPtrTemp, pDst); // Store dst pixels
-                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    compute_warp_perspective_src_loc_next_term_avx(plocW, plocY, plocX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
                     dstPtrTemp += vectorIncrementPkd;
                 }
-                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
-                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
-                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
-                srcX = (parX/parCommon) + roiHalfWidth;
-                srcY = (parY/parCommon) + roiHalfHeight;
+                locW += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                locY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                locX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (locX/locW) + roiHalfWidth;
+                srcY = (locY/locW) + roiHalfHeight;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     compute_generic_bilinear_interpolation_pln3pkd3_to_pkd3(srcY, srcX, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
-                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, locW, locY, locX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
                     dstPtrTemp += 3;
                 }
                 dstPtrRow += dstDescPtr->strides.hStride;
@@ -1899,14 +1899,14 @@ RppStatus warp_perspective_bilinear_i8_i8_host_tensor(Rpp8s *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                Rpp32f parX, parY, parCommon, srcX, srcY;
-                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
-                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
-                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
-                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
-                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
-                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
-                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                Rpp32f locX, locY, locW, srcX, srcY;
+                __m256 plocX, plocY, plocW, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, locW, locY, locX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                plocX = _mm256_add_ps(_mm256_set1_ps(locX), pPerspectiveMatrixTerm0);
+                plocY = _mm256_add_ps(_mm256_set1_ps(locY), pPerspectiveMatrixTerm3);
+                plocW = _mm256_add_ps(_mm256_set1_ps(locW), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(plocY, plocW), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(plocX, plocW), roiHalfWidthVec);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 pSrc[12], pDst[3];
@@ -1915,20 +1915,20 @@ RppStatus warp_perspective_bilinear_i8_i8_host_tensor(Rpp8s *srcPtr,
                     compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
                     compute_offset_i8_3c_avx(pDst);
                     rpp_simd_store(rpp_store24_f32pln3_to_i8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, pDst); // Store dst pixels
-                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    compute_warp_perspective_src_loc_next_term_avx(plocW, plocY, plocX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
                     dstPtrTempR += vectorIncrementPerChannel;
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
                 }
-                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
-                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
-                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
-                srcX = (parX/parCommon) + roiHalfWidth;
-                srcY = (parY/parCommon) + roiHalfHeight;
+                locW += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                locY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                locX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (locX/locW) + roiHalfWidth;
+                srcY = (locY/locW) + roiHalfHeight;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     compute_generic_bilinear_interpolation_pln_to_pln(srcY, srcX, &roiLTRB, dstPtrTempR++, srcPtrChannel, srcDescPtr, dstDescPtr);
-                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, locW, locY, locX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
                 }
                 dstPtrRowR += dstDescPtr->strides.hStride;
                 dstPtrRowG += dstDescPtr->strides.hStride;
@@ -1948,14 +1948,14 @@ RppStatus warp_perspective_bilinear_i8_i8_host_tensor(Rpp8s *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                Rpp32f parX, parY, parCommon, srcX, srcY;
-                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
-                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
-                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
-                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
-                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
-                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
-                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                Rpp32f locX, locY, locW, srcX, srcY;
+                __m256 plocX, plocY, plocW, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, locW, locY, locX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                plocX = _mm256_add_ps(_mm256_set1_ps(locX), pPerspectiveMatrixTerm0);
+                plocY = _mm256_add_ps(_mm256_set1_ps(locY), pPerspectiveMatrixTerm3);
+                plocW = _mm256_add_ps(_mm256_set1_ps(locW), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(plocY, plocW), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(plocX, plocW), roiHalfWidthVec);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 pSrc[4], pDst;
@@ -1964,18 +1964,18 @@ RppStatus warp_perspective_bilinear_i8_i8_host_tensor(Rpp8s *srcPtr,
                     compute_bilinear_interpolation_1c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
                     compute_offset_i8_1c_avx(pDst);
                     rpp_simd_store(rpp_store8_f32pln1_to_i8pln1_avx, dstPtrTemp, pDst); // Store dst pixels
-                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    compute_warp_perspective_src_loc_next_term_avx(plocW, plocY, plocX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
                     dstPtrTemp += vectorIncrementPerChannel;
                 }
-                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
-                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
-                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
-                srcX = (parX/parCommon) + roiHalfWidth;
-                srcY = (parY/parCommon) + roiHalfHeight;
+                locW += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                locY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                locX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (locX/locW) + roiHalfWidth;
+                srcY = (locY/locW) + roiHalfHeight;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     compute_generic_bilinear_interpolation_pln_to_pln(srcY, srcX, &roiLTRB, dstPtrTemp++, srcPtrChannel, srcDescPtr, dstDescPtr);
-                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, locW, locY, locX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
                 }
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
@@ -2061,14 +2061,14 @@ RppStatus warp_perspective_bilinear_f16_f16_host_tensor(Rpp16f *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                Rpp32f parX, parY, parCommon, srcX, srcY;
-                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
-                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
-                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
-                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
-                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
-                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
-                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                Rpp32f locX, locY, locW, srcX, srcY;
+                __m256 plocX, plocY, plocW, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, locW, locY, locX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                plocX = _mm256_add_ps(_mm256_set1_ps(locX), pPerspectiveMatrixTerm0);
+                plocY = _mm256_add_ps(_mm256_set1_ps(locY), pPerspectiveMatrixTerm3);
+                plocW = _mm256_add_ps(_mm256_set1_ps(locW), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(plocY, plocW), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(plocX, plocW), roiHalfWidthVec);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 pSrc[12], pDst[3];
@@ -2076,20 +2076,20 @@ RppStatus warp_perspective_bilinear_f16_f16_host_tensor(Rpp16f *srcPtr,
                     rpp_simd_load(rpp_generic_bilinear_load_3c_avx<Rpp16f>, srcPtrChannel, srcDescPtr, srcLocs, pSrcY, pSrcX, pRoiLTRB, pSrc);  // Load input pixels required for bilinear interpolation
                     compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
                     rpp_simd_store(rpp_store24_f32pln3_to_f16pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, pDst); // Store dst pixels
-                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    compute_warp_perspective_src_loc_next_term_avx(plocW, plocY, plocX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
                     dstPtrTempR += vectorIncrementPerChannel;
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
                 }
-                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
-                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
-                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
-                srcX = (parX/parCommon) + roiHalfWidth;
-                srcY = (parY/parCommon) + roiHalfHeight;
+                locW += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                locY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                locX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (locX/locW) + roiHalfWidth;
+                srcY = (locY/locW) + roiHalfHeight;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     compute_generic_bilinear_interpolation_pkd3_to_pln3(srcY, srcX, &roiLTRB, dstPtrTempR++, dstPtrTempG++, dstPtrTempB++, srcPtrChannel, srcDescPtr);
-                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, locW, locY, locX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
                 }
                 dstPtrRowR += dstDescPtr->strides.hStride;
                 dstPtrRowG += dstDescPtr->strides.hStride;
@@ -2108,14 +2108,14 @@ RppStatus warp_perspective_bilinear_f16_f16_host_tensor(Rpp16f *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                Rpp32f parX, parY, parCommon, srcX, srcY;
-                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
-                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
-                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
-                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
-                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
-                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
-                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                Rpp32f locX, locY, locW, srcX, srcY;
+                __m256 plocX, plocY, plocW, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, locW, locY, locX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                plocX = _mm256_add_ps(_mm256_set1_ps(locX), pPerspectiveMatrixTerm0);
+                plocY = _mm256_add_ps(_mm256_set1_ps(locY), pPerspectiveMatrixTerm3);
+                plocW = _mm256_add_ps(_mm256_set1_ps(locW), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(plocY, plocW), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(plocX, plocW), roiHalfWidthVec);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 pSrc[12], pDst[3];
@@ -2123,18 +2123,18 @@ RppStatus warp_perspective_bilinear_f16_f16_host_tensor(Rpp16f *srcPtr,
                     rpp_simd_load(rpp_generic_bilinear_load_3c_avx<Rpp16f>, srcPtrChannel, srcDescPtr, srcLocs, pSrcY, pSrcX, pRoiLTRB, pSrc);  // Load input pixels required for bilinear interpolation
                     compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
                     rpp_simd_store(rpp_store24_f32pln3_to_f16pkd3_avx, dstPtrTemp, pDst); // Store dst pixels
-                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    compute_warp_perspective_src_loc_next_term_avx(plocW, plocY, plocX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
                     dstPtrTemp += vectorIncrementPkd;
                 }
-                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
-                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
-                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
-                srcX = (parX/parCommon) + roiHalfWidth;
-                srcY = (parY/parCommon) + roiHalfHeight;
+                locW += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                locY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                locX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (locX/locW) + roiHalfWidth;
+                srcY = (locY/locW) + roiHalfHeight;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     compute_generic_bilinear_interpolation_pln3pkd3_to_pkd3(srcY, srcX, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
-                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, locW, locY, locX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
                     dstPtrTemp += 3;
                 }
                 dstPtrRow += dstDescPtr->strides.hStride;
@@ -2152,14 +2152,14 @@ RppStatus warp_perspective_bilinear_f16_f16_host_tensor(Rpp16f *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                Rpp32f parX, parY, parCommon, srcX, srcY;
-                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
-                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
-                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
-                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
-                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
-                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
-                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                Rpp32f locX, locY, locW, srcX, srcY;
+                __m256 plocX, plocY, plocW, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, locW, locY, locX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                plocX = _mm256_add_ps(_mm256_set1_ps(locX), pPerspectiveMatrixTerm0);
+                plocY = _mm256_add_ps(_mm256_set1_ps(locY), pPerspectiveMatrixTerm3);
+                plocW = _mm256_add_ps(_mm256_set1_ps(locW), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(plocY, plocW), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(plocX, plocW), roiHalfWidthVec);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 pSrc[12], pDst[3];
@@ -2167,18 +2167,18 @@ RppStatus warp_perspective_bilinear_f16_f16_host_tensor(Rpp16f *srcPtr,
                     rpp_simd_load(rpp_generic_bilinear_load_3c_avx<Rpp16f>, srcPtrChannel, srcDescPtr, srcLocs, pSrcY, pSrcX, pRoiLTRB, pSrc);  // Load input pixels required for bilinear interpolation
                     compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
                     rpp_simd_store(rpp_store24_f32pln3_to_f16pkd3_avx, dstPtrTemp, pDst); // Store dst pixels
-                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    compute_warp_perspective_src_loc_next_term_avx(plocW, plocY, plocX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
                     dstPtrTemp += vectorIncrementPkd;
                 }
-                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
-                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
-                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
-                srcX = (parX/parCommon) + roiHalfWidth;
-                srcY = (parY/parCommon) + roiHalfHeight;
+                locW += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                locY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                locX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (locX/locW) + roiHalfWidth;
+                srcY = (locY/locW) + roiHalfHeight;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     compute_generic_bilinear_interpolation_pln3pkd3_to_pkd3(srcY, srcX, &roiLTRB, dstPtrTemp, srcPtrChannel, srcDescPtr);
-                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, locW, locY, locX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
                     dstPtrTemp += 3;
                 }
                 dstPtrRow += dstDescPtr->strides.hStride;
@@ -2201,14 +2201,14 @@ RppStatus warp_perspective_bilinear_f16_f16_host_tensor(Rpp16f *srcPtr,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
-                Rpp32f parX, parY, parCommon, srcX, srcY;
-                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
-                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
-                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
-                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
-                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
-                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
-                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                Rpp32f locX, locY, locW, srcX, srcY;
+                __m256 plocX, plocY, plocW, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, locW, locY, locX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                plocX = _mm256_add_ps(_mm256_set1_ps(locX), pPerspectiveMatrixTerm0);
+                plocY = _mm256_add_ps(_mm256_set1_ps(locY), pPerspectiveMatrixTerm3);
+                plocW = _mm256_add_ps(_mm256_set1_ps(locW), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(plocY, plocW), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(plocX, plocW), roiHalfWidthVec);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 pSrc[12], pDst[3];
@@ -2216,20 +2216,20 @@ RppStatus warp_perspective_bilinear_f16_f16_host_tensor(Rpp16f *srcPtr,
                     rpp_simd_load(rpp_generic_bilinear_load_3c_avx<Rpp16f>, srcPtrChannel, srcDescPtr, srcLocs, pSrcY, pSrcX, pRoiLTRB, pSrc);  // Load input pixels required for bilinear interpolation
                     compute_bilinear_interpolation_3c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
                     rpp_simd_store(rpp_store24_f32pln3_to_f16pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, pDst); // Store dst pixels
-                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    compute_warp_perspective_src_loc_next_term_avx(plocW, plocY, plocX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
                     dstPtrTempR += vectorIncrementPerChannel;
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
                 }
-                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
-                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
-                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
-                srcX = (parX/parCommon) + roiHalfWidth;
-                srcY = (parY/parCommon) + roiHalfHeight;
+                locW += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                locY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                locX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (locX/locW) + roiHalfWidth;
+                srcY = (locY/locW) + roiHalfHeight;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     compute_generic_bilinear_interpolation_pln_to_pln(srcY, srcX, &roiLTRB, dstPtrTempR++, srcPtrChannel, srcDescPtr, dstDescPtr);
-                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, locW, locY, locX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
                 }
                 dstPtrRowR += dstDescPtr->strides.hStride;
                 dstPtrRowG += dstDescPtr->strides.hStride;
@@ -2249,14 +2249,14 @@ RppStatus warp_perspective_bilinear_f16_f16_host_tensor(Rpp16f *srcPtr,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-                Rpp32f parX, parY, parCommon, srcX, srcY;
-                __m256 pParX, pParY, pParCommon, pSrcX, pSrcY;
-                compute_warp_perspective_src_loc_params(i, vectorLoopCount, parCommon, parY, parX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
-                pParX = _mm256_add_ps(_mm256_set1_ps(parX), pPerspectiveMatrixTerm0);
-                pParY = _mm256_add_ps(_mm256_set1_ps(parY), pPerspectiveMatrixTerm3);
-                pParCommon = _mm256_add_ps(_mm256_set1_ps(parCommon), pPerspectiveMatrixTerm6);
-                pSrcY = _mm256_add_ps(_mm256_div_ps(pParY, pParCommon), roiHalfHeightVec);
-                pSrcX = _mm256_add_ps(_mm256_div_ps(pParX, pParCommon), roiHalfWidthVec);
+                Rpp32f locX, locY, locW, srcX, srcY;
+                __m256 plocX, plocY, plocW, pSrcX, pSrcY;
+                compute_warp_perspective_src_loc_params(i, vectorLoopCount, locW, locY, locX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                plocX = _mm256_add_ps(_mm256_set1_ps(locX), pPerspectiveMatrixTerm0);
+                plocY = _mm256_add_ps(_mm256_set1_ps(locY), pPerspectiveMatrixTerm3);
+                plocW = _mm256_add_ps(_mm256_set1_ps(locW), pPerspectiveMatrixTerm6);
+                pSrcY = _mm256_add_ps(_mm256_div_ps(plocY, plocW), roiHalfHeightVec);
+                pSrcX = _mm256_add_ps(_mm256_div_ps(plocX, plocW), roiHalfWidthVec);
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 pSrc[4], pDst;
@@ -2264,18 +2264,18 @@ RppStatus warp_perspective_bilinear_f16_f16_host_tensor(Rpp16f *srcPtr,
                     rpp_simd_load(rpp_generic_bilinear_load_1c_avx<Rpp16f>, srcPtrChannel, srcDescPtr, srcLocs, pSrcY, pSrcX, pRoiLTRB, pSrc);  // Load input pixels required for bilinear interpolation
                     compute_bilinear_interpolation_1c_avx(pSrc, pBilinearCoeffs, pDst); // Compute Bilinear interpolation
                     rpp_simd_store(rpp_store8_f32pln1_to_f16pln1_avx, dstPtrTemp, pDst); // Store dst pixels
-                    compute_warp_perspective_src_loc_next_term_avx(pParCommon, pParY, pParX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
+                    compute_warp_perspective_src_loc_next_term_avx(plocW, plocY, plocX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
                     dstPtrTemp += vectorIncrementPerChannel;
                 }
-                parCommon += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
-                parY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
-                parX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
-                srcX = (parX/parCommon) + roiHalfWidth;
-                srcY = (parY/parCommon) + roiHalfHeight;
+                locW += (perspectiveMatrix_f9->data[6] * vectorLoopCount);
+                locY += (perspectiveMatrix_f9->data[3] * vectorLoopCount);
+                locX += (perspectiveMatrix_f9->data[0] * vectorLoopCount);
+                srcX = (locX/locW) + roiHalfWidth;
+                srcY = (locY/locW) + roiHalfHeight;
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     compute_generic_bilinear_interpolation_pln_to_pln(srcY, srcX, &roiLTRB, dstPtrTemp++, srcPtrChannel, srcDescPtr, dstDescPtr);
-                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, parCommon, parY, parX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
+                    compute_warp_perspective_src_loc_next_term(vectorLoopCount, locW, locY, locX, srcY, srcX, perspectiveMatrix_f9, roiHalfHeight, roiHalfWidth);
                 }
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
