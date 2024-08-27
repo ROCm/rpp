@@ -51,18 +51,12 @@ def get_log_file_list(preserveOutput):
     ]
 
 def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
-    print("\n\n\n\n")
-    print("--------------------------------")
-    print("Running a New Functionality...")
-    print("--------------------------------")
     bitDepths = range(7)
     outputFormatToggles = [0, 1]
     if qaMode:
         bitDepths = [0]
         outputFormatToggles = [0]
     for bitDepth in bitDepths:
-        print("\n\n\nRunning New Bit Depth...\n-------------------------\n\n")
-
         for outputFormatToggle in outputFormatToggles:
             # There is no layout toggle for PLN1 case, so skip this case
             if layout == 2 and outputFormatToggle == 1:
@@ -110,16 +104,11 @@ def run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, d
         read_from_subprocess_and_write_to_log(process, logFile)
 
 def run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
-    print("\n\n\n\n")
-    print("--------------------------------")
-    print("Running a New Functionality...")
-    print("--------------------------------")
+    print("\n")
     bitDepths = range(7)
     if qaMode:
         bitDepths = [0]
     for bitDepth in bitDepths:
-        print("\n\n\nRunning New Bit Depth...\n-------------------------\n\n")
-
         for outputFormatToggle in range(2):
             # There is no layout toggle for PLN1 case, so skip this case
             if layout == 2 and outputFormatToggle == 1:
@@ -131,13 +120,15 @@ def run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPa
                 # Run all variants of noise type functions with additional argument of noiseType = gausssianNoise / shotNoise / saltandpepperNoise
                 for noiseType in range(3):
                     run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, noiseType, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
+                    print("")
             elif case == "21" or case == "23" or case == "24" or case == "79":
                 # Run all variants of interpolation functions with additional argument of interpolationType = bicubic / bilinear / gaussian / nearestneigbor / lanczos / triangular
                 for interpolationType in range(6):
                     run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, interpolationType, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
+                    print("")
             else:
                 run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, "0", numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
-            print("------------------------------------------------------------------------------------------")
+            print("------------------------------------------------------------------------------------------\n")
 
 # Parse and validate command-line arguments for the RPP test suite
 def rpp_test_suite_parser_and_validator():
@@ -271,12 +262,11 @@ subprocess.call(["make", "-j16"], cwd=".")    # nosec
 # List of cases supported
 supportedCaseList = ['0', '1', '2', '4', '5', '6', '8', '13', '20', '21', '23', '26', '29', '30', '31', '32', '33', '34', '35', '36', '37', '38', '39', '45', '46', '49', '54', '61', '63', '65', '68', '70', '79', '80', '81', '82', '83', '84', '85', '86', '87', '88', '89', '90', '91', '92']
 
-print("\n\n\n\n\n")
-print("##########################################################################################")
-print("Running all layout Inputs...")
-print("##########################################################################################")
-
 if testType == 0:
+    noCaseSupported = all(case not in supportedCaseList for case in caseList)
+    if noCaseSupported:
+        print("\ncase numbers %s are not supported" % caseList)
+        exit(0)
     for case in caseList:
         if case not in supportedCaseList:
             continue
@@ -302,6 +292,10 @@ if testType == 0:
     if qaMode == 0:
         create_layout_directories(dstPath, layoutDict)
 else:
+    noCaseSupported = all(case not in supportedCaseList for case in caseList)
+    if noCaseSupported:
+        print("case numbers %s are not supported" % caseList)
+        exit(0)
     for case in caseList:
         if case not in supportedCaseList:
             continue
@@ -327,7 +321,7 @@ if qaMode and testType == 0:
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
         print("---------------------------------- Results of QA Test - Tensor_host ----------------------------------\n")
-        print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList)
+        print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, "Tensor_host")
 
 layoutDict = {0:"PKD3", 1:"PLN3", 2:"PLN1"}
 # unit tests and QA mode disabled

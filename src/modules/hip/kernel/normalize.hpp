@@ -1808,8 +1808,8 @@ RppStatus hip_exec_normalize_tensor(T *srcPtr,
 
     // create buffer for paramShape and paramStride needed for generic kernel
     Rpp32u *paramShape, *paramStrides;
-    paramShape =  handle.GetInitHandle()->mem.mgpu.scratchBuf.uintmem;
-    paramStrides = handle.GetInitHandle()->mem.mgpu.scratchBuf.uintmem + (batchSize * tensorDims);
+    paramShape = reinterpret_cast<Rpp32u*>(handle.GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem);
+    paramStrides = reinterpret_cast<Rpp32u*>(handle.GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem) + (batchSize * tensorDims);
 
     // do initial preprocessing, compute maxParamVolue and fill the values for paramShape and paramStrides
     Rpp32u maxParamVolume;
