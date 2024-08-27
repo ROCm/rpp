@@ -45,7 +45,6 @@ RppStatus rppt_gaussian_filter_host(RppPtr_t srcPtr,
                                     rppHandle_t rppHandle)
 {
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
-
     if ((kernelSize != 3) && (kernelSize != 5) && (kernelSize != 7) && (kernelSize != 9))
         return RPP_ERROR_INVALID_ARGUMENTS;
 

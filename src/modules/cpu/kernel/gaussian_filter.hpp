@@ -50,136 +50,26 @@ inline Rpp32f gaussian(int iSquare, int j, Rpp32f mulFactor)
     return expFactor;
 }
 
-inline void create_gaussian_kernel_3x3_host(Rpp32f* filter, Rpp32f stdDev)
-{
-    Rpp32f mulFactor = 1 / (2 * stdDev * stdDev);
-    int rowIdx = 0;
-
-    // compute values for only top left quarter and replicate the values
-    for (int i = -1; i <= 0; i++, rowIdx += 3)
-    {
-        int iSquare = i * i;
-        filter[rowIdx + 2] = filter[rowIdx] = gaussian(iSquare, -1, mulFactor);
-        filter[rowIdx + 1] = gaussian(iSquare, 0, mulFactor);
-
-        if ((6 - rowIdx) != rowIdx)
-            std::memcpy(&filter[6 - rowIdx], &filter[rowIdx], 3 * sizeof(float));
-    }
-
-    Rpp32f kernelSum = 0.0f;
-    for (int i = 0; i < 9; i++)
-        kernelSum += filter[i];
-    kernelSum = (1.0f / kernelSum);
-
-    for (int i = 0; i < 9; i++)
-        filter[i] *= kernelSum;
-}
-
-inline void create_gaussian_kernel_5x5_host(Rpp32f* filter, Rpp32f stdDev)
-{
-    Rpp32f mulFactor = 1 / (2 * stdDev * stdDev);
-    int rowIdx = 0;
-
-    // compute values for only top left quarter and replicate the values
-    for (int i = -2; i <= 0; i++, rowIdx += 5)
-    {
-        int iSquare = i * i;
-        filter[rowIdx + 4] = filter[rowIdx] = gaussian(iSquare, -2, mulFactor);
-        filter[rowIdx + 3] = filter[rowIdx + 1] = gaussian(iSquare, -1, mulFactor);
-        filter[rowIdx + 2] = gaussian(iSquare, 0, mulFactor);
-
-        if ((20 - rowIdx) != rowIdx)
-            std::memcpy(&filter[20 - rowIdx], &filter[rowIdx], 5 * sizeof(float));
-    }
-
-    Rpp32f kernelSum = 0.0f;
-    for (int i = 0; i < 25; i++)
-        kernelSum += filter[i];
-    kernelSum = (1.0f / kernelSum);
-
-    for (int i = 0; i < 25; i++)
-        filter[i] *= kernelSum;
-}
-
-inline void create_gaussian_kernel_7x7_host(Rpp32f* filter, Rpp32f stdDev)
-{
-    Rpp32f mulFactor = 1 / (2 * stdDev * stdDev);
-    int rowIdx = 0;
-
-    // compute values for only top left quarter and replicate the values
-    for (int i = -3; i <= 0; i++, rowIdx += 7)
-    {
-        int iSquare = i * i;
-        filter[rowIdx + 6] = filter[rowIdx] = gaussian(iSquare, -3, mulFactor);
-        filter[rowIdx + 5] = filter[rowIdx + 1] = gaussian(iSquare, -2, mulFactor);
-        filter[rowIdx + 4] = filter[rowIdx + 2] = gaussian(iSquare, -1, mulFactor);
-        filter[rowIdx + 3] = gaussian(iSquare, 0, mulFactor);
-
-        if ((42 - rowIdx) != rowIdx)
-            std::memcpy(&filter[42 - rowIdx], &filter[rowIdx], 7 * sizeof(float));
-    }
-
-    Rpp32f kernelSum = 0.0f;
-    for (int i = 0; i < 49; i++)
-        kernelSum += filter[i];
-    kernelSum = (1.0f / kernelSum);
-
-    for (int i = 0; i < 49; i++)
-        filter[i] *= kernelSum;
-    }
-
-inline void create_gaussian_kernel_9x9_host(Rpp32f* filter,
-                                            Rpp32f stdDev)
-{
-    Rpp32f mulFactor = 1 / (2 * stdDev * stdDev);
-    int rowIdx = 0;
-
-    // compute values for only top left quarter and replicate the values
-    for (int i = -4; i <= 0; i++, rowIdx += 9)
-    {
-        int iSquare = i * i;
-        filter[rowIdx + 8] = filter[rowIdx] = gaussian(iSquare, -4, mulFactor);
-        filter[rowIdx + 7] = filter[rowIdx + 1] = gaussian(iSquare, -3, mulFactor);
-        filter[rowIdx + 6] = filter[rowIdx + 2] = gaussian(iSquare, -2, mulFactor);
-        filter[rowIdx + 5] = filter[rowIdx + 3] = gaussian(iSquare, -1, mulFactor);
-        filter[rowIdx + 4] = gaussian(iSquare, 0, mulFactor);
-
-        if ((72 - rowIdx) != rowIdx)
-            std::memcpy(&filter[72 - rowIdx], &filter[rowIdx], 9 * sizeof(float));
-    }
-
-    Rpp32f kernelSum = 0.0f;
-    for (int i = 0; i < 81; i++)
-        kernelSum += filter[i];
-    kernelSum = (1.0f / kernelSum);
-
-    for (int i = 0; i < 81; i++)
-        filter[i] *= kernelSum;
-}
-
-// Generic function to create a Gaussian kernel of any size
 inline void create_gaussian_kernel_host(Rpp32f* filter, Rpp32f stdDev, int kernelSize)
 {
-    int kernelHalfSize  = kernelSize / 2;
+    int kernelHalfSize = kernelSize / 2;
     Rpp32f mulFactor = 1.0f / (2.0f * stdDev * stdDev);
     int rowIdx = 0;
 
-    // Compute values for only the top left quarter and replicate the values
+    // Compute values for only top left quarter and replicate the values
     for (int i = -kernelHalfSize; i <= 0; i++, rowIdx += kernelSize)
     {
         int iSquare = i * i;
         for (int j = -kernelHalfSize; j <= 0; j++)
         {
-            int index = rowIdx + (j + kernelHalfSize);
-            filter[index] = gaussian(iSquare, j * j, mulFactor);
-
-            // Replicate the values to the other quadrants
-            filter[rowIdx + (kernelSize - 1) - (j + kernelHalfSize)] = filter[index];
-            filter[(kernelSize - 1 - rowIdx) * kernelSize + (j + kernelHalfSize)] = filter[index];
-            filter[(kernelSize - 1 - rowIdx) * kernelSize + (kernelSize - 1) - (j + kernelHalfSize)] = filter[index];
+            filter[rowIdx + (kernelHalfSize + j)] =  filter[rowIdx + (kernelHalfSize - j)] = gaussian(iSquare, j, mulFactor);
         }
+
+        if ((kernelSize * (kernelSize - 1) - rowIdx) != rowIdx)
+            std::memcpy(&filter[kernelSize * (kernelSize - 1) - rowIdx], &filter[rowIdx], kernelSize * sizeof(float));
     }
 
+    // Normalize the kernel
     Rpp32f kernelSum = 0.0f;
     for (int i = 0; i < kernelSize * kernelSize; i++)
         kernelSum += filter[i];
@@ -308,9 +198,15 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
         T *srcPtrChannel, *dstPtrChannel;
         srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
+        create_gaussian_kernel_host(filterTensor, stdDevTensor[batchCount], kernelSize);
+#if __AVX2__
+        int size = kernelSize * kernelSize;
+        __m256 pFilter[size];
+        for (int i = 0; i < size; i++)
+            pFilter[i] = _mm256_set1_ps(filterTensor[i]);
+#endif
         if (kernelSize == 3)
         {
-            create_gaussian_kernel_3x3_host(filterTensor, stdDevTensor[batchCount]);
             T *srcPtrRow[3], *dstPtrRow;
             for (int i = 0; i < 3; i++)
                 srcPtrRow[i] = srcPtrChannel + i * srcDescPtr->strides.hStride;
@@ -328,11 +224,6 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     srcPtrRow[1] = srcPtrRow[0] + srcDescPtr->strides.hStride;
                     srcPtrRow[2] = srcPtrRow[1] + srcDescPtr->strides.hStride;
                     dstPtrRow = dstPtrChannel;
-#if __AVX2__
-                    __m256 pFilter[9];
-                    for (int i = 0; i < 9; i++)
-                        pFilter[i] = _mm256_set1_ps(filterTensor[i]);
-#endif
                     for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                     {
                         int vectorLoopCount = 0;
@@ -396,11 +287,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                 /* exclude ((2 * padLength) * 3) number of columns from alignedLength calculation
                     since (padLength * 3) number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 24) * 24;
-#if __AVX2__
-                __m256 pFilter[9];
-                for (int i = 0; i < 9; i++)
-                    pFilter[i] = _mm256_set1_ps(filterTensor[i]);
-#endif
+
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
                     int vectorLoopCount = 0;
@@ -460,11 +347,6 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                 /* exclude ((2 * padLength) * 3) number of columns from alignedLength calculation
                     since (padLength * 3) number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 24) * 24;
-#if __AVX2__
-                __m256 pFilter[9];
-                for (int i = 0; i < 9; i++)
-                    pFilter[i] = _mm256_set1_ps(filterTensor[i]);
-#endif
                 T *dstPtrChannels[3];
                 for (int i = 0; i < 3; i++)
                     dstPtrChannels[i] = dstPtrChannel + i * dstDescPtr->strides.cStride;
@@ -529,11 +411,6 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                 /* exclude (2 * padLength) number of columns from alignedLength calculation
                     since padLength number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 16) * 16;
-#if __AVX2__
-                __m256 pFilter[9];
-                for (int i = 0; i < 9; i++)
-                    pFilter[i] = _mm256_set1_ps(filterTensor[i]);
-#endif
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
                     int vectorLoopCount = 0;
@@ -621,7 +498,6 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
         }
         else if (kernelSize == 5)
         {
-            create_gaussian_kernel_5x5_host(filterTensor, stdDevTensor[batchCount]);
             T *srcPtrRow[5], *dstPtrRow;
             for (int i = 0; i < 5; i++)
                 srcPtrRow[i] = srcPtrChannel + i * srcDescPtr->strides.hStride;
@@ -633,11 +509,6 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                 /* exclude (2 * padLength) number of columns from alignedLength calculation
                     since padLength number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 16) * 16;
-#if __AVX2__
-                    __m256 pFilter[25];
-                    for (int i = 0; i < 25; i++)
-                        pFilter[i] = _mm256_set1_ps(filterTensor[i]);
-#endif
                 for (int c = 0; c < srcDescPtr->c; c++)
                 {
                     srcPtrRow[0] = srcPtrChannel;
@@ -711,11 +582,6 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                 /* exclude ((2 * padLength) * 3) number of columns from alignedLength calculation
                     since (padLength * 3) number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength * 3)) / 32) * 32;
-#if __AVX2__
-                __m256 pFilter[25];
-                for (int i = 0; i < 25; i++)
-                    pFilter[i] = _mm256_set1_ps(filterTensor[i]);
-#endif
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
                     int vectorLoopCount = 0;
@@ -779,11 +645,6 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                 /* exclude (2 * padLength) number of columns from alignedLength calculation
                     since padLength number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 16) * 16;
-#if __AVX2__
-                __m256 pFilter[25];
-                for (int i = 0; i < 25; i++)
-                    pFilter[i] = _mm256_set1_ps(filterTensor[i]);
-#endif
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
                     int vectorLoopCount = 0;
@@ -869,11 +730,6 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                 /* exclude ((2 * padLength) * 3) number of columns from alignedLength calculation
                     since (padLength * 3) number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 24) * 24;
-#if __AVX2__
-                __m256 pFilter[25];
-                for (int i = 0; i < 25; i++)
-                    pFilter[i] = _mm256_set1_ps(filterTensor[i]);
-#endif
                 T *dstPtrChannels[3];
                 for (int i = 0; i < 3; i++)
                     dstPtrChannels[i] = dstPtrChannel + i * dstDescPtr->strides.cStride;
@@ -942,7 +798,6 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
         }
         else if (kernelSize == 7)
         {
-            create_gaussian_kernel_7x7_host(filterTensor, stdDevTensor[batchCount]);
             T *srcPtrRow[7], *dstPtrRow;
             for (int i = 0; i < 7; i++)
                 srcPtrRow[i] = srcPtrChannel + i * srcDescPtr->strides.hStride;
@@ -954,11 +809,6 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                 /* exclude (2 * padLength) number of columns from alignedLength calculation
                    since padLength number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 16) * 16;
-#if __AVX2__
-                __m256 pFilter[49];
-                for (int i = 0; i < 49; i++)
-                    pFilter[i] = _mm256_set1_ps(filterTensor[i]);
-#endif
                 for (int c = 0; c < srcDescPtr->c; c++)
                 {
                     srcPtrRow[0] = srcPtrChannel;
@@ -1037,11 +887,6 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                 /* exclude ((2 * padLength) * 3) number of columns from alignedLength calculation
                    since (padLength * 3) number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 32) * 32;
-#if __AVX2__
-                __m256 pFilter[49];
-                for (int i = 0; i < 49; i++)
-                    pFilter[i] = _mm256_set1_ps(filterTensor[i]);
-#endif
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
                     int vectorLoopCount = 0;
@@ -1107,11 +952,6 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                 /* exclude (2 * padLength) number of columns from alignedLength calculation
                    since padLength number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 16) * 16;
-#if __AVX2__
-                __m256 pFilter[49];
-                for (int i = 0; i < 49; i++)
-                    pFilter[i] = _mm256_set1_ps(filterTensor[i]);
-#endif
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
                     int vectorLoopCount = 0;
@@ -1167,9 +1007,9 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         }
                         // convert result from pln to pkd format and store in output buffer
                         if constexpr (std::is_same<T, Rpp32f>::value)
-                            rpp_store24_f32pln3_to_f32pkd3_avx(dstPtrTemp, pResultPln);
+                            rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, pResultPln);
                         else if constexpr (std::is_same<T, Rpp16f>::value)
-                            rpp_store24_f32pln3_to_f16pkd3_avx(dstPtrTemp, pResultPln);
+                            rpp_simd_store(rpp_store24_f32pln3_to_f16pkd3_avx, dstPtrTemp, pResultPln);
                         else if constexpr (std::is_same<T, Rpp8u>::value)
                             rpp_simd_store(rpp_store24_f32pln3_to_u8pkd3_avx, dstPtrTemp, pResultPln);
                         else if constexpr (std::is_same<T, Rpp8s>::value)
@@ -1198,11 +1038,6 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                 /* exclude ((2 * padLength) * 3) number of columns from alignedLength calculation
                    since (padLength * 3) number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 32) * 32;
-#if __AVX2__
-                __m256 pFilter[49];
-                for (int i = 0; i < 49; i++)
-                    pFilter[i] = _mm256_set1_ps(filterTensor[i]);
-#endif
                 T *dstPtrChannels[3];
                 for (int i = 0; i < 3; i++)
                     dstPtrChannels[i] = dstPtrChannel + i * dstDescPtr->strides.cStride;
@@ -1276,7 +1111,6 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
         }
         else if (kernelSize == 9)
         {
-            create_gaussian_kernel_9x9_host(filterTensor, stdDevTensor[batchCount]);
             T *srcPtrRow[9], *dstPtrRow;
             for (int i = 0; i < 9; i++)
                 srcPtrRow[i] = srcPtrChannel + i * srcDescPtr->strides.hStride;
@@ -1288,11 +1122,6 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                 /* exclude (2 * padLength) number of columns from alignedLength calculation
                    since padLength number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 16) * 16;
-#if __AVX2__
-                __m256 pFilter[81];
-                for (int i = 0; i < 81; i++)
-                    pFilter[i] = _mm256_set1_ps(filterTensor[i]);
-#endif
                 for (int c = 0; c < srcDescPtr->c; c++)
                 {
                     srcPtrRow[0] = srcPtrChannel;
@@ -1371,11 +1200,6 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                 /* exclude ((2 * padLength) * 3) number of columns from alignedLength calculation
                    since (padLength * 3) number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 32) * 32;
-#if __AVX2__
-                __m256 pFilter[81];
-                for (int i = 0; i < 81; i++)
-                    pFilter[i] = _mm256_set1_ps(filterTensor[i]);
-#endif
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
                     int vectorLoopCount = 0;
@@ -1444,11 +1268,6 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                 /* exclude (2 * padLength) number of columns from alignedLength calculation
                    since padLength number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength)) / 16) * 16;
-#if __AVX2__
-                __m256 pFilter[81];
-                for (int i = 0; i < 81; i++)
-                    pFilter[i] = _mm256_set1_ps(filterTensor[i]);
-#endif
                 for(int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
                     int vectorLoopCount = 0;
@@ -1504,9 +1323,9 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         }
 
                         if constexpr (std::is_same<T, Rpp32f>::value)
-                           rpp_store24_f32pln3_to_f32pkd3_avx(dstPtrTemp, pResultPln);
+                           rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, pResultPln);
                         else if constexpr (std::is_same<T, Rpp16f>::value)
-                           rpp_store24_f32pln3_to_f16pkd3_avx(dstPtrTemp, pResultPln);
+                           rpp_simd_store(rpp_store24_f32pln3_to_f16pkd3_avx, dstPtrTemp, pResultPln);
                         else if constexpr (std::is_same<T, Rpp8u>::value)
                             rpp_simd_store(rpp_store24_f32pln3_to_u8pkd3_avx, dstPtrTemp, pResultPln);
                         else if constexpr (std::is_same<T, Rpp8s>::value)
@@ -1535,11 +1354,6 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                 /* exclude ((2 * padLength) * 3) number of columns from alignedLength calculation
                    since (padLength * 3) number of columns from the beginning and end of each row will be computed using raw c code */
                 Rpp32u alignedLength = ((bufferLength - (2 * padLength) * 3) / 40) * 40;
-#if __AVX2__
-                __m256 pFilter[81];
-                for (int i = 0; i < 81; i++)
-                    pFilter[i] = _mm256_set1_ps(filterTensor[i]);
-#endif
                 T *dstPtrChannels[3];
                 for (int i = 0; i < 3; i++)
                     dstPtrChannels[i] = dstPtrChannel + i * dstDescPtr->strides.cStride;
