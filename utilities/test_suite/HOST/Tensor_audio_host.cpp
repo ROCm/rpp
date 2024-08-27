@@ -470,7 +470,6 @@ int main(int argc, char **argv)
     free(dstDims);
     free(inputf32);
     free(outputf32);
-    if (window.lookup != nullptr)
-        free(window.lookup);
+        
     return 0;
 }
