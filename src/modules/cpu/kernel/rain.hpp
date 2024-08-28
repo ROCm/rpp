@@ -31,6 +31,8 @@ SOFTWARE.
 template<typename T>
 inline void create_rain_layer(T *rainLayer, Rpp32u numDrops, RpptDescPtr srcDescPtr, Rpp32s slant, Rpp32u dropLength, Rpp32u bufferMultiplier)
 {
+    // Choose the value based on the data type
+    T rainValue = std::is_same<T, Rpp8u>::value ? static_cast<T>(200) : std::is_same<T, Rpp8s>::value ? static_cast<T>(72) : static_cast<T>(200 * ONE_OVER_255);
     for (Rpp32u i = 0; i < numDrops; i++)
     {
         Rpp32u xStart = rand() % (srcDescPtr->w - slant);
@@ -42,14 +44,9 @@ inline void create_rain_layer(T *rainLayer, Rpp32u numDrops, RpptDescPtr srcDesc
 
             if (x >= 0 && x < srcDescPtr->w && y < srcDescPtr->h)
             {
-                Rpp32s loc = y * srcDescPtr->strides.hStride + x * bufferMultiplier;
-                T *rainLayerTemp = rainLayer + loc;
-
-                // Choose the value based on the type
-                T rainValue = std::is_same<T, Rpp8u>::value ? static_cast<T>(200) : std::is_same<T, Rpp8s>::value ? static_cast<T>(72) : static_cast<T>(200 * ONE_OVER_255);
+                T *rainLayerTemp = rainLayer + y * srcDescPtr->strides.hStride + x * bufferMultiplier;
 
                 *rainLayerTemp = rainValue;
-                
                 if (srcDescPtr->c > 1)
                 {
                     *(rainLayerTemp + srcDescPtr->strides.cStride) = rainValue;
@@ -106,14 +103,12 @@ RppStatus rain_u8_u8_host_tensor(Rpp8u *srcPtr,
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp32u alignedLength = (bufferLength / 48) * 48;
-
             Rpp8u *srcPtr1Row, *srcPtr2Row, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtr1Row = srcPtrChannel;
             srcPtr2Row = rainLayer;
             dstPtrRowR = dstPtrChannel;
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
-
             for(Rpp32u i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8u *srcPtr1Temp, *srcPtr2Temp, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
@@ -122,12 +117,11 @@ RppStatus rain_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTempR = dstPtrRowR;
                 dstPtrTempG = dstPtrRowG;
                 dstPtrTempB = dstPtrRowB;
-
                 Rpp32u vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += 48)
                 {
                     __m256 p1[6], p2[6];
-
                     rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtr1Temp, p1);    // simd loads
                     rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtr2Temp, p2);    // simd loads
                     p1[0] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[0]), pMul, p1[0]);    // alpha-blending adjustment
@@ -144,19 +138,15 @@ RppStatus rain_u8_u8_host_tensor(Rpp8u *srcPtr,
                     dstPtrTempG += 16;
                     dstPtrTempB += 16;
                 }
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTempR = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(static_cast<Rpp32f>(srcPtr1Temp[0] * (1 - alpha[batchCount]) + srcPtr2Temp[0] * alpha[batchCount]))));
-                    *dstPtrTempG = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(static_cast<Rpp32f>(srcPtr1Temp[1] * (1 - alpha[batchCount]) + srcPtr2Temp[1] * alpha[batchCount]))));
-                    *dstPtrTempB = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(static_cast<Rpp32f>(srcPtr1Temp[2] * (1 - alpha[batchCount]) + srcPtr2Temp[2] * alpha[batchCount]))));
-
+                    *dstPtrTempR++ = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(static_cast<Rpp32f>(srcPtr1Temp[0] * (1 - alpha[batchCount]) + srcPtr2Temp[0] * alpha[batchCount]))));
+                    *dstPtrTempG++ = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(static_cast<Rpp32f>(srcPtr1Temp[1] * (1 - alpha[batchCount]) + srcPtr2Temp[1] * alpha[batchCount]))));
+                    *dstPtrTempB++ = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(static_cast<Rpp32f>(srcPtr1Temp[2] * (1 - alpha[batchCount]) + srcPtr2Temp[2] * alpha[batchCount]))));
                     srcPtr1Temp += 3;
                     srcPtr2Temp += 3;
-                    dstPtrTempR++;
-                    dstPtrTempG++;
-                    dstPtrTempB++;
                 }
-
                 srcPtr1Row += srcDescPtr->strides.hStride;
                 srcPtr2Row += srcDescPtr->strides.hStride;
                 dstPtrRowR += dstDescPtr->strides.hStride;
@@ -164,12 +154,10 @@ RppStatus rain_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrRowB += dstDescPtr->strides.hStride;
             }
         }
-
         // Rain with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp32u alignedLength = (bufferLength / 48) * 48;
-
             Rpp8u *srcPtr1RowR, *srcPtr1RowG, *srcPtr1RowB, *srcPtr2RowR, *srcPtr2RowG, *srcPtr2RowB, *dstPtrRow;
             srcPtr1RowR = srcPtrChannel;
             srcPtr1RowG = srcPtr1RowR + srcDescPtr->strides.cStride;
@@ -178,7 +166,6 @@ RppStatus rain_u8_u8_host_tensor(Rpp8u *srcPtr,
             srcPtr2RowG = srcPtr2RowR + srcDescPtr->strides.cStride;
             srcPtr2RowB = srcPtr2RowG + srcDescPtr->strides.cStride;
             dstPtrRow = dstPtrChannel;
-
             for(Rpp32u i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8u *srcPtr1TempR, *srcPtr1TempG, *srcPtr1TempB, *srcPtr2TempR, *srcPtr2TempG, *srcPtr2TempB, *dstPtrTemp;
@@ -189,12 +176,11 @@ RppStatus rain_u8_u8_host_tensor(Rpp8u *srcPtr,
                 srcPtr2TempG = srcPtr2RowG;
                 srcPtr2TempB = srcPtr2RowB;
                 dstPtrTemp = dstPtrRow;
-
                 Rpp32u vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                 {
                     __m256 p1[6], p2[6];
-
                     rpp_simd_load(rpp_load48_u8pln3_to_f32pln3_avx, srcPtr1TempR, srcPtr1TempG, srcPtr1TempB, p1);    // simd loads
                     rpp_simd_load(rpp_load48_u8pln3_to_f32pln3_avx, srcPtr2TempR, srcPtr2TempG, srcPtr2TempB, p2);    // simd loads
                     p1[0] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[0]), pMul, p1[0]);    // alpha-blending adjustment
@@ -213,12 +199,12 @@ RppStatus rain_u8_u8_host_tensor(Rpp8u *srcPtr,
                     srcPtr2TempB += 16;
                     dstPtrTemp += 48;
                 }
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     dstPtrTemp[0] = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(static_cast<Rpp32f>(*srcPtr1TempR * (1 - alpha[batchCount]) + *srcPtr2TempR * alpha[batchCount]))));
                     dstPtrTemp[1] = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(static_cast<Rpp32f>(*srcPtr1TempG * (1 - alpha[batchCount]) + *srcPtr2TempG * alpha[batchCount]))));
                     dstPtrTemp[2] = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(static_cast<Rpp32f>(*srcPtr1TempB * (1 - alpha[batchCount]) + *srcPtr2TempB * alpha[batchCount]))));
-
                     srcPtr1TempR++;
                     srcPtr2TempR++;
                     srcPtr1TempG++;
@@ -227,7 +213,6 @@ RppStatus rain_u8_u8_host_tensor(Rpp8u *srcPtr,
                     srcPtr2TempB++;
                     dstPtrTemp += 3;
                 }
-
                 srcPtr1RowR += srcDescPtr->strides.hStride;
                 srcPtr1RowG += srcDescPtr->strides.hStride;
                 srcPtr1RowB += srcDescPtr->strides.hStride;
@@ -241,24 +226,21 @@ RppStatus rain_u8_u8_host_tensor(Rpp8u *srcPtr,
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp32u alignedLength = (bufferLength / 32) * 32;
-
             Rpp8u *srcPtr1Row, *srcPtr2Row, *dstPtrRow;
             srcPtr1Row = srcPtrChannel;
             srcPtr2Row = rainLayer;
             dstPtrRow = dstPtrChannel;
-
             for(Rpp32u i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8u *srcPtr1Temp, *srcPtr2Temp, *dstPtrTemp;
                 srcPtr1Temp = srcPtr1Row;
                 srcPtr2Temp = srcPtr2Row;
                 dstPtrTemp = dstPtrRow;
-
                 Rpp32u vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += 32)
                 {
                     __m256 p1[4], p2[4];
-
                     rpp_simd_load(rpp_load32_u8_to_f32_avx, srcPtr1Temp, p1);    // simd loads
                     rpp_simd_load(rpp_load32_u8_to_f32_avx, srcPtr2Temp, p2);    // simd loads
                     p1[0] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[0]), pMul, p1[0]);    // alpha-blending adjustment
@@ -271,20 +253,18 @@ RppStatus rain_u8_u8_host_tensor(Rpp8u *srcPtr,
                     srcPtr2Temp += 32;
                     dstPtrTemp += 32;
                 }
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     *dstPtrTemp = static_cast<Rpp8s>(RPPPIXELCHECKI8(std::nearbyintf(static_cast<Rpp32f>(*srcPtr1Temp * (1 - alpha[batchCount]) + *srcPtr2Temp * alpha[batchCount]))));
-
                     srcPtr1Temp++;
                     srcPtr2Temp++;
                     dstPtrTemp++;
                 }
-
                 srcPtr1Row += srcDescPtr->strides.hStride;
                 srcPtr2Row += srcDescPtr->strides.hStride;
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
-
             srcPtrChannel += srcDescPtr->strides.cStride;
             rainLayer += srcDescPtr->strides.cStride;
             dstPtrChannel += dstDescPtr->strides.cStride;
@@ -293,26 +273,23 @@ RppStatus rain_u8_u8_host_tensor(Rpp8u *srcPtr,
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp32u alignedLength = (bufferLength / 32) * 32;
-
             for(Rpp32u c = 0; c < layoutParams.channelParam; c++)
             {
                 Rpp8u *srcPtr1Row, *srcPtr2Row, *dstPtrRow;
                 srcPtr1Row = srcPtrChannel;
                 srcPtr2Row = rainLayer;
                 dstPtrRow = dstPtrChannel;
-
                 for(Rpp32u i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
                     Rpp8u *srcPtr1Temp, *srcPtr2Temp, *dstPtrTemp;
                     srcPtr1Temp = srcPtr1Row;
                     srcPtr2Temp = srcPtr2Row;
                     dstPtrTemp = dstPtrRow;
-
                     Rpp32u vectorLoopCount = 0;
+#if __AVX2__
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 32)
                     {
                         __m256 p1[4], p2[4];
-
                         rpp_simd_load(rpp_load32_u8_to_f32_avx, srcPtr1Temp, p1);    // simd loads
                         rpp_simd_load(rpp_load32_u8_to_f32_avx, srcPtr2Temp, p2);    // simd loads
                         p1[0] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[0]), pMul, p1[0]);    // alpha-blending adjustment
@@ -326,20 +303,18 @@ RppStatus rain_u8_u8_host_tensor(Rpp8u *srcPtr,
                         dstPtrTemp += 
                         32;
                     }
+#endif
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         *dstPtrTemp = static_cast<Rpp8s>(RPPPIXELCHECKI8(std::nearbyintf(static_cast<Rpp32f>(*srcPtr1Temp * (1 - alpha[batchCount]) + *srcPtr2Temp * alpha[batchCount]))));
-
                         srcPtr1Temp++;
                         srcPtr2Temp++;
                         dstPtrTemp++;
                     }
-
                     srcPtr1Row += srcDescPtr->strides.hStride;
                     srcPtr2Row += srcDescPtr->strides.hStride;
                     dstPtrRow += dstDescPtr->strides.hStride;
                 }
-
                 srcPtrChannel += srcDescPtr->strides.cStride;
                 rainLayer += srcDescPtr->strides.cStride;
                 dstPtrChannel += dstDescPtr->strides.cStride;
@@ -395,14 +370,12 @@ RppStatus rain_f32_f32_host_tensor(Rpp32f *srcPtr,
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp32u alignedLength = (bufferLength / 24) * 24;
-
             Rpp32f *srcPtr1Row, *srcPtr2Row, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtr1Row = srcPtrChannel;
             srcPtr2Row = rainLayer;
             dstPtrRowR = dstPtrChannel;
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
-
             for(Rpp32u i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp32f *srcPtr1Temp, *srcPtr2Temp, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
@@ -411,12 +384,11 @@ RppStatus rain_f32_f32_host_tensor(Rpp32f *srcPtr,
                 dstPtrTempR = dstPtrRowR;
                 dstPtrTempG = dstPtrRowG;
                 dstPtrTempB = dstPtrRowB;
-
                 Rpp32u vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += 48)
                 {
                     __m256 p1[3], p2[3];
-
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtr1Temp, p1);    // simd loads
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtr2Temp, p2);    // simd loads
                     p1[0] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[0]), pMul, p1[0]);    // alpha-blending adjustment
@@ -430,19 +402,18 @@ RppStatus rain_f32_f32_host_tensor(Rpp32f *srcPtr,
                     dstPtrTempG += 8;
                     dstPtrTempB += 8;
                 }
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     *dstPtrTempR = RPPPIXELCHECKF32(srcPtr1Temp[0] * (1 - alpha[batchCount]) + srcPtr2Temp[0] * alpha[batchCount]);
                     *dstPtrTempG = RPPPIXELCHECKF32(srcPtr1Temp[1] * (1 - alpha[batchCount]) + srcPtr2Temp[1] * alpha[batchCount]);
                     *dstPtrTempB = RPPPIXELCHECKF32(srcPtr1Temp[2] * (1 - alpha[batchCount]) + srcPtr2Temp[2] * alpha[batchCount]);
-
                     srcPtr1Temp += 3;
                     srcPtr2Temp += 3;
                     dstPtrTempR++;
                     dstPtrTempG++;
                     dstPtrTempB++;
                 }
-
                 srcPtr1Row += srcDescPtr->strides.hStride;
                 srcPtr2Row += srcDescPtr->strides.hStride;
                 dstPtrRowR += dstDescPtr->strides.hStride;
@@ -454,7 +425,6 @@ RppStatus rain_f32_f32_host_tensor(Rpp32f *srcPtr,
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp32u alignedLength = (bufferLength / 24) * 24;
-
             Rpp32f *srcPtr1RowR, *srcPtr1RowG, *srcPtr1RowB, *srcPtr2RowR, *srcPtr2RowG, *srcPtr2RowB, *dstPtrRow;
             srcPtr1RowR = srcPtrChannel;
             srcPtr1RowG = srcPtr1RowR + srcDescPtr->strides.cStride;
@@ -463,7 +433,6 @@ RppStatus rain_f32_f32_host_tensor(Rpp32f *srcPtr,
             srcPtr2RowG = srcPtr2RowR + srcDescPtr->strides.cStride;
             srcPtr2RowB = srcPtr2RowG + srcDescPtr->strides.cStride;
             dstPtrRow = dstPtrChannel;
-
             for(Rpp32u i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp32f *srcPtr1TempR, *srcPtr1TempG, *srcPtr1TempB, *srcPtr2TempR, *srcPtr2TempG, *srcPtr2TempB, *dstPtrTemp;
@@ -474,12 +443,11 @@ RppStatus rain_f32_f32_host_tensor(Rpp32f *srcPtr,
                 srcPtr2TempG = srcPtr2RowG;
                 srcPtr2TempB = srcPtr2RowB;
                 dstPtrTemp = dstPtrRow;
-
                 Rpp32u vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                 {
                     __m256 p1[3], p2[3];
-
                     rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtr1TempR, srcPtr1TempG, srcPtr1TempB, p1);    // simd loads
                     rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtr2TempR, srcPtr2TempG, srcPtr2TempB, p2);    // simd loads
                     p1[0] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[0]), pMul, p1[0]);    // alpha-blending adjustment
@@ -495,12 +463,12 @@ RppStatus rain_f32_f32_host_tensor(Rpp32f *srcPtr,
                     srcPtr2TempB += 8;
                     dstPtrTemp += 24;
                 }
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     dstPtrTemp[0] = RPPPIXELCHECKF32(*srcPtr1TempR * (1 - alpha[batchCount]) + *srcPtr2TempR * alpha[batchCount]);
                     dstPtrTemp[1] = RPPPIXELCHECKF32(*srcPtr1TempG * (1 - alpha[batchCount]) + *srcPtr2TempG * alpha[batchCount]);
                     dstPtrTemp[2] = RPPPIXELCHECKF32(*srcPtr1TempB * (1 - alpha[batchCount]) + *srcPtr2TempB * alpha[batchCount]);
-
                     srcPtr1TempR++;
                     srcPtr2TempR++;
                     srcPtr1TempG++;
@@ -509,7 +477,6 @@ RppStatus rain_f32_f32_host_tensor(Rpp32f *srcPtr,
                     srcPtr2TempB++;
                     dstPtrTemp += 3;
                 }
-
                 srcPtr1RowR += srcDescPtr->strides.hStride;
                 srcPtr1RowG += srcDescPtr->strides.hStride;
                 srcPtr1RowB += srcDescPtr->strides.hStride;
@@ -523,24 +490,21 @@ RppStatus rain_f32_f32_host_tensor(Rpp32f *srcPtr,
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp32u alignedLength = (bufferLength / 8) * 8;
-
             Rpp32f *srcPtr1Row, *srcPtr2Row, *dstPtrRow;
             srcPtr1Row = srcPtrChannel;
             srcPtr2Row = rainLayer;
             dstPtrRow = dstPtrChannel;
-
             for(Rpp32u i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp32f *srcPtr1Temp, *srcPtr2Temp, *dstPtrTemp;
                 srcPtr1Temp = srcPtr1Row;
                 srcPtr2Temp = srcPtr2Row;
                 dstPtrTemp = dstPtrRow;
-
                 Rpp32u vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                 {
                     __m256 p1, p2;
-
                     rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtr1Temp, &p1);    // simd loads
                     rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtr2Temp, &p2);    // simd loads
                     p1 = _mm256_fmadd_ps(_mm256_sub_ps(p2, p1), pMul, p1);    // alpha-blending adjustment
@@ -550,20 +514,18 @@ RppStatus rain_f32_f32_host_tensor(Rpp32f *srcPtr,
                     srcPtr2Temp += 8;
                     dstPtrTemp += 8;
                 }
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     *dstPtrTemp = RPPPIXELCHECKF32(*srcPtr1Temp * (1 - alpha[batchCount]) + *srcPtr2Temp * alpha[batchCount]);
-
                     srcPtr1Temp++;
                     srcPtr2Temp++;
                     dstPtrTemp++;
                 }
-
                 srcPtr1Row += srcDescPtr->strides.hStride;
                 srcPtr2Row += srcDescPtr->strides.hStride;
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
-
             srcPtrChannel += srcDescPtr->strides.cStride;
             rainLayer += srcDescPtr->strides.cStride;
             dstPtrChannel += dstDescPtr->strides.cStride;
@@ -572,7 +534,6 @@ RppStatus rain_f32_f32_host_tensor(Rpp32f *srcPtr,
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp32u alignedLength = (bufferLength / 8) * 8;
-
             for(Rpp32u c = 0; c < layoutParams.channelParam; c++)
             {
                 Rpp32f *srcPtr1Row, *srcPtr2Row, *dstPtrRow;
@@ -586,12 +547,11 @@ RppStatus rain_f32_f32_host_tensor(Rpp32f *srcPtr,
                     srcPtr1Temp = srcPtr1Row;
                     srcPtr2Temp = srcPtr2Row;
                     dstPtrTemp = dstPtrRow;
-
                     Rpp32u vectorLoopCount = 0;
+#if __AVX2__
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                     {
                         __m256 p1, p2;
-
                         rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtr1Temp, &p1);    // simd loads
                         rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtr2Temp, &p2);    // simd loads
                         p1 = _mm256_fmadd_ps(_mm256_sub_ps(p2, p1), pMul, p1);    // alpha-blending adjustment
@@ -601,20 +561,18 @@ RppStatus rain_f32_f32_host_tensor(Rpp32f *srcPtr,
                         srcPtr2Temp += 8;
                         dstPtrTemp += 8;
                     }
+#endif
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         *dstPtrTemp = RPPPIXELCHECKF32(*srcPtr1Temp * (1 - alpha[batchCount]) + *srcPtr2Temp * alpha[batchCount]);
-
                         srcPtr1Temp++;
                         srcPtr2Temp++;
                         dstPtrTemp++;
                     }
-
                     srcPtr1Row += srcDescPtr->strides.hStride;
                     srcPtr2Row += srcDescPtr->strides.hStride;
                     dstPtrRow += dstDescPtr->strides.hStride;
                 }
-
                 srcPtrChannel += srcDescPtr->strides.cStride;
                 rainLayer += srcDescPtr->strides.cStride;
                 dstPtrChannel += dstDescPtr->strides.cStride;
@@ -670,14 +628,12 @@ RppStatus rain_f16_f16_host_tensor(Rpp16f *srcPtr,
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp32u alignedLength = (bufferLength / 24) * 24;
-
             Rpp16f *srcPtr1Row, *srcPtr2Row, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtr1Row = srcPtrChannel;
             srcPtr2Row = rainLayer;
             dstPtrRowR = dstPtrChannel;
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
-
             for(Rpp32u i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp16f *srcPtr1Temp, *srcPtr2Temp, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
@@ -686,12 +642,11 @@ RppStatus rain_f16_f16_host_tensor(Rpp16f *srcPtr,
                 dstPtrTempR = dstPtrRowR;
                 dstPtrTempG = dstPtrRowG;
                 dstPtrTempB = dstPtrRowB;
-
                 Rpp32u vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
                 {
                     __m256 p1[3], p2[3];
-
                     rpp_simd_load(rpp_load24_f32pkd3_to_f16pln3_avx, srcPtr1Temp, p1);    // simd loads
                     rpp_simd_load(rpp_load24_f32pkd3_to_f16pln3_avx, srcPtr2Temp, p2);    // simd loads
                     p1[0] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[0]), pMul, p1[0]);    // alpha-blending adjustment
@@ -705,19 +660,18 @@ RppStatus rain_f16_f16_host_tensor(Rpp16f *srcPtr,
                     dstPtrTempG += 8;
                     dstPtrTempB += 8;
                 }
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     *dstPtrTempR = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<Rpp32f>(srcPtr1Temp[0] * (1 - alpha[batchCount]) + srcPtr2Temp[0] * alpha[batchCount])));
                     *dstPtrTempG = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<Rpp32f>(srcPtr1Temp[1] * (1 - alpha[batchCount]) + srcPtr2Temp[1] * alpha[batchCount])));
                     *dstPtrTempB = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<Rpp32f>(srcPtr1Temp[2] * (1 - alpha[batchCount]) + srcPtr2Temp[2] * alpha[batchCount])));
-
                     srcPtr1Temp += 3;
                     srcPtr2Temp += 3;
                     dstPtrTempR++;
                     dstPtrTempG++;
                     dstPtrTempB++;
                 }
-
                 srcPtr1Row += srcDescPtr->strides.hStride;
                 srcPtr2Row += srcDescPtr->strides.hStride;
                 dstPtrRowR += dstDescPtr->strides.hStride;
@@ -729,7 +683,6 @@ RppStatus rain_f16_f16_host_tensor(Rpp16f *srcPtr,
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp32u alignedLength = (bufferLength / 24) * 24;
-
             Rpp16f *srcPtr1RowR, *srcPtr1RowG, *srcPtr1RowB, *srcPtr2RowR, *srcPtr2RowG, *srcPtr2RowB, *dstPtrRow;
             srcPtr1RowR = srcPtrChannel;
             srcPtr1RowG = srcPtr1RowR + srcDescPtr->strides.cStride;
@@ -738,7 +691,6 @@ RppStatus rain_f16_f16_host_tensor(Rpp16f *srcPtr,
             srcPtr2RowG = srcPtr2RowR + srcDescPtr->strides.cStride;
             srcPtr2RowB = srcPtr2RowG + srcDescPtr->strides.cStride;
             dstPtrRow = dstPtrChannel;
-
             for(Rpp32u i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp16f *srcPtr1TempR, *srcPtr1TempG, *srcPtr1TempB, *srcPtr2TempR, *srcPtr2TempG, *srcPtr2TempB, *dstPtrTemp;
@@ -749,12 +701,11 @@ RppStatus rain_f16_f16_host_tensor(Rpp16f *srcPtr,
                 srcPtr2TempG = srcPtr2RowG;
                 srcPtr2TempB = srcPtr2RowB;
                 dstPtrTemp = dstPtrRow;
-
                 Rpp32u vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                 {
                     __m256 p1[3], p2[3];
-
                     rpp_simd_load(rpp_load24_f16pln3_to_f32pln3_avx, srcPtr1TempR, srcPtr1TempG, srcPtr1TempB, p1);    // simd loads
                     rpp_simd_load(rpp_load24_f16pln3_to_f32pln3_avx, srcPtr2TempR, srcPtr2TempG, srcPtr2TempB, p2);    // simd loads
                     p1[0] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[0]), pMul, p1[0]);    // alpha-blending adjustment
@@ -770,12 +721,12 @@ RppStatus rain_f16_f16_host_tensor(Rpp16f *srcPtr,
                     srcPtr2TempB += 8;
                     dstPtrTemp += 24;
                 }
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     dstPtrTemp[0] = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<Rpp32f>(*srcPtr1TempR * (1 - alpha[batchCount]) + *srcPtr2TempR * alpha[batchCount])));
                     dstPtrTemp[1] = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<Rpp32f>(*srcPtr1TempG * (1 - alpha[batchCount]) + *srcPtr2TempG * alpha[batchCount])));
                     dstPtrTemp[2] = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<Rpp32f>(*srcPtr1TempB * (1 - alpha[batchCount]) + *srcPtr2TempB * alpha[batchCount])));
-
                     srcPtr1TempR++;
                     srcPtr2TempR++;
                     srcPtr1TempG++;
@@ -784,7 +735,6 @@ RppStatus rain_f16_f16_host_tensor(Rpp16f *srcPtr,
                     srcPtr2TempB++;
                     dstPtrTemp += 3;
                 }
-
                 srcPtr1RowR += srcDescPtr->strides.hStride;
                 srcPtr1RowG += srcDescPtr->strides.hStride;
                 srcPtr1RowB += srcDescPtr->strides.hStride;
@@ -798,24 +748,21 @@ RppStatus rain_f16_f16_host_tensor(Rpp16f *srcPtr,
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp32u alignedLength = (bufferLength / 8) * 8;
-
             Rpp16f *srcPtr1Row, *srcPtr2Row, *dstPtrRow;
             srcPtr1Row = srcPtrChannel;
             srcPtr2Row = rainLayer;
             dstPtrRow = dstPtrChannel;
-
             for(Rpp32u i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp16f *srcPtr1Temp, *srcPtr2Temp, *dstPtrTemp;
                 srcPtr1Temp = srcPtr1Row;
                 srcPtr2Temp = srcPtr2Row;
                 dstPtrTemp = dstPtrRow;
-
                 Rpp32u vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                 {
                     __m256 p1, p2;
-
                     rpp_simd_load(rpp_load8_f16_to_f32_avx, srcPtr1Temp, &p1);    // simd loads
                     rpp_simd_load(rpp_load8_f16_to_f32_avx, srcPtr2Temp, &p2);    // simd loads
                     p1 = _mm256_fmadd_ps(_mm256_sub_ps(p2, p1), pMul, p1);    // alpha-blending adjustment
@@ -825,20 +772,18 @@ RppStatus rain_f16_f16_host_tensor(Rpp16f *srcPtr,
                     srcPtr2Temp += 8;
                     dstPtrTemp += 8;
                 }
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     *dstPtrTemp = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<Rpp32f>(*srcPtr1Temp * (1 - alpha[batchCount]) + *srcPtr2Temp * alpha[batchCount])));
-
                     srcPtr1Temp++;
                     srcPtr2Temp++;
                     dstPtrTemp++;
                 }
-
                 srcPtr1Row += srcDescPtr->strides.hStride;
                 srcPtr2Row += srcDescPtr->strides.hStride;
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
-
             srcPtrChannel += srcDescPtr->strides.cStride;
             rainLayer += srcDescPtr->strides.cStride;
             dstPtrChannel += dstDescPtr->strides.cStride;
@@ -847,7 +792,6 @@ RppStatus rain_f16_f16_host_tensor(Rpp16f *srcPtr,
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp32u alignedLength = (bufferLength / 8) * 8;
-
             for(Rpp32u c = 0; c < layoutParams.channelParam; c++)
             {
                 Rpp16f *srcPtr1Row, *srcPtr2Row, *dstPtrRow;
@@ -861,12 +805,11 @@ RppStatus rain_f16_f16_host_tensor(Rpp16f *srcPtr,
                     srcPtr1Temp = srcPtr1Row;
                     srcPtr2Temp = srcPtr2Row;
                     dstPtrTemp = dstPtrRow;
-
                     Rpp32u vectorLoopCount = 0;
+#if __AVX2__
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                     {
                         __m256 p1, p2;
-
                         rpp_simd_load(rpp_load8_f16_to_f32_avx, srcPtr1Temp, &p1);    // simd loads
                         rpp_simd_load(rpp_load8_f16_to_f32_avx, srcPtr2Temp, &p2);    // simd loads
                         p1 = _mm256_fmadd_ps(_mm256_sub_ps(p2, p1), pMul, p1);    // alpha-blending adjustment
@@ -876,20 +819,18 @@ RppStatus rain_f16_f16_host_tensor(Rpp16f *srcPtr,
                         srcPtr2Temp += 8;
                         dstPtrTemp += 8;
                     }
+#endif
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         *dstPtrTemp = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<Rpp32f>(*srcPtr1Temp * (1 - alpha[batchCount]) + *srcPtr2Temp * alpha[batchCount])));
-
                         srcPtr1Temp++;
                         srcPtr2Temp++;
                         dstPtrTemp++;
                     }
-
                     srcPtr1Row += srcDescPtr->strides.hStride;
                     srcPtr2Row += srcDescPtr->strides.hStride;
                     dstPtrRow += dstDescPtr->strides.hStride;
                 }
-
                 srcPtrChannel += srcDescPtr->strides.cStride;
                 rainLayer += srcDescPtr->strides.cStride;
                 dstPtrChannel += dstDescPtr->strides.cStride;
@@ -945,14 +886,12 @@ RppStatus rain_i8_i8_host_tensor(Rpp8s *srcPtr,
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp32u alignedLength = (bufferLength / 48) * 48;
-
             Rpp8s *srcPtr1Row, *srcPtr2Row, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtr1Row = srcPtrChannel;
             srcPtr2Row = rainLayer;
             dstPtrRowR = dstPtrChannel;
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
-
             for(Rpp32u i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8s *srcPtr1Temp, *srcPtr2Temp, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
@@ -961,12 +900,11 @@ RppStatus rain_i8_i8_host_tensor(Rpp8s *srcPtr,
                 dstPtrTempR = dstPtrRowR;
                 dstPtrTempG = dstPtrRowG;
                 dstPtrTempB = dstPtrRowB;
-
                 Rpp32u vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += 48)
                 {
                     __m256 p1[6], p2[6];
-
                     rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3_avx, srcPtr1Temp, p1);    // simd loads
                     rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3_avx, srcPtr2Temp, p2);    // simd loads
                     p1[0] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[0]), pMul, p1[0]);    // alpha-blending adjustment
@@ -983,19 +921,18 @@ RppStatus rain_i8_i8_host_tensor(Rpp8s *srcPtr,
                     dstPtrTempG += 16;
                     dstPtrTempB += 16;
                 }
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     *dstPtrTempR = static_cast<Rpp8s>(RPPPIXELCHECKI8(std::nearbyintf(static_cast<Rpp32f>(srcPtr1Temp[0] * (1 - alpha[batchCount]) + srcPtr2Temp[0] * alpha[batchCount]))));
                     *dstPtrTempG = static_cast<Rpp8s>(RPPPIXELCHECKI8(std::nearbyintf(static_cast<Rpp32f>(srcPtr1Temp[1] * (1 - alpha[batchCount]) + srcPtr2Temp[1] * alpha[batchCount]))));
                     *dstPtrTempB = static_cast<Rpp8s>(RPPPIXELCHECKI8(std::nearbyintf(static_cast<Rpp32f>(srcPtr1Temp[2] * (1 - alpha[batchCount]) + srcPtr2Temp[2] * alpha[batchCount]))));
-
                     srcPtr1Temp += 3;
                     srcPtr2Temp += 3;
                     dstPtrTempR++;
                     dstPtrTempG++;
                     dstPtrTempB++;
                 }
-
                 srcPtr1Row += srcDescPtr->strides.hStride;
                 srcPtr2Row += srcDescPtr->strides.hStride;
                 dstPtrRowR += dstDescPtr->strides.hStride;
@@ -1007,7 +944,6 @@ RppStatus rain_i8_i8_host_tensor(Rpp8s *srcPtr,
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp32u alignedLength = (bufferLength / 48) * 48;
-
             Rpp8s *srcPtr1RowR, *srcPtr1RowG, *srcPtr1RowB, *srcPtr2RowR, *srcPtr2RowG, *srcPtr2RowB, *dstPtrRow;
             srcPtr1RowR = srcPtrChannel;
             srcPtr1RowG = srcPtr1RowR + srcDescPtr->strides.cStride;
@@ -1016,7 +952,6 @@ RppStatus rain_i8_i8_host_tensor(Rpp8s *srcPtr,
             srcPtr2RowG = srcPtr2RowR + srcDescPtr->strides.cStride;
             srcPtr2RowB = srcPtr2RowG + srcDescPtr->strides.cStride;
             dstPtrRow = dstPtrChannel;
-
             for(Rpp32u i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8s *srcPtr1TempR, *srcPtr1TempG, *srcPtr1TempB, *srcPtr2TempR, *srcPtr2TempG, *srcPtr2TempB, *dstPtrTemp;
@@ -1027,12 +962,11 @@ RppStatus rain_i8_i8_host_tensor(Rpp8s *srcPtr,
                 srcPtr2TempG = srcPtr2RowG;
                 srcPtr2TempB = srcPtr2RowB;
                 dstPtrTemp = dstPtrRow;
-
                 Rpp32u vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                 {
                     __m256 p1[6], p2[6];
-
                     rpp_simd_load(rpp_load48_i8pln3_to_f32pln3_avx, srcPtr1TempR, srcPtr1TempG, srcPtr1TempB, p1);    // simd loads
                     rpp_simd_load(rpp_load48_i8pln3_to_f32pln3_avx, srcPtr2TempR, srcPtr2TempG, srcPtr2TempB, p2);    // simd loads
                     p1[0] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[0]), pMul, p1[0]);    // alpha-blending adjustment
@@ -1051,12 +985,12 @@ RppStatus rain_i8_i8_host_tensor(Rpp8s *srcPtr,
                     srcPtr2TempB += 16;
                     dstPtrTemp += 48;
                 }
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     dstPtrTemp[0] = static_cast<Rpp8s>(RPPPIXELCHECKI8(std::nearbyintf(static_cast<Rpp32f>(*srcPtr1TempR * (1 - alpha[batchCount]) + *srcPtr2TempR * alpha[batchCount]))));
                     dstPtrTemp[1] = static_cast<Rpp8s>(RPPPIXELCHECKI8(std::nearbyintf(static_cast<Rpp32f>(*srcPtr1TempG * (1 - alpha[batchCount]) + *srcPtr2TempG * alpha[batchCount]))));
                     dstPtrTemp[2] = static_cast<Rpp8s>(RPPPIXELCHECKI8(std::nearbyintf(static_cast<Rpp32f>(*srcPtr1TempB * (1 - alpha[batchCount]) + *srcPtr2TempB * alpha[batchCount]))));
-
                     srcPtr1TempR++;
                     srcPtr2TempR++;
                     srcPtr1TempG++;
@@ -1065,7 +999,6 @@ RppStatus rain_i8_i8_host_tensor(Rpp8s *srcPtr,
                     srcPtr2TempB++;
                     dstPtrTemp += 3;
                 }
-
                 srcPtr1RowR += srcDescPtr->strides.hStride;
                 srcPtr1RowG += srcDescPtr->strides.hStride;
                 srcPtr1RowB += srcDescPtr->strides.hStride;
@@ -1079,24 +1012,21 @@ RppStatus rain_i8_i8_host_tensor(Rpp8s *srcPtr,
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp32u alignedLength = (bufferLength / 32) * 32;
-
             Rpp8s *srcPtr1Row, *srcPtr2Row, *dstPtrRow;
             srcPtr1Row = srcPtrChannel;
             srcPtr2Row = rainLayer;
             dstPtrRow = dstPtrChannel;
-
             for(Rpp32u i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8s *srcPtr1Temp, *srcPtr2Temp, *dstPtrTemp;
                 srcPtr1Temp = srcPtr1Row;
                 srcPtr2Temp = srcPtr2Row;
                 dstPtrTemp = dstPtrRow;
-
                 Rpp32u vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += 32)
                 {
                     __m256 p1[4], p2[4];
-
                     rpp_simd_load(rpp_load32_i8_to_f32_avx, srcPtr1Temp, p1);    // simd loads
                     rpp_simd_load(rpp_load32_i8_to_f32_avx, srcPtr2Temp, p2);    // simd loads
                     p1[0] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[0]), pMul, p1[0]);    // alpha-blending adjustment
@@ -1109,20 +1039,18 @@ RppStatus rain_i8_i8_host_tensor(Rpp8s *srcPtr,
                     srcPtr2Temp += 32;
                     dstPtrTemp += 32;
                 }
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     *dstPtrTemp = static_cast<Rpp8s>(RPPPIXELCHECKI8(std::nearbyintf(static_cast<Rpp32f>(*srcPtr1Temp * (1 - alpha[batchCount]) + *srcPtr2Temp * alpha[batchCount]))));
-
                     srcPtr1Temp++;
                     srcPtr2Temp++;
                     dstPtrTemp++;
                 }
-
                 srcPtr1Row += srcDescPtr->strides.hStride;
                 srcPtr2Row += srcDescPtr->strides.hStride;
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
-
             srcPtrChannel += srcDescPtr->strides.cStride;
             rainLayer += srcDescPtr->strides.cStride;
             dstPtrChannel += dstDescPtr->strides.cStride;
@@ -1131,26 +1059,23 @@ RppStatus rain_i8_i8_host_tensor(Rpp8s *srcPtr,
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp32u alignedLength = (bufferLength / 32) * 32;
-
             for(Rpp32u c = 0; c < layoutParams.channelParam; c++)
             {
                 Rpp8s *srcPtr1Row, *srcPtr2Row, *dstPtrRow;
                 srcPtr1Row = srcPtrChannel;
                 srcPtr2Row = rainLayer;
                 dstPtrRow = dstPtrChannel;
-
                 for(Rpp32u i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
                     Rpp8s *srcPtr1Temp, *srcPtr2Temp, *dstPtrTemp;
                     srcPtr1Temp = srcPtr1Row;
                     srcPtr2Temp = srcPtr2Row;
                     dstPtrTemp = dstPtrRow;
-
                     Rpp32u vectorLoopCount = 0;
+#if __AVX2__
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 32)
                     {
                         __m256 p1[4], p2[4];
-
                         rpp_simd_load(rpp_load32_i8_to_f32_avx, srcPtr1Temp, p1);    // simd loads
                         rpp_simd_load(rpp_load32_i8_to_f32_avx, srcPtr2Temp, p2);    // simd loads
                         p1[0] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[0]), pMul, p1[0]);    // alpha-blending adjustment
@@ -1161,23 +1086,20 @@ RppStatus rain_i8_i8_host_tensor(Rpp8s *srcPtr,
 
                         srcPtr1Temp += 32;
                         srcPtr2Temp += 32;
-                        dstPtrTemp += 
-                        32;
+                        dstPtrTemp += 32;
                     }
+#endif
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         *dstPtrTemp = static_cast<Rpp8s>(RPPPIXELCHECKI8(std::nearbyintf(static_cast<Rpp32f>(*srcPtr1Temp * (1 - alpha[batchCount]) + *srcPtr2Temp * alpha[batchCount]))));
-
                         srcPtr1Temp++;
                         srcPtr2Temp++;
                         dstPtrTemp++;
                     }
-
                     srcPtr1Row += srcDescPtr->strides.hStride;
                     srcPtr2Row += srcDescPtr->strides.hStride;
                     dstPtrRow += dstDescPtr->strides.hStride;
                 }
-
                 srcPtrChannel += srcDescPtr->strides.cStride;
                 rainLayer += srcDescPtr->strides.cStride;
                 dstPtrChannel += dstDescPtr->strides.cStride;
