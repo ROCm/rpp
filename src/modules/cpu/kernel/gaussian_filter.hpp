@@ -23,22 +23,22 @@ SOFTWARE.
 #include "rpp_cpu_common.hpp"
 #include "rpp_cpu_filter.hpp"
 
-inline void rpp_store_gaussian_filter_3x3_host(Rpp8u *dstPtrTemp, __m256 *pDst)
+inline void rpp_store_filter_3x3_host(Rpp8u *dstPtrTemp, __m256 *pDst)
 {
     rpp_store16_f32_to_u8_avx(dstPtrTemp, pDst);
 }
 
-inline void rpp_store_gaussian_filter_3x3_host(Rpp8s *dstPtrTemp, __m256 *pDst)
+inline void rpp_store_filter_3x3_host(Rpp8s *dstPtrTemp, __m256 *pDst)
 {
     rpp_store16_f32_to_i8_avx(dstPtrTemp, pDst);
 }
 
-inline void rpp_store_gaussian_filter_3x3_host(Rpp32f *dstPtrTemp, __m256 *pDst)
+inline void rpp_store_filter_3x3_host(Rpp32f *dstPtrTemp, __m256 *pDst)
 {
     rpp_store16_f32_to_f32_avx(dstPtrTemp, pDst);
 }
 
-inline void rpp_store_gaussian_filter_3x3_host(Rpp16f *dstPtrTemp, __m256 *pDst)
+inline void rpp_store_filter_3x3_host(Rpp16f *dstPtrTemp, __m256 *pDst)
 {
     rpp_store16_f32_to_f16_avx(dstPtrTemp, pDst);
 }
@@ -64,7 +64,6 @@ inline void create_gaussian_kernel_host(Rpp32f* filter, Rpp32f stdDev, int kerne
         {
             filter[rowIdx + (kernelHalfSize + j)] =  filter[rowIdx + (kernelHalfSize - j)] = gaussian(iSquare, j, mulFactor);
         }
-
         if ((kernelSize * (kernelSize - 1) - rowIdx) != rowIdx)
             std::memcpy(&filter[kernelSize * (kernelSize - 1) - rowIdx], &filter[rowIdx], kernelSize * sizeof(float));
     }
@@ -77,86 +76,6 @@ inline void create_gaussian_kernel_host(Rpp32f* filter, Rpp32f stdDev, int kerne
 
     for (int i = 0; i < kernelSize * kernelSize; i++)
         filter[i] *= kernelSum;
-}
-
-template<typename T>
-inline void gaussian_filter_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp32s columnIndex,
-                                           Rpp32u kernelSize, Rpp32u padLength, Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit,
-                                           Rpp32f *filterTensor, Rpp32u channels = 1)
-{
-    Rpp32f accum = 0.0f;
-    Rpp32s columnKernelLoopLimit = kernelSize;
-
-    // find the colKernelLoopLimit based on columnIndex
-    get_kernel_loop_limit(columnIndex, columnKernelLoopLimit, padLength, unpaddedWidth);
-    if constexpr (std::is_same<T, Rpp8s>::value)
-    {
-        for (int i = 0; i < rowKernelLoopLimit; i++)
-            for (int j = 0, k = 0 ; j < columnKernelLoopLimit; j++, k += channels)
-                accum += static_cast<Rpp32f>(srcPtrTemp[i][k] + 128) * filterTensor[i * kernelSize + j];
-    }
-    else
-    {
-        for (int i = 0; i < rowKernelLoopLimit; i++)
-            for (int j = 0, k = 0 ; j < columnKernelLoopLimit; j++, k += channels)
-                accum += static_cast<Rpp32f>(srcPtrTemp[i][k]) * filterTensor[i * kernelSize + j];
-
-    }
-
-    if constexpr (std::is_same<T, Rpp8u>::value || std::is_same<T, Rpp8s>::value)
-        accum = round(accum);
-    saturate_pixel(accum, dstPtrTemp);
-}
-
-// process padLength number of columns in each row
-// left border pixels in image which does not have required pixels in 3x3 kernel, process them separately
-template<typename T>
-inline void process_left_border_columns_pln_pln(T **srcPtrTemp, T *dstPtrTemp, Rpp32u kernelSize, Rpp32u padLength,
-                                                Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit, Rpp32f *filterTensor)
-{
-    for (int k = 0; k < padLength; k++)
-    {
-        gaussian_filter_generic_tensor(srcPtrTemp, dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
-        dstPtrTemp++;
-    }
-}
-
-template<typename T>
-inline void process_left_border_columns_pkd_pkd(T **srcPtrTemp, T **srcPtrRow, T *dstPtrTemp, Rpp32u kernelSize, Rpp32u padLength,
-                                                Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit, Rpp32f *filterTensor)
-{
-    for (int c = 0; c < 3; c++)
-    {
-        T *dstPtrTempChannel = dstPtrTemp + c;
-        for (int k = 0; k < padLength; k++)
-        {
-            gaussian_filter_generic_tensor(srcPtrTemp, dstPtrTempChannel, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3);
-            dstPtrTempChannel += 3;
-        }
-        increment_row_ptrs(srcPtrTemp, kernelSize, 1);
-    }
-    // reset source to initial position
-    for (int k = 0; k < kernelSize; k++)
-        srcPtrTemp[k] = srcPtrRow[k];
-}
-
-template<typename T>
-inline void process_left_border_columns_pkd_pln(T **srcPtrTemp, T **srcPtrRow, T **dstPtrTempChannels, Rpp32u kernelSize, Rpp32u padLength,
-                                                Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit, Rpp32f *filterTensor)
-{
-    for (int c = 0; c < 3; c++)
-    {
-        for (int k = 0; k < padLength; k++)
-        {
-            gaussian_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[c], k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3);
-            dstPtrTempChannels[c] += 1;
-        }
-        increment_row_ptrs(srcPtrTemp, kernelSize, 1);
-    }
-
-    // reset source to initial position
-    for (int k = 0; k < kernelSize; k++)
-        srcPtrTemp[k] = srcPtrRow[k];
 }
 
 template<typename T>
@@ -177,6 +96,11 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
     if ((kernelSize != 3) && (kernelSize != 5) && (kernelSize != 7) && (kernelSize != 9))
         return gaussian_filter_generic_host_tensor(srcPtr, srcDescPtr, dstPtr, dstDescPtr, stdDevTensor, kernelSize, roiTensorPtrSrc, roiType, layoutParams, handle);
 
+    // set the required masks array needed for shuffle operations 
+#if __AVX2__
+    __m256i pxMaskPln[7] = {avx_pxMaskRotate0To1, avx_pxMaskRotate0To2, avx_pxMaskRotate0To3, avx_pxMaskRotate0To4, avx_pxMaskRotate0To5, avx_pxMaskRotate0To6, avx_pxMaskRotate0To7};
+    __m256i pxMaskPkd[7] = {avx_pxMaskRotate0To3, avx_pxMaskRotate0To6, avx_pxMaskRotate0To1, avx_pxMaskRotate0To4, avx_pxMaskRotate0To7, avx_pxMaskRotate0To2, avx_pxMaskRotate0To5};
+#endif
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
@@ -236,7 +160,6 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
                         process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
                         dstPtrTemp += padLength;
-
 #if __AVX2__
                         // process alignedLength number of columns in each row
                         for (; vectorLoopCount < alignedLength; vectorLoopCount += 14)
@@ -247,22 +170,14 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             pDst[1] = avx_p0;
                             for (int k = 0; k < 3; k++)
                             {
-                                __m256 pTemp[3];
                                 Rpp32s filterIndex =  k * 3;
                                 Rpp32s rowIndex = k * 2;
 
-                                pTemp[0] = _mm256_mul_ps(pRow[rowIndex], pFilter[filterIndex]);
-                                pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 1), avx_pxMaskRotate0To1), pFilter[filterIndex + 1]);
-                                pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 3), avx_pxMaskRotate0To2), pFilter[filterIndex + 2]);
-                                pDst[0] = _mm256_add_ps(pDst[0], _mm256_add_ps(_mm256_add_ps(pTemp[0], pTemp[1]), pTemp[2]));
-
-                                pTemp[0] = _mm256_mul_ps(pRow[rowIndex + 1], pFilter[filterIndex]);
-                                pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], avx_p0, 1), avx_pxMaskRotate0To1), pFilter[filterIndex + 1]);
-                                pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], avx_p0, 3), avx_pxMaskRotate0To2), pFilter[filterIndex + 2]);
-                                pDst[1] = _mm256_add_ps(pDst[1], _mm256_add_ps(_mm256_add_ps(pTemp[0], pTemp[1]), pTemp[2]));
+                                permute_blend_add_3x3<1, 3, 0, 1>(pDst[0], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex], pxMaskPln);
+                                permute_blend_add_3x3<1, 3, 0, 1>(pDst[1], pRow[rowIndex + 1], avx_p0, &pFilter[filterIndex], pxMaskPln);
                             }
 
-                            rpp_store_gaussian_filter_3x3_host(dstPtrTemp, pDst);
+                            rpp_store_filter_3x3_host(dstPtrTemp, pDst);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 14);
                             dstPtrTemp += 14;
                         }
@@ -270,7 +185,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         vectorLoopCount += padLength;
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            gaussian_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                            convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -299,7 +214,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
                     process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
                     dstPtrTemp += padLength * 3;
-    #if __AVX2__
+#if __AVX2__
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
                     {
@@ -310,30 +225,22 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         pDst[1] = avx_p0;
                         for (int k = 0; k < 3; k++)
                         {
-                            __m256 pTemp[3];
                             Rpp32s filterIndex = k * 3;
                             Rpp32s rowIndex = k * 3;
 
-                            pTemp[0] = _mm256_mul_ps(pRow[rowIndex], pFilter[filterIndex]);
-                            pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 7), avx_pxMaskRotate0To3), pFilter[filterIndex + 1]);
-                            pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 63), avx_pxMaskRotate0To6), pFilter[filterIndex + 2]);
-                            pDst[0] = _mm256_add_ps(pDst[0], _mm256_add_ps(_mm256_add_ps(pTemp[0], pTemp[1]), pTemp[2]));
-
-                            pTemp[0] = _mm256_mul_ps(pRow[rowIndex + 1], pFilter[filterIndex]);
-                            pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], pRow[rowIndex + 2], 7), avx_pxMaskRotate0To3), pFilter[filterIndex + 1]);
-                            pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], pRow[rowIndex + 2], 63), avx_pxMaskRotate0To6), pFilter[filterIndex + 2]);
-                            pDst[1] = _mm256_add_ps(pDst[1], _mm256_add_ps(_mm256_add_ps(pTemp[0], pTemp[1]), pTemp[2]));
+                            permute_blend_add_3x3<7, 63, 0, 1>(pDst[0], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex], pxMaskPkd);
+                            permute_blend_add_3x3<7, 63, 0, 1>(pDst[1], pRow[rowIndex + 1], pRow[rowIndex + 2], &pFilter[filterIndex], pxMaskPkd);
                         }
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 16);
-                        rpp_store_gaussian_filter_3x3_host(dstPtrTemp, pDst);
+                        rpp_store_filter_3x3_host(dstPtrTemp, pDst);
                         dstPtrTemp += 16;
                     }
-    #endif
+#endif
                     vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        gaussian_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3);
+                        convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -360,7 +267,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     Rpp32s rowKernelLoopLimit = kernelSize;
                     get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
                     process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
-    #if __AVX2__
+#if __AVX2__
                     // process remaining columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 12)
                     {
@@ -371,33 +278,24 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         pDst[1] = avx_p0;
                         for (int k = 0; k < 3; k++)
                         {
-                            __m256 pTemp[3];
                             Rpp32s filterIndex = k * 3;
                             Rpp32s rowIndex = k * 3;
 
-                            pTemp[0] = _mm256_mul_ps(pRow[rowIndex], pFilter[filterIndex]);
-                            pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 7), avx_pxMaskRotate0To3), pFilter[filterIndex + 1]);
-                            pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 63), avx_pxMaskRotate0To6), pFilter[filterIndex + 2]);
-                            pDst[0] = _mm256_add_ps(pDst[0], _mm256_add_ps(_mm256_add_ps(pTemp[0], pTemp[1]), pTemp[2]));
-
-                            pTemp[0] = _mm256_mul_ps(pRow[rowIndex + 1], pFilter[filterIndex]);
-                            pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], pRow[rowIndex + 2], 7), avx_pxMaskRotate0To3), pFilter[filterIndex + 1]);
-                            pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], pRow[rowIndex + 2], 63), avx_pxMaskRotate0To6), pFilter[filterIndex + 2]);
-                            pDst[1] = _mm256_add_ps(pDst[1], _mm256_add_ps(_mm256_add_ps(pTemp[0], pTemp[1]), pTemp[2]));
+                            permute_blend_add_3x3<7, 63, 0, 1>(pDst[0], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex], pxMaskPkd);
+                            permute_blend_add_3x3<7, 63, 0, 1>(pDst[1], pRow[rowIndex + 1], pRow[rowIndex + 2], &pFilter[filterIndex], pxMaskPkd);
                         }
-
                         __m128 pDstPln[3];
                         rpp_convert12_f32pkd3_to_f32pln3(pDst, pDstPln);
                         rpp_store12_float_pkd_pln(dstPtrTempChannels, pDstPln);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 12);
                         increment_row_ptrs(dstPtrTempChannels, kernelSize, 4);
                     }
-    #endif
+#endif
                     vectorLoopCount += padLength * 3;
                     for (int c = 0; vectorLoopCount < bufferLength; vectorLoopCount++, c++)
                     {
                         int channel = c % 3;
-                        gaussian_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3);
+                        convolution_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTempChannels[channel]++;
                     }
@@ -432,11 +330,11 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            gaussian_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                            convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
                             dstPtrTemp++;
                         }
                     }
-    #if __AVX2__
+#if __AVX2__
                     // process alignedLength number of columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 14)
                     {
@@ -454,19 +352,11 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                                 Rpp32s filterIndex =  k * 3;
                                 Rpp32s rowIndex = k * 2;
 
-                                pTemp[0] = _mm256_mul_ps(pRow[rowIndex], pFilter[filterIndex]);
-                                pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 1), avx_pxMaskRotate0To1), pFilter[filterIndex + 1]);
-                                pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 3), avx_pxMaskRotate0To2), pFilter[filterIndex + 2]);
-                                pResult[channelStride] = _mm256_add_ps(pResult[channelStride], _mm256_add_ps(_mm256_add_ps(pTemp[0], pTemp[1]), pTemp[2]));
-
-                                pTemp[0] = _mm256_mul_ps(pRow[rowIndex + 1], pFilter[filterIndex]);
-                                pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], avx_p0, 1), avx_pxMaskRotate0To1), pFilter[filterIndex + 1]);
-                                pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], avx_p0, 3), avx_pxMaskRotate0To2), pFilter[filterIndex + 2]);
-                                pResult[channelStride + 1] = _mm256_add_ps(pResult[channelStride + 1], _mm256_add_ps(_mm256_add_ps(pTemp[0], pTemp[1]), pTemp[2]));
+                                permute_blend_add_3x3<7, 63, 0, 1>(pResult[channelStride], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex], pxMaskPln);
+                                permute_blend_add_3x3<7, 63, 0, 1>(pResult[channelStride + 1], pRow[rowIndex + 1], avx_p0, &pFilter[filterIndex], pxMaskPln);
                             }
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 14);
                         }
-
                         // convert result from pln to pkd format and store in output buffer
                         if constexpr (std::is_same<T, Rpp32f>::value)
                             rpp_simd_store(rpp_store48_f32pln3_to_f32pkd3_avx, dstPtrTemp, pResult);
@@ -476,16 +366,15 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTemp, pResult);
                         else if constexpr (std::is_same<T, Rpp8s>::value)
                             rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3_avx, dstPtrTemp, pResult);
-
                         dstPtrTemp += 42;
                     }
-    #endif
+#endif
                     vectorLoopCount += padLength;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            gaussian_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                            convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -538,26 +427,14 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             pDst[1] = avx_p0;
                             for (int k = 0; k < 5; k++)
                             {
-                                __m256 pTemp[5];
                                 Rpp32s filterIndex =  k * 5;
                                 Rpp32s rowIndex = k * 2;
 
-                                pTemp[0] = _mm256_mul_ps(pRow[rowIndex], pFilter[filterIndex]);
-                                pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 1), avx_pxMaskRotate0To1), pFilter[filterIndex + 1]);
-                                pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 3), avx_pxMaskRotate0To2), pFilter[filterIndex + 2]);
-                                pTemp[3] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 7), avx_pxMaskRotate0To3), pFilter[filterIndex + 3]);
-                                pTemp[4] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 15), avx_pxMaskRotate0To4), pFilter[filterIndex + 4]);
-                                pDst[0] = _mm256_add_ps(pDst[0], _mm256_add_ps(_mm256_add_ps(pTemp[0], _mm256_add_ps(pTemp[1], pTemp[2])), _mm256_add_ps(pTemp[3], pTemp[4])));
-
-                                pTemp[0] = _mm256_mul_ps(pRow[rowIndex + 1], pFilter[filterIndex]);
-                                pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], avx_p0, 1), avx_pxMaskRotate0To1), pFilter[filterIndex + 1]);
-                                pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], avx_p0, 3), avx_pxMaskRotate0To2), pFilter[filterIndex + 2]);
-                                pTemp[3] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], avx_p0, 7), avx_pxMaskRotate0To3), pFilter[filterIndex + 3]);
-                                pTemp[4] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], avx_p0, 15), avx_pxMaskRotate0To4), pFilter[filterIndex + 4]);
-                                pDst[1] = _mm256_add_ps(pDst[1], _mm256_add_ps(_mm256_add_ps(pTemp[0], _mm256_add_ps(pTemp[1], pTemp[2])), _mm256_add_ps(pTemp[3], pTemp[4])));
+                                permute_blend_add_5x5_pln(pDst[0], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex]);
+                                permute_blend_add_5x5_pln(pDst[1], pRow[rowIndex + 1], avx_p0, &pFilter[filterIndex]);
                             }
 
-                            rpp_store_gaussian_filter_3x3_host(dstPtrTemp, pDst);
+                            rpp_store_filter_3x3_host(dstPtrTemp, pDst);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 12);
                             dstPtrTemp += 12;
                         }
@@ -565,7 +442,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         vectorLoopCount += padLength;
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            gaussian_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                            convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -604,34 +481,22 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         pDst[1] = avx_p0;
                         for (int k = 0; k < 5; k++)
                         {
-                            __m256 pTemp[5];
                             Rpp32s filterIndex =  k * 5;
                             Rpp32s rowIndex = k * 4;
 
-                            pTemp[0] = _mm256_mul_ps(pRow[rowIndex], pFilter[filterIndex]);
-                            pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 7), avx_pxMaskRotate0To3), pFilter[filterIndex + 1]);
-                            pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 63), avx_pxMaskRotate0To6), pFilter[filterIndex + 2]);
-                            pTemp[3] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], pRow[rowIndex + 2], 1), avx_pxMaskRotate0To1), pFilter[filterIndex + 3]);
-                            pTemp[4] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], pRow[rowIndex + 2], 15), avx_pxMaskRotate0To4), pFilter[filterIndex + 4]);
-                            pDst[0] = _mm256_add_ps(pDst[0], _mm256_add_ps(_mm256_add_ps(pTemp[0], _mm256_add_ps(pTemp[1], pTemp[2])), _mm256_add_ps(pTemp[3], pTemp[4])));
-
-                            pTemp[0] = _mm256_mul_ps(pRow[rowIndex + 1], pFilter[filterIndex]);
-                            pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], pRow[rowIndex + 2], 7), avx_pxMaskRotate0To3), pFilter[filterIndex + 1]);
-                            pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], pRow[rowIndex + 2], 63), avx_pxMaskRotate0To6), pFilter[filterIndex + 2]);
-                            pTemp[3] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 2], pRow[rowIndex + 3], 1), avx_pxMaskRotate0To1), pFilter[filterIndex + 3]);
-                            pTemp[4] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 2], pRow[rowIndex + 3], 15), avx_pxMaskRotate0To4), pFilter[filterIndex + 4]);
-                            pDst[1] = _mm256_add_ps(pDst[1], _mm256_add_ps(_mm256_add_ps(pTemp[0], _mm256_add_ps(pTemp[1], pTemp[2])), _mm256_add_ps(pTemp[3], pTemp[4])));
+                            permute_blend_add_5x5_pkd(pDst[0], pRow[rowIndex], pRow[rowIndex + 1], pRow[rowIndex + 2], &pFilter[filterIndex]);
+                            permute_blend_add_5x5_pkd(pDst[1], pRow[rowIndex + 1], pRow[rowIndex + 2], pRow[rowIndex + 3], &pFilter[filterIndex]);
                         }
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 16);
-                        rpp_store_gaussian_filter_3x3_host(dstPtrTemp, pDst);
+                        rpp_store_filter_3x3_host(dstPtrTemp, pDst);
                         dstPtrTemp += 16;
                     }
     #endif
                     vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        gaussian_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3);
+                        convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -667,11 +532,11 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            gaussian_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                            convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
                             dstPtrTemp++;
                         }
                     }
-    #if __AVX2__
+#if __AVX2__
                     // process alignedLength number of columns in each row
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
                     {
@@ -683,16 +548,10 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             pResultPln[c] = avx_p0;
                             for (int k = 0; k < 5; k++)
                             {
-                                __m256 pTemp[5];
                                 Rpp32s filterIndex =  k * 5;
                                 Rpp32s rowIndex = k * 2;
 
-                                pTemp[0] = _mm256_mul_ps(pRow[rowIndex], pFilter[filterIndex]);
-                                pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 1), avx_pxMaskRotate0To1), pFilter[filterIndex + 1]);
-                                pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 3), avx_pxMaskRotate0To2), pFilter[filterIndex + 2]);
-                                pTemp[3] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 7), avx_pxMaskRotate0To3), pFilter[filterIndex + 3]);
-                                pTemp[4] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 15), avx_pxMaskRotate0To4), pFilter[filterIndex + 4]);
-                                pResultPln[c] = _mm256_add_ps(pResultPln[c], _mm256_add_ps(_mm256_add_ps(pTemp[0], _mm256_add_ps(pTemp[1], pTemp[2])), _mm256_add_ps(pTemp[3], pTemp[4])));
+                                permute_blend_add_5x5_pln(pResultPln[c], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex]);
                             }
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 8);
                         }
@@ -709,13 +568,13 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
 
                         dstPtrTemp += 24;
                     }
-    #endif
+#endif
                     vectorLoopCount += padLength;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         for (int c = 0; c < srcDescPtr->c; c++)
                         {
-                            gaussian_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                            convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -755,23 +614,11 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         pDst[1] = avx_p0;
                         for (int k = 0; k < 5; k++)
                         {
-                            __m256 pTemp[5];
                             Rpp32s filterIndex =  k * 5;
                             Rpp32s rowIndex = k * 4;
 
-                            pTemp[0] = _mm256_mul_ps(pRow[rowIndex], pFilter[filterIndex]);
-                            pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 7), avx_pxMaskRotate0To3), pFilter[filterIndex + 1]);
-                            pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 63), avx_pxMaskRotate0To6), pFilter[filterIndex + 2]);
-                            pTemp[3] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], pRow[rowIndex + 2], 1), avx_pxMaskRotate0To1), pFilter[filterIndex + 3]);
-                            pTemp[4] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], pRow[rowIndex + 2], 15), avx_pxMaskRotate0To4), pFilter[filterIndex + 4]);
-                            pDst[0] = _mm256_add_ps(pDst[0], _mm256_add_ps(_mm256_add_ps(pTemp[0], _mm256_add_ps(pTemp[1], pTemp[2])), _mm256_add_ps(pTemp[3], pTemp[4])));
-
-                            pTemp[0] = _mm256_mul_ps(pRow[rowIndex + 1], pFilter[filterIndex]);
-                            pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], pRow[rowIndex + 2], 7), avx_pxMaskRotate0To3), pFilter[filterIndex + 1]);
-                            pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], pRow[rowIndex + 2], 63), avx_pxMaskRotate0To6), pFilter[filterIndex + 2]);
-                            pTemp[3] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 2], pRow[rowIndex + 3], 1), avx_pxMaskRotate0To1), pFilter[filterIndex + 3]);
-                            pTemp[4] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 2], pRow[rowIndex + 3], 15), avx_pxMaskRotate0To4), pFilter[filterIndex + 4]);
-                            pDst[1] = _mm256_add_ps(pDst[1], _mm256_add_ps(_mm256_add_ps(pTemp[0], _mm256_add_ps(pTemp[1], pTemp[2])), _mm256_add_ps(pTemp[3], pTemp[4])));
+                            permute_blend_add_5x5_pkd(pDst[0], pRow[rowIndex], pRow[rowIndex + 1], pRow[rowIndex + 2], &pFilter[filterIndex]);
+                            permute_blend_add_5x5_pkd(pDst[1], pRow[rowIndex + 1], pRow[rowIndex + 2], pRow[rowIndex + 3], &pFilter[filterIndex]);
                         }
 
                         __m128 pDstPln[3];
@@ -786,7 +633,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         int channel = vectorLoopCount % 3;
-                        gaussian_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3);
+                        convolution_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTempChannels[channel]++;
                     }
@@ -839,18 +686,10 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             pDst = avx_p0;
                             for (int k = 0; k < 7; k++)
                             {
-                                __m256 pTemp[7];
                                 Rpp32s filterIndex =  k * 7;
                                 Rpp32s rowIndex = k * 2;
 
-                                pTemp[0] = _mm256_mul_ps(pRow[rowIndex], pFilter[filterIndex]);
-                                pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 1), avx_pxMaskRotate0To1), pFilter[filterIndex + 1]);
-                                pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 3), avx_pxMaskRotate0To2), pFilter[filterIndex + 2]);
-                                pTemp[3] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 7), avx_pxMaskRotate0To3), pFilter[filterIndex + 3]);
-                                pTemp[4] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 15), avx_pxMaskRotate0To4), pFilter[filterIndex + 4]);
-                                pTemp[5] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 31), avx_pxMaskRotate0To5), pFilter[filterIndex + 5]);
-                                pTemp[6] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 63), avx_pxMaskRotate0To6), pFilter[filterIndex + 6]);
-                                pDst =  _mm256_add_ps(pDst, _mm256_add_ps(_mm256_add_ps(pTemp[0], _mm256_add_ps(pTemp[1], pTemp[2])), _mm256_add_ps(_mm256_add_ps(pTemp[3], pTemp[4]), _mm256_add_ps(pTemp[5], pTemp[6]))));
+                                permute_blend_add_7x7_pln(pDst, pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex]);
                             }
 
                             // convert result from pln to pkd format and store in output buffer
@@ -870,7 +709,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         vectorLoopCount += padLength;
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            gaussian_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                            convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -908,18 +747,10 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         pDst = avx_p0;
                         for (int k = 0; k < 7; k++)
                         {
-                            __m256 pTemp[7];
                             Rpp32s filterIndex =  k * 7;
                             Rpp32s rowIndex = k * 4;
 
-                            pTemp[0] = _mm256_mul_ps(pRow[rowIndex], pFilter[filterIndex]);
-                            pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 7), avx_pxMaskRotate0To3), pFilter[filterIndex + 1]);
-                            pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 63), avx_pxMaskRotate0To6), pFilter[filterIndex + 2]);
-                            pTemp[3] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], pRow[rowIndex + 2], 1), avx_pxMaskRotate0To1), pFilter[filterIndex + 3]);
-                            pTemp[4] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], pRow[rowIndex + 2], 15), avx_pxMaskRotate0To4), pFilter[filterIndex + 4]);
-                            pTemp[5] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], pRow[rowIndex + 2], 127), avx_pxMaskRotate0To7), pFilter[filterIndex + 5]);
-                            pTemp[6] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 2], pRow[rowIndex + 3], 3), avx_pxMaskRotate0To2), pFilter[filterIndex + 6]);
-                            pDst =  _mm256_add_ps(pDst, _mm256_add_ps(_mm256_add_ps(pTemp[0], _mm256_add_ps(pTemp[1], pTemp[2])), _mm256_add_ps(_mm256_add_ps(pTemp[3], pTemp[4]), _mm256_add_ps(pTemp[5], pTemp[6]))));
+                            permute_blend_add_7x7_pkd(pDst, pRow[rowIndex], pRow[rowIndex + 1], pRow[rowIndex + 2], pRow[rowIndex + 3], &pFilter[filterIndex]);
                         }
 
                         if constexpr (std::is_same<T, Rpp32f>::value)
@@ -938,7 +769,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        gaussian_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3);
+                        convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -974,7 +805,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            gaussian_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                            convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
                             dstPtrTemp++;
                         }
                     }
@@ -990,18 +821,10 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             pResultPln[c] = avx_p0;
                             for (int k = 0; k < 7; k++)
                             {
-                                __m256 pTemp[7];
                                 Rpp32s filterIndex =  k * 7;
                                 Rpp32s rowIndex = k * 2;
 
-                                pTemp[0] = _mm256_mul_ps(pRow[rowIndex], pFilter[filterIndex]);
-                                pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 1), avx_pxMaskRotate0To1), pFilter[filterIndex + 1]);
-                                pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 3), avx_pxMaskRotate0To2), pFilter[filterIndex + 2]);
-                                pTemp[3] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 7), avx_pxMaskRotate0To3), pFilter[filterIndex + 3]);
-                                pTemp[4] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 15), avx_pxMaskRotate0To4), pFilter[filterIndex + 4]);
-                                pTemp[5] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 31), avx_pxMaskRotate0To5), pFilter[filterIndex + 5]);
-                                pTemp[6] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 63), avx_pxMaskRotate0To6), pFilter[filterIndex + 6]);
-                                pResultPln[c] = _mm256_add_ps(pResultPln[c], _mm256_add_ps(_mm256_add_ps(pTemp[0], _mm256_add_ps(pTemp[1], pTemp[2])), _mm256_add_ps(_mm256_add_ps(pTemp[3], pTemp[4]), _mm256_add_ps(pTemp[5], pTemp[6]))));
+                                permute_blend_add_7x7_pln(pResultPln[c], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex]);
                             }
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 8);
                         }
@@ -1023,7 +846,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < srcDescPtr->c; c++)
                         {
-                            gaussian_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                            convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -1062,27 +885,11 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         pDst[1] = avx_p0;
                         for (int k = 0; k < 7; k++)
                         {
-                            __m256 pTemp[7];
                             Rpp32s filterIndex =  k * 7;
                             Rpp32s rowIndex = k * 4;
 
-                            pTemp[0] = _mm256_mul_ps(pRow[rowIndex], pFilter[filterIndex]);
-                            pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 7), avx_pxMaskRotate0To3), pFilter[filterIndex + 1]);
-                            pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 63), avx_pxMaskRotate0To6), pFilter[filterIndex + 2]);
-                            pTemp[3] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], pRow[rowIndex + 2], 1), avx_pxMaskRotate0To1), pFilter[filterIndex + 3]);
-                            pTemp[4] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], pRow[rowIndex + 2], 15), avx_pxMaskRotate0To4), pFilter[filterIndex + 4]);
-                            pTemp[5] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], pRow[rowIndex + 2], 127), avx_pxMaskRotate0To7), pFilter[filterIndex + 5]);
-                            pTemp[6] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 2], pRow[rowIndex + 3], 3), avx_pxMaskRotate0To2), pFilter[filterIndex + 6]);
-                            pDst[0] =  _mm256_add_ps(pDst[0], _mm256_add_ps(_mm256_add_ps(pTemp[0], _mm256_add_ps(pTemp[1], pTemp[2])), _mm256_add_ps(_mm256_add_ps(pTemp[3], pTemp[4]), _mm256_add_ps(pTemp[5], pTemp[6]))));
-
-                            pTemp[0] = _mm256_mul_ps(pRow[rowIndex + 1], pFilter[filterIndex]);
-                            pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], pRow[rowIndex + 2], 7), avx_pxMaskRotate0To3), pFilter[filterIndex + 1]);
-                            pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], pRow[rowIndex + 2], 63), avx_pxMaskRotate0To6), pFilter[filterIndex + 2]);
-                            pTemp[3] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 2], pRow[rowIndex + 3], 1), avx_pxMaskRotate0To1), pFilter[filterIndex + 3]);
-                            pTemp[4] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 2], pRow[rowIndex + 3], 15), avx_pxMaskRotate0To4), pFilter[filterIndex + 4]);
-                            pTemp[5] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 2], pRow[rowIndex + 3], 127), avx_pxMaskRotate0To7), pFilter[filterIndex + 5]);
-                            pTemp[6] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 3], avx_p0, 3), avx_pxMaskRotate0To2), pFilter[filterIndex + 6]);
-                            pDst[1] =  _mm256_add_ps(pDst[1], _mm256_add_ps(_mm256_add_ps(pTemp[0], _mm256_add_ps(pTemp[1], pTemp[2])), _mm256_add_ps(_mm256_add_ps(pTemp[3], pTemp[4]), _mm256_add_ps(pTemp[5], pTemp[6]))));
+                            permute_blend_add_7x7_pkd(pDst[0], pRow[rowIndex], pRow[rowIndex + 1], pRow[rowIndex + 2], pRow[rowIndex + 3], &pFilter[filterIndex]);
+                            permute_blend_add_7x7_pkd(pDst[1], pRow[rowIndex + 1], pRow[rowIndex + 2], pRow[rowIndex + 3], avx_p0, &pFilter[filterIndex]);
                         }
 
                         __m128 pDstPln[3];
@@ -1099,7 +906,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         int channel = vectorLoopCount % 3;
-                        gaussian_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3);
+                        convolution_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTempChannels[channel]++;
                     }
@@ -1151,20 +958,10 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             pDst = avx_p0;
                             for (int k = 0; k < 9; k++)
                             {
-                                __m256 pTemp[9];
                                 Rpp32s filterIndex =  k * 9;
                                 Rpp32s rowIndex = k * 2;
 
-                                pTemp[0] = _mm256_mul_ps(pRow[rowIndex], pFilter[filterIndex]);
-                                pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 1), avx_pxMaskRotate0To1), pFilter[filterIndex + 1]);
-                                pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 3), avx_pxMaskRotate0To2), pFilter[filterIndex + 2]);
-                                pTemp[3] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 7), avx_pxMaskRotate0To3), pFilter[filterIndex + 3]);
-                                pTemp[4] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 15), avx_pxMaskRotate0To4), pFilter[filterIndex + 4]);
-                                pTemp[5] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 31), avx_pxMaskRotate0To5), pFilter[filterIndex + 5]);
-                                pTemp[6] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 63), avx_pxMaskRotate0To6), pFilter[filterIndex + 6]);
-                                pTemp[7] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 127), avx_pxMaskRotate0To7), pFilter[filterIndex + 7]);
-                                pTemp[8] = _mm256_mul_ps(pRow[rowIndex + 1], pFilter[filterIndex + 8]);
-                                pDst = _mm256_add_ps(pDst, _mm256_add_ps(_mm256_add_ps(_mm256_add_ps(pTemp[0], pTemp[1]), _mm256_add_ps(pTemp[2], pTemp[3])), _mm256_add_ps(_mm256_add_ps(pTemp[4], pTemp[5]), _mm256_add_ps(pTemp[6], _mm256_add_ps(pTemp[7], pTemp[8])))));
+                                permute_blend_add_9x9_pln(pDst, pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex]);
                             }
 
                             if constexpr (std::is_same<T, Rpp32f>::value)
@@ -1183,7 +980,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         vectorLoopCount += padLength;
                         for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                         {
-                            gaussian_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                            convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
                             increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -1221,20 +1018,10 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         pDst = avx_p0;
                         for (int k = 0; k < 9; k++)
                         {
-                            __m256 pTemp[9];
                             Rpp32s filterIndex =  k * 9;
                             Rpp32s rowIndex = k * 4;
 
-                            pTemp[0] = _mm256_mul_ps(pRow[rowIndex], pFilter[filterIndex]);
-                            pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 7), avx_pxMaskRotate0To3), pFilter[filterIndex + 1]);
-                            pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 63), avx_pxMaskRotate0To6), pFilter[filterIndex + 2]);
-                            pTemp[3] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], pRow[rowIndex + 2], 1), avx_pxMaskRotate0To1), pFilter[filterIndex + 3]);
-                            pTemp[4] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], pRow[rowIndex + 2], 15), avx_pxMaskRotate0To4), pFilter[filterIndex + 4]);
-                            pTemp[5] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], pRow[rowIndex + 2], 127), avx_pxMaskRotate0To7), pFilter[filterIndex + 5]);
-                            pTemp[6] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 2], pRow[rowIndex + 3], 3), avx_pxMaskRotate0To2), pFilter[filterIndex + 6]);
-                            pTemp[7] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 2], pRow[rowIndex + 3], 31), avx_pxMaskRotate0To5), pFilter[filterIndex + 7]);
-                            pTemp[8] = _mm256_mul_ps(pRow[rowIndex + 3], pFilter[filterIndex + 8]);
-                            pDst = _mm256_add_ps(pDst, _mm256_add_ps(_mm256_add_ps(_mm256_add_ps(pTemp[0], pTemp[1]), _mm256_add_ps(pTemp[2], pTemp[3])), _mm256_add_ps(_mm256_add_ps(pTemp[4], pTemp[5]), _mm256_add_ps(pTemp[6], _mm256_add_ps(pTemp[7], pTemp[8])))));
+                            permute_blend_add_9x9_pkd(pDst, pRow[rowIndex], pRow[rowIndex + 1], pRow[rowIndex + 2], pRow[rowIndex + 3], &pFilter[filterIndex]);
                         }
 
                         if constexpr (std::is_same<T, Rpp32f>::value)
@@ -1253,7 +1040,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     vectorLoopCount += padLength * 3;
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        gaussian_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3);
+                        convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -1288,7 +1075,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < 3; c++)
                         {
-                            gaussian_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                            convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
                             dstPtrTemp++;
                         }
                     }
@@ -1304,20 +1091,10 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             pResultPln[c] = avx_p0;
                             for (int k = 0; k < 9; k++)
                             {
-                                __m256 pTemp[9];
                                 Rpp32s filterIndex =  k * 9;
                                 Rpp32s rowIndex = k * 2;
 
-                                pTemp[0] = _mm256_mul_ps(pRow[rowIndex], pFilter[filterIndex]);
-                                pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 1), avx_pxMaskRotate0To1), pFilter[filterIndex + 1]);
-                                pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 3), avx_pxMaskRotate0To2), pFilter[filterIndex + 2]);
-                                pTemp[3] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 7), avx_pxMaskRotate0To3), pFilter[filterIndex + 3]);
-                                pTemp[4] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 15), avx_pxMaskRotate0To4), pFilter[filterIndex + 4]);
-                                pTemp[5] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 31), avx_pxMaskRotate0To5), pFilter[filterIndex + 5]);
-                                pTemp[6] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 63), avx_pxMaskRotate0To6), pFilter[filterIndex + 6]);
-                                pTemp[7] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 127), avx_pxMaskRotate0To7), pFilter[filterIndex + 7]);
-                                pTemp[8] = _mm256_mul_ps(pRow[rowIndex + 1], pFilter[filterIndex + 8]);
-                                pResultPln[c] = _mm256_add_ps(pResultPln[c], _mm256_add_ps(_mm256_add_ps(_mm256_add_ps(pTemp[0], pTemp[1]), _mm256_add_ps(pTemp[2], pTemp[3])), _mm256_add_ps(_mm256_add_ps(pTemp[4], pTemp[5]), _mm256_add_ps(pTemp[6], _mm256_add_ps(pTemp[7], pTemp[8])))));
+                                permute_blend_add_9x9_pln(pResultPln[c], pRow[rowIndex], pFilter[rowIndex + 1], &pFilter[filterIndex]);
                             }
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 8);
                         }
@@ -1339,7 +1116,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     {
                         for (int c = 0; c < srcDescPtr->c; c++)
                         {
-                            gaussian_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                            convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
                             dstPtrTemp++;
                         }
@@ -1378,31 +1155,11 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         pDst[1] = avx_p0;
                         for (int k = 0; k < 9; k++)
                         {
-                            __m256 pTemp[9];
                             Rpp32s filterIndex =  k * 9;
                             Rpp32s rowIndex = k * 4;
 
-                            pTemp[0] = _mm256_mul_ps(pRow[rowIndex], pFilter[filterIndex]);
-                            pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 7), avx_pxMaskRotate0To3), pFilter[filterIndex + 1]);
-                            pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex], pRow[rowIndex + 1], 63), avx_pxMaskRotate0To6), pFilter[filterIndex + 2]);
-                            pTemp[3] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], pRow[rowIndex + 2], 1), avx_pxMaskRotate0To1), pFilter[filterIndex + 3]);
-                            pTemp[4] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], pRow[rowIndex + 2], 15), avx_pxMaskRotate0To4), pFilter[filterIndex + 4]);
-                            pTemp[5] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], pRow[rowIndex + 2], 127), avx_pxMaskRotate0To7), pFilter[filterIndex + 5]);
-                            pTemp[6] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 2], pRow[rowIndex + 3], 3), avx_pxMaskRotate0To2), pFilter[filterIndex + 6]);
-                            pTemp[7] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 2], pRow[rowIndex + 3], 31), avx_pxMaskRotate0To5), pFilter[filterIndex + 7]);
-                            pTemp[8] = _mm256_mul_ps(pRow[rowIndex + 3], pFilter[filterIndex + 8]);
-                            pDst[0] = _mm256_add_ps(pDst[0], _mm256_add_ps(_mm256_add_ps(_mm256_add_ps(pTemp[0], pTemp[1]), _mm256_add_ps(pTemp[2], pTemp[3])), _mm256_add_ps(_mm256_add_ps(pTemp[4], pTemp[5]), _mm256_add_ps(pTemp[6], _mm256_add_ps(pTemp[7], pTemp[8])))));
-
-                            pTemp[0] = _mm256_mul_ps(pRow[rowIndex + 1], pFilter[filterIndex]);
-                            pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], pRow[rowIndex + 2], 7), avx_pxMaskRotate0To3), pFilter[filterIndex + 1]);
-                            pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 1], pRow[rowIndex + 2], 63), avx_pxMaskRotate0To6), pFilter[filterIndex + 2]);
-                            pTemp[3] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 2], pRow[rowIndex + 3], 1), avx_pxMaskRotate0To1), pFilter[filterIndex + 3]);
-                            pTemp[4] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 2], pRow[rowIndex + 3], 15), avx_pxMaskRotate0To4), pFilter[filterIndex + 4]);
-                            pTemp[5] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 2], pRow[rowIndex + 3], 127), avx_pxMaskRotate0To7), pFilter[filterIndex + 5]);
-                            pTemp[6] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 3], pRow[rowIndex + 4], 3), avx_pxMaskRotate0To2), pFilter[filterIndex + 6]);
-                            pTemp[7] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[rowIndex + 3], pRow[rowIndex + 4], 31), avx_pxMaskRotate0To5), pFilter[filterIndex + 7]);
-                            pTemp[8] = _mm256_mul_ps(pRow[rowIndex + 4], pFilter[filterIndex + 8]);
-                            pDst[1] = _mm256_add_ps(pDst[1], _mm256_add_ps(_mm256_add_ps(_mm256_add_ps(pTemp[0], pTemp[1]), _mm256_add_ps(pTemp[2], pTemp[3])), _mm256_add_ps(_mm256_add_ps(pTemp[4], pTemp[5]), _mm256_add_ps(pTemp[6], _mm256_add_ps(pTemp[7], pTemp[8])))));
+                            permute_blend_add_9x9_pkd(pDst[0], pRow[rowIndex], pRow[rowIndex + 1], pRow[rowIndex + 2], pRow[rowIndex + 3], &pFilter[filterIndex]);
+                            permute_blend_add_9x9_pkd(pDst[1], pRow[rowIndex + 1], pRow[rowIndex + 2], pRow[rowIndex + 3], pRow[rowIndex + 4], &pFilter[filterIndex]);
                         }
 
                         __m128 pDstPln[3];
@@ -1419,7 +1176,7 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
                         int channel = vectorLoopCount % 3;
-                        gaussian_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3);
+                        convolution_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTempChannels[channel]++;
                     }
@@ -1498,11 +1255,10 @@ RppStatus gaussian_filter_generic_host_tensor(T *srcPtr,
                     process_left_border_columns_pln_pln(srcPtrTemp, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
                     dstPtrTemp += padLength;
                     vectorLoopCount += padLength;
-
                     // process remaining columns in each row
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        gaussian_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                        convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
                         increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -1530,11 +1286,10 @@ RppStatus gaussian_filter_generic_host_tensor(T *srcPtr,
                 process_left_border_columns_pkd_pkd(srcPtrTemp, srcPtrRow, dstPtrTemp, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
                 dstPtrTemp += padLength * 3;
                 vectorLoopCount += padLength * 3;
-
                 // process remaining columns in each row
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    gaussian_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3);
+                    convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3);
                     increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                     dstPtrTemp++;
                 }
@@ -1566,18 +1321,17 @@ RppStatus gaussian_filter_generic_host_tensor(T *srcPtr,
                 {
                     for (int c = 0; c < 3; c++)
                     {
-                        gaussian_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                        convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
                         dstPtrTemp++;
                     }
                 }
                 vectorLoopCount += padLength;
-
                 // process remaining columns in each row
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     for (int c = 0; c < srcDescPtr->c; c++)
                     {
-                        gaussian_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+                        convolution_filter_generic_tensor(srcPtrTemp[c], dstPtrTemp, vectorLoopCount, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
                         increment_row_ptrs(srcPtrTemp[c], kernelSize, 1);
                         dstPtrTemp++;
                     }
@@ -1605,12 +1359,11 @@ RppStatus gaussian_filter_generic_host_tensor(T *srcPtr,
                 get_kernel_loop_limit(i, rowKernelLoopLimit, padLength, unpaddedHeight);
                 process_left_border_columns_pkd_pln(srcPtrTemp, srcPtrRow, dstPtrTempChannels, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
                 vectorLoopCount += padLength * 3;
-
                 // process remaining columns in each row
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     int channel = vectorLoopCount % 3;
-                    gaussian_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3);
+                    convolution_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[channel], vectorLoopCount / 3, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3);
                     increment_row_ptrs(srcPtrTemp, kernelSize, 1);
                     dstPtrTempChannels[channel]++;
                 }

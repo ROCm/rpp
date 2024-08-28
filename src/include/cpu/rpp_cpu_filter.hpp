@@ -43,13 +43,6 @@ const __m256i avx_pxMaskRotate0To5 = _mm256_setr_epi32(5, 6, 7, 0, 1, 2, 3, 4);
 const __m256i avx_pxMaskRotate0To6 = _mm256_setr_epi32(6, 7, 0, 1, 2, 3, 4, 5);
 const __m256i avx_pxMaskRotate0To7 = _mm256_setr_epi32(7, 0, 1, 2, 3, 4, 5, 6);
 
-template<typename T>
-inline void increment_row_ptrs(T **srcPtrTemp, Rpp32u kernelSize, Rpp32s increment)
-{
-    for (int i = 0; i < kernelSize; i++)
-        srcPtrTemp[i] += increment;
-}
-
 // get the kernel loop limit based on index
 inline void get_kernel_loop_limit(Rpp32s &index, Rpp32s &loopLimit, Rpp32u &padLength, Rpp32u &unpaddedLength)
 {
@@ -58,6 +51,181 @@ inline void get_kernel_loop_limit(Rpp32s &index, Rpp32s &loopLimit, Rpp32u &padL
         Rpp32u factor = (index < padLength) ? (index - padLength) : (unpaddedLength - 1 - index);
         loopLimit += factor;
     }
+}
+
+template<typename T>
+inline void increment_row_ptrs(T **srcPtrTemp, Rpp32u kernelSize, Rpp32s increment)
+{
+    for (int i = 0; i < kernelSize; i++)
+        srcPtrTemp[i] += increment;
+}
+
+template<typename T>
+inline void convolution_filter_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp32s columnIndex,
+                                              Rpp32u kernelSize, Rpp32u padLength, Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit,
+                                              Rpp32f *filterTensor, Rpp32u channels = 1)
+{
+    Rpp32f accum = 0.0f;
+    Rpp32s columnKernelLoopLimit = kernelSize;
+
+    // find the colKernelLoopLimit based on columnIndex
+    get_kernel_loop_limit(columnIndex, columnKernelLoopLimit, padLength, unpaddedWidth);
+    if constexpr (std::is_same<T, Rpp8s>::value)
+    {
+        for (int i = 0; i < rowKernelLoopLimit; i++)
+            for (int j = 0, k = 0 ; j < columnKernelLoopLimit; j++, k += channels)
+                accum += static_cast<Rpp32f>(srcPtrTemp[i][k] + 128) * filterTensor[i * kernelSize + j];
+    }
+    else
+    {
+        for (int i = 0; i < rowKernelLoopLimit; i++)
+            for (int j = 0, k = 0 ; j < columnKernelLoopLimit; j++, k += channels)
+                accum += static_cast<Rpp32f>(srcPtrTemp[i][k]) * filterTensor[i * kernelSize + j];
+    }
+
+    if constexpr (std::is_same<T, Rpp8u>::value || std::is_same<T, Rpp8s>::value)
+        accum = round(accum);
+    saturate_pixel(accum, dstPtrTemp);
+}
+
+// process padLength number of columns in each row
+// left border pixels in image which does not have required pixels in 3x3 kernel, process them separately
+template<typename T>
+inline void process_left_border_columns_pln_pln(T **srcPtrTemp, T *dstPtrTemp, Rpp32u kernelSize, Rpp32u padLength,
+                                                Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit, Rpp32f *filterTensor)
+{
+    for (int k = 0; k < padLength; k++)
+    {
+        convolution_filter_generic_tensor(srcPtrTemp, dstPtrTemp, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor);
+        dstPtrTemp++;
+    }
+}
+
+template<typename T>
+inline void process_left_border_columns_pkd_pkd(T **srcPtrTemp, T **srcPtrRow, T *dstPtrTemp, Rpp32u kernelSize, Rpp32u padLength,
+                                                Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit, Rpp32f *filterTensor)
+{
+    for (int c = 0; c < 3; c++)
+    {
+        T *dstPtrTempChannel = dstPtrTemp + c;
+        for (int k = 0; k < padLength; k++)
+        {
+            convolution_filter_generic_tensor(srcPtrTemp, dstPtrTempChannel, k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3);
+            dstPtrTempChannel += 3;
+        }
+        increment_row_ptrs(srcPtrTemp, kernelSize, 1);
+    }
+    // reset source to initial position
+    for (int k = 0; k < kernelSize; k++)
+        srcPtrTemp[k] = srcPtrRow[k];
+}
+
+template<typename T>
+inline void process_left_border_columns_pkd_pln(T **srcPtrTemp, T **srcPtrRow, T **dstPtrTempChannels, Rpp32u kernelSize, Rpp32u padLength,
+                                                Rpp32u unpaddedWidth, Rpp32s rowKernelLoopLimit, Rpp32f *filterTensor)
+{
+    for (int c = 0; c < 3; c++)
+    {
+        for (int k = 0; k < padLength; k++)
+        {
+            convolution_filter_generic_tensor(srcPtrTemp, dstPtrTempChannels[c], k, kernelSize, padLength, unpaddedWidth, rowKernelLoopLimit, filterTensor, 3);
+            dstPtrTempChannels[c] += 1;
+        }
+        increment_row_ptrs(srcPtrTemp, kernelSize, 1);
+    }
+
+    // reset source to initial position
+    for (int k = 0; k < kernelSize; k++)
+        srcPtrTemp[k] = srcPtrRow[k];
+}
+
+
+template<int blendMask1, int blendMask2, int roatateMask1, int roatateMask2>
+inline void permute_blend_add_3x3(__m256 &pDst, __m256 pRow0, __m256 pRow1, __m256 *pFilter, __m256i *pxMask)
+{
+    __m256 pTemp[3];
+    pTemp[0] = _mm256_mul_ps(pRow0, pFilter[0]);
+    pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, blendMask1), pxMask[roatateMask1]), pFilter[1]);
+    pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, blendMask2), pxMask[roatateMask2]), pFilter[2]);
+    pDst = _mm256_add_ps(pDst, _mm256_add_ps(_mm256_add_ps(pTemp[0], pTemp[1]), pTemp[2]));
+}
+
+inline void permute_blend_add_5x5_pln(__m256 &pDst, __m256 pRow0, __m256 pRow1, __m256 *pFilter)
+{
+    __m256 pTemp[5];
+    pTemp[0] = _mm256_mul_ps(pRow0, pFilter[0]);
+    pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 1), avx_pxMaskRotate0To1), pFilter[1]);
+    pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 3), avx_pxMaskRotate0To2), pFilter[2]);
+    pTemp[3] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 7), avx_pxMaskRotate0To3), pFilter[3]);
+    pTemp[4] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 15), avx_pxMaskRotate0To4), pFilter[4]);
+    pDst = _mm256_add_ps(pDst, _mm256_add_ps(_mm256_add_ps(pTemp[0], _mm256_add_ps(pTemp[1], pTemp[2])), _mm256_add_ps(pTemp[3], pTemp[4])));
+}
+
+inline void permute_blend_add_5x5_pkd(__m256 &pDst, __m256 pRow0, __m256 pRow1, __m256 pRow2, __m256 *pFilter)
+{
+    __m256 pTemp[5];
+    pTemp[0] = _mm256_mul_ps(pRow0, pFilter[0]);
+    pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 7), avx_pxMaskRotate0To3), pFilter[1]);
+    pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 63), avx_pxMaskRotate0To6), pFilter[2]);
+    pTemp[3] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow1, pRow2, 1), avx_pxMaskRotate0To1), pFilter[3]);
+    pTemp[4] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow1, pRow2, 15), avx_pxMaskRotate0To4), pFilter[4]);
+    pDst = _mm256_add_ps(pDst, _mm256_add_ps(_mm256_add_ps(pTemp[0], _mm256_add_ps(pTemp[1], pTemp[2])), _mm256_add_ps(pTemp[3], pTemp[4])));
+}
+
+inline void permute_blend_add_7x7_pln(__m256 &pDst, __m256 pRow0, __m256 pRow1, __m256 *pFilter)
+{
+    __m256 pTemp[7];
+    pTemp[0] = _mm256_mul_ps(pRow0, pFilter[0]);
+    pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 1), avx_pxMaskRotate0To1), pFilter[1]);
+    pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 3), avx_pxMaskRotate0To2), pFilter[2]);
+    pTemp[3] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 7), avx_pxMaskRotate0To3), pFilter[3]);
+    pTemp[4] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 15), avx_pxMaskRotate0To4), pFilter[4]);
+    pTemp[5] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 31), avx_pxMaskRotate0To5), pFilter[5]);
+    pTemp[6] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 63), avx_pxMaskRotate0To6), pFilter[6]);
+    pDst =  _mm256_add_ps(pDst, _mm256_add_ps(_mm256_add_ps(pTemp[0], _mm256_add_ps(pTemp[1], pTemp[2])), _mm256_add_ps(_mm256_add_ps(pTemp[3], pTemp[4]), _mm256_add_ps(pTemp[5], pTemp[6]))));
+}
+
+inline void permute_blend_add_7x7_pkd(__m256 &pDst, __m256 pRow0, __m256 pRow1, __m256 pRow2, __m256 pRow3, __m256 *pFilter)
+{
+    __m256 pTemp[7];
+    pTemp[0] = _mm256_mul_ps(pRow0, pFilter[0]);
+    pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 7), avx_pxMaskRotate0To3), pFilter[1]);
+    pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 63), avx_pxMaskRotate0To6), pFilter[2]);
+    pTemp[3] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow1, pRow2, 1), avx_pxMaskRotate0To1), pFilter[3]);
+    pTemp[4] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow1, pRow2, 15), avx_pxMaskRotate0To4), pFilter[4]);
+    pTemp[5] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow1, pRow2, 127), avx_pxMaskRotate0To7), pFilter[5]);
+    pTemp[6] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow2, pRow3, 3), avx_pxMaskRotate0To2), pFilter[6]);
+    pDst =  _mm256_add_ps(pDst, _mm256_add_ps(_mm256_add_ps(pTemp[0], _mm256_add_ps(pTemp[1], pTemp[2])), _mm256_add_ps(_mm256_add_ps(pTemp[3], pTemp[4]), _mm256_add_ps(pTemp[5], pTemp[6]))));
+}
+
+inline void permute_blend_add_9x9_pln(__m256 &pDst, __m256 pRow0, __m256 pRow1, __m256 *pFilter)
+{
+    __m256 pTemp[9];
+    pTemp[0] = _mm256_mul_ps(pRow0, pFilter[0]);
+    pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 1), avx_pxMaskRotate0To1), pFilter[1]);
+    pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 3), avx_pxMaskRotate0To2), pFilter[2]);
+    pTemp[3] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 7), avx_pxMaskRotate0To3), pFilter[3]);
+    pTemp[4] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 15), avx_pxMaskRotate0To4), pFilter[4]);
+    pTemp[5] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 31), avx_pxMaskRotate0To5), pFilter[5]);
+    pTemp[6] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 63), avx_pxMaskRotate0To6), pFilter[6]);
+    pTemp[7] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 127), avx_pxMaskRotate0To7), pFilter[7]);
+    pTemp[8] = _mm256_mul_ps(pRow1, pFilter[8]);
+    pDst = _mm256_add_ps(pDst, _mm256_add_ps(_mm256_add_ps(_mm256_add_ps(pTemp[0], pTemp[1]), _mm256_add_ps(pTemp[2], pTemp[3])), _mm256_add_ps(_mm256_add_ps(pTemp[4], pTemp[5]), _mm256_add_ps(pTemp[6], _mm256_add_ps(pTemp[7], pTemp[8])))));
+}
+
+inline void permute_blend_add_9x9_pkd(__m256 &pDst, __m256 pRow0, __m256 pRow1, __m256 pRow2, __m256 pRow3, __m256 *pFilter)
+{
+    __m256 pTemp[9];
+    pTemp[0] = _mm256_mul_ps(pRow0, pFilter[0]);
+    pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 7), avx_pxMaskRotate0To3), pFilter[1]);
+    pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 63), avx_pxMaskRotate0To6), pFilter[2]);
+    pTemp[3] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow1, pRow2, 1), avx_pxMaskRotate0To1), pFilter[3]);
+    pTemp[4] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow1, pRow2, 15), avx_pxMaskRotate0To4), pFilter[4]);
+    pTemp[5] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow1, pRow2, 127), avx_pxMaskRotate0To7), pFilter[5]);
+    pTemp[6] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow2, pRow3, 3), avx_pxMaskRotate0To2), pFilter[6]);
+    pTemp[7] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow2, pRow3, 31), avx_pxMaskRotate0To5), pFilter[7]);
+    pTemp[8] = _mm256_mul_ps(pRow3, pFilter[8]);
+    pDst = _mm256_add_ps(pDst, _mm256_add_ps(_mm256_add_ps(_mm256_add_ps(pTemp[0], pTemp[1]), _mm256_add_ps(pTemp[2], pTemp[3])), _mm256_add_ps(_mm256_add_ps(pTemp[4], pTemp[5]), _mm256_add_ps(pTemp[6], _mm256_add_ps(pTemp[7], pTemp[8])))));
 }
 
 // -------------------- Filter load functions for U8 bitdepth --------------------
