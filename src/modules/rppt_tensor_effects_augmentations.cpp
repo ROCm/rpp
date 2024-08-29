@@ -1161,15 +1161,19 @@ RppStatus rppt_fog_host(RppPtr_t srcPtr,
                         rppHandle_t rppHandle)
 {
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
-    // Initialize and set original fog mask source descriptor
-    RpptDesc fogMaskSrcDesc; 
+    // Do the setup required for resizing the fog mask based on max size in the batch
+
+    // Initialize and set descriptor for original fog mask
+    RpptDesc fogMaskSrcDesc;
     RpptDescPtr fogMaskSrcDescPtr = &fogMaskSrcDesc;
     set_fog_mask_descriptor(fogMaskSrcDescPtr, 2, FOG_MAX_HEIGHT, FOG_MAX_WIDTH, 1);
-    // Initialize and set fog resized mask destination descriptor
+    
+    // Initialize and set descriptor for resized fog mask
     RpptDesc fogMaskDstDesc;
     RpptDescPtr fogMaskDstDescPtr = &fogMaskDstDesc;
     set_fog_mask_descriptor(fogMaskDstDescPtr, 2, srcDescPtr->h, srcDescPtr->w, 1);
 
+    // Fill the ROI and dstImageSize values required for resize api call 
     RpptImagePatchPtr internalDstImgSizes = reinterpret_cast<RpptImagePatch *> (rpp::deref(rppHandle).GetInitHandle()->mem.mcpu.scratchBufferHost);
     RpptROI *internalRoiTensorPtrSrc = reinterpret_cast<RpptROI *>(internalDstImgSizes + 2);
     for (Rpp32s i = 0; i < 2; i++)
@@ -1178,10 +1182,11 @@ RppStatus rppt_fog_host(RppPtr_t srcPtr,
         internalRoiTensorPtrSrc[i].xywhROI = {0, 0, 1920, 1080};
     }
     RpptInterpolationType interpolationType = RpptInterpolationType::NEAREST_NEIGHBOR;
-    Rpp32f *fogAlphaMaskPtr = reinterpret_cast<Rpp32f *>(internalRoiTensorPtrSrc + 2);
-    Rpp32f *fogIntensityMaskPtr = fogAlphaMaskPtr + (srcDescPtr->h * srcDescPtr->w);
+    Rpp32f *resizedFogAlphaMaskPtr = reinterpret_cast<Rpp32f *>(internalRoiTensorPtrSrc + 2);
+    Rpp32f *resizedFogIntensityMaskPtr = resizedFogAlphaMaskPtr + (srcDescPtr->h * srcDescPtr->w);
+    
     // Resize the mask to the maximum size present in the batch
-    rppt_resize_host(&fogMask_1920_1080[0], fogMaskSrcDescPtr, fogAlphaMaskPtr, fogMaskDstDescPtr, internalDstImgSizes, interpolationType, internalRoiTensorPtrSrc, roiType, rppHandle);
+    rppt_resize_host(&fogMask_1920_1080[0], fogMaskSrcDescPtr, resizedFogAlphaMaskPtr, fogMaskDstDescPtr, internalDstImgSizes, interpolationType, internalRoiTensorPtrSrc, roiType, rppHandle);
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
@@ -1189,8 +1194,8 @@ RppStatus rppt_fog_host(RppPtr_t srcPtr,
                               srcDescPtr,
                               static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
                               dstDescPtr,
-                              fogAlphaMaskPtr,
-                              fogIntensityMaskPtr,
+                              resizedFogAlphaMaskPtr,
+                              resizedFogIntensityMaskPtr,
                               intensityFactor,
                               roiTensorPtrSrc,
                               roiType,
@@ -1203,8 +1208,8 @@ RppStatus rppt_fog_host(RppPtr_t srcPtr,
                                 srcDescPtr,
                                 reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                 dstDescPtr,
-                                fogAlphaMaskPtr,
-                                fogIntensityMaskPtr,
+                                resizedFogAlphaMaskPtr,
+                                resizedFogIntensityMaskPtr,
                                 intensityFactor,
                                 roiTensorPtrSrc,
                                 roiType,
@@ -1217,8 +1222,8 @@ RppStatus rppt_fog_host(RppPtr_t srcPtr,
                                 srcDescPtr,
                                 reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
                                 dstDescPtr,
-                                fogAlphaMaskPtr,
-                                fogIntensityMaskPtr,
+                                resizedFogAlphaMaskPtr,
+                                resizedFogIntensityMaskPtr,
                                 intensityFactor,
                                 roiTensorPtrSrc,
                                 roiType,
@@ -1231,8 +1236,8 @@ RppStatus rppt_fog_host(RppPtr_t srcPtr,
                               srcDescPtr,
                               static_cast<Rpp8s*>(dstPtr) + dstDescPtr->offsetInBytes,
                               dstDescPtr,
-                              fogAlphaMaskPtr,
-                              fogIntensityMaskPtr,
+                              resizedFogAlphaMaskPtr,
+                              resizedFogIntensityMaskPtr,
                               intensityFactor,
                               roiTensorPtrSrc,
                               roiType,
@@ -2444,46 +2449,52 @@ RppStatus rppt_fog_gpu(RppPtr_t srcPtr,
                        rppHandle_t rppHandle)
 {
 #ifdef HIP_COMPILE
-    RpptInterpolationType interpolationType = RpptInterpolationType::NEAREST_NEIGHBOR;
-    // Initialize and set original fog mask source descriptor
+    // Do the setup required for resizing the fog mask based on max size in the batch
+
+    // Initialize and set descriptor for original fog mask
     RpptDesc fogMaskSrcDesc;
     RpptDescPtr fogMaskSrcDescPtr = &fogMaskSrcDesc;
     set_fog_mask_descriptor(fogMaskSrcDescPtr, 2, FOG_MAX_HEIGHT, FOG_MAX_WIDTH, 1);  
-    // Initialize and set fog resized mask destination descriptor
+    
+    // Initialize and set descriptor for resized fog mask
     RpptDesc fogMaskDstDesc;
     RpptDescPtr fogMaskDstDescPtr = &fogMaskDstDesc;
     set_fog_mask_descriptor(fogMaskDstDescPtr, 2, srcDescPtr->h, srcDescPtr->w, 1);
 
+    // Fill the ROI and dstImageSize values required for resize api call 
     RpptImagePatchPtr internalDstImgSizes = reinterpret_cast<RpptImagePatch *>(rpp::deref(rppHandle).GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem);
     RpptROI *internalRoiTensorPtrSrc = reinterpret_cast<RpptROI *>(internalDstImgSizes + 2);
-
     for (Rpp32s i = 0; i < 2; i++)
     {
         internalDstImgSizes[i] = {srcDescPtr->w, srcDescPtr->h};
         internalRoiTensorPtrSrc[i].xywhROI = {0, 0, 1920, 1080};
     }
-    // Setting batch size to 2 for computing resizing for alpha and intensity
+    RpptInterpolationType interpolationType = RpptInterpolationType::NEAREST_NEIGHBOR;
+
+    // Set batch size to 2 for computing resized alpha and intensity masks using single resize call
     rppSetBatchSize(rppHandle, 2);
 
+    // Compute the mask size
     Rpp32u maskSize = FOG_MAX_HEIGHT * FOG_MAX_WIDTH;
     Rpp32u maskSizeInBytes = maskSize * sizeof(Rpp32f);
 
-    Rpp32f *d_fogAlphaMaskPtr, *d_fogIntensityMaskPtr;
+    Rpp32f *d_fogAlphaMaskPtr, *d_fogIntensityMaskPtr, *d_resizedFogAlphaMaskPtr, *d_resizedFogIntensityMaskPtr;
     d_fogAlphaMaskPtr = reinterpret_cast<Rpp32f*>(rpp::deref(rppHandle).GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
-
-    Rpp32f *d_resizedFogAlphaMaskPtr, *d_resizedFogIntensityMaskPtr;
     d_resizedFogAlphaMaskPtr = reinterpret_cast<Rpp32f*>(d_fogAlphaMaskPtr + (2 * maskSize));
-     // Copying fog alpha mask from host to device asynchronously
+    d_resizedFogIntensityMaskPtr = d_resizedFogAlphaMaskPtr + (srcDescPtr->h * srcDescPtr->w);
+
+    // Copying fog alpha mask from host to device asynchronously
     CHECK_RETURN_STATUS(hipMemcpyAsync(d_fogAlphaMaskPtr, &fogMask_1920_1080[0], maskSizeInBytes * 2, hipMemcpyHostToDevice,rpp::deref(rppHandle).GetStream()));
+
     // Resize the mask to the maximum size present in the batch
     rppt_resize_gpu(d_fogAlphaMaskPtr, fogMaskSrcDescPtr, d_resizedFogAlphaMaskPtr, fogMaskDstDescPtr, internalDstImgSizes, interpolationType, internalRoiTensorPtrSrc, roiType, rppHandle);
     hipStreamSynchronize(rpp::deref(rppHandle).GetStream());
-    d_resizedFogIntensityMaskPtr = d_resizedFogAlphaMaskPtr + (srcDescPtr->h * srcDescPtr->w);
-    // Resetting the batch size to match the source's batch size
+
+    // Resetting the batch size in handle to match the user passed batch size
     rppSetBatchSize(rppHandle, srcDescPtr->n);
 
     Rpp32u *maskLocOffsetX, *maskLocOffsetY;
-    maskLocOffsetX = reinterpret_cast<Rpp32u*>(d_resizedFogIntensityMaskPtr + (srcDescPtr->h * srcDescPtr->w));
+    maskLocOffsetX = reinterpret_cast<Rpp32u*>(internalRoiTensorPtrSrc + 2);
     maskLocOffsetY = reinterpret_cast<Rpp32u*>(maskLocOffsetX + srcDescPtr->n);
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
