@@ -28,6 +28,7 @@ SOFTWARE.
 
 // Include this header file to use functions from libsndfile
 #include <sndfile.h>
+using namespace std;
 
 std::map<int, string> audioAugmentationMap =
 {
@@ -320,7 +321,7 @@ void verify_non_silent_region_detection(int *detectedIndex, int *detectionLength
 inline Rpp32f sinc(Rpp32f x)
 {
     x *= M_PI;
-    return (std::abs(x) < 1e-5f) ? (1.0f - x * x * (1.0f / 6)) : std::sin(x) / x;
+    return (std::abs(x) < 1e-5f) ? (1.f - (x * x * 0.16666667)) : std::sin(x) / x;
 }
 
 inline Rpp64f hann(Rpp64f x)
@@ -336,18 +337,25 @@ inline void windowed_sinc(RpptResamplingWindow &window, Rpp32s coeffs, Rpp32s lo
     Rpp32f scale_envelope = 2.0f / coeffs;
     window.coeffs = coeffs;
     window.lobes = lobes;
-    window.lookup.clear();
-    window.lookup.resize(coeffs + 5);
-    window.lookupSize = window.lookup.size();
+    window.lookupSize = coeffs + 5;
     Rpp32s center = (coeffs - 1) * 0.5f;
+    Rpp32f *lookupPtr = nullptr;
+#ifdef GPU_SUPPORT
+    CHECK_RETURN_STATUS(hipHostMalloc(&(window.lookupPinned), window.lookupSize * sizeof(Rpp32f)));
+    lookupPtr = window.lookupPinned;
+#else
+    window.lookup.clear();
+    window.lookup.resize(window.lookupSize);
+    lookupPtr = window.lookup.data();
+#endif
     for (int i = 0; i < coeffs; i++) {
         Rpp32f x = (i - center) * scale;
         Rpp32f y = (i - center) * scale_envelope;
         Rpp32f w = sinc(x) * hann(y);
-        window.lookup[i + 1] = w;
+        lookupPtr[i + 1] = w;
     }
     window.center = center + 1;
     window.scale = 1 / scale;
     window.pCenter = _mm_set1_ps(window.center);
-    window.pScale = _mm_set1_ps(window.scale);
+    window.pScale = _mm_set1_ps(window.scale);  
 }

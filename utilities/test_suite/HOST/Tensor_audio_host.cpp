@@ -30,8 +30,8 @@ int main(int argc, char **argv)
     const int MIN_ARG_COUNT = 7;
     if (argc < MIN_ARG_COUNT)
     {
-        printf("\nImproper Usage! Needs all arguments!\n");
-        printf("\nUsage: ./Tensor_host_audio <src folder> <case number = 0:7> <test type 0/1> <numRuns> <batchSize> <dst folder>\n");
+        cout << "\nImproper Usage! Needs all arguments!\n";
+        cout << "\nUsage: ./Tensor_host_audio <src folder> <case number = 0:7> <test type 0/1> <numRuns> <batchSize> <dst folder>\n";
         return -1;
     }
 
@@ -55,7 +55,7 @@ int main(int argc, char **argv)
     if (funcName.empty())
     {
         if (testType == 0)
-            printf("\ncase %d is not supported\n", testCase);
+            cout << "\ncase " << testCase << " is not supported\n";
 
         return -1;
     }
@@ -129,6 +129,11 @@ int main(int argc, char **argv)
     iBufferSize = (Rpp64u)srcDescPtr->h * (Rpp64u)srcDescPtr->w * (Rpp64u)srcDescPtr->c * (Rpp64u)srcDescPtr->n;
     oBufferSize = (Rpp64u)dstDescPtr->h * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
 
+    // compute maximum possible buffer size of resample
+    unsigned long long resampleMaxBufferSize = dstDescPtr->n * dstDescPtr->strides.nStride * 1.15;
+    if (testCase == 6)
+        oBufferSize = resampleMaxBufferSize;
+
     // allocate host buffers for input & output
     Rpp32f *inputf32 = (Rpp32f *)calloc(iBufferSize, sizeof(Rpp32f));
     Rpp32f *outputf32 = (Rpp32f *)calloc(oBufferSize, sizeof(Rpp32f));
@@ -144,6 +149,9 @@ int main(int argc, char **argv)
     // buffers used for non silent region detection
     Rpp32s detectedIndex[batchSize], detectionLength[batchSize];
 
+    // RpptResamplingWindow instance used for resample augmentation
+    RpptResamplingWindow window;
+
     // run case-wise RPP API and measure time
     rppHandle_t handle;
     rppCreateWithBatchSize(&handle, srcDescPtr->n, 3);
@@ -151,7 +159,7 @@ int main(int argc, char **argv)
     int noOfIterations = (int)audioNames.size() / batchSize;
     double maxWallTime = 0, minWallTime = 500, avgWallTime = 0;
     string testCaseName;
-    printf("\nRunning %s %d times (each time with a batch size of %d audio files) and computing mean statistics...", func.c_str(), numRuns, batchSize);
+    cout << "\nRunning " << func << " " << numRuns << " times (each time with a batch size of " << batchSize << " audio files) and computing mean statistics...";
     for (int iterCount = 0; iterCount < noOfIterations; iterCount++)
     {
         // read and decode audio and fill the audio dim values
@@ -328,21 +336,17 @@ int main(int argc, char **argv)
                     Rpp32f quality = 50.0f;
                     Rpp32s lobes = std::round(0.007 * quality * quality - 0.09 * quality + 3);
                     Rpp32s lookupSize = lobes * 64 + 1;
-                    RpptResamplingWindow window;
                     windowed_sinc(window, lookupSize, lobes);
 
                     dstDescPtr->w = maxDstWidth;
                     dstDescPtr->strides.nStride = dstDescPtr->c * dstDescPtr->w * dstDescPtr->h;
 
-                    // Set buffer sizes for dst
-                    Rpp64u resampleBufferSize = (Rpp64u)dstDescPtr->h * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
-
-                    // Reinitialize host buffers for output
-                    outputf32 = (Rpp32f *)realloc(outputf32, sizeof(Rpp32f) * resampleBufferSize);
-                    if(!outputf32)
+                    // check if the required output buffer size is greater than predefined resampleMaxBufferSize
+                    if (dstDescPtr->n * dstDescPtr->strides.nStride > resampleMaxBufferSize)
                     {
-                        std::cout << "Unable to reallocate memory for output" << std::endl;
-                        break;
+                        std::cout << "\nError! Requested resample output size is greater than predefined max size for resample in test suite."
+                                     "\nPlease modify resampleMaxBufferSize value in test suite as per your requirements for running resample kernel" << std::endl;
+                        exit(0);
                     }
 
                     startWallTime = omp_get_wtime();
@@ -377,12 +381,11 @@ int main(int argc, char **argv)
                         maxDstHeight = std::max(maxDstHeight, (int)dstDims[i].height);
                         maxDstWidth = std::max(maxDstWidth, (int)dstDims[i].width);
                     }
-
                     srcDescPtr->h = maxSrcHeight;
                     srcDescPtr->w = maxSrcWidth;
                     dstDescPtr->h = maxDstHeight;
                     dstDescPtr->w = maxDstWidth;
-
+                    
                     set_audio_descriptor_dims_and_strides_nostriding(srcDescPtr, batchSize, maxSrcHeight, maxSrcWidth, maxSrcChannels, offsetInBytes);
                     set_audio_descriptor_dims_and_strides_nostriding(dstDescPtr, batchSize, maxDstHeight, maxDstWidth, maxDstChannels, offsetInBytes);
                     srcDescPtr->numDims = 3;
@@ -412,7 +415,7 @@ int main(int argc, char **argv)
             endWallTime = omp_get_wtime();
             if (missingFuncFlag == 1)
             {
-                printf("\nThe functionality %s doesn't yet exist in RPP\n", func.c_str());
+                cout << "\nThe functionality " << func << " doesn't yet exist in RPP\n";
                 return -1;
             }
 
@@ -467,5 +470,6 @@ int main(int argc, char **argv)
     free(dstDims);
     free(inputf32);
     free(outputf32);
+        
     return 0;
 }

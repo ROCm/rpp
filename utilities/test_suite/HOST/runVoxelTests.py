@@ -58,11 +58,11 @@ def func_group_finder(case_number):
         return "miscellaneous"
 
 def run_unit_test_cmd(headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
-    print("./Tensor_voxel_host " + headerPath + " " + dataPath + " " + dstPathTemp + " " + str(layout) + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(qaMode) + " " + str(batchSize) + " " + str(bitDepth))
+    print("\n./Tensor_voxel_host " + headerPath + " " + dataPath + " " + dstPathTemp + " " + str(layout) + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(qaMode) + " " + str(batchSize) + " " + str(bitDepth))
     result = subprocess.Popen([buildFolderPath + "/build/Tensor_voxel_host", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE) # nosec
     stdout_data, stderr_data = result.communicate()
     print(stdout_data.decode())
-    print("------------------------------------------------------------------------------------------")
+    print("\n------------------------------------------------------------------------------------------")
 
 def run_performance_test_cmd(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
     with open(loggingFolder + "/Tensor_voxel_host_" + logFileLayout + "_raw_performance_log.txt", "a") as logFile:
@@ -72,16 +72,17 @@ def run_performance_test_cmd(loggingFolder, logFileLayout, headerPath, dataPath,
             output = process.stdout.readline()
             if not output and process.poll() is not None:
                 break
-            output = output.decode().strip()  # Decode bytes to string and strip extra whitespace
-            print(output)
-            logFile.write(output)
+            output = output.decode('utf-8')
+            if output:
+                print(output, end='')
+                logFile.write(output)
             if "Running" in output or "max,min,avg wall times" in output:
                 cleanedOutput = ''.join(char for char in output if 32 <= ord(char) <= 126)  # Remove control characters
                 cleanedOutput = cleanedOutput.strip()  # Remove leading/trailing whitespace
                 logFile.write(cleanedOutput + '\n')
                 if "max,min,avg wall times" in output:
                     logFile.write("\n")
-        print("------------------------------------------------------------------------------------------")
+        print("\n------------------------------------------------------------------------------------------")
 
 def run_test(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
     if testType == 0:
@@ -212,19 +213,14 @@ subprocess.call(["make", "-j16"], cwd=".")  # nosec
 # List of cases supported
 supportedCaseList = ['0', '1', '2', '3', '4', '5', '6']
 
-print("\n\n\n\n\n")
-print("##########################################################################################")
-print("Running all layout Inputs...")
-print("##########################################################################################")
-
 bitDepths = [0, 2]
+noCaseSupported = all(case not in supportedCaseList for case in caseList)
+if noCaseSupported:
+    print("\ncase numbers %s are not supported" % caseList)
+    exit(0)
 for case in caseList:
     if case not in supportedCaseList:
         continue
-    print("\n\n\n\n")
-    print("--------------------------------")
-    print("Running a New Functionality...")
-    print("--------------------------------")
     for layout in range(3):
         dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "host", func_group_finder)
         if testType == 0 and qaMode == 0:
@@ -235,8 +231,6 @@ for case in caseList:
         if testType == 0 and qaMode:
             bitDepths = [2]
         for bitDepth in bitDepths:
-            print("\n\n\nRunning New Bit Depth...\n-------------------------\n\n")
-            print("\n\n\n\n")
             run_test(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize)
 
 # print the results of qa tests
@@ -246,7 +240,7 @@ if qaMode and testType == 0:
     qaFilePath = os.path.join(outFilePath, "QA_results.txt")
     checkFile = os.path.isfile(qaFilePath)
     if checkFile:
-        print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList)
+        print_qa_tests_summary(qaFilePath, supportedCaseList, nonQACaseList, "Tensor_voxel_host")
 
 layoutDict = {0:"PKD3", 1:"PLN3", 2:"PLN1"}
 if (testType == 0 and qaMode == 0):   # Unit tests

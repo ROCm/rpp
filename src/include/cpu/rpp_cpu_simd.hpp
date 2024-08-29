@@ -4081,6 +4081,16 @@ inline void rpp_store12_u8_to_u8(Rpp8u* dstPtr, __m128i &p)
     _mm_storeu_si128((__m128i *)(dstPtr), p);
 }
 
+inline void rpp_store4_u8pln1_to_u8pln1(Rpp8u* dstPtr, __m128i &p)
+{
+    rpp_storeu_si32((__m128i *)(dstPtr), p);
+}
+
+inline void rpp_store4_i8pln1_to_i8pln1(Rpp8s* dstPtr, __m128i &p)
+{
+    rpp_storeu_si32((__m128i *)(dstPtr), p);
+}
+
 inline void rpp_store24_u8_to_u8_avx(Rpp8u* dstPtr, __m256i &p)
 {
     _mm256_storeu_si256((__m256i *)(dstPtr), p);

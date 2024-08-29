@@ -23,11 +23,13 @@ SOFTWARE.
 ]]
 
 cmake_minimum_required(VERSION 3.5)
-set(CMAKE_CXX_COMPILER clang++)
+if (NOT DEFINED CMAKE_CXX_COMPILER)
+    set(CMAKE_CXX_COMPILER clang++)
+endif()
 set(CMAKE_CXX_STANDARD 17)
 
 # RPP Version
-set(VERSION "1.8.0")
+set(VERSION "1.9.1")
 
 # Set Project Version and Language
 project(rpp VERSION ${VERSION} LANGUAGES CXX)
@@ -244,7 +246,11 @@ if("${BACKEND}" STREQUAL "HIP")
         set(RPP_BACKEND_HIP 1)
         # To use RPP_BACKEND_HIP
         add_definitions(-DRPP_BACKEND_HIP=${RPP_BACKEND_HIP})
-        set(COMPILER_FOR_HIP ${ROCM_PATH}/llvm/bin/clang++)
+	if (EXISTS ${ROCM_PATH}/llvm/bin/clang++)
+		set(COMPILER_FOR_HIP ${ROCM_PATH}/llvm/bin/clang++)
+	else()
+		set(COMPILER_FOR_HIP ${CMAKE_CXX_COMPILER})
+	endif()
         include_directories(${ROCM_PATH}/${CMAKE_INSTALL_INCLUDEDIR})
         link_directories(${HIP_PATH}/${CMAKE_INSTALL_LIBDIR})
         # link To HIP Host library -- [hip::host] to use host API

@@ -80,50 +80,50 @@ int main(int argc, char **argv)
 
     if (verbosity == 1)
     {
-       printf("\nInputs for this test case are:");
-        printf("\nsrc1 = %s", argv[1]);
-        printf("\nsrc2 = %s", argv[2]);
+        cout << "\nInputs for this test case are:";
+        cout << "\nsrc1 = " << argv[1];
+        cout << "\nsrc2 = " << argv[2];
         if (testType == 0)
-            printf("\ndst = %s", argv[3]);
-        printf("\nu8 / f16 / f32 / u8->f16 / u8->f32 / i8 / u8->i8 (0/1/2/3/4/5/6) = %s", argv[4]);
-        printf("\noutputFormatToggle (pkd->pkd = 0 / pkd->pln = 1) = %s", argv[5]);
-        printf("\ncase number (0:91) = %s", argv[6]);
-        printf("\nnumber of times to run = %s", argv[8]);
-        printf("\ntest type - (0 = unit tests / 1 = performance tests) = %s", argv[9]);
-        printf("\nlayout type - (0 = PKD3/ 1 = PLN3/ 2 = PLN1) = %s", argv[10]);
-        printf("\nqa mode - 0/1 = %s", argv[12]);
-        printf("\ndecoder type - (0 = TurboJPEG / 1 = OpenCV) = %s", argv[13]);
-        printf("\nbatch size = %s", argv[14]);
+            cout << "\ndst = " << argv[3];
+        cout << "\nu8 / f16 / f32 / u8->f16 / u8->f32 / i8 / u8->i8 (0/1/2/3/4/5/6) = " << argv[4];
+        cout << "\noutputFormatToggle (pkd->pkd = 0 / pkd->pln = 1) = " << argv[5];
+        cout << "\ncase number (0:91) = " << argv[6];
+        cout << "\nnumber of times to run = " << argv[8];
+        cout << "\ntest type - (0 = unit tests / 1 = performance tests) = " << argv[9];
+        cout << "\nlayout type - (0 = PKD3 / 1 = PLN3 / 2 = PLN1) = " << argv[10];
+        cout << "\nqa mode - 0/1 = " << argv[12];
+        cout << "\ndecoder type - (0 = TurboJPEG / 1 = OpenCV) = " << argv[13];
+        cout << "\nbatch size = " << argv[14];
     }
 
     if (argc < MIN_ARG_COUNT)
     {
-        printf("\nImproper Usage! Needs all arguments!\n");
-        printf("\nUsage: <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:87> <number of runs > 0> <layout type (layout type - (0 = PKD3/ 1 = PLN3/ 2 = PLN1)> < qa mode (0/1)> <decoder type (0/1)> <batch size > 1> <roiList> <verbosity = 0/1>>\n");
+        cout << "\nImproper Usage! Needs all arguments!\n";
+        cout << "\nUsage: <src1 folder> <src2 folder (place same as src1 folder for single image functionalities)> <dst folder> <u8 = 0 / f16 = 1 / f32 = 2 / u8->f16 = 3 / u8->f32 = 4 / i8 = 5 / u8->i8 = 6> <outputFormatToggle (pkd->pkd = 0 / pkd->pln = 1)> <case number = 0:87> <number of runs > 0> <layout type (layout type - (0 = PKD3 / 1 = PLN3 / 2 = PLN1)> < qa mode (0/1)> <decoder type (0/1)> <batch size > 1> <roiList> <verbosity = 0/1>>\n";
     }
 
     if (layoutType == 2)
     {
         if(testCase == 31 || testCase == 35 || testCase == 36 || testCase == 45 || testCase == 86)
         {
-            printf("\ncase %d does not exist for PLN1 layout\n", testCase);
+            cout << "\ncase " << testCase << " does not exist for PLN1 layout\n";
             return -1;
         }
         else if (outputFormatToggle != 0)
         {
-            printf("\nPLN1 cases don't have outputFormatToggle! Please input outputFormatToggle = 0\n");
+            cout << "\nPLN1 cases don't have outputFormatToggle! Please input outputFormatToggle = 0\n";
             return -1;
         }
     }
 
     if(pln1OutTypeCase && outputFormatToggle != 0)
     {
-        printf("\ntest case %d don't have outputFormatToggle! Please input outputFormatToggle = 0\n", testCase);
+        cout << "\ntest case " << testCase << " don't have outputFormatToggle! Please input outputFormatToggle = 0\n";
         return -1;
     }
     else if (reductionTypeCase && outputFormatToggle != 0)
     {
-        printf("\nReduction Kernels don't have outputFormatToggle! Please input outputFormatToggle = 0\n");
+        cout << "\nReduction Kernels don't have outputFormatToggle! Please input outputFormatToggle = 0\n";
         return -1;
     }
     else if(batchSize > MAX_BATCH_SIZE)
@@ -153,7 +153,7 @@ int main(int argc, char **argv)
     if (funcName.empty())
     {
         if (testType == 0)
-            printf("\ncase %d is not supported\n", testCase);
+            cout << "\ncase " << testCase << " is not supported\n";
 
         return -1;
     }
@@ -359,6 +359,10 @@ int main(int argc, char **argv)
     }
     bool invalidROI = (roiList[0] == 0 && roiList[1] == 0 && roiList[2] == 0 && roiList[3] == 0);
 
+    void *interDstPtr;
+    if(testCase == 5)
+        interDstPtr = static_cast<Rpp8u *>(calloc(srcDescPtr->strides.nStride * srcDescPtr->n , sizeof(Rpp32f)));
+
     // Set the number of threads to be used by OpenMP pragma for RPP batch processing on host.
     // If numThreads value passed is 0, number of OpenMP threads used by RPP will be set to batch size
     Rpp32u numThreads = 0;
@@ -371,7 +375,7 @@ int main(int argc, char **argv)
     string testCaseName;
 
     // case-wise RPP API and measure time script for Unit and Performance test
-    printf("\nRunning %s %d times (each time with a batch size of %d images) and computing mean statistics...", func.c_str(), numRuns, batchSize);
+    cout << "\nRunning " << func << " " << numRuns << " times (each time with a batch size of " << batchSize << " images) and computing mean statistics...";
     for(int iterCount = 0; iterCount < noOfIterations; iterCount++)
     {
         vector<string>::const_iterator imagesPathStart = imageNamesPath.begin() + (iterCount * batchSize);
@@ -513,6 +517,21 @@ int main(int argc, char **argv)
                     startCpuTime = clock();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
                         rppt_contrast_host(input, srcDescPtr, output, dstDescPtr, contrastFactor, contrastCenter, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
+                case 5:
+                {
+                    testCaseName = "pixelate";
+
+                    Rpp32f pixelationPercentage = 87.5;
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_pixelate_host(input, srcDescPtr, output, dstDescPtr, interDstPtr, pixelationPercentage, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
@@ -1488,7 +1507,7 @@ int main(int argc, char **argv)
             wallTime = endWallTime - startWallTime;
             if (missingFuncFlag == 1)
             {
-                printf("\nThe functionality %s doesn't yet exist in RPP\n", func.c_str());
+                cout << "\nThe functionality " << func << " doesn't yet exist in RPP\n";
                 return -1;
             }
 
@@ -1502,16 +1521,18 @@ int main(int argc, char **argv)
         if (testType == 0)
         {
             cout <<"\n\n";
+            if(noOfIterations > 1)
+                cout <<"Execution Timings for Iteration "<< iterCount+1 <<":"<<endl;
             cout <<"CPU Backend Clock Time: "<< cpuTime <<" ms/batch"<< endl;
-            cout <<"CPU Backend Wall Time: "<< wallTime <<" ms/batch"<< endl;
+            cout <<"CPU Backend Wall Time: "<< wallTime <<" ms/batch";
 
             if (reductionTypeCase)
             {
                 if(srcDescPtr->c == 3)
-                    printf("\nReduction result (Batch of 3 channel images produces 4 results per image in batch): ");
+                    cout<<"\nReduction result (Batch of 3 channel images produces 4 results per image in batch): ";
                 else if(srcDescPtr->c == 1)
                 {
-                    printf("\nReduction result (Batch of 1 channel images produces 1 result per image in batch): ");
+                    cout << "\nReduction result (Batch of 1 channel images produces 1 result per image in batch): ";
                     reductionFuncResultArrLength = srcDescPtr->n;
                 }
 
@@ -1540,7 +1561,7 @@ int main(int argc, char **argv)
                     else
                         print_array(static_cast<Rpp8s *>(reductionFuncResultArr), reductionFuncResultArrLength, precision);
                 }
-                printf("\n");
+                cout << "\n";
 
                 /*Compare the output of the function with golden outputs only if
                 1.QA Flag is set
@@ -1682,6 +1703,8 @@ int main(int argc, char **argv)
     }
     if(reductionTypeCase)
         free(reductionFuncResultArr);
+    if(testCase == 5)
+        free(interDstPtr);
     if(testCase == 33)
     {
         free(cropRoi);
