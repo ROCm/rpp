@@ -37,10 +37,10 @@ SOFTWARE.
 #ifdef __cplusplus
 extern "C" {
 #endif
-// NOTE: Match the version with CMakelists.txt version
+// NOTE: IMPORTANT: Match the version with CMakelists.txt version
 #define RPP_VERSION_MAJOR 1
 #define RPP_VERSION_MINOR 9
-#define RPP_VERSION_PATCH 0
+#define RPP_VERSION_PATCH 1
 #ifdef __cplusplus
 }
 #endif
