@@ -745,7 +745,7 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "warp_perspective";
 
-                    if (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR)
+                    if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR))
                     {
                         missingFuncFlag = 1;
                         break;
