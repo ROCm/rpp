@@ -4007,7 +4007,7 @@ inline void rpp_generic_resize_nn_load_f16pln1_avx(Rpp16f *srcRowPtrsForInterp, 
     p = _mm256_setr_ps((!invalidLoad[0]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[0]) : 0, (!invalidLoad[1]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[1]) : 0,
                        (!invalidLoad[2]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[2]) : 0, (!invalidLoad[3]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[3]) : 0,
                         (!invalidLoad[4]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[4]) : 0, (!invalidLoad[5]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[5]) : 0,
-                        (!invalidLoad[6]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[6]) : 0, (!invalidLoad[6]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[7]) : 0);
+                        (!invalidLoad[6]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[6]) : 0, (!invalidLoad[7]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[7]) : 0);
 }
 
 inline void rpp_resize_nn_load_i8pkd3(Rpp8s *srcRowPtrsForInterp, Rpp32s *loc, __m128i &p)
