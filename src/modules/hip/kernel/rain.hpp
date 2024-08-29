@@ -181,13 +181,13 @@ RppStatus hip_exec_rain_tensor(T *srcPtr1,
     Rpp32f rainPercent = rainPercentage * 0.004f;
     Rpp32u numDrops = static_cast<Rpp32u>(rainPercent * srcDescPtr->h * srcDescPtr->w);
     std::srand(std::time(0));
-    T *rainLayer = reinterpret_cast<T *>(handle.GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem);
+    T *rainLayer = reinterpret_cast<T *>(handle.GetInitHandle()->mem.mcpu.scratchBufferHost);
     T initValue = 0;
     if constexpr (std::is_same<T, Rpp8s>::value)
     {
         initValue = static_cast<T>(0x81);
     }
-    hipMemset(rainLayer, initValue, srcDescPtr->strides.nStride * sizeof(T));
+    std::memset(rainLayer, initValue, srcDescPtr->strides.nStride * sizeof(T));
     for (Rpp32u i = 0; i < numDrops; i++)
     {
         Rpp32u xStart = rand() % (srcDescPtr->w - slant);
@@ -217,7 +217,6 @@ RppStatus hip_exec_rain_tensor(T *srcPtr1,
                 }
 
                 *rainLayerTemp = rainValue;
-                
                 if (srcDescPtr->c > 1)
                 {
                     *(rainLayerTemp + srcDescPtr->strides.cStride) = rainValue;
@@ -226,6 +225,9 @@ RppStatus hip_exec_rain_tensor(T *srcPtr1,
             }
         }
     }
+
+    T *rainLayerHip = reinterpret_cast<T *>(handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
+    CHECK_RETURN_STATUS(hipMemcpyAsync(rainLayerHip, rainLayer, srcDescPtr->strides.nStride * sizeof(T), hipMemcpyHostToDevice, handle.GetStream()));
 
     int globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
     int globalThreads_y = dstDescPtr->h;
@@ -239,7 +241,7 @@ RppStatus hip_exec_rain_tensor(T *srcPtr1,
                            0,
                            handle.GetStream(),
                            srcPtr1,
-                           rainLayer,
+                           rainLayerHip,
                            make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                            dstPtr,
                            make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
@@ -254,7 +256,7 @@ RppStatus hip_exec_rain_tensor(T *srcPtr1,
                            0,
                            handle.GetStream(),
                            srcPtr1,
-                           rainLayer,
+                           rainLayerHip,
                            make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                            dstPtr,
                            make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
@@ -272,7 +274,7 @@ RppStatus hip_exec_rain_tensor(T *srcPtr1,
                                0,
                                handle.GetStream(),
                                srcPtr1,
-                               rainLayer,
+                               rainLayerHip,
                                make_uint2(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride),
                                dstPtr,
                                make_uint3(dstDescPtr->strides.nStride, dstDescPtr->strides.cStride, dstDescPtr->strides.hStride),
@@ -288,7 +290,7 @@ RppStatus hip_exec_rain_tensor(T *srcPtr1,
                                0,
                                handle.GetStream(),
                                srcPtr1,
-                               rainLayer,
+                               rainLayerHip,
                                make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                                dstPtr,
                                make_uint2(dstDescPtr->strides.nStride, dstDescPtr->strides.hStride),
