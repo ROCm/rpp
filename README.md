@@ -219,7 +219,7 @@ All notable changes for each release are added to our [changelog](CHANGELOG.md).
   * Ubuntu - `20.04` / `22.04`
   * RedHat - `8` / `9`
   * SLES - `15-SP5`
-* ROCm: rocm-core - `6.2.0.60200-66`
+* ROCm: rocm-core - `6.3.0.60300`
 * CMake - Version `3.16.3`+
 * Clang - Version `5.0.1`+
 * half - IEEE 754-based half-precision floating-point library - Version `1.12.0` / package V`1.12.0.60200`

@@ -40,17 +40,22 @@ imageAugmentationMap = {
     1: ["gamma_correction", "HOST", "HIP"],
     2: ["blend", "HOST", "HIP"],
     4: ["contrast", "HOST", "HIP"],
+    5: ["pixelate", "HOST", "HIP"],
+    6: ["jitter", "HOST", "HIP"],
     8: ["noise", "HOST", "HIP"],
     13: ["exposure", "HOST", "HIP"],
     20: ["flip", "HOST", "HIP"],
     21: ["resize", "HOST", "HIP"],
     23: ["rotate", "HOST", "HIP"],
+    24: ["warp_affine", "HOST", "HIP"],
+    26: ["lens_correction", "HOST", "HIP"],
     29: ["water", "HOST", "HIP"],
     30: ["non_linear_blend", "HOST", "HIP"],
     31: ["color_cast", "HOST", "HIP"],
     32: ["erase", "HOST", "HIP"],
     33: ["crop_and_patch", "HOST", "HIP"],
     34: ["lut", "HOST", "HIP"],
+    35: ["glitch", "HOST", "HIP"],
     36: ["color_twist", "HOST", "HIP"],
     37: ["crop", "HOST", "HIP"],
     38: ["crop_mirror_normalize", "HOST", "HIP"],
@@ -102,13 +107,15 @@ voxelAugmentationMap = {
 }
 
 miscAugmentationMap  = {
-    1: ["normalize", "HOST", "HIP"]
+    0: ["transpose","HOST", "HIP"],
+    1: ["normalize", "HOST", "HIP"],
+    2: ["log", "HOST", "HIP"]
 }
 
 ImageAugmentationGroupMap = {
     "color_augmentations" : [0, 1, 2, 3, 4, 13, 31, 34, 36, 45, 81],
-    "effects_augmentations" : [8, 29, 30, 32, 35, 46, 82, 83, 84],
-    "geometric_augmentations" : [20, 21, 23, 33, 37, 38, 39, 63, 79, 80, 92],
+    "effects_augmentations" : [5, 6, 8, 29, 30, 32, 35, 46, 82, 83, 84],
+    "geometric_augmentations" : [20, 21, 23, 24, 26, 33, 37, 38, 39, 63, 79, 80, 92],
     "filter_augmentations" : [49, 54],
     "arithmetic_operations" : [61],
     "logical_operations" : [65, 68],
