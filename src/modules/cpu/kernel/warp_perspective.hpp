@@ -911,7 +911,7 @@ RppStatus warp_perspective_nn_f16_f16_host_tensor(Rpp16f *srcPtr,
                 {
                     __m256 pRow[3];
                     compute_generic_nn_srclocs_and_validate_avx(pSrcY, pSrcX, pRoiLTRB, pSrcStrideH, srcLoc, invalidLoad, true);
-                    rpp_simd_load(rpp_generic_resize_nn_load_f16pkd3_to_f32pln3_avx, srcPtrChannel, srcLoc, invalidLoad, pRow);
+                    rpp_simd_load(rpp_generic_nn_load_f16pkd3_to_f32pln3_avx, srcPtrChannel, srcLoc, invalidLoad, pRow);
                     rpp_simd_store(rpp_store24_f32pln3_to_f16pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, pRow);
                     compute_warp_perspective_src_loc_next_term_avx(plocW, plocY, plocX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
                     dstPtrTempR += vectorIncrementPerChannel;
@@ -962,9 +962,9 @@ RppStatus warp_perspective_nn_f16_f16_host_tensor(Rpp16f *srcPtr,
                 {
                     __m256 pRow[3];
                     compute_generic_nn_srclocs_and_validate_avx(pSrcY, pSrcX, pRoiLTRB, pSrcStrideH, srcLoc, invalidLoad);
-                    rpp_simd_load(rpp_generic_resize_nn_load_f16pln1_avx, srcPtrChannelR, srcLoc, invalidLoad, pRow[0]);
-                    rpp_simd_load(rpp_generic_resize_nn_load_f16pln1_avx, srcPtrChannelG, srcLoc, invalidLoad, pRow[1]);
-                    rpp_simd_load(rpp_generic_resize_nn_load_f16pln1_avx, srcPtrChannelB, srcLoc, invalidLoad, pRow[2]);
+                    rpp_simd_load(rpp_generic_nn_load_f16pln1_avx, srcPtrChannelR, srcLoc, invalidLoad, pRow[0]);
+                    rpp_simd_load(rpp_generic_nn_load_f16pln1_avx, srcPtrChannelG, srcLoc, invalidLoad, pRow[1]);
+                    rpp_simd_load(rpp_generic_nn_load_f16pln1_avx, srcPtrChannelB, srcLoc, invalidLoad, pRow[2]);
                     rpp_simd_store(rpp_store24_f32pln3_to_f16pkd3_avx, dstPtrTemp, pRow);
                     compute_warp_perspective_src_loc_next_term_avx(plocW, plocY, plocX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
                     dstPtrTemp += vectorIncrementPkd;
@@ -1007,7 +1007,7 @@ RppStatus warp_perspective_nn_f16_f16_host_tensor(Rpp16f *srcPtr,
                 {
                     __m256 pRow[3];
                     compute_generic_nn_srclocs_and_validate_avx(pSrcY, pSrcX, pRoiLTRB, pSrcStrideH, srcLoc, invalidLoad, true);
-                    rpp_simd_load(rpp_generic_resize_nn_load_f16pkd3_to_f32pkd3_avx, srcPtrChannel, srcLoc, invalidLoad, pRow);
+                    rpp_simd_load(rpp_generic_nn_load_f16pkd3_to_f32pkd3_avx, srcPtrChannel, srcLoc, invalidLoad, pRow);
                     rpp_simd_store(rpp_store24_f32pkd3_to_f16pkd3_avx, dstPtrTemp, pRow);
                     compute_warp_perspective_src_loc_next_term_avx(plocW, plocY, plocX, pSrcY, pSrcX, pPerspectiveMatrixTerm6Incr, pPerspectiveMatrixTerm3Incr, pPerspectiveMatrixTerm0Incr, roiHalfHeightVec, roiHalfWidthVec);
                     dstPtrTemp += vectorIncrementPkd;
@@ -1054,7 +1054,7 @@ RppStatus warp_perspective_nn_f16_f16_host_tensor(Rpp16f *srcPtr,
                     for(int c = 0; c < srcDescPtr->c; c++)
                     {
                         __m256 pRow;
-                        rpp_simd_load(rpp_generic_resize_nn_load_f16pln1_avx, srcPtrTempChn, srcLoc, invalidLoad, pRow);
+                        rpp_simd_load(rpp_generic_nn_load_f16pln1_avx, srcPtrTempChn, srcLoc, invalidLoad, pRow);
                         rpp_simd_store(rpp_store8_f32_to_f16_avx, dstPtrTempChn, &pRow);
                         srcPtrTempChn += srcDescPtr->strides.cStride;
                         dstPtrTempChn += dstDescPtr->strides.cStride;

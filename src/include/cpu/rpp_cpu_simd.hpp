@@ -3940,7 +3940,7 @@ inline void rpp_resize_nn_load_f16pkd3_to_f32pln3_avx(Rpp16f *srcRowPtrsForInter
                           (Rpp32f)*(srcRowPtrsForInterp + loc[6] + 2), (Rpp32f)*(srcRowPtrsForInterp + loc[7] + 2));
 }
 
-inline void rpp_generic_resize_nn_load_f16pkd3_to_f32pln3_avx(Rpp16f *srcRowPtrsForInterp, Rpp32s *loc, Rpp32s *invalidLoad, __m256 *p)
+inline void rpp_generic_nn_load_f16pkd3_to_f32pln3_avx(Rpp16f *srcRowPtrsForInterp, Rpp32s *loc, Rpp32s *invalidLoad, __m256 *p)
 {
     p[0] = _mm256_setr_ps((!invalidLoad[0]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[0]) : 0, (!invalidLoad[1]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[1]) : 0,
                           (!invalidLoad[2]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[2]) : 0, (!invalidLoad[3]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[3]) : 0,
@@ -3958,7 +3958,7 @@ inline void rpp_generic_resize_nn_load_f16pkd3_to_f32pln3_avx(Rpp16f *srcRowPtrs
                           (!invalidLoad[6]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[6] + 2) : 0, (!invalidLoad[7]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[7] + 2) : 0);
 }
 
-inline void rpp_generic_resize_nn_load_f16pkd3_to_f32pkd3_avx(Rpp16f *srcRowPtrsForInterp, Rpp32s *loc, Rpp32s *invalidLoad, __m256 *p)
+inline void rpp_generic_nn_load_f16pkd3_to_f32pkd3_avx(Rpp16f *srcRowPtrsForInterp, Rpp32s *loc, Rpp32s *invalidLoad, __m256 *p)
 {
     p[0] = _mm256_setr_ps((!invalidLoad[0]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[0]): 0, (!invalidLoad[0]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[0] + 1): 0,        // Get R01|G01|B01|R02|B02|G02|R03|G03
                           (!invalidLoad[0]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[0] + 2): 0, (!invalidLoad[1]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[1]): 0,        // load the values from input using srcLoc buffer if invalidLoad is 0, else set the values to 0
@@ -4002,7 +4002,7 @@ inline void rpp_resize_nn_load_f16pln1_avx(Rpp16f *srcRowPtrsForInterp, Rpp32s *
                        (Rpp32f)*(srcRowPtrsForInterp + loc[6]), (Rpp32f)*(srcRowPtrsForInterp + loc[7]));
 }
 
-inline void rpp_generic_resize_nn_load_f16pln1_avx(Rpp16f *srcRowPtrsForInterp, Rpp32s *loc, Rpp32s *invalidLoad, __m256 &p)
+inline void rpp_generic_nn_load_f16pln1_avx(Rpp16f *srcRowPtrsForInterp, Rpp32s *loc, Rpp32s *invalidLoad, __m256 &p)
 {
     p = _mm256_setr_ps((!invalidLoad[0]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[0]) : 0, (!invalidLoad[1]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[1]) : 0,
                        (!invalidLoad[2]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[2]) : 0, (!invalidLoad[3]) ? (Rpp32f)*(srcRowPtrsForInterp + loc[3]) : 0,
