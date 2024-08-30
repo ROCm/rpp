@@ -804,17 +804,17 @@ int main(int argc, char **argv)
                         break;
                     }
 
-                    for (i = 0; i < batchSize; i++)
+                    for (i = 0, j = 0; i < batchSize; i++, j += 9)
                     {
-                        perspectiveTensorPtr[i * 9 + 0] = 0.93;
-                        perspectiveTensorPtr[i * 9 + 1] = 0.5;
-                        perspectiveTensorPtr[i * 9 + 2] = 0.0;
-                        perspectiveTensorPtr[i * 9 + 3] = -0.5;
-                        perspectiveTensorPtr[i * 9 + 4] = 0.93;
-                        perspectiveTensorPtr[i * 9 + 5] = 0.0;
-                        perspectiveTensorPtr[i * 9 + 6] = 0.005;
-                        perspectiveTensorPtr[i * 9 + 7] = 0.005;
-                        perspectiveTensorPtr[i * 9 + 8] = 1;
+                        perspectiveTensorPtr[j + 0] = 0.93;
+                        perspectiveTensorPtr[j + 1] = 0.5;
+                        perspectiveTensorPtr[j + 2] = 0.0;
+                        perspectiveTensorPtr[j + 3] = -0.5;
+                        perspectiveTensorPtr[j + 4] = 0.93;
+                        perspectiveTensorPtr[j + 5] = 0.0;
+                        perspectiveTensorPtr[j + 6] = 0.005;
+                        perspectiveTensorPtr[j + 7] = 0.005;
+                        perspectiveTensorPtr[j + 8] = 1;
                     }
 
                     startWallTime = omp_get_wtime();
@@ -1688,10 +1688,8 @@ int main(int argc, char **argv)
     }
     if(testCase == 35)
         CHECK_RETURN_STATUS(hipHostFree(rgbOffsets));
-
     if(perspectiveTensorPtr != NULL)
       CHECK_RETURN_STATUS(hipHostFree(perspectiveTensorPtr));
-
     if (reductionTypeCase)
     {
         CHECK_RETURN_STATUS(hipHostFree(reductionFuncResultArr));
