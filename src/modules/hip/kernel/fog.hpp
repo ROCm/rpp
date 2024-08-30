@@ -6,19 +6,19 @@ __device__ __forceinline__ void fog_hip_compute(uchar *srcPtr, d_float8 *src_f8,
     float4 alphaFactor_f4[2];
     alphaFactor_f4[0] = rpp_hip_pixel_check_0to1(maskAlpha_f8->f4[0] + *intensityFactor_f4);
     alphaFactor_f4[1] = rpp_hip_pixel_check_0to1(maskAlpha_f8->f4[1] + *intensityFactor_f4);
-    dst_f8->f4[0] = rpp_hip_pixel_check_0to255((src_f8->f4[0] * ((float4)1 - alphaFactor_f4[0])) + (maskIntensity_f8->f4[0] * alphaFactor_f4[0]));
-    dst_f8->f4[1] = rpp_hip_pixel_check_0to255((src_f8->f4[1] * ((float4)1 - alphaFactor_f4[1])) + (maskIntensity_f8->f4[1] * alphaFactor_f4[1]));
+    dst_f8->f4[0] = rpp_hip_pixel_check_0to255((src_f8->f4[0] * (static_cast<float4>(1) - alphaFactor_f4[0])) + (maskIntensity_f8->f4[0] * alphaFactor_f4[0]));
+    dst_f8->f4[1] = rpp_hip_pixel_check_0to255((src_f8->f4[1] * (static_cast<float4>(1) - alphaFactor_f4[1])) + (maskIntensity_f8->f4[1] * alphaFactor_f4[1]));
 }
 
 __device__ __forceinline__ void fog_hip_compute(float *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, d_float8 *maskAlpha_f8, d_float8 *maskIntensity_f8, float4 *intensityFactor_f4)
 {
     float4 pixNorm_f4[2], alphaFactor_f4[2];
-    pixNorm_f4[0] = maskIntensity_f8->f4[0] * (float4) ONE_OVER_255;
-    pixNorm_f4[1] = maskIntensity_f8->f4[1] * (float4) ONE_OVER_255;
+    pixNorm_f4[0] = maskIntensity_f8->f4[0] * static_cast<float4>(ONE_OVER_255);
+    pixNorm_f4[1] = maskIntensity_f8->f4[1] * static_cast<float4>(ONE_OVER_255);
     alphaFactor_f4[0] = rpp_hip_pixel_check_0to1(maskAlpha_f8->f4[0] + *intensityFactor_f4);
     alphaFactor_f4[1] = rpp_hip_pixel_check_0to1(maskAlpha_f8->f4[1] + *intensityFactor_f4);
-    dst_f8->f4[0] = (src_f8->f4[0] * ((float4)1 - alphaFactor_f4[0])) + (pixNorm_f4[0] * alphaFactor_f4[0]);
-    dst_f8->f4[1] = (src_f8->f4[1] * ((float4)1 - alphaFactor_f4[1])) + (pixNorm_f4[1] * alphaFactor_f4[1]);
+    dst_f8->f4[0] = (src_f8->f4[0] * (static_cast<float4>(1) - alphaFactor_f4[0])) + (pixNorm_f4[0] * alphaFactor_f4[0]);
+    dst_f8->f4[1] = (src_f8->f4[1] * (static_cast<float4>(1) - alphaFactor_f4[1])) + (pixNorm_f4[1] * alphaFactor_f4[1]);
 }
 
 __device__ __forceinline__ void fog_hip_compute(schar *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, d_float8 *maskAlpha_f8, d_float8 *maskIntensity_f8, float4 *intensityFactor_f4)
@@ -26,19 +26,19 @@ __device__ __forceinline__ void fog_hip_compute(schar *srcPtr, d_float8 *src_f8,
     float4 alphaFactor_f4[2];
     alphaFactor_f4[0] = rpp_hip_pixel_check_0to1(maskAlpha_f8->f4[0] + *intensityFactor_f4);
     alphaFactor_f4[1] = rpp_hip_pixel_check_0to1(maskAlpha_f8->f4[1] + *intensityFactor_f4);
-    dst_f8->f4[0] = rpp_hip_pixel_check_0to255((src_f8->f4[0] + (float4)128) * ((float4)1 - alphaFactor_f4[0]) + (maskIntensity_f8->f4[0] * alphaFactor_f4[0])) - (float4)128;
-    dst_f8->f4[1] = rpp_hip_pixel_check_0to255((src_f8->f4[1] + (float4)128) * ((float4)1 - alphaFactor_f4[1]) + (maskIntensity_f8->f4[1] * alphaFactor_f4[1])) - (float4)128;
+    dst_f8->f4[0] = rpp_hip_pixel_check_0to255((src_f8->f4[0] + static_cast<float4>(128)) * (static_cast<float4>(1) - alphaFactor_f4[0]) + (maskIntensity_f8->f4[0] * alphaFactor_f4[0])) - static_cast<float4>(128);
+    dst_f8->f4[1] = rpp_hip_pixel_check_0to255((src_f8->f4[1] + static_cast<float4>(128)) * (static_cast<float4>(1) - alphaFactor_f4[1]) + (maskIntensity_f8->f4[1] * alphaFactor_f4[1])) - static_cast<float4>(128);
 }
 
 __device__ __forceinline__ void fog_hip_compute(half *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, d_float8 *maskAlpha_f8, d_float8 *maskIntensity_f8, float4 *intensityFactor_f4)
 {
     float4 pixNorm_f4[2], alphaFactor_f4[2];
-    pixNorm_f4[0] = maskIntensity_f8->f4[0] * (float4) ONE_OVER_255;
-    pixNorm_f4[1] = maskIntensity_f8->f4[1] * (float4) ONE_OVER_255;
+    pixNorm_f4[0] = maskIntensity_f8->f4[0] * static_cast<float4>(ONE_OVER_255);
+    pixNorm_f4[1] = maskIntensity_f8->f4[1] * static_cast<float4>(ONE_OVER_255);
     alphaFactor_f4[0] = rpp_hip_pixel_check_0to1(maskAlpha_f8->f4[0] + *intensityFactor_f4);
     alphaFactor_f4[1] = rpp_hip_pixel_check_0to1(maskAlpha_f8->f4[1] + *intensityFactor_f4);
-    dst_f8->f4[0] = (src_f8->f4[0] * ((float4)1 - alphaFactor_f4[0])) + (pixNorm_f4[0] * alphaFactor_f4[0]);
-    dst_f8->f4[1] = (src_f8->f4[1] * ((float4)1 - alphaFactor_f4[1])) + (pixNorm_f4[1] * alphaFactor_f4[1]);
+    dst_f8->f4[0] = (src_f8->f4[0] * (static_cast<float4>(1) - alphaFactor_f4[0])) + (pixNorm_f4[0] * alphaFactor_f4[0]);
+    dst_f8->f4[1] = (src_f8->f4[1] * (static_cast<float4>(1) - alphaFactor_f4[1])) + (pixNorm_f4[1] * alphaFactor_f4[1]);
 }
 
 template <typename T>
@@ -49,8 +49,8 @@ __global__ void fog_pkd_hip_tensor(T *srcPtr,
                                    float *fogAlphaMaskPtr,
                                    float *fogIntensityMaskPtr,
                                    float *intensityFactor,
-                                   uint *maskLocArrX,
-                                   uint *maskLocArrY,
+                                   uint *maskLocOffsetX,
+                                   uint *maskLocOffsetY,
                                    RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -64,7 +64,7 @@ __global__ void fog_pkd_hip_tensor(T *srcPtr,
 
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
-    uint maskIdx = ((srcStridesNH.y / 3) * (maskLocArrY[id_z] + id_y)) + maskLocArrX[id_z] + id_x;
+    uint maskIdx = ((id_y + maskLocOffsetY[id_z]) * (srcStridesNH.y / 3)) + (id_x + maskLocOffsetX[id_z]);
 
     d_float24 src_f24, dst_f24;
     d_float8 maskAlpha_f8, maskIntensity_f8;
@@ -87,8 +87,8 @@ __global__ void fog_pln_hip_tensor(T *srcPtr,
                                    float *fogAlphaMaskPtr,
                                    float *fogIntensityMaskPtr,
                                    float *intensityFactor,
-                                   uint *maskLocArrX,
-                                   uint *maskLocArrY,
+                                   uint *maskLocOffsetX,
+                                   uint *maskLocOffsetY,
                                    RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -102,7 +102,7 @@ __global__ void fog_pln_hip_tensor(T *srcPtr,
 
     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
-    uint maskIdx = (srcStridesNCH.z * (maskLocArrY[id_z] + id_y)) + maskLocArrX[id_z] + id_x;
+    uint maskIdx = ((id_y + maskLocOffsetY[id_z]) * srcStridesNCH.z) + (id_x + maskLocOffsetX[id_z]);
 
     d_float8 src_f8, dst_f8;
     d_float8 maskAlpha_f8, maskIntensity_f8;
@@ -139,8 +139,8 @@ __global__ void fog_pkd3_pln3_hip_tensor(T *srcPtr,
                                          float *fogAlphaMaskPtr,
                                          float *fogIntensityMaskPtr,
                                          float *intensityFactor,
-                                         uint *maskLocArrX,
-                                         uint *maskLocArrY,
+                                         uint *maskLocOffsetX,
+                                         uint *maskLocOffsetY,
                                          RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -154,7 +154,7 @@ __global__ void fog_pkd3_pln3_hip_tensor(T *srcPtr,
 
     uint srcIdx = (id_z * srcStridesNH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNH.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
-    uint maskIdx = ((srcStridesNH.y / 3) * (maskLocArrY[id_z] + id_y)) + maskLocArrX[id_z] + id_x;
+    uint maskIdx = ((id_y + maskLocOffsetY[id_z]) * (srcStridesNH.y / 3)) + (id_x + maskLocOffsetX[id_z]);
 
     d_float24 src_f24, dst_f24;
     d_float8 maskAlpha_f8, maskIntensity_f8;
@@ -176,8 +176,8 @@ __global__ void fog_pln3_pkd3_hip_tensor(T *srcPtr,
                                          float *fogAlphaMaskPtr,
                                          float *fogIntensityMaskPtr,
                                          float *intensityFactor,
-                                         uint *maskLocArrX,
-                                         uint *maskLocArrY,
+                                         uint *maskLocOffsetX,
+                                         uint *maskLocOffsetY,
                                          RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
@@ -191,7 +191,7 @@ __global__ void fog_pln3_pkd3_hip_tensor(T *srcPtr,
 
     uint srcIdx = (id_z * srcStridesNCH.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
-    uint maskIdx = ((srcStridesNCH.z) * (maskLocArrY[id_z] + id_y)) + maskLocArrX[id_z] + id_x;
+    uint maskIdx = ((id_y + maskLocOffsetY[id_z]) * srcStridesNCH.z) + (id_x + maskLocOffsetX[id_z]);
 
     d_float24 src_f24, dst_f24;
     d_float8 maskAlpha_f8, maskIntensity_f8;
@@ -226,6 +226,7 @@ RppStatus hip_exec_fog_tensor(T *srcPtr,
     Rpp32s globalThreads_y = dstDescPtr->h;
     Rpp32s globalThreads_z = dstDescPtr->n;
 
+    // fill the random starting point (x, y) in mask for each image in batch 
     std::random_device rd;  // Random number engine seed
     std::mt19937 gen(rd()); // Seeding rd() to fast mersenne twister engine
     for (Rpp32s i = 0; i < dstDescPtr->n; i++)
