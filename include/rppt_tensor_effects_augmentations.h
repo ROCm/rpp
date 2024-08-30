@@ -687,6 +687,7 @@ RppStatus rppt_pixelate_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t ds
 
 /*! \brief Fog augmentation on HOST backend for a NCHW/NHWC layout tensor
  * \details The fog augmentation adds a fog effect for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+ * <b> NOTE: This augmentation gives a more realistic fog output when all images in a batch are of similar / same sizes </b> <br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
  * \image html img640x480.png Sample Input
@@ -708,6 +709,7 @@ RppStatus rppt_fog_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr
 #ifdef GPU_SUPPORT
 /*! \brief Fog augmentation on HIP backend for a NCHW/NHWC layout tensor
  * \details The fog augmentation adds a fog effect for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+ * <b> NOTE: This augmentation gives a more realistic fog output when all images in a batch are of similar / same sizes </b> <br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
  * \image html img640x480.png Sample Input
