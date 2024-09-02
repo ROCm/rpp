@@ -771,7 +771,7 @@ int main(int argc, char **argv)
                     }
 
                     Rpp32f9 perspectiveTensor_f9[batchSize];
-                    Rpp32f *perspectiveTensor = (Rpp32f *)perspectiveTensor_f9;
+                    Rpp32f *perspectiveTensor = reinterpret_cast<Rpp32f *>(perspectiveTensor_f9);
                     for (i = 0; i < batchSize; i++)
                     {
                         perspectiveTensor_f9[i].data[0] = 0.93;

@@ -93,7 +93,7 @@ RppStatus warp_perspective_nn_u8_u8_host_tensor(Rpp8u *srcPtr,
         Rpp32s roiHalfHeight = roi.xywhROI.roiHeight >> 1;
 
         Rpp32f9 *perspectiveMatrix_f9;
-        perspectiveMatrix_f9 = (Rpp32f9 *)perspectiveTensor + batchCount;
+        perspectiveMatrix_f9 = reinterpret_cast<Rpp32f9 *>(perspectiveTensor + batchCount * 9);
 
         Rpp8u *srcPtrChannel, *dstPtrChannel, *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
@@ -343,7 +343,7 @@ RppStatus warp_perspective_nn_f32_f32_host_tensor(Rpp32f *srcPtr,
         Rpp32s roiHalfHeight = roi.xywhROI.roiHeight >> 1;
 
         Rpp32f9 *perspectiveMatrix_f9;
-        perspectiveMatrix_f9 = (Rpp32f9 *)perspectiveTensor + batchCount;
+        perspectiveMatrix_f9 = reinterpret_cast<Rpp32f9 *>(perspectiveTensor + batchCount * 9);
 
         Rpp32f *srcPtrChannel, *dstPtrChannel, *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
@@ -592,7 +592,7 @@ RppStatus warp_perspective_nn_i8_i8_host_tensor(Rpp8s *srcPtr,
         Rpp32s roiHalfHeight = roi.xywhROI.roiHeight >> 1;
 
         Rpp32f9 *perspectiveMatrix_f9;
-        perspectiveMatrix_f9 = (Rpp32f9 *)perspectiveTensor + batchCount;
+        perspectiveMatrix_f9 = reinterpret_cast<Rpp32f9 *>(perspectiveTensor + batchCount * 9);
 
         Rpp8s *srcPtrChannel, *dstPtrChannel, *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
@@ -841,7 +841,7 @@ RppStatus warp_perspective_nn_f16_f16_host_tensor(Rpp16f *srcPtr,
         Rpp32s roiHalfHeight = roi.xywhROI.roiHeight >> 1;
 
         Rpp32f9 *perspectiveMatrix_f9;
-        perspectiveMatrix_f9 = (Rpp32f9 *)perspectiveTensor + batchCount;
+        perspectiveMatrix_f9 = reinterpret_cast<Rpp32f9 *>(perspectiveTensor + batchCount * 9);
 
         Rpp16f *srcPtrChannel, *dstPtrChannel, *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
@@ -1089,7 +1089,7 @@ RppStatus warp_perspective_bilinear_u8_u8_host_tensor(Rpp8u *srcPtr,
         Rpp32s roiHalfHeight = roi.xywhROI.roiHeight >> 1;
 
         Rpp32f9 *perspectiveMatrix_f9;
-        perspectiveMatrix_f9 = (Rpp32f9 *)perspectiveTensor + batchCount;
+        perspectiveMatrix_f9 = reinterpret_cast<Rpp32f9 *>(perspectiveTensor + batchCount * 9);
 
         Rpp8u *srcPtrChannel, *dstPtrChannel, *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
@@ -1384,7 +1384,7 @@ RppStatus warp_perspective_bilinear_f32_f32_host_tensor(Rpp32f *srcPtr,
         Rpp32s roiHalfHeight = roi.xywhROI.roiHeight >> 1;
 
         Rpp32f9 *perspectiveMatrix_f9;
-        perspectiveMatrix_f9 = (Rpp32f9 *)perspectiveTensor + batchCount;
+        perspectiveMatrix_f9 = reinterpret_cast<Rpp32f9 *>(perspectiveTensor + batchCount * 9);
 
         Rpp32f *srcPtrChannel, *dstPtrChannel, *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
@@ -1679,7 +1679,7 @@ RppStatus warp_perspective_bilinear_i8_i8_host_tensor(Rpp8s *srcPtr,
         Rpp32s roiHalfHeight = roi.xywhROI.roiHeight >> 1;
 
         Rpp32f9 *perspectiveMatrix_f9;
-        perspectiveMatrix_f9 = (Rpp32f9 *)perspectiveTensor + batchCount;
+        perspectiveMatrix_f9 = reinterpret_cast<Rpp32f9 *>(perspectiveTensor + batchCount * 9);
 
         Rpp8s *srcPtrChannel, *dstPtrChannel, *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
@@ -1979,7 +1979,7 @@ RppStatus warp_perspective_bilinear_f16_f16_host_tensor(Rpp16f *srcPtr,
         Rpp32s roiHalfHeight = roi.xywhROI.roiHeight >> 1;
 
         Rpp32f9 *perspectiveMatrix_f9;
-        perspectiveMatrix_f9 = (Rpp32f9 *)perspectiveTensor + batchCount;
+        perspectiveMatrix_f9 = reinterpret_cast<Rpp32f9 *>(perspectiveTensor + batchCount * 9);
 
         Rpp16f *srcPtrChannel, *dstPtrChannel, *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
