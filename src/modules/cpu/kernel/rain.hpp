@@ -187,11 +187,14 @@ RppStatus rain_u8_u8_host_tensor(Rpp8u *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1TempR) * alpha + *srcPtr1TempR++))));
-                    dstPtrTemp[1] = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1TempG) * alpha + *srcPtr1TempG++))));
-                    dstPtrTemp[2] = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1TempB) * alpha + *srcPtr1TempB++))));
+                    dstPtrTemp[0] = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1TempR) * alpha + *srcPtr1TempR))));
+                    dstPtrTemp[1] = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1TempG) * alpha + *srcPtr1TempG))));
+                    dstPtrTemp[2] = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1TempB) * alpha + *srcPtr1TempB))));
                     dstPtrTemp += 3;
                     srcPtr2Temp++;
+                    srcPtr1TempR++;
+                    srcPtr1TempG++;
+                    srcPtr1TempB++;
                 }
                 srcPtr1RowR += srcDescPtr->strides.hStride;
                 srcPtr1RowG += srcDescPtr->strides.hStride;
@@ -229,10 +232,11 @@ RppStatus rain_u8_u8_host_tensor(Rpp8u *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTemp++ = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1Temp) * alpha + *srcPtr1Temp++))));
-                    *dstPtrTemp++ = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1Temp) * alpha + *srcPtr1Temp++))));
-                    *dstPtrTemp++ = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1Temp) * alpha + *srcPtr1Temp++))));
-                    *srcPtr2Temp++;
+                    *dstPtrTemp++ = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1Temp) * alpha + *srcPtr1Temp))));
+                    *dstPtrTemp++ = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(static_cast<Rpp32f>((*srcPtr2Temp - *(srcPtr1Temp + 1)) * alpha + *(srcPtr1Temp + 1)))));
+                    *dstPtrTemp++ = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(static_cast<Rpp32f>((*srcPtr2Temp - *(srcPtr1Temp + 2)) * alpha + *(srcPtr1Temp + 2)))));
+                    srcPtr2Temp++;
+                    srcPtr1Temp += 3;
                 }
                 srcPtr1Row += srcDescPtr->strides.hStride;
                 srcPtr2Row += srcDescPtr->w;
@@ -270,7 +274,11 @@ RppStatus rain_u8_u8_host_tensor(Rpp8u *srcPtr,
                     }
 #endif
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
-                        *dstPtrTemp++ = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(static_cast<Rpp32f>((*srcPtr2Temp++ - *srcPtr1Temp) * alpha + *srcPtr1Temp++))));
+                    {
+                        *dstPtrTemp++ = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1Temp) * alpha + *srcPtr1Temp))));
+                        srcPtr1Temp++;
+                        srcPtr2Temp++;
+                    }
                     srcPtr1Row += srcDescPtr->strides.hStride;
                     srcPtr2Row += srcDescPtr->strides.hStride;
                     dstPtrRow += dstDescPtr->strides.hStride;
@@ -409,11 +417,14 @@ RppStatus rain_f32_f32_host_tensor(Rpp32f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    dstPtrTemp[0] = RPPPIXELCHECKF32((*srcPtr2Temp - *srcPtr1TempR) * alpha + *srcPtr1TempR++);
-                    dstPtrTemp[1] = RPPPIXELCHECKF32((*srcPtr2Temp - *srcPtr1TempG) * alpha + *srcPtr1TempG++);
-                    dstPtrTemp[2] = RPPPIXELCHECKF32((*srcPtr2Temp - *srcPtr1TempB) * alpha + *srcPtr1TempB++);
-                    srcPtr2Temp++;
+                    dstPtrTemp[0] = RPPPIXELCHECKF32((*srcPtr2Temp - *srcPtr1TempR) * alpha + *srcPtr1TempR);
+                    dstPtrTemp[1] = RPPPIXELCHECKF32((*srcPtr2Temp - *srcPtr1TempG) * alpha + *srcPtr1TempG);
+                    dstPtrTemp[2] = RPPPIXELCHECKF32((*srcPtr2Temp - *srcPtr1TempB) * alpha + *srcPtr1TempB);
                     dstPtrTemp += 3;
+                    srcPtr2Temp++;
+                    srcPtr1TempR++;
+                    srcPtr1TempG++;
+                    srcPtr1TempB++;
                 }
                 srcPtr1RowR += srcDescPtr->strides.hStride;
                 srcPtr1RowG += srcDescPtr->strides.hStride;
@@ -451,10 +462,11 @@ RppStatus rain_f32_f32_host_tensor(Rpp32f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTemp++ = RPPPIXELCHECKF32((*srcPtr2Temp - *srcPtr1Temp) * alpha + *srcPtr1Temp++);
-                    *dstPtrTemp++ = RPPPIXELCHECKF32((*srcPtr2Temp - *srcPtr1Temp) * alpha + *srcPtr1Temp++);
-                    *dstPtrTemp++ = RPPPIXELCHECKF32((*srcPtr2Temp - *srcPtr1Temp) * alpha + *srcPtr1Temp++);
+                    *dstPtrTemp++ = RPPPIXELCHECKF32((*srcPtr2Temp - *srcPtr1Temp) * alpha + *srcPtr1Temp);
+                    *dstPtrTemp++ = RPPPIXELCHECKF32((*srcPtr2Temp - *(srcPtr1Temp + 1)) * alpha + *(srcPtr1Temp + 1));
+                    *dstPtrTemp++ = RPPPIXELCHECKF32((*srcPtr2Temp - *(srcPtr1Temp + 2)) * alpha + *(srcPtr1Temp + 2));
                     srcPtr2Temp++;
+                    srcPtr1Temp += 3;
                 }
                 srcPtr1Row += srcDescPtr->strides.hStride;
                 srcPtr2Row += srcDescPtr->w;
@@ -493,7 +505,11 @@ RppStatus rain_f32_f32_host_tensor(Rpp32f *srcPtr,
                     }
 #endif
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
-                        *dstPtrTemp++ = RPPPIXELCHECKF32((*srcPtr2Temp++ - *srcPtr1Temp) * alpha + *srcPtr1Temp++);
+                    {
+                        *dstPtrTemp++ = RPPPIXELCHECKF32((*srcPtr2Temp - *srcPtr1Temp) * alpha + *srcPtr1Temp);
+                        srcPtr1Temp++;
+                        srcPtr2Temp++;
+                    }
                     srcPtr1Row += srcDescPtr->strides.hStride;
                     srcPtr2Row += srcDescPtr->strides.hStride;
                     dstPtrRow += dstDescPtr->strides.hStride;
@@ -632,11 +648,14 @@ RppStatus rain_f16_f16_host_tensor(Rpp16f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1TempR) * alpha + *srcPtr1TempR++)));
-                    dstPtrTemp[1] = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1TempG) * alpha + *srcPtr1TempG++)));
-                    dstPtrTemp[2] = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1TempB) * alpha + *srcPtr1TempB++)));
-                    srcPtr2Temp++;
+                    dstPtrTemp[0] = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1TempR) * alpha + *srcPtr1TempR)));
+                    dstPtrTemp[1] = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1TempG) * alpha + *srcPtr1TempG)));
+                    dstPtrTemp[2] = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1TempB) * alpha + *srcPtr1TempB)));
                     dstPtrTemp += 3;
+                    srcPtr2Temp++;
+                    srcPtr1TempR++;
+                    srcPtr1TempG++;
+                    srcPtr1TempB++;
                 }
                 srcPtr1RowR += srcDescPtr->strides.hStride;
                 srcPtr1RowG += srcDescPtr->strides.hStride;
@@ -674,10 +693,11 @@ RppStatus rain_f16_f16_host_tensor(Rpp16f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTemp++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1Temp) * alpha + *srcPtr1Temp++)));
-                    *dstPtrTemp++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1Temp) * alpha + *srcPtr1Temp++)));
-                    *dstPtrTemp++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1Temp) * alpha + *srcPtr1Temp++)));
+                    *dstPtrTemp++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1Temp) * alpha + *srcPtr1Temp)));
+                    *dstPtrTemp++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<Rpp32f>((*srcPtr2Temp - *(srcPtr1Temp + 1)) * alpha + *(srcPtr1Temp + 1))));
+                    *dstPtrTemp++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<Rpp32f>((*srcPtr2Temp - *(srcPtr1Temp + 2)) * alpha + *(srcPtr1Temp + 2))));
                     srcPtr2Temp++;
+                    srcPtr1Temp += 3;
                 }
                 srcPtr1Row += srcDescPtr->strides.hStride;
                 srcPtr2Row += srcDescPtr->w;
@@ -716,7 +736,11 @@ RppStatus rain_f16_f16_host_tensor(Rpp16f *srcPtr,
                     }
 #endif
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
-                        *dstPtrTemp++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<Rpp32f>((*srcPtr2Temp++ - *srcPtr1Temp) * alpha + *srcPtr1Temp++)));
+                    {
+                        *dstPtrTemp++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1Temp) * alpha + *srcPtr1Temp)));
+                        srcPtr1Temp++;
+                        srcPtr2Temp++;
+                    }
                     srcPtr1Row += srcDescPtr->strides.hStride;
                     srcPtr2Row += srcDescPtr->strides.hStride;
                     dstPtrRow += dstDescPtr->strides.hStride;
@@ -855,11 +879,14 @@ RppStatus rain_i8_i8_host_tensor(Rpp8s *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = static_cast<Rpp8s>(RPPPIXELCHECKI8(std::nearbyintf(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1TempR) * alpha + *srcPtr1TempR++))));
-                    dstPtrTemp[1] = static_cast<Rpp8s>(RPPPIXELCHECKI8(std::nearbyintf(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1TempG) * alpha + *srcPtr1TempG++))));
-                    dstPtrTemp[2] = static_cast<Rpp8s>(RPPPIXELCHECKI8(std::nearbyintf(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1TempB) * alpha + *srcPtr1TempB++))));
-                    srcPtr2Temp++;
+                    dstPtrTemp[0] = static_cast<Rpp8s>(RPPPIXELCHECKI8(std::nearbyintf(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1TempR) * alpha + *srcPtr1TempR))));
+                    dstPtrTemp[1] = static_cast<Rpp8s>(RPPPIXELCHECKI8(std::nearbyintf(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1TempG) * alpha + *srcPtr1TempG))));
+                    dstPtrTemp[2] = static_cast<Rpp8s>(RPPPIXELCHECKI8(std::nearbyintf(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1TempB) * alpha + *srcPtr1TempB))));
                     dstPtrTemp += 3;
+                    srcPtr2Temp++;
+                    srcPtr1TempR++;
+                    srcPtr1TempG++;
+                    srcPtr1TempB++;
                 }
                 srcPtr1RowR += srcDescPtr->strides.hStride;
                 srcPtr1RowG += srcDescPtr->strides.hStride;
@@ -897,10 +924,11 @@ RppStatus rain_i8_i8_host_tensor(Rpp8s *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTemp++ = static_cast<Rpp8s>(RPPPIXELCHECKI8(std::nearbyintf(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1Temp) * alpha + *srcPtr1Temp++))));
-                    *dstPtrTemp++ = static_cast<Rpp8s>(RPPPIXELCHECKI8(std::nearbyintf(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1Temp) * alpha + *srcPtr1Temp++))));
-                    *dstPtrTemp++ = static_cast<Rpp8s>(RPPPIXELCHECKI8(std::nearbyintf(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1Temp) * alpha + *srcPtr1Temp++))));
-                    *srcPtr2Temp++;
+                    *dstPtrTemp++ = static_cast<Rpp8s>(RPPPIXELCHECKI8(std::nearbyintf(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1Temp) * alpha + *srcPtr1Temp))));
+                    *dstPtrTemp++ = static_cast<Rpp8s>(RPPPIXELCHECKI8(std::nearbyintf(static_cast<Rpp32f>((*srcPtr2Temp - *(srcPtr1Temp + 1)) * alpha + *(srcPtr1Temp + 1)))));
+                    *dstPtrTemp++ = static_cast<Rpp8s>(RPPPIXELCHECKI8(std::nearbyintf(static_cast<Rpp32f>((*srcPtr2Temp - *(srcPtr1Temp + 2)) * alpha + *(srcPtr1Temp + 2)))));
+                    srcPtr2Temp++;
+                    srcPtr1Temp += 3;
                 }
                 srcPtr1Row += srcDescPtr->strides.hStride;
                 srcPtr2Row += srcDescPtr->w;
@@ -938,7 +966,11 @@ RppStatus rain_i8_i8_host_tensor(Rpp8s *srcPtr,
                     }
 #endif
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
-                        *dstPtrTemp++ = static_cast<Rpp8s>(RPPPIXELCHECKI8(std::nearbyintf(static_cast<Rpp32f>((*srcPtr2Temp++ - *srcPtr1Temp) * alpha + *srcPtr1Temp++))));
+                    {
+                        *dstPtrTemp++ = static_cast<Rpp8s>(RPPPIXELCHECKI8(std::nearbyintf(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1Temp) * alpha + *srcPtr1Temp))));
+                        srcPtr1Temp++;
+                        srcPtr2Temp++;
+                    }
                     srcPtr1Row += srcDescPtr->strides.hStride;
                     srcPtr2Row += srcDescPtr->strides.hStride;
                     dstPtrRow += dstDescPtr->strides.hStride;

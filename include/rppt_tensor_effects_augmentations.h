@@ -682,7 +682,7 @@ RppStatus rppt_rain_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPt
  * \param [in] rainWidth Width of the rain drops in pixels
  * \param [in] rainHeight Height of the rain drops in pixels
  * \param [in] slant Slant of the rain drops in pixels (positive value for right slant, negative for left slant)
- * \param [in] alpha An array of alpha blending values in pinned memory, used for each image in the batch.
+ * \param [in] alpha An array of alpha blending values in pinned / HIP memory, used for each image in the batch.
  * \param [in] roiTensorPtrSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>

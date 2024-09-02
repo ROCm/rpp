@@ -74,7 +74,6 @@ __global__ void rain_pln_hip_tensor(T *srcPtr1,
     float4 alpha_f4 = static_cast<float4>(alpha[id_z]);
 
     d_float8 src1_f8, src2_f8, dst_f8;
-
     rpp_hip_load8_and_unpack_to_float8(srcPtr1 + srcIdx1, &src1_f8);
     rpp_hip_load8_and_unpack_to_float8(srcPtr2 + srcIdx2, &src2_f8);
     rain_hip_compute(&src1_f8, &src2_f8, &dst_f8, &alpha_f4);
@@ -121,7 +120,6 @@ __global__ void rain_pkd3_pln3_hip_tensor(T *srcPtr1,
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
     float4 alpha_f4 = static_cast<float4>alpha[id_z];
-
     d_float24 src1_f24, dst_f24;
     d_float8 src2_f8;
 
@@ -156,7 +154,6 @@ __global__ void rain_pln3_pkd3_hip_tensor(T *srcPtr1,
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
     float4 alpha_f4 = static_cast<float4>(alpha[id_z]);
-
     d_float24 src1_f24, dst_f24;
     d_float8 src2_f8;
 
