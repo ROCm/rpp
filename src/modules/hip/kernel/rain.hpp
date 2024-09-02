@@ -2,9 +2,9 @@
 #include "rpp_hip_common.hpp"
 
 // Constants to represent the rain intensity for different data types
-#define RAIN_INTENSITY_8U = 200;   // Intensity value for Rpp8u
-#define RAIN_INTENSITY_8S = 72;    // Intensity value for Rpp8s
-#define RAIN_INTENSITY_FLOAT = 200 * ONE_OVER_255; // Intensity value for Rpp32f and Rpp16f
+#define RAIN_INTENSITY_8U 200   // Intensity value for Rpp8u
+#define RAIN_INTENSITY_8S 72    // Intensity value for Rpp8s
+#define RAIN_INTENSITY_FLOAT 200 * ONE_OVER_255 // Intensity value for Rpp32f and Rpp16f
 
 __device__ __forceinline__ void rain_hip_compute(d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8, float4 *alpha_f4)
 {

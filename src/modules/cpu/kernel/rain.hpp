@@ -28,9 +28,9 @@ SOFTWARE.
 #include <chrono>
 
 // Constants to represent the rain intensity for different data types
-#define RAIN_INTENSITY_8U = 200;   // Intensity value for Rpp8u
-#define RAIN_INTENSITY_8S = 72;    // Intensity value for Rpp8s
-#define RAIN_INTENSITY_FLOAT = 200 * ONE_OVER_255; // Intensity value for Rpp32f and Rpp16f
+#define RAIN_INTENSITY_8U 200   // Intensity value for Rpp8u
+#define RAIN_INTENSITY_8S 72    // Intensity value for Rpp8s
+#define RAIN_INTENSITY_FLOAT 200 * ONE_OVER_255 // Intensity value for Rpp32f and Rpp16f
 
 template<typename T>
 inline void create_rain_layer(T *rainLayer, Rpp32f rainPercentage, RpptDescPtr srcDescPtr, Rpp32s slant, Rpp32u dropLength, Rpp32u bufferMultiplier)
@@ -126,13 +126,7 @@ RppStatus rain_u8_u8_host_tensor(Rpp8u *srcPtr,
                     __m256 p1[6], p2[2];
                     rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtr1Temp, p1);    // simd loads
                     rpp_simd_load(rpp_load16_u8_to_f32_avx, srcPtr2Temp, p2);    // simd loads
-                    p1[0] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[0]), pMul, p1[0]);    // alpha-blending adjustment
-                    p1[1] = _mm256_fmadd_ps(_mm256_sub_ps(p2[1], p1[1]), pMul, p1[1]);    // alpha-blending adjustment
-                    p1[2] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[2]), pMul, p1[2]);    // alpha-blending adjustment
-                    p1[3] = _mm256_fmadd_ps(_mm256_sub_ps(p2[1], p1[3]), pMul, p1[3]);    // alpha-blending adjustment
-                    p1[4] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[4]), pMul, p1[4]);    // alpha-blending adjustment
-                    p1[5] = _mm256_fmadd_ps(_mm256_sub_ps(p2[1], p1[5]), pMul, p1[5]);    // alpha-blending adjustment
-
+                    compute_rain_48_host(p1, p2, pMul);
                     rpp_simd_store(rpp_store48_f32pln3_to_u8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p1);    // simd stores
                     srcPtr1Temp += 48;
                     srcPtr2Temp += 16;
@@ -185,14 +179,8 @@ RppStatus rain_u8_u8_host_tensor(Rpp8u *srcPtr,
                     __m256 p1[6], p2[2];
                     rpp_simd_load(rpp_load48_u8pln3_to_f32pln3_avx, srcPtr1TempR, srcPtr1TempG, srcPtr1TempB, p1);    // simd loads
                     rpp_simd_load(rpp_load16_u8_to_f32_avx, srcPtr2TempR, p2);    // simd loads
-                    p1[0] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[0]), pMul, p1[0]);    // alpha-blending adjustment
-                    p1[1] = _mm256_fmadd_ps(_mm256_sub_ps(p2[1], p1[1]), pMul, p1[1]);    // alpha-blending adjustment
-                    p1[2] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[2]), pMul, p1[2]);    // alpha-blending adjustment
-                    p1[3] = _mm256_fmadd_ps(_mm256_sub_ps(p2[1], p1[3]), pMul, p1[3]);    // alpha-blending adjustment
-                    p1[4] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[4]), pMul, p1[4]);    // alpha-blending adjustment
-                    p1[5] = _mm256_fmadd_ps(_mm256_sub_ps(p2[1], p1[5]), pMul, p1[5]);    // alpha-blending adjustment
+                    compute_rain_48_host(p1, p2, pMul);
                     rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTemp, p1);    // simd stores
-
                     srcPtr1TempR += 16;
                     srcPtr1TempG += 16;
                     srcPtr1TempB += 16;
@@ -238,14 +226,8 @@ RppStatus rain_u8_u8_host_tensor(Rpp8u *srcPtr,
                     __m256 p1[6], p2[2];
                     rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtr1Temp, p1);    // simd loads
                     rpp_simd_load(rpp_load16_u8_to_f32_avx, srcPtr2Temp, p2);    // simd loads
-                    p1[0] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[0]), pMul, p1[0]);    // alpha-blending adjustment
-                    p1[1] = _mm256_fmadd_ps(_mm256_sub_ps(p2[1], p1[1]), pMul, p1[1]);    // alpha-blending adjustment
-                    p1[2] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[2]), pMul, p1[2]);    // alpha-blending adjustment
-                    p1[3] = _mm256_fmadd_ps(_mm256_sub_ps(p2[1], p1[3]), pMul, p1[3]);    // alpha-blending adjustment
-                    p1[4] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[4]), pMul, p1[4]);    // alpha-blending adjustment
-                    p1[5] = _mm256_fmadd_ps(_mm256_sub_ps(p2[1], p1[5]), pMul, p1[5]);    // alpha-blending adjustment
+                    compute_rain_48_host(p1, p2, pMul);
                     rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTemp, p1);    // simd stores
-
                     srcPtr1Temp += 48;
                     srcPtr2Temp += 16;
                     dstPtrTemp += 48;
@@ -286,12 +268,8 @@ RppStatus rain_u8_u8_host_tensor(Rpp8u *srcPtr,
                         __m256 p1[4], p2[4];
                         rpp_simd_load(rpp_load32_u8_to_f32_avx, srcPtr1Temp, p1);    // simd loads
                         rpp_simd_load(rpp_load32_u8_to_f32_avx, srcPtr2Temp, p2);    // simd loads
-                        p1[0] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[0]), pMul, p1[0]);    // alpha-blending adjustment
-                        p1[1] = _mm256_fmadd_ps(_mm256_sub_ps(p2[1], p1[1]), pMul, p1[1]);    // alpha-blending adjustment
-                        p1[2] = _mm256_fmadd_ps(_mm256_sub_ps(p2[2], p1[2]), pMul, p1[2]);    // alpha-blending adjustment
-                        p1[3] = _mm256_fmadd_ps(_mm256_sub_ps(p2[3], p1[3]), pMul, p1[3]);    // alpha-blending adjustment
+                        compute_rain_32_host(p1, p2, pMul);
                         rpp_simd_store(rpp_store32_f32_to_u8_avx, dstPtrTemp, p1);    // simd stores
-
                         srcPtr1Temp += 32;
                         srcPtr2Temp += 32;
                         dstPtrTemp += 32;
@@ -376,10 +354,7 @@ RppStatus rain_f32_f32_host_tensor(Rpp32f *srcPtr,
                     __m256 p1[3], p2;
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtr1Temp, p1);    // simd loads
                     rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtr2Temp, &p2);    // simd loads
-                    p1[0] = _mm256_fmadd_ps(_mm256_sub_ps(p2, p1[0]), pMul, p1[0]);    // alpha-blending adjustment
-                    p1[1] = _mm256_fmadd_ps(_mm256_sub_ps(p2, p1[1]), pMul, p1[1]);    // alpha-blending adjustment
-                    p1[2] = _mm256_fmadd_ps(_mm256_sub_ps(p2, p1[2]), pMul, p1[2]);    // alpha-blending adjustment
-
+                    compute_rain_24_host(p1, p2, pMul);
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p1);    // simd stores
                     srcPtr1Temp += 24;
                     srcPtr2Temp += 8;
@@ -432,11 +407,8 @@ RppStatus rain_f32_f32_host_tensor(Rpp32f *srcPtr,
                     __m256 p1[3], p2;
                     rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtr1TempR, srcPtr1TempG, srcPtr1TempB, p1);    // simd loads
                     rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtr2TempR, &p2);    // simd loads
-                    p1[0] = _mm256_fmadd_ps(_mm256_sub_ps(p2, p1[0]), pMul, p1[0]);    // alpha-blending adjustment
-                    p1[1] = _mm256_fmadd_ps(_mm256_sub_ps(p2, p1[1]), pMul, p1[1]);    // alpha-blending adjustment
-                    p1[2] = _mm256_fmadd_ps(_mm256_sub_ps(p2, p1[2]), pMul, p1[2]);    // alpha-blending adjustment
+                    compute_rain_24_host(p1, p2, pMul);
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, p1);    // simd stores
-
                     srcPtr1TempR += 8;
                     srcPtr1TempG += 8;
                     srcPtr1TempB += 8;
@@ -482,11 +454,8 @@ RppStatus rain_f32_f32_host_tensor(Rpp32f *srcPtr,
                     __m256 p1[3], p2;
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtr1Temp, p1);    // simd loads
                     rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtr2Temp, &p2);    // simd loads
-                    p1[0] = _mm256_fmadd_ps(_mm256_sub_ps(p2, p1[0]), pMul, p1[0]);    // alpha-blending adjustment
-                    p1[1] = _mm256_fmadd_ps(_mm256_sub_ps(p2, p1[1]), pMul, p1[1]);    // alpha-blending adjustment
-                    p1[2] = _mm256_fmadd_ps(_mm256_sub_ps(p2, p1[2]), pMul, p1[2]);    // alpha-blending adjustment
+                    compute_rain_24_host(p1, p2, pMul);
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, p1);    // simd stores
-
                     srcPtr1Temp += 24;
                     srcPtr2Temp += 8;
                     dstPtrTemp += 24;
@@ -530,7 +499,6 @@ RppStatus rain_f32_f32_host_tensor(Rpp32f *srcPtr,
                         rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtr2Temp, &p2);    // simd loads
                         p1 = _mm256_fmadd_ps(_mm256_sub_ps(p2, p1), pMul, p1);    // alpha-blending adjustment
                         rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp, &p1);    // simd stores
-
                         srcPtr1Temp += 8;
                         srcPtr2Temp += 8;
                         dstPtrTemp += 8;
@@ -616,10 +584,7 @@ RppStatus rain_f16_f16_host_tensor(Rpp16f *srcPtr,
                     __m256 p1[3], p2;
                     rpp_simd_load(rpp_load24_f16pkd3_to_f32pln3_avx, srcPtr1Temp, p1);    // simd loads
                     rpp_simd_load(rpp_load8_f16_to_f32_avx, srcPtr2Temp, &p2);    // simd loads
-                    p1[0] = _mm256_fmadd_ps(_mm256_sub_ps(p2, p1[0]), pMul, p1[0]);    // alpha-blending adjustment
-                    p1[1] = _mm256_fmadd_ps(_mm256_sub_ps(p2, p1[1]), pMul, p1[1]);    // alpha-blending adjustment
-                    p1[2] = _mm256_fmadd_ps(_mm256_sub_ps(p2, p1[2]), pMul, p1[2]);    // alpha-blending adjustment
-
+                    compute_rain_24_host(p1, p2, pMul);
                     rpp_simd_store(rpp_store24_f32pln3_to_f16pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p1);    // simd stores
                     srcPtr1Temp += 24;
                     srcPtr2Temp += 8;
@@ -672,11 +637,8 @@ RppStatus rain_f16_f16_host_tensor(Rpp16f *srcPtr,
                     __m256 p1[3], p2;
                     rpp_simd_load(rpp_load24_f16pln3_to_f32pln3_avx, srcPtr1TempR, srcPtr1TempG, srcPtr1TempB, p1);    // simd loads
                     rpp_simd_load(rpp_load8_f16_to_f32_avx, srcPtr2TempR, &p2);    // simd loads
-                    p1[0] = _mm256_fmadd_ps(_mm256_sub_ps(p2, p1[0]), pMul, p1[0]);    // alpha-blending adjustment
-                    p1[1] = _mm256_fmadd_ps(_mm256_sub_ps(p2, p1[1]), pMul, p1[1]);    // alpha-blending adjustment
-                    p1[2] = _mm256_fmadd_ps(_mm256_sub_ps(p2, p1[2]), pMul, p1[2]);    // alpha-blending adjustment
+                    compute_rain_24_host(p1, p2, pMul);
                     rpp_simd_store(rpp_store24_f32pln3_to_f16pkd3_avx, dstPtrTemp, p1);    // simd stores
-
                     srcPtr1TempR += 8;
                     srcPtr1TempG += 8;
                     srcPtr1TempB += 8;
@@ -722,11 +684,8 @@ RppStatus rain_f16_f16_host_tensor(Rpp16f *srcPtr,
                     __m256 p1[3], p2;
                     rpp_simd_load(rpp_load24_f16pkd3_to_f32pln3_avx, srcPtr1Temp, p1);    // simd loads
                     rpp_simd_load(rpp_load8_f16_to_f32_avx, srcPtr2Temp, &p2);    // simd loads
-                    p1[0] = _mm256_fmadd_ps(_mm256_sub_ps(p2, p1[0]), pMul, p1[0]);    // alpha-blending adjustment
-                    p1[1] = _mm256_fmadd_ps(_mm256_sub_ps(p2, p1[1]), pMul, p1[1]);    // alpha-blending adjustment
-                    p1[2] = _mm256_fmadd_ps(_mm256_sub_ps(p2, p1[2]), pMul, p1[2]);    // alpha-blending adjustment
+                    compute_rain_24_host(p1, p2, pMul);
                     rpp_simd_store(rpp_store24_f32pln3_to_f16pkd3_avx, dstPtrTemp, p1);    // simd stores
-
                     srcPtr1Temp += 24;
                     srcPtr2Temp += 8;
                     dstPtrTemp += 24;
@@ -770,7 +729,6 @@ RppStatus rain_f16_f16_host_tensor(Rpp16f *srcPtr,
                         rpp_simd_load(rpp_load8_f16_to_f32_avx, srcPtr2Temp, &p2);    // simd loads
                         p1 = _mm256_fmadd_ps(_mm256_sub_ps(p2, p1), pMul, p1);    // alpha-blending adjustment
                         rpp_simd_store(rpp_store8_f32_to_f16_avx, dstPtrTemp, &p1);    // simd stores
-
                         srcPtr1Temp += 8;
                         srcPtr2Temp += 8;
                         dstPtrTemp += 8;
@@ -856,13 +814,7 @@ RppStatus rain_i8_i8_host_tensor(Rpp8s *srcPtr,
                     __m256 p1[6], p2[2];
                     rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3_avx, srcPtr1Temp, p1);    // simd loads
                     rpp_simd_load(rpp_load16_i8_to_f32_avx, srcPtr2Temp, p2);    // simd loads
-                    p1[0] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[0]), pMul, p1[0]);    // alpha-blending adjustment
-                    p1[1] = _mm256_fmadd_ps(_mm256_sub_ps(p2[1], p1[1]), pMul, p1[1]);    // alpha-blending adjustment
-                    p1[2] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[2]), pMul, p1[2]);    // alpha-blending adjustment
-                    p1[3] = _mm256_fmadd_ps(_mm256_sub_ps(p2[1], p1[3]), pMul, p1[3]);    // alpha-blending adjustment
-                    p1[4] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[4]), pMul, p1[4]);    // alpha-blending adjustment
-                    p1[5] = _mm256_fmadd_ps(_mm256_sub_ps(p2[1], p1[5]), pMul, p1[5]);    // alpha-blending adjustment
-
+                    compute_rain_48_host(p1, p2, pMul);
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p1);    // simd stores
                     srcPtr1Temp += 48;
                     srcPtr2Temp += 16;
@@ -915,14 +867,8 @@ RppStatus rain_i8_i8_host_tensor(Rpp8s *srcPtr,
                     __m256 p1[6], p2[2];
                     rpp_simd_load(rpp_load48_i8pln3_to_f32pln3_avx, srcPtr1TempR, srcPtr1TempG, srcPtr1TempB, p1);    // simd loads
                     rpp_simd_load(rpp_load16_i8_to_f32_avx, srcPtr2TempR, p2);    // simd loads
-                    p1[0] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[0]), pMul, p1[0]);    // alpha-blending adjustment
-                    p1[1] = _mm256_fmadd_ps(_mm256_sub_ps(p2[1], p1[1]), pMul, p1[1]);    // alpha-blending adjustment
-                    p1[2] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[2]), pMul, p1[2]);    // alpha-blending adjustment
-                    p1[3] = _mm256_fmadd_ps(_mm256_sub_ps(p2[1], p1[3]), pMul, p1[3]);    // alpha-blending adjustment
-                    p1[4] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[4]), pMul, p1[4]);    // alpha-blending adjustment
-                    p1[5] = _mm256_fmadd_ps(_mm256_sub_ps(p2[1], p1[5]), pMul, p1[5]);    // alpha-blending adjustment
+                    compute_rain_48_host(p1, p2, pMul);
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3_avx, dstPtrTemp, p1);    // simd stores
-
                     srcPtr1TempR += 16;
                     srcPtr1TempG += 16;
                     srcPtr1TempB += 16;
@@ -968,14 +914,8 @@ RppStatus rain_i8_i8_host_tensor(Rpp8s *srcPtr,
                     __m256 p1[6], p2[2];
                     rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3_avx, srcPtr1Temp, p1);    // simd loads
                     rpp_simd_load(rpp_load16_i8_to_f32_avx, srcPtr2Temp, p2);    // simd loads
-                    p1[0] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[0]), pMul, p1[0]);    // alpha-blending adjustment
-                    p1[1] = _mm256_fmadd_ps(_mm256_sub_ps(p2[1], p1[1]), pMul, p1[1]);    // alpha-blending adjustment
-                    p1[2] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[2]), pMul, p1[2]);    // alpha-blending adjustment
-                    p1[3] = _mm256_fmadd_ps(_mm256_sub_ps(p2[1], p1[3]), pMul, p1[3]);    // alpha-blending adjustment
-                    p1[4] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[4]), pMul, p1[4]);    // alpha-blending adjustment
-                    p1[5] = _mm256_fmadd_ps(_mm256_sub_ps(p2[1], p1[5]), pMul, p1[5]);    // alpha-blending adjustment
+                    compute_rain_48_host(p1, p2, pMul);
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3_avx, dstPtrTemp, p1);    // simd stores
-
                     srcPtr1Temp += 48;
                     srcPtr2Temp += 16;
                     dstPtrTemp += 48;
@@ -1016,12 +956,8 @@ RppStatus rain_i8_i8_host_tensor(Rpp8s *srcPtr,
                         __m256 p1[4], p2[4];
                         rpp_simd_load(rpp_load32_i8_to_f32_avx, srcPtr1Temp, p1);    // simd loads
                         rpp_simd_load(rpp_load32_i8_to_f32_avx, srcPtr2Temp, p2);    // simd loads
-                        p1[0] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[0]), pMul, p1[0]);    // alpha-blending adjustment
-                        p1[1] = _mm256_fmadd_ps(_mm256_sub_ps(p2[1], p1[1]), pMul, p1[1]);    // alpha-blending adjustment
-                        p1[2] = _mm256_fmadd_ps(_mm256_sub_ps(p2[2], p1[2]), pMul, p1[2]);    // alpha-blending adjustment
-                        p1[3] = _mm256_fmadd_ps(_mm256_sub_ps(p2[3], p1[3]), pMul, p1[3]);    // alpha-blending adjustment
+                        compute_rain_32_host(p1, p2, pMul);
                         rpp_simd_store(rpp_store32_f32_to_i8_avx, dstPtrTemp, p1);    // simd stores
-
                         srcPtr1Temp += 32;
                         srcPtr2Temp += 32;
                         dstPtrTemp += 32;
