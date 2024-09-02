@@ -8,8 +8,8 @@ __device__ void warp_perspective_srclocs_hip_compute(float perspectiveMatrixElem
     d_float8 increment_f8;
     increment_f8.f4[0] = make_float4(0, perspectiveMatrixElement, perspectiveMatrixElement + perspectiveMatrixElement, perspectiveMatrixElement + perspectiveMatrixElement + perspectiveMatrixElement);
     increment_f8.f4[1] = static_cast<float4>(perspectiveMatrixElement + increment_f8.f4[0].w) + increment_f8.f4[0];
-    locSrcPtr_f8->f4[0] = ((locHomComponent_f4 + increment_f8.f4[0])/locHomW_f8.f4[0]) + roiComponent_f4;
-    locSrcPtr_f8->f4[1] = ((locHomComponent_f4 + increment_f8.f4[1])/locHomW_f8.f4[1]) + roiComponent_f4;
+    locSrcPtr_f8->f4[0] = ((locHomComponent_f4 + increment_f8.f4[0])/locHomW_f8.f4[0]) + roiComponent_f4; //Compute src x/src y locations based on homogeneous coords hom x/hom y and common scale hom w for dst x and dst y locations [0-3]
+    locSrcPtr_f8->f4[1] = ((locHomComponent_f4 + increment_f8.f4[1])/locHomW_f8.f4[1]) + roiComponent_f4; //Compute src x/src y locations based on homogeneous coords hom x/hom y and common scale hom w for dst x and dst y locations [4-7]
 }
 
 __device__ void warp_perspective_roi_and_srclocs_hip_compute(int4 *srcRoiPtr_i4, int id_x, int id_y, d_float9 *perspectiveMatrix_f9, d_float16 *locSrc_f16)
@@ -95,7 +95,6 @@ __global__ void warp_perspective_bilinear_pln_hip_tensor(T *srcPtr,
     d_float8 dst_f8;
     rpp_hip_interpolate8_bilinear_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &srcRoi_i4, &dst_f8);
     rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
-
     if (channelsDst == 3)
     {
         srcIdx += srcStridesNCH.y;
@@ -233,7 +232,6 @@ __global__ void warp_perspective_nearest_neighbor_pln_hip_tensor(T *srcPtr,
     d_float8 dst_f8;
     rpp_hip_interpolate8_nearest_neighbor_pln1(srcPtr + srcIdx, srcStridesNCH.z, &locSrc_f16, &srcRoi_i4, &dst_f8);
     rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
-
     if (channelsDst == 3)
     {
         srcIdx += srcStridesNCH.y;
