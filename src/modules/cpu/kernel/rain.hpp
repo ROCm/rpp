@@ -415,7 +415,7 @@ RppStatus rain_f32_f32_host_tensor(Rpp32f *srcPtr,
                     dstPtrTemp += vectorIncrement;
                 }
 #endif
-                for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
+                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     dstPtrTemp[0] = RPPPIXELCHECKF32((*srcPtr2Temp - *srcPtr1TempR) * alpha + *srcPtr1TempR);
                     dstPtrTemp[1] = RPPPIXELCHECKF32((*srcPtr2Temp - *srcPtr1TempG) * alpha + *srcPtr1TempG);
@@ -601,8 +601,8 @@ RppStatus rain_f16_f16_host_tensor(Rpp16f *srcPtr,
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     *dstPtrTempR++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<Rpp32f>((*srcPtr2Temp - srcPtr1Temp[0]) * alpha + srcPtr1Temp[0])));
-                    *dstPtrTempG++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<Rpp32f>((*srcPtr2Temp - srcPtr1Temp[0]) * alpha + srcPtr1Temp[0])));
-                    *dstPtrTempB++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<Rpp32f>((*srcPtr2Temp - srcPtr1Temp[0]) * alpha + srcPtr1Temp[0])));
+                    *dstPtrTempG++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<Rpp32f>((*srcPtr2Temp - srcPtr1Temp[1]) * alpha + srcPtr1Temp[1])));
+                    *dstPtrTempB++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<Rpp32f>((*srcPtr2Temp - srcPtr1Temp[2]) * alpha + srcPtr1Temp[2])));
                     srcPtr1Temp += 3;
                     srcPtr2Temp++;
                 }

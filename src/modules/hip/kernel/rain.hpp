@@ -6,10 +6,28 @@
 #define RAIN_INTENSITY_8S 72    // Intensity value for Rpp8s
 #define RAIN_INTENSITY_FLOAT 200 * ONE_OVER_255 // Intensity value for Rpp32f and Rpp16f
 
-__device__ __forceinline__ void rain_hip_compute(d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8, float4 *alpha_f4)
+__device__ __forceinline__ void rain_hip_compute(uchar *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8, float4 *alpha_f4)
 {
-    dst_f8->f4[0] = (src2_f8->f4[0] - src1_f8->f4[0]) * *alpha_f4 + src1_f8->f4[0];
-    dst_f8->f4[1] = (src2_f8->f4[1] - src1_f8->f4[1]) * *alpha_f4 + src1_f8->f4[1];
+    dst_f8->f4[0] = rpp_hip_pixel_check_0to255((src2_f8->f4[0] - src1_f8->f4[0]) * *alpha_f4 + src1_f8->f4[0]);
+    dst_f8->f4[1] = rpp_hip_pixel_check_0to255((src2_f8->f4[1] - src1_f8->f4[1]) * *alpha_f4 + src1_f8->f4[1]);
+}
+
+__device__ __forceinline__ void rain_hip_compute(float *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8, float4 *alpha_f4)
+{
+    dst_f8->f4[0] = rpp_hip_pixel_check_0to1((src2_f8->f4[0] - src1_f8->f4[0]) * *alpha_f4 + src1_f8->f4[0]);
+    dst_f8->f4[1] = rpp_hip_pixel_check_0to1((src2_f8->f4[1] - src1_f8->f4[1]) * *alpha_f4 + src1_f8->f4[1]);
+}
+
+__device__ __forceinline__ void rain_hip_compute(schar *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8, float4 *alpha_f4)
+{
+    dst_f8->f4[0] = rpp_hip_pixel_check_0to255((src2_f8->f4[0] - src1_f8->f4[0]) * *alpha_f4 + src1_f8->f4[0] + (float4)128) - (float4)128;
+    dst_f8->f4[1] = rpp_hip_pixel_check_0to255((src2_f8->f4[1] - src1_f8->f4[1]) * *alpha_f4 + src1_f8->f4[1] + (float4)128) - (float4)128;
+}
+
+__device__ __forceinline__ void rain_hip_compute(half *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8, float4 *alpha_f4)
+{
+    dst_f8->f4[0] = rpp_hip_pixel_check_0to1((src2_f8->f4[0] - src1_f8->f4[0]) * *alpha_f4 + src1_f8->f4[0]);
+    dst_f8->f4[1] = rpp_hip_pixel_check_0to1((src2_f8->f4[1] - src1_f8->f4[1]) * *alpha_f4 + src1_f8->f4[1]);
 }
 
 template <typename T>
@@ -35,16 +53,16 @@ __global__ void rain_pkd_hip_tensor(T *srcPtr1,
     uint srcIdx2 = ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNHW.z) + (maskid_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x;
 
-    float4 alpha_f4 = static_cast<float4>alpha[id_z];
+    float4 alpha_f4 = static_cast<float4>(alpha[id_z]);
 
     d_float24 src1_f24, dst_f24;
     d_float8 src2_f8;
 
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr1 + srcIdx1, &src1_f24);
     rpp_hip_load8_and_unpack_to_float8(srcPtr2 + srcIdx2, &src2_f8);
-    rain_hip_compute(&src1_f24.f8[0], &src2_f8, &dst_f24.f8[0], &alpha_f4);
-    rain_hip_compute(&src1_f24.f8[1], &src2_f8, &dst_f24.f8[1], &alpha_f4);
-    rain_hip_compute(&src1_f24.f8[2], &src2_f8, &dst_f24.f8[2], &alpha_f4);
+    rain_hip_compute(srcPtr1, &src1_f24.f8[0], &src2_f8, &dst_f24.f8[0], &alpha_f4);
+    rain_hip_compute(srcPtr1, &src1_f24.f8[1], &src2_f8, &dst_f24.f8[1], &alpha_f4);
+    rain_hip_compute(srcPtr1, &src1_f24.f8[2], &src2_f8, &dst_f24.f8[2], &alpha_f4);
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
 }
 
@@ -72,27 +90,24 @@ __global__ void rain_pln_hip_tensor(T *srcPtr1,
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
     float4 alpha_f4 = static_cast<float4>(alpha[id_z]);
-
     d_float8 src1_f8, src2_f8, dst_f8;
     rpp_hip_load8_and_unpack_to_float8(srcPtr1 + srcIdx1, &src1_f8);
     rpp_hip_load8_and_unpack_to_float8(srcPtr2 + srcIdx2, &src2_f8);
-    rain_hip_compute(&src1_f8, &src2_f8, &dst_f8, &alpha_f4);
+    rain_hip_compute(srcPtr1, &src1_f8, &src2_f8, &dst_f8, &alpha_f4);
     rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
 
     if (channelsDst == 3)
     {
         srcIdx1 += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
-
         rpp_hip_load8_and_unpack_to_float8(srcPtr1 + srcIdx1, &src1_f8);
-        rain_hip_compute(&src1_f8, &src2_f8, &dst_f8, &alpha_f4);
+        rain_hip_compute(srcPtr1, &src1_f8, &src2_f8, &dst_f8, &alpha_f4);
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
 
         srcIdx1 += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
-
         rpp_hip_load8_and_unpack_to_float8(srcPtr1 + srcIdx1, &src1_f8);
-        rain_hip_compute(&src1_f8, &src2_f8, &dst_f8, &alpha_f4);
+        rain_hip_compute(srcPtr1, &src1_f8, &src2_f8, &dst_f8, &alpha_f4);
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
     }
 }
@@ -119,15 +134,15 @@ __global__ void rain_pkd3_pln3_hip_tensor(T *srcPtr1,
     uint srcIdx2 = ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNHW.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-    float4 alpha_f4 = static_cast<float4>alpha[id_z];
+    float4 alpha_f4 = static_cast<float4>(alpha[id_z]);
     d_float24 src1_f24, dst_f24;
     d_float8 src2_f8;
 
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr1 + srcIdx1, &src1_f24);
     rpp_hip_load8_and_unpack_to_float8(srcPtr2 + srcIdx2, &src2_f8);
-    rain_hip_compute(&src1_f24.f8[0], &src2_f8, &dst_f24.f8[0], &alpha_f4);
-    rain_hip_compute(&src1_f24.f8[1], &src2_f8, &dst_f24.f8[1], &alpha_f4);
-    rain_hip_compute(&src1_f24.f8[2], &src2_f8, &dst_f24.f8[2], &alpha_f4);
+    rain_hip_compute(srcPtr1, &src1_f24.f8[0], &src2_f8, &dst_f24.f8[0], &alpha_f4);
+    rain_hip_compute(srcPtr1, &src1_f24.f8[1], &src2_f8, &dst_f24.f8[1], &alpha_f4);
+    rain_hip_compute(srcPtr1, &src1_f24.f8[2], &src2_f8, &dst_f24.f8[2], &alpha_f4);
     rpp_hip_pack_float24_pln3_and_store24_pln3(dstPtr + dstIdx, dstStridesNCH.y, &dst_f24);
 }
 
@@ -159,9 +174,9 @@ __global__ void rain_pln3_pkd3_hip_tensor(T *srcPtr1,
 
     rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr1 + srcIdx1, srcStridesNCH.y, &src1_f24);
     rpp_hip_load8_and_unpack_to_float8(srcPtr2 + srcIdx2, &src2_f8);
-    rain_hip_compute(&src1_f24.f8[0], &src2_f8, &dst_f24.f8[0], &alpha_f4);
-    rain_hip_compute(&src1_f24.f8[1], &src2_f8, &dst_f24.f8[1], &alpha_f4);
-    rain_hip_compute(&src1_f24.f8[2], &src2_f8, &dst_f24.f8[2], &alpha_f4);
+    rain_hip_compute(srcPtr1, &src1_f24.f8[0], &src2_f8, &dst_f24.f8[0], &alpha_f4);
+    rain_hip_compute(srcPtr1, &src1_f24.f8[1], &src2_f8, &dst_f24.f8[1], &alpha_f4);
+    rain_hip_compute(srcPtr1, &src1_f24.f8[2], &src2_f8, &dst_f24.f8[2], &alpha_f4);
     rpp_hip_pack_float24_pln3_and_store24_pkd3(dstPtr + dstIdx, &dst_f24);
 }
 
@@ -196,7 +211,7 @@ RppStatus hip_exec_rain_tensor(T *srcPtr1,
     T rainValue = std::is_same<T, Rpp8u>::value ? static_cast<T>(RAIN_INTENSITY_8U) :
                   std::is_same<T, Rpp8s>::value ? static_cast<T>(RAIN_INTENSITY_8S) :
                   static_cast<T>(RAIN_INTENSITY_FLOAT);
-    Rpp32f slantPerDropLength = static_cast<Rpp32f>(slant) / dropLength;
+    Rpp32f slantPerDropLength = static_cast<Rpp32f>(slant) / rainHeight;
     for (Rpp32u i = 0; i < numDrops; i++)
     {
         Rpp32u xStart = rand() % (srcDescPtr->w - slant);
