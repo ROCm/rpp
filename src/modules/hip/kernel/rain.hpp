@@ -35,7 +35,7 @@ __global__ void rain_pkd_hip_tensor(T *srcPtr1,
     uint srcIdx2 = ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNHW.z) + (maskid_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x;
 
-    float4 alpha_f4 = (float4)alpha[id_z];
+    float4 alpha_f4 = static_cast<float4>alpha[id_z];
 
     d_float24 src1_f24, dst_f24;
     d_float8 src2_f8;
@@ -71,7 +71,7 @@ __global__ void rain_pln_hip_tensor(T *srcPtr1,
     uint srcIdx2 = ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-    float4 alpha_f4 = (float4)(alpha[id_z]);
+    float4 alpha_f4 = static_cast<float4>(alpha[id_z]);
 
     d_float8 src1_f8, src2_f8, dst_f8;
 
@@ -120,7 +120,7 @@ __global__ void rain_pkd3_pln3_hip_tensor(T *srcPtr1,
     uint srcIdx2 = ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNHW.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-    float4 alpha_f4 = (float4)alpha[id_z];
+    float4 alpha_f4 = static_cast<float4>alpha[id_z];
 
     d_float24 src1_f24, dst_f24;
     d_float8 src2_f8;
@@ -155,7 +155,7 @@ __global__ void rain_pln3_pkd3_hip_tensor(T *srcPtr1,
     uint srcIdx2 = ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNCH.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
-    float4 alpha_f4 = (float4)(alpha[id_z]);
+    float4 alpha_f4 = static_cast<float4>(alpha[id_z]);
 
     d_float24 src1_f24, dst_f24;
     d_float8 src2_f8;
@@ -192,7 +192,7 @@ RppStatus hip_exec_rain_tensor(T *srcPtr1,
     T initValue = 0;
     if constexpr (std::is_same<T, Rpp8s>::value)
     {
-        initValue = static_cast<T>(0x81);
+        initValue = static_cast<T>(0x81);   // 0x81 represents -127 in signed 8-bit integer(Rpp8s).
     }
     std::memset(rainLayer, initValue, srcDescPtr->strides.nStride * sizeof(T));
     // Choose the rain intensity value based on the data type

@@ -2,7 +2,13 @@
 
 Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/rpp/en/latest](https://rocm.docs.amd.com/projects/rpp/en/latest)
 
-## RPP 1.9.0 (Unreleased) 
+## RPP 1.13.0 (Unreleased)
+
+### Changes
+
+* RPP Tensor Rain support on HOST and HIP
+
+## RPP 1.9.0 (Unreleased)
 
 ### Changes
 

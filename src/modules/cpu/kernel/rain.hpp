@@ -100,11 +100,13 @@ RppStatus rain_u8_u8_host_tensor(Rpp8u *srcPtr,
 
         Rpp32f alpha = alphaValues[batchCount];
         __m256 pMul = _mm256_set1_ps(alpha);
+        Rpp32u vectorIncrement = 48;
+        Rpp32u vectorIncrementPerChannel = 16;
+        Rpp32u alignedLength = (bufferLength / vectorIncrement) * vectorIncrement;
 
         // Rain with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u alignedLength = (bufferLength / 48) * 48;
             Rpp8u *srcPtr1Row, *srcPtr2Row, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtr1Row = srcPtrChannel;
             srcPtr2Row = rainLayer;
@@ -121,18 +123,18 @@ RppStatus rain_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTempB = dstPtrRowB;
                 Rpp32u vectorLoopCount = 0;
 #if __AVX2__
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += 48)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 p1[6], p2[2];
                     rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtr1Temp, p1);    // simd loads
                     rpp_simd_load(rpp_load16_u8_to_f32_avx, srcPtr2Temp, p2);    // simd loads
                     compute_rain_48_host(p1, p2, pMul);
                     rpp_simd_store(rpp_store48_f32pln3_to_u8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p1);    // simd stores
-                    srcPtr1Temp += 48;
-                    srcPtr2Temp += 16;
-                    dstPtrTempR += 16;
-                    dstPtrTempG += 16;
-                    dstPtrTempB += 16;
+                    srcPtr1Temp += vectorIncrement;
+                    srcPtr2Temp += vectorIncrementPerChannel;
+                    dstPtrTempR += vectorIncrementPerChannel;
+                    dstPtrTempG += vectorIncrementPerChannel;
+                    dstPtrTempB += vectorIncrementPerChannel;
                 }
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
@@ -153,62 +155,54 @@ RppStatus rain_u8_u8_host_tensor(Rpp8u *srcPtr,
         // Rain with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u alignedLength = (bufferLength / 48) * 48;
-            Rpp8u *srcPtr1RowR, *srcPtr1RowG, *srcPtr1RowB, *srcPtr2RowR, *srcPtr2RowG, *srcPtr2RowB, *dstPtrRow;
+            Rpp8u *srcPtr1RowR, *srcPtr1RowG, *srcPtr1RowB, *srcPtr2Row, *dstPtrRow;
             srcPtr1RowR = srcPtrChannel;
             srcPtr1RowG = srcPtr1RowR + srcDescPtr->strides.cStride;
             srcPtr1RowB = srcPtr1RowG + srcDescPtr->strides.cStride;
-            srcPtr2RowR = rainLayer;
-            srcPtr2RowG = srcPtr2RowR + srcDescPtr->strides.cStride;
-            srcPtr2RowB = srcPtr2RowG + srcDescPtr->strides.cStride;
+            srcPtr2Row = rainLayer;
             dstPtrRow = dstPtrChannel;
             for(Rpp32u i = 0; i < roi.xywhROI.roiHeight; i++)
             {
-                Rpp8u *srcPtr1TempR, *srcPtr1TempG, *srcPtr1TempB, *srcPtr2TempR, *srcPtr2TempG, *srcPtr2TempB, *dstPtrTemp;
+                Rpp8u *srcPtr1TempR, *srcPtr1TempG, *srcPtr1TempB, *srcPtr2Temp, *dstPtrTemp;
                 srcPtr1TempR = srcPtr1RowR;
                 srcPtr1TempG = srcPtr1RowG;
                 srcPtr1TempB = srcPtr1RowB;
-                srcPtr2TempR = srcPtr2RowR;
-                srcPtr2TempG = srcPtr2RowG;
-                srcPtr2TempB = srcPtr2RowB;
+                srcPtr2Temp = srcPtr2Row;
                 dstPtrTemp = dstPtrRow;
                 Rpp32u vectorLoopCount = 0;
 #if __AVX2__
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 p1[6], p2[2];
                     rpp_simd_load(rpp_load48_u8pln3_to_f32pln3_avx, srcPtr1TempR, srcPtr1TempG, srcPtr1TempB, p1);    // simd loads
-                    rpp_simd_load(rpp_load16_u8_to_f32_avx, srcPtr2TempR, p2);    // simd loads
+                    rpp_simd_load(rpp_load16_u8_to_f32_avx, srcPtr2Temp, p2);    // simd loads
                     compute_rain_48_host(p1, p2, pMul);
                     rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTemp, p1);    // simd stores
-                    srcPtr1TempR += 16;
-                    srcPtr1TempG += 16;
-                    srcPtr1TempB += 16;
-                    srcPtr2TempR += 16;
-                    srcPtr2TempG += 16;
-                    srcPtr2TempB += 16;
-                    dstPtrTemp += 48;
+                    srcPtr1TempR += vectorIncrementPerChannel;
+                    srcPtr1TempG += vectorIncrementPerChannel;
+                    srcPtr1TempB += vectorIncrementPerChannel;
+                    srcPtr2Temp += vectorIncrementPerChannel;
+                    dstPtrTemp += vectorIncrement;
                 }
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(static_cast<Rpp32f>((*srcPtr2TempR - *srcPtr1TempR) * alpha + *srcPtr1TempR++))));
-                    dstPtrTemp[1] = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(static_cast<Rpp32f>((*srcPtr2TempR - *srcPtr1TempG) * alpha + *srcPtr1TempG++))));
-                    dstPtrTemp[2] = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(static_cast<Rpp32f>((*srcPtr2TempR - *srcPtr1TempB) * alpha + *srcPtr1TempB++))));
+                    dstPtrTemp[0] = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1TempR) * alpha + *srcPtr1TempR++))));
+                    dstPtrTemp[1] = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1TempG) * alpha + *srcPtr1TempG++))));
+                    dstPtrTemp[2] = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1TempB) * alpha + *srcPtr1TempB++))));
                     dstPtrTemp += 3;
-                    srcPtr2TempR++;
+                    srcPtr2Temp++;
                 }
                 srcPtr1RowR += srcDescPtr->strides.hStride;
                 srcPtr1RowG += srcDescPtr->strides.hStride;
                 srcPtr1RowB += srcDescPtr->strides.hStride;
-                srcPtr2RowR += srcDescPtr->strides.hStride;
+                srcPtr2Row += srcDescPtr->strides.hStride;
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
         }
         // Rain with fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u alignedLength = (bufferLength / 48) * 48;
             Rpp8u *srcPtr1Row, *srcPtr2Row, *dstPtrRow;
             srcPtr1Row = srcPtrChannel;
             srcPtr2Row = rainLayer;
@@ -221,16 +215,16 @@ RppStatus rain_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrTemp = dstPtrRow;
                 Rpp32u vectorLoopCount = 0;
 #if __AVX2__
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += 48)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 p1[6], p2[2];
                     rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtr1Temp, p1);    // simd loads
                     rpp_simd_load(rpp_load16_u8_to_f32_avx, srcPtr2Temp, p2);    // simd loads
                     compute_rain_48_host(p1, p2, pMul);
                     rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTemp, p1);    // simd stores
-                    srcPtr1Temp += 48;
-                    srcPtr2Temp += 16;
-                    dstPtrTemp += 48;
+                    srcPtr1Temp += vectorIncrement;
+                    srcPtr2Temp += vectorIncrementPerChannel;
+                    dstPtrTemp += vectorIncrement;
                 }
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
@@ -248,7 +242,7 @@ RppStatus rain_u8_u8_host_tensor(Rpp8u *srcPtr,
         // Rain without fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u alignedLength = (bufferLength / 32) * 32;
+            alignedLength = (bufferLength / 32) * 32;
             for(Rpp32u c = 0; c < layoutParams.channelParam; c++)
             {
                 Rpp8u *srcPtr1Row, *srcPtr2Row, *dstPtrRow;
@@ -328,11 +322,13 @@ RppStatus rain_f32_f32_host_tensor(Rpp32f *srcPtr,
 
         Rpp32f alpha = alphaValues[batchCount];
         __m256 pMul = _mm256_set1_ps(alpha);
+        Rpp32u vectorIncrement = 24;
+        Rpp32u vectorIncrementPerChannel = 8;
+        Rpp32u alignedLength = (bufferLength / vectorIncrement) * vectorIncrement;
 
         // Rain with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u alignedLength = (bufferLength / 24) * 24;
             Rpp32f *srcPtr1Row, *srcPtr2Row, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtr1Row = srcPtrChannel;
             srcPtr2Row = rainLayer;
@@ -349,18 +345,18 @@ RppStatus rain_f32_f32_host_tensor(Rpp32f *srcPtr,
                 dstPtrTempB = dstPtrRowB;
                 Rpp32u vectorLoopCount = 0;
 #if __AVX2__
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += 48)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 p1[3], p2;
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtr1Temp, p1);    // simd loads
                     rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtr2Temp, &p2);    // simd loads
                     compute_rain_24_host(p1, p2, pMul);
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p1);    // simd stores
-                    srcPtr1Temp += 24;
-                    srcPtr2Temp += 8;
-                    dstPtrTempR += 8;
-                    dstPtrTempG += 8;
-                    dstPtrTempB += 8;
+                    srcPtr1Temp += vectorIncrement;
+                    srcPtr2Temp += vectorIncrementPerChannel;
+                    dstPtrTempR += vectorIncrementPerChannel;
+                    dstPtrTempG += vectorIncrementPerChannel;
+                    dstPtrTempB += vectorIncrementPerChannel;
                 }
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
@@ -381,62 +377,54 @@ RppStatus rain_f32_f32_host_tensor(Rpp32f *srcPtr,
         // Rain with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u alignedLength = (bufferLength / 24) * 24;
-            Rpp32f *srcPtr1RowR, *srcPtr1RowG, *srcPtr1RowB, *srcPtr2RowR, *srcPtr2RowG, *srcPtr2RowB, *dstPtrRow;
+            Rpp32f *srcPtr1RowR, *srcPtr1RowG, *srcPtr1RowB, *srcPtr2Row, *dstPtrRow;
             srcPtr1RowR = srcPtrChannel;
             srcPtr1RowG = srcPtr1RowR + srcDescPtr->strides.cStride;
             srcPtr1RowB = srcPtr1RowG + srcDescPtr->strides.cStride;
-            srcPtr2RowR = rainLayer;
-            srcPtr2RowG = srcPtr2RowR + srcDescPtr->strides.cStride;
-            srcPtr2RowB = srcPtr2RowG + srcDescPtr->strides.cStride;
+            srcPtr2Row = rainLayer;
             dstPtrRow = dstPtrChannel;
             for(Rpp32u i = 0; i < roi.xywhROI.roiHeight; i++)
             {
-                Rpp32f *srcPtr1TempR, *srcPtr1TempG, *srcPtr1TempB, *srcPtr2TempR, *srcPtr2TempG, *srcPtr2TempB, *dstPtrTemp;
+                Rpp32f *srcPtr1TempR, *srcPtr1TempG, *srcPtr1TempB, *srcPtr2Temp, *dstPtrTemp;
                 srcPtr1TempR = srcPtr1RowR;
                 srcPtr1TempG = srcPtr1RowG;
                 srcPtr1TempB = srcPtr1RowB;
-                srcPtr2TempR = srcPtr2RowR;
-                srcPtr2TempG = srcPtr2RowG;
-                srcPtr2TempB = srcPtr2RowB;
+                srcPtr2Temp = srcPtr2Row;
                 dstPtrTemp = dstPtrRow;
                 Rpp32u vectorLoopCount = 0;
 #if __AVX2__
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 p1[3], p2;
                     rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtr1TempR, srcPtr1TempG, srcPtr1TempB, p1);    // simd loads
-                    rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtr2TempR, &p2);    // simd loads
+                    rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtr2Temp, &p2);    // simd loads
                     compute_rain_24_host(p1, p2, pMul);
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, p1);    // simd stores
-                    srcPtr1TempR += 8;
-                    srcPtr1TempG += 8;
-                    srcPtr1TempB += 8;
-                    srcPtr2TempR += 8;
-                    srcPtr2TempG += 8;
-                    srcPtr2TempB += 8;
-                    dstPtrTemp += 24;
+                    srcPtr1TempR += vectorIncrementPerChannel;
+                    srcPtr1TempG += vectorIncrementPerChannel;
+                    srcPtr1TempB += vectorIncrementPerChannel;
+                    srcPtr2Temp += vectorIncrementPerChannel;
+                    dstPtrTemp += vectorIncrement;
                 }
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    dstPtrTemp[0] = RPPPIXELCHECKF32((*srcPtr2TempR - *srcPtr1TempR) * alpha + *srcPtr1TempR++);
-                    dstPtrTemp[1] = RPPPIXELCHECKF32((*srcPtr2TempR - *srcPtr1TempG) * alpha + *srcPtr1TempG++);
-                    dstPtrTemp[2] = RPPPIXELCHECKF32((*srcPtr2TempR - *srcPtr1TempB) * alpha + *srcPtr1TempB++);
-                    srcPtr2TempR++;
+                    dstPtrTemp[0] = RPPPIXELCHECKF32((*srcPtr2Temp - *srcPtr1TempR) * alpha + *srcPtr1TempR++);
+                    dstPtrTemp[1] = RPPPIXELCHECKF32((*srcPtr2Temp - *srcPtr1TempG) * alpha + *srcPtr1TempG++);
+                    dstPtrTemp[2] = RPPPIXELCHECKF32((*srcPtr2Temp - *srcPtr1TempB) * alpha + *srcPtr1TempB++);
+                    srcPtr2Temp++;
                     dstPtrTemp += 3;
                 }
                 srcPtr1RowR += srcDescPtr->strides.hStride;
                 srcPtr1RowG += srcDescPtr->strides.hStride;
                 srcPtr1RowB += srcDescPtr->strides.hStride;
-                srcPtr2RowR += srcDescPtr->strides.hStride;
+                srcPtr2Row += srcDescPtr->strides.hStride;
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
         }
         // Rain with fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u alignedLength = (bufferLength / 24) * 24;
             Rpp32f *srcPtr1Row, *srcPtr2Row, *dstPtrRow;
             srcPtr1Row = srcPtrChannel;
             srcPtr2Row = rainLayer;
@@ -449,16 +437,16 @@ RppStatus rain_f32_f32_host_tensor(Rpp32f *srcPtr,
                 dstPtrTemp = dstPtrRow;
                 Rpp32u vectorLoopCount = 0;
 #if __AVX2__
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 p1[3], p2;
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtr1Temp, p1);    // simd loads
                     rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtr2Temp, &p2);    // simd loads
                     compute_rain_24_host(p1, p2, pMul);
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, p1);    // simd stores
-                    srcPtr1Temp += 24;
-                    srcPtr2Temp += 8;
-                    dstPtrTemp += 24;
+                    srcPtr1Temp += vectorIncrement;
+                    srcPtr2Temp += vectorIncrementPerChannel;
+                    dstPtrTemp += vectorIncrement;
                 }
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
@@ -476,7 +464,7 @@ RppStatus rain_f32_f32_host_tensor(Rpp32f *srcPtr,
         // Rain without fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u alignedLength = (bufferLength / 8) * 8;
+            alignedLength = (bufferLength / vectorIncrementPerChannel) * vectorIncrementPerChannel;
             for(Rpp32u c = 0; c < layoutParams.channelParam; c++)
             {
                 Rpp32f *srcPtr1Row, *srcPtr2Row, *dstPtrRow;
@@ -492,16 +480,16 @@ RppStatus rain_f32_f32_host_tensor(Rpp32f *srcPtr,
                     dstPtrTemp = dstPtrRow;
                     Rpp32u vectorLoopCount = 0;
 #if __AVX2__
-                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                     {
                         __m256 p1, p2;
                         rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtr1Temp, &p1);    // simd loads
                         rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtr2Temp, &p2);    // simd loads
                         p1 = _mm256_fmadd_ps(_mm256_sub_ps(p2, p1), pMul, p1);    // alpha-blending adjustment
                         rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp, &p1);    // simd stores
-                        srcPtr1Temp += 8;
-                        srcPtr2Temp += 8;
-                        dstPtrTemp += 8;
+                        srcPtr1Temp += vectorIncrementPerChannel;
+                        srcPtr2Temp += vectorIncrementPerChannel;
+                        dstPtrTemp += vectorIncrementPerChannel;
                     }
 #endif
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
@@ -511,7 +499,6 @@ RppStatus rain_f32_f32_host_tensor(Rpp32f *srcPtr,
                     dstPtrRow += dstDescPtr->strides.hStride;
                 }
                 srcPtrChannel += srcDescPtr->strides.cStride;
-                rainLayer += srcDescPtr->strides.cStride;
                 dstPtrChannel += dstDescPtr->strides.cStride;
             }
         }
@@ -558,11 +545,13 @@ RppStatus rain_f16_f16_host_tensor(Rpp16f *srcPtr,
 
         Rpp32f alpha = alphaValues[batchCount];
         __m256 pMul = _mm256_set1_ps(alpha);
+        Rpp32u vectorIncrement = 24;
+        Rpp32u vectorIncrementPerChannel = 8;
+        Rpp32u alignedLength = (bufferLength / vectorIncrement) * vectorIncrement;
 
         // Rain with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u alignedLength = (bufferLength / 24) * 24;
             Rpp16f *srcPtr1Row, *srcPtr2Row, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtr1Row = srcPtrChannel;
             srcPtr2Row = rainLayer;
@@ -579,18 +568,18 @@ RppStatus rain_f16_f16_host_tensor(Rpp16f *srcPtr,
                 dstPtrTempB = dstPtrRowB;
                 Rpp32u vectorLoopCount = 0;
 #if __AVX2__
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 p1[3], p2;
                     rpp_simd_load(rpp_load24_f16pkd3_to_f32pln3_avx, srcPtr1Temp, p1);    // simd loads
                     rpp_simd_load(rpp_load8_f16_to_f32_avx, srcPtr2Temp, &p2);    // simd loads
                     compute_rain_24_host(p1, p2, pMul);
                     rpp_simd_store(rpp_store24_f32pln3_to_f16pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p1);    // simd stores
-                    srcPtr1Temp += 24;
-                    srcPtr2Temp += 8;
-                    dstPtrTempR += 8;
-                    dstPtrTempG += 8;
-                    dstPtrTempB += 8;
+                    srcPtr1Temp += vectorIncrement;
+                    srcPtr2Temp += vectorIncrementPerChannel;
+                    dstPtrTempR += vectorIncrementPerChannel;
+                    dstPtrTempG += vectorIncrementPerChannel;
+                    dstPtrTempB += vectorIncrementPerChannel;
                 }
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
@@ -611,62 +600,54 @@ RppStatus rain_f16_f16_host_tensor(Rpp16f *srcPtr,
         // Rain with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u alignedLength = (bufferLength / 24) * 24;
-            Rpp16f *srcPtr1RowR, *srcPtr1RowG, *srcPtr1RowB, *srcPtr2RowR, *srcPtr2RowG, *srcPtr2RowB, *dstPtrRow;
+            Rpp16f *srcPtr1RowR, *srcPtr1RowG, *srcPtr1RowB, *srcPtr2Row, *dstPtrRow;
             srcPtr1RowR = srcPtrChannel;
             srcPtr1RowG = srcPtr1RowR + srcDescPtr->strides.cStride;
             srcPtr1RowB = srcPtr1RowG + srcDescPtr->strides.cStride;
-            srcPtr2RowR = rainLayer;
-            srcPtr2RowG = srcPtr2RowR + srcDescPtr->strides.cStride;
-            srcPtr2RowB = srcPtr2RowG + srcDescPtr->strides.cStride;
+            srcPtr2Row = rainLayer;
             dstPtrRow = dstPtrChannel;
             for(Rpp32u i = 0; i < roi.xywhROI.roiHeight; i++)
             {
-                Rpp16f *srcPtr1TempR, *srcPtr1TempG, *srcPtr1TempB, *srcPtr2TempR, *srcPtr2TempG, *srcPtr2TempB, *dstPtrTemp;
+                Rpp16f *srcPtr1TempR, *srcPtr1TempG, *srcPtr1TempB, *srcPtr2Temp, *dstPtrTemp;
                 srcPtr1TempR = srcPtr1RowR;
                 srcPtr1TempG = srcPtr1RowG;
                 srcPtr1TempB = srcPtr1RowB;
-                srcPtr2TempR = srcPtr2RowR;
-                srcPtr2TempG = srcPtr2RowG;
-                srcPtr2TempB = srcPtr2RowB;
+                srcPtr2Temp = srcPtr2Row;
                 dstPtrTemp = dstPtrRow;
                 Rpp32u vectorLoopCount = 0;
 #if __AVX2__
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 p1[3], p2;
                     rpp_simd_load(rpp_load24_f16pln3_to_f32pln3_avx, srcPtr1TempR, srcPtr1TempG, srcPtr1TempB, p1);    // simd loads
-                    rpp_simd_load(rpp_load8_f16_to_f32_avx, srcPtr2TempR, &p2);    // simd loads
+                    rpp_simd_load(rpp_load8_f16_to_f32_avx, srcPtr2Temp, &p2);    // simd loads
                     compute_rain_24_host(p1, p2, pMul);
                     rpp_simd_store(rpp_store24_f32pln3_to_f16pkd3_avx, dstPtrTemp, p1);    // simd stores
-                    srcPtr1TempR += 8;
-                    srcPtr1TempG += 8;
-                    srcPtr1TempB += 8;
-                    srcPtr2TempR += 8;
-                    srcPtr2TempG += 8;
-                    srcPtr2TempB += 8;
-                    dstPtrTemp += 24;
+                    srcPtr1TempR += vectorIncrementPerChannel;
+                    srcPtr1TempG += vectorIncrementPerChannel;
+                    srcPtr1TempB += vectorIncrementPerChannel;
+                    srcPtr2Temp += vectorIncrementPerChannel;
+                    dstPtrTemp += vectorIncrement;
                 }
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<Rpp32f>((*srcPtr2TempR - *srcPtr1TempR) * alpha + *srcPtr1TempR++)));
-                    dstPtrTemp[1] = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<Rpp32f>((*srcPtr2TempR - *srcPtr1TempG) * alpha + *srcPtr1TempG++)));
-                    dstPtrTemp[2] = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<Rpp32f>((*srcPtr2TempR - *srcPtr1TempB) * alpha + *srcPtr1TempB++)));
-                    srcPtr2TempR++;
+                    dstPtrTemp[0] = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1TempR) * alpha + *srcPtr1TempR++)));
+                    dstPtrTemp[1] = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1TempG) * alpha + *srcPtr1TempG++)));
+                    dstPtrTemp[2] = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1TempB) * alpha + *srcPtr1TempB++)));
+                    srcPtr2Temp++;
                     dstPtrTemp += 3;
                 }
                 srcPtr1RowR += srcDescPtr->strides.hStride;
                 srcPtr1RowG += srcDescPtr->strides.hStride;
                 srcPtr1RowB += srcDescPtr->strides.hStride;
-                srcPtr2RowR += srcDescPtr->strides.hStride;
+                srcPtr2Row += srcDescPtr->strides.hStride;
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
         }
         // Rain with fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u alignedLength = (bufferLength / 24) * 24;
             Rpp16f *srcPtr1Row, *srcPtr2Row, *dstPtrRow;
             srcPtr1Row = srcPtrChannel;
             srcPtr2Row = rainLayer;
@@ -679,16 +660,16 @@ RppStatus rain_f16_f16_host_tensor(Rpp16f *srcPtr,
                 dstPtrTemp = dstPtrRow;
                 Rpp32u vectorLoopCount = 0;
 #if __AVX2__
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += 24)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 p1[3], p2;
                     rpp_simd_load(rpp_load24_f16pkd3_to_f32pln3_avx, srcPtr1Temp, p1);    // simd loads
                     rpp_simd_load(rpp_load8_f16_to_f32_avx, srcPtr2Temp, &p2);    // simd loads
                     compute_rain_24_host(p1, p2, pMul);
                     rpp_simd_store(rpp_store24_f32pln3_to_f16pkd3_avx, dstPtrTemp, p1);    // simd stores
-                    srcPtr1Temp += 24;
-                    srcPtr2Temp += 8;
-                    dstPtrTemp += 24;
+                    srcPtr1Temp += vectorIncrement;
+                    srcPtr2Temp += vectorIncrementPerChannel;
+                    dstPtrTemp += vectorIncrement;
                 }
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
@@ -706,7 +687,7 @@ RppStatus rain_f16_f16_host_tensor(Rpp16f *srcPtr,
         // Rain without fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u alignedLength = (bufferLength / 8) * 8;
+            Rpp32u alignedLength = (bufferLength / vectorIncrementPerChannel) * vectorIncrementPerChannel;
             for(Rpp32u c = 0; c < layoutParams.channelParam; c++)
             {
                 Rpp16f *srcPtr1Row, *srcPtr2Row, *dstPtrRow;
@@ -722,16 +703,16 @@ RppStatus rain_f16_f16_host_tensor(Rpp16f *srcPtr,
                     dstPtrTemp = dstPtrRow;
                     Rpp32u vectorLoopCount = 0;
 #if __AVX2__
-                    for (; vectorLoopCount < alignedLength; vectorLoopCount += 8)
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                     {
                         __m256 p1, p2;
                         rpp_simd_load(rpp_load8_f16_to_f32_avx, srcPtr1Temp, &p1);    // simd loads
                         rpp_simd_load(rpp_load8_f16_to_f32_avx, srcPtr2Temp, &p2);    // simd loads
                         p1 = _mm256_fmadd_ps(_mm256_sub_ps(p2, p1), pMul, p1);    // alpha-blending adjustment
                         rpp_simd_store(rpp_store8_f32_to_f16_avx, dstPtrTemp, &p1);    // simd stores
-                        srcPtr1Temp += 8;
-                        srcPtr2Temp += 8;
-                        dstPtrTemp += 8;
+                        srcPtr1Temp += vectorIncrementPerChannel;
+                        srcPtr2Temp += vectorIncrementPerChannel;
+                        dstPtrTemp += vectorIncrementPerChannel;
                     }
 #endif
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
@@ -741,7 +722,6 @@ RppStatus rain_f16_f16_host_tensor(Rpp16f *srcPtr,
                     dstPtrRow += dstDescPtr->strides.hStride;
                 }
                 srcPtrChannel += srcDescPtr->strides.cStride;
-                rainLayer += srcDescPtr->strides.cStride;
                 dstPtrChannel += dstDescPtr->strides.cStride;
             }
         }
@@ -788,11 +768,13 @@ RppStatus rain_i8_i8_host_tensor(Rpp8s *srcPtr,
 
         Rpp32f alpha = alphaValues[batchCount];
         __m256 pMul = _mm256_set1_ps(alpha);
+        Rpp32u vectorIncrement = 48;
+        Rpp32u vectorIncrementPerChannel = 16;
+        Rpp32u alignedLength = (bufferLength / vectorIncrement) * vectorIncrement;
 
         // Rain with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u alignedLength = (bufferLength / 48) * 48;
             Rpp8s *srcPtr1Row, *srcPtr2Row, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtr1Row = srcPtrChannel;
             srcPtr2Row = rainLayer;
@@ -809,18 +791,18 @@ RppStatus rain_i8_i8_host_tensor(Rpp8s *srcPtr,
                 dstPtrTempB = dstPtrRowB;
                 Rpp32u vectorLoopCount = 0;
 #if __AVX2__
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += 48)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 p1[6], p2[2];
                     rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3_avx, srcPtr1Temp, p1);    // simd loads
                     rpp_simd_load(rpp_load16_i8_to_f32_avx, srcPtr2Temp, p2);    // simd loads
                     compute_rain_48_host(p1, p2, pMul);
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p1);    // simd stores
-                    srcPtr1Temp += 48;
-                    srcPtr2Temp += 16;
-                    dstPtrTempR += 16;
-                    dstPtrTempG += 16;
-                    dstPtrTempB += 16;
+                    srcPtr1Temp += vectorIncrement;
+                    srcPtr2Temp += vectorIncrementPerChannel;
+                    dstPtrTempR += vectorIncrementPerChannel;
+                    dstPtrTempG += vectorIncrementPerChannel;
+                    dstPtrTempB += vectorIncrementPerChannel;
                 }
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
@@ -841,62 +823,54 @@ RppStatus rain_i8_i8_host_tensor(Rpp8s *srcPtr,
         // Rain with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u alignedLength = (bufferLength / 48) * 48;
-            Rpp8s *srcPtr1RowR, *srcPtr1RowG, *srcPtr1RowB, *srcPtr2RowR, *srcPtr2RowG, *srcPtr2RowB, *dstPtrRow;
+            Rpp8s *srcPtr1RowR, *srcPtr1RowG, *srcPtr1RowB, *srcPtr2Row, *dstPtrRow;
             srcPtr1RowR = srcPtrChannel;
             srcPtr1RowG = srcPtr1RowR + srcDescPtr->strides.cStride;
             srcPtr1RowB = srcPtr1RowG + srcDescPtr->strides.cStride;
-            srcPtr2RowR = rainLayer;
-            srcPtr2RowG = srcPtr2RowR + srcDescPtr->strides.cStride;
-            srcPtr2RowB = srcPtr2RowG + srcDescPtr->strides.cStride;
+            srcPtr2Row = rainLayer;
             dstPtrRow = dstPtrChannel;
             for(Rpp32u i = 0; i < roi.xywhROI.roiHeight; i++)
             {
-                Rpp8s *srcPtr1TempR, *srcPtr1TempG, *srcPtr1TempB, *srcPtr2TempR, *srcPtr2TempG, *srcPtr2TempB, *dstPtrTemp;
+                Rpp8s *srcPtr1TempR, *srcPtr1TempG, *srcPtr1TempB, *srcPtr2Temp, *dstPtrTemp;
                 srcPtr1TempR = srcPtr1RowR;
                 srcPtr1TempG = srcPtr1RowG;
                 srcPtr1TempB = srcPtr1RowB;
-                srcPtr2TempR = srcPtr2RowR;
-                srcPtr2TempG = srcPtr2RowG;
-                srcPtr2TempB = srcPtr2RowB;
+                srcPtr2Temp = srcPtr2Row;
                 dstPtrTemp = dstPtrRow;
                 Rpp32u vectorLoopCount = 0;
 #if __AVX2__
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += 16)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 p1[6], p2[2];
                     rpp_simd_load(rpp_load48_i8pln3_to_f32pln3_avx, srcPtr1TempR, srcPtr1TempG, srcPtr1TempB, p1);    // simd loads
-                    rpp_simd_load(rpp_load16_i8_to_f32_avx, srcPtr2TempR, p2);    // simd loads
+                    rpp_simd_load(rpp_load16_i8_to_f32_avx, srcPtr2Temp, p2);    // simd loads
                     compute_rain_48_host(p1, p2, pMul);
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3_avx, dstPtrTemp, p1);    // simd stores
-                    srcPtr1TempR += 16;
-                    srcPtr1TempG += 16;
-                    srcPtr1TempB += 16;
-                    srcPtr2TempR += 16;
-                    srcPtr2TempG += 16;
-                    srcPtr2TempB += 16;
-                    dstPtrTemp += 48;
+                    srcPtr1TempR += vectorIncrementPerChannel;
+                    srcPtr1TempG += vectorIncrementPerChannel;
+                    srcPtr1TempB += vectorIncrementPerChannel;
+                    srcPtr2Temp += vectorIncrementPerChannel;
+                    dstPtrTemp += vectorIncrement;
                 }
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = static_cast<Rpp8s>(RPPPIXELCHECKI8(std::nearbyintf(static_cast<Rpp32f>((*srcPtr2TempR - *srcPtr1TempR) * alpha + *srcPtr1TempR++))));
-                    dstPtrTemp[1] = static_cast<Rpp8s>(RPPPIXELCHECKI8(std::nearbyintf(static_cast<Rpp32f>((*srcPtr2TempR - *srcPtr1TempG) * alpha + *srcPtr1TempG++))));
-                    dstPtrTemp[2] = static_cast<Rpp8s>(RPPPIXELCHECKI8(std::nearbyintf(static_cast<Rpp32f>((*srcPtr2TempR - *srcPtr1TempB) * alpha + *srcPtr1TempB++))));
-                    srcPtr2TempR++;
+                    dstPtrTemp[0] = static_cast<Rpp8s>(RPPPIXELCHECKI8(std::nearbyintf(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1TempR) * alpha + *srcPtr1TempR++))));
+                    dstPtrTemp[1] = static_cast<Rpp8s>(RPPPIXELCHECKI8(std::nearbyintf(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1TempG) * alpha + *srcPtr1TempG++))));
+                    dstPtrTemp[2] = static_cast<Rpp8s>(RPPPIXELCHECKI8(std::nearbyintf(static_cast<Rpp32f>((*srcPtr2Temp - *srcPtr1TempB) * alpha + *srcPtr1TempB++))));
+                    srcPtr2Temp++;
                     dstPtrTemp += 3;
                 }
                 srcPtr1RowR += srcDescPtr->strides.hStride;
                 srcPtr1RowG += srcDescPtr->strides.hStride;
                 srcPtr1RowB += srcDescPtr->strides.hStride;
-                srcPtr2RowR += srcDescPtr->strides.hStride;
+                srcPtr2Row += srcDescPtr->strides.hStride;
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
         }
         // Rain with fused output-layout toggle (NHWC -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            Rpp32u alignedLength = (bufferLength / 48) * 48;
             Rpp8s *srcPtr1Row, *srcPtr2Row, *dstPtrRow;
             srcPtr1Row = srcPtrChannel;
             srcPtr2Row = rainLayer;
@@ -909,16 +883,16 @@ RppStatus rain_i8_i8_host_tensor(Rpp8s *srcPtr,
                 dstPtrTemp = dstPtrRow;
                 Rpp32u vectorLoopCount = 0;
 #if __AVX2__
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += 48)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256 p1[6], p2[2];
                     rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3_avx, srcPtr1Temp, p1);    // simd loads
                     rpp_simd_load(rpp_load16_i8_to_f32_avx, srcPtr2Temp, p2);    // simd loads
                     compute_rain_48_host(p1, p2, pMul);
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3_avx, dstPtrTemp, p1);    // simd stores
-                    srcPtr1Temp += 48;
-                    srcPtr2Temp += 16;
-                    dstPtrTemp += 48;
+                    srcPtr1Temp += vectorIncrement;
+                    srcPtr2Temp += vectorIncrementPerChannel;
+                    dstPtrTemp += vectorIncrement;
                 }
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
@@ -936,7 +910,7 @@ RppStatus rain_i8_i8_host_tensor(Rpp8s *srcPtr,
         // Rain without fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
-            Rpp32u alignedLength = (bufferLength / 32) * 32;
+            alignedLength = (bufferLength / 32) * 32;
             for(Rpp32u c = 0; c < layoutParams.channelParam; c++)
             {
                 Rpp8s *srcPtr1Row, *srcPtr2Row, *dstPtrRow;
@@ -970,7 +944,6 @@ RppStatus rain_i8_i8_host_tensor(Rpp8s *srcPtr,
                     dstPtrRow += dstDescPtr->strides.hStride;
                 }
                 srcPtrChannel += srcDescPtr->strides.cStride;
-                rainLayer += srcDescPtr->strides.cStride;
                 dstPtrChannel += dstDescPtr->strides.cStride;
             }
         }
