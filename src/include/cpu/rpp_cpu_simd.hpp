@@ -1461,10 +1461,10 @@ inline void rpp_store32_f32_to_u8_avx(Rpp8u *dstPtr, __m256 *p)
     pxCvt[1] = _mm256_cvtps_epi32(p[1]);  // Convert floating-point to 32-bit integers for pixels 8-15
     pxCvt[2] = _mm256_cvtps_epi32(p[2]);  // Convert floating-point to 32-bit integers for pixels 16-23
     pxCvt[3] = _mm256_cvtps_epi32(p[3]);  // Convert floating-point to 32-bit integers for pixels 24-31
-    px[0] = _mm_packus_epi32(_mm256_extracti128_si256(pxCvt[0], 0), _mm256_extracti128_si256(pxCvt[0], 1));  /* pack pixels 0-7 */
-    px[1] = _mm_packus_epi32(_mm256_extracti128_si256(pxCvt[1], 0), _mm256_extracti128_si256(pxCvt[1], 1));  /* pack pixels 8-15 */
-    px[2] = _mm_packus_epi32(_mm256_extracti128_si256(pxCvt[2], 0), _mm256_extracti128_si256(pxCvt[2], 1));  /* pack pixels 16-23 */
-    px[3] = _mm_packus_epi32(_mm256_extracti128_si256(pxCvt[3], 0), _mm256_extracti128_si256(pxCvt[3], 1));  /* pack pixels 24-31 */
+    px[0] = _mm_packus_epi32(_mm256_castsi256_si128(pxCvt[0]), _mm256_extracti128_si256(pxCvt[0], 1));  /* pack pixels 0-7 */
+    px[1] = _mm_packus_epi32(_mm256_castsi256_si128(pxCvt[1]), _mm256_extracti128_si256(pxCvt[1], 1));  /* pack pixels 8-15 */
+    px[2] = _mm_packus_epi32(_mm256_castsi256_si128(pxCvt[2]), _mm256_extracti128_si256(pxCvt[2], 1));  /* pack pixels 16-23 */
+    px[3] = _mm_packus_epi32(_mm256_castsi256_si128(pxCvt[3]), _mm256_extracti128_si256(pxCvt[3], 1));  /* pack pixels 24-31 */
     px[0] = _mm_packus_epi16(px[0], px[1]);  /* pack pixels 0-15 */
     px[2] = _mm_packus_epi16(px[2], px[2]);  /* pack pixels 16-31 */
     __m256i packedPx = _mm256_setr_m128i(px[0], px[2]);
@@ -1527,7 +1527,7 @@ inline void rpp_load24_f32pkd3_to_f32pln3_avx(Rpp32f *srcPtr, __m256 *p)
     p[2] = _mm256_setr_m128(p128[2], p128[6]);
 }
 
-inline void rpp_load24_f32pkd3_to_f16pln3_avx(Rpp16f *srcPtr, __m256 *p)
+inline void rpp_load24_f16pkd3_to_f32pln3_avx(Rpp16f *srcPtr, __m256 *p)
 {
     __m128 p128[8];
     p128[0] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr))));

@@ -1,6 +1,11 @@
 #include <hip/hip_runtime.h>
 #include "rpp_hip_common.hpp"
 
+// Constants to represent the rain intensity for different data types
+#define RAIN_INTENSITY_8U = 200;   // Intensity value for Rpp8u
+#define RAIN_INTENSITY_8S = 72;    // Intensity value for Rpp8s
+#define RAIN_INTENSITY_FLOAT = 200 * ONE_OVER_255; // Intensity value for Rpp32f and Rpp16f
+
 __device__ __forceinline__ void rain_hip_compute(d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8, float4 *alpha_f4)
 {
     dst_f8->f4[0] = (src2_f8->f4[0] - src1_f8->f4[0]) * *alpha_f4 + src1_f8->f4[0];
@@ -190,34 +195,23 @@ RppStatus hip_exec_rain_tensor(T *srcPtr1,
         initValue = static_cast<T>(0x81);
     }
     std::memset(rainLayer, initValue, srcDescPtr->strides.nStride * sizeof(T));
+    // Choose the rain intensity value based on the data type
+    T rainValue = std::is_same<T, Rpp8u>::value ? static_cast<T>(RAIN_INTENSITY_8U) :
+                  std::is_same<T, Rpp8s>::value ? static_cast<T>(RAIN_INTENSITY_8S) :
+                  static_cast<T>(RAIN_INTENSITY_FLOAT);
+    Rpp32f slantPerDropLength = static_cast<Rpp32f>(slant) / dropLength;
     for (Rpp32u i = 0; i < numDrops; i++)
     {
         Rpp32u xStart = rand() % (srcDescPtr->w - slant);
         Rpp32u yStart = rand() % (srcDescPtr->h - rainHeight);
         for (Rpp32u j = 0; j < rainHeight; j++)
         {
-            Rpp32u x = xStart + j * slant / rainHeight;
+            Rpp32u x = xStart + j * slantPerDropLength;
             Rpp32u y = yStart + j;
 
             if (x >= 0 && x < srcDescPtr->w && y < srcDescPtr->h)
             {
                 T *rainLayerTemp = rainLayer + y * srcDescPtr->w + x;
-
-                // Conditionally assign rain value based on type T
-                T rainValue;
-                if constexpr (std::is_same<T, Rpp8u>::value)
-                {
-                    rainValue = static_cast<T>(200);
-                }
-                else if constexpr (std::is_same<T, Rpp8s>::value)
-                {
-                    rainValue = static_cast<T>(72);
-                }
-                else
-                {
-                    rainValue = static_cast<T>(200 * ONE_OVER_255);
-                }
-
                 *rainLayerTemp = rainValue;
             }
         }
