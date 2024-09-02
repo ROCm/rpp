@@ -28,7 +28,7 @@ SOFTWARE.
 
 /************* warp_perspective helpers *************/
 
-inline void compute_warp_perspective_src_loc_next_term_avx(__m256 &plocW, __m256 &plocY, __m256 &plocX, __m256 &pSrcY, __m256 &pSrcX, __m256 &pPerspectiveMatrixTerm6Incr, __m256 &pPerspectiveMatrixTerm3Incr, __m256 &pPerspectiveMatrixTerm0Incr, __m256 pRoiHalfHeight, __m256 pRoiHalfWidth)
+inline void compute_warp_perspective_src_loc_next_term_avx(__m256 &plocW, __m256 &plocY, __m256 &plocX, __m256 &pSrcY, __m256 &pSrcX, __m256 &pPerspectiveMatrixTerm6Incr, __m256 &pPerspectiveMatrixTerm3Incr, __m256 &pPerspectiveMatrixTerm0Incr, __m256 &pRoiHalfHeight, __m256 &pRoiHalfWidth)
 {
     plocW = _mm256_add_ps(plocW, pPerspectiveMatrixTerm6Incr);
     plocY = _mm256_add_ps(plocY, pPerspectiveMatrixTerm3Incr);
