@@ -69,21 +69,21 @@ inline void compute_warp_perspective_src_loc_next_term(Rpp32s dstX, Rpp32f &locW
 /************* NEAREST NEIGHBOR INTERPOLATION *************/
 
 RppStatus warp_perspective_nn_u8_u8_host_tensor(Rpp8u *srcPtr,
-                                           RpptDescPtr srcDescPtr,
-                                           Rpp8u *dstPtr,
-                                           RpptDescPtr dstDescPtr,
-                                           Rpp32f *perspectiveTensor,
-                                           RpptROIPtr roiTensorPtrSrc,
-                                           RpptRoiType roiType,
-                                           RppLayoutParams srcLayoutParams,
-                                           rpp::Handle& handle)
+                                                RpptDescPtr srcDescPtr,
+                                                Rpp8u *dstPtr,
+                                                RpptDescPtr dstDescPtr,
+                                                Rpp32f *perspectiveTensor,
+                                                RpptROIPtr roiTensorPtrSrc,
+                                                RpptRoiType roiType,
+                                                RppLayoutParams srcLayoutParams,
+                                                rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
     Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
-    for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
+    for (int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi, roiLTRB;
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
@@ -130,8 +130,7 @@ RppStatus warp_perspective_nn_u8_u8_host_tensor(Rpp8u *srcPtr,
             dstPtrRowR = dstPtrChannel;
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
-
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8u *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
                 dstPtrTempR = dstPtrRowR;
@@ -183,8 +182,7 @@ RppStatus warp_perspective_nn_u8_u8_host_tensor(Rpp8u *srcPtr,
             srcPtrChannelR = srcPtrChannel;
             srcPtrChannelG = srcPtrChannelR + srcDescPtr->strides.cStride;
             srcPtrChannelB = srcPtrChannelG + srcDescPtr->strides.cStride;
-
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8u *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
@@ -229,8 +227,7 @@ RppStatus warp_perspective_nn_u8_u8_host_tensor(Rpp8u *srcPtr,
         {
             Rpp8u *dstPtrRow;
             dstPtrRow = dstPtrChannel;
-
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8u *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
@@ -271,8 +268,7 @@ RppStatus warp_perspective_nn_u8_u8_host_tensor(Rpp8u *srcPtr,
         {
             Rpp8u *dstPtrRow;
             dstPtrRow = dstPtrChannel;
-
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8u *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
@@ -292,7 +288,7 @@ RppStatus warp_perspective_nn_u8_u8_host_tensor(Rpp8u *srcPtr,
                     srcPtrTempChn = srcPtrChannel;
                     dstPtrTempChn = dstPtrTemp;
                     compute_generic_nn_srclocs_and_validate_avx(pSrcY, pSrcX, pRoiLTRB, pSrcStrideH, srcLoc, invalidLoad);
-                    for(int c = 0; c < srcDescPtr->c; c++)
+                    for (int c = 0; c < srcDescPtr->c; c++)
                     {
                         __m256i pRow;
                         rpp_simd_load(rpp_generic_nn_load_u8pln1_avx, srcPtrTempChn, srcLoc, invalidLoad, pRow);
@@ -323,21 +319,21 @@ RppStatus warp_perspective_nn_u8_u8_host_tensor(Rpp8u *srcPtr,
 
 
 RppStatus warp_perspective_nn_f32_f32_host_tensor(Rpp32f *srcPtr,
-                                           RpptDescPtr srcDescPtr,
-                                           Rpp32f *dstPtr,
-                                           RpptDescPtr dstDescPtr,
-                                           Rpp32f *perspectiveTensor,
-                                           RpptROIPtr roiTensorPtrSrc,
-                                           RpptRoiType roiType,
-                                           RppLayoutParams srcLayoutParams,
-                                           rpp::Handle& handle)
+                                                  RpptDescPtr srcDescPtr,
+                                                  Rpp32f *dstPtr,
+                                                  RpptDescPtr dstDescPtr,
+                                                  Rpp32f *perspectiveTensor,
+                                                  RpptROIPtr roiTensorPtrSrc,
+                                                  RpptRoiType roiType,
+                                                  RppLayoutParams srcLayoutParams,
+                                                  rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
     Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
-    for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
+    for (int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi, roiLTRB;
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
@@ -384,8 +380,7 @@ RppStatus warp_perspective_nn_f32_f32_host_tensor(Rpp32f *srcPtr,
             dstPtrRowR = dstPtrChannel;
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
-
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp32f *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
                 dstPtrTempR = dstPtrRowR;
@@ -437,8 +432,7 @@ RppStatus warp_perspective_nn_f32_f32_host_tensor(Rpp32f *srcPtr,
             srcPtrChannelR = srcPtrChannel;
             srcPtrChannelG = srcPtrChannelR + srcDescPtr->strides.cStride;
             srcPtrChannelB = srcPtrChannelG + srcDescPtr->strides.cStride;
-
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp32f *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
@@ -483,8 +477,7 @@ RppStatus warp_perspective_nn_f32_f32_host_tensor(Rpp32f *srcPtr,
         {
             Rpp32f *dstPtrRow;
             dstPtrRow = dstPtrChannel;
-
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp32f *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
@@ -525,8 +518,7 @@ RppStatus warp_perspective_nn_f32_f32_host_tensor(Rpp32f *srcPtr,
         {
             Rpp32f *dstPtrRow;
             dstPtrRow = dstPtrChannel;
-
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp32f *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
@@ -546,7 +538,7 @@ RppStatus warp_perspective_nn_f32_f32_host_tensor(Rpp32f *srcPtr,
                     srcPtrTempChn = srcPtrChannel;
                     dstPtrTempChn = dstPtrTemp;
                     compute_generic_nn_srclocs_and_validate_avx(pSrcY, pSrcX, pRoiLTRB, pSrcStrideH, srcLoc, invalidLoad);
-                    for(int c = 0; c < srcDescPtr->c; c++)
+                    for (int c = 0; c < srcDescPtr->c; c++)
                     {
                         __m256 pRow;
                         rpp_simd_load(rpp_generic_nn_load_f32pln1_avx, srcPtrTempChn, srcLoc, invalidLoad, pRow);
@@ -576,21 +568,21 @@ RppStatus warp_perspective_nn_f32_f32_host_tensor(Rpp32f *srcPtr,
 }
 
 RppStatus warp_perspective_nn_i8_i8_host_tensor(Rpp8s *srcPtr,
-                                           RpptDescPtr srcDescPtr,
-                                           Rpp8s *dstPtr,
-                                           RpptDescPtr dstDescPtr,
-                                           Rpp32f *perspectiveTensor,
-                                           RpptROIPtr roiTensorPtrSrc,
-                                           RpptRoiType roiType,
-                                           RppLayoutParams srcLayoutParams,
-                                           rpp::Handle& handle)
+                                                RpptDescPtr srcDescPtr,
+                                                Rpp8s *dstPtr,
+                                                RpptDescPtr dstDescPtr,
+                                                Rpp32f *perspectiveTensor,
+                                                RpptROIPtr roiTensorPtrSrc,
+                                                RpptRoiType roiType,
+                                                RppLayoutParams srcLayoutParams,
+                                                rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
     Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
-    for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
+    for (int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi, roiLTRB;
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
@@ -637,8 +629,7 @@ RppStatus warp_perspective_nn_i8_i8_host_tensor(Rpp8s *srcPtr,
             dstPtrRowR = dstPtrChannel;
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
-
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8s *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
                 dstPtrTempR = dstPtrRowR;
@@ -690,8 +681,7 @@ RppStatus warp_perspective_nn_i8_i8_host_tensor(Rpp8s *srcPtr,
             srcPtrChannelR = srcPtrChannel;
             srcPtrChannelG = srcPtrChannelR + srcDescPtr->strides.cStride;
             srcPtrChannelB = srcPtrChannelG + srcDescPtr->strides.cStride;
-
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8s *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
@@ -736,8 +726,7 @@ RppStatus warp_perspective_nn_i8_i8_host_tensor(Rpp8s *srcPtr,
         {
             Rpp8s *dstPtrRow;
             dstPtrRow = dstPtrChannel;
-
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8s *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
@@ -778,8 +767,7 @@ RppStatus warp_perspective_nn_i8_i8_host_tensor(Rpp8s *srcPtr,
         {
             Rpp8s *dstPtrRow;
             dstPtrRow = dstPtrChannel;
-
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8s *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
@@ -799,7 +787,7 @@ RppStatus warp_perspective_nn_i8_i8_host_tensor(Rpp8s *srcPtr,
                     srcPtrTempChn = srcPtrChannel;
                     dstPtrTempChn = dstPtrTemp;
                     compute_generic_nn_srclocs_and_validate_avx(pSrcY, pSrcX, pRoiLTRB, pSrcStrideH, srcLoc, invalidLoad);
-                    for(int c = 0; c < srcDescPtr->c; c++)
+                    for (int c = 0; c < srcDescPtr->c; c++)
                     {
                         __m256i pRow;
                         rpp_simd_load(rpp_generic_nn_load_i8pln1_avx, srcPtrTempChn, srcLoc, invalidLoad, pRow);
@@ -829,21 +817,21 @@ RppStatus warp_perspective_nn_i8_i8_host_tensor(Rpp8s *srcPtr,
 }
 
 RppStatus warp_perspective_nn_f16_f16_host_tensor(Rpp16f *srcPtr,
-                                           RpptDescPtr srcDescPtr,
-                                           Rpp16f *dstPtr,
-                                           RpptDescPtr dstDescPtr,
-                                           Rpp32f *perspectiveTensor,
-                                           RpptROIPtr roiTensorPtrSrc,
-                                           RpptRoiType roiType,
-                                           RppLayoutParams srcLayoutParams,
-                                           rpp::Handle& handle)
+                                                  RpptDescPtr srcDescPtr,
+                                                  Rpp16f *dstPtr,
+                                                  RpptDescPtr dstDescPtr,
+                                                  Rpp32f *perspectiveTensor,
+                                                  RpptROIPtr roiTensorPtrSrc,
+                                                  RpptRoiType roiType,
+                                                  RppLayoutParams srcLayoutParams,
+                                                  rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
     Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
-    for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
+    for (int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi, roiLTRB;
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
@@ -890,8 +878,7 @@ RppStatus warp_perspective_nn_f16_f16_host_tensor(Rpp16f *srcPtr,
             dstPtrRowR = dstPtrChannel;
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
-
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp16f *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
                 dstPtrTempR = dstPtrRowR;
@@ -943,8 +930,7 @@ RppStatus warp_perspective_nn_f16_f16_host_tensor(Rpp16f *srcPtr,
             srcPtrChannelR = srcPtrChannel;
             srcPtrChannelG = srcPtrChannelR + srcDescPtr->strides.cStride;
             srcPtrChannelB = srcPtrChannelG + srcDescPtr->strides.cStride;
-
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp16f *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
@@ -988,8 +974,7 @@ RppStatus warp_perspective_nn_f16_f16_host_tensor(Rpp16f *srcPtr,
         {
             Rpp16f *dstPtrRow;
             dstPtrRow = dstPtrChannel;
-
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp16f *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
@@ -1030,8 +1015,7 @@ RppStatus warp_perspective_nn_f16_f16_host_tensor(Rpp16f *srcPtr,
         {
             Rpp16f *dstPtrRow;
             dstPtrRow = dstPtrChannel;
-
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp16f *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
@@ -1051,7 +1035,7 @@ RppStatus warp_perspective_nn_f16_f16_host_tensor(Rpp16f *srcPtr,
                     srcPtrTempChn = srcPtrChannel;
                     dstPtrTempChn = dstPtrTemp;
                     compute_generic_nn_srclocs_and_validate_avx(pSrcY, pSrcX, pRoiLTRB, pSrcStrideH, srcLoc, invalidLoad);
-                    for(int c = 0; c < srcDescPtr->c; c++)
+                    for (int c = 0; c < srcDescPtr->c; c++)
                     {
                         __m256 pRow;
                         rpp_simd_load(rpp_generic_nn_load_f16pln1_avx, srcPtrTempChn, srcLoc, invalidLoad, pRow);
@@ -1081,21 +1065,21 @@ RppStatus warp_perspective_nn_f16_f16_host_tensor(Rpp16f *srcPtr,
 }
 
 RppStatus warp_perspective_bilinear_u8_u8_host_tensor(Rpp8u *srcPtr,
-                                           RpptDescPtr srcDescPtr,
-                                           Rpp8u *dstPtr,
-                                           RpptDescPtr dstDescPtr,
-                                           Rpp32f *perspectiveTensor,
-                                           RpptROIPtr roiTensorPtrSrc,
-                                           RpptRoiType roiType,
-                                           RppLayoutParams srcLayoutParams,
-                                           rpp::Handle& handle)
+                                                      RpptDescPtr srcDescPtr,
+                                                      Rpp8u *dstPtr,
+                                                      RpptDescPtr dstDescPtr,
+                                                      Rpp32f *perspectiveTensor,
+                                                      RpptROIPtr roiTensorPtrSrc,
+                                                      RpptRoiType roiType,
+                                                      RppLayoutParams srcLayoutParams,
+                                                      rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
     Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
-    for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
+    for (int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi, roiLTRB;
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
@@ -1147,8 +1131,7 @@ RppStatus warp_perspective_bilinear_u8_u8_host_tensor(Rpp8u *srcPtr,
             dstPtrRowR = dstPtrChannel;
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
-
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8u *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
                 dstPtrTempR = dstPtrRowR;
@@ -1196,8 +1179,7 @@ RppStatus warp_perspective_bilinear_u8_u8_host_tensor(Rpp8u *srcPtr,
         {
             Rpp8u *dstPtrRow;
             dstPtrRow = dstPtrChannel;
-
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8u *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
@@ -1240,8 +1222,7 @@ RppStatus warp_perspective_bilinear_u8_u8_host_tensor(Rpp8u *srcPtr,
         {
             Rpp8u *dstPtrRow;
             dstPtrRow = dstPtrChannel;
-
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8u *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
@@ -1287,8 +1268,7 @@ RppStatus warp_perspective_bilinear_u8_u8_host_tensor(Rpp8u *srcPtr,
             dstPtrRowR = dstPtrChannel;
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
-
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8u *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
                 dstPtrTempR = dstPtrRowR;
@@ -1337,8 +1317,7 @@ RppStatus warp_perspective_bilinear_u8_u8_host_tensor(Rpp8u *srcPtr,
         {
             Rpp8u *dstPtrRow;
             dstPtrRow = dstPtrChannel;
-
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8u *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
@@ -1381,21 +1360,21 @@ RppStatus warp_perspective_bilinear_u8_u8_host_tensor(Rpp8u *srcPtr,
 }
 
 RppStatus warp_perspective_bilinear_f32_f32_host_tensor(Rpp32f *srcPtr,
-                                           RpptDescPtr srcDescPtr,
-                                           Rpp32f *dstPtr,
-                                           RpptDescPtr dstDescPtr,
-                                           Rpp32f *perspectiveTensor,
-                                           RpptROIPtr roiTensorPtrSrc,
-                                           RpptRoiType roiType,
-                                           RppLayoutParams srcLayoutParams,
-                                           rpp::Handle& handle)
+                                                        RpptDescPtr srcDescPtr,
+                                                        Rpp32f *dstPtr,
+                                                        RpptDescPtr dstDescPtr,
+                                                        Rpp32f *perspectiveTensor,
+                                                        RpptROIPtr roiTensorPtrSrc,
+                                                        RpptRoiType roiType,
+                                                        RppLayoutParams srcLayoutParams,
+                                                        rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
     Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
-    for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
+    for (int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi, roiLTRB;
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
@@ -1447,8 +1426,7 @@ RppStatus warp_perspective_bilinear_f32_f32_host_tensor(Rpp32f *srcPtr,
             dstPtrRowR = dstPtrChannel;
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
-
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp32f *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
                 dstPtrTempR = dstPtrRowR;
@@ -1496,8 +1474,7 @@ RppStatus warp_perspective_bilinear_f32_f32_host_tensor(Rpp32f *srcPtr,
         {
             Rpp32f *dstPtrRow;
             dstPtrRow = dstPtrChannel;
-
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp32f *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
@@ -1540,8 +1517,7 @@ RppStatus warp_perspective_bilinear_f32_f32_host_tensor(Rpp32f *srcPtr,
         {
             Rpp32f *dstPtrRow;
             dstPtrRow = dstPtrChannel;
-
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp32f *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
@@ -1587,8 +1563,7 @@ RppStatus warp_perspective_bilinear_f32_f32_host_tensor(Rpp32f *srcPtr,
             dstPtrRowR = dstPtrChannel;
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
-
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp32f *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
                 dstPtrTempR = dstPtrRowR;
@@ -1637,8 +1612,7 @@ RppStatus warp_perspective_bilinear_f32_f32_host_tensor(Rpp32f *srcPtr,
         {
             Rpp32f *dstPtrRow;
             dstPtrRow = dstPtrChannel;
-
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp32f *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
@@ -1681,21 +1655,21 @@ RppStatus warp_perspective_bilinear_f32_f32_host_tensor(Rpp32f *srcPtr,
 }
 
 RppStatus warp_perspective_bilinear_i8_i8_host_tensor(Rpp8s *srcPtr,
-                                           RpptDescPtr srcDescPtr,
-                                           Rpp8s *dstPtr,
-                                           RpptDescPtr dstDescPtr,
-                                           Rpp32f *perspectiveTensor,
-                                           RpptROIPtr roiTensorPtrSrc,
-                                           RpptRoiType roiType,
-                                           RppLayoutParams srcLayoutParams,
-                                           rpp::Handle& handle)
+                                                      RpptDescPtr srcDescPtr,
+                                                      Rpp8s *dstPtr,
+                                                      RpptDescPtr dstDescPtr,
+                                                      Rpp32f *perspectiveTensor,
+                                                      RpptROIPtr roiTensorPtrSrc,
+                                                      RpptRoiType roiType,
+                                                      RppLayoutParams srcLayoutParams,
+                                                      rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
     Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
-    for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
+    for (int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi, roiLTRB;
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
@@ -1747,8 +1721,7 @@ RppStatus warp_perspective_bilinear_i8_i8_host_tensor(Rpp8s *srcPtr,
             dstPtrRowR = dstPtrChannel;
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
-
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8s *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
                 dstPtrTempR = dstPtrRowR;
@@ -1797,8 +1770,7 @@ RppStatus warp_perspective_bilinear_i8_i8_host_tensor(Rpp8s *srcPtr,
         {
             Rpp8s *dstPtrRow;
             dstPtrRow = dstPtrChannel;
-
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8s *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
@@ -1842,8 +1814,7 @@ RppStatus warp_perspective_bilinear_i8_i8_host_tensor(Rpp8s *srcPtr,
         {
             Rpp8s *dstPtrRow;
             dstPtrRow = dstPtrChannel;
-
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8s *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
@@ -1890,8 +1861,7 @@ RppStatus warp_perspective_bilinear_i8_i8_host_tensor(Rpp8s *srcPtr,
             dstPtrRowR = dstPtrChannel;
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
-
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8s *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
                 dstPtrTempR = dstPtrRowR;
@@ -1941,8 +1911,7 @@ RppStatus warp_perspective_bilinear_i8_i8_host_tensor(Rpp8s *srcPtr,
         {
             Rpp8s *dstPtrRow;
             dstPtrRow = dstPtrChannel;
-
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8s *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
@@ -1986,21 +1955,21 @@ RppStatus warp_perspective_bilinear_i8_i8_host_tensor(Rpp8s *srcPtr,
 }
 
 RppStatus warp_perspective_bilinear_f16_f16_host_tensor(Rpp16f *srcPtr,
-                                           RpptDescPtr srcDescPtr,
-                                           Rpp16f *dstPtr,
-                                           RpptDescPtr dstDescPtr,
-                                           Rpp32f *perspectiveTensor,
-                                           RpptROIPtr roiTensorPtrSrc,
-                                           RpptRoiType roiType,
-                                           RppLayoutParams srcLayoutParams,
-                                           rpp::Handle& handle)
+                                                        RpptDescPtr srcDescPtr,
+                                                        Rpp16f *dstPtr,
+                                                        RpptDescPtr dstDescPtr,
+                                                        Rpp32f *perspectiveTensor,
+                                                        RpptROIPtr roiTensorPtrSrc,
+                                                        RpptRoiType roiType,
+                                                        RppLayoutParams srcLayoutParams,
+                                                        rpp::Handle& handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
     Rpp32u numThreads = handle.GetNumThreads();
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
-    for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
+    for (int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi, roiLTRB;
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
@@ -2052,8 +2021,7 @@ RppStatus warp_perspective_bilinear_f16_f16_host_tensor(Rpp16f *srcPtr,
             dstPtrRowR = dstPtrChannel;
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
-
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp16f *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
                 dstPtrTempR = dstPtrRowR;
@@ -2101,8 +2069,7 @@ RppStatus warp_perspective_bilinear_f16_f16_host_tensor(Rpp16f *srcPtr,
         {
             Rpp16f *dstPtrRow;
             dstPtrRow = dstPtrChannel;
-
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp16f *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
@@ -2145,8 +2112,7 @@ RppStatus warp_perspective_bilinear_f16_f16_host_tensor(Rpp16f *srcPtr,
         {
             Rpp16f *dstPtrRow;
             dstPtrRow = dstPtrChannel;
-
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp16f *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
@@ -2192,8 +2158,7 @@ RppStatus warp_perspective_bilinear_f16_f16_host_tensor(Rpp16f *srcPtr,
             dstPtrRowR = dstPtrChannel;
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
-
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp16f *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
                 dstPtrTempR = dstPtrRowR;
@@ -2242,8 +2207,7 @@ RppStatus warp_perspective_bilinear_f16_f16_host_tensor(Rpp16f *srcPtr,
         {
             Rpp16f *dstPtrRow;
             dstPtrRow = dstPtrChannel;
-
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp16f *dstPtrTemp;
                 dstPtrTemp = dstPtrRow;
