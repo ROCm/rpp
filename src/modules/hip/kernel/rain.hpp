@@ -224,7 +224,8 @@ RppStatus hip_exec_rain_tensor(T *srcPtr1,
             if (x >= 0 && x < srcDescPtr->w && y < srcDescPtr->h)
             {
                 T *rainLayerTemp = rainLayer + y * srcDescPtr->w + x;
-                *rainLayerTemp = rainValue;
+                for (int k = 0; k < rainWidth; k++)
+                    *(rainLayerTemp + k * srcDescPtr->strides.wStride) = rainValue;
             }
         }
     }

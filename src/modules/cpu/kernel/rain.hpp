@@ -33,7 +33,7 @@ SOFTWARE.
 #define RAIN_INTENSITY_FLOAT 200 * ONE_OVER_255 // Intensity value for Rpp32f and Rpp16f
 
 template<typename T>
-inline void create_rain_layer(T *rainLayer, Rpp32f rainPercentage, RpptDescPtr srcDescPtr, Rpp32s slant, Rpp32u dropLength, Rpp32u bufferMultiplier)
+inline void create_rain_layer(T *rainLayer, Rpp32f rainPercentage, RpptDescPtr srcDescPtr, Rpp32s slant, Rpp32u dropLength, Rpp32u rainWidth, Rpp32u bufferMultiplier)
 {
     Rpp32f rainPercent = rainPercentage * 0.004f;
     Rpp32u numDrops = static_cast<Rpp32u>(rainPercent * srcDescPtr->h * srcDescPtr->w);
@@ -55,7 +55,8 @@ inline void create_rain_layer(T *rainLayer, Rpp32f rainPercentage, RpptDescPtr s
             if ((x >= 0) && (x < srcDescPtr->w) && (y < srcDescPtr->h))
             {
                 T *rainLayerTemp = rainLayer + y * srcDescPtr->w + x;
-                *rainLayerTemp = rainValue;
+                for (int k = 0; k < rainWidth; k++)
+                    *(rainLayerTemp + k * srcDescPtr->strides.wStride) = rainValue;
             }
         }
     }
@@ -80,7 +81,7 @@ RppStatus rain_u8_u8_host_tensor(Rpp8u *srcPtr,
 
     Rpp8u *rainLayer = reinterpret_cast<Rpp8u *>(handle.GetInitHandle()->mem.mcpu.scratchBufferHost);
     std::memset(rainLayer, 0, srcDescPtr->w * srcDescPtr->h * sizeof(Rpp8u));
-    create_rain_layer(rainLayer, rainPercentage, srcDescPtr, slant, rainHeight, layoutParams.bufferMultiplier);
+    create_rain_layer(rainLayer, rainPercentage, srcDescPtr, slant, rainHeight, rainWidth, layoutParams.bufferMultiplier);
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
@@ -310,7 +311,7 @@ RppStatus rain_f32_f32_host_tensor(Rpp32f *srcPtr,
 
     Rpp32f *rainLayer = handle.GetInitHandle()->mem.mcpu.scratchBufferHost;
     std::memset(rainLayer, 0, srcDescPtr->strides.nStride * sizeof(Rpp32f));
-    create_rain_layer(rainLayer, rainPercentage, srcDescPtr, slant, rainHeight, layoutParams.bufferMultiplier);
+    create_rain_layer(rainLayer, rainPercentage, srcDescPtr, slant, rainHeight, rainWidth, layoutParams.bufferMultiplier);
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
@@ -541,7 +542,7 @@ RppStatus rain_f16_f16_host_tensor(Rpp16f *srcPtr,
 
     Rpp16f *rainLayer = reinterpret_cast<Rpp16f *>(handle.GetInitHandle()->mem.mcpu.scratchBufferHost);
     std::memset(rainLayer, 0, srcDescPtr->strides.nStride * sizeof(Rpp16f));
-    create_rain_layer(rainLayer, rainPercentage, srcDescPtr, slant, rainHeight, layoutParams.bufferMultiplier);
+    create_rain_layer(rainLayer, rainPercentage, srcDescPtr, slant, rainHeight, rainWidth, layoutParams.bufferMultiplier);
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
@@ -772,7 +773,7 @@ RppStatus rain_i8_i8_host_tensor(Rpp8s *srcPtr,
 
     Rpp8s *rainLayer = reinterpret_cast<Rpp8s *>(handle.GetInitHandle()->mem.mcpu.scratchBufferHost);
     std::memset(rainLayer, 0x81, srcDescPtr->strides.nStride * sizeof(Rpp8s));
-    create_rain_layer(rainLayer, rainPercentage, srcDescPtr, slant, rainHeight, layoutParams.bufferMultiplier);
+    create_rain_layer(rainLayer, rainPercentage, srcDescPtr, slant, rainHeight, rainWidth, layoutParams.bufferMultiplier);
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
