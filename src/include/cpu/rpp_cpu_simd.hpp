@@ -1466,7 +1466,7 @@ inline void rpp_store32_f32_to_u8_avx(Rpp8u *dstPtr, __m256 *p)
     px[2] = _mm_packus_epi32(_mm256_castsi256_si128(pxCvt[2]), _mm256_extracti128_si256(pxCvt[2], 1));  /* pack pixels 16-23 */
     px[3] = _mm_packus_epi32(_mm256_castsi256_si128(pxCvt[3]), _mm256_extracti128_si256(pxCvt[3], 1));  /* pack pixels 24-31 */
     px[0] = _mm_packus_epi16(px[0], px[1]);  /* pack pixels 0-15 */
-    px[2] = _mm_packus_epi16(px[2], px[2]);  /* pack pixels 16-31 */
+    px[2] = _mm_packus_epi16(px[2], px[3]);  /* pack pixels 16-31 */
     __m256i packedPx = _mm256_setr_m128i(px[0], px[2]);
     _mm256_storeu_si256((__m256i *)dstPtr, packedPx);
 }
@@ -1973,7 +1973,7 @@ inline void rpp_store32_f32_to_i8_avx(Rpp8s *dstPtr, __m256 *p)
     px[2] = _mm_packus_epi32(_mm256_extracti128_si256(pxCvt[2], 0), _mm256_extracti128_si256(pxCvt[2], 1));  /* pack pixels 16-23 */
     px[3] = _mm_packus_epi32(_mm256_extracti128_si256(pxCvt[3], 0), _mm256_extracti128_si256(pxCvt[3], 1));  /* pack pixels 24-31 */
     px[0] = _mm_packus_epi16(px[0], px[1]);  /* pack pixels 0-15 */
-    px[2] = _mm_packus_epi16(px[2], px[2]);  /* pack pixels 16-31 */
+    px[2] = _mm_packus_epi16(px[2], px[3]);  /* pack pixels 16-31 */
     __m256i packedPx = _mm256_setr_m128i(px[0], px[2]);
     packedPx = _mm256_sub_epi8(packedPx, avx_pxConvertI8);
     _mm256_storeu_si256((__m256i *)dstPtr, packedPx);
