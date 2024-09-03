@@ -8,11 +8,44 @@ Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/r
 
 * RPP Tensor Rain support on HOST and HIP
 
-## RPP 1.9.0 (Unreleased)
-
+## RPP 1.9.1 for ROCm 6.3.0
+ 
 ### Changes
-
+ 
 * Test - Prerequisites Updates
+* RPP Glitch on HOST and HIP
+* AMD Advanced - Build Flag
+* RPP Audio Support HIP - Resample
+* RPP Audio Support HIP - Pre emphasis filter
+* RPP Pixelate - HOST and HIP
+* RPP Audio Support HIP - Down-mixing 
+* RPP Audio Support HIP - To Decibels
+* RPP Audio Support HIP - Non silent region
+
+### Removals
+ 
+* TurboJPEG - older version
+ 
+### Optimizations
+ 
+* macOS - Build fix 
+* Docs - changed roiTensorSrc to roiTensorPtrSrc in documentation
+* Test Suite - updates 
+ 
+### Resolved issues
+ 
+* RPP Test Suite - augmentations fix 
+* Copy - bugfix for `NCDHW` layout
+* MIVisionX compatibility fix - Resample and pre-emphasis filter
+* Docs - fix broken image links
+ 
+### Known issues
+
+* Package only supports HIP backend
+ 
+### Upcoming changes
+ 
+* Optimized audio augmentations 
 
 ### Tested configurations
 
@@ -20,13 +53,13 @@ Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/r
   * Ubuntu - `20.04` / `22.04`
   * CentOS - `7`
   * RHEL - `8`/`9`
-* ROCm: rocm-core - `6.2.0.60200-66`
+* ROCm: rocm-core - `6.3.0.60300`
 * Clang - Version `5.0.1`+
 * CMake - Version `3.16.3`+
 * IEEE 754-based half-precision floating-point library - Version `1.12.0`
 
 
-## RPP 1.8.0 for ROCm 6.3.0
+## RPP 1.8.0 for ROCm 6.2.0
 
 ### Changes
 

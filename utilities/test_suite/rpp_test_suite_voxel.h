@@ -35,6 +35,7 @@ SOFTWARE.
 #include <fstream>
 #include <unistd.h>
 #include <dirent.h>
+#include <map>
 #include "rpp.h"
 #include "nifti1.h"
 
@@ -716,7 +717,7 @@ inline void compare_output(Rpp32f* output, Rpp64u oBufferSize, string func, int 
     FILE *fp;
     fp = fopen(refFile.c_str(), "rb");
     if (fp == NULL)
-        printf("Error opening file");
+        std::cout << "Error opening file";
 
     fseek(fp, 0, SEEK_END);
     long fsize = ftell(fp);
