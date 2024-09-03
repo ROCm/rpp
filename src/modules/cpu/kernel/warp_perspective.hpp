@@ -263,6 +263,7 @@ RppStatus warp_perspective_nn_u8_u8_host_tensor(Rpp8u *srcPtr,
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
         }
+        // Warp perspective without fused output-layout toggle (NCHW -> NCHW for 1 channel and 3 channel)
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp8u *dstPtrRow;
@@ -523,6 +524,7 @@ RppStatus warp_perspective_nn_f32_f32_host_tensor(Rpp32f *srcPtr,
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
         }
+        // Warp perspective without fused output-layout toggle (NCHW -> NCHW for 1 channel and 3 channel)
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp32f *dstPtrRow;
@@ -782,6 +784,7 @@ RppStatus warp_perspective_nn_i8_i8_host_tensor(Rpp8s *srcPtr,
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
         }
+        // Warp perspective without fused output-layout toggle (NCHW -> NCHW for 1 channel and 3 channel)
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp8s *dstPtrRow;
@@ -1040,6 +1043,7 @@ RppStatus warp_perspective_nn_f16_f16_host_tensor(Rpp16f *srcPtr,
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
         }
+        // Warp perspective without fused output-layout toggle (NCHW -> NCHW for 1 channel and 3 channel)
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp16f *dstPtrRow;
@@ -1300,7 +1304,7 @@ RppStatus warp_perspective_bilinear_u8_u8_host_tensor(Rpp8u *srcPtr,
             }
         }
 
-        // Warp perspective with fused output-layout toggle (NCHW -> NCHW)
+        // Warp perspective without fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp8u *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -1607,7 +1611,7 @@ RppStatus warp_perspective_bilinear_f32_f32_host_tensor(Rpp32f *srcPtr,
             }
         }
 
-        // Warp perspective with fused output-layout toggle (NCHW -> NCHW)
+        // Warp perspective without fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp32f *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -1917,7 +1921,7 @@ RppStatus warp_perspective_bilinear_i8_i8_host_tensor(Rpp8s *srcPtr,
             }
         }
 
-        // Warp perspective with fused output-layout toggle (NCHW -> NCHW)
+        // Warp perspective without fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp8s *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -2226,7 +2230,7 @@ RppStatus warp_perspective_bilinear_f16_f16_host_tensor(Rpp16f *srcPtr,
             }
         }
 
-        // Warp perspective with fused output-layout toggle (NCHW -> NCHW)
+        // Warp perspective without fused output-layout toggle (NCHW -> NCHW)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp16f *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
