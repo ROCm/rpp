@@ -639,7 +639,7 @@ int main(int argc, char **argv)
                     Rpp32u rainWidth = 1;
                     Rpp32s slant = 0;
                     Rpp32f alpha[batchSize];
-                    for(int i = 0; i < batchSize; i++)
+                    for (int i = 0; i < batchSize; i++)
                         alpha[i] = 0.4;
 
                     startWallTime = omp_get_wtime();

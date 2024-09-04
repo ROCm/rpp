@@ -419,7 +419,7 @@ int main(int argc, char **argv)
     if(testCase == 5)
         CHECK_RETURN_STATUS(hipHostMalloc(&d_interDstPtr, srcDescPtr->strides.nStride * srcDescPtr->n * sizeof(Rpp32f)));
 
-    Rpp32f *alpha;
+    Rpp32f *alpha = nullptr;
     if(testCase == 11)
         CHECK_RETURN_STATUS(hipHostMalloc(&alpha, batchSize * sizeof(Rpp32f)));
 
@@ -684,7 +684,7 @@ int main(int argc, char **argv)
                     Rpp32u rainHeight = 6;
                     Rpp32u rainWidth = 1;
                     Rpp32s slant = 0;
-                    for(int i = 0; i < batchSize; i++)
+                    for (int i = 0; i < batchSize; i++)
                         alpha[i] = 0.4;
 
                     startWallTime = omp_get_wtime();
@@ -1712,7 +1712,7 @@ int main(int argc, char **argv)
     CHECK_RETURN_STATUS(hipFree(d_output));
     if(testCase == 5)
         CHECK_RETURN_STATUS(hipFree(d_interDstPtr));
-    if(testCase == 11)
+    if(alpha != NULL)
         CHECK_RETURN_STATUS(hipHostFree(alpha));
     return 0;
 }

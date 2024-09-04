@@ -6563,7 +6563,7 @@ inline void compute_transpose4x8_avx(__m256 *pSrc, __m128 *pDst)
     pDst[7] = _mm256_extractf128_ps(pSrc[3], 1);    /* extract [P08|P16|P24|P32] */
 }
 
-inline void compute_rain_48_host(__m256 *p1, __m256 *p2, __m256 pMul)
+inline void compute_rain_48_host(__m256 *p1, __m256 *p2, __m256 &pMul)
 {
     p1[0] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[0]), pMul, p1[0]);    // alpha-blending adjustment
     p1[1] = _mm256_fmadd_ps(_mm256_sub_ps(p2[1], p1[1]), pMul, p1[1]);    // alpha-blending adjustment
@@ -6573,19 +6573,19 @@ inline void compute_rain_48_host(__m256 *p1, __m256 *p2, __m256 pMul)
     p1[5] = _mm256_fmadd_ps(_mm256_sub_ps(p2[1], p1[5]), pMul, p1[5]);    // alpha-blending adjustment
 }
 
-inline void compute_rain_24_host(__m256 *p1, __m256 p2, __m256 pMul)
-{
-    p1[0] = _mm256_fmadd_ps(_mm256_sub_ps(p2, p1[0]), pMul, p1[0]);    // alpha-blending adjustment
-    p1[1] = _mm256_fmadd_ps(_mm256_sub_ps(p2, p1[1]), pMul, p1[1]);    // alpha-blending adjustment
-    p1[2] = _mm256_fmadd_ps(_mm256_sub_ps(p2, p1[2]), pMul, p1[2]);    // alpha-blending adjustment
-}
-
-inline void compute_rain_32_host(__m256 *p1, __m256 *p2, __m256 pMul)
+inline void compute_rain_32_host(__m256 *p1, __m256 *p2, __m256 &pMul)
 {
     p1[0] = _mm256_fmadd_ps(_mm256_sub_ps(p2[0], p1[0]), pMul, p1[0]);    // alpha-blending adjustment
     p1[1] = _mm256_fmadd_ps(_mm256_sub_ps(p2[1], p1[1]), pMul, p1[1]);    // alpha-blending adjustment
     p1[2] = _mm256_fmadd_ps(_mm256_sub_ps(p2[2], p1[2]), pMul, p1[2]);    // alpha-blending adjustment
     p1[3] = _mm256_fmadd_ps(_mm256_sub_ps(p2[3], p1[3]), pMul, p1[3]);    // alpha-blending adjustment
+}
+
+inline void compute_rain_24_host(__m256 *p1, __m256 p2, __m256 &pMul)
+{
+    p1[0] = _mm256_fmadd_ps(_mm256_sub_ps(p2, p1[0]), pMul, p1[0]);    // alpha-blending adjustment
+    p1[1] = _mm256_fmadd_ps(_mm256_sub_ps(p2, p1[1]), pMul, p1[1]);    // alpha-blending adjustment
+    p1[2] = _mm256_fmadd_ps(_mm256_sub_ps(p2, p1[2]), pMul, p1[2]);    // alpha-blending adjustment
 }
 
 #endif //RPP_CPU_COMMON_H

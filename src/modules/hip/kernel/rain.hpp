@@ -39,8 +39,7 @@ __global__ void rain_pkd_hip_tensor(T *srcPtr1,
                                     float *alpha,
                                     RpptROIPtr roiTensorPtrSrc)
 {
-    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 24;
-    int maskid_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
+    int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     int id_z = hipBlockIdx_z * hipBlockDim_z + hipThreadIdx_z;
 
@@ -49,15 +48,13 @@ __global__ void rain_pkd_hip_tensor(T *srcPtr1,
         return;
     }
 
-    uint srcIdx1 = (id_z * srcStridesNHW.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNHW.y) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x * 3);
-    uint srcIdx2 = ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNHW.z) + (maskid_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
-    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x;
+    uint srcIdx1 = (id_z * srcStridesNHW.x) + ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNHW.y) + ((id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x) * 3);
+    uint srcIdx2 = ((id_y + roiTensorPtrSrc[id_z].xywhROI.xy.y) * srcStridesNHW.z) + (id_x + roiTensorPtrSrc[id_z].xywhROI.xy.x);
+    uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
     float4 alpha_f4 = static_cast<float4>(alpha[id_z]);
-
     d_float24 src1_f24, dst_f24;
     d_float8 src2_f8;
-
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr1 + srcIdx1, &src1_f24);
     rpp_hip_load8_and_unpack_to_float8(srcPtr2 + srcIdx2, &src2_f8);
     rain_hip_compute(srcPtr1, &src1_f24.f8[0], &src2_f8, &dst_f24.f8[0], &alpha_f4);
@@ -103,7 +100,6 @@ __global__ void rain_pln_hip_tensor(T *srcPtr1,
         rpp_hip_load8_and_unpack_to_float8(srcPtr1 + srcIdx1, &src1_f8);
         rain_hip_compute(srcPtr1, &src1_f8, &src2_f8, &dst_f8, &alpha_f4);
         rpp_hip_pack_float8_and_store8(dstPtr + dstIdx, &dst_f8);
-
         srcIdx1 += srcStridesNCH.y;
         dstIdx += dstStridesNCH.y;
         rpp_hip_load8_and_unpack_to_float8(srcPtr1 + srcIdx1, &src1_f8);
@@ -137,7 +133,6 @@ __global__ void rain_pkd3_pln3_hip_tensor(T *srcPtr1,
     float4 alpha_f4 = static_cast<float4>(alpha[id_z]);
     d_float24 src1_f24, dst_f24;
     d_float8 src2_f8;
-
     rpp_hip_load24_pkd3_and_unpack_to_float24_pln3(srcPtr1 + srcIdx1, &src1_f24);
     rpp_hip_load8_and_unpack_to_float8(srcPtr2 + srcIdx2, &src2_f8);
     rain_hip_compute(srcPtr1, &src1_f24.f8[0], &src2_f8, &dst_f24.f8[0], &alpha_f4);
@@ -171,7 +166,6 @@ __global__ void rain_pln3_pkd3_hip_tensor(T *srcPtr1,
     float4 alpha_f4 = static_cast<float4>(alpha[id_z]);
     d_float24 src1_f24, dst_f24;
     d_float8 src2_f8;
-
     rpp_hip_load24_pln3_and_unpack_to_float24_pln3(srcPtr1 + srcIdx1, srcStridesNCH.y, &src1_f24);
     rpp_hip_load8_and_unpack_to_float8(srcPtr2 + srcIdx2, &src2_f8);
     rain_hip_compute(srcPtr1, &src1_f24.f8[0], &src2_f8, &dst_f24.f8[0], &alpha_f4);
@@ -181,7 +175,7 @@ __global__ void rain_pln3_pkd3_hip_tensor(T *srcPtr1,
 }
 
 template <typename T>
-RppStatus hip_exec_rain_tensor(T *srcPtr1,
+RppStatus hip_exec_rain_tensor(T *srcPtr,
                                RpptDescPtr srcDescPtr,
                                T *dstPtr,
                                RpptDescPtr dstDescPtr,
@@ -199,14 +193,17 @@ RppStatus hip_exec_rain_tensor(T *srcPtr1,
 
     Rpp32f rainPercent = rainPercentage * 0.004f;
     Rpp32u numDrops = static_cast<Rpp32u>(rainPercent * srcDescPtr->h * srcDescPtr->w);
-    std::srand(std::time(0));
+
+    // Seed the random number generator and set up the uniform distributions
+    std::mt19937 rng(std::random_device{}());
+    std::uniform_int_distribution<Rpp32u> distX(0, srcDescPtr->w - slant - 1);
+    std::uniform_int_distribution<Rpp32u> distY(0, srcDescPtr->h - rainHeight - 1);
+
     T *rainLayer = reinterpret_cast<T *>(handle.GetInitHandle()->mem.mcpu.scratchBufferHost);
     T initValue = 0;
     if constexpr (std::is_same<T, Rpp8s>::value)
-    {
         initValue = static_cast<T>(0x81);   // 0x81 represents -127 in signed 8-bit integer(Rpp8s).
-    }
-    std::memset(rainLayer, initValue, srcDescPtr->strides.nStride * sizeof(T));
+    std::memset(rainLayer, initValue, srcDescPtr->w * srcDescPtr->h * sizeof(T));
     // Choose the rain intensity value based on the data type
     T rainValue = std::is_same<T, Rpp8u>::value ? static_cast<T>(RAIN_INTENSITY_8U) :
                   std::is_same<T, Rpp8s>::value ? static_cast<T>(RAIN_INTENSITY_8S) :
@@ -214,8 +211,8 @@ RppStatus hip_exec_rain_tensor(T *srcPtr1,
     Rpp32f slantPerDropLength = static_cast<Rpp32f>(slant) / rainHeight;
     for (Rpp32u i = 0; i < numDrops; i++)
     {
-        Rpp32u xStart = rand() % (srcDescPtr->w - slant);
-        Rpp32u yStart = rand() % (srcDescPtr->h - rainHeight);
+        Rpp32u xStart = distX(rng);
+        Rpp32u yStart = distX(rng);
         for (Rpp32u j = 0; j < rainHeight; j++)
         {
             Rpp32u x = xStart + j * slantPerDropLength;
@@ -224,8 +221,8 @@ RppStatus hip_exec_rain_tensor(T *srcPtr1,
             if (x >= 0 && x < srcDescPtr->w && y < srcDescPtr->h)
             {
                 T *rainLayerTemp = rainLayer + y * srcDescPtr->w + x;
-                for (int k = 0; k < rainWidth; k++)
-                    *(rainLayerTemp + k * srcDescPtr->strides.wStride) = rainValue;
+                for (Rpp32u k = 0; k < rainWidth; k++)
+                    rainLayerTemp[k] = rainValue;
             }
         }
     }
@@ -233,19 +230,18 @@ RppStatus hip_exec_rain_tensor(T *srcPtr1,
     T *rainLayerHip = reinterpret_cast<T *>(handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
     CHECK_RETURN_STATUS(hipMemcpyAsync(rainLayerHip, rainLayer, srcDescPtr->w * srcDescPtr->h * sizeof(T), hipMemcpyHostToDevice, handle.GetStream()));
 
-    int globalThreads_x = (dstDescPtr->strides.hStride + 7) >> 3;
+    int globalThreads_x = (dstDescPtr->w + 7) >> 3;;
     int globalThreads_y = dstDescPtr->h;
     int globalThreads_z = dstDescPtr->n;
 
     if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
     {
-        globalThreads_x = (dstDescPtr->w + 7) >> 3;
         hipLaunchKernelGGL(rain_pkd_hip_tensor,
                            dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                            0,
                            handle.GetStream(),
-                           srcPtr1,
+                           srcPtr,
                            rainLayerHip,
                            make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride, srcDescPtr->w),
                            dstPtr,
@@ -260,7 +256,7 @@ RppStatus hip_exec_rain_tensor(T *srcPtr1,
                            dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                            0,
                            handle.GetStream(),
-                           srcPtr1,
+                           srcPtr,
                            rainLayerHip,
                            make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                            dstPtr,
@@ -278,7 +274,7 @@ RppStatus hip_exec_rain_tensor(T *srcPtr1,
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
                                handle.GetStream(),
-                               srcPtr1,
+                               srcPtr,
                                rainLayerHip,
                                make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.hStride, srcDescPtr->w),
                                dstPtr,
@@ -288,13 +284,12 @@ RppStatus hip_exec_rain_tensor(T *srcPtr1,
         }
         else if ((srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
-            globalThreads_x = (srcDescPtr->strides.hStride + 7) >> 3;
             hipLaunchKernelGGL(rain_pln3_pkd3_hip_tensor,
                                dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                                dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),
                                0,
                                handle.GetStream(),
-                               srcPtr1,
+                               srcPtr,
                                rainLayerHip,
                                make_uint3(srcDescPtr->strides.nStride, srcDescPtr->strides.cStride, srcDescPtr->strides.hStride),
                                dstPtr,
