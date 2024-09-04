@@ -1452,13 +1452,13 @@ inline void rpp_load40_u8_to_f32_avx(Rpp8u *srcPtr, __m256 *p)
 {
     __m256i px1 = _mm256_loadu_si256((__m256i *)srcPtr);     // Load the first 32 bytes
     __m128i px2 = _mm_loadu_si128((__m128i *)(srcPtr + 32)); // Load the remaining 8 bytes
-    __m128i px1_low  = _mm256_castsi256_si128(px1);
-    __m128i px1_high = _mm256_extractf128_si256(px1, 1);
+    __m128i px1Low  = _mm256_castsi256_si128(px1);
+    __m128i px1High = _mm256_extractf128_si256(px1, 1);
 
-    p[0] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px1_low, xmm_pxMask00To03), _mm_shuffle_epi8(px1_low, xmm_pxMask04To07))); // Pixels 01-08
-    p[1] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px1_low, xmm_pxMask08To11), _mm_shuffle_epi8(px1_low, xmm_pxMask12To15))); // Pixels 09-16
-    p[2] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px1_high, xmm_pxMask00To03), _mm_shuffle_epi8(px1_high, xmm_pxMask04To07))); // Pixels 17-24
-    p[3] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px1_high, xmm_pxMask08To11), _mm_shuffle_epi8(px1_high, xmm_pxMask12To15))); // Pixels 25-32
+    p[0] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px1Low, xmm_pxMask00To03), _mm_shuffle_epi8(px1Low, xmm_pxMask04To07))); // Pixels 01-08
+    p[1] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px1Low, xmm_pxMask08To11), _mm_shuffle_epi8(px1Low, xmm_pxMask12To15))); // Pixels 09-16
+    p[2] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px1High, xmm_pxMask00To03), _mm_shuffle_epi8(px1High, xmm_pxMask04To07))); // Pixels 17-24
+    p[3] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px1High, xmm_pxMask08To11), _mm_shuffle_epi8(px1High, xmm_pxMask12To15))); // Pixels 25-32
     p[4] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px2, xmm_pxMask00To03), _mm_shuffle_epi8(px2, xmm_pxMask04To07)));        // Pixels 33-40
 }
 
@@ -1973,13 +1973,13 @@ inline void rpp_load40_i8_to_f32_avx(Rpp8s *srcPtr, __m256 *p)
 {
     __m256i px1 = _mm256_add_epi8(avx_pxConvertI8, _mm256_loadu_si256((__m256i *)srcPtr));     // Load the first 32 bytes
     __m128i px2 = _mm_add_epi8(xmm_pxConvertI8, _mm_loadu_si128((__m128i *)(srcPtr + 32))); // Load the remaining 8 bytes
-    __m128i px1_low  = _mm256_castsi256_si128(px1);
-    __m128i px1_high = _mm256_extractf128_si256(px1, 1);
+    __m128i px1Low  = _mm256_castsi256_si128(px1);
+    __m128i px1High = _mm256_extractf128_si256(px1, 1);
 
-    p[0] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px1_low, xmm_pxMask00To03), _mm_shuffle_epi8(px1_low, xmm_pxMask04To07))); // Pixels 01-08
-    p[1] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px1_low, xmm_pxMask08To11), _mm_shuffle_epi8(px1_low, xmm_pxMask12To15))); // Pixels 09-16
-    p[2] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px1_high, xmm_pxMask00To03), _mm_shuffle_epi8(px1_high, xmm_pxMask04To07))); // Pixels 17-24
-    p[3] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px1_high, xmm_pxMask08To11), _mm_shuffle_epi8(px1_high, xmm_pxMask12To15))); // Pixels 25-32
+    p[0] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px1Low, xmm_pxMask00To03), _mm_shuffle_epi8(px1Low, xmm_pxMask04To07))); // Pixels 01-08
+    p[1] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px1Low, xmm_pxMask08To11), _mm_shuffle_epi8(px1Low, xmm_pxMask12To15))); // Pixels 09-16
+    p[2] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px1High, xmm_pxMask00To03), _mm_shuffle_epi8(px1High, xmm_pxMask04To07))); // Pixels 17-24
+    p[3] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px1High, xmm_pxMask08To11), _mm_shuffle_epi8(px1High, xmm_pxMask12To15))); // Pixels 25-32
     p[4] = _mm256_cvtepi32_ps(_mm256_setr_m128i(_mm_shuffle_epi8(px2, xmm_pxMask00To03), _mm_shuffle_epi8(px2, xmm_pxMask04To07)));        // Pixels 33-40
 }
 

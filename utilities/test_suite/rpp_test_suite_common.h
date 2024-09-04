@@ -1158,8 +1158,8 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     }
     else if(testCase == 54)
     {
-        func += "_kSize" + std::to_string(additionalParam);
-        binFile += "_kSize" + std::to_string(additionalParam);
+        func += "_kernelSize" + std::to_string(additionalParam);
+        binFile += "_kernelSize" + std::to_string(additionalParam);
     }
     refFile = scriptPath + "/../REFERENCE_OUTPUT/" + funcName + "/"+ binFile + ".bin";
     int fileMatch = 0;

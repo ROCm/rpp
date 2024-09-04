@@ -84,7 +84,7 @@ inline void convolution_filter_generic_tensor(T **srcPtrTemp, T *dstPtrTemp, Rpp
     }
 
     if constexpr (std::is_same<T, Rpp8u>::value || std::is_same<T, Rpp8s>::value)
-        accum = round(accum);
+        accum = nearbyintf(accum);
     saturate_pixel(accum, dstPtrTemp);
 }
 
@@ -161,70 +161,70 @@ inline void permute_blend_add_5x5_pln(__m256 &pDst, __m256 pRow0, __m256 pRow1, 
     pDst = _mm256_add_ps(pDst, _mm256_add_ps(_mm256_add_ps(pTemp[0], _mm256_add_ps(pTemp[1], pTemp[2])), _mm256_add_ps(pTemp[3], pTemp[4])));
 }
 
-inline void permute_blend_add_5x5_pkd(__m256 &pDst, __m256 pRow0, __m256 pRow1, __m256 pRow2, __m256 *pFilter)
+inline void permute_blend_add_5x5_pkd(__m256 &pDst, __m256 *pRow, __m256 *pFilter)
 {
     __m256 pTemp[5];
-    pTemp[0] = _mm256_mul_ps(pRow0, pFilter[0]);
-    pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 7), avx_pxMaskRotate0To3), pFilter[1]);
-    pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 63), avx_pxMaskRotate0To6), pFilter[2]);
-    pTemp[3] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow1, pRow2, 1), avx_pxMaskRotate0To1), pFilter[3]);
-    pTemp[4] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow1, pRow2, 15), avx_pxMaskRotate0To4), pFilter[4]);
+    pTemp[0] = _mm256_mul_ps(pRow[0], pFilter[0]);
+    pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[0], pRow[1], 7), avx_pxMaskRotate0To3), pFilter[1]);
+    pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[0], pRow[1], 63), avx_pxMaskRotate0To6), pFilter[2]);
+    pTemp[3] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[1], pRow[2], 1), avx_pxMaskRotate0To1), pFilter[3]);
+    pTemp[4] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[1], pRow[2], 15), avx_pxMaskRotate0To4), pFilter[4]);
     pDst = _mm256_add_ps(pDst, _mm256_add_ps(_mm256_add_ps(pTemp[0], _mm256_add_ps(pTemp[1], pTemp[2])), _mm256_add_ps(pTemp[3], pTemp[4])));
 }
 
-inline void permute_blend_add_7x7_pln(__m256 &pDst, __m256 pRow0, __m256 pRow1, __m256 *pFilter)
+inline void permute_blend_add_7x7_pln(__m256 &pDst, __m256 *pRow, __m256 *pFilter)
 {
     __m256 pTemp[7];
-    pTemp[0] = _mm256_mul_ps(pRow0, pFilter[0]);
-    pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 1), avx_pxMaskRotate0To1), pFilter[1]);
-    pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 3), avx_pxMaskRotate0To2), pFilter[2]);
-    pTemp[3] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 7), avx_pxMaskRotate0To3), pFilter[3]);
-    pTemp[4] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 15), avx_pxMaskRotate0To4), pFilter[4]);
-    pTemp[5] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 31), avx_pxMaskRotate0To5), pFilter[5]);
-    pTemp[6] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 63), avx_pxMaskRotate0To6), pFilter[6]);
+    pTemp[0] = _mm256_mul_ps(pRow[0], pFilter[0]);
+    pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[0], pRow[1], 1), avx_pxMaskRotate0To1), pFilter[1]);
+    pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[0], pRow[1], 3), avx_pxMaskRotate0To2), pFilter[2]);
+    pTemp[3] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[0], pRow[1], 7), avx_pxMaskRotate0To3), pFilter[3]);
+    pTemp[4] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[0], pRow[1], 15), avx_pxMaskRotate0To4), pFilter[4]);
+    pTemp[5] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[0], pRow[1], 31), avx_pxMaskRotate0To5), pFilter[5]);
+    pTemp[6] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[0], pRow[1], 63), avx_pxMaskRotate0To6), pFilter[6]);
     pDst =  _mm256_add_ps(pDst, _mm256_add_ps(_mm256_add_ps(pTemp[0], _mm256_add_ps(pTemp[1], pTemp[2])), _mm256_add_ps(_mm256_add_ps(pTemp[3], pTemp[4]), _mm256_add_ps(pTemp[5], pTemp[6]))));
 }
 
-inline void permute_blend_add_7x7_pkd(__m256 &pDst, __m256 pRow0, __m256 pRow1, __m256 pRow2, __m256 pRow3, __m256 *pFilter)
+inline void permute_blend_add_7x7_pkd(__m256 &pDst, __m256 *pRow, __m256 pRow2, __m256 *pFilter)
 {
     __m256 pTemp[7];
-    pTemp[0] = _mm256_mul_ps(pRow0, pFilter[0]);
-    pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 7), avx_pxMaskRotate0To3), pFilter[1]);
-    pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 63), avx_pxMaskRotate0To6), pFilter[2]);
-    pTemp[3] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow1, pRow2, 1), avx_pxMaskRotate0To1), pFilter[3]);
-    pTemp[4] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow1, pRow2, 15), avx_pxMaskRotate0To4), pFilter[4]);
-    pTemp[5] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow1, pRow2, 127), avx_pxMaskRotate0To7), pFilter[5]);
-    pTemp[6] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow2, pRow3, 3), avx_pxMaskRotate0To2), pFilter[6]);
+    pTemp[0] = _mm256_mul_ps(pRow[0], pFilter[0]);
+    pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[0], pRow[1], 7), avx_pxMaskRotate0To3), pFilter[1]);
+    pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[0], pRow[1], 63), avx_pxMaskRotate0To6), pFilter[2]);
+    pTemp[3] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[1], pRow[2], 1), avx_pxMaskRotate0To1), pFilter[3]);
+    pTemp[4] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[1], pRow[2], 15), avx_pxMaskRotate0To4), pFilter[4]);
+    pTemp[5] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[1], pRow[2], 127), avx_pxMaskRotate0To7), pFilter[5]);
+    pTemp[6] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[2], pRow2, 3), avx_pxMaskRotate0To2), pFilter[6]);
     pDst =  _mm256_add_ps(pDst, _mm256_add_ps(_mm256_add_ps(pTemp[0], _mm256_add_ps(pTemp[1], pTemp[2])), _mm256_add_ps(_mm256_add_ps(pTemp[3], pTemp[4]), _mm256_add_ps(pTemp[5], pTemp[6]))));
 }
 
-inline void permute_blend_add_9x9_pln(__m256 &pDst, __m256 pRow0, __m256 pRow1, __m256 *pFilter)
+inline void permute_blend_add_9x9_pln(__m256 &pDst, __m256 *pRow, __m256 *pFilter)
 {
     __m256 pTemp[9];
-    pTemp[0] = _mm256_mul_ps(pRow0, pFilter[0]);
-    pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 1), avx_pxMaskRotate0To1), pFilter[1]);
-    pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 3), avx_pxMaskRotate0To2), pFilter[2]);
-    pTemp[3] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 7), avx_pxMaskRotate0To3), pFilter[3]);
-    pTemp[4] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 15), avx_pxMaskRotate0To4), pFilter[4]);
-    pTemp[5] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 31), avx_pxMaskRotate0To5), pFilter[5]);
-    pTemp[6] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 63), avx_pxMaskRotate0To6), pFilter[6]);
-    pTemp[7] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 127), avx_pxMaskRotate0To7), pFilter[7]);
-    pTemp[8] = _mm256_mul_ps(pRow1, pFilter[8]);
+    pTemp[0] = _mm256_mul_ps(pRow[0], pFilter[0]);
+    pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[0], pRow[1], 1), avx_pxMaskRotate0To1), pFilter[1]);
+    pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[0], pRow[1], 3), avx_pxMaskRotate0To2), pFilter[2]);
+    pTemp[3] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[0], pRow[1], 7), avx_pxMaskRotate0To3), pFilter[3]);
+    pTemp[4] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[0], pRow[1], 15), avx_pxMaskRotate0To4), pFilter[4]);
+    pTemp[5] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[0], pRow[1], 31), avx_pxMaskRotate0To5), pFilter[5]);
+    pTemp[6] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[0], pRow[1], 63), avx_pxMaskRotate0To6), pFilter[6]);
+    pTemp[7] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[0], pRow[1], 127), avx_pxMaskRotate0To7), pFilter[7]);
+    pTemp[8] = _mm256_mul_ps(pRow[1], pFilter[8]);
     pDst = _mm256_add_ps(pDst, _mm256_add_ps(_mm256_add_ps(_mm256_add_ps(pTemp[0], pTemp[1]), _mm256_add_ps(pTemp[2], pTemp[3])), _mm256_add_ps(_mm256_add_ps(pTemp[4], pTemp[5]), _mm256_add_ps(pTemp[6], _mm256_add_ps(pTemp[7], pTemp[8])))));
 }
 
-inline void permute_blend_add_9x9_pkd(__m256 &pDst, __m256 pRow0, __m256 pRow1, __m256 pRow2, __m256 pRow3, __m256 *pFilter)
+inline void permute_blend_add_9x9_pkd(__m256 &pDst, __m256 *pRow, __m256 *pFilter)
 {
     __m256 pTemp[9];
-    pTemp[0] = _mm256_mul_ps(pRow0, pFilter[0]);
-    pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 7), avx_pxMaskRotate0To3), pFilter[1]);
-    pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow0, pRow1, 63), avx_pxMaskRotate0To6), pFilter[2]);
-    pTemp[3] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow1, pRow2, 1), avx_pxMaskRotate0To1), pFilter[3]);
-    pTemp[4] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow1, pRow2, 15), avx_pxMaskRotate0To4), pFilter[4]);
-    pTemp[5] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow1, pRow2, 127), avx_pxMaskRotate0To7), pFilter[5]);
-    pTemp[6] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow2, pRow3, 3), avx_pxMaskRotate0To2), pFilter[6]);
-    pTemp[7] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow2, pRow3, 31), avx_pxMaskRotate0To5), pFilter[7]);
-    pTemp[8] = _mm256_mul_ps(pRow3, pFilter[8]);
+    pTemp[0] = _mm256_mul_ps(pRow[0], pFilter[0]);
+    pTemp[1] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[0], pRow[1], 7), avx_pxMaskRotate0To3), pFilter[1]);
+    pTemp[2] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[0], pRow[1], 63), avx_pxMaskRotate0To6), pFilter[2]);
+    pTemp[3] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[1], pRow[2], 1), avx_pxMaskRotate0To1), pFilter[3]);
+    pTemp[4] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[1], pRow[2], 15), avx_pxMaskRotate0To4), pFilter[4]);
+    pTemp[5] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[1], pRow[2], 127), avx_pxMaskRotate0To7), pFilter[5]);
+    pTemp[6] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[2], pRow[3], 3), avx_pxMaskRotate0To2), pFilter[6]);
+    pTemp[7] = _mm256_mul_ps(_mm256_permutevar8x32_ps(_mm256_blend_ps(pRow[2], pRow[3], 31), avx_pxMaskRotate0To5), pFilter[7]);
+    pTemp[8] = _mm256_mul_ps(pRow[3], pFilter[8]);
     pDst = _mm256_add_ps(pDst, _mm256_add_ps(_mm256_add_ps(_mm256_add_ps(pTemp[0], pTemp[1]), _mm256_add_ps(pTemp[2], pTemp[3])), _mm256_add_ps(_mm256_add_ps(pTemp[4], pTemp[5]), _mm256_add_ps(pTemp[6], _mm256_add_ps(pTemp[7], pTemp[8])))));
 }
 
@@ -241,10 +241,7 @@ inline void rpp_load_filter_3x3_pln_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32
     if (rowKernelLoopLimit == 3)
         rpp_load16_u8_to_f32_avx(srcPtrTemp[2], &pRow[4]);
     else
-    {
-        pRow[4] = avx_p0;
-        pRow[5] = avx_p0;
-    }
+        pRow[4] = pRow[5] = avx_p0;
 }
 
 // load function for 5x5 kernel size
@@ -257,12 +254,8 @@ inline void rpp_load_filter_5x5_pln_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32
 
     for (int k = 3; k < rowKernelLoopLimit; k++)
         rpp_load16_u8_to_f32_avx(srcPtrTemp[k], &pRow[k * 2]);
-    for (int k = rowKernelLoopLimit; k < 5; k++)
-    {
-        int idx = k * 2;
-        pRow[idx] = avx_p0;
-        pRow[idx + 1] = avx_p0;
-    }
+    for (int k = rowKernelLoopLimit * 2; k < 10; k += 2)
+        pRow[k] = pRow[k + 1] = avx_p0;
 }
 
 // load function for 7x7 kernel size
@@ -275,12 +268,8 @@ inline void rpp_load_filter_7x7_pln_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32
     rpp_load16_u8_to_f32_avx(srcPtrTemp[3], &pRow[6]);
     for (int k = 4; k < rowKernelLoopLimit; k++)
         rpp_load16_u8_to_f32_avx(srcPtrTemp[k], &pRow[k * 2]);
-    for (int k = rowKernelLoopLimit; k < 7; k++)
-    {
-        int idx = k * 2;
-        pRow[idx] = avx_p0;
-        pRow[idx + 1] = avx_p0;
-    }
+    for (int k = rowKernelLoopLimit * 2; k < 14; k += 2)
+        pRow[k] = pRow[k + 1] = avx_p0;
 }
 
 // load function for 9x9 kernel size
@@ -294,12 +283,8 @@ inline void rpp_load_filter_9x9_pln_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32
     rpp_load16_u8_to_f32_avx(srcPtrTemp[4], &pRow[8]);
     for (int k = 5; k < rowKernelLoopLimit; k++)
         rpp_load16_u8_to_f32_avx(srcPtrTemp[k], &pRow[k * 2]);
-    for (int k = rowKernelLoopLimit; k < 9; k++)
-    {
-        int idx = k * 2;
-        pRow[idx] = avx_p0;
-        pRow[idx + 1] = avx_p0;
-    }
+    for (int k = rowKernelLoopLimit * 2; k < 18; k += 2)
+        pRow[k] = pRow[k + 1] = avx_p0;
 }
 
 inline void rpp_load_filter_3x3_pkd_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32s rowKernelLoopLimit)
@@ -310,9 +295,7 @@ inline void rpp_load_filter_3x3_pkd_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32
 
     // if rowKernelLoopLimit is 3 load values from 3rd row pointer else set it 0
     if (rowKernelLoopLimit == 3)
-    {
         rpp_load24_u8_to_f32_avx(srcPtrTemp[2], &pRow[6]);
-    }
     else
     {
         pRow[6] = avx_px0;
@@ -329,16 +312,13 @@ inline void rpp_load_filter_5x5_pkd_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32
     rpp_load32_u8_to_f32_avx(srcPtrTemp[1], &pRow[4]);
     rpp_load32_u8_to_f32_avx(srcPtrTemp[2], &pRow[8]);
     for (int k = 3; k < rowKernelLoopLimit; k++)
-    {
         rpp_load32_u8_to_f32_avx(srcPtrTemp[k], &pRow[k * 4]);
-    }
-    for (int k = rowKernelLoopLimit; k < 5; k++)
+    for (int k = rowKernelLoopLimit * 4; k < 20; k += 4)
     {
-        int idx = k * 4;
-        pRow[idx] = avx_p0;
-        pRow[idx + 1] = avx_p0;
-        pRow[idx + 2] = avx_p0;
-        pRow[idx + 3] = avx_p0;
+        pRow[k] = avx_p0;
+        pRow[k + 1] = avx_p0;
+        pRow[k + 2] = avx_p0;
+        pRow[k + 3] = avx_p0;
     }
 }
 
@@ -350,16 +330,13 @@ inline void rpp_load_filter_7x7_pkd_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32
     rpp_load32_u8_to_f32_avx(srcPtrTemp[2], &pRow[8]);
     rpp_load32_u8_to_f32_avx(srcPtrTemp[3], &pRow[12]);
     for (int k = 4; k < rowKernelLoopLimit; k++)
-    {
         rpp_load32_u8_to_f32_avx(srcPtrTemp[k], &pRow[k * 4]);
-    }
-    for (int k = rowKernelLoopLimit; k < 7; k++)
+    for (int k = rowKernelLoopLimit * 4; k < 28; k += 4)
     {
-        int idx = k * 4;
-        pRow[idx] = avx_p0;
-        pRow[idx + 1] = avx_p0;
-        pRow[idx + 2] = avx_p0;
-        pRow[idx + 3] = avx_p0;
+        pRow[k] = avx_p0;
+        pRow[k + 1] = avx_p0;
+        pRow[k + 2] = avx_p0;
+        pRow[k + 3] = avx_p0;
     }
 }
 
@@ -372,16 +349,13 @@ inline void rpp_load_filter_9x9_pkd_host(__m256 *pRow, Rpp8u **srcPtrTemp, Rpp32
     rpp_load32_u8_to_f32_avx(srcPtrTemp[3], &pRow[12]);
     rpp_load32_u8_to_f32_avx(srcPtrTemp[4], &pRow[16]);
     for (int k = 5; k < rowKernelLoopLimit; k++)
-    {
         rpp_load32_u8_to_f32_avx(srcPtrTemp[k], &pRow[k * 4]);
-    }
-    for (int k = rowKernelLoopLimit; k < 9; k++)
+    for (int k = rowKernelLoopLimit * 4; k < 36; k += 4)
     {
-        int idx = k * 4;
-        pRow[idx] = avx_p0;
-        pRow[idx + 1] = avx_p0;
-        pRow[idx + 2] = avx_p0;
-        pRow[idx + 3] = avx_p0;
+        pRow[k] = avx_p0;
+        pRow[k + 1] = avx_p0;
+        pRow[k + 2] = avx_p0;
+        pRow[k + 3] = avx_p0;
     }
 }
 
@@ -394,17 +368,14 @@ inline void rpp_load_gaussian_filter_9x9_pkd_pln_host(__m256 *pRow, Rpp8u **srcP
     rpp_load40_u8_to_f32_avx(srcPtrTemp[3], &pRow[15]);
     rpp_load40_u8_to_f32_avx(srcPtrTemp[4], &pRow[20]);
     for (int k = 5; k < rowKernelLoopLimit; k++)
-    {
         rpp_load40_u8_to_f32_avx(srcPtrTemp[k], &pRow[k * 5]);
-    }
-    for (int k = rowKernelLoopLimit; k < 9; k++)
+    for (int k = rowKernelLoopLimit * 5; k < 45; k += 5)
     {
-        int idx = k * 5;
-        pRow[idx] = avx_p0;
-        pRow[idx + 1] = avx_p0;
-        pRow[idx + 2] = avx_p0;
-        pRow[idx + 3] = avx_p0;
-        pRow[idx + 4] = avx_p0;
+        pRow[k] = avx_p0;
+        pRow[k + 1] = avx_p0;
+        pRow[k + 2] = avx_p0;
+        pRow[k + 3] = avx_p0;
+        pRow[k + 4] = avx_p0;
     }
 }
 
@@ -435,12 +406,8 @@ inline void rpp_load_filter_5x5_pln_host(__m256 *pRow, Rpp8s **srcPtrTemp, Rpp32
 
     for (int k = 3; k < rowKernelLoopLimit; k++)
         rpp_load16_i8_to_f32_avx(srcPtrTemp[k], &pRow[k * 2]);
-    for (int k = rowKernelLoopLimit; k < 5; k++)
-    {
-        int idx = k * 2;
-        pRow[idx] = avx_p0;
-        pRow[idx + 1] = avx_p0;
-    }
+    for (int k = rowKernelLoopLimit * 2; k < 10; k += 2)
+        pRow[k] = pRow[k + 1] = avx_p0;
 }
 
 inline void rpp_load_filter_7x7_pln_host(__m256 *pRow, Rpp8s **srcPtrTemp, Rpp32s rowKernelLoopLimit)
@@ -452,12 +419,8 @@ inline void rpp_load_filter_7x7_pln_host(__m256 *pRow, Rpp8s **srcPtrTemp, Rpp32
     rpp_load16_i8_to_f32_avx(srcPtrTemp[3], &pRow[6]);
     for (int k = 4; k < rowKernelLoopLimit; k++)
         rpp_load16_i8_to_f32_avx(srcPtrTemp[k], &pRow[k * 2]);
-    for (int k = rowKernelLoopLimit; k < 7; k++)
-    {
-        int idx = k * 2;
-        pRow[idx] = avx_p0;
-        pRow[idx + 1] = avx_p0;
-    }
+    for (int k = rowKernelLoopLimit * 2; k < 14; k += 2)
+        pRow[k] = pRow[k + 1] = avx_p0;
 }
 
 inline void rpp_load_filter_9x9_pln_host(__m256 *pRow, Rpp8s **srcPtrTemp, Rpp32s rowKernelLoopLimit)
@@ -470,12 +433,8 @@ inline void rpp_load_filter_9x9_pln_host(__m256 *pRow, Rpp8s **srcPtrTemp, Rpp32
     rpp_load16_i8_to_f32_avx(srcPtrTemp[4], &pRow[8]);
     for (int k = 5; k < rowKernelLoopLimit; k++)
         rpp_load16_i8_to_f32_avx(srcPtrTemp[k], &pRow[k * 2]);
-    for (int k = rowKernelLoopLimit; k < 9; k++)
-    {
-        int idx = k * 2;
-        pRow[idx] = avx_p0;
-        pRow[idx + 1] = avx_p0;
-    }
+    for (int k = rowKernelLoopLimit * 2; k < 18; k += 2)
+        pRow[k] = pRow[k + 1] = avx_p0;
 }
 
 inline void rpp_load_filter_3x3_pkd_host(__m256 *pRow, Rpp8s **srcPtrTemp, Rpp32s rowKernelLoopLimit)
@@ -485,9 +444,7 @@ inline void rpp_load_filter_3x3_pkd_host(__m256 *pRow, Rpp8s **srcPtrTemp, Rpp32
     rpp_load24_i8_to_f32_avx(srcPtrTemp[1], &pRow[3]);
     // if rowKernelLoopLimit is 3 load values from 3rd row pointer else set it 0
     if (rowKernelLoopLimit == 3)
-    {
         rpp_load24_i8_to_f32_avx(srcPtrTemp[2], &pRow[6]);
-    }
     else
     {
         pRow[6] = avx_px0;
@@ -504,16 +461,13 @@ inline void rpp_load_filter_5x5_pkd_host(__m256 *pRow, Rpp8s **srcPtrTemp, Rpp32
     rpp_load32_i8_to_f32_avx(srcPtrTemp[1], &pRow[4]);
     rpp_load32_i8_to_f32_avx(srcPtrTemp[2], &pRow[8]);
     for (int k = 3; k < rowKernelLoopLimit; k++)
-    {
         rpp_load32_i8_to_f32_avx(srcPtrTemp[k], &pRow[k * 4]);
-    }
-    for (int k = rowKernelLoopLimit; k < 5; k++)
+    for (int k = rowKernelLoopLimit * 4; k < 20; k += 4)
     {
-        int idx = k * 4;
-        pRow[idx] = avx_p0;
-        pRow[idx + 1] = avx_p0;
-        pRow[idx + 2] = avx_p0;
-        pRow[idx + 3] = avx_p0;
+        pRow[k] = avx_p0;
+        pRow[k + 1] = avx_p0;
+        pRow[k + 2] = avx_p0;
+        pRow[k + 3] = avx_p0;
     }
 }
 
@@ -525,16 +479,13 @@ inline void rpp_load_filter_7x7_pkd_host(__m256 *pRow, Rpp8s **srcPtrTemp, Rpp32
     rpp_load32_i8_to_f32_avx(srcPtrTemp[2], &pRow[8]);
     rpp_load32_i8_to_f32_avx(srcPtrTemp[3], &pRow[12]);
     for (int k = 4; k < rowKernelLoopLimit; k++)
-    {
         rpp_load32_i8_to_f32_avx(srcPtrTemp[k], &pRow[k * 4]);
-    }
-    for (int k = rowKernelLoopLimit; k < 7; k++)
+    for (int k = rowKernelLoopLimit * 4; k < 28; k += 4)
     {
-        int idx = k * 4;
-        pRow[idx] = avx_p0;
-        pRow[idx + 1] = avx_p0;
-        pRow[idx + 2] = avx_p0;
-        pRow[idx + 3] = avx_p0;
+        pRow[k] = avx_p0;
+        pRow[k + 1] = avx_p0;
+        pRow[k + 2] = avx_p0;
+        pRow[k + 3] = avx_p0;
     }
 }
 
@@ -547,16 +498,13 @@ inline void rpp_load_filter_9x9_pkd_host(__m256 *pRow, Rpp8s **srcPtrTemp, Rpp32
     rpp_load32_i8_to_f32_avx(srcPtrTemp[3], &pRow[12]);
     rpp_load32_i8_to_f32_avx(srcPtrTemp[4], &pRow[16]);
     for (int k = 5; k < rowKernelLoopLimit; k++)
-    {
         rpp_load32_i8_to_f32_avx(srcPtrTemp[k], &pRow[k * 4]);
-    }
-    for (int k = rowKernelLoopLimit; k < 9; k++)
+    for (int k = rowKernelLoopLimit * 4; k < 36; k += 4)
     {
-        int idx = k * 4;
-        pRow[idx] = avx_p0;
-        pRow[idx + 1] = avx_p0;
-        pRow[idx + 2] = avx_p0;
-        pRow[idx + 3] = avx_p0;
+        pRow[k] = avx_p0;
+        pRow[k + 1] = avx_p0;
+        pRow[k + 2] = avx_p0;
+        pRow[k + 3] = avx_p0;
     }
 }
 
@@ -569,17 +517,14 @@ inline void rpp_load_gaussian_filter_9x9_pkd_pln_host(__m256 *pRow, Rpp8s **srcP
     rpp_load40_i8_to_f32_avx(srcPtrTemp[3], &pRow[15]);
     rpp_load40_i8_to_f32_avx(srcPtrTemp[4], &pRow[20]);
     for (int k = 5; k < rowKernelLoopLimit; k++)
-    {
         rpp_load40_i8_to_f32_avx(srcPtrTemp[k], &pRow[k * 5]);
-    }
-    for (int k = rowKernelLoopLimit; k < 9; k++)
+    for (int k = rowKernelLoopLimit * 5; k < 45; k += 5)
     {
-        int idx = k * 5;
-        pRow[idx] = avx_p0;
-        pRow[idx + 1] = avx_p0;
-        pRow[idx + 2] = avx_p0;
-        pRow[idx + 3] = avx_p0;
-        pRow[idx + 4] = avx_p0;
+        pRow[k] = avx_p0;
+        pRow[k + 1] = avx_p0;
+        pRow[k + 2] = avx_p0;
+        pRow[k + 3] = avx_p0;
+        pRow[k + 4] = avx_p0;
     }
 }
 
@@ -610,12 +555,8 @@ inline void rpp_load_filter_5x5_pln_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp3
 
     for (int k = 3; k < rowKernelLoopLimit; k++)
         rpp_load16_f32_to_f32_avx(srcPtrTemp[k], &pRow[k * 2]);
-    for (int k = rowKernelLoopLimit; k < 5; k++)
-    {
-        int idx = k * 2;
-        pRow[idx] = avx_p0;
-        pRow[idx + 1] = avx_p0;
-    }
+    for (int k = rowKernelLoopLimit * 2; k < 10; k += 2)
+        pRow[k] = pRow[k + 1] = avx_p0;
 }
 
 inline void rpp_load_filter_7x7_pln_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit)
@@ -627,12 +568,8 @@ inline void rpp_load_filter_7x7_pln_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp3
     rpp_load16_f32_to_f32_avx(srcPtrTemp[3], &pRow[6]);
     for (int k = 4; k < rowKernelLoopLimit; k++)
         rpp_load16_f32_to_f32_avx(srcPtrTemp[k], &pRow[k * 2]);
-    for (int k = rowKernelLoopLimit; k < 7; k++)
-    {
-        int idx = k * 2;
-        pRow[idx] = avx_p0;
-        pRow[idx + 1] = avx_p0;
-    }
+    for (int k = rowKernelLoopLimit * 2; k < 14; k += 2)
+        pRow[k] = pRow[k + 1] = avx_p0;
 }
 
 inline void rpp_load_filter_9x9_pln_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit)
@@ -645,12 +582,8 @@ inline void rpp_load_filter_9x9_pln_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp3
     rpp_load16_f32_to_f32_avx(srcPtrTemp[4], &pRow[8]);
     for (int k = 5; k < rowKernelLoopLimit; k++)
         rpp_load16_f32_to_f32_avx(srcPtrTemp[k], &pRow[k * 2]);
-    for (int k = rowKernelLoopLimit; k < 9; k++)
-    {
-        int idx = k * 2;
-        pRow[idx] = avx_p0;
-        pRow[idx + 1] = avx_p0;
-    }
+    for (int k = rowKernelLoopLimit * 2; k < 18; k += 2)
+        pRow[k] = pRow[k + 1] = avx_p0;
 }
 
 inline void rpp_load_filter_3x3_pkd_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp32s rowKernelLoopLimit)
@@ -660,9 +593,7 @@ inline void rpp_load_filter_3x3_pkd_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp3
     rpp_load24_f32_to_f32_avx(srcPtrTemp[1], &pRow[3]);
     // if rowKernelLoopLimit is 3 load values from 3rd row pointer else set it 0
     if (rowKernelLoopLimit == 3)
-    {
         rpp_load24_f32_to_f32_avx(srcPtrTemp[2], &pRow[6]);
-    }
     else
     {
         pRow[6] = avx_px0;
@@ -679,16 +610,13 @@ inline void rpp_load_filter_5x5_pkd_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp3
     rpp_load32_f32_to_f32_avx(srcPtrTemp[1], &pRow[4]);
     rpp_load32_f32_to_f32_avx(srcPtrTemp[2], &pRow[8]);
     for (int k = 3; k < rowKernelLoopLimit; k++)
-    {
         rpp_load32_f32_to_f32_avx(srcPtrTemp[k], &pRow[k * 4]);
-    }
-    for (int k = rowKernelLoopLimit; k < 5; k++)
+    for (int k = rowKernelLoopLimit * 4 ; k < 20; k += 4)
     {
-        int idx = k * 4;
-        pRow[idx] = avx_p0;
-        pRow[idx + 1] = avx_p0;
-        pRow[idx + 2] = avx_p0;
-        pRow[idx + 3] = avx_p0;
+        pRow[k] = avx_p0;
+        pRow[k + 1] = avx_p0;
+        pRow[k + 2] = avx_p0;
+        pRow[k + 3] = avx_p0;
     }
 }
 
@@ -701,16 +629,13 @@ inline void rpp_load_filter_7x7_pkd_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp3
     rpp_load32_f32_to_f32_avx(srcPtrTemp[2], &pRow[8]);
     rpp_load32_f32_to_f32_avx(srcPtrTemp[3], &pRow[12]);
     for (int k = 4; k < rowKernelLoopLimit; k++)
-    {
         rpp_load32_f32_to_f32_avx(srcPtrTemp[k], &pRow[k * 4]);
-    }
-    for (int k = rowKernelLoopLimit; k < 7; k++)
+    for (int k = rowKernelLoopLimit * 4; k < 28; k += 4)
     {
-        int idx = k * 4;
-        pRow[idx] = avx_p0;
-        pRow[idx + 1] = avx_p0;
-        pRow[idx + 2] = avx_p0;
-        pRow[idx + 3] = avx_p0;
+        pRow[k] = avx_p0;
+        pRow[k + 1] = avx_p0;
+        pRow[k + 2] = avx_p0;
+        pRow[k + 3] = avx_p0;
     }
 }
 
@@ -724,16 +649,13 @@ inline void rpp_load_filter_9x9_pkd_host(__m256 *pRow, Rpp32f **srcPtrTemp, Rpp3
     rpp_load32_f32_to_f32_avx(srcPtrTemp[3], &pRow[12]);
     rpp_load32_f32_to_f32_avx(srcPtrTemp[4], &pRow[16]);
     for (int k = 5; k < rowKernelLoopLimit; k++)
-    {
         rpp_load32_f32_to_f32_avx(srcPtrTemp[k], &pRow[k * 4]);
-    }
-    for (int k = rowKernelLoopLimit; k < 9; k++)
+    for (int k = rowKernelLoopLimit * 4; k < 36; k += 4)
     {
-        int idx = k * 4;
-        pRow[idx] = avx_p0;
-        pRow[idx + 1] = avx_p0;
-        pRow[idx + 2] = avx_p0;
-        pRow[idx + 3] = avx_p0;
+        pRow[k] = avx_p0;
+        pRow[k + 1] = avx_p0;
+        pRow[k + 2] = avx_p0;
+        pRow[k + 3] = avx_p0;
     }
 }
 
@@ -746,17 +668,14 @@ inline void rpp_load_gaussian_filter_9x9_pkd_pln_host(__m256 *pRow, Rpp32f **src
     rpp_load40_f32_to_f32_avx(srcPtrTemp[3], &pRow[15]);
     rpp_load40_f32_to_f32_avx(srcPtrTemp[4], &pRow[20]);
     for (int k = 5; k < rowKernelLoopLimit; k++)
-    {
         rpp_load40_f32_to_f32_avx(srcPtrTemp[k], &pRow[k * 5]);
-    }
-    for (int k = rowKernelLoopLimit; k < 9; k++)
+    for (int k = rowKernelLoopLimit * 5; k < 45; k += 5)
     {
-        int idx = k * 5;
-        pRow[idx] = avx_p0;
-        pRow[idx + 1] = avx_p0;
-        pRow[idx + 2] = avx_p0;
-        pRow[idx + 3] = avx_p0;
-        pRow[idx + 4] = avx_p0;
+        pRow[k] = avx_p0;
+        pRow[k + 1] = avx_p0;
+        pRow[k + 2] = avx_p0;
+        pRow[k + 3] = avx_p0;
+        pRow[k + 4] = avx_p0;
     }
 }
 
@@ -788,12 +707,8 @@ inline void rpp_load_filter_5x5_pln_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp3
 
     for (int k = 3; k < rowKernelLoopLimit; k++)
         rpp_load16_f16_to_f32_avx(srcPtrTemp[k], &pRow[k * 2]);
-    for (int k = rowKernelLoopLimit; k < 5; k++)
-    {
-        int idx = k * 2;
-        pRow[idx] = avx_p0;
-        pRow[idx + 1] = avx_p0;
-    }
+    for (int k = rowKernelLoopLimit * 2; k < 10; k += 2)
+        pRow[k] = pRow[k + 1] = avx_p0;
 }
 
 inline void rpp_load_filter_7x7_pln_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit)
@@ -805,12 +720,8 @@ inline void rpp_load_filter_7x7_pln_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp3
     rpp_load16_f16_to_f32_avx(srcPtrTemp[3], &pRow[6]);
     for (int k = 4; k < rowKernelLoopLimit; k++)
         rpp_load16_f16_to_f32_avx(srcPtrTemp[k], &pRow[k * 2]);
-    for (int k = rowKernelLoopLimit; k < 7; k++)
-    {
-        int idx = k * 2;
-        pRow[idx] = avx_p0;
-        pRow[idx + 1] = avx_p0;
-    }
+    for (int k = rowKernelLoopLimit * 2; k < 14; k += 2)
+        pRow[k] = pRow[k + 1] = avx_p0;
 }
 
 inline void rpp_load_filter_9x9_pln_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit)
@@ -823,12 +734,8 @@ inline void rpp_load_filter_9x9_pln_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp3
     rpp_load16_f16_to_f32_avx(srcPtrTemp[4], &pRow[8]);
     for (int k = 5; k < rowKernelLoopLimit; k++)
         rpp_load16_f16_to_f32_avx(srcPtrTemp[k], &pRow[k * 2]);
-    for (int k = rowKernelLoopLimit; k < 9; k++)
-    {
-        int idx = k * 2;
-        pRow[idx] = avx_p0;
-        pRow[idx + 1] = avx_p0;
-    }
+    for (int k = rowKernelLoopLimit * 2; k < 18; k += 2)
+        pRow[k] = pRow[k + 1] = avx_p0;
 }
 
 inline void rpp_load_filter_3x3_pkd_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp32s rowKernelLoopLimit)
@@ -838,9 +745,7 @@ inline void rpp_load_filter_3x3_pkd_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp3
     rpp_load24_f16_to_f32_avx(srcPtrTemp[1], &pRow[3]);
     // if rowKernelLoopLimit is 3 load values from 3rd row pointer else set it 0
     if (rowKernelLoopLimit == 3)
-    {
         rpp_load24_f16_to_f32_avx(srcPtrTemp[2], &pRow[6]);
-    }
     else
     {
         pRow[6] = avx_px0;
@@ -857,16 +762,13 @@ inline void rpp_load_filter_5x5_pkd_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp3
     rpp_load32_f16_to_f32_avx(srcPtrTemp[1], &pRow[4]);
     rpp_load32_f16_to_f32_avx(srcPtrTemp[2], &pRow[8]);
     for (int k = 3; k < rowKernelLoopLimit; k++)
-    {
         rpp_load32_f16_to_f32_avx(srcPtrTemp[k], &pRow[k * 4]);
-    }
-    for (int k = rowKernelLoopLimit; k < 5; k++)
+    for (int k = rowKernelLoopLimit * 4 ; k < 20; k += 4)
     {
-        int idx = k * 4;
-        pRow[idx] = avx_p0;
-        pRow[idx + 1] = avx_p0;
-        pRow[idx + 2] = avx_p0;
-        pRow[idx + 3] = avx_p0;
+        pRow[k] = avx_p0;
+        pRow[k + 1] = avx_p0;
+        pRow[k + 2] = avx_p0;
+        pRow[k + 3] = avx_p0;
     }
 }
 
@@ -879,16 +781,13 @@ inline void rpp_load_filter_7x7_pkd_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp3
     rpp_load32_f16_to_f32_avx(srcPtrTemp[2], &pRow[8]);
     rpp_load32_f16_to_f32_avx(srcPtrTemp[3], &pRow[12]);
     for (int k = 4; k < rowKernelLoopLimit; k++)
-    {
         rpp_load32_f16_to_f32_avx(srcPtrTemp[k], &pRow[k * 4]);
-    }
-    for (int k = rowKernelLoopLimit; k < 7; k++)
+    for (int k = rowKernelLoopLimit * 4; k < 28; k += 4)
     {
-        int idx = k * 4;
-        pRow[idx] = avx_p0;
-        pRow[idx + 1] = avx_p0;
-        pRow[idx + 2] = avx_p0;
-        pRow[idx + 3] = avx_p0;
+        pRow[k] = avx_p0;
+        pRow[k + 1] = avx_p0;
+        pRow[k + 2] = avx_p0;
+        pRow[k + 3] = avx_p0;
     }
 }
 
@@ -902,16 +801,13 @@ inline void rpp_load_filter_9x9_pkd_host(__m256 *pRow, Rpp16f **srcPtrTemp, Rpp3
     rpp_load32_f16_to_f32_avx(srcPtrTemp[3], &pRow[12]);
     rpp_load32_f16_to_f32_avx(srcPtrTemp[4], &pRow[16]);
     for (int k = 5; k < rowKernelLoopLimit; k++)
-    {
         rpp_load32_f16_to_f32_avx(srcPtrTemp[k], &pRow[k * 4]);
-    }
-    for (int k = rowKernelLoopLimit; k < 9; k++)
+    for (int k = rowKernelLoopLimit * 4; k < 36; k += 4)
     {
-        int idx = k * 4;
-        pRow[idx] = avx_p0;
-        pRow[idx + 1] = avx_p0;
-        pRow[idx + 2] = avx_p0;
-        pRow[idx + 3] = avx_p0;
+        pRow[k] = avx_p0;
+        pRow[k + 1] = avx_p0;
+        pRow[k + 2] = avx_p0;
+        pRow[k + 3] = avx_p0;
     }
 }
 
@@ -924,17 +820,14 @@ inline void rpp_load_gaussian_filter_9x9_pkd_pln_host(__m256 *pRow, Rpp16f **src
     rpp_load40_f16_to_f32_avx(srcPtrTemp[3], &pRow[15]);
     rpp_load40_f16_to_f32_avx(srcPtrTemp[4], &pRow[20]);
     for (int k = 5; k < rowKernelLoopLimit; k++)
-    {
         rpp_load40_f16_to_f32_avx(srcPtrTemp[k], &pRow[k * 5]);
-    }
-    for (int k = rowKernelLoopLimit; k < 9; k++)
+    for (int k = rowKernelLoopLimit * 5; k < 45; k += 5)
     {
-        int idx = k * 5;
-        pRow[idx] = avx_p0;
-        pRow[idx + 1] = avx_p0;
-        pRow[idx + 2] = avx_p0;
-        pRow[idx + 3] = avx_p0;
-        pRow[idx + 4] = avx_p0;
+        pRow[k] = avx_p0;
+        pRow[k + 1] = avx_p0;
+        pRow[k + 2] = avx_p0;
+        pRow[k + 3] = avx_p0;
+        pRow[k + 4] = avx_p0;
     }
 }
 

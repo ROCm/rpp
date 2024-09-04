@@ -168,11 +168,8 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             rpp_load_filter_3x3_pln_host(pRow, srcPtrTemp, rowKernelLoopLimit);
                             pDst[0] = avx_p0;
                             pDst[1] = avx_p0;
-                            for (int k = 0; k < 3; k++)
+                            for (int k = 0, filterIndex = 0, rowIndex = 0; k < 3; k++, filterIndex += 3, rowIndex += 2)
                             {
-                                Rpp32s filterIndex =  k * 3;
-                                Rpp32s rowIndex = k * 2;
-
                                 permute_blend_add_3x3<1, 3, 0, 1>(pDst[0], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex], pxMaskPln);
                                 permute_blend_add_3x3<1, 3, 0, 1>(pDst[1], pRow[rowIndex + 1], avx_p0, &pFilter[filterIndex], pxMaskPln);
                             }
@@ -223,11 +220,8 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
 
                         pDst[0] = avx_p0;
                         pDst[1] = avx_p0;
-                        for (int k = 0; k < 3; k++)
+                        for (int k = 0, filterIndex = 0, rowIndex = 0; k < 3; k++, filterIndex += 3, rowIndex += 3)
                         {
-                            Rpp32s filterIndex = k * 3;
-                            Rpp32s rowIndex = k * 3;
-
                             permute_blend_add_3x3<7, 63, 0, 1>(pDst[0], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex], pxMaskPkd);
                             permute_blend_add_3x3<7, 63, 0, 1>(pDst[1], pRow[rowIndex + 1], pRow[rowIndex + 2], &pFilter[filterIndex], pxMaskPkd);
                         }
@@ -276,11 +270,8 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
 
                         pDst[0] = avx_p0;
                         pDst[1] = avx_p0;
-                        for (int k = 0; k < 3; k++)
+                        for (int k = 0, filterIndex = 0, rowIndex = 0; k < 3; k++, filterIndex += 3, rowIndex += 3)
                         {
-                            Rpp32s filterIndex = k * 3;
-                            Rpp32s rowIndex = k * 3;
-
                             permute_blend_add_3x3<7, 63, 0, 1>(pDst[0], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex], pxMaskPkd);
                             permute_blend_add_3x3<7, 63, 0, 1>(pDst[1], pRow[rowIndex + 1], pRow[rowIndex + 2], &pFilter[filterIndex], pxMaskPkd);
                         }
@@ -346,12 +337,8 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             rpp_load_filter_3x3_pln_host(pRow, srcPtrTemp[c], rowKernelLoopLimit);
                             pResult[channelStride] = avx_p0;
                             pResult[channelStride + 1] = avx_p0;
-                            for (int k = 0; k < 3; k++)
+                            for (int k = 0, filterIndex = 0, rowIndex = 0; k < 3; k++, filterIndex += 3, rowIndex += 2)
                             {
-                                __m256 pTemp[3];
-                                Rpp32s filterIndex =  k * 3;
-                                Rpp32s rowIndex = k * 2;
-
                                 permute_blend_add_3x3<7, 63, 0, 1>(pResult[channelStride], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex], pxMaskPln);
                                 permute_blend_add_3x3<7, 63, 0, 1>(pResult[channelStride + 1], pRow[rowIndex + 1], avx_p0, &pFilter[filterIndex], pxMaskPln);
                             }
@@ -425,11 +412,8 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             rpp_load_filter_5x5_pln_host(pRow, srcPtrTemp, rowKernelLoopLimit);
                             pDst[0] = avx_p0;
                             pDst[1] = avx_p0;
-                            for (int k = 0; k < 5; k++)
+                            for (int k = 0, filterIndex = 0, rowIndex = 0; k < 5; k++, filterIndex += 5, rowIndex += 2)
                             {
-                                Rpp32s filterIndex =  k * 5;
-                                Rpp32s rowIndex = k * 2;
-
                                 permute_blend_add_5x5_pln(pDst[0], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex]);
                                 permute_blend_add_5x5_pln(pDst[1], pRow[rowIndex + 1], avx_p0, &pFilter[filterIndex]);
                             }
@@ -479,13 +463,10 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         rpp_load_filter_5x5_pkd_host(pRow, srcPtrTemp, rowKernelLoopLimit);
                         pDst[0] = avx_p0;
                         pDst[1] = avx_p0;
-                        for (int k = 0; k < 5; k++)
+                        for (int k = 0, filterIndex = 0, rowIndex = 0; k < 5; k++, filterIndex += 5, rowIndex += 4)
                         {
-                            Rpp32s filterIndex =  k * 5;
-                            Rpp32s rowIndex = k * 4;
-
-                            permute_blend_add_5x5_pkd(pDst[0], pRow[rowIndex], pRow[rowIndex + 1], pRow[rowIndex + 2], &pFilter[filterIndex]);
-                            permute_blend_add_5x5_pkd(pDst[1], pRow[rowIndex + 1], pRow[rowIndex + 2], pRow[rowIndex + 3], &pFilter[filterIndex]);
+                            permute_blend_add_5x5_pkd(pDst[0], &pRow[rowIndex], &pFilter[filterIndex]);
+                            permute_blend_add_5x5_pkd(pDst[1], &pRow[rowIndex + 1], &pFilter[filterIndex]);
                         }
 
                         increment_row_ptrs(srcPtrTemp, kernelSize, 16);
@@ -546,13 +527,8 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             __m256 pRow[10];
                             rpp_load_filter_5x5_pln_host(pRow, srcPtrTemp[c], rowKernelLoopLimit);
                             pResultPln[c] = avx_p0;
-                            for (int k = 0; k < 5; k++)
-                            {
-                                Rpp32s filterIndex =  k * 5;
-                                Rpp32s rowIndex = k * 2;
-
+                            for (int k = 0, filterIndex = 0, rowIndex = 0; k < 5; k++, filterIndex += 5, rowIndex += 2)
                                 permute_blend_add_5x5_pln(pResultPln[c], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex]);
-                            }
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 8);
                         }
 
@@ -612,13 +588,10 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         rpp_load_filter_5x5_pkd_host(pRow, srcPtrTemp, rowKernelLoopLimit);
                         pDst[0] = avx_p0;
                         pDst[1] = avx_p0;
-                        for (int k = 0; k < 5; k++)
+                       for (int k = 0, filterIndex = 0, rowIndex = 0; k < 5; k++, filterIndex += 5, rowIndex += 4)
                         {
-                            Rpp32s filterIndex =  k * 5;
-                            Rpp32s rowIndex = k * 4;
-
-                            permute_blend_add_5x5_pkd(pDst[0], pRow[rowIndex], pRow[rowIndex + 1], pRow[rowIndex + 2], &pFilter[filterIndex]);
-                            permute_blend_add_5x5_pkd(pDst[1], pRow[rowIndex + 1], pRow[rowIndex + 2], pRow[rowIndex + 3], &pFilter[filterIndex]);
+                            permute_blend_add_5x5_pkd(pDst[0], &pRow[rowIndex], &pFilter[filterIndex]);
+                            permute_blend_add_5x5_pkd(pDst[1], &pRow[rowIndex + 1], &pFilter[filterIndex]);
                         }
 
                         __m128 pDstPln[3];
@@ -684,13 +657,8 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             __m256 pRow[14], pDst;
                             rpp_load_filter_7x7_pln_host(pRow, srcPtrTemp, rowKernelLoopLimit);
                             pDst = avx_p0;
-                            for (int k = 0; k < 7; k++)
-                            {
-                                Rpp32s filterIndex =  k * 7;
-                                Rpp32s rowIndex = k * 2;
-
-                                permute_blend_add_7x7_pln(pDst, pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex]);
-                            }
+                            for (int k = 0, filterIndex = 0, rowIndex = 0; k < 7; k++, filterIndex += 7, rowIndex += 2)
+                                permute_blend_add_7x7_pln(pDst, &pRow[rowIndex], &pFilter[filterIndex]);
 
                             // convert result from pln to pkd format and store in output buffer
                             if constexpr (std::is_same<T, Rpp32f>::value)
@@ -745,13 +713,8 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         __m256 pRow[28], pDst;
                         rpp_load_filter_7x7_pkd_host(pRow, srcPtrTemp, rowKernelLoopLimit);
                         pDst = avx_p0;
-                        for (int k = 0; k < 7; k++)
-                        {
-                            Rpp32s filterIndex =  k * 7;
-                            Rpp32s rowIndex = k * 4;
-
-                            permute_blend_add_7x7_pkd(pDst, pRow[rowIndex], pRow[rowIndex + 1], pRow[rowIndex + 2], pRow[rowIndex + 3], &pFilter[filterIndex]);
-                        }
+                        for (int k = 0, filterIndex = 0, rowIndex = 0; k < 7; k++, filterIndex += 7, rowIndex += 4)
+                            permute_blend_add_7x7_pkd(pDst, &pRow[rowIndex], pRow[rowIndex + 3], &pFilter[filterIndex]);
 
                         if constexpr (std::is_same<T, Rpp32f>::value)
                             _mm256_storeu_ps(dstPtrTemp, pDst);
@@ -819,13 +782,8 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             __m256 pRow[14];
                             rpp_load_filter_7x7_pln_host(pRow, srcPtrTemp[c], rowKernelLoopLimit);
                             pResultPln[c] = avx_p0;
-                            for (int k = 0; k < 7; k++)
-                            {
-                                Rpp32s filterIndex =  k * 7;
-                                Rpp32s rowIndex = k * 2;
-
-                                permute_blend_add_7x7_pln(pResultPln[c], pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex]);
-                            }
+                            for (int k = 0, filterIndex = 0, rowIndex = 0; k < 7; k++, filterIndex += 7, rowIndex += 2)
+                                permute_blend_add_7x7_pln(pResultPln[c], &pRow[rowIndex], &pFilter[filterIndex]);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 8);
                         }
                         // convert result from pln to pkd format and store in output buffer
@@ -883,13 +841,10 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         rpp_load_filter_7x7_pkd_host(pRow, srcPtrTemp, rowKernelLoopLimit);
                         pDst[0] = avx_p0;
                         pDst[1] = avx_p0;
-                        for (int k = 0; k < 7; k++)
+                        for (int k = 0, filterIndex = 0, rowIndex = 0; k < 7; k++, filterIndex += 7, rowIndex += 4)
                         {
-                            Rpp32s filterIndex =  k * 7;
-                            Rpp32s rowIndex = k * 4;
-
-                            permute_blend_add_7x7_pkd(pDst[0], pRow[rowIndex], pRow[rowIndex + 1], pRow[rowIndex + 2], pRow[rowIndex + 3], &pFilter[filterIndex]);
-                            permute_blend_add_7x7_pkd(pDst[1], pRow[rowIndex + 1], pRow[rowIndex + 2], pRow[rowIndex + 3], avx_p0, &pFilter[filterIndex]);
+                            permute_blend_add_7x7_pkd(pDst[0], &pRow[rowIndex], pRow[rowIndex + 3], &pFilter[filterIndex]);
+                            permute_blend_add_7x7_pkd(pDst[1], &pRow[rowIndex + 1], avx_p0, &pFilter[filterIndex]);
                         }
 
                         __m128 pDstPln[3];
@@ -956,13 +911,8 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             __m256 pRow[18], pDst;
                             rpp_load_filter_9x9_pln_host(pRow, srcPtrTemp, rowKernelLoopLimit);
                             pDst = avx_p0;
-                            for (int k = 0; k < 9; k++)
-                            {
-                                Rpp32s filterIndex =  k * 9;
-                                Rpp32s rowIndex = k * 2;
-
-                                permute_blend_add_9x9_pln(pDst, pRow[rowIndex], pRow[rowIndex + 1], &pFilter[filterIndex]);
-                            }
+                            for (int k = 0, filterIndex = 0, rowIndex = 0; k < 9; k++, filterIndex += 9, rowIndex += 2)
+                                permute_blend_add_9x9_pln(pDst, &pRow[rowIndex], &pFilter[filterIndex]);
 
                             if constexpr (std::is_same<T, Rpp32f>::value)
                                 _mm256_storeu_ps(dstPtrTemp, pDst);
@@ -1016,13 +966,8 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         __m256 pRow[36], pDst;
                         rpp_load_filter_9x9_pkd_host(pRow, srcPtrTemp, rowKernelLoopLimit);
                         pDst = avx_p0;
-                        for (int k = 0; k < 9; k++)
-                        {
-                            Rpp32s filterIndex =  k * 9;
-                            Rpp32s rowIndex = k * 4;
-
-                            permute_blend_add_9x9_pkd(pDst, pRow[rowIndex], pRow[rowIndex + 1], pRow[rowIndex + 2], pRow[rowIndex + 3], &pFilter[filterIndex]);
-                        }
+                        for (int k = 0, filterIndex = 0, rowIndex = 0; k < 9; k++, filterIndex += 9, rowIndex += 4)
+                            permute_blend_add_9x9_pkd(pDst, &pRow[rowIndex], &pFilter[filterIndex]);
 
                         if constexpr (std::is_same<T, Rpp32f>::value)
                             _mm256_storeu_ps(dstPtrTemp, pDst);
@@ -1089,13 +1034,8 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                             __m256 pRow[18];
                             rpp_load_filter_9x9_pln_host(pRow, srcPtrTemp[c], rowKernelLoopLimit);
                             pResultPln[c] = avx_p0;
-                            for (int k = 0; k < 9; k++)
-                            {
-                                Rpp32s filterIndex =  k * 9;
-                                Rpp32s rowIndex = k * 2;
-
-                                permute_blend_add_9x9_pln(pResultPln[c], pRow[rowIndex], pFilter[rowIndex + 1], &pFilter[filterIndex]);
-                            }
+                            for (int k = 0, filterIndex = 0, rowIndex = 0; k < 9; k++, filterIndex += 9, rowIndex += 2)
+                                permute_blend_add_9x9_pln(pResultPln[c], &pRow[rowIndex], &pFilter[filterIndex]);
                             increment_row_ptrs(srcPtrTemp[c], kernelSize, 8);
                         }
 
@@ -1153,13 +1093,10 @@ RppStatus gaussian_filter_host_tensor(T *srcPtr,
                         rpp_load_gaussian_filter_9x9_pkd_pln_host(pRow, srcPtrTemp, rowKernelLoopLimit);
                         pDst[0] = avx_p0;
                         pDst[1] = avx_p0;
-                        for (int k = 0; k < 9; k++)
+                        for (int k = 0, filterIndex = 0, rowIndex = 0; k < 9; k++, filterIndex += 9, rowIndex += 4)
                         {
-                            Rpp32s filterIndex =  k * 9;
-                            Rpp32s rowIndex = k * 4;
-
-                            permute_blend_add_9x9_pkd(pDst[0], pRow[rowIndex], pRow[rowIndex + 1], pRow[rowIndex + 2], pRow[rowIndex + 3], &pFilter[filterIndex]);
-                            permute_blend_add_9x9_pkd(pDst[1], pRow[rowIndex + 1], pRow[rowIndex + 2], pRow[rowIndex + 3], pRow[rowIndex + 4], &pFilter[filterIndex]);
+                            permute_blend_add_9x9_pkd(pDst[0], &pRow[rowIndex], &pFilter[filterIndex]);
+                            permute_blend_add_9x9_pkd(pDst[1], &pRow[rowIndex + 1], &pFilter[filterIndex]);
                         }
 
                         __m128 pDstPln[3];
