@@ -35,6 +35,8 @@ except ImportError:
     # Python 2 compatibility
     FileExistsError = OSError
 
+bitDepthDict = {0 : "_u8_", 1 : "_f16_", 2 : "_f32_", 3: "_u8_f16", 4: "_u8_f32_", 5: "_i8_", 6: "_u8_i8_"}
+
 imageAugmentationMap = {
     0: ["brightness", "HOST", "HIP"],
     1: ["gamma_correction", "HOST", "HIP"],
@@ -388,3 +390,27 @@ def dataframe_to_markdown(df):
         md += '| ' + ' | '.join([str(value).ljust(column_widths[df.columns[j]]) for j, value in enumerate(row.values)]) + ' |\n'
 
     return md
+
+def get_image_layout_type(layout, outputFormatToggle, backend):
+    result = "Tensor_" + backend
+    if layout == 0:
+        result += "_PKD3"
+        if outputFormatToggle:
+            result += "_toPLN3"
+        else:
+            result += "_toPKD3"
+    elif layout == 1:
+        result += "_PLN3"
+        if outputFormatToggle:
+            result += "_toPKD3"
+        else:
+            result += "_toPLN3"
+    else:
+       result += "_PLN1"
+       result += "_toPLN1"
+    return result
+
+def log_detected_errors(errorData, errorLog, caseName, bitDepth, functionSpecificName):
+    if errorData.decode():
+        msg = caseName + bitDepthDict[bitDepth] + functionSpecificName + " kernel execution failed. Getting below error\n" + errorData.decode()
+        errorLog.append(msg)
