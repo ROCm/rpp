@@ -248,7 +248,7 @@ RppStatus bitwise_and_u8_u8_host_tensor(Rpp8u *srcPtr1,
 /* BitwiseAND is logical operation only on U8/I8 types.
    For a Rpp32f precision image (pixel values from 0-1), the BitwiseAND is applied on a 0-255
    range-translated approximation, of the original 0-1 decimal-range image.
-   Link: https://stackoverflow.com/questions/1723575/how-to-perform-a-bitwise-operation-on-floating-point-numbers */
+   The bitwise operation is applied to the char representation of the raw floating-point data in memory */
 RppStatus bitwise_and_f32_f32_host_tensor(Rpp32f *srcPtr1,
                                           Rpp32f *srcPtr2,
                                           RpptDescPtr srcDescPtr,
