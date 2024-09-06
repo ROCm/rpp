@@ -49,7 +49,7 @@ imageAugmentationMap = {
     23: ["rotate", "HOST", "HIP"],
     24: ["warp_affine", "HOST", "HIP"],
     26: ["lens_correction", "HOST", "HIP"],
-    24: ["warp_perspective", "HOST", "HIP"],
+    28: ["warp_perspective", "HOST", "HIP"],
     29: ["water", "HOST", "HIP"],
     30: ["non_linear_blend", "HOST", "HIP"],
     31: ["color_cast", "HOST", "HIP"],
