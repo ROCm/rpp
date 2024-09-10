@@ -45,7 +45,7 @@ RppStatus exclusive_or_u8_u8_host_tensor(Rpp8u *srcPtr1,
     Rpp32u numThreads = Handle.GetNumThreads();
 
     omp_set_dynamic(0);
-//#pragma omp parallel for num_threads(numThreads)
+#pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
