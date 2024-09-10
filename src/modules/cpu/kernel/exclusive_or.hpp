@@ -45,7 +45,7 @@ RppStatus exclusive_or_u8_u8_host_tensor(Rpp8u *srcPtr1,
     Rpp32u numThreads = Handle.GetNumThreads();
 
     omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
+//#pragma omp parallel for num_threads(numThreads)
     for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
@@ -64,9 +64,9 @@ RppStatus exclusive_or_u8_u8_host_tensor(Rpp8u *srcPtr1,
         srcPtr2Channel = srcPtr2Image + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
-        Rpp32u alignedLength = (bufferLength / 48) * 48;
-        Rpp32u vectorIncrement = 48;
-        Rpp32u vectorIncrementPerChannel = 16;
+        Rpp32u alignedLength = (bufferLength / 96) * 96;
+        Rpp32u vectorIncrement = 96;
+        Rpp32u vectorIncrementPerChannel = 32;
 
         // Bitwise OR with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -90,14 +90,14 @@ RppStatus exclusive_or_u8_u8_host_tensor(Rpp8u *srcPtr1,
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
-                    __m128i p1[3], p2[3];
+                    __m256i p1[3], p2[3];
 
-                    rpp_simd_load(rpp_load48_u8pkd3_to_u8pln3, srcPtr1Temp, p1);    // simd loads
-                    rpp_simd_load(rpp_load48_u8pkd3_to_u8pln3, srcPtr2Temp, p2);    // simd loads
-                    p1[0] = _mm_xor_si128(p1[0], p2[0]);    // exclusive_or computation
-                    p1[1] = _mm_xor_si128(p1[1], p2[1]);    // exclusive_or computation
-                    p1[2] = _mm_xor_si128(p1[2], p2[2]);    // exclusive_or computation
-                    rpp_simd_store(rpp_store48_u8pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p1);    // simd stores
+                    rpp_simd_load(rpp_load96_u8pkd3_to_u8pln3, srcPtr1Temp, p1);    // simd loads
+                    rpp_simd_load(rpp_load96_u8pkd3_to_u8pln3, srcPtr2Temp, p2);    // simd loads
+                    p1[0] = _mm256_xor_si256(p1[0], p2[0]);    // exclusive_or computation
+                    p1[1] = _mm256_xor_si256(p1[1], p2[1]);    // exclusive_or computation
+                    p1[2] = _mm256_xor_si256(p1[2], p2[2]);    // exclusive_or computation
+                    rpp_simd_store(rpp_store96_u8pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p1);    // simd stores
 
                     srcPtr1Temp += vectorIncrement;
                     srcPtr2Temp += vectorIncrement;
@@ -150,14 +150,14 @@ RppStatus exclusive_or_u8_u8_host_tensor(Rpp8u *srcPtr1,
                 int vectorLoopCount = 0;
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
-                    __m128i p1[3], p2[3];
+                    __m256i p1[3], p2[3];
 
-                    rpp_simd_load(rpp_load48_u8pln3_to_u8pln3, srcPtr1TempR, srcPtr1TempG, srcPtr1TempB, p1);    // simd loads
-                    rpp_simd_load(rpp_load48_u8pln3_to_u8pln3, srcPtr2TempR, srcPtr2TempG, srcPtr2TempB, p2);    // simd loads
-                    p1[0] = _mm_xor_si128(p1[0], p2[0]);    // exclusive_or computation
-                    p1[1] = _mm_xor_si128(p1[1], p2[1]);    // exclusive_or computation
-                    p1[2] = _mm_xor_si128(p1[2], p2[2]);    // exclusive_or computation
-                    rpp_simd_store(rpp_store48_u8pln3_to_u8pkd3, dstPtrTemp, p1);    // simd stores
+                    rpp_simd_load(rpp_load96_u8pln3_to_u8pln3, srcPtr1TempR, srcPtr1TempG, srcPtr1TempB, p1);    // simd loads
+                    rpp_simd_load(rpp_load96_u8pln3_to_u8pln3, srcPtr2TempR, srcPtr2TempG, srcPtr2TempB, p2);    // simd loads
+                    p1[0] = _mm256_xor_si256(p1[0], p2[0]);    // exclusive_or computation
+                    p1[1] = _mm256_xor_si256(p1[1], p2[1]);    // exclusive_or computation
+                    p1[2] = _mm256_xor_si256(p1[2], p2[2]);    // exclusive_or computation
+                    rpp_simd_store(rpp_store96_u8pln3_to_u8pkd3, dstPtrTemp, p1);    // simd stores
 
                     srcPtr1TempR += vectorIncrementPerChannel;
                     srcPtr1TempG += vectorIncrementPerChannel;
@@ -196,7 +196,7 @@ RppStatus exclusive_or_u8_u8_host_tensor(Rpp8u *srcPtr1,
         // Bitwise OR without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
         else
         {
-            alignedLength = bufferLength & ~15;
+            alignedLength = bufferLength & ~31;
 
             for(int c = 0; c < layoutParams.channelParam; c++)
             {
@@ -215,12 +215,12 @@ RppStatus exclusive_or_u8_u8_host_tensor(Rpp8u *srcPtr1,
                     int vectorLoopCount = 0;
                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                     {
-                        __m128i p1, p2;
+                        __m256i p1, p2;
 
-                        p1 = _mm_loadu_si128((__m128i *)srcPtr1Temp);   // simd loads
-                        p2 = _mm_loadu_si128((__m128i *)srcPtr2Temp);   // simd loads
-                        p1 = _mm_xor_si128(p1, p2);    // exclusive_or computation
-                        _mm_storeu_si128((__m128i *)dstPtrTemp, p1);    // simd stores
+                        p1 = _mm256_loadu_si256((const __m256i *)srcPtr1Temp);   // simd loads
+                        p2 = _mm256_loadu_si256((const __m256i *)srcPtr2Temp);   // simd loads
+                        p1 = _mm256_xor_si256(p1, p2);    // exclusive_or computation
+                        _mm256_storeu_si256((__m256i *)dstPtrTemp, p1);    // simd stores
 
                         srcPtr1Temp += vectorIncrementPerChannel;
                         srcPtr2Temp += vectorIncrementPerChannel;
