@@ -26,6 +26,7 @@ SOFTWARE.
 #define HOST_TENSOR_LOGICAL_OPERATIONS_HPP
 
 #include "kernel/bitwise_and.hpp"
+#include "kernel/exclusive_or.hpp"
 #include "kernel/bitwise_or.hpp"
 
 #endif // HOST_TENSOR_LOGICAL_OPERATIONS_HPP

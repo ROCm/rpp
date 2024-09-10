@@ -97,6 +97,47 @@ RppStatus rppt_bitwise_and_host(RppPtr_t srcPtr1,
     return RPP_SUCCESS;
 }
 
+/******************** exclusive OR ********************/
+
+RppStatus rppt_exclusive_or_host(RppPtr_t srcPtr1,
+                                RppPtr_t srcPtr2,
+                                RpptDescPtr srcDescPtr,
+                                RppPtr_t dstPtr,
+                                RpptDescPtr dstDescPtr,
+                                RpptROIPtr roiTensorPtrSrc,
+                                RpptRoiType roiType,
+                                rppHandle_t rppHandle)
+{
+    RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+
+    if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+    {
+        exclusive_or_f16_f16_host_tensor(reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(srcPtr1) + srcDescPtr->offsetInBytes),
+                                        reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(srcPtr2) + srcDescPtr->offsetInBytes),
+                                        srcDescPtr,
+                                        reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                        dstDescPtr,
+                                        roiTensorPtrSrc,
+                                        roiType,
+                                        layoutParams,
+                                        rpp::deref(rppHandle));
+    }
+    else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        exclusive_or_f32_f32_host_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr1) + srcDescPtr->offsetInBytes),
+                                        reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr2) + srcDescPtr->offsetInBytes),
+                                        srcDescPtr,
+                                        reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                        dstDescPtr,
+                                        roiTensorPtrSrc,
+                                        roiType,
+                                        layoutParams,
+                                        rpp::deref(rppHandle));
+    }
+
+    return RPP_SUCCESS;
+}
+
 /******************** bitwise OR ********************/
 
 RppStatus rppt_bitwise_or_host(RppPtr_t srcPtr1,
