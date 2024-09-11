@@ -1497,6 +1497,24 @@ inline void rpp_load24_f32pkd3_to_f32pln3_avx(Rpp32f *srcPtr, __m256 *p)
     p[2] = _mm256_setr_m128(p128[2], p128[6]);
 }
 
+inline void rpp_load24_f16pkd3_to_f32pln3_avx(Rpp16f *srcPtr, __m256 *p)
+{
+    __m128 p128[8];
+    p128[0] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr))));
+    p128[1] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr + 3))));
+    p128[2] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr + 6))));
+    p128[3] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr + 9))));
+    _MM_TRANSPOSE4_PS(p128[0], p128[1], p128[2], p128[3]);
+    p128[4] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr + 12))));
+    p128[5] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr + 15))));
+    p128[6] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr + 18))));
+    p128[7] = _mm_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr + 21))));
+    _MM_TRANSPOSE4_PS(p128[4], p128[5], p128[6], p128[7]);
+    p[0] = _mm256_setr_m128(p128[0], p128[4]);
+    p[1] = _mm256_setr_m128(p128[1], p128[5]);
+    p[2] = _mm256_setr_m128(p128[2], p128[6]);
+}
+
 inline void rpp_load24_f32pkd3_to_f32pln3_mirror_avx(Rpp32f *srcPtr, __m256 *p)
 {
     __m128 p128[8];
@@ -1553,6 +1571,13 @@ inline void rpp_load24_f32pln3_to_f32pln3_avx(Rpp32f *srcPtrR, Rpp32f *srcPtrG, 
     p[0] = _mm256_loadu_ps(srcPtrR);
     p[1] = _mm256_loadu_ps(srcPtrG);
     p[2] = _mm256_loadu_ps(srcPtrB);
+}
+
+inline void rpp_load24_f16pln3_to_f32pln3_avx(Rpp16f *srcPtrR, Rpp16f *srcPtrG, Rpp16f *srcPtrB, __m256 *p)
+{
+    p[0] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrR))));
+    p[1] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrG))));
+    p[2] = _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtrB))));
 }
 
 inline void rpp_load24_f32pln3_to_f32pln3_mirror_avx(Rpp32f *srcPtrR, Rpp32f *srcPtrG, Rpp32f *srcPtrB, __m256 *p)
@@ -1645,6 +1670,11 @@ inline void rpp_store16_f32_to_f16_avx(Rpp16f *dstPtr, __m256 *p)
 inline void rpp_load8_f32_to_f32_avx(Rpp32f *srcPtr, __m256 *p)
 {
     p[0] = _mm256_loadu_ps(srcPtr);
+}
+
+inline void rpp_load8_f16_to_f32_avx(Rpp16f *srcPtr, __m256 *p)
+{
+    p[0] =  _mm256_cvtph_ps(_mm_castps_si128(_mm_loadu_ps(reinterpret_cast<Rpp32f *>(srcPtr))));
 }
 
 inline void rpp_load8_f32_to_f32_mirror_avx(Rpp32f *srcPtr, __m256 *p)
@@ -1930,6 +1960,13 @@ inline void rpp_multiply48_constant(__m128 *p, __m128 pMultiplier)
     p[9] = _mm_mul_ps(p[9], pMultiplier);
     p[10] = _mm_mul_ps(p[10], pMultiplier);
     p[11] = _mm_mul_ps(p[11], pMultiplier);
+}
+
+inline void rpp_multiply24_constant(__m256 *p, __m256 pMultiplier)
+{
+    p[0] = _mm256_mul_ps(p[0], pMultiplier);
+    p[1] = _mm256_mul_ps(p[1], pMultiplier);
+    p[2] = _mm256_mul_ps(p[2], pMultiplier);
 }
 
 inline void rpp_multiply16_constant(__m256 *p, __m256 pMultiplier)
