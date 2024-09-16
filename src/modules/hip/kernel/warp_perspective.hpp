@@ -16,7 +16,7 @@ __device__ void warp_perspective_roi_and_srclocs_hip_compute(int4 *srcRoiPtr_i4,
 {
     float2 locDst_f2;
     float3 locHom_f3;
-    float4 locHom_W;
+    float4 locHomW_f4;
     d_float8 locHomW_f8, incrementW_f8;
     float roiHalfWidth = (srcRoiPtr_i4->z - srcRoiPtr_i4->x + 1) >> 1;
     float roiHalfHeight = (srcRoiPtr_i4->w - srcRoiPtr_i4->y + 1) >> 1;
@@ -25,11 +25,11 @@ __device__ void warp_perspective_roi_and_srclocs_hip_compute(int4 *srcRoiPtr_i4,
     locHom_f3.x = fmaf(locDst_f2.x, perspectiveMatrix_f9->f1[0], fmaf(locDst_f2.y, perspectiveMatrix_f9->f1[1], perspectiveMatrix_f9->f1[2]));
     locHom_f3.y = fmaf(locDst_f2.x, perspectiveMatrix_f9->f1[3], fmaf(locDst_f2.y, perspectiveMatrix_f9->f1[4], perspectiveMatrix_f9->f1[5]));
     locHom_f3.z = fmaf(locDst_f2.x, perspectiveMatrix_f9->f1[6], fmaf(locDst_f2.y, perspectiveMatrix_f9->f1[7], perspectiveMatrix_f9->f1[8]));    // Compute first homogenous coords based on which final destination coords are computed
-    locHom_W = static_cast<float4>(locHom_f3.z);
+    locHomW_f4 = static_cast<float4>(locHom_f3.z);
     incrementW_f8.f4[0] = make_float4(0, perspectiveMatrix_f9->f1[6], perspectiveMatrix_f9->f1[6] + perspectiveMatrix_f9->f1[6], perspectiveMatrix_f9->f1[6] + perspectiveMatrix_f9->f1[6] + perspectiveMatrix_f9->f1[6]);
     incrementW_f8.f4[1] = static_cast<float4>(perspectiveMatrix_f9->f1[6] + incrementW_f8.f4[0].w) + incrementW_f8.f4[0];
-    locHomW_f8.f4[0] = locHom_W + incrementW_f8.f4[0];
-    locHomW_f8.f4[1] = locHom_W + incrementW_f8.f4[1];    // Compute multiple homogenous coords terms using first term and perspective matrix based on which final destination coords are computed
+    locHomW_f8.f4[0] = locHomW_f4 + incrementW_f8.f4[0];
+    locHomW_f8.f4[1] = locHomW_f4 + incrementW_f8.f4[1];    // Compute multiple homogenous coords terms using first term and perspective matrix based on which final destination coords are computed
     warp_perspective_srclocs_hip_compute(perspectiveMatrix_f9->f1[0], static_cast<float4>(locHom_f3.x), static_cast<float4>(roiHalfWidth), &locHomW_f8, &(locSrc_f16->f8[0]));    // Compute 8 locSrcX
     warp_perspective_srclocs_hip_compute(perspectiveMatrix_f9->f1[3], static_cast<float4>(locHom_f3.y), static_cast<float4>(roiHalfHeight), &locHomW_f8, &(locSrc_f16->f8[1]));    // Compute 8 locSrcY
 }
