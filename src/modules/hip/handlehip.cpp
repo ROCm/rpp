@@ -74,7 +74,7 @@ void* default_allocator(void*, size_t sz)
 
 void default_deallocator(void*, void* mem)
 {
-    hipFree(mem);
+    CHECK_RETURN_STATUS(hipFree(mem));
 }
 
 int get_device_id() // Get random device
@@ -210,42 +210,42 @@ struct HandleImpl
         this->initHandle->mem.mgpu.croiPoints.y = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
         this->initHandle->mem.mgpu.croiPoints.roiHeight = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
         this->initHandle->mem.mgpu.croiPoints.roiWidth = (Rpp32u *)malloc(sizeof(Rpp32u) * this->nBatchSize);
-        hipMalloc(&(this->initHandle->mem.mgpu.srcSize.height), sizeof(Rpp32u) * this->nBatchSize);
-        hipMalloc(&(this->initHandle->mem.mgpu.srcSize.width), sizeof(Rpp32u) * this->nBatchSize);
-        hipMalloc(&(this->initHandle->mem.mgpu.dstSize.height), sizeof(Rpp32u) * this->nBatchSize);
-        hipMalloc(&(this->initHandle->mem.mgpu.dstSize.width), sizeof(Rpp32u) * this->nBatchSize);
-        hipMalloc(&(this->initHandle->mem.mgpu.maxSrcSize.height), sizeof(Rpp32u) * this->nBatchSize);
-        hipMalloc(&(this->initHandle->mem.mgpu.maxSrcSize.width), sizeof(Rpp32u) * this->nBatchSize);
-        hipMalloc(&(this->initHandle->mem.mgpu.maxDstSize.height), sizeof(Rpp32u) * this->nBatchSize);
-        hipMalloc(&(this->initHandle->mem.mgpu.maxDstSize.width), sizeof(Rpp32u) * this->nBatchSize);
-        hipMalloc(&(this->initHandle->mem.mgpu.roiPoints.x), sizeof(Rpp32u) * this->nBatchSize);
-        hipMalloc(&(this->initHandle->mem.mgpu.roiPoints.y), sizeof(Rpp32u) * this->nBatchSize);
-        hipMalloc(&(this->initHandle->mem.mgpu.roiPoints.roiHeight), sizeof(Rpp32u) * this->nBatchSize);
-        hipMalloc(&(this->initHandle->mem.mgpu.roiPoints.roiWidth), sizeof(Rpp32u) * this->nBatchSize);
-        hipMalloc(&(this->initHandle->mem.mgpu.inc), sizeof(Rpp32u) * this->nBatchSize);
-        hipMalloc(&(this->initHandle->mem.mgpu.dstInc), sizeof(Rpp32u) * this->nBatchSize);
+        CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.srcSize.height), sizeof(Rpp32u) * this->nBatchSize));
+        CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.srcSize.width), sizeof(Rpp32u) * this->nBatchSize));
+        CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.dstSize.height), sizeof(Rpp32u) * this->nBatchSize));
+        CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.dstSize.width), sizeof(Rpp32u) * this->nBatchSize));
+        CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.maxSrcSize.height), sizeof(Rpp32u) * this->nBatchSize));
+        CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.maxSrcSize.width), sizeof(Rpp32u) * this->nBatchSize));
+        CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.maxDstSize.height), sizeof(Rpp32u) * this->nBatchSize));
+        CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.maxDstSize.width), sizeof(Rpp32u) * this->nBatchSize));
+        CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.roiPoints.x), sizeof(Rpp32u) * this->nBatchSize));
+        CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.roiPoints.y), sizeof(Rpp32u) * this->nBatchSize));
+        CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.roiPoints.roiHeight), sizeof(Rpp32u) * this->nBatchSize));
+        CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.roiPoints.roiWidth), sizeof(Rpp32u) * this->nBatchSize));
+        CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.inc), sizeof(Rpp32u) * this->nBatchSize));
+        CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.dstInc), sizeof(Rpp32u) * this->nBatchSize));
 
-        hipMalloc(&(this->initHandle->mem.mgpu.srcBatchIndex), sizeof(Rpp64u) * this->nBatchSize);
-        hipMalloc(&(this->initHandle->mem.mgpu.dstBatchIndex), sizeof(Rpp64u) * this->nBatchSize);
+        CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.srcBatchIndex), sizeof(Rpp64u) * this->nBatchSize));
+        CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.dstBatchIndex), sizeof(Rpp64u) * this->nBatchSize));
 
         for(int i = 0; i < 10; i++)
         {
-            hipMalloc(&(this->initHandle->mem.mgpu.floatArr[i].floatmem), sizeof(Rpp32f) * this->nBatchSize);
-            hipMalloc(&(this->initHandle->mem.mgpu.uintArr[i].uintmem), sizeof(Rpp32u) * this->nBatchSize);
-            hipMalloc(&(this->initHandle->mem.mgpu.intArr[i].intmem), sizeof(Rpp32s) * this->nBatchSize);
-            hipMalloc(&(this->initHandle->mem.mgpu.ucharArr[i].ucharmem), sizeof(Rpp8u) * this->nBatchSize);
-            hipMalloc(&(this->initHandle->mem.mgpu.charArr[i].charmem), sizeof(Rpp8s) * this->nBatchSize);
-            hipMalloc(&(this->initHandle->mem.mgpu.float3Arr[i].floatmem), sizeof(Rpp32f) * this->nBatchSize * 3);
+            CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.floatArr[i].floatmem), sizeof(Rpp32f) * this->nBatchSize));
+            CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.uintArr[i].uintmem), sizeof(Rpp32u) * this->nBatchSize));
+            CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.intArr[i].intmem), sizeof(Rpp32s) * this->nBatchSize));
+            CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.ucharArr[i].ucharmem), sizeof(Rpp8u) * this->nBatchSize));
+            CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.charArr[i].charmem), sizeof(Rpp8s) * this->nBatchSize));
+            CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.float3Arr[i].floatmem), sizeof(Rpp32f) * this->nBatchSize * 3));
         }
 
-        hipMalloc(&(this->initHandle->mem.mgpu.rgbArr.rgbmem), sizeof(RpptRGB) * this->nBatchSize);
+        CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.rgbArr.rgbmem), sizeof(RpptRGB) * this->nBatchSize));
 
         /* (600000 + 293 + 128) * 128 - Maximum scratch memory required for Non Silent Region Detection HIP kernel used in RNNT training (uses a batchsize 128)
            - 600000 is the maximum size that will be required for MMS buffer based on Librispeech dataset
            - 293 is the size required for storing reduction outputs for 600000 size sample
            - 128 is the size required for storing cutOffDB values for batch size 128 */
-        hipMalloc(&(this->initHandle->mem.mgpu.scratchBufferHip.floatmem), sizeof(Rpp32f) * 76853888);
-        hipHostMalloc(&(this->initHandle->mem.mgpu.scratchBufferPinned.floatmem), sizeof(Rpp32f) * 8294400);    // 3840 x 2160
+        CHECK_RETURN_STATUS(hipMalloc(&(this->initHandle->mem.mgpu.scratchBufferHip.floatmem), sizeof(Rpp32f) * 76853888));
+        CHECK_RETURN_STATUS(hipHostMalloc(&(this->initHandle->mem.mgpu.scratchBufferPinned.floatmem), sizeof(Rpp32f) * 8294400));    // 3840 x 2160
     }
 };
 
@@ -333,37 +333,37 @@ void Handle::rpp_destroy_object_gpu()
     free(this->GetInitHandle()->mem.mgpu.croiPoints.y);
     free(this->GetInitHandle()->mem.mgpu.croiPoints.roiHeight);
     free(this->GetInitHandle()->mem.mgpu.croiPoints.roiWidth);
-    hipFree(this->GetInitHandle()->mem.mgpu.srcSize.height);
-    hipFree(this->GetInitHandle()->mem.mgpu.srcSize.width);
-    hipFree(this->GetInitHandle()->mem.mgpu.dstSize.height);
-    hipFree(this->GetInitHandle()->mem.mgpu.dstSize.width);
-    hipFree(this->GetInitHandle()->mem.mgpu.maxSrcSize.height);
-    hipFree(this->GetInitHandle()->mem.mgpu.maxSrcSize.width);
-    hipFree(this->GetInitHandle()->mem.mgpu.maxDstSize.height);
-    hipFree(this->GetInitHandle()->mem.mgpu.maxDstSize.width);
-    hipFree(this->GetInitHandle()->mem.mgpu.roiPoints.x);
-    hipFree(this->GetInitHandle()->mem.mgpu.roiPoints.y);
-    hipFree(this->GetInitHandle()->mem.mgpu.roiPoints.roiHeight);
-    hipFree(this->GetInitHandle()->mem.mgpu.roiPoints.roiWidth);
-    hipFree(this->GetInitHandle()->mem.mgpu.inc);
-    hipFree(this->GetInitHandle()->mem.mgpu.dstInc);
+    CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.srcSize.height));
+    CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.srcSize.width));
+    CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.dstSize.height));
+    CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.dstSize.width));
+    CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.maxSrcSize.height));
+    CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.maxSrcSize.width));
+    CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.maxDstSize.height));
+    CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.maxDstSize.width));
+    CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.roiPoints.x));
+    CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.roiPoints.y));
+    CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.roiPoints.roiHeight));
+    CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.roiPoints.roiWidth));
+    CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.inc));
+    CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.dstInc));
 
-    hipFree(this->GetInitHandle()->mem.mgpu.srcBatchIndex);
-    hipFree(this->GetInitHandle()->mem.mgpu.dstBatchIndex);
+    CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.srcBatchIndex));
+    CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.dstBatchIndex));
 
     for(int i = 0; i < 10; i++)
     {
-        hipFree(this->GetInitHandle()->mem.mgpu.floatArr[i].floatmem);
-        hipFree(this->GetInitHandle()->mem.mgpu.uintArr[i].uintmem);
-        hipFree(this->GetInitHandle()->mem.mgpu.intArr[i].intmem);
-        hipFree(this->GetInitHandle()->mem.mgpu.ucharArr[i].ucharmem);
-        hipFree(this->GetInitHandle()->mem.mgpu.charArr[i].charmem);
-        hipFree(this->GetInitHandle()->mem.mgpu.float3Arr[i].floatmem);
+        CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.floatArr[i].floatmem));
+        CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.uintArr[i].uintmem));
+        CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.intArr[i].intmem));
+        CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.ucharArr[i].ucharmem));
+        CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.charArr[i].charmem));
+        CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.float3Arr[i].floatmem));
     }
 
-    hipFree(this->GetInitHandle()->mem.mgpu.rgbArr.rgbmem);
-    hipFree(this->GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem);
-    hipHostFree(this->GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem);
+    CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.rgbArr.rgbmem));
+    CHECK_RETURN_STATUS(hipFree(this->GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem));
+    CHECK_RETURN_STATUS(hipHostFree(this->GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem));
 }
 
 void Handle::rpp_destroy_object_host()
