@@ -67,7 +67,7 @@ imageAugmentationMap = {
     61: ["magnitude", "HOST", "HIP"],
     63: ["phase", "HOST", "HIP"],
     65: ["bitwise_and", "HOST", "HIP"],
-    65: ["exclusive_or", "HOST", "HIP"],
+    67: ["exclusive_or", "HOST", "HIP"],
     68: ["bitwise_or", "HOST", "HIP"],
     70: ["copy", "HOST", "HIP"],
     79: ["remap", "HOST", "HIP"],

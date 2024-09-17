@@ -32,21 +32,21 @@ SOFTWARE.
    The bitwise operation is applied to the char representation of the raw floating-point data in memory */
 
 RppStatus exclusive_or_u8_u8_host_tensor(Rpp8u *srcPtr1,
-                                       Rpp8u *srcPtr2,
-                                       RpptDescPtr srcDescPtr,
-                                       Rpp8u *dstPtr,
-                                       RpptDescPtr dstDescPtr,
-                                       RpptROIPtr roiTensorPtrSrc,
-                                       RpptRoiType roiType,
-                                       RppLayoutParams layoutParams,
-                                       rpp::Handle& Handle)
+                                         Rpp8u *srcPtr2,
+                                         RpptDescPtr srcDescPtr,
+                                         Rpp8u *dstPtr,
+                                         RpptDescPtr dstDescPtr,
+                                         RpptROIPtr roiTensorPtrSrc,
+                                         RpptRoiType roiType,
+                                         RppLayoutParams layoutParams,
+                                         rpp::Handle& Handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
     Rpp32u numThreads = Handle.GetNumThreads();
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
-    for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
+    for (int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
@@ -78,7 +78,7 @@ RppStatus exclusive_or_u8_u8_host_tensor(Rpp8u *srcPtr1,
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
 
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8u *srcPtr1Temp, *srcPtr2Temp, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
                 srcPtr1Temp = srcPtr1Row;
@@ -136,7 +136,7 @@ RppStatus exclusive_or_u8_u8_host_tensor(Rpp8u *srcPtr1,
             srcPtr2RowB = srcPtr2RowG + srcDescPtr->strides.cStride;
             dstPtrRow = dstPtrChannel;
 
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8u *srcPtr1TempR, *srcPtr1TempG, *srcPtr1TempB, *srcPtr2TempR, *srcPtr2TempG, *srcPtr2TempB, *dstPtrTemp;
                 srcPtr1TempR = srcPtr1RowR;
@@ -198,14 +198,14 @@ RppStatus exclusive_or_u8_u8_host_tensor(Rpp8u *srcPtr1,
         {
             alignedLength = bufferLength & ~31;
 
-            for(int c = 0; c < layoutParams.channelParam; c++)
+            for (int c = 0; c < layoutParams.channelParam; c++)
             {
                 Rpp8u *srcPtr1Row, *srcPtr2Row, *dstPtrRow;
                 srcPtr1Row = srcPtr1Channel;
                 srcPtr2Row = srcPtr2Channel;
                 dstPtrRow = dstPtrChannel;
 
-                for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+                for (int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
                     Rpp8u *srcPtr1Temp, *srcPtr2Temp, *dstPtrTemp;
                     srcPtr1Temp = srcPtr1Row;
@@ -251,21 +251,21 @@ RppStatus exclusive_or_u8_u8_host_tensor(Rpp8u *srcPtr1,
 }
 
 RppStatus exclusive_or_f32_f32_host_tensor(Rpp32f *srcPtr1,
-                                         Rpp32f *srcPtr2,
-                                         RpptDescPtr srcDescPtr,
-                                         Rpp32f *dstPtr,
-                                         RpptDescPtr dstDescPtr,
-                                         RpptROIPtr roiTensorPtrSrc,
-                                         RpptRoiType roiType,
-                                         RppLayoutParams layoutParams,
-                                         rpp::Handle& Handle)
+                                           Rpp32f *srcPtr2,
+                                           RpptDescPtr srcDescPtr,
+                                           Rpp32f *dstPtr,
+                                           RpptDescPtr dstDescPtr,
+                                           RpptROIPtr roiTensorPtrSrc,
+                                           RpptRoiType roiType,
+                                           RppLayoutParams layoutParams,
+                                           rpp::Handle& Handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
     Rpp32u numThreads = Handle.GetNumThreads();
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
-    for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
+    for (int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
@@ -299,7 +299,7 @@ RppStatus exclusive_or_f32_f32_host_tensor(Rpp32f *srcPtr1,
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
 
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp32f *srcPtr1Temp, *srcPtr2Temp, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
                 srcPtr1Temp = srcPtr1Row;
@@ -361,7 +361,7 @@ RppStatus exclusive_or_f32_f32_host_tensor(Rpp32f *srcPtr1,
             srcPtr2RowB = srcPtr2RowG + srcDescPtr->strides.cStride;
             dstPtrRow = dstPtrChannel;
 
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp32f *srcPtr1TempR, *srcPtr1TempG, *srcPtr1TempB, *srcPtr2TempR, *srcPtr2TempG, *srcPtr2TempB, *dstPtrTemp;
                 srcPtr1TempR = srcPtr1RowR;
@@ -429,14 +429,14 @@ RppStatus exclusive_or_f32_f32_host_tensor(Rpp32f *srcPtr1,
             alignedLength = bufferLength & ~7;
 #endif
 
-            for(int c = 0; c < layoutParams.channelParam; c++)
+            for (int c = 0; c < layoutParams.channelParam; c++)
             {
                 Rpp32f *srcPtr1Row, *srcPtr2Row, *dstPtrRow;
                 srcPtr1Row = srcPtr1Channel;
                 srcPtr2Row = srcPtr2Channel;
                 dstPtrRow = dstPtrChannel;
 
-                for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+                for (int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
                     Rpp32f *srcPtr1Temp, *srcPtr2Temp, *dstPtrTemp;
                     srcPtr1Temp = srcPtr1Row;
@@ -484,21 +484,21 @@ RppStatus exclusive_or_f32_f32_host_tensor(Rpp32f *srcPtr1,
 }
 
 RppStatus exclusive_or_f16_f16_host_tensor(Rpp16f *srcPtr1,
-                                         Rpp16f *srcPtr2,
-                                         RpptDescPtr srcDescPtr,
-                                         Rpp16f *dstPtr,
-                                         RpptDescPtr dstDescPtr,
-                                         RpptROIPtr roiTensorPtrSrc,
-                                         RpptRoiType roiType,
-                                         RppLayoutParams layoutParams,
-                                         rpp::Handle& Handle)
+                                           Rpp16f *srcPtr2,
+                                           RpptDescPtr srcDescPtr,
+                                           Rpp16f *dstPtr,
+                                           RpptDescPtr dstDescPtr,
+                                           RpptROIPtr roiTensorPtrSrc,
+                                           RpptRoiType roiType,
+                                           RppLayoutParams layoutParams,
+                                           rpp::Handle& Handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
     Rpp32u numThreads = Handle.GetNumThreads();
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
-    for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
+    for (int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
@@ -532,7 +532,7 @@ RppStatus exclusive_or_f16_f16_host_tensor(Rpp16f *srcPtr1,
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
 
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp16f *srcPtr1Temp, *srcPtr2Temp, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
                 srcPtr1Temp = srcPtr1Row;
@@ -547,7 +547,7 @@ RppStatus exclusive_or_f16_f16_host_tensor(Rpp16f *srcPtr1,
                 {
                     Rpp32f srcPtr1Temp_ps[24], srcPtr2Temp_ps[24];
 
-                    for(int cnt = 0; cnt < vectorIncrement; cnt++)
+                    for (int cnt = 0; cnt < vectorIncrement; cnt++)
                     {
                         srcPtr1Temp_ps[cnt] = static_cast<Rpp32f>(srcPtr1Temp[cnt]);
                         srcPtr2Temp_ps[cnt] = static_cast<Rpp32f>(srcPtr2Temp[cnt]);
@@ -602,7 +602,7 @@ RppStatus exclusive_or_f16_f16_host_tensor(Rpp16f *srcPtr1,
             srcPtr2RowB = srcPtr2RowG + srcDescPtr->strides.cStride;
             dstPtrRow = dstPtrChannel;
 
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp16f *srcPtr1TempR, *srcPtr1TempG, *srcPtr1TempB, *srcPtr2TempR, *srcPtr2TempG, *srcPtr2TempB, *dstPtrTemp;
                 srcPtr1TempR = srcPtr1RowR;
@@ -619,7 +619,7 @@ RppStatus exclusive_or_f16_f16_host_tensor(Rpp16f *srcPtr1,
                 {
                     Rpp32f srcPtr1Temp_ps[24], srcPtr2Temp_ps[24];
 
-                    for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
+                    for (int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
                     {
                         srcPtr1Temp_ps[cnt] = static_cast<Rpp32f>(srcPtr1TempR[cnt]);
                         srcPtr1Temp_ps[cnt + 8] = static_cast<Rpp32f>(srcPtr1TempG[cnt]);
@@ -683,14 +683,14 @@ RppStatus exclusive_or_f16_f16_host_tensor(Rpp16f *srcPtr1,
             alignedLength = bufferLength & ~7;
 #endif
 
-            for(int c = 0; c < layoutParams.channelParam; c++)
+            for (int c = 0; c < layoutParams.channelParam; c++)
             {
                 Rpp16f *srcPtr1Row, *srcPtr2Row, *dstPtrRow;
                 srcPtr1Row = srcPtr1Channel;
                 srcPtr2Row = srcPtr2Channel;
                 dstPtrRow = dstPtrChannel;
 
-                for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+                for (int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
                     Rpp16f *srcPtr1Temp, *srcPtr2Temp, *dstPtrTemp;
                     srcPtr1Temp = srcPtr1Row;
@@ -703,7 +703,7 @@ RppStatus exclusive_or_f16_f16_host_tensor(Rpp16f *srcPtr1,
                     {
                         Rpp32f srcPtr1Temp_ps[8], srcPtr2Temp_ps[8];
 
-                        for(int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
+                        for (int cnt = 0; cnt < vectorIncrementPerChannel; cnt++)
                         {
                             srcPtr1Temp_ps[cnt] = static_cast<Rpp32f>(srcPtr1Temp[cnt]);
                             srcPtr2Temp_ps[cnt] = static_cast<Rpp32f>(srcPtr2Temp[cnt]);
@@ -746,21 +746,21 @@ RppStatus exclusive_or_f16_f16_host_tensor(Rpp16f *srcPtr1,
 }
 
 RppStatus exclusive_or_i8_i8_host_tensor(Rpp8s *srcPtr1,
-                                       Rpp8s *srcPtr2,
-                                       RpptDescPtr srcDescPtr,
-                                       Rpp8s *dstPtr,
-                                       RpptDescPtr dstDescPtr,
-                                       RpptROIPtr roiTensorPtrSrc,
-                                       RpptRoiType roiType,
-                                       RppLayoutParams layoutParams,
-                                       rpp::Handle& Handle)
+                                         Rpp8s *srcPtr2,
+                                         RpptDescPtr srcDescPtr,
+                                         Rpp8s *dstPtr,
+                                         RpptDescPtr dstDescPtr,
+                                         RpptROIPtr roiTensorPtrSrc,
+                                         RpptRoiType roiType,
+                                         RppLayoutParams layoutParams,
+                                         rpp::Handle& Handle)
 {
     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
     Rpp32u numThreads = Handle.GetNumThreads();
 
     omp_set_dynamic(0);
 #pragma omp parallel for num_threads(numThreads)
-    for(int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
+    for (int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
     {
         RpptROI roi;
         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
@@ -792,7 +792,7 @@ RppStatus exclusive_or_i8_i8_host_tensor(Rpp8s *srcPtr1,
             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
 
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8s *srcPtr1Temp, *srcPtr2Temp, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
                 srcPtr1Temp = srcPtr1Row;
@@ -850,7 +850,7 @@ RppStatus exclusive_or_i8_i8_host_tensor(Rpp8s *srcPtr1,
             srcPtr2RowB = srcPtr2RowG + srcDescPtr->strides.cStride;
             dstPtrRow = dstPtrChannel;
 
-            for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
                 Rpp8s *srcPtr1TempR, *srcPtr1TempG, *srcPtr1TempB, *srcPtr2TempR, *srcPtr2TempG, *srcPtr2TempB, *dstPtrTemp;
                 srcPtr1TempR = srcPtr1RowR;
@@ -912,14 +912,14 @@ RppStatus exclusive_or_i8_i8_host_tensor(Rpp8s *srcPtr1,
         {
             alignedLength = bufferLength & ~31;
 
-            for(int c = 0; c < layoutParams.channelParam; c++)
+            for (int c = 0; c < layoutParams.channelParam; c++)
             {
                 Rpp8s *srcPtr1Row, *srcPtr2Row, *dstPtrRow;
                 srcPtr1Row = srcPtr1Channel;
                 srcPtr2Row = srcPtr2Channel;
                 dstPtrRow = dstPtrChannel;
 
-                for(int i = 0; i < roi.xywhROI.roiHeight; i++)
+                for (int i = 0; i < roi.xywhROI.roiHeight; i++)
                 {
                     Rpp8s *srcPtr1Temp, *srcPtr2Temp, *dstPtrTemp;
                     srcPtr1Temp = srcPtr1Row;

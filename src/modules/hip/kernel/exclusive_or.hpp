@@ -29,11 +29,11 @@ __device__ void exclusive_or_hip_compute(T *srcPtr, d_float8 *src1_f8, d_float8 
 
 template <typename T>
 __global__ void exclusive_or_pkd_hip_tensor(T *srcPtr1,
-                                          T *srcPtr2,
-                                          uint2 srcStridesNH,
-                                          T *dstPtr,
-                                          uint2 dstStridesNH,
-                                          RpptROIPtr roiTensorPtrSrc)
+                                            T *srcPtr2,
+                                            uint2 srcStridesNH,
+                                            T *dstPtr,
+                                            uint2 dstStridesNH,
+                                            RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -59,12 +59,12 @@ __global__ void exclusive_or_pkd_hip_tensor(T *srcPtr1,
 
 template <typename T>
 __global__ void exclusive_or_pln_hip_tensor(T *srcPtr1,
-                                          T *srcPtr2,
-                                          uint3 srcStridesNCH,
-                                          T *dstPtr,
-                                          uint3 dstStridesNCH,
-                                          int channelsDst,
-                                          RpptROIPtr roiTensorPtrSrc)
+                                            T *srcPtr2,
+                                            uint3 srcStridesNCH,
+                                            T *dstPtr,
+                                            uint3 dstStridesNCH,
+                                            int channelsDst,
+                                            RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -107,11 +107,11 @@ __global__ void exclusive_or_pln_hip_tensor(T *srcPtr1,
 
 template <typename T>
 __global__ void exclusive_or_pkd3_pln3_hip_tensor(T *srcPtr1,
-                                                T *srcPtr2,
-                                                uint2 srcStridesNH,
-                                                T *dstPtr,
-                                                uint3 dstStridesNCH,
-                                                RpptROIPtr roiTensorPtrSrc)
+                                                  T *srcPtr2,
+                                                  uint2 srcStridesNH,
+                                                  T *dstPtr,
+                                                  uint3 dstStridesNCH,
+                                                  RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -137,11 +137,11 @@ __global__ void exclusive_or_pkd3_pln3_hip_tensor(T *srcPtr1,
 
 template <typename T>
 __global__ void exclusive_or_pln3_pkd3_hip_tensor(T *srcPtr1,
-                                                T *srcPtr2,
-                                                uint3 srcStridesNCH,
-                                                T *dstPtr,
-                                                uint2 dstStridesNH,
-                                                RpptROIPtr roiTensorPtrSrc)
+                                                  T *srcPtr2,
+                                                  uint3 srcStridesNCH,
+                                                  T *dstPtr,
+                                                  uint2 dstStridesNH,
+                                                  RpptROIPtr roiTensorPtrSrc)
 {
     int id_x = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x) * 8;
     int id_y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
@@ -167,20 +167,20 @@ __global__ void exclusive_or_pln3_pkd3_hip_tensor(T *srcPtr1,
 
 template <typename T>
 RppStatus hip_exec_exclusive_or_tensor(T *srcPtr1,
-                                     T *srcPtr2,
-                                     RpptDescPtr srcDescPtr,
-                                     T *dstPtr,
-                                     RpptDescPtr dstDescPtr,
-                                     RpptROIPtr roiTensorPtrSrc,
-                                     RpptRoiType roiType,
-                                     rpp::Handle& handle)
+                                       T *srcPtr2,
+                                       RpptDescPtr srcDescPtr,
+                                       T *dstPtr,
+                                       RpptDescPtr dstDescPtr,
+                                       RpptROIPtr roiTensorPtrSrc,
+                                       RpptRoiType roiType,
+                                       rpp::Handle& handle)
 {
     if (roiType == RpptRoiType::LTRB)
         hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
 
     int globalThreads_x = (dstDescPtr->w + 7) >> 3;
     int globalThreads_y = dstDescPtr->h;
-    int globalThreads_z = handle.GetBatchSize();
+    int globalThreads_z = dstDescPtr->n;
 
     if ((srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NHWC))
     {
