@@ -848,9 +848,9 @@ inline void rpp_store48_u8pln3_to_i8pln3(Rpp8s *dstPtrR, Rpp8s *dstPtrG, Rpp8s *
 
 inline void rpp_store96_u8pln3_to_i8pln3(Rpp8s *dstPtrR, Rpp8s *dstPtrG, Rpp8s *dstPtrB, __m256i *px)
 {
-    _mm256_store_si256((__m256i *)dstPtrR, _mm256_sub_epi8(px[0], avx_pxConvertI8));    /* store [R01|R02|R03|R04|R05|R06|R07|R08|R09|R10|R11|R12|R13|R14|R15|R16] */
-    _mm256_store_si256((__m256i *)dstPtrG, _mm256_sub_epi8(px[1], avx_pxConvertI8));    /* store [G01|G02|G03|G04|G05|G06|G07|G08|G09|G10|G11|G12|G13|G14|G15|G16] */
-    _mm256_store_si256((__m256i *)dstPtrB, _mm256_sub_epi8(px[2], avx_pxConvertI8));    /* store [B01|B02|B03|B04|B05|B06|B07|B08|B09|B10|B11|B12|B13|B14|B15|B16] */
+    _mm256_storeu_si256((__m256i *)dstPtrR, _mm256_sub_epi8(px[0], avx_pxConvertI8));    /* store [R01|R02|R03|R04|R05|R06|R07|R08|R09|R10|R11|R12|R13|R14|R15|R16] */
+    _mm256_storeu_si256((__m256i *)dstPtrG, _mm256_sub_epi8(px[1], avx_pxConvertI8));    /* store [G01|G02|G03|G04|G05|G06|G07|G08|G09|G10|G11|G12|G13|G14|G15|G16] */
+    _mm256_storeu_si256((__m256i *)dstPtrB, _mm256_sub_epi8(px[2], avx_pxConvertI8));    /* store [B01|B02|B03|B04|B05|B06|B07|B08|B09|B10|B11|B12|B13|B14|B15|B16] */
 }
 
 inline void rpp_load48_i8pkd3_to_i32pln3_avx(Rpp8s *srcPtr, __m256i *p)
