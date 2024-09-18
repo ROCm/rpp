@@ -5134,10 +5134,17 @@ inline void compute_generic_bilinear_srclocs_and_interpolate(T *srcPtrChannel, R
 
     for (int c = 0; c < srcDescPtr->c; c++)
     {
-        dst[c] = (T)std::nearbyintf(((*(srcPtrChannel + srcLoc[0]) * bilinearCoeffs[0]) +        // TopRow R01 Pixel * coeff0
-                    (*(srcPtrChannel + srcLoc[1]) * bilinearCoeffs[1]) +        // TopRow R02 Pixel * coeff1
-                    (*(srcPtrChannel + srcLoc[2]) * bilinearCoeffs[2]) +        // BottomRow R01 Pixel * coeff2
-                    (*(srcPtrChannel + srcLoc[3]) * bilinearCoeffs[3])));        // BottomRow R02 Pixel * coeff3
+        if constexpr (std::is_same<T, Rpp8s>::value || std::is_same<T, Rpp8u>::value)
+          dst[c] = (T)std::nearbyintf(((*(srcPtrChannel + srcLoc[0]) * bilinearCoeffs[0]) +        // TopRow R01 Pixel * coeff0
+                    (*(srcPtrChannel + srcLoc[1]) * bilinearCoeffs[1]) +                           // TopRow R02 Pixel * coeff1
+                    (*(srcPtrChannel + srcLoc[2]) * bilinearCoeffs[2]) +                           // BottomRow R01 Pixel * coeff2
+                    (*(srcPtrChannel + srcLoc[3]) * bilinearCoeffs[3])));                          // BottomRow R02 Pixel * coeff3
+        else if constexpr (std::is_same<T, Rpp32f>::value || std::is_same<T, Rpp16f>::value)
+          dst[c] = (T)(((*(srcPtrChannel + srcLoc[0]) * bilinearCoeffs[0]) +                       // TopRow R01 Pixel * coeff0
+                    (*(srcPtrChannel + srcLoc[1]) * bilinearCoeffs[1]) +                           // TopRow R02 Pixel * coeff1
+                    (*(srcPtrChannel + srcLoc[2]) * bilinearCoeffs[2]) +                           // BottomRow R01 Pixel * coeff2
+                    (*(srcPtrChannel + srcLoc[3]) * bilinearCoeffs[3])));                          // BottomRow R02 Pixel * coeff3
+
         srcPtrChannel += srcDescPtr->strides.cStride;
     }
 }
@@ -5211,7 +5218,9 @@ inline void compute_generic_bilinear_srclocs_3c_avx(__m256 &pSrcY, __m256 &pSrcX
 template <typename T>
 inline void compute_generic_bilinear_interpolation_pkd3_to_pln3(Rpp32f srcY, Rpp32f srcX, RpptROI *roiLTRB, T *dstPtrTempR, T *dstPtrTempG, T *dstPtrTempB, T *srcPtrChannel, RpptDescPtr srcDescPtr)
 {
-    if ((srcX < roiLTRB->ltrbROI.lt.x) || (srcY < roiLTRB->ltrbROI.lt.y) || (srcX > roiLTRB->ltrbROI.rb.x) || (srcY > roiLTRB->ltrbROI.rb.y))
+    Rpp32s srcXFloor = std::floor(srcX);
+    Rpp32s srcYFloor = std::floor(srcY);
+    if ((srcXFloor < roiLTRB->ltrbROI.lt.x) || (srcYFloor < roiLTRB->ltrbROI.lt.y) || (srcXFloor > roiLTRB->ltrbROI.rb.x) || (srcYFloor > roiLTRB->ltrbROI.rb.y))
     {
         *dstPtrTempR = 0;
         *dstPtrTempG = 0;
