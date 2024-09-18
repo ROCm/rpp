@@ -34,6 +34,7 @@ RppStatus fog_u8_u8_host_tensor(Rpp8u *srcPtr,
                                 Rpp32f *fogAlphaMask,
                                 Rpp32f *fogIntensityMask,
                                 Rpp32f *intensityFactor,
+                                Rpp32f *grayFactor,
                                 RpptROIPtr roiTensorPtrSrc,
                                 RpptRoiType roiType,
                                 RppLayoutParams layoutParams,
@@ -51,6 +52,7 @@ RppStatus fog_u8_u8_host_tensor(Rpp8u *srcPtr,
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
         Rpp32f intensityValue = intensityFactor[batchCount];
+        Rpp32f grayValue = grayFactor[batchCount];
 
         Rpp8u *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
@@ -79,6 +81,7 @@ RppStatus fog_u8_u8_host_tensor(Rpp8u *srcPtr,
         Rpp32u vectorIncrementPerChannel = 16;
 #if __AVX2__
         __m256 pIntensity = _mm256_set1_ps(intensityValue);
+        __m256 pGrayFactor = _mm256_set1_ps(grayValue);
 #endif
         // Fog without fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -110,7 +113,7 @@ RppStatus fog_u8_u8_host_tensor(Rpp8u *srcPtr,
                     rpp_simd_load(rpp_load16_f32_to_f32_avx, fogAlphaMaskPtrTemp, pFogAlphaMask);                   // simd loads
                     rpp_simd_load(rpp_load16_f32_to_f32_avx, fogIntensityMaskPtrTemp, pFogIntensityMask);           // simd loads
                     rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtrTemp, p);                                 // simd loads
-                    compute_fog_48_host(p, pFogAlphaMask, pFogIntensityMask, pIntensity);                               // fog adjustment
+                    compute_fog_48_host(p, pFogAlphaMask, pFogIntensityMask, pIntensity, pGrayFactor);              // fog adjustment
                     rpp_simd_store(rpp_store48_f32pln3_to_u8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
                     srcPtrTemp += vectorIncrement;
                     dstPtrTempR += vectorIncrementPerChannel;
@@ -167,7 +170,7 @@ RppStatus fog_u8_u8_host_tensor(Rpp8u *srcPtr,
                     rpp_simd_load(rpp_load16_f32_to_f32_avx, fogAlphaMaskPtrTemp, pFogAlphaMask);                   // simd loads
                     rpp_simd_load(rpp_load16_f32_to_f32_avx, fogIntensityMaskPtrTemp, pFogIntensityMask);           // simd loads
                     rpp_simd_load(rpp_load48_u8pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);      // simd loads
-                    compute_fog_48_host(p, pFogAlphaMask, pFogIntensityMask, pIntensity);                               // fog adjustment
+                    compute_fog_48_host(p, pFogAlphaMask, pFogIntensityMask, pIntensity, pGrayFactor);              // fog adjustment
                     rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTemp, p);                               // simd stores
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
@@ -223,7 +226,7 @@ RppStatus fog_u8_u8_host_tensor(Rpp8u *srcPtr,
                     rpp_simd_load(rpp_load16_f32_to_f32_avx, fogAlphaMaskPtrTemp, pFogAlphaMask);                   // simd loads
                     rpp_simd_load(rpp_load16_f32_to_f32_avx, fogIntensityMaskPtrTemp, pFogIntensityMask);           // simd loads
                     rpp_simd_load(rpp_load48_u8pkd3_to_f32pln3_avx, srcPtrTemp, p);                                 // simd loads
-                    compute_fog_48_host(p, pFogAlphaMask, pFogIntensityMask, pIntensity);                               // fog adjustment
+                    compute_fog_48_host(p, pFogAlphaMask, pFogIntensityMask, pIntensity, pGrayFactor);              // fog adjustment
                     rpp_simd_store(rpp_store48_f32pln3_to_u8pkd3_avx, dstPtrTemp, p);                               // simd stores
                     srcPtrTemp += vectorIncrement;
                     dstPtrTemp += vectorIncrement;
@@ -280,7 +283,7 @@ RppStatus fog_u8_u8_host_tensor(Rpp8u *srcPtr,
                     {
                         __m256 p[2];
                         rpp_simd_load(rpp_load16_u8_to_f32_avx, srcPtrChannel, p);                                  // simd loads
-                        compute_fog_16_host(p, pFogAlphaMask, pFogIntensityMask, pIntensity);                           // fog adjustment
+                        compute_fog_16_host(p, pFogAlphaMask, pFogIntensityMask, pIntensity);                       // fog adjustment
                         rpp_simd_store(rpp_store16_f32_to_u8_avx, dstPtrChannel, p);                                // simd stores
                         srcPtrChannel += srcDescPtr->strides.cStride;
                         dstPtrChannel += dstDescPtr->strides.cStride;
@@ -323,6 +326,7 @@ RppStatus fog_f16_f16_host_tensor(Rpp16f *srcPtr,
                                   Rpp32f* fogAlphaMask,
                                   Rpp32f* fogIntensityMask,
                                   Rpp32f *intensityFactor,
+                                  Rpp32f *grayFactor,
                                   RpptROIPtr roiTensorPtrSrc,
                                   RpptRoiType roiType,
                                   RppLayoutParams layoutParams,
@@ -340,6 +344,7 @@ RppStatus fog_f16_f16_host_tensor(Rpp16f *srcPtr,
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
         Rpp32f intensityValue = intensityFactor[batchCount];
+        Rpp32f grayValue = grayFactor[batchCount];
 
         Rpp16f *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
@@ -368,6 +373,7 @@ RppStatus fog_f16_f16_host_tensor(Rpp16f *srcPtr,
         Rpp32u vectorIncrementPerChannel = 8;
 #if __AVX2__
         __m256 pIntensity = _mm256_set1_ps(intensityValue);
+        __m256 pGrayFactor = _mm256_set1_ps(grayValue);
 #endif
         // Fog without fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -398,8 +404,9 @@ RppStatus fog_f16_f16_host_tensor(Rpp16f *srcPtr,
                     rpp_simd_load(rpp_load8_f32_to_f32_avx, fogAlphaMaskPtrTemp, &pFogAlphaMask);                   // simd loads
                     rpp_simd_load(rpp_load8_f32_to_f32_avx, fogIntensityMaskPtrTemp, &pFogIntensityMask);           // simd loads
                     rpp_simd_load(rpp_load24_f16pkd3_to_f32pln3_avx, srcPtrTemp, p);                                // simd loads
-                    pFogIntensityMask = _mm256_mul_ps(pFogIntensityMask, avx_p1op255);                              // u8 normalization to range[0,1]
-                    compute_fog_24_host(p, &pFogAlphaMask, &pFogIntensityMask, pIntensity);                             // fog adjustment
+                    rpp_multiply24_constant(p, avx_p255);                                                           // denormalization
+                    compute_fog_24_host(p, &pFogAlphaMask, &pFogIntensityMask, pIntensity, pGrayFactor);            // fog adjustment
+                    rpp_normalize24_avx(p);                                                                         // normalization to range[0.1]
                     rpp_simd_store(rpp_store24_f32pln3_to_f16pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);   // simd stores
                     srcPtrTemp += vectorIncrement;
                     dstPtrTempR += vectorIncrementPerChannel;
@@ -456,8 +463,9 @@ RppStatus fog_f16_f16_host_tensor(Rpp16f *srcPtr,
                     rpp_simd_load(rpp_load8_f32_to_f32_avx, fogAlphaMaskPtrTemp, &pFogAlphaMask);                   // simd loads
                     rpp_simd_load(rpp_load8_f32_to_f32_avx, fogIntensityMaskPtrTemp, &pFogIntensityMask);           // simd loads
                     rpp_simd_load(rpp_load24_f16pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);     // simd loads
-                    pFogIntensityMask = _mm256_mul_ps(pFogIntensityMask, avx_p1op255);                              // u8 normalization to range[0,1]
-                    compute_fog_24_host(p, &pFogAlphaMask, &pFogIntensityMask, pIntensity);                             // fog adjustment
+                    rpp_multiply24_constant(p, avx_p255);                                                           // denormalization
+                    compute_fog_24_host(p, &pFogAlphaMask, &pFogIntensityMask, pIntensity, pGrayFactor);            // fog adjustment
+                    rpp_normalize24_avx(p);                                                                         // normalization to range[0.1]
                     rpp_simd_store(rpp_store24_f32pln3_to_f16pkd3_avx, dstPtrTemp, p);                              // simd stores
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
@@ -513,8 +521,9 @@ RppStatus fog_f16_f16_host_tensor(Rpp16f *srcPtr,
                     rpp_simd_load(rpp_load8_f32_to_f32_avx, fogAlphaMaskPtrTemp, &pFogAlphaMask);                   // simd loads
                     rpp_simd_load(rpp_load8_f32_to_f32_avx, fogIntensityMaskPtrTemp, &pFogIntensityMask);           // simd loads
                     rpp_simd_load(rpp_load24_f16pkd3_to_f32pln3_avx, srcPtrTemp, p);                                // simd loads
-                    pFogIntensityMask = _mm256_mul_ps(pFogIntensityMask, avx_p1op255);                              // u8 normalization to range[0,1]
-                    compute_fog_24_host(p, &pFogAlphaMask, &pFogIntensityMask, pIntensity);                             // fog adjustment
+                    rpp_multiply24_constant(p, avx_p255);                                                           // denormalization
+                    compute_fog_24_host(p, &pFogAlphaMask, &pFogIntensityMask, pIntensity, pGrayFactor);            // fog adjustment
+                    rpp_normalize24_avx(p);                                                                         // normalization to range[0.1]
                     rpp_simd_store(rpp_store24_f32pln3_to_f16pkd3_avx, dstPtrTemp, p);                              // simd stores
                     srcPtrTemp += vectorIncrement;
                     dstPtrTemp += vectorIncrement;
@@ -577,7 +586,7 @@ RppStatus fog_f16_f16_host_tensor(Rpp16f *srcPtr,
                         Rpp32f srcPtrChannel_ps[8], dstPtrChannel_ps[8];
                         __m256 p;
                         rpp_simd_load(rpp_load8_f16_to_f32_avx, srcPtrChannel, &p);                                 // simd loads
-                        compute_fog_8_host(&p, &pFogAlphaMask, &pFogIntensityMask, pIntensity);                         // fog adjustment
+                        compute_fog_8_host(&p, &pFogAlphaMask, &pFogIntensityMask, pIntensity);                     // fog adjustment
                         rpp_simd_store(rpp_store8_f32_to_f16_avx, dstPtrChannel, &p);                               // simd stores
                         srcPtrChannel += srcDescPtr->strides.cStride;
                         dstPtrChannel += dstDescPtr->strides.cStride;
@@ -620,6 +629,7 @@ RppStatus fog_f32_f32_host_tensor(Rpp32f *srcPtr,
                                   Rpp32f* fogAlphaMask,
                                   Rpp32f* fogIntensityMask,
                                   Rpp32f *intensityFactor,
+                                  Rpp32f *grayFactor,
                                   RpptROIPtr roiTensorPtrSrc,
                                   RpptRoiType roiType,
                                   RppLayoutParams layoutParams,
@@ -637,6 +647,7 @@ RppStatus fog_f32_f32_host_tensor(Rpp32f *srcPtr,
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
         Rpp32f intensityValue = intensityFactor[batchCount];
+        Rpp32f grayValue = grayFactor[batchCount];
 
         Rpp32f *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
@@ -665,6 +676,7 @@ RppStatus fog_f32_f32_host_tensor(Rpp32f *srcPtr,
         Rpp32u vectorIncrementPerChannel = 8;
 #if __AVX2__
         __m256 pIntensity = _mm256_set1_ps(intensityValue);
+        __m256 pGrayFactor = _mm256_set1_ps(grayValue);
 #endif
         // Fog without fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -695,8 +707,9 @@ RppStatus fog_f32_f32_host_tensor(Rpp32f *srcPtr,
                     rpp_simd_load(rpp_load8_f32_to_f32_avx, fogAlphaMaskPtrTemp, &pFogAlphaMask);                   // simd loads
                     rpp_simd_load(rpp_load8_f32_to_f32_avx, fogIntensityMaskPtrTemp, &pFogIntensityMask);           // simd loads
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp, p);                                // simd loads
-                    pFogIntensityMask = _mm256_mul_ps(pFogIntensityMask, avx_p1op255);                              // u8 normalization to range[0,1]
-                    compute_fog_24_host(p, &pFogAlphaMask, &pFogIntensityMask, pIntensity);                             // fog adjustment
+                    rpp_multiply24_constant(p, avx_p255);                                                           // denormalization
+                    compute_fog_24_host(p, &pFogAlphaMask, &pFogIntensityMask, pIntensity, pGrayFactor);            // fog adjustment
+                    rpp_normalize24_avx(p);                                                                         // normalization to range[0.1]
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);   // simd stores
                     srcPtrTemp += vectorIncrement;
                     dstPtrTempR += vectorIncrementPerChannel;
@@ -753,8 +766,9 @@ RppStatus fog_f32_f32_host_tensor(Rpp32f *srcPtr,
                     rpp_simd_load(rpp_load8_f32_to_f32_avx, fogAlphaMaskPtrTemp, &pFogAlphaMask);                   // simd loads
                     rpp_simd_load(rpp_load8_f32_to_f32_avx, fogIntensityMaskPtrTemp, &pFogIntensityMask);           // simd loads
                     rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);     // simd loads
-                    pFogIntensityMask = _mm256_mul_ps(pFogIntensityMask, avx_p1op255);                              // u8 normalization to range[0,1]
-                    compute_fog_24_host(p, &pFogAlphaMask, &pFogIntensityMask, pIntensity);                             // fog adjustment
+                    rpp_multiply24_constant(p, avx_p255);                                                           // denormalization
+                    compute_fog_24_host(p, &pFogAlphaMask, &pFogIntensityMask, pIntensity, pGrayFactor);            // fog adjustment
+                    rpp_normalize24_avx(p);                                                                         // normalization to range[0.1]
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, p);                              // simd stores
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
@@ -810,8 +824,9 @@ RppStatus fog_f32_f32_host_tensor(Rpp32f *srcPtr,
                     rpp_simd_load(rpp_load8_f32_to_f32_avx, fogAlphaMaskPtrTemp, &pFogAlphaMask);                   // simd loads
                     rpp_simd_load(rpp_load8_f32_to_f32_avx, fogIntensityMaskPtrTemp, &pFogIntensityMask);           // simd loads
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp, p);                                // simd loads
-                    rpp_multiply24_constant(&pFogIntensityMask, avx_p1op255);                                       // u8 normalization to range[0,1]
-                    compute_fog_24_host(p, &pFogAlphaMask, &pFogIntensityMask, pIntensity);                             // fog adjustment
+                    rpp_multiply24_constant(p, avx_p255);                                                           // denormalization
+                    compute_fog_24_host(p, &pFogAlphaMask, &pFogIntensityMask, pIntensity, pGrayFactor);            // fog adjustment
+                    rpp_normalize24_avx(p);                                                                         // normalization to range[0.1]
                     rpp_simd_store(rpp_store24_f32pln3_to_f32pkd3_avx, dstPtrTemp, p);                              // simd stores
                     srcPtrTemp += vectorIncrement;
                     dstPtrTemp += vectorIncrement;
@@ -870,7 +885,7 @@ RppStatus fog_f32_f32_host_tensor(Rpp32f *srcPtr,
                     {
                         __m256 p;   
                         rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrChannel, &p);                                 // simd loads
-                        compute_fog_8_host(&p, &pFogAlphaMask, &pFogIntensityMask, pIntensity);                         // fog adjustment
+                        compute_fog_8_host(&p, &pFogAlphaMask, &pFogIntensityMask, pIntensity);                     // fog adjustment
                         rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrChannel, &p);                               // simd stores
                         srcPtrChannel += srcDescPtr->strides.cStride;
                         dstPtrChannel += dstDescPtr->strides.cStride;
@@ -914,6 +929,7 @@ RppStatus fog_i8_i8_host_tensor(Rpp8s *srcPtr,
                                 Rpp32f* fogAlphaMask,
                                 Rpp32f* fogIntensityMask,
                                 Rpp32f *intensityFactor,
+                                Rpp32f *grayFactor,
                                 RpptROIPtr roiTensorPtrSrc,
                                 RpptRoiType roiType,
                                 RppLayoutParams layoutParams,
@@ -931,6 +947,7 @@ RppStatus fog_i8_i8_host_tensor(Rpp8s *srcPtr,
         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
         Rpp32f intensityValue = intensityFactor[batchCount];
+        Rpp32f grayValue = grayFactor[batchCount];
 
         Rpp8s *srcPtrImage, *dstPtrImage;
         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
@@ -959,6 +976,7 @@ RppStatus fog_i8_i8_host_tensor(Rpp8s *srcPtr,
         Rpp32u vectorIncrementPerChannel = 16;
 #if __AVX2__
         __m256 pIntensity = _mm256_set1_ps(intensityValue);
+        __m256 pGrayFactor = _mm256_set1_ps(grayValue);
 #endif
         // Fog without fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -989,7 +1007,7 @@ RppStatus fog_i8_i8_host_tensor(Rpp8s *srcPtr,
                     rpp_simd_load(rpp_load16_f32_to_f32_avx, fogAlphaMaskPtrTemp, pFogAlphaMask);                   // simd loads
                     rpp_simd_load(rpp_load16_f32_to_f32_avx, fogIntensityMaskPtrTemp, pFogIntensityMask);           // simd loads
                     rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3_avx, srcPtrTemp, p);                                 // simd loads
-                    compute_fog_48_host(p, pFogAlphaMask, pFogIntensityMask, pIntensity);                               // fog adjustment
+                    compute_fog_48_host(p, pFogAlphaMask, pFogIntensityMask, pIntensity, pGrayFactor);              // fog adjustment
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
                     srcPtrTemp += vectorIncrement;
                     dstPtrTempR += vectorIncrementPerChannel;
@@ -1046,7 +1064,7 @@ RppStatus fog_i8_i8_host_tensor(Rpp8s *srcPtr,
                     rpp_simd_load(rpp_load16_f32_to_f32_avx, fogAlphaMaskPtrTemp, pFogAlphaMask);                   // simd loads
                     rpp_simd_load(rpp_load16_f32_to_f32_avx, fogIntensityMaskPtrTemp, pFogIntensityMask);           // simd loads
                     rpp_simd_load(rpp_load48_i8pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);      // simd loads
-                    compute_fog_48_host(p, pFogAlphaMask, pFogIntensityMask, pIntensity);                               // fog adjustment
+                    compute_fog_48_host(p, pFogAlphaMask, pFogIntensityMask, pIntensity, pGrayFactor);              // fog adjustment
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3_avx, dstPtrTemp, p);                               // simd stores
                     srcPtrTempR += vectorIncrementPerChannel;
                     srcPtrTempG += vectorIncrementPerChannel;
@@ -1102,7 +1120,7 @@ RppStatus fog_i8_i8_host_tensor(Rpp8s *srcPtr,
                     rpp_simd_load(rpp_load16_f32_to_f32_avx, fogAlphaMaskPtrTemp, pFogAlphaMask);                   // simd loads
                     rpp_simd_load(rpp_load16_f32_to_f32_avx, fogIntensityMaskPtrTemp, pFogIntensityMask);           // simd loads
                     rpp_simd_load(rpp_load48_i8pkd3_to_f32pln3_avx, srcPtrTemp, p);                                 // simd loads
-                    compute_fog_48_host(p, pFogAlphaMask, pFogIntensityMask, pIntensity);                               // fog adjustment
+                    compute_fog_48_host(p, pFogAlphaMask, pFogIntensityMask, pIntensity, pGrayFactor);              // fog adjustment
                     rpp_simd_store(rpp_store48_f32pln3_to_i8pkd3_avx, dstPtrTemp, p);                               // simd stores
                     srcPtrTemp += vectorIncrement;
                     dstPtrTemp += vectorIncrement;
@@ -1159,7 +1177,7 @@ RppStatus fog_i8_i8_host_tensor(Rpp8s *srcPtr,
                     {
                         __m256 p[2];
                         rpp_simd_load(rpp_load16_i8_to_f32_avx, srcPtrChannel, p);                                  // simd loads
-                        compute_fog_16_host(p, pFogAlphaMask, pFogIntensityMask, pIntensity);                           // fog adjustment
+                        compute_fog_16_host(p, pFogAlphaMask, pFogIntensityMask, pIntensity);                       // fog adjustment
                         rpp_simd_store(rpp_store16_f32_to_i8_avx, dstPtrChannel, p);                                // simd stores
                         srcPtrChannel += srcDescPtr->strides.cStride;
                         dstPtrChannel += dstDescPtr->strides.cStride;

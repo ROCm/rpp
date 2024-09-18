@@ -3135,9 +3135,20 @@ inline void compute_color_temperature_24_host(__m256 *p, __m256 pAdj)
     p[2] = _mm256_sub_ps(p[2], pAdj);    // color_temperature adjustment Bs
 }
 
-inline void compute_fog_48_host(__m256 *p, __m256 *pFogAlphaMask, __m256 *pFogIntensityMask, __m256 pIntensityFactor)
+inline void compute_fog_48_host(__m256 *p, __m256 *pFogAlphaMask, __m256 *pFogIntensityMask, __m256 pIntensityFactor, __m256 pGrayFactor)
 {
-    __m256 pAlphaMaskFactor[2], pIntensityMaskFactor[2];
+    __m256 pAlphaMaskFactor[2], pIntensityMaskFactor[2], pGray[2], pOneMinusGrayFactor;
+    pGray[0] = _mm256_add_ps(_mm256_mul_ps(_mm256_set1_ps(0.299f), p[0]), _mm256_add_ps(_mm256_mul_ps(_mm256_set1_ps(0.587f), p[2]), _mm256_mul_ps(_mm256_set1_ps(0.114f), p[4]))); 
+    pGray[1] = _mm256_add_ps(_mm256_mul_ps(_mm256_set1_ps(0.299f), p[1]), _mm256_add_ps(_mm256_mul_ps(_mm256_set1_ps(0.587f), p[3]), _mm256_mul_ps(_mm256_set1_ps(0.114f), p[5])));
+    pOneMinusGrayFactor = _mm256_sub_ps(avx_p1 , pGrayFactor);
+    pGray[0] = _mm256_mul_ps(pGray[0], pGrayFactor);
+    pGray[1] = _mm256_mul_ps(pGray[1], pGrayFactor);
+    p[0] = _mm256_fmadd_ps(p[0], pOneMinusGrayFactor, pGray[0]);  
+    p[1] = _mm256_fmadd_ps(p[1], pOneMinusGrayFactor, pGray[0]);  
+    p[2] = _mm256_fmadd_ps(p[2], pOneMinusGrayFactor, pGray[0]);  
+    p[3] = _mm256_fmadd_ps(p[3], pOneMinusGrayFactor, pGray[1]);  
+    p[4] = _mm256_fmadd_ps(p[4], pOneMinusGrayFactor, pGray[1]);  
+    p[5] = _mm256_fmadd_ps(p[5], pOneMinusGrayFactor, pGray[1]);  
     pAlphaMaskFactor[0] = _mm256_sub_ps(avx_p1, _mm256_add_ps(pFogAlphaMask[0], pIntensityFactor));
     pAlphaMaskFactor[1] = _mm256_sub_ps(avx_p1, _mm256_add_ps(pFogAlphaMask[1], pIntensityFactor));
     pIntensityMaskFactor[0] = _mm256_mul_ps(pFogIntensityMask[0], _mm256_add_ps(pFogAlphaMask[0], pIntensityFactor));
@@ -3150,9 +3161,15 @@ inline void compute_fog_48_host(__m256 *p, __m256 *pFogAlphaMask, __m256 *pFogIn
     p[5] = _mm256_fmadd_ps(p[5],  pAlphaMaskFactor[1], pIntensityMaskFactor[1]);    // fog adjustment
 }
 
-inline void compute_fog_24_host(__m256 *p, __m256 *pFogAlphaMask, __m256 *pFogIntensityMask, __m256 pIntensityFactor)
+inline void compute_fog_24_host(__m256 *p, __m256 *pFogAlphaMask, __m256 *pFogIntensityMask, __m256 pIntensityFactor, __m256 pGrayFactor)
 {
-    __m256 pAlphaMaskFactor, pIntensityMaskFactor;
+    __m256 pAlphaMaskFactor, pIntensityMaskFactor, pGray, pOneMinusGrayFactor;
+    pGray = _mm256_add_ps(_mm256_mul_ps(_mm256_set1_ps(0.299f), p[0]), _mm256_add_ps(_mm256_mul_ps(_mm256_set1_ps(0.587f), p[1]), _mm256_mul_ps(_mm256_set1_ps(0.114f), p[2]))); 
+    pOneMinusGrayFactor = _mm256_sub_ps(avx_p1 , pGrayFactor);
+    pGray = _mm256_mul_ps(pGray, pGrayFactor);
+    p[0] = _mm256_fmadd_ps(p[0], pOneMinusGrayFactor, pGray);  
+    p[1] = _mm256_fmadd_ps(p[1], pOneMinusGrayFactor, pGray);  
+    p[2] = _mm256_fmadd_ps(p[2], pOneMinusGrayFactor, pGray);  
     pAlphaMaskFactor = _mm256_sub_ps(avx_p1, _mm256_add_ps(pFogAlphaMask[0], pIntensityFactor));
     pIntensityMaskFactor = _mm256_mul_ps(pFogIntensityMask[0], _mm256_add_ps(pFogAlphaMask[0], pIntensityFactor));
     p[0] = _mm256_fmadd_ps(p[0],  pAlphaMaskFactor, pIntensityMaskFactor);    // fog adjustment
