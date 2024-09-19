@@ -408,8 +408,12 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostMalloc(&intensity, batchSize * sizeof(Rpp32f)));
 
     Rpp32f *intensityFactor = nullptr;
+    Rpp32f *greyFactor = nullptr;
     if(testCase == 10)
+    {
         CHECK_RETURN_STATUS(hipHostMalloc(&intensityFactor, batchSize * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&greyFactor, batchSize * sizeof(Rpp32f)));
+    }
 
     Rpp32u *kernelSizeTensor;
     if(testCase == 6)
@@ -681,11 +685,14 @@ int main(int argc, char **argv)
                     testCaseName = "fog";
 
                     for (i = 0; i < batchSize; i++)
+                    {
                         intensityFactor[i] = 0;
+                        greyFactor[i] = 0;
+                    }
 
                     startWallTime = omp_get_wtime();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_fog_gpu(d_input, srcDescPtr, d_output, dstDescPtr, intensityFactor, roiTensorPtrSrc, roiTypeSrc, handle);
+                        rppt_fog_gpu(d_input, srcDescPtr, d_output, dstDescPtr, intensityFactor, greyFactor, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
@@ -1694,6 +1701,8 @@ int main(int argc, char **argv)
         CHECK_RETURN_STATUS(hipHostFree(shapeTensor));
     if(intensityFactor != NULL)
         CHECK_RETURN_STATUS(hipHostFree(intensityFactor));
+    if(greyFactor != NULL)
+        CHECK_RETURN_STATUS(hipHostFree(greyFactor));
     if(roiTensor != NULL)
         CHECK_RETURN_STATUS(hipHostFree(roiTensor));
     if(testCase == 6)
