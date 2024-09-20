@@ -3135,11 +3135,11 @@ inline void compute_color_temperature_24_host(__m256 *p, __m256 pAdj)
     p[2] = _mm256_sub_ps(p[2], pAdj);    // color_temperature adjustment Bs
 }
 
-inline void compute_fog_48_host(__m256 *p, __m256 *pFogAlphaMask, __m256 *pFogIntensityMask, __m256 pIntensityFactor, __m256 pGrayFactor)
+inline void compute_fog_48_host(__m256 *p, __m256 *pFogAlphaMask, __m256 *pFogIntensityMask, __m256 pIntensityFactor, __m256 pGrayFactor, __m256 *pConversionFactor)
 {
     __m256 pAlphaMaskFactor[2], pIntensityMaskFactor[2], pGray[2], pOneMinusGrayFactor;
-    pGray[0] = _mm256_add_ps(_mm256_mul_ps(_mm256_set1_ps(0.299f), p[0]), _mm256_add_ps(_mm256_mul_ps(_mm256_set1_ps(0.587f), p[2]), _mm256_mul_ps(_mm256_set1_ps(0.114f), p[4]))); 
-    pGray[1] = _mm256_add_ps(_mm256_mul_ps(_mm256_set1_ps(0.299f), p[1]), _mm256_add_ps(_mm256_mul_ps(_mm256_set1_ps(0.587f), p[3]), _mm256_mul_ps(_mm256_set1_ps(0.114f), p[5])));
+    pGray[0] = _mm256_fmadd_ps(pConversionFactor[0], p[0], _mm256_fmadd_ps(pConversionFactor[1], p[2], _mm256_mul_ps(pConversionFactor[2], p[4]))); 
+    pGray[1] = _mm256_fmadd_ps(pConversionFactor[0], p[1], _mm256_fmadd_ps(pConversionFactor[1], p[3], _mm256_mul_ps(pConversionFactor[2], p[5]))); 
     pOneMinusGrayFactor = _mm256_sub_ps(avx_p1 , pGrayFactor);
     pGray[0] = _mm256_mul_ps(pGray[0], pGrayFactor);
     pGray[1] = _mm256_mul_ps(pGray[1], pGrayFactor);
@@ -3161,10 +3161,10 @@ inline void compute_fog_48_host(__m256 *p, __m256 *pFogAlphaMask, __m256 *pFogIn
     p[5] = _mm256_fmadd_ps(p[5],  pAlphaMaskFactor[1], pIntensityMaskFactor[1]);    // fog adjustment
 }
 
-inline void compute_fog_24_host(__m256 *p, __m256 *pFogAlphaMask, __m256 *pFogIntensityMask, __m256 pIntensityFactor, __m256 pGrayFactor)
+inline void compute_fog_24_host(__m256 *p, __m256 *pFogAlphaMask, __m256 *pFogIntensityMask, __m256 pIntensityFactor, __m256 pGrayFactor, __m256 *pConversionFactor)
 {
     __m256 pAlphaMaskFactor, pIntensityMaskFactor, pGray, pOneMinusGrayFactor;
-    pGray = _mm256_add_ps(_mm256_mul_ps(_mm256_set1_ps(0.299f), p[0]), _mm256_add_ps(_mm256_mul_ps(_mm256_set1_ps(0.587f), p[1]), _mm256_mul_ps(_mm256_set1_ps(0.114f), p[2]))); 
+    pGray = _mm256_fmadd_ps(pConversionFactor[0], p[0], _mm256_fmadd_ps(pConversionFactor[1], p[1], _mm256_mul_ps(pConversionFactor[2], p[2]))); 
     pOneMinusGrayFactor = _mm256_sub_ps(avx_p1 , pGrayFactor);
     pGray = _mm256_mul_ps(pGray, pGrayFactor);
     p[0] = _mm256_fmadd_ps(p[0], pOneMinusGrayFactor, pGray);  
