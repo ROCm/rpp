@@ -54,7 +54,7 @@ RppStatus mel_filter_bank_host_tensor(Rpp32f *srcPtr,
     Rpp32u batchSize = srcDescPtr->n;
     Rpp32f *scratchMem = handle.GetInitHandle()->mem.mcpu.scratchBufferHost;
 
-    Rpp32f maxFreq = sampleRate / 2;
+    Rpp32f maxFreq = (maxFreqVal == 0) ? sampleRate / 2 : maxFreqVal;
     Rpp32f minFreq = minFreqVal;
 
     // Convert lower, higher frequencies to mel scale and find melStep

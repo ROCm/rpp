@@ -1,6 +1,54 @@
 #include <hip/hip_runtime.h>
 #include "rpp_hip_common.hpp"
 
+/*
+This kernel transforms the 2D spectrogram output into a Mel-scaled output based on the number of filters (numFilter) and applies optional normalization.
+
+Mel Filter Bank Transformation:
+
+Input: A 2D spectrogram of dimensions (numBins, numTimeFrames), where numBins is the number of FFT frequency bins (typically nfft / 2 + 1), and numTimeFrames represents the temporal frames.
+Output: A 2D Mel-scaled output of dimensions (numFilter, numTimeFrames), where numFilter is the number of desired Mel filter banks, each corresponding to a range of FFT frequency bins.
+
+Key Parameters:
+numFilter: Number of Mel filter banks.
+normalize flag: Whether to apply normalization to the filter bank.
+melFormula: Choice of Mel scale formula (HTK or Slaney).
+maxFreq and minFreq: Frequency range for the Mel filter banks.
+
+
+Preprocessing:
+Before the kernel is launched, Three arrays are precomputed to store the filter intervals, normalization factors, and weights:
+
+Compute Intervals:
+For each Mel filter, compute the frequency intervals (start and end FFT bins) that the filter spans. This is based on the Mel scale conversion of frequency ranges and the relationship between FFT bin indices and actual frequencies.
+            interval = ceil(f1 / hzStep), 
+where hzStep is the frequency of the FFT bins (based on the sample rate and nfft).
+
+Compute Normalization Factors:
+If normalize is enabled, compute normalization factors for each filter. This ensures that each filter captures a normalized energy from its frequency interval.
+            normFactor = 2 / (f2 - f0), 
+where f0 and f2 are adjacent frequencies defining the boundaries of the filter.
+
+Compute Filter Weights:
+The weights applied to FFT bins in each interval are precomputed, separated into two phases: weights up and weights down.
+Weights up increase linearly from the start of the interval to the center.
+Weights down decrease linearly from the center of the interval to the end.
+            weightsUp = (f1 - fftBinStart * hzStep) / (f1 - f0), 
+            weightsDown = (f1 - fIter) * slope,
+Kernel Logic:
+The kernel applies the Mel filter bank transformation to the spectrogram data for each time frame and each Mel filter.
+
+Steps in Kernel:
+In the first interval, the weights increase linearly from 0 to 1. Apply these weights up to the corresponding FFT bins and accumulate the results into the destination value dstVal.
+            dstVal += srcVal * weightUp,
+            where weightUp = (1.0 - weightDown).
+
+In the second interval, the weights decrease linearly from 1 to 0. Apply these weights down to the FFT bins and accumulate the results into dstVal.
+            dstVal += srcVal * weightDown,
+
+Once both intervals have been processed, store the accumulated value dstVal in the output buffer for the current (Mel filter, time frame).
+*/
+
 __device__ __forceinline__ void compute_mel(float *srcPtr, int melBin, float *weightsDown, int *intervals, int2 fftStrides, float normFactor, float &dstVal)
 {
     dstVal = 0;
@@ -80,7 +128,7 @@ RppStatus hip_exec_mel_filter_bank_tensor(Rpp32f *srcPtr,
             break;
     }
 
-    Rpp32f maxFreq = sampleRate / 2;
+    Rpp32f maxFreq = (maxFreqVal == 0) ? sampleRate / 2 : maxFreqVal;
     Rpp32f minFreq = minFreqVal;
 
     // Convert the frequency range to Mel scale and compute Mel step size
@@ -136,9 +184,9 @@ RppStatus hip_exec_mel_filter_bank_tensor(Rpp32f *srcPtr,
         }
     }
 
-    Rpp32s globalThreads_x = dstDescPtr->w;
-    Rpp32s globalThreads_y = dstDescPtr->h;
-    Rpp32s globalThreads_z = dstDescPtr->n;
+    Rpp32s globalThreads_x = dstDescPtr->w;     // number of frequency bins (numBins)
+    Rpp32s globalThreads_y = dstDescPtr->h;     // number of time frames
+    Rpp32s globalThreads_z = dstDescPtr->n;     // batch size
     hipLaunchKernelGGL(mel_filter_bank_tensor,
                        dim3(ceil((float)globalThreads_x/LOCAL_THREADS_X), ceil((float)globalThreads_y/LOCAL_THREADS_Y), ceil((float)globalThreads_z/LOCAL_THREADS_Z)),
                        dim3(LOCAL_THREADS_X, LOCAL_THREADS_Y, LOCAL_THREADS_Z),

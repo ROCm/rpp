@@ -225,6 +225,12 @@ RppStatus rppt_mel_filter_bank_host(RppPtr_t srcPtr,
 {
     if (srcDescPtr->layout != RpptLayout::NFT) return RPP_ERROR_INVALID_SRC_LAYOUT;
     if (dstDescPtr->layout != RpptLayout::NFT) return RPP_ERROR_INVALID_DST_LAYOUT;
+    // Disabled this check for now. 
+    // This check will be re-enabled when the numDims based changes are added in MIVisionX */
+    // if (maxFreq < 0 || maxFreq > sampleRate / 2)
+    //     return RPP_ERROR_INVALID_ARGUMENTS;
+    // if (minFreq < 0 || minFreq > sampleRate / 2)
+    //     return RPP_ERROR_INVALID_ARGUMENTS;
 
     if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
@@ -464,6 +470,10 @@ RppStatus rppt_mel_filter_bank_gpu(RppPtr_t srcPtr,
         return RPP_ERROR_INVALID_SRC_DIMS;
     if (srcDescPtr->layout != RpptLayout::NFT) return RPP_ERROR_INVALID_SRC_LAYOUT;
     if (dstDescPtr->layout != RpptLayout::NFT) return RPP_ERROR_INVALID_DST_LAYOUT;
+    if (maxFreq < 0 || maxFreq > sampleRate / 2)
+        return RPP_ERROR_INVALID_ARGUMENTS;
+    if (minFreq < 0 || minFreq > sampleRate / 2)
+        return RPP_ERROR_INVALID_ARGUMENTS;
 
     if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
