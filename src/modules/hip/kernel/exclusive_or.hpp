@@ -11,17 +11,17 @@ __device__ void exclusive_or_hip_compute(T *srcPtr, d_float8 *src1_f8, d_float8 
 {
     if constexpr ((std::is_same<T, float>::value) || (std::is_same<T, half>::value))
     {
-        rpp_hip_math_multiply8_const(src1_f8, src1_f8, (float4)255);
-        rpp_hip_math_multiply8_const(src2_f8, src2_f8, (float4)255);
+        rpp_hip_math_multiply8_const(src1_f8, src1_f8, static_cast<float4>(255));
+        rpp_hip_math_multiply8_const(src2_f8, src2_f8, static_cast<float4>(255));
         rpp_hip_math_exclusiveOr8(src1_f8, src2_f8, dst_f8);
-        rpp_hip_math_multiply8_const(dst_f8, dst_f8, (float4)ONE_OVER_255);
+        rpp_hip_math_multiply8_const(dst_f8, dst_f8, static_cast<float4>(ONE_OVER_255));
     }
     else if constexpr (std::is_same<T, signed char>::value)
     {
-        rpp_hip_math_add8_const(src1_f8, src1_f8, (float4)128);
-        rpp_hip_math_add8_const(src2_f8, src2_f8, (float4)128);
+        rpp_hip_math_add8_const(src1_f8, src1_f8, static_cast<float4>(128));
+        rpp_hip_math_add8_const(src2_f8, src2_f8, static_cast<float4>(128));
         rpp_hip_math_exclusiveOr8(src1_f8, src2_f8, dst_f8);
-        rpp_hip_math_subtract8_const(dst_f8, dst_f8, (float4)128);
+        rpp_hip_math_subtract8_const(dst_f8, dst_f8, static_cast<float4>(128));
     }
     else
         rpp_hip_math_exclusiveOr8(src1_f8, src2_f8, dst_f8);
