@@ -56,11 +56,14 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
     const Rpp32s alignedNfftLength = nfft & ~7;
     const Rpp32s alignedNbinsLength = numBins & ~7;
     const Rpp32s alignedWindowLength = windowLength & ~7;
+    const Rpp32s maxNumWindows = (vertical) ? dstDescPtr->w : dstDescPtr->h;
+    const Rpp32u windowOutputStride = maxNumWindows * nfft;
     bool useRealImpl = can_use_real_impl(nfft);
     const auto fftInSize = size_in_buf(nfft);
     const auto fftOutSize = size_out_buf(nfft);
 
     Rpp32f *windowFn = static_cast<Rpp32f *>(calloc(windowLength, sizeof(Rpp32f)));
+    Rpp32f *scratchMem = handle.GetInitHandle()->mem.mcpu.scratchBufferHost;
 
     // Generate hanning window
     if (windowFunction == NULL)
@@ -78,7 +81,7 @@ RppStatus spectrogram_host_tensor(Rpp32f *srcPtr,
         Rpp32f *dstPtrTemp = dstPtr + batchCount * dstDescPtr->strides.nStride;
         Rpp32s bufferLength = srcLengthTensor[batchCount];
         Rpp32s numWindows = get_num_windows(bufferLength, windowLength, windowStep, centerWindows);
-        Rpp32f windowOutput[numWindows * nfft];
+        Rpp32f *windowOutput = scratchMem + batchCount * windowOutputStride;
         std::fill_n(windowOutput, numWindows * nfft, 0);
         for (Rpp32s w = 0; w < numWindows; w++)
         {
