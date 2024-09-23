@@ -40,6 +40,7 @@ SOFTWARE.
 #include <turbojpeg.h>
 #include <random>
 #include <map>
+#include <iomanip>
 
 #ifdef GPU_SUPPORT
     #include <hip/hip_fp16.h>
