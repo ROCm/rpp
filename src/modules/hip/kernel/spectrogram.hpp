@@ -1,6 +1,41 @@
 #include <hip/hip_runtime.h>
 #include "rpp_hip_common.hpp"
 
+/* Spectrogram kernel working overview
+1D Input -> 2D Output
+Output can be in 2 layouts
+1. TF layout (Time-Frequency)
+2. FT layout (Frequency-Time)
+
+Input parameters
+1. nfft
+2. windowLength
+3. windowStep
+4. centerWindows
+5. reflectPadding
+6. windowFunction
+7. power
+                                      
+For input audio sample of length N
+      Spectrogram             TF layout   
+(N) --------------->  (numWindows, nfft / 2 + 1)
+
+      Spectrogram             FT layout
+(N) --------------->  (nfft / 2 + 1, numWindows)
+
+Where
+windowOffset = (centerWindows) ? (windowLength / 2) : 0;
+numWindows = ((N - windowOffset) / windowStep) + 1
+
+Spectrogram output computation is divided into 4 steps as below:
+1. Compute window output. Applies a filter for a chunks of input to get the window output of shape (numWindows, nfft)
+2. Compute sine and cosine factors required (nfft, nfft / 2 + 1)
+3. Do matrix muliplication to get final output of shape (numWindows, nfft / 2 + 1) for the TF layout. For the FT layout is just transposed
+real part      - windowOutput (numWindows, nfft) . cosFactor (nfft, nfft/2 + 1) 
+imaginary part - windowOutput (numWindows, nfft) . sinFactor (nfft, nfft/2 + 1)
+4. Compute final result using the real and imaginary part */
+
+
 // -------------------- Set 0 -  spectrogram hip kernels --------------------
 
 // compute window output by applying hanning window
@@ -182,7 +217,6 @@ RppStatus hip_exec_spectrogram_tensor(Rpp32f* srcPtr,
     // copy the hanning window values to hip memory
     Rpp32f *d_windowFn = handle.GetInitHandle()->mem.mgpu.scratchBufferHip.floatmem;
     CHECK_RETURN_STATUS(hipMemcpyAsync(d_windowFn, windowFn, windowLength * sizeof(Rpp32f), hipMemcpyHostToDevice, handle.GetStream()));
-    CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
 
     // compute the number of windows required for each input in the batch
     Rpp32s *numWindowsTensor = reinterpret_cast<Rpp32s*>(handle.GetInitHandle()->mem.mgpu.scratchBufferPinned.floatmem);
@@ -195,7 +229,8 @@ RppStatus hip_exec_spectrogram_tensor(Rpp32f* srcPtr,
 
     Rpp32f *windowOutput = d_windowFn + windowLength;
     CHECK_RETURN_STATUS(hipMemsetAsync(windowOutput, 0, windowOutputStride * dstDescPtr->n * sizeof(Rpp32f), handle.GetStream()));
-    CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
+    
+    // compute the windowOutput for all samples in a batch. Each sample will be of shape (numWindows, nfft)
     Rpp32s globalThreads_x = windowLength;
     Rpp32s globalThreads_y = maxNumWindows;
     Rpp32s globalThreads_z = dstDescPtr->n;
@@ -245,6 +280,7 @@ RppStatus hip_exec_spectrogram_tensor(Rpp32f* srcPtr,
                        sinTensor,
                        make_int4(nfft, numBins, power, numTiles),
                        vertical);
+    CHECK_RETURN_STATUS(hipStreamSynchronize(handle.GetStream()));
 
     return RPP_SUCCESS;
 }
