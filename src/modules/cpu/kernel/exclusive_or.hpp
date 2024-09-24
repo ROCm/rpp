@@ -561,9 +561,9 @@ RppStatus exclusive_or_f32_f32_host_tensor(Rpp32f *srcPtr1,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    *dstPtrTempR++ = RPPPIXELCHECKF32((float)((uint)(*srcPtr1TempR * 255) ^ (uint)(*srcPtr2TempR * 255)) / 255);
-                    *dstPtrTempG++ = RPPPIXELCHECKF32((float)((uint)(*srcPtr1TempG * 255) ^ (uint)(*srcPtr2TempG * 255)) / 255);
-                    *dstPtrTempB++ = RPPPIXELCHECKF32((float)((uint)(*srcPtr1TempB * 255) ^ (uint)(*srcPtr2TempB * 255)) / 255);
+                    *dstPtrTempR = RPPPIXELCHECKF32((float)((uint)(*srcPtr1TempR * 255) ^ (uint)(*srcPtr2TempR * 255)) / 255);
+                    *dstPtrTempG = RPPPIXELCHECKF32((float)((uint)(*srcPtr1TempG * 255) ^ (uint)(*srcPtr2TempG * 255)) / 255);
+                    *dstPtrTempB = RPPPIXELCHECKF32((float)((uint)(*srcPtr1TempB * 255) ^ (uint)(*srcPtr2TempB * 255)) / 255);
 
                     srcPtr1TempR++;
                     srcPtr1TempG++;
@@ -571,6 +571,9 @@ RppStatus exclusive_or_f32_f32_host_tensor(Rpp32f *srcPtr1,
                     srcPtr2TempR++;
                     srcPtr2TempG++;
                     srcPtr2TempB++;
+                    dstPtrTempR++;
+                    dstPtrTempG++;
+                    dstPtrTempB++;
                 }
 
                 srcPtr1RowR += srcDescPtr->strides.hStride;
@@ -813,6 +816,88 @@ RppStatus exclusive_or_f16_f16_host_tensor(Rpp16f *srcPtr1,
                 srcPtr2RowG += srcDescPtr->strides.hStride;
                 srcPtr2RowB += srcDescPtr->strides.hStride;
                 dstPtrRow += dstDescPtr->strides.hStride;
+            }
+        }
+
+        // Exclusive OR without fused output-layout toggle (NCHW -> NCHW for 3 channel)
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            Rpp16f *srcPtr1RowR, *srcPtr1RowG, *srcPtr1RowB, *srcPtr2RowR, *srcPtr2RowG, *srcPtr2RowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
+            srcPtr1RowR = srcPtr1Channel;
+            srcPtr1RowG = srcPtr1RowR + srcDescPtr->strides.cStride;
+            srcPtr1RowB = srcPtr1RowG + srcDescPtr->strides.cStride;
+            srcPtr2RowR = srcPtr2Channel;
+            srcPtr2RowG = srcPtr2RowR + srcDescPtr->strides.cStride;
+            srcPtr2RowB = srcPtr2RowG + srcDescPtr->strides.cStride;
+            dstPtrRowR = dstPtrChannel;
+            dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
+            dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
+            {
+                Rpp16f *srcPtr1TempR, *srcPtr1TempG, *srcPtr1TempB, *srcPtr2TempR, *srcPtr2TempG, *srcPtr2TempB, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
+                srcPtr1TempR = srcPtr1RowR;
+                srcPtr1TempG = srcPtr1RowG;
+                srcPtr1TempB = srcPtr1RowB;
+                srcPtr2TempR = srcPtr2RowR;
+                srcPtr2TempG = srcPtr2RowG;
+                srcPtr2TempB = srcPtr2RowB;
+                dstPtrTempR = dstPtrRowR;
+                dstPtrTempG = dstPtrRowG;
+                dstPtrTempB = dstPtrRowB;
+
+                int vectorLoopCount = 0;
+#if __AVX2__
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    __m256 p1[3], p2[3];
+
+                    rpp_simd_load(rpp_load24_f16pln3_to_f32pln3_avx, srcPtr1TempR, srcPtr1TempG, srcPtr1TempB, p1);    // simd loads
+                    rpp_simd_load(rpp_load24_f16pln3_to_f32pln3_avx, srcPtr2TempR, srcPtr2TempG, srcPtr2TempB, p2);    // simd loads
+                    p1[0] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p1[0], avx_p255)), _mm256_cvttps_epi32(_mm256_mul_ps(p2[0], avx_p255))));    // exclusive_or computation
+                    p1[1] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p1[1], avx_p255)), _mm256_cvttps_epi32(_mm256_mul_ps(p2[1], avx_p255))));    // exclusive_or computation
+                    p1[2] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p1[2], avx_p255)), _mm256_cvttps_epi32(_mm256_mul_ps(p2[2], avx_p255))));    // exclusive_or computation
+                    p1[0] = _mm256_mul_ps(p1[0], avx_p1op255);
+                    p1[1] = _mm256_mul_ps(p1[1], avx_p1op255);
+                    p1[2] = _mm256_mul_ps(p1[2], avx_p1op255);
+                    rpp_simd_store(rpp_store24_f32pln3_to_f16pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p1);
+
+                    srcPtr1TempR += vectorIncrementPerChannel;
+                    srcPtr1TempG += vectorIncrementPerChannel;
+                    srcPtr1TempB += vectorIncrementPerChannel;
+                    srcPtr2TempR += vectorIncrementPerChannel;
+                    srcPtr2TempG += vectorIncrementPerChannel;
+                    srcPtr2TempB += vectorIncrementPerChannel;
+                    dstPtrTempR += vectorIncrementPerChannel;
+                    dstPtrTempG += vectorIncrementPerChannel;
+                    dstPtrTempB += vectorIncrementPerChannel;
+                }
+#endif
+                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                {
+                    *dstPtrTempR = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)((uint)(*srcPtr1TempR * 255) ^ (uint)(*srcPtr2TempR * 255)) / 255));
+                    *dstPtrTempG = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)((uint)(*srcPtr1TempG * 255) ^ (uint)(*srcPtr2TempG * 255)) / 255));
+                    *dstPtrTempB = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)((uint)(*srcPtr1TempB * 255) ^ (uint)(*srcPtr2TempB * 255)) / 255));
+
+                    srcPtr1TempR++;
+                    srcPtr1TempG++;
+                    srcPtr1TempB++;
+                    srcPtr2TempR++;
+                    srcPtr2TempG++;
+                    srcPtr2TempB++;
+                    dstPtrTempR++;
+                    dstPtrTempG++;
+                    dstPtrTempB++;
+                }
+
+                srcPtr1RowR += srcDescPtr->strides.hStride;
+                srcPtr1RowG += srcDescPtr->strides.hStride;
+                srcPtr1RowB += srcDescPtr->strides.hStride;
+                srcPtr2RowR += srcDescPtr->strides.hStride;
+                srcPtr2RowG += srcDescPtr->strides.hStride;
+                srcPtr2RowB += srcDescPtr->strides.hStride;
+                dstPtrRowR += dstDescPtr->strides.hStride;
+                dstPtrRowG += dstDescPtr->strides.hStride;
+                dstPtrRowB += dstDescPtr->strides.hStride;
             }
         }
 
