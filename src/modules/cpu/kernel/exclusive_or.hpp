@@ -509,7 +509,7 @@ RppStatus exclusive_or_f32_f32_host_tensor(Rpp32f *srcPtr1,
 
             for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
-                Rpp32f *srcPtr1TempR, *srcPtr1TempG, *srcPtr1TempB, *srcPtr2TempR, *srcPtr2TempG, *srcPtr2TempB, *dstPtrTemp;
+                Rpp32f *srcPtr1TempR, *srcPtr1TempG, *srcPtr1TempB, *srcPtr2TempR, *srcPtr2TempG, *srcPtr2TempB, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
                 srcPtr1TempR = srcPtr1RowR;
                 srcPtr1TempG = srcPtr1RowG;
                 srcPtr1TempB = srcPtr1RowB;
@@ -1069,7 +1069,7 @@ RppStatus exclusive_or_i8_i8_host_tensor(Rpp8s *srcPtr1,
             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
             for (int i = 0; i < roi.xywhROI.roiHeight; i++)
             {
-                Rpp8u *srcPtr1TempR, *srcPtr1TempG, *srcPtr1TempB, *srcPtr2TempR, *srcPtr2TempG, *srcPtr2TempB, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
+                Rpp8s *srcPtr1TempR, *srcPtr1TempG, *srcPtr1TempB, *srcPtr2TempR, *srcPtr2TempG, *srcPtr2TempB, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
                 srcPtr1TempR = srcPtr1RowR;
                 srcPtr1TempG = srcPtr1RowG;
                 srcPtr1TempB = srcPtr1RowB;
