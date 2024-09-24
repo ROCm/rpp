@@ -263,9 +263,9 @@ RppStatus exclusive_or_u8_u8_host_tensor(Rpp8u *srcPtr1,
                 srcPtr2RowR += srcDescPtr->strides.hStride;
                 srcPtr2RowG += srcDescPtr->strides.hStride;
                 srcPtr2RowB += srcDescPtr->strides.hStride;
-                dstPtrTempR += dstDescPtr->strides.hStride;
-                dstPtrTempG += dstDescPtr->strides.hStride;
-                dstPtrTempB += dstDescPtr->strides.hStride;
+                dstPtrRowR += dstDescPtr->strides.hStride;
+                dstPtrRowG += dstDescPtr->strides.hStride;
+                dstPtrRowB += dstDescPtr->strides.hStride;
             }
         }
         // Exclusive OR without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
@@ -1126,9 +1126,9 @@ RppStatus exclusive_or_i8_i8_host_tensor(Rpp8s *srcPtr1,
                 srcPtr2RowR += srcDescPtr->strides.hStride;
                 srcPtr2RowG += srcDescPtr->strides.hStride;
                 srcPtr2RowB += srcDescPtr->strides.hStride;
-                dstPtrTempR += dstDescPtr->strides.hStride;
-                dstPtrTempG += dstDescPtr->strides.hStride;
-                dstPtrTempB += dstDescPtr->strides.hStride;
+                dstPtrRowR += dstDescPtr->strides.hStride;
+                dstPtrRowG += dstDescPtr->strides.hStride;
+                dstPtrRowB += dstDescPtr->strides.hStride;
             }
         }
         // Exclusive OR without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
