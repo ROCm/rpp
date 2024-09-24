@@ -64,9 +64,11 @@ RppStatus exclusive_or_u8_u8_host_tensor(Rpp8u *srcPtr1,
         srcPtr2Channel = srcPtr2Image + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
+#if __AVX2__
         Rpp32u alignedLength = (bufferLength / 96) * 96;
         Rpp32u vectorIncrement = 96;
         Rpp32u vectorIncrementPerChannel = 32;
+#endif
 
         // Exclusive OR with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -88,6 +90,7 @@ RppStatus exclusive_or_u8_u8_host_tensor(Rpp8u *srcPtr1,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256i p1[3], p2[3];
@@ -105,7 +108,7 @@ RppStatus exclusive_or_u8_u8_host_tensor(Rpp8u *srcPtr1,
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
                 }
-
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     *dstPtrTempR++ = srcPtr1Temp[0] ^ srcPtr2Temp[0];
@@ -148,6 +151,7 @@ RppStatus exclusive_or_u8_u8_host_tensor(Rpp8u *srcPtr1,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256i p1[3], p2[3];
@@ -167,7 +171,7 @@ RppStatus exclusive_or_u8_u8_host_tensor(Rpp8u *srcPtr1,
                     srcPtr2TempB += vectorIncrementPerChannel;
                     dstPtrTemp += vectorIncrement;
                 }
-
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     dstPtrTemp[0] = *srcPtr1TempR ^ *srcPtr2TempR;
@@ -220,6 +224,7 @@ RppStatus exclusive_or_u8_u8_host_tensor(Rpp8u *srcPtr1,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256i p1[3], p2[3];
@@ -241,7 +246,7 @@ RppStatus exclusive_or_u8_u8_host_tensor(Rpp8u *srcPtr1,
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
                 }
-
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     *dstPtrTempR = *srcPtr1TempR ^ *srcPtr2TempR;
@@ -274,7 +279,9 @@ RppStatus exclusive_or_u8_u8_host_tensor(Rpp8u *srcPtr1,
         // Exclusive OR without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW for 1 channel)
         else
         {
+#if __AVX2__
             alignedLength = bufferLength & ~31;
+#endif
 
             Rpp8u *srcPtr1Row, *srcPtr2Row, *dstPtrRow;
             srcPtr1Row = srcPtr1Channel;
@@ -289,6 +296,7 @@ RppStatus exclusive_or_u8_u8_host_tensor(Rpp8u *srcPtr1,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256i p1, p2;
@@ -302,7 +310,7 @@ RppStatus exclusive_or_u8_u8_host_tensor(Rpp8u *srcPtr1,
                     srcPtr2Temp += vectorIncrementPerChannel;
                     dstPtrTemp += vectorIncrementPerChannel;
                 }
-
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     *dstPtrTemp++ = *srcPtr1Temp ^ *srcPtr2Temp;
@@ -931,9 +939,11 @@ RppStatus exclusive_or_i8_i8_host_tensor(Rpp8s *srcPtr1,
         srcPtr2Channel = srcPtr2Image + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
         dstPtrChannel = dstPtrImage;
 
+#if __AVX2__
         Rpp32u alignedLength = (bufferLength / 96) * 96;
         Rpp32u vectorIncrement = 96;
         Rpp32u vectorIncrementPerChannel = 32;
+#endif
 
         // Exclusive OR with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -955,6 +965,7 @@ RppStatus exclusive_or_i8_i8_host_tensor(Rpp8s *srcPtr1,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
                 {
                     __m256i p1[3], p2[3];
@@ -972,7 +983,7 @@ RppStatus exclusive_or_i8_i8_host_tensor(Rpp8s *srcPtr1,
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
                 }
-
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
                     *dstPtrTempR++ = static_cast<Rpp8s>(RPPPIXELCHECKI8(((srcPtr1Temp[0] + 128) ^ (srcPtr2Temp[0] + 128)) -  128));
@@ -1015,7 +1026,7 @@ RppStatus exclusive_or_i8_i8_host_tensor(Rpp8s *srcPtr1,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256i p1[3], p2[3];
@@ -1035,6 +1046,7 @@ RppStatus exclusive_or_i8_i8_host_tensor(Rpp8s *srcPtr1,
                     srcPtr2TempB += vectorIncrementPerChannel;
                     dstPtrTemp += vectorIncrement;
                 }
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     dstPtrTemp[0] = static_cast<Rpp8s>(RPPPIXELCHECKI8(((static_cast<Rpp8u>((*srcPtr1TempR + 128) ^ static_cast<Rpp8u>(*srcPtr2TempR + 128)))) -  128));
@@ -1087,6 +1099,7 @@ RppStatus exclusive_or_i8_i8_host_tensor(Rpp8s *srcPtr1,
                 dstPtrTempB = dstPtrRowB;
 
                 int vectorLoopCount = 0;
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256i p1[3], p2[3];
@@ -1108,7 +1121,7 @@ RppStatus exclusive_or_i8_i8_host_tensor(Rpp8s *srcPtr1,
                     dstPtrTempG += vectorIncrementPerChannel;
                     dstPtrTempB += vectorIncrementPerChannel;
                 }
-
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     *dstPtrTempR = static_cast<Rpp8s>(RPPPIXELCHECKI8(((static_cast<Rpp8u>((*srcPtr1TempR +  128) ^ static_cast<Rpp8u>(*srcPtr2TempR +  128)))) -  128));
@@ -1141,7 +1154,9 @@ RppStatus exclusive_or_i8_i8_host_tensor(Rpp8s *srcPtr1,
         // Exclusive OR without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW for 1 channel)
         else
         {
+#if __AVX2__
             alignedLength = bufferLength & ~31;
+#endif
 
             Rpp8s *srcPtr1Row, *srcPtr2Row, *dstPtrRow;
             srcPtr1Row = srcPtr1Channel;
@@ -1156,7 +1171,7 @@ RppStatus exclusive_or_i8_i8_host_tensor(Rpp8s *srcPtr1,
                 dstPtrTemp = dstPtrRow;
 
                 int vectorLoopCount = 0;
-
+#if __AVX2__
                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256i p1, p2;
@@ -1170,6 +1185,7 @@ RppStatus exclusive_or_i8_i8_host_tensor(Rpp8s *srcPtr1,
                     srcPtr2Temp += vectorIncrementPerChannel;
                     dstPtrTemp += vectorIncrementPerChannel;
                 }
+#endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
                     *dstPtrTemp++ = static_cast<Rpp8s>(RPPPIXELCHECKI8(((static_cast<Rpp8u>((*srcPtr1Temp +  128) ^ static_cast<Rpp8u>(*srcPtr2Temp +  128)))) -  128));
