@@ -192,6 +192,8 @@ RppStatus exclusive_or_u8_u8_host_tensor(Rpp8u *srcPtr1,
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
         }
+
+        // Exclusive OR without fused output-layout toggle (NCHW -> NCHW for 3 channel)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp8u *srcPtr1RowR, *srcPtr1RowG, *srcPtr1RowB, *srcPtr2RowR, *srcPtr2RowG, *srcPtr2RowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -268,7 +270,8 @@ RppStatus exclusive_or_u8_u8_host_tensor(Rpp8u *srcPtr1,
                 dstPtrRowB += dstDescPtr->strides.hStride;
             }
         }
-        // Exclusive OR without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
+
+        // Exclusive OR without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW for 1 channel)
         else
         {
             alignedLength = bufferLength & ~31;
@@ -493,7 +496,8 @@ RppStatus exclusive_or_f32_f32_host_tensor(Rpp32f *srcPtr1,
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
         }
-        // Exclusive OR with fused output-layout toggle (NCHW -> NHWC)
+
+        // Exclusive OR without fused output-layout toggle (NCHW -> NCHW for 3 channel)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp32f *srcPtr1RowR, *srcPtr1RowG, *srcPtr1RowB, *srcPtr2RowR, *srcPtr2RowG, *srcPtr2RowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -573,7 +577,7 @@ RppStatus exclusive_or_f32_f32_host_tensor(Rpp32f *srcPtr1,
             }
         }
 
-        // Exclusive OR without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
+        // Exclusive OR without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW for 1 channel)
         else
         {
 #if __AVX2__
@@ -1055,6 +1059,8 @@ RppStatus exclusive_or_i8_i8_host_tensor(Rpp8s *srcPtr1,
                 dstPtrRow += dstDescPtr->strides.hStride;
             }
         }
+
+        // Exclusive OR without fused output-layout toggle (NCHW -> NCHW for 3 channel)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp8s *srcPtr1RowR, *srcPtr1RowG, *srcPtr1RowB, *srcPtr2RowR, *srcPtr2RowG, *srcPtr2RowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -1131,7 +1137,8 @@ RppStatus exclusive_or_i8_i8_host_tensor(Rpp8s *srcPtr1,
                 dstPtrRowB += dstDescPtr->strides.hStride;
             }
         }
-        // Exclusive OR without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
+
+        // Exclusive OR without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW for 1 channel)
         else
         {
             alignedLength = bufferLength & ~31;
