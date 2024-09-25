@@ -664,8 +664,8 @@ RppStatus threshold_i8_i8_host_tensor(Rpp8s *srcPtr,
         Rpp32f maxThreshold[3];
         for (int c = 0; c < srcDescPtr->c; c++)
         {
-            minThreshold[c] = minTensor[batchIndex + c];
-            maxThreshold[c] = maxTensor[batchIndex + c];
+            minThreshold[c] = minTensor[batchIndex + c] + static_cast<Rpp32f>(128);
+            maxThreshold[c] = maxTensor[batchIndex + c] + static_cast<Rpp32f>(128);
         }
 #if __AVX2__
             __m256 pThresholdParams[6];

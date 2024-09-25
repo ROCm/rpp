@@ -699,15 +699,18 @@ int main(int argc, char **argv)
                 {
                     testCaseName = "threshold";
                     Rpp32f normFactor = 1;
+                    Rpp32f subtractionFactor = 0;
                     if (inputBitDepth == 1 || inputBitDepth == 2)
                         normFactor = 255;
+                    else if (inputBitDepth == 5)
+                        subtractionFactor = 128;
 
                     for (int i = 0; i < batchSize; i++)
                     {
                         for (int j = 0, k = i * srcDescPtr->c; j < srcDescPtr->c; j++, k++)
                         {
-                            minTensor[k] = 30 / normFactor;
-                            maxTensor[k] = 100 / normFactor;
+                            minTensor[k] = (30 / normFactor) - subtractionFactor;
+                            maxTensor[k] = (100 / normFactor) - subtractionFactor;
                         }
                     }
 

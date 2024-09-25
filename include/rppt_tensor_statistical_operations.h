@@ -268,7 +268,7 @@ RppStatus rppt_tensor_stddev_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr
 #endif // GPU_SUPPORT
 
 /*! \brief Threshold augmentation on HOST backend for a NCHW/NHWC layout tensor
- * \details The Threshold augmentation applies min, max threshold checks for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+ * \details The Threshold augmentation outputs a black/white binary mask image, based on whether or not each pixel is within the user-specified pixel-range bounds, for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
  * \image html img150x150.png Sample Input
@@ -292,7 +292,7 @@ RppStatus rppt_threshold_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t 
 
 #ifdef GPU_SUPPORT
 /*! \brief Threshold augmentation on HIP backend for a NCHW/NHWC layout tensor
- * \details The Threshold augmentation applies min, max threshold checks for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+ * \details The Threshold augmentation outputs a black/white binary mask image, based on whether or not each pixel is within the user-specified pixel-range bounds, for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
  * \image html img150x150.png Sample Input
