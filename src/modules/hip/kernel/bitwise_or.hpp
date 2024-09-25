@@ -4,7 +4,8 @@
 /* BitwiseOR is logical operation only on U8/I8 types.
    For a Rpp32f precision image (pixel values from 0-1), the BitwiseOR is applied on a 0-255
    range-translated approximation, of the original 0-1 decimal-range image.
-   Link: https://stackoverflow.com/questions/1723575/how-to-perform-a-bitwise-operation-on-floating-point-numbers */
+   The bitwise operation is applied to the char representation of the raw floating-point data in memory */
+
 template <typename T>
 __device__ void bitwise_or_hip_compute(T *srcPtr, d_float8 *src1_f8, d_float8 *src2_f8, d_float8 *dst_f8)
 {
