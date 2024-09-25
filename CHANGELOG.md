@@ -1,7 +1,13 @@
 # Changelog for RPP
 
 Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/rpp/en/latest](https://rocm.docs.amd.com/projects/rpp/en/latest)
+
+## RPP 1.14.0 (unreleased)
  
+### Changes
+ 
+* RPP Tensor Threshold support on HOST and HIP
+
 ## RPP 1.9.1 for ROCm 6.3.0
  
 ### Changes
