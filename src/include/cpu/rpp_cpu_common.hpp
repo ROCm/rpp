@@ -3280,7 +3280,7 @@ inline void compute_color_jitter_ctm_host(Rpp32f brightnessParam, Rpp32f contras
 {
     contrastParam += 1.0f;
 
-    alignas(64) Rpp32f hue_saturation_matrix[16] = {0.299f, 0.299f, 0.299f, 0.0f, 0.587f, 0.587f, 0.587f, 0.0f, 0.114f, 0.114f, 0.114f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
+    alignas(64) Rpp32f hue_saturation_matrix[16] = {RGB_TO_GREY_WEIGHT_RED, RGB_TO_GREY_WEIGHT_RED, RGB_TO_GREY_WEIGHT_RED, 0.0f, RGB_TO_GREY_WEIGHT_GREEN, RGB_TO_GREY_WEIGHT_GREEN, RGB_TO_GREY_WEIGHT_GREEN, 0.0f, RGB_TO_GREY_WEIGHT_BLUE, RGB_TO_GREY_WEIGHT_BLUE, RGB_TO_GREY_WEIGHT_BLUE, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
     alignas(64) Rpp32f brightness_contrast_matrix[16] = {contrastParam, 0.0f, 0.0f, 0.0f, 0.0f, contrastParam, 0.0f, 0.0f, 0.0f, 0.0f, contrastParam, 0.0f, brightnessParam, brightnessParam, brightnessParam, 1.0f};
 
     Rpp32f sch = saturationParam * cos(hueParam * PI_OVER_180);
