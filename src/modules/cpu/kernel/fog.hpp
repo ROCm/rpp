@@ -83,9 +83,9 @@ RppStatus fog_u8_u8_host_tensor(Rpp8u *srcPtr,
         __m256 pIntensity = _mm256_set1_ps(intensityValue);
         __m256 pGrayFactor = _mm256_set1_ps(grayValue);
         __m256 pConversionFactor[3];
-        pConversionFactor[0] = _mm256_set1_ps(0.299f);
-        pConversionFactor[1] = _mm256_set1_ps(0.587f);
-        pConversionFactor[2] = _mm256_set1_ps(0.114f);
+        pConversionFactor[0] = _mm256_set1_ps(RGB_TO_GREY_WEIGHT_RED);
+        pConversionFactor[1] = _mm256_set1_ps(RGB_TO_GREY_WEIGHT_GREEN);
+        pConversionFactor[2] = _mm256_set1_ps(RGB_TO_GREY_WEIGHT_BLUE);
 #endif
         // Fog without fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -129,22 +129,20 @@ RppStatus fog_u8_u8_host_tensor(Rpp8u *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    RpptFloatRGB pixel;
-                    pixel.R = static_cast<Rpp32f>(srcPtrTemp[0]);
-                    pixel.G = static_cast<Rpp32f>(srcPtrTemp[1]);
-                    pixel.B = static_cast<Rpp32f>(srcPtrTemp[2]);
-                    Rpp32f gray = 0.299 * pixel.R + 0.587 * pixel.G + 0.114 * pixel.B;
-                    gray = gray * grayValue;
+                    RpptFloatRGB pixel = {static_cast<Rpp32f>(srcPtrTemp[0]),
+                                          static_cast<Rpp32f>(srcPtrTemp[1]),
+                                          static_cast<Rpp32f>(srcPtrTemp[2])};
+                    Rpp32f gray =  grayValue * ((RGB_TO_GREY_WEIGHT_RED * pixel.R) + (RGB_TO_GREY_WEIGHT_GREEN * pixel.G) + (RGB_TO_GREY_WEIGHT_BLUE * pixel.B));
                     Rpp32f oneMinusGrayValue = 1 - grayValue;
-                    pixel.R = (pixel.R * oneMinusGrayValue + gray);   
-                    pixel.G = (pixel.G * oneMinusGrayValue + gray);   
-                    pixel.B = (pixel.B * oneMinusGrayValue + gray);  
+                    pixel.R = (pixel.R * oneMinusGrayValue) + gray;   
+                    pixel.G = (pixel.G * oneMinusGrayValue) + gray;   
+                    pixel.B = (pixel.B * oneMinusGrayValue) + gray;  
                     Rpp32f alphaMaskFactor = (1 - (*fogAlphaMaskPtrTemp + intensityValue));
                     Rpp32f intensityMaskFactor = ((*fogIntensityMaskPtrTemp++) * ((*fogAlphaMaskPtrTemp++) + intensityValue));
-                    *dstPtrTempR++ = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(pixel.R * alphaMaskFactor + intensityMaskFactor)));
-                    *dstPtrTempG++ = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(pixel.G * alphaMaskFactor + intensityMaskFactor)));
-                    *dstPtrTempB++ = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(pixel.B * alphaMaskFactor + intensityMaskFactor)));
-                    srcPtrTemp+=3;
+                    *dstPtrTempR++ = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf((pixel.R * alphaMaskFactor) + intensityMaskFactor)));
+                    *dstPtrTempG++ = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf((pixel.G * alphaMaskFactor) + intensityMaskFactor)));
+                    *dstPtrTempB++ = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf((pixel.B * alphaMaskFactor) + intensityMaskFactor)));
+                    srcPtrTemp += 3;
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
                 dstPtrRowR += dstDescPtr->strides.hStride;
@@ -196,21 +194,19 @@ RppStatus fog_u8_u8_host_tensor(Rpp8u *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    RpptFloatRGB pixel;
-                    pixel.R = static_cast<Rpp32f>(*srcPtrTempR);
-                    pixel.G = static_cast<Rpp32f>(*srcPtrTempG);
-                    pixel.B = static_cast<Rpp32f>(*srcPtrTempB);
-                    Rpp32f gray = 0.299 * pixel.R + 0.587 * pixel.G + 0.114 * pixel.B;
-                    gray = gray * grayValue;
+                    RpptFloatRGB pixel = {static_cast<Rpp32f>(*srcPtrTempR),
+                                          static_cast<Rpp32f>(*srcPtrTempG),
+                                          static_cast<Rpp32f>(*srcPtrTempB)};
+                    Rpp32f gray =  grayValue * ((RGB_TO_GREY_WEIGHT_RED * pixel.R) + (RGB_TO_GREY_WEIGHT_GREEN * pixel.G) + (RGB_TO_GREY_WEIGHT_BLUE * pixel.B));
                     Rpp32f oneMinusGrayValue = 1 - grayValue;
-                    pixel.R = (pixel.R * oneMinusGrayValue + gray);   
-                    pixel.G = (pixel.G * oneMinusGrayValue + gray);   
-                    pixel.B = (pixel.B * oneMinusGrayValue + gray);  
+                    pixel.R = (pixel.R * oneMinusGrayValue) + gray;   
+                    pixel.G = (pixel.G * oneMinusGrayValue) + gray;   
+                    pixel.B = (pixel.B * oneMinusGrayValue) + gray; 
                     Rpp32f alphaMaskFactor = (1 - (*fogAlphaMaskPtrTemp + intensityValue));
                     Rpp32f intensityMaskFactor = ((*fogIntensityMaskPtrTemp++) * ((*fogAlphaMaskPtrTemp++) + intensityValue));
-                    dstPtrTemp[0] = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(pixel.R * alphaMaskFactor + intensityMaskFactor)));
-                    dstPtrTemp[1] = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(pixel.G * alphaMaskFactor + intensityMaskFactor)));
-                    dstPtrTemp[2] = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(pixel.B * alphaMaskFactor + intensityMaskFactor)));
+                    dstPtrTemp[0] = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf((pixel.R * alphaMaskFactor) + intensityMaskFactor)));
+                    dstPtrTemp[1] = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf((pixel.G * alphaMaskFactor) + intensityMaskFactor)));
+                    dstPtrTemp[2] = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf((pixel.B * alphaMaskFactor) + intensityMaskFactor)));
                     srcPtrTempR++;
                     srcPtrTempG++;
                     srcPtrTempB++;
@@ -259,23 +255,21 @@ RppStatus fog_u8_u8_host_tensor(Rpp8u *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    RpptFloatRGB pixel;
-                    pixel.R = static_cast<Rpp32f>(srcPtrTemp[0]);
-                    pixel.G = static_cast<Rpp32f>(srcPtrTemp[1]);
-                    pixel.B = static_cast<Rpp32f>(srcPtrTemp[2]);
-                    Rpp32f gray = 0.299 * pixel.R + 0.587 * pixel.G + 0.114 * pixel.B;
-                    gray = gray * grayValue;
+                    RpptFloatRGB pixel = {static_cast<Rpp32f>(srcPtrTemp[0]),
+                                          static_cast<Rpp32f>(srcPtrTemp[1]),
+                                          static_cast<Rpp32f>(srcPtrTemp[2])};
+                    Rpp32f gray =  grayValue * ((RGB_TO_GREY_WEIGHT_RED * pixel.R) + (RGB_TO_GREY_WEIGHT_GREEN * pixel.G) + (RGB_TO_GREY_WEIGHT_BLUE * pixel.B));
                     Rpp32f oneMinusGrayValue = 1 - grayValue;
-                    pixel.R = (pixel.R * oneMinusGrayValue + gray);   
-                    pixel.G = (pixel.G * oneMinusGrayValue + gray);   
-                    pixel.B = (pixel.B * oneMinusGrayValue + gray);  
+                    pixel.R = (pixel.R * oneMinusGrayValue) + gray;   
+                    pixel.G = (pixel.G * oneMinusGrayValue) + gray;   
+                    pixel.B = (pixel.B * oneMinusGrayValue) + gray;  
                     Rpp32f alphaMaskFactor = (1 - (*fogAlphaMaskPtrTemp + intensityValue));
                     Rpp32f intensityMaskFactor = ((*fogIntensityMaskPtrTemp++) * ((*fogAlphaMaskPtrTemp++) + intensityValue));
-                    dstPtrTemp[0] = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(pixel.R * alphaMaskFactor + intensityMaskFactor)));
-                    dstPtrTemp[1] = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(pixel.G * alphaMaskFactor + intensityMaskFactor)));
-                    dstPtrTemp[2] = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(pixel.B * alphaMaskFactor + intensityMaskFactor)));
-                    srcPtrTemp+=3;
-                    dstPtrTemp+=3;
+                    dstPtrTemp[0] = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf((pixel.R * alphaMaskFactor) + intensityMaskFactor)));
+                    dstPtrTemp[1] = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf((pixel.G * alphaMaskFactor) + intensityMaskFactor)));
+                    dstPtrTemp[2] = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf((pixel.B * alphaMaskFactor) + intensityMaskFactor)));
+                    srcPtrTemp += 3;
+                    dstPtrTemp += 3;
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
                 dstPtrRow += dstDescPtr->strides.hStride;
@@ -330,21 +324,19 @@ RppStatus fog_u8_u8_host_tensor(Rpp8u *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    RpptFloatRGB pixel;
-                    pixel.R = (Rpp32f)*srcPtrTempR;
-                    pixel.G = (Rpp32f)*srcPtrTempG;
-                    pixel.B = (Rpp32f)*srcPtrTempB;
-                    Rpp32f gray = 0.299 * pixel.R + 0.587 * pixel.G + 0.114 * pixel.B;
-                    gray = gray * grayValue;
+                    RpptFloatRGB pixel = {static_cast<Rpp32f>(*srcPtrTempR),
+                                          static_cast<Rpp32f>(*srcPtrTempG),
+                                          static_cast<Rpp32f>(*srcPtrTempB)};
+                    Rpp32f gray =  grayValue * ((RGB_TO_GREY_WEIGHT_RED * pixel.R) + (RGB_TO_GREY_WEIGHT_GREEN * pixel.G) + (RGB_TO_GREY_WEIGHT_BLUE * pixel.B));
                     Rpp32f oneMinusGrayValue = 1 - grayValue;
-                    pixel.R = pixel.R * oneMinusGrayValue + gray;
-                    pixel.G = pixel.G * oneMinusGrayValue + gray;
-                    pixel.B = pixel.B * oneMinusGrayValue + gray;
+                    pixel.R = (pixel.R * oneMinusGrayValue) + gray;   
+                    pixel.G = (pixel.G * oneMinusGrayValue) + gray;   
+                    pixel.B = (pixel.B * oneMinusGrayValue) + gray;
                     Rpp32f alphaMaskFactor = (1 - (*fogAlphaMaskPtrTemp + intensityValue));
                     Rpp32f intensityMaskFactor = (*fogIntensityMaskPtrTemp++ * ((*fogAlphaMaskPtrTemp++) + intensityValue));
-                    *dstPtrTempR++ = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((pixel.R * alphaMaskFactor + intensityMaskFactor)));
-                    *dstPtrTempG++ = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((pixel.G * alphaMaskFactor + intensityMaskFactor)));
-                    *dstPtrTempB++ = (Rpp8u) RPPPIXELCHECK(std::nearbyintf((pixel.B * alphaMaskFactor + intensityMaskFactor)));
+                    *dstPtrTempR++ = (Rpp8u) RPPPIXELCHECK(std::nearbyintf(((pixel.R * alphaMaskFactor) + intensityMaskFactor)));
+                    *dstPtrTempG++ = (Rpp8u) RPPPIXELCHECK(std::nearbyintf(((pixel.G * alphaMaskFactor) + intensityMaskFactor)));
+                    *dstPtrTempB++ = (Rpp8u) RPPPIXELCHECK(std::nearbyintf(((pixel.B * alphaMaskFactor) + intensityMaskFactor)));
 
                     srcPtrTempR++;
                     srcPtrTempG++;
@@ -472,9 +464,9 @@ RppStatus fog_f16_f16_host_tensor(Rpp16f *srcPtr,
         __m256 pIntensity = _mm256_set1_ps(intensityValue);
         __m256 pGrayFactor = _mm256_set1_ps(grayValue);
         __m256 pConversionFactor[3];
-        pConversionFactor[0] = _mm256_set1_ps(0.299f);
-        pConversionFactor[1] = _mm256_set1_ps(0.587f);
-        pConversionFactor[2] = _mm256_set1_ps(0.114f);
+        pConversionFactor[0] = _mm256_set1_ps(RGB_TO_GREY_WEIGHT_RED);
+        pConversionFactor[1] = _mm256_set1_ps(RGB_TO_GREY_WEIGHT_GREEN);
+        pConversionFactor[2] = _mm256_set1_ps(RGB_TO_GREY_WEIGHT_BLUE);
 #endif
         // Fog without fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -519,21 +511,19 @@ RppStatus fog_f16_f16_host_tensor(Rpp16f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    RpptFloatRGB pixel;
-                    pixel.R = static_cast<Rpp32f>(srcPtrTemp[0]) * 255;
-                    pixel.G = static_cast<Rpp32f>(srcPtrTemp[1]) * 255;
-                    pixel.B = static_cast<Rpp32f>(srcPtrTemp[2]) * 255;
-                    Rpp32f gray = 0.299 * pixel.R + 0.587 * pixel.G + 0.114 * pixel.B;
-                    gray = gray * grayValue;
+                    RpptFloatRGB pixel = {static_cast<Rpp32f>(srcPtrTemp[0]) * 255,
+                                          static_cast<Rpp32f>(srcPtrTemp[1]) * 255,
+                                          static_cast<Rpp32f>(srcPtrTemp[2]) * 255};
+                    Rpp32f gray =  grayValue * ((RGB_TO_GREY_WEIGHT_RED * pixel.R) + (RGB_TO_GREY_WEIGHT_GREEN * pixel.G) + (RGB_TO_GREY_WEIGHT_BLUE * pixel.B));
                     Rpp32f oneMinusGrayValue = 1 - grayValue;
-                    pixel.R = (pixel.R * oneMinusGrayValue + gray) * ONE_OVER_255;   
-                    pixel.G = (pixel.G * oneMinusGrayValue + gray) * ONE_OVER_255;   
-                    pixel.B = (pixel.B * oneMinusGrayValue + gray) * ONE_OVER_255;  
+                    pixel.R = ((pixel.R * oneMinusGrayValue) + gray) * ONE_OVER_255;   
+                    pixel.G = ((pixel.G * oneMinusGrayValue) + gray) * ONE_OVER_255;   
+                    pixel.B = ((pixel.B * oneMinusGrayValue) + gray) * ONE_OVER_255; 
                     Rpp32f alphaMaskFactor = (1 - (*fogAlphaMaskPtrTemp + intensityValue));
                     Rpp32f intensityMaskFactor = (((*fogIntensityMaskPtrTemp++) * ONE_OVER_255) * ((*fogAlphaMaskPtrTemp++) + intensityValue));
-                    *dstPtrTempR++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel.R * alphaMaskFactor + intensityMaskFactor));
-                    *dstPtrTempG++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel.G * alphaMaskFactor + intensityMaskFactor));
-                    *dstPtrTempB++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel.B * alphaMaskFactor + intensityMaskFactor));
+                    *dstPtrTempR++ = static_cast<Rpp16f>(RPPPIXELCHECKF32((pixel.R * alphaMaskFactor) + intensityMaskFactor));
+                    *dstPtrTempG++ = static_cast<Rpp16f>(RPPPIXELCHECKF32((pixel.G * alphaMaskFactor) + intensityMaskFactor));
+                    *dstPtrTempB++ = static_cast<Rpp16f>(RPPPIXELCHECKF32((pixel.B * alphaMaskFactor) + intensityMaskFactor));
                     srcPtrTemp += 3;
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
@@ -588,21 +578,19 @@ RppStatus fog_f16_f16_host_tensor(Rpp16f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    RpptFloatRGB pixel;
-                    pixel.R = static_cast<Rpp32f>(*srcPtrTempR) * 255;
-                    pixel.G = static_cast<Rpp32f>(*srcPtrTempG) * 255;
-                    pixel.B = static_cast<Rpp32f>(*srcPtrTempB) * 255;
-                    Rpp32f gray = 0.299 * pixel.R + 0.587 * pixel.G + 0.114 * pixel.B;
-                    gray = gray * grayValue;
+                    RpptFloatRGB pixel = {static_cast<Rpp32f>(*srcPtrTempR) * 255,
+                                          static_cast<Rpp32f>(*srcPtrTempG) * 255,
+                                          static_cast<Rpp32f>(*srcPtrTempB) * 255};
+                    Rpp32f gray =  grayValue * ((RGB_TO_GREY_WEIGHT_RED * pixel.R) + (RGB_TO_GREY_WEIGHT_GREEN * pixel.G) + (RGB_TO_GREY_WEIGHT_BLUE * pixel.B));
                     Rpp32f oneMinusGrayValue = 1 - grayValue;
-                    pixel.R = (pixel.R * oneMinusGrayValue + gray) * ONE_OVER_255;   
-                    pixel.G = (pixel.G * oneMinusGrayValue + gray) * ONE_OVER_255;  
-                    pixel.B = (pixel.B * oneMinusGrayValue + gray) * ONE_OVER_255;
+                    pixel.R = ((pixel.R * oneMinusGrayValue) + gray) * ONE_OVER_255;   
+                    pixel.G = ((pixel.G * oneMinusGrayValue) + gray) * ONE_OVER_255;   
+                    pixel.B = ((pixel.B * oneMinusGrayValue) + gray) * ONE_OVER_255; 
                     Rpp32f alphaMaskFactor = (1 - (*fogAlphaMaskPtrTemp + intensityValue));
                     Rpp32f intensityMaskFactor = (((*fogIntensityMaskPtrTemp++) * ONE_OVER_255) * ((*fogAlphaMaskPtrTemp++) + intensityValue));
-                    dstPtrTemp[0] = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel.R * alphaMaskFactor + intensityMaskFactor));
-                    dstPtrTemp[1] = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel.G * alphaMaskFactor + intensityMaskFactor));
-                    dstPtrTemp[2] = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel.B * alphaMaskFactor + intensityMaskFactor));
+                    dstPtrTemp[0] = static_cast<Rpp16f>(RPPPIXELCHECKF32((pixel.R * alphaMaskFactor) + intensityMaskFactor));
+                    dstPtrTemp[1] = static_cast<Rpp16f>(RPPPIXELCHECKF32((pixel.G * alphaMaskFactor) + intensityMaskFactor));
+                    dstPtrTemp[2] = static_cast<Rpp16f>(RPPPIXELCHECKF32((pixel.B * alphaMaskFactor) + intensityMaskFactor));
                     dstPtrTemp += 3;
                     srcPtrTempR++;
                     srcPtrTempG++;
@@ -654,23 +642,21 @@ RppStatus fog_f16_f16_host_tensor(Rpp16f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    RpptFloatRGB pixel;
-                    pixel.R = static_cast<Rpp32f>(srcPtrTemp[0]) * 255;
-                    pixel.G = static_cast<Rpp32f>(srcPtrTemp[1]) * 255;
-                    pixel.B = static_cast<Rpp32f>(srcPtrTemp[2]) * 255;
-                    Rpp32f gray = 0.299 * pixel.R + 0.587 * pixel.G + 0.114 * pixel.B;
-                    gray = gray * grayValue;
+                    RpptFloatRGB pixel = {static_cast<Rpp32f>(srcPtrTemp[0]) * 255,
+                                          static_cast<Rpp32f>(srcPtrTemp[1]) * 255,
+                                          static_cast<Rpp32f>(srcPtrTemp[2]) * 255};
+                    Rpp32f gray =  grayValue * ((RGB_TO_GREY_WEIGHT_RED * pixel.R) + (RGB_TO_GREY_WEIGHT_GREEN * pixel.G) + (RGB_TO_GREY_WEIGHT_BLUE * pixel.B));
                     Rpp32f oneMinusGrayValue = 1 - grayValue;
-                    pixel.R = (pixel.R * oneMinusGrayValue + gray) * ONE_OVER_255;   
-                    pixel.G = (pixel.G * oneMinusGrayValue + gray) * ONE_OVER_255;   
-                    pixel.B = (pixel.B * oneMinusGrayValue + gray) * ONE_OVER_255;  
+                    pixel.R = ((pixel.R * oneMinusGrayValue) + gray) * ONE_OVER_255;   
+                    pixel.G = ((pixel.G * oneMinusGrayValue) + gray) * ONE_OVER_255;   
+                    pixel.B = ((pixel.B * oneMinusGrayValue) + gray) * ONE_OVER_255; 
                     Rpp32f alphaMaskFactor = (1 - (*fogAlphaMaskPtrTemp + intensityValue));
                     Rpp32f intensityMaskFactor = (((*fogIntensityMaskPtrTemp++) * ONE_OVER_255) * ((*fogAlphaMaskPtrTemp++) + intensityValue));
-                    dstPtrTemp[0] = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel.R * alphaMaskFactor + intensityMaskFactor));
-                    dstPtrTemp[1] = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel.G * alphaMaskFactor + intensityMaskFactor));
-                    dstPtrTemp[2] = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel.B * alphaMaskFactor + intensityMaskFactor));
-                    srcPtrTemp+=3;
-                    dstPtrTemp+=3;
+                    dstPtrTemp[0] = static_cast<Rpp16f>(RPPPIXELCHECKF32((pixel.R * alphaMaskFactor) + intensityMaskFactor));
+                    dstPtrTemp[1] = static_cast<Rpp16f>(RPPPIXELCHECKF32((pixel.G * alphaMaskFactor) + intensityMaskFactor));
+                    dstPtrTemp[2] = static_cast<Rpp16f>(RPPPIXELCHECKF32((pixel.B * alphaMaskFactor) + intensityMaskFactor));
+                    srcPtrTemp += 3;
+                    dstPtrTemp += 3;
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
                 dstPtrRow += dstDescPtr->strides.hStride;
@@ -729,21 +715,19 @@ RppStatus fog_f16_f16_host_tensor(Rpp16f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    RpptFloatRGB pixel;
-                    pixel.R = static_cast<Rpp32f>(*srcPtrTempR) * 255;
-                    pixel.G = static_cast<Rpp32f>(*srcPtrTempG) * 255;
-                    pixel.B = static_cast<Rpp32f>(*srcPtrTempB) * 255;
-                    Rpp32f gray = 0.299 * pixel.R + 0.587 * pixel.G + 0.114 * pixel.B;
-                    gray = gray * grayValue;
+                    RpptFloatRGB pixel = {static_cast<Rpp32f>(*srcPtrTempR) * 255,
+                                          static_cast<Rpp32f>(*srcPtrTempG) * 255,
+                                          static_cast<Rpp32f>(*srcPtrTempB) * 255};
+                    Rpp32f gray =  grayValue * ((RGB_TO_GREY_WEIGHT_RED * pixel.R) + (RGB_TO_GREY_WEIGHT_GREEN * pixel.G) + (RGB_TO_GREY_WEIGHT_BLUE * pixel.B));
                     Rpp32f oneMinusGrayValue = 1 - grayValue;
-                    pixel.R = (pixel.R * oneMinusGrayValue + gray) * ONE_OVER_255;   
-                    pixel.G = (pixel.G * oneMinusGrayValue + gray) * ONE_OVER_255;   
-                    pixel.B = (pixel.B * oneMinusGrayValue + gray) * ONE_OVER_255;  
+                    pixel.R = ((pixel.R * oneMinusGrayValue) + gray) * ONE_OVER_255;   
+                    pixel.G = ((pixel.G * oneMinusGrayValue) + gray) * ONE_OVER_255;   
+                    pixel.B = ((pixel.B * oneMinusGrayValue) + gray) * ONE_OVER_255;  
                     Rpp32f alphaMaskFactor = (1 - (*fogAlphaMaskPtrTemp + intensityValue));
                     Rpp32f intensityMaskFactor = (((*fogIntensityMaskPtrTemp++) * ONE_OVER_255) * ((*fogAlphaMaskPtrTemp++) + intensityValue));
-                    *dstPtrTempR++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel.R * alphaMaskFactor + intensityMaskFactor));
-                    *dstPtrTempG++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel.G * alphaMaskFactor + intensityMaskFactor));
-                    *dstPtrTempB++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel.B * alphaMaskFactor + intensityMaskFactor));
+                    *dstPtrTempR++ = static_cast<Rpp16f>(RPPPIXELCHECKF32((pixel.R * alphaMaskFactor) + intensityMaskFactor));
+                    *dstPtrTempG++ = static_cast<Rpp16f>(RPPPIXELCHECKF32((pixel.G * alphaMaskFactor) + intensityMaskFactor));
+                    *dstPtrTempB++ = static_cast<Rpp16f>(RPPPIXELCHECKF32((pixel.B * alphaMaskFactor) + intensityMaskFactor));
 
                     srcPtrTempR++;
                     srcPtrTempG++;
@@ -872,9 +856,9 @@ RppStatus fog_f32_f32_host_tensor(Rpp32f *srcPtr,
         __m256 pIntensity = _mm256_set1_ps(intensityValue);
         __m256 pGrayFactor = _mm256_set1_ps(grayValue);
         __m256 pConversionFactor[3];
-        pConversionFactor[0] = _mm256_set1_ps(0.299f);
-        pConversionFactor[1] = _mm256_set1_ps(0.587f);
-        pConversionFactor[2] = _mm256_set1_ps(0.114f);
+        pConversionFactor[0] = _mm256_set1_ps(RGB_TO_GREY_WEIGHT_RED);
+        pConversionFactor[1] = _mm256_set1_ps(RGB_TO_GREY_WEIGHT_GREEN);
+        pConversionFactor[2] = _mm256_set1_ps(RGB_TO_GREY_WEIGHT_BLUE);
 #endif
         // Fog without fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -919,22 +903,20 @@ RppStatus fog_f32_f32_host_tensor(Rpp32f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    RpptFloatRGB pixel;
-                    pixel.R = static_cast<Rpp32f>(srcPtrTemp[0]) * 255;
-                    pixel.G = static_cast<Rpp32f>(srcPtrTemp[1]) * 255;
-                    pixel.B = static_cast<Rpp32f>(srcPtrTemp[2]) * 255;
-                    Rpp32f gray = 0.299 * pixel.R + 0.587 * pixel.G + 0.114 * pixel.B;
-                    gray = gray * grayValue;
+                    RpptFloatRGB pixel = {static_cast<Rpp32f>(srcPtrTemp[0]) * 255,
+                                          static_cast<Rpp32f>(srcPtrTemp[1]) * 255,
+                                          static_cast<Rpp32f>(srcPtrTemp[2]) * 255};
+                    Rpp32f gray =  grayValue * ((RGB_TO_GREY_WEIGHT_RED * pixel.R) + (RGB_TO_GREY_WEIGHT_GREEN * pixel.G) + (RGB_TO_GREY_WEIGHT_BLUE * pixel.B));
                     Rpp32f oneMinusGrayValue = 1 - grayValue;
-                    pixel.R = (pixel.R * oneMinusGrayValue + gray) * ONE_OVER_255;   
-                    pixel.G = (pixel.G * oneMinusGrayValue + gray) * ONE_OVER_255;   
-                    pixel.B = (pixel.B * oneMinusGrayValue + gray) * ONE_OVER_255;  
+                    pixel.R = ((pixel.R * oneMinusGrayValue) + gray) * ONE_OVER_255;   
+                    pixel.G = ((pixel.G * oneMinusGrayValue) + gray) * ONE_OVER_255;   
+                    pixel.B = ((pixel.B * oneMinusGrayValue) + gray) * ONE_OVER_255;  
                     Rpp32f alphaMaskFactor = (1 - (*fogAlphaMaskPtrTemp + intensityValue));
                     Rpp32f intensityMaskFactor = (((*fogIntensityMaskPtrTemp++) * ONE_OVER_255) * ((*fogAlphaMaskPtrTemp++) + intensityValue));
-                    *dstPtrTempR++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel.R * alphaMaskFactor + intensityMaskFactor));
-                    *dstPtrTempG++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel.G * alphaMaskFactor + intensityMaskFactor));
-                    *dstPtrTempB++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel.B * alphaMaskFactor + intensityMaskFactor));
-                    srcPtrTemp+=3;
+                    *dstPtrTempR++ = static_cast<Rpp16f>(RPPPIXELCHECKF32((pixel.R * alphaMaskFactor) + intensityMaskFactor));
+                    *dstPtrTempG++ = static_cast<Rpp16f>(RPPPIXELCHECKF32((pixel.G * alphaMaskFactor) + intensityMaskFactor));
+                    *dstPtrTempB++ = static_cast<Rpp16f>(RPPPIXELCHECKF32((pixel.B * alphaMaskFactor) + intensityMaskFactor));
+                    srcPtrTemp += 3;
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
                 dstPtrRowR += dstDescPtr->strides.hStride;
@@ -988,25 +970,23 @@ RppStatus fog_f32_f32_host_tensor(Rpp32f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    RpptFloatRGB pixel;
-                    pixel.R = static_cast<Rpp32f>(*srcPtrTempR) * 255;
-                    pixel.G = static_cast<Rpp32f>(*srcPtrTempG) * 255;
-                    pixel.B = static_cast<Rpp32f>(*srcPtrTempB) * 255;
-                    Rpp32f gray = 0.299 * pixel.R + 0.587 * pixel.G + 0.114 * pixel.B;
-                    gray = gray * grayValue;
+                    RpptFloatRGB pixel = {static_cast<Rpp32f>(*srcPtrTempR) * 255,
+                                          static_cast<Rpp32f>(*srcPtrTempG) * 255,
+                                          static_cast<Rpp32f>(*srcPtrTempB) * 255};
+                    Rpp32f gray =  grayValue * ((RGB_TO_GREY_WEIGHT_RED * pixel.R) + (RGB_TO_GREY_WEIGHT_GREEN * pixel.G) + (RGB_TO_GREY_WEIGHT_BLUE * pixel.B));
                     Rpp32f oneMinusGrayValue = 1 - grayValue;
-                    pixel.R = (pixel.R * oneMinusGrayValue + gray) * ONE_OVER_255;   
-                    pixel.G = (pixel.G * oneMinusGrayValue + gray) * ONE_OVER_255;   
-                    pixel.B = (pixel.B * oneMinusGrayValue + gray) * ONE_OVER_255;  
+                    pixel.R = ((pixel.R * oneMinusGrayValue) + gray) * ONE_OVER_255;   
+                    pixel.G = ((pixel.G * oneMinusGrayValue) + gray) * ONE_OVER_255;   
+                    pixel.B = ((pixel.B * oneMinusGrayValue) + gray) * ONE_OVER_255;   
                     Rpp32f alphaMaskFactor = (1 - (*fogAlphaMaskPtrTemp + intensityValue));
                     Rpp32f intensityMaskFactor = (((*fogIntensityMaskPtrTemp++) * ONE_OVER_255) * ((*fogAlphaMaskPtrTemp++) + intensityValue));
-                    dstPtrTemp[0] = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel.R * alphaMaskFactor + intensityMaskFactor));
-                    dstPtrTemp[1] = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel.G * alphaMaskFactor + intensityMaskFactor));
-                    dstPtrTemp[2] = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel.B * alphaMaskFactor + intensityMaskFactor));
+                    dstPtrTemp[0] = static_cast<Rpp16f>(RPPPIXELCHECKF32((pixel.R * alphaMaskFactor) + intensityMaskFactor));
+                    dstPtrTemp[1] = static_cast<Rpp16f>(RPPPIXELCHECKF32((pixel.G * alphaMaskFactor) + intensityMaskFactor));
+                    dstPtrTemp[2] = static_cast<Rpp16f>(RPPPIXELCHECKF32((pixel.B * alphaMaskFactor) + intensityMaskFactor));
                     srcPtrTempR++;
                     srcPtrTempG++;
                     srcPtrTempB++;
-                    dstPtrTemp+=3;
+                    dstPtrTemp += 3;
                 }
                 srcPtrRowR += srcDescPtr->strides.hStride;
                 srcPtrRowG += srcDescPtr->strides.hStride;
@@ -1054,23 +1034,21 @@ RppStatus fog_f32_f32_host_tensor(Rpp32f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    RpptFloatRGB pixel;
-                    pixel.R = static_cast<Rpp32f>(srcPtrTemp[0]) * 255;
-                    pixel.G = static_cast<Rpp32f>(srcPtrTemp[1]) * 255;
-                    pixel.B = static_cast<Rpp32f>(srcPtrTemp[2]) * 255;
-                    Rpp32f gray = 0.299 * pixel.R + 0.587 * pixel.G + 0.114 * pixel.B;
-                    gray = gray * grayValue;
+                    RpptFloatRGB pixel = {static_cast<Rpp32f>(srcPtrTemp[0]) * 255,
+                                          static_cast<Rpp32f>(srcPtrTemp[1]) * 255,
+                                          static_cast<Rpp32f>(srcPtrTemp[2]) * 255};
+                    Rpp32f gray =  grayValue * ((RGB_TO_GREY_WEIGHT_RED * pixel.R) + (RGB_TO_GREY_WEIGHT_GREEN * pixel.G) + (RGB_TO_GREY_WEIGHT_BLUE * pixel.B));
                     Rpp32f oneMinusGrayValue = 1 - grayValue;
-                    pixel.R = (pixel.R * oneMinusGrayValue + gray) * ONE_OVER_255;   
-                    pixel.G = (pixel.G * oneMinusGrayValue + gray) * ONE_OVER_255;   
-                    pixel.B = (pixel.B * oneMinusGrayValue + gray) * ONE_OVER_255;  
+                    pixel.R = ((pixel.R * oneMinusGrayValue) + gray) * ONE_OVER_255;   
+                    pixel.G = ((pixel.G * oneMinusGrayValue) + gray) * ONE_OVER_255;   
+                    pixel.B = ((pixel.B * oneMinusGrayValue) + gray) * ONE_OVER_255;   
                     Rpp32f alphaMaskFactor = (1 - (*fogAlphaMaskPtrTemp + intensityValue));
                     Rpp32f intensityMaskFactor = (((*fogIntensityMaskPtrTemp++) * ONE_OVER_255) * ((*fogAlphaMaskPtrTemp++) + intensityValue));
-                    dstPtrTemp[0] = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel.R * alphaMaskFactor + intensityMaskFactor));
-                    dstPtrTemp[1] = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel.G * alphaMaskFactor + intensityMaskFactor));
-                    dstPtrTemp[2] = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel.B * alphaMaskFactor + intensityMaskFactor));
-                    srcPtrTemp+=3;
-                    dstPtrTemp+=3;
+                    dstPtrTemp[0] = static_cast<Rpp16f>(RPPPIXELCHECKF32((pixel.R * alphaMaskFactor) + intensityMaskFactor));
+                    dstPtrTemp[1] = static_cast<Rpp16f>(RPPPIXELCHECKF32((pixel.G * alphaMaskFactor) + intensityMaskFactor));
+                    dstPtrTemp[2] = static_cast<Rpp16f>(RPPPIXELCHECKF32((pixel.B * alphaMaskFactor) + intensityMaskFactor));
+                    srcPtrTemp += 3;
+                    dstPtrTemp += 3;
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
                 dstPtrRow += dstDescPtr->strides.hStride;
@@ -1129,21 +1107,19 @@ RppStatus fog_f32_f32_host_tensor(Rpp32f *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    RpptFloatRGB pixel;
-                    pixel.R = static_cast<Rpp32f>(*srcPtrTempR) * 255;
-                    pixel.G = static_cast<Rpp32f>(*srcPtrTempG) * 255;
-                    pixel.B = static_cast<Rpp32f>(*srcPtrTempB) * 255;
-                    Rpp32f gray = 0.299 * pixel.R + 0.587 * pixel.G + 0.114 * pixel.B;
-                    gray = gray * grayValue;
+                    RpptFloatRGB pixel = {static_cast<Rpp32f>(*srcPtrTempR) * 255,
+                                          static_cast<Rpp32f>(*srcPtrTempG) * 255,
+                                          static_cast<Rpp32f>(*srcPtrTempB) * 255};
+                    Rpp32f gray =  grayValue * ((RGB_TO_GREY_WEIGHT_RED * pixel.R) + (RGB_TO_GREY_WEIGHT_GREEN * pixel.G) + (RGB_TO_GREY_WEIGHT_BLUE * pixel.B));
                     Rpp32f oneMinusGrayValue = 1 - grayValue;
-                    pixel.R = (pixel.R * oneMinusGrayValue + gray) * ONE_OVER_255;   
-                    pixel.G = (pixel.G * oneMinusGrayValue + gray) * ONE_OVER_255;   
-                    pixel.B = (pixel.B * oneMinusGrayValue + gray) * ONE_OVER_255;  
+                    pixel.R = ((pixel.R * oneMinusGrayValue) + gray) * ONE_OVER_255;   
+                    pixel.G = ((pixel.G * oneMinusGrayValue) + gray) * ONE_OVER_255;   
+                    pixel.B = ((pixel.B * oneMinusGrayValue) + gray) * ONE_OVER_255;  
                     Rpp32f alphaMaskFactor = (1 - (*fogAlphaMaskPtrTemp + intensityValue));
                     Rpp32f intensityMaskFactor = (((*fogIntensityMaskPtrTemp++) * ONE_OVER_255) * ((*fogAlphaMaskPtrTemp++) + intensityValue));
-                    *dstPtrTempR++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel.R * alphaMaskFactor + intensityMaskFactor));
-                    *dstPtrTempG++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel.G * alphaMaskFactor + intensityMaskFactor));
-                    *dstPtrTempB++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel.B * alphaMaskFactor + intensityMaskFactor));
+                    *dstPtrTempR++ = static_cast<Rpp16f>(RPPPIXELCHECKF32((pixel.R * alphaMaskFactor) + intensityMaskFactor));
+                    *dstPtrTempG++ = static_cast<Rpp16f>(RPPPIXELCHECKF32((pixel.G * alphaMaskFactor) + intensityMaskFactor));
+                    *dstPtrTempB++ = static_cast<Rpp16f>(RPPPIXELCHECKF32((pixel.B * alphaMaskFactor) + intensityMaskFactor));
 
                     srcPtrTempR++;
                     srcPtrTempG++;
@@ -1273,9 +1249,9 @@ RppStatus fog_i8_i8_host_tensor(Rpp8s *srcPtr,
         __m256 pIntensity = _mm256_set1_ps(intensityValue);
         __m256 pGrayFactor = _mm256_set1_ps(grayValue);
         __m256 pConversionFactor[3];
-        pConversionFactor[0] = _mm256_set1_ps(0.299f);
-        pConversionFactor[1] = _mm256_set1_ps(0.587f);
-        pConversionFactor[2] = _mm256_set1_ps(0.114f);
+        pConversionFactor[0] = _mm256_set1_ps(RGB_TO_GREY_WEIGHT_RED);
+        pConversionFactor[1] = _mm256_set1_ps(RGB_TO_GREY_WEIGHT_GREEN);
+        pConversionFactor[2] = _mm256_set1_ps(RGB_TO_GREY_WEIGHT_BLUE);
 #endif
         // Fog without fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -1318,21 +1294,19 @@ RppStatus fog_i8_i8_host_tensor(Rpp8s *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    RpptFloatRGB pixel;
-                    pixel.R = (static_cast<Rpp32f>(srcPtrTemp[0]) + 128.0f);
-                    pixel.G = (static_cast<Rpp32f>(srcPtrTemp[1]) + 128.0f);
-                    pixel.B = (static_cast<Rpp32f>(srcPtrTemp[2]) + 128.0f);
-                    Rpp32f gray = 0.299 * pixel.R + 0.587 * pixel.G + 0.114 * pixel.B;
-                    gray = gray * grayValue;
+                    RpptFloatRGB pixel = {static_cast<Rpp32f>(srcPtrTemp[0]) + 128.0f,
+                                          static_cast<Rpp32f>(srcPtrTemp[1]) + 128.0f,
+                                          static_cast<Rpp32f>(srcPtrTemp[2]) + 128.0f};
+                    Rpp32f gray =  grayValue * ((RGB_TO_GREY_WEIGHT_RED * pixel.R) + (RGB_TO_GREY_WEIGHT_GREEN * pixel.G) + (RGB_TO_GREY_WEIGHT_BLUE * pixel.B));
                     Rpp32f oneMinusGrayValue = 1 - grayValue;
-                    pixel.R = (pixel.R * oneMinusGrayValue + gray);   
-                    pixel.G = (pixel.G * oneMinusGrayValue + gray);   
-                    pixel.B = (pixel.B * oneMinusGrayValue + gray);  
+                    pixel.R = (pixel.R * oneMinusGrayValue) + gray;   
+                    pixel.G = (pixel.G * oneMinusGrayValue) + gray;   
+                    pixel.B = (pixel.B * oneMinusGrayValue) + gray;   
                     Rpp32f alphaMaskFactor = (1 - (*fogAlphaMaskPtrTemp + intensityValue));
                     Rpp32f intensityMaskFactor = ((*fogIntensityMaskPtrTemp++) * ((*fogAlphaMaskPtrTemp++) + intensityValue)) -128.0f;
-                    *dstPtrTempR++ = static_cast<Rpp8s>(RPPPIXELCHECKI8(pixel.R * alphaMaskFactor + intensityMaskFactor));
-                    *dstPtrTempG++ = static_cast<Rpp8s>(RPPPIXELCHECKI8(pixel.G * alphaMaskFactor + intensityMaskFactor));
-                    *dstPtrTempB++ = static_cast<Rpp8s>(RPPPIXELCHECKI8(pixel.B * alphaMaskFactor + intensityMaskFactor));
+                    *dstPtrTempR++ = static_cast<Rpp8s>(RPPPIXELCHECKI8((pixel.R * alphaMaskFactor) + intensityMaskFactor));
+                    *dstPtrTempG++ = static_cast<Rpp8s>(RPPPIXELCHECKI8((pixel.G * alphaMaskFactor) + intensityMaskFactor));
+                    *dstPtrTempB++ = static_cast<Rpp8s>(RPPPIXELCHECKI8((pixel.B * alphaMaskFactor) + intensityMaskFactor));
                     srcPtrTemp += 3;
                 }
                 srcPtrRow += srcDescPtr->strides.hStride;
@@ -1385,21 +1359,19 @@ RppStatus fog_i8_i8_host_tensor(Rpp8s *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    RpptFloatRGB pixel;
-                    pixel.R = (static_cast<Rpp32f>(*srcPtrTempR) + 128.0f);
-                    pixel.G = (static_cast<Rpp32f>(*srcPtrTempG) + 128.0f);
-                    pixel.B = (static_cast<Rpp32f>(*srcPtrTempB) + 128.0f);
-                    Rpp32f gray = 0.299 * pixel.R + 0.587 * pixel.G + 0.114 * pixel.B;
-                    gray = gray * grayValue;
+                    RpptFloatRGB pixel = {static_cast<Rpp32f>(*srcPtrTempR) + 128.0f,
+                                          static_cast<Rpp32f>(*srcPtrTempG) + 128.0f,
+                                          static_cast<Rpp32f>(*srcPtrTempB) + 128.0f};
+                    Rpp32f gray =  grayValue * ((RGB_TO_GREY_WEIGHT_RED * pixel.R) + (RGB_TO_GREY_WEIGHT_GREEN * pixel.G) + (RGB_TO_GREY_WEIGHT_BLUE * pixel.B));
                     Rpp32f oneMinusGrayValue = 1 - grayValue;
-                    pixel.R = (pixel.R * oneMinusGrayValue + gray);   
-                    pixel.G = (pixel.G * oneMinusGrayValue + gray);   
-                    pixel.B = (pixel.B * oneMinusGrayValue + gray);  
+                    pixel.R = (pixel.R * oneMinusGrayValue) + gray;   
+                    pixel.G = (pixel.G * oneMinusGrayValue) + gray;   
+                    pixel.B = (pixel.B * oneMinusGrayValue) + gray;
                     Rpp32f alphaMaskFactor = (1 - (*fogAlphaMaskPtrTemp + intensityValue));
                     Rpp32f intensityMaskFactor = ((*fogIntensityMaskPtrTemp++) * ((*fogAlphaMaskPtrTemp++) + intensityValue)) -128.0f;
-                    dstPtrTemp[0] = static_cast<Rpp8s>(RPPPIXELCHECKI8(pixel.R * alphaMaskFactor + intensityMaskFactor));
-                    dstPtrTemp[1] = static_cast<Rpp8s>(RPPPIXELCHECKI8(pixel.G * alphaMaskFactor + intensityMaskFactor));
-                    dstPtrTemp[2] = static_cast<Rpp8s>(RPPPIXELCHECKI8(pixel.B * alphaMaskFactor + intensityMaskFactor));
+                    dstPtrTemp[0] = static_cast<Rpp8s>(RPPPIXELCHECKI8((pixel.R * alphaMaskFactor) + intensityMaskFactor));
+                    dstPtrTemp[1] = static_cast<Rpp8s>(RPPPIXELCHECKI8((pixel.G * alphaMaskFactor) + intensityMaskFactor));
+                    dstPtrTemp[2] = static_cast<Rpp8s>(RPPPIXELCHECKI8((pixel.B * alphaMaskFactor) + intensityMaskFactor));
                     dstPtrTemp += 3;
                     srcPtrTempR++;
                     srcPtrTempG++;
@@ -1449,21 +1421,19 @@ RppStatus fog_i8_i8_host_tensor(Rpp8s *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    RpptFloatRGB pixel;
-                    pixel.R = (static_cast<Rpp32f>(srcPtrTemp[0]) + 128.0f);
-                    pixel.G = (static_cast<Rpp32f>(srcPtrTemp[1]) + 128.0f);
-                    pixel.B = (static_cast<Rpp32f>(srcPtrTemp[2]) + 128.0f);
-                    Rpp32f gray = 0.299 * pixel.R + 0.587 * pixel.G + 0.114 * pixel.B;
-                    gray = gray * grayValue;
+                    RpptFloatRGB pixel = {static_cast<Rpp32f>(srcPtrTemp[0]) + 128.0f,
+                                          static_cast<Rpp32f>(srcPtrTemp[1]) + 128.0f,
+                                          static_cast<Rpp32f>(srcPtrTemp[2]) + 128.0f};
+                    Rpp32f gray =  grayValue * ((RGB_TO_GREY_WEIGHT_RED * pixel.R) + (RGB_TO_GREY_WEIGHT_GREEN * pixel.G) + (RGB_TO_GREY_WEIGHT_BLUE * pixel.B));
                     Rpp32f oneMinusGrayValue = 1 - grayValue;
-                    pixel.R = (pixel.R * oneMinusGrayValue + gray);   
-                    pixel.G = (pixel.G * oneMinusGrayValue + gray);   
-                    pixel.B = (pixel.B * oneMinusGrayValue + gray);  
+                    pixel.R = (pixel.R * oneMinusGrayValue) + gray;   
+                    pixel.G = (pixel.G * oneMinusGrayValue) + gray;   
+                    pixel.B = (pixel.B * oneMinusGrayValue) + gray;
                     Rpp32f alphaMaskFactor = (1 - (*fogAlphaMaskPtrTemp + intensityValue));
                     Rpp32f intensityMaskFactor = ((*fogIntensityMaskPtrTemp++) * ((*fogAlphaMaskPtrTemp++) + intensityValue)) -128.0f;
-                    dstPtrTemp[0] = static_cast<Rpp8s>(RPPPIXELCHECKI8(pixel.R * alphaMaskFactor + intensityMaskFactor));
-                    dstPtrTemp[1] = static_cast<Rpp8s>(RPPPIXELCHECKI8(pixel.G * alphaMaskFactor + intensityMaskFactor));
-                    dstPtrTemp[2] = static_cast<Rpp8s>(RPPPIXELCHECKI8(pixel.B * alphaMaskFactor + intensityMaskFactor));
+                    dstPtrTemp[0] = static_cast<Rpp8s>(RPPPIXELCHECKI8((pixel.R * alphaMaskFactor) + intensityMaskFactor));
+                    dstPtrTemp[1] = static_cast<Rpp8s>(RPPPIXELCHECKI8((pixel.G * alphaMaskFactor) + intensityMaskFactor));
+                    dstPtrTemp[2] = static_cast<Rpp8s>(RPPPIXELCHECKI8((pixel.B * alphaMaskFactor) + intensityMaskFactor));
                     srcPtrTemp += 3;
                     dstPtrTemp += 3;
                 }
@@ -1522,21 +1492,19 @@ RppStatus fog_i8_i8_host_tensor(Rpp8s *srcPtr,
                 }
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    RpptFloatRGB pixel;
-                    pixel.R = (static_cast<Rpp32f>(*srcPtrTempR) + 128.0f);
-                    pixel.G = (static_cast<Rpp32f>(*srcPtrTempG) + 128.0f);
-                    pixel.B = (static_cast<Rpp32f>(*srcPtrTempB) + 128.0f);
-                    Rpp32f gray = 0.299 * pixel.R + 0.587 * pixel.G + 0.114 * pixel.B;
-                    gray = gray * grayValue;
+                    RpptFloatRGB pixel = {static_cast<Rpp32f>(*srcPtrTempR) + 128.0f,
+                                          static_cast<Rpp32f>(*srcPtrTempG) + 128.0f,
+                                          static_cast<Rpp32f>(*srcPtrTempB) + 128.0f};
+                    Rpp32f gray =  grayValue * ((RGB_TO_GREY_WEIGHT_RED * pixel.R) + (RGB_TO_GREY_WEIGHT_GREEN * pixel.G) + (RGB_TO_GREY_WEIGHT_BLUE * pixel.B));
                     Rpp32f oneMinusGrayValue = 1 - grayValue;
-                    pixel.R = (pixel.R * oneMinusGrayValue + gray);   
-                    pixel.G = (pixel.G * oneMinusGrayValue + gray);   
-                    pixel.B = (pixel.B * oneMinusGrayValue + gray);  
+                    pixel.R = (pixel.R * oneMinusGrayValue) + gray;   
+                    pixel.G = (pixel.G * oneMinusGrayValue) + gray;   
+                    pixel.B = (pixel.B * oneMinusGrayValue) + gray; 
                     Rpp32f alphaMaskFactor = (1 - (*fogAlphaMaskPtrTemp + intensityValue));
                     Rpp32f intensityMaskFactor = ((*fogIntensityMaskPtrTemp++) * ((*fogAlphaMaskPtrTemp++) + intensityValue)) -128.0f;
-                    *dstPtrTempR++ = static_cast<Rpp8s>(RPPPIXELCHECKI8(pixel.R * alphaMaskFactor + intensityMaskFactor));
-                    *dstPtrTempG++ = static_cast<Rpp8s>(RPPPIXELCHECKI8(pixel.G * alphaMaskFactor + intensityMaskFactor));
-                    *dstPtrTempB++ = static_cast<Rpp8s>(RPPPIXELCHECKI8(pixel.B * alphaMaskFactor + intensityMaskFactor));
+                    *dstPtrTempR++ = static_cast<Rpp8s>(RPPPIXELCHECKI8((pixel.R * alphaMaskFactor) + intensityMaskFactor));
+                    *dstPtrTempG++ = static_cast<Rpp8s>(RPPPIXELCHECKI8((pixel.G * alphaMaskFactor) + intensityMaskFactor));
+                    *dstPtrTempB++ = static_cast<Rpp8s>(RPPPIXELCHECKI8((pixel.B * alphaMaskFactor) + intensityMaskFactor));
 
                     srcPtrTempR++;
                     srcPtrTempG++;

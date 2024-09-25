@@ -687,7 +687,7 @@ int main(int argc, char **argv)
                     for (i = 0; i < batchSize; i++)
                     {
                         intensityFactor[i] = 0;
-                        greyFactor[i] = 0;
+                        greyFactor[i] = 0.3;
                     }
 
                     startWallTime = omp_get_wtime();

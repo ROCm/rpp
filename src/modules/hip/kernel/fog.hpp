@@ -4,20 +4,20 @@
 __device__ __forceinline__ void fog_grey_hip_compute(d_float8 *r_f8, d_float8 *g_f8, d_float8 *b_f8, float4 *greyFactor_f4)
 {
     float4 grey_f4[2];
-    float4 rMultiplier_f4 = static_cast<float4>(0.299f);
-    float4 gMultiplier_f4 = static_cast<float4>(0.589f);
-    float4 bMultiplier_f4 = static_cast<float4>(0.114f);
+    float4 rMultiplier_f4 = static_cast<float4>(RGB_TO_GREY_WEIGHT_RED);
+    float4 gMultiplier_f4 = static_cast<float4>(RGB_TO_GREY_WEIGHT_GREEN);
+    float4 bMultiplier_f4 = static_cast<float4>(RGB_TO_GREY_WEIGHT_BLUE);
     grey_f4[0] = r_f8->f4[0] * rMultiplier_f4 + g_f8->f4[0] * gMultiplier_f4 + b_f8->f4[0] * bMultiplier_f4;
     grey_f4[1] = r_f8->f4[1] * rMultiplier_f4 + g_f8->f4[1] * gMultiplier_f4 + b_f8->f4[1] * bMultiplier_f4;
-    float4 oneMinusGreyFactor = static_cast<float4>(1.0f) - *greyFactor_f4;
+    float4 oneMinusGreyFactor_f4 = static_cast<float4>(1.0f) - *greyFactor_f4;
     grey_f4[0] = grey_f4[0] * *greyFactor_f4;
     grey_f4[1] = grey_f4[1] * *greyFactor_f4;
-    r_f8->f4[0] = (r_f8->f4[0] * oneMinusGreyFactor) + grey_f4[0];
-    g_f8->f4[0] = (g_f8->f4[0] * oneMinusGreyFactor) + grey_f4[0];
-    b_f8->f4[0] = (b_f8->f4[0] * oneMinusGreyFactor) + grey_f4[0];
-    r_f8->f4[0] = (r_f8->f4[0] * oneMinusGreyFactor) + grey_f4[1];
-    g_f8->f4[0] = (g_f8->f4[0] * oneMinusGreyFactor) + grey_f4[1];
-    b_f8->f4[0] = (b_f8->f4[0] * oneMinusGreyFactor) + grey_f4[1];
+    r_f8->f4[0] = (r_f8->f4[0] * oneMinusGreyFactor_f4) + grey_f4[0];
+    g_f8->f4[0] = (g_f8->f4[0] * oneMinusGreyFactor_f4) + grey_f4[0];
+    b_f8->f4[0] = (b_f8->f4[0] * oneMinusGreyFactor_f4) + grey_f4[0];
+    r_f8->f4[0] = (r_f8->f4[0] * oneMinusGreyFactor_f4) + grey_f4[1];
+    g_f8->f4[0] = (g_f8->f4[0] * oneMinusGreyFactor_f4) + grey_f4[1];
+    b_f8->f4[0] = (b_f8->f4[0] * oneMinusGreyFactor_f4) + grey_f4[1];
 }
 
 __device__ __forceinline__ void fog_hip_compute(uchar *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, d_float8 *maskAlpha_f8, d_float8 *maskIntensity_f8, float4 *intensityFactor_f4)
