@@ -278,7 +278,7 @@ RppStatus bitwise_not_u8_u8_host_tensor(Rpp8u *srcPtr,
 }
 
 RppStatus bitwise_not_f32_f32_host_tensor(Rpp32f *srcPtr,
-                                           RpptDescPtr srcDescPtr,
+                                          RpptDescPtr srcDescPtr,
                                            Rpp32f *dstPtr,
                                            RpptDescPtr dstDescPtr,
                                            RpptROIPtr roiTensorPtrSrc,
@@ -311,7 +311,7 @@ RppStatus bitwise_not_f32_f32_host_tensor(Rpp32f *srcPtr,
         Rpp32u alignedLength = (bufferLength / 24) * 24;
         Rpp32u vectorIncrement = 24;
         Rpp32u vectorIncrementPerChannel = 8;
-        __m256i pxMax = _mm256_set1_epi32(0xFFFFFFFF);
+        __m256i pxMax = _mm256_set1_epi32(0xFF);
 #endif
 
         // Exclusive OR with fused output-layout toggle (NHWC -> NCHW)
@@ -513,7 +513,7 @@ RppStatus bitwise_not_f32_f32_host_tensor(Rpp32f *srcPtr,
                     __m256 p;
 
                     rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtrTemp, &p);    // simd loads
-                    p = _mm256_castsi256_ps(_mm256_xor_si256(_mm256_castps_si256(p), _mm256_set1_epi32(0xFFFFFFFF)));
+                    p = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p, avx_p255)), pxMax));
                     p = _mm256_mul_ps(p, avx_p1op255);
                     rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp, &p);    // simd stores
 
@@ -541,270 +541,270 @@ RppStatus bitwise_not_f32_f32_host_tensor(Rpp32f *srcPtr,
     return RPP_SUCCESS;
 }
 
-// RppStatus bitwise_not_f16_f16_host_tensor(Rpp16f *srcPtr,
-//                                            RpptDescPtr srcDescPtr,
-//                                            Rpp16f *dstPtr,
-//                                            RpptDescPtr dstDescPtr,
-//                                            RpptROIPtr roiTensorPtrSrc,
-//                                            RpptRoiType roiType,
-//                                            RppLayoutParams layoutParams,
-//                                            rpp::Handle& Handle)
-// {
-//     RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
-//     Rpp32u numThreads = Handle.GetNumThreads();
+RppStatus bitwise_not_f16_f16_host_tensor(Rpp16f *srcPtr,
+                                           RpptDescPtr srcDescPtr,
+                                           Rpp16f *dstPtr,
+                                           RpptDescPtr dstDescPtr,
+                                           RpptROIPtr roiTensorPtrSrc,
+                                           RpptRoiType roiType,
+                                           RppLayoutParams layoutParams,
+                                           rpp::Handle& Handle)
+{
+    RpptROI roiDefault = {0, 0, (Rpp32s)srcDescPtr->w, (Rpp32s)srcDescPtr->h};
+    Rpp32u numThreads = Handle.GetNumThreads();
 
-//     omp_set_dynamic(0);
-// #pragma omp parallel for num_threads(numThreads)
-//     for (int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
-//     {
-//         RpptROI roi;
-//         RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
-//         compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
+    omp_set_dynamic(0);
+#pragma omp parallel for num_threads(numThreads)
+    for (int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
+    {
+        RpptROI roi;
+        RpptROIPtr roiPtrInput = &roiTensorPtrSrc[batchCount];
+        compute_roi_validation_host(roiPtrInput, &roi, &roiDefault, roiType);
 
-//         Rpp16f *srcPtrImage, *dstPtrImage;
-//         srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
-//         dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
+        Rpp16f *srcPtrImage, *dstPtrImage;
+        srcPtrImage = srcPtr + batchCount * srcDescPtr->strides.nStride;
+        dstPtrImage = dstPtr + batchCount * dstDescPtr->strides.nStride;
 
-//         Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
+        Rpp32u bufferLength = roi.xywhROI.roiWidth * layoutParams.bufferMultiplier;
 
-//         Rpp16f *srcPtrChannel, *dstPtrChannel;
-//         srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
-//         dstPtrChannel = dstPtrImage;
+        Rpp16f *srcPtrChannel, *dstPtrChannel;
+        srcPtrChannel = srcPtrImage + (roi.xywhROI.xy.y * srcDescPtr->strides.hStride) + (roi.xywhROI.xy.x * layoutParams.bufferMultiplier);
+        dstPtrChannel = dstPtrImage;
 
-// #if __AVX2__
-//         Rpp32u alignedLength = (bufferLength / 24) * 24;
-//         Rpp32u vectorIncrement = 24;
-//         Rpp32u vectorIncrementPerChannel = 8;
-// #endif
+#if __AVX2__
+        Rpp32u alignedLength = (bufferLength / 24) * 24;
+        Rpp32u vectorIncrement = 24;
+        Rpp32u vectorIncrementPerChannel = 8;
+        __m256i pxMax = _mm256_set1_epi32(0xFF);
+#endif
 
-//         // Exclusive OR with fused output-layout toggle (NHWC -> NCHW)
-//         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
-//         {
-//             Rpp16f *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
-//             srcPtrRow = srcPtrChannel;
-//             dstPtrRowR = dstPtrChannel;
-//             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
-//             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
+        // Exclusive OR with fused output-layout toggle (NHWC -> NCHW)
+        if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            Rpp16f *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
+            srcPtrRow = srcPtrChannel;
+            dstPtrRowR = dstPtrChannel;
+            dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
+            dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
 
-//             for (int i = 0; i < roi.xywhROI.roiHeight; i++)
-//             {
-//                 Rpp16f *srcPtrTemp, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
-//                 srcPtrTemp = srcPtrRow;
-//                 dstPtrTempR = dstPtrRowR;
-//                 dstPtrTempG = dstPtrRowG;
-//                 dstPtrTempB = dstPtrRowB;
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
+            {
+                Rpp16f *srcPtrTemp, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
+                srcPtrTemp = srcPtrRow;
+                dstPtrTempR = dstPtrRowR;
+                dstPtrTempG = dstPtrRowG;
+                dstPtrTempB = dstPtrRowB;
 
-//                 int vectorLoopCount = 0;
-// #if __AVX2__
-//                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
-//                 {
-//                     __m256 p1[3], p2[3];
+                int vectorLoopCount = 0;
+#if __AVX2__
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
+                {
+                    __m256 p[3];
 
-//                     rpp_simd_load(rpp_load24_f16pkd3_to_f32pln3_avx, srcPtrTemp, p1);    // simd loads
-//                     p[0] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p[0], avx_p255)), _mm256_cvttps_epi32(avx_p255)));    // exclusive_or computation
-//                     p[1] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p[1], avx_p255)), _mm256_cvttps_epi32(avx_p255)));    // exclusive_or computation
-//                     p[2] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p[2], avx_p255)), _mm256_cvttps_epi32(avx_p255)));    // exclusive_or computation
-//                     p[0] = _mm256_mul_ps(p[0], avx_p1op255);
-//                     p[1] = _mm256_mul_ps(p[1], avx_p1op255);
-//                     p[2] = _mm256_mul_ps(p[2], avx_p1op255);
-//                     rpp_simd_store(rpp_store24_f32pln3_to_f16pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p1);    // simd stores
+                    rpp_simd_load(rpp_load24_f16pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
+                     p[0] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p[0], avx_p255)), pxMax));    // exclusive_or computation
+                    p[1] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p[1], avx_p255)), pxMax));    // exclusive_or computation
+                    p[2] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p[2], avx_p255)), pxMax));    // exclusive_or computation
+                    p[0] = _mm256_mul_ps(p[0], avx_p1op255);
+                    p[1] = _mm256_mul_ps(p[1], avx_p1op255);
+                    p[2] = _mm256_mul_ps(p[2], avx_p1op255);
+                    rpp_simd_store(rpp_store24_f32pln3_to_f16pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 
-//                     srcPtrTemp += vectorIncrement;
-//                     dstPtrTempR += vectorIncrementPerChannel;
-//                     dstPtrTempG += vectorIncrementPerChannel;
-//                     dstPtrTempB += vectorIncrementPerChannel;
-//                 }
-// #endif
-//                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
-//                 {
-//                     *dstPtrTempR++ = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)(~(uint)(srcPtrTemp[0] * 255)) / 255));
-//                     *dstPtrTempG++ = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)(~(uint)(srcPtrTemp[1] * 255)) / 255));
-//                     *dstPtrTempB++ = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)(~(uint)(srcPtrTemp[2] * 255)) / 255));
+                    srcPtrTemp += vectorIncrement;
+                    dstPtrTempR += vectorIncrementPerChannel;
+                    dstPtrTempG += vectorIncrementPerChannel;
+                    dstPtrTempB += vectorIncrementPerChannel;
+                }
+#endif
+                for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
+                {
+                    *dstPtrTempR++ = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)(~(Rpp8u)(srcPtrTemp[0] * 255) & 0xFF) / 255));
+                    *dstPtrTempG++ = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)(~(Rpp8u)(srcPtrTemp[1] * 255) & 0xFF) / 255));
+                    *dstPtrTempB++ = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)(~(Rpp8u)(srcPtrTemp[2] * 255) & 0xFF) / 255));
 
-//                     srcPtrTemp += 3;
-//                 }
+                    srcPtrTemp += 3;
+                }
 
-//                 srcPtrRow += srcDescPtr->strides.hStride;
-//                 dstPtrRowR += dstDescPtr->strides.hStride;
-//                 dstPtrRowG += dstDescPtr->strides.hStride;
-//                 dstPtrRowB += dstDescPtr->strides.hStride;
-//             }
-//         }
+                srcPtrRow += srcDescPtr->strides.hStride;
+                dstPtrRowR += dstDescPtr->strides.hStride;
+                dstPtrRowG += dstDescPtr->strides.hStride;
+                dstPtrRowB += dstDescPtr->strides.hStride;
+            }
+        }
 
-//         // Exclusive OR with fused output-layout toggle (NCHW -> NHWC)
-//         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
-//         {
-//             Rpp16f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *srcPtr2RowR, *srcPtr2RowG, *srcPtr2RowB, *dstPtrRow;
-//             srcPtrRowR = srcPtrChannel;
-//             srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
-//             srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
-//             dstPtrRow = dstPtrChannel;
+        // Exclusive OR with fused output-layout toggle (NCHW -> NHWC)
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
+        {
+            Rpp16f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *srcPtr2RowR, *srcPtr2RowG, *srcPtr2RowB, *dstPtrRow;
+            srcPtrRowR = srcPtrChannel;
+            srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
+            srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
+            dstPtrRow = dstPtrChannel;
 
-//             for (int i = 0; i < roi.xywhROI.roiHeight; i++)
-//             {
-//                 Rpp16f *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *srcPtr2TempR, *srcPtr2TempG, *srcPtr2TempB, *dstPtrTemp;
-//                 srcPtrTempR = srcPtrRowR;
-//                 srcPtrTempG = srcPtrRowG;
-//                 srcPtrTempB = srcPtrRowB;
-//                 dstPtrTemp = dstPtrRow;
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
+            {
+                Rpp16f *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *srcPtr2TempR, *srcPtr2TempG, *srcPtr2TempB, *dstPtrTemp;
+                srcPtrTempR = srcPtrRowR;
+                srcPtrTempG = srcPtrRowG;
+                srcPtrTempB = srcPtrRowB;
+                dstPtrTemp = dstPtrRow;
 
-//                 int vectorLoopCount = 0;
-// #if __AVX2__
-//                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
-//                 {
-//                     __m256 p1[3], p2[3];
+                int vectorLoopCount = 0;
+#if __AVX2__
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    __m256 p[3];
 
-//                     rpp_simd_load(rpp_load24_f16pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p1);    // simd loads
-//                     p1[0] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p1[0], avx_p255)), _avx_px255));
-//                     p1[1] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p1[1], avx_p255)), _avx_px255));
-//                     p1[2] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p1[2], avx_p255)), _avx_px255));
-//                     p1[0] = _mm256_mul_ps(p1[0], avx_p1op255);
-//                     p1[1] = _mm256_mul_ps(p1[1], avx_p1op255);
-//                     p1[2] = _mm256_mul_ps(p1[2], avx_p1op255);
-//                     rpp_simd_store(rpp_store24_f32pln3_to_f16pkd3_avx, dstPtrTemp, p1);    // simd stores
+                    rpp_simd_load(rpp_load24_f16pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
+                    p[0] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p[0], avx_p255)), pxMax));
+                    p[1] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p[1], avx_p255)), pxMax));
+                    p[2] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p[2], avx_p255)), pxMax));
+                    p[0] = _mm256_mul_ps(p[0], avx_p1op255);
+                    p[1] = _mm256_mul_ps(p[1], avx_p1op255);
+                    p[2] = _mm256_mul_ps(p[2], avx_p1op255);
+                    rpp_simd_store(rpp_store24_f32pln3_to_f16pkd3_avx, dstPtrTemp, p);    // simd stores
 
-//                     srcPtrTempR += vectorIncrementPerChannel;
-//                     srcPtrTempG += vectorIncrementPerChannel;
-//                     srcPtrTempB += vectorIncrementPerChannel;
-//                     dstPtrTemp += vectorIncrement;
-//                 }
-// #endif
-//                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
-//                 {
-//                     dstPtrTemp[0] = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)(~(uint)(*srcPtrTempR * 255)) / 255));
-//                     dstPtrTemp[1] = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)(~(uint)(*srcPtrTempG * 255)) / 255));
-//                     dstPtrTemp[2] = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)(~(uint)(*srcPtrTempB * 255)) / 255));
+                    srcPtrTempR += vectorIncrementPerChannel;
+                    srcPtrTempG += vectorIncrementPerChannel;
+                    srcPtrTempB += vectorIncrementPerChannel;
+                    dstPtrTemp += vectorIncrement;
+                }
+#endif
+                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                {
+                    dstPtrTemp[0] = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)(~(Rpp8u)(*srcPtrTempR * 255) & 0xFF) / 255));
+                    dstPtrTemp[1] = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)(~(Rpp8u)(*srcPtrTempG * 255) & 0xFF) / 255));
+                    dstPtrTemp[2] = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)(~(Rpp8u)(*srcPtrTempB * 255) & 0xFF) / 255));
 
-//                     srcPtrTempR++;
-//                     srcPtrTempG++;
-//                     srcPtrTempB++;
-//                     dstPtrTemp += 3;
-//                 }
+                    srcPtrTempR++;
+                    srcPtrTempG++;
+                    srcPtrTempB++;
+                    dstPtrTemp += 3;
+                }
 
-//                 srcPtrRowR += srcDescPtr->strides.hStride;
-//                 srcPtrRowG += srcDescPtr->strides.hStride;
-//                 srcPtrRowB += srcDescPtr->strides.hStride;
-//                 dstPtrRow += dstDescPtr->strides.hStride;
-//             }
-//         }
+                srcPtrRowR += srcDescPtr->strides.hStride;
+                srcPtrRowG += srcDescPtr->strides.hStride;
+                srcPtrRowB += srcDescPtr->strides.hStride;
+                dstPtrRow += dstDescPtr->strides.hStride;
+            }
+        }
 
-//         // Exclusive OR without fused output-layout toggle (NCHW -> NCHW for 3 channel)
-//         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
-//         {
-//             Rpp16f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *srcPtr2RowR, *srcPtr2RowG, *srcPtr2RowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
-//             srcPtrRowR = srcPtrChannel;
-//             srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
-//             srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
-//             dstPtrRowR = dstPtrChannel;
-//             dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
-//             dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
-//             for (int i = 0; i < roi.xywhROI.roiHeight; i++)
-//             {
-//                 Rpp16f *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *srcPtr2TempR, *srcPtr2TempG, *srcPtr2TempB, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
-//                 srcPtrTempR = srcPtrRowR;
-//                 srcPtrTempG = srcPtrRowG;
-//                 srcPtrTempB = srcPtrRowB;
-//                 dstPtrTempR = dstPtrRowR;
-//                 dstPtrTempG = dstPtrRowG;
-//                 dstPtrTempB = dstPtrRowB;
+        // Exclusive OR without fused output-layout toggle (NCHW -> NCHW for 3 channel)
+        else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
+        {
+            Rpp16f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *srcPtr2RowR, *srcPtr2RowG, *srcPtr2RowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
+            srcPtrRowR = srcPtrChannel;
+            srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
+            srcPtrRowB = srcPtrRowG + srcDescPtr->strides.cStride;
+            dstPtrRowR = dstPtrChannel;
+            dstPtrRowG = dstPtrRowR + dstDescPtr->strides.cStride;
+            dstPtrRowB = dstPtrRowG + dstDescPtr->strides.cStride;
+            for (int i = 0; i < roi.xywhROI.roiHeight; i++)
+            {
+                Rpp16f *srcPtrTempR, *srcPtrTempG, *srcPtrTempB, *srcPtr2TempR, *srcPtr2TempG, *srcPtr2TempB, *dstPtrTempR, *dstPtrTempG, *dstPtrTempB;
+                srcPtrTempR = srcPtrRowR;
+                srcPtrTempG = srcPtrRowG;
+                srcPtrTempB = srcPtrRowB;
+                dstPtrTempR = dstPtrRowR;
+                dstPtrTempG = dstPtrRowG;
+                dstPtrTempB = dstPtrRowB;
 
-//                 int vectorLoopCount = 0;
-// #if __AVX2__
-//                 for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
-//                 {
-//                     __m256 p1[3], p2[3];
+                int vectorLoopCount = 0;
+#if __AVX2__
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                {
+                    __m256 p[3];
 
-//                     rpp_simd_load(rpp_load24_f16pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p1);    // simd loads
-//                     p[0] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p[0], avx_p255)), avx_px255));    // exclusive_or computation
-//                     p[1] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p[1], avx_p255)), avx_px255));    // exclusive_or computation
-//                     p[2] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p[2], avx_p255)), avx_px255));    // exclusive_or computation
-//                     p[0] = _mm256_mul_ps(p1[0], avx_p1op255);
-//                     p[1] = _mm256_mul_ps(p1[1], avx_p1op255);
-//                     p[2] = _mm256_mul_ps(p1[2], avx_p1op255);
-//                     rpp_simd_store(rpp_store24_f32pln3_to_f16pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p1);
+                    rpp_simd_load(rpp_load24_f16pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
+                    p[0] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p[0], avx_p255)), pxMax));    // exclusive_or computation
+                    p[1] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p[1], avx_p255)), pxMax));    // exclusive_or computation
+                    p[2] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p[2], avx_p255)), pxMax));    // exclusive_or computation
+                    p[0] = _mm256_mul_ps(p[0], avx_p1op255);
+                    p[1] = _mm256_mul_ps(p[1], avx_p1op255);
+                    p[2] = _mm256_mul_ps(p[2], avx_p1op255);
+                    rpp_simd_store(rpp_store24_f32pln3_to_f16pln3_avx, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);
 
-//                     srcPtrTempR += vectorIncrementPerChannel;
-//                     srcPtrTempG += vectorIncrementPerChannel;
-//                     srcPtrTempB += vectorIncrementPerChannel;
-//                     dstPtrTempR += vectorIncrementPerChannel;
-//                     dstPtrTempG += vectorIncrementPerChannel;
-//                     dstPtrTempB += vectorIncrementPerChannel;
-//                 }
-// #endif
-//                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
-//                 {
-//                     *dstPtrTempR++ = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)(~(uint)(*srcPtrTempR * 255)) / 255));
-//                     *dstPtrTempG++ = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)(~(uint)(*srcPtrTempG * 255)) / 255));
-//                     *dstPtrTempB++ = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)(~(uint)(*srcPtrTempB * 255)) / 255));
+                    srcPtrTempR += vectorIncrementPerChannel;
+                    srcPtrTempG += vectorIncrementPerChannel;
+                    srcPtrTempB += vectorIncrementPerChannel;
+                    dstPtrTempR += vectorIncrementPerChannel;
+                    dstPtrTempG += vectorIncrementPerChannel;
+                    dstPtrTempB += vectorIncrementPerChannel;
+                }
+#endif
+                for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                {
+                    *dstPtrTempR++ = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)(~(Rpp8u)(*srcPtrTempR * 255) & 0xFF) / 255));
+                    *dstPtrTempG++ = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)(~(Rpp8u)(*srcPtrTempG * 255) & 0xFF) / 255));
+                    *dstPtrTempB++ = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)(~(Rpp8u)(*srcPtrTempB * 255) & 0xFF) / 255));
 
-//                     srcPtrTempR++;
-//                     srcPtrTempG++;
-//                     srcPtrTempB++;
-//                 }
+                    srcPtrTempR++;
+                    srcPtrTempG++;
+                    srcPtrTempB++;
+                }
 
-//                 srcPtrRowR += srcDescPtr->strides.hStride;
-//                 srcPtrRowG += srcDescPtr->strides.hStride;
-//                 srcPtrRowB += srcDescPtr->strides.hStride;
-//                 dstPtrRowR += dstDescPtr->strides.hStride;
-//                 dstPtrRowG += dstDescPtr->strides.hStride;
-//                 dstPtrRowB += dstDescPtr->strides.hStride;
-//             }
-//         }
+                srcPtrRowR += srcDescPtr->strides.hStride;
+                srcPtrRowG += srcDescPtr->strides.hStride;
+                srcPtrRowB += srcDescPtr->strides.hStride;
+                dstPtrRowR += dstDescPtr->strides.hStride;
+                dstPtrRowG += dstDescPtr->strides.hStride;
+                dstPtrRowB += dstDescPtr->strides.hStride;
+            }
+        }
 
-//         // Exclusive OR without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
-//         else
-//         {
-// #if __AVX2__
-//             alignedLength = bufferLength & ~7;
-// #endif
+        // Exclusive OR without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
+        else
+        {
+#if __AVX2__
+            alignedLength = bufferLength & ~7;
+#endif
 
-//             for (int c = 0; c < layoutParams.channelParam; c++)
-//             {
-//                 Rpp16f *srcPtrRow, *srcPtr2Row, *dstPtrRow;
-//                 srcPtrRow = srcPtrChannel;
-//                 dstPtrRow = dstPtrChannel;
+            for (int c = 0; c < layoutParams.channelParam; c++)
+            {
+                Rpp16f *srcPtrRow, *srcPtr2Row, *dstPtrRow;
+                srcPtrRow = srcPtrChannel;
+                dstPtrRow = dstPtrChannel;
 
-//                 for (int i = 0; i < roi.xywhROI.roiHeight; i++)
-//                 {
-//                     Rpp16f *srcPtrTemp, *srcPtr2Temp, *dstPtrTemp;
-//                     srcPtrTemp = srcPtrRow;
-//                     dstPtrTemp = dstPtrRow;
+                for (int i = 0; i < roi.xywhROI.roiHeight; i++)
+                {
+                    Rpp16f *srcPtrTemp, *srcPtr2Temp, *dstPtrTemp;
+                    srcPtrTemp = srcPtrRow;
+                    dstPtrTemp = dstPtrRow;
 
-//                     int vectorLoopCount = 0;
-// #if __AVX2__
-//                     for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
-//                     {
-//                         __m256 p1[1], p2[1];
+                    int vectorLoopCount = 0;
+#if __AVX2__
+                    for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
+                    {
+                        __m256 p;
 
-//                         rpp_simd_load(rpp_load8_f16_to_f32_avx, srcPtrTemp, p1);    // simd loads
-//                         rpp_simd_load(rpp_load8_f16_to_f32_avx, srcPtr2Temp, p2);    // simd loads
-//                         p1[0] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p1[0], avx_p255)), _mm256_cvttps_epi32(_mm256_mul_ps(p2[0], avx_p255))));    // exclusive_or computation
-//                         p1[0] = _mm256_mul_ps(p1[0], avx_p1op255);
-//                         rpp_simd_store(rpp_store8_f32_to_f16_avx, dstPtrTemp, p1);    // simd stores
+                        rpp_simd_load(rpp_load8_f16_to_f32_avx, srcPtrTemp, &p);    // simd loads
+                        p = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p, avx_p255)), pxMax));
+                        p = _mm256_mul_ps(p, avx_p1op255);
+                        rpp_simd_store(rpp_store8_f32_to_f16_avx, dstPtrTemp, &p);    // simd stores
 
-//                         srcPtrTemp += vectorIncrementPerChannel;
-//                         dstPtrTemp += vectorIncrementPerChannel;
-//                     }
-// #endif
-//                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
-//                     {
-//                         *dstPtrTemp++ = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)((uint)(*srcPtrTemp * 255) ^ (uint)(*srcPtr2Temp * 255)) / 255));
+                        srcPtrTemp += vectorIncrementPerChannel;
+                        dstPtrTemp += vectorIncrementPerChannel;
+                    }
+#endif
+                    for (; vectorLoopCount < bufferLength; vectorLoopCount++)
+                    {
+                        *dstPtrTemp++ = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)(~(Rpp8u)(*srcPtrTemp * 255) & 0xFF) / 255));
 
-//                         srcPtrTemp++;
-//                     }
+                        srcPtrTemp++;
+                    }
 
-//                     srcPtrRow += srcDescPtr->strides.hStride;
-//                     dstPtrRow += dstDescPtr->strides.hStride;
-//                 }
+                    srcPtrRow += srcDescPtr->strides.hStride;
+                    dstPtrRow += dstDescPtr->strides.hStride;
+                }
 
-//                 srcPtrChannel += srcDescPtr->strides.cStride;
-//                 dstPtrChannel += dstDescPtr->strides.cStride;
-//             }
-//         }
-//     }
+                srcPtrChannel += srcDescPtr->strides.cStride;
+                dstPtrChannel += dstDescPtr->strides.cStride;
+            }
+        }
+    }
 
-//     return RPP_SUCCESS;
-// }
+    return RPP_SUCCESS;
+}
 
 RppStatus bitwise_not_i8_i8_host_tensor(Rpp8s *srcPtr,
                                         RpptDescPtr srcDescPtr,

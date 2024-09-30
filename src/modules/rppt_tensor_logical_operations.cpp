@@ -185,18 +185,17 @@ RppStatus rppt_bitwise_not_host(RppPtr_t srcPtr,
                                      layoutParams,
                                      rpp::deref(rppHandle));
     }
-    // else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
-    // {
-    //     bitwise_not_f16_f16_host_tensor(reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(srcPtr1) + srcDescPtr->offsetInBytes),
-    //                                    reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(srcPtr2) + srcDescPtr->offsetInBytes),
-    //                                    srcDescPtr,
-    //                                    reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
-    //                                    dstDescPtr,
-    //                                    roiTensorPtrSrc,
-    //                                    roiType,
-    //                                    layoutParams,
-    //                                    rpp::deref(rppHandle));
-    // }
+    else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
+    {
+        bitwise_not_f16_f16_host_tensor(reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
+                                        srcDescPtr,
+                                        reinterpret_cast<Rpp16f*>(static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes),
+                                        dstDescPtr,
+                                        roiTensorPtrSrc,
+                                        roiType,
+                                        layoutParams,
+                                        rpp::deref(rppHandle));
+    }
     else if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
         bitwise_not_f32_f32_host_tensor(reinterpret_cast<Rpp32f*>(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes),
