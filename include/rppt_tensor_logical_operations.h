@@ -132,6 +132,10 @@ RppStatus rppt_bitwise_or_gpu(RppPtr_t srcPtr1, RppPtr_t srcPtr2, RpptDescPtr sr
 
 RppStatus rppt_bitwise_not_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
 
+#ifdef GPU_SUPPORT
+RppStatus rppt_bitwise_not_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, RpptROIPtr roiTensorPtrSrc, RpptRoiType roiType, rppHandle_t rppHandle);
+#endif // GPU_SUPPORT
+
 /*! @}
  */
 
