@@ -28,6 +28,7 @@ import argparse
 import datetime
 import shutil
 import sys
+import signal
 sys.dont_write_bytecode = True
 sys.path.append(os.path.join(os.path.dirname( __file__ ), '..' ))
 from common import *
@@ -39,6 +40,7 @@ outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
 caseMin = 0
 caseMax = 2
+errorLog = []
 
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list():
@@ -48,16 +50,29 @@ def get_log_file_list():
 
 def run_unit_test_cmd(numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg):
     print("\n./Tensor_misc_host " + str(case) + " " + str(testType) + " " + str(toggle) + " " + str(numDims) + " " + str(batchSize) + " " + str(numRuns) + " " + str(additionalArg))
-    result = subprocess.Popen([buildFolderPath + "/build/Tensor_misc_host", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE)    # nosec
+    result = subprocess.Popen([buildFolderPath + "/build/Tensor_misc_host", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
     stdout_data, stderr_data = result.communicate()
     print(stdout_data.decode())
+    exit_code = result.returncode
+    if(exit_code != 0):
+        if(exit_code < 0):
+            log_detected_errors("Returned non-zero exit status : "+ str(exit_code) + " Signal : "+ str(signal.Signals(-exit_code).name) + stderr_data.decode(), errorLog, miscAugmentationMap[int(case)][0], get_misc_func_name(int(case), numDims, additionalArg))
+        else:
+            log_detected_errors("Returned non-zero exit status : "+ str(exit_code)  + stderr_data.decode(), errorLog, micsAugmentationMap[int(case)][0], get_misc_func_name(int(case), numDims, additionalArg))
     print("------------------------------------------------------------------------------------------")
 
 def run_performance_test_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg):
     with open(loggingFolder + "/Tensor_misc_host_raw_performance_log.txt", "a") as logFile:
         logFile.write("./Tensor_misc_host " + str(case) + " " + str(testType) + " " + str(toggle) + " " + str(numDims) + " " + str(batchSize) + " " + str(numRuns) + " " + str(additionalArg) + "\n")
-        process = subprocess.Popen([buildFolderPath + "/build/Tensor_misc_host", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)    # nosec
+        process = subprocess.Popen([buildFolderPath + "/build/Tensor_misc_host", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
         read_from_subprocess_and_write_to_log(process, logFile)
+        stdout_data, stderr_data = process.communicate()
+        exit_code = process.returncode
+        if(exit_code != 0):
+            if(exit_code < 0):
+                log_detected_errors("Returned non- exit status : "+ str(exit_code) + " Signal : "+ str(signal.Signals(-exit_code).name) + stderr_data.decode(), errorLog, miscAugmentationMap[int(case)][0], get_misc_func_name(int(case), numDims, additionalArg))
+            else:
+                log_detected_errors("Returned non-zero exit status : "+ str(exit_code)  + stderr_data.decode(), errorLog, miscAugmentationMap[int(case)][0], get_misc_func_name(int(case), numDims, additionalArg))
 
 def run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg = ""):
     if testType == 0:
@@ -201,3 +216,9 @@ if (testType == 1):
 
     for logFile in logFileList:
         print_performance_tests_summary(logFile, functionalityGroupList, numRuns)
+
+if errorLog:
+    print("\n---------------------------------- Error log - Tensor_misc_host ----------------------------------\n")
+    for error in errorLog:
+        print(error)
+    print("-----------------------------------------------------------------------------------------------")

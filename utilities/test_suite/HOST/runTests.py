@@ -23,6 +23,7 @@ SOFTWARE.
 """
 import os
 import sys
+import signal
 sys.dont_write_bytecode = True
 sys.path.append(os.path.join(os.path.dirname( __file__ ), '..' ))
 from common import *
@@ -70,7 +71,12 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
                     result = subprocess.Popen([buildFolderPath + "/build/Tensor_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(noiseType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
                     stdout_data, stderr_data = result.communicate()
                     print(stdout_data.decode())
-                    log_detected_errors(stderr_data, errorLog, imageAugmentationMap[int(case)][0], bitDepth, get_image_layout_type(layout, outputFormatToggle, "HOST"))
+                    exit_code = result.returncode
+                    if(exit_code != 0):
+                        if(exit_code < 0):
+                            log_detected_errors("Returned non-zero exit status : "+ str(exit_code) + " Signal : "+ str(signal.Signals(-exit_code).name) + stderr_data.decode(), errorLog, imageAugmentationMap[int(case)][0], bitDepth, get_image_layout_type(layout, outputFormatToggle, "HOST"))
+                        else:
+                            log_detected_errors("Returned non-zero exit status : "+ str(exit_code)  + stderr_data.decode(), errorLog, imageAugmentationMap[int(case)][0], bitDepth, get_image_layout_type(layout, outputFormatToggle, "HOST"))
             elif case == "21" or case == "23" or case == "24" or case == "79":
                 # Run all variants of interpolation functions with additional argument of interpolationType = bicubic / bilinear / gaussian / nearestneigbor / lanczos / triangular
                 interpolationRange = 6
@@ -81,13 +87,42 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
                     result = subprocess.Popen([buildFolderPath + "/build/Tensor_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(interpolationType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
                     stdout_data, stderr_data = result.communicate()
                     print(stdout_data.decode())
-                    log_detected_errors(stderr_data, errorLog, imageAugmentationMap[int(case)][0], bitDepth, get_image_layout_type(layout, outputFormatToggle, "HOST"))
+                    exit_code = result.returncode
+                    if(exit_code != 0):
+                        if(exit_code < 0):
+                            log_detected_errors("Returned non-zero exit status : "+ str(exit_code) + " Signal : "+ str(signal.Signals(-exit_code).name) + stderr_data.decode(), errorLog, imageAugmentationMap[int(case)][0], bitDepth, get_image_layout_type(layout, outputFormatToggle, "HOST"))
+                        else:
+                            log_detected_errors("Returned non-zero exit status : "+ str(exit_code)  + stderr_data.decode(), errorLog, imageAugmentationMap[int(case)][0], bitDepth, get_image_layout_type(layout, outputFormatToggle, "HOST"))
             else:
                 print("\n./Tensor_host " + srcPath1 + " " + srcPath2 + " " + dstPathTemp + " " + str(bitDepth) + " " + str(outputFormatToggle) + " " + str(case) + " 0 " + str(numRuns) + " " + str(testType) + " " + str(layout) + " 0")
                 result = subprocess.Popen([buildFolderPath + "/build/Tensor_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), "0", str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
                 stdout_data, stderr_data = result.communicate()
                 print(stdout_data.decode())
-                log_detected_errors(stderr_data, errorLog, imageAugmentationMap[int(case)][0], bitDepth, get_image_layout_type(layout, outputFormatToggle, "HOST"))
+                exit_code = result.returncode
+                if(exit_code != 0):
+                    if(exit_code < 0):
+                        log_detected_errors("Returned non-zero exit status : "+ str(exit_code) + " Signal : "+ str(signal.Signals(-exit_code).name) + stderr_data.decode(), errorLog, imageAugmentationMap[int(case)][0], bitDepth, get_image_layout_type(layout, outputFormatToggle, "HOST"))
+                    else:
+                        log_detected_errors("Returned non-zero exit status : "+ str(exit_code)  + stderr_data.decode(), errorLog, imageAugmentationMap[int(case)][0], bitDepth, get_image_layout_type(layout, outputFormatToggle, "HOST"))
+
+                    # result = subprocess.check_output([buildFolderPath + "/build/Tensor_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), "0", str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath])    # nosec
+                    # print("Result :",result.decode('utf-8'))
+                # except subprocess.CalledProcessError as e:
+                #     if(e.returncode < 0):
+                #         # print(f"Error: Command '{e.cmd}' returned non-zero exit status {e.returncode}.Signal : Process died with signal: {signal.Signals(-e.returncode).name} ({-e.returncode})")
+                #         log_detected_errors("Returned non-zero exit status : {e.returncode}.: "+ str({signal.Signals(-e.returncode).name})+str({-e.returncode}), errorLog, imageAugmentationMap[int(case)][0], bitDepth, get_image_layout_type(layout, outputFormatToggle, "HOST"))
+                #     else :
+                #         # print(f"Error: Command '{e.cmd}' returned non-zero exit status {e.returncode}.")
+
+                # except FileNotFoundError as e:
+                #     print(f"Error: {e}")
+                #     log_detected_errors(e, errorLog, imageAugmentationMap[int(case)][0], bitDepth, get_image_layout_type(layout, outputFormatToggle, "HOST"))
+
+                # stdout_data, stderr_data = result.communicate()
+                # print(stdout_data.decode())
+                # print("Error",stderr.decode())
+
+                # log_detected_errors(stderr_data, errorLog, imageAugmentationMap[int(case)][0], bitDepth, get_image_layout_type(layout, outputFormatToggle, "HOST"))
 
             print("------------------------------------------------------------------------------------------")
 
@@ -98,14 +133,24 @@ def run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, d
             read_from_subprocess_and_write_to_log(process, logFile)
             log_detected_errors(stderr_data, errorLog, imageAugmentationMap[int(case)][0], bitDepth, get_image_layout_type(layout, outputFormatToggle, "HOST"))
             _, stderr_data = process.communicate()
-            log_detected_errors(stderr_data, errorLog, imageAugmentationMap[int(case)][0], bitDepth, get_image_layout_type(layout, outputFormatToggle, "HOST"))
+            exit_code = result.returncode
+            if(exit_code != 0):
+                if(exit_code < 0):
+                    log_detected_errors("Returned non-zero exit status : "+ str(exit_code) + " Signal : "+ str(signal.Signals(-exit_code).name) + stderr_data.decode(), errorLog, imageAugmentationMap[int(case)][0], bitDepth, get_image_layout_type(layout, outputFormatToggle, "HOST"))
+                else:
+                    log_detected_errors("Returned non-zero exit status : "+ str(exit_code)  + stderr_data.decode(), errorLog, imageAugmentationMap[int(case)][0], bitDepth, get_image_layout_type(layout, outputFormatToggle, "HOST"))
 
     with open(loggingFolder + "/Tensor_host_" + logFileLayout + "_raw_performance_log.txt", "a") as logFile:
         logFile.write("./Tensor_host " + srcPath1 + " " + srcPath2 + " " + dstPath + " " + str(bitDepth) + " " + str(outputFormatToggle) + " " + str(case) + " " + str(additionalParam) + " 0\n")
         process = subprocess.Popen([buildFolderPath + "/build/Tensor_host", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
         read_from_subprocess_and_write_to_log(process, logFile)
         _, stderr_data = process.communicate()
-        log_detected_errors(stderr_data, errorLog, imageAugmentationMap[int(case)][0], bitDepth, get_image_layout_type(layout, outputFormatToggle, "HOST"))
+        exit_code = result.returncode
+        if(exit_code != 0):
+            if(exit_code < 0):
+                log_detected_errors("Returned non-zero exit status : "+ str(exit_code) + " Signal : "+ str(signal.Signals(-exit_code).name) + stderr_data.decode(), errorLog, imageAugmentationMap[int(case)][0], bitDepth, get_image_layout_type(layout, outputFormatToggle, "HOST"))
+            else:
+                log_detected_errors("Returned non-zero exit status : "+ str(exit_code)  + stderr_data.decode(), errorLog, imageAugmentationMap[int(case)][0], bitDepth, get_image_layout_type(layout, outputFormatToggle, "HOST"))
 
 def run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
     print("\n")

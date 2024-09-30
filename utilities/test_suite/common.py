@@ -410,7 +410,41 @@ def get_image_layout_type(layout, outputFormatToggle, backend):
        result += "_toPLN1"
     return result
 
+def get_misc_func_name(testCase, nDim, additionalArg):
+    axisMaskCase = 0
+    permOrderCase = 0
+    if testCase == 1:
+        axisMaskCase = 1
+    elif testCase == 0:
+        permOrderCase = 1
+    additionalParam = 1
+    if axisMaskCase or permOrderCase:
+        additionalParam = additionalArg
+    axisMask = additionalParam
+    permOrder = additionalParam
+    result = ""
+    if (axisMaskCase):
+        result = result + "_" + str(nDim) + "d" + "_axisMask" + str(axisMask)
+    if (permOrderCase):
+        result =result + "_" + str(nDim) + "d" + "_permOrder" + str(permOrder)
+    return result
+
+def get_voxel_layout_type(layout, backend):
+    result = "Tensor_" + backend
+    if layout == 0:
+        result += "_PKD3_toPKD3"
+    elif layout == 1:
+        result += "_PLN3_toPLN3"
+    else:
+       result += "_PLN1_toPLN1"
+    return result
+# def log_detected_errors(errorData, errorLog, caseName, bitDepth, functionSpecificName):
+#     if errorData.decode():
+#         msg = caseName + bitDepthDict[bitDepth] + functionSpecificName + " kernel execution failed. Getting below error\n" + errorData.decode()
+#         errorLog.append(msg)
 def log_detected_errors(errorData, errorLog, caseName, bitDepth, functionSpecificName):
-    if errorData.decode():
-        msg = caseName + bitDepthDict[bitDepth] + functionSpecificName + " kernel execution failed. Getting below error\n" + errorData.decode()
-        errorLog.append(msg)
+    msg = caseName + bitDepthDict[bitDepth] + functionSpecificName + " kernel execution failed. Getting below error\n" + errorData
+    errorLog.append(msg)
+def log_detected_errors(errorData, errorLog, caseName, functionSpecificName):
+    msg = caseName  + functionSpecificName + " kernel execution failed. Getting below error\n" + errorData
+    errorLog.append(msg)

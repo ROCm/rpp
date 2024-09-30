@@ -24,6 +24,7 @@ SOFTWARE.
 
 import os
 import sys
+import signal
 sys.dont_write_bytecode = True
 sys.path.append(os.path.join(os.path.dirname( __file__ ), '..' ))
 from common import *
@@ -37,6 +38,7 @@ outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
 caseMin = 0
 caseMax = 7
+errorLog = []
 
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list():
@@ -46,16 +48,29 @@ def get_log_file_list():
 
 def run_unit_test_cmd(srcPath, case, numRuns, testType, batchSize, outFilePath):
     print("\n./Tensor_audio_host " + srcPath + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(numRuns) + " " + str(batchSize))
-    result = subprocess.Popen([buildFolderPath + "/build/Tensor_audio_host", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE)    # nosec
+    result = subprocess.Popen([buildFolderPath + "/build/Tensor_audio_host", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
     stdout_data, stderr_data = result.communicate()
+    exit_code = result.returncode
+    if(exit_code != 0):
+        if(exit_code < 0):
+            log_detected_audio_errors("Returned non-zero exit status : "+ str(exit_code) + " Signal : "+ str(signal.Signals(-exit_code).name) + stderr_data.decode(), errorLog, audioAugmentationMap[int(case)][0], "_HOST")
+        else:
+            log_detected_audio_errors("Returned non-zero exit status : "+ str(exit_code)  + stderr_data.decode(), errorLog, audioAugmentationMapAugmentationMap[int(case)][0], "_HOST")
     print(stdout_data.decode())
     print("------------------------------------------------------------------------------------------")
 
 def run_performance_test_cmd(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath):
     with open(loggingFolder + "/Tensor_audio_host_raw_performance_log.txt", "a") as logFile:
         logFile.write("./Tensor_audio_host " + srcPath + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(numRuns) + " " + str(batchSize) + "\n")
-        process = subprocess.Popen([buildFolderPath + "/build/Tensor_audio_host", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)    # nosec
+        process = subprocess.Popen([buildFolderPath + "/build/Tensor_audio_host", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
         read_from_subprocess_and_write_to_log(process, logFile)
+        stdout_data, stderr_data = process.communicate()
+        exit_code = process.returncode
+        if(exit_code != 0):
+            if(exit_code < 0):
+                log_detected_audio_errors("Returned non-zero exit status : "+ str(exit_code) + " Signal : "+ str(signal.Signals(-exit_code).name) + stderr_data.decode(), errorLog, audioAugmentationMap[int(case)][0], "_HOST")
+            else:
+                log_detected_audio_errors("Returned non-zero exit status : "+ str(exit_code)  + stderr_data.decode(), errorLog, audioAugmentationMap[int(case)][0], "_HOST")
         print("------------------------------------------------------------------------------------------")
 
 def run_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath):
@@ -209,4 +224,10 @@ if (testType == 1):
     log_file_list = get_log_file_list()
     for log_file in log_file_list:
         print_performance_tests_summary(log_file, "", numRuns)
+
+if errorLog:
+    print("\n---------------------------------- Error log - Tensor_host ----------------------------------\n")
+    for error in errorLog:
+        print(error)
+    print("-----------------------------------------------------------------------------------------------")
 
