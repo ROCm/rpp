@@ -200,6 +200,10 @@ RppStatus exclusive_or_u8_u8_host_tensor(Rpp8u *srcPtr1,
         // Exclusive OR without fused output-layout toggle (NCHW -> NCHW for 3 channel)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
+#if __AVX2__
+            alignedLength = bufferLength & ~31;
+#endif
+
             Rpp8u *srcPtr1RowR, *srcPtr1RowG, *srcPtr1RowB, *srcPtr2RowR, *srcPtr2RowG, *srcPtr2RowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtr1RowR = srcPtr1Channel;
             srcPtr1RowG = srcPtr1RowR + srcDescPtr->strides.cStride;
@@ -508,6 +512,10 @@ RppStatus exclusive_or_f32_f32_host_tensor(Rpp32f *srcPtr1,
         // Exclusive OR without fused output-layout toggle (NCHW -> NCHW for 3 channel)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
+#if __AVX2__
+            alignedLength = bufferLength & ~7;
+#endif
+
             Rpp32f *srcPtr1RowR, *srcPtr1RowG, *srcPtr1RowB, *srcPtr2RowR, *srcPtr2RowG, *srcPtr2RowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtr1RowR = srcPtr1Channel;
             srcPtr1RowG = srcPtr1RowR + srcDescPtr->strides.cStride;
@@ -822,6 +830,10 @@ RppStatus exclusive_or_f16_f16_host_tensor(Rpp16f *srcPtr1,
         // Exclusive OR without fused output-layout toggle (NCHW -> NCHW for 3 channel)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
+#if __AVX2__
+            alignedLength = bufferLength & ~7;
+#endif
+
             Rpp16f *srcPtr1RowR, *srcPtr1RowG, *srcPtr1RowB, *srcPtr2RowR, *srcPtr2RowG, *srcPtr2RowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtr1RowR = srcPtr1Channel;
             srcPtr1RowG = srcPtr1RowR + srcDescPtr->strides.cStride;
@@ -1131,6 +1143,10 @@ RppStatus exclusive_or_i8_i8_host_tensor(Rpp8s *srcPtr1,
         // Exclusive OR without fused output-layout toggle (NCHW -> NCHW for 3 channel)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
+#if __AVX2__
+            alignedLength = bufferLength & ~31;
+#endif
+
             Rpp8s *srcPtr1RowR, *srcPtr1RowG, *srcPtr1RowB, *srcPtr2RowR, *srcPtr2RowG, *srcPtr2RowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtr1RowR = srcPtr1Channel;
             srcPtr1RowG = srcPtr1RowR + srcDescPtr->strides.cStride;
