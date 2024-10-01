@@ -432,6 +432,9 @@ RppStatus bitwise_not_f32_f32_host_tensor(Rpp32f *srcPtr,
         // Bitwise Not without fused output-layout toggle (NCHW -> NCHW for 3 channel)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
+#if __AVX2__
+            alignedLength = bufferLength & ~7;
+#endif
             Rpp32f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtrRowR = srcPtrChannel;
             srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
@@ -696,6 +699,9 @@ RppStatus bitwise_not_f16_f16_host_tensor(Rpp16f *srcPtr,
         // Bitwise Not without fused output-layout toggle (NCHW -> NCHW for 3 channel)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
+#if __AVX2__
+            alignedLength = bufferLength & ~7;
+#endif
             Rpp16f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *srcPtr2RowR, *srcPtr2RowG, *srcPtr2RowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtrRowR = srcPtrChannel;
             srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
@@ -955,6 +961,9 @@ RppStatus bitwise_not_i8_i8_host_tensor(Rpp8s *srcPtr,
         // Bitwise Not without fused output-layout toggle (NCHW -> NCHW for 3 channel)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
+#if __AVX2__
+            alignedLength = bufferLength & ~31;
+#endif
             Rpp8s *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *srcPtr2RowR, *srcPtr2RowG, *srcPtr2RowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtrRowR = srcPtrChannel;
             srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
