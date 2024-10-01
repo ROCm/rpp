@@ -1827,14 +1827,14 @@ __device__ __forceinline__ void rpp_hip_math_bitwiseOr8(d_float8 *src1_f8, d_flo
 
 __device__ __forceinline__ void rpp_hip_math_bitwiseNot8(d_float8 *src_f8, d_float8 *dst_f8)
 {
-    dst_f8->f1[0] = (float)(~((uchar)(src_f8->f1[0])) & 0xFF);
-    dst_f8->f1[1] = (float)(~((uchar)(src_f8->f1[1])) & 0xFF);
-    dst_f8->f1[2] = (float)(~((uchar)(src_f8->f1[2])) & 0xFF);
-    dst_f8->f1[3] = (float)(~((uchar)(src_f8->f1[3])) & 0xFF);
-    dst_f8->f1[4] = (float)(~((uchar)(src_f8->f1[4])) & 0xFF);
-    dst_f8->f1[5] = (float)(~((uchar)(src_f8->f1[5])) & 0xFF);
-    dst_f8->f1[6] = (float)(~((uchar)(src_f8->f1[6])) & 0xFF);
-    dst_f8->f1[7] = (float)(~((uchar)(src_f8->f1[7])) & 0xFF);
+    dst_f8->f1[0] = static_cast<float>(~static_cast<unsigned char>(src_f8->f1[0]) & 0xFF);
+    dst_f8->f1[1] = static_cast<float>(~static_cast<unsigned char>(src_f8->f1[1]) & 0xFF);
+    dst_f8->f1[2] = static_cast<float>(~static_cast<unsigned char>(src_f8->f1[2]) & 0xFF);
+    dst_f8->f1[3] = static_cast<float>(~static_cast<unsigned char>(src_f8->f1[3]) & 0xFF);
+    dst_f8->f1[4] = static_cast<float>(~static_cast<unsigned char>(src_f8->f1[4]) & 0xFF);
+    dst_f8->f1[5] = static_cast<float>(~static_cast<unsigned char>(src_f8->f1[5]) & 0xFF);
+    dst_f8->f1[6] = static_cast<float>(~static_cast<unsigned char>(src_f8->f1[6]) & 0xFF);
+    dst_f8->f1[7] = static_cast<float>(~static_cast<unsigned char>(src_f8->f1[7]) & 0xFF);
 }
 
 __device__ __forceinline__ float rpp_hip_math_inverse_sqrt1(float x)

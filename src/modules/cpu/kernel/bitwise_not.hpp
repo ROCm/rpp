@@ -358,9 +358,9 @@ RppStatus bitwise_not_f32_f32_host_tensor(Rpp32f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTempR++ = RPPPIXELCHECKF32((float)(~(Rpp8u)(srcPtrTemp[0] * 255) & 0xFF) / 255);
-                    *dstPtrTempG++ = RPPPIXELCHECKF32((float)(~(Rpp8u)(srcPtrTemp[1] * 255) & 0xFF) / 255);
-                    *dstPtrTempB++ = RPPPIXELCHECKF32((float)(~(Rpp8u)(srcPtrTemp[2] * 255) & 0xFF) / 255);
+                    *dstPtrTempR++ = RPPPIXELCHECKF32(static_cast<float>(~static_cast<Rpp8u>(srcPtrTemp[0] * 255) & 0xFF) / 255.0f);
+                    *dstPtrTempG++ = RPPPIXELCHECKF32(static_cast<float>(~static_cast<Rpp8u>(srcPtrTemp[1] * 255) & 0xFF) / 255.0f);
+                    *dstPtrTempB++ = RPPPIXELCHECKF32(static_cast<float>(~static_cast<Rpp8u>(srcPtrTemp[2] * 255) & 0xFF) / 255.0f);
 
                     srcPtrTemp += 3;
                 }
@@ -412,9 +412,9 @@ RppStatus bitwise_not_f32_f32_host_tensor(Rpp32f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = RPPPIXELCHECKF32((float)(~(Rpp8u)(*srcPtrTempR * 255) & 0xFF) / 255);
-                    dstPtrTemp[1] = RPPPIXELCHECKF32((float)(~(Rpp8u)(*srcPtrTempG * 255) & 0xFF) / 255);
-                    dstPtrTemp[2] = RPPPIXELCHECKF32((float)(~(Rpp8u)(*srcPtrTempB * 255) & 0xFF) / 255);
+                    dstPtrTemp[0] = RPPPIXELCHECKF32(static_cast<float>(~static_cast<Rpp8u>(*srcPtrTempR * 255) & 0xFF) / 255.0f);
+                    dstPtrTemp[1] = RPPPIXELCHECKF32(static_cast<float>(~static_cast<Rpp8u>(*srcPtrTempG * 255) & 0xFF) / 255.0f);
+                    dstPtrTemp[2] = RPPPIXELCHECKF32(static_cast<float>(~static_cast<Rpp8u>(*srcPtrTempB * 255) & 0xFF) / 255.0f);
 
                     srcPtrTempR++;
                     srcPtrTempG++;
@@ -478,9 +478,9 @@ RppStatus bitwise_not_f32_f32_host_tensor(Rpp32f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    *dstPtrTempR++ = RPPPIXELCHECKF32((float)(~(Rpp8u)(*srcPtrTempR * 255) & 0xFF) / 255);
-                    *dstPtrTempG++ = RPPPIXELCHECKF32((float)(~(Rpp8u)(*srcPtrTempG * 255) & 0xFF) / 255);
-                    *dstPtrTempB++ = RPPPIXELCHECKF32((float)(~(Rpp8u)(*srcPtrTempB * 255) & 0xFF) / 255);
+                    *dstPtrTempR++ = RPPPIXELCHECKF32(static_cast<float>(~static_cast<Rpp8u>(*srcPtrTempR * 255) & 0xFF) / 255.0f);
+                    *dstPtrTempG++ = RPPPIXELCHECKF32(static_cast<float>(~static_cast<Rpp8u>(*srcPtrTempG * 255) & 0xFF) / 255.0f);
+                    *dstPtrTempB++ = RPPPIXELCHECKF32(static_cast<float>(~static_cast<Rpp8u>(*srcPtrTempB * 255) & 0xFF) / 255.0f);
 
                     srcPtrTempR++;
                     srcPtrTempG++;
@@ -530,8 +530,7 @@ RppStatus bitwise_not_f32_f32_host_tensor(Rpp32f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    *dstPtrTemp++ = RPPPIXELCHECKF32((float)(~(Rpp8u)(*srcPtrTemp * 255) & 0xFF) / 255);
-
+                    *dstPtrTemp++ = RPPPIXELCHECKF32(static_cast<float>(~static_cast<Rpp8u>(*srcPtrTemp * 255) & 0xFF) / 255.0f);
                     srcPtrTemp++;
                 }
 
@@ -625,9 +624,9 @@ RppStatus bitwise_not_f16_f16_host_tensor(Rpp16f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTempR++ = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)(~(Rpp8u)(srcPtrTemp[0] * 255) & 0xFF) / 255));
-                    *dstPtrTempG++ = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)(~(Rpp8u)(srcPtrTemp[1] * 255) & 0xFF) / 255));
-                    *dstPtrTempB++ = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)(~(Rpp8u)(srcPtrTemp[2] * 255) & 0xFF) / 255));
+                    *dstPtrTempR++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<float>(~static_cast<Rpp8u>(srcPtrTemp[0] * 255) & 0xFF) / 255.0f));
+                    *dstPtrTempG++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<float>(~static_cast<Rpp8u>(srcPtrTemp[1] * 255) & 0xFF) / 255.0f));
+                    *dstPtrTempB++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<float>(~static_cast<Rpp8u>(srcPtrTemp[2] * 255) & 0xFF) / 255.0f));
 
                     srcPtrTemp += 3;
                 }
@@ -679,9 +678,9 @@ RppStatus bitwise_not_f16_f16_host_tensor(Rpp16f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)(~(Rpp8u)(*srcPtrTempR * 255) & 0xFF) / 255));
-                    dstPtrTemp[1] = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)(~(Rpp8u)(*srcPtrTempG * 255) & 0xFF) / 255));
-                    dstPtrTemp[2] = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)(~(Rpp8u)(*srcPtrTempB * 255) & 0xFF) / 255));
+                    dstPtrTemp[0] = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<float>(~static_cast<Rpp8u>(*srcPtrTempR * 255) & 0xFF) / 255.0f));
+                    dstPtrTemp[1] = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<float>(~static_cast<Rpp8u>(*srcPtrTempG * 255) & 0xFF) / 255.0f));
+                    dstPtrTemp[2] = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<float>(~static_cast<Rpp8u>(*srcPtrTempB * 255) & 0xFF) / 255.0f));
 
                     srcPtrTempR++;
                     srcPtrTempG++;
@@ -744,9 +743,9 @@ RppStatus bitwise_not_f16_f16_host_tensor(Rpp16f *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    *dstPtrTempR++ = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)(~(Rpp8u)(*srcPtrTempR * 255) & 0xFF) / 255));
-                    *dstPtrTempG++ = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)(~(Rpp8u)(*srcPtrTempG * 255) & 0xFF) / 255));
-                    *dstPtrTempB++ = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)(~(Rpp8u)(*srcPtrTempB * 255) & 0xFF) / 255));
+                    *dstPtrTempR++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<float>(~static_cast<Rpp8u>(*srcPtrTempR * 255) & 0xFF) / 255.0f));
+                    *dstPtrTempG++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<float>(~static_cast<Rpp8u>(*srcPtrTempG * 255) & 0xFF) / 255.0f));
+                    *dstPtrTempB++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<float>(~static_cast<Rpp8u>(*srcPtrTempB * 255) & 0xFF) / 255.0f));
 
                     srcPtrTempR++;
                     srcPtrTempG++;
@@ -798,7 +797,7 @@ RppStatus bitwise_not_f16_f16_host_tensor(Rpp16f *srcPtr,
 #endif
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        *dstPtrTemp++ = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)(~(Rpp8u)(*srcPtrTemp * 255) & 0xFF) / 255));
+                        *dstPtrTemp++ = static_cast<Rpp16f>(RPPPIXELCHECKF32(static_cast<float>(~(static_cast<Rpp8u>(*srcPtrTemp * 255)) & 0xFF) / 255.0f));
 
                         srcPtrTemp++;
                     }
@@ -890,9 +889,9 @@ RppStatus bitwise_not_i8_i8_host_tensor(Rpp8s *srcPtr,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTempR++ = static_cast<Rpp8s>(RPPPIXELCHECKI8((~(srcPtrTemp[0] + 128) & 0xFF) -  128));
-                    *dstPtrTempG++ = static_cast<Rpp8s>(RPPPIXELCHECKI8((~(srcPtrTemp[1] + 128) & 0xFF) -  128));
-                    *dstPtrTempB++ = static_cast<Rpp8s>(RPPPIXELCHECKI8((~(srcPtrTemp[2] + 128) & 0xFF) -  128));
+                    *dstPtrTempR++ = static_cast<Rpp8s>(RPPPIXELCHECKI8((~(static_cast<Rpp8u>(srcPtrTemp[0] + 128)) & 0xFF) -  128));
+                    *dstPtrTempG++ = static_cast<Rpp8s>(RPPPIXELCHECKI8((~(static_cast<Rpp8u>(srcPtrTemp[1] + 128)) & 0xFF) -  128));
+                    *dstPtrTempB++ = static_cast<Rpp8s>(RPPPIXELCHECKI8((~(static_cast<Rpp8u>(srcPtrTemp[2] + 128)) & 0xFF) -  128));
 
                     srcPtrTemp += 3;
                 }
