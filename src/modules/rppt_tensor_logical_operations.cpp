@@ -165,25 +165,25 @@ RppStatus rppt_bitwise_or_host(RppPtr_t srcPtr1,
 /******************** bitwise NOT ********************/
 
 RppStatus rppt_bitwise_not_host(RppPtr_t srcPtr,
-                               RpptDescPtr srcDescPtr,
-                               RppPtr_t dstPtr,
-                               RpptDescPtr dstDescPtr,
-                               RpptROIPtr roiTensorPtrSrc,
-                               RpptRoiType roiType,
-                               rppHandle_t rppHandle)
+                                RpptDescPtr srcDescPtr,
+                                RppPtr_t dstPtr,
+                                RpptDescPtr dstDescPtr,
+                                RpptROIPtr roiTensorPtrSrc,
+                                RpptRoiType roiType,
+                                rppHandle_t rppHandle)
 {
     RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
 
     if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
     {
         bitwise_not_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
-                                     srcDescPtr,
-                                     static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
-                                     dstDescPtr,
-                                     roiTensorPtrSrc,
-                                     roiType,
-                                     layoutParams,
-                                     rpp::deref(rppHandle));
+                                      srcDescPtr,
+                                      static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                      dstDescPtr,
+                                      roiTensorPtrSrc,
+                                      roiType,
+                                      layoutParams,
+                                      rpp::deref(rppHandle));
     }
     else if ((srcDescPtr->dataType == RpptDataType::F16) && (dstDescPtr->dataType == RpptDataType::F16))
     {

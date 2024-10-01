@@ -123,7 +123,6 @@ const __m256 avx_p255 = _mm256_set1_ps(255.0f);
 const __m256 avx_p1op255 = _mm256_set1_ps(1.0f / 255.0f);
 const __m256 avx_p1op3 = _mm256_set1_ps(1.0f / 3.0f);
 const __m256 avx_p2op3 = _mm256_set1_ps(2.0f / 3.0f);
-const __m256i avx8_px1 = _mm256_set1_epi8(0xFF);
 
 const __m256i avx_cephesSQRTHF = _mm256_set1_ps(0.707106781186547524);
 const __m256i avx_cephesLogP0 = _mm256_set1_ps(7.0376836292E-2);

@@ -60,6 +60,7 @@ RppStatus bitwise_not_u8_u8_host_tensor(Rpp8u *srcPtr,
         Rpp32u alignedLength = (bufferLength / 96) * 96;
         Rpp32u vectorIncrement = 96;
         Rpp32u vectorIncrementPerChannel = 32;
+        __m256i pxMax = _mm256_set1_epi8(0xFF);
 #endif
 
         // Bitwise NOT with fused output-layout toggle (NHWC -> NCHW)
@@ -86,9 +87,9 @@ RppStatus bitwise_not_u8_u8_host_tensor(Rpp8u *srcPtr,
                     __m256i p[3];
 
                     rpp_simd_load(rpp_load96_u8pkd3_to_u8pln3, srcPtrTemp, p);    // simd loads
-                    p[0] = _mm256_xor_si256(p[0], avx8_px1);
-                    p[1] = _mm256_xor_si256(p[1], avx8_px1);
-                    p[2] = _mm256_xor_si256(p[2], avx8_px1);
+                    p[0] = _mm256_xor_si256(p[0], pxMax);
+                    p[1] = _mm256_xor_si256(p[1], pxMax);
+                    p[2] = _mm256_xor_si256(p[2], pxMax);
                     rpp_simd_store(rpp_store96_u8pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 
                     srcPtrTemp += vectorIncrement;
@@ -113,7 +114,7 @@ RppStatus bitwise_not_u8_u8_host_tensor(Rpp8u *srcPtr,
             }
         }
 
-        // Exclusive OR with fused output-layout toggle (NCHW -> NHWC)
+        // Bitwise Not with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp8u *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
@@ -137,9 +138,9 @@ RppStatus bitwise_not_u8_u8_host_tensor(Rpp8u *srcPtr,
                     __m256i p[3];
 
                     rpp_simd_load(rpp_load96_u8pln3_to_u8pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    p[0] = _mm256_xor_si256(p[0], avx8_px1);
-                    p[1] = _mm256_xor_si256(p[1], avx8_px1);
-                    p[2] = _mm256_xor_si256(p[2], avx8_px1);
+                    p[0] = _mm256_xor_si256(p[0], pxMax);
+                    p[1] = _mm256_xor_si256(p[1], pxMax);
+                    p[2] = _mm256_xor_si256(p[2], pxMax);
                     rpp_simd_store(rpp_store96_u8pln3_to_u8pkd3, dstPtrTemp, p);    // simd stores
 
                     srcPtrTempR += vectorIncrementPerChannel;
@@ -167,9 +168,12 @@ RppStatus bitwise_not_u8_u8_host_tensor(Rpp8u *srcPtr,
             }
         }
 
-        // Exclusive OR without fused output-layout toggle (NCHW -> NCHW for 3 channel)
+        // Bitwise Not without fused output-layout toggle (NCHW -> NCHW for 3 channel)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
+#if __AVX2__
+            alignedLength = bufferLength & ~31;
+#endif
             Rpp8u *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
             srcPtrRowR = srcPtrChannel;
             srcPtrRowG = srcPtrRowR + srcDescPtr->strides.cStride;
@@ -194,9 +198,9 @@ RppStatus bitwise_not_u8_u8_host_tensor(Rpp8u *srcPtr,
                     __m256i p[3];
 
                     rpp_simd_load(rpp_load96_u8pln3_to_u8pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    p[0] = _mm256_xor_si256(p[0], avx8_px1);
-                    p[1] = _mm256_xor_si256(p[1], avx8_px1);
-                    p[2] = _mm256_xor_si256(p[2], avx8_px1);
+                    p[0] = _mm256_xor_si256(p[0], pxMax);
+                    p[1] = _mm256_xor_si256(p[1], pxMax);
+                    p[2] = _mm256_xor_si256(p[2], pxMax);
                     rpp_simd_store(rpp_store96_u8pln3_to_u8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);
 
                     srcPtrTempR += vectorIncrementPerChannel;
@@ -227,7 +231,7 @@ RppStatus bitwise_not_u8_u8_host_tensor(Rpp8u *srcPtr,
             }
         }
 
-        // Exclusive OR without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW for 1 channel)
+        // Bitwise Not without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW for 1 channel)
         else
         {
 #if __AVX2__
@@ -251,7 +255,7 @@ RppStatus bitwise_not_u8_u8_host_tensor(Rpp8u *srcPtr,
                     __m256i p;
 
                     p = _mm256_loadu_si256((const __m256i *)srcPtrTemp);   // simd loads
-                    p = _mm256_xor_si256(p, avx8_px1);
+                    p = _mm256_xor_si256(p, pxMax);
                     _mm256_storeu_si256((__m256i *)dstPtrTemp, p);    // simd stores
 
                     srcPtrTemp += vectorIncrementPerChannel;
@@ -314,7 +318,7 @@ RppStatus bitwise_not_f32_f32_host_tensor(Rpp32f *srcPtr,
         __m256i pxMax = _mm256_set1_epi32(0xFF);
 #endif
 
-        // Exclusive OR with fused output-layout toggle (NHWC -> NCHW)
+        // Bitwise Not with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp32f *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -338,9 +342,9 @@ RppStatus bitwise_not_f32_f32_host_tensor(Rpp32f *srcPtr,
                     __m256 p[3];
 
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
-                    p[0] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p[0], avx_p255)), pxMax));    // exclusive_or computation
-                    p[1] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p[1], avx_p255)), pxMax));    // exclusive_or computation
-                    p[2] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p[2], avx_p255)), pxMax));    // exclusive_or computation
+                    p[0] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p[0], avx_p255)), pxMax));    // bitwise_not computation
+                    p[1] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p[1], avx_p255)), pxMax));    // bitwise_not computation
+                    p[2] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p[2], avx_p255)), pxMax));    // bitwise_not computation
                     p[0] = _mm256_mul_ps(p[0], avx_p1op255);
                     p[1] = _mm256_mul_ps(p[1], avx_p1op255);
                     p[2] = _mm256_mul_ps(p[2], avx_p1op255);
@@ -368,7 +372,7 @@ RppStatus bitwise_not_f32_f32_host_tensor(Rpp32f *srcPtr,
             }
         }
 
-        // Exclusive OR with fused output-layout toggle (NCHW -> NHWC)
+        // Bitwise Not with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp32f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRow;
@@ -425,7 +429,7 @@ RppStatus bitwise_not_f32_f32_host_tensor(Rpp32f *srcPtr,
             }
         }
 
-        // Exclusive OR without fused output-layout toggle (NCHW -> NCHW for 3 channel)
+        // Bitwise Not without fused output-layout toggle (NCHW -> NCHW for 3 channel)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp32f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -453,9 +457,9 @@ RppStatus bitwise_not_f32_f32_host_tensor(Rpp32f *srcPtr,
                     __m256 p[3];
 
                     rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    p[0] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p[0], avx_p255)), pxMax));    // exclusive_or computation
-                    p[1] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p[1], avx_p255)), pxMax));    // exclusive_or computation
-                    p[2] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p[2], avx_p255)), pxMax));    // exclusive_or computation
+                    p[0] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p[0], avx_p255)), pxMax));    // bitwise_not computation
+                    p[1] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p[1], avx_p255)), pxMax));    // bitwise_not computation
+                    p[2] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p[2], avx_p255)), pxMax));    // bitwise_not computation
                     p[0] = _mm256_mul_ps(p[0], avx_p1op255);
                     p[1] = _mm256_mul_ps(p[1], avx_p1op255);
                     p[2] = _mm256_mul_ps(p[2], avx_p1op255);
@@ -489,7 +493,7 @@ RppStatus bitwise_not_f32_f32_host_tensor(Rpp32f *srcPtr,
             }
         }
 
-        // Exclusive OR without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW for 1 channel)
+        // Bitwise Not without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW for 1 channel)
         else
         {
 #if __AVX2__
@@ -578,7 +582,7 @@ RppStatus bitwise_not_f16_f16_host_tensor(Rpp16f *srcPtr,
         __m256i pxMax = _mm256_set1_epi32(0xFF);
 #endif
 
-        // Exclusive OR with fused output-layout toggle (NHWC -> NCHW)
+        // Bitwise Not with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp16f *srcPtrRow, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -602,9 +606,9 @@ RppStatus bitwise_not_f16_f16_host_tensor(Rpp16f *srcPtr,
                     __m256 p[3];
 
                     rpp_simd_load(rpp_load24_f16pkd3_to_f32pln3_avx, srcPtrTemp, p);    // simd loads
-                     p[0] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p[0], avx_p255)), pxMax));    // exclusive_or computation
-                    p[1] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p[1], avx_p255)), pxMax));    // exclusive_or computation
-                    p[2] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p[2], avx_p255)), pxMax));    // exclusive_or computation
+                     p[0] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p[0], avx_p255)), pxMax));    // bitwise_not computation
+                    p[1] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p[1], avx_p255)), pxMax));    // bitwise_not computation
+                    p[2] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p[2], avx_p255)), pxMax));    // bitwise_not computation
                     p[0] = _mm256_mul_ps(p[0], avx_p1op255);
                     p[1] = _mm256_mul_ps(p[1], avx_p1op255);
                     p[2] = _mm256_mul_ps(p[2], avx_p1op255);
@@ -632,7 +636,7 @@ RppStatus bitwise_not_f16_f16_host_tensor(Rpp16f *srcPtr,
             }
         }
 
-        // Exclusive OR with fused output-layout toggle (NCHW -> NHWC)
+        // Bitwise Not with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp16f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *srcPtr2RowR, *srcPtr2RowG, *srcPtr2RowB, *dstPtrRow;
@@ -689,7 +693,7 @@ RppStatus bitwise_not_f16_f16_host_tensor(Rpp16f *srcPtr,
             }
         }
 
-        // Exclusive OR without fused output-layout toggle (NCHW -> NCHW for 3 channel)
+        // Bitwise Not without fused output-layout toggle (NCHW -> NCHW for 3 channel)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp16f *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *srcPtr2RowR, *srcPtr2RowG, *srcPtr2RowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -716,9 +720,9 @@ RppStatus bitwise_not_f16_f16_host_tensor(Rpp16f *srcPtr,
                     __m256 p[3];
 
                     rpp_simd_load(rpp_load24_f16pln3_to_f32pln3_avx, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    p[0] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p[0], avx_p255)), pxMax));    // exclusive_or computation
-                    p[1] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p[1], avx_p255)), pxMax));    // exclusive_or computation
-                    p[2] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p[2], avx_p255)), pxMax));    // exclusive_or computation
+                    p[0] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p[0], avx_p255)), pxMax));    // bitwise_not computation
+                    p[1] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p[1], avx_p255)), pxMax));    // bitwise_not computation
+                    p[2] = _mm256_cvtepi32_ps(_mm256_xor_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p[2], avx_p255)), pxMax));    // bitwise_not computation
                     p[0] = _mm256_mul_ps(p[0], avx_p1op255);
                     p[1] = _mm256_mul_ps(p[1], avx_p1op255);
                     p[2] = _mm256_mul_ps(p[2], avx_p1op255);
@@ -752,7 +756,7 @@ RppStatus bitwise_not_f16_f16_host_tensor(Rpp16f *srcPtr,
             }
         }
 
-        // Exclusive OR without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
+        // Bitwise Not without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW)
         else
         {
 #if __AVX2__
@@ -840,9 +844,10 @@ RppStatus bitwise_not_i8_i8_host_tensor(Rpp8s *srcPtr,
         Rpp32u alignedLength = (bufferLength / 96) * 96;
         Rpp32u vectorIncrement = 96;
         Rpp32u vectorIncrementPerChannel = 32;
+        __m256i pxMax = _mm256_set1_epi8(0xFF);
 #endif
 
-        // Exclusive OR with fused output-layout toggle (NHWC -> NCHW)
+        // Bitwise Not with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp8s *srcPtrRow, *srcPtr2Row, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -866,9 +871,9 @@ RppStatus bitwise_not_i8_i8_host_tensor(Rpp8s *srcPtr,
                     __m256i p[3];
 
                     rpp_simd_load(rpp_load96_i8pkd3_to_u8pln3, srcPtrTemp, p);    // simd loads
-                    p[0] = _mm256_xor_si256(p[0], avx8_px1);
-                    p[1] = _mm256_xor_si256(p[1], avx8_px1);
-                    p[2] = _mm256_xor_si256(p[2], avx8_px1);
+                    p[0] = _mm256_xor_si256(p[0], pxMax);
+                    p[1] = _mm256_xor_si256(p[1], pxMax);
+                    p[2] = _mm256_xor_si256(p[2], pxMax);
                     rpp_simd_store(rpp_store96_u8pln3_to_i8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);    // simd stores
 
                     srcPtrTemp += vectorIncrement;
@@ -893,7 +898,7 @@ RppStatus bitwise_not_i8_i8_host_tensor(Rpp8s *srcPtr,
             }
         }
 
-        // Exclusive OR with fused output-layout toggle (NCHW -> NHWC)
+        // Bitwise Not with fused output-layout toggle (NCHW -> NHWC)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NHWC))
         {
             Rpp8s *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *srcPtr2RowR, *srcPtr2RowG, *srcPtr2RowB, *dstPtrRow;
@@ -917,9 +922,9 @@ RppStatus bitwise_not_i8_i8_host_tensor(Rpp8s *srcPtr,
                     __m256i p[3];
 
                     rpp_simd_load(rpp_load96_i8pln3_to_u8pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                     p[0] = _mm256_xor_si256(p[0], avx8_px1);
-                    p[1] = _mm256_xor_si256(p[1], avx8_px1);
-                    p[2] = _mm256_xor_si256(p[2], avx8_px1);
+                     p[0] = _mm256_xor_si256(p[0], pxMax);
+                    p[1] = _mm256_xor_si256(p[1], pxMax);
+                    p[2] = _mm256_xor_si256(p[2], pxMax);
                     rpp_simd_store(rpp_store96_u8pln3_to_i8pkd3, dstPtrTemp, p);    // simd stores
 
                     srcPtrTempR += vectorIncrementPerChannel;
@@ -947,7 +952,7 @@ RppStatus bitwise_not_i8_i8_host_tensor(Rpp8s *srcPtr,
             }
         }
 
-        // Exclusive OR without fused output-layout toggle (NCHW -> NCHW for 3 channel)
+        // Bitwise Not without fused output-layout toggle (NCHW -> NCHW for 3 channel)
         else if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NCHW) && (dstDescPtr->layout == RpptLayout::NCHW))
         {
             Rpp8s *srcPtrRowR, *srcPtrRowG, *srcPtrRowB, *srcPtr2RowR, *srcPtr2RowG, *srcPtr2RowB, *dstPtrRowR, *dstPtrRowG, *dstPtrRowB;
@@ -974,9 +979,9 @@ RppStatus bitwise_not_i8_i8_host_tensor(Rpp8s *srcPtr,
                     __m256i p[3];
 
                     rpp_simd_load(rpp_load96_i8pln3_to_u8pln3, srcPtrTempR, srcPtrTempG, srcPtrTempB, p);    // simd loads
-                    p[0] = _mm256_xor_si256(p[0], avx8_px1);
-                    p[1] = _mm256_xor_si256(p[1], avx8_px1);
-                    p[2] = _mm256_xor_si256(p[2], avx8_px1);
+                    p[0] = _mm256_xor_si256(p[0], pxMax);
+                    p[1] = _mm256_xor_si256(p[1], pxMax);
+                    p[2] = _mm256_xor_si256(p[2], pxMax);
                     rpp_simd_store(rpp_store96_u8pln3_to_i8pln3, dstPtrTempR, dstPtrTempG, dstPtrTempB, p);
 
                     srcPtrTempR += vectorIncrementPerChannel;
@@ -1007,7 +1012,7 @@ RppStatus bitwise_not_i8_i8_host_tensor(Rpp8s *srcPtr,
             }
         }
 
-        // Exclusive OR without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW for 1 channel)
+        // Bitwise Not without fused output-layout toggle (NHWC -> NHWC or NCHW -> NCHW for 1 channel)
         else
         {
 #if __AVX2__
@@ -1031,7 +1036,7 @@ RppStatus bitwise_not_i8_i8_host_tensor(Rpp8s *srcPtr,
                     __m256i p;
 
                     p = _mm256_add_epi8(avx_pxConvertI8, _mm256_loadu_si256((__m256i *)srcPtrTemp));   // simd loads
-                    p = _mm256_xor_si256(p, avx8_px1);
+                    p = _mm256_xor_si256(p, pxMax);
                     _mm256_storeu_si256((__m256i *)dstPtrTemp, _mm256_sub_epi8(p, avx_pxConvertI8));    // simd stores
 
                     srcPtrTemp += vectorIncrementPerChannel;
