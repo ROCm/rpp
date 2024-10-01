@@ -24,7 +24,6 @@ SOFTWARE.
 
 import os
 import sys
-import signal
 sys.dont_write_bytecode = True
 sys.path.append(os.path.join(os.path.dirname( __file__ ), '..' ))
 from common import *
@@ -50,13 +49,10 @@ def run_unit_test_cmd(srcPath, case, numRuns, testType, batchSize, outFilePath):
     print("\n./Tensor_audio_host " + srcPath + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(numRuns) + " " + str(batchSize))
     result = subprocess.Popen([buildFolderPath + "/build/Tensor_audio_host", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
     stdout_data, stderr_data = result.communicate()
+    print(stdout_data.decode())
     exit_code = result.returncode
     if(exit_code != 0):
-        if(exit_code < 0):
-            log_detected_audio_errors("Returned non-zero exit status : "+ str(exit_code) + " Signal : "+ str(signal.Signals(-exit_code).name) + stderr_data.decode(), errorLog, audioAugmentationMap[int(case)][0], "_HOST")
-        else:
-            log_detected_audio_errors("Returned non-zero exit status : "+ str(exit_code)  + stderr_data.decode(), errorLog, audioAugmentationMapAugmentationMap[int(case)][0], "_HOST")
-    print(stdout_data.decode())
+        log_detected_errors("Returned non-zero exit status : "+ str(exit_code) + " " + stderr_data.decode(), errorLog, "", audioAugmentationMap[int(case)][0], "_HOST", get_signal_name_from_return_code(exit_code))
     print("------------------------------------------------------------------------------------------")
 
 def run_performance_test_cmd(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath):
@@ -67,10 +63,7 @@ def run_performance_test_cmd(loggingFolder, srcPath, case, numRuns, testType, ba
         stdout_data, stderr_data = process.communicate()
         exit_code = process.returncode
         if(exit_code != 0):
-            if(exit_code < 0):
-                log_detected_audio_errors("Returned non-zero exit status : "+ str(exit_code) + " Signal : "+ str(signal.Signals(-exit_code).name) + stderr_data.decode(), errorLog, audioAugmentationMap[int(case)][0], "_HOST")
-            else:
-                log_detected_audio_errors("Returned non-zero exit status : "+ str(exit_code)  + stderr_data.decode(), errorLog, audioAugmentationMap[int(case)][0], "_HOST")
+            log_detected_errors("Returned non-zero exit status : "+ str(exit_code) + " " + stderr_data.decode(), errorLog, "", audioAugmentationMap[int(case)][0], "_HOST", get_signal_name_from_return_code(exit_code))
         print("------------------------------------------------------------------------------------------")
 
 def run_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath):
@@ -226,7 +219,7 @@ if (testType == 1):
         print_performance_tests_summary(log_file, "", numRuns)
 
 if errorLog:
-    print("\n---------------------------------- Error log - Tensor_host ----------------------------------\n")
+    print("\n---------------------------------- Error log - Tensor_audio_host ----------------------------------\n")
     for error in errorLog:
         print(error)
     print("-----------------------------------------------------------------------------------------------")

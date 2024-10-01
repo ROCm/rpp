@@ -37,7 +37,7 @@ outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
 caseMin = 0
 caseMax = 6
-
+errorLog = []
 
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list():
@@ -74,16 +74,23 @@ def generate_performance_reports(RESULTS_DIR):
 
 def run_unit_test_cmd(srcPath, case, numRuns, testType, batchSize, outFilePath):
     print("\n./Tensor_audio_hip " + srcPath + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(numRuns) + " " + str(batchSize))
-    result = subprocess.Popen([buildFolderPath + "/build/Tensor_audio_hip", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE)    # nosec
+    result = subprocess.Popen([buildFolderPath + "/build/Tensor_audio_hip", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
     stdout_data, stderr_data = result.communicate()
     print(stdout_data.decode())
+    exit_code = result.returncode
+    if(exit_code != 0):
+        log_detected_errors("Returned non-zero exit status : "+ str(exit_code) + " " + stderr_data.decode(), errorLog, "", audioAugmentationMap[int(case)][0], "_HIP", get_signal_name_from_return_code(exit_code))
     print("------------------------------------------------------------------------------------------")
 
 def run_performance_test_cmd(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath):
     with open(loggingFolder + "/Tensor_audio_hip_raw_performance_log.txt", "a") as logFile:
         print("./Tensor_audio_hip " + srcPath + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(numRuns) + " " + str(batchSize))
-        process = subprocess.Popen([buildFolderPath + "/build/Tensor_audio_hip", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)    # nosec
+        process = subprocess.Popen([buildFolderPath + "/build/Tensor_audio_hip", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
         read_from_subprocess_and_write_to_log(process, logFile)
+        stdout_data, stderr_data = process.communicate()
+        exit_code = process.returncode
+        if(exit_code != 0):
+            log_detected_errors("Returned non-zero exit status : "+ str(exit_code) + " "+ stderr_data.decode(), errorLog, "", audioAugmentationMap[int(case)][0], "_HIP", get_signal_name_from_return_code(exit_code))
         print("------------------------------------------------------------------------------------------")
 
 def run_performance_test_with_profiler_cmd(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath):
@@ -91,7 +98,7 @@ def run_performance_test_with_profiler_cmd(loggingFolder, srcPath, case, numRuns
         os.mkdir(outFilePath + "/case_" + case)
     with open(loggingFolder + "/Tensor_audio_hip_raw_performance_log.txt", "a") as logFile:
         print("\nrocprof --basenames on --timestamp on --stats -o " + outFilePath + "/case_" + str(case) + "/output_case" + str(case) + ".csv ./Tensor_audio_hip " + srcPath + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(numRuns) + " " + str(batchSize))
-        process = subprocess.Popen([ 'rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', outFilePath + "/case_" + case + "/output_case" + case + ".csv", "./Tensor_audio_hip", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)  # nosec
+        process = subprocess.Popen([ 'rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', outFilePath + "/case_" + case + "/output_case" + case + ".csv", "./Tensor_audio_hip", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)  # nosec
         while True:
             output = process.stdout.readline()
             if not output and process.poll() is not None:
@@ -99,6 +106,11 @@ def run_performance_test_with_profiler_cmd(loggingFolder, srcPath, case, numRuns
             print(output.strip())
             output_str = output.decode('utf-8')
             logFile.write(output_str)
+        
+        stdout_data, stderr_data = process.communicate()
+        exit_code = process.returncode
+        if(exit_code != 0):
+            log_detected_errors("Returned non-zero exit status : "+ str(exit_code) + " "+ stderr_data.decode(), errorLog, "", audioAugmentationMap[int(case)][0], "_HIP", get_signal_name_from_return_code(exit_code))
         print("------------------------------------------------------------------------------------------")
 
 def run_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath, profilingOption = "NO"):
@@ -296,3 +308,9 @@ elif testType == 1 and profilingOption == "YES":
                 CONSOLIDATED_FILE + "\n")
     except IOError:
         print("Unable to open results in " + CONSOLIDATED_FILE)
+
+if errorLog:
+    print("\n---------------------------------- Error log - Tensor_audio_hip ----------------------------------\n")
+    for error in errorLog:
+        print(error)
+    print("-----------------------------------------------------------------------------------------------")

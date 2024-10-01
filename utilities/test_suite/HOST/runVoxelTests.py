@@ -24,7 +24,6 @@ SOFTWARE.
 
 import os
 import sys
-import signal
 sys.dont_write_bytecode = True
 sys.path.append(os.path.join(os.path.dirname( __file__ ), '..' ))
 from common import *
@@ -66,10 +65,8 @@ def run_unit_test_cmd(headerPath, dataPath, dstPathTemp, layout, case, numRuns, 
     print(stdout_data.decode())
     exit_code = result.returncode
     if(exit_code != 0):
-        if(exit_code < 0):
-            log_detected_errors("Returned non-zero exit status : "+ str(exit_code) + " Signal : "+ str(signal.Signals(-exit_code).name) + stderr_data.decode(), errorLog, voxelAugmentationMap[int(case)][0], bitDepth, get_voxel_layout_type(layout, "HOST"))
-        else:
-            log_detected_errors("Returned non-zero exit status : "+ str(exit_code)  + stderr_data.decode(), errorLog, voxelAugmentationMap[int(case)][0], bitDepth, get_voxel_layout_type(layout, "HOST"))
+        log_detected_errors("Returned non-zero exit status : "+ str(exit_code) + " " + stderr_data.decode(), errorLog, voxelAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_voxel_layout_type(layout, "HOST"), get_signal_name_from_return_code(exit_code))
+    
     print("\n------------------------------------------------------------------------------------------")
 
 def run_performance_test_cmd(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
@@ -94,10 +91,7 @@ def run_performance_test_cmd(loggingFolder, logFileLayout, headerPath, dataPath,
         stdout_data, stderr_data = process.communicate()
         exit_code = process.returncode
         if(exit_code != 0):
-            if(exit_code < 0):
-                log_detected_errors("Returned non-zero exit status : "+ str(exit_code) + " Signal : "+ str(signal.Signals(-exit_code).name) + stderr_data.decode(), errorLog, voxelAugmentationMap[int(case)][0], bitDepth, get_voxel_layout_type(layout, "HOST"))
-            else:
-                log_detected_errors("Returned non-zero exit status : "+ str(exit_code)  + stderr_data.decode(), errorLog, voxelAugmentationMap[int(case)][0], bitDepth, get_voxel_layout_type(layout, "HOST"))
+            log_detected_errors("Returned non-zero exit status : "+ str(exit_code) + " " + stderr_data.decode(), errorLog, voxelAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_voxel_layout_type(layout, "HOST"), get_signal_name_from_return_code(exit_code))
         print("\n------------------------------------------------------------------------------------------")
 
 def run_test(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
@@ -269,7 +263,7 @@ elif (testType == 1):   # Performance tests
         print_performance_tests_summary(logFile, functionalityGroupList, numRuns)
 
 if errorLog:
-    print("\n---------------------------------- Error log - Tensor_host ----------------------------------\n")
+    print("\n---------------------------------- Error log - Tensor_voxel_host ----------------------------------\n")
     for error in errorLog:
         print(error)
     print("-----------------------------------------------------------------------------------------------")

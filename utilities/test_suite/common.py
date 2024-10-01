@@ -28,6 +28,7 @@ import sys
 import datetime
 import shutil
 import pandas as pd
+import signal
 
 try:
     from errno import FileExistsError
@@ -438,13 +439,23 @@ def get_voxel_layout_type(layout, backend):
     else:
        result += "_PLN1_toPLN1"
     return result
-# def log_detected_errors(errorData, errorLog, caseName, bitDepth, functionSpecificName):
-#     if errorData.decode():
-#         msg = caseName + bitDepthDict[bitDepth] + functionSpecificName + " kernel execution failed. Getting below error\n" + errorData.decode()
-#         errorLog.append(msg)
-def log_detected_errors(errorData, errorLog, caseName, bitDepth, functionSpecificName):
-    msg = caseName + bitDepthDict[bitDepth] + functionSpecificName + " kernel execution failed. Getting below error\n" + errorData
-    errorLog.append(msg)
-def log_detected_errors(errorData, errorLog, caseName, functionSpecificName):
-    msg = caseName  + functionSpecificName + " kernel execution failed. Getting below error\n" + errorData
+
+def get_bit_depth(bitDepth):
+    result = str(bitDepthDict[bitDepth])
+    return result
+
+def get_signal_name_from_return_code(return_code):
+    result = ""
+    if return_code < 0:
+        signal_num = -return_code
+        result = result + " Signal = "
+        for signame, signum in signal.__dict__.items():
+            if isinstance(signum, int) and signum == signal_num:
+                signal_name = signame
+                break
+        result = result + signal_name
+    return result
+
+def log_detected_errors(errorData, errorLog, caseName, functionBitDepth, functionSpecificName, functionSignalName):
+    msg = caseName + functionBitDepth + functionSpecificName + " kernel execution failed. Getting below error\n" + errorData + functionSignalName
     errorLog.append(msg)

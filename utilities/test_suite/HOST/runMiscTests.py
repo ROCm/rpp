@@ -28,7 +28,6 @@ import argparse
 import datetime
 import shutil
 import sys
-import signal
 sys.dont_write_bytecode = True
 sys.path.append(os.path.join(os.path.dirname( __file__ ), '..' ))
 from common import *
@@ -55,10 +54,7 @@ def run_unit_test_cmd(numDims, case, numRuns, testType, toggle, batchSize, outFi
     print(stdout_data.decode())
     exit_code = result.returncode
     if(exit_code != 0):
-        if(exit_code < 0):
-            log_detected_errors("Returned non-zero exit status : "+ str(exit_code) + " Signal : "+ str(signal.Signals(-exit_code).name) + stderr_data.decode(), errorLog, miscAugmentationMap[int(case)][0], get_misc_func_name(int(case), numDims, additionalArg))
-        else:
-            log_detected_errors("Returned non-zero exit status : "+ str(exit_code)  + stderr_data.decode(), errorLog, micsAugmentationMap[int(case)][0], get_misc_func_name(int(case), numDims, additionalArg))
+        log_detected_errors("Returned non-zero exit status : "+ str(exit_code) + " " + stderr_data.decode(), errorLog, miscAugmentationMap[int(case)][0], "", get_misc_func_name(int(case), numDims, additionalArg), get_signal_name_from_return_code(exit_code))
     print("------------------------------------------------------------------------------------------")
 
 def run_performance_test_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg):
@@ -69,10 +65,7 @@ def run_performance_test_cmd(loggingFolder, numDims, case, numRuns, testType, to
         stdout_data, stderr_data = process.communicate()
         exit_code = process.returncode
         if(exit_code != 0):
-            if(exit_code < 0):
-                log_detected_errors("Returned non- exit status : "+ str(exit_code) + " Signal : "+ str(signal.Signals(-exit_code).name) + stderr_data.decode(), errorLog, miscAugmentationMap[int(case)][0], get_misc_func_name(int(case), numDims, additionalArg))
-            else:
-                log_detected_errors("Returned non-zero exit status : "+ str(exit_code)  + stderr_data.decode(), errorLog, miscAugmentationMap[int(case)][0], get_misc_func_name(int(case), numDims, additionalArg))
+            log_detected_errors("Returned non- exit status : "+ str(exit_code) + " " + stderr_data.decode(), errorLog, "", miscAugmentationMap[int(case)][0], get_misc_func_name(int(case), numDims, additionalArg), get_signal_name_from_return_code(exit_code))
 
 def run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg = ""):
     if testType == 0:
