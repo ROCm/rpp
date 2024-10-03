@@ -77,7 +77,7 @@ def run_performance_test_cmd(loggingFolder, logFileLayout, headerPath, dataPath,
                 break
             output = output.decode('utf-8')
             if output:
-                print(output, end='')
+                print(output)
                 logFile.write(output)
             if "Running" in output or "max,min,avg wall times" in output:
                 cleanedOutput = ''.join(char for char in output if 32 <= ord(char) <= 126)  # Remove control characters
