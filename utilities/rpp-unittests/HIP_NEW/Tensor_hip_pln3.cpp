@@ -35,6 +35,7 @@ SOFTWARE.
 #include <unistd.h>
 #include <time.h>
 #include <omp.h>
+#include <hip/hip_fp16.h>
 #include <fstream>
 
 using namespace cv;

@@ -39,6 +39,7 @@ SOFTWARE.
 #include <half/half.hpp>
 using halfhpp = half_float::half;
 typedef halfhpp Rpp16f;
+
 #ifdef OCL_COMPILE
 #include <CL/cl.h>
 #endif

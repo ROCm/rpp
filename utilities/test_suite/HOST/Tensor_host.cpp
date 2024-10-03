@@ -41,9 +41,6 @@ SOFTWARE.
 using namespace cv;
 using namespace std;
 
-using half_float::half;
-typedef half Rpp16f;
-
 int main(int argc, char **argv)
 {
     // Handle inputs
