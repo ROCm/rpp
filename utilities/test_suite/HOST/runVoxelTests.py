@@ -61,11 +61,11 @@ def func_group_finder(case_number):
 def run_unit_test_cmd(headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
     print("\n./Tensor_voxel_host " + headerPath + " " + dataPath + " " + dstPathTemp + " " + str(layout) + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(qaMode) + " " + str(batchSize) + " " + str(bitDepth))
     result = subprocess.Popen([buildFolderPath + "/build/Tensor_voxel_host", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE) # nosec
-    stdout_data, stderr_data = result.communicate()
-    print(stdout_data.decode())
-    exit_code = result.returncode
-    if(exit_code != 0):
-        log_detected_errors("Returned non-zero exit status : "+ str(exit_code) + " " + stderr_data.decode(), errorLog, voxelAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_voxel_layout_type(layout, "HOST"), get_signal_name_from_return_code(exit_code))
+    stdoutData, stderrData = result.communicate()
+    print(stdoutData.decode())
+    exitCode = result.returncode
+    if(exitCode != 0):
+        log_detected_errors("Returned non-zero exit status : "+ str(exitCode) + " " + stderrData.decode(), errorLog, voxelAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_voxel_layout_type(layout, "HOST"), get_signal_name_from_return_code(exitCode))
     
     print("\n------------------------------------------------------------------------------------------")
 
@@ -88,10 +88,10 @@ def run_performance_test_cmd(loggingFolder, logFileLayout, headerPath, dataPath,
                 if "max,min,avg wall times" in output:
                     logFile.write("\n")
 
-        stdout_data, stderr_data = process.communicate()
-        exit_code = process.returncode
-        if(exit_code != 0):
-            log_detected_errors("Returned non-zero exit status : "+ str(exit_code) + " " + stderr_data.decode(), errorLog, voxelAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_voxel_layout_type(layout, "HOST"), get_signal_name_from_return_code(exit_code))
+        stdoutData, stderrData = process.communicate()
+        exitCode = process.returncode
+        if(exitCode != 0):
+            log_detected_errors("Returned non-zero exit status : "+ str(exitCode) + " " + stderrData.decode(), errorLog, voxelAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_voxel_layout_type(layout, "HOST"), get_signal_name_from_return_code(exitCode))
         print("\n------------------------------------------------------------------------------------------")
 
 def run_test(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):

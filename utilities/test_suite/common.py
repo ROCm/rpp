@@ -427,7 +427,7 @@ def get_misc_func_name(testCase, nDim, additionalArg):
     if (axisMaskCase):
         result = result + "_" + str(nDim) + "d" + "_axisMask" + str(axisMask)
     if (permOrderCase):
-        result =result + "_" + str(nDim) + "d" + "_permOrder" + str(permOrder)
+        result = result + "_" + str(nDim) + "d" + "_permOrder" + str(permOrder)
     return result
 
 def get_voxel_layout_type(layout, backend):
@@ -444,16 +444,16 @@ def get_bit_depth(bitDepth):
     result = str(bitDepthDict[bitDepth])
     return result
 
-def get_signal_name_from_return_code(return_code):
+def get_signal_name_from_return_code(returnCode):
     result = ""
-    if return_code < 0:
-        signal_num = -return_code
+    if returnCode < 0:
+        signalNum = -returnCode
         result = result + " Signal = "
         for signame, signum in signal.__dict__.items():
-            if isinstance(signum, int) and signum == signal_num:
-                signal_name = signame
+            if isinstance(signum, int) and signum == signalNum:
+                signalName = signame
                 break
-        result = result + signal_name
+        result = result + signalName
     return result
 
 def log_detected_errors(errorData, errorLog, caseName, functionBitDepth, functionSpecificName, functionSignalName):

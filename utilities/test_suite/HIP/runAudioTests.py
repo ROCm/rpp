@@ -75,11 +75,11 @@ def generate_performance_reports(RESULTS_DIR):
 def run_unit_test_cmd(srcPath, case, numRuns, testType, batchSize, outFilePath):
     print("\n./Tensor_audio_hip " + srcPath + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(numRuns) + " " + str(batchSize))
     result = subprocess.Popen([buildFolderPath + "/build/Tensor_audio_hip", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
-    stdout_data, stderr_data = result.communicate()
-    print(stdout_data.decode())
-    exit_code = result.returncode
-    if(exit_code != 0):
-        log_detected_errors("Returned non-zero exit status : "+ str(exit_code) + " " + stderr_data.decode(), errorLog, "", audioAugmentationMap[int(case)][0], "_HIP", get_signal_name_from_return_code(exit_code))
+    stdoutData, stderrData = result.communicate()
+    print(stdoutData.decode())
+    exitCode = result.returncode
+    if(exitCode != 0):
+        log_detected_errors("Returned non-zero exit status : "+ str(exitCode) + " " + stderrData.decode(), errorLog, "", audioAugmentationMap[int(case)][0], "_HIP", get_signal_name_from_return_code(exitCode))
     print("------------------------------------------------------------------------------------------")
 
 def run_performance_test_cmd(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath):
@@ -87,10 +87,10 @@ def run_performance_test_cmd(loggingFolder, srcPath, case, numRuns, testType, ba
         print("./Tensor_audio_hip " + srcPath + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(numRuns) + " " + str(batchSize))
         process = subprocess.Popen([buildFolderPath + "/build/Tensor_audio_hip", srcPath, str(case), str(testType), str(numRuns), str(batchSize), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
         read_from_subprocess_and_write_to_log(process, logFile)
-        stdout_data, stderr_data = process.communicate()
-        exit_code = process.returncode
-        if(exit_code != 0):
-            log_detected_errors("Returned non-zero exit status : "+ str(exit_code) + " "+ stderr_data.decode(), errorLog, "", audioAugmentationMap[int(case)][0], "_HIP", get_signal_name_from_return_code(exit_code))
+        stdoutData, stderrData = process.communicate()
+        exitCode = process.returncode
+        if(exitCode != 0):
+            log_detected_errors("Returned non-zero exit status : "+ str(exitCode) + " "+ stderrData.decode(), errorLog, "", audioAugmentationMap[int(case)][0], "_HIP", get_signal_name_from_return_code(exitCode))
         print("------------------------------------------------------------------------------------------")
 
 def run_performance_test_with_profiler_cmd(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath):
@@ -107,10 +107,10 @@ def run_performance_test_with_profiler_cmd(loggingFolder, srcPath, case, numRuns
             output_str = output.decode('utf-8')
             logFile.write(output_str)
         
-        stdout_data, stderr_data = process.communicate()
-        exit_code = process.returncode
-        if(exit_code != 0):
-            log_detected_errors("Returned non-zero exit status : "+ str(exit_code) + " "+ stderr_data.decode(), errorLog, "", audioAugmentationMap[int(case)][0], "_HIP", get_signal_name_from_return_code(exit_code))
+        stdoutData, stderrData = process.communicate()
+        exitCode = process.returncode
+        if(exitCode != 0):
+            log_detected_errors("Returned non-zero exit status : "+ str(exitCode) + " "+ stderrData.decode(), errorLog, "", audioAugmentationMap[int(case)][0], "_HIP", get_signal_name_from_return_code(exitCode))
         print("------------------------------------------------------------------------------------------")
 
 def run_test(loggingFolder, srcPath, case, numRuns, testType, batchSize, outFilePath, profilingOption = "NO"):
