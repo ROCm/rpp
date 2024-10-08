@@ -521,11 +521,10 @@ inline void rpp_store48_u8pln3_to_u8pkd3(Rpp8u *dstPtr, __m128i *px)
 inline void rpp_store96_u8pln3_to_u8pkd3(Rpp8u *dstPtr, __m256i *px)
 {
     __m256i pxDst[8];
-    __m256i pxZero = _mm256_setzero_si256();
     __m256i pxMaskRGBAtoRGB = _mm256_castsi128_si256(_mm_setr_epi8(0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14, 3, 7, 11, 15));
     pxMaskRGBAtoRGB = _mm256_permute2f128_si256(pxMaskRGBAtoRGB, pxMaskRGBAtoRGB, 0);
-    pxDst[0] = _mm256_unpacklo_epi8(px[1], pxZero);
-    pxDst[1] = _mm256_unpackhi_epi8(px[1], pxZero);
+    pxDst[0] = _mm256_unpacklo_epi8(px[1], avx_px0);
+    pxDst[1] = _mm256_unpackhi_epi8(px[1], avx_px0);
     pxDst[2] = _mm256_unpacklo_epi8(px[0], px[2]);
     pxDst[3] = _mm256_unpackhi_epi8(px[0], px[2]);
     pxDst[4] = _mm256_shuffle_epi8(_mm256_unpacklo_epi8(pxDst[2], pxDst[0]), pxMaskRGBAtoRGB);
@@ -933,11 +932,10 @@ inline void rpp_store48_u8pln3_to_i8pkd3(Rpp8s *dstPtr, __m128i *px)
 inline void rpp_store96_u8pln3_to_i8pkd3(Rpp8s *dstPtr, __m256i *px)
 {
     __m256i pxDst[8];
-    __m256i pxZero = _mm256_setzero_si256();
     __m256i pxMaskRGBAtoRGB = _mm256_castsi128_si256(_mm_setr_epi8(0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14, 3, 7, 11, 15));
     pxMaskRGBAtoRGB = _mm256_permute2f128_si256(pxMaskRGBAtoRGB, pxMaskRGBAtoRGB, 0);
-    pxDst[0] = _mm256_unpacklo_epi8(px[1], pxZero);
-    pxDst[1] = _mm256_unpackhi_epi8(px[1], pxZero);
+    pxDst[0] = _mm256_unpacklo_epi8(px[1], avx_px0);
+    pxDst[1] = _mm256_unpackhi_epi8(px[1], avx_px0);
     pxDst[2] = _mm256_unpacklo_epi8(px[0], px[2]);
     pxDst[3] = _mm256_unpackhi_epi8(px[0], px[2]);
     pxDst[4] = _mm256_sub_epi8(_mm256_shuffle_epi8(_mm256_unpacklo_epi8(pxDst[2], pxDst[0]), pxMaskRGBAtoRGB), avx_pxConvertI8);
