@@ -156,8 +156,8 @@ RppStatus exclusive_or_u8_u8_host_tensor(Rpp8u *srcPtr1,
                 {
                     __m256i p1[3], p2[3];
 
-                    rpp_simd_load(rpp_load96_u8pln3_to_u8pln3, srcPtr1TempR, srcPtr1TempG, srcPtr1TempB, p1);    // simd loads
-                    rpp_simd_load(rpp_load96_u8pln3_to_u8pln3, srcPtr2TempR, srcPtr2TempG, srcPtr2TempB, p2);    // simd loads
+                    rpp_simd_load(rpp_load96_u8_avx, srcPtr1TempR, srcPtr1TempG, srcPtr1TempB, p1);    // simd loads
+                    rpp_simd_load(rpp_load96_u8_avx, srcPtr2TempR, srcPtr2TempG, srcPtr2TempB, p2);    // simd loads
                     p1[0] = _mm256_xor_si256(p1[0], p2[0]);    // exclusive_or computation
                     p1[1] = _mm256_xor_si256(p1[1], p2[1]);    // exclusive_or computation
                     p1[2] = _mm256_xor_si256(p1[2], p2[2]);    // exclusive_or computation
@@ -233,8 +233,8 @@ RppStatus exclusive_or_u8_u8_host_tensor(Rpp8u *srcPtr1,
                 {
                     __m256i p1[3], p2[3];
 
-                    rpp_simd_load(rpp_load96_u8pln3_to_u8pln3, srcPtr1TempR, srcPtr1TempG, srcPtr1TempB, p1);    // simd loads
-                    rpp_simd_load(rpp_load96_u8pln3_to_u8pln3, srcPtr2TempR, srcPtr2TempG, srcPtr2TempB, p2);    // simd loads
+                    rpp_simd_load(rpp_load96_u8_avx, srcPtr1TempR, srcPtr1TempG, srcPtr1TempB, p1);    // simd loads
+                    rpp_simd_load(rpp_load96_u8_avx, srcPtr2TempR, srcPtr2TempG, srcPtr2TempB, p2);    // simd loads
                     p1[0] = _mm256_xor_si256(p1[0], p2[0]);    // exclusive_or computation
                     p1[1] = _mm256_xor_si256(p1[1], p2[1]);    // exclusive_or computation
                     p1[2] = _mm256_xor_si256(p1[2], p2[2]);    // exclusive_or computation
