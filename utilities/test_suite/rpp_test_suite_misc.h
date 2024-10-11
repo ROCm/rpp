@@ -22,9 +22,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#include "rpp.h"
 #include "rpp_test_suite_common.h"
+#include <string.h>
+#include <iostream>
+#include <map>
 
-using namespace std;
+// using namespace std;
 
 std::map<int, string> augmentationMiscMap =
 {
