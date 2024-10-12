@@ -27,6 +27,7 @@ SOFTWARE.
 #include <string.h>
 #include <iostream>
 #include <map>
+#include <array>
 
 std::map<int, string> augmentationMiscMap =
 {
