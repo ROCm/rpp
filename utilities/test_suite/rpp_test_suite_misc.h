@@ -24,6 +24,7 @@ SOFTWARE.
 
 #include "rpp.h"
 #include "rpp_test_suite_common.h"
+#include <omp.h>
 #include <string.h>
 #include <iostream>
 #include <map>
