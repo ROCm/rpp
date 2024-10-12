@@ -4,18 +4,23 @@ This repository contains four test suites for the RPP library: `image`/`voxel`/`
 
 ## Prerequisites
 
+* OpenMP
+  ```shell
+  sudo apt install libomp-dev
+  ```
+
 * OpenCV Version `3.X`/`4.X`
   ```shell
   sudo apt install libopencv-dev
   ```
 
-* [Turbo JPEG](https://libjpeg-turbo.org/) 
+* [Turbo JPEG](https://libjpeg-turbo.org/)
   * Source: `https://github.com/libjpeg-turbo/libjpeg-turbo.git`
-  * Tag: [3.0.2](https://github.com/libjpeg-turbo/libjpeg-turbo/releases/tag/3.0.2) 
+  * Tag: [3.0.2](https://github.com/libjpeg-turbo/libjpeg-turbo/releases/tag/3.0.2)
   ```shell
   sudo apt-get install nasm
   sudo apt-get install wget
-  git clone -b 3.0.2 https://github.com/libjpeg-turbo/libjpeg-turbo.git 
+  git clone -b 3.0.2 https://github.com/libjpeg-turbo/libjpeg-turbo.git
   cd libjpeg-turbo
   mkdir build
   cd build
@@ -32,11 +37,6 @@ This repository contains four test suites for the RPP library: `image`/`voxel`/`
 * Libsndfile
   ```shell
   sudo apt-get install libsndfile1-dev
-  ```
-
-* Imagemagick
-  ```shell
-  sudo apt-get install imagemagick
   ```
 
 * Nifti-Imaging - [nifti_clib](https://github.com/NIFTI-Imaging/nifti_clib)
