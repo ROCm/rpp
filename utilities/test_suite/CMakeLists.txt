@@ -23,7 +23,6 @@ SOFTWARE.
 ]]
 
 cmake_minimum_required (VERSION 3.5)
-
 project(rpp-test)
 
 # make test with CTest
@@ -32,12 +31,36 @@ include(CTest)
 
 # ROCM Path
 if(DEFINED ENV{ROCM_PATH})
-  set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
+    set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
 elseif(ROCM_PATH)
-  message("-- ${PROJECT_NAME} INFO:ROCM_PATH Set -- ${ROCM_PATH}")
+    message("-- ${PROJECT_NAME} INFO:ROCM_PATH Set -- ${ROCM_PATH}")
 else()
-  set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
+    set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
 endif()
+
+# Set message options
+if(NOT WIN32)
+    string(ASCII 27 Esc)
+    set(ColourReset "${Esc}[m")
+    set(Red         "${Esc}[31m")
+    set(Green       "${Esc}[32m")
+    set(Yellow      "${Esc}[33m")
+    set(Blue        "${Esc}[34m")
+    set(BoldBlue    "${Esc}[1;34m")
+    set(Magenta     "${Esc}[35m")
+    set(Cyan        "${Esc}[36m")
+    set(White       "${Esc}[37m")
+endif()
+
+#[[
+List of high level dependency checks - just for RPP QA tests in utilities/test_suite/CMakeLists.txt are below.
+(The utilities/test_suite/HOST and utilities/test_suite/HIP folders are also designed to be built separately, so list of checks for those are present in the files "utilities/test_suite/HOST/CMakeLists.txt" and "utilities/test_suite/HIP/CMakeLists.txt")
+- RPP (For ALL tests - to test any RPP functionalities)
+- Python3 (For ALL tests - to run any QA tests)
+- RPP_AUDIO_AUGMENTATIONS_SUPPORT (For AUDIO tests - to decide if RPP Audio QA tests script even needs to be built and executed)
+- libsnd (For AUDIO tests - if RPP_AUDIO_AUGMENTATIONS_SUPPORT is enabled, to decide if RPP Audio QA tests script can be built and executed)
+- NIFTI (For VOXEL tests - to decide if RPP Voxel QA tests script can be built and executed)
+]]
 
 # find RPP
 find_library(RPP_LIBRARY NAMES rpp HINTS ${ROCM_PATH}/lib)
@@ -49,7 +72,7 @@ if(RPP_LIBRARY AND RPP_INCLUDE_DIR)
 endif()
 
 if(NOT RPP_FOUND)
-    message("-- ${Yellow}${PROJECT_NAME} requires RPP. Install RPP before running CTests")
+    message("-- ${Red}${PROJECT_NAME} requires RPP. Install RPP before running CTests")
 else()
     # RPP installation - Backend check
     set(RPP_BACKEND_HIP_FOUND 0)
@@ -71,70 +94,75 @@ else()
         string(REGEX MATCH "RPP_AUDIO_AUGMENTATIONS_SUPPORT ([0-9]*)" _ ${RPP_AUDIO_AUGMENTATIONS_SUPPORT_FILE})
         set(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND ${CMAKE_MATCH_1})
     endif()
-endif(NOT RPP_FOUND)
 
-# find required libraries
-set(Python3_FIND_VIRTUALENV FIRST)
-find_package(Python3 QUIET)
-find_package(NIFTI QUIET)
-find_library(libsnd_LIBS
-     NAMES sndfile libsndfile
-     PATHS ${CMAKE_SYSTEM_PREFIX_PATH} ${LIBSND_ROOT_DIR} "/usr/local"
-     PATH_SUFFIXES lib lib64)
+    # find required libraries
+    set(Python3_FIND_VIRTUALENV FIRST)
+    find_package(Python3 QUIET)
+    find_package(NIFTI QUIET)
+    find_library(libsnd_LIBS
+        NAMES sndfile libsndfile
+        PATHS ${CMAKE_SYSTEM_PREFIX_PATH} ${LIBSND_ROOT_DIR} "/usr/local"
+        PATH_SUFFIXES lib lib64)
 
-if(Python3_FOUND)
-    # Running all HOST tests
-    add_test(
-        NAME rpp_qa_tests_tensor_host_all
-        COMMAND ${Python3_EXECUTABLE} ${ROCM_PATH}/share/rpp/test/HOST/runTests.py --qa_mode 1 --batch_size 3
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    )
-    if(NIFTI_FOUND)
+    if(Python3_FOUND)
+        # Running all HOST Tensor-Image QA PASS/FAIL tests
         add_test(
-            NAME rpp_qa_tests_tensor_voxel_host_all
-            COMMAND ${Python3_EXECUTABLE} ${ROCM_PATH}/share/rpp/test/HOST/runVoxelTests.py --qa_mode 1 --batch_size 3
+            NAME rpp_qa_tests_tensor_host_all
+            COMMAND ${Python3_EXECUTABLE} ${ROCM_PATH}/share/rpp/test/HOST/runTests.py --qa_mode 1 --batch_size 3
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )
-    endif(NIFTI_FOUND)
-    if(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND)
-        if(libsnd_LIBS)
-            add_test(
-                NAME rpp_qa_tests_tensor_audio_host_all
-                COMMAND ${Python3_EXECUTABLE} ${ROCM_PATH}/share/rpp/test/HOST/runAudioTests.py --qa_mode 1 --batch_size 3
-                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-            )
-        endif(libsnd_LIBS)
-    endif(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND)
-
-    if( "${BACKEND}" STREQUAL "HIP")
-        # Running all HIP tests
-        add_test(
-            NAME rpp_qa_tests_tensor_hip_all
-            COMMAND ${Python3_EXECUTABLE} ${ROCM_PATH}/share/rpp/test/HIP/runTests.py --qa_mode 1 --batch_size 3
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        )
+        # Running all HOST Tensor-Voxel QA PASS/FAIL tests
         if(NIFTI_FOUND)
             add_test(
-                NAME rpp_qa_tests_tensor_voxel_hip_all
-                COMMAND ${Python3_EXECUTABLE} ${ROCM_PATH}/share/rpp/test/HIP/runVoxelTests.py --qa_mode 1 --batch_size 3
+                NAME rpp_qa_tests_tensor_voxel_host_all
+                COMMAND ${Python3_EXECUTABLE} ${ROCM_PATH}/share/rpp/test/HOST/runVoxelTests.py --qa_mode 1 --batch_size 3
                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
             )
         endif(NIFTI_FOUND)
+        # Running all HOST Tensor-Audio QA PASS/FAIL tests
         if(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND)
             if(libsnd_LIBS)
                 add_test(
-                    NAME rpp_qa_tests_tensor_audio_hip_all
-                    COMMAND ${Python3_EXECUTABLE} ${ROCM_PATH}/share/rpp/test/HIP/runAudioTests.py --qa_mode 1 --batch_size 3
+                    NAME rpp_qa_tests_tensor_audio_host_all
+                    COMMAND ${Python3_EXECUTABLE} ${ROCM_PATH}/share/rpp/test/HOST/runAudioTests.py --qa_mode 1 --batch_size 3
                     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                 )
             endif(libsnd_LIBS)
         endif(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND)
 
-    elseif( "${BACKEND}" STREQUAL "OCL")
-        # TBD: Add OCL Tests
-        message("-- ${Yellow}${PROJECT_NAME} Warning: OpenCL tests not enabled${ColourReset}")
+        if( "${BACKEND}" STREQUAL "HIP")
+            # Running all HIP Tensor-Image QA PASS/FAIL tests
+            add_test(
+                NAME rpp_qa_tests_tensor_hip_all
+                COMMAND ${Python3_EXECUTABLE} ${ROCM_PATH}/share/rpp/test/HIP/runTests.py --qa_mode 1 --batch_size 3
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            )
+            # Running all HIP Tensor-Voxel QA PASS/FAIL tests
+            if(NIFTI_FOUND)
+                add_test(
+                    NAME rpp_qa_tests_tensor_voxel_hip_all
+                    COMMAND ${Python3_EXECUTABLE} ${ROCM_PATH}/share/rpp/test/HIP/runVoxelTests.py --qa_mode 1 --batch_size 3
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                )
+            endif(NIFTI_FOUND)
+            # Running all HIP Tensor-Audio QA PASS/FAIL tests
+            if(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND)
+                if(libsnd_LIBS)
+                    add_test(
+                        NAME rpp_qa_tests_tensor_audio_hip_all
+                        COMMAND ${Python3_EXECUTABLE} ${ROCM_PATH}/share/rpp/test/HIP/runAudioTests.py --qa_mode 1 --batch_size 3
+                        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                    )
+                endif(libsnd_LIBS)
+            endif(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND)
 
-    endif()
-else()
-  message("-- ${Yellow}${PROJECT_NAME} Warning: Python3 must be installed to run RPP test_suite successfully${ColourReset}")
-endif(Python3_FOUND)
+        elseif( "${BACKEND}" STREQUAL "OCL")
+            # TBD: Add OCL Tests
+            message("-- ${Yellow}${PROJECT_NAME} Warning: OpenCL tests not enabled${ColourReset}")
+
+        endif()
+    else()
+        message("-- ${Yellow}${PROJECT_NAME} Warning: Python3 must be installed to run RPP test_suite successfully${ColourReset}")
+    endif(Python3_FOUND)
+
+endif(NOT RPP_FOUND)
