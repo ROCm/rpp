@@ -53,13 +53,18 @@ if(NOT WIN32)
 endif()
 
 #[[
-List of high level dependency checks - just for RPP QA tests in utilities/test_suite/CMakeLists.txt are below.
+List of high level dependency checks - for RPP QA tests in utilities/test_suite/CMakeLists.txt are below.
 (The utilities/test_suite/HOST and utilities/test_suite/HIP folders are also designed to be built separately, so list of checks for those are present in the files "utilities/test_suite/HOST/CMakeLists.txt" and "utilities/test_suite/HIP/CMakeLists.txt")
 - RPP (For ALL tests - to test any RPP functionalities)
-- Python3 (For ALL tests - to run any QA tests)
-- RPP_AUDIO_AUGMENTATIONS_SUPPORT (For AUDIO tests - to decide if RPP Audio QA tests script even needs to be built and executed)
-- libsnd (For AUDIO tests - if RPP_AUDIO_AUGMENTATIONS_SUPPORT is enabled, to decide if RPP Audio QA tests script can be built and executed)
+- Python3 (For ALL tests - to run any RPP tests)
+- Pandas (For ALL tests - to run and display rocprof performance test results)
+- OpenMP (For ALL tests - to measure wall-times, and parallelize input tensor-image PKD3->PLN3 conversions across threads)
+- ROCm HIP (For ALL HIP tests - HIP to be installed and found to run all RPP GPU HIP backend API)
+- RPP_AUDIO_AUGMENTATIONS_SUPPORT (For AUDIO tests - to decide if RPP Audio tests script even needs to be built and executed)
+- libsnd (For AUDIO tests - if RPP_AUDIO_AUGMENTATIONS_SUPPORT is enabled, to decide if RPP Audio tests script can be built and executed)
 - NIFTI (For VOXEL tests - to decide if RPP Voxel QA tests script can be built and executed)
+- OpenCV (For IMAGE and VOXEL tests - to decode image inputs and write images for unit test outputs)
+- TurboJPEG (For IMAGE tests - to decode image inputs)
 ]]
 
 # find RPP
