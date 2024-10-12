@@ -28,8 +28,6 @@ SOFTWARE.
 #include <iostream>
 #include <map>
 
-// using namespace std;
-
 std::map<int, string> augmentationMiscMap =
 {
     {0, "transpose"},
