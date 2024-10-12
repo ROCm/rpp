@@ -341,17 +341,17 @@ inline int check_roi_out_of_bounds(RpptROIPtr roiPtrImage, RpptDescPtr srcDescPt
     int x, y, w, h;
     if (type == RpptRoiType::XYWH)
     {
-        x = (0 <= roiPtrImage->xywhROI.xy.x < srcDescPtr->w) ? roiPtrImage->xywhROI.xy.x : -1;
-        y = (0 <= roiPtrImage->xywhROI.xy.y < srcDescPtr->h) ? roiPtrImage->xywhROI.xy.y : -1;
+        x = ((0 <= roiPtrImage->xywhROI.xy.x) && (roiPtrImage->xywhROI.xy.x < srcDescPtr->w)) ? roiPtrImage->xywhROI.xy.x : -1;
+        y = ((0 <= roiPtrImage->xywhROI.xy.y) && (roiPtrImage->xywhROI.xy.y < srcDescPtr->h)) ? roiPtrImage->xywhROI.xy.y : -1;
         w = ((roiPtrImage->xywhROI.roiWidth) <= srcDescPtr->w) ? roiPtrImage->xywhROI.roiWidth : -1;
         h = ((roiPtrImage->xywhROI.roiHeight) <= srcDescPtr->h) ? roiPtrImage->xywhROI.roiHeight : -1;
     }
     else if (type == RpptRoiType::LTRB)
     {
-        x = (0 <= roiPtrImage->ltrbROI.lt.x < srcDescPtr->w) ? roiPtrImage->ltrbROI.lt.x : -1;
-        y = (0 <= roiPtrImage->ltrbROI.lt.y < srcDescPtr->h) ? roiPtrImage->ltrbROI.lt.y : -1;
-        w = (0 <= roiPtrImage->ltrbROI.rb.x < srcDescPtr->w) ? roiPtrImage->ltrbROI.rb.x - roiPtrImage->ltrbROI.lt.x + 1 : -1;
-        h = (0 <= roiPtrImage->ltrbROI.rb.y < srcDescPtr->h) ? roiPtrImage->ltrbROI.rb.y - roiPtrImage->ltrbROI.lt.y + 1 : -1;
+        x = ((0 <= roiPtrImage->ltrbROI.lt.x) && (roiPtrImage->ltrbROI.lt.x < srcDescPtr->w)) ? roiPtrImage->ltrbROI.lt.x : -1;
+        y = ((0 <= roiPtrImage->ltrbROI.lt.y) && (roiPtrImage->ltrbROI.lt.y < srcDescPtr->h)) ? roiPtrImage->ltrbROI.lt.y : -1;
+        w = ((0 <= roiPtrImage->ltrbROI.rb.x) && (roiPtrImage->ltrbROI.rb.x < srcDescPtr->w)) ? roiPtrImage->ltrbROI.rb.x - roiPtrImage->ltrbROI.lt.x + 1 : -1;
+        h = ((0 <= roiPtrImage->ltrbROI.rb.y) && (roiPtrImage->ltrbROI.rb.y < srcDescPtr->h)) ? roiPtrImage->ltrbROI.rb.y - roiPtrImage->ltrbROI.lt.y + 1 : -1;
     }
     if ((x < 0) || (y < 0) || (w < 0) || (h < 0))
         return -1;
