@@ -27,11 +27,11 @@ project(test_suite/HIP)
 
 # ROCM Path
 if(DEFINED ENV{ROCM_PATH})
-  set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
+    set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "Default ROCm installation path")
 elseif(ROCM_PATH)
-  message("-- INFO:ROCM_PATH Set -- ${ROCM_PATH}")
+    message("-- INFO:ROCM_PATH Set -- ${ROCM_PATH}")
 else()
-  set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
+    set(ROCM_PATH /opt/rocm CACHE PATH "Default ROCm installation path")
 endif()
 
 list(APPEND CMAKE_MODULE_PATH ${ROCM_PATH}/share/rpp/test/cmake)
@@ -133,18 +133,18 @@ else()
         # )
 
         if(hip_FOUND)
-            message("-- ${Green}HIP found${ColourReset}")
+            message("-- ${Green}HIP found at hip_INCLUDE_DIRS - ${hip_INCLUDE_DIRS} and hip_LIBRARIES - ${hip_LIBRARIES}${ColourReset}")
 
             if(Python3_FOUND)
                 message("-- ${Green}Python3 found${ColourReset}")
                 # Check pandas for all RPP rocprof performance test results
                 if (PANDAS_FOUND EQUAL 0)
-                    message("-- ${Green}Pandas for Python3 found ${ColourReset}")
+                    message("-- ${Green}Python3 found at ${Python3_EXECUTABLE}${ColourReset}")
 
                     # set flags
                     set(COMPILER_FOR_HIP ${ROCM_PATH}/bin/hipcc)
                     set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
-                    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++17")
+                    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGPU_SUPPORT=1 -DRPP_BACKEND_HIP=1 -std=gnu++17")
 
                     # include and link directories
                     include_directories(${hip_INCLUDE_DIRS} ${hip_INCLUDE_DIRS}/hip)
@@ -165,7 +165,7 @@ else()
                                 set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} OpenMP::OpenMP_CXX)
                                 message("-- ${Green}${PROJECT_NAME} Tensor-Image tests set to build with OpenMP${ColourReset}")
                                 add_executable(Tensor_hip Tensor_hip.cpp)
-                                target_link_libraries(Tensor_hip -lrpp pthread -lturbojpeg ${OpenCV_LIBS} ${LINK_LIBRARY_LIST} ${hip_LIBRARIES} hip::device)
+                                target_link_libraries(Tensor_hip -lrpp pthread -lturbojpeg ${OpenCV_LIBS} ${LINK_LIBRARY_LIST} ${hip_LIBRARIES})
                                 # if (OPENPYXL_FOUND EQUAL 0)                                                                                                                                   # added only on HOST
                                 #     message("-- ${Green}Openpyxl for Python3 found ${ColourReset}")                                                                                           # added only on HOST
                                 #     add_executable(BatchPD_hip_pkd3 ${ROCM_PATH}/share/rpp/test/rpp-performancetests/HOST_NEW/BatchPD_hip_pkd3.cpp) # OLD - To be deprecated and removed      # added only on HOST
@@ -194,7 +194,7 @@ else()
                             include_directories(${OpenCV_INCLUDE_DIRS})
                             message("-- ${Green}${PROJECT_NAME} Tensor-Voxel tests set to build with OpenCV${ColourReset}")
                             add_executable(Tensor_voxel_hip Tensor_voxel_hip.cpp)
-                            target_link_libraries(Tensor_voxel_hip -lrpp pthread ${NIFTI_PACKAGE_PREFIX}NIFTI::${NIFTI_PACKAGE_PREFIX}niftiio ${OpenCV_LIBS} ${LINK_LIBRARY_LIST} ${hip_LIBRARIES} hip::device)
+                            target_link_libraries(Tensor_voxel_hip -lrpp pthread ${NIFTI_PACKAGE_PREFIX}NIFTI::${NIFTI_PACKAGE_PREFIX}niftiio ${OpenCV_LIBS} ${LINK_LIBRARY_LIST} ${hip_LIBRARIES})
                         else()
                             message("-- ${Yellow}Warning: OpenCV must be installed to install ${PROJECT_NAME} Tensor-Voxel tests successfully!${ColourReset}")
                         endif(OpenCV_FOUND)
@@ -214,7 +214,7 @@ else()
                             if(NOT APPLE)
                                 set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} stdc++fs)
                             endif(NOT APPLE)
-                            target_link_libraries(Tensor_audio_hip -lrpp pthread ${libsnd_LIBS} -lsndfile ${LINK_LIBRARY_LIST} ${hip_LIBRARIES} hip::device)
+                            target_link_libraries(Tensor_audio_hip -lrpp pthread ${libsnd_LIBS} -lsndfile ${LINK_LIBRARY_LIST} ${hip_LIBRARIES})
                         else()
                             message("-- ${Yellow}Warning: libsnd must be installed to install ${PROJECT_NAME} Tensor-Audio tests successfully!${ColourReset}")
                         endif(libsnd_LIBS)
@@ -224,7 +224,7 @@ else()
 
                     # Test type 4 - RPP Tensor-Misc HIP test suite
                     add_executable(Tensor_misc_hip Tensor_misc_hip.cpp)
-                    target_link_libraries(Tensor_misc_hip -lrpp pthread ${LINK_LIBRARY_LIST} ${hip_LIBRARIES} hip::device)
+                    target_link_libraries(Tensor_misc_hip -lrpp pthread ${LINK_LIBRARY_LIST} ${hip_LIBRARIES})
 
                 else()
                     message("-- ${Red}${PROJECT_NAME} Error: Pandas for Python3 must be installed to run any RPP test_suite performance tests with profiling successfully${ColourReset}")

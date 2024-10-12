@@ -131,7 +131,7 @@ else()
         )
 
         if(Python3_FOUND)
-            message("-- ${Green}Python3 found${ColourReset}")
+            message("-- ${Green}Python3 found at ${Python3_EXECUTABLE}${ColourReset}")
             # Check pandas for all RPP rocprof performance test results
             if (PANDAS_FOUND EQUAL 0)
                 message("-- ${Green}Pandas for Python3 found${ColourReset}")
