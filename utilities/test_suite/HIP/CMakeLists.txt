@@ -157,7 +157,7 @@ else()
                         set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} OpenMP::OpenMP_CXX)
                         message("-- ${Green}${PROJECT_NAME} All Tensor HIP tests set to build with OpenMP${ColourReset}")
 
-                        # Test set 1 - RPP Tensor-Image HIP test suite
+                        # HIP test set 1 - RPP Tensor-Image HIP test suite
                         if(TurboJpeg_FOUND)
                             include_directories(${TurboJpeg_INCLUDE_DIRS})
                             set(LINK_LIBRARY_LIST ${LINK_LIBRARY_LIST} ${TurboJpeg_LIBRARIES_DIR})
@@ -185,7 +185,7 @@ else()
                             message("-- ${Yellow}Warning: TurboJpeg must be installed to install ${PROJECT_NAME} Tensor-Image tests successfully!${ColourReset}")
                         endif(TurboJpeg_FOUND)
 
-                        # Test set 2 - RPP Tensor-Voxel HIP test suite
+                        # HIP test set 2 - RPP Tensor-Voxel HIP test suite
                         if(NIFTI_FOUND)
                             message("-- ${Green}${PROJECT_NAME} Tensor-Voxel HIP tests set to build with libniftiio${ColourReset}")
                             if(OpenCV_FOUND)
@@ -200,7 +200,7 @@ else()
                             message("-- ${Yellow}Warning: libniftiio must be installed to install ${PROJECT_NAME} Tensor-Voxel tests successfully!${ColourReset}")
                         endif(NIFTI_FOUND)
 
-                        # Test set 3 - RPP Tensor-Audio HIP test suite
+                        # HIP test set 3 - RPP Tensor-Audio HIP test suite
                         if(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND)
                             set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DAUDIO_SUPPORT=1")
                             message("-- ${Green}${PROJECT_NAME} Tensor-Audio HIP tests set to build with RPP_AUDIO_SUPPORT set to ON${ColourReset}")
@@ -220,7 +220,7 @@ else()
                             message("-- ${Yellow}Warning: RPP_AUDIO_SUPPORT not found in RPP installation. It must be installed to build ${PROJECT_NAME} Tensor-Audio tests successfully!${ColourReset}")
                         endif(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND)
 
-                        # Test set 4 - RPP Tensor-Misc HIP test suite
+                        # HIP test set 4 - RPP Tensor-Misc HIP test suite
                         add_executable(Tensor_misc_hip Tensor_misc_hip.cpp)
                         target_link_libraries(Tensor_misc_hip -lrpp pthread ${LINK_LIBRARY_LIST} ${hip_LIBRARIES})
                     else()
