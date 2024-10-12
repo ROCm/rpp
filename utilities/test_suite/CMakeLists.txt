@@ -86,83 +86,82 @@ else()
     elseif(NOT DEFINED BACKEND)
         set(BACKEND "CPU")
     endif()
+endif(NOT RPP_FOUND)
 
-    # RPP installation - Audio support check
-    set(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND 0)
-    if(EXISTS ${RPP_INCLUDE_DIR}/rpp_audio_augmentations_support.h)
-        file(READ ${RPP_INCLUDE_DIR}/rpp_audio_augmentations_support.h RPP_AUDIO_AUGMENTATIONS_SUPPORT_FILE)
-        string(REGEX MATCH "RPP_AUDIO_AUGMENTATIONS_SUPPORT ([0-9]*)" _ ${RPP_AUDIO_AUGMENTATIONS_SUPPORT_FILE})
-        set(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND ${CMAKE_MATCH_1})
-    endif()
+# RPP installation - Audio support check
+set(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND 0)
+if(EXISTS ${RPP_INCLUDE_DIR}/rpp_audio_augmentations_support.h)
+    file(READ ${RPP_INCLUDE_DIR}/rpp_audio_augmentations_support.h RPP_AUDIO_AUGMENTATIONS_SUPPORT_FILE)
+    string(REGEX MATCH "RPP_AUDIO_AUGMENTATIONS_SUPPORT ([0-9]*)" _ ${RPP_AUDIO_AUGMENTATIONS_SUPPORT_FILE})
+    set(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND ${CMAKE_MATCH_1})
+endif()
 
-    # find required libraries
-    set(Python3_FIND_VIRTUALENV FIRST)
-    find_package(Python3 QUIET)
-    find_package(NIFTI QUIET)
-    find_library(libsnd_LIBS
-        NAMES sndfile libsndfile
-        PATHS ${CMAKE_SYSTEM_PREFIX_PATH} ${LIBSND_ROOT_DIR} "/usr/local"
-        PATH_SUFFIXES lib lib64)
+# find required libraries
+set(Python3_FIND_VIRTUALENV FIRST)
+find_package(Python3 QUIET)
+find_package(NIFTI QUIET)
+find_library(libsnd_LIBS
+    NAMES sndfile libsndfile
+    PATHS ${CMAKE_SYSTEM_PREFIX_PATH} ${LIBSND_ROOT_DIR} "/usr/local"
+    PATH_SUFFIXES lib lib64)
 
-    if(Python3_FOUND)
-        # Running all HOST Tensor-Image QA PASS/FAIL tests
+if(Python3_FOUND)
+    # Running all HOST Tensor-Image QA PASS/FAIL tests
+    add_test(
+        NAME rpp_qa_tests_tensor_host_all
+        COMMAND ${Python3_EXECUTABLE} ${ROCM_PATH}/share/rpp/test/HOST/runTests.py --qa_mode 1 --batch_size 3
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+    # Running all HOST Tensor-Voxel QA PASS/FAIL tests
+    if(NIFTI_FOUND)
         add_test(
-            NAME rpp_qa_tests_tensor_host_all
-            COMMAND ${Python3_EXECUTABLE} ${ROCM_PATH}/share/rpp/test/HOST/runTests.py --qa_mode 1 --batch_size 3
+            NAME rpp_qa_tests_tensor_voxel_host_all
+            COMMAND ${Python3_EXECUTABLE} ${ROCM_PATH}/share/rpp/test/HOST/runVoxelTests.py --qa_mode 1 --batch_size 3
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )
-        # Running all HOST Tensor-Voxel QA PASS/FAIL tests
+    endif(NIFTI_FOUND)
+    # Running all HOST Tensor-Audio QA PASS/FAIL tests
+    if(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND)
+        if(libsnd_LIBS)
+            add_test(
+                NAME rpp_qa_tests_tensor_audio_host_all
+                COMMAND ${Python3_EXECUTABLE} ${ROCM_PATH}/share/rpp/test/HOST/runAudioTests.py --qa_mode 1 --batch_size 3
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            )
+        endif(libsnd_LIBS)
+    endif(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND)
+
+    if( "${BACKEND}" STREQUAL "HIP")
+        # Running all HIP Tensor-Image QA PASS/FAIL tests
+        add_test(
+            NAME rpp_qa_tests_tensor_hip_all
+            COMMAND ${Python3_EXECUTABLE} ${ROCM_PATH}/share/rpp/test/HIP/runTests.py --qa_mode 1 --batch_size 3
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        )
+        # Running all HIP Tensor-Voxel QA PASS/FAIL tests
         if(NIFTI_FOUND)
             add_test(
-                NAME rpp_qa_tests_tensor_voxel_host_all
-                COMMAND ${Python3_EXECUTABLE} ${ROCM_PATH}/share/rpp/test/HOST/runVoxelTests.py --qa_mode 1 --batch_size 3
+                NAME rpp_qa_tests_tensor_voxel_hip_all
+                COMMAND ${Python3_EXECUTABLE} ${ROCM_PATH}/share/rpp/test/HIP/runVoxelTests.py --qa_mode 1 --batch_size 3
                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
             )
         endif(NIFTI_FOUND)
-        # Running all HOST Tensor-Audio QA PASS/FAIL tests
+        # Running all HIP Tensor-Audio QA PASS/FAIL tests
         if(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND)
             if(libsnd_LIBS)
                 add_test(
-                    NAME rpp_qa_tests_tensor_audio_host_all
-                    COMMAND ${Python3_EXECUTABLE} ${ROCM_PATH}/share/rpp/test/HOST/runAudioTests.py --qa_mode 1 --batch_size 3
+                    NAME rpp_qa_tests_tensor_audio_hip_all
+                    COMMAND ${Python3_EXECUTABLE} ${ROCM_PATH}/share/rpp/test/HIP/runAudioTests.py --qa_mode 1 --batch_size 3
                     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                 )
             endif(libsnd_LIBS)
         endif(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND)
 
-        if( "${BACKEND}" STREQUAL "HIP")
-            # Running all HIP Tensor-Image QA PASS/FAIL tests
-            add_test(
-                NAME rpp_qa_tests_tensor_hip_all
-                COMMAND ${Python3_EXECUTABLE} ${ROCM_PATH}/share/rpp/test/HIP/runTests.py --qa_mode 1 --batch_size 3
-                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-            )
-            # Running all HIP Tensor-Voxel QA PASS/FAIL tests
-            if(NIFTI_FOUND)
-                add_test(
-                    NAME rpp_qa_tests_tensor_voxel_hip_all
-                    COMMAND ${Python3_EXECUTABLE} ${ROCM_PATH}/share/rpp/test/HIP/runVoxelTests.py --qa_mode 1 --batch_size 3
-                    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-                )
-            endif(NIFTI_FOUND)
-            # Running all HIP Tensor-Audio QA PASS/FAIL tests
-            if(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND)
-                if(libsnd_LIBS)
-                    add_test(
-                        NAME rpp_qa_tests_tensor_audio_hip_all
-                        COMMAND ${Python3_EXECUTABLE} ${ROCM_PATH}/share/rpp/test/HIP/runAudioTests.py --qa_mode 1 --batch_size 3
-                        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-                    )
-                endif(libsnd_LIBS)
-            endif(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND)
+    elseif( "${BACKEND}" STREQUAL "OCL")
+        # TBD: Add OCL Tests
+        message("-- ${Yellow}${PROJECT_NAME} Warning: OpenCL tests not enabled${ColourReset}")
 
-        elseif( "${BACKEND}" STREQUAL "OCL")
-            # TBD: Add OCL Tests
-            message("-- ${Yellow}${PROJECT_NAME} Warning: OpenCL tests not enabled${ColourReset}")
-
-        endif()
-    else()
-        message("-- ${Yellow}${PROJECT_NAME} Warning: Python3 must be installed to run RPP test_suite successfully${ColourReset}")
-    endif(Python3_FOUND)
-
-endif(NOT RPP_FOUND)
+    endif()
+else()
+    message("-- ${Yellow}${PROJECT_NAME} Warning: Python3 must be installed to run RPP test_suite successfully${ColourReset}")
+endif(Python3_FOUND)
