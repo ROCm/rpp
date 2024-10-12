@@ -130,6 +130,12 @@ if(Python3_FOUND)
             )
         endif(libsnd_LIBS)
     endif(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND)
+    # Running all HOST Tensor-Misc QA PASS/FAIL tests
+    add_test(
+        NAME rpp_qa_tests_tensor_misc_host_all
+        COMMAND ${Python3_EXECUTABLE} ${ROCM_PATH}/share/rpp/test/HOST/runMiscTests.py --qa_mode 1 --batch_size 3
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
 
     if( "${BACKEND}" STREQUAL "HIP")
         # Running all HIP Tensor-Image QA PASS/FAIL tests
@@ -156,6 +162,12 @@ if(Python3_FOUND)
                 )
             endif(libsnd_LIBS)
         endif(RPP_AUDIO_AUGMENTATIONS_SUPPORT_FOUND)
+        # Running all HIP Tensor-Misc QA PASS/FAIL tests
+        add_test(
+            NAME rpp_qa_tests_tensor_misc_hip_all
+            COMMAND ${Python3_EXECUTABLE} ${ROCM_PATH}/share/rpp/test/HIP/runMiscTests.py --qa_mode 1 --batch_size 3
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        )
 
     elseif( "${BACKEND}" STREQUAL "OCL")
         # TBD: Add OCL Tests
