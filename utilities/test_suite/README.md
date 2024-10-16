@@ -184,7 +184,7 @@ python runVoxelTests.py --header_path <header_path> --data_path <data_path> --ca
 ``` python
 python runVoxelTests.py --case_start 0 --case_end 4 --test_type 0 --qa_mode 1 --batch_size 3
 ```
--   Unit test mode - Unit tests allowing users to pass a path to a folder containing nii fikes, to execute the desired functionality and variant once, report RPP execution wall time, save and view output images, gifs and nii files
+-   Unit test mode - Unit tests allowing users to pass a path to a folder containing nii files, to execute the desired functionality and variant once, report RPP execution wall time, save and view output images and nii files. Optionally gifs will also be saved for viewing convenience if '[Imagemagick](https://imagemagick.org/script/download.php)' is installed.
 ``` python
 python runVoxelTests.py --case_start 0 --case_end 4 --test_type 0 --qa_mode 0
 ```
@@ -211,7 +211,7 @@ python runVoxelTests.py --test_type 1 --profiling YES
 
 ### Summary of features (RPP Voxel Test Suite)
 The image test suite includes:
--   Unit tests that execute the desired functionality and variant once, report RPP execution wall time and save output images, gifs and nii files
+-   Unit tests that execute the desired functionality and variant once, report RPP execution wall time and save output images and nii files. Optionally gifs will also be saved for viewing convenience if '[Imagemagick](https://imagemagick.org/script/download.php)' is installed.
 -   Performance tests that execute the desired functionality and variant 100 times by default, and report max/min/avg RPP execution wall time, or optionally, AMD rocprof kernel profiler max/min/avg time for HIP backend variants.
 -   Unit and Performance tests are included for three layouts - PLN1 (1 channel planar NCHW), PLN3 (3 channel planar NCHW) and PKD3 (3 channel packed/interrleaved NHWC).
 -   Unit and Performance tests are included for one input/output bitdepth F32.
