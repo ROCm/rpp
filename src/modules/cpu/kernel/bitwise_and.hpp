@@ -315,9 +315,9 @@ RppStatus bitwise_and_f32_f32_host_tensor(Rpp32f *srcPtr1,
 
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtr1Temp, p1);    // simd loads
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtr2Temp, p2);    // simd loads
-                    p1[0] = _mm256_cvtepi32_ps(_mm256_and_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p1[0], avx_p255)), _mm256_cvttps_epi32(_mm256_mul_ps(p2[0], avx_p255))));    // bitwise_and computation
-                    p1[1] = _mm256_cvtepi32_ps(_mm256_and_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p1[1], avx_p255)), _mm256_cvttps_epi32(_mm256_mul_ps(p2[1], avx_p255))));    // bitwise_and computation
-                    p1[2] = _mm256_cvtepi32_ps(_mm256_and_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p1[2], avx_p255)), _mm256_cvttps_epi32(_mm256_mul_ps(p2[2], avx_p255))));    // bitwise_and computation
+                    p1[0] = _mm256_cvtepi32_ps(_mm256_and_si256(_mm256_cvtps_epi32(_mm256_mul_ps(p1[0], avx_p255)), _mm256_cvtps_epi32(_mm256_mul_ps(p2[0], avx_p255))));    // bitwise_and computation
+                    p1[1] = _mm256_cvtepi32_ps(_mm256_and_si256(_mm256_cvtps_epi32(_mm256_mul_ps(p1[1], avx_p255)), _mm256_cvtps_epi32(_mm256_mul_ps(p2[1], avx_p255))));    // bitwise_and computation
+                    p1[2] = _mm256_cvtepi32_ps(_mm256_and_si256(_mm256_cvtps_epi32(_mm256_mul_ps(p1[2], avx_p255)), _mm256_cvtps_epi32(_mm256_mul_ps(p2[2], avx_p255))));    // bitwise_and computation
                     p1[0] = _mm256_mul_ps(p1[0], avx_p1op255);
                     p1[1] = _mm256_mul_ps(p1[1], avx_p1op255);
                     p1[2] = _mm256_mul_ps(p1[2], avx_p1op255);
@@ -332,9 +332,9 @@ RppStatus bitwise_and_f32_f32_host_tensor(Rpp32f *srcPtr1,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTempR++ = RPPPIXELCHECKF32((float)((uint)(srcPtr1Temp[0] * 255) & (uint)(srcPtr2Temp[0] * 255)) / 255);
-                    *dstPtrTempG++ = RPPPIXELCHECKF32((float)((uint)(srcPtr1Temp[1] * 255) & (uint)(srcPtr2Temp[1] * 255)) / 255);
-                    *dstPtrTempB++ = RPPPIXELCHECKF32((float)((uint)(srcPtr1Temp[2] * 255) & (uint)(srcPtr2Temp[2] * 255)) / 255);
+                    *dstPtrTempR++ = RPPPIXELCHECKF32((float)((uint)(std::nearbyintf)(srcPtr1Temp[0] * 255) & (uint)(std::nearbyintf)(srcPtr2Temp[0] * 255)) / 255);
+                    *dstPtrTempG++ = RPPPIXELCHECKF32((float)((uint)(std::nearbyintf)(srcPtr1Temp[1] * 255) & (uint)(std::nearbyintf)(srcPtr2Temp[1] * 255)) / 255);
+                    *dstPtrTempB++ = RPPPIXELCHECKF32((float)((uint)(std::nearbyintf)(srcPtr1Temp[2] * 255) & (uint)(std::nearbyintf)(srcPtr2Temp[2] * 255)) / 255);
 
                     srcPtr1Temp += 3;
                     srcPtr2Temp += 3;
@@ -379,9 +379,9 @@ RppStatus bitwise_and_f32_f32_host_tensor(Rpp32f *srcPtr1,
 
                     rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtr1TempR, srcPtr1TempG, srcPtr1TempB, p1);    // simd loads
                     rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtr2TempR, srcPtr2TempG, srcPtr2TempB, p2);    // simd loads
-                    p1[0] = _mm256_cvtepi32_ps(_mm256_and_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p1[0], avx_p255)), _mm256_cvttps_epi32(_mm256_mul_ps(p2[0], avx_p255))));    // bitwise_and computation
-                    p1[1] = _mm256_cvtepi32_ps(_mm256_and_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p1[1], avx_p255)), _mm256_cvttps_epi32(_mm256_mul_ps(p2[1], avx_p255))));    // bitwise_and computation
-                    p1[2] = _mm256_cvtepi32_ps(_mm256_and_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p1[2], avx_p255)), _mm256_cvttps_epi32(_mm256_mul_ps(p2[2], avx_p255))));    // bitwise_and computation
+                    p1[0] = _mm256_cvtepi32_ps(_mm256_and_si256(_mm256_cvtps_epi32(_mm256_mul_ps(p1[0], avx_p255)), _mm256_cvtps_epi32(_mm256_mul_ps(p2[0], avx_p255))));    // bitwise_and computation
+                    p1[1] = _mm256_cvtepi32_ps(_mm256_and_si256(_mm256_cvtps_epi32(_mm256_mul_ps(p1[1], avx_p255)), _mm256_cvtps_epi32(_mm256_mul_ps(p2[1], avx_p255))));    // bitwise_and computation
+                    p1[2] = _mm256_cvtepi32_ps(_mm256_and_si256(_mm256_cvtps_epi32(_mm256_mul_ps(p1[2], avx_p255)), _mm256_cvtps_epi32(_mm256_mul_ps(p2[2], avx_p255))));    // bitwise_and computation
                     p1[0] = _mm256_mul_ps(p1[0], avx_p1op255);
                     p1[1] = _mm256_mul_ps(p1[1], avx_p1op255);
                     p1[2] = _mm256_mul_ps(p1[2], avx_p1op255);
@@ -398,9 +398,9 @@ RppStatus bitwise_and_f32_f32_host_tensor(Rpp32f *srcPtr1,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = RPPPIXELCHECKF32((float)((uint)(*srcPtr1TempR * 255) & (uint)(*srcPtr2TempR * 255)) / 255);
-                    dstPtrTemp[1] = RPPPIXELCHECKF32((float)((uint)(*srcPtr1TempG * 255) & (uint)(*srcPtr2TempG * 255)) / 255);
-                    dstPtrTemp[2] = RPPPIXELCHECKF32((float)((uint)(*srcPtr1TempB * 255) & (uint)(*srcPtr2TempB * 255)) / 255);
+                    dstPtrTemp[0] = RPPPIXELCHECKF32((float)((uint)(std::nearbyintf)(*srcPtr1TempR * 255) & (uint)(std::nearbyintf)(*srcPtr2TempR * 255)) / 255);
+                    dstPtrTemp[1] = RPPPIXELCHECKF32((float)((uint)(std::nearbyintf)(*srcPtr1TempG * 255) & (uint)(std::nearbyintf)(*srcPtr2TempG * 255)) / 255);
+                    dstPtrTemp[2] = RPPPIXELCHECKF32((float)((uint)(std::nearbyintf)(*srcPtr1TempB * 255) & (uint)(std::nearbyintf)(*srcPtr2TempB * 255)) / 255);
 
                     srcPtr1TempR++;
                     srcPtr1TempG++;
@@ -450,7 +450,7 @@ RppStatus bitwise_and_f32_f32_host_tensor(Rpp32f *srcPtr1,
 
                         rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtr1Temp, p1);    // simd loads
                         rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtr2Temp, p2);    // simd loads
-                        p1[0] = _mm256_cvtepi32_ps(_mm256_and_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p1[0], avx_p255)), _mm256_cvttps_epi32(_mm256_mul_ps(p2[0], avx_p255))));    // bitwise_and computation
+                        p1[0] = _mm256_cvtepi32_ps(_mm256_and_si256(_mm256_cvtps_epi32(_mm256_mul_ps(p1[0], avx_p255)), _mm256_cvtps_epi32(_mm256_mul_ps(p2[0], avx_p255))));    // bitwise_and computation
                         p1[0] = _mm256_mul_ps(p1[0], avx_p1op255);
                         rpp_simd_store(rpp_store8_f32_to_f32_avx, dstPtrTemp, p1);    // simd stores
 
@@ -461,7 +461,7 @@ RppStatus bitwise_and_f32_f32_host_tensor(Rpp32f *srcPtr1,
 #endif
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        *dstPtrTemp++ = RPPPIXELCHECKF32((float)((uint)(*srcPtr1Temp * 255) & (uint)(*srcPtr2Temp * 255)) / 255);
+                        *dstPtrTemp++ = RPPPIXELCHECKF32((float)((uint)(std::nearbyintf)(*srcPtr1Temp * 255) & (uint)(std::nearbyintf)(*srcPtr2Temp * 255)) / 255);
 
                         srcPtr1Temp++;
                         srcPtr2Temp++;
@@ -556,9 +556,9 @@ RppStatus bitwise_and_f16_f16_host_tensor(Rpp16f *srcPtr1,
 
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtr1Temp_ps, p1);    // simd loads
                     rpp_simd_load(rpp_load24_f32pkd3_to_f32pln3_avx, srcPtr2Temp_ps, p2);    // simd loads
-                    p1[0] = _mm256_cvtepi32_ps(_mm256_and_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p1[0], avx_p255)), _mm256_cvttps_epi32(_mm256_mul_ps(p2[0], avx_p255))));    // bitwise_and computation
-                    p1[1] = _mm256_cvtepi32_ps(_mm256_and_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p1[1], avx_p255)), _mm256_cvttps_epi32(_mm256_mul_ps(p2[1], avx_p255))));    // bitwise_and computation
-                    p1[2] = _mm256_cvtepi32_ps(_mm256_and_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p1[2], avx_p255)), _mm256_cvttps_epi32(_mm256_mul_ps(p2[2], avx_p255))));    // bitwise_and computation
+                    p1[0] = _mm256_cvtepi32_ps(_mm256_and_si256(_mm256_cvtps_epi32(_mm256_mul_ps(p1[0], avx_p255)), _mm256_cvtps_epi32(_mm256_mul_ps(p2[0], avx_p255))));    // bitwise_and computation
+                    p1[1] = _mm256_cvtepi32_ps(_mm256_and_si256(_mm256_cvtps_epi32(_mm256_mul_ps(p1[1], avx_p255)), _mm256_cvtps_epi32(_mm256_mul_ps(p2[1], avx_p255))));    // bitwise_and computation
+                    p1[2] = _mm256_cvtepi32_ps(_mm256_and_si256(_mm256_cvtps_epi32(_mm256_mul_ps(p1[2], avx_p255)), _mm256_cvtps_epi32(_mm256_mul_ps(p2[2], avx_p255))));    // bitwise_and computation
                     p1[0] = _mm256_mul_ps(p1[0], avx_p1op255);
                     p1[1] = _mm256_mul_ps(p1[1], avx_p1op255);
                     p1[2] = _mm256_mul_ps(p1[2], avx_p1op255);
@@ -573,9 +573,9 @@ RppStatus bitwise_and_f16_f16_host_tensor(Rpp16f *srcPtr1,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount += 3)
                 {
-                    *dstPtrTempR++ = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)((uint)(srcPtr1Temp[0] * 255) & (uint)(srcPtr2Temp[0] * 255)) / 255));
-                    *dstPtrTempG++ = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)((uint)(srcPtr1Temp[1] * 255) & (uint)(srcPtr2Temp[1] * 255)) / 255));
-                    *dstPtrTempB++ = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)((uint)(srcPtr1Temp[2] * 255) & (uint)(srcPtr2Temp[2] * 255)) / 255));
+                    *dstPtrTempR++ = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)((uint)(std::nearbyintf)(srcPtr1Temp[0] * 255) & (uint)(std::nearbyintf)(srcPtr2Temp[0] * 255)) / 255));
+                    *dstPtrTempG++ = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)((uint)(std::nearbyintf)(srcPtr1Temp[1] * 255) & (uint)(std::nearbyintf)(srcPtr2Temp[1] * 255)) / 255));
+                    *dstPtrTempB++ = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)((uint)(std::nearbyintf)(srcPtr1Temp[2] * 255) & (uint)(std::nearbyintf)(srcPtr2Temp[2] * 255)) / 255));
 
                     srcPtr1Temp += 3;
                     srcPtr2Temp += 3;
@@ -633,9 +633,9 @@ RppStatus bitwise_and_f16_f16_host_tensor(Rpp16f *srcPtr1,
 
                     rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtr1Temp_ps, srcPtr1Temp_ps + 8, srcPtr1Temp_ps + 16, p1);    // simd loads
                     rpp_simd_load(rpp_load24_f32pln3_to_f32pln3_avx, srcPtr2Temp_ps, srcPtr2Temp_ps + 8, srcPtr2Temp_ps + 16, p2);    // simd loads
-                    p1[0] = _mm256_cvtepi32_ps(_mm256_and_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p1[0], avx_p255)), _mm256_cvttps_epi32(_mm256_mul_ps(p2[0], avx_p255))));    // bitwise_and computation
-                    p1[1] = _mm256_cvtepi32_ps(_mm256_and_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p1[1], avx_p255)), _mm256_cvttps_epi32(_mm256_mul_ps(p2[1], avx_p255))));    // bitwise_and computation
-                    p1[2] = _mm256_cvtepi32_ps(_mm256_and_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p1[2], avx_p255)), _mm256_cvttps_epi32(_mm256_mul_ps(p2[2], avx_p255))));    // bitwise_and computation
+                    p1[0] = _mm256_cvtepi32_ps(_mm256_and_si256(_mm256_cvtps_epi32(_mm256_mul_ps(p1[0], avx_p255)), _mm256_cvtps_epi32(_mm256_mul_ps(p2[0], avx_p255))));    // bitwise_and computation
+                    p1[1] = _mm256_cvtepi32_ps(_mm256_and_si256(_mm256_cvtps_epi32(_mm256_mul_ps(p1[1], avx_p255)), _mm256_cvtps_epi32(_mm256_mul_ps(p2[1], avx_p255))));    // bitwise_and computation
+                    p1[2] = _mm256_cvtepi32_ps(_mm256_and_si256(_mm256_cvtps_epi32(_mm256_mul_ps(p1[2], avx_p255)), _mm256_cvtps_epi32(_mm256_mul_ps(p2[2], avx_p255))));    // bitwise_and computation
                     p1[0] = _mm256_mul_ps(p1[0], avx_p1op255);
                     p1[1] = _mm256_mul_ps(p1[1], avx_p1op255);
                     p1[2] = _mm256_mul_ps(p1[2], avx_p1op255);
@@ -652,9 +652,9 @@ RppStatus bitwise_and_f16_f16_host_tensor(Rpp16f *srcPtr1,
 #endif
                 for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                 {
-                    dstPtrTemp[0] = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)((uint)(*srcPtr1TempR * 255) & (uint)(*srcPtr2TempR * 255)) / 255));
-                    dstPtrTemp[1] = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)((uint)(*srcPtr1TempG * 255) & (uint)(*srcPtr2TempG * 255)) / 255));
-                    dstPtrTemp[2] = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)((uint)(*srcPtr1TempB * 255) & (uint)(*srcPtr2TempB * 255)) / 255));
+                    dstPtrTemp[0] = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)((uint)(std::nearbyintf)(*srcPtr1TempR * 255) & (uint)(std::nearbyintf)(*srcPtr2TempR * 255)) / 255));
+                    dstPtrTemp[1] = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)((uint)(std::nearbyintf)(*srcPtr1TempG * 255) & (uint)(std::nearbyintf)(*srcPtr2TempG * 255)) / 255));
+                    dstPtrTemp[2] = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)((uint)(std::nearbyintf)(*srcPtr1TempB * 255) & (uint)(std::nearbyintf)(*srcPtr2TempB * 255)) / 255));
 
                     srcPtr1TempR++;
                     srcPtr1TempG++;
@@ -712,7 +712,7 @@ RppStatus bitwise_and_f16_f16_host_tensor(Rpp16f *srcPtr1,
 
                         rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtr1Temp_ps, p1);    // simd loads
                         rpp_simd_load(rpp_load8_f32_to_f32_avx, srcPtr2Temp_ps, p2);    // simd loads
-                        p1[0] = _mm256_cvtepi32_ps(_mm256_and_si256(_mm256_cvttps_epi32(_mm256_mul_ps(p1[0], avx_p255)), _mm256_cvttps_epi32(_mm256_mul_ps(p2[0], avx_p255))));    // bitwise_and computation
+                        p1[0] = _mm256_cvtepi32_ps(_mm256_and_si256(_mm256_cvtps_epi32(_mm256_mul_ps(p1[0], avx_p255)), _mm256_cvtps_epi32(_mm256_mul_ps(p2[0], avx_p255))));    // bitwise_and computation
                         p1[0] = _mm256_mul_ps(p1[0], avx_p1op255);
                         rpp_simd_store(rpp_store8_f32_to_f16_avx, dstPtrTemp, p1);    // simd stores
 
@@ -723,7 +723,7 @@ RppStatus bitwise_and_f16_f16_host_tensor(Rpp16f *srcPtr1,
 #endif
                     for (; vectorLoopCount < bufferLength; vectorLoopCount++)
                     {
-                        *dstPtrTemp++ = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)((uint)(*srcPtr1Temp * 255) & (uint)(*srcPtr2Temp * 255)) / 255));
+                        *dstPtrTemp++ = static_cast<Rpp16f>(RPPPIXELCHECKF32((float)((uint)(std::nearbyintf)(*srcPtr1Temp * 255) & (uint)(std::nearbyintf)(*srcPtr2Temp * 255)) / 255));
 
                         srcPtr1Temp++;
                         srcPtr2Temp++;
