@@ -30,7 +30,7 @@ SOFTWARE.
 #include <opencv2/opencv.hpp>
 #include <iostream>
 #include "rpp.h"
-#include "../rpp_test_suite_common.h"
+#include "../rpp_test_suite_image.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
