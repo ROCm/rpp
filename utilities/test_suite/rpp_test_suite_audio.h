@@ -22,9 +22,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#include "rpp.h"
 #include "rpp_test_suite_common.h"
+#include <string.h>
+#include <iostream>
+#include <fstream>
 #include <iomanip>
 #include <vector>
+#include <map>
 
 // Include this header file to use functions from libsndfile
 #include <sndfile.h>
@@ -357,5 +362,5 @@ inline void windowed_sinc(RpptResamplingWindow &window, Rpp32s coeffs, Rpp32s lo
     window.center = center + 1;
     window.scale = 1 / scale;
     window.pCenter = _mm_set1_ps(window.center);
-    window.pScale = _mm_set1_ps(window.scale);  
+    window.pScale = _mm_set1_ps(window.scale);
 }
