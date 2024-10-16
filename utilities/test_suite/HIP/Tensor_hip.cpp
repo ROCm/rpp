@@ -160,7 +160,7 @@ int main(int argc, char **argv)
     RpptDescPtr dstDescPtr = &dstDesc;
 
     // Set src/dst layout types in tensor descriptors
-    set_descriptor_layout( srcDescPtr, dstDescPtr, layoutType, pln1OutTypeCase, outputFormatToggle);
+    set_descriptor_layout(srcDescPtr, dstDescPtr, layoutType, pln1OutTypeCase, outputFormatToggle);
 
     // Set src/dst data types in tensor descriptors
     set_descriptor_data_type(inputBitDepth, funcName, srcDescPtr, dstDescPtr);
@@ -1588,7 +1588,7 @@ int main(int argc, char **argv)
                 2.input bit depth 0 (Input U8 && Output U8)
                 3.source and destination layout are the same
                 4.augmentation case does not generate random output*/
-                if(qaFlag && inputBitDepth == 0 && ((srcDescPtr->layout == dstDescPtr->layout) || pln1OutTypeCase) && !(randomOutputCase) && !(nonQACase))
+                if(qaFlag && inputBitDepth == 0 && (!(randomOutputCase) && !(nonQACase)))
                     compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, batchSize, interpolationTypeName, noiseTypeName, testCase, dst, scriptPath);
 
                 // Calculate exact dstROI in XYWH format for OpenCV dump

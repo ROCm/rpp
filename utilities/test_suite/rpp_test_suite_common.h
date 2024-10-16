@@ -1127,24 +1127,46 @@ inline void compare_output(T* output, string funcName, RpptDescPtr srcDescPtr, R
     }
 
     std::string binFile = func + "Tensor";
-    if(dstDescPtr->layout == RpptLayout::NHWC)
-        func += "Tensor_PKD3";
+    if(testCase == 86)
+    {
+        if(srcDescPtr->layout == RpptLayout::NHWC)
+            func += "Tensor_PKD3";
+        else
+            func += "Tensor_PLN3";
+        pln1RefStride = 0;
+    }
     else
     {
-        if (dstDescPtr->c == 3)
-            func += "Tensor_PLN3";
+        if(srcDescPtr->layout == RpptLayout::NHWC)
+        {
+            func += "Tensor_PKD3";
+            if(dstDescPtr->layout == RpptLayout::NHWC)
+                func += "_toPKD3";
+            else
+            {
+                if (dstDescPtr->c == 3)
+                    func += "_toPLN3";
+                else
+                    func += "_toPLN1";
+            }
+        }
         else
         {
-            if(testCase == 86)
+            if (dstDescPtr->c == 3)
             {
-                if(srcDescPtr->layout == RpptLayout::NHWC)
-                    func += "Tensor_PKD3";
+                func += "Tensor_PLN3";
+                if(dstDescPtr->layout == RpptLayout::NHWC)
+                    func += "_toPKD3";
                 else
-                    func += "Tensor_PLN3";
-                pln1RefStride = 0;
+                {
+                    if (dstDescPtr->c == 3)
+                        func += "_toPLN3";
+                    else
+                        func += "_toPLN1";
+                }
             }
             else
-                func += "Tensor_PLN1";
+                func += "Tensor_PLN1_toPLN1";
         }
     }
     if(testCase == 21 ||testCase == 23 || testCase == 24 || testCase == 79)
