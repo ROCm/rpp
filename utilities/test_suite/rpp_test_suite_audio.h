@@ -22,9 +22,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#include "rpp.h"
 #include "rpp_test_suite_common.h"
+#include <string.h>
+#include <iostream>
+#include <fstream>
 #include <iomanip>
 #include <vector>
+#include <map>
 
 // Include this header file to use functions from libsndfile
 #include <sndfile.h>
