@@ -23,6 +23,9 @@ SOFTWARE.
 */
 
 #include "rppdefs.h"
+#include "rpp_cpu_simd.hpp"
+#include "rpp_cpu_common.hpp"
+#include "rpp/handle.hpp"
 
 RppStatus lut_u8_u8_host_tensor(Rpp8u *srcPtr,
                                 RpptDescPtr srcDescPtr,

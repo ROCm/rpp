@@ -24,7 +24,9 @@ SOFTWARE.
 
 project(modules)
 
-if( "${BACKEND}" STREQUAL "HIP")
+if( "${BACKEND}" STREQUAL "CPU")
+    file(GLOB RPP_KERNELS cpu/kernel/*.cpp)
+elseif( "${BACKEND}" STREQUAL "HIP")
     file(GLOB RPP_KERNELS hip/kernel/*.cpp)
 elseif( "${BACKEND}" STREQUAL "OCL")
     file(GLOB RPP_KERNELS cl/kernel/*.cl)
@@ -125,6 +127,9 @@ elseif( "${BACKEND}" STREQUAL "OCL")
     set(INCLUDE_LIST ${ROCM_INC} ${OCL_LOCAL_INCLUDE_LIST} ${INCLUDE_LIST})
 elseif( "${BACKEND}" STREQUAL "CPU")
     # Add CPU specific includes
+    file(GLOB MOD_HOST_CPP_KERNELS "cpu/kernel/*.cpp" )
+    list(APPEND Rpp_Source ${CPPFILES} ${MOD_HOST_CPP_KERNELS})
+    message("-- ${Green}HOST kernels added${ColourReset}")
     set(INCLUDE_LIST ${CMAKE_SOURCE_DIR}/src/include/common/)
     set_source_files_properties(rppt_tensor_audio_augmentations.cpp PROPERTIES COMPILE_FLAGS -mno-fma)
     set_source_files_properties(rppt_tensor_statistical_operations.cpp PROPERTIES COMPILE_FLAGS -mno-fma) # no-fma flag added to get the exact output match with golden outputs
@@ -149,6 +154,7 @@ target_include_directories( ${PROJECT_NAME}
     PRIVATE
         ${CMAKE_SOURCE_DIR}/src/include/cpu
         ${CMAKE_SOURCE_DIR}/src/include/common
+        ${CMAKE_SOURCE_DIR}/src/include/common/rpp
         ${CMAKE_SOURCE_DIR}/src/include/func_specific
         ${INCLUDE_LIST}
 )
@@ -163,5 +169,10 @@ elseif( "${BACKEND}" STREQUAL "OCL")
     target_include_directories(${PROJECT_NAME}
     PRIVATE
         ${CMAKE_SOURCE_DIR}/src/include/cl
+    )
+elseif( "${BACKEND}" STREQUAL "CPU")
+    target_include_directories(${PROJECT_NAME}
+    PRIVATE
+        ${CMAKE_SOURCE_DIR}/src/modules/cpu/kernel
     )
 endif()
