@@ -220,7 +220,7 @@ void replicate_last_sample_mel_filter_bank(Rpp32f *srcPtr, int numSamples, unsig
     for (int i = numSamples; i < batchSize; i++)
     {
         Rpp32f *sample = srcPtr + i * sampleSize;
-        std::memcpy(sample, lastSample, sampleSize * sizeof(Rpp32f));
+        memcpy(sample, lastSample, sampleSize * sizeof(Rpp32f));
     }
 }
 
