@@ -510,24 +510,24 @@ inline int power_function(int a, int b)
     return product;
 }
 
-inline void saturate_pixel(Rpp32f pixel, Rpp8u* dst)
+inline void saturate_pixel(Rpp32f &pixel, Rpp8u* dst)
 {
-    *dst = RPPPIXELCHECK(pixel);
+    *dst = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(pixel)));
 }
 
-inline void saturate_pixel(Rpp32f pixel, Rpp8s* dst)
+inline void saturate_pixel(Rpp32f &pixel, Rpp8s* dst)
 {
-    *dst = (Rpp8s)RPPPIXELCHECKI8(pixel - 128);
+    *dst = static_cast<Rpp8s>(RPPPIXELCHECKI8(std::nearbyintf(pixel) - 128));
 }
 
-inline void saturate_pixel(Rpp32f pixel, Rpp32f* dst)
+inline void saturate_pixel(Rpp32f &pixel, Rpp32f* dst)
 {
-    *dst = (Rpp32f)pixel;
+    *dst = RPPPIXELCHECKF32(pixel);
 }
 
-inline void saturate_pixel(Rpp32f pixel, Rpp16f* dst)
+inline void saturate_pixel(Rpp32f &pixel, Rpp16f* dst)
 {
-    *dst = (Rpp16f)pixel;
+    *dst = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel));
 }
 
 template <typename T>
