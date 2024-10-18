@@ -252,6 +252,28 @@ RppStatus rppt_spectrogram_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t
  */
 RppStatus rppt_mel_filter_bank_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcDims, Rpp32f maxFreq, Rpp32f minFreq, RpptMelScaleFormula melFormula, Rpp32s numFilter, Rpp32f sampleRate, bool normalize, rppHandle_t rppHandle);
 
+#ifdef GPU_SUPPORT
+/*! \brief Mel filter bank augmentation on HIP backend
+ * \details Mel filter bank augmentation for audio data
+ * \param[in] srcPtr source tensor in HIP memory
+ * \param[in] srcDescPtr source tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32, layout - NFT)
+ * \param[out] dstPtr destination tensor in HIP memory
+ * \param[in] dstDescPtr destination tensor descriptor (Restrictions - numDims = 3, offsetInBytes >= 0, dataType = F32, layout - NFT)
+ * \param[in] srcDimsTensor source audio buffer length and number of channels (1D tensor in HOST memory, of size batchSize * 2)
+ * \param[in] maxFreq maximum frequency if not provided maxFreq = sampleRate / 2
+ * \param[in] minFreq minimum frequency
+ * \param[in] melFormula formula used to convert frequencies from hertz to mel and from mel to hertz (SLANEY / HTK)
+ * \param[in] numFilter number of mel filters
+ * \param[in] sampleRate sampling rate of the audio
+ * \param[in] normalize boolean variable that determine whether to normalize weights / not
+ * \param[in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
+ * \return A <tt> \ref RppStatus</tt> enumeration.
+ * \retval RPP_SUCCESS Successful completion.
+ * \retval RPP_ERROR* Unsuccessful completion.
+ */
+RppStatus rppt_mel_filter_bank_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPtr, RpptDescPtr dstDescPtr, Rpp32s *srcDims, Rpp32f maxFreq, Rpp32f minFreq, RpptMelScaleFormula melFormula, Rpp32s numFilter, Rpp32f sampleRate, bool normalize, rppHandle_t rppHandle);
+#endif
+
 /*! \brief Resample augmentation on HOST backend
 * \details Resample augmentation for audio data
 * \param [in] srcPtr source tensor in HOST memory

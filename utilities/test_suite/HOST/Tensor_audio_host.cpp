@@ -126,14 +126,22 @@ int main(int argc, char **argv)
     }
 
     // set buffer sizes for src/dst
-    iBufferSize = (Rpp64u)srcDescPtr->h * (Rpp64u)srcDescPtr->w * (Rpp64u)srcDescPtr->c * (Rpp64u)srcDescPtr->n;
-    oBufferSize = (Rpp64u)dstDescPtr->h * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
-    
+    if(testCase == 7)
+    {
+        iBufferSize = (Rpp64u)MEL_FILTER_BANK_MAX_HEIGHT * (Rpp64u)srcDescPtr->w * (Rpp64u)srcDescPtr->c * (Rpp64u)srcDescPtr->n;
+        oBufferSize = (Rpp64u)MEL_FILTER_BANK_MAX_HEIGHT * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
+    }
+    else
+    {
+        iBufferSize = (Rpp64u)srcDescPtr->h * (Rpp64u)srcDescPtr->w * (Rpp64u)srcDescPtr->c * (Rpp64u)srcDescPtr->n;
+        oBufferSize = (Rpp64u)dstDescPtr->h * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
+    }
+
     // compute maximum possible buffer size of resample
     Rpp64u resampleMaxBufferSize = dstDescPtr->n * dstDescPtr->strides.nStride * 1.15;
     if (testCase == 6)
         oBufferSize = resampleMaxBufferSize;
-    
+
     // compute maximum possible buffer size of spectrogram
     Rpp64u spectrogramMaxBufferSize = 257 * 3754 * dstDescPtr->n;
     if (testCase == 4)
@@ -262,7 +270,7 @@ int main(int argc, char **argv)
 
                     maxDstWidth = 0;
                     maxDstHeight = 0;
-                    init_spectrogram(srcDescPtr, dstDescPtr, dstDims, srcLengthTensor, windowLength, 
+                    init_spectrogram(srcDescPtr, dstDescPtr, dstDims, srcLengthTensor, windowLength,
                                      windowStep, windowOffset, nfft, maxDstHeight, maxDstWidth);
 
                     // check if the output buffer size is greater than predefined spectrogramMaxBufferSize
@@ -354,41 +362,10 @@ int main(int argc, char **argv)
                     RpptMelScaleFormula melFormula = RpptMelScaleFormula::SLANEY;
                     Rpp32s numFilter = 80;
                     bool normalize = true;
-                    Rpp32s srcDimsTensor[] = {257, 225, 257, 211, 257, 214}; // (height, width) for each tensor in a batch for given QA inputs.
-                    // Accepts outputs from FT layout of Spectrogram for QA
-                    srcDescPtr->layout = dstDescPtr->layout = RpptLayout::NFT;
+                    // (height, width) for each tensor in a batch for given QA inputs.
+                    Rpp32s srcDimsTensor[] = {257, 225, 257, 211, 257, 214};
 
-                    maxDstHeight = 0;
-                    maxDstWidth = 0;
-                    maxSrcHeight = 0;
-                    maxSrcWidth = 0;
-                    for(int i = 0, j = 0; i < batchSize; i++, j += 2)
-                    {
-                        maxSrcHeight = std::max(maxSrcHeight, (int)srcDimsTensor[j]);
-                        maxSrcWidth = std::max(maxSrcWidth, (int)srcDimsTensor[j + 1]);
-                        dstDims[i].height = numFilter;
-                        dstDims[i].width = srcDimsTensor[j + 1];
-                        maxDstHeight = std::max(maxDstHeight, (int)dstDims[i].height);
-                        maxDstWidth = std::max(maxDstWidth, (int)dstDims[i].width);
-                    }
-                    srcDescPtr->h = maxSrcHeight;
-                    srcDescPtr->w = maxSrcWidth;
-                    dstDescPtr->h = maxDstHeight;
-                    dstDescPtr->w = maxDstWidth;
-                    
-                    set_audio_descriptor_dims_and_strides_nostriding(srcDescPtr, batchSize, maxSrcHeight, maxSrcWidth, maxSrcChannels, offsetInBytes);
-                    set_audio_descriptor_dims_and_strides_nostriding(dstDescPtr, batchSize, maxDstHeight, maxDstWidth, maxDstChannels, offsetInBytes);
-                    srcDescPtr->numDims = 3;
-                    dstDescPtr->numDims = 3;
-
-                    // Set buffer sizes for src/dst
-                    unsigned long long spectrogramBufferSize = (unsigned long long)srcDescPtr->h * (unsigned long long)srcDescPtr->w * (unsigned long long)srcDescPtr->c * (unsigned long long)srcDescPtr->n;
-                    unsigned long long melFilterBufferSize = (unsigned long long)dstDescPtr->h * (unsigned long long)dstDescPtr->w * (unsigned long long)dstDescPtr->c * (unsigned long long)dstDescPtr->n;
-                    inputf32 = (Rpp32f *)realloc(inputf32, spectrogramBufferSize * sizeof(Rpp32f));
-                    outputf32 = (Rpp32f *)realloc(outputf32, melFilterBufferSize * sizeof(Rpp32f));
-
-                    // Read source data
-                    read_from_bin_file(inputf32, srcDescPtr, srcDimsTensor, "spectrogram", scriptPath);
+                    init_mel_filter_bank(&inputf32, &outputf32, srcDescPtr, dstDescPtr, dstDims, offsetInBytes, numFilter, batchSize, srcDimsTensor, scriptPath, testType);
 
                     startWallTime = omp_get_wtime();
                     rppt_mel_filter_bank_host(inputf32, srcDescPtr, outputf32, dstDescPtr, srcDimsTensor, maxFreq, minFreq, melFormula, numFilter, sampleRate, normalize, handle);
@@ -460,6 +437,6 @@ int main(int argc, char **argv)
     free(dstDims);
     free(inputf32);
     free(outputf32);
-        
+
     return 0;
 }
