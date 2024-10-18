@@ -112,8 +112,16 @@ int main(int argc, char **argv)
     }
     set_audio_descriptor_dims_and_strides(dstDescPtr, batchSize, maxDstHeight, maxDstWidth, maxDstChannels, offsetInBytes);
     // set buffer sizes for src/dst
-    iBufferSize = static_cast<Rpp64u>(srcDescPtr->h) * static_cast<Rpp64u>(srcDescPtr->w) * static_cast<Rpp64u>(srcDescPtr->c) * static_cast<Rpp64u>(srcDescPtr->n);
-    oBufferSize = static_cast<Rpp64u>(dstDescPtr->h) * static_cast<Rpp64u>(dstDescPtr->w) * static_cast<Rpp64u>(dstDescPtr->c) * static_cast<Rpp64u>(dstDescPtr->n);
+    if(testCase == 7)
+    {
+        iBufferSize = (Rpp64u)MEL_FILTER_BANK_MAX_HEIGHT * (Rpp64u)srcDescPtr->w * (Rpp64u)srcDescPtr->c * (Rpp64u)srcDescPtr->n;
+        oBufferSize = (Rpp64u)MEL_FILTER_BANK_MAX_HEIGHT * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
+    }
+    else
+    {
+        iBufferSize = (Rpp64u)srcDescPtr->h * (Rpp64u)srcDescPtr->w * (Rpp64u)srcDescPtr->c * (Rpp64u)srcDescPtr->n;
+        oBufferSize = (Rpp64u)dstDescPtr->h * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
+    }
 
     // compute maximum possible buffer size of resample
     unsigned long long resampleMaxBufferSize = dstDescPtr->n * dstDescPtr->strides.nStride * 1.15;
@@ -286,6 +294,32 @@ int main(int argc, char **argv)
 
                     startWallTime = omp_get_wtime();
                     rppt_resample_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, inRateTensor, outRateTensor, srcDimsTensor, *window, handle);
+
+                    break;
+                }
+                case 7:
+                {
+                    testCaseName = "mel_filter_bank";
+
+                    Rpp32f sampleRate = 16000;
+                    Rpp32f minFreq = 0.0;
+                    Rpp32f maxFreq = sampleRate / 2;
+                    RpptMelScaleFormula melFormula = RpptMelScaleFormula::SLANEY;
+                    Rpp32s numFilter = 80;
+                    bool normalize = true;
+                    srcDimsTensor[0] = 257;
+                    srcDimsTensor[1] = 225;
+                    srcDimsTensor[2] = 257;
+                    srcDimsTensor[3] = 211;
+                    srcDimsTensor[4] = 257;
+                    srcDimsTensor[5] = 214;
+
+                    init_mel_filter_bank(&inputf32, &outputf32, srcDescPtr, dstDescPtr, dstDims, offsetInBytes, numFilter, batchSize, srcDimsTensor, scriptPath, testType);
+
+                    CHECK_RETURN_STATUS(hipMemcpy(d_inputf32, inputf32, iBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
+
+                    startWallTime = omp_get_wtime();
+                    rppt_mel_filter_bank_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcDimsTensor, maxFreq, minFreq, melFormula, numFilter, sampleRate, normalize, handle);
 
                     break;
                 }
