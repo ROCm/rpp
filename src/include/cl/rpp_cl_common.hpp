@@ -33,9 +33,6 @@ SOFTWARE.
 #include <math.h>
 #include <algorithm>
 #include <rppdefs.h>
-#include <half/half.hpp>
-using half_float::half;
-typedef half Rpp16f;
 
 #define __CL_ENABLE_EXCEPTIONS
 #define CL_USE_DEPRECATED_OPENCL_1_2_APIS

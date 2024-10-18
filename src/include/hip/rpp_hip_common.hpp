@@ -26,15 +26,11 @@ SOFTWARE.
 #define RPP_HIP_COMMON_H
 
 #include <hip/hip_runtime.h>
-#include <hip/hip_fp16.h>
-#include <half/half.hpp>
 
 #include "rppdefs.h"
 #include "rpp/handle.hpp"
 #include "rpp_hip_roi_conversion.hpp"
 
-using halfhpp = half_float::half;
-typedef halfhpp Rpp16f;
 typedef unsigned char uchar;
 typedef signed char schar;
 typedef struct { uint   data[ 6]; } d_uint6_s;

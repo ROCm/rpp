@@ -28,7 +28,6 @@ SOFTWARE.
 #include "cpu/host_tensor_geometric_augmentations.hpp"
 
 #ifdef HIP_COMPILE
-#include <hip/hip_fp16.h>
 #include "hip/hip_tensor_geometric_augmentations.hpp"
 #endif // HIP_COMPILE
 
