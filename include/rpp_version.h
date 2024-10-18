@@ -40,7 +40,7 @@ extern "C" {
 // NOTE: IMPORTANT: Match the version with CMakelists.txt version
 #define RPP_VERSION_MAJOR 1
 #define RPP_VERSION_MINOR 9
-#define RPP_VERSION_PATCH 2
+#define RPP_VERSION_PATCH 3
 #ifdef __cplusplus
 }
 #endif
