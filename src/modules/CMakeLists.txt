@@ -24,9 +24,9 @@ SOFTWARE.
 
 project(modules)
 
-if( "${BACKEND}" STREQUAL "CPU")
-    file(GLOB RPP_KERNELS cpu/kernel/*.cpp)
-elseif( "${BACKEND}" STREQUAL "HIP")
+
+file(GLOB RPP_KERNELS cpu/kernel/*.cpp)
+if( "${BACKEND}" STREQUAL "HIP")
     file(GLOB RPP_KERNELS hip/kernel/*.cpp)
 elseif( "${BACKEND}" STREQUAL "OCL")
     file(GLOB RPP_KERNELS cl/kernel/*.cl)
@@ -154,7 +154,6 @@ target_include_directories( ${PROJECT_NAME}
     PRIVATE
         ${CMAKE_SOURCE_DIR}/src/include/cpu
         ${CMAKE_SOURCE_DIR}/src/include/common
-        ${CMAKE_SOURCE_DIR}/src/include/common/rpp
         ${CMAKE_SOURCE_DIR}/src/include/func_specific
         ${INCLUDE_LIST}
 )
@@ -169,10 +168,5 @@ elseif( "${BACKEND}" STREQUAL "OCL")
     target_include_directories(${PROJECT_NAME}
     PRIVATE
         ${CMAKE_SOURCE_DIR}/src/include/cl
-    )
-elseif( "${BACKEND}" STREQUAL "CPU")
-    target_include_directories(${PROJECT_NAME}
-    PRIVATE
-        ${CMAKE_SOURCE_DIR}/src/modules/cpu/kernel
     )
 endif()
