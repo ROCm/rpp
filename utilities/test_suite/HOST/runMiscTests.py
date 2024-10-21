@@ -73,7 +73,7 @@ def rpp_test_suite_parser_and_validator():
     parser.add_argument("--case_end", type = int, default = caseMax, help = "Testing start case # - Range must be in [" + str(caseMin) + ":" + str(caseMax) + "]")
     parser.add_argument('--test_type', type = int, default = 0, help = "Type of Test - (0 = QA tests / 1 = Performance tests)")
     parser.add_argument('--toggle', type = int, default = 0, help = "Toggle outputs")
-    parser.add_argument('--case_list', nargs = "+", help = "List of case numbers to test", required = False)
+    parser.add_argument('--case_list', nargs = "+", help = "A list of specific case numbers to run separated by spaces", required = False)
     parser.add_argument("--num_dims", type = int, default = 2, help = "Number of dimensions for input")
     parser.add_argument('--num_runs', type = int, default = 1, help = "Specifies the number of runs for running the performance tests")
     parser.add_argument('--qa_mode', type = int, default = 0, help = "Run with qa_mode? Outputs from tests will be compared with golden outputs - (0 / 1)", required = False)

@@ -225,6 +225,12 @@ RppStatus rppt_mel_filter_bank_host(RppPtr_t srcPtr,
 {
     if (srcDescPtr->layout != RpptLayout::NFT) return RPP_ERROR_INVALID_SRC_LAYOUT;
     if (dstDescPtr->layout != RpptLayout::NFT) return RPP_ERROR_INVALID_DST_LAYOUT;
+    // Disabled this check for now. 
+    // This check will be re-enabled when the numDims based changes are added in MIVisionX */
+    // if (maxFreq < 0 || maxFreq > sampleRate / 2)
+    //     return RPP_ERROR_INVALID_ARGUMENTS;
+    // if (minFreq < 0 || minFreq > sampleRate / 2)
+    //     return RPP_ERROR_INVALID_ARGUMENTS;
 
     if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
     {
@@ -432,6 +438,57 @@ RppStatus rppt_pre_emphasis_filter_gpu(RppPtr_t srcPtr,
                                                    srcLengthTensor,
                                                    borderType,
                                                    rpp::deref(rppHandle));
+    }
+    else
+    {
+        return RPP_ERROR_NOT_IMPLEMENTED;
+    }
+
+#elif defined(OCL_COMPILE)
+    return RPP_ERROR_NOT_IMPLEMENTED;
+#endif // backend
+}
+
+/******************** mel_filter_bank ********************/
+
+RppStatus rppt_mel_filter_bank_gpu(RppPtr_t srcPtr,
+                                   RpptDescPtr srcDescPtr,
+                                   RppPtr_t dstPtr,
+                                   RpptDescPtr dstDescPtr,
+                                   Rpp32s* srcDimsTensor,
+                                   Rpp32f maxFreq,
+                                   Rpp32f minFreq,
+                                   RpptMelScaleFormula melFormula,
+                                   Rpp32s numFilter,
+                                   Rpp32f sampleRate,
+                                   bool normalize,
+                                   rppHandle_t rppHandle)
+{
+#ifdef HIP_COMPILE
+    Rpp32u tensorDims = srcDescPtr->numDims - 1; // exclude batchsize from input dims
+    if (tensorDims != 2)
+        return RPP_ERROR_INVALID_SRC_DIMS;
+    if (srcDescPtr->layout != RpptLayout::NFT) return RPP_ERROR_INVALID_SRC_LAYOUT;
+    if (dstDescPtr->layout != RpptLayout::NFT) return RPP_ERROR_INVALID_DST_LAYOUT;
+    if (maxFreq < 0 || maxFreq > sampleRate / 2)
+        return RPP_ERROR_INVALID_ARGUMENTS;
+    if (minFreq < 0 || minFreq > sampleRate / 2)
+        return RPP_ERROR_INVALID_ARGUMENTS;
+
+    if ((srcDescPtr->dataType == RpptDataType::F32) && (dstDescPtr->dataType == RpptDataType::F32))
+    {
+        return hip_exec_mel_filter_bank_tensor(static_cast<Rpp32f*>(srcPtr),
+                                               srcDescPtr,
+                                               static_cast<Rpp32f*>(dstPtr),
+                                               dstDescPtr,
+                                               srcDimsTensor,
+                                               maxFreq,
+                                               minFreq,
+                                               melFormula,
+                                               numFilter,
+                                               sampleRate,
+                                               normalize,
+                                               rpp::deref(rppHandle));
     }
     else
     {
