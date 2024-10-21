@@ -99,6 +99,7 @@ RppStatus warp_perspective_nn_u8_u8_host_tensor(Rpp8u *srcPtr,
         Rpp32s srcLoc[8] = {0};         // Since 4 dst pixels are processed per iteration
         Rpp32s invalidLoad[8] = {0};    // Since 4 dst pixels are processed per iteration
 
+#if __AVX2__
         __m256 pSrcStrideH = _mm256_set1_ps(srcDescPtr->strides.hStride);
         __m256 pPerspectiveMatrixTerm0 = _mm256_setr_ps(0, perspectiveMatrix_f9->data[0], perspectiveMatrix_f9->data[0] * 2, perspectiveMatrix_f9->data[0] * 3, perspectiveMatrix_f9->data[0] * 4, perspectiveMatrix_f9->data[0] * 5, perspectiveMatrix_f9->data[0] * 6, perspectiveMatrix_f9->data[0] * 7);
         __m256 pPerspectiveMatrixTerm3 = _mm256_setr_ps(0, perspectiveMatrix_f9->data[3], perspectiveMatrix_f9->data[3] * 2, perspectiveMatrix_f9->data[3] * 3, perspectiveMatrix_f9->data[3] * 4, perspectiveMatrix_f9->data[3] * 5, perspectiveMatrix_f9->data[3] * 6, perspectiveMatrix_f9->data[3] * 7);
@@ -113,6 +114,7 @@ RppStatus warp_perspective_nn_u8_u8_host_tensor(Rpp8u *srcPtr,
         pRoiLTRB[1] = _mm256_set1_ps(roiLTRB.ltrbROI.lt.y);
         pRoiLTRB[2] = _mm256_set1_ps(roiLTRB.ltrbROI.rb.x);
         pRoiLTRB[3] = _mm256_set1_ps(roiLTRB.ltrbROI.rb.y);
+#endif
 
         // Warp perspective with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -357,6 +359,7 @@ RppStatus warp_perspective_nn_f32_f32_host_tensor(Rpp32f *srcPtr,
         Rpp32s srcLoc[8] = {0};         // Since 4 dst pixels are processed per iteration
         Rpp32s invalidLoad[8] = {0};    // Since 4 dst pixels are processed per iteration
 
+#if __AVX2__
         __m256 pSrcStrideH = _mm256_set1_ps(srcDescPtr->strides.hStride);
         __m256 pPerspectiveMatrixTerm0 = _mm256_setr_ps(0, perspectiveMatrix_f9->data[0], perspectiveMatrix_f9->data[0] * 2, perspectiveMatrix_f9->data[0] * 3, perspectiveMatrix_f9->data[0] * 4, perspectiveMatrix_f9->data[0] * 5, perspectiveMatrix_f9->data[0] * 6, perspectiveMatrix_f9->data[0] * 7);
         __m256 pPerspectiveMatrixTerm3 = _mm256_setr_ps(0, perspectiveMatrix_f9->data[3], perspectiveMatrix_f9->data[3] * 2, perspectiveMatrix_f9->data[3] * 3, perspectiveMatrix_f9->data[3] * 4, perspectiveMatrix_f9->data[3] * 5, perspectiveMatrix_f9->data[3] * 6, perspectiveMatrix_f9->data[3] * 7);
@@ -371,6 +374,7 @@ RppStatus warp_perspective_nn_f32_f32_host_tensor(Rpp32f *srcPtr,
         pRoiLTRB[1] = _mm256_set1_ps(roiLTRB.ltrbROI.lt.y);
         pRoiLTRB[2] = _mm256_set1_ps(roiLTRB.ltrbROI.rb.x);
         pRoiLTRB[3] = _mm256_set1_ps(roiLTRB.ltrbROI.rb.y);
+#endif
 
         // Warp perspective with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -614,6 +618,7 @@ RppStatus warp_perspective_nn_i8_i8_host_tensor(Rpp8s *srcPtr,
         Rpp32s srcLoc[8] = {0};         // Since 4 dst pixels are processed per iteration
         Rpp32s invalidLoad[8] = {0};    // Since 4 dst pixels are processed per iteration
 
+#if __AVX2__
         __m256 pSrcStrideH = _mm256_set1_ps(srcDescPtr->strides.hStride);
         __m256 pPerspectiveMatrixTerm0 = _mm256_setr_ps(0, perspectiveMatrix_f9->data[0], perspectiveMatrix_f9->data[0] * 2, perspectiveMatrix_f9->data[0] * 3, perspectiveMatrix_f9->data[0] * 4, perspectiveMatrix_f9->data[0] * 5, perspectiveMatrix_f9->data[0] * 6, perspectiveMatrix_f9->data[0] * 7);
         __m256 pPerspectiveMatrixTerm3 = _mm256_setr_ps(0, perspectiveMatrix_f9->data[3], perspectiveMatrix_f9->data[3] * 2, perspectiveMatrix_f9->data[3] * 3, perspectiveMatrix_f9->data[3] * 4, perspectiveMatrix_f9->data[3] * 5, perspectiveMatrix_f9->data[3] * 6, perspectiveMatrix_f9->data[3] * 7);
@@ -628,6 +633,7 @@ RppStatus warp_perspective_nn_i8_i8_host_tensor(Rpp8s *srcPtr,
         pRoiLTRB[1] = _mm256_set1_ps(roiLTRB.ltrbROI.lt.y);
         pRoiLTRB[2] = _mm256_set1_ps(roiLTRB.ltrbROI.rb.x);
         pRoiLTRB[3] = _mm256_set1_ps(roiLTRB.ltrbROI.rb.y);
+#endif
 
         // Warp perspective with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -871,6 +877,7 @@ RppStatus warp_perspective_nn_f16_f16_host_tensor(Rpp16f *srcPtr,
         Rpp32s srcLoc[8] = {0};         // Since 4 dst pixels are processed per iteration
         Rpp32s invalidLoad[8] = {0};    // Since 4 dst pixels are processed per iteration
 
+#if __AVX2__
         __m256 pSrcStrideH = _mm256_set1_ps(srcDescPtr->strides.hStride);
         __m256 pPerspectiveMatrixTerm0 = _mm256_setr_ps(0, perspectiveMatrix_f9->data[0], perspectiveMatrix_f9->data[0] * 2, perspectiveMatrix_f9->data[0] * 3, perspectiveMatrix_f9->data[0] * 4, perspectiveMatrix_f9->data[0] * 5, perspectiveMatrix_f9->data[0] * 6, perspectiveMatrix_f9->data[0] * 7);
         __m256 pPerspectiveMatrixTerm3 = _mm256_setr_ps(0, perspectiveMatrix_f9->data[3], perspectiveMatrix_f9->data[3] * 2, perspectiveMatrix_f9->data[3] * 3, perspectiveMatrix_f9->data[3] * 4, perspectiveMatrix_f9->data[3] * 5, perspectiveMatrix_f9->data[3] * 6, perspectiveMatrix_f9->data[3] * 7);
@@ -885,6 +892,7 @@ RppStatus warp_perspective_nn_f16_f16_host_tensor(Rpp16f *srcPtr,
         pRoiLTRB[1] = _mm256_set1_ps(roiLTRB.ltrbROI.lt.y);
         pRoiLTRB[2] = _mm256_set1_ps(roiLTRB.ltrbROI.rb.x);
         pRoiLTRB[3] = _mm256_set1_ps(roiLTRB.ltrbROI.rb.y);
+#endif
 
         // Warp perspective with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -1125,6 +1133,7 @@ RppStatus warp_perspective_bilinear_u8_u8_host_tensor(Rpp8u *srcPtr,
         Rpp32u bufferLength = roi.xywhROI.roiWidth;
         Rpp32u alignedLength = bufferLength & ~7;   // Align dst width to process 16 dst pixels per iteration
 
+#if __AVX2__
         __m256 pBilinearCoeffs[4];
         __m256 pSrcStrideH = _mm256_set1_ps(srcDescPtr->strides.hStride);
         __m256 pPerspectiveMatrixTerm0 = _mm256_setr_ps(0, perspectiveMatrix_f9->data[0], perspectiveMatrix_f9->data[0] * 2, perspectiveMatrix_f9->data[0] * 3, perspectiveMatrix_f9->data[0] * 4, perspectiveMatrix_f9->data[0] * 5, perspectiveMatrix_f9->data[0] * 6, perspectiveMatrix_f9->data[0] * 7);
@@ -1146,6 +1155,7 @@ RppStatus warp_perspective_bilinear_u8_u8_host_tensor(Rpp8u *srcPtr,
         pxSrcStridesCHW[1] = _mm256_set1_epi32(srcDescPtr->strides.hStride);
         pxSrcStridesCHW[2] = _mm256_set1_epi32(srcDescPtr->strides.wStride);
         RpptBilinearNbhoodLocsVecLen8 srcLocs;
+#endif
 
         // Warp perspective with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -1430,6 +1440,7 @@ RppStatus warp_perspective_bilinear_f32_f32_host_tensor(Rpp32f *srcPtr,
         Rpp32u bufferLength = roi.xywhROI.roiWidth;
         Rpp32u alignedLength = bufferLength & ~7;   // Align dst width to process 16 dst pixels per iteration
 
+#if __AVX2__
         __m256 pBilinearCoeffs[4];
         __m256 pSrcStrideH = _mm256_set1_ps(srcDescPtr->strides.hStride);
         __m256 pPerspectiveMatrixTerm0 = _mm256_setr_ps(0, perspectiveMatrix_f9->data[0], perspectiveMatrix_f9->data[0] * 2, perspectiveMatrix_f9->data[0] * 3, perspectiveMatrix_f9->data[0] * 4, perspectiveMatrix_f9->data[0] * 5, perspectiveMatrix_f9->data[0] * 6, perspectiveMatrix_f9->data[0] * 7);
@@ -1451,6 +1462,7 @@ RppStatus warp_perspective_bilinear_f32_f32_host_tensor(Rpp32f *srcPtr,
         pxSrcStridesCHW[1] = _mm256_set1_epi32(srcDescPtr->strides.hStride);
         pxSrcStridesCHW[2] = _mm256_set1_epi32(srcDescPtr->strides.wStride);
         RpptBilinearNbhoodLocsVecLen8 srcLocs;
+#endif
 
         // Warp perspective with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -1735,6 +1747,7 @@ RppStatus warp_perspective_bilinear_i8_i8_host_tensor(Rpp8s *srcPtr,
         Rpp32u bufferLength = roi.xywhROI.roiWidth;
         Rpp32u alignedLength = bufferLength & ~7;   // Align dst width to process 16 dst pixels per iteration
 
+#if __AVX2__
         __m256 pBilinearCoeffs[4];
         __m256 pSrcStrideH = _mm256_set1_ps(srcDescPtr->strides.hStride);
         __m256 pPerspectiveMatrixTerm0 = _mm256_setr_ps(0, perspectiveMatrix_f9->data[0], perspectiveMatrix_f9->data[0] * 2, perspectiveMatrix_f9->data[0] * 3, perspectiveMatrix_f9->data[0] * 4, perspectiveMatrix_f9->data[0] * 5, perspectiveMatrix_f9->data[0] * 6, perspectiveMatrix_f9->data[0] * 7);
@@ -1756,6 +1769,7 @@ RppStatus warp_perspective_bilinear_i8_i8_host_tensor(Rpp8s *srcPtr,
         pxSrcStridesCHW[1] = _mm256_set1_epi32(srcDescPtr->strides.hStride);
         pxSrcStridesCHW[2] = _mm256_set1_epi32(srcDescPtr->strides.wStride);
         RpptBilinearNbhoodLocsVecLen8 srcLocs;
+#endif
 
         // Warp perspective with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))
@@ -2045,6 +2059,7 @@ RppStatus warp_perspective_bilinear_f16_f16_host_tensor(Rpp16f *srcPtr,
         Rpp32u bufferLength = roi.xywhROI.roiWidth;
         Rpp32u alignedLength = bufferLength & ~7;   // Align dst width to process 16 dst pixels per iteration
 
+#if __AVX2__
         __m256 pBilinearCoeffs[4];
         __m256 pSrcStrideH = _mm256_set1_ps(srcDescPtr->strides.hStride);
         __m256 pPerspectiveMatrixTerm0 = _mm256_setr_ps(0, perspectiveMatrix_f9->data[0], perspectiveMatrix_f9->data[0] * 2, perspectiveMatrix_f9->data[0] * 3, perspectiveMatrix_f9->data[0] * 4, perspectiveMatrix_f9->data[0] * 5, perspectiveMatrix_f9->data[0] * 6, perspectiveMatrix_f9->data[0] * 7);
@@ -2066,6 +2081,7 @@ RppStatus warp_perspective_bilinear_f16_f16_host_tensor(Rpp16f *srcPtr,
         pxSrcStridesCHW[1] = _mm256_set1_epi32(srcDescPtr->strides.hStride);
         pxSrcStridesCHW[2] = _mm256_set1_epi32(srcDescPtr->strides.wStride);
         RpptBilinearNbhoodLocsVecLen8 srcLocs;
+#endif
 
         // Warp perspective with fused output-layout toggle (NHWC -> NCHW)
         if ((srcDescPtr->c == 3) && (srcDescPtr->layout == RpptLayout::NHWC) && (dstDescPtr->layout == RpptLayout::NCHW))

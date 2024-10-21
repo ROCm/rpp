@@ -730,7 +730,7 @@ RppStatus rppt_transpose_gpu(RppPtr_t srcPtr, RpptGenericDescPtr srcGenericDescP
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
  * \image html img150x150.png Sample Input
- * \image html geometric_augmentations_warp_affine_img150x150.png Sample Output
+ * \image html geometric_augmentations_warp_perspective_img150x150.png Sample Output
  * \param [in] srcPtr source tensor in HOST memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HOST memory
@@ -748,11 +748,11 @@ RppStatus rppt_warp_perspective_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, Rp
 
 #ifdef GPU_SUPPORT
 /*! \brief Warp perspective augmentation on HIP backend for a NCHW/NHWC layout tensor
- * \details The warp perspective augmentation performs affine transformations for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
+ * \details The warp perspective augmentation performs perspective transformations for a batch of RGB(3 channel) / greyscale(1 channel) images with an NHWC/NCHW tensor layout.<br>
  * - srcPtr depth ranges - Rpp8u (0 to 255), Rpp16f (0 to 1), Rpp32f (0 to 1), Rpp8s (-128 to 127).
  * - dstPtr depth ranges - Will be same depth as srcPtr.
  * \image html img150x150.png Sample Input
- * \image html geometric_augmentations_warp_affine_img150x150.png Sample Output
+ * \image html geometric_augmentations_warp_perspective_img150x150.png Sample Output
  * \param [in] srcPtr source tensor in HIP memory
  * \param [in] srcDescPtr source tensor descriptor (Restrictions - numDims = 4, offsetInBytes >= 0, dataType = U8/F16/F32/I8, layout = NCHW/NHWC, c = 1/3)
  * \param [out] dstPtr destination tensor in HIP memory
