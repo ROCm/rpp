@@ -794,7 +794,7 @@ int main(int argc, char **argv)
 
                     break;
                 }
-                case 24:
+                case 28:
                 {
                     testCaseName = "warp_perspective";
 
@@ -806,15 +806,15 @@ int main(int argc, char **argv)
 
                     for (i = 0; i < batchSize; i++)
                     {
-                        perspectiveTensorPtr[i].data[0] = 0.93;
-                        perspectiveTensorPtr[i].data[1] = 0.5;
-                        perspectiveTensorPtr[i].data[2] = 0.0;
-                        perspectiveTensorPtr[i].data[3] = -0.5;
-                        perspectiveTensorPtr[i].data[4] = 0.93;
-                        perspectiveTensorPtr[i].data[5] = 0.0;
-                        perspectiveTensorPtr[i].data[6] = 0.005;
-                        perspectiveTensorPtr[i].data[7] = 0.005;
-                        perspectiveTensorPtr[i].data[8] = 1;
+                        perspectiveTensorPtr[i * 9 + 0] = 0.93;
+                        perspectiveTensorPtr[i * 9 + 1] = 0.5;
+                        perspectiveTensorPtr[i * 9 + 2] = 0.0;
+                        perspectiveTensorPtr[i * 9 + 3] = -0.5;
+                        perspectiveTensorPtr[i * 9 + 4] = 0.93;
+                        perspectiveTensorPtr[i * 9 + 5] = 0.0;
+                        perspectiveTensorPtr[i * 9 + 6] = 0.005;
+                        perspectiveTensorPtr[i * 9 + 7] = 0.005;
+                        perspectiveTensorPtr[i * 9 + 8] = 1;
                     }
 
                     startWallTime = omp_get_wtime();

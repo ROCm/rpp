@@ -20,7 +20,7 @@ __device__ void warp_perspective_srclocs_hip_compute(float perspectiveMatrixElem
     locSrcPtr_f8->f4[1] = ((locParComponent_f4 + increment_f8.f4[1])/locParC_f8.f4[1]) + roiComponent_f4;
 }
 
-__device__ void warp_perspective_roi_and_srclocs_hip_compute(int4 *srcRoiPtr_i4, int id_x, int id_y, d_float6 *perspectiveMatrix_f9, d_float16 *locSrc_f16)
+__device__ void warp_perspective_roi_and_srclocs_hip_compute(int4 *srcRoiPtr_i4, int id_x, int id_y, d_float9 *perspectiveMatrix_f9, d_float16 *locSrc_f16)
 {
     float2 locDst_f2;
     float3 locPar_f3;
@@ -29,12 +29,12 @@ __device__ void warp_perspective_roi_and_srclocs_hip_compute(int4 *srcRoiPtr_i4,
     float roiHalfHeight = (srcRoiPtr_i4->w - srcRoiPtr_i4->y + 1) >> 1;
     locDst_f2.x = (float) (id_x - roiHalfWidth);
     locDst_f2.y = (float) (id_y - roiHalfHeight);
-    locPar_f3.x = fmaf(locDst_f2.x, perspectiveMatrix_f6->f1[0], fmaf(locDst_f2.y, perspectiveMatrix_f6->f1[1], perspectiveMatrix_f6->f1[2]));
-    locPar_f3.y = fmaf(locDst_f2.x, perspectiveMatrix_f6->f1[3], fmaf(locDst_f2.y, perspectiveMatrix_f6->f1[4], perspectiveMatrix_f6->f1[5]));
-    locPar_f3.z = fmaf(locDst_f2.x, perspectiveMatrix_f6->f1[6], fmaf(locDst_f2.y, perspectiveMatrix_f6->f1[7], perspectiveMatrix_f6->f1[8]));
-    warp_perspective_parcommon_hip_compute(perspectiveMatrix_f6->f1[6], (float4)locPar_f3.z, &locParC_f8);
-    warp_perspective_srclocs_hip_compute(perspectiveMatrix_f6->f1[0], (float4)locPar_f2.x, (float4)roiHalfWidth, locParC_f8, &(locSrc_f16->f8[0]));    // Compute 8 locSrcX
-    warp_perspective_srclocs_hip_compute(perspectiveMatrix_f6->f1[3], (float4)locPar_f2.y, (float4)roiHalfHeight, locParC_f8, &(locSrc_f16->f8[1]));    // Compute 8 locSrcY
+    locPar_f3.x = fmaf(locDst_f2.x, perspectiveMatrix_f9->f1[0], fmaf(locDst_f2.y, perspectiveMatrix_f9->f1[1], perspectiveMatrix_f9->f1[2]));
+    locPar_f3.y = fmaf(locDst_f2.x, perspectiveMatrix_f9->f1[3], fmaf(locDst_f2.y, perspectiveMatrix_f9->f1[4], perspectiveMatrix_f9->f1[5]));
+    locPar_f3.z = fmaf(locDst_f2.x, perspectiveMatrix_f9->f1[6], fmaf(locDst_f2.y, perspectiveMatrix_f9->f1[7], perspectiveMatrix_f9->f1[8]));
+    warp_perspective_parcommon_hip_compute(perspectiveMatrix_f9->f1[6], (float4)locPar_f3.z, &locParC_f8);
+    warp_perspective_srclocs_hip_compute(perspectiveMatrix_f9->f1[0], (float4)locPar_f3.x, (float4)roiHalfWidth, locParC_f8, &(locSrc_f16->f8[0]));    // Compute 8 locSrcX
+    warp_perspective_srclocs_hip_compute(perspectiveMatrix_f9->f1[3], (float4)locPar_f3.y, (float4)roiHalfHeight, locParC_f8, &(locSrc_f16->f8[1]));    // Compute 8 locSrcY
 }
 
 // -------------------- Set 1 - Bilinear Interpolation --------------------
@@ -60,7 +60,7 @@ __global__ void warp_perspective_bilinear_pkd_hip_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNH.x);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
-    d_float6 perspectiveMatrix_f9 = perspectiveTensor[id_z];
+    d_float9 perspectiveMatrix_f9 = perspectiveTensor[id_z];
     int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
     d_float16 locSrc_f16;
     warp_perspective_roi_and_srclocs_hip_compute(&srcRoi_i4, id_x, id_y, &perspectiveMatrix_f9, &locSrc_f16);
@@ -138,7 +138,7 @@ __global__ void warp_perspective_bilinear_pkd3_pln3_hip_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNH.x);
     uint dstIdx = (id_z * dstStridesNCH.x) + (id_y * dstStridesNCH.z) + id_x;
 
-    d_float6 perspectiveMatrix_f6 = perspectiveTensor[id_z];
+    d_float9 perspectiveMatrix_f9 = perspectiveTensor[id_z];
     int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
     d_float16 locSrc_f16;
     warp_perspective_roi_and_srclocs_hip_compute(&srcRoi_i4, id_x, id_y, &perspectiveMatrix_f9, &locSrc_f16);
@@ -169,7 +169,7 @@ __global__ void warp_perspective_bilinear_pln3_pkd3_hip_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNCH.x);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
-    d_float6 perspectiveMatrix_f9 = perspectiveTensor[id_z];
+    d_float9 perspectiveMatrix_f9 = perspectiveTensor[id_z];
     int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
     d_float16 locSrc_f16;
     warp_perspective_roi_and_srclocs_hip_compute(&srcRoi_i4, id_x, id_y, &perspectiveMatrix_f9, &locSrc_f16);
@@ -202,10 +202,10 @@ __global__ void warp_perspective_nearest_neighbor_pkd_hip_tensor(T *srcPtr,
     uint srcIdx = (id_z * srcStridesNH.x);
     uint dstIdx = (id_z * dstStridesNH.x) + (id_y * dstStridesNH.y) + id_x * 3;
 
-    d_float6 perspectiveMatrix_f6 = perspectiveTensor[id_z];
+    d_float9 perspectiveMatrix_f9 = perspectiveTensor[id_z];
     int4 srcRoi_i4 = *(int4 *)&roiTensorPtrSrc[id_z];
     d_float16 locSrc_f16;
-    warp_perspective_roi_and_srclocs_hip_compute(&srcRoi_i4, id_x, id_y, &perspectiveMatrix_f6, &locSrc_f16);
+    warp_perspective_roi_and_srclocs_hip_compute(&srcRoi_i4, id_x, id_y, &perspectiveMatrix_f9, &locSrc_f16);
 
     d_float24 dst_f24;
     rpp_hip_interpolate24_nearest_neighbor_pkd3(srcPtr + srcIdx, srcStridesNH.y, &locSrc_f16, &srcRoi_i4, &dst_f24);
