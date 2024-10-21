@@ -29,7 +29,7 @@ endif()
 set(CMAKE_CXX_STANDARD 17)
 
 # RPP Version
-set(VERSION "1.9.2")
+set(VERSION "1.14.0")
 
 # Set Project Version and Language
 project(rpp VERSION ${VERSION} LANGUAGES CXX)

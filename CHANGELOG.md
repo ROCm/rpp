@@ -7,7 +7,6 @@ Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/r
 ### Changes
 
 * RPP Tensor Warp Perspective support on HOST and HIP
-
  
 ## RPP 1.9.2 (Unreleased)
 
