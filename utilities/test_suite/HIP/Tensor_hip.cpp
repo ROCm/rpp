@@ -794,6 +794,37 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 24:
+                {
+                    testCaseName = "warp_perspective";
+
+                    if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR))
+                    {
+                        missingFuncFlag = 1;
+                        break;
+                    }
+
+                    for (i = 0; i < batchSize; i++)
+                    {
+                        perspectiveTensorPtr[i].data[0] = 0.93;
+                        perspectiveTensorPtr[i].data[1] = 0.5;
+                        perspectiveTensorPtr[i].data[2] = 0.0;
+                        perspectiveTensorPtr[i].data[3] = -0.5;
+                        perspectiveTensorPtr[i].data[4] = 0.93;
+                        perspectiveTensorPtr[i].data[5] = 0.0;
+                        perspectiveTensorPtr[i].data[6] = 0.005;
+                        perspectiveTensorPtr[i].data[7] = 0.005;
+                        perspectiveTensorPtr[i].data[8] = 1;
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_warp_perspective_gpu(d_input, srcDescPtr, d_output, dstDescPtr, perspectiveTensorPtr, interpolationType, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 case 29:
                 {
                     testCaseName = "water";
@@ -1657,6 +1688,10 @@ int main(int argc, char **argv)
     }
     if(testCase == 35)
         CHECK_RETURN_STATUS(hipHostFree(rgbOffsets));
+
+    if(perspectiveTensorPtr != NULL)
+      CHECK_RETURN_STATUS(hipHostFree(perspectiveTensorPtr));
+
     if (reductionTypeCase)
     {
         CHECK_RETURN_STATUS(hipHostFree(reductionFuncResultArr));
