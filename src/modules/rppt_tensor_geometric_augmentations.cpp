@@ -1439,6 +1439,39 @@ RppStatus rppt_transpose_host(RppPtr_t srcPtr,
     return RPP_SUCCESS;
 }
 
+RppStatus rppt_warp_perspective_host(RppPtr_t srcPtr,
+                                RpptDescPtr srcDescPtr,
+                                RppPtr_t dstPtr,
+                                RpptDescPtr dstDescPtr,
+                                Rpp32f *perspectiveTensor,
+                                RpptInterpolationType interpolationType,
+                                RpptROIPtr roiTensorPtrSrc,
+                                RpptRoiType roiType,
+                                rppHandle_t rppHandle)
+{
+    if ((interpolationType != RpptInterpolationType::BILINEAR) && (interpolationType != RpptInterpolationType::NEAREST_NEIGHBOR))
+        return RPP_ERROR_NOT_IMPLEMENTED;
+
+    RppLayoutParams layoutParams = get_layout_params(srcDescPtr->layout, srcDescPtr->c);
+
+    if(interpolationType == RpptInterpolationType::NEAREST_NEIGHBOR)
+    {
+        if ((srcDescPtr->dataType == RpptDataType::U8) && (dstDescPtr->dataType == RpptDataType::U8))
+        {
+            warp_perspective_nn_u8_u8_host_tensor(static_cast<Rpp8u*>(srcPtr) + srcDescPtr->offsetInBytes,
+                                             srcDescPtr,
+                                             static_cast<Rpp8u*>(dstPtr) + dstDescPtr->offsetInBytes,
+                                             dstDescPtr,
+                                             perspectiveTensor,
+                                             roiTensorPtrSrc,
+                                             roiType,
+                                             layoutParams,
+                                             rpp::deref(rppHandle));
+        }
+    }
+    return RPP_SUCCESS;
+}
+
 /********************************************************************************************************************/
 /*********************************************** RPP_GPU_SUPPORT = ON ***********************************************/
 /********************************************************************************************************************/
