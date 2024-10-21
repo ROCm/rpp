@@ -26,7 +26,19 @@ SOFTWARE.
 #include "rppdefs.h"
 #include "rppi_validate.hpp"
 #include "rppt_tensor_effects_augmentations.h"
-#include "cpu/host_tensor_effects_augmentations.hpp"
+#include "cpu/kernel/gridmask.hpp"
+#include "cpu/kernel/spatter.hpp"
+#include "cpu/kernel/noise_salt_and_pepper.hpp"
+#include "cpu/kernel/noise_shot.hpp"
+#include "cpu/kernel/noise_gaussian.hpp"
+#include "cpu/kernel/non_linear_blend.hpp"
+#include "cpu/kernel/jitter.hpp"
+#include "cpu/kernel/glitch.hpp"
+#include "cpu/kernel/water.hpp"
+#include "cpu/kernel/ricap.hpp"
+#include "cpu/kernel/vignette.hpp"
+#include "cpu/kernel/resize.hpp"  //pixelate dependency
+#include "cpu/kernel/erase.hpp"
 
 #ifdef HIP_COMPILE
 #include <hip/hip_fp16.h>
