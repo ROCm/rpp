@@ -90,10 +90,10 @@ audioAugmentationMap = {
     1: ["to_decibels", "HOST", "HIP"],
     2: ["pre_emphasis_filter", "HOST", "HIP"],
     3: ["down_mixing", "HOST", "HIP"],
-    4: ["spectrogram", "HOST"],
-    5: ["slice", "HOST"],
+    4: ["spectrogram", "HOST", "HIP"],
+    5: ["slice", "HOST", "HIP"],
     6: ["resample", "HOST", "HIP"],
-    7: ["mel_filter_bank", "HOST"]
+    7: ["mel_filter_bank", "HOST", "HIP"]
 }
 
 voxelAugmentationMap = {
