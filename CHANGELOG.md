@@ -2,12 +2,18 @@
 
 Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/rpp/en/latest](https://rocm.docs.amd.com/projects/rpp/en/latest)
 
-## RPP 1.14.0 (Unreleased)
+## RPP 1.9.6 (unreleased)
 
 ### Changes
 
-* RPP Tensor Warp Perspective support on HOST and HIP
- 
+* RPP Warp Perspective on HOST and HIP
+
+## RPP 1.9.3 (unreleased)
+
+### Changes
+
+* RPP Audio Support HIP - Spectrogram
+
 ## RPP 1.9.2 (Unreleased)
 
 ### Changes
@@ -15,43 +21,43 @@ Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/r
 RPP Audio Support HIP - Mel Filter Bank
 
 ## RPP 1.9.1 for ROCm 6.3.0
- 
+
 ### Changes
- 
+
 * Test - Prerequisites Updates
 * RPP Glitch on HOST and HIP
 * AMD Advanced - Build Flag
 * RPP Audio Support HIP - Resample
 * RPP Audio Support HIP - Pre emphasis filter
 * RPP Pixelate - HOST and HIP
-* RPP Audio Support HIP - Down-mixing 
+* RPP Audio Support HIP - Down-mixing
 * RPP Audio Support HIP - To Decibels
 * RPP Audio Support HIP - Non silent region
 
 ### Removals
- 
+
 * TurboJPEG - older version
- 
+
 ### Optimizations
- 
-* macOS - Build fix 
+
+* macOS - Build fix
 * Docs - changed roiTensorSrc to roiTensorPtrSrc in documentation
-* Test Suite - updates 
- 
+* Test Suite - updates
+
 ### Resolved issues
- 
-* RPP Test Suite - augmentations fix 
+
+* RPP Test Suite - augmentations fix
 * Copy - bugfix for `NCDHW` layout
 * MIVisionX compatibility fix - Resample and pre-emphasis filter
 * Docs - fix broken image links
- 
+
 ### Known issues
 
 * Package only supports HIP backend
- 
+
 ### Upcoming changes
- 
-* Optimized audio augmentations 
+
+* Optimized audio augmentations
 
 ### Tested configurations
 

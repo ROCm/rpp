@@ -124,9 +124,14 @@ int main(int argc, char **argv)
     }
 
     // compute maximum possible buffer size of resample
-    unsigned long long resampleMaxBufferSize = dstDescPtr->n * dstDescPtr->strides.nStride * 1.15;
+    Rpp64u resampleMaxBufferSize = dstDescPtr->n * dstDescPtr->strides.nStride * 1.15;
     if (testCase == 6)
         oBufferSize = resampleMaxBufferSize;
+
+    // compute maximum possible buffer size of spectrogram
+    Rpp64u spectrogramMaxBufferSize = 257 * 3754 * dstDescPtr->n;
+    if (testCase == 4)
+        oBufferSize = spectrogramMaxBufferSize;
 
     // allocate hip buffers for input & output
     Rpp32f *inputf32 = static_cast<Rpp32f *>(calloc(iBufferSize, sizeof(Rpp32f)));
@@ -153,8 +158,8 @@ int main(int argc, char **argv)
     Rpp32s *detectedIndex = nullptr, *detectionLength = nullptr;
     if(testCase == 0)
     {
-        CHECK_RETURN_STATUS(hipHostMalloc(&detectedIndex, batchSize * sizeof(Rpp32f)));
-        CHECK_RETURN_STATUS(hipHostMalloc(&detectionLength, batchSize * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&detectedIndex, batchSize * sizeof(Rpp32s)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&detectionLength, batchSize * sizeof(Rpp32s)));
     }
 
     // declare pointer of type RpptResamplingWindow used for resample augmentation
@@ -253,6 +258,40 @@ int main(int argc, char **argv)
 
                     startWallTime = omp_get_wtime();
                     rppt_down_mixing_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcDimsTensor, normalizeWeights, handle);
+
+                    break;
+                }
+                case 4:
+                {
+                    testCaseName = "spectrogram";
+                    bool centerWindows = true;
+                    bool reflectPadding = true;
+                    Rpp32f *windowFn = NULL;
+                    Rpp32s power = 2;
+                    Rpp32s windowLength = 320;
+                    Rpp32s windowStep = 160;
+                    Rpp32s nfft = 512;
+                    dstDescPtr->layout = RpptLayout::NFT;
+
+                    int windowOffset = 0;
+                    if(!centerWindows)
+                        windowOffset = windowLength;
+
+                    maxDstWidth = 0;
+                    maxDstHeight = 0;
+                    init_spectrogram(srcDescPtr, dstDescPtr, dstDims, srcLengthTensor, windowLength, 
+                                     windowStep, windowOffset, nfft, maxDstHeight, maxDstWidth);
+
+                    // check if the output buffer size is greater than predefined spectrogramMaxBufferSize
+                    if (dstDescPtr->n * dstDescPtr->strides.nStride > spectrogramMaxBufferSize)
+                    {
+                        std::cout << "\nError! Requested spectrogram output size is greater than predefined max size for spectrogram in test suite."
+                                     "\nPlease modify spectrogramMaxBufferSize value in test suite for running spectrogram kernel" << std::endl;
+                        exit(0);
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    rppt_spectrogram_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcLengthTensor, centerWindows, reflectPadding, windowFn, nfft, power, windowLength, windowStep, handle);
 
                     break;
                 }

@@ -266,7 +266,7 @@ void verify_output(Rpp32f *dstPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dst
         std::cout<<"\nCould not open the reference output. Please check the path specified\n";
         return;
     }
-   double cutoff = (backend == "HOST") ? 1e-20 : audioHIPCutOff[testCase];
+    double cutoff = (backend == "HOST") ? 1e-20 : audioHIPCutOff[testCase];
 
     // iterate over all samples in a batch and compare with reference outputs
     for (int batchCount = 0; batchCount < dstDescPtr->n; batchCount++)
@@ -408,7 +408,7 @@ inline void windowed_sinc(RpptResamplingWindow &window, Rpp32s coeffs, Rpp32s lo
     window.center = center + 1;
     window.scale = 1 / scale;
     window.pCenter = _mm_set1_ps(window.center);
-    window.pScale = _mm_set1_ps(window.scale);  
+    window.pScale = _mm_set1_ps(window.scale);
 }
 
 // Mel filter bank initializer for unit and performance testing
@@ -450,4 +450,34 @@ void inline init_mel_filter_bank(Rpp32f **inputf32, Rpp32f **outputf32, RpptDesc
         replicate_last_sample_mel_filter_bank(*inputf32, numSamples, sampleSize, batchSize);
         replicate_src_dims_to_fill_batch(srcDimsTensor, numSamples, batchSize);
     }
+}
+
+// Spectrogram initializer for QA and performance testing
+void init_spectrogram(RpptDescPtr srcDescPtr, RpptDescPtr dstDescPtr, RpptImagePatchPtr dstDims, Rpp32s *srcLengthTensor,
+                      Rpp32s &windowLength, Rpp32s &windowStep, Rpp32s &windowOffset, Rpp32s &nfft,
+                      Rpp32s &maxDstHeight, Rpp32s &maxDstWidth)
+{
+    if(dstDescPtr->layout == RpptLayout::NFT)
+    {
+        for(int i = 0; i < dstDescPtr->n; i++)
+        {
+            dstDims[i].height = nfft / 2 + 1;
+            dstDims[i].width = ((srcLengthTensor[i] - windowOffset) / windowStep) + 1;
+            maxDstHeight = std::max(maxDstHeight, static_cast<int>(dstDims[i].height));
+            maxDstWidth = std::max(maxDstWidth, static_cast<int>(dstDims[i].width));
+        }
+    }
+    else
+    {
+        for(int i = 0; i < dstDescPtr->n; i++)
+        {
+            dstDims[i].height = ((srcLengthTensor[i] - windowOffset) / windowStep) + 1;
+            dstDims[i].width = nfft / 2 + 1;
+            maxDstHeight = std::max(maxDstHeight, static_cast<int>(dstDims[i].height));
+            maxDstWidth = std::max(maxDstWidth, static_cast<int>(dstDims[i].width));
+        }
+    }
+
+    set_audio_descriptor_dims_and_strides_nostriding(dstDescPtr, dstDescPtr->n, maxDstHeight, maxDstWidth, 1, 0);
+    dstDescPtr->numDims = 3;
 }
