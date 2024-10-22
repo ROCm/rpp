@@ -29,7 +29,7 @@ endif()
 set(CMAKE_CXX_STANDARD 17)
 
 # RPP Version
-set(VERSION "1.14.0")
+set(VERSION "1.9.6")
 
 # Set Project Version and Language
 project(rpp VERSION ${VERSION} LANGUAGES CXX)
@@ -246,8 +246,8 @@ if("${BACKEND}" STREQUAL "HIP")
         set(RPP_BACKEND_HIP 1)
         # To use RPP_BACKEND_HIP
         add_definitions(-DRPP_BACKEND_HIP=${RPP_BACKEND_HIP})
-	if (EXISTS ${ROCM_PATH}/llvm/bin/clang++)
-		set(COMPILER_FOR_HIP ${ROCM_PATH}/llvm/bin/clang++)
+	if (EXISTS ${ROCM_PATH}/lib/llvm/bin/clang++)
+		set(COMPILER_FOR_HIP ${ROCM_PATH}/lib/llvm/bin/clang++)
 	else()
 		set(COMPILER_FOR_HIP ${CMAKE_CXX_COMPILER})
 	endif()

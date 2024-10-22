@@ -112,13 +112,26 @@ int main(int argc, char **argv)
     }
     set_audio_descriptor_dims_and_strides(dstDescPtr, batchSize, maxDstHeight, maxDstWidth, maxDstChannels, offsetInBytes);
     // set buffer sizes for src/dst
-    iBufferSize = static_cast<Rpp64u>(srcDescPtr->h) * static_cast<Rpp64u>(srcDescPtr->w) * static_cast<Rpp64u>(srcDescPtr->c) * static_cast<Rpp64u>(srcDescPtr->n);
-    oBufferSize = static_cast<Rpp64u>(dstDescPtr->h) * static_cast<Rpp64u>(dstDescPtr->w) * static_cast<Rpp64u>(dstDescPtr->c) * static_cast<Rpp64u>(dstDescPtr->n);
+    if(testCase == 7)
+    {
+        iBufferSize = (Rpp64u)MEL_FILTER_BANK_MAX_HEIGHT * (Rpp64u)srcDescPtr->w * (Rpp64u)srcDescPtr->c * (Rpp64u)srcDescPtr->n;
+        oBufferSize = (Rpp64u)MEL_FILTER_BANK_MAX_HEIGHT * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
+    }
+    else
+    {
+        iBufferSize = (Rpp64u)srcDescPtr->h * (Rpp64u)srcDescPtr->w * (Rpp64u)srcDescPtr->c * (Rpp64u)srcDescPtr->n;
+        oBufferSize = (Rpp64u)dstDescPtr->h * (Rpp64u)dstDescPtr->w * (Rpp64u)dstDescPtr->c * (Rpp64u)dstDescPtr->n;
+    }
 
     // compute maximum possible buffer size of resample
-    unsigned long long resampleMaxBufferSize = dstDescPtr->n * dstDescPtr->strides.nStride * 1.15;
+    Rpp64u resampleMaxBufferSize = dstDescPtr->n * dstDescPtr->strides.nStride * 1.15;
     if (testCase == 6)
         oBufferSize = resampleMaxBufferSize;
+
+    // compute maximum possible buffer size of spectrogram
+    Rpp64u spectrogramMaxBufferSize = 257 * 3754 * dstDescPtr->n;
+    if (testCase == 4)
+        oBufferSize = spectrogramMaxBufferSize;
 
     // allocate hip buffers for input & output
     Rpp32f *inputf32 = static_cast<Rpp32f *>(calloc(iBufferSize, sizeof(Rpp32f)));
@@ -145,8 +158,8 @@ int main(int argc, char **argv)
     Rpp32s *detectedIndex = nullptr, *detectionLength = nullptr;
     if(testCase == 0)
     {
-        CHECK_RETURN_STATUS(hipHostMalloc(&detectedIndex, batchSize * sizeof(Rpp32f)));
-        CHECK_RETURN_STATUS(hipHostMalloc(&detectionLength, batchSize * sizeof(Rpp32f)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&detectedIndex, batchSize * sizeof(Rpp32s)));
+        CHECK_RETURN_STATUS(hipHostMalloc(&detectionLength, batchSize * sizeof(Rpp32s)));
     }
 
     // declare pointer of type RpptResamplingWindow used for resample augmentation
@@ -248,6 +261,40 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 4:
+                {
+                    testCaseName = "spectrogram";
+                    bool centerWindows = true;
+                    bool reflectPadding = true;
+                    Rpp32f *windowFn = NULL;
+                    Rpp32s power = 2;
+                    Rpp32s windowLength = 320;
+                    Rpp32s windowStep = 160;
+                    Rpp32s nfft = 512;
+                    dstDescPtr->layout = RpptLayout::NFT;
+
+                    int windowOffset = 0;
+                    if(!centerWindows)
+                        windowOffset = windowLength;
+
+                    maxDstWidth = 0;
+                    maxDstHeight = 0;
+                    init_spectrogram(srcDescPtr, dstDescPtr, dstDims, srcLengthTensor, windowLength, 
+                                     windowStep, windowOffset, nfft, maxDstHeight, maxDstWidth);
+
+                    // check if the output buffer size is greater than predefined spectrogramMaxBufferSize
+                    if (dstDescPtr->n * dstDescPtr->strides.nStride > spectrogramMaxBufferSize)
+                    {
+                        std::cout << "\nError! Requested spectrogram output size is greater than predefined max size for spectrogram in test suite."
+                                     "\nPlease modify spectrogramMaxBufferSize value in test suite for running spectrogram kernel" << std::endl;
+                        exit(0);
+                    }
+
+                    startWallTime = omp_get_wtime();
+                    rppt_spectrogram_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcLengthTensor, centerWindows, reflectPadding, windowFn, nfft, power, windowLength, windowStep, handle);
+
+                    break;
+                }
                 case 6:
                 {
                     testCaseName = "resample";
@@ -286,6 +333,32 @@ int main(int argc, char **argv)
 
                     startWallTime = omp_get_wtime();
                     rppt_resample_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, inRateTensor, outRateTensor, srcDimsTensor, *window, handle);
+
+                    break;
+                }
+                case 7:
+                {
+                    testCaseName = "mel_filter_bank";
+
+                    Rpp32f sampleRate = 16000;
+                    Rpp32f minFreq = 0.0;
+                    Rpp32f maxFreq = sampleRate / 2;
+                    RpptMelScaleFormula melFormula = RpptMelScaleFormula::SLANEY;
+                    Rpp32s numFilter = 80;
+                    bool normalize = true;
+                    srcDimsTensor[0] = 257;
+                    srcDimsTensor[1] = 225;
+                    srcDimsTensor[2] = 257;
+                    srcDimsTensor[3] = 211;
+                    srcDimsTensor[4] = 257;
+                    srcDimsTensor[5] = 214;
+
+                    init_mel_filter_bank(&inputf32, &outputf32, srcDescPtr, dstDescPtr, dstDims, offsetInBytes, numFilter, batchSize, srcDimsTensor, scriptPath, testType);
+
+                    CHECK_RETURN_STATUS(hipMemcpy(d_inputf32, inputf32, iBufferSize * sizeof(Rpp32f), hipMemcpyHostToDevice));
+
+                    startWallTime = omp_get_wtime();
+                    rppt_mel_filter_bank_gpu(d_inputf32, srcDescPtr, d_outputf32, dstDescPtr, srcDimsTensor, maxFreq, minFreq, melFormula, numFilter, sampleRate, normalize, handle);
 
                     break;
                 }
