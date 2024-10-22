@@ -2,6 +2,12 @@
 
 Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/rpp/en/latest](https://rocm.docs.amd.com/projects/rpp/en/latest)
 
+## RPP 1.9.6 (unreleased)
+
+### Changes
+
+* RPP Warp Perspective on HOST and HIP
+
 ## RPP 1.9.3 (unreleased)
 
 ### Changes
