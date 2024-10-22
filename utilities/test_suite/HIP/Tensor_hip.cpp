@@ -423,10 +423,6 @@ int main(int argc, char **argv)
     if(testCase == 28)
         CHECK_RETURN_STATUS(hipHostMalloc(&perspectiveTensorPtr, batchSize * 9 * sizeof(Rpp32f)));
 
-    Rpp32f *perspectiveTensorPtr = NULL
-    if(testCase == 28)
-        CHECK_RETURN_STATUS(hipHostMalloc(&perspectiveTensorPtr, batchSize * 9 * sizeof(Rpp32f)));
-
     // case-wise RPP API and measure time script for Unit and Performance test
     cout << "\nRunning " << func << " " << numRuns << " times (each time with a batch size of " << batchSize << " images) and computing mean statistics...";
     for(int iterCount = 0; iterCount < noOfIterations; iterCount++)
