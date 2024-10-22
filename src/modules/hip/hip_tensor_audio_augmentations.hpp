@@ -31,5 +31,6 @@ SOFTWARE.
 #include "kernel/pre_emphasis_filter.hpp"
 #include "kernel/to_decibels.hpp"
 #include "kernel/resample.hpp"
+#include "kernel/spectrogram.hpp"
 
 #endif // HIP_TENSOR_AUDIO_AUGMENTATIONS_HPP
