@@ -352,7 +352,7 @@ void normalize_3D_tensor_avx_axis3(Rpp32f *srcPtr, RpptGenericDescPtr srcGeneric
 }
 
 // Computes normalize for ND non toggle variants for i8 dataype
-void normalize_ND_tensor_nontoggle(Rpp32s *srcPtr, Rpp32u *srcStride, Rpp32f *dstPtr, Rpp32f *meanPtr, Rpp32f *multiplierPtr,
+void normalize_ND_tensor_nontoggle(Rpp8s *srcPtr, Rpp32u *srcStride, Rpp32f *dstPtr, Rpp32f *meanPtr, Rpp32f *multiplierPtr,
                                    Rpp32f shift, Rpp32u *paramStride, Rpp32u *length, Rpp32u tensorDim, Rpp32u level, Rpp32u& idx)
 {
     Rpp32u idx1 = 0;
@@ -371,7 +371,7 @@ void normalize_ND_tensor_nontoggle(Rpp32s *srcPtr, Rpp32u *srcStride, Rpp32f *ds
         idx1 = idx;
         for (Rpp32u i = 0; i < length[level]; i++)
         {
-            normalize_ND_tensor_nontoggle(srcPtr, srcStride, dstPtr, meanPtr, multiplierPtr, shift, paramStride, length + 1, tensorDim - 1, level + 1, idx);
+            normalize_ND_tensor_nontoggle(srcPtr, srcStride, dstPtr, meanPtr, multiplierPtr, shift, paramStride, length, tensorDim - 1, level + 1, idx);
             if(i < length[level] - 1)
                 idx = (!paramStride[level]) ? idx1 : idx + paramStride[level];
             dstPtr += srcStride[level];
@@ -405,7 +405,7 @@ void normalize_ND_tensor_nontoggle(T1 *srcPtr, Rpp32u *srcStride, T2 *dstPtr, Rp
         idx1 = idx;
         for (Rpp32u i = 0; i < length[level]; i++)
         {
-            normalize_ND_tensor_nontoggle(srcPtr, srcStride, dstPtr, meanPtr, multiplierPtr, shift, paramStride, length + 1, tensorDim - 1, level + 1, idx);
+            normalize_ND_tensor_nontoggle(srcPtr, srcStride, dstPtr, meanPtr, multiplierPtr, shift, paramStride, length, tensorDim - 1, level + 1, idx);
             if(i < length[level] - 1)
                 idx = (!paramStride[level]) ? idx1 : idx + paramStride[level];
             dstPtr += srcStride[level];
@@ -737,28 +737,29 @@ RppStatus normalize_f32_f32_host_tensor(Rpp32f *srcPtr,
             }
 
             Rpp32u paramStride[tensorDims], srcStride[tensorDims];
-            collapse_axis(&tensorDims, axis, length, newAxis, newDims, &lastNormAxis);
-            compute_strides(srcStride, newDims, tensorDims);
+            Rpp32u newTensorDims = tensorDims;
+            collapse_axis(&newTensorDims, axis, length, newAxis, newDims, &lastNormAxis);
+            compute_strides(srcStride, newDims, newTensorDims);
 
             if(computeMeanStddev & 1) // Check if mean is to be computed internally
             {
-                compute_ND_mean(srcPtrChannel, meanTensor, newDims, srcStride, newAxis, tensorDims, 0, 0, size, 0, lastNormAxis);
+                compute_ND_mean(srcPtrChannel, meanTensor, newDims, srcStride, newAxis, newTensorDims, 0, 0, size, 0, lastNormAxis);
                 Rpp32f normFactor = 1.0 / totalElements;
                 for(int i = 0; i < size; i++)
                     meanTensor[i] *= normFactor;
             }
             if(computeMeanStddev & 2) // Check if stddev is to be computed internally
             {
-                compute_ND_stddev(srcPtrChannel, meanTensor, stdDevTensor, newDims, srcStride, newAxis, tensorDims, 0, 0, size, 0, lastNormAxis);
+                compute_ND_stddev(srcPtrChannel, meanTensor, stdDevTensor, newDims, srcStride, newAxis, newTensorDims, 0, 0, size, 0, lastNormAxis);
                 Rpp32f normFactor = (Rpp32f)(1.0 / totalElements);
                 rpp_rsqrt_avx(stdDevTensor, (Rpp32s)size, 0, normFactor, scale);
             }
 
-            for(Rpp32u i = 0; i < tensorDims; i++)
+            for(Rpp32u i = 0; i < newTensorDims; i++)
                 paramStride[i] = !newAxis[i];
 
             Rpp32u idx = 0;
-            normalize_ND_tensor_nontoggle(srcPtrChannel, srcStride, dstPtrTemp, meanTensor, stdDevTensor, shift, paramStride, newDims, tensorDims, 0, idx);
+            normalize_ND_tensor_nontoggle(srcPtrChannel, srcStride, dstPtrTemp, meanTensor, stdDevTensor, shift, paramStride, newDims, newTensorDims, 0, idx);
         }
     }
 
@@ -839,28 +840,29 @@ RppStatus normalize_generic_host_tensor(T1 *srcPtr,
         }
 
         Rpp32u paramStride[tensorDims], srcStride[tensorDims];
-        collapse_axis(&tensorDims, axis, length, newAxis, newDims, &lastNormAxis);
-        compute_strides(srcStride, newDims, tensorDims);
+        Rpp32u newTensorDims = tensorDims;
+        collapse_axis(&newTensorDims, axis, length, newAxis, newDims, &lastNormAxis);
+        compute_strides(srcStride, newDims, newTensorDims);
 
         if(computeMeanStddev & 1) // Check if mean is to be computed internally
         {
-            compute_ND_mean(srcPtrChannel, meanTensor, newDims, srcStride, newAxis, tensorDims, 0, 0, size, 0, lastNormAxis);
+            compute_ND_mean(srcPtrChannel, meanTensor, newDims, srcStride, newAxis, newTensorDims, 0, 0, size, 0, lastNormAxis);
             Rpp32f normFactor = 1.0 / totalElements;
             for(int i = 0; i < size; i++)
                 meanTensor[i] *= normFactor;
         }
         if(computeMeanStddev & 2) // Check if stddev is to be computed internally
         {
-            compute_ND_stddev(srcPtrChannel, meanTensor, stdDevTensor, newDims, srcStride, newAxis, tensorDims, 0, 0, size, 0, lastNormAxis);
+            compute_ND_stddev(srcPtrChannel, meanTensor, stdDevTensor, newDims, srcStride, newAxis, newTensorDims, 0, 0, size, 0, lastNormAxis);
             Rpp32f normFactor = (Rpp32f)(1.0 / totalElements);
             rpp_rsqrt_avx(stdDevTensor, (Rpp32s)size, 0, normFactor, scale);
         }
 
-        for(int i = 0; i < tensorDims; i++)
+        for(int i = 0; i < newTensorDims; i++)
             paramStride[i] = !newAxis[i];
 
         Rpp32u idx = 0;
-        normalize_ND_tensor_nontoggle(srcPtrChannel, srcStride, dstPtrTemp, meanTensor, stdDevTensor, shift, paramStride, newDims, tensorDims, 0, idx);
+        normalize_ND_tensor_nontoggle(srcPtrChannel, srcStride, dstPtrTemp, meanTensor, stdDevTensor, shift, paramStride, newDims, newTensorDims, 0, idx);
     }
 
     return RPP_SUCCESS;

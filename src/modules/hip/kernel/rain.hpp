@@ -193,7 +193,7 @@ RppStatus hip_exec_rain_tensor(T *srcPtr,
 
     Rpp32f rainPercent = rainPercentage * 0.004f; //Scaling factor to convert percentage to a range suitable for rain effect intensity
     Rpp32u numDrops = static_cast<Rpp32u>(rainPercent * srcDescPtr->h * srcDescPtr->w);
-    Rpp32f slant = sin(slantAngle) * dropLength;
+    Rpp32f slant = sin(slantAngle) * rainHeight;
 
     // Seed the random number generator and set up the uniform distributions
     std::mt19937 rng(std::random_device{}());
