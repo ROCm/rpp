@@ -15,9 +15,9 @@ __device__ __forceinline__ void fog_grey_hip_compute(d_float8 *r_f8, d_float8 *g
     r_f8->f4[0] = (r_f8->f4[0] * oneMinusGreyFactor_f4) + grey_f4[0];
     g_f8->f4[0] = (g_f8->f4[0] * oneMinusGreyFactor_f4) + grey_f4[0];
     b_f8->f4[0] = (b_f8->f4[0] * oneMinusGreyFactor_f4) + grey_f4[0];
-    r_f8->f4[0] = (r_f8->f4[0] * oneMinusGreyFactor_f4) + grey_f4[1];
-    g_f8->f4[0] = (g_f8->f4[0] * oneMinusGreyFactor_f4) + grey_f4[1];
-    b_f8->f4[0] = (b_f8->f4[0] * oneMinusGreyFactor_f4) + grey_f4[1];
+    r_f8->f4[1] = (r_f8->f4[1] * oneMinusGreyFactor_f4) + grey_f4[1];
+    g_f8->f4[1] = (g_f8->f4[1] * oneMinusGreyFactor_f4) + grey_f4[1];
+    b_f8->f4[1] = (b_f8->f4[1] * oneMinusGreyFactor_f4) + grey_f4[1];
 }
 
 __device__ __forceinline__ void fog_hip_compute(uchar *srcPtr, d_float8 *src_f8, d_float8 *dst_f8, d_float8 *maskAlpha_f8, d_float8 *maskIntensity_f8, float4 *intensityFactor_f4)
