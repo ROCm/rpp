@@ -182,7 +182,7 @@ RppStatus hip_exec_rain_tensor(T *srcPtr,
                                Rpp32f rainPercentage,
                                Rpp32u rainWidth,
                                Rpp32u rainHeight,
-                               Rpp32s slant,
+                               Rpp32f slantAngle,
                                Rpp32f *alpha,
                                RpptROIPtr roiTensorPtrSrc,
                                RpptRoiType roiType,
@@ -191,8 +191,9 @@ RppStatus hip_exec_rain_tensor(T *srcPtr,
     if (roiType == RpptRoiType::LTRB)
         hip_exec_roi_converison_ltrb_to_xywh(roiTensorPtrSrc, handle);
 
-    Rpp32f rainPercent = rainPercentage * 0.004f;
+    Rpp32f rainPercent = rainPercentage * 0.004f; //Scaling factor to convert percentage to a range suitable for rain effect intensity
     Rpp32u numDrops = static_cast<Rpp32u>(rainPercent * srcDescPtr->h * srcDescPtr->w);
+    Rpp32f slant = sin(slantAngle) * dropLength;
 
     // Seed the random number generator and set up the uniform distributions
     std::mt19937 rng(std::random_device{}());

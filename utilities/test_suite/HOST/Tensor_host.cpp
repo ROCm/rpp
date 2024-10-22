@@ -637,7 +637,7 @@ int main(int argc, char **argv)
                     Rpp32f rainPercentage = 7;
                     Rpp32u rainHeight = 6;
                     Rpp32u rainWidth = 1;
-                    Rpp32s slant = 0;
+                    Rpp32f slantAngle = 0;
                     Rpp32f alpha[batchSize];
                     for (int i = 0; i < batchSize; i++)
                         alpha[i] = 0.4;
@@ -645,7 +645,7 @@ int main(int argc, char **argv)
                     startWallTime = omp_get_wtime();
                     startCpuTime = clock();
                     if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
-                        rppt_rain_host(input, srcDescPtr, output, dstDescPtr, rainPercentage, rainWidth, rainHeight, slant, alpha, roiTensorPtrSrc, roiTypeSrc, handle);
+                        rppt_rain_host(input, srcDescPtr, output, dstDescPtr, rainPercentage, rainWidth, rainHeight, slantAngle, alpha, roiTensorPtrSrc, roiTypeSrc, handle);
                     else
                         missingFuncFlag = 1;
 
