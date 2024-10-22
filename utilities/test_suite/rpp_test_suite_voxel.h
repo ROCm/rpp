@@ -36,6 +36,7 @@ SOFTWARE.
 #include <unistd.h>
 #include <dirent.h>
 #include <map>
+#include <iomanip>
 #include "rpp.h"
 #include "nifti1.h"
 
