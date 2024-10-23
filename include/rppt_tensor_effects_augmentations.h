@@ -657,7 +657,7 @@ RppStatus rppt_glitch_gpu(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstP
  * \param [in] rainHeight Height of the rain drops in pixels. To be tuned by user depending on size of the image.
  * \param [in] slantAngle Slant angle of the rain drops (positive value for right slant, negative for left slant). A single Rpp32s/f representing the slant of raindrops in degrees.
  *                        Values range from [-90, 90], where -90 represents extreme left slant, 0 is vertical, and 90 is extreme right slant.
- * \param [in] alpha An array of alpha blending values to be used for each image in the batch(0 <= alpha <= 1 for each image in batch)
+ * \param [in] alpha An array of alpha blending values to be used for blending the rainLayer and the input image for each image in the batch (0 ≤ alpha ≤ 1 for each image in the batch).
  * \param [in] roiTensorPtrSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HOST handle created with <tt>\ref rppCreateWithBatchSize()</tt>
@@ -684,7 +684,7 @@ RppStatus rppt_rain_host(RppPtr_t srcPtr, RpptDescPtr srcDescPtr, RppPtr_t dstPt
  * \param [in] rainHeight Height of the rain drops in pixels. To be tuned by user depending on size of the image.
  * \param [in] slantAngle Slant angle of the rain drops (positive value for right slant, negative for left slant). A single Rpp32s/f representing the slant of raindrops in degrees.
  *                        Values range from [-90, 90], where -90 represents extreme left slant, 0 is vertical, and 90 is extreme right slant.
- * \param [in] alpha An array of alpha blending values in pinned / HIP memory, used for each image in the batch.(0 <= alpha <= 1 for each image in batch)
+ * \param [in] alpha An array of alpha blending values in pinned / HIP memory is used for blending the rainLayer and the input image for each image in the batch (0 ≤ alpha ≤ 1 for each image in the batch).
  * \param [in] roiTensorPtrSrc ROI data for each image in source tensor (2D tensor of size batchSize * 4, in either format - XYWH(xy.x, xy.y, roiWidth, roiHeight) or LTRB(lt.x, lt.y, rb.x, rb.y))
  * \param [in] roiType ROI type used (RpptRoiType::XYWH or RpptRoiType::LTRB)
  * \param [in] rppHandle RPP HIP handle created with <tt>\ref rppCreateWithStreamAndBatchSize()</tt>
