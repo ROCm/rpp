@@ -33,45 +33,4 @@ RppStatus pre_emphasis_filter_host_tensor(Rpp32f *srcPtr,
                                           Rpp32s *srcLengthTensor,
                                           Rpp32f *coeffTensor,
                                           Rpp32u borderType,
-                                          rpp::Handle& handle)
-{
-    Rpp32u numThreads = handle.GetNumThreads();
-
-    omp_set_dynamic(0);
-#pragma omp parallel for num_threads(numThreads)
-    for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
-    {
-        Rpp32f *srcPtrTemp = srcPtr + batchCount * srcDescPtr->strides.nStride;
-        Rpp32f *dstPtrTemp = dstPtr + batchCount * dstDescPtr->strides.nStride;
-        Rpp32s bufferLength = srcLengthTensor[batchCount];
-        Rpp32f coeff = coeffTensor[batchCount];
-        Rpp32f border = (borderType == RpptAudioBorderType::CLAMP) ? srcPtrTemp[0] :
-                        (borderType == RpptAudioBorderType::REFLECT) ? srcPtrTemp[1] : 0;
-        dstPtrTemp[0] = srcPtrTemp[0] - coeff * border;
-
-        Rpp32s vectorIncrement = 8;
-        Rpp32s alignedLength = (bufferLength / 8) * 8 - 8;
-        __m256 pCoeff = _mm256_set1_ps(coeff);
-
-        Rpp32s vectorLoopCount = 1;
-        dstPtrTemp++;
-        srcPtrTemp++;
-        for(; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
-        {
-            __m256 pSrc[2];
-            pSrc[0] = _mm256_loadu_ps(srcPtrTemp);
-            pSrc[1] = _mm256_loadu_ps(srcPtrTemp - 1);
-            pSrc[1] = _mm256_sub_ps(pSrc[0], _mm256_mul_ps(pSrc[1], pCoeff));
-            _mm256_storeu_ps(dstPtrTemp, pSrc[1]);
-            srcPtrTemp += vectorIncrement;
-            dstPtrTemp += vectorIncrement;
-        }
-        for(; vectorLoopCount < bufferLength; vectorLoopCount++)
-        {
-            *dstPtrTemp++ = *srcPtrTemp - coeff * (*(srcPtrTemp - 1));
-            srcPtrTemp++;
-        }
-    }
-
-    return RPP_SUCCESS;
-}
+                                          rpp::Handle& handle);

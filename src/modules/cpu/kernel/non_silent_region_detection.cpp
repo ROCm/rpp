@@ -83,8 +83,14 @@ the entire MMS buffer and compare these values with the calculated cutoff value
       data compute length with the formulae, length = ending index - beginning index + 1
 */
 
-#include "rppdefs.h"
-#include "rpp_cpu_common.hpp"
+#include "non_silent_region_detection.hpp"
+#include <omp.h>
+#include <algorithm>
+
+Rpp32f getSquare(Rpp32f &value)
+{
+    return (value * value);
+}
 
 RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
                                                   RpptDescPtr srcDescPtr,
@@ -95,4 +101,93 @@ RppStatus non_silent_region_detection_host_tensor(Rpp32f *srcPtr,
                                                   Rpp32s windowLength,
                                                   Rpp32f referencePower,
                                                   Rpp32s resetInterval,
-                                                  rpp::Handle& handle);
+                                                  rpp::Handle& handle)
+{
+    Rpp32u numThreads = handle.GetNumThreads();
+    const Rpp32f cutOff = std::pow(10.0f, cutOffDB * 0.1f);
+
+    omp_set_dynamic(0);
+#pragma omp parallel for num_threads(numThreads)
+    for(int batchCount = 0; batchCount < srcDescPtr->n; batchCount++)
+    {
+        Rpp32f *srcPtrTemp = srcPtr + batchCount * srcDescPtr->strides.nStride;
+        Rpp32s srcLength = srcLengthTensor[batchCount];
+
+        // mmsBuffer length is equal to input audio length and can vary dynamically for each input in a batch
+        // preallocating a static buffer for entire batchsize will be too big, so allocate mmsBuffer for each sample dynamically
+        Rpp32f *mmsBuffer = new Rpp32f[srcLength]{};
+        bool referenceMax = (referencePower == 0.0f);
+
+        // set reset interval based on the user input
+        Rpp32s resetLength = (resetInterval == -1) ? srcLength : resetInterval;
+
+        // calculate moving mean square of input
+        Rpp32f meanFactor = 1.0f / windowLength;
+        Rpp32s windowBegin = -windowLength + 1;
+        for (Rpp32s outPos = 0; outPos < srcLength;)
+        {
+            // reset the sumOfSquares values to 0 and recompute the starting value required for next block
+            Rpp32f sumOfSquares = 0.0f;
+            for (Rpp32s i = std::max<Rpp32s>(windowBegin, 0); i < outPos; i++)
+                sumOfSquares += getSquare(srcPtrTemp[i]);
+
+            Rpp32s intervalEndIdx = std::min<Rpp32s>(srcLength, outPos + resetLength);
+            for (; outPos < intervalEndIdx; outPos++, windowBegin++)
+            {
+                sumOfSquares += getSquare(srcPtrTemp[outPos]);
+                mmsBuffer[outPos] = sumOfSquares * meanFactor;
+                if (windowBegin >= 0)
+                    sumOfSquares -= getSquare(srcPtrTemp[windowBegin]);
+            }
+        }
+
+        // convert cutoff from DB to magnitude
+        Rpp32f base = (referenceMax) ? *std::max_element(mmsBuffer, mmsBuffer + srcLength) : referencePower;
+        Rpp32f cutOffMag = base * cutOff;
+
+        // calculate begining index, length of non silent region from the mms buffer
+        Rpp32s endIdx = srcLength;
+        Rpp32s beginIdx = endIdx;
+        Rpp32s detectBegin, detectEnd;
+        for(int i = 0; i < endIdx; i++)
+        {
+            if(mmsBuffer[i] >= cutOffMag)
+            {
+                beginIdx = i;
+                break;
+            }
+        }
+        if(beginIdx == endIdx)
+        {
+            detectBegin = 0;
+            detectEnd = 0;
+        }
+        else
+        {
+            for(int i = endIdx - 1; i >= beginIdx; i--)
+            {
+                if(mmsBuffer[i] >= cutOffMag)
+                {
+                    endIdx = i;
+                    break;
+                }
+            }
+            detectBegin = beginIdx;
+            detectEnd = endIdx - beginIdx + 1;
+        }
+
+        // if both starting index and length of nonsilent region is not 0
+        // adjust the values as per the windowLength
+        if(detectBegin != 0 && detectEnd != 0)
+        {
+            Rpp32s newBegin = std::max<Rpp32s>(detectBegin - (windowLength - 1), 0);
+            detectEnd += detectBegin - newBegin;
+            detectBegin = newBegin;
+        }
+
+        detectedIndexTensor[batchCount] = detectBegin;
+        detectionLengthTensor[batchCount] = detectEnd;
+        delete[] mmsBuffer;
+    }
+    return RPP_SUCCESS;
+}
