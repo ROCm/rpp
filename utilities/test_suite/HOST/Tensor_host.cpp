@@ -66,7 +66,7 @@ int main(int argc, char **argv)
 
     bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23 || testCase == 24 || testCase == 79);
     bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 33 || testCase == 61 || testCase == 63 || testCase == 65 || testCase == 68);
-    bool randomOutputCase = (testCase == 6 || testCase == 8 || testCase == 84);
+    bool randomOutputCase = (testCase == 6 || testCase == 8 || testCase == 11 || testCase == 84);
     bool nonQACase = (testCase == 24);
     bool interpolationTypeCase = (testCase == 21 || testCase == 23 || testCase == 24 || testCase == 79);
     bool reductionTypeCase = (testCase == 87 || testCase == 88 || testCase == 89 || testCase == 90 || testCase == 91);
@@ -627,6 +627,27 @@ int main(int argc, char **argv)
                             break;
                         }
                     }
+
+                    break;
+                }
+                case 11:
+                {
+                    testCaseName = "rain";
+
+                    Rpp32f rainPercentage = 7;
+                    Rpp32u rainHeight = 6;
+                    Rpp32u rainWidth = 1;
+                    Rpp32f slantAngle = 0;
+                    Rpp32f alpha[batchSize];
+                    for (int i = 0; i < batchSize; i++)
+                        alpha[i] = 0.4;
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_rain_host(input, srcDescPtr, output, dstDescPtr, rainPercentage, rainWidth, rainHeight, slantAngle, alpha, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
 
                     break;
                 }

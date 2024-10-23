@@ -38,5 +38,6 @@ SOFTWARE.
 #include "kernel/vignette.hpp"
 #include "kernel/resize.hpp"  //pixelate dependency
 #include "kernel/erase.hpp"
+#include "kernel/rain.hpp"
 
 #endif // HIP_TENSOR_EFFECTS_AUGMENTATIONS_HPP
