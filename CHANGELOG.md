@@ -2,11 +2,23 @@
 
 Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/rpp/en/latest](https://rocm.docs.amd.com/projects/rpp/en/latest)
 
-## RPP 1.13.0 (Unreleased)
+## RPP 1.9.8 (Unreleased)
 
 ### Changes
 
-* RPP Tensor Rain support on HOST and HIP
+RPP Rain augmentation on HOST and HIP
+
+## RPP 1.9.3 (unreleased)
+
+### Changes
+
+* RPP Audio Support HIP - Spectrogram
+
+## RPP 1.9.2 (Unreleased)
+
+### Changes
+
+RPP Audio Support HIP - Mel Filter Bank
 
 ## RPP 1.9.1 for ROCm 6.3.0
 
