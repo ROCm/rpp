@@ -25,7 +25,12 @@ SOFTWARE.
 #include "rppdefs.h"
 #include "rppi_validate.hpp"
 #include "rppt_tensor_statistical_operations.h"
-#include "cpu/host_tensor_statistical_operations.hpp"
+#include "cpu/kernel/tensor_sum.hpp"
+#include "cpu/kernel/tensor_min.hpp"
+#include "cpu/kernel/tensor_max.hpp"
+#include "cpu/kernel/tensor_mean.hpp"
+#include "cpu/kernel/tensor_stddev.hpp"
+#include "cpu/kernel/normalize.hpp"
 
 #ifdef HIP_COMPILE
     #include <hip/hip_fp16.h>

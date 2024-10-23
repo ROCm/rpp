@@ -25,7 +25,12 @@ SOFTWARE.
 #include "rppdefs.h"
 #include "rppi_validate.hpp"
 #include "rppt_tensor_arithmetic_operations.h"
-#include "cpu/host_tensor_arithmetic_operations.hpp"
+#include "cpu/kernel/fused_multiply_add_scalar.hpp"
+#include "cpu/kernel/add_scalar.hpp"
+#include "cpu/kernel/subtract_scalar.hpp"
+#include "cpu/kernel/multiply_scalar.hpp"
+#include "cpu/kernel/magnitude.hpp"
+#include "cpu/kernel/log.hpp"
 
 #ifdef HIP_COMPILE
     #include <hip/hip_fp16.h>
