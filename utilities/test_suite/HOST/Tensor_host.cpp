@@ -36,14 +36,10 @@ SOFTWARE.
 #include <unistd.h>
 #include <time.h>
 #include <omp.h>
-#include <half/half.hpp>
 #include <fstream>
 
 using namespace cv;
 using namespace std;
-
-using half_float::half;
-typedef half Rpp16f;
 
 int main(int argc, char **argv)
 {
