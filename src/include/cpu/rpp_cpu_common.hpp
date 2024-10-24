@@ -510,24 +510,24 @@ inline int power_function(int a, int b)
     return product;
 }
 
-inline void saturate_pixel(Rpp32f pixel, Rpp8u* dst)
+inline void saturate_pixel(Rpp32f &pixel, Rpp8u* dst)
 {
-    *dst = RPPPIXELCHECK(pixel);
+    *dst = static_cast<Rpp8u>(RPPPIXELCHECK(std::nearbyintf(pixel)));
 }
 
-inline void saturate_pixel(Rpp32f pixel, Rpp8s* dst)
+inline void saturate_pixel(Rpp32f &pixel, Rpp8s* dst)
 {
-    *dst = (Rpp8s)RPPPIXELCHECKI8(pixel - 128);
+    *dst = static_cast<Rpp8s>(RPPPIXELCHECKI8(std::nearbyintf(pixel) - 128));
 }
 
-inline void saturate_pixel(Rpp32f pixel, Rpp32f* dst)
+inline void saturate_pixel(Rpp32f &pixel, Rpp32f* dst)
 {
-    *dst = (Rpp32f)pixel;
+    *dst = RPPPIXELCHECKF32(pixel);
 }
 
-inline void saturate_pixel(Rpp32f pixel, Rpp16f* dst)
+inline void saturate_pixel(Rpp32f &pixel, Rpp16f* dst)
 {
-    *dst = (Rpp16f)pixel;
+    *dst = static_cast<Rpp16f>(RPPPIXELCHECKF32(pixel));
 }
 
 template <typename T>
@@ -6561,6 +6561,42 @@ inline void compute_transpose4x8_avx(__m256 *pSrc, __m128 *pDst)
     pDst[5] = _mm256_extractf128_ps(pSrc[1], 1);    /* extract [P06|P14|P22|P30] */
     pDst[6] = _mm256_extractf128_ps(pSrc[2], 1);    /* extract [P07|P15|P23|P31] */
     pDst[7] = _mm256_extractf128_ps(pSrc[3], 1);    /* extract [P08|P16|P24|P32] */
+}
+
+// Compute hanning window
+inline RPP_HOST_DEVICE void hann_window(Rpp32f *output, Rpp32s windowSize)
+{
+    Rpp64f a = (2.0 * M_PI) / windowSize;
+    for (Rpp32s t = 0; t < windowSize; t++)
+    {
+        Rpp64f phase = a * (t + 0.5);
+        output[t] = (0.5 * (1.0 - std::cos(phase)));
+    }
+}
+
+// Compute number of spectrogram windows
+inline RPP_HOST_DEVICE Rpp32s get_num_windows(Rpp32s length, Rpp32s windowLength, Rpp32s windowStep, bool centerWindows)
+{
+    if (!centerWindows)
+        length -= windowLength;
+    return ((length / windowStep) + 1);
+}
+
+// Compute reflect start idx to pad
+inline RPP_HOST_DEVICE Rpp32s get_idx_reflect(Rpp32s loc, Rpp32s minLoc, Rpp32s maxLoc)
+{
+    if (maxLoc - minLoc < 2)
+        return maxLoc - 1;
+    for (;;)
+    {
+        if (loc < minLoc)
+            loc = 2 * minLoc - loc;
+        else if (loc >= maxLoc)
+            loc = 2 * maxLoc - 2 - loc;
+        else
+            break;
+    }
+    return loc;
 }
 
 #endif //RPP_CPU_COMMON_H

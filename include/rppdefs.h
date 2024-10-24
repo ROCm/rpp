@@ -70,10 +70,11 @@ SOFTWARE.
 #define RPP_HOST_DEVICE
 #endif
 
-const float ONE_OVER_6 = 1.0f / 6;
-const float ONE_OVER_3 = 1.0f / 3;
-const float ONE_OVER_255 = 1.0f / 255;
-const uint MMS_MAX_SCRATCH_MEMORY = 76800000; // maximum scratch memory size (number of floats) needed for MMS buffer in RNNT training
+const float ONE_OVER_6                      = 1.0f / 6;
+const float ONE_OVER_3                      = 1.0f / 3;
+const float ONE_OVER_255                    = 1.0f / 255;
+const uint MMS_MAX_SCRATCH_MEMORY           = 115293120; // maximum scratch memory size (in number of floats) needed for MMS buffer in RNNT training
+const uint SPECTROGRAM_MAX_SCRATCH_MEMORY   = 372877312; // maximum scratch memory size (in number of floats) needed for spectrogram HIP kernel in RNNT training
 
 /******************** RPP typedefs ********************/
 
@@ -154,7 +155,9 @@ typedef enum
     /*! \brief Scratch memory size needed is beyond the bounds (Needs to adhere to function specification.) \ingroup group_rppdefs */
     RPP_ERROR_OUT_OF_BOUND_SCRATCH_MEMORY_SIZE    = -22,
     /*! \brief Number of src dims is invalid. (Needs to adhere to function specification.) \ingroup group_rppdefs */
-    RPP_ERROR_INVALID_SRC_DIMS          = -23
+    RPP_ERROR_INVALID_SRC_DIMS          = -23,
+    /*! \brief Number of dst dims is invalid. (Needs to adhere to function specification.) \ingroup group_rppdefs */
+    RPP_ERROR_INVALID_DST_DIMS          = -24
 } RppStatus;
 
 /*! \brief RPP rppStatus_t type enums
@@ -747,6 +750,67 @@ typedef struct RpptResamplingWindow
     std::vector<Rpp32f> lookup;
     __m128 pCenter, pScale;
 } RpptResamplingWindow;
+
+/*! \brief Base class for Mel scale conversions.
+ * \ingroup group_rppdefs
+ */
+struct BaseMelScale
+{
+    public:
+        inline RPP_HOST_DEVICE virtual Rpp32f hz_to_mel(Rpp32f hz) = 0;
+        inline RPP_HOST_DEVICE virtual Rpp32f mel_to_hz(Rpp32f mel) = 0;
+        virtual ~BaseMelScale() = default;
+};
+
+/*! \brief Derived class for HTK Mel scale conversions.
+ * \ingroup group_rppdefs
+ */
+struct HtkMelScale : public BaseMelScale
+{
+    inline RPP_HOST_DEVICE Rpp32f hz_to_mel(Rpp32f hz) { return 1127.0f * std::log(1.0f + (hz / 700.0f)); }
+    inline RPP_HOST_DEVICE Rpp32f mel_to_hz(Rpp32f mel) { return 700.0f * (std::exp(mel / 1127.0f) - 1.0f); }
+    public:
+        ~HtkMelScale() {};
+};
+
+/*! \brief Derived class for Slaney Mel scale conversions.
+ * \ingroup group_rppdefs
+ */
+struct SlaneyMelScale : public BaseMelScale
+{
+    const Rpp32f freqLow = 0;
+    const Rpp32f fsp = 66.666667f;
+    const Rpp32f minLogHz = 1000.0;
+    const Rpp32f minLogMel = (minLogHz - freqLow) / fsp;
+    const Rpp32f stepLog = 0.068751777;  // Equivalent to std::log(6.4) / 27.0;
+
+    const Rpp32f invMinLogHz = 0.001f;
+    const Rpp32f invStepLog = 1.0f / stepLog;
+    const Rpp32f invFsp = 1.0f / fsp;
+
+    inline RPP_HOST_DEVICE Rpp32f hz_to_mel(Rpp32f hz)
+    {
+        Rpp32f mel = 0.0f;
+        if (hz >= minLogHz)
+            mel = minLogMel + std::log(hz * invMinLogHz) * invStepLog;
+        else
+            mel = (hz - freqLow) * invFsp;
+
+        return mel;
+    }
+
+    inline RPP_HOST_DEVICE Rpp32f mel_to_hz(Rpp32f mel)
+    {
+        Rpp32f hz = 0.0f;
+        if (mel >= minLogMel)
+            hz = minLogHz * std::exp(stepLog * (mel - minLogMel));
+        else
+            hz = freqLow + mel * fsp;
+        return hz;
+    }
+    public:
+        ~SlaneyMelScale() {};
+};
 
 /******************** HOST memory typedefs ********************/
 
