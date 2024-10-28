@@ -26,7 +26,7 @@ SOFTWARE.
 #define HOST_ADVANCED_AUGMENTATIONS_H
 
 #include "rpp_cpu_simd.hpp"
-#include "rpp_cpu_common.hpp"
+#include "rpp_cpu_common_batchpd.hpp"
 
 /**************** water ***************/
 

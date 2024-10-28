@@ -25,7 +25,7 @@ SOFTWARE.
 #ifndef HOST_MORPHOLOGICAL_TRANSFORMS_HPP
 #define HOST_MORPHOLOGICAL_TRANSFORMS_HPP
 
-#include "rpp_cpu_common.hpp"
+#include "rpp_cpu_common_batchpd.hpp"
 
 /**************** erode ***************/
 

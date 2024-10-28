@@ -29,7 +29,7 @@ SOFTWARE.
 #include <time.h>
 
 #include "rpp_cpu_simd.hpp"
-#include "rpp_cpu_common.hpp"
+#include "rpp_cpu_common_batchpd.hpp"
 
 /************ brightness ************/
 

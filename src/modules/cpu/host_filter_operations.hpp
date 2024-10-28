@@ -25,7 +25,7 @@ SOFTWARE.
 #ifndef HOST_FILTER_OPERATIONS_HPP
 #define HOST_FILTER_OPERATIONS_HPP
 
-#include "rpp_cpu_common.hpp"
+#include "rpp_cpu_common_batchpd.hpp"
 
 /**************** box_filter ***************/
 

@@ -25,7 +25,7 @@ SOFTWARE.
 #ifndef HOST_COMPUTER_VISION_HPP
 #define HOST_COMPUTER_VISION_HPP
 
-#include "rpp_cpu_common.hpp"
+#include "rpp_cpu_common_batchpd.hpp"
 
 /**************** data_object_copy ***************/
 

@@ -25,7 +25,7 @@ SOFTWARE.
 #ifndef HOST_COLOR_MODER_CONVERSIONS_HPP
 #define HOST_COLOR_MODER_CONVERSIONS_HPP
 
-#include "rpp_cpu_common.hpp"
+#include "rpp_cpu_common_batchpd.hpp"
 
 /**************** channel_extract ***************/
 
