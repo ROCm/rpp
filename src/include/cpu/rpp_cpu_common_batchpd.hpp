@@ -50,6 +50,109 @@ typedef halfhpp Rpp16f;
 #define RPP_255_OVER_1PT57              162.3380757272f     // (255 / 1.570796) - multiplier used in phase computation
 #define ONE_OVER_1PT57                  0.6366199048f       // (1 / 1.570796) i.e. 2/pi - multiplier used in phase computation
 
+const __m128 xmm_p2Pow32 = _mm_set1_ps(RPP_2POW32);
+const __m128 xmm_p2Pow32Inv = _mm_set1_ps(RPP_2POW32_INV);
+const __m128 xmm_p2Pow32InvDiv2 = _mm_set1_ps(RPP_2POW32_INV_DIV_2);
+const __m128 xmm_p2Pow32InvMul2Pi = _mm_set1_ps(RPP_2POW32_INV_MUL_2PI);
+const __m128 xmm_p2Pow32InvMul2PiDiv2 = _mm_set1_ps(RPP_2POW32_INV_MUL_2PI_DIV_2);
+const __m128i xmm_newtonMethodInitialGuess = _mm_set1_epi32(NEWTON_METHOD_INITIAL_GUESS);
+
+const __m256 avx_p2Pow32 = _mm256_set1_ps(RPP_2POW32);
+const __m256 avx_p2Pow32Inv = _mm256_set1_ps(RPP_2POW32_INV);
+const __m256 avx_p2Pow32InvDiv2 = _mm256_set1_ps(RPP_2POW32_INV_DIV_2);
+const __m256 avx_p2Pow32InvMul2Pi = _mm256_set1_ps(RPP_2POW32_INV_MUL_2PI);
+const __m256 avx_p2Pow32InvMul2PiDiv2 = _mm256_set1_ps(RPP_2POW32_INV_MUL_2PI_DIV_2);
+const __m256i avx_newtonMethodInitialGuess = _mm256_set1_epi32(NEWTON_METHOD_INITIAL_GUESS);
+
+#if __AVX2__
+#define SIMD_FLOAT_VECTOR_LENGTH        8
+#else
+#define SIMD_FLOAT_VECTOR_LENGTH        4
+#endif
+
+/*Constants used for Gaussian interpolation*/
+// Here sigma is considered as 0.5f
+#define GAUSSCONSTANT1                 -2.0f          // 1 / (sigma * sigma * -1 * 2);
+#define GAUSSCONSTANT2                  0.7978845608028654f // 1 / ((2 * PI)*(1/2) * sigma)
+static uint16_t wyhash16_x;
+
+alignas(64) const Rpp32f sch_mat[16] = {0.701f, -0.299f, -0.300f, 0.0f, -0.587f, 0.413f, -0.588f, 0.0f, -0.114f, -0.114f, 0.886f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+alignas(64) const Rpp32f ssh_mat[16] = {0.168f, -0.328f, 1.250f, 0.0f, 0.330f, 0.035f, -1.050f, 0.0f, -0.497f, 0.292f, -0.203f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+alignas(64) const Rpp32u multiseedStreamOffset[8] = {0x15E975, 0x2359A3, 0x42CC61, 0x1925A7, 0x123AA3, 0x21F149, 0x2DDE23, 0x2A93BB};    // Prime numbers for multiseed stream initialization
+
+inline uint32_t hash16(uint32_t input, uint32_t key) {
+  uint32_t hash = input * key;
+  return ((hash >> 16) ^ hash) & 0xFFFF;
+}
+
+inline uint16_t wyhash16() {
+  wyhash16_x += 0xfc15;
+  return hash16(wyhash16_x, 0x2ab);
+}
+
+inline uint16_t rand_range16(const uint16_t s) {
+    uint16_t x = wyhash16();
+    uint32_t m = (uint32_t)x * (uint32_t)s;
+    uint16_t l = (uint16_t)m;
+    if (l < s) {
+        uint16_t t = -s % s;
+        while (l < t) {
+            x = wyhash16();
+            m = (uint32_t)x * (uint32_t)s;
+            l = (uint16_t)m;
+        }
+    }
+    return m >> 16;
+}
+
+static unsigned int g_seed;
+
+inline void fast_srand( int seed )
+{
+    g_seed = seed;
+}
+
+inline int fastrand()
+{
+    g_seed = (214013*g_seed+2531011);
+    return (g_seed>>16)&0x7FFF;
+}
+
+#if !GPU_SUPPORT
+enum class RPPTensorDataType
+{
+    U8 = 0,
+    FP32,
+    FP16,
+    I8,
+};
+
+struct RPPTensorFunctionMetaData
+{
+    RPPTensorDataType _in_type = RPPTensorDataType::U8;
+    RPPTensorDataType _out_type = RPPTensorDataType::U8;
+    RppiChnFormat _in_format = RppiChnFormat::RPPI_CHN_PACKED;
+    RppiChnFormat _out_format = RppiChnFormat::RPPI_CHN_PLANAR;
+    Rpp32u _in_channels = 3;
+
+    RPPTensorFunctionMetaData(RppiChnFormat in_chn_format, RPPTensorDataType in_tensor_type,
+                              RPPTensorDataType out_tensor_type, Rpp32u in_channels,
+                              bool out_format_change) : _in_format(in_chn_format), _in_type(in_tensor_type),
+                                                        _out_type(out_tensor_type), _in_channels(in_channels)
+    {
+        if (out_format_change)
+        {
+            if (_in_format == RPPI_CHN_PLANAR)
+                _out_format = RppiChnFormat::RPPI_CHN_PACKED;
+            else
+                _out_format = RppiChnFormat::RPPI_CHN_PLANAR;
+        }
+        else
+            _out_format = _in_format;
+    }
+};
+#endif // GPU_SUPPORT
+
 template <typename T>
 RppStatus subtract_host_batch(T* srcPtr1, T* srcPtr2, RppiSize *batch_srcSize, RppiSize *batch_srcSizeMax, T* dstPtr,
                               RppiROI *roiPoints, Rpp32u nbatchSize,
