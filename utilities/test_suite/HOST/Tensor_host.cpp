@@ -64,7 +64,8 @@ int main(int argc, char **argv)
     int decoderType = atoi(argv[13]);
     int batchSize = atoi(argv[14]);
 
-    bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23 || testCase == 24 || testCase == 79);
+    bool additionalParamCase = (testCase == 8 || testCase == 21 || testCase == 23 || testCase == 24 || testCase == 49 || testCase == 79);
+    bool kernelSizeCase = (testCase == 49);
     bool dualInputCase = (testCase == 2 || testCase == 30 || testCase == 33 || testCase == 61 || testCase == 63 || testCase == 65 || testCase == 68);
     bool randomOutputCase = (testCase == 6 || testCase == 8 || testCase == 84);
     bool nonQACase = (testCase == 24);
@@ -210,6 +211,13 @@ int main(int argc, char **argv)
         noiseTypeName = get_noise_type(additionalParam);
         func += "_noiseType";
         func += noiseTypeName.c_str();
+    }
+    else if (kernelSizeCase)
+    {
+        char additionalParam_char[2];
+        std::sprintf(additionalParam_char, "%u", additionalParam);
+        func += "_kernelSize";
+        func += additionalParam_char;
     }
 
     if(!qaFlag)
@@ -1134,6 +1142,20 @@ int main(int argc, char **argv)
 
                     break;
                 }
+                case 49:
+                {
+                    testCaseName = "box_filter";
+                    Rpp32u kernelSize = additionalParam;
+
+                    startWallTime = omp_get_wtime();
+                    startCpuTime = clock();
+                    if (inputBitDepth == 0 || inputBitDepth == 1 || inputBitDepth == 2 || inputBitDepth == 5)
+                        rppt_box_filter_host(input, srcDescPtr, output, dstDescPtr, kernelSize, roiTensorPtrSrc, roiTypeSrc, handle);
+                    else
+                        missingFuncFlag = 1;
+
+                    break;
+                }
                 case 61:
                 {
                     testCaseName = "magnitude";
@@ -1632,7 +1654,7 @@ int main(int argc, char **argv)
                 3.source and destination layout are the same
                 4.augmentation case does not generate random output*/
                 if(qaFlag && inputBitDepth == 0 && ((srcDescPtr->layout == dstDescPtr->layout) || pln1OutTypeCase) && !(randomOutputCase) && !(nonQACase))
-                    compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, batchSize, interpolationTypeName, noiseTypeName, testCase, dst, scriptPath);
+                    compare_output<Rpp8u>(outputu8, testCaseName, srcDescPtr, dstDescPtr, dstImgSizes, batchSize, interpolationTypeName, noiseTypeName, additionalParam, testCase, dst, scriptPath);
 
                 // Calculate exact dstROI in XYWH format for OpenCV dump
                 if (roiTypeSrc == RpptRoiType::LTRB)

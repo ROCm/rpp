@@ -8,6 +8,12 @@ Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/r
 
 * RPP Threshold on HOST and HIP
 
+## RPP 1.9.4 (unreleased)
+
+### Changes
+
+* RPP Tensor Box Filter support on HOST
+
 ## RPP 1.9.3 (unreleased)
 
 ### Changes
