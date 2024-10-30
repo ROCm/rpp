@@ -22,26 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef RPP_VERSION_H
-#define RPP_VERSION_H
+#ifndef HOST_TENSOR_FILTER_AUGMENTATIONS_HPP
+#define HOST_TENSOR_FILTER_AUGMENTATIONS_HPP
 
-/*!
- * \file
- * \brief ROCm Performance Primitives (RPP) version
- * \defgroup group_rpp_version RPP Version
- * \brief ROCm Performance Primitives (RPP) version
- */
+#include "kernel/box_filter.hpp"
 
-// TODO: change the patch version with every new feature
-#include "rpp.h"
-#ifdef __cplusplus
-extern "C" {
-#endif
-// NOTE: IMPORTANT: Match the version with CMakelists.txt version
-#define RPP_VERSION_MAJOR 1
-#define RPP_VERSION_MINOR 9
-#define RPP_VERSION_PATCH 9
-#ifdef __cplusplus
-}
-#endif
-#endif    // RPP_VERSION_H
+#endif // HOST_TENSOR_FILTER_AUGMENTATIONS_HPP
