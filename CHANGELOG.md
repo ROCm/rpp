@@ -2,79 +2,69 @@
 
 Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/rpp/en/latest](https://rocm.docs.amd.com/projects/rpp/en/latest)
 
-## RPP 1.9.7 (unreleased)
+## (Unreleased) RPP 1.9.7
 
 ### Changes
 
 * RPP Threshold on HOST and HIP
 
-## RPP 1.9.4 (unreleased)
+## (Unreleased) RPP 1.9.4
 
 ### Changes
 
 * RPP Tensor Box Filter support on HOST
 
-## RPP 1.9.3 (unreleased)
+## (Unreleased) RPP 1.9.3
 
-### Changes
+### Changed
 
 * RPP Audio Support HIP - Spectrogram
 
-## RPP 1.9.2 (Unreleased)
+## (Unreleased) RPP 1.9.2 
 
-### Changes
+### Changed
 
 RPP Audio Support HIP - Mel Filter Bank
 
 ## RPP 1.9.1 for ROCm 6.3.0
 
-### Changes
+### Added
 
-* Test - Prerequisites Updates
-* RPP Glitch on HOST and HIP
-* AMD Advanced - Build Flag
-* RPP Audio Support HIP - Resample
-* RPP Audio Support HIP - Pre emphasis filter
-* RPP Pixelate - HOST and HIP
-* RPP Audio Support HIP - Down-mixing
-* RPP Audio Support HIP - To Decibels
-* RPP Audio Support HIP - Non silent region
+* RPP Glitch has been added to the HOST and HIP backend.
+* RPP Pixelate has been added to the HOST and HIP backend.
+* The following audio support was added to the HIP backend:
+  * Resample
+  * Pre emphasis filter
+  * Down-mixing
+  * To Decibels
+  * Non silent region
 
-### Removals
+### Changed
 
-* TurboJPEG - older version
+* Test prerequisites have been updated.
 
-### Optimizations
+### Removed
 
-* macOS - Build fix
-* Docs - changed roiTensorSrc to roiTensorPtrSrc in documentation
-* Test Suite - updates
+* Older versions of TurboJPEG have been removed.
+
+### Optimized
+
+* Updated the test suite
 
 ### Resolved issues
 
-* RPP Test Suite - augmentations fix
-* Copy - bugfix for `NCDHW` layout
-* MIVisionX compatibility fix - Resample and pre-emphasis filter
-* Docs - fix broken image links
+* macOS build
+* RPP Test Suite: augmentations fix
+* Copy: bugfix for `NCDHW` layout
+* MIVisionX compatibility fix: Resample and pre-emphasis filter
 
 ### Known issues
 
-* Package only supports HIP backend
+* Package installation only supports the HIP backend.
 
 ### Upcoming changes
 
 * Optimized audio augmentations
-
-### Tested configurations
-
-* Linux distribution
-  * Ubuntu - `20.04` / `22.04`
-  * CentOS - `7`
-  * RHEL - `8`/`9`
-* ROCm: rocm-core - `6.3.0.60300`
-* Clang - Version `5.0.1`+
-* CMake - Version `3.16.3`+
-* IEEE 754-based half-precision floating-point library - Version `1.12.0`
 
 
 ## RPP 1.8.0 for ROCm 6.2.0
