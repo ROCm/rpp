@@ -165,8 +165,8 @@ else()
                             if(OpenCV_FOUND)
                                 include_directories(${OpenCV_INCLUDE_DIRS})
                                 message("-- ${Green}${PROJECT_NAME} Tensor-Image HIP tests set to build with OpenCV${ColourReset}")
-                                add_executable(Tensor_hip Tensor_hip.cpp)
-                                target_link_libraries(Tensor_hip -lrpp pthread -lturbojpeg ${OpenCV_LIBS} ${LINK_LIBRARY_LIST} ${hip_LIBRARIES})
+                                add_executable(Tensor_image_hip Tensor_image_hip.cpp)
+                                target_link_libraries(Tensor_image_hip -lrpp pthread -lturbojpeg ${OpenCV_LIBS} ${LINK_LIBRARY_LIST} ${hip_LIBRARIES})
                                 # if (OPENPYXL_FOUND EQUAL 0)                                                                                                                                   # added only on HOST
                                 #     message("-- ${Green}Openpyxl for Python3 found ${ColourReset}")                                                                                           # added only on HOST
                                 #     add_executable(BatchPD_hip_pkd3 ${ROCM_PATH}/share/rpp/test/rpp-performancetests/HOST_NEW/BatchPD_hip_pkd3.cpp) # OLD - To be deprecated and removed      # added only on HOST
