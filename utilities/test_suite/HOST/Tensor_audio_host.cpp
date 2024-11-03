@@ -31,7 +31,7 @@ int main(int argc, char **argv)
     if (argc < MIN_ARG_COUNT)
     {
         cout << "\nImproper Usage! Needs all arguments!\n";
-        cout << "\nUsage: ./Tensor_host_audio <src folder> <case number = 0:7> <test type 0/1> <numRuns> <batchSize> <dst folder>\n";
+        cout << "\nUsage: ./Tensor_audio_host <src folder> <case number = 0:7> <test type 0/1> <numRuns> <batchSize> <dst folder>\n";
         return -1;
     }
 
