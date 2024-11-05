@@ -43,7 +43,7 @@ Spectrogram kernel output represented as a image <br><br>
 ## Prerequisites
 
 * Linux
-  * Ubuntu - `20.04` / `22.04`
+  * Ubuntu - `22.04` / `24.04`
   * RedHat - `8` / `9`
   * SLES - `15-SP5`
 
@@ -51,7 +51,7 @@ Spectrogram kernel output represented as a image <br><br>
 > [!IMPORTANT] 
 > `gfx908` or higher GPU required
 
-* Install ROCm `6.1.0` or later with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html): Required usecase - rocm
+* Install ROCm `6.1.0` or later with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html): **Required** usecase:`rocm`
 > [!IMPORTANT]
 > `sudo amdgpu-install --usecase=rocm`
 
@@ -70,10 +70,16 @@ Spectrogram kernel output represented as a image <br><br>
   sudo apt install half
   ```
 
-> [!IMPORTANT] 
+> [!IMPORTANT]
 > * Compiler features required
 >   * C++17
+>     ```shell
+>     sudo apt install libstdc++-12-dev
+>     ```
 >   * OpenMP
+>     ```shell
+>     sudo apt install libomp-dev
+>     ```
 >   * Threads
 
 >[!NOTE]
@@ -87,7 +93,8 @@ The installation process uses the following steps:
 
 * Install ROCm `6.1.0` or later with [amdgpu-install](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html) with `--usecase=rocm`
 
-* Use **either** [package install](#package-install) **or** [source install](#source-install) as described below.
+> [!IMPORTANT]
+> Use **either** [package install](#package-install) **or** [source install](#source-install) as described below.
 
 ### Package install
 
@@ -144,7 +151,7 @@ sudo zypper install rpp rpp-devel rpp-test
   make test
   ```
 
->[!NOTE]
+> [!IMPORTANT]
 > `make test` requires [test suite prerequisites](utilities/test_suite/README.md) installed
 
 #### OCL Backend
@@ -163,11 +170,8 @@ The installer will copy
 
 * Libraries into `/opt/rocm/lib`
 * Header files into `/opt/rocm/include/rpp`
-* Samples folder into `/opt/rocm/share/rpp`
+* Samples, and test folder into `/opt/rocm/share/rpp`
 * Documents folder into `/opt/rocm/share/doc/rpp`
-
->[!NOTE]
-> [Test suite prerequisites](utilities/test_suite#prerequisites) install is required to run tests
 
 ### Verify with rpp-test package
 
@@ -178,6 +182,8 @@ mkdir rpp-test && cd rpp-test
 cmake /opt/rocm/share/rpp/test/
 ctest -VV
 ```
+> [!IMPORTANT]
+> [Test suite prerequisites](utilities/test_suite#prerequisites) are required to run tests
 
 ## Test Functionalities
 
@@ -220,7 +226,7 @@ All notable changes for each release are added to our [changelog](CHANGELOG.md).
 ## Tested configurations
 
 * Linux distribution
-  * Ubuntu - `20.04` / `22.04`
+  * Ubuntu - `22.04` / `24.04`
   * RedHat - `8` / `9`
   * SLES - `15-SP5`
 * ROCm: rocm-core - `6.3.0.60300`
