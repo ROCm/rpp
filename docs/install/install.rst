@@ -15,66 +15,48 @@ Prerequisites
 
 * Linux distribution
 
-  - Ubuntu 20.04 or 22.04
-  - CentOS 7
+  - Ubuntu 22.04 or 24.04
   - RedHat 8 or 9
-  - SLES 15-SP4
+  - SLES 15-SP5
 
 * `ROCm supported hardware <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/reference/system-requirements.html>`_
 
 * Install ROCm with `amdgpu-install <https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/amdgpu-install.html>`_ with ``--usecase=rocm``
 
-* Clang Version `5.0.1` and above
+* CMake Version `3.5` and above
 
-  * Ubuntu `20`/`22`
+    .. code-block:: shell
+
+      sudo apt-get install cmake
+
+* Clang Version `5.0.1` and above
 
     .. code-block:: shell
 
       sudo apt-get install clang
 
-
-  * CentOS `7`
-
-    .. code-block:: shell
-
-      sudo yum install llvm-toolset-7-clang llvm-toolset-7-clang-analyzer llvm-toolset-7-clang-tools-extra
-      scl enable llvm-toolset-7 bash
-
-
-  * RHEL `8`/`9`
-
-    .. code-block:: shell
-
-      sudo yum install clang
-
-
-  * SLES `15-SP4` (use `ROCm LLVM Clang`)
-
-    .. code-block:: shell
-
-      zypper -n --no-gpg-checks install clang
-      update-alternatives --install /usr/bin/clang clang /opt/rocm-*/llvm/bin/clang 100
-      update-alternatives --install /usr/bin/clang++ clang++ /opt/rocm-*/llvm/bin/clang++ 100
-
-
-* CMake Version `3.5` and above
-
 * IEEE 754-based half-precision floating-point library (half.hpp)
-
-  * `half` package install
 
     .. code-block:: shell
 
       sudo apt-get install half
 
-    .. note::
-        Use appropriate package manager depending on the OS 
-
 * Compiler with support for C++ Version `17` and above
+
+    .. code-block:: shell
+
+      sudo apt-get install libstdc++-12-dev
 
 * OpenMP
 
+    .. code-block:: shell
+
+      sudo apt-get install libomp-dev
+
 * Threads
+
+    .. note::
+        Use appropriate package manager depending on the OS 
 
 Build and install instructions
 ================================
@@ -174,9 +156,6 @@ The installer will copy
 * Samples folder into `/opt/rocm/share/rpp`
 * Documents folder into `/opt/rocm/share/doc/rpp`
 
-.. note::
-  Installation of `test suite prerequisites <https://github.com/ROCm/rpp/blob/develop/utilities/test_suite/README.md>`_ is required to run tests
-
 Verify with `rpp-test` package
 --------------------------------------------
 
@@ -187,6 +166,9 @@ Test package will install `ctest` module to test `rpp`. Use the following steps 
   mkdir rpp-test && cd rpp-test
   cmake /opt/rocm/share/rpp/test/
   ctest -VV
+
+.. note::
+  Installation of `test suite prerequisites <https://github.com/ROCm/rpp/blob/develop/utilities/test_suite/README.md>`_ are required to run tests
 
 Test RPP functionalities
 --------------------------------------------
@@ -215,6 +197,3 @@ To test the functionalities of `rpp`, run the code shown for your backend:
 
       cd rpp/utilities/rpp-unittests/HOST_NEW
       ./testAllScript.sh
-
-
-
