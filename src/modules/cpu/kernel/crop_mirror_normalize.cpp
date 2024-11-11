@@ -24,6 +24,46 @@ SOFTWARE.
 
 #include "crop_mirror_normalize.hpp"
 
+inline void compute_cmn_48_host(__m256 *p, __m256 *pCMNParams)
+{
+    p[0] = _mm256_fmadd_ps(p[0], pCMNParams[0], pCMNParams[1]);
+    p[1] = _mm256_fmadd_ps(p[1], pCMNParams[0], pCMNParams[1]);
+    p[2] = _mm256_fmadd_ps(p[2], pCMNParams[2], pCMNParams[3]);
+    p[3] = _mm256_fmadd_ps(p[3], pCMNParams[2], pCMNParams[3]);
+    p[4] = _mm256_fmadd_ps(p[4], pCMNParams[4], pCMNParams[5]);
+    p[5] = _mm256_fmadd_ps(p[5], pCMNParams[4], pCMNParams[5]);
+}
+
+inline void compute_cmn_48_rgb_host(__m256 *p, __m256 *pCMNParams)
+{
+    p[0] = _mm256_fmadd_ps(p[0], pCMNParams[0], pCMNParams[1]);
+    p[1] = _mm256_fmadd_ps(p[1], pCMNParams[0], pCMNParams[1]);
+    p[2] = _mm256_fmadd_ps(p[2], pCMNParams[0], pCMNParams[1]);
+    p[3] = _mm256_fmadd_ps(p[3], pCMNParams[0], pCMNParams[1]);
+    p[4] = _mm256_fmadd_ps(p[4], pCMNParams[0], pCMNParams[1]);
+    p[5] = _mm256_fmadd_ps(p[5], pCMNParams[0], pCMNParams[1]);
+    p[6] = _mm256_fmadd_ps(p[6], pCMNParams[0], pCMNParams[1]);
+    p[7] = _mm256_fmadd_ps(p[7], pCMNParams[0], pCMNParams[1]);
+}
+
+inline void compute_cmn_24_host(__m256 *p, __m256 *pCMNParams)
+{
+    p[0] = _mm256_fmadd_ps(p[0], pCMNParams[0], pCMNParams[1]);
+    p[1] = _mm256_fmadd_ps(p[1], pCMNParams[2], pCMNParams[3]);
+    p[2] = _mm256_fmadd_ps(p[2], pCMNParams[4], pCMNParams[5]);
+}
+
+inline void compute_cmn_16_host(__m256 *p, __m256 *pCMNParams)
+{
+    p[0] = _mm256_fmadd_ps(p[0], pCMNParams[0], pCMNParams[1]);
+    p[1] = _mm256_fmadd_ps(p[1], pCMNParams[0], pCMNParams[1]);
+}
+
+inline void compute_cmn_8_host(__m256 *p, __m256 *pCMNParams)
+{
+    p[0] = _mm256_fmadd_ps(p[0], pCMNParams[0], pCMNParams[1]);
+}
+
 RppStatus crop_mirror_normalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                                                   RpptDescPtr srcDescPtr,
                                                   Rpp8u *dstPtr,

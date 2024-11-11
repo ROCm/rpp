@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 #include "water.hpp"
+#include "rpp_cpu_common_interpolation.hpp"
 
 inline void compute_water_src_loc_avx(__m256 &pDstY, __m256 &pDstX, __m256 &pSrcY, __m256 &pSrcX, __m256 *pWaterParams,
                                       __m256 &pSinFactor, __m256 &pCosFactor, __m256 &pRowLimit, __m256 &pColLimit,

@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 #include "noise_salt_and_pepper.hpp"
+#include "rpp_cpu_common_random.hpp"
 
 inline void compute_salt_and_pepper_noise_params_initialize_4_host_sse(Rpp32f &noiseProbability, Rpp32f &saltProbability, Rpp32f salt, Rpp32f pepper, __m128 *pSaltAndPepperNoiseParams)
 {
@@ -38,6 +39,94 @@ inline void compute_salt_and_pepper_noise_params_initialize_8_host_avx(Rpp32f &n
     pSaltAndPepperNoiseParams[1] = _mm256_set1_ps(saltProbability);
     pSaltAndPepperNoiseParams[2] = _mm256_set1_ps(salt);
     pSaltAndPepperNoiseParams[3] = _mm256_set1_ps(pepper);
+}
+
+inline void compute_salt_and_pepper_noise_8_host(__m256 *p, __m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter, __m256 *pSaltAndPepperNoiseParams)
+{
+    __m256 pMask[3];
+    __m256 pRandomNumbers = rpp_host_rng_xorwow_8_f32_avx(pxXorwowStateX, pxXorwowStateCounter);
+    pMask[0] = _mm256_cmp_ps(pRandomNumbers, pSaltAndPepperNoiseParams[0], _CMP_GT_OQ);
+    pMask[1] = _mm256_andnot_ps(pMask[0], _mm256_cmp_ps(pRandomNumbers, pSaltAndPepperNoiseParams[1], _CMP_LE_OQ));
+    pMask[2] = _mm256_andnot_ps(pMask[0], _mm256_cmp_ps(pRandomNumbers, pSaltAndPepperNoiseParams[1], _CMP_GT_OQ));
+    p[0] = _mm256_and_ps(pMask[0], p[0]);
+    p[0] = _mm256_or_ps(_mm256_andnot_ps(pMask[1], p[0]), _mm256_and_ps(pMask[1], pSaltAndPepperNoiseParams[2]));
+    p[0] = _mm256_or_ps(_mm256_andnot_ps(pMask[2], p[0]), _mm256_and_ps(pMask[2], pSaltAndPepperNoiseParams[3]));
+}
+
+inline void compute_salt_and_pepper_noise_4_host(__m128 *p, __m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter, __m128 *pSaltAndPepperNoiseParams)
+{
+    __m128 pMask[3];
+    __m128 pRandomNumbers = rpp_host_rng_xorwow_4_f32_sse(pxXorwowStateX, pxXorwowStateCounter);
+    pMask[0] = _mm_cmpgt_ps(pRandomNumbers, pSaltAndPepperNoiseParams[0]);
+    pMask[1] = _mm_andnot_ps(pMask[0], _mm_cmple_ps(pRandomNumbers, pSaltAndPepperNoiseParams[1]));
+    pMask[2] = _mm_andnot_ps(pMask[0], _mm_cmpgt_ps(pRandomNumbers, pSaltAndPepperNoiseParams[1]));
+    p[0] = _mm_and_ps(pMask[0], p[0]);
+    p[0] = _mm_or_ps(_mm_andnot_ps(pMask[1], p[0]), _mm_and_ps(pMask[1], pSaltAndPepperNoiseParams[2]));
+    p[0] = _mm_or_ps(_mm_andnot_ps(pMask[2], p[0]), _mm_and_ps(pMask[2], pSaltAndPepperNoiseParams[3]));
+}
+
+inline void compute_salt_and_pepper_noise_16_host(__m256 *p, __m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter, __m256 *pSaltAndPepperNoiseParams)
+{
+    compute_salt_and_pepper_noise_8_host(p    , pxXorwowStateX, pxXorwowStateCounter, pSaltAndPepperNoiseParams);
+    compute_salt_and_pepper_noise_8_host(p + 1, pxXorwowStateX, pxXorwowStateCounter, pSaltAndPepperNoiseParams);
+}
+
+inline void compute_salt_and_pepper_noise_16_host(__m128 *p, __m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter, __m128 *pSaltAndPepperNoiseParams)
+{
+    compute_salt_and_pepper_noise_4_host(p    , pxXorwowStateX, pxXorwowStateCounter, pSaltAndPepperNoiseParams);
+    compute_salt_and_pepper_noise_4_host(p + 1, pxXorwowStateX, pxXorwowStateCounter, pSaltAndPepperNoiseParams);
+    compute_salt_and_pepper_noise_4_host(p + 2, pxXorwowStateX, pxXorwowStateCounter, pSaltAndPepperNoiseParams);
+    compute_salt_and_pepper_noise_4_host(p + 3, pxXorwowStateX, pxXorwowStateCounter, pSaltAndPepperNoiseParams);
+}
+
+inline void compute_salt_and_pepper_noise_24_host(__m256 *pR, __m256 *pG, __m256 *pB, __m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter, __m256 *pSaltAndPepperNoiseParams)
+{
+    __m256 pMask[3];
+    __m256 pRandomNumbers = rpp_host_rng_xorwow_8_f32_avx(pxXorwowStateX, pxXorwowStateCounter);
+    pMask[0] = _mm256_cmp_ps(pRandomNumbers, pSaltAndPepperNoiseParams[0], _CMP_GT_OQ);
+    pMask[1] = _mm256_andnot_ps(pMask[0], _mm256_cmp_ps(pRandomNumbers, pSaltAndPepperNoiseParams[1], _CMP_LE_OQ));
+    pMask[2] = _mm256_andnot_ps(pMask[0], _mm256_cmp_ps(pRandomNumbers, pSaltAndPepperNoiseParams[1], _CMP_GT_OQ));
+    pR[0] = _mm256_and_ps(pMask[0], pR[0]);
+    pR[0] = _mm256_or_ps(_mm256_andnot_ps(pMask[1], pR[0]), _mm256_and_ps(pMask[1], pSaltAndPepperNoiseParams[2]));
+    pR[0] = _mm256_or_ps(_mm256_andnot_ps(pMask[2], pR[0]), _mm256_and_ps(pMask[2], pSaltAndPepperNoiseParams[3]));
+    pG[0] = _mm256_and_ps(pMask[0], pG[0]);
+    pG[0] = _mm256_or_ps(_mm256_andnot_ps(pMask[1], pG[0]), _mm256_and_ps(pMask[1], pSaltAndPepperNoiseParams[2]));
+    pG[0] = _mm256_or_ps(_mm256_andnot_ps(pMask[2], pG[0]), _mm256_and_ps(pMask[2], pSaltAndPepperNoiseParams[3]));
+    pB[0] = _mm256_and_ps(pMask[0], pB[0]);
+    pB[0] = _mm256_or_ps(_mm256_andnot_ps(pMask[1], pB[0]), _mm256_and_ps(pMask[1], pSaltAndPepperNoiseParams[2]));
+    pB[0] = _mm256_or_ps(_mm256_andnot_ps(pMask[2], pB[0]), _mm256_and_ps(pMask[2], pSaltAndPepperNoiseParams[3]));
+}
+
+inline void compute_salt_and_pepper_noise_12_host(__m128 *pR, __m128 *pG, __m128 *pB, __m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter, __m128 *pSaltAndPepperNoiseParams)
+{
+    __m128 pMask[3];
+    __m128 pRandomNumbers = rpp_host_rng_xorwow_4_f32_sse(pxXorwowStateX, pxXorwowStateCounter);
+    pMask[0] = _mm_cmpgt_ps(pRandomNumbers, pSaltAndPepperNoiseParams[0]);
+    pMask[1] = _mm_andnot_ps(pMask[0], _mm_cmple_ps(pRandomNumbers, pSaltAndPepperNoiseParams[1]));
+    pMask[2] = _mm_andnot_ps(pMask[0], _mm_cmpgt_ps(pRandomNumbers, pSaltAndPepperNoiseParams[1]));
+    pR[0] = _mm_and_ps(pMask[0], pR[0]);
+    pR[0] = _mm_or_ps(_mm_andnot_ps(pMask[1], pR[0]), _mm_and_ps(pMask[1], pSaltAndPepperNoiseParams[2]));
+    pR[0] = _mm_or_ps(_mm_andnot_ps(pMask[2], pR[0]), _mm_and_ps(pMask[2], pSaltAndPepperNoiseParams[3]));
+    pG[0] = _mm_and_ps(pMask[0], pG[0]);
+    pG[0] = _mm_or_ps(_mm_andnot_ps(pMask[1], pG[0]), _mm_and_ps(pMask[1], pSaltAndPepperNoiseParams[2]));
+    pG[0] = _mm_or_ps(_mm_andnot_ps(pMask[2], pG[0]), _mm_and_ps(pMask[2], pSaltAndPepperNoiseParams[3]));
+    pB[0] = _mm_and_ps(pMask[0], pB[0]);
+    pB[0] = _mm_or_ps(_mm_andnot_ps(pMask[1], pB[0]), _mm_and_ps(pMask[1], pSaltAndPepperNoiseParams[2]));
+    pB[0] = _mm_or_ps(_mm_andnot_ps(pMask[2], pB[0]), _mm_and_ps(pMask[2], pSaltAndPepperNoiseParams[3]));
+}
+
+inline void compute_salt_and_pepper_noise_48_host(__m256 *p, __m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter, __m256 *pSaltAndPepperNoiseParams)
+{
+    compute_salt_and_pepper_noise_24_host(p    , p + 2, p +  4, pxXorwowStateX, pxXorwowStateCounter, pSaltAndPepperNoiseParams);
+    compute_salt_and_pepper_noise_24_host(p + 1, p + 3, p +  5, pxXorwowStateX, pxXorwowStateCounter, pSaltAndPepperNoiseParams);
+}
+
+inline void compute_salt_and_pepper_noise_48_host(__m128 *p, __m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter, __m128 *pSaltAndPepperNoiseParams)
+{
+    compute_salt_and_pepper_noise_12_host(p    , p + 4, p +  8, pxXorwowStateX, pxXorwowStateCounter, pSaltAndPepperNoiseParams);
+    compute_salt_and_pepper_noise_12_host(p + 1, p + 5, p +  9, pxXorwowStateX, pxXorwowStateCounter, pSaltAndPepperNoiseParams);
+    compute_salt_and_pepper_noise_12_host(p + 2, p + 6, p + 10, pxXorwowStateX, pxXorwowStateCounter, pSaltAndPepperNoiseParams);
+    compute_salt_and_pepper_noise_12_host(p + 3, p + 7, p + 11, pxXorwowStateX, pxXorwowStateCounter, pSaltAndPepperNoiseParams);
 }
 
 RppStatus salt_and_pepper_noise_u8_u8_host_tensor(Rpp8u *srcPtr,

@@ -24,6 +24,34 @@ SOFTWARE.
 
 #include "contrast.hpp"
 
+inline void compute_contrast_48_host(__m256 *p, __m256 *pContrastParams)
+{
+    p[0] = _mm256_fmadd_ps(_mm256_sub_ps(p[0], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
+    p[1] = _mm256_fmadd_ps(_mm256_sub_ps(p[1], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
+    p[2] = _mm256_fmadd_ps(_mm256_sub_ps(p[2], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
+    p[3] = _mm256_fmadd_ps(_mm256_sub_ps(p[3], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
+    p[4] = _mm256_fmadd_ps(_mm256_sub_ps(p[4], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
+    p[5] = _mm256_fmadd_ps(_mm256_sub_ps(p[5], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
+}
+
+inline void compute_contrast_24_host(__m256 *p, __m256 *pContrastParams)
+{
+    p[0] = _mm256_fmadd_ps(_mm256_sub_ps(p[0], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
+    p[1] = _mm256_fmadd_ps(_mm256_sub_ps(p[1], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
+    p[2] = _mm256_fmadd_ps(_mm256_sub_ps(p[2], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
+}
+
+inline void compute_contrast_16_host(__m256 *p, __m256 *pContrastParams)
+{
+    p[0] = _mm256_fmadd_ps(_mm256_sub_ps(p[0], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
+    p[1] = _mm256_fmadd_ps(_mm256_sub_ps(p[1], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
+}
+
+inline void compute_contrast_8_host(__m256 *p, __m256 *pContrastParams)
+{
+    p[0] = _mm256_fmadd_ps(_mm256_sub_ps(p[0], pContrastParams[1]), pContrastParams[0], pContrastParams[1]);    // contrast adjustment
+}
+
 RppStatus contrast_u8_u8_host_tensor(Rpp8u *srcPtr,
                                      RpptDescPtr srcDescPtr,
                                      Rpp8u *dstPtr,

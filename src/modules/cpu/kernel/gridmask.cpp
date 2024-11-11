@@ -24,6 +24,88 @@ SOFTWARE.
 
 #include "gridmask.hpp"
 
+inline void compute_gridmask_masks_16_host(__m128 *pCol, __m128 *pGridRowRatio, __m128 pCosRatio, __m128 pSinRatio, __m128 pGridRatio, __m128 *pMask)
+{
+    __m128 pCalc[2];
+
+    pCalc[0] = _mm_fmadd_ps(pCol[0], pCosRatio, pGridRowRatio[0]);
+    pCalc[1] = _mm_fmadd_ps(pCol[0], pSinRatio, pGridRowRatio[1]);
+    pCalc[0] = _mm_cmpge_ps(_mm_sub_ps(pCalc[0], _mm_floor_ps(pCalc[0])), pGridRatio);
+    pCalc[1] = _mm_cmpge_ps(_mm_sub_ps(pCalc[1], _mm_floor_ps(pCalc[1])), pGridRatio);
+    pMask[0] = _mm_or_ps(pCalc[0], pCalc[1]);
+
+    pCalc[0] = _mm_fmadd_ps(pCol[1], pCosRatio, pGridRowRatio[0]);
+    pCalc[1] = _mm_fmadd_ps(pCol[1], pSinRatio, pGridRowRatio[1]);
+    pCalc[0] = _mm_cmpge_ps(_mm_sub_ps(pCalc[0], _mm_floor_ps(pCalc[0])), pGridRatio);
+    pCalc[1] = _mm_cmpge_ps(_mm_sub_ps(pCalc[1], _mm_floor_ps(pCalc[1])), pGridRatio);
+    pMask[1] = _mm_or_ps(pCalc[0], pCalc[1]);
+
+    pCalc[0] = _mm_fmadd_ps(pCol[2], pCosRatio, pGridRowRatio[0]);
+    pCalc[1] = _mm_fmadd_ps(pCol[2], pSinRatio, pGridRowRatio[1]);
+    pCalc[0] = _mm_cmpge_ps(_mm_sub_ps(pCalc[0], _mm_floor_ps(pCalc[0])), pGridRatio);
+    pCalc[1] = _mm_cmpge_ps(_mm_sub_ps(pCalc[1], _mm_floor_ps(pCalc[1])), pGridRatio);
+    pMask[2] = _mm_or_ps(pCalc[0], pCalc[1]);
+
+    pCalc[0] = _mm_fmadd_ps(pCol[3], pCosRatio, pGridRowRatio[0]);
+    pCalc[1] = _mm_fmadd_ps(pCol[3], pSinRatio, pGridRowRatio[1]);
+    pCalc[0] = _mm_cmpge_ps(_mm_sub_ps(pCalc[0], _mm_floor_ps(pCalc[0])), pGridRatio);
+    pCalc[1] = _mm_cmpge_ps(_mm_sub_ps(pCalc[1], _mm_floor_ps(pCalc[1])), pGridRatio);
+    pMask[3] = _mm_or_ps(pCalc[0], pCalc[1]);
+
+    pCol[0] = _mm_add_ps(pCol[0], xmm_p16);
+    pCol[1] = _mm_add_ps(pCol[1], xmm_p16);
+    pCol[2] = _mm_add_ps(pCol[2], xmm_p16);
+    pCol[3] = _mm_add_ps(pCol[3], xmm_p16);
+}
+
+inline void compute_gridmask_masks_4_host(__m128 &pCol, __m128 *pGridRowRatio, __m128 pCosRatio, __m128 pSinRatio, __m128 pGridRatio, __m128 &pMask)
+{
+    __m128 pCalc[2];
+
+    pCalc[0] = _mm_fmadd_ps(pCol, pCosRatio, pGridRowRatio[0]);
+    pCalc[1] = _mm_fmadd_ps(pCol, pSinRatio, pGridRowRatio[1]);
+    pCalc[0] = _mm_cmpge_ps(_mm_sub_ps(pCalc[0], _mm_floor_ps(pCalc[0])), pGridRatio);
+    pCalc[1] = _mm_cmpge_ps(_mm_sub_ps(pCalc[1], _mm_floor_ps(pCalc[1])), pGridRatio);
+    pMask = _mm_or_ps(pCalc[0], pCalc[1]);
+    pCol = _mm_add_ps(pCol, xmm_p4);
+}
+
+inline void compute_gridmask_result_48_host(__m128 *p, __m128 *pMask)
+{
+    p[0] = _mm_and_ps(p[0], pMask[0]);
+    p[1] = _mm_and_ps(p[1], pMask[1]);
+    p[2] = _mm_and_ps(p[2], pMask[2]);
+    p[3] = _mm_and_ps(p[3], pMask[3]);
+    p[4] = _mm_and_ps(p[4], pMask[0]);
+    p[5] = _mm_and_ps(p[5], pMask[1]);
+    p[6] = _mm_and_ps(p[6], pMask[2]);
+    p[7] = _mm_and_ps(p[7], pMask[3]);
+    p[8] = _mm_and_ps(p[8], pMask[0]);
+    p[9] = _mm_and_ps(p[9], pMask[1]);
+    p[10] = _mm_and_ps(p[10], pMask[2]);
+    p[11] = _mm_and_ps(p[11], pMask[3]);
+}
+
+inline void compute_gridmask_result_16_host(__m128 *p, __m128 *pMask)
+{
+    p[0] = _mm_and_ps(p[0], pMask[0]);
+    p[1] = _mm_and_ps(p[1], pMask[1]);
+    p[2] = _mm_and_ps(p[2], pMask[2]);
+    p[3] = _mm_and_ps(p[3], pMask[3]);
+}
+
+inline void compute_gridmask_result_12_host(__m128 *p, __m128 pMask)
+{
+    p[0] = _mm_and_ps(p[0], pMask);
+    p[1] = _mm_and_ps(p[1], pMask);
+    p[2] = _mm_and_ps(p[2], pMask);
+}
+
+inline void compute_gridmask_result_4_host(__m128 *p, __m128 pMask)
+{
+    p[0] = _mm_and_ps(p[0], pMask);
+}
+
 RppStatus gridmask_u8_u8_host_tensor(Rpp8u *srcPtr,
                                      RpptDescPtr srcDescPtr,
                                      Rpp8u *dstPtr,

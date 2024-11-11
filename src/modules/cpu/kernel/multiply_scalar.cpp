@@ -24,6 +24,12 @@ SOFTWARE.
 
 #include "multiply_scalar.hpp"
 
+inline void compute_multiply_16_host(__m256 *p, __m256 *pMulParam)
+{
+    p[0] = _mm256_mul_ps(p[0], pMulParam[0]);    // multiply adjustment
+    p[1] = _mm256_mul_ps(p[1], pMulParam[0]);    // multiply adjustment
+}
+
 RppStatus multiply_scalar_f32_f32_host_tensor(Rpp32f *srcPtr,
                                               RpptGenericDescPtr srcGenericDescPtr,
                                               Rpp32f *dstPtr,

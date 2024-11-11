@@ -24,6 +24,22 @@ SOFTWARE.
 
 #include "color_temperature.hpp"
 
+inline void compute_color_temperature_48_host(__m256 *p, __m256 pAdj)
+{
+    p[0] = _mm256_add_ps(p[0], pAdj);    // color_temperature adjustment Rs
+    p[1] = _mm256_add_ps(p[1], pAdj);    // color_temperature adjustment Rs
+    // no color_temperature adjustment Gs
+    p[4] = _mm256_sub_ps(p[4], pAdj);    // color_temperature adjustment Bs
+    p[5] = _mm256_sub_ps(p[5], pAdj);    // color_temperature adjustment Bs
+}
+
+inline void compute_color_temperature_24_host(__m256 *p, __m256 pAdj)
+{
+    p[0] = _mm256_add_ps(p[0], pAdj);    // color_temperature adjustment Rs
+    // no color_temperature adjustment Gs
+    p[2] = _mm256_sub_ps(p[2], pAdj);    // color_temperature adjustment Bs
+}
+
 RppStatus color_temperature_u8_u8_host_tensor(Rpp8u *srcPtr,
                                               RpptDescPtr srcDescPtr,
                                               Rpp8u *dstPtr,

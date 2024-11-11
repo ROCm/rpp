@@ -23,6 +23,8 @@ SOFTWARE.
 */
 
 #include "resize_crop_mirror.hpp"
+#include "rpp_cpu_common_geometric.hpp"
+#include "rpp_cpu_common_interpolation.hpp"
 
 RppStatus resize_crop_mirror_u8_u8_host_tensor(Rpp8u *srcPtr,
                                                RpptDescPtr srcDescPtr,

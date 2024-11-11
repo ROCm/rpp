@@ -23,6 +23,20 @@ SOFTWARE.
 */
 
 #include "resize_mirror_normalize.hpp"
+#include "rpp_cpu_common_geometric.hpp"
+#include "rpp_cpu_common_interpolation.hpp"
+
+inline void compute_rmn_24_host(__m256 *p, __m256 *pRMNParams)
+{
+    p[0] = _mm256_mul_ps(_mm256_sub_ps(p[0], pRMNParams[0]), pRMNParams[1]);
+    p[1] = _mm256_mul_ps(_mm256_sub_ps(p[1], pRMNParams[2]), pRMNParams[3]);
+    p[2] = _mm256_mul_ps(_mm256_sub_ps(p[2], pRMNParams[4]), pRMNParams[5]);
+}
+
+inline void compute_rmn_8_host(__m256 *p, __m256 *pRMNParams)
+{
+    p[0] = _mm256_mul_ps(_mm256_sub_ps(p[0], pRMNParams[0]), pRMNParams[1]);
+}
 
 RppStatus resize_mirror_normalize_u8_u8_host_tensor(Rpp8u *srcPtr,
                                                     RpptDescPtr srcDescPtr,

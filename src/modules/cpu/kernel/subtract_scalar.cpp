@@ -24,6 +24,12 @@ SOFTWARE.
 
 #include "subtract_scalar.hpp"
 
+inline void compute_subtract_16_host(__m256 *p, __m256 *pSubtractParam)
+{
+    p[0] = _mm256_sub_ps(p[0], pSubtractParam[0]);    // subtract adjustment
+    p[1] = _mm256_sub_ps(p[1], pSubtractParam[0]);    // subtract adjustment
+}
+
 RppStatus subtract_scalar_f32_f32_host_tensor(Rpp32f *srcPtr,
                                               RpptGenericDescPtr srcGenericDescPtr,
                                               Rpp32f *dstPtr,

@@ -1,4 +1,25 @@
 #include "jitter.hpp"
+#include "rpp_cpu_common_random.hpp"
+
+inline void compute_jitter_src_loc_avx(__m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter, __m256 &pRow, __m256 &pCol, __m256 &pKernelSize, __m256 &pBound, __m256 &pHeightLimit, __m256 &pWidthLimit, __m256 &pStride, __m256 &pChannel, Rpp32s *srcLoc)
+{
+    __m256 pRngX = rpp_host_rng_xorwow_8_f32_avx(pxXorwowStateX, pxXorwowStateCounter);
+    __m256 pRngY = rpp_host_rng_xorwow_8_f32_avx(pxXorwowStateX, pxXorwowStateCounter);
+    __m256 pX = _mm256_mul_ps(pRngX, pKernelSize);
+    __m256 pY = _mm256_mul_ps(pRngY, pKernelSize);
+    pX = _mm256_max_ps(_mm256_min_ps(_mm256_floor_ps(_mm256_add_ps(pRow, _mm256_sub_ps(pX, pBound))), pHeightLimit), avx_p0);
+    pY = _mm256_max_ps(_mm256_min_ps(_mm256_floor_ps(_mm256_add_ps(pCol, _mm256_sub_ps(pY, pBound))), pWidthLimit), avx_p0);
+    __m256i pxSrcLoc = _mm256_cvtps_epi32(_mm256_fmadd_ps(pX, pStride, _mm256_mul_ps(pY, pChannel)));
+    _mm256_storeu_si256((__m256i*) srcLoc, pxSrcLoc);
+}
+
+inline void compute_jitter_src_loc(RpptXorwowStateBoxMuller *xorwowState, Rpp32s row, Rpp32s col, Rpp32s kSize, Rpp32s heightLimit, Rpp32s widthLimit, Rpp32s stride, Rpp32s bound, Rpp32s channels, Rpp32s &loc)
+{
+    Rpp32u heightIncrement = rpp_host_rng_xorwow_f32(xorwowState) * kSize;
+    Rpp32u widthIncrement = rpp_host_rng_xorwow_f32(xorwowState) * kSize;
+    loc = std::max(std::min(static_cast<int>(row + heightIncrement - bound), heightLimit), 0) * stride;
+    loc += std::max(std::min(static_cast<int>(col + widthIncrement  - bound), (widthLimit - 1)), 0) * channels;
+}
 
 RppStatus jitter_u8_u8_host_tensor(Rpp8u *srcPtr,
                                    RpptDescPtr srcDescPtr,

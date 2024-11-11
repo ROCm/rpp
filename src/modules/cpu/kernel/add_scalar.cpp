@@ -24,6 +24,13 @@ SOFTWARE.
 
 #include "add_scalar.hpp"
 
+
+inline void compute_add_16_host(__m256 *p, __m256 *pAddParam)
+{
+    p[0] = _mm256_add_ps(p[0], pAddParam[0]);    // add adjustment
+    p[1] = _mm256_add_ps(p[1], pAddParam[0]);    // add adjustment
+}
+
 RppStatus add_scalar_f32_f32_host_tensor(Rpp32f *srcPtr,
                                          RpptGenericDescPtr srcGenericDescPtr,
                                          Rpp32f *dstPtr,

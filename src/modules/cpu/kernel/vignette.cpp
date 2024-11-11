@@ -24,6 +24,50 @@ SOFTWARE.
 
 #include "vignette.hpp"
 
+inline void compute_vignette_48_host(__m256 *p, __m256 &pMultiplier, __m256 &pILocComponent, __m256 &pJLocComponent)
+{
+    __m256 pGaussianValue;
+    pGaussianValue = fast_exp_avx(_mm256_mul_ps(_mm256_fmadd_ps(pJLocComponent, pJLocComponent, pILocComponent), pMultiplier));
+    p[0] = _mm256_mul_ps(p[0], pGaussianValue);    // vignette adjustment
+    p[2] = _mm256_mul_ps(p[2], pGaussianValue);    // vignette adjustment
+    p[4] = _mm256_mul_ps(p[4], pGaussianValue);    // vignette adjustment
+    pJLocComponent = _mm256_add_ps(pJLocComponent, avx_p8);
+    pGaussianValue = fast_exp_avx(_mm256_mul_ps(_mm256_fmadd_ps(pJLocComponent, pJLocComponent, pILocComponent), pMultiplier));
+    p[1] = _mm256_mul_ps(p[1], pGaussianValue);    // vignette adjustment
+    p[3] = _mm256_mul_ps(p[3], pGaussianValue);    // vignette adjustment
+    p[5] = _mm256_mul_ps(p[5], pGaussianValue);    // vignette adjustment
+    pJLocComponent = _mm256_add_ps(pJLocComponent, avx_p8);
+}
+
+inline void compute_vignette_24_host(__m256 *p, __m256 &pMultiplier, __m256 &pILocComponent, __m256 &pJLocComponent)
+{
+    __m256 pGaussianValue;
+    pGaussianValue = fast_exp_avx(_mm256_mul_ps(_mm256_fmadd_ps(pJLocComponent, pJLocComponent, pILocComponent), pMultiplier));
+    p[0] = _mm256_mul_ps(p[0], pGaussianValue);    // vignette adjustment
+    p[1] = _mm256_mul_ps(p[1], pGaussianValue);    // vignette adjustment
+    p[2] = _mm256_mul_ps(p[2], pGaussianValue);    // vignette adjustment
+    pJLocComponent = _mm256_add_ps(pJLocComponent, avx_p8);
+}
+
+inline void compute_vignette_16_host(__m256 *p, __m256 &pMultiplier, __m256 &pILocComponent, __m256 &pJLocComponent)
+{
+    __m256 pGaussianValue;
+    pGaussianValue = fast_exp_avx(_mm256_mul_ps(_mm256_fmadd_ps(pJLocComponent, pJLocComponent, pILocComponent), pMultiplier));
+    p[0] = _mm256_mul_ps(p[0], pGaussianValue);    // vignette adjustment
+    pJLocComponent = _mm256_add_ps(pJLocComponent, avx_p8);
+    pGaussianValue = fast_exp_avx(_mm256_mul_ps(_mm256_fmadd_ps(pJLocComponent, pJLocComponent, pILocComponent), pMultiplier));
+    p[1] = _mm256_mul_ps(p[1], pGaussianValue);    // vignette adjustment
+    pJLocComponent = _mm256_add_ps(pJLocComponent, avx_p8);
+}
+
+inline void compute_vignette_8_host(__m256 *p, __m256 &pMultiplier, __m256 &pILocComponent, __m256 &pJLocComponent)
+{
+    __m256 pGaussianValue;
+    pGaussianValue = fast_exp_avx(_mm256_mul_ps(_mm256_fmadd_ps(pJLocComponent, pJLocComponent, pILocComponent), pMultiplier));
+    p[0] = _mm256_mul_ps(p[0], pGaussianValue);    // vignette adjustment
+    pJLocComponent = _mm256_add_ps(pJLocComponent, avx_p8);
+}
+
 RppStatus vignette_u8_u8_host_tensor(Rpp8u *srcPtr,
                                      RpptDescPtr srcDescPtr,
                                      Rpp8u *dstPtr,

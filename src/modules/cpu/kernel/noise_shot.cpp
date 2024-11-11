@@ -23,6 +23,106 @@ SOFTWARE.
 */
 
 #include "noise_shot.hpp"
+#include "rpp_cpu_common_random.hpp"
+
+inline void compute_shot_noise_8_host(__m256 *p, __m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter, __m256 *pShotNoiseFactorInv, __m256 *pShotNoiseFactor)
+{
+    __m256 pShotNoiseValue = avx_p0;                                                                                                                                // Rpp32u shotNoiseValue = 0;
+    __m256 pFactValue = fast_exp_avx(_mm256_mul_ps(*p, *pShotNoiseFactorInv));                                                                                      // Rpp32f factValue = expf(lambda);
+    __m256 pFactValueMask = avx_p1;                                                                                                                                 // Set mask for pFactValue computation to 1
+    do
+    {
+        pShotNoiseValue = _mm256_or_ps(_mm256_andnot_ps(pFactValueMask, pShotNoiseValue), _mm256_and_ps(pFactValueMask, _mm256_add_ps(pShotNoiseValue, avx_p1)));   // shotNoiseValue++;
+        pFactValue = _mm256_mul_ps(pFactValue, rpp_host_rng_xorwow_8_f32_avx(pxXorwowStateX, pxXorwowStateCounter));                                                // factValue *= rpp_host_rng_xorwow_f32(xorwowStatePtr);
+        pFactValueMask = _mm256_cmp_ps(pFactValue, avx_p1, _CMP_GT_OQ);                                                                                             // compute new pFactValueMask for loop exit condition
+    } while (_mm256_movemask_epi8(_mm256_cvtps_epi32(pFactValueMask)) != 0);                                                                                        // while (factValue > 1.0f);
+
+    pShotNoiseValue = _mm256_sub_ps(pShotNoiseValue, avx_p1);                                                                                                       // shotNoiseValue -= 1;
+    *p = _mm256_mul_ps(pShotNoiseValue, *pShotNoiseFactor);                                                                                                         // dst = pShotNoiseValue * shotNoiseFactor;
+}
+
+inline void compute_shot_noise_4_host(__m128 *p, __m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter, __m128 *pShotNoiseFactorInv, __m128 *pShotNoiseFactor)
+{
+    __m128 pShotNoiseValue = xmm_p0;                                                                                                                    // Rpp32u shotNoiseValue = 0;
+    __m128 pFactValue = fast_exp_sse(_mm_mul_ps(*p, *pShotNoiseFactorInv));                                                                             // Rpp32f factValue = expf(lambda);
+    __m128 pFactValueMask = xmm_p1;                                                                                                                     // Set mask for pFactValue computation to 1
+    do
+    {
+        pShotNoiseValue = _mm_or_ps(_mm_andnot_ps(pFactValueMask, pShotNoiseValue), _mm_and_ps(pFactValueMask, _mm_add_ps(pShotNoiseValue, xmm_p1)));   // shotNoiseValue++;
+        pFactValue = _mm_mul_ps(pFactValue, rpp_host_rng_xorwow_4_f32_sse(pxXorwowStateX, pxXorwowStateCounter));                                       // factValue *= rpp_host_rng_xorwow_f32(xorwowStatePtr);
+        pFactValueMask = _mm_cmpgt_ps(pFactValue, xmm_p1);                                                                                              // compute new pFactValueMask for loop exit condition
+    } while (_mm_movemask_epi8(_mm_cvtps_epi32(pFactValueMask)) != 0);                                                                                  // while (factValue > 1.0f);
+
+    pShotNoiseValue = _mm_sub_ps(pShotNoiseValue, xmm_p1);                                                                                              // shotNoiseValue -= 1;
+    *p = _mm_mul_ps(pShotNoiseValue, *pShotNoiseFactor);                                                                                                // dst = pShotNoiseValue * shotNoiseFactor;
+}
+
+inline void compute_shot_noise_48_host(__m256 *p, __m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter, __m256 *pShotNoiseFactorInv, __m256 *pShotNoiseFactor)
+{
+    compute_shot_noise_8_host(p     , pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_8_host(p +  1, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_8_host(p +  2, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_8_host(p +  3, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_8_host(p +  4, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_8_host(p +  5, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+}
+
+inline void compute_shot_noise_48_host(__m128 *p, __m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter, __m128 *pShotNoiseFactorInv, __m128 *pShotNoiseFactor)
+{
+    compute_shot_noise_4_host(p     , pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_4_host(p +  1, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_4_host(p +  2, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_4_host(p +  3, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_4_host(p +  4, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_4_host(p +  5, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_4_host(p +  6, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_4_host(p +  7, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_4_host(p +  8, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_4_host(p +  9, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_4_host(p + 10, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_4_host(p + 11, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+}
+
+inline void compute_shot_noise_24_host(__m256 *p, __m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter, __m256 *pShotNoiseFactorInv, __m256 *pShotNoiseFactor)
+{
+    compute_shot_noise_8_host(p     , pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_8_host(p +  1, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_8_host(p +  2, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+}
+
+inline void compute_shot_noise_16_host(__m256 *p, __m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter, __m256 *pShotNoiseFactorInv, __m256 *pShotNoiseFactor)
+{
+    compute_shot_noise_8_host(p     , pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_8_host(p +  1, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+}
+
+inline void compute_shot_noise_16_host(__m128 *p, __m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter, __m128 *pShotNoiseFactorInv, __m128 *pShotNoiseFactor)
+{
+    compute_shot_noise_4_host(p     , pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_4_host(p +  1, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_4_host(p +  2, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_4_host(p +  3, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+}
+
+inline void compute_shot_noise_12_host(__m128 *p, __m128i *pxXorwowStateX, __m128i *pxXorwowStateCounter, __m128 *pShotNoiseFactorInv, __m128 *pShotNoiseFactor)
+{
+    compute_shot_noise_4_host(p     , pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_4_host(p +  1, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+    compute_shot_noise_4_host(p +  2, pxXorwowStateX, pxXorwowStateCounter, pShotNoiseFactorInv, pShotNoiseFactor);
+}
+
+inline Rpp32u compute_shot_noise_1_host(RpptXorwowState *xorwowStatePtr, Rpp32f lambda)
+{
+    Rpp32u shotNoiseValue = 0;                                   // initialize shotNoiseValue to 0
+    Rpp32f factValue = rpp_host_math_exp_lim256approx(lambda);   // initialize factValue to e^lambda
+    do
+    {
+        shotNoiseValue++;                                        // additively cumulate shotNoiseValue by 1 until exit condition
+        factValue *= rpp_host_rng_xorwow_f32(xorwowStatePtr);    // multiplicatively cumulate factValue by the next uniform random number until exit condition
+    } while (factValue > 1.0f);                                  // loop while factValue >= 1.0f
+
+    return shotNoiseValue - 1;
+}
 
 inline void compute_shot_noise_params_initialize_4_host_sse(Rpp32f &shotNoiseFactor, Rpp32f &shotNoiseFactorInv, __m128 &pShotNoiseFactor, __m128 &pShotNoiseFactorInv)
 {

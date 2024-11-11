@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 #include "tensor_sum.hpp"
+#include "rpp_cpu_common_arithmetic.hpp"
 
 RppStatus tensor_sum_u8_u64_host(Rpp8u *srcPtr,
                                  RpptDescPtr srcDescPtr,

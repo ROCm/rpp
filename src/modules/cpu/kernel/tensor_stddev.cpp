@@ -24,6 +24,46 @@ SOFTWARE.
 
 #include "tensor_stddev.hpp"
 
+inline void compute_variance_8_host(__m256d *p1, __m256d *pMean, __m256d *pVar)
+{
+    __m256d pSub = _mm256_sub_pd(p1[0], pMean[0]);
+    pVar[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVar[0]);
+    pSub = _mm256_sub_pd(p1[1], pMean[0]);
+    pVar[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVar[0]);
+}
+
+inline void compute_variance_channel_pln3_24_host(__m256d *p1, __m256d *pMeanR, __m256d *pMeanG, __m256d *pMeanB, __m256d *pVarR, __m256d *pVarG, __m256d *pVarB)
+{
+    __m256d pSub = _mm256_sub_pd(p1[0], pMeanR[0]);
+    pVarR[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVarR[0]);
+    pSub = _mm256_sub_pd(p1[1], pMeanR[0]);
+    pVarR[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVarR[0]);
+    pSub = _mm256_sub_pd(p1[2], pMeanG[0]);
+    pVarG[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVarG[0]);
+    pSub = _mm256_sub_pd(p1[3], pMeanG[0]);
+    pVarG[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVarG[0]);
+    pSub = _mm256_sub_pd(p1[4], pMeanB[0]);
+    pVarB[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVarB[0]);
+    pSub = _mm256_sub_pd(p1[5], pMeanB[0]);
+    pVarB[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVarB[0]);
+}
+
+inline void compute_variance_image_pln3_24_host(__m256d *p1, __m256d *pMean, __m256d *pVarR, __m256d *pVarG, __m256d *pVarB)
+{
+    __m256d pSub = _mm256_sub_pd(p1[0], pMean[0]);
+    pVarR[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVarR[0]);
+    pSub = _mm256_sub_pd(p1[1], pMean[0]);
+    pVarR[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVarR[0]);
+    pSub = _mm256_sub_pd(p1[2], pMean[0]);
+    pVarG[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVarG[0]);
+    pSub = _mm256_sub_pd(pMean[0], p1[3]);
+    pVarG[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVarG[0]);
+    pSub = _mm256_sub_pd(p1[4], pMean[0]);
+    pVarB[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVarB[0]);
+    pSub = _mm256_sub_pd(p1[5], pMean[0]);
+    pVarB[0] = _mm256_add_pd(_mm256_mul_pd(pSub, pSub), pVarB[0]);
+}
+
 RppStatus tensor_stddev_u8_f32_host(Rpp8u *srcPtr,
                                     RpptDescPtr srcDescPtr,
                                     Rpp32f *tensorStddevArr,

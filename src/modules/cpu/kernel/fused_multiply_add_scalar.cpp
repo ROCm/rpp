@@ -24,6 +24,11 @@ SOFTWARE.
 
 #include "fused_multiply_add_scalar.hpp"
 
+inline void rpp_host_math_fmadd8(__m256 *p, __m256 *pFmaddParams)
+{
+    p[0] = _mm256_fmadd_ps(p[0], pFmaddParams[0], pFmaddParams[1]);    // fmadd adjustment
+}
+
 RppStatus fused_multiply_add_scalar_f32_f32_host_tensor(Rpp32f *srcPtr,
                                            RpptGenericDescPtr srcGenericDescPtr,
                                            Rpp32f *dstPtr,
