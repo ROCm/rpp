@@ -67,26 +67,11 @@ typedef halfhpp Rpp16f;
 #define INTERP_BILINEAR_KERNEL_RADIUS   1.0f        // Kernel radius needed for Bilinear Interpolation
 #define INTERP_BILINEAR_NUM_COEFFS      4           // Number of coefficents needed for Bilinear Interpolation
 #define NEWTON_METHOD_INITIAL_GUESS     0x5f3759df          // Initial guess for Newton Raphson Inverse Square Root
-#define RPP_2POW32                      0x100000000         // (2^32)
-#define RPP_2POW32_INV                  2.3283064e-10f      // (1 / 2^32)
-#define RPP_2POW32_INV_DIV_2            1.164153218e-10f    // RPP_2POW32_INV / 2
-#define RPP_2POW32_INV_MUL_2PI          1.46291812e-09f     // (1 / 2^32) * 2PI
-#define RPP_2POW32_INV_MUL_2PI_DIV_2    7.3145906e-10f      // RPP_2POW32_INV_MUL_2PI / 2
 #define RPP_255_OVER_1PT57              162.3380757272f     // (255 / 1.570796) - multiplier used in phase computation
 #define ONE_OVER_1PT57                  0.6366199048f       // (1 / 1.570796) i.e. 2/pi - multiplier used in phase computation
 
-//const __m128 xmm_p2Pow32 = _mm_set1_ps(RPP_2POW32);
-//const __m128 xmm_p2Pow32Inv = _mm_set1_ps(RPP_2POW32_INV);
-//const __m128 xmm_p2Pow32InvDiv2 = _mm_set1_ps(RPP_2POW32_INV_DIV_2);
-//const __m128 xmm_p2Pow32InvMul2Pi = _mm_set1_ps(RPP_2POW32_INV_MUL_2PI);
-//const __m128 xmm_p2Pow32InvMul2PiDiv2 = _mm_set1_ps(RPP_2POW32_INV_MUL_2PI_DIV_2);
 const __m128i xmm_newtonMethodInitialGuess = _mm_set1_epi32(NEWTON_METHOD_INITIAL_GUESS);
 
-//const __m256 avx_p2Pow32 = _mm256_set1_ps(RPP_2POW32);
-//const __m256 avx_p2Pow32Inv = _mm256_set1_ps(RPP_2POW32_INV);
-//const __m256 avx_p2Pow32InvDiv2 = _mm256_set1_ps(RPP_2POW32_INV_DIV_2);
-//const __m256 avx_p2Pow32InvMul2Pi = _mm256_set1_ps(RPP_2POW32_INV_MUL_2PI);
-//const __m256 avx_p2Pow32InvMul2PiDiv2 = _mm256_set1_ps(RPP_2POW32_INV_MUL_2PI_DIV_2);
 const __m256i avx_newtonMethodInitialGuess = _mm256_set1_epi32(NEWTON_METHOD_INITIAL_GUESS);
 
 #if __AVX2__
@@ -152,15 +137,6 @@ inline __m256 rpp_host_math_inverse_sqrt_8_avx(__m256 p)
     p = _mm256_mul_ps(p, _mm256_fmadd_ps(p, _mm256_mul_ps(p, pHalfNeg), _ps_1p5_avx));  // x = x * (1.5f - xHalf * x * x);
 
     return p;
-}
-
-inline Rpp32f rpp_host_math_exp_lim256approx(Rpp32f x)
-{
-  x = 1.0 + x * ONE_OVER_256;
-  x *= x; x *= x; x *= x; x *= x;
-  x *= x; x *= x; x *= x; x *= x;
-
-  return x;
 }
 
 // copy ROI of voxel data from input to output

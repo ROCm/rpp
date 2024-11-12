@@ -25,6 +25,15 @@ SOFTWARE.
 #include "noise_shot.hpp"
 #include "rpp_cpu_common_random.hpp"
 
+inline Rpp32f rpp_host_math_exp_lim256approx(Rpp32f x)
+{
+  x = 1.0 + x * ONE_OVER_256;
+  x *= x; x *= x; x *= x; x *= x;
+  x *= x; x *= x; x *= x; x *= x;
+
+  return x;
+}
+
 inline void compute_shot_noise_8_host(__m256 *p, __m256i *pxXorwowStateX, __m256i *pxXorwowStateCounter, __m256 *pShotNoiseFactorInv, __m256 *pShotNoiseFactor)
 {
     __m256 pShotNoiseValue = avx_p0;                                                                                                                                // Rpp32u shotNoiseValue = 0;
