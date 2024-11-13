@@ -23,7 +23,6 @@ SOFTWARE.
 */
 
 #include "rppdefs.h"
-#include "rpp_cpu_simd.hpp"
 #include "rpp_cpu_common.hpp"
 
 #define SPATTER_MAX_WIDTH 1920

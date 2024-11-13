@@ -23,7 +23,6 @@ SOFTWARE.
 */
 
 #include "rppdefs.h"
-#include "rpp_cpu_simd.hpp"
 #include "rpp_cpu_common.hpp"
 
 RppStatus add_scalar_f32_f32_host_tensor(Rpp32f *srcPtr,

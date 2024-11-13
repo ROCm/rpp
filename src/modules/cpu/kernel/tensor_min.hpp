@@ -23,7 +23,6 @@ SOFTWARE.
 */
 
 #include "rppdefs.h"
-#include "rpp_cpu_simd.hpp"
 #include "rpp_cpu_common.hpp"
 
 RppStatus tensor_min_u8_u8_host(Rpp8u *srcPtr,

@@ -23,7 +23,6 @@ SOFTWARE.
 */
 
 #include "rppdefs.h"
-#include "rpp_cpu_simd.hpp"
 #include "rpp_cpu_common.hpp"
 
 void compute_lens_correction_remap_tables_host_tensor(RpptDescPtr srcDescPtr,

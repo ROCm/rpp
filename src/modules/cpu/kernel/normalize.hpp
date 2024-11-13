@@ -24,7 +24,6 @@ SOFTWARE.
 #ifndef NORMALIZE_HPP
 #define NORMALIZE_HPP
 #include "rppdefs.h"
-#include "rpp_cpu_simd.hpp"
 #include "rpp_cpu_common.hpp"
 
 // Computes normalize for ND non toggle variants for i8 dataype
