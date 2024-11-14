@@ -78,6 +78,7 @@ function(add_kernel_includes KERNEL_FILES)
 endfunction()
 
 file(GLOB CPPFILES "*.cpp" )
+list(FILTER CPPFILES EXCLUDE REGEX "rppi.*\\.cpp")
 list(APPEND Rpp_Source ${CPPFILES})
 list(APPEND Rpp_Source ${PROJECT_BINARY_DIR}/kernel.cpp)
 list(APPEND Rpp_Source ${PROJECT_BINARY_DIR}/kernel_includes.cpp)
