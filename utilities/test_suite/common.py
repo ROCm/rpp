@@ -65,7 +65,7 @@ imageAugmentationMap = {
     39: ["resize_crop_mirror", "HOST", "HIP"],
     45: ["color_temperature", "HOST", "HIP"],
     46: ["vignette", "HOST", "HIP"],
-    49: ["box_filter", "HIP"],
+    49: ["box_filter", "HIP", "HOST"],
     54: ["gaussian_filter", "HIP"],
     61: ["magnitude", "HOST", "HIP"],
     63: ["phase", "HOST", "HIP"],
@@ -93,10 +93,10 @@ audioAugmentationMap = {
     1: ["to_decibels", "HOST", "HIP"],
     2: ["pre_emphasis_filter", "HOST", "HIP"],
     3: ["down_mixing", "HOST", "HIP"],
-    4: ["spectrogram", "HOST"],
-    5: ["slice", "HOST"],
+    4: ["spectrogram", "HOST", "HIP"],
+    5: ["slice", "HOST", "HIP"],
     6: ["resample", "HOST", "HIP"],
-    7: ["mel_filter_bank", "HOST"]
+    7: ["mel_filter_bank", "HOST", "HIP"]
 }
 
 voxelAugmentationMap = {
