@@ -50,11 +50,7 @@ def get_log_file_list():
 def run_unit_test_cmd(numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg):
     print("\n./Tensor_misc_host " + str(case) + " " + str(testType) + " " + str(toggle) + " " + str(numDims) + " " + str(batchSize) + " " + str(numRuns) + " " + str(additionalArg))
     result = subprocess.Popen([buildFolderPath + "/build/Tensor_misc_host", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
-    stdoutData, stderrData = result.communicate()
-    print(stdoutData.decode())
-    exitCode = result.returncode
-    if(exitCode != 0):
-        log_detected_errors("Returned non-zero exit status : "+ str(exitCode) + " " + stderrData.decode(), errorLog, miscAugmentationMap[int(case)][0], "", get_misc_func_name(int(case), numDims, additionalArg), get_signal_name_from_return_code(exitCode))
+    log_detected(result, errorLog, miscAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_misc_func_name(int(case), numDims, additionalArg))
     print("------------------------------------------------------------------------------------------")
 
 def run_performance_test_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg):
@@ -62,11 +58,8 @@ def run_performance_test_cmd(loggingFolder, numDims, case, numRuns, testType, to
         logFile.write("./Tensor_misc_host " + str(case) + " " + str(testType) + " " + str(toggle) + " " + str(numDims) + " " + str(batchSize) + " " + str(numRuns) + " " + str(additionalArg) + "\n")
         process = subprocess.Popen([buildFolderPath + "/build/Tensor_misc_host", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
         read_from_subprocess_and_write_to_log(process, logFile)
-        stdoutData, stderrData = process.communicate()
-        exitCode = process.returncode
-        if(exitCode != 0):
-            log_detected_errors("Returned non- exit status : "+ str(exitCode) + " " + stderrData.decode(), errorLog, "", miscAugmentationMap[int(case)][0], get_misc_func_name(int(case), numDims, additionalArg), get_signal_name_from_return_code(exitCode))
-
+        log_detected(process, errorLog, miscAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_misc_func_name(int(case), numDims, additionalArg))
+ 
 def run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg = ""):
     if testType == 0:
         run_unit_test_cmd(numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg)

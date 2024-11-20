@@ -68,21 +68,13 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
                 for kernelSize in range(3, 10, 2):
                     print("./Tensor_hip " + srcPath1 + " " + srcPath2 + " " + dstPath + " " + str(bitDepth) + " " + str(outputFormatToggle) + " " + str(case) + " " + str(kernelSize))
                     result = subprocess.Popen([buildFolderPath + "/build/Tensor_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(kernelSize), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
-                    stdoutData, stderrData = result.communicate()
-                    print(stdoutData.decode())
-                    exitCode = result.returncode
-                    if(exitCode != 0):
-                        log_detected_errors("Returned non-zero exit status : "+ str(exitCode) + " " + stderrData.decode(), errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_image_layout_type(layout, outputFormatToggle, "HIP"), get_signal_name_from_return_code(exitCode))
+                    log_detected(result, errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_image_layout_type(layout, outputFormatToggle, "HIP"))
             elif case == "8":
                 # Run all variants of noise type functions with additional argument of noiseType = gausssianNoise / shotNoise / saltandpepperNoise
                 for noiseType in range(3):
                     print("./Tensor_hip " + srcPath1 + " " + srcPath2 + " " + dstPathTemp + " " + str(bitDepth) + " " + str(outputFormatToggle) + " " + str(case) + " " + str(noiseType))
                     result = subprocess.Popen([buildFolderPath + "/build/Tensor_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(noiseType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
-                    stdoutData, stderrData = result.communicate()
-                    print(stdoutData.decode())
-                    exitCode = result.returncode
-                    if(exitCode != 0):
-                        log_detected_errors("Returned non-zero exit status : "+ str(exitCode) + " " + stderrData.decode(), errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_image_layout_type(layout, outputFormatToggle, "HIP"), get_signal_name_from_return_code(exitCode))
+                    log_detected(result, errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_image_layout_type(layout, outputFormatToggle, "HIP"))
             elif case == "21" or case == "23" or case == "24" or case == "79":
                 # Run all variants of interpolation functions with additional argument of interpolationType = bicubic / bilinear / gaussian / nearestneigbor / lanczos / triangular
                 interpolationRange = 6
@@ -91,19 +83,11 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
                 for interpolationType in range(interpolationRange):
                     print("./Tensor_hip " + srcPath1 + " " + srcPath2 + " " + dstPathTemp + " " + str(bitDepth) + " " + str(outputFormatToggle) + " " + str(case) + " " + str(interpolationType))
                     result = subprocess.Popen([buildFolderPath + "/build/Tensor_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(interpolationType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
-                    stdoutData, stderrData = result.communicate()
-                    print(stdoutData.decode())
-                    exitCode = result.returncode
-                    if(exitCode != 0):
-                        log_detected_errors("Returned non-zero exit status : "+ str(exitCode) + " " + stderrData.decode(), errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_image_layout_type(layout, outputFormatToggle, "HIP"), get_signal_name_from_return_code(exitCode))
+                    log_detected(result, errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_image_layout_type(layout, outputFormatToggle, "HIP"))
             else:
                 print("./Tensor_hip " + srcPath1 + " " + srcPath2 + " " + dstPathTemp + " " + str(bitDepth) + " " + str(outputFormatToggle) + " " + str(case) + " 0 " + str(numRuns) + " " + str(testType) + " " + str(layout))
                 result = subprocess.Popen([buildFolderPath + "/build/Tensor_hip", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), "0", str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
-                stdoutData, stderrData = result.communicate()
-                print(stdoutData.decode())
-                exitCode = result.returncode
-                if(exitCode != 0):
-                    log_detected_errors("Returned non-zero exit status : "+ str(exitCode) + " " + stderrData.decode(), errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_image_layout_type(layout, outputFormatToggle, "HIP"), get_signal_name_from_return_code(exitCode))
+                log_detected(result, errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_image_layout_type(layout, outputFormatToggle, "HIP"))
             print("------------------------------------------------------------------------------------------")
 
 def run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, bitDepth, outputFormatToggle, case, additionalParam, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
@@ -111,10 +95,7 @@ def run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, d
         print("./Tensor_hip " + srcPath1 + " " + srcPath2 + " " + dstPath + " " + str(bitDepth) + " " + str(outputFormatToggle) + " " + str(case) + " " + str(additionalParam))
         process = subprocess.Popen([buildFolderPath + "/build/Tensor_hip", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)  # nosec        
         read_from_subprocess_and_write_to_log(process, logFile)
-        _, stderrData = process.communicate()
-        exitCode = process.returncode
-        if(exitCode != 0):
-            log_detected_errors("Returned non-zero exit status : "+ str(exitCode) + " " + stderrData.decode(), errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_image_layout_type(layout, outputFormatToggle, "HIP"), get_signal_name_from_return_code(exitCode))
+        log_detected(process, errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_image_layout_type(layout, outputFormatToggle, "HIP"))
 
 def run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
     print("\n")
@@ -158,10 +139,7 @@ def run_performance_test_with_profiler(loggingFolder, logFileLayout, srcPath1, s
             output_str = output.decode('utf-8')
             logFile.write(output_str)
 
-        stdoutData, stderrData = process.communicate()
-        exitCode = process.returncode
-        if(exitCode != 0):
-            log_detected_errors("Returned non-zero exit status : "+ str(exitCode) + " " + stderrData.decode(), errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_image_layout_type(layout, outputFormatToggle, "HIP"), get_signal_name_from_return_code(exitCode))
+        log_detected(process, errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_image_layout_type(layout, outputFormatToggle, "HIP"))
 
 # Parse and validate command-line arguments for the RPP test suite
 def rpp_test_suite_parser_and_validator():

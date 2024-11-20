@@ -60,11 +60,7 @@ def func_group_finder(case_number):
 def run_unit_test_cmd(headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
     print("\n./Tensor_voxel_hip " + headerPath + " " + dataPath + " " + dstPathTemp + " " + str(layout) + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(qaMode) + " " + str(batchSize) + " " + str(bitDepth))
     result = subprocess.Popen([buildFolderPath + "/build/Tensor_voxel_hip", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE) # nosec
-    stdoutData, stderrData = result.communicate()
-    print(stdoutData.decode())
-    exitCode = result.returncode
-    if(exitCode != 0):
-        log_detected_errors("Returned non-zero exit status : "+ str(exitCode) + " " + stderrData.decode(), errorLog, voxelAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_voxel_layout_type(layout, "HIP"), get_signal_name_from_return_code(exitCode))
+    log_detected(result, errorLog, voxelAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_voxel_layout_type(layout, "HIP"))    
     print("\n------------------------------------------------------------------------------------------")
 
 def run_performance_test_cmd(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
@@ -78,18 +74,16 @@ def run_performance_test_cmd(loggingFolder, logFileLayout, headerPath, dataPath,
             output = output.decode('utf-8')
             if output:
                 print(output)
-                logFile.write(output)
             if "Running" in output or "max,min,avg wall times" in output:
                 cleanedOutput = ''.join(char for char in output if 32 <= ord(char) <= 126)  # Remove control characters
                 cleanedOutput = cleanedOutput.strip()  # Remove leading/trailing whitespace
                 logFile.write(cleanedOutput + '\n')
                 if "max,min,avg wall times" in output:
                     logFile.write("\n")
+            else:
+                logFile.write(output)
         
-        stdoutData, stderrData = process.communicate()
-        exitCode = process.returncode
-        if(exitCode != 0):
-            log_detected_errors("Returned non-zero exit status : "+ str(exitCode) + " " + stderrData.decode(), errorLog, voxelAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_voxel_layout_type(layout, "HIP"), get_signal_name_from_return_code(exitCode))
+        log_detected(process, errorLog, voxelAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_voxel_layout_type(layout, "HIP"))    
         print("\n------------------------------------------------------------------------------------------")
 
 def run_performance_test_with_profiler_cmd(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
@@ -109,10 +103,7 @@ def run_performance_test_with_profiler_cmd(loggingFolder, logFileLayout, headerP
                     break
                 print(output.strip())
                 logFile.write(output.decode('utf-8'))
-        stdoutData, stderrData = process.communicate()
-        exitCode = process.returncode
-        if(exitCode != 0):
-            log_detected_errors("Returned non-zero exit status : "+ str(exitCode) + " " + stderrData.decode(), errorLog, voxelAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_voxel_layout_type(layout, "HIP"), get_signal_name_from_return_code(exitCode))
+        log_detected(process, errorLog, voxelAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_voxel_layout_type(layout, "HIP"))    
     print("------------------------------------------------------------------------------------------")
 
 def run_test(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize, profilingOption = 'NO'):

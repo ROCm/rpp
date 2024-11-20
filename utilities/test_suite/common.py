@@ -425,9 +425,9 @@ def get_misc_func_name(testCase, nDim, additionalArg):
     permOrder = additionalParam
     result = ""
     if (axisMaskCase):
-        result = result + "_" + str(nDim) + "d" + "_axisMask" + str(axisMask)
+        result = result + str(nDim) + "d" + "_axisMask" + str(axisMask)
     if (permOrderCase):
-        result = result + "_" + str(nDim) + "d" + "_permOrder" + str(permOrder)
+        result = result + str(nDim) + "d" + "_permOrder" + str(permOrder)
     return result
 
 def get_voxel_layout_type(layout, backend):
@@ -456,6 +456,11 @@ def get_signal_name_from_return_code(returnCode):
         result = result + signalName
     return result
 
-def log_detected_errors(errorData, errorLog, caseName, functionBitDepth, functionSpecificName, functionSignalName):
-    msg = caseName + functionBitDepth + functionSpecificName + " kernel execution failed. Getting below error\n" + errorData + functionSignalName
-    errorLog.append(msg)
+def log_detected(result, errorLog, caseName, functionBitDepth, functionSpecificName):
+    stdoutData, stderrData = result.communicate()
+    print(stdoutData.decode())
+    exitCode = result.returncode
+    if(exitCode != 0):
+        errorData = "Returned non-zero exit status : "+ str(exitCode) + " " + stderrData.decode();
+        msg = caseName + functionBitDepth + functionSpecificName + " kernel execution failed. Getting below error\n" + errorData + get_signal_name_from_return_code(exitCode)
+        errorLog.append(msg)
