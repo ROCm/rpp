@@ -2,7 +2,14 @@
 
 Full documentation for RPP is available at [https://rocm.docs.amd.com/projects/rpp/en/latest](https://rocm.docs.amd.com/projects/rpp/en/latest)
 
-## (Unreleased) RPP 1.9.4
+## RPP 1.9.5 (Unreleased) 
+
+### Changes
+
+* RPP Tensor Gaussian Filter support on HOST
+
+## RPP 1.9.1 for ROCm 6.3.0
+ 
 ### Changes
 
 * RPP Tensor Box Filter support on HOST
