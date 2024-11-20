@@ -275,7 +275,7 @@ if testType == 0:
         elif case == "26" and (("--input_path1" not in sys.argv and "--input_path2" not in sys.argv) or qaMode == 1):
             srcPath1 = lensCorrectionInFilePath
             srcPath2 = lensCorrectionInFilePath
-        else :
+        else:
             srcPath1 = inFilePath1
             srcPath2 = inFilePath2
         # if QA mode is enabled overwrite the input folders with the folders used for generating golden outputs
@@ -311,7 +311,7 @@ else:
         elif case == "26" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
             srcPath1 = lensCorrectionInFilePath
             srcPath2 = lensCorrectionInFilePath
-        else :
+        else:
             srcPath1 = inFilePath1
             srcPath2 = inFilePath2
         for layout in range(3):
