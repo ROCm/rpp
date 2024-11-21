@@ -61,7 +61,7 @@ def func_group_finder(case_number):
 def run_unit_test_cmd(headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
     print("\n./Tensor_voxel_host " + headerPath + " " + dataPath + " " + dstPathTemp + " " + str(layout) + " " + str(case) + " " + str(numRuns) + " " + str(testType) + " " + str(qaMode) + " " + str(batchSize) + " " + str(bitDepth))
     result = subprocess.Popen([buildFolderPath + "/build/Tensor_voxel_host", headerPath, dataPath, dstPathTemp, str(layout), str(case), str(numRuns), str(testType), str(qaMode), str(batchSize), str(bitDepth), scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE) # nosec
-    log_detected(result, errorLog, voxelAugmentationMap[int(case)][0], get_bit_depth(int(2)), get_voxel_layout_type(layout, "HOST"))    
+    log_detected(result, errorLog, voxelAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_voxel_layout_type(layout, "HOST"))    
     print("\n------------------------------------------------------------------------------------------")
 
 def run_performance_test_cmd(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
@@ -85,7 +85,7 @@ def run_performance_test_cmd(loggingFolder, logFileLayout, headerPath, dataPath,
                 logFile.write(output)
                 
 
-        log_detected(process, errorLog, voxelAugmentationMap[int(case)][0], get_bit_depth(int(2)), get_voxel_layout_type(layout, "HOST"))    
+        log_detected(process, errorLog, voxelAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_voxel_layout_type(layout, "HOST"))    
         print("\n------------------------------------------------------------------------------------------")
 
 def run_test(loggingFolder, logFileLayout, headerPath, dataPath, dstPathTemp, layout, case, numRuns, testType, qaMode, batchSize):
