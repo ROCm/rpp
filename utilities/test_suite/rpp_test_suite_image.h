@@ -41,6 +41,7 @@ SOFTWARE.
 #include <turbojpeg.h>
 #include <random>
 #include <map>
+#include <unordered_set>
 #include <iomanip>
 
 #ifdef GPU_SUPPORT
@@ -121,6 +122,16 @@ std::map<int, string> augmentationMap =
     {91, "tensor_stddev"},
     {92, "slice"}
 };
+
+const unordered_set<int> additionalParamCases = {8, 21, 23, 24, 49, 79};
+const unordered_set<int> kernelSizeCases = {49};
+const unordered_set<int> dualInputCases = {2, 30, 33, 61, 63, 65, 68};
+const unordered_set<int> randomOutputCases = {6, 8, 84};
+const unordered_set<int> nonQACases = {24};
+const unordered_set<int> interpolationTypeCases = {21, 23, 24, 79};
+const unordered_set<int> reductionTypeCases = {87, 88, 89, 90, 91};
+const unordered_set<int> noiseTypeCases = {8};
+const unordered_set<int> pln1OutTypeCases = {86};
 
 // Golden outputs for Tensor min Kernel
 std::map<int, std::vector<Rpp8u>> TensorMinReferenceOutputs =
