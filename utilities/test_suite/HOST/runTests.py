@@ -188,8 +188,8 @@ def rpp_test_suite_parser_and_validator():
         print(" Invalid ROI. Aborting")
         exit(0)
 
+    case_list = []
     if args.case_list:
-        case_list = []
         for case in args.case_list:
             try:
                 case_number = get_case_number(case)
@@ -202,7 +202,7 @@ def rpp_test_suite_parser_and_validator():
         print("No cases provided.")
 
     args.case_list = case_list
-    if args.case_list is None:
+    if args.case_list is None or len(args.case_list) == 0:
         args.case_list = range(args.case_start, args.case_end + 1)
         args.case_list = [str(x) for x in args.case_list]
     else:
@@ -271,9 +271,6 @@ os.chdir(buildFolderPath + "/build")
 # Run cmake and make commands
 subprocess.call(["cmake", scriptPath], cwd=".")   # nosec
 subprocess.call(["make", "-j16"], cwd=".")    # nosec
-
-# List of cases supported
-supportedCaseList = ['0', '1', '2', '4', '5', '6', '8', '13', '20', '21', '23', '26', '29', '30', '31', '32', '33', '34', '35', '36', '37', '38', '39', '45', '46', '49', '54', '61', '63', '65', '68', '70', '79', '80', '81', '82', '83', '84', '85', '86', '87', '88', '89', '90', '91', '92']
 
 if testType == 0:
     noCaseSupported = all(int(case) not in imageAugmentationMap.keys() for case in caseList)
