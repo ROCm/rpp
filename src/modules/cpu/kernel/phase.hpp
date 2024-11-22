@@ -153,7 +153,7 @@ RppStatus phase_u8_u8_host_tensor(Rpp8u *srcPtr1,
 
                 int vectorLoopCount = 0;
 #if __AVX2__
-                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrement)
+                for (; vectorLoopCount < alignedLength; vectorLoopCount += vectorIncrementPerChannel)
                 {
                     __m256 p1[6], p2[6];
 

@@ -55,7 +55,6 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
     outputFormatToggles = [0, 1]
     if qaMode:
         bitDepths = [0]
-        outputFormatToggles = [0]
     for bitDepth in bitDepths:
         for outputFormatToggle in outputFormatToggles:
             # There is no layout toggle for PLN1 case, so skip this case
@@ -189,6 +188,20 @@ def rpp_test_suite_parser_and_validator():
         print(" Invalid ROI. Aborting")
         exit(0)
 
+    if args.case_list:
+        case_list = []
+        for case in args.case_list:
+            try:
+                case_number = get_case_number(case)
+                case_list.append(case_number)
+            except ValueError as e:
+                print(e)
+
+        print(f"Processed case numbers: {case_list}")
+    else:
+        print("No cases provided.")
+
+    args.case_list = case_list
     if args.case_list is None:
         args.case_list = range(args.case_start, args.case_end + 1)
         args.case_list = [str(x) for x in args.case_list]
