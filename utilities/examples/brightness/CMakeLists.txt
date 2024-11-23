@@ -61,7 +61,7 @@ endif()
 
 if (hip_FOUND AND OpenCV_FOUND)
     message("-- ${Green}${PROJECT_NAME} set to build with rpp, hip and OpenCV${ColourReset}")
-    set(COMPILER_FOR_HIP ${ROCM_PATH}/bin/hipcc)
+    set(COMPILER_FOR_HIP ${ROCM_PATH}/bin/amdclang++)
     set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
 
     include_directories(${hip_INCLUDE_DIRS} ${hip_INCLUDE_DIRS}/hip)

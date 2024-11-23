@@ -55,15 +55,17 @@ Spectrogram kernel output represented as a image <br><br>
 > [!IMPORTANT]
 > `sudo amdgpu-install --usecase=rocm`
 
-* CMake Version `3.5` and above
+* CMake Version `3.10` and above
   ```shell
   sudo apt install cmake
   ```
 
-* Clang Version `5.0.1` and above
-  ```shell
-  sudo apt install clang
-  ```
+* AMD Clang++ Version 18.0.0 or later - installed with ROCm
+> [!IMPORTANT]
+> * For CPU only backend use Clang Version `5.0.1` and above
+>   ```shell
+>    sudo apt install clang
+>   ```
 
 * [Half-precision floating-point](https://half.sourceforge.net) library - Version `1.12.0` or higher
   ```shell
