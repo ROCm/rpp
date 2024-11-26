@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]
 
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 project(test_suite/HIP)
 
 # ROCM Path
@@ -142,7 +142,7 @@ else()
                     message("-- ${Green}Python3 found at ${Python3_EXECUTABLE}${ColourReset}")
 
                     # set flags
-                    set(COMPILER_FOR_HIP ${ROCM_PATH}/bin/hipcc)
+                    set(COMPILER_FOR_HIP ${ROCM_PATH}/bin/amdclang++)
                     set(CMAKE_CXX_COMPILER ${COMPILER_FOR_HIP})
                     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGPU_SUPPORT=1 -DRPP_BACKEND_HIP=1 -std=gnu++17")
 
