@@ -28,12 +28,15 @@ import sys
 import datetime
 import shutil
 import pandas as pd
+import signal
 
 try:
     from errno import FileExistsError
 except ImportError:
     # Python 2 compatibility
     FileExistsError = OSError
+
+bitDepthDict = {0 : "_u8_", 1 : "_f16_", 2 : "_f32_", 3: "_u8_f16", 4: "_u8_f32_", 5: "_i8_", 6: "_u8_i8_"}
 
 imageAugmentationMap = {
     0: ["brightness", "HOST", "HIP"],
@@ -388,3 +391,76 @@ def dataframe_to_markdown(df):
         md += '| ' + ' | '.join([str(value).ljust(column_widths[df.columns[j]]) for j, value in enumerate(row.values)]) + ' |\n'
 
     return md
+
+def get_image_layout_type(layout, outputFormatToggle, backend):
+    result = "Tensor_" + backend
+    if layout == 0:
+        result += "_PKD3"
+        if outputFormatToggle:
+            result += "_toPLN3"
+        else:
+            result += "_toPKD3"
+    elif layout == 1:
+        result += "_PLN3"
+        if outputFormatToggle:
+            result += "_toPKD3"
+        else:
+            result += "_toPLN3"
+    else:
+       result += "_PLN1"
+       result += "_toPLN1"
+    return result
+
+def get_misc_func_name(testCase, nDim, additionalArg):
+    axisMaskCase = 0
+    permOrderCase = 0
+    if testCase == 1:
+        axisMaskCase = 1
+    elif testCase == 0:
+        permOrderCase = 1
+    additionalParam = 1
+    if axisMaskCase or permOrderCase:
+        additionalParam = additionalArg
+    axisMask = additionalParam
+    permOrder = additionalParam
+    result = ""
+    if (axisMaskCase):
+        result = result + str(nDim) + "d" + "_axisMask" + str(axisMask)
+    if (permOrderCase):
+        result = result + str(nDim) + "d" + "_permOrder" + str(permOrder)
+    return result
+
+def get_voxel_layout_type(layout, backend):
+    result = "Tensor_" + backend
+    if layout == 0:
+        result += "_PKD3_toPKD3"
+    elif layout == 1:
+        result += "_PLN3_toPLN3"
+    else:
+       result += "_PLN1_toPLN1"
+    return result
+
+def get_bit_depth(bitDepth):
+    result = str(bitDepthDict[bitDepth])
+    return result
+
+def get_signal_name_from_return_code(returnCode):
+    result = ""
+    if returnCode < 0:
+        signalNum = -returnCode
+        result = result + " Signal = "
+        for signame, signum in signal.__dict__.items():
+            if isinstance(signum, int) and signum == signalNum:
+                signalName = signame
+                break
+        result = result + signalName
+    return result
+
+def log_detected(result, errorLog, caseName, functionBitDepth, functionSpecificName):
+    stdoutData, stderrData = result.communicate()
+    print(stdoutData.decode())
+    exitCode = result.returncode
+    if(exitCode != 0):
+        errorData = "Returned non-zero exit status : "+ str(exitCode) + " " + stderrData.decode();
+        msg = caseName + functionBitDepth + functionSpecificName + " kernel execution failed. Getting below error\n" + errorData + get_signal_name_from_return_code(exitCode)
+        errorLog.append(msg)

@@ -41,6 +41,7 @@ outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
 caseMin = 0
 caseMax = 92
+errorLog = []
 
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list(preserveOutput):
@@ -66,14 +67,13 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
                 for kernelSize in range(3, 10, 2):
                     print(f"./Tensor_host {srcPath1} {srcPath2} {dstPathTemp} {bitDepth} {outputFormatToggle} {case} {kernelSize} 0 ")
                     result = subprocess.run([buildFolderPath + "/build/Tensor_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(kernelSize), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
-                    print(result.stdout.decode())
+                    log_detected(result, errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_image_layout_type(layout, outputFormatToggle, "HOST"))
             elif case == "8":
                 # Run all variants of noise type functions with additional argument of noiseType = gausssianNoise / shotNoise / saltandpepperNoise
                 for noiseType in range(3):
                     print("./Tensor_host " + srcPath1 + " " + srcPath2 + " " + dstPathTemp + " " + str(bitDepth) + " " + str(outputFormatToggle) + " " + str(case) + " " + str(noiseType) + " 0")
                     result = subprocess.Popen([buildFolderPath + "/build/Tensor_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(noiseType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
-                    stdout_data, stderr_data = result.communicate()
-                    print(stdout_data.decode())
+                    log_detected(result, errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_image_layout_type(layout, outputFormatToggle, "HOST"))
             elif case == "21" or case == "23" or case == "24" or case == "79":
                 # Run all variants of interpolation functions with additional argument of interpolationType = bicubic / bilinear / gaussian / nearestneigbor / lanczos / triangular
                 interpolationRange = 6
@@ -82,13 +82,11 @@ def run_unit_test(srcPath1, srcPath2, dstPathTemp, case, numRuns, testType, layo
                 for interpolationType in range(interpolationRange):
                     print("./Tensor_host " + srcPath1 + " " + srcPath2 + " " + dstPathTemp + " " + str(bitDepth) + " " + str(outputFormatToggle) + " " + str(case) + " " + str(interpolationType) + " 0")
                     result = subprocess.Popen([buildFolderPath + "/build/Tensor_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), str(interpolationType), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
-                    stdout_data, stderr_data = result.communicate()
-                    print(stdout_data.decode())
+                    log_detected(result, errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_image_layout_type(layout, outputFormatToggle, "HOST"))
             else:
                 print("./Tensor_host " + srcPath1 + " " + srcPath2 + " " + dstPathTemp + " " + str(bitDepth) + " " + str(outputFormatToggle) + " " + str(case) + " 0 " + str(numRuns) + " " + str(testType) + " " + str(layout) + " 0")
                 result = subprocess.Popen([buildFolderPath + "/build/Tensor_host", srcPath1, srcPath2, dstPathTemp, str(bitDepth), str(outputFormatToggle), str(case), "0", str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
-                stdout_data, stderr_data = result.communicate()
-                print(stdout_data.decode())
+                log_detected(result, errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_image_layout_type(layout, outputFormatToggle, "HOST"))
 
             print("------------------------------------------------------------------------------------------")
 
@@ -97,12 +95,13 @@ def run_performance_test_cmd(loggingFolder, logFileLayout, srcPath1, srcPath2, d
         with open(loggingFolder + "/BatchPD_host_" + logFileLayout + "_raw_performance_log.txt", "a") as logFile:
             process = subprocess.Popen([buildFolderPath + "/build/BatchPD_host_" + logFileLayout, srcPath1, srcPath2, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), "0"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
             read_from_subprocess_and_write_to_log(process, logFile)
-
+            log_detected(process, errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_image_layout_type(layout, outputFormatToggle, "HOST"))
     with open(loggingFolder + "/Tensor_host_" + logFileLayout + "_raw_performance_log.txt", "a") as logFile:
         logFile.write("./Tensor_host " + srcPath1 + " " + srcPath2 + " " + dstPath + " " + str(bitDepth) + " " + str(outputFormatToggle) + " " + str(case) + " " + str(additionalParam) + " 0\n")
         process = subprocess.Popen([buildFolderPath + "/build/Tensor_host", srcPath1, srcPath2, dstPath, str(bitDepth), str(outputFormatToggle), str(case), str(additionalParam), str(numRuns), str(testType), str(layout), "0", str(qaMode), str(decoderType), str(batchSize)] + roiList + [scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
         read_from_subprocess_and_write_to_log(process, logFile)
-
+        log_detected(process, errorLog, imageAugmentationMap[int(case)][0], get_bit_depth(int(bitDepth)), get_image_layout_type(layout, outputFormatToggle, "HOST"))
+        
 def run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList):
     print("\n")
     bitDepths = range(7)
@@ -273,9 +272,12 @@ if testType == 0:
         if case == "82" and (("--input_path1" not in sys.argv and "--input_path2" not in sys.argv) or qaMode == 1):
             srcPath1 = ricapInFilePath
             srcPath2 = ricapInFilePath
-        if case == "26" and (("--input_path1" not in sys.argv and "--input_path2" not in sys.argv) or qaMode == 1):
+        elif case == "26" and (("--input_path1" not in sys.argv and "--input_path2" not in sys.argv) or qaMode == 1):
             srcPath1 = lensCorrectionInFilePath
             srcPath2 = lensCorrectionInFilePath
+        else:
+            srcPath1 = inFilePath1
+            srcPath2 = inFilePath2
         # if QA mode is enabled overwrite the input folders with the folders used for generating golden outputs
         if qaMode == 1 and (case != "82" and case != "26"):
             srcPath1 = inFilePath1
@@ -306,9 +308,12 @@ else:
         if case == "82" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
             srcPath1 = ricapInFilePath
             srcPath2 = ricapInFilePath
-        if case == "26" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
+        elif case == "26" and "--input_path1" not in sys.argv and "--input_path2" not in sys.argv:
             srcPath1 = lensCorrectionInFilePath
             srcPath2 = lensCorrectionInFilePath
+        else:
+            srcPath1 = inFilePath1
+            srcPath2 = inFilePath2
         for layout in range(3):
             dstPathTemp, logFileLayout = process_layout(layout, qaMode, case, dstPath, "host", func_group_finder)
             run_performance_test(loggingFolder, logFileLayout, srcPath1, srcPath2, dstPath, case, numRuns, testType, layout, qaMode, decoderType, batchSize, roiList)
@@ -481,3 +486,9 @@ elif (testType == 1 and qaMode == 0):
 
     for logFile in logFileList:
         print_performance_tests_summary(logFile, functionalityGroupList, numRuns)
+
+if errorLog:
+    print("\n---------------------------------- Error log - Tensor_host ----------------------------------\n")
+    for error in errorLog:
+        print(error)
+    print("-----------------------------------------------------------------------------------------------")

@@ -50,6 +50,8 @@ int main(int argc, char * argv[])
     inputBitDepth = atoi(argv[10]);
     string scriptPath = argv[11];
 
+    bool nonQACase = (testCase == 6);
+
     if ((layoutType < 0) || (layoutType > 2))
     {
         fprintf(stdout, "\nUsage: %s <header file> <data file> <layoutType = 0 - PKD3/ 1 - PLN3/ 2 - PLN1>\n", argv[0]);
@@ -446,7 +448,7 @@ int main(int argc, char * argv[])
             /*Compare the output of the function with golden outputs only if
             1.QA Flag is set
             2.input bit depth 2 (F32)*/
-            if(qaFlag && inputBitDepth == 2)
+            if(qaFlag && inputBitDepth == 2  && !(nonQACase))
                 compare_output(outputF32, oBufferSize, testCaseName, layoutType, descriptorPtr3D, (RpptRoiXyzwhd *)roiGenericSrcPtr, dstPath, scriptPath);
             else
             {

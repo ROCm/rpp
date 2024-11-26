@@ -39,6 +39,7 @@ outFolderPath = os.getcwd()
 buildFolderPath = os.getcwd()
 caseMin = 0
 caseMax = 2
+errorLog = []
 
 # Get a list of log files based on a flag for preserving output
 def get_log_file_list():
@@ -75,16 +76,16 @@ def generate_performance_reports(RESULTS_DIR):
 
 def run_unit_test_cmd(numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg):
     print("\n./Tensor_misc_hip " + str(case) + " " + str(testType) + " " + str(toggle) + " " + str(numDims) + " " + str(batchSize) + " " + str(numRuns) + " " + str(additionalArg))
-    result = subprocess.Popen([buildFolderPath + "/build/Tensor_misc_hip", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE)    # nosec
-    stdout_data, stderr_data = result.communicate()
-    print(stdout_data.decode())
+    result = subprocess.Popen([buildFolderPath + "/build/Tensor_misc_hip", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
+    log_detected(result, errorLog, miscAugmentationMap[int(case)][0], get_bit_depth(int(2)), get_misc_func_name(int(case), numDims, additionalArg))
     print("------------------------------------------------------------------------------------------")
 
 def run_performance_test_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg):
     with open(loggingFolder + "/Tensor_misc_hip_raw_performance_log.txt", "a") as logFile:
         logFile.write("./Tensor_misc_hip " + str(case) + " " + str(testType) + " " + str(toggle) + " " + str(numDims) + " " + str(batchSize) + " " + str(numRuns) + " " + str(additionalArg) + "\n")
-        process = subprocess.Popen([buildFolderPath + "/build/Tensor_misc_hip", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)    # nosec
+        process = subprocess.Popen([buildFolderPath + "/build/Tensor_misc_hip", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)    # nosec
         read_from_subprocess_and_write_to_log(process, logFile)
+        log_detected(process, errorLog, miscAugmentationMap[int(case)][0], get_bit_depth(int(2)), get_misc_func_name(int(case), numDims, additionalArg))
 
 def run_performance_test_with_profiler_cmd(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg):
     if not os.path.exists(outFilePath + "/case_" + str(case)):
@@ -92,8 +93,9 @@ def run_performance_test_with_profiler_cmd(loggingFolder, numDims, case, numRuns
 
     with open(loggingFolder + "/Tensor_misc_hip_raw_performance_log.txt", "a") as logFile:
         logFile.write("\nrocprof --basenames on --timestamp on --stats -o " + outFilePath + "/case_" + str(case) + "/output_case" + str(case) + ".csv ./Tensor_misc_hip " + str(case) + " " + str(testType) + " " + str(toggle) + " " + str(numDims) + " " + str(batchSize) + " " + str(numRuns) + " " + str(additionalArg) + "\n")
-        process = subprocess.Popen(['rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', outFilePath + "/case_" + str(case) + "/output_case" + str(case) + ".csv", "./Tensor_misc_hip", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)  # nosec
+        process = subprocess.Popen(['rocprof', '--basenames', 'on', '--timestamp', 'on', '--stats', '-o', outFilePath + "/case_" + str(case) + "/output_case" + str(case) + ".csv", "./Tensor_misc_hip", str(case), str(testType), str(toggle), str(numDims), str(batchSize), str(numRuns), str(additionalArg), outFilePath, scriptPath], stdout=subprocess.PIPE, stderr=subprocess.PIPE)  # nosec
         read_from_subprocess_and_write_to_log(process, logFile)
+        log_detected(process, errorLog, miscAugmentationMap[int(case)][0], get_bit_depth(int(2)), get_misc_func_name(int(case), numDims, additionalArg))
     print("------------------------------------------------------------------------------------------")
 
 def run_test(loggingFolder, numDims, case, numRuns, testType, toggle, batchSize, outFilePath, additionalArg, profilingOption = 'NO'):
@@ -286,3 +288,9 @@ if (testType == 1 and profilingOption == "NO"):
 
     for logFile in logFileList:
         print_performance_tests_summary(logFile, functionalityGroupList, numRuns)
+
+if errorLog:
+    print("\n---------------------------------- Error log - Tensor_misc_hip ----------------------------------\n")
+    for error in errorLog:
+        print(error)
+    print("-----------------------------------------------------------------------------------------------")
